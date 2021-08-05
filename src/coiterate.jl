@@ -6,6 +6,19 @@ end
 
 block(args...) = reduce(block, args)
 
+#What's going on here?  We're going to create a virtual code generator for
+#nested blocks A block is a contiguous group of other blocks Initially, we
+#assume the blocks are aligned, but the style of the blocks tells us how to
+#merge them.  When we merge split blocks or use a block loop, we need to
+#truncate the blocks to realign them.  This might produce a switch-case block
+#depending on what the truncated block is.  At some point, we'll reach a point
+#where we can simply emit code or simplify a block merge to a no-op the
+#destination block assignment is tricky. We need to iterate over the
+#destination, but it's nontrivial to do increments on a sparse destination, etc.
+#If the destination is e.g. a run, then we need some rules about
+#how to encode spikes as two separate runs, etc.  presumably we should simplify
+#the destination and source iterators until we get to the bottom (spikes, runs,
+#singles), then use destination rules about how to do the storage.
 struct SparseLevel{Ti}
     pos
     idx
