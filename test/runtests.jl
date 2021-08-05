@@ -1,6 +1,6 @@
-using FiberArrays
+using Thrush
 using Test
 
-@testset "FiberArrays.jl" begin
+@testset "Thrush.jl" begin
     # Write your tests here.
 end
