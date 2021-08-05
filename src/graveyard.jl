@@ -114,3 +114,30 @@ function coiterate(runs, runs, runs)
         i = i′
     end
 end
+
+
+struct SparseVectorSplitIterator
+    prev_pos
+    vec
+end
+
+IteratorStyle(itr::SparseVectorSplitIterator) = SplitStyle()
+
+setup(itr::SparseVectorSplitIterator) = :(p = 1)
+
+splits(itr::SparseVectorSplitIterator) = (Split(itr.vec, itr.prev_pos), SparseVectorRunCleanup(vec))
+
+struct SparseVectorSpikeLoop
+    prev_pos
+    vec
+end
+
+block_end(itr::SparseVectorSpikeLoop) = :($(itr.vec.pos)[$(itr.prev_pos)])
+
+IteratorStyle(itr::SparseVectorSpikeLoop) = IterativeTruncateStyle()
+
+struct SparseVectorRunCleanup
+    vec
+end
+
+IteratorStyle(itr::SparseVectorRunCleanup) = TerminalStyle()

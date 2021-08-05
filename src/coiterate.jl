@@ -1,92 +1,93 @@
-struct SparseVector{Ti}
+function block(a, b)
+    a_stmts = a isa Expr && a.head == :block ? a.args : [a,]
+    b_stmts = b isa Expr && b.head == :block ? b.args : [b,]
+    return Expr(:block, vcat(a_stmts, b_stmts))
+end
+
+block(args...) = reduce(block, args)
+
+struct SparseLevel{Ti}
     pos
     idx
 end
 
-iterator_codegen(type::SparseVector{Ti})
-    return SplitIterator(
-        setup = (i)->quote
+struct VirtualSparseLevel
+    Ti
+    ex
+    name
+    default
+    parent_p
+    child
+end
 
+iterator_codegen(lvl::VirtualSparseLevel)
+    my_p = Symbol("p_", lvl.name)
+    my_p′ = Symbol("p′_", lvl.name)
+    my_i′ = Symbol("i′_", lvl.name)
+    return PhaseIterator(
+        setup = (i)->quote
+            $my_p = $(ex).pos[$(lvl.parent_p)]
+            $my_p′ = $(ex).pos[$(lvl.parent_p) + 1]
         end,
         phases = (
-            TruncateLoopIterator(
-                block_end = quote
-                    pos[p]
-                end
-                truncate = (i′)->quote
-                    CaseIterator(
-                        setup = :(i_p = idx[p])
-                        cases = (
-                            Case(:($i′ == $i_p),
-                                Spike(
-                                    start = :i,
-                                    finish = :i′,
-                                    default = Literal(type.default),
-                                    value = Typed(type, SparseFiber(:i))
-                                    cleanup = :(p += 1)
-                                    ),
-                            Case(true,
-                                Run(
-                                    start = :i,
-                                    finish = :i′,
-                                    default = Literal(type.default),
+            LoopIterator(
+                is_empty = :($my_p < $my_p′),
+                setup = :($my_i′ = $(ex).idx[$my_p]),
+                finish = :($(ex).idx[$my_p′ - 1])
+                body = CaseIterator(
+                    cases = (
+                        Case(:($i′ == $my_i′),
+                            Spike(
+                                default = Literal(lvl.default),
+                                value = iterator_child(lvl, my_i′, my_p)
+                                cleanup = :($my_p += 1)
                                 ),
-                            )
+                        ),
+                        Case(true,
+                            Run(
+                                default = Literal(lvl.default),
+                            ),
                         )
                     )
-                end
+                    finish = my_i′
+                )
+            ),
+            Run(
+                finish = Top(),
+                default = Literal(lvl.default),
             )
-            while
         ),
-        cleanup = (i)->quote
-        end,
+        finish = Top(),
     )
 end
 
-struct SparseVectorSplitIterator
-    prev_pos
-    vec
-end
-
-IteratorStyle(itr::SparseVectorSplitIterator) = SplitStyle()
-
-setup(itr::SparseVectorSplitIterator) = :(p = 1)
-
-splits(itr::SparseVectorSplitIterator) = (Split(itr.vec, itr.prev_pos), SparseVectorRunCleanup(vec))
-
-struct SparseVectorSpikeLoop
-    prev_pos
-    vec
-end
-
-block_end(itr::SparseVectorSpikeLoop) = :($(itr.vec.pos)[$(itr.prev_pos)])
-
-IteratorStyle(itr::SparseVectorSpikeLoop) = IterativeTruncateStyle()
-
-struct SparseVectorRunCleanup
-    vec
-end
-
-IteratorStyle(itr::SparseVectorRunCleanup) = TerminalStyle()
-
 function coiterate(itrs)
     style = reduce_style(map(IteratorStyle, itrs))
-    coiterate(itrs, style)
+    thunk = Expr(:block)
+    map(arg->(thunk = block(thunk, setup(arg))), itrs))
+    thunk = block(thunk, coiterate(itrs, style))
+    map(arg->(thunk = block(thunk, cleanup(arg))), itrs))
 end
 
 struct SplitStyle end
 
-struct SplitIterator
+abstract type Iterator end
+
+struct PhaseIterator
     setup
     cleanup
     phases
 end
 
-function phase_order()
-end
+PhaseIterator(;setup=nothing, cleanup=nothing, phases=())
 
-function coiterate(itrs, ::SplitStyle)
-    pipelines = map(itr->splits, itrs)
+phases(itr::PhaseIterator) = itr.phases
+phases(itr) = (itr,)
+
+IteratorStyle(itr::PhaseIterator) = PhaseStyle()
+
+function coiterate(itrs, ::PhaseStyle)
+    pipelines = map(phases, itrs)
     pipekeys = map(pipeline->1:length(pipeline), pipelines)
     maxkey = maximum(map(maximum, pipekeys))
     phases = reshape(collect(Iterators.product(pipekeys...)), :)
@@ -98,22 +99,32 @@ function coiterate(itrs, ::SplitStyle)
     return thunk
 end
 
-splits(itr) = (itr, )
-
 struct CaseStyle end
 
-function phase_order()
+struct CaseIterator
+    setup
+    cleanup
+    cases
 end
 
+IteratorStyle(itr::CaseIterator) = CaseStyle()
+
+CaseIterator(;setup=nothing, cleanup=nothing, cases=())
+
+cases(itr::CaseIterator) = itr.cases
+cases(itr) = [(true, itr),]
+
+IteratorStyle(::CaseIterator, ::PhaseStyle) = PhaseStyle()
+
 function coiterate(itrs, ::CaseStyle)
-    pipelines = map(itr->splits, itrs)
+    pipelines = map(cases, itrs)
     pipekeys = map(pipeline->1:length(pipeline), pipelines)
     maxkey = maximum(map(maximum, pipekeys))
     phases = reshape(collect(Iterators.product(pipekeys...)), :)
     sort!(phases, by=phase->map(k->count(key->key>k, phase), 1:maxkey))
     for phase in phases
         itrs′ = map(((pipeline, key))->pipeline[key], zip(pipelines, phase))
-        #do an if else
+        #do an if else tree
         push!(thunk.args, coiterate(itrs′))
     end
     return thunk
@@ -145,7 +156,22 @@ function stage_min(args...)
     end
 end
 
-function coiterate(i, itrs, ::TruncateLoopStyle)
+struct LoopStyle end
+
+struct LoopIterator
+    setup
+    cleanup
+    body
+end
+
+IteratorStyle(itr::LoopIterator) = LoopStyle()
+
+LoopIterator(;setup=nothing, cleanup=nothing, cases=())
+
+body(itr::LoopIterator) = itr
+body(itr) = itr
+
+function coiterate(i, itrs, ::LoopStyle)
     i′ = Symbol(i, "′")
     return quote
         while $(stage_and(map(is_valid_check, itrs)...))
