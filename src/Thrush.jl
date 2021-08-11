@@ -1,4 +1,4 @@
-module FiberArrays
+module Thrush
 
 export SparseLevel
 export SparseFiber

@@ -1,11 +1,3 @@
-function block(a, b)
-    a_stmts = a isa Expr && a.head == :block ? a.args : [a,]
-    b_stmts = b isa Expr && b.head == :block ? b.args : [b,]
-    return Expr(:block, vcat(a_stmts, b_stmts))
-end
-
-block(args...) = reduce(block, args)
-
 #What's going on here?  We're going to create a virtual code generator for
 #nested blocks A block is a contiguous group of other blocks Initially, we
 #assume the blocks are aligned, but the style of the blocks tells us how to
@@ -19,12 +11,7 @@ block(args...) = reduce(block, args)
 #how to encode spikes as two separate runs, etc.  presumably we should simplify
 #the destination and source iterators until we get to the bottom (spikes, runs,
 #singles), then use destination rules about how to do the storage.
-struct SparseLevel{Ti}
-    pos
-    idx
-end
-
-struct VirtualSparseLevel
+struct VirtualSparseFiber
     Ti
     ex
     name
@@ -33,7 +20,7 @@ struct VirtualSparseLevel
     child
 end
 
-iterator_codegen(lvl::VirtualSparseLevel)
+iterator_codegen(lvl::VirtualSparseFiber)
     my_p = Symbol("p_", lvl.name)
     my_p′ = Symbol("p′_", lvl.name)
     my_i′ = Symbol("i′_", lvl.name)
@@ -209,4 +196,24 @@ end
 
 function coiterate(i, itrs, ::TerminalStyle)
     return terminal(map(simplify, itrs))
+end
+
+lower(stmt::Forall) = lower(stmt, ForallStyle(stmt.idx, stmt.body))
+
+#may want to specialize lowering style based on index of current forall.
+ForallStyle(idx, stmt::Forall) = ForallStyle(idx, stmt.body)
+ForallStyle(idx, stmt::Where) = result_forall_style(ForallStyle(idx, stmt.prod), ForallStyle(idx, stmt.cons))
+ForallStyle(idx, stmt::Assign) = result_forall_style(ForallStyle(idx, stmt.lhs), ForallStyle(idx, stmt.rhs))
+ForallStyle(idx, stmt::Call) = result_forall_style(map(arg->ForallStyle(idx, arg), stmt.args)...)
+function ForallStyle(idx, stmt::Access)
+    if idx in stmt.idxs
+        AccessStyle(find(idx, stmt.idxs), stmt.tns)
+    else
+        ScalarStyle()
+    end
+end
+ForallStyle(VirtualSparseFiber())
+
+function lower(stmt, ::CoiterateStyle)
+    coiterate(postorder(coiterator, stmt))
 end
