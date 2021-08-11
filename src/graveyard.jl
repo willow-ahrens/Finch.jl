@@ -141,3 +141,105 @@ struct SparseVectorRunCleanup
 end
 
 IteratorStyle(itr::SparseVectorRunCleanup) = TerminalStyle()
+
+
+function lower(ex::Forall)
+    idx = ex.idx
+    lvls = get_tensors_with_idx(ex, idx)
+    for tns in tensors(ex)
+        replace(ex, tns=>)
+    end
+    iterators = map(get_iterator, tns)
+    return quote
+        $setup_iterators
+        i = 0
+        #The blocks here are two-part blocks, one for the spikes and one for the cleanup afterwards.
+        $(unfold(i, iterators))
+    end
+end
+
+function unfold(i, expression)
+    style = unfold_style(expression)
+    unfold(i, expression, style)
+end
+
+function unfold(i, blockstyle)
+    block_ind = 0
+    while $(!any(isempty(iterators)))
+        i′ = $(min(map(get_block_end, )))
+        $(
+            process the block from i to i′ = min(block_ends)
+            process_block(expression with blocks inserted)
+        )
+        if hascoord(itr1, coord) && hascoord(itr2, coord)
+            do_filled
+        elseif hascoord(itr1 && !itr2)
+            do_filled
+        elseif hascoord(itr1 && !itr2)
+            do_filled
+        end
+        end
+        if hascoord(itr2)
+        end
+    end
+end
+
+function unfold(i, expression, combinatorstyle)
+    combinators = get_combinators(expression)
+    for combo in product(combinators)
+        switch = :(true)
+        for (condition, block, iterator) in combo
+            switch = :($switch && $condition)
+            replace!(expression, iterator => block)
+        end
+        unfold(i, expression)
+    end
+    advance_blocks
+end
+
+function unfold(i, expression, loopcleanupstyle)
+    combinators = get_splits(expression)
+    while any 4
+    while any 3
+    while any 2
+    while any 1
+end
+
+struct Spike
+    default
+    parent
+end
+
+lower_style(b::Spike) = SpikeStyle()
+
+truncate(b::Spike, i′) = Combinator(:(i′ == block_end(b.parent)), Spike(b.default, b.parent), Run(b.default))
+
+struct Run
+    default
+end
+
+lower_style(b::Run) = SingleStyle()
+
+truncate(b::Run, i′) = b
+
+#okay, so the next step is coiteration
+
+struct Call{F, Args}
+    f::F
+    args::Args
+end
+
+struct Forall{I, Ops}
+    i::I
+    ops::Ops
+end
+
+function lower(ex::Forall{I, Ops}, pos, iter)
+    i = ex.i
+    ex = map(ex) do tns
+        if tns isa Level && tns.i == ex.i
+            push!(iters, tns.itr)
+            return tns.child
+        end
+    end
+end
