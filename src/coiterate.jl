@@ -11,6 +11,10 @@
 #how to encode spikes as two separate runs, etc.  presumably we should simplify
 #the destination and source iterators until we get to the bottom (spikes, runs,
 #singles), then use destination rules about how to do the storage.
+
+#Peter about three weeeks later: It's pretty clear that locate iterators are
+#sorta different from coiterate iterators, and choosing one or the other should
+#be a scheduling decision.
 struct VirtualSparseFiber
     Ti
     ex

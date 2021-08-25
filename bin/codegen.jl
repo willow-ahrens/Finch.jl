@@ -1,3 +1,5 @@
+using Thrush
+
 A = Tensor(:A, VirtualSparseFiber(
     Ti = Int,
     ex = "A.level",
