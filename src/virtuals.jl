@@ -8,7 +8,6 @@ export ScalarLevel
 struct VirtualSparseLevel
     expr
     Ti
-    N
     child
 end
 
@@ -38,7 +37,6 @@ end
 struct VirtualDenseLevel
     expr
     Ti
-    N
     child
 end
 

@@ -1,6 +1,9 @@
 module Thrush
 
 using Pigeon
+using SymbolicUtils
+using SymbolicUtils: istree, arguments, operation, similarterm
+using SymbolicUtils: Postwalk, Prewalk
 
 export SparseLevel
 export SparseFiber

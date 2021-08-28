@@ -51,7 +51,18 @@ A = Thrush.VirtualScalarFiber(1,
     )
 )
 
+B = Thrush.VirtualDenseFiber(1,
+    Thrush.VirtualDenseLevel(
+        :(data),
+        Int64,
+        Thrush.VirtualScalarLevel(
+            :(data),
+            Float64
+        )
+    )
+)
+
 println(lower(i"$A[] = $A[]"))
-#println(lower(i"∀ i A[i] = A[i]"))
+println(lower(i"∀ i $A[] = $A[]"))
 
 

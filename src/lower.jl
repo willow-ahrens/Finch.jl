@@ -204,25 +204,7 @@ function coiterate(i, itrs, ::TerminalStyle)
     return terminal(map(simplify, itrs))
 end
 
-lower(stmt::Loop) = lower(stmt, LoopStyle(stmt.idx, stmt.body))
 
-#may want to specialize lowering style based on index of current forall.
-LoopStyle(idx, stmt::Loop) = LoopStyle(idx, stmt.body)
-LoopStyle(idx, stmt::Where) = result_forall_style(LoopStyle(idx, stmt.prod), LoopStyle(idx, stmt.cons))
-LoopStyle(idx, stmt::Assign) = result_forall_style(LoopStyle(idx, stmt.lhs), LoopStyle(idx, stmt.rhs))
-LoopStyle(idx, stmt::Call) = result_forall_style(map(arg->LoopStyle(idx, arg), stmt.args)...)
-function LoopStyle(idx, stmt::Access)
-    if idx in stmt.idxs
-        AccessStyle(find(idx, stmt.idxs), stmt.tns)
-    else
-        ScalarStyle()
-    end
-end
-LoopStyle(VirtualSparseFiber())
-
-function lower(stmt, ::CoiterateStyle)
-    coiterate(postorder(coiterator, stmt))
-end
 =#
 
 lower(::Pass) = :()
@@ -236,4 +218,54 @@ lower(ex::Call) = :($(lower(stmt.op))(map(lower, stmt.args)))
 function lower(ex::Access)
     @assert isempty(ex.idxs)
     lower_access(ex.tns)
+end
+
+function lower(stmt::Loop)
+    if isempty(stmt.idxs)
+        return lower(stmt.body)
+    elseif length(stmt.idxs) > 1
+        return lower(Loop([stmt.idxs[1]], Loop(stmt.idxs[2:end], body)))
+    end
+    lower_loop(stmt.body, stmt.idxs[1])
+end
+lower_loop(body, idx) = lower_loop(body, idx, LoopStyle(idx, body))
+lower_loop(body, idx, ::Missing) = lower_loop(body, idx, ForeachStyle())
+
+#may want to specialize lowering style based on index of current forall.
+LoopStyle(idx, stmt::Loop) = LoopStyle(idx, stmt.body)
+LoopStyle(idx, stmt::IndexNode) = istree(stmt) ? 
+    mapreduce(arg->LoopStyle(idx, arg), _loop_style, arguments(stmt)) : missing
+_loop_style(a, b) = LoopStyle(a, b) === missing ? LoopStyle(b, a) : LoopStyle(a, b)
+function LoopStyle(idx, stmt::Access)
+    if idx in stmt.idxs
+        AccessStyle(find(idx, stmt.idxs), stmt.tns)
+    else
+        missing
+    end
+end
+
+LoopStyle(::Missing, a) = a
+
+struct CoiterateStyle end
+struct ForeachStyle end
+
+coiterator(idx, stmt) = stmt
+function coiterator(idx, stmt::Access)
+    if idx == stmt.idxs[1]
+        coiterator(idx, stmt.tns)
+    else
+        missing
+    end
+end
+
+function lower_loop(stmt, idx, ::CoiterateStyle)
+    lower_loop(Prewalk((stmt->coiterator(idx, stmt))(stmt), idx))
+end
+
+function lower_loop(stmt, idx, ::ForeachStyle)
+    return quote
+        for $idx = 1:$(10#=dimension(idx) TODO=#)
+            $(lower(stmt))
+        end
+    end
 end
