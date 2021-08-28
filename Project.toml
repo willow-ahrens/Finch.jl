@@ -3,6 +3,9 @@ uuid = "1ddded22-6fc6-4ca9-aa11-2d3393dfe105"
 authors = ["Peter Ahrens"]
 version = "0.1.0"
 
+[deps]
+Pigeon = "5feeeddc-254b-4aab-a0bc-ed990ddc1d92"
+
 [compat]
 julia = "1.1"
 

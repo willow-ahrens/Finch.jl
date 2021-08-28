@@ -86,13 +86,12 @@ function virtual_getindex(lvl::VirtualScalarLevel, q)
 end
 
 function lower_access(fbr::VirtualScalarFiber)
-    return :($(fbr.lvl.expr)[$fbr.q])
+    return :($(fbr.lvl.expr).val[$(fbr.q)])
 end
 
 function lower_assign(fbr::VirtualScalarFiber, ::Nothing, ex)
-    return :($(fbr.lvl.expr)[$fbr.q] = $ex)
+    :($(fbr.lvl.expr).val[$(fbr.q)] = $ex)
 end
-
 function lower_assign(fbr::VirtualScalarFiber, op, ex)
-    return :($(fbr.lvl.expr)[$(fbr.q)] = $op($(fbr.lvl.expr)[$fbr.q], $ex))
+    :($(fbr.lvl.expr).val[$(fbr.q)] = $op($(fbr.lvl.expr).val[$(fbr.q)], $ex))
 end
