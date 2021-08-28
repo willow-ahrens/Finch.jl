@@ -1,5 +1,7 @@
 using Thrush
+using Pigeon
 
+#=
 A = Tensor(:A, VirtualSparseFiber(
     Ti = Int,
     ex = "A.level",
@@ -16,8 +18,6 @@ A = Tensor(:A, VirtualSparseFiber(
         )
     )
 )
-
-i = Index(:i)
 j = Index(:j)
 
 ex = 
@@ -41,6 +41,17 @@ ex =
         )
     )
 
-println(lower(ex))
+i = Index(:i)
+=#
+
+A = Thrush.VirtualScalarFiber(1,
+    Thrush.VirtualScalarLevel(
+        :(data),
+        Float64
+    )
+)
+
+println(lower(i"$A[] = $A[]"))
+#println(lower(i"∀ i A[i] = A[i]"))
 
 

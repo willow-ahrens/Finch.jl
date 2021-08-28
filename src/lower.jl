@@ -12,6 +12,8 @@
 #the destination and source iterators until we get to the bottom (spikes, runs,
 #singles), then use destination rules about how to do the storage.
 
+#=
+
 #Peter about three weeeks later: It's pretty clear that locate iterators are
 #sorta different from coiterate iterators, and choosing one or the other should
 #be a scheduling decision.
@@ -24,7 +26,7 @@ struct VirtualSparseFiber
     child
 end
 
-iterator_codegen(lvl::VirtualSparseFiber)
+function lower(lvl::VirtualSparseFiber)
     my_p = Symbol("p_", lvl.name)
     my_p′ = Symbol("p′_", lvl.name)
     my_i′ = Symbol("i′_", lvl.name)
@@ -34,21 +36,21 @@ iterator_codegen(lvl::VirtualSparseFiber)
             $my_p′ = $(ex).pos[$(lvl.parent_p) + 1]
         end,
         phases = (
-            LoopIterator(
+            (i)->LoopIterator(
                 is_empty = :($my_p < $my_p′),
                 setup = :($my_i′ = $(ex).idx[$my_p]),
                 finish = :($(ex).idx[$my_p′ - 1])
-                body = CaseIterator(
+                body = (i)->CaseIterator(
                     cases = (
-                        Case(:($i′ == $my_i′),
-                            Spike(
+                        (i)->Case(:($i′ == $my_i′),
+                            (i)->Spike(
                                 default = Literal(lvl.default),
                                 value = iterator_child(lvl, my_i′, my_p)
                                 cleanup = :($my_p += 1)
-                                ),
+                            ),
                         ),
-                        Case(true,
-                            Run(
+                        (i)->Case(true,
+                            (i)->Run(
                                 default = Literal(lvl.default),
                             ),
                         )
@@ -56,7 +58,7 @@ iterator_codegen(lvl::VirtualSparseFiber)
                     finish = my_i′
                 )
             ),
-            Run(
+            (i)->Run(
                 finish = Top(),
                 default = Literal(lvl.default),
             )
@@ -202,22 +204,36 @@ function coiterate(i, itrs, ::TerminalStyle)
     return terminal(map(simplify, itrs))
 end
 
-lower(stmt::Forall) = lower(stmt, ForallStyle(stmt.idx, stmt.body))
+lower(stmt::Loop) = lower(stmt, LoopStyle(stmt.idx, stmt.body))
 
 #may want to specialize lowering style based on index of current forall.
-ForallStyle(idx, stmt::Forall) = ForallStyle(idx, stmt.body)
-ForallStyle(idx, stmt::Where) = result_forall_style(ForallStyle(idx, stmt.prod), ForallStyle(idx, stmt.cons))
-ForallStyle(idx, stmt::Assign) = result_forall_style(ForallStyle(idx, stmt.lhs), ForallStyle(idx, stmt.rhs))
-ForallStyle(idx, stmt::Call) = result_forall_style(map(arg->ForallStyle(idx, arg), stmt.args)...)
-function ForallStyle(idx, stmt::Access)
+LoopStyle(idx, stmt::Loop) = LoopStyle(idx, stmt.body)
+LoopStyle(idx, stmt::Where) = result_forall_style(LoopStyle(idx, stmt.prod), LoopStyle(idx, stmt.cons))
+LoopStyle(idx, stmt::Assign) = result_forall_style(LoopStyle(idx, stmt.lhs), LoopStyle(idx, stmt.rhs))
+LoopStyle(idx, stmt::Call) = result_forall_style(map(arg->LoopStyle(idx, arg), stmt.args)...)
+function LoopStyle(idx, stmt::Access)
     if idx in stmt.idxs
         AccessStyle(find(idx, stmt.idxs), stmt.tns)
     else
         ScalarStyle()
     end
 end
-ForallStyle(VirtualSparseFiber())
+LoopStyle(VirtualSparseFiber())
 
 function lower(stmt, ::CoiterateStyle)
     coiterate(postorder(coiterator, stmt))
+end
+=#
+
+lower(::Pass) = :()
+
+function lower(stmt::Assign)
+    lower_assign(stmt.lhs.tns, stmt.op, lower(stmt.rhs))
+end
+
+lower(ex::Call) = :($(lower(stmt.op))(map(lower, stmt.args)))
+
+function lower(ex::Access)
+    @assert isempty(ex.idxs)
+    lower_access(ex.tns)
 end

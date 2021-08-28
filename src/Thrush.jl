@@ -1,14 +1,18 @@
 module Thrush
 
+using Pigeon
+
 export SparseLevel
 export SparseFiber
 export DenseLevel
 export DenseFiber
 export ScalarLevel
 
-include(util.jl)
-include(levels.jl)
-include(concrete.jl)
-include(lower.jl)
+export lower
+
+include("utils.jl")
+include("levels.jl")
+include("virtuals.jl")
+include("lower.jl")
 
 end
