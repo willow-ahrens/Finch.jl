@@ -1,3 +1,7 @@
+struct Virtual{T}
+    expr
+end
+
 #What's going on here?  We're going to create a virtual code generator for
 #nested blocks A block is a contiguous group of other blocks Initially, we
 #assume the blocks are aligned, but the style of the blocks tells us how to
@@ -17,6 +21,18 @@
 #Peter about three weeeks later: It's pretty clear that locate iterators are
 #sorta different from coiterate iterators, and choosing one or the other should
 #be a scheduling decision.
+
+#PETER even later:
+#There seems to be some xinteraction between a lowering loop and a simplify
+#loop.  In particular, it seems that the spikes and stuff are all just subloops,
+#and some of those subloops can be simplified or become pass statements. After
+#each lower, we want to apply a simplify, and after simplifying, we need to
+#lower again. The lower step allows the tensors to declare which tensors need
+#handling first.
+#One question is how to extensibly encode simplification rules. For now, we might
+#just want to have a list of rules that get applied.
+#Also, the virtual types are a little unnecessary. We can just have a single virtualtensor type and
+#overload calls to the virtual type.
 struct VirtualSparseFiber
     Ti
     ex
@@ -26,31 +42,32 @@ struct VirtualSparseFiber
     child
 end
 
-function lower(lvl::VirtualSparseFiber)
+function lower(lvl::VirtualSparseFiber, i, ctx)
     my_p = Symbol("p_", lvl.name)
     my_p′ = Symbol("p′_", lvl.name)
     my_i′ = Symbol("i′_", lvl.name)
     return PhaseIterator(
-        setup = (i)->quote
+        setup = (i, ctx)->quote
             $my_p = $(ex).pos[$(lvl.parent_p)]
             $my_p′ = $(ex).pos[$(lvl.parent_p) + 1]
         end,
         phases = (
-            (i)->LoopIterator(
+            (i, ctx)->push!(ctx.preamble)
+                LoopIterator(
                 is_empty = :($my_p < $my_p′),
                 setup = :($my_i′ = $(ex).idx[$my_p]),
                 finish = :($(ex).idx[$my_p′ - 1])
-                body = (i)->CaseIterator(
+                body = (i, ctx)->CaseIterator(
                     cases = (
-                        (i)->Case(:($i′ == $my_i′),
-                            (i)->Spike(
+                        (i, ctx)->Case(:($i′ == $my_i′),
+                            (i, ctx)->Spike(
                                 default = Literal(lvl.default),
                                 value = iterator_child(lvl, my_i′, my_p)
                                 cleanup = :($my_p += 1)
                             ),
                         ),
-                        (i)->Case(true,
-                            (i)->Run(
+                        (i, ctx)->Case(true,
+                            (i, ctx)->Run(
                                 default = Literal(lvl.default),
                             ),
                         )
@@ -207,65 +224,90 @@ end
 
 =#
 
-lower(::Pass) = :()
+#generic lowering
 
-function lower(stmt::Assign)
-    lower_assign(stmt.lhs.tns, stmt.op, lower(stmt.rhs))
+struct LowerContext
+    preamble::Vector{Any}
+    bindings::Dict{Name, Any}
+    epilogue::Vector{Any}
 end
 
-lower(ex::Call) = :($(lower(stmt.op))(map(lower, stmt.args)))
+LowerContext() = LowerContext([], Dict(), [])
 
-function lower(ex::Access)
+bind(ctx::LowerContext, vars) = LowerContext([], merge(ctx.bindings, vars), [])
+function emit(ctx::LowerContext, ex)
+    block = Expr(:block)
+    append!(block.args, ctx.preamble)
+    push!(block.args, ex)
+    append!(block.args, ctx.epilogue)
+end
+function openscope(f, ctx::LowerContext, vars...)
+    ctx′ = bind(ctx, vars)
+    return emit(ctx′, f(ctx′))
+end
+
+lower(stmt) = lower(stmt, LowerContext())
+
+#easy lowering
+
+lower(::Pass, ctx) = :()
+
+function lower(stmt::Assign, ctx)
+    @assert stmt.lhs isa Access && isempty(stmt.lhs.idxs)
+    lower_assign(stmt.lhs.tns, stmt.op, lower(stmt.rhs, ctx), ctx)
+end
+
+lower(ex::Call, ctx) = :($(lower(stmt.op, ctx))(map(arg->lower(arg, ctx), stmt.args)...))
+
+function lower(ex::Access, ctx)
     @assert isempty(ex.idxs)
-    lower_access(ex.tns)
+    lower_access(ex.tns, ctx)
 end
 
-function lower(stmt::Loop)
+#Loop lowering
+
+function lower(stmt::Loop, ctx)
     if isempty(stmt.idxs)
-        return lower(stmt.body)
+        return lower(stmt.body, ctx)
     elseif length(stmt.idxs) > 1
-        return lower(Loop([stmt.idxs[1]], Loop(stmt.idxs[2:end], body)))
+        return lower(Loop([stmt.idxs[1]], Loop(stmt.idxs[2:end], body)), ctx)
     end
-    lower_loop(stmt.body, stmt.idxs[1])
+    lower_loop(stmt.body, stmt.idxs[1], ctx)
 end
-lower_loop(body, idx) = lower_loop(body, idx, LoopStyle(idx, body))
-lower_loop(body, idx, ::Missing) = lower_loop(body, idx, ForeachStyle())
 
-#may want to specialize lowering style based on index of current forall.
+struct LocateStyle end
+
+lower_loop(body, idx, ctx) = lower_loop(body, idx, ctx, LoopStyle(idx, body))
+lower_loop(body, idx, ctx, ::Missing) = lower_loop(body, idx, ctx, LocateStyle())
+
+LoopStyle(::Missing, a) = a
+
+function lower_loop(stmt, idx, ctx, ::LocateStyle)
+    idx_sym = gensym(name(idx))
+    ctx = bind(ctx, idx, idx_sym)
+    return quote
+        for $idx_sym = 1:$(10#=dimension(idx) TODO=#)
+            $(lower(lower_loop_simplify(stmt, ctx), ctx))
+        end
+    end
+end
+
+lower_loop_rewriters(stmt, ctx) = []
+
+function lower_loop_simplify(stmt, ctx)
+    rewriters = ctx.rewriters
+    Postwalk(node->(append!(rewriters, lower_loop_rewriters(node, ctx)); node))(stmt)
+    return Fixpoint(Postwalk(rewriters), ctx)
+end
+
 LoopStyle(idx, stmt::Loop) = LoopStyle(idx, stmt.body)
 LoopStyle(idx, stmt::IndexNode) = istree(stmt) ? 
     mapreduce(arg->LoopStyle(idx, arg), _loop_style, arguments(stmt)) : missing
 _loop_style(a, b) = LoopStyle(a, b) === missing ? LoopStyle(b, a) : LoopStyle(a, b)
 function LoopStyle(idx, stmt::Access)
-    if idx in stmt.idxs
-        AccessStyle(find(idx, stmt.idxs), stmt.tns)
+    if !isempty(stmt.idxs) && idx == stmt.idxs[1]
+        AccessStyle(stmt.tns)
     else
         missing
-    end
-end
-
-LoopStyle(::Missing, a) = a
-
-struct CoiterateStyle end
-struct ForeachStyle end
-
-coiterator(idx, stmt) = stmt
-function coiterator(idx, stmt::Access)
-    if idx == stmt.idxs[1]
-        coiterator(idx, stmt.tns)
-    else
-        missing
-    end
-end
-
-function lower_loop(stmt, idx, ::CoiterateStyle)
-    lower_loop(Prewalk((stmt->coiterator(idx, stmt))(stmt), idx))
-end
-
-function lower_loop(stmt, idx, ::ForeachStyle)
-    return quote
-        for $idx = 1:$(10#=dimension(idx) TODO=#)
-            $(lower(stmt))
-        end
     end
 end

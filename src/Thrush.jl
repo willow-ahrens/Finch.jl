@@ -10,6 +10,7 @@ export SparseFiber
 export DenseLevel
 export DenseFiber
 export ScalarLevel
+export ScalarFiber
 
 export lower
 

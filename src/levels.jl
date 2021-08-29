@@ -21,7 +21,7 @@ struct SparseFiber{Tv, Ti, N} <: AbstractArray{Tv, N}
     lvl::SparseLevel{Tv, Ti, N}
 end
 
-function Base.getindex(lvl::SparseLevel{Ti}, q) where {Ti}
+function Base.getindex(lvl::SparseLevel, q)
     return SparseFiber(q, lvl)
 end
 
@@ -47,13 +47,13 @@ struct DenseFiber{Tv, Ti, N} <: AbstractArray{Tv, N}
     lvl::DenseLevel{Tv, Ti, N}
 end
 
-function Base.getindex(lvl::DenseLevel{Ti}, q) where {Ti}
+function Base.getindex(lvl::DenseLevel, q)
     return DenseFiber(q, lvl)
 end
 
 Base.size(fbr::DenseFiber) = dimension(fbr.lvl)
 
-function Base.getindex(fbr::DenseFiber{Ti}, i, tail...) where {Ti}
+function Base.getindex(fbr::DenseFiber, i, tail...)
     fbr.lvl.child[(fbr.q - 1) * fbr.lvl.I + i][tail...]
 end
 
@@ -65,6 +65,19 @@ end
 dimension(lvl::ScalarLevel) = ()
 Base.size(lvl::ScalarLevel) = size(lvl.val)
 
-function Base.getindex(lvl::ScalarLevel{Ti}, q) where {Ti}
+function Base.getindex(lvl::ScalarLevel, q)
     return lvl.val[q]
+end
+
+struct ScalarFiber{Tv, Ti, V} <: AbstractArray{Tv, 0}
+    q::Ti
+    lvl::ScalarLevel{Tv, V}
+end
+
+function Base.getindex(fbr::ScalarFiber)
+    fbr.lvl.val[fbr.q]
+end
+
+function lower_access(node::Virtual{T}, ctx) where {T <: ScalarFiber}
+    return :($(node.expr).lvl.val[$(node.expr).q])
 end
