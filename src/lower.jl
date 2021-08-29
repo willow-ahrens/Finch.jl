@@ -36,9 +36,9 @@ combine_lower_style_rule(a::Missing, b) = b
 
 #default lowering
 
-lower(::Pass, ctx::LowerContext, ::Missing) = :()
+lower(::Pass, ctx::LowerContext) = :()
 
-function lower(root::Assign, ctx::LowerContext, ::Missing)
+function lower(root::Assign, ctx::LowerContext)
     @assert root.lhs isa Access && root.lhs.idxs ⊆ keys(ctx.bindings)
     if root.op == nothing
         rhs = lower(root.rhs, ctx)
@@ -50,23 +50,23 @@ function lower(root::Assign, ctx::LowerContext, ::Missing)
     :($tns[$idxs...] = $rhs)
 end
 
-function lower(root::Call, ctx::LowerContext, ::Missing)
+function lower(root::Call, ctx::LowerContext)
     :($(lower(root.op, ctx))(map(arg->lower(arg, ctx), root.args)...))
 end
 
-function lower(root::Name, ctx::LowerContext, ::Missing)
+function lower(root::Name, ctx::LowerContext)
     @assert haskey(ctx.bindings, root) "TODO unbound variable error or something"
     return ctx.bindings[root]
 end
 
-function lower(ex::Access, ctx::LowerContext, ::Missing)
+function lower(ex::Access, ctx::LowerContext)
     @assert root.idxs ⊆ keys(ctx.bindings)
     tns = lower(root.tns, ctx)
     idxs = map(idx->lower(idx, ctx), root.idxs)
     :($tns[$idxs...])
 end
 
-function lower(stmt::Loop, ctx::LowerContext, ::Missing)
+function lower(stmt::Loop, ctx::LowerContext)
     if isempty(stmt.idxs)
         return lower(stmt.body, ctx)
     else
@@ -96,24 +96,17 @@ end
 combine_lower_style_rule(a::DimensionalizeStyle, b) = DimensionalizeStyle(b)
 combine_lower_style_rule(a::DimensionalizeStyle, b::DimensionalizeStyle) = DimensionalizeStyle(combine_lower_style(a.style, b.style))
 
-dimensionalize(stmt, ctx) = map(arg->dimensionalize(arg, ctx), arguments(stmt))
-function dimensionalize(stmt::Access, ctx)
-    if stmt.tns != Access && !(stmt.inds ⊆ keys(ctx.axes))
-        for ind in inds
-            do the dimension thing
-        push!(ctx.preamble, :(axes(stmt.tns))
-    else
-        dimensionalize(stmt.tns, ctx)
+bind_axes(stmt, ctx) = mapreduce(arg -> dimensionalize(arg, ctx),
+    (a, b) -> merge((c, d) -> bind_axis_merge(ctx, c, d), a, b), arguments(stmt))
+function bind_axis_merge(ctx, a, b)
+    push!(ctx.preamble, :($a == $b || @assert false))
+    a
+end
+function bind_axes(stmt::Access, ctx)
+    if isterminal(stmt.tns)
+        return Dict([idx => lower_axes(ctx, stmt.tns, i) for (i, idx) in enumerate(stmt.idxs) if !haskey(ctx.axes, idx)])
     end
 end
-
-function lower(stmt, ctx::LowerContext, style::DimensionalizeStyle)
-    (dims, checks) = dimensionalize(stmt, ctx)
-    push!(ctx.dims, dims)
-    push!(ctx.preamble, checks)
-    return lower(stmt, ctx, style.style)
-end
-
 
 struct Virtual{T}
     expr
