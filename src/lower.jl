@@ -1,3 +1,120 @@
+struct LowerContext
+    preamble::Vector{Any}
+    bindings::Dict{Name, Symbol}
+    epilogue::Vector{Any}
+end
+
+LowerContext() = LowerContext([], Dict(), [])
+
+bind(ctx::LowerContext, vars) = LowerContext([], merge(ctx.bindings, vars), [])
+function emit(ctx::LowerContext, ex)
+    block = Expr(:block)
+    append!(block.args, ctx.preamble)
+    push!(block.args, ex)
+    append!(block.args, ctx.epilogue)
+end
+function scope(f, ctx::LowerContext, vars...)
+    ctx′ = bind(ctx, vars)
+    return emit(ctx′, f(ctx′))
+end
+
+lower(root) = lower(root, LowerContext(root))
+lower(root, ctx) = lower(root, ctx, lower_style(root, ctx))
+lower_style(root, ctx) = lower_style(root, ctx, root)
+function lower_style(root, ctx, node)
+    if istree(node)
+        resolve_lower_style(root, ctx, node, mapreduce(node->lower_style(root, ctx, node), combine_lower_style, arguments(node)))
+    end
+end
+combine_lower_style(a, b) = _combine_lower_style(combine_lower_style_rule(a, b), combine_lower_style_rule(a, b))
+_combine_lower_style(a::Missing, b::Missing) = missing
+_combine_lower_style(a, b::Missing) = a
+_combine_lower_style(a::Missing, b) = b
+_combine_lower_style(a::T, b::T) = (a == b) ? a : @assert false "TODO lower_style_ambiguity_error"
+_combine_lower_style(a, b) = (a == b) ? a : @assert false "TODO lower_style_ambiguity_error"
+combine_lower_style_rule(a::Missing, b) = b
+
+#default lowering
+
+lower(::Pass, ctx::LowerContext, ::Missing) = :()
+
+function lower(root::Assign, ctx::LowerContext, ::Missing)
+    @assert root.lhs isa Access && root.lhs.idxs ⊆ keys(ctx.bindings)
+    if root.op == nothing
+        rhs = lower(root.rhs, ctx)
+    else
+        rhs = lower(call(root.op, root.lhs, root.rhs), ctx)
+    end
+    tns = lower(root.lhs.tns, ctx)
+    idxs = map(idx->lower(idx, ctx), root.lhs.idxs)
+    :($tns[$idxs...] = $rhs)
+end
+
+function lower(root::Call, ctx::LowerContext, ::Missing)
+    :($(lower(root.op, ctx))(map(arg->lower(arg, ctx), root.args)...))
+end
+
+function lower(root::Name, ctx::LowerContext, ::Missing)
+    @assert haskey(ctx.bindings, root) "TODO unbound variable error or something"
+    return ctx.bindings[root]
+end
+
+function lower(ex::Access, ctx::LowerContext, ::Missing)
+    @assert root.idxs ⊆ keys(ctx.bindings)
+    tns = lower(root.tns, ctx)
+    idxs = map(idx->lower(idx, ctx), root.idxs)
+    :($tns[$idxs...])
+end
+
+function lower(stmt::Loop, ctx::LowerContext, ::Missing)
+    if isempty(stmt.idxs)
+        return lower(stmt.body, ctx)
+    else
+        idx_sym = gensym(name(idx))
+        scope(ctx, idx => idx_sym) do ctx′
+            quote
+                for $idx_sym = 1:$(10#=dimension(idx) TODO=#)
+                    $(lower(lower_simplify(stmt, ctx′), ctx′))
+                end
+            end
+        end
+    end
+end
+
+lower_rewriters(stmt, ctx) = []
+
+function lower_simplify(stmt, ctx)
+    rewriters = ctx.rewriters
+    Postwalk(node->(append!(rewriters, lower_rewriters(node, ctx)); node))(stmt)
+    return Fixpoint(Postwalk(rewriters), ctx)
+end
+
+struct DimensionalizeStyle{Style}
+    style::Style
+end
+
+combine_lower_style_rule(a::DimensionalizeStyle, b) = DimensionalizeStyle(b)
+combine_lower_style_rule(a::DimensionalizeStyle, b::DimensionalizeStyle) = DimensionalizeStyle(combine_lower_style(a.style, b.style))
+
+dimensionalize(stmt, ctx) = map(arg->dimensionalize(arg, ctx), arguments(stmt))
+function dimensionalize(stmt::Access, ctx)
+    if stmt.tns != Access && !(stmt.inds ⊆ keys(ctx.axes))
+        for ind in inds
+            do the dimension thing
+        push!(ctx.preamble, :(axes(stmt.tns))
+    else
+        dimensionalize(stmt.tns, ctx)
+    end
+end
+
+function lower(stmt, ctx::LowerContext, style::DimensionalizeStyle)
+    (dims, checks) = dimensionalize(stmt, ctx)
+    push!(ctx.dims, dims)
+    push!(ctx.preamble, checks)
+    return lower(stmt, ctx, style.style)
+end
+
+
 struct Virtual{T}
     expr
 end
@@ -224,90 +341,3 @@ end
 
 =#
 
-#generic lowering
-
-struct LowerContext
-    preamble::Vector{Any}
-    bindings::Dict{Name, Any}
-    epilogue::Vector{Any}
-end
-
-LowerContext() = LowerContext([], Dict(), [])
-
-bind(ctx::LowerContext, vars) = LowerContext([], merge(ctx.bindings, vars), [])
-function emit(ctx::LowerContext, ex)
-    block = Expr(:block)
-    append!(block.args, ctx.preamble)
-    push!(block.args, ex)
-    append!(block.args, ctx.epilogue)
-end
-function openscope(f, ctx::LowerContext, vars...)
-    ctx′ = bind(ctx, vars)
-    return emit(ctx′, f(ctx′))
-end
-
-lower(stmt) = lower(stmt, LowerContext())
-
-#easy lowering
-
-lower(::Pass, ctx) = :()
-
-function lower(stmt::Assign, ctx)
-    @assert stmt.lhs isa Access && isempty(stmt.lhs.idxs)
-    lower_assign(stmt.lhs.tns, stmt.op, lower(stmt.rhs, ctx), ctx)
-end
-
-lower(ex::Call, ctx) = :($(lower(stmt.op, ctx))(map(arg->lower(arg, ctx), stmt.args)...))
-
-function lower(ex::Access, ctx)
-    @assert isempty(ex.idxs)
-    lower_access(ex.tns, ctx)
-end
-
-#Loop lowering
-
-function lower(stmt::Loop, ctx)
-    if isempty(stmt.idxs)
-        return lower(stmt.body, ctx)
-    elseif length(stmt.idxs) > 1
-        return lower(Loop([stmt.idxs[1]], Loop(stmt.idxs[2:end], body)), ctx)
-    end
-    lower_loop(stmt.body, stmt.idxs[1], ctx)
-end
-
-struct LocateStyle end
-
-lower_loop(body, idx, ctx) = lower_loop(body, idx, ctx, LoopStyle(idx, body))
-lower_loop(body, idx, ctx, ::Missing) = lower_loop(body, idx, ctx, LocateStyle())
-
-LoopStyle(::Missing, a) = a
-
-function lower_loop(stmt, idx, ctx, ::LocateStyle)
-    idx_sym = gensym(name(idx))
-    ctx = bind(ctx, idx, idx_sym)
-    return quote
-        for $idx_sym = 1:$(10#=dimension(idx) TODO=#)
-            $(lower(lower_loop_simplify(stmt, ctx), ctx))
-        end
-    end
-end
-
-lower_loop_rewriters(stmt, ctx) = []
-
-function lower_loop_simplify(stmt, ctx)
-    rewriters = ctx.rewriters
-    Postwalk(node->(append!(rewriters, lower_loop_rewriters(node, ctx)); node))(stmt)
-    return Fixpoint(Postwalk(rewriters), ctx)
-end
-
-LoopStyle(idx, stmt::Loop) = LoopStyle(idx, stmt.body)
-LoopStyle(idx, stmt::IndexNode) = istree(stmt) ? 
-    mapreduce(arg->LoopStyle(idx, arg), _loop_style, arguments(stmt)) : missing
-_loop_style(a, b) = LoopStyle(a, b) === missing ? LoopStyle(b, a) : LoopStyle(a, b)
-function LoopStyle(idx, stmt::Access)
-    if !isempty(stmt.idxs) && idx == stmt.idxs[1]
-        AccessStyle(stmt.tns)
-    else
-        missing
-    end
-end
