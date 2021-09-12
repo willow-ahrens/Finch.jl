@@ -1,12 +1,14 @@
 using Pigeon
-using Pigeon: DefaultStyle, lower!
+using Pigeon: DefaultStyle, lower!, getname
 
 using TermInterface
 using Base.Iterators: product
+using SymbolicUtils: Postwalk
 
 struct Virtual{T}
     ex
 end
+TermInterface.istree(::Type{<:Virtual}) = false
 
 struct JuliaContext
     preamble::Vector{Any}
@@ -35,13 +37,13 @@ function scope(f, ctx::JuliaContext)
     block = Expr(:block)
     ctx′ = JuliaContext([], ctx.bindings, [])
     body = f(ctx′)
-    append!(block.args, ctx.preamble)
+    append!(block.args, ctx′.preamble)
     if body isa Expr && body.head == :block
         append!(block.args, body.args)
     else
         push!(block.args, body)
     end
-    append!(block.args, ctx.epilogue)
+    append!(block.args, ctx′.epilogue)
     return block
 end
 
@@ -147,5 +149,142 @@ B = Virtual{AbstractVector{Any}}(:B)
 C = Cases([(:is_B_empty, Literal(0)), (true, i"B[i]")])
 
 display(scope(ctx -> lower!(i"∀ i A[i] += B[i]", ctx), JuliaContext()))
+println()
 
 display(scope(ctx -> lower!(i"∀ i A[i] += $C", ctx), JuliaContext()))
+println()
+
+struct Cases
+    cases
+end
+
+struct CaseStyle end
+
+#TODO handle children of access?
+Pigeon.make_style(root, ctx::JuliaContext, node::Cases) = CaseStyle()
+Pigeon.combine_style(a::DefaultStyle, b::CaseStyle) = CaseStyle()
+
+function Pigeon.lower!(stmt, ctx::JuliaContext, ::CaseStyle)
+    cases = collect_cases(stmt, ctx)
+    thunk = Expr(:block)
+    for (guard, body) in cases
+        push!(thunk.args, :(
+            if $(guard)
+                $(lower!(body, ctx))
+            end
+        ))
+    end
+    return thunk
+end
+
+collect_cases_reduce(x, y) = x === true ? y : (y === true : x : :($x && $y))
+function collect_cases(node, ctx)
+    if istree(node)
+        map(product(map(arg->collect_cases(arg, ctx), arguments(node))...)) do case
+            (guards, bodies) = zip(case...)
+            (reduce(collect_cases_reduce, guards), operation(node)(bodies...))
+        end
+    else
+        [(true, node),]
+    end
+end
+
+function collect_cases(node::Cases, ctx::JuliaContext)
+    node.cases
+end
+
+struct Pipeline
+    phases
+end
+
+struct Phase
+    key #precedence of the phase, could be derived
+    stop #integer representing the last index
+    body
+end
+
+phase_precedence(x) = []
+phase_precedence(x::Phase) = [x.key]
+phase_stop(x) = []
+phase_stop(x::Phase) = [x.stop]
+phase_body(x) = x
+phase_body(x::Phase) = x.body
+
+TermInterface.istree(::Phase) = false
+
+struct PipelineStyle end
+
+#TODO handle children of access?
+Pigeon.make_style(root::Loop, ctx::JuliaContext, node::Pipeline) = PipelineStyle()
+#TODO note that we should only insert pipelines into loops with valid first indices
+Pigeon.combine_style(a::DefaultStyle, b::PipelineStyle) = PipelineStyle()
+Pigeon.combine_style(a::PipelineStyle, b::PipelineStyle) = PipelineStyle()
+
+function Base.mapreduce(f, op, node::Union{Pigeon.IndexNode, Phase, Virtual})
+    if istree(node)
+        return mapreduce(arg->mapreduce(f, op, arg), op, arguments(node))
+    else
+        return f(node)
+    end
+end
+
+function Pigeon.lower!(root::Loop, ctx::JuliaContext, ::PipelineStyle)
+    states = Pigeon.PrewalkStep(node->expand_pipeline(node, ctx))(root)
+    keys = map(state->mapreduce(phase_precedence, vcat, state), states)
+    maxkey = maximum(map(maximum, keys))
+    σ = sortperm(keys, by=key->map(l->count(k->k>l, key), 1:maxkey))
+    i = getname(root.idxs[1])
+    thunk = Expr(:block)
+    for state in states[σ]
+        body = Postwalk(phase_body)(state)
+        cond = mapreduce(phase_stop, vcat, state)
+        push!(thunk.args, scope(ctx) do ctx′
+            i′ = gensym(Symbol("_", i))
+            push!(ctx′.preamble, :($i′ = min($(cond...))))
+            body = truncate_block(root, body, i′, ctx′)
+            #TODO do dimension truncation as well
+            return :(
+                if $i < $i′
+                    $(lower!(body, ctx′))
+                end
+            )
+        end)
+    end
+    return thunk
+end
+
+struct Top end
+
+expand_pipeline(node, ctx) = [node]
+expand_pipeline(node::Pipeline, ctx) = node.phases
+
+function collect_pipelines(node::Pipeline, ctx::JuliaContext)
+    node.phases
+end
+
+function truncate_block(root, node, i, ctx)
+    if istree(node)
+        operation(node)(map(arg->truncate_block(root, arg, i, ctx), arguments(node))...)
+    else
+        node
+    end
+end
+
+
+A = Virtual{AbstractVector{Any}}(:A)
+B = Virtual{AbstractVector{Any}}(:B)
+C = Virtual{AbstractVector{Any}}(:C)
+
+B′ = Pipeline([
+    Phase(1, :B_start, Literal(0)),
+    Phase(2, :B_stop, i"B[i]"),
+    Phase(3, :top, Literal(0)),
+])
+
+C′ = Pipeline([
+    Phase(1, :C_start, Literal(0)),
+    Phase(2, :C_stop, i"C[i]"),
+    Phase(3, :top, Literal(0)),
+])
+
+display(scope(ctx -> lower!(i"∀ i A[i] += $B′ * $C′", ctx), JuliaContext()))
