@@ -281,8 +281,13 @@ B′ = Pipeline([
     Phase(3, :top, Literal(0)),
 ])
 
+x = Cases([
+    (:(zero), Literal(0)),
+    (:(one), Literal(1))
+])
+
 C′ = Pipeline([
-    Phase(1, :C_start, Literal(0)),
+    Phase(1, :C_start, x),
     Phase(2, :C_stop, i"C[i]"),
     Phase(3, :top, Literal(0)),
 ])
