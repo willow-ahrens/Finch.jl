@@ -4,6 +4,7 @@ using Pigeon: DefaultStyle, lower!, getname
 using TermInterface
 using Base.Iterators: product
 using SymbolicUtils: Postwalk
+using MacroTools
 
 struct Virtual{T}
     ex
@@ -33,18 +34,15 @@ function bind(f, ctx::JuliaContext, (var, val′), tail...)
         return res
     end
 end
+
 function scope(f, ctx::JuliaContext)
-    block = Expr(:block)
+    thunk = Expr(:block)
     ctx′ = JuliaContext([], ctx.bindings, [])
     body = f(ctx′)
-    append!(block.args, ctx′.preamble)
-    if body isa Expr && body.head == :block
-        append!(block.args, body.args)
-    else
-        push!(block.args, body)
-    end
-    append!(block.args, ctx′.epilogue)
-    return block
+    append!(thunk.args, ctx′.preamble)
+    push!(thunk.args, body)
+    append!(thunk.args, ctx′.epilogue)
+    return thunk
 end
 
 #default lowering
@@ -292,4 +290,4 @@ C′ = Pipeline([
     Phase(3, :top, Literal(0)),
 ])
 
-display(scope(ctx -> lower!(i"∀ i A[i] += $B′ * $C′", ctx), JuliaContext()))
+display(MacroTools.prettify(scope(ctx -> lower!(i"∀ i A[i] += $B′ * $C′", ctx), JuliaContext()), alias=false))
