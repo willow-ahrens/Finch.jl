@@ -366,3 +366,42 @@ A′ = Stream(:(length(A)), Phase(1, :j, i"A[i]"))
 B′ = Stream(:(length(B)), Phase(1, :k, i"B[i]"))
 
 display(MacroTools.prettify(scope(ctx -> lower!(i"∀ i $A′ += $B′", ctx), JuliaContext()), alias=false))
+
+struct Run
+    body
+    stop
+end
+
+function truncate_block(root, node::Run, i, ctx)
+    return Run(node.body, i)
+end
+
+struct Spike
+    body
+    tail
+    stop
+end
+
+function truncate_block(root, node::Spike, i, ctx)
+    return Cases([
+        (:($i = $(node.stop)), node),
+        (true, truncate_block(root, node.body, i, ctx)),
+    ])
+end
+
+struct SpikeStyle end
+
+#TODO handle children of access?
+Pigeon.make_style(root::Loop, ctx::JuliaContext, node::Spike) = SpikeStyle()
+#TODO note that we should only insert pipelines into loops with valid first indices
+Pigeon.combine_style(a::DefaultStyle, b::SpikeStyle) = SpikeStyle()
+Pigeon.combine_style(a::SpikeStyle, b::SpikeStyle) = SpikeStyle()
+Pigeon.combine_style(a::SpikeStyle, b::PipelineStyle) = PipelineStyle()
+Pigeon.combine_style(a::StreamStyle, b::SpikeStyle) = StreamStyle()
+
+function Pigeon.lower!(root::Loop, ctx::JuliaContext, ::SpikeStyle)
+    return Expr(:block,
+        lower!(Pigeon.Prewalk(node->spike_body(node, ctx))(root), ctx),
+        lower!(Pigeon.Prewalk(node->spike_tail(node, ctx))(root), ctx)
+    )
+end
