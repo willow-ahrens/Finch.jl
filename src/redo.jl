@@ -141,17 +141,6 @@ function collect_cases(node::Cases, ctx::JuliaContext)
     node.cases
 end
 
-A = Virtual{AbstractVector{Any}}(:A)
-B = Virtual{AbstractVector{Any}}(:B)
-
-C = Cases([(:is_B_empty, Literal(0)), (true, i"B[i]")])
-
-display(scope(ctx -> lower!(i"∀ i A[i] += B[i]", ctx), JuliaContext()))
-println()
-
-display(scope(ctx -> lower!(i"∀ i A[i] += $C", ctx), JuliaContext()))
-println()
-
 struct Cases
     cases
 end
@@ -218,14 +207,6 @@ Pigeon.make_style(root::Loop, ctx::JuliaContext, node::Pipeline) = PipelineStyle
 Pigeon.combine_style(a::DefaultStyle, b::PipelineStyle) = PipelineStyle()
 Pigeon.combine_style(a::PipelineStyle, b::PipelineStyle) = PipelineStyle()
 
-function Base.mapreduce(f, op, node::Union{Pigeon.IndexNode, Phase, Virtual})
-    if istree(node)
-        return mapreduce(arg->mapreduce(f, op, arg), op, arguments(node))
-    else
-        return f(node)
-    end
-end
-
 function Pigeon.lower!(root::Loop, ctx::JuliaContext, ::PipelineStyle)
     states = Pigeon.PrewalkStep(node->expand_pipeline(node, ctx))(root)
     keys = map(state->mapreduce(phase_precedence, vcat, state), states)
@@ -268,6 +249,80 @@ function truncate_block(root, node, i, ctx)
     end
 end
 
+struct Stream
+    stop #integer representing the last index
+    body
+end
+
+
+function Base.mapreduce(f, op, node::Union{Pigeon.IndexNode, Phase, Virtual, Stream})
+    if istree(node)
+        return mapreduce(arg->mapreduce(f, op, arg), op, arguments(node))
+    else
+        return f(node)
+    end
+end
+
+
+stream_stop(x, ctx) = []
+stream_stop(x::Stream, ctx) = [x.stop]
+stream_body(x, ctx) = x
+stream_body(x::Stream, ctx) = x.body
+
+struct StreamStyle end
+
+#TODO handle children of access?
+Pigeon.make_style(root::Loop, ctx::JuliaContext, node::Stream) = StreamStyle()
+#TODO note that we should only insert pipelines into loops with valid first indices
+Pigeon.combine_style(a::DefaultStyle, b::StreamStyle) = StreamStyle()
+Pigeon.combine_style(a::StreamStyle, b::StreamStyle) = StreamStyle()
+Pigeon.combine_style(a::StreamStyle, b::PipelineStyle) = PipelineStyle()
+
+function Base.mapreduce(f, op, node::Union{Pigeon.IndexNode, Phase, Virtual})
+    if istree(node)
+        return mapreduce(arg->mapreduce(f, op, arg), op, arguments(node))
+    else
+        return f(node)
+    end
+end
+
+function Pigeon.lower!(root::Loop, ctx::JuliaContext, ::StreamStyle)
+    body = Pigeon.Prewalk(node->stream_body(node, ctx))(root)
+    stop = mapreduce(node->stream_stop(node, ctx), vcat, root)
+    i = getname(root.idxs[1])
+    thunk = Expr(:block)
+    i′ = gensym(Symbol("_", i))
+    i′′ = gensym(Symbol("_", i))
+    return quote
+        $i′ = min($(stop...))
+        while $i′′ < $i′
+            $(scope(ctx) do ctx′
+                body = Postwalk(phase_body)(body)
+                cond = mapreduce(phase_stop, vcat, body)
+                push!(ctx′.preamble, :($i′′ = min($(cond...))))
+                lower!(truncate_block(root, body, i′′, ctx′), ctx′)
+            end)
+        end
+    end
+end
+
+struct Top end
+
+expand_pipeline(node, ctx) = [node]
+expand_pipeline(node::Pipeline, ctx) = node.phases
+
+function collect_pipelines(node::Pipeline, ctx::JuliaContext)
+    node.phases
+end
+
+function truncate_block(root, node, i, ctx)
+    if istree(node)
+        operation(node)(map(arg->truncate_block(root, arg, i, ctx), arguments(node))...)
+    else
+        node
+    end
+end
+
 
 A = Virtual{AbstractVector{Any}}(:A)
 B = Virtual{AbstractVector{Any}}(:B)
@@ -291,3 +346,23 @@ C′ = Pipeline([
 ])
 
 display(MacroTools.prettify(scope(ctx -> lower!(i"∀ i A[i] += $B′ * $C′", ctx), JuliaContext()), alias=false))
+
+A = Virtual{AbstractVector{Any}}(:A)
+B = Virtual{AbstractVector{Any}}(:B)
+
+C = Cases([(:is_B_empty, Literal(0)), (true, i"B[i]")])
+
+display(scope(ctx -> lower!(i"∀ i A[i] += B[i]", ctx), JuliaContext()))
+println()
+
+display(scope(ctx -> lower!(i"∀ i A[i] += $C", ctx), JuliaContext()))
+println()
+
+
+A = Virtual{AbstractVector{Any}}(:A)
+B = Virtual{AbstractVector{Any}}(:B)
+
+A′ = Stream(:(length(A)), Phase(1, :j, i"A[i]"))
+B′ = Stream(:(length(B)), Phase(1, :k, i"B[i]"))
+
+display(MacroTools.prettify(scope(ctx -> lower!(i"∀ i $A′ += $B′", ctx), JuliaContext()), alias=false))
