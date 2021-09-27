@@ -268,7 +268,6 @@ function collectwalk(f, op, node)
     end
 end
 
-
 stream_stop(x, ctx) = []
 stream_stop(x::Stream, ctx) = [x.stop]
 stream_body(x, ctx) = x
@@ -320,7 +319,6 @@ function truncate_block(root, node, i, ctx)
     end
 end
 
-
 A = Virtual{AbstractVector{Any}}(:A)
 B = Virtual{AbstractVector{Any}}(:B)
 C = Virtual{AbstractVector{Any}}(:C)
@@ -343,16 +341,17 @@ C′ = Pipeline([
 ])
 
 display(MacroTools.prettify(scope(ctx -> lower!(@i(@loop i A[i] += $B′ * $C′), ctx), JuliaContext()), alias=false))
+println()
 
 A = Virtual{AbstractVector{Any}}(:A)
 B = Virtual{AbstractVector{Any}}(:B)
 
 C = Cases([(:is_B_empty, Literal(0)), (true, @i B[i])])
 
-display(scope(ctx -> lower!(@i(@loop i A[i] += B[i]), ctx), JuliaContext()))
+display(MacroTools.prettify(scope(ctx -> lower!(@i(@loop i A[i] += B[i]), ctx), JuliaContext()), alias=false))
 println()
 
-display(scope(ctx -> lower!(@i(@loop i A[i] += $C), ctx), JuliaContext()))
+display(MacroTools.prettify(scope(ctx -> lower!(@i(@loop i A[i] += $C), ctx), JuliaContext()), alias=false))
 println()
 
 
@@ -363,6 +362,7 @@ A′ = Stream(:(length(A)), Phase(1, :j, @i(A[i])))
 B′ = Stream(:(length(B)), Phase(1, :k, @i(B[i])))
 
 display(MacroTools.prettify(scope(ctx -> lower!(@i(@loop i $A′ += $B′), ctx), JuliaContext()), alias=false))
+println()
 
 struct Run
     body
@@ -396,9 +396,25 @@ Pigeon.combine_style(a::SpikeStyle, b::SpikeStyle) = SpikeStyle()
 Pigeon.combine_style(a::SpikeStyle, b::PipelineStyle) = PipelineStyle()
 Pigeon.combine_style(a::StreamStyle, b::SpikeStyle) = StreamStyle()
 
+struct RunStyle end
+
 function Pigeon.lower!(root::Loop, ctx::JuliaContext, ::SpikeStyle)
+    #1. simplify
+    #2. "dispatch" on spike = ..., no matter where it occurs in expr.
+
     return Expr(:block,
         lower!(Pigeon.Prewalk(node->spike_body(node, ctx))(root), ctx),
         lower!(Pigeon.Prewalk(node->spike_tail(node, ctx))(root), ctx)
     )
 end
+
+function Pigeon.lower!(root::Loop, ctx::JuliaContext, ::RunStyle)
+    #1. simplify
+    #2. "dispatch" on run = ..., no matter where it occurs in expr.
+
+    return Expr(:block,
+        lower!(Pigeon.Prewalk(node->spike_tail(node, ctx))(root), ctx)
+    )
+end
+
+
