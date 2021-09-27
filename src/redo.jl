@@ -131,44 +131,6 @@ function Pigeon.lower!(stmt, ctx::JuliaContext, ::CaseStyle)
     return thunk
 end
 
-function collect_cases(node, ctx)
-    if istree(node)
-        map(product(map(arg->collect_cases(arg, ctx), arguments(node))...)) do case
-            (guards, bodies) = zip(case...)
-            (reduce((a, b) -> :($a && $b), guards), operation(node)(bodies...))
-        end
-    else
-        [(true, node),]
-    end
-end
-
-function collect_cases(node::Cases, ctx::JuliaContext)
-    node.cases
-end
-
-struct Cases
-    cases
-end
-
-struct CaseStyle end
-
-#TODO handle children of access?
-Pigeon.make_style(root, ctx::JuliaContext, node::Cases) = CaseStyle()
-Pigeon.combine_style(a::DefaultStyle, b::CaseStyle) = CaseStyle()
-
-function Pigeon.lower!(stmt, ctx::JuliaContext, ::CaseStyle)
-    cases = collect_cases(stmt, ctx)
-    thunk = Expr(:block)
-    for (guard, body) in cases
-        push!(thunk.args, :(
-            if $(guard)
-                $(lower!(body, ctx))
-            end
-        ))
-    end
-    return thunk
-end
-
 collect_cases_reduce(x, y) = x === true ? y : (y === true : x : :($x && $y))
 function collect_cases(node, ctx)
     if istree(node)
@@ -189,18 +151,21 @@ struct Pipeline
     phases
 end
 
-struct Phase
-    key #precedence of the phase, could be derived
+mutable struct Phase
+    key
     stop #integer representing the last index
     body
 end
 
+Phase(; key=nothing, stop=nothing, body=nothing) = Phase(key, stop, body)
+copy(x::Phase) = Phase(x.key, x.stop, x.body)
+
 phase_precedence(x) = []
-phase_precedence(x::Phase) = [x.key]
+phase_precedence(x::Phase, ctx) = [x.key(ctx)]
 phase_stop(x) = []
-phase_stop(x::Phase) = [x.stop]
+phase_stop(x::Phase, ctx) = [x.stop(ctx)]
 phase_body(x) = x
-phase_body(x::Phase) = x.body
+phase_body(x::Phase, ctx) = x.body(ctx)
 
 TermInterface.istree(::Phase) = false
 
@@ -240,7 +205,7 @@ end
 struct Top end
 
 expand_pipeline(node, ctx) = [node]
-expand_pipeline(node::Pipeline, ctx) = node.phases
+expand_pipeline(node::Pipeline, ctx) = map((n, a) -> (b = copy(phase); b.key = n; b), node.phases)
 
 function collect_pipelines(node::Pipeline, ctx::JuliaContext)
     node.phases
@@ -318,51 +283,6 @@ function truncate_block(root, node, i, ctx)
         node
     end
 end
-
-A = Virtual{AbstractVector{Any}}(:A)
-B = Virtual{AbstractVector{Any}}(:B)
-C = Virtual{AbstractVector{Any}}(:C)
-
-B′ = Pipeline([
-    Phase(1, :B_start, Literal(0)),
-    Phase(2, :B_stop, @i B[i]),
-    Phase(3, :top, Literal(0)),
-])
-
-x = Cases([
-    (:(zero), Literal(0)),
-    (:(one), Literal(1))
-])
-
-C′ = Pipeline([
-    Phase(1, :C_start, x),
-    Phase(2, :C_stop, @i C[i]),
-    Phase(3, :top, Literal(0)),
-])
-
-display(MacroTools.prettify(scope(ctx -> lower!(@i(@loop i A[i] += $B′ * $C′), ctx), JuliaContext()), alias=false))
-println()
-
-A = Virtual{AbstractVector{Any}}(:A)
-B = Virtual{AbstractVector{Any}}(:B)
-
-C = Cases([(:is_B_empty, Literal(0)), (true, @i B[i])])
-
-display(MacroTools.prettify(scope(ctx -> lower!(@i(@loop i A[i] += B[i]), ctx), JuliaContext()), alias=false))
-println()
-
-display(MacroTools.prettify(scope(ctx -> lower!(@i(@loop i A[i] += $C), ctx), JuliaContext()), alias=false))
-println()
-
-
-A = Virtual{AbstractVector{Any}}(:A)
-B = Virtual{AbstractVector{Any}}(:B)
-
-A′ = Stream(:(length(A)), Phase(1, :j, @i(A[i])))
-B′ = Stream(:(length(B)), Phase(1, :k, @i(B[i])))
-
-display(MacroTools.prettify(scope(ctx -> lower!(@i(@loop i $A′ += $B′), ctx), JuliaContext()), alias=false))
-println()
 
 struct Run
     body
