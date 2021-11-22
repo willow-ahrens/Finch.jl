@@ -32,6 +32,8 @@ A = Pipeline([
     ),
 ])
 
+println(MacroTools.prettify(Pigeon.visit!(@i A[i] = A[i]), alias=false))
+
 #=
 A = Virtual{AbstractVector{Any}}(:A)
 B = Virtual{AbstractVector{Any}}(:B)
