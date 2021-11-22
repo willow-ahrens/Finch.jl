@@ -1,26 +1,33 @@
 using Pigeon
-using Pigeon: DefaultStyle, lower!, getname
+using Pigeon: DefaultStyle, visit!, getname
 
 using TermInterface
 using Base.Iterators: product
 using SymbolicUtils: Postwalk
 using MacroTools
+using Parameters
 
 struct Virtual{T}
     ex
 end
 TermInterface.istree(::Type{<:Virtual}) = false
 
-struct JuliaContext
-    preamble::Vector{Any}
-    bindings::Dict{Name, Symbol}
-    epilogue::Vector{Any}
+@with_kw struct Extent{T}
+    start
+    stop
 end
 
-JuliaContext() = JuliaContext([], Dict(), [])
+struct Top end
+struct Bottom end
 
-bind(f, ctx::JuliaContext) = f()
-function bind(f, ctx::JuliaContext, (var, val′), tail...)
+@with_kw struct LowerJuliaContext
+    preamble::Vector{Any} = []
+    bindings::Dict{Name, Symbol} = Dict()
+    epilogue::Vector{Any} = []
+end
+
+bind(f, ctx::LowerJuliaContext) = f()
+function bind(f, ctx::LowerJuliaContext, (var, val′), tail...)
     if haskey(ctx.bindings, var)
         val = ctx.bindings[var]
         ctx.bindings[var] = val′
@@ -35,9 +42,9 @@ function bind(f, ctx::JuliaContext, (var, val′), tail...)
     end
 end
 
-function scope(f, ctx::JuliaContext)
+function scope(f, ctx::LowerJuliaContext)
     thunk = Expr(:block)
-    ctx′ = JuliaContext([], ctx.bindings, [])
+    ctx′ = LowerJuliaContext([], ctx.bindings, [])
     body = f(ctx′)
     append!(thunk.args, ctx′.preamble)
     push!(thunk.args, body)
@@ -47,52 +54,52 @@ end
 
 #default lowering
 
-Pigeon.lower!(::Pass, ctx::JuliaContext, ::DefaultStyle) = :()
+Pigeon.visit!(::Pass, ctx::LowerJuliaContext, ::DefaultStyle) = :()
 
-function Pigeon.lower!(root::Assign, ctx::JuliaContext, ::DefaultStyle)
+function Pigeon.visit!(root::Assign, ctx::LowerJuliaContext, ::DefaultStyle)
     @assert root.lhs isa Access && root.lhs.idxs ⊆ keys(ctx.bindings)
     if root.op == nothing
-        rhs = lower!(root.rhs, ctx)
+        rhs = visit!(root.rhs, ctx)
     else
-        rhs = lower!(call(root.op, root.lhs, root.rhs), ctx)
+        rhs = visit!(call(root.op, root.lhs, root.rhs), ctx)
     end
-    tns = lower!(root.lhs.tns, ctx)
-    idxs = map(idx->lower!(idx, ctx), root.lhs.idxs)
+    tns = visit!(root.lhs.tns, ctx)
+    idxs = map(idx->visit!(idx, ctx), root.lhs.idxs)
     :($tns[$(idxs...)] = $rhs)
 end
 
-function Pigeon.lower!(root::Call, ctx::JuliaContext, ::DefaultStyle)
-    :($(lower!(root.op, ctx))($(map(arg->lower!(arg, ctx), root.args)...)))
+function Pigeon.visit!(root::Call, ctx::LowerJuliaContext, ::DefaultStyle)
+    :($(visit!(root.op, ctx))($(map(arg->visit!(arg, ctx), root.args)...)))
 end
 
-function Pigeon.lower!(root::Name, ctx::JuliaContext, ::DefaultStyle)
+function Pigeon.visit!(root::Name, ctx::LowerJuliaContext, ::DefaultStyle)
     @assert haskey(ctx.bindings, root) "TODO unbound variable error or something"
     return ctx.bindings[root]
 end
 
-function Pigeon.lower!(root::Literal, ctx::JuliaContext, ::DefaultStyle)
+function Pigeon.visit!(root::Literal, ctx::LowerJuliaContext, ::DefaultStyle)
     return root.val
 end
 
-function Pigeon.lower!(root, ctx::JuliaContext, ::DefaultStyle)
+function Pigeon.visit!(root, ctx::LowerJuliaContext, ::DefaultStyle)
     if Pigeon.isliteral(root) return Pigeon.value(root) end
     error()
 end
 
-function Pigeon.lower!(root::Virtual, ctx::JuliaContext, ::DefaultStyle)
+function Pigeon.visit!(root::Virtual, ctx::LowerJuliaContext, ::DefaultStyle)
     return root.ex
 end
 
-function Pigeon.lower!(root::Access, ctx::JuliaContext, ::DefaultStyle)
+function Pigeon.visit!(root::Access, ctx::LowerJuliaContext, ::DefaultStyle)
     @assert root.idxs ⊆ keys(ctx.bindings)
-    tns = lower!(root.tns, ctx)
-    idxs = map(idx->lower!(idx, ctx), root.idxs)
+    tns = visit!(root.tns, ctx)
+    idxs = map(idx->visit!(idx, ctx), root.idxs)
     :($tns[$(idxs...)])
 end
 
-function Pigeon.lower!(stmt::Loop, ctx::JuliaContext, ::DefaultStyle)
+function Pigeon.visit!(stmt::Loop, ctx::LowerJuliaContext, ::DefaultStyle)
     if isempty(stmt.idxs)
-        return lower!(stmt.body, ctx)
+        return visit!(stmt.body, ctx)
     else
         idx_sym = gensym(Pigeon.getname(stmt.idxs[1]))
         stmt′ = Loop(stmt.idxs[2:end], stmt.body)
@@ -100,7 +107,7 @@ function Pigeon.lower!(stmt::Loop, ctx::JuliaContext, ::DefaultStyle)
             scope(ctx, ) do ctx′
                 quote
                     for $idx_sym = 1:$(10#=dimension(idx) TODO=#)
-                        $(lower!(stmt′, ctx′))
+                        $(visit!(stmt′, ctx′))
                     end
                 end
             end
@@ -108,23 +115,23 @@ function Pigeon.lower!(stmt::Loop, ctx::JuliaContext, ::DefaultStyle)
     end
 end
 
-struct Cases
+@with_kw struct Cases
     cases
 end
 
 struct CaseStyle end
 
 #TODO handle children of access?
-Pigeon.make_style(root, ctx::JuliaContext, node::Cases) = CaseStyle()
+Pigeon.make_style(root, ctx::LowerJuliaContext, node::Cases) = CaseStyle()
 Pigeon.combine_style(a::DefaultStyle, b::CaseStyle) = CaseStyle()
 
-function Pigeon.lower!(stmt, ctx::JuliaContext, ::CaseStyle)
+function Pigeon.visit!(stmt, ctx::LowerJuliaContext, ::CaseStyle)
     cases = collect_cases(stmt, ctx)
     thunk = Expr(:block)
     for (guard, body) in cases
         push!(thunk.args, :(
             if $(guard)
-                $(lower!(body, ctx))
+                $(visit!(body, ctx))
             end
         ))
     end
@@ -143,11 +150,11 @@ function collect_cases(node, ctx)
     end
 end
 
-function collect_cases(node::Cases, ctx::JuliaContext)
+function collect_cases(node::Cases, ctx::LowerJuliaContext)
     node.cases
 end
 
-struct Pipeline
+@with_kw struct Pipeline
     phases
 end
 
@@ -172,12 +179,12 @@ TermInterface.istree(::Phase) = false
 struct PipelineStyle end
 
 #TODO handle children of access?
-Pigeon.make_style(root::Loop, ctx::JuliaContext, node::Pipeline) = PipelineStyle()
+Pigeon.make_style(root::Loop, ctx::LowerJuliaContext, node::Pipeline) = PipelineStyle()
 #TODO note that we should only insert pipelines into loops with valid first indices
 Pigeon.combine_style(a::DefaultStyle, b::PipelineStyle) = PipelineStyle()
 Pigeon.combine_style(a::PipelineStyle, b::PipelineStyle) = PipelineStyle()
 
-function Pigeon.lower!(root::Loop, ctx::JuliaContext, ::PipelineStyle)
+function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::PipelineStyle)
     states = Pigeon.PrewalkStep(node->expand_pipeline(node, ctx))(root)
     keys = map(state->collectwalk(phase_precedence, vcat, state), states)
     maxkey = maximum(map(maximum, keys))
@@ -194,7 +201,7 @@ function Pigeon.lower!(root::Loop, ctx::JuliaContext, ::PipelineStyle)
             #TODO do dimension truncation as well
             return :(
                 if $i < $i′
-                    $(lower!(body, ctx′))
+                    $(visit!(body, ctx′))
                 end
             )
         end)
@@ -207,7 +214,7 @@ struct Top end
 expand_pipeline(node, ctx) = [node]
 expand_pipeline(node::Pipeline, ctx) = map((n, a) -> (b = copy(phase); b.key = n; b), node.phases)
 
-function collect_pipelines(node::Pipeline, ctx::JuliaContext)
+function collect_pipelines(node::Pipeline, ctx::LowerJuliaContext)
     node.phases
 end
 
@@ -219,9 +226,9 @@ function truncate_block(root, node, i, ctx)
     end
 end
 
-struct Stream
-    stop #integer representing the last index
+@with_kw struct Stream
     body
+    ext
 end
 
 
@@ -241,13 +248,13 @@ stream_body(x::Stream, ctx) = x.body
 struct StreamStyle end
 
 #TODO handle children of access?
-Pigeon.make_style(root::Loop, ctx::JuliaContext, node::Stream) = StreamStyle()
+Pigeon.make_style(root::Loop, ctx::LowerJuliaContext, node::Stream) = StreamStyle()
 #TODO note that we should only insert pipelines into loops with valid first indices
 Pigeon.combine_style(a::DefaultStyle, b::StreamStyle) = StreamStyle()
 Pigeon.combine_style(a::StreamStyle, b::StreamStyle) = StreamStyle()
 Pigeon.combine_style(a::StreamStyle, b::PipelineStyle) = PipelineStyle()
 
-function Pigeon.lower!(root::Loop, ctx::JuliaContext, ::StreamStyle)
+function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::StreamStyle)
     body = Pigeon.Prewalk(node->stream_body(node, ctx))(root)
     stop = collectwalk(node->stream_stop(node, ctx), vcat, root)
     i = getname(root.idxs[1])
@@ -261,18 +268,16 @@ function Pigeon.lower!(root::Loop, ctx::JuliaContext, ::StreamStyle)
                 body = Postwalk(phase_body)(body)
                 cond = collectwalk(phase_stop, vcat, body)
                 push!(ctx′.preamble, :($i′′ = min($(cond...))))
-                lower!(truncate_block(root, body, i′′, ctx′), ctx′)
+                visit!(truncate_block(root, body, i′′, ctx′), ctx′)
             end)
         end
     end
 end
 
-struct Top end
-
 expand_pipeline(node, ctx) = [node]
 expand_pipeline(node::Pipeline, ctx) = node.phases
 
-function collect_pipelines(node::Pipeline, ctx::JuliaContext)
+function collect_pipelines(node::Pipeline, ctx::LowerJuliaContext)
     node.phases
 end
 
@@ -284,19 +289,19 @@ function truncate_block(root, node, i, ctx)
     end
 end
 
-struct Run
+@with_kw struct Run
     body
-    stop
+    ext
 end
 
 function truncate_block(root, node::Run, i, ctx)
     return Run(node.body, i)
 end
 
-struct Spike
+@with_kw struct Spike
     body
     tail
-    stop
+    ext
 end
 
 function truncate_block(root, node::Spike, i, ctx)
@@ -309,7 +314,7 @@ end
 struct SpikeStyle end
 
 #TODO handle children of access?
-Pigeon.make_style(root::Loop, ctx::JuliaContext, node::Spike) = SpikeStyle()
+Pigeon.make_style(root::Loop, ctx::LowerJuliaContext, node::Spike) = SpikeStyle()
 #TODO note that we should only insert pipelines into loops with valid first indices
 Pigeon.combine_style(a::DefaultStyle, b::SpikeStyle) = SpikeStyle()
 Pigeon.combine_style(a::SpikeStyle, b::SpikeStyle) = SpikeStyle()
@@ -318,22 +323,22 @@ Pigeon.combine_style(a::StreamStyle, b::SpikeStyle) = StreamStyle()
 
 struct RunStyle end
 
-function Pigeon.lower!(root::Loop, ctx::JuliaContext, ::SpikeStyle)
+function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::SpikeStyle)
     #1. simplify
     #2. "dispatch" on spike = ..., no matter where it occurs in expr.
 
     return Expr(:block,
-        lower!(Pigeon.Prewalk(node->spike_body(node, ctx))(root), ctx),
-        lower!(Pigeon.Prewalk(node->spike_tail(node, ctx))(root), ctx)
+        visit!(Pigeon.Prewalk(node->spike_body(node, ctx))(root), ctx),
+        visit!(Pigeon.Prewalk(node->spike_tail(node, ctx))(root), ctx)
     )
 end
 
-function Pigeon.lower!(root::Loop, ctx::JuliaContext, ::RunStyle)
+function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::RunStyle)
     #1. simplify
     #2. "dispatch" on run = ..., no matter where it occurs in expr.
 
     return Expr(:block,
-        lower!(Pigeon.Prewalk(node->spike_tail(node, ctx))(root), ctx)
+        visit!(Pigeon.Prewalk(node->spike_tail(node, ctx))(root), ctx)
     )
 end
 
