@@ -1,22 +1,19 @@
 module Finch
 
 using Pigeon
+using Pigeon: Dimensions, dimensionalize!, DefaultStyle, getname
+using Pigeon: visit!
 using SymbolicUtils
 using SymbolicUtils: istree, arguments, operation, similarterm
 using SymbolicUtils: Postwalk, Prewalk
+using TermInterface
+using MacroTools
 
-export SparseLevel
-export SparseFiber
-export DenseLevel
-export DenseFiber
-export ScalarLevel
-export ScalarFiber
+export Virtual
+export lower_julia
 
-export lower
-
-include("utils.jl")
-include("levels.jl")
-include("virtuals.jl")
 include("lower.jl")
+include("virtuals.jl")
+
 
 end

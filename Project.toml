@@ -4,6 +4,7 @@ authors = ["Peter Ahrens"]
 version = "0.1.0"
 
 [deps]
+MacroTools = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
 Pigeon = "5feeeddc-254b-4aab-a0bc-ed990ddc1d92"
 SymbolicUtils = "d1185830-fcd6-423d-90d6-eec64667417b"
 TermInterface = "8ea1fca8-c5ef-4a55-8b96-4e9afe9c9a3c"
