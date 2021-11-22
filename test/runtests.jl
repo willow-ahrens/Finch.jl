@@ -1,6 +1,6 @@
-using Thrush
+using Finch
 using Test
 
-@testset "Thrush.jl" begin
+@testset "Finch.jl" begin
     # Write your tests here.
 end

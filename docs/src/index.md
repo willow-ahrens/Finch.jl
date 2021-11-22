@@ -1,14 +1,14 @@
 ```@meta
-CurrentModule = Thrush
+CurrentModule = Finch
 ```
 
-# Thrush
+# Finch
 
-Documentation for [Thrush](https://github.com/peterahrens/Thrush.jl).
+Documentation for [Finch](https://github.com/peterahrens/Finch.jl).
 
 ```@index
 ```
 
 ```@autodocs
-Modules = [Thrush]
+Modules = [Finch]
 ```

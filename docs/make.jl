@@ -1,16 +1,16 @@
-using Thrush
+using Finch
 using Documenter
 
-DocMeta.setdocmeta!(Thrush, :DocTestSetup, :(using Thrush); recursive=true)
+DocMeta.setdocmeta!(Finch, :DocTestSetup, :(using Finch); recursive=true)
 
 makedocs(;
-    modules=[Thrush],
+    modules=[Finch],
     authors="Peter Ahrens",
-    repo="https://github.com/peterahrens/Thrush.jl/blob/{commit}{path}#{line}",
-    sitename="Thrush.jl",
+    repo="https://github.com/peterahrens/Finch.jl/blob/{commit}{path}#{line}",
+    sitename="Finch.jl",
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
-        canonical="https://peterahrens.github.io/Thrush.jl",
+        canonical="https://peterahrens.github.io/Finch.jl",
         assets=String[],
     ),
     pages=[
@@ -19,5 +19,6 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/peterahrens/Thrush.jl",
+    repo="github.com/peterahrens/Finch.jl",
+    devbranch="main",
 )
