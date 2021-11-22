@@ -1,18 +1,17 @@
 using Pigeon
-using Pigeon: DefaultStyle, visit!, getname
+using Pigeon: DefaultStyle, visit!, getname, Dimensions
 
 using TermInterface
 using Base.Iterators: product
 using SymbolicUtils: Postwalk
 using MacroTools
-using Parameters
 
 struct Virtual{T}
     ex
 end
 TermInterface.istree(::Type{<:Virtual}) = false
 
-@with_kw struct Extent{T}
+Base.@kwdef struct Extent
     start
     stop
 end
@@ -20,10 +19,11 @@ end
 struct Top end
 struct Bottom end
 
-@with_kw struct LowerJuliaContext
+Base.@kwdef struct LowerJuliaContext
     preamble::Vector{Any} = []
     bindings::Dict{Name, Symbol} = Dict()
     epilogue::Vector{Any} = []
+    dims::Dimensions = Dimensions()
 end
 
 bind(f, ctx::LowerJuliaContext) = f()
@@ -44,7 +44,7 @@ end
 
 function scope(f, ctx::LowerJuliaContext)
     thunk = Expr(:block)
-    ctx′ = LowerJuliaContext([], ctx.bindings, [])
+    ctx′ = LowerJuliaContext(bindings = ctx.bindings, dims = ctx.dims)
     body = f(ctx′)
     append!(thunk.args, ctx′.preamble)
     push!(thunk.args, body)
@@ -53,6 +53,11 @@ function scope(f, ctx::LowerJuliaContext)
 end
 
 #default lowering
+
+function _visit!(prgm, ctx::LowerJuliaContext)
+    Postwalk(node -> (dimensionalize!(node, ctx, ctx.dims); node))(prgm) #TODO abstract this into a function
+    Pigeon.visit!(prgm, ctx)
+end
 
 Pigeon.visit!(::Pass, ctx::LowerJuliaContext, ::DefaultStyle) = :()
 
@@ -115,7 +120,7 @@ function Pigeon.visit!(stmt::Loop, ctx::LowerJuliaContext, ::DefaultStyle)
     end
 end
 
-@with_kw struct Cases
+Base.@kwdef struct Cases
     cases
 end
 
@@ -154,25 +159,20 @@ function collect_cases(node::Cases, ctx::LowerJuliaContext)
     node.cases
 end
 
-@with_kw struct Pipeline
+Base.@kwdef struct Pipeline
     phases
 end
-
-mutable struct Phase
-    key
-    stop #integer representing the last index
+Base.@kwdef mutable struct Phase
     body
+    key = nothing
 end
 
-Phase(; key=nothing, stop=nothing, body=nothing) = Phase(key, stop, body)
-copy(x::Phase) = Phase(x.key, x.stop, x.body)
-
 phase_precedence(x) = []
-phase_precedence(x::Phase, ctx) = [x.key(ctx)]
+phase_precedence(x::Phase) = [x.key]
 phase_stop(x) = []
-phase_stop(x::Phase, ctx) = [x.stop(ctx)]
+phase_stop(x::Phase) = [x.stop]
 phase_body(x) = x
-phase_body(x::Phase, ctx) = x.body(ctx)
+phase_body(x::Phase) = x.body
 
 TermInterface.istree(::Phase) = false
 
@@ -185,7 +185,7 @@ Pigeon.combine_style(a::DefaultStyle, b::PipelineStyle) = PipelineStyle()
 Pigeon.combine_style(a::PipelineStyle, b::PipelineStyle) = PipelineStyle()
 
 function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::PipelineStyle)
-    states = Pigeon.PrewalkStep(node->expand_pipeline(node, ctx))(root)
+    states = Pigeon.PrewalkSaturate(node->expand_pipeline(node, ctx))(root)
     keys = map(state->collectwalk(phase_precedence, vcat, state), states)
     maxkey = maximum(map(maximum, keys))
     σ = sortperm(keys, by=key->map(l->count(k->k>l, key), 1:maxkey))
@@ -212,11 +212,7 @@ end
 struct Top end
 
 expand_pipeline(node, ctx) = [node]
-expand_pipeline(node::Pipeline, ctx) = map((n, a) -> (b = copy(phase); b.key = n; b), node.phases)
-
-function collect_pipelines(node::Pipeline, ctx::LowerJuliaContext)
-    node.phases
-end
+expand_pipeline(node::Pipeline, ctx) = map(((i, phase),) -> (phase′ = deepcopy(phase); phase′.key = i; phase′), enumerate(node.phases))
 
 function truncate_block(root, node, i, ctx)
     if istree(node)
@@ -226,7 +222,7 @@ function truncate_block(root, node, i, ctx)
     end
 end
 
-@with_kw struct Stream
+Base.@kwdef struct Stream
     body
     ext
 end
@@ -274,13 +270,6 @@ function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::StreamStyle)
     end
 end
 
-expand_pipeline(node, ctx) = [node]
-expand_pipeline(node::Pipeline, ctx) = node.phases
-
-function collect_pipelines(node::Pipeline, ctx::LowerJuliaContext)
-    node.phases
-end
-
 function truncate_block(root, node, i, ctx)
     if istree(node)
         operation(node)(map(arg->truncate_block(root, arg, i, ctx), arguments(node))...)
@@ -289,7 +278,7 @@ function truncate_block(root, node, i, ctx)
     end
 end
 
-@with_kw struct Run
+Base.@kwdef struct Run
     body
     ext
 end
@@ -298,10 +287,10 @@ function truncate_block(root, node::Run, i, ctx)
     return Run(node.body, i)
 end
 
-@with_kw struct Spike
+Base.@kwdef struct Spike
     body
     tail
-    ext
+    extent
 end
 
 function truncate_block(root, node::Spike, i, ctx)
@@ -341,5 +330,3 @@ function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::RunStyle)
         visit!(Pigeon.Prewalk(node->spike_tail(node, ctx))(root), ctx)
     )
 end
-
-

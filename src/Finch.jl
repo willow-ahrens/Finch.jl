@@ -1,4 +1,4 @@
-module Thrush
+module Finch
 
 using Pigeon
 using SymbolicUtils

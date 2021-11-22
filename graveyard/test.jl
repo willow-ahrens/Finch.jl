@@ -1,5 +1,18 @@
 include("redo.jl")
 
+pretty(ex) = MacroTools.prettify(ex, alias=false)
+
+A = Spike(
+    extent = Extent(1, 42),
+    body = (ctx) -> 0,
+    tail = (ctx) -> Virtual{Any}(:(in[$my_i])),
+)
+
+B = Virtual{Vector{Any}}(:(out))
+
+println(pretty(Pigeon.visit!((@i @loop i B[i] = A[i]), LowerJuliaContext())))
+
+#=
 A = Pipeline([
     Phase(
         body = (ctx) -> begin
@@ -31,8 +44,7 @@ A = Pipeline([
         )
     ),
 ])
-
-println(MacroTools.prettify(Pigeon.visit!(@i A[i] = A[i]), alias=false))
+=#
 
 #=
 A = Virtual{AbstractVector{Any}}(:A)
