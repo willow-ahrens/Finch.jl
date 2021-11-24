@@ -28,7 +28,7 @@ function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::RunStyle)
     root = visit!(root, AssignRunContext(root, dirty.deps))
     dirty = DirtyRunContext(idx = root.idxs[1])
     visit!(root, dirty)
-    #TODO This step is a bit of a hack. At this point, we probably have for i scalar[] = scalar[].
+    #TODO This step is a bit of a hack. At this point, we probably have for i scalar[] += scalar[].
     if !any(values(dirty.deps))
         return visit!(Loop(root.idxs[2:end], root.body), ctx)
     else
