@@ -1,4 +1,4 @@
-using Pigeon: Read, Write, Update
+
 
 Base.@kwdef mutable struct Run
     body
@@ -9,13 +9,13 @@ Pigeon.lower_axes(arr::Run, ctx::LowerJuliaContext) = (arr.ext,) #TODO probably 
 Pigeon.getsites(arr::Run) = (1,) #TODO this is wrong I think?? and probably wouldn't need this if tests were more realistic
 Pigeon.getname(arr::Run) = getname(arr.body)
 
-struct RunStyle end
+struct RunAccessStyle end
 
-Pigeon.make_style(root::Loop, ctx::LowerJuliaContext, node::Run) = RunStyle()
-Pigeon.combine_style(a::DefaultStyle, b::RunStyle) = RunStyle()
-Pigeon.combine_style(a::RunStyle, b::RunStyle) = RunStyle()
+Pigeon.make_style(root::Loop, ctx::LowerJuliaContext, node::Run) = RunAccessStyle()
+Pigeon.combine_style(a::DefaultStyle, b::RunAccessStyle) = RunAccessStyle()
+Pigeon.combine_style(a::RunAccessStyle, b::RunAccessStyle) = RunAccessStyle()
 
-function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::RunStyle)
+function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::RunAccessStyle)
     #TODO all runs in rhs become scalars
     #TODO add a simplify step perhaps
     #TODO if we had a run-length lhs whose rhs was independent of i, we should do something clever here
@@ -23,17 +23,7 @@ function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::RunStyle)
     #TODO essentially, this is an unwrap and simplify thing
     @assert !isempty(root.idxs)
     root = visit!(root, AccessRunContext(root))
-    dirty = DirtyRunContext(idx = root.idxs[1])
-    visit!(root, dirty)
-    root = visit!(root, AssignRunContext(root, dirty.deps))
-    dirty = DirtyRunContext(idx = root.idxs[1])
-    visit!(root, dirty)
-    #TODO This step is a bit of a hack. At this point, we probably have for i scalar[] += scalar[].
-    if !any(values(dirty.deps))
-        return visit!(Loop(root.idxs[2:end], root.body), ctx)
-    else
-        return visit!(root, ctx)
-    end
+    visit!(root, ctx)
 end
 
 struct AccessRunContext <: Pigeon.AbstractTransformContext
@@ -42,40 +32,53 @@ end
 
 function Pigeon.visit!(node::Access{Run, Read}, ctx::AccessRunContext, ::DefaultStyle)
     if length(node.idxs) == 1 && node.idxs[1] == ctx.root.idxs[1]
-        return node.tns.body
+        return Access(node.tns.body, Read(), [])
     end
     return node
 end
 
 #assume ssa
 
-Base.@kwdef mutable struct DirtyRunContext <: Pigeon.AbstractWalkContext
+struct RunAssignStyle end
+
+Pigeon.make_style(root::Loop, ctx::LowerJuliaContext, node::Access{Run, <:Union{Write, Update}}) = RunAssignStyle()
+Pigeon.combine_style(a::DefaultStyle, b::RunAssignStyle) = RunAssignStyle()
+Pigeon.combine_style(a::RunAssignStyle, b::RunAssignStyle) = RunAssignStyle()
+Pigeon.combine_style(a::RunAccessStyle, b::RunAssignStyle) = RunAccessStyle()
+
+function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::RunAssignStyle)
+    root = visit!(root, AssignRunContext(root))
+    @assert !visit!(root, DirtyRunContext(root.idxs[1]))
+    return visit!(Loop(root.idxs[2:end], root.body), ctx)
+end
+
+Base.@kwdef mutable struct DirtyRunContext <: Pigeon.AbstractCollectContext
     idx
-    lhs = nothing
-    deps = DefaultDict(false)
 end
 
-function Pigeon.visit!(node::With, ctx::DirtyRunContext, ::DefaultStyle)
-    prod = Pigeon.visit!(node.prod, ctx)
-    cons = Pigeon.visit!(node.cons, ctx)
+Pigeon.collector(ctx::DirtyRunContext) = |
+
+Pigeon.visit!(node, ctx::DirtyRunContext, ::DefaultStyle) = false 
+
+function Pigeon.visit!(node::Access, ctx::DirtyRunContext, ::DefaultStyle)
+    return ctx.idx in node.idxs
 end
 
-function Pigeon.visit!(node::Access{<:Any, Read}, ctx::DirtyRunContext, ::DefaultStyle)
-    ctx.deps[ctx.lhs] |= ((ctx.idx in node.idxs) | ctx.deps[getname(node.tns)])
-end
-
-function Pigeon.visit!(node::Assign, ctx::DirtyRunContext, ::DefaultStyle)
-    ctx.lhs = getname(node.lhs.tns)
-    visit!(node.rhs, ctx)
+function Pigeon.visit!(node::Assign{<:Access{Run}}, ctx::DirtyRunContext, ::DefaultStyle)
+    if getname(node.lhs.tns) !== nothing
+        ctx.lhs = getname(node.lhs.tns)
+        ctx.deps[ctx.lhs] |= ctx.idx in node.lhs.idxs
+        visit!(node.rhs, ctx)
+    else
+        println(node)
+    end
 end
 
 Base.@kwdef mutable struct AssignRunContext <: Pigeon.AbstractTransformContext
     root
-    deps
 end
 
 function Pigeon.visit!(node::Access{Run, <:Union{Write, Update}}, ctx::AssignRunContext, ::DefaultStyle)
-    @assert !ctx.deps[getname(node.tns)]
     @assert node.idxs == ctx.root.idxs[1:1]
-    node.tns.body
+    Access(node.tns.body, node.mode, [])
 end
