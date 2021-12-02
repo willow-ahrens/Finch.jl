@@ -13,6 +13,10 @@ Base.@kwdef struct Extent
     stop
 end
 
+struct Scalar
+    val
+end
+
 Base.@kwdef struct LowerJuliaContext
     preamble::Vector{Any} = []
     bindings::Dict{Name, Any} = Dict()
@@ -109,6 +113,15 @@ function Pigeon.visit!(root::Access, ctx::LowerJuliaContext, ::DefaultStyle)
     tns = visit!(root.tns, ctx)
     idxs = map(idx->visit!(idx, ctx), root.idxs)
     :($(virtual_expr(tns))[$(idxs...)])
+end
+
+function Pigeon.visit!(root::Access{<:Scalar, Read}, ctx::LowerJuliaContext, ::DefaultStyle)
+    return visit!(root.tns.val, ctx)
+end
+
+function Pigeon.visit!(root::Access{<:Number, Read}, ctx::LowerJuliaContext, ::DefaultStyle)
+    @assert isempty(root.idxs)
+    return root.tns
 end
 
 function Pigeon.visit!(stmt::Loop, ctx::LowerJuliaContext, ::DefaultStyle)

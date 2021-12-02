@@ -14,13 +14,15 @@ struct SpikeStyle end
 
 Pigeon.make_style(root::Loop, ctx::LowerJuliaContext, node::Spike) = SpikeStyle()
 Pigeon.combine_style(a::DefaultStyle, b::SpikeStyle) = SpikeStyle()
-Pigeon.combine_style(a::RunStyle, b::SpikeStyle) = SpikeStyle()
+Pigeon.combine_style(a::RunAccessStyle, b::SpikeStyle) = SpikeStyle()
+Pigeon.combine_style(a::RunAssignStyle, b::SpikeStyle) = SpikeStyle()
 Pigeon.combine_style(a::SpikeStyle, b::SpikeStyle) = SpikeStyle()
 
 function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::SpikeStyle)
     if isempty(root.idxs) println(root) end
     @assert !isempty(root.idxs)
     root_body = visit!(root, AccessSpikeBodyContext(root))
+    #TODO arguably we could take several better alternative approaches to rediminsionalization here
     body_expr = restrict(ctx, getname(root.idxs[1]) => spike_body_range(ctx.dims[getname(root.idxs[1])])) do
         visit!(root_body, ctx)
     end
@@ -46,12 +48,12 @@ function access_spike_body(node::Access{Run}, ctx, idx)
     @assert ctx.root.idxs[1:1] == node.idxs
     tns′ = deepcopy(node.tns)
     tns′.ext.stop = spike_body_stop(tns.ext.stop)
-    return Access(tns′, node.mode, ctx.root.idxs[1:1])
+    return Access(tns′, node.mode, node.idxs)
 end
 
 function access_spike_body(node::Access{Spike}, ctx, idx)
     @assert ctx.root.idxs[1:1] == node.idxs
-    return node.tns.body
+    return Access(node.tns.body, node.mode, node.idxs)
 end
 
 function access_spike_body(node::Access{}, ctx, idx)
@@ -60,6 +62,7 @@ end
 
 #spike_body_stop(stop::Top) = Top()
 spike_body_stop(stop::Virtual{T}) where {T <: Integer} = Virtual{T}(:($(stop.ex) - 1))
+spike_body_stop(stop::Integer) = stop - 1
 
 spike_body_range(ext::Extent) = Extent(ext.start, spike_body_stop(ext.stop))
 
@@ -76,12 +79,12 @@ end
 
 function access_spike_tail(node::Access{Run}, ctx, idx)
     @assert ctx.root.idxs[1:1] == node.idxs
-    return node.body
+    return Access(node.tns.body, node.mode, [])
 end
 
 function access_spike_tail(node::Access{Spike}, ctx, idx)
     @assert ctx.root.idxs[1:1] == node.idxs
-    return node.tns.tail
+    return Access(node.tns.tail, node.mode, [])
 end
 
 function access_spike_tail(node::Access, ctx, idx)

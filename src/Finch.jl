@@ -10,7 +10,9 @@ using TermInterface
 using MacroTools
 using DataStructures
 
-export Virtual
+using Pigeon: Read, Write, Update
+
+export Virtual, Scalar
 export lower_julia
 
 include("lower.jl")
