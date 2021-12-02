@@ -6,10 +6,6 @@ Base.@kwdef struct Spike
     ext
 end
 
-Pigeon.lower_axes(arr::Spike, ctx::LowerJuliaContext) = (arr.ext,) #TODO probably wouldn't need this if tests were more realistic
-Pigeon.getsites(arr::Spike) = (1,) #TODO this is wrong I think?? and probably wouldn't need this if tests were more realistic
-Pigeon.getname(arr::Spike) = gensym() #Probably also wrong.
-
 struct SpikeStyle end
 
 Pigeon.make_style(root::Loop, ctx::LowerJuliaContext, node::Spike) = SpikeStyle()
