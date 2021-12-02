@@ -45,7 +45,6 @@ Pigeon.combine_style(a::RunAccessStyle, b::RunAssignStyle) = RunAccessStyle()
 function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::RunAssignStyle)
     root = visit!(root, AssignRunContext(root))
     @assert !visit!(root, DirtyRunContext(root.idxs[1]))
-    println(root.body)
     return visit!(Loop(root.idxs[2:end], root.body), ctx)
 end
 
@@ -53,9 +52,9 @@ Base.@kwdef mutable struct DirtyRunContext <: Pigeon.AbstractCollectContext
     idx
 end
 
-Pigeon.collector(ctx::DirtyRunContext) = |
+Pigeon.collector(ctx::DirtyRunContext) = any
 
-Pigeon.visit!(node, ctx::DirtyRunContext, ::DefaultStyle) = false 
+Pigeon.postvisit!(node, ctx::DirtyRunContext) = false 
 
 function Pigeon.visit!(node::Access, ctx::DirtyRunContext, ::DefaultStyle)
     return ctx.idx in node.idxs

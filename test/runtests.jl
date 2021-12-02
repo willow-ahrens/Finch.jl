@@ -35,8 +35,4 @@ end
     A = ChunkVector(Spike(Run(VirtualAbstractArray(0, :A, :A1), Extent(1, 9)), VirtualAbstractArray(0, :A, :A2), Extent(1, 10)), Extent(1, 10), :A)
     B = ChunkVector(Spike(Run(0, Extent(1, 9)), 1, Extent(1, 10)), Extent(1, 10), :B)
     println(lower_julia(@i @loop i A[i] = B[i]))
-
-    A = ChunkVector(Spike(Run(VirtualAbstractArray(0, :A, :A1), Extent(1, 9)), VirtualAbstractArray(0, :A, :A2), Extent(1, 10)), Extent(1, 10), :A)
-    B = VirtualAbstractArray(1, :B, :B)
-    println(lower_julia(@i @loop i A[i] = B[i]))
 end
