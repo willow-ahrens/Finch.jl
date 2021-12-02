@@ -1,6 +1,6 @@
 using Pigeon: Read, Write, Update
 
-Base.@kwdef struct Run
+Base.@kwdef mutable struct Run
     body
     ext
 end

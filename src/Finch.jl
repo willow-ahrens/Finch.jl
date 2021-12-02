@@ -16,5 +16,6 @@ export lower_julia
 include("lower.jl")
 include("virtuals.jl")
 include("runs.jl")
+include("spikes.jl")
 
 end

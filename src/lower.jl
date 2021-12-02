@@ -15,7 +15,7 @@ end
 
 Base.@kwdef struct LowerJuliaContext
     preamble::Vector{Any} = []
-    bindings::Dict{Name, Symbol} = Dict()
+    bindings::Dict{Name, Any} = Dict()
     epilogue::Vector{Any} = []
     dims::Dimensions = Dimensions()
 end
@@ -36,6 +36,16 @@ function bind(f, ctx::LowerJuliaContext, (var, val′), tail...)
         pop!(ctx.bindings, var)
         return res
     end
+end
+
+restrict(f, ctx::LowerJuliaContext) = f()
+function restrict(f, ctx::LowerJuliaContext, (idx, ext′), tail...)
+    @assert haskey(ctx.dims, idx)
+    ext = ctx.dims[idx]
+    ctx.dims[idx] = ext′
+    res = restrict(f, ctx, tail...)
+    ctx.dims[idx] = ext
+    return res
 end
 
 function scope(f, ctx::LowerJuliaContext)
@@ -78,7 +88,7 @@ end
 
 function Pigeon.visit!(root::Name, ctx::LowerJuliaContext, ::DefaultStyle)
     @assert haskey(ctx.bindings, root) "TODO unbound variable error or something"
-    return ctx.bindings[root]
+    return visit!(ctx.bindings[root], ctx) #This unwraps indices that are virtuals. Arguably these virtuals should be precomputed, but whatevs.
 end
 
 function Pigeon.visit!(root::Literal, ctx::LowerJuliaContext, ::DefaultStyle)
