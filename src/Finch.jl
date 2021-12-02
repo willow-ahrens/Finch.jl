@@ -12,11 +12,12 @@ using DataStructures
 
 using Pigeon: Read, Write, Update
 
-export Virtual, Scalar
+export Virtual, Scalar, Chunk
 export lower_julia
 
 include("lower.jl")
 include("virtuals.jl")
+include("chunks.jl")
 include("runs.jl")
 include("spikes.jl")
 
