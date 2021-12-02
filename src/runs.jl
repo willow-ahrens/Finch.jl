@@ -45,6 +45,7 @@ Pigeon.combine_style(a::RunAccessStyle, b::RunAssignStyle) = RunAccessStyle()
 function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::RunAssignStyle)
     root = visit!(root, AssignRunContext(root))
     @assert !visit!(root, DirtyRunContext(root.idxs[1]))
+    println(root.body)
     return visit!(Loop(root.idxs[2:end], root.body), ctx)
 end
 
@@ -58,16 +59,6 @@ Pigeon.visit!(node, ctx::DirtyRunContext, ::DefaultStyle) = false
 
 function Pigeon.visit!(node::Access, ctx::DirtyRunContext, ::DefaultStyle)
     return ctx.idx in node.idxs
-end
-
-function Pigeon.visit!(node::Assign{<:Access{Run}}, ctx::DirtyRunContext, ::DefaultStyle)
-    if getname(node.lhs.tns) !== nothing
-        ctx.lhs = getname(node.lhs.tns)
-        ctx.deps[ctx.lhs] |= ctx.idx in node.lhs.idxs
-        visit!(node.rhs, ctx)
-    else
-        println(node)
-    end
 end
 
 Base.@kwdef mutable struct AssignRunContext <: Pigeon.AbstractTransformContext
