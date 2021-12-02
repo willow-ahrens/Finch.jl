@@ -9,6 +9,7 @@ using SymbolicUtils: Postwalk, Prewalk
 using TermInterface
 using MacroTools
 using DataStructures
+using Base.Iterators
 
 using Pigeon: Read, Write, Update
 
@@ -20,5 +21,6 @@ include("virtuals.jl")
 include("chunks.jl")
 include("runs.jl")
 include("spikes.jl")
+include("cases.jl")
 
 end

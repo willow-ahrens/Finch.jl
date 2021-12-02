@@ -12,8 +12,10 @@ Pigeon.combine_style(a::RunAssignStyle, b::CaseStyle) = CaseStyle()
 Pigeon.combine_style(a::SpikeStyle, b::CaseStyle) = CaseStyle()
 Pigeon.combine_style(a::CaseStyle, b::CaseStyle) = CaseStyle()
 
+struct CasesContext <: Pigeon.AbstractCollectContext end
+
 function Pigeon.visit!(stmt, ctx::LowerJuliaContext, ::CaseStyle)
-    cases = collect_cases(stmt, ctx)
+    cases = visit!(stmt, CasesContext())
     thunk = Expr(:block)
     for (guard, body) in cases
         push!(thunk.args, :(
@@ -25,19 +27,16 @@ function Pigeon.visit!(stmt, ctx::LowerJuliaContext, ::CaseStyle)
     return thunk
 end
 
-collect_cases_reduce(x, y) = x === true ? y : (y === true : x : :($x && $y))
-function collect_cases(node, ctx)
-    if istree(node)
-        map(product(map(arg->collect_cases(arg, ctx), arguments(node))...)) do case
-            (guards, bodies) = zip(case...)
-            (reduce(collect_cases_reduce, guards), operation(node)(bodies...))
-        end
-    else
-        [(true, node),]
+virtual_and(x, y) = x === true ? y :
+                    y === true ? x :
+                    :($x && $y)
+
+function Pigeon.postvisit!(node, ctx::CasesContext, args)
+    map(product(args...)) do case
+        guards = map(first, case)
+        bodies = map(last, case)
+        return reduce(virtual_and, guards) => similarterm(node, operation(node), collect(bodies))
     end
 end
-
-function collect_cases(node::Cases, ctx::LowerJuliaContext)
-    node.cases
-end
-
+Pigeon.postvisit!(node, ctx::CasesContext) = [(true => node)]
+Pigeon.visit!(node::Cases, ctx::CasesContext, ::DefaultStyle) = node.cases

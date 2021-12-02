@@ -3,7 +3,7 @@ using Pigeon
 using Test
 using MacroTools
 
-using Finch: VirtualAbstractArray, Run, Spike, Extent, Scalar
+using Finch: VirtualAbstractArray, Run, Spike, Extent, Scalar, Cases
 
 Base.@kwdef struct ChunkVector
     body
@@ -34,5 +34,12 @@ end
 
     A = ChunkVector(Spike(Run(VirtualAbstractArray(0, :A, :A1), Extent(1, 9)), VirtualAbstractArray(0, :A, :A2), Extent(1, 10)), Extent(1, 10), :A)
     B = ChunkVector(Spike(Run(0, Extent(1, 9)), 1, Extent(1, 10)), Extent(1, 10), :B)
+    println(lower_julia(@i @loop i A[i] = B[i]))
+
+    A = ChunkVector(Spike(Run(VirtualAbstractArray(0, :A, :A1), Extent(1, 9)), VirtualAbstractArray(0, :A, :A2), Extent(1, 10)), Extent(1, 10), :A)
+    B = ChunkVector(Cases([
+        :foobar => Spike(Run(0, Extent(1, 9)), 1, Extent(1, 10))
+        true => Run(42, Extent(1, 10))
+    ]), Extent(1, 10), :B)
     println(lower_julia(@i @loop i A[i] = B[i]))
 end

@@ -8,7 +8,7 @@ virtual_typeof(::Virtual{T}) where {T} = T
 virtual_expr(x) = x
 virtual_expr(ex::Virtual) = ex.ex
 
-Base.@kwdef struct Extent
+Base.@kwdef mutable struct Extent
     start
     stop
 end
@@ -134,7 +134,7 @@ function Pigeon.visit!(stmt::Loop, ctx::LowerJuliaContext, ::DefaultStyle)
         return bind(ctx, stmt.idxs[1] => idx_sym) do 
             scope(ctx, ) do ctx′
                 quote
-                    for $idx_sym = $(virtual_expr(ext.start)):$(virtual_expr(ext.stop))
+                    for $idx_sym = $(visit!(ext.start, ctx′)):$(visit!(ext.stop, ctx′))
                         $(visit!(stmt′, ctx′))
                     end
                 end

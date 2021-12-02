@@ -40,10 +40,11 @@ function Pigeon.visit!(node::Access, ctx::AccessSpikeBodyContext, ::DefaultStyle
     return node
 end
 
+#A bit ugly. We can make this work better.
 function access_spike_body(node::Access{Run}, ctx, idx)
     @assert ctx.root.idxs[1:1] == node.idxs
     tns′ = deepcopy(node.tns)
-    tns′.ext.stop = spike_body_stop(tns.ext.stop)
+    tns′.ext.stop = spike_body_stop(node.tns.ext.stop)
     return Access(tns′, node.mode, node.idxs)
 end
 
