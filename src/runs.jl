@@ -16,13 +16,9 @@ Pigeon.combine_style(a::DefaultStyle, b::RunAccessStyle) = RunAccessStyle()
 Pigeon.combine_style(a::RunAccessStyle, b::RunAccessStyle) = RunAccessStyle()
 
 function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::RunAccessStyle)
-    #TODO all runs in rhs become scalars
-    #TODO add a simplify step perhaps
-    #TODO if we had a run-length lhs whose rhs was independent of i, we should do something clever here
-    #TODO if we had a run on the lhs, we could substitute something here
-    #TODO essentially, this is an unwrap and simplify thing
     @assert !isempty(root.idxs)
     root = visit!(root, AccessRunContext(root))
+    #TODO add a simplify step here perhaps
     visit!(root, ctx)
 end
 
