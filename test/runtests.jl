@@ -29,16 +29,16 @@ end
     println(lower_julia(@i @loop i A[i] = B[i]))
 
     A = VirtualAbstractArray(1, :A, :A)
-    B = ChunkVector(Spike(Run(0, Extent(1, 9)), 1, Extent(1, 10)), Extent(1, 10), :B)
+    B = ChunkVector(Spike(0, 1, Extent(1, 10)), Extent(1, 10), :B)
     println(lower_julia(@i @loop i A[i] = B[i]))
 
-    A = ChunkVector(Spike(Run(VirtualAbstractArray(0, :A, :A1), Extent(1, 9)), VirtualAbstractArray(0, :A, :A2), Extent(1, 10)), Extent(1, 10), :A)
-    B = ChunkVector(Spike(Run(0, Extent(1, 9)), 1, Extent(1, 10)), Extent(1, 10), :B)
+    A = ChunkVector(Spike(VirtualAbstractArray(0, :A, :A1), VirtualAbstractArray(0, :A, :A2), Extent(1, 10)), Extent(1, 10), :A)
+    B = ChunkVector(Spike(0, 1, Extent(1, 10)), Extent(1, 10), :B)
     println(lower_julia(@i @loop i A[i] = B[i]))
 
-    A = ChunkVector(Spike(Run(VirtualAbstractArray(0, :A, :A1), Extent(1, 9)), VirtualAbstractArray(0, :A, :A2), Extent(1, 10)), Extent(1, 10), :A)
+    A = ChunkVector(Spike(VirtualAbstractArray(0, :A, :A1), VirtualAbstractArray(0, :A, :A2), Extent(1, 10)), Extent(1, 10), :A)
     B = ChunkVector(Cases([
-        :foobar => Spike(Run(0, Extent(1, 9)), 1, Extent(1, 10))
+        :foobar => Spike(0, 1, Extent(1, 10))
         true => Run(42, Extent(1, 10))
     ]), Extent(1, 10), :B)
     println(lower_julia(@i @loop i A[i] = B[i]))
@@ -58,7 +58,7 @@ end
                     push!(ctx.epilogue, :($my_i = $my_i′))
                     push!(ctx.epilogue, :($my_i′ = lvl.idx[$my_p + 1]))
                     Spike(
-                        body = Run(0, Extent(start, Virtual{Any}(:($stop - 1)))),
+                        body = 0,
                         tail = (ctx) -> Virtual(:(lvl.val[$my_i])),
                         ext = Extent(start, stop)
                     )

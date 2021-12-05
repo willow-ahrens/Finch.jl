@@ -17,9 +17,11 @@ Pigeon.combine_style(a::SpikeStyle, b::SpikeStyle) = SpikeStyle()
 function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::SpikeStyle)
     if isempty(root.idxs) println(root) end
     @assert !isempty(root.idxs)
-    root_body = visit!(root, AccessSpikeBodyContext(root))
+    println(root)
+    root_body = postmap(node->spike_body(node, ctx, root.idxs[1]), root)
+    println(root_body)
     #TODO arguably we could take several better alternative approaches to rediminsionalization here
-    body_expr = restrict(ctx, getname(root.idxs[1]) => spike_body_range(ctx.dims[getname(root.idxs[1])])) do
+    body_expr = restrict(ctx, getname(root.idxs[1]) => spike_body_range(ctx.dims[getname(root.idxs[1])], ctx)) do
         visit!(root_body, ctx)
     end
     root_tail = visit!(Loop(root.idxs[2:end], root.body), AccessSpikeTailContext(root))
@@ -29,40 +31,24 @@ function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::SpikeStyle)
     return Expr(:block, body_expr, tail_expr)
 end
 
-Base.@kwdef struct AccessSpikeBodyContext <: Pigeon.AbstractTransformContext
-    root
-end
+spike_body(node, ctx, idx) = nothing
+spike_body(node::Spike, ctx, idx) = Run(node.body, Extent(node.ext.start, spike_body_stop(node.ext.stop, ctx)))
 
-function Pigeon.visit!(node::Access, ctx::AccessSpikeBodyContext, ::DefaultStyle)
-    if ctx.root.idxs[1] in node.idxs
-        return access_spike_body(node, ctx, ctx.root.idxs[1])
-    end
+#A bit ugly. We can make this work better.
+function spike_body(node::Run, ctx, idx)
+    node = deepcopy(node)
+    node.ext.stop = spike_body_stop(node.ext.stop, ctx)
     return node
 end
 
-#A bit ugly. We can make this work better.
-function access_spike_body(node::Access{Run}, ctx, idx)
-    @assert ctx.root.idxs[1:1] == node.idxs
-    tns′ = deepcopy(node.tns)
-    tns′.ext.stop = spike_body_stop(node.tns.ext.stop)
-    return Access(tns′, node.mode, node.idxs)
-end
-
-function access_spike_body(node::Access{Spike}, ctx, idx)
-    @assert ctx.root.idxs[1:1] == node.idxs
-    return Access(node.tns.body, node.mode, node.idxs)
-end
-
-function access_spike_body(node::Access{}, ctx, idx)
-    return node #TODO truncate_block
-end
+#TODO truncate_block
 
 #spike_body_stop(stop::Top) = Top()
 #spike_body_stop(stop::Virtual{T}) where {T <: Integer} = Virtual{T}(:($(stop.ex) - 1))
-spike_body_stop(stop::Virtual{T}) where {T <: Any} = Virtual{T}(:($(stop.ex) - 1)) #TODO kinda messy
-spike_body_stop(stop::Integer) = stop - 1
+spike_body_stop(stop, ctx) = :($(visit!(stop, ctx)) - 1)
+spike_body_stop(stop::Integer, ctx) = stop - 1
 
-spike_body_range(ext::Extent) = Extent(ext.start, spike_body_stop(ext.stop))
+spike_body_range(ext::Extent, ctx) = Extent(ext.start, spike_body_stop(ext.stop, ctx))
 
 Base.@kwdef struct AccessSpikeTailContext <: Pigeon.AbstractTransformContext
     root
