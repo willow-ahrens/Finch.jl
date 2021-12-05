@@ -41,10 +41,8 @@ function spike_body(node::Run, ctx, idx)
     return node
 end
 
-#TODO truncate_block
+#TODO truncate_block needs to be called on non-chunk tensors? What do we do with non-chunk tensors? probably makes more sense to just have a visitor?
 
-#spike_body_stop(stop::Top) = Top()
-#spike_body_stop(stop::Virtual{T}) where {T <: Integer} = Virtual{T}(:($(stop.ex) - 1))
 spike_body_stop(stop, ctx) = :($(visit!(stop, ctx)) - 1)
 spike_body_stop(stop::Integer, ctx) = stop - 1
 
