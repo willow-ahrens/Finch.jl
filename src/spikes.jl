@@ -87,3 +87,11 @@ end
 function access_spike_tail(node::Access, ctx, idx)
     return node
 end
+
+function trim_chunk_stop!(node::Spike, ctx::LowerJuliaContext, stop)
+    return Cases([
+        :($(visit!(stop, ctx)) == $(visit!(node.ext.stop))) => node,
+        :($(visit!(stop, ctx)) != $(visit!(node.ext.stop))) =>
+            Run(node.body, Extent(node.ext.start, stop))
+    ])
+end

@@ -9,6 +9,8 @@ Pigeon.lower_axes(arr::Run, ctx::LowerJuliaContext) = (arr.ext,) #TODO probably 
 Pigeon.getsites(arr::Run) = (1,) #TODO this is wrong I think?? and probably wouldn't need this if tests were more realistic
 Pigeon.getname(arr::Run) = getname(arr.body)
 
+trim_chunk_stop!(node::Run, ctx::LowerJuliaContext, stop) = (node′ = deepcopy(node); node′.ext.stop = stop; node′)
+
 struct RunAccessStyle end
 
 Pigeon.make_style(root::Loop, ctx::LowerJuliaContext, node::Run) = RunAccessStyle()

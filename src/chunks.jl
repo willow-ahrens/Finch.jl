@@ -10,3 +10,5 @@ function Pigeon.visit!(root, ctx::LowerJuliaContext, ::ChunkStyle)
     #TODO add a simplify step here perhaps
     visit!(root, ctx)
 end
+
+trim_chunk_stop!(node, ctx, stop) = nothing

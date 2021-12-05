@@ -42,4 +42,32 @@ end
         true => Run(42, Extent(1, 10))
     ]), Extent(1, 10), :B)
     println(lower_julia(@i @loop i A[i] = B[i]))
+
+    A = ChunkVector(Stream(
+        extent = Extent(1, 10),
+        body = (ctx) -> begin
+            my_i = gensym(:stream_i)
+            my_p = gensym(:stream_p)
+            push!(ctx.preamble, :($my_p = 1))
+            push!(ctx.preamble, :($my_i = lvl.idx[$my_p]))
+            push!(ctx.preamble, :($my_i′ = lvl.idx[$my_p + 1]))
+            Packet(
+                body = (ctx, start, stop) -> begin
+                    push!(ctx.epilogue, :($my_p += ($my_i == $stop)))
+                    push!(ctx.epilogue, :($my_i = $my_i′))
+                    push!(ctx.epilogue, :($my_i′ = lvl.idx[$my_p + 1]))
+                    Spike(
+                        body = Run(0),
+                        tail = (ctx) -> Virtual(:(lvl.val[$my_i])),
+                    )
+                end,
+                step = my_i
+            )
+        end),
+        Extent(1, 10), :A)
+    
+    B = VirtualAbstractArray(1, :B, :B)
+
+    println(lower_julia(@i @loop i A[i] = B[i]))
+
 end
