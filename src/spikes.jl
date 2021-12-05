@@ -15,11 +15,8 @@ Pigeon.combine_style(a::RunAssignStyle, b::SpikeStyle) = SpikeStyle()
 Pigeon.combine_style(a::SpikeStyle, b::SpikeStyle) = SpikeStyle()
 
 function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::SpikeStyle)
-    if isempty(root.idxs) println(root) end
     @assert !isempty(root.idxs)
-    println(root)
     root_body = postmap(node->spike_body(node, ctx, root.idxs[1]), root)
-    println(root_body)
     #TODO arguably we could take several better alternative approaches to rediminsionalization here
     body_expr = restrict(ctx, getname(root.idxs[1]) => spike_body_range(ctx.dims[getname(root.idxs[1])], ctx)) do
         visit!(root_body, ctx)

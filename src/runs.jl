@@ -19,9 +19,7 @@ Pigeon.combine_style(a::RunAccessStyle, b::RunAccessStyle) = RunAccessStyle()
 
 function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::RunAccessStyle)
     @assert !isempty(root.idxs)
-    println(root)
     root = visit!(root, AccessRunContext(root))
-    println(root)
     #TODO add a simplify step here perhaps
     visit!(root, ctx)
 end

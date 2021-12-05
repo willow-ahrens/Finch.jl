@@ -70,6 +70,6 @@ end
     
     B = VirtualAbstractArray(1, :B, :B)
 
-    println(lower_julia(@i @loop i B[i] = A[i]))
+    println(lower_julia(@i @loop i B[i] = A[i] + A[i]))
 
 end
