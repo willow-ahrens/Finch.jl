@@ -22,5 +22,6 @@ include("chunks.jl")
 include("runs.jl")
 include("spikes.jl")
 include("cases.jl")
+include("streams.jl")
 
 end

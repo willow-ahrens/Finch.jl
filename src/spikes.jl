@@ -58,7 +58,8 @@ function access_spike_body(node::Access{}, ctx, idx)
 end
 
 #spike_body_stop(stop::Top) = Top()
-spike_body_stop(stop::Virtual{T}) where {T <: Integer} = Virtual{T}(:($(stop.ex) - 1))
+#spike_body_stop(stop::Virtual{T}) where {T <: Integer} = Virtual{T}(:($(stop.ex) - 1))
+spike_body_stop(stop::Virtual{T}) where {T <: Any} = Virtual{T}(:($(stop.ex) - 1)) #TODO kinda messy
 spike_body_stop(stop::Integer) = stop - 1
 
 spike_body_range(ext::Extent) = Extent(ext.start, spike_body_stop(ext.stop))
@@ -90,8 +91,7 @@ end
 
 function trim_chunk_stop!(node::Spike, ctx::LowerJuliaContext, stop)
     return Cases([
-        :($(visit!(stop, ctx)) == $(visit!(node.ext.stop))) => node,
-        :($(visit!(stop, ctx)) != $(visit!(node.ext.stop))) =>
-            Run(node.body, Extent(node.ext.start, stop))
+        :($(visit!(stop, ctx)) == $(visit!(node.ext.stop, ctx))) => node,
+        :($(visit!(stop, ctx)) != $(visit!(node.ext.stop, ctx))) => trim_chunk_stop!(node.body, ctx, stop)
     ])
 end

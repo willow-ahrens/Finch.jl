@@ -3,7 +3,7 @@ using Pigeon
 using Test
 using MacroTools
 
-using Finch: VirtualAbstractArray, Run, Spike, Extent, Scalar, Cases
+using Finch: VirtualAbstractArray, Run, Spike, Extent, Scalar, Cases, Stream, Packet
 
 Base.@kwdef struct ChunkVector
     body
@@ -46,9 +46,10 @@ end
     A = ChunkVector(Stream(
         extent = Extent(1, 10),
         body = (ctx) -> begin
-            my_i = gensym(:stream_i)
+            my_i = gensym(:stream_i0)
+            my_i′ = gensym(:stream_i1)
             my_p = gensym(:stream_p)
-            push!(ctx.preamble, :($my_p = 1))
+            push!(ctx.preamble, :($my_p = 2))
             push!(ctx.preamble, :($my_i = lvl.idx[$my_p]))
             push!(ctx.preamble, :($my_i′ = lvl.idx[$my_p + 1]))
             Packet(
@@ -57,17 +58,18 @@ end
                     push!(ctx.epilogue, :($my_i = $my_i′))
                     push!(ctx.epilogue, :($my_i′ = lvl.idx[$my_p + 1]))
                     Spike(
-                        body = Run(0),
+                        body = Run(0, Extent(start, Virtual{Any}(:($stop - 1)))),
                         tail = (ctx) -> Virtual(:(lvl.val[$my_i])),
+                        ext = Extent(start, stop)
                     )
                 end,
-                step = my_i
+                step = (ctx, start, stop) -> my_i
             )
         end),
         Extent(1, 10), :A)
     
     B = VirtualAbstractArray(1, :B, :B)
 
-    println(lower_julia(@i @loop i A[i] = B[i]))
+    println(lower_julia(@i @loop i B[i] = A[i]))
 
 end
