@@ -256,7 +256,9 @@ TermInterface.istree(::Type{<:MesaValue}) = false
 
 virtualize(ex, ::Type{MesaValue{arg}}) where {arg} = arg
 
-#TODO following code should be merged with code in Pigeon
+#TODO following code should be merged with the code in Pigeon. Not good to copy
+#paste. We'll do this when we reorganize Finch to be the package which defines
+#index expressions.
 
 function capture_index(ex; ctx...)
     incs = Dict(:+= => :+, :*= => :*, :/= => :/, :^= => :^)
