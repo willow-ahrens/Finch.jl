@@ -1,7 +1,6 @@
 struct StreamStyle end
 
 Base.@kwdef struct Stream
-    extent
     body
 end
 
@@ -33,9 +32,8 @@ function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::StreamStyle)
                 stop = postmapreduce(node->packet_step!(node, ctx′, i0, i1), vcat, body, [])
                 body = postmap(node->packet_body!(node, ctx′, i0, i1), body)
                 push!(ctx′.preamble, :($i1 = min($(stop...))))
-                trim = postmap(node->trim_chunk_stop!(node, ctx′, i1), body)
                 restrict(ctx′, i => Extent(Virtual{Any}(i0), Virtual{Any}(i1))) do
-                    visit!(trim, ctx′)
+                    visit!(body, ctx′)
                 end
             end)
         end

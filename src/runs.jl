@@ -1,15 +1,11 @@
-
-
 Base.@kwdef mutable struct Run
     body
-    ext
 end
 
-Pigeon.lower_axes(arr::Run, ctx::LowerJuliaContext) = (arr.ext,) #TODO probably wouldn't need this if tests were more realistic
-Pigeon.getsites(arr::Run) = (1,) #TODO this is wrong I think?? and probably wouldn't need this if tests were more realistic
-Pigeon.getname(arr::Run) = getname(arr.body)
+#A minor revelation: There's no readon to store extents in chunks, they just modify the extents of the context.
+#Another revelation: If you want to store something in a chunk, 
 
-trim_chunk_stop!(node::Run, ctx::LowerJuliaContext, stop) = (node′ = deepcopy(node); node′.ext.stop = stop; node′)
+Pigeon.getname(arr::Run) = getname(arr.body)
 
 struct RunAccessStyle end
 

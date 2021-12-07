@@ -4,9 +4,10 @@ include("goofyvector.jl")
     B = GoofyVector{Float64, Int, 0.0}([1, 5, 8, 10], [1.0, 1.0, 1.0])
     println(A)
     println(B)
-    C = zeros(10)
+    C = zeros(9)
     ex = @I @loop i C[i] += A[i] + B[i]
     println(virtualize(:ex, typeof(ex)))
     display(lower_julia(virtualize(:ex, typeof(ex))))
     execute(ex)
+    println(C)
 end

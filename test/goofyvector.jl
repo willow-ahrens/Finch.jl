@@ -17,7 +17,7 @@ struct VirtualGoofyVector{Tv, Ti}
 end
 
 function Finch.virtualize(ex, ::Type{GoofyVector{Tv, Ti, D}}) where {Tv, Ti, D}
-    VirtualGoofyVector{Tv, Ti}(ex, gensym(), D)
+    VirtualGoofyVector{Tv, Ti}(ex, gensym(:goofy), D)
 end
 
 Pigeon.lower_axes(arr::VirtualGoofyVector{Tv, Ti}, ctx::Finch.LowerJuliaContext) where {Tv, Ti} = (Extent(1, Virtual{Ti}(:(size($(arr.ex))[1]))),)
@@ -31,9 +31,9 @@ Pigeon.visit!(node::Access{<:VirtualGoofyVector}, ctx::Finch.ChunkifyContext, ::
 function chunkbody(vec::VirtualGoofyVector{Tv, Ti}) where {Tv, Ti}
     return Stream(
         body = (ctx) -> begin
-            my_i = gensym(:goofy_i0)
-            my_i′ = gensym(:goofy_i1)
-            my_p = gensym(:goofy_p)
+            my_i = Symbol(Pigeon.getname(vec), :_i0)
+            my_i′ = Symbol(Pigeon.getname(vec), :_i1)
+            my_p = Symbol(Pigeon.getname(vec), :_p)
             push!(ctx.preamble, :($my_p = 2))
             push!(ctx.preamble, :($my_i = $(vec.ex).idx[$my_p]))
             push!(ctx.preamble, :($my_i′ = $(vec.ex).idx[$my_p + 1]))
@@ -42,10 +42,17 @@ function chunkbody(vec::VirtualGoofyVector{Tv, Ti}) where {Tv, Ti}
                     push!(ctx.epilogue, :($my_p += ($my_i == $stop)))
                     push!(ctx.epilogue, :($my_i = $my_i′))
                     push!(ctx.epilogue, :($my_i′ = $(vec.ex).idx[$my_p + 1]))
-                    Spike(
-                        body = 0,
-                        tail = (ctx) -> Virtual{Tv}(:($(vec.ex).val[$my_i])),
-                    )
+                    Cases([
+                        :($my_i == $stop) =>
+                            Spike(
+                                body = 0,
+                                tail = (ctx) -> Virtual{Tv}(:($(vec.ex).val[$my_i])),
+                            ),
+                        :($my_i == $stop) =>
+                            Run(
+                                body = 0,
+                            ),
+                    ])
                 end,
                 step = (ctx, start, stop) -> my_i
             )

@@ -3,7 +3,6 @@ using Pigeon: Read, Write, Update
 Base.@kwdef struct Spike
     body
     tail
-    ext
 end
 
 struct SpikeStyle end
@@ -29,14 +28,10 @@ function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::SpikeStyle)
 end
 
 spike_body(node, ctx, idx) = nothing
-spike_body(node::Spike, ctx, idx) = Run(node.body, Extent(node.ext.start, spike_body_stop(node.ext.stop, ctx)))
+spike_body(node::Spike, ctx, idx) = Run(node.body)
 
 #A bit ugly. We can make this work better.
-function spike_body(node::Run, ctx, idx)
-    node = deepcopy(node)
-    node.ext.stop = spike_body_stop(node.ext.stop, ctx)
-    return node
-end
+spike_body(node::Run, ctx, idx) = node
 
 #TODO truncate_block needs to be called on non-chunk tensors? What do we do with non-chunk tensors? probably makes more sense to just have a visitor?
 
@@ -70,9 +65,9 @@ function access_spike_tail(node::Access, ctx, idx)
     return node
 end
 
-function trim_chunk_stop!(node::Spike, ctx::LowerJuliaContext, stop)
+function trim_chunk_stop!(node::Spike, ctx::LowerJuliaContext, stop, stop′)
     return Cases([
-        :($(visit!(stop, ctx)) == $(visit!(node.ext.stop, ctx))) => node,
-        :($(visit!(stop, ctx)) != $(visit!(node.ext.stop, ctx))) => trim_chunk_stop!(node.body, ctx, stop)
+        :($(visit!(stop, ctx)) == $(visit!(stop′, ctx))) => node,
+        :($(visit!(stop, ctx)) != $(visit!(stop′, ctx))) => trim_chunk_stop!(node.body, ctx, stop, stop′)
     ])
 end
