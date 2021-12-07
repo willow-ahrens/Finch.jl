@@ -20,6 +20,9 @@ function Pigeon.visit!(node::Access{ChunkVector}, ctx::Finch.ChunkifyContext, ::
 end
 
 @testset "Finch.jl" begin
+
+    include("parse.jl")
+
     A = VirtualAbstractArray(1, :A, :A)
     B = VirtualAbstractArray(1, :B, :B)
     println(lower_julia(@i @loop i A[i] = B[i]))

@@ -15,6 +15,7 @@ using Pigeon: Read, Write, Update
 
 export Virtual, Scalar, Chunk
 export lower_julia
+export @I
 
 include("lower.jl")
 include("virtuals.jl")
@@ -23,5 +24,6 @@ include("runs.jl")
 include("spikes.jl")
 include("cases.jl")
 include("streams.jl")
+include("mesa.jl")
 
 end

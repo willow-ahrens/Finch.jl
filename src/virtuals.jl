@@ -23,3 +23,5 @@ function Pigeon.lower_axis_merge(ctx::Finch.LowerJuliaContext, a::Extent, b::Ext
 end
 Pigeon.getsites(arr::VirtualAbstractArray) = 1:arr.ndims
 Pigeon.getname(arr::VirtualAbstractArray) = arr.name
+
+virtualize(ex, T) = Virtual{T}(ex)
