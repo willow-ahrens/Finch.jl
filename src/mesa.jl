@@ -130,7 +130,7 @@ function virtualize(ex, ::Type{MesaLoop{Idxs, Body}}) where {Idxs, Body}
         virtualize(:($ex.idxs[$n]), Idx)
     end
     body = virtualize(:($ex.body), Body)
-    MesaLoop(idxs, body)
+    Loop(idxs, body)
 end
 
 struct MesaAssign{Lhs, Op, Rhs} <: MesaIndexStatement
@@ -297,7 +297,6 @@ function capture_index(ex; ctx...)
         return esc(ex)
     elseif ex isa Expr && ex.head == :call && length(ex.args) >= 1
         op = capture_index(ex.args[1]; ctx..., namify=false, mode=Read())
-        println(op)
         return :(mesacall($op, $(map(arg->capture_index(arg; ctx..., namify=true, mode=Read()), ex.args[2:end])...)))
     elseif ex isa Expr && ex.head == :ref && length(ex.args) >= 1
         tns = capture_index(ex.args[1]; ctx..., namify=false, mode=Read())

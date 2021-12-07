@@ -25,3 +25,4 @@ Pigeon.getsites(arr::VirtualAbstractArray) = 1:arr.ndims
 Pigeon.getname(arr::VirtualAbstractArray) = arr.name
 
 virtualize(ex, T) = Virtual{T}(ex)
+virtualize(ex, ::Type{<:AbstractArray{T, N}}) where {T, N} = VirtualAbstractArray(N, gensym(), ex)
