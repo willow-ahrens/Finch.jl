@@ -9,6 +9,9 @@ Base.@kwdef struct Packet
     step
 end
 
+Pigeon.isliteral(::Stream) = false
+Pigeon.isliteral(::Packet) = false
+
 Pigeon.make_style(root::Loop, ctx::LowerJuliaContext, node::Stream) = StreamStyle()
 Pigeon.combine_style(a::DefaultStyle, b::StreamStyle) = StreamStyle()
 Pigeon.combine_style(a::StreamStyle, b::StreamStyle) = StreamStyle()

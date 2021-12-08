@@ -19,12 +19,13 @@ annihilate_index = Fixpoint(Prewalk(Chain([
     #(@ex@rule @i(+(~~a)) => if !issorted(~~a) @i +($(sort(~~a))) end),
     #(@ex@rule @i(*(~~a)) => if !issorted(~~a) @i *($(sort(~~a))) end),
 
+    (@ex@rule @i((~a)[]) => ~a), 
     (@ex@rule @i((~a)[~~i] = 0) => pass(~a)), #TODO this is only valid when the default of A is 0
     (@ex@rule @i((~a)[~~i] += 0) => pass(~a)),
     (@ex@rule @i((~a)[~~i] *= 1) => pass(~a)),
 
-    (@ex@rule @i((~a)[~~i] *= ~b) => if isimplicit(~a) && getdefault(~a) == 0 pass(~a) end),
-    (@ex@rule @i((~a)[~~i] = ~b) => if isimplicit(~a) && getdefault(~a) == ~b pass(~a) end),
+    #(@ex@rule @i((~a)[~~i] *= ~b) => if isimplicit(~a) && getdefault(~a) == 0 pass(~a) end),
+    #(@ex@rule @i((~a)[~~i] = ~b) => if isimplicit(~a) && getdefault(~a) == ~b pass(~a) end),
     ((a) -> if a isa Literal && isliteral(value(a)) value(a) end), #only quote when necessary
 
     (@ex@rule @i(@loop (~~i) @pass(~~a)) => pass(~~a)),

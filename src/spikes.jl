@@ -5,6 +5,8 @@ Base.@kwdef struct Spike
     tail
 end
 
+Pigeon.isliteral(::Spike) = false
+
 struct SpikeStyle end
 
 Pigeon.make_style(root::Loop, ctx::LowerJuliaContext, node::Spike) = SpikeStyle()
@@ -16,13 +18,15 @@ Pigeon.combine_style(a::SpikeStyle, b::SpikeStyle) = SpikeStyle()
 function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::SpikeStyle)
     @assert !isempty(root.idxs)
     root_body = postmap(node->spike_body(node, ctx, root.idxs[1]), root)
+    println(root_body)
     #TODO arguably we could take several better alternative approaches to rediminsionalization here
     body_expr = restrict(ctx, getname(root.idxs[1]) => spike_body_range(ctx.dims[getname(root.idxs[1])], ctx)) do
-        visit!(root_body, ctx)
+        visit!(annihilate_index(root_body), ctx)
     end
     root_tail = visit!(Loop(root.idxs[2:end], root.body), AccessSpikeTailContext(root))
+    println(root_tail)
     tail_expr = bind(ctx, root.idxs[1] => ctx.dims[getname(root.idxs[1])].stop) do 
-        visit!(root_tail, ctx)
+        visit!(annihilate_index(root_tail), ctx)
     end
     return Expr(:block, body_expr, tail_expr)
 end

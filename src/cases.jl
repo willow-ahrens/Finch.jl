@@ -2,6 +2,8 @@ Base.@kwdef struct Cases
     cases
 end
 
+Pigeon.isliteral(::Cases) = false
+
 struct CaseStyle end
 
 #TODO handle children of access?

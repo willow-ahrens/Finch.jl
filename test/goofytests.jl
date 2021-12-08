@@ -6,8 +6,8 @@ include("goofyvector.jl")
     println(B)
     C = zeros(9)
     ex = @I @loop i C[i] += A[i] + B[i]
-    println(virtualize(:ex, typeof(ex)))
     display(lower_julia(virtualize(:ex, typeof(ex))))
+    println()
     execute(ex)
     println(C)
 end

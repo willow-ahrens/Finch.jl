@@ -2,6 +2,8 @@ Base.@kwdef mutable struct Run
     body
 end
 
+Pigeon.isliteral(::Run) = false
+
 #A minor revelation: There's no readon to store extents in chunks, they just modify the extents of the context.
 #Another revelation: If you want to store something in a chunk, 
 
@@ -17,6 +19,7 @@ function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::RunAccessStyle)
     @assert !isempty(root.idxs)
     root = visit!(root, AccessRunContext(root))
     #TODO add a simplify step here perhaps
+    root = annihilate_index(root)
     visit!(root, ctx)
 end
 

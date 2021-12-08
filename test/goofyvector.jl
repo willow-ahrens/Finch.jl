@@ -46,7 +46,7 @@ function chunkbody(vec::VirtualGoofyVector{Tv, Ti}) where {Tv, Ti}
                         :($my_i == $stop) =>
                             Spike(
                                 body = 0,
-                                tail = (ctx) -> Virtual{Tv}(:($(vec.ex).val[$my_i])),
+                                tail = Virtual{Tv}(:($(vec.ex).val[$my_i])),
                             ),
                         :($my_i == $stop) =>
                             Run(

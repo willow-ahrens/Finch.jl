@@ -72,7 +72,7 @@ function lower_julia(prgm)
     MacroTools.prettify(ex, alias=false)
 end
 
-Pigeon.visit!(::Pass, ctx::LowerJuliaContext, ::DefaultStyle) = :()
+Pigeon.visit!(::Pass, ctx::LowerJuliaContext, ::DefaultStyle) = quote end
 
 function Pigeon.visit!(root::Assign, ctx::LowerJuliaContext, ::DefaultStyle)
     @assert root.lhs isa Access && root.lhs.idxs ⊆ keys(ctx.bindings)
@@ -100,7 +100,9 @@ function Pigeon.visit!(root::Literal, ctx::LowerJuliaContext, ::DefaultStyle)
 end
 
 function Pigeon.visit!(root, ctx::LowerJuliaContext, ::DefaultStyle)
-    if Pigeon.isliteral(root) return Pigeon.value(root) end
+    if Pigeon.isliteral(root)
+        return Pigeon.value(root)
+    end
     error()
 end
 

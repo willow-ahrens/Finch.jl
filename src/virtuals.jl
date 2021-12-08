@@ -24,5 +24,12 @@ end
 Pigeon.getsites(arr::VirtualAbstractArray) = 1:arr.ndims
 Pigeon.getname(arr::VirtualAbstractArray) = arr.name
 
+function Pigeon.visit!(arr::VirtualAbstractArray, ctx::LowerJuliaContext, ::DefaultStyle)
+    return arr.ex
+end
+
 virtualize(ex, T) = Virtual{T}(ex)
 virtualize(ex, ::Type{<:AbstractArray{T, N}}) where {T, N} = VirtualAbstractArray(N, gensym(), ex)
+
+Pigeon.isliteral(::Virtual) = false
+Pigeon.isliteral(::VirtualAbstractArray) = false
