@@ -60,10 +60,17 @@ end
                     push!(ctx.epilogue, :($my_p += ($my_i == $stop)))
                     push!(ctx.epilogue, :($my_i = $my_i′))
                     push!(ctx.epilogue, :($my_i′ = lvl.idx[$my_p + 1]))
-                    Spike(
-                        body = 0,
-                        tail = (ctx) -> Virtual(:(lvl.val[$my_i])),
-                    )
+                    Cases([
+                        :($my_i == $stop) =>
+                            Spike(
+                                body = 0,
+                                tail = Virtual{Int}(:(lvl.val[$my_i])),
+                            ),
+                        :($my_i == $stop) =>
+                            Run(
+                                body = 0,
+                            ),
+                    ])
                 end,
                 step = (ctx, start, stop) -> my_i
             )
