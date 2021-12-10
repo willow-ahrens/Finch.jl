@@ -22,7 +22,8 @@ end
 @testset "Finch.jl" begin
 
     include("parse.jl")
-    include("goofytests.jl")
+    include("simplesparsetests.jl")
+    exit()
 
     A = VirtualAbstractArray(1, :A, :A)
     B = VirtualAbstractArray(1, :B, :B)
