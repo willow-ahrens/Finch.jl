@@ -11,8 +11,8 @@ struct SpikeStyle end
 
 Pigeon.make_style(root::Loop, ctx::LowerJuliaContext, node::Spike) = SpikeStyle()
 Pigeon.combine_style(a::DefaultStyle, b::SpikeStyle) = SpikeStyle()
-Pigeon.combine_style(a::RunAccessStyle, b::SpikeStyle) = SpikeStyle()
-Pigeon.combine_style(a::RunAssignStyle, b::SpikeStyle) = SpikeStyle()
+Pigeon.combine_style(a::RunStyle, b::SpikeStyle) = SpikeStyle()
+Pigeon.combine_style(a::AcceptRunStyle, b::SpikeStyle) = SpikeStyle()
 Pigeon.combine_style(a::SpikeStyle, b::SpikeStyle) = SpikeStyle()
 
 function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::SpikeStyle)

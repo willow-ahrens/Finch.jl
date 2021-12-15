@@ -9,13 +9,13 @@ Pigeon.isliteral(::Run) = false
 
 Pigeon.getname(arr::Run) = getname(arr.body)
 
-struct RunAccessStyle end
+struct RunStyle end
 
-Pigeon.make_style(root::Loop, ctx::LowerJuliaContext, node::Run) = RunAccessStyle()
-Pigeon.combine_style(a::DefaultStyle, b::RunAccessStyle) = RunAccessStyle()
-Pigeon.combine_style(a::RunAccessStyle, b::RunAccessStyle) = RunAccessStyle()
+Pigeon.make_style(root::Loop, ctx::LowerJuliaContext, node::Run) = RunStyle()
+Pigeon.combine_style(a::DefaultStyle, b::RunStyle) = RunStyle()
+Pigeon.combine_style(a::RunStyle, b::RunStyle) = RunStyle()
 
-function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::RunAccessStyle)
+function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::RunStyle)
     @assert !isempty(root.idxs)
     root = visit!(root, AccessRunContext(root))
     #TODO add a simplify step here perhaps
@@ -36,15 +36,15 @@ end
 
 #assume ssa
 
-struct RunAssignStyle end
+struct AcceptRunStyle end
 
-Pigeon.make_style(root::Loop, ctx::LowerJuliaContext, node::Access{Run, <:Union{Write, Update}}) = RunAssignStyle()
-Pigeon.combine_style(a::DefaultStyle, b::RunAssignStyle) = RunAssignStyle()
-Pigeon.combine_style(a::RunAssignStyle, b::RunAssignStyle) = RunAssignStyle()
-Pigeon.combine_style(a::RunAccessStyle, b::RunAssignStyle) = RunAccessStyle()
+Pigeon.make_style(root::Loop, ctx::LowerJuliaContext, node::Access{Run, <:Union{Write, Update}}) = AcceptRunStyle()
+Pigeon.combine_style(a::DefaultStyle, b::AcceptRunStyle) = AcceptRunStyle()
+Pigeon.combine_style(a::AcceptRunStyle, b::AcceptRunStyle) = AcceptRunStyle()
+Pigeon.combine_style(a::RunStyle, b::AcceptRunStyle) = RunStyle()
 
-function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::RunAssignStyle)
-    root = visit!(root, AssignRunContext(root))
+function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::AcceptRunStyle)
+    root = visit!(root, AcceptRunContext(root))
     @assert !visit!(root, DirtyRunContext(root.idxs[1]))
     return visit!(Loop(root.idxs[2:end], root.body), ctx)
 end
@@ -61,11 +61,16 @@ function Pigeon.visit!(node::Access, ctx::DirtyRunContext, ::DefaultStyle)
     return ctx.idx in node.idxs
 end
 
-Base.@kwdef mutable struct AssignRunContext <: Pigeon.AbstractTransformContext
-    root
+Base.@kwdef mutable struct AcceptRun
+    body
 end
 
-function Pigeon.visit!(node::Access{Run, <:Union{Write, Update}}, ctx::AssignRunContext, ::DefaultStyle)
+Base.@kwdef mutable struct AcceptRunContext <: Pigeon.AbstractTransformContext
+    root
+    ctx
+end
+
+function Pigeon.visit!(node::Access{AcceptRun, <:Union{Write, Update}}, ctx::AcceptRunContext, ::DefaultStyle)
     @assert node.idxs == ctx.root.idxs[1:1]
-    Access(node.tns.body, node.mode, [])
+    Access(node.tns.body(ctx.ctx), node.mode, [])
 end

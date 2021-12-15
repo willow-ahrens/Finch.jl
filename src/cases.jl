@@ -9,8 +9,8 @@ struct CaseStyle end
 #TODO handle children of access?
 Pigeon.make_style(root, ctx::LowerJuliaContext, node::Cases) = CaseStyle()
 Pigeon.combine_style(a::DefaultStyle, b::CaseStyle) = CaseStyle()
-Pigeon.combine_style(a::RunAccessStyle, b::CaseStyle) = CaseStyle()
-Pigeon.combine_style(a::RunAssignStyle, b::CaseStyle) = CaseStyle()
+Pigeon.combine_style(a::RunStyle, b::CaseStyle) = CaseStyle()
+Pigeon.combine_style(a::AcceptRunStyle, b::CaseStyle) = CaseStyle()
 Pigeon.combine_style(a::SpikeStyle, b::CaseStyle) = CaseStyle()
 Pigeon.combine_style(a::CaseStyle, b::CaseStyle) = CaseStyle()
 
