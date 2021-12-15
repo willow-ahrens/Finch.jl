@@ -66,7 +66,6 @@ function Pigeon.visit!(node::Access{<:VirtualSimpleRunLength{Tv, Ti}, <: Union{P
                 push!(ctx.epilogue, quote
                     $my_p += 1
                     push!($(vec.ex).idx, $(Pigeon.visit!(stop, ctx)) + 1)
-                    println("hewwo uwu :3")
                     resize!($(vec.ex).val, $my_p)
                 end)
                 Scalar(Virtual{Tv}(:($(vec.ex).val[$my_p])))
