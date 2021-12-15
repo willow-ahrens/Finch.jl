@@ -3,7 +3,7 @@ using Pigeon
 using Test
 using MacroTools
 
-using Finch: VirtualAbstractArray, Run, Spike, Extent, Scalar, Cases, Stream, Packet
+using Finch: VirtualAbstractArray, Run, Spike, Extent, Scalar, Cases, Stream, Packet, AcceptRun
 
 Base.@kwdef struct ChunkVector
     body
@@ -23,6 +23,7 @@ end
 
     include("parse.jl")
     include("simplesparsetests.jl")
+    include("simplerunlengthtests.jl")
     exit()
 
     A = VirtualAbstractArray(1, :A, :A)

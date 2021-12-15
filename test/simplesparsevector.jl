@@ -59,3 +59,5 @@ function chunkbody(vec::VirtualSimpleSparseVector{Tv, Ti}) where {Tv, Ti}
         end
     )
 end
+
+Finch.register()

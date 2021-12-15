@@ -79,11 +79,10 @@ function Pigeon.visit!(root::Assign, ctx::LowerJuliaContext, ::DefaultStyle)
     if root.op == nothing
         rhs = visit!(root.rhs, ctx)
     else
-        rhs = visit!(call(root.op, root.lhs, root.rhs), ctx)
+        rhs = visit!(call(root.op, root.lhs, root.rhs), ctx) #TODO turn the update into an access with READ instead of write?
     end
-    tns = visit!(root.lhs.tns, ctx)
-    idxs = map(idx->visit!(idx, ctx), root.lhs.idxs)
-    :($(virtual_expr(tns))[$(idxs...)] = $rhs)
+    lhs = visit!(root.lhs, ctx)
+    :($lhs = $rhs)
 end
 
 function Pigeon.visit!(root::Call, ctx::LowerJuliaContext, ::DefaultStyle)
@@ -117,7 +116,7 @@ function Pigeon.visit!(root::Access, ctx::LowerJuliaContext, ::DefaultStyle)
     :($(virtual_expr(tns))[$(idxs...)])
 end
 
-function Pigeon.visit!(root::Access{<:Scalar, Read}, ctx::LowerJuliaContext, ::DefaultStyle)
+function Pigeon.visit!(root::Access{<:Scalar}, ctx::LowerJuliaContext, ::DefaultStyle)
     return visit!(root.tns.val, ctx)
 end
 

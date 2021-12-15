@@ -36,15 +36,19 @@ end
 
 #assume ssa
 
+Base.@kwdef mutable struct AcceptRun
+    body
+end
+
 struct AcceptRunStyle end
 
-Pigeon.make_style(root::Loop, ctx::LowerJuliaContext, node::Access{Run, <:Union{Write, Update}}) = AcceptRunStyle()
+Pigeon.make_style(root::Loop, ctx::LowerJuliaContext, node::Access{AcceptRun, <:Union{Write, Update}}) = AcceptRunStyle()
 Pigeon.combine_style(a::DefaultStyle, b::AcceptRunStyle) = AcceptRunStyle()
 Pigeon.combine_style(a::AcceptRunStyle, b::AcceptRunStyle) = AcceptRunStyle()
 Pigeon.combine_style(a::RunStyle, b::AcceptRunStyle) = RunStyle()
 
 function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::AcceptRunStyle)
-    root = visit!(root, AcceptRunContext(root))
+    root = visit!(root, AcceptRunContext(root, ctx))
     @assert !visit!(root, DirtyRunContext(root.idxs[1]))
     return visit!(Loop(root.idxs[2:end], root.body), ctx)
 end
@@ -61,10 +65,6 @@ function Pigeon.visit!(node::Access, ctx::DirtyRunContext, ::DefaultStyle)
     return ctx.idx in node.idxs
 end
 
-Base.@kwdef mutable struct AcceptRun
-    body
-end
-
 Base.@kwdef mutable struct AcceptRunContext <: Pigeon.AbstractTransformContext
     root
     ctx
@@ -72,5 +72,6 @@ end
 
 function Pigeon.visit!(node::Access{AcceptRun, <:Union{Write, Update}}, ctx::AcceptRunContext, ::DefaultStyle)
     @assert node.idxs == ctx.root.idxs[1:1]
-    Access(node.tns.body(ctx.ctx), node.mode, [])
+    ext = ctx.ctx.dims[getname(ctx.root.idxs[1])]
+    Access(node.tns.body(ctx.ctx, ext.start, ext.stop), node.mode, [])
 end
