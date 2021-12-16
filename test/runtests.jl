@@ -23,10 +23,9 @@ end
 
     include("parse.jl")
     include("simplesparsetests.jl")
-    #include("simplerunlengthtests.jl")
+    include("simplerunlengthtests.jl")
     exit()
 
-    #=
     A = VirtualAbstractArray(1, :A, :A)
     B = VirtualAbstractArray(1, :B, :B)
     println(lower_julia(@i @loop i A[i] = B[i]))
@@ -50,25 +49,31 @@ end
     ]), Extent(1, 10), :B)
     println(lower_julia(@i @loop i A[i] = B[i]))
 
-    A = ChunkVector(Thunk(
-        Stream(
-        body = (ctx) -> begin
-            my_i = gensym(:stream_i0)
-            my_i′ = gensym(:stream_i1)
-            my_p = gensym(:stream_p)
-            push!(ctx.preamble, :($my_p = 2))
-            push!(ctx.preamble, :($my_i = lvl.idx[$my_p]))
-            push!(ctx.preamble, :($my_i′ = lvl.idx[$my_p + 1]))
-            Packet(
+    my_i = gensym(:stream_i0)
+    my_i′ = gensym(:stream_i1)
+    my_p = gensym(:stream_p)
+    A = ChunkVector(
+        Thunk(
+            preamble = quote
+                $my_p = 2
+                $my_i = lvl.idx[$my_p]
+                $my_i′ = lvl.idx[$my_p + 1]
+            end,
+            body = Stream(
+                step = (ctx, start, stop) -> my_i,
                 body = (ctx, start, stop) -> begin
-                    push!(ctx.epilogue, :($my_p += ($my_i == $stop)))
-                    push!(ctx.epilogue, :($my_i = $my_i′))
-                    push!(ctx.epilogue, :($my_i′ = lvl.idx[$my_p + 1]))
                     Cases([
                         :($my_i == $stop) =>
-                            Spike(
-                                body = 0,
-                                tail = Virtual{Int}(:(lvl.val[$my_i])),
+                            Thunk(
+                                body = Spike(
+                                    body = 0,
+                                    tail = Virtual{Int}(:(lvl.val[$my_i])),
+                                ),
+                                epilogue = quote
+                                    $my_p += 1
+                                    $my_i = $my_i′
+                                    $my_i′ = lvl.idx[$my_p + 1]
+                                end
                             ),
                         :($my_i == $stop) =>
                             Run(
@@ -76,14 +81,12 @@ end
                             ),
                     ])
                 end,
-                step = (ctx, start, stop) -> my_i
             )
-        end),
+        ),
         Extent(1, 10), :A)
     
     B = VirtualAbstractArray(1, :B, :B)
 
     println(lower_julia(@i @loop i B[i] = A[i] + A[i]))
-    =#
 
 end

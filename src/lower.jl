@@ -65,9 +65,9 @@ end
 struct ThunkStyle end
 
 Base.@kwdef struct Thunk
-    preamble = :()
+    preamble = quote end
     body
-    epilogue = :()
+    epilogue = quote end
 end
 
 lower_style(::Thunk, ::LowerJuliaContext) = ThunkStyle()
@@ -97,11 +97,14 @@ end
 
 function lower_julia(prgm)
     ex = scope(LowerJuliaContext()) do ctx
+        prgm = postmap(node->revirtualize!(node, ctx), prgm)
         dimensionalize!(prgm, ctx)
         Pigeon.visit!(prgm, ctx)
     end
     MacroTools.prettify(ex, alias=false)
 end
+
+revirtualize!(node, ctx) = nothing
 
 Pigeon.visit!(::Pass, ctx::LowerJuliaContext, ::DefaultStyle) = quote end
 

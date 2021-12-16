@@ -10,7 +10,7 @@ function Base.getindex(vec::SimpleSparseVector{Tv, Ti, D}, i) where {Tv, Ti, D}
     vec.idx[p] == i ? vec.val[p] : D
 end
 
-struct VirtualSimpleSparseVector{Tv, Ti}
+mutable struct VirtualSimpleSparseVector{Tv, Ti}
     ex
     name
     D
@@ -18,6 +18,14 @@ end
 
 function Finch.virtualize(ex, ::Type{SimpleSparseVector{Tv, Ti, D, name}}) where {Tv, Ti, D, name}
     VirtualSimpleSparseVector{Tv, Ti}(ex, name, D)
+end
+
+function Finch.revirtualize!(node::VirtualSimpleSparseVector, ctx::Finch.LowerJuliaContext)
+    ex′ = Symbol(:tns_, node.name)
+    push!(ctx.preamble, :($ex′ = $(node.ex)))
+    node = deepcopy(node)
+    node.ex = ex′
+    node
 end
 
 Pigeon.lower_axes(arr::VirtualSimpleSparseVector{Tv, Ti}, ctx::Finch.LowerJuliaContext) where {Tv, Ti} = (Extent(1, Virtual{Ti}(:(size($(arr.ex))[1]))),)

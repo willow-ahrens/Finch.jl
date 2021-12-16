@@ -1,4 +1,4 @@
-struct SimpleRunLength{Tv, Ti} <: AbstractVector{Tv}
+mutable struct SimpleRunLength{Tv, Ti, name} <: AbstractVector{Tv}
     idx::Vector{Ti}
     val::Vector{Tv}
 end
@@ -10,13 +10,21 @@ function Base.getindex(vec::SimpleRunLength{Tv, Ti}, i) where {Tv, Ti}
     vec.val[p]
 end
 
-struct VirtualSimpleRunLength{Tv, Ti}
+mutable struct VirtualSimpleRunLength{Tv, Ti}
     ex
     name
 end
 
-function Finch.virtualize(ex, ::Type{SimpleRunLength{Tv, Ti}}) where {Tv, Ti}
-    VirtualSimpleRunLength{Tv, Ti}(ex, gensym(:goofy))
+function Finch.virtualize(ex, ::Type{SimpleRunLength{Tv, Ti, name}}) where {Tv, Ti, name}
+    VirtualSimpleRunLength{Tv, Ti}(ex, name)
+end
+
+function Finch.revirtualize!(node::VirtualSimpleRunLength, ctx::Finch.LowerJuliaContext)
+    ex′ = Symbol(:tns_, node.name)
+    push!(ctx.preamble, :($ex′ = $(node.ex)))
+    node = deepcopy(node)
+    node.ex = ex′
+    node
 end
 
 Pigeon.lower_axes(arr::VirtualSimpleRunLength{Tv, Ti}, ctx::Finch.LowerJuliaContext) where {Tv, Ti} = (Extent(1, Virtual{Ti}(:(size($(arr.ex))[1]))),)
@@ -27,27 +35,31 @@ Pigeon.make_style(root::Loop, ctx::Finch.LowerJuliaContext, node::Access{<:Virtu
 
 function Pigeon.visit!(node::Access{VirtualSimpleRunLength{Tv, Ti}, Pigeon.Read}, ctx::Finch.ChunkifyContext, ::Pigeon.DefaultStyle) where {Tv, Ti}
     vec = node.tns
+    my_i = Symbol(:tns_, Pigeon.getname(vec), :_i0)
+    my_i′ = Symbol(:tns_, Pigeon.getname(vec), :_i1)
+    my_p = Symbol(:tns_, Pigeon.getname(vec), :_p)
     if ctx.idx == node.idxs[1]
-        tns = Stream(
-            body = (ctx) -> begin
-                my_i = Symbol(Pigeon.getname(vec), :_i0)
-                my_i′ = Symbol(Pigeon.getname(vec), :_i1)
-                my_p = Symbol(Pigeon.getname(vec), :_p)
-                push!(ctx.preamble, :($my_p = 1))
-                push!(ctx.preamble, :($my_i = $(vec.ex).idx[$my_p]))
-                push!(ctx.preamble, :($my_i′ = $(vec.ex).idx[$my_p + 1]))
-                Packet(
-                    body = (ctx, start, stop) -> begin
-                        push!(ctx.epilogue, :($my_p += ($my_i == $stop)))
-                        push!(ctx.epilogue, :($my_i = $my_i′))
-                        push!(ctx.epilogue, :($my_i′ = $(vec.ex).idx[$my_p + 1]))
-                        Run(
-                            body = Virtual{Tv}(:($(vec.ex).val[$my_i])),
-                        )
-                    end,
-                    step = (ctx, start, stop) -> my_i
+        tns = Thunk(
+            preamble = quote
+                $my_p = 1
+                $my_i = 1
+                $my_i′ = $(vec.ex).idx[$my_p]
+            end,
+            body = Stream(
+                step = (ctx, start, stop) -> my_i′,
+                body = (ctx, start, stop) -> Thunk(
+                    body = Run(
+                        body = Virtual{Tv}(:($(vec.ex).val[$my_p])),
+                    ),
+                    epilogue = quote
+                        if $my_i′ == $stop
+                            $my_p += 1
+                            $my_i = $my_i′ + 1
+                            $my_i′ = $(vec.ex).idx[$my_p + 1]
+                        end
+                    end
                 )
-            end
+            )
         )
         Access(tns, node.mode, node.idxs)
     else

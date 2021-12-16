@@ -1,4 +1,4 @@
-Base.@kwdef struct VirtualAbstractArray
+Base.@kwdef mutable struct VirtualAbstractArray
     ndims
     name
     ex
@@ -30,6 +30,14 @@ end
 
 virtualize(ex, T) = Virtual{T}(ex)
 virtualize(ex, ::Type{<:AbstractArray{T, N}}) where {T, N} = VirtualAbstractArray(N, gensym(), ex)
+
+function revirtualize!(node::VirtualAbstractArray, ctx::LowerJuliaContext)
+    ex′ = Symbol(:tns_, node.name)
+    push!(ctx.preamble, :($ex′ = $(node.ex)))
+    node = deepcopy(node)
+    node.ex = ex′
+    node
+end
 
 Pigeon.isliteral(::Virtual) = false
 Pigeon.isliteral(::VirtualAbstractArray) = false
