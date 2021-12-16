@@ -19,15 +19,14 @@ struct CasesContext <: Pigeon.AbstractCollectContext end
 
 function Pigeon.visit!(stmt, ctx::LowerJuliaContext, ::CaseStyle)
     cases = visit!(stmt, CasesContext())
-    thunk = Expr(:block)
-    for (guard, body) in cases
-        push!(thunk.args, :(
-            if $(guard)
-                $(visit!(body, ctx))
-            end
-        ))
+    function nest(cases, inner=false)
+        guard, body = cases[1]
+        body = visit!(body, ctx)
+        length(cases) == 1 && return body
+        inner && return Expr(:elseif, guard, body, nest(cases[2:end], true))
+        return Expr(:if, guard, body, nest(cases[2:end], true))
     end
-    return thunk
+    return nest(cases)
 end
 
 virtual_and(x, y) = x === true ? y :

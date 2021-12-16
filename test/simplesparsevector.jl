@@ -29,20 +29,20 @@ Pigeon.visit!(node::Access{<:VirtualSimpleSparseVector}, ctx::Finch.ChunkifyCont
     ctx.idx == node.idxs[1] ? Access(chunkbody(node.tns), node.mode, node.idxs) : node.idxs
 
 function chunkbody(vec::VirtualSimpleSparseVector{Tv, Ti}) where {Tv, Ti}
-    my_i = Symbol(Pigeon.getname(vec), :_i0)
-    my_i′ = Symbol(Pigeon.getname(vec), :_i1)
-    my_p = Symbol(Pigeon.getname(vec), :_p)
+    my_i = Symbol(:tns_, Pigeon.getname(vec), :_i0)
+    my_i′ = Symbol(:tns_, Pigeon.getname(vec), :_i1)
+    my_p = Symbol(:tns_, Pigeon.getname(vec), :_p)
     return Thunk(
         preamble = quote
             $my_p = 1
-            $my_i = $(vec.ex).idx[$my_p]
-            $my_i′ = $(vec.ex).idx[$my_p + 1]
+            $my_i = 1
+            $my_i′ = $(vec.ex).idx[$my_p]
         end,
         body = Stream(
             step = (ctx, start, stop) -> my_i′,
             body = (ctx, start, stop) -> begin
                 Cases([
-                    :($my_i == $stop) =>
+                    :($my_i′ == $stop) =>
                         Thunk(
                             body = Spike(
                                 body = 0,
@@ -50,11 +50,11 @@ function chunkbody(vec::VirtualSimpleSparseVector{Tv, Ti}) where {Tv, Ti}
                             ),
                             epilogue = quote
                                 $my_p += 1
-                                $my_i = $my_i′
-                                $my_i′ = $(vec.ex).idx[$my_p + 1]
+                                $my_i = $my_i′ + 1
+                                $my_i′ = $(vec.ex).idx[$my_p]
                             end
                         ),
-                    :($my_i < $stop) =>
+                    true =>
                         Run(
                             body = 0,
                         ),
