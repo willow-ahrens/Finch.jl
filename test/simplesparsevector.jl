@@ -1,4 +1,4 @@
-struct SimpleSparseVector{Tv, Ti, D} <: AbstractVector{Tv}
+struct SimpleSparseVector{Tv, Ti, D, name} <: AbstractVector{Tv}
     idx::Vector{Ti}
     val::Vector{Tv}
 end
@@ -16,8 +16,8 @@ struct VirtualSimpleSparseVector{Tv, Ti}
     D
 end
 
-function Finch.virtualize(ex, ::Type{SimpleSparseVector{Tv, Ti, D}}) where {Tv, Ti, D}
-    VirtualSimpleSparseVector{Tv, Ti}(ex, gensym(:goofy), D)
+function Finch.virtualize(ex, ::Type{SimpleSparseVector{Tv, Ti, D, name}}) where {Tv, Ti, D, name}
+    VirtualSimpleSparseVector{Tv, Ti}(ex, name, D)
 end
 
 Pigeon.lower_axes(arr::VirtualSimpleSparseVector{Tv, Ti}, ctx::Finch.LowerJuliaContext) where {Tv, Ti} = (Extent(1, Virtual{Ti}(:(size($(arr.ex))[1]))),)
@@ -29,34 +29,38 @@ Pigeon.visit!(node::Access{<:VirtualSimpleSparseVector}, ctx::Finch.ChunkifyCont
     ctx.idx == node.idxs[1] ? Access(chunkbody(node.tns), node.mode, node.idxs) : node.idxs
 
 function chunkbody(vec::VirtualSimpleSparseVector{Tv, Ti}) where {Tv, Ti}
-    return Stream(
-        body = (ctx) -> begin
-            my_i = Symbol(Pigeon.getname(vec), :_i0)
-            my_i′ = Symbol(Pigeon.getname(vec), :_i1)
-            my_p = Symbol(Pigeon.getname(vec), :_p)
-            push!(ctx.preamble, :($my_p = 1))
-            push!(ctx.preamble, :($my_i = $(vec.ex).idx[$my_p]))
-            push!(ctx.preamble, :($my_i′ = $(vec.ex).idx[$my_p + 1]))
-            Packet(
-                body = (ctx, start, stop) -> begin
-                    push!(ctx.epilogue, :($my_p += ($my_i == $(Pigeon.visit!(ctx, stop))))
-                    push!(ctx.epilogue, :($my_i = $(vec.ex).idx[$my_p]))
-                    push!(ctx.epilogue, :($my_i′ = $(vec.ex).idx[$my_p + 1]))
-                    Cases([
-                        :($my_i == $stop) =>
-                            Spike(
+    my_i = Symbol(Pigeon.getname(vec), :_i0)
+    my_i′ = Symbol(Pigeon.getname(vec), :_i1)
+    my_p = Symbol(Pigeon.getname(vec), :_p)
+    return Thunk(
+        preamble = quote
+            $my_p = 1
+            $my_i = $(vec.ex).idx[$my_p]
+            $my_i′ = $(vec.ex).idx[$my_p + 1]
+        end,
+        body = Stream(
+            step = (ctx, start, stop) -> my_i′,
+            body = (ctx, start, stop) -> begin
+                Cases([
+                    :($my_i == $stop) =>
+                        Thunk(
+                            body = Spike(
                                 body = 0,
                                 tail = Virtual{Tv}(:($(vec.ex).val[$my_p])),
                             ),
-                        :($my_i == $stop) =>
-                            Run(
-                                body = 0,
-                            ),
-                    ])
-                end,
-                step = (ctx, start, stop) -> my_i
-            )
-        end
+                            epilogue = quote
+                                $my_p += 1
+                                $my_i = $my_i′
+                                $my_i′ = $(vec.ex).idx[$my_p + 1]
+                            end
+                        ),
+                    :($my_i < $stop) =>
+                        Run(
+                            body = 0,
+                        ),
+                ])
+            end
+        )
     )
 end
 

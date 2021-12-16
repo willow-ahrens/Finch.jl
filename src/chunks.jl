@@ -1,6 +1,7 @@
 struct ChunkStyle end
 
 Pigeon.combine_style(a::DefaultStyle, b::ChunkStyle) = ChunkStyle()
+Pigeon.combine_style(a::ThunkStyle, b::DefaultStyle) = ThunkStyle()
 Pigeon.combine_style(a::ChunkStyle, b::ChunkStyle) = ChunkStyle()
 
 struct ChunkifyContext <: Pigeon.AbstractTransformContext

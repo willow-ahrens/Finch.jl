@@ -18,6 +18,10 @@ function scope(f, ctx::LowerContext, vars...)
     return emit(ctx′, f(ctx′))
 end
 
+
+
+
+
 lower(root) = lower(root, LowerContext(root))
 lower(root, ctx) = lower(root, ctx, lower_style(root, ctx))
 lower_style(root, ctx) = lower_style(root, ctx, root)

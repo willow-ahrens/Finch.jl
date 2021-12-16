@@ -3,7 +3,7 @@ using Pigeon
 using Test
 using MacroTools
 
-using Finch: VirtualAbstractArray, Run, Spike, Extent, Scalar, Cases, Stream, Packet, AcceptRun
+using Finch: VirtualAbstractArray, Run, Spike, Extent, Scalar, Cases, Stream, AcceptRun, Thunk
 
 Base.@kwdef struct ChunkVector
     body
@@ -23,9 +23,10 @@ end
 
     include("parse.jl")
     include("simplesparsetests.jl")
-    include("simplerunlengthtests.jl")
+    #include("simplerunlengthtests.jl")
     exit()
 
+    #=
     A = VirtualAbstractArray(1, :A, :A)
     B = VirtualAbstractArray(1, :B, :B)
     println(lower_julia(@i @loop i A[i] = B[i]))
@@ -49,7 +50,8 @@ end
     ]), Extent(1, 10), :B)
     println(lower_julia(@i @loop i A[i] = B[i]))
 
-    A = ChunkVector(Stream(
+    A = ChunkVector(Thunk(
+        Stream(
         body = (ctx) -> begin
             my_i = gensym(:stream_i0)
             my_i′ = gensym(:stream_i1)
@@ -82,5 +84,6 @@ end
     B = VirtualAbstractArray(1, :B, :B)
 
     println(lower_julia(@i @loop i B[i] = A[i] + A[i]))
+    =#
 
 end

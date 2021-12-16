@@ -13,6 +13,7 @@ struct RunStyle end
 
 Pigeon.make_style(root::Loop, ctx::LowerJuliaContext, node::Run) = RunStyle()
 Pigeon.combine_style(a::DefaultStyle, b::RunStyle) = RunStyle()
+Pigeon.combine_style(a::ThunkStyle, b::RunStyle) = ThunkStyle()
 Pigeon.combine_style(a::RunStyle, b::RunStyle) = RunStyle()
 
 function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::RunStyle)
@@ -44,6 +45,7 @@ struct AcceptRunStyle end
 
 Pigeon.make_style(root::Loop, ctx::LowerJuliaContext, node::Access{AcceptRun, <:Union{Write, Update}}) = AcceptRunStyle()
 Pigeon.combine_style(a::DefaultStyle, b::AcceptRunStyle) = AcceptRunStyle()
+Pigeon.combine_style(a::ThunkStyle, b::AcceptRunStyle) = ThunkStyle()
 Pigeon.combine_style(a::AcceptRunStyle, b::AcceptRunStyle) = AcceptRunStyle()
 Pigeon.combine_style(a::RunStyle, b::AcceptRunStyle) = RunStyle()
 

@@ -62,6 +62,37 @@ function scope(f, ctx::LowerJuliaContext)
     return thunk
 end
 
+struct ThunkStyle end
+
+Base.@kwdef struct Thunk
+    preamble = :()
+    body
+    epilogue = :()
+end
+
+lower_style(::Thunk, ::LowerJuliaContext) = ThunkStyle()
+
+Pigeon.make_style(root, ctx::LowerJuliaContext, node::Thunk) = ThunkStyle()
+Pigeon.combine_style(a::DefaultStyle, b::ThunkStyle) = ThunkStyle()
+Pigeon.combine_style(a::ThunkStyle, b::ThunkStyle) = ThunkStyle()
+
+struct ThunkContext <: Pigeon.AbstractTransformContext
+    ctx
+end
+
+function Pigeon.visit!(node, ctx::LowerJuliaContext, ::ThunkStyle)
+    scope(ctx) do ctx′
+        node = visit!(node, ThunkContext(ctx′))
+        visit!(node, ctx′) #TODO might want to use original context?
+    end
+end
+
+function Pigeon.visit!(node::Thunk, ctx::ThunkContext, ::DefaultStyle)
+    push!(ctx.ctx.preamble, node.preamble)
+    push!(ctx.ctx.epilogue, node.epilogue)
+    node.body
+end
+
 #default lowering
 
 function lower_julia(prgm)
