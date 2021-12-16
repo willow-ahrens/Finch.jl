@@ -34,19 +34,19 @@ function chunkbody(vec::VirtualSimpleSparseVector{Tv, Ti}) where {Tv, Ti}
             my_i = Symbol(Pigeon.getname(vec), :_i0)
             my_i′ = Symbol(Pigeon.getname(vec), :_i1)
             my_p = Symbol(Pigeon.getname(vec), :_p)
-            push!(ctx.preamble, :($my_p = 2))
+            push!(ctx.preamble, :($my_p = 1))
             push!(ctx.preamble, :($my_i = $(vec.ex).idx[$my_p]))
             push!(ctx.preamble, :($my_i′ = $(vec.ex).idx[$my_p + 1]))
             Packet(
                 body = (ctx, start, stop) -> begin
-                    push!(ctx.epilogue, :($my_p += ($my_i == $stop)))
-                    push!(ctx.epilogue, :($my_i = $my_i′))
+                    push!(ctx.epilogue, :($my_p += ($my_i == $(Pigeon.visit!(ctx, stop))))
+                    push!(ctx.epilogue, :($my_i = $(vec.ex).idx[$my_p]))
                     push!(ctx.epilogue, :($my_i′ = $(vec.ex).idx[$my_p + 1]))
                     Cases([
                         :($my_i == $stop) =>
                             Spike(
                                 body = 0,
-                                tail = Virtual{Tv}(:($(vec.ex).val[$my_i])),
+                                tail = Virtual{Tv}(:($(vec.ex).val[$my_p])),
                             ),
                         :($my_i == $stop) =>
                             Run(
