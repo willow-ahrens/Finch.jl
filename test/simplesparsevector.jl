@@ -6,7 +6,7 @@ end
 Base.size(vec::SimpleSparseVector) = vec.idx[end] - 1
 
 function Base.getindex(vec::SimpleSparseVector{Tv, Ti, D}, i) where {Tv, Ti, D}
-    p = findlast(j->j <= i, vec.idx)
+    p = findfirst(j->j >= i, vec.idx)
     vec.idx[p] == i ? vec.val[p] : D
 end
 
@@ -28,7 +28,11 @@ function Finch.revirtualize!(node::VirtualSimpleSparseVector, ctx::Finch.LowerJu
     node
 end
 
-Pigeon.lower_axes(arr::VirtualSimpleSparseVector{Tv, Ti}, ctx::Finch.LowerJuliaContext) where {Tv, Ti} = (Extent(1, Virtual{Ti}(:(size($(arr.ex))[1]))),)
+function Pigeon.lower_axes(arr::VirtualSimpleSparseVector{Tv, Ti}, ctx::Finch.LowerJuliaContext) where {Tv, Ti}
+    ex = Symbol(:tns_, arr.name, :_stop)
+    push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))
+    (Extent(1, Virtual{Ti}(ex)),)
+end
 Pigeon.getsites(arr::VirtualSimpleSparseVector) = (1,)
 Pigeon.getname(arr::VirtualSimpleSparseVector) = arr.name
 Pigeon.make_style(root::Loop, ctx::Finch.LowerJuliaContext, node::Access{<:VirtualSimpleSparseVector}) =

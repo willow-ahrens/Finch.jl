@@ -101,7 +101,7 @@ function lower_julia(prgm)
         dimensionalize!(prgm, ctx)
         Pigeon.visit!(prgm, ctx)
     end
-    MacroTools.prettify(ex, alias=false)
+    MacroTools.prettify(ex, alias=false, lines=false)
 end
 
 revirtualize!(node, ctx) = nothing

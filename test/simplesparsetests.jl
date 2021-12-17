@@ -1,10 +1,10 @@
 include("simplesparsevector.jl")
 @testset "simplesparsevector" begin
-    A = SimpleSparseVector{Float64, Int, 0.0, :A}([1, 3, 5, 7, 9, 10], [2.0, 3.0, 4.0, 5.0, 6.0, 7.0])
-    B = SimpleSparseVector{Float64, Int, 0.0, :B}([1, 5, 8, 10], [1.0, 1.0, 1.0])
+    A = SimpleSparseVector{Float64, Int, 0.0, :A}([1, 3, 5, 7, 9, 11], [2.0, 3.0, 4.0, 5.0, 6.0])
+    B = SimpleSparseVector{Float64, Int, 0.0, :B}([2, 5, 8, 11], [1.0, 1.0, 1.0])
     println(A)
     println(B)
-    C = zeros(9)
+    C = zeros(10)
     ex = @I @loop i C[i] += A[i] + B[i]
     display(lower_julia(virtualize(:ex, typeof(ex))))
     println()

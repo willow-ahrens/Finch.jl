@@ -43,7 +43,7 @@ end
 
 struct AcceptRunStyle end
 
-Pigeon.make_style(root::Loop, ctx::LowerJuliaContext, node::Access{AcceptRun, <:Union{Write, Update}}) = AcceptRunStyle()
+Pigeon.make_style(root::Loop, ctx::LowerJuliaContext, node::Access{AcceptRun, <:Union{Write, Update}}) = (println(root.idxs); AcceptRunStyle())
 Pigeon.combine_style(a::DefaultStyle, b::AcceptRunStyle) = AcceptRunStyle()
 Pigeon.combine_style(a::ThunkStyle, b::AcceptRunStyle) = ThunkStyle()
 Pigeon.combine_style(a::AcceptRunStyle, b::AcceptRunStyle) = AcceptRunStyle()
