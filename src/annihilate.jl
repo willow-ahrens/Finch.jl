@@ -32,3 +32,5 @@ annihilate_index = Fixpoint(Prewalk(Chain([
     (@ex@rule @i(@pass(~~a) where ~x) => pass(~~a)),
     #(@ex@rule @i(~x where @pass(~~a)) => ~x), #can't do this bc produced tensors won't get initialized
 ])))
+
+#TODO add simplify as a chunk pass.
