@@ -85,3 +85,8 @@ function trim_chunk_stop!(node::Spike, ctx::LowerJuliaContext, stop, stop′)
         :($(visit!(stop′, ctx)) < $(visit!(stop, ctx))) => trim_chunk_stop!(node.body, ctx, stop, stop′)
     ])
 end
+
+function Pigeon.visit!(node::Access{Spike}, ctx::ForLoopContext, ::DefaultStyle)
+    @assert node.idxs == [ctx.idx]
+    Access(node.tns.tail, node.mode, [])
+end

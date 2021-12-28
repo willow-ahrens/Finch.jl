@@ -168,6 +168,7 @@ function Pigeon.visit!(stmt::Loop, ctx::LowerJuliaContext, ::DefaultStyle)
         ext = ctx.dims[getname(stmt.idxs[1])]
         return bind(ctx, stmt.idxs[1] => idx_sym) do 
             scope(ctx, ) do ctx′
+                stmt′ = visit!(stmt′, ForLoopContext(ctx′, stmt.idxs[1], idx_sym))
                 quote
                     for $idx_sym = $(visit!(ext.start, ctx′)):$(visit!(ext.stop, ctx′))
                         $(visit!(stmt′, ctx′))
@@ -176,4 +177,10 @@ function Pigeon.visit!(stmt::Loop, ctx::LowerJuliaContext, ::DefaultStyle)
             end
         end
     end
+end
+
+Base.@kwdef struct ForLoopContext <: Pigeon.AbstractTransformContext
+    ctx
+    idx
+    val
 end
