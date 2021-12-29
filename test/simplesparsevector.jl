@@ -3,7 +3,7 @@ struct SimpleSparseVector{Tv, Ti, D, name} <: AbstractVector{Tv}
     val::Vector{Tv}
 end
 
-Base.size(vec::SimpleSparseVector) = vec.idx[end] - 1
+Base.size(vec::SimpleSparseVector) = (vec.idx[end] - 1,)
 
 function Base.getindex(vec::SimpleSparseVector{Tv, Ti, D}, i) where {Tv, Ti, D}
     p = findfirst(j->j >= i, vec.idx)

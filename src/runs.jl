@@ -51,7 +51,7 @@ Pigeon.combine_style(a::RunStyle, b::AcceptRunStyle) = RunStyle()
 
 function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::AcceptRunStyle)
     root′ = visit!(root, AcceptRunContext(root, ctx))
-    if visit!(root′, DirtyRunContext(root.idxs[1])) #TODO can we guarantee the type of root′?
+    if !visit!(root′, DirtyRunContext(root.idxs[1])) #TODO can we guarantee the type of root′?
         return visit!(Loop(root′.idxs[2:end], root′.body), ctx)
     else
         return visit!(Loop(root.idxs[1:end], root.body), ctx, DefaultStyle()) #TODO most correct thing to do here is to resolve a backup style.

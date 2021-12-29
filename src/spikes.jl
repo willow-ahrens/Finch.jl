@@ -90,3 +90,57 @@ function Pigeon.visit!(node::Access{Spike}, ctx::ForLoopContext, ::DefaultStyle)
     @assert node.idxs == [ctx.idx]
     Access(node.tns.tail, node.mode, [])
 end
+
+
+#=
+#assume ssa
+
+Base.@kwdef mutable struct AcceptSpike
+    body
+end
+
+struct AcceptSpikeStyle end
+
+Pigeon.make_style(root::Loop, ctx::LowerJuliaContext, node::Access{AcceptSpike, <:Union{Write, Update}}) = AcceptSpikeStyle()
+Pigeon.combine_style(a::DefaultStyle, b::AcceptSpikeStyle) = AcceptSpikeStyle()
+Pigeon.combine_style(a::ThunkStyle, b::AcceptSpikeStyle) = ThunkStyle()
+Pigeon.combine_style(a::AcceptSpikeStyle, b::AcceptSpikeStyle) = AcceptSpikeStyle()
+Pigeon.combine_style(a::RunStyle, b::AcceptSpikeStyle) = RunStyle()
+
+function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::AcceptSpikeStyle)
+    root′ = visit!(root, AcceptSpikeContext(root, ctx))
+    if visit!(root′, DirtyRunContext(root.idxs[1])) #TODO can we guarantee the type of root′?
+        return visit!(Loop(root′.idxs[2:end], root′.body), ctx)
+    else
+        return visit!(Loop(root.idxs[1:end], root.body), ctx, DefaultStyle()) #TODO most correct thing to do here is to resolve a backup style.
+    end
+end
+
+Base.@kwdef mutable struct DirtyRunContext <: Pigeon.AbstractCollectContext
+    idx
+end
+
+Pigeon.collector(ctx::DirtyRunContext) = any
+
+Pigeon.postvisit!(node, ctx::DirtyRunContext) = false 
+
+function Pigeon.visit!(node::Access, ctx::DirtyRunContext, ::DefaultStyle)
+    return ctx.idx in node.idxs
+end
+
+Base.@kwdef mutable struct AcceptSpikeContext <: Pigeon.AbstractTransformContext
+    root
+    ctx
+end
+
+function Pigeon.visit!(node::Access{AcceptSpike, <:Union{Write, Update}}, ctx::AcceptSpikeContext, ::DefaultStyle)
+    @assert node.idxs == ctx.root.idxs[1:1]
+    ext = ctx.ctx.dims[getname(ctx.root.idxs[1])]
+    Access(node.tns.body(ctx.ctx, ext.start, ext.stop), node.mode, [])
+end
+
+function Pigeon.visit!(node::Access{AcceptSpike}, ctx::ForLoopContext, ::DefaultStyle)
+    @assert node.idxs == [ctx.idx]
+    Access(node.tns.body(ctx.ctx, ctx.val, ctx.val), node.mode, [])
+end
+=#

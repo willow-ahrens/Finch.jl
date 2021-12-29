@@ -6,6 +6,7 @@ include("simplesparsevector.jl")
     println(B)
     C = zeros(10)
     ex = @I @loop i C[i] += A[i] + B[i]
+    println(typeof(ex))
     display(lower_julia(virtualize(:ex, typeof(ex))))
     println()
     execute(ex)

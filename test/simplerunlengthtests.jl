@@ -7,6 +7,7 @@ include("simplerunlength.jl")
     println(B)
     C = SimpleRunLength{Float64, Int, :C}([1, 10], [0.0])
     ex = @I @loop i C[i] += A[i] + B[i]
+    println(typeof(ex))
     display(lower_julia(virtualize(:ex, typeof(ex))))
     println()
     execute(ex)

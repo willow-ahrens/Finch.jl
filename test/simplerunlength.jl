@@ -3,7 +3,7 @@ mutable struct SimpleRunLength{Tv, Ti, name} <: AbstractVector{Tv}
     val::Vector{Tv}
 end
 
-Base.size(vec::SimpleRunLength) = vec.idx[end]
+Base.size(vec::SimpleRunLength) = (vec.idx[end], )
 
 function Base.getindex(vec::SimpleRunLength{Tv, Ti}, i) where {Tv, Ti}
     p = findfirst(j->j >= i, vec.idx)
