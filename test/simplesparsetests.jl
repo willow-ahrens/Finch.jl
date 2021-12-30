@@ -11,4 +11,13 @@ include("simplesparsevector.jl")
     println()
     execute(ex)
     println(C)
+
+    C = SimpleSparseVector{Float64, Int, 0.0, :c}([11], [])
+
+    ex = @I @loop i C[i] += A[i] + B[i]
+    println(typeof(ex))
+    display(lower_julia(virtualize(:ex, typeof(ex))))
+    println()
+    execute(ex)
+    println(C)
 end

@@ -12,6 +12,7 @@ Pigeon.combine_style(a::DefaultStyle, b::StreamStyle) = StreamStyle()
 Pigeon.combine_style(a::StreamStyle, b::StreamStyle) = StreamStyle()
 Pigeon.combine_style(a::StreamStyle, b::RunStyle) = StreamStyle()
 Pigeon.combine_style(a::StreamStyle, b::AcceptRunStyle) = StreamStyle()
+Pigeon.combine_style(a::StreamStyle, b::AcceptSpikeStyle) = StreamStyle()
 Pigeon.combine_style(a::StreamStyle, b::SpikeStyle) = StreamStyle() #Not sure on this one
 Pigeon.combine_style(a::StreamStyle, b::CaseStyle) = CaseStyle()
 Pigeon.combine_style(a::ThunkStyle, b::StreamStyle) = ThunkStyle()

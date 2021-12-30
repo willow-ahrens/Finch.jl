@@ -3,7 +3,7 @@ using Pigeon
 using Test
 using MacroTools
 
-using Finch: VirtualAbstractArray, Run, Spike, Extent, Scalar, Cases, Stream, AcceptRun, Thunk
+using Finch: VirtualAbstractArray, Run, Spike, Extent, Scalar, Cases, Stream, AcceptRun, AcceptSpike, Thunk
 
 Base.@kwdef struct ChunkVector
     body
