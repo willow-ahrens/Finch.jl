@@ -56,7 +56,8 @@ function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::AcceptRunStyle)
     if !visit!(body, DirtyRunContext(idx))
         return visit!(body, ctx)
     else
-        return visit!(root, ctx, DefaultStyle()) #TODO most correct thing to do here is to resolve a backup style.
+        #call DefaultStyle, the only style that AcceptRunStyle promotes with
+        return visit!(root, ctx, DefaultStyle())
     end
 end
 

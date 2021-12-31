@@ -115,7 +115,9 @@ Pigeon.combine_style(a::RunStyle, b::AcceptSpikeStyle) = RunStyle()
 Pigeon.combine_style(a::SpikeStyle, b::AcceptSpikeStyle) = SpikeStyle()
 
 function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::AcceptSpikeStyle)
-    return visit!(Loop(root.idxs[1:end], root.body), ctx, DefaultStyle()) #TODO most correct thing to do here is to resolve a backup style.
+    #call DefaultStyle because we didn't simplify away the body or tail of
+    #corresponding Spikes, and need to set all the elements of the spike.
+    return visit!(Loop(root.idxs[1:end], root.body), ctx, DefaultStyle())
 end
 
 Base.@kwdef mutable struct AcceptSpikeContext <: Pigeon.AbstractTransformContext
