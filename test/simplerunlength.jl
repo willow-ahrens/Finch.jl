@@ -1,4 +1,4 @@
-mutable struct SimpleRunLength{Tv, Ti, name} <: AbstractVector{Tv}
+mutable struct SimpleRunLength{Tv, Ti} <: AbstractVector{Tv}
     idx::Vector{Ti}
     val::Vector{Tv}
 end
@@ -15,8 +15,8 @@ mutable struct VirtualSimpleRunLength{Tv, Ti}
     name
 end
 
-function Finch.virtualize(ex, ::Type{SimpleRunLength{Tv, Ti, name}}) where {Tv, Ti, name}
-    VirtualSimpleRunLength{Tv, Ti}(ex, name)
+function Finch.virtualize(ex, ::Type{SimpleRunLength{Tv, Ti}}; tag=gensym(), kwargs...) where {Tv, Ti}
+    VirtualSimpleRunLength{Tv, Ti}(ex, tag)
 end
 
 function Finch.revirtualize!(node::VirtualSimpleRunLength, ctx::Finch.LowerJuliaContext)

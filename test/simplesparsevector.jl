@@ -1,11 +1,15 @@
-mutable struct SimpleSparseVector{Tv, Ti, D, name} <: AbstractVector{Tv}
+mutable struct SimpleSparseVector{D, Tv, Ti} <: AbstractVector{Tv}
     idx::Vector{Ti}
     val::Vector{Tv}
 end
 
+function SimpleSparseVector{D}(idx::Vector{Ti}, val::Vector{Tv}) where {D, Ti, Tv}
+    SimpleSparseVector{D, Tv, Ti}(idx, val)
+end
+
 Base.size(vec::SimpleSparseVector) = (vec.idx[end] - 1,)
 
-function Base.getindex(vec::SimpleSparseVector{Tv, Ti, D}, i) where {Tv, Ti, D}
+function Base.getindex(vec::SimpleSparseVector{D, Tv, Ti}, i) where {D, Tv, Ti}
     p = findfirst(j->j >= i, vec.idx)
     vec.idx[p] == i ? vec.val[p] : D
 end
@@ -16,8 +20,8 @@ mutable struct VirtualSimpleSparseVector{Tv, Ti}
     D
 end
 
-function Finch.virtualize(ex, ::Type{SimpleSparseVector{Tv, Ti, D, name}}) where {Tv, Ti, D, name}
-    VirtualSimpleSparseVector{Tv, Ti}(ex, name, D)
+function Finch.virtualize(ex, ::Type{SimpleSparseVector{D, Tv, Ti}}; tag=gensym(), kwargs...) where {D, Tv, Ti}
+    VirtualSimpleSparseVector{Tv, Ti}(ex, tag, D)
 end
 
 function Finch.revirtualize!(node::VirtualSimpleSparseVector, ctx::Finch.LowerJuliaContext)

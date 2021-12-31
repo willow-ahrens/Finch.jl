@@ -1,3 +1,4 @@
+
 Base.@kwdef mutable struct VirtualAbstractArray
     ndims
     name
@@ -28,8 +29,11 @@ function Pigeon.visit!(arr::VirtualAbstractArray, ctx::LowerJuliaContext, ::Defa
     return arr.ex
 end
 
-virtualize(ex, T) = Virtual{T}(ex)
-virtualize(ex, ::Type{<:AbstractArray{T, N}}) where {T, N} = VirtualAbstractArray(N, gensym(), ex)
+virtualize(ex, T) = virtualize(ex, T, tag)
+virtualize(ex, T, tag) = Virtual{T}(ex)
+function virtualize(ex, ::Type{<:AbstractArray{T, N}}; tag=gensym(), kwargs...) where {T, N}
+    VirtualAbstractArray(N, tag, ex)
+end
 
 function revirtualize!(node::VirtualAbstractArray, ctx::LowerJuliaContext)
     ex′ = Symbol(:tns_, node.name)

@@ -1,7 +1,7 @@
-using Finch: mesacall, mesaaccess, mesavalue, mesaname, mesaloop, mesawith, virtualize
+using Finch: mesacall, mesaaccess, mesavalue, mesaname, mesaloop, mesawith, mesalabel, virtualize
 @testset "Parse" begin
     @test @I(:f(:B[i, k] * :C[k, j]^3, 42)) ==
-    mesacall(mesavalue(:f), mesacall(mesavalue(*), mesaaccess(mesavalue(:B), Pigeon.Read(), mesaname(:i), mesaname(:k)), mesacall(mesavalue(^), mesaaccess(mesavalue(:C), Pigeon.Read(), mesaname(:k), mesaname(:j)), mesavalue(3))), mesavalue(42))
+    mesacall(mesavalue(:f), mesacall(mesalabel(:*, mesavalue(*)), mesaaccess(mesavalue(:B), Pigeon.Read(), mesaname(:i), mesaname(:k)), mesacall(mesalabel(:^, mesavalue(^)), mesaaccess(mesavalue(:C), Pigeon.Read(), mesaname(:k), mesaname(:j)), mesavalue(3))), mesavalue(42))
 
     @test virtualize(:ex, typeof(@I(:f(:B[i, k] * :C[k, j]^3, 42)))) ==
     call(:f, call(*, access(:B, Pigeon.Read(), Name(:i), Name(:k)), call(^, access(:C, Pigeon.Read(), Name(:k), Name(:j)), 3)), 42) 

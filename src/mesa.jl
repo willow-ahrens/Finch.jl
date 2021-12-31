@@ -3,47 +3,12 @@ abstract type MesaIndexStatement <: MesaIndexNode end
 abstract type MesaIndexExpression <: MesaIndexNode end
 abstract type MesaIndexTerminal <: MesaIndexExpression end
 
-const tab = "  "
-
-function Base.show(io::IO, mime::MIME"text/plain", stmt::MesaIndexStatement)
-	println(io, "\"\"\"")
-	show_statement(io, mime, stmt, 0)
-	println(io, "\"\"\"")
-end
-
-function Base.show(io::IO, mime::MIME"text/plain", ex::MesaIndexExpression)
-	print(io, "\"")
-	show_expression(io, mime, ex)
-	print(io, "\"")
-end
-
-function Base.show(io::IO, ex::MesaIndexNode)
-    if istree(ex)
-        print(io, operation(ex))
-        print(io, "(")
-        for arg in arguments(ex)[1:end-1]
-            show(io, arg)
-            print(io, ", ")
-        end
-        if length(arguments(ex)) >= 1
-            show(io, last(arguments(ex)))
-        end
-        print(io, ")")
-    else
-        invoke(show, Tuple{IO, Any}, io, ex)
-    end
-end
-
 struct MesaLiteral{val} <: MesaIndexTerminal
 end
 
 mesaliteral(tns) = MesaLiteral{tns}()
 
-virtualize(ex, ::Type{MesaLiteral{val}}) where {val} = Literal(val)
-
-TermInterface.istree(::Type{<:MesaLiteral}) = false
-
-show_expression(io, mime, ex::MesaLiteral{val}) where {val} = print(io, val)
+virtualize(ex, ::Type{MesaLiteral{val}}; kwargs...) where {val} = Literal(val)
 
 struct MesaPass{Tns} <: MesaIndexStatement
     tns::Tns
@@ -52,28 +17,13 @@ Base.:(==)(a::MesaPass, b::MesaPass) = a.tns == b.tns
 
 mesapass(tns) = MesaPass(tns)
 
-virtualize(ex, ::Type{MesaPass{Tns}}) where {Tns} = Pass(virtualize(:($ex.tns), Tns))
-
-TermInterface.istree(::Type{<:MesaPass}) = true
-TermInterface.operation(stmt::MesaPass) = mesapass
-TermInterface.arguments(stmt::MesaPass{tns}) where {tns} = Any[stmt.tns]
-TermInterface.similarterm(::MesaIndexNode, ::typeof(mesapass), args, T...) = mesapass(args...)
-
-function show_statement(io, mime, stmt::MesaPass, level)
-    print(io, tab^level * "(")
-    show_expression(io, mime, stmt.tns)
-    print(io, ")")
-end
+virtualize(ex, ::Type{MesaPass{Tns}}; kwargs...) where {Tns} = Pass(virtualize(:($ex.tns), Tns))
 
 struct MesaName{name} <: MesaIndexTerminal end
 
 mesaname(name) = MesaName{name}()
 
-TermInterface.istree(::Type{<:MesaName}) = false
-
-show_expression(io, mime, ex::MesaName{name}) where {name} = print(io, name)
-
-virtualize(ex, ::Type{MesaName{name}}) where {name} = Name(name)
+virtualize(ex, ::Type{MesaName{name}}; kwargs...) where {name} = Name(name)
 
 struct MesaWith{Cons, Prod} <: MesaIndexStatement
 	cons::Cons
@@ -83,20 +33,7 @@ Base.:(==)(a::MesaWith, b::MesaWith) = a.cons == b.cons && a.prod == b.prod
 
 mesawith(cons, prod) = With(cons, prod)
 
-TermInterface.istree(::Type{<:MesaWith}) = true
-TermInterface.operation(stmt::MesaWith) = mesawith
-TermInterface.arguments(stmt::MesaWith) = Any[stmt.cons, stmt.prod]
-TermInterface.similarterm(::MesaIndexNode, ::typeof(mesawith), args, T...) = mesawith(args...)
-
-function show_statement(io, mime, stmt::MesaWith, level)
-    print(io, tab^level * "(\n")
-    show_statement(io, mime, stmt.cons, level + 1)
-    print(io, tab^level * ") where (\n")
-    show_statement(io, mime, stmt.prod, level + 1)
-    print(io, tab^level * ")\n")
-end
-
-virtualize(ex, ::Type{MesaWith{Cons, Prod}}) where {Cons, Prod} = With(virtualize(:($ex.cons), Cons), virtualize(:($ex.prod), Prod))
+virtualize(ex, ::Type{MesaWith{Cons, Prod}}; kwargs...) where {Cons, Prod} = With(virtualize(:($ex.cons), Cons), virtualize(:($ex.prod), Prod))
 
 struct MesaLoop{Idxs<:Tuple, Body} <: MesaIndexStatement
 	idxs::Idxs
@@ -106,26 +43,7 @@ Base.:(==)(a::MesaLoop, b::MesaLoop) = a.idxs == b.idxs && a.body == b.body
 
 mesaloop(args...) = MesaLoop((args[1:end-1]...,), args[end])
 
-TermInterface.istree(::Type{<:MesaLoop}) = true
-TermInterface.operation(stmt::MesaLoop) = mesaloop
-TermInterface.arguments(stmt::MesaLoop) = Any[stmt.idxs; stmt.body]
-TermInterface.similarterm(::MesaIndexNode, ::typeof(mesaloop), args, T...) = mesaloop(args...)
-
-function show_statement(io, mime, stmt::MesaLoop, level)
-    print(io, tab^level * "@∀ ")
-    if !isempty(stmt.idxs)
-        show_expression(io, mime, stmt.idxs[1])
-        for idx in stmt.idxs[2:end]
-            print(io," ")
-            show_expression(io, mime, idx)
-        end
-    end
-    print(io," (\n")
-    show_statement(io, mime, stmt.body, level + 1)
-    print(io, tab^level * ")\n")
-end
-
-function virtualize(ex, ::Type{MesaLoop{Idxs, Body}}) where {Idxs, Body}
+function virtualize(ex, ::Type{MesaLoop{Idxs, Body}}; kwargs...) where {Idxs, Body}
     idxs = map(enumerate(Idxs.parameters)) do (n, Idx)
         virtualize(:($ex.idxs[$n]), Idx)
     end
@@ -143,34 +61,11 @@ Base.:(==)(a::MesaAssign, b::MesaAssign) = a.lhs == b.lhs && a.op == b.op && a.r
 mesaassign(lhs, rhs) = MesaAssign(lhs, nothing, rhs)
 mesaassign(lhs, op, rhs) = MesaAssign(lhs, op, rhs)
 
-TermInterface.istree(::Type{<:MesaAssign})= true
-TermInterface.operation(stmt::MesaAssign) = mesaassign
-function TermInterface.arguments(stmt::MesaAssign)
-    if stmt.op === nothing
-        Any[stmt.lhs, stmt.rhs]
-    else
-        Any[stmt.lhs, stmt.op, stmt.rhs]
-    end
-end
-TermInterface.similarterm(::MesaIndexNode, ::typeof(mesaassign), args, T...) = mesaassign(args...)
-
-function show_statement(io, mime, stmt::MesaAssign, level)
-    print(io, tab^level)
-    show_expression(io, mime, stmt.lhs)
-    print(io, " ")
-    if stmt.op !== nothing
-        show_expression(io, mime, stmt.op)
-    end
-    print(io, "= ")
-    show_expression(io, mime, stmt.rhs)
-    print(io, "\n")
-end
-
-function virtualize(ex, ::Type{MesaAssign{Lhs, Nothing, Rhs}}) where {Lhs, Rhs}
+function virtualize(ex, ::Type{MesaAssign{Lhs, Nothing, Rhs}}; kwargs...) where {Lhs, Rhs}
     Assign(virtualize(:($ex.lhs), Lhs), nothing, virtualize(:($ex.rhs), Rhs))
 end
 
-function virtualize(ex, ::Type{MesaAssign{Lhs, Op, Rhs}}) where {Lhs, Op, Rhs}
+function virtualize(ex, ::Type{MesaAssign{Lhs, Op, Rhs}}; kwargs...) where {Lhs, Op, Rhs}
     Assign(virtualize(:($ex.lhs), Lhs), virtualize(:($ex.op), Op), virtualize(:($ex.rhs), Rhs))
 end
 
@@ -182,23 +77,7 @@ Base.:(==)(a::MesaCall, b::MesaCall) = a.op == b.op && a.args == b.args
 
 mesacall(op, args...) = MesaCall(op, args)
 
-TermInterface.istree(::Type{<:MesaCall}) = true
-TermInterface.operation(ex::MesaCall) = mesacall
-TermInterface.arguments(ex::MesaCall) = Any[ex.op; ex.args]
-TermInterface.similarterm(::MesaIndexNode, ::typeof(mesacall), args, T...) = mesacall(args...)
-
-function show_expression(io, mime, ex::MesaCall)
-    show_expression(io, mime, ex.op)
-    print(io, "(")
-    for arg in ex.args[1:end-1]
-        show_expression(io, mime, arg)
-        print(io, ", ")
-    end
-    show_expression(io, mime, ex.args[end])
-    print(io, ")")
-end
-
-function virtualize(ex, ::Type{MesaCall{Op, Args}}) where {Op, Args}
+function virtualize(ex, ::Type{MesaCall{Op, Args}}; kwargs...) where {Op, Args}
     op = virtualize(:($ex.op), Op)
     args = map(enumerate(Args.parameters)) do (n, Arg)
         virtualize(:($ex.args[$n]), Arg)
@@ -215,46 +94,38 @@ Base.:(==)(a::MesaAccess, b::MesaAccess) = a.tns == b.tns && a.mode == b.mode &&
 
 mesaaccess(tns, mode, idxs...) = MesaAccess(tns, mode, idxs)
 
-TermInterface.istree(::Type{<:MesaAccess}) = true
-TermInterface.operation(ex::MesaAccess) = mesaaccess
-TermInterface.arguments(ex::MesaAccess) = Any[ex.tns; ex.mode; ex.idxs]
-TermInterface.similarterm(::MesaIndexNode, ::typeof(mesaaccess), args, T...) = mesaaccess!(args)
-
-function show_expression(io, mime, ex::MesaAccess)
-    show_expression(io, mime, ex.tns)
-    print(io, "[")
-    if length(ex.idxs) >= 1
-        for idx in ex.idxs[1:end-1]
-            show_expression(io, mime, idx)
-            print(io, ", ")
-        end
-        show_expression(io, mime, ex.idxs[end])
-    end
-    print(io, "]")
-end
-
 show_expression(io, mime, ex) = print(io, ex)
 
-function virtualize(ex, ::Type{MesaAccess{Tns, Mode, Idxs}}) where {Tns, Mode, Idxs}
+function virtualize(ex, ::Type{MesaAccess{Tns, Mode, Idxs}}; kwargs...) where {Tns, Mode, Idxs}
     tns = virtualize(:($ex.tns), Tns)
     idxs = map(enumerate(Idxs.parameters)) do (n, Idx)
         virtualize(:($ex.idxs[$n]), Idx)
     end
-    Access(tns, _virtualize_mode(Mode), idxs)
+    Access(tns, virtualize(:($ex.mode), Mode), idxs)
 end
 
-_virtualize_mode(::Type{Read}) = Read()
-_virtualize_mode(::Type{Write}) = Write()
-_virtualize_mode(::Type{Update}) = Update()
+virtualize(ex, ::Type{Read}; kwargs...) = Read()
+virtualize(ex, ::Type{Write}; kwargs...) = Write()
+virtualize(ex, ::Type{Update}; kwargs...) = Update()
+
+struct MesaLabel{tag, Tns} <: MesaIndexExpression
+    tns::Tns
+end
+Base.:(==)(a::MesaLabel, b::MesaLabel) = false
+Base.:(==)(a::MesaLabel{tag}, b::MesaLabel{tag}) where {tag} = a.tns == b.tns
+
+mesalabel(tag, tns) = MesaLabel{tag, typeof(tns)}(tns)
+
+function virtualize(ex, ::Type{MesaLabel{tag, Tns}}; kwargs...) where {tag, Tns}
+    return virtualize(:($ex.tns), Tns, tag=tag)
+end
 
 struct MesaValue{arg} end
 
 mesavalue(arg) = isbits(arg) ? MesaValue{arg}() : arg
 mesavalue(arg::Symbol) = MesaValue{arg}()
 
-TermInterface.istree(::Type{<:MesaValue}) = false
-
-virtualize(ex, ::Type{MesaValue{arg}}) where {arg} = arg
+virtualize(ex, ::Type{MesaValue{arg}}; kwargs...) where {arg} = arg
 
 #TODO following code should be merged with the code in Pigeon. Not good to copy
 #paste. We'll do this when we reorganize Finch to be the package which defines
@@ -305,6 +176,8 @@ function capture_index(ex; ctx...)
         return esc(ex.args[1])
     elseif ex isa Symbol && values(ctx).namify
         return mesaname(ex)
+    elseif ex isa Symbol
+        return :(mesalabel($(QuoteNode(ex)), mesavalue($(esc(ex)))))
     else
         return :(mesavalue($(esc(ex))))
     end
