@@ -106,7 +106,7 @@ function Pigeon.visit!(root::Assign, ctx::LowerJuliaContext, ::DefaultStyle)
     if root.op == nothing
         rhs = visit!(root.rhs, ctx)
     else
-        rhs = visit!(call(root.op, root.lhs, root.rhs), ctx) #TODO turn the update into an access with READ instead of write?
+        rhs = visit!(call(root.op, root.lhs, root.rhs), ctx)
     end
     lhs = visit!(root.lhs, ctx)
     :($lhs = $rhs)

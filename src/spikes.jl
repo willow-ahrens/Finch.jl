@@ -50,8 +50,6 @@ function access_spike_tail(node::Access{AcceptRun}, ctx, idx)
     return Access(node.tns.body(ctx.ctx, ext.stop, ext.stop), node.mode, [])
 end
 
-#TODO truncate_block needs to be called on non-chunk tensors? What do we do with non-chunk tensors? probably makes more sense to just have a visitor?
-
 spike_body_stop(stop, ctx) = :($(visit!(stop, ctx)) - 1)
 spike_body_stop(stop::Integer, ctx) = stop - 1
 
