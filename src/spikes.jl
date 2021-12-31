@@ -21,11 +21,15 @@ function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::SpikeStyle)
     root_body = postmap(node->spike_body(node, ctx, root.idxs[1]), root)
     #TODO arguably we could take several better alternative approaches to rediminsionalization here
     body_expr = restrict(ctx, getname(root.idxs[1]) => spike_body_range(ctx.dims[getname(root.idxs[1])], ctx)) do
-        visit!(annihilate_index(root_body), ctx)
+        scope(ctx) do ctx′
+            visit!(annihilate_index(root_body), ctx′)
+        end
     end
     root_tail = visit!(Loop(root.idxs[2:end], root.body), AccessSpikeTailContext(ctx, root))
     tail_expr = bind(ctx, root.idxs[1] => ctx.dims[getname(root.idxs[1])].stop) do 
-        visit!(annihilate_index(root_tail), ctx)
+        scope(ctx) do ctx′
+            visit!(annihilate_index(root_tail), ctx′)
+        end
     end
     return Expr(:block, body_expr, tail_expr)
 end

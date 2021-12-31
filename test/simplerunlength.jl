@@ -72,21 +72,23 @@ function Pigeon.visit!(node::Access{<:VirtualSimpleRunLength{Tv, Ti}, <: Union{P
     vec = node.tns
     my_p = Symbol(:tns_, node.tns.name, :_p)
     if ctx.idx == node.idxs[1]
-        push!(ctx.ctx.preamble, quote
-            $my_p = 0
-            $(vec.ex).idx = $Ti[]
-            $(vec.ex).val = $Tv[]
-        end)
-        tns = AcceptRun(
-            body = (ctx, start, stop) -> Thunk(
-                preamble = quote
-                    push!($(vec.ex).val, zero($Tv))
-                    $my_p += 1
-                end,
-                body = Scalar(Virtual{Tv}(:($(vec.ex).val[$my_p]))),
-                epilogue = quote
-                    push!($(vec.ex).idx, $(Pigeon.visit!(stop, ctx)))
-                end
+        tns = Thunk(
+            preamble = quote
+                $my_p = 0
+                $(vec.ex).idx = $Ti[]
+                $(vec.ex).val = $Tv[]
+            end,
+            body = AcceptRun(
+                body = (ctx, start, stop) -> Thunk(
+                    preamble = quote
+                        push!($(vec.ex).val, zero($Tv))
+                        $my_p += 1
+                    end,
+                    body = Scalar(Virtual{Tv}(:($(vec.ex).val[$my_p]))),
+                    epilogue = quote
+                        push!($(vec.ex).idx, $(Pigeon.visit!(stop, ctx)))
+                    end
+                )
             )
         )
         Access(tns, node.mode, node.idxs)

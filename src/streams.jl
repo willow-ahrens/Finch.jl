@@ -30,9 +30,11 @@ function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::StreamStyle)
                 stop = postmapreduce(node->stream_step!(node, ctx′, i0, i1), vcat, root, [])
                 stop = [stop; [visit!(ctx.dims[i].stop, ctx)]]
                 body = postmap(node->stream_body!(node, ctx′, i0, i1), root)
-                push!(ctx′.preamble, :($i1 = min($(stop...))))
-                restrict(ctx′, i => Extent(Virtual{Any}(i0), Virtual{Any}(i1))) do
-                    visit!(body, ctx′)
+                quote
+                    $i1 = min($(stop...))
+                    $(restrict(ctx′, i => Extent(Virtual{Any}(i0), Virtual{Any}(i1))) do
+                        visit!(body, ctx′)
+                    end)
                 end
             end)
             $i0 = $i1 + 1
