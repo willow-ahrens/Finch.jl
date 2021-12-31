@@ -1,12 +1,3 @@
-struct Virtual{T}
-    ex
-end
-TermInterface.istree(::Type{<:Virtual}) = false
-
-virtual_typeof(x) = typeof(x)
-virtual_typeof(::Virtual{T}) where {T} = T
-virtual_expr(x) = x
-virtual_expr(ex::Virtual) = ex.ex
 
 Base.@kwdef mutable struct Extent
     start
@@ -147,7 +138,7 @@ function Pigeon.visit!(root::Access, ctx::LowerJuliaContext, ::DefaultStyle)
     @assert root.idxs ⊆ keys(ctx.bindings)
     tns = visit!(root.tns, ctx)
     idxs = map(idx->visit!(idx, ctx), root.idxs)
-    :($(virtual_expr(tns))[$(idxs...)])
+    :($(visit!(tns, ctx))[$(idxs...)])
 end
 
 function Pigeon.visit!(root::Access{<:Scalar}, ctx::LowerJuliaContext, ::DefaultStyle)

@@ -1,3 +1,13 @@
+virtualize(ex, T) = virtualize(ex, T, tag)
+virtualize(ex, T, tag) = Virtual{T}(ex)
+
+struct Virtual{T}
+    ex
+end
+TermInterface.istree(::Type{<:Virtual}) = false
+
+Pigeon.isliteral(::Virtual) = false
+
 abstract type MesaIndexNode end
 abstract type MesaIndexStatement <: MesaIndexNode end
 abstract type MesaIndexExpression <: MesaIndexNode end
