@@ -72,10 +72,8 @@ struct ThunkContext <: Pigeon.AbstractTransformContext
 end
 
 function Pigeon.visit!(node, ctx::LowerJuliaContext, ::ThunkStyle)
-    scope(ctx) do ctx′
-        node = visit!(node, ThunkContext(ctx′))
-        visit!(node, ctx′) #TODO might want to use original context?
-    end
+    node = visit!(node, ThunkContext(ctx))
+    visit!(node, ctx)
 end
 
 function Pigeon.visit!(node::Thunk, ctx::ThunkContext, ::DefaultStyle)
@@ -155,16 +153,16 @@ function Pigeon.visit!(stmt::Loop, ctx::LowerJuliaContext, ::DefaultStyle)
         return visit!(stmt.body, ctx)
     else
         idx_sym = gensym(Pigeon.getname(stmt.idxs[1]))
-        stmt′ = Loop(stmt.idxs[2:end], stmt.body)
+        body = Loop(stmt.idxs[2:end], stmt.body)
         ext = ctx.dims[getname(stmt.idxs[1])]
-        return bind(ctx, stmt.idxs[1] => idx_sym) do 
-            scope(ctx, ) do ctx′
-                stmt′ = visit!(stmt′, ForLoopContext(ctx′, stmt.idxs[1], idx_sym))
-                quote
-                    for $idx_sym = $(visit!(ext.start, ctx′)):$(visit!(ext.stop, ctx′))
-                        $(visit!(stmt′, ctx′))
+        return quote
+            for $idx_sym = $(visit!(ext.start, ctx)):$(visit!(ext.stop, ctx))
+                $(bind(ctx, stmt.idxs[1] => idx_sym) do 
+                    scope(ctx) do ctx′
+                        body = visit!(body, ForLoopContext(ctx′, stmt.idxs[1], idx_sym))
+                        visit!(body, ctx′)
                     end
-                end
+                end)
             end
         end
     end
