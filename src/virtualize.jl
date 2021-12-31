@@ -137,10 +137,6 @@ mesavalue(arg::Symbol) = MesaValue{arg}()
 
 virtualize(ex, ::Type{MesaValue{arg}}; kwargs...) where {arg} = arg
 
-#TODO following code should be merged with the code in Pigeon. Not good to copy
-#paste. We'll do this when we reorganize Finch to be the package which defines
-#index expressions.
-
 function capture_index(ex; ctx...)
     incs = Dict(:+= => :+, :*= => :*, :/= => :/, :^= => :^)
 
