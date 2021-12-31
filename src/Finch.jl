@@ -20,15 +20,15 @@ export Virtual, Scalar, Chunk
 export lower_julia
 export @I, execute
 
+include("virtualize.jl")
 include("lower.jl")
 include("annihilate.jl")
-include("virtuals.jl")
 include("chunks.jl")
 include("runs.jl")
 include("spikes.jl")
 include("cases.jl")
 include("streams.jl")
-include("mesa.jl")
 include("execute.jl")
+include("virtual_abstractarray.jl")
 
 end

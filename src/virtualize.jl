@@ -1,9 +1,9 @@
-virtualize(ex, T) = virtualize(ex, T, tag)
-virtualize(ex, T, tag) = Virtual{T}(ex)
-
 struct Virtual{T}
     ex
 end
+
+virtualize(ex, T; kwargs...) = Virtual{T}(ex)
+
 TermInterface.istree(::Type{<:Virtual}) = false
 
 Pigeon.isliteral(::Virtual) = false
