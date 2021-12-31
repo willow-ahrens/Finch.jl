@@ -50,11 +50,13 @@ Pigeon.combine_style(a::AcceptRunStyle, b::AcceptRunStyle) = AcceptRunStyle()
 Pigeon.combine_style(a::RunStyle, b::AcceptRunStyle) = RunStyle()
 
 function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::AcceptRunStyle)
-    root′ = visit!(root, AcceptRunContext(root, ctx))
-    if !visit!(root′, DirtyRunContext(root.idxs[1])) #TODO can we guarantee the type of root′?
-        return visit!(Loop(root′.idxs[2:end], root′.body), ctx)
+    idx = root.idxs[1]
+    body = Loop(root.idxs[2:end], root.body)
+    body = visit!(body, AcceptRunContext(body, idx, ctx))
+    if !visit!(body, DirtyRunContext(idx))
+        return visit!(body, ctx)
     else
-        return visit!(Loop(root.idxs[1:end], root.body), ctx, DefaultStyle()) #TODO most correct thing to do here is to resolve a backup style.
+        return visit!(root, ctx, DefaultStyle()) #TODO most correct thing to do here is to resolve a backup style.
     end
 end
 
@@ -72,12 +74,13 @@ end
 
 Base.@kwdef mutable struct AcceptRunContext <: Pigeon.AbstractTransformContext
     root
+    idx
     ctx
 end
 
 function Pigeon.visit!(node::Access{AcceptRun, <:Union{Write, Update}}, ctx::AcceptRunContext, ::DefaultStyle)
-    @assert node.idxs == ctx.root.idxs[1:1]
-    ext = ctx.ctx.dims[getname(ctx.root.idxs[1])]
+    @assert node.idxs == [ctx.idx]
+    ext = ctx.ctx.dims[getname(ctx.idx)]
     Access(node.tns.body(ctx.ctx, ext.start, ext.stop), node.mode, [])
 end
 

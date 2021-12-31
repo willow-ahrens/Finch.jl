@@ -113,7 +113,7 @@ function Pigeon.visit!(root::Call, ctx::LowerJuliaContext, ::DefaultStyle)
 end
 
 function Pigeon.visit!(root::Name, ctx::LowerJuliaContext, ::DefaultStyle)
-    @assert haskey(ctx.bindings, root) "TODO unbound variable error or something"
+    @assert haskey(ctx.bindings, root) "variable $(getname(root)) unbound"
     return visit!(ctx.bindings[root], ctx) #This unwraps indices that are virtuals. Arguably these virtuals should be precomputed, but whatevs.
 end
 
