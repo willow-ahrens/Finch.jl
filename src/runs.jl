@@ -35,6 +35,11 @@ function Pigeon.visit!(node::Access{Run, Read}, ctx::AccessRunContext, ::Default
     return node
 end
 
+function Pigeon.visit!(node::Access{Run, Read}, ctx::ForLoopContext, ::DefaultStyle)
+    @assert node.idxs[1] == ctx.idx
+    return node.tns.body
+end
+
 #assume ssa
 
 Base.@kwdef mutable struct AcceptRun

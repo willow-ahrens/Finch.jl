@@ -26,9 +26,13 @@ function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::SpikeStyle)
             visit!(annihilate_index(root_body), ctx′)
         end
     end
-    root_tail = visit!(Loop(root.idxs[2:end], root.body), AccessSpikeTailContext(ctx, root))
-    tail_expr = bind(ctx, root.idxs[1] => ctx.dims[getname(root.idxs[1])].stop) do 
+    val = ctx.dims[getname(root.idxs[1])].stop
+    tail_expr = bind(ctx, root.idxs[1] => val) do 
         scope(ctx) do ctx′
+            root_tail = visit!(Loop(root.idxs[2:end], root.body), AccessSpikeTailContext(root, ctx′, idx, val))
+            #The next call is a convenient fallback, but make no mistake, all chunks must work with all other chunks.
+            #It's a handshake problem and you can't get around it.
+            root_tail = visit!(root_tail, ForLoopContext(ctx′, idx, val))
             visit!(annihilate_index(root_tail), ctx′)
         end
     end
@@ -50,48 +54,21 @@ function Pigeon.visit!(node::Run, ctx::AccessSpikeBodyContext, ::DefaultStyle)
     return node
 end
 
-
-
-function access_spike_tail(node::Access{Run}, ctx, idx)
-    @assert ctx.root.idxs[1:1] == node.idxs
-    return Access(node.tns.body, node.mode, [])
-end
-
-function access_spike_tail(node::Access{AcceptRun}, ctx, idx)
-    @assert node.idxs == ctx.root.idxs[1:1]
-    ext = ctx.ctx.dims[getname(ctx.root.idxs[1])]
-    return Access(node.tns.body(ctx.ctx, ext.stop, ext.stop), node.mode, [])
-end
-
 spike_body_stop(stop, ctx) = :($(visit!(stop, ctx)) - 1)
 spike_body_stop(stop::Integer, ctx) = stop - 1
 
 spike_body_range(ext::Extent, ctx) = Extent(ext.start, spike_body_stop(ext.stop, ctx))
 
 Base.@kwdef struct AccessSpikeTailContext <: Pigeon.AbstractTransformContext
-    ctx
     root
+    ctx
+    idx
+    val
 end
 
-function Pigeon.visit!(node::Access, ctx::AccessSpikeTailContext, ::DefaultStyle)
-    if ctx.root.idxs[1] in node.idxs
-        return access_spike_tail(node, ctx, ctx.root.idxs[1])
-    end
-    return node
-end
-
-function access_spike_tail(node::Access{Run}, ctx, idx)
-    @assert ctx.root.idxs[1:1] == node.idxs
-    return Access(node.tns.body, node.mode, [])
-end
-
-function access_spike_tail(node::Access{Spike}, ctx, idx)
-    @assert ctx.root.idxs[1:1] == node.idxs
-    return Access(node.tns.tail, node.mode, [])
-end
-
-function access_spike_tail(node::Access, ctx, idx)
-    return node
+function Pigeon.visit!(node::Access{Spike}, ctx::AccessSpikeTailContext, ::DefaultStyle)
+    @assert ctx.idx == node.idxs[1]
+    return Access(node.tns.tail, node.mode, node.idxs[2:end])
 end
 
 function trim_chunk_stop!(node::Spike, ctx::LowerJuliaContext, stop, stop′)
