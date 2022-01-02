@@ -71,13 +71,6 @@ function Pigeon.visit!(node::Access{Spike}, ctx::AccessSpikeTailContext, ::Defau
     return Access(node.tns.tail, node.mode, node.idxs[2:end])
 end
 
-function trim_chunk_stop!(node::Spike, ctx::LowerJuliaContext, stop, stop′)
-    return Cases([
-        :($(visit!(stop′, ctx)) == $(visit!(stop, ctx))) => node,
-        :($(visit!(stop′, ctx)) < $(visit!(stop, ctx))) => trim_chunk_stop!(node.body, ctx, stop, stop′)
-    ])
-end
-
 function Pigeon.visit!(node::Access{Spike}, ctx::ForLoopContext, ::DefaultStyle)
     @assert node.idxs == [ctx.idx]
     Access(node.tns.tail, node.mode, [])
