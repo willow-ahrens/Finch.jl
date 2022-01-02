@@ -34,7 +34,7 @@ include("simplesparsevector.jl")
     println(B)
     println(C)
 
-    @test C == [1.0, 1.0, 3.0, 0.0, 5.0, 0.0, 5.0, 1.0, 6.0, 0.0]
+    @test C == [2.0, 1.0, 3.0, 0.0, 5.0, 0.0, 5.0, 1.0, 6.0, 0.0]
     println()
 
     println("sparse = sparse + sparse")
@@ -68,7 +68,7 @@ include("simplesparsevector.jl")
     println(C)
 
     @test C.idx == [2, 3, 4, 5, 7, 8, 9, 10]
-    @test C.val == [2.0, 3.0, 2.0, 3.0, 6.0, 7.0, 9.0]
+    @test C.val == [2.0, 3.0, 2.0, 3.0, 6.0, 7.0, 6.0, 9.0]
     println()
 
     println("run = run + dense")
@@ -86,6 +86,6 @@ include("simplesparsevector.jl")
     println(C)
 
     @test C.idx == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    @test C.val == [3.0, 3.0, 4.0, 4.0, 5.0, 5.0, 6.0, 6.0, 7.0, 7.0]
+    @test C.val == [3.0, 4.0, 4.0, 5.0, 5.0, 6.0, 6.0, 7.0, 7.0, 8.0]
     println()
 end
