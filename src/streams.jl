@@ -47,6 +47,7 @@ stream_step!(node::Stream, ctx, start, stop) = [node.step(ctx, start, stop)]
 stream_body!(node, ctx, start, stop) = nothing
 stream_body!(node::Stream, ctx, start, stop) = node.body(ctx, start, stop)
 
+#TODO make this work
 function trim_chunk_stop!(node::Spike, ctx::LowerJuliaContext, stop, stop′)
     return Cases([
         :($(visit!(stop′, ctx)) == $(visit!(stop, ctx))) => node,
