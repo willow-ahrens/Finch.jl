@@ -18,7 +18,8 @@ Pigeon.combine_style(a::SpikeStyle, b::SpikeStyle) = SpikeStyle()
 
 function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::SpikeStyle)
     @assert !isempty(root.idxs)
-    root_body = postmap(node->spike_body(node, ctx, root.idxs[1]), root)
+    idx = root.idxs[1]
+    root_body = Pigeon.visit!(root, AccessSpikeBodyContext(root, ctx, idx))
     #TODO arguably we could take several better alternative approaches to rediminsionalization here
     body_expr = restrict(ctx, getname(root.idxs[1]) => spike_body_range(ctx.dims[getname(root.idxs[1])], ctx)) do
         scope(ctx) do ctx′
@@ -34,11 +35,23 @@ function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::SpikeStyle)
     return Expr(:block, body_expr, tail_expr)
 end
 
-spike_body(node, ctx, idx) = nothing
-spike_body(node::Spike, ctx, idx) = Run(node.body)
 
-#A bit ugly. We can make this work better.
-spike_body(node::Run, ctx, idx) = node
+Base.@kwdef struct AccessSpikeBodyContext <: Pigeon.AbstractTransformContext
+    root
+    ctx
+    idx
+end
+
+function Pigeon.visit!(node::Spike, ctx::AccessSpikeBodyContext, ::DefaultStyle)
+    return Run(node.body)
+end
+
+function Pigeon.visit!(node::Run, ctx::AccessSpikeBodyContext, ::DefaultStyle)
+    return node
+end
+
+
+
 function access_spike_tail(node::Access{Run}, ctx, idx)
     @assert ctx.root.idxs[1:1] == node.idxs
     return Access(node.tns.body, node.mode, [])
