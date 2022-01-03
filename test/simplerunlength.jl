@@ -47,14 +47,14 @@ function Pigeon.visit!(node::Access{VirtualSimpleRunLength{Tv, Ti}, Pigeon.Read}
                 $my_p = 1
                 $my_i′ = $(vec.ex).idx[$my_p]
             end,
-            body = Stream(
-                step = (ctx, start, stop) -> my_i′,
-                body = (ctx, start, stop) -> Thunk(
+            body = Stepper(
+                stride = (start) -> my_i′,
+                body = (start, step) -> Thunk(
                     body = Run(
                         body = Virtual{Tv}(:($(vec.ex).val[$my_p])),
                     ),
                     epilogue = quote
-                        if $my_i′ == $stop && $my_p < length($(vec.ex).idx)
+                        if $my_i′ == $step && $my_p < length($(vec.ex).idx)
                             $my_p += 1
                             $my_i′ = $(vec.ex).idx[$my_p]
                         end

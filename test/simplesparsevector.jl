@@ -57,11 +57,15 @@ function Pigeon.visit!(node::Access{VirtualSimpleSparseVector{Tv, Ti}, Pigeon.Re
                 $my_i = 1
                 $my_i′ = $(vec.ex).idx[$my_p]
             end,
-            body = Stream(
-                step = (ctx, start, stop) -> my_i′,
-                body = (ctx, start, stop) -> begin
+            body = Stepper(
+                stride = (start) -> my_i′,
+                body = (start, step) -> begin
                     Cases([
-                        :($my_i′ == $stop) =>
+                        :($step < $my_i′) =>
+                            Run(
+                                body = 0,
+                            ),
+                        true =>
                             Thunk(
                                 body = Spike(
                                     body = 0,
@@ -72,10 +76,6 @@ function Pigeon.visit!(node::Access{VirtualSimpleSparseVector{Tv, Ti}, Pigeon.Re
                                     $my_i = $my_i′ + 1
                                     $my_i′ = $(vec.ex).idx[$my_p]
                                 end
-                            ),
-                        true =>
-                            Run(
-                                body = 0,
                             ),
                     ])
                 end

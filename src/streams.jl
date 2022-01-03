@@ -1,57 +1,67 @@
-struct StreamStyle end
+struct StepperStyle end
 
-Base.@kwdef struct Stream
+Base.@kwdef struct Stepper
     body
-    step
+    stride
 end
 
-Pigeon.isliteral(::Stream) = false
+Pigeon.isliteral(::Stepper) = false
 
-Pigeon.make_style(root::Loop, ctx::LowerJuliaContext, node::Stream) = StreamStyle()
-Pigeon.combine_style(a::DefaultStyle, b::StreamStyle) = StreamStyle()
-Pigeon.combine_style(a::StreamStyle, b::StreamStyle) = StreamStyle()
-Pigeon.combine_style(a::StreamStyle, b::RunStyle) = StreamStyle()
-Pigeon.combine_style(a::StreamStyle, b::AcceptRunStyle) = StreamStyle()
-Pigeon.combine_style(a::StreamStyle, b::AcceptSpikeStyle) = StreamStyle()
-Pigeon.combine_style(a::StreamStyle, b::SpikeStyle) = StreamStyle() #Not sure on this one
-Pigeon.combine_style(a::StreamStyle, b::CaseStyle) = CaseStyle()
-Pigeon.combine_style(a::ThunkStyle, b::StreamStyle) = ThunkStyle()
-#Pigeon.combine_style(a::StreamStyle, b::PipelineStyle) = PipelineStyle()
+Pigeon.make_style(root::Loop, ctx::LowerJuliaContext, node::Stepper) = StepperStyle()
+Pigeon.combine_style(a::DefaultStyle, b::StepperStyle) = StepperStyle()
+Pigeon.combine_style(a::StepperStyle, b::StepperStyle) = StepperStyle()
+Pigeon.combine_style(a::StepperStyle, b::RunStyle) = StepperStyle()
+Pigeon.combine_style(a::StepperStyle, b::AcceptRunStyle) = StepperStyle()
+Pigeon.combine_style(a::StepperStyle, b::AcceptSpikeStyle) = StepperStyle()
+Pigeon.combine_style(a::StepperStyle, b::SpikeStyle) = StepperStyle() #Not sure on this one
+Pigeon.combine_style(a::StepperStyle, b::CaseStyle) = CaseStyle()
+Pigeon.combine_style(a::ThunkStyle, b::StepperStyle) = ThunkStyle()
+#Pigeon.combine_style(a::StepperStyle, b::PipelineStyle) = PipelineStyle()
 
-function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::StreamStyle)
+function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::StepperStyle)
     i = getname(root.idxs[1])
     thunk = Expr(:block)
     i0 = gensym(Symbol("_", i))
-    i1 = gensym(Symbol("_", i))
+    step = gensym(Symbol("_", i))
     return quote
         $i0 = $(ctx.dims[i].start)
         while $i0 <= $(visit!(ctx.dims[i].stop, ctx))
             $(scope(ctx) do ctx′
-                stop = postmapreduce(node->stream_step!(node, ctx′, i0, i1), vcat, root, [])
-                stop = [stop; [visit!(ctx.dims[i].stop, ctx)]]
-                body = postmap(node->stream_body!(node, ctx′, i0, i1), root)
+                strides = visit!(root, StepperStrideContext(ctx′, i0))
+                strides = [strides; visit!(ctx.dims[i].stop, ctx)]
+                body = visit!(root, StepperBodyContext(ctx′, i0, step))
                 quote
-                    $i1 = min($(stop...))
-                    $(restrict(ctx′, i => Extent(Virtual{Any}(i0), Virtual{Any}(i1))) do
+                    $step = min($(strides...))
+                    $(restrict(ctx′, i => Extent(Virtual{Any}(i0), Virtual{Any}(step))) do
                         visit!(body, ctx′)
                     end)
                 end
             end)
-            $i0 = $i1 + 1
+            $i0 = $step + 1
         end
     end
 end
 
-stream_step!(node, ctx, start, stop) = nothing
-stream_step!(node::Stream, ctx, start, stop) = [node.step(ctx, start, stop)]
-stream_body!(node, ctx, start, stop) = nothing
-stream_body!(node::Stream, ctx, start, stop) = node.body(ctx, start, stop)
+Base.@kwdef struct StepperStrideContext <: Pigeon.AbstractCollectContext
+    ctx
+    start
+end
+Pigeon.collect_op(::StepperStrideContext) = (args) -> vcat(args...) #flatten?
+Pigeon.collect_zero(::StepperStrideContext) = []
+Pigeon.visit!(node::Stepper, ctx::StepperStrideContext, ::DefaultStyle) = [node.stride(ctx.start)]
 
-#TODO make this work
-function trim_chunk_stop!(node::Spike, ctx::LowerJuliaContext, stop, stop′)
+Base.@kwdef struct StepperBodyContext <: Pigeon.AbstractTransformContext
+    ctx
+    start
+    step
+end
+Pigeon.visit!(node::Stepper, ctx::StepperBodyContext, ::DefaultStyle) = node.body(ctx.start, ctx.step)
+Pigeon.visit!(node::Spike, ctx::StepperBodyContext, ::DefaultStyle) = truncate(node, ctx.start, ctx.step, ctx.ctx.dims[getname(ctx.idx)].stop)
+
+truncate(node, start, step, stop) = node
+function truncate(node::Spike, start, step, stop)
     return Cases([
-        :($(visit!(stop′, ctx)) == $(visit!(stop, ctx))) => node,
-        :($(visit!(stop′, ctx)) < $(visit!(stop, ctx))) => trim_chunk_stop!(node.body, ctx, stop, stop′)
+        :($(step) < $(stop)) => Run(node.body),
+        :($(step) == $(stop)) => node,
     ])
 end
-

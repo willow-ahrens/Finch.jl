@@ -69,11 +69,8 @@ end
 Base.@kwdef mutable struct DirtyRunContext <: Pigeon.AbstractCollectContext
     idx
 end
-
-Pigeon.collector(ctx::DirtyRunContext) = any
-
-Pigeon.postvisit!(node, ctx::DirtyRunContext) = false 
-
+Pigeon.collect_op(ctx::DirtyRunContext) = any
+Pigeon.collect_zero(ctx::DirtyRunContext) = false
 function Pigeon.visit!(node::Access, ctx::DirtyRunContext, ::DefaultStyle)
     return ctx.idx in node.idxs
 end

@@ -43,14 +43,23 @@ function restrict(f, ctx::LowerJuliaContext, (idx, ext′), tail...)
     return res
 end
 
-function scope(f, ctx::LowerJuliaContext)
-    thunk = Expr(:block)
+function openscope(ctx::LowerJuliaContext)
     ctx′ = LowerJuliaContext(bindings = ctx.bindings, dims = ctx.dims)
-    body = f(ctx′)
-    append!(thunk.args, ctx′.preamble)
+    return ctx′
+end
+
+function closescope(body, ctx)
+    thunk = Expr(:block)
+    append!(thunk.args, ctx.preamble)
     push!(thunk.args, body)
-    append!(thunk.args, ctx′.epilogue)
+    append!(thunk.args, ctx.epilogue)
     return thunk
+end
+
+function scope(f, ctx::LowerJuliaContext)
+    ctx′ = openscope(ctx)
+    body = f(ctx′)
+    return closescope(body, ctx′)
 end
 
 struct ThunkStyle end
