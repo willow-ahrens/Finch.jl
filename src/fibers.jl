@@ -4,6 +4,10 @@ export DenseLevel
 export DenseFiber
 export ScalarLevel
 
+struct FiberArray{Tv, N, Levels<:NTuple{N}} <: AbstractArray{Tv, N}
+    levels::Levels
+end
+
 #represents a collection of SparseFibers
 struct SparseLevel{Tv, Ti, N} <: AbstractVector{Any} #should have fiber eltype
     Q::Ti

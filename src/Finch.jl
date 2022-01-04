@@ -30,5 +30,6 @@ include("cases.jl")
 include("streams.jl")
 include("execute.jl")
 include("virtual_abstractarray.jl")
+include("fibers.jl")
 
 end
