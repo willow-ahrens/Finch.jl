@@ -27,9 +27,9 @@ function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::StepperStyle)
         $i0 = $(ctx.dims[i].start)
         while $i0 <= $(visit!(ctx.dims[i].stop, ctx))
             $(scope(ctx) do ctx′
-                strides = visit!(root, StepperStrideContext(ctx′, i0))
+                strides = visit!(root, StepperStrideContext(ctx′, i, i0))
                 strides = [strides; visit!(ctx.dims[i].stop, ctx)]
-                body = visit!(root, StepperBodyContext(ctx′, i0, step))
+                body = visit!(root, StepperBodyContext(ctx′, i, i0, step))
                 quote
                     $step = min($(strides...))
                     $(restrict(ctx′, i => Extent(Virtual{Any}(i0), Virtual{Any}(step))) do
@@ -44,6 +44,7 @@ end
 
 Base.@kwdef struct StepperStrideContext <: Pigeon.AbstractCollectContext
     ctx
+    idx
     start
 end
 Pigeon.collect_op(::StepperStrideContext) = (args) -> vcat(args...) #flatten?
@@ -52,16 +53,17 @@ Pigeon.visit!(node::Stepper, ctx::StepperStrideContext, ::DefaultStyle) = [node.
 
 Base.@kwdef struct StepperBodyContext <: Pigeon.AbstractTransformContext
     ctx
+    idx
     start
     step
 end
 Pigeon.visit!(node::Stepper, ctx::StepperBodyContext, ::DefaultStyle) = node.body(ctx.start, ctx.step)
-Pigeon.visit!(node::Spike, ctx::StepperBodyContext, ::DefaultStyle) = truncate(node, ctx.start, ctx.step, ctx.ctx.dims[getname(ctx.idx)].stop)
+Pigeon.visit!(node::Spike, ctx::StepperBodyContext, ::DefaultStyle) = truncate(node, ctx.start, ctx.step, visit!(ctx.ctx.dims[ctx.idx].stop, ctx.ctx))
 
 truncate(node, start, step, stop) = node
 function truncate(node::Spike, start, step, stop)
     return Cases([
         :($(step) < $(stop)) => Run(node.body),
-        :($(step) == $(stop)) => node,
+        true => node,
     ])
 end
