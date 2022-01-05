@@ -20,6 +20,8 @@ export Virtual, Scalar, Chunk
 export lower_julia
 export @I, execute
 
+export Fiber, SparseLevel, DenseLevel, ScalarLevel
+
 include("virtualize.jl")
 include("lower.jl")
 include("annihilate.jl")

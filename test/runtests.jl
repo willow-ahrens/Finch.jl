@@ -7,6 +7,7 @@ using Finch: VirtualAbstractArray, Run, Spike, Extent, Scalar, Cases, Stepper, A
 
 @testset "Finch.jl" begin
 
+    include("fibers.jl")
     include("parse.jl")
     include("simplevectors.jl")
 
