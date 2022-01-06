@@ -100,7 +100,7 @@ function Pigeon.lower_axes(arr::VirtualFiber, ctx::LowerJuliaContext) where {T <
     return map(i->Extent(1, Virtual{Int}(dims[i])), 1:arr.ndims)
 end
 
-function virtualize(ex, ::Type{<:Fiber{Tv, N, R, Lvls, Poss, Idxs}}, ctx; tag=gensym(), kwargs...) where {Tv, N, R, Lvls, Poss, Idxs}
+function virtualize(ex, ::Type{<:Fiber{Tv, N, R, Lvls, Poss, Idxs}}, ctx, tag=gensym()) where {Tv, N, R, Lvls, Poss, Idxs}
     sym = Symbol(:tns_, tag)
     push!(ctx.preamble, :($sym = $ex))
     lvls = map(enumerate(Lvls.parameters)) do (n, Lvl)
@@ -140,7 +140,7 @@ struct VirtualSparseLevel
     Ti
 end
 
-function virtualize(ex, ::Type{<:SparseLevel{Tv, Ti}}, ctx; kwargs...) where {Tv, Ti}
+function virtualize(ex, ::Type{<:SparseLevel{Tv, Ti}}, ctx) where {Tv, Ti}
     VirtualSparseLevel(ex, Tv, Ti)
 end
 

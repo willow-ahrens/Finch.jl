@@ -26,7 +26,7 @@ function Pigeon.visit!(arr::VirtualAbstractArray, ctx::LowerJuliaContext, ::Defa
     return arr.ex
 end
 
-function virtualize(ex, ::Type{<:AbstractArray{T, N}}, ctx; tag=gensym(), kwargs...) where {T, N}
+function virtualize(ex, ::Type{<:AbstractArray{T, N}}, ctx, tag=gensym()) where {T, N}
     sym = Symbol(:tns_, tag)
     push!(ctx.preamble, :($sym = $ex))
     VirtualAbstractArray(N, tag, sym)

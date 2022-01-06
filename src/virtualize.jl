@@ -1,8 +1,10 @@
+virtualize(ex, T, ctx, tag) = virtualize(ex, T, ctx)
+
 struct Virtual{T}
     ex
 end
 
-virtualize(ex, T, ctx; kwargs...) = Virtual{T}(ex)
+virtualize(ex, T, ctx) = Virtual{T}(ex)
 
 TermInterface.istree(::Type{<:Virtual}) = false
 
@@ -18,7 +20,7 @@ end
 
 mesaliteral(tns) = MesaLiteral{tns}()
 
-virtualize(ex, ::Type{MesaLiteral{val}}, ctx; kwargs...) where {val} = Literal(val)
+virtualize(ex, ::Type{MesaLiteral{val}}, ctx) where {val} = Literal(val)
 
 struct MesaPass{Tns} <: MesaIndexStatement
     tns::Tns
@@ -27,13 +29,13 @@ Base.:(==)(a::MesaPass, b::MesaPass) = a.tns == b.tns
 
 mesapass(tns) = MesaPass(tns)
 
-virtualize(ex, ::Type{MesaPass{Tns}}, ctx; kwargs...) where {Tns} = Pass(virtualize(:($ex.tns), Tns, ctx))
+virtualize(ex, ::Type{MesaPass{Tns}}, ctx) where {Tns} = Pass(virtualize(:($ex.tns), Tns, ctx))
 
 struct MesaName{name} <: MesaIndexTerminal end
 
 mesaname(name) = MesaName{name}()
 
-virtualize(ex, ::Type{MesaName{name}}, ctx; kwargs...) where {name} = Name(name)
+virtualize(ex, ::Type{MesaName{name}}, ctx) where {name} = Name(name)
 
 struct MesaWith{Cons, Prod} <: MesaIndexStatement
 	cons::Cons
@@ -43,7 +45,7 @@ Base.:(==)(a::MesaWith, b::MesaWith) = a.cons == b.cons && a.prod == b.prod
 
 mesawith(cons, prod) = With(cons, prod)
 
-virtualize(ex, ::Type{MesaWith{Cons, Prod}}, ctx; kwargs...) where {Cons, Prod} = With(virtualize(:($ex.cons), Cons, ctx), virtualize(:($ex.prod), Prod, ctx))
+virtualize(ex, ::Type{MesaWith{Cons, Prod}}, ctx) where {Cons, Prod} = With(virtualize(:($ex.cons), Cons, ctx), virtualize(:($ex.prod), Prod, ctx))
 
 struct MesaLoop{Idxs<:Tuple, Body} <: MesaIndexStatement
 	idxs::Idxs
@@ -53,7 +55,7 @@ Base.:(==)(a::MesaLoop, b::MesaLoop) = a.idxs == b.idxs && a.body == b.body
 
 mesaloop(args...) = MesaLoop((args[1:end-1]...,), args[end])
 
-function virtualize(ex, ::Type{MesaLoop{Idxs, Body}}, ctx; kwargs...) where {Idxs, Body}
+function virtualize(ex, ::Type{MesaLoop{Idxs, Body}}, ctx) where {Idxs, Body}
     idxs = map(enumerate(Idxs.parameters)) do (n, Idx)
         virtualize(:($ex.idxs[$n]), Idx, ctx)
     end
@@ -71,11 +73,11 @@ Base.:(==)(a::MesaAssign, b::MesaAssign) = a.lhs == b.lhs && a.op == b.op && a.r
 mesaassign(lhs, rhs) = MesaAssign(lhs, nothing, rhs)
 mesaassign(lhs, op, rhs) = MesaAssign(lhs, op, rhs)
 
-function virtualize(ex, ::Type{MesaAssign{Lhs, Nothing, Rhs}}, ctx; kwargs...) where {Lhs, Rhs}
+function virtualize(ex, ::Type{MesaAssign{Lhs, Nothing, Rhs}}, ctx) where {Lhs, Rhs}
     Assign(virtualize(:($ex.lhs), Lhs, ctx), nothing, virtualize(:($ex.rhs), Rhs, ctx))
 end
 
-function virtualize(ex, ::Type{MesaAssign{Lhs, Op, Rhs}}, ctx; kwargs...) where {Lhs, Op, Rhs}
+function virtualize(ex, ::Type{MesaAssign{Lhs, Op, Rhs}}, ctx) where {Lhs, Op, Rhs}
     Assign(virtualize(:($ex.lhs), Lhs, ctx), virtualize(:($ex.op), Op, ctx), virtualize(:($ex.rhs), Rhs, ctx))
 end
 
@@ -87,7 +89,7 @@ Base.:(==)(a::MesaCall, b::MesaCall) = a.op == b.op && a.args == b.args
 
 mesacall(op, args...) = MesaCall(op, args)
 
-function virtualize(ex, ::Type{MesaCall{Op, Args}}, ctx; kwargs...) where {Op, Args}
+function virtualize(ex, ::Type{MesaCall{Op, Args}}, ctx) where {Op, Args}
     op = virtualize(:($ex.op), Op, ctx)
     args = map(enumerate(Args.parameters)) do (n, Arg)
         virtualize(:($ex.args[$n]), Arg, ctx)
@@ -106,7 +108,7 @@ mesaaccess(tns, mode, idxs...) = MesaAccess(tns, mode, idxs)
 
 show_expression(io, mime, ex) = print(io, ex)
 
-function virtualize(ex, ::Type{MesaAccess{Tns, Mode, Idxs}}, ctx; kwargs...) where {Tns, Mode, Idxs}
+function virtualize(ex, ::Type{MesaAccess{Tns, Mode, Idxs}}, ctx) where {Tns, Mode, Idxs}
     tns = virtualize(:($ex.tns), Tns, ctx)
     idxs = map(enumerate(Idxs.parameters)) do (n, Idx)
         virtualize(:($ex.idxs[$n]), Idx, ctx)
@@ -114,9 +116,9 @@ function virtualize(ex, ::Type{MesaAccess{Tns, Mode, Idxs}}, ctx; kwargs...) whe
     Access(tns, virtualize(:($ex.mode), Mode, ctx), idxs)
 end
 
-virtualize(ex, ::Type{Read}, ctx; kwargs...) = Read()
-virtualize(ex, ::Type{Write}, ctx; kwargs...) = Write()
-virtualize(ex, ::Type{Update}, ctx; kwargs...) = Update()
+virtualize(ex, ::Type{Read}, ctx) = Read()
+virtualize(ex, ::Type{Write}, ctx) = Write()
+virtualize(ex, ::Type{Update}, ctx) = Update()
 
 struct MesaLabel{tag, Tns} <: MesaIndexExpression
     tns::Tns
@@ -126,8 +128,8 @@ Base.:(==)(a::MesaLabel{tag}, b::MesaLabel{tag}) where {tag} = a.tns == b.tns
 
 mesalabel(tag, tns) = MesaLabel{tag, typeof(tns)}(tns)
 
-function virtualize(ex, ::Type{MesaLabel{tag, Tns}}, ctx; kwargs...) where {tag, Tns}
-    return virtualize(:($ex.tns), Tns, ctx, tag=tag)
+function virtualize(ex, ::Type{MesaLabel{tag, Tns}}, ctx) where {tag, Tns}
+    return virtualize(:($ex.tns), Tns, ctx, tag)
 end
 
 struct MesaValue{arg} end
@@ -135,7 +137,7 @@ struct MesaValue{arg} end
 mesavalue(arg) = isbits(arg) ? MesaValue{arg}() : arg
 mesavalue(arg::Symbol) = MesaValue{arg}()
 
-virtualize(ex, ::Type{MesaValue{arg}}, ctx; kwargs...) where {arg} = arg
+virtualize(ex, ::Type{MesaValue{arg}}, ctx) where {arg} = arg
 
 function capture_index(ex; ctx...)
     incs = Dict(:+= => :+, :*= => :*, :/= => :/, :^= => :^)
