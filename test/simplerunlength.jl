@@ -15,7 +15,7 @@ mutable struct VirtualSimpleRunLength{Tv, Ti}
     name
 end
 
-function Finch.virtualize(ex, ::Type{SimpleRunLength{Tv, Ti}}; tag=gensym(), kwargs...) where {Tv, Ti}
+function Finch.virtualize(ex, ::Type{SimpleRunLength{Tv, Ti}}, ctx; tag=gensym(), kwargs...) where {Tv, Ti}
     VirtualSimpleRunLength{Tv, Ti}(ex, tag)
 end
 

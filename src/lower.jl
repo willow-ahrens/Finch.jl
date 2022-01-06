@@ -99,14 +99,11 @@ end
 
 function lower_julia(prgm)
     ex = scope(LowerJuliaContext()) do ctx
-        prgm = postmap(node->revirtualize!(node, ctx), prgm)
         dimensionalize!(prgm, ctx)
         Pigeon.visit!(prgm, ctx)
     end
     MacroTools.prettify(ex, alias=false, lines=false)
 end
-
-revirtualize!(node, ctx) = nothing
 
 Pigeon.visit!(::Pass, ctx::LowerJuliaContext, ::DefaultStyle) = quote end
 

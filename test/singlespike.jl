@@ -19,7 +19,7 @@ mutable struct VirtualSingleSpike{Tv}
     D
 end
 
-function Finch.virtualize(ex, ::Type{SingleSpike{D, Tv}}; tag=gensym(), kwargs...) where {D, Tv}
+function Finch.virtualize(ex, ::Type{SingleSpike{D, Tv}}, ctx; tag=gensym(), kwargs...) where {D, Tv}
     VirtualSingleSpike{Tv}(ex, tag, D)
 end
 

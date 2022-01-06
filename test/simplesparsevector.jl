@@ -20,7 +20,7 @@ mutable struct VirtualSimpleSparseVector{Tv, Ti}
     D
 end
 
-function Finch.virtualize(ex, ::Type{SimpleSparseVector{D, Tv, Ti}}; tag=gensym(), kwargs...) where {D, Tv, Ti}
+function Finch.virtualize(ex, ::Type{SimpleSparseVector{D, Tv, Ti}}, ctx; tag=gensym(), kwargs...) where {D, Tv, Ti}
     VirtualSimpleSparseVector{Tv, Ti}(ex, tag, D)
 end
 

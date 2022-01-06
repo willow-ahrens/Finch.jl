@@ -5,6 +5,8 @@ using MacroTools
 
 using Finch: VirtualAbstractArray, Run, Spike, Extent, Scalar, Cases, Stepper, AcceptRun, AcceptSpike, Thunk
 
+using Finch: LowerJuliaContext
+
 @testset "Finch.jl" begin
 
     include("fibers.jl")

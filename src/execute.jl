@@ -1,8 +1,9 @@
 function register()
     Base.eval(Finch, quote
         @generated function execute(ex)
-            thunk = lower_julia(virtualize(:ex, ex))
-            thunk
+            scope(LowerJuliaContext()) do ctx
+                lower_julia(virtualize(:ex, ex, ctx))
+            end
         end
     end)
 end

@@ -9,7 +9,7 @@ include("singlespike.jl")
     C = SimpleRunLength{Float64, Int}([1, 10], [0.0])
     ex = @I @loop i C[i] += A[i] + B[i]
 
-    display(lower_julia(virtualize(:ex, typeof(ex))))
+    display(lower_julia(virtualize(:ex, typeof(ex), LowerJuliaContext())))
     println()
     execute(ex)
 
@@ -27,7 +27,7 @@ include("singlespike.jl")
     C = zeros(10)
     ex = @I @loop i C[i] += A[i] + B[i]
 
-    display(lower_julia(virtualize(:ex, typeof(ex))))
+    display(lower_julia(virtualize(:ex, typeof(ex), LowerJuliaContext())))
     println()
     execute(ex)
 
@@ -42,7 +42,7 @@ include("singlespike.jl")
     C = SimpleSparseVector{0.0, Float64, Int}([11], [])
     ex = @I @loop i C[i] += A[i] + B[i]
 
-    display(lower_julia(virtualize(:ex, typeof(ex))))
+    display(lower_julia(virtualize(:ex, typeof(ex), LowerJuliaContext())))
     println()
     execute(ex)
 
@@ -60,7 +60,7 @@ include("singlespike.jl")
     C = SimpleRunLength{Float64, Int}([1, 10], [0.0])
     ex = @I @loop i C[i] += A[i] + B[i]
 
-    display(lower_julia(virtualize(:ex, typeof(ex))))
+    display(lower_julia(virtualize(:ex, typeof(ex), LowerJuliaContext())))
     println()
     execute(ex)
 
@@ -78,7 +78,7 @@ include("singlespike.jl")
     C = SimpleRunLength{Float64, Int}([1, 10], [0.0])
     ex = @I @loop i C[i] += A[i] + B[i]
 
-    display(lower_julia(virtualize(:ex, typeof(ex))))
+    display(lower_julia(virtualize(:ex, typeof(ex), LowerJuliaContext())))
     println()
     execute(ex)
 
@@ -96,7 +96,7 @@ include("singlespike.jl")
     C = SimpleRunLength{Float64, Int}([1, 10], [0.0])
     ex = @I @loop i C[i] += A[i] + B[i]
 
-    display(lower_julia(virtualize(:ex, typeof(ex))))
+    display(lower_julia(virtualize(:ex, typeof(ex), LowerJuliaContext())))
     println()
     execute(ex)
 
@@ -114,7 +114,7 @@ include("singlespike.jl")
     C = SimpleRunLength{Float64, Int}([1, 10], [0.0])
     ex = @I @loop i C[i] += A[i] + B[i]
 
-    display(lower_julia(virtualize(:ex, typeof(ex))))
+    display(lower_julia(virtualize(:ex, typeof(ex), LowerJuliaContext())))
     println()
     execute(ex)
 

@@ -100,15 +100,15 @@ function Pigeon.lower_axes(arr::VirtualFiber, ctx::LowerJuliaContext) where {T <
     return map(i->Extent(1, Virtual{Int}(dims[i])), 1:arr.ndims)
 end
 
-function virtualize(ex, ::Type{<:Fiber{Tv, N, R, Lvls, Poss, Idxs}}; tag=gensym(), kwargs...) where {Tv, N, R, Lvls, Poss, Idxs}
+function virtualize(ex, ::Type{<:Fiber{Tv, N, R, Lvls, Poss, Idxs}}, ctx; tag=gensym(), kwargs...) where {Tv, N, R, Lvls, Poss, Idxs}
     lvls = map(enumerate(Lvls.parameters)) do (n, Lvl)
-        virtualize(:($ex.poss[$n]), Lvl)
+        virtualize(:($ex.poss[$n]), Lvl, ctx)
     end
     poss = map(enumerate(Poss.parameters)) do (n, Pos)
-        virtualize(:($ex.poss[$n]), Pos)
+        virtualize(:($ex.poss[$n]), Pos, ctx)
     end
     idxs = map(enumerate(Idxs.parameters)) do (n, Idx)
-        virtualize(:($ex.idxs[$n]), Idx)
+        virtualize(:($ex.idxs[$n]), Idx, ctx)
     end
     VirtualFiber(tag, ex, N, Tv, R, lvls, poss, idxs)
 end
@@ -138,7 +138,7 @@ struct VirtualSparseLevel
     Ti
 end
 
-function virtualize(ex, ::Type{<:SparseLevel{Tv, Ti}}; kwargs...) where {Tv, Ti}
+function virtualize(ex, ::Type{<:SparseLevel{Tv, Ti}}, ctx; kwargs...) where {Tv, Ti}
     VirtualSparseLevel(ex, Tv, Ti)
 end
 
