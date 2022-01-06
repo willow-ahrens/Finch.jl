@@ -102,14 +102,6 @@ end
 
 #default lowering
 
-function lower_julia(prgm)
-    ex = scope(LowerJuliaContext()) do ctx
-        dimensionalize!(prgm, ctx)
-        Pigeon.visit!(prgm, ctx)
-    end
-    MacroTools.prettify(ex, alias=false, lines=false)
-end
-
 Pigeon.visit!(::Pass, ctx::LowerJuliaContext, ::DefaultStyle) = quote end
 
 function Pigeon.visit!(root::Assign, ctx::LowerJuliaContext, ::DefaultStyle)

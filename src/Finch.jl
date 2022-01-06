@@ -17,7 +17,6 @@ using Pigeon: Read, Write, Update
 using Pigeon: @ex
 
 export Virtual, Scalar, Chunk
-export lower_julia
 export @I, execute
 
 export Fiber, SparseLevel, DenseLevel, ScalarLevel
