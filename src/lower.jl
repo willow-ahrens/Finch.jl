@@ -62,6 +62,11 @@ function scope(f, ctx::LowerJuliaContext)
     return closescope(body, ctx′)
 end
 
+function cache!(ex, ctx::LowerJuliaContext, name = gensym())
+    push!(ctx.preamble, "$name = $ex")
+    return name
+end
+
 struct ThunkStyle end
 
 Base.@kwdef struct Thunk

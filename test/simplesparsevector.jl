@@ -21,15 +21,9 @@ mutable struct VirtualSimpleSparseVector{Tv, Ti}
 end
 
 function Finch.virtualize(ex, ::Type{SimpleSparseVector{D, Tv, Ti}}, ctx; tag=gensym(), kwargs...) where {D, Tv, Ti}
-    VirtualSimpleSparseVector{Tv, Ti}(ex, tag, D)
-end
-
-function Finch.revirtualize!(node::VirtualSimpleSparseVector, ctx::Finch.LowerJuliaContext)
-    ex′ = Symbol(:tns_, node.name)
-    push!(ctx.preamble, :($ex′ = $(node.ex)))
-    node = deepcopy(node)
-    node.ex = ex′
-    node
+    sym = Symbol(:tns_, tag)
+    push!(ctx.preamble, :($sym = $ex))
+    VirtualSimpleSparseVector{Tv, Ti}(sym, tag, D)
 end
 
 function Pigeon.lower_axes(arr::VirtualSimpleSparseVector{Tv, Ti}, ctx::Finch.LowerJuliaContext) where {Tv, Ti}

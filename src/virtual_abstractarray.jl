@@ -27,15 +27,9 @@ function Pigeon.visit!(arr::VirtualAbstractArray, ctx::LowerJuliaContext, ::Defa
 end
 
 function virtualize(ex, ::Type{<:AbstractArray{T, N}}, ctx; tag=gensym(), kwargs...) where {T, N}
-    VirtualAbstractArray(N, tag, ex)
-end
-
-function revirtualize!(node::VirtualAbstractArray, ctx::LowerJuliaContext)
-    ex′ = Symbol(:tns_, node.name)
-    push!(ctx.preamble, :($ex′ = $(node.ex)))
-    node = deepcopy(node)
-    node.ex = ex′
-    node
+    sym = Symbol(:tns_, tag)
+    push!(ctx.preamble, :($sym = $ex))
+    VirtualAbstractArray(N, tag, sym)
 end
 
 Pigeon.isliteral(::VirtualAbstractArray) = false

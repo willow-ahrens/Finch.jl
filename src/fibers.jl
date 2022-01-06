@@ -101,6 +101,8 @@ function Pigeon.lower_axes(arr::VirtualFiber, ctx::LowerJuliaContext) where {T <
 end
 
 function virtualize(ex, ::Type{<:Fiber{Tv, N, R, Lvls, Poss, Idxs}}, ctx; tag=gensym(), kwargs...) where {Tv, N, R, Lvls, Poss, Idxs}
+    sym = Symbol(:tns_, tag)
+    push!(ctx.preamble, :($sym = $ex))
     lvls = map(enumerate(Lvls.parameters)) do (n, Lvl)
         virtualize(:($ex.poss[$n]), Lvl, ctx)
     end
@@ -110,7 +112,7 @@ function virtualize(ex, ::Type{<:Fiber{Tv, N, R, Lvls, Poss, Idxs}}, ctx; tag=ge
     idxs = map(enumerate(Idxs.parameters)) do (n, Idx)
         virtualize(:($ex.idxs[$n]), Idx, ctx)
     end
-    VirtualFiber(tag, ex, N, Tv, R, lvls, poss, idxs)
+    VirtualFiber(tag, sym, N, Tv, R, lvls, poss, idxs)
 end
 
 function virtual_refurl(fbr::VirtualFiber, p, i)

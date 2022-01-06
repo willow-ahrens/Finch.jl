@@ -16,15 +16,9 @@ mutable struct VirtualSimpleRunLength{Tv, Ti}
 end
 
 function Finch.virtualize(ex, ::Type{SimpleRunLength{Tv, Ti}}, ctx; tag=gensym(), kwargs...) where {Tv, Ti}
-    VirtualSimpleRunLength{Tv, Ti}(ex, tag)
-end
-
-function Finch.revirtualize!(node::VirtualSimpleRunLength, ctx::Finch.LowerJuliaContext)
-    ex′ = Symbol(:tns_, node.name)
-    push!(ctx.preamble, :($ex′ = $(node.ex)))
-    node = deepcopy(node)
-    node.ex = ex′
-    node
+    sym = Symbol(:tns_, tag)
+    push!(ctx.preamble, :($sym = $ex))
+    VirtualSimpleRunLength{Tv, Ti}(sym, tag)
 end
 
 function Pigeon.lower_axes(arr::VirtualSimpleRunLength{Tv, Ti}, ctx::Finch.LowerJuliaContext) where {Tv, Ti}
