@@ -1,7 +1,5 @@
 export SparseLevel
-export SparseFiber
 export DenseLevel
-export DenseFiber
 export ScalarLevel
 
 struct Fiber{Tv, N, R, Lvls<:Tuple, Poss<:Tuple, Idxs<:Tuple} <: AbstractArray{Tv, N}
@@ -73,4 +71,113 @@ end
 function unfurl(lvl::ScalarLevel, fbr::Fiber{Tv, N, R}) where {Tv, N, R}
     q = fbr.poss[R]
     return lvl.val[q]
+end
+
+
+
+abstract type AbstractVirtualFiber end
+
+Pigeon.make_style(root::Loop, ctx::Finch.LowerJuliaContext, node::Access{<:AbstractVirtualFiber}) =
+    root.idxs[1] == node.idxs[1] ? Finch.ChunkStyle() : DefaultStyle()
+
+mutable struct VirtualFiber <: AbstractVirtualFiber
+    name
+    ex
+    N
+    Tv
+    R
+    lvls
+    poss
+    idxs
+end
+
+function Pigeon.lower_axes(arr::VirtualFiber, ctx::LowerJuliaContext) where {T <: AbstractArray}
+    dims = map(i -> gensym(Symbol(arr.name, :_, i, :_stop)), 1:arr.ndims)
+    for (dim, lvl) in zip(dims, lvls)
+        #Could unroll more manually, but I'm not convinced it's worth it.
+        push!(ctx.preamble, :($dim = dimension($lvl)))
+    end
+    return map(i->Extent(1, Virtual{Int}(dims[i])), 1:arr.ndims)
+end
+
+function virtualize(ex, ::Type{<:Fiber{Tv, N, R, Lvls, Poss, Idxs}}; tag=gensym(), kwargs...) where {Tv, N, R, Lvls, Poss, Idxs}
+    lvls = map(enumerate(Lvls.parameters)) do (n, Lvl)
+        virtualize(:($ex.poss[$n]), Lvl)
+    end
+    poss = map(enumerate(Poss.parameters)) do (n, Pos)
+        virtualize(:($ex.poss[$n]), Pos)
+    end
+    idxs = map(enumerate(Idxs.parameters)) do (n, Idx)
+        virtualize(:($ex.idxs[$n]), Idx)
+    end
+    VirtualFiber(tag, ex, N, Tv, R, lvls, poss, idxs)
+end
+
+function virtual_refurl(fbr::VirtualFiber, p, i)
+    res = deepcopy(fbr)
+    res.N = fbr.N - 1
+    res.R = fbr.R + 1
+    push!(res.poss, p)
+    push!(res.idxs, i)
+    return res
+end
+
+function Pigeon.visit!(node::Access{VirtualFiber}, ctx::Finch.ChunkifyContext, ::Pigeon.DefaultStyle) where {Tv, Ti}
+    if ctx.idx == node.idxs[1]
+        refurl = (p, i) -> Access(virtual_refurl(node.tns, p, i), node.mode, node.idxs[2:end])
+        virtual_unfurl(fbr.lvls[R], ctx, node.tns, refurl)
+    else
+        node
+    end
+end
+
+
+struct VirtualSparseLevel
+    ex
+    Tv
+    Ti
+end
+
+function virtualize(ex, ::Type{<:SparseLevel{Tv, Ti}}; kwargs...) where {Tv, Ti}
+    VirtualSparseLevel(ex, Tv, Ti)
+end
+
+function virtual_unfurl(lvl::VirtualSparseLevel, ctx::Finch.ChunkifyContext, ::Pigeon.Read, tns::VirtualFiber, refurl)
+    r = fiber.R
+    name = Symbol(:tns_, Pigeon.getname(tns), :_, R)
+    my_p = Symbol(name, :_p)
+
+    q = fbr.poss[R]
+    p = (q - 1) * lvl.I + i
+    Virtual{Ti}((q - 1) * lvl.I + i)
+    Thunk(
+        preamble = quote
+            $my_p = $(lvl.ex).pos[$(tns.poss[R])]
+            $my_i = 1
+            $my_i′ = $(lvl.ex).idx[$my_p]
+        end,
+        body = Stepper(
+            stride = (start) -> my_i′,
+            body = (start, step) -> begin
+                Cases([
+                    :($step < $my_i′) =>
+                        Run(
+                            body = 0,
+                        ),
+                    true =>
+                        Thunk(
+                            body = Spike(
+                                body = 0,
+                                tail = refurl(Virtual{lvl.T}(my_p), Virtual{lvl.Ti}(my_i′)),
+                            ),
+                            epilogue = quote
+                                $my_p += 1
+                                $my_i = $my_i′ + 1
+                                $my_i′ = $(lvl.ex).idx[$my_p]
+                            end
+                        ),
+                ])
+            end
+        )
+    )
 end
