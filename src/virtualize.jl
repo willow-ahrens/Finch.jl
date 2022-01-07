@@ -139,11 +139,12 @@ mesavalue(arg::Symbol) = MesaValue{arg}()
 
 virtualize(ex, ::Type{MesaValue{arg}}, ctx) where {arg} = arg
 
+#TODO use macrotools?
 function capture_index(ex; ctx...)
     incs = Dict(:+= => :+, :*= => :*, :/= => :/, :^= => :^)
 
     if ex isa Expr && ex.head == :macrocall && length(ex.args) >= 2 && ex.args[1] == Symbol("@pass")
-        args = map(arg -> capture_index(arg; ctx..., namify=true), ex.args[3:end])
+        args = map(arg -> capture_index(arg; ctx...), ex.args[3:end])
         return :(mesapass($(args...)))
     elseif ex isa Expr && ex.head == :macrocall && length(ex.args) >= 3 && ex.args[1] in [Symbol("@loop"), Symbol("@∀")]
         idxs = map(arg -> capture_index(arg; ctx..., namify=true), ex.args[3:end-1])
@@ -170,6 +171,7 @@ function capture_index(ex; ctx...)
     elseif values(ctx).slot && ex isa Expr && ex.head == :call && length(ex.args) == 2 && ex.args[1] == :~ &&
         ex.args[2] isa Symbol
         return esc(ex)
+    #TODO add ellipsis syntax
     elseif values(ctx).slot && ex isa Expr && ex.head == :call && length(ex.args) == 2 && ex.args[1] == :~ &&
         ex.args[2] isa Expr && ex.args[2].head == :call && length(ex.args[2].args) == 2 && ex.args[2].args[1] == :~ &&
         ex.args[2].args[2] isa Symbol
@@ -180,6 +182,8 @@ function capture_index(ex; ctx...)
     elseif ex isa Expr && ex.head == :ref && length(ex.args) >= 1
         tns = capture_index(ex.args[1]; ctx..., namify=false, mode=Read())
         return :(mesaaccess($tns, $(values(ctx).mode), $(map(arg->capture_index(arg; ctx..., namify=true, mode=Read()), ex.args[2:end])...)))
+    elseif ex isa Expr && ex.head == :(::) && length(ex.args) == 2
+        return :($(esc(ex.args[2]))($(capture_index(ex.args[1], ctx...))))
     elseif ex isa Expr && ex.head == :$ && length(ex.args) == 1
         return esc(ex.args[1])
     elseif ex isa Symbol && values(ctx).namify

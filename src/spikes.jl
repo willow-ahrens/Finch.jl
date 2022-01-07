@@ -27,7 +27,7 @@ function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::SpikeStyle)
         end
     end
     val = ctx.dims[getname(root.idxs[1])].stop
-    tail_expr = bind(ctx, root.idxs[1] => val) do 
+    tail_expr = bind(ctx, getname(root.idxs[1]) => val) do 
         scope(ctx) do ctx′
             root_tail = visit!(Loop(root.idxs[2:end], root.body), AccessSpikeTailContext(root, ctx′, idx, val))
             #The next call is a convenient fallback, but make no mistake, all chunks must work with all other chunks.
@@ -67,13 +67,15 @@ Base.@kwdef struct AccessSpikeTailContext <: Pigeon.AbstractTransformContext
 end
 
 function Pigeon.visit!(node::Access{Spike}, ctx::AccessSpikeTailContext, ::DefaultStyle)
-    @assert ctx.idx == node.idxs[1]
+    #TODO we should get rid of this assertion. Anytime we see a spike we should know that 
+    #it corresponds to the current index
+    @assert getname(ctx.idx) == getname(node.idxs[1])
     return Access(node.tns.tail, node.mode, node.idxs[2:end])
 end
 
 function Pigeon.visit!(node::Access{Spike}, ctx::ForLoopContext, ::DefaultStyle)
-    @assert node.idxs == [ctx.idx]
-    Access(node.tns.tail, node.mode, [])
+    @assert getname(ctx.idx) == getname(node.idxs[1])
+    return Access(node.tns.tail, node.mode, node.idxs[2:end])
 end
 
 Base.@kwdef mutable struct AcceptSpike
@@ -82,7 +84,7 @@ Base.@kwdef mutable struct AcceptSpike
 end
 
 function access_spike_tail(node::Access{AcceptSpike}, ctx, idx)
-    @assert node.idxs == ctx.root.idxs[1:1]
+    @assert map(getname, node.idxs) == map(getname, ctx.root.idxs[1:1])
     ext = ctx.ctx.dims[getname(ctx.root.idxs[1])]
     return Access(node.tns.tail(ctx.ctx, ext.stop), node.mode, [])
 end
@@ -109,6 +111,6 @@ Base.@kwdef mutable struct AcceptSpikeContext <: Pigeon.AbstractTransformContext
 end
 
 function Pigeon.visit!(node::Access{AcceptSpike}, ctx::ForLoopContext, ::DefaultStyle)
-    @assert node.idxs == [ctx.idx]
+    @assert map(getname, node.idxs) == [getname(ctx.idx)]
     Access(node.tns.tail(ctx.ctx, ctx.val), node.mode, [])
 end

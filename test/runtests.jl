@@ -4,6 +4,7 @@ using Test
 using MacroTools
 
 using Finch: VirtualAbstractArray, Run, Spike, Extent, Scalar, Cases, Stepper, AcceptRun, AcceptSpike, Thunk, execute_code_lowered
+using Pigeon: getname
 
 @testset "Finch.jl" begin
 

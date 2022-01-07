@@ -34,7 +34,7 @@ end
 Pigeon.getsites(arr::VirtualSimpleSparseVector) = (1,)
 Pigeon.getname(arr::VirtualSimpleSparseVector) = arr.name
 Pigeon.make_style(root::Loop, ctx::Finch.LowerJuliaContext, node::Access{<:VirtualSimpleSparseVector}) =
-    root.idxs[1] == node.idxs[1] ? Finch.ChunkStyle() : DefaultStyle()
+    getname(root.idxs[1]) == getname(node.idxs[1]) ? Finch.ChunkStyle() : DefaultStyle()
 #TODO is there a way to share this logic with others?
 #Pigeon.visit!(node::Access{<:VirtualSimpleSparseVector}, ctx::Finch.ChunkifyContext, ::Pigeon.DefaultStyle) =
 #    ctx.idx == node.idxs[1] ? Access(chunkbody(node.tns), node.mode, node.idxs) : node.idxs
@@ -44,7 +44,7 @@ function Pigeon.visit!(node::Access{VirtualSimpleSparseVector{Tv, Ti}, Pigeon.Re
     my_i = Symbol(:tns_, Pigeon.getname(vec), :_i0)
     my_i′ = Symbol(:tns_, Pigeon.getname(vec), :_i1)
     my_p = Symbol(:tns_, Pigeon.getname(vec), :_p)
-    if ctx.idx == node.idxs[1]
+    if getname(ctx.idx) == getname(node.idxs[1])
         tns = Thunk(
             preamble = quote
                 $my_p = 1
@@ -85,7 +85,7 @@ function Pigeon.visit!(node::Access{VirtualSimpleSparseVector{Tv, Ti}, <:Union{P
     vec = node.tns
     my_p = Symbol(:tns_, node.tns.name, :_p)
     my_I = Symbol(:tns_, node.tns.name, :_I)
-    if ctx.idx == node.idxs[1]
+    if getname(ctx.idx) == getname(node.idxs[1])
         push!(ctx.ctx.preamble, quote
             $my_p = 0
             $my_I = $(Pigeon.visit!(ctx.ctx.dims[Pigeon.getname(node.idxs[1])].stop, ctx.ctx)) + 1

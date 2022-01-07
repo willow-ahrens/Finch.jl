@@ -33,11 +33,11 @@ end
 Pigeon.getsites(arr::VirtualSingleSpike) = (1,)
 Pigeon.getname(arr::VirtualSingleSpike) = arr.name
 Pigeon.make_style(root::Loop, ctx::Finch.LowerJuliaContext, node::Access{<:VirtualSingleSpike}) =
-    root.idxs[1] == node.idxs[1] ? Finch.ChunkStyle() : DefaultStyle()
+    getname(root.idxs[1]) == getname(node.idxs[1]) ? Finch.ChunkStyle() : DefaultStyle()
 
 function Pigeon.visit!(node::Access{VirtualSingleSpike{Tv}, Pigeon.Read}, ctx::Finch.ChunkifyContext, ::Pigeon.DefaultStyle) where {Tv}
     vec = node.tns
-    if ctx.idx == node.idxs[1]
+    if getname(ctx.idx) == getname(node.idxs[1])
         tns = Spike(
             body = 0,
             tail = Virtual{Tv}(:($(vec.ex).tail))

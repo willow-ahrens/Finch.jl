@@ -10,7 +10,7 @@ end
 
 Base.@kwdef struct LowerJuliaContext
     preamble::Vector{Any} = []
-    bindings::Dict{Name, Any} = Dict()
+    bindings::Dict{Any, Any} = Dict()
     epilogue::Vector{Any} = []
     dims::Dimensions = Dimensions()
 end
@@ -105,7 +105,7 @@ end
 Pigeon.visit!(::Pass, ctx::LowerJuliaContext, ::DefaultStyle) = quote end
 
 function Pigeon.visit!(root::Assign, ctx::LowerJuliaContext, ::DefaultStyle)
-    @assert root.lhs isa Access && root.lhs.idxs ⊆ keys(ctx.bindings)
+    @assert root.lhs isa Access && map(getname, root.lhs.idxs) ⊆ keys(ctx.bindings)
     if root.op == nothing
         rhs = visit!(root.rhs, ctx)
     else
@@ -120,8 +120,8 @@ function Pigeon.visit!(root::Call, ctx::LowerJuliaContext, ::DefaultStyle)
 end
 
 function Pigeon.visit!(root::Name, ctx::LowerJuliaContext, ::DefaultStyle)
-    @assert haskey(ctx.bindings, root) "variable $(getname(root)) unbound"
-    return visit!(ctx.bindings[root], ctx) #This unwraps indices that are virtuals. Arguably these virtuals should be precomputed, but whatevs.
+    @assert haskey(ctx.bindings, getname(root)) "variable $(getname(root)) unbound"
+    return visit!(ctx.bindings[getname(root)], ctx) #This unwraps indices that are virtuals. Arguably these virtuals should be precomputed, but whatevs.
 end
 
 function Pigeon.visit!(root::Literal, ctx::LowerJuliaContext, ::DefaultStyle)
@@ -140,7 +140,7 @@ function Pigeon.visit!(root::Virtual, ctx::LowerJuliaContext, ::DefaultStyle)
 end
 
 function Pigeon.visit!(root::Access, ctx::LowerJuliaContext, ::DefaultStyle)
-    @assert root.idxs ⊆ keys(ctx.bindings)
+    @assert map(getname, root.idxs) ⊆ keys(ctx.bindings)
     tns = visit!(root.tns, ctx)
     idxs = map(idx->visit!(idx, ctx), root.idxs)
     :($(visit!(tns, ctx))[$(idxs...)])
@@ -164,7 +164,7 @@ function Pigeon.visit!(stmt::Loop, ctx::LowerJuliaContext, ::DefaultStyle)
         ext = ctx.dims[getname(stmt.idxs[1])]
         return quote
             for $idx_sym = $(visit!(ext.start, ctx)):$(visit!(ext.stop, ctx))
-                $(bind(ctx, stmt.idxs[1] => idx_sym) do 
+                $(bind(ctx, getname(stmt.idxs[1]) => idx_sym) do 
                     scope(ctx) do ctx′
                         body = visit!(body, ForLoopContext(ctx′, stmt.idxs[1], idx_sym))
                         visit!(body, ctx′)

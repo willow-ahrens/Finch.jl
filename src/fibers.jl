@@ -78,7 +78,7 @@ end
 abstract type AbstractVirtualFiber end
 
 Pigeon.make_style(root::Loop, ctx::Finch.LowerJuliaContext, node::Access{<:AbstractVirtualFiber}) =
-    root.idxs[1] == node.idxs[1] ? Finch.ChunkStyle() : DefaultStyle()
+    getname(root.idxs[1]) == getname(node.idxs[1]) ? Finch.ChunkStyle() : DefaultStyle()
 
 mutable struct VirtualFiber <: AbstractVirtualFiber
     name
@@ -125,7 +125,7 @@ function virtual_refurl(fbr::VirtualFiber, p, i)
 end
 
 function Pigeon.visit!(node::Access{VirtualFiber}, ctx::Finch.ChunkifyContext, ::Pigeon.DefaultStyle) where {Tv, Ti}
-    if ctx.idx == node.idxs[1]
+    if getname(ctx.idx) == getname(node.idxs[1])
         refurl = (p, i) -> Access(virtual_refurl(node.tns, p, i), node.mode, node.idxs[2:end])
         virtual_unfurl(fbr.lvls[R], ctx, node.tns, refurl)
     else

@@ -29,13 +29,13 @@ end
 Pigeon.getsites(arr::VirtualSimpleRunLength) = (1,)
 Pigeon.getname(arr::VirtualSimpleRunLength) = arr.name
 Pigeon.make_style(root::Loop, ctx::Finch.LowerJuliaContext, node::Access{<:VirtualSimpleRunLength}) =
-    root.idxs[1] == node.idxs[1] ? Finch.ChunkStyle() : DefaultStyle()
+    getname(root.idxs[1]) == getname(node.idxs[1]) ? Finch.ChunkStyle() : DefaultStyle()
 
 function Pigeon.visit!(node::Access{VirtualSimpleRunLength{Tv, Ti}, Pigeon.Read}, ctx::Finch.ChunkifyContext, ::Pigeon.DefaultStyle) where {Tv, Ti}
     vec = node.tns
     my_i′ = Symbol(:tns_, Pigeon.getname(vec), :_i1)
     my_p = Symbol(:tns_, Pigeon.getname(vec), :_p)
-    if ctx.idx == node.idxs[1]
+    if getname(ctx.idx) == getname(node.idxs[1])
         tns = Thunk(
             preamble = quote
                 $my_p = 1
@@ -65,7 +65,7 @@ end
 function Pigeon.visit!(node::Access{<:VirtualSimpleRunLength{Tv, Ti}, <: Union{Pigeon.Write, Pigeon.Update}}, ctx::Finch.ChunkifyContext, ::Pigeon.DefaultStyle) where {Tv, Ti}
     vec = node.tns
     my_p = Symbol(:tns_, node.tns.name, :_p)
-    if ctx.idx == node.idxs[1]
+    if getname(ctx.idx) == getname(node.idxs[1])
         tns = Thunk(
             preamble = quote
                 $my_p = 0
