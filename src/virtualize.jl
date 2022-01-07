@@ -183,7 +183,7 @@ function capture_index(ex; ctx...)
         tns = capture_index(ex.args[1]; ctx..., namify=false, mode=Read())
         return :(mesaaccess($tns, $(values(ctx).mode), $(map(arg->capture_index(arg; ctx..., namify=true, mode=Read()), ex.args[2:end])...)))
     elseif ex isa Expr && ex.head == :(::) && length(ex.args) == 2
-        return :($(esc(ex.args[2]))($(capture_index(ex.args[1], ctx...))))
+        return :($(esc(ex.args[2]))($(capture_index(ex.args[1]; ctx...))))
     elseif ex isa Expr && ex.head == :$ && length(ex.args) == 1
         return esc(ex.args[1])
     elseif ex isa Symbol && values(ctx).namify

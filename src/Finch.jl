@@ -23,6 +23,7 @@ export Fiber, SparseLevel, DenseLevel, ScalarLevel
 
 include("virtualize.jl")
 include("lower.jl")
+include("protocols.jl")
 include("annihilate.jl")
 include("chunks.jl")
 include("runs.jl")
