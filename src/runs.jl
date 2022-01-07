@@ -29,14 +29,10 @@ struct AccessRunContext <: Pigeon.AbstractTransformContext
 end
 
 function Pigeon.visit!(node::Access{Run, Read}, ctx::AccessRunContext, ::DefaultStyle)
-    if length(node.idxs) == 1 && getname(node.idxs[1]) == getname(ctx.root.idxs[1])
-        return Access(node.tns.body, Read(), [])
-    end
-    return node
+    return node.tns.body
 end
 
 function Pigeon.visit!(node::Access{Run, Read}, ctx::ForLoopContext, ::DefaultStyle)
-    @assert getname(node.idxs[1]) == getname(ctx.idx)
     return node.tns.body
 end
 
@@ -82,12 +78,10 @@ Base.@kwdef mutable struct AcceptRunContext <: Pigeon.AbstractTransformContext
 end
 
 function Pigeon.visit!(node::Access{AcceptRun, <:Union{Write, Update}}, ctx::AcceptRunContext, ::DefaultStyle)
-    @assert map(getname, node.idxs) == [getname(ctx.idx)]
     ext = ctx.ctx.dims[getname(ctx.idx)]
-    Access(node.tns.body(ctx.ctx, ext.start, ext.stop), node.mode, [])
+    node.tns.body(ctx.ctx, ext.start, ext.stop)
 end
 
 function Pigeon.visit!(node::Access{AcceptRun}, ctx::ForLoopContext, ::DefaultStyle)
-    @assert map(getname, node.idxs) == [getname(ctx.idx)]
-    Access(node.tns.body(ctx.ctx, ctx.val, ctx.val), node.mode, [])
+    node.tns.body(ctx.ctx, ctx.val, ctx.val)
 end

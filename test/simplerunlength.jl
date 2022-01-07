@@ -78,7 +78,7 @@ function Pigeon.visit!(node::Access{<:VirtualSimpleRunLength{Tv, Ti}, <: Union{P
                         push!($(vec.ex).val, zero($Tv))
                         $my_p += 1
                     end,
-                    body = Scalar(Virtual{Tv}(:($(vec.ex).val[$my_p]))),
+                    body = Access(Scalar(Virtual{Tv}(:($(vec.ex).val[$my_p]))), node.mode, []),
                     epilogue = quote
                         push!($(vec.ex).idx, $(Pigeon.visit!(stop, ctx)))
                     end

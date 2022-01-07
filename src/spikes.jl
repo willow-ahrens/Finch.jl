@@ -67,26 +67,16 @@ Base.@kwdef struct AccessSpikeTailContext <: Pigeon.AbstractTransformContext
 end
 
 function Pigeon.visit!(node::Access{Spike}, ctx::AccessSpikeTailContext, ::DefaultStyle)
-    #TODO we should get rid of this assertion. Anytime we see a spike we should know that 
-    #it corresponds to the current index
-    @assert getname(ctx.idx) == getname(node.idxs[1])
-    return Access(node.tns.tail, node.mode, node.idxs[2:end])
+    return node.tns.tail
 end
 
 function Pigeon.visit!(node::Access{Spike}, ctx::ForLoopContext, ::DefaultStyle)
-    @assert getname(ctx.idx) == getname(node.idxs[1])
-    return Access(node.tns.tail, node.mode, node.idxs[2:end])
+    return node.tns.tail
 end
 
 Base.@kwdef mutable struct AcceptSpike
     val
     tail
-end
-
-function access_spike_tail(node::Access{AcceptSpike}, ctx, idx)
-    @assert map(getname, node.idxs) == map(getname, ctx.root.idxs[1:1])
-    ext = ctx.ctx.dims[getname(ctx.root.idxs[1])]
-    return Access(node.tns.tail(ctx.ctx, ext.stop), node.mode, [])
 end
 
 struct AcceptSpikeStyle end
@@ -111,6 +101,5 @@ Base.@kwdef mutable struct AcceptSpikeContext <: Pigeon.AbstractTransformContext
 end
 
 function Pigeon.visit!(node::Access{AcceptSpike}, ctx::ForLoopContext, ::DefaultStyle)
-    @assert map(getname, node.idxs) == [getname(ctx.idx)]
-    Access(node.tns.tail(ctx.ctx, ctx.val), node.mode, [])
+    node.tns.tail(ctx.ctx, ctx.val)
 end
