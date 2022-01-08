@@ -180,3 +180,11 @@ Base.@kwdef struct ForLoopContext <: Pigeon.AbstractTransformContext
     idx
     val
 end
+
+@kwdef struct Leaf
+    body
+end
+
+function Pigeon.visit!(node::Access{Leaf}, ctx::ForLoopContext, ::DefaultStyle)
+    node.tns.body(ctx.val)
+end
