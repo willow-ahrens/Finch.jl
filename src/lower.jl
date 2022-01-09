@@ -181,7 +181,7 @@ Base.@kwdef struct ForLoopContext <: Pigeon.AbstractTransformContext
     val
 end
 
-@kwdef struct Leaf
+Base.@kwdef struct Leaf
     body
 end
 

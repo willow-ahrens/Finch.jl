@@ -75,12 +75,7 @@ end
 
 
 
-abstract type AbstractVirtualFiber end
-
-Pigeon.make_style(root::Loop, ctx::Finch.LowerJuliaContext, node::Access{<:AbstractVirtualFiber}) =
-    getname(root.idxs[1]) == getname(node.idxs[1]) ? Finch.ChunkStyle() : DefaultStyle()
-
-mutable struct VirtualFiber <: AbstractVirtualFiber
+mutable struct VirtualFiber
     name
     ex
     N
@@ -89,6 +84,16 @@ mutable struct VirtualFiber <: AbstractVirtualFiber
     lvls
     poss
     idxs
+end
+
+function Pigeon.make_style(root::Loop, ctx::Finch.LowerJuliaContext, node::Access{<:VirtualFiber})
+    if isempty(node.idxs)
+        return AccessStyle()
+    elseif getname(root.idxs[1]) == getname(node.idxs[1])
+        return ChunkStyle()
+    else
+        return DefaultStyle()
+    end
 end
 
 function Pigeon.lower_axes(arr::VirtualFiber, ctx::LowerJuliaContext) where {T <: AbstractArray}
@@ -115,24 +120,27 @@ function virtualize(ex, ::Type{<:Fiber{Tv, N, R, Lvls, Poss, Idxs}}, ctx, tag=ge
     VirtualFiber(tag, sym, N, Tv, R, lvls, poss, idxs)
 end
 
-function virtual_refurl(fbr::VirtualFiber, p, i)
+function virtual_refurl(fbr::VirtualFiber, p, mode, i, tail...)
     res = deepcopy(fbr)
     res.N = fbr.N - 1
     res.R = fbr.R + 1
     push!(res.poss, p)
     push!(res.idxs, i)
-    return res
+    return Access(res, mode, tail...)
 end
 
 function Pigeon.visit!(node::Access{VirtualFiber}, ctx::Finch.ChunkifyContext, ::Pigeon.DefaultStyle) where {Tv, Ti}
     if getname(ctx.idx) == getname(node.idxs[1])
         refurl = (p, i) -> Access(virtual_refurl(node.tns, p, i), node.mode, node.idxs[2:end])
-        virtual_unfurl(fbr.lvls[R], node.mode, idx, node.tns, ctx.ctx, refurl)
+        virtual_unfurl(fbr.lvls[R], node.tns, ctx.ctx, node.mode, node.idxs...)
     else
         node
     end
 end
 
+function Pigeon.visit!(node::Access{VirtualFiber}, ctx::Finch.AccessContext, ::Pigeon.DefaultStyle) where {Tv, Ti}
+    virtual_unfurl(fbr.lvls[R], node.tns, ctx.ctx, node.mode)
+end
 
 struct VirtualSparseLevel
     ex
@@ -144,10 +152,10 @@ function virtualize(ex, ::Type{<:SparseLevel{Tv, Ti}}, ctx) where {Tv, Ti}
     VirtualSparseLevel(ex, Tv, Ti)
 end
 
-virtual_unfurl(lvl::VirtualSparseLevel, idx::Name, mode::Pigeon.Read, tns, ctx, refurl) =
-    virtual_unfurl(lvl, walk(idx), mode, tns, ctx, refurl)
+virtual_unfurl(lvl::VirtualSparseLevel, tns, ctx, mode::Pigeon.Read, idx::Name, tail...) =
+    virtual_unfurl(lvl, tns, ctx, mode, walk(idx), tail...)
 
-function virtual_unfurl(lvl::VirtualSparseLevel, idx::Walk, ::Pigeon.Read, tns, ctx, refurl)
+function virtual_unfurl(lvl::VirtualSparseLevel, tns, ctx, ::Pigeon.Read, idx::Walk, tail...)
     r = fiber.R
     name = Symbol(:tns_, Pigeon.getname(tns), :_, R)
     my_p = Symbol(name, :_p)
@@ -170,7 +178,7 @@ function virtual_unfurl(lvl::VirtualSparseLevel, idx::Walk, ::Pigeon.Read, tns, 
                         Thunk(
                             body = Spike(
                                 body = 0,
-                                tail = refurl(Virtual{lvl.T}(my_p), Virtual{lvl.Ti}(my_i′)),
+                                tail = virtual_refurl(tns, Virtual{lvl.T}(my_p), Virtual{lvl.Ti}(my_i′), mode, tail...),
                             ),
                             epilogue = quote
                                 $my_p += 1
@@ -195,10 +203,10 @@ function virtualize(ex, ::Type{<:DenseLevel{Ti}}, ctx) where {Ti}
     VirtualDenseLevel(ex, Ti)
 end
 
-virtual_unfurl(lvl::VirtualDenseLevel, idx::Name, mode::Pigeon.Read, tns, ctx, refurl) =
-    virtual_unfurl(lvl, locate(idx), mode, tns, ctx, refurl)
+virtual_unfurl(lvl::VirtualSparseLevel, tns, ctx, mode::Pigeon.Read, idx::Name, tail...) =
+    virtual_unfurl(lvl, tns, ctx, mode, walk(idx), tail...)
 
-function virtual_unfurl(lvl::VirtualDenseLevel, idx::Locate, ::Pigeon.Read, fbr, ctx, refurl)
+function virtual_unfurl(lvl::VirtualDenseLevel, fbr, ctx, mode::Pigeon.Read, idx::Locate, tail...)
     R = fbr.R
     q = fbr.poss[R]
     p = Symbol(:tns_, name(fbr), :_, R, :_p)
@@ -208,7 +216,7 @@ function virtual_unfurl(lvl::VirtualDenseLevel, idx::Locate, ::Pigeon.Read, fbr,
             preamble = quote
                 $p = ($q - 1) * $(lvl.ex).I + $i
             end,
-            body = refurl(Virtual{lvl.T}(my_p), i) 
+            body = virtual_refurl(tns, Virtual{lvl.T}(my_p), i, mode, tail...),
         )
     )
 end
@@ -223,20 +231,14 @@ function virtualize(ex, ::Type{<:ScalarLevel{Tv}}, ctx) where {Tv}
     VirtualScalarLevel(ex, Tv)
 end
 
-virtual_unfurl(lvl::VirtualScalarLevel, idx::Name, mode::Pigeon.Read, tns, ctx, refurl) =
-    virtual_unfurl(lvl, locate(idx), mode, tns, ctx, refurl)
-
-function virtual_unfurl(lvl::VirtualDenseLevel, idx::Locate, ::Pigeon.Read, fbr, ctx, refurl)
+function virtual_unfurl(lvl::VirtualScalarLevel, fbr, ctx, ::Pigeon.Read)
     R = fbr.R
-    q = fbr.poss[R]
-    p = Symbol(:tns_, name(fbr), :_, R, :_p)
+    val = gensym(:tns_, getname(fbr), :_val)
 
-    Leaf(
-        body = (i) -> Thunk(
-            preamble = quote
-                $p = ($q - 1) * $(lvl.ex).I + $i
-            end,
-            body = refurl(Virtual{lvl.T}(my_p), i) 
-        )
+    Thunk(
+        preamble = quote
+            $val = $(lvl.ex)[$(fbr.poss[end])]
+        end,
+        body = Virtual{lvl.Tv}(val)
     )
 end
