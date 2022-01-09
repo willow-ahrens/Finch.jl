@@ -8,7 +8,7 @@ struct Scalar
     val
 end
 
-Base.@kwdef struct LowerJuliaContext
+Base.@kwdef struct LowerJuliaContext <: Pigeon.AbstractContext
     preamble::Vector{Any} = []
     bindings::Dict{Any, Any} = Dict()
     epilogue::Vector{Any} = []

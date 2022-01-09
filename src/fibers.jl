@@ -8,7 +8,7 @@ struct Fiber{Tv, N, R, Lvls<:Tuple, Poss<:Tuple, Idxs<:Tuple} <: AbstractArray{T
     idxs::Idxs
 end
 
-Fiber{Tv}(lvls::Lvls) where {Tv, N, Lvls} = Fiber{Tv, length(lvls) - 1, 1}(lvls, (true,), ())
+Fiber{Tv}(lvls::Lvls) where {Tv, N, Lvls} = Fiber{Tv, length(lvls) - 1, 1}(lvls, (1,), ())
 Fiber{Tv, N, R}(lvls, poss, idxs) where {Tv, N, R} = Fiber{Tv, N, R, typeof(lvls), typeof(poss), typeof(idxs)}(lvls, poss, idxs)
 
 Base.size(fbr::Fiber{Tv, N, R}) where {Tv, N, R} = map(dimension, fbr.lvls[R:end-1])
@@ -122,13 +122,13 @@ function virtualize(ex, ::Type{<:Fiber{Tv, N, R, Lvls, Poss, Idxs}}, ctx, tag=ge
     sym = Symbol(:tns_, tag)
     push!(ctx.preamble, :($sym = $ex))
     lvls = map(enumerate(Lvls.parameters)) do (n, Lvl)
-        virtualize(:($ex.poss[$n]), Lvl, ctx)
+        virtualize(:($sym.poss[$n]), Lvl, ctx)
     end
     poss = map(enumerate(Poss.parameters)) do (n, Pos)
-        virtualize(:($ex.poss[$n]), Pos, ctx)
+        virtualize(:($sym.poss[$n]), Pos, ctx)
     end
     idxs = map(enumerate(Idxs.parameters)) do (n, Idx)
-        virtualize(:($ex.idxs[$n]), Idx, ctx)
+        virtualize(:($sym.idxs[$n]), Idx, ctx)
     end
     VirtualFiber(tag, sym, N, Tv, R, lvls, poss, idxs)
 end
@@ -180,7 +180,7 @@ function virtual_unfurl(lvl::VirtualSparseLevel, tns, ctx, mode::Pigeon.Read, id
 
     Thunk(
         preamble = quote
-            $my_p = $(lvl.ex).pos[$(tns.poss[R])]
+            $my_p = $(lvl.ex).pos[$(ctx(tns.poss[R]))]
             $my_i = 1
             $my_i′ = $(lvl.ex).idx[$my_p]
         end,
@@ -232,7 +232,7 @@ function virtual_unfurl(lvl::VirtualDenseLevel, fbr, ctx, mode::Pigeon.Read, idx
     Leaf(
         body = (i) -> Thunk(
             preamble = quote
-                $p = ($q - 1) * $(lvl.ex).I + $i
+                $p = ($(ctx(q)) - 1) * $(lvl.ex).I + $i
             end,
             body = virtual_refurl(tns, Virtual{lvl.T}(my_p), i, mode, tail...),
         )
@@ -255,7 +255,7 @@ function virtual_unfurl(lvl::VirtualScalarLevel, fbr, ctx, ::Pigeon.Read)
 
     Thunk(
         preamble = quote
-            $val = $(lvl.ex)[$(fbr.poss[end])]
+            $val = $(lvl.ex)[$(ctx(fbr.poss[end]))]
         end,
         body = Virtual{lvl.Tv}(val)
     )
