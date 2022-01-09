@@ -110,7 +110,7 @@ function Pigeon.lower_axes(arr::VirtualFiber, ctx::LowerJuliaContext) where {T <
     dims = map(i -> gensym(Symbol(arr.name, :_, i, :_stop)), 1:arr.N)
     for (dim, lvl) in zip(dims, arr.lvls)
         #Could unroll more manually, but I'm not convinced it's worth it.
-        push!(ctx.preamble, :($dim = dimension($lvl)))
+        push!(ctx.preamble, :($dim = dimension($(lvl.ex)))) #TODO we don't know if every level has a .ex
     end
     return map(i->Extent(1, Virtual{Int}(dims[i])), 1:arr.N)
 end
@@ -122,7 +122,7 @@ function virtualize(ex, ::Type{<:Fiber{Tv, N, R, Lvls, Poss, Idxs}}, ctx, tag=ge
     sym = Symbol(:tns_, tag)
     push!(ctx.preamble, :($sym = $ex))
     lvls = map(enumerate(Lvls.parameters)) do (n, Lvl)
-        virtualize(:($sym.poss[$n]), Lvl, ctx)
+        virtualize(:($sym.lvls[$n]), Lvl, ctx)
     end
     poss = map(enumerate(Poss.parameters)) do (n, Pos)
         virtualize(:($sym.poss[$n]), Pos, ctx)
@@ -174,21 +174,19 @@ virtual_unfurl(lvl::VirtualSparseLevel, tns, ctx, mode::Pigeon.Read, idx::Name, 
 function virtual_unfurl(lvl::VirtualSparseLevel, tns, ctx, mode::Pigeon.Read, idx::Walk, tail...)
     R = tns.R
     sym = Symbol(:tns_, Pigeon.getname(tns), :_, R)
-    my_i = Symbol(sym, :_i0)
-    my_i′ = Symbol(sym, :_i1)
+    my_i = Symbol(sym, :_i)
     my_p = Symbol(sym, :_p)
 
     Thunk(
         preamble = quote
             $my_p = $(lvl.ex).pos[$(ctx(tns.poss[R]))]
-            $my_i = 1
-            $my_i′ = $(lvl.ex).idx[$my_p]
+            $my_i = $(lvl.ex).idx[$my_p]
         end,
         body = Stepper(
-            stride = (start) -> my_i′,
+            stride = (start) -> my_i,
             body = (start, step) -> begin
                 Cases([
-                    :($step < $my_i′) =>
+                    :($step < $my_i) =>
                         Run(
                             body = 0,
                         ),
@@ -196,12 +194,11 @@ function virtual_unfurl(lvl::VirtualSparseLevel, tns, ctx, mode::Pigeon.Read, id
                         Thunk(
                             body = Spike(
                                 body = 0,
-                                tail = virtual_refurl(tns, Virtual{lvl.Tv}(my_p), Virtual{lvl.Ti}(my_i′), mode, tail...),
+                                tail = virtual_refurl(tns, Virtual{lvl.Tv}(my_p), Virtual{lvl.Ti}(my_i), mode, tail...),
                             ),
                             epilogue = quote
                                 $my_p += 1
-                                $my_i = $my_i′ + 1
-                                $my_i′ = $(lvl.ex).idx[$my_p]
+                                $my_i = $(lvl.ex).idx[$my_p]
                             end
                         ),
                 ])
@@ -255,7 +252,7 @@ function virtual_unfurl(lvl::VirtualScalarLevel, fbr, ctx, ::Pigeon.Read)
 
     Thunk(
         preamble = quote
-            $val = $(lvl.ex)[$(ctx(fbr.poss[end]))]
+            $val = $(lvl.ex).val[$(ctx(fbr.poss[end]))]
         end,
         body = Virtual{lvl.Tv}(val)
     )
