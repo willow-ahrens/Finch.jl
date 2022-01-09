@@ -132,7 +132,7 @@ function Pigeon.visit!(root, ctx::LowerJuliaContext, ::DefaultStyle)
     if Pigeon.isliteral(root)
         return Pigeon.value(root)
     end
-    error()
+    error("Don't know how to lower $root")
 end
 
 function Pigeon.visit!(root::Virtual, ctx::LowerJuliaContext, ::DefaultStyle)

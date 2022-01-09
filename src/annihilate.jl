@@ -19,7 +19,7 @@ annihilate_index = Fixpoint(Prewalk(Chain([
     #(@ex@rule @i(+(~~a)) => if !issorted(~~a) @i +($(sort(~~a))) end),
     #(@ex@rule @i(*(~~a)) => if !issorted(~~a) @i *($(sort(~~a))) end),
 
-    (@ex@rule @i((~a)[]) => ~a), 
+    #(@ex@rule @i((~a)[]) => ~a),  #This rule is wrong, and also should be handled by AccessContext anyway
     (@ex@rule @i((~a)[~~i] = 0) => pass(~a)), #TODO this is only valid when the default of A is 0
     (@ex@rule @i((~a)[~~i] += 0) => pass(~a)),
     (@ex@rule @i((~a)[~~i] *= 1) => pass(~a)),

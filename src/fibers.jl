@@ -81,12 +81,14 @@ mutable struct VirtualFiber
     N
     Tv
     R
-    lvls
-    poss
-    idxs
+    lvls::Vector{Any}
+    poss::Vector{Any}
+    idxs::Vector{Any}
 end
 
-function Pigeon.make_style(root::Loop, ctx::Finch.LowerJuliaContext, node::Access{<:VirtualFiber})
+Pigeon.isliteral(::VirtualFiber) = false
+
+function Pigeon.make_style(root::Loop, ctx::Finch.LowerJuliaContext, node::Access{VirtualFiber})
     if isempty(node.idxs)
         return AccessStyle()
     elseif getname(root.idxs[1]) == getname(node.idxs[1])
@@ -96,14 +98,25 @@ function Pigeon.make_style(root::Loop, ctx::Finch.LowerJuliaContext, node::Acces
     end
 end
 
+function Pigeon.make_style(root, ctx::Finch.LowerJuliaContext, node::Access{VirtualFiber})
+    if isempty(node.idxs)
+        return AccessStyle()
+    else
+        return DefaultStyle()
+    end
+end
+
 function Pigeon.lower_axes(arr::VirtualFiber, ctx::LowerJuliaContext) where {T <: AbstractArray}
-    dims = map(i -> gensym(Symbol(arr.name, :_, i, :_stop)), 1:arr.ndims)
-    for (dim, lvl) in zip(dims, lvls)
+    dims = map(i -> gensym(Symbol(arr.name, :_, i, :_stop)), 1:arr.N)
+    for (dim, lvl) in zip(dims, arr.lvls)
         #Could unroll more manually, but I'm not convinced it's worth it.
         push!(ctx.preamble, :($dim = dimension($lvl)))
     end
-    return map(i->Extent(1, Virtual{Int}(dims[i])), 1:arr.ndims)
+    return map(i->Extent(1, Virtual{Int}(dims[i])), 1:arr.N)
 end
+
+Pigeon.getsites(arr::VirtualFiber) = 1:arr.N
+Pigeon.getname(arr::VirtualFiber) = arr.name
 
 function virtualize(ex, ::Type{<:Fiber{Tv, N, R, Lvls, Poss, Idxs}}, ctx, tag=gensym()) where {Tv, N, R, Lvls, Poss, Idxs}
     sym = Symbol(:tns_, tag)
@@ -120,26 +133,29 @@ function virtualize(ex, ::Type{<:Fiber{Tv, N, R, Lvls, Poss, Idxs}}, ctx, tag=ge
     VirtualFiber(tag, sym, N, Tv, R, lvls, poss, idxs)
 end
 
-function virtual_refurl(fbr::VirtualFiber, p, mode, i, tail...)
+function virtual_refurl(fbr::VirtualFiber, p, i, mode, tail...)
     res = deepcopy(fbr)
     res.N = fbr.N - 1
     res.R = fbr.R + 1
     push!(res.poss, p)
     push!(res.idxs, i)
-    return Access(res, mode, tail...)
+    return Access(res, mode, Any[tail...])
 end
 
 function Pigeon.visit!(node::Access{VirtualFiber}, ctx::Finch.ChunkifyContext, ::Pigeon.DefaultStyle) where {Tv, Ti}
     if getname(ctx.idx) == getname(node.idxs[1])
-        refurl = (p, i) -> Access(virtual_refurl(node.tns, p, i), node.mode, node.idxs[2:end])
-        virtual_unfurl(fbr.lvls[R], node.tns, ctx.ctx, node.mode, node.idxs...)
+        Access(virtual_unfurl(node.tns.lvls[node.tns.R], node.tns, ctx.ctx, node.mode, node.idxs...), node.mode, node.idxs)
     else
         node
     end
 end
 
 function Pigeon.visit!(node::Access{VirtualFiber}, ctx::Finch.AccessContext, ::Pigeon.DefaultStyle) where {Tv, Ti}
-    virtual_unfurl(fbr.lvls[R], node.tns, ctx.ctx, node.mode)
+    if isempty(node.idxs)
+        virtual_unfurl(node.tns.lvls[node.tns.R], node.tns, ctx.ctx, node.mode)
+    else
+        node
+    end
 end
 
 struct VirtualSparseLevel
@@ -155,10 +171,12 @@ end
 virtual_unfurl(lvl::VirtualSparseLevel, tns, ctx, mode::Pigeon.Read, idx::Name, tail...) =
     virtual_unfurl(lvl, tns, ctx, mode, walk(idx), tail...)
 
-function virtual_unfurl(lvl::VirtualSparseLevel, tns, ctx, ::Pigeon.Read, idx::Walk, tail...)
-    r = fiber.R
-    name = Symbol(:tns_, Pigeon.getname(tns), :_, R)
-    my_p = Symbol(name, :_p)
+function virtual_unfurl(lvl::VirtualSparseLevel, tns, ctx, mode::Pigeon.Read, idx::Walk, tail...)
+    R = tns.R
+    sym = Symbol(:tns_, Pigeon.getname(tns), :_, R)
+    my_i = Symbol(sym, :_i0)
+    my_i′ = Symbol(sym, :_i1)
+    my_p = Symbol(sym, :_p)
 
     Thunk(
         preamble = quote
@@ -178,7 +196,7 @@ function virtual_unfurl(lvl::VirtualSparseLevel, tns, ctx, ::Pigeon.Read, idx::W
                         Thunk(
                             body = Spike(
                                 body = 0,
-                                tail = virtual_refurl(tns, Virtual{lvl.T}(my_p), Virtual{lvl.Ti}(my_i′), mode, tail...),
+                                tail = virtual_refurl(tns, Virtual{lvl.Tv}(my_p), Virtual{lvl.Ti}(my_i′), mode, tail...),
                             ),
                             epilogue = quote
                                 $my_p += 1
@@ -233,7 +251,7 @@ end
 
 function virtual_unfurl(lvl::VirtualScalarLevel, fbr, ctx, ::Pigeon.Read)
     R = fbr.R
-    val = gensym(:tns_, getname(fbr), :_val)
+    val = Symbol(:tns_, getname(fbr), :_val)
 
     Thunk(
         preamble = quote

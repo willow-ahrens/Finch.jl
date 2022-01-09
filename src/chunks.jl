@@ -15,8 +15,6 @@ function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::ChunkStyle)
     visit!(root, ctx)
 end
 
-trim_chunk_stop!(node, ctx, stop) = nothing
-
 struct AccessStyle end
 
 Pigeon.combine_style(a::DefaultStyle, b::AccessStyle) = AccessStyle()
@@ -28,10 +26,8 @@ struct AccessContext <: Pigeon.AbstractTransformContext
     ctx
 end
 
-function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::ChunkStyle)
+function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::AccessStyle)
     root = visit!(root, AccessContext(ctx))
     #TODO add a simplify step here perhaps
     visit!(root, ctx)
 end
-
-trim_chunk_stop!(node, ctx, stop) = nothing
