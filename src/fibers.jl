@@ -218,20 +218,20 @@ function virtualize(ex, ::Type{<:DenseLevel{Ti}}, ctx) where {Ti}
     VirtualDenseLevel(ex, Ti)
 end
 
-virtual_unfurl(lvl::VirtualSparseLevel, tns, ctx, mode::Pigeon.Read, idx::Name, tail...) =
-    virtual_unfurl(lvl, tns, ctx, mode, walk(idx), tail...)
+virtual_unfurl(lvl::VirtualDenseLevel, tns, ctx, mode::Pigeon.Read, idx::Name, tail...) =
+    virtual_unfurl(lvl, tns, ctx, mode, locate(idx), tail...)
 
 function virtual_unfurl(lvl::VirtualDenseLevel, fbr, ctx, mode::Pigeon.Read, idx::Locate, tail...)
     R = fbr.R
     q = fbr.poss[R]
-    p = Symbol(:tns_, name(fbr), :_, R, :_p)
+    p = Symbol(:tns_, getname(fbr), :_, R, :_p)
 
     Leaf(
         body = (i) -> Thunk(
             preamble = quote
                 $p = ($(ctx(q)) - 1) * $(lvl.ex).I + $i
             end,
-            body = virtual_refurl(tns, Virtual{lvl.T}(my_p), i, mode, tail...),
+            body = virtual_refurl(fbr, Virtual{lvl.Ti}(p), i, mode, tail...),
         )
     )
 end
