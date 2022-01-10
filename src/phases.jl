@@ -41,7 +41,9 @@ function Pigeon.visit!(stmt, ctx::LowerJuliaContext, ::PipelineStyle)
         push!(thunk.args, scope(ctx) do ctx′
             strides = visit!(root, PhaseStrideContext(ctx′, i, i0))
             strides = [strides; visit!(ctx.dims[i].stop, ctx)]
-            push!(ctx′.preamble, $step = min($(strides...)))
+            :($step = min($(strides...)))
+        end
+        push!(thunk.args, scope(ctx) do ctx′
             body = visit!(root, PhaseBodyContext(ctx′, i, i0, step))
             quote
                 if $i0 < $step

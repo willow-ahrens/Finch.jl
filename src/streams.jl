@@ -29,9 +29,11 @@ function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::StepperStyle)
             $(scope(ctx) do ctx′
                 strides = visit!(root, StepperStrideContext(ctx′, i, i0))
                 strides = [strides; visit!(ctx.dims[i].stop, ctx)]
+                :($step = min($(strides...)))
+            end)
+            $(scope(ctx) do ctx′
                 body = visit!(root, StepperBodyContext(ctx′, i, i0, step))
                 quote
-                    $step = min($(strides...))
                     $(restrict(ctx′, i => Extent(Virtual{Any}(i0), Virtual{Any}(step))) do
                         visit!(body, ctx′)
                     end)
