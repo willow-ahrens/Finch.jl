@@ -6,7 +6,7 @@ end
 
 virtualize(ex, T, ctx) = Virtual{T}(ex)
 
-TermInterface.istree(::Type{<:Virtual}) = false
+SyntaxInterface.istree(::Virtual) = false
 
 Pigeon.isliteral(::Virtual) = false
 

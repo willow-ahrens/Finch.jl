@@ -186,7 +186,7 @@ uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
 version = "2.1.3"
 
 [[deps.Pigeon]]
-deps = ["Combinatorics", "DataStructures", "Debugger", "InteractiveUtils", "ProgressMeter", "Random", "RewriteTools", "Scratch", "TermInterface", "Unzip"]
+deps = ["Combinatorics", "DataStructures", "Debugger", "InteractiveUtils", "ProgressMeter", "Random", "RewriteTools", "Scratch", "SyntaxInterface", "Unzip"]
 path = "/Users/Peter/Projects/Pigeon.jl/"
 uuid = "5feeeddc-254b-4aab-a0bc-ed990ddc1d92"
 version = "0.1.0"
@@ -214,7 +214,7 @@ deps = ["SHA", "Serialization"]
 uuid = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
 [[deps.RewriteTools]]
-deps = ["AbstractTrees", "Documenter", "TermInterface", "TimerOutputs"]
+deps = ["AbstractTrees", "Documenter", "SyntaxInterface", "TimerOutputs"]
 path = "/Users/Peter/Projects/RewriteTools.jl"
 uuid = "5969e224-3634-4c61-9f66-721b69e98b8a"
 version = "0.1.0"
@@ -246,6 +246,11 @@ uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 deps = ["LinearAlgebra", "SparseArrays"]
 uuid = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
+[[deps.SyntaxInterface]]
+path = "/Users/Peter/Projects/SyntaxInterface.jl/"
+uuid = "b33eeca9-aacb-4496-a840-e75f1646a4fb"
+version = "0.1.0"
+
 [[deps.TOML]]
 deps = ["Dates"]
 uuid = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
@@ -253,11 +258,6 @@ uuid = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
 [[deps.Tar]]
 deps = ["ArgTools", "SHA"]
 uuid = "a4e569a6-e804-4fa4-b0f3-eef7a1d5b13e"
-
-[[deps.TermInterface]]
-git-tree-sha1 = "02a620218eaaa1c1914d228d0e75da122224a502"
-uuid = "8ea1fca8-c5ef-4a55-8b96-4e9afe9c9a3c"
-version = "0.1.8"
 
 [[deps.Test]]
 deps = ["InteractiveUtils", "Logging", "Random", "Serialization"]

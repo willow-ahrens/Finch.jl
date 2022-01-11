@@ -7,7 +7,7 @@ using RewriteTools
 using RewriteTools: istree, arguments, operation, similarterm
 using RewriteTools: Chain, Fixpoint
 using RewriteTools: Postwalk, Prewalk
-using TermInterface
+using SyntaxInterface
 using MacroTools
 using DataStructures
 using Base.Iterators
