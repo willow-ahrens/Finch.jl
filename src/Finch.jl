@@ -3,10 +3,10 @@ module Finch
 using Pigeon
 using Pigeon: Dimensions, dimensionalize!, DefaultStyle, getname
 using Pigeon: visit!, isliteral, pass
-using SymbolicUtils
-using SymbolicUtils: istree, arguments, operation, similarterm
-using SymbolicUtils: Chain, Fixpoint
-using SymbolicUtils: Postwalk, Prewalk
+using RewriteTools
+using RewriteTools: istree, arguments, operation, similarterm
+using RewriteTools: Chain, Fixpoint
+using RewriteTools: Postwalk, Prewalk
 using TermInterface
 using MacroTools
 using DataStructures
