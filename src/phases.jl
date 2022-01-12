@@ -46,10 +46,11 @@ function Pigeon.visit!(root, ctx::LowerJuliaContext, ::PipelineStyle)
         push!(thunk.args, scope(ctx) do ctx′
             body = visit!(body, PhaseBodyContext(ctx′, i, i0, step))
             quote
-                if $i0 < $step
+                if $i0 <= $step
                     $(restrict(ctx′, i => Extent(Virtual{Any}(i0), Virtual{Any}(step))) do
                         visit!(body, ctx′)
                     end)
+                    $i0 = $step + 1
                 end
             end
         end)

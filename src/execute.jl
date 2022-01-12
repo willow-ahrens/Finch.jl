@@ -15,7 +15,6 @@ function execute_code_lowered(ex, T)
         Pigeon.visit!(prgm, ctx)
     end
     MacroTools.prettify(code, alias=false, lines=false)
-    code
 end
 
 register()
