@@ -9,7 +9,7 @@ annihilate_index = @slots a b c i j f g Fixpoint(Prewalk(Chain([
     (@ex@rule @i(*(a..., 1, b...)) => @i *(a..., b...)),
     (@ex@rule @i(*(a..., 0, b...)) => 0),
 
-    (@ex@rule @i(+ a) => a),
+    (@ex@rule @i((+)(a)) => a),
     (@ex@rule @i(a - b) => @i a + - b),
     (@ex@rule @i(- (- a)) => a),
     (@ex@rule @i(- +(a, b...)) => @i +(- a, - +(b...))),

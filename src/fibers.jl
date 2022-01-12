@@ -176,34 +176,47 @@ function virtual_unfurl(lvl::VirtualSparseLevel, tns, ctx, mode::Pigeon.Read, id
     sym = Symbol(:tns_, Pigeon.getname(tns), :_, R)
     my_i = Symbol(sym, :_i)
     my_p = Symbol(sym, :_p)
+    my_i1 = Symbol(sym, :_i1)
 
     Thunk(
         preamble = quote
             $my_p = $(lvl.ex).pos[$(ctx(tns.poss[R]))]
             $my_i = $(lvl.ex).idx[$my_p]
+            $my_i1 = $(lvl.ex).idx[$(lvl.ex).pos[$(ctx(tns.poss[R])) + 1] - 1]
+            println($(QuoteNode(Pigeon.getname(tns))), $my_i1)
         end,
-        body = Stepper(
-            stride = (start) -> my_i,
-            body = (start, step) -> begin
-                Cases([
-                    :($step < $my_i) =>
-                        Run(
-                            body = 0,
-                        ),
-                    true =>
-                        Thunk(
-                            body = Spike(
-                                body = 0,
-                                tail = virtual_refurl(tns, Virtual{lvl.Tv}(my_p), Virtual{lvl.Ti}(my_i), mode, tail...),
-                            ),
-                            epilogue = quote
-                                $my_p += 1
-                                $my_i = $(lvl.ex).idx[$my_p]
-                            end
-                        ),
-                ])
-            end
-        )
+        body = Pipeline([
+            Phase(
+                stride = (start) -> my_i1,
+                body = (start, step) -> Stepper(
+                    stride = (start) -> my_i,
+                    body = (start, step) -> begin
+                        Cases([
+                            :($step < $my_i) =>
+                                Run(
+                                    body = 0,
+                                ),
+                            true =>
+                                Thunk(
+                                    preamble = quote
+                                        $my_i = $(lvl.ex).idx[$my_p]
+                                    end,
+                                    body = Spike(
+                                        body = 0,
+                                        tail = virtual_refurl(tns, Virtual{lvl.Tv}(my_p), Virtual{lvl.Ti}(my_i), mode, tail...),
+                                    ),
+                                    epilogue = quote
+                                        $my_p += 1
+                                    end
+                                ),
+                        ])
+                    end
+                )
+            ),
+            Phase(
+                body = (start, step) -> Run(0)
+            )
+        ])
     )
 end
 

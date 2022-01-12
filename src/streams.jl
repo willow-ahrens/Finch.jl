@@ -24,7 +24,7 @@ function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::StepperStyle)
     i0 = gensym(Symbol("_", i))
     step = gensym(Symbol("_", i))
     return quote
-        $i0 = $(ctx.dims[i].start)
+        $i0 = $(ctx(ctx.dims[i].start))
         while $i0 <= $(visit!(ctx.dims[i].stop, ctx))
             $(scope(ctx) do ctx′
                 strides = visit!(root, StepperStrideContext(ctx′, i, i0))

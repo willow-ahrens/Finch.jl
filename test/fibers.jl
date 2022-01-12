@@ -12,11 +12,11 @@
 
     println("dense = fiber(s) + fiber(s)")
     A = Finch.Fiber{Float64}((
-        SparseLevel{Float64}(10, [1, 6], [1, 3, 5, 7, 9, 11]),
+        SparseLevel{Float64}(10, [1, 6], [1, 3, 5, 7, 9]),
         ScalarLevel{Float64}([2.0, 3.0, 4.0, 5.0, 6.0]),
     ))
     B = Finch.Fiber{Float64}((
-        SparseLevel{Float64}(10, [1, 5], [2, 5, 8, 11]),
+        SparseLevel{Float64}(10, [1, 4], [2, 5, 8]),
         ScalarLevel{Float64}([1.0, 1.0, 1.0]),
     ))
     C = zeros(10)
