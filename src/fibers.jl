@@ -183,8 +183,13 @@ function virtual_unfurl(lvl::VirtualSparseLevel, tns, ctx, mode::Pigeon.Read, id
         preamble = quote
             $my_p = $(lvl.ex).pos[$(ctx(tns.poss[R]))]
             $my_p1 = $(lvl.ex).pos[$(ctx(tns.poss[R])) + 1]
-            $my_i = $(lvl.ex).idx[$my_p] #Not strictly correct, phases need conditional guards
-            $my_i1 = $(lvl.ex).idx[$my_p1 - 1] #Not strictly correct, phases need conditional guards
+            if $my_p < $my_p1
+                $my_i = $(lvl.ex).idx[$my_p]
+                $my_i1 = $(lvl.ex).idx[$my_p1 - 1]
+            else
+                $my_i = 1
+                $my_i1 = 0
+            end
             println($(QuoteNode(Pigeon.getname(tns))), $my_i1)
         end,
         body = Pipeline([
