@@ -27,21 +27,32 @@ function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::StepperStyle)
         $i0 = $(ctx(ctx.dims[i].start))
         while $i0 <= $(visit!(ctx.dims[i].stop, ctx))
             $(scope(ctx) do ctx′
+                visit!(root, StepperThunkContext(ctx′, i, i0))
                 strides = visit!(root, StepperStrideContext(ctx′, i, i0))
                 strides = [strides; visit!(ctx.dims[i].stop, ctx)]
-                :($step = min($(strides...)))
-            end)
-            $(scope(ctx) do ctx′
                 body = visit!(root, StepperBodyContext(ctx′, i, i0, step))
                 quote
-                    $(restrict(ctx′, i => Extent(Virtual{Any}(i0), Virtual{Any}(step))) do
-                        visit!(body, ctx′)
+                    $step = min($(strides...))
+                    $(scope(ctx′) do ctx′′
+                        restrict(ctx′′, i => Extent(Virtual{Any}(i0), Virtual{Any}(step))) do
+                            visit!(body, ctx′′)
+                        end
                     end)
                 end
             end)
             $i0 = $step + 1
         end
     end
+end
+
+Base.@kwdef struct StepperThunkContext <: Pigeon.AbstractWalkContext
+    ctx
+    idx
+    start
+end
+function Pigeon.postvisit!(node::Stepper, ctx::StepperThunkContext, ::DefaultStyle)
+    push!(ctx.ctx.preamble, node.preamble)
+    push!(ctx.ctx.epilogue, node.epilogue)
 end
 
 Base.@kwdef struct StepperStrideContext <: Pigeon.AbstractCollectContext

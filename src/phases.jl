@@ -39,16 +39,17 @@ function Pigeon.visit!(root, ctx::LowerJuliaContext, ::PipelineStyle)
 
     for (keys, body) in phases
         push!(thunk.args, scope(ctx) do ctx′
+            visit!(body, PhaseThunkContext(ctx′, i, i0))
             strides = visit!(body, PhaseStrideContext(ctx′, i, i0))
             strides = [strides; visit!(ctx.dims[i].stop, ctx)]
-            :($step = min($(strides...)))
-        end)
-        push!(thunk.args, scope(ctx) do ctx′
             body = visit!(body, PhaseBodyContext(ctx′, i, i0, step))
             quote
+                $step = min($(strides...))
                 if $i0 <= $step
-                    $(restrict(ctx′, i => Extent(Virtual{Any}(i0), Virtual{Any}(step))) do
-                        visit!(body, ctx′)
+                    $(scope(ctx′) do ctx′′
+                        restrict(ctx′′, i => Extent(Virtual{Any}(i0), Virtual{Any}(step))) do
+                            visit!(body, ctx′′)
+                        end
                     end)
                     $i0 = $step + 1
                 end
@@ -70,6 +71,16 @@ function Pigeon.postvisit!(node, ctx::PipelineContext, args)
 end
 Pigeon.postvisit!(node, ctx::PipelineContext) = [([], node)]
 Pigeon.visit!(node::Pipeline, ctx::PipelineContext, ::DefaultStyle) = enumerate(node.phases)
+
+Base.@kwdef struct PhaseThunkContext <: Pigeon.AbstractWalkContext
+    ctx
+    idx
+    start
+end
+function Pigeon.postvisit!(node::Phase, ctx::PhaseThunkContext, ::DefaultStyle)
+    push!(ctx.ctx.preamble, node.preamble)
+    push!(ctx.ctx.epilogue, node.epilogue)
+end
 
 Base.@kwdef struct PhaseStrideContext <: Pigeon.AbstractCollectContext
     ctx
