@@ -3,8 +3,10 @@ Base.@kwdef struct Pipeline
 end
 
 Base.@kwdef struct Phase
+    preamble = quote end
     body
     stride = nothing
+    epilogue = quote end
 end
 
 Pigeon.isliteral(::Pipeline) = false
@@ -77,9 +79,10 @@ Base.@kwdef struct PhaseThunkContext <: Pigeon.AbstractWalkContext
     idx
     start
 end
-function Pigeon.postvisit!(node::Phase, ctx::PhaseThunkContext, ::DefaultStyle)
+function Pigeon.visit!(node::Phase, ctx::PhaseThunkContext, ::DefaultStyle)
     push!(ctx.ctx.preamble, node.preamble)
     push!(ctx.ctx.epilogue, node.epilogue)
+    node
 end
 
 Base.@kwdef struct PhaseStrideContext <: Pigeon.AbstractCollectContext

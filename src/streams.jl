@@ -1,8 +1,10 @@
 struct StepperStyle end
 
 Base.@kwdef struct Stepper
+    preamble = quote end
     body
     stride
+    epilogue = quote end
 end
 
 Pigeon.isliteral(::Stepper) = false
@@ -27,7 +29,7 @@ function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::StepperStyle)
         $i0 = $(ctx(ctx.dims[i].start))
         while $i0 <= $(visit!(ctx.dims[i].stop, ctx))
             $(scope(ctx) do ctx′
-                visit!(root, StepperThunkContext(ctx′, i, i0))
+                visit!(root, StepperThunkContext(ctx′, i, i0)) #TODO we could just use actual thunks here and call a thunkcontext, would look cleaner.
                 strides = visit!(root, StepperStrideContext(ctx′, i, i0))
                 strides = [strides; visit!(ctx.dims[i].stop, ctx)]
                 body = visit!(root, StepperBodyContext(ctx′, i, i0, step))
@@ -50,9 +52,10 @@ Base.@kwdef struct StepperThunkContext <: Pigeon.AbstractWalkContext
     idx
     start
 end
-function Pigeon.postvisit!(node::Stepper, ctx::StepperThunkContext, ::DefaultStyle)
+function Pigeon.visit!(node::Stepper, ctx::StepperThunkContext, ::DefaultStyle)
     push!(ctx.ctx.preamble, node.preamble)
     push!(ctx.ctx.epilogue, node.epilogue)
+    node
 end
 
 Base.@kwdef struct StepperStrideContext <: Pigeon.AbstractCollectContext

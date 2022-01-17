@@ -196,11 +196,11 @@ function virtual_unfurl(lvl::VirtualSparseLevel, tns, ctx, mode::Pigeon.Read, id
             Phase(
                 stride = (start) -> my_i1,
                 body = (start, step) -> Stepper(
-                    stride = (start) -> :($(lvl.ex).idx[$my_p]), #TODO cache me somehow
+                    preamble = :(
+                        $my_i = $(lvl.ex).idx[$my_p]
+                    ),
+                    stride = (start) -> my_i,
                     body = (start, step) -> Thunk(
-                        preamble = quote
-                            $my_i = $(lvl.ex).idx[$my_p]
-                        end,
                         body = Cases([
                             :($step < $my_i) =>
                                 Run(
