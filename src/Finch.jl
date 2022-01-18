@@ -14,8 +14,6 @@ using Base.Iterators
 
 using Pigeon: Read, Write, Update
 
-using Pigeon: @ex
-
 export Virtual, Scalar, Chunk
 export @I, execute
 
