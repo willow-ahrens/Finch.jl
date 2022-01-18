@@ -267,7 +267,6 @@ end
 struct VirtualSolidLevel
     ex
     Ti
-    D
 end
 
 function virtualize(ex, ::Type{<:SolidLevel{Ti}}, ctx) where {Ti}
