@@ -105,7 +105,6 @@ end
 Pigeon.visit!(::Pass, ctx::LowerJuliaContext, ::DefaultStyle) = quote end
 
 function Pigeon.visit!(root::Assign, ctx::LowerJuliaContext, ::DefaultStyle)
-    @assert root.lhs isa Access && map(getname, root.lhs.idxs) ⊆ keys(ctx.bindings)
     if root.op == nothing
         rhs = visit!(root.rhs, ctx)
     else

@@ -243,13 +243,12 @@ function virtual_unfurl(lvl::VirtualHollowLevel, tns, ctx, mode::Union{Pigeon.Wr
             $my_p = $(lvl.ex).pos[end]
             resize!($(lvl.ex).idx, $my_p - 1)
             $my_p = 0
-            $(lvl.ex).val = $Tv[]
+            $(lvl.ex).val = $(lvl.Tv)[]
         end,
         body = AcceptSpike(
             val = lvl.D,
             tail = (ctx, idx) -> Thunk(
                 preamble = quote
-                    push!($(lvl.ex).val, $(lvl.D))
                     $my_p += 1
                 end,
                 body = virtual_refurl(tns, Virtual{lvl.Tv}(my_p), Virtual{lvl.Ti}(my_i), mode, tail...),
@@ -313,6 +312,7 @@ end
 struct VirtualScalarLevel
     ex
     Tv
+    D
 end
 
 function virtualize(ex, ::Type{<:ScalarLevel{Tv}}, ctx) where {Tv}
@@ -328,5 +328,35 @@ function virtual_unfurl(lvl::VirtualScalarLevel, fbr, ctx, ::Pigeon.Read)
             $val = $(lvl.ex).val[$(ctx(fbr.poss[end]))]
         end,
         body = Virtual{lvl.Tv}(val)
+    )
+end
+
+function virtual_unfurl(lvl::VirtualScalarLevel, fbr, ctx, ::Pigeon.Write)
+    R = fbr.R
+    val = Symbol(:tns_, getname(fbr), :_val)
+
+    Thunk(
+        preamble = quote
+            $val = nothing
+        end,
+        body = Virtual{lvl.Tv}(val),
+        epilogue = quote
+            $(lvl.ex).val[$(ctx(fbr.poss[end]))] = $val
+        end,
+    )
+end
+
+function virtual_unfurl(lvl::VirtualScalarLevel, fbr, ctx, ::Pigeon.Update)
+    R = fbr.R
+    val = Symbol(:tns_, getname(fbr), :_val)
+
+    Thunk(
+        preamble = quote
+            $val = $(lvl.ex).val[$(ctx(fbr.poss[end]))]
+        end,
+        body = Virtual{lvl.Tv}(val),
+        epilogue = quote
+            $(lvl.ex).val[$(ctx(fbr.poss[end]))] = $val
+        end,
     )
 end
