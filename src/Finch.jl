@@ -19,7 +19,7 @@ using Pigeon: @ex
 export Virtual, Scalar, Chunk
 export @I, execute
 
-export Fiber, SparseLevel, DenseLevel, ScalarLevel
+export Fiber, HollowLevel, SolidLevel, ScalarLevel
 
 include("virtualize.jl")
 include("lower.jl")

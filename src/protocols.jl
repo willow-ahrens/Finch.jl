@@ -15,17 +15,47 @@ virtualize(ex, ::Type{MesaWalk{name}}, ctx) where {name} = Walk(name)
 
 
 
-export locate
+export follow
 
-struct Locate
+struct Follow
     name
 end
 
-Pigeon.getname(idx::Locate) = idx.name
+Pigeon.getname(idx::Follow) = idx.name
 
-locate(name::Name) = Locate(getname(name))
+follow(name::Name) = Follow(getname(name))
 
-struct MesaLocate{name} end
-mesalocate(name) = MesaLocate{name}()
-locate(::MesaName{name}) where {name} = mesalocate(name)
-virtualize(ex, ::Type{MesaLocate{name}}, ctx) where {name} = Locate(name)
+struct MesaFollow{name} end
+mesafollow(name) = MesaFollow{name}()
+follow(::MesaName{name}) where {name} = mesafollow(name)
+virtualize(ex, ::Type{MesaFollow{name}}, ctx) where {name} = Follow(name)
+
+export extrude
+
+struct Extrude
+    name
+end
+
+Pigeon.getname(idx::Extrude) = idx.name
+
+extrude(name::Name) = Extrude(getname(name))
+
+struct MesaExtrude{name} end
+mesaextrude(name) = MesaExtrude{name}()
+extrude(::MesaName{name}) where {name} = mesaextrude(name)
+virtualize(ex, ::Type{MesaExtrude{name}}, ctx) where {name} = Extrude(name)
+
+export laminate
+
+struct Laminate
+    name
+end
+
+Pigeon.getname(idx::Laminate) = idx.name
+
+laminate(name::Name) = Laminate(getname(name))
+
+struct MesaLaminate{name} end
+mesalaminate(name) = MesaLaminate{name}()
+laminate(::MesaName{name}) where {name} = mesalaminate(name)
+virtualize(ex, ::Type{MesaLaminate{name}}, ctx) where {name} = Laminate(name)

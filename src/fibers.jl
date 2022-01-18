@@ -1,5 +1,5 @@
-export SparseLevel
-export DenseLevel
+export HollowLevel
+export SolidLevel
 export ScalarLevel
 
 struct Fiber{Tv, N, R, Lvls<:Tuple, Poss<:Tuple, Idxs<:Tuple} <: AbstractArray{Tv, N}
@@ -27,20 +27,20 @@ end
 
 
 
-struct SparseLevel{Tv, Ti}
+struct HollowLevel{Tv, Ti}
     I::Ti
     pos::Vector{Ti}
     idx::Vector{Ti}
 end
 
-function SparseLevel{Tv}(I::Ti, pos::Vector{Ti}, idx::Vector{Ti}) where {Tv, Ti}
-    SparseLevel{Tv, Ti}(I, pos, idx)
+function HollowLevel{Tv}(I::Ti, pos::Vector{Ti}, idx::Vector{Ti}) where {Tv, Ti}
+    HollowLevel{Tv, Ti}(I, pos, idx)
 end
 
-dimension(lvl::SparseLevel) = lvl.I
-cardinality(lvl::SparseLevel) = pos[end] - 1
+dimension(lvl::HollowLevel) = lvl.I
+cardinality(lvl::HollowLevel) = pos[end] - 1
 
-function unfurl(lvl::SparseLevel{Tv, Ti}, fbr::Fiber{Tv, N, R}, i, tail...) where {Tv, Ti, N, R}
+function unfurl(lvl::HollowLevel{Tv, Ti}, fbr::Fiber{Tv, N, R}, i, tail...) where {Tv, Ti, N, R}
     q = fbr.poss[R]
     r = searchsorted(@view(lvl.idx[lvl.pos[q]:lvl.pos[q + 1] - 1]), i)
     p = lvl.pos[q] + first(r) - 1
@@ -49,14 +49,14 @@ end
 
 
 
-struct DenseLevel{Ti}
+struct SolidLevel{Ti}
     I::Ti
 end
 
-dimension(lvl::DenseLevel) = lvl.I
-cardinality(lvl::DenseLevel) = lvl.I
+dimension(lvl::SolidLevel) = lvl.I
+cardinality(lvl::SolidLevel) = lvl.I
 
-function unfurl(lvl::DenseLevel{Ti}, fbr::Fiber{Tv, N, R}, i, tail...) where {Tv, Ti, N, R}
+function unfurl(lvl::SolidLevel{Ti}, fbr::Fiber{Tv, N, R}, i, tail...) where {Tv, Ti, N, R}
     q = fbr.poss[R]
     p = (q - 1) * lvl.I + i
     readindex(refurl(fbr, p, i), tail...)
@@ -158,20 +158,20 @@ function Pigeon.visit!(node::Access{VirtualFiber}, ctx::Finch.AccessContext, ::P
     end
 end
 
-struct VirtualSparseLevel
+struct VirtualHollowLevel
     ex
     Tv
     Ti
 end
 
-function virtualize(ex, ::Type{<:SparseLevel{Tv, Ti}}, ctx) where {Tv, Ti}
-    VirtualSparseLevel(ex, Tv, Ti)
+function virtualize(ex, ::Type{<:HollowLevel{Tv, Ti}}, ctx) where {Tv, Ti}
+    VirtualHollowLevel(ex, Tv, Ti)
 end
 
-virtual_unfurl(lvl::VirtualSparseLevel, tns, ctx, mode::Pigeon.Read, idx::Name, tail...) =
+virtual_unfurl(lvl::VirtualHollowLevel, tns, ctx, mode::Pigeon.Read, idx::Name, tail...) =
     virtual_unfurl(lvl, tns, ctx, mode, walk(idx), tail...)
 
-function virtual_unfurl(lvl::VirtualSparseLevel, tns, ctx, mode::Pigeon.Read, idx::Walk, tail...)
+function virtual_unfurl(lvl::VirtualHollowLevel, tns, ctx, mode::Pigeon.Read, idx::Walk, tail...)
     R = tns.R
     sym = Symbol(:tns_, Pigeon.getname(tns), :_, R)
     my_i = Symbol(sym, :_i)
@@ -226,10 +226,10 @@ function virtual_unfurl(lvl::VirtualSparseLevel, tns, ctx, mode::Pigeon.Read, id
     )
 end
 
-virtual_unfurl(lvl::VirtualSparseLevel, tns, ctx, mode::Union{Pigeon.Write, Pigeon.Update}, idx::Name, tail...) =
-    virtual_unfurl(lvl, tns, ctx, mode, follow(idx), tail...)
+virtual_unfurl(lvl::VirtualHollowLevel, tns, ctx, mode::Union{Pigeon.Write, Pigeon.Update}, idx::Name, tail...) =
+    virtual_unfurl(lvl, tns, ctx, mode, extrude(idx), tail...)
 
-function virtual_unfurl(lvl::VirtualSparseLevel, tns, ctx, mode::Union{Pigeon.Write, Pigeon.Update}, idx::Follow, tail...)
+function virtual_unfurl(lvl::VirtualHollowLevel, tns, ctx, mode::Union{Pigeon.Write, Pigeon.Update}, idx::Extrude, tail...)
     R = tns.R
     sym = Symbol(:tns_, Pigeon.getname(tns), :_, R)
     my_i = Symbol(sym, :_i)
@@ -263,19 +263,37 @@ function virtual_unfurl(lvl::VirtualSparseLevel, tns, ctx, mode::Union{Pigeon.Wr
     )
 end
 
-struct VirtualDenseLevel
+struct VirtualSolidLevel
     ex
     Ti
 end
 
-function virtualize(ex, ::Type{<:DenseLevel{Ti}}, ctx) where {Ti}
-    VirtualDenseLevel(ex, Ti)
+function virtualize(ex, ::Type{<:SolidLevel{Ti}}, ctx) where {Ti}
+    VirtualSolidLevel(ex, Ti)
 end
 
-virtual_unfurl(lvl::VirtualDenseLevel, tns, ctx, mode::Pigeon.Read, idx::Name, tail...) =
-    virtual_unfurl(lvl, tns, ctx, mode, locate(idx), tail...)
+virtual_unfurl(lvl::VirtualSolidLevel, tns, ctx, mode::Pigeon.Read, idx::Name, tail...) =
+    virtual_unfurl(lvl, tns, ctx, mode, follow(idx), tail...)
 
-function virtual_unfurl(lvl::VirtualDenseLevel, fbr, ctx, mode::Pigeon.Read, idx::Locate, tail...)
+function virtual_unfurl(lvl::VirtualSolidLevel, fbr, ctx, mode::Pigeon.Read, idx::Follow, tail...)
+    R = fbr.R
+    q = fbr.poss[R]
+    p = Symbol(:tns_, getname(fbr), :_, R, :_p)
+
+    Leaf(
+        body = (i) -> Thunk(
+            preamble = quote
+                $p = ($(ctx(q)) - 1) * $(lvl.ex).I + $i
+            end,
+            body = virtual_refurl(fbr, Virtual{lvl.Ti}(p), i, mode, tail...),
+        )
+    )
+end
+
+virtual_unfurl(lvl::VirtualSolidLevel, tns, ctx, mode::Union{Pigeon.Write, Pigeon.Update}, idx::Name, tail...) =
+    virtual_unfurl(lvl, tns, ctx, mode, extrude(idx), tail...)
+
+function virtual_unfurl(lvl::VirtualSolidLevel, fbr, ctx, mode::Union{Pigeon.Write, Pigeon.Update}, idx::Laminate, tail...)
     R = fbr.R
     q = fbr.poss[R]
     p = Symbol(:tns_, getname(fbr), :_, R, :_p)
