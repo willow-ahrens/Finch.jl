@@ -86,12 +86,10 @@ struct ThunkContext <: Pigeon.AbstractTransformContext
 end
 
 function Pigeon.visit!(node, ctx::LowerJuliaContext, ::ThunkStyle)
-    node = visit!(node, ThunkContext(ctx))
-    visit!(node, ctx)
-    #scope(ctx) do ctx′ #TODO this should probably be the only way to do preambles, etc.
-    #    node = visit!(node, ThunkContext(ctx′))
-    #    visit!(node, ctx′)
-    #end
+    scope(ctx) do ctx2
+        node = visit!(node, ThunkContext(ctx2))
+        visit!(node, ctx2)
+    end
 end
 
 function Pigeon.visit!(node::Thunk, ctx::ThunkContext, ::DefaultStyle)

@@ -64,7 +64,7 @@ end
 
 
 
-struct ScalarLevel{Tv}
+struct ScalarLevel{D, Tv}
     val::Vector{Tv}
 end
 
@@ -117,6 +117,11 @@ end
 
 Pigeon.getsites(arr::VirtualFiber) = 1:arr.N
 Pigeon.getname(arr::VirtualFiber) = arr.name
+
+virtual_assemble(tns, ctx, q) =
+    virtual_assemble(tns, ctx, [nothing for _ = 1:tns.R], q)
+virtual_assemble(tns::VirtualFiber, ctx, qoss, q) =
+    virtual_assemble(tns.lvls[length(qoss) + 1], tns::VirtualFiber, ctx, vcat(qoss, [q]), q)
 
 function virtualize(ex, ::Type{<:Fiber{Tv, N, R, Lvls, Poss, Idxs}}, ctx, tag=gensym()) where {Tv, N, R, Lvls, Poss, Idxs}
     sym = Symbol(:tns_, tag)
@@ -230,6 +235,17 @@ end
 virtual_unfurl(lvl::VirtualHollowLevel, tns, ctx, mode::Union{Pigeon.Write, Pigeon.Update}, idx::Name, tail...) =
     virtual_unfurl(lvl, tns, ctx, mode, extrude(idx), tail...)
 
+function virtual_assemble(lvl::VirtualHollowLevel, tns, ctx, qoss, q)
+    if q == nothing
+        return quote end
+    else
+        return quote
+            :(resize!($(lvl.ex).pos, $(ctx(q))))
+            $(virtual_assemble(tns, ctx, qoss, nothing))
+        end
+    end
+end
+
 function virtual_unfurl(lvl::VirtualHollowLevel, tns, ctx, mode::Union{Pigeon.Write, Pigeon.Update}, idx::Extrude, tail...)
     R = tns.R
     sym = Symbol(:tns_, Pigeon.getname(tns), :_, R)
@@ -240,25 +256,26 @@ function virtual_unfurl(lvl::VirtualHollowLevel, tns, ctx, mode::Union{Pigeon.Wr
 
     Thunk(
         preamble = quote
-            $my_p = $(lvl.ex).pos[end]
-            resize!($(lvl.ex).idx, $my_p - 1)
-            $my_p = 0
-            $(lvl.ex).val = $(lvl.Tv)[]
+            $my_p = $(lvl.ex).pos[$(ctx(tns.poss[R]))]
+            #resize!($(lvl.ex).idx, $my_p)
         end,
         body = AcceptSpike(
             val = lvl.D,
             tail = (ctx, idx) -> Thunk(
                 preamble = quote
-                    $my_p += 1
+                    $(scope(ctx) do ctx2 
+                        virtual_assemble(tns, ctx2, my_p)
+                    end)
                 end,
-                body = virtual_refurl(tns, Virtual{lvl.Tv}(my_p), Virtual{lvl.Ti}(my_i), mode, tail...),
+                body = virtual_refurl(tns, Virtual{lvl.Tv}(my_p), idx, mode, tail...),
                 epilogue = quote
                     push!($(lvl.ex).idx, $(Pigeon.visit!(idx, ctx)))
+                    $my_p += 1
                 end
             )
         ),
         epilogue = quote
-            push!($(lvl.ex).pos, $my_p)
+            $(lvl.ex).pos[$(ctx(tns.poss[R])) + 1] = $my_p
         end
     )
 end
@@ -274,6 +291,18 @@ end
 
 virtual_unfurl(lvl::VirtualSolidLevel, tns, ctx, mode::Pigeon.Read, idx::Name, tail...) =
     virtual_unfurl(lvl, tns, ctx, mode, follow(idx), tail...)
+
+function virtual_assemble(lvl::VirtualSolidLevel, tns, ctx, qoss, q)
+    if q == nothing
+        return quote end
+    else
+        q2 = Symbol(:tns_, getname(fbr), :_, R, :_q)
+        return quote
+            $q2 = ($(ctx(qoss)) - 1) * $(lvl.ex).I + $i
+            $(virtual_assemble(tns, ctx, qoss, q2))
+        end
+    end
+end
 
 function virtual_unfurl(lvl::VirtualSolidLevel, fbr, ctx, mode::Pigeon.Read, idx::Follow, tail...)
     R = fbr.R
@@ -315,9 +344,26 @@ struct VirtualScalarLevel
     D
 end
 
-function virtualize(ex, ::Type{<:ScalarLevel{Tv}}, ctx) where {Tv}
-    VirtualScalarLevel(ex, Tv)
+function virtualize(ex, ::Type{ScalarLevel{D, Tv}}, ctx) where {D, Tv}
+    VirtualScalarLevel(ex, Tv, D)
 end
+
+function virtual_assemble(lvl::VirtualScalarLevel, tns, ctx, qoss, q)
+    if q == nothing
+        return quote end
+    else
+        p = gensym()
+        i = gensym()
+        return quote
+            $p = length($(lvl.ex).val)
+            resize!($(lvl.ex).val, $q)
+            for $i = $p + 1: $q
+                $(lvl.ex).val[$i] = $(lvl.D)
+            end
+        end
+    end
+end
+
 
 function virtual_unfurl(lvl::VirtualScalarLevel, fbr, ctx, ::Pigeon.Read)
     R = fbr.R
