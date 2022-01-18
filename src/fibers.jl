@@ -27,24 +27,24 @@ end
 
 
 
-struct HollowLevel{Tv, Ti}
+struct HollowLevel{D, Tv, Ti}
     I::Ti
     pos::Vector{Ti}
     idx::Vector{Ti}
 end
 
-function HollowLevel{Tv}(I::Ti, pos::Vector{Ti}, idx::Vector{Ti}) where {Tv, Ti}
-    HollowLevel{Tv, Ti}(I, pos, idx)
+function HollowLevel{D, Tv}(I::Ti, pos::Vector{Ti}, idx::Vector{Ti}) where {D, Tv, Ti}
+    HollowLevel{D, Tv, Ti}(I, pos, idx)
 end
 
 dimension(lvl::HollowLevel) = lvl.I
 cardinality(lvl::HollowLevel) = pos[end] - 1
 
-function unfurl(lvl::HollowLevel{Tv, Ti}, fbr::Fiber{Tv, N, R}, i, tail...) where {Tv, Ti, N, R}
+function unfurl(lvl::HollowLevel{D, Tv, Ti}, fbr::Fiber{Tv, N, R}, i, tail...) where {D, Tv, Ti, N, R}
     q = fbr.poss[R]
     r = searchsorted(@view(lvl.idx[lvl.pos[q]:lvl.pos[q + 1] - 1]), i)
     p = lvl.pos[q] + first(r) - 1
-    length(r) == 0 ? zero(Tv) : readindex(refurl(fbr, p, i), tail...)
+    length(r) == 0 ? D : readindex(refurl(fbr, p, i), tail...)
 end
 
 
@@ -160,12 +160,13 @@ end
 
 struct VirtualHollowLevel
     ex
+    D
     Tv
     Ti
 end
 
-function virtualize(ex, ::Type{<:HollowLevel{Tv, Ti}}, ctx) where {Tv, Ti}
-    VirtualHollowLevel(ex, Tv, Ti)
+function virtualize(ex, ::Type{HollowLevel{D, Tv, Ti}}, ctx) where {D, Tv, Ti}
+    VirtualHollowLevel(ex, D, Tv, Ti)
 end
 
 virtual_unfurl(lvl::VirtualHollowLevel, tns, ctx, mode::Pigeon.Read, idx::Name, tail...) =
@@ -203,12 +204,12 @@ function virtual_unfurl(lvl::VirtualHollowLevel, tns, ctx, mode::Pigeon.Read, id
                         body = Cases([
                             :($step < $my_i) =>
                                 Run(
-                                    body = 0,
+                                    body = lvl.D,
                                 ),
                             true =>
                                 Thunk(
                                     body = Spike(
-                                        body = 0,
+                                        body = lvl.D,
                                         tail = virtual_refurl(tns, Virtual{lvl.Tv}(my_p), Virtual{lvl.Ti}(my_i), mode, tail...),
                                     ),
                                     epilogue = quote
@@ -245,10 +246,10 @@ function virtual_unfurl(lvl::VirtualHollowLevel, tns, ctx, mode::Union{Pigeon.Wr
             $(lvl.ex).val = $Tv[]
         end,
         body = AcceptSpike(
-            val = tns.D,
+            val = lvl.D,
             tail = (ctx, idx) -> Thunk(
                 preamble = quote
-                    push!($(lvl.ex).val, zero($Tv))
+                    push!($(lvl.ex).val, $(lvl.D))
                     $my_p += 1
                 end,
                 body = virtual_refurl(tns, Virtual{lvl.Tv}(my_p), Virtual{lvl.Ti}(my_i), mode, tail...),
@@ -266,6 +267,7 @@ end
 struct VirtualSolidLevel
     ex
     Ti
+    D
 end
 
 function virtualize(ex, ::Type{<:SolidLevel{Ti}}, ctx) where {Ti}
