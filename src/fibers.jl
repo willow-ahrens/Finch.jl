@@ -190,7 +190,6 @@ function virtual_unfurl(lvl::VirtualSparseLevel, tns, ctx, mode::Pigeon.Read, id
                 $my_i = 1
                 $my_i1 = 0
             end
-            println($(QuoteNode(Pigeon.getname(tns))), $my_i1)
         end,
         body = Pipeline([
             Phase(
@@ -227,7 +226,42 @@ function virtual_unfurl(lvl::VirtualSparseLevel, tns, ctx, mode::Pigeon.Read, id
     )
 end
 
+virtual_unfurl(lvl::VirtualSparseLevel, tns, ctx, mode::Union{Pigeon.Write, Pigeon.Update}, idx::Name, tail...) =
+    virtual_unfurl(lvl, tns, ctx, mode, follow(idx), tail...)
 
+function virtual_unfurl(lvl::VirtualSparseLevel, tns, ctx, mode::Union{Pigeon.Write, Pigeon.Update}, idx::Follow, tail...)
+    R = tns.R
+    sym = Symbol(:tns_, Pigeon.getname(tns), :_, R)
+    my_i = Symbol(sym, :_i)
+    my_p = Symbol(sym, :_p)
+    my_p1 = Symbol(sym, :_p1)
+    my_i1 = Symbol(sym, :_i1)
+
+    Thunk(
+        preamble = quote
+            $my_p = $(lvl.ex).pos[end]
+            resize!($(lvl.ex).idx, $my_p - 1)
+            $my_p = 0
+            $(lvl.ex).val = $Tv[]
+        end,
+        body = AcceptSpike(
+            val = tns.D,
+            tail = (ctx, idx) -> Thunk(
+                preamble = quote
+                    push!($(lvl.ex).val, zero($Tv))
+                    $my_p += 1
+                end,
+                body = virtual_refurl(tns, Virtual{lvl.Tv}(my_p), Virtual{lvl.Ti}(my_i), mode, tail...),
+                epilogue = quote
+                    push!($(lvl.ex).idx, $(Pigeon.visit!(idx, ctx)))
+                end
+            )
+        ),
+        epilogue = quote
+            push!($(lvl.ex).pos, $my_p)
+        end
+    )
+end
 
 struct VirtualDenseLevel
     ex
