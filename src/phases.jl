@@ -39,15 +39,15 @@ function Pigeon.visit!(root, ctx::LowerJuliaContext, ::PipelineStyle)
         $i0 = $(ctx(ctx.dims[i].start))
     end
 
-    for (keys, body) in phases
-        push!(thunk.args, scope(ctx) do ctx′
-            visit!(body, PhaseThunkContext(ctx′, i, i0))
-            strides = visit!(body, PhaseStrideContext(ctx′, i, i0))
-            strides = [strides; visit!(ctx.dims[i].stop, ctx)]
-            body = visit!(body, PhaseBodyContext(ctx′, i, i0, step))
-            quote
-                $step = min($(strides...))
-                if $i0 <= $step
+    if length(phases[1][1]) == 1 #only one phaser
+        for (keys, body) in phases
+            push!(thunk.args, scope(ctx) do ctx′
+                visit!(body, PhaseThunkContext(ctx′, i, i0))
+                strides = visit!(body, PhaseStrideContext(ctx′, i, i0))
+                strides = [strides; visit!(ctx.dims[i].stop, ctx)]
+                body = visit!(body, PhaseBodyContext(ctx′, i, i0, step))
+                quote
+                    $step = min($(strides...))
                     $(scope(ctx′) do ctx′′
                         restrict(ctx′′, i => Extent(Virtual{Any}(i0), Virtual{Any}(step))) do
                             visit!(body, ctx′′)
@@ -55,8 +55,36 @@ function Pigeon.visit!(root, ctx::LowerJuliaContext, ::PipelineStyle)
                     end)
                     $i0 = $step + 1
                 end
-            end
-        end)
+            end)
+        end
+    else
+        for (n, (keys, body)) in enumerate(phases)
+            push!(thunk.args, scope(ctx) do ctx′
+                visit!(body, PhaseThunkContext(ctx′, i, i0))
+                strides = visit!(body, PhaseStrideContext(ctx′, i, i0))
+                strides = [strides; visit!(ctx.dims[i].stop, ctx)]
+                body = visit!(body, PhaseBodyContext(ctx′, i, i0, step))
+                block = quote
+                    $(scope(ctx′) do ctx′′
+                        restrict(ctx′′, i => Extent(Virtual{Any}(i0), Virtual{Any}(step))) do
+                            visit!(body, ctx′′)
+                        end
+                    end)
+                    $i0 = $step + 1
+                end
+                if n > 1 && length(keys) > 1 #length of keys should be constant, TODO check this
+                    block = quote
+                        if $i0 <= $step
+                            $block
+                        end
+                    end
+                end
+                quote
+                    $step = min($(strides...))
+                    $block
+                end
+            end)
+        end
     end
 
     return thunk
