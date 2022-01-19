@@ -1,4 +1,4 @@
-annihilate_index = @slots a b c i j f g Fixpoint(Prewalk(Chain([
+annihilate_index = @slots a b c i j f g Rewrite(Fixpoint(Prewalk(Chain([
     (@rule @i(f(a...)) => if isliteral(f) && all(isliteral, a) Literal(value(f)(value.(a)...)) end),
     (@rule @i((a..., +(b...), c...)) => @i +(a..., b..., c...)),
     (@rule @i(+(a...)) => if count(isliteral, a) >= 2 @i +($(filter(!isliteral, a)...), $(Literal(+(value.(filter(isliteral, a))...)))) end),
@@ -27,6 +27,6 @@ annihilate_index = @slots a b c i j f g Fixpoint(Prewalk(Chain([
     (@rule @i(@loop i... @pass(a...)) => pass(a...)),
     (@rule @i(@pass(a...) where b) => pass(a...)),
     #(@rule @i(a where @pass(b...)) => a),#can't do this bc produced tensors won't get initialized
-])))
+]))))
 
 #TODO add simplify as a chunk pass.
