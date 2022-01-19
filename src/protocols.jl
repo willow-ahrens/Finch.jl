@@ -9,7 +9,7 @@ Pigeon.getname(idx::Walk) = idx.name
 walk(name::Name) = Walk(getname(name))
 
 struct MesaWalk{name} end
-mesawalk(name) = MesaWalk{name}()
+@inline mesawalk(name) = MesaWalk{name}()
 walk(::MesaName{name}) where {name} = mesawalk(name)
 virtualize(ex, ::Type{MesaWalk{name}}, ctx) where {name} = Walk(name)
 
@@ -26,7 +26,7 @@ Pigeon.getname(idx::Follow) = idx.name
 follow(name::Name) = Follow(getname(name))
 
 struct MesaFollow{name} end
-mesafollow(name) = MesaFollow{name}()
+@inline mesafollow(name) = MesaFollow{name}()
 follow(::MesaName{name}) where {name} = mesafollow(name)
 virtualize(ex, ::Type{MesaFollow{name}}, ctx) where {name} = Follow(name)
 
@@ -41,7 +41,7 @@ Pigeon.getname(idx::Extrude) = idx.name
 extrude(name::Name) = Extrude(getname(name))
 
 struct MesaExtrude{name} end
-mesaextrude(name) = MesaExtrude{name}()
+@inline mesaextrude(name) = MesaExtrude{name}()
 extrude(::MesaName{name}) where {name} = mesaextrude(name)
 virtualize(ex, ::Type{MesaExtrude{name}}, ctx) where {name} = Extrude(name)
 
@@ -56,6 +56,6 @@ Pigeon.getname(idx::Laminate) = idx.name
 laminate(name::Name) = Laminate(getname(name))
 
 struct MesaLaminate{name} end
-mesalaminate(name) = MesaLaminate{name}()
+@inline mesalaminate(name) = MesaLaminate{name}()
 laminate(::MesaName{name}) where {name} = mesalaminate(name)
 virtualize(ex, ::Type{MesaLaminate{name}}, ctx) where {name} = Laminate(name)

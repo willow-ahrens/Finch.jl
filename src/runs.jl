@@ -19,7 +19,7 @@ Pigeon.combine_style(a::RunStyle, b::RunStyle) = RunStyle()
 function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::RunStyle)
     @assert !isempty(root.idxs)
     root = visit!(root, AccessRunContext(root))
-    #TODO add a simplify step here perhaps
+    #TODO remove simplify step once we have dedicated handlers for it
     root = annihilate_index(root)
     visit!(root, ctx)
 end

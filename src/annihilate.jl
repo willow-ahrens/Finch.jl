@@ -19,6 +19,9 @@ annihilate_index = @slots a b c i j f g Rewrite(Fixpoint(Prewalk(Chain([
     (@rule @i(a[i...] = 0) => pass(a)), #TODO this is only valid when the default of A is 0
     (@rule @i(a[i...] += 0) => pass(a)),
     (@rule @i(a[i...] *= 1) => pass(a)),
+    (@rule @i(a = 0) => pass(a)), #TODO this is only valid when the default of A is 0
+    (@rule @i(a += 0) => pass(a)),
+    (@rule @i(a *= 1) => pass(a)),
 
     #(@rule @i((~a)[~~i] *= ~b) => if isimplicit(~a) && getdefault(~a) == 0 pass(~a) end),
     #(@rule @i((~a)[~~i] = ~b) => if isimplicit(~a) && getdefault(~a) == ~b pass(~a) end),

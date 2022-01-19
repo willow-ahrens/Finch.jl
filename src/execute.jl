@@ -14,7 +14,13 @@ function execute_code_lowered(ex, T)
         dimensionalize!(prgm, ctx)
         Pigeon.visit!(prgm, ctx)
     end
-    MacroTools.prettify(code, alias=false, lines=false)
+    code = MacroTools.prettify(code, alias=false, lines=false)
+    return quote
+        @inbounds begin
+            $code
+        end
+    end
+
 end
 
 register()

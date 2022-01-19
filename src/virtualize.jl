@@ -18,7 +18,7 @@ abstract type MesaIndexTerminal <: MesaIndexExpression end
 struct MesaLiteral{val} <: MesaIndexTerminal
 end
 
-mesaliteral(tns) = MesaLiteral{tns}()
+@inline mesaliteral(tns) = MesaLiteral{tns}()
 
 virtualize(ex, ::Type{MesaLiteral{val}}, ctx) where {val} = Literal(val)
 
@@ -27,13 +27,13 @@ struct MesaPass{Tns} <: MesaIndexStatement
 end
 Base.:(==)(a::MesaPass, b::MesaPass) = a.tns == b.tns
 
-mesapass(tns) = MesaPass(tns)
+@inline mesapass(tns) = MesaPass(tns)
 
 virtualize(ex, ::Type{MesaPass{Tns}}, ctx) where {Tns} = Pass(virtualize(:($ex.tns), Tns, ctx))
 
 struct MesaName{name} <: MesaIndexTerminal end
 
-mesaname(name) = MesaName{name}()
+@inline mesaname(name) = MesaName{name}()
 
 virtualize(ex, ::Type{MesaName{name}}, ctx) where {name} = Name(name)
 
@@ -43,7 +43,7 @@ struct MesaWith{Cons, Prod} <: MesaIndexStatement
 end
 Base.:(==)(a::MesaWith, b::MesaWith) = a.cons == b.cons && a.prod == b.prod
 
-mesawith(cons, prod) = With(cons, prod)
+@inline mesawith(cons, prod) = With(cons, prod)
 
 virtualize(ex, ::Type{MesaWith{Cons, Prod}}, ctx) where {Cons, Prod} = With(virtualize(:($ex.cons), Cons, ctx), virtualize(:($ex.prod), Prod, ctx))
 
@@ -53,7 +53,7 @@ struct MesaLoop{Idxs<:Tuple, Body} <: MesaIndexStatement
 end
 Base.:(==)(a::MesaLoop, b::MesaLoop) = a.idxs == b.idxs && a.body == b.body
 
-mesaloop(args...) = MesaLoop((args[1:end-1]...,), args[end])
+@inline mesaloop(args...) = MesaLoop((args[1:end-1]...,), args[end])
 
 function virtualize(ex, ::Type{MesaLoop{Idxs, Body}}, ctx) where {Idxs, Body}
     idxs = map(enumerate(Idxs.parameters)) do (n, Idx)
@@ -70,8 +70,8 @@ struct MesaAssign{Lhs, Op, Rhs} <: MesaIndexStatement
 end
 Base.:(==)(a::MesaAssign, b::MesaAssign) = a.lhs == b.lhs && a.op == b.op && a.rhs == b.rhs
 
-mesaassign(lhs, rhs) = MesaAssign(lhs, nothing, rhs)
-mesaassign(lhs, op, rhs) = MesaAssign(lhs, op, rhs)
+@inline mesaassign(lhs, rhs) = MesaAssign(lhs, nothing, rhs)
+@inline mesaassign(lhs, op, rhs) = MesaAssign(lhs, op, rhs)
 
 function virtualize(ex, ::Type{MesaAssign{Lhs, Nothing, Rhs}}, ctx) where {Lhs, Rhs}
     Assign(virtualize(:($ex.lhs), Lhs, ctx), nothing, virtualize(:($ex.rhs), Rhs, ctx))
@@ -87,7 +87,7 @@ struct MesaCall{Op, Args<:Tuple} <: MesaIndexExpression
 end
 Base.:(==)(a::MesaCall, b::MesaCall) = a.op == b.op && a.args == b.args
 
-mesacall(op, args...) = MesaCall(op, args)
+@inline mesacall(op, args...) = MesaCall(op, args)
 
 function virtualize(ex, ::Type{MesaCall{Op, Args}}, ctx) where {Op, Args}
     op = virtualize(:($ex.op), Op, ctx)
@@ -104,7 +104,7 @@ struct MesaAccess{Tns, Mode, Idxs} <: MesaIndexExpression
 end
 Base.:(==)(a::MesaAccess, b::MesaAccess) = a.tns == b.tns && a.mode == b.mode && a.idxs == b.idxs
 
-mesaaccess(tns, mode, idxs...) = MesaAccess(tns, mode, idxs)
+@inline mesaaccess(tns, mode, idxs...) = MesaAccess(tns, mode, idxs)
 
 show_expression(io, mime, ex) = print(io, ex)
 
@@ -126,7 +126,7 @@ end
 Base.:(==)(a::MesaLabel, b::MesaLabel) = false
 Base.:(==)(a::MesaLabel{tag}, b::MesaLabel{tag}) where {tag} = a.tns == b.tns
 
-mesalabel(tag, tns) = MesaLabel{tag, typeof(tns)}(tns)
+@inline mesalabel(tag, tns) = MesaLabel{tag, typeof(tns)}(tns)
 
 function virtualize(ex, ::Type{MesaLabel{tag, Tns}}, ctx) where {tag, Tns}
     return virtualize(:($ex.tns), Tns, ctx, tag)
@@ -134,8 +134,8 @@ end
 
 struct MesaValue{arg} end
 
-mesavalue(arg) = isbits(arg) ? MesaValue{arg}() : arg
-mesavalue(arg::Symbol) = MesaValue{arg}()
+@inline mesavalue(arg) = isbits(arg) ? MesaValue{arg}() : arg
+@inline mesavalue(arg::Symbol) = MesaValue{arg}()
 
 virtualize(ex, ::Type{MesaValue{arg}}, ctx) where {arg} = arg
 
@@ -196,5 +196,5 @@ function capture_index(ex; ctx...)
 end
 
 macro I(ex)
-    return capture_index(ex; namify=true, slot = true, mode = Read())
+    return capture_index(ex; namify=false, slot = true, mode = Read())
 end

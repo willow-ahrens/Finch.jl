@@ -130,7 +130,7 @@ function virtualize(ex, ::Type{<:Fiber{Tv, N, R, Lvls, Poss, Idxs}}, ctx, tag=ge
         virtualize(:($sym.lvls[$n]), Lvl, ctx)
     end
     poss = map(enumerate(Poss.parameters)) do (n, Pos)
-        virtualize(:($sym.poss[$n]), Pos, ctx)
+        n == 1 ? 1 : virtualize(:($sym.poss[$n]), Pos, ctx)
     end
     idxs = map(enumerate(Idxs.parameters)) do (n, Idx)
         virtualize(:($sym.idxs[$n]), Idx, ctx)
@@ -291,6 +291,8 @@ end
 
 virtual_unfurl(lvl::VirtualSolidLevel, tns, ctx, mode::Pigeon.Read, idx::Name, tail...) =
     virtual_unfurl(lvl, tns, ctx, mode, follow(idx), tail...)
+virtual_unfurl(lvl::VirtualSolidLevel, tns, ctx, mode::Union{Pigeon.Write, Pigeon.Update}, idx::Name, tail...) =
+    virtual_unfurl(lvl, tns, ctx, mode, laminate(idx), tail...)
 
 function virtual_assemble(lvl::VirtualSolidLevel, tns, ctx, qoss, q)
     if q == nothing
@@ -298,44 +300,33 @@ function virtual_assemble(lvl::VirtualSolidLevel, tns, ctx, qoss, q)
     else
         q2 = Symbol(:tns_, getname(fbr), :_, R, :_q)
         return quote
-            $q2 = ($(ctx(qoss)) - 1) * $(lvl.ex).I + $i
+            $q2 = ($(ctx(qoss)) - 1) * $(lvl.ex).I + $(ctx(i))
             $(virtual_assemble(tns, ctx, qoss, q2))
         end
     end
 end
 
-function virtual_unfurl(lvl::VirtualSolidLevel, fbr, ctx, mode::Pigeon.Read, idx::Follow, tail...)
+function virtual_unfurl(lvl::VirtualSolidLevel, fbr, ctx, mode::Union{Pigeon.Read, Pigeon.Write, Pigeon.Update}, idx::Union{Follow, Laminate, Extrude}, tail...)
     R = fbr.R
     q = fbr.poss[R]
     p = Symbol(:tns_, getname(fbr), :_, R, :_p)
 
-    Leaf(
-        body = (i) -> Thunk(
-            preamble = quote
-                $p = ($(ctx(q)) - 1) * $(lvl.ex).I + $i
-            end,
-            body = virtual_refurl(fbr, Virtual{lvl.Ti}(p), i, mode, tail...),
+    if R == 1
+        Leaf(
+            body = (i) -> virtual_refurl(fbr, i, i, mode, tail...),
         )
-    )
+    else
+        Leaf(
+            body = (i) -> Thunk(
+                preamble = quote
+                    $p = ($(ctx(q)) - 1) * $(lvl.ex).I + $(ctx(i))
+                end,
+                body = virtual_refurl(fbr, Virtual{lvl.Ti}(p), i, mode, tail...),
+            )
+        )
+    end
 end
 
-virtual_unfurl(lvl::VirtualSolidLevel, tns, ctx, mode::Union{Pigeon.Write, Pigeon.Update}, idx::Name, tail...) =
-    virtual_unfurl(lvl, tns, ctx, mode, extrude(idx), tail...)
-
-function virtual_unfurl(lvl::VirtualSolidLevel, fbr, ctx, mode::Union{Pigeon.Write, Pigeon.Update}, idx::Laminate, tail...)
-    R = fbr.R
-    q = fbr.poss[R]
-    p = Symbol(:tns_, getname(fbr), :_, R, :_p)
-
-    Leaf(
-        body = (i) -> Thunk(
-            preamble = quote
-                $p = ($(ctx(q)) - 1) * $(lvl.ex).I + $i
-            end,
-            body = virtual_refurl(fbr, Virtual{lvl.Ti}(p), i, mode, tail...),
-        )
-    )
-end
 
 
 struct VirtualScalarLevel
