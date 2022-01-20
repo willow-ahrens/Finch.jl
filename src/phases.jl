@@ -6,6 +6,7 @@ Base.@kwdef struct Phase
     preamble = quote end
     body
     stride = nothing
+    guard = nothing
     epilogue = quote end
 end
 
@@ -61,6 +62,7 @@ function Pigeon.visit!(root, ctx::LowerJuliaContext, ::PipelineStyle)
         for (n, (keys, body)) in enumerate(phases)
             push!(thunk.args, scope(ctx) do ctx′
                 visit!(body, PhaseThunkContext(ctx′, i, i0))
+                guards = visit!(body, PhaseGuardContext(ctx′, i, i0))
                 strides = visit!(body, PhaseStrideContext(ctx′, i, i0))
                 strides = [strides; visit!(ctx.dims[i].stop, ctx)]
                 body = visit!(body, PhaseBodyContext(ctx′, i, i0, step))
@@ -112,6 +114,15 @@ function Pigeon.visit!(node::Phase, ctx::PhaseThunkContext, ::DefaultStyle)
     push!(ctx.ctx.epilogue, node.epilogue)
     node
 end
+
+Base.@kwdef struct PhaseGuardContext <: Pigeon.AbstractCollectContext
+    ctx
+    idx
+    start
+end
+Pigeon.collect_op(::PhaseGuardContext) = (args) -> vcat(args...) #flatten?
+Pigeon.collect_zero(::PhaseGuardContext) = []
+Pigeon.visit!(node::Phase, ctx::PhaseGuardContext, ::DefaultStyle) = node.guard === nothing ? [] : [something(node.guard)(ctx.start)]
 
 Base.@kwdef struct PhaseStrideContext <: Pigeon.AbstractCollectContext
     ctx

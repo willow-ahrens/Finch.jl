@@ -204,6 +204,7 @@ function virtual_unfurl(lvl::VirtualHollowLevel, tns, ctx, mode::Pigeon.Read, id
                     preamble = :(
                         $my_i = $(lvl.ex).idx[$my_p]
                     ),
+                    guard = (start) -> :($my_p < $my_p1),
                     stride = (start) -> my_i,
                     body = (start, step) -> Thunk(
                         body = Cases([

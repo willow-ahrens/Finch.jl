@@ -3,6 +3,7 @@ struct StepperStyle end
 Base.@kwdef struct Stepper
     preamble = quote end
     body
+    guard = nothing
     stride
     epilogue = quote end
 end
@@ -23,35 +24,44 @@ Pigeon.combine_style(a::ThunkStyle, b::StepperStyle) = ThunkStyle()
 function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::StepperStyle)
     i = getname(root.idxs[1])
     i0 = gensym(Symbol("_", i))
-    return quote
-        $i0 = $(ctx(ctx.dims[i].start))
-        while $i0 <= $(visit!(ctx.dims[i].stop, ctx))
-            $(scope(ctx) do ctx′
-                visit!(root, StepperThunkContext(ctx′, i, i0)) #TODO we could just use actual thunks here and call a thunkcontext, would look cleaner.
-                strides = visit!(root, StepperStrideContext(ctx′, i, i0))
-                if isempty(strides)
-                    step = ctx′(ctx.dims[i].stop)
-                    step_min = quote end
-                elseif length(strides) == 1
-                    step = ctx′(strides[1])
-                    step_min = quote end
-                else
-                    step = gensym(Symbol("_", i))
-                    step_min = quote
-                        $step = min($(map(ctx′, strides)...))
-                    end
-                end
-                body = visit!(root, StepperBodyContext(ctx′, i, i0, step))
-                quote
-                    $step_min
-                    $(scope(ctx′) do ctx′′
-                        restrict(ctx′′, i => Extent(Virtual{Any}(i0), Virtual{Any}(step))) do
-                            visit!(body, ctx′′)
-                        end
-                    end)
-                    $i0 = $step + 1
+    guard = nothing
+    body = scope(ctx) do ctx′
+        visit!(root, StepperThunkContext(ctx′, i, i0)) #TODO we could just use actual thunks here and call a thunkcontext, would look cleaner.
+        guards = visit!(root, StepperGuardContext(ctx′, i, i0))
+        strides = visit!(root, StepperStrideContext(ctx′, i, i0))
+        if isempty(strides)
+            step = ctx′(ctx.dims[i].stop)
+            step_min = quote end
+        elseif length(strides) == 1
+            step = ctx′(strides[1])
+            step_min = quote end
+            if length(guards) == 1
+                guard = guards[1]
+            else
+                guard = :($i0 <= $(visit!(ctx.dims[i].stop, ctx)))
+            end
+        else
+            step = gensym(Symbol("_", i))
+            step_min = quote
+                $step = min($(map(ctx′, strides)...))
+            end
+            guard = :($i0 <= $(visit!(ctx.dims[i].stop, ctx)))
+        end
+        body = visit!(root, StepperBodyContext(ctx′, i, i0, step))
+        quote
+            $step_min
+            $(scope(ctx′) do ctx′′
+                restrict(ctx′′, i => Extent(Virtual{Any}(i0), Virtual{Any}(step))) do
+                    visit!(body, ctx′′)
                 end
             end)
+            $i0 = $step + 1
+        end
+    end
+    return quote
+        $i0 = $(ctx(ctx.dims[i].start))
+        while $guard
+            $body
         end
     end
 end
@@ -75,6 +85,16 @@ end
 Pigeon.collect_op(::StepperStrideContext) = (args) -> vcat(args...) #flatten?
 Pigeon.collect_zero(::StepperStrideContext) = []
 Pigeon.visit!(node::Stepper, ctx::StepperStrideContext, ::DefaultStyle) = [node.stride(ctx.start)]
+
+
+Base.@kwdef struct StepperGuardContext <: Pigeon.AbstractCollectContext
+    ctx
+    idx
+    start
+end
+Pigeon.collect_op(::StepperGuardContext) = (args) -> vcat(args...) #flatten?
+Pigeon.collect_zero(::StepperGuardContext) = []
+Pigeon.visit!(node::Stepper, ctx::StepperGuardContext, ::DefaultStyle) = node.guard === nothing ? [] : [node.guard(ctx.start)]
 
 Base.@kwdef struct StepperBodyContext <: Pigeon.AbstractTransformContext
     ctx
