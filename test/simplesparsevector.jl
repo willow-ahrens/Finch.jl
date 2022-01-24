@@ -20,14 +20,14 @@ mutable struct VirtualSimpleSparseVector{Tv, Ti}
     D
 end
 
-function Finch.virtualize(ex, ::Type{SimpleSparseVector{D, Tv, Ti}}, ctx, tag=gensym()) where {D, Tv, Ti}
-    sym = Symbol(:tns_, tag)
+function Finch.virtualize(ex, ::Type{SimpleSparseVector{D, Tv, Ti}}, ctx, tag=:tns) where {D, Tv, Ti}
+    sym = ctx.freshen(:tns_, tag)
     push!(ctx.preamble, :($sym = $ex))
     VirtualSimpleSparseVector{Tv, Ti}(sym, tag, D)
 end
 
 function Pigeon.lower_axes(arr::VirtualSimpleSparseVector{Tv, Ti}, ctx::Finch.LowerJuliaContext) where {Tv, Ti}
-    ex = Symbol(:tns_, arr.name, :_stop)
+    ex = ctx.freshen(:tns_, arr.name, :_stop)
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))
     (Extent(1, Virtual{Ti}(ex)),)
 end
@@ -41,9 +41,9 @@ Pigeon.make_style(root::Loop, ctx::Finch.LowerJuliaContext, node::Access{<:Virtu
 
 function Pigeon.visit!(node::Access{VirtualSimpleSparseVector{Tv, Ti}, Pigeon.Read}, ctx::Finch.ChunkifyContext, ::Pigeon.DefaultStyle) where {Tv, Ti}
     vec = node.tns
-    my_i = Symbol(:tns_, Pigeon.getname(vec), :_i0)
-    my_i′ = Symbol(:tns_, Pigeon.getname(vec), :_i1)
-    my_p = Symbol(:tns_, Pigeon.getname(vec), :_p)
+    my_i = ctx.ctx.freshen(:tns_, Pigeon.getname(vec), :_i0)
+    my_i′ = ctx.ctx.freshen(:tns_, Pigeon.getname(vec), :_i1)
+    my_p = ctx.ctx.freshen(:tns_, Pigeon.getname(vec), :_p)
     if getname(ctx.idx) == getname(node.idxs[1])
         tns = Thunk(
             preamble = quote
@@ -83,8 +83,8 @@ end
 
 function Pigeon.visit!(node::Access{VirtualSimpleSparseVector{Tv, Ti}, <:Union{Pigeon.Write, Pigeon.Update}}, ctx::Finch.ChunkifyContext, ::Pigeon.DefaultStyle) where {Tv, Ti}
     vec = node.tns
-    my_p = Symbol(:tns_, node.tns.name, :_p)
-    my_I = Symbol(:tns_, node.tns.name, :_I)
+    my_p = ctx.ctx.freshen(:tns_, node.tns.name, :_p)
+    my_I = ctx.ctx.freshen(:tns_, node.tns.name, :_I)
     if getname(ctx.idx) == getname(node.idxs[1])
         push!(ctx.ctx.preamble, quote
             $my_p = 0

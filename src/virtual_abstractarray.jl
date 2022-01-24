@@ -5,7 +5,7 @@ Base.@kwdef mutable struct VirtualAbstractArray
 end
 
 function Pigeon.lower_axes(arr::VirtualAbstractArray, ctx::LowerJuliaContext) where {T <: AbstractArray}
-    dims = map(i -> gensym(Symbol(arr.name, :_, i, :_stop)), 1:arr.ndims)
+    dims = map(i -> ctx.freshen(arr.name, :_, i, :_stop), 1:arr.ndims)
     push!(ctx.preamble, quote
         ($(dims...),) = size($(arr.ex))
     end)
@@ -26,8 +26,8 @@ function Pigeon.visit!(arr::VirtualAbstractArray, ctx::LowerJuliaContext, ::Defa
     return arr.ex
 end
 
-function virtualize(ex, ::Type{<:AbstractArray{T, N}}, ctx, tag=gensym()) where {T, N}
-    sym = Symbol(:tns_, tag)
+function virtualize(ex, ::Type{<:AbstractArray{T, N}}, ctx, tag=:tns) where {T, N}
+    sym = ctx.freshen(:tns_, tag)
     push!(ctx.preamble, :($sym = $ex))
     VirtualAbstractArray(N, tag, sym)
 end

@@ -34,8 +34,8 @@ function Pigeon.visit!(root, ctx::LowerJuliaContext, ::PipelineStyle)
     maxkey = maximum(map(maximum, map(((keys, body),)->keys, phases)))
     phases = sort(phases, by=(((keys, body),)->map(l->count(k->k>l, keys), 1:maxkey)))
     i = getname(root.idxs[1])
-    i0 = gensym(Symbol("_", i))
-    step = gensym(Symbol("_", i))
+    i0 = ctx.freshen(:start_, i)
+    step = ctx.freshen(:step_, i)
     thunk = quote
         $i0 = $(ctx(ctx.dims[i].start))
     end

@@ -1,7 +1,22 @@
-
 Base.@kwdef mutable struct Extent
     start
     stop
+end
+
+struct Freshen
+    counts
+end
+Freshen() = Freshen(Dict())
+function (spc::Freshen)(names...)
+    name = Symbol(names...)
+    if haskey(spc.counts, name)
+        n = spc.counts[name]
+        spc.counts[name] = n + 1
+        return Symbol(name, :_, n + 1)
+    else
+        spc.counts[name] = 1
+        return name
+    end
 end
 
 struct Scalar
@@ -13,6 +28,7 @@ Base.@kwdef struct LowerJuliaContext <: Pigeon.AbstractContext
     bindings::Dict{Any, Any} = Dict()
     epilogue::Vector{Any} = []
     dims::Dimensions = Dimensions()
+    freshen::Freshen = Freshen()
 end
 
 Pigeon.getdims(ctx::LowerJuliaContext) = ctx.dims
@@ -44,7 +60,7 @@ function restrict(f, ctx::LowerJuliaContext, (idx, ext′), tail...)
 end
 
 function openscope(ctx::LowerJuliaContext)
-    ctx′ = LowerJuliaContext(bindings = ctx.bindings, dims = ctx.dims)
+    ctx′ = LowerJuliaContext(bindings = ctx.bindings, dims = ctx.dims, freshen = ctx.freshen) #TODO use a mutable pattern here
     return ctx′
 end
 
@@ -60,11 +76,6 @@ function scope(f, ctx::LowerJuliaContext)
     ctx′ = openscope(ctx)
     body = f(ctx′)
     return closescope(body, ctx′)
-end
-
-function cache!(ex, ctx::LowerJuliaContext, name = gensym())
-    push!(ctx.preamble, "$name = $ex")
-    return name
 end
 
 struct ThunkStyle end
@@ -156,7 +167,7 @@ function Pigeon.visit!(stmt::Loop, ctx::LowerJuliaContext, ::DefaultStyle)
     if isempty(stmt.idxs)
         return visit!(stmt.body, ctx)
     else
-        idx_sym = gensym(Pigeon.getname(stmt.idxs[1]))
+        idx_sym = ctx.freshen(Pigeon.getname(stmt.idxs[1]))
         body = Loop(stmt.idxs[2:end], stmt.body)
         ext = ctx.dims[getname(stmt.idxs[1])]
         return quote

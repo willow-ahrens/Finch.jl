@@ -107,7 +107,7 @@ function Pigeon.make_style(root, ctx::Finch.LowerJuliaContext, node::Access{Virt
 end
 
 function Pigeon.lower_axes(arr::VirtualFiber, ctx::LowerJuliaContext) where {T <: AbstractArray}
-    dims = map(i -> gensym(Symbol(arr.name, :_, i, :_stop)), 1:arr.N)
+    dims = map(i -> ctx.freshen(arr.name, :_, i, :_stop), 1:arr.N)
     for (dim, lvl) in zip(dims, arr.lvls)
         #Could unroll more manually, but I'm not convinced it's worth it.
         push!(ctx.preamble, :($dim = dimension($(lvl.ex)))) #TODO we don't know if every level has a .ex
@@ -123,8 +123,8 @@ virtual_assemble(tns, ctx, q) =
 virtual_assemble(tns::VirtualFiber, ctx, qoss, q) =
     virtual_assemble(tns.lvls[length(qoss) + 1], tns::VirtualFiber, ctx, vcat(qoss, [q]), q)
 
-function virtualize(ex, ::Type{<:Fiber{Tv, N, R, Lvls, Poss, Idxs}}, ctx, tag=gensym()) where {Tv, N, R, Lvls, Poss, Idxs}
-    sym = Symbol(:tns_, tag)
+function virtualize(ex, ::Type{<:Fiber{Tv, N, R, Lvls, Poss, Idxs}}, ctx, tag=:tns) where {Tv, N, R, Lvls, Poss, Idxs}
+    sym = ctx.freshen(:tns_, tag)
     push!(ctx.preamble, :($sym = $ex))
     lvls = map(enumerate(Lvls.parameters)) do (n, Lvl)
         virtualize(:($sym.lvls[$n]), Lvl, ctx)
@@ -179,11 +179,11 @@ virtual_unfurl(lvl::VirtualHollowLevel, tns, ctx, mode::Pigeon.Read, idx::Name, 
 
 function virtual_unfurl(lvl::VirtualHollowLevel, tns, ctx, mode::Pigeon.Read, idx::Walk, tail...)
     R = tns.R
-    sym = Symbol(:tns_, Pigeon.getname(tns), :_, R)
-    my_i = Symbol(sym, :_i)
-    my_p = Symbol(sym, :_p)
-    my_p1 = Symbol(sym, :_p1)
-    my_i1 = Symbol(sym, :_i1)
+    tag = Symbol(:tns_, Pigeon.getname(tns), :_, R)
+    my_i = ctx.freshen(tag, :_i)
+    my_p = ctx.freshen(tag, :_p)
+    my_p1 = ctx.freshen(tag, :_p1)
+    my_i1 = ctx.freshen(tag, :_i1)
 
     Thunk(
         preamble = quote
@@ -249,11 +249,11 @@ end
 
 function virtual_unfurl(lvl::VirtualHollowLevel, tns, ctx, mode::Union{Pigeon.Write, Pigeon.Update}, idx::Extrude, tail...)
     R = tns.R
-    sym = Symbol(:tns_, Pigeon.getname(tns), :_, R)
-    my_i = Symbol(sym, :_i)
-    my_p = Symbol(sym, :_p)
-    my_p1 = Symbol(sym, :_p1)
-    my_i1 = Symbol(sym, :_i1)
+    tag = Symbol(:tns_, Pigeon.getname(tns), :_, R)
+    my_i = ctx.freshen(tag, :_i)
+    my_p = ctx.freshen(tag, :_p)
+    my_p1 = ctx.freshen(tag, :_p1)
+    my_i1 = ctx.freshen(tag, :_i1)
 
     Thunk(
         preamble = quote
@@ -299,7 +299,7 @@ function virtual_assemble(lvl::VirtualSolidLevel, tns, ctx, qoss, q)
     if q == nothing
         return quote end
     else
-        q2 = Symbol(:tns_, getname(fbr), :_, R, :_q)
+        q2 = ctx.freshen(:tns_, getname(fbr), :_, R, :_q)
         return quote
             $q2 = ($(ctx(qoss)) - 1) * $(lvl.ex).I + $(ctx(i))
             $(virtual_assemble(tns, ctx, qoss, q2))
@@ -310,7 +310,7 @@ end
 function virtual_unfurl(lvl::VirtualSolidLevel, fbr, ctx, mode::Union{Pigeon.Read, Pigeon.Write, Pigeon.Update}, idx::Union{Follow, Laminate, Extrude}, tail...)
     R = fbr.R
     q = fbr.poss[R]
-    p = Symbol(:tns_, getname(fbr), :_, R, :_p)
+    p = ctx.freshen(:tns_, getname(fbr), :_, R, :_p)
 
     if R == 1
         Leaf(
@@ -344,13 +344,13 @@ function virtual_assemble(lvl::VirtualScalarLevel, tns, ctx, qoss, q)
     if q == nothing
         return quote end
     else
-        p = gensym()
-        i = gensym()
+        q_start = ctx.freshen(:q_start_, tns.R)
+        my_q = ctx.freshen(:q_, tns.R)
         return quote
-            $p = length($(lvl.ex).val)
+            $q_start = length($(lvl.ex).val)
             resize!($(lvl.ex).val, $q)
-            for $i = $p + 1: $q
-                $(lvl.ex).val[$i] = $(lvl.D)
+            for $my_q = $q_start + 1: $q
+                $(lvl.ex).val[$my_q] = $(lvl.D)
             end
         end
     end
@@ -359,7 +359,7 @@ end
 
 function virtual_unfurl(lvl::VirtualScalarLevel, fbr, ctx, ::Pigeon.Read)
     R = fbr.R
-    val = Symbol(:tns_, getname(fbr), :_val)
+    val = ctx.freshen(:tns_, getname(fbr), :_val)
 
     Thunk(
         preamble = quote
@@ -371,7 +371,7 @@ end
 
 function virtual_unfurl(lvl::VirtualScalarLevel, fbr, ctx, ::Pigeon.Write)
     R = fbr.R
-    val = Symbol(:tns_, getname(fbr), :_val)
+    val = ctx.freshen(:tns_, getname(fbr), :_val)
 
     Thunk(
         preamble = quote
@@ -386,7 +386,7 @@ end
 
 function virtual_unfurl(lvl::VirtualScalarLevel, fbr, ctx, ::Pigeon.Update)
     R = fbr.R
-    val = Symbol(:tns_, getname(fbr), :_val)
+    val = ctx.freshen(:tns_, getname(fbr), :_val)
 
     Thunk(
         preamble = quote

@@ -19,14 +19,14 @@ mutable struct VirtualSingleSpike{Tv}
     D
 end
 
-function Finch.virtualize(ex, ::Type{SingleSpike{D, Tv}}, ctx, tag=gensym()) where {D, Tv}
-    sym = Symbol(:tns_, tag)
+function Finch.virtualize(ex, ::Type{SingleSpike{D, Tv}}, ctx, tag=:tns) where {D, Tv}
+    sym = ctx.freshen(:tns_, tag)
     push!(ctx.preamble, :($sym = $ex))
     VirtualSingleSpike{Tv}(sym, tag, D)
 end
 
 function Pigeon.lower_axes(arr::VirtualSingleSpike{Tv}, ctx::Finch.LowerJuliaContext) where {Tv}
-    ex = Symbol(:tns_, arr.name, :_stop)
+    ex = ctx.freshen(:tns_, arr.name, :_stop)
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))
     (Extent(1, Virtual{Int}(ex)),)
 end

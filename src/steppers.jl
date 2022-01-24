@@ -23,7 +23,7 @@ Pigeon.combine_style(a::ThunkStyle, b::StepperStyle) = ThunkStyle()
 
 function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::StepperStyle)
     i = getname(root.idxs[1])
-    i0 = gensym(Symbol("_", i))
+    i0 = ctx.freshen(:start_, i)
     guard = nothing
     body = scope(ctx) do ctx′
         visit!(root, StepperThunkContext(ctx′, i, i0)) #TODO we could just use actual thunks here and call a thunkcontext, would look cleaner.
@@ -41,7 +41,7 @@ function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::StepperStyle)
                 guard = :($i0 <= $(visit!(ctx.dims[i].stop, ctx)))
             end
         else
-            step = gensym(Symbol("_", i))
+            step = ctx.freshen(:step_, i)
             step_min = quote
                 $step = min($(map(ctx′, strides)...))
             end
