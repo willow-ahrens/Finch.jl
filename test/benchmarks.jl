@@ -42,7 +42,6 @@ function spmv(mtx)
 end
 
 
-#=
 function ata(mtx)
     println("ata: $mtx")
     A_ref = SparseMatrixCSC(mdopen(mtx).A)
@@ -52,17 +51,12 @@ function ata(mtx)
         HollowLevel{0.0, Float64}(n, A_ref.colptr, A_ref.rowval),
         ScalarLevel{0.0, Float64}(A_ref.nzval),
     ))
-    B = Finch.Fiber{Float64}((
-        SolidLevel(m),
-        HollowLevel{0.0, Float64}(n, A_ref.colptr, A_ref.rowval),
-        ScalarLevel{0.0, Float64}(A_ref.nzval),
-    ))
     C = Finch.Fiber{Float64}((
         SolidLevel(m),
         SolidLevel(n),
         ScalarLevel{0.0, Float64}(zeros(m * n)),
     ))
-    ex = @I @loop i j k C[i, j] += A[i, j] * B[i, j]
+    ex = @I @loop i j k C[i, j] += A[i, k] * A[j, k]
     display(Finch.execute_code_lowered(:ex, typeof(ex)))
     execute(ex)
     println()
@@ -72,10 +66,10 @@ function ata(mtx)
     @btime execute($ex)
 
     println("Julia:")
-    x_ref = rand(n)
-    @btime $A_ref * $x_ref
+    @btime $A_ref * $(transpose(A_ref))
 end
-=#
+
+ata("Gset/G30")
 
 spmv("Boeing/ct20stif")
 spmv("Gset/G30")

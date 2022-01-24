@@ -31,3 +31,7 @@ function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::AccessStyle)
     #TODO add a simplify step here perhaps
     visit!(root, ctx)
 end
+
+function Pigeon.visit!(root::Pass, ctx::LowerJuliaContext, ::AccessStyle)
+    quote end
+end
