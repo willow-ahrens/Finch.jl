@@ -32,20 +32,16 @@ function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::StepperStyle)
         if isempty(strides)
             step = ctx′(ctx.dims[i].stop)
             step_min = quote end
-        elseif length(strides) == 1
-            step = ctx′(strides[1])
-            step_min = quote end
-            if length(guards) == 1
+        else
+            step = ctx.freshen(:step_, i)
+            step_min = quote
+                $step = min($(map(ctx′, strides)...), $(ctx′(ctx.dims[i].stop)))
+            end
+            if length(strides) == 1 && length(guards) == 1
                 guard = guards[1]
             else
                 guard = :($i0 <= $(visit!(ctx.dims[i].stop, ctx)))
             end
-        else
-            step = ctx.freshen(:step_, i)
-            step_min = quote
-                $step = min($(map(ctx′, strides)...))
-            end
-            guard = :($i0 <= $(visit!(ctx.dims[i].stop, ctx)))
         end
         body = visit!(root, StepperBodyContext(ctx′, i, i0, step))
         quote
