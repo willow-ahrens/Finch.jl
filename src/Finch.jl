@@ -15,7 +15,7 @@ using Pigeon: Read, Write, Update
 export Virtual, Scalar, Chunk
 export @I, execute
 
-export Fiber, HollowLevel, SolidLevel, ScalarLevel
+export Fiber, HollowListLevel, SolidLevel, ElementLevel
 
 include("virtualize.jl")
 include("lower.jl")

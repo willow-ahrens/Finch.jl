@@ -1,6 +1,6 @@
-export HollowLevel
+export HollowListLevel
 export SolidLevel
-export ScalarLevel
+export ElementLevel
 
 struct Fiber{Tv, N, R, Lvls<:Tuple, Poss<:Tuple, Idxs<:Tuple} <: AbstractArray{Tv, N}
     lvls::Lvls
@@ -27,20 +27,20 @@ end
 
 
 
-struct HollowLevel{D, Tv, Ti}
+struct HollowListLevel{D, Tv, Ti}
     I::Ti
     pos::Vector{Ti}
     idx::Vector{Ti}
 end
 
-function HollowLevel{D, Tv}(I::Ti, pos::Vector{Ti}, idx::Vector{Ti}) where {D, Tv, Ti}
-    HollowLevel{D, Tv, Ti}(I, pos, idx)
+function HollowListLevel{D, Tv}(I::Ti, pos::Vector{Ti}, idx::Vector{Ti}) where {D, Tv, Ti}
+    HollowListLevel{D, Tv, Ti}(I, pos, idx)
 end
 
-dimension(lvl::HollowLevel) = lvl.I
-cardinality(lvl::HollowLevel) = pos[end] - 1
+dimension(lvl::HollowListLevel) = lvl.I
+cardinality(lvl::HollowListLevel) = pos[end] - 1
 
-function unfurl(lvl::HollowLevel{D, Tv, Ti}, fbr::Fiber{Tv, N, R}, i, tail...) where {D, Tv, Ti, N, R}
+function unfurl(lvl::HollowListLevel{D, Tv, Ti}, fbr::Fiber{Tv, N, R}, i, tail...) where {D, Tv, Ti, N, R}
     q = fbr.poss[R]
     r = searchsorted(@view(lvl.idx[lvl.pos[q]:lvl.pos[q + 1] - 1]), i)
     p = lvl.pos[q] + first(r) - 1
@@ -64,11 +64,11 @@ end
 
 
 
-struct ScalarLevel{D, Tv}
+struct ElementLevel{D, Tv}
     val::Vector{Tv}
 end
 
-function unfurl(lvl::ScalarLevel, fbr::Fiber{Tv, N, R}) where {Tv, N, R}
+function unfurl(lvl::ElementLevel, fbr::Fiber{Tv, N, R}) where {Tv, N, R}
     q = fbr.poss[R]
     return lvl.val[q]
 end
@@ -163,7 +163,7 @@ function Pigeon.visit!(node::Access{VirtualFiber}, ctx::Finch.AccessContext, ::P
     end
 end
 
-struct VirtualHollowLevel
+struct VirtualHollowListLevel
     ex
     D
     Tv
@@ -172,20 +172,20 @@ struct VirtualHollowLevel
     idx_q
 end
 
-function virtualize(ex, ::Type{HollowLevel{D, Tv, Ti}}, ctx) where {D, Tv, Ti}
+function virtualize(ex, ::Type{HollowListLevel{D, Tv, Ti}}, ctx) where {D, Tv, Ti}
     pos_q = ctx.freshen(:pos_q)
     idx_q = ctx.freshen(:idx_q)
     push!(ctx.preamble, quote
         $pos_q = length($ex.pos)
         $idx_q = length($ex.idx)
     end)
-    VirtualHollowLevel(ex, D, Tv, Ti, pos_q, idx_q)
+    VirtualHollowListLevel(ex, D, Tv, Ti, pos_q, idx_q)
 end
 
-virtual_unfurl(lvl::VirtualHollowLevel, tns, ctx, mode::Pigeon.Read, idx::Name, tail...) =
+virtual_unfurl(lvl::VirtualHollowListLevel, tns, ctx, mode::Pigeon.Read, idx::Name, tail...) =
     virtual_unfurl(lvl, tns, ctx, mode, walk(idx), tail...)
 
-function virtual_unfurl(lvl::VirtualHollowLevel, tns, ctx, mode::Pigeon.Read, idx::Walk, tail...)
+function virtual_unfurl(lvl::VirtualHollowListLevel, tns, ctx, mode::Pigeon.Read, idx::Walk, tail...)
     R = tns.R
     tag = Symbol(:tns_, Pigeon.getname(tns), :_, R)
     my_i = ctx.freshen(tag, :_i)
@@ -241,10 +241,10 @@ function virtual_unfurl(lvl::VirtualHollowLevel, tns, ctx, mode::Pigeon.Read, id
     )
 end
 
-virtual_unfurl(lvl::VirtualHollowLevel, tns, ctx, mode::Union{Pigeon.Write, Pigeon.Update}, idx::Name, tail...) =
+virtual_unfurl(lvl::VirtualHollowListLevel, tns, ctx, mode::Union{Pigeon.Write, Pigeon.Update}, idx::Name, tail...) =
     virtual_unfurl(lvl, tns, ctx, mode, extrude(idx), tail...)
 
-function virtual_assemble(lvl::VirtualHollowLevel, tns, ctx, qoss, q)
+function virtual_assemble(lvl::VirtualHollowListLevel, tns, ctx, qoss, q)
     if q == nothing
         return quote end
     else
@@ -259,7 +259,7 @@ function virtual_assemble(lvl::VirtualHollowLevel, tns, ctx, qoss, q)
     end
 end
 
-function virtual_unfurl(lvl::VirtualHollowLevel, tns, ctx, mode::Union{Pigeon.Write, Pigeon.Update}, idx::Extrude, tail...)
+function virtual_unfurl(lvl::VirtualHollowListLevel, tns, ctx, mode::Union{Pigeon.Write, Pigeon.Update}, idx::Extrude, tail...)
     R = tns.R
     tag = Symbol(:tns_, Pigeon.getname(tns), :_, R)
     my_i = ctx.freshen(tag, :_i)
@@ -347,22 +347,22 @@ end
 
 
 
-struct VirtualScalarLevel
+struct VirtualElementLevel
     ex
     Tv
     D
     val_q
 end
 
-function virtualize(ex, ::Type{ScalarLevel{D, Tv}}, ctx) where {D, Tv}
+function virtualize(ex, ::Type{ElementLevel{D, Tv}}, ctx) where {D, Tv}
     val_q = ctx.freshen(:val_q)
     push!(ctx.preamble, quote
         $val_q = length($ex.val)
     end)
-    VirtualScalarLevel(ex, Tv, D, val_q)
+    VirtualElementLevel(ex, Tv, D, val_q)
 end
 
-function virtual_assemble(lvl::VirtualScalarLevel, tns, ctx, qoss, q)
+function virtual_assemble(lvl::VirtualElementLevel, tns, ctx, qoss, q)
     if q == nothing
         return quote end
     else
@@ -381,7 +381,7 @@ function virtual_assemble(lvl::VirtualScalarLevel, tns, ctx, qoss, q)
 end
 
 
-function virtual_unfurl(lvl::VirtualScalarLevel, fbr, ctx, ::Pigeon.Read)
+function virtual_unfurl(lvl::VirtualElementLevel, fbr, ctx, ::Pigeon.Read)
     R = fbr.R
     val = ctx.freshen(:tns_, getname(fbr), :_val)
 
@@ -393,7 +393,7 @@ function virtual_unfurl(lvl::VirtualScalarLevel, fbr, ctx, ::Pigeon.Read)
     )
 end
 
-function virtual_unfurl(lvl::VirtualScalarLevel, fbr, ctx, ::Pigeon.Write)
+function virtual_unfurl(lvl::VirtualElementLevel, fbr, ctx, ::Pigeon.Write)
     R = fbr.R
     val = ctx.freshen(:tns_, getname(fbr), :_val)
 
@@ -408,7 +408,7 @@ function virtual_unfurl(lvl::VirtualScalarLevel, fbr, ctx, ::Pigeon.Write)
     )
 end
 
-function virtual_unfurl(lvl::VirtualScalarLevel, fbr, ctx, ::Pigeon.Update)
+function virtual_unfurl(lvl::VirtualElementLevel, fbr, ctx, ::Pigeon.Update)
     R = fbr.R
     val = ctx.freshen(:tns_, getname(fbr), :_val)
 

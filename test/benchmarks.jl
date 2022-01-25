@@ -13,16 +13,16 @@ function spmv(mtx)
     (m, n) = size(A_ref)
     A = Finch.Fiber{Float64}((
         SolidLevel(m),
-        HollowLevel{0.0, Float64}(n, A_ref.colptr, A_ref.rowval),
-        ScalarLevel{0.0, Float64}(A_ref.nzval),
+        HollowListLevel{0.0, Float64}(n, A_ref.colptr, A_ref.rowval),
+        ElementLevel{0.0, Float64}(A_ref.nzval),
     ))
     y = Finch.Fiber{Float64}((
         SolidLevel(m),
-        ScalarLevel{0.0, Float64}(zeros(m)),
+        ElementLevel{0.0, Float64}(zeros(m)),
     ))
     x = Finch.Fiber{Float64}((
         SolidLevel(n),
-        ScalarLevel{0.0, Float64}(rand(n)),
+        ElementLevel{0.0, Float64}(rand(n)),
     ))
     ex = @I @loop i j y[i] += A[i, j] * x[j]
     display(Finch.execute_code_lowered(:ex, typeof(ex)))
@@ -48,13 +48,13 @@ function ata(mtx)
     (m, n) = size(A_ref)
     A = Finch.Fiber{Float64}((
         SolidLevel(m),
-        HollowLevel{0.0, Float64}(n, A_ref.colptr, A_ref.rowval),
-        ScalarLevel{0.0, Float64}(A_ref.nzval),
+        HollowListLevel{0.0, Float64}(n, A_ref.colptr, A_ref.rowval),
+        ElementLevel{0.0, Float64}(A_ref.nzval),
     ))
     C = Finch.Fiber{Float64}((
         SolidLevel(m),
         SolidLevel(n),
-        ScalarLevel{0.0, Float64}(zeros(m * n)),
+        ElementLevel{0.0, Float64}(zeros(m * n)),
     ))
     ex = @I @loop i j k C[i, j] += A[i, k] * A[j, k]
     display(Finch.execute_code_lowered(:ex, typeof(ex)))
@@ -224,8 +224,8 @@ function foo(A, B)
     (m, n) = size(A)
     C = Finch.Fiber{Float64}((
         SolidLevel(m),
-        HollowLevel{0.0, Float64}(n, ones(Int, m + 1), Int[]),
-        ScalarLevel{0.0, Float64}([]),
+        HollowListLevel{0.0, Float64}(n, ones(Int, m + 1), Int[]),
+        ElementLevel{0.0, Float64}([]),
     ))
     ex = @I @loop i j C[i, j] = A[i, j] + B[i, j]
     execute(ex)
@@ -239,18 +239,18 @@ function apb(mtxa, mtxb)
     (m, n) = size(A_ref)
     A = Finch.Fiber{Float64}((
         SolidLevel(m),
-        HollowLevel{0.0, Float64}(n, A_ref.colptr, A_ref.rowval),
-        ScalarLevel{0.0, Float64}(A_ref.nzval),
+        HollowListLevel{0.0, Float64}(n, A_ref.colptr, A_ref.rowval),
+        ElementLevel{0.0, Float64}(A_ref.nzval),
     ))
     B = Finch.Fiber{Float64}((
         SolidLevel(m),
-        HollowLevel{0.0, Float64}(n, B_ref.colptr, B_ref.rowval),
-        ScalarLevel{0.0, Float64}(B_ref.nzval),
+        HollowListLevel{0.0, Float64}(n, B_ref.colptr, B_ref.rowval),
+        ElementLevel{0.0, Float64}(B_ref.nzval),
     ))
     C = Finch.Fiber{Float64}((
         SolidLevel(m),
-        HollowLevel{0.0, Float64}(n, ones(Int, m + 1), Int[]),
-        ScalarLevel{0.0, Float64}([]),
+        HollowListLevel{0.0, Float64}(n, ones(Int, m + 1), Int[]),
+        ElementLevel{0.0, Float64}([]),
     ))
     ex = @I @loop i j C[i, j] += A[i, j] + B[i, j]
     #display(Finch.execute_code_lowered(:ex, typeof(ex)))
