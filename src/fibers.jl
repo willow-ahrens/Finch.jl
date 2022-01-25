@@ -8,7 +8,8 @@ struct Fiber{Tv, N, R, Lvls<:Tuple, Poss<:Tuple, Idxs<:Tuple} <: AbstractArray{T
     idxs::Idxs
 end
 
-Fiber{Tv}(lvls::Lvls) where {Tv, N, Lvls} = Fiber{Tv, length(lvls) - 1, 1}(lvls, (1,), ())
+Fiber(lvls) = Fiber{valtype(last(levels))}(lvls)
+Fiber{Tv}(lvls) where {Tv} = Fiber{Tv, length(lvls) - 1, 1}(lvls, (1,), ())
 Fiber{Tv, N, R}(lvls, poss, idxs) where {Tv, N, R} = Fiber{Tv, N, R, typeof(lvls), typeof(poss), typeof(idxs)}(lvls, poss, idxs)
 
 Base.size(fbr::Fiber{Tv, N, R}) where {Tv, N, R} = map(dimension, fbr.lvls[R:end-1])
@@ -32,10 +33,12 @@ struct HollowListLevel{D, Tv, Ti}
     pos::Vector{Ti}
     idx::Vector{Ti}
 end
+const HollowList = HollowListLevel
 
-function HollowListLevel{D, Tv}(I::Ti, pos::Vector{Ti}, idx::Vector{Ti}) where {D, Tv, Ti}
-    HollowListLevel{D, Tv, Ti}(I, pos, idx)
-end
+HollowListLevel{D}(args...) where {D} = HollowListLevel{D, typeof(D)}(args...)
+HollowListLevel{D, Tv}(I::Ti) where {D, Tv, Ti} = HollowListLevel{D, Tv, Ti}(I)
+HollowListLevel{D, Tv}(I::Ti, pos, idx) where {D, Tv, Ti} = HollowListLevel{D, Tv, Ti}(I, pos, idx)
+HollowListLevel{D, Tv, Ti}(I::Ti) where {D, Tv, Ti} = HollowListLevel{D, Tv, Ti}(I, Vector{Ti}(undef, 4), Vector{Ti}(undef, 4))
 
 dimension(lvl::HollowListLevel) = lvl.I
 cardinality(lvl::HollowListLevel) = pos[end] - 1
@@ -52,6 +55,7 @@ end
 struct SolidLevel{Ti}
     I::Ti
 end
+const Solid = SolidLevel
 
 dimension(lvl::SolidLevel) = lvl.I
 cardinality(lvl::SolidLevel) = lvl.I
@@ -67,6 +71,11 @@ end
 struct ElementLevel{D, Tv}
     val::Vector{Tv}
 end
+ElementLevel{D}(args...) where {D} = ElementLevel{D, typeof(D)}(args...)
+ElementLevel{D, Tv}() where {D, Tv} = ElementLevel{D, Tv}(Vector{Tv}(undef, 4))
+const Element = ElementLevel
+
+@inline valtype(lvl::ElementLevel{D, Tv}) where {D, Tv} = Tv
 
 function unfurl(lvl::ElementLevel, fbr::Fiber{Tv, N, R}) where {Tv, N, R}
     q = fbr.poss[R]
