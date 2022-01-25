@@ -168,10 +168,18 @@ struct VirtualHollowLevel
     D
     Tv
     Ti
+    pos_q
+    idx_q
 end
 
 function virtualize(ex, ::Type{HollowLevel{D, Tv, Ti}}, ctx) where {D, Tv, Ti}
-    VirtualHollowLevel(ex, D, Tv, Ti)
+    pos_q = ctx.freshen(:pos_q)
+    idx_q = ctx.freshen(:idx_q)
+    push!(ctx.preamble, quote
+        $pos_q = length($ex.pos)
+        $idx_q = length($ex.idx)
+    end)
+    VirtualHollowLevel(ex, D, Tv, Ti, pos_q, idx_q)
 end
 
 virtual_unfurl(lvl::VirtualHollowLevel, tns, ctx, mode::Pigeon.Read, idx::Name, tail...) =
@@ -241,7 +249,11 @@ function virtual_assemble(lvl::VirtualHollowLevel, tns, ctx, qoss, q)
         return quote end
     else
         return quote
-            :(resize!($(lvl.ex).pos, $(ctx(q))))
+            if $(lvl.pos_q) < $(ctx(q))
+                $(lvl.pos_q) = max($(lvl.pos_q), 1)
+                resize!($(lvl.ex).pos, $(lvl.pos_q) * 4)
+                $(lvl.pos_q) *= 4
+            end
             $(virtual_assemble(tns, ctx, qoss, nothing))
         end
     end
@@ -270,7 +282,12 @@ function virtual_unfurl(lvl::VirtualHollowLevel, tns, ctx, mode::Union{Pigeon.Wr
                 end,
                 body = virtual_refurl(tns, Virtual{lvl.Tv}(my_p), idx, mode, tail...),
                 epilogue = quote
-                    push!($(lvl.ex).idx, $(Pigeon.visit!(idx, ctx)))
+                    if $(lvl.idx_q) < $my_p
+                        $(lvl.idx_q) = max($(lvl.idx_q), 1)
+                        resize!($(lvl.ex).idx, $(lvl.idx_q) * 4)
+                        $(lvl.idx_q) *= 4
+                    end
+                    $(lvl.ex).idx[$my_p] = $(Pigeon.visit!(idx, ctx))
                     $my_p += 1
                 end
             )
@@ -334,23 +351,30 @@ struct VirtualScalarLevel
     ex
     Tv
     D
+    val_q
 end
 
 function virtualize(ex, ::Type{ScalarLevel{D, Tv}}, ctx) where {D, Tv}
-    VirtualScalarLevel(ex, Tv, D)
+    val_q = ctx.freshen(:val_q)
+    push!(ctx.preamble, quote
+        $val_q = length($ex.val)
+    end)
+    VirtualScalarLevel(ex, Tv, D, val_q)
 end
 
 function virtual_assemble(lvl::VirtualScalarLevel, tns, ctx, qoss, q)
     if q == nothing
         return quote end
     else
-        q_start = ctx.freshen(:q_start_, tns.R)
         my_q = ctx.freshen(:q_, tns.R)
         return quote
-            $q_start = length($(lvl.ex).val)
-            resize!($(lvl.ex).val, $q)
-            for $my_q = $q_start + 1: $q
-                $(lvl.ex).val[$my_q] = $(lvl.D)
+            if $(lvl.val_q) < $q
+                $(lvl.val_q) = max($(lvl.val_q), 1)
+                resize!($(lvl.ex).val, $(lvl.val_q) * 4)
+                @simd for $my_q = $(lvl.val_q) + 1: $(lvl.val_q) * 4
+                    $(lvl.ex).val[$my_q] = $(lvl.D)
+                end
+                $(lvl.val_q) *= 4
             end
         end
     end

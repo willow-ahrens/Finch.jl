@@ -228,8 +228,8 @@ function foo(A, B)
         ScalarLevel{0.0, Float64}([]),
     ))
     ex = @I @loop i j C[i, j] = A[i, j] + B[i, j]
-    #execute(ex)
-    bar(ex)
+    execute(ex)
+    #bar(ex)
 end
 
 function apb(mtxa, mtxb)
