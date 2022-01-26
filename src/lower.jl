@@ -67,8 +67,14 @@ end
 function closescope(body, ctx)
     thunk = Expr(:block)
     append!(thunk.args, ctx.preamble)
-    push!(thunk.args, body)
-    append!(thunk.args, ctx.epilogue)
+    if isempty(ctx.epilogue)
+        push!(thunk.args, body)
+    else
+        res = ctx.freshen(:res)
+        push!(thunk.args, :($res = $body))
+        append!(thunk.args, ctx.epilogue)
+        push!(thunk.args, res)
+    end
     return thunk
 end
 
