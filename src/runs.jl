@@ -2,21 +2,21 @@ Base.@kwdef mutable struct Run
     body
 end
 
-Pigeon.isliteral(::Run) = false
+isliteral(::Run) = false
 
 #A minor revelation: There's no readon to store extents in chunks, they just modify the extents of the context.
 #Another revelation: If you want to store something in a chunk, 
 
-Pigeon.getname(arr::Run) = getname(arr.body)
+getname(arr::Run) = getname(arr.body)
 
 struct RunStyle end
 
-Pigeon.make_style(root::Loop, ctx::LowerJuliaContext, node::Run) = RunStyle()
-Pigeon.combine_style(a::DefaultStyle, b::RunStyle) = RunStyle()
-Pigeon.combine_style(a::ThunkStyle, b::RunStyle) = ThunkStyle()
-Pigeon.combine_style(a::RunStyle, b::RunStyle) = RunStyle()
+make_style(root::Loop, ctx::LowerJuliaContext, node::Run) = RunStyle()
+combine_style(a::DefaultStyle, b::RunStyle) = RunStyle()
+combine_style(a::ThunkStyle, b::RunStyle) = ThunkStyle()
+combine_style(a::RunStyle, b::RunStyle) = RunStyle()
 
-function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::RunStyle)
+function visit!(root::Loop, ctx::LowerJuliaContext, ::RunStyle)
     @assert !isempty(root.idxs)
     root = visit!(root, AccessRunContext(root))
     #TODO remove simplify step once we have dedicated handlers for it
@@ -24,15 +24,15 @@ function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::RunStyle)
     visit!(root, ctx)
 end
 
-struct AccessRunContext <: Pigeon.AbstractTransformContext
+struct AccessRunContext <: AbstractTransformContext
     root
 end
 
-function Pigeon.visit!(node::Access{Run, Read}, ctx::AccessRunContext, ::DefaultStyle)
+function visit!(node::Access{Run, Read}, ctx::AccessRunContext, ::DefaultStyle)
     return node.tns.body
 end
 
-function Pigeon.visit!(node::Access{Run, Read}, ctx::ForLoopContext, ::DefaultStyle)
+function visit!(node::Access{Run, Read}, ctx::ForLoopContext, ::DefaultStyle)
     return node.tns.body
 end
 
@@ -44,13 +44,13 @@ end
 
 struct AcceptRunStyle end
 
-Pigeon.make_style(root::Loop, ctx::LowerJuliaContext, node::Access{AcceptRun, <:Union{Write, Update}}) = AcceptRunStyle()
-Pigeon.combine_style(a::DefaultStyle, b::AcceptRunStyle) = AcceptRunStyle()
-Pigeon.combine_style(a::ThunkStyle, b::AcceptRunStyle) = ThunkStyle()
-Pigeon.combine_style(a::AcceptRunStyle, b::AcceptRunStyle) = AcceptRunStyle()
-Pigeon.combine_style(a::RunStyle, b::AcceptRunStyle) = RunStyle()
+make_style(root::Loop, ctx::LowerJuliaContext, node::Access{AcceptRun, <:Union{Write, Update}}) = AcceptRunStyle()
+combine_style(a::DefaultStyle, b::AcceptRunStyle) = AcceptRunStyle()
+combine_style(a::ThunkStyle, b::AcceptRunStyle) = ThunkStyle()
+combine_style(a::AcceptRunStyle, b::AcceptRunStyle) = AcceptRunStyle()
+combine_style(a::RunStyle, b::AcceptRunStyle) = RunStyle()
 
-function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::AcceptRunStyle)
+function visit!(root::Loop, ctx::LowerJuliaContext, ::AcceptRunStyle)
     idx = root.idxs[1]
     body = Loop(root.idxs[2:end], root.body)
     body = visit!(body, AcceptRunContext(body, idx, ctx))
@@ -62,26 +62,26 @@ function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::AcceptRunStyle)
     end
 end
 
-Base.@kwdef mutable struct DirtyRunContext <: Pigeon.AbstractCollectContext
+Base.@kwdef mutable struct DirtyRunContext <: AbstractCollectContext
     idx
 end
-Pigeon.collect_op(ctx::DirtyRunContext) = any
-Pigeon.collect_zero(ctx::DirtyRunContext) = false
-function Pigeon.visit!(node::Access, ctx::DirtyRunContext, ::DefaultStyle)
+collect_op(ctx::DirtyRunContext) = any
+collect_zero(ctx::DirtyRunContext) = false
+function visit!(node::Access, ctx::DirtyRunContext, ::DefaultStyle)
     return getname(ctx.idx) in map(getname, node.idxs)
 end
 
-Base.@kwdef mutable struct AcceptRunContext <: Pigeon.AbstractTransformContext
+Base.@kwdef mutable struct AcceptRunContext <: AbstractTransformContext
     root
     idx
     ctx
 end
 
-function Pigeon.visit!(node::Access{AcceptRun, <:Union{Write, Update}}, ctx::AcceptRunContext, ::DefaultStyle)
+function visit!(node::Access{AcceptRun, <:Union{Write, Update}}, ctx::AcceptRunContext, ::DefaultStyle)
     ext = ctx.ctx.dims[getname(ctx.idx)]
     node.tns.body(ctx.ctx, ext.start, ext.stop)
 end
 
-function Pigeon.visit!(node::Access{AcceptRun}, ctx::ForLoopContext, ::DefaultStyle)
+function visit!(node::Access{AcceptRun}, ctx::ForLoopContext, ::DefaultStyle)
     node.tns.body(ctx.ctx, ctx.val, ctx.val)
 end

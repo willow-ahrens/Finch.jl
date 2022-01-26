@@ -8,20 +8,20 @@ Base.@kwdef struct Stepper
     epilogue = quote end
 end
 
-Pigeon.isliteral(::Stepper) = false
+isliteral(::Stepper) = false
 
-Pigeon.make_style(root::Loop, ctx::LowerJuliaContext, node::Stepper) = StepperStyle()
-Pigeon.combine_style(a::DefaultStyle, b::StepperStyle) = StepperStyle()
-Pigeon.combine_style(a::StepperStyle, b::StepperStyle) = StepperStyle()
-Pigeon.combine_style(a::StepperStyle, b::RunStyle) = RunStyle()
-Pigeon.combine_style(a::StepperStyle, b::AcceptRunStyle) = StepperStyle()
-Pigeon.combine_style(a::StepperStyle, b::AcceptSpikeStyle) = StepperStyle()
-Pigeon.combine_style(a::StepperStyle, b::SpikeStyle) = StepperStyle() #Not sure on this one
-Pigeon.combine_style(a::StepperStyle, b::CaseStyle) = CaseStyle()
-Pigeon.combine_style(a::ThunkStyle, b::StepperStyle) = ThunkStyle()
-#Pigeon.combine_style(a::StepperStyle, b::PipelineStyle) = PipelineStyle()
+make_style(root::Loop, ctx::LowerJuliaContext, node::Stepper) = StepperStyle()
+combine_style(a::DefaultStyle, b::StepperStyle) = StepperStyle()
+combine_style(a::StepperStyle, b::StepperStyle) = StepperStyle()
+combine_style(a::StepperStyle, b::RunStyle) = RunStyle()
+combine_style(a::StepperStyle, b::AcceptRunStyle) = StepperStyle()
+combine_style(a::StepperStyle, b::AcceptSpikeStyle) = StepperStyle()
+combine_style(a::StepperStyle, b::SpikeStyle) = StepperStyle() #Not sure on this one
+combine_style(a::StepperStyle, b::CaseStyle) = CaseStyle()
+combine_style(a::ThunkStyle, b::StepperStyle) = ThunkStyle()
+#combine_style(a::StepperStyle, b::PipelineStyle) = PipelineStyle()
 
-function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::StepperStyle)
+function visit!(root::Loop, ctx::LowerJuliaContext, ::StepperStyle)
     i = getname(root.idxs[1])
     i0 = ctx.freshen(:start_, i)
     guard = nothing
@@ -62,44 +62,44 @@ function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::StepperStyle)
     end
 end
 
-Base.@kwdef struct StepperThunkContext <: Pigeon.AbstractWalkContext
+Base.@kwdef struct StepperThunkContext <: AbstractWalkContext
     ctx
     idx
     start
 end
-function Pigeon.visit!(node::Stepper, ctx::StepperThunkContext, ::DefaultStyle)
+function visit!(node::Stepper, ctx::StepperThunkContext, ::DefaultStyle)
     push!(ctx.ctx.preamble, node.preamble)
     push!(ctx.ctx.epilogue, node.epilogue)
     node
 end
 
-Base.@kwdef struct StepperStrideContext <: Pigeon.AbstractCollectContext
+Base.@kwdef struct StepperStrideContext <: AbstractCollectContext
     ctx
     idx
     start
 end
-Pigeon.collect_op(::StepperStrideContext) = (args) -> vcat(args...) #flatten?
-Pigeon.collect_zero(::StepperStrideContext) = []
-Pigeon.visit!(node::Stepper, ctx::StepperStrideContext, ::DefaultStyle) = [node.stride(ctx.start)]
+collect_op(::StepperStrideContext) = (args) -> vcat(args...) #flatten?
+collect_zero(::StepperStrideContext) = []
+visit!(node::Stepper, ctx::StepperStrideContext, ::DefaultStyle) = [node.stride(ctx.start)]
 
 
-Base.@kwdef struct StepperGuardContext <: Pigeon.AbstractCollectContext
+Base.@kwdef struct StepperGuardContext <: AbstractCollectContext
     ctx
     idx
     start
 end
-Pigeon.collect_op(::StepperGuardContext) = (args) -> vcat(args...) #flatten?
-Pigeon.collect_zero(::StepperGuardContext) = []
-Pigeon.visit!(node::Stepper, ctx::StepperGuardContext, ::DefaultStyle) = node.guard === nothing ? [] : [node.guard(ctx.start)]
+collect_op(::StepperGuardContext) = (args) -> vcat(args...) #flatten?
+collect_zero(::StepperGuardContext) = []
+visit!(node::Stepper, ctx::StepperGuardContext, ::DefaultStyle) = node.guard === nothing ? [] : [node.guard(ctx.start)]
 
-Base.@kwdef struct StepperBodyContext <: Pigeon.AbstractTransformContext
+Base.@kwdef struct StepperBodyContext <: AbstractTransformContext
     ctx
     idx
     start
     step
 end
-Pigeon.visit!(node::Stepper, ctx::StepperBodyContext, ::DefaultStyle) = node.body(ctx.start, ctx.step)
-Pigeon.visit!(node::Spike, ctx::StepperBodyContext, ::DefaultStyle) = truncate(node, ctx.start, ctx.step, visit!(ctx.ctx.dims[ctx.idx].stop, ctx.ctx))
+visit!(node::Stepper, ctx::StepperBodyContext, ::DefaultStyle) = node.body(ctx.start, ctx.step)
+visit!(node::Spike, ctx::StepperBodyContext, ::DefaultStyle) = truncate(node, ctx.start, ctx.step, visit!(ctx.ctx.dims[ctx.idx].stop, ctx.ctx))
 
 truncate(node, start, step, stop) = node
 function truncate(node::Spike, start, step, stop)

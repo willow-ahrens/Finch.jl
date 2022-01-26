@@ -28,20 +28,20 @@ function Finch.virtual_initialize!(arr::VirtualSimpleRunLength{Tv}, ctx::Finch.L
     end
 end 
 
-function Pigeon.lower_axes(arr::VirtualSimpleRunLength{Tv, Ti}, ctx::Finch.LowerJuliaContext) where {Tv, Ti}
+function Finch.lower_axes(arr::VirtualSimpleRunLength{Tv, Ti}, ctx::Finch.LowerJuliaContext) where {Tv, Ti}
     ex = ctx.freshen(:tns_, arr.name, :_stop)
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))
     (Extent(1, Virtual{Ti}(ex)),)
 end
-Pigeon.getsites(arr::VirtualSimpleRunLength) = (1,)
-Pigeon.getname(arr::VirtualSimpleRunLength) = arr.name
-Pigeon.make_style(root::Loop, ctx::Finch.LowerJuliaContext, node::Access{<:VirtualSimpleRunLength}) =
-    getname(root.idxs[1]) == getname(node.idxs[1]) ? Finch.ChunkStyle() : DefaultStyle()
+Finch.getsites(arr::VirtualSimpleRunLength) = (1,)
+Finch.getname(arr::VirtualSimpleRunLength) = arr.name
+Finch.make_style(root::Loop, ctx::Finch.LowerJuliaContext, node::Access{<:VirtualSimpleRunLength}) =
+    getname(root.idxs[1]) == getname(node.idxs[1]) ? Finch.ChunkStyle() : Finch.DefaultStyle()
 
-function Pigeon.visit!(node::Access{VirtualSimpleRunLength{Tv, Ti}, Pigeon.Read}, ctx::Finch.ChunkifyContext, ::Pigeon.DefaultStyle) where {Tv, Ti}
+function Finch.visit!(node::Access{VirtualSimpleRunLength{Tv, Ti}, Read}, ctx::Finch.ChunkifyContext, ::Finch.DefaultStyle) where {Tv, Ti}
     vec = node.tns
-    my_i′ = ctx.ctx.freshen(:tns_, Pigeon.getname(vec), :_i1)
-    my_p = ctx.ctx.freshen(:tns_, Pigeon.getname(vec), :_p)
+    my_i′ = ctx.ctx.freshen(:tns_, getname(vec), :_i1)
+    my_p = ctx.ctx.freshen(:tns_, getname(vec), :_p)
     if getname(ctx.idx) == getname(node.idxs[1])
         tns = Thunk(
             preamble = quote
@@ -69,7 +69,7 @@ function Pigeon.visit!(node::Access{VirtualSimpleRunLength{Tv, Ti}, Pigeon.Read}
     end
 end
 
-function Pigeon.visit!(node::Access{<:VirtualSimpleRunLength{Tv, Ti}, <: Union{Pigeon.Write, Pigeon.Update}}, ctx::Finch.ChunkifyContext, ::Pigeon.DefaultStyle) where {Tv, Ti}
+function Finch.visit!(node::Access{<:VirtualSimpleRunLength{Tv, Ti}, <: Union{Write, Update}}, ctx::Finch.ChunkifyContext, ::Finch.DefaultStyle) where {Tv, Ti}
     vec = node.tns
     my_p = ctx.ctx.freshen(:tns_, node.tns.name, :_p)
     if getname(ctx.idx) == getname(node.idxs[1])
@@ -87,7 +87,7 @@ function Pigeon.visit!(node::Access{<:VirtualSimpleRunLength{Tv, Ti}, <: Union{P
                     end,
                     body = Access(Scalar(Virtual{Tv}(:($(vec.ex).val[$my_p]))), node.mode, []),
                     epilogue = quote
-                        push!($(vec.ex).idx, $(Pigeon.visit!(stop, ctx)))
+                        push!($(vec.ex).idx, $(ctx(stop)))
                     end
                 )
             )

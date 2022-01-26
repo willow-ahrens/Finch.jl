@@ -25,17 +25,17 @@ function Finch.virtualize(ex, ::Type{SingleSpike{D, Tv}}, ctx, tag=:tns) where {
     VirtualSingleSpike{Tv}(sym, tag, D)
 end
 
-function Pigeon.lower_axes(arr::VirtualSingleSpike{Tv}, ctx::Finch.LowerJuliaContext) where {Tv}
+function Finch.lower_axes(arr::VirtualSingleSpike{Tv}, ctx::Finch.LowerJuliaContext) where {Tv}
     ex = ctx.freshen(:tns_, arr.name, :_stop)
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))
     (Extent(1, Virtual{Int}(ex)),)
 end
-Pigeon.getsites(arr::VirtualSingleSpike) = (1,)
-Pigeon.getname(arr::VirtualSingleSpike) = arr.name
-Pigeon.make_style(root::Loop, ctx::Finch.LowerJuliaContext, node::Access{<:VirtualSingleSpike}) =
-    getname(root.idxs[1]) == getname(node.idxs[1]) ? Finch.ChunkStyle() : DefaultStyle()
+Finch.getsites(arr::VirtualSingleSpike) = (1,)
+Finch.getname(arr::VirtualSingleSpike) = arr.name
+Finch.make_style(root::Loop, ctx::Finch.LowerJuliaContext, node::Access{<:VirtualSingleSpike}) =
+    getname(root.idxs[1]) == getname(node.idxs[1]) ? Finch.ChunkStyle() : Finch.DefaultStyle()
 
-function Pigeon.visit!(node::Access{VirtualSingleSpike{Tv}, Pigeon.Read}, ctx::Finch.ChunkifyContext, ::Pigeon.DefaultStyle) where {Tv}
+function Finch.visit!(node::Access{VirtualSingleSpike{Tv}, Read}, ctx::Finch.ChunkifyContext, ::Finch.DefaultStyle) where {Tv}
     vec = node.tns
     if getname(ctx.idx) == getname(node.idxs[1])
         tns = Spike(

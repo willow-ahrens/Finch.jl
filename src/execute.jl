@@ -15,7 +15,7 @@ function execute_code_lowered(ex, T)
         quote
             $(initialize_program!(prgm, ctx))
             $(scope(ctx) do ctx2
-                Pigeon.visit!(prgm, ctx2)
+                visit!(prgm, ctx2)
             end)
         end
     end

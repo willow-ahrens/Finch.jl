@@ -10,26 +10,26 @@ Base.@kwdef struct Phase
     epilogue = quote end
 end
 
-Pigeon.isliteral(::Pipeline) = false
-Pigeon.isliteral(::Phase) = false
+isliteral(::Pipeline) = false
+isliteral(::Phase) = false
 
 struct PipelineStyle end
 
-Pigeon.make_style(root, ctx::LowerJuliaContext, node::Pipeline) = PipelineStyle()
-Pigeon.combine_style(a::DefaultStyle, b::PipelineStyle) = PipelineStyle()
-Pigeon.combine_style(a::ThunkStyle, b::PipelineStyle) = ThunkStyle()
-Pigeon.combine_style(a::RunStyle, b::PipelineStyle) = PipelineStyle()
-Pigeon.combine_style(a::AcceptRunStyle, b::PipelineStyle) = PipelineStyle()
-Pigeon.combine_style(a::AcceptSpikeStyle, b::PipelineStyle) = PipelineStyle()
-Pigeon.combine_style(a::SpikeStyle, b::PipelineStyle) = PipelineStyle()
-Pigeon.combine_style(a::PipelineStyle, b::PipelineStyle) = PipelineStyle()
-Pigeon.combine_style(a::PipelineStyle, b::CaseStyle) = CaseStyle()
+make_style(root, ctx::LowerJuliaContext, node::Pipeline) = PipelineStyle()
+combine_style(a::DefaultStyle, b::PipelineStyle) = PipelineStyle()
+combine_style(a::ThunkStyle, b::PipelineStyle) = ThunkStyle()
+combine_style(a::RunStyle, b::PipelineStyle) = PipelineStyle()
+combine_style(a::AcceptRunStyle, b::PipelineStyle) = PipelineStyle()
+combine_style(a::AcceptSpikeStyle, b::PipelineStyle) = PipelineStyle()
+combine_style(a::SpikeStyle, b::PipelineStyle) = PipelineStyle()
+combine_style(a::PipelineStyle, b::PipelineStyle) = PipelineStyle()
+combine_style(a::PipelineStyle, b::CaseStyle) = CaseStyle()
 
-struct PipelineContext <: Pigeon.AbstractCollectContext
+struct PipelineContext <: AbstractCollectContext
     ctx
 end
 
-function Pigeon.visit!(root, ctx::LowerJuliaContext, ::PipelineStyle)
+function visit!(root, ctx::LowerJuliaContext, ::PipelineStyle)
     phases = visit!(root, PipelineContext(ctx))
     maxkey = maximum(map(maximum, map(((keys, body),)->keys, phases)))
     phases = sort(phases, by=(((keys, body),)->map(l->count(k->k>l, keys), 1:maxkey)))
@@ -92,7 +92,7 @@ function Pigeon.visit!(root, ctx::LowerJuliaContext, ::PipelineStyle)
     return thunk
 end
 
-function Pigeon.postvisit!(node, ctx::PipelineContext, args)
+function postvisit!(node, ctx::PipelineContext, args)
     res = map(flatten((product(args...),))) do phases
         keys = map(first, phases)
         bodies = map(last, phases)
@@ -101,44 +101,44 @@ function Pigeon.postvisit!(node, ctx::PipelineContext, args)
         )
     end
 end
-Pigeon.postvisit!(node, ctx::PipelineContext) = [([], node)]
-Pigeon.visit!(node::Pipeline, ctx::PipelineContext, ::DefaultStyle) = enumerate(node.phases)
+postvisit!(node, ctx::PipelineContext) = [([], node)]
+visit!(node::Pipeline, ctx::PipelineContext, ::DefaultStyle) = enumerate(node.phases)
 
-Base.@kwdef struct PhaseThunkContext <: Pigeon.AbstractWalkContext
+Base.@kwdef struct PhaseThunkContext <: AbstractWalkContext
     ctx
     idx
     start
 end
-function Pigeon.visit!(node::Phase, ctx::PhaseThunkContext, ::DefaultStyle)
+function visit!(node::Phase, ctx::PhaseThunkContext, ::DefaultStyle)
     push!(ctx.ctx.preamble, node.preamble)
     push!(ctx.ctx.epilogue, node.epilogue)
     node
 end
 
-Base.@kwdef struct PhaseGuardContext <: Pigeon.AbstractCollectContext
+Base.@kwdef struct PhaseGuardContext <: AbstractCollectContext
     ctx
     idx
     start
 end
-Pigeon.collect_op(::PhaseGuardContext) = (args) -> vcat(args...) #flatten?
-Pigeon.collect_zero(::PhaseGuardContext) = []
-Pigeon.visit!(node::Phase, ctx::PhaseGuardContext, ::DefaultStyle) = node.guard === nothing ? [] : [something(node.guard)(ctx.start)]
+collect_op(::PhaseGuardContext) = (args) -> vcat(args...) #flatten?
+collect_zero(::PhaseGuardContext) = []
+visit!(node::Phase, ctx::PhaseGuardContext, ::DefaultStyle) = node.guard === nothing ? [] : [something(node.guard)(ctx.start)]
 
-Base.@kwdef struct PhaseStrideContext <: Pigeon.AbstractCollectContext
+Base.@kwdef struct PhaseStrideContext <: AbstractCollectContext
     ctx
     idx
     start
 end
-Pigeon.collect_op(::PhaseStrideContext) = (args) -> vcat(args...) #flatten?
-Pigeon.collect_zero(::PhaseStrideContext) = []
-Pigeon.visit!(node::Phase, ctx::PhaseStrideContext, ::DefaultStyle) = node.stride === nothing ? [] : [something(node.stride)(ctx.start)]
+collect_op(::PhaseStrideContext) = (args) -> vcat(args...) #flatten?
+collect_zero(::PhaseStrideContext) = []
+visit!(node::Phase, ctx::PhaseStrideContext, ::DefaultStyle) = node.stride === nothing ? [] : [something(node.stride)(ctx.start)]
 
-Base.@kwdef struct PhaseBodyContext <: Pigeon.AbstractTransformContext
+Base.@kwdef struct PhaseBodyContext <: AbstractTransformContext
     ctx
     idx
     start
     step
 end
-Pigeon.visit!(node::Phase, ctx::PhaseBodyContext, ::DefaultStyle) = node.body(ctx.start, ctx.step)
-Pigeon.visit!(node::Stepper, ctx::PhaseBodyContext, ::DefaultStyle) = truncate(node, ctx.start, ctx.step, visit!(ctx.ctx.dims[ctx.idx].stop, ctx.ctx))
-Pigeon.visit!(node::Spike, ctx::PhaseBodyContext, ::DefaultStyle) = truncate(node, ctx.start, ctx.step, visit!(ctx.ctx.dims[ctx.idx].stop, ctx.ctx))
+visit!(node::Phase, ctx::PhaseBodyContext, ::DefaultStyle) = node.body(ctx.start, ctx.step)
+visit!(node::Stepper, ctx::PhaseBodyContext, ::DefaultStyle) = truncate(node, ctx.start, ctx.step, visit!(ctx.ctx.dims[ctx.idx].stop, ctx.ctx))
+visit!(node::Spike, ctx::PhaseBodyContext, ::DefaultStyle) = truncate(node, ctx.start, ctx.step, visit!(ctx.ctx.dims[ctx.idx].stop, ctx.ctx))

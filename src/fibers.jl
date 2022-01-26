@@ -95,9 +95,9 @@ mutable struct VirtualFiber
     idxs::Vector{Any}
 end
 
-Pigeon.isliteral(::VirtualFiber) = false
+isliteral(::VirtualFiber) = false
 
-function Pigeon.make_style(root::Loop, ctx::Finch.LowerJuliaContext, node::Access{VirtualFiber})
+function make_style(root::Loop, ctx::Finch.LowerJuliaContext, node::Access{VirtualFiber})
     if isempty(node.idxs)
         return AccessStyle()
     elseif getname(root.idxs[1]) == getname(node.idxs[1])
@@ -107,7 +107,7 @@ function Pigeon.make_style(root::Loop, ctx::Finch.LowerJuliaContext, node::Acces
     end
 end
 
-function Pigeon.make_style(root, ctx::Finch.LowerJuliaContext, node::Access{VirtualFiber})
+function make_style(root, ctx::Finch.LowerJuliaContext, node::Access{VirtualFiber})
     if isempty(node.idxs)
         return AccessStyle()
     else
@@ -115,7 +115,7 @@ function Pigeon.make_style(root, ctx::Finch.LowerJuliaContext, node::Access{Virt
     end
 end
 
-function Pigeon.lower_axes(arr::VirtualFiber, ctx::LowerJuliaContext) where {T <: AbstractArray}
+function lower_axes(arr::VirtualFiber, ctx::LowerJuliaContext) where {T <: AbstractArray}
     dims = map(i -> ctx.freshen(arr.name, :_, i, :_stop), 1:arr.N)
     for (dim, lvl) in zip(dims, arr.lvls)
         #Could unroll more manually, but I'm not convinced it's worth it.
@@ -139,8 +139,8 @@ function virtual_initialize!(arr::VirtualFiber, ctx::LowerJuliaContext)
     return thunk
 end
 
-Pigeon.getsites(arr::VirtualFiber) = 1:arr.N
-Pigeon.getname(arr::VirtualFiber) = arr.name
+getsites(arr::VirtualFiber) = 1:arr.N
+getname(arr::VirtualFiber) = arr.name
 
 virtual_assemble(tns, ctx, q) =
     virtual_assemble(tns, ctx, [nothing for _ = 1:tns.R], q)
@@ -171,7 +171,7 @@ function virtual_refurl(fbr::VirtualFiber, p, i, mode, tail...)
     return Access(res, mode, Any[tail...])
 end
 
-function Pigeon.visit!(node::Access{VirtualFiber}, ctx::Finch.ChunkifyContext, ::Pigeon.DefaultStyle) where {Tv, Ti}
+function visit!(node::Access{VirtualFiber}, ctx::Finch.ChunkifyContext, ::DefaultStyle) where {Tv, Ti}
     if getname(ctx.idx) == getname(node.idxs[1])
         Access(virtual_unfurl(node.tns.lvls[node.tns.R], node.tns, ctx.ctx, node.mode, node.idxs...), node.mode, node.idxs)
     else
@@ -179,7 +179,7 @@ function Pigeon.visit!(node::Access{VirtualFiber}, ctx::Finch.ChunkifyContext, :
     end
 end
 
-function Pigeon.visit!(node::Access{VirtualFiber}, ctx::Finch.AccessContext, ::Pigeon.DefaultStyle) where {Tv, Ti}
+function visit!(node::Access{VirtualFiber}, ctx::Finch.AccessContext, ::DefaultStyle) where {Tv, Ti}
     if isempty(node.idxs)
         virtual_unfurl(node.tns.lvls[node.tns.R], node.tns, ctx.ctx, node.mode)
     else
@@ -234,12 +234,12 @@ function virtual_assemble(lvl::VirtualHollowListLevel, tns, ctx, qoss, q)
     end
 end
 
-virtual_unfurl(lvl::VirtualHollowListLevel, tns, ctx, mode::Pigeon.Read, idx::Name, tail...) =
+virtual_unfurl(lvl::VirtualHollowListLevel, tns, ctx, mode::Read, idx::Name, tail...) =
     virtual_unfurl(lvl, tns, ctx, mode, walk(idx), tail...)
 
-function virtual_unfurl(lvl::VirtualHollowListLevel, tns, ctx, mode::Pigeon.Read, idx::Walk, tail...)
+function virtual_unfurl(lvl::VirtualHollowListLevel, tns, ctx, mode::Read, idx::Walk, tail...)
     R = tns.R
-    tag = Symbol(:tns_, Pigeon.getname(tns), :_, R)
+    tag = Symbol(:tns_, getname(tns), :_, R)
     my_i = ctx.freshen(tag, :_i)
     my_p = ctx.freshen(tag, :_p)
     my_p1 = ctx.freshen(tag, :_p1)
@@ -293,12 +293,12 @@ function virtual_unfurl(lvl::VirtualHollowListLevel, tns, ctx, mode::Pigeon.Read
     )
 end
 
-virtual_unfurl(lvl::VirtualHollowListLevel, tns, ctx, mode::Union{Pigeon.Write, Pigeon.Update}, idx::Name, tail...) =
+virtual_unfurl(lvl::VirtualHollowListLevel, tns, ctx, mode::Union{Write, Update}, idx::Name, tail...) =
     virtual_unfurl(lvl, tns, ctx, mode, extrude(idx), tail...)
 
-function virtual_unfurl(lvl::VirtualHollowListLevel, tns, ctx, mode::Union{Pigeon.Write, Pigeon.Update}, idx::Extrude, tail...)
+function virtual_unfurl(lvl::VirtualHollowListLevel, tns, ctx, mode::Union{Write, Update}, idx::Extrude, tail...)
     R = tns.R
-    tag = Symbol(:tns_, Pigeon.getname(tns), :_, R)
+    tag = Symbol(:tns_, getname(tns), :_, R)
     my_i = ctx.freshen(tag, :_i)
     my_p = ctx.freshen(tag, :_p)
     my_p1 = ctx.freshen(tag, :_p1)
@@ -322,7 +322,7 @@ function virtual_unfurl(lvl::VirtualHollowListLevel, tns, ctx, mode::Union{Pigeo
                         resize!($(lvl.ex).idx, $(lvl.idx_q) * 4)
                         $(lvl.idx_q) *= 4
                     end
-                    $(lvl.ex).idx[$my_p] = $(Pigeon.visit!(idx, ctx))
+                    $(lvl.ex).idx[$my_p] = $(visit!(idx, ctx))
                     $my_p += 1
                 end
             )
@@ -342,9 +342,9 @@ function virtualize(ex, ::Type{<:SolidLevel{Ti}}, ctx) where {Ti}
     VirtualSolidLevel(ex, Ti)
 end
 
-virtual_unfurl(lvl::VirtualSolidLevel, tns, ctx, mode::Pigeon.Read, idx::Name, tail...) =
+virtual_unfurl(lvl::VirtualSolidLevel, tns, ctx, mode::Read, idx::Name, tail...) =
     virtual_unfurl(lvl, tns, ctx, mode, follow(idx), tail...)
-virtual_unfurl(lvl::VirtualSolidLevel, tns, ctx, mode::Union{Pigeon.Write, Pigeon.Update}, idx::Name, tail...) =
+virtual_unfurl(lvl::VirtualSolidLevel, tns, ctx, mode::Union{Write, Update}, idx::Name, tail...) =
     virtual_unfurl(lvl, tns, ctx, mode, laminate(idx), tail...)
 
 virtual_initialize_level!(lvl::VirtualSolidLevel, tns, ctx) = quote end
@@ -361,7 +361,7 @@ function virtual_assemble(lvl::VirtualSolidLevel, tns, ctx, qoss, q)
     end
 end
 
-function virtual_unfurl(lvl::VirtualSolidLevel, fbr, ctx, mode::Union{Pigeon.Read, Pigeon.Write, Pigeon.Update}, idx::Union{Follow, Laminate, Extrude}, tail...)
+function virtual_unfurl(lvl::VirtualSolidLevel, fbr, ctx, mode::Union{Read, Write, Update}, idx::Union{Follow, Laminate, Extrude}, tail...)
     R = fbr.R
     q = fbr.poss[R]
     p = ctx.freshen(:tns_, getname(fbr), :_, R, :_p)
@@ -430,7 +430,7 @@ function virtual_assemble(lvl::VirtualElementLevel, tns, ctx, qoss, q)
 end
 
 
-function virtual_unfurl(lvl::VirtualElementLevel, fbr, ctx, ::Pigeon.Read)
+function virtual_unfurl(lvl::VirtualElementLevel, fbr, ctx, ::Read)
     R = fbr.R
     val = ctx.freshen(:tns_, getname(fbr), :_val)
 
@@ -442,7 +442,7 @@ function virtual_unfurl(lvl::VirtualElementLevel, fbr, ctx, ::Pigeon.Read)
     )
 end
 
-function virtual_unfurl(lvl::VirtualElementLevel, fbr, ctx, ::Pigeon.Write)
+function virtual_unfurl(lvl::VirtualElementLevel, fbr, ctx, ::Write)
     R = fbr.R
     val = ctx.freshen(:tns_, getname(fbr), :_val)
 
@@ -457,7 +457,7 @@ function virtual_unfurl(lvl::VirtualElementLevel, fbr, ctx, ::Pigeon.Write)
     )
 end
 
-function virtual_unfurl(lvl::VirtualElementLevel, fbr, ctx, ::Pigeon.Update)
+function virtual_unfurl(lvl::VirtualElementLevel, fbr, ctx, ::Update)
     R = fbr.R
     val = ctx.freshen(:tns_, getname(fbr), :_val)
 

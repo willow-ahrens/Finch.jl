@@ -33,24 +33,24 @@ function Finch.virtual_initialize!(arr::VirtualSimpleSparseVector{D, Tv}, ctx::F
     end
 end 
 
-function Pigeon.lower_axes(arr::VirtualSimpleSparseVector{Tv, Ti}, ctx::Finch.LowerJuliaContext) where {Tv, Ti}
+function Finch.lower_axes(arr::VirtualSimpleSparseVector{Tv, Ti}, ctx::Finch.LowerJuliaContext) where {Tv, Ti}
     ex = ctx.freshen(:tns_, arr.name, :_stop)
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))
     (Extent(1, Virtual{Ti}(ex)),)
 end
-Pigeon.getsites(arr::VirtualSimpleSparseVector) = (1,)
-Pigeon.getname(arr::VirtualSimpleSparseVector) = arr.name
-Pigeon.make_style(root::Loop, ctx::Finch.LowerJuliaContext, node::Access{<:VirtualSimpleSparseVector}) =
-    getname(root.idxs[1]) == getname(node.idxs[1]) ? Finch.ChunkStyle() : DefaultStyle()
+Finch.getsites(arr::VirtualSimpleSparseVector) = (1,)
+Finch.getname(arr::VirtualSimpleSparseVector) = arr.name
+Finch.make_style(root::Loop, ctx::Finch.LowerJuliaContext, node::Access{<:VirtualSimpleSparseVector}) =
+    getname(root.idxs[1]) == getname(node.idxs[1]) ? Finch.ChunkStyle() : Finch.DefaultStyle()
 #TODO is there a way to share this logic with others?
-#Pigeon.visit!(node::Access{<:VirtualSimpleSparseVector}, ctx::Finch.ChunkifyContext, ::Pigeon.DefaultStyle) =
+#visit!(node::Access{<:VirtualSimpleSparseVector}, ctx::Finch.ChunkifyContext, ::Finch.DefaultStyle) =
 #    ctx.idx == node.idxs[1] ? Access(chunkbody(node.tns), node.mode, node.idxs) : node.idxs
 
-function Pigeon.visit!(node::Access{VirtualSimpleSparseVector{Tv, Ti}, Pigeon.Read}, ctx::Finch.ChunkifyContext, ::Pigeon.DefaultStyle) where {Tv, Ti}
+function Finch.visit!(node::Access{VirtualSimpleSparseVector{Tv, Ti}, Read}, ctx::Finch.ChunkifyContext, ::Finch.DefaultStyle) where {Tv, Ti}
     vec = node.tns
-    my_i = ctx.ctx.freshen(:tns_, Pigeon.getname(vec), :_i0)
-    my_i′ = ctx.ctx.freshen(:tns_, Pigeon.getname(vec), :_i1)
-    my_p = ctx.ctx.freshen(:tns_, Pigeon.getname(vec), :_p)
+    my_i = ctx.ctx.freshen(:tns_, getname(vec), :_i0)
+    my_i′ = ctx.ctx.freshen(:tns_, getname(vec), :_i1)
+    my_p = ctx.ctx.freshen(:tns_, getname(vec), :_p)
     if getname(ctx.idx) == getname(node.idxs[1])
         tns = Thunk(
             preamble = quote
@@ -88,14 +88,14 @@ function Pigeon.visit!(node::Access{VirtualSimpleSparseVector{Tv, Ti}, Pigeon.Re
     end
 end
 
-function Pigeon.visit!(node::Access{VirtualSimpleSparseVector{Tv, Ti}, <:Union{Pigeon.Write, Pigeon.Update}}, ctx::Finch.ChunkifyContext, ::Pigeon.DefaultStyle) where {Tv, Ti}
+function Finch.visit!(node::Access{VirtualSimpleSparseVector{Tv, Ti}, <:Union{Write, Update}}, ctx::Finch.ChunkifyContext, ::Finch.DefaultStyle) where {Tv, Ti}
     vec = node.tns
     my_p = ctx.ctx.freshen(:tns_, node.tns.name, :_p)
     my_I = ctx.ctx.freshen(:tns_, node.tns.name, :_I)
     if getname(ctx.idx) == getname(node.idxs[1])
         push!(ctx.ctx.preamble, quote
             $my_p = 0
-            $my_I = $(Pigeon.visit!(ctx.ctx.dims[Pigeon.getname(node.idxs[1])].stop, ctx.ctx)) + 1
+            $my_I = $(Finch.visit!(ctx.ctx.dims[getname(node.idxs[1])].stop, ctx.ctx)) + 1
             $(vec.ex).idx = $Ti[$my_I]
             $(vec.ex).val = $Tv[]
         end)
@@ -109,7 +109,7 @@ function Pigeon.visit!(node::Access{VirtualSimpleSparseVector{Tv, Ti}, <:Union{P
                 end,
                 body = Access(Scalar(Virtual{Tv}(:($(vec.ex).val[$my_p]))), node.mode, []),
                 epilogue = quote
-                    $(vec.ex).idx[$my_p] = $(Pigeon.visit!(idx, ctx))
+                    $(vec.ex).idx[$my_p] = $(ctx(idx))
                 end
             )
         )

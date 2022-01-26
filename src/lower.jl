@@ -23,7 +23,7 @@ struct Scalar
     val
 end
 
-Base.@kwdef struct LowerJuliaContext <: Pigeon.AbstractContext
+Base.@kwdef struct LowerJuliaContext <: AbstractContext
     preamble::Vector{Any} = []
     bindings::Dict{Any, Any} = Dict()
     epilogue::Vector{Any} = []
@@ -31,7 +31,7 @@ Base.@kwdef struct LowerJuliaContext <: Pigeon.AbstractContext
     freshen::Freshen = Freshen()
 end
 
-Pigeon.getdims(ctx::LowerJuliaContext) = ctx.dims
+getdims(ctx::LowerJuliaContext) = ctx.dims
 
 bind(f, ctx::LowerJuliaContext) = f()
 function bind(f, ctx::LowerJuliaContext, (var, val′), tail...)
@@ -94,22 +94,22 @@ end
 
 lower_style(::Thunk, ::LowerJuliaContext) = ThunkStyle()
 
-Pigeon.make_style(root, ctx::LowerJuliaContext, node::Thunk) = ThunkStyle()
-Pigeon.combine_style(a::DefaultStyle, b::ThunkStyle) = ThunkStyle()
-Pigeon.combine_style(a::ThunkStyle, b::ThunkStyle) = ThunkStyle()
+make_style(root, ctx::LowerJuliaContext, node::Thunk) = ThunkStyle()
+combine_style(a::DefaultStyle, b::ThunkStyle) = ThunkStyle()
+combine_style(a::ThunkStyle, b::ThunkStyle) = ThunkStyle()
 
-struct ThunkContext <: Pigeon.AbstractTransformContext
+struct ThunkContext <: AbstractTransformContext
     ctx
 end
 
-function Pigeon.visit!(node, ctx::LowerJuliaContext, ::ThunkStyle)
+function visit!(node, ctx::LowerJuliaContext, ::ThunkStyle)
     scope(ctx) do ctx2
         node = visit!(node, ThunkContext(ctx2))
         visit!(node, ctx2)
     end
 end
 
-function Pigeon.visit!(node::Thunk, ctx::ThunkContext, ::DefaultStyle)
+function visit!(node::Thunk, ctx::ThunkContext, ::DefaultStyle)
     push!(ctx.ctx.preamble, node.preamble)
     push!(ctx.ctx.epilogue, node.epilogue)
     node.body
@@ -117,9 +117,9 @@ end
 
 #default lowering
 
-Pigeon.visit!(::Pass, ctx::LowerJuliaContext, ::DefaultStyle) = quote end
+visit!(::Pass, ctx::LowerJuliaContext, ::DefaultStyle) = quote end
 
-function Pigeon.visit!(root::Assign, ctx::LowerJuliaContext, ::DefaultStyle)
+function visit!(root::Assign, ctx::LowerJuliaContext, ::DefaultStyle)
     if root.op == nothing
         rhs = visit!(root.rhs, ctx)
     else
@@ -129,31 +129,31 @@ function Pigeon.visit!(root::Assign, ctx::LowerJuliaContext, ::DefaultStyle)
     :($lhs = $rhs)
 end
 
-function Pigeon.visit!(root::Call, ctx::LowerJuliaContext, ::DefaultStyle)
+function visit!(root::Call, ctx::LowerJuliaContext, ::DefaultStyle)
     :($(visit!(root.op, ctx))($(map(arg->visit!(arg, ctx), root.args)...)))
 end
 
-function Pigeon.visit!(root::Name, ctx::LowerJuliaContext, ::DefaultStyle)
+function visit!(root::Name, ctx::LowerJuliaContext, ::DefaultStyle)
     @assert haskey(ctx.bindings, getname(root)) "variable $(getname(root)) unbound"
     return visit!(ctx.bindings[getname(root)], ctx) #This unwraps indices that are virtuals. Arguably these virtuals should be precomputed, but whatevs.
 end
 
-function Pigeon.visit!(root::Literal, ctx::LowerJuliaContext, ::DefaultStyle)
+function visit!(root::Literal, ctx::LowerJuliaContext, ::DefaultStyle)
     return root.val
 end
 
-function Pigeon.visit!(root, ctx::LowerJuliaContext, ::DefaultStyle)
-    if Pigeon.isliteral(root)
-        return Pigeon.value(root)
+function visit!(root, ctx::LowerJuliaContext, ::DefaultStyle)
+    if isliteral(root)
+        return getvalue(root)
     end
     error("Don't know how to lower $root")
 end
 
-function Pigeon.visit!(root::Virtual, ctx::LowerJuliaContext, ::DefaultStyle)
+function visit!(root::Virtual, ctx::LowerJuliaContext, ::DefaultStyle)
     return root.ex
 end
 
-function Pigeon.visit!(root::With, ctx::LowerJuliaContext, ::DefaultStyle)
+function visit!(root::With, ctx::LowerJuliaContext, ::DefaultStyle)
     return quote
         $(initialize_prgm!(root.prod, ctx))
         $(scope(ctx) do ctx2
@@ -168,32 +168,32 @@ end
 function initialize_program!(root, ctx)
     scope(ctx) do ctx2
         thunk = Expr(:block)
-        append!(thunk.args, map(tns->virtual_initialize!(tns, ctx2), (Pigeon.getresult(root),)))
+        append!(thunk.args, map(tns->virtual_initialize!(tns, ctx2), getresults(root)))
         thunk
     end
 end
 
-function Pigeon.visit!(root::Access, ctx::LowerJuliaContext, ::DefaultStyle)
+function visit!(root::Access, ctx::LowerJuliaContext, ::DefaultStyle)
     @assert map(getname, root.idxs) ⊆ keys(ctx.bindings)
     tns = visit!(root.tns, ctx)
     idxs = map(idx->visit!(idx, ctx), root.idxs)
     :($(visit!(tns, ctx))[$(idxs...)])
 end
 
-function Pigeon.visit!(root::Access{<:Scalar}, ctx::LowerJuliaContext, ::DefaultStyle)
+function visit!(root::Access{<:Scalar}, ctx::LowerJuliaContext, ::DefaultStyle)
     return visit!(root.tns.val, ctx)
 end
 
-function Pigeon.visit!(root::Access{<:Number, Read}, ctx::LowerJuliaContext, ::DefaultStyle)
+function visit!(root::Access{<:Number, Read}, ctx::LowerJuliaContext, ::DefaultStyle)
     @assert isempty(root.idxs)
     return root.tns
 end
 
-function Pigeon.visit!(stmt::Loop, ctx::LowerJuliaContext, ::DefaultStyle)
+function visit!(stmt::Loop, ctx::LowerJuliaContext, ::DefaultStyle)
     if isempty(stmt.idxs)
         return visit!(stmt.body, ctx)
     else
-        idx_sym = ctx.freshen(Pigeon.getname(stmt.idxs[1]))
+        idx_sym = ctx.freshen(getname(stmt.idxs[1]))
         body = Loop(stmt.idxs[2:end], stmt.body)
         ext = ctx.dims[getname(stmt.idxs[1])]
         return quote
@@ -209,7 +209,7 @@ function Pigeon.visit!(stmt::Loop, ctx::LowerJuliaContext, ::DefaultStyle)
     end
 end
 
-Base.@kwdef struct ForLoopContext <: Pigeon.AbstractTransformContext
+Base.@kwdef struct ForLoopContext <: AbstractTransformContext
     ctx
     idx
     val
@@ -219,6 +219,6 @@ Base.@kwdef struct Leaf
     body
 end
 
-function Pigeon.visit!(node::Access{Leaf}, ctx::ForLoopContext, ::DefaultStyle)
+function visit!(node::Access{Leaf}, ctx::ForLoopContext, ::DefaultStyle)
     node.tns.body(ctx.val)
 end

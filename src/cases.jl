@@ -2,22 +2,22 @@ Base.@kwdef struct Cases
     cases
 end
 
-Pigeon.isliteral(::Cases) = false
+isliteral(::Cases) = false
 
 struct CaseStyle end
 
-Pigeon.make_style(root, ctx::LowerJuliaContext, node::Cases) = CaseStyle()
-Pigeon.combine_style(a::DefaultStyle, b::CaseStyle) = CaseStyle()
-Pigeon.combine_style(a::ThunkStyle, b::CaseStyle) = ThunkStyle()
-Pigeon.combine_style(a::RunStyle, b::CaseStyle) = CaseStyle()
-Pigeon.combine_style(a::AcceptRunStyle, b::CaseStyle) = CaseStyle()
-Pigeon.combine_style(a::AcceptSpikeStyle, b::CaseStyle) = CaseStyle()
-Pigeon.combine_style(a::SpikeStyle, b::CaseStyle) = CaseStyle()
-Pigeon.combine_style(a::CaseStyle, b::CaseStyle) = CaseStyle()
+make_style(root, ctx::LowerJuliaContext, node::Cases) = CaseStyle()
+combine_style(a::DefaultStyle, b::CaseStyle) = CaseStyle()
+combine_style(a::ThunkStyle, b::CaseStyle) = ThunkStyle()
+combine_style(a::RunStyle, b::CaseStyle) = CaseStyle()
+combine_style(a::AcceptRunStyle, b::CaseStyle) = CaseStyle()
+combine_style(a::AcceptSpikeStyle, b::CaseStyle) = CaseStyle()
+combine_style(a::SpikeStyle, b::CaseStyle) = CaseStyle()
+combine_style(a::CaseStyle, b::CaseStyle) = CaseStyle()
 
-struct CasesContext <: Pigeon.AbstractCollectContext end
+struct CasesContext <: AbstractCollectContext end
 
-function Pigeon.visit!(stmt, ctx::LowerJuliaContext, ::CaseStyle)
+function visit!(stmt, ctx::LowerJuliaContext, ::CaseStyle)
     cases = visit!(stmt, CasesContext())
     function nest(cases, inner=false)
         guard, body = cases[1]
@@ -35,12 +35,12 @@ virtual_and(x, y) = x === true ? y :
                     y === true ? x :
                     :($x && $y)
 
-function Pigeon.postvisit!(node, ctx::CasesContext, args)
+function postvisit!(node, ctx::CasesContext, args)
     map(product(args...)) do case
         guards = map(first, case)
         bodies = map(last, case)
         return reduce(virtual_and, guards) => similarterm(node, operation(node), collect(bodies))
     end
 end
-Pigeon.postvisit!(node, ctx::CasesContext) = [(true => node)]
-Pigeon.visit!(node::Cases, ctx::CasesContext, ::DefaultStyle) = node.cases
+postvisit!(node, ctx::CasesContext) = [(true => node)]
+visit!(node::Cases, ctx::CasesContext, ::DefaultStyle) = node.cases

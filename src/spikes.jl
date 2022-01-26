@@ -1,25 +1,23 @@
-using Pigeon: Read, Write, Update
-
 Base.@kwdef struct Spike
     body
     tail
 end
 
-Pigeon.isliteral(::Spike) = false
+isliteral(::Spike) = false
 
 struct SpikeStyle end
 
-Pigeon.make_style(root::Loop, ctx::LowerJuliaContext, node::Spike) = SpikeStyle()
-Pigeon.combine_style(a::DefaultStyle, b::SpikeStyle) = SpikeStyle()
-Pigeon.combine_style(a::RunStyle, b::SpikeStyle) = SpikeStyle()
-Pigeon.combine_style(a::ThunkStyle, b::SpikeStyle) = ThunkStyle()
-Pigeon.combine_style(a::AcceptRunStyle, b::SpikeStyle) = SpikeStyle()
-Pigeon.combine_style(a::SpikeStyle, b::SpikeStyle) = SpikeStyle()
+make_style(root::Loop, ctx::LowerJuliaContext, node::Spike) = SpikeStyle()
+combine_style(a::DefaultStyle, b::SpikeStyle) = SpikeStyle()
+combine_style(a::RunStyle, b::SpikeStyle) = SpikeStyle()
+combine_style(a::ThunkStyle, b::SpikeStyle) = ThunkStyle()
+combine_style(a::AcceptRunStyle, b::SpikeStyle) = SpikeStyle()
+combine_style(a::SpikeStyle, b::SpikeStyle) = SpikeStyle()
 
-function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::SpikeStyle)
+function visit!(root::Loop, ctx::LowerJuliaContext, ::SpikeStyle)
     @assert !isempty(root.idxs)
     idx = root.idxs[1]
-    root_body = Pigeon.visit!(root, AccessSpikeBodyContext(root, ctx, idx))
+    root_body = visit!(root, AccessSpikeBodyContext(root, ctx, idx))
     #TODO arguably we could take several better alternative approaches to rediminsionalization here
     body_expr = restrict(ctx, getname(root.idxs[1]) => spike_body_range(ctx.dims[getname(root.idxs[1])], ctx)) do
         scope(ctx) do ctx′
@@ -40,17 +38,17 @@ function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::SpikeStyle)
 end
 
 
-Base.@kwdef struct AccessSpikeBodyContext <: Pigeon.AbstractTransformContext
+Base.@kwdef struct AccessSpikeBodyContext <: AbstractTransformContext
     root
     ctx
     idx
 end
 
-function Pigeon.visit!(node::Spike, ctx::AccessSpikeBodyContext, ::DefaultStyle)
+function visit!(node::Spike, ctx::AccessSpikeBodyContext, ::DefaultStyle)
     return Run(node.body)
 end
 
-function Pigeon.visit!(node::Run, ctx::AccessSpikeBodyContext, ::DefaultStyle)
+function visit!(node::Run, ctx::AccessSpikeBodyContext, ::DefaultStyle)
     return node
 end
 
@@ -59,18 +57,18 @@ spike_body_stop(stop::Integer, ctx) = stop - 1
 
 spike_body_range(ext::Extent, ctx) = Extent(ext.start, spike_body_stop(ext.stop, ctx))
 
-Base.@kwdef struct AccessSpikeTailContext <: Pigeon.AbstractTransformContext
+Base.@kwdef struct AccessSpikeTailContext <: AbstractTransformContext
     root
     ctx
     idx
     val
 end
 
-function Pigeon.visit!(node::Access{Spike}, ctx::AccessSpikeTailContext, ::DefaultStyle)
+function visit!(node::Access{Spike}, ctx::AccessSpikeTailContext, ::DefaultStyle)
     return node.tns.tail
 end
 
-function Pigeon.visit!(node::Access{Spike}, ctx::ForLoopContext, ::DefaultStyle)
+function visit!(node::Access{Spike}, ctx::ForLoopContext, ::DefaultStyle)
     return node.tns.tail
 end
 
@@ -81,25 +79,25 @@ end
 
 struct AcceptSpikeStyle end
 
-Pigeon.make_style(root::Loop, ctx::LowerJuliaContext, node::Access{AcceptSpike, <:Union{Write, Update}}) = AcceptSpikeStyle()
-Pigeon.combine_style(a::DefaultStyle, b::AcceptSpikeStyle) = AcceptSpikeStyle()
-Pigeon.combine_style(a::ThunkStyle, b::AcceptSpikeStyle) = ThunkStyle()
-Pigeon.combine_style(a::AcceptSpikeStyle, b::AcceptSpikeStyle) = AcceptSpikeStyle()
-Pigeon.combine_style(a::AcceptRunStyle, b::AcceptSpikeStyle) = AcceptSpikeStyle()
-Pigeon.combine_style(a::RunStyle, b::AcceptSpikeStyle) = RunStyle()
-Pigeon.combine_style(a::SpikeStyle, b::AcceptSpikeStyle) = SpikeStyle()
+make_style(root::Loop, ctx::LowerJuliaContext, node::Access{AcceptSpike, <:Union{Write, Update}}) = AcceptSpikeStyle()
+combine_style(a::DefaultStyle, b::AcceptSpikeStyle) = AcceptSpikeStyle()
+combine_style(a::ThunkStyle, b::AcceptSpikeStyle) = ThunkStyle()
+combine_style(a::AcceptSpikeStyle, b::AcceptSpikeStyle) = AcceptSpikeStyle()
+combine_style(a::AcceptRunStyle, b::AcceptSpikeStyle) = AcceptSpikeStyle()
+combine_style(a::RunStyle, b::AcceptSpikeStyle) = RunStyle()
+combine_style(a::SpikeStyle, b::AcceptSpikeStyle) = SpikeStyle()
 
-function Pigeon.visit!(root::Loop, ctx::LowerJuliaContext, ::AcceptSpikeStyle)
+function visit!(root::Loop, ctx::LowerJuliaContext, ::AcceptSpikeStyle)
     #call DefaultStyle because we didn't simplify away the body or tail of
     #corresponding Spikes, and need to set all the elements of the spike.
     return visit!(Loop(root.idxs[1:end], root.body), ctx, DefaultStyle())
 end
 
-Base.@kwdef mutable struct AcceptSpikeContext <: Pigeon.AbstractTransformContext
+Base.@kwdef mutable struct AcceptSpikeContext <: AbstractTransformContext
     root
     ctx
 end
 
-function Pigeon.visit!(node::Access{AcceptSpike}, ctx::ForLoopContext, ::DefaultStyle)
+function visit!(node::Access{AcceptSpike}, ctx::ForLoopContext, ::DefaultStyle)
     node.tns.tail(ctx.ctx, ctx.val)
 end

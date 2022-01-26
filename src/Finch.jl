@@ -1,8 +1,5 @@
 module Finch
 
-using Pigeon
-using Pigeon: Dimensions, dimensionalize!, DefaultStyle, getname
-using Pigeon: visit!, isliteral, pass
 using SyntaxInterface
 using RewriteTools
 using RewriteTools.Rewriters
@@ -10,16 +7,17 @@ using MacroTools
 using DataStructures
 using Base.Iterators
 
-using Pigeon: Read, Write, Update
-
-export Virtual, Scalar, Chunk
 export @I, execute
 
 export Fiber, HollowList, Solid, Element
 
+include("semantics.jl")
+include("IndexNotation/IndexNotation.jl")
+using .IndexNotation
 include("virtualize.jl")
+include("style.jl")
+include("dimensionalize.jl")
 include("lower.jl")
-include("protocols.jl")
 include("annihilate.jl")
 include("chunks.jl")
 include("runs.jl")
