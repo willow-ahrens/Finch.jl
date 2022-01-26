@@ -8,9 +8,9 @@ Finch.getname(idx::Walk) = idx.name
 
 walk(name::Name) = Walk(Finch.getname(name))
 
-struct MesaWalk{name} end
-@inline mesawalk(name) = MesaWalk{name}()
-walk(::MesaName{name}) where {name} = mesawalk(name)
+struct WalkInstance{name} end
+@inline walk_instance(name) = WalkInstance{name}()
+walk(::NameInstance{name}) where {name} = walk_instance(name)
 
 
 
@@ -24,9 +24,9 @@ Finch.getname(idx::Follow) = idx.name
 
 follow(name::Name) = Follow(Finch.getname(name))
 
-struct MesaFollow{name} end
-@inline mesafollow(name) = MesaFollow{name}()
-follow(::MesaName{name}) where {name} = mesafollow(name)
+struct FollowInstance{name} end
+@inline follow_instance(name) = FollowInstance{name}()
+follow(::NameInstance{name}) where {name} = follow_instance(name)
 
 export extrude
 
@@ -38,9 +38,9 @@ Finch.getname(idx::Extrude) = idx.name
 
 extrude(name::Name) = Extrude(Finch.getname(name))
 
-struct MesaExtrude{name} end
-@inline mesaextrude(name) = MesaExtrude{name}()
-extrude(::MesaName{name}) where {name} = mesaextrude(name)
+struct ExtrudeInstance{name} end
+@inline extrude_instance(name) = ExtrudeInstance{name}()
+extrude(::NameInstance{name}) where {name} = extrude_instance(name)
 
 export laminate
 
@@ -52,6 +52,6 @@ Finch.getname(idx::Laminate) = idx.name
 
 laminate(name::Name) = Laminate(Finch.getname(name))
 
-struct MesaLaminate{name} end
-@inline mesalaminate(name) = MesaLaminate{name}()
-laminate(::MesaName{name}) where {name} = mesalaminate(name)
+struct LaminateInstance{name} end
+@inline laminate_instance(name) = LaminateInstance{name}()
+laminate(::NameInstance{name}) where {name} = laminate_instance(name)

@@ -20,7 +20,7 @@ module IndexNotation
     export @i, @I
 
     include("nodes.jl")
-    include("mesas.jl")
+    include("instances.jl")
     include("protocols.jl")
     include("syntax.jl")
 end

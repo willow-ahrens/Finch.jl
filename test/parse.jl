@@ -1,14 +1,14 @@
 using Finch.IndexNotation
-using Finch.IndexNotation: mesacall, mesaaccess, mesavalue, mesaname, mesaloop, mesawith, mesalabel, mesawalk
+using Finch.IndexNotation: call_instance, access_instance, value_instance, name_instance, loop_instance, with_instance, label_instance, walk_instance
 
 @testset "Parse" begin
     @test @I(:f(:B[i::walk, k] * :C[k, j]^3, 42)) ==
-    mesacall(mesavalue(:f), mesacall(mesalabel(:*, mesavalue(*)), mesaaccess(mesavalue(:B), Read(), mesawalk(:i), mesaname(:k)), mesacall(mesalabel(:^, mesavalue(^)), mesaaccess(mesavalue(:C), Read(), mesaname(:k), mesaname(:j)), mesavalue(3))), mesavalue(42))
+    call_instance(value_instance(:f), call_instance(label_instance(:*, value_instance(*)), access_instance(value_instance(:B), Read(), walk_instance(:i), name_instance(:k)), call_instance(label_instance(:^, value_instance(^)), access_instance(value_instance(:C), Read(), name_instance(:k), name_instance(:j)), value_instance(3))), value_instance(42))
 
     @test Finch.virtualize(:ex, typeof(@I(:f(:B[i::walk, k] * :C[k, j]^3, 42))), Finch.LowerJuliaContext()) ==
     call(:f, call(*, access(:B, Read(), Walk(:i), Name(:k)), call(^, access(:C, Read(), Name(:k), Name(:j)), 3)), 42) 
 
-    #call(:f, call(*, mesaaccess(:B, Read(), Name(:i), Name(:k)), call(^, mesaaccess(:C, Read(), Name(:k), Name(:j)), 3)), 42)
+    #call(:f, call(*, access_instance(:B, Read(), Name(:i), Name(:k)), call(^, access_instance(:C, Read(), Name(:k), Name(:j)), 3)), 42)
     #call(:f, call(*, access(:B, Read(), Name(:i), Name(:k)), call(^, access(:C, Read(), Name(:k), Name(:j)), 3)), 42)
 
     #@test @i(
