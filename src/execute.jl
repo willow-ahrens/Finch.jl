@@ -12,7 +12,12 @@ function execute_code_lowered(ex, T)
     code = scope(LowerJuliaContext()) do ctx
         prgm = virtualize(ex, T, ctx)
         dimensionalize!(prgm, ctx)
-        Pigeon.visit!(prgm, ctx)
+        quote
+            $(initialize_program!(prgm, ctx))
+            $(scope(ctx) do ctx2
+                Pigeon.visit!(prgm, ctx2)
+            end)
+        end
     end
     code = quote
         @inbounds begin

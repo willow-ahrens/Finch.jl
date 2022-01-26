@@ -21,6 +21,13 @@ function Finch.virtualize(ex, ::Type{SimpleRunLength{Tv, Ti}}, ctx, tag=:tns) wh
     VirtualSimpleRunLength{Tv, Ti}(sym, tag)
 end
 
+function Finch.virtual_initialize!(arr::VirtualSimpleRunLength{Tv}, ctx::Finch.LowerJuliaContext) where {Tv}
+    quote 
+        $(arr.ex).idx = [$(arr.ex).idx[end]]
+        $(arr.ex).val = [$(zero(Tv))]
+    end
+end 
+
 function Pigeon.lower_axes(arr::VirtualSimpleRunLength{Tv, Ti}, ctx::Finch.LowerJuliaContext) where {Tv, Ti}
     ex = ctx.freshen(:tns_, arr.name, :_stop)
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))

@@ -26,6 +26,13 @@ function Finch.virtualize(ex, ::Type{SimpleSparseVector{D, Tv, Ti}}, ctx, tag=:t
     VirtualSimpleSparseVector{Tv, Ti}(sym, tag, D)
 end
 
+function Finch.virtual_initialize!(arr::VirtualSimpleSparseVector{D, Tv}, ctx::Finch.LowerJuliaContext) where {D, Tv}
+    quote 
+        $(arr.ex).idx = [$(arr.ex).idx[end]]
+        $(arr.ex).val = $Tv[]
+    end
+end 
+
 function Pigeon.lower_axes(arr::VirtualSimpleSparseVector{Tv, Ti}, ctx::Finch.LowerJuliaContext) where {Tv, Ti}
     ex = ctx.freshen(:tns_, arr.name, :_stop)
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))

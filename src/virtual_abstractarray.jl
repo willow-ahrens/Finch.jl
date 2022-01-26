@@ -32,4 +32,10 @@ function virtualize(ex, ::Type{<:AbstractArray{T, N}}, ctx, tag=:tns) where {T, 
     VirtualAbstractArray(N, tag, sym)
 end
 
+function virtual_initialize!(arr::VirtualAbstractArray, ctx::LowerJuliaContext)
+    return quote
+        zero($(arr.ex))
+    end
+end
+
 Pigeon.isliteral(::VirtualAbstractArray) = false

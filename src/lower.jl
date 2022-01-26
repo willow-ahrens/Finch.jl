@@ -147,6 +147,26 @@ function Pigeon.visit!(root::Virtual, ctx::LowerJuliaContext, ::DefaultStyle)
     return root.ex
 end
 
+function Pigeon.visit!(root::With, ctx::LowerJuliaContext, ::DefaultStyle)
+    return quote
+        $(initialize_prgm!(root.prod, ctx))
+        $(scope(ctx) do ctx2
+            visit!(prod, ctx2)
+        end)
+        $(scope(ctx) do ctx2
+            visit!(cons, ctx2)
+        end)
+    end
+end
+
+function initialize_program!(root, ctx)
+    scope(ctx) do ctx2
+        thunk = Expr(:block)
+        append!(thunk.args, map(tns->virtual_initialize!(tns, ctx2), (Pigeon.getresult(root),)))
+        thunk
+    end
+end
+
 function Pigeon.visit!(root::Access, ctx::LowerJuliaContext, ::DefaultStyle)
     @assert map(getname, root.idxs) ⊆ keys(ctx.bindings)
     tns = visit!(root.tns, ctx)

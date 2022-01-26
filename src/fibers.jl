@@ -8,7 +8,7 @@ struct Fiber{Tv, N, R, Lvls<:Tuple, Poss<:Tuple, Idxs<:Tuple} <: AbstractArray{T
     idxs::Idxs
 end
 
-Fiber(lvls) = Fiber{valtype(last(levels))}(lvls)
+Fiber(lvls) = Fiber{valtype(last(lvls))}(lvls)
 Fiber{Tv}(lvls) where {Tv} = Fiber{Tv, length(lvls) - 1, 1}(lvls, (1,), ())
 Fiber{Tv, N, R}(lvls, poss, idxs) where {Tv, N, R} = Fiber{Tv, N, R, typeof(lvls), typeof(poss), typeof(idxs)}(lvls, poss, idxs)
 
@@ -124,6 +124,21 @@ function Pigeon.lower_axes(arr::VirtualFiber, ctx::LowerJuliaContext) where {T <
     return map(i->Extent(1, Virtual{Int}(dims[i])), 1:arr.N)
 end
 
+function virtual_initialize!(arr::VirtualFiber, ctx::LowerJuliaContext)
+    @assert arr.R == 1
+    N = arr.N
+    thunk = Expr(:block)
+    for R = 1:N + 1
+        push!(thunk.args, virtual_initialize_level!(arr.lvls[R], arr, ctx))
+        arr.R += 1
+        arr.N -= 1
+    end
+    arr.N = N
+    arr.R = 1
+    push!(thunk.args, virtual_assemble(arr, ctx, 1))
+    return thunk
+end
+
 Pigeon.getsites(arr::VirtualFiber) = 1:arr.N
 Pigeon.getname(arr::VirtualFiber) = arr.name
 
@@ -191,6 +206,34 @@ function virtualize(ex, ::Type{HollowListLevel{D, Tv, Ti}}, ctx) where {D, Tv, T
     VirtualHollowListLevel(ex, D, Tv, Ti, pos_q, idx_q)
 end
 
+function virtual_initialize_level!(lvl::VirtualHollowListLevel, tns, ctx)
+    return quote
+        if $(lvl.pos_q) < 4
+            resize!($(lvl.ex).pos, 4)
+        end
+        $(lvl.pos_q) = 4
+        $(lvl.ex).pos[1] = 1
+        if $(lvl.idx_q) < 4
+            resize!($(lvl.ex).idx, 4)
+        end
+        $(lvl.idx_q) = 4
+    end
+end
+
+function virtual_assemble(lvl::VirtualHollowListLevel, tns, ctx, qoss, q)
+    if q == nothing
+        return quote end
+    else
+        return quote
+            if $(lvl.pos_q) < $(ctx(q))
+                resize!($(lvl.ex).pos, $(lvl.pos_q) * 4)
+                $(lvl.pos_q) *= 4
+            end
+            $(virtual_assemble(tns, ctx, qoss, nothing))
+        end
+    end
+end
+
 virtual_unfurl(lvl::VirtualHollowListLevel, tns, ctx, mode::Pigeon.Read, idx::Name, tail...) =
     virtual_unfurl(lvl, tns, ctx, mode, walk(idx), tail...)
 
@@ -253,21 +296,6 @@ end
 virtual_unfurl(lvl::VirtualHollowListLevel, tns, ctx, mode::Union{Pigeon.Write, Pigeon.Update}, idx::Name, tail...) =
     virtual_unfurl(lvl, tns, ctx, mode, extrude(idx), tail...)
 
-function virtual_assemble(lvl::VirtualHollowListLevel, tns, ctx, qoss, q)
-    if q == nothing
-        return quote end
-    else
-        return quote
-            if $(lvl.pos_q) < $(ctx(q))
-                $(lvl.pos_q) = max($(lvl.pos_q), 1)
-                resize!($(lvl.ex).pos, $(lvl.pos_q) * 4)
-                $(lvl.pos_q) *= 4
-            end
-            $(virtual_assemble(tns, ctx, qoss, nothing))
-        end
-    end
-end
-
 function virtual_unfurl(lvl::VirtualHollowListLevel, tns, ctx, mode::Union{Pigeon.Write, Pigeon.Update}, idx::Extrude, tail...)
     R = tns.R
     tag = Symbol(:tns_, Pigeon.getname(tns), :_, R)
@@ -279,7 +307,6 @@ function virtual_unfurl(lvl::VirtualHollowListLevel, tns, ctx, mode::Union{Pigeo
     Thunk(
         preamble = quote
             $my_p = $(lvl.ex).pos[$(ctx(tns.poss[R]))]
-            #resize!($(lvl.ex).idx, $my_p)
         end,
         body = AcceptSpike(
             val = lvl.D,
@@ -292,7 +319,6 @@ function virtual_unfurl(lvl::VirtualHollowListLevel, tns, ctx, mode::Union{Pigeo
                 body = virtual_refurl(tns, Virtual{lvl.Tv}(my_p), idx, mode, tail...),
                 epilogue = quote
                     if $(lvl.idx_q) < $my_p
-                        $(lvl.idx_q) = max($(lvl.idx_q), 1)
                         resize!($(lvl.ex).idx, $(lvl.idx_q) * 4)
                         $(lvl.idx_q) *= 4
                     end
@@ -320,6 +346,8 @@ virtual_unfurl(lvl::VirtualSolidLevel, tns, ctx, mode::Pigeon.Read, idx::Name, t
     virtual_unfurl(lvl, tns, ctx, mode, follow(idx), tail...)
 virtual_unfurl(lvl::VirtualSolidLevel, tns, ctx, mode::Union{Pigeon.Write, Pigeon.Update}, idx::Name, tail...) =
     virtual_unfurl(lvl, tns, ctx, mode, laminate(idx), tail...)
+
+virtual_initialize_level!(lvl::VirtualSolidLevel, tns, ctx) = quote end
 
 function virtual_assemble(lvl::VirtualSolidLevel, tns, ctx, qoss, q)
     if q == nothing
@@ -371,6 +399,19 @@ function virtualize(ex, ::Type{ElementLevel{D, Tv}}, ctx) where {D, Tv}
     VirtualElementLevel(ex, Tv, D, val_q)
 end
 
+function virtual_initialize_level!(lvl::VirtualElementLevel, tns, ctx)
+    my_q = ctx.freshen(:q_, tns.R)
+    return quote
+        if $(lvl.val_q) < 4
+            resize!($(lvl.ex).val, 4)
+        end
+        $(lvl.val_q) = 4
+        for $my_q = 1:4
+            $(lvl.ex).val[$my_q] = $(lvl.D)
+        end
+    end
+end
+
 function virtual_assemble(lvl::VirtualElementLevel, tns, ctx, qoss, q)
     if q == nothing
         return quote end
@@ -378,7 +419,6 @@ function virtual_assemble(lvl::VirtualElementLevel, tns, ctx, qoss, q)
         my_q = ctx.freshen(:q_, tns.R)
         return quote
             if $(lvl.val_q) < $q
-                $(lvl.val_q) = max($(lvl.val_q), 1)
                 resize!($(lvl.ex).val, $(lvl.val_q) * 4)
                 @simd for $my_q = $(lvl.val_q) + 1: $(lvl.val_q) * 4
                     $(lvl.ex).val[$my_q] = $(lvl.D)
