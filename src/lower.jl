@@ -173,9 +173,11 @@ end
 
 function (ctx::LowerJulia)(root::With, ::DefaultStyle)
     return quote
-        $(initialize_prgm!(root.prod, ctx))
         $(scope(ctx) do ctx2
-            (ctx2)(prod)
+            prod = Initialize(ctx2)(root.prod)
+            res = (ctx2)(prod)
+            Finalize(ctx2)(root.prod)
+            res
         end)
         $(scope(ctx) do ctx2
             (ctx2)(cons)

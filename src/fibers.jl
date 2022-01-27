@@ -95,6 +95,8 @@ mutable struct VirtualFiber
     idxs::Vector{Any}
 end
 
+(ctx::Finch.LowerJulia)(arr::VirtualFiber) = arr.ex
+
 isliteral(::VirtualFiber) = false
 
 function make_style(root::Loop, ctx::Finch.LowerJulia, node::Access{VirtualFiber})
@@ -124,19 +126,20 @@ function getdims(arr::VirtualFiber, ctx::LowerJulia) where {T <: AbstractArray}
     return map(i->Extent(1, Virtual{Int}(dims[i])), 1:arr.N)
 end
 
-function virtual_initialize!(arr::VirtualFiber, ctx::LowerJulia)
+function initialize!(arr::VirtualFiber, ctx::LowerJulia)
     @assert arr.R == 1
     N = arr.N
     thunk = Expr(:block)
     for R = 1:N + 1
-        push!(thunk.args, virtual_initialize_level!(arr.lvls[R], arr, ctx))
+        push!(thunk.args, initialize_level!(arr.lvls[R], arr, ctx))
         arr.R += 1
         arr.N -= 1
     end
     arr.N = N
     arr.R = 1
     push!(thunk.args, virtual_assemble(arr, ctx, 1))
-    return thunk
+    push!(ctx.preamble, thunk)
+    arr
 end
 
 getsites(arr::VirtualFiber) = 1:arr.N
@@ -207,7 +210,7 @@ function virtualize(ex, ::Type{HollowListLevel{D, Tv, Ti}}, ctx) where {D, Tv, T
     VirtualHollowListLevel(ex, D, Tv, Ti, pos_q, idx_q)
 end
 
-function virtual_initialize_level!(lvl::VirtualHollowListLevel, tns, ctx)
+function initialize_level!(lvl::VirtualHollowListLevel, tns, ctx)
     return quote
         if $(lvl.pos_q) < 4
             resize!($(lvl.ex).pos, 4)
@@ -348,7 +351,7 @@ virtual_unfurl(lvl::VirtualSolidLevel, tns, ctx, mode::Read, idx::Name, tail...)
 virtual_unfurl(lvl::VirtualSolidLevel, tns, ctx, mode::Union{Write, Update}, idx::Name, tail...) =
     virtual_unfurl(lvl, tns, ctx, mode, laminate(idx), tail...)
 
-virtual_initialize_level!(lvl::VirtualSolidLevel, tns, ctx) = quote end
+initialize_level!(lvl::VirtualSolidLevel, tns, ctx) = quote end
 
 function virtual_assemble(lvl::VirtualSolidLevel, tns, ctx, qoss, q)
     if q == nothing
@@ -400,7 +403,7 @@ function virtualize(ex, ::Type{ElementLevel{D, Tv}}, ctx) where {D, Tv}
     VirtualElementLevel(ex, Tv, D, val_q)
 end
 
-function virtual_initialize_level!(lvl::VirtualElementLevel, tns, ctx)
+function initialize_level!(lvl::VirtualElementLevel, tns, ctx)
     my_q = ctx.freshen(:lvl, tns.R, :_q)
     return quote
         if $(lvl.val_q) < 4
