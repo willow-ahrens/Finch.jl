@@ -21,9 +21,6 @@ using Finch: Name
         )
     ))
 
-    display(ex)
-    println()
-
     @test ex == Finch.@i(
         @loop i (
             @loop j (

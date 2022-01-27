@@ -1,4 +1,4 @@
-Base.@kwdef struct Spike
+@kwdef struct Spike
     body
     tail
 end
@@ -38,7 +38,7 @@ function (ctx::LowerJulia)(root::Loop, ::SpikeStyle)
 end
 
 
-Base.@kwdef struct AccessSpikeBodyVisitor <: AbstractTransformVisitor
+@kwdef struct AccessSpikeBodyVisitor <: AbstractTransformVisitor
     root
     ctx
     idx
@@ -57,7 +57,7 @@ spike_body_stop(stop::Integer, ctx) = stop - 1
 
 spike_body_range(ext::Extent, ctx) = Extent(ext.start, spike_body_stop(ext.stop, ctx))
 
-Base.@kwdef struct AccessSpikeTailVisitor <: AbstractTransformVisitor
+@kwdef struct AccessSpikeTailVisitor <: AbstractTransformVisitor
     root
     ctx
     idx
@@ -72,7 +72,7 @@ function (ctx::ForLoopVisitor)(node::Access{Spike}, ::DefaultStyle)
     return node.tns.tail
 end
 
-Base.@kwdef mutable struct AcceptSpike
+@kwdef mutable struct AcceptSpike
     val
     tail
 end
@@ -93,7 +93,7 @@ function (ctx::LowerJulia)(root::Loop, ::AcceptSpikeStyle)
     return ctx(Loop(root.idxs[1:end], root.body), DefaultStyle())
 end
 
-Base.@kwdef mutable struct AcceptSpikeVisitor <: AbstractTransformVisitor
+@kwdef mutable struct AcceptSpikeVisitor <: AbstractTransformVisitor
     root
     ctx
 end

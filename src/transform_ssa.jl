@@ -4,7 +4,7 @@
 A callable that transforms a program to SSA form. Fresh names will be generated
 with `freshen(name)`.
 """
-mutable struct TransformSSA <: AbstractTransformVisitor
+@kwdef mutable struct TransformSSA <: AbstractTransformVisitor
     renames
     binds
     freshen
@@ -31,15 +31,16 @@ end
 function definename!(root, ctx::TransformSSA)
     name = getname(root)
     push!(ctx.binds, name)
-    println(name, ctx.renames)
     name2 = ctx.freshen(name)
     push!(get!(ctx.renames, name, []), name2)
     return setname(root, name2)
 end
 
 function scope(f::F, ctx::TransformSSA) where {F}
-    #ctx_2 = shallowcopy(ctx)
-    ctx_2 = TransformSSA(ctx.renames, ctx.binds, ctx.freshen)
+    ctx_2 = TransformSSA(
+        renames = ctx.renames, 
+        freshen = ctx.freshen,
+        binds = [])
     ctx_2.binds = []
     res = f(ctx_2)
     for name in ctx_2.binds

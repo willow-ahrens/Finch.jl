@@ -6,12 +6,12 @@ using RewriteTools.Rewriters
 using MacroTools
 using DataStructures
 using Base.Iterators
+using Base: @kwdef
 
 export @I, execute
 
 export Fiber, HollowList, Solid, Element
 
-include("utils.jl")
 include("semantics.jl")
 include("IndexNotation/IndexNotation.jl")
 using .IndexNotation

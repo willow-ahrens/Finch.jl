@@ -1,8 +1,8 @@
-Base.@kwdef struct Pipeline
+@kwdef struct Pipeline
     phases
 end
 
-Base.@kwdef struct Phase
+@kwdef struct Phase
     preamble = quote end
     body
     stride = nothing
@@ -104,7 +104,7 @@ end
 postvisit!(node, ctx::PipelineVisitor) = [([], node)]
 (ctx::PipelineVisitor)(node::Pipeline, ::DefaultStyle) = enumerate(node.phases)
 
-Base.@kwdef struct PhaseThunkVisitor <: AbstractWalkVisitor
+@kwdef struct PhaseThunkVisitor <: AbstractWalkVisitor
     ctx
     idx
     start
@@ -115,7 +115,7 @@ function (ctx::PhaseThunkVisitor)(node::Phase, ::DefaultStyle)
     node
 end
 
-Base.@kwdef struct PhaseGuardVisitor <: AbstractCollectVisitor
+@kwdef struct PhaseGuardVisitor <: AbstractCollectVisitor
     ctx
     idx
     start
@@ -124,7 +124,7 @@ collect_op(::PhaseGuardVisitor) = (args) -> vcat(args...) #flatten?
 collect_zero(::PhaseGuardVisitor) = []
 (ctx::PhaseGuardVisitor)(node::Phase, ::DefaultStyle) = node.guard === nothing ? [] : [something(node.guard)(ctx.start)]
 
-Base.@kwdef struct PhaseStrideVisitor <: AbstractCollectVisitor
+@kwdef struct PhaseStrideVisitor <: AbstractCollectVisitor
     ctx
     idx
     start
@@ -133,7 +133,7 @@ collect_op(::PhaseStrideVisitor) = (args) -> vcat(args...) #flatten?
 collect_zero(::PhaseStrideVisitor) = []
 (ctx::PhaseStrideVisitor)(node::Phase, ::DefaultStyle) = node.stride === nothing ? [] : [something(node.stride)(ctx.start)]
 
-Base.@kwdef struct PhaseBodyVisitor <: AbstractTransformVisitor
+@kwdef struct PhaseBodyVisitor <: AbstractTransformVisitor
     ctx
     idx
     start

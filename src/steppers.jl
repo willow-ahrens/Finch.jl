@@ -1,6 +1,6 @@
 struct StepperStyle end
 
-Base.@kwdef struct Stepper
+@kwdef struct Stepper
     preamble = quote end
     body
     guard = nothing
@@ -62,7 +62,7 @@ function (ctx::LowerJulia)(root::Loop, ::StepperStyle)
     end
 end
 
-Base.@kwdef struct StepperThunkVisitor <: AbstractWalkVisitor
+@kwdef struct StepperThunkVisitor <: AbstractWalkVisitor
     ctx
     idx
     start
@@ -73,7 +73,7 @@ function (ctx::StepperThunkVisitor)(node::Stepper, ::DefaultStyle)
     node
 end
 
-Base.@kwdef struct StepperStrideVisitor <: AbstractCollectVisitor
+@kwdef struct StepperStrideVisitor <: AbstractCollectVisitor
     ctx
     idx
     start
@@ -83,7 +83,7 @@ collect_zero(::StepperStrideVisitor) = []
 (ctx::StepperStrideVisitor)(node::Stepper, ::DefaultStyle) = [node.stride(ctx.start)]
 
 
-Base.@kwdef struct StepperGuardVisitor <: AbstractCollectVisitor
+@kwdef struct StepperGuardVisitor <: AbstractCollectVisitor
     ctx
     idx
     start
@@ -92,7 +92,7 @@ collect_op(::StepperGuardVisitor) = (args) -> vcat(args...) #flatten?
 collect_zero(::StepperGuardVisitor) = []
 (ctx::StepperGuardVisitor)(node::Stepper, ::DefaultStyle) = node.guard === nothing ? [] : [node.guard(ctx.start)]
 
-Base.@kwdef struct StepperBodyVisitor <: AbstractTransformVisitor
+@kwdef struct StepperBodyVisitor <: AbstractTransformVisitor
     ctx
     idx
     start

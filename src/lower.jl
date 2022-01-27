@@ -1,4 +1,4 @@
-Base.@kwdef mutable struct Extent
+@kwdef mutable struct Extent
     start
     stop
 end
@@ -34,7 +34,7 @@ struct Scalar
     val
 end
 
-Base.@kwdef struct LowerJulia <: AbstractVisitor
+@kwdef struct LowerJulia <: AbstractVisitor
     preamble::Vector{Any} = []
     bindings::Dict{Any, Any} = Dict()
     epilogue::Vector{Any} = []
@@ -97,7 +97,7 @@ end
 
 struct ThunkStyle end
 
-Base.@kwdef struct Thunk
+@kwdef struct Thunk
     preamble = quote end
     body
     epilogue = quote end
@@ -220,13 +220,13 @@ function (ctx::LowerJulia)(stmt::Loop, ::DefaultStyle)
     end
 end
 
-Base.@kwdef struct ForLoopVisitor <: AbstractTransformVisitor
+@kwdef struct ForLoopVisitor <: AbstractTransformVisitor
     ctx
     idx
     val
 end
 
-Base.@kwdef struct Leaf
+@kwdef struct Leaf
     body
 end
 

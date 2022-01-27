@@ -1,4 +1,4 @@
-Base.@kwdef struct Cases
+@kwdef struct Cases
     cases
 end
 

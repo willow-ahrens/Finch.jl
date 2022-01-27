@@ -1,4 +1,4 @@
-Base.@kwdef mutable struct VirtualAbstractArray
+@kwdef mutable struct VirtualAbstractArray
     ndims
     name
     ex

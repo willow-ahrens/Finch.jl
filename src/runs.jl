@@ -1,4 +1,4 @@
-Base.@kwdef mutable struct Run
+@kwdef mutable struct Run
     body
 end
 
@@ -38,7 +38,7 @@ end
 
 #assume ssa
 
-Base.@kwdef mutable struct AcceptRun
+@kwdef mutable struct AcceptRun
     body
 end
 
@@ -62,7 +62,7 @@ function (ctx::LowerJulia)(root::Loop, ::AcceptRunStyle)
     end
 end
 
-Base.@kwdef mutable struct DirtyRunVisitor <: AbstractCollectVisitor
+@kwdef mutable struct DirtyRunVisitor <: AbstractCollectVisitor
     idx
 end
 collect_op(ctx::DirtyRunVisitor) = any
@@ -71,7 +71,7 @@ function (ctx::DirtyRunVisitor)(node::Access, ::DefaultStyle)
     return getname(ctx.idx) in map(getname, node.idxs)
 end
 
-Base.@kwdef mutable struct AcceptRunVisitor <: AbstractTransformVisitor
+@kwdef mutable struct AcceptRunVisitor <: AbstractTransformVisitor
     root
     idx
     ctx

@@ -107,7 +107,7 @@ end
 
 postmapreduce(f, g, root, init) = (PostMapReduceVisitor(f, g, init))(root)
 
-Base.@kwdef struct QuantifiedVisitor{Ctx} <: AbstractTraverseVisitor
+@kwdef struct QuantifiedVisitor{Ctx} <: AbstractTraverseVisitor
     parent::Ctx
     qnt = []
     diff = []
