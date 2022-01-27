@@ -116,7 +116,7 @@ function make_style(root, ctx::Finch.LowerJuliaContext, node::Access{VirtualFibe
 end
 
 function lower_axes(arr::VirtualFiber, ctx::LowerJuliaContext) where {T <: AbstractArray}
-    dims = map(i -> ctx.freshen(arr.name, :_, i, :_stop), 1:arr.N)
+    dims = map(i -> ctx.freshen(arr.name, :_mode, i, :_stop), 1:arr.N)
     for (dim, lvl) in zip(dims, arr.lvls)
         #Could unroll more manually, but I'm not convinced it's worth it.
         push!(ctx.preamble, :($dim = dimension($(lvl.ex)))) #TODO we don't know if every level has a .ex
@@ -148,7 +148,7 @@ virtual_assemble(tns::VirtualFiber, ctx, qoss, q) =
     virtual_assemble(tns.lvls[length(qoss) + 1], tns::VirtualFiber, ctx, vcat(qoss, [q]), q)
 
 function virtualize(ex, ::Type{<:Fiber{Tv, N, R, Lvls, Poss, Idxs}}, ctx, tag=:tns) where {Tv, N, R, Lvls, Poss, Idxs}
-    sym = ctx.freshen(:tns_, tag)
+    sym = ctx.freshen(tag)
     push!(ctx.preamble, :($sym = $ex))
     lvls = map(enumerate(Lvls.parameters)) do (n, Lvl)
         virtualize(:($sym.lvls[$n]), Lvl, ctx)
@@ -239,7 +239,7 @@ virtual_unfurl(lvl::VirtualHollowListLevel, tns, ctx, mode::Read, idx::Name, tai
 
 function virtual_unfurl(lvl::VirtualHollowListLevel, tns, ctx, mode::Read, idx::Walk, tail...)
     R = tns.R
-    tag = Symbol(:tns_, getname(tns), :_, R)
+    tag = Symbol(getname(tns), :_lvl, R)
     my_i = ctx.freshen(tag, :_i)
     my_p = ctx.freshen(tag, :_p)
     my_p1 = ctx.freshen(tag, :_p1)
@@ -298,7 +298,7 @@ virtual_unfurl(lvl::VirtualHollowListLevel, tns, ctx, mode::Union{Write, Update}
 
 function virtual_unfurl(lvl::VirtualHollowListLevel, tns, ctx, mode::Union{Write, Update}, idx::Extrude, tail...)
     R = tns.R
-    tag = Symbol(:tns_, getname(tns), :_, R)
+    tag = Symbol(getname(tns), :_lvl, R)
     my_i = ctx.freshen(tag, :_i)
     my_p = ctx.freshen(tag, :_p)
     my_p1 = ctx.freshen(tag, :_p1)
@@ -353,7 +353,7 @@ function virtual_assemble(lvl::VirtualSolidLevel, tns, ctx, qoss, q)
     if q == nothing
         return quote end
     else
-        q2 = ctx.freshen(:tns_, getname(fbr), :_, R, :_q)
+        q2 = ctx.freshen(getname(fbr), :_lvl, R, :_q)
         return quote
             $q2 = ($(ctx(qoss)) - 1) * $(lvl.ex).I + $(ctx(i))
             $(virtual_assemble(tns, ctx, qoss, q2))
@@ -364,7 +364,7 @@ end
 function virtual_unfurl(lvl::VirtualSolidLevel, fbr, ctx, mode::Union{Read, Write, Update}, idx::Union{Follow, Laminate, Extrude}, tail...)
     R = fbr.R
     q = fbr.poss[R]
-    p = ctx.freshen(:tns_, getname(fbr), :_, R, :_p)
+    p = ctx.freshen(getname(fbr), :_, R, :_p)
 
     if R == 1
         Leaf(
@@ -400,7 +400,7 @@ function virtualize(ex, ::Type{ElementLevel{D, Tv}}, ctx) where {D, Tv}
 end
 
 function virtual_initialize_level!(lvl::VirtualElementLevel, tns, ctx)
-    my_q = ctx.freshen(:q_, tns.R)
+    my_q = ctx.freshen(:lvl, tns.R, :_q)
     return quote
         if $(lvl.val_q) < 4
             resize!($(lvl.ex).val, 4)
@@ -416,7 +416,7 @@ function virtual_assemble(lvl::VirtualElementLevel, tns, ctx, qoss, q)
     if q == nothing
         return quote end
     else
-        my_q = ctx.freshen(:q_, tns.R)
+        my_q = ctx.freshen(:lvl, tns.R, :_q)
         return quote
             if $(lvl.val_q) < $q
                 resize!($(lvl.ex).val, $(lvl.val_q) * 4)
@@ -432,7 +432,7 @@ end
 
 function virtual_unfurl(lvl::VirtualElementLevel, fbr, ctx, ::Read)
     R = fbr.R
-    val = ctx.freshen(:tns_, getname(fbr), :_val)
+    val = ctx.freshen(getname(fbr), :_val)
 
     Thunk(
         preamble = quote
@@ -444,7 +444,7 @@ end
 
 function virtual_unfurl(lvl::VirtualElementLevel, fbr, ctx, ::Write)
     R = fbr.R
-    val = ctx.freshen(:tns_, getname(fbr), :_val)
+    val = ctx.freshen(getname(fbr), :_val)
 
     Thunk(
         preamble = quote
@@ -459,7 +459,7 @@ end
 
 function virtual_unfurl(lvl::VirtualElementLevel, fbr, ctx, ::Update)
     R = fbr.R
-    val = ctx.freshen(:tns_, getname(fbr), :_val)
+    val = ctx.freshen(getname(fbr), :_val)
 
     Thunk(
         preamble = quote

@@ -7,15 +7,22 @@ struct Freshen
     counts
 end
 Freshen() = Freshen(Dict())
-function (spc::Freshen)(names...)
-    name = Symbol(names...)
-    if haskey(spc.counts, name)
-        n = spc.counts[name]
-        spc.counts[name] = n + 1
-        return Symbol(name, :_, n + 1)
+function (spc::Freshen)(tags...)
+    name = Symbol(tags...)
+    m = match(r"^(.*)_(\d*)$", string(name))
+    if m === nothing
+        tag = name
+        n = 0
     else
-        spc.counts[name] = 1
-        return name
+        tag = m.captures[1]
+        n = parse(BigInt, m.captures[2])
+    end
+    n = max(get(spc.counts, tag, 0), n) + 1
+    spc.counts[tag] = n
+    if n == 1
+        return Symbol(tag)
+    else
+        return Symbol(tag, :_, n)
     end
 end
 

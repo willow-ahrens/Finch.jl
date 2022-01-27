@@ -16,6 +16,7 @@ include("IndexNotation/IndexNotation.jl")
 using .IndexNotation
 include("virtualize.jl")
 include("style.jl")
+include("transform_ssa.jl")
 include("dimensionalize.jl")
 include("lower.jl")
 include("annihilate.jl")

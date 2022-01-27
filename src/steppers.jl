@@ -23,7 +23,7 @@ combine_style(a::ThunkStyle, b::StepperStyle) = ThunkStyle()
 
 function visit!(root::Loop, ctx::LowerJuliaContext, ::StepperStyle)
     i = getname(root.idxs[1])
-    i0 = ctx.freshen(:start_, i)
+    i0 = ctx.freshen(i, :_start)
     guard = nothing
     body = scope(ctx) do ctx′
         visit!(root, StepperThunkContext(ctx′, i, i0)) #TODO we could just use actual thunks here and call a thunkcontext, would look cleaner.
@@ -33,7 +33,7 @@ function visit!(root::Loop, ctx::LowerJuliaContext, ::StepperStyle)
             step = ctx′(ctx.dims[i].stop)
             step_min = quote end
         else
-            step = ctx.freshen(:step_, i)
+            step = ctx.freshen(i, :_step)
             step_min = quote
                 $step = min($(map(ctx′, strides)...), $(ctx′(ctx.dims[i].stop)))
             end

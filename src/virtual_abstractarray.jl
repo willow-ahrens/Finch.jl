@@ -5,7 +5,7 @@ Base.@kwdef mutable struct VirtualAbstractArray
 end
 
 function lower_axes(arr::VirtualAbstractArray, ctx::LowerJuliaContext) where {T <: AbstractArray}
-    dims = map(i -> ctx.freshen(arr.name, :_, i, :_stop), 1:arr.ndims)
+    dims = map(i -> ctx.freshen(arr.name, :_mode, i, :_stop), 1:arr.ndims)
     push!(ctx.preamble, quote
         ($(dims...),) = size($(arr.ex))
     end)
@@ -27,7 +27,7 @@ function visit!(arr::VirtualAbstractArray, ctx::LowerJuliaContext, ::DefaultStyl
 end
 
 function virtualize(ex, ::Type{<:AbstractArray{T, N}}, ctx, tag=:tns) where {T, N}
-    sym = ctx.freshen(:tns_, tag)
+    sym = ctx.freshen(tag)
     push!(ctx.preamble, :($sym = $ex))
     VirtualAbstractArray(N, tag, sym)
 end

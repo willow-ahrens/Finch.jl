@@ -21,7 +21,7 @@ mutable struct VirtualSimpleSparseVector{Tv, Ti}
 end
 
 function Finch.virtualize(ex, ::Type{SimpleSparseVector{D, Tv, Ti}}, ctx, tag=:tns) where {D, Tv, Ti}
-    sym = ctx.freshen(:tns_, tag)
+    sym = ctx.freshen(tag)
     push!(ctx.preamble, :($sym = $ex))
     VirtualSimpleSparseVector{Tv, Ti}(sym, tag, D)
 end
@@ -34,7 +34,7 @@ function Finch.virtual_initialize!(arr::VirtualSimpleSparseVector{D, Tv}, ctx::F
 end 
 
 function Finch.lower_axes(arr::VirtualSimpleSparseVector{Tv, Ti}, ctx::Finch.LowerJuliaContext) where {Tv, Ti}
-    ex = ctx.freshen(:tns_, arr.name, :_stop)
+    ex = ctx.freshen(arr.name, :_stop)
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))
     (Extent(1, Virtual{Ti}(ex)),)
 end
@@ -48,9 +48,9 @@ Finch.make_style(root::Loop, ctx::Finch.LowerJuliaContext, node::Access{<:Virtua
 
 function Finch.visit!(node::Access{VirtualSimpleSparseVector{Tv, Ti}, Read}, ctx::Finch.ChunkifyContext, ::Finch.DefaultStyle) where {Tv, Ti}
     vec = node.tns
-    my_i = ctx.ctx.freshen(:tns_, getname(vec), :_i0)
-    my_i′ = ctx.ctx.freshen(:tns_, getname(vec), :_i1)
-    my_p = ctx.ctx.freshen(:tns_, getname(vec), :_p)
+    my_i = ctx.ctx.freshen(getname(vec), :_i0)
+    my_i′ = ctx.ctx.freshen(getname(vec), :_i1)
+    my_p = ctx.ctx.freshen(getname(vec), :_p)
     if getname(ctx.idx) == getname(node.idxs[1])
         tns = Thunk(
             preamble = quote
@@ -90,8 +90,8 @@ end
 
 function Finch.visit!(node::Access{VirtualSimpleSparseVector{Tv, Ti}, <:Union{Write, Update}}, ctx::Finch.ChunkifyContext, ::Finch.DefaultStyle) where {Tv, Ti}
     vec = node.tns
-    my_p = ctx.ctx.freshen(:tns_, node.tns.name, :_p)
-    my_I = ctx.ctx.freshen(:tns_, node.tns.name, :_I)
+    my_p = ctx.ctx.freshen(node.tns.name, :_p)
+    my_I = ctx.ctx.freshen(node.tns.name, :_I)
     if getname(ctx.idx) == getname(node.idxs[1])
         push!(ctx.ctx.preamble, quote
             $my_p = 0
