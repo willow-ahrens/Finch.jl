@@ -21,24 +21,24 @@ function Finch.virtualize(ex, ::Type{SimpleRunLength{Tv, Ti}}, ctx, tag=:tns) wh
     VirtualSimpleRunLength{Tv, Ti}(sym, tag)
 end
 
-function Finch.virtual_initialize!(arr::VirtualSimpleRunLength{Tv}, ctx::Finch.LowerJuliaContext) where {Tv}
+function Finch.virtual_initialize!(arr::VirtualSimpleRunLength{Tv}, ctx::Finch.LowerJulia) where {Tv}
     quote 
         $(arr.ex).idx = [$(arr.ex).idx[end]]
         $(arr.ex).val = [$(zero(Tv))]
     end
 end 
 
-function Finch.lower_axes(arr::VirtualSimpleRunLength{Tv, Ti}, ctx::Finch.LowerJuliaContext) where {Tv, Ti}
+function Finch.lower_axes(arr::VirtualSimpleRunLength{Tv, Ti}, ctx::Finch.LowerJulia) where {Tv, Ti}
     ex = ctx.freshen(arr.name, :_stop)
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))
     (Extent(1, Virtual{Ti}(ex)),)
 end
 Finch.getsites(arr::VirtualSimpleRunLength) = (1,)
 Finch.getname(arr::VirtualSimpleRunLength) = arr.name
-Finch.make_style(root::Loop, ctx::Finch.LowerJuliaContext, node::Access{<:VirtualSimpleRunLength}) =
+Finch.make_style(root::Loop, ctx::Finch.LowerJulia, node::Access{<:VirtualSimpleRunLength}) =
     getname(root.idxs[1]) == getname(node.idxs[1]) ? Finch.ChunkStyle() : Finch.DefaultStyle()
 
-function Finch.visit!(node::Access{VirtualSimpleRunLength{Tv, Ti}, Read}, ctx::Finch.ChunkifyContext, ::Finch.DefaultStyle) where {Tv, Ti}
+function Finch.visit!(node::Access{VirtualSimpleRunLength{Tv, Ti}, Read}, ctx::Finch.ChunkifyVisitor, ::Finch.DefaultStyle) where {Tv, Ti}
     vec = node.tns
     my_i′ = ctx.ctx.freshen(getname(vec), :_i1)
     my_p = ctx.ctx.freshen(getname(vec), :_p)
@@ -69,7 +69,7 @@ function Finch.visit!(node::Access{VirtualSimpleRunLength{Tv, Ti}, Read}, ctx::F
     end
 end
 
-function Finch.visit!(node::Access{<:VirtualSimpleRunLength{Tv, Ti}, <: Union{Write, Update}}, ctx::Finch.ChunkifyContext, ::Finch.DefaultStyle) where {Tv, Ti}
+function Finch.visit!(node::Access{<:VirtualSimpleRunLength{Tv, Ti}, <: Union{Write, Update}}, ctx::Finch.ChunkifyVisitor, ::Finch.DefaultStyle) where {Tv, Ti}
     vec = node.tns
     my_p = ctx.ctx.freshen(node.tns.name, :_p)
     if getname(ctx.idx) == getname(node.idxs[1])

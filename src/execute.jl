@@ -1,7 +1,7 @@
 function register()
     Base.eval(Finch, quote
         @generated function execute(ex)
-            scope(LowerJuliaContext()) do ctx
+            scope(LowerJulia()) do ctx
                 execute_code_lowered(:ex, ex)
             end
         end
@@ -9,7 +9,7 @@ function register()
 end
 
 function execute_code_lowered(ex, T)
-    code = scope(LowerJuliaContext()) do ctx
+    code = scope(LowerJulia()) do ctx
         prgm = virtualize(ex, T, ctx)
         dimensionalize!(prgm, ctx)
         quote

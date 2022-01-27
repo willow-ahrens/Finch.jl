@@ -27,13 +27,13 @@ combine_style(a, b) = UnknownStyle()
 combine_style(a::DefaultStyle, b) = b
 resolve_style(root, ctx, node, style) = style
 
-abstract type AbstractContext end
+abstract type AbstractVisitor end
 
-(ctx::AbstractContext)(root) = visit!(root, ctx)
+(ctx::AbstractVisitor)(root) = visit!(root, ctx)
 
-abstract type AbstractTraverseContext <: AbstractContext end
+abstract type AbstractTraverseVisitor <: AbstractVisitor end
 
-visit!(node, ctx::AbstractTraverseContext, style::DefaultStyle) = visit_default!(node, ctx)
+visit!(node, ctx::AbstractTraverseVisitor, style::DefaultStyle) = visit_default!(node, ctx)
 function visit_default!(node, ctx)
     node = previsit!(node, ctx)
     if istree(node)
@@ -43,42 +43,42 @@ function visit_default!(node, ctx)
     end
 end
 
-abstract type AbstractTransformContext <: AbstractTraverseContext end
+abstract type AbstractTransformVisitor <: AbstractTraverseVisitor end
 
-previsit!(node, ctx::AbstractTransformContext) = node
-postvisit!(node, ctx::AbstractTransformContext, args) = similarterm(node, operation(node), args)
-postvisit!(node, ctx::AbstractTransformContext) = node
+previsit!(node, ctx::AbstractTransformVisitor) = node
+postvisit!(node, ctx::AbstractTransformVisitor, args) = similarterm(node, operation(node), args)
+postvisit!(node, ctx::AbstractTransformVisitor) = node
 
-abstract type AbstractCollectContext <: AbstractTraverseContext end
+abstract type AbstractCollectVisitor <: AbstractTraverseVisitor end
 function collect_op end
 function collect_zero end
 
-previsit!(node, ctx::AbstractCollectContext) = node
-postvisit!(node, ctx::AbstractCollectContext, args) = collect_op(ctx)(args)
-postvisit!(node, ctx::AbstractCollectContext) = collect_zero(ctx)
+previsit!(node, ctx::AbstractCollectVisitor) = node
+postvisit!(node, ctx::AbstractCollectVisitor, args) = collect_op(ctx)(args)
+postvisit!(node, ctx::AbstractCollectVisitor) = collect_zero(ctx)
 
-abstract type AbstractWalkContext <: AbstractTraverseContext end
+abstract type AbstractWalkVisitor <: AbstractTraverseVisitor end
 
-previsit!(node, ctx::AbstractWalkContext) = node
-postvisit!(node, ctx::AbstractWalkContext, args) = nothing
-postvisit!(node, ctx::AbstractWalkContext) = nothing
+previsit!(node, ctx::AbstractWalkVisitor) = node
+postvisit!(node, ctx::AbstractWalkVisitor, args) = nothing
+postvisit!(node, ctx::AbstractWalkVisitor) = nothing
 
 
 
-abstract type AbstractWrapperContext <: AbstractTraverseContext end
+abstract type AbstractWrapperVisitor <: AbstractTraverseVisitor end
 
-previsit!(node, ctx::AbstractWrapperContext) = previsit!(node, getparent(ctx))
-postvisit!(node, ctx::AbstractWrapperContext, args) = transform(node, getparent(ctx), args)
-postvisit!(node, ctx::AbstractWrapperContext) = postvisit!(node, getparent(ctx))
+previsit!(node, ctx::AbstractWrapperVisitor) = previsit!(node, getparent(ctx))
+postvisit!(node, ctx::AbstractWrapperVisitor, args) = transform(node, getparent(ctx), args)
+postvisit!(node, ctx::AbstractWrapperVisitor) = postvisit!(node, getparent(ctx))
 
 getdata(ctx) = ctx
-getdata(ctx::AbstractWrapperContext) = getdata(getparent(ctx))
+getdata(ctx::AbstractWrapperVisitor) = getdata(getparent(ctx))
 
-struct PostMapContext{F} <: AbstractTransformContext
+struct PostMapVisitor{F} <: AbstractTransformVisitor
     f::F
 end
 
-function visit!(node, ctx::PostMapContext, ::DefaultStyle)
+function visit!(node, ctx::PostMapVisitor, ::DefaultStyle)
     node′ = ctx.f(node)
     if node′ === nothing
         visit_default!(node, ctx)
@@ -87,17 +87,17 @@ function visit!(node, ctx::PostMapContext, ::DefaultStyle)
     end
 end
 
-postmap(f, root) = visit!(root, PostMapContext(f))
+postmap(f, root) = visit!(root, PostMapVisitor(f))
 
-struct PostMapReduceContext{F, G} <: AbstractCollectContext
+struct PostMapReduceVisitor{F, G} <: AbstractCollectVisitor
     f::F
     g::G
     init
 end
 
-postvisit!(node, ctx::PostMapReduceContext) = ctx.init
-postvisit!(node, ctx::PostMapReduceContext, args) = ctx.g(args...)
-function visit!(node, ctx::PostMapReduceContext, ::DefaultStyle)
+postvisit!(node, ctx::PostMapReduceVisitor) = ctx.init
+postvisit!(node, ctx::PostMapReduceVisitor, args) = ctx.g(args...)
+function visit!(node, ctx::PostMapReduceVisitor, ::DefaultStyle)
     node′ = ctx.f(node)
     if node′ === nothing
         visit_default!(node, ctx)
@@ -106,27 +106,27 @@ function visit!(node, ctx::PostMapReduceContext, ::DefaultStyle)
     end
 end
 
-postmapreduce(f, g, root, init) = visit!(root, PostMapReduceContext(f, g, init))
+postmapreduce(f, g, root, init) = visit!(root, PostMapReduceVisitor(f, g, init))
 
-Base.@kwdef struct QuantifiedContext{Ctx} <: AbstractTraverseContext
+Base.@kwdef struct QuantifiedVisitor{Ctx} <: AbstractTraverseVisitor
     parent::Ctx
     qnt = []
     diff = []
 end
 
-getparent(ctx::QuantifiedContext) = ctx.ctx
-getqnt(ctx::QuantifiedContext) = ctx.qnt
+getparent(ctx::QuantifiedVisitor) = ctx.ctx
+getqnt(ctx::QuantifiedVisitor) = ctx.qnt
 getqnt(ctx) = getqnt(getparent(ctx))
 
-function previsit!(node, ctx::QuantifiedContext)
+function previsit!(node, ctx::QuantifiedVisitor)
     push!(diff, 0)
 end
-function previsit!(node::Loop, ctx::QuantifiedContext)
+function previsit!(node::Loop, ctx::QuantifiedVisitor)
     append!(ctx.qnt, node.idxs)
     push!(diff, length(node.idxs))
     previsit!(node, ctx.ctx)
 end
-function postvisit!(node, ctx::QuantifiedContext)
+function postvisit!(node, ctx::QuantifiedVisitor)
     for i in 1:pop!(node.diff)
         pop!(ctx.qnt)
     end

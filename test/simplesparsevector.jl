@@ -26,27 +26,27 @@ function Finch.virtualize(ex, ::Type{SimpleSparseVector{D, Tv, Ti}}, ctx, tag=:t
     VirtualSimpleSparseVector{Tv, Ti}(sym, tag, D)
 end
 
-function Finch.virtual_initialize!(arr::VirtualSimpleSparseVector{D, Tv}, ctx::Finch.LowerJuliaContext) where {D, Tv}
+function Finch.virtual_initialize!(arr::VirtualSimpleSparseVector{D, Tv}, ctx::Finch.LowerJulia) where {D, Tv}
     quote 
         $(arr.ex).idx = [$(arr.ex).idx[end]]
         $(arr.ex).val = $Tv[]
     end
 end 
 
-function Finch.lower_axes(arr::VirtualSimpleSparseVector{Tv, Ti}, ctx::Finch.LowerJuliaContext) where {Tv, Ti}
+function Finch.lower_axes(arr::VirtualSimpleSparseVector{Tv, Ti}, ctx::Finch.LowerJulia) where {Tv, Ti}
     ex = ctx.freshen(arr.name, :_stop)
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))
     (Extent(1, Virtual{Ti}(ex)),)
 end
 Finch.getsites(arr::VirtualSimpleSparseVector) = (1,)
 Finch.getname(arr::VirtualSimpleSparseVector) = arr.name
-Finch.make_style(root::Loop, ctx::Finch.LowerJuliaContext, node::Access{<:VirtualSimpleSparseVector}) =
+Finch.make_style(root::Loop, ctx::Finch.LowerJulia, node::Access{<:VirtualSimpleSparseVector}) =
     getname(root.idxs[1]) == getname(node.idxs[1]) ? Finch.ChunkStyle() : Finch.DefaultStyle()
 #TODO is there a way to share this logic with others?
-#visit!(node::Access{<:VirtualSimpleSparseVector}, ctx::Finch.ChunkifyContext, ::Finch.DefaultStyle) =
+#visit!(node::Access{<:VirtualSimpleSparseVector}, ctx::Finch.ChunkifyVisitor, ::Finch.DefaultStyle) =
 #    ctx.idx == node.idxs[1] ? Access(chunkbody(node.tns), node.mode, node.idxs) : node.idxs
 
-function Finch.visit!(node::Access{VirtualSimpleSparseVector{Tv, Ti}, Read}, ctx::Finch.ChunkifyContext, ::Finch.DefaultStyle) where {Tv, Ti}
+function Finch.visit!(node::Access{VirtualSimpleSparseVector{Tv, Ti}, Read}, ctx::Finch.ChunkifyVisitor, ::Finch.DefaultStyle) where {Tv, Ti}
     vec = node.tns
     my_i = ctx.ctx.freshen(getname(vec), :_i0)
     my_i′ = ctx.ctx.freshen(getname(vec), :_i1)
@@ -88,7 +88,7 @@ function Finch.visit!(node::Access{VirtualSimpleSparseVector{Tv, Ti}, Read}, ctx
     end
 end
 
-function Finch.visit!(node::Access{VirtualSimpleSparseVector{Tv, Ti}, <:Union{Write, Update}}, ctx::Finch.ChunkifyContext, ::Finch.DefaultStyle) where {Tv, Ti}
+function Finch.visit!(node::Access{VirtualSimpleSparseVector{Tv, Ti}, <:Union{Write, Update}}, ctx::Finch.ChunkifyVisitor, ::Finch.DefaultStyle) where {Tv, Ti}
     vec = node.tns
     my_p = ctx.ctx.freshen(node.tns.name, :_p)
     my_I = ctx.ctx.freshen(node.tns.name, :_I)

@@ -6,7 +6,7 @@ isliteral(::Cases) = false
 
 struct CaseStyle end
 
-make_style(root, ctx::LowerJuliaContext, node::Cases) = CaseStyle()
+make_style(root, ctx::LowerJulia, node::Cases) = CaseStyle()
 combine_style(a::DefaultStyle, b::CaseStyle) = CaseStyle()
 combine_style(a::ThunkStyle, b::CaseStyle) = ThunkStyle()
 combine_style(a::RunStyle, b::CaseStyle) = CaseStyle()
@@ -15,10 +15,10 @@ combine_style(a::AcceptSpikeStyle, b::CaseStyle) = CaseStyle()
 combine_style(a::SpikeStyle, b::CaseStyle) = CaseStyle()
 combine_style(a::CaseStyle, b::CaseStyle) = CaseStyle()
 
-struct CasesContext <: AbstractCollectContext end
+struct CasesVisitor <: AbstractCollectVisitor end
 
-function visit!(stmt, ctx::LowerJuliaContext, ::CaseStyle)
-    cases = visit!(stmt, CasesContext())
+function visit!(stmt, ctx::LowerJulia, ::CaseStyle)
+    cases = visit!(stmt, CasesVisitor())
     function nest(cases, inner=false)
         guard, body = cases[1]
         body = scope(ctx) do ctx′
@@ -35,12 +35,12 @@ virtual_and(x, y) = x === true ? y :
                     y === true ? x :
                     :($x && $y)
 
-function postvisit!(node, ctx::CasesContext, args)
+function postvisit!(node, ctx::CasesVisitor, args)
     map(product(args...)) do case
         guards = map(first, case)
         bodies = map(last, case)
         return reduce(virtual_and, guards) => similarterm(node, operation(node), collect(bodies))
     end
 end
-postvisit!(node, ctx::CasesContext) = [(true => node)]
-visit!(node::Cases, ctx::CasesContext, ::DefaultStyle) = node.cases
+postvisit!(node, ctx::CasesVisitor) = [(true => node)]
+visit!(node::Cases, ctx::CasesVisitor, ::DefaultStyle) = node.cases

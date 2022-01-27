@@ -97,7 +97,7 @@ end
 
 isliteral(::VirtualFiber) = false
 
-function make_style(root::Loop, ctx::Finch.LowerJuliaContext, node::Access{VirtualFiber})
+function make_style(root::Loop, ctx::Finch.LowerJulia, node::Access{VirtualFiber})
     if isempty(node.idxs)
         return AccessStyle()
     elseif getname(root.idxs[1]) == getname(node.idxs[1])
@@ -107,7 +107,7 @@ function make_style(root::Loop, ctx::Finch.LowerJuliaContext, node::Access{Virtu
     end
 end
 
-function make_style(root, ctx::Finch.LowerJuliaContext, node::Access{VirtualFiber})
+function make_style(root, ctx::Finch.LowerJulia, node::Access{VirtualFiber})
     if isempty(node.idxs)
         return AccessStyle()
     else
@@ -115,7 +115,7 @@ function make_style(root, ctx::Finch.LowerJuliaContext, node::Access{VirtualFibe
     end
 end
 
-function lower_axes(arr::VirtualFiber, ctx::LowerJuliaContext) where {T <: AbstractArray}
+function lower_axes(arr::VirtualFiber, ctx::LowerJulia) where {T <: AbstractArray}
     dims = map(i -> ctx.freshen(arr.name, :_mode, i, :_stop), 1:arr.N)
     for (dim, lvl) in zip(dims, arr.lvls)
         #Could unroll more manually, but I'm not convinced it's worth it.
@@ -124,7 +124,7 @@ function lower_axes(arr::VirtualFiber, ctx::LowerJuliaContext) where {T <: Abstr
     return map(i->Extent(1, Virtual{Int}(dims[i])), 1:arr.N)
 end
 
-function virtual_initialize!(arr::VirtualFiber, ctx::LowerJuliaContext)
+function virtual_initialize!(arr::VirtualFiber, ctx::LowerJulia)
     @assert arr.R == 1
     N = arr.N
     thunk = Expr(:block)
@@ -171,7 +171,7 @@ function virtual_refurl(fbr::VirtualFiber, p, i, mode, tail...)
     return Access(res, mode, Any[tail...])
 end
 
-function visit!(node::Access{VirtualFiber}, ctx::Finch.ChunkifyContext, ::DefaultStyle) where {Tv, Ti}
+function visit!(node::Access{VirtualFiber}, ctx::Finch.ChunkifyVisitor, ::DefaultStyle) where {Tv, Ti}
     if getname(ctx.idx) == getname(node.idxs[1])
         Access(virtual_unfurl(node.tns.lvls[node.tns.R], node.tns, ctx.ctx, node.mode, node.idxs...), node.mode, node.idxs)
     else
@@ -179,7 +179,7 @@ function visit!(node::Access{VirtualFiber}, ctx::Finch.ChunkifyContext, ::Defaul
     end
 end
 
-function visit!(node::Access{VirtualFiber}, ctx::Finch.AccessContext, ::DefaultStyle) where {Tv, Ti}
+function visit!(node::Access{VirtualFiber}, ctx::Finch.AccessVisitor, ::DefaultStyle) where {Tv, Ti}
     if isempty(node.idxs)
         virtual_unfurl(node.tns.lvls[node.tns.R], node.tns, ctx.ctx, node.mode)
     else

@@ -15,7 +15,7 @@ isliteral(::Phase) = false
 
 struct PipelineStyle end
 
-make_style(root, ctx::LowerJuliaContext, node::Pipeline) = PipelineStyle()
+make_style(root, ctx::LowerJulia, node::Pipeline) = PipelineStyle()
 combine_style(a::DefaultStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::ThunkStyle, b::PipelineStyle) = ThunkStyle()
 combine_style(a::RunStyle, b::PipelineStyle) = PipelineStyle()
@@ -25,12 +25,12 @@ combine_style(a::SpikeStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::PipelineStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::PipelineStyle, b::CaseStyle) = CaseStyle()
 
-struct PipelineContext <: AbstractCollectContext
+struct PipelineVisitor <: AbstractCollectVisitor
     ctx
 end
 
-function visit!(root, ctx::LowerJuliaContext, ::PipelineStyle)
-    phases = visit!(root, PipelineContext(ctx))
+function visit!(root, ctx::LowerJulia, ::PipelineStyle)
+    phases = visit!(root, PipelineVisitor(ctx))
     maxkey = maximum(map(maximum, map(((keys, body),)->keys, phases)))
     phases = sort(phases, by=(((keys, body),)->map(l->count(k->k>l, keys), 1:maxkey)))
     i = getname(root.idxs[1])
@@ -43,10 +43,10 @@ function visit!(root, ctx::LowerJuliaContext, ::PipelineStyle)
     if length(phases[1][1]) == 1 #only one phaser
         for (keys, body) in phases
             push!(thunk.args, scope(ctx) do ctx′
-                visit!(body, PhaseThunkContext(ctx′, i, i0))
-                strides = visit!(body, PhaseStrideContext(ctx′, i, i0))
+                visit!(body, PhaseThunkVisitor(ctx′, i, i0))
+                strides = visit!(body, PhaseStrideVisitor(ctx′, i, i0))
                 strides = [strides; visit!(ctx.dims[i].stop, ctx)]
-                body = visit!(body, PhaseBodyContext(ctx′, i, i0, step))
+                body = visit!(body, PhaseBodyVisitor(ctx′, i, i0, step))
                 quote
                     $step = min($(strides...))
                     $(scope(ctx′) do ctx′′
@@ -61,11 +61,11 @@ function visit!(root, ctx::LowerJuliaContext, ::PipelineStyle)
     else
         for (n, (keys, body)) in enumerate(phases)
             push!(thunk.args, scope(ctx) do ctx′
-                visit!(body, PhaseThunkContext(ctx′, i, i0))
-                guards = visit!(body, PhaseGuardContext(ctx′, i, i0))
-                strides = visit!(body, PhaseStrideContext(ctx′, i, i0))
+                visit!(body, PhaseThunkVisitor(ctx′, i, i0))
+                guards = visit!(body, PhaseGuardVisitor(ctx′, i, i0))
+                strides = visit!(body, PhaseStrideVisitor(ctx′, i, i0))
                 strides = [strides; visit!(ctx.dims[i].stop, ctx)]
-                body = visit!(body, PhaseBodyContext(ctx′, i, i0, step))
+                body = visit!(body, PhaseBodyVisitor(ctx′, i, i0, step))
                 block = quote
                     $(scope(ctx′) do ctx′′
                         restrict(ctx′′, i => Extent(Virtual{Any}(i0), Virtual{Any}(step))) do
@@ -92,7 +92,7 @@ function visit!(root, ctx::LowerJuliaContext, ::PipelineStyle)
     return thunk
 end
 
-function postvisit!(node, ctx::PipelineContext, args)
+function postvisit!(node, ctx::PipelineVisitor, args)
     res = map(flatten((product(args...),))) do phases
         keys = map(first, phases)
         bodies = map(last, phases)
@@ -101,44 +101,44 @@ function postvisit!(node, ctx::PipelineContext, args)
         )
     end
 end
-postvisit!(node, ctx::PipelineContext) = [([], node)]
-visit!(node::Pipeline, ctx::PipelineContext, ::DefaultStyle) = enumerate(node.phases)
+postvisit!(node, ctx::PipelineVisitor) = [([], node)]
+visit!(node::Pipeline, ctx::PipelineVisitor, ::DefaultStyle) = enumerate(node.phases)
 
-Base.@kwdef struct PhaseThunkContext <: AbstractWalkContext
+Base.@kwdef struct PhaseThunkVisitor <: AbstractWalkVisitor
     ctx
     idx
     start
 end
-function visit!(node::Phase, ctx::PhaseThunkContext, ::DefaultStyle)
+function visit!(node::Phase, ctx::PhaseThunkVisitor, ::DefaultStyle)
     push!(ctx.ctx.preamble, node.preamble)
     push!(ctx.ctx.epilogue, node.epilogue)
     node
 end
 
-Base.@kwdef struct PhaseGuardContext <: AbstractCollectContext
+Base.@kwdef struct PhaseGuardVisitor <: AbstractCollectVisitor
     ctx
     idx
     start
 end
-collect_op(::PhaseGuardContext) = (args) -> vcat(args...) #flatten?
-collect_zero(::PhaseGuardContext) = []
-visit!(node::Phase, ctx::PhaseGuardContext, ::DefaultStyle) = node.guard === nothing ? [] : [something(node.guard)(ctx.start)]
+collect_op(::PhaseGuardVisitor) = (args) -> vcat(args...) #flatten?
+collect_zero(::PhaseGuardVisitor) = []
+visit!(node::Phase, ctx::PhaseGuardVisitor, ::DefaultStyle) = node.guard === nothing ? [] : [something(node.guard)(ctx.start)]
 
-Base.@kwdef struct PhaseStrideContext <: AbstractCollectContext
+Base.@kwdef struct PhaseStrideVisitor <: AbstractCollectVisitor
     ctx
     idx
     start
 end
-collect_op(::PhaseStrideContext) = (args) -> vcat(args...) #flatten?
-collect_zero(::PhaseStrideContext) = []
-visit!(node::Phase, ctx::PhaseStrideContext, ::DefaultStyle) = node.stride === nothing ? [] : [something(node.stride)(ctx.start)]
+collect_op(::PhaseStrideVisitor) = (args) -> vcat(args...) #flatten?
+collect_zero(::PhaseStrideVisitor) = []
+visit!(node::Phase, ctx::PhaseStrideVisitor, ::DefaultStyle) = node.stride === nothing ? [] : [something(node.stride)(ctx.start)]
 
-Base.@kwdef struct PhaseBodyContext <: AbstractTransformContext
+Base.@kwdef struct PhaseBodyVisitor <: AbstractTransformVisitor
     ctx
     idx
     start
     step
 end
-visit!(node::Phase, ctx::PhaseBodyContext, ::DefaultStyle) = node.body(ctx.start, ctx.step)
-visit!(node::Stepper, ctx::PhaseBodyContext, ::DefaultStyle) = truncate(node, ctx.start, ctx.step, visit!(ctx.ctx.dims[ctx.idx].stop, ctx.ctx))
-visit!(node::Spike, ctx::PhaseBodyContext, ::DefaultStyle) = truncate(node, ctx.start, ctx.step, visit!(ctx.ctx.dims[ctx.idx].stop, ctx.ctx))
+visit!(node::Phase, ctx::PhaseBodyVisitor, ::DefaultStyle) = node.body(ctx.start, ctx.step)
+visit!(node::Stepper, ctx::PhaseBodyVisitor, ::DefaultStyle) = truncate(node, ctx.start, ctx.step, visit!(ctx.ctx.dims[ctx.idx].stop, ctx.ctx))
+visit!(node::Spike, ctx::PhaseBodyVisitor, ::DefaultStyle) = truncate(node, ctx.start, ctx.step, visit!(ctx.ctx.dims[ctx.idx].stop, ctx.ctx))

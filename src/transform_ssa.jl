@@ -1,12 +1,12 @@
-struct SSAContext{Ctx} <: AbstractTransformContext
+struct SSAVisitor{Ctx} <: AbstractTransformVisitor
     renames
     binds
     ctx::Ctx
 end
 
-SSAContext(ctx) = SSAContext(Dict(), [], ctx)
+SSAVisitor(ctx) = SSAVisitor(Dict(), [], ctx)
 
-function resolvename!(root, ctx::SSAContext, freshen)
+function resolvename!(root, ctx::SSAVisitor, freshen)
     name = getname(root)
     if haskey(ctx.renames, name)
         if isempty(ctx.renames[name]) #redefining global name
@@ -22,7 +22,7 @@ function resolvename!(root, ctx::SSAContext, freshen)
     end
 end
 
-function definename!(root, ctx::SSAContext, freshen)
+function definename!(root, ctx::SSAVisitor, freshen)
     name = getname(root)
     push!(ctx.binds, name)
     if haskey(ctx.renames, name)
@@ -35,9 +35,9 @@ function definename!(root, ctx::SSAContext, freshen)
     end
 end
 
-function scope(f::F, ctx::SSAContext) where {F}
+function scope(f::F, ctx::SSAVisitor) where {F}
     binds′ = []
-    res = f(SSAContext(ctx.renames, binds′))
+    res = f(SSAVisitor(ctx.renames, binds′))
     for name in binds′
         pop!(ctx.renames[name])
     end
@@ -46,16 +46,16 @@ end
 
 #globals are getglobals(prgm) and getresult(prgm)
 function getarguments(prgm)
-    spc = SSAContext()
+    spc = SSAVisitor()
     transform_ssa!(prgm, spc)
     return filter(name -> !isempty(spc.renames[name]), keys(spc.renames))
 end
 
-function visit!(root::Name, ctx::SSAContext)
+function visit!(root::Name, ctx::SSAVisitor)
     resolvename!(root, ctx)
 end
 
-function visit!(root::Loop, ctx::SSAContext)
+function visit!(root::Loop, ctx::SSAVisitor)
     scope(ctx) do ctx′
         idxs = map(idx->definename!(idx, ctx′), root.idxs)
         body = ctx(root.body)
@@ -63,7 +63,7 @@ function visit!(root::Loop, ctx::SSAContext)
     end
 end
 
-function visit!(root::With, ctx::SSAContext)
+function visit!(root::With, ctx::SSAVisitor)
     scope(ctx) do ctx′
         prod = ctx(root.prod, ctx′)
         cons = ctx(root.cons, ctx)
@@ -71,7 +71,7 @@ function visit!(root::With, ctx::SSAContext)
     end
 end
 
-function visit!(root::Access, ctx::SSAContext)
+function visit!(root::Access, ctx::SSAVisitor)
     if root.mode != Read()
         tns = definename!(root.tns, ctx)
     else
