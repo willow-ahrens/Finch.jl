@@ -40,7 +40,7 @@ function (ctx::LowerJulia)(root::Loop, ::StepperStyle)
             if length(strides) == 1 && length(guards) == 1
                 guard = guards[1]
             else
-                guard = :($i0 <= $((ctx)(ctx.dims[i].stop)))
+                guard = :($i0 <= $(ctx(ctx.dims[i].stop)))
             end
         end
         body = (StepperBodyVisitor(ctx′, i, i0, step))(root)

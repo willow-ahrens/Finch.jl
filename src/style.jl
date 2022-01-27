@@ -27,7 +27,7 @@ resolve_style(root, ctx, node, style) = style
 
 abstract type AbstractVisitor end
 
-(ctx::AbstractVisitor)(root) = (ctx)(root, make_style(root, ctx))
+(ctx::AbstractVisitor)(root) = ctx(root, make_style(root, ctx))
 
 
 abstract type AbstractTraverseVisitor <: AbstractVisitor end

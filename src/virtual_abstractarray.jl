@@ -14,8 +14,8 @@ end
 
 function lower_axis_merge(ctx::Finch.LowerJulia, a::Extent, b::Extent)
     push!(ctx.preamble, quote
-        $((ctx)(a.start)) == $((ctx)(b.start)) || throw(DimensionMismatch("mismatched dimension starts"))
-        $((ctx)(a.stop)) == $((ctx)(b.stop)) || throw(DimensionMismatch("mismatched dimension stops"))
+        $(ctx(a.start)) == $(ctx(b.start)) || throw(DimensionMismatch("mismatched dimension starts"))
+        $(ctx(a.stop)) == $(ctx(b.stop)) || throw(DimensionMismatch("mismatched dimension stops"))
     end)
     a #TODO could do some simplify stuff here
 end

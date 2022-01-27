@@ -45,7 +45,7 @@ function (ctx::LowerJulia)(root, ::PipelineStyle)
             push!(thunk.args, scope(ctx) do ctx′
                 (PhaseThunkVisitor(ctx′, i, i0))(body)
                 strides = (PhaseStrideVisitor(ctx′, i, i0))(body)
-                strides = [strides; (ctx)(ctx.dims[i].stop)]
+                strides = [strides; ctx(ctx.dims[i].stop)]
                 body = (PhaseBodyVisitor(ctx′, i, i0, step))(body)
                 quote
                     $step = min($(strides...))
@@ -64,7 +64,7 @@ function (ctx::LowerJulia)(root, ::PipelineStyle)
                 (PhaseThunkVisitor(ctx′, i, i0))(body)
                 guards = (PhaseGuardVisitor(ctx′, i, i0))(body)
                 strides = (PhaseStrideVisitor(ctx′, i, i0))(body)
-                strides = [strides; (ctx)(ctx.dims[i].stop)]
+                strides = [strides; ctx(ctx.dims[i].stop)]
                 body = (PhaseBodyVisitor(ctx′, i, i0, step))(body)
                 block = quote
                     $(scope(ctx′) do ctx′′

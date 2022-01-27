@@ -132,7 +132,7 @@ function (ctx::LowerJulia)(root::Assign, ::DefaultStyle)
     else
         rhs = ctx(call(root.op, root.lhs, root.rhs))
     end
-    lhs = (ctx)(root.lhs)
+    lhs = ctx(root.lhs)
     :($lhs = $rhs)
 end
 
@@ -142,7 +142,7 @@ end
 
 function (ctx::LowerJulia)(root::Name, ::DefaultStyle)
     @assert haskey(ctx.bindings, getname(root)) "variable $(getname(root)) unbound"
-    return (ctx)(ctx.bindings[getname(root)]) #This unwraps indices that are virtuals. Arguably these virtuals should be precomputed, but whatevs.
+    return ctx(ctx.bindings[getname(root)]) #This unwraps indices that are virtuals. Arguably these virtuals should be precomputed, but whatevs.
 end
 
 function (ctx::LowerJulia)(root::Literal, ::DefaultStyle)
@@ -182,13 +182,13 @@ end
 
 function (ctx::LowerJulia)(root::Access, ::DefaultStyle)
     @assert map(getname, root.idxs) ⊆ keys(ctx.bindings)
-    tns = (ctx)(root.tns)
+    tns = ctx(root.tns)
     idxs = map(ctx, root.idxs)
-    :($((ctx)(tns))[$(idxs...)])
+    :($(ctx(tns))[$(idxs...)])
 end
 
 function (ctx::LowerJulia)(root::Access{<:Scalar}, ::DefaultStyle)
-    return (ctx)(root.tns.val)
+    return ctx(root.tns.val)
 end
 
 function (ctx::LowerJulia)(root::Access{<:Number, Read}, ::DefaultStyle)
@@ -198,13 +198,13 @@ end
 
 function (ctx::LowerJulia)(stmt::Loop, ::DefaultStyle)
     if isempty(stmt.idxs)
-        return (ctx)(stmt.body)
+        return ctx(stmt.body)
     else
         idx_sym = ctx.freshen(getname(stmt.idxs[1]))
         body = Loop(stmt.idxs[2:end], stmt.body)
         ext = ctx.dims[getname(stmt.idxs[1])]
         return quote
-            for $idx_sym = $((ctx)(ext.start)):$((ctx)(ext.stop))
+            for $idx_sym = $(ctx(ext.start)):$(ctx(ext.stop))
                 $(bind(ctx, getname(stmt.idxs[1]) => idx_sym) do 
                     scope(ctx) do ctx′
                         body = ForLoopVisitor(ctx′, stmt.idxs[1], idx_sym)(body)

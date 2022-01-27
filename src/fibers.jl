@@ -322,7 +322,7 @@ function virtual_unfurl(lvl::VirtualHollowListLevel, tns, ctx, mode::Union{Write
                         resize!($(lvl.ex).idx, $(lvl.idx_q) * 4)
                         $(lvl.idx_q) *= 4
                     end
-                    $(lvl.ex).idx[$my_p] = $((ctx)(idx))
+                    $(lvl.ex).idx[$my_p] = $(ctx(idx))
                     $my_p += 1
                 end
             )

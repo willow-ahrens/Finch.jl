@@ -12,7 +12,7 @@ end
 function (ctx::LowerJulia)(root::Loop, ::ChunkStyle)
     root = (ChunkifyVisitor(ctx, root.idxs[1]))(root)
     #TODO add a simplify step here perhaps
-    (ctx)(root)
+    ctx(root)
 end
 
 struct AccessStyle end
@@ -29,7 +29,7 @@ end
 function (ctx::LowerJulia)(root::Loop, ::AccessStyle)
     root = (AccessVisitor(ctx))(root)
     #TODO add a simplify step here perhaps
-    (ctx)(root)
+    ctx(root)
 end
 
 function (ctx::LowerJulia)(root::Pass, ::AccessStyle)

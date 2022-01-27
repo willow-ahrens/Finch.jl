@@ -21,7 +21,7 @@ function (ctx::LowerJulia)(root::Loop, ::RunStyle)
     root = (AccessRunVisitor(root))(root)
     #TODO remove simplify step once we have dedicated handlers for it
     root = annihilate_index(root)
-    (ctx)(root)
+    ctx(root)
 end
 
 struct AccessRunVisitor <: AbstractTransformVisitor
@@ -55,10 +55,10 @@ function (ctx::LowerJulia)(root::Loop, ::AcceptRunStyle)
     body = Loop(root.idxs[2:end], root.body)
     body = (AcceptRunVisitor(body, idx, ctx))(body)
     if !(DirtyRunVisitor(idx))(body)
-        return (ctx)(body)
+        return ctx(body)
     else
         #call DefaultStyle, the only style that AcceptRunStyle promotes with
-        return (ctx)(root, DefaultStyle())
+        return ctx(root, DefaultStyle())
     end
 end
 

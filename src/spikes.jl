@@ -52,7 +52,7 @@ function (ctx::AccessSpikeBodyVisitor)(node::Run, ::DefaultStyle)
     return node
 end
 
-spike_body_stop(stop, ctx) = :($((ctx)(stop)) - 1)
+spike_body_stop(stop, ctx) = :($(ctx(stop)) - 1)
 spike_body_stop(stop::Integer, ctx) = stop - 1
 
 spike_body_range(ext::Extent, ctx) = Extent(ext.start, spike_body_stop(ext.stop, ctx))
