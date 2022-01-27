@@ -17,7 +17,7 @@ See also: [`getdims`](@ref), [`getsites`](@ref), [`combinedim`](@ref),
     dims
 end
 
-function visit!(node::Access, ctx::GatherDimensions)
+function previsit!(node::Access, ctx::GatherDimensions)
     if !istree(node.tns)
         for (idx, dim, n) in zip(getname.(node.idxs), getdims(node.tns, ctx.ctx), getsites(node.tns))
             site = (getname(node.tns), n)

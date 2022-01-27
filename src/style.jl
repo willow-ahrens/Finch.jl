@@ -34,7 +34,6 @@ abstract type AbstractTransformVisitor <: AbstractVisitor end
 (ctx::AbstractTransformVisitor)(node, style::DefaultStyle) = visit_default!(node, ctx)
 function visit_default!(node, ctx)
     node = previsit!(node, ctx)
-    visit!(node, ctx)
     if istree(node)
         postvisit!(node, ctx, map(ctx, arguments(node)))
     else
@@ -43,7 +42,6 @@ function visit_default!(node, ctx)
 end
 
 previsit!(node, ctx::AbstractTransformVisitor) = node
-visit!(node, ctx::AbstractTransformVisitor) = nothing
 postvisit!(node, ctx::AbstractTransformVisitor, args) = similarterm(node, operation(node), args)
 postvisit!(node, ctx::AbstractTransformVisitor) = node
 
