@@ -9,10 +9,10 @@ struct ChunkifyVisitor <: AbstractTransformVisitor
     idx
 end
 
-function visit!(root::Loop, ctx::LowerJulia, ::ChunkStyle)
-    root = visit!(root, ChunkifyVisitor(ctx, root.idxs[1]))
+function (ctx::LowerJulia)(root::Loop, ::ChunkStyle)
+    root = (ChunkifyVisitor(ctx, root.idxs[1]))(root)
     #TODO add a simplify step here perhaps
-    visit!(root, ctx)
+    (ctx)(root)
 end
 
 struct AccessStyle end
@@ -26,12 +26,12 @@ struct AccessVisitor <: AbstractTransformVisitor
     ctx
 end
 
-function visit!(root::Loop, ctx::LowerJulia, ::AccessStyle)
-    root = visit!(root, AccessVisitor(ctx))
+function (ctx::LowerJulia)(root::Loop, ::AccessStyle)
+    root = (AccessVisitor(ctx))(root)
     #TODO add a simplify step here perhaps
-    visit!(root, ctx)
+    (ctx)(root)
 end
 
-function visit!(root::Pass, ctx::LowerJulia, ::AccessStyle)
+function (ctx::LowerJulia)(root::Pass, ::AccessStyle)
     quote end
 end

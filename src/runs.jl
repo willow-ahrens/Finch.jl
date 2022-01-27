@@ -16,23 +16,23 @@ combine_style(a::DefaultStyle, b::RunStyle) = RunStyle()
 combine_style(a::ThunkStyle, b::RunStyle) = ThunkStyle()
 combine_style(a::RunStyle, b::RunStyle) = RunStyle()
 
-function visit!(root::Loop, ctx::LowerJulia, ::RunStyle)
+function (ctx::LowerJulia)(root::Loop, ::RunStyle)
     @assert !isempty(root.idxs)
-    root = visit!(root, AccessRunVisitor(root))
+    root = (AccessRunVisitor(root))(root)
     #TODO remove simplify step once we have dedicated handlers for it
     root = annihilate_index(root)
-    visit!(root, ctx)
+    (ctx)(root)
 end
 
 struct AccessRunVisitor <: AbstractTransformVisitor
     root
 end
 
-function visit!(node::Access{Run, Read}, ctx::AccessRunVisitor, ::DefaultStyle)
+function (ctx::AccessRunVisitor)(node::Access{Run, Read}, ::DefaultStyle)
     return node.tns.body
 end
 
-function visit!(node::Access{Run, Read}, ctx::ForLoopVisitor, ::DefaultStyle)
+function (ctx::ForLoopVisitor)(node::Access{Run, Read}, ::DefaultStyle)
     return node.tns.body
 end
 
@@ -50,15 +50,15 @@ combine_style(a::ThunkStyle, b::AcceptRunStyle) = ThunkStyle()
 combine_style(a::AcceptRunStyle, b::AcceptRunStyle) = AcceptRunStyle()
 combine_style(a::RunStyle, b::AcceptRunStyle) = RunStyle()
 
-function visit!(root::Loop, ctx::LowerJulia, ::AcceptRunStyle)
+function (ctx::LowerJulia)(root::Loop, ::AcceptRunStyle)
     idx = root.idxs[1]
     body = Loop(root.idxs[2:end], root.body)
-    body = visit!(body, AcceptRunVisitor(body, idx, ctx))
-    if !visit!(body, DirtyRunVisitor(idx))
-        return visit!(body, ctx)
+    body = (AcceptRunVisitor(body, idx, ctx))(body)
+    if !(DirtyRunVisitor(idx))(body)
+        return (ctx)(body)
     else
         #call DefaultStyle, the only style that AcceptRunStyle promotes with
-        return visit!(root, ctx, DefaultStyle())
+        return (ctx)(root, DefaultStyle())
     end
 end
 
@@ -67,7 +67,7 @@ Base.@kwdef mutable struct DirtyRunVisitor <: AbstractCollectVisitor
 end
 collect_op(ctx::DirtyRunVisitor) = any
 collect_zero(ctx::DirtyRunVisitor) = false
-function visit!(node::Access, ctx::DirtyRunVisitor, ::DefaultStyle)
+function (ctx::DirtyRunVisitor)(node::Access, ::DefaultStyle)
     return getname(ctx.idx) in map(getname, node.idxs)
 end
 
@@ -77,11 +77,11 @@ Base.@kwdef mutable struct AcceptRunVisitor <: AbstractTransformVisitor
     ctx
 end
 
-function visit!(node::Access{AcceptRun, <:Union{Write, Update}}, ctx::AcceptRunVisitor, ::DefaultStyle)
+function (ctx::AcceptRunVisitor)(node::Access{AcceptRun, <:Union{Write, Update}}, ::DefaultStyle)
     ext = ctx.ctx.dims[getname(ctx.idx)]
     node.tns.body(ctx.ctx, ext.start, ext.stop)
 end
 
-function visit!(node::Access{AcceptRun}, ctx::ForLoopVisitor, ::DefaultStyle)
+function (ctx::ForLoopVisitor)(node::Access{AcceptRun}, ::DefaultStyle)
     node.tns.body(ctx.ctx, ctx.val, ctx.val)
 end

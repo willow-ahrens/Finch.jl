@@ -38,7 +38,7 @@ Finch.getname(arr::VirtualSimpleRunLength) = arr.name
 Finch.make_style(root::Loop, ctx::Finch.LowerJulia, node::Access{<:VirtualSimpleRunLength}) =
     getname(root.idxs[1]) == getname(node.idxs[1]) ? Finch.ChunkStyle() : Finch.DefaultStyle()
 
-function Finch.visit!(node::Access{VirtualSimpleRunLength{Tv, Ti}, Read}, ctx::Finch.ChunkifyVisitor, ::Finch.DefaultStyle) where {Tv, Ti}
+function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSimpleRunLength{Tv, Ti}, Read}, ::Finch.DefaultStyle) where {Tv, Ti}
     vec = node.tns
     my_i′ = ctx.ctx.freshen(getname(vec), :_i1)
     my_p = ctx.ctx.freshen(getname(vec), :_p)
@@ -69,7 +69,7 @@ function Finch.visit!(node::Access{VirtualSimpleRunLength{Tv, Ti}, Read}, ctx::F
     end
 end
 
-function Finch.visit!(node::Access{<:VirtualSimpleRunLength{Tv, Ti}, <: Union{Write, Update}}, ctx::Finch.ChunkifyVisitor, ::Finch.DefaultStyle) where {Tv, Ti}
+function (ctx::Finch.ChunkifyVisitor)(node::Access{<:VirtualSimpleRunLength{Tv, Ti}, <: Union{Write, Update}}, ::Finch.DefaultStyle) where {Tv, Ti}
     vec = node.tns
     my_p = ctx.ctx.freshen(node.tns.name, :_p)
     if getname(ctx.idx) == getname(node.idxs[1])

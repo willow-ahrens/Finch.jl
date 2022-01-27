@@ -21,14 +21,14 @@ combine_style(a::StepperStyle, b::CaseStyle) = CaseStyle()
 combine_style(a::ThunkStyle, b::StepperStyle) = ThunkStyle()
 #combine_style(a::StepperStyle, b::PipelineStyle) = PipelineStyle()
 
-function visit!(root::Loop, ctx::LowerJulia, ::StepperStyle)
+function (ctx::LowerJulia)(root::Loop, ::StepperStyle)
     i = getname(root.idxs[1])
     i0 = ctx.freshen(i, :_start)
     guard = nothing
     body = scope(ctx) do ctx′
-        visit!(root, StepperThunkVisitor(ctx′, i, i0)) #TODO we could just use actual thunks here and call a thunkcontext, would look cleaner.
-        guards = visit!(root, StepperGuardVisitor(ctx′, i, i0))
-        strides = visit!(root, StepperStrideVisitor(ctx′, i, i0))
+        (StepperThunkVisitor(ctx′, i, i0))(root) #TODO we could just use actual thunks here and call a thunkcontext, would look cleaner.
+        guards = (StepperGuardVisitor(ctx′, i, i0))(root)
+        strides = (StepperStrideVisitor(ctx′, i, i0))(root)
         if isempty(strides)
             step = ctx′(ctx.dims[i].stop)
             step_min = quote end
@@ -40,15 +40,15 @@ function visit!(root::Loop, ctx::LowerJulia, ::StepperStyle)
             if length(strides) == 1 && length(guards) == 1
                 guard = guards[1]
             else
-                guard = :($i0 <= $(visit!(ctx.dims[i].stop, ctx)))
+                guard = :($i0 <= $((ctx)(ctx.dims[i].stop)))
             end
         end
-        body = visit!(root, StepperBodyVisitor(ctx′, i, i0, step))
+        body = (StepperBodyVisitor(ctx′, i, i0, step))(root)
         quote
             $step_min
             $(scope(ctx′) do ctx′′
                 restrict(ctx′′, i => Extent(Virtual{Any}(i0), Virtual{Any}(step))) do
-                    visit!(body, ctx′′)
+                    (ctx′′)(body)
                 end
             end)
             $i0 = $step + 1
@@ -67,7 +67,7 @@ Base.@kwdef struct StepperThunkVisitor <: AbstractWalkVisitor
     idx
     start
 end
-function visit!(node::Stepper, ctx::StepperThunkVisitor, ::DefaultStyle)
+function (ctx::StepperThunkVisitor)(node::Stepper, ::DefaultStyle)
     push!(ctx.ctx.preamble, node.preamble)
     push!(ctx.ctx.epilogue, node.epilogue)
     node
@@ -80,7 +80,7 @@ Base.@kwdef struct StepperStrideVisitor <: AbstractCollectVisitor
 end
 collect_op(::StepperStrideVisitor) = (args) -> vcat(args...) #flatten?
 collect_zero(::StepperStrideVisitor) = []
-visit!(node::Stepper, ctx::StepperStrideVisitor, ::DefaultStyle) = [node.stride(ctx.start)]
+(ctx::StepperStrideVisitor)(node::Stepper, ::DefaultStyle) = [node.stride(ctx.start)]
 
 
 Base.@kwdef struct StepperGuardVisitor <: AbstractCollectVisitor
@@ -90,7 +90,7 @@ Base.@kwdef struct StepperGuardVisitor <: AbstractCollectVisitor
 end
 collect_op(::StepperGuardVisitor) = (args) -> vcat(args...) #flatten?
 collect_zero(::StepperGuardVisitor) = []
-visit!(node::Stepper, ctx::StepperGuardVisitor, ::DefaultStyle) = node.guard === nothing ? [] : [node.guard(ctx.start)]
+(ctx::StepperGuardVisitor)(node::Stepper, ::DefaultStyle) = node.guard === nothing ? [] : [node.guard(ctx.start)]
 
 Base.@kwdef struct StepperBodyVisitor <: AbstractTransformVisitor
     ctx
@@ -98,8 +98,8 @@ Base.@kwdef struct StepperBodyVisitor <: AbstractTransformVisitor
     start
     step
 end
-visit!(node::Stepper, ctx::StepperBodyVisitor, ::DefaultStyle) = node.body(ctx.start, ctx.step)
-visit!(node::Spike, ctx::StepperBodyVisitor, ::DefaultStyle) = truncate(node, ctx.start, ctx.step, visit!(ctx.ctx.dims[ctx.idx].stop, ctx.ctx))
+(ctx::StepperBodyVisitor)(node::Stepper, ::DefaultStyle) = node.body(ctx.start, ctx.step)
+(ctx::StepperBodyVisitor)(node::Spike, ::DefaultStyle) = truncate(node, ctx.start, ctx.step, (ctx.ctx)(ctx.ctx.dims[ctx.idx].stop))
 
 truncate(node, start, step, stop) = node
 function truncate(node::Spike, start, step, stop)

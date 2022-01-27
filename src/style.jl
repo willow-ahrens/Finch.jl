@@ -1,8 +1,6 @@
 struct DefaultStyle end
 struct UnknownStyle end
 
-visit!(node, ctx) = visit!(node, ctx, make_style(node, ctx))
-
 make_style(root, ctx) = make_style(root, ctx, root)
 function make_style(root, ctx, node)
     if istree(node)
@@ -29,15 +27,16 @@ resolve_style(root, ctx, node, style) = style
 
 abstract type AbstractVisitor end
 
-(ctx::AbstractVisitor)(root) = visit!(root, ctx)
+(ctx::AbstractVisitor)(root) = (ctx)(root, make_style(root, ctx))
+
 
 abstract type AbstractTraverseVisitor <: AbstractVisitor end
 
-visit!(node, ctx::AbstractTraverseVisitor, style::DefaultStyle) = visit_default!(node, ctx)
+(ctx::AbstractTraverseVisitor)(node, style::DefaultStyle) = visit_default!(node, ctx)
 function visit_default!(node, ctx)
     node = previsit!(node, ctx)
     if istree(node)
-        postvisit!(node, ctx, map(arg->visit!(arg, ctx), arguments(node)))
+        postvisit!(node, ctx, map(ctx, arguments(node)))
     else
         postvisit!(node, ctx)
     end
@@ -78,7 +77,7 @@ struct PostMapVisitor{F} <: AbstractTransformVisitor
     f::F
 end
 
-function visit!(node, ctx::PostMapVisitor, ::DefaultStyle)
+function (ctx::PostMapVisitor)(node, ::DefaultStyle)
     node′ = ctx.f(node)
     if node′ === nothing
         visit_default!(node, ctx)
@@ -87,7 +86,7 @@ function visit!(node, ctx::PostMapVisitor, ::DefaultStyle)
     end
 end
 
-postmap(f, root) = visit!(root, PostMapVisitor(f))
+postmap(f, root) = (PostMapVisitor(f))(root)
 
 struct PostMapReduceVisitor{F, G} <: AbstractCollectVisitor
     f::F
@@ -97,7 +96,7 @@ end
 
 postvisit!(node, ctx::PostMapReduceVisitor) = ctx.init
 postvisit!(node, ctx::PostMapReduceVisitor, args) = ctx.g(args...)
-function visit!(node, ctx::PostMapReduceVisitor, ::DefaultStyle)
+function (ctx::PostMapReduceVisitor)(node, ::DefaultStyle)
     node′ = ctx.f(node)
     if node′ === nothing
         visit_default!(node, ctx)
@@ -106,7 +105,7 @@ function visit!(node, ctx::PostMapReduceVisitor, ::DefaultStyle)
     end
 end
 
-postmapreduce(f, g, root, init) = visit!(root, PostMapReduceVisitor(f, g, init))
+postmapreduce(f, g, root, init) = (PostMapReduceVisitor(f, g, init))(root)
 
 Base.@kwdef struct QuantifiedVisitor{Ctx} <: AbstractTraverseVisitor
     parent::Ctx

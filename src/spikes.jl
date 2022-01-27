@@ -14,24 +14,24 @@ combine_style(a::ThunkStyle, b::SpikeStyle) = ThunkStyle()
 combine_style(a::AcceptRunStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::SpikeStyle, b::SpikeStyle) = SpikeStyle()
 
-function visit!(root::Loop, ctx::LowerJulia, ::SpikeStyle)
+function (ctx::LowerJulia)(root::Loop, ::SpikeStyle)
     @assert !isempty(root.idxs)
     idx = root.idxs[1]
-    root_body = visit!(root, AccessSpikeBodyVisitor(root, ctx, idx))
+    root_body = AccessSpikeBodyVisitor(root, ctx, idx)(root)
     #TODO arguably we could take several better alternative approaches to rediminsionalization here
     body_expr = restrict(ctx, getname(root.idxs[1]) => spike_body_range(ctx.dims[getname(root.idxs[1])], ctx)) do
         scope(ctx) do ctx′
-            visit!(annihilate_index(root_body), ctx′)
+            (ctx′)(annihilate_index(root_body))
         end
     end
     val = ctx.dims[getname(root.idxs[1])].stop
     tail_expr = bind(ctx, getname(root.idxs[1]) => val) do 
         scope(ctx) do ctx′
-            root_tail = visit!(Loop(root.idxs[2:end], root.body), AccessSpikeTailVisitor(root, ctx′, idx, val))
+            root_tail = AccessSpikeTailVisitor(root, ctx′, idx, val)(Loop(root.idxs[2:end], root.body))
             #The next call is a convenient fallback, but make no mistake, all chunks must work with all other chunks.
             #It's a handshake problem and you can't get around it.
-            root_tail = visit!(root_tail, ForLoopVisitor(ctx′, idx, val))
-            visit!(annihilate_index(root_tail), ctx′)
+            root_tail = ForLoopVisitor(ctx′, idx, val)(root_tail)
+            (ctx′)(annihilate_index(root_tail))
         end
     end
     return Expr(:block, body_expr, tail_expr)
@@ -44,15 +44,15 @@ Base.@kwdef struct AccessSpikeBodyVisitor <: AbstractTransformVisitor
     idx
 end
 
-function visit!(node::Spike, ctx::AccessSpikeBodyVisitor, ::DefaultStyle)
+function (ctx::AccessSpikeBodyVisitor)(node::Spike, ::DefaultStyle)
     return Run(node.body)
 end
 
-function visit!(node::Run, ctx::AccessSpikeBodyVisitor, ::DefaultStyle)
+function (ctx::AccessSpikeBodyVisitor)(node::Run, ::DefaultStyle)
     return node
 end
 
-spike_body_stop(stop, ctx) = :($(visit!(stop, ctx)) - 1)
+spike_body_stop(stop, ctx) = :($((ctx)(stop)) - 1)
 spike_body_stop(stop::Integer, ctx) = stop - 1
 
 spike_body_range(ext::Extent, ctx) = Extent(ext.start, spike_body_stop(ext.stop, ctx))
@@ -64,11 +64,11 @@ Base.@kwdef struct AccessSpikeTailVisitor <: AbstractTransformVisitor
     val
 end
 
-function visit!(node::Access{Spike}, ctx::AccessSpikeTailVisitor, ::DefaultStyle)
+function (ctx::AccessSpikeTailVisitor)(node::Access{Spike}, ::DefaultStyle)
     return node.tns.tail
 end
 
-function visit!(node::Access{Spike}, ctx::ForLoopVisitor, ::DefaultStyle)
+function (ctx::ForLoopVisitor)(node::Access{Spike}, ::DefaultStyle)
     return node.tns.tail
 end
 
@@ -87,10 +87,10 @@ combine_style(a::AcceptRunStyle, b::AcceptSpikeStyle) = AcceptSpikeStyle()
 combine_style(a::RunStyle, b::AcceptSpikeStyle) = RunStyle()
 combine_style(a::SpikeStyle, b::AcceptSpikeStyle) = SpikeStyle()
 
-function visit!(root::Loop, ctx::LowerJulia, ::AcceptSpikeStyle)
+function (ctx::LowerJulia)(root::Loop, ::AcceptSpikeStyle)
     #call DefaultStyle because we didn't simplify away the body or tail of
     #corresponding Spikes, and need to set all the elements of the spike.
-    return visit!(Loop(root.idxs[1:end], root.body), ctx, DefaultStyle())
+    return ctx(Loop(root.idxs[1:end], root.body), DefaultStyle())
 end
 
 Base.@kwdef mutable struct AcceptSpikeVisitor <: AbstractTransformVisitor
@@ -98,6 +98,6 @@ Base.@kwdef mutable struct AcceptSpikeVisitor <: AbstractTransformVisitor
     ctx
 end
 
-function visit!(node::Access{AcceptSpike}, ctx::ForLoopVisitor, ::DefaultStyle)
+function (ctx::ForLoopVisitor)(node::Access{AcceptSpike}, ::DefaultStyle)
     node.tns.tail(ctx.ctx, ctx.val)
 end

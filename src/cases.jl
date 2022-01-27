@@ -17,12 +17,12 @@ combine_style(a::CaseStyle, b::CaseStyle) = CaseStyle()
 
 struct CasesVisitor <: AbstractCollectVisitor end
 
-function visit!(stmt, ctx::LowerJulia, ::CaseStyle)
-    cases = visit!(stmt, CasesVisitor())
+function (ctx::LowerJulia)(stmt, ::CaseStyle)
+    cases = (CasesVisitor())(stmt)
     function nest(cases, inner=false)
         guard, body = cases[1]
         body = scope(ctx) do ctx′
-            visit!(body, ctx′)
+            (ctx′)(body)
         end
         length(cases) == 1 && return body
         inner && return Expr(:elseif, guard, body, nest(cases[2:end], true))
@@ -43,4 +43,4 @@ function postvisit!(node, ctx::CasesVisitor, args)
     end
 end
 postvisit!(node, ctx::CasesVisitor) = [(true => node)]
-visit!(node::Cases, ctx::CasesVisitor, ::DefaultStyle) = node.cases
+(ctx::CasesVisitor)(node::Cases, ::DefaultStyle) = node.cases

@@ -109,14 +109,14 @@ struct ThunkVisitor <: AbstractTransformVisitor
     ctx
 end
 
-function visit!(node, ctx::LowerJulia, ::ThunkStyle)
+function (ctx::LowerJulia)(node, ::ThunkStyle)
     scope(ctx) do ctx2
-        node = visit!(node, ThunkVisitor(ctx2))
-        visit!(node, ctx2)
+        node = (ThunkVisitor(ctx2))(node)
+        (ctx2)(node)
     end
 end
 
-function visit!(node::Thunk, ctx::ThunkVisitor, ::DefaultStyle)
+function (ctx::ThunkVisitor)(node::Thunk, ::DefaultStyle)
     push!(ctx.ctx.preamble, node.preamble)
     push!(ctx.ctx.epilogue, node.epilogue)
     node.body
@@ -124,50 +124,50 @@ end
 
 #default lowering
 
-visit!(::Pass, ctx::LowerJulia, ::DefaultStyle) = quote end
+(ctx::LowerJulia)(::Pass, ::DefaultStyle) = quote end
 
-function visit!(root::Assign, ctx::LowerJulia, ::DefaultStyle)
+function (ctx::LowerJulia)(root::Assign, ::DefaultStyle)
     if root.op == nothing
-        rhs = visit!(root.rhs, ctx)
+        rhs = ctx(root.rhs)
     else
-        rhs = visit!(call(root.op, root.lhs, root.rhs), ctx)
+        rhs = ctx(call(root.op, root.lhs, root.rhs))
     end
-    lhs = visit!(root.lhs, ctx)
+    lhs = (ctx)(root.lhs)
     :($lhs = $rhs)
 end
 
-function visit!(root::Call, ctx::LowerJulia, ::DefaultStyle)
-    :($(visit!(root.op, ctx))($(map(arg->visit!(arg, ctx), root.args)...)))
+function (ctx::LowerJulia)(root::Call, ::DefaultStyle)
+    :($(ctx(root.op))($(map(ctx, root.args)...)))
 end
 
-function visit!(root::Name, ctx::LowerJulia, ::DefaultStyle)
+function (ctx::LowerJulia)(root::Name, ::DefaultStyle)
     @assert haskey(ctx.bindings, getname(root)) "variable $(getname(root)) unbound"
-    return visit!(ctx.bindings[getname(root)], ctx) #This unwraps indices that are virtuals. Arguably these virtuals should be precomputed, but whatevs.
+    return (ctx)(ctx.bindings[getname(root)]) #This unwraps indices that are virtuals. Arguably these virtuals should be precomputed, but whatevs.
 end
 
-function visit!(root::Literal, ctx::LowerJulia, ::DefaultStyle)
+function (ctx::LowerJulia)(root::Literal, ::DefaultStyle)
     return root.val
 end
 
-function visit!(root, ctx::LowerJulia, ::DefaultStyle)
+function (ctx::LowerJulia)(root, ::DefaultStyle)
     if isliteral(root)
         return getvalue(root)
     end
     error("Don't know how to lower $root")
 end
 
-function visit!(root::Virtual, ctx::LowerJulia, ::DefaultStyle)
+function (ctx::LowerJulia)(root::Virtual, ::DefaultStyle)
     return root.ex
 end
 
-function visit!(root::With, ctx::LowerJulia, ::DefaultStyle)
+function (ctx::LowerJulia)(root::With, ::DefaultStyle)
     return quote
         $(initialize_prgm!(root.prod, ctx))
         $(scope(ctx) do ctx2
-            visit!(prod, ctx2)
+            (ctx2)(prod)
         end)
         $(scope(ctx) do ctx2
-            visit!(cons, ctx2)
+            (ctx2)(cons)
         end)
     end
 end
@@ -180,35 +180,35 @@ function initialize_program!(root, ctx)
     end
 end
 
-function visit!(root::Access, ctx::LowerJulia, ::DefaultStyle)
+function (ctx::LowerJulia)(root::Access, ::DefaultStyle)
     @assert map(getname, root.idxs) ⊆ keys(ctx.bindings)
-    tns = visit!(root.tns, ctx)
-    idxs = map(idx->visit!(idx, ctx), root.idxs)
-    :($(visit!(tns, ctx))[$(idxs...)])
+    tns = (ctx)(root.tns)
+    idxs = map(ctx, root.idxs)
+    :($((ctx)(tns))[$(idxs...)])
 end
 
-function visit!(root::Access{<:Scalar}, ctx::LowerJulia, ::DefaultStyle)
-    return visit!(root.tns.val, ctx)
+function (ctx::LowerJulia)(root::Access{<:Scalar}, ::DefaultStyle)
+    return (ctx)(root.tns.val)
 end
 
-function visit!(root::Access{<:Number, Read}, ctx::LowerJulia, ::DefaultStyle)
+function (ctx::LowerJulia)(root::Access{<:Number, Read}, ::DefaultStyle)
     @assert isempty(root.idxs)
     return root.tns
 end
 
-function visit!(stmt::Loop, ctx::LowerJulia, ::DefaultStyle)
+function (ctx::LowerJulia)(stmt::Loop, ::DefaultStyle)
     if isempty(stmt.idxs)
-        return visit!(stmt.body, ctx)
+        return (ctx)(stmt.body)
     else
         idx_sym = ctx.freshen(getname(stmt.idxs[1]))
         body = Loop(stmt.idxs[2:end], stmt.body)
         ext = ctx.dims[getname(stmt.idxs[1])]
         return quote
-            for $idx_sym = $(visit!(ext.start, ctx)):$(visit!(ext.stop, ctx))
+            for $idx_sym = $((ctx)(ext.start)):$((ctx)(ext.stop))
                 $(bind(ctx, getname(stmt.idxs[1]) => idx_sym) do 
                     scope(ctx) do ctx′
-                        body = visit!(body, ForLoopVisitor(ctx′, stmt.idxs[1], idx_sym))
-                        visit!(body, ctx′)
+                        body = ForLoopVisitor(ctx′, stmt.idxs[1], idx_sym)(body)
+                        (ctx′)(body)
                     end
                 end)
             end
@@ -226,6 +226,6 @@ Base.@kwdef struct Leaf
     body
 end
 
-function visit!(node::Access{Leaf}, ctx::ForLoopVisitor, ::DefaultStyle)
+function (ctx::ForLoopVisitor)(node::Access{Leaf}, ::DefaultStyle)
     node.tns.body(ctx.val)
 end

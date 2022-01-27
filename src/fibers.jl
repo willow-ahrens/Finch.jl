@@ -171,7 +171,7 @@ function virtual_refurl(fbr::VirtualFiber, p, i, mode, tail...)
     return Access(res, mode, Any[tail...])
 end
 
-function visit!(node::Access{VirtualFiber}, ctx::Finch.ChunkifyVisitor, ::DefaultStyle) where {Tv, Ti}
+function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualFiber}, ::DefaultStyle) where {Tv, Ti}
     if getname(ctx.idx) == getname(node.idxs[1])
         Access(virtual_unfurl(node.tns.lvls[node.tns.R], node.tns, ctx.ctx, node.mode, node.idxs...), node.mode, node.idxs)
     else
@@ -179,7 +179,7 @@ function visit!(node::Access{VirtualFiber}, ctx::Finch.ChunkifyVisitor, ::Defaul
     end
 end
 
-function visit!(node::Access{VirtualFiber}, ctx::Finch.AccessVisitor, ::DefaultStyle) where {Tv, Ti}
+function (ctx::Finch.AccessVisitor)(node::Access{VirtualFiber}, ::DefaultStyle) where {Tv, Ti}
     if isempty(node.idxs)
         virtual_unfurl(node.tns.lvls[node.tns.R], node.tns, ctx.ctx, node.mode)
     else
@@ -322,7 +322,7 @@ function virtual_unfurl(lvl::VirtualHollowListLevel, tns, ctx, mode::Union{Write
                         resize!($(lvl.ex).idx, $(lvl.idx_q) * 4)
                         $(lvl.idx_q) *= 4
                     end
-                    $(lvl.ex).idx[$my_p] = $(visit!(idx, ctx))
+                    $(lvl.ex).idx[$my_p] = $((ctx)(idx))
                     $my_p += 1
                 end
             )

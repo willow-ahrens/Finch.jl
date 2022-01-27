@@ -51,11 +51,11 @@ function getarguments(prgm)
     return filter(name -> !isempty(spc.renames[name]), keys(spc.renames))
 end
 
-function visit!(root::Name, ctx::SSAVisitor)
+function (ctx::SSAVisitor)(root::Name)
     resolvename!(root, ctx)
 end
 
-function visit!(root::Loop, ctx::SSAVisitor)
+function (ctx::SSAVisitor)(root::Loop)
     scope(ctx) do ctx′
         idxs = map(idx->definename!(idx, ctx′), root.idxs)
         body = ctx(root.body)
@@ -63,7 +63,7 @@ function visit!(root::Loop, ctx::SSAVisitor)
     end
 end
 
-function visit!(root::With, ctx::SSAVisitor)
+function (ctx::SSAVisitor)(root::With)
     scope(ctx) do ctx′
         prod = ctx(root.prod, ctx′)
         cons = ctx(root.cons, ctx)
@@ -71,7 +71,7 @@ function visit!(root::With, ctx::SSAVisitor)
     end
 end
 
-function visit!(root::Access, ctx::SSAVisitor)
+function (ctx::SSAVisitor)(root::Access)
     if root.mode != Read()
         tns = definename!(root.tns, ctx)
     else

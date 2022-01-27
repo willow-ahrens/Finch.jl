@@ -14,15 +14,15 @@ end
 
 function lower_axis_merge(ctx::Finch.LowerJulia, a::Extent, b::Extent)
     push!(ctx.preamble, quote
-        $(visit!(a.start, ctx)) == $(visit!(b.start, ctx)) || throw(DimensionMismatch("mismatched dimension starts"))
-        $(visit!(a.stop, ctx)) == $(visit!(b.stop, ctx)) || throw(DimensionMismatch("mismatched dimension stops"))
+        $((ctx)(a.start)) == $((ctx)(b.start)) || throw(DimensionMismatch("mismatched dimension starts"))
+        $((ctx)(a.stop)) == $((ctx)(b.stop)) || throw(DimensionMismatch("mismatched dimension stops"))
     end)
     a #TODO could do some simplify stuff here
 end
 getsites(arr::VirtualAbstractArray) = 1:arr.ndims
 getname(arr::VirtualAbstractArray) = arr.name
 
-function visit!(arr::VirtualAbstractArray, ctx::LowerJulia, ::DefaultStyle)
+function (ctx::LowerJulia)(arr::VirtualAbstractArray, ::DefaultStyle)
     return arr.ex
 end
 
