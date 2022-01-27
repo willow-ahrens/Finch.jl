@@ -1,0 +1,1 @@
+shallowcopy(x::T) where T = T([getfield(x, k) for k ∈ fieldnames(T)]...)

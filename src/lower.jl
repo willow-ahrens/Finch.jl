@@ -4,21 +4,25 @@ Base.@kwdef mutable struct Extent
 end
 
 struct Freshen
+    seen
     counts
 end
-Freshen() = Freshen(Dict())
+Freshen() = Freshen(Set(), Dict())
 function (spc::Freshen)(tags...)
     name = Symbol(tags...)
     m = match(r"^(.*)_(\d*)$", string(name))
     if m === nothing
         tag = name
-        n = 0
+        n = 1
     else
         tag = m.captures[1]
         n = parse(BigInt, m.captures[2])
     end
-    n = max(get(spc.counts, tag, 0), n) + 1
-    spc.counts[tag] = n
+    if (tag, n) in spc.seen
+        n = max(get(spc.counts, tag, 0), n) + 1
+        spc.counts[tag] = n
+    end
+    push!(spc.seen, (tag, n))
     if n == 1
         return Symbol(tag)
     else

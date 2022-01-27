@@ -1,109 +1,88 @@
-struct SSAVisitor{Ctx} <: AbstractTransformVisitor
+"""
+    TransformSSA(freshen)
+
+A callable that transforms a program to SSA form. Fresh names will be generated
+with `freshen(name)`.
+"""
+mutable struct TransformSSA <: AbstractTransformVisitor
     renames
     binds
-    ctx::Ctx
+    freshen
 end
 
-SSAVisitor(ctx) = SSAVisitor(Dict(), [], ctx)
+TransformSSA(freshen) = TransformSSA(Dict(), [], freshen)
 
-function resolvename!(root, ctx::SSAVisitor, freshen)
+function resolvename!(root, ctx::TransformSSA)
     name = getname(root)
     if haskey(ctx.renames, name)
         if isempty(ctx.renames[name]) #redefining global name
-            name′ = freshen(name, ctx.ctx)
+            name′ = ctx.freshen(name)
             push!(ctx.renames[name], name′)
-            return rename(root, name′)
+            return setname(root, name′)
         else
-            return rename(root, ctx.renames[name][end])
+            return setname(root, ctx.renames[name][end])
         end
     else
         ctx.renames[name] = Any[name]
-        return rename(root, name)
+        return setname(root, name)
     end
 end
 
-function definename!(root, ctx::SSAVisitor, freshen)
+function definename!(root, ctx::TransformSSA)
     name = getname(root)
     push!(ctx.binds, name)
-    if haskey(ctx.renames, name)
-        name′ = freshen(name, ctx.ctx)
-        push!(ctx.renames[name], name′)
-        return rename(root, name′)
-    else
-        ctx.renames[name] = Any[name]
-        return rename(root, name)
-    end
+    println(name, ctx.renames)
+    name2 = ctx.freshen(name)
+    push!(get!(ctx.renames, name, []), name2)
+    return setname(root, name2)
 end
 
-function scope(f::F, ctx::SSAVisitor) where {F}
-    binds′ = []
-    res = f(SSAVisitor(ctx.renames, binds′))
-    for name in binds′
+function scope(f::F, ctx::TransformSSA) where {F}
+    #ctx_2 = shallowcopy(ctx)
+    ctx_2 = TransformSSA(ctx.renames, ctx.binds, ctx.freshen)
+    ctx_2.binds = []
+    res = f(ctx_2)
+    for name in ctx_2.binds
         pop!(ctx.renames[name])
     end
     return res
 end
 
-#globals are getglobals(prgm) and getresult(prgm)
-function getarguments(prgm)
-    spc = SSAVisitor()
+#globals are getglobals(prgm) and getresults(prgm)
+#TODO make a version of this that returns tensors that are sources called getsources?
+#=
+function getglobals(prgm)
+    spc = TransformSSA()
     transform_ssa!(prgm, spc)
     return filter(name -> !isempty(spc.renames[name]), keys(spc.renames))
 end
+=#
 
-function (ctx::SSAVisitor)(root::Name)
+function (ctx::TransformSSA)(root::Name)
     resolvename!(root, ctx)
 end
 
-function (ctx::SSAVisitor)(root::Loop)
-    scope(ctx) do ctx′
-        idxs = map(idx->definename!(idx, ctx′), root.idxs)
+function (ctx::TransformSSA)(root::Loop)
+    scope(ctx) do ctx2
+        idxs = map(idx->definename!(idx, ctx2), root.idxs)
         body = ctx(root.body)
         return loop(idxs, body)
     end
 end
 
-function (ctx::SSAVisitor)(root::With)
-    scope(ctx) do ctx′
-        prod = ctx(root.prod, ctx′)
-        cons = ctx(root.cons, ctx)
+function (ctx::TransformSSA)(root::With)
+    scope(ctx) do ctx2
+        prod = ctx2(root.prod)
+        cons = ctx(root.cons)
         return with(cons, prod)
     end
 end
 
-function (ctx::SSAVisitor)(root::Access)
+function (ctx::TransformSSA)(root::Access)
     if root.mode != Read()
         tns = definename!(root.tns, ctx)
     else
         tns = resolvename!(root.tns, ctx)
     end
     return Access(tns, root.mode, map(ctx, root.idxs))
-end
-
-is_homomorphic(a, b) = is_homomorphic(a, b, Dict())
-function _is_homomorphic(a, b, names)
-    res = is_homomorphic(a, b, names)
-    if !res
-        println(a)
-        println(b)
-        println()
-    end
-    return res
-end
-
-function is_homomorphic(a, b, names)
-    if istree(a) && istree(b)
-        if operation(a) == operation(b)
-            if length(arguments(a)) == length(arguments(b))
-                return all(map((c, d) -> is_homomorphic(c, d, names), arguments(a), arguments(b)))
-            end
-        end
-    else
-        if isrenamable(a) && isrenamable(b)
-            return a == rename(deepcopy(b), get!(names, getname(a), getname(a)))
-        else
-            return a == b
-        end
-    end
-    return false
 end
