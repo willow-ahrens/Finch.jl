@@ -1,5 +1,5 @@
 """
-dimensionalization assumes foralls have unique indices.
+dimensionalization assumes SSA form.
 """
 
 function dimensionalize!(root, ctx)
