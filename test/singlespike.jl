@@ -25,13 +25,14 @@ function Finch.virtualize(ex, ::Type{SingleSpike{D, Tv}}, ctx, tag=:tns) where {
     VirtualSingleSpike{Tv}(sym, tag, D)
 end
 
-function Finch.lower_axes(arr::VirtualSingleSpike{Tv}, ctx::Finch.LowerJulia) where {Tv}
+function Finch.getdims(arr::VirtualSingleSpike{Tv}, ctx::Finch.LowerJulia) where {Tv}
     ex = ctx.freshen(arr.name, :_stop)
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))
     (Extent(1, Virtual{Int}(ex)),)
 end
 Finch.getsites(arr::VirtualSingleSpike) = (1,)
 Finch.getname(arr::VirtualSingleSpike) = arr.name
+Finch.setname(arr::VirtualSingleSpike, name) = (arr_2 = deepcopy(arr); arr_2.name = name; arr_2)
 Finch.make_style(root::Loop, ctx::Finch.LowerJulia, node::Access{<:VirtualSingleSpike}) =
     getname(root.idxs[1]) == getname(node.idxs[1]) ? Finch.ChunkStyle() : Finch.DefaultStyle()
 

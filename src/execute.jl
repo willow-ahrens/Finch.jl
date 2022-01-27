@@ -11,7 +11,8 @@ end
 function execute_code_lowered(ex, T)
     code = scope(LowerJulia()) do ctx
         prgm = virtualize(ex, T, ctx)
-        dimensionalize!(prgm, ctx)
+        prgm = TransformSSA(ctx.freshen)(prgm)
+        GatherDimensions(ctx, ctx.dims)(prgm)
         quote
             $(initialize_program!(prgm, ctx))
             $(scope(ctx) do ctx2

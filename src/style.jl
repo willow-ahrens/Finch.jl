@@ -29,12 +29,12 @@ abstract type AbstractVisitor end
 
 (ctx::AbstractVisitor)(root) = ctx(root, make_style(root, ctx))
 
+abstract type AbstractTransformVisitor <: AbstractVisitor end
 
-abstract type AbstractTraverseVisitor <: AbstractVisitor end
-
-(ctx::AbstractTraverseVisitor)(node, style::DefaultStyle) = visit_default!(node, ctx)
+(ctx::AbstractTransformVisitor)(node, style::DefaultStyle) = visit_default!(node, ctx)
 function visit_default!(node, ctx)
     node = previsit!(node, ctx)
+    visit!(node, ctx)
     if istree(node)
         postvisit!(node, ctx, map(ctx, arguments(node)))
     else
@@ -42,13 +42,12 @@ function visit_default!(node, ctx)
     end
 end
 
-abstract type AbstractTransformVisitor <: AbstractTraverseVisitor end
-
 previsit!(node, ctx::AbstractTransformVisitor) = node
+visit!(node, ctx::AbstractTransformVisitor) = nothing
 postvisit!(node, ctx::AbstractTransformVisitor, args) = similarterm(node, operation(node), args)
 postvisit!(node, ctx::AbstractTransformVisitor) = node
 
-abstract type AbstractCollectVisitor <: AbstractTraverseVisitor end
+abstract type AbstractCollectVisitor <: AbstractTransformVisitor end
 function collect_op end
 function collect_zero end
 
@@ -56,15 +55,7 @@ previsit!(node, ctx::AbstractCollectVisitor) = node
 postvisit!(node, ctx::AbstractCollectVisitor, args) = collect_op(ctx)(args)
 postvisit!(node, ctx::AbstractCollectVisitor) = collect_zero(ctx)
 
-abstract type AbstractWalkVisitor <: AbstractTraverseVisitor end
-
-previsit!(node, ctx::AbstractWalkVisitor) = node
-postvisit!(node, ctx::AbstractWalkVisitor, args) = nothing
-postvisit!(node, ctx::AbstractWalkVisitor) = nothing
-
-
-
-abstract type AbstractWrapperVisitor <: AbstractTraverseVisitor end
+abstract type AbstractWrapperVisitor <: AbstractTransformVisitor end
 
 previsit!(node, ctx::AbstractWrapperVisitor) = previsit!(node, getparent(ctx))
 postvisit!(node, ctx::AbstractWrapperVisitor, args) = transform(node, getparent(ctx), args)
@@ -107,7 +98,7 @@ end
 
 postmapreduce(f, g, root, init) = (PostMapReduceVisitor(f, g, init))(root)
 
-@kwdef struct QuantifiedVisitor{Ctx} <: AbstractTraverseVisitor
+@kwdef struct QuantifiedVisitor{Ctx} <: AbstractTransformVisitor
     parent::Ctx
     qnt = []
     diff = []

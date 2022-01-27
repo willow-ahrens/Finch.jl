@@ -1,8 +1,8 @@
 """
     TransformSSA(freshen)
 
-A callable that transforms a program to SSA form. Fresh names will be generated
-with `freshen(name)`.
+A transformation of a program to SSA form. Fresh names will be generated with
+`freshen(name)`.
 """
 @kwdef mutable struct TransformSSA <: AbstractTransformVisitor
     renames

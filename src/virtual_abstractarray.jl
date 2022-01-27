@@ -4,7 +4,7 @@
     ex
 end
 
-function lower_axes(arr::VirtualAbstractArray, ctx::LowerJulia) where {T <: AbstractArray}
+function getdims(arr::VirtualAbstractArray, ctx::LowerJulia) where {T <: AbstractArray}
     dims = map(i -> ctx.freshen(arr.name, :_mode, i, :_stop), 1:arr.ndims)
     push!(ctx.preamble, quote
         ($(dims...),) = size($(arr.ex))
@@ -12,15 +12,10 @@ function lower_axes(arr::VirtualAbstractArray, ctx::LowerJulia) where {T <: Abst
     return map(i->Extent(1, Virtual{Int}(dims[i])), 1:arr.ndims)
 end
 
-function lower_axis_merge(ctx::Finch.LowerJulia, a::Extent, b::Extent)
-    push!(ctx.preamble, quote
-        $(ctx(a.start)) == $(ctx(b.start)) || throw(DimensionMismatch("mismatched dimension starts"))
-        $(ctx(a.stop)) == $(ctx(b.stop)) || throw(DimensionMismatch("mismatched dimension stops"))
-    end)
-    a #TODO could do some simplify stuff here
-end
+
 getsites(arr::VirtualAbstractArray) = 1:arr.ndims
 getname(arr::VirtualAbstractArray) = arr.name
+setname(arr::VirtualAbstractArray, name) = (arr_2 = deepcopy(arr); arr_2.name = name; arr_2)
 
 function (ctx::LowerJulia)(arr::VirtualAbstractArray, ::DefaultStyle)
     return arr.ex

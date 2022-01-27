@@ -28,13 +28,14 @@ function Finch.virtual_initialize!(arr::VirtualSimpleRunLength{Tv}, ctx::Finch.L
     end
 end 
 
-function Finch.lower_axes(arr::VirtualSimpleRunLength{Tv, Ti}, ctx::Finch.LowerJulia) where {Tv, Ti}
+function Finch.getdims(arr::VirtualSimpleRunLength{Tv, Ti}, ctx::Finch.LowerJulia) where {Tv, Ti}
     ex = ctx.freshen(arr.name, :_stop)
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))
     (Extent(1, Virtual{Ti}(ex)),)
 end
 Finch.getsites(arr::VirtualSimpleRunLength) = (1,)
 Finch.getname(arr::VirtualSimpleRunLength) = arr.name
+Finch.setname(arr::VirtualSimpleRunLength, name) = (arr_2 = deepcopy(arr); arr_2.name = name; arr_2)
 Finch.make_style(root::Loop, ctx::Finch.LowerJulia, node::Access{<:VirtualSimpleRunLength}) =
     getname(root.idxs[1]) == getname(node.idxs[1]) ? Finch.ChunkStyle() : Finch.DefaultStyle()
 

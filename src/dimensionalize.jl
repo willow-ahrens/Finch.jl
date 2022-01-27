@@ -1,62 +1,97 @@
 """
-dimensionalization assumes SSA form.
-"""
+    GatherDimensions(ctx, dims)
 
-function dimensionalize!(root, ctx)
-    Postwalk(node -> (collect_dimensions!(node, ctx); node))(root)
+A program traversal which gathers the dimensions of tensors based on shared
+indices. Index sharing is transitive, so `A[i] = B[i]` and `B[j] = C[j]` will
+induce a gathering of the dimensions of `A`, `B`, and `C` into one. The
+resulting dimensions are gathered into a `Dimensions` object, which can be
+accesed with an index name or a `(tensor_name, mode_name)` tuple.
+
+The program is assumed to be in SSA form.
+
+See also: [`getdims`](@ref), [`getsites`](@ref), [`combinedim`](@ref),
+[`TransformSSA`](@ref)
+"""
+@kwdef struct GatherDimensions <: AbstractTransformVisitor
+    ctx
+    dims
 end
 
-collect_dimensions!(node, ctx) = nothing
-
-function collect_dimensions!(node::Access, ctx)
-    dims = getdims(ctx)
+function visit!(node::Access, ctx::GatherDimensions)
     if !istree(node.tns)
-        for (idx, lowered_axis, n) in zip(getname.(node.idxs), lower_axes(node.tns, ctx), getsites(node.tns))
+        for (idx, dim, n) in zip(getname.(node.idxs), getdims(node.tns, ctx.ctx), getsites(node.tns))
             site = (getname(node.tns), n)
-            if !haskey(dims, site)
-                push!(dims.labels, site)
-                dims.lowered_axes[site] = lowered_axis
+            if !haskey(ctx.dims, site)
+                push!(ctx.dims.labels, site)
+                ctx.dims.dims[site] = dim
             end
-            site_axis = dims[site]
-            if !haskey(dims, idx)
-                push!(dims.labels, idx)
-                dims.lowered_axes[union!(dims.labels, site, idx)] = site_axis
-            elseif !in_same_set(dims.labels, idx, site)
-                idx_axis = dims[idx]
-                dims.lowered_axes[union!(dims.labels, site, idx)] =
+            site_axis = ctx.dims[site]
+            if !haskey(ctx.dims, idx)
+                push!(ctx.dims.labels, idx)
+                ctx.dims.dims[union!(ctx.dims.labels, site, idx)] = site_axis
+            elseif !in_same_set(ctx.dims.labels, idx, site)
+                idx_axis = ctx.dims[idx]
+                ctx.dims.dims[union!(ctx.dims.labels, site, idx)] =
                     site_axis === nothing ? idx_axis :
                     idx_axis === nothing ? site_axis :
-                    lower_axis_merge(ctx, idx_axis, site_axis)
+                    resultdim(ctx.ctx, idx_axis, site_axis)
             end
         end
     end
+    node
 end
 
-struct Dimensions
+mutable struct Dimensions
     labels
-    lowered_axes
+    dims
 end
-
-getdims(dims::Dimensions) = dims
 
 Dimensions() = Dimensions(DisjointSets{Any}(), Dict())
 
 #there is a wacky julia bug that is fixed on 70cc57cb36. It causes find_root! to sometimes
 #return the right index into dims.labels.revmap, but reinterprets the access as the wrong type.
 #not sure which commit actually fixed this, but I need to move on with my life.
-Base.getindex(dims::Dimensions, idx) = dims.lowered_axes[find_root!(dims.labels, idx)]
-Base.setindex!(dims::Dimensions, ext, idx) = dims.lowered_axes[find_root!(dims.labels, idx)] = ext
+Base.getindex(dims::Dimensions, idx) = dims.dims[find_root!(dims.labels, idx)]
+Base.setindex!(dims::Dimensions, ext, idx) = dims.dims[find_root!(dims.labels, idx)] = ext
 Base.haskey(dims::Dimensions, idx) = idx in dims.labels
-function isdimensionalized(dims::Dimensions, node::Access)
-    if !istree(node.tns)
-        for (n, idx) in zip(getsites(node.tns), getname.(node.idxs))
-            site = (getname(node.tns), n)
-            (haskey(dims, idx) && haskey(dims, site) && in_same_set(dims.labels, idx, site)) || return false
-        end
-    end
-    return true
-end
 
+struct UnknownDimension end
+
+resultdim(ctx, a, b) = _resultdim(ctx, combinedim(ctx, a, b), combinedim(ctx, b, a))
+_resultdim(ctx, a::UnknownDimension, b::UnknownDimension) = throw(MethodError(combinedim, ctx, a, b))
+_resultdim(ctx, a, b::UnknownDimension) = a
+_resultdim(ctx, a::UnknownDimension, b) = b
+#_resultdim(ctx, a::T, b::T) where {T} = (a == b) ? a : @assert false "TODO combinedim_ambiguity_error"
+#_resultdim(ctx, a, b) = (a == b) ? a : @assert false "TODO combinedim_ambiguity_error"
+_resultdim(ctx, a, b) = a
+
+"""
+    combinedim(ctx, a, b)
+
+Combine the two dimensions `a` and `b` in the context ctx. Usually, this
+involves checking that they are equivalent and returning one of them. To avoid
+ambiguity, only define one of
+
+```
+combinedim(::Ctx, ::A, ::B)
+combinedim(::Ctx, ::B, ::A)
+```
+"""
+combinedim(ctx, a, b) = UnknownDimension()
+
+"""
+    getdims(tns, ctx)
+
+Return an iterable over the dimensions of `tns` in the context `ctx`. This is
+a function similar in spirit to `Base.axes`.
+"""
 function getdims end
-function lower_axes end
-function lower_axis_merge end
+
+"""
+    getsites(tns)
+
+Return an iterable over the identities of the modes of `tns`. If `tns_2` is a
+transpose of `tns`, then `getsites(tns_2)` should be a permutation of
+`getsites(tns)` corresponding to the order in which modes have been permuted.
+"""
+function getsites end

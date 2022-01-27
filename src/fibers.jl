@@ -115,7 +115,7 @@ function make_style(root, ctx::Finch.LowerJulia, node::Access{VirtualFiber})
     end
 end
 
-function lower_axes(arr::VirtualFiber, ctx::LowerJulia) where {T <: AbstractArray}
+function getdims(arr::VirtualFiber, ctx::LowerJulia) where {T <: AbstractArray}
     dims = map(i -> ctx.freshen(arr.name, :_mode, i, :_stop), 1:arr.N)
     for (dim, lvl) in zip(dims, arr.lvls)
         #Could unroll more manually, but I'm not convinced it's worth it.
@@ -141,6 +141,7 @@ end
 
 getsites(arr::VirtualFiber) = 1:arr.N
 getname(arr::VirtualFiber) = arr.name
+setname(arr::VirtualFiber, name) = (arr_2 = deepcopy(arr); arr_2.name = name; arr_2)
 
 virtual_assemble(tns, ctx, q) =
     virtual_assemble(tns, ctx, [nothing for _ = 1:tns.R], q)

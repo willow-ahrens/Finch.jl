@@ -12,6 +12,8 @@ export @I, execute
 
 export Fiber, HollowList, Solid, Element
 
+include("util.jl")
+
 include("semantics.jl")
 include("IndexNotation/IndexNotation.jl")
 using .IndexNotation

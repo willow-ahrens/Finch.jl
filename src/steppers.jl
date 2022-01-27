@@ -62,7 +62,7 @@ function (ctx::LowerJulia)(root::Loop, ::StepperStyle)
     end
 end
 
-@kwdef struct StepperThunkVisitor <: AbstractWalkVisitor
+@kwdef struct StepperThunkVisitor <: AbstractTransformVisitor
     ctx
     idx
     start

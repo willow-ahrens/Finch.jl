@@ -8,7 +8,6 @@ using Finch: getname, Virtual
 @testset "Finch.jl" begin
 
     include("test_ssa.jl")
-    exit()
     include("fibers.jl")
     include("parse.jl")
     include("simplevectors.jl")

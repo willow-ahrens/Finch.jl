@@ -104,7 +104,7 @@ end
 postvisit!(node, ctx::PipelineVisitor) = [([], node)]
 (ctx::PipelineVisitor)(node::Pipeline, ::DefaultStyle) = enumerate(node.phases)
 
-@kwdef struct PhaseThunkVisitor <: AbstractWalkVisitor
+@kwdef struct PhaseThunkVisitor <: AbstractTransformVisitor
     ctx
     idx
     start

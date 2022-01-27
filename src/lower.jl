@@ -1,8 +1,3 @@
-@kwdef mutable struct Extent
-    start
-    stop
-end
-
 struct Freshen
     seen
     counts
@@ -41,8 +36,6 @@ end
     dims::Dimensions = Dimensions()
     freshen::Freshen = Freshen()
 end
-
-getdims(ctx::LowerJulia) = ctx.dims
 
 bind(f, ctx::LowerJulia) = f()
 function bind(f, ctx::LowerJulia, (var, val′), tail...)
@@ -94,6 +87,20 @@ function scope(f, ctx::LowerJulia)
     body = f(ctx′)
     return closescope(body, ctx′)
 end
+
+@kwdef mutable struct Extent
+    start
+    stop
+end
+
+function combinedim(ctx::Finch.LowerJulia, a::Extent, b::Extent)
+    push!(ctx.preamble, quote
+        $(ctx(a.start)) == $(ctx(b.start)) || throw(DimensionMismatch("mismatched dimension starts"))
+        $(ctx(a.stop)) == $(ctx(b.stop)) || throw(DimensionMismatch("mismatched dimension stops"))
+    end)
+    a #TODO could do some simplify stuff here
+end
+
 
 struct ThunkStyle end
 
