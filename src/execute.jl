@@ -35,7 +35,7 @@ function execute_code_lowered(ex, T)
             $code
         end
     end
-    code = MacroTools.prettify(code, alias=false, lines=false)
+    code = MacroTools.prettify(strip_res(code), alias=false, lines=false)
 end
 
 """
