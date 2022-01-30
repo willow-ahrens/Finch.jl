@@ -1,3 +1,5 @@
+#TODO should we just have another IR? Ugh idk
+
 function strip_res(ex, ignore = false)
     if ex isa Expr && ex.head == :block
         if ignore && ex.args[end] isa Symbol && 
