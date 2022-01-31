@@ -48,13 +48,13 @@ See also: [`initialize!`](@ref)
 struct Initialize{Ctx} <: AbstractTransformVisitor
     ctx::Ctx
 end
-initialize!(tns, ctx) = tns
+initialize!(tns, ctx, mode) = tns
 
 (ctx::Initialize)(node::With, ::DefaultStyle) =
     With(ctx(node.cons), node.prod)
 
 function postvisit!(acc::Access{<:Any, <:Union{Write, Update}}, ctx::Initialize, args)
-    Access(initialize!(acc.tns, ctx.ctx), acc.mode, acc.idxs)
+    Access(initialize!(acc.tns, ctx.ctx, acc.mode), acc.mode, acc.idxs)
 end
 
 """
@@ -68,13 +68,13 @@ See also: [`finalize!`](@ref)
 struct Finalize{Ctx} <: AbstractTransformVisitor
     ctx::Ctx
 end
-finalize!(tns, ctx) = tns
+finalize!(tns, ctx, mode) = tns
 
 (ctx::Finalize)(node::With, ::DefaultStyle) =
     With(ctx(node.cons), node.prod)
 
 function postvisit!(acc::Access{<:Any, <:Union{Write, Update}}, ctx::Finalize, args)
-    Access(finalize!(acc.tns, ctx.ctx), acc.mode, acc.idxs)
+    Access(finalize!(acc.tns, ctx.ctx, acc.mode), acc.mode, acc.idxs)
 end
 
 

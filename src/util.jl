@@ -1,4 +1,5 @@
 #TODO should we just have another IR? Ugh idk
+shallowcopy(x::T) where T = T([getfield(x, k) for k ∈ fieldnames(T)]...)
 
 function strip_res(ex, ignore = false)
     if ex isa Expr && ex.head == :block

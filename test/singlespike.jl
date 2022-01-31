@@ -25,7 +25,7 @@ function Finch.virtualize(ex, ::Type{SingleSpike{D, Tv}}, ctx, tag=:tns) where {
     VirtualSingleSpike{Tv}(sym, tag, D)
 end
 
-function Finch.getdims(arr::VirtualSingleSpike{Tv}, ctx::Finch.LowerJulia) where {Tv}
+function Finch.getdims(arr::VirtualSingleSpike{Tv}, ctx::Finch.LowerJulia, mode) where {Tv}
     ex = ctx.freshen(arr.name, :_stop)
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))
     (Extent(1, Virtual{Int}(ex)),)

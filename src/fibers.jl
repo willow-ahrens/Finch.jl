@@ -117,29 +117,22 @@ function make_style(root, ctx::Finch.LowerJulia, node::Access{VirtualFiber})
     end
 end
 
-function getdims(arr::VirtualFiber, ctx::LowerJulia) where {T <: AbstractArray}
-    dims = map(i -> ctx.freshen(arr.name, :_mode, i, :_stop), 1:arr.N)
-    for (dim, lvl) in zip(dims, arr.lvls)
-        #Could unroll more manually, but I'm not convinced it's worth it.
-        push!(ctx.preamble, :($dim = dimension($(lvl.ex)))) #TODO we don't know if every level has a .ex
+function getdims(arr::VirtualFiber, ctx::LowerJulia, mode)
+    @assert arr.R == 1
+    return map(1:arr.N) do R
+        getdims_level!(arr.lvls[R], arr, R, ctx, mode)
     end
-    return map(i->Extent(1, Virtual{Int}(dims[i])), 1:arr.N)
 end
 
-function initialize!(arr::VirtualFiber, ctx::LowerJulia)
+function initialize!(arr::VirtualFiber, ctx::LowerJulia, mode)
     @assert arr.R == 1
-    N = arr.N
-    thunk = Expr(:block)
-    for R = 1:N + 1
-        push!(thunk.args, initialize_level!(arr.lvls[R], arr, ctx))
-        arr.R += 1
-        arr.N -= 1
+    lvls_2 = map(1:arr.N + 1) do R
+        lvl_2 = initialize_level!(arr.lvls[R], arr, R, ctx, mode)
+        lvl_2 === nothing ? arr.lvls[R] : lvl_2
     end
-    arr.N = N
-    arr.R = 1
-    push!(thunk.args, virtual_assemble(arr, ctx, 1))
-    push!(ctx.preamble, thunk)
-    arr
+    arr_2 = deepcopy(arr)
+    arr_2.lvls = lvls_2
+    arr_2
 end
 
 getsites(arr::VirtualFiber) = 1:arr.N
@@ -149,13 +142,13 @@ setname(arr::VirtualFiber, name) = (arr_2 = deepcopy(arr); arr_2.name = name; ar
 virtual_assemble(tns, ctx, q) =
     virtual_assemble(tns, ctx, [nothing for _ = 1:tns.R], q)
 virtual_assemble(tns::VirtualFiber, ctx, qoss, q) =
-    virtual_assemble(tns.lvls[length(qoss) + 1], tns::VirtualFiber, ctx, vcat(qoss, [q]), q)
+    virtual_assemble(tns.lvls[length(qoss) + 1], tns, ctx, vcat(qoss, [q]), q)
 
 function virtualize(ex, ::Type{<:Fiber{Tv, N, R, Lvls, Poss, Idxs}}, ctx, tag=:tns) where {Tv, N, R, Lvls, Poss, Idxs}
     sym = ctx.freshen(tag)
     push!(ctx.preamble, :($sym = $ex))
     lvls = map(enumerate(Lvls.parameters)) do (n, Lvl)
-        virtualize(:($sym.lvls[$n]), Lvl, ctx)
+        virtualize(:($sym.lvls[$n]), Lvl, ctx, Symbol(tag, :_lvl, n))
     end
     poss = map(enumerate(Poss.parameters)) do (n, Pos)
         n == 1 ? 1 : virtualize(:($sym.poss[$n]), Pos, ctx)
@@ -200,9 +193,12 @@ struct VirtualHollowListLevel
     idx_q
 end
 
-function virtualize(ex, ::Type{HollowListLevel{D, Tv, Ti}}, ctx) where {D, Tv, Ti}
-    pos_q = ctx.freshen(:pos_q)
-    idx_q = ctx.freshen(:idx_q)
+function virtualize(ex, ::Type{HollowListLevel{D, Tv, Ti}}, ctx, tag=:lvl) where {D, Tv, Ti}
+    I = ctx.freshen(tag, :_I)
+    pos = ctx.freshen(tag, :_dim)
+    idx = ctx.freshen(tag, :_dim)
+    pos_q = ctx.freshen(tag, :pos_q)
+    idx_q = ctx.freshen(tag, :idx_q)
     push!(ctx.preamble, quote
         $pos_q = length($ex.pos)
         $idx_q = length($ex.idx)
@@ -210,8 +206,14 @@ function virtualize(ex, ::Type{HollowListLevel{D, Tv, Ti}}, ctx) where {D, Tv, T
     VirtualHollowListLevel(ex, D, Tv, Ti, pos_q, idx_q)
 end
 
-function initialize_level!(lvl::VirtualHollowListLevel, tns, ctx)
-    return quote
+function getdims_level!(lvl::VirtualHollowListLevel, arr, R, ctx, mode)
+    dim = ctx.freshen(arr.name, :_mode, R, :_stop)
+    push!(ctx.preamble, :($dim = dimension($(lvl.ex)))) #TODO we don't know if every level has a .ex
+    return Extent(1, Virtual{Int}(dim))
+end
+
+function initialize_level!(lvl::VirtualHollowListLevel, tns, R, ctx, mode)
+    push!(ctx.preamble, quote
         if $(lvl.pos_q) < 4
             resize!($(lvl.ex).pos, 4)
         end
@@ -221,7 +223,8 @@ function initialize_level!(lvl::VirtualHollowListLevel, tns, ctx)
             resize!($(lvl.ex).idx, 4)
         end
         $(lvl.idx_q) = 4
-    end
+    end)
+    nothing
 end
 
 function virtual_assemble(lvl::VirtualHollowListLevel, tns, ctx, qoss, q)
@@ -351,7 +354,13 @@ virtual_unfurl(lvl::VirtualSolidLevel, tns, ctx, mode::Read, idx::Name, tail...)
 virtual_unfurl(lvl::VirtualSolidLevel, tns, ctx, mode::Union{Write, Update}, idx::Name, tail...) =
     virtual_unfurl(lvl, tns, ctx, mode, laminate(idx), tail...)
 
-initialize_level!(lvl::VirtualSolidLevel, tns, ctx) = quote end
+
+function getdims_level!(lvl::VirtualSolidLevel, arr, R, ctx, mode)
+    dim = ctx.freshen(arr.name, :_mode, R, :_stop)
+    push!(ctx.preamble, :($dim = dimension($(lvl.ex)))) #TODO we don't know if every level has a .ex
+    return Extent(1, Virtual{Int}(dim))
+end
+initialize_level!(lvl::VirtualSolidLevel, tns, R, ctx, mode) = nothing
 
 function virtual_assemble(lvl::VirtualSolidLevel, tns, ctx, qoss, q)
     if q == nothing
@@ -403,9 +412,9 @@ function virtualize(ex, ::Type{ElementLevel{D, Tv}}, ctx) where {D, Tv}
     VirtualElementLevel(ex, Tv, D, val_q)
 end
 
-function initialize_level!(lvl::VirtualElementLevel, tns, ctx)
+function initialize_level!(lvl::VirtualElementLevel, tns, R, ctx, mode)
     my_q = ctx.freshen(:lvl, tns.R, :_q)
-    return quote
+    push!(ctx.preamble, quote
         if $(lvl.val_q) < 4
             resize!($(lvl.ex).val, 4)
         end
@@ -413,7 +422,8 @@ function initialize_level!(lvl::VirtualElementLevel, tns, ctx)
         for $my_q = 1:4
             $(lvl.ex).val[$my_q] = $(lvl.D)
         end
-    end
+    end)
+    nothing
 end
 
 function virtual_assemble(lvl::VirtualElementLevel, tns, ctx, qoss, q)

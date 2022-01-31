@@ -26,14 +26,15 @@ function Finch.virtualize(ex, ::Type{SimpleSparseVector{D, Tv, Ti}}, ctx, tag=:t
     VirtualSimpleSparseVector{Tv, Ti}(sym, tag, D)
 end
 
-function Finch.virtual_initialize!(arr::VirtualSimpleSparseVector{D, Tv}, ctx::Finch.LowerJulia) where {D, Tv}
-    quote 
+function Finch.initialize!(arr::VirtualSimpleSparseVector{D, Tv}, ctx::Finch.LowerJulia) where {D, Tv}
+    push!(ctx.preamble, quote
         $(arr.ex).idx = [$(arr.ex).idx[end]]
         $(arr.ex).val = $Tv[]
-    end
+    end)
+    arr
 end 
 
-function Finch.getdims(arr::VirtualSimpleSparseVector{Tv, Ti}, ctx::Finch.LowerJulia) where {Tv, Ti}
+function Finch.getdims(arr::VirtualSimpleSparseVector{Tv, Ti}, ctx::Finch.LowerJulia, mode) where {Tv, Ti}
     ex = ctx.freshen(arr.name, :_stop)
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))
     (Extent(1, Virtual{Ti}(ex)),)

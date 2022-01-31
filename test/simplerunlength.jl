@@ -21,14 +21,15 @@ function Finch.virtualize(ex, ::Type{SimpleRunLength{Tv, Ti}}, ctx, tag=:tns) wh
     VirtualSimpleRunLength{Tv, Ti}(sym, tag)
 end
 
-function Finch.virtual_initialize!(arr::VirtualSimpleRunLength{Tv}, ctx::Finch.LowerJulia) where {Tv}
-    quote 
+function Finch.initialize!(arr::VirtualSimpleRunLength{Tv}, ctx::Finch.LowerJulia, mode) where {Tv}
+    push!(ctx.preamble, quote 
         $(arr.ex).idx = [$(arr.ex).idx[end]]
         $(arr.ex).val = [$(zero(Tv))]
-    end
+    end)
+    arr
 end 
 
-function Finch.getdims(arr::VirtualSimpleRunLength{Tv, Ti}, ctx::Finch.LowerJulia) where {Tv, Ti}
+function Finch.getdims(arr::VirtualSimpleRunLength{Tv, Ti}, ctx::Finch.LowerJulia, mode) where {Tv, Ti}
     ex = ctx.freshen(arr.name, :_stop)
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))
     (Extent(1, Virtual{Ti}(ex)),)

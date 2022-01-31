@@ -19,7 +19,7 @@ end
 
 function previsit!(node::Access, ctx::GatherDimensions)
     if !istree(node.tns)
-        for (idx, dim, n) in zip(getname.(node.idxs), getdims(node.tns, ctx.ctx), getsites(node.tns))
+        for (idx, dim, n) in zip(getname.(node.idxs), getdims(node.tns, ctx.ctx, node.mode), getsites(node.tns))
             site = (getname(node.tns), n)
             if !haskey(ctx.dims, site)
                 push!(ctx.dims.labels, site)
@@ -80,10 +80,10 @@ combinedim(::Ctx, ::B, ::A)
 combinedim(ctx, a, b) = UnknownDimension()
 
 """
-    getdims(tns, ctx)
+    getdims(tns, ctx, mode)
 
-Return an iterable over the dimensions of `tns` in the context `ctx`. This is
-a function similar in spirit to `Base.axes`.
+Return an iterable over the dimensions of `tns` in the context `ctx` with access
+mode `mode`. This is a function similar in spirit to `Base.axes`.
 """
 function getdims end
 
