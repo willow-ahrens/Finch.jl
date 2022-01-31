@@ -1,6 +1,6 @@
 annihilate_index = @slots a b c i j f g Rewrite(Fixpoint(Prewalk(Chain([
     (@rule @i(f(a...)) => if isliteral(f) && all(isliteral, a) Literal(getvalue(f)(getvalue.(a)...)) end),
-    (@rule @i((a..., +(b...), c...)) => @i +(a..., b..., c...)),
+    (@rule @i(+(a..., +(b...), c...)) => @i +(a..., b..., c...)),
     (@rule @i(+(a...)) => if count(isliteral, a) >= 2 @i +($(filter(!isliteral, a)...), $(Literal(+(getvalue.(filter(isliteral, a))...)))) end),
     (@rule @i(+(a..., 0, b...)) => @i +(a..., b...)),
 
@@ -9,12 +9,12 @@ annihilate_index = @slots a b c i j f g Rewrite(Fixpoint(Prewalk(Chain([
     (@rule @i(*(a..., 1, b...)) => @i *(a..., b...)),
     (@rule @i(*(a..., 0, b...)) => 0),
 
-    (@rule @i((+)(a)) => a),
-    (@rule @i(a - b) => @i a + - b),
-    (@rule @i(- (- a)) => a),
-    (@rule @i(- +(a, b...)) => @i +(- a, - +(b...))),
-    (@rule @i((*)a) => a),
-    (@rule @i((*)(a..., - b, c...)) => @i -(*(a..., b, c...))),
+    (@rule @i((+)($a)) => a),
+    (@rule @i($a - $b) => @i a + - b),
+    (@rule @i(- (- $a)) => a),
+    (@rule @i(- +($a, b...)) => @i +(- a, - +(b...))),
+    (@rule @i((*)($a)) => a),
+    (@rule @i((*)(a..., - $b, c...)) => @i -(*(a..., b, c...))),
 
     (@rule @i(a[i...] = 0) => pass(a)), #TODO this is only valid when the default of A is 0
     (@rule @i(a[i...] += 0) => pass(a)),
@@ -28,7 +28,7 @@ annihilate_index = @slots a b c i j f g Rewrite(Fixpoint(Prewalk(Chain([
     ((a) -> if a isa Literal && isliteral(getvalue(a)) getvalue(a) end), #only quote when necessary
 
     (@rule @i(@loop i... @pass(a...)) => pass(a...)),
-    (@rule @i(@pass(a...) where b) => pass(a...)),
+    (@rule @i(@pass(a...) where $b) => pass(a...)),
     #(@rule @i(a where @pass(b...)) => a),#can't do this bc produced tensors won't get initialized
 ]))))
 
