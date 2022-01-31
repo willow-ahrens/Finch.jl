@@ -79,6 +79,30 @@ combinedim(::Ctx, ::B, ::A)
 """
 combinedim(ctx, a, b) = UnknownDimension()
 
+struct UnknownLimit end
+
+resultlim(ctx, a, b) = _resultlim(ctx, combinelim(ctx, a, b), combinelim(ctx, b, a))
+_resultlim(ctx, a::UnknownLimit, b::UnknownLimit) = throw(MethodError(combinelim, ctx, a, b))
+_resultlim(ctx, a, b::UnknownLimit) = a
+_resultlim(ctx, a::UnknownLimit, b) = b
+#_resultlim(ctx, a::T, b::T) where {T} = (a == b) ? a : @assert false "TODO combinelim_ambiguity_error"
+#_resultlim(ctx, a, b) = (a == b) ? a : @assert false "TODO combinelim_ambiguity_error"
+_resultlim(ctx, a, b) = a
+
+"""
+    combinelim(ctx, a, b)
+
+Combine the two dimension extent limits `a` and `b` in the context ctx. Usually, this
+involves checking that they are equivalent and returning one of them. To avoid
+ambiguity, only define one of
+
+```
+combinelim(::Ctx, ::A, ::B)
+combinelim(::Ctx, ::B, ::A)
+```
+"""
+combinelim(ctx, a, b) = UnknownLimit()
+
 """
     getdims(tns, ctx, mode)
 

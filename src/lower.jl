@@ -93,14 +93,34 @@ end
     stop
 end
 
-function combinedim(ctx::Finch.LowerJulia, a::Extent, b::Extent)
+combinedim(ctx, a::Extent, b::Extent) =
+    Extent(combinelim(ctx, a.start, b.start), combinelim(ctx, a.stop, b.stop))
+
+struct MissingExtent end
+
+combinedim(ctx::Finch.LowerJulia, a::MissingExtent, b::Extent) = b
+
+struct SuggestedExtent
+    ext
+end
+
+combinedim(ctx::Finch.LowerJulia, a::SuggestedExtent, b::Extent) = b
+
+combinedim(ctx::Finch.LowerJulia, a::SuggestedExtent, b::MissingExtent) = a
+
+combinedim(ctx::Finch.LowerJulia, a::SuggestedExtent, b::SuggestedExtent) = a #TODO this is a weird case, because either suggestion could set the dimension for the other.
+
+function combinelim(ctx::Finch.LowerJulia, a::Union{Virtual, Number}, b::Virtual)
     push!(ctx.preamble, quote
-        $(ctx(a.start)) == $(ctx(b.start)) || throw(DimensionMismatch("mismatched dimension starts"))
-        $(ctx(a.stop)) == $(ctx(b.stop)) || throw(DimensionMismatch("mismatched dimension stops"))
+        $(ctx(a)) == $(ctx(b)) || throw(DimensionMismatch("mismatched dimension starts"))
     end)
     a #TODO could do some simplify stuff here
 end
 
+function combinelim(ctx::Finch.LowerJulia, a::Number, b::Number)
+    a == b || throw(DimensionMismatch("mismatched dimension starts ($a != $b)"))
+    a #TODO could do some simplify stuff here
+end
 
 struct ThunkStyle end
 

@@ -202,6 +202,7 @@ struct VirtualHollowListLevel
     D
     Tv
     Ti
+    I
     pos_q
     idx_q
 end
@@ -211,22 +212,20 @@ end
 function virtualize(ex, ::Type{HollowListLevel{D, Tv, Ti}}, ctx, tag=:lvl) where {D, Tv, Ti}
     sym = ctx.freshen(tag)
     I = ctx.freshen(tag, :_I)
-    pos = ctx.freshen(tag, :_dim)
-    idx = ctx.freshen(tag, :_dim)
     pos_q = ctx.freshen(tag, :_pos_q)
     idx_q = ctx.freshen(tag, :_idx_q)
     push!(ctx.preamble, quote
         $sym = $ex
-        $pos_q = length($ex.pos)
-        $idx_q = length($ex.idx)
+        $I = $sym.I
+        $pos_q = length($sym.pos)
+        $idx_q = length($sym.idx)
     end)
-    VirtualHollowListLevel(sym, D, Tv, Ti, pos_q, idx_q)
+    VirtualHollowListLevel(sym, D, Tv, Ti, I, pos_q, idx_q)
 end
 
 function getdims_level!(lvl::VirtualHollowListLevel, arr, R, ctx, mode)
-    dim = ctx.freshen(arr.name, :_mode, R, :_stop)
-    push!(ctx.preamble, :($dim = dimension($(lvl.ex)))) #TODO we don't know if every level has a .ex
-    return Extent(1, Virtual{Int}(dim))
+    ext = Extent(1, Virtual{Int}(lvl.I))
+    return mode isa Read ? ext : SuggestedExtent(ext)
 end
 
 function initialize_level!(lvl::VirtualHollowListLevel, tns, R, ctx, mode)
@@ -243,8 +242,9 @@ function initialize_level!(lvl::VirtualHollowListLevel, tns, R, ctx, mode)
     end)
     if mode isa Union{Write, Update}
         push!(ctx.preamble, quote
+            $(lvl.I) = $(ctx(ctx.dims[(getname(tns), R)].stop))
             $(lvl.ex) = HollowListLevel{$(lvl.D), $(lvl.Tv), $(lvl.Ti)}(
-                $(lvl.Ti)($(ctx(ctx.dims[(getname(tns), R)].stop))),
+                $(lvl.Ti)($(lvl.I)),
                 $(lvl.ex).pos,
                 $(lvl.ex).idx,
             )
@@ -371,16 +371,19 @@ end
 struct VirtualSolidLevel
     ex
     Ti
+    I
 end
 
 (ctx::Finch.LowerJulia)(lvl::VirtualSolidLevel) = lvl.ex
 
 function virtualize(ex, ::Type{<:SolidLevel{Ti}}, ctx, tag=:lvl) where {Ti}
     sym = ctx.freshen(tag)
+    I = ctx.freshen(tag, :_stop)
     push!(ctx.preamble, quote
         $sym = $ex
+        $I = $sym.I
     end)
-    VirtualSolidLevel(sym, Ti)
+    VirtualSolidLevel(sym, Ti, I)
 end
 
 virtual_unfurl(lvl::VirtualSolidLevel, tns, ctx, mode::Read, idx::Name, tail...) =
@@ -390,16 +393,16 @@ virtual_unfurl(lvl::VirtualSolidLevel, tns, ctx, mode::Union{Write, Update}, idx
 
 
 function getdims_level!(lvl::VirtualSolidLevel, arr, R, ctx, mode)
-    dim = ctx.freshen(arr.name, :_mode, R, :_stop)
-    push!(ctx.preamble, :($dim = dimension($(lvl.ex)))) #TODO we don't know if every level has a .ex
-    return Extent(1, Virtual{Int}(dim))
+    ext = Extent(1, Virtual{Int}(lvl.I))
+    return mode isa Read ? ext : SuggestedExtent(ext)
 end
 
 function initialize_level!(lvl::VirtualSolidLevel, tns, R, ctx, mode)
     if mode isa Union{Write, Update}
         push!(ctx.preamble, quote
+            $(lvl.I) = $(ctx(ctx.dims[(getname(tns), R)].stop))
             $(lvl.ex) = SolidLevel{$(lvl.Ti)}(
-                $(lvl.Ti)($(ctx(ctx.dims[(getname(tns), R)].stop))),
+                $(lvl.Ti)($(lvl.I)),
             )
         end)
         lvl
