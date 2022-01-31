@@ -127,12 +127,25 @@ end
 function initialize!(arr::VirtualFiber, ctx::LowerJulia, mode)
     @assert arr.R == 1
     lvls_2 = map(1:arr.N + 1) do R
-        lvl_2 = initialize_level!(arr.lvls[R], arr, R, ctx, mode)
-        lvl_2 === nothing ? arr.lvls[R] : lvl_2
+        initialize_level!(arr.lvls[R], arr, R, ctx, mode)
     end
-    arr_2 = deepcopy(arr)
-    arr_2.lvls = lvls_2
-    arr_2
+    if !all(isnothing, lvls_2)
+        lvls_3 = map(zip(arr.lvls, lvls_2)) do (lvl, lvl_2)
+            lvl_2 === nothing ? lvl : lvl_2
+        end
+        arr_2 = deepcopy(arr)
+        arr_2.lvls = lvls_3
+        push!(ctx.preamble, quote
+            $(arr_2.ex) = Fiber{$(arr.Tv), $(arr.N), $(arr.R)}(
+                ($(map(ctx, lvls_3)...),),
+                ($(map(ctx, arr.poss)...),),
+                ($(map(ctx, arr.idxs)...),),
+            )
+        end)
+        arr_2
+    else
+        arr
+    end
 end
 
 getsites(arr::VirtualFiber) = 1:arr.N
@@ -193,17 +206,21 @@ struct VirtualHollowListLevel
     idx_q
 end
 
+(ctx::Finch.LowerJulia)(lvl::VirtualHollowListLevel) = lvl.ex
+
 function virtualize(ex, ::Type{HollowListLevel{D, Tv, Ti}}, ctx, tag=:lvl) where {D, Tv, Ti}
+    sym = ctx.freshen(tag)
     I = ctx.freshen(tag, :_I)
     pos = ctx.freshen(tag, :_dim)
     idx = ctx.freshen(tag, :_dim)
-    pos_q = ctx.freshen(tag, :pos_q)
-    idx_q = ctx.freshen(tag, :idx_q)
+    pos_q = ctx.freshen(tag, :_pos_q)
+    idx_q = ctx.freshen(tag, :_idx_q)
     push!(ctx.preamble, quote
+        $sym = $ex
         $pos_q = length($ex.pos)
         $idx_q = length($ex.idx)
     end)
-    VirtualHollowListLevel(ex, D, Tv, Ti, pos_q, idx_q)
+    VirtualHollowListLevel(sym, D, Tv, Ti, pos_q, idx_q)
 end
 
 function getdims_level!(lvl::VirtualHollowListLevel, arr, R, ctx, mode)
@@ -224,7 +241,18 @@ function initialize_level!(lvl::VirtualHollowListLevel, tns, R, ctx, mode)
         end
         $(lvl.idx_q) = 4
     end)
-    nothing
+    if mode isa Union{Write, Update}
+        push!(ctx.preamble, quote
+            $(lvl.ex) = HollowListLevel{$(lvl.D), $(lvl.Tv), $(lvl.Ti)}(
+                $(lvl.Ti)($(ctx(ctx.dims[(getname(tns), R)].stop))),
+                $(lvl.ex).pos,
+                $(lvl.ex).idx,
+            )
+        end)
+        lvl
+    else
+        return nothing
+    end
 end
 
 function virtual_assemble(lvl::VirtualHollowListLevel, tns, ctx, qoss, q)
@@ -345,8 +373,14 @@ struct VirtualSolidLevel
     Ti
 end
 
-function virtualize(ex, ::Type{<:SolidLevel{Ti}}, ctx) where {Ti}
-    VirtualSolidLevel(ex, Ti)
+(ctx::Finch.LowerJulia)(lvl::VirtualSolidLevel) = lvl.ex
+
+function virtualize(ex, ::Type{<:SolidLevel{Ti}}, ctx, tag=:lvl) where {Ti}
+    sym = ctx.freshen(tag)
+    push!(ctx.preamble, quote
+        $sym = $ex
+    end)
+    VirtualSolidLevel(sym, Ti)
 end
 
 virtual_unfurl(lvl::VirtualSolidLevel, tns, ctx, mode::Read, idx::Name, tail...) =
@@ -360,7 +394,19 @@ function getdims_level!(lvl::VirtualSolidLevel, arr, R, ctx, mode)
     push!(ctx.preamble, :($dim = dimension($(lvl.ex)))) #TODO we don't know if every level has a .ex
     return Extent(1, Virtual{Int}(dim))
 end
-initialize_level!(lvl::VirtualSolidLevel, tns, R, ctx, mode) = nothing
+
+function initialize_level!(lvl::VirtualSolidLevel, tns, R, ctx, mode)
+    if mode isa Union{Write, Update}
+        push!(ctx.preamble, quote
+            $(lvl.ex) = SolidLevel{$(lvl.Ti)}(
+                $(lvl.Ti)($(ctx(ctx.dims[(getname(tns), R)].stop))),
+            )
+        end)
+        lvl
+    else
+        return nothing
+    end
+end
 
 function virtual_assemble(lvl::VirtualSolidLevel, tns, ctx, qoss, q)
     if q == nothing
@@ -404,12 +450,16 @@ struct VirtualElementLevel
     val_q
 end
 
-function virtualize(ex, ::Type{ElementLevel{D, Tv}}, ctx) where {D, Tv}
-    val_q = ctx.freshen(:val_q)
+(ctx::Finch.LowerJulia)(lvl::VirtualElementLevel) = lvl.ex
+
+function virtualize(ex, ::Type{ElementLevel{D, Tv}}, ctx, tag) where {D, Tv}
+    sym = ctx.freshen(tag)
+    val_q = ctx.freshen(tag, :_val_q)
     push!(ctx.preamble, quote
+        $sym = $ex
         $val_q = length($ex.val)
     end)
-    VirtualElementLevel(ex, Tv, D, val_q)
+    VirtualElementLevel(sym, Tv, D, val_q)
 end
 
 function initialize_level!(lvl::VirtualElementLevel, tns, R, ctx, mode)
