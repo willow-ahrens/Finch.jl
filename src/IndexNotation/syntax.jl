@@ -28,13 +28,6 @@ function capture_index(ex; ctx...)
         op = capture_index(ex.args[3]; ctx..., namify=false, literalize=true)
         rhs = capture_index(ex.args[5]; ctx...)
         return :(assign($lhs, $op, $rhs))
-    elseif values(ctx).slot && ex isa Expr && ex.head == :call && length(ex.args) == 2 && ex.args[1] == :~ &&
-        ex.args[2] isa Symbol
-        return esc(ex)
-    elseif values(ctx).slot && ex isa Expr && ex.head == :call && length(ex.args) == 2 && ex.args[1] == :~ &&
-        ex.args[2] isa Expr && ex.args[2].head == :call && length(ex.args[2].args) == 2 && ex.args[2].args[1] == :~ &&
-        ex.args[2].args[2] isa Symbol
-        return esc(ex)
     elseif ex isa Expr && ex.head == :call && length(ex.args) >= 1
         op = capture_index(ex.args[1]; ctx..., namify=false, mode=Read())
         return :(call($op, $(map(arg->capture_index(arg; ctx..., namify=true, mode=Read()), ex.args[2:end])...)))
@@ -51,7 +44,7 @@ function capture_index(ex; ctx...)
 end
 
 macro i(ex)
-    return capture_index(ex; namify=false, slot = true, mode = Read())
+    return capture_index(ex; namify=false, mode = Read())
 end
 
 function capture_virtual_index(ex; ctx...)
@@ -82,14 +75,6 @@ function capture_virtual_index(ex; ctx...)
         op = capture_virtual_index(ex.args[3]; ctx..., namify=false, literalize=true)
         rhs = capture_virtual_index(ex.args[5]; ctx...)
         return :(assign_instance($lhs, $op, $rhs))
-    elseif values(ctx).slot && ex isa Expr && ex.head == :call && length(ex.args) == 2 && ex.args[1] == :~ &&
-        ex.args[2] isa Symbol
-        return esc(ex)
-    #TODO add ellipsis syntax
-    elseif values(ctx).slot && ex isa Expr && ex.head == :call && length(ex.args) == 2 && ex.args[1] == :~ &&
-        ex.args[2] isa Expr && ex.args[2].head == :call && length(ex.args[2].args) == 2 && ex.args[2].args[1] == :~ &&
-        ex.args[2].args[2] isa Symbol
-        return esc(ex)
     elseif ex isa Expr && ex.head == :call && length(ex.args) >= 1
         op = capture_virtual_index(ex.args[1]; ctx..., namify=false, mode=Read())
         return :(call_instance($op, $(map(arg->capture_virtual_index(arg; ctx..., namify=true, mode=Read()), ex.args[2:end])...)))
@@ -110,5 +95,5 @@ function capture_virtual_index(ex; ctx...)
 end
 
 macro I(ex)
-    return capture_virtual_index(ex; namify=false, slot = true, mode = Read())
+    return capture_virtual_index(ex; namify=false, mode = Read())
 end
