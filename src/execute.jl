@@ -38,6 +38,23 @@ function execute_code_lowered(ex, T)
     code = MacroTools.prettify(strip_res(code), alias=false, lines=false)
 end
 
+macro index(ex)
+    results = Set()
+    prgm = IndexNotation.capture_index_instance(ex; namify=false, mode = Read(), results = results)
+    thunk = quote
+        res = $execute($prgm)
+    end
+    for tns in results
+        push!(thunk.args, quote
+            $(esc(tns)) = res.$tns
+        end)
+    end
+    push!(thunk.args, quote
+        res
+    end)
+    thunk
+end
+
 """
     Initialize(ctx)
 

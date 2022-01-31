@@ -24,7 +24,7 @@ function spmv(mtx)
         SolidLevel(n),
         ElementLevel{0.0, Float64}(rand(n)),
     ))
-    ex = @I @loop i j y[i] += A[i, j] * x[j]
+    ex = @index_program_instance @loop i j y[i] += A[i, j] * x[j]
     display(Finch.execute_code_lowered(:ex, typeof(ex)))
     execute(ex)
     println()
@@ -56,7 +56,7 @@ function ata(mtx)
         SolidLevel(n),
         ElementLevel{0.0, Float64}(zeros(m * n)),
     ))
-    ex = @I @loop i j k C[i, j] += A[i, k] * A[j, k]
+    ex = @index_program_instance @loop i j k C[i, j] += A[i, k] * A[j, k]
     display(Finch.execute_code_lowered(:ex, typeof(ex)))
     execute(ex)
     println()
@@ -227,7 +227,7 @@ function foo(A, B)
         HollowListLevel{0.0, Float64}(n, ones(Int, m + 1), Int[]),
         ElementLevel{0.0, Float64}([]),
     ))
-    ex = @I @loop i j C[i, j] = A[i, j] + B[i, j]
+    ex = @index_program_instance @loop i j C[i, j] = A[i, j] + B[i, j]
     execute(ex)
     #bar(ex)
 end
@@ -252,7 +252,7 @@ function apb(mtxa, mtxb)
         HollowListLevel{0.0, Float64}(n, ones(Int, m + 1), Int[]),
         ElementLevel{0.0, Float64}([]),
     ))
-    ex = @I @loop i j C[i, j] += A[i, j] + B[i, j]
+    ex = @index_program_instance @loop i j C[i, j] += A[i, j] + B[i, j]
     #display(Finch.execute_code_lowered(:ex, typeof(ex)))
     bar(ex)
     execute(ex)

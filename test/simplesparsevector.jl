@@ -26,6 +26,8 @@ function Finch.virtualize(ex, ::Type{SimpleSparseVector{D, Tv, Ti}}, ctx, tag=:t
     VirtualSimpleSparseVector{Tv, Ti}(sym, tag, D)
 end
 
+(ctx::Finch.LowerJulia)(tns::VirtualSimpleSparseVector) = tns.ex
+
 function Finch.initialize!(arr::VirtualSimpleSparseVector{D, Tv}, ctx::Finch.LowerJulia) where {D, Tv}
     push!(ctx.preamble, quote
         $(arr.ex).idx = [$(arr.ex).idx[end]]

@@ -12,11 +12,15 @@
         HollowList{0.0}(10),
         Element{0.0}(),
     ))
-    ex = @I @loop i C[i] += A[i] + B[i]
 
+    display(@macroexpand @index @loop i C[i] += A[i] + B[i])
+    println()
+
+    ex = @index_program_instance @loop i C[i] += A[i] + B[i]
     display(execute_code_lowered(:ex, typeof(ex)))
     println()
-    execute(ex)
+
+    @index @loop i C[i] += A[i] + B[i]
 
     println(A)
     println(B)
@@ -46,11 +50,11 @@
         Element{0.0}([1.0, 1.0, 1.0]),
     ))
     C = zeros(10)
-    ex = @I @loop i C[i] += A[i] + B[i]
-
+    ex = @index_program_instance @loop i C[i] += A[i] + B[i]
     display(execute_code_lowered(:ex, typeof(ex)))
     println()
-    execute(ex)
+
+    @index @loop i C[i] += A[i] + B[i]
 
     println(A)
     println(B)
@@ -66,11 +70,12 @@
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0, 1.0, 1.0, 1.0]),
     ))
     B = zeros(10)
-    ex = @I @loop j i B[i] += A[j, i]
+    ex = @index_program_instance @loop j i B[i] += A[j, i]
 
     display(execute_code_lowered(:ex, typeof(ex)))
     println()
-    execute(ex)
+
+    @index @loop j i B[i] += A[j, i]
 
     println(A)
     println(B)

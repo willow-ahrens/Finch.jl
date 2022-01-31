@@ -17,7 +17,7 @@ module IndexNotation
     export Extrude, extrude
     export Laminate, laminate
 
-    export @i, @I
+    export @i, @index_program, @index_program_instance
 
     include("nodes.jl")
     include("instances.jl")

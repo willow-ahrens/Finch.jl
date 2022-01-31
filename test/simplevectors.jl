@@ -7,11 +7,12 @@ include("singlespike.jl")
     A = SimpleRunLength{Float64, Int}([1, 3, 5, 7, 9, 10], [2.0, 3.0, 4.0, 5.0, 6.0, 7.0])
     B = SimpleRunLength{Float64, Int}([5, 8, 10], [1.0, 2.0, 3.0])
     C = SimpleRunLength{Float64, Int}([1, 10], [0.0])
-    ex = @I @loop i C[i] += A[i] + B[i]
+    ex = @index_program_instance @loop i C[i] += A[i] + B[i]
 
     display(execute_code_lowered(:ex, typeof(ex)))
     println()
-    execute(ex)
+
+    @index @loop i C[i] += A[i] + B[i]
 
     println(A)
     println(B)
@@ -25,11 +26,12 @@ include("singlespike.jl")
     A = SimpleSparseVector{0.0, Float64, Int}([1, 3, 5, 7, 9, 11], [2.0, 3.0, 4.0, 5.0, 6.0])
     B = SimpleSparseVector{0.0, Float64, Int}([2, 5, 8, 11], [1.0, 1.0, 1.0])
     C = zeros(10)
-    ex = @I @loop i C[i] += A[i] + B[i]
+    ex = @index_program_instance @loop i C[i] += A[i] + B[i]
 
     display(execute_code_lowered(:ex, typeof(ex)))
     println()
-    execute(ex)
+
+    @index @loop i C[i] += A[i] + B[i]
 
     println(A)
     println(B)
@@ -40,11 +42,12 @@ include("singlespike.jl")
 
     println("sparse = sparse + sparse")
     C = SimpleSparseVector{0.0, Float64, Int}([11], [])
-    ex = @I @loop i C[i] += A[i] + B[i]
+    ex = @index_program_instance @loop i C[i] += A[i] + B[i]
 
     display(execute_code_lowered(:ex, typeof(ex)))
     println()
-    execute(ex)
+
+    @index @loop i C[i] += A[i] + B[i]
 
     println(A)
     println(B)
@@ -58,11 +61,12 @@ include("singlespike.jl")
     A = SimpleRunLength{Float64, Int}([5, 9, 10], [2.0, 6.0, 9.0])
     B = SimpleSparseVector{0.0, Float64, Int}([3, 5, 8, 11], [1.0, 1.0, 1.0])
     C = SimpleRunLength{Float64, Int}([1, 10], [0.0])
-    ex = @I @loop i C[i] += A[i] + B[i]
+    ex = @index_program_instance @loop i C[i] += A[i] + B[i]
 
     display(execute_code_lowered(:ex, typeof(ex)))
     println()
-    execute(ex)
+
+    @index @loop i C[i] += A[i] + B[i]
 
     println(A)
     println(B)
@@ -76,11 +80,12 @@ include("singlespike.jl")
     A = SimpleRunLength{Float64, Int}([5, 7, 10], [2.0, 6.0, 9.0])
     B = SimpleSparseVector{0.0, Float64, Int}([3, 5, 8, 11], [1.0, 1.0, 1.0])
     C = SimpleRunLength{Float64, Int}([1, 10], [0.0])
-    ex = @I @loop i C[i] += A[i] + B[i]
+    ex = @index_program_instance @loop i C[i] += A[i] + B[i]
 
     display(execute_code_lowered(:ex, typeof(ex)))
     println()
-    execute(ex)
+
+    @index @loop i C[i] += A[i] + B[i]
 
     println(A)
     println(B)
@@ -94,11 +99,12 @@ include("singlespike.jl")
     A = SimpleRunLength{Float64, Int}([1, 3, 5, 7, 9, 10], [2.0, 3.0, 4.0, 5.0, 6.0, 7.0])
     B = ones(10)
     C = SimpleRunLength{Float64, Int}([1, 10], [0.0])
-    ex = @I @loop i C[i] += A[i] + B[i]
+    ex = @index_program_instance @loop i C[i] += A[i] + B[i]
 
     display(execute_code_lowered(:ex, typeof(ex)))
     println()
-    execute(ex)
+
+    @index @loop i C[i] += A[i] + B[i]
 
     println(A)
     println(B)
@@ -112,11 +118,12 @@ include("singlespike.jl")
     A = SimpleRunLength{Float64, Int}([1, 3, 5, 7, 9, 10], [2.0, 3.0, 4.0, 5.0, 6.0, 7.0])
     B = SingleSpike{0.0}(10, 2.0)
     C = SimpleRunLength{Float64, Int}([1, 10], [0.0])
-    ex = @I @loop i C[i] += A[i] + B[i]
+    ex = @index_program_instance @loop i C[i] += A[i] + B[i]
 
     display(execute_code_lowered(:ex, typeof(ex)))
     println()
-    execute(ex)
+
+    @index @loop i C[i] += A[i] + B[i]
 
     println(A)
     println(B)
