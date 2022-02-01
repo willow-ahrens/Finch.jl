@@ -13,7 +13,6 @@ HollowListLevel{D, Tv, Ti}() where {D, Tv, Ti} = HollowListLevel{D, Tv, Ti}(zero
 HollowListLevel{D, Tv, Ti}(I::Ti) where {D, Tv, Ti} = HollowListLevel{D, Tv, Ti}(I, Vector{Ti}(undef, 4), Vector{Ti}(undef, 4))
 
 dimension(lvl::HollowListLevel) = lvl.I
-cardinality(lvl::HollowListLevel) = pos[end] - 1
 
 function unfurl(lvl::HollowListLevel{D, Tv, Ti}, fbr::Fiber{Tv, N, R}, i, tail...) where {D, Tv, Ti, N, R}
     q = fbr.poss[R]

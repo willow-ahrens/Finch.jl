@@ -7,7 +7,6 @@ SolidLevel(I::Ti) where {Ti} = SolidLevel{Ti}(I)
 const Solid = SolidLevel
 
 dimension(lvl::SolidLevel) = lvl.I
-cardinality(lvl::SolidLevel) = lvl.I
 
 function unfurl(lvl::SolidLevel{Ti}, fbr::Fiber{Tv, N, R}, i, tail...) where {Tv, Ti, N, R}
     q = fbr.poss[R]
