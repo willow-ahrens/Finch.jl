@@ -1,6 +1,9 @@
 struct SolidLevel{Ti}
     I::Ti
 end
+SolidLevel{Ti}() where {Ti} = SolidLevel(zero(Ti))
+SolidLevel() = SolidLevel(0)
+SolidLevel(I::Ti) where {Ti} = SolidLevel{Ti}(I)
 const Solid = SolidLevel
 
 dimension(lvl::SolidLevel) = lvl.I

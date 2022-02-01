@@ -6,8 +6,10 @@ end
 const HollowList = HollowListLevel
 
 HollowListLevel{D}(args...) where {D} = HollowListLevel{D, typeof(D)}(args...)
+HollowListLevel{D, Tv}() where {D, Tv} = HollowListLevel{D, Tv}(0)
 HollowListLevel{D, Tv}(I::Ti) where {D, Tv, Ti} = HollowListLevel{D, Tv, Ti}(I)
 HollowListLevel{D, Tv}(I::Ti, pos, idx) where {D, Tv, Ti} = HollowListLevel{D, Tv, Ti}(I, pos, idx)
+HollowListLevel{D, Tv, Ti}() where {D, Tv, Ti} = HollowListLevel{D, Tv, Ti}(zero(Ti))
 HollowListLevel{D, Tv, Ti}(I::Ti) where {D, Tv, Ti} = HollowListLevel{D, Tv, Ti}(I, Vector{Ti}(undef, 4), Vector{Ti}(undef, 4))
 
 dimension(lvl::HollowListLevel) = lvl.I
