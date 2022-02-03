@@ -10,6 +10,30 @@ struct RootEnvironment end
 envposition(env::RootEnvironment) = 1
 
 """
+    envdepth()
+
+Return the number of accesses (coordinates) unfurled so far in this environment.
+"""
+envdepth(env::RootEnvironment) = 0
+
+"""
+    VirtualRootEnvironment()
+
+In addition to holding information about the environment instance itself,
+virtual environments may also hold information about the scope that this fiber
+lives in.
+"""
+struct VirtualRootEnvironment end
+virtualize(ex, ::Type{RootEnvironment}, ctx) = VirtualRootEnvironment()
+(ctx::Finch.LowerJulia)(::VirtualRootEnvironment) = :(RootEnvironment())
+isliteral(::VirtualRootEnvironment) = false
+
+envposition(env::VirtualRootEnvironment) = 1
+envdepth(env::VirtualRootEnvironment) = 0
+
+
+
+"""
     PositionEnvironment(pos, idx, env)
 
 An environment that holds a position `pos`, corresponding coordinate `idx`, and parent
@@ -22,6 +46,25 @@ struct PositionEnvironment{Tp, Ti, Env}
     idx::Ti
     env::Env
 end
+envdepth(env::PositionEnvironment) = 1 + envdepth(env.env)
+
+struct VirtualPositionEnvironment
+    pos
+    idx
+    env
+end
+function virtualize(ex, ::Type{PositionEnvironment{Tp, Ti, Env}}, ctx) where {Tp, Ti, Env}
+    pos = virtualize(:($ex.pos), Tp, ctx)
+    idx = virtualize(:($ex.idx), Ti, ctx)
+    env = virtualize(:($ex.env), Env, ctx)
+    VirtualPositionEnvironment(pos, idx, env)
+end
+(ctx::Finch.LowerJulia)(env::VirtualPositionEnvironment) = :(PositionEnvironment($(ctx(env.pos)), $(ctx(env.idx)), $(ctx(env.env))))
+isliteral(::VirtualPositionEnvironment) = false
+
+envposition(env::VirtualPositionEnvironment) = env.pos
+envcoordinate(env::VirtualPositionEnvironment) = env.idx
+envdepth(env::VirtualPositionEnvironment) = 1 + envdepth(env.env)
 
 """
     ArbitraryEnvironment(env)
@@ -34,6 +77,19 @@ See also: [`getparent`](@ref)
 struct ArbitraryEnvironment{Env}
     env::Env
 end
+
+envdepth(env::ArbitraryEnvironment) = 1 + envdepth(env.env)
+
+struct VirtualArbitraryEnvironment
+    env
+end
+function virtualize(ex, ::Type{ArbitraryEnvironment{Env}}, ctx) where {Env}
+    env = virtualize(:($ex.env), Env, ctx)
+    VirtualArbitraryEnvironment(env)
+end
+(ctx::Finch.LowerJulia)(env::VirtualArbitraryEnvironment) = :(ArbitraryEnvironment($(ctx(env.env))))
+isliteral(::VirtualArbitraryEnvironment) = false
+envdepth(env::VirtualArbitraryEnvironment) = 1 + envdepth(env.env)
 
 """
     envposition(env)
@@ -77,6 +133,27 @@ Fiber(lvl::Lvl) where {Lvl} = Fiber{Lvl}(lvl)
 Fiber{Lvl}(lvl::Lvl, env::Env=RootEnvironment()) where {Lvl, Env} = Fiber{Lvl, Env}(lvl, env)
 
 fiber(lvl) = FiberArray(Fiber(lvl))
+
+"""
+    VirtualFiber(lvl, env)
+
+A virtual fiber is the avatar of a fiber for the purposes of compilation. Two
+fibers should share a `name` only if they hold the same data. `lvl` is a virtual
+object representing the level nest and `env` is a virtual object representing
+the environment.
+"""
+mutable struct VirtualFiber{Lvl, Env}
+    name
+    lvl::Lvl
+    env::Env
+end
+function virtualize(ex, ::Type{<:Fiber{Lvl, Env}}, ctx, tag=:tns) where {Lvl, Env}
+    lvl = virtualize(:($ex.lvl), Lvl, ctx, Symbol(tag, :_lvl))
+    env = virtualize(:($ex.env), Env, ctx)
+    VirtualFiber(tag, lvl, env)
+end
+(ctx::Finch.LowerJulia)(fbr::VirtualFiber) = :(Fiber($(ctx(fbr.lvl)), $(ctx(fbr.env))))
+isliteral(::VirtualFiber) = false
 
 
 
@@ -135,64 +212,17 @@ function Base.getindex(arr::FiberArray, idxs::Integer...) where {Tv, N}
     arr.fbr(idxs...)
 end
 
-#=
-
 """
     default(fbr)
 
 The default for a fiber is the value the fiber will have after initialization.
-This could be a scalar or another fiber. This value is most often zero.
+This could be a scalar or another fiber. This value is most often zero or the
+fiber itself.
 
 See also: [`initialize`](@ref)
 """
-default(fbr::Fiber) = default(fbr.lvl)
+function default end
 
-struct VirtualRootEnvironment end
-
-envposition(env::RootEnvironment) = 1
-
-"""
-    PositionEnvironment(pos, idx, env)
-
-An environment that holds a position `pos`, corresponding coordinate `idx`, and parent
-environment `env`.
-
-See also: [`envposition`](@ref), [`envcoordinate`](@ref), [`getparent`](@ref)
-"""
-struct PositionVirtualEnvironment
-    pos::Tp
-    idx::Ti
-    env::Env
-end
-
-"""
-    ArbitraryEnvironment(env)
-
-An environment that abstracts over all positions, not making a choice. The
-parent environment is `env`.
-
-See also: [`getparent`](@ref)
-"""
-struct ArbitraryVirtualEnvironment
-    env::Env
-end
-
-"""
-    VirtualFiber(name, ex, lvl, env)
-
-A virtual fiber is the avatar of a fiber for the purposes of compilation. Two
-fibers should share a `name` only if they hold the same data. `ex` is a julia
-expression identifying the fiber, `lvl` is a virtual object representing the level nest and `env`
-is a virtual object representing the environment.
-"""
-mutable struct VirtualFiber{Lvl, Env}
-    lvl::Lvl
-    Env::Env
-end
-
-(ctx::Finch.LowerJulia)(arr::VirtualFiber) = arr.ex
-
-isliteral(::VirtualFiber) = false
 
 """
     initialize!(fbr, ctx, mode)
@@ -202,11 +232,10 @@ access mode `mode`. Return `nothing` if the fiber instance is unchanged, or
 the new fiber object otherwise.
 """
 function initialize!(fbr::VirtualFiber, ctx, mode)
-    lvl = initialize_level!(fbr, ctx, mode)
-    if lvl === nothing
-        return nothing
+    if (lvl = initialize_level!(fbr, ctx, mode)) !== nothing
+        return VirtualFiber(lvl, fbr.env)
     else
-        return Fiber(lvl, fbr.env)
+        return nothing
     end
 end
 
@@ -240,47 +269,13 @@ function make_style(root, ctx::Finch.LowerJulia, node::Access{<:VirtualFiber})
     end
 end
 
-getsites(arr::VirtualFiber) = 1:ndims(arr)
+getsites(arr::VirtualFiber) = 1:arity(arr)
 getname(arr::VirtualFiber) = arr.name
 setname(arr::VirtualFiber, name) = (arr_2 = deepcopy(arr); arr_2.name = name; arr_2)
 
-#TODO Not sure about anything after this line
-getdims(arr::VirtualFiber, ctx::LowerJulia, mode) = getdims(arr.lvl, ctx, mode)
-
-initialize!(arr::VirtualFiber, ctx::LowerJulia, mode) = initialize!(arr.lvl, ctx, mode)
-
-virtual_assemble(tns, ctx, q) =
-    virtual_assemble(tns, ctx, [nothing for _ = 1:tns.R], q)
-virtual_assemble(tns::VirtualFiber, ctx, qoss, q) =
-    virtual_assemble(tns.lvls[length(qoss) + 1], tns, ctx, vcat(qoss, [q]), q)
-
-function virtualize(ex, ::Type{<:Fiber{Tv, N, R, Lvls, Poss, Idxs}}, ctx, tag=:tns) where {Tv, N, R, Lvls, Poss, Idxs}
-    sym = ctx.freshen(tag)
-    push!(ctx.preamble, :($sym = $ex))
-    lvls = map(enumerate(Lvls.parameters)) do (n, Lvl)
-        virtualize(:($sym.lvls[$n]), Lvl, ctx, Symbol(tag, :_lvl, n))
-    end
-    poss = map(enumerate(Poss.parameters)) do (n, Pos)
-        n == 1 ? 1 : virtualize(:($sym.poss[$n]), Pos, ctx)
-    end
-    idxs = map(enumerate(Idxs.parameters)) do (n, Idx)
-        virtualize(:($sym.idxs[$n]), Idx, ctx)
-    end
-    VirtualFiber(tag, sym, N, Tv, R, lvls, poss, idxs)
-end
-
-function virtual_refurl(fbr::VirtualFiber, p, i, mode, tail...)
-    res = deepcopy(fbr)
-    res.N = fbr.N - 1
-    res.R = fbr.R + 1
-    push!(res.poss, p)
-    push!(res.idxs, i)
-    return Access(res, mode, Any[tail...])
-end
-
 function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualFiber}, ::DefaultStyle) where {Tv, Ti}
     if getname(ctx.idx) == getname(node.idxs[1])
-        Access(virtual_unfurl(node.tns.lvls[node.tns.R], node.tns, ctx.ctx, node.mode, node.idxs...), node.mode, node.idxs)
+        unfurl(node.tns, ctx.ctx, node.mode, node.idxs...)
     else
         node
     end
@@ -288,21 +283,8 @@ end
 
 function (ctx::Finch.AccessVisitor)(node::Access{VirtualFiber}, ::DefaultStyle) where {Tv, Ti}
     if isempty(node.idxs)
-        virtual_unfurl(node.tns.lvls[node.tns.R], node.tns, ctx.ctx, node.mode)
+        unfurl(node.tns, ctx.ctx, node.mode)
     else
         node
     end
 end
-
-
-
-
-struct FiberArray{Tv, N, Fbr} <: AbstractArray{Tv, N}
-    fbr::Fbr
-end
-#TODO eventually we should generate the getindex call
-function Base.getindex(fbr::Fiber{Tv, N}, idxs::Vararg{<:Any, N}) where {Tv, N}
-    readindex(fbr, idxs...)
-end
-readindex(fbr) = fbr
-=#

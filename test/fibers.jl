@@ -1,9 +1,9 @@
 @testset "fibers" begin
 
-    A_3 = Element{0.0}([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0])
-    A_2 = HollowList(5, A_3, [1, 4, 6, 8], [1, 2, 5, 2, 4, 3, 5])
-    A_1 = Solid(3, A_2)
-    A = Finch.FiberArray(Fiber(A_1))
+    A = Finch.FiberArray(Fiber(
+        Solid(3, 
+        HollowList(5, [1, 4, 6, 8], [1, 2, 5, 2, 4, 3, 5],
+        Element{0.0}([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0])))))
     @test ndims(A) == 2
     @test size(A) == (3, 5)
     @test axes(A) == (1:3, 1:5)
@@ -14,14 +14,14 @@
         0.0  0.0  1.0  0.0  1.0;
     ]
 
-    #=
     println("fiber(s) = fiber(s) + fiber(s)")
-    A_2 = Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])
-    A_1 = HollowList(10, A_2, [1, 6], [1, 3, 5, 7, 9])
-    A = Finch.Fiber(A_1)
-    B_2 = Element{0.0}([1.0, 1.0, 1.0])
-    B_1 = HollowList(10, B_1, [1, 4], [2, 5, 8])
-    B = Finch.Fiber(B_1)
+
+    A = Finch.Fiber(
+        HollowList(10, [1, 6], [1, 3, 5, 7, 9],
+        Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
+    B = Finch.Fiber(
+        HollowList(10, [1, 4], [2, 5, 8],
+        Element{0.0}([1.0, 1.0, 1.0])))
     C = Finch.Fiber(HollowList(10, Element{0.0}()))
 
     display(@macroexpand @index @loop i C[i] += A[i] + B[i])
@@ -41,6 +41,7 @@
     println()
 
 
+    #=
     println("dense = fiber(s) + fiber(s)")
     A_2 = Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])
     A_1 = HollowList(10, A_2, [1, 6], [1, 3, 5, 7, 9])

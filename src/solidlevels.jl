@@ -45,8 +45,8 @@ end
 
 unfurl(lvl::VirtualSolidLevel, tns, ctx, mode::Read, idx::Name, tail...) =
     unfurl(lvl, tns, ctx, mode, follow(idx), tail...)
-virtual_unfurl(lvl::VirtualSolidLevel, tns, ctx, mode::Union{Write, Update}, idx::Name, tail...) =
-    virtual_unfurl(lvl, tns, ctx, mode, laminate(idx), tail...)
+unfurl(lvl::VirtualSolidLevel, tns, ctx, mode::Union{Write, Update}, idx::Name, tail...) =
+    unfurl(lvl, tns, ctx, mode, laminate(idx), tail...)
 
 
 function getdims_level!(lvl::VirtualSolidLevel, arr, R, ctx, mode)
@@ -80,7 +80,7 @@ function virtual_assemble(lvl::VirtualSolidLevel, tns, ctx, qoss, q)
     end
 end
 
-function virtual_unfurl(lvl::VirtualSolidLevel, fbr, ctx, mode::Union{Read, Write, Update}, idx::Union{Follow, Laminate, Extrude}, tail...)
+function unfurl(lvl::VirtualSolidLevel, fbr, ctx, mode::Union{Read, Write, Update}, idx::Union{Follow, Laminate, Extrude}, tail...)
     R = fbr.R
     q = fbr.poss[R]
     p = ctx.freshen(getname(fbr), :_, R, :_p)

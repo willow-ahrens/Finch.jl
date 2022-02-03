@@ -17,7 +17,7 @@ function (fbr::Fiber{<:ElementLevel})()
 end
 
 
-#=
+
 struct VirtualElementLevel
     ex
     Tv
@@ -26,10 +26,9 @@ struct VirtualElementLevel
 end
 
 (ctx::Finch.LowerJulia)(lvl::VirtualElementLevel) = lvl.ex
-
 function virtualize(ex, ::Type{ElementLevel{D, Tv}}, ctx, tag) where {D, Tv}
     sym = ctx.freshen(tag)
-    val_q = ctx.freshen(tag, :_val_q)
+    val_q = ctx.freshen(sym, :_val_q)
     push!(ctx.preamble, quote
         $sym = $ex
         $val_q = length($ex.val)
@@ -37,15 +36,21 @@ function virtualize(ex, ::Type{ElementLevel{D, Tv}}, ctx, tag) where {D, Tv}
     VirtualElementLevel(sym, Tv, D, val_q)
 end
 
-function initialize_level!(lvl::VirtualElementLevel, tns, R, ctx, mode)
-    my_q = ctx.freshen(:lvl, tns.R, :_q)
+function getsites(fbr::VirtualFiber{VirtualElementLevel})
+    return ()
+end
+
+getdims(::VirtualFiber{VirtualElementLevel}, ctx, mode) = ()
+
+function initialize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
+    my_q = ctx.freshen(fbr.lvl.ex)
     push!(ctx.preamble, quote
-        if $(lvl.val_q) < 4
-            resize!($(lvl.ex).val, 4)
+        if $(fbr.lvl.val_q) < 4
+            resize!($(fbr.lvl.ex).val, 4)
         end
-        $(lvl.val_q) = 4
+        $(fbr.lvl.val_q) = 4
         for $my_q = 1:4
-            $(lvl.ex).val[$my_q] = $(lvl.D)
+            $(fbr.lvl.ex).val[$my_q] = $(fbr.lvl.D)
         end
     end)
     nothing
@@ -69,7 +74,7 @@ function virtual_assemble(lvl::VirtualElementLevel, tns, ctx, qoss, q)
 end
 
 
-function virtual_unfurl(lvl::VirtualElementLevel, fbr, ctx, ::Read)
+function unfurl(lvl::VirtualElementLevel, fbr, ctx, ::Read)
     R = fbr.R
     val = ctx.freshen(getname(fbr), :_val)
 
@@ -81,7 +86,7 @@ function virtual_unfurl(lvl::VirtualElementLevel, fbr, ctx, ::Read)
     )
 end
 
-function virtual_unfurl(lvl::VirtualElementLevel, fbr, ctx, ::Write)
+function unfurl(lvl::VirtualElementLevel, fbr, ctx, ::Write)
     R = fbr.R
     val = ctx.freshen(getname(fbr), :_val)
 
@@ -96,7 +101,7 @@ function virtual_unfurl(lvl::VirtualElementLevel, fbr, ctx, ::Write)
     )
 end
 
-function virtual_unfurl(lvl::VirtualElementLevel, fbr, ctx, ::Update)
+function unfurl(lvl::VirtualElementLevel, fbr, ctx, ::Update)
     R = fbr.R
     val = ctx.freshen(getname(fbr), :_val)
 
@@ -110,4 +115,3 @@ function virtual_unfurl(lvl::VirtualElementLevel, fbr, ctx, ::Update)
         end,
     )
 end
-=#

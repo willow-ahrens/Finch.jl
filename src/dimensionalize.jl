@@ -19,6 +19,9 @@ end
 
 function previsit!(node::Access, ctx::GatherDimensions)
     if !istree(node.tns)
+        println(node)
+        println(getdims(node.tns, ctx.ctx, node.mode))
+        println(getsites(node.tns))
         for (idx, dim, n) in zip(getname.(node.idxs), getdims(node.tns, ctx.ctx, node.mode), getsites(node.tns))
             site = (getname(node.tns), n)
             if !haskey(ctx.dims, site)
