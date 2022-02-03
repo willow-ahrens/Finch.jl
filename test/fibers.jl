@@ -4,11 +4,10 @@
     A_2 = HollowList(5, A_3, [1, 4, 6, 8], [1, 2, 5, 2, 4, 3, 5])
     A_1 = Solid(3, A_2)
     A = Finch.FiberArray(Fiber(A_1))
-    println(ndims(A))
-    println(size(A))
-    println(axes(A))
-    println(eltype(A))
-    println(A[1, 2])
+    @test ndims(A) == 2
+    @test size(A) == (3, 5)
+    @test axes(A) == (1:3, 1:5)
+    @test eltype(A) == Float64
     @test A == [
         1.0  1.0  0.0  0.0  1.0;
         0.0  1.0  0.0  1.0  0.0;
