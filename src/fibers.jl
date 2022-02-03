@@ -1,49 +1,228 @@
-export HollowListLevel
-export SolidLevel
-export ElementLevel
+"""
+    RootEnvironment()
 
-struct Fiber{Tv, N, R, Lvls<:Tuple, Poss<:Tuple, Idxs<:Tuple} <: AbstractArray{Tv, N}
-    lvls::Lvls
-    poss::Poss
-    idxs::Idxs
+An environment can be thought of as the argument to a level that yeilds a fiber.
+Environments also allow parents levels to pass attributes to their children.  By
+default, the top level has access to the RootEnvironment.
+"""
+struct RootEnvironment end
+
+envposition(env::RootEnvironment) = 1
+
+"""
+    PositionEnvironment(pos, idx, env)
+
+An environment that holds a position `pos`, corresponding coordinate `idx`, and parent
+environment `env`.
+
+See also: [`envposition`](@ref), [`envcoordinate`](@ref), [`getparent`](@ref)
+"""
+struct PositionEnvironment{Tp, Ti, Env}
+    pos::Tp
+    idx::Ti
+    env::Env
 end
 
-Fiber(lvls) = Fiber{valtype(last(lvls))}(lvls)
-Fiber{Tv}(lvls) where {Tv} = Fiber{Tv, length(lvls) - 1, 1}(lvls, (1,), ())
-Fiber{Tv, N, R}(lvls, poss, idxs) where {Tv, N, R} = Fiber{Tv, N, R, typeof(lvls), typeof(poss), typeof(idxs)}(lvls, poss, idxs)
+"""
+    ArbitraryEnvironment(env)
 
-Base.size(fbr::Fiber{Tv, N, R}) where {Tv, N, R} = map(dimension, fbr.lvls[R:end-1])
+An environment that abstracts over all positions, not making a choice. The
+parent environment is `env`.
 
-function Base.getindex(fbr::Fiber{Tv, N}, idxs::Vararg{<:Any, N}) where {Tv, N}
-    readindex(fbr, idxs...)
+See also: [`getparent`](@ref)
+"""
+struct ArbitraryEnvironment{Env}
+    env::Env
 end
 
-function readindex(fbr::Fiber{Tv, N, R}, idxs...) where {Tv, N, R}
-    unfurl(fbr.lvls[R], fbr, idxs...)
+"""
+    envposition(env)
+
+Get the position in the environment. The position is an integer identifying
+which fiber to access in a level.
+"""
+envposition(env::PositionEnvironment) = env.pos
+
+"""
+    envcoordinate(env)
+
+Get the coordinate (index) in the previous environment.
+"""
+envcoordinate(env::PositionEnvironment) = env.idx
+
+"""
+    getparent(env)
+
+Get the parent of the environment.
+"""
+getparent(env::PositionEnvironment) = env.env
+getparent(env::ArbitraryEnvironment) = env.env
+
+
+
+"""
+    Fiber(lvl, env=RootEnvironment())
+
+A fiber is a combination of a (possibly nested) level `lvl` and an environment
+`env`. The environment is often used to refer to a particular fiber within the
+level. Fibers are arrays, of sorts. The function `refindex(fbr, i...)` is used
+as a reference implementation of getindex for the fiber. Accessing an
+`N`-dimensional fiber with less than `N` indices will return another fiber.
+"""
+struct Fiber{Lvl, Env}
+    lvl::Lvl
+    env::Env
+end
+Fiber(lvl::Lvl) where {Lvl} = Fiber{Lvl}(lvl)
+Fiber{Lvl}(lvl::Lvl, env::Env=RootEnvironment()) where {Lvl, Env} = Fiber{Lvl, Env}(lvl, env)
+
+fiber(lvl) = FiberArray(Fiber(lvl))
+
+
+
+struct FiberArray{Fbr, T, N} <: AbstractArray{T, N}
+    fbr::Fbr
 end
 
-function refurl(fbr::Fiber{Tv, N, R}, p, i) where {Tv, N, R}
-    return Fiber{Tv, N - 1, R + 1}(fbr.lvls, (fbr.poss..., p), (fbr.idxs..., i))
+FiberArray(fbr::Fbr) where {Fbr} = FiberArray{Fbr}(fbr)
+FiberArray{Fbr}(fbr::Fbr) where {Fbr} = FiberArray{Fbr, image(fbr)}(fbr)
+FiberArray{Fbr, N}(fbr::Fbr) where {Fbr, N} = FiberArray{Fbr, N, arity(fbr)}(fbr)
+
+"""
+    arity(::Fiber)
+
+The "arity" of a fiber is the number of arguments that fiber can be indexed by
+before it returns a value. 
+
+See also: [`Base.ndims`](@ref)
+"""
+function arity end
+Base.ndims(arr::FiberArray) = arity(arr.fbr)
+
+"""
+    image(::Fiber)
+
+The "image" of a fiber is the smallest julia type that its values assume. 
+
+See also: [`Base.eltype`](@ref)
+"""
+function image end
+Base.eltype(arr::FiberArray) = image(arr.fbr)
+
+"""
+    shape(::Fiber)
+
+The "shape" of a fiber is a tuple where each element describes the number of
+distinct values that might be given as each argument to the fiber.
+
+See also: [`Base.size`](@ref)
+"""
+function shape end
+Base.size(arr::FiberArray) = shape(arr.fbr)
+
+"""
+    domain(::Fiber)
+
+The "domain" of a fiber is a tuple listing the sets of distinct values that might
+be given as each argument to the fiber.
+
+See also: [`Base.axes`](@ref)
+"""
+function domain end
+Base.axes(arr::FiberArray) = domain(arr.fbr)
+
+function Base.getindex(arr::FiberArray, idxs::Integer...) where {Tv, N}
+    arr.fbr(idxs...)
 end
 
+#=
 
+"""
+    default(fbr)
 
-mutable struct VirtualFiber
-    name
-    ex
-    N
-    Tv
-    R
-    lvls::Vector{Any}
-    poss::Vector{Any}
-    idxs::Vector{Any}
+The default for a fiber is the value the fiber will have after initialization.
+This could be a scalar or another fiber. This value is most often zero.
+
+See also: [`initialize`](@ref)
+"""
+default(fbr::Fiber) = default(fbr.lvl)
+
+struct VirtualRootEnvironment end
+
+envposition(env::RootEnvironment) = 1
+
+"""
+    PositionEnvironment(pos, idx, env)
+
+An environment that holds a position `pos`, corresponding coordinate `idx`, and parent
+environment `env`.
+
+See also: [`envposition`](@ref), [`envcoordinate`](@ref), [`getparent`](@ref)
+"""
+struct PositionVirtualEnvironment
+    pos::Tp
+    idx::Ti
+    env::Env
+end
+
+"""
+    ArbitraryEnvironment(env)
+
+An environment that abstracts over all positions, not making a choice. The
+parent environment is `env`.
+
+See also: [`getparent`](@ref)
+"""
+struct ArbitraryVirtualEnvironment
+    env::Env
+end
+
+"""
+    VirtualFiber(name, ex, lvl, env)
+
+A virtual fiber is the avatar of a fiber for the purposes of compilation. Two
+fibers should share a `name` only if they hold the same data. `ex` is a julia
+expression identifying the fiber, `lvl` is a virtual object representing the level nest and `env`
+is a virtual object representing the environment.
+"""
+mutable struct VirtualFiber{Lvl, Env}
+    lvl::Lvl
+    Env::Env
 end
 
 (ctx::Finch.LowerJulia)(arr::VirtualFiber) = arr.ex
 
 isliteral(::VirtualFiber) = false
 
-function make_style(root::Loop, ctx::Finch.LowerJulia, node::Access{VirtualFiber})
+"""
+    initialize!(fbr, ctx, mode)
+
+Initialize the virtual fiber to it's default value in the context `ctx` with
+access mode `mode`. Return `nothing` if the fiber instance is unchanged, or
+the new fiber object otherwise.
+"""
+function initialize!(fbr::VirtualFiber, ctx, mode)
+    lvl = initialize_level!(fbr, ctx, mode)
+    if lvl === nothing
+        return nothing
+    else
+        return Fiber(lvl, fbr.env)
+    end
+end
+
+"""
+    initialize_level!(fbr, ctx, mode)
+
+Initialize the level within the virtual fiber to it's default value in the
+context `ctx` with access mode `mode`. Return `nothing` if the fiber instance is
+unchanged, or the new level otherwise.
+"""
+function initialize_level! end
+
+
+
+
+function make_style(root::Loop, ctx::Finch.LowerJulia, node::Access{<:VirtualFiber})
     if isempty(node.idxs)
         return AccessStyle()
     elseif getname(root.idxs[1]) == getname(node.idxs[1])
@@ -53,7 +232,7 @@ function make_style(root::Loop, ctx::Finch.LowerJulia, node::Access{VirtualFiber
     end
 end
 
-function make_style(root, ctx::Finch.LowerJulia, node::Access{VirtualFiber})
+function make_style(root, ctx::Finch.LowerJulia, node::Access{<:VirtualFiber})
     if isempty(node.idxs)
         return AccessStyle()
     else
@@ -61,40 +240,14 @@ function make_style(root, ctx::Finch.LowerJulia, node::Access{VirtualFiber})
     end
 end
 
-function getdims(arr::VirtualFiber, ctx::LowerJulia, mode)
-    @assert arr.R == 1
-    return map(1:arr.N) do R
-        getdims_level!(arr.lvls[R], arr, R, ctx, mode)
-    end
-end
-
-function initialize!(arr::VirtualFiber, ctx::LowerJulia, mode)
-    @assert arr.R == 1
-    lvls_2 = map(1:arr.N + 1) do R
-        initialize_level!(arr.lvls[R], arr, R, ctx, mode)
-    end
-    if !all(isnothing, lvls_2)
-        lvls_3 = map(zip(arr.lvls, lvls_2)) do (lvl, lvl_2)
-            lvl_2 === nothing ? lvl : lvl_2
-        end
-        arr_2 = deepcopy(arr)
-        arr_2.lvls = lvls_3
-        push!(ctx.preamble, quote
-            $(arr_2.ex) = Fiber{$(arr.Tv), $(arr.N), $(arr.R)}(
-                ($(map(ctx, lvls_3)...),),
-                ($(map(ctx, arr.poss)...),),
-                ($(map(ctx, arr.idxs)...),),
-            )
-        end)
-        arr_2
-    else
-        arr
-    end
-end
-
-getsites(arr::VirtualFiber) = 1:arr.N
+getsites(arr::VirtualFiber) = 1:ndims(arr)
 getname(arr::VirtualFiber) = arr.name
 setname(arr::VirtualFiber, name) = (arr_2 = deepcopy(arr); arr_2.name = name; arr_2)
+
+#TODO Not sure about anything after this line
+getdims(arr::VirtualFiber, ctx::LowerJulia, mode) = getdims(arr.lvl, ctx, mode)
+
+initialize!(arr::VirtualFiber, ctx::LowerJulia, mode) = initialize!(arr.lvl, ctx, mode)
 
 virtual_assemble(tns, ctx, q) =
     virtual_assemble(tns, ctx, [nothing for _ = 1:tns.R], q)
@@ -140,3 +293,16 @@ function (ctx::Finch.AccessVisitor)(node::Access{VirtualFiber}, ::DefaultStyle) 
         node
     end
 end
+
+
+
+
+struct FiberArray{Tv, N, Fbr} <: AbstractArray{Tv, N}
+    fbr::Fbr
+end
+#TODO eventually we should generate the getindex call
+function Base.getindex(fbr::Fiber{Tv, N}, idxs::Vararg{<:Any, N}) where {Tv, N}
+    readindex(fbr, idxs...)
+end
+readindex(fbr) = fbr
+=#

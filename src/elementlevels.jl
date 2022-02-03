@@ -5,15 +5,19 @@ ElementLevel{D}(args...) where {D} = ElementLevel{D, typeof(D)}(args...)
 ElementLevel{D, Tv}() where {D, Tv} = ElementLevel{D, Tv}(Vector{Tv}(undef, 4))
 const Element = ElementLevel
 
-@inline valtype(lvl::ElementLevel{D, Tv}) where {D, Tv} = Tv
+@inline arity(fbr::Fiber{<:ElementLevel}) = 0
+@inline shape(fbr::Fiber{<:ElementLevel}) = ()
+@inline domain(fbr::Fiber{<:ElementLevel}) = ()
+@inline image(fbr::Fiber{ElementLevel{D, Tv}}) where {D, Tv} = Tv
+@inline default(lvl::Fiber{<:ElementLevel{D}}) where {D} = D
 
-function unfurl(lvl::ElementLevel, fbr::Fiber{Tv, N, R}) where {Tv, N, R}
-    q = fbr.poss[R]
-    return lvl.val[q]
+function (fbr::Fiber{<:ElementLevel})()
+    q = envposition(fbr.env)
+    return fbr.lvl.val[q]
 end
 
 
-
+#=
 struct VirtualElementLevel
     ex
     Tv
@@ -106,3 +110,4 @@ function virtual_unfurl(lvl::VirtualElementLevel, fbr, ctx, ::Update)
         end,
     )
 end
+=#

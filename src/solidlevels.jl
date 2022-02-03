@@ -1,21 +1,30 @@
-struct SolidLevel{Ti}
+struct SolidLevel{Ti, Lvl}
     I::Ti
+    lvl::Lvl
 end
-SolidLevel{Ti}() where {Ti} = SolidLevel(zero(Ti))
-SolidLevel() = SolidLevel(0)
-SolidLevel(I::Ti) where {Ti} = SolidLevel{Ti}(I)
+SolidLevel{Ti}(lvl) where {Ti} = SolidLevel(zero(Ti), lvl)
+SolidLevel(lvl) = SolidLevel(0, lvl)
 const Solid = SolidLevel
 
 dimension(lvl::SolidLevel) = lvl.I
 
-function unfurl(lvl::SolidLevel{Ti}, fbr::Fiber{Tv, N, R}, i, tail...) where {Tv, Ti, N, R}
-    q = fbr.poss[R]
+@inline arity(fbr::Fiber{<:SolidLevel}) = 1 + arity(Fiber(fbr.lvl.lvl, ArbitraryEnvironment(fbr.env)))
+@inline shape(fbr::Fiber{<:SolidLevel}) = (fbr.lvl.I, shape(Fiber(fbr.lvl.lvl, ArbitraryEnvironment(fbr.env)))...)
+@inline domain(fbr::Fiber{<:SolidLevel}) = (1:fbr.lvl.I, domain(Fiber(fbr.lvl.lvl, ArbitraryEnvironment(fbr.env)))...)
+@inline image(fbr::Fiber{<:SolidLevel}) = image(Fiber(fbr.lvl.lvl, ArbitraryEnvironment(fbr.env)))
+@inline default(fbr::Fiber{<:SolidLevel}) = default(Fiber(fbr.lvl.lvl, ArbitraryEnvironment(fbr.env)))
+
+function (fbr::Fiber{<:SolidLevel{Ti}})(i, tail...) where {D, Tv, Ti, N, R}
+    lvl = fbr.lvl
+    q = envposition(fbr.env)
     p = (q - 1) * lvl.I + i
-    readindex(refurl(fbr, p, i), tail...)
+    fbr_2 = Fiber(lvl.lvl, PositionEnvironment(p, i, fbr.env))
+    fbr_2(tail...)
 end
 
 
 
+#=
 struct VirtualSolidLevel
     ex
     Ti
@@ -34,8 +43,8 @@ function virtualize(ex, ::Type{<:SolidLevel{Ti}}, ctx, tag=:lvl) where {Ti}
     VirtualSolidLevel(sym, Ti, I)
 end
 
-virtual_unfurl(lvl::VirtualSolidLevel, tns, ctx, mode::Read, idx::Name, tail...) =
-    virtual_unfurl(lvl, tns, ctx, mode, follow(idx), tail...)
+unfurl(lvl::VirtualSolidLevel, tns, ctx, mode::Read, idx::Name, tail...) =
+    unfurl(lvl, tns, ctx, mode, follow(idx), tail...)
 virtual_unfurl(lvl::VirtualSolidLevel, tns, ctx, mode::Union{Write, Update}, idx::Name, tail...) =
     virtual_unfurl(lvl, tns, ctx, mode, laminate(idx), tail...)
 
@@ -91,3 +100,4 @@ function virtual_unfurl(lvl::VirtualSolidLevel, fbr, ctx, mode::Union{Read, Writ
         )
     end
 end
+=#
