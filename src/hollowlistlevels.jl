@@ -53,14 +53,16 @@ end
 (ctx::Finch.LowerJulia)(lvl::VirtualHollowListLevel) = lvl.ex
 
 function getsites(fbr::VirtualFiber{VirtualHollowListLevel})
-    return (envdepth(fbr.env) + 1, getsites(refurl(fbr, VirtualArbitraryEnvironment(fbr.env)))...)
+    return (envdepth(fbr.env) + 1, getsites(VirtualFiber(fbr.lvl.lvl, VirtualArbitraryEnvironment(fbr.env)))...)
 end
 
 function getdims(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
     ext = Extent(1, Virtual{Int}(fbr.lvl.I))
     dim = mode isa Read ? ext : SuggestedExtent(ext)
-    (dim, getdims(refurl(fbr, VirtualArbitraryEnvironment(fbr.env)), ctx, mode)...)
+    (dim, getdims(VirtualFiber(fbr.lvl.lvl, VirtualArbitraryEnvironment(fbr.env)), ctx, mode)...)
 end
+
+@inline default(fbr::VirtualFiber{<:VirtualHollowListLevel}) = default(VirtualFiber(fbr.lvl.lvl, VirtualArbitraryEnvironment(fbr.env)))
 
 function initialize_level!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
     lvl = fbr.lvl
@@ -76,7 +78,7 @@ function initialize_level!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
         end
         $(lvl.idx_q) = 4
         $(scope(ctx) do ctx_2
-            if (lvl_2 = initialize_level!(refurl(fbr, ArbitraryEnvironment(fbr.env)), ctx_2, mode)) === nothing
+            if (lvl_2 = initialize_level!(VirtualFiber(fbr.lvl.lvl, ArbitraryEnvironment(fbr.env)), ctx_2, mode)) === nothing
                 lvl_2 = lvl.lvl
             end
         end)
@@ -104,7 +106,7 @@ function assemble_level!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
             $(lvl.pos_q) *= 4
         end
         $(scope(ctx) do ctx_2
-            lvl_2 = assemble_level!(refurl(fbr, MaxPositionEnv(q, env)), ctx, mode)
+            lvl_2 = assemble_level!(VirtualFiber(fbr.lvl.lvl, MaxPositionEnv(q, env)), ctx, mode)
         end)
     end)
     if lvl_2 !== nothing
@@ -117,12 +119,11 @@ function assemble_level!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
 end
 
 unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx::Name, idxs...) =
-    unfurl(lvl, tns, ctx, mode, walk(idx))
+    unfurl(fbr, ctx, mode, walk(idx))
 
 function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx::Walk, idxs...)
-    R = tns.R
     lvl = fbr.lvl
-    tag = lvl.sym
+    tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
     my_p = ctx.freshen(tag, :_p)
     my_p1 = ctx.freshen(tag, :_p1)
@@ -130,8 +131,8 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
 
     Thunk(
         preamble = quote
-            $my_p = $(lvl.ex).pos[$(ctx(tns.poss[R]))]
-            $my_p1 = $(lvl.ex).pos[$(ctx(tns.poss[R])) + 1]
+            $my_p = $(lvl.ex).pos[$(ctx(envposition(fbr.env)))]
+            $my_p1 = $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1]
             if $my_p < $my_p1
                 $my_i = $(lvl.ex).idx[$my_p]
                 $my_i1 = $(lvl.ex).idx[$my_p1 - 1]
@@ -153,13 +154,13 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
                         body = Cases([
                             :($step < $my_i) =>
                                 Run(
-                                    body = lvl.D,
+                                    body = default(fbr),
                                 ),
                             true =>
                                 Thunk(
                                     body = Spike(
-                                        body = lvl.D,
-                                        tail = Access(refurl(fbr, PositionEnvironment(Virtual{lvl.Tv}(my_p), Virtual{lvl.Ti}(my_i), fbr.env)), mode, idxs),
+                                        body = default(fbr),
+                                        tail = access(VirtualFiber(lvl.lvl, PositionEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_i), fbr.env)), mode, idxs...),
                                     ),
                                     epilogue = quote
                                         $my_p += 1
@@ -176,30 +177,33 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
     )
 end
 
-unfurl(lvl::VirtualHollowListLevel, tns, ctx, mode::Union{Write, Update}, idx::Name, idxs...) =
-    unfurl(lvl, tns, ctx, mode, extrude(idx), idxs...)
+unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Union{Write, Update}, idx::Name, idxs...) =
+    unfurl(fbr, ctx, mode, extrude(idx), idxs...)
 
-function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, tns, ctx, mode::Union{Write, Update}, idx::Extrude, idxs...)
-    R = tns.R
-    tag = Symbol(getname(tns), :_lvl, R)
+function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Union{Write, Update}, idx::Extrude, idxs...)
+    lvl = fbr.lvl
+    tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
     my_p = ctx.freshen(tag, :_p)
     my_p1 = ctx.freshen(tag, :_p1)
     my_i1 = ctx.freshen(tag, :_i1)
+    lvl_2 = nothing
 
     Thunk(
         preamble = quote
-            $my_p = $(lvl.ex).pos[$(ctx(tns.poss[R]))]
+            $my_p = $(lvl.ex).pos[$(ctx(envposition(fbr.env)))]
         end,
         body = AcceptSpike(
-            val = lvl.D,
+            val = default(fbr),
             tail = (ctx, idx) -> Thunk(
                 preamble = quote
                     $(scope(ctx) do ctx2 
-                        assemble_level!(Fiber(lvl.lvl, MaxPositionEnv(my_p)), ctx2)
+                        if (lvl_2 = assemble_level!(VirtualFiber(lvl.lvl, MaxPositionEnv(my_p)), ctx2)) === nothing
+                            lvl_2 = lvl.lvl
+                        end
                     end)
                 end,
-                body = Access(Fiber(lvl_2, PositionEnvironment(Virtual{lvl.Tv}(my_p), idx, fbr.env)), mode, tail...),
+                body = access(VirtualFiber(lvl_2, PositionEnvironment(Virtual{lvl.Tv}(my_p), idx, fbr.env)), mode, idxs...),
                 epilogue = quote
                     if $(lvl.idx_q) < $my_p
                         resize!($(lvl.ex).idx, $(lvl.idx_q) * 4)
@@ -211,7 +215,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, tns, ctx, mode::Union
             )
         ),
         epilogue = quote
-            $(lvl.ex).pos[$(ctx(tns.poss[R])) + 1] = $my_p
+            $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1] = $my_p
         end
     )
 end

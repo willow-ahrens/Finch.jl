@@ -31,6 +31,26 @@ isliteral(::VirtualRootEnvironment) = false
 envposition(env::VirtualRootEnvironment) = 1
 envdepth(env::VirtualRootEnvironment) = 0
 
+abstract type AbstractMetaEnvironment end
+
+"""
+    VirtualNameEnvironment(env)
+
+Holds the name of the tensor at the point it was named.
+"""
+mutable struct VirtualNameEnvironment <: AbstractMetaEnvironment
+    name
+    env
+end
+(ctx::Finch.LowerJulia)(env::VirtualNameEnvironment) = ctx(env.env)
+isliteral(::VirtualNameEnvironment) = false
+
+envposition(env::AbstractMetaEnvironment) = envposition(env.env)
+envdepth(env::AbstractMetaEnvironment) = envdepth(env.env)
+envgetname(env) = envgetname(env.env) #TODO add getter for environment child
+envgetname(env::VirtualNameEnvironment) = env.name
+envsetname!(env, name) = (envsetname!(env.env, name); env) #TODO should this really be mutable?
+envsetname!(env::VirtualNameEnvironment, name) = (env.name = name; env)
 
 
 """
@@ -142,18 +162,20 @@ fibers should share a `name` only if they hold the same data. `lvl` is a virtual
 object representing the level nest and `env` is a virtual object representing
 the environment.
 """
-mutable struct VirtualFiber{Lvl, Env}
-    name
+mutable struct VirtualFiber{Lvl}
     lvl::Lvl
-    env::Env
+    env
 end
-function virtualize(ex, ::Type{<:Fiber{Lvl, Env}}, ctx, tag=:tns) where {Lvl, Env}
+function virtualize(ex, ::Type{<:Fiber{Lvl, Env}}, ctx, tag=ctx.freshen(:tns)) where {Lvl, Env}
     lvl = virtualize(:($ex.lvl), Lvl, ctx, Symbol(tag, :_lvl))
     env = virtualize(:($ex.env), Env, ctx)
-    VirtualFiber(tag, lvl, env)
+    VirtualFiber(lvl, VirtualNameEnvironment(tag, env))
 end
 (ctx::Finch.LowerJulia)(fbr::VirtualFiber) = :(Fiber($(ctx(fbr.lvl)), $(ctx(fbr.env))))
 isliteral(::VirtualFiber) = false
+
+getname(fbr::VirtualFiber) = envgetname(fbr.env)
+setname(fbr::VirtualFiber, name) = VirtualFiber(fbr.lvl, envsetname!(fbr.env, name))
 
 
 
@@ -269,11 +291,9 @@ function make_style(root, ctx::Finch.LowerJulia, node::Access{<:VirtualFiber})
     end
 end
 
-getsites(arr::VirtualFiber) = 1:arity(arr)
-getname(arr::VirtualFiber) = arr.name
-setname(arr::VirtualFiber, name) = (arr_2 = deepcopy(arr); arr_2.name = name; arr_2)
+getsites(arr::VirtualFiber) = 1:arity(arr) #TODO maybe check how deep the name is in the env first
 
-function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualFiber}, ::DefaultStyle) where {Tv, Ti}
+function (ctx::Finch.ChunkifyVisitor)(node::Access{<:VirtualFiber}, ::DefaultStyle) where {Tv, Ti}
     if getname(ctx.idx) == getname(node.idxs[1])
         unfurl(node.tns, ctx.ctx, node.mode, node.idxs...)
     else
@@ -281,7 +301,7 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualFiber}, ::DefaultStyle
     end
 end
 
-function (ctx::Finch.AccessVisitor)(node::Access{VirtualFiber}, ::DefaultStyle) where {Tv, Ti}
+function (ctx::Finch.AccessVisitor)(node::Access{<:VirtualFiber}, ::DefaultStyle) where {Tv, Ti}
     if isempty(node.idxs)
         unfurl(node.tns, ctx.ctx, node.mode)
     else
