@@ -82,6 +82,7 @@ function initialize_level!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
             if (lvl_2 = initialize_level!(VirtualFiber(fbr.lvl.lvl, ArbitraryEnvironment(fbr.env)), ctx_2, mode)) === nothing
                 lvl_2 = lvl.lvl
             end
+            quote end
         end)
     end)
     push!(ctx.preamble, quote
@@ -108,6 +109,7 @@ function assemble_level!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
         end
         $(scope(ctx) do ctx_2
             lvl_2 = assemble_level!(VirtualFiber(fbr.lvl.lvl, VirtualMaxPositionEnvironment(q, fbr.env)), ctx, mode)
+            quote end
         end)
     end)
     if lvl_2 !== nothing
