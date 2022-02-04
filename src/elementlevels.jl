@@ -45,35 +45,34 @@ getdims(::VirtualFiber{VirtualElementLevel}, ctx, mode) = ()
 @inline default(fbr::VirtualFiber{VirtualElementLevel}) = fbr.lvl.D
 
 function initialize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
-    my_q = ctx.freshen(fbr.lvl.ex, :_q)
+    lvl = fbr.lvl
+    my_q = ctx.freshen(lvl.ex, :_q)
     push!(ctx.preamble, quote
-        if $(fbr.lvl.val_q) < 4
-            resize!($(fbr.lvl.ex).val, 4)
+        if $(lvl.val_q) < 4
+            resize!($(lvl.ex).val, 4)
         end
-        $(fbr.lvl.val_q) = 4
+        $(lvl.val_q) = 4
         for $my_q = 1:4
-            $(fbr.lvl.ex).val[$my_q] = $(fbr.lvl.D)
+            $(lvl.ex).val[$my_q] = $(lvl.D)
         end
     end)
     nothing
 end
 
 function assemble_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
-    q = getmaxposition(fbr.env)
-    if q == nothing
-        return nothing
-    else
-        my_q = ctx.freshen(:lvl, tns.R, :_q)
-        push!(ctx.preamble, quote
-            if $(lvl.val_q) < $q
-                resize!($(lvl.ex).val, $(lvl.val_q) * 4)
-                @simd for $my_q = $(lvl.val_q) + 1: $(lvl.val_q) * 4
-                    $(lvl.ex).val[$my_q] = $(lvl.D)
-                end
-                $(lvl.val_q) *= 4
+    lvl = fbr.lvl
+    q = envmaxposition(fbr.env)
+    my_q = ctx.freshen(lvl.ex, :_q)
+    push!(ctx.preamble, quote
+        if $(lvl.val_q) < $q
+            resize!($(lvl.ex).val, $(lvl.val_q) * 4)
+            @simd for $my_q = $(lvl.val_q) + 1: $(lvl.val_q) * 4
+                $(lvl.ex).val[$my_q] = $(lvl.D)
             end
-        end)
-    end
+            $(lvl.val_q) *= 4
+        end
+    end)
+    return nothing
 end
 
 function unfurl(fbr::VirtualFiber{VirtualElementLevel}, ctx, ::Read)

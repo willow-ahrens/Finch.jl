@@ -87,6 +87,22 @@ envcoordinate(env::VirtualPositionEnvironment) = env.idx
 envdepth(env::VirtualPositionEnvironment) = 1 + envdepth(env.env)
 
 """
+    VirtualMaxPositionEnvironment(maxpos, env)
+
+An environment that holds a maximum position that a level should support, and a parent
+environment `env`. The coordinate here is arbitrary
+
+See also: [`envposition`](@ref)
+"""
+struct VirtualMaxPositionEnvironment
+    pos
+    env
+end
+envdepth(env::VirtualMaxPositionEnvironment) = 1 + envdepth(env.env)
+envmaxposition(env::VirtualMaxPositionEnvironment) = env.pos
+
+
+"""
     ArbitraryEnvironment(env)
 
 An environment that abstracts over all positions, not making a choice. The
@@ -165,7 +181,13 @@ the environment.
 mutable struct VirtualFiber{Lvl}
     lvl::Lvl
     env
+    function VirtualFiber{Lvl}(lvl::Lvl, env) where {Lvl}
+        @assert !(lvl isa Vector)
+        new{Lvl}(lvl, env)
+    end
 end
+VirtualFiber(lvl::Lvl, env) where {Lvl} = VirtualFiber{Lvl}(lvl, env)
+
 function virtualize(ex, ::Type{<:Fiber{Lvl, Env}}, ctx, tag=ctx.freshen(:tns)) where {Lvl, Env}
     lvl = virtualize(:($ex.lvl), Lvl, ctx, Symbol(tag, :_lvl))
     env = virtualize(:($ex.env), Env, ctx)
@@ -295,7 +317,8 @@ getsites(arr::VirtualFiber) = 1:arity(arr) #TODO maybe check how deep the name i
 
 function (ctx::Finch.ChunkifyVisitor)(node::Access{<:VirtualFiber}, ::DefaultStyle) where {Tv, Ti}
     if getname(ctx.idx) == getname(node.idxs[1])
-        unfurl(node.tns, ctx.ctx, node.mode, node.idxs...)
+        #TODO I think we probably shouldn't wrap this in an Access, but life is complicated and I don't know what the right choice is right now.
+        Access(unfurl(node.tns, ctx.ctx, node.mode, node.idxs...), node.mode, node.idxs)
     else
         node
     end

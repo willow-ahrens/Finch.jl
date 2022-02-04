@@ -17,7 +17,6 @@ combine_style(a::ThunkStyle, b::RunStyle) = ThunkStyle()
 combine_style(a::RunStyle, b::RunStyle) = RunStyle()
 
 function (ctx::LowerJulia)(root::Loop, ::RunStyle)
-    display(root)
     @assert !isempty(root.idxs)
     root = (AccessRunVisitor(root))(root)
     #TODO remove simplify step once we have dedicated handlers for it
@@ -29,6 +28,7 @@ struct AccessRunVisitor <: AbstractTransformVisitor
     root
 end
 
+#TODO consider processing runs (and other blocks) outside of access objects?
 function (ctx::AccessRunVisitor)(node::Access{Run, Read}, ::DefaultStyle)
     return node.tns.body
 end

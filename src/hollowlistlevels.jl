@@ -9,6 +9,7 @@ HollowListLevel(lvl) = HollowListLevel(0, lvl)
 HollowListLevel{Ti}(lvl) where {Ti} = HollowListLevel(zero{Ti}, lvl)
 HollowListLevel(I::Ti, lvl::Lvl) where {Ti, Lvl} = HollowListLevel{Ti, Lvl}(I, lvl)
 HollowListLevel{Ti}(I::Ti, lvl::Lvl) where {Ti, Lvl} = HollowListLevel{Ti, Lvl}(I, lvl)
+HollowListLevel{Ti}(I::Ti, pos, idx, lvl::Lvl) where {Ti, Lvl} = HollowListLevel{Ti, Lvl}(I, pos, idx, lvl)
 HollowListLevel{Ti, Lvl}(I::Ti, lvl::Lvl) where {Ti, Lvl} = HollowListLevel{Ti, Lvl}(I, Vector{Ti}(undef, 4), Vector{Ti}(undef, 4), lvl)
 
 @inline arity(fbr::Fiber{<:HollowListLevel}) = 1 + arity(Fiber(fbr.lvl.lvl, ArbitraryEnvironment(fbr.env)))
@@ -47,7 +48,7 @@ function virtualize(ex, ::Type{HollowListLevel{Ti, Lvl}}, ctx, tag=:lvl) where {
         $pos_q = length($sym.pos)
         $idx_q = length($sym.idx)
     end)
-    lvl_2 = virtualize(sym, Lvl, ctx, sym)
+    lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
     VirtualHollowListLevel(sym, Ti, I, pos_q, idx_q, lvl_2)
 end
 (ctx::Finch.LowerJulia)(lvl::VirtualHollowListLevel) = lvl.ex
@@ -87,9 +88,9 @@ function initialize_level!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
         $(lvl.I) = $(ctx(ctx.dims[(getname(fbr), envdepth(fbr.env) + 1)].stop))
         $(lvl.ex) = HollowListLevel{$(lvl.Ti)}(
             $(lvl.Ti)($(lvl.I)),
-            $(ctx(lvl_2.ex)),
             $(lvl.ex).pos,
             $(lvl.ex).idx,
+            $(ctx(lvl_2.ex)),
         )
     end)
     lvl_3 = shallowcopy(lvl)
@@ -98,7 +99,7 @@ function initialize_level!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
 end
 
 function assemble_level!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
-    q = getmaxposition(fbr.env)
+    q = envmaxposition(fbr.env)
     lvl = fbr.lvl
     push!(ctx.preamble, quote
         if $(lvl.pos_q) < $(ctx(q))
@@ -106,7 +107,7 @@ function assemble_level!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
             $(lvl.pos_q) *= 4
         end
         $(scope(ctx) do ctx_2
-            lvl_2 = assemble_level!(VirtualFiber(fbr.lvl.lvl, MaxPositionEnv(q, env)), ctx, mode)
+            lvl_2 = assemble_level!(VirtualFiber(fbr.lvl.lvl, VirtualMaxPositionEnvironment(q, fbr.env)), ctx, mode)
         end)
     end)
     if lvl_2 !== nothing
@@ -198,12 +199,12 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Union{Writ
             tail = (ctx, idx) -> Thunk(
                 preamble = quote
                     $(scope(ctx) do ctx2 
-                        if (lvl_2 = assemble_level!(VirtualFiber(lvl.lvl, MaxPositionEnv(my_p)), ctx2)) === nothing
+                        if (lvl_2 = assemble_level!(VirtualFiber(lvl.lvl, VirtualMaxPositionEnvironment(my_p, fbr.env)), ctx2, mode)) === nothing
                             lvl_2 = lvl.lvl
                         end
                     end)
                 end,
-                body = access(VirtualFiber(lvl_2, PositionEnvironment(Virtual{lvl.Tv}(my_p), idx, fbr.env)), mode, idxs...),
+                body = access(VirtualFiber(lvl_2, PositionEnvironment(Virtual{lvl.Ti}(my_p), idx, fbr.env)), mode, idxs...),
                 epilogue = quote
                     if $(lvl.idx_q) < $my_p
                         resize!($(lvl.ex).idx, $(lvl.idx_q) * 4)
