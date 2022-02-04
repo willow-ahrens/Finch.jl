@@ -204,6 +204,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Union{Writ
                         if (lvl_2 = assemble_level!(VirtualFiber(lvl.lvl, VirtualMaxPositionEnvironment(my_p, fbr.env)), ctx2, mode)) === nothing
                             lvl_2 = lvl.lvl
                         end
+                        quote end
                     end)
                 end,
                 body = access(VirtualFiber(lvl_2, PositionEnvironment(Virtual{lvl.Ti}(my_p), idx, fbr.env)), mode, idxs...),
