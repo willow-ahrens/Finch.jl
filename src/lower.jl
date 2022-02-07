@@ -10,7 +10,7 @@ function (spc::Freshen)(tags...)
         tag = name
         n = 1
     else
-        tag = m.captures[1]
+        tag = Symbol(m.captures[1])
         n = parse(BigInt, m.captures[2])
     end
     if (tag, n) in spc.seen

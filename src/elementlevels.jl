@@ -28,6 +28,7 @@ end
 (ctx::Finch.LowerJulia)(lvl::VirtualElementLevel) = lvl.ex
 function virtualize(ex, ::Type{ElementLevel{D, Tv}}, ctx, tag) where {D, Tv}
     sym = ctx.freshen(tag)
+    println((sym, tag))
     val_q = ctx.freshen(sym, :_val_q)
     push!(ctx.preamble, quote
         $sym = $ex

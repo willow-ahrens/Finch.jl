@@ -87,6 +87,41 @@ envcoordinate(env::VirtualPositionEnvironment) = env.idx
 envdepth(env::VirtualPositionEnvironment) = 1 + envdepth(env.env)
 
 """
+    DeferredEnvironment(idx, env)
+
+An environment that holds a deferred coordinate `idx`, and parent
+environment `env`.
+
+See also: [`envdeferred`](@ref), [`envcoordinate`](@ref), [`getparent`](@ref)
+"""
+struct DeferredEnvironment{Ti, Env}
+    idx::Ti
+    env::Env
+end
+envdepth(env::DeferredEnvironment) = 1 + envdepth(env.env)
+envcoordinate(env::DeferredEnvironment) = env.idx
+envdeferred(env::DeferredEnvironment) = (env.idx, envdeferred(env.env)...)
+envdeferred(env) = envdeferred(env.env) #TODO abstract type here?
+envdeferred(env::PositionEnvironment) = ()
+
+struct VirtualDeferredEnvironment
+    idx
+    env
+end
+function virtualize(ex, ::Type{DeferredEnvironment{Ti, Env}}, ctx) where {Ti, Env}
+    idx = virtualize(:($ex.idx), Ti, ctx)
+    env = virtualize(:($ex.env), Env, ctx)
+    VirtualDeferredEnvironment(pos, idx, env)
+end
+(ctx::Finch.LowerJulia)(env::VirtualDeferredEnvironment) = :(DeferredEnvironment($(ctx(env.idx)), $(ctx(env.env))))
+isliteral(::VirtualDeferredEnvironment) = false
+
+envdepth(env::VirtualDeferredEnvironment) = 1 + envdepth(env.env)
+envcoordinate(env::VirtualDeferredEnvironment) = env.idx
+envdeferred(env::VirtualDeferredEnvironment) = (env.idx, envdeferred(env.env)...)
+envdeferred(env::VirtualPositionEnvironment) = ()
+
+"""
     VirtualMaxPositionEnvironment(maxpos, env)
 
 An environment that holds a maximum position that a level should support, and a parent

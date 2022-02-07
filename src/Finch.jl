@@ -33,6 +33,7 @@ include("execute.jl")
 include("virtual_abstractarray.jl")
 include("fibers.jl")
 include("hollowlistlevels.jl")
+include("hollowhashlevels.jl")
 include("solidlevels.jl")
 include("elementlevels.jl")
 
