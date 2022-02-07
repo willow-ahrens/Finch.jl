@@ -48,6 +48,7 @@ end
 
 mutable struct VirtualHollowHashLevel
     ex
+    N
     Ti
     Tp
     Tp_2
@@ -66,9 +67,21 @@ function virtualize(ex, ::Type{HollowHashLevel{N, Ti, Tp, Tp_2, Tbl, Lvl}}, ctx,
         $idx_q = length($sym.tbl)
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualHollowHashLevel(sym, Ti, Tp, Tp_2, Tbl, I, idx_q, lvl_2)
+    VirtualHollowHashLevel(sym, N, Ti, Tp, Tp_2, Tbl, I, idx_q, lvl_2)
 end
 (ctx::Finch.LowerJulia)(lvl::VirtualHollowHashLevel) = lvl.ex
+
+function reconstruct!(lvl::VirtualHollowHashLevel, ctx)
+    push!(ctx.preamble, quote
+        $(lvl.ex) = HollowHashLevel{$(lvl.N), $(lvl.Ti), $(lvl.Tp), $(lvl.Tp_2), $(lvl.Tbl)}(
+            $(ctx(lvl.I)),
+            $(lvl.ex).tbl,
+            $(lvl.ex).srt,
+            $(lvl.ex).pos,
+            $(ctx(lvl.lvl)),
+        )
+    end)
+end
 
 function getsites(fbr::VirtualFiber{VirtualHollowHashLevel})
     return (map(n-> envdepth(fbr.env) + n, 1:fbr.lvl.N)..., getsites(VirtualFiber(fbr.lvl.lvl, ∘(repeated(VirtualArbitraryEnvironment, fbr.lvl.N)...)(fbr.env)))...)
@@ -85,33 +98,22 @@ end
 function initialize_level!(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode)
     @assert isempty(envdeferred(fbr.env))
     lvl = fbr.lvl
-    lvl_2 = nothing
     push!(ctx.preamble, quote
         $(lvl.idx_q) = 0
-        $(scope(ctx) do ctx_2
-            if (lvl_2 = initialize_level!(VirtualFiber(fbr.lvl.lvl, ∘(repeated(VirtualArbitraryEnvironment, lvl.N)...)(fbr.env)), ctx_2, mode)) === nothing
-                lvl_2 = lvl.lvl
-            end
-            quote end
-        end)
-    end)
-    push!(ctx.preamble, quote
-        $(lvl.Is) = ($(map(n->ctx(ctx.dims[(getname(fbr), envdepth(fbr.env) + n)].stop), 1:lvl.N))...,)
+        $(lvl.I) = $(lvl.Ti)($(map(n->ctx(ctx.dims[(getname(fbr), envdepth(fbr.env) + n)].stop), 1:lvl.N))...,)
         empty!($(lvl.ex).tbl)
-        empty!($(lvl.ex).srt),
-        $(lvl.ex) = HollowHashLevel{$(lvl.N), $(lvl.Ti), $(lvl.Tp), $(lvl.Tp_2), $(lvl.Tbl)}(
-            $(lvl.Tis)($(lvl.Is)),
-            $(lvl.ex).tbl,
-            $(lvl.ex).srt,
-            $(ctx(lvl_2)),
-        )
+        empty!($(lvl.ex).srt)
+        empty!($(lvl.ex).pos)
     end)
-    lvl_3 = shallowcopy(lvl)
-    lvl_3.lvl = lvl_2
-    return lvl_3
+    if (lvl_2 = initialize_level!(VirtualFiber(fbr.lvl.lvl, ∘(repeated(VirtualArbitraryEnvironment, lvl.N)...)(fbr.env)), ctx_2, mode)) !== nothing
+        lvl = shallowcopy(lvl)
+        lvl.lvl = lvl_2
+    end
+    reconstruct!(lvl, ctx)
+    return lvl
 end
 
-function assemble_level!(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode)
+function assemble!(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode)
     return nothing
 end
 
@@ -121,15 +123,15 @@ function finalize_level!(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode)
         resize!($lvl.srt, length($lvl.tbl))
         copyto!($lvl.srt, pairs($lvl.tbl))
         sort!($lvl.srt)
-        $(scope(ctx) do ctx_2
-            if (lvl_2 = finalize_level!(VirtualFiber(fbr.lvl.lvl, ∘(repeated(VirtualArbitraryEnvironment, lvl.N)...)(fbr.env)), ctx_2, mode)) !== nothing
-                lvl_2 = lvl.lvl 
-            end
-            quote end
-        end)
     end)
-    #TODO deal with reconstruction
-    nothing
+    if (lvl_2 = finalize_level!(VirtualFiber(fbr.lvl.lvl, ∘(repeated(VirtualArbitraryEnvironment, lvl.N)...)(fbr.env)), ctx_2, mode)) !== nothing
+        lvl = shallowcopy(lvl)
+        lvl.lvl = lvl_2
+        reconstruct!(lvl, ctx)
+        return lvl
+    else
+        return nothing
+    end
 end
 
 unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx::Name, idxs...) =
@@ -227,7 +229,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Union{Writ
             tail = (ctx, idx) -> Thunk(
                 preamble = quote
                     $(scope(ctx) do ctx_2 
-                        if (lvl_2 = assemble_level!(VirtualFiber(fbr.lvl.lvl, ∘(repeated(ArbitraryEnvironment, lvl.N - 1)..., identity)(VirtualMaxPositionEnvironment(q, fbr.env))), ctx_2, mode))
+                        if (lvl_2 = assemble!(VirtualFiber(fbr.lvl.lvl, ∘(repeated(ArbitraryEnvironment, lvl.N - 1)..., identity)(VirtualMaxPositionEnvironment(q, fbr.env))), ctx_2, mode))
                             lvl_2 = lvl.lvl
                         end
                         quote end

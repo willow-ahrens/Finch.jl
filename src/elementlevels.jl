@@ -28,7 +28,6 @@ end
 (ctx::Finch.LowerJulia)(lvl::VirtualElementLevel) = lvl.ex
 function virtualize(ex, ::Type{ElementLevel{D, Tv}}, ctx, tag) where {D, Tv}
     sym = ctx.freshen(tag)
-    println((sym, tag))
     val_q = ctx.freshen(sym, :_val_q)
     push!(ctx.preamble, quote
         $sym = $ex
@@ -60,7 +59,7 @@ function initialize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
     nothing
 end
 
-function assemble_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
+function assemble!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
     lvl = fbr.lvl
     q = envmaxposition(fbr.env)
     my_q = ctx.freshen(lvl.ex, :_q)
