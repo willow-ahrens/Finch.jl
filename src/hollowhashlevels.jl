@@ -54,20 +54,26 @@ mutable struct VirtualHollowHashLevel
     Tp_2
     Tbl
     I
+    pos_q
+    pos_q_alloc
     idx_q
     lvl
 end
 function virtualize(ex, ::Type{HollowHashLevel{N, Ti, Tp, Tp_2, Tbl, Lvl}}, ctx, tag=:lvl) where {N, Ti, Tp, Tp_2, Tbl, Lvl}   
     sym = ctx.freshen(tag)
     I = ctx.freshen(sym, :_I)
+    pos_q = ctx.freshen(sym, :_pos_q)
+    pos_q_alloc = ctx.freshen(sym, :_pos_q_alloc)
     idx_q = ctx.freshen(sym, :_idx_q)
     push!(ctx.preamble, quote
         $sym = $ex
         $I = $sym.I
+        $pos_q = length($sym.pos)
+        $pos_q_alloc = $pos_q
         $idx_q = length($sym.tbl)
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualHollowHashLevel(sym, N, Ti, Tp, Tp_2, Tbl, I, idx_q, lvl_2)
+    VirtualHollowHashLevel(sym, N, Ti, Tp, Tp_2, Tbl, I, pos_q, idx_q, lvl_2)
 end
 (ctx::Finch.LowerJulia)(lvl::VirtualHollowHashLevel) = lvl.ex
 
@@ -99,11 +105,16 @@ function initialize_level!(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode)
     @assert isempty(envdeferred(fbr.env))
     lvl = fbr.lvl
     push!(ctx.preamble, quote
-        $(lvl.idx_q) = 0
         $(lvl.I) = $(lvl.Ti)($(map(n->ctx(ctx.dims[(getname(fbr), envdepth(fbr.env) + n)].stop), 1:lvl.N))...,)
+        $(lvl.idx_q) = 0
         empty!($(lvl.ex).tbl)
         empty!($(lvl.ex).srt)
-        empty!($(lvl.ex).pos)
+        if $(lvl.pos_q_alloc) < 4
+            resize!($(lvl.ex).pos, 4)
+        end
+        $(lvl.pos_q_alloc) = 4
+        $(lvl.pos_q) = 0
+        $(lvl.ex).pos[1] = 1
     end)
     if (lvl_2 = initialize_level!(VirtualFiber(fbr.lvl.lvl, ∘(repeated(VirtualArbitraryEnvironment, lvl.N)...)(fbr.env)), ctx_2, mode)) !== nothing
         lvl = shallowcopy(lvl)
@@ -114,15 +125,28 @@ function initialize_level!(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode)
 end
 
 function assemble!(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode)
-    return nothing
+    q = envmaxposition(fbr.env)
+    lvl = fbr.lvl
+    push!(ctx.preamble, quote
+        if $(lvl.pos_q_alloc) < $(ctx(q)) + 1
+            resize!($(lvl.ex).pos, $(lvl.pos_q_alloc) * 4)
+            $(lvl.pos_q_alloc) *= 4
+        end
+        $(lvl.pos_q) = $(ctx(q))
+        $(lvl.ex).pos[$(lvl.pos_q) + 1] = 0
+    end)
 end
 
 function finalize_level!(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode)
     @assert isempty(envdeferred(fbr.env))
+    my_p = ctx.freshen(fbr.ex, :_p)
     push!(ctx.preamble, quote
         resize!($lvl.srt, length($lvl.tbl))
         copyto!($lvl.srt, pairs($lvl.tbl))
         sort!($lvl.srt)
+        for $my_p = 1:$(lvl.pos_q)
+            $(lvl.ex).pos[$my_p + 1] += $(lvl.ex).pos[$my_p]
+        end
     end)
     if (lvl_2 = finalize_level!(VirtualFiber(fbr.lvl.lvl, ∘(repeated(VirtualArbitraryEnvironment, lvl.N)...)(fbr.env)), ctx_2, mode)) !== nothing
         lvl = shallowcopy(lvl)
@@ -154,7 +178,6 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx:
         p_start = envstart(fbr.env)
         p_stop = envstop(fbr.env)
     end
-
 
     Thunk(
         preamble = quote

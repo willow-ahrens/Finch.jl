@@ -102,7 +102,7 @@ function assemble!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
     q = envmaxposition(fbr.env)
     lvl = fbr.lvl
     push!(ctx.preamble, quote
-        if $(lvl.pos_q) < $(ctx(q))
+        if $(lvl.pos_q) < $(ctx(q)) + 1
             resize!($(lvl.ex).pos, $(lvl.pos_q) * 4)
             $(lvl.pos_q) *= 4
         end
