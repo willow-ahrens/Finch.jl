@@ -142,26 +142,37 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx:
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
     my_p = ctx.freshen(tag, :_p)
-    my_p1 = ctx.freshen(tag, :_p1)
-    my_i1 = ctx.freshen(tag, :_i1)
+    my_p_step = ctx.freshen(tag, :_p_step)
+    my_p_stop = ctx.freshen(tag, :_p_stop)
+    my_i_stop = ctx.freshen(tag, :_i_stop)
+    R = length(envdeferred(fbr.env)) + 1
+    @assert R == 1 || (envstart(fbr.env) !== nothing && envstop(fbr.env) !== nothing)
+    if R == 1
+        p_start = Virtual(:($(lvl.ex).pos[$(ctx(envposition(fbr.env)))]))
+        p_stop = Virtual(:($(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1]))
+    else
+        p_start = envstart(fbr.env)
+        p_stop = envstop(fbr.env)
+    end
+
 
     Thunk(
         preamble = quote
-            $my_p = $(lvl.ex).pos[$(ctx(envposition(fbr.env)))]
-            $my_p1 = $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1]
-            if $my_p < $my_p1
-                $my_i = $(lvl.ex).srt[$my_p][1]
-                $my_i1 = $(lvl.ex).srt[$my_p1 - 1][1]
+            $my_p = $(ctx(p_start))
+            $my_p_stop = $(ctx(p_stop))
+            if $my_p < $my_p_stop
+                $my_i = $(lvl.ex).srt[$my_p][$R]
+                $my_i_stop = $(lvl.ex).srt[$my_p_stop - 1][$R]
             else
                 $my_i = 1
-                $my_i1 = 0
+                $my_i_stop = 0
             end
         end,
         body = Pipeline([
             Phase(
                 stride = (start) -> my_i1,
                 body = (start, step) -> Stepper(
-                    guard = (start) -> :($my_p < $my_p1),
+                    guard = (start) -> :($my_p < $my_p_stop),
                     stride = (start) -> my_i,
                     body = (start, step) -> Thunk(
                         body = Cases([
@@ -169,25 +180,43 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx:
                                 Run(
                                     body = default(fbr),
                                 ),
-                            true =>
-                                Thunk(
-                                    body = Spike(
-                                        body = default(fbr),
-                                        tail = access(VirtualFiber(lvl.lvl, PositionEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_i), fbr.env)), mode, idxs...),
-                                    ),
-                                    epilogue = quote
-                                        while $my_p < $my_p1 && $(lvl.ex).srt[$my_p][1] == $my_i
+                            true => begin
+                                if R == lvl.N
+                                    Thunk(
+                                        body = Spike(
+                                            body = default(fbr),
+                                            tail = access(VirtualFiber(lvl.lvl, PositionEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_i), fbr.env)), mode, idxs...),
+                                        ),
+                                        epilogue = quote
                                             $my_p += 1
+                                            $my_i = $(lvl.ex).srt[$my_p][$R]
                                         end
-                                        $my_i = $(lvl.ex).srt[$my_p][1]
-                                    end
-                                ),
+                                    )
+                                else
+                                    Thunk(
+                                        preamble = quote
+                                            $my_p_step = $my_p + 1
+                                            while $my_p_step < $my_p_stop && $(lvl.ex).srt[$my_p_step][$(R + 1)] == $my_i
+                                                $my_p_step += 1
+                                            end
+                                        end,
+                                        body = Spike(
+                                            body = default(fbr),
+                                            tail = access(VirtualFiber(lvl, PosRangeEnvironment(Virtual{lvl.Ti}(my_i), Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_p_step), fbr.env)), mode, idxs...),
+                                        ),
+                                        epilogue = quote
+                                            $my_p = $my_p_step
+                                            $my_i = $(lvl.ex).srt[$my_p][$R]
+                                        end
+                                    )
+                                end
+                            end,
                         ])
                     )
                 )
             ),
             Phase(
-                body = (start, step) -> Run(0)
+                body = (start, step) -> Run(default(fbr))
             )
         ])
     )
@@ -196,16 +225,28 @@ end
 function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx::Union{Follow}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
-    p = ctx.freshen(tag, :_p)
+    R = length(envdeferred(fbr.env)) + 1
+    my_key = cgx.freshen(tag, :_key)
+    my_p = cgx.freshen(tag, :_p)
 
-    Leaf(
-        body = (i) -> Thunk(
-            preamble = quote
-                $p = $lvl.tbl[$(map(ctx, envdeferred(fbr.env))..., ctx(i))]
-            end,
-            body = access(VirtualFiber(lvl.lvl, PositionEnvironment(Virtual{lvl.Tp_2}(my_p), i, fbr.env)), mode, idxs...)
+    if R == lvl.N
+        Leaf(
+            body = (i) -> Thunk(
+                preamble = quote
+                    $my_key = ($(ctx(envposition(fbr.env))), ($(map(ctx, envdeferred(fbr.env))...), $(ctx(i))))
+                    $my_p = get($lvl.tbl, $my_key, 0)
+                end,
+                body = Cases([
+                    :($my_p != 0) => access(VirtualFiber(lvl.lvl, PositionEnvironment(Virtual{lvl.Tp_2}(my_p), i, fbr.env)), mode, idxs...),
+                    true => default(fbr)
+                ])
+            )
         )
-    )
+    else
+        Leaf(
+            body = (i) -> access(VirtualFiber(lvl, DeferredEnvironment(i, fbr.env)), mode, idxs...)
+        )
+    end
 end
 
 unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Union{Write, Update}, idx::Name, idxs...) =
@@ -214,40 +255,37 @@ unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Union{Write, Update
 function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Union{Write, Update}, idx::Union{Name, Extrude, Laminate}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
-    my_i = ctx.freshen(tag, :_i)
-    my_p = ctx.freshen(tag, :_p)
-    my_p1 = ctx.freshen(tag, :_p1)
-    my_i1 = ctx.freshen(tag, :_i1)
-    lvl_2 = nothing
+    R = length(envdeferred(fbr.env)) + 1
+    my_key = cgx.freshen(tag, :_key)
+    my_p = cgx.freshen(tag, :_p)
 
-    Thunk(
-        preamble = quote
-            $my_p = $(lvl.ex).pos[$(ctx(envposition(fbr.env)))]
-        end,
-        body = AcceptSpike(
-            val = default(fbr),
-            tail = (ctx, idx) -> Thunk(
-                preamble = quote
-                    $(scope(ctx) do ctx_2 
-                        if (lvl_2 = assemble!(VirtualFiber(fbr.lvl.lvl, ∘(repeated(ArbitraryEnvironment, lvl.N - 1)..., identity)(VirtualMaxPositionEnvironment(q, fbr.env))), ctx_2, mode))
-                            lvl_2 = lvl.lvl
+    if R == lvl.N
+        Thunk(
+            preamble = quote
+                $my_p = $(lvl.ex).pos[$(ctx(envposition(fbr.env)))]
+            end,
+            body = AcceptSpike(
+                val = default(fbr),
+                tail = (ctx, idx) -> Thunk(
+                    preamble = quote
+                        $my_key = ($(ctx(envposition(fbr.env))), ($(map(ctx, envdeferred(fbr.env))...), $(ctx(idx))))
+                        $my_p = get!(lvl.tbl, $my_key, $(lvl.idx_q) + 1)
+                        if $my_p > $(lvl.idx_q)
+                            $(lvl.idx_q) = $my_p
+                            $(scope(ctx) do ctx_2 
+                                assemble!(VirtualFiber(fbr.lvl.lvl, ∘(repeated(ArbitraryEnvironment, lvl.N - 1)..., identity)(VirtualMaxPositionEnvironment(my_p, fbr.env))), ctx_2, mode)
+                                quote end
+                            end)
+                            $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1] += 1
                         end
-                        quote end
-                    end)
-                end,
-                body = access(VirtualFiber(lvl_2, PositionEnvironment(Virtual{lvl.Ti}(my_p), idx, fbr.env)), mode, idxs...),
-                epilogue = quote
-                    if $(lvl.idx_q) < $my_p
-                        resize!($(lvl.ex).idx, $(lvl.idx_q) * 4)
-                        $(lvl.idx_q) *= 4
-                    end
-                    $(lvl.ex).idx[$my_p] = $(ctx(idx))
-                    $my_p += 1
-                end
+                    end,
+                    body = access(VirtualFiber(lvl_2, PositionEnvironment(Virtual{lvl.Ti}(my_p), idx, fbr.env)), mode, idxs...)
+                )
             )
-        ),
-        epilogue = quote
-            $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1] = $my_p
-        end
-    )
+        )
+    else
+        Leaf(
+            body = (i) -> access(VirtualFiber(lvl, DeferredEnvironment(i, fbr.env)), mode, idxs...)
+        )
+    end
 end
