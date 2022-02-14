@@ -102,6 +102,7 @@ envcoordinate(env::DeferredEnvironment) = env.idx
 envdeferred(env::DeferredEnvironment) = (env.idx, envdeferred(env.env)...)
 envdeferred(env) = envdeferred(env.env) #TODO abstract type here?
 envdeferred(env::PositionEnvironment) = ()
+envdeferred(env::RootEnvironment) = ()
 
 struct VirtualDeferredEnvironment
     idx
@@ -119,6 +120,7 @@ envdepth(env::VirtualDeferredEnvironment) = 1 + envdepth(env.env)
 envcoordinate(env::VirtualDeferredEnvironment) = env.idx
 envdeferred(env::VirtualDeferredEnvironment) = (env.idx, envdeferred(env.env)...)
 envdeferred(env::VirtualPositionEnvironment) = ()
+envdeferred(env::VirtualRootEnvironment) = ()
 
 struct VirtualPosRangeEnvironment
     idx

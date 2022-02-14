@@ -10,7 +10,7 @@ using Base: @kwdef
 
 export @index
 
-export Fiber, HollowList, Solid, Element
+export Fiber, HollowList, HollowHash, Solid, Element, FiberArray
 
 include("util.jl")
 

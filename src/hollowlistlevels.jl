@@ -55,7 +55,7 @@ end
 
 function reconstruct!(lvl::VirtualHollowListLevel, ctx)
     push!(ctx.preamble, quote
-        $(lvl.ex) = HollowListLevel{$(lvl.Ti)}(
+        $(lvl.ex) = $HollowListLevel{$(lvl.Ti)}(
             $(ctx(lvl.I)),
             $(lvl.ex).pos,
             $(lvl.ex).idx,
@@ -108,6 +108,16 @@ function assemble!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
         end
     end)
     assemble!(VirtualFiber(fbr.lvl.lvl, VirtualMaxPositionEnvironment(q, fbr.env)), ctx, mode)
+end
+
+function finalize_level!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
+    lvl = fbr.lvl
+    if (lvl_2 = initialize_level!(VirtualFiber(fbr.lvl.lvl, ArbitraryEnvironment(fbr.env)), ctx, mode)) !== nothing
+        lvl = shallowcopy(lvl)
+        lvl.lvl = lvl_2
+        reconstruct!(lvl, ctx)
+    end
+    return lvl
 end
 
 unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx::Name, idxs...) =

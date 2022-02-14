@@ -59,6 +59,8 @@ function initialize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
     nothing
 end
 
+finalize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode) = nothing
+
 function assemble!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
     lvl = fbr.lvl
     q = envmaxposition(fbr.env)

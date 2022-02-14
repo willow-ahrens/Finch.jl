@@ -144,7 +144,7 @@ function finalize_level!(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode)
     my_p = ctx.freshen(lvl.ex, :_p)
     push!(ctx.preamble, quote
         resize!($(lvl.ex).srt, length($(lvl.ex).tbl))
-        resize!($(lvl.ex).pos, length($(lvl.ex).tbl) + 1)
+        resize!($(lvl.ex).pos, $(lvl.pos_q))
         copyto!($(lvl.ex).srt, pairs($(lvl.ex).tbl))
         sort!($(lvl.ex).srt)
         $(lvl.ex).pos[$(lvl.pos_q) + 1] = 0
