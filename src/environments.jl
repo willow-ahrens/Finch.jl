@@ -8,6 +8,7 @@ default, the top level has access to the RootEnvironment.
 struct RootEnvironment end
 
 envposition(env::RootEnvironment) = 1
+envmaxposition(env::RootEnvironment) = 1
 
 """
     envdepth()
@@ -29,6 +30,7 @@ virtualize(ex, ::Type{RootEnvironment}, ctx) = VirtualRootEnvironment()
 isliteral(::VirtualRootEnvironment) = false
 
 envposition(env::VirtualRootEnvironment) = 1
+envmaxposition(env::VirtualRootEnvironment) = 1
 envdepth(env::VirtualRootEnvironment) = 0
 
 abstract type AbstractMetaEnvironment end
@@ -46,6 +48,7 @@ end
 isliteral(::VirtualNameEnvironment) = false
 
 envposition(env::AbstractMetaEnvironment) = envposition(env.env)
+envmaxposition(env::AbstractMetaEnvironment) = envmaxposition(env.env)
 envdepth(env::AbstractMetaEnvironment) = envdepth(env.env)
 envgetname(env) = envgetname(env.env) #TODO add getter for environment child
 envgetname(env::VirtualNameEnvironment) = env.name
@@ -99,6 +102,8 @@ struct DeferredEnvironment{Ti, Env}
 end
 envdepth(env::DeferredEnvironment) = 1 + envdepth(env.env)
 envcoordinate(env::DeferredEnvironment) = env.idx
+envposition(env::DeferredEnvironment) = envposition(env.env)
+envmaxposition(env::DeferredEnvironment) = envmaxposition(env.env)
 envdeferred(env::DeferredEnvironment) = (env.idx, envdeferred(env.env)...)
 envdeferred(env) = envdeferred(env.env) #TODO abstract type here?
 envdeferred(env::PositionEnvironment) = ()
@@ -118,6 +123,8 @@ isliteral(::VirtualDeferredEnvironment) = false
 
 envdepth(env::VirtualDeferredEnvironment) = 1 + envdepth(env.env)
 envcoordinate(env::VirtualDeferredEnvironment) = env.idx
+envposition(env::VirtualDeferredEnvironment) = envposition(env.env)
+envmaxposition(env::VirtualDeferredEnvironment) = envmaxposition(env.env)
 envdeferred(env::VirtualDeferredEnvironment) = (env.idx, envdeferred(env.env)...)
 envdeferred(env::VirtualPositionEnvironment) = ()
 envdeferred(env::VirtualRootEnvironment) = ()

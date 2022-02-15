@@ -125,10 +125,10 @@ the new fiber object otherwise.
 """
 function initialize!(fbr::VirtualFiber, ctx, mode)
     if (lvl = initialize_level!(fbr, ctx, mode)) !== nothing
-        return VirtualFiber(lvl, fbr.env)
-    else
-        return fbr
+        fbr = VirtualFiber(lvl, fbr.env)
     end
+    assemble!(fbr, ctx, mode)
+    return fbr
 end
 
 """
@@ -150,10 +150,9 @@ Finalize the virtual fiber in the context `ctx` with access mode `mode`. Return
 """
 function finalize!(fbr::VirtualFiber, ctx, mode)
     if (lvl = finalize_level!(fbr, ctx, mode)) !== nothing
-        return VirtualFiber(lvl, fbr.env)
-    else
-        return fbr
+        fbr = VirtualFiber(lvl, fbr.env)
     end
+    return fbr
 end
 
 """

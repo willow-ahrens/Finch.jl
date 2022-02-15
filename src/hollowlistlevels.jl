@@ -110,15 +110,7 @@ function assemble!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
     assemble!(VirtualFiber(fbr.lvl.lvl, VirtualMaxPositionEnvironment(q, fbr.env)), ctx, mode)
 end
 
-function finalize_level!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
-    lvl = fbr.lvl
-    if (lvl_2 = initialize_level!(VirtualFiber(fbr.lvl.lvl, ArbitraryEnvironment(fbr.env)), ctx, mode)) !== nothing
-        lvl = shallowcopy(lvl)
-        lvl.lvl = lvl_2
-        reconstruct!(lvl, ctx)
-    end
-    return lvl
-end
+finalize_level!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode) = nothing
 
 unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx::Name, idxs...) =
     unfurl(fbr, ctx, mode, walk(idx))

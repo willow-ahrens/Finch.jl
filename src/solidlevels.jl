@@ -76,25 +76,17 @@ function initialize_level!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode)
     return lvl
 end
 
-function assemble!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
+function assemble!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode)
     q = envmaxposition(fbr.env)
     lvl = fbr.lvl
     q_2 = ctx.freshen(lvl.ex, :_q)
     push!(ctx.preamble, quote
-        $q_2 = $(ctx(q)) * $(lvl.I) + $(ctx(i))
+        $q_2 = $(ctx(q)) * $(lvl.I)
     end)
     assemble!(VirtualFiber(lvl.lvl, VirtualMaxPositionEnvironment(q_2, fbr.env)), ctx, mode)
 end
 
-function finalize_level!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
-    lvl = fbr.lvl
-    if (lvl_2 = initialize_level!(VirtualFiber(fbr.lvl.lvl, ArbitraryEnvironment(fbr.env)), ctx, mode)) !== nothing
-        lvl = shallowcopy(lvl)
-        lvl.lvl = lvl_2
-        reconstruct!(lvl, ctx)
-    end
-    return lvl
-end
+finalize_level!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode) = nothing
 
 function unfurl(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode::Union{Read, Write, Update}, idx::Union{Name, Walk, Follow, Laminate, Extrude}, idxs...)
     lvl = fbr.lvl
