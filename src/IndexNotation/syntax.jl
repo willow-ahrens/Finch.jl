@@ -12,7 +12,7 @@ function capture_index(ex; ctx...)
         return :($loop($(idxs...), $body))
     elseif ex isa Expr && ex.head == :where && length(ex.args) == 2
         cons = capture_index(ex.args[1]; ctx...)
-        prod = capture_index(ex.args[2]; ctx...)
+        prod = capture_index(ex.args[2]; ctx..., results=Set())
         return :($with($cons, $prod))
     elseif ex isa Expr && ex.head == :(=) && length(ex.args) == 2
         lhs = capture_index(ex.args[1]; ctx..., mode=Write())
@@ -66,7 +66,7 @@ function capture_index_instance(ex; ctx...)
         return :($loop_instance($(idxs...), $body))
     elseif ex isa Expr && ex.head == :where && length(ex.args) == 2
         cons = capture_index_instance(ex.args[1]; ctx...)
-        prod = capture_index_instance(ex.args[2]; ctx...)
+        prod = capture_index_instance(ex.args[2]; ctx..., results = Set())
         return :($with_instance($cons, $prod))
     elseif ex isa Expr && ex.head == :(=) && length(ex.args) == 2
         lhs = capture_index_instance(ex.args[1]; ctx..., mode=Write())

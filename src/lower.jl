@@ -192,15 +192,15 @@ function (ctx::LowerJulia)(root::Virtual, ::DefaultStyle)
 end
 
 function (ctx::LowerJulia)(root::With, ::DefaultStyle)
+    prod = nothing
     return quote
-        $(scope(ctx) do ctx2
-            prod = Initialize(ctx2)(root.prod)
-            res = (ctx2)(prod)
-            Finalize(ctx2)(root.prod)
-            res
+        $(scope(ctx) do ctx_2
+            prod = Initialize(ctx_2)(root.prod)
+            (ctx_2)(prod)
         end)
-        $(scope(ctx) do ctx2
-            (ctx2)(cons)
+        $(scope(ctx) do ctx_2
+            Finalize(ctx_2)(prod)
+            (ctx_2)(root.cons)
         end)
     end
 end

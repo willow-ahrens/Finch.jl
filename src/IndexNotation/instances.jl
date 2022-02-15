@@ -25,7 +25,7 @@ struct WithInstance{Cons, Prod} <: IndexStatementInstance
 end
 Base.:(==)(a::WithInstance, b::WithInstance) = a.cons == b.cons && a.prod == b.prod
 
-@inline with_instance(cons, prod) = With(cons, prod)
+@inline with_instance(cons, prod) = WithInstance(cons, prod)
 
 struct LoopInstance{Idxs<:Tuple, Body} <: IndexStatementInstance
 	idxs::Idxs
