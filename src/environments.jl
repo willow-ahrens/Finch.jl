@@ -129,14 +129,36 @@ envdeferred(env::VirtualDeferredEnvironment) = (env.idx, envdeferred(env.env)...
 envdeferred(env::VirtualPositionEnvironment) = ()
 envdeferred(env::VirtualRootEnvironment) = ()
 
+struct PosRangeEnvironment{Start, Stop, Idx, Env}
+    start::Start
+    stop::Stop
+    idx::Idx
+    env::Env
+end
+
+envdepth(env::PosRangeEnvironment) = 1 + envdepth(env.env)
+envcoordinate(env::PosRangeEnvironment) = env.idx
+envstart(env::PosRangeEnvironment) = env.start
+envstart(env) = nothing
+envstop(env::PosRangeEnvironment) = env.stop
+envstop(env) = nothing
+envdeferred(env::PosRangeEnvironment) = (env.idx, envdeferred(env.env)...)
+
 struct VirtualPosRangeEnvironment
-    idx
     start
     stop
+    idx
     env
 end
 isliteral(::VirtualPosRangeEnvironment) = false
-(ctx::Finch.LowerJulia)(env::VirtualPosRangeEnvironment) = :(DeferredEnvironment($(ctx(env.idx)), $(ctx(env.env))))
+function virtualize(ex, ::Type{PosRangeEnvironment{Start, Stop, Idx, Env}}, ctx) where {Start, Stop, Idx, Env}
+    idx = virtualize(:($ex.idx), Idx, ctx)
+    start = virtualize(:($ex.start), Start, ctx)
+    stop = virtualize(:($ex.stop), Stop, ctx)
+    env = virtualize(:($ex.env), Env, ctx)
+    VirtualPosRangeEnvironment(start, stop, idx, env)
+end
+(ctx::Finch.LowerJulia)(env::VirtualPosRangeEnvironment) = :(PosRangeEnvironment($(ctx(env.start)), $(ctx(env.stop)), $(ctx(env.idx)), $(ctx(env.env))))
 isliteral(::VirtualPosRangeEnvironment) = false
 
 envdepth(env::VirtualPosRangeEnvironment) = 1 + envdepth(env.env)

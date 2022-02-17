@@ -213,7 +213,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx:
                                     Thunk(
                                         body = Spike(
                                             body = default(fbr),
-                                            tail = access(VirtualFiber(lvl.lvl, PositionEnvironment(Virtual{lvl.Ti}(:(last($(lvl.ex).srt[$my_p])[$R])), Virtual{lvl.Ti}(my_i), fbr.env)), mode, idxs...),
+                                            tail = access(VirtualFiber(lvl.lvl, VirtualPositionEnvironment(Virtual{lvl.Ti}(:(last($(lvl.ex).srt[$my_p])[$R])), Virtual{lvl.Ti}(my_i), fbr.env)), mode, idxs...),
                                         ),
                                         epilogue = quote
                                             $my_p += 1
@@ -229,7 +229,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx:
                                         end,
                                         body = Spike(
                                             body = default(fbr),
-                                            tail = access(VirtualFiber(lvl, PosRangeEnvironment(Virtual{lvl.Ti}(my_i), Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_p_step), fbr.env)), mode, idxs...),
+                                            tail = access(VirtualFiber(lvl, VirtualPosRangeEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_p_step), Virtual{lvl.Ti}(my_i), fbr.env)), mode, idxs...),
                                         ),
                                         epilogue = quote
                                             $my_p = $my_p_step

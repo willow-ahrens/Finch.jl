@@ -77,6 +77,81 @@
     println(FiberArray(C))
     @test FiberArray(A) == FiberArray(C)
 
+    println("fiber(c) = fiber(s)")
+    A = Finch.Fiber(
+        HollowList(10, [1, 6], [1, 3, 5, 7, 9],
+        Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
+    B = Finch.Fiber(
+        HollowCoo{1}((10,),
+        Element{0.0}()))
+
+    ex = @index_program_instance @loop i B[i] += A[i]
+    display(execute_code_lowered(:ex, typeof(ex)))
+    println()
+
+    @index @loop i B[i] += A[i]
+
+    println(B)
+    println(FiberArray(B))
+    @test FiberArray(A) == FiberArray(B)
+
+    println("fiber(s) = fiber(c)")
+
+    ex = @index_program_instance @loop i A[i] += B[i]
+    display(execute_code_lowered(:ex, typeof(ex)))
+    println()
+
+    println(A)
+    println(B)
+
+    @index @loop i A[i] += B[i]
+
+    println("hello")
+    println(A)
+
+    println(FiberArray(A))
+    @test FiberArray(A) == FiberArray(B)
+
+    println("fiber(cc) = fiber(d, s)")
+
+    A = Finch.FiberArray(Fiber(
+        Solid(3, 
+        HollowList(5, [1, 4, 6, 8], [1, 2, 5, 2, 4, 3, 5],
+        Element{0.0}([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0])))))
+
+    B = Finch.Fiber(
+        HollowCoo{2}((3,5),
+        Element{0.0}()))
+    
+    ex = @index_program_instance @loop i j B[i, j] += A[i, j]
+    display(execute_code_lowered(:ex, typeof(ex)))
+    println()
+
+    @index @loop i j B[i, j] += A[i, j] 
+
+    println(FiberArray(B))
+
+    println("fiber(s) = fiber(c) where fiber(c) = fiber(s)")
+    A = Finch.Fiber(
+        HollowList(10, [1, 6], [1, 3, 5, 7, 9],
+        Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
+    B = Finch.Fiber(
+        HollowCoo{1}((10,),
+        Element{0.0}()))
+    C = Finch.Fiber(
+        HollowList(10, 
+        Element{0.0}()))
+
+    ex = @index_program_instance (@loop i C[i] += B[i]) where (@loop i B[i] += A[i])
+    display(execute_code_lowered(:ex, typeof(ex)))
+    println()
+
+    @index (@loop i C[i] += B[i]) where (@loop i B[i] += A[i])
+
+    println(FiberArray(C))
+    @test FiberArray(A) == FiberArray(C)
+
+
     println("fiber(s) = fiber(s) + fiber(s)")
 
     A = Finch.Fiber(
