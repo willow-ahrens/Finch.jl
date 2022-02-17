@@ -159,6 +159,7 @@ function finalize_level!(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode)
         copyto!($(lvl.ex).srt, pairs($(lvl.ex).tbl))
         σ = collect($(lvl.Tp_2(1)):$pos_q)
         sortperm!(σ, lt=CooLT($lvl.tbl))
+        #TODO sort within correct pos range
         for $my_p = 1:$(lvl.pos_q)
             $(lvl.ex).pos[$my_p + 1] += $(lvl.ex).pos[$my_p]
         end
