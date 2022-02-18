@@ -64,16 +64,16 @@ function (ctx::TransformSSA)(root::Name)
 end
 
 function (ctx::TransformSSA)(root::Loop)
-    scope(ctx) do ctx2
-        idxs = map(idx->definename!(idx, ctx2), root.idxs)
+    scope(ctx) do ctx_2
+        idxs = map(idx->definename!(idx, ctx_2), root.idxs)
         body = ctx(root.body)
         return loop(idxs, body)
     end
 end
 
 function (ctx::TransformSSA)(root::With)
-    scope(ctx) do ctx2
-        prod = ctx2(root.prod)
+    scope(ctx) do ctx_2
+        prod = ctx_2(root.prod)
         cons = ctx(root.cons)
         return with(cons, prod)
     end

@@ -42,16 +42,16 @@ function (ctx::LowerJulia)(root, ::PipelineStyle)
 
     if length(phases[1][1]) == 1 #only one phaser
         for (keys, body) in phases
-            push!(thunk.args, scope(ctx) do ctx′
-                (PhaseThunkVisitor(ctx′, i, i0))(body)
-                strides = (PhaseStrideVisitor(ctx′, i, i0))(body)
+            push!(thunk.args, scope(ctx) do ctx_2
+                (PhaseThunkVisitor(ctx_2, i, i0))(body)
+                strides = (PhaseStrideVisitor(ctx_2, i, i0))(body)
                 strides = [strides; ctx(ctx.dims[i].stop)]
-                body = (PhaseBodyVisitor(ctx′, i, i0, step))(body)
+                body = (PhaseBodyVisitor(ctx_2, i, i0, step))(body)
                 quote
                     $step = min($(strides...))
-                    $(scope(ctx′) do ctx′′
-                        restrict(ctx′′, i => Extent(Virtual{Any}(i0), Virtual{Any}(step))) do
-                            (ctx′′)(body)
+                    $(scope(ctx_2) do ctx_3
+                        restrict(ctx_3, i => Extent(Virtual{Any}(i0), Virtual{Any}(step))) do
+                            (ctx_3)(body)
                         end
                     end)
                     $i0 = $step + 1
@@ -60,16 +60,16 @@ function (ctx::LowerJulia)(root, ::PipelineStyle)
         end
     else
         for (n, (keys, body)) in enumerate(phases)
-            push!(thunk.args, scope(ctx) do ctx′
-                (PhaseThunkVisitor(ctx′, i, i0))(body)
-                guards = (PhaseGuardVisitor(ctx′, i, i0))(body)
-                strides = (PhaseStrideVisitor(ctx′, i, i0))(body)
+            push!(thunk.args, scope(ctx) do ctx_2
+                (PhaseThunkVisitor(ctx_2, i, i0))(body)
+                guards = (PhaseGuardVisitor(ctx_2, i, i0))(body)
+                strides = (PhaseStrideVisitor(ctx_2, i, i0))(body)
                 strides = [strides; ctx(ctx.dims[i].stop)]
-                body = (PhaseBodyVisitor(ctx′, i, i0, step))(body)
+                body = (PhaseBodyVisitor(ctx_2, i, i0, step))(body)
                 block = quote
-                    $(scope(ctx′) do ctx′′
-                        restrict(ctx′′, i => Extent(Virtual{Any}(i0), Virtual{Any}(step))) do
-                            (ctx′′)(body)
+                    $(scope(ctx_2) do ctx_3
+                        restrict(ctx_3, i => Extent(Virtual{Any}(i0), Virtual{Any}(step))) do
+                            (ctx_3)(body)
                         end
                     end)
                     $i0 = $step + 1

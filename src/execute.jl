@@ -12,7 +12,7 @@ function execute_code_lowered(ex, T)
     prgm = nothing
     code = scope(LowerJulia()) do ctx
         quote
-            $(scope(ctx) do ctx2
+            $(scope(ctx) do ctx_2
                 prgm = virtualize(ex, T, ctx)
                 #The following call separates tensor and index names from environment symbols.
                 #TODO we might want to keep the namespace around, and/or further stratify index
@@ -20,12 +20,12 @@ function execute_code_lowered(ex, T)
                 prgm = TransformSSA(Freshen())(prgm)
                 GatherDimensions(ctx, ctx.dims)(prgm)
                 prgm = Initialize(ctx)(prgm)
-                ctx2(prgm)
+                ctx_2(prgm)
             end)
-            $(scope(ctx) do ctx2
-                prgm = Finalize(ctx2)(prgm)
+            $(scope(ctx) do ctx_2
+                prgm = Finalize(ctx_2)(prgm)
                 :(($(map(getresults(prgm)) do tns
-                    :($(getname(tns)) = $(ctx2(tns)))
+                    :($(getname(tns)) = $(ctx_2(tns)))
                 end...), ))
             end)
         end

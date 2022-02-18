@@ -25,17 +25,17 @@ function (ctx::LowerJulia)(root::Loop, ::StepperStyle)
     i = getname(root.idxs[1])
     i0 = ctx.freshen(i, :_start)
     guard = nothing
-    body = scope(ctx) do ctx′
-        (StepperThunkVisitor(ctx′, i, i0))(root) #TODO we could just use actual thunks here and call a thunkcontext, would look cleaner.
-        guards = (StepperGuardVisitor(ctx′, i, i0))(root)
-        strides = (StepperStrideVisitor(ctx′, i, i0))(root)
+    body = scope(ctx) do ctx_2
+        (StepperThunkVisitor(ctx_2, i, i0))(root) #TODO we could just use actual thunks here and call a thunkcontext, would look cleaner.
+        guards = (StepperGuardVisitor(ctx_2, i, i0))(root)
+        strides = (StepperStrideVisitor(ctx_2, i, i0))(root)
         if isempty(strides)
-            step = ctx′(ctx.dims[i].stop)
+            step = ctx_2(ctx.dims[i].stop)
             step_min = quote end
         else
             step = ctx.freshen(i, :_step)
             step_min = quote
-                $step = min($(map(ctx′, strides)...), $(ctx′(ctx.dims[i].stop)))
+                $step = min($(map(ctx_2, strides)...), $(ctx_2(ctx.dims[i].stop)))
             end
             if length(strides) == 1 && length(guards) == 1
                 guard = guards[1]
@@ -43,12 +43,12 @@ function (ctx::LowerJulia)(root::Loop, ::StepperStyle)
                 guard = :($i0 <= $(ctx(ctx.dims[i].stop)))
             end
         end
-        body = (StepperBodyVisitor(ctx′, i, i0, step))(root)
+        body = (StepperBodyVisitor(ctx_2, i, i0, step))(root)
         quote
             $step_min
-            $(scope(ctx′) do ctx′′
-                restrict(ctx′′, i => Extent(Virtual{Any}(i0), Virtual{Any}(step))) do
-                    (ctx′′)(body)
+            $(scope(ctx_2) do ctx_3
+                restrict(ctx_3, i => Extent(Virtual{Any}(i0), Virtual{Any}(step))) do
+                    (ctx_3)(body)
                 end
             end)
             $i0 = $step + 1

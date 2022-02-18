@@ -20,18 +20,18 @@ function (ctx::LowerJulia)(root::Loop, ::SpikeStyle)
     root_body = AccessSpikeBodyVisitor(root, ctx, idx)(root)
     #TODO arguably we could take several better alternative approaches to rediminsionalization here
     body_expr = restrict(ctx, getname(root.idxs[1]) => spike_body_range(ctx.dims[getname(root.idxs[1])], ctx)) do
-        scope(ctx) do ctx′
-            (ctx′)(annihilate_index(root_body))
+        scope(ctx) do ctx_2
+            (ctx_2)(annihilate_index(root_body))
         end
     end
     val = ctx.dims[getname(root.idxs[1])].stop
     tail_expr = bind(ctx, getname(root.idxs[1]) => val) do 
-        scope(ctx) do ctx′
-            root_tail = AccessSpikeTailVisitor(root, ctx′, idx, val)(Loop(root.idxs[2:end], root.body))
+        scope(ctx) do ctx_2
+            root_tail = AccessSpikeTailVisitor(root, ctx_2, idx, val)(Loop(root.idxs[2:end], root.body))
             #The next call is a convenient fallback, but make no mistake, all chunks must work with all other chunks.
             #It's a handshake problem and you can't get around it.
-            root_tail = ForLoopVisitor(ctx′, idx, val)(root_tail)
-            (ctx′)(annihilate_index(root_tail))
+            root_tail = ForLoopVisitor(ctx_2, idx, val)(root_tail)
+            (ctx_2)(annihilate_index(root_tail))
         end
     end
     return Expr(:block, body_expr, tail_expr)

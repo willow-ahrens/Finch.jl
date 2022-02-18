@@ -21,8 +21,8 @@ function (ctx::LowerJulia)(stmt, ::CaseStyle)
     cases = (CasesVisitor())(stmt)
     function nest(cases, inner=false)
         guard, body = cases[1]
-        body = scope(ctx) do ctx′
-            (ctx′)(body)
+        body = scope(ctx) do ctx_2
+            (ctx_2)(body)
         end
         length(cases) == 1 && return body
         inner && return Expr(:elseif, guard, body, nest(cases[2:end], true))

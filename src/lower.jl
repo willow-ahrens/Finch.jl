@@ -206,9 +206,9 @@ function (ctx::LowerJulia)(root::With, ::DefaultStyle)
 end
 
 function initialize_program!(root, ctx)
-    scope(ctx) do ctx2
+    scope(ctx) do ctx_2
         thunk = Expr(:block)
-        append!(thunk.args, map(tns->virtual_initialize!(tns, ctx2), getresults(root)))
+        append!(thunk.args, map(tns->virtual_initialize!(tns, ctx_2), getresults(root)))
         thunk
     end
 end
@@ -239,9 +239,9 @@ function (ctx::LowerJulia)(stmt::Loop, ::DefaultStyle)
         return quote
             for $idx_sym = $(ctx(ext.start)):$(ctx(ext.stop))
                 $(bind(ctx, getname(stmt.idxs[1]) => idx_sym) do 
-                    scope(ctx) do ctx′
-                        body = ForLoopVisitor(ctx′, stmt.idxs[1], idx_sym)(body)
-                        (ctx′)(body)
+                    scope(ctx) do ctx_2
+                        body = ForLoopVisitor(ctx_2, stmt.idxs[1], idx_sym)(body)
+                        (ctx_2)(body)
                     end
                 end)
             end
