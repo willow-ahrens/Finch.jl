@@ -1,11 +1,7 @@
 struct StepperStyle end
 
 @kwdef struct Stepper
-    preamble = quote end
     body
-    guard = nothing
-    stride
-    epilogue = quote end
 end
 
 isliteral(::Stepper) = false
@@ -26,9 +22,10 @@ function (ctx::LowerJulia)(root::Loop, ::StepperStyle)
     i0 = ctx.freshen(i, :_start)
     guard = nothing
     body = scope(ctx) do ctx_2
-        (StepperThunkVisitor(ctx_2, i, i0))(root) #TODO we could just use actual thunks here and call a thunkcontext, would look cleaner.
-        guards = (StepperGuardVisitor(ctx_2, i, i0))(root)
-        strides = (StepperStrideVisitor(ctx_2, i, i0))(root)
+        body = StepperBodyVisitor()(root)
+        body = ThunkVisitor(ctx_2)(body)
+        guards = (PhaseGuardVisitor(ctx_2, i, i0))(body)
+        strides = (PhaseStrideVisitor(ctx_2, i, i0))(body)
         if isempty(strides)
             step = ctx_2(ctx.dims[i].stop)
             step_min = quote end
@@ -43,7 +40,7 @@ function (ctx::LowerJulia)(root::Loop, ::StepperStyle)
                 guard = :($i0 <= $(ctx(ctx.dims[i].stop)))
             end
         end
-        body = (StepperBodyVisitor(ctx_2, i, i0, step))(root)
+        body = (PhaseBodyVisitor(ctx_2, i, i0, step))(body)
         quote
             $step_min
             $(scope(ctx_2) do ctx_3
@@ -62,44 +59,9 @@ function (ctx::LowerJulia)(root::Loop, ::StepperStyle)
     end
 end
 
-@kwdef struct StepperThunkVisitor <: AbstractTransformVisitor
-    ctx
-    idx
-    start
-end
-function (ctx::StepperThunkVisitor)(node::Stepper, ::DefaultStyle)
-    push!(ctx.ctx.preamble, node.preamble)
-    push!(ctx.ctx.epilogue, node.epilogue)
-    node
-end
-
-@kwdef struct StepperStrideVisitor <: AbstractCollectVisitor
-    ctx
-    idx
-    start
-end
-collect_op(::StepperStrideVisitor) = (args) -> vcat(args...) #flatten?
-collect_zero(::StepperStrideVisitor) = []
-(ctx::StepperStrideVisitor)(node::Stepper, ::DefaultStyle) = [node.stride(ctx.start)]
-
-
-@kwdef struct StepperGuardVisitor <: AbstractCollectVisitor
-    ctx
-    idx
-    start
-end
-collect_op(::StepperGuardVisitor) = (args) -> vcat(args...) #flatten?
-collect_zero(::StepperGuardVisitor) = []
-(ctx::StepperGuardVisitor)(node::Stepper, ::DefaultStyle) = node.guard === nothing ? [] : [node.guard(ctx.start)]
-
 @kwdef struct StepperBodyVisitor <: AbstractTransformVisitor
-    ctx
-    idx
-    start
-    step
 end
-(ctx::StepperBodyVisitor)(node::Stepper, ::DefaultStyle) = node.body(ctx.start, ctx.step)
-(ctx::StepperBodyVisitor)(node::Spike, ::DefaultStyle) = truncate(node, ctx.start, ctx.step, (ctx.ctx)(ctx.ctx.dims[ctx.idx].stop))
+(ctx::StepperBodyVisitor)(node::Stepper, ::DefaultStyle) = node.body
 
 truncate(node, start, step, stop) = node
 function truncate(node::Spike, start, step, stop)

@@ -3,11 +3,9 @@
 end
 
 @kwdef struct Phase
-    preamble = quote end
     body
     stride = nothing
     guard = nothing
-    epilogue = quote end
 end
 
 isliteral(::Pipeline) = false
@@ -43,7 +41,7 @@ function (ctx::LowerJulia)(root, ::PipelineStyle)
     if length(phases[1][1]) == 1 #only one phaser
         for (keys, body) in phases
             push!(thunk.args, scope(ctx) do ctx_2
-                (PhaseThunkVisitor(ctx_2, i, i0))(body)
+                body = ThunkVisitor(ctx_2)(body)
                 strides = (PhaseStrideVisitor(ctx_2, i, i0))(body)
                 strides = [strides; ctx(ctx.dims[i].stop)]
                 body = (PhaseBodyVisitor(ctx_2, i, i0, step))(body)
@@ -61,7 +59,7 @@ function (ctx::LowerJulia)(root, ::PipelineStyle)
     else
         for (n, (keys, body)) in enumerate(phases)
             push!(thunk.args, scope(ctx) do ctx_2
-                (PhaseThunkVisitor(ctx_2, i, i0))(body)
+                body = ThunkVisitor(ctx_2)(body)
                 guards = (PhaseGuardVisitor(ctx_2, i, i0))(body)
                 strides = (PhaseStrideVisitor(ctx_2, i, i0))(body)
                 strides = [strides; ctx(ctx.dims[i].stop)]
@@ -103,17 +101,6 @@ function postvisit!(node, ctx::PipelineVisitor, args)
 end
 postvisit!(node, ctx::PipelineVisitor) = [([], node)]
 (ctx::PipelineVisitor)(node::Pipeline, ::DefaultStyle) = enumerate(node.phases)
-
-@kwdef struct PhaseThunkVisitor <: AbstractTransformVisitor
-    ctx
-    idx
-    start
-end
-function (ctx::PhaseThunkVisitor)(node::Phase, ::DefaultStyle)
-    push!(ctx.ctx.preamble, node.preamble)
-    push!(ctx.ctx.epilogue, node.epilogue)
-    node
-end
 
 @kwdef struct PhaseGuardVisitor <: AbstractCollectVisitor
     ctx
