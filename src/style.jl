@@ -15,7 +15,7 @@ function make_style(root, ctx, node)
 end
 
 result_style(a, b) = _result_style(combine_style(a, b), combine_style(b, a))
-_result_style(a::UnknownStyle, b::UnknownStyle) = throw(MethodError(combine_style, a, b))
+_result_style(a::UnknownStyle, b::UnknownStyle) = throw(MethodError(combine_style, typeof(Tuple(a, b))))
 _result_style(a, b::UnknownStyle) = a
 _result_style(a::UnknownStyle, b) = b
 _result_style(a::T, b::T) where {T} = (a == b) ? a : @assert false "TODO lower_style_ambiguity_error"

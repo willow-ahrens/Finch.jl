@@ -1,6 +1,7 @@
 include("simplerunlength.jl")
 include("simplesparsevector.jl")
 include("singlespike.jl")
+include("singleblock.jl")
 
 @testset "simplevectors" begin
     println("run = run + run")
@@ -132,5 +133,26 @@ include("singlespike.jl")
     #Not checking for empty runs lol.
     @test C.idx == [1, 3, 5, 7, 9, 9, 10]
     @test C.val == [2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 9.0]
+    println()
+
+    println("sparse = sparse * block")
+
+    A = SingleBlock{0.0, Float64, Int}(10, 3, 9, [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0])
+    B = SimpleSparseVector{0.0, Float64, Int}([1, 3, 5, 7, 9, 11], [2.0, 3.0, 4.0, 5.0, 6.0])
+    C = SimpleSparseVector{0.0, Float64, Int}([11], [])
+    ex = @index_program_instance @loop i C[i] = A[i] * B[i]
+
+    display(execute_code_lowered(:ex, typeof(ex)))
+    println()
+
+    @index @loop i C[i] = A[i] * B[i]
+
+    println(A)
+    println(B)
+    println(C)
+
+    #Not checking for empty runs lol.
+    @test C.idx == [3, 5, 7, 9, 11]
+    @test C.val == [3.0, 4.0, 5.0, 6.0]
     println()
 end

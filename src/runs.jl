@@ -33,8 +33,16 @@ function (ctx::AccessRunVisitor)(node::Access{Run, Read}, ::DefaultStyle)
     return node.tns.body
 end
 
+function (ctx::AccessRunVisitor)(node::Run, ::DefaultStyle)
+    return node.body
+end
+
 function (ctx::ForLoopVisitor)(node::Access{Run, Read}, ::DefaultStyle)
     return node.tns.body
+end
+
+function (ctx::ForLoopVisitor)(node::Run, ::DefaultStyle)
+    return node.body
 end
 
 #assume ssa

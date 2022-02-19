@@ -22,6 +22,7 @@ combine_style(a::AcceptSpikeStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::SpikeStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::PipelineStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::PipelineStyle, b::CaseStyle) = CaseStyle()
+combine_style(a::StepperStyle, b::PipelineStyle) = PipelineStyle()
 
 struct PipelineVisitor <: AbstractCollectVisitor
     ctx

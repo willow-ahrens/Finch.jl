@@ -17,11 +17,13 @@ combine_style(a::StepperStyle, b::AcceptSpikeStyle) = StepperStyle()
 combine_style(a::StepperStyle, b::SpikeStyle) = StepperStyle() #Not sure on this one
 combine_style(a::StepperStyle, b::CaseStyle) = CaseStyle()
 combine_style(a::ThunkStyle, b::StepperStyle) = ThunkStyle()
-#combine_style(a::StepperStyle, b::PipelineStyle) = PipelineStyle()
 
 function (ctx::LowerJulia)(root::Loop, ::StepperStyle)
     i = getname(root.idxs[1])
     i0 = ctx.freshen(i, :_start)
+    push!(ctx.preamble, quote
+        $i0 = $(ctx(ctx.dims[i].start))
+    end)
     guard = nothing
     body = StepperVisitor(i0, ctx)(root)
     body_2 = :(error("this code should not run"))
@@ -64,7 +66,6 @@ function (ctx::LowerJulia)(root::Loop, ::StepperStyle)
         end
     end
     return quote
-        $i0 = $(ctx(ctx.dims[i].start))
         while $guard
             $body_2
         end
@@ -77,7 +78,7 @@ end
 end
 function (ctx::StepperVisitor)(node::Stepper, ::DefaultStyle)
     if false in get(ctx.ctx.state, node.name, Set(true))
-        push!(ctx.ctx.preamble, node.seek(ctx.start))
+        push!(ctx.ctx.preamble, node.seek(ctx, ctx.start))
     end
     ctx.ctx.state[node.name] = Set(true)
     node.body

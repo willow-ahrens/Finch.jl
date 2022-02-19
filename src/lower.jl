@@ -271,6 +271,12 @@ end
     body
 end
 
+isliteral(node::Leaf) = false
+
 function (ctx::ForLoopVisitor)(node::Access{Leaf}, ::DefaultStyle)
     node.tns.body(ctx.val)
+end
+
+function (ctx::ForLoopVisitor)(node::Leaf, ::DefaultStyle)
+    node.body(ctx.val)
 end

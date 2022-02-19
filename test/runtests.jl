@@ -2,7 +2,7 @@ using Finch
 using Test
 using MacroTools
 
-using Finch: VirtualAbstractArray, Run, Spike, Extent, Scalar, Cases, Stepper, AcceptRun, AcceptSpike, Thunk, Phase
+using Finch: VirtualAbstractArray, Run, Spike, Extent, Scalar, Cases, Stepper, AcceptRun, AcceptSpike, Thunk, Phase, Pipeline, Leaf
 using Finch: @i, @index_program_instance, execute, execute_code_lowered
 using Finch: getname, Virtual
 
