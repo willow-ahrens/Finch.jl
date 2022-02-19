@@ -29,12 +29,13 @@ struct Scalar
     val
 end
 
-@kwdef struct LowerJulia <: AbstractVisitor
+@kwdef mutable struct LowerJulia <: AbstractVisitor
     preamble::Vector{Any} = []
     bindings::Dict{Any, Any} = Dict()
     epilogue::Vector{Any} = []
     dims::Dimensions = Dimensions()
     freshen::Freshen = Freshen()
+    state::Dict{Any, Any} = Dict()
 end
 
 bind(f, ctx::LowerJulia) = f()
@@ -64,7 +65,7 @@ function restrict(f, ctx::LowerJulia, (idx, ext′), tail...)
 end
 
 function openscope(ctx::LowerJulia)
-    ctx′ = LowerJulia(bindings = ctx.bindings, dims = ctx.dims, freshen = ctx.freshen) #TODO use a mutable pattern here
+    ctx′ = LowerJulia(bindings = ctx.bindings, dims = ctx.dims, freshen = ctx.freshen, state = ctx.state) #TODO use a mutable pattern here
     return ctx′
 end
 
@@ -86,6 +87,17 @@ function scope(f, ctx::LowerJulia)
     ctx′ = openscope(ctx)
     body = f(ctx′)
     return closescope(body, ctx′)
+end
+
+function diverge(ctx::LowerJulia)
+    ctx_2 = shallowcopy(ctx)
+    ctx_2.state = deepcopy(ctx.state)
+    return ctx_2
+end
+
+function unify!(ctx::LowerJulia, ctx_2)
+    merge!(union, ctx.state, ctx_2.state)
+    return ctx
 end
 
 @kwdef mutable struct Extent

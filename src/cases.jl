@@ -19,14 +19,20 @@ struct CasesVisitor <: AbstractCollectVisitor end
 
 function (ctx::LowerJulia)(stmt, ::CaseStyle)
     cases = (CasesVisitor())(stmt)
+    ctx_2s = []
     function nest(cases, inner=false)
         guard, body = cases[1]
-        body = scope(ctx) do ctx_2
-            (ctx_2)(body)
+        ctx_2 = diverge(ctx)
+        body = scope(ctx_2) do ctx_3
+            (ctx_3)(body)
         end
+        push!(ctx_2s, ctx_2)
         length(cases) == 1 && return body
         inner && return Expr(:elseif, guard, body, nest(cases[2:end], true))
         return Expr(:if, guard, body, nest(cases[2:end], true))
+    end
+    for ctx_2 in ctx_2s
+        unify!(ctx, ctx_2)
     end
     return nest(cases)
 end
