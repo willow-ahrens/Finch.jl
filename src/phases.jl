@@ -39,25 +39,25 @@ function (ctx::LowerJulia)(root, ::PipelineStyle)
         $i0 = $(ctx(ctx.dims[i].start))
     end
 
-    #ctx_2s = Dict(minimum(keys(phases)) => ctx)
+    ctx_2s = Dict(minimum(keys(phases)) => ctx)
     visited = Set()
     frontier = [minimum(keys(phases))]
 
     while !isempty(frontier)
         key = pop!(frontier)
         body = phases[key]
-        #ctx_2 = ctx_2s[key]
+        ctx_2 = ctx_2s[key]
 
-        push!(thunk.args, scope(ctx) do ctx_2
-            body = ThunkVisitor(ctx_2)(body)
-            guards = (PhaseGuardVisitor(ctx_2, i, i0))(body)
-            strides = (PhaseStrideVisitor(ctx_2, i, i0))(body)
+        push!(thunk.args, scope(ctx_2) do ctx_3
+            body = ThunkVisitor(ctx_3)(body)
+            guards = (PhaseGuardVisitor(ctx_3, i, i0))(body)
+            strides = (PhaseStrideVisitor(ctx_3, i, i0))(body)
             strides = [strides; ctx(ctx.dims[i].stop)]
-            body = (PhaseBodyVisitor(ctx_2, i, i0, step))(body)
+            body = (PhaseBodyVisitor(ctx_3, i, i0, step))(body)
             block = quote
-                $(scope(ctx_2) do ctx_3
-                    restrict(ctx_3, i => Extent(Virtual{Any}(i0), Virtual{Any}(step))) do
-                        (ctx_3)(body)
+                $(scope(ctx_3) do ctx_4
+                    restrict(ctx_4, i => Extent(Virtual{Any}(i0), Virtual{Any}(step))) do
+                        (ctx_4)(body)
                     end
                 end)
                 $i0 = $step + 1
@@ -77,11 +77,14 @@ function (ctx::LowerJulia)(root, ::PipelineStyle)
 
         push!(visited, key)
         for key_2 in children(key)
+            unify!(get!(ctx_2s, key_2, diverge(ctx_2)), ctx_2)
             if parents(key_2) ⊆ visited
                 push!(frontier, key_2)
             end
         end
     end
+
+    unify!(ctx, ctx_2s[maximum(keys(phases))])
 
     return thunk
 end
