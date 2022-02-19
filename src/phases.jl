@@ -3,11 +3,9 @@
 end
 
 @kwdef struct Phase
-    preamble = quote end
     body
     stride = nothing
     guard = nothing
-    epilogue = quote end
 end
 
 isliteral(::Pipeline) = false
@@ -30,9 +28,10 @@ struct PipelineVisitor <: AbstractCollectVisitor
 end
 
 function (ctx::LowerJulia)(root, ::PipelineStyle)
-    phases = (PipelineVisitor(ctx))(root)
-    maxkey = maximum(map(maximum, map(((keys, body),)->keys, phases)))
-    phases = sort(phases, by=(((keys, body),)->map(l->count(k->k>l, keys), 1:maxkey)))
+    phases = Dict(PipelineVisitor(ctx)(root))
+    children(key) = intersect(map(i->(key_2 = copy(key); key_2[i] += 1; key_2), 1:length(key)), keys(phases))
+    parents(key) = intersect(map(i->(key_2 = copy(key); key_2[i] -= 1; key_2), 1:length(key)), keys(phases))
+
     i = getname(root.idxs[1])
     i0 = ctx.freshen(i, :_start)
     step = ctx.freshen(i, :_step)
@@ -40,52 +39,47 @@ function (ctx::LowerJulia)(root, ::PipelineStyle)
         $i0 = $(ctx(ctx.dims[i].start))
     end
 
-    if length(phases[1][1]) == 1 #only one phaser
-        for (keys, body) in phases
-            push!(thunk.args, scope(ctx) do ctx_2
-                (PhaseThunkVisitor(ctx_2, i, i0))(body)
-                strides = (PhaseStrideVisitor(ctx_2, i, i0))(body)
-                strides = [strides; ctx(ctx.dims[i].stop)]
-                body = (PhaseBodyVisitor(ctx_2, i, i0, step))(body)
-                quote
-                    $step = min($(strides...))
-                    $(scope(ctx_2) do ctx_3
-                        restrict(ctx_3, i => Extent(Virtual{Any}(i0), Virtual{Any}(step))) do
-                            (ctx_3)(body)
-                        end
-                    end)
-                    $i0 = $step + 1
-                end
-            end)
-        end
-    else
-        for (n, (keys, body)) in enumerate(phases)
-            push!(thunk.args, scope(ctx) do ctx_2
-                (PhaseThunkVisitor(ctx_2, i, i0))(body)
-                guards = (PhaseGuardVisitor(ctx_2, i, i0))(body)
-                strides = (PhaseStrideVisitor(ctx_2, i, i0))(body)
-                strides = [strides; ctx(ctx.dims[i].stop)]
-                body = (PhaseBodyVisitor(ctx_2, i, i0, step))(body)
+    #ctx_2s = Dict(minimum(keys(phases)) => ctx)
+    visited = Set()
+    frontier = [minimum(keys(phases))]
+
+    while !isempty(frontier)
+        key = pop!(frontier)
+        body = phases[key]
+        #ctx_2 = ctx_2s[key]
+
+        push!(thunk.args, scope(ctx) do ctx_2
+            body = ThunkVisitor(ctx_2)(body)
+            guards = (PhaseGuardVisitor(ctx_2, i, i0))(body)
+            strides = (PhaseStrideVisitor(ctx_2, i, i0))(body)
+            strides = [strides; ctx(ctx.dims[i].stop)]
+            body = (PhaseBodyVisitor(ctx_2, i, i0, step))(body)
+            block = quote
+                $(scope(ctx_2) do ctx_3
+                    restrict(ctx_3, i => Extent(Virtual{Any}(i0), Virtual{Any}(step))) do
+                        (ctx_3)(body)
+                    end
+                end)
+                $i0 = $step + 1
+            end
+            if length(key) > 1
                 block = quote
-                    $(scope(ctx_2) do ctx_3
-                        restrict(ctx_3, i => Extent(Virtual{Any}(i0), Virtual{Any}(step))) do
-                            (ctx_3)(body)
-                        end
-                    end)
-                    $i0 = $step + 1
-                end
-                if n > 1 && length(keys) > 1 #length of keys should be constant, TODO check this
-                    block = quote
-                        if $i0 <= $step
-                            $block
-                        end
+                    if $i0 <= $step
+                        $block
                     end
                 end
-                quote
-                    $step = min($(strides...))
-                    $block
-                end
-            end)
+            end
+            quote
+                $step = min($(strides...))
+                $block
+            end
+        end)
+
+        push!(visited, key)
+        for key_2 in children(key)
+            if parents(key_2) ⊆ visited
+                push!(frontier, key_2)
+            end
         end
     end
 
@@ -97,23 +91,11 @@ function postvisit!(node, ctx::PipelineVisitor, args)
         keys = map(first, phases)
         bodies = map(last, phases)
         return (reduce(vcat, keys),
-            similarterm(node, operation(node), collect(bodies)),
-        )
+            similarterm(node, operation(node), collect(bodies)))
     end
 end
 postvisit!(node, ctx::PipelineVisitor) = [([], node)]
 (ctx::PipelineVisitor)(node::Pipeline, ::DefaultStyle) = enumerate(node.phases)
-
-@kwdef struct PhaseThunkVisitor <: AbstractTransformVisitor
-    ctx
-    idx
-    start
-end
-function (ctx::PhaseThunkVisitor)(node::Phase, ::DefaultStyle)
-    push!(ctx.ctx.preamble, node.preamble)
-    push!(ctx.ctx.epilogue, node.epilogue)
-    node
-end
 
 @kwdef struct PhaseGuardVisitor <: AbstractCollectVisitor
     ctx

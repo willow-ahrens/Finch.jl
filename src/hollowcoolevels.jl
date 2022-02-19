@@ -183,47 +183,51 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Read, idx::
             Phase(
                 stride = (start) -> my_i_stop,
                 body = (start, step) -> Stepper(
-                    preamble = quote
-                        $my_i = $(lvl.ex).tbl[$R][$my_p]
-                    end,
-                    guard = (start) -> :($my_p < $my_p_stop),
-                    stride = (start) -> my_i,
-                    body = (start, step) -> Thunk(
-                        body = Cases([
-                            :($step < $my_i) =>
-                                Run(
-                                    body = default(fbr),
-                                ),
-                            true => begin
-                                if R == lvl.N
-                                    Thunk(
-                                        body = Spike(
+                    body = Thunk(
+                        preamble = quote
+                            $my_i = $(lvl.ex).tbl[$R][$my_p]
+                        end,
+                        body = Phase(
+                            guard = (start) -> :($my_p < $my_p_stop),
+                            stride = (start) -> my_i,
+                            body = (start, step) -> Thunk(
+                                body = Cases([
+                                    :($step < $my_i) =>
+                                        Run(
                                             body = default(fbr),
-                                            tail = access(VirtualFiber(lvl.lvl, VirtualPositionEnvironment(Virtual{lvl.Tp_2}(:($my_p)), Virtual{lvl.Ti}(my_i), fbr.env)), mode, idxs...),
                                         ),
-                                        epilogue = quote
-                                            $my_p += 1
+                                    true => begin
+                                        if R == lvl.N
+                                            Thunk(
+                                                body = Spike(
+                                                    body = default(fbr),
+                                                    tail = access(VirtualFiber(lvl.lvl, VirtualPositionEnvironment(Virtual{lvl.Tp_2}(:($my_p)), Virtual{lvl.Ti}(my_i), fbr.env)), mode, idxs...),
+                                                ),
+                                                epilogue = quote
+                                                    $my_p += 1
+                                                end
+                                            )
+                                        else
+                                            Thunk(
+                                                preamble = quote
+                                                    $my_p_step = $my_p + 1
+                                                    while $my_p_step < $my_p_stop && $(lvl.ex).tbl[$R][$my_p_step] == $my_i
+                                                        $my_p_step += 1
+                                                    end
+                                                end,
+                                                body = Spike(
+                                                    body = default(fbr),
+                                                    tail = access(VirtualFiber(lvl, VirtualPosRangeEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_p_step), Virtual{lvl.Ti}(my_i), fbr.env)), mode, idxs...),
+                                                ),
+                                                epilogue = quote
+                                                    $my_p = $my_p_step
+                                                end
+                                            )
                                         end
-                                    )
-                                else
-                                    Thunk(
-                                        preamble = quote
-                                            $my_p_step = $my_p + 1
-                                            while $my_p_step < $my_p_stop && $(lvl.ex).tbl[$R][$my_p_step] == $my_i
-                                                $my_p_step += 1
-                                            end
-                                        end,
-                                        body = Spike(
-                                            body = default(fbr),
-                                            tail = access(VirtualFiber(lvl, VirtualPosRangeEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_p_step), Virtual{lvl.Ti}(my_i), fbr.env)), mode, idxs...),
-                                        ),
-                                        epilogue = quote
-                                            $my_p = $my_p_step
-                                        end
-                                    )
-                                end
-                            end,
-                        ])
+                                    end,
+                                ])
+                            )
+                        )
                     )
                 )
             ),

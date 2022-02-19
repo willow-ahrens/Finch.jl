@@ -60,27 +60,29 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSimpleSparseVector{Tv,
                 $my_i′ = $(vec.ex).idx[$my_p]
             end,
             body = Stepper(
-                stride = (start) -> my_i′,
-                body = (start, step) -> begin
-                    Cases([
-                        :($step < $my_i′) =>
-                            Run(
-                                body = 0,
-                            ),
-                        true =>
-                            Thunk(
-                                body = Spike(
+                body = Phase(
+                    stride = (start) -> my_i′,
+                    body = (start, step) -> begin
+                        Cases([
+                            :($step < $my_i′) =>
+                                Run(
                                     body = 0,
-                                    tail = Virtual{Tv}(:($(vec.ex).val[$my_p])),
                                 ),
-                                epilogue = quote
-                                    $my_p += 1
-                                    $my_i = $my_i′ + 1
-                                    $my_i′ = $(vec.ex).idx[$my_p]
-                                end
-                            ),
-                    ])
-                end
+                            true =>
+                                Thunk(
+                                    body = Spike(
+                                        body = 0,
+                                        tail = Virtual{Tv}(:($(vec.ex).val[$my_p])),
+                                    ),
+                                    epilogue = quote
+                                        $my_p += 1
+                                        $my_i = $my_i′ + 1
+                                        $my_i′ = $(vec.ex).idx[$my_p]
+                                    end
+                                ),
+                        ])
+                    end
+                )
             )
         )
         Access(tns, node.mode, node.idxs)
