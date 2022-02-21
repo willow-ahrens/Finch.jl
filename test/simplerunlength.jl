@@ -53,7 +53,6 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSimpleRunLength{Tv, Ti
                 $my_i′ = $(vec.ex).idx[$my_p]
             end,
             body = Stepper(
-                name = Symbol(vec.ex, :_stepper),
                 body = Phase(
                     stride = (start) -> my_i′,
                     body = (start, step) -> Thunk(
