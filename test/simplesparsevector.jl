@@ -60,6 +60,7 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSimpleSparseVector{Tv,
                 $my_i′ = $(vec.ex).idx[$my_p]
             end,
             body = Stepper(
+                name = Symbol(vec.ex, :_stepper),
                 seek = (ctx, start) -> quote
                     $my_p = searchsortedfirst($(vec.ex).idx, $start, $my_p, length($(vec.ex).idx), Base.Forward)
                     $my_i = $start

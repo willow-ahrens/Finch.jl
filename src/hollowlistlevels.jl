@@ -139,6 +139,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
             Phase(
                 stride = (start) -> my_i1,
                 body = (start, step) -> Stepper(
+                    name = Symbol(tag, :_stepper),
                     body = Thunk(
                         preamble = :(
                             $my_i = $(lvl.ex).idx[$my_p]

@@ -3,7 +3,7 @@ struct StepperStyle end
 @kwdef struct Stepper
     body
     seek = (ctx, start) -> error("seek not implemented error")
-    name = gensym(:stepper)
+    name
 end
 
 isliteral(::Stepper) = false

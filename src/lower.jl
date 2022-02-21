@@ -250,11 +250,23 @@ function (ctx::LowerJulia)(stmt::Loop, ::DefaultStyle)
         ext = ctx.dims[getname(stmt.idxs[1])]
         return quote
             for $idx_sym = $(ctx(ext.start)):$(ctx(ext.stop))
-                $(bind(ctx, getname(stmt.idxs[1]) => idx_sym) do 
-                    scope(ctx) do ctx_2
-                        body = ForLoopVisitor(ctx_2, stmt.idxs[1], idx_sym)(body)
-                        (ctx_2)(body)
+                $(begin
+                    body_2 = :(error("this code should not run"))
+                    while true
+                        ctx_2 = diverge(ctx)
+                        body_2 = bind(ctx_2, getname(stmt.idxs[1]) => idx_sym) do 
+                            scope(ctx_2) do ctx_3
+                                body_3 = ForLoopVisitor(ctx_3, stmt.idxs[1], idx_sym)(body)
+                                (ctx_3)(body_3)
+                            end
+                        end
+                        if ctx_2.state == ctx.state
+                            break
+                        else
+                            unify!(ctx, ctx_2)
+                        end
                     end
+                    body_2
                 end)
             end
         end
