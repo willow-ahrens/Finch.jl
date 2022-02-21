@@ -1,9 +1,29 @@
 include("simplerunlength.jl")
 include("simplesparsevector.jl")
+include("simplejumpvector.jl")
 include("singlespike.jl")
 include("singleblock.jl")
 
 @testset "simplevectors" begin
+    println("sparse = jump + jump")
+    A = SimpleJumpVector{0.0, Float64, Int}([1, 3, 5, 7, 9, 11], [2.0, 3.0, 4.0, 5.0, 6.0])
+    B = SimpleJumpVector{0.0, Float64, Int}([2, 5, 8, 11], [1.0, 1.0, 1.0])
+    C = SimpleSparseVector{0.0, Float64, Int}([11], [])
+    ex = @index_program_instance @loop i C[i] += A[i] + B[i]
+
+    display(execute_code_lowered(:ex, typeof(ex)))
+    println()
+
+    @index @loop i C[i] += A[i] + B[i]
+
+    println(A)
+    println(B)
+    println(C)
+
+    @test C.idx == [1, 2, 3, 5, 7, 8, 9, 11]
+    @test C.val == [2.0, 1.0, 3.0, 5.0, 5.0, 1.0, 6.0]
+    println()
+
     println("run = run + run")
     A = SimpleRunLength{Float64, Int}([1, 3, 5, 7, 9, 10], [2.0, 3.0, 4.0, 5.0, 6.0, 7.0])
     B = SimpleRunLength{Float64, Int}([5, 8, 10], [1.0, 2.0, 3.0])
