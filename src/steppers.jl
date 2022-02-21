@@ -3,7 +3,7 @@ struct StepperStyle end
 @kwdef struct Stepper
     body
     seek = (ctx, start) -> error("seek not implemented error")
-    name
+    name = gensym()
 end
 
 isliteral(::Stepper) = false
@@ -80,13 +80,13 @@ function (ctx::StepperVisitor)(node::Stepper, ::DefaultStyle)
     if false in get(ctx.ctx.state, node.name, Set(true))
         push!(ctx.ctx.preamble, node.seek(ctx, ctx.start))
     end
-    ctx.ctx.state[node.name] = Set(true)
+    define!(ctx.ctx, node.name, Set(true))
     node.body
 end
 
 truncate(node, ctx, start, step, stop) = node
 function truncate(node::Stepper, ctx, start, step, stop)
-    ctx.state[node.name] = Set(false)
+    define!(ctx, node.name, Set(false))
     node
 end
 

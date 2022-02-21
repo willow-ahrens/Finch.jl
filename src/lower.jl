@@ -36,6 +36,14 @@ end
     dims::Dimensions = Dimensions()
     freshen::Freshen = Freshen()
     state::Dict{Any, Any} = Dict()
+    defs::Set{Any} = Set()
+end
+
+function define!(ctx, var, val)
+    if !haskey(ctx.state, var)
+        push!(ctx.defs, var)
+    end
+    ctx.state[var] = val
 end
 
 bind(f, ctx::LowerJulia) = f()
@@ -65,7 +73,7 @@ function restrict(f, ctx::LowerJulia, (idx, ext′), tail...)
 end
 
 function openscope(ctx::LowerJulia)
-    ctx′ = LowerJulia(bindings = ctx.bindings, dims = ctx.dims, freshen = ctx.freshen, state = ctx.state) #TODO use a mutable pattern here
+    ctx′ = LowerJulia(bindings = ctx.bindings, dims = ctx.dims, freshen = ctx.freshen, state = ctx.state, defs = Set()) #TODO use a mutable pattern here
     return ctx′
 end
 
@@ -79,6 +87,9 @@ function closescope(body, ctx)
         push!(thunk.args, :($res = $body))
         append!(thunk.args, ctx.epilogue)
         push!(thunk.args, res)
+    end
+    for var in ctx.defs
+        delete!(ctx.state, var)
     end
     return thunk
 end

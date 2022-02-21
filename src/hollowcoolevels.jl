@@ -183,7 +183,6 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Read, idx::
             Phase(
                 stride = (start) -> my_i_stop,
                 body = (start, step) -> Stepper(
-                    name = Symbol(tag, :_stepper),
                     body = Thunk(
                         preamble = quote
                             $my_i = $(lvl.ex).tbl[$R][$my_p]
