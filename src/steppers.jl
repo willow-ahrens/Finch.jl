@@ -14,7 +14,7 @@ combine_style(a::StepperStyle, b::StepperStyle) = StepperStyle()
 combine_style(a::StepperStyle, b::RunStyle) = RunStyle()
 combine_style(a::StepperStyle, b::AcceptRunStyle) = StepperStyle()
 combine_style(a::StepperStyle, b::AcceptSpikeStyle) = StepperStyle()
-combine_style(a::StepperStyle, b::SpikeStyle) = StepperStyle() #Not sure on this one
+combine_style(a::StepperStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::StepperStyle, b::CaseStyle) = CaseStyle()
 combine_style(a::ThunkStyle, b::StepperStyle) = ThunkStyle()
 
@@ -71,6 +71,18 @@ function (ctx::LowerJulia)(root::Loop, ::StepperStyle)
         end
     end
 end
+
+#=
+function (ctx::AccessSpikeTailVisitor)(node::Stepper, ::DefaultStyle)
+    if false in get(ctx.ctx.state, node.name, Set(true))
+        push!(ctx.ctx.preamble, node.seek(ctx, ctx.start))
+    end
+    define!(ctx.ctx, node.name, Set(true))
+    body = ThunkVisitor(ctx.ctx)(node.body)
+    body = PhaseBodyVisitor(ctx.ctx, ctx.idx, ctx.val, ctx.val)(body)
+    ctx(body)
+end
+=#
 
 @kwdef struct StepperVisitor <: AbstractTransformVisitor
     start
