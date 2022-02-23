@@ -19,7 +19,6 @@ function (ctx::LowerJulia)(root::Loop, ::RunStyle)
     @assert !isempty(root.idxs)
     root = (AccessRunVisitor(root))(root)
     if make_style(root, ctx) isa RunStyle
-        println(root)
         error("run style couldn't lower runs")
     end
     #TODO remove simplify step once we have dedicated handlers for it
