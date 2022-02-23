@@ -38,7 +38,7 @@ function (ctx::LowerJulia)(root, ::PipelineStyle)
     i0 = ctx.freshen(i, :_start)
     step = ctx.freshen(i, :_step)
     thunk = quote
-        $i0 = $(ctx(ctx.dims[i].start))
+        $i0 = $(ctx(start(ctx.dims[i])))
     end
 
     ctx_2s = Dict(minimum(keys(phases)) => ctx)
@@ -54,7 +54,7 @@ function (ctx::LowerJulia)(root, ::PipelineStyle)
             body = ThunkVisitor(ctx_3)(body)
             guards = (PhaseGuardVisitor(ctx_3, i, i0))(body)
             strides = (PhaseStrideVisitor(ctx_3, i, i0))(body)
-            strides = [strides; ctx(ctx.dims[i].stop)]
+            strides = [strides; ctx(stop(ctx.dims[i]))]
             body = (PhaseBodyVisitor(ctx_3, i, i0, step))(body)
             block = quote
                 $(scope(ctx_3) do ctx_4
@@ -127,5 +127,5 @@ collect_zero(::PhaseStrideVisitor) = []
     step
 end
 (ctx::PhaseBodyVisitor)(node::Phase, ::DefaultStyle) = node.body(ctx.start, ctx.step)
-(ctx::PhaseBodyVisitor)(node::Stepper, ::DefaultStyle) = truncate(node, ctx.ctx, ctx.start, ctx.step, (ctx.ctx)(ctx.ctx.dims[ctx.idx].stop))
-(ctx::PhaseBodyVisitor)(node::Spike, ::DefaultStyle) = truncate(node, ctx.ctx, ctx.start, ctx.step, (ctx.ctx)(ctx.ctx.dims[ctx.idx].stop))
+(ctx::PhaseBodyVisitor)(node::Stepper, ::DefaultStyle) = truncate(node, ctx.ctx, ctx.start, ctx.step, (ctx.ctx)(stop(ctx.ctx.dims[ctx.idx])))
+(ctx::PhaseBodyVisitor)(node::Spike, ::DefaultStyle) = truncate(node, ctx.ctx, ctx.start, ctx.step, (ctx.ctx)(stop(ctx.ctx.dims[ctx.idx])))

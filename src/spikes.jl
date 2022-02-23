@@ -24,7 +24,7 @@ function (ctx::LowerJulia)(root::Loop, ::SpikeStyle)
             (ctx_2)(annihilate_index(root_body))
         end
     end
-    val = ctx.dims[getname(root.idxs[1])].stop
+    val = stop(ctx.dims[getname(root.idxs[1])])
     tail_expr = bind(ctx, getname(root.idxs[1]) => val) do 
         scope(ctx) do ctx_2
             root_tail = AccessSpikeTailVisitor(root, ctx_2, idx, val)(Loop(root.idxs[2:end], root.body))
@@ -55,7 +55,7 @@ end
 spike_body_stop(stop, ctx) = :($(ctx(stop)) - 1)
 spike_body_stop(stop::Integer, ctx) = stop - 1
 
-spike_body_range(ext::Extent, ctx) = Extent(ext.start, spike_body_stop(ext.stop, ctx))
+spike_body_range(ext::Extent, ctx) = Extent(start(ext), spike_body_stop(stop(ext), ctx))
 
 @kwdef struct AccessSpikeTailVisitor <: AbstractTransformVisitor
     root

@@ -88,7 +88,7 @@ function initialize_level!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
             resize!($(lvl.ex).idx, 4)
         end
         $(lvl.idx_q) = 4
-        $(lvl.I) = $(ctx(ctx.dims[(getname(fbr), envdepth(fbr.env) + 1)].stop))
+        $(lvl.I) = $(ctx(stop(ctx.dims[(getname(fbr), envdepth(fbr.env) + 1)])))
     end)
     if (lvl_2 = initialize_level!(VirtualFiber(fbr.lvl.lvl, ArbitraryEnvironment(fbr.env)), ctx, mode)) !== nothing
         lvl = shallowcopy(lvl)

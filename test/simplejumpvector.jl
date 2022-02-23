@@ -128,7 +128,7 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSimpleJumpVector{Tv, T
     if getname(ctx.idx) == getname(node.idxs[1])
         push!(ctx.ctx.preamble, quote
             $my_p = 0
-            $my_I = $(ctx.ctx(ctx.ctx.dims[getname(node.idxs[1])].stop)) + 1
+            $my_I = $(ctx.ctx(stop(ctx.ctx.dims[getname(node.idxs[1])]))) + 1
             $(vec.ex).idx = $Ti[$my_I]
             $(vec.ex).val = $Tv[]
         end)

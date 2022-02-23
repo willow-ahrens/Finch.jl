@@ -66,7 +66,7 @@ end
 function initialize_level!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode)
     lvl = fbr.lvl
     push!(ctx.preamble, quote
-        $(lvl.I) = $(ctx(ctx.dims[(getname(fbr), envdepth(fbr.env) + 1)].stop))
+        $(lvl.I) = $(ctx(stop(ctx.dims[(getname(fbr), envdepth(fbr.env) + 1)])))
     end)
     if (lvl_2 = initialize_level!(VirtualFiber(lvl.lvl, ArbitraryEnvironment(fbr.env)), ctx, mode)) !== nothing
         lvl = shallowcopy(lvl)

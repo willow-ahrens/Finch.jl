@@ -101,7 +101,7 @@ function initialize_level!(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode)
     lvl = fbr.lvl
     my_p = ctx.freshen(lvl.ex, :_p)
     push!(ctx.preamble, quote
-        $(lvl.I) = $(lvl.Ti)(($(map(n->ctx(ctx.dims[(getname(fbr), envdepth(fbr.env) + n)].stop), 1:lvl.N)...),))
+        $(lvl.I) = $(lvl.Ti)(($(map(n->ctx(stop(ctx.dims[(getname(fbr), envdepth(fbr.env) + n)])), 1:lvl.N)...),))
         $(lvl.idx_q) = 4
         $(lvl.pos_q) = 4
         resize!($(lvl.ex).pos, 5)

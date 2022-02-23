@@ -23,7 +23,7 @@ function (ctx::LowerJulia)(root::Loop, ::JumperStyle)
     i = getname(root.idxs[1])
     i0 = ctx.freshen(i, :_start)
     push!(ctx.preamble, quote
-        $i0 = $(ctx(ctx.dims[i].start))
+        $i0 = $(ctx(start(ctx.dims[i])))
     end)
     guard = nothing
     body = JumperVisitor(i0, ctx)(root)
@@ -36,17 +36,17 @@ function (ctx::LowerJulia)(root::Loop, ::JumperStyle)
             guards = (PhaseGuardVisitor(ctx_3, i, i0))(body_3)
             strides = (PhaseStrideVisitor(ctx_3, i, i0))(body_3)
             if isempty(strides)
-                step = ctx_3(ctx.dims[i].stop)
+                step = ctx_3(stop(ctx.dims[i]))
                 step_min = quote end
             else
                 step = ctx.freshen(i, :_step)
                 step_min = quote
-                    $step = min(max($(map(ctx_3, strides)...)), $(ctx_3(ctx.dims[i].stop)))
+                    $step = min(max($(map(ctx_3, strides)...)), $(ctx_3(stop(ctx.dims[i]))))
                 end
                 if length(strides) == 1 && length(guards) == 1
                     guard = guards[1]
                 else
-                    guard = :($i0 <= $(ctx_3(ctx.dims[i].stop)))
+                    guard = :($i0 <= $(ctx_3(stop(ctx.dims[i]))))
                 end
             end
             body_4 = (PhaseBodyVisitor(ctx_3, i, i0, step))(body_3)

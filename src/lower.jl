@@ -119,6 +119,18 @@ end
 combinedim(ctx, a::Extent, b::Extent) =
     Extent(combinelim(ctx, a.start, b.start), combinelim(ctx, a.stop, b.stop))
 
+@kwdef mutable struct UnitExtent
+    val
+end
+
+function combinedim(ctx, a::UnitExtent, b::Extent)
+    combinelim(ctx, a.val, b.stop)
+    UnitExtent(combinelim(ctx, a.val, b.start))
+end
+
+combinedim(ctx, a::UnitExtent, b::UnitExtent) =
+    UnitExtent(combinelim(ctx, a.val, b.val))
+
 struct MissingExtent end
 
 combinedim(ctx::Finch.LowerJulia, a::MissingExtent, b::Extent) = b
@@ -260,7 +272,7 @@ function (ctx::LowerJulia)(stmt::Loop, ::DefaultStyle)
         body = Loop(stmt.idxs[2:end], stmt.body)
         ext = ctx.dims[getname(stmt.idxs[1])]
         return quote
-            for $idx_sym = $(ctx(ext.start)):$(ctx(ext.stop))
+            for $idx_sym = $(ctx(start(ext))):$(ctx(stop(ext)))
                 $(begin
                     body_2 = :(error("this code should not run"))
                     while true

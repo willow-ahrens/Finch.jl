@@ -33,17 +33,17 @@ function (ctx::AccessRunVisitor)(node::Access{Run, Read}, ::DefaultStyle)
     return node.tns.body
 end
 
-function (ctx::AccessRunVisitor)(node::Run, ::DefaultStyle)
-    return node.body
-end
+#function (ctx::AccessRunVisitor)(node::Run, ::DefaultStyle)
+#    return node.body
+#end
 
 function (ctx::ForLoopVisitor)(node::Access{Run, Read}, ::DefaultStyle)
     return node.tns.body
 end
 
-function (ctx::ForLoopVisitor)(node::Run, ::DefaultStyle)
-    return node.body
-end
+#function (ctx::ForLoopVisitor)(node::Run, ::DefaultStyle)
+#    return node.body
+#end
 
 #assume ssa
 
@@ -88,7 +88,7 @@ end
 
 function (ctx::AcceptRunVisitor)(node::Access{AcceptRun, <:Union{Write, Update}}, ::DefaultStyle)
     ext = ctx.ctx.dims[getname(ctx.idx)]
-    node.tns.body(ctx.ctx, ext.start, ext.stop)
+    node.tns.body(ctx.ctx, start(ext), stop(ext))
 end
 
 function (ctx::ForLoopVisitor)(node::Access{AcceptRun}, ::DefaultStyle)
