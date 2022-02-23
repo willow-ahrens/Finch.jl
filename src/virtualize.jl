@@ -49,6 +49,7 @@ function virtualize(ex, ::Type{IndexNotation.LabelInstance{tag, Tns}}, ctx) wher
 end
 virtualize(ex, ::Type{IndexNotation.ValueInstance{arg}}, ctx) where {arg} = arg
 virtualize(ex, ::Type{IndexNotation.WalkInstance{name}}, ctx) where {name} = Walk(name)
+virtualize(ex, ::Type{IndexNotation.GallopInstance{name}}, ctx) where {name} = Gallop(name)
 virtualize(ex, ::Type{IndexNotation.FollowInstance{name}}, ctx) where {name} = Follow(name)
 virtualize(ex, ::Type{IndexNotation.ExtrudeInstance{name}}, ctx) where {name} = Extrude(name)
 virtualize(ex, ::Type{IndexNotation.LaminateInstance{name}}, ctx) where {name} = Laminate(name)

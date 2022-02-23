@@ -10,6 +10,7 @@ isliteral(::Stepper) = false
 
 make_style(root::Loop, ctx::LowerJulia, node::Stepper) = StepperStyle()
 combine_style(a::DefaultStyle, b::StepperStyle) = StepperStyle()
+combine_style(a::AccessStyle, b::StepperStyle) = AccessStyle()
 combine_style(a::StepperStyle, b::StepperStyle) = StepperStyle()
 combine_style(a::StepperStyle, b::RunStyle) = RunStyle()
 combine_style(a::StepperStyle, b::AcceptRunStyle) = StepperStyle()

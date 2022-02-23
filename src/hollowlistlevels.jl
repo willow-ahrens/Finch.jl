@@ -79,15 +79,9 @@ end
 function initialize_level!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
     lvl = fbr.lvl
     push!(ctx.preamble, quote
-        if $(lvl.pos_q) < 4
-            resize!($(lvl.ex).pos, 4)
-        end
-        $(lvl.pos_q) = 4
+        $(lvl.pos_q) < 4 && resize!($(lvl.ex).pos, ($(lvl.pos_q) = 4;))
         $(lvl.ex).pos[1] = 1
-        if $(lvl.idx_q) < 4
-            resize!($(lvl.ex).idx, 4)
-        end
-        $(lvl.idx_q) = 4
+        $(lvl.idx_q) < 4 && resize!($(lvl.ex).idx, ($(lvl.idx_q) = 4;))
         $(lvl.I) = $(ctx(stop(ctx.dims[(getname(fbr), envdepth(fbr.env) + 1)])))
     end)
     if (lvl_2 = initialize_level!(VirtualFiber(fbr.lvl.lvl, ArbitraryEnvironment(fbr.env)), ctx, mode)) !== nothing
@@ -102,10 +96,7 @@ function assemble!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
     q = envmaxposition(fbr.env)
     lvl = fbr.lvl
     push!(ctx.preamble, quote
-        if $(lvl.pos_q) < $(ctx(q)) + 1
-            resize!($(lvl.ex).pos, $(lvl.pos_q) * 4)
-            $(lvl.pos_q) *= 4
-        end
+        $(lvl.pos_q) < $(ctx(q)) + 1 && resize!($(lvl.ex).pos, $(lvl.pos_q) *= 4)
     end)
     assemble!(VirtualFiber(fbr.lvl.lvl, VirtualMaxPositionEnvironment(q, fbr.env)), ctx, mode)
 end
@@ -214,24 +205,29 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
                                     seek = (ctx, start) -> quote
                                         $my_p = searchsortedfirst($(vec.ex).idx, $start, $my_p, length($(vec.ex).idx), Base.Forward)
                                     end,
-                                    body = Phase(
-                                        guard = (start) -> :($my_p < $my_p1),
-                                        stride = (start) -> my_i,
-                                        body = (start, step) -> Thunk(
-                                            body = Cases([
-                                                :($step < $my_i) => Run(
-                                                    body = default(fbr),
-                                                ),
-                                                true => Thunk(
-                                                    body = Spike(
+                                    body = Thunk(
+                                        preamble = :(
+                                            $my_i = $(lvl.ex).idx[$my_p]
+                                        ),
+                                        body = Phase(
+                                            guard = (start) -> :($my_p < $my_p1),
+                                            stride = (start) -> my_i,
+                                            body = (start, step) -> Thunk(
+                                                body = Cases([
+                                                    :($step < $my_i) => Run(
                                                         body = default(fbr),
-                                                        tail = access(VirtualFiber(lvl.lvl, PositionEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_i), fbr.env)), mode, idxs...),
                                                     ),
-                                                    epilogue = quote
-                                                        $my_p += 1
-                                                    end
-                                                ),
-                                            ])
+                                                    true => Thunk(
+                                                        body = Spike(
+                                                            body = default(fbr),
+                                                            tail = access(VirtualFiber(lvl.lvl, PositionEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_i), fbr.env)), mode, idxs...),
+                                                        ),
+                                                        epilogue = quote
+                                                            $my_p += 1
+                                                        end
+                                                    ),
+                                                ])
+                                            )
                                         )
                                     )
                                 ),
@@ -285,10 +281,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Union{Writ
                 end,
                 body = access(VirtualFiber(lvl_2, PositionEnvironment(Virtual{lvl.Ti}(my_p), idx, fbr.env)), mode, idxs...),
                 epilogue = quote
-                    if $(lvl.idx_q) < $my_p
-                        resize!($(lvl.ex).idx, $(lvl.idx_q) * 4)
-                        $(lvl.idx_q) *= 4
-                    end
+                    $(lvl.idx_q) < $my_p && resize!($(lvl.ex).idx, $(lvl.idx_q) *= 4)
                     $(lvl.ex).idx[$my_p] = $(ctx(idx))
                     $my_p += 1
                 end

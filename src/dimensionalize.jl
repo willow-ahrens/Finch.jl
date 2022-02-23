@@ -57,13 +57,11 @@ Base.haskey(dims::Dimensions, idx) = idx in dims.labels
 
 struct UnknownDimension end
 
-resultdim(ctx, a, b) = _resultdim(ctx, combinedim(ctx, a, b), combinedim(ctx, b, a))
-_resultdim(ctx, a::UnknownDimension, b::UnknownDimension) = throw(MethodError(combinedim, ctx, a, b))
-_resultdim(ctx, a, b::UnknownDimension) = a
-_resultdim(ctx, a::UnknownDimension, b) = b
-#_resultdim(ctx, a::T, b::T) where {T} = (a == b) ? a : @assert false "TODO combinedim_ambiguity_error"
-#_resultdim(ctx, a, b) = (a == b) ? a : @assert false "TODO combinedim_ambiguity_error"
-_resultdim(ctx, a, b) = a
+resultdim(ctx, a, b) = _resultdim(ctx, a, b, combinedim(ctx, a, b), combinedim(ctx, b, a))
+_resultdim(ctx, a, b, c::UnknownDimension, d::UnknownDimension) = throw(MethodError(combinedim, (ctx, a, b)))
+_resultdim(ctx, a, b, c, d::UnknownDimension) = c
+_resultdim(ctx, a, b, c::UnknownDimension, d) = d
+_resultdim(ctx, a, b, c, d) = c
 
 """
     combinedim(ctx, a, b)

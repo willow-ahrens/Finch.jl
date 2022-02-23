@@ -29,9 +29,9 @@ function (ctx::LowerJulia)(root::Loop, ::SpikeStyle)
             end
         end
     end
+    root_tail = AccessSpikeTailVisitor(root, ctx, idx, stop(ext))(root)
     tail_expr = restrict(ctx, getname(root.idxs[1]) => UnitExtent(stop(ext))) do
         scope(ctx) do ctx_2
-            root_tail = AccessSpikeTailVisitor(root, ctx_2, idx, stop(ext))(root)
             (ctx_2)(annihilate_index(root_tail))
         end
     end

@@ -25,7 +25,7 @@ Finch.getname(idx::Gallop) = idx.name
 gallop(name::Name) = Gallop(Finch.getname(name))
 
 struct GallopInstance{name} end
-@inline Gallop_instance(name) = GallopInstance{name}()
+@inline gallop_instance(name) = GallopInstance{name}()
 gallop(::NameInstance{name}) where {name} = gallop_instance(name)
 
 
