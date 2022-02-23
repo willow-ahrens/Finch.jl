@@ -116,12 +116,18 @@ end
     stop
 end
 
+start(ext::Extent) = ext.start
+stop(ext::Extent) = ext.stop
+
 combinedim(ctx, a::Extent, b::Extent) =
     Extent(combinelim(ctx, a.start, b.start), combinelim(ctx, a.stop, b.stop))
 
 @kwdef mutable struct UnitExtent
     val
 end
+
+start(ext::UnitExtent) = ext.val
+stop(ext::UnitExtent) = ext.val
 
 function combinedim(ctx, a::UnitExtent, b::Extent)
     combinelim(ctx, a.val, b.stop)
