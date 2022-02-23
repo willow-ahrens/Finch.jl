@@ -118,6 +118,7 @@ end
 
 start(ext::Extent) = ext.start
 stop(ext::Extent) = ext.stop
+extent(ext::Extent) = @i stop - start + 1
 
 combinedim(ctx, a::Extent, b::Extent) =
     Extent(combinelim(ctx, a.start, b.start), combinelim(ctx, a.stop, b.stop))
@@ -128,6 +129,7 @@ end
 
 start(ext::UnitExtent) = ext.val
 stop(ext::UnitExtent) = ext.val
+extent(ext::UnitExtent) = 1
 
 function combinedim(ctx, a::UnitExtent, b::Extent)
     combinelim(ctx, a.val, b.stop)
