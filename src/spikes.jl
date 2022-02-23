@@ -84,6 +84,7 @@ make_style(root::Loop, ctx::LowerJulia, node::Access{AcceptSpike, <:Union{Write,
 combine_style(a::DefaultStyle, b::AcceptSpikeStyle) = AcceptSpikeStyle()
 combine_style(a::ThunkStyle, b::AcceptSpikeStyle) = ThunkStyle()
 combine_style(a::AcceptSpikeStyle, b::AcceptSpikeStyle) = AcceptSpikeStyle()
+combine_style(a::AcceptSpikeStyle, b::AccessStyle) = AccessStyle()
 combine_style(a::AcceptRunStyle, b::AcceptSpikeStyle) = AcceptSpikeStyle()
 combine_style(a::RunStyle, b::AcceptSpikeStyle) = RunStyle()
 combine_style(a::SpikeStyle, b::AcceptSpikeStyle) = SpikeStyle()

@@ -26,6 +26,7 @@ struct AccessVisitor <: AbstractTransformVisitor
     ctx
 end
 
+#TODO may just want to avoid generating empty accesses if you're going to just lower them eagerly
 function (ctx::LowerJulia)(root::Loop, ::AccessStyle)
     root = (AccessVisitor(ctx))(root)
     #TODO add a simplify step here perhaps
