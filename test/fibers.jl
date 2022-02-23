@@ -217,4 +217,27 @@
 
     @test B == [2.0, 1.0, 3.0, 0.0, 5.0, 0.0, 5.0, 1.0, 6.0, 0.0]
     println()
+
+    println("fiber(s) = fiber(s) + fiber(s)")
+
+    A = Finch.Fiber(
+        HollowList(10, [1, 6], [1, 3, 5, 7, 9],
+        Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
+    B = Finch.Fiber(
+        HollowList(10, [1, 4], [2, 5, 8],
+        Element{0.0}([1.0, 1.0, 1.0])))
+    C = Finch.Fiber(HollowList(10, Element{0.0}()))
+
+    ex = @index_program_instance @loop i C[i] += A[gallop(i)] + B[gallop(i)]
+    display(execute_code_lowered(:ex, typeof(ex)))
+    println()
+
+    @index @loop i C[i] += A[i::gallop] + B[i::gallop]
+
+    println(A)
+    println(B)
+    println(C)
+
+    @test Finch.FiberArray(C) == [2.0, 1.0, 3.0, 0.0, 5.0, 0.0, 5.0, 1.0, 6.0, 0.0]
+    println()
 end

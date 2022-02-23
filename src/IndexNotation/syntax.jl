@@ -84,7 +84,6 @@ function capture_index_instance(ex; ctx...)
         return :($assign_instance($lhs, $op, $rhs))
     elseif ex isa Expr && ex.head == :call && length(ex.args) >= 1
         op = capture_index_instance(ex.args[1]; ctx..., namify=false, mode=Read())
-        return :($call_instance($op, $(map(arg->capture_index_instance(arg; ctx..., namify=true, mode=Read()), ex.args[2:end])...)))
     elseif ex isa Expr && ex.head == :ref && length(ex.args) >= 1
         tns = capture_index_instance(ex.args[1]; ctx..., namify=false, mode=Read())
         if values(ctx).mode isa Union{Write, Update} && ex.args[1] isa Symbol

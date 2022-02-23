@@ -14,6 +14,22 @@ walk(::NameInstance{name}) where {name} = walk_instance(name)
 
 
 
+export gallop
+
+struct Gallop
+    name
+end
+
+Finch.getname(idx::Gallop) = idx.name
+
+gallop(name::Name) = Gallop(Finch.getname(name))
+
+struct GallopInstance{name} end
+@inline Gallop_instance(name) = GallopInstance{name}()
+gallop(::NameInstance{name}) where {name} = gallop_instance(name)
+
+
+
 export follow
 
 struct Follow

@@ -175,6 +175,87 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
     )
 end
 
+function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx::Gallop, idxs...)
+    lvl = fbr.lvl
+    tag = lvl.ex
+    my_i = ctx.freshen(tag, :_i)
+    my_p = ctx.freshen(tag, :_p)
+    my_p1 = ctx.freshen(tag, :_p1)
+    my_i1 = ctx.freshen(tag, :_i1)
+
+    Thunk(
+        preamble = quote
+            $my_p = $(lvl.ex).pos[$(ctx(envposition(fbr.env)))]
+            $my_p1 = $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1]
+            if $my_p < $my_p1
+                $my_i = $(lvl.ex).idx[$my_p]
+                $my_i1 = $(lvl.ex).idx[$my_p1 - 1]
+            else
+                $my_i = 1
+                $my_i1 = 0
+            end
+        end,
+        body = Pipeline([
+            Phase(
+                stride = (start) -> my_i1,
+                body = (start, step) -> Jumper(
+                    seek = (ctx, start) -> quote
+                        $my_p = searchsortedfirst($(vec.ex).idx, $start, $my_p, length($(vec.ex).idx), Base.Forward)
+                    end,
+                    body = Thunk(
+                        preamble = :(
+                            $my_i = $(lvl.ex).idx[$my_p]
+                        ),
+                        body = Phase(
+                            guard = (start) -> :($my_p < $my_p1),
+                            stride = (start) -> my_i,
+                            body = (start, step) -> Cases([
+                                :($step < $my_i) => Stepper(
+                                    seek = (ctx, start) -> quote
+                                        $my_p = searchsortedfirst($(vec.ex).idx, $start, $my_p, length($(vec.ex).idx), Base.Forward)
+                                    end,
+                                    body = Phase(
+                                        guard = (start) -> :($my_p < $my_p1),
+                                        stride = (start) -> my_i,
+                                        body = (start, step) -> Thunk(
+                                            body = Cases([
+                                                :($step < $my_i) => Run(
+                                                    body = default(fbr),
+                                                ),
+                                                true => Thunk(
+                                                    body = Spike(
+                                                        body = default(fbr),
+                                                        tail = access(VirtualFiber(lvl.lvl, PositionEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_i), fbr.env)), mode, idxs...),
+                                                    ),
+                                                    epilogue = quote
+                                                        $my_p += 1
+                                                    end
+                                                ),
+                                            ])
+                                        )
+                                    )
+                                ),
+                                true => Thunk(
+                                    body = Spike(
+                                        body = default(fbr),
+                                        tail = access(VirtualFiber(lvl.lvl, PositionEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_i), fbr.env)), mode, idxs...),
+                                    ),
+                                    epilogue = quote
+                                        $my_p += 1
+                                    end
+                                )
+                            ])
+                        )
+                    )
+                )
+            ),
+            Phase(
+                body = (start, step) -> Run(0)
+            )
+        ])
+    )
+end
+
 unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Union{Write, Update}, idx::Name, idxs...) =
     unfurl(fbr, ctx, mode, extrude(idx), idxs...)
 
