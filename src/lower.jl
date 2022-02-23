@@ -279,26 +279,38 @@ function (ctx::LowerJulia)(stmt::Loop, ::DefaultStyle)
         idx_sym = ctx.freshen(getname(stmt.idxs[1]))
         body = Loop(stmt.idxs[2:end], stmt.body)
         ext = ctx.dims[getname(stmt.idxs[1])]
-        return quote
-            for $idx_sym = $(ctx(start(ext))):$(ctx(stop(ext)))
-                $(begin
-                    body_2 = :(error("this code should not run"))
-                    while true
-                        ctx_2 = diverge(ctx)
-                        body_2 = bind(ctx_2, getname(stmt.idxs[1]) => idx_sym) do 
-                            scope(ctx_2) do ctx_3
-                                body_3 = ForLoopVisitor(ctx_3, stmt.idxs[1], idx_sym)(body)
-                                (ctx_3)(body_3)
+        if extent(ext) == 1
+            return quote
+                $idx_sym = $(ctx(start(ext)))
+                $(bind(ctx, getname(stmt.idxs[1]) => idx_sym) do 
+                    scope(ctx) do ctx_2
+                        body_3 = ForLoopVisitor(ctx_2, stmt.idxs[1], idx_sym)(body)
+                        (ctx_2)(body_3)
+                    end
+                end)
+            end
+        else
+            return quote
+                for $idx_sym = $(ctx(start(ext))):$(ctx(stop(ext)))
+                    $(begin
+                        body_2 = :(error("this code should not run"))
+                        while true
+                            ctx_2 = diverge(ctx)
+                            body_2 = bind(ctx_2, getname(stmt.idxs[1]) => idx_sym) do 
+                                scope(ctx_2) do ctx_3
+                                    body_3 = ForLoopVisitor(ctx_3, stmt.idxs[1], idx_sym)(body)
+                                    (ctx_3)(body_3)
+                                end
+                            end
+                            if ctx_2.state == ctx.state
+                                break
+                            else
+                                unify!(ctx, ctx_2)
                             end
                         end
-                        if ctx_2.state == ctx.state
-                            break
-                        else
-                            unify!(ctx, ctx_2)
-                        end
-                    end
-                    body_2
-                end)
+                        body_2
+                    end)
+                end
             end
         end
     end

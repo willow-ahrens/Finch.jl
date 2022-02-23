@@ -25,50 +25,60 @@ function (ctx::LowerJulia)(root::Loop, ::JumperStyle)
     push!(ctx.preamble, quote
         $i0 = $(ctx(start(ctx.dims[i])))
     end)
-    guard = nothing
-    body = JumperVisitor(i0, ctx)(root)
-    body_2 = :(error("this code should not run"))
 
-    while true
-        ctx_2 = diverge(ctx)
-        body_2 = scope(ctx_2) do ctx_3
-            body_3 = ThunkVisitor(ctx_3)(body)
-            guards = (PhaseGuardVisitor(ctx_3, i, i0))(body_3)
-            strides = (PhaseStrideVisitor(ctx_3, i, i0))(body_3)
-            if isempty(strides)
-                step = ctx_3(stop(ctx.dims[i]))
-                step_min = quote end
-            else
-                step = ctx.freshen(i, :_step)
-                step_min = quote
-                    $step = min(max($(map(ctx_3, strides)...)), $(ctx_3(stop(ctx.dims[i]))))
-                end
-                if length(strides) == 1 && length(guards) == 1
-                    guard = guards[1]
+    if extent(ctx.dims[i]) == 1
+        body = JumperVisitor(i0, ctx)(root)
+        return scope(ctx) do ctx_2
+            body_2 = ThunkVisitor(ctx_2)(body)
+            step = ctx_2(start(ctx.dims[i]))
+            body_3 = (PhaseBodyVisitor(ctx_3, i, i0, step))(body_2)
+            (ctx_2)(body_3)
+        end
+    else
+        guard = nothing
+        body = JumperVisitor(i0, ctx)(root)
+        body_2 = :(error("this code should not run"))
+        while true
+            ctx_2 = diverge(ctx)
+            body_2 = scope(ctx_2) do ctx_3
+                body_3 = ThunkVisitor(ctx_3)(body)
+                guards = (PhaseGuardVisitor(ctx_3, i, i0))(body_3)
+                strides = (PhaseStrideVisitor(ctx_3, i, i0))(body_3)
+                if isempty(strides)
+                    step = ctx_3(stop(ctx.dims[i]))
+                    step_min = quote end
                 else
-                    guard = :($i0 <= $(ctx_3(stop(ctx.dims[i]))))
+                    step = ctx.freshen(i, :_step)
+                    step_min = quote
+                        $step = min(max($(map(ctx_3, strides)...)), $(ctx_3(stop(ctx.dims[i]))))
+                    end
+                    if length(strides) == 1 && length(guards) == 1
+                        guard = guards[1]
+                    else
+                        guard = :($i0 <= $(ctx_3(stop(ctx.dims[i]))))
+                    end
+                end
+                body_4 = (PhaseBodyVisitor(ctx_3, i, i0, step))(body_3)
+                quote
+                    $step_min
+                    $(scope(ctx_3) do ctx_4
+                        restrict(ctx_4, i => Extent(Virtual{Any}(i0), Virtual{Any}(step))) do
+                            (ctx_4)(body_4)
+                        end
+                    end)
+                    $i0 = $step + 1
                 end
             end
-            body_4 = (PhaseBodyVisitor(ctx_3, i, i0, step))(body_3)
-            quote
-                $step_min
-                $(scope(ctx_3) do ctx_4
-                    restrict(ctx_4, i => Extent(Virtual{Any}(i0), Virtual{Any}(step))) do
-                        (ctx_4)(body_4)
-                    end
-                end)
-                $i0 = $step + 1
+            if ctx_2.state == ctx.state
+                break
+            else
+                unify!(ctx, ctx_2)
             end
         end
-        if ctx_2.state == ctx.state
-            break
-        else
-            unify!(ctx, ctx_2)
-        end
-    end
-    return quote
-        while $guard
-            $body_2
+        return quote
+            while $guard
+                $body_2
+            end
         end
     end
 end

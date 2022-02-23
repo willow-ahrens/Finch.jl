@@ -69,6 +69,7 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSingleBlock{Tv, Ti}, R
             ),
             Phase(body = (start, step) -> Run(body = vec.D))
         ])
+        Access(tns, node.mode, node.idxs)
     else
         node
     end

@@ -151,8 +151,8 @@ include("singleblock.jl")
     println(C)
 
     #Not checking for empty runs lol.
-    @test C.idx == [1, 3, 5, 7, 9, 9, 10]
-    @test C.val == [2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 9.0]
+    @test C.idx == [1, 3, 5, 7, 9, 10]
+    @test C.val == [2.0, 3.0, 4.0, 5.0, 6.0, 9.0]
     println()
 
     println("sparse = sparse * block")

@@ -4,8 +4,7 @@ end
 
 isliteral(::Run) = false
 
-#A minor revelation: There's no readon to store extents in chunks, they just modify the extents of the context.
-#Another revelation: If you want to store something in a chunk, 
+#A minor revelation: There's no reason to store extents in chunks, they just modify the extents of the context.
 
 getname(arr::Run) = getname(arr.body)
 
@@ -19,6 +18,10 @@ combine_style(a::RunStyle, b::RunStyle) = RunStyle()
 function (ctx::LowerJulia)(root::Loop, ::RunStyle)
     @assert !isempty(root.idxs)
     root = (AccessRunVisitor(root))(root)
+    if make_style(root, ctx) isa RunStyle
+        println(root)
+        error("run style couldn't lower runs")
+    end
     #TODO remove simplify step once we have dedicated handlers for it
     root = annihilate_index(root)
     ctx(root)
@@ -28,22 +31,9 @@ struct AccessRunVisitor <: AbstractTransformVisitor
     root
 end
 
-#TODO consider processing runs (and other blocks) outside of access objects?
 function (ctx::AccessRunVisitor)(node::Access{Run, Read}, ::DefaultStyle)
     return node.tns.body
 end
-
-#function (ctx::AccessRunVisitor)(node::Run, ::DefaultStyle)
-#    return node.body
-#end
-
-function (ctx::ForLoopVisitor)(node::Access{Run, Read}, ::DefaultStyle)
-    return node.tns.body
-end
-
-#function (ctx::ForLoopVisitor)(node::Run, ::DefaultStyle)
-#    return node.body
-#end
 
 #assume ssa
 
@@ -91,6 +81,6 @@ function (ctx::AcceptRunVisitor)(node::Access{AcceptRun, <:Union{Write, Update}}
     node.tns.body(ctx.ctx, start(ext), stop(ext))
 end
 
-function (ctx::ForLoopVisitor)(node::Access{AcceptRun}, ::DefaultStyle)
+function (ctx::ForLoopVisitor)(node::Access{AcceptRun, <:Union{Write, Update}}, ::DefaultStyle)
     node.tns.body(ctx.ctx, ctx.val, ctx.val)
 end

@@ -19,18 +19,19 @@ function (ctx::LowerJulia)(root::Loop, ::SpikeStyle)
     idx = root.idxs[1]
     root_body = AccessSpikeBodyVisitor(root, ctx, idx)(root)
     #TODO arguably we could take several better alternative approaches to rediminsionalization here
-    body_expr = restrict(ctx, getname(root.idxs[1]) => spike_body_range(ctx.dims[getname(root.idxs[1])], ctx)) do
-        scope(ctx) do ctx_2
-            (ctx_2)(annihilate_index(root_body))
+    ext = ctx.dims[getname(root.idxs[1])]
+    if extent(ext) == 1
+        body_expr = quote end
+    else
+        body_expr = restrict(ctx, getname(root.idxs[1]) => spike_body_range(ext, ctx)) do
+            scope(ctx) do ctx_2
+                (ctx_2)(annihilate_index(root_body))
+            end
         end
     end
-    val = stop(ctx.dims[getname(root.idxs[1])])
-    tail_expr = bind(ctx, getname(root.idxs[1]) => val) do 
+    tail_expr = restrict(ctx, getname(root.idxs[1]) => UnitExtent(stop(ext))) do
         scope(ctx) do ctx_2
-            root_tail = AccessSpikeTailVisitor(root, ctx_2, idx, val)(Loop(root.idxs[2:end], root.body))
-            #The next call is a convenient fallback, but make no mistake, all chunks must work with all other chunks.
-            #It's a handshake problem and you can't get around it.
-            root_tail = ForLoopVisitor(ctx_2, idx, val)(root_tail)
+            root_tail = AccessSpikeTailVisitor(root, ctx_2, idx, stop(ext))(root)
             (ctx_2)(annihilate_index(root_tail))
         end
     end
@@ -55,7 +56,7 @@ end
 spike_body_stop(stop, ctx) = :($(ctx(stop)) - 1)
 spike_body_stop(stop::Integer, ctx) = stop - 1
 
-spike_body_range(ext::Extent, ctx) = Extent(start(ext), spike_body_stop(stop(ext), ctx))
+spike_body_range(ext, ctx) = Extent(start(ext), spike_body_stop(stop(ext), ctx))
 
 @kwdef struct AccessSpikeTailVisitor <: AbstractTransformVisitor
     root

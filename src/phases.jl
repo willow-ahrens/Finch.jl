@@ -58,8 +58,14 @@ function (ctx::LowerJulia)(root, ::PipelineStyle)
             body = (PhaseBodyVisitor(ctx_3, i, i0, step))(body)
             block = quote
                 $(scope(ctx_3) do ctx_4
-                    restrict(ctx_4, i => Extent(Virtual{Any}(i0), Virtual{Any}(step))) do
-                        (ctx_4)(body)
+                    if extent(ctx.dims[i]) == 1
+                        restrict(ctx_4, i => UnitExtent(Virtual{Any}(step))) do
+                            (ctx_4)(body)
+                        end
+                    else
+                        restrict(ctx_4, i => Extent(Virtual{Any}(i0), Virtual{Any}(step))) do
+                            (ctx_4)(body)
+                        end
                     end
                 end)
                 $i0 = $step + 1
