@@ -100,16 +100,21 @@ end
     ctx
 end
 function (ctx::StepperVisitor)(node::Stepper, ::DefaultStyle)
-    if false in get(ctx.ctx.state, node.name, Set(true))
+    if :skipped in get(ctx.ctx.state, node.name, Set())
         push!(ctx.ctx.preamble, node.seek(ctx, ctx.start))
     end
-    define!(ctx.ctx, node.name, Set(true))
+    define!(ctx.ctx, node.name, Set((:seen,)))
     node.body
+end
+
+function (ctx::SkipVisitor)(node::Stepper, ::DefaultStyle)
+    define!(ctx.ctx, node.name, Set((:skipped,)))
+    node
 end
 
 truncate(node, ctx, start, step, stop) = node
 function truncate(node::Stepper, ctx, start, step, stop)
-    define!(ctx, node.name, Set(false))
+    define!(ctx, node.name, Set())
     node
 end
 

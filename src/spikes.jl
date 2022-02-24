@@ -25,14 +25,14 @@ function (ctx::LowerJulia)(root::Loop, ::SpikeStyle)
     else
         body_expr = restrict(ctx, getname(root.idxs[1]) => spike_body_range(ext, ctx)) do
             scope(ctx) do ctx_2
-                (ctx_2)(annihilate_index(root_body))
+                (ctx_2)(annihilate_index(ctx_2)(root_body))
             end
         end
     end
     root_tail = AccessSpikeTailVisitor(root, ctx, idx, stop(ext))(root)
     tail_expr = restrict(ctx, getname(root.idxs[1]) => UnitExtent(stop(ext))) do
         scope(ctx) do ctx_2
-            (ctx_2)(annihilate_index(root_tail))
+            (ctx_2)(annihilate_index(ctx_2)(root_tail))
         end
     end
     return Expr(:block, body_expr, tail_expr)

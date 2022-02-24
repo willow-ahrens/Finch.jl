@@ -7,7 +7,7 @@ annihilate_index(ctx) = @slots a b c i j f g Rewrite(Fixpoint(Prewalk(Chain([
     (@rule @i(*(a..., *(b...), c...)) => @i *(a..., b..., c...)),
     (@rule @i(*(a...)) => if count(isliteral, a) >= 2 @i(*($(filter(!isliteral, a)...), $(Literal(*(getvalue.(filter(isliteral, a))...))))) end),
     (@rule @i(*(a..., 1, b...)) => @i *(a..., b...)),
-    (@rule @i(*(a..., 0, b...)) => 0),
+    (@rule @i(*(a..., 0, b...)) => (map(SkipVisitor(ctx), [a; b]); 0)),
 
     (@rule @i((+)($a)) => a),
     (@rule @i($a - $b) => @i a + - b),
@@ -31,5 +31,9 @@ annihilate_index(ctx) = @slots a b c i j f g Rewrite(Fixpoint(Prewalk(Chain([
     (@rule @i(@pass(a...) where $b) => pass(a...)),
     #(@rule @i(a where @pass(b...)) => a),#can't do this bc produced tensors won't get initialized
 ]))))
+
+@kwdef struct SkipVisitor <: AbstractTransformVisitor #TODO define a walk visitor you lazy programmer
+    ctx
+end
 
 #TODO add simplify as a chunk pass.

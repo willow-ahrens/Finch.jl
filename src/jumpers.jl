@@ -88,14 +88,19 @@ end
     ctx
 end
 function (ctx::JumperVisitor)(node::Jumper, ::DefaultStyle)
-    if false in get(ctx.ctx.state, node.name, Set(true))
+    if false in get(ctx.ctx.state, node.name, Set())
         push!(ctx.ctx.preamble, node.seek(ctx, ctx.start))
     end
-    define!(ctx.ctx, node.name, Set(true))
+    define!(ctx.ctx, node.name, Set((:seen,)))
     node.body
 end
 
+function (ctx::SkipVisitor)(node::Jumper, ::DefaultStyle)
+    define!(ctx.ctx, node.name, Set((:skipped,)))
+    node
+end
+
 function truncate(node::Jumper, ctx, start, step, stop)
-    define!(ctx, node.name, Set(false))
+    define!(ctx, node.name, Set())
     node
 end

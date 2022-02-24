@@ -23,7 +23,7 @@ function (ctx::LowerJulia)(root::Loop, ::RunStyle)
         error("run style couldn't lower runs")
     end
     #TODO remove simplify step once we have dedicated handlers for it
-    root = annihilate_index(root)
+    root = annihilate_index(ctx)(root)
     ctx(root)
 end
 
