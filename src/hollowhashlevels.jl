@@ -302,7 +302,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Union{Writ
                         $my_p = get!($(lvl.ex).tbl, $my_key, $(lvl.idx_q) + 1)
                         if $(lvl.idx_q) < $my_p 
                             $(lvl.idx_q) = $my_p
-                            $(scope(ctx) do ctx_2 
+                            $(contain(ctx) do ctx_2 
                                 assemble!(VirtualFiber(fbr.lvl.lvl, VirtualMaxPositionEnvironment(my_p, ∘(repeated(VirtualArbitraryEnvironment, lvl.N - 1)..., identity)(fbr.env))), ctx_2, mode)
                                 quote end
                             end)

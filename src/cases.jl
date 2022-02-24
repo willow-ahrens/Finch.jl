@@ -23,7 +23,7 @@ function (ctx::LowerJulia)(stmt, ::CaseStyle)
     function nest(cases, inner=false)
         guard, body = cases[1]
         ctx_2 = diverge(ctx)
-        body = scope(ctx_2) do ctx_3
+        body = contain(ctx_2) do ctx_3
             (ctx_3)(body)
         end
         push!(ctx_2s, ctx_2)

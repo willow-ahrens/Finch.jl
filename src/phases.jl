@@ -50,14 +50,14 @@ function (ctx::LowerJulia)(root, ::PipelineStyle)
         body = phases[key]
         ctx_2 = ctx_2s[key]
 
-        push!(thunk.args, scope(ctx_2) do ctx_3
+        push!(thunk.args, contain(ctx_2) do ctx_3
             body = ThunkVisitor(ctx_3)(body)
             guards = (PhaseGuardVisitor(ctx_3, i, i0))(body)
             strides = (PhaseStrideVisitor(ctx_3, i, i0))(body)
             strides = [strides; ctx(stop(ctx.dims[i]))]
             body = (PhaseBodyVisitor(ctx_3, i, i0, step))(body)
             block = quote
-                $(scope(ctx_3) do ctx_4
+                $(contain(ctx_3) do ctx_4
                     if extent(ctx.dims[i]) == 1
                         restrict(ctx_4, i => UnitExtent(Virtual{Any}(step))) do
                             (ctx_4)(body)

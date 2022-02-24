@@ -36,7 +36,7 @@ function definename!(root, ctx::TransformSSA)
     return setname(root, name2)
 end
 
-function scope(f::F, ctx::TransformSSA) where {F}
+function contain(f::F, ctx::TransformSSA) where {F}
     ctx_2 = TransformSSA(
         renames = ctx.renames, 
         freshen = ctx.freshen,
@@ -64,7 +64,7 @@ function (ctx::TransformSSA)(root::Name)
 end
 
 function (ctx::TransformSSA)(root::Loop)
-    scope(ctx) do ctx_2
+    contain(ctx) do ctx_2
         idxs = map(idx->definename!(idx, ctx_2), root.idxs)
         body = ctx(root.body)
         return loop(idxs, body)
@@ -72,7 +72,7 @@ function (ctx::TransformSSA)(root::Loop)
 end
 
 function (ctx::TransformSSA)(root::With)
-    scope(ctx) do ctx_2
+    contain(ctx) do ctx_2
         prod = ctx_2(root.prod)
         cons = ctx(root.cons)
         return with(cons, prod)

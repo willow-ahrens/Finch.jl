@@ -254,7 +254,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Union{Write
                 val = default(fbr),
                 tail = (ctx, idx) -> Thunk(
                     preamble = quote
-                        $(scope(ctx) do ctx_2 
+                        $(contain(ctx) do ctx_2 
                             assemble!(VirtualFiber(lvl.lvl, VirtualMaxPositionEnvironment(my_p, fbr.env)), ctx_2, mode)
                             quote end
                         end)

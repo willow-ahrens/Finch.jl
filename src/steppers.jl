@@ -28,7 +28,7 @@ function (ctx::LowerJulia)(root::Loop, ::StepperStyle)
 
     if extent(ctx.dims[i]) == 1
         body = StepperVisitor(i0, ctx)(root)
-        return scope(ctx) do ctx_2
+        return contain(ctx) do ctx_2
             body_2 = ThunkVisitor(ctx_2)(body)
             body_3 = (PhaseBodyVisitor(ctx_2, i, i0, i0))(body_2)
             (ctx_2)(body_3)
@@ -36,11 +36,9 @@ function (ctx::LowerJulia)(root::Loop, ::StepperStyle)
     else
         guard = nothing
         body = StepperVisitor(i0, ctx)(root)
-        body_2 = :(error("this code should not run"))
 
-        while true
-            ctx_2 = diverge(ctx)
-            body_2 = scope(ctx_2) do ctx_3
+        body_2 = fixpoint(ctx) do ctx_2
+            scope(ctx_2) do ctx_3
                 body_3 = ThunkVisitor(ctx_3)(body)
                 guards = (PhaseGuardVisitor(ctx_3, i, i0))(body_3)
                 strides = (PhaseStrideVisitor(ctx_3, i, i0))(body_3)
@@ -61,18 +59,13 @@ function (ctx::LowerJulia)(root::Loop, ::StepperStyle)
                 body_4 = (PhaseBodyVisitor(ctx_3, i, i0, step))(body_3)
                 quote
                     $step_min
-                    $(scope(ctx_3) do ctx_4
+                    $(contain(ctx_3) do ctx_4
                         restrict(ctx_4, i => Extent(Virtual{Any}(i0), Virtual{Any}(step))) do
                             (ctx_4)(body_4)
                         end
                     end)
                     $i0 = $step + 1
                 end
-            end
-            if ctx_2.state == ctx.state
-                break
-            else
-                unify!(ctx, ctx_2)
             end
         end
         return quote

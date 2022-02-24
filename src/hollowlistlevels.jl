@@ -271,7 +271,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Union{Writ
             val = default(fbr),
             tail = (ctx, idx) -> Thunk(
                 preamble = quote
-                    $(scope(ctx) do ctx_2 
+                    $(contain(ctx) do ctx_2 
                         if (lvl_2 = assemble!(VirtualFiber(lvl.lvl, VirtualMaxPositionEnvironment(my_p, fbr.env)), ctx_2, mode)) === nothing
                             lvl_2 = lvl.lvl
                         end

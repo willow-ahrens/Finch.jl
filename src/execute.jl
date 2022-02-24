@@ -1,7 +1,7 @@
 function register()
     Base.eval(Finch, quote
         @generated function execute(ex)
-            scope(LowerJulia()) do ctx
+            contain(LowerJulia()) do ctx
                 execute_code_lowered(:ex, ex)
             end
         end
@@ -10,9 +10,9 @@ end
 
 function execute_code_lowered(ex, T)
     prgm = nothing
-    code = scope(LowerJulia()) do ctx
+    code = contain(LowerJulia()) do ctx
         quote
-            $(scope(ctx) do ctx_2
+            $(contain(ctx) do ctx_2
                 prgm = virtualize(ex, T, ctx)
                 #The following call separates tensor and index names from environment symbols.
                 #TODO we might want to keep the namespace around, and/or further stratify index
@@ -22,7 +22,7 @@ function execute_code_lowered(ex, T)
                 prgm = Initialize(ctx)(prgm)
                 ctx_2(prgm)
             end)
-            $(scope(ctx) do ctx_2
+            $(contain(ctx) do ctx_2
                 prgm = Finalize(ctx_2)(prgm)
                 :(($(map(getresults(prgm)) do tns
                     :($(getname(tns)) = $(ctx_2(tns)))
@@ -58,7 +58,7 @@ end
 """
     Initialize(ctx)
 
-A transformation to initialize output tensors that have just entered into scope.
+A transformation to initialize output tensors that have just entered into contain.
 
 See also: [`initialize!`](@ref)
 """
@@ -77,7 +77,7 @@ end
 """
     Finalize(ctx)
 
-A transformation to finalize output tensors before they leave scope and are
+A transformation to finalize output tensors before they leave contain and are
 returned to the caller.
 
 See also: [`finalize!`](@ref)

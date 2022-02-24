@@ -21,7 +21,7 @@ envdepth(env::RootEnvironment) = 0
     VirtualRootEnvironment()
 
 In addition to holding information about the environment instance itself,
-virtual environments may also hold information about the scope that this fiber
+virtual environments may also hold information about the contain that this fiber
 lives in.
 """
 struct VirtualRootEnvironment end

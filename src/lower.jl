@@ -72,32 +72,47 @@ function restrict(f, ctx::LowerJulia, (idx, ext′), tail...)
     return res
 end
 
-function openscope(ctx::LowerJulia)
-    ctx′ = LowerJulia(bindings = ctx.bindings, dims = ctx.dims, freshen = ctx.freshen, state = ctx.state, defs = Set()) #TODO use a mutable pattern here
-    return ctx′
-end
-
-function closescope(body, ctx)
-    thunk = Expr(:block)
-    append!(thunk.args, ctx.preamble)
-    if isempty(ctx.epilogue)
-        push!(thunk.args, body)
-    else
-        res = ctx.freshen(:res)
-        push!(thunk.args, :($res = $body))
-        append!(thunk.args, ctx.epilogue)
-        push!(thunk.args, res)
-    end
-    for var in ctx.defs
+function scope(f, ctx)
+    ctx_2 = shallowcopy(ctx)
+    ctx_2.defs = Set()
+    res = f(ctx_2)
+    for var in ctx_2.defs
         delete!(ctx.state, var)
     end
-    return thunk
+    res
 end
 
-function scope(f, ctx::LowerJulia)
-    ctx′ = openscope(ctx)
-    body = f(ctx′)
-    return closescope(body, ctx′)
+function fixpoint(f, ctx)
+    res = nothing
+    while true
+        ctx_2 = diverge(ctx)
+        res = contain(f, ctx_2)
+        if ctx_2.state == ctx.state
+            unify!(ctx, ctx_2)
+            break
+        else
+            unify!(ctx, ctx_2)
+        end
+    end
+    return res
+end
+
+function contain(f, ctx::LowerJulia)
+    ctx_2 = shallowcopy(ctx)
+    ctx_2.preamble = []
+    ctx_2.epilogue = []
+    body = f(ctx_2)
+    thunk = Expr(:block)
+    append!(thunk.args, ctx_2.preamble)
+    if isempty(ctx_2.epilogue)
+        push!(thunk.args, body)
+    else
+        res = ctx_2.freshen(:res)
+        push!(thunk.args, :($res = $body))
+        append!(thunk.args, ctx_2.epilogue)
+        push!(thunk.args, res)
+    end
+    return thunk
 end
 
 function diverge(ctx::LowerJulia)
@@ -184,7 +199,7 @@ struct ThunkVisitor <: AbstractTransformVisitor
 end
 
 function (ctx::LowerJulia)(node, ::ThunkStyle)
-    scope(ctx) do ctx2
+    contain(ctx) do ctx2
         node = (ThunkVisitor(ctx2))(node)
         (ctx2)(node)
     end
@@ -237,11 +252,11 @@ end
 function (ctx::LowerJulia)(root::With, ::DefaultStyle)
     prod = nothing
     return quote
-        $(scope(ctx) do ctx_2
+        $(contain(ctx) do ctx_2
             prod = Initialize(ctx_2)(root.prod)
             (ctx_2)(prod)
         end)
-        $(scope(ctx) do ctx_2
+        $(contain(ctx) do ctx_2
             Finalize(ctx_2)(prod)
             (ctx_2)(root.cons)
         end)
@@ -249,7 +264,7 @@ function (ctx::LowerJulia)(root::With, ::DefaultStyle)
 end
 
 function initialize_program!(root, ctx)
-    scope(ctx) do ctx_2
+    contain(ctx) do ctx_2
         thunk = Expr(:block)
         append!(thunk.args, map(tns->virtual_initialize!(tns, ctx_2), getresults(root)))
         thunk
@@ -283,7 +298,7 @@ function (ctx::LowerJulia)(stmt::Loop, ::DefaultStyle)
             return quote
                 $idx_sym = $(ctx(start(ext)))
                 $(bind(ctx, getname(stmt.idxs[1]) => idx_sym) do 
-                    scope(ctx) do ctx_2
+                    contain(ctx) do ctx_2
                         body_3 = ForLoopVisitor(ctx_2, stmt.idxs[1], idx_sym)(body)
                         (ctx_2)(body_3)
                     end
@@ -292,23 +307,15 @@ function (ctx::LowerJulia)(stmt::Loop, ::DefaultStyle)
         else
             return quote
                 for $idx_sym = $(ctx(start(ext))):$(ctx(stop(ext)))
-                    $(begin
-                        body_2 = :(error("this code should not run"))
-                        while true
-                            ctx_2 = diverge(ctx)
-                            body_2 = bind(ctx_2, getname(stmt.idxs[1]) => idx_sym) do 
-                                scope(ctx_2) do ctx_3
-                                    body_3 = ForLoopVisitor(ctx_3, stmt.idxs[1], idx_sym)(body)
-                                    (ctx_3)(body_3)
+                    $(fixpoint(ctx) do ctx_2
+                        scope(ctx_2) do ctx_3
+                            bind(ctx_3, getname(stmt.idxs[1]) => idx_sym) do 
+                                contain(ctx_3) do ctx_4
+                                    body_3 = ForLoopVisitor(ctx_4, stmt.idxs[1], idx_sym)(body)
+                                    (ctx_4)(body_3)
                                 end
                             end
-                            if ctx_2.state == ctx.state
-                                break
-                            else
-                                unify!(ctx, ctx_2)
-                            end
                         end
-                        body_2
                     end)
                 end
             end
