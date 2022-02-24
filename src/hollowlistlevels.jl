@@ -191,7 +191,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
                 stride = (start) -> my_i1,
                 body = (start, step) -> Jumper(
                     seek = (ctx, start) -> quote
-                        $my_p = searchsortedfirst($(vec.ex).idx, $start, $my_p, length($(vec.ex).idx), Base.Forward)
+                        $my_p = searchsortedfirst($(lvl.ex).idx, $start, $my_p, $my_p1, Base.Forward)
                     end,
                     body = Thunk(
                         preamble = :(
@@ -201,16 +201,15 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
                             guard = (start) -> :($my_p < $my_p1),
                             stride = (start) -> my_i,
                             body = (start, step) -> Cases([
-                                :($step < $my_i) => Stepper(
+                                :($step > $my_i) => Stepper(
                                     seek = (ctx, start) -> quote
-                                        $my_p = searchsortedfirst($(vec.ex).idx, $start, $my_p, length($(vec.ex).idx), Base.Forward)
+                                        $my_p = searchsortedfirst($(lvl.ex).idx, $start, $my_p, $my_p1, Base.Forward)
                                     end,
                                     body = Thunk(
                                         preamble = :(
                                             $my_i = $(lvl.ex).idx[$my_p]
                                         ),
                                         body = Phase(
-                                            guard = (start) -> :($my_p < $my_p1),
                                             stride = (start) -> my_i,
                                             body = (start, step) -> Thunk(
                                                 body = Cases([

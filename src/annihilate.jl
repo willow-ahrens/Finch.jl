@@ -1,4 +1,4 @@
-annihilate_index = @slots a b c i j f g Rewrite(Fixpoint(Prewalk(Chain([
+annihilate_index(ctx) = @slots a b c i j f g Rewrite(Fixpoint(Prewalk(Chain([
     (@rule @i(f(a...)) => if isliteral(f) && all(isliteral, a) Literal(getvalue(f)(getvalue.(a)...)) end),
     (@rule @i(+(a..., +(b...), c...)) => @i +(a..., b..., c...)),
     (@rule @i(+(a...)) => if count(isliteral, a) >= 2 @i +($(filter(!isliteral, a)...), $(Literal(+(getvalue.(filter(isliteral, a))...)))) end),

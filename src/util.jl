@@ -3,7 +3,7 @@ shallowcopy(x::T) where T = T([getfield(x, k) for k ∈ fieldnames(T)]...)
 
 function refill!(arr, val, p, q)
     p_2 = regrow!(arr, p, q)
-    @simd for p_3 = p:p_2
+    @simd for p_3 = p + 1:p_2
         arr[p_3] = val
     end
     p_2
@@ -14,7 +14,9 @@ function regrow!(arr, p, q)
     while p_2 < q
         p_2 *= 2
     end
-    resize!(arr, p_2)
+    if p_2 > length(arr)
+        resize!(arr, p_2)
+    end
     p_2
 end
 

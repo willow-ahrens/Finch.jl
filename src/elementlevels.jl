@@ -64,15 +64,8 @@ finalize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode) = nothing
 function assemble!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
     lvl = fbr.lvl
     q = envmaxposition(fbr.env)
-    my_q = ctx.freshen(lvl.ex, :_q)
     push!(ctx.preamble, quote
-        if $(lvl.val_q) < $q
-            resize!($(lvl.ex).val, $(lvl.val_q) * 4)
-            @simd for $my_q = $(lvl.val_q) + 1: $(lvl.val_q) * 4
-                $(lvl.ex).val[$my_q] = $(lvl.D)
-            end
-            $(lvl.val_q) *= 4
-        end
+        $(lvl.val_q) < $q && ($(lvl.val_q) = $refill!($(lvl.ex).val, $(lvl.D), $(lvl.val_q), $q))
     end)
     return nothing
 end

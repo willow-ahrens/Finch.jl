@@ -45,12 +45,13 @@ end
     idx
 end
 
-function (ctx::AccessSpikeBodyVisitor)(node::Spike, ::DefaultStyle)
-    return Run(node.body)
+function (ctx::AccessSpikeBodyVisitor)(node::Access{Spike}, ::DefaultStyle)
+    return Access(Run(node.tns.body), node.mode, node.idxs)
 end
 
-function (ctx::AccessSpikeBodyVisitor)(node::Run, ::DefaultStyle)
-    return node
+function (ctx::AccessSpikeBodyVisitor)(node::Access, ::DefaultStyle)
+    ext = ctx.ctx.dims[getname(ctx.idx)]
+    return Access(truncate(node.tns, ctx.ctx, start(ext), spike_body_stop(stop(ext), ctx.ctx), stop(ext)), node.mode, node.idxs)
 end
 
 spike_body_stop(stop, ctx) = :($(ctx(stop)) - 1)

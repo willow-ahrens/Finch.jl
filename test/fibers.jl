@@ -218,8 +218,7 @@
     @test B == [2.0, 1.0, 3.0, 0.0, 5.0, 0.0, 5.0, 1.0, 6.0, 0.0]
     println()
 
-    println("fiber(s) = fiber(gallop(s)) + fiber(gallop(s))")
-
+    println("fiber(s)[i] = fiber(s)[i::gallop] + fiber(s)[i::gallop]")
     A = Finch.Fiber(
         HollowList(10, [1, 6], [1, 3, 5, 7, 9],
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
@@ -241,13 +240,14 @@
     @test Finch.FiberArray(C) == [2.0, 1.0, 3.0, 0.0, 5.0, 0.0, 5.0, 1.0, 6.0, 0.0]
     println()
 
-    #=
+    println("fiber(s)[i] = fiber(s)[i::gallop] + fiber(s)[i::gallop]")
+
     A = Finch.Fiber(
         HollowList(10, [1, 6], [1, 3, 5, 7, 9],
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
     B = Finch.Fiber(
-        HollowList(10, [1, 4], [2, 5, 8],
-        Element{0.0}([1.0, 1.0, 1.0])))
+        HollowList(10, [1, 5], [2, 5, 7, 8],
+        Element{0.0}([1.0, 1.0, 1.0, 1.0])))
     C = Finch.Fiber(HollowList(10, Element{0.0}()))
 
     ex = @index_program_instance @loop i C[i] += A[i::gallop] * B[i::gallop]
@@ -260,7 +260,6 @@
     println(B)
     println(C)
 
-    @test Finch.FiberArray(C) == [2.0, 1.0, 3.0, 0.0, 5.0, 0.0, 5.0, 1.0, 6.0, 0.0]
+    @test Finch.FiberArray(C) == [0.0, 0.0, 0.0, 0.0, 4.0, 0.0, 5.0, 0.0, 0.0, 0.0]
     println()
-    =#
 end

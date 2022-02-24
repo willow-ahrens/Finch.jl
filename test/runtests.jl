@@ -10,7 +10,7 @@ using Finch: getname, Virtual
 
     include("test_ssa.jl")
     include("parse.jl")
-    include("simplevectors.jl")
     include("fibers.jl")
+    include("simplevectors.jl")
 
 end
