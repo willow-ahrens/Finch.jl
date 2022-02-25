@@ -42,7 +42,8 @@ function (ctx::LowerJulia)(root::Loop, ::JumperStyle)
         end
     else
         body = JumperVisitor(i0, ctx)(root)
-        return fixpoint(ctx) do ctx_2
+        guard = nothing
+        body_2 = fixpoint(ctx) do ctx_2
             scope(ctx_2) do ctx_3
                 body_3 = ThunkVisitor(ctx_3)(body)
                 strides = (PhaseStrideVisitor(ctx_3, i, i0))(body_3)
@@ -59,19 +60,27 @@ function (ctx::LowerJulia)(root::Loop, ::JumperStyle)
                 else
                     step = ctx.freshen(i, :_step)
                     body_4 = (PhaseBodyVisitor(ctx_3, i, i0, step))(body_3)
+                    guard = :($i0 <= $(ctx_3(stop(ctx.dims[i]))))
                     quote
-                        while $i0 <= $(ctx_3(stop(ctx.dims[i])))
-                            $step = min(max($(map(ctx_3, strides)...)), $(ctx_3(stop(ctx.dims[i]))))
-                            $(contain(ctx_3) do ctx_4
-                                restrict(ctx_4, i => Extent(Virtual{Any}(i0), Virtual{Any}(step))) do
-                                    (ctx_4)(body_4)
-                                end
-                            end)
-                            $i0 = $step + 1
-                        end
+                        $step = min(max($(map(ctx_3, strides)...)), $(ctx_3(stop(ctx.dims[i]))))
+                        $(contain(ctx_3) do ctx_4
+                            restrict(ctx_4, i => Extent(Virtual{Any}(i0), Virtual{Any}(step))) do
+                                (ctx_4)(body_4)
+                            end
+                        end)
+                        $i0 = $step + 1
                     end
                 end
             end
+        end
+        if guard !== nothing
+            return quote
+                while $guard
+                    $body_2
+                end
+            end
+        else
+            return body_2
         end
     end
 end

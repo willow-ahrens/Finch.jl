@@ -139,20 +139,18 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
                             stride = (start) -> my_i,
                             body = (start, step) -> Thunk(
                                 body = Cases([
-                                    :($step < $my_i) =>
-                                        Run(
+                                    :($step == $my_i) => Thunk(
+                                        body = Spike(
                                             body = default(fbr),
+                                            tail = access(VirtualFiber(lvl.lvl, PositionEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_i), fbr.env)), mode, idxs...),
                                         ),
-                                    true =>
-                                        Thunk(
-                                            body = Spike(
-                                                body = default(fbr),
-                                                tail = access(VirtualFiber(lvl.lvl, PositionEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_i), fbr.env)), mode, idxs...),
-                                            ),
-                                            epilogue = quote
-                                                $my_p += 1
-                                            end
-                                        ),
+                                        epilogue = quote
+                                            $my_p += 1
+                                        end
+                                    ),
+                                    true => Run(
+                                        body = default(fbr),
+                                    ),
                                 ])
                             )
                         )
@@ -222,10 +220,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
                                             stride = (start) -> my_i,
                                             body = (start, step) -> Thunk(
                                                 body = Cases([
-                                                    :($step < $my_i) => Run(
-                                                        body = default(fbr),
-                                                    ),
-                                                    true => Thunk(
+                                                    :($step == $my_i) => Thunk(
                                                         body = Spike(
                                                             body = default(fbr),
                                                             tail = access(VirtualFiber(lvl.lvl, PositionEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_i), fbr.env)), mode, idxs...),
@@ -233,6 +228,9 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
                                                         epilogue = quote
                                                             $my_p += 1
                                                         end
+                                                    ),
+                                                    true => Run(
+                                                        body = default(fbr),
                                                     ),
                                                 ])
                                             )
