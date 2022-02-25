@@ -79,9 +79,9 @@ end
 function initialize_level!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
     lvl = fbr.lvl
     push!(ctx.preamble, quote
-        $(lvl.pos_q) < 4 && resize!($(lvl.ex).pos, ($(lvl.pos_q) = 4;))
+        $(lvl.pos_q) < 64 && resize!($(lvl.ex).pos, ($(lvl.pos_q) = 64;))
         $(lvl.ex).pos[1] = 1
-        $(lvl.idx_q) < 4 && resize!($(lvl.ex).idx, ($(lvl.idx_q) = 4;))
+        $(lvl.idx_q) < 64 && resize!($(lvl.ex).idx, ($(lvl.idx_q) = 64;))
         $(lvl.I) = $(ctx(stop(ctx.dims[(getname(fbr), envdepth(fbr.env) + 1)])))
     end)
     if (lvl_2 = initialize_level!(VirtualFiber(fbr.lvl.lvl, ArbitraryEnvironment(fbr.env)), ctx, mode)) !== nothing
@@ -130,6 +130,9 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
             Phase(
                 stride = (start) -> my_i1,
                 body = (start, step) -> Stepper(
+                    seek = (ctx, start) -> quote
+                        $my_p = searchsortedfirst($(lvl.ex).idx, $start, $my_p, $my_p1, Base.Forward)
+                    end,
                     body = Thunk(
                         preamble = :(
                             $my_i = $(lvl.ex).idx[$my_p]

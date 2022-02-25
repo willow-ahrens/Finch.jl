@@ -11,6 +11,7 @@ using Base: @kwdef
 export @index
 
 export Fiber, HollowList, HollowHash, HollowCoo, Solid, Element, FiberArray
+export walk, gallop, follow, extrude, laminate
 
 include("util.jl")
 

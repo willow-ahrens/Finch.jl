@@ -12,7 +12,7 @@ end
 function regrow!(arr, p, q)
     p_2 = p
     while p_2 < q
-        p_2 *= 2
+        p_2 *= 4
     end
     if p_2 > length(arr)
         resize!(arr, p_2)

@@ -6,7 +6,7 @@ struct JumperStyle end
     status = gensym()
 end
 
-isliteral(::Stepper) = false
+isliteral(::Jumper) = false
 
 function make_style(root::Loop, ctx::LowerJulia, node::Jumper)
     if node.status in keys(ctx.state)

@@ -150,7 +150,7 @@ struct VirtualPosRangeEnvironment
     idx
     env
 end
-isliteral(::VirtualPosRangeEnvironment) = false
+
 function virtualize(ex, ::Type{PosRangeEnvironment{Start, Stop, Idx, Env}}, ctx) where {Start, Stop, Idx, Env}
     idx = virtualize(:($ex.idx), Idx, ctx)
     start = virtualize(:($ex.start), Start, ctx)
@@ -165,10 +165,8 @@ envdepth(env::VirtualPosRangeEnvironment) = 1 + envdepth(env.env)
 envcoordinate(env::VirtualPosRangeEnvironment) = env.idx
 envstart(env::VirtualPosRangeEnvironment) = env.start
 envstart(env::VirtualNameEnvironment) = envstart(env.env)
-envstart(env) = nothing
 envstop(env::VirtualPosRangeEnvironment) = env.stop
 envstop(env::VirtualNameEnvironment) = envstop(env.env)
-envstop(env) = nothing
 envdeferred(env::VirtualPosRangeEnvironment) = (env.idx, envdeferred(env.env)...)
 
 """
@@ -183,6 +181,7 @@ struct VirtualMaxPositionEnvironment
     pos
     env
 end
+#TODO virtualize this
 envdepth(env::VirtualMaxPositionEnvironment) = 1 + envdepth(env.env)
 envmaxposition(env::VirtualMaxPositionEnvironment) = env.pos
 

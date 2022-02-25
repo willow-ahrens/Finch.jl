@@ -70,6 +70,15 @@ function assemble!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
     return nothing
 end
 
+function assemble!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode::Write)
+    lvl = fbr.lvl
+    q = envmaxposition(fbr.env)
+    push!(ctx.preamble, quote
+        $(lvl.val_q) < $q && ($(lvl.val_q) = $regrow!($(lvl.ex).val, $(lvl.val_q), $q))
+    end)
+    return nothing
+end
+
 function unfurl(fbr::VirtualFiber{VirtualElementLevel}, ctx, ::Read)
     lvl = fbr.lvl
     tag = lvl.ex
