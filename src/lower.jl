@@ -186,6 +186,7 @@ struct ThunkStyle end
     preamble = quote end
     body
     epilogue = quote end
+    binds = ()
 end
 
 lower_style(::Thunk, ::LowerJulia) = ThunkStyle()
@@ -208,6 +209,9 @@ end
 function (ctx::ThunkVisitor)(node::Thunk, ::DefaultStyle)
     push!(ctx.ctx.preamble, node.preamble)
     push!(ctx.ctx.epilogue, node.epilogue)
+    for (var, val) in node.binds
+        define!(ctx.ctx, var, val)
+    end
     node.body
 end
 

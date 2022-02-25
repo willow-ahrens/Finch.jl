@@ -3,12 +3,18 @@ struct JumperStyle end
 @kwdef struct Jumper
     body
     seek = (ctx, start) -> error("seek not implemented error")
-    name = gensym()
+    status = gensym()
 end
 
 isliteral(::Stepper) = false
 
-make_style(root::Loop, ctx::LowerJulia, node::Jumper) = JumperStyle()
+function make_style(root::Loop, ctx::LowerJulia, node::Jumper)
+    if node.status in keys(ctx.state)
+        JumperStyle()
+    else
+        ThunkStyle()
+    end
+end
 combine_style(a::DefaultStyle, b::JumperStyle) = JumperStyle()
 combine_style(a::JumperStyle, b::JumperStyle) = JumperStyle()
 combine_style(a::JumperStyle, b::RunStyle) = RunStyle()
@@ -20,7 +26,6 @@ combine_style(a::ThunkStyle, b::JumperStyle) = ThunkStyle()
 combine_style(a::StepperStyle, b::JumperStyle) = JumperStyle()
 
 function (ctx::LowerJulia)(root::Loop, ::JumperStyle)
-    println("hello")
     i = getname(root.idxs[1])
     i0 = ctx.freshen(i, :_start)
     push!(ctx.preamble, quote
@@ -82,19 +87,21 @@ end
     ctx
 end
 function (ctx::JumperVisitor)(node::Jumper, ::DefaultStyle)
-    if false in get(ctx.ctx.state, node.name, Set())
+    if false in get(ctx.ctx.state, node.status, Set())
         push!(ctx.ctx.preamble, node.seek(ctx, ctx.start))
     end
-    define!(ctx.ctx, node.name, Set((:seen,)))
+    define!(ctx.ctx, node.status, Set((:seen,)))
     node.body
 end
 
 function (ctx::SkipVisitor)(node::Jumper, ::DefaultStyle)
-    define!(ctx.ctx, node.name, Set((:skipped,)))
+    define!(ctx.ctx, node.status, Set((:skipped,)))
     node
 end
 
-function truncate(node::Jumper, ctx, start, step, stop)
-    define!(ctx, node.name, Set())
+function (ctx::ThunkVisitor)(node::Jumper, ::DefaultStyle)
+    if !haskey(ctx.ctx.state, node.status)
+        define!(ctx.ctx, node.status, Set((:seen,)))
+    end
     node
 end

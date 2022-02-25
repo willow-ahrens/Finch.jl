@@ -3,12 +3,18 @@ struct StepperStyle end
 @kwdef struct Stepper
     body
     seek = (ctx, start) -> error("seek not implemented error")
-    name = gensym()
+    status = gensym()
 end
 
 isliteral(::Stepper) = false
 
-make_style(root::Loop, ctx::LowerJulia, node::Stepper) = StepperStyle()
+function make_style(root::Loop, ctx::LowerJulia, node::Stepper)
+    if node.status in keys(ctx.state)
+        StepperStyle()
+    else
+        ThunkStyle()
+    end
+end
 combine_style(a::DefaultStyle, b::StepperStyle) = StepperStyle()
 combine_style(a::AccessStyle, b::StepperStyle) = AccessStyle()
 combine_style(a::StepperStyle, b::StepperStyle) = StepperStyle()
@@ -78,10 +84,10 @@ end
 
 #=
 function (ctx::AccessSpikeTailVisitor)(node::Stepper, ::DefaultStyle)
-    if false in get(ctx.ctx.state, node.name, Set(true))
+    if false in get(ctx.ctx.state, node.status, Set(true))
         push!(ctx.ctx.preamble, node.seek(ctx, ctx.start))
     end
-    define!(ctx.ctx, node.name, Set(true))
+    define!(ctx.ctx, node.status, Set(true))
     body = ThunkVisitor(ctx.ctx)(node.body)
     body = PhaseBodyVisitor(ctx.ctx, ctx.idx, ctx.val, ctx.val)(body)
     ctx(body)
@@ -93,24 +99,26 @@ end
     ctx
 end
 function (ctx::StepperVisitor)(node::Stepper, ::DefaultStyle)
-    if :skipped in get(ctx.ctx.state, node.name, Set())
+    if :skipped in get(ctx.ctx.state, node.status, Set())
         push!(ctx.ctx.preamble, node.seek(ctx, ctx.start))
     end
-    define!(ctx.ctx, node.name, Set((:seen,)))
+    define!(ctx.ctx, node.status, Set((:seen,)))
     node.body
 end
 
 function (ctx::SkipVisitor)(node::Stepper, ::DefaultStyle)
-    define!(ctx.ctx, node.name, Set((:skipped,)))
+    define!(ctx.ctx, node.status, Set((:skipped,)))
+    node
+end
+
+function (ctx::ThunkVisitor)(node::Stepper, ::DefaultStyle)
+    if !haskey(ctx.ctx.state, node.status)
+        define!(ctx.ctx, node.status, Set((:seen,)))
+    end
     node
 end
 
 truncate(node, ctx, start, step, stop) = node
-function truncate(node::Stepper, ctx, start, step, stop)
-    define!(ctx, node.name, Set())
-    node
-end
-
 function truncate(node::Spike, ctx, start, step, stop)
     return Cases([
         :($(step) < $(stop)) => Run(node.body),
