@@ -116,6 +116,11 @@ function fusesum(n, p, q)
     println()
 end
 
+assume(x::Bool) = Core.Intrinsics.llvmcall(("declare void @llvm.assume(i1)",
+"%cond = icmp eq i8 %0, 1
+ call void @llvm.assume(i1 %cond)
+ ret void"), Nothing, Tuple{Bool},  x)
+
 foo(ex) = (@inbounds begin
     C_lvl = ex.body.lhs.tns.tns.lvl
     C_lvl_val_q = length(ex.body.lhs.tns.tns.lvl.val)
@@ -171,7 +176,7 @@ foo(ex) = (@inbounds begin
             if i_step_2 > i_step
                 i_step_2 = i_step
                 break
-            elseif i_step_2 == A_lvl_i && i_step_2 == B_lvl_i
+            elseif A_lvl_i == B_lvl_i
                 A_lvl_2_val = A_lvl_2.val[A_lvl_p]
                 B_lvl_2_val = B_lvl_2.val[B_lvl_p]
                 i = i_step_2
@@ -180,7 +185,7 @@ foo(ex) = (@inbounds begin
                 B_lvl_p += 1
             elseif i_step_2 == B_lvl_i
                 B_lvl_p += 1
-            elseif i_step_2 == A_lvl_i
+            else
                 A_lvl_p += 1
             end
             i_start_2 = i_step_2 + 1
@@ -249,4 +254,4 @@ end
 #mul_vec(100_000, 0.001, 0.1)
 #fusesum(100_000, 0.001, 0.1)
 dot(100_000, 0.1, 0.1)
-dot(100_000, 0.001, 0.1)
+#dot(100_000, 0.001, 0.1)

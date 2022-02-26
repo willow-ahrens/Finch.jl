@@ -3,6 +3,7 @@
 end
 
 @kwdef struct Phase
+    head = nothing
     body
     stride = nothing
     guard = nothing
