@@ -37,7 +37,7 @@ function (ctx::LowerJulia)(root::Loop, ::JumperStyle)
         return contain(ctx) do ctx_2
             body_2 = ThunkVisitor(ctx_2)(body)
             step = ctx_2(start(ctx.dims[i]))
-            body_3 = (PhaseBodyVisitor(ctx_3, i, i0, step))(body_2)
+            body_3 = (PhaseBodyVisitor(ctx_2, i, i0, step))(body_2)
             (ctx_2)(body_3)
         end
     else
