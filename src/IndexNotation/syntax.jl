@@ -14,6 +14,10 @@ function capture_index(ex; ctx...)
         cons = capture_index(ex.args[1]; ctx...)
         prod = capture_index(ex.args[2]; ctx..., results=Set())
         return :($with($cons, $prod))
+    elseif ex isa Expr && ex.head == :block
+        args = filter(arg->!(arg isa LineNumberNode), ex.args)
+        bodies = map(arg->capture_index(arg; ctx...), args)
+        return :($multi($(bodies...)))
     elseif ex isa Expr && ex.head == :(=) && length(ex.args) == 2
         lhs = capture_index(ex.args[1]; ctx..., mode=Write())
         rhs = capture_index(ex.args[2]; ctx...)
@@ -68,6 +72,10 @@ function capture_index_instance(ex; ctx...)
         cons = capture_index_instance(ex.args[1]; ctx...)
         prod = capture_index_instance(ex.args[2]; ctx..., results = Set())
         return :($with_instance($cons, $prod))
+    elseif ex isa Expr && ex.head == :block
+        args = filter(arg->!(arg isa LineNumberNode), ex.args)
+        bodies = map(arg->capture_index_instance(arg; ctx...), args)
+        return :($multi_instance($(bodies...)))
     elseif ex isa Expr && ex.head == :(=) && length(ex.args) == 2
         lhs = capture_index_instance(ex.args[1]; ctx..., mode=Write())
         rhs = capture_index_instance(ex.args[2]; ctx...)

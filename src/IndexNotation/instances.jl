@@ -27,6 +27,13 @@ Base.:(==)(a::WithInstance, b::WithInstance) = a.cons == b.cons && a.prod == b.p
 
 @inline with_instance(cons, prod) = WithInstance(cons, prod)
 
+struct MultiInstance{Bodies} <: IndexStatementInstance
+    bodies::Bodies
+end
+Base.:(==)(a::MultiInstance, b::MultiInstance) = all(a.bodies .== b.bodies)
+
+multi_instance(bodies...) = MultiInstance(bodies)
+
 struct LoopInstance{Idxs<:Tuple, Body} <: IndexStatementInstance
 	idxs::Idxs
 	body::Body

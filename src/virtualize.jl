@@ -14,6 +14,12 @@ virtualize(ex, ::Type{IndexNotation.LiteralInstance{val}}, ctx) where {val} = Li
 virtualize(ex, ::Type{IndexNotation.PassInstance{Tns}}, ctx) where {Tns} = Pass(virtualize(:($ex.tns), Tns, ctx))
 virtualize(ex, ::Type{IndexNotation.NameInstance{name}}, ctx) where {name} = Name(name)
 virtualize(ex, ::Type{IndexNotation.WithInstance{Cons, Prod}}, ctx) where {Cons, Prod} = With(virtualize(:($ex.cons), Cons, ctx), virtualize(:($ex.prod), Prod, ctx))
+function virtualize(ex, ::Type{IndexNotation.MultiInstance{Bodies}}, ctx) where {Bodies}
+    bodies = map(enumerate(Bodies.parameters)) do (n, Body)
+        virtualize(:($ex.bodies[$n]), Body, ctx)
+    end
+    Multi(bodies)
+end
 function virtualize(ex, ::Type{IndexNotation.LoopInstance{Idxs, Body}}, ctx) where {Idxs, Body}
     idxs = map(enumerate(Idxs.parameters)) do (n, Idx)
         virtualize(:($ex.idxs[$n]), Idx, ctx)

@@ -7,6 +7,7 @@ module IndexNotation
     export Workspace
     export Pass, pass
     export With, with
+    export Multi, multi
     export Loop, loop
     export Assign, assign
     export Call, call

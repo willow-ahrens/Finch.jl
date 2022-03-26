@@ -138,6 +138,29 @@ end
 
 Finch.getresults(stmt::With) = Finch.getresults(stmt.cons)
 
+struct Multi <: IndexStatement
+    bodies
+end
+Base.:(==)(a::Multi, b::Multi) = all(a.bodies .== b.bodies)
+
+multi(args...) = multi!(vcat(args...))
+multi!(args) = Multi(args)
+
+SyntaxInterface.istree(::Multi) = true
+SyntaxInterface.operation(stmt::Multi) = multi
+SyntaxInterface.arguments(stmt::Multi) = stmt.bodies
+SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(multi), args) = multi!(args)
+
+function show_statement(io, mime, stmt::Multi, level)
+    print(io, tab^level * "begin\n")
+    for body in stmt.bodies
+        show_statement(io, mime, body, level + 1)
+    end
+    print(io, tab^level * "end\n")
+end
+
+Finch.getresults(stmt::Multi) = mapreduce(Finch.getresults, vcat, stmt.bodies)
+
 struct Loop <: IndexStatement
 	idxs::Vector{Any}
 	body::Any
@@ -167,6 +190,37 @@ function show_statement(io, mime, stmt::Loop, level)
 end
 
 Finch.getresults(stmt::Loop) = Finch.getresults(stmt.body)
+
+struct Chunk <: IndexStatement
+	idx::Any
+    ext::Any
+	body::Any
+end
+Base.:(==)(a::Chunk, b::Chunk) = a.idxs == b.idxs && a.body == b.body
+
+chunk(args...) = chunk!(vcat(args...))
+chunk!(args) = Chunk(args, pop!(args))
+
+SyntaxInterface.istree(::Chunk) = true
+SyntaxInterface.operation(stmt::Chunk) = chunk
+SyntaxInterface.arguments(stmt::Chunk) = Any[stmt.idxs; stmt.body]
+SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(chunk), args) = chunk!(args)
+
+function show_statement(io, mime, stmt::Chunk, level)
+    print(io, tab^level * "@∀ ")
+    if !isempty(stmt.idxs)
+        show_expression(io, mime, stmt.idxs[1])
+        for idx in stmt.idxs[2:end]
+            print(io," ")
+            show_expression(io, mime, idx)
+        end
+    end
+    print(io," (\n")
+    show_statement(io, mime, stmt.body, level + 1)
+    print(io, tab^level * ")\n")
+end
+
+Finch.getresults(stmt::Chunk) = Finch.getresults(stmt.body)
 
 struct Assign{Lhs} <: IndexStatement
 	lhs::Lhs

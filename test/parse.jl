@@ -8,6 +8,9 @@ using Finch.IndexNotation: call_instance, access_instance, value_instance, name_
     @test Finch.virtualize(:ex, typeof(@index_program_instance(:f(:B[i::walk, k] * :C[k, j]^3, 42))), Finch.LowerJulia()) ==
     call(:f, call(*, access(:B, Read(), Walk(:i), Name(:k)), call(^, access(:C, Read(), Name(:k), Name(:j)), 3)), 42) 
 
+    @test Finch.virtualize(:ex, typeof(@index_program_instance((:A[] = 1; :B[] = 2))), Finch.LowerJulia()) ==
+    multi(assign(access(:A, Read()), 1), assign(access(:B, Read()), 2))
+
     #call(:f, call(*, access_instance(:B, Read(), Name(:i), Name(:k)), call(^, access_instance(:C, Read(), Name(:k), Name(:j)), 3)), 42)
     #call(:f, call(*, access(:B, Read(), Name(:i), Name(:k)), call(^, access(:C, Read(), Name(:k), Name(:j)), 3)), 42)
 
