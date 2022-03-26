@@ -267,6 +267,19 @@ function (ctx::LowerJulia)(root::With, ::DefaultStyle)
     end
 end
 
+function (ctx::LowerJulia)(root::Multi, ::DefaultStyle)
+    thunk = Expr(:block)
+    for body in root.bodies
+        println(body)
+        push!(thunk.args, quote
+            $(contain(ctx) do ctx_2
+                (ctx_2)(body)
+            end)
+        end)
+    end
+    thunk
+end
+
 function initialize_program!(root, ctx)
     contain(ctx) do ctx_2
         thunk = Expr(:block)
