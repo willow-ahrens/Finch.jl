@@ -4,12 +4,7 @@ struct UnknownStyle end
 make_style(root, ctx) = make_style(root, ctx, root)
 function make_style(root, ctx, node)
     if istree(node)
-        #m = map(arg->make_style(root, ctx, arg), arguments(node))
-        #r = reduce(result_style, m)
-        #s = resolve_style(root, ctx, node, r)
-        @info "hmm" node
         return resolve_style(root, ctx, node, mapreduce(arg->make_style(root, ctx, arg), result_style, arguments(node); init=DefaultStyle()))
-        #return s
     end
     return DefaultStyle()
 end
