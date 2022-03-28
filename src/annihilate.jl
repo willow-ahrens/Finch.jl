@@ -1,4 +1,4 @@
-annihilate_index(ctx) = @slots a b c d e i j f g Rewrite(Fixpoint(Prewalk(Chain([
+annihilate_index(ctx) = @slots a b c d i j f g Rewrite(Fixpoint(Prewalk(Chain([
     (@rule @i(f(a...)) => if isliteral(f) && all(isliteral, a) Literal(getvalue(f)(getvalue.(a)...)) end),
     (@rule @i(+(a..., +(b...), c...)) => @i +(a..., b..., c...)),
     (@rule @i(+(a...)) => if count(isliteral, a) >= 2 @i +($(filter(!isliteral, a)...), $(Literal(+(getvalue.(filter(isliteral, a))...)))) end),
@@ -19,9 +19,9 @@ annihilate_index(ctx) = @slots a b c d e i j f g Rewrite(Fixpoint(Prewalk(Chain(
     (@rule @i(a[i...] = 0) => pass(a)), #TODO this is only valid when the default of A is 0
     (@rule @i(a[i...] += 0) => pass(a)),
     (@rule @i(a[i...] *= 1) => pass(a)),
-    (@rule @i($a = 0) => pass(a)), #TODO this is only valid when the default of A is 0
-    (@rule @i($a += 0) => pass(a)),
-    (@rule @i($a *= 1) => pass(a)),
+    #(@rule @i($a = 0) => pass(a)), #TODO this is only valid when the default of A is 0
+    #(@rule @i($a += 0) => pass(a)),
+    #(@rule @i($a *= 1) => pass(a)),
 
     #(@rule @i((~a)[~~i] *= ~b) => if isimplicit(~a) && getdefault(~a) == 0 pass(~a) end),
     #(@rule @i((~a)[~~i] = ~b) => if isimplicit(~a) && getdefault(~a) == ~b pass(~a) end),
@@ -29,8 +29,30 @@ annihilate_index(ctx) = @slots a b c d e i j f g Rewrite(Fixpoint(Prewalk(Chain(
 
     (@rule @i(@loop i... @pass(a...)) => pass(a...)),
     (@rule @i(@pass(a...) where $b) => pass(a...)),
+    (@rule @i(a where @pass()) => a),
     (@rule @i(@multi(a..., @pass(b...), @pass(c...), d...)) => @i(@multi(a..., @pass(b..., c...), d...))),
     (@rule @i((@pass(a...);)) => pass(a...)),
+    (@rule @i(a where b) => begin
+        @slots c d i j f g begin
+            props = Dict()
+            b_2 = Postwalk(Chain([
+                (@rule @i($c[i...] = d) => if isliteral(d)
+                    props[getname(c)] = d
+                    pass()
+                end),
+                (@rule @i(@pass(c...)) => begin
+                    for d in c
+                        props[getname(d)] = default(d) #TODO is this okay?
+                    end
+                    pass()
+                end),
+            ]))(b)
+            if b_2 != nothing
+                a_2 = Rewrite(Postwalk(@rule @i($c[i...]) => get(props, getname(c), nothing)))(a)
+                @i a_2 where b_2
+            end
+        end
+    end),
     #(@rule @i(a where @pass(b...)) => a),#can't do this bc produced tensors won't get initialized
 ]))))
 
