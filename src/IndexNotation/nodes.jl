@@ -67,21 +67,27 @@ Finch.getvalue(ex::Literal) = ex.val
 
 
 struct Pass <: IndexStatement
-	tns::Any
+	tnss::Vector{Any}
 end
-Base.:(==)(a::Pass, b::Pass) = a.tns == b.tns
+Base.:(==)(a::Pass, b::Pass) = Set(a.tnss) == Set(b.tns)
 
 pass(args...) = pass!(vcat(args...))
-pass!(args) = Pass(args[1])
+pass!(args) = Pass(args)
 
-SyntaxInterface.istree(::Pass) = true
+SyntaxInterface.istree(stmt::Pass) = true
 SyntaxInterface.operation(stmt::Pass) = pass
-SyntaxInterface.arguments(stmt::Pass) = Any[stmt.tns]
+SyntaxInterface.arguments(stmt::Pass) = stmt.tnss
 SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(pass), args) = pass!(args)
 
 function show_statement(io, mime, stmt::Pass, level)
     print(io, tab^level * "(")
-    show_expression(io, mime, stmt.tns)
+    for tns in arguments(stmt)[1:end-1]
+        show_expression(io, mime, tns)
+        print(io, ", ")
+    end
+    if length(arguments(stmt)) >= 1
+        show_expression(io, mime, last(arguments(stmt)))
+    end
     print(io, ")")
 end
 

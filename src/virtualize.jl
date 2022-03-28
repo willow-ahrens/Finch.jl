@@ -11,7 +11,12 @@ SyntaxInterface.istree(::Virtual) = false
 isliteral(::Virtual) = false
 
 virtualize(ex, ::Type{IndexNotation.LiteralInstance{val}}, ctx) where {val} = Literal(val)
-virtualize(ex, ::Type{IndexNotation.PassInstance{Tns}}, ctx) where {Tns} = Pass(virtualize(:($ex.tns), Tns, ctx))
+function virtualize(ex, ::Type{IndexNotation.PassInstance{Tnss}}, ctx) where {Tnss}
+    tnss = map(enumerate(Tnss.parameters)) do (n, Tns)
+        virtualize(:($ex.tnss[$n]), Tns, ctx)
+    end
+    Pass(tnss)
+end
 virtualize(ex, ::Type{IndexNotation.NameInstance{name}}, ctx) where {name} = Name(name)
 virtualize(ex, ::Type{IndexNotation.WithInstance{Cons, Prod}}, ctx) where {Cons, Prod} = With(virtualize(:($ex.cons), Cons, ctx), virtualize(:($ex.prod), Prod, ctx))
 function virtualize(ex, ::Type{IndexNotation.MultiInstance{Bodies}}, ctx) where {Bodies}

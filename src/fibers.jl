@@ -176,7 +176,7 @@ end
 getsites(arr::VirtualFiber) = 1:arity(arr) #TODO maybe check how deep the name is in the env first
 
 function (ctx::Finch.ChunkifyVisitor)(node::Access{<:VirtualFiber}, ::DefaultStyle) where {Tv, Ti}
-    if getname(ctx.idx) == getname(node.idxs[1])
+    if !isempty(node.idxs) && getname(ctx.idx) == getname(node.idxs[1])
         #TODO I think we probably shouldn't wrap this in an Access, but life is complicated and I don't know what the right choice is right now.
         Access(unfurl(node.tns, ctx.ctx, node.mode, node.idxs...), node.mode, node.idxs)
     else

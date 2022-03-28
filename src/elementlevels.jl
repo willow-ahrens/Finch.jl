@@ -23,17 +23,20 @@ struct VirtualElementLevel
     Tv
     D
     val_q
+    val
 end
 
 (ctx::Finch.LowerJulia)(lvl::VirtualElementLevel) = lvl.ex
 function virtualize(ex, ::Type{ElementLevel{D, Tv}}, ctx, tag) where {D, Tv}
     sym = ctx.freshen(tag)
     val_q = ctx.freshen(sym, :_val_q)
+    val = ctx.freshen(sym, :_val)
     push!(ctx.preamble, quote
         $sym = $ex
         $val_q = length($ex.val)
+        $val = $D
     end)
-    VirtualElementLevel(sym, Tv, D, val_q)
+    VirtualElementLevel(sym, Tv, D, val_q, val)
 end
 
 function getsites(fbr::VirtualFiber{VirtualElementLevel})
@@ -81,45 +84,45 @@ end
 
 function refurl(fbr::VirtualFiber{VirtualElementLevel}, ctx, ::Read)
     lvl = fbr.lvl
-    tag = lvl.ex
-    val = ctx.freshen(tag, :_val)
 
     Thunk(
         preamble = quote
-            $val = $(lvl.ex).val[$(ctx(envposition(fbr.env)))]
+            $(lvl.val) = $(lvl.ex).val[$(ctx(envposition(fbr.env)))]
         end,
-        body = Virtual{lvl.Tv}(val)
+        body = Access(fbr, Read(), []),
     )
 end
 
 function refurl(fbr::VirtualFiber{VirtualElementLevel}, ctx, ::Write)
     lvl = fbr.lvl
-    tag = lvl.ex
-    val = ctx.freshen(tag, :_val)
 
     Thunk(
         preamble = quote
-            $val = nothing
+            $(lvl.val) = $(lvl.D)
         end,
-        body = Virtual{lvl.Tv}(val),
+        body = Access(fbr, Write(), []),
         epilogue = quote
-            $(lvl.ex).val[$(ctx(envposition(fbr.env)))] = $val
+            $(lvl.ex).val[$(ctx(envposition(fbr.env)))] = $(lvl.val)
         end,
     )
 end
 
 function refurl(fbr::VirtualFiber{VirtualElementLevel}, ctx, ::Update)
     lvl = fbr.lvl
-    tag = lvl.ex
-    val = ctx.freshen(tag, :_val)
 
     Thunk(
         preamble = quote
-            $val = $(lvl.ex).val[$(ctx(envposition(fbr.env)))]
+            $(lvl.val) = $(lvl.ex).val[$(ctx(envposition(fbr.env)))]
         end,
-        body = Virtual{lvl.Tv}(val),
+        body = Access(fbr, Update(), []),
         epilogue = quote
-            $(lvl.ex).val[$(ctx(envposition(fbr.env)))] = $val
+            $(lvl.ex).val[$(ctx(envposition(fbr.env)))] = $(lvl.val)
         end,
     )
+end
+
+function (ctx::Finch.LowerJulia)(node::Access{<:VirtualFiber{VirtualElementLevel}}, ::DefaultStyle) where {Tv, Ti}
+    @assert isempty(node.idxs)
+    tns = node.tns
+    node.tns.lvl.val
 end

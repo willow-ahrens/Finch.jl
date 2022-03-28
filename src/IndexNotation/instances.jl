@@ -8,12 +8,12 @@ end
 
 @inline literal_instance(tns) = LiteralInstance{tns}()
 
-struct PassInstance{Tns} <: IndexStatementInstance
-    tns::Tns
+struct PassInstance{Tnss<:Tuple} <: IndexStatementInstance
+    tnss::Tnss
 end
-Base.:(==)(a::PassInstance, b::PassInstance) = a.tns == b.tns
+Base.:(==)(a::PassInstance, b::PassInstance) = Set([a.tnss...]) == Set([b.tnss...])
 
-@inline pass_instance(tns) = PassInstance(tns)
+@inline pass_instance(tnss...) = PassInstance(tnss)
 
 struct NameInstance{name} <: IndexTerminalInstance end
 
