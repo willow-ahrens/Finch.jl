@@ -115,7 +115,7 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSimpleSparseVector{Tv,
                     push!($(vec.ex).val, zero($Tv))
                     $my_p += 1
                 end,
-                body = Access(Scalar(Virtual{Tv}(:($(vec.ex).val[$my_p]))), node.mode, []),
+                body = Virtual{Tv}(:($(vec.ex).val[$my_p])),
                 epilogue = quote
                     $(vec.ex).idx[$my_p] = $(ctx(idx))
                 end

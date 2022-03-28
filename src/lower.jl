@@ -26,6 +26,7 @@ function (spc::Freshen)(tags...)
 end
 
 struct Scalar
+    name
     val
 end
 
