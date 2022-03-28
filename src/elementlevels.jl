@@ -79,7 +79,7 @@ function assemble!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode::Write)
     return nothing
 end
 
-function unfurl(fbr::VirtualFiber{VirtualElementLevel}, ctx, ::Read)
+function refurl(fbr::VirtualFiber{VirtualElementLevel}, ctx, ::Read)
     lvl = fbr.lvl
     tag = lvl.ex
     val = ctx.freshen(tag, :_val)
@@ -92,7 +92,7 @@ function unfurl(fbr::VirtualFiber{VirtualElementLevel}, ctx, ::Read)
     )
 end
 
-function unfurl(fbr::VirtualFiber{VirtualElementLevel}, ctx, ::Write)
+function refurl(fbr::VirtualFiber{VirtualElementLevel}, ctx, ::Write)
     lvl = fbr.lvl
     tag = lvl.ex
     val = ctx.freshen(tag, :_val)
@@ -108,7 +108,7 @@ function unfurl(fbr::VirtualFiber{VirtualElementLevel}, ctx, ::Write)
     )
 end
 
-function unfurl(fbr::VirtualFiber{VirtualElementLevel}, ctx, ::Update)
+function refurl(fbr::VirtualFiber{VirtualElementLevel}, ctx, ::Update)
     lvl = fbr.lvl
     tag = lvl.ex
     val = ctx.freshen(tag, :_val)

@@ -23,12 +23,12 @@ end
 
 (ctx::Finch.LowerJulia)(tns::VirtualSimpleRunLength) = tns.ex
 
-function Finch.initialize!(arr::VirtualSimpleRunLength{Tv}, ctx::Finch.LowerJulia, mode) where {Tv}
+function Finch.initialize!(arr::VirtualSimpleRunLength{Tv}, ctx::Finch.LowerJulia, mode, idxs...) where {Tv}
     push!(ctx.preamble, quote 
         $(arr.ex).idx = [$(arr.ex).idx[end]]
         $(arr.ex).val = [$(zero(Tv))]
     end)
-    arr
+    access(arr, mode, idxs...)
 end 
 
 function Finch.getdims(arr::VirtualSimpleRunLength{Tv, Ti}, ctx::Finch.LowerJulia, mode) where {Tv, Ti}

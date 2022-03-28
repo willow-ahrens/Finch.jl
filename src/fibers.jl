@@ -123,12 +123,12 @@ Initialize the virtual fiber to it's default value in the context `ctx` with
 access mode `mode`. Return `nothing` if the fiber instance is unchanged, or
 the new fiber object otherwise.
 """
-function initialize!(fbr::VirtualFiber, ctx, mode)
+function initialize!(fbr::VirtualFiber, ctx, mode, idxs...)
     if (lvl = initialize_level!(fbr, ctx, mode)) !== nothing
         fbr = VirtualFiber(lvl, fbr.env)
     end
     assemble!(fbr, ctx, mode)
-    return fbr
+    return refurl(fbr, ctx, mode, idxs...)
 end
 
 """
@@ -166,18 +166,8 @@ function finalize_level! end
 
 
 function make_style(root::Loop, ctx::Finch.LowerJulia, node::Access{<:VirtualFiber})
-    if isempty(node.idxs)
-        return AccessStyle()
-    elseif getname(root.idxs[1]) == getname(node.idxs[1])
+    if !isempty(node.idxs) && getname(root.idxs[1]) == getname(node.idxs[1])
         return ChunkStyle()
-    else
-        return DefaultStyle()
-    end
-end
-
-function make_style(root, ctx::Finch.LowerJulia, node::Access{<:VirtualFiber})
-    if isempty(node.idxs)
-        return AccessStyle()
     else
         return DefaultStyle()
     end
@@ -194,10 +184,4 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{<:VirtualFiber}, ::DefaultSty
     end
 end
 
-function (ctx::Finch.AccessVisitor)(node::Access{<:VirtualFiber}, ::DefaultStyle) where {Tv, Ti}
-    if isempty(node.idxs)
-        unfurl(node.tns, ctx.ctx, node.mode)
-    else
-        node
-    end
-end
+refurl(tns, ctx, mode, idxs...) = access(tns, mode, idxs...)

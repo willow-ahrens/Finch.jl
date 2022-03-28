@@ -106,9 +106,7 @@
 
     @index @loop i A[i] += B[i]
 
-    println("hello")
     println(A)
-
     println(FiberArray(A))
     @test FiberArray(A) == FiberArray(B)
 

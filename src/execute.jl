@@ -58,26 +58,26 @@ end
 """
     Initialize(ctx)
 
-A transformation to initialize output tensors that have just entered into contain.
+A transformation to initialize output tensors that have just entered into scope.
 
 See also: [`initialize!`](@ref)
 """
 struct Initialize{Ctx} <: AbstractTransformVisitor
     ctx::Ctx
 end
-initialize!(tns, ctx, mode) = tns
+initialize!(tns, ctx, mode, idxs...) = access(tns, mode, idxs...)
 
 (ctx::Initialize)(node::With, ::DefaultStyle) =
     With(ctx(node.cons), node.prod)
 
 function postvisit!(acc::Access{<:Any, <:Union{Write, Update}}, ctx::Initialize, args)
-    Access(initialize!(acc.tns, ctx.ctx, acc.mode), acc.mode, acc.idxs)
+    initialize!(acc.tns, ctx.ctx, acc.mode, acc.idxs...)
 end
 
 """
     Finalize(ctx)
 
-A transformation to finalize output tensors before they leave contain and are
+A transformation to finalize output tensors before they leave scope and are
 returned to the caller.
 
 See also: [`finalize!`](@ref)

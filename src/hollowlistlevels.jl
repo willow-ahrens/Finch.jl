@@ -145,7 +145,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
                                     :($step == $my_i) => Thunk(
                                         body = Spike(
                                             body = default(fbr),
-                                            tail = access(VirtualFiber(lvl.lvl, PositionEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_i), fbr.env)), mode, idxs...),
+                                            tail = refurl(VirtualFiber(lvl.lvl, PositionEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_i), fbr.env)), ctx, mode, idxs...),
                                         ),
                                         epilogue = quote
                                             $my_p += 1
@@ -205,7 +205,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
                                 :($step == $my_i) => Thunk(
                                     body = Spike(
                                         body = default(fbr),
-                                        tail = access(VirtualFiber(lvl.lvl, PositionEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_i), fbr.env)), mode, idxs...),
+                                        tail = refurl(VirtualFiber(lvl.lvl, PositionEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_i), fbr.env)), ctx, mode, idxs...),
                                     ),
                                     epilogue = quote
                                         $my_p += 1
@@ -226,7 +226,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
                                                     :($step == $my_i) => Thunk(
                                                         body = Spike(
                                                             body = default(fbr),
-                                                            tail = access(VirtualFiber(lvl.lvl, PositionEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_i), fbr.env)), mode, idxs...),
+                                                            tail = refurl(VirtualFiber(lvl.lvl, PositionEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_i), fbr.env)), ctx, mode, idxs...),
                                                         ),
                                                         epilogue = quote
                                                             $my_p += 1
@@ -279,7 +279,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Union{Writ
                         quote end
                     end)
                 end,
-                body = access(VirtualFiber(lvl_2, PositionEnvironment(Virtual{lvl.Ti}(my_p), idx, fbr.env)), mode, idxs...),
+                body = refurl(VirtualFiber(lvl_2, PositionEnvironment(Virtual{lvl.Ti}(my_p), idx, fbr.env)), ctx, mode, idxs...),
                 epilogue = quote
                     $(lvl.idx_q) < $my_p && resize!($(lvl.ex).idx, $(lvl.idx_q) *= 4)
                     $(lvl.ex).idx[$my_p] = $(ctx(idx))

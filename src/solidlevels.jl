@@ -96,7 +96,7 @@ function unfurl(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode::Union{Read, Wri
     p_1 = ctx.freshen(tag, :_p)
     if p == 1
         Leaf(
-            body = (i) -> access(VirtualFiber(lvl.lvl, PositionEnvironment(i, i, fbr.env)), mode, idxs...),
+            body = (i) -> refurl(VirtualFiber(lvl.lvl, PositionEnvironment(i, i, fbr.env)), ctx, mode, idxs...),
         )
     else
         Leaf(
@@ -104,7 +104,7 @@ function unfurl(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode::Union{Read, Wri
                 preamble = quote
                     $p_1 = ($(ctx(p)) - 1) * $(lvl.ex).I + $(ctx(i))
                 end,
-                body =  access(VirtualFiber(lvl.lvl, PositionEnvironment(Virtual{lvl.Ti}(p_1), i, fbr.env)), mode, idxs...),
+                body = refurl(VirtualFiber(lvl.lvl, PositionEnvironment(Virtual{lvl.Ti}(p_1), i, fbr.env)), ctx, mode, idxs...),
             )
         )
     end

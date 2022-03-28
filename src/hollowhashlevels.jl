@@ -210,7 +210,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx:
                                         Thunk(
                                             body = Spike(
                                                 body = default(fbr),
-                                                tail = access(VirtualFiber(lvl.lvl, VirtualPositionEnvironment(Virtual{lvl.Ti}(:(last($(lvl.ex).srt[$my_p])[$R])), Virtual{lvl.Ti}(my_i), fbr.env)), mode, idxs...),
+                                                tail = refurl(VirtualFiber(lvl.lvl, VirtualPositionEnvironment(Virtual{lvl.Ti}(:(last($(lvl.ex).srt[$my_p])[$R])), Virtual{lvl.Ti}(my_i), fbr.env)), ctx, mode, idxs...),
                                             ),
                                             epilogue = quote
                                                 $my_p += 1
@@ -226,7 +226,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx:
                                             end,
                                             body = Spike(
                                                 body = default(fbr),
-                                                tail = access(VirtualFiber(lvl, VirtualPosRangeEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_p_step), Virtual{lvl.Ti}(my_i), fbr.env)), mode, idxs...),
+                                                tail = refurl(VirtualFiber(lvl, VirtualPosRangeEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_p_step), Virtual{lvl.Ti}(my_i), fbr.env)), ctx, mode, idxs...),
                                             ),
                                             epilogue = quote
                                                 $my_p = $my_p_step
@@ -264,14 +264,14 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx:
                     $my_p = get($(lvl.ex).tbl, $my_key, 0)
                 end,
                 body = Cases([
-                    :($my_p != 0) => access(VirtualFiber(lvl.lvl, PositionEnvironment(Virtual{lvl.Tp_2}(my_p), i, fbr.env)), mode, idxs...),
+                    :($my_p != 0) => refurl(VirtualFiber(lvl.lvl, PositionEnvironment(Virtual{lvl.Tp_2}(my_p), i, fbr.env)), ctx, mode, idxs...),
                     true => default(fbr)
                 ])
             )
         )
     else
         Leaf(
-            body = (i) -> access(VirtualFiber(lvl, DeferredEnvironment(i, fbr.env)), mode, idxs...)
+            body = (i) -> refurl(VirtualFiber(lvl, DeferredEnvironment(i, fbr.env)), ctx, mode, idxs...)
         )
     end
 end
@@ -306,13 +306,13 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Union{Writ
                             $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1] += 1
                         end
                     end,
-                    body = access(VirtualFiber(lvl.lvl, PositionEnvironment(Virtual{lvl.Ti}(my_p), idx, fbr.env)), mode, idxs...)
+                    body = refurl(VirtualFiber(lvl.lvl, PositionEnvironment(Virtual{lvl.Ti}(my_p), idx, fbr.env)), ctx, mode, idxs...)
                 )
             )
         )
     else
         Leaf(
-            body = (i) -> access(VirtualFiber(lvl, DeferredEnvironment(i, fbr.env)), mode, idxs...)
+            body = (i) -> refurl(VirtualFiber(lvl, DeferredEnvironment(i, fbr.env)), ctx, mode, idxs...)
         )
     end
 end

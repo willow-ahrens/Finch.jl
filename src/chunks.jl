@@ -14,25 +14,3 @@ function (ctx::LowerJulia)(root::Loop, ::ChunkStyle)
     #TODO add a simplify step here perhaps
     ctx(root)
 end
-
-struct AccessStyle end
-
-combine_style(a::DefaultStyle, b::AccessStyle) = AccessStyle()
-combine_style(a::ThunkStyle, b::AccessStyle) = ThunkStyle()
-combine_style(a::ChunkStyle, b::AccessStyle) = AccessStyle()
-combine_style(a::AccessStyle, b::AccessStyle) = AccessStyle()
-
-struct AccessVisitor <: AbstractTransformVisitor
-    ctx
-end
-
-#TODO may just want to avoid generating empty accesses if you're going to just lower them eagerly
-function (ctx::LowerJulia)(root::Loop, ::AccessStyle)
-    root = (AccessVisitor(ctx))(root)
-    #TODO add a simplify step here perhaps
-    ctx(root)
-end
-
-function (ctx::LowerJulia)(root::Pass, ::AccessStyle)
-    quote end
-end

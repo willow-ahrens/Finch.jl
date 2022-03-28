@@ -196,7 +196,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Read, idx::
                                         Thunk(
                                             body = Spike(
                                                 body = default(fbr),
-                                                tail = access(VirtualFiber(lvl.lvl, VirtualPositionEnvironment(Virtual{lvl.Tp_2}(:($my_p)), Virtual{lvl.Ti}(my_i), fbr.env)), mode, idxs...),
+                                                tail = refurl(VirtualFiber(lvl.lvl, VirtualPositionEnvironment(Virtual{lvl.Tp_2}(:($my_p)), Virtual{lvl.Ti}(my_i), fbr.env)), ctx, mode, idxs...),
                                             ),
                                             epilogue = quote
                                                 $my_p += 1
@@ -212,7 +212,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Read, idx::
                                             end,
                                             body = Spike(
                                                 body = default(fbr),
-                                                tail = access(VirtualFiber(lvl, VirtualPosRangeEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_p_step), Virtual{lvl.Ti}(my_i), fbr.env)), mode, idxs...),
+                                                tail = refurl(VirtualFiber(lvl, VirtualPosRangeEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_p_step), Virtual{lvl.Ti}(my_i), fbr.env)), ctx, mode, idxs...),
                                             ),
                                             epilogue = quote
                                                 $my_p = $my_p_step
@@ -256,7 +256,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Union{Write
                             quote end
                         end)
                     end,
-                    body = access(VirtualFiber(lvl.lvl, PositionEnvironment(Virtual{lvl.Ti}(my_p), idx, fbr.env)), mode, idxs...),
+                    body = refurl(VirtualFiber(lvl.lvl, PositionEnvironment(Virtual{lvl.Ti}(my_p), idx, fbr.env)), ctx, mode, idxs...),
                     epilogue = begin
                         resize_body = quote end
                         write_body = quote end
@@ -288,7 +288,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Union{Write
         )
     else
         Leaf(
-            body = (i) -> access(VirtualFiber(lvl, DeferredEnvironment(i, fbr.env)), mode, idxs...)
+            body = (i) -> refurl(VirtualFiber(lvl, DeferredEnvironment(i, fbr.env)), ctx, mode, idxs...)
         )
     end
 end

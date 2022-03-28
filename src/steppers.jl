@@ -16,7 +16,6 @@ function make_style(root::Loop, ctx::LowerJulia, node::Stepper)
     end
 end
 combine_style(a::DefaultStyle, b::StepperStyle) = StepperStyle()
-combine_style(a::AccessStyle, b::StepperStyle) = AccessStyle()
 combine_style(a::StepperStyle, b::StepperStyle) = StepperStyle()
 combine_style(a::StepperStyle, b::RunStyle) = RunStyle()
 combine_style(a::StepperStyle, b::AcceptRunStyle) = StepperStyle()

@@ -12,7 +12,6 @@ struct RunStyle end
 
 make_style(root::Loop, ctx::LowerJulia, node::Run) = RunStyle()
 combine_style(a::DefaultStyle, b::RunStyle) = RunStyle()
-combine_style(a::AccessStyle, b::RunStyle) = RunStyle()
 combine_style(a::ThunkStyle, b::RunStyle) = ThunkStyle()
 combine_style(a::RunStyle, b::RunStyle) = RunStyle()
 

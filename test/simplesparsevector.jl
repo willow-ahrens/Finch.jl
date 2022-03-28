@@ -28,12 +28,12 @@ end
 
 (ctx::Finch.LowerJulia)(tns::VirtualSimpleSparseVector) = tns.ex
 
-function Finch.initialize!(arr::VirtualSimpleSparseVector{D, Tv}, ctx::Finch.LowerJulia) where {D, Tv}
+function Finch.initialize!(arr::VirtualSimpleSparseVector{D, Tv}, ctx::Finch.LowerJulia, mode, idxs...) where {D, Tv}
     push!(ctx.preamble, quote
         $(arr.ex).idx = [$(arr.ex).idx[end]]
         $(arr.ex).val = $Tv[]
     end)
-    arr
+    access(arr, mode, idxs...)
 end 
 
 function Finch.getdims(arr::VirtualSimpleSparseVector{Tv, Ti}, ctx::Finch.LowerJulia, mode) where {Tv, Ti}

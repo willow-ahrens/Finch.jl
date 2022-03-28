@@ -188,6 +188,7 @@ struct ThunkStyle end
     epilogue = quote end
     binds = ()
 end
+isliteral(::Thunk) = false
 
 lower_style(::Thunk, ::LowerJulia) = ThunkStyle()
 
