@@ -19,10 +19,10 @@ function tri(mtx)
     C = Finch.Fiber(
         Element{0.0, Float64}(zeros(1)))
 
-    ex = Finch.@index_program_instance @loop i j k C[] += A[i, k] * A2[i, j] * A3[j, k]
-    display(Finch.execute_code_lowered(:ex, typeof(ex)))
-    println()
-    foo(ex) = @inbounds begin
+    #ex = Finch.@index_program_instance @loop i j k C[] += A[i, k] * A2[i, j] * A3[j, k]
+    #display(Finch.execute_code_lowered(:ex, typeof(ex)))
+    #println()
+    foo(ex) = begin
         C_lvl = ex.body.lhs.tns.tns.lvl
         C_lvl_val_q = length(ex.body.lhs.tns.tns.lvl.val)
         C_lvl_val = 0.0
@@ -112,7 +112,7 @@ function tri(mtx)
                         while k_start_2 <= k_step
                             A_lvl_2_i = A_lvl_2.idx[A_lvl_2_p]
                             A3_lvl_2_i = A3_lvl_2.idx[A3_lvl_2_p]
-                            k_step_2 = min(A_lvl_2_i, A3_lvl_2_i, k_step)
+                            k_step_2 = min(A_lvl_2_i, A3_lvl_2_i)
                             if k_step_2 == A_lvl_2_i && k_step_2 == A3_lvl_2_i
                                 A_lvl_3_val = A_lvl_3.val[A_lvl_2_p]
                                 A3_lvl_3_val = A3_lvl_3.val[A3_lvl_2_p]
@@ -121,27 +121,12 @@ function tri(mtx)
                                 A_lvl_2_p += 1
                                 A3_lvl_2_p += 1
                             elseif k_step_2 == A3_lvl_2_i
-                                A3_lvl_3_val = A3_lvl_3.val[A3_lvl_2_p]
                                 A3_lvl_2_p += 1
                             elseif k_step_2 == A_lvl_2_i
-                                A_lvl_3_val = A_lvl_3.val[A_lvl_2_p]
                                 A_lvl_2_p += 1
-                            else
                             end
                             k_start_2 = k_step_2 + 1
                         end
-                        k_start = k_step + 1
-                    end
-                    k_step = min(A_lvl_2_i1, A_lvl_2_I)
-                    if k_start <= k_step
-                        k_start = k_step + 1
-                    end
-                    k_step = min(A3_lvl_2_i1, A_lvl_2_I)
-                    if k_start <= k_step
-                        k_start = k_step + 1
-                    end
-                    k_step = min(A_lvl_2_I)
-                    if k_start <= k_step
                         k_start = k_step + 1
                     end
                     A2_lvl_2_p += 1
@@ -154,11 +139,12 @@ function tri(mtx)
             j_start = j_step + 1
         end
         C_lvl.val[1] = C_lvl_val
-        (C = Fiber(C_lvl, RootEnvironment()),)
+        (C = Finch.Fiber(C_lvl, Finch.RootEnvironment()),)
     end 
     #@descend foo(ex)
     #exit()
     #=
+    #./taco "a += B(i, k) * C(i, j) * D(j, k)" -f=B:ds -i=B:./web-BerkStan.mtx -f=C:ds -i=C:./web-BerkStan.mtx -f=D:ds -i=D:./web-BerkStan.mtx -time=10 -o=a:foo.ttx
     A = Finch.Fiber(
         Solid(m,
         Solid(n,
@@ -171,9 +157,13 @@ function tri(mtx)
     display(Finch.execute_code_lowered(:ex, typeof(ex)))
     println()
     exit()
-    ex = Finch.@index_program_instance @loop i j k C[] += A[i, k::gallop] * A[i, j] * A[j, k::gallop]
+    ex = Finch.@index_program_instance @loop i j k C[] += A[i, k::gallop] * A2[i, j] * A3[j, k::gallop]
     display(Finch.execute_code_lowered(:ex, typeof(ex)))
     println()
+    exit()
+    foo(Finch.@index_program_instance @loop i j k C[] += A[i, k] * A2[i, j] * A3[j, k])
+    @btime (A = $A; A2=$A; A3=$A; C = $C; $foo(Finch.@index_program_instance @loop i j k C[] += A[i, k] * A2[i, j] * A3[j, k]))
+    exit()
     =#
     @index @loop i j k C[] += A[i, k::gallop] * A2[i, j] * A3[j, k::gallop]
     println(FiberArray(C)[])
@@ -182,25 +172,28 @@ function tri(mtx)
     println(sum(A_ref .* (A_ref * A_ref)))
     #println(@descend execute(ex))
 
+    
+    #@profile @index @loop i j k C[] += A[i, k] * A2[i, j] * A3[j, k]
+    #Profile.print()
+
     println("Finch:")
     @btime (A = $A; A2=$A; A3=$A; C = $C; @index @loop i j k C[] += A[i, k::gallop] * A2[i, j] * A3[j, k::gallop])
 
     println("Finch:")
-    @btime (A = $A; A2=$A; A3=$A; C = $C; foo(Finch.@index_program_instance @loop i j k C[] += A[i, k] * A2[i, j] * A3[j, k]))
     @btime (A = $A; A2=$A; A3=$A; C = $C; @index @loop i j k C[] += A[i, k] * A2[i, j] * A3[j, k])
 
     println("Julia:")
     @btime sum($A_ref .* ($A_ref * $(transpose(A_ref))))
 end
 
-tri("SNAP/web-BerkStan")
+tri("Boeing/ct20stif")
 tri("SNAP/web-NotreDame")
 tri("SNAP/roadNet-PA")
-exit()
 tri("VDOL/spaceStation_5")
 tri("DIMACS10/sd2010")
-tri("Boeing/ct20stif")
 tri("Bai/bfwb398")
 tri("SNAP/soc-Epinions1")
 tri("SNAP/email-EuAll")
 tri("SNAP/wiki-Talk")
+#tri("SNAP/web-BerkStan")
+exit()
