@@ -22,7 +22,7 @@ function tri(mtx)
     #ex = Finch.@index_program_instance @loop i j k C[] += A[i, k] * A2[i, j] * A3[j, k]
     #display(Finch.execute_code_lowered(:ex, typeof(ex)))
     #println()
-    foo(ex) = begin
+    foo(ex) = (@inbounds begin
         C_lvl = ex.body.lhs.tns.tns.lvl
         C_lvl_val_q = length(ex.body.lhs.tns.tns.lvl.val)
         C_lvl_val = 0.0
@@ -113,7 +113,10 @@ function tri(mtx)
                             A_lvl_2_i = A_lvl_2.idx[A_lvl_2_p]
                             A3_lvl_2_i = A3_lvl_2.idx[A3_lvl_2_p]
                             k_step_2 = min(A_lvl_2_i, A3_lvl_2_i)
-                            if k_step_2 == A_lvl_2_i && k_step_2 == A3_lvl_2_i
+                            if k_step_2 > k_step
+                                k_step_2 = k_step
+                                break
+                            elseif k_step_2 == A_lvl_2_i && k_step_2 == A3_lvl_2_i
                                 A_lvl_3_val = A_lvl_3.val[A_lvl_2_p]
                                 A3_lvl_3_val = A3_lvl_3.val[A3_lvl_2_p]
                                 k = k_step_2
@@ -121,12 +124,26 @@ function tri(mtx)
                                 A_lvl_2_p += 1
                                 A3_lvl_2_p += 1
                             elseif k_step_2 == A3_lvl_2_i
+                                #A3_lvl_3_val = A3_lvl_3.val[A3_lvl_2_p]
                                 A3_lvl_2_p += 1
                             elseif k_step_2 == A_lvl_2_i
+                                #A_lvl_3_val = A_lvl_3.val[A_lvl_2_p]
                                 A_lvl_2_p += 1
                             end
                             k_start_2 = k_step_2 + 1
                         end
+                        k_start = k_step + 1
+                    end
+                    k_step = min(A_lvl_2_i1, A_lvl_2_I)
+                    if k_start <= k_step
+                        k_start = k_step + 1
+                    end
+                    k_step = min(A3_lvl_2_i1, A_lvl_2_I)
+                    if k_start <= k_step
+                        k_start = k_step + 1
+                    end
+                    k_step = min(A_lvl_2_I)
+                    if k_start <= k_step
                         k_start = k_step + 1
                     end
                     A2_lvl_2_p += 1
@@ -139,8 +156,8 @@ function tri(mtx)
             j_start = j_step + 1
         end
         C_lvl.val[1] = C_lvl_val
-        (C = Finch.Fiber(C_lvl, Finch.RootEnvironment()),)
-    end 
+        (C = Fiber(C_lvl, Finch.RootEnvironment()),)
+    end)
     #@descend foo(ex)
     #exit()
     #=
@@ -161,8 +178,6 @@ function tri(mtx)
     display(Finch.execute_code_lowered(:ex, typeof(ex)))
     println()
     exit()
-    foo(Finch.@index_program_instance @loop i j k C[] += A[i, k] * A2[i, j] * A3[j, k])
-    @btime (A = $A; A2=$A; A3=$A; C = $C; $foo(Finch.@index_program_instance @loop i j k C[] += A[i, k] * A2[i, j] * A3[j, k]))
     exit()
     =#
     @index @loop i j k C[] += A[i, k::gallop] * A2[i, j] * A3[j, k::gallop]
@@ -172,6 +187,7 @@ function tri(mtx)
     println(sum(A_ref .* (A_ref * A_ref)))
     #println(@descend execute(ex))
 
+    foo(Finch.@index_program_instance @loop i j k C[] += A[i, k] * A2[i, j] * A3[j, k])
     
     #@profile @index @loop i j k C[] += A[i, k] * A2[i, j] * A3[j, k]
     #Profile.print()
@@ -181,6 +197,9 @@ function tri(mtx)
 
     println("Finch:")
     @btime (A = $A; A2=$A; A3=$A; C = $C; @index @loop i j k C[] += A[i, k] * A2[i, j] * A3[j, k])
+
+    println("foo:")
+    @btime (A = $A; A2=$A; A3=$A; C = $C; $foo(Finch.@index_program_instance @loop i j k C[] += A[i, k] * A2[i, j] * A3[j, k]))
 
     println("Julia:")
     @btime sum($A_ref .* ($A_ref * $(transpose(A_ref))))
