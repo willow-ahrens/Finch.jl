@@ -131,7 +131,10 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
                 stride = (start) -> my_i1,
                 body = (start, step) -> Stepper(
                     seek = (ctx, start) -> quote
-                        $my_p = searchsortedfirst($(lvl.ex).idx, $start, $my_p, $my_p1, Base.Forward)
+                        #$my_p = searchsortedfirst($(lvl.ex).idx, $start, $my_p, $my_p1, Base.Forward)
+                        while $my_p < $my_p1 && $(lvl.ex).idx[$my_p] < $start
+                            $my_p += 1
+                        end
                     end,
                     body = Thunk(
                         preamble = :(
@@ -192,7 +195,10 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
                 stride = (start) -> my_i1,
                 body = (start, step) -> Jumper(
                     seek = (ctx, start) -> quote
-                        $my_p = searchsortedfirst($(lvl.ex).idx, $start, $my_p, $my_p1, Base.Forward)
+                        #$my_p = searchsortedfirst($(lvl.ex).idx, $start, $my_p, $my_p1, Base.Forward)
+                        while $my_p < $my_p1 && $(lvl.ex).idx[$my_p] < $start
+                            $my_p += 1
+                        end
                     end,
                     body = Thunk(
                         preamble = :(
@@ -213,7 +219,10 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
                                 ),
                                 true => Stepper(
                                     seek = (ctx, start) -> quote
-                                        $my_p = searchsortedfirst($(lvl.ex).idx, $start, $my_p, $my_p1, Base.Forward)
+                                        #$my_p = searchsortedfirst($(lvl.ex).idx, $start, $my_p, $my_p1, Base.Forward)
+                                        while $my_p < $my_p1 && $(lvl.ex).idx[$my_p] < $start
+                                            $my_p += 1
+                                        end
                                     end,
                                     body = Thunk(
                                         preamble = :(
