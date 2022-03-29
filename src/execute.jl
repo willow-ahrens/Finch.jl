@@ -19,7 +19,8 @@ function execute_code_lowered(ex, T)
                 #names from tensor names
                 prgm = TransformSSA(Freshen())(prgm)
                 GatherDimensions(ctx, ctx.dims)(prgm)
-                prgm = Initialize(ctx)(prgm)
+                prgm = Initialize(ctx_2)(prgm)
+                prgm = ThunkVisitor(ctx_2)(prgm) #TODO this is a bit of a hack.
                 ctx_2(prgm)
             end)
             $(contain(ctx) do ctx_2
