@@ -1,31 +1,26 @@
-annihilate_index(ctx) = @slots a b c d i j f g Rewrite(Fixpoint(Prewalk(Chain([
+@kwdef struct SkipVisitor <: AbstractTransformVisitor
+    ctx
+end
+
+@kwdef struct Skip
+    ignores
+    body
+end
+isliteral(::Skip) = false
+
+make_style(root, ctx::LowerJulia, node::Skip) = ThunkStyle()
+
+function (ctx::ThunkVisitor)(node::Skip, ::DefaultStyle)
+    map(SkipVisitor(ctx.ctx), node.ignores)
+    node.body
+end
+
+@slots a b c d i j f g rules = [
     (@rule @i(f(a...)) => if isliteral(f) && all(isliteral, a) Literal(getvalue(f)(getvalue.(a)...)) end),
-    (@rule @i(+(a..., +(b...), c...)) => @i +(a..., b..., c...)),
-    (@rule @i(+(a...)) => if count(isliteral, a) >= 2 @i +($(filter(!isliteral, a)...), $(Literal(+(getvalue.(filter(isliteral, a))...)))) end),
-    (@rule @i(+(a..., 0, b...)) => @i +(a..., b...)),
 
-    (@rule @i(*(a..., *(b...), c...)) => @i *(a..., b..., c...)),
-    (@rule @i(*(a...)) => if count(isliteral, a) >= 2 @i(*($(filter(!isliteral, a)...), $(Literal(*(getvalue.(filter(isliteral, a))...))))) end),
-    (@rule @i(*(a..., 1, b...)) => @i *(a..., b...)),
-    (@rule @i(*(a..., 0, b...)) => (map(SkipVisitor(ctx), [a; b]); 0)),
-
-    (@rule @i((+)($a)) => a),
-    (@rule @i($a - $b) => @i a + - b),
-    (@rule @i(- (- $a)) => a),
-    (@rule @i(- +($a, b...)) => @i +(- a, - +(b...))),
-    (@rule @i((*)($a)) => a),
-    (@rule @i((*)(a..., - $b, c...)) => @i -(*(a..., b, c...))),
-
-    (@rule @i(a[i...] = 0) => pass(a)), #TODO this is only valid when the default of A is 0
-    (@rule @i(a[i...] += 0) => pass(a)),
-    (@rule @i(a[i...] *= 1) => pass(a)),
-    #(@rule @i($a = 0) => pass(a)), #TODO this is only valid when the default of A is 0
-    #(@rule @i($a += 0) => pass(a)),
-    #(@rule @i($a *= 1) => pass(a)),
-
-    #(@rule @i((~a)[~~i] *= ~b) => if isimplicit(~a) && getdefault(~a) == 0 pass(~a) end),
-    #(@rule @i((~a)[~~i] = ~b) => if isimplicit(~a) && getdefault(~a) == ~b pass(~a) end),
     ((a) -> if a isa Literal && isliteral(getvalue(a)) getvalue(a) end), #only quote when necessary
+
+    (@rule @i(a[i...] = b) => if b == default(a) pass(a) end),
 
     (@rule @i(@loop i... @pass(a...)) => pass(a...)),
     (@rule @i(@pass(a...) where $b) => pass(a...)),
@@ -53,11 +48,53 @@ annihilate_index(ctx) = @slots a b c d i j f g Rewrite(Fixpoint(Prewalk(Chain([
             end
         end
     end),
-    #(@rule @i(a where @pass(b...)) => a),#can't do this bc produced tensors won't get initialized
-]))))
+    #(@rule @i(a where @pass(b...)) => a),#can't do this bc produced tensors won't get initialized ?
 
-@kwdef struct SkipVisitor <: AbstractTransformVisitor #TODO define a walk visitor you lazy programmer
-    ctx
+    (@rule @i(+(a..., +(b...), c...)) => @i +(a..., b..., c...)),
+    (@rule @i(+(a...)) => if count(isliteral, a) >= 2 @i +($(filter(!isliteral, a)...), $(Literal(+(getvalue.(filter(isliteral, a))...)))) end),
+    (@rule @i(+(a..., 0, b...)) => @i +(a..., b...)),
+    (@rule @i((+)($a)) => a),
+    (@rule @i(- +($a, b...)) => @i +(- a, - +(b...))),
+    (@rule @i(a[i...] += 0) => pass(a)),
+
+    (@rule @i($a - $b) => @i a + - b),
+    (@rule @i(- (- $a)) => a),
+
+    (@rule @i(*(a..., *(b...), c...)) => @i *(a..., b..., c...)),
+    (@rule @i(*(a...)) => if count(isliteral, a) >= 2 @i(*($(filter(!isliteral, a)...), $(Literal(*(getvalue.(filter(isliteral, a))...))))) end),
+    (@rule @i(*(a..., 1, b...)) => @i *(a..., b...)),
+    (@rule @i(*(a..., 0, b...)) => Skip(ignores = [a; b], body = 0)),
+    (@rule @i((*)($a)) => a),
+    (@rule @i((*)(a..., - $b, c...)) => @i -(*(a..., b, c...))),
+    (@rule @i(a[i...] *= 1) => pass(a)),
+]
+
+@kwdef mutable struct Simplify
+    body
 end
 
-#TODO add simplify as a chunk pass.
+struct SimplifyStyle end
+
+make_style(root, ctx::LowerJulia, node::Simplify) = SimplifyStyle()
+combine_style(a::DefaultStyle, b::SimplifyStyle) = SimplifyStyle()
+combine_style(a::ThunkStyle, b::SimplifyStyle) = ThunkStyle() #Not sure about this, but we gotta get rid of thunks to match, so...
+combine_style(a::SimplifyStyle, b::SimplifyStyle) = SimplifyStyle()
+
+@kwdef struct SimplifyContext{Ctx} <: AbstractTransformVisitor
+    ctx::Ctx
+end
+
+function postvisit!(node::Simplify, ctx::SimplifyContext)
+    node.body
+end
+
+function (ctx::LowerJulia)(root, ::SimplifyStyle)
+    global rules
+    root = SimplifyContext(ctx)(root)
+    root = Rewrite(Fixpoint(Prewalk(Chain(rules))))(root)
+    ctx(root)
+end
+
+add_rules!(node, new_rules) = union!(rules, new_rules)
+
+isliteral(::Simplify) = false

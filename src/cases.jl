@@ -9,6 +9,7 @@ struct CaseStyle end
 make_style(root, ctx::LowerJulia, node::Cases) = CaseStyle()
 combine_style(a::DefaultStyle, b::CaseStyle) = CaseStyle()
 combine_style(a::ThunkStyle, b::CaseStyle) = ThunkStyle()
+combine_style(a::SimplifyStyle, b::CaseStyle) = SimplifyStyle()
 combine_style(a::RunStyle, b::CaseStyle) = CaseStyle()
 combine_style(a::AcceptRunStyle, b::CaseStyle) = CaseStyle()
 combine_style(a::AcceptSpikeStyle, b::CaseStyle) = CaseStyle()

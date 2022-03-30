@@ -18,6 +18,7 @@ end
 combine_style(a::DefaultStyle, b::StepperStyle) = StepperStyle()
 combine_style(a::StepperStyle, b::StepperStyle) = StepperStyle()
 combine_style(a::StepperStyle, b::RunStyle) = RunStyle()
+combine_style(a::SimplifyStyle, b::StepperStyle) = SimplifyStyle()
 combine_style(a::StepperStyle, b::AcceptRunStyle) = StepperStyle()
 combine_style(a::StepperStyle, b::AcceptSpikeStyle) = StepperStyle()
 combine_style(a::StepperStyle, b::SpikeStyle) = SpikeStyle()

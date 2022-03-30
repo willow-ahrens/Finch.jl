@@ -191,8 +191,6 @@ struct ThunkStyle end
 end
 isliteral(::Thunk) = false
 
-lower_style(::Thunk, ::LowerJulia) = ThunkStyle()
-
 make_style(root, ctx::LowerJulia, node::Thunk) = ThunkStyle()
 combine_style(a::DefaultStyle, b::ThunkStyle) = ThunkStyle()
 combine_style(a::ThunkStyle, b::ThunkStyle) = ThunkStyle()

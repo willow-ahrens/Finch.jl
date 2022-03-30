@@ -18,6 +18,7 @@ end
 combine_style(a::DefaultStyle, b::JumperStyle) = JumperStyle()
 combine_style(a::JumperStyle, b::JumperStyle) = JumperStyle()
 combine_style(a::JumperStyle, b::RunStyle) = RunStyle()
+combine_style(a::SimplifyStyle, b::JumperStyle) = SimplifyStyle()
 combine_style(a::JumperStyle, b::AcceptRunStyle) = JumperStyle()
 combine_style(a::JumperStyle, b::AcceptSpikeStyle) = JumperStyle()
 combine_style(a::JumperStyle, b::SpikeStyle) = SpikeStyle()

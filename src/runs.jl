@@ -13,6 +13,7 @@ struct RunStyle end
 make_style(root::Loop, ctx::LowerJulia, node::Run) = RunStyle()
 combine_style(a::DefaultStyle, b::RunStyle) = RunStyle()
 combine_style(a::ThunkStyle, b::RunStyle) = ThunkStyle()
+combine_style(a::SimplifyStyle, b::RunStyle) = SimplifyStyle()
 combine_style(a::RunStyle, b::RunStyle) = RunStyle()
 
 function (ctx::LowerJulia)(root::Loop, ::RunStyle)
@@ -21,8 +22,6 @@ function (ctx::LowerJulia)(root::Loop, ::RunStyle)
     if make_style(root, ctx) isa RunStyle
         error("run style couldn't lower runs")
     end
-    #TODO remove simplify step once we have dedicated handlers for it
-    root = annihilate_index(ctx)(root)
     ctx(root)
 end
 
@@ -45,6 +44,7 @@ struct AcceptRunStyle end
 make_style(root::Loop, ctx::LowerJulia, node::Access{AcceptRun, <:Union{Write, Update}}) = AcceptRunStyle()
 combine_style(a::DefaultStyle, b::AcceptRunStyle) = AcceptRunStyle()
 combine_style(a::ThunkStyle, b::AcceptRunStyle) = ThunkStyle()
+combine_style(a::SimplifyStyle, b::AcceptRunStyle) = SimplifyStyle()
 combine_style(a::AcceptRunStyle, b::AcceptRunStyle) = AcceptRunStyle()
 combine_style(a::RunStyle, b::AcceptRunStyle) = RunStyle()
 

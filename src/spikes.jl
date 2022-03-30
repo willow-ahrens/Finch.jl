@@ -11,6 +11,7 @@ make_style(root::Loop, ctx::LowerJulia, node::Spike) = SpikeStyle()
 combine_style(a::DefaultStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::RunStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::ThunkStyle, b::SpikeStyle) = ThunkStyle()
+combine_style(a::SimplifyStyle, b::SpikeStyle) = SimplifyStyle()
 combine_style(a::AcceptRunStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::SpikeStyle, b::SpikeStyle) = SpikeStyle()
 
@@ -25,14 +26,14 @@ function (ctx::LowerJulia)(root::Loop, ::SpikeStyle)
     else
         body_expr = restrict(ctx, getname(root.idxs[1]) => spike_body_range(ext, ctx)) do
             contain(ctx) do ctx_2
-                (ctx_2)(annihilate_index(ctx_2)(root_body))
+                (ctx_2)(root_body)
             end
         end
     end
     root_tail = AccessSpikeTailVisitor(root, ctx, idx, stop(ext))(root)
     tail_expr = restrict(ctx, getname(root.idxs[1]) => UnitExtent(stop(ext))) do
         contain(ctx) do ctx_2
-            (ctx_2)(annihilate_index(ctx_2)(root_tail))
+            (ctx_2)(root_tail)
         end
     end
     return Expr(:block, body_expr, tail_expr)
@@ -79,11 +80,14 @@ end
     tail
 end
 
+default(node::AcceptSpike) = node.val #TODO is this semantically... okay?
+
 struct AcceptSpikeStyle end
 
 make_style(root::Loop, ctx::LowerJulia, node::Access{AcceptSpike, <:Union{Write, Update}}) = AcceptSpikeStyle()
 combine_style(a::DefaultStyle, b::AcceptSpikeStyle) = AcceptSpikeStyle()
 combine_style(a::ThunkStyle, b::AcceptSpikeStyle) = ThunkStyle()
+combine_style(a::SimplifyStyle, b::AcceptSpikeStyle) = SimplifyStyle()
 combine_style(a::AcceptSpikeStyle, b::AcceptSpikeStyle) = AcceptSpikeStyle()
 combine_style(a::AcceptRunStyle, b::AcceptSpikeStyle) = AcceptSpikeStyle()
 combine_style(a::RunStyle, b::AcceptSpikeStyle) = RunStyle()

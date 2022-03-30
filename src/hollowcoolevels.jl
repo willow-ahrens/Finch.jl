@@ -195,7 +195,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Read, idx::
                                     :($step == $my_i) => if R == lvl.N
                                         Thunk(
                                             body = Spike(
-                                                body = default(fbr),
+                                                body = Simplify(default(fbr)),
                                                 tail = refurl(VirtualFiber(lvl.lvl, VirtualPositionEnvironment(Virtual{lvl.Tp_2}(:($my_p)), Virtual{lvl.Ti}(my_i), fbr.env)), ctx, mode, idxs...),
                                             ),
                                             epilogue = quote
@@ -211,7 +211,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Read, idx::
                                                 end
                                             end,
                                             body = Spike(
-                                                body = default(fbr),
+                                                body = Simplify(default(fbr)),
                                                 tail = refurl(VirtualFiber(lvl, VirtualPosRangeEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_p_step), Virtual{lvl.Ti}(my_i), fbr.env)), ctx, mode, idxs...),
                                             ),
                                             epilogue = quote
@@ -229,7 +229,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Read, idx::
                 )
             ),
             Phase(
-                body = (start, step) -> Run(default(fbr))
+                body = (start, step) -> Run(Simplify(default(fbr)))
             )
         ])
     )

@@ -42,7 +42,7 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSingleSpike{Tv}, Read}
     vec = node.tns
     if getname(ctx.idx) == getname(node.idxs[1])
         tns = Spike(
-            body = 0,
+            body = Simplify(zero(Tv)),
             tail = Virtual{Tv}(:($(vec.ex).tail))
         )
         Access(tns, node.mode, node.idxs)

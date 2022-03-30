@@ -59,7 +59,7 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSingleBlock{Tv, Ti}, R
         tns = Pipeline([
             Phase(
                 stride = (start) -> :($(vec.ex).start - 1),
-                body = (start, step) -> Run(body = vec.D)
+                body = (start, step) -> Run(body = Simplify(vec.D))
             ),
             Phase(
                 stride = (start) -> :($(vec.ex).stop),
@@ -67,7 +67,7 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSingleBlock{Tv, Ti}, R
                     body = (i) -> :($(vec.ex).val[$(ctx.ctx(i)) - $(vec.ex).start + 1]) #TODO all of these functions should really have a ctx
                 )
             ),
-            Phase(body = (start, step) -> Run(body = vec.D))
+            Phase(body = (start, step) -> Run(body = Simplify(vec.D)))
         ])
         Access(tns, node.mode, node.idxs)
     else

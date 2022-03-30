@@ -209,7 +209,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx:
                                     :($step == $my_i) => if R == lvl.N
                                         Thunk(
                                             body = Spike(
-                                                body = default(fbr),
+                                                body = Simplify(default(fbr)),
                                                 tail = refurl(VirtualFiber(lvl.lvl, VirtualPositionEnvironment(Virtual{lvl.Ti}(:(last($(lvl.ex).srt[$my_p])[$R])), Virtual{lvl.Ti}(my_i), fbr.env)), ctx, mode, idxs...),
                                             ),
                                             epilogue = quote
@@ -225,7 +225,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx:
                                                 end
                                             end,
                                             body = Spike(
-                                                body = default(fbr),
+                                                body = Simplify(default(fbr)),
                                                 tail = refurl(VirtualFiber(lvl, VirtualPosRangeEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_p_step), Virtual{lvl.Ti}(my_i), fbr.env)), ctx, mode, idxs...),
                                             ),
                                             epilogue = quote
@@ -234,7 +234,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx:
                                         )
                                     end,
                                     true => Run(
-                                        body = default(fbr),
+                                        body = Simplify(default(fbr)),
                                     ),
                                 ])
                             )
@@ -243,7 +243,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx:
                 )
             ),
             Phase(
-                body = (start, step) -> Run(default(fbr))
+                body = (start, step) -> Run(Simplify(default(fbr)))
             )
         ])
     )
@@ -265,7 +265,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx:
                 end,
                 body = Cases([
                     :($my_p != 0) => refurl(VirtualFiber(lvl.lvl, PositionEnvironment(Virtual{lvl.Tp_2}(my_p), i, fbr.env)), ctx, mode, idxs...),
-                    true => default(fbr)
+                    true => Simplify(default(fbr))
                 ])
             )
         )

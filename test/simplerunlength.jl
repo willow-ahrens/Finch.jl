@@ -57,7 +57,7 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSimpleRunLength{Tv, Ti
                     stride = (start) -> my_i′,
                     body = (start, step) -> Thunk(
                         body = Run(
-                            body = Virtual{Tv}(:($(vec.ex).val[$my_p])),
+                            body = Simplify(Virtual{Tv}(:($(vec.ex).val[$my_p]))),
                         ),
                         epilogue = quote
                             if $my_i′ == $step && $my_p < length($(vec.ex).idx)
