@@ -63,7 +63,7 @@ end
     (@rule @i(*(a..., *(b...), c...)) => @i *(a..., b..., c...)),
     (@rule @i(*(a...)) => if count(isliteral, a) >= 2 @i(*($(filter(!isliteral, a)...), $(Literal(*(getvalue.(filter(isliteral, a))...))))) end),
     (@rule @i(*(a..., 1, b...)) => @i *(a..., b...)),
-    (@rule @i(*(a..., 0, b...)) => Skip(ignores = [a; b], body = 0)),
+    (@rule @i(*(a..., 0, b...)) => Skip(ignores = [a; b], body = Simplify(0))), #TODO this is lazy, but not sure yet if I want the rules to have access to context.
     (@rule @i((*)($a)) => a),
     (@rule @i((*)(a..., - $b, c...)) => @i -(*(a..., b, c...))),
     (@rule @i(a[i...] *= 1) => pass(a)),
