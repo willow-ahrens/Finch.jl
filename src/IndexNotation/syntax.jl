@@ -4,7 +4,7 @@ function capture_index(ex; ctx...)
     incs = Dict(:+= => :+, :*= => :*, :/= => :/, :^= => :^)
 
     if ex isa Expr && ex.head == :macrocall && length(ex.args) >= 2 && ex.args[1] == Symbol("@pass")
-        args = map(arg -> capture_index(arg; ctx..., namify=true), ex.args[3:end])
+        args = map(arg -> capture_index(arg; ctx..., namify=false), ex.args[3:end])
         return :($pass($(args...)))
     elseif ex isa Expr && ex.head == :macrocall && length(ex.args) >= 3 && ex.args[1] in [Symbol("@loop"), Symbol("@∀")]
         idxs = map(arg -> capture_index(arg; ctx..., namify=true), ex.args[3:end-1])
@@ -54,7 +54,7 @@ function capture_index(ex; ctx...)
 end
 
 macro index_program(ex)
-    return capture_index(ex; namify=false, mode = Read(), results = Set())
+    return capture_index(ex; namify=true, mode = Read(), results = Set())
 end
 
 macro i(ex)
@@ -65,7 +65,7 @@ function capture_index_instance(ex; ctx...)
     incs = Dict(:+= => :+, :*= => :*, :/= => :/, :^= => :^)
 
     if ex isa Expr && ex.head == :macrocall && length(ex.args) >= 2 && ex.args[1] == Symbol("@pass")
-        args = map(arg -> capture_index_instance(arg; ctx...), ex.args[3:end])
+        args = map(arg -> capture_index_instance(arg; ctx..., namify=false), ex.args[3:end])
         return :($pass_instance($(args...)))
     elseif ex isa Expr && ex.head == :macrocall && length(ex.args) >= 3 && ex.args[1] in [Symbol("@loop"), Symbol("@∀")]
         idxs = map(arg -> capture_index_instance(arg; ctx..., namify=true), ex.args[3:end-1])
@@ -119,5 +119,5 @@ function capture_index_instance(ex; ctx...)
 end
 
 macro index_program_instance(ex)
-    return capture_index_instance(ex; namify=false, mode = Read(), results = Set())
+    return capture_index_instance(ex; namify=true, mode = Read(), results = Set())
 end
