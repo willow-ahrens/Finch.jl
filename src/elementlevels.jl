@@ -85,12 +85,15 @@ end
 function refurl(fbr::VirtualFiber{VirtualElementLevel}, ctx, ::Read)
     lvl = fbr.lvl
 
+    Access(fbr, Read(), [])
+    #=
     Thunk(
         preamble = quote
             $(lvl.val) = $(lvl.ex).val[$(ctx(envposition(fbr.env)))]
         end,
         body = Access(fbr, Read(), []),
     )
+    =#
 end
 
 function refurl(fbr::VirtualFiber{VirtualElementLevel}, ctx, ::Write)
@@ -124,5 +127,15 @@ end
 function (ctx::Finch.LowerJulia)(node::Access{<:VirtualFiber{VirtualElementLevel}}, ::DefaultStyle) where {Tv, Ti}
     @assert isempty(node.idxs)
     tns = node.tns
-    node.tns.lvl.val
+
+    if node.mode == Read() #TODO This issue may run deeper than just the elements.
+        #Basically, we need to update read-based virtualizations of workspaces after they are defined.
+        #We could do this with a clever version of initialize that only initializes tensors for reads once their corresponding name is in scope.
+        #what a mess...
+        return :($(tns.lvl.ex).val[$(ctx(envposition(tns.env)))])
+    else
+        node.tns.lvl.val
+    end
+
+    #node.tns.lvl.val
 end
