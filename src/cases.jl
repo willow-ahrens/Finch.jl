@@ -46,7 +46,7 @@ function postvisit!(node, ctx::CasesVisitor, args)
     map(product(args...)) do case
         guards = map(first, case)
         bodies = map(last, case)
-        return reduce(virtual_and, guards) => similarterm(node, operation(node), collect(bodies))
+        return reduce(virtual_and, guards, init=true) => similarterm(node, operation(node), collect(bodies))
     end
 end
 postvisit!(node, ctx::CasesVisitor) = [(true => node)]

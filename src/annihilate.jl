@@ -25,14 +25,14 @@ end
     (@rule @i(@loop i... @pass(a...)) => pass(a...)),
     (@rule chunk(i, a, @i(@pass(b...))) => pass(b...)),
     (@rule @i(@pass(a...) where $b) => pass(a...)),
-    (@rule @i(a where @pass()) => a),
+    (@rule @i($a where @pass()) => a),
     (@rule @i(@multi(a..., @pass(b...), @pass(c...), d...)) => @i(@multi(a..., @pass(b..., c...), d...))),
     (@rule @i((@pass(a...);)) => pass(a...)),
-    (@rule @i(a where b) => begin
+    (@rule @i($a where $b) => begin
         @slots c d i j f g begin
             props = Dict()
             b_2 = Postwalk(Chain([
-                (@rule @i($c[i...] = d) => if isliteral(d)
+                (@rule @i(c[i...] = $d) => if isliteral(d)
                     props[getname(c)] = d
                     pass()
                 end),
@@ -45,7 +45,7 @@ end
             ]))(b)
             if b_2 != nothing
                 a_2 = Rewrite(Postwalk(@rule @i($c[i...]) => get(props, getname(c), nothing)))(a)
-                @i a_2 where b_2
+                @i $a_2 where $b_2
             end
         end
     end),
@@ -55,10 +55,10 @@ end
     (@rule @i(+(a...)) => if count(isliteral, a) >= 2 @i +($(filter(!isliteral, a)...), $(Literal(+(getvalue.(filter(isliteral, a))...)))) end),
     (@rule @i(+(a..., 0, b...)) => @i +(a..., b...)),
     (@rule @i((+)($a)) => a),
-    (@rule @i(- +($a, b...)) => @i +(- a, - +(b...))),
+    (@rule @i(- +($a, b...)) => @i +(- $a, - +(b...))),
     (@rule @i(a[i...] += 0) => pass(a)),
 
-    (@rule @i($a - $b) => @i a + - b),
+    (@rule @i($a - $b) => @i $a + - $b),
     (@rule @i(- (- $a)) => a),
 
     (@rule @i(*(a..., *(b...), c...)) => @i *(a..., b..., c...)),
@@ -66,7 +66,7 @@ end
     (@rule @i(*(a..., 1, b...)) => @i *(a..., b...)),
     (@rule @i(*(a..., 0, b...)) => Skip(ignores = [a; b], body = Simplify(0))), #TODO this is lazy, but not sure yet if I want the rules to have access to context.
     (@rule @i((*)($a)) => a),
-    (@rule @i((*)(a..., - $b, c...)) => @i -(*(a..., b, c...))),
+    (@rule @i((*)(a..., - $b, c...)) => @i -(*(a..., $b, c...))),
     (@rule @i(a[i...] *= 1) => pass(a)),
 ]
 
