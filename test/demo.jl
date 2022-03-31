@@ -59,12 +59,24 @@ function stats(n, p)
     minim = Finch.Fiber(Element{0.0}())
     maxim = Finch.Fiber(Element{0.0}())
 
-    @index_code_lowered @loop i (begin
+    #=
+    (@rule chunk(i, a, @i((b[i] <min>= d))) => if isliteral(d)
+        @i @multi (c[i] <min>= d) @chunk(i, a, @i(@multi b... e...))
+    end),
+    (@rule chunk(i, a, @i(@multi b... (c[i] <min>= d) e...)) => if isliteral(d)
+        @i @multi (c[i] <min>= d) @chunk(i, a, @i(@multi b... e...))
+    end),
+    (@rule chunk(i, a, @i(@multi b... (c[i] <min>= d) e...)) => if isliteral(d)
+        @i @multi (c[i] <min>= d) @chunk(i, a, @i(@multi b... e...))
+    end),
+    =#
+
+    display(@index_code_lowered @loop i (begin
         total[] += a[]
         total2[] += a[]*a[]
         minim[] <min>= a[]
         maxim[] <max>= a[]
-    end) where (a[] = A[i])
+    end) where (a[] = A[i]))
 
     #println("Finch:")
     #@btime (A = $A; C = $C; @index @loop i j k C[] += A[i, k] * A[i, j] * A[j, k])

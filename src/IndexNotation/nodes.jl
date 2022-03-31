@@ -147,7 +147,7 @@ Finch.getresults(stmt::With) = Finch.getresults(stmt.cons)
 struct Multi <: IndexStatement
     bodies
 end
-Base.:(==)(a::Multi, b::Multi) = all(a.bodies .== b.bodies)
+Base.:(==)(a::Multi, b::Multi) = a.bodies == b.bodies
 
 multi(args...) = multi!(vcat(args...))
 multi!(args) = Multi(args)
