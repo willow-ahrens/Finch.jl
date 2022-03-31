@@ -19,12 +19,12 @@ function execute_code_lowered(ex, T)
                 #names from tensor names
                 prgm = TransformSSA(Freshen())(prgm)
                 GatherDimensions(ctx, ctx.dims)(prgm)
-                prgm = Initialize(ctx_2)(prgm)
+                prgm = Initialize(ctx = ctx_2)(prgm)
                 prgm = ThunkVisitor(ctx_2)(prgm) #TODO this is a bit of a hack.
                 ctx_2(prgm)
             end)
             $(contain(ctx) do ctx_2
-                prgm = Finalize(ctx_2)(prgm)
+                prgm = Finalize(ctx = ctx_2)(prgm)
                 :(($(map(getresults(prgm)) do tns
                     :($(getname(tns)) = $(ctx_2(tns)))
                 end...), ))
@@ -66,20 +66,28 @@ end
 """
     Initialize(ctx)
 
-A transformation to initialize output tensors that have just entered into scope.
+A transformation to initialize tensors that have just entered into scope.
 
 See also: [`initialize!`](@ref)
 """
-struct Initialize{Ctx} <: AbstractTransformVisitor
+@kwdef struct Initialize{Ctx} <: AbstractTransformVisitor
     ctx::Ctx
+    target=nothing
+    escape=[]
 end
 initialize!(tns, ctx, mode, idxs...) = access(tns, mode, idxs...)
 
-(ctx::Initialize)(node::With, ::DefaultStyle) =
-    With(ctx(node.cons), node.prod)
+function (ctx::Initialize)(node::With, ::DefaultStyle) 
+    ctx_2 = Initialize(ctx.ctx, ctx.target, union(ctx.escape, map(getname, getresults(node.prod))))
+    With(ctx_2(node.cons), ctx_2(node.prod))
+end
 
-function postvisit!(acc::Access{<:Any, <:Union{Write, Update}}, ctx::Initialize, args)
-    initialize!(acc.tns, ctx.ctx, acc.mode, acc.idxs...)
+function postvisit!(acc::Access{<:Any}, ctx::Initialize, args)
+    if (ctx.target === nothing || (getname(acc.tns) in ctx.target) && !(getname(acc.tns) in ctx.escape))
+        initialize!(acc.tns, ctx.ctx, acc.mode, acc.idxs...)
+    else
+        acc
+    end
 end
 
 """
@@ -90,17 +98,24 @@ returned to the caller.
 
 See also: [`finalize!`](@ref)
 """
-struct Finalize{Ctx} <: AbstractTransformVisitor
+@kwdef struct Finalize{Ctx} <: AbstractTransformVisitor
     ctx::Ctx
+    target=nothing
+    escape=[]
 end
 finalize!(tns, ctx, mode) = tns
 
-(ctx::Finalize)(node::With, ::DefaultStyle) =
-    With(ctx(node.cons), node.prod)
-
-function postvisit!(acc::Access{<:Any, <:Union{Write, Update}}, ctx::Finalize, args)
-    Access(finalize!(acc.tns, ctx.ctx, acc.mode), acc.mode, acc.idxs)
+function (ctx::Finalize)(node::With, ::DefaultStyle) 
+    ctx_2 = Finalize(ctx.ctx, ctx.target, union(ctx.escape, map(getname, getresults(node.prod))))
+    With(ctx_2(node.cons), ctx_2(node.prod))
 end
 
+function postvisit!(acc::Access{<:Any}, ctx::Finalize, args)
+    if (ctx.target === nothing || (getname(acc.tns) in ctx.target) && !(getname(acc.tns) in ctx.escape))
+        Access(finalize!(acc.tns, ctx.ctx, acc.mode), acc.mode, acc.idxs)
+    else
+        acc
+    end
+end
 
 register()

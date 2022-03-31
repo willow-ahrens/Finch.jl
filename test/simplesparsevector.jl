@@ -28,7 +28,7 @@ end
 
 (ctx::Finch.LowerJulia)(tns::VirtualSimpleSparseVector) = tns.ex
 
-function Finch.initialize!(arr::VirtualSimpleSparseVector{D, Tv}, ctx::Finch.LowerJulia, mode, idxs...) where {D, Tv}
+function Finch.initialize!(arr::VirtualSimpleSparseVector{D, Tv}, ctx::Finch.LowerJulia, mode::Union{Write, Update}, idxs...) where {D, Tv}
     push!(ctx.preamble, quote
         $(arr.ex).idx = [$(arr.ex).idx[end]]
         $(arr.ex).val = $Tv[]

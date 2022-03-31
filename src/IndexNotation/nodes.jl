@@ -91,7 +91,7 @@ function show_statement(io, mime, stmt::Pass, level)
     print(io, ")")
 end
 
-Finch.getresults(stmt::Pass) = [stmt.tns,]
+Finch.getresults(stmt::Pass) = stmt.tnss
 
 struct Workspace <: IndexTerminal
     n

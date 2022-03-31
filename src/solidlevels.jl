@@ -63,7 +63,7 @@ end
 
 @inline default(fbr::VirtualFiber{<:VirtualSolidLevel}) = default(VirtualFiber(fbr.lvl.lvl, VirtualArbitraryEnvironment(fbr.env)))
 
-function initialize_level!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode)
+function initialize_level!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode::Union{Write, Update})
     lvl = fbr.lvl
     push!(ctx.preamble, quote
         $(lvl.I) = $(ctx(stop(ctx.dims[(getname(fbr), envdepth(fbr.env) + 1)])))
@@ -86,7 +86,7 @@ function assemble!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode)
     assemble!(VirtualFiber(lvl.lvl, VirtualMaxPositionEnvironment(q_2, fbr.env)), ctx, mode)
 end
 
-finalize_level!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode) = nothing
+finalize_level!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode::Union{Write, Update}) = nothing
 
 function unfurl(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode::Union{Read, Write, Update}, idx::Union{Name, Walk, Follow, Laminate, Extrude}, idxs...)
     lvl = fbr.lvl

@@ -1,5 +1,4 @@
 @testset "kernels" begin
-    #=
     for (mtx, A_ref) in matrices
         A_ref = SparseMatrixCSC(A_ref)
         m, n = size(A_ref)
@@ -14,14 +13,12 @@
             @test FiberArray(B)[] ≈ sum(A_ref .* (A_ref * transpose(A_ref)))
         end
     end
-    =#
-
 
     for trial = 1:10
         n = 100
         p = q = 0.1
 
-        println("@loop i (C[i] = a[] - b[]; d[] += a[] * b[]) where (a[] = A[i]; b[] = B[i]) : n = $n p = $p q = $q")
+        println("(C[i] = a[] - b[]; d[] += a[] * b[]) where (a[] = A[i]; b[] = B[i]) : n = $n p = $p q = $q")
         
         A_ref = sprand(n, p)
         B_ref = sprand(n, q)

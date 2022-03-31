@@ -127,7 +127,9 @@ function initialize!(fbr::VirtualFiber, ctx, mode, idxs...)
     if (lvl = initialize_level!(fbr, ctx, mode)) !== nothing
         fbr = VirtualFiber(lvl, fbr.env)
     end
-    assemble!(fbr, ctx, mode)
+    if mode isa Union{Write, Update}
+        assemble!(fbr, ctx, mode)
+    end
     return refurl(fbr, ctx, mode, idxs...)
 end
 
@@ -139,6 +141,8 @@ context `ctx` with access mode `mode`. Return `nothing` if the fiber instance is
 unchanged, or the new level otherwise.
 """
 function initialize_level! end
+
+initialize_level!(fbr, ctx, mode) = nothing
 
 
 
@@ -162,6 +166,7 @@ Finalize the level within the virtual fiber. These are the bulk cleanup steps.
 """
 function finalize_level! end
 
+finalize_level!(fbr, ctx, mode) = nothing
 
 
 

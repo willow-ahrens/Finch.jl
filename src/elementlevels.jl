@@ -47,7 +47,7 @@ getdims(::VirtualFiber{VirtualElementLevel}, ctx, mode) = ()
 
 @inline default(fbr::VirtualFiber{VirtualElementLevel}) = fbr.lvl.D
 
-function initialize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
+function initialize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode::Union{Write, Update})
     lvl = fbr.lvl
     my_q = ctx.freshen(lvl.ex, :_q)
     push!(ctx.preamble, quote
@@ -62,7 +62,7 @@ function initialize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
     nothing
 end
 
-finalize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode) = nothing
+finalize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode::Union{Write, Update}) = nothing
 
 function assemble!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
     lvl = fbr.lvl
@@ -85,15 +85,12 @@ end
 function refurl(fbr::VirtualFiber{VirtualElementLevel}, ctx, ::Read)
     lvl = fbr.lvl
 
-    Access(fbr, Read(), [])
-    #=
     Thunk(
         preamble = quote
             $(lvl.val) = $(lvl.ex).val[$(ctx(envposition(fbr.env)))]
         end,
         body = Access(fbr, Read(), []),
     )
-    =#
 end
 
 function refurl(fbr::VirtualFiber{VirtualElementLevel}, ctx, ::Write)
@@ -128,14 +125,5 @@ function (ctx::Finch.LowerJulia)(node::Access{<:VirtualFiber{VirtualElementLevel
     @assert isempty(node.idxs)
     tns = node.tns
 
-    if node.mode == Read() #TODO This issue may run deeper than just the elements.
-        #Basically, we need to update read-based virtualizations of workspaces after they are defined.
-        #We could do this with a clever version of initialize that only initializes tensors for reads once their corresponding name is in scope.
-        #what a mess...
-        return :($(tns.lvl.ex).val[$(ctx(envposition(tns.env)))])
-    else
-        node.tns.lvl.val
-    end
-
-    #node.tns.lvl.val
+    node.tns.lvl.val
 end

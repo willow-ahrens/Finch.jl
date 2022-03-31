@@ -96,7 +96,7 @@ end
 
 @inline default(fbr::VirtualFiber{VirtualHollowCooLevel}) = default(VirtualFiber(fbr.lvl.lvl, ∘(repeated(VirtualArbitraryEnvironment, fbr.lvl.N)...)(fbr.env)))
 
-function initialize_level!(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode)
+function initialize_level!(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Union{Write, Update})
     @assert isempty(envdeferred(fbr.env))
     lvl = fbr.lvl
     my_p = ctx.freshen(lvl.ex, :_p)
@@ -132,7 +132,7 @@ function assemble!(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode)
     end)
 end
 
-function finalize_level!(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode)
+function finalize_level!(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Union{Write, Update})
     @assert isempty(envdeferred(fbr.env))
     lvl = fbr.lvl
 

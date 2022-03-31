@@ -76,7 +76,7 @@ end
 
 @inline default(fbr::VirtualFiber{<:VirtualHollowListLevel}) = default(VirtualFiber(fbr.lvl.lvl, VirtualArbitraryEnvironment(fbr.env)))
 
-function initialize_level!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
+function initialize_level!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Union{Write, Update})
     lvl = fbr.lvl
     push!(ctx.preamble, quote
         $(lvl.pos_q) < 64 && resize!($(lvl.ex).pos, ($(lvl.pos_q) = 64;))
@@ -101,7 +101,7 @@ function assemble!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
     assemble!(VirtualFiber(fbr.lvl.lvl, VirtualMaxPositionEnvironment(q, fbr.env)), ctx, mode)
 end
 
-finalize_level!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode) = nothing
+finalize_level!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Union{Write, Update}) = nothing
 
 unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx::Name, idxs...) =
     unfurl(fbr, ctx, mode, walk(idx))
