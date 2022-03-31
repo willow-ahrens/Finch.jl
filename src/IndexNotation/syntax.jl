@@ -58,7 +58,7 @@ macro index_program(ex)
 end
 
 macro i(ex)
-    return capture_index(ex; namify=false, mode = Read(), results = Set())
+    return capture_index(ex; namify=false, mode = Read(), results = Set()) #WHY DIFFERENT FROM ABOVE TODO
 end
 
 function capture_index_instance(ex; ctx...)
