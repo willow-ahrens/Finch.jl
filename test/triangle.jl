@@ -26,9 +26,6 @@ function tri(mtx)
     println("Finch:")
     @btime (A = $A; C = $C; @index @loop i j k C[] += A[i, k] * A[i, j] * A[j, k])
 
-    println("foo:")
-    @btime (A = $A; C = $C; $foo(Finch.@index_program_instance @loop i j k C[] += A[i, k] * A[i, j] * A[j, k]))
-
     println("Finch(gallop):")
     @btime (A = $A; C = $C; @index @loop i j k C[] += A[i, k::gallop] * A[i, j] * A[j, k::gallop])
 
