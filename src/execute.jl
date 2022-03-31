@@ -56,6 +56,13 @@ macro index(ex)
     thunk
 end
 
+macro index_code_lowered(ex)
+    prgm = IndexNotation.capture_index_instance(ex; namify=false, mode = Read(), results=Set())
+    return quote
+        $execute_code_lowered(:ex, typeof($prgm))
+    end
+end
+
 """
     Initialize(ctx)
 

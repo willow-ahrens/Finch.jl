@@ -163,6 +163,11 @@ struct SuggestedExtent
     ext
 end
 
+#TODO maybe just call something like resolve_extent to unwrap?
+start(ext::SuggestedExtent) = start(ext.ext)
+stop(ext::SuggestedExtent) = stop(ext.ext)
+extent(ext::SuggestedExtent) = extent(ext.ext)
+
 combinedim(ctx::Finch.LowerJulia, a::SuggestedExtent, b::Extent) = b
 
 combinedim(ctx::Finch.LowerJulia, a::SuggestedExtent, b::MissingExtent) = a

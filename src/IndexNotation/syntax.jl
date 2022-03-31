@@ -28,11 +28,11 @@ function capture_index(ex; ctx...)
     elseif ex isa Expr && haskey(incs, ex.head) && length(ex.args) == 2
         lhs = capture_index(ex.args[1]; ctx..., mode=Update())
         rhs = capture_index(ex.args[2]; ctx...)
-        op = capture_index(incs[ex.head]; ctx..., namify=false, literalize=true)
+        op = capture_index(incs[ex.head]; ctx..., namify=false)
         return :($assign($lhs, $op, $rhs))
     elseif ex isa Expr && ex.head == :comparison && length(ex.args) == 5 && ex.args[2] == :< && ex.args[4] == :>=
         lhs = capture_index(ex.args[1]; ctx..., mode=Update())
-        op = capture_index(ex.args[3]; ctx..., namify=false, literalize=true)
+        op = capture_index(ex.args[3]; ctx..., namify=false)
         rhs = capture_index(ex.args[5]; ctx...)
         return :($assign($lhs, $op, $rhs))
     elseif ex isa Expr && ex.head == :call && length(ex.args) >= 1
@@ -89,11 +89,11 @@ function capture_index_instance(ex; ctx...)
     elseif ex isa Expr && haskey(incs, ex.head) && length(ex.args) == 2
         lhs = capture_index_instance(ex.args[1]; ctx..., mode=Update())
         rhs = capture_index_instance(ex.args[2]; ctx...)
-        op = capture_index_instance(incs[ex.head]; ctx..., namify=false, literalize=true)
+        op = capture_index_instance(incs[ex.head]; ctx..., namify=false)
         return :($assign_instance($lhs, $op, $rhs))
     elseif ex isa Expr && ex.head == :comparison && length(ex.args) == 5 && ex.args[2] == :< && ex.args[4] == :>=
         lhs = capture_index_instance(ex.args[1]; ctx..., mode=Update())
-        op = capture_index_instance(ex.args[3]; ctx..., namify=false, literalize=true)
+        op = capture_index_instance(ex.args[3]; ctx..., namify=false)
         rhs = capture_index_instance(ex.args[5]; ctx...)
         return :($assign_instance($lhs, $op, $rhs))
     elseif ex isa Expr && ex.head == :call && length(ex.args) >= 1

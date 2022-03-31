@@ -8,7 +8,7 @@ using DataStructures
 using Base.Iterators
 using Base: @kwdef
 
-export @index
+export @index, @index_code_lowered
 
 export Fiber, HollowList, HollowHash, HollowCoo, Solid, Element, FiberArray
 export walk, gallop, follow, extrude, laminate
