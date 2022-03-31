@@ -69,7 +69,7 @@ Finch.getvalue(ex::Literal) = ex.val
 struct Pass <: IndexStatement
 	tnss::Vector{Any}
 end
-Base.:(==)(a::Pass, b::Pass) = Set(a.tnss) == Set(b.tns)
+Base.:(==)(a::Pass, b::Pass) = Set(a.tnss) == Set(b.tnss) #TODO This feels... not quite right
 
 pass(args...) = pass!(vcat(args...))
 pass!(args) = Pass(args)
@@ -197,36 +197,6 @@ end
 
 Finch.getresults(stmt::Loop) = Finch.getresults(stmt.body)
 
-struct Chunk <: IndexStatement
-	idx::Any
-    ext::Any
-	body::Any
-end
-Base.:(==)(a::Chunk, b::Chunk) = a.idxs == b.idxs && a.body == b.body
-
-chunk(args...) = chunk!(vcat(args...))
-chunk!(args) = Chunk(args, pop!(args))
-
-SyntaxInterface.istree(::Chunk) = true
-SyntaxInterface.operation(stmt::Chunk) = chunk
-SyntaxInterface.arguments(stmt::Chunk) = Any[stmt.idxs; stmt.body]
-SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(chunk), args) = chunk!(args)
-
-function show_statement(io, mime, stmt::Chunk, level)
-    print(io, tab^level * "@∀ ")
-    if !isempty(stmt.idxs)
-        show_expression(io, mime, stmt.idxs[1])
-        for idx in stmt.idxs[2:end]
-            print(io," ")
-            show_expression(io, mime, idx)
-        end
-    end
-    print(io," (\n")
-    show_statement(io, mime, stmt.body, level + 1)
-    print(io, tab^level * ")\n")
-end
-
-Finch.getresults(stmt::Chunk) = Finch.getresults(stmt.body)
 
 struct Assign{Lhs} <: IndexStatement
 	lhs::Lhs

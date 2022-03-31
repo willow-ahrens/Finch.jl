@@ -9,6 +9,7 @@ module IndexNotation
     export With, with
     export Multi, multi
     export Loop, loop
+    export Chunk, chunk
     export Assign, assign
     export Call, call
     export Access, Read, Write, Update, access, access

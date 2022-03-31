@@ -166,7 +166,7 @@ uuid = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 deps = ["AbstractTrees", "Documenter", "SyntaxInterface"]
 path = "/Users/Peter/Projects/RewriteTools.jl"
 uuid = "5969e224-3634-4c61-9f66-721b69e98b8a"
-version = "0.1.0"
+version = "0.1.1"
 
 [[deps.SHA]]
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"

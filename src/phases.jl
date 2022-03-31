@@ -31,16 +31,17 @@ struct PipelineVisitor <: AbstractCollectVisitor
     ctx
 end
 
-function (ctx::LowerJulia)(root, ::PipelineStyle)
-    phases = Dict(PipelineVisitor(ctx)(root))
+function (ctx::LowerJulia)(root::Chunk, ::PipelineStyle)
+    phases = Dict(PipelineVisitor(ctx)(root.body))
     children(key) = intersect(map(i->(key_2 = copy(key); key_2[i] += 1; key_2), 1:length(key)), keys(phases))
     parents(key) = intersect(map(i->(key_2 = copy(key); key_2[i] -= 1; key_2), 1:length(key)), keys(phases))
 
-    i = getname(root.idxs[1])
+    i = getname(root.idx)
     i0 = ctx.freshen(i, :_start)
     step = ctx.freshen(i, :_step)
+    
     thunk = quote
-        $i0 = $(ctx(start(ctx.dims[i])))
+        $i0 = $(ctx(start(root.ext)))
     end
 
     ctx_2s = Dict(minimum(keys(phases)) => ctx)
@@ -56,18 +57,22 @@ function (ctx::LowerJulia)(root, ::PipelineStyle)
             body = ThunkVisitor(ctx_3)(body)
             guards = (PhaseGuardVisitor(ctx_3, i, i0))(body)
             strides = (PhaseStrideVisitor(ctx_3, i, i0))(body)
-            strides = [strides; ctx(stop(ctx.dims[i]))]
-            body = (PhaseBodyVisitor(ctx_3, i, i0, step))(body)
+            strides = [strides; ctx(stop(root.ext))]
+            body = (PhaseBodyVisitor(ctx_3, i, i0, step, (ctx)(stop(root.ext))))(body)
             block = quote
                 $(contain(ctx_3) do ctx_4
-                    if extent(ctx.dims[i]) == 1
-                        restrict(ctx_4, i => UnitExtent(Virtual{Any}(step))) do
-                            (ctx_4)(body)
-                        end
+                    if extent(root.ext) == 1
+                        (ctx_4)(Chunk(
+                            idx = root.idx,
+                            ext = UnitExtent(Virtual{Any}(step)),
+                            body = body
+                        ))
                     else
-                        restrict(ctx_4, i => Extent(Virtual{Any}(i0), Virtual{Any}(step))) do
-                            (ctx_4)(body)
-                        end
+                        (ctx_4)(Chunk(
+                            idx = root.idx,
+                            ext = Extent(Virtual{Any}(i0), Virtual{Any}(step)),
+                            body = body
+                        ))
                     end
                 end)
                 $i0 = $step + 1
@@ -133,7 +138,8 @@ collect_zero(::PhaseStrideVisitor) = []
     idx
     start
     step
+    stop
 end
 (ctx::PhaseBodyVisitor)(node::Phase, ::DefaultStyle) = node.body(ctx.start, ctx.step)
-(ctx::PhaseBodyVisitor)(node::Stepper, ::DefaultStyle) = truncate(node, ctx.ctx, ctx.start, ctx.step, (ctx.ctx)(stop(ctx.ctx.dims[ctx.idx])))
-(ctx::PhaseBodyVisitor)(node::Spike, ::DefaultStyle) = truncate(node, ctx.ctx, ctx.start, ctx.step, (ctx.ctx)(stop(ctx.ctx.dims[ctx.idx])))
+(ctx::PhaseBodyVisitor)(node::Stepper, ::DefaultStyle) = truncate(node, ctx.ctx, ctx.start, ctx.step, ctx.stop)
+(ctx::PhaseBodyVisitor)(node::Spike, ::DefaultStyle) = truncate(node, ctx.ctx, ctx.start, ctx.step, ctx.stop)

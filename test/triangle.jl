@@ -20,9 +20,10 @@ function tri(mtx)
     C = Finch.Fiber(
         Element{0.0, Float64}(zeros(1)))
 
-    #ex = Finch.@index_program_instance @loop i j k C[] += A[i, k] * A2[i, j] * A3[j, k]
-    #display(Finch.execute_code_lowered(:ex, typeof(ex)))
-    #println()
+    ex = Finch.@index_program_instance @loop i j k C[] += A[i, k] * A[i, j] * A[j, k]
+    display(Finch.execute_code_lowered(:ex, typeof(ex)))
+    println()
+    exit()
     foo(ex) = (@inbounds begin
         C_lvl = ex.body.lhs.tns.tns.lvl
         C_lvl_val_q = length(ex.body.lhs.tns.tns.lvl.val)

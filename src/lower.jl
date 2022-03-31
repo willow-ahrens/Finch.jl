@@ -63,16 +63,6 @@ function bind(f, ctx::LowerJulia, (var, val′), tail...)
     end
 end
 
-restrict(f, ctx::LowerJulia) = f()
-function restrict(f, ctx::LowerJulia, (idx, ext′), tail...)
-    @assert haskey(ctx.dims, idx)
-    ext = ctx.dims[idx]
-    ctx.dims[idx] = ext′
-    res = restrict(f, ctx, tail...)
-    ctx.dims[idx] = ext
-    return res
-end
-
 function scope(f, ctx)
     ctx_2 = shallowcopy(ctx)
     ctx_2.defs = Set()
@@ -275,7 +265,6 @@ end
 function (ctx::LowerJulia)(root::Multi, ::DefaultStyle)
     thunk = Expr(:block)
     for body in root.bodies
-        println(body)
         push!(thunk.args, quote
             $(contain(ctx) do ctx_2
                 (ctx_2)(body)
@@ -309,37 +298,70 @@ function (ctx::LowerJulia)(root::Access{<:Number, Read}, ::DefaultStyle)
     return root.tns
 end
 
+#TODO should Chunk be a first-class node, or just an intermediate lowering thing?
+Base.@kwdef struct Chunk <: IndexStatement
+	idx::Any
+    ext::Any
+	body::Any
+end
+Base.:(==)(a::Chunk, b::Chunk) = a.idx == b.idx && a.ext == b.ext && a.body == b.body
+
+chunk(args...) = chunk!(vcat(args...))
+chunk!(args) = Chunk(args[1], args[2], args[3])
+
+SyntaxInterface.istree(::Chunk) = true
+SyntaxInterface.operation(stmt::Chunk) = chunk
+SyntaxInterface.arguments(stmt::Chunk) = Any[stmt.idx, stmt.ext, stmt.body]
+SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(chunk), args) = chunk!(args)
+
+function show_statement(io, mime, stmt::Chunk, level)
+    print(io, tab^level * "@∀ ")
+    show_expression(io, mime, stmt.idx)
+    print(io, " : ")
+    show_expression(io, mime, stmt.ext)
+    print(io," (\n")
+    show_statement(io, mime, stmt.body, level + 1)
+    print(io, tab^level * ")\n")
+end
+
+Finch.getresults(stmt::Chunk) = Finch.getresults(stmt.body)
+
 function (ctx::LowerJulia)(stmt::Loop, ::DefaultStyle)
     if isempty(stmt.idxs)
-        return ctx(stmt.body)
+        ctx(stmt.body)
     else
-        idx_sym = ctx.freshen(getname(stmt.idxs[1]))
-        body = Loop(stmt.idxs[2:end], stmt.body)
-        ext = ctx.dims[getname(stmt.idxs[1])]
-        if extent(ext) == 1
-            return quote
-                $idx_sym = $(ctx(start(ext)))
-                $(bind(ctx, getname(stmt.idxs[1]) => idx_sym) do 
-                    contain(ctx) do ctx_2
-                        body_3 = ForLoopVisitor(ctx_2, stmt.idxs[1], idx_sym)(body)
-                        (ctx_2)(body_3)
-                    end
-                end)
-            end
-        else
-            return quote
-                for $idx_sym = $(ctx(start(ext))):$(ctx(stop(ext)))
-                    $(fixpoint(ctx) do ctx_2
-                        scope(ctx_2) do ctx_3
-                            bind(ctx_3, getname(stmt.idxs[1]) => idx_sym) do 
-                                contain(ctx_3) do ctx_4
-                                    body_3 = ForLoopVisitor(ctx_4, stmt.idxs[1], idx_sym)(body)
-                                    (ctx_4)(body_3)
-                                end
+        ctx(Chunk(
+            idx = stmt.idxs[1],
+            ext = ctx.dims[getname(stmt.idxs[1])],
+            body = Loop(stmt.body, stmt.idxs[2:end])
+        ))
+    end
+end
+function (ctx::LowerJulia)(stmt::Chunk, ::DefaultStyle)
+    idx_sym = ctx.freshen(getname(stmt.idx))
+    if extent(stmt.ext) == 1
+        return quote
+            $idx_sym = $(ctx(start(stmt.ext)))
+            $(bind(ctx, getname(stmt.idx) => idx_sym) do 
+                contain(ctx) do ctx_2
+                    body_3 = ForLoopVisitor(ctx_2, stmt.idx, idx_sym)(stmt.body)
+                    (ctx_2)(body_3)
+                end
+            end)
+        end
+    else
+        return quote
+            for $idx_sym = $(ctx(start(stmt.ext))):$(ctx(stop(stmt.ext)))
+                $(fixpoint(ctx) do ctx_2
+                    scope(ctx_2) do ctx_3
+                        bind(ctx_3, getname(stmt.idx) => idx_sym) do 
+                            contain(ctx_3) do ctx_4
+                                body_3 = ForLoopVisitor(ctx_4, stmt.idx, idx_sym)(stmt.body)
+                                (ctx_4)(body_3)
                             end
                         end
-                    end)
-                end
+                    end
+                end)
             end
         end
     end

@@ -7,7 +7,7 @@ isliteral(::Spike) = false
 
 struct SpikeStyle end
 
-make_style(root::Loop, ctx::LowerJulia, node::Spike) = SpikeStyle()
+make_style(root::Chunk, ctx::LowerJulia, node::Spike) = SpikeStyle()
 combine_style(a::DefaultStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::RunStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::ThunkStyle, b::SpikeStyle) = ThunkStyle()
@@ -15,26 +15,26 @@ combine_style(a::SimplifyStyle, b::SpikeStyle) = SimplifyStyle()
 combine_style(a::AcceptRunStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::SpikeStyle, b::SpikeStyle) = SpikeStyle()
 
-function (ctx::LowerJulia)(root::Loop, ::SpikeStyle)
-    @assert !isempty(root.idxs)
-    idx = root.idxs[1]
-    root_body = AccessSpikeBodyVisitor(root, ctx, idx)(root)
-    #TODO arguably we could take several better alternative approaches to rediminsionalization here
-    ext = ctx.dims[getname(root.idxs[1])]
-    if extent(ext) == 1
+function (ctx::LowerJulia)(root::Chunk, ::SpikeStyle)
+    root_body = AccessSpikeBodyVisitor(root.body, ctx, root.idx, root.ext)(root.body)
+    if extent(root.ext) == 1
         body_expr = quote end
     else
-        body_expr = restrict(ctx, getname(root.idxs[1]) => spike_body_range(ext, ctx)) do
-            contain(ctx) do ctx_2
-                (ctx_2)(root_body)
-            end
+        body_expr = contain(ctx) do ctx_2
+            (ctx_2)(Chunk(
+                idx = root.idx,
+                ext = spike_body_range(root.ext, ctx),
+                body = root_body,
+            ))
         end
     end
-    root_tail = AccessSpikeTailVisitor(root, ctx, idx, stop(ext))(root)
-    tail_expr = restrict(ctx, getname(root.idxs[1]) => UnitExtent(stop(ext))) do
-        contain(ctx) do ctx_2
-            (ctx_2)(root_tail)
-        end
+    root_tail = AccessSpikeTailVisitor(root.body, ctx, root.idx, stop(root.ext))(root.body)
+    tail_expr = contain(ctx) do ctx_2
+        (ctx_2)(Chunk(
+            idx = root.idx,
+            ext = UnitExtent(stop(root.ext)),
+            body = root_tail,
+        ))
     end
     return Expr(:block, body_expr, tail_expr)
 end
@@ -44,6 +44,7 @@ end
     root
     ctx
     idx
+    ext
 end
 
 function (ctx::AccessSpikeBodyVisitor)(node::Access{Spike}, ::DefaultStyle)
@@ -51,8 +52,7 @@ function (ctx::AccessSpikeBodyVisitor)(node::Access{Spike}, ::DefaultStyle)
 end
 
 function (ctx::AccessSpikeBodyVisitor)(node::Access, ::DefaultStyle)
-    ext = ctx.ctx.dims[getname(ctx.idx)]
-    return Access(truncate(node.tns, ctx.ctx, start(ext), spike_body_stop(stop(ext), ctx.ctx), stop(ext)), node.mode, node.idxs)
+    return Access(truncate(node.tns, ctx.ctx, start(ctx.ext), spike_body_stop(stop(ctx.ext), ctx.ctx), stop(ctx.ext)), node.mode, node.idxs)
 end
 
 spike_body_stop(stop, ctx) = :($(ctx(stop)) - 1)
@@ -84,7 +84,7 @@ default(node::AcceptSpike) = node.val #TODO is this semantically... okay?
 
 struct AcceptSpikeStyle end
 
-make_style(root::Loop, ctx::LowerJulia, node::Access{AcceptSpike, <:Union{Write, Update}}) = AcceptSpikeStyle()
+make_style(root::Chunk, ctx::LowerJulia, node::Access{AcceptSpike, <:Union{Write, Update}}) = AcceptSpikeStyle()
 combine_style(a::DefaultStyle, b::AcceptSpikeStyle) = AcceptSpikeStyle()
 combine_style(a::ThunkStyle, b::AcceptSpikeStyle) = ThunkStyle()
 combine_style(a::SimplifyStyle, b::AcceptSpikeStyle) = SimplifyStyle()
@@ -93,10 +93,10 @@ combine_style(a::AcceptRunStyle, b::AcceptSpikeStyle) = AcceptSpikeStyle()
 combine_style(a::RunStyle, b::AcceptSpikeStyle) = RunStyle()
 combine_style(a::SpikeStyle, b::AcceptSpikeStyle) = SpikeStyle()
 
-function (ctx::LowerJulia)(root::Loop, ::AcceptSpikeStyle)
+function (ctx::LowerJulia)(root::Chunk, ::AcceptSpikeStyle)
     #call DefaultStyle because we didn't simplify away the body or tail of
     #corresponding Spikes, and need to set all the elements of the spike.
-    return ctx(Loop(root.idxs[1:end], root.body), DefaultStyle())
+    return ctx(root, DefaultStyle())
 end
 
 @kwdef mutable struct AcceptSpikeVisitor <: AbstractTransformVisitor
