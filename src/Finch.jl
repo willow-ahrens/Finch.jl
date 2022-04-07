@@ -10,7 +10,7 @@ using Base: @kwdef
 
 export @index, @index_code_lowered
 
-export Fiber, HollowList, HollowHash, HollowCoo, Solid, Element, FiberArray
+export Fiber, HollowList, HollowHash, HollowCoo, Solid, Element, FiberArray, Scalar
 export walk, gallop, follow, extrude, laminate
 
 include("util.jl")
@@ -34,6 +34,7 @@ include("phases.jl")
 include("execute.jl")
 include("virtual_abstractarray.jl")
 include("fibers.jl")
+include("scalars.jl")
 include("hollowlistlevels.jl")
 include("hollowhashlevels.jl")
 include("hollowcoolevels.jl")

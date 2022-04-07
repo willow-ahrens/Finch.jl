@@ -25,11 +25,6 @@ function (spc::Freshen)(tags...)
     end
 end
 
-struct Scalar
-    name
-    val
-end
-
 @kwdef mutable struct LowerJulia <: AbstractVisitor
     preamble::Vector{Any} = []
     bindings::Dict{Any, Any} = Dict()
@@ -293,9 +288,6 @@ function (ctx::LowerJulia)(root::Access, ::DefaultStyle)
     :($(ctx(tns))[$(idxs...)])
 end
 
-function (ctx::LowerJulia)(root::Access{<:Scalar}, ::DefaultStyle)
-    return ctx(root.tns.val)
-end
 
 function (ctx::LowerJulia)(root::Access{<:Number, Read}, ::DefaultStyle)
     @assert isempty(root.idxs)
