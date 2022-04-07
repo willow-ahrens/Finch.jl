@@ -1,5 +1,7 @@
 using MatrixDepot
 using Finch
+using Finch.IndexNotation
+using RewriteTools
 using BenchmarkTools
 using SparseArrays
 using LinearAlgebra
@@ -45,6 +47,27 @@ end
 ##tri("SNAP/web-BerkStan")
 #exit()
 
+#println(@macroexpand(@i(@chunk i a @multi b... (c[j...] <min>= d) e...)))
+@slots a b c d e i j Finch.add_rules!([
+    (@rule @i(@chunk $i a (b[j...] <min>= d)) => if isliteral(d) && i ∉ j
+        @i (b[j...] <min>= d)
+    end),
+    (@rule @i(@chunk $i a @multi b... (c[j...] <min>= d) e...) => begin
+        if Finch.isliteral(d) && i ∉ j
+            @i @multi (c[j...] <min>= d) @chunk i a @i(@multi b... e...)
+        end
+    end),
+    (@rule @i(@chunk $i a (b[j...] <max>= d)) => if isliteral(d) && i ∉ j
+        @i (b[j...] <max>= d)
+    end),
+    (@rule @i(@chunk $i a @multi b... (c[j...] <max>= d) e...) => begin
+        if Finch.isliteral(d) && i ∉ j
+            @i @multi (c[j...] <max>= d) @chunk i a @i(@multi b... e...)
+        end
+    end),
+])
+
+Finch.register()
 
 function stats(n, p)
     println("stats: n=$n p=$p")

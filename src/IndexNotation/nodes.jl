@@ -167,6 +167,33 @@ end
 
 Finch.getresults(stmt::Multi) = mapreduce(Finch.getresults, vcat, stmt.bodies)
 
+Base.@kwdef struct Chunk <: IndexStatement
+	idx::Any
+    ext::Any
+	body::Any
+end
+Base.:(==)(a::Chunk, b::Chunk) = a.idx == b.idx && a.ext == b.ext && a.body == b.body
+
+chunk(args...) = chunk!(vcat(args...))
+chunk!(args) = Chunk(args[1], args[2], args[3])
+
+SyntaxInterface.istree(::Chunk) = true
+SyntaxInterface.operation(stmt::Chunk) = chunk
+SyntaxInterface.arguments(stmt::Chunk) = Any[stmt.idx, stmt.ext, stmt.body]
+SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(chunk), args) = chunk!(args)
+
+function show_statement(io, mime, stmt::Chunk, level)
+    print(io, tab^level * "@∀ ")
+    show_expression(io, mime, stmt.idx)
+    print(io, " : ")
+    show_expression(io, mime, stmt.ext)
+    print(io," (\n")
+    show_statement(io, mime, stmt.body, level + 1)
+    print(io, tab^level * ")\n")
+end
+
+Finch.getresults(stmt::Chunk) = Finch.getresults(stmt.body)
+
 struct Loop <: IndexStatement
 	idxs::Vector{Any}
 	body::Any

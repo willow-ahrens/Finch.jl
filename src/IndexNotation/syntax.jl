@@ -10,6 +10,11 @@ function capture_index(ex; ctx...)
         idxs = map(arg -> capture_index(arg; ctx..., namify=true), ex.args[3:end-1])
         body = capture_index(ex.args[end]; ctx...)
         return :($loop($(idxs...), $body))
+    elseif ex isa Expr && ex.head == :macrocall && length(ex.args) == 5 && ex.args[1] == Symbol("@chunk")
+        idx = capture_index(ex.args[3]; ctx...) #TODO namify?
+        ext = capture_index(ex.args[4]; ctx..., namify=false)
+        body = capture_index(ex.args[5]; ctx...)
+        return :($chunk($idx, $ext, $body))
     elseif ex isa Expr && ex.head == :where && length(ex.args) == 2
         cons = capture_index(ex.args[1]; ctx...)
         prod = capture_index(ex.args[2]; ctx..., results=Set())
