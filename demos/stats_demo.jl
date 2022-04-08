@@ -6,9 +6,8 @@ using BenchmarkTools
 using SparseArrays
 using LinearAlgebra
 
-#=
 @slots a b c d e i j Finch.add_rules!([
-    (@rule @i(@chunk $i a (b[j...] <min>= d)) => if isliteral(d) && i ∉ j
+    (@rule @i(@chunk $i a (b[j...] <min>= d)) => if Finch.isliteral(d) && i ∉ j
         @i (b[j...] <min>= d)
     end),
     (@rule @i(@chunk $i a @multi b... (c[j...] <min>= d) e...) => begin
@@ -16,7 +15,7 @@ using LinearAlgebra
             @i @multi (c[j...] <min>= d) @chunk i a @i(@multi b... e...)
         end
     end),
-    (@rule @i(@chunk $i a (b[j...] <max>= d)) => if isliteral(d) && i ∉ j
+    (@rule @i(@chunk $i a (b[j...] <max>= d)) => if Finch.isliteral(d) && i ∉ j
         @i (b[j...] <max>= d)
     end),
     (@rule @i(@chunk $i a @multi b... (c[j...] <max>= d) e...) => begin
@@ -27,7 +26,6 @@ using LinearAlgebra
 ])
 
 Finch.register()
-=#
 
 function stats(n, p)
     println("stats: n=$n p=$p")
