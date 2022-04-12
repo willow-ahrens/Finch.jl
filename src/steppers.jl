@@ -56,7 +56,7 @@ function (ctx::LowerJulia)(root::Chunk, ::StepperStyle)
                     step_min = quote
                         $step = min($(map(ctx_3, strides)...), $(ctx_3(stop(root.ext))))
                     end
-                    if length(strides) == 1 && length(guards) == 1
+                    if length(strides) == 1 && length(guards) == 1 && false #Guards are unsafe to use alone. We need to also include a check for end of range.
                         guard = guards[1]
                     else
                         guard = :($i0 <= $(ctx_3(stop(root.ext))))

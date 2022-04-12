@@ -48,44 +48,26 @@ function (ctx::LowerJulia)(root::Chunk, ::JumperStyle)
             scope(ctx_2) do ctx_3
                 body_3 = ThunkVisitor(ctx_3)(body)
                 strides = (PhaseStrideVisitor(ctx_3, i, i0))(body_3)
-                if length(strides) <= 1
-                    step = ctx_3(stop(root.ext))
-                    body_4 = (PhaseBodyVisitor(ctx_3, i, i0, step, ctx_3(stop(root.ext))))(body_3)
-                    quote
-                        $(contain(ctx_3) do ctx_4
-                            (ctx_4)(Chunk(
-                                idx = root.idx,
-                                ext = Extent(Virtual{Any}(i0), Virtual{Any}(step)),
-                                body = body_4
-                            ))
-                        end)
-                    end
-                else
-                    step = ctx.freshen(i, :_step)
-                    body_4 = (PhaseBodyVisitor(ctx_3, i, i0, step, ctx_3(stop(root.ext))))(body_3)
-                    guard = :($i0 <= $(ctx_3(stop(root.ext))))
-                    quote
-                        $step = min(max($(map(ctx_3, strides)...)), $(ctx_3(stop(root.ext))))
-                        $(contain(ctx_3) do ctx_4
-                            (ctx_4)(Chunk(
-                                idx = root.idx,
-                                ext = Extent(Virtual{Any}(i0), Virtual{Any}(step)),
-                                body = body_4
-                            ))
-                        end)
-                        $i0 = $step + 1
-                    end
+                step = ctx.freshen(i, :_step)
+                body_4 = (PhaseBodyVisitor(ctx_3, i, i0, step, ctx_3(stop(root.ext))))(body_3)
+                guard = :($i0 <= $(ctx_3(stop(root.ext))))
+                quote
+                    $step = min(max($(map(ctx_3, strides)...)), $(ctx_3(stop(root.ext))))
+                    $(contain(ctx_3) do ctx_4
+                        (ctx_4)(Chunk(
+                            idx = root.idx,
+                            ext = Extent(Virtual{Any}(i0), Virtual{Any}(step)),
+                            body = body_4
+                        ))
+                    end)
+                    $i0 = $step + 1
                 end
             end
         end
-        if guard !== nothing
-            return quote
-                while $guard
-                    $body_2
-                end
+        return quote
+            while $guard
+                $body_2
             end
-        else
-            return body_2
         end
     end
 end

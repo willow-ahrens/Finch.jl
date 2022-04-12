@@ -75,7 +75,7 @@ function mul_vec(n, p, q; verbose=false)
         Element{0.0, Float64}())
     )
     
-    println("C[i] = A[i] + B[i]")
+    println("C[i] = A[i] * B[i]")
     if verbose
         display(@index_code_lowered @loop i C[i] = A[i] * B[i])
         println()
@@ -121,7 +121,7 @@ function dot(n, p, q; verbose=false)
     )
     C = Scalar{0.0}()
     
-    println("C[] += A[i] + B[i]")
+    println("C[] += A[i] * B[i]")
     if verbose
         display(@index_code_lowered @loop i C[] += A[i] * B[i])
         println()
@@ -150,6 +150,52 @@ function dot(n, p, q; verbose=false)
     #println()
 end
 
+function minplus(n, p, q; verbose=false)
+    @info "minplus" n p q
+
+    A_ref = sprand(n, p)
+    B_ref = sprand(n, q)
+    I, V = findnz(A_ref)
+    J, W = findnz(B_ref)
+    A = Fiber(
+        HollowList(n, [1, length(I) + 1], I,
+        Element{0.0, Float64}(V))
+    )
+    B = Fiber(
+        HollowList(n, [1, length(J) + 1], J,
+        Element{0.0, Float64}(W))
+    )
+    C = Scalar{0.0}()
+    
+    println("C[] <min>= A[i] + B[i]")
+    if verbose
+        display(@index_code_lowered @loop i C[] <min>= A[i] + B[i])
+        println()
+    end
+    display((@benchmark (A = $A; B = $B; C = $C; @index @loop i C[] <min>= A[i] + B[i])))
+    println()
+
+    println("C[] += A[i] * B[i::gallop]")
+    if verbose
+        display(@index_code_lowered @loop i C[] <min>= A[i] + B[i::gallop])
+        println()
+    end
+    display((@benchmark (A = $A; B = $B; C = $C; @index @loop i C[] <min>= A[i] + B[i::gallop])))
+    println()
+
+    println("C[] += A[i::gallop] * B[i::gallop]")
+    if verbose
+        display(@index_code_lowered @loop i C[] <min>= A[i::gallop] + B[i::gallop])
+        println()
+    end
+    display((@benchmark (A = $A; B = $B; C = $C; @index @loop i C[] <min>= A[i::gallop] + B[i::gallop])))
+    println()
+
+    #println("Julia:")
+    #display((@benchmark $A_ref * $B_ref))
+    #println()
+end
+
 dot(100_000, 0.1, 0.001, verbose=true)
-add_vec(100_000, 0.1, 0.001)
+add_vec(100_000, 0.1, 0.001, verbose=true)
 mul_vec(100_000, 0.1, 0.001)
