@@ -39,3 +39,10 @@ Base.setproperty!(env::VirtualEnvironment, name::Symbol, x) = setindex(getfield(
 Base.get(env::VirtualEnvironment, name::Symbol, x) = get(getfield(env, :props), name, x)
 
 Base.get!(env::VirtualEnvironment, name::Symbol, x) = get!(getfield(env, :props), name, x)
+
+envcoordinate(env::Environment) = env.index
+envposition(env::Environment) = env.position
+envdepth(env::Environment) = haskey(env, :index) + envdepth(env.parent)
+envdeferred(env::Environment) = haskey(env, :internal) ? (env.index, envdeferred(env.parent)...) : ()
+envparent(env::Environment) = haskey(env, :internal) ? env.parent : ()
+envguard(env::Environment) = haskey(env, :guard) ? env.guard : nothing
