@@ -61,7 +61,7 @@ envsetname!(env::VirtualNameEnvironment, name) = (env.name = name; env)
 An environment that holds a position `pos`, corresponding coordinate `idx`, and parent
 environment `env`.
 
-See also: [`envposition`](@ref), [`envcoordinate`](@ref), [`getparent`](@ref)
+See also: [`envposition`](@ref), [`envcoordinate`](@ref)
 """
 struct PositionEnvironment{Tp, Ti, Env}
     pos::Tp
@@ -94,7 +94,7 @@ envdepth(env::VirtualPositionEnvironment) = 1 + envdepth(env.env)
 An environment that holds a deferred coordinate `idx`, and parent
 environment `env`.
 
-See also: [`envdeferred`](@ref), [`envcoordinate`](@ref), [`getparent`](@ref)
+See also: [`envdeferred`](@ref), [`envcoordinate`](@ref)
 """
 struct DeferredEnvironment{Ti, Env}
     idx::Ti
@@ -191,8 +191,6 @@ envmaxposition(env::VirtualMaxPositionEnvironment) = env.pos
 
 An environment that abstracts over all positions, not making a choice. The
 parent environment is `env`.
-
-See also: [`getparent`](@ref)
 """
 struct ArbitraryEnvironment{Env}
     env::Env
@@ -227,9 +225,8 @@ Get the coordinate (index) in the previous environment.
 envcoordinate(env::PositionEnvironment) = env.idx
 
 """
-    getparent(env)
+    envparent(env)
 
-Get the parent of the environment.
+Strip internal environments, leaving the parent environment.
 """
-getparent(env::PositionEnvironment) = env.env
-getparent(env::ArbitraryEnvironment) = env.env
+envparent(env) = env

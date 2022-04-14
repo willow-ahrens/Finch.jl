@@ -18,8 +18,6 @@ dimension(lvl::SolidLevel) = lvl.I
     SolidEnvironment(pos, idx, env)
 
 The environment introduced by the SolidLevel.
-
-See also: [`envposition`](@ref), [`envcoordinate`](@ref), [`getparent`](@ref)
 """
 struct SolidEnvironment{Pos, Idx, Env}
     pos::Pos

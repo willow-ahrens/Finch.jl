@@ -25,8 +25,6 @@ HollowCooLevel{N, Ti, Tp_2, Tbl}(I::Ti, tbl::Tbl, pos, lvl::Lvl) where {N, Ti, T
     HollowCooEnvironment(pos, idx, env)
 
 The environment introduced by a HollowCooLevel.
-
-See also: [`envcoordinate`](@ref), [`getparent`](@ref)
 """
 struct HollowCooEnvironment{Pos, Idx, Env}
     pos::Pos
@@ -59,8 +57,6 @@ envdepth(env::VirtualHollowCooEnvironment) = 1 + envdepth(env.env)
     HollowCooSearchEnvironment(pos, idx, env)
 
 The environment introduced inside a HollowCooLevel.
-
-See also: [`envcoordinate`](@ref), [`getparent`](@ref)
 """
 struct HollowCooSearchEnvironment{Start, Stop, Idx, Env}
     start::Start
@@ -71,6 +67,7 @@ end
 envdepth(env::HollowCooSearchEnvironment) = 1 + envdepth(env.env)
 envcoordinate(env::HollowCooSearchEnvironment) = env.idx
 envdeferred(env::HollowCooSearchEnvironment) = (env.idx, envdeferred(env.env)...)
+envparent(env::HollowCooSearchEnvironment) = env.env
 
 struct VirtualHollowCooSearchEnvironment
     start
@@ -87,16 +84,15 @@ end
 (ctx::Finch.LowerJulia)(env::VirtualHollowCooSearchEnvironment) = :(HollowCooSearchEnvironment($(ctx(env.pos)), $(ctx(env.idx)), $(ctx(env.env))))
 isliteral(::VirtualHollowCooSearchEnvironment) = false
 
-envcoordinate(env::VirtualHollowCooEnvironment) = env.idx
-envdepth(env::VirtualHollowCooEnvironment) = 1 + envdepth(env.env)
+envcoordinate(env::VirtualHollowCooSearchEnvironment) = env.idx
+envdepth(env::VirtualHollowCooSearchEnvironment) = 1 + envdepth(env.env)
 envdeferred(env::VirtualHollowCooSearchEnvironment) = (env.idx, envdeferred(env.env)...)
+envparent(env::VirtualHollowCooSearchEnvironment) = env.env
 
 """
     HollowCooBufferEnvironment(idx, env)
 
 The environment introduced inside a HollowCooLevel to just buffer up a coordinate to write later.
-
-See also: [`envcoordinate`](@ref), [`getparent`](@ref)
 """
 struct HollowCooBufferEnvironment{Idx, Env}
     idx::Idx
@@ -105,6 +101,7 @@ end
 envdepth(env::HollowCooBufferEnvironment) = 1 + envdepth(env.env)
 envcoordinate(env::HollowCooBufferEnvironment) = env.idx
 envdeferred(env::HollowCooBufferEnvironment) = (env.idx, envdeferred(env.env)...)
+envparent(env::HollowCooBufferEnvironment) = env.env
 
 struct VirtualHollowCooBufferEnvironment
     idx
@@ -118,9 +115,10 @@ end
 (ctx::Finch.LowerJulia)(env::VirtualHollowCooBufferEnvironment) = :(HollowCooBufferEnvironment($(ctx(env.idx)), $(ctx(env.env))))
 isliteral(::VirtualHollowCooBufferEnvironment) = false
 
-envcoordinate(env::VirtualHollowCooEnvironment) = env.idx
-envdepth(env::VirtualHollowCooEnvironment) = 1 + envdepth(env.env)
+envcoordinate(env::VirtualHollowCooBufferEnvironment) = env.idx
+envdepth(env::VirtualHollowCooBufferEnvironment) = 1 + envdepth(env.env)
 envdeferred(env::VirtualHollowCooBufferEnvironment) = (env.idx, envdeferred(env.env)...)
+envparent(env::VirtualHollowCooBufferEnvironment) = env.env
 
 function (fbr::Fiber{<:HollowCooLevel{N, Ti}})(i, tail...) where {N, Ti}
     lvl = fbr.lvl
@@ -345,7 +343,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Union{Write
     if R == lvl.N
         Thunk(
             preamble = quote
-                $my_p = $(lvl.ex).pos[$(ctx(envposition(fbr.env)))]
+                $my_p = $(lvl.ex).pos[$(ctx(envposition(envparent(fbr.env))))]
             end,
             body = AcceptSpike(
                 val = default(fbr),
@@ -383,7 +381,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Union{Write
                 )
             ),
             epilogue = quote
-                $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1] = $my_p
+                $(lvl.ex).pos[$(ctx(envposition(envparent(fbr.env)))) + 1] = $my_p
             end
         )
     else
