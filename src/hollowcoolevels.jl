@@ -21,6 +21,107 @@ HollowCooLevel{N, Ti, Tp_2, Tbl}(I::Ti, tbl::Tbl, pos, lvl::Lvl) where {N, Ti, T
 @inline image(fbr::Fiber{<:HollowCooLevel{N}}) where {N} = image(Fiber(fbr.lvl.lvl, ∘(repeated(ArbitraryEnvironment, N)...)(fbr.env)))
 @inline default(fbr::Fiber{<:HollowCooLevel{N}}) where {N} = default(Fiber(fbr.lvl.lvl, ∘(repeated(ArbitraryEnvironment, N)...)(fbr.env)))
 
+"""
+    HollowCooEnvironment(pos, idx, env)
+
+The environment introduced by a HollowCooLevel.
+
+See also: [`envcoordinate`](@ref), [`getparent`](@ref)
+"""
+struct HollowCooEnvironment{Pos, Idx, Env}
+    pos::Pos
+    idx::Idx
+    env::Env
+end
+envdepth(env::HollowCooEnvironment) = 1 + envdepth(env.env)
+envposition(env::HollowCooEnvironment) = env.pos
+envcoordinate(env::HollowCooEnvironment) = env.idx
+
+struct VirtualHollowCooEnvironment
+    pos
+    idx
+    env
+end
+function virtualize(ex, ::Type{HollowCooEnvironment{Pos, Idx, Env}}, ctx) where {Pos, Idx, Env}
+    pos = virtualize(:($ex.pos), Pos, ctx)
+    idx = virtualize(:($ex.idx), Idx, ctx)
+    env = virtualize(:($ex.env), Env, ctx)
+    VirtualHollowCooEnvironment(pos, idx, env)
+end
+(ctx::Finch.LowerJulia)(env::VirtualHollowCooEnvironment) = :(HollowCooEnvironment($(ctx(env.pos)), $(ctx(env.idx)), $(ctx(env.env))))
+isliteral(::VirtualHollowCooEnvironment) = false
+
+envposition(env::VirtualHollowCooEnvironment) = env.pos
+envcoordinate(env::VirtualHollowCooEnvironment) = env.idx
+envdepth(env::VirtualHollowCooEnvironment) = 1 + envdepth(env.env)
+
+"""
+    HollowCooSearchEnvironment(pos, idx, env)
+
+The environment introduced inside a HollowCooLevel.
+
+See also: [`envcoordinate`](@ref), [`getparent`](@ref)
+"""
+struct HollowCooSearchEnvironment{Start, Stop, Idx, Env}
+    start::Start
+    stop::Stop
+    idx::Idx
+    env::Env
+end
+envdepth(env::HollowCooSearchEnvironment) = 1 + envdepth(env.env)
+envcoordinate(env::HollowCooSearchEnvironment) = env.idx
+envdeferred(env::HollowCooSearchEnvironment) = (env.idx, envdeferred(env.env)...)
+
+struct VirtualHollowCooSearchEnvironment
+    start
+    stop
+    idx
+    env
+end
+function virtualize(ex, ::Type{HollowCooSearchEnvironment{Pos, Idx, Env}}, ctx) where {Pos, Idx, Env}
+    pos = virtualize(:($ex.pos), Pos, ctx)
+    idx = virtualize(:($ex.idx), Idx, ctx)
+    env = virtualize(:($ex.env), Env, ctx)
+    VirtualHollowCooSearchEnvironment(pos, idx, env)
+end
+(ctx::Finch.LowerJulia)(env::VirtualHollowCooSearchEnvironment) = :(HollowCooSearchEnvironment($(ctx(env.pos)), $(ctx(env.idx)), $(ctx(env.env))))
+isliteral(::VirtualHollowCooSearchEnvironment) = false
+
+envcoordinate(env::VirtualHollowCooEnvironment) = env.idx
+envdepth(env::VirtualHollowCooEnvironment) = 1 + envdepth(env.env)
+envdeferred(env::VirtualHollowCooSearchEnvironment) = (env.idx, envdeferred(env.env)...)
+
+"""
+    HollowCooBufferEnvironment(idx, env)
+
+The environment introduced inside a HollowCooLevel to just buffer up a coordinate to write later.
+
+See also: [`envcoordinate`](@ref), [`getparent`](@ref)
+"""
+struct HollowCooBufferEnvironment{Idx, Env}
+    idx::Idx
+    env::Env
+end
+envdepth(env::HollowCooBufferEnvironment) = 1 + envdepth(env.env)
+envcoordinate(env::HollowCooBufferEnvironment) = env.idx
+envdeferred(env::HollowCooBufferEnvironment) = (env.idx, envdeferred(env.env)...)
+
+struct VirtualHollowCooBufferEnvironment
+    idx
+    env
+end
+function virtualize(ex, ::Type{HollowCooBufferEnvironment{Idx, Env}}, ctx) where {Idx, Env}
+    idx = virtualize(:($ex.idx), Idx, ctx)
+    env = virtualize(:($ex.env), Env, ctx)
+    VirtualHollowCooBufferEnvironment(idx, env)
+end
+(ctx::Finch.LowerJulia)(env::VirtualHollowCooBufferEnvironment) = :(HollowCooBufferEnvironment($(ctx(env.idx)), $(ctx(env.env))))
+isliteral(::VirtualHollowCooBufferEnvironment) = false
+
+envcoordinate(env::VirtualHollowCooEnvironment) = env.idx
+envdepth(env::VirtualHollowCooEnvironment) = 1 + envdepth(env.env)
+envdeferred(env::VirtualHollowCooBufferEnvironment) = (env.idx, envdeferred(env.env)...)
+
 function (fbr::Fiber{<:HollowCooLevel{N, Ti}})(i, tail...) where {N, Ti}
     lvl = fbr.lvl
     R = length(envdeferred(fbr.env)) + 1
@@ -29,17 +130,17 @@ function (fbr::Fiber{<:HollowCooLevel{N, Ti}})(i, tail...) where {N, Ti}
         start = lvl.pos[q]
         stop = lvl.pos[q + 1]
     else
-        start = envstart(fbr.env)
-        stop = envstop(fbr.env)
+        start = fbr.env.start
+        stop = fbr.env.stop
     end
     r = searchsorted(@view(lvl.tbl[R][start:stop - 1]), i)
     p = start + first(r) - 1
     p_2 = start + last(r)
     if R == N
-        fbr_2 = Fiber(lvl.lvl, PositionEnvironment(p, i, fbr.env))
+        fbr_2 = Fiber(lvl.lvl, HollowCooEnvironment(p, i, fbr.env))
         length(r) == 0 ? default(fbr_2) : fbr_2(tail...)
     else
-        fbr_2 = Fiber(lvl, PosRangeEnvironment(p, p_2, i, fbr.env))
+        fbr_2 = Fiber(lvl, HollowCooSearchEnvironment(p, p_2, i, fbr.env))
         length(r) == 0 ? default(fbr_2) : fbr_2(tail...)
     end
 end
@@ -158,13 +259,12 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Read, idx::
     my_p_stop = ctx.freshen(tag, :_p_stop)
     my_i_stop = ctx.freshen(tag, :_i_stop)
     R = length(envdeferred(fbr.env)) + 1
-    @assert R == 1 || (envstart(fbr.env) !== nothing && envstop(fbr.env) !== nothing)
     if R == 1
         p_start = Virtual{lvl.Tp_2}(:($(lvl.ex).pos[$(ctx(envposition(fbr.env)))]))
         p_stop = Virtual{lvl.Tp_2}(:($(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1]))
     else
-        p_start = envstart(fbr.env)
-        p_stop = envstop(fbr.env)
+        p_start = fbr.env.start
+        p_stop = fbr.env.stop
     end
 
     Thunk(
@@ -196,7 +296,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Read, idx::
                                         Thunk(
                                             body = Spike(
                                                 body = Simplify(default(fbr)),
-                                                tail = refurl(VirtualFiber(lvl.lvl, VirtualPositionEnvironment(Virtual{lvl.Tp_2}(:($my_p)), Virtual{lvl.Ti}(my_i), fbr.env)), ctx, mode, idxs...),
+                                                tail = refurl(VirtualFiber(lvl.lvl, VirtualHollowCooEnvironment(Virtual{lvl.Tp_2}(:($my_p)), Virtual{lvl.Ti}(my_i), fbr.env)), ctx, mode, idxs...),
                                             ),
                                             epilogue = quote
                                                 $my_p += 1
@@ -212,7 +312,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Read, idx::
                                             end,
                                             body = Spike(
                                                 body = Simplify(default(fbr)),
-                                                tail = refurl(VirtualFiber(lvl, VirtualPosRangeEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_p_step), Virtual{lvl.Ti}(my_i), fbr.env)), ctx, mode, idxs...),
+                                                tail = refurl(VirtualFiber(lvl, VirtualHollowCooSearchEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_p_step), Virtual{lvl.Ti}(my_i), fbr.env)), ctx, mode, idxs...),
                                             ),
                                             epilogue = quote
                                                 $my_p = $my_p_step
@@ -256,7 +356,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Union{Write
                             quote end
                         end)
                     end,
-                    body = refurl(VirtualFiber(lvl.lvl, PositionEnvironment(Virtual{lvl.Ti}(my_p), idx, fbr.env)), ctx, mode, idxs...),
+                    body = refurl(VirtualFiber(lvl.lvl, VirtualHollowCooEnvironment(Virtual{lvl.Ti}(my_p), idx, fbr.env)), ctx, mode, idxs...),
                     epilogue = begin
                         resize_body = quote end
                         write_body = quote end
@@ -288,7 +388,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Union{Write
         )
     else
         Leaf(
-            body = (i) -> refurl(VirtualFiber(lvl, DeferredEnvironment(i, fbr.env)), ctx, mode, idxs...)
+            body = (i) -> refurl(VirtualFiber(lvl, VirtualHollowCooBufferEnvironment(i, fbr.env)), ctx, mode, idxs...)
         )
     end
 end

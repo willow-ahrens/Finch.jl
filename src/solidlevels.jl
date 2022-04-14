@@ -14,14 +14,47 @@ dimension(lvl::SolidLevel) = lvl.I
 @inline image(fbr::Fiber{<:SolidLevel}) = image(Fiber(fbr.lvl.lvl, ArbitraryEnvironment(fbr.env)))
 @inline default(fbr::Fiber{<:SolidLevel}) = default(Fiber(fbr.lvl.lvl, ArbitraryEnvironment(fbr.env)))
 
+"""
+    SolidEnvironment(pos, idx, env)
+
+The environment introduced by the SolidLevel.
+
+See also: [`envposition`](@ref), [`envcoordinate`](@ref), [`getparent`](@ref)
+"""
+struct SolidEnvironment{Pos, Idx, Env}
+    pos::Pos
+    idx::Idx
+    env::Env
+end
+envdepth(env::SolidEnvironment) = 1 + envdepth(env.env)
+envposition(env::SolidEnvironment) = env.pos
+envcoordinate(env::SolidEnvironment) = env.idx
+
+struct VirtualSolidEnvironment
+    pos
+    idx
+    env
+end
+function virtualize(ex, ::Type{SolidEnvironment{Pos, Idx, Env}}, ctx) where {Pos, Idx, Env}
+    pos = virtualize(:($ex.pos), Pos, ctx)
+    idx = virtualize(:($ex.idx), Idx, ctx)
+    env = virtualize(:($ex.env), Env, ctx)
+    VirtualSolidEnvironment(pos, idx, env)
+end
+(ctx::Finch.LowerJulia)(env::VirtualSolidEnvironment) = :(SolidEnvironment($(ctx(env.pos)), $(ctx(env.idx)), $(ctx(env.env))))
+isliteral(::VirtualSolidEnvironment) = false
+
+envposition(env::VirtualSolidEnvironment) = env.pos
+envcoordinate(env::VirtualSolidEnvironment) = env.idx
+envdepth(env::VirtualSolidEnvironment) = 1 + envdepth(env.env)
+
 function (fbr::Fiber{<:SolidLevel{Ti}})(i, tail...) where {D, Tv, Ti, N, R}
     lvl = fbr.lvl
     q = envposition(fbr.env)
     p = (q - 1) * lvl.I + i
-    fbr_2 = Fiber(lvl.lvl, PositionEnvironment(p, i, fbr.env))
+    fbr_2 = Fiber(lvl.lvl, SolidEnvironment(p, i, fbr.env))
     fbr_2(tail...)
 end
-
 
 
 mutable struct VirtualSolidLevel
@@ -96,7 +129,7 @@ function unfurl(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode::Union{Read, Wri
     p_1 = ctx.freshen(tag, :_p)
     if p == 1
         Leaf(
-            body = (i) -> refurl(VirtualFiber(lvl.lvl, PositionEnvironment(i, i, fbr.env)), ctx, mode, idxs...),
+            body = (i) -> refurl(VirtualFiber(lvl.lvl, SolidEnvironment(i, i, fbr.env)), ctx, mode, idxs...),
         )
     else
         Leaf(
@@ -104,7 +137,7 @@ function unfurl(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode::Union{Read, Wri
                 preamble = quote
                     $p_1 = ($(ctx(p)) - 1) * $(lvl.ex).I + $(ctx(i))
                 end,
-                body = refurl(VirtualFiber(lvl.lvl, PositionEnvironment(Virtual{lvl.Ti}(p_1), i, fbr.env)), ctx, mode, idxs...),
+                body = refurl(VirtualFiber(lvl.lvl, SolidEnvironment(Virtual{lvl.Ti}(p_1), i, fbr.env)), ctx, mode, idxs...),
             )
         )
     end
