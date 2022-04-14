@@ -70,13 +70,14 @@ envcoordinate(env::HollowListEnvironment) = env.idx
 struct VirtualHollowListEnvironment
     pos
     idx
+    isdefault
     env
 end
 function virtualize(ex, ::Type{HollowListEnvironment{Pos, Idx, Env}}, ctx) where {Pos, Idx, Env}
     pos = virtualize(:($ex.pos), Pos, ctx)
     idx = virtualize(:($ex.idx), Idx, ctx)
     env = virtualize(:($ex.env), Env, ctx)
-    VirtualHollowListEnvironment(pos, idx, env)
+    VirtualHollowListEnvironment(pos, idx, env, nothing)
 end
 (ctx::Finch.LowerJulia)(env::VirtualHollowListEnvironment) = :(HollowListEnvironment($(ctx(env.pos)), $(ctx(env.idx)), $(ctx(env.env))))
 isliteral(::VirtualHollowListEnvironment) = false
@@ -84,6 +85,7 @@ isliteral(::VirtualHollowListEnvironment) = false
 envposition(env::VirtualHollowListEnvironment) = env.pos
 envcoordinate(env::VirtualHollowListEnvironment) = env.idx
 envdepth(env::VirtualHollowListEnvironment) = 1 + envdepth(env.env)
+getdefaultcheck(env::VirtualHollowListEnvironment) = env.isdefault
 
 function reconstruct!(lvl::VirtualHollowListLevel, ctx)
     push!(ctx.preamble, quote
@@ -180,7 +182,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
                                     :($step == $my_i) => Thunk(
                                         body = Spike(
                                             body = Simplify(default(fbr)),
-                                            tail = refurl(VirtualFiber(lvl.lvl, VirtualHollowCooEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_i), fbr.env)), ctx, mode, idxs...),
+                                            tail = refurl(VirtualFiber(lvl.lvl, VirtualHollowListEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_i), nothing, fbr.env)), ctx, mode, idxs...),
                                         ),
                                         epilogue = quote
                                             $my_p += 1
@@ -243,7 +245,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
                                 :($step == $my_i) => Thunk(
                                     body = Spike(
                                         body = Simplify(default(fbr)),
-                                        tail = refurl(VirtualFiber(lvl.lvl, VirtualHollowCooEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_i), fbr.env)), ctx, mode, idxs...),
+                                        tail = refurl(VirtualFiber(lvl.lvl, VirtualHollowListEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_i), nothing, fbr.env)), ctx, mode, idxs...),
                                     ),
                                     epilogue = quote
                                         $my_p += 1
@@ -267,7 +269,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
                                                     :($step == $my_i) => Thunk(
                                                         body = Spike(
                                                             body = Simplify(default(fbr)),
-                                                            tail = refurl(VirtualFiber(lvl.lvl, VirtualHollowCooEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_i), fbr.env)), ctx, mode, idxs...),
+                                                            tail = refurl(VirtualFiber(lvl.lvl, VirtualHollowListEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_i), nothing, fbr.env)), ctx, mode, idxs...),
                                                         ),
                                                         epilogue = quote
                                                             $my_p += 1
@@ -303,6 +305,9 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Union{Writ
     my_p = ctx.freshen(tag, :_p)
     my_p1 = ctx.freshen(tag, :_p1)
     my_i1 = ctx.freshen(tag, :_i1)
+    my_guard = if hasdefaultcheck(lvl.lvl)
+        ctx.freshen(tag, :_isdefault)
+    end
     lvl_2 = nothing
 
     Thunk(
@@ -319,12 +324,42 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Union{Writ
                         end
                         quote end
                     end)
+                    $(
+                        if hasdefaultcheck(lvl.lvl)
+                            :($my_guard = true)
+                        else
+                            quote end
+                        end
+                    ) 
                 end,
-                body = refurl(VirtualFiber(lvl_2, VirtualHollowCooEnvironment(Virtual{lvl.Ti}(my_p), idx, fbr.env)), ctx, mode, idxs...),
-                epilogue = quote
-                    $(lvl.idx_q) < $my_p && resize!($(lvl.ex).idx, $(lvl.idx_q) *= 4)
-                    $(lvl.ex).idx[$my_p] = $(ctx(idx))
-                    $my_p += 1
+                body = refurl(VirtualFiber(lvl_2, VirtualHollowListEnvironment(Virtual{lvl.Ti}(my_p), idx, my_guard, fbr.env)), ctx, mode, idxs...),
+                epilogue = begin
+                    body = quote
+                        $(lvl.idx_q) < $my_p && resize!($(lvl.ex).idx, $(lvl.idx_q) *= 4)
+                        $(lvl.ex).idx[$my_p] = $(ctx(idx))
+                        $my_p += 1
+                    end
+                    if getdefaultcheck(fbr.env) != nothing
+                        if hasdefaultcheck(lvl.lvl)
+                            body = quote
+                                $body
+                                $(getdefaultcheck) &= $my_guard
+                            end
+                        else
+                            body = quote
+                                $body
+                                $(getdefaultcheck) = false
+                            end
+                        end
+                    end
+                    if hasdefaultcheck(lvl.lvl)
+                        body = quote
+                            if $(my_guard)
+                                body
+                            end
+                        end
+                    end
+                    body
                 end
             )
         ),
