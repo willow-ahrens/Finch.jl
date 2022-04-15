@@ -273,14 +273,6 @@ function (ctx::LowerJulia)(root::Multi, ::DefaultStyle)
     thunk
 end
 
-function initialize_program!(root, ctx)
-    contain(ctx) do ctx_2
-        thunk = Expr(:block)
-        append!(thunk.args, map(tns->virtual_initialize!(tns, ctx_2), getresults(root)))
-        thunk
-    end
-end
-
 function (ctx::LowerJulia)(root::Access, ::DefaultStyle)
     @assert map(getname, root.idxs) ⊆ keys(ctx.bindings)
     tns = ctx(root.tns)
