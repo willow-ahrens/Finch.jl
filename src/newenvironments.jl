@@ -40,9 +40,18 @@ Base.get(env::VirtualEnvironment, name::Symbol, x) = get(getfield(env, :props), 
 
 Base.get!(env::VirtualEnvironment, name::Symbol, x) = get!(getfield(env, :props), name, x)
 
-envcoordinate(env::Environment) = env.index
-envposition(env::Environment) = env.position
-envdepth(env::Environment) = haskey(env, :index) + envdepth(env.parent)
-envdeferred(env::Environment) = haskey(env, :internal) ? (env.index, envdeferred(env.parent)...) : ()
-envparent(env::Environment) = haskey(env, :internal) ? env.parent : ()
-envguard(env::Environment) = haskey(env, :guard) ? env.guard : nothing
+envcoordinate(env::Union{Environment, VirtualEnvironment}) = env.index
+envposition(env::Union{Environment, VirtualEnvironment}) = env.position
+envdepth(env::Union{Environment, VirtualEnvironment}) = haskey(env, :index) + envdepth(env.parent)
+envdeferred(env::Union{Environment, VirtualEnvironment}) = haskey(env, :internal) ? (env.index, envdeferred(env.parent)...) : ()
+envparent(env::Union{Environment, VirtualEnvironment}) = haskey(env, :internal) ? env.parent : ()
+envguard(env::Union{Environment, VirtualEnvironment}) = haskey(env, :guard) ? env.guard : nothing
+
+struct Arbitrary{T} end
+Arbitrary() = Arbitrary{Any}()
+
+Base.length(::Arbitrary) = 1
+Base.iterate(x::Arbitrary) = (x, nothing)
+
+#ArbitraryEnvironment(env) = Environment(env = env, pos=Arbitrary(), idx=Arbitrary())
+#VirtualArbitraryEnvironment(env) = VirtualEnvironment(env = env, pos=Arbitrary(), idx=Arbitrary())
