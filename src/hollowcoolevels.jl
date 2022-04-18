@@ -221,7 +221,7 @@ function initialize_level!(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::
 end
 
 function assemble!(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode)
-    q = envmaxposition(fbr.env)
+    q = envposition(fbr.env)
     lvl = fbr.lvl
     push!(ctx.preamble, quote
         if $(lvl.pos_q) < $(ctx(q)) + 1

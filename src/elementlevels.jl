@@ -66,16 +66,16 @@ finalize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode::Union{Write, 
 
 function assemble!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
     lvl = fbr.lvl
-    q = envmaxposition(fbr.env)
+    q = envposition(fbr.env)
     push!(ctx.preamble, quote
         $(lvl.val_q) < $q && ($(lvl.val_q) = $refill!($(lvl.ex).val, $(lvl.D), $(lvl.val_q), $q))
     end)
     return nothing
 end
 
-function assemble!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode::Write)
+function assemble!(fbr, ctx, mode::Write)
     lvl = fbr.lvl
-    q = envmaxposition(fbr.env)
+    q = envposition(fbr.env)
     push!(ctx.preamble, quote
         $(lvl.val_q) < $q && ($(lvl.val_q) = $regrow!($(lvl.ex).val, $(lvl.val_q), $q))
     end)

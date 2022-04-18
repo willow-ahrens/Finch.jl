@@ -125,7 +125,7 @@ function initialize_level!(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode:
 end
 
 function assemble!(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode)
-    q = envmaxposition(fbr.env)
+    q = envposition(fbr.env)
     lvl = fbr.lvl
     push!(ctx.preamble, quote
         $(lvl.pos_q) = $(ctx(q))

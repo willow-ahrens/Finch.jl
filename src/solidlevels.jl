@@ -108,7 +108,6 @@ function initialize_level!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode::Unio
 end
 
 function assemble!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode)
-    q = envmaxposition(fbr.env)
     lvl = fbr.lvl
     q_2 = ctx.freshen(lvl.ex, :_q)
     push!(ctx.preamble, quote
