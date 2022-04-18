@@ -17,34 +17,10 @@ dimension(lvl::SolidLevel) = lvl.I
 """
     SolidEnvironment(pos, idx, env)
 
-The environment introduced by the SolidLevel.
+The environment introduced by a SolidLevel.
 """
-struct SolidEnvironment{Pos, Idx, Env}
-    pos::Pos
-    idx::Idx
-    env::Env
-end
-envdepth(env::SolidEnvironment) = 1 + envdepth(env.env)
-envposition(env::SolidEnvironment) = env.pos
-envcoordinate(env::SolidEnvironment) = env.idx
-
-struct VirtualSolidEnvironment
-    pos
-    idx
-    env
-end
-function virtualize(ex, ::Type{SolidEnvironment{Pos, Idx, Env}}, ctx) where {Pos, Idx, Env}
-    pos = virtualize(:($ex.pos), Pos, ctx)
-    idx = virtualize(:($ex.idx), Idx, ctx)
-    env = virtualize(:($ex.env), Env, ctx)
-    VirtualSolidEnvironment(pos, idx, env)
-end
-(ctx::Finch.LowerJulia)(env::VirtualSolidEnvironment) = :(SolidEnvironment($(ctx(env.pos)), $(ctx(env.idx)), $(ctx(env.env))))
-isliteral(::VirtualSolidEnvironment) = false
-
-envposition(env::VirtualSolidEnvironment) = env.pos
-envcoordinate(env::VirtualSolidEnvironment) = env.idx
-envdepth(env::VirtualSolidEnvironment) = 1 + envdepth(env.env)
+SolidEnvironment(pos, idx, env) = Environment(position=pos, index=idx, parent=env)
+VirtualSolidEnvironment(pos, idx, env) = VirtualEnvironment(position=pos, index=idx, parent=env)
 
 function (fbr::Fiber{<:SolidLevel{Ti}})(i, tail...) where {D, Tv, Ti, N, R}
     lvl = fbr.lvl

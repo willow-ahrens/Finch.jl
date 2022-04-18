@@ -58,34 +58,8 @@ end
 
 The environment introduced by a HollowListLevel.
 """
-struct HollowListEnvironment{Pos, Idx, Env}
-    pos::Pos
-    idx::Idx
-    env::Env
-end
-envdepth(env::HollowListEnvironment) = 1 + envdepth(env.env)
-envposition(env::HollowListEnvironment) = env.pos
-envcoordinate(env::HollowListEnvironment) = env.idx
-
-struct VirtualHollowListEnvironment
-    pos
-    idx
-    isdefault
-    env
-end
-function virtualize(ex, ::Type{HollowListEnvironment{Pos, Idx, Env}}, ctx) where {Pos, Idx, Env}
-    pos = virtualize(:($ex.pos), Pos, ctx)
-    idx = virtualize(:($ex.idx), Idx, ctx)
-    env = virtualize(:($ex.env), Env, ctx)
-    VirtualHollowListEnvironment(pos, idx, env, nothing)
-end
-(ctx::Finch.LowerJulia)(env::VirtualHollowListEnvironment) = :(HollowListEnvironment($(ctx(env.pos)), $(ctx(env.idx)), $(ctx(env.env))))
-isliteral(::VirtualHollowListEnvironment) = false
-
-envposition(env::VirtualHollowListEnvironment) = env.pos
-envcoordinate(env::VirtualHollowListEnvironment) = env.idx
-envdepth(env::VirtualHollowListEnvironment) = 1 + envdepth(env.env)
-getdefaultcheck(env::VirtualHollowListEnvironment) = env.isdefault
+HollowListEnvironment(pos, idx, env) = Environment(position=pos, index=idx, parent=env)
+VirtualHollowListEnvironment(pos, idx, env) = VirtualEnvironment(position=pos, index=idx, parent=env)
 
 function reconstruct!(lvl::VirtualHollowListLevel, ctx)
     push!(ctx.preamble, quote
@@ -182,7 +156,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
                                     :($step == $my_i) => Thunk(
                                         body = Spike(
                                             body = Simplify(default(fbr)),
-                                            tail = refurl(VirtualFiber(lvl.lvl, VirtualHollowListEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_i), nothing, fbr.env)), ctx, mode, idxs...),
+                                            tail = refurl(VirtualFiber(lvl.lvl, VirtualHollowListEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_i), fbr.env)), ctx, mode, idxs...),
                                         ),
                                         epilogue = quote
                                             $my_p += 1
@@ -245,7 +219,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
                                 :($step == $my_i) => Thunk(
                                     body = Spike(
                                         body = Simplify(default(fbr)),
-                                        tail = refurl(VirtualFiber(lvl.lvl, VirtualHollowListEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_i), nothing, fbr.env)), ctx, mode, idxs...),
+                                        tail = refurl(VirtualFiber(lvl.lvl, VirtualHollowListEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_i), fbr.env)), ctx, mode, idxs...),
                                     ),
                                     epilogue = quote
                                         $my_p += 1
@@ -269,7 +243,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
                                                     :($step == $my_i) => Thunk(
                                                         body = Spike(
                                                             body = Simplify(default(fbr)),
-                                                            tail = refurl(VirtualFiber(lvl.lvl, VirtualHollowListEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_i), nothing, fbr.env)), ctx, mode, idxs...),
+                                                            tail = refurl(VirtualFiber(lvl.lvl, VirtualHollowListEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_i), fbr.env)), ctx, mode, idxs...),
                                                         ),
                                                         epilogue = quote
                                                             $my_p += 1
@@ -332,7 +306,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Union{Writ
                         end
                     ) 
                 end,
-                body = refurl(VirtualFiber(lvl_2, VirtualHollowListEnvironment(Virtual{lvl.Ti}(my_p), idx, my_guard, fbr.env)), ctx, mode, idxs...),
+                body = refurl(VirtualFiber(lvl_2, VirtualHollowListEnvironment(Virtual{lvl.Ti}(my_p), idx, #=my_guard,=# fbr.env)), ctx, mode, idxs...),
                 epilogue = begin
                     body = quote
                         $(lvl.idx_q) < $my_p && resize!($(lvl.ex).idx, $(lvl.idx_q) *= 4)

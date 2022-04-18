@@ -26,99 +26,12 @@ HollowCooLevel{N, Ti, Tp_2, Tbl}(I::Ti, tbl::Tbl, pos, lvl::Lvl) where {N, Ti, T
 
 The environment introduced by a HollowCooLevel.
 """
-struct HollowCooEnvironment{Pos, Idx, Env}
-    pos::Pos
-    idx::Idx
-    env::Env
-end
-envdepth(env::HollowCooEnvironment) = 1 + envdepth(env.env)
-envposition(env::HollowCooEnvironment) = env.pos
-envcoordinate(env::HollowCooEnvironment) = env.idx
-
-struct VirtualHollowCooEnvironment
-    pos
-    idx
-    env
-end
-function virtualize(ex, ::Type{HollowCooEnvironment{Pos, Idx, Env}}, ctx) where {Pos, Idx, Env}
-    pos = virtualize(:($ex.pos), Pos, ctx)
-    idx = virtualize(:($ex.idx), Idx, ctx)
-    env = virtualize(:($ex.env), Env, ctx)
-    VirtualHollowCooEnvironment(pos, idx, env)
-end
-(ctx::Finch.LowerJulia)(env::VirtualHollowCooEnvironment) = :(HollowCooEnvironment($(ctx(env.pos)), $(ctx(env.idx)), $(ctx(env.env))))
-isliteral(::VirtualHollowCooEnvironment) = false
-
-envposition(env::VirtualHollowCooEnvironment) = env.pos
-envcoordinate(env::VirtualHollowCooEnvironment) = env.idx
-envdepth(env::VirtualHollowCooEnvironment) = 1 + envdepth(env.env)
-
-"""
-    HollowCooSearchEnvironment(pos, idx, env)
-
-The environment introduced inside a HollowCooLevel.
-"""
-struct HollowCooSearchEnvironment{Start, Stop, Idx, Env}
-    start::Start
-    stop::Stop
-    idx::Idx
-    env::Env
-end
-envdepth(env::HollowCooSearchEnvironment) = 1 + envdepth(env.env)
-envcoordinate(env::HollowCooSearchEnvironment) = env.idx
-envdeferred(env::HollowCooSearchEnvironment) = (env.idx, envdeferred(env.env)...)
-envparent(env::HollowCooSearchEnvironment) = env.env
-
-struct VirtualHollowCooSearchEnvironment
-    start
-    stop
-    idx
-    env
-end
-function virtualize(ex, ::Type{HollowCooSearchEnvironment{Pos, Idx, Env}}, ctx) where {Pos, Idx, Env}
-    pos = virtualize(:($ex.pos), Pos, ctx)
-    idx = virtualize(:($ex.idx), Idx, ctx)
-    env = virtualize(:($ex.env), Env, ctx)
-    VirtualHollowCooSearchEnvironment(pos, idx, env)
-end
-(ctx::Finch.LowerJulia)(env::VirtualHollowCooSearchEnvironment) = :(HollowCooSearchEnvironment($(ctx(env.pos)), $(ctx(env.idx)), $(ctx(env.env))))
-isliteral(::VirtualHollowCooSearchEnvironment) = false
-
-envcoordinate(env::VirtualHollowCooSearchEnvironment) = env.idx
-envdepth(env::VirtualHollowCooSearchEnvironment) = 1 + envdepth(env.env)
-envdeferred(env::VirtualHollowCooSearchEnvironment) = (env.idx, envdeferred(env.env)...)
-envparent(env::VirtualHollowCooSearchEnvironment) = env.env
-
-"""
-    HollowCooBufferEnvironment(idx, env)
-
-The environment introduced inside a HollowCooLevel to just buffer up a coordinate to write later.
-"""
-struct HollowCooBufferEnvironment{Idx, Env}
-    idx::Idx
-    env::Env
-end
-envdepth(env::HollowCooBufferEnvironment) = 1 + envdepth(env.env)
-envcoordinate(env::HollowCooBufferEnvironment) = env.idx
-envdeferred(env::HollowCooBufferEnvironment) = (env.idx, envdeferred(env.env)...)
-envparent(env::HollowCooBufferEnvironment) = env.env
-
-struct VirtualHollowCooBufferEnvironment
-    idx
-    env
-end
-function virtualize(ex, ::Type{HollowCooBufferEnvironment{Idx, Env}}, ctx) where {Idx, Env}
-    idx = virtualize(:($ex.idx), Idx, ctx)
-    env = virtualize(:($ex.env), Env, ctx)
-    VirtualHollowCooBufferEnvironment(idx, env)
-end
-(ctx::Finch.LowerJulia)(env::VirtualHollowCooBufferEnvironment) = :(HollowCooBufferEnvironment($(ctx(env.idx)), $(ctx(env.env))))
-isliteral(::VirtualHollowCooBufferEnvironment) = false
-
-envcoordinate(env::VirtualHollowCooBufferEnvironment) = env.idx
-envdepth(env::VirtualHollowCooBufferEnvironment) = 1 + envdepth(env.env)
-envdeferred(env::VirtualHollowCooBufferEnvironment) = (env.idx, envdeferred(env.env)...)
-envparent(env::VirtualHollowCooBufferEnvironment) = env.env
+HollowCooEnvironment(pos, idx, env) = Environment(position=pos, index=idx, parent=env)
+VirtualHollowCooEnvironment(pos, idx, env) = VirtualEnvironment(position=pos, index=idx, parent=env)
+HollowCooSearchEnvironment(start, stop, idx, env) = Environment(start=start, stop=stop, index=idx, parent=env, internal=true)
+VirtualHollowCooSearchEnvironment(start, stop, idx, env) = VirtualEnvironment(start=start, stop=stop, index=idx, parent=env, internal=true)
+HollowCooBufferEnvironment(idx, env) = Environment(index=idx, parent=env, internal=true)
+VirtualHollowCooBufferEnvironment(idx, env) = VirtualEnvironment(index=idx, parent=env, internal=true)
 
 function (fbr::Fiber{<:HollowCooLevel{N, Ti}})(i, tail...) where {N, Ti}
     lvl = fbr.lvl
@@ -343,7 +256,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Union{Write
     if R == lvl.N
         Thunk(
             preamble = quote
-                $my_p = $(lvl.ex).pos[$(ctx(envposition(envparent(fbr.env))))]
+                $my_p = $(lvl.ex).pos[$(ctx(envposition(envexternal(fbr.env))))]
             end,
             body = AcceptSpike(
                 val = default(fbr),
@@ -381,7 +294,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Union{Write
                 )
             ),
             epilogue = quote
-                $(lvl.ex).pos[$(ctx(envposition(envparent(fbr.env)))) + 1] = $my_p
+                $(lvl.ex).pos[$(ctx(envposition(envexternal(fbr.env)))) + 1] = $my_p
             end
         )
     else

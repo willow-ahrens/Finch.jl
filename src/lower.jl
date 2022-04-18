@@ -229,7 +229,11 @@ function (ctx::LowerJulia)(root::Name, ::DefaultStyle)
 end
 
 function (ctx::LowerJulia)(root::Literal, ::DefaultStyle)
-    return root.val
+    if root.val isa Union{Symbol, Expr}
+        return QuoteNode(root.val)
+    else
+        return root.val
+    end
 end
 
 function (ctx::LowerJulia)(root, ::DefaultStyle)

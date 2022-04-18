@@ -30,7 +30,7 @@ HollowHashLevel{N, Ti, Tp, Tp_2, Tbl}(I::Ti, tbl::Tbl, srt, pos, lvl::Lvl) where
 function (fbr::Fiber{<:HollowHashLevel{N, Ti}})(i, tail...) where {N, Ti}
     lvl = fbr.lvl
     if length(envdeferred(fbr.env)) == N - 1
-        q = (envposition(fbr.env), (envdeferred(fbr.env)..., i))
+        q = (envposition(envexternal(fbr.env)), (envdeferred(fbr.env)..., i))
 
         if !haskey(lvl.tbl, q)
             return default(fbr)
@@ -167,99 +167,12 @@ end
 
 The environment introduced by a HollowHashLevel.
 """
-struct HollowHashEnvironment{Pos, Idx, Env}
-    pos::Pos
-    idx::Idx
-    env::Env
-end
-envdepth(env::HollowHashEnvironment) = 1 + envdepth(env.env)
-envposition(env::HollowHashEnvironment) = env.pos
-envcoordinate(env::HollowHashEnvironment) = env.idx
-
-struct VirtualHollowHashEnvironment
-    pos
-    idx
-    env
-end
-function virtualize(ex, ::Type{HollowHashEnvironment{Pos, Idx, Env}}, ctx) where {Pos, Idx, Env}
-    pos = virtualize(:($ex.pos), Pos, ctx)
-    idx = virtualize(:($ex.idx), Idx, ctx)
-    env = virtualize(:($ex.env), Env, ctx)
-    VirtualHollowHashEnvironment(pos, idx, env)
-end
-(ctx::Finch.LowerJulia)(env::VirtualHollowHashEnvironment) = :(HollowHashEnvironment($(ctx(env.pos)), $(ctx(env.idx)), $(ctx(env.env))))
-isliteral(::VirtualHollowHashEnvironment) = false
-
-envposition(env::VirtualHollowHashEnvironment) = env.pos
-envcoordinate(env::VirtualHollowHashEnvironment) = env.idx
-envdepth(env::VirtualHollowHashEnvironment) = 1 + envdepth(env.env)
-
-"""
-    HollowHashSearchEnvironment(pos, idx, env)
-
-The environment introduced inside a HollowHashLevel.
-"""
-struct HollowHashSearchEnvironment{Start, Stop, Idx, Env}
-    start::Start
-    stop::Stop
-    idx::Idx
-    env::Env
-end
-envdepth(env::HollowHashSearchEnvironment) = 1 + envdepth(env.env)
-envcoordinate(env::HollowHashSearchEnvironment) = env.idx
-envdeferred(env::HollowHashSearchEnvironment) = (env.idx, envdeferred(env.env)...)
-envparent(env::HollowHashSearchEnvironment) = env.env
-
-struct VirtualHollowHashSearchEnvironment
-    start
-    stop
-    idx
-    env
-end
-function virtualize(ex, ::Type{HollowHashSearchEnvironment{Pos, Idx, Env}}, ctx) where {Pos, Idx, Env}
-    pos = virtualize(:($ex.pos), Pos, ctx)
-    idx = virtualize(:($ex.idx), Idx, ctx)
-    env = virtualize(:($ex.env), Env, ctx)
-    VirtualHollowHashSearchEnvironment(pos, idx, env)
-end
-(ctx::Finch.LowerJulia)(env::VirtualHollowHashSearchEnvironment) = :(HollowHashSearchEnvironment($(ctx(env.pos)), $(ctx(env.idx)), $(ctx(env.env))))
-isliteral(::VirtualHollowHashSearchEnvironment) = false
-
-envcoordinate(env::VirtualHollowHashSearchEnvironment) = env.idx
-envdepth(env::VirtualHollowHashSearchEnvironment) = 1 + envdepth(env.env)
-envdeferred(env::VirtualHollowHashSearchEnvironment) = (env.idx, envdeferred(env.env)...)
-envparent(env::VirtualHollowHashSearchEnvironment) = env.env
-
-"""
-    HollowHashBufferEnvironment(idx, env)
-
-The environment introduced inside a HollowHashLevel to just buffer up a coordinate to write later.
-"""
-struct HollowHashBufferEnvironment{Idx, Env}
-    idx::Idx
-    env::Env
-end
-envdepth(env::HollowHashBufferEnvironment) = 1 + envdepth(env.env)
-envcoordinate(env::HollowHashBufferEnvironment) = env.idx
-envdeferred(env::HollowHashBufferEnvironment) = (env.idx, envdeferred(env.env)...)
-envparent(env::HollowHashBufferEnvironment) = env.env
-
-struct VirtualHollowHashBufferEnvironment
-    idx
-    env
-end
-function virtualize(ex, ::Type{HollowHashBufferEnvironment{Idx, Env}}, ctx) where {Idx, Env}
-    idx = virtualize(:($ex.idx), Idx, ctx)
-    env = virtualize(:($ex.env), Env, ctx)
-    VirtualHollowHashBufferEnvironment(idx, env)
-end
-(ctx::Finch.LowerJulia)(env::VirtualHollowHashBufferEnvironment) = :(HollowHashBufferEnvironment($(ctx(env.idx)), $(ctx(env.env))))
-isliteral(::VirtualHollowHashBufferEnvironment) = false
-
-envcoordinate(env::VirtualHollowHashBufferEnvironment) = env.idx
-envdepth(env::VirtualHollowHashBufferEnvironment) = 1 + envdepth(env.env)
-envdeferred(env::VirtualHollowHashBufferEnvironment) = (env.idx, envdeferred(env.env)...)
-envparent(env::VirtualHollowHashBufferEnvironment) = env.env
+HollowHashEnvironment(pos, idx, env) = Environment(position=pos, index=idx, parent=env)
+VirtualHollowHashEnvironment(pos, idx, env) = VirtualEnvironment(position=pos, index=idx, parent=env)
+HollowHashSearchEnvironment(start, stop, idx, env) = Environment(start=start, stop=stop, index=idx, parent=env, internal=true)
+VirtualHollowHashSearchEnvironment(start, stop, idx, env) = VirtualEnvironment(start=start, stop=stop, index=idx, parent=env, internal=true)
+HollowHashBufferEnvironment(idx, env) = Environment(index=idx, parent=env, internal=true)
+VirtualHollowHashBufferEnvironment(idx, env) = VirtualEnvironment(index=idx, parent=env, internal=true)
 
 
 
@@ -363,7 +276,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx:
         Leaf(
             body = (i) -> Thunk(
                 preamble = quote
-                    $my_key = ($(ctx(envposition(envparent(fbr.env)))), ($(map(ctx, envdeferred(fbr.env))...), $(ctx(i))))
+                    $my_key = ($(ctx(envposition(envexternal(fbr.env)))), ($(map(ctx, envdeferred(fbr.env))...), $(ctx(i))))
                     $my_p = get($(lvl.ex).tbl, $my_key, 0)
                 end,
                 body = Cases([
@@ -392,13 +305,13 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Union{Writ
     if R == lvl.N
         Thunk(
             preamble = quote
-                $my_p = $(lvl.ex).pos[$(ctx(envposition(envparent(fbr.env))))]
+                $my_p = $(lvl.ex).pos[$(ctx(envposition(envexternal(fbr.env))))]
             end,
             body = AcceptSpike(
                 val = default(fbr),
                 tail = (ctx, idx) -> Thunk(
                     preamble = quote
-                        $my_key = ($(ctx(envposition(envparent(fbr.env)))), ($(map(ctx, envdeferred(fbr.env))...), $(ctx(idx))))
+                        $my_key = ($(ctx(envposition(envexternal(fbr.env)))), ($(map(ctx, envdeferred(fbr.env))...), $(ctx(idx))))
                         $my_p = get!($(lvl.ex).tbl, $my_key, $(lvl.idx_q) + 1)
                         if $(lvl.idx_q) < $my_p 
                             $(lvl.idx_q) = $my_p
@@ -406,7 +319,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Union{Writ
                                 assemble!(VirtualFiber(fbr.lvl.lvl, VirtualMaxPositionEnvironment(my_p, ∘(repeated(VirtualArbitraryEnvironment, lvl.N - 1)..., identity)(fbr.env))), ctx_2, mode)
                                 quote end
                             end)
-                            $(lvl.ex).pos[$(ctx(envposition(envparent(fbr.env)))) + 1] += 1
+                            $(lvl.ex).pos[$(ctx(envposition(envexternal(fbr.env)))) + 1] += 1
                         end
                     end,
                     body = refurl(VirtualFiber(lvl.lvl, HollowHashEnvironment(Virtual{lvl.Ti}(my_p), idx, fbr.env)), ctx, mode, idxs...)

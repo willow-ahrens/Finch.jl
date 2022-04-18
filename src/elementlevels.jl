@@ -73,7 +73,7 @@ function assemble!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
     return nothing
 end
 
-function assemble!(fbr, ctx, mode::Write)
+function assemble!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode::Write)
     lvl = fbr.lvl
     q = envposition(fbr.env)
     push!(ctx.preamble, quote

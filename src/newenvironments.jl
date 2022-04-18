@@ -8,6 +8,8 @@ Base.getproperty(env::Environment, name::Symbol) = getproperty(getfield(env, :pr
 
 Base.hasproperty(env::Environment, name::Symbol) = hasproperty(getfield(env, :props), name)
 
+Base.get(env::Environment, name::Symbol, x) = get(getfield(env, :props), name, x)
+
 function virtualize(ex, ::Type{Environment{NamedTuple{names, Args}}}, ctx) where {names, Args}
     props = Dict{Symbol, Any}(map(zip(names, Args.parameters)) do (name, Arg)
         name => virtualize(:($ex.$name), Arg, ctx)
@@ -19,12 +21,12 @@ struct VirtualEnvironment
     props
 end
 
-VirtualEnvironment(;kwargs...) = VirtualEnvironment((;kwargs...))
+VirtualEnvironment(;kwargs...) = VirtualEnvironment(Dict{Symbol, Any}(pairs(kwargs)))
 
 isliteral(env::VirtualEnvironment) = false
 
 function (ctx::Finch.LowerJulia)(env::VirtualEnvironment)
-    kwargs = map(pairs(getfield(env, :props))) do name, arg
+    kwargs = map(collect(getfield(env, :props))) do (name, arg)
         Expr(:kw, name, ctx(arg))
     end
     :($Environment(;$(kwargs...)))
@@ -34,18 +36,17 @@ Base.getproperty(env::VirtualEnvironment, name::Symbol) = getindex(getfield(env,
 
 Base.hasproperty(env::VirtualEnvironment, name::Symbol) = haskey(getfield(env, :props), name)
 
-Base.setproperty!(env::VirtualEnvironment, name::Symbol, x) = setindex(getfield(env, :props), name, x)
+Base.setproperty!(env::VirtualEnvironment, name::Symbol, x) = setindex!(getfield(env, :props), x, name)
 
 Base.get(env::VirtualEnvironment, name::Symbol, x) = get(getfield(env, :props), name, x)
 
 Base.get!(env::VirtualEnvironment, name::Symbol, x) = get!(getfield(env, :props), name, x)
 
 envcoordinate(env::Union{Environment, VirtualEnvironment}) = env.index
-envposition(env::Union{Environment, VirtualEnvironment}) = env.position
-envdepth(env::Union{Environment, VirtualEnvironment}) = haskey(env, :index) + envdepth(env.parent)
-envdeferred(env::Union{Environment, VirtualEnvironment}) = haskey(env, :internal) ? (env.index, envdeferred(env.parent)...) : ()
-envparent(env::Union{Environment, VirtualEnvironment}) = haskey(env, :internal) ? env.parent : ()
-envguard(env::Union{Environment, VirtualEnvironment}) = haskey(env, :guard) ? env.guard : nothing
+envdeferred(env::Union{Environment, VirtualEnvironment}) = hasproperty(env, :internal) ? (env.index, envdeferred(env.parent)...) : ()
+envexternal(env::Union{Environment, VirtualEnvironment}) = hasproperty(env, :internal) ? envexternal(env.parent) : env
+envguard(env::Union{Environment, VirtualEnvironment}) = hasproperty(env, :guard) ? env.guard : nothing
+envparent(env::Union{Environment, VirtualEnvironment}) = get(env, :parent, nothing)
 
 struct Arbitrary{T} end
 Arbitrary() = Arbitrary{Any}()

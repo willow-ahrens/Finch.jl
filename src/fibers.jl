@@ -31,6 +31,7 @@ mutable struct VirtualFiber{Lvl}
     env
     function VirtualFiber{Lvl}(lvl::Lvl, env) where {Lvl}
         @assert !(lvl isa Vector)
+        @assert env != nothing
         new{Lvl}(lvl, env)
     end
 end
