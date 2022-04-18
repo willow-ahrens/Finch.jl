@@ -1,3 +1,9 @@
+"""
+    Environment()
+
+An environment can be thought of as the argument to a level that yeilds a fiber.
+Environments also allow parents levels to pass attributes to their children.
+"""
 struct Environment{Props <: NamedTuple}
     props::Props
 end
@@ -17,6 +23,13 @@ function virtualize(ex, ::Type{Environment{NamedTuple{names, Args}}}, ctx) where
     return VirtualEnvironment(props)
 end
 
+"""
+    VirtualRootEnvironment()
+
+In addition to holding information about the environment instance itself,
+virtual environments may also hold information about the scope that this fiber
+lives in.
+"""
 struct VirtualEnvironment
     props
 end
@@ -42,6 +55,13 @@ Base.get(env::VirtualEnvironment, name::Symbol, x) = get(getfield(env, :props), 
 
 Base.get!(env::VirtualEnvironment, name::Symbol, x) = get!(getfield(env, :props), name, x)
 
+"""
+    envposition(env)
+
+Get the position in the environment. The position is an integer identifying
+which fiber to access in a level.
+"""
+envposition(env) = envparent(env) === nothing ? 1 : env.position
 envcoordinate(env::Union{Environment, VirtualEnvironment}) = env.index
 envdeferred(env::Union{Environment, VirtualEnvironment}) = hasproperty(env, :internal) ? (env.index, envdeferred(env.parent)...) : ()
 envexternal(env::Union{Environment, VirtualEnvironment}) = hasproperty(env, :internal) ? envexternal(env.parent) : env

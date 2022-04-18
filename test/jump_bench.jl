@@ -205,7 +205,7 @@ foo(ex) = (@inbounds begin
         i_start = i_step + 1
     end
     C_lvl.val[1] = C_lvl_val
-    (C = Fiber(C_lvl, Finch.RootEnvironment()),)
+    (C = Fiber(C_lvl),)
 end)
 
 

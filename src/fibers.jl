@@ -1,7 +1,7 @@
 include("environments.jl")
 
 """
-    Fiber(lvl, env=RootEnvironment())
+    Fiber(lvl, env=Environment())
 
 A fiber is a combination of a (possibly nested) level `lvl` and an environment
 `env`. The environment is often used to refer to a particular fiber within the
@@ -14,7 +14,7 @@ struct Fiber{Lvl, Env}
     env::Env
 end
 Fiber(lvl::Lvl) where {Lvl} = Fiber{Lvl}(lvl)
-Fiber{Lvl}(lvl::Lvl, env::Env=RootEnvironment()) where {Lvl, Env} = Fiber{Lvl, Env}(lvl, env)
+Fiber{Lvl}(lvl::Lvl, env::Env=Environment()) where {Lvl, Env} = Fiber{Lvl, Env}(lvl, env)
 
 fiber(lvl) = FiberArray(Fiber(lvl))
 
