@@ -67,12 +67,3 @@ envdeferred(env::Union{Environment, VirtualEnvironment}) = hasproperty(env, :int
 envexternal(env::Union{Environment, VirtualEnvironment}) = hasproperty(env, :internal) ? envexternal(env.parent) : env
 envguard(env::Union{Environment, VirtualEnvironment}) = hasproperty(env, :guard) ? env.guard : nothing
 envparent(env::Union{Environment, VirtualEnvironment}) = get(env, :parent, nothing)
-
-struct Arbitrary{T} end
-Arbitrary() = Arbitrary{Any}()
-
-Base.length(::Arbitrary) = 1
-Base.iterate(x::Arbitrary) = (x, nothing)
-
-#ArbitraryEnvironment(env) = Environment(env = env, pos=Arbitrary(), idx=Arbitrary())
-#VirtualArbitraryEnvironment(env) = VirtualEnvironment(env = env, pos=Arbitrary(), idx=Arbitrary())

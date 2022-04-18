@@ -21,39 +21,6 @@ function envrename!(env, name)
 end
 
 """
-    PositionEnvironment(pos, idx, env)
-
-An environment that holds a position `pos`, corresponding coordinate `idx`, and parent
-environment `env`.
-
-See also: [`envposition`](@ref), [`envcoordinate`](@ref)
-"""
-PositionEnvironment(pos, idx, env) = Environment(position = pos, coordinate = idx, parent=env)
-
-VirtualPositionEnvironment(pos, idx, env) = VirtualEnvironment(position = pos, coordinate = idx, parent=env)
-
-"""
-    DeferredEnvironment(idx, env)
-
-An environment that holds a deferred coordinate `idx`, and parent
-environment `env`.
-
-See also: [`envdeferred`](@ref), [`envcoordinate`](@ref)
-"""
-DeferredEnvironment(idx, env) = Environment(index=idx, parent=env, internal=true)
-VirtualDeferredEnvironment(idx, env) = VirtualEnvironment(index=idx, parent=env, internal=true)
-
-"""
-    VirtualMaxPositionEnvironment(maxpos, env)
-
-An environment that holds a maximum position that a level should support, and a parent
-environment `env`. The coordinate here is arbitrary
-
-See also: [`envposition`](@ref)
-"""
-VirtualMaxPositionEnvironment(pos, env) = VirtualEnvironment(position=pos, parent=env)
-
-"""
     ArbitraryEnvironment(env)
 
 An environment that abstracts over all positions, not making a choice. The

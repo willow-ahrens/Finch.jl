@@ -36,11 +36,11 @@ function (fbr::Fiber{<:HollowHashLevel{N, Ti}})(i, tail...) where {N, Ti}
             return default(fbr)
         else
             p = lvl.tbl[q]
-            fbr_2 = Fiber(lvl.lvl, PositionEnvironment(p, i, fbr.env))
+            fbr_2 = Fiber(lvl.lvl, Environment(position=p, index=i, parent=fbr.env))
             return fbr_2(tail...)
         end
     else
-        fbr_2 = Fiber(lvl, DeferredEnvironment(i, fbr.env))
+        fbr_2 = Fiber(lvl, Environment(index=i, parent=fbr.env, internal=true))
         fbr_2(tail...)
     end
 end
@@ -160,22 +160,6 @@ function finalize_level!(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::U
     end
 end
 
-
-
-"""
-    HollowHashEnvironment(pos, idx, env)
-
-The environment introduced by a HollowHashLevel.
-"""
-HollowHashEnvironment(pos, idx, env) = Environment(position=pos, index=idx, parent=env)
-VirtualHollowHashEnvironment(pos, idx, env) = VirtualEnvironment(position=pos, index=idx, parent=env)
-HollowHashSearchEnvironment(start, stop, idx, env) = Environment(start=start, stop=stop, index=idx, parent=env, internal=true)
-VirtualHollowHashSearchEnvironment(start, stop, idx, env) = VirtualEnvironment(start=start, stop=stop, index=idx, parent=env, internal=true)
-HollowHashBufferEnvironment(idx, env) = Environment(index=idx, parent=env, internal=true)
-VirtualHollowHashBufferEnvironment(idx, env) = VirtualEnvironment(index=idx, parent=env, internal=true)
-
-
-
 unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx::Name, idxs...) =
     unfurl(fbr, ctx, mode, walk(idx))
 
@@ -226,7 +210,13 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx:
                                         Thunk(
                                             body = Spike(
                                                 body = Simplify(default(fbr)),
-                                                tail = refurl(VirtualFiber(lvl.lvl, VirtualHollowHashEnvironment(Virtual{lvl.Ti}(:(last($(lvl.ex).srt[$my_p])[$R])), Virtual{lvl.Ti}(my_i), fbr.env)), ctx, mode, idxs...),
+                                                tail = begin
+                                                    env_2 = VirtualEnvironment(
+                                                    position=Virtual{lvl.Ti}(:(last($(lvl.ex).srt[$my_p])[$R])),
+                                                    index=Virtual{lvl.Ti}(my_i),
+                                                    parent=fbr.env)
+                                                    refurl(VirtualFiber(lvl.lvl, env_2), ctx, mode, idxs...)
+                                                end,
                                             ),
                                             epilogue = quote
                                                 $my_p += 1
@@ -242,7 +232,15 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx:
                                             end,
                                             body = Spike(
                                                 body = Simplify(default(fbr)),
-                                                tail = refurl(VirtualFiber(lvl, VirtualHollowHashSearchEnvironment(Virtual{lvl.Ti}(my_p), Virtual{lvl.Ti}(my_p_step), Virtual{lvl.Ti}(my_i), fbr.env)), ctx, mode, idxs...),
+                                                tail = begin
+                                                    env_2 = VirtualEnvironment(
+                                                        start=Virtual{lvl.Ti}(my_p),
+                                                        stop=Virtual{lvl.Ti}(my_p_step),
+                                                        index=Virtual{lvl.Ti}(my_i),
+                                                        parent=fbr.env,
+                                                        internal=true)
+                                                    refurl(VirtualFiber(lvl, env_2), ctx, mode, idxs...)
+                                                end,
                                             ),
                                             epilogue = quote
                                                 $my_p = $my_p_step
@@ -280,14 +278,14 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx:
                     $my_p = get($(lvl.ex).tbl, $my_key, 0)
                 end,
                 body = Cases([
-                    :($my_p != 0) => refurl(VirtualFiber(lvl.lvl, HollowHashEnvironment(Virtual{lvl.Tp_2}(my_p), i, fbr.env)), ctx, mode, idxs...),
+                    :($my_p != 0) => refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Tp_2}(my_p), index=i, parent=fbr.env)), ctx, mode, idxs...),
                     true => Simplify(default(fbr))
                 ])
             )
         )
     else
         Leaf(
-            body = (i) -> refurl(VirtualFiber(lvl, HollowHashBufferEnvironment(i, fbr.env)), ctx, mode, idxs...)
+            body = (i) -> refurl(VirtualFiber(lvl, VirtualEnvironment(index=i, parent=fbr.env, internal=true)), ctx, mode, idxs...)
         )
     end
 end
@@ -316,19 +314,19 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Union{Writ
                         if $(lvl.idx_q) < $my_p 
                             $(lvl.idx_q) = $my_p
                             $(contain(ctx) do ctx_2 
-                                assemble!(VirtualFiber(fbr.lvl.lvl, VirtualMaxPositionEnvironment(my_p, ∘(repeated(VirtualArbitraryEnvironment, lvl.N - 1)..., identity)(fbr.env))), ctx_2, mode)
+                                assemble!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(position=my_p, parent=∘(repeated(VirtualArbitraryEnvironment, lvl.N - 1)..., identity)(fbr.env))), ctx_2, mode)
                                 quote end
                             end)
                             $(lvl.ex).pos[$(ctx(envposition(envexternal(fbr.env)))) + 1] += 1
                         end
                     end,
-                    body = refurl(VirtualFiber(lvl.lvl, HollowHashEnvironment(Virtual{lvl.Ti}(my_p), idx, fbr.env)), ctx, mode, idxs...)
+                    body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_p), index=idx, parent=fbr.env)), ctx, mode, idxs...)
                 )
             )
         )
     else
         Leaf(
-            body = (i) -> refurl(VirtualFiber(lvl, HollowHashBufferEnvironment(i, fbr.env)), ctx, mode, idxs...)
+            body = (i) -> refurl(VirtualFiber(lvl, VirtualEnvironment(index=i, parent=fbr.env, internal=true)), ctx, mode, idxs...)
         )
     end
 end

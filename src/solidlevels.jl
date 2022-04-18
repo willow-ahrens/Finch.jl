@@ -14,19 +14,11 @@ dimension(lvl::SolidLevel) = lvl.I
 @inline image(fbr::Fiber{<:SolidLevel}) = image(Fiber(fbr.lvl.lvl, ArbitraryEnvironment(fbr.env)))
 @inline default(fbr::Fiber{<:SolidLevel}) = default(Fiber(fbr.lvl.lvl, ArbitraryEnvironment(fbr.env)))
 
-"""
-    SolidEnvironment(pos, idx, env)
-
-The environment introduced by a SolidLevel.
-"""
-SolidEnvironment(pos, idx, env) = Environment(position=pos, index=idx, parent=env)
-VirtualSolidEnvironment(pos, idx, env) = VirtualEnvironment(position=pos, index=idx, parent=env)
-
 function (fbr::Fiber{<:SolidLevel{Ti}})(i, tail...) where {D, Tv, Ti, N, R}
     lvl = fbr.lvl
     q = envposition(fbr.env)
     p = (q - 1) * lvl.I + i
-    fbr_2 = Fiber(lvl.lvl, SolidEnvironment(p, i, fbr.env))
+    fbr_2 = Fiber(lvl.lvl, Environment(position=p, index=i, parent=fbr.env))
     fbr_2(tail...)
 end
 
@@ -89,7 +81,7 @@ function assemble!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode)
     push!(ctx.preamble, quote
         $q_2 = $(ctx(q)) * $(lvl.I)
     end)
-    assemble!(VirtualFiber(lvl.lvl, VirtualMaxPositionEnvironment(q_2, fbr.env)), ctx, mode)
+    assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=q_2, parent=fbr.env)), ctx, mode)
 end
 
 finalize_level!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode::Union{Write, Update}) = nothing
@@ -102,7 +94,7 @@ function unfurl(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode::Union{Read, Wri
     p_1 = ctx.freshen(tag, :_p)
     if p == 1
         Leaf(
-            body = (i) -> refurl(VirtualFiber(lvl.lvl, SolidEnvironment(i, i, fbr.env)), ctx, mode, idxs...),
+            body = (i) -> refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=i, index=i, parent=fbr.env)), ctx, mode, idxs...),
         )
     else
         Leaf(
@@ -110,7 +102,7 @@ function unfurl(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode::Union{Read, Wri
                 preamble = quote
                     $p_1 = ($(ctx(p)) - 1) * $(lvl.ex).I + $(ctx(i))
                 end,
-                body = refurl(VirtualFiber(lvl.lvl, SolidEnvironment(Virtual{lvl.Ti}(p_1), i, fbr.env)), ctx, mode, idxs...),
+                body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(p_1), index=i, parent=fbr.env)), ctx, mode, idxs...),
             )
         )
     end
