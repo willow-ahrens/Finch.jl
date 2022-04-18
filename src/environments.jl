@@ -6,17 +6,16 @@ Return the number of accesses (coordinates) unfurled so far in this environment.
 envdepth(env) = envparent(env) === nothing ? 0 : 1 + envdepth(envparent(env))
 
 """
-    VirtualNameEnvironment(env)
+    envname()
 
-Holds the name of the tensor at the point it was named.
+The name of the tensor when it was last named.
 """
-VirtualNameEnvironment(name, env) = (env.name = Literal(name); env)
-envgetname(env) = hasproperty(env, :name) ? getvalue(env.name) : envgetname(envparent(env))
-function envsetname!(env, name)
+envname(env) = hasproperty(env, :name) ? getvalue(env.name) : envname(envparent(env))
+function envrename!(env, name)
     if hasproperty(env, :name)
         env.name = Literal(name)
     else
-        env.env = envsetname!(envparent(env), name)
+        env.env = envrename!(envparent(env), name)
     end
     env
 end

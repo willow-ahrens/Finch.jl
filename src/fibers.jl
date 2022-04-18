@@ -40,13 +40,15 @@ VirtualFiber(lvl::Lvl, env) where {Lvl} = VirtualFiber{Lvl}(lvl, env)
 function virtualize(ex, ::Type{<:Fiber{Lvl, Env}}, ctx, tag=ctx.freshen(:tns)) where {Lvl, Env}
     lvl = virtualize(:($ex.lvl), Lvl, ctx, Symbol(tag, :_lvl))
     env = virtualize(:($ex.env), Env, ctx)
-    VirtualFiber(lvl, VirtualNameEnvironment(tag, env))
+    env.name = tag
+    VirtualFiber(lvl, env)
 end
 (ctx::Finch.LowerJulia)(fbr::VirtualFiber) = :(Fiber($(ctx(fbr.lvl)), $(ctx(fbr.env))))
 isliteral(::VirtualFiber) = false
 
-getname(fbr::VirtualFiber) = envgetname(fbr.env)
-setname(fbr::VirtualFiber, name) = VirtualFiber(fbr.lvl, envsetname!(fbr.env, name))
+getname(fbr::VirtualFiber) = envname(fbr.env)
+setname(fbr::VirtualFiber, name) = VirtualFiber(fbr.lvl, envrename!(fbr.env, name))
+#setname(fbr::VirtualFiber, name) = (fbr.env.name = name; fbr)
 
 
 
