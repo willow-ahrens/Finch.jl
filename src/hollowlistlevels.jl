@@ -78,9 +78,9 @@ end
 function initialize_level!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Union{Write, Update})
     lvl = fbr.lvl
     push!(ctx.preamble, quote
-        $(lvl.pos_q) < 64 && resize!($(lvl.ex).pos, ($(lvl.pos_q) = 64;))
+        $(lvl.pos_q) = $regrow!($(lvl.ex).pos, 0, 16)
         $(lvl.ex).pos[1] = 1
-        $(lvl.idx_q) < 64 && resize!($(lvl.ex).idx, ($(lvl.idx_q) = 64;))
+        $(lvl.idx_q) = $regrow!($(lvl.ex).idx, 0, 16)
         $(lvl.I) = $(ctx(stop(ctx.dims[(getname(fbr), envdepth(fbr.env) + 1)])))
     end)
     if (lvl_2 = initialize_level!(VirtualFiber(fbr.lvl.lvl, Environment(fbr.env)), ctx, mode)) !== nothing
@@ -95,7 +95,7 @@ function assemble!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
     q = envposition(fbr.env)
     lvl = fbr.lvl
     push!(ctx.preamble, quote
-        $(lvl.pos_q) < $(ctx(q)) + 1 && resize!($(lvl.ex).pos, $(lvl.pos_q) *= 4)
+        $(lvl.pos_q) < $(ctx(q)) && ($(lvl.pos_q) = $regrow!($(lvl.ex).pos, $(lvl.pos_q) + 1, $(ctx(q)) + 1))
     end)
     assemble!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(position=q, parent=fbr.env)), ctx, mode)
 end
@@ -300,7 +300,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Union{Writ
                 body = refurl(VirtualFiber(lvl_2, VirtualEnvironment(position=Virtual{lvl.Ti}(my_p), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode, idxs...),
                 epilogue = begin
                     body = quote
-                        $(lvl.idx_q) < $my_p && resize!($(lvl.ex).idx, $(lvl.idx_q) *= 4)
+                        $(lvl.idx_q) < $my_p && ($(lvl.idx_q) = $regrow!($(lvl.ex).idx, $(lvl.idx_q), $my_p))
                         $(lvl.ex).idx[$my_p] = $(ctx(idx))
                         $my_p += 1
                     end

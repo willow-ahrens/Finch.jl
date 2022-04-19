@@ -102,14 +102,12 @@ function initialize_level!(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::
     my_p = ctx.freshen(lvl.ex, :_p)
     push!(ctx.preamble, quote
         $(lvl.I) = $(lvl.Ti)(($(map(n->ctx(stop(ctx.dims[(getname(fbr), envdepth(fbr.env) + n)])), 1:lvl.N)...),))
-        $(lvl.idx_q) = 4
-        $(lvl.pos_q) = 4
-        resize!($(lvl.ex).pos, 5)
+        $(lvl.pos_q) = $regrow!($(lvl.ex).pos, 0, 5) - 1
         $(lvl.ex).pos[1] = 1
     end)
     for n = 1:lvl.N
         push!(ctx.preamble, quote
-            resize!($(lvl.ex).tbl[$n], 4)
+            $(lvl.idx_q) = $regrow!($(lvl.ex).tbl[$n], 0, 4)
         end)
     end
 
@@ -125,10 +123,7 @@ function assemble!(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode)
     q = envposition(fbr.env)
     lvl = fbr.lvl
     push!(ctx.preamble, quote
-        if $(lvl.pos_q) < $(ctx(q)) + 1
-            $(lvl.pos_q) *= 4
-            resize!($(lvl.ex).pos, $(lvl.pos_q))
-        end
+        $(lvl.pos_q) < $(ctx(q)) && ($(lvl.pos_q) = $regrow!($(lvl.ex).pos, $(lvl.pos_q) + 1, $(ctx(q)) + 1) - 1)
     end)
 end
 
@@ -261,9 +256,16 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Union{Write
                         write_body = quote end
                         idxs = map(ctx, (envdeferred(fbr.env)..., idx))
                         for n = 1:lvl.N
-                            resize_body = quote
-                                $resize_body
-                                resize!($(lvl.ex).tbl[$n], $(lvl.idx_q))
+                            if n == lvl.N
+                                resize_body = quote
+                                    $resize_body
+                                    $(lvl.idx_q) = $regrow!($(lvl.ex).tbl[$n], $(lvl.idx_q), $my_p)
+                                end
+                            else
+                                resize_body = quote
+                                    $resize_body
+                                    $regrow!($(lvl.ex).tbl[$n], $(lvl.idx_q), $my_p)
+                                end
                             end
                             write_body = quote
                                 $write_body
@@ -272,7 +274,6 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Union{Write
                         end
                         quote
                             if $(lvl.idx_q) < $my_p
-                                $(lvl.idx_q) *= 4
                                 $resize_body
                             end
                             $write_body

@@ -9,11 +9,8 @@ function refill!(arr, val, p, q)
     p_2
 end
 
-function regrow!(arr, p, q)
-    p_2 = p
-    while p_2 < q
-        p_2 *= 4
-    end
+function regrow!(arr, p, q::T) where {T <: Integer}
+    p_2 = 2 << (sizeof(T) * 8 - leading_zeros(q)) #round to next power of two, multiply by two
     if p_2 > length(arr)
         resize!(arr, p_2)
     end

@@ -51,13 +51,7 @@ function initialize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode::Un
     lvl = fbr.lvl
     my_q = ctx.freshen(lvl.ex, :_q)
     push!(ctx.preamble, quote
-        if $(lvl.val_q) < 4
-            resize!($(lvl.ex).val, 4)
-        end
-        $(lvl.val_q) = 4
-        for $my_q = 1:4
-            $(lvl.ex).val[$my_q] = $(lvl.D)
-        end
+        $(lvl.val_q) = $refill!($(lvl.ex).val, $(lvl.D), 0, 4)
     end)
     nothing
 end

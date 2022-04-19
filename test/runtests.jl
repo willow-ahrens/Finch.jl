@@ -10,10 +10,10 @@ using Finch: getname, Virtual
 
 @testset "Finch.jl" begin
 
-    #include("test_ssa.jl")
-    #include("parse.jl")
-    #include("fibers.jl")
-    #include("simplevectors.jl")
+    include("test_ssa.jl")
+    include("parse.jl")
+    include("fibers.jl")
+    include("simplevectors.jl")
     include("kernels.jl")
 
 end
