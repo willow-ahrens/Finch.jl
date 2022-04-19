@@ -44,3 +44,6 @@ function strip_res(ex, ignore = false)
         ex
     end
 end
+
+(Base.:^)(T::Type, i::Int) = ∘(repeated(T, i)..., identity)
+(Base.:^)(f::Function, i::Int) = ∘(repeated(f, i)..., identity)

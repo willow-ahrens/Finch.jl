@@ -41,6 +41,5 @@ include("hollowhashlevels.jl")
 include("hollowcoolevels.jl")
 include("solidlevels.jl")
 include("elementlevels.jl")
-include("newenvironments.jl")
 
 end
