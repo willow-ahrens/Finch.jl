@@ -127,3 +127,18 @@ function (ctx::Finch.LowerJulia)(node::Access{<:VirtualFiber{VirtualElementLevel
 
     node.tns.lvl.val
 end
+
+hasdefaultcheck(::VirtualElementLevel) = true
+
+function (ctx::Finch.LowerJulia)(node::Access{<:VirtualFiber{VirtualElementLevel}, <:Union{Write, Update}}, ::DefaultStyle) where {Tv, Ti}
+    @assert isempty(node.idxs)
+    tns = node.tns
+
+    if envdefaultcheck(tns.env) !== nothing
+        push!(ctx.preamble, quote
+            $(envdefaultcheck(tns.env)) = false
+        end)
+    end
+
+    node.tns.lvl.val
+end

@@ -1,4 +1,27 @@
 @testset "kernels" begin
+    #=
+    for (mtx, A_ref) in matrices
+        A_ref = SparseMatrixCSC(A_ref)
+        m, n = size(A_ref)
+        if m == n
+            println("B[i, j] += A[i,k] * A[j, k]: $mtx")
+            A = Finch.Fiber(
+                Solid(m,
+                HollowList(n, A_ref.colptr, A_ref.rowval,
+                Element{0.0}(A_ref.nzval))))
+            B = Finch.Fiber(
+                Solid(m,
+                HollowList(m,
+                Element{0.0}())))
+            foo(@index_program_instance @loop i j k B[i, j] += A[i, k] * A[j, k])
+            #display(@index_code_lowered @loop i j k B[i, j] += A[i, k] * A[j, k])
+            #@index @loop i j k B[i, j] += A[i, k] * A[j, k]
+            @test B.lvl.lvl.pos[1:length(A_ref.colptr)] == A_ref.colptr
+            @test B.lvl.lvl.idx[1:length(A_ref.rowval)] == A_ref.rowval
+        end
+    end
+    =#
+
     for (mtx, A_ref) in matrices
         A_ref = SparseMatrixCSC(A_ref)
         m, n = size(A_ref)

@@ -260,4 +260,25 @@
 
     @test Finch.FiberArray(C) == [0.0, 0.0, 0.0, 0.0, 4.0, 0.0, 5.0, 0.0, 0.0, 0.0]
     println()
+
+    @testset "defaultcheck" begin
+        println("B(s)[i] = A(ds)[i, j]")
+        A = Finch.Fiber(
+            Solid(3, 
+            HollowList(10, [1, 6, 6, 7], [1, 3, 5, 7, 9, 4],
+            Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0, 4.0]))))
+        B = Finch.Fiber(
+            HollowList(3,
+            Element{0.0}()))
+    
+        ex = @index_program_instance @loop i j B[i] += A[i, j]
+        display(execute_code_lowered(:ex, typeof(ex)))
+        println()
+    
+        @index @loop i j B[i] += A[i, j]
+    
+        println(FiberArray(B))
+        @test B.lvl.idx[1:B.lvl.pos[2]-1] == [1, 3]
+    
+    end
 end

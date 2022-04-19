@@ -2,7 +2,8 @@ struct SolidLevel{Ti, Lvl}
     I::Ti
     lvl::Lvl
 end
-SolidLevel{Ti}(lvl) where {Ti} = SolidLevel(zero(Ti), lvl)
+SolidLevel{Ti}(I, lvl::Lvl) where {Ti, Lvl} = SolidLevel{Ti, Lvl}(I, lvl)
+SolidLevel{Ti}(lvl::Lvl) where {Ti, Lvl} = SolidLevel{Ti, Lvl}(zero(Ti), lvl)
 SolidLevel(lvl) = SolidLevel(0, lvl)
 const Solid = SolidLevel
 
@@ -77,6 +78,7 @@ end
 
 function assemble!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode)
     lvl = fbr.lvl
+    q = envposition(fbr.env)
     q_2 = ctx.freshen(lvl.ex, :_q)
     push!(ctx.preamble, quote
         $q_2 = $(ctx(q)) * $(lvl.I)
@@ -86,6 +88,8 @@ end
 
 finalize_level!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode::Union{Write, Update}) = nothing
 
+hasdefaultcheck(lvl::VirtualSolidLevel) = hasdefaultcheck(lvl.lvl)
+
 function unfurl(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode::Union{Read, Write, Update}, idx::Union{Name, Walk, Follow, Laminate, Extrude}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
@@ -94,7 +98,7 @@ function unfurl(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode::Union{Read, Wri
     p_1 = ctx.freshen(tag, :_p)
     if p == 1
         Leaf(
-            body = (i) -> refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=i, index=i, parent=fbr.env)), ctx, mode, idxs...),
+            body = (i) -> refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=i, index=i, guard=envdefaultcheck(fbr.env), parent=fbr.env)), ctx, mode, idxs...),
         )
     else
         Leaf(
@@ -102,7 +106,7 @@ function unfurl(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode::Union{Read, Wri
                 preamble = quote
                     $p_1 = ($(ctx(p)) - 1) * $(lvl.ex).I + $(ctx(i))
                 end,
-                body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(p_1), index=i, parent=fbr.env)), ctx, mode, idxs...),
+                body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(p_1), index=i, guard=envdefaultcheck(fbr.env), parent=fbr.env)), ctx, mode, idxs...),
             )
         )
     end

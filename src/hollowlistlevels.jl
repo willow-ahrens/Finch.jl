@@ -295,7 +295,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Union{Writ
                         else
                             quote end
                         end
-                    ) 
+                    )
                 end,
                 body = refurl(VirtualFiber(lvl_2, VirtualEnvironment(position=Virtual{lvl.Ti}(my_p), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode, idxs...),
                 epilogue = begin
@@ -304,23 +304,16 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Union{Writ
                         $(lvl.ex).idx[$my_p] = $(ctx(idx))
                         $my_p += 1
                     end
-                    if getdefaultcheck(fbr.env) != nothing
-                        if hasdefaultcheck(lvl.lvl)
-                            body = quote
-                                $body
-                                $(getdefaultcheck) &= $my_guard
-                            end
-                        else
-                            body = quote
-                                $body
-                                $(getdefaultcheck) = false
-                            end
+                    if envdefaultcheck(fbr.env) !== nothing
+                        body = quote
+                            $body
+                            $(envdefaultcheck(fbr.env)) = false
                         end
                     end
                     if hasdefaultcheck(lvl.lvl)
                         body = quote
-                            if $(my_guard)
-                                body
+                            if !$(my_guard)
+                                $body
                             end
                         end
                     end
