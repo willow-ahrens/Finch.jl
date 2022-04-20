@@ -299,6 +299,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Union{Writ
                 end,
                 body = refurl(VirtualFiber(lvl_2, VirtualEnvironment(position=Virtual{lvl.Ti}(my_p), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode, idxs...),
                 epilogue = begin
+                    #We should be careful here. Presumably, we haven't modified the subfiber because it is still default. Is this always true? Should strict assembly happen every time?
                     body = quote
                         $(lvl.idx_q) < $my_p && ($(lvl.idx_q) = $Finch.regrow!($(lvl.ex).idx, $(lvl.idx_q), $my_p))
                         $(lvl.ex).idx[$my_p] = $(ctx(idx))
