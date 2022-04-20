@@ -51,7 +51,7 @@ function initialize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode::Un
     lvl = fbr.lvl
     my_q = ctx.freshen(lvl.ex, :_q)
     push!(ctx.preamble, quote
-        $(lvl.val_q) = $refill!($(lvl.ex).val, $(lvl.D), 0, 4)
+        $(lvl.val_q) = $Finch.refill!($(lvl.ex).val, $(lvl.D), 0, 4)
     end)
     nothing
 end
@@ -62,7 +62,7 @@ function assemble!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
     lvl = fbr.lvl
     q = envposition(fbr.env)
     push!(ctx.preamble, quote
-        $(lvl.val_q) < $q && ($(lvl.val_q) = $refill!($(lvl.ex).val, $(lvl.D), $(lvl.val_q), $q))
+        $(lvl.val_q) < $q && ($(lvl.val_q) = $Finch.refill!($(lvl.ex).val, $(lvl.D), $(lvl.val_q), $q))
     end)
     return nothing
 end
@@ -71,7 +71,7 @@ function assemble!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode::Write)
     lvl = fbr.lvl
     q = envposition(fbr.env)
     push!(ctx.preamble, quote
-        $(lvl.val_q) < $q && ($(lvl.val_q) = $regrow!($(lvl.ex).val, $(lvl.val_q), $q))
+        $(lvl.val_q) < $q && ($(lvl.val_q) = $Finch.regrow!($(lvl.ex).val, $(lvl.val_q), $q))
     end)
     return nothing
 end

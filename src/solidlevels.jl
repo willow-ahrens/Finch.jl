@@ -44,7 +44,7 @@ end
 
 function reconstruct!(lvl::VirtualSolidLevel, ctx)
     push!(ctx.preamble, quote
-        $(lvl.ex) = SolidLevel{$(lvl.Ti)}(
+        $(lvl.ex) = $SolidLevel{$(lvl.Ti)}(
             $(ctx(lvl.I)),
             $(ctx(lvl.lvl)),
         )

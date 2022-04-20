@@ -111,7 +111,7 @@ function initialize_level!(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode:
         $(lvl.idx_q) = 0
         empty!($(lvl.ex).tbl)
         empty!($(lvl.ex).srt)
-        $(lvl.pos_q_alloc) = $regrow!($(lvl.ex).pos, 0, 5)
+        $(lvl.pos_q_alloc) = $Finch.regrow!($(lvl.ex).pos, 0, 5)
         $(lvl.ex).pos[1] = 1
         $(lvl.pos_q) = 0
     end)
@@ -128,7 +128,7 @@ function assemble!(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode)
     lvl = fbr.lvl
     push!(ctx.preamble, quote
         $(lvl.pos_q) = $(ctx(q))
-        $(lvl.pos_q_alloc) < $(lvl.pos_q) && ($(lvl.pos_q_alloc) = regrow!($(lvl.ex).pos, $(lvl.pos_q_alloc) + 1, $(lvl.pos_q) + 1) - 1)
+        $(lvl.pos_q_alloc) < $(lvl.pos_q) && ($(lvl.pos_q_alloc) = Finch.regrow!($(lvl.ex).pos, $(lvl.pos_q_alloc) + 1, $(lvl.pos_q) + 1) - 1)
         $(lvl.ex).pos[$(lvl.pos_q) + 1] = 0
     end)
 end

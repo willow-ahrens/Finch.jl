@@ -5,14 +5,13 @@
         println("B[i, j] += A[i,k] * A[j, k]: $mtx")
         B_ref = transpose(A_ref) * A_ref
         A = Finch.Fiber(
-            Solid(m,
-            HollowList(n, A_ref.colptr, A_ref.rowval,
+            Solid(n,
+            HollowList(m, A_ref.colptr, A_ref.rowval,
             Element{0.0}(A_ref.nzval))))
         B = Finch.Fiber(
             Solid(m,
             HollowList(m,
             Element{0.0}())))
-        #display(@index_code_lowered @loop i j k B[i, j] += A[i, k] * A[j, k])
         @index @loop i j k B[i, j] += A[i, k] * A[j, k]
         @test B.lvl.lvl.pos[1:length(B_ref.colptr)] == B_ref.colptr
         @test B.lvl.lvl.idx[1:length(B_ref.rowval)] == B_ref.rowval
@@ -24,8 +23,8 @@
         if m == n
             println("B[] += A[i,k] * A[i, j] * A[j, k] : $mtx")
             A = Finch.Fiber(
-                Solid(m,
-                HollowList(n, A_ref.colptr, A_ref.rowval,
+                Solid(n,
+                HollowList(m, A_ref.colptr, A_ref.rowval,
                 Element{0.0}(A_ref.nzval))))
             B = Finch.Fiber(Element{0.0}())
             @index @loop i j k B[] += A[i, k] * A[i, j] * A[j, k]

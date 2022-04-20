@@ -102,12 +102,12 @@ function initialize_level!(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::
     my_p = ctx.freshen(lvl.ex, :_p)
     push!(ctx.preamble, quote
         $(lvl.I) = $(lvl.Ti)(($(map(n->ctx(stop(ctx.dims[(getname(fbr), envdepth(fbr.env) + n)])), 1:lvl.N)...),))
-        $(lvl.pos_q) = $regrow!($(lvl.ex).pos, 0, 5) - 1
+        $(lvl.pos_q) = $Finch.regrow!($(lvl.ex).pos, 0, 5) - 1
         $(lvl.ex).pos[1] = 1
     end)
     for n = 1:lvl.N
         push!(ctx.preamble, quote
-            $(lvl.idx_q) = $regrow!($(lvl.ex).tbl[$n], 0, 4)
+            $(lvl.idx_q) = $Finch.regrow!($(lvl.ex).tbl[$n], 0, 4)
         end)
     end
 
@@ -123,7 +123,7 @@ function assemble!(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode)
     q = envposition(fbr.env)
     lvl = fbr.lvl
     push!(ctx.preamble, quote
-        $(lvl.pos_q) < $(ctx(q)) && ($(lvl.pos_q) = $regrow!($(lvl.ex).pos, $(lvl.pos_q) + 1, $(ctx(q)) + 1) - 1)
+        $(lvl.pos_q) < $(ctx(q)) && ($(lvl.pos_q) = $Finch.regrow!($(lvl.ex).pos, $(lvl.pos_q) + 1, $(ctx(q)) + 1) - 1)
     end)
 end
 
@@ -259,12 +259,12 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Union{Write
                             if n == lvl.N
                                 resize_body = quote
                                     $resize_body
-                                    $(lvl.idx_q) = $regrow!($(lvl.ex).tbl[$n], $(lvl.idx_q), $my_p)
+                                    $(lvl.idx_q) = $Finch.regrow!($(lvl.ex).tbl[$n], $(lvl.idx_q), $my_p)
                                 end
                             else
                                 resize_body = quote
                                     $resize_body
-                                    $regrow!($(lvl.ex).tbl[$n], $(lvl.idx_q), $my_p)
+                                    $Finch.regrow!($(lvl.ex).tbl[$n], $(lvl.idx_q), $my_p)
                                 end
                             end
                             write_body = quote
