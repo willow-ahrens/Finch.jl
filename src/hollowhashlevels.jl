@@ -308,6 +308,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Union{Writ
                 val = default(fbr),
                 tail = (ctx, idx) -> Thunk(
                     preamble = quote
+                        $my_guard = true
                         $my_key = ($(ctx(envposition(envexternal(fbr.env)))), ($(map(ctx, envdeferred(fbr.env))...), $(ctx(idx))))
                         $my_p = get($(lvl.ex).tbl, $my_key, $(lvl.idx_q) + 1)
                         if $(lvl.idx_q) < $my_p 

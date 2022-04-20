@@ -229,12 +229,15 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Read, idx::
     )
 end
 
+hasdefaultcheck(lvl::VirtualHollowCooLevel) = true
+
 function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Union{Write, Update}, idx::Union{Name, Extrude}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     R = length(envdeferred(fbr.env)) + 1
     my_key = ctx.freshen(tag, :_key)
     my_p = ctx.freshen(tag, :_p)
+    my_guard = ctx.freshen(tag, :_guard)
 
     if R == lvl.N
         Thunk(
@@ -245,12 +248,13 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Union{Write
                 val = default(fbr),
                 tail = (ctx, idx) -> Thunk(
                     preamble = quote
+                        $my_guard = true
                         $(contain(ctx) do ctx_2 
                             assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=my_p, parent=fbr.env)), ctx_2, mode)
                             quote end
                         end)
                     end,
-                    body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_p), index=idx, parent=fbr.env)), ctx, mode, idxs...),
+                    body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_p), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode, idxs...),
                     epilogue = begin
                         resize_body = quote end
                         write_body = quote end
@@ -272,13 +276,27 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Union{Write
                                 $(lvl.ex).tbl[$n][$my_p] = $(idxs[n])
                             end
                         end
-                        quote
+                        body = quote
                             if $(lvl.idx_q) < $my_p
                                 $resize_body
                             end
                             $write_body
                             $my_p += 1
                         end
+                        if envdefaultcheck(fbr.env) !== nothing
+                            body = quote
+                                $body
+                                $(envdefaultcheck(fbr.env)) = false
+                            end
+                        end
+                        if hasdefaultcheck(lvl.lvl)
+                            body = quote
+                                if !$(my_guard)
+                                    $body
+                                end
+                            end
+                        end
+                        body
                     end
                 )
             ),
