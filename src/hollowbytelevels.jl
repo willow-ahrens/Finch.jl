@@ -98,7 +98,7 @@ function initialize_level!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode:
         $(lvl.idx_q) = 0
         # fill!($(lvl.ex).tbl, 0)
         # empty!($(lvl.ex).srt)
-        $(lvl.pos_q) = $Finch.regrow!($(lvl.ex).pos, 0, 5) - 1
+        $(lvl.pos_q) = $Finch.refill!($(lvl.ex).pos, $(zero(lvl.Ti)), 0, 5) - 1
         $(lvl.tbl_q) = $Finch.refill!($(lvl.ex).tbl, false, 0, 4)
         $(lvl.idx_q_alloc) = $Finch.regrow!($(lvl.ex).srt, 0, 4)
         $(lvl.ex).pos[1] = 1
