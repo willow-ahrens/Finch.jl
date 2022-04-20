@@ -281,4 +281,21 @@
         @test B.lvl.idx[1:B.lvl.pos[2]-1] == [1, 3]
     
     end
+
+    println("B[i] = A(ds)[j, i]")
+    A = Fiber(
+        Solid(4,
+        HollowList(10, [1, 6, 9, 9, 10], [1, 3, 5, 7, 9, 2, 5, 8, 3],
+        Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0, 1.0, 1.0, 1.0, 7.0]))))
+    B = Fiber(
+        HollowByte(4,
+        Element{0.0}()))
+
+    ex = @index_program_instance @loop j i B[i] += A[j, i]
+    display(execute_code_lowered(:ex, typeof(ex)))
+    println()
+
+    @index @loop j i B[i] += A[j, i]
+
+    @test B.lvl.srt = [(1, 1), (1, 2), (1, 4)]
 end

@@ -1,27 +1,27 @@
-struct HollowAcceleratorLevel{Ti, Tp, Tp_2, Lvl}
+struct HollowByteLevel{Ti, Tp, Tp_2, Lvl}
     I::Ti
     tbl::Vector{Bool}
-    srt::Vector{Tuple{Tp, Ti}}}
+    srt::Vector{Tuple{Tp, Ti}}
     pos::Vector{Tp_2}
     lvl::Lvl
 end
-const HollowAccelerator = HollowAcceleratorLevel
-HollowAcceleratorLevel(lvl) = HollowAcceleratorLevel(0, lvl)
-HollowAcceleratorLevel{Ti}(lvl) where {Ti} = HollowAcceleratorLevel{Ti}(zero(Ti), lvl)
-HollowAcceleratorLevel(I::Ti, lvl) where {Ti} = HollowAcceleratorLevel{Ti}(I, lvl)
-HollowAcceleratorLevel{Ti}(I::Ti, lvl) where {Ti} = HollowAcceleratorLevel{Ti, Int, Int}(I, lvl)
-HollowAcceleratorLevel{Ti, Tp, Tp_2}(I::Ti, lvl) where {Ti, Tp, Tp_2} =
-    HollowAcceleratorLevel{Ti, Tp, Tp_2}(I::Ti, Vector{Bool}(undef, 4), Vector{Tuple{Tp, Ti}}(undef, 4), Vector{Tp_2}(undef, 4), lvl)
-HollowAcceleratorLevel{Ti, Tp, Tp_2}(I::Ti, tbl, srt, pos, lvl::Lvl) where {Ti, Tp, Tp_2, Lvl} =
-    HollowAcceleratorLevel{Ti, Tp, Tp_2, Lvl}(I, tbl, srt, pos, lvl)
+const HollowByte = HollowByteLevel
+HollowByteLevel(lvl) = HollowByteLevel(0, lvl)
+HollowByteLevel{Ti}(lvl) where {Ti} = HollowByteLevel{Ti}(zero(Ti), lvl)
+HollowByteLevel(I::Ti, lvl) where {Ti} = HollowByteLevel{Ti}(I, lvl)
+HollowByteLevel{Ti}(I::Ti, lvl) where {Ti} = HollowByteLevel{Ti, Int, Int}(I, lvl)
+HollowByteLevel{Ti, Tp, Tp_2}(I::Ti, lvl) where {Ti, Tp, Tp_2} =
+    HollowByteLevel{Ti, Tp, Tp_2}(I::Ti, Vector{Bool}(undef, 4), Vector{Tuple{Tp, Ti}}(undef, 4), Vector{Tp_2}(undef, 4), lvl)
+HollowByteLevel{Ti, Tp, Tp_2}(I::Ti, tbl, srt, pos, lvl::Lvl) where {Ti, Tp, Tp_2, Lvl} =
+    HollowByteLevel{Ti, Tp, Tp_2, Lvl}(I, tbl, srt, pos, lvl)
 
-@inline arity(fbr::Fiber{<:HollowAcceleratorLevel}) = 1 + arity(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
-@inline shape(fbr::Fiber{<:HollowAcceleratorLevel}) = (fbr.lvl.I, shape(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
-@inline domain(fbr::Fiber{<:HollowAcceleratorLevel}) = (1:fbr.lvl.I, domain(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
-@inline image(fbr::Fiber{<:HollowAcceleratorLevel}) = image(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
-@inline default(fbr::Fiber{<:HollowAcceleratorLevel}) = default(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
+@inline arity(fbr::Fiber{<:HollowByteLevel}) = 1 + arity(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
+@inline shape(fbr::Fiber{<:HollowByteLevel}) = (fbr.lvl.I, shape(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
+@inline domain(fbr::Fiber{<:HollowByteLevel}) = (1:fbr.lvl.I, domain(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
+@inline image(fbr::Fiber{<:HollowByteLevel}) = image(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
+@inline default(fbr::Fiber{<:HollowByteLevel}) = default(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
 
-function (fbr::Fiber{<:HollowAcceleratorLevel{Ti}})(i, tail...) where {D, Tv, Ti, N, R}
+function (fbr::Fiber{<:HollowByteLevel{Ti}})(i, tail...) where {D, Tv, Ti, R}
     lvl = fbr.lvl
     q = envposition(fbr.env)
     p = (q - 1) * lvl.I + i
@@ -33,7 +33,7 @@ function (fbr::Fiber{<:HollowAcceleratorLevel{Ti}})(i, tail...) where {D, Tv, Ti
     end
 end
 
-mutable struct VirtualHollowAcceleratorLevel
+mutable struct VirtualHollowByteLevel
     ex
     Ti
     Tp
@@ -41,27 +41,33 @@ mutable struct VirtualHollowAcceleratorLevel
     I
     pos_q
     idx_q
+    idx_q_alloc
+    tbl_q
     lvl
 end
-function virtualize(ex, ::Type{HollowAcceleratorLevel{Ti, Tp, Tp_2, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Tp_2, Lvl}   
+function virtualize(ex, ::Type{HollowByteLevel{Ti, Tp, Tp_2, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Tp_2, Lvl}   
     sym = ctx.freshen(tag)
     I = ctx.freshen(sym, :_I)
     pos_q = ctx.freshen(sym, :_pos_q)
     idx_q = ctx.freshen(sym, :_idx_q)
+    idx_q_alloc = ctx.freshen(sym, :_idx_q_alloc)
+    tbl_q = ctx.freshen(sym, :_tbl_q)
     push!(ctx.preamble, quote
         $sym = $ex
         $I = $sym.I
         $pos_q = length($sym.pos)
-        $idx_q = length($sym.tbl)
+        $idx_q = length($sym.srt)
+        $idx_q_alloc = length($sym.srt)
+        $tbl_q = length($sym.tbl)
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualHollowAcceleratorLevel(sym, Ti, Tp, Tp_2, I, pos_q, idx_q, lvl_2)
+    VirtualHollowByteLevel(sym, Ti, Tp, Tp_2, I, pos_q, idx_q, idx_q_alloc, tbl_q, lvl_2)
 end
-(ctx::Finch.LowerJulia)(lvl::VirtualHollowAcceleratorLevel) = lvl.ex
+(ctx::Finch.LowerJulia)(lvl::VirtualHollowByteLevel) = lvl.ex
 
-function reconstruct!(lvl::VirtualHollowAcceleratorLevel, ctx)
+function reconstruct!(lvl::VirtualHollowByteLevel, ctx)
     push!(ctx.preamble, quote
-        $(lvl.ex) = $HollowAcceleratorLevel{$(lvl.Ti), $(lvl.Tp), $(lvl.Tp_2)}(
+        $(lvl.ex) = $HollowByteLevel{$(lvl.Ti), $(lvl.Tp), $(lvl.Tp_2)}(
             $(ctx(lvl.I)),
             $(lvl.ex).tbl,
             $(lvl.ex).srt,
@@ -71,28 +77,30 @@ function reconstruct!(lvl::VirtualHollowAcceleratorLevel, ctx)
     end)
 end
 
-function getsites(fbr::VirtualFiber{VirtualHollowAcceleratorLevel})
-    return (envdepth(fbr.env) + 1, getsites(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^fbr.lvl.N)(fbr.env)))...)
+function getsites(fbr::VirtualFiber{VirtualHollowByteLevel})
+    return (envdepth(fbr.env) + 1, getsites(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))...)
 end
 
-function getdims(fbr::VirtualFiber{VirtualHollowAcceleratorLevel}, ctx, mode)
+function getdims(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode)
     ext = Extent(1, Virtual{Int}(:($(fbr.lvl.I))))
     dim = mode isa Read ? ext : SuggestedExtent(ext)
     (dim, getdims(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)...)
 end
 
-@inline default(fbr::VirtualFiber{VirtualHollowAcceleratorLevel}) = default(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
+@inline default(fbr::VirtualFiber{VirtualHollowByteLevel}) = default(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
 
-function initialize_level!(fbr::VirtualFiber{VirtualHollowAcceleratorLevel}, ctx, mode::Union{Write, Update})
+function initialize_level!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Union{Write, Update})
     @assert isempty(envdeferred(fbr.env))
     lvl = fbr.lvl
     my_p = ctx.freshen(lvl.ex, :_p)
     push!(ctx.preamble, quote
-        $(lvl.I) = $(lvl.Ti)($(ctx(stop(ctx.dims[(getname(fbr), envdepth(fbr.env))]))))
+        $(lvl.I) = $(lvl.Ti)($(ctx(stop(ctx.dims[(getname(fbr), envdepth(fbr.env) + 1)]))))
         $(lvl.idx_q) = 0
         # fill!($(lvl.ex).tbl, 0)
         # empty!($(lvl.ex).srt)
         $(lvl.pos_q) = $Finch.regrow!($(lvl.ex).pos, 0, 5) - 1
+        $(lvl.tbl_q) = $Finch.refill!($(lvl.ex).tbl, false, 0, 4)
+        $(lvl.idx_q_alloc) = $Finch.regrow!($(lvl.ex).srt, 0, 4)
         $(lvl.ex).pos[1] = 1
     end)
     if (lvl_2 = initialize_level!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)) !== nothing
@@ -103,25 +111,27 @@ function initialize_level!(fbr::VirtualFiber{VirtualHollowAcceleratorLevel}, ctx
     return lvl
 end
 
-function assemble!(fbr::VirtualFiber{VirtualHollowAcceleratorLevel}, ctx, mode)
+function assemble!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode)
     q = envposition(fbr.env)
-    q_2 = ctx.freshen(fbr.tag, :_q_2)
     lvl = fbr.lvl
+    q_2 = ctx.freshen(lvl.ex, :_q_2)
     push!(ctx.preamble, quote
         $(lvl.pos_q) < $(ctx(q)) && ($(lvl.pos_q) = Finch.refill!($(lvl.ex).pos, $(zero(lvl.Ti)), $(lvl.pos_q) + 1, $(ctx(q)) + 1) - 1)
+        $q_2 = $(ctx(q)) * $(lvl.I)
+        $(lvl.tbl_q) < $q_2 && ($(lvl.tbl_q) = Finch.refill!($(lvl.ex).tbl, false, $(lvl.tbl_q), $q_2))
     end)
 end
 
-function finalize_level!(fbr::VirtualFiber{VirtualHollowAcceleratorLevel}, ctx, mode::Union{Write, Update})
+function finalize_level!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Union{Write, Update})
     @assert isempty(envdeferred(fbr.env))
     lvl = fbr.lvl
     my_p = ctx.freshen(lvl.ex, :_p)
     push!(ctx.preamble, quote
-        sort!($(lvl.ex).srt)
-        #resize!($(lvl.ex).pos, $(lvl.pos_q) + 1)
+        sort!(@view $(lvl.ex).srt[1:$(lvl.idx_q)])
         for $my_p = 1:$(lvl.pos_q)
             $(lvl.ex).pos[$my_p + 1] += $(lvl.ex).pos[$my_p]
         end
+        #resize!($(lvl.ex).pos, $(lvl.pos_q) + 1)
     end)
     if (lvl_2 = finalize_level!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)) !== nothing
         lvl = shallowcopy(lvl)
@@ -133,13 +143,10 @@ function finalize_level!(fbr::VirtualFiber{VirtualHollowAcceleratorLevel}, ctx, 
     end
 end
 
-unfurl(fbr::VirtualFiber{VirtualHollowAcceleratorLevel}, ctx, mode::Read, idx::Name, idxs...) =
+unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Read, idx::Name, idxs...) =
     unfurl(fbr, ctx, mode, walk(idx))
 
-    unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx::Name, idxs...) =
-    unfurl(fbr, ctx, mode, walk(idx))
-
-function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx::Walk, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Read, idx::Walk, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
@@ -203,7 +210,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
     )
 end
 
-function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx::Gallop, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Read, idx::Gallop, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
@@ -294,7 +301,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
     )
 end
 
-function unfurl(fbr::VirtualFiber{VirtualHollowAcceleratorLevel}, ctx, mode::Read, idx::Union{Follow}, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Read, idx::Union{Follow}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     R = length(envdeferred(fbr.env)) + 1
@@ -302,31 +309,25 @@ function unfurl(fbr::VirtualFiber{VirtualHollowAcceleratorLevel}, ctx, mode::Rea
     my_p = cgx.freshen(tag, :_p)
     q = envposition(fbr.env)
 
-    if R == lvl.N
-        Leaf(
-            body = (i) -> Thunk(
-                preamble = quote
-                    $my_p = $(ctx(q)) * $(lvl.I) + $i
-                end,
-                body = Cases([
-                    :($tbl[$my_p]) => refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Tp_2}(my_p), index=i, parent=fbr.env)), ctx, mode, idxs...),
-                    true => Simplify(default(fbr))
-                ])
-            )
+    Leaf(
+        body = (i) -> Thunk(
+            preamble = quote
+                $my_p = $(ctx(q)) * $(lvl.I) + $i
+            end,
+            body = Cases([
+                :($tbl[$my_p]) => refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Tp_2}(my_p), index=i, parent=fbr.env)), ctx, mode, idxs...),
+                true => Simplify(default(fbr))
+            ])
         )
-    else
-        Leaf(
-            body = (i) -> refurl(VirtualFiber(lvl, VirtualEnvironment(index=i, parent=fbr.env, internal=true)), ctx, mode, idxs...)
-        )
-    end
+    )
 end
 
-unfurl(fbr::VirtualFiber{VirtualHollowAcceleratorLevel}, ctx, mode::Union{Write, Update}, idx::Name, idxs...) =
+unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Union{Write, Update}, idx::Name, idxs...) =
     unfurl(fbr, ctx, mode, laminate(idx), idxs...)
 
-hasdefaultcheck(lvl::VirtualHollowAcceleratorLevel) = true
+hasdefaultcheck(lvl::VirtualHollowByteLevel) = true
 
-function unfurl(fbr::VirtualFiber{VirtualHollowAcceleratorLevel}, ctx, mode::Union{Write, Update}, idx::Union{Name, Extrude, Laminate}, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Union{Write, Update}, idx::Union{Name, Extrude, Laminate}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_key = ctx.freshen(tag, :_key)
@@ -342,7 +343,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowAcceleratorLevel}, ctx, mode::Uni
             tail = (ctx, idx) -> Thunk(
                 preamble = quote
                     $my_guard = true
-                    $my_p = $(ctx(envposition(fbr.env))) * $(lvl.I) + $(ctx.idx)
+                    $my_p = ($(ctx(envposition(fbr.env))) - 1) * $(lvl.I) + $idx
                     $my_seen = $(lvl.ex).tbl[$my_p]
                     if !$my_seen
                         $(contain(ctx) do ctx_2 
