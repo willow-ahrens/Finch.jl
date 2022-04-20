@@ -10,6 +10,12 @@ using Finch: getname, Virtual
 
 @testset "Finch.jl" begin
 
+    include("test_ssa.jl")
+    include("parse.jl")
+    include("fibers.jl")
+    include("simplevectors.jl")
+    include("kernels.jl")
+
     println("B[i] = A(ds)[j, i]")
     A = Fiber(
         Solid(4,
@@ -53,11 +59,4 @@ using Finch: getname, Virtual
             exit()
         end
     end
-
-    include("test_ssa.jl")
-    include("parse.jl")
-    include("fibers.jl")
-    include("simplevectors.jl")
-    include("kernels.jl")
-
 end
