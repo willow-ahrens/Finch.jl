@@ -128,7 +128,7 @@ function assemble!(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode)
     lvl = fbr.lvl
     push!(ctx.preamble, quote
         $(lvl.pos_q) = $(ctx(q))
-        $(lvl.pos_q_alloc) < $(lvl.pos_q) && ($(lvl.pos_q_alloc) = Finch.regrow!($(lvl.ex).pos, $(lvl.pos_q_alloc) + 1, $(lvl.pos_q) + 1) - 1)
+        $(lvl.pos_q_alloc) < $(lvl.pos_q) && ($(lvl.pos_q_alloc) = Finch.regrow!($(lvl.ex).pos, $(lvl.pos_q_alloc) + 1, $(lvl.pos_q) + 1) - 1) #TODO should this zero-init?
         $(lvl.ex).pos[$(lvl.pos_q) + 1] = 0
     end)
 end
