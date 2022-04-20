@@ -289,12 +289,15 @@ end
 unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Union{Write, Update}, idx::Name, idxs...) =
     unfurl(fbr, ctx, mode, laminate(idx), idxs...)
 
+hasdefaultcheck(lvl::VirtualHollowHashLevel) = true
+
 function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Union{Write, Update}, idx::Union{Name, Extrude, Laminate}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     R = length(envdeferred(fbr.env)) + 1
     my_key = ctx.freshen(tag, :_key)
     my_p = ctx.freshen(tag, :_p)
+    my_guard = ctx.freshen(tag, :_guard)
 
     if R == lvl.N
         Thunk(
@@ -306,17 +309,37 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Union{Writ
                 tail = (ctx, idx) -> Thunk(
                     preamble = quote
                         $my_key = ($(ctx(envposition(envexternal(fbr.env)))), ($(map(ctx, envdeferred(fbr.env))...), $(ctx(idx))))
-                        $my_p = get!($(lvl.ex).tbl, $my_key, $(lvl.idx_q) + 1)
+                        $my_p = get($(lvl.ex).tbl, $my_key, $(lvl.idx_q) + 1)
                         if $(lvl.idx_q) < $my_p 
-                            $(lvl.idx_q) = $my_p
                             $(contain(ctx) do ctx_2 
+                                #THIS code reassembles every time. TODO
                                 assemble!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(position=my_p, parent=(VirtualEnvironment^(lvl.N - 1))(fbr.env))), ctx_2, mode)
                                 quote end
                             end)
-                            $(lvl.ex).pos[$(ctx(envposition(envexternal(fbr.env)))) + 1] += 1
                         end
                     end,
-                    body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_p), index=idx, parent=fbr.env)), ctx, mode, idxs...)
+                    body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_p), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode, idxs...),
+                    epilogue = begin
+                        body = quote
+                            $(lvl.idx_q) = $my_p
+                            $(lvl.ex).tbl[$my_key] = $(lvl.idx_q)
+                            $(lvl.ex).pos[$(ctx(envposition(envexternal(fbr.env)))) + 1] += 1
+                        end
+                        if envdefaultcheck(fbr.env) !== nothing
+                            body = quote
+                                $body
+                                $(envdefaultcheck(fbr.env)) = false
+                            end
+                        end
+                        if hasdefaultcheck(lvl.lvl)
+                            body = quote
+                                if !$(my_guard)
+                                    $body
+                                end
+                            end
+                        end
+                        body
+                    end
                 )
             )
         )
