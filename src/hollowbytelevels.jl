@@ -360,7 +360,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Union{Writ
                             $(lvl.ex).tbl[$my_p] = true
                             $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1] += 1
                             $(lvl.idx_q) += 1
-                            $(lvl.idx_q_alloc) < $(lvl.idx_q) && ($(lvl.idx_q_alloc) = $Finch.regrow!($(lvl.ex).idx, $(lvl.idx_q_alloc), $(lvl.idx_q)))
+                            $(lvl.idx_q_alloc) < $(lvl.idx_q) && ($(lvl.idx_q_alloc) = $Finch.regrow!($(lvl.ex).srt, $(lvl.idx_q_alloc), $(lvl.idx_q)))
                             $(lvl.ex).srt[$(lvl.idx_q)] = ($(ctx(envposition(fbr.env))), $idx)
                         end
                     end
