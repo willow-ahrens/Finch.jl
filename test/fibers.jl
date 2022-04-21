@@ -14,9 +14,10 @@
     @index @loop i B[i] += A[i]
 
     println(FiberArray(B))
+    println(B)
     @test FiberArray(A) == FiberArray(B)
 
-    println("B(s)[i] = A(h)[i]")
+    println("A(s)[i] = B(h)[i]")
 
     ex = @index_program_instance @loop i A[i] += B[i]
     display(execute_code_lowered(:ex, typeof(ex)))

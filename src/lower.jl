@@ -42,6 +42,17 @@ function define!(ctx, var, val)
     ctx.state[var] = val
 end
 
+function cache!(ctx, var, val)
+    if ctx(val) isa Symbol
+        return val
+    else
+        push!(ctx.preamble, quote
+            $var = $(ctx(val))
+        end)
+        return Virtual{Any}(var)
+    end
+end
+
 bind(f, ctx::LowerJulia) = f()
 function bind(f, ctx::LowerJulia, (var, val′), tail...)
     if haskey(ctx.bindings, var)
@@ -111,6 +122,10 @@ function unify!(ctx::LowerJulia, ctx_2)
     merge!(union, ctx.state, ctx_2.state)
     return ctx
 end
+
+start(val) = val
+stop(val) = val
+extent(val) = 1
 
 @kwdef mutable struct Extent
     start

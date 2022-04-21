@@ -93,11 +93,12 @@ end
 
 interval_assembly_depth(lvl::VirtualHollowListLevel) = Inf
 
+#This function is quite simple, since HollowListLevels don't support reassembly.
 function assemble!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
-    q = envposition(fbr.env)
     lvl = fbr.lvl
+    p_stop = ctx(cache!(ctx, ctx.freshen(lvl.ex, :_p_stop), stop(envposition(fbr.env))))
     push!(ctx.preamble, quote
-        $(lvl.pos_q) < $(ctx(q)) && ($(lvl.pos_q) = $Finch.regrow!($(lvl.ex).pos, $(lvl.pos_q) + 1, $(ctx(q)) + 1))
+        $(lvl.pos_q) < $p_stop && ($(lvl.pos_q) = $Finch.regrow!($(lvl.ex).pos, $(lvl.pos_q) + 1, $p_stop + 1) - 1)
     end)
 end
 

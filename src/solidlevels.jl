@@ -80,34 +80,26 @@ interval_assembly_depth(lvl::VirtualSolidLevel) = min(Inf, interval_assembly_dep
 
 function assemble!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode)
     lvl = fbr.lvl
-    q = envposition(fbr.env)
-    q_2 = ctx.freshen(lvl.ex, :_q)
-    push!(ctx.preamble, quote
-        $q_2 = $(ctx(q)) * $(lvl.I)
-    end)
-    assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=q_2, parent=fbr.env)), ctx, mode)
-end
-
-#=
-function assemble!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode)
-    lvl = fbr.lvl
     p_start = start(envposition(fbr.env))
     p_stop = stop(envposition(fbr.env))
-    p_start_2 = Call(*, p_start, lvl.I)
-    p_stop_2 = Call(*, p_stop, lvl.I)
+    p_start_2 = call(*, p_start, lvl.I)
+    p_stop_2 = call(*, p_stop, lvl.I)
     if interval_assembly_depth(lvl.lvl) >= 1
         assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Extent(p_start_2, p_stop_2), index = Extent(1, lvl.I), parent=fbr.env)), ctx, mode)
     else
-        p_2 = ctx.freshen(lvl.ex, :_p)
+        p = ctx.freshen(lvl.ex, :_p)
+        p_2 = ctx.freshen(lvl.ex, :_p_2)
         i_2 = ctx.freshen(lvl.ex, :_i)
         push!(ctx.preamble, quote
-            for $i_2 = 1:$(lvl.I)
-                assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual(p_2), index=Virtual(i_2), parent=fbr.env)), ctx, mode)
+            for $p = $(ctx(p_start)):$(ctx(p_stop))
+                for $i_2 = 1:$(lvl.I)
+                    $p_2 = ($p - 1) * $(lvl.I) + $i_2
+                    assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual(p_2), index=Virtual(i_2), parent=fbr.env)), ctx, mode)
+                end
             end
         end)
     end
 end
-=#
 
 finalize_level!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode::Union{Write, Update}) = nothing
 

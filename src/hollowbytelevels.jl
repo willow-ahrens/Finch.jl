@@ -113,17 +113,43 @@ end
 
 interval_assembly_depth(lvl::VirtualHollowByteLevel) = min(Inf, interval_assembly_depth(lvl.lvl) - 1)
 
+#TODO does this actually support reassembly? I think it needs to filter out indices with unset table entries during finalization
 function assemble!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode)
-    q = envposition(fbr.env)
     lvl = fbr.lvl
-    q_2 = ctx.freshen(lvl.ex, :_q_2)
+    p_stop = ctx(cache!(ctx, ctx.freshen(lvl.ex, :_p), stop(envposition(fbr.env))))
+    if extent(envposition(fbr.env)) == 1
+        p_start = p_stop
+    else
+        p_start = ctx(cache!(ctx, freshen(lvl.ex, :_p), start(envposition(fbr.env))))
+    end
+    p_start_2 = ctx.freshen(lvl.ex, :p_start_2)
+    p_stop_2 = ctx.freshen(lvl.ex, :p_stop_2)
+    p_2 = ctx.freshen(lvl.ex, :p_2)
+
     push!(ctx.preamble, quote
-        $(lvl.pos_q) < $(ctx(q)) && ($(lvl.pos_q) = Finch.refill!($(lvl.ex).pos, $(zero(lvl.Ti)), $(lvl.pos_q) + 1, $(ctx(q)) + 1) - 1)
-        $q_2 = $(ctx(q)) * $(lvl.I)
-        $(lvl.tbl_q) < $q_2 && ($(lvl.tbl_q) = Finch.refill!($(lvl.ex).tbl, false, $(lvl.tbl_q), $q_2))
+        $p_start_2 = ($p_start - 1) * $lvl.I + 1
+        $p_stop_2 = $p_stop * $lvl.I
+        $(lvl.pos_q) < $p_stop && ($(lvl.pos_q) = Finch.refill!($(lvl.ex).pos, $(zero(lvl.Ti)), $(lvl.pos_q) + 1, $(ctx(q)) + 1) - 1)
+        $(lvl.tbl_q) < $p_stop_2 && ($(lvl.tbl_q) = Finch.regrow!($(lvl.ex).tbl, $(lvl.tbl_q), $q_2))
+        @simd for $p_2 = $p_start_2:$p_stop_2
+            $(lvl.tbl_q)[$p_2] = false
+        end
     end)
-    assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=q_2, parent=fbr.env)), ctx, mode)
-    #This bad boy needs to initialize sublevels like a dense level
+
+    if interval_assembly_depth(lvl.lvl) >= 1
+        assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Extent(p_start_2, p_stop_2), index = Extent(1, lvl.I), parent=fbr.env)), ctx, mode)
+    else
+        i_2 = ctx.freshen(lvl.ex, :_i)
+        p = ctx.freshen(lvl.ex, :_p)
+        push!(ctx.preamble, quote
+            for $p = $p_start:$p_stop
+                for $i_2 = 1:$(lvl.I)
+                    $p_2 = ($p - 1) * $(lvl.I) + $i_2
+                    assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual(p_2), index=Virtual(i_2), parent=fbr.env)), ctx, mode)
+                end
+            end
+        end)
+    end
 end
 
 function finalize_level!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Union{Write, Update})

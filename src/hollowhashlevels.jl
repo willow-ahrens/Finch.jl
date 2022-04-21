@@ -111,7 +111,7 @@ function initialize_level!(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode:
         $(lvl.idx_q) = 0
         empty!($(lvl.ex).tbl)
         empty!($(lvl.ex).srt)
-        $(lvl.pos_q_alloc) = $Finch.regrow!($(lvl.ex).pos, 0, 5)
+        $(lvl.pos_q_alloc) = $Finch.refill!($(lvl.ex).pos, 0, 0, 5) - 1
         $(lvl.ex).pos[1] = 1
         $(lvl.pos_q) = 0
     end)
@@ -125,13 +125,14 @@ end
 
 interval_assembly_depth(lvl::VirtualHollowHashLevel) = Inf #This level supports interval assembly, and this assembly isn't recursive.
 
+#This function is quite simple, since HollowHashLevels don't support reassembly.
+#TODO what would it take to support reassembly?
 function assemble!(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode)
-    q = envposition(fbr.env)
     lvl = fbr.lvl
+    p_stop = ctx(cache!(ctx, ctx.freshen(lvl.ex, :_p_stop), stop(envposition(fbr.env))))
     push!(ctx.preamble, quote
-        $(lvl.pos_q) = $(ctx(q))
-        $(lvl.pos_q_alloc) < $(lvl.pos_q) && ($(lvl.pos_q_alloc) = Finch.regrow!($(lvl.ex).pos, $(lvl.pos_q_alloc) + 1, $(lvl.pos_q) + 1) - 1) #TODO should this zero-init?
-        $(lvl.ex).pos[$(lvl.pos_q) + 1] = 0
+        $(lvl.pos_q) = max($p_stop, $(lvl.pos_q))
+        $(lvl.pos_q_alloc) < $(lvl.pos_q) && ($(lvl.pos_q_alloc) = Finch.refill!($(lvl.ex).pos, 0, $(lvl.pos_q_alloc) + 1, $(lvl.pos_q) + 1) - 1)
     end)
 end
 
