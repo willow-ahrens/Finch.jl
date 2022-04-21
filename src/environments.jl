@@ -100,3 +100,25 @@ Strip environments which are internal to the level, leaving the parent environme
 envexternal(env::Union{Environment, VirtualEnvironment}) = hasproperty(env, :internal) ? envexternal(env.parent) : env
 envguard(env::Union{Environment, VirtualEnvironment}) = hasproperty(env, :guard) ? env.guard : nothing
 envparent(env::Union{Environment, VirtualEnvironment}) = get(env, :parent, nothing)
+
+"""
+    hasdefaultcheck(lvl)
+
+Can the level check whether it is entirely default?
+"""
+hasdefaultcheck(lvl) = false
+
+"""
+    getdefaultcheck(env)
+
+Return a variable which should be set to false if the subfiber is not entirely default.
+"""
+getdefaultcheck(lvl) = nothing
+
+"""
+    envdefaultcheck(env)
+
+Return a variable which should be set to false if the subfiber is not entirely default.
+"""
+envdefaultcheck(env) = get(env, :guard, nothing)
+
