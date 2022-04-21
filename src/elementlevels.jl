@@ -22,21 +22,21 @@ struct VirtualElementLevel
     ex
     Tv
     D
-    val_q
+    val_alloc
     val
 end
 
 (ctx::Finch.LowerJulia)(lvl::VirtualElementLevel) = lvl.ex
 function virtualize(ex, ::Type{ElementLevel{D, Tv}}, ctx, tag) where {D, Tv}
     sym = ctx.freshen(tag)
-    val_q = ctx.freshen(sym, :_val_q)
+    val_alloc = ctx.freshen(sym, :_val_alloc)
     val = ctx.freshen(sym, :_val)
     push!(ctx.preamble, quote
         $sym = $ex
-        $val_q = length($ex.val)
+        $val_alloc = length($ex.val)
         $val = $D
     end)
-    VirtualElementLevel(sym, Tv, D, val_q, val)
+    VirtualElementLevel(sym, Tv, D, val_alloc, val)
 end
 
 function getsites(fbr::VirtualFiber{VirtualElementLevel})
@@ -50,9 +50,11 @@ getdims(::VirtualFiber{VirtualElementLevel}, ctx, mode) = ()
 function initialize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode::Union{Write, Update})
     lvl = fbr.lvl
     my_q = ctx.freshen(lvl.ex, :_q)
-    push!(ctx.preamble, quote
-        $(lvl.val_q) = $Finch.refill!($(lvl.ex).val, $(lvl.D), 0, 4)
-    end)
+    if !envreinitialized(fbr.env)
+        push!(ctx.preamble, quote
+            $(lvl.val_alloc) = $Finch.refill!($(lvl.ex).val, $(lvl.D), 0, 4)
+        end)
+    end
     nothing
 end
 
@@ -64,7 +66,18 @@ function assemble!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
     lvl = fbr.lvl
     q = ctx(stop(envposition(fbr.env)))
     push!(ctx.preamble, quote
-        $(lvl.val_q) < $q && ($(lvl.val_q) = $Finch.refill!($(lvl.ex).val, $(lvl.D), $(lvl.val_q), $q))
+        $(lvl.val_alloc) < $q && ($(lvl.val_alloc) = $Finch.refill!($(lvl.ex).val, $(lvl.D), $(lvl.val_alloc), $q))
+    end)
+end
+
+function reinitialize!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode)
+    lvl = fbr.lvl
+    p_start = start(envposition(fbr.env))
+    p_stop = stop(envposition(fbr.env))
+    push!(ctx.preamble, quote
+        for $p = $(ctx(p_start)):$(ctx(p_stop))
+            $(lvl.ex).val[$p] = $(lvl.D)
+        end
     end)
 end
 
@@ -74,7 +87,7 @@ function assemble!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode::Write)
     lvl = fbr.lvl
     q = envposition(fbr.env)
     push!(ctx.preamble, quote
-        $(lvl.val_q) < $q && ($(lvl.val_q) = $Finch.regrow!($(lvl.ex).val, $(lvl.val_q), $q))
+        $(lvl.val_alloc) < $q && ($(lvl.val_alloc) = $Finch.regrow!($(lvl.ex).val, $(lvl.val_alloc), $q))
     end)
     return nothing
 end

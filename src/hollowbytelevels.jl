@@ -98,6 +98,8 @@ function initialize_level!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode:
     lvl = fbr.lvl
     r = ctx.freshen(lvl.ex, :_r)
     p = ctx.freshen(lvl.ex, :_p)
+    q = ctx.freshen(lvl.ex, :_q)
+    i = ctx.freshen(lvl.ex, :_i)
     p_prev = ctx.freshen(lvl.ex, :_p_prev)
     push!(ctx.preamble, quote
         $(lvl.I) = $(lvl.Ti)($(ctx(stop(ctx.dims[(getname(fbr), envdepth(fbr.env) + 1)]))))
@@ -115,10 +117,22 @@ function initialize_level!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode:
         end
         for $r = 1:$(lvl.srt_stop)
             $(lvl.ex).tbl[$r] = false
+            $(if reinitializeable(lvl.lvl)
+                scope(ctx) do ctx_2
+                    push!(ctx_2.preamble, quote
+                        $p = first($(lvl.ex).srt[$r])
+                        $i = last($(lvl.ex).srt[$r])
+                        $q = ($p - 1) * $(lvl.I) + $i
+                    end)
+                    reinitialize(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env, position = Virtual{Ti}(q), index = Virtual{Ti}(i))))
+                end
+            else
+                quote end
+            end)
         end
         $(lvl.ex).srt_stop[] = $(lvl.srt_stop) = 0
     end)
-    if (lvl_2 = initialize_level!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)) !== nothing
+    if (lvl_2 = initialize_level!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env, reinitialized = reinitializeable(lvl.lvl))), ctx, mode)) !== nothing
         lvl = shallowcopy(lvl)
         lvl.lvl = lvl_2
     end
@@ -411,19 +425,11 @@ function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Union{Writ
                 preamble = quote
                     $my_guard = true
                     $my_q = ($(ctx(envposition(fbr.env))) - 1) * $(lvl.I) + $idx
-                    $my_seen = $(lvl.ex).tbl[$my_q]
-                    if !$my_seen
-                        $(contain(ctx) do ctx_2 
-                            #TODO This code reassembles every time. Maybe that's okay?
-                            assemble!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(position=my_q, parent=VirtualEnvironment(fbr.env))), ctx_2, mode)
-                            quote end
-                        end)
-                    end
                 end,
                 body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode, idxs...),
                 epilogue = begin
                     body = quote
-                        if !$my_seen
+                        if !$(lvl.ex).tbl[$my_q]
                             $(lvl.ex).tbl[$my_q] = true
                             $(lvl.srt_stop) += 1
                             $(lvl.srt_alloc) < $(lvl.srt_stop) && ($(lvl.srt_alloc) = $Finch.regrow!($(lvl.ex).srt, $(lvl.srt_alloc), $(lvl.srt_stop)))
