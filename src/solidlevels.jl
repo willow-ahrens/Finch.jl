@@ -17,9 +17,9 @@ dimension(lvl::SolidLevel) = lvl.I
 
 function (fbr::Fiber{<:SolidLevel{Ti}})(i, tail...) where {D, Tv, Ti, N, R}
     lvl = fbr.lvl
-    q = envposition(fbr.env)
-    p = (q - 1) * lvl.I + i
-    fbr_2 = Fiber(lvl.lvl, Environment(position=p, index=i, parent=fbr.env))
+    p = envposition(fbr.env)
+    p_2 = (p - 1) * lvl.I + i
+    fbr_2 = Fiber(lvl.lvl, Environment(position=p_2, index=i, parent=fbr.env))
     fbr_2(tail...)
 end
 
@@ -93,9 +93,9 @@ function assemble!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode)
         i_2 = ctx.freshen(lvl.ex, :_i)
         push!(ctx.preamble, quote
             for $p = $(ctx(p_start)):$(ctx(p_stop))
-                for $i_2 = 1:$(lvl.I)
-                    $p_2 = ($p - 1) * $(lvl.I) + $i_2
-                    assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual(p_2), index=Virtual(i_2), parent=fbr.env)), ctx, mode)
+                for $i = 1:$(lvl.I)
+                    $p_2 = ($p - 1) * $(lvl.I) + $i
+                    assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual(p_2), index=Virtual(i), parent=fbr.env)), ctx, mode)
                 end
             end
         end)
@@ -111,19 +111,13 @@ function unfurl(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode::Union{Read, Wri
     tag = lvl.ex
 
     p = envposition(fbr.env)
-    p_1 = ctx.freshen(tag, :_p)
-    if p == 1
-        Leaf(
-            body = (i) -> refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=i, index=i, guard=envdefaultcheck(fbr.env), parent=fbr.env)), ctx, mode, idxs...),
+    p_2 = ctx.freshen(tag, :_p)
+    Leaf(
+        body = (i) -> Thunk(
+            preamble = quote
+                $p_2 = ($(ctx(p)) - 1) * $(lvl.ex).I + $(ctx(i))
+            end,
+            body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(p_2), index=i, guard=envdefaultcheck(fbr.env), parent=fbr.env)), ctx, mode, idxs...),
         )
-    else
-        Leaf(
-            body = (i) -> Thunk(
-                preamble = quote
-                    $p_1 = ($(ctx(p)) - 1) * $(lvl.ex).I + $(ctx(i))
-                end,
-                body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(p_1), index=i, guard=envdefaultcheck(fbr.env), parent=fbr.env)), ctx, mode, idxs...),
-            )
-        )
-    end
+    )
 end
