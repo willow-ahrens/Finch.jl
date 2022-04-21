@@ -133,7 +133,7 @@ function assemble!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode)
         $(lvl.pos_q) < $p_stop && ($(lvl.pos_q) = Finch.refill!($(lvl.ex).pos, $(zero(lvl.Ti)), $(lvl.pos_q) + 1, $p_stop + 1) - 1)
         $(lvl.tbl_q) < $p_stop_2 && ($(lvl.tbl_q) = Finch.regrow!($(lvl.ex).tbl, $(lvl.tbl_q), $p_stop_2))
         @simd for $p_2 = $p_start_2:$p_stop_2
-            $(lvl.tbl_q)[$p_2] = false
+            $(lvl.ex).tbl[$p_2] = false
         end
     end)
 
