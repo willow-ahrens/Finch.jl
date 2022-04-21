@@ -1,5 +1,6 @@
 struct HollowByteLevel{Ti, Tp, Tp_2, Lvl}
     I::Ti
+    usg::Ref{Int}
     tbl::Vector{Bool}
     srt::Vector{Tuple{Tp, Ti}}
     pos::Vector{Tp_2}
@@ -11,9 +12,9 @@ HollowByteLevel{Ti}(lvl) where {Ti} = HollowByteLevel{Ti}(zero(Ti), lvl)
 HollowByteLevel(I::Ti, lvl) where {Ti} = HollowByteLevel{Ti}(I, lvl)
 HollowByteLevel{Ti}(I::Ti, lvl) where {Ti} = HollowByteLevel{Ti, Int, Int}(I, lvl)
 HollowByteLevel{Ti, Tp, Tp_2}(I::Ti, lvl) where {Ti, Tp, Tp_2} =
-    HollowByteLevel{Ti, Tp, Tp_2}(I::Ti, [false, false, false, false], Vector{Tuple{Tp, Ti}}(undef, 4), Tp_2[1, 1, 0, 0, 0], lvl)
-HollowByteLevel{Ti, Tp, Tp_2}(I::Ti, tbl, srt, pos, lvl::Lvl) where {Ti, Tp, Tp_2, Lvl} =
-    HollowByteLevel{Ti, Tp, Tp_2, Lvl}(I, tbl, srt, pos, lvl)
+    HollowByteLevel{Ti, Tp, Tp_2}(I::Ti, Ref(0), [false, false, false, false], Vector{Tuple{Tp, Ti}}(undef, 4), Tp_2[1, 1, 0, 0, 0], lvl)
+HollowByteLevel{Ti, Tp, Tp_2}(I::Ti, usg, tbl, srt, pos, lvl::Lvl) where {Ti, Tp, Tp_2, Lvl} =
+    HollowByteLevel{Ti, Tp, Tp_2, Lvl}(I, usg, tbl, srt, pos, lvl)
 
 @inline arity(fbr::Fiber{<:HollowByteLevel}) = 1 + arity(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
 @inline shape(fbr::Fiber{<:HollowByteLevel}) = (fbr.lvl.I, shape(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
@@ -69,6 +70,7 @@ function reconstruct!(lvl::VirtualHollowByteLevel, ctx)
     push!(ctx.preamble, quote
         $(lvl.ex) = $HollowByteLevel{$(lvl.Ti), $(lvl.Tp), $(lvl.Tp_2)}(
             $(ctx(lvl.I)),
+            $(lvl.ex).usg,
             $(lvl.ex).tbl,
             $(lvl.ex).srt,
             $(lvl.ex).pos,
