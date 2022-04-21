@@ -1,9 +1,9 @@
-struct HollowByteLevel{Ti, Tp, T_q, Lvl}
+struct HollowByteLevel{Ti, Tp, Tq, Lvl}
     I::Ti
     P::Ref{Int}
     tbl::Vector{Bool}
     srt::Vector{Tuple{Tp, Ti}}
-    pos::Vector{T_q}
+    pos::Vector{Tq}
     lvl::Lvl
 end
 const HollowByte = HollowByteLevel
@@ -11,10 +11,10 @@ HollowByteLevel(lvl) = HollowByteLevel(0, lvl)
 HollowByteLevel{Ti}(lvl) where {Ti} = HollowByteLevel{Ti}(zero(Ti), lvl)
 HollowByteLevel(I::Ti, lvl) where {Ti} = HollowByteLevel{Ti}(I, lvl)
 HollowByteLevel{Ti}(I::Ti, lvl) where {Ti} = HollowByteLevel{Ti, Int, Int}(I, lvl)
-HollowByteLevel{Ti, Tp, T_q}(I::Ti, lvl) where {Ti, Tp, T_q} =
-    HollowByteLevel{Ti, Tp, T_q}(I::Ti, Ref(0), [false, false, false, false], Vector{Tuple{Tp, Ti}}(undef, 4), T_q[1, 1, 0, 0, 0], lvl)
-HollowByteLevel{Ti, Tp, T_q}(I::Ti, P, tbl, srt, pos, lvl::Lvl) where {Ti, Tp, T_q, Lvl} =
-    HollowByteLevel{Ti, Tp, T_q, Lvl}(I, P, tbl, srt, pos, lvl)
+HollowByteLevel{Ti, Tp, Tq}(I::Ti, lvl) where {Ti, Tp, Tq} =
+    HollowByteLevel{Ti, Tp, Tq}(I::Ti, Ref(0), [false, false, false, false], Vector{Tuple{Tp, Ti}}(undef, 4), Tq[1, 1, 0, 0, 0], lvl)
+HollowByteLevel{Ti, Tp, Tq}(I::Ti, P, tbl, srt, pos, lvl::Lvl) where {Ti, Tp, Tq, Lvl} =
+    HollowByteLevel{Ti, Tp, Tq, Lvl}(I, P, tbl, srt, pos, lvl)
 
 @inline arity(fbr::Fiber{<:HollowByteLevel}) = 1 + arity(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
 @inline shape(fbr::Fiber{<:HollowByteLevel}) = (fbr.lvl.I, shape(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
@@ -38,7 +38,7 @@ mutable struct VirtualHollowByteLevel
     ex
     Ti
     Tp
-    T_q
+    Tq
     I
     pos_alloc
     Q
@@ -46,7 +46,7 @@ mutable struct VirtualHollowByteLevel
     tbl_alloc
     lvl
 end
-function virtualize(ex, ::Type{HollowByteLevel{Ti, Tp, T_q, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, T_q, Lvl}   
+function virtualize(ex, ::Type{HollowByteLevel{Ti, Tp, Tq, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Tq, Lvl}   
     sym = ctx.freshen(tag)
     I = ctx.freshen(sym, :_I)
     pos_alloc = ctx.freshen(sym, :_pos_alloc)
@@ -62,13 +62,13 @@ function virtualize(ex, ::Type{HollowByteLevel{Ti, Tp, T_q, Lvl}}, ctx, tag=:lvl
         $tbl_alloc = length($sym.tbl)
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualHollowByteLevel(sym, Ti, Tp, T_q, I, pos_alloc, Q, idx_alloc, tbl_alloc, lvl_2)
+    VirtualHollowByteLevel(sym, Ti, Tp, Tq, I, pos_alloc, Q, idx_alloc, tbl_alloc, lvl_2)
 end
 (ctx::Finch.LowerJulia)(lvl::VirtualHollowByteLevel) = lvl.ex
 
 function reconstruct!(lvl::VirtualHollowByteLevel, ctx)
     push!(ctx.preamble, quote
-        $(lvl.ex) = $HollowByteLevel{$(lvl.Ti), $(lvl.Tp), $(lvl.T_q)}(
+        $(lvl.ex) = $HollowByteLevel{$(lvl.Ti), $(lvl.Tp), $(lvl.Tq)}(
             $(ctx(lvl.I)),
             $(lvl.ex).P,
             $(lvl.ex).tbl,
@@ -344,7 +344,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Read, idx:
                 $my_q = $(ctx(q)) * $(lvl.I) + $i
             end,
             body = Cases([
-                :($tbl[$my_q]) => refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.T_q}(my_q), index=i, parent=fbr.env)), ctx, mode, idxs...),
+                :($tbl[$my_q]) => refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Tq}(my_q), index=i, parent=fbr.env)), ctx, mode, idxs...),
                 true => Simplify(default(fbr))
             ])
         )
