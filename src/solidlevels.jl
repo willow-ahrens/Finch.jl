@@ -76,6 +76,8 @@ function initialize_level!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode::Unio
     return lvl
 end
 
+interval_assembly_depth(lvl::VirtualSolidLevel) = min(Inf, interval_assembly_depth(lvl.lvl) - 1)
+
 function assemble!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode)
     lvl = fbr.lvl
     q = envposition(fbr.env)

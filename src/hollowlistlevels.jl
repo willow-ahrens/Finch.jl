@@ -91,6 +91,8 @@ function initialize_level!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode:
     return lvl
 end
 
+interval_assembly_depth(lvl::VirtualHollowListLevel) = min(Inf, interval_assembly_depth(lvl.lvl) - 1)
+
 function assemble!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
     q = envposition(fbr.env)
     lvl = fbr.lvl

@@ -58,6 +58,8 @@ end
 
 finalize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode::Union{Write, Update}) = nothing
 
+interval_assembly_depth(lvl::VirtualElementLevel) = Inf
+
 function assemble!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
     lvl = fbr.lvl
     q = envposition(fbr.env)

@@ -122,3 +122,23 @@ Return a variable which should be set to false if the subfiber is not entirely d
 """
 envdefaultcheck(env) = get(env, :guard, nothing)
 
+"""
+    supports_selective_initialization(lvl)
+
+Does the level support selective initialization through assembly?
+"""
+supports_selective_initialization(lvl) = false
+
+"""
+    env_selectively_initialized(env)
+
+did the previous level selectively initialize this one?
+"""
+env_selectively_initialized(env) = get(env, :selective_initialize, false)
+
+"""
+    interval_assembly_depth(lvl)
+
+to what depth will the level tolerate interval environment properties for assembly?
+"""
+interval_assembly_depth(lvl) = 0
