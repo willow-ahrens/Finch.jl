@@ -31,23 +31,23 @@ mutable struct VirtualHollowListLevel
     ex
     Ti
     I
-    pos_q
-    idx_q
+    pos_alloc
+    idx_alloc
     lvl
 end
 function virtualize(ex, ::Type{HollowListLevel{Ti, Lvl}}, ctx, tag=:lvl) where {Ti, Lvl}
     sym = ctx.freshen(tag)
     I = ctx.freshen(sym, :_I)
-    pos_q = ctx.freshen(sym, :_pos_q)
-    idx_q = ctx.freshen(sym, :_idx_q)
+    pos_alloc = ctx.freshen(sym, :_pos_alloc)
+    idx_alloc = ctx.freshen(sym, :_idx_alloc)
     push!(ctx.preamble, quote
         $sym = $ex
         $I = $sym.I
-        $pos_q = length($sym.pos) - 1
-        $idx_q = length($sym.idx)
+        $pos_alloc = length($sym.pos)
+        $idx_alloc = length($sym.idx)
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualHollowListLevel(sym, Ti, I, pos_q, idx_q, lvl_2)
+    VirtualHollowListLevel(sym, Ti, I, pos_alloc, idx_alloc, lvl_2)
 end
 (ctx::Finch.LowerJulia)(lvl::VirtualHollowListLevel) = lvl.ex
 
@@ -78,9 +78,9 @@ end
 function initialize_level!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Union{Write, Update})
     lvl = fbr.lvl
     push!(ctx.preamble, quote
-        $(lvl.pos_q) = length($(lvl.ex).pos) - 1
+        $(lvl.pos_alloc) = length($(lvl.ex).pos)
         $(lvl.ex).pos[1] = 1
-        $(lvl.idx_q) = length($(lvl.ex).idx)
+        $(lvl.idx_alloc) = length($(lvl.ex).idx)
         $(lvl.I) = $(ctx(stop(ctx.dims[(getname(fbr), envdepth(fbr.env) + 1)])))
     end)
     if (lvl_2 = initialize_level!(VirtualFiber(fbr.lvl.lvl, Environment(fbr.env)), ctx, mode)) !== nothing
@@ -98,7 +98,7 @@ function assemble!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
     lvl = fbr.lvl
     p_stop = ctx(cache!(ctx, ctx.freshen(lvl.ex, :_p_stop), stop(envposition(fbr.env))))
     push!(ctx.preamble, quote
-        $(lvl.pos_q) < $p_stop && ($(lvl.pos_q) = $Finch.regrow!($(lvl.ex).pos, $(lvl.pos_q) + 1, $p_stop + 1) - 1)
+        $(lvl.pos_alloc) < ($p_stop + 1) && ($(lvl.pos_alloc) = $Finch.regrow!($(lvl.ex).pos, $(lvl.pos_alloc), $p_stop + 1))
     end)
 end
 
@@ -300,7 +300,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Union{Writ
                 epilogue = begin
                     #We should be careful here. Presumably, we haven't modified the subfiber because it is still default. Is this always true? Should strict assembly happen every time?
                     body = quote
-                        $(lvl.idx_q) < $my_p && ($(lvl.idx_q) = $Finch.regrow!($(lvl.ex).idx, $(lvl.idx_q), $my_p))
+                        $(lvl.idx_alloc) < $my_p && ($(lvl.idx_alloc) = $Finch.regrow!($(lvl.ex).idx, $(lvl.idx_alloc), $my_p))
                         $(lvl.ex).idx[$my_p] = $(ctx(idx))
                         $my_p += 1
                     end

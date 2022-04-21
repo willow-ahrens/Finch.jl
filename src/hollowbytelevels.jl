@@ -1,6 +1,6 @@
 struct HollowByteLevel{Ti, Tp, Tp_2, Lvl}
     I::Ti
-    usg::Ref{Int}
+    P::Ref{Int}
     tbl::Vector{Bool}
     srt::Vector{Tuple{Tp, Ti}}
     pos::Vector{Tp_2}
@@ -13,8 +13,8 @@ HollowByteLevel(I::Ti, lvl) where {Ti} = HollowByteLevel{Ti}(I, lvl)
 HollowByteLevel{Ti}(I::Ti, lvl) where {Ti} = HollowByteLevel{Ti, Int, Int}(I, lvl)
 HollowByteLevel{Ti, Tp, Tp_2}(I::Ti, lvl) where {Ti, Tp, Tp_2} =
     HollowByteLevel{Ti, Tp, Tp_2}(I::Ti, Ref(0), [false, false, false, false], Vector{Tuple{Tp, Ti}}(undef, 4), Tp_2[1, 1, 0, 0, 0], lvl)
-HollowByteLevel{Ti, Tp, Tp_2}(I::Ti, usg, tbl, srt, pos, lvl::Lvl) where {Ti, Tp, Tp_2, Lvl} =
-    HollowByteLevel{Ti, Tp, Tp_2, Lvl}(I, usg, tbl, srt, pos, lvl)
+HollowByteLevel{Ti, Tp, Tp_2}(I::Ti, P, tbl, srt, pos, lvl::Lvl) where {Ti, Tp, Tp_2, Lvl} =
+    HollowByteLevel{Ti, Tp, Tp_2, Lvl}(I, P, tbl, srt, pos, lvl)
 
 @inline arity(fbr::Fiber{<:HollowByteLevel}) = 1 + arity(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
 @inline shape(fbr::Fiber{<:HollowByteLevel}) = (fbr.lvl.I, shape(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
@@ -40,29 +40,29 @@ mutable struct VirtualHollowByteLevel
     Tp
     Tp_2
     I
-    pos_q
-    idx_q
-    idx_q_alloc
-    tbl_q
+    pos_alloc
+    Q
+    idx_alloc
+    tbl_alloc
     lvl
 end
 function virtualize(ex, ::Type{HollowByteLevel{Ti, Tp, Tp_2, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Tp_2, Lvl}   
     sym = ctx.freshen(tag)
     I = ctx.freshen(sym, :_I)
-    pos_q = ctx.freshen(sym, :_pos_q)
-    idx_q = ctx.freshen(sym, :_idx_q)
-    idx_q_alloc = ctx.freshen(sym, :_idx_q_alloc)
-    tbl_q = ctx.freshen(sym, :_tbl_q)
+    pos_alloc = ctx.freshen(sym, :_pos_alloc)
+    Q = ctx.freshen(sym, :_Q)
+    idx_alloc = ctx.freshen(sym, :_idx_alloc)
+    tbl_alloc = ctx.freshen(sym, :_tbl_alloc)
     push!(ctx.preamble, quote
         $sym = $ex
         $I = $sym.I
-        $pos_q = length($sym.pos)
-        $idx_q = length($sym.srt)
-        $idx_q_alloc = length($sym.srt)
-        $tbl_q = length($sym.tbl)
+        $pos_alloc = length($sym.pos)
+        $Q = length($sym.srt)
+        $idx_alloc = length($sym.srt)
+        $tbl_alloc = length($sym.tbl)
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualHollowByteLevel(sym, Ti, Tp, Tp_2, I, pos_q, idx_q, idx_q_alloc, tbl_q, lvl_2)
+    VirtualHollowByteLevel(sym, Ti, Tp, Tp_2, I, pos_alloc, Q, idx_alloc, tbl_alloc, lvl_2)
 end
 (ctx::Finch.LowerJulia)(lvl::VirtualHollowByteLevel) = lvl.ex
 
@@ -70,7 +70,7 @@ function reconstruct!(lvl::VirtualHollowByteLevel, ctx)
     push!(ctx.preamble, quote
         $(lvl.ex) = $HollowByteLevel{$(lvl.Ti), $(lvl.Tp), $(lvl.Tp_2)}(
             $(ctx(lvl.I)),
-            $(lvl.ex).usg,
+            $(lvl.ex).P,
             $(lvl.ex).tbl,
             $(lvl.ex).srt,
             $(lvl.ex).pos,
@@ -97,12 +97,12 @@ function initialize_level!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode:
     my_p = ctx.freshen(lvl.ex, :_p)
     push!(ctx.preamble, quote
         $(lvl.I) = $(lvl.Ti)($(ctx(stop(ctx.dims[(getname(fbr), envdepth(fbr.env) + 1)]))))
-        $(lvl.idx_q) = 0
+        $(lvl.Q) = 0
         # fill!($(lvl.ex).tbl, 0)
         # empty!($(lvl.ex).srt)
-        $(lvl.pos_q) = $Finch.refill!($(lvl.ex).pos, $(zero(lvl.Ti)), 0, 5) - 1
-        $(lvl.tbl_q) = $Finch.refill!($(lvl.ex).tbl, false, 0, 4)
-        $(lvl.idx_q_alloc) = $Finch.regrow!($(lvl.ex).srt, 0, 4)
+        $(lvl.pos_alloc) = $Finch.refill!($(lvl.ex).pos, $(zero(lvl.Ti)), 0, 5) - 1
+        $(lvl.tbl_alloc) = $Finch.refill!($(lvl.ex).tbl, false, 0, 4)
+        $(lvl.idx_alloc) = $Finch.regrow!($(lvl.ex).srt, 0, 4)
         $(lvl.ex).pos[1] = 1
     end)
     if (lvl_2 = initialize_level!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)) !== nothing
@@ -131,8 +131,8 @@ function assemble!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode)
     push!(ctx.preamble, quote
         $p_start_2 = ($p_start - 1) * $(lvl.I) + 1
         $p_stop_2 = $p_stop * $(lvl.I)
-        $(lvl.pos_q) < $p_stop && ($(lvl.pos_q) = Finch.refill!($(lvl.ex).pos, $(zero(lvl.Ti)), $(lvl.pos_q) + 1, $p_stop + 1) - 1)
-        $(lvl.tbl_q) < $p_stop_2 && ($(lvl.tbl_q) = Finch.refill!($(lvl.ex).tbl, false, $(lvl.tbl_q), $p_stop_2))
+        $(lvl.pos_alloc) < ($p_stop + 1) && ($(lvl.pos_alloc) = Finch.refill!($(lvl.ex).pos, $(zero(lvl.Ti)), $(lvl.pos_alloc), $p_stop + 1))
+        $(lvl.tbl_alloc) < $p_stop_2 && ($(lvl.tbl_alloc) = Finch.refill!($(lvl.ex).tbl, false, $(lvl.tbl_alloc), $p_stop_2))
     end)
 
     if interval_assembly_depth(lvl.lvl) >= 1
@@ -156,11 +156,11 @@ function finalize_level!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::U
     lvl = fbr.lvl
     my_p = ctx.freshen(lvl.ex, :_p)
     push!(ctx.preamble, quote
-        sort!(@view $(lvl.ex).srt[1:$(lvl.idx_q)])
-        for $my_p = 1:$(lvl.pos_q)
+        sort!(@view $(lvl.ex).srt[1:$(lvl.Q)])
+        for $my_p = 1:$(lvl.pos_alloc)
             $(lvl.ex).pos[$my_p + 1] += $(lvl.ex).pos[$my_p]
         end
-        #resize!($(lvl.ex).pos, $(lvl.pos_q) + 1)
+        #resize!($(lvl.ex).pos, $(lvl.pos_alloc) + 1)
     end)
     if (lvl_2 = finalize_level!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)) !== nothing
         lvl = shallowcopy(lvl)
@@ -376,7 +376,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Union{Writ
                     $my_seen = $(lvl.ex).tbl[$my_p]
                     if !$my_seen
                         $(contain(ctx) do ctx_2 
-                            #THIS code reassembles every time. TODO
+                            #TODO This code reassembles every time. Maybe that's okay?
                             assemble!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(position=my_p, parent=VirtualEnvironment(fbr.env))), ctx_2, mode)
                             quote end
                         end)
@@ -388,9 +388,9 @@ function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Union{Writ
                         if !$my_seen
                             $(lvl.ex).tbl[$my_p] = true
                             $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1] += 1
-                            $(lvl.idx_q) += 1
-                            $(lvl.idx_q_alloc) < $(lvl.idx_q) && ($(lvl.idx_q_alloc) = $Finch.regrow!($(lvl.ex).srt, $(lvl.idx_q_alloc), $(lvl.idx_q)))
-                            $(lvl.ex).srt[$(lvl.idx_q)] = ($(ctx(envposition(fbr.env))), $idx)
+                            $(lvl.Q) += 1
+                            $(lvl.idx_alloc) < $(lvl.Q) && ($(lvl.idx_alloc) = $Finch.regrow!($(lvl.ex).srt, $(lvl.idx_alloc), $(lvl.Q)))
+                            $(lvl.ex).srt[$(lvl.Q)] = ($(ctx(envposition(fbr.env))), $idx)
                         end
                     end
                     if envdefaultcheck(fbr.env) !== nothing

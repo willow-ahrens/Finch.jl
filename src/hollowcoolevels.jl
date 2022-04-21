@@ -53,23 +53,23 @@ mutable struct VirtualHollowCooLevel
     Tp_2
     Tbl
     I
-    pos_q
+    pos_alloc
     idx_q
     lvl
 end
 function virtualize(ex, ::Type{HollowCooLevel{N, Ti, Tp_2, Tbl, Lvl}}, ctx, tag=:lvl) where {N, Ti, Tp_2, Tbl, Lvl}   
     sym = ctx.freshen(tag)
     I = ctx.freshen(sym, :_I)
-    pos_q = ctx.freshen(sym, :_pos_q)
+    pos_alloc = ctx.freshen(sym, :_pos_alloc)
     idx_q = ctx.freshen(sym, :_idx_q)
     push!(ctx.preamble, quote
         $sym = $ex
         $I = $sym.I
-        $pos_q = length($sym.pos)
+        $pos_alloc = length($sym.pos)
         $idx_q = length($sym.tbl)
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualHollowCooLevel(sym, N, Ti, Tp_2, Tbl, I, pos_q, idx_q, lvl_2)
+    VirtualHollowCooLevel(sym, N, Ti, Tp_2, Tbl, I, pos_alloc, idx_q, lvl_2)
 end
 (ctx::Finch.LowerJulia)(lvl::VirtualHollowCooLevel) = lvl.ex
 
@@ -102,7 +102,7 @@ function initialize_level!(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::
     my_p = ctx.freshen(lvl.ex, :_p)
     push!(ctx.preamble, quote
         $(lvl.I) = $(lvl.Ti)(($(map(n->ctx(stop(ctx.dims[(getname(fbr), envdepth(fbr.env) + n)])), 1:lvl.N)...),))
-        $(lvl.pos_q) = length($(lvl.ex).pos) - 1
+        $(lvl.pos_alloc) = length($(lvl.ex).pos) - 1
         $(lvl.ex).pos[1] = 1
         $(lvl.idx_q) = length($(lvl.ex).tbl[1])
     end)
@@ -122,7 +122,7 @@ function assemble!(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode)
     lvl = fbr.lvl
     p_stop = ctx(cache!(ctx, ctx.freshen(lvl.ex, :_p_stop), stop(envposition(fbr.env))))
     push!(ctx.preamble, quote
-        $(lvl.pos_q) < $p_stop && ($(lvl.pos_q) = $Finch.regrow!($(lvl.ex).pos, $(lvl.pos_q) + 1, $p_stop + 1) - 1)
+        $(lvl.pos_alloc) < ($p_stop + 1) && ($(lvl.pos_alloc) = $Finch.regrow!($(lvl.ex).pos, $(lvl.pos_alloc), $p_stop + 1))
     end)
 end
 
