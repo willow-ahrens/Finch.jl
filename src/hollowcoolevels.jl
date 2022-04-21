@@ -9,7 +9,7 @@ HollowCooLevel{N}(lvl) where {N} = HollowCooLevel{N}((0 for _ in 1:N...), lvl)
 HollowCooLevel{N, Ti}(lvl) where {N, Ti} = HollowCooLevel{N, Ti}((map(zero, Ti.parameters)..., ), lvl)
 HollowCooLevel{N}(I::Ti, lvl) where {N, Ti} = HollowCooLevel{N, Ti}(I, lvl)
 HollowCooLevel{N, Ti}(I::Ti, lvl) where {N, Ti} = HollowCooLevel{N, Ti, Int}(I, lvl)
-HollowCooLevel{N, Ti, Tp_2}(I::Ti, lvl) where {N, Ti, Tp_2} = HollowCooLevel{N, Ti, Tp_2}(I, ((Vector{T}(undef, 4) for T in Ti.parameters)...,), Vector{Tp_2}(undef, 4), lvl)
+HollowCooLevel{N, Ti, Tp_2}(I::Ti, lvl) where {N, Ti, Tp_2} = HollowCooLevel{N, Ti, Tp_2}(I, ((Vector{T}(undef, 16) for T in Ti.parameters)...,), Tp_2[1, 1, 3:17...], lvl)
 HollowCooLevel{N, Ti, Tp_2}(I::Ti, tbl::Tbl, pos, lvl) where {N, Ti, Tp_2, Tbl} =
     HollowCooLevel{N, Ti, Tp_2, Tbl}(I, tbl, pos, lvl)
 HollowCooLevel{N, Ti, Tp_2, Tbl}(I::Ti, tbl::Tbl, pos, lvl::Lvl) where {N, Ti, Tp_2, Tbl, Lvl} =
@@ -102,14 +102,10 @@ function initialize_level!(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::
     my_p = ctx.freshen(lvl.ex, :_p)
     push!(ctx.preamble, quote
         $(lvl.I) = $(lvl.Ti)(($(map(n->ctx(stop(ctx.dims[(getname(fbr), envdepth(fbr.env) + n)])), 1:lvl.N)...),))
-        $(lvl.pos_q) = $Finch.regrow!($(lvl.ex).pos, 0, 5) - 1
+        $(lvl.pos_q) = length($(lvl.ex).pos) - 1
         $(lvl.ex).pos[1] = 1
+        $(lvl.idx_q) = length($(lvl.ex).tbl[1])
     end)
-    for n = 1:lvl.N
-        push!(ctx.preamble, quote
-            $(lvl.idx_q) = $Finch.regrow!($(lvl.ex).tbl[$n], 0, 4)
-        end)
-    end
 
     if (lvl_2 = initialize_level!(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^lvl.N)(fbr.env)), ctx, mode)) !== nothing
         lvl = shallowcopy(lvl)

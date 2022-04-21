@@ -11,7 +11,7 @@ HollowByteLevel{Ti}(lvl) where {Ti} = HollowByteLevel{Ti}(zero(Ti), lvl)
 HollowByteLevel(I::Ti, lvl) where {Ti} = HollowByteLevel{Ti}(I, lvl)
 HollowByteLevel{Ti}(I::Ti, lvl) where {Ti} = HollowByteLevel{Ti, Int, Int}(I, lvl)
 HollowByteLevel{Ti, Tp, Tp_2}(I::Ti, lvl) where {Ti, Tp, Tp_2} =
-    HollowByteLevel{Ti, Tp, Tp_2}(I::Ti, Vector{Bool}(undef, 4), Vector{Tuple{Tp, Ti}}(undef, 4), Vector{Tp_2}(undef, 4), lvl)
+    HollowByteLevel{Ti, Tp, Tp_2}(I::Ti, [false, false, false, false], Vector{Tuple{Tp, Ti}}(undef, 4), Tp_2[1, 1, 0, 0, 0], lvl)
 HollowByteLevel{Ti, Tp, Tp_2}(I::Ti, tbl, srt, pos, lvl::Lvl) where {Ti, Tp, Tp_2, Lvl} =
     HollowByteLevel{Ti, Tp, Tp_2, Lvl}(I, tbl, srt, pos, lvl)
 
@@ -131,10 +131,7 @@ function assemble!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode)
         $p_start_2 = ($p_start - 1) * $(lvl.I) + 1
         $p_stop_2 = $p_stop * $(lvl.I)
         $(lvl.pos_q) < $p_stop && ($(lvl.pos_q) = Finch.refill!($(lvl.ex).pos, $(zero(lvl.Ti)), $(lvl.pos_q) + 1, $p_stop + 1) - 1)
-        $(lvl.tbl_q) < $p_stop_2 && ($(lvl.tbl_q) = Finch.regrow!($(lvl.ex).tbl, $(lvl.tbl_q), $p_stop_2))
-        @simd for $p_2 = $p_start_2:$p_stop_2
-            $(lvl.ex).tbl[$p_2] = false
-        end
+        $(lvl.tbl_q) < $p_stop_2 && ($(lvl.tbl_q) = Finch.refill!($(lvl.ex).tbl, false, $(lvl.tbl_q), $p_stop_2))
     end)
 
     if interval_assembly_depth(lvl.lvl) >= 1
