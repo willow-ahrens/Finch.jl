@@ -15,5 +15,4 @@ operators.
 At it's heart, Finch is powered by a domain specific language for coiteration,
 breaking structured iterators into units we call Looplets. The Looplets are
 lowered progressively, leaving several opportunities to rewrite and simplify
-each intermediate expression.
-
+intermediate expressions.
