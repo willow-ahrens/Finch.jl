@@ -91,7 +91,7 @@ function initialize_level!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode:
     return lvl
 end
 
-interval_assembly_depth(lvl::VirtualHollowListLevel) = min(Inf, interval_assembly_depth(lvl.lvl) - 1)
+interval_assembly_depth(lvl::VirtualHollowListLevel) = Inf
 
 function assemble!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
     q = envposition(fbr.env)
@@ -99,7 +99,7 @@ function assemble!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
     push!(ctx.preamble, quote
         $(lvl.pos_q) < $(ctx(q)) && ($(lvl.pos_q) = $Finch.regrow!($(lvl.ex).pos, $(lvl.pos_q) + 1, $(ctx(q)) + 1))
     end)
-    assemble!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(position=q, parent=fbr.env)), ctx, mode)
+    #assemble!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(position=q, parent=fbr.env)), ctx, mode)
 end
 
 finalize_level!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Union{Write, Update}) = nothing

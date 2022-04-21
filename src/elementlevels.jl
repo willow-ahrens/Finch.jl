@@ -69,6 +69,8 @@ function assemble!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
     return nothing
 end
 
+#=
+#TODO This assumes that all of the elements will eventually be written to, which isn't always true sadly.
 function assemble!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode::Write)
     lvl = fbr.lvl
     q = envposition(fbr.env)
@@ -77,6 +79,7 @@ function assemble!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode::Write)
     end)
     return nothing
 end
+=#
 
 function refurl(fbr::VirtualFiber{VirtualElementLevel}, ctx, ::Read)
     lvl = fbr.lvl

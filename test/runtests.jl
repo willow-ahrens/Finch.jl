@@ -15,48 +15,4 @@ using Finch: getname, Virtual
     include("fibers.jl")
     include("simplevectors.jl")
     include("kernels.jl")
-
-    println("B[i] = A(ds)[j, i]")
-    A = Fiber(
-        Solid(4,
-        HollowList(10, [1, 6, 9, 9, 10], [1, 3, 5, 7, 9, 3, 5, 8, 3],
-        Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0, 1.0, 1.0, 1.0, 7.0]))))
-    B = Fiber(
-        HollowByte(4,
-        Element{0.0}()))
-
-    ex = @index_program_instance @loop j i B[i] += A[j, i]
-    display(execute_code_lowered(:ex, typeof(ex)))
-    println()
-
-    @index @loop i j B[j] += A[i, j]
-
-    @test B.lvl.srt[1:6] == [(1, 1), (1, 3), (1, 5), (1, 7), (1, 8), (1, 9)]
-
-    for (mtx, A_ref) in matrices
-        A_ref = SparseMatrixCSC(A_ref)
-        m, n = size(A_ref)
-        if m == n
-            println("B(ds)[i, j] = w[j] where w[j] += A(ds)[i, k] * A(ds)(k, j)")
-            A = Finch.Fiber(
-                Solid(n,
-                HollowList(m, A_ref.colptr, A_ref.rowval,
-                Element{0.0}(A_ref.nzval))))
-            B = Fiber(
-                Solid(0,
-                HollowList(0,
-                Element{0.0}())))
-            w = Fiber(
-                HollowByte(m, #TODO
-                Element{0.0}()))
-
-            ex = @index_program_instance @loop i ((@loop j B[i, j] = w[j]) where (@loop k j w[j] = A[i, k] * A[k, j]))
-            display(execute_code_lowered(:ex, typeof(ex)))
-            println()
-
-            @index @loop i ((@loop j B[i, j] = w[j]) where (@loop k j w[j] = A[i, k] * A[k, j]))
-
-            exit()
-        end
-    end
 end

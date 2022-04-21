@@ -88,6 +88,27 @@ function assemble!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode)
     assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=q_2, parent=fbr.env)), ctx, mode)
 end
 
+#=
+function assemble!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode)
+    lvl = fbr.lvl
+    p_start = start(envposition(fbr.env))
+    p_stop = stop(envposition(fbr.env))
+    p_start_2 = Call(*, p_start, lvl.I)
+    p_stop_2 = Call(*, p_stop, lvl.I)
+    if interval_assembly_depth(lvl.lvl) >= 1
+        assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Extent(p_start_2, p_stop_2), index = Extent(1, lvl.I), parent=fbr.env)), ctx, mode)
+    else
+        p_2 = ctx.freshen(lvl.ex, :_p)
+        i_2 = ctx.freshen(lvl.ex, :_i)
+        push!(ctx.preamble, quote
+            for $i_2 = 1:$(lvl.I)
+                assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual(p_2), index=Virtual(i_2), parent=fbr.env)), ctx, mode)
+            end
+        end)
+    end
+end
+=#
+
 finalize_level!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode::Union{Write, Update}) = nothing
 
 hasdefaultcheck(lvl::VirtualSolidLevel) = hasdefaultcheck(lvl.lvl)

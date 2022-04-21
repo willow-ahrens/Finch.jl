@@ -123,7 +123,7 @@ function initialize_level!(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode:
     return lvl
 end
 
-interval_assembly_depth(lvl::VirtualHollowHashLevel) = min(Inf, interval_assembly_depth(lvl.lvl) - lvl.N)
+interval_assembly_depth(lvl::VirtualHollowHashLevel) = Inf #This level supports interval assembly, and this assembly isn't recursive.
 
 function assemble!(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode)
     q = envposition(fbr.env)
