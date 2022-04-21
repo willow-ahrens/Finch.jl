@@ -89,6 +89,7 @@ end
 
 @inline default(fbr::VirtualFiber{VirtualHollowByteLevel}) = default(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
 
+supports_selective_initialization(lvl::VirtualHollowByteLevel) = true
 function initialize_level!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Union{Write, Update})
     @assert isempty(envdeferred(fbr.env))
     lvl = fbr.lvl
@@ -127,10 +128,10 @@ function assemble!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode)
     p_2 = ctx.freshen(lvl.ex, :p_2)
 
     push!(ctx.preamble, quote
-        $p_start_2 = ($p_start - 1) * $lvl.I + 1
-        $p_stop_2 = $p_stop * $lvl.I
-        $(lvl.pos_q) < $p_stop && ($(lvl.pos_q) = Finch.refill!($(lvl.ex).pos, $(zero(lvl.Ti)), $(lvl.pos_q) + 1, $(ctx(q)) + 1) - 1)
-        $(lvl.tbl_q) < $p_stop_2 && ($(lvl.tbl_q) = Finch.regrow!($(lvl.ex).tbl, $(lvl.tbl_q), $q_2))
+        $p_start_2 = ($p_start - 1) * $(lvl.I) + 1
+        $p_stop_2 = $p_stop * $(lvl.I)
+        $(lvl.pos_q) < $p_stop && ($(lvl.pos_q) = Finch.refill!($(lvl.ex).pos, $(zero(lvl.Ti)), $(lvl.pos_q) + 1, $p_stop + 1) - 1)
+        $(lvl.tbl_q) < $p_stop_2 && ($(lvl.tbl_q) = Finch.regrow!($(lvl.ex).tbl, $(lvl.tbl_q), $p_stop_2))
         @simd for $p_2 = $p_start_2:$p_stop_2
             $(lvl.tbl_q)[$p_2] = false
         end

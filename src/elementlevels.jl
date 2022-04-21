@@ -62,11 +62,10 @@ interval_assembly_depth(lvl::VirtualElementLevel) = Inf
 
 function assemble!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
     lvl = fbr.lvl
-    q = envposition(fbr.env)
+    q = ctx(stop(envposition(fbr.env)))
     push!(ctx.preamble, quote
         $(lvl.val_q) < $q && ($(lvl.val_q) = $Finch.refill!($(lvl.ex).val, $(lvl.D), $(lvl.val_q), $q))
     end)
-    return nothing
 end
 
 #=

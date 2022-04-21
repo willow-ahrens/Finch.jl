@@ -63,12 +63,13 @@ end
 
 @inline default(fbr::VirtualFiber{<:VirtualSolidLevel}) = default(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
 
+supports_selective_initialization(lvl::VirtualSolidLevel) = supports_selective_initialization(lvl.lvl)
 function initialize_level!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode::Union{Write, Update})
     lvl = fbr.lvl
     push!(ctx.preamble, quote
         $(lvl.I) = $(ctx(stop(ctx.dims[(getname(fbr), envdepth(fbr.env) + 1)])))
     end)
-    if (lvl_2 = initialize_level!(VirtualFiber(lvl.lvl, Environment(fbr.env)), ctx, mode)) !== nothing
+    if (lvl_2 = initialize_level!(VirtualFiber(lvl.lvl, Environment(fbr.env, selectively_initialized=env_selectively_initialized(fbr.env))), ctx, mode)) !== nothing
         lvl = shallowcopy(lvl)
         lvl.lvl = lvl_2
     end
