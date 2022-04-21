@@ -24,10 +24,10 @@ HollowByteLevel{Ti, Tp, Tp_2}(I::Ti, P, tbl, srt, pos, lvl::Lvl) where {Ti, Tp, 
 
 function (fbr::Fiber{<:HollowByteLevel{Ti}})(i, tail...) where {D, Tv, Ti, R}
     lvl = fbr.lvl
-    q = envposition(fbr.env)
-    p = (q - 1) * lvl.I + i
-    if lvl.tbl[p]
-        fbr_2 = Fiber(lvl.lvl, Environment(position=p, index=i, parent=fbr.env))
+    p = envposition(fbr.env)
+    q = (p - 1) * lvl.I + i
+    if lvl.tbl[q]
+        fbr_2 = Fiber(lvl.lvl, Environment(position=q, index=i, parent=fbr.env))
         fbr_2(tail...)
     else
         default(fbr_2)

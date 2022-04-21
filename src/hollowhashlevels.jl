@@ -31,13 +31,13 @@ HollowHashLevel{N, Ti, Tp, Tp_2, Tbl}(I::Ti, tbl::Tbl, srt, pos, lvl::Lvl) where
 function (fbr::Fiber{<:HollowHashLevel{N, Ti}})(i, tail...) where {N, Ti}
     lvl = fbr.lvl
     if length(envdeferred(fbr.env)) == N - 1
-        q = (envposition(envexternal(fbr.env)), (envdeferred(fbr.env)..., i))
+        p = (envposition(envexternal(fbr.env)), (envdeferred(fbr.env)..., i))
 
-        if !haskey(lvl.tbl, q)
+        if !haskey(lvl.tbl, p)
             return default(fbr)
         else
-            p = lvl.tbl[q]
-            fbr_2 = Fiber(lvl.lvl, Environment(position=p, index=i, parent=fbr.env))
+            q = lvl.tbl[p]
+            fbr_2 = Fiber(lvl.lvl, Environment(position=q, index=i, parent=fbr.env))
             return fbr_2(tail...)
         end
     else
@@ -57,25 +57,25 @@ mutable struct VirtualHollowHashLevel
     Tbl
     I
     P
-    pos_alloc
-    idx_alloc
+    pos_q_alloc
+    idx_q_alloc
     lvl
 end
 function virtualize(ex, ::Type{HollowHashLevel{N, Ti, Tp, Tp_2, Tbl, Lvl}}, ctx, tag=:lvl) where {N, Ti, Tp, Tp_2, Tbl, Lvl}   
     sym = ctx.freshen(tag)
     I = ctx.freshen(sym, :_I)
     P = ctx.freshen(sym, :_P)
-    pos_alloc = ctx.freshen(sym, :_pos_alloc)
-    idx_alloc = ctx.freshen(sym, :_idx_alloc)
+    pos_q_alloc = ctx.freshen(sym, :_pos_q_alloc)
+    idx_q_alloc = ctx.freshen(sym, :_idx_q_alloc)
     push!(ctx.preamble, quote
         $sym = $ex
         $I = $sym.I
         $P = length($sym.pos)
-        $pos_alloc = $P
-        $idx_alloc = length($sym.tbl)
+        $pos_q_alloc = $P
+        $idx_q_alloc = length($sym.tbl)
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualHollowHashLevel(sym, N, Ti, Tp, Tp_2, Tbl, I, P, pos_alloc, idx_alloc, lvl_2)
+    VirtualHollowHashLevel(sym, N, Ti, Tp, Tp_2, Tbl, I, P, pos_q_alloc, idx_q_alloc, lvl_2)
 end
 (ctx::Finch.LowerJulia)(lvl::VirtualHollowHashLevel) = lvl.ex
 
@@ -109,10 +109,10 @@ function initialize_level!(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode:
     my_p = ctx.freshen(lvl.ex, :_p)
     push!(ctx.preamble, quote
         $(lvl.I) = $(lvl.Ti)(($(map(n->ctx(stop(ctx.dims[(getname(fbr), envdepth(fbr.env) + n)])), 1:lvl.N)...),))
-        $(lvl.idx_alloc) = 0
+        $(lvl.idx_q_alloc) = 0
         empty!($(lvl.ex).tbl)
         empty!($(lvl.ex).srt)
-        $(lvl.pos_alloc) = $Finch.refill!($(lvl.ex).pos, 0, 0, 5)
+        $(lvl.pos_q_alloc) = $Finch.refill!($(lvl.ex).pos, 0, 0, 5)
         $(lvl.ex).pos[1] = 1
         $(lvl.P) = 0
     end)
@@ -133,7 +133,7 @@ function assemble!(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode)
     p_stop = ctx(cache!(ctx, ctx.freshen(lvl.ex, :_p_stop), stop(envposition(fbr.env))))
     push!(ctx.preamble, quote
         $(lvl.P) = max($p_stop, $(lvl.P))
-        $(lvl.pos_alloc) < ($(lvl.P) + 1) && ($(lvl.pos_alloc) = Finch.refill!($(lvl.ex).pos, 0, $(lvl.pos_alloc), $(lvl.P) + 1))
+        $(lvl.pos_q_alloc) < ($(lvl.P) + 1) && ($(lvl.pos_q_alloc) = Finch.refill!($(lvl.ex).pos, 0, $(lvl.pos_q_alloc), $(lvl.P) + 1))
     end)
 end
 
@@ -314,8 +314,8 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Union{Writ
                     preamble = quote
                         $my_guard = true
                         $my_key = ($(ctx(envposition(envexternal(fbr.env)))), ($(map(ctx, envdeferred(fbr.env))...), $(ctx(idx))))
-                        $my_p = get($(lvl.ex).tbl, $my_key, $(lvl.idx_alloc) + 1)
-                        if $(lvl.idx_alloc) < $my_p 
+                        $my_p = get($(lvl.ex).tbl, $my_key, $(lvl.idx_q_alloc) + 1)
+                        if $(lvl.idx_q_alloc) < $my_p 
                             $(contain(ctx) do ctx_2 
                                 #THIS code reassembles every time. TODO
                                 assemble!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(position=my_p, parent=(VirtualEnvironment^(lvl.N - 1))(fbr.env))), ctx_2, mode)
@@ -326,8 +326,8 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Union{Writ
                     body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_p), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode, idxs...),
                     epilogue = begin
                         body = quote
-                            $(lvl.idx_alloc) = $my_p
-                            $(lvl.ex).tbl[$my_key] = $(lvl.idx_alloc)
+                            $(lvl.idx_q_alloc) = $my_p
+                            $(lvl.ex).tbl[$my_key] = $(lvl.idx_q_alloc)
                             $(lvl.ex).pos[$(ctx(envposition(envexternal(fbr.env)))) + 1] += 1
                         end
                         if envdefaultcheck(fbr.env) !== nothing
