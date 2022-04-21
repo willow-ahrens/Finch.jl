@@ -37,8 +37,8 @@ function stats(n, p)
     a = Scalar{0.0}()
     total = Scalar{0.0}()
     total2 = Scalar{0.0}()
-    minim = Scalar{-Inf}()
-    maxim = Scalar{Inf}()
+    minim = Scalar{Inf}()
+    maxim = Scalar{-Inf}()
 
     println("fused stats")
     display(@index_code_lowered @loop i (begin
