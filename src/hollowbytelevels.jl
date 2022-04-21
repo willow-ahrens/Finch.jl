@@ -1,9 +1,9 @@
-struct HollowByteLevel{Ti, Tp, Tp_2, Lvl}
+struct HollowByteLevel{Ti, Tp, T_q, Lvl}
     I::Ti
     P::Ref{Int}
     tbl::Vector{Bool}
     srt::Vector{Tuple{Tp, Ti}}
-    pos::Vector{Tp_2}
+    pos::Vector{T_q}
     lvl::Lvl
 end
 const HollowByte = HollowByteLevel
@@ -11,10 +11,10 @@ HollowByteLevel(lvl) = HollowByteLevel(0, lvl)
 HollowByteLevel{Ti}(lvl) where {Ti} = HollowByteLevel{Ti}(zero(Ti), lvl)
 HollowByteLevel(I::Ti, lvl) where {Ti} = HollowByteLevel{Ti}(I, lvl)
 HollowByteLevel{Ti}(I::Ti, lvl) where {Ti} = HollowByteLevel{Ti, Int, Int}(I, lvl)
-HollowByteLevel{Ti, Tp, Tp_2}(I::Ti, lvl) where {Ti, Tp, Tp_2} =
-    HollowByteLevel{Ti, Tp, Tp_2}(I::Ti, Ref(0), [false, false, false, false], Vector{Tuple{Tp, Ti}}(undef, 4), Tp_2[1, 1, 0, 0, 0], lvl)
-HollowByteLevel{Ti, Tp, Tp_2}(I::Ti, P, tbl, srt, pos, lvl::Lvl) where {Ti, Tp, Tp_2, Lvl} =
-    HollowByteLevel{Ti, Tp, Tp_2, Lvl}(I, P, tbl, srt, pos, lvl)
+HollowByteLevel{Ti, Tp, T_q}(I::Ti, lvl) where {Ti, Tp, T_q} =
+    HollowByteLevel{Ti, Tp, T_q}(I::Ti, Ref(0), [false, false, false, false], Vector{Tuple{Tp, Ti}}(undef, 4), T_q[1, 1, 0, 0, 0], lvl)
+HollowByteLevel{Ti, Tp, T_q}(I::Ti, P, tbl, srt, pos, lvl::Lvl) where {Ti, Tp, T_q, Lvl} =
+    HollowByteLevel{Ti, Tp, T_q, Lvl}(I, P, tbl, srt, pos, lvl)
 
 @inline arity(fbr::Fiber{<:HollowByteLevel}) = 1 + arity(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
 @inline shape(fbr::Fiber{<:HollowByteLevel}) = (fbr.lvl.I, shape(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
@@ -38,7 +38,7 @@ mutable struct VirtualHollowByteLevel
     ex
     Ti
     Tp
-    Tp_2
+    T_q
     I
     pos_alloc
     Q
@@ -46,7 +46,7 @@ mutable struct VirtualHollowByteLevel
     tbl_alloc
     lvl
 end
-function virtualize(ex, ::Type{HollowByteLevel{Ti, Tp, Tp_2, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Tp_2, Lvl}   
+function virtualize(ex, ::Type{HollowByteLevel{Ti, Tp, T_q, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, T_q, Lvl}   
     sym = ctx.freshen(tag)
     I = ctx.freshen(sym, :_I)
     pos_alloc = ctx.freshen(sym, :_pos_alloc)
@@ -62,13 +62,13 @@ function virtualize(ex, ::Type{HollowByteLevel{Ti, Tp, Tp_2, Lvl}}, ctx, tag=:lv
         $tbl_alloc = length($sym.tbl)
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualHollowByteLevel(sym, Ti, Tp, Tp_2, I, pos_alloc, Q, idx_alloc, tbl_alloc, lvl_2)
+    VirtualHollowByteLevel(sym, Ti, Tp, T_q, I, pos_alloc, Q, idx_alloc, tbl_alloc, lvl_2)
 end
 (ctx::Finch.LowerJulia)(lvl::VirtualHollowByteLevel) = lvl.ex
 
 function reconstruct!(lvl::VirtualHollowByteLevel, ctx)
     push!(ctx.preamble, quote
-        $(lvl.ex) = $HollowByteLevel{$(lvl.Ti), $(lvl.Tp), $(lvl.Tp_2)}(
+        $(lvl.ex) = $HollowByteLevel{$(lvl.Ti), $(lvl.Tp), $(lvl.T_q)}(
             $(ctx(lvl.I)),
             $(lvl.ex).P,
             $(lvl.ex).tbl,
@@ -179,48 +179,48 @@ function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Read, idx:
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
-    my_p = ctx.freshen(tag, :_p)
-    my_p1 = ctx.freshen(tag, :_p1)
-    my_i1 = ctx.freshen(tag, :_i1)
+    my_q = ctx.freshen(tag, :_p)
+    my_q_stop = ctx.freshen(tag, :_p1)
+    my_i_stop = ctx.freshen(tag, :_i_stop)
 
     Thunk(
         preamble = quote
-            $my_p = $(lvl.ex).pos[$(ctx(envposition(fbr.env)))]
-            $my_p1 = $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1]
-            if $my_p < $my_p1
-                $my_i = last($(lvl.ex).srt[$my_p])
-                $my_i1 = last($(lvl.ex).srt[$my_p1 - 1])
+            $my_q = $(lvl.ex).pos[$(ctx(envposition(fbr.env)))]
+            $my_q_stop = $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1]
+            if $my_q < $my_p1
+                $my_i = last($(lvl.ex).srt[$my_q])
+                $my_i_stop = last($(lvl.ex).srt[$my_q_stop - 1])
             else
                 $my_i = 1
-                $my_i1 = 0
+                $my_i_stop = 0
             end
         end,
         body = Pipeline([
             Phase(
-                stride = (start) -> my_i1,
+                stride = (start) -> my_i_stop,
                 body = (start, step) -> Stepper(
                     seek = (ctx, start) -> quote
-                        #$my_p = searchsortedfirst($(lvl.ex).idx, $start, $my_p, $my_p1, Base.Forward)
-                        while $my_p < $my_p1 && last($(lvl.ex).srt[$my_p]) < $start
-                            $my_p += 1
+                        #$my_q = searchsortedfirst($(lvl.ex).idx, $start, $my_p, $my_p1, Base.Forward)
+                        while $my_q < $my_p1 && last($(lvl.ex).srt[$my_p]) < $start
+                            $my_q += 1
                         end
                     end,
                     body = Thunk(
                         preamble = :(
-                            $my_i = last($(lvl.ex).srt[$my_p])
+                            $my_i = last($(lvl.ex).srt[$my_q])
                         ),
                         body = Phase(
-                            guard = (start) -> :($my_p < $my_p1),
+                            guard = (start) -> :($my_q < $my_p1),
                             stride = (start) -> my_i,
                             body = (start, step) -> Thunk(
                                 body = Cases([
                                     :($step == $my_i) => Thunk(
                                         body = Spike(
                                             body = Simplify(default(fbr)),
-                                            tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_p), index=Virtual{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
+                                            tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=Virtual{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
                                         ),
                                         epilogue = quote
-                                            $my_p += 1
+                                            $my_q += 1
                                         end
                                     ),
                                     true => Run(
@@ -243,59 +243,59 @@ function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Read, idx:
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
-    my_p = ctx.freshen(tag, :_p)
-    my_p1 = ctx.freshen(tag, :_p1)
-    my_i1 = ctx.freshen(tag, :_i1)
+    my_q = ctx.freshen(tag, :_q)
+    my_q_stop = ctx.freshen(tag, :_q_stop)
+    my_i_stop = ctx.freshen(tag, :_i_stop)
 
     Thunk(
         preamble = quote
-            $my_p = $(lvl.ex).pos[$(ctx(envposition(fbr.env)))]
-            $my_p1 = $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1]
-            if $my_p < $my_p1
-                $my_i = last($(lvl.ex).srt[$my_p])
-                $my_i1 = last($(lvl.ex).srt[$my_p1 - 1])
+            $my_q = $(lvl.ex).pos[$(ctx(envposition(fbr.env)))]
+            $my_q_stop = $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1]
+            if $my_q < $my_q_stop
+                $my_i = last($(lvl.ex).srt[$my_q])
+                $my_i_stop = last($(lvl.ex).srt[$my_q_stop - 1])
             else
                 $my_i = 1
-                $my_i1 = 0
+                $my_i_stop = 0
             end
         end,
         body = Pipeline([
             Phase(
-                stride = (start) -> my_i1,
+                stride = (start) -> my_i_stop,
                 body = (start, step) -> Jumper(
                     seek = (ctx, start) -> quote
-                        #$my_p = searchsortedfirst($(lvl.ex).idx, $start, $my_p, $my_p1, Base.Forward)
-                        while $my_p < $my_p1 && last($(lvl.ex).srt[$my_p]) < $start
-                            $my_p += 1
+                        #$my_q = searchsortedfirst($(lvl.ex).idx, $start, $my_q, $my_q_stop, Base.Forward)
+                        while $my_q < $my_q_stop && last($(lvl.ex).srt[$my_q]) < $start
+                            $my_q += 1
                         end
                     end,
                     body = Thunk(
                         preamble = :(
-                            $my_i = last($(lvl.ex).srt[$my_p])
+                            $my_i = last($(lvl.ex).srt[$my_q])
                         ),
                         body = Phase(
-                            guard = (start) -> :($my_p < $my_p1),
+                            guard = (start) -> :($my_q < $my_q_stop),
                             stride = (start) -> my_i,
                             body = (start, step) -> Cases([
                                 :($step == $my_i) => Thunk(
                                     body = Spike(
                                         body = Simplify(default(fbr)),
-                                        tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_p), index=Virtual{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
+                                        tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=Virtual{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
                                     ),
                                     epilogue = quote
-                                        $my_p += 1
+                                        $my_q += 1
                                     end
                                 ),
                                 true => Stepper(
                                     seek = (ctx, start) -> quote
-                                        #$my_p = searchsortedfirst($(lvl.ex).idx, $start, $my_p, $my_p1, Base.Forward)
-                                        while $my_p < $my_p1 && last($(lvl.ex).srt[$my_p]) < $start
-                                            $my_p += 1
+                                        #$my_q = searchsortedfirst($(lvl.ex).idx, $start, $my_q, $my_q_stop, Base.Forward)
+                                        while $my_q < $my_q_stop && last($(lvl.ex).srt[$my_q]) < $start
+                                            $my_q += 1
                                         end
                                     end,
                                     body = Thunk(
                                         preamble = :(
-                                            $my_i = last($(lvl.ex).srt[$my_p])
+                                            $my_i = last($(lvl.ex).srt[$my_q])
                                         ),
                                         body = Phase(
                                             stride = (start) -> my_i,
@@ -304,10 +304,10 @@ function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Read, idx:
                                                     :($step == $my_i) => Thunk(
                                                         body = Spike(
                                                             body = Simplify(default(fbr)),
-                                                            tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_p), index=Virtual{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
+                                                            tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=Virtual{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
                                                         ),
                                                         epilogue = quote
-                                                            $my_p += 1
+                                                            $my_q += 1
                                                         end
                                                     ),
                                                     true => Run(
@@ -335,16 +335,16 @@ function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Read, idx:
     tag = lvl.ex
     R = length(envdeferred(fbr.env)) + 1
     my_key = cgx.freshen(tag, :_key)
-    my_p = cgx.freshen(tag, :_p)
+    my_q = cgx.freshen(tag, :_q)
     q = envposition(fbr.env)
 
     Leaf(
         body = (i) -> Thunk(
             preamble = quote
-                $my_p = $(ctx(q)) * $(lvl.I) + $i
+                $my_q = $(ctx(q)) * $(lvl.I) + $i
             end,
             body = Cases([
-                :($tbl[$my_p]) => refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Tp_2}(my_p), index=i, parent=fbr.env)), ctx, mode, idxs...),
+                :($tbl[$my_q]) => refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.T_q}(my_q), index=i, parent=fbr.env)), ctx, mode, idxs...),
                 true => Simplify(default(fbr))
             ])
         )
@@ -360,7 +360,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Union{Writ
     lvl = fbr.lvl
     tag = lvl.ex
     my_key = ctx.freshen(tag, :_key)
-    my_p = ctx.freshen(tag, :_p)
+    my_q = ctx.freshen(tag, :_q)
     my_guard = ctx.freshen(tag, :_guard)
     my_seen = ctx.freshen(tag, :_seen)
 
@@ -372,21 +372,21 @@ function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Union{Writ
             tail = (ctx, idx) -> Thunk(
                 preamble = quote
                     $my_guard = true
-                    $my_p = ($(ctx(envposition(fbr.env))) - 1) * $(lvl.I) + $idx
-                    $my_seen = $(lvl.ex).tbl[$my_p]
+                    $my_q = ($(ctx(envposition(fbr.env))) - 1) * $(lvl.I) + $idx
+                    $my_seen = $(lvl.ex).tbl[$my_q]
                     if !$my_seen
                         $(contain(ctx) do ctx_2 
                             #TODO This code reassembles every time. Maybe that's okay?
-                            assemble!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(position=my_p, parent=VirtualEnvironment(fbr.env))), ctx_2, mode)
+                            assemble!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(position=my_q, parent=VirtualEnvironment(fbr.env))), ctx_2, mode)
                             quote end
                         end)
                     end
                 end,
-                body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_p), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode, idxs...),
+                body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode, idxs...),
                 epilogue = begin
                     body = quote
                         if !$my_seen
-                            $(lvl.ex).tbl[$my_p] = true
+                            $(lvl.ex).tbl[$my_q] = true
                             $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1] += 1
                             $(lvl.Q) += 1
                             $(lvl.idx_alloc) < $(lvl.Q) && ($(lvl.idx_alloc) = $Finch.regrow!($(lvl.ex).srt, $(lvl.idx_alloc), $(lvl.Q)))

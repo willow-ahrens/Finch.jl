@@ -1,7 +1,7 @@
-struct HollowCooLevel{N, Ti<:Tuple, Tp_2, Tbl, Lvl}
+struct HollowCooLevel{N, Ti<:Tuple, Tq, Tbl, Lvl}
     I::Ti
     tbl::Tbl
-    pos::Vector{Tp_2}
+    pos::Vector{Tq}
     lvl::Lvl
 end
 const HollowCoo = HollowCooLevel
@@ -9,11 +9,11 @@ HollowCooLevel{N}(lvl) where {N} = HollowCooLevel{N}((0 for _ in 1:N...), lvl)
 HollowCooLevel{N, Ti}(lvl) where {N, Ti} = HollowCooLevel{N, Ti}((map(zero, Ti.parameters)..., ), lvl)
 HollowCooLevel{N}(I::Ti, lvl) where {N, Ti} = HollowCooLevel{N, Ti}(I, lvl)
 HollowCooLevel{N, Ti}(I::Ti, lvl) where {N, Ti} = HollowCooLevel{N, Ti, Int}(I, lvl)
-HollowCooLevel{N, Ti, Tp_2}(I::Ti, lvl) where {N, Ti, Tp_2} = HollowCooLevel{N, Ti, Tp_2}(I, ((Vector{T}(undef, 16) for T in Ti.parameters)...,), Tp_2[1, 1, 3:17...], lvl)
-HollowCooLevel{N, Ti, Tp_2}(I::Ti, tbl::Tbl, pos, lvl) where {N, Ti, Tp_2, Tbl} =
-    HollowCooLevel{N, Ti, Tp_2, Tbl}(I, tbl, pos, lvl)
-HollowCooLevel{N, Ti, Tp_2, Tbl}(I::Ti, tbl::Tbl, pos, lvl::Lvl) where {N, Ti, Tp_2, Tbl, Lvl} =
-    HollowCooLevel{N, Ti, Tp_2, Tbl, Lvl}(I, tbl, pos, lvl)
+HollowCooLevel{N, Ti, Tq}(I::Ti, lvl) where {N, Ti, Tq} = HollowCooLevel{N, Ti, Tq}(I, ((Vector{T}(undef, 16) for T in Ti.parameters)...,), Tq[1, 1, 3:17...], lvl)
+HollowCooLevel{N, Ti, Tq}(I::Ti, tbl::Tbl, pos, lvl) where {N, Ti, Tq, Tbl} =
+    HollowCooLevel{N, Ti, Tq, Tbl}(I, tbl, pos, lvl)
+HollowCooLevel{N, Ti, Tq, Tbl}(I::Ti, tbl::Tbl, pos, lvl::Lvl) where {N, Ti, Tq, Tbl, Lvl} =
+    HollowCooLevel{N, Ti, Tq, Tbl, Lvl}(I, tbl, pos, lvl)
 
 @inline arity(fbr::Fiber{<:HollowCooLevel{N}}) where {N} = N + arity(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))
 @inline shape(fbr::Fiber{<:HollowCooLevel{N}}) where {N} = (fbr.lvl.I..., shape(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))...)
@@ -50,32 +50,32 @@ mutable struct VirtualHollowCooLevel
     ex
     N
     Ti
-    Tp_2
+    Tq
     Tbl
     I
     pos_alloc
-    idx_q
+    idx_alloc
     lvl
 end
-function virtualize(ex, ::Type{HollowCooLevel{N, Ti, Tp_2, Tbl, Lvl}}, ctx, tag=:lvl) where {N, Ti, Tp_2, Tbl, Lvl}   
+function virtualize(ex, ::Type{HollowCooLevel{N, Ti, Tq, Tbl, Lvl}}, ctx, tag=:lvl) where {N, Ti, Tq, Tbl, Lvl}   
     sym = ctx.freshen(tag)
     I = ctx.freshen(sym, :_I)
     pos_alloc = ctx.freshen(sym, :_pos_alloc)
-    idx_q = ctx.freshen(sym, :_idx_q)
+    idx_alloc = ctx.freshen(sym, :_idx_alloc)
     push!(ctx.preamble, quote
         $sym = $ex
         $I = $sym.I
         $pos_alloc = length($sym.pos)
-        $idx_q = length($sym.tbl)
+        $idx_alloc = length($sym.tbl)
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualHollowCooLevel(sym, N, Ti, Tp_2, Tbl, I, pos_alloc, idx_q, lvl_2)
+    VirtualHollowCooLevel(sym, N, Ti, Tq, Tbl, I, pos_alloc, idx_alloc, lvl_2)
 end
 (ctx::Finch.LowerJulia)(lvl::VirtualHollowCooLevel) = lvl.ex
 
 function reconstruct!(lvl::VirtualHollowCooLevel, ctx)
     push!(ctx.preamble, quote
-        $(lvl.ex) = $HollowCooLevel{$(lvl.N), $(lvl.Ti), $(lvl.Tp_2), $(lvl.Tbl)}(
+        $(lvl.ex) = $HollowCooLevel{$(lvl.N), $(lvl.Ti), $(lvl.Tq), $(lvl.Tbl)}(
             $(ctx(lvl.I)),
             $(lvl.ex).tbl,
             $(lvl.ex).pos,
@@ -104,7 +104,7 @@ function initialize_level!(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::
         $(lvl.I) = $(lvl.Ti)(($(map(n->ctx(stop(ctx.dims[(getname(fbr), envdepth(fbr.env) + n)])), 1:lvl.N)...),))
         $(lvl.pos_alloc) = length($(lvl.ex).pos) - 1
         $(lvl.ex).pos[1] = 1
-        $(lvl.idx_q) = length($(lvl.ex).tbl[1])
+        $(lvl.idx_alloc) = length($(lvl.ex).tbl[1])
     end)
 
     if (lvl_2 = initialize_level!(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^lvl.N)(fbr.env)), ctx, mode)) !== nothing
@@ -147,26 +147,26 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Read, idx::
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
-    my_p = ctx.freshen(tag, :_p)
-    my_p_step = ctx.freshen(tag, :_p_step)
-    my_p_stop = ctx.freshen(tag, :_p_stop)
+    my_q = ctx.freshen(tag, :_q)
+    my_q_step = ctx.freshen(tag, :_q_step)
+    my_q_stop = ctx.freshen(tag, :_q_stop)
     my_i_stop = ctx.freshen(tag, :_i_stop)
     R = length(envdeferred(fbr.env)) + 1
     if R == 1
-        p_start = Virtual{lvl.Tp_2}(:($(lvl.ex).pos[$(ctx(envposition(fbr.env)))]))
-        p_stop = Virtual{lvl.Tp_2}(:($(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1]))
+        q_start = Virtual{lvl.Tq}(:($(lvl.ex).pos[$(ctx(envposition(fbr.env)))]))
+        q_stop = Virtual{lvl.Tq}(:($(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1]))
     else
-        p_start = fbr.env.start
-        p_stop = fbr.env.stop
+        q_start = fbr.env.start
+        q_stop = fbr.env.stop
     end
 
     Thunk(
         preamble = quote
-            $my_p = $(ctx(p_start))
-            $my_p_stop = $(ctx(p_stop))
-            if $my_p < $my_p_stop
-                $my_i = $(lvl.ex).tbl[$R][$my_p]
-                $my_i_stop = $(lvl.ex).tbl[$R][$my_p_stop - 1]
+            $my_q = $(ctx(q_start))
+            $my_q_stop = $(ctx(q_stop))
+            if $my_q < $my_q_stop
+                $my_i = $(lvl.ex).tbl[$R][$my_q]
+                $my_i_stop = $(lvl.ex).tbl[$R][$my_q_stop - 1]
             else
                 $my_i = 1
                 $my_i_stop = 0
@@ -178,10 +178,10 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Read, idx::
                 body = (start, step) -> Stepper(
                     body = Thunk(
                         preamble = quote
-                            $my_i = $(lvl.ex).tbl[$R][$my_p]
+                            $my_i = $(lvl.ex).tbl[$R][$my_q]
                         end,
                         body = Phase(
-                            guard = (start) -> :($my_p < $my_p_stop),
+                            guard = (start) -> :($my_q < $my_q_stop),
                             stride = (start) -> my_i,
                             body = (start, step) -> Thunk(
                                 body = Cases([
@@ -189,26 +189,26 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Read, idx::
                                         Thunk(
                                             body = Spike(
                                                 body = Simplify(default(fbr)),
-                                                tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Tp_2}(:($my_p)), index=Virtual{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
+                                                tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Tq}(:($my_q)), index=Virtual{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
                                             ),
                                             epilogue = quote
-                                                $my_p += 1
+                                                $my_q += 1
                                             end
                                         )
                                     else
                                         Thunk(
                                             preamble = quote
-                                                $my_p_step = $my_p + 1
-                                                while $my_p_step < $my_p_stop && $(lvl.ex).tbl[$R][$my_p_step] == $my_i
-                                                    $my_p_step += 1
+                                                $my_q_step = $my_q + 1
+                                                while $my_q_step < $my_q_stop && $(lvl.ex).tbl[$R][$my_q_step] == $my_i
+                                                    $my_q_step += 1
                                                 end
                                             end,
                                             body = Spike(
                                                 body = Simplify(default(fbr)),
-                                                tail = refurl(VirtualFiber(lvl, VirtualEnvironment(start=Virtual{lvl.Ti}(my_p), stop=Virtual{lvl.Ti}(my_p_step), index=Virtual{lvl.Ti}(my_i), parent=fbr.env, internal=true)), ctx, mode, idxs...),
+                                                tail = refurl(VirtualFiber(lvl, VirtualEnvironment(start=Virtual{lvl.Ti}(my_q), stop=Virtual{lvl.Ti}(my_q_step), index=Virtual{lvl.Ti}(my_i), parent=fbr.env, internal=true)), ctx, mode, idxs...),
                                             ),
                                             epilogue = quote
-                                                $my_p = $my_p_step
+                                                $my_q = $my_q_step
                                             end
                                         )
                                     end,
@@ -235,13 +235,13 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Union{Write
     tag = lvl.ex
     R = length(envdeferred(fbr.env)) + 1
     my_key = ctx.freshen(tag, :_key)
-    my_p = ctx.freshen(tag, :_p)
+    my_q = ctx.freshen(tag, :_q)
     my_guard = ctx.freshen(tag, :_guard)
 
     if R == lvl.N
         Thunk(
             preamble = quote
-                $my_p = $(lvl.ex).pos[$(ctx(envposition(envexternal(fbr.env))))]
+                $my_q = $(lvl.ex).pos[$(ctx(envposition(envexternal(fbr.env))))]
             end,
             body = AcceptSpike(
                 val = default(fbr),
@@ -249,11 +249,11 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Union{Write
                     preamble = quote
                         $my_guard = true
                         $(contain(ctx) do ctx_2 
-                            assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=my_p, parent=fbr.env)), ctx_2, mode)
+                            assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=my_q, parent=fbr.env)), ctx_2, mode)
                             quote end
                         end)
                     end,
-                    body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_p), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode, idxs...),
+                    body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode, idxs...),
                     epilogue = begin
                         resize_body = quote end
                         write_body = quote end
@@ -262,25 +262,25 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Union{Write
                             if n == lvl.N
                                 resize_body = quote
                                     $resize_body
-                                    $(lvl.idx_q) = $Finch.regrow!($(lvl.ex).tbl[$n], $(lvl.idx_q), $my_p)
+                                    $(lvl.idx_alloc) = $Finch.regrow!($(lvl.ex).tbl[$n], $(lvl.idx_alloc), $my_q)
                                 end
                             else
                                 resize_body = quote
                                     $resize_body
-                                    $Finch.regrow!($(lvl.ex).tbl[$n], $(lvl.idx_q), $my_p)
+                                    $Finch.regrow!($(lvl.ex).tbl[$n], $(lvl.idx_alloc), $my_q)
                                 end
                             end
                             write_body = quote
                                 $write_body
-                                $(lvl.ex).tbl[$n][$my_p] = $(idxs[n])
+                                $(lvl.ex).tbl[$n][$my_q] = $(idxs[n])
                             end
                         end
                         body = quote
-                            if $(lvl.idx_q) < $my_p
+                            if $(lvl.idx_alloc) < $my_q
                                 $resize_body
                             end
                             $write_body
-                            $my_p += 1
+                            $my_q += 1
                         end
                         if envdefaultcheck(fbr.env) !== nothing
                             body = quote
@@ -300,7 +300,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Union{Write
                 )
             ),
             epilogue = quote
-                $(lvl.ex).pos[$(ctx(envposition(envexternal(fbr.env)))) + 1] = $my_p
+                $(lvl.ex).pos[$(ctx(envposition(envexternal(fbr.env)))) + 1] = $my_q
             end
         )
     else

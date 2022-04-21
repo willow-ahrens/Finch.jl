@@ -1,7 +1,7 @@
 @testset "fibers" begin
     println("B(h)[i] = A(s)[i]")
     A = Finch.Fiber(
-        HollowList(10, Ref(1), [1, 6], [1, 3, 5, 7, 9],
+        HollowList(10, [1, 6], [1, 3, 5, 7, 9],
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
     B = Finch.Fiber(
         HollowHash{1}((10,),
@@ -32,7 +32,7 @@
 
     A = Finch.FiberArray(Fiber(
         Solid(3, 
-        HollowList(5, Ref(3), [1, 4, 6, 8], [1, 2, 5, 2, 4, 3, 5],
+        HollowList(5, [1, 4, 6, 8], [1, 2, 5, 2, 4, 3, 5],
         Element{0.0}([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0])))))
     @test ndims(A) == 2
     @test size(A) == (3, 5)
@@ -60,7 +60,7 @@
 
     println("C(s)[i] = B(h)[i] where B(h)[i] = A(s)[i]")
     A = Finch.Fiber(
-        HollowList(10, Ref(1), [1, 6], [1, 3, 5, 7, 9],
+        HollowList(10, [1, 6], [1, 3, 5, 7, 9],
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
     B = Finch.Fiber(
         HollowHash{1}((10,),
@@ -80,7 +80,7 @@
 
     println("B(c)[i] = A(s)[i]")
     A = Finch.Fiber(
-        HollowList(10, Ref(1), [1, 6], [1, 3, 5, 7, 9],
+        HollowList(10, [1, 6], [1, 3, 5, 7, 9],
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
     B = Finch.Fiber(
         HollowCoo{1}((10,),
@@ -115,7 +115,7 @@
 
     A = Finch.FiberArray(Fiber(
         Solid(3, 
-        HollowList(5, Ref(3), [1, 4, 6, 8], [1, 2, 5, 2, 4, 3, 5],
+        HollowList(5, [1, 4, 6, 8], [1, 2, 5, 2, 4, 3, 5],
         Element{0.0}([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0])))))
 
     B = Finch.Fiber(
@@ -132,7 +132,7 @@
 
     println("C(s)[i] = B(c)[i] where B(c)[i] = A(s)[i]")
     A = Finch.Fiber(
-        HollowList(10, Ref(1), [1, 6], [1, 3, 5, 7, 9],
+        HollowList(10, [1, 6], [1, 3, 5, 7, 9],
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
     B = Finch.Fiber(
         HollowCoo{1}((10,),
@@ -154,10 +154,10 @@
     println("C(s)[i] = A(s)[i] + B(s)[i]")
 
     A = Finch.Fiber(
-        HollowList(10, Ref(1), [1, 6], [1, 3, 5, 7, 9],
+        HollowList(10, [1, 6], [1, 3, 5, 7, 9],
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
     B = Finch.Fiber(
-        HollowList(10, Ref(1), [1, 4], [2, 5, 8],
+        HollowList(10, [1, 4], [2, 5, 8],
         Element{0.0}([1.0, 1.0, 1.0])))
     C = Finch.Fiber(HollowList(10, Element{0.0}()))
 
@@ -180,10 +180,10 @@
 
     println("C[i] = A(s)[i] + B(s)[i]")
     A = Finch.Fiber(
-        HollowList(10, Ref(1), [1, 6], [1, 3, 5, 7, 9],
+        HollowList(10, [1, 6], [1, 3, 5, 7, 9],
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
     B = Finch.Fiber(
-        HollowList(10, Ref(1), [1, 4], [2, 5, 8],
+        HollowList(10, [1, 4], [2, 5, 8],
         Element{0.0}([1.0, 1.0, 1.0])))
     C = zeros(10)
     ex = @index_program_instance @loop i C[i] += A[i] + B[i]
@@ -202,7 +202,7 @@
     println("B[i] = A(ds)[j, i]")
     A = Fiber(
         Solid(2,
-        HollowList(10, Ref(2), [1, 6, 9], [1, 3, 5, 7, 9, 2, 5, 8],
+        HollowList(10, [1, 6, 9], [1, 3, 5, 7, 9, 2, 5, 8],
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0, 1.0, 1.0, 1.0]))))
     B = zeros(10)
     ex = @index_program_instance @loop j i B[i] += A[j, i]
@@ -219,10 +219,10 @@
 
     println("C(s)[i] = A(s)[i::gallop] + B(s)[i::gallop]")
     A = Finch.Fiber(
-        HollowList(10, Ref(1), [1, 6], [1, 3, 5, 7, 9],
+        HollowList(10, [1, 6], [1, 3, 5, 7, 9],
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
     B = Finch.Fiber(
-        HollowList(10, Ref(1), [1, 4], [2, 5, 8],
+        HollowList(10, [1, 4], [2, 5, 8],
         Element{0.0}([1.0, 1.0, 1.0])))
     C = Finch.Fiber(HollowList(10, Element{0.0}()))
 
@@ -242,10 +242,10 @@
     println("C(s)[i] = A(s)[i::gallop] * B(s)[i::gallop]")
 
     A = Finch.Fiber(
-        HollowList(10, Ref(1), [1, 6], [1, 3, 5, 7, 9],
+        HollowList(10, [1, 6], [1, 3, 5, 7, 9],
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
     B = Finch.Fiber(
-        HollowList(10, Ref(1), [1, 5], [2, 5, 7, 8],
+        HollowList(10, [1, 5], [2, 5, 7, 8],
         Element{0.0}([1.0, 1.0, 1.0, 1.0])))
     C = Finch.Fiber(HollowList(10, Element{0.0}()))
 
@@ -266,7 +266,7 @@
         println("B(s)[i] = A(ds)[i, j]")
         A = Finch.Fiber(
             Solid(3, 
-            HollowList(10, Ref(3), [1, 6, 6, 7], [1, 3, 5, 7, 9, 4],
+            HollowList(10, [1, 6, 6, 7], [1, 3, 5, 7, 9, 4],
             Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0, 4.0]))))
         B = Finch.Fiber(
             HollowList(3,
@@ -286,7 +286,7 @@
     println("B[i] = A(ds)[j, i]")
     A = Fiber(
         Solid(4,
-        HollowList(10, Ref(4), [1, 6, 9, 9, 10], [1, 3, 5, 7, 9, 3, 5, 8, 3],
+        HollowList(10, [1, 6, 9, 9, 10], [1, 3, 5, 7, 9, 3, 5, 8, 3],
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0, 1.0, 1.0, 1.0, 7.0]))))
     B = Fiber(
         HollowByte(4,

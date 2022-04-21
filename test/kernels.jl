@@ -6,7 +6,7 @@
         B_ref = transpose(A_ref) * A_ref
         A = Finch.Fiber(
             Solid(n,
-            HollowList(m, Ref(n), A_ref.colptr, A_ref.rowval,
+            HollowList(m, A_ref.colptr, A_ref.rowval,
             Element{0.0}(A_ref.nzval))))
         B = Finch.Fiber(
             Solid(m,
@@ -24,7 +24,7 @@
             println("B[] += A[i,k] * A[i, j] * A[j, k] : $mtx")
             A = Finch.Fiber(
                 Solid(n,
-                HollowList(m, Ref(n), A_ref.colptr, A_ref.rowval,
+                HollowList(m, A_ref.colptr, A_ref.rowval,
                 Element{0.0}(A_ref.nzval))))
             B = Finch.Fiber(Element{0.0}())
             @index @loop i j k B[] += A[i, k] * A[i, j] * A[j, k]
@@ -43,11 +43,11 @@
         I, V = findnz(A_ref)
         J, W = findnz(B_ref)
         A = Fiber(
-            HollowList(n, Ref(1), [1, length(I) + 1], I,
+            HollowList(n, [1, length(I) + 1], I,
             Element{0.0}(V))
         )
         B = Fiber(
-            HollowList(n, Ref(1), [1, length(J) + 1], J,
+            HollowList(n, [1, length(J) + 1], J,
             Element{0.0}(W))
         )
         C = Fiber(
@@ -73,7 +73,7 @@
             println("B(ds)[i, j] = w[j] where w[j] += A(ds)[i, k] * A(ds)(k, j)")
             A = Finch.Fiber(
                 Solid(n,
-                HollowList(m, Ref(n), A_ref.colptr, A_ref.rowval,
+                HollowList(m, A_ref.colptr, A_ref.rowval,
                 Element{0.0}(A_ref.nzval))))
             B = Fiber(
                 Solid(0,
