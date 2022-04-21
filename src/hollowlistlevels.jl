@@ -1,5 +1,6 @@
 struct HollowListLevel{Ti, Lvl}
     I::Ti
+    usg::Ref{Int}
     pos::Vector{Ti}
     idx::Vector{Ti}
     lvl::Lvl
@@ -9,8 +10,8 @@ HollowListLevel(lvl) = HollowListLevel(0, lvl)
 HollowListLevel{Ti}(lvl) where {Ti} = HollowListLevel(zero{Ti}, lvl)
 HollowListLevel(I::Ti, lvl::Lvl) where {Ti, Lvl} = HollowListLevel{Ti, Lvl}(I, lvl)
 HollowListLevel{Ti}(I::Ti, lvl::Lvl) where {Ti, Lvl} = HollowListLevel{Ti, Lvl}(I, lvl)
-HollowListLevel{Ti}(I::Ti, pos, idx, lvl::Lvl) where {Ti, Lvl} = HollowListLevel{Ti, Lvl}(I, pos, idx, lvl)
-HollowListLevel{Ti, Lvl}(I::Ti, lvl::Lvl) where {Ti, Lvl} = HollowListLevel{Ti, Lvl}(I, Ti[1, 1, 3:17...], Vector{Ti}(undef, 16), lvl)
+HollowListLevel{Ti}(I::Ti, usg, pos, idx, lvl::Lvl) where {Ti, Lvl} = HollowListLevel{Ti, Lvl}(I, usg, pos, idx, lvl)
+HollowListLevel{Ti, Lvl}(I::Ti, lvl::Lvl) where {Ti, Lvl} = HollowListLevel{Ti, Lvl}(I, Ref(0), Ti[1, fill(0, 16)...], Vector{Ti}(undef, 16), lvl)
 
 @inline arity(fbr::Fiber{<:HollowListLevel}) = 1 + arity(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
 @inline shape(fbr::Fiber{<:HollowListLevel}) = (fbr.lvl.I, shape(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
@@ -56,6 +57,7 @@ function reconstruct!(lvl::VirtualHollowListLevel, ctx)
     push!(ctx.preamble, quote
         $(lvl.ex) = $HollowListLevel{$(lvl.Ti)}(
             $(ctx(lvl.I)),
+            $(lvl.ex).usg,
             $(lvl.ex).pos,
             $(lvl.ex).idx,
             $(ctx(lvl.lvl)),
