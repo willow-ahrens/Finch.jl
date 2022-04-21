@@ -122,6 +122,8 @@ function assemble!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode)
         $q_2 = $(ctx(q)) * $(lvl.I)
         $(lvl.tbl_q) < $q_2 && ($(lvl.tbl_q) = Finch.refill!($(lvl.ex).tbl, false, $(lvl.tbl_q), $q_2))
     end)
+    assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=q_2, parent=fbr.env)), ctx, mode)
+    #This bad boy needs to initialize sublevels like a dense level
 end
 
 function finalize_level!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Union{Write, Update})
