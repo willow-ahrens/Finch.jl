@@ -22,7 +22,7 @@ extern void finch_initialize(){
         using Finch;\n\
         Finch\
     ");
-    setindex = jl_get_function(jl_base_module, "setindex");
+    setindex = jl_get_function(jl_base_module, "setindex!");
     delete = jl_get_function(jl_base_module, "delete!");
     reft = (jl_datatype_t*)jl_eval_string("Base.RefValue{Any}");
 }
@@ -32,8 +32,8 @@ jl_value_t* finch_root(jl_value_t* var){
     JL_GC_PUSH1(&var);
     // Wrap `var` in `RefValue{Any}` and push to `refs` to protect it.
     jl_value_t* rvar = jl_new_struct(reft, var);
-    jl_call3(setindex, refs, rvar, rvar);
     JL_GC_POP();
+    jl_call3(setindex, refs, rvar, rvar);
     return var;
 }
 
@@ -44,12 +44,10 @@ void finch_free(jl_value_t* var){
 
 jl_value_t* finch_eval(const char* prg){
     jl_value_t* res = jl_eval_string(prg);
-    /*
     if (jl_exception_occurred()){
         printf("%s \n", jl_typeof_str(jl_exception_occurred()));
         exit(1);
     }
-    */
     return finch_root(res);
 }
 
@@ -62,12 +60,10 @@ jl_value_t* finch_call(jl_function_t* func, int argc, ...){
     }
     va_end(argl);
     jl_value_t* res = jl_call(func, argv, argc);
-    /*
     if (jl_exception_occurred()){
         printf("%s \n", jl_typeof_str(jl_exception_occurred()));
         exit(1);
     }
-    */
     return finch_root(res);
 }
 

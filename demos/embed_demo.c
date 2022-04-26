@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <stdarg.h>
 
+JULIA_DEFINE_FAST_TLS // only define this once, in an executable
+
 int main(int argc, char** argv){
     finch_initialize();
 
@@ -21,6 +23,9 @@ int main(int argc, char** argv){
         Fiber(\n\
             Solid(m,\n\
             Element{0.0}(val)))\n\
+    end");
+    jl_function_t* dense_vector_val = finch_eval("function dense_vector_data(vec)\n\
+        vec.lvl.lvl.val\n\
     end");
     jl_function_t* csr_matrix = finch_eval("function csr_matrix(m, n, pos, idx, val)\n\
         Fiber(\n\
@@ -42,8 +47,6 @@ int main(int argc, char** argv){
 
     double x_val[] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
 
-    jl_gc_enable(0);
-
     jl_value_t *_m = finch_root(jl_box_int64(m));
     jl_value_t *_n = finch_root(jl_box_int64(n));
 
@@ -63,10 +66,19 @@ int main(int argc, char** argv){
 
     finch_free(finch_call(print_tensor, 1, _y));
 
+    jl_value_t *_y_val = finch_call(dense_vector_val, 1, _y);
+    double *y_val = jl_array_data(_y_val);
+
+    for(int i = 0; i < m; i++){
+        printf("%g, ", y_val[i]);
+    }
+    printf("\n");
+
     finch_free(_m);
     finch_free(_n);
 
     finch_free(_y);
+    finch_free(_y_val);
     finch_free(_A_pos);
     finch_free(_A_idx);
     finch_free(_A_val);
