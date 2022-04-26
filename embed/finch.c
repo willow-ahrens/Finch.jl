@@ -55,6 +55,20 @@ jl_value_t* finch_call(jl_function_t* func, int argc, ...){
     return res;
 }
 
+jl_value_t* finch_consume_vector(jl_datatype_t* type, void* ptr, int len){
+    jl_value_t* arr_type = jl_apply_array_type((jl_value_t*)type, 1);
+    jl_value_t* res = (jl_value_t*) jl_ptr_to_array_1d(arr_type, ptr, len, 0);
+    finch_root(res);
+    return res;
+}
+
+jl_value_t* finch_mirror_vector(jl_datatype_t* type, void* ptr, int len){
+    jl_value_t* arr_type = jl_apply_array_type((jl_value_t*)type, 1);
+    jl_value_t* res = (jl_value_t*) jl_ptr_to_array_1d(arr_type, ptr, len, 1);
+    finch_root(res);
+    return res;
+}
+
 void finch_free(jl_value_t* var){
     jl_value_t* rvar = jl_new_struct(reft, var);
     jl_call2(delete, refs, rvar);
