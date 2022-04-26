@@ -1,7 +1,7 @@
 CC = gcc
 LD = ld
 JULIA = julia
-CFLAGS= -O3
+CFLAGS= -g -O0
 
 JL_SHARE = $(shell $(JULIA) -e 'print(joinpath(Sys.BINDIR, Base.DATAROOTDIR, "julia"))')
 CFLAGS   += $(shell $(JL_SHARE)/julia-config.jl --cflags) -I../embed

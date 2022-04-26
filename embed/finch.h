@@ -11,6 +11,8 @@ jl_value_t* finch_consume_vector(jl_datatype_t* type, void* ptr, int len);
 
 jl_value_t* finch_mirror_vector(jl_datatype_t* type, void* ptr, int len);
 
+jl_value_t* finch_root(jl_value_t* var);
+
 void finch_free(jl_value_t* var);
 
 void finch_finalize();

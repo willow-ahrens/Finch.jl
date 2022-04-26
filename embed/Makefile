@@ -11,7 +11,7 @@ LDLIBS   += $(shell $(JL_SHARE)/julia-config.jl --ldlibs)
 all: libfinch.a
 
 finch.o: finch.c
-	$(CC) -c $< -o $@ $(CFLAGS) $(LDFLAGS) $(LDLIBS)
+	$(CC) -c $< -o $@ $(CFLAGS)
 
 libfinch.a: finch.o
 	ar rcs $@ $^
