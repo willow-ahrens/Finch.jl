@@ -12,14 +12,15 @@ jl_function_t* setindex;
 jl_function_t* delete;
 jl_function_t* println;
 jl_function_t* displayln;
+jl_function_t* getproperty;
 jl_datatype_t* reft;
 
 jl_function_t* Fiber;
 jl_function_t* HollowList;
-jl_function_t* HollowList_;
+jl_function_t* HollowListLevel;
 jl_function_t* Solid;
 jl_function_t* Element;
-jl_function_t* Element_;
+jl_function_t* ElementLevel;
 
 /* required: setup the Julia context */
 extern void finch_initialize(){
@@ -34,15 +35,16 @@ extern void finch_initialize(){
     setindex = jl_get_function(jl_base_module, "setindex!");
     delete = jl_get_function(jl_base_module, "delete!");
     reft = (jl_datatype_t*)jl_eval_string("Base.RefValue{Any}");
-
     println = (jl_function_t*)jl_eval_string("println");
     displayln = (jl_function_t*)jl_eval_string("(obj) -> (display(obj); println())");
+    getproperty = (jl_function_t*)jl_eval_string("getproperty");
+
     Fiber = (jl_function_t*)jl_eval_string("(lvl) -> Finch.Fiber(lvl)");
     HollowList = (jl_function_t*)jl_eval_string("(m, lvl) -> Finch.HollowList(m, lvl)");
-    HollowList_ = (jl_function_t*)jl_eval_string("(m, pos, idx, lvl) -> Finch.HollowList(m, pos, idx, lvl)");
+    HollowListLevel = (jl_function_t*)jl_eval_string("(m, pos, idx, lvl) -> Finch.HollowList(m, pos, idx, lvl)");
     Solid = (jl_function_t*)jl_eval_string("(m, lvl) -> Finch.Solid(m, lvl)");
     Element = (jl_function_t*)jl_eval_string("(default) -> Finch.Element{default}()");
-    Element_ = (jl_function_t*)jl_eval_string("(default, val) -> Finch.Element{default}(val)");
+    ElementLevel = (jl_function_t*)jl_eval_string("(default, val) -> Finch.Element{default}(val)");
 }
 
 jl_value_t* finch_root(jl_value_t* var){
@@ -90,6 +92,26 @@ jl_value_t* finch_call(jl_function_t* func, int argc, ...){
         exit(1);
     }
     return finch_root(res);
+}
+
+jl_value_t* finch_get(jl_value_t* obj, const char *property){
+    char tokens[strlen(property)];
+    strcpy(tokens, property);
+    jl_value_t *res = 0;
+    int first = 1;
+    char *token = strtok(tokens, ".");
+    while (token != NULL){
+        if(strlen(token) != 0){
+            res = finch_call(getproperty, 2, obj, jl_symbol(token));
+            if (!first) {
+                finch_free(obj);
+            }
+            first = 0;
+            obj = res;
+        }
+        token = strtok(NULL, ".");
+    }
+    return obj;
 }
 
 jl_value_t* finch_consume_vector(jl_datatype_t* type, void* ptr, int len){
@@ -149,9 +171,9 @@ jl_value_t* finch_HollowList(jl_value_t *n, jl_value_t* lvl){
     return res;
 }
 
-jl_value_t* finch_HollowList_(jl_value_t *n, jl_value_t *pos, jl_value_t *idx, jl_value_t* lvl){
+jl_value_t* finch_HollowListLevel(jl_value_t *n, jl_value_t *pos, jl_value_t *idx, jl_value_t* lvl){
     jl_value_t* args[] = {n, pos, idx, lvl};
-    jl_value_t *res = finch_root(jl_call(HollowList_, args, 4));
+    jl_value_t *res = finch_root(jl_call(HollowListLevel, args, 4));
     finch_free(n);
     finch_free(pos);
     finch_free(idx);
@@ -172,8 +194,8 @@ jl_value_t* finch_Element(jl_value_t *fill){
     return res;
 }
 
-jl_value_t* finch_Element_(jl_value_t *fill, jl_value_t *val){
-    jl_value_t *res = finch_root(jl_call2(Element_, fill, val));
+jl_value_t* finch_ElementLevel(jl_value_t *fill, jl_value_t *val){
+    jl_value_t *res = finch_root(jl_call2(ElementLevel, fill, val));
     finch_free(fill);
     finch_free(val);
     return res;

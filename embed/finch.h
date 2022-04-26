@@ -24,6 +24,8 @@ jl_value_t* finch_eval(const char* prg);
 
 jl_value_t* finch_call(jl_function_t* func, int argc, ...);
 
+jl_value_t* finch_get(jl_value_t* obj, const char *property);
+
 jl_value_t* finch_consume_vector(jl_datatype_t* type, void* ptr, int len);
 
 jl_value_t* finch_mirror_vector(jl_datatype_t* type, void* ptr, int len);
@@ -45,9 +47,9 @@ jl_value_t* finch_Vector_Int64(int64_t *ptr, int len);
 
 jl_value_t* finch_Fiber(jl_value_t* lvl);
 jl_value_t* finch_HollowList(jl_value_t* n, jl_value_t* lvl);
-jl_value_t* finch_HollowList_(jl_value_t* n, jl_value_t* pos, jl_value_t* idx, jl_value_t* lvl);
+jl_value_t* finch_HollowListLevel(jl_value_t* n, jl_value_t* pos, jl_value_t* idx, jl_value_t* lvl);
 jl_value_t* finch_Solid(jl_value_t* n, jl_value_t* lvl);
 jl_value_t* finch_Element(jl_value_t *fill);
-jl_value_t* finch_Element_(jl_value_t *fill, jl_value_t *val);
+jl_value_t* finch_ElementLevel(jl_value_t *fill, jl_value_t *val);
 
 #endif
