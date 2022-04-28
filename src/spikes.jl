@@ -82,28 +82,6 @@ end
 
 default(node::AcceptSpike) = node.val #TODO is this semantically... okay?
 
-struct AcceptSpikeStyle end
-
-make_style(root::Chunk, ctx::LowerJulia, node::Access{AcceptSpike, <:Union{Write, Update}}) = AcceptSpikeStyle()
-combine_style(a::DefaultStyle, b::AcceptSpikeStyle) = AcceptSpikeStyle()
-combine_style(a::ThunkStyle, b::AcceptSpikeStyle) = ThunkStyle()
-combine_style(a::SimplifyStyle, b::AcceptSpikeStyle) = SimplifyStyle()
-combine_style(a::AcceptSpikeStyle, b::AcceptSpikeStyle) = AcceptSpikeStyle()
-combine_style(a::AcceptRunStyle, b::AcceptSpikeStyle) = AcceptSpikeStyle()
-combine_style(a::RunStyle, b::AcceptSpikeStyle) = RunStyle()
-combine_style(a::SpikeStyle, b::AcceptSpikeStyle) = SpikeStyle()
-
-function (ctx::LowerJulia)(root::Chunk, ::AcceptSpikeStyle)
-    #call DefaultStyle because we didn't simplify away the body or tail of
-    #corresponding Spikes, and need to set all the elements of the spike.
-    return ctx(root, DefaultStyle())
-end
-
-@kwdef mutable struct AcceptSpikeVisitor <: AbstractTransformVisitor
-    root
-    ctx
-end
-
 function (ctx::ForLoopVisitor)(node::Access{AcceptSpike}, ::DefaultStyle)
     node.tns.tail(ctx.ctx, ctx.val)
 end
