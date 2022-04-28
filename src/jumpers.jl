@@ -95,3 +95,5 @@ function (ctx::ThunkVisitor)(node::Jumper, ::DefaultStyle)
     end
     node
 end
+
+supports_shift(::JumperStyle) = true

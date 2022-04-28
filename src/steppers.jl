@@ -127,3 +127,5 @@ function truncate(node::Spike, ctx, start, step, stop)
         true => node,
     ])
 end
+
+supports_shift(::StepperStyle) = true

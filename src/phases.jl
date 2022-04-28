@@ -143,3 +143,7 @@ end
 (ctx::PhaseBodyVisitor)(node::Phase, ::DefaultStyle) = node.body(ctx.start, ctx.step)
 (ctx::PhaseBodyVisitor)(node::Stepper, ::DefaultStyle) = truncate(node, ctx.ctx, ctx.start, ctx.step, ctx.stop)
 (ctx::PhaseBodyVisitor)(node::Spike, ::DefaultStyle) = truncate(node, ctx.ctx, ctx.start, ctx.step, ctx.stop)
+
+supports_shift(::PipelineStyle) = true
+(ctx::PhaseStrideVisitor)(node::Shift, ::DefaultStyle) = map(stride -> Call(+, stride, node.shift), ctx(node.body))
+(ctx::PhaseBodyVisitor)(node::Spike, ::DefaultStyle) = truncate(node, ctx.ctx, Call(-, ctx.start, node.shift), Call(-, ctx.step, node.shift), Call(-, ctx.stop, node.shift))
