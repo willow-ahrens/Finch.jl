@@ -23,6 +23,7 @@ struct finch_kernel_t{
 jl_value_t* finch_eval(const char* prg);
 
 jl_value_t* finch_call(jl_function_t* func, int argc, ...);
+jl_value_t *finch_calla(jl_function_t *f, int nargs, jl_value_t **args);
 
 jl_value_t* finch_get(jl_value_t* obj, const char *property);
 

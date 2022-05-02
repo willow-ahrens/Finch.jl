@@ -13,6 +13,8 @@ jl_function_t* delete;
 jl_function_t* println;
 jl_function_t* displayln;
 jl_function_t* getproperty;
+jl_function_t* showerror;
+jl_function_t* catch_backtrace;
 jl_datatype_t* reft;
 
 jl_function_t* Fiber;
@@ -34,6 +36,8 @@ extern void finch_initialize(){
     ");
     setindex = jl_get_function(jl_base_module, "setindex!");
     delete = jl_get_function(jl_base_module, "delete!");
+    showerror = jl_get_function(jl_base_module, "showerror");
+    catch_backtrace = jl_get_function(jl_base_module, "catch_backtrace");
     reft = (jl_datatype_t*)jl_eval_string("Base.RefValue{Any}");
     println = (jl_function_t*)jl_eval_string("println");
     displayln = (jl_function_t*)jl_eval_string("(obj) -> (display(obj); println())");
@@ -70,9 +74,27 @@ void finch_display(jl_value_t* obj){
 }
 
 jl_value_t* finch_eval(const char* prg){
-    jl_value_t* res = jl_eval_string(prg);
-    if (jl_exception_occurred()){
-        printf("%s \n", jl_typeof_str(jl_exception_occurred()));
+    jl_value_t *res = NULL;
+    JL_TRY {
+        const char filename[] = "none";
+        jl_value_t *ast = jl_parse_all(prg, strlen(prg),
+                filename, strlen(filename));
+        JL_GC_PUSH1(&ast);
+        res = jl_toplevel_eval_in(jl_main_module, ast);
+        JL_GC_POP();
+        jl_exception_clear();
+    }
+    JL_CATCH {
+        jl_value_t* bt = jl_call0(catch_backtrace);
+        JL_GC_PUSH1(&bt);
+        {
+            jl_value_t* err = jl_current_exception();
+            JL_GC_PUSH1(&err);
+            jl_call3(showerror, jl_stderr_obj(), err, bt);
+            JL_GC_POP();
+        }
+        JL_GC_POP();
+        fprintf(stderr, "\n");
         exit(1);
     }
     return finch_root(res);
@@ -86,12 +108,40 @@ jl_value_t* finch_call(jl_function_t* func, int argc, ...){
         argv[i] = va_arg(argl, jl_value_t*);
     }
     va_end(argl);
-    jl_value_t* res = jl_call(func, argv, argc);
-    if (jl_exception_occurred()){
-        printf("%s \n", jl_typeof_str(jl_exception_occurred()));
+    return finch_calla(func, argc, argv);
+}
+
+jl_value_t *finch_calla(jl_function_t *f, int nargs, jl_value_t **args) {
+    jl_value_t *v;
+    jl_task_t *ct = jl_current_task;
+    nargs++; // add f to args
+    JL_TRY {
+        jl_value_t **argv;
+        JL_GC_PUSHARGS(argv, nargs);
+        argv[0] = (jl_value_t*)f;
+        for (int i = 1; i < nargs; i++)
+            argv[i] = args[i - 1];
+        size_t last_age = ct->world_age;
+        ct->world_age = jl_get_world_counter();
+        v = jl_apply(argv, nargs);
+        ct->world_age = last_age;
+        JL_GC_POP();
+        jl_exception_clear();
+    }
+    JL_CATCH {
+        jl_value_t* bt = jl_call0(catch_backtrace);
+        JL_GC_PUSH1(&bt);
+        {
+            jl_value_t* err = jl_current_exception();
+            JL_GC_PUSH1(&err);
+            jl_call3(showerror, jl_stderr_obj(), err, bt);
+            JL_GC_POP();
+        }
+        JL_GC_POP();
+        fprintf(stderr, "\n");
         exit(1);
     }
-    return finch_root(res);
+    return finch_root(v);
 }
 
 jl_value_t* finch_get(jl_value_t* obj, const char *property){
