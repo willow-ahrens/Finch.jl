@@ -167,28 +167,28 @@ function minplus(n, p, q; verbose=false)
     )
     C = Scalar{0.0}()
     
-    println("C[] <min>= A[i] + B[i]")
+    println("C[] <<min>>= A[i] + B[i]")
     if verbose
-        display(@index_code_lowered @loop i C[] <min>= A[i] + B[i])
+        display(@index_code_lowered @loop i C[] <<min>>= A[i] + B[i])
         println()
     end
-    display((@benchmark (A = $A; B = $B; C = $C; @index @loop i C[] <min>= A[i] + B[i])))
+    display((@benchmark (A = $A; B = $B; C = $C; @index @loop i C[] <<min>>= A[i] + B[i])))
     println()
 
     println("C[] += A[i] * B[i::gallop]")
     if verbose
-        display(@index_code_lowered @loop i C[] <min>= A[i] + B[i::gallop])
+        display(@index_code_lowered @loop i C[] <<min>>= A[i] + B[i::gallop])
         println()
     end
-    display((@benchmark (A = $A; B = $B; C = $C; @index @loop i C[] <min>= A[i] + B[i::gallop])))
+    display((@benchmark (A = $A; B = $B; C = $C; @index @loop i C[] <<min>>= A[i] + B[i::gallop])))
     println()
 
     println("C[] += A[i::gallop] * B[i::gallop]")
     if verbose
-        display(@index_code_lowered @loop i C[] <min>= A[i::gallop] + B[i::gallop])
+        display(@index_code_lowered @loop i C[] <<min>>= A[i::gallop] + B[i::gallop])
         println()
     end
-    display((@benchmark (A = $A; B = $B; C = $C; @index @loop i C[] <min>= A[i::gallop] + B[i::gallop])))
+    display((@benchmark (A = $A; B = $B; C = $C; @index @loop i C[] <<min>>= A[i::gallop] + B[i::gallop])))
     println()
 
     #println("Julia:")
