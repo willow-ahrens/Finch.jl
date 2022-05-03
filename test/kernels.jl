@@ -1,4 +1,5 @@
 @testset "kernels" begin
+    #=
     for (mtx, A_ref) in matrices
         A_ref = SparseMatrixCSC(A_ref)
         m, n = size(A_ref)
@@ -31,6 +32,7 @@
             @test FiberArray(B)[] ≈ sum(A_ref .* (A_ref * transpose(A_ref)))
         end
     end
+    =#
 
     for trial = 1:10
         n = 100
@@ -59,6 +61,7 @@
         b = Fiber(Element{0.0}())
 
         @index @loop i (C[i] = a[] - b[]; d[] += a[] * b[]) where (a[] = A[i]; b[] = B[i])
+        #println(@index_code_lowered @loop i (C[i] = a[] - b[]; d[] += a[] * b[]) where (a[] = A[i]; b[] = B[i]))
 
         @test FiberArray(C) == A_ref .- B_ref
         refidx = (A_ref .- B_ref).nzind
@@ -84,6 +87,7 @@
                 Element{0.0}()))
 
             ex = @index_program_instance @loop i ((@loop j B[i, j] = w[j]) where (@loop k j w[j] = A[i, k] * A[k, j]))
+            #println(typeof(ex))
             #display(execute_code_lowered(:ex, typeof(ex)))
             #println()
 

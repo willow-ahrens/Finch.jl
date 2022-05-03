@@ -41,7 +41,7 @@ end
 
 macro index(ex)
     results = Set()
-    prgm = IndexNotation.capture_index_instance(ex; namify=false, mode = Read(), results = results)
+    prgm = IndexNotation.capture_index_instance(ex)
     thunk = quote
         res = $execute($prgm)
     end
@@ -57,7 +57,7 @@ macro index(ex)
 end
 
 macro index_code_lowered(ex)
-    prgm = IndexNotation.capture_index_instance(ex; namify=false, mode = Read(), results=Set())
+    prgm = IndexNotation.capture_index_instance(ex)
     return quote
         $execute_code_lowered(:ex, typeof($prgm))
     end
