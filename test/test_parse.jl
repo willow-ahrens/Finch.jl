@@ -107,15 +107,4 @@ using Finch.IndexNotation: call_instance, assign_instance, access_instance, valu
                 call(==, Name(:i), Name(:j)),
                 call(<, Name(:k), Name(:l))))
 
-    #call(:f, call(*, access_instance(:B, Read(), Name(:i), Name(:k)), call(^, access_instance(:C, Read(), Name(:k), Name(:j)), 3)), 42)
-    #call(:f, call(*, access(:B, Read(), Name(:i), Name(:k)), call(^, access(:C, Read(), Name(:k), Name(:j)), 3)), 42)
-
-    #@test @i(
-    #    @loop i (
-    #        @loop j :A[i, j] += :w[j]
-    #    ) where (
-    #        @loop j k :w[j] += :B[i, k] * :C[k, j]
-    #    )
-    #) ==
-    #loop(Name(:i), with(loop(Name(:j), assign(access(:A, Update(), Name(:i), Name(:j)), +, access(:w, Read(), Name(:j)))), loop(Name(:j), Name(:k), assign(access(:w, Update(), Name(:j)), +, call(*, access(:B, Read(), Name(:i), Name(:k)), access(:C, Read(), Name(:k), Name(:j)))))))
 end
