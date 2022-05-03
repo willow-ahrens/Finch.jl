@@ -41,7 +41,7 @@ end
 
 macro index(ex)
     results = Set()
-    prgm = IndexNotation.capture_index_instance(ex)
+    prgm = IndexNotation.capture_index_instance(ex, results=results)
     thunk = quote
         res = $execute($prgm)
     end

@@ -191,8 +191,8 @@ function capture_index(ex, ctx)
     end
 end
 
-capture_index_program(ex) = capture_index(ex, (nodes=program_nodes, namify=true, mode = Read(), results = Set()))
-capture_index_instance(ex) = capture_index(ex, (nodes=instance_nodes, namify=true, mode = Read(), results = Set()))
+capture_index_program(ex; results=Set()) = capture_index(ex, (nodes=program_nodes, namify=true, mode = Read(), results = results))
+capture_index_instance(ex; results=Set()) = capture_index(ex, (nodes=instance_nodes, namify=true, mode = Read(), results = results))
 
 macro index_program(ex)
     return capture_index_program(ex)
