@@ -7,20 +7,21 @@ using SparseArrays
 using LinearAlgebra
 
 @slots a b c d e i j Finch.add_rules!([
-    (@rule @i(@chunk $i a (b[j...] <min>= d)) => if Finch.isliteral(d) && i ∉ j
-        @i (b[j...] <min>= d)
+    (@rule @i(@chunk $i a (b[j...] <min>= $d)) => if Finch.isliteral(d) && i ∉ j
+        @i (b[j...] <min>= $d)
     end),
-    (@rule @i(@chunk $i a @multi b... (c[j...] <min>= d) e...) => begin
+    (@rule @i(@chunk $i a @multi b... (c[j...] <min>= $d) e...) => begin
         if Finch.isliteral(d) && i ∉ j
-            @i @multi (c[j...] <min>= d) @chunk i a @i(@multi b... e...)
+            @i @multi (c[j...] <min>= $d) @chunk $i a @i(@multi b... e...)
         end
     end),
-    (@rule @i(@chunk $i a (b[j...] <max>= d)) => if Finch.isliteral(d) && i ∉ j
-        @i (b[j...] <max>= d)
+    (@rule @i(@chunk $i a (b[j...] <max>= $d)) => if Finch.isliteral(d) && i ∉ j
+        @i (b[j...] <max>= $d)
     end),
-    (@rule @i(@chunk $i a @multi b... (c[j...] <max>= d) e...) => begin
+    (@rule @i(@chunk $i a @multi b... (c[j...] <max>= $d) e...) => begin
         if Finch.isliteral(d) && i ∉ j
-            @i @multi (c[j...] <max>= d) @chunk i a @i(@multi b... e...)
+            println(@i @multi (c[j...] <max>= $d) @chunk $i a @i(@multi b... e...))
+            @i @multi (c[j...] <max>= $d) @chunk $i a @i(@multi b... e...)
         end
     end),
 ])
