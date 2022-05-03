@@ -145,7 +145,7 @@ jl_value_t *finch_calla(jl_function_t *f, int nargs, jl_value_t **args) {
 }
 
 jl_value_t* finch_get(jl_value_t* obj, const char *property){
-    char tokens[strlen(property)];
+    char tokens[strlen(property) + 1];
     strcpy(tokens, property);
     jl_value_t *res = 0;
     int first = 1;
