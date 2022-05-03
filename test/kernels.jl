@@ -84,6 +84,7 @@
                 Element{0.0}()))
 
             ex = @index_program_instance @loop i ((@loop j B[i, j] = w[j]) where (@loop k j w[j] = A[i, k] * A[k, j]))
+            #println(typeof(ex))
             #display(execute_code_lowered(:ex, typeof(ex)))
             #println()
 

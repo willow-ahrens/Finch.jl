@@ -70,7 +70,7 @@ function assemble!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
     end)
 end
 
-function reinitialize!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode)
+function reinitialize!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
     lvl = fbr.lvl
     p_start = start(envposition(fbr.env))
     p_stop = stop(envposition(fbr.env))

@@ -115,7 +115,7 @@ function initialize_level!(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::
     return lvl
 end
 
-interval_assembly_depth(lvl::VirtualHollowHashLevel) = Inf
+interval_assembly_depth(lvl::VirtualHollowCooLevel) = Inf
 
 #This function is quite simple, since HollowCooLevels don't support reassembly.
 function assemble!(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode)
