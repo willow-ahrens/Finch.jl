@@ -91,6 +91,14 @@ using Finch.IndexNotation: call_instance, assign_instance, access_instance, valu
                         name_instance(:i)),
                     name_instance(:i))))
 
+    @test @index_program(:A[i] += i < j < k) ==
+        assign(
+            access(:A, Update(), Name(:i)),
+            +,
+            call(&,
+                call(<, Name(:i), Name(:j)),
+                call(<, Name(:j), Name(:k))))
+
     #call(:f, call(*, access_instance(:B, Read(), Name(:i), Name(:k)), call(^, access_instance(:C, Read(), Name(:k), Name(:j)), 3)), 42)
     #call(:f, call(*, access(:B, Read(), Name(:i), Name(:k)), call(^, access(:C, Read(), Name(:k), Name(:j)), 3)), 42)
 
