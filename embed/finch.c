@@ -269,32 +269,31 @@ jl_value_t* finch_Vector_Int64(int64_t *ptr, int len){
 }
 
 jl_value_t* finch_Fiber(jl_value_t* lvl){
-    jl_value_t *res = finch_root(jl_call1(Fiber, lvl));
+    jl_value_t *res = finch_call(Fiber, 1, lvl);
     return res;
 }
 
 jl_value_t* finch_HollowList(jl_value_t *n, jl_value_t* lvl){
-    jl_value_t *res = finch_root(jl_call2(HollowList, n, lvl));
+    jl_value_t *res = finch_call(HollowList, 2, n, lvl);
     return res;
 }
 
 jl_value_t* finch_HollowListLevel(jl_value_t *n, jl_value_t *pos, jl_value_t *idx, jl_value_t* lvl){
-    jl_value_t* args[] = {n, pos, idx, lvl};
-    jl_value_t *res = finch_root(jl_call(HollowListLevel, args, 4));
+    jl_value_t *res = finch_call(HollowListLevel, 4, n, pos, idx, lvl);
     return res;
 }
 
 jl_value_t* finch_Solid(jl_value_t *n, jl_value_t* lvl){
-    jl_value_t *res = finch_root(jl_call2(Solid, n, lvl));
+    jl_value_t *res = finch_call(Solid, 2, n, lvl);
     return res;
 }
 
 jl_value_t* finch_Element(jl_value_t *fill){
-    jl_value_t *res = finch_root(jl_call1(Element, fill));
+    jl_value_t *res = finch_call(Element, 1, fill);
     return res;
 }
 
 jl_value_t* finch_ElementLevel(jl_value_t *fill, jl_value_t *val){
-    jl_value_t *res = finch_root(jl_call2(ElementLevel, fill, val));
+    jl_value_t *res = finch_call(ElementLevel, 2, fill, val);
     return res;
 }
