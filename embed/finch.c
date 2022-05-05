@@ -6,10 +6,12 @@
 
 //JULIA_DEFINE_FAST_TLS // only define this once, in an executable (not in a shared library) if you want fast code.
 
-jl_value_t* refs;
 jl_function_t* Finch;
-jl_function_t* setindex;
-jl_function_t* delete;
+jl_function_t* root_object;
+jl_function_t* free_object;
+jl_function_t* escape_object;
+jl_function_t* open_scope;
+jl_function_t* close_scope;
 jl_function_t* println;
 jl_function_t* displayln;
 jl_function_t* getproperty;
@@ -27,15 +29,63 @@ jl_function_t* ElementLevel;
 /* required: setup the Julia context */
 extern void finch_initialize(){
     jl_init();
-    refs = jl_eval_string("refs = IdDict()");
     Finch = jl_eval_string("\
         #using Pkg;\n\
         #Pkg.add(\"Finch\");\n\
         using Finch;\n\
-        Finch\
+        scopes = [Set()];\n\
+        refs = IdDict();\n\
+        Finch\n\
     ");
-    setindex = jl_get_function(jl_base_module, "setindex!");
-    delete = jl_get_function(jl_base_module, "delete!");
+    root_object = jl_eval_string("\
+        function root_object(rvar)\n\
+            if !haskey(refs, rvar)\n\
+                push!(last(scopes), rvar)\n\
+                refs[rvar] = length(scopes)\n\
+            end\n\
+            nothing\n\
+        end\n\
+    ");
+    if(jl_exception_occurred()){exit(1);}
+    free_object = jl_eval_string("\
+        function free_object(rvar)\n\
+            if haskey(refs, rvar)\n\
+                d = pop!(refs, rvar)\n\
+                pop!(scopes[d], rvar)\n\
+            end\n\
+            nothing\n\
+        end\n\
+    ");
+    if(jl_exception_occurred()){exit(1);}
+    escape_object = jl_eval_string("\
+        function escape_object(rvar)\n\
+            if length(scopes) > 1\n\
+                if rvar in last(scopes)\n\
+                    refs[rvar] -= 1\n\
+                    pop!(scopes[end], rvar)\n\
+                    push!(scopes[end - 1], rvar)\n\
+                end\n\
+            end\n\
+            nothing\n\
+        end\n\
+    ");
+    if(jl_exception_occurred()){exit(1);}
+    open_scope = jl_eval_string("\
+        function open_scope()\n\
+            push!(scopes, Set())\n\
+            nothing\n\
+        end\n\
+    ");
+    if(jl_exception_occurred()){exit(1);}
+    close_scope = jl_eval_string("\
+        function close_scope()\n\
+            for rvar in pop!(scopes)\n\
+                pop!(refs, rvar)\n\
+            end\n\
+            nothing\n\
+        end\n\
+    ");
+    if(jl_exception_occurred()){exit(1);}
     showerror = jl_get_function(jl_base_module, "showerror");
     catch_backtrace = jl_get_function(jl_base_module, "catch_backtrace");
     reft = (jl_datatype_t*)jl_eval_string("Base.RefValue{Any}");
@@ -57,13 +107,27 @@ jl_value_t* finch_root(jl_value_t* var){
     // Wrap `var` in `RefValue{Any}` and push to `refs` to protect it.
     jl_value_t* rvar = jl_new_struct(reft, var);
     JL_GC_POP();
-    jl_call3(setindex, refs, rvar, rvar);
+    jl_call1(root_object, rvar);
     return var;
 }
 
 void finch_free(jl_value_t* var){
     jl_value_t* rvar = jl_new_struct(reft, var);
-    jl_call2(delete, refs, rvar);
+    jl_call1(free_object, rvar);
+}
+
+jl_value_t* finch_escape(jl_value_t* var){
+    jl_value_t* rvar = jl_new_struct(reft, var);
+    jl_call1(escape_object, rvar);
+    return var;
+}
+
+void finch_scope_open(){
+    jl_call0(open_scope);
+}
+
+void finch_scope_close(){
+    jl_call0(close_scope);
 }
 
 void finch_print(jl_value_t* obj){
@@ -147,20 +211,16 @@ jl_value_t *finch_calla(jl_function_t *f, int nargs, jl_value_t **args) {
 jl_value_t* finch_get(jl_value_t* obj, const char *property){
     char tokens[strlen(property) + 1];
     strcpy(tokens, property);
-    jl_value_t *res = 0;
-    int first = 1;
     char *token = strtok(tokens, ".");
-    while (token != NULL){
-        if(strlen(token) != 0){
-            res = finch_call(getproperty, 2, obj, jl_symbol(token));
-            if (!first) {
-                finch_free(obj);
+    FINCH_SCOPE(
+        while (token != NULL){
+            if(strlen(token) != 0){
+                obj = finch_call(getproperty, 2, obj, finch_root((jl_value_t*)jl_symbol(token)));
             }
-            first = 0;
-            obj = res;
+            token = strtok(NULL, ".");
         }
-        token = strtok(NULL, ".");
-    }
+        finch_escape(obj);
+    )
     return obj;
 }
 
@@ -210,43 +270,31 @@ jl_value_t* finch_Vector_Int64(int64_t *ptr, int len){
 
 jl_value_t* finch_Fiber(jl_value_t* lvl){
     jl_value_t *res = finch_root(jl_call1(Fiber, lvl));
-    finch_free(lvl);
     return res;
 }
 
 jl_value_t* finch_HollowList(jl_value_t *n, jl_value_t* lvl){
     jl_value_t *res = finch_root(jl_call2(HollowList, n, lvl));
-    finch_free(n);
-    finch_free(lvl);
     return res;
 }
 
 jl_value_t* finch_HollowListLevel(jl_value_t *n, jl_value_t *pos, jl_value_t *idx, jl_value_t* lvl){
     jl_value_t* args[] = {n, pos, idx, lvl};
     jl_value_t *res = finch_root(jl_call(HollowListLevel, args, 4));
-    finch_free(n);
-    finch_free(pos);
-    finch_free(idx);
-    finch_free(lvl);
     return res;
 }
 
 jl_value_t* finch_Solid(jl_value_t *n, jl_value_t* lvl){
     jl_value_t *res = finch_root(jl_call2(Solid, n, lvl));
-    finch_free(n);
-    finch_free(lvl);
     return res;
 }
 
 jl_value_t* finch_Element(jl_value_t *fill){
     jl_value_t *res = finch_root(jl_call1(Element, fill));
-    finch_free(fill);
     return res;
 }
 
 jl_value_t* finch_ElementLevel(jl_value_t *fill, jl_value_t *val){
     jl_value_t *res = finch_root(jl_call2(ElementLevel, fill, val));
-    finch_free(fill);
-    finch_free(val);
     return res;
 }

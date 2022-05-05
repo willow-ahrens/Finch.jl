@@ -1,6 +1,18 @@
 #ifndef __FINCH_H
 #define __FINCH_H
 
+#define FINCH_SCOPE(ex) {\
+    finch_scope_open();\
+    ex\
+    finch_scope_close();\
+}\
+
+jl_value_t* finch_escape(jl_value_t* var);
+void finch_scope_open();
+void finch_scope_close();
+jl_value_t* finch_root(jl_value_t* var);
+void finch_free(jl_value_t* var);
+
 extern void finch_initialize();
 
 /*
@@ -31,9 +43,6 @@ jl_value_t* finch_consume_vector(jl_datatype_t* type, void* ptr, int len);
 
 jl_value_t* finch_mirror_vector(jl_datatype_t* type, void* ptr, int len);
 
-jl_value_t* finch_root(jl_value_t* var);
-
-void finch_free(jl_value_t* var);
 
 void finch_print(jl_value_t* obj);
 void finch_display(jl_value_t* obj);

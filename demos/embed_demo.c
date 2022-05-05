@@ -50,11 +50,5 @@ int main(int argc, char** argv){
     }
     printf("\n");
 
-    finch_free(y_val);
-
-    finch_free(y);
-    finch_free(A);
-    finch_free(x);
-
     finch_finalize();
 }
