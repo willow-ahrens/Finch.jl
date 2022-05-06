@@ -71,7 +71,6 @@ jl_value_t* finch_eval(const char* prg);
 Call the Julia function `f` on the arguments `args` and return the result. This
 is a macro that counts the number of arguments.
 */
-jl_value_t* finch_eval(const char* prg);
 #define finch_call(f, ...) finch_call_(f, (jl_value_t*[]){finch_call_begin, ##__VA_ARGS__, finch_call_end})
 int finch_call_begin_ = 0;
 int finch_call_end_ = 0;
