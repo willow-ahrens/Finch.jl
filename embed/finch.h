@@ -1,7 +1,8 @@
 #ifndef __FINCH_H
 #define __FINCH_H
 
-/*!
+/*! function FINCH_SCOPE end
+
     FINCH_SCOPE([stmt])
 
 Execute the statement `stmt` in a new finch scope. All finch objects allocated
@@ -17,7 +18,8 @@ or `break` to leave `stmt`.
 void finch_scope_open();
 void finch_scope_close();
 
-/*!
+/*! function finch_escape end
+
     jl_value_t* finch_escape(jl_value_t* var)
 
 Removes `var` from the current scope and registers it with the parent scope.
@@ -25,7 +27,8 @@ This means`var` will not be freed when the current scope is closed.
 */
 jl_value_t* finch_escape(jl_value_t* var);
 
-/*!
+/*! function finch_root end
+
     jl_value_t* finch_root(jl_value_t* var)
 
 Register the Julia-allocated object `var` with Finch on the current scope to
@@ -33,7 +36,8 @@ avoid garbage collecting it.
 */
 jl_value_t* finch_root(jl_value_t* var);
 
-/*!
+/*! function finch_free end
+
     void finch_free(jl_value_t* var)
 
 Unregister the Finch-tracked object `var` within the current scope to allow the
@@ -42,7 +46,8 @@ using FINCH_SCOPE to limit the lifetime of objects.
 */
 void finch_free(jl_value_t* var);
 
-/*!
+/*! function finch_initialize end
+
     void finch_initialize()
 
 Initialize Finch. Should be called only once before any other finch calls, from
@@ -50,22 +55,25 @@ the executable.
 */
 void finch_initialize();
 
-/*!
-    void finch_finalize();
+/*! function finch_finalize end
+
+    void finch_finalize()
 
 Finalize Finch. Should be called at the end of the program to allow Finch to
 cleanup.
 */
 void finch_finalize();
 
-/*!
+/*! function finch_eval end
+
     jl_value_t* finch_eval(const char* proc)
 
 Evaluate the Julia code represented by the string `proc` at global scope in the `Main` module.
 */
 jl_value_t* finch_eval(const char* proc);
 
-/*!
+/*! function finch_exec end
+
     jl_value_t* finch_exec(const char* proc, jl_value_t* args...)
 
 Evaluate the Julia code represented by the string `proc` at local scope in the
@@ -82,7 +90,8 @@ should evaluate to x + y
 #define finch_exec(proc, ...) finch_call(finch_exec_function(proc), ##__VA_ARGS__)
 jl_function_t* finch_exec_function(const char* proc);
 
-/*!
+/*! function finch_call end
+
     jl_value_t* finch_call(jl_value_t* f, jl_value_t* args...)
 
 Call the Julia function `f` on the arguments `args` and return the result. This
@@ -95,7 +104,8 @@ int finch_call_end_;
 #define finch_call_end ((jl_value_t*)&finch_call_end_)
 jl_value_t *finch_call_(jl_value_t *f, jl_value_t **args);
 
-/*!
+/*! function finch_consume_vector end
+
     jl_value_t* finch_consume_vector(jl_datatype_t* type, void* ptr, int len);
 
 Create a Julia array with elements of datatype `type` from the pointer `ptr`. The array
@@ -103,7 +113,8 @@ will be of length `len`, no copying will be performed, and Finch may call `free(
 */
 jl_value_t* finch_consume_vector(jl_datatype_t* type, void* ptr, int len);
 
-/*!
+/*! function finch_mirror_vector end
+
     jl_value_t* finch_mirror_vector(jl_datatype_t* type, void* ptr, int len);
 
 Create a Julia array with elements of datatype `type` from the pointer `ptr`. The array
@@ -111,39 +122,16 @@ will be of length `len`, no copying will be performed, and Finch may not call `f
 */
 jl_value_t* finch_mirror_vector(jl_datatype_t* type, void* ptr, int len);
 
-/*!
-    void finch_Int32(int32_t x);
+/*! function finch_T end
 
-Create a Julia Int32 object from `x`.
+    void finch_[T](S x);
+
+Create a Julia object of type T from corresponding C object `x` of type S.
 */
 jl_value_t* finch_Int32(int32_t x);
-
-/*!
-    void finch_Int64(int64_t x);
-
-Create a Julia Int64 object from `x`.
-*/
 jl_value_t* finch_Int64(int64_t x);
-
-/*!
-    void finch_Cint(int x);
-
-Create a Julia Cint object from `x`.
-*/
 jl_value_t* finch_Cint(int x);
-
-/*!
-    void finch_Float32(float x);
-
-Create a Julia Float32 object from `x`.
-*/
 jl_value_t* finch_Float32(float x);
-
-/*!
-    void finch_Float64(float x);
-
-Create a Julia Float64 object from `x`.
-*/
 jl_value_t* finch_Float64(double x);
 
 jl_value_t* finch_Vector_Float64(double *ptr, int len);

@@ -42,4 +42,26 @@ include("hollowbytelevels.jl")
 include("solidlevels.jl")
 include("elementlevels.jl")
 
+module h
+    using Finch
+    function generate_embed_docs()
+        finch_h = read(joinpath(dirname(pathof(Finch)), "../embed/finch.h"), String)
+        blocks = map(m -> m.captures[1], eachmatch(r"\/\*\!(((?!\*\/)(.|\n|\r))*)\*\/", finch_h))
+        map(blocks) do block
+            block = strip(block)
+            lines = collect(eachline(IOBuffer(block)))
+            key = Meta.parse(strip(lines[1]))
+            body = strip(join(lines[2:end], "\n"))
+            @eval begin
+                """
+                    $($body)
+                """
+                $key
+            end
+        end
+    end
+
+    generate_embed_docs()
+end
+
 end
