@@ -17,6 +17,7 @@ makedocs(;
         "Home" => "index.md",
         "Getting Started" => "getting_started.md",
         "The Deets" => "listing.md",
+        "Embedding" => "embed.md",
     ],
 )
 
