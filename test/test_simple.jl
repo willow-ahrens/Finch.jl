@@ -3,8 +3,25 @@ include("simplesparsevector.jl")
 include("simplejumpvector.jl")
 include("singlespike.jl")
 include("singleblock.jl")
+include("singleshift.jl")
 
 @testset "simplevectors" begin
+    println("dense = shift")
+    A = SingleShift{Float64, Int}(10, 1, collect(1.0:15.0))
+    B = zeros(10)
+    ex = @index_program_instance @loop i B[i] = A[i]
+
+    display(execute_code_lowered(:ex, typeof(ex)))
+    println()
+
+    @index @loop i B[i] = A[i]
+
+    println(A)
+    println(B)
+
+    @test B == collect(2.0:11.0)
+    println()
+
     println("sparse = jump + jump")
     A = SimpleJumpVector{0.0, Float64, Int}([1, 3, 5, 7, 9, 11], [2.0, 3.0, 4.0, 5.0, 6.0])
     B = SimpleJumpVector{0.0, Float64, Int}([2, 5, 8, 11], [1.0, 1.0, 1.0])

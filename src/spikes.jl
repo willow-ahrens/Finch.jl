@@ -16,7 +16,7 @@ combine_style(a::AcceptRunStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::SpikeStyle, b::SpikeStyle) = SpikeStyle()
 
 function (ctx::LowerJulia)(root::Chunk, ::SpikeStyle)
-    root_body = AccessSpikeBodyVisitor(ctx, root.idx, start(root.ext), spike_body_stop(stop(root.ext), ctx), stop(root.ext))(root.body)
+    root_body = SpikeBodyVisitor(ctx, root.idx, start(root.ext), spike_body_stop(stop(root.ext), ctx), stop(root.ext))(root.body)
     if extent(root.ext) == 1
         body_expr = quote end
     else
@@ -28,7 +28,7 @@ function (ctx::LowerJulia)(root::Chunk, ::SpikeStyle)
             ))
         end
     end
-    root_tail = AccessSpikeTailVisitor(ctx, root.idx, stop(root.ext))(root.body)
+    root_tail = SpikeTailVisitor(ctx, root.idx, stop(root.ext))(root.body)
     tail_expr = contain(ctx) do ctx_2
         (ctx_2)(Chunk(
             idx = root.idx,
@@ -39,7 +39,7 @@ function (ctx::LowerJulia)(root::Chunk, ::SpikeStyle)
     return Expr(:block, body_expr, tail_expr)
 end
 
-@kwdef struct AccessSpikeBodyVisitor <: AbstractTransformVisitor
+@kwdef struct SpikeBodyVisitor <: AbstractTransformVisitor
     ctx
     idx
     start
@@ -47,11 +47,15 @@ end
     stop
 end
 
-function (ctx::AccessSpikeBodyVisitor)(node::Access{Spike}, ::DefaultStyle)
+function (ctx::SpikeBodyVisitor)(node::Access, ::DefaultStyle)
+    return Access(truncate(node.tns, ctx.ctx, ctx.start, ctx.step, ctx.stop), node.mode, node.idxs)
+end
+
+function (ctx::SpikeBodyVisitor)(node::Access{Spike}, ::DefaultStyle)
     return Access(Run(node.tns.body), node.mode, node.idxs)
 end
 
-function (ctx::AccessSpikeBodyVisitor)(node::Access, ::DefaultStyle)
+function (ctx::SpikeBodyVisitor)(node::Access, ::DefaultStyle)
     return Access(truncate(node.tns, ctx.ctx, ctx.start, ctx.step, ctx.stop), node.mode, node.idxs)
 end
 
@@ -60,19 +64,22 @@ spike_body_stop(stop::Integer, ctx) = stop - 1
 
 spike_body_range(ext, ctx) = Extent(start(ext), spike_body_stop(stop(ext), ctx))
 
-@kwdef struct AccessSpikeTailVisitor <: AbstractTransformVisitor
+@kwdef struct SpikeTailVisitor <: AbstractTransformVisitor
     ctx
     idx
     val
 end
 
-function (ctx::AccessSpikeTailVisitor)(node::Access{Spike}, ::DefaultStyle)
+function (ctx::SpikeTailVisitor)(node::Access{Spike}, ::DefaultStyle)
     return node.tns.tail
 end
 
 function (ctx::ForLoopVisitor)(node::Access{Spike}, ::DefaultStyle)
     return node.tns.tail
 end
+
+supports_shift(::SpikeStyle) = true
+(ctx::SpikeBodyVisitor)(node::Shift, ::DefaultStyle) = SpikeBodyVisitor(ctx.ctx, ctx.idx, call(-, ctx.start, node.shift), call(-, ctx.step, node.shift), call(-, ctx.stop, node.shift))(node.body)
 
 @kwdef mutable struct AcceptSpike
     val
