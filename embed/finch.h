@@ -59,11 +59,28 @@ cleanup.
 void finch_finalize();
 
 /*!
-    jl_value_t* finch_eval(const char* prg)
+    jl_value_t* finch_eval(const char* proc)
 
-Evaluate the Julia string represented by `prg` at global scope in the `Main` module.
+Evaluate the Julia code represented by the string `proc` at global scope in the `Main` module.
 */
-jl_value_t* finch_eval(const char* prg);
+jl_value_t* finch_eval(const char* proc);
+
+/*!
+    jl_value_t* finch_exec(const char* proc, jl_value_t* args...)
+
+Evaluate the Julia code represented by the string `proc` at local scope in the
+`Main` module.  `proc` can optionally contain format specifiers to interpolate
+julia arguments.  Format specifiers should be either `%s` for a julia input or
+`%%` for a literal `%` character. For example,
+```
+    finch_exec("%s + %s", x, y)
+```
+should evaluate to x + y
+
+`finch_exec` caches inputs by their string to avoid repeated compilation.
+*/
+#define finch_exec(proc, ...) finch_call(finch_exec_function(proc), ##__VA_ARGS__)
+jl_function_t* finch_exec_function(const char* proc);
 
 /*!
     jl_value_t* finch_call(jl_value_t* f, jl_value_t* args...)
@@ -72,23 +89,11 @@ Call the Julia function `f` on the arguments `args` and return the result. This
 is a macro that counts the number of arguments.
 */
 #define finch_call(f, ...) finch_call_(f, (jl_value_t*[]){finch_call_begin, ##__VA_ARGS__, finch_call_end})
-int finch_call_begin_ = 0;
-int finch_call_end_ = 0;
+int finch_call_begin_;
+int finch_call_end_;
 #define finch_call_begin ((jl_value_t*)&finch_call_begin_)
 #define finch_call_end ((jl_value_t*)&finch_call_end_)
 jl_value_t *finch_call_(jl_value_t *f, jl_value_t **args);
-
-/*!
-    jl_value_t* finch_get(jl_value_t* obj, const char *property);
-
-Get the property of `obj` specified by the period-delimited path of property
-names given in `property`. For instance,
-```
-    printf("%d\n", finch_get(finch_eval("(x = (y = 42,), z = 12,)"), ".x.y"));
-```
-should print `42`.
-*/
-jl_value_t* finch_get(jl_value_t* obj, const char *property);
 
 /*!
     jl_value_t* finch_consume_vector(jl_datatype_t* type, void* ptr, int len);
@@ -106,21 +111,6 @@ will be of length `len`, no copying will be performed, and Finch may not call `f
 */
 jl_value_t* finch_mirror_vector(jl_datatype_t* type, void* ptr, int len);
 
-
-/*!
-    void finch_print(jl_value_t* obj);
-
-Call `println(obj)`.
-*/
-void finch_print(jl_value_t* obj);
-
-/*!
-    void finch_display(jl_value_t* obj);
-
-Call `display(obj)`.
-*/
-void finch_display(jl_value_t* obj);
-
 /*!
     void finch_Int32(int32_t x);
 
@@ -136,11 +126,11 @@ Create a Julia Int64 object from `x`.
 jl_value_t* finch_Int64(int64_t x);
 
 /*!
-    void finch_Int(int x);
+    void finch_Cint(int x);
 
-Create an integer Julia object of the same size as `x`.
+Create a Julia Cint object from `x`.
 */
-jl_value_t* finch_Int(int x);
+jl_value_t* finch_Cint(int x);
 
 /*!
     void finch_Float32(float x);

@@ -31,17 +31,17 @@ int main(int argc, char** argv){
         finch_HollowListLevel(finch_Int64(n), finch_Vector_Int64(A_pos, 5), finch_Vector_Int64(A_idx, 9),
         finch_ElementLevel(finch_Float64(0.0), finch_Vector_Float64(A_val, 9)))));
 
-    finch_print(A);
+    finch_exec("println(%s)", A);
 
     jl_value_t *x = finch_Fiber(
         finch_Solid(finch_Int64(n),
         finch_ElementLevel(finch_Float64(0.0), finch_Vector_Float64(x_val, n))));
 
-    finch_print(x);
+    finch_exec("println(%s)", x);
 
     finch_call(spmv, y, A, x);
 
-    jl_value_t *y_val = finch_get(y, ".lvl.lvl.val");
+    jl_value_t *y_val = finch_exec("%s.lvl.lvl.val", y);
 
     double *y_data = jl_array_data(y_val);
 

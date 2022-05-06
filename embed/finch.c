@@ -19,9 +19,7 @@ jl_function_t* free_object;
 jl_function_t* escape_object;
 jl_function_t* open_scope;
 jl_function_t* close_scope;
-jl_function_t* println;
-jl_function_t* displayln;
-jl_function_t* getproperty;
+jl_function_t* exec_function;
 jl_function_t* showerror;
 jl_function_t* catch_backtrace;
 jl_datatype_t* reft;
@@ -32,6 +30,9 @@ jl_function_t* HollowListLevel;
 jl_function_t* Solid;
 jl_function_t* Element;
 jl_function_t* ElementLevel;
+
+int finch_call_begin_ = 0;
+int finch_call_end_ = 0;
 
 /* required: setup the Julia context */
 extern void finch_initialize(){
@@ -49,6 +50,7 @@ extern void finch_initialize(){
         Pkg.activate(joinpath(dirname(\""__FILE__"\"), \"..\"), io=devnull)\n\
         Pkg.instantiate()\n\
         using Finch;\n\
+        using Printf;\n\
         Finch\n\
     ");
     FINCH_ASSERT(!jl_exception_occurred(), "Could not find Finch module");
@@ -107,18 +109,30 @@ extern void finch_initialize(){
     ");
     FINCH_ASSERT(!jl_exception_occurred(), "Could not eval close_scope");
 
+    exec_function = jl_eval_string("\
+        exec_functions = Dict{String, Any}()\n\
+        function exec_function(proc)\n\
+            return get(exec_functions, proc) do\n\
+                fmt = Printf.Format(proc)\n\
+                args = [gensym(Symbol(:arg, n)) for n in 1:length(fmt.formats)]\n\
+                proc = Printf.format(fmt, (\"var$(repr(string(arg)))\" for arg in args)...)\n\
+                body = Meta.parse(proc)\n\
+                eval(quote\n\
+                    function $(gensym(:exec))($(args...))\n\
+                        $body\n\
+                    end\n\
+                end)\n\
+            end\n\
+        end\n\
+    ");
+    FINCH_ASSERT(!jl_exception_occurred(), "Could not eval exec_function");
+
     showerror = (jl_function_t*)jl_eval_string("Base.showerror");
     FINCH_ASSERT(!jl_exception_occurred(), "Could not find showerror");
     catch_backtrace = (jl_function_t*)jl_eval_string("Base.catch_backtrace");
     FINCH_ASSERT(!jl_exception_occurred(), "Could not find catch_backtrace");
     reft = (jl_datatype_t*)jl_eval_string("Base.RefValue{Any}");
     FINCH_ASSERT(!jl_exception_occurred(), "Could not find RefValue{Any}");
-    println = (jl_function_t*)jl_eval_string("Base.println");
-    FINCH_ASSERT(!jl_exception_occurred(), "Could not find println");
-    displayln = (jl_function_t*)jl_eval_string("(obj) -> (display(obj); println())");
-    FINCH_ASSERT(!jl_exception_occurred(), "Could not eval displayln");
-    getproperty = (jl_function_t*)jl_eval_string("Base.getproperty");
-    FINCH_ASSERT(!jl_exception_occurred(), "Could not find getproperty");
 
     Fiber = (jl_function_t*)jl_eval_string("(lvl) -> Finch.Fiber(lvl)");
     FINCH_ASSERT(!jl_exception_occurred(), "Could not find Fiber");
@@ -171,15 +185,6 @@ void finch_scope_close(){
     FINCH_ASSERT(!jl_exception_occurred(), "Could not close scope");
 }
 
-void finch_print(jl_value_t* obj){
-    jl_call1(println, obj);
-    FINCH_ASSERT(!jl_exception_occurred(), "Could not print object");
-}
-void finch_display(jl_value_t* obj){
-    jl_call1(displayln, obj);
-    FINCH_ASSERT(!jl_exception_occurred(), "Could not display object");
-}
-
 jl_value_t* finch_eval(const char* prg){
     jl_value_t *res = NULL;
     JL_TRY {
@@ -205,6 +210,10 @@ jl_value_t* finch_eval(const char* prg){
         FINCH_ASSERT(0, "Could not evaluate program");
     }
     return finch_root(res);
+}
+
+jl_function_t* finch_exec_function(const char* proc){
+    return finch_call(exec_function, jl_cstr_to_string(proc));
 }
 
 jl_value_t *finch_call_(jl_function_t *f, jl_value_t **args) {
@@ -246,22 +255,6 @@ jl_value_t *finch_call_(jl_function_t *f, jl_value_t **args) {
     return finch_root(v);
 }
 
-jl_value_t* finch_get(jl_value_t* obj, const char *property){
-    char tokens[strlen(property) + 1];
-    strcpy(tokens, property);
-    char *token = strtok(tokens, ".");
-    FINCH_SCOPE(
-        while (token != NULL){
-            if(strlen(token) != 0){
-                obj = finch_call(getproperty, obj, finch_root((jl_value_t*)jl_symbol(token)));
-            }
-            token = strtok(NULL, ".");
-        }
-        finch_escape(obj);
-    )
-    return obj;
-}
-
 jl_value_t* finch_consume_vector(jl_datatype_t* type, void* ptr, int len){
     jl_value_t* arr_type = jl_apply_array_type((jl_value_t*)type, 1);
     FINCH_ASSERT(!jl_exception_occurred(), "Could not construct vector type");
@@ -288,8 +281,6 @@ void finch_finalize(){
     FINCH_ASSERT(!jl_exception_occurred(), "Could not finalize Julia");
 }
 
-
-
 jl_value_t* finch_Int64(int64_t x){
     return finch_root(jl_box_int64(x));
 }
@@ -298,7 +289,7 @@ jl_value_t* finch_Int32(int32_t x){
     return finch_root(jl_box_int32(x));
 }
 
-jl_value_t* finch_Int(int x){
+jl_value_t* finch_Cint(int x){
     if(sizeof(int) == sizeof(uint32_t)){
         return finch_Int32(x);
     } else if (sizeof(int) == sizeof(uint64_t)){
