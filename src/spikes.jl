@@ -16,7 +16,7 @@ combine_style(a::AcceptRunStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::SpikeStyle, b::SpikeStyle) = SpikeStyle()
 
 function (ctx::LowerJulia)(root::Chunk, ::SpikeStyle)
-    root_body = AccessSpikeBodyVisitor(ctx, root.idx, root.ext)(root.body)
+    root_body = AccessSpikeBodyVisitor(ctx, root.idx, start(root.ext), spike_body_stop(stop(root.ext), ctx), stop(root.ext))(root.body)
     if extent(root.ext) == 1
         body_expr = quote end
     else
@@ -39,11 +39,12 @@ function (ctx::LowerJulia)(root::Chunk, ::SpikeStyle)
     return Expr(:block, body_expr, tail_expr)
 end
 
-
 @kwdef struct AccessSpikeBodyVisitor <: AbstractTransformVisitor
     ctx
     idx
-    ext
+    start
+    step
+    stop
 end
 
 function (ctx::AccessSpikeBodyVisitor)(node::Access{Spike}, ::DefaultStyle)
@@ -51,7 +52,7 @@ function (ctx::AccessSpikeBodyVisitor)(node::Access{Spike}, ::DefaultStyle)
 end
 
 function (ctx::AccessSpikeBodyVisitor)(node::Access, ::DefaultStyle)
-    return Access(truncate(node.tns, ctx.ctx, start(ctx.ext), spike_body_stop(stop(ctx.ext), ctx.ctx), stop(ctx.ext)), node.mode, node.idxs)
+    return Access(truncate(node.tns, ctx.ctx, ctx.start, ctx.step, ctx.stop), node.mode, node.idxs)
 end
 
 spike_body_stop(stop, ctx) = :($(ctx(stop)) - 1)
