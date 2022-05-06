@@ -39,7 +39,7 @@ int main(int argc, char** argv){
 
     finch_print(x);
 
-    finch_call(spmv, 3, y, A, x);
+    finch_call(spmv, y, A, x);
 
     jl_value_t *y_val = finch_get(y, ".lvl.lvl.val");
 
