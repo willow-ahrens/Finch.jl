@@ -122,12 +122,41 @@ Call `display(obj)`.
 */
 void finch_display(jl_value_t* obj);
 
+/*!
+    void finch_Int32(int32_t x);
 
+Create a Julia Int32 object from `x`.
+*/
 jl_value_t* finch_Int32(int32_t x);
+
+/*!
+    void finch_Int64(int64_t x);
+
+Create a Julia Int64 object from `x`.
+*/
 jl_value_t* finch_Int64(int64_t x);
+
+/*!
+    void finch_Int(int x);
+
+Create an integer Julia object of the same size as `x`.
+*/
 jl_value_t* finch_Int(int x);
+
+/*!
+    void finch_Float32(float x);
+
+Create a Julia Float32 object from `x`.
+*/
 jl_value_t* finch_Float32(float x);
+
+/*!
+    void finch_Float64(float x);
+
+Create a Julia Float64 object from `x`.
+*/
 jl_value_t* finch_Float64(double x);
+
 jl_value_t* finch_Vector_Float64(double *ptr, int len);
 jl_value_t* finch_Vector_Int64(int64_t *ptr, int len);
 
