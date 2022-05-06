@@ -6,3 +6,4 @@
 demos/embed_demo
 embed/finch.o
 embed/libfinch.a
+demos/embed_demo.o
