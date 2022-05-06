@@ -264,16 +264,16 @@ jl_value_t* finch_get(jl_value_t* obj, const char *property){
 
 jl_value_t* finch_consume_vector(jl_datatype_t* type, void* ptr, int len){
     jl_value_t* arr_type = jl_apply_array_type((jl_value_t*)type, 1);
-    FINCH_ASSERT(1, "Could not construct vector type");
+    FINCH_ASSERT(!jl_exception_occurred(), "Could not construct vector type");
     jl_value_t* res = (jl_value_t*) jl_ptr_to_array_1d(arr_type, ptr, len, 1);
-    FINCH_ASSERT(1, "Could not consume vector");
+    FINCH_ASSERT(!jl_exception_occurred(), "Could not consume vector");
     return finch_root(res);
 }
 jl_value_t* finch_mirror_vector(jl_datatype_t* type, void* ptr, int len){
     jl_value_t* arr_type = jl_apply_array_type((jl_value_t*)type, 1);
-    FINCH_ASSERT(1, "Could not construct vector type");
+    FINCH_ASSERT(!jl_exception_occurred(), "Could not construct vector type");
     jl_value_t* res = (jl_value_t*) jl_ptr_to_array_1d(arr_type, ptr, len, 0);
-    FINCH_ASSERT(1, "Could not mirror vector");
+    FINCH_ASSERT(!jl_exception_occurred(), "Could not mirror vector");
     return finch_root(res);
 }
 
@@ -285,7 +285,7 @@ void finch_finalize(){
          and run all finalizers
     */
     jl_atexit_hook(0);
-    FINCH_ASSERT(1, "Could not finalize Julia");
+    FINCH_ASSERT(!jl_exception_occurred(), "Could not finalize Julia");
 }
 
 
@@ -298,6 +298,19 @@ jl_value_t* finch_Int32(int32_t x){
     return finch_root(jl_box_int32(x));
 }
 
+jl_value_t* finch_Int(int x){
+    if(sizeof(int) == sizeof(uint32_t)){
+        return finch_Int32(x);
+    } else if (sizeof(int) == sizeof(uint64_t)){
+        return finch_Int64(x);
+    } else {
+        FINCH_ASSERT(0, "C has a weird int size");
+    }
+}
+
+jl_value_t* finch_Float32(float x){
+    return finch_root(jl_box_float32(x));
+}
 jl_value_t* finch_Float64(double x){
     return finch_root(jl_box_float64(x));
 }

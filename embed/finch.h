@@ -15,23 +15,6 @@ void finch_free(jl_value_t* var);
 
 extern void finch_initialize();
 
-/*
-enum finch_object_type_t{
-    finch_kernel_type,
-    finch_jl_value_type
-}
-
-struct finch_object_t{
-    finch_object_type_t type;
-}
-
-struct finch_kernel_t{
-    finch_object_type_t type;
-    jl_function_t* func;
-    int nargs;
-}
-*/
-
 jl_value_t* finch_eval(const char* prg);
 
 int finch_call_begin_;
@@ -54,8 +37,10 @@ void finch_display(jl_value_t* obj);
 
 void finch_finalize();
 
-jl_value_t* finch_Int64(int64_t x);
 jl_value_t* finch_Int32(int32_t x);
+jl_value_t* finch_Int64(int64_t x);
+jl_value_t* finch_Int(int x);
+jl_value_t* finch_Float32(float x);
 jl_value_t* finch_Float64(double x);
 jl_value_t* finch_Vector_Float64(double *ptr, int len);
 jl_value_t* finch_Vector_Int64(int64_t *ptr, int len);
