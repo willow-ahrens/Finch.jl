@@ -19,3 +19,6 @@ demos/graphs
 .vscode/
 demos/Manifest*
 *.dSYM/
+.idea/
+demos/sssp
+demos/sssp.o

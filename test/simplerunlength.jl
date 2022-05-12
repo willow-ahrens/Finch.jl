@@ -1,3 +1,5 @@
+using Finch
+
 mutable struct SimpleRunLength{Tv, Ti} <: AbstractVector{Tv}
     idx::Vector{Ti}
     val::Vector{Tv}
