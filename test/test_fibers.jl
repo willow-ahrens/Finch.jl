@@ -75,6 +75,23 @@
 
     @index (@loop i C[i] += B[i]) where (@loop i B[i] += A[i])
 
+    println("C(s)[i] = w(h)[i] where w(h)[i] = A(s)[i]")
+    A = Finch.Fiber(
+        HollowList(10, [1, 6], [1, 3, 5, 7, 9],
+        Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
+    B = Finch.Fiber(
+        HollowHash{1}((0,),
+        Element{0.0}()))
+    C = Finch.Fiber(
+        HollowList(10, 
+        Element{0.0}()))
+
+    ex = @index_program_instance (@loop i C[i] += B[i]) where (@loop i B[i] += A[i])
+    display(execute_code_lowered(:ex, typeof(ex)))
+    println()
+
+    @index (@loop i C[i] += B[i]) where (@loop i B[i] += A[i])
+
     println(FiberArray(C))
     @test FiberArray(A) == FiberArray(C)
 
