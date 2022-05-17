@@ -39,39 +39,11 @@ function previsit!(node::Access, ctx::Dimensionalize)
     if !istree(node.tns)
         for (idx, dim, n) in zip(getname.(node.idxs), redimensionalize!(node, ctx), getsites(node.tns))
             site = (getname(node.tns), n)
-            if !haskey(ctx.dims, site)
-                push!(ctx.dims.labels, site)
-                ctx.dims.dims[site] = dim
-            end
-            site_axis = ctx.dims[site]
-            if !haskey(ctx.dims, idx)
-                push!(ctx.dims.labels, idx)
-                ctx.dims.dims[union!(ctx.dims.labels, site, idx)] = site_axis
-            elseif !in_same_set(ctx.dims.labels, idx, site)
-                idx_axis = ctx.dims[idx]
-                ctx.dims.dims[union!(ctx.dims.labels, site, idx)] =
-                    site_axis === nothing ? idx_axis :
-                    idx_axis === nothing ? site_axis :
-                    resultdim(ctx.ctx, idx_axis, site_axis)
-            end
+            mergewith!((a, b) -> resultdim(ctx.ctx, a, b), ctx.dims, DisjointDict((idx, site)=>dim))
         end
     end
     node
 end
-
-mutable struct Dimensions
-    labels
-    dims
-end
-
-Dimensions() = Dimensions(DisjointSets{Any}(), Dict())
-
-#there is a wacky julia bug that is fixed on 70cc57cb36. It causes find_root! to sometimes
-#return the right index into dims.labels.revmap, but reinterprets the access as the wrong type.
-#not sure which commit actually fixed this, but I need to move on with my life.
-Base.getindex(dims::Dimensions, idx) = dims.dims[find_root!(dims.labels, idx)]
-Base.setindex!(dims::Dimensions, ext, idx) = dims.dims[find_root!(dims.labels, idx)] = ext
-Base.haskey(dims::Dimensions, idx) = idx in dims.labels
 
 struct UnknownDimension end
 

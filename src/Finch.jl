@@ -4,7 +4,6 @@ using SyntaxInterface
 using RewriteTools
 using RewriteTools.Rewriters
 using MacroTools
-using DataStructures
 using Base.Iterators
 using Base: @kwdef
 
