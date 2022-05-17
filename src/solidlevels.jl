@@ -57,8 +57,7 @@ end
 
 function getdims(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode)
     ext = Extent(1, Virtual{Int}(fbr.lvl.I))
-    dim = mode isa Read ? ext : SuggestedExtent(ext)
-    (dim, getdims(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)...)
+    (ext, getdims(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)...)
 end
 
 @inline default(fbr::VirtualFiber{<:VirtualSolidLevel}) = default(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))

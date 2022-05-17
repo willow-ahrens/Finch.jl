@@ -18,7 +18,7 @@ function execute_code_lowered(ex, T)
                 #TODO we might want to keep the namespace around, and/or further stratify index
                 #names from tensor names
                 prgm = TransformSSA(Freshen())(prgm)
-                GatherDimensions(ctx, ctx.dims)(prgm)
+                Dimensionalize(ctx, ctx.dims, [])(prgm)
                 prgm = Initialize(ctx = ctx_2)(prgm)
                 prgm = ThunkVisitor(ctx_2)(prgm) #TODO this is a bit of a hack.
                 ctx_2(prgm)

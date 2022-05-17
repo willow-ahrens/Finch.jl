@@ -1,25 +1,43 @@
 """
-    GatherDimensions(ctx, dims)
+    Dimensionalize(ctx)
 
-A program traversal which gathers the dimensions of tensors based on shared
-indices. Index sharing is transitive, so `A[i] = B[i]` and `B[j] = C[j]` will
-induce a gathering of the dimensions of `A`, `B`, and `C` into one. The
-resulting dimensions are gathered into a `Dimensions` object, which can be
-accesed with an index name or a `(tensor_name, mode_name)` tuple.
+A program traversal which gathers dimensions of tensors based on shared indices.
+Index sharing is transitive, so `A[i] = B[i]` and `B[j] = C[j]` will induce a
+gathering of the dimensions of `A`, `B`, and `C` into one. The resulting
+dimensions are gathered into a `Dimensions` object, which can be accesed with an
+index name or a `(tensor_name, mode_name)` tuple.
 
 The program is assumed to be in SSA form.
 
 See also: [`getdims`](@ref), [`getsites`](@ref), [`combinedim`](@ref),
 [`TransformSSA`](@ref)
 """
-@kwdef struct GatherDimensions <: AbstractTransformVisitor
+@kwdef struct Dimensionalize <: AbstractTransformVisitor
     ctx
     dims
+    escape=[]
 end
 
-function previsit!(node::Access, ctx::GatherDimensions)
+function (ctx::Dimensionalize)(node::With, ::DefaultStyle) 
+    ctx_2 = Dimensionalize(ctx.ctx, ctx.dims, union(ctx.escape, map(getname, getresults(node.prod))))
+    With(ctx_2(node.cons), ctx(node.prod))
+end
+
+function redimensionalize!(node::Access{<:Any, Read}, ctx::Dimensionalize)
+    if getname(node.tns) !== nothing && getname(node.tns) in ctx.escape
+        return [MissingExtent() for ext in 1:length(getsites(node.tns))]
+    else
+        return getdims(node.tns, ctx.ctx, node.mode)
+    end
+end
+
+function redimensionalize!(node::Access{<:Any, <:Union{Write, Update}}, ctx::Dimensionalize)
+    return [SuggestedExtent(ext) for ext in getdims(node.tns, ctx.ctx, node.mode)]
+end
+
+function previsit!(node::Access, ctx::Dimensionalize)
     if !istree(node.tns)
-        for (idx, dim, n) in zip(getname.(node.idxs), getdims(node.tns, ctx.ctx, node.mode), getsites(node.tns))
+        for (idx, dim, n) in zip(getname.(node.idxs), redimensionalize!(node, ctx), getsites(node.tns))
             site = (getname(node.tns), n)
             if !haskey(ctx.dims, site)
                 push!(ctx.dims.labels, site)
