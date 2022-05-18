@@ -174,7 +174,7 @@ finalize_level!(fbr, ctx, mode) = nothing
 
 
 function make_style(root::Loop, ctx::Finch.LowerJulia, node::Access{<:VirtualFiber})
-    if getname(root.idx) == getname(node.idxs[1])
+    if !isempty(node.idxs) && getname(root.idx) == getname(node.idxs[1])
         return ChunkStyle()
     else
         return DefaultStyle()
