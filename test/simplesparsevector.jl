@@ -45,7 +45,7 @@ Finch.getsites(arr::VirtualSimpleSparseVector) = (1,)
 Finch.getname(arr::VirtualSimpleSparseVector) = arr.name
 Finch.setname(arr::VirtualSimpleSparseVector, name) = (arr_2 = deepcopy(arr); arr_2.name = name; arr_2)
 Finch.make_style(root::Loop, ctx::Finch.LowerJulia, node::Access{<:VirtualSimpleSparseVector}) =
-    getname(root.idxs[1]) == getname(node.idxs[1]) ? Finch.ChunkStyle() : Finch.DefaultStyle()
+    getname(root.idx) == getname(node.idxs[1]) ? Finch.ChunkStyle() : Finch.DefaultStyle()
 
 function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSimpleSparseVector{Tv, Ti}, Read}, ::Finch.DefaultStyle) where {Tv, Ti}
     vec = node.tns

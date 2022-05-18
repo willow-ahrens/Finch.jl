@@ -25,12 +25,10 @@ function virtualize(ex, ::Type{IndexNotation.MultiInstance{Bodies}}, ctx) where 
     end
     Multi(bodies)
 end
-function virtualize(ex, ::Type{IndexNotation.LoopInstance{Idxs, Body}}, ctx) where {Idxs, Body}
-    idxs = map(enumerate(Idxs.parameters)) do (n, Idx)
-        virtualize(:($ex.idxs[$n]), Idx, ctx)
-    end
+function virtualize(ex, ::Type{IndexNotation.LoopInstance{Idx, Body}}, ctx) where {Idx, Body}
+    idx = virtualize(:($ex.idx), Idx, ctx)
     body = virtualize(:($ex.body), Body, ctx)
-    Loop(idxs, body)
+    Loop(idx, body)
 end
 function virtualize(ex, ::Type{IndexNotation.AssignInstance{Lhs, Nothing, Rhs}}, ctx) where {Lhs, Rhs}
     Assign(virtualize(:($ex.lhs), Lhs, ctx), nothing, virtualize(:($ex.rhs), Rhs, ctx))

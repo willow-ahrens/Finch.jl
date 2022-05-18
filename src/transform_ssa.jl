@@ -65,9 +65,9 @@ end
 
 function (ctx::TransformSSA)(root::Loop)
     contain(ctx) do ctx_2
-        idxs = map(idx->definename!(idx, ctx_2), root.idxs)
+        idx = definename!(root.idx, ctx_2)
         body = ctx(root.body)
-        return loop(idxs, body)
+        return loop(idx, body)
     end
 end
 

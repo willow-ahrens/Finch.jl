@@ -105,7 +105,7 @@ function previsit!(node, ctx::QuantifiedVisitor)
     push!(diff, 0)
 end
 function previsit!(node::Loop, ctx::QuantifiedVisitor)
-    append!(ctx.qnt, node.idxs)
+    push!(ctx.qnt, node.idx)
     push!(diff, length(node.idxs))
     previsit!(node, ctx.ctx)
 end

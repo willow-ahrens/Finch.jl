@@ -10,14 +10,9 @@ struct ChunkifyVisitor <: AbstractTransformVisitor
 end
 
 function (ctx::LowerJulia)(root::Loop, ::ChunkStyle)
-    if length(root.idxs) > 1
-        body = Loop(root.idxs[2:end], root.body)
-    else
-        body = root.body
-    end
-    idx = root.idxs[1]
-    ext = ctx.dims[getname(root.idxs[1])]
-    body = (ChunkifyVisitor(ctx, idx))(body)
+    idx = root.idx
+    ext = ctx.dims[getname(idx)]
+    body = (ChunkifyVisitor(ctx, idx))(root.body)
     #TODO add a simplify step here perhaps
     ctx(Chunk(
         idx = idx,

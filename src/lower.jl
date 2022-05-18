@@ -307,15 +307,11 @@ end
 
 
 function (ctx::LowerJulia)(stmt::Loop, ::DefaultStyle)
-    if isempty(stmt.idxs)
-        ctx(stmt.body)
-    else
-        ctx(Chunk(
-            idx = stmt.idxs[1],
-            ext = ctx.dims[getname(stmt.idxs[1])],
-            body = Loop(stmt.body, stmt.idxs[2:end])
-        ))
-    end
+    ctx(Chunk(
+        idx = stmt.idx,
+        ext = ctx.dims[getname(stmt.idx)],
+        body = stmt.body)
+    )
 end
 function (ctx::LowerJulia)(stmt::Chunk, ::DefaultStyle)
     idx_sym = ctx.freshen(getname(stmt.idx))

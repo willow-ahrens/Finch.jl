@@ -34,13 +34,15 @@ Base.:(==)(a::MultiInstance, b::MultiInstance) = all(a.bodies .== b.bodies)
 
 multi_instance(bodies...) = MultiInstance(bodies)
 
-struct LoopInstance{Idxs<:Tuple, Body} <: IndexStatementInstance
-	idxs::Idxs
+struct LoopInstance{Idx, Body} <: IndexStatementInstance
+	idx::Idx
 	body::Body
 end
-Base.:(==)(a::LoopInstance, b::LoopInstance) = a.idxs == b.idxs && a.body == b.body
+Base.:(==)(a::LoopInstance, b::LoopInstance) = a.idx == b.idx && a.body == b.body
 
-@inline loop_instance(args...) = LoopInstance((args[1:end-1]...,), args[end])
+@inline loop_instance(idx, body) = LoopInstance(idx, body)
+@inline loop_instance(body) = body
+@inline loop_instance(idx, args...) = LoopInstance(idx, loop_instance(args...))
 
 struct AssignInstance{Lhs, Op, Rhs} <: IndexStatementInstance
 	lhs::Lhs

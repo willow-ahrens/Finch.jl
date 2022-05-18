@@ -36,7 +36,7 @@ Finch.getsites(arr::VirtualSingleSpike) = (1,)
 Finch.getname(arr::VirtualSingleSpike) = arr.name
 Finch.setname(arr::VirtualSingleSpike, name) = (arr_2 = deepcopy(arr); arr_2.name = name; arr_2)
 Finch.make_style(root::Loop, ctx::Finch.LowerJulia, node::Access{<:VirtualSingleSpike}) =
-    getname(root.idxs[1]) == getname(node.idxs[1]) ? Finch.ChunkStyle() : Finch.DefaultStyle()
+    getname(root.idx) == getname(node.idxs[1]) ? Finch.ChunkStyle() : Finch.DefaultStyle()
 
 function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSingleSpike{Tv}, Read}, ::Finch.DefaultStyle) where {Tv}
     vec = node.tns

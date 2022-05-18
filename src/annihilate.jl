@@ -22,7 +22,7 @@ end
 
     (@rule @i(a[i...] = $b) => if b == default(a) pass(a) end),
 
-    (@rule @i(@loop i... @pass(a...)) => pass(a...)),
+    (@rule @i(@loop $i @pass(a...)) => pass(a...)),
     (@rule @i(@chunk $i a @pass(b...)) => pass(b...)),
     (@rule @i(@pass(a...) where $b) => pass(a...)),
     (@rule @i($a where @pass()) => a),

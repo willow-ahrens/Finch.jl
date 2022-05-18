@@ -195,30 +195,28 @@ end
 Finch.getresults(stmt::Chunk) = Finch.getresults(stmt.body)
 
 struct Loop <: IndexStatement
-	idxs::Vector{Any}
+	idx::Any
 	body::Any
 end
-Base.:(==)(a::Loop, b::Loop) = a.idxs == b.idxs && a.body == b.body
+Base.:(==)(a::Loop, b::Loop) = a.idx == b.idx && a.body == b.body
 
-loop(args...) = loop!(vcat(args...))
-loop!(args) = Loop(args, pop!(args))
+loop(args...) = loop!(args)
+loop!(args) = foldr(Loop, args)
 
 SyntaxInterface.istree(::Loop) = true
 SyntaxInterface.operation(stmt::Loop) = loop
-SyntaxInterface.arguments(stmt::Loop) = Any[stmt.idxs; stmt.body]
+SyntaxInterface.arguments(stmt::Loop) = Any[stmt.idx; stmt.body]
 SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(loop), args) = loop!(args)
 
 function show_statement(io, mime, stmt::Loop, level)
     print(io, tab^level * "@∀ ")
-    if !isempty(stmt.idxs)
-        show_expression(io, mime, stmt.idxs[1])
-        for idx in stmt.idxs[2:end]
-            print(io," ")
-            show_expression(io, mime, idx)
-        end
+    while stmt isa Loop
+        show_expression(io, mime, stmt.idx)
+        print(io," ")
+        stmt = stmt.body
     end
     print(io," (\n")
-    show_statement(io, mime, stmt.body, level + 1)
+    show_statement(io, mime, stmt, level + 1)
     print(io, tab^level * ")\n")
 end
 
