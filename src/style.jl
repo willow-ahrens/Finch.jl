@@ -4,21 +4,21 @@ struct UnknownStyle end
 make_style(root, ctx) = make_style(root, ctx, root)
 function make_style(root, ctx, node)
     if istree(node)
-        return resolve_style(root, ctx, node, mapreduce(arg->make_style(root, ctx, arg), result_style, arguments(node); init=DefaultStyle()))
+        return mapreduce(arg->make_style(root, ctx, arg), (a, b) -> result_style(ctx, a, b), arguments(node); init=DefaultStyle())
     end
     return DefaultStyle()
 end
 
-result_style(a, b) = _result_style(a, b, combine_style(a, b), combine_style(b, a))
+result_style(ctx, a, b) = _result_style(a, b, combine_style(ctx, a, b), combine_style(ctx, b, a))
 _result_style(a, b, c::UnknownStyle, d::UnknownStyle) = throw(MethodError(combine_style, (a, b)))
 _result_style(a, b, c, d::UnknownStyle) = c
 _result_style(a, b, c::UnknownStyle, d) = d
 _result_style(a, b, c::T, d::T) where {T} = (c == d) ? c : @assert false "TODO lower_style_ambiguity_error"
 _result_style(a, b, c, d) = (c == d) ? c : @assert false "TODO lower_style_ambiguity_error"
+combine_style(ctx, a, b) = combine_style(a, b)
 combine_style(a, b) = UnknownStyle()
 
 combine_style(a::DefaultStyle, b) = b
-resolve_style(root, ctx, node, style) = style
 
 abstract type AbstractVisitor end
 
