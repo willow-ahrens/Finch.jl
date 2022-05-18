@@ -18,6 +18,27 @@ See also: [`getdims`](@ref), [`getsites`](@ref), [`combinedim`](@ref),
     escape=[]
 end
 
+#=
+function (ctx::Dimensionalize)(node::Loop, ::DefaultStyle) 
+    isempty(node.idxs) || error("Inference Error: no declared extent for $(node.idxs[1])")
+    return ctx(node.body)
+end
+
+function (ctx::Dimensionalize)(node::Loop, style::ExtentStyle) 
+    idx = node.idxs[1]
+    ext = resolve_extent(ctx.ctx, style.ext)
+    ctx.dims[idx] = ext
+    loop(idx, ctx(loop(node.idxs[2:end], node.body)))
+end
+
+combine_style(a::ExtentStyle, ::DefaultStyle) = a
+combine_style(ctx::Dimensionalize, a::ExtentStyle, b::ExtentStyle) = ExtentStyle(resultdim(ctx.ctx, a.ext, b.ext))
+function make_style(root::Loop, ctx::Dimensionalize, node::Access)
+    getdims(ctx, node.tns)[findall(isequal(idx), node.idxs)]
+end
+
+=#
+
 function (ctx::Dimensionalize)(node::With, ::DefaultStyle) 
     ctx_2 = Dimensionalize(ctx.ctx, ctx.dims, union(ctx.escape, map(getname, getresults(node.prod))))
     With(ctx_2(node.cons), ctx(node.prod))
