@@ -77,18 +77,16 @@ function virtualize(ex, ::Type{HollowHashLevel{N, Ti, Tp, T_q, Tbl, Lvl}}, ctx, 
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
     VirtualHollowHashLevel(sym, N, Ti, Tp, T_q, Tbl, I, P, pos_alloc, idx_alloc, lvl_2)
 end
-(ctx::Finch.LowerJulia)(lvl::VirtualHollowHashLevel) = lvl.ex
-
-function reconstruct!(lvl::VirtualHollowHashLevel, ctx)
-    push!(ctx.preamble, quote
-        $(lvl.ex) = $HollowHashLevel{$(lvl.N), $(lvl.Ti), $(lvl.Tp), $(lvl.T_q), $(lvl.Tbl)}(
+function (ctx::Finch.LowerJulia)(lvl::VirtualHollowHashLevel)
+    quote
+        $HollowHashLevel{$(lvl.N), $(lvl.Ti), $(lvl.Tp), $(lvl.T_q), $(lvl.Tbl)}(
             $(ctx(lvl.I)),
             $(lvl.ex).tbl,
             $(lvl.ex).srt,
             $(lvl.ex).pos,
             $(ctx(lvl.lvl)),
         )
-    end)
+    end
 end
 
 function getsites(fbr::VirtualFiber{VirtualHollowHashLevel})
@@ -116,11 +114,7 @@ function initialize_level!(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode:
         $(lvl.ex).pos[1] = 1
         $(lvl.P) = 0
     end)
-    if (lvl_2 = initialize_level!(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^lvl.N)(fbr.env)), ctx, mode)) !== nothing
-        lvl = shallowcopy(lvl)
-        lvl.lvl = lvl_2
-    end
-    reconstruct!(lvl, ctx)
+    lvl.lvl = initialize_level!(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^lvl.N)(fbr.env)), ctx, mode)
     return lvl
 end
 
@@ -150,14 +144,8 @@ function finalize_level!(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::U
             $(lvl.ex).pos[$my_p + 1] += $(lvl.ex).pos[$my_p]
         end
     end)
-    if (lvl_2 = finalize_level!(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^lvl.N)(fbr.env)), ctx, mode)) !== nothing
-        lvl = shallowcopy(lvl)
-        lvl.lvl = lvl_2
-        reconstruct!(lvl, ctx)
-        return lvl
-    else
-        return nothing
-    end
+    lvl.lvl = finalize_level!(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^lvl.N)(fbr.env)), ctx, mode)
+    return lvl
 end
 
 unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx::Name, idxs...) =

@@ -55,10 +55,10 @@ function initialize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode::Un
             $(lvl.val_alloc) = $Finch.refill!($(lvl.ex).val, $(lvl.D), 0, 4)
         end)
     end
-    nothing
+    lvl
 end
 
-finalize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode::Union{Write, Update}) = nothing
+finalize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode::Union{Write, Update}) = fbr.lvl
 
 interval_assembly_depth(lvl::VirtualElementLevel) = Inf
 

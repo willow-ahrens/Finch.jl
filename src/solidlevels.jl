@@ -43,12 +43,12 @@ end
 (ctx::Finch.LowerJulia)(lvl::VirtualSolidLevel) = lvl.ex
 
 function reconstruct!(lvl::VirtualSolidLevel, ctx)
-    push!(ctx.preamble, quote
-        $(lvl.ex) = $SolidLevel{$(lvl.Ti)}(
+    quote
+        $SolidLevel{$(lvl.Ti)}(
             $(ctx(lvl.I)),
             $(ctx(lvl.lvl)),
         )
-    end)
+    end
 end
 
 function getsites(fbr::VirtualFiber{VirtualSolidLevel})
@@ -69,11 +69,7 @@ function initialize_level!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode::Unio
     push!(ctx.preamble, quote
         $(lvl.I) = $(ctx(stop(ctx.dims[(getname(fbr), envdepth(fbr.env) + 1)])))
     end)
-    if (lvl_2 = initialize_level!(VirtualFiber(lvl.lvl, Environment(fbr.env, reinitialized=envreinitialized(fbr.env))), ctx, mode)) !== nothing
-        lvl = shallowcopy(lvl)
-        lvl.lvl = lvl_2
-    end
-    reconstruct!(lvl, ctx)
+    lvl.lvl = initialize_level!(VirtualFiber(lvl.lvl, Environment(fbr.env, reinitialized=envreinitialized(fbr.env))), ctx, mode)
     return lvl
 end
 
@@ -125,7 +121,10 @@ function assemble!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode)
     end
 end
 
-finalize_level!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode::Union{Write, Update}) = nothing
+function finalize_level!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode::Union{Write, Update})
+    fbr.lvl.lvl = finalize_level!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)
+    return fbr.lvl
+end
 
 hasdefaultcheck(lvl::VirtualSolidLevel) = hasdefaultcheck(lvl.lvl)
 
