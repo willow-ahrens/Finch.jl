@@ -71,17 +71,15 @@ function virtualize(ex, ::Type{HollowCooLevel{N, Ti, Tq, Tbl, Lvl}}, ctx, tag=:l
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
     VirtualHollowCooLevel(sym, N, Ti, Tq, Tbl, I, pos_alloc, idx_alloc, lvl_2)
 end
-(ctx::Finch.LowerJulia)(lvl::VirtualHollowCooLevel) = lvl.ex
-
-function reconstruct!(lvl::VirtualHollowCooLevel, ctx)
-    push!(ctx.preamble, quote
-        $(lvl.ex) = $HollowCooLevel{$(lvl.N), $(lvl.Ti), $(lvl.Tq), $(lvl.Tbl)}(
+function (ctx::Finch.LowerJulia)(lvl::VirtualHollowCooLevel)
+    quote
+        $HollowCooLevel{$(lvl.N), $(lvl.Ti), $(lvl.Tq), $(lvl.Tbl)}(
             $(ctx(lvl.I)),
             $(lvl.ex).tbl,
             $(lvl.ex).pos,
             $(ctx(lvl.lvl)),
         )
-    end)
+    end
 end
 
 function getsites(fbr::VirtualFiber{VirtualHollowCooLevel})
@@ -106,11 +104,7 @@ function initialize_level!(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::
         $(lvl.idx_alloc) = length($(lvl.ex).tbl[1])
     end)
 
-    if (lvl_2 = initialize_level!(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^lvl.N)(fbr.env)), ctx, mode)) !== nothing
-        lvl = shallowcopy(lvl)
-        lvl.lvl = lvl_2
-    end
-    reconstruct!(lvl, ctx)
+    lvl.lvl = initialize_level!(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^lvl.N)(fbr.env)), ctx, mode)
     return lvl
 end
 
@@ -129,14 +123,8 @@ function finalize_level!(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Un
     @assert isempty(envdeferred(fbr.env))
     lvl = fbr.lvl
 
-    if (lvl_2 = finalize_level!(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^lvl.N)(fbr.env)), ctx, mode)) !== nothing
-        lvl = shallowcopy(lvl)
-        lvl.lvl = lvl_2
-        reconstruct!(lvl, ctx)
-        return lvl
-    else
-        return nothing
-    end
+    lvl.lvl = finalize_level!(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^lvl.N)(fbr.env)), ctx, mode)
+    return lvl
 end
 
 unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Read, idx::Name, idxs...) =

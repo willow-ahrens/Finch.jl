@@ -123,13 +123,10 @@ function default end
     initialize!(fbr, ctx, mode)
 
 Initialize the virtual fiber to it's default value in the context `ctx` with
-access mode `mode`. Return `nothing` if the fiber instance is unchanged, or
-the new fiber object otherwise.
+access mode `mode`. Return the new fiber object.
 """
 function initialize!(fbr::VirtualFiber, ctx, mode, idxs...)
-    if (lvl = initialize_level!(fbr, ctx, mode)) !== nothing
-        fbr = VirtualFiber(lvl, fbr.env)
-    end
+    fbr = VirtualFiber(initialize_level!(fbr, ctx, mode), fbr.env)
     if mode isa Union{Write, Update}
         assemble!(fbr, ctx, mode)
     end
@@ -140,26 +137,22 @@ end
     initialize_level!(fbr, ctx, mode)
 
 Initialize the level within the virtual fiber to it's default value in the
-context `ctx` with access mode `mode`. Return `nothing` if the fiber instance is
-unchanged, or the new level otherwise.
+context `ctx` with access mode `mode`. Return the new level.
 """
 function initialize_level! end
 
-initialize_level!(fbr, ctx, mode) = nothing
+initialize_level!(fbr, ctx, mode) = fbr.lvl
 
 
 
 """
-    finalize!(fbr, ctx, mode)
+    finalize!(fbr, ctx, mode, idxs...)
 
 Finalize the virtual fiber in the context `ctx` with access mode `mode`. Return
-`nothing` if the fiber instance is unchanged, or the new fiber object otherwise.
+the new fiber object.
 """
-function finalize!(fbr::VirtualFiber, ctx, mode)
-    if (lvl = finalize_level!(fbr, ctx, mode)) !== nothing
-        fbr = VirtualFiber(lvl, fbr.env)
-    end
-    return fbr
+function finalize!(fbr::VirtualFiber, ctx, mode, idxs...)
+    VirtualFiber(finalize_level!(fbr, ctx, mode), fbr.env)
 end
 
 """
@@ -169,7 +162,7 @@ Finalize the level within the virtual fiber. These are the bulk cleanup steps.
 """
 function finalize_level! end
 
-finalize_level!(fbr, ctx, mode) = nothing
+finalize_level!(fbr, ctx, mode) = fbr.lvl
 
 
 

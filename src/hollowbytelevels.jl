@@ -65,11 +65,9 @@ function virtualize(ex, ::Type{HollowByteLevel{Ti, Tp, Tq, Lvl}}, ctx, tag=:lvl)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
     VirtualHollowByteLevel(sym, Ti, Tp, Tq, I, tbl_alloc, srt_alloc, srt_stop, pos_alloc, lvl_2)
 end
-(ctx::Finch.LowerJulia)(lvl::VirtualHollowByteLevel) = lvl.ex
-
-function reconstruct!(lvl::VirtualHollowByteLevel, ctx)
-    push!(ctx.preamble, quote
-        $(lvl.ex) = $HollowByteLevel{$(lvl.Ti), $(lvl.Tp), $(lvl.Tq)}(
+function (ctx::Finch.LowerJulia)(lvl::VirtualHollowByteLevel)
+    quote
+        $HollowByteLevel{$(lvl.Ti), $(lvl.Tp), $(lvl.Tq)}(
             $(ctx(lvl.I)),
             $(lvl.ex).P,
             $(lvl.ex).tbl,
@@ -78,7 +76,7 @@ function reconstruct!(lvl::VirtualHollowByteLevel, ctx)
             $(lvl.ex).pos,
             $(ctx(lvl.lvl)),
         )
-    end)
+    end
 end
 
 function getsites(fbr::VirtualFiber{VirtualHollowByteLevel})
@@ -131,11 +129,7 @@ function initialize_level!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode:
         end
         $(lvl.ex).srt_stop[] = $(lvl.srt_stop) = 0
     end)
-    if (lvl_2 = initialize_level!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env, reinitialized = reinitializeable(lvl.lvl))), ctx, mode)) !== nothing
-        lvl = shallowcopy(lvl)
-        lvl.lvl = lvl_2
-    end
-    reconstruct!(lvl, ctx)
+    lvl.lvl = initialize_level!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env, reinitialized = reinitializeable(lvl.lvl))), ctx, mode)
     return lvl
 end
 
@@ -196,14 +190,8 @@ function finalize_level!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::U
         $(lvl.ex).pos[$p_prev + 1] = $(lvl.srt_stop) + 1
         $(lvl.ex).srt_stop[] = $(lvl.srt_stop)
     end)
-    if (lvl_2 = finalize_level!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)) !== nothing
-        lvl = shallowcopy(lvl)
-        lvl.lvl = lvl_2
-        reconstruct!(lvl, ctx)
-        return lvl
-    else
-        return nothing
-    end
+    lvl.lvl = finalize_level!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)
+    return lvl
 end
 
 unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Read, idx::Name, idxs...) =
