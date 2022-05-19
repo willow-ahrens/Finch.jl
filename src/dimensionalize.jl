@@ -14,70 +14,74 @@ See also: [`getdims`](@ref), [`getsites`](@ref), [`combinedim`](@ref),
 """
 @kwdef struct Dimensionalize <: AbstractTransformVisitor
     ctx
-    dims
-    escape=[]
+    dims = Dict()
 end
 
-#=
+function dimensionalize!(prgm, ctx) 
+    ctx_2 = Dimensionalize(ctx=ctx)
+    Initialize(ctx = ctx_2)(prgm)
+    ctx_2(prgm)
+    Finalize(ctx = ctx_2)(prgm)
+end
+
+function (ctx::Dimensionalize)(node::With, ::ResultStyle) 
+    target = map(getname, getresults(root.prod))
+    Initialize(ctx, target)(node.prod)
+    ctx(node.prod)
+    Finalize(ctx, target)(node.prod)
+    Initialize(ctx, target)(node.cons)
+    ctx(node.cons)
+    Finalize(ctx, target)(node.cons)
+end
+
+initialize!(tns, ctx::Dimensionalize, mode, idxs...) = access(tns, mode, idxs...)
+finalize!(tns, ctx::Dimensionalize, mode, idxs...) = access(tns, mode, idxs...)
+
 function (ctx::Dimensionalize)(node::Loop, ::DefaultStyle) 
-    isempty(node.idxs) || error("Inference Error: no declared extent for $(node.idxs[1])")
-    return ctx(node.body)
+    dim = InferDimension(ctx=ctx, idx=node.idx)(node.body)
+    ctx.dims[idx] = resolve_dimension(ctx, dim)
+    ctx(node.body)
 end
 
-function (ctx::Dimensionalize)(node::Loop, style::ExtentStyle) 
-    idx = node.idxs[1]
-    ext = resolve_extent(ctx.ctx, style.ext)
-    ctx.dims[idx] = ext
-    loop(idx, ctx(loop(node.idxs[2:end], node.body)))
+@kwdef struct InferDimension{Ctx}
+    ctx::Ctx
+    idx
 end
+(ctx::InferDimension)(node, ext) = ctx(node)
+(ctx::InferDimension)(node) = MissingExtent()
+(ctx::InferDimension)(node::Name, ext) = ctx == getname(node) ? ext : MissingExtent()
 
-combine_style(a::ExtentStyle, ::DefaultStyle) = a
-combine_style(ctx::Dimensionalize, a::ExtentStyle, b::ExtentStyle) = ExtentStyle(resultdim(ctx.ctx, a.ext, b.ext))
-function make_style(root::Loop, ctx::Dimensionalize, node::Access)
-    getdims(ctx, node.tns)[findall(isequal(idx), node.idxs)]
-end
-
-=#
-
-function (ctx::Dimensionalize)(node::With, ::DefaultStyle) 
-    ctx_2 = Dimensionalize(ctx.ctx, ctx.dims, union(ctx.escape, map(getname, getresults(node.prod))))
-    With(ctx_2(node.cons), ctx(node.prod))
-end
-
-function redimensionalize!(node::Access{<:Any, Read}, ctx::Dimensionalize)
-    if getname(node.tns) !== nothing && getname(node.tns) in ctx.escape
-        return [MissingExtent() for ext in 1:length(getsites(node.tns))]
-    else
-        return getdims(node.tns, ctx.ctx, node.mode)
+function (ctx::InferDimension)(node)
+    if istree(node)
+        return mapreduce(ctx, result_dimension, arguments(node); init=MissingExtent())
     end
+    return MissingExtent()
 end
 
-function redimensionalize!(node::Access{<:Any, <:Union{Write, Update}}, ctx::Dimensionalize)
-    return [SuggestedExtent(ext) for ext in getdims(node.tns, ctx.ctx, node.mode)]
+function (ctx::InferDimension)(node::Access)
+    dim = mapreduce(ctx, result_dimension, node.idxs, getdims(node.tns); init=MissingExtent())
+    return result_dimension(ctx(tns), dim)
 end
 
-function previsit!(node::Access, ctx::Dimensionalize)
-    if !istree(node.tns)
-        for (idx, dim, n) in zip(getname.(node.idxs), redimensionalize!(node, ctx), getsites(node.tns))
-            site = (getname(node.tns), n)
-            mergewith!((a, b) -> resultdim(ctx.ctx, a, b), ctx.dims, DisjointDict((idx, site)=>dim))
-        end
-    end
-    node
+
+@kwdef struct EvalDimension{Ctx}
+    ctx::Ctx
 end
+(ctx::EvalDimension)(node) = MissingExtent()
+(ctx::EvalDimension)(node::Name) = ctx.dims[getname(node)]
 
 struct UnknownDimension end
 
-resultdim(ctx, a, b) = _resultdim(ctx, a, b, combinedim(ctx, a, b), combinedim(ctx, b, a))
-_resultdim(ctx, a, b, c::UnknownDimension, d::UnknownDimension) = throw(MethodError(combinedim, (ctx, a, b)))
-_resultdim(ctx, a, b, c, d::UnknownDimension) = c
-_resultdim(ctx, a, b, c::UnknownDimension, d) = d
-_resultdim(ctx, a, b, c, d) = c
+resultdim(a, b) = _resultdim(a, b, combinedim(a, b), combinedim(b, a))
+_resultdim(a, b, c::UnknownDimension, d::UnknownDimension) = throw(MethodError(combinedim, (ctx, a, b)))
+_resultdim(a, b, c, d::UnknownDimension) = c
+_resultdim(a, b, c::UnknownDimension, d) = d
+_resultdim(a, b, c, d) = c
 
 """
-    combinedim(ctx, a, b)
+    combinedim(a, b)
 
-Combine the two dimensions `a` and `b` in the context ctx. Usually, this
+Combine the two dimensions `a` and `b`. Usually, this
 involves checking that they are equivalent and returning one of them. To avoid
 ambiguity, only define one of
 
@@ -86,22 +90,22 @@ combinedim(::Ctx, ::A, ::B)
 combinedim(::Ctx, ::B, ::A)
 ```
 """
-combinedim(ctx, a, b) = UnknownDimension()
+combinedim(a, b) = UnknownDimension()
 
 struct UnknownLimit end
 
-resultlim(ctx, a, b) = _resultlim(ctx, combinelim(ctx, a, b), combinelim(ctx, b, a))
-_resultlim(ctx, a::UnknownLimit, b::UnknownLimit) = throw(MethodError(combinelim, ctx, a, b))
-_resultlim(ctx, a, b::UnknownLimit) = a
-_resultlim(ctx, a::UnknownLimit, b) = b
-#_resultlim(ctx, a::T, b::T) where {T} = (a == b) ? a : @assert false "TODO combinelim_ambiguity_error"
-#_resultlim(ctx, a, b) = (a == b) ? a : @assert false "TODO combinelim_ambiguity_error"
-_resultlim(ctx, a, b) = a
+resultlim(a, b) = _resultlim(combinelim(a, b), combinelim(b, a))
+_resultlim(a::UnknownLimit, b::UnknownLimit) = throw(MethodError(combinelim, ctx, a, b))
+_resultlim(a, b::UnknownLimit) = a
+_resultlim(a::UnknownLimit, b) = b
+#_resultlim(a::T, b::T) where {T} = (a == b) ? a : @assert false "TODO combinelim_ambiguity_error"
+#_resultlim(a, b) = (a == b) ? a : @assert false "TODO combinelim_ambiguity_error"
+_resultlim(a, b) = a
 
 """
-    combinelim(ctx, a, b)
+    combinelim(a, b)
 
-Combine the two dimension extent limits `a` and `b` in the context ctx. Usually, this
+Combine the two dimension extent limits `a` and `b`. Usually, this
 involves checking that they are equivalent and returning one of them. To avoid
 ambiguity, only define one of
 
@@ -110,7 +114,7 @@ combinelim(::Ctx, ::A, ::B)
 combinelim(::Ctx, ::B, ::A)
 ```
 """
-combinelim(ctx, a, b) = UnknownLimit()
+combinelim(a, b) = UnknownLimit()
 
 """
     getdims(tns, ctx, mode)
