@@ -82,7 +82,7 @@ end
 end
 (ctx::EvalDimension)(node) = MissingDimension()
 (ctx::EvalDimension)(node::Name) = ctx.dims[getname(node)]
-(ctx::InferDimension)(node::Union{Gallop, Walk, Follow, Laminate, Extrude}, ext) = ctx.dims[getname(node)] # TODO
+(ctx::EvalDimension)(node::Union{Gallop, Walk, Follow, Laminate, Extrude}, ext) = ctx.dims[getname(node)] # TODO
 
 finalize!(tns, ctx::Dimensionalize, mode::Union{Write, Update}, idxs...) = setdims!(tns, ctx.ctx, mode, map(EvalDimension(ctx = ctx.ctx, dims = ctx.dims), idxs)...)
 
