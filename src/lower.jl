@@ -43,12 +43,17 @@ function define!(ctx, var, val)
 end
 
 function cache!(ctx, var, val)
+    var = ctx.freshen(var)
+    body = contain(ctx) do ctx_2
+        ctx(val)
+    end
     if ctx(val) isa Symbol
         return val
     else
-        push!(ctx.preamble, quote
-            $var = $(ctx(val))
-        end)
+        push!(ctx.preamble, Expr(:cache, var,
+        quote
+            $var = $body
+        end))
         return Virtual{Any}(var)
     end
 end
@@ -105,9 +110,7 @@ function contain(f, ctx::LowerJulia)
         push!(thunk.args, body)
     else
         res = ctx_2.freshen(:res)
-        push!(thunk.args, :($res = $body))
-        append!(thunk.args, ctx_2.epilogue)
-        push!(thunk.args, res)
+        push!(thunk.args, Expr(:cleanup, res, body, Expr(:block, ctx_2.epilogue...)))
     end
     return thunk
 end

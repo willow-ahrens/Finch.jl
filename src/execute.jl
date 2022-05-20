@@ -36,7 +36,7 @@ function execute_code_lowered(ex, T)
             $code
         end
     end
-    code = MacroTools.prettify(strip_res(code), alias=false, lines=false)
+    code = MacroTools.prettify(lower_cleanup(lower_caches(code)), alias=false, lines=false)
 end
 
 macro index(ex)
