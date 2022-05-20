@@ -17,26 +17,78 @@ function regrow!(arr, p, q::T) where {T <: Integer}
     p_2
 end
 
-function strip_res(ex, ignore = false)
-    if ex isa Expr && ex.head == :block
-        if ignore && ex.args[end] isa Symbol && 
-                match(r"res(_(\d*)$)?", string(ex.args[end])) !== nothing
-            Expr(:block, map(ex.args[1:end-1]) do arg
-                if arg isa Expr && arg.head == :(=) && arg.args[1] == ex.args[end]
-                    strip_res(arg.args[2], true)
-                else
-                    strip_res(arg, true)
+function lower_caches(ex)
+    consumers = Dict()
+    function collect_consumers(ex, parent)
+        if ex isa Symbol
+            push!(get!(consumers, parent, Set()), ex)
+        elseif ex isa Expr
+            if ex.head == :cache
+                (var, body) = ex.args
+                push!(get!(consumers, var, Set()), parent)
+                collect_consumers(body, var)
+            else
+                args = map(ex.args) do arg
+                    collect_consumers(arg, parent)
                 end
-            end...)
-        else
-            Expr(:block, map(ex.args[1:end - 1]) do arg
-                strip_res(arg, true)
-            end..., strip_res(ex.args[end], ignore))
+            end
         end
+    end
+    collect_consumers(ex, nothing)
+    used = Set()
+    function mark_used(var)
+        if !(var in used)
+            push!(used, var)
+            for var_2 in get(consumers, var, [])
+                mark_used(var_2)
+            end
+        end
+    end
+    mark_used(nothing)
+    function prune_caches(ex)
+        if ex isa Expr
+            if ex.head == :cache
+                (var, body) = ex.args
+                if var in used 
+                    return prune_caches(body)
+                else
+                    quote end
+                end
+            else
+                Expr(ex.head, map(prune_caches, ex.args)...)
+            end
+        else
+            return ex
+        end
+    end
+    return prune_caches(ex)
+end
+
+function lower_cleanup(ex, ignore=false)
+    if ex isa Expr && ex.head == :cleanup
+        (sym::Symbol, result, cleanup) = ex.args
+        result = lower_cleanup(result, ignore)
+        cleanup = lower_cleanup(cleanup, true)
+        if ignore
+            return quote
+                $result
+                $cleanup
+            end
+        else
+            return quote
+                $sym = $result
+                $cleanup
+                $sym
+            end
+        end
+    elseif ex isa Expr && ex.head == :block
+        Expr(:block, map(ex.args[1:end - 1]) do arg
+            lower_cleanup(arg, true)
+        end..., lower_cleanup(ex.args[end], ignore))
     elseif ex isa Expr && ex.head in [:if, :elseif, :for, :while]
-        Expr(ex.head, strip_res(ex.args[1]), map(arg->strip_res(arg, ignore), ex.args[2:end])...)
+        Expr(ex.head, lower_cleanup(ex.args[1]), map(arg->lower_cleanup(arg, ignore), ex.args[2:end])...)
     elseif ex isa Expr
-        Expr(ex.head, map(strip_res, ex.args)...)
+        Expr(ex.head, map(lower_cleanup, ex.args)...)
     else
         ex
     end
