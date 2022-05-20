@@ -1,5 +1,5 @@
 """
-    Dimensionalize(ctx)
+    InferDimensions(ctx)
 
 A program traversal which gathers dimensions of tensors based on shared indices.
 Index sharing is transitive, so `A[i] = B[i]` and `B[j] = C[j]` will induce a
@@ -12,79 +12,52 @@ The program is assumed to be in SSA form.
 See also: [`getdims`](@ref), [`getsites`](@ref), [`combinedim`](@ref),
 [`TransformSSA`](@ref)
 """
-@kwdef struct Dimensionalize <: AbstractTransformVisitor
+@kwdef struct InferDimensions
     ctx
     dims = Dict()
+    escape = []
 end
 
 function dimensionalize!(prgm, ctx) 
-    ctx_2 = Dimensionalize(ctx=ctx)
-    prgm = Initialize(ctx = ctx_2)(prgm)
-    prgm = ctx_2(prgm)
-    prgm = Finalize(ctx = ctx_2)(prgm)
-    return (prgm, ctx_2.dims)
-end
-
-function (ctx::Dimensionalize)(node::With, ::DefaultStyle) 
-    target = map(getname, getresults(node.prod))
-    prod = Initialize(ctx=ctx, target=target)(node.prod)
-    prod = ctx(prod)
-    prod = Finalize(ctx=ctx, target=target)(prod)
-    cons = Initialize(ctx=ctx, target=target)(node.cons)
-    cons = ctx(cons)
-    cons = Finalize(ctx=ctx, target=target)(cons)
-    return with(cons, prod)
-end
-
-function (ctx::Dimensionalize)(node::Loop, ::DefaultStyle)
-    if get(ctx.dims, getname(node.idx), MissingDimension()) == MissingDimension()
-        error("could not dimensionalize")
+    dims = Dict()
+    while true
+        dims_2 = deepcopy(dims)
+        InferDimensions(ctx=ctx, dims = dims_2)(prgm)
+        if dims_2 == dims
+            return (prgm, dims_2)
+        end
     end
-    loop(node.idx, ctx(node.body))
+    dims = Dict(map(resolvedim(ctx, ext)))
 end
 
 resolvedim(ctx, ext) = ext
 
 struct MissingDimension end
 
+(ctx::InferDimensions)(node, ext) = (ctx(node); MissingDimension())
 
-(ctx::LowerJulia)(root::MissingDimension) = error()
-
-@kwdef struct InferDimension{Ctx}
-    ctx::Ctx
-    dims
+function (ctx::InferDimensions)(node::Name, ext)
+    ext_2 = get(ctx.dims, getname(node), MissingDimension())
+    ctx.dims[getname(node)] = resultdim(ctx.ctx, ext, ext_2)
 end
-(ctx::InferDimension)(node, ext) = ctx(node)
-(ctx::InferDimension)(node::Name, ext) = 
-    ctx.dims[getname(node)] = resultdim(ctx.ctx, get(ctx.dims, getname(node), MissingDimension()), ext)
 
-(ctx::InferDimension)(node::Union{Gallop, Walk, Follow, Laminate, Extrude}, ext) =
-    ctx.dims[getname(node)] = resultdim(ctx.ctx, get(ctx.dims, getname(node), MissingDimension()), ext) #TODO
+function (ctx::InferDimensions)(node::Union{Gallop, Walk, Follow, Laminate, Extrude}, ext)
+    ext_2 = get(ctx.dims, getname(node), MissingDimension())
+    ctx.dims[getname(node)] = resultdim(ctx.ctx, ext, ext_2)
+end
 
-function (ctx::InferDimension)(node)
+function (ctx::InferDimensions)(node::Access)
+    exts = map(ctx, node.idxs, getdims(node.tns, ctx, node.mode))
+    setdims!(node.tns, ctx, node.mode)
+    return MissingDimension()
+end
+
+function (ctx::InferDimensions)(node)
     if istree(node)
         foreach(ctx, arguments(node))
     end
+    MissingDimension()
 end
-
-function (ctx::InferDimension)(node::Access)
-    foreach(ctx, node.idxs, getdims(node.tns, ctx.ctx, node.mode))
-end
-
-function initialize!(tns, ctx::Dimensionalize, mode, idxs...)
-    foreach(InferDimension(ctx.ctx, ctx.dims), idxs, getdims(tns, ctx.ctx, mode))
-    access(tns, mode, idxs...)
-end
-
-@kwdef struct EvalDimension{Ctx}
-    ctx::Ctx
-    dims
-end
-(ctx::EvalDimension)(node) = MissingDimension()
-(ctx::EvalDimension)(node::Name) = ctx.dims[getname(node)]
-(ctx::EvalDimension)(node::Union{Gallop, Walk, Follow, Laminate, Extrude}, ext) = ctx.dims[getname(node)] # TODO
-
-finalize!(tns, ctx::Dimensionalize, mode::Union{Write, Update}, idxs...) = setdims!(tns, ctx.ctx, mode, map(EvalDimension(ctx = ctx.ctx, dims = ctx.dims), idxs)...)
 
 
 
@@ -162,13 +135,13 @@ combinedim(ctx::Finch.LowerJulia, a::SuggestedExtent, b::SuggestedExtent) = a #T
 
 function combinelim(ctx::Finch.LowerJulia, a::Union{Virtual, Number}, b::Virtual)
     push!(ctx.preamble, quote
-        $(ctx(a)) == $(ctx(b)) || throw(DimensionMismatch("mismatched dimension starts"))
+        $(ctx(a)) == $(ctx(b)) || throw(DimensionMismatch("mismatched dimension limits"))
     end)
     a #TODO could do some simplify stuff here
 end
 
 function combinelim(ctx::Finch.LowerJulia, a::Number, b::Number)
-    a == b || throw(DimensionMismatch("mismatched dimension starts ($a != $b)"))
+    a == b || throw(DimensionMismatch("mismatched dimension limits ($a != $b)"))
     a #TODO could do some simplify stuff here
 end
 

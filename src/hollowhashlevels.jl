@@ -90,15 +90,21 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualHollowHashLevel)
 end
 
 function getdims(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode)
-    fbr.lvl.I = get(ctx.dims, (getname(fbr), envdepth(fbr.env) + 1), fbr.lvl.I)
-    ext = map(n->Extent(1, Virtual{Int}(:($(fbr.lvl.I)[$n]))), 1:fbr.lvl.N)
-    ext = mode isa Read ? ext : map(SuggestedExtent, ext)
-    (ext..., getdims(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^fbr.lvl.N)(fbr.env)), ctx, mode)...)
+    exts = map(1:fbr.lvl.N) do n
+        ext = Extent(1, Virtual{Int}(:($(fbr.lvl.I)[$n])))
+        if mode isa Read && !(getname(fbr) in ctx.escape)
+            return ext
+        else
+            ext_2 = get(ctx.dims, (getname(fbr, ctx), envdepth(fbr.env) + n), MissingDimension())
+            return resultdim(ext, ext_2)
+        end
+    end
+    (exts..., getdims(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^fbr.lvl.N)(fbr.env)), ctx, mode)...)
 end
 
 function setdims!(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode, dims...)
-    push!(ctx.preamble, :($(fbr.lvl.I) = ($(map(dim->ctx(stop(dim)), dims[1:fbr.lvl.N])...),)))
-    ctx.dims[(getname(fbr), envdepth(fbr.env) + 1)] = fbr.lvl.I
+    key = (getname(fbr, ctx), envdepth(fbr.env) + n)
+    ctx.dims[key] = resolvedim(resultdim(ext, ctx.dims[key]))
     fbr.lvl.lvl = setdims!(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^fbr.lvl.N)(fbr.env)), ctx, mode, dims[fbr.lvl.N + 1:end]...).lvl
     fbr
 end
