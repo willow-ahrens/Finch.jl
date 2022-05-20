@@ -41,7 +41,7 @@ function Finch.getdims(arr::VirtualSimpleJumpVector{Tv, Ti}, ctx::Finch.LowerJul
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))
     (Extent(1, Virtual{Ti}(ex)),)
 end
-Finch.getsites(arr::VirtualSimpleJumpVector) = (1,)
+Finch.setdims!(arr::VirtualSimpleJumpVector{Tv, Ti}, ctx::Finch.LowerJulia, mode, dims...) where {Tv, Ti} = nothing
 Finch.getname(arr::VirtualSimpleJumpVector) = arr.name
 Finch.setname(arr::VirtualSimpleJumpVector, name) = (arr_2 = deepcopy(arr); arr_2.name = name; arr_2)
 Finch.make_style(root::Loop, ctx::Finch.LowerJulia, node::Access{<:VirtualSimpleJumpVector}) =

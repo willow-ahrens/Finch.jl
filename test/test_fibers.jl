@@ -30,15 +30,15 @@
 
     println("A(ds)")
 
-    A = Finch.FiberArray(Fiber(
+    A = Fiber(
         Solid(3, 
         HollowList(5, [1, 4, 6, 8], [1, 2, 5, 2, 4, 3, 5],
-        Element{0.0}([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0])))))
-    @test ndims(A) == 2
-    @test size(A) == (3, 5)
-    @test axes(A) == (1:3, 1:5)
-    @test eltype(A) == Float64
-    @test A == [
+        Element{0.0}([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]))))
+    @test ndims(FiberArray(A)) == 2
+    @test size(FiberArray(A)) == (3, 5)
+    @test axes(FiberArray(A)) == (1:3, 1:5)
+    @test eltype(FiberArray(A)) == Float64
+    @test FiberArray(A) == [
         1.0  1.0  0.0  0.0  1.0;
         0.0  1.0  0.0  1.0  0.0;
         0.0  0.0  1.0  0.0  1.0;

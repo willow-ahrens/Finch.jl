@@ -123,68 +123,6 @@ function unify!(ctx::LowerJulia, ctx_2)
     return ctx
 end
 
-start(val) = val
-stop(val) = val
-extent(val) = 1
-
-@kwdef mutable struct Extent
-    start
-    stop
-end
-
-start(ext::Extent) = ext.start
-stop(ext::Extent) = ext.stop
-extent(ext::Extent) = @i stop - start + 1
-
-combinedim(ctx, a::Extent, b::Extent) =
-    Extent(combinelim(ctx, a.start, b.start), combinelim(ctx, a.stop, b.stop))
-
-@kwdef mutable struct UnitExtent
-    val
-end
-
-start(ext::UnitExtent) = ext.val
-stop(ext::UnitExtent) = ext.val
-extent(ext::UnitExtent) = 1
-
-function combinedim(ctx, a::UnitExtent, b::Extent)
-    combinelim(ctx, a.val, b.stop)
-    UnitExtent(combinelim(ctx, a.val, b.start))
-end
-
-combinedim(ctx, a::UnitExtent, b::UnitExtent) =
-    UnitExtent(combinelim(ctx, a.val, b.val))
-
-struct MissingExtent end
-
-combinedim(ctx::Finch.LowerJulia, a::MissingExtent, b::Extent) = b
-
-struct SuggestedExtent
-    ext
-end
-
-#TODO maybe just call something like resolve_extent to unwrap?
-start(ext::SuggestedExtent) = start(ext.ext)
-stop(ext::SuggestedExtent) = stop(ext.ext)
-extent(ext::SuggestedExtent) = extent(ext.ext)
-
-combinedim(ctx::Finch.LowerJulia, a::SuggestedExtent, b::Extent) = b
-
-combinedim(ctx::Finch.LowerJulia, a::SuggestedExtent, b::MissingExtent) = a
-
-combinedim(ctx::Finch.LowerJulia, a::SuggestedExtent, b::SuggestedExtent) = a #TODO this is a weird case, because either suggestion could set the dimension for the other.
-
-function combinelim(ctx::Finch.LowerJulia, a::Union{Virtual, Number}, b::Virtual)
-    push!(ctx.preamble, quote
-        $(ctx(a)) == $(ctx(b)) || throw(DimensionMismatch("mismatched dimension starts"))
-    end)
-    a #TODO could do some simplify stuff here
-end
-
-function combinelim(ctx::Finch.LowerJulia, a::Number, b::Number)
-    a == b || throw(DimensionMismatch("mismatched dimension starts ($a != $b)"))
-    a #TODO could do some simplify stuff here
-end
 
 struct ThunkStyle end
 

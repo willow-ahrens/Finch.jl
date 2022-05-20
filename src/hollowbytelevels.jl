@@ -79,18 +79,19 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualHollowByteLevel)
     end
 end
 
-function getsites(fbr::VirtualFiber{VirtualHollowByteLevel})
-    return (envdepth(fbr.env) + 1, getsites(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))...)
-end
-
 function getdims(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode)
     ext = Extent(1, Virtual{Int}(:($(fbr.lvl.I))))
     (ext, getdims(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)...)
 end
 
+function setdims!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode, dim, dims...)
+    push!(ctx.preamble, :($(fbr.lvl.I) = $(ctx(stop(dim)))))
+    setdims!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode, dims...)
+end
+
 @inline default(fbr::VirtualFiber{VirtualHollowByteLevel}) = default(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
 
-function initialize_level!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Union{Write, Update})
+function initialize_level!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx::LowerJulia, mode::Union{Write, Update})
     @assert isempty(envdeferred(fbr.env))
     lvl = fbr.lvl
     r = ctx.freshen(lvl.ex, :_r)
@@ -170,7 +171,7 @@ function assemble!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode)
     end
 end
 
-function finalize_level!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Union{Write, Update})
+function finalize_level!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx::LowerJulia, mode::Union{Write, Update})
     @assert isempty(envdeferred(fbr.env))
     lvl = fbr.lvl
     r = ctx.freshen(lvl.ex, :_r)

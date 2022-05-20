@@ -18,7 +18,7 @@ function execute_code_lowered(ex, T)
                 #TODO we might want to keep the namespace around, and/or further stratify index
                 #names from tensor names
                 prgm = TransformSSA(Freshen())(prgm)
-                Dimensionalize(ctx, ctx.dims, [])(prgm)
+                Dimensionalize(ctx, ctx.dims)(prgm)
                 prgm = Initialize(ctx = ctx_2)(prgm)
                 prgm = ThunkVisitor(ctx_2)(prgm) #TODO this is a bit of a hack.
                 ctx_2(prgm)
@@ -103,7 +103,7 @@ See also: [`finalize!`](@ref)
     target=nothing
     escape=[]
 end
-finalize!(tns, ctx, mode) = tns
+finalize!(tns, ctx, mode, idxs...) = tns
 
 function (ctx::Finalize)(node::With, ::DefaultStyle) 
     ctx_2 = Finalize(ctx.ctx, ctx.target, union(ctx.escape, map(getname, getresults(node.prod))))
@@ -112,7 +112,7 @@ end
 
 function postvisit!(acc::Access{<:Any}, ctx::Finalize, args)
     if (ctx.target === nothing || (getname(acc.tns) in ctx.target) && !(getname(acc.tns) in ctx.escape))
-        Access(finalize!(acc.tns, ctx.ctx, acc.mode), acc.mode, acc.idxs)
+        Access(finalize!(acc.tns, ctx.ctx, acc.mode, acc.idxs...), acc.mode, acc.idxs)
     else
         acc
     end

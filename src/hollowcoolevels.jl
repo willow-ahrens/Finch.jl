@@ -82,23 +82,23 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualHollowCooLevel)
     end
 end
 
-function getsites(fbr::VirtualFiber{VirtualHollowCooLevel})
-    return (map(n-> envdepth(fbr.env) + n, 1:fbr.lvl.N)..., getsites(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^fbr.lvl.N)(fbr.env)))...)
-end
-
 function getdims(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode)
     ext = map(n->Extent(1, Virtual{Int}(:($(fbr.lvl.I)[$n]))), 1:fbr.lvl.N)
     (ext..., getdims(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^fbr.lvl.N)(fbr.env)), ctx, mode)...)
 end
 
+function setdims!(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode, dims...)
+    push!(ctx.preamble, :($(fbr.lvl.I) = ($(map(dim->ctx(stop(dim)), dims[1:fbr.lvl.N])...),)))
+    setdims!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode, dims[fbr.lvl.N + 1:end]...)
+end
+
 @inline default(fbr::VirtualFiber{VirtualHollowCooLevel}) = default(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^fbr.lvl.N)(fbr.env)))
 
-function initialize_level!(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Union{Write, Update})
+function initialize_level!(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx::LowerJulia, mode::Union{Write, Update})
     @assert isempty(envdeferred(fbr.env))
     lvl = fbr.lvl
     my_p = ctx.freshen(lvl.ex, :_p)
     push!(ctx.preamble, quote
-        $(lvl.I) = $(lvl.Ti)(($(map(n->ctx(stop(ctx.dims[(getname(fbr), envdepth(fbr.env) + n)])), 1:lvl.N)...),))
         $(lvl.pos_alloc) = length($(lvl.ex).pos) - 1
         $(lvl.ex).pos[1] = 1
         $(lvl.idx_alloc) = length($(lvl.ex).tbl[1])
@@ -119,7 +119,7 @@ function assemble!(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode)
     end)
 end
 
-function finalize_level!(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Union{Write, Update})
+function finalize_level!(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx::LowerJulia, mode::Union{Write, Update})
     @assert isempty(envdeferred(fbr.env))
     lvl = fbr.lvl
 

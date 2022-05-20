@@ -125,7 +125,7 @@ function default end
 Initialize the virtual fiber to it's default value in the context `ctx` with
 access mode `mode`. Return the new fiber object.
 """
-function initialize!(fbr::VirtualFiber, ctx, mode, idxs...)
+function initialize!(fbr::VirtualFiber, ctx::LowerJulia, mode, idxs...)
     fbr = VirtualFiber(initialize_level!(fbr, ctx, mode), fbr.env)
     if mode isa Union{Write, Update}
         assemble!(fbr, ctx, mode)
@@ -151,7 +151,7 @@ initialize_level!(fbr, ctx, mode) = fbr.lvl
 Finalize the virtual fiber in the context `ctx` with access mode `mode`. Return
 the new fiber object.
 """
-function finalize!(fbr::VirtualFiber, ctx, mode, idxs...)
+function finalize!(fbr::VirtualFiber, ctx::LowerJulia, mode, idxs...)
     VirtualFiber(finalize_level!(fbr, ctx, mode), fbr.env)
 end
 

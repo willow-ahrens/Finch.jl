@@ -43,6 +43,7 @@ function getsites(fbr::VirtualFiber{VirtualElementLevel})
     return ()
 end
 
+setdims!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode) = fbr
 getdims(::VirtualFiber{VirtualElementLevel}, ctx, mode) = ()
 
 @inline default(fbr::VirtualFiber{VirtualElementLevel}) = fbr.lvl.D

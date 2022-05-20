@@ -60,24 +60,24 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualHollowListLevel)
     end
 end
 
-function getsites(fbr::VirtualFiber{VirtualHollowListLevel})
-    return (envdepth(fbr.env) + 1, getsites(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))...)
-end
-
 function getdims(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
     ext = Extent(1, Virtual{Int}(fbr.lvl.I))
     (ext, getdims(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)...)
 end
 
+function setdims!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode, dim, dims...)
+    push!(ctx.preamble, :($(fbr.lvl.I) = $(ctx(stop(dim)))))
+    setdims!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode, dims...)
+end
+
 @inline default(fbr::VirtualFiber{<:VirtualHollowListLevel}) = default(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
 
-function initialize_level!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Union{Write, Update})
+function initialize_level!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx::LowerJulia, mode::Union{Write, Update})
     lvl = fbr.lvl
     push!(ctx.preamble, quote
         $(lvl.pos_alloc) = length($(lvl.ex).pos)
         $(lvl.ex).pos[1] = 1
         $(lvl.idx_alloc) = length($(lvl.ex).idx)
-        $(lvl.I) = $(ctx(stop(ctx.dims[(getname(fbr), envdepth(fbr.env) + 1)])))
     end)
     lvl.lvl = initialize_level!(VirtualFiber(fbr.lvl.lvl, Environment(fbr.env)), ctx, mode)
     return lvl
@@ -94,7 +94,7 @@ function assemble!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
     end)
 end
 
-function finalize_level!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Union{Write, Update})
+function finalize_level!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx::LowerJulia, mode::Union{Write, Update})
     fbr.lvl.lvl = finalize_level!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)
     return fbr.lvl
 end
