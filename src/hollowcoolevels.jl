@@ -83,15 +83,12 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualHollowCooLevel)
 end
 
 function getdims(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx::LowerJulia, mode)
-    fbr.lvl.I = get(ctx.dims, (getname(fbr), envdepth(fbr.env) + 1), fbr.lvl.I)
     ext = map(n->Extent(1, Virtual{Int}(:($(fbr.lvl.I)[$n]))), 1:fbr.lvl.N)
-    ext = mode isa Read ? ext : map(SuggestedExtent, ext)
     (ext..., getdims(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^fbr.lvl.N)(fbr.env)), ctx, mode)...)
 end
 
 function setdims!(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx::LowerJulia, mode, dims...)
     push!(ctx.preamble, :($(fbr.lvl.I) = ($(map(dim->ctx(stop(dim)), dims[1:fbr.lvl.N])...),)))
-    ctx.dims[(getname(fbr), envdepth(fbr.env) + 1)] = fbr.lvl.I
     fbr.lvl.lvl = setdims!(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^fbr.lvl.N)(fbr.env)), ctx, mode, dims[fbr.lvl.N + 1:end]...).lvl
     fbr
 end

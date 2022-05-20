@@ -16,18 +16,21 @@ See also: [`getdims`](@ref), [`getsites`](@ref), [`combinedim`](@ref),
     ctx
     dims = Dict()
     escape = []
+    check = false
 end
 
 function dimensionalize!(prgm, ctx) 
     dims = Dict()
     while true
-        dims_2 = deepcopy(dims)
+        dims_2 = dims
+        dims = Dict(k=>typeof(v) for (k, v) in dims)
         InferDimensions(ctx=ctx, dims = dims_2)(prgm)
-        if dims_2 == dims
+        if Dict(k=>typeof(v) for (k, v) in dims_2) == dims
             return (prgm, dims_2)
         end
+        dims = dims_2
     end
-    dims = Dict(map(resolvedim(ctx, ext)))
+    InferDimensions(ctx=ctx, dims = dims, check=true)(prgm)
 end
 
 resolvedim(ctx, ext) = ext
@@ -35,6 +38,11 @@ resolvedim(ctx, ext) = ext
 struct MissingDimension end
 
 (ctx::InferDimensions)(node, ext) = (ctx(node); MissingDimension())
+
+function (ctx::InferDimensions)(node::With)
+    ctx_2 = InferDimensions(ctx.ctx, ctx.dims, union(ctx.escape, map(getname, getresults(node.prod))), ctx.check)
+    With(ctx_2(node.cons), ctx_2(node.prod))
+end
 
 function (ctx::InferDimensions)(node::Name, ext)
     ext_2 = get(ctx.dims, getname(node), MissingDimension())
@@ -47,10 +55,25 @@ function (ctx::InferDimensions)(node::Union{Gallop, Walk, Follow, Laminate, Extr
 end
 
 function (ctx::InferDimensions)(node::Access)
-    exts = map(ctx, node.idxs, getdims(node.tns, ctx, node.mode))
-    setdims!(node.tns, ctx, node.mode)
+    exts = getdims(node.tns, ctx.ctx, node.mode)
+    if node.mode != Read() || getname(node.tns) in ctx.escape
+        exts = map(enumerate(exts), node.idxs) do (n, ext), idx
+            ext = suggest(ext)
+            if getname(node.tns) !== nothing
+                site = (getname(node.tns), n)
+                ext = resultdim(ctx.ctx, ext, get(ctx.dims, site, MissingDimension()))
+                ctx.dims[site] = ctx(idx, ext)
+            end
+        end
+        ctx.check && setdims!(node.tns, ctx.ctx, node.mode, exts...)
+    else
+        foreach(ctx, node.idxs, exts)
+    end
+    ctx(node.tns)
     return MissingDimension()
 end
+
+setdims!(tns, ctx, mode, dims...) = (map((ext_1, ext_2) -> resultdim(ctx, ext_1, ext_2), dims, getdims(tns, ctx, mode)), tns)
 
 function (ctx::InferDimensions)(node)
     if istree(node)
@@ -58,6 +81,14 @@ function (ctx::InferDimensions)(node)
     end
     MissingDimension()
 end
+
+#=
+struct CheckDimension{Dim}
+    dim::Dim
+end
+
+checkdim(ctx, a, b) = resultdim(ctx, CheckDimension(a), CheckDimension(b))
+=#
 
 
 
@@ -86,9 +117,9 @@ combinedim(ctx, a, b) = UnknownDimension()
 
 combinedim(ctx, a::MissingDimension, b) = b
 
-@kwdef mutable struct Extent
-    start
-    stop
+@kwdef mutable struct Extent{Start, Stop}
+    start::Start
+    stop::Stop
 end
 
 start(ext::Extent) = ext.start
@@ -98,8 +129,8 @@ extent(ext::Extent) = @i stop - start + 1
 combinedim(ctx, a::Extent, b::Extent) =
     Extent(resultlim(ctx, a.start, b.start), resultlim(ctx, a.stop, b.stop))
 
-@kwdef mutable struct UnitExtent
-    val
+@kwdef mutable struct UnitExtent{Val}
+    val::Val
 end
 
 start(ext::UnitExtent) = ext.val
@@ -116,9 +147,12 @@ combinedim(ctx, a::UnitExtent, b::UnitExtent) =
 
 combinedim(ctx, a::MissingDimension, b::Extent) = b
 
-struct SuggestedExtent
-    ext
+struct SuggestedExtent{Ext}
+    ext::Ext
 end
+suggest(ext) = SuggestedExtent(ext)
+suggest(ext::SuggestedExtent) = ext
+suggest(ext::MissingDimension) = MissingDimension()
 
 #TODO maybe just call something like resolve_extent to unwrap?
 start(ext::SuggestedExtent) = start(ext.ext)

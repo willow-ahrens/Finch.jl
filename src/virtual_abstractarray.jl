@@ -11,7 +11,6 @@ function getdims(arr::VirtualAbstractArray, ctx::LowerJulia, mode) where {T <: A
     end)
     return map(i->Extent(1, Virtual{Int}(dims[i])), 1:arr.ndims)
 end
-setdims!(fbr::VirtualAbstractArray, ctx, mode, dims...) = fbr
 
 getname(arr::VirtualAbstractArray) = arr.name
 setname(arr::VirtualAbstractArray, name) = (arr_2 = deepcopy(arr); arr_2.name = name; arr_2)
