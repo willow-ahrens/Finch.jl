@@ -12,16 +12,19 @@ function execute_code_lowered(ex, T)
     prgm = nothing
     code = contain(LowerJulia()) do ctx
         quote
-            $(contain(ctx) do ctx_2
+            $(begin
                 prgm = virtualize(ex, T, ctx)
                 #The following call separates tensor and index names from environment symbols.
                 #TODO we might want to keep the namespace around, and/or further stratify index
                 #names from tensor names
-                prgm = TransformSSA(Freshen())(prgm)
-                Dimensionalize(ctx, ctx.dims)(prgm)
-                prgm = Initialize(ctx = ctx_2)(prgm)
-                prgm = ThunkVisitor(ctx_2)(prgm) #TODO this is a bit of a hack.
-                ctx_2(prgm)
+                contain(ctx) do ctx_2
+                    prgm = TransformSSA(Freshen())(prgm)
+                    (prgm, dims) = dimensionalize!(prgm, ctx_2)
+                    merge!(ctx.dims, dims)
+                    prgm = Initialize(ctx = ctx_2)(prgm)
+                    prgm = ThunkVisitor(ctx_2)(prgm) #TODO this is a bit of a hack.
+                    ctx_2(prgm)
+                end
             end)
             $(contain(ctx) do ctx_2
                 prgm = Finalize(ctx = ctx_2)(prgm)
@@ -83,7 +86,7 @@ function (ctx::Initialize)(node::With, ::DefaultStyle)
 end
 
 function postvisit!(acc::Access{<:Any}, ctx::Initialize, args)
-    if (ctx.target === nothing || (getname(acc.tns) in ctx.target) && !(getname(acc.tns) in ctx.escape))
+    if (ctx.target === nothing || (getname(acc.tns) in ctx.target)) && !(getname(acc.tns) in ctx.escape)
         initialize!(acc.tns, ctx.ctx, acc.mode, acc.idxs...)
     else
         acc
@@ -111,7 +114,7 @@ function (ctx::Finalize)(node::With, ::DefaultStyle)
 end
 
 function postvisit!(acc::Access{<:Any}, ctx::Finalize, args)
-    if (ctx.target === nothing || (getname(acc.tns) in ctx.target) && !(getname(acc.tns) in ctx.escape))
+    if (ctx.target === nothing || (getname(acc.tns) in ctx.target)) && !(getname(acc.tns) in ctx.escape)
         Access(finalize!(acc.tns, ctx.ctx, acc.mode, acc.idxs...), acc.mode, acc.idxs)
     else
         acc

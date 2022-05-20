@@ -29,7 +29,7 @@ end
     preamble::Vector{Any} = []
     bindings::Dict{Any, Any} = Dict()
     epilogue::Vector{Any} = []
-    dims::DisjointDict = DisjointDict()
+    dims::Dict = Dict()
     freshen::Freshen = Freshen()
     state::Dict{Any, Any} = Dict()
     defs::Set{Any} = Set()

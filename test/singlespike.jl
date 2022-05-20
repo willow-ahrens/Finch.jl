@@ -32,7 +32,7 @@ function Finch.getdims(arr::VirtualSingleSpike{Tv}, ctx::Finch.LowerJulia, mode)
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))
     (Extent(1, Virtual{Int}(ex)),)
 end
-Finch.setdims!(arr::VirtualSingleSpike, ctx::Finch.LowerJulia, mode, dims...) = nothing
+Finch.setdims!(arr::VirtualSingleSpike, ctx::Finch.LowerJulia, mode, dims...) = arr
 Finch.getname(arr::VirtualSingleSpike) = arr.name
 Finch.setname(arr::VirtualSingleSpike, name) = (arr_2 = deepcopy(arr); arr_2.name = name; arr_2)
 Finch.make_style(root::Loop, ctx::Finch.LowerJulia, node::Access{<:VirtualSingleSpike}) =

@@ -41,7 +41,7 @@ function Finch.getdims(arr::VirtualSimpleSparseVector{Tv, Ti}, ctx::Finch.LowerJ
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))
     (Extent(1, Virtual{Ti}(ex)),)
 end
-Finch.setdims!(arr::VirtualSimpleSparseVector{Tv, Ti}, ctx::Finch.LowerJulia, mode, dims...) where {Tv, Ti} = nothing
+Finch.setdims!(arr::VirtualSimpleSparseVector{Tv, Ti}, ctx::Finch.LowerJulia, mode, dims...) where {Tv, Ti} = arr
 Finch.getname(arr::VirtualSimpleSparseVector) = arr.name
 Finch.setname(arr::VirtualSimpleSparseVector, name) = (arr_2 = deepcopy(arr); arr_2.name = name; arr_2)
 Finch.make_style(root::Loop, ctx::Finch.LowerJulia, node::Access{<:VirtualSimpleSparseVector}) =

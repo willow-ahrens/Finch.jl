@@ -1,4 +1,25 @@
 @testset "fibers" begin
+
+    println("C(s)[i] = w(h)[i] where w(h)[i] = A(s)[i]")
+    A = Finch.Fiber(
+        HollowList(10, [1, 6], [1, 3, 5, 7, 9],
+        Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
+    B = Finch.Fiber(
+        HollowHash{1}((0,),
+        Element{0.0}()))
+    C = Finch.Fiber(
+        HollowList(10, 
+        Element{0.0}()))
+
+    ex = @index_program_instance (@loop i C[i] += B[i]) where (@loop i B[i] += A[i])
+    display(execute_code_lowered(:ex, typeof(ex)))
+    println()
+
+    @index (@loop i C[i] += B[i]) where (@loop i B[i] += A[i])
+
+    println(FiberArray(C))
+    @test FiberArray(A) == FiberArray(C)
+
     println("B(h)[i] = A(s)[i]")
     A = Finch.Fiber(
         HollowList(10, [1, 6], [1, 3, 5, 7, 9],
@@ -75,25 +96,7 @@
 
     @index (@loop i C[i] += B[i]) where (@loop i B[i] += A[i])
 
-    println("C(s)[i] = w(h)[i] where w(h)[i] = A(s)[i]")
-    A = Finch.Fiber(
-        HollowList(10, [1, 6], [1, 3, 5, 7, 9],
-        Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
-    B = Finch.Fiber(
-        HollowHash{1}((0,),
-        Element{0.0}()))
-    C = Finch.Fiber(
-        HollowList(10, 
-        Element{0.0}()))
 
-    ex = @index_program_instance (@loop i C[i] += B[i]) where (@loop i B[i] += A[i])
-    display(execute_code_lowered(:ex, typeof(ex)))
-    println()
-
-    @index (@loop i C[i] += B[i]) where (@loop i B[i] += A[i])
-
-    println(FiberArray(C))
-    @test FiberArray(A) == FiberArray(C)
 
     println("B(c)[i] = A(s)[i]")
     A = Finch.Fiber(
@@ -130,10 +133,10 @@
 
     println("B(cc)[i, j] = A(ds)[i, j]")
 
-    A = Finch.FiberArray(Fiber(
+    A = Fiber(
         Solid(3, 
         HollowList(5, [1, 4, 6, 8], [1, 2, 5, 2, 4, 3, 5],
-        Element{0.0}([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0])))))
+        Element{0.0}([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]))))
 
     B = Finch.Fiber(
         HollowCoo{2}((3,5),

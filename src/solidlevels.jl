@@ -52,13 +52,17 @@ function reconstruct!(lvl::VirtualSolidLevel, ctx)
 end
 
 function getdims(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode)
+    fbr.lvl.I = get(ctx.dims, (getname(fbr), envdepth(fbr.env) + 1), fbr.lvl.I)
     ext = Extent(1, Virtual{Int}(fbr.lvl.I))
+    ext = mode isa Read ? ext : SuggestedExtent(ext)
     (ext, getdims(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)...)
 end
 
-function setdims!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode, dim, dims...)
+function setdims!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode, dim, dims...)
     push!(ctx.preamble, :($(fbr.lvl.I) = $(ctx(stop(dim)))))
-    setdims!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode, dims...)
+    ctx.dims[(getname(fbr), envdepth(fbr.env) + 1)] = fbr.lvl.I
+    fbr.lvl.lvl = setdims!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode, dims...).lvl
+    fbr
 end
 
 @inline default(fbr::VirtualFiber{<:VirtualSolidLevel}) = default(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))

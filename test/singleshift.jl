@@ -32,7 +32,7 @@ function Finch.getdims(arr::VirtualSingleShift{Tv, Ti}, ctx::Finch.LowerJulia, m
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))
     (Extent(1, Virtual{Ti}(ex)),)
 end
-Finch.setdims!(arr::VirtualSingleShift, ctx::Finch.LowerJulia, mode, dims...) = nothing
+Finch.setdims!(arr::VirtualSingleShift, ctx::Finch.LowerJulia, mode, dims...) = arr
 Finch.getname(arr::VirtualSingleShift) = arr.name
 Finch.setname(arr::VirtualSingleShift, name) = (arr_2 = deepcopy(arr); arr_2.name = name; arr_2)
 Finch.make_style(root::Loop, ctx::Finch.LowerJulia, node::Access{<:VirtualSingleShift}) =
