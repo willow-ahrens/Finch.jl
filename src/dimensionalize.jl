@@ -22,15 +22,14 @@ end
 function dimensionalize!(prgm, ctx) 
     dims = Dict()
     while true
-        dims_2 = dims
-        dims = Dict(k=>typeof(v) for (k, v) in dims)
-        InferDimensions(ctx=ctx, dims = dims_2)(prgm)
-        if Dict(k=>typeof(v) for (k, v) in dims_2) == dims
-            return (prgm, dims_2)
+        dims_old = Dict(k=>typeof(v) for (k, v) in dims)
+        InferDimensions(ctx=ctx, dims = dims)(prgm)
+        if Dict(k=>typeof(v) for (k, v) in dims) == dims_old
+            break
         end
-        dims = dims_2
     end
     InferDimensions(ctx=ctx, dims = dims, check=true)(prgm)
+    return (prgm, dims)
 end
 
 resolvedim(ctx, ext) = ext
