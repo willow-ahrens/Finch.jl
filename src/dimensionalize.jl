@@ -36,7 +36,7 @@ function dimensionalize!(prgm, ctx)
 end
 
 struct NoDimension end
-nodim = nodim
+nodim = NoDimension()
 
 (ctx::InferDimensions)(node, ext) = (ctx(node); nodim)
 
