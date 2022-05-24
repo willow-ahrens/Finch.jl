@@ -12,8 +12,9 @@ The program is assumed to be in SSA form.
 See also: [`getdims`](@ref), [`getsites`](@ref), [`combinedim`](@ref),
 [`TransformSSA`](@ref)
 """
-@kwdef struct InferDimensions
+@kwdef mutable struct InferDimensions
     ctx
+    prev_dims = Dict()
     dims = Dict()
     escape = []
     check = false
@@ -22,33 +23,37 @@ end
 function dimensionalize!(prgm, ctx) 
     dims = Dict()
     while true
-        dims_old = Dict(k=>typeof(v) for (k, v) in dims)
-        InferDimensions(ctx=ctx, dims = dims)(prgm)
-        if Dict(k=>typeof(v) for (k, v) in dims) == dims_old
+        prev_dims = dims
+        dims = Dict()
+        InferDimensions(ctx=ctx, prev_dims = prev_dims, dims = dims)(prgm)
+        if Dict(k=>typeof(v) for (k, v) in prev_dims) == Dict(k=>typeof(v) for (k, v) in dims)
             break
         end
     end
-    InferDimensions(ctx=ctx, dims = dims, check=true)(prgm)
+    println(dims)
+    InferDimensions(ctx=ctx, prev_dims = dims, check=true)(prgm)
     return (prgm, dims)
 end
 
-struct MissingDimension end
+struct NoDimension end
+nodim = nodim
 
-(ctx::InferDimensions)(node, ext) = (ctx(node); MissingDimension())
+(ctx::InferDimensions)(node, ext) = (ctx(node); nodim)
 
 function (ctx::InferDimensions)(node::With)
-    ctx_2 = InferDimensions(ctx.ctx, ctx.dims, union(ctx.escape, map(getname, getresults(node.prod))), ctx.check)
+    ctx_2 = shallowcopy(ctx)
+    ctx_2.escape = union(ctx.escape, map(getname, getresults(node.prod)))
     With(ctx_2(node.cons), ctx_2(node.prod))
 end
 
 function (ctx::InferDimensions)(node::Name, ext)
-    ext_2 = get(ctx.dims, getname(node), MissingDimension())
-    ctx.dims[getname(node)] = resultdim(ctx.ctx, ctx.check, ext, ext_2)
+    ctx.dims[getname(node)] = resultdim(ctx.ctx, ctx.check, get(ctx.dims, getname(node), nodim), ext)
+    get(ctx.prev_dims, getname(node), nodim)
 end
 
 function (ctx::InferDimensions)(node::Union{Gallop, Walk, Follow, Laminate, Extrude}, ext)
-    ext_2 = get(ctx.dims, getname(node), MissingDimension())
-    ctx.dims[getname(node)] = resultdim(ctx.ctx, ctx.check, ext, ext_2)
+    ctx.dims[getname(node)] = resultdim(ctx.ctx, ctx.check, get(ctx.dims, getname(node), nodim), ext)
+    get(ctx.prev_dims, getname(node), nodim)
 end
 
 function (ctx::InferDimensions)(node::Access)
@@ -58,8 +63,9 @@ function (ctx::InferDimensions)(node::Access)
             ext = suggest(ext)
             if getname(node.tns) !== nothing
                 site = (getname(node.tns), n)
-                ext = resultdim(ctx.ctx, ctx.check, ext, get(ctx.dims, site, MissingDimension()))
-                ctx.dims[site] = ctx(idx, ext)
+                ext = resultdim(ctx.ctx, false, get(ctx.prev_dims, site, nodim), ext)
+                ctx.dims[site] = resultdim(ctx.ctx, false, get(ctx.dims, site, nodim), ctx(idx, ext))
+                ext
             end
         end
         ctx.check && setdims!(node.tns, ctx.ctx, node.mode, exts...)
@@ -67,7 +73,7 @@ function (ctx::InferDimensions)(node::Access)
         foreach(ctx, node.idxs, exts)
     end
     ctx(node.tns)
-    return MissingDimension()
+    return nodim
 end
 
 setdims!(tns, ctx, mode, dims...) = (map((ext_1, ext_2) -> resultdim(ctx, true, ext_1, ext_2), dims, getdims(tns, ctx, mode)), tns)
@@ -76,7 +82,7 @@ function (ctx::InferDimensions)(node)
     if istree(node)
         foreach(ctx, arguments(node))
     end
-    MissingDimension()
+    nodim
 end
 
 #=
@@ -91,6 +97,7 @@ checkdim(ctx, a, b) = resultdim(ctx, CheckDimension(a), CheckDimension(b))
 
 struct UnknownDimension end
 
+resultdim(ctx, check, a, b, c, tail...) = resultdim(ctx, check, a, resultdim(ctx, check, b, c, tail...))
 function resultdim(ctx, check, a, b)
     c = combinedim(ctx, check, a, b)
     d = combinedim(ctx, check && (c isa UnknownDimension), b, a)
@@ -116,7 +123,7 @@ combinedim(::Ctx, ::Bool, ::B, ::A)
 """
 combinedim(ctx, check, a, b) = UnknownDimension()
 
-combinedim(ctx, check, a::MissingDimension, b) = b
+combinedim(ctx, check, a::NoDimension, b) = b
 
 @kwdef mutable struct Extent{Start, Stop}
     start::Start
@@ -146,14 +153,14 @@ end
 combinedim(ctx, check, a::UnitExtent, b::UnitExtent) =
     UnitExtent(resultdim(ctx, check, a.val, b.val))
 
-combinedim(ctx, check, a::MissingDimension, b::Extent) = b
+combinedim(ctx, check, a::NoDimension, b::Extent) = b
 
 struct SuggestedExtent{Ext}
     ext::Ext
 end
 suggest(ext) = SuggestedExtent(ext)
 suggest(ext::SuggestedExtent) = ext
-suggest(ext::MissingDimension) = MissingDimension()
+suggest(ext::NoDimension) = nodim
 
 #TODO maybe just call something like resolve_extent to unwrap?
 start(ext::SuggestedExtent) = start(ext.ext)
@@ -162,12 +169,12 @@ extent(ext::SuggestedExtent) = extent(ext.ext)
 
 combinedim(ctx::Finch.LowerJulia, check, a::SuggestedExtent, b::Extent) = b
 
-combinedim(ctx::Finch.LowerJulia, check, a::SuggestedExtent, b::MissingDimension) = a
+combinedim(ctx::Finch.LowerJulia, check, a::SuggestedExtent, b::NoDimension) = a
 
 combinedim(ctx::Finch.LowerJulia, check, a::SuggestedExtent, b::SuggestedExtent) = a #TODO this is a weird case, because either suggestion could set the dimension for the other.
 
 function combinedim(ctx::Finch.LowerJulia, check, a::Union{Virtual, Number}, b::Virtual)
-    if check
+    if check && a != b
         push!(ctx.preamble, quote
             $(ctx(a)) == $(ctx(b)) || throw(DimensionMismatch("mismatched dimension limits"))
         end)
