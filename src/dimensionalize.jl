@@ -30,7 +30,6 @@ function dimensionalize!(prgm, ctx)
             break
         end
     end
-    println(dims)
     InferDimensions(ctx=ctx, prev_dims = dims, check=true)(prgm)
     return (prgm, dims)
 end
