@@ -1,5 +1,5 @@
 using Finch.IndexNotation
-using Finch.IndexNotation: call_instance, assign_instance, access_instance, value_instance, name_instance, loop_instance, with_instance, label_instance, walk_instance
+using Finch.IndexNotation: call_instance, assign_instance, access_instance, value_instance, name_instance, loop_instance, with_instance, label_instance, protocol_instance
 
 @testset "Parse" begin
     @test @index_program_instance(:f(:B[i::walk, k] * :C[k, j]^3, 42)) ==
@@ -10,7 +10,7 @@ using Finch.IndexNotation: call_instance, assign_instance, access_instance, valu
                 access_instance(
                     value_instance(:B),
                     Read(),
-                    walk_instance(:i),
+                    protocol_instance(name_instance(:i), walk),
                     name_instance(:k)),
                 call_instance(
                     label_instance(:^, value_instance(^)),
@@ -25,7 +25,7 @@ using Finch.IndexNotation: call_instance, assign_instance, access_instance, valu
     @test Finch.virtualize(:ex, typeof(@index_program_instance(:f(:B[i::walk, k] * :C[k, j]^3, 42))), Finch.LowerJulia()) ==
         call(:f, 
             call(*,
-                access(:B, Read(), Walk(:i), Name(:k)),
+                access(:B, Read(), Protocol(Name(:i), walk), Name(:k)),
                 call(^,
                     access(:C, Read(), Name(:k), Name(:j)),
                     3)),

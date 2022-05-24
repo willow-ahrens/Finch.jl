@@ -149,9 +149,9 @@ function finalize_level!(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx::LowerJu
 end
 
 unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx::Name, idxs...) =
-    unfurl(fbr, ctx, mode, walk(idx))
+    unfurl(fbr, ctx, mode, protocol(idx, walk))
 
-function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx::Walk, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx::Protocol{Name, Walk}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
@@ -251,7 +251,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx:
     )
 end
 
-function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx::Union{Follow}, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx::Protocol{Name, Follow}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     R = length(envdeferred(fbr.env)) + 1
@@ -279,11 +279,11 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx:
 end
 
 unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Union{Write, Update}, idx::Name, idxs...) =
-    unfurl(fbr, ctx, mode, laminate(idx), idxs...)
+    unfurl(fbr, ctx, mode, protocol(idx, laminate), idxs...)
 
 hasdefaultcheck(lvl::VirtualHollowHashLevel) = true
 
-function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Union{Write, Update}, idx::Union{Name, Extrude, Laminate}, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Union{Write, Update}, idx::Union{Name, Protocol{Name, <:Union{Extrude, Laminate}}}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     R = length(envdeferred(fbr.env)) + 1

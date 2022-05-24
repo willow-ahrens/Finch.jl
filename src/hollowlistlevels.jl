@@ -101,9 +101,9 @@ function finalize_level!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx::LowerJu
 end
 
 unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx::Name, idxs...) =
-    unfurl(fbr, ctx, mode, walk(idx))
+    unfurl(fbr, ctx, mode, protocol(idx, walk))
 
-function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx::Walk, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx::Protocol{Name, Walk}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
@@ -167,7 +167,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
     )
 end
 
-function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx::Gallop, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx::Protocol{Name, Gallop}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
@@ -259,9 +259,9 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
 end
 
 unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Union{Write, Update}, idx::Name, idxs...) =
-    unfurl(fbr, ctx, mode, extrude(idx), idxs...)
+    unfurl(fbr, ctx, mode, protocol(idx, extrude), idxs...)
 
-function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Union{Write, Update}, idx::Extrude, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Union{Write, Update}, idx::Protocol{Name, Extrude}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)

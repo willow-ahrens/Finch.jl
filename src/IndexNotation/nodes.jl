@@ -121,6 +121,26 @@ Finch.getname(ex::Name) = ex.name
 Finch.setname(ex::Name, name) = Name(name)
 Finch.getunbound(ex::Name) = [ex.name]
 
+struct Protocol{Idx, Val} <: IndexExpression
+    idx::Idx
+    val::Val
+end
+Base.:(==)(a::Protocol, b::Protocol) = a.idx == b.idx && a.val == b.val
+
+protocol(args...) = protocol!(vcat(args...))
+protocol!(args) = Protocol(args[1], args[2])
+
+SyntaxInterface.istree(::Protocol) = true
+SyntaxInterface.operation(ex::Protocol) = protocol
+SyntaxInterface.arguments(ex::Protocol) = Any[ex.idx, ex.val]
+SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(protocol), args) = protocol!(args)
+
+function show_expression(io, mime, ex::Protocol)
+    show_expression(io, mime, ex.idx)
+    print(io, "::")
+    show_expression(io, mime, ex.val)
+end
+
 struct With <: IndexStatement
 	cons::Any
 	prod::Any

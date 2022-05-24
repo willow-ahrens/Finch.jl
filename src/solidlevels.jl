@@ -125,7 +125,7 @@ end
 
 hasdefaultcheck(lvl::VirtualSolidLevel) = hasdefaultcheck(lvl.lvl)
 
-function unfurl(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode::Union{Read, Write, Update}, idx::Union{Name, Walk, Follow, Laminate, Extrude}, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode::Union{Read, Write, Update}, idx::Union{Name, Protocol{Name, <:Union{Follow, Laminate, Extrude}}}, idxs...) #TODO should protocol be strict?
     lvl = fbr.lvl
     tag = lvl.ex
 

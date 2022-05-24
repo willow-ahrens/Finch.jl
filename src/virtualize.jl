@@ -18,6 +18,7 @@ function virtualize(ex, ::Type{IndexNotation.PassInstance{Tnss}}, ctx) where {Tn
     Pass(tnss)
 end
 virtualize(ex, ::Type{IndexNotation.NameInstance{name}}, ctx) where {name} = Name(name)
+virtualize(ex, ::Type{IndexNotation.ProtocolInstance{Idx, Val}}, ctx) where {Idx, Val} = Protocol(virtualize(:($ex.idx), Idx, ctx), virtualize(:($ex.val), Val, ctx))
 virtualize(ex, ::Type{IndexNotation.WithInstance{Cons, Prod}}, ctx) where {Cons, Prod} = With(virtualize(:($ex.cons), Cons, ctx), virtualize(:($ex.prod), Prod, ctx))
 function virtualize(ex, ::Type{IndexNotation.MultiInstance{Bodies}}, ctx) where {Bodies}
     bodies = map(enumerate(Bodies.parameters)) do (n, Body)
@@ -57,8 +58,8 @@ function virtualize(ex, ::Type{IndexNotation.LabelInstance{tag, Tns}}, ctx) wher
     return virtualize(:($ex.tns), Tns, ctx, tag)
 end
 virtualize(ex, ::Type{IndexNotation.ValueInstance{arg}}, ctx) where {arg} = arg
-virtualize(ex, ::Type{IndexNotation.WalkInstance{name}}, ctx) where {name} = Walk(name)
-virtualize(ex, ::Type{IndexNotation.GallopInstance{name}}, ctx) where {name} = Gallop(name)
-virtualize(ex, ::Type{IndexNotation.FollowInstance{name}}, ctx) where {name} = Follow(name)
-virtualize(ex, ::Type{IndexNotation.ExtrudeInstance{name}}, ctx) where {name} = Extrude(name)
-virtualize(ex, ::Type{IndexNotation.LaminateInstance{name}}, ctx) where {name} = Laminate(name)
+virtualize(ex, ::Type{Walk}, ctx) = walk
+virtualize(ex, ::Type{Gallop}, ctx) = gallop
+virtualize(ex, ::Type{Follow}, ctx) = follow
+virtualize(ex, ::Type{Laminate}, ctx) = laminate
+virtualize(ex, ::Type{Extrude}, ctx) = extrude

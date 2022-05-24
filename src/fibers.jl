@@ -167,22 +167,26 @@ finalize_level!(fbr, ctx, mode) = fbr.lvl
 
 
 function make_style(root::Loop, ctx::Finch.LowerJulia, node::Access{<:VirtualFiber})
-    if !isempty(node.idxs) && getname(root.idx) == getname(node.idxs[1])
-        return ChunkStyle()
-    else
-        return DefaultStyle()
+    if !isempty(node.idxs)
+        if (node.idxs[1] isa Name && getname(root.idx) == getname(node.idxs[1])) ||
+            (node.idxs[1] isa Protocol && getname(root.idx) == getname(node.idxs[1].idx))
+            return ChunkStyle()
+        end
     end
+    return DefaultStyle()
 end
 
 getsites(arr::VirtualFiber) = 1:arity(arr) #TODO maybe check how deep the name is in the env first
 
 function (ctx::Finch.ChunkifyVisitor)(node::Access{<:VirtualFiber}, ::DefaultStyle) where {Tv, Ti}
-    if !isempty(node.idxs) && getname(ctx.idx) == getname(node.idxs[1])
-        #TODO I think we probably shouldn't wrap this in an Access, but life is complicated and I don't know what the right choice is right now.
-        Access(unfurl(node.tns, ctx.ctx, node.mode, node.idxs...), node.mode, node.idxs)
-    else
-        node
+    if !isempty(node.idxs)
+        if (node.idxs[1] isa Name && getname(ctx.idx) == getname(node.idxs[1])) ||
+            (node.idxs[1] isa Protocol && getname(ctx.idx) == getname(node.idxs[1].idx))
+            #TODO I think we probably shouldn't wrap this in an Access, but life is complicated and I don't know what the right choice is right now.
+            return Access(unfurl(node.tns, ctx.ctx, node.mode, node.idxs...), node.mode, node.idxs)
+        end
     end
+    return node
 end
 
 refurl(tns, ctx, mode, idxs...) = access(tns, mode, idxs...)

@@ -129,9 +129,9 @@ function finalize_level!(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx::LowerJul
 end
 
 unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Read, idx::Name, idxs...) =
-    unfurl(fbr, ctx, mode, walk(idx))
+    unfurl(fbr, ctx, mode, protocol(idx, walk))
 
-function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Read, idx::Walk, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Read, idx::Protocol{Name, Walk}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
@@ -218,7 +218,7 @@ end
 
 hasdefaultcheck(lvl::VirtualHollowCooLevel) = true
 
-function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Union{Write, Update}, idx::Union{Name, Extrude}, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Union{Write, Update}, idx::Union{Name, Protocol{Name, <:Union{Extrude}}}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     R = length(envdeferred(fbr.env)) + 1

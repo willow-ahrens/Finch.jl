@@ -11,6 +11,7 @@ const program_nodes = (
     assign = assign,
     call = call,
     access = access,
+    protocol = protocol,
     name = Name,
     label = esc,
     value = esc,
@@ -25,6 +26,7 @@ const instance_nodes = (
     assign = assign_instance,
     call = call_instance,
     access = access_instance,
+    protocol = protocol_instance,
     name = name_instance,
     label = (ex) -> :($label_instance($(QuoteNode(ex)), $value_instance($(esc(ex))))),
     value = (ex) -> :($value_instance($(esc(ex))))
@@ -99,7 +101,7 @@ function capture_index(ex, ctx)
         return :($(ctx.nodes.access)($tns, $(ctx.mode), $(idxs...)))
     elseif @capture ex (idx_::proto_)
         idx = capture_index(idx, ctx)
-        return :($(esc(proto))($idx))
+        return :($(ctx.nodes.protocol)($idx, $(esc(proto))))
     elseif ex isa Expr && ex.head == :$ && length(ex.args) == 1
         return esc(ex.args[1])
     elseif ex isa Symbol && ctx.namify

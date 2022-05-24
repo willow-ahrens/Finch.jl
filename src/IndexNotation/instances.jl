@@ -19,6 +19,13 @@ struct NameInstance{name} <: IndexTerminalInstance end
 
 @inline name_instance(name) = NameInstance{name}()
 
+struct ProtocolInstance{Idx, Val} <: IndexExpressionInstance
+	idx::Idx
+	val::Val
+end
+Base.:(==)(a::ProtocolInstance, b::ProtocolInstance) = a.idx == b.idx && a.val == b.val
+@inline protocol_instance(idx, val) = ProtocolInstance(idx, val)
+
 struct WithInstance{Cons, Prod} <: IndexStatementInstance
 	cons::Cons
 	prod::Prod

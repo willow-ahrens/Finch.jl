@@ -50,10 +50,7 @@ function (ctx::InferDimensions)(node::Name, ext)
     get(ctx.prev_dims, getname(node), nodim)
 end
 
-function (ctx::InferDimensions)(node::Union{Gallop, Walk, Follow, Laminate, Extrude}, ext)
-    ctx.dims[getname(node)] = resultdim(ctx.ctx, ctx.check, get(ctx.dims, getname(node), nodim), ext)
-    get(ctx.prev_dims, getname(node), nodim)
-end
+(ctx::InferDimensions)(node::Protocol, ext) = ctx(node.idx, ext)
 
 function (ctx::InferDimensions)(node::Access)
     exts = getdims(node.tns, ctx.ctx, node.mode)

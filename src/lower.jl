@@ -183,6 +183,10 @@ function (ctx::LowerJulia)(root::Name, ::DefaultStyle)
     return ctx(ctx.bindings[getname(root)]) #This unwraps indices that are virtuals. Arguably these virtuals should be precomputed, but whatevs.
 end
 
+function (ctx::LowerJulia)(root::Protocol, ::DefaultStyle)
+    :($(ctx(root.idx)))
+end
+
 function (ctx::LowerJulia)(root::Literal, ::DefaultStyle)
     if root.val isa Union{Symbol, Expr}
         return QuoteNode(root.val)

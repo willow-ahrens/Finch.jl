@@ -13,6 +13,7 @@ module IndexNotation
     export Assign, assign
     export Call, call
     export Access, Read, Write, Update, access, access
+    export Protocol, protocol
 
     export Follow, follow
     export Walk, walk
