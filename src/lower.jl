@@ -126,7 +126,6 @@ function unify!(ctx::LowerJulia, ctx_2)
     return ctx
 end
 
-
 struct ThunkStyle end
 
 @kwdef struct Thunk

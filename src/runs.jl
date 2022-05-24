@@ -49,21 +49,12 @@ combine_style(a::RunStyle, b::AcceptRunStyle) = RunStyle()
 
 function (ctx::LowerJulia)(root::Chunk, ::AcceptRunStyle)
     body = (AcceptRunVisitor(root, root.idx, ctx))(root.body)
-    if !(DirtyRunVisitor(root.idx))(body)
-        return ctx(body)
-    else
+    if getname(root.idx) in getunbound(body)
         #call DefaultStyle, the only style that AcceptRunStyle promotes with
         return ctx(root, DefaultStyle())
+    else
+        return ctx(body)
     end
-end
-
-@kwdef mutable struct DirtyRunVisitor <: AbstractCollectVisitor
-    idx
-end
-collect_op(ctx::DirtyRunVisitor) = any
-collect_zero(ctx::DirtyRunVisitor) = false
-function (ctx::DirtyRunVisitor)(node::Access, ::DefaultStyle)
-    return getname(ctx.idx) in map(getname, node.idxs)
 end
 
 @kwdef mutable struct AcceptRunVisitor <: AbstractTransformVisitor

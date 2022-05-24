@@ -172,18 +172,27 @@ combinedim(ctx::Finch.LowerJulia, check, a::SuggestedExtent, b::NoDimension) = a
 
 combinedim(ctx::Finch.LowerJulia, check, a::SuggestedExtent, b::SuggestedExtent) = a #TODO this is a weird case, because either suggestion could set the dimension for the other.
 
-function combinedim(ctx::Finch.LowerJulia, check, a::Union{Virtual, Number}, b::Virtual)
-    if check && a != b
+function combinedim(ctx::Finch.LowerJulia, check, a::Virtual, b::Virtual)
+    if check && a.ex != b.ex
         push!(ctx.preamble, quote
             $(ctx(a)) == $(ctx(b)) || throw(DimensionMismatch("mismatched dimension limits"))
         end)
     end
-    a #TODO could do some simplify stuff here
+    a
+end
+
+function combinedim(ctx::Finch.LowerJulia, check, a::Number, b::Virtual)
+    if check
+        push!(ctx.preamble, quote
+            $a == $(ctx(b)) || throw(DimensionMismatch("mismatched dimension limits"))
+        end)
+    end
+    a
 end
 
 function combinedim(ctx::Finch.LowerJulia, check, a::Number, b::Number)
     a == b || throw(DimensionMismatch("mismatched dimension limits ($a != $b)"))
-    a #TODO could do some simplify stuff here
+    a
 end
 
 """

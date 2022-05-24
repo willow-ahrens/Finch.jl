@@ -119,6 +119,7 @@ show_expression(io, mime, ex::Name) = print(io, ex.name)
 
 Finch.getname(ex::Name) = ex.name
 Finch.setname(ex::Name, name) = Name(name)
+Finch.getunbound(ex::Name) = [ex.name]
 
 struct With <: IndexStatement
 	cons::Any
@@ -181,6 +182,7 @@ SyntaxInterface.istree(::Chunk) = true
 SyntaxInterface.operation(stmt::Chunk) = chunk
 SyntaxInterface.arguments(stmt::Chunk) = Any[stmt.idx, stmt.ext, stmt.body]
 SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(chunk), args) = chunk!(args)
+Finch.getunbound(ex::Chunk) = setdiff(union(getunbound(ex.body), getunbound(ex.ext)), getunbound(ex.idx))
 
 function show_statement(io, mime, stmt::Chunk, level)
     print(io, tab^level * "@∀ ")
@@ -207,6 +209,8 @@ SyntaxInterface.istree(::Loop) = true
 SyntaxInterface.operation(stmt::Loop) = loop
 SyntaxInterface.arguments(stmt::Loop) = Any[stmt.idx; stmt.body]
 SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(loop), args) = loop!(args)
+
+Finch.getunbound(ex::Loop) = setdiff(getunbound(ex.body), getunbound(ex.idx))
 
 function show_statement(io, mime, stmt::Loop, level)
     print(io, tab^level * "@∀ ")

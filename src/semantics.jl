@@ -8,6 +8,20 @@ assignments return their left hand sides.
 function getresults end
 
 """
+    getunbound(stmt)
+
+Return an iterator over the names in an index expression that have yet to be
+bound.
+```julia
+julia> getunbound(@index_program @loop i :a[i, j] += 2)
+[j]
+julia> getunbound(@index_program i + j * 2 * i)
+[i, j]
+```
+"""
+getunbound(ex) = istree(ex) ? mapreduce(getunbound, union, arguments(ex), init=[]) : []
+
+"""
     getname(ex)
 
 Return the name of the index expression `ex`. The name serves as a unique
