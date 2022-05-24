@@ -32,8 +32,6 @@ function dimensionalize!(prgm, ctx)
     return (prgm, dims)
 end
 
-resolvedim(ctx, ext) = ext
-
 struct MissingDimension end
 
 (ctx::InferDimensions)(node, ext) = (ctx(node); MissingDimension())
@@ -45,12 +43,12 @@ end
 
 function (ctx::InferDimensions)(node::Name, ext)
     ext_2 = get(ctx.dims, getname(node), MissingDimension())
-    ctx.dims[getname(node)] = resultdim(ctx.ctx, ext, ext_2)
+    ctx.dims[getname(node)] = resultdim(ctx.ctx, ctx.check, ext, ext_2)
 end
 
 function (ctx::InferDimensions)(node::Union{Gallop, Walk, Follow, Laminate, Extrude}, ext)
     ext_2 = get(ctx.dims, getname(node), MissingDimension())
-    ctx.dims[getname(node)] = resultdim(ctx.ctx, ext, ext_2)
+    ctx.dims[getname(node)] = resultdim(ctx.ctx, ctx.check, ext, ext_2)
 end
 
 function (ctx::InferDimensions)(node::Access)
@@ -60,7 +58,7 @@ function (ctx::InferDimensions)(node::Access)
             ext = suggest(ext)
             if getname(node.tns) !== nothing
                 site = (getname(node.tns), n)
-                ext = resultdim(ctx.ctx, ext, get(ctx.dims, site, MissingDimension()))
+                ext = resultdim(ctx.ctx, ctx.check, ext, get(ctx.dims, site, MissingDimension()))
                 ctx.dims[site] = ctx(idx, ext)
             end
         end
@@ -72,7 +70,7 @@ function (ctx::InferDimensions)(node::Access)
     return MissingDimension()
 end
 
-setdims!(tns, ctx, mode, dims...) = (map((ext_1, ext_2) -> resultdim(ctx, ext_1, ext_2), dims, getdims(tns, ctx, mode)), tns)
+setdims!(tns, ctx, mode, dims...) = (map((ext_1, ext_2) -> resultdim(ctx, true, ext_1, ext_2), dims, getdims(tns, ctx, mode)), tns)
 
 function (ctx::InferDimensions)(node)
     if istree(node)
@@ -93,28 +91,32 @@ checkdim(ctx, a, b) = resultdim(ctx, CheckDimension(a), CheckDimension(b))
 
 struct UnknownDimension end
 
-resultdim(ctx, a, b) = _resultdim(ctx, a, b, combinedim(ctx, a, b), combinedim(ctx, b, a))
-_resultdim(ctx, a, b, c::UnknownDimension, d::UnknownDimension) = throw(MethodError(combinedim, (ctx, a, b)))
+function resultdim(ctx, check, a, b)
+    c = combinedim(ctx, check, a, b)
+    d = combinedim(ctx, check && (c isa UnknownDimension), b, a)
+    return _resultdim(ctx, a, b, c, d)
+end
+_resultdim(ctx, a, b, c::UnknownDimension, d::UnknownDimension) = throw(MethodError(combinedim, (ctx, false, a, b)))
 _resultdim(ctx, a, b, c, d::UnknownDimension) = c
 _resultdim(ctx, a, b, c::UnknownDimension, d) = d
-_resultdim(ctx, a, b, c, d) = c
+_resultdim(ctx, a, b, c, d) = c #TODO assert same lattice type here.
 #_resultdim(ctx, a, b, c::T, d::T) where {T} = (c == d) ? c : @assert false "TODO combinedim_ambiguity_error"
 
 """
-    combinedim(ctx, a, b)
+    combinedim(ctx, check, a, b)
 
-Combine the two dimensions `a` and `b`. Usually, this
-involves checking that they are equivalent and returning one of them. To avoid
+Combine the two dimensions `a` and `b`. If `check`, also 
+check that they are equivalent. To avoid
 ambiguity, only define one of
 
 ```
-combinedim(::Ctx, ::A, ::B)
-combinedim(::Ctx, ::B, ::A)
+combinedim(::Ctx, ::Bool, ::A, ::B)
+combinedim(::Ctx, ::Bool, ::B, ::A)
 ```
 """
-combinedim(ctx, a, b) = UnknownDimension()
+combinedim(ctx, check, a, b) = UnknownDimension()
 
-combinedim(ctx, a::MissingDimension, b) = b
+combinedim(ctx, check, a::MissingDimension, b) = b
 
 @kwdef mutable struct Extent{Start, Stop}
     start::Start
@@ -125,8 +127,8 @@ start(ext::Extent) = ext.start
 stop(ext::Extent) = ext.stop
 extent(ext::Extent) = @i stop - start + 1
 
-combinedim(ctx, a::Extent, b::Extent) =
-    Extent(resultlim(ctx, a.start, b.start), resultlim(ctx, a.stop, b.stop))
+combinedim(ctx, check, a::Extent, b::Extent) =
+    Extent(resultdim(ctx, check, a.start, b.start), resultdim(ctx, check, a.stop, b.stop))
 
 @kwdef mutable struct UnitExtent{Val}
     val::Val
@@ -136,15 +138,15 @@ start(ext::UnitExtent) = ext.val
 stop(ext::UnitExtent) = ext.val
 extent(ext::UnitExtent) = 1
 
-function combinedim(ctx, a::UnitExtent, b::Extent)
-    resultlim(ctx, a.val, b.stop)
-    UnitExtent(resultlim(ctx, a.val, b.start))
+function combinedim(ctx, check, a::UnitExtent, b::Extent)
+    resultdim(ctx, check, a.val, b.stop)
+    UnitExtent(resultdim(ctx, check, a.val, b.start))
 end
 
-combinedim(ctx, a::UnitExtent, b::UnitExtent) =
-    UnitExtent(resultlim(ctx, a.val, b.val))
+combinedim(ctx, check, a::UnitExtent, b::UnitExtent) =
+    UnitExtent(resultdim(ctx, check, a.val, b.val))
 
-combinedim(ctx, a::MissingDimension, b::Extent) = b
+combinedim(ctx, check, a::MissingDimension, b::Extent) = b
 
 struct SuggestedExtent{Ext}
     ext::Ext
@@ -158,48 +160,25 @@ start(ext::SuggestedExtent) = start(ext.ext)
 stop(ext::SuggestedExtent) = stop(ext.ext)
 extent(ext::SuggestedExtent) = extent(ext.ext)
 
-resolvedim(ctx, ext::SuggestedExtent) = resolvedim(ctx, ext.ext)
+combinedim(ctx::Finch.LowerJulia, check, a::SuggestedExtent, b::Extent) = b
 
-combinedim(ctx::Finch.LowerJulia, a::SuggestedExtent, b::Extent) = b
+combinedim(ctx::Finch.LowerJulia, check, a::SuggestedExtent, b::MissingDimension) = a
 
-combinedim(ctx::Finch.LowerJulia, a::SuggestedExtent, b::MissingDimension) = a
+combinedim(ctx::Finch.LowerJulia, check, a::SuggestedExtent, b::SuggestedExtent) = a #TODO this is a weird case, because either suggestion could set the dimension for the other.
 
-combinedim(ctx::Finch.LowerJulia, a::SuggestedExtent, b::SuggestedExtent) = a #TODO this is a weird case, because either suggestion could set the dimension for the other.
-
-function combinelim(ctx::Finch.LowerJulia, a::Union{Virtual, Number}, b::Virtual)
-    push!(ctx.preamble, quote
-        $(ctx(a)) == $(ctx(b)) || throw(DimensionMismatch("mismatched dimension limits"))
-    end)
+function combinedim(ctx::Finch.LowerJulia, check, a::Union{Virtual, Number}, b::Virtual)
+    if check
+        push!(ctx.preamble, quote
+            $(ctx(a)) == $(ctx(b)) || throw(DimensionMismatch("mismatched dimension limits"))
+        end)
+    end
     a #TODO could do some simplify stuff here
 end
 
-function combinelim(ctx::Finch.LowerJulia, a::Number, b::Number)
+function combinedim(ctx::Finch.LowerJulia, check, a::Number, b::Number)
     a == b || throw(DimensionMismatch("mismatched dimension limits ($a != $b)"))
     a #TODO could do some simplify stuff here
 end
-
-struct UnknownLimit end
-
-resultlim(ctx, a, b) = _resultlim(ctx, a, b, combinelim(ctx, a, b), combinelim(ctx, b, a))
-_resultlim(ctx, a, b, c::UnknownLimit, d::UnknownLimit) = throw(MethodError(combinelim, (ctx, a, b)))
-_resultlim(ctx, a, b, c, d::UnknownLimit) = c
-_resultlim(ctx, a, b, c::UnknownLimit, d) = d
-_resultlim(ctx, a, b, c, d) = c
-#_resultlim(ctx, a, b, c::T, d::T) where {T} = (c == d) ? c : @assert false "TODO combinelim_ambiguity_error"
-
-"""
-    combinelim(ctx, a, b)
-
-Combine the two dimension extent limits `a` and `b`. Usually, this
-involves checking that they are equivalent and returning one of them. To avoid
-ambiguity, only define one of
-
-```
-combinelim(::Ctx, ::A, ::B)
-combinelim(::Ctx, ::B, ::A)
-```
-"""
-combinelim(ctx, a, b) = UnknownLimit()
 
 """
     getdims(tns, ctx, mode)
