@@ -20,4 +20,10 @@
     println(B)
     @test B() == 0.0
 
+    ex = @index_program_instance (@loop j if select[2, j] B[] += A[j] end)
+    display(execute_code_lowered(:ex, typeof(ex)))
+    println()
+
+    @index (@loop j if select[2, j] B[] += A[j] end)
+
 end

@@ -7,7 +7,7 @@ const program_nodes = (
     loop = loop,
     chunk = chunk,
     with = with,
-    skip = skip_instance,
+    skip = skip,
     multi = multi,
     assign = assign,
     call = call,
@@ -41,7 +41,11 @@ function capture_index(ex, ctx)
         return capture_index(:(@loop($(idxs...), $body)), ctx)
     elseif ex isa Expr && ex.head == :block
         bodies = filter(arg->!(arg isa LineNumberNode), ex.args)
-        return capture_index(:(@multi($(bodies...),)), ctx)
+        if length(bodies) == 1
+            return capture_index(:($(bodies[1])), ctx)
+        else
+            return capture_index(:(@multi($(bodies...),)), ctx)
+        end
     elseif ex isa Expr && haskey(incs, ex.head)
         (lhs, rhs) = ex.args; op = incs[ex.head]
         return capture_index(:($lhs << $op >>= $rhs), ctx)

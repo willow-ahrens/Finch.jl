@@ -10,7 +10,7 @@ using Base: @kwdef
 export @index, @index_code_lowered
 
 export Fiber, HollowList, HollowHash, HollowCoo, HollowByte, Solid, Element, FiberArray, Scalar
-export walk, gallop, follow, extrude, laminate
+export walk, gallop, follow, extrude, laminate, select
 
 include("util.jl")
 
@@ -41,6 +41,7 @@ include("hollowcoolevels.jl")
 include("hollowbytelevels.jl")
 include("solidlevels.jl")
 include("elementlevels.jl")
+include("select.jl")
 
 module h
     using Finch
