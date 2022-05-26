@@ -262,7 +262,7 @@ function (ctx::LowerJulia)(stmt::Skip, ::DefaultStyle)
         else
             $(contain(ctx) do ctx_2
                 ctx_3 = diverge(ctx_2)
-                SkipVisitor(ctx_2 = ctx_3)(stmt.body)
+                SkipVisitor(ctx = ctx_3)(stmt.body)
                 unify!(ctx_2, ctx_3)
                 nothing
             end)
