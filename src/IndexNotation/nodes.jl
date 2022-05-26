@@ -247,6 +247,36 @@ end
 Finch.getresults(stmt::Loop) = Finch.getresults(stmt.body)
 
 
+struct Skip <: IndexStatement
+	cond::Any
+	body::Any
+end
+Base.:(==)(a::Skip, b::Skip) = a.cond == b.cond && a.body == b.body
+
+skip(args...) = skip!(args)
+skip!(args) = foldr(Skip, args)
+
+SyntaxInterface.istree(::Skip) = true
+SyntaxInterface.operation(stmt::Skip) = skip
+SyntaxInterface.arguments(stmt::Skip) = Any[stmt.cond; stmt.body]
+SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(skip), args) = skip!(args)
+
+Finch.getunbound(ex::Skip) = setdiff(getunbound(ex.body), getunbound(ex.cond))
+
+function show_statement(io, mime, stmt::Skip, level)
+    print(io, tab^level * "if ")
+    while stmt isa Skip
+        show_expression(io, mime, stmt.cond)
+        print(io," && ")
+        stmt = stmt.body
+    end
+    print(io,"\n")
+    show_statement(io, mime, stmt, level + 1)
+    print(io, tab^level * "end\n")
+end
+
+Finch.getresults(stmt::Skip) = Finch.getresults(stmt.body)
+
 struct Assign{Lhs} <: IndexStatement
 	lhs::Lhs
 	op::Any

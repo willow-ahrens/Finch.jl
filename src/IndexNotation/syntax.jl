@@ -7,6 +7,7 @@ const program_nodes = (
     loop = loop,
     chunk = chunk,
     with = with,
+    skip = skip_instance,
     multi = multi,
     assign = assign,
     call = call,
@@ -22,6 +23,7 @@ const instance_nodes = (
     loop = loop_instance,
     chunk = :(throw(NotImplementedError("TODO"))),
     with = with_instance,
+    skip = skip_instance,
     multi = multi_instance,
     assign = assign_instance,
     call = call_instance,
@@ -63,6 +65,10 @@ function capture_index(ex, ctx)
     if @capture ex (@pass(args__))
         args = map(arg -> capture_index(arg, (ctx..., namify=false)), args)
         return :($(ctx.nodes.pass)($(args...)))
+    elseif @capture ex (if cond_ body_ end)
+        cond = capture_index(cond, (ctx..., namify=true))
+        body = capture_index(body, ctx)
+        return :($(ctx.nodes.skip)($cond, $body))
     elseif @capture ex (@loop idxs__ body_)
         idxs = map(idx -> capture_index(idx, (ctx..., namify=true)), idxs)
         body = capture_index(body, ctx)

@@ -51,6 +51,16 @@ Base.:(==)(a::LoopInstance, b::LoopInstance) = a.idx == b.idx && a.body == b.bod
 @inline loop_instance(body) = body
 @inline loop_instance(idx, args...) = LoopInstance(idx, loop_instance(args...))
 
+struct SkipInstance{Cond, Body} <: IndexStatementInstance
+	cond::Cond
+	body::Body
+end
+Base.:(==)(a::SkipInstance, b::SkipInstance) = a.cond == b.cond && a.body == b.body
+
+@inline skip_instance(cond, body) = SkipInstance(cond, body)
+@inline skip_instance(body) = body
+@inline skip_instance(cond, args...) = SkipInstance(cond, skip_instance(args...))
+
 struct AssignInstance{Lhs, Op, Rhs} <: IndexStatementInstance
 	lhs::Lhs
 	op::Op

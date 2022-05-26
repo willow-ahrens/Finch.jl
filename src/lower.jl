@@ -133,6 +133,7 @@ struct ThunkStyle end
     body
     epilogue = quote end
     binds = ()
+    skips = []
 end
 isliteral(::Thunk) = false
 
@@ -157,6 +158,7 @@ function (ctx::ThunkVisitor)(node::Thunk, ::DefaultStyle)
     for (var, val) in node.binds
         define!(ctx.ctx, var, val)
     end
+    map(SkipVisitor(ctx.ctx), node.skips)
     node.body
 end
 
@@ -247,6 +249,29 @@ end
 function (ctx::LowerJulia)(root::Access{<:Number, Read}, ::DefaultStyle)
     @assert isempty(root.idxs)
     return root.tns
+end
+
+function (ctx::LowerJulia)(stmt::Skip, ::DefaultStyle)
+    cond = ctx.freshen(:cond)
+    push!(ctx.preamble, :($cond = $(ctx(stmt.cond))))
+    body = ctx(stmt.body)
+
+    return quote
+        if $cond
+            $body
+        else
+            $(contain(ctx) do ctx_2
+                ctx_3 = diverge(ctx_2)
+                SkipVisitor(ctx_2 = ctx_3)(stmt.body)
+                unify!(ctx_2, ctx_3)
+                nothing
+            end)
+        end
+    end
+end
+
+@kwdef struct SkipVisitor <: AbstractTransformVisitor
+    ctx
 end
 
 
