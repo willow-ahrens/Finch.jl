@@ -56,7 +56,7 @@
     (@rule @i((*)(a..., - $b, c...)) => @i -(*(a..., $b, c...))),
     (@rule @i(a[i...] *= 1) => pass(a)),
     (@rule @i(if true; $a end) => a),
-    (@rule @i(if false; $a end) => Thunk(skips = [a], body=pass(getresults(a)...))),
+    (@rule @i(if false; $a end) => Thunk(skips = [a], body=Simplify(pass(getresults(a)...)))),
 ]
 
 println(@rule a @i(if true; $a end) => (println(:hi); a))
