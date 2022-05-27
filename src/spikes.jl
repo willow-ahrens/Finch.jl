@@ -55,10 +55,6 @@ function (ctx::SpikeBodyVisitor)(node::Access{Spike}, ::DefaultStyle)
     return Access(Run(node.tns.body), node.mode, node.idxs)
 end
 
-function (ctx::SpikeBodyVisitor)(node::Access, ::DefaultStyle)
-    return Access(truncate(node.tns, ctx.ctx, ctx.start, ctx.step, ctx.stop), node.mode, node.idxs)
-end
-
 spike_body_stop(stop, ctx) = :($(ctx(stop)) - 1)
 spike_body_stop(stop::Integer, ctx) = stop - 1
 

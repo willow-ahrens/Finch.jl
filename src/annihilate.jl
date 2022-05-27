@@ -59,8 +59,6 @@
     (@rule @i(if false; $a end) => Thunk(skips = [a], body=Simplify(pass(getresults(a)...)))),
 ]
 
-println(@rule a @i(if true; $a end) => (println(:hi); a))
-
 @kwdef mutable struct Simplify
     body
 end

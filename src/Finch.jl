@@ -33,6 +33,7 @@ include("jumpers.jl")
 include("phases.jl")
 include("execute.jl")
 include("virtual_abstractarray.jl")
+include("select.jl")
 include("fibers.jl")
 include("scalars.jl")
 include("hollowlistlevels.jl")
@@ -41,7 +42,6 @@ include("hollowcoolevels.jl")
 include("hollowbytelevels.jl")
 include("solidlevels.jl")
 include("elementlevels.jl")
-include("select.jl")
 
 module h
     using Finch

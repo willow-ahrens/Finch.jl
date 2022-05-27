@@ -36,3 +36,28 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{Select}, ::Finch.DefaultStyle
         node
     end
 end
+
+struct SelectVisitor <: AbstractTransformVisitor
+    ctx
+    idxs
+end
+
+struct SelectStyle end
+
+combine_style(a::SelectStyle, b::ThunkStyle) = b
+combine_style(a::SelectStyle, b::ChunkStyle) = a
+
+function (ctx::LowerJulia)(root, ::SelectStyle)
+    idxs = Dict()
+    root = SelectVisitor(ctx, idxs)(root)
+    for (idx, val) in pairs(idxs)
+        root = @i(
+            @loop $idx (
+                if select[$val, $idx]
+                    $root
+                end
+            )
+        )
+    end
+    ctx(root)
+end

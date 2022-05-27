@@ -165,15 +165,37 @@ function finalize_level! end
 finalize_level!(fbr, ctx, mode) = fbr.lvl
 
 
+function make_style(root, ctx::Finch.LowerJulia, node::Access{<:VirtualFiber})
+    if !isempty(node.idxs)
+        if getunbound(node.idxs[1]) ⊆ keys(ctx.bindings)
+            return SelectStyle()
+        end
+    end
+    return DefaultStyle()
+end
 
 function make_style(root::Loop, ctx::Finch.LowerJulia, node::Access{<:VirtualFiber})
     if !isempty(node.idxs)
-        if (node.idxs[1] isa Name && getname(root.idx) == getname(node.idxs[1])) ||
+        if getunbound(node.idxs[1]) ⊆ keys(ctx.bindings)
+            return SelectStyle()
+        elseif (node.idxs[1] isa Name && getname(root.idx) == getname(node.idxs[1])) ||
             (node.idxs[1] isa Protocol && getname(root.idx) == getname(node.idxs[1].idx))
             return ChunkStyle()
         end
     end
     return DefaultStyle()
+end
+
+function (ctx::Finch.SelectVisitor)(node::Access{<:VirtualFiber}, ::DefaultStyle) where {Tv, Ti}
+    if !isempty(node.idxs)
+        if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
+            var = Name(ctx.ctx.freshen(:s))
+            ctx.idxs[var] = node.idxs[1]
+            ctx.ctx.dims[getname(var)] = getdims(node.tns, ctx, node.idxs...)[1] #TODO redimensionalization
+            return access(node.tns, node.mode, var, node.idxs[2:end]...)
+        end
+    end
+    return node
 end
 
 getsites(arr::VirtualFiber) = 1:arity(arr) #TODO maybe check how deep the name is in the env first
