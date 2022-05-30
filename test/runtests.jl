@@ -13,7 +13,7 @@ using Finch: getname, Virtual
     include("test_ssa.jl")
     include("test_parse.jl")
     include("test_skips.jl")
-    #include("test_fibers.jl")
-    #include("test_simple.jl")
-    #include("test_kernels.jl")
+    include("test_fibers.jl")
+    include("test_simple.jl")
+    include("test_kernels.jl")
 end

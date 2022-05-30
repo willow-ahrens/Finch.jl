@@ -143,22 +143,15 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
                         body = Phase(
                             guard = (start) -> :($my_q < $my_q_stop),
                             stride = (start) -> my_i,
-                            body = (start, step) -> Thunk(
-                                body = Cases([
-                                    :($step == $my_i) => Thunk(
-                                        body = Spike(
-                                            body = Simplify(default(fbr)),
-                                            tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=Virtual{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
-                                        ),
-                                        epilogue = quote
-                                            $my_q += 1
-                                        end
-                                    ),
-                                    true => Run(
-                                        body = Simplify(default(fbr)),
-                                    ),
-                                ])
-                            )
+                            body = (start, step) -> truncate(Spike(
+                                body = Simplify(default(fbr)),
+                                tail = Thunk(
+                                    body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=Virtual{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
+                                    epilogue = quote
+                                        $my_q += 1
+                                    end
+                                )
+                            ), nothing, start, step, my_i),
                         )
                     )
                 )
