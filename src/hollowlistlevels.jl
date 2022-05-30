@@ -111,6 +111,8 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
     my_q_stop = ctx.freshen(tag, :_q_stop)
     my_i1 = ctx.freshen(tag, :_i1)
 
+    foo = gensym()
+
     Thunk(
         preamble = quote
             $my_q = $(lvl.ex).pos[$(ctx(envposition(fbr.env)))]
@@ -127,6 +129,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
             Phase(
                 stride = (start) -> my_i1,
                 body = (start, step) -> Stepper(
+                    status = foo,
                     seek = (ctx, start) -> quote
                         #$my_q = searchsortedfirst($(lvl.ex).idx, $start, $my_q, $my_q_stop, Base.Forward)
                         while $my_q < $my_q_stop && $(lvl.ex).idx[$my_q] < $start

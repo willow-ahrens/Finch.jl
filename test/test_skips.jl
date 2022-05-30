@@ -36,7 +36,7 @@
 
     @index (B[] += A[5])
 
-    @test B() == 5.0
+    @test B() == 4.0
 
     println(B)
 

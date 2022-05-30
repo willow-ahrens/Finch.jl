@@ -21,17 +21,18 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{Select}, ::Finch.DefaultStyle
         push!(ctx.ctx.preamble, quote
             $sym = $(ctx.ctx(node.idxs[1]))
         end)
-        Pipeline([
+        tns = Pipeline([
             Phase(
                 stride = (start) -> :($sym - 1),
-                body = (start, step) -> Simplify(false)
+                body = (start, step) -> Run(body=false)
             ),
             Phase(
                 stride = (start) -> sym,
-                body = (start, step) -> Simplify(true),
+                body = (start, step) -> Run(body=true),
             ),
-            Phase(body = (start, step) -> Simplify(false))
+            Phase(body = (start, step) -> Run(body=false))
         ])
+        access(tns, node.mode, node.idxs[2])
     else
         node
     end
