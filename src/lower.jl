@@ -251,7 +251,7 @@ function (ctx::LowerJulia)(root::Access{<:Number, Read}, ::DefaultStyle)
     return root.tns
 end
 
-function (ctx::LowerJulia)(stmt::Skip, ::DefaultStyle)
+function (ctx::LowerJulia)(stmt::Sieve, ::DefaultStyle)
     cond = ctx.freshen(:cond)
     push!(ctx.preamble, :($cond = $(ctx(stmt.cond))))
     body = ctx(stmt.body)
