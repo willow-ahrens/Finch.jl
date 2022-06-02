@@ -164,6 +164,12 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Read, idx::
             Phase(
                 stride = (start) -> my_i_stop,
                 body = (start, step) -> Stepper(
+                    seek = (ctx, start) -> quote
+                        $my_q_step = $my_q + 1
+                        while $my_q_step < $my_q_stop && $(lvl.ex).tbl[$R][$my_q_step] < $start
+                            $my_q_step += 1
+                        end
+                    end,
                     body = Thunk(
                         preamble = quote
                             $my_i = $(lvl.ex).tbl[$R][$my_q]

@@ -129,7 +129,6 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
             Phase(
                 stride = (start) -> my_i1,
                 body = (start, step) -> Stepper(
-                    status = foo,
                     seek = (ctx, start) -> quote
                         #$my_q = searchsortedfirst($(lvl.ex).idx, $start, $my_q, $my_q_stop, Base.Forward)
                         while $my_q < $my_q_stop && $(lvl.ex).idx[$my_q] < $start

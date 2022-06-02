@@ -185,6 +185,12 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx:
             Phase(
                 stride = (start) -> my_i_stop,
                 body = (start, step) -> Stepper(
+                    seek = (ctx, start) -> quote
+                        $my_q_step = $my_q + 1
+                        while $my_q_step < $my_q_stop && last(first($(lvl.ex).srt[$my_q_step]))[$R] < $start
+                            $my_q_step += 1
+                        end
+                    end,
                     body = Thunk(
                         preamble = :(
                             $my_i = last(first($(lvl.ex).srt[$my_q]))[$R]

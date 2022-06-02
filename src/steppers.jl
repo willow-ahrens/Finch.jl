@@ -3,18 +3,12 @@ struct StepperStyle end
 @kwdef struct Stepper
     body
     seek = (ctx, start) -> error("seek not implemented error")
-    status = gensym()
 end
 
 isliteral(::Stepper) = false
 
-function make_style(root::Chunk, ctx::LowerJulia, node::Stepper)
-    if node.status in keys(ctx.state)
-        StepperStyle()
-    else
-        ThunkStyle()
-    end
-end
+make_style(root::Chunk, ctx::LowerJulia, node::Stepper) = StepperStyle()
+
 combine_style(a::DefaultStyle, b::StepperStyle) = StepperStyle()
 combine_style(a::StepperStyle, b::StepperStyle) = StepperStyle()
 combine_style(a::StepperStyle, b::RunStyle) = RunStyle()
@@ -47,20 +41,11 @@ function (ctx::LowerJulia)(root::Chunk, ::StepperStyle)
                 body_3 = ThunkVisitor(ctx_3)(body)
                 guards = (PhaseGuardVisitor(ctx_3, i, i0))(body_3)
                 strides = (PhaseStrideVisitor(ctx_3, i, i0))(body_3)
-                if isempty(strides)
-                    step = ctx_3(stop(root.ext))
-                    step_min = quote end
-                else
-                    step = ctx.freshen(i, :_step)
-                    step_min = quote
-                        $step = min($(map(ctx_3, strides)...), $(ctx_3(stop(root.ext))))
-                    end
-                    if length(strides) == 1 && length(guards) == 1 && false #Guards are unsafe to use alone. We need to also include a check for end of range.
-                        guard = guards[1]
-                    else
-                        guard = :($i0 <= $(ctx_3(stop(root.ext))))
-                    end
+                step = ctx.freshen(i, :_step)
+                step_min = quote
+                    $step = min($(map(ctx_3, strides)...), $(ctx_3(stop(root.ext))))
                 end
+                guard = :($i0 <= $(ctx_3(stop(root.ext))))
                 body_4 = (PhaseBodyVisitor(ctx_3, i, i0, step, ctx_3(stop(root.ext))))(body_3)
                 quote
                     $step_min
@@ -83,40 +68,13 @@ function (ctx::LowerJulia)(root::Chunk, ::StepperStyle)
     end
 end
 
-#=
-function (ctx::AccessSpikeTailVisitor)(node::Stepper, ::DefaultStyle)
-    if false in get(ctx.ctx.state, node.status, Set(true))
-        push!(ctx.ctx.preamble, node.seek(ctx, ctx.start))
-    end
-    define!(ctx.ctx, node.status, Set(true))
-    body = ThunkVisitor(ctx.ctx)(node.body)
-    body = PhaseBodyVisitor(ctx.ctx, ctx.idx, ctx.val, ctx.val)(body)
-    ctx(body)
-end
-=#
-
 @kwdef struct StepperVisitor <: AbstractTransformVisitor
     start
     ctx
 end
 function (ctx::StepperVisitor)(node::Stepper, ::DefaultStyle)
-    if :skipped in get(ctx.ctx.state, node.status, Set())
-        push!(ctx.ctx.preamble, node.seek(ctx, ctx.start))
-    end
-    define!(ctx.ctx, node.status, Set((:seen,)))
+    push!(ctx.ctx.preamble, node.seek(ctx, ctx.start))
     node.body
-end
-
-function (ctx::SkipVisitor)(node::Stepper, ::DefaultStyle)
-    define!(ctx.ctx, node.status, Set((:skipped,)))
-    node
-end
-
-function (ctx::ThunkVisitor)(node::Stepper, ::DefaultStyle)
-    if !haskey(ctx.ctx.state, node.status)
-        define!(ctx.ctx, node.status, Set((:seen,)))
-    end
-    node
 end
 
 truncate(node, ctx, start, step, stop) = node
