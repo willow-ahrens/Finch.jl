@@ -94,5 +94,5 @@ function truncate(node::Spike, ctx, ext, ext_2)
         true => node,
     ])
 end
-truncate_weak(node::Spike, ctx, ext, ext_2) = nothing
+truncate_weak(node::Spike, ctx, ext, ext_2) = node
 truncate_strong(node::Spike, ctx, ext, ext_2) = Run(node.body)

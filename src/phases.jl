@@ -81,7 +81,7 @@ end
 phase_range(node, ctx, idx, ext) = NoDimension()
 phase_range(node::Phase, ctx, idx, ext) = Narrow(Extent(getstart(ext), PhaseStrideVisitor(ctx, idx, getstart(ext))(node)[1]))
 
-phase_body(node, ctx, idx, ext, ext_2) = truncate(node, ctx, idx, ext, ext_2)
+phase_body(node, ctx, idx, ext, ext_2) = truncate(node, ctx, ext, ext_2)
 phase_body(node::Phase, ctx, idx, ext, ext_2) = node.body(getstart(ext_2), getstop(ext_2))
 function phase_body(node::Shift, ctx, idx, ext, ext_2)
     body_2 = phase_body(node.body, ctx, idx, shiftdim(ext, call(-, node.shift)), shiftdim(ext_2, call(-, node.shift)))

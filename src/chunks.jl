@@ -21,6 +21,7 @@ function (ctx::LowerJulia)(root::Loop, ::ChunkStyle)
     ))
 end
 
-truncate(node, ctx, idx, ext, ext_2) = nothing
-truncate_weak(node, ctx, idx, ext, ext_2) = truncate(node, ctx, idx, ext, ext_2)
-truncate_strong(node, ctx, idx, ext, ext_2) = truncate(node, ctx, idx, ext, ext_2)
+#TODO one day this might be nothing?
+truncate(node, ctx, ext, ext_2) = node
+truncate_weak(node, ctx, ext, ext_2) = truncate(node, ctx, ext, ext_2)
+truncate_strong(node, ctx, ext, ext_2) = truncate(node, ctx, ext, ext_2)

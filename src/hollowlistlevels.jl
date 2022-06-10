@@ -111,8 +111,6 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
     my_q_stop = ctx.freshen(tag, :_q_stop)
     my_i1 = ctx.freshen(tag, :_i1)
 
-    foo = gensym()
-
     Thunk(
         preamble = quote
             $my_q = $(lvl.ex).pos[$(ctx(envposition(fbr.env)))]
@@ -139,18 +137,15 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
                         preamble = :(
                             $my_i = $(lvl.ex).idx[$my_q]
                         ),
-                        body = Phase(
-                            guard = (start) -> :($my_q < $my_q_stop),
-                            stride = (start) -> my_i,
-                            body = (start, step) -> truncate(Spike(
+                        body = Step(
+                            stride = (ctx, idx, ext) -> my_i,
+                            body = Spike(
                                 body = Simplify(default(fbr)),
-                                tail = Thunk(
-                                    body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=Virtual{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
-                                    epilogue = quote
-                                        $my_q += 1
-                                    end
-                                )
-                            ), ctx, Extent(start, my_i), Extent(start, step)),
+                                tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=Virtual{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
+                            ),
+                            next = (ctx, idx, ext) -> quote
+                                $my_q += 1
+                            end
                         )
                     )
                 )
