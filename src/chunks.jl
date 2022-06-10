@@ -20,3 +20,7 @@ function (ctx::LowerJulia)(root::Loop, ::ChunkStyle)
         body = body
     ))
 end
+
+truncate(node, ctx, idx, ext, ext_2) = nothing
+truncate_weak(node, ctx, idx, ext, ext_2) = truncate(node, ctx, idx, ext, ext_2)
+truncate_strong(node, ctx, idx, ext, ext_2) = truncate(node, ctx, idx, ext, ext_2)

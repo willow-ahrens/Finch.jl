@@ -81,20 +81,11 @@ end
 phase_range(node, ctx, idx, ext) = NoDimension()
 phase_range(node::Phase, ctx, idx, ext) = Narrow(Extent(getstart(ext), PhaseStrideVisitor(ctx, idx, getstart(ext))(node)[1]))
 
-phase_body(node, ctx, idx, ext, ext_2) = nothing
-phase_body(node, ctx, idx, ext, ext_2) = PhaseBodyVisitor(ctx, idx, ext, ext_2)(node)
-
-#=
 phase_body(node, ctx, idx, ext, ext_2) = truncate(node, ctx, idx, ext, ext_2)
-phase_body(node::Phase, ctx, idx, ext, ext_2) = node.body(getstart(ctx.ext_2), getstop(ctx.ext_2))
+phase_body(node::Phase, ctx, idx, ext, ext_2) = node.body(getstart(ext_2), getstop(ext_2))
 function phase_body(node::Shift, ctx, idx, ext, ext_2)
     body_2 = phase_body(node.body, ctx, idx, shiftdim(ext, call(-, node.shift)), shiftdim(ext_2, call(-, node.shift)))
     if body_2 != nothing
         return Shift(body = body_2, shift=node.shift)
     end
 end
-
-truncate(node, ctx, idx, ext, ext_2) = nothing
-truncate_weak(node, ctx, idx, ext, ext_2) = truncate(node, ctx, idx, ext, ext_2)
-truncate_strong(node, ctx, idx, ext, ext_2) = truncate(node, ctx, idx, ext, ext_2)
-=#

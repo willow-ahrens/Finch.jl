@@ -87,3 +87,12 @@ default(node::AcceptSpike) = node.val #TODO is this semantically... okay?
 function (ctx::ForLoopVisitor)(node::Access{AcceptSpike}, ::DefaultStyle)
     node.tns.tail(ctx.ctx, ctx.val)
 end
+
+function truncate(node::Spike, ctx, ext, ext_2)
+    return Cases([
+        :($(ctx(getstop(ext_2))) < $(ctx(getstop(ext)))) => Run(node.body),
+        true => node,
+    ])
+end
+truncate_weak(node::Spike, ctx, ext, ext_2) = nothing
+truncate_strong(node::Spike, ctx, ext, ext_2) = Run(node.body)
