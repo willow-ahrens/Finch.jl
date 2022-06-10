@@ -37,11 +37,14 @@ function (ctx::LowerJulia)(root::Chunk, ::StepperStyle)
         end
     else
         guard = :($i <= $(ctx(stop(root.ext))))
-        body = StepperVisitor(i0, ctx)(root)
+        body = StepperVisitor(i0, ctx)(root.body)
 
         body_2 = fixpoint(ctx) do ctx_2
             scope(ctx_2) do ctx_3
-                ctx_3(body)
+                contain(ctx_3) do ctx_4
+                    push!(ctx_4.preamble, :($i0 = $i))
+                    ctx_4(Chunk(root.idx, Extent(i0, stop(root.ext)), body))
+                end
             end
         end
         return quote
@@ -94,26 +97,26 @@ function (ctx::LowerJulia)(root::Chunk, ::StepStyle)
         nothing
     end)(body)
 
-    step = ctx.freshen(i, :_step)
-    step_min = quote
-        $step = $(ctx(stop(ext_2.ext)))
-    end
-    body = (PhaseBodyVisitor(ctx, i, i0, step, ctx(stop(root.ext))))(body)
+    #TODO clean that up
+    stop_2 = cache!(ctx, ctx.freshen(i, :_stop), stop(ext_2))
+    start_2 = cache!(ctx, ctx.freshen(i, :_start), start(ext_2))
+    ext_2 = Extent(start_2, stop_2)
+    body = Postwalk(node->phase_body(node, ctx, root.idx, root.ext, ext_2))(body)
     quote
         $i0 = $i
-        $step_min
         $(contain(ctx) do ctx_4
             (ctx_4)(Chunk(
                 idx = root.idx,
-                ext = Extent(Virtual{Any}(i0), Virtual{Any}(step)),
+                ext = ext_2,
                 body = body
             ))
         end)
-        $i = $step + 1
+        $i = $(ctx(stop(ext_2))) + 1
     end
 end
 
 phase_range(node, ctx, idx, ext) = NoDimension()
 phase_range(node::Phase, ctx, idx, ext) = Narrow(Extent(start(ext), PhaseStrideVisitor(ctx, idx, start(ext))(node)[1]))
 
-(ctx::PhaseBodyVisitor)(node::Stepper, ::DefaultStyle) = truncate(node, ctx.ctx, ctx.start, ctx.step, ctx.stop)
+phase_body(node, ctx, idx, ext, ext_2) = nothing
+phase_body(node, ctx, idx, ext, ext_2) = PhaseBodyVisitor(ctx, idx, ctx(start(ext_2)), ctx(stop(ext_2)), ctx(stop(ext)))(node)
