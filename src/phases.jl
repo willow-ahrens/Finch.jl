@@ -23,7 +23,6 @@ combine_style(a::AcceptRunStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::PipelineStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::PipelineStyle, b::CaseStyle) = CaseStyle()
 combine_style(a::SpikeStyle, b::PipelineStyle) = PipelineStyle()
-combine_style(a::StepperStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::JumperStyle, b::PipelineStyle) = PipelineStyle()
 
 struct PipelineVisitor <: AbstractCollectVisitor
@@ -140,7 +139,6 @@ collect_zero(::PhaseStrideVisitor) = []
     stop
 end
 (ctx::PhaseBodyVisitor)(node::Phase, ::DefaultStyle) = node.body(ctx.start, ctx.step)
-(ctx::PhaseBodyVisitor)(node::Stepper, ::DefaultStyle) = truncate(node, ctx.ctx, ctx.start, ctx.step, ctx.stop)
 (ctx::PhaseBodyVisitor)(node::Spike, ::DefaultStyle) = truncate(node, ctx.ctx, ctx.start, ctx.step, ctx.stop)
 
 supports_shift(::PipelineStyle) = true
