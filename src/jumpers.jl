@@ -22,6 +22,7 @@ combine_style(a::SimplifyStyle, b::JumperStyle) = SimplifyStyle()
 combine_style(a::JumperStyle, b::AcceptRunStyle) = JumperStyle()
 combine_style(a::JumperStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::JumperStyle, b::CaseStyle) = CaseStyle()
+combine_style(a::JumperStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::ThunkStyle, b::JumperStyle) = ThunkStyle()
 
 function (ctx::LowerJulia)(root::Chunk, ::JumperStyle)

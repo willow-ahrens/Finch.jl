@@ -23,14 +23,18 @@ include("transform_ssa.jl")
 include("lower.jl")
 include("dimensionalize.jl")
 include("annihilate.jl")
+
 include("shifts.jl")
 include("chunks.jl")
 include("runs.jl")
 include("spikes.jl")
 include("cases.jl")
-include("jumpers.jl")
+
 include("phases.jl")
+include("pipelines.jl")
+include("jumpers.jl")
 include("steppers.jl")
+
 include("execute.jl")
 include("virtual_abstractarray.jl")
 include("select.jl")
@@ -43,8 +47,6 @@ include("hollowbytelevels.jl")
 include("solidlevels.jl")
 include("elementlevels.jl")
 
-combine_style(a::CaseStyle, b::StepStyle) = CaseStyle()
-combine_style(a::ThunkStyle, b::StepStyle) = ThunkStyle()
 
 module h
     using Finch
