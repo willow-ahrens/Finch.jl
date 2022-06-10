@@ -91,16 +91,14 @@ function (ctx::LowerJulia)(root::Chunk, ::StepStyle)
 
     body = root.body
 
-    ext_2 = root.ext
+    ext_2 = NoDimension()
     Postwalk(node->begin
         ext_2 = resultdim(ctx, false, ext_2, phase_range(node, ctx, root.idx, root.ext))
         nothing
     end)(body)
 
-    #TODO clean that up
-    stop_2 = cache!(ctx, ctx.freshen(i, :_stop), stop(ext_2))
-    start_2 = cache!(ctx, ctx.freshen(i, :_start), start(ext_2))
-    ext_2 = Extent(start_2, stop_2)
+    ext_2 = resolvedim(ctx, combinedim(ctx, false, Narrow(root.ext), resolvedim(ctx, ext_2)))
+
     body = Postwalk(node->phase_body(node, ctx, root.idx, root.ext, ext_2))(body)
     quote
         $i0 = $i
