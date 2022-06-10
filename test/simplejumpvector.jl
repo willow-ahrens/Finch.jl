@@ -69,7 +69,7 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSimpleJumpVector{Tv, T
                     stride = (start) -> my_i′,
                     body = (start, step) -> begin
                         Cases([
-                            :($step == $my_i′) => Thunk(
+                            :($(ctx.ctx(step)) == $my_i′) => Thunk(
                                 body = Spike(
                                     body = Simplify(zero(Tv)),
                                     tail = Virtual{Tv}(:($(vec.ex).val[$my_p])),
@@ -90,7 +90,7 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSimpleJumpVector{Tv, T
                                     stride = (start) -> my_i′,
                                     body = (start, step) -> begin
                                         Cases([
-                                            :($step < $my_i′) =>
+                                            :($(ctx.ctx(step)) < $my_i′) =>
                                                 Run(
                                                     body = Simplify(zero(Tv)),
                                                 ),

@@ -179,7 +179,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Read, idx::
                             stride = (start) -> my_i,
                             body = (start, step) -> Thunk(
                                 body = Cases([
-                                    :($step == $my_i) => if R == lvl.N
+                                    :($(ctx(step)) == $my_i) => if R == lvl.N
                                         Thunk(
                                             body = Spike(
                                                 body = Simplify(default(fbr)),

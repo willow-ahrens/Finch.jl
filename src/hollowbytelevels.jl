@@ -239,7 +239,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Read, idx:
                             stride = (start) -> my_i,
                             body = (start, step) -> Thunk(
                                 body = Cases([
-                                    :($step == $my_i) => Thunk(
+                                    :($(ctx(step)) == $my_i) => Thunk(
                                         body = Spike(
                                             body = Simplify(default(fbr)),
                                             tail = Thunk(

@@ -41,15 +41,18 @@ phase_range(node::Step, ctx, idx, ext) = Narrow(Extent(getstart(ext), node.strid
 phase_body(node::Step, ctx, idx, ext, ext_2) = Cases([
     :($(ctx(node.stride(ctx, idx, ext))) == $(ctx(getstop(ext_2)))) => Thunk(
         body = truncate_weak(node.body, ctx, getstart(ext_2), getstop(ext_2), getstop(ext)),
-        epilogue = node.next(ctx, idx, ext_2))
+        epilogue = node.next(ctx, idx, ext_2)
+    ),
+    :($(ctx(node.stride(ctx, idx, ext))) == $(ctx(getstop(ext_2)))) => 
+        body = truncate_strong(node.body, ctx, getstart(ext_2), getstop(ext_2), getstop(ext)),
 ])
 =#
 
 
-truncate(node, ctx, start, step, stop) = node
-function truncate(node::Spike, ctx, start, step, stop)
+truncate(node, ctx, ext, ext_2) = node
+function truncate(node::Spike, ctx, ext, ext_2)
     return Cases([
-        :($(step) < $(stop)) => Run(node.body),
+        :($(ctx(getstop(ext_2))) < $(ctx(getstop(ext)))) => Run(node.body),
         true => node,
     ])
 end

@@ -28,15 +28,14 @@ collect_zero(::PhaseStrideVisitor) = []
 @kwdef struct PhaseBodyVisitor <: AbstractTransformVisitor
     ctx
     idx
-    start
-    step
-    stop
+    ext
+    ext_2
 end
-(ctx::PhaseBodyVisitor)(node::Phase, ::DefaultStyle) = node.body(ctx.start, ctx.step)
-(ctx::PhaseBodyVisitor)(node::Spike, ::DefaultStyle) = truncate(node, ctx.ctx, ctx.start, ctx.step, ctx.stop)
+(ctx::PhaseBodyVisitor)(node::Phase, ::DefaultStyle) = node.body(getstart(ctx.ext_2), getstop(ctx.ext_2))
+(ctx::PhaseBodyVisitor)(node::Spike, ::DefaultStyle) = truncate(node, ctx.ctx, ctx.ext, ctx.ext_2)
 
 (ctx::PhaseStrideVisitor)(node::Shift, ::DefaultStyle) = map(stride -> call(+, stride, node.shift), ctx(node.body))
-(ctx::PhaseBodyVisitor)(node::Shift, ::DefaultStyle) = PhaseBodyVisitor(ctx.ctx, ctx.idx, call(-, ctx.start, node.shift), call(-, ctx.step, node.shift), call(-, ctx.stop, node.shift))(node.body)
+(ctx::PhaseBodyVisitor)(node::Shift, ::DefaultStyle) = PhaseBodyVisitor(ctx.ctx, ctx.idx, shiftdim(ctx.ext, call(-, node.shift)), shiftdim(ctx.ext_2, call(-, node.shift)))(node.body)
 
 struct PhaseStyle end
 
@@ -83,4 +82,19 @@ phase_range(node, ctx, idx, ext) = NoDimension()
 phase_range(node::Phase, ctx, idx, ext) = Narrow(Extent(getstart(ext), PhaseStrideVisitor(ctx, idx, getstart(ext))(node)[1]))
 
 phase_body(node, ctx, idx, ext, ext_2) = nothing
-phase_body(node, ctx, idx, ext, ext_2) = PhaseBodyVisitor(ctx, idx, ctx(getstart(ext_2)), ctx(getstop(ext_2)), ctx(getstop(ext)))(node)
+phase_body(node, ctx, idx, ext, ext_2) = PhaseBodyVisitor(ctx, idx, ext, ext_2)(node)
+
+#=
+phase_body(node, ctx, idx, ext, ext_2) = truncate(node, ctx, idx, ext, ext_2)
+phase_body(node::Phase, ctx, idx, ext, ext_2) = node.body(getstart(ctx.ext_2), getstop(ctx.ext_2))
+function phase_body(node::Shift, ctx, idx, ext, ext_2)
+    body_2 = phase_body(node.body, ctx, idx, shiftdim(ext, call(-, node.shift)), shiftdim(ext_2, call(-, node.shift)))
+    if body_2 != nothing
+        return Shift(body = body_2, shift=node.shift)
+    end
+end
+
+truncate(node, ctx, idx, ext, ext_2) = nothing
+truncate_weak(node, ctx, idx, ext, ext_2) = truncate(node, ctx, idx, ext, ext_2)
+truncate_strong(node, ctx, idx, ext, ext_2) = truncate(node, ctx, idx, ext, ext_2)
+=#

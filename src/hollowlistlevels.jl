@@ -150,7 +150,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
                                         $my_q += 1
                                     end
                                 )
-                            ), nothing, start, step, my_i),
+                            ), ctx, Extent(start, my_i), Extent(start, step)),
                         )
                     )
                 )
@@ -224,7 +224,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
                                             stride = (start) -> my_i,
                                             body = (start, step) -> Thunk(
                                                 body = Cases([
-                                                    :($step == $my_i) => Thunk(
+                                                    :($(ctx(step)) == $my_i) => Thunk(
                                                         body = Spike(
                                                             body = Simplify(default(fbr)),
                                                             tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=Virtual{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),

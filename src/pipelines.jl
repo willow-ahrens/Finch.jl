@@ -49,19 +49,19 @@ function (ctx::LowerJulia)(root::Chunk, ::PipelineStyle)
             guards = (PhaseGuardVisitor(ctx_3, i, i0))(body)
             strides = (PhaseStrideVisitor(ctx_3, i, i0))(body)
             strides = [strides; ctx(getstop(root.ext))]
-            body = (PhaseBodyVisitor(ctx_3, i, i0, step, (ctx)(getstop(root.ext))))(body)
+            body = (PhaseBodyVisitor(ctx_3, i, root.ext, Extent(i0, step)))(body)
             block = quote
                 $(contain(ctx_3) do ctx_4
                     if extent(root.ext) == 1
                         (ctx_4)(Chunk(
                             idx = root.idx,
-                            ext = UnitExtent(Virtual{Any}(step)),
+                            ext = UnitExtent(step),
                             body = body
                         ))
                     else
                         (ctx_4)(Chunk(
                             idx = root.idx,
-                            ext = Extent(Virtual{Any}(i0), Virtual{Any}(step)),
+                            ext = Extent(i0, step),
                             body = body
                         ))
                     end

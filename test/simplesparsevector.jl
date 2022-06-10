@@ -69,7 +69,7 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSimpleSparseVector{Tv,
                     stride = (start) -> my_i′,
                     body = (start, step) -> begin
                         Cases([
-                            :($step < $my_i′) =>
+                            :($(ctx.ctx(step)) < $my_i′) =>
                                 Run(
                                     body = Simplify(zero(Tv)),
                                 ),
