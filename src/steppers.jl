@@ -24,53 +24,27 @@ function (ctx::LowerJulia)(root::Chunk, style::StepperStyle)
     lower_cycle(root, ctx, root.ext, style)
 end
 
-function lower_cycle(root, ctx, ext::UnitExtent, style)
-    i = getname(root.idx)
-    i0 = ctx.freshen(i, :_start)
-    push!(ctx.preamble, quote
-        $i0 = $(ctx(getstart(root.ext)))
-        $i = $i0
-    end)
-
-    body = Postwalk(node->unwrap_cycle(node, ctx, ext, style))(root.body)
-
-    contain(ctx) do ctx_4
-        push!(ctx_4.preamble, :($i0 = $i))
-        ctx_4(Chunk(root.idx, Extent(i0, getstop(ext)), body))
-    end
-end
-
-function lower_cycle(root, ctx, ext, style)
-    i = getname(root.idx)
-    i0 = ctx.freshen(i, :_start)
-    push!(ctx.preamble, quote
-        $i0 = $(ctx(getstart(root.ext)))
-        $i = $i0
-    end)
-
-    guard = :($i <= $(ctx(getstop(root.ext))))
-    body = Postwalk(node->unwrap_cycle(node, ctx, ext, style))(root.body)
-
-    body_2 = fixpoint(ctx) do ctx_2
-        scope(ctx_2) do ctx_3
-            contain(ctx_3) do ctx_4
-                push!(ctx_4.preamble, :($i0 = $i))
-                ctx_4(Chunk(root.idx, Extent(i0, getstop(root.ext)), body))
-            end
-        end
-    end
-    return quote
-        while $guard
-            $body_2
-        end
-    end
-end
-
-unwrap_cycle(node, ctx, ext, style) = nothing
 function unwrap_cycle(node::Stepper, ctx, ext, ::StepperStyle)
     push!(ctx.preamble, node.seek(ctx, ext))
     node.body
 end
+
+#=
+@kwdef struct Step
+    body
+    stride
+    next = nothing
+end
+
+phase_range(node::Step, ctx, idx, ext) = Narrow(Extent(getstart(ext), node.stride(ctx, idx, ext)))
+
+phase_body(node::Step, ctx, idx, ext, ext_2) = Cases([
+    :($(ctx(node.stride(ctx, idx, ext))) == $(ctx(getstop(ext_2)))) => Thunk(
+        body = truncate_weak(node.body, ctx, getstart(ext_2), getstop(ext_2), getstop(ext)),
+        epilogue = node.next(ctx, idx, ext_2))
+])
+=#
+
 
 truncate(node, ctx, start, step, stop) = node
 function truncate(node::Spike, ctx, start, step, stop)

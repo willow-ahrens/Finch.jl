@@ -32,6 +32,7 @@ include("cases.jl")
 
 include("phases.jl")
 include("pipelines.jl")
+include("cycles.jl")
 include("jumpers.jl")
 include("steppers.jl")
 
