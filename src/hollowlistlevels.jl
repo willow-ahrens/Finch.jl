@@ -66,7 +66,7 @@ function getdims(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
 end
 
 function setdims!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode, dim, dims...)
-    push!(ctx.preamble, :($(fbr.lvl.I) = $(ctx(stop(dim)))))
+    push!(ctx.preamble, :($(fbr.lvl.I) = $(ctx(getstop(dim)))))
     fbr.lvl.lvl = setdims!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode, dims...).lvl
     fbr
 end
@@ -89,7 +89,7 @@ interval_assembly_depth(lvl::VirtualHollowListLevel) = Inf
 #This function is quite simple, since HollowListLevels don't support reassembly.
 function assemble!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
     lvl = fbr.lvl
-    p_stop = ctx(cache!(ctx, ctx.freshen(lvl.ex, :_p_stop), stop(envposition(fbr.env))))
+    p_stop = ctx(cache!(ctx, ctx.freshen(lvl.ex, :_p_stop), getstop(envposition(fbr.env))))
     push!(ctx.preamble, quote
         $(lvl.pos_alloc) < ($p_stop + 1) && ($(lvl.pos_alloc) = $Finch.regrow!($(lvl.ex).pos, $(lvl.pos_alloc), $p_stop + 1))
     end)
@@ -129,9 +129,9 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
             Phase(
                 stride = (start) -> my_i1,
                 body = (start, step) -> Stepper(
-                    seek = (ctx, start) -> quote
+                    seek = (ctx, ext) -> quote
                         #$my_q = searchsortedfirst($(lvl.ex).idx, $start, $my_q, $my_q_stop, Base.Forward)
-                        while $my_q < $my_q_stop && $(lvl.ex).idx[$my_q] < $start
+                        while $my_q < $my_q_stop && $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
                             $my_q += 1
                         end
                     end,
@@ -186,9 +186,9 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
             Phase(
                 stride = (start) -> my_i1,
                 body = (start, step) -> Jumper(
-                    seek = (ctx, start) -> quote
+                    seek = (ctx, ext) -> quote
                         #$my_q = searchsortedfirst($(lvl.ex).idx, $start, $my_q, $my_q_stop, Base.Forward)
-                        while $my_q < $my_q_stop && $(lvl.ex).idx[$my_q] < $start
+                        while $my_q < $my_q_stop && $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
                             $my_q += 1
                         end
                     end,
@@ -210,9 +210,9 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
                                     end
                                 ),
                                 true => Stepper(
-                                    seek = (ctx, start) -> quote
+                                    seek = (ctx, ext) -> quote
                                         #$my_q = searchsortedfirst($(lvl.ex).idx, $start, $my_q, $my_q_stop, Base.Forward)
-                                        while $my_q < $my_q_stop && $(lvl.ex).idx[$my_q] < $start
+                                        while $my_q < $my_q_stop && $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
                                             $my_q += 1
                                         end
                                     end,

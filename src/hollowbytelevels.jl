@@ -85,7 +85,7 @@ function getdims(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode)
 end
 
 function setdims!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode, dim, dims...)
-    push!(ctx.preamble, :($(fbr.lvl.I) = $(ctx(stop(dim)))))
+    push!(ctx.preamble, :($(fbr.lvl.I) = $(ctx(getstop(dim)))))
     fbr.lvl.lvl = setdims!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode, dims...).lvl
     fbr
 end
@@ -101,7 +101,7 @@ function initialize_level!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx::Lower
     i = ctx.freshen(lvl.ex, :_i)
     p_prev = ctx.freshen(lvl.ex, :_p_prev)
     push!(ctx.preamble, quote
-        $(lvl.I) = $(lvl.Ti)($(ctx(stop(ctx.dims[(getname(fbr), envdepth(fbr.env) + 1)]))))
+        $(lvl.I) = $(lvl.Ti)($(ctx(getstop(ctx.dims[(getname(fbr), envdepth(fbr.env) + 1)]))))
         # fill!($(lvl.ex).tbl, 0)
         # empty!($(lvl.ex).srt)
         $(lvl.ex).pos[1] = 1
@@ -140,11 +140,11 @@ interval_assembly_depth(lvl::VirtualHollowByteLevel) = min(Inf, interval_assembl
 #TODO does this actually support reassembly? I think it needs to filter out indices with unset table entries during finalization
 function assemble!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode)
     lvl = fbr.lvl
-    p_stop = ctx(cache!(ctx, ctx.freshen(lvl.ex, :_p), stop(envposition(fbr.env))))
+    p_stop = ctx(cache!(ctx, ctx.freshen(lvl.ex, :_p), getstop(envposition(fbr.env))))
     if extent(envposition(fbr.env)) == 1
         p_start = p_stop
     else
-        p_start = ctx(cache!(ctx, freshen(lvl.ex, :_p), start(envposition(fbr.env))))
+        p_start = ctx(cache!(ctx, freshen(lvl.ex, :_p), getstart(envposition(fbr.env))))
     end
     q_start = ctx.freshen(lvl.ex, :q_start)
     q_stop = ctx.freshen(lvl.ex, :q_stop)
@@ -224,9 +224,9 @@ function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Read, idx:
             Phase(
                 stride = (start) -> my_i_stop,
                 body = (start, step) -> Stepper(
-                    seek = (ctx, start) -> quote
+                    seek = (ctx, ext) -> quote
                         #$my_r = searchsortedfirst($(lvl.ex).idx, $start, $my_r, $my_r_stop, Base.Forward)
-                        while $my_r < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $start
+                        while $my_r < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext)))
                             $my_r += 1
                         end
                     end,
@@ -323,9 +323,9 @@ function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Read, idx:
                                     end
                                 ),
                                 true => Stepper(
-                                    seek = (ctx, start) -> quote
+                                    seek = (ctx, ext) -> quote
                                         #$my_r = searchsortedfirst($(lvl.ex).idx, $start, $my_r, $my_r_stop, Base.Forward)
-                                        while $my_r < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $start
+                                        while $my_r < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext)))
                                             $my_r += 1
                                         end
                                     end,

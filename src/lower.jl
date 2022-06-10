@@ -286,7 +286,7 @@ function (ctx::LowerJulia)(stmt::Chunk, ::DefaultStyle)
     idx_sym = ctx.freshen(getname(stmt.idx))
     if extent(stmt.ext) == 1
         return quote
-            $idx_sym = $(ctx(start(stmt.ext)))
+            $idx_sym = $(ctx(getstart(stmt.ext)))
             $(bind(ctx, getname(stmt.idx) => idx_sym) do 
                 contain(ctx) do ctx_2
                     body_3 = ForLoopVisitor(ctx_2, stmt.idx, idx_sym)(stmt.body)
@@ -296,7 +296,7 @@ function (ctx::LowerJulia)(stmt::Chunk, ::DefaultStyle)
         end
     else
         return quote
-            for $idx_sym = $(ctx(start(stmt.ext))):$(ctx(stop(stmt.ext)))
+            for $idx_sym = $(ctx(getstart(stmt.ext))):$(ctx(getstop(stmt.ext)))
                 $(fixpoint(ctx) do ctx_2
                     scope(ctx_2) do ctx_3
                         bind(ctx_3, getname(stmt.idx) => idx_sym) do 

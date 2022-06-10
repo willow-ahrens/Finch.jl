@@ -53,8 +53,8 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSimpleRunLength{Tv, Ti
                 $my_i′ = $(vec.ex).idx[$my_p]
             end,
             body = Stepper(
-                seek = (ctx, start) -> quote
-                    $my_p = searchsortedfirst($(vec.ex).idx, $start, $my_p, length($(vec.ex).idx), Base.Forward)
+                seek = (ctx, ext) -> quote
+                    $my_p = searchsortedfirst($(vec.ex).idx, $(ctx(getstart(ext))), $my_p, length($(vec.ex).idx), Base.Forward)
                     $my_i′ = $(vec.ex).idx[$my_p]
                 end,
                 body = Phase(

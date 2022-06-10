@@ -60,9 +60,9 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSimpleSparseVector{Tv,
                 $my_i′ = $(vec.ex).idx[$my_p]
             end,
             body = Stepper(
-                seek = (ctx, start) -> quote
-                    $my_p = searchsortedfirst($(vec.ex).idx, $start, $my_p, length($(vec.ex).idx), Base.Forward)
-                    $my_i = $start
+                seek = (ctx, ext) -> quote
+                    $my_p = searchsortedfirst($(vec.ex).idx, $(ctx(getstart(ext))), $my_p, length($(vec.ex).idx), Base.Forward)
+                    $my_i = $(ctx(getstart(ext)))
                     $my_i′ = $(vec.ex).idx[$my_p]
                 end,
                 body = Phase(
@@ -103,7 +103,7 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSimpleSparseVector{Tv,
     if getname(ctx.idx) == getname(node.idxs[1])
         push!(ctx.ctx.preamble, quote
             $my_p = 0
-            $my_I = $(ctx.ctx(stop(ctx.ctx.dims[getname(node.idxs[1])]))) + 1 #TODO is this okay? Should Chunkify tell us which chunk to use?
+            $my_I = $(ctx.ctx(getstop(ctx.ctx.dims[getname(node.idxs[1])]))) + 1 #TODO is this okay? Should Chunkify tell us which chunk to use?
             $(vec.ex).idx = $Ti[$my_I]
             $(vec.ex).val = $Tv[]
         end)

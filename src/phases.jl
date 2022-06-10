@@ -75,12 +75,12 @@ function (ctx::LowerJulia)(root::Chunk, ::PhaseStyle)
                 body = body
             ))
         end)
-        $i = $(ctx(stop(ext_2))) + 1
+        $i = $(ctx(getstop(ext_2))) + 1
     end
 end
 
 phase_range(node, ctx, idx, ext) = NoDimension()
-phase_range(node::Phase, ctx, idx, ext) = Narrow(Extent(start(ext), PhaseStrideVisitor(ctx, idx, start(ext))(node)[1]))
+phase_range(node::Phase, ctx, idx, ext) = Narrow(Extent(getstart(ext), PhaseStrideVisitor(ctx, idx, getstart(ext))(node)[1]))
 
 phase_body(node, ctx, idx, ext, ext_2) = nothing
-phase_body(node, ctx, idx, ext, ext_2) = PhaseBodyVisitor(ctx, idx, ctx(start(ext_2)), ctx(stop(ext_2)), ctx(stop(ext)))(node)
+phase_body(node, ctx, idx, ext, ext_2) = PhaseBodyVisitor(ctx, idx, ctx(getstart(ext_2)), ctx(getstop(ext_2)), ctx(getstop(ext)))(node)

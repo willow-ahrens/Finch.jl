@@ -29,15 +29,15 @@ function (ctx::LowerJulia)(root::Chunk, ::JumperStyle)
     i = getname(root.idx)
     i0 = ctx.freshen(i, :_start)
     push!(ctx.preamble, quote
-        $i0 = $(ctx(start(root.ext)))
+        $i0 = $(ctx(getstart(root.ext)))
     end)
 
     if extent(root.ext) == 1
         body = JumperVisitor(i0, ctx)(root)
         return contain(ctx) do ctx_2
             body_2 = ThunkVisitor(ctx_2)(body)
-            step = ctx_2(start(root.ext))
-            body_3 = (PhaseBodyVisitor(ctx_2, i, i0, step, ctx_2(stop(root.ext))))(body_2)
+            step = ctx_2(getstart(root.ext))
+            body_3 = (PhaseBodyVisitor(ctx_2, i, i0, step, ctx_2(getstop(root.ext))))(body_2)
             (ctx_2)(body_3)
         end
     else
@@ -48,10 +48,10 @@ function (ctx::LowerJulia)(root::Chunk, ::JumperStyle)
                 body_3 = ThunkVisitor(ctx_3)(body)
                 strides = (PhaseStrideVisitor(ctx_3, i, i0))(body_3)
                 step = ctx.freshen(i, :_step)
-                body_4 = (PhaseBodyVisitor(ctx_3, i, i0, step, ctx_3(stop(root.ext))))(body_3)
-                guard = :($i0 <= $(ctx_3(stop(root.ext))))
+                body_4 = (PhaseBodyVisitor(ctx_3, i, i0, step, ctx_3(getstop(root.ext))))(body_3)
+                guard = :($i0 <= $(ctx_3(getstop(root.ext))))
                 quote
-                    $step = min(max($(map(ctx_3, strides)...)), $(ctx_3(stop(root.ext))))
+                    $step = min(max($(map(ctx_3, strides)...)), $(ctx_3(getstop(root.ext))))
                     $(contain(ctx_3) do ctx_4
                         (ctx_4)(Chunk(
                             idx = root.idx,

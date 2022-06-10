@@ -20,47 +20,55 @@ combine_style(a::StepperStyle, b::CaseStyle) = CaseStyle()
 combine_style(a::ThunkStyle, b::StepperStyle) = ThunkStyle()
 combine_style(a::StepperStyle, b::JumperStyle) = JumperStyle()
 
-function (ctx::LowerJulia)(root::Chunk, ::StepperStyle)
+function (ctx::LowerJulia)(root::Chunk, style::StepperStyle)
+    lower_cycle(root, ctx, root.ext, style)
+end
+
+function lower_cycle(root, ctx, ext::UnitExtent, style)
     i = getname(root.idx)
     i0 = ctx.freshen(i, :_start)
     push!(ctx.preamble, quote
-        $i0 = $(ctx(start(root.ext)))
-        $i = $(ctx(start(root.ext)))
+        $i0 = $(ctx(getstart(root.ext)))
+        $i = $i0
     end)
 
-    if extent(root.ext) == 1
-        body = StepperVisitor(i0, ctx)(root)
-        return contain(ctx) do ctx_2
-            body_2 = ThunkVisitor(ctx_2)(body)
-            body_3 = (PhaseBodyVisitor(ctx_2, i, i0, i0, ctx_2(stop(root.ext))))(body_2)
-            (ctx_2)(body_3)
-        end
-    else
-        guard = :($i <= $(ctx(stop(root.ext))))
-        body = StepperVisitor(i0, ctx)(root.body)
+    body = Postwalk(node->unwrap_cycle(node, ctx, ext, style))(root.body)
 
-        body_2 = fixpoint(ctx) do ctx_2
-            scope(ctx_2) do ctx_3
-                contain(ctx_3) do ctx_4
-                    push!(ctx_4.preamble, :($i0 = $i))
-                    ctx_4(Chunk(root.idx, Extent(i0, stop(root.ext)), body))
-                end
+    contain(ctx) do ctx_4
+        push!(ctx_4.preamble, :($i0 = $i))
+        ctx_4(Chunk(root.idx, Extent(i0, getstop(ext)), body))
+    end
+end
+
+function lower_cycle(root, ctx, ext, style)
+    i = getname(root.idx)
+    i0 = ctx.freshen(i, :_start)
+    push!(ctx.preamble, quote
+        $i0 = $(ctx(getstart(root.ext)))
+        $i = $i0
+    end)
+
+    guard = :($i <= $(ctx(getstop(root.ext))))
+    body = Postwalk(node->unwrap_cycle(node, ctx, ext, style))(root.body)
+
+    body_2 = fixpoint(ctx) do ctx_2
+        scope(ctx_2) do ctx_3
+            contain(ctx_3) do ctx_4
+                push!(ctx_4.preamble, :($i0 = $i))
+                ctx_4(Chunk(root.idx, Extent(i0, getstop(root.ext)), body))
             end
         end
-        return quote
-            while $guard
-                $body_2
-            end
+    end
+    return quote
+        while $guard
+            $body_2
         end
     end
 end
 
-@kwdef struct StepperVisitor <: AbstractTransformVisitor
-    start
-    ctx
-end
-function (ctx::StepperVisitor)(node::Stepper, ::DefaultStyle)
-    push!(ctx.ctx.preamble, node.seek(ctx, ctx.start))
+unwrap_cycle(node, ctx, ext, style) = nothing
+function unwrap_cycle(node::Stepper, ctx, ext, ::StepperStyle)
+    push!(ctx.preamble, node.seek(ctx, ext))
     node.body
 end
 

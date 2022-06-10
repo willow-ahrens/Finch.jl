@@ -126,8 +126,8 @@ combinedim(ctx, check, a::NoDimension, b) = b
     stop::Stop
 end
 
-start(ext::Extent) = ext.start
-stop(ext::Extent) = ext.stop
+getstart(ext::Extent) = ext.start
+getstop(ext::Extent) = ext.stop
 extent(ext::Extent) = @i stop - start + 1
 
 combinedim(ctx, check, a::Extent, b::Extent) =
@@ -137,8 +137,8 @@ combinedim(ctx, check, a::Extent, b::Extent) =
     val::Val
 end
 
-start(ext::UnitExtent) = ext.val
-stop(ext::UnitExtent) = ext.val
+getstart(ext::UnitExtent) = ext.val
+getstop(ext::UnitExtent) = ext.val
 extent(ext::UnitExtent) = 1
 
 function combinedim(ctx, check, a::UnitExtent, b::Extent)
@@ -159,8 +159,8 @@ suggest(ext::SuggestedExtent) = ext
 suggest(ext::NoDimension) = nodim
 
 #TODO maybe just call something like resolve_extent to unwrap?
-start(ext::SuggestedExtent) = start(ext.ext)
-stop(ext::SuggestedExtent) = stop(ext.ext)
+getstart(ext::SuggestedExtent) = getstart(ext.ext)
+getstop(ext::SuggestedExtent) = getstop(ext.ext)
 extent(ext::SuggestedExtent) = extent(ext.ext)
 
 combinedim(ctx::Finch.LowerJulia, check, a::SuggestedExtent, b::Extent) = b
@@ -210,43 +210,43 @@ transpose of `tns`, then `getsites(tns_2)` should be a permutation of
 function getsites end
 
 
-start(val) = val
-stop(val) = val
+getstart(val) = val
+getstop(val) = val
 extent(val) = 1
 
 struct Narrow{Ext}
     ext::Ext
 end
 
-start(ext::Narrow) = start(ext.ext)
-stop(ext::Narrow) = stop(ext.ext)
+getstart(ext::Narrow) = getstart(ext.ext)
+getstop(ext::Narrow) = getstop(ext.ext)
 
 struct Widen{Ext}
     ext::Ext
 end
 
-start(ext::Widen) = start(ext.ext)
-stop(ext::Widen) = stop(ext.ext)
+getstart(ext::Widen) = getstart(ext.ext)
+getstop(ext::Widen) = getstop(ext.ext)
 
 combinedim(ctx, check, a::Narrow, b::Union{<:UnitExtent, <:Extent}) = resultdim(ctx, check, a, Narrow(b))
 
 function combinedim(ctx, check, a::Narrow{<:UnitExtent}, b::Narrow{<:Union{<:Extent, <:UnitExtent}})
-    start_2 = cache!(ctx, ctx.freshen(:start), call(max, start(a), start(b)))
-    stop_2 = cache!(ctx, ctx.freshen(:stop), call(min, stop(a), stop(b)))
+    start_2 = cache!(ctx, ctx.freshen(:start), call(max, getstart(a), getstart(b)))
+    stop_2 = cache!(ctx, ctx.freshen(:stop), call(min, getstop(a), getstop(b)))
     return Narrow(UnitExtent(stop))
 end
 
 function combinedim(ctx, check, a::Narrow{<:Extent}, b::Narrow{<:Extent})
-    start_2 = cache!(ctx, ctx.freshen(:start), call(max, start(a), start(b)))
-    stop_2 = cache!(ctx, ctx.freshen(:stop), call(min, stop(a), stop(b)))
+    start_2 = cache!(ctx, ctx.freshen(:start), call(max, getstart(a), getstart(b)))
+    stop_2 = cache!(ctx, ctx.freshen(:stop), call(min, getstop(a), getstop(b)))
     return Narrow(Extent(start_2, stop_2))
 end
 
 combinedim(ctx, check, a::Widen, b::Union{<:UnitExtent, <:Extent}) = resultdim(ctx, check, a, Widen(b))
 
 function combinedim(ctx, check, a::Widen{<:Union{<:Extent, <:UnitExtent}}, b::Widen{<:Union{<:Extent, <:UnitExtent}})
-    start_2 = cache!(ctx, ctx.freshen(:start), call(min, start(a), start(b)))
-    stop_2 = cache!(ctx, ctx.freshen(:stop), call(max, stop(a), stop(b)))
+    start_2 = cache!(ctx, ctx.freshen(:start), call(min, getstart(a), getstart(b)))
+    stop_2 = cache!(ctx, ctx.freshen(:stop), call(max, getstop(a), getstop(b)))
     return Widen(Extent(start_2, stop_2))
 end
 

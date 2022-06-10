@@ -64,7 +64,7 @@ end
 end
 
 function (ctx::AcceptRunVisitor)(node::Access{AcceptRun, <:Union{Write, Update}}, ::DefaultStyle)
-    node.tns.body(ctx.ctx, start(ctx.root.ext), stop(ctx.root.ext))
+    node.tns.body(ctx.ctx, getstart(ctx.root.ext), getstop(ctx.root.ext))
 end
 
 function (ctx::ForLoopVisitor)(node::Access{AcceptRun, <:Union{Write, Update}}, ::DefaultStyle)
