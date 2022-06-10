@@ -20,3 +20,18 @@ function (ctx::ForLoopVisitor)(node::Access{Shift}, ::DefaultStyle)
     ctx_2 = ForLoopVisitor(ctx.ctx, ctx.idx, call(+, ctx.val, node.tns.shift))
     ctx_2(node.tns.body)
 end
+
+function shiftdim(ext::UnitExtent, ctx, delta)
+    val_2 = cache!(ctx, ctx.freshen(:val), call(+, ext.val, delta))
+    return UnitExtent(val)
+end
+
+function shiftdim(ext::Extent, ctx, delta)
+    start_2 = cache!(ctx, ctx.freshen(:start), call(+, ext.start, delta))
+    stop_2 = cache!(ctx, ctx.freshen(:stop), call(+, ext.stop, delta))
+    return Extent(start_2, stop_2)
+end
+
+shiftdim(ext::Widen, ctx, delta) = Widen(shiftdim(ext.ext, ctx, delta))
+shiftdim(ext::Narrow, ctx, delta) = Narrow(shiftdim(ext.ext, ctx, delta))
+shiftdim(ext::NoDimension, ctx, delta) = NoDimension()
