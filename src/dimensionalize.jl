@@ -213,3 +213,49 @@ function getsites end
 start(val) = val
 stop(val) = val
 extent(val) = 1
+
+struct Narrow{Ext}
+    ext::Ext
+end
+
+start(ext::Narrow) = start(ext.ext)
+stop(ext::Narrow) = stop(ext.ext)
+
+struct Widen{Ext}
+    ext::Ext
+end
+
+start(ext::Widen) = start(ext.ext)
+stop(ext::Widen) = stop(ext.ext)
+
+combinedim(ctx, check, a::Narrow, b::Union{<:UnitExtent, <:Extent}) = resultdim(ctx, check, a, Narrow(b))
+
+function combinedim(ctx, check, a::Narrow{<:UnitExtent}, b::Narrow{<:Union{<:Extent, <:UnitExtent}})
+    start_2 = call(max, start(a), start(b))
+    stop_2 = call(min, stop(a), stop(b))
+    if check
+        push!(ctx.preamble, quote
+            @assert $start_2 == $stop_2
+        end)
+    end
+    return Narrow(UnitExtent(stop))
+end
+
+function combinedim(ctx, check, a::Narrow{<:Extent}, b::Narrow{<:Extent})
+    start_2 = call(max, start(a), start(b))
+    stop_2 = call(min, stop(a), stop(b))
+    if check
+        push!(ctx.preamble, quote
+            @assert $start_2 <= $stop_2
+        end)
+    end
+    return Narrow(Extent(start_2, stop_2))
+end
+
+combinedim(ctx, check, a::Widen, b::Union{<:UnitExtent, <:Extent}) = resultdim(ctx, check, a, Widen(b))
+
+function combinedim(ctx, check, a::Widen{<:Union{<:Extent, <:UnitExtent}}, b::Widen{<:Union{<:Extent, <:UnitExtent}})
+    start_2 = call(min, start(a), start(b))
+    stop_2 = call(max, stop(a), stop(b))
+    return Widen(Extent(start_2, stop_2))
+end

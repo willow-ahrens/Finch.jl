@@ -79,8 +79,6 @@ make_style(root::Chunk, ctx::LowerJulia, node::Phase) = StepStyle()
 
 combine_style(a::DefaultStyle, b::StepStyle) = StepStyle()
 combine_style(a::StepStyle, b::StepStyle) = StepStyle()
-combine_style(a::CasesStyle, b::StepStyle) = CasesStyle()
-combine_style(a::ThunkStyle, b::StepStyle) = ThunkStyle()
 combine_style(a::SimplifyStyle, b::StepStyle) = StepStyle()
 combine_style(a::AcceptRunStyle, b::StepStyle) = StepStyle()
 
@@ -88,12 +86,17 @@ function (ctx::LowerJulia)(root::Chunk, ::StepStyle)
     i = getname(root.idx)
     i0=ctx.freshen(i)
 
-    body = StepperVisitor(i0, ctx)(root.body)
+    body = root.body
 
-    strides = (PhaseStrideVisitor(ctx, i, i0))(body)
+    ext_2 = root.ext
+    Postwalk(node->begin
+        ext_2 = resultdim(ctx, false, ext_2, phase_range(node, ctx, root.idx, root.ext))
+        nothing
+    end)(body)
+
     step = ctx.freshen(i, :_step)
     step_min = quote
-        $step = min($(map(ctx, strides)...), $(ctx(stop(root.ext))))
+        $step = $(ctx(stop(ext_2.ext)))
     end
     body = (PhaseBodyVisitor(ctx, i, i0, step, ctx(stop(root.ext))))(body)
     quote
@@ -109,5 +112,8 @@ function (ctx::LowerJulia)(root::Chunk, ::StepStyle)
         $i = $step + 1
     end
 end
+
+phase_range(node, ctx, idx, ext) = NoDimension()
+phase_range(node::Phase, ctx, idx, ext) = Narrow(Extent(start(ext), PhaseStrideVisitor(ctx, idx, start(ext))(node)[1]))
 
 (ctx::PhaseBodyVisitor)(node::Stepper, ::DefaultStyle) = truncate(node, ctx.ctx, ctx.start, ctx.step, ctx.stop)

@@ -43,6 +43,9 @@ include("hollowbytelevels.jl")
 include("solidlevels.jl")
 include("elementlevels.jl")
 
+combine_style(a::CaseStyle, b::StepStyle) = CaseStyle()
+combine_style(a::ThunkStyle, b::StepStyle) = ThunkStyle()
+
 module h
     using Finch
     function generate_embed_docs()
