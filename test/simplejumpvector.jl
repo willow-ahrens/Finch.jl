@@ -60,16 +60,16 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSimpleJumpVector{Tv, T
                 $my_i′ = $(vec.ex).idx[$my_p]
             end,
             body = Jumper(
-                seek = (ctx, start) -> quote
-                    $my_p = searchsortedfirst($(vec.ex).idx, $start, $my_p, length($(vec.ex).idx), Base.Forward)
-                    $my_i = $start
-                    $my_i′ = $(vec.ex).idx[$my_p]
-                end,
-                body = Phase(
-                    stride = (start) -> my_i′,
-                    body = (start, step) -> begin
+                body = Jump(
+                    seek = (ctx, ext) -> quote
+                        $my_p = searchsortedfirst($(vec.ex).idx, $(ctx(getstart(ext))), $my_p, length($(vec.ex).idx), Base.Forward)
+                        $my_i = $(ctx(getstart(ext)))
+                        $my_i′ = $(vec.ex).idx[$my_p]
+                    end,
+                    stride = (ctx, ext) -> my_i′,
+                    body = (ctx, ext, ext_2) -> begin
                         Cases([
-                            :($(ctx.ctx(step)) == $my_i′) => Thunk(
+                            :($(ctx(getstop(ext_2))) == $my_i′) => Thunk(
                                 body = Spike(
                                     body = Simplify(zero(Tv)),
                                     tail = Virtual{Tv}(:($(vec.ex).val[$my_p])),
@@ -90,7 +90,7 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSimpleJumpVector{Tv, T
                                     stride = (start) -> my_i′,
                                     body = (start, step) -> begin
                                         Cases([
-                                            :($(ctx.ctx(step)) < $my_i′) =>
+                                            :($(ctx(step)) < $my_i′) =>
                                                 Run(
                                                     body = Simplify(zero(Tv)),
                                                 ),
