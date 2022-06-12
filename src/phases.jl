@@ -89,7 +89,7 @@ function (ctx::LowerJulia)(root::Chunk, ::PhaseStyle)
 end
 
 phase_range(node, ctx, idx, ext) = NoDimension()
-phase_range(node::Phase, ctx, idx, ext) = Narrow(Extent(getstart(ext), PhaseStrideVisitor(ctx, idx, getstart(ext))(node)[1]))
+phase_range(node::Phase, ctx, idx, ext) = Narrow(Extent(start = getstart(ext), stop = PhaseStrideVisitor(ctx, idx, getstart(ext))(node)[1], lower = 1))
 
 phase_body(node, ctx, idx, ext, ext_2) = truncate(node, ctx, ext, ext_2)
 phase_body(node::Phase, ctx, idx, ext, ext_2) = node.body(getstart(ext_2), getstop(ext_2))

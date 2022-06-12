@@ -13,7 +13,7 @@ function lower_cycle(root, ctx, ext, style)
         scope(ctx_2) do ctx_3
             contain(ctx_3) do ctx_4
                 push!(ctx_4.preamble, :($i0 = $i))
-                ctx_4(Chunk(root.idx, Extent(i0, getstop(root.ext)), body))
+                ctx_4(Chunk(root.idx, Extent(start = i0, stop = getstop(root.ext), lower = 1), body))
             end
         end
     end
