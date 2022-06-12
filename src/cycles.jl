@@ -2,8 +2,7 @@ function lower_cycle(root, ctx, ext, style)
     i = getname(root.idx)
     i0 = ctx.freshen(i, :_start)
     push!(ctx.preamble, quote
-        $i0 = $(ctx(getstart(root.ext)))
-        $i = $i0
+        $i = $(ctx(getstart(root.ext)))
     end)
 
     guard = :($i <= $(ctx(getstop(root.ext))))

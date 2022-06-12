@@ -19,6 +19,7 @@ combine_style(a::StepperStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::StepperStyle, b::CaseStyle) = CaseStyle()
 combine_style(a::ThunkStyle, b::StepperStyle) = ThunkStyle()
 combine_style(a::StepperStyle, b::JumperStyle) = JumperStyle()
+combine_style(a::StepperStyle, b::PhaseStyle) = PhaseStyle()
 
 function (ctx::LowerJulia)(root::Chunk, style::StepperStyle)
     lower_cycle(root, ctx, root.ext, style)

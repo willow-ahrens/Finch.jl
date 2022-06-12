@@ -221,6 +221,7 @@ getstart(ext::Widen) = getstart(ext.ext)
 getstop(ext::Widen) = getstop(ext.ext)
 
 combinedim(ctx, check, a::Narrow, b::Extent) = resultdim(ctx, check, a, Narrow(b))
+combinedim(ctx, check, a::Narrow, b::NoDimension) = a
 
 function combinedim(ctx, check, a::Narrow{<:Extent}, b::Narrow{<:Extent})
     Narrow(Extent(
@@ -236,6 +237,7 @@ function combinedim(ctx, check, a::Narrow{<:Extent}, b::Narrow{<:Extent})
 end
 
 combinedim(ctx, check, a::Widen, b::Extent) = resultdim(ctx, check, a, Widen(b))
+combinedim(ctx, check, a::Widen, b::NoDimension) = a
 
 function combinedim(ctx, check, a::Widen{<:Extent}, b::Widen{<:Extent})
     Widen(Extent(

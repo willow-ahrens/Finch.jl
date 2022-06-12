@@ -32,7 +32,7 @@ function (ctx::LowerJulia)(root::Chunk, ::PipelineStyle)
     step = ctx.freshen(i, :_step)
     
     thunk = quote
-        $i0 = $(ctx(getstart(root.ext)))
+        $i = $(ctx(getstart(root.ext)))
     end
 
     ctx_2s = Dict(minimum(keys(phases)) => ctx)
@@ -45,40 +45,8 @@ function (ctx::LowerJulia)(root::Chunk, ::PipelineStyle)
         ctx_2 = ctx_2s[key]
 
         push!(thunk.args, contain(ctx_2) do ctx_3
-            body = ThunkVisitor(ctx_3)(body)
-            guards = (PhaseGuardVisitor(ctx_3, i, i0))(body)
-            strides = (PhaseStrideVisitor(ctx_3, i, i0))(body)
-            strides = [strides; ctx(getstop(root.ext))]
-            body = (PhaseBodyVisitor(ctx_3, i, root.ext, Extent(i0, step)))(body)
-            block = quote
-                $(contain(ctx_3) do ctx_4
-                    if extent(root.ext) == 1
-                        (ctx_4)(Chunk(
-                            idx = root.idx,
-                            ext = Extent(start = step, stop = step, lower = 1, upper = 1),
-                            body = body
-                        ))
-                    else
-                        (ctx_4)(Chunk(
-                            idx = root.idx,
-                            ext = Extent(i0, step),
-                            body = body
-                        ))
-                    end
-                end)
-                $i0 = $step + 1
-            end
-            if length(key) > 1
-                block = quote
-                    if $i0 <= $step
-                        $block
-                    end
-                end
-            end
-            quote
-                $step = min($(strides...))
-                $block
-            end
+            push!(ctx_3.preamble, :($i0 = $i))
+            ctx_3(Chunk(root.idx, Extent(start = i0, stop = getstop(root.ext), lower = 1), body))
         end)
 
         push!(visited, key)
