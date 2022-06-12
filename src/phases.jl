@@ -77,7 +77,7 @@ function (ctx::LowerJulia)(root::Chunk, ::PhaseStyle)
         $i = $(ctx(getstop(ext_2))) + 1
     end
 
-    if simplify($(getupper(ext_2)) >= 1)
+    if simplify(@i $(getlower(ext_2)) >= 1)
         return body
     else
         return quote
