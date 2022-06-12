@@ -43,13 +43,13 @@ function define!(ctx, var, val)
 end
 
 function cache!(ctx, var, val)
-    var = ctx.freshen(var)
     body = contain(ctx) do ctx_2
         ctx(val)
     end
-    if ctx(val) isa Symbol
-        return val
+    if body isa Symbol
+        return body
     else
+        var = ctx.freshen(var)
         push!(ctx.preamble, Expr(:cache, var,
         quote
             $var = $body
@@ -196,6 +196,9 @@ function (ctx::LowerJulia)(root::Literal, ::DefaultStyle)
         return root.val
     end
 end
+
+isliteral(::Union{Symbol, Expr}) = false
+(ctx::LowerJulia)(root::Union{Symbol, Expr}, ::DefaultStyle) = root
 
 function (ctx::LowerJulia)(root, ::DefaultStyle)
     if isliteral(root)

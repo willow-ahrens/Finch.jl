@@ -33,7 +33,7 @@ function (ctx::LowerJulia)(root::Chunk, ::SpikeStyle)
     tail_expr = contain(ctx) do ctx_2
         (ctx_2)(Chunk(
             idx = root.idx,
-            ext = UnitExtent(getstop(root.ext)),
+            ext = Extent(start = getstop(root.ext), stop = getstop(root.ext), lower = 1, upper = 1),
             body = root_tail,
         ))
     end

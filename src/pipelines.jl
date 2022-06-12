@@ -55,7 +55,7 @@ function (ctx::LowerJulia)(root::Chunk, ::PipelineStyle)
                     if extent(root.ext) == 1
                         (ctx_4)(Chunk(
                             idx = root.idx,
-                            ext = UnitExtent(step),
+                            ext = Extent(start = step, stop = step, lower = 1, upper = 1),
                             body = body
                         ))
                     else

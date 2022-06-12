@@ -39,7 +39,7 @@ isliteral(::Step) = false
 
 make_style(root::Chunk, ctx::LowerJulia, node::Step) = PhaseStyle()
 
-phase_range(node::Step, ctx, idx, ext) = Narrow(Extent(getstart(ext), node.stride(ctx, idx, ext)))
+phase_range(node::Step, ctx, idx, ext) = Narrow(Extent(start = getstart(ext), stop = node.stride(ctx, idx, ext), lower = 1))
 
 phase_body(node::Step, ctx, idx, ext, ext_2) = begin
     Cases([

@@ -65,7 +65,7 @@ function (ctx::LowerJulia)(root::Chunk, ::PhaseStyle)
     ext_2 = resolvedim(ctx, combinedim(ctx, false, Narrow(root.ext), resolvedim(ctx, ext_2)))
 
     body = Postwalk(node->phase_body(node, ctx, root.idx, root.ext, ext_2))(body)
-    quote
+    body = quote
         $i0 = $i
         $(contain(ctx) do ctx_4
             (ctx_4)(Chunk(
@@ -75,6 +75,16 @@ function (ctx::LowerJulia)(root::Chunk, ::PhaseStyle)
             ))
         end)
         $i = $(ctx(getstop(ext_2))) + 1
+    end
+
+    if simplify($(getupper(ext_2)) >= 1)
+        return body
+    else
+        return quote
+            if $(ctx(getstop(ext_2))) >= $(ctx(getstart(ext_2)))
+                $body
+            end
+        end
     end
 end
 

@@ -124,30 +124,20 @@ combinedim(ctx, check, a::NoDimension, b) = b
 @kwdef struct Extent
     start
     stop
+    lower = @i $stop - $start + 1
+    upper = @i $stop - $start + 1
 end
+
+Extent(start, stop) = Extent(start, stop, (@i $stop - $start + 1), (@i $stop - $start + 1))
 
 getstart(ext::Extent) = ext.start
 getstop(ext::Extent) = ext.stop
-extent(ext::Extent) = @i stop - start + 1
+getlower(ext::Extent) = ext.lower
+getupper(ext::Extent) = ext.upper
+extent(ext::Extent) = @i $(ext.stop) - $(ext.start) + 1
 
 combinedim(ctx, check, a::Extent, b::Extent) =
-    Extent(resultdim(ctx, check, a.start, b.start), resultdim(ctx, check, a.stop, b.stop))
-
-@kwdef mutable struct UnitExtent{Val}
-    val::Val
-end
-
-getstart(ext::UnitExtent) = ext.val
-getstop(ext::UnitExtent) = ext.val
-extent(ext::UnitExtent) = 1
-
-function combinedim(ctx, check, a::UnitExtent, b::Extent)
-    resultdim(ctx, check, a.val, b.stop)
-    UnitExtent(resultdim(ctx, check, a.val, b.start))
-end
-
-combinedim(ctx, check, a::UnitExtent, b::UnitExtent) =
-    UnitExtent(resultdim(ctx, check, a.val, b.val))
+    Extent(resultdim(ctx, check, a.start, b.start), resultdim(ctx, check, a.stop, b.stop), resultdim(ctx, false, a.lower, b.lower), resultdim(ctx, false, a.upper, b.upper))
 
 combinedim(ctx, check, a::NoDimension, b::Extent) = b
 
@@ -177,6 +167,8 @@ function combinedim(ctx::Finch.LowerJulia, check, a::Virtual, b::Virtual)
     end
     a
 end
+
+combinedim(ctx::Finch.LowerJulia, check, a::IndexExpression, b::Union{<:IndexExpression, <:Virtual, <:Number}) = b
 
 function combinedim(ctx::Finch.LowerJulia, check, a::Number, b::Virtual)
     if check
@@ -228,42 +220,36 @@ end
 getstart(ext::Widen) = getstart(ext.ext)
 getstop(ext::Widen) = getstop(ext.ext)
 
-combinedim(ctx, check, a::Narrow, b::Union{<:UnitExtent, <:Extent}) = resultdim(ctx, check, a, Narrow(b))
-
-function combinedim(ctx, check, a::Narrow{<:UnitExtent}, b::Narrow{<:Union{<:Extent, <:UnitExtent}})
-    start_2 = cache!(ctx, ctx.freshen(:start), call(max, getstart(a), getstart(b)))
-    stop_2 = cache!(ctx, ctx.freshen(:stop), call(min, getstop(a), getstop(b)))
-    return Narrow(UnitExtent(stop))
-end
+combinedim(ctx, check, a::Narrow, b::Extent) = resultdim(ctx, check, a, Narrow(b))
 
 function combinedim(ctx, check, a::Narrow{<:Extent}, b::Narrow{<:Extent})
-    start_2 = cache!(ctx, ctx.freshen(:start), call(max, getstart(a), getstart(b)))
-    stop_2 = cache!(ctx, ctx.freshen(:stop), call(min, getstop(a), getstop(b)))
-    return Narrow(Extent(start_2, stop_2))
+    Narrow(Extent(
+        start = cache!(ctx, :start, simplify(@i max($(getstart(a)), $(getstart(b))))),
+        stop = cache!(ctx, :stop, simplify(@i min($(getstop(a)), $(getstop(b))))),
+        lower = if getstart(a) == getstart(b) || getstop(a) == getstop(b)
+            simplify(@i(min($(a.ext.lower), $(b.ext.lower))))
+        else
+            0
+        end,
+        upper = simplify(@i(min($(a.ext.upper), $(b.ext.upper))))
+    ))
 end
 
-combinedim(ctx, check, a::Widen, b::Union{<:UnitExtent, <:Extent}) = resultdim(ctx, check, a, Widen(b))
+combinedim(ctx, check, a::Widen, b::Extent) = resultdim(ctx, check, a, Widen(b))
 
-function combinedim(ctx, check, a::Widen{<:Union{<:Extent, <:UnitExtent}}, b::Widen{<:Union{<:Extent, <:UnitExtent}})
-    start_2 = cache!(ctx, ctx.freshen(:start), call(min, getstart(a), getstart(b)))
-    stop_2 = cache!(ctx, ctx.freshen(:stop), call(max, getstop(a), getstop(b)))
-    return Widen(Extent(start_2, stop_2))
+function combinedim(ctx, check, a::Widen{<:Extent}, b::Widen{<:Extent})
+    Widen(Extent(
+        start = cache!(ctx, :start, simplify(@i min($(getstart(a)), $(getstart(b))))),
+        stop = cache!(ctx, :stop, simplify(@i max($(getstop(a)), $(getstop(b))))),
+        lower = simplify(@i(max($(a.ext.lower), $(b.ext.lower)))),
+        upper = if getstart(a) == getstart(b) || getstop(a) == getstop(b)
+            simplify(@i(max($(a.ext.upper), $(b.ext.upper))))
+        else
+            simplify(@i($(a.ext.upper) + $(b.ext.upper)))
+        end,
+    ))
 end
 
 resolvedim(ctx, ext) = ext
 resolvedim(ctx, ext::Narrow) = resolvedim(ctx, ext.ext)
 resolvedim(ctx, ext::Widen) = resolvedim(ctx, ext.ext)
-
-#=
-    struct Overlay{Ext}
-        ext::Ext
-    end
-    
-    getstart(ext::Overlay) = getstart(ext.ext)
-    getstop(ext::Overlay) = getstop(ext.ext)
-    
-    combinedim(ctx, check, a::Overlay, b::AnyExtent) = resultdim(ctx, check, a, Overlay(b))
-    
-    combinedim(ctx, check, a::Overlay{<:AnyExtent}, b::Overlay{<:AnyExtent}) =
-        Overlay(Extent(restart(max, a, b), restop(min, a, b)))
-=#

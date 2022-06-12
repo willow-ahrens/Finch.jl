@@ -76,10 +76,15 @@ function postvisit!(node::Simplify, ctx::SimplifyContext)
     node.body
 end
 
+function simplify(node)
+    global rules
+    Rewrite(Fixpoint(Prewalk(Chain(rules))))(node)
+end
+
 function (ctx::LowerJulia)(root, ::SimplifyStyle)
     global rules
     root = SimplifyContext(ctx)(root)
-    root = Rewrite(Fixpoint(Prewalk(Chain(rules))))(root)
+    root = simplify(root)
     ctx(root)
 end
 
