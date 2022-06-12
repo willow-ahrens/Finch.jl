@@ -121,9 +121,9 @@ combinedim(ctx, check, a, b) = UnknownDimension()
 
 combinedim(ctx, check, a::NoDimension, b) = b
 
-@kwdef mutable struct Extent{Start, Stop}
-    start::Start
-    stop::Stop
+@kwdef struct Extent
+    start
+    stop
 end
 
 getstart(ext::Extent) = ext.start
@@ -253,3 +253,17 @@ end
 resolvedim(ctx, ext) = ext
 resolvedim(ctx, ext::Narrow) = resolvedim(ctx, ext.ext)
 resolvedim(ctx, ext::Widen) = resolvedim(ctx, ext.ext)
+
+#=
+    struct Overlay{Ext}
+        ext::Ext
+    end
+    
+    getstart(ext::Overlay) = getstart(ext.ext)
+    getstop(ext::Overlay) = getstop(ext.ext)
+    
+    combinedim(ctx, check, a::Overlay, b::AnyExtent) = resultdim(ctx, check, a, Overlay(b))
+    
+    combinedim(ctx, check, a::Overlay{<:AnyExtent}, b::Overlay{<:AnyExtent}) =
+        Overlay(Extent(restart(max, a, b), restop(min, a, b)))
+=#
