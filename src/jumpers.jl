@@ -38,11 +38,11 @@ isliteral(::Jump) = false
 
 make_style(root::Chunk, ctx::LowerJulia, node::Jump) = PhaseStyle()
 
-phase_range(node::Jump, ctx, idx, ext) = Widen(Extent(getstart(ext), node.stride(ctx, ext)))
+function phase_range(node::Jump, ctx, idx, ext)
+    push!(ctx.preamble, node.seek !== nothing ? node.seek(ctx, ext) : quote end)
+    Widen(Extent(getstart(ext), node.stride(ctx, ext)))
+end
 
-phase_body(node::Jump, ctx, idx, ext, ext_2) = Thunk(
-    preamble = node.seek !== nothing ? node.seek(ctx, ext) : quote end,
-    body = node.body(ctx, ext, ext_2)
-)
+phase_body(node::Jump, ctx, idx, ext, ext_2) = node.body(ctx, ext, ext_2)
 
 supports_shift(::JumperStyle) = true
