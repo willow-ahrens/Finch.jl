@@ -18,8 +18,8 @@ function lower_cycle(root, ctx, ext, style)
         end
     end
 
-    if simplify((@i $(getlower(ext)) == 1)) == true  && simplify((@i $(getupper(ext)) == 1)) == true
-        return body_2
+    if simplify((@i $(getlower(ext)) >= 1)) == true  && simplify((@i $(getupper(ext)) <= 1)) == true
+        body_2
     else
         return quote
             while $guard
