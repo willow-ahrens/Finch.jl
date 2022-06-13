@@ -31,15 +31,6 @@ end
     epilogue::Vector{Any} = []
     dims::Dict = Dict()
     freshen::Freshen = Freshen()
-    state::Dict{Any, Any} = Dict()
-    defs::Set{Any} = Set()
-end
-
-function define!(ctx, var, val)
-    if !haskey(ctx.state, var)
-        push!(ctx.defs, var)
-    end
-    ctx.state[var] = val
 end
 
 function cache!(ctx, var, val)
@@ -74,31 +65,6 @@ function bind(f, ctx::LowerJulia, (var, val′), tail...)
     end
 end
 
-function scope(f, ctx)
-    ctx_2 = shallowcopy(ctx)
-    ctx_2.defs = Set()
-    res = f(ctx_2)
-    for var in ctx_2.defs
-        delete!(ctx.state, var)
-    end
-    res
-end
-
-function fixpoint(f, ctx)
-    res = nothing
-    while true
-        ctx_2 = diverge(ctx)
-        res = contain(f, ctx_2)
-        if ctx_2.state == ctx.state
-            unify!(ctx, ctx_2)
-            break
-        else
-            unify!(ctx, ctx_2)
-        end
-    end
-    return res
-end
-
 function contain(f, ctx::LowerJulia)
     ctx_2 = shallowcopy(ctx)
     ctx_2.preamble = []
@@ -113,17 +79,6 @@ function contain(f, ctx::LowerJulia)
         push!(thunk.args, Expr(:cleanup, res, body, Expr(:block, ctx_2.epilogue...)))
     end
     return thunk
-end
-
-function diverge(ctx::LowerJulia)
-    ctx_2 = shallowcopy(ctx)
-    ctx_2.state = deepcopy(ctx.state)
-    return ctx_2
-end
-
-function unify!(ctx::LowerJulia, ctx_2)
-    merge!(union, ctx.state, ctx_2.state)
-    return ctx
 end
 
 struct ThunkStyle end
@@ -260,12 +215,6 @@ function (ctx::LowerJulia)(stmt::Sieve, ::DefaultStyle)
     return quote
         if $cond
             $body
-        else
-            $(contain(ctx) do ctx_2
-                ctx_3 = diverge(ctx_2)
-                unify!(ctx_2, ctx_3)
-                nothing
-            end)
         end
     end
 end
@@ -292,14 +241,10 @@ function (ctx::LowerJulia)(stmt::Chunk, ::DefaultStyle)
     else
         return quote
             for $idx_sym = $(ctx(getstart(stmt.ext))):$(ctx(getstop(stmt.ext)))
-                $(fixpoint(ctx) do ctx_2
-                    scope(ctx_2) do ctx_3
-                        bind(ctx_3, getname(stmt.idx) => idx_sym) do 
-                            contain(ctx_3) do ctx_4
-                                body_3 = ForLoopVisitor(ctx_4, stmt.idx, idx_sym)(stmt.body)
-                                (ctx_4)(body_3)
-                            end
-                        end
+                $(bind(ctx, getname(stmt.idx) => idx_sym) do 
+                    contain(ctx) do ctx_2
+                        body_3 = ForLoopVisitor(ctx_2, stmt.idx, idx_sym)(stmt.body)
+                        (ctx_2)(body_3)
                     end
                 end)
             end

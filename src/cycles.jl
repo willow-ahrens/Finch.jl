@@ -8,13 +8,9 @@ function lower_cycle(root, ctx, ext, style)
     guard = :($i <= $(ctx(getstop(root.ext))))
     body = Postwalk(node->unwrap_cycle(node, ctx, ext, style))(root.body)
 
-    body_2 = fixpoint(ctx) do ctx_2
-        scope(ctx_2) do ctx_3
-            contain(ctx_3) do ctx_4
-                push!(ctx_4.preamble, :($i0 = $i))
-                ctx_4(Chunk(root.idx, Extent(start = i0, stop = getstop(root.ext), lower = 1), body))
-            end
-        end
+    body_2 = contain(ctx) do ctx_2
+        push!(ctx_2.preamble, :($i0 = $i))
+        ctx_2(Chunk(root.idx, Extent(start = i0, stop = getstop(root.ext), lower = 1), body))
     end
 
     if simplify((@i $(getlower(ext)) >= 1)) == true  && simplify((@i $(getupper(ext)) <= 1)) == true

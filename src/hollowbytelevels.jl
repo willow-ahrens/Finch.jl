@@ -117,14 +117,12 @@ function initialize_level!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx::Lower
         for $r = 1:$(lvl.srt_stop)
             $(lvl.ex).tbl[$r] = false
             $(if reinitializeable(lvl.lvl)
-                scope(ctx) do ctx_2
-                    push!(ctx_2.preamble, quote
-                        $p = first($(lvl.ex).srt[$r])
-                        $i = last($(lvl.ex).srt[$r])
-                        $q = ($p - 1) * $(lvl.I) + $i
-                    end)
-                    reinitialize(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env, position = Virtual{Ti}(q), index = Virtual{Ti}(i))))
-                end
+                push!(ctx.preamble, quote
+                    $p = first($(lvl.ex).srt[$r])
+                    $i = last($(lvl.ex).srt[$r])
+                    $q = ($p - 1) * $(lvl.I) + $i
+                end)
+                reinitialize(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env, position = Virtual{Ti}(q), index = Virtual{Ti}(i))))
             else
                 quote end
             end)

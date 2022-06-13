@@ -35,30 +35,25 @@ function (ctx::LowerJulia)(root::Chunk, ::PipelineStyle)
         $i = $(ctx(getstart(root.ext)))
     end
 
-    ctx_2s = Dict(minimum(keys(phases)) => ctx)
     visited = Set()
     frontier = [minimum(keys(phases))]
 
     while !isempty(frontier)
         key = pop!(frontier)
         body = phases[key]
-        ctx_2 = ctx_2s[key]
 
-        push!(thunk.args, contain(ctx_2) do ctx_3
-            push!(ctx_3.preamble, :($i0 = $i))
-            ctx_3(Chunk(root.idx, Extent(start = i0, stop = getstop(root.ext), lower = 1), body))
+        push!(thunk.args, contain(ctx) do ctx_2
+            push!(ctx_2.preamble, :($i0 = $i))
+            ctx_2(Chunk(root.idx, Extent(start = i0, stop = getstop(root.ext), lower = 1), body))
         end)
 
         push!(visited, key)
         for key_2 in children(key)
-            unify!(get!(ctx_2s, key_2, diverge(ctx_2)), ctx_2)
             if parents(key_2) ⊆ visited
                 push!(frontier, key_2)
             end
         end
     end
-
-    unify!(ctx, ctx_2s[maximum(keys(phases))])
 
     return thunk
 end

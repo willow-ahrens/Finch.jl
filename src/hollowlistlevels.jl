@@ -258,8 +258,8 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Union{Writ
             val = default(fbr),
             tail = (ctx, idx) -> Thunk(
                 preamble = quote
-                    $(scope(ctx) do ctx_2 
-                        assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=my_q, parent=fbr.env)), ctx_2, mode)
+                    $(begin
+                        assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=my_q, parent=fbr.env)), ctx, mode)
                         quote end
                     end)
                     $(
