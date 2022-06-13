@@ -59,12 +59,12 @@
     (@rule @i(*(a..., *(b...), c...)) => @i *(a..., b..., c...)),
     (@rule @i(*(a...)) => if count(isliteral, a) >= 2 @i(*($(filter(!isliteral, a)...), $(Literal(*(getvalue.(filter(isliteral, a))...))))) end),
     (@rule @i(*(a..., 1, b...)) => @i *(a..., b...)),
-    (@rule @i(*(a..., 0, b...)) => Thunk(skips = [a; b], body = Simplify(0))),
+    (@rule @i(*(a..., 0, b...)) => 0),
     (@rule @i((*)($a)) => a),
     (@rule @i((*)(a..., - $b, c...)) => @i -(*(a..., $b, c...))),
     (@rule @i(a[i...] *= 1) => pass(a)),
     (@rule @i(if true; $a end) => a),
-    (@rule @i(if false; $a end) => Thunk(skips = [a], body=Simplify(pass(getresults(a)...)))),
+    (@rule @i(if false; $a end) => pass(getresults(a)...)),
 ]
 
 @kwdef mutable struct Simplify
