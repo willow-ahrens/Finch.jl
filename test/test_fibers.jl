@@ -147,7 +147,6 @@
     C = Finch.Fiber(HollowList(10, Element{0.0}()))
 
     @test diff("hl_plus_hl_to_hl", @index_code_lowered @loop i C[i] += A[i] + B[i])
-    @test diff("hl_plus_hl_to_hl_execute", @macroexpand @index @loop i C[i] += A[i] + B[i])
 
     @index @loop i C[i] += A[i] + B[i]
 
