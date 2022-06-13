@@ -30,37 +30,48 @@
             A_lvl_i = 1
             A_lvl_i1 = 0
         end
-        i_start = 1
-        i_step = min(A_lvl_i1, A_lvl_I)
-        i_start_2 = i_start
-        while i_start_2 <= i_step
-            A_lvl_i = A_lvl.idx[A_lvl_q]
-            i_step_2 = min(A_lvl_i, i_step)
-            if i_step_2 == A_lvl_i
-                A_lvl_2_val = A_lvl_2.val[A_lvl_q]
-                i = i_step_2
-                B_lvl_guard = true
-                B_lvl_2_val_alloc < B_lvl_q && (B_lvl_2_val_alloc = (Finch).refill!(B_lvl_2.val, 0.0, B_lvl_2_val_alloc, B_lvl_q))
-                B_lvl_2_val = B_lvl_2.val[B_lvl_q]
-                B_lvl_guard = false
-                B_lvl_guard = false
-                B_lvl_2_val = B_lvl_2_val + A_lvl_2_val
-                B_lvl_2.val[B_lvl_q] = B_lvl_2_val
-                if !B_lvl_guard
-                    if B_lvl_idx_alloc < B_lvl_q
-                        B_lvl_idx_alloc = (Finch).regrow!(B_lvl.tbl[1], B_lvl_idx_alloc, B_lvl_q)
-                    end
-                    (B_lvl.tbl[1])[B_lvl_q] = i
-                    B_lvl_q += 1
-                end
+        i = 1
+        i_start = i
+        start = max(i_start, i_start)
+        stop = min(A_lvl_I, A_lvl_i1)
+        if stop >= start
+            i = i
+            i = start
+            while A_lvl_q < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < start
                 A_lvl_q += 1
-            else
             end
-            i_start_2 = i_step_2 + 1
+            while i <= stop
+                i_start_2 = i
+                A_lvl_i = A_lvl.idx[A_lvl_q]
+                stop_3 = min(stop, A_lvl_i)
+                i_2 = i
+                if A_lvl_i == stop_3
+                    A_lvl_2_val = A_lvl_2.val[A_lvl_q]
+                    i_3 = stop_3
+                    B_lvl_guard = true
+                    B_lvl_2_val_alloc < B_lvl_q && (B_lvl_2_val_alloc = (Finch).refill!(B_lvl_2.val, 0.0, B_lvl_2_val_alloc, B_lvl_q))
+                    B_lvl_2_val = B_lvl_2.val[B_lvl_q]
+                    B_lvl_guard = false
+                    B_lvl_guard = false
+                    B_lvl_2_val = B_lvl_2_val + A_lvl_2_val
+                    B_lvl_2.val[B_lvl_q] = B_lvl_2_val
+                    if !B_lvl_guard
+                        if B_lvl_idx_alloc < B_lvl_q
+                            B_lvl_idx_alloc = (Finch).regrow!(B_lvl.tbl[1], B_lvl_idx_alloc, B_lvl_q)
+                        end
+                        (B_lvl.tbl[1])[B_lvl_q] = i_3
+                        B_lvl_q += 1
+                    end
+                    A_lvl_q += 1
+                else
+                end
+                i = stop_3 + 1
+            end
+            i = stop + 1
         end
-        i_start = i_step + 1
-        i_step = min(A_lvl_I)
-        i_start = i_step + 1
+        i_start = i
+        i_4 = i
+        i = A_lvl_I + 1
         B_lvl.pos[1 + 1] = B_lvl_q
         (B = Fiber((Finch.HollowCooLevel){1, Tuple{Int64}, Int64, Tuple{Vector{Int64}}}(B_lvl_I, B_lvl.tbl, B_lvl.pos, B_lvl_2), (Finch.Environment)(; name = :B)),)
     end

@@ -27,24 +27,35 @@
                 A_lvl_2_i = 1
                 A_lvl_2_i1 = 0
             end
-            i_start = 1
-            i_step = min(A_lvl_2_i1, A_lvl_2_I)
-            i_start_2 = i_start
-            while i_start_2 <= i_step
-                A_lvl_2_i = A_lvl_2.idx[A_lvl_2_q]
-                i_step_2 = min(A_lvl_2_i, i_step)
-                if i_step_2 == A_lvl_2_i
-                    A_lvl_3_val = A_lvl_3.val[A_lvl_2_q]
-                    i = i_step_2
-                    B[i] = B[i] + A_lvl_3_val
+            i = 1
+            i_start = i
+            start = max(i_start, i_start)
+            stop = min(A_lvl_2_I, A_lvl_2_i1)
+            if stop >= start
+                i = i
+                i = start
+                while A_lvl_2_q < A_lvl_2_q_stop && A_lvl_2.idx[A_lvl_2_q] < start
                     A_lvl_2_q += 1
-                else
                 end
-                i_start_2 = i_step_2 + 1
+                while i <= stop
+                    i_start_2 = i
+                    A_lvl_2_i = A_lvl_2.idx[A_lvl_2_q]
+                    stop_3 = min(stop, A_lvl_2_i)
+                    i_2 = i
+                    if A_lvl_2_i == stop_3
+                        A_lvl_3_val = A_lvl_3.val[A_lvl_2_q]
+                        i_3 = stop_3
+                        B[i_3] = B[i_3] + A_lvl_3_val
+                        A_lvl_2_q += 1
+                    else
+                    end
+                    i = stop_3 + 1
+                end
+                i = stop + 1
             end
-            i_start = i_step + 1
-            i_step = min(A_lvl_2_I)
-            i_start = i_step + 1
+            i_start = i
+            i_4 = i
+            i = A_lvl_2_I + 1
         end
         (B = B,)
     end

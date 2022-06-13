@@ -28,45 +28,58 @@
         B_p = 1
         B_i0 = 1
         B_i1 = B.idx[B_p]
-        i_start = 1
-        while i_start <= A_stop
-            i_step = min(A_i1, B_i1, A_stop)
-            if i_step < A_i1 && i_step < B_i1
-            elseif i_step < B_i1
-                i = i_step
-                push!(C.idx, C_I)
-                push!(C.val, zero(Float64))
-                C_p += 1
-                C.val[C_p] = C.val[C_p] + A.val[A_p]
-                C.idx[C_p] = i
-                A_p += 1
-                A_i0 = A_i1 + 1
-                A_i1 = A.idx[A_p]
-            elseif i_step < A_i1
-                i_2 = i_step
-                push!(C.idx, C_I)
-                push!(C.val, zero(Float64))
-                C_p += 1
-                C.val[C_p] = C.val[C_p] + B.val[B_p]
-                C.idx[C_p] = i_2
-                B_p += 1
-                B_i0 = B_i1 + 1
-                B_i1 = B.idx[B_p]
-            else
-                i_3 = i_step
-                push!(C.idx, C_I)
-                push!(C.val, zero(Float64))
-                C_p += 1
-                C.val[C_p] = C.val[C_p] + (A.val[A_p] + B.val[B_p])
-                C.idx[C_p] = i_3
-                A_p += 1
-                A_i0 = A_i1 + 1
-                A_i1 = A.idx[A_p]
-                B_p += 1
-                B_i0 = B_i1 + 1
-                B_i1 = B.idx[B_p]
+        i = 1
+        A_p = searchsortedfirst(A.idx, 1, A_p, length(A.idx), Base.Forward)
+        A_i0 = 1
+        A_i1 = A.idx[A_p]
+        B_p = searchsortedfirst(B.idx, 1, B_p, length(B.idx), Base.Forward)
+        B_i0 = 1
+        B_i1 = B.idx[B_p]
+        while i <= A_stop
+            i_start = i
+            start = max(i_start, i_start)
+            stop = min(A_i1, B_i1)
+            start_3 = max(i_start, start)
+            stop_3 = min(A_stop, stop)
+            if stop_3 >= start_3
+                i = i
+                if A_i1 == stop_3 && B_i1 == stop_3
+                    i_2 = stop_3
+                    push!(C.idx, C_I)
+                    push!(C.val, zero(Float64))
+                    C_p += 1
+                    C.val[C_p] = C.val[C_p] + (A.val[A_p] + B.val[B_p])
+                    C.idx[C_p] = i_2
+                    A_p += 1
+                    A_i0 = A_i1 + 1
+                    A_i1 = A.idx[A_p]
+                    B_p += 1
+                    B_i0 = B_i1 + 1
+                    B_i1 = B.idx[B_p]
+                elseif B_i1 == stop_3
+                    i_3 = stop_3
+                    push!(C.idx, C_I)
+                    push!(C.val, zero(Float64))
+                    C_p += 1
+                    C.val[C_p] = C.val[C_p] + B.val[B_p]
+                    C.idx[C_p] = i_3
+                    B_p += 1
+                    B_i0 = B_i1 + 1
+                    B_i1 = B.idx[B_p]
+                elseif A_i1 == stop_3
+                    i_4 = stop_3
+                    push!(C.idx, C_I)
+                    push!(C.val, zero(Float64))
+                    C_p += 1
+                    C.val[C_p] = C.val[C_p] + A.val[A_p]
+                    C.idx[C_p] = i_4
+                    A_p += 1
+                    A_i0 = A_i1 + 1
+                    A_i1 = A.idx[A_p]
+                else
+                end
+                i = stop_3 + 1
             end
-            i_start = i_step + 1
         end
         (C = C,)
     end

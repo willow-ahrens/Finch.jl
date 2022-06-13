@@ -25,32 +25,45 @@
         B_p = 1
         B_i0 = 1
         B_i1 = B.idx[B_p]
-        i_start = 1
-        i_step = min(A.start - 1, A_stop)
-        i_start = i_step + 1
-        i_step = min(A.stop, A_stop)
-        i_start_2 = i_start
-        B_p = searchsortedfirst(B.idx, i_start_2, B_p, length(B.idx), Base.Forward)
-        B_i0 = i_start_2
-        B_i1 = B.idx[B_p]
-        while i_start_2 <= i_step
-            i_step_2 = min(B_i1, i_step)
-            if i_step_2 < B_i1
-            else
-                i = i_step_2
-                push!(C.idx, C_I)
-                push!(C.val, zero(Float64))
-                C_p += 1
-                C.val[C_p] = C.val[C_p] + A.val[(i - A.start) + 1] * B.val[B_p]
-                C.idx[C_p] = i
-                B_p += 1
-                B_i0 = B_i1 + 1
-                B_i1 = B.idx[B_p]
-            end
-            i_start_2 = i_step_2 + 1
+        i = 1
+        i_start = i
+        start = max(i_start, i_start)
+        stop = min(A_stop, A.start - 1)
+        if stop >= start
+            i = i
+            i = stop + 1
         end
-        i_start = i_step + 1
-        i_step = min(A_stop)
-        i_start = i_step + 1
+        i_start = i
+        start_3 = max(i_start, i_start)
+        stop_3 = min(A_stop, A.stop)
+        if stop_3 >= start_3
+            i_2 = i
+            i = start_3
+            B_p = searchsortedfirst(B.idx, start_3, B_p, length(B.idx), Base.Forward)
+            B_i0 = start_3
+            B_i1 = B.idx[B_p]
+            while i <= stop_3
+                i_start_2 = i
+                stop_5 = min(stop_3, B_i1)
+                i_3 = i
+                if B_i1 == stop_5
+                    i_4 = stop_5
+                    push!(C.idx, C_I)
+                    push!(C.val, zero(Float64))
+                    C_p += 1
+                    C.val[C_p] = C.val[C_p] + A.val[(i_4 - A.start) + 1] * B.val[B_p]
+                    C.idx[C_p] = i_4
+                    B_p += 1
+                    B_i0 = B_i1 + 1
+                    B_i1 = B.idx[B_p]
+                else
+                end
+                i = stop_5 + 1
+            end
+            i = stop_3 + 1
+        end
+        i_start = i
+        i_5 = i
+        i = A_stop + 1
         (C = C,)
     end

@@ -26,32 +26,65 @@
         B_p = 1
         B_i0 = 1
         B_i1 = B.idx[B_p]
-        i_start = 1
-        while i_start <= A_stop
-            i_step = min(A_i1, B_i1, A_stop)
-            if i_step < B_i1
-                push!(C.val, zero(Float64))
-                C_p += 1
-                C.val[C_p] = C.val[C_p] + A.val[A_p]
-                push!(C.idx, i_step)
-            else
-                push!(C.val, zero(Float64))
-                C_p += 1
-                C.val[C_p] = C.val[C_p] + A.val[A_p]
-                push!(C.idx, i_step - 1)
-                push!(C.val, zero(Float64))
-                C_p += 1
-                C.val[C_p] = C.val[C_p] + (A.val[A_p] + B.val[B_p])
-                push!(C.idx, i_step)
-                B_p += 1
-                B_i0 = B_i1 + 1
-                B_i1 = B.idx[B_p]
+        i = 1
+        A_p = searchsortedfirst(A.idx, 1, A_p, length(A.idx), Base.Forward)
+        A_i1 = A.idx[A_p]
+        B_p = searchsortedfirst(B.idx, 1, B_p, length(B.idx), Base.Forward)
+        B_i0 = 1
+        B_i1 = B.idx[B_p]
+        while i <= A_stop
+            i_start = i
+            start = max(i_start, i_start)
+            stop = min(A_i1, B_i1)
+            start_3 = max(i_start, start)
+            stop_3 = min(A_stop, stop)
+            if stop_3 >= start_3
+                i = i
+                if A_i1 == stop_3 && B_i1 == stop_3
+                    push!(C.val, zero(Float64))
+                    C_p += 1
+                    C.val[C_p] = C.val[C_p] + A.val[A_p]
+                    push!(C.idx, stop_3 - 1)
+                    push!(C.val, zero(Float64))
+                    C_p += 1
+                    C.val[C_p] = C.val[C_p] + (A.val[A_p] + B.val[B_p])
+                    push!(C.idx, stop_3)
+                    if A_p < length(A.idx)
+                        A_p += 1
+                        A_i1 = A.idx[A_p]
+                    end
+                    B_p += 1
+                    B_i0 = B_i1 + 1
+                    B_i1 = B.idx[B_p]
+                elseif B_i1 == stop_3
+                    push!(C.val, zero(Float64))
+                    C_p += 1
+                    C.val[C_p] = C.val[C_p] + A.val[A_p]
+                    push!(C.idx, stop_3 - 1)
+                    push!(C.val, zero(Float64))
+                    C_p += 1
+                    C.val[C_p] = C.val[C_p] + (A.val[A_p] + B.val[B_p])
+                    push!(C.idx, stop_3)
+                    B_p += 1
+                    B_i0 = B_i1 + 1
+                    B_i1 = B.idx[B_p]
+                elseif A_i1 == stop_3
+                    push!(C.val, zero(Float64))
+                    C_p += 1
+                    C.val[C_p] = C.val[C_p] + A.val[A_p]
+                    push!(C.idx, stop_3)
+                    if A_p < length(A.idx)
+                        A_p += 1
+                        A_i1 = A.idx[A_p]
+                    end
+                else
+                    push!(C.val, zero(Float64))
+                    C_p += 1
+                    C.val[C_p] = C.val[C_p] + A.val[A_p]
+                    push!(C.idx, stop_3)
+                end
+                i = stop_3 + 1
             end
-            if A_i1 == i_step && A_p < length(A.idx)
-                A_p += 1
-                A_i1 = A.idx[A_p]
-            end
-            i_start = i_step + 1
         end
         (C = C,)
     end

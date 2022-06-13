@@ -23,20 +23,34 @@
         C.val = (Float64)[]
         A_p = 1
         A_i1 = A.idx[A_p]
-        i_start = 1
-        while i_start <= A_stop
-            i_step = min(A_i1, A_stop)
-            for i = i_start:i_step
-                push!(C.val, zero(Float64))
-                C_p += 1
-                C.val[C_p] = C.val[C_p] + (A.val[A_p] + B[i])
-                push!(C.idx, i)
+        i = 1
+        A_p = searchsortedfirst(A.idx, 1, A_p, length(A.idx), Base.Forward)
+        A_i1 = A.idx[A_p]
+        while i <= A_stop
+            i_start = i
+            start = max(i_start, i_start)
+            stop = min(A_stop, A_i1)
+            i = i
+            if A_i1 == stop
+                for i_2 = start:stop
+                    push!(C.val, zero(Float64))
+                    C_p += 1
+                    C.val[C_p] = C.val[C_p] + (A.val[A_p] + B[i_2])
+                    push!(C.idx, i_2)
+                end
+                if A_p < length(A.idx)
+                    A_p += 1
+                    A_i1 = A.idx[A_p]
+                end
+            else
+                for i_3 = start:stop
+                    push!(C.val, zero(Float64))
+                    C_p += 1
+                    C.val[C_p] = C.val[C_p] + (A.val[A_p] + B[i_3])
+                    push!(C.idx, i_3)
+                end
             end
-            if A_i1 == i_step && A_p < length(A.idx)
-                A_p += 1
-                A_i1 = A.idx[A_p]
-            end
-            i_start = i_step + 1
+            i = stop + 1
         end
         (C = C,)
     end
