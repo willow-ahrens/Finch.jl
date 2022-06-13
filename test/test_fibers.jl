@@ -1,25 +1,4 @@
 @testset "fibers" begin
-
-    println("C(s)[i] = w(h)[i] where w(h)[i] = A(s)[i]")
-    A = Finch.Fiber(
-        HollowList(10, [1, 6], [1, 3, 5, 7, 9],
-        Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
-    B = Finch.Fiber(
-        HollowHash{1}((0,),
-        Element{0.0}()))
-    C = Finch.Fiber(
-        HollowList(10, 
-        Element{0.0}()))
-
-    ex = @index_program_instance (@loop i C[i] += B[i]) where (@loop i B[i] += A[i])
-    display(execute_code_lowered(:ex, typeof(ex)))
-    println()
-
-    @index (@loop i C[i] += B[i]) where (@loop i B[i] += A[i])
-
-    println(FiberArray(C))
-    @test FiberArray(A) == FiberArray(C)
-
     println("B(h)[i] = A(s)[i]")
     A = Finch.Fiber(
         HollowList(10, [1, 6], [1, 3, 5, 7, 9],
@@ -28,9 +7,7 @@
         HollowHash{1}((10,),
         Element{0.0}()))
 
-    ex = @index_program_instance @loop i B[i] += A[i]
-    display(execute_code_lowered(:ex, typeof(ex)))
-    println()
+    @test diff("hl_to_hh", @index_code_lowered @loop i B[i] += A[i])
 
     @index @loop i B[i] += A[i]
 
@@ -40,9 +17,7 @@
 
     println("A(s)[i] = B(h)[i]")
 
-    ex = @index_program_instance @loop i A[i] += B[i]
-    display(execute_code_lowered(:ex, typeof(ex)))
-    println()
+    @test diff("hh_to_hs", @index_code_lowered @loop i A[i] += B[i])
 
     @index @loop i A[i] += B[i]
 
@@ -71,9 +46,7 @@
         HollowHash{2}((3,5),
         Element{0.0}()))
     
-    ex = @index_program_instance @loop i j B[i, j] += A[i, j]
-    display(execute_code_lowered(:ex, typeof(ex)))
-    println()
+    @test diff("s_hl_to_hh2", @index_code_lowered @loop i j B[i, j] += A[i, j])
 
     @index @loop i j B[i, j] += A[i, j] 
 
@@ -84,18 +57,18 @@
         HollowList(10, [1, 6], [1, 3, 5, 7, 9],
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
     B = Finch.Fiber(
-        HollowHash{1}((10,),
+        HollowHash{1}((0,),
         Element{0.0}()))
     C = Finch.Fiber(
         HollowList(10, 
         Element{0.0}()))
 
-    ex = @index_program_instance (@loop i C[i] += B[i]) where (@loop i B[i] += A[i])
-    display(execute_code_lowered(:ex, typeof(ex)))
-    println()
+    @test diff("hl_to_hh_to_hl", @index_code_lowered (@loop i C[i] += B[i]) where (@loop i B[i] += A[i]))
 
     @index (@loop i C[i] += B[i]) where (@loop i B[i] += A[i])
 
+    println(FiberArray(C))
+    @test FiberArray(A) == FiberArray(C)
 
 
     println("B(c)[i] = A(s)[i]")
@@ -106,9 +79,7 @@
         HollowCoo{1}((10,),
         Element{0.0}()))
 
-    ex = @index_program_instance @loop i B[i] += A[i]
-    display(execute_code_lowered(:ex, typeof(ex)))
-    println()
+    @test diff("hl_to_hc", @index_code_lowered @loop i B[i] += A[i])
 
     @index @loop i B[i] += A[i]
 
@@ -118,9 +89,7 @@
 
     println("A(s)[i] = B(c)[i]")
 
-    ex = @index_program_instance @loop i A[i] += B[i]
-    display(execute_code_lowered(:ex, typeof(ex)))
-    println()
+    @test diff("hc_to_hl", @index_code_lowered @loop i A[i] += B[i])
 
     println(A)
     println(B)
@@ -142,9 +111,7 @@
         HollowCoo{2}((3,5),
         Element{0.0}()))
     
-    ex = @index_program_instance @loop i j B[i, j] += A[i, j]
-    display(execute_code_lowered(:ex, typeof(ex)))
-    println()
+    @test diff("s_hl_to_hc2", @index_code_lowered @loop i j B[i, j] += A[i, j])
 
     @index @loop i j B[i, j] += A[i, j] 
 
@@ -161,9 +128,7 @@
         HollowList(10, 
         Element{0.0}()))
 
-    ex = @index_program_instance (@loop i C[i] += B[i]) where (@loop i B[i] += A[i])
-    display(execute_code_lowered(:ex, typeof(ex)))
-    println()
+    @test diff("hl_to_hc_to_hl", @index_code_lowered (@loop i C[i] += B[i]) where (@loop i B[i] += A[i]))
 
     @index (@loop i C[i] += B[i]) where (@loop i B[i] += A[i])
 
@@ -181,12 +146,8 @@
         Element{0.0}([1.0, 1.0, 1.0])))
     C = Finch.Fiber(HollowList(10, Element{0.0}()))
 
-    display(@macroexpand @index @loop i C[i] += A[i] + B[i])
-    println()
-
-    ex = @index_program_instance @loop i C[i] += A[i] + B[i]
-    display(execute_code_lowered(:ex, typeof(ex)))
-    println()
+    @test diff("hl_plus_hl_to_hl", @index_code_lowered @loop i C[i] += A[i] + B[i])
+    @test diff("hl_plus_hl_to_hl_execute", @macroexpand @index @loop i C[i] += A[i] + B[i])
 
     @index @loop i C[i] += A[i] + B[i]
 
@@ -206,9 +167,8 @@
         HollowList(10, [1, 4], [2, 5, 8],
         Element{0.0}([1.0, 1.0, 1.0])))
     C = zeros(10)
-    ex = @index_program_instance @loop i C[i] += A[i] + B[i]
-    display(execute_code_lowered(:ex, typeof(ex)))
-    println()
+
+    @test diff("hl_plus_hl_to_vec", @index_code_lowered @loop i C[i] += A[i] + B[i])
 
     @index @loop i C[i] += A[i] + B[i]
 
@@ -225,9 +185,8 @@
         HollowList(10, [1, 6, 9], [1, 3, 5, 7, 9, 2, 5, 8],
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0, 1.0, 1.0, 1.0]))))
     B = zeros(10)
-    ex = @index_program_instance @loop j i B[i] += A[j, i]
-    display(execute_code_lowered(:ex, typeof(ex)))
-    println()
+
+    @test diff("s_hl_sum_2_to_vec", @index_code_lowered @loop j i B[i] += A[j, i])
 
     @index @loop j i B[i] += A[j, i]
 
@@ -246,9 +205,7 @@
         Element{0.0}([1.0, 1.0, 1.0])))
     C = Finch.Fiber(HollowList(10, Element{0.0}()))
 
-    ex = @index_program_instance @loop i C[i] += A[i::gallop] + B[i::gallop]
-    display(execute_code_lowered(:ex, typeof(ex)))
-    println()
+    @test diff("hl_gallop_plus_hl_gallop_to_hl", @index_code_lowered @loop i C[i] += A[i::gallop] + B[i::gallop])
 
     @index @loop i C[i] += A[i::gallop] + B[i::gallop]
 
@@ -269,9 +226,7 @@
         Element{0.0}([1.0, 1.0, 1.0, 1.0])))
     C = Finch.Fiber(HollowList(10, Element{0.0}()))
 
-    ex = @index_program_instance @loop i C[i] += A[i::gallop] * B[i::gallop]
-    display(execute_code_lowered(:ex, typeof(ex)))
-    println()
+    @test diff("hl_gallop_plus_hl_gallop_to_hl", @index_code_lowered @loop i C[i] += A[i::gallop] * B[i::gallop])
 
     @index @loop i C[i] += A[i::gallop] * B[i::gallop]
 
@@ -282,26 +237,21 @@
     @test Finch.FiberArray(C) == [0.0, 0.0, 0.0, 0.0, 4.0, 0.0, 5.0, 0.0, 0.0, 0.0]
     println()
 
-    @testset "defaultcheck" begin
-        println("B(s)[i] = A(ds)[i, j]")
-        A = Finch.Fiber(
-            Solid(3, 
-            HollowList(10, [1, 6, 6, 7], [1, 3, 5, 7, 9, 4],
-            Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0, 4.0]))))
-        B = Finch.Fiber(
-            HollowList(3,
-            Element{0.0}()))
-    
-        ex = @index_program_instance @loop i j B[i] += A[i, j]
-        display(execute_code_lowered(:ex, typeof(ex)))
-        println()
-    
-        @index @loop i j B[i] += A[i, j]
-    
-        println(FiberArray(B))
-        @test B.lvl.idx[1:B.lvl.pos[2]-1] == [1, 3]
-    
-    end
+    println("B(s)[i] = A(ds)[i, j]")
+    A = Finch.Fiber(
+        Solid(3, 
+        HollowList(10, [1, 6, 6, 7], [1, 3, 5, 7, 9, 4],
+        Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0, 4.0]))))
+    B = Finch.Fiber(
+        HollowList(3,
+        Element{0.0}()))
+
+    @test diff("s_hl_sum_2_to_hl", @index_code_lowered @loop i j B[j] += A[i, j])
+
+    @index @loop i j B[i] += A[i, j]
+
+    println(FiberArray(B))
+    @test B.lvl.idx[1:B.lvl.pos[2]-1] == [1, 3]
 
     println("B[i] = A(ds)[j, i]")
     A = Fiber(
@@ -312,9 +262,7 @@
         HollowByte(4,
         Element{0.0}()))
 
-    ex = @index_program_instance @loop j i B[i] += A[j, i]
-    display(execute_code_lowered(:ex, typeof(ex)))
-    println()
+    @test diff("s_hl_sum_2_to_hb", @index_code_lowered @loop i j B[j] += A[i, j])
 
     @index @loop i j B[j] += A[i, j]
 

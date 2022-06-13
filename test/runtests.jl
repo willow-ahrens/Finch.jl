@@ -4,6 +4,25 @@ using MacroTools
 
 include("data_matrices.jl")
 
+function diff(name, body)
+    global ARGS
+    cache_dir = mkpath(joinpath(@__DIR__, "cache"))
+    temp_dir = mkpath(joinpath(@__DIR__, "temp"))
+    cache_file = joinpath(cache_dir, "$name.jl")
+    temp_file = joinpath(temp_dir, "$name.jl")
+    open(temp_file, "w") do f
+        println(f, body)
+    end
+    if "overwrite" in ARGS
+        open(cache_file, "w") do f
+            println(f, body)
+        end
+        true
+    else
+        success(`diff $cache_file $temp_file`)
+    end
+end
+
 using Finch: VirtualAbstractArray, Run, Spike, Extent, Scalar, Cases, Stepper, Jumper, AcceptRun, AcceptSpike, Thunk, Phase, Pipeline, Leaf, Simplify, Shift
 using Finch: @i, @index_program_instance, execute, execute_code_lowered, start, stop
 using Finch: getname, Virtual
