@@ -225,7 +225,7 @@
         Element{0.0}([1.0, 1.0, 1.0, 1.0])))
     C = Finch.Fiber(HollowList(10, Element{0.0}()))
 
-    @test diff("hl_gallop_plus_hl_gallop_to_hl", @index_code_lowered @loop i C[i] += A[i::gallop] * B[i::gallop])
+    @test diff("hl_gallop_times_hl_gallop_to_hl", @index_code_lowered @loop i C[i] += A[i::gallop] * B[i::gallop])
 
     @index @loop i C[i] += A[i::gallop] * B[i::gallop]
 
