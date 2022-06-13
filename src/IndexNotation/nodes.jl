@@ -247,6 +247,36 @@ end
 Finch.getresults(stmt::Loop) = Finch.getresults(stmt.body)
 
 
+struct Sieve <: IndexStatement
+	cond::Any
+	body::Any
+end
+Base.:(==)(a::Sieve, b::Sieve) = a.cond == b.cond && a.body == b.body
+
+sieve(args...) = sieve!(args)
+sieve!(args) = foldr(Sieve, args)
+
+SyntaxInterface.istree(::Sieve) = true
+SyntaxInterface.operation(stmt::Sieve) = sieve
+SyntaxInterface.arguments(stmt::Sieve) = Any[stmt.cond; stmt.body]
+SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(sieve), args) = sieve!(args)
+
+Finch.getunbound(ex::Sieve) = setdiff(getunbound(ex.body), getunbound(ex.cond))
+
+function show_statement(io, mime, stmt::Sieve, level)
+    print(io, tab^level * "if ")
+    while stmt isa Sieve
+        show_expression(io, mime, stmt.cond)
+        print(io," && ")
+        stmt = stmt.body
+    end
+    print(io,"\n")
+    show_statement(io, mime, stmt, level + 1)
+    print(io, tab^level * "end\n")
+end
+
+Finch.getresults(stmt::Sieve) = Finch.getresults(stmt.body)
+
 struct Assign{Lhs} <: IndexStatement
 	lhs::Lhs
 	op::Any

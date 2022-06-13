@@ -33,3 +33,5 @@ function initialize!(arr::VirtualAbstractArray, ctx::LowerJulia, mode::Union{Wri
 end
 
 isliteral(::VirtualAbstractArray) = false
+
+default(::VirtualAbstractArray) = 0

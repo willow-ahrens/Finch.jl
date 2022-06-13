@@ -121,33 +121,23 @@ combinedim(ctx, check, a, b) = UnknownDimension()
 
 combinedim(ctx, check, a::NoDimension, b) = b
 
-@kwdef mutable struct Extent{Start, Stop}
-    start::Start
-    stop::Stop
+@kwdef struct Extent
+    start
+    stop
+    lower = @i $stop - $start + 1
+    upper = @i $stop - $start + 1
 end
 
-start(ext::Extent) = ext.start
-stop(ext::Extent) = ext.stop
-extent(ext::Extent) = @i stop - start + 1
+Extent(start, stop) = Extent(start, stop, (@i $stop - $start + 1), (@i $stop - $start + 1))
+
+getstart(ext::Extent) = ext.start
+getstop(ext::Extent) = ext.stop
+getlower(ext::Extent) = ext.lower
+getupper(ext::Extent) = ext.upper
+extent(ext::Extent) = @i $(ext.stop) - $(ext.start) + 1
 
 combinedim(ctx, check, a::Extent, b::Extent) =
-    Extent(resultdim(ctx, check, a.start, b.start), resultdim(ctx, check, a.stop, b.stop))
-
-@kwdef mutable struct UnitExtent{Val}
-    val::Val
-end
-
-start(ext::UnitExtent) = ext.val
-stop(ext::UnitExtent) = ext.val
-extent(ext::UnitExtent) = 1
-
-function combinedim(ctx, check, a::UnitExtent, b::Extent)
-    resultdim(ctx, check, a.val, b.stop)
-    UnitExtent(resultdim(ctx, check, a.val, b.start))
-end
-
-combinedim(ctx, check, a::UnitExtent, b::UnitExtent) =
-    UnitExtent(resultdim(ctx, check, a.val, b.val))
+    Extent(resultdim(ctx, check, a.start, b.start), resultdim(ctx, check, a.stop, b.stop), resultdim(ctx, false, a.lower, b.lower), resultdim(ctx, false, a.upper, b.upper))
 
 combinedim(ctx, check, a::NoDimension, b::Extent) = b
 
@@ -159,8 +149,8 @@ suggest(ext::SuggestedExtent) = ext
 suggest(ext::NoDimension) = nodim
 
 #TODO maybe just call something like resolve_extent to unwrap?
-start(ext::SuggestedExtent) = start(ext.ext)
-stop(ext::SuggestedExtent) = stop(ext.ext)
+getstart(ext::SuggestedExtent) = getstart(ext.ext)
+getstop(ext::SuggestedExtent) = getstop(ext.ext)
 extent(ext::SuggestedExtent) = extent(ext.ext)
 
 combinedim(ctx::Finch.LowerJulia, check, a::SuggestedExtent, b::Extent) = b
@@ -177,6 +167,8 @@ function combinedim(ctx::Finch.LowerJulia, check, a::Virtual, b::Virtual)
     end
     a
 end
+
+combinedim(ctx::Finch.LowerJulia, check, a::IndexExpression, b::Union{<:IndexExpression, <:Virtual, <:Number}) = b
 
 function combinedim(ctx::Finch.LowerJulia, check, a::Number, b::Virtual)
     if check
@@ -210,6 +202,56 @@ transpose of `tns`, then `getsites(tns_2)` should be a permutation of
 function getsites end
 
 
-start(val) = val
-stop(val) = val
+getstart(val) = val
+getstop(val) = val
 extent(val) = 1
+
+struct Narrow{Ext}
+    ext::Ext
+end
+
+getstart(ext::Narrow) = getstart(ext.ext)
+getstop(ext::Narrow) = getstop(ext.ext)
+
+struct Widen{Ext}
+    ext::Ext
+end
+
+getstart(ext::Widen) = getstart(ext.ext)
+getstop(ext::Widen) = getstop(ext.ext)
+
+combinedim(ctx, check, a::Narrow, b::Extent) = resultdim(ctx, check, a, Narrow(b))
+combinedim(ctx, check, a::Narrow, b::NoDimension) = a
+
+function combinedim(ctx, check, a::Narrow{<:Extent}, b::Narrow{<:Extent})
+    Narrow(Extent(
+        start = cache!(ctx, :start, simplify(@i max($(getstart(a)), $(getstart(b))))),
+        stop = cache!(ctx, :stop, simplify(@i min($(getstop(a)), $(getstop(b))))),
+        lower = if getstart(a) == getstart(b) || getstop(a) == getstop(b)
+            simplify(@i(min($(a.ext.lower), $(b.ext.lower))))
+        else
+            0
+        end,
+        upper = simplify(@i(min($(a.ext.upper), $(b.ext.upper))))
+    ))
+end
+
+combinedim(ctx, check, a::Widen, b::Extent) = resultdim(ctx, check, a, Widen(b))
+combinedim(ctx, check, a::Widen, b::NoDimension) = a
+
+function combinedim(ctx, check, a::Widen{<:Extent}, b::Widen{<:Extent})
+    Widen(Extent(
+        start = cache!(ctx, :start, simplify(@i min($(getstart(a)), $(getstart(b))))),
+        stop = cache!(ctx, :stop, simplify(@i max($(getstop(a)), $(getstop(b))))),
+        lower = simplify(@i(max($(a.ext.lower), $(b.ext.lower)))),
+        upper = if getstart(a) == getstart(b) || getstop(a) == getstop(b)
+            simplify(@i(max($(a.ext.upper), $(b.ext.upper))))
+        else
+            simplify(@i($(a.ext.upper) + $(b.ext.upper)))
+        end,
+    ))
+end
+
+resolvedim(ctx, ext) = ext
+resolvedim(ctx, ext::Narrow) = resolvedim(ctx, ext.ext)
+resolvedim(ctx, ext::Widen) = resolvedim(ctx, ext.ext)

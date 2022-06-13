@@ -53,19 +53,21 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSimpleRunLength{Tv, Ti
                 $my_i′ = $(vec.ex).idx[$my_p]
             end,
             body = Stepper(
-                body = Phase(
-                    stride = (start) -> my_i′,
-                    body = (start, step) -> Thunk(
-                        body = Run(
-                            body = Simplify(Virtual{Tv}(:($(vec.ex).val[$my_p]))),
-                        ),
-                        epilogue = quote
-                            if $my_i′ == $step && $my_p < length($(vec.ex).idx)
-                                $my_p += 1
-                                $my_i′ = $(vec.ex).idx[$my_p]
-                            end
+                seek = (ctx, ext) -> quote
+                    $my_p = searchsortedfirst($(vec.ex).idx, $(ctx(getstart(ext))), $my_p, length($(vec.ex).idx), Base.Forward)
+                    $my_i′ = $(vec.ex).idx[$my_p]
+                end,
+                body = Step(
+                    stride = (ctx, idx, ext) -> my_i′,
+                    chunk = Run(
+                        body = Simplify(Virtual{Tv}(:($(vec.ex).val[$my_p]))),
+                    ),
+                    next = (ctx, idx, ext) -> quote
+                        if $my_p < length($(vec.ex).idx)
+                            $my_p += 1
+                            $my_i′ = $(vec.ex).idx[$my_p]
                         end
-                    )
+                    end
                 )
             )
         )

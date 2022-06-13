@@ -7,6 +7,7 @@ const program_nodes = (
     loop = loop,
     chunk = chunk,
     with = with,
+    sieve = sieve,
     multi = multi,
     assign = assign,
     call = call,
@@ -22,6 +23,7 @@ const instance_nodes = (
     loop = loop_instance,
     chunk = :(throw(NotImplementedError("TODO"))),
     with = with_instance,
+    sieve = sieve_instance,
     multi = multi_instance,
     assign = assign_instance,
     call = call_instance,
@@ -39,7 +41,11 @@ function capture_index(ex, ctx)
         return capture_index(:(@loop($(idxs...), $body)), ctx)
     elseif ex isa Expr && ex.head == :block
         bodies = filter(arg->!(arg isa LineNumberNode), ex.args)
-        return capture_index(:(@multi($(bodies...),)), ctx)
+        if length(bodies) == 1
+            return capture_index(:($(bodies[1])), ctx)
+        else
+            return capture_index(:(@multi($(bodies...),)), ctx)
+        end
     elseif ex isa Expr && haskey(incs, ex.head)
         (lhs, rhs) = ex.args; op = incs[ex.head]
         return capture_index(:($lhs << $op >>= $rhs), ctx)
@@ -63,6 +69,10 @@ function capture_index(ex, ctx)
     if @capture ex (@pass(args__))
         args = map(arg -> capture_index(arg, (ctx..., namify=false)), args)
         return :($(ctx.nodes.pass)($(args...)))
+    elseif @capture ex (if cond_ body_ end)
+        cond = capture_index(cond, (ctx..., namify=true))
+        body = capture_index(body, ctx)
+        return :($(ctx.nodes.sieve)($cond, $body))
     elseif @capture ex (@loop idxs__ body_)
         idxs = map(idx -> capture_index(idx, (ctx..., namify=true)), idxs)
         body = capture_index(body, ctx)

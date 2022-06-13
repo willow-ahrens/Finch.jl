@@ -66,7 +66,7 @@ function getdims(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
 end
 
 function setdims!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode, dim, dims...)
-    push!(ctx.preamble, :($(fbr.lvl.I) = $(ctx(stop(dim)))))
+    push!(ctx.preamble, :($(fbr.lvl.I) = $(ctx(getstop(dim)))))
     fbr.lvl.lvl = setdims!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode, dims...).lvl
     fbr
 end
@@ -89,7 +89,7 @@ interval_assembly_depth(lvl::VirtualHollowListLevel) = Inf
 #This function is quite simple, since HollowListLevels don't support reassembly.
 function assemble!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
     lvl = fbr.lvl
-    p_stop = ctx(cache!(ctx, ctx.freshen(lvl.ex, :_p_stop), stop(envposition(fbr.env))))
+    p_stop = ctx(cache!(ctx, ctx.freshen(lvl.ex, :_p_stop), getstop(envposition(fbr.env))))
     push!(ctx.preamble, quote
         $(lvl.pos_alloc) < ($p_stop + 1) && ($(lvl.pos_alloc) = $Finch.regrow!($(lvl.ex).pos, $(lvl.pos_alloc), $p_stop + 1))
     end)
@@ -127,9 +127,9 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
             Phase(
                 stride = (start) -> my_i1,
                 body = (start, step) -> Stepper(
-                    seek = (ctx, start) -> quote
+                    seek = (ctx, ext) -> quote
                         #$my_q = searchsortedfirst($(lvl.ex).idx, $start, $my_q, $my_q_stop, Base.Forward)
-                        while $my_q < $my_q_stop && $(lvl.ex).idx[$my_q] < $start
+                        while $my_q < $my_q_stop && $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
                             $my_q += 1
                         end
                     end,
@@ -137,25 +137,15 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
                         preamble = :(
                             $my_i = $(lvl.ex).idx[$my_q]
                         ),
-                        body = Phase(
-                            guard = (start) -> :($my_q < $my_q_stop),
-                            stride = (start) -> my_i,
-                            body = (start, step) -> Thunk(
-                                body = Cases([
-                                    :($step == $my_i) => Thunk(
-                                        body = Spike(
-                                            body = Simplify(default(fbr)),
-                                            tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=Virtual{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
-                                        ),
-                                        epilogue = quote
-                                            $my_q += 1
-                                        end
-                                    ),
-                                    true => Run(
-                                        body = Simplify(default(fbr)),
-                                    ),
-                                ])
-                            )
+                        body = Step(
+                            stride = (ctx, idx, ext) -> my_i,
+                            chunk = Spike(
+                                body = Simplify(default(fbr)),
+                                tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=Virtual{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
+                            ),
+                            next = (ctx, idx, ext) -> quote
+                                $my_q += 1
+                            end
                         )
                     )
                 )
@@ -191,21 +181,18 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
             Phase(
                 stride = (start) -> my_i1,
                 body = (start, step) -> Jumper(
-                    seek = (ctx, start) -> quote
-                        #$my_q = searchsortedfirst($(lvl.ex).idx, $start, $my_q, $my_q_stop, Base.Forward)
-                        while $my_q < $my_q_stop && $(lvl.ex).idx[$my_q] < $start
-                            $my_q += 1
-                        end
-                    end,
                     body = Thunk(
-                        preamble = :(
-                            $my_i = $(lvl.ex).idx[$my_q]
-                        ),
-                        body = Phase(
-                            guard = (start) -> :($my_q < $my_q_stop),
-                            stride = (start) -> my_i,
-                            body = (start, step) -> Cases([
-                                :($step == $my_i) => Thunk(
+                        body = Jump(
+                            seek = (ctx, ext) -> quote
+                                #$my_q = searchsortedfirst($(lvl.ex).idx, $start, $my_q, $my_q_stop, Base.Forward)
+                                while $my_q < $my_q_stop && $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
+                                    $my_q += 1
+                                end
+                                $my_i = $(lvl.ex).idx[$my_q]
+                            end,
+                            stride = (ctx, ext) -> my_i,
+                            body = (ctx, ext, ext_2) -> Cases([
+                                :($(ctx(getstop(ext_2))) == $my_i) => Thunk(
                                     body = Spike(
                                         body = Simplify(default(fbr)),
                                         tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=Virtual{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
@@ -215,9 +202,9 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
                                     end
                                 ),
                                 true => Stepper(
-                                    seek = (ctx, start) -> quote
+                                    seek = (ctx, ext) -> quote
                                         #$my_q = searchsortedfirst($(lvl.ex).idx, $start, $my_q, $my_q_stop, Base.Forward)
-                                        while $my_q < $my_q_stop && $(lvl.ex).idx[$my_q] < $start
+                                        while $my_q < $my_q_stop && $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
                                             $my_q += 1
                                         end
                                     end,
@@ -225,24 +212,15 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
                                         preamble = :(
                                             $my_i = $(lvl.ex).idx[$my_q]
                                         ),
-                                        body = Phase(
-                                            stride = (start) -> my_i,
-                                            body = (start, step) -> Thunk(
-                                                body = Cases([
-                                                    :($step == $my_i) => Thunk(
-                                                        body = Spike(
-                                                            body = Simplify(default(fbr)),
-                                                            tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=Virtual{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
-                                                        ),
-                                                        epilogue = quote
-                                                            $my_q += 1
-                                                        end
-                                                    ),
-                                                    true => Run(
-                                                        body = Simplify(default(fbr)),
-                                                    ),
-                                                ])
-                                            )
+                                        body = Step(
+                                            stride = (ctx, idx, ext) -> my_i,
+                                            chunk = Spike(
+                                                body = Simplify(default(fbr)),
+                                                tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=Virtual{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
+                                            ),
+                                            next = (ctx, idx, ext) -> quote
+                                                $my_q += 1
+                                            end
                                         )
                                     )
                                 ),
@@ -280,8 +258,8 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Union{Writ
             val = default(fbr),
             tail = (ctx, idx) -> Thunk(
                 preamble = quote
-                    $(scope(ctx) do ctx_2 
-                        assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=my_q, parent=fbr.env)), ctx_2, mode)
+                    $(begin
+                        assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=my_q, parent=fbr.env)), ctx, mode)
                         quote end
                     end)
                     $(

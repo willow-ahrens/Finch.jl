@@ -1,20 +1,3 @@
-@kwdef struct SkipVisitor <: AbstractTransformVisitor
-    ctx
-end
-
-@kwdef struct Skip
-    ignores
-    body
-end
-isliteral(::Skip) = false
-
-make_style(root, ctx::LowerJulia, node::Skip) = ThunkStyle()
-
-function (ctx::ThunkVisitor)(node::Skip, ::DefaultStyle)
-    map(SkipVisitor(ctx.ctx), node.ignores)
-    node.body
-end
-
 @slots a b c d i j f g rules = [
     (@rule @i(f(a...)) => if isliteral(f) && all(isliteral, a) Literal(getvalue(f)(getvalue.(a)...)) end),
 
@@ -53,9 +36,19 @@ end
     end),
     #(@rule @i(a where @pass(b...)) => a),#can't do this bc produced tensors won't get initialized ?
 
+    (@rule @i(max(a...) >= $b) => @i any($(map(x -> @i($x >= $b), a)...))),
+    (@rule @i(max(a...) > $b) => @i any($(map(x -> @i($x > $b), a)...))),
+    (@rule @i(max(a...) <= $b) => @i all($(map(x -> @i($x <= $b), a)...))),
+    (@rule @i(max(a...) < $b) => @i all($(map(x -> @i($x < $b), a)...))),
+    (@rule @i(min(a...) <= $b) => @i any($(map(x -> @i($x <= $b), a)...))),
+    (@rule @i(min(a...) < $b) => @i any($(map(x -> @i($x < $b), a)...))),
+    (@rule @i(min(a...) >= $b) => @i all($(map(x -> @i($x >= $b), a)...))),
+    (@rule @i(min(a...) > $b) => @i all($(map(x -> @i($x > $b), a)...))),
     (@rule @i(+(a..., +(b...), c...)) => @i +(a..., b..., c...)),
     (@rule @i(+(a...)) => if count(isliteral, a) >= 2 @i +($(filter(!isliteral, a)...), $(Literal(+(getvalue.(filter(isliteral, a))...)))) end),
     (@rule @i(+(a..., 0, b...)) => @i +(a..., b...)),
+    (@rule @i(any(a..., false, b...)) => @i +(a..., b...)),
+    (@rule @i(any(a..., true, b...)) => true),
     (@rule @i((+)($a)) => a),
     (@rule @i(- +($a, b...)) => @i +(- $a, - +(b...))),
     (@rule @i(a[i...] += 0) => pass(a)),
@@ -66,10 +59,12 @@ end
     (@rule @i(*(a..., *(b...), c...)) => @i *(a..., b..., c...)),
     (@rule @i(*(a...)) => if count(isliteral, a) >= 2 @i(*($(filter(!isliteral, a)...), $(Literal(*(getvalue.(filter(isliteral, a))...))))) end),
     (@rule @i(*(a..., 1, b...)) => @i *(a..., b...)),
-    (@rule @i(*(a..., 0, b...)) => Skip(ignores = [a; b], body = Simplify(0))), #TODO this is lazy, but not sure yet if I want the rules to have access to context.
+    (@rule @i(*(a..., 0, b...)) => 0),
     (@rule @i((*)($a)) => a),
     (@rule @i((*)(a..., - $b, c...)) => @i -(*(a..., $b, c...))),
     (@rule @i(a[i...] *= 1) => pass(a)),
+    (@rule @i(if true; $a end) => a),
+    (@rule @i(if false; $a end) => pass(getresults(a)...)),
 ]
 
 @kwdef mutable struct Simplify
@@ -91,10 +86,15 @@ function postvisit!(node::Simplify, ctx::SimplifyContext)
     node.body
 end
 
+function simplify(node)
+    global rules
+    Rewrite(Fixpoint(Prewalk(Chain(rules))))(node)
+end
+
 function (ctx::LowerJulia)(root, ::SimplifyStyle)
     global rules
     root = SimplifyContext(ctx)(root)
-    root = Rewrite(Fixpoint(Prewalk(Chain(rules))))(root)
+    root = simplify(root)
     ctx(root)
 end
 

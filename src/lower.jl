@@ -31,25 +31,16 @@ end
     epilogue::Vector{Any} = []
     dims::Dict = Dict()
     freshen::Freshen = Freshen()
-    state::Dict{Any, Any} = Dict()
-    defs::Set{Any} = Set()
-end
-
-function define!(ctx, var, val)
-    if !haskey(ctx.state, var)
-        push!(ctx.defs, var)
-    end
-    ctx.state[var] = val
 end
 
 function cache!(ctx, var, val)
-    var = ctx.freshen(var)
     body = contain(ctx) do ctx_2
         ctx(val)
     end
-    if ctx(val) isa Symbol
-        return val
+    if body isa Symbol
+        return body
     else
+        var = ctx.freshen(var)
         push!(ctx.preamble, Expr(:cache, var,
         quote
             $var = $body
@@ -74,31 +65,6 @@ function bind(f, ctx::LowerJulia, (var, val′), tail...)
     end
 end
 
-function scope(f, ctx)
-    ctx_2 = shallowcopy(ctx)
-    ctx_2.defs = Set()
-    res = f(ctx_2)
-    for var in ctx_2.defs
-        delete!(ctx.state, var)
-    end
-    res
-end
-
-function fixpoint(f, ctx)
-    res = nothing
-    while true
-        ctx_2 = diverge(ctx)
-        res = contain(f, ctx_2)
-        if ctx_2.state == ctx.state
-            unify!(ctx, ctx_2)
-            break
-        else
-            unify!(ctx, ctx_2)
-        end
-    end
-    return res
-end
-
 function contain(f, ctx::LowerJulia)
     ctx_2 = shallowcopy(ctx)
     ctx_2.preamble = []
@@ -113,17 +79,6 @@ function contain(f, ctx::LowerJulia)
         push!(thunk.args, Expr(:cleanup, res, body, Expr(:block, ctx_2.epilogue...)))
     end
     return thunk
-end
-
-function diverge(ctx::LowerJulia)
-    ctx_2 = shallowcopy(ctx)
-    ctx_2.state = deepcopy(ctx.state)
-    return ctx_2
-end
-
-function unify!(ctx::LowerJulia, ctx_2)
-    merge!(union, ctx.state, ctx_2.state)
-    return ctx
 end
 
 struct ThunkStyle end
@@ -195,6 +150,9 @@ function (ctx::LowerJulia)(root::Literal, ::DefaultStyle)
     end
 end
 
+isliteral(::Union{Symbol, Expr}) = false
+(ctx::LowerJulia)(root::Union{Symbol, Expr}, ::DefaultStyle) = root
+
 function (ctx::LowerJulia)(root, ::DefaultStyle)
     if isliteral(root)
         return getvalue(root)
@@ -249,6 +207,17 @@ function (ctx::LowerJulia)(root::Access{<:Number, Read}, ::DefaultStyle)
     return root.tns
 end
 
+function (ctx::LowerJulia)(stmt::Sieve, ::DefaultStyle)
+    cond = ctx.freshen(:cond)
+    push!(ctx.preamble, :($cond = $(ctx(stmt.cond))))
+    body = ctx(stmt.body)
+
+    return quote
+        if $cond
+            $body
+        end
+    end
+end
 
 function (ctx::LowerJulia)(stmt::Loop, ::DefaultStyle)
     ctx(Chunk(
@@ -259,9 +228,9 @@ function (ctx::LowerJulia)(stmt::Loop, ::DefaultStyle)
 end
 function (ctx::LowerJulia)(stmt::Chunk, ::DefaultStyle)
     idx_sym = ctx.freshen(getname(stmt.idx))
-    if extent(stmt.ext) == 1
+    if simplify((@i $(getlower(stmt.ext)) >= 1)) == true  && simplify((@i $(getupper(stmt.ext)) <= 1)) == true
         return quote
-            $idx_sym = $(ctx(start(stmt.ext)))
+            $idx_sym = $(ctx(getstart(stmt.ext)))
             $(bind(ctx, getname(stmt.idx) => idx_sym) do 
                 contain(ctx) do ctx_2
                     body_3 = ForLoopVisitor(ctx_2, stmt.idx, idx_sym)(stmt.body)
@@ -271,15 +240,11 @@ function (ctx::LowerJulia)(stmt::Chunk, ::DefaultStyle)
         end
     else
         return quote
-            for $idx_sym = $(ctx(start(stmt.ext))):$(ctx(stop(stmt.ext)))
-                $(fixpoint(ctx) do ctx_2
-                    scope(ctx_2) do ctx_3
-                        bind(ctx_3, getname(stmt.idx) => idx_sym) do 
-                            contain(ctx_3) do ctx_4
-                                body_3 = ForLoopVisitor(ctx_4, stmt.idx, idx_sym)(stmt.body)
-                                (ctx_4)(body_3)
-                            end
-                        end
+            for $idx_sym = $(ctx(getstart(stmt.ext))):$(ctx(getstop(stmt.ext)))
+                $(bind(ctx, getname(stmt.idx) => idx_sym) do 
+                    contain(ctx) do ctx_2
+                        body_3 = ForLoopVisitor(ctx_2, stmt.idx, idx_sym)(stmt.body)
+                        (ctx_2)(body_3)
                     end
                 end)
             end

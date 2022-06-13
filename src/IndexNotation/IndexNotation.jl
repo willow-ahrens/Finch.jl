@@ -14,6 +14,7 @@ module IndexNotation
     export Call, call
     export Access, Read, Write, Update, access, access
     export Protocol, protocol
+    export Sieve, sieve
 
     export Follow, follow
     export Walk, walk

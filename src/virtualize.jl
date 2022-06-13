@@ -26,6 +26,11 @@ function virtualize(ex, ::Type{IndexNotation.MultiInstance{Bodies}}, ctx) where 
     end
     Multi(bodies)
 end
+function virtualize(ex, ::Type{IndexNotation.SieveInstance{Cond, Body}}, ctx) where {Cond, Body}
+    cond = virtualize(:($ex.cond), Cond, ctx)
+    body = virtualize(:($ex.body), Body, ctx)
+    Sieve(cond, body)
+end
 function virtualize(ex, ::Type{IndexNotation.LoopInstance{Idx, Body}}, ctx) where {Idx, Body}
     idx = virtualize(:($ex.idx), Idx, ctx)
     body = virtualize(:($ex.body), Body, ctx)

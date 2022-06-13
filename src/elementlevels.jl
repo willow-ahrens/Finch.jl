@@ -65,7 +65,7 @@ interval_assembly_depth(lvl::VirtualElementLevel) = Inf
 
 function assemble!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
     lvl = fbr.lvl
-    q = ctx(stop(envposition(fbr.env)))
+    q = ctx(getstop(envposition(fbr.env)))
     push!(ctx.preamble, quote
         $(lvl.val_alloc) < $q && ($(lvl.val_alloc) = $Finch.refill!($(lvl.ex).val, $(lvl.D), $(lvl.val_alloc), $q))
     end)
@@ -73,8 +73,8 @@ end
 
 function reinitialize!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
     lvl = fbr.lvl
-    p_start = start(envposition(fbr.env))
-    p_stop = stop(envposition(fbr.env))
+    p_start = getstart(envposition(fbr.env))
+    p_stop = getstop(envposition(fbr.env))
     push!(ctx.preamble, quote
         for $p = $(ctx(p_start)):$(ctx(p_stop))
             $(lvl.ex).val[$p] = $(lvl.D)

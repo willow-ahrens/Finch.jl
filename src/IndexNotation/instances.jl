@@ -51,6 +51,16 @@ Base.:(==)(a::LoopInstance, b::LoopInstance) = a.idx == b.idx && a.body == b.bod
 @inline loop_instance(body) = body
 @inline loop_instance(idx, args...) = LoopInstance(idx, loop_instance(args...))
 
+struct SieveInstance{Cond, Body} <: IndexStatementInstance
+	cond::Cond
+	body::Body
+end
+Base.:(==)(a::SieveInstance, b::SieveInstance) = a.cond == b.cond && a.body == b.body
+
+@inline sieve_instance(cond, body) = SieveInstance(cond, body)
+@inline sieve_instance(body) = body
+@inline sieve_instance(cond, args...) = SieveInstance(cond, sieve_instance(args...))
+
 struct AssignInstance{Lhs, Op, Rhs} <: IndexStatementInstance
 	lhs::Lhs
 	op::Op

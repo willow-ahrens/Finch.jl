@@ -95,7 +95,7 @@ function getdims(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx::LowerJulia, mod
 end
 
 function setdims!(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx::LowerJulia, mode, dims...)
-    push!(ctx.preamble, :($(fbr.lvl.I) = ($(map(dim->ctx(stop(dim)), dims[1:fbr.lvl.N])...),)))
+    push!(ctx.preamble, :($(fbr.lvl.I) = ($(map(dim->ctx(getstop(dim)), dims[1:fbr.lvl.N])...),)))
     fbr.lvl.lvl = setdims!(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^fbr.lvl.N)(fbr.env)), ctx, mode, dims[fbr.lvl.N + 1:end]...).lvl
     fbr
 end
@@ -124,7 +124,7 @@ interval_assembly_depth(lvl::VirtualHollowHashLevel) = Inf #This level supports 
 #TODO what would it take to support reassembly?
 function assemble!(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode)
     lvl = fbr.lvl
-    p_stop = ctx(cache!(ctx, ctx.freshen(lvl.ex, :_p_stop), stop(envposition(fbr.env))))
+    p_stop = ctx(cache!(ctx, ctx.freshen(lvl.ex, :_p_stop), getstop(envposition(fbr.env))))
     push!(ctx.preamble, quote
         $(lvl.P) = max($p_stop, $(lvl.P))
         $(lvl.pos_alloc) < ($(lvl.P) + 1) && ($(lvl.pos_alloc) = Finch.refill!($(lvl.ex).pos, 0, $(lvl.pos_alloc), $(lvl.P) + 1))
@@ -160,13 +160,13 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx:
     my_q_stop = ctx.freshen(tag, :_q_stop)
     my_i_stop = ctx.freshen(tag, :_i_stop)
     R = length(envdeferred(fbr.env)) + 1
-    @assert R == 1 || (envstart(fbr.env) !== nothing && envstop(fbr.env) !== nothing)
+    @assert R == 1 || (envgetstart(fbr.env) !== nothing && envgetstop(fbr.env) !== nothing)
     if R == 1
         q_start = Virtual{lvl.Tp}(:($(lvl.ex).pos[$(ctx(envposition(fbr.env)))]))
         q_stop = Virtual{lvl.Tp}(:($(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1]))
     else
-        q_start = envstart(fbr.env)
-        q_stop = envstop(fbr.env)
+        q_start = envgetstart(fbr.env)
+        q_stop = envgetstop(fbr.env)
     end
 
     Thunk(
@@ -185,62 +185,57 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx:
             Phase(
                 stride = (start) -> my_i_stop,
                 body = (start, step) -> Stepper(
+                    seek = (ctx, ext) -> quote
+                        $my_q_step = $my_q + 1
+                        while $my_q_step < $my_q_stop && last(first($(lvl.ex).srt[$my_q_step]))[$R] < $(ctx(getstart(ext)))
+                            $my_q_step += 1
+                        end
+                    end,
                     body = Thunk(
                         preamble = :(
                             $my_i = last(first($(lvl.ex).srt[$my_q]))[$R]
                         ),
-                        body = Phase(
-                            guard = (start) -> :($my_q < $my_q_stop),
-                            stride = (start) -> my_i,
-                            body = (start, step) -> Thunk(
-                                body = Cases([
-                                    :($step == $my_i) => if R == lvl.N
-                                        Thunk(
-                                            body = Spike(
-                                                body = Simplify(default(fbr)),
-                                                tail = begin
-                                                    env_2 = VirtualEnvironment(
-                                                    position=Virtual{lvl.Ti}(:(last($(lvl.ex).srt[$my_q])[$R])),
-                                                    index=Virtual{lvl.Ti}(my_i),
-                                                    parent=fbr.env)
-                                                    refurl(VirtualFiber(lvl.lvl, env_2), ctx, mode, idxs...)
-                                                end,
-                                            ),
-                                            epilogue = quote
-                                                $my_q += 1
-                                            end
-                                        )
-                                    else
-                                        Thunk(
-                                            preamble = quote
-                                                $my_q_step = $my_q + 1
-                                                while $my_q_step < $my_q_stop && last(first($(lvl.ex).srt[$my_q_step]))[$R] == $my_i
-                                                    $my_q_step += 1
-                                                end
-                                            end,
-                                            body = Spike(
-                                                body = Simplify(default(fbr)),
-                                                tail = begin
-                                                    env_2 = VirtualEnvironment(
-                                                        start=Virtual{lvl.Ti}(my_q),
-                                                        stop=Virtual{lvl.Ti}(my_q_step),
-                                                        index=Virtual{lvl.Ti}(my_i),
-                                                        parent=fbr.env,
-                                                        internal=true)
-                                                    refurl(VirtualFiber(lvl, env_2), ctx, mode, idxs...)
-                                                end,
-                                            ),
-                                            epilogue = quote
-                                                $my_q = $my_q_step
-                                            end
-                                        )
+                        body = if R == lvl.N
+                            Step(
+                                stride =  (ctx, idx, ext) -> my_i,
+                                chunk = Spike(
+                                    body = Simplify(default(fbr)),
+                                    tail = begin
+                                        env_2 = VirtualEnvironment(
+                                        position=Virtual{lvl.Ti}(:(last($(lvl.ex).srt[$my_q])[$R])),
+                                        index=Virtual{lvl.Ti}(my_i),
+                                        parent=fbr.env)
+                                        refurl(VirtualFiber(lvl.lvl, env_2), ctx, mode, idxs...)
                                     end,
-                                    true => Run(
-                                        body = Simplify(default(fbr)),
-                                    ),
-                                ])
+                                ),
+                                next =  (ctx, idx, ext) -> quote
+                                    $my_q += 1
+                                end
                             )
-                        )
+                        else
+                            Step(
+                                stride =  (ctx, idx, ext) -> my_i,
+                                chunk = Spike(
+                                    body = Simplify(default(fbr)),
+                                    tail = begin
+                                        env_2 = VirtualEnvironment(
+                                            start=Virtual{lvl.Ti}(my_q),
+                                            stop=Virtual{lvl.Ti}(my_q_step),
+                                            index=Virtual{lvl.Ti}(my_i),
+                                            parent=fbr.env,
+                                            internal=true)
+                                        refurl(VirtualFiber(lvl, env_2), ctx, mode, idxs...)
+                                    end,
+                                ),
+                                next =  (ctx, idx, ext) -> quote
+                                    $my_q = $my_q_step
+                                    $my_q_step = $my_q + 1
+                                    while $my_q_step < $my_q_stop && last(first($(lvl.ex).srt[$my_q_step]))[$R] == $my_i
+                                        $my_q_step += 1
+                                    end
+                                end
+                            )
+                        end
                     )
                 )
             ),

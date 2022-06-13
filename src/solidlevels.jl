@@ -57,7 +57,7 @@ function getdims(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode)
 end
 
 function setdims!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode, dim, dims...)
-    push!(ctx.preamble, :($(fbr.lvl.I) = $(ctx(stop(dim)))))
+    push!(ctx.preamble, :($(fbr.lvl.I) = $(ctx(getstop(dim)))))
     fbr.lvl.lvl = setdims!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode, dims...).lvl
     fbr
 end
@@ -72,8 +72,8 @@ end
 
 function reinitialize!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode)
     lvl = fbr.lvl
-    p_start = start(envposition(fbr.env))
-    p_stop = stop(envposition(fbr.env))
+    p_start = getstart(envposition(fbr.env))
+    p_stop = getstop(envposition(fbr.env))
     q_start = call(*, p_start, lvl.I)
     q_stop = call(*, p_stop, lvl.I)
     if interval_assembly_depth(lvl.lvl) >= 1
@@ -97,8 +97,8 @@ interval_assembly_depth(lvl::VirtualSolidLevel) = min(Inf, interval_assembly_dep
 
 function assemble!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode)
     lvl = fbr.lvl
-    p_start = start(envposition(fbr.env))
-    p_stop = stop(envposition(fbr.env))
+    p_start = getstart(envposition(fbr.env))
+    p_stop = getstop(envposition(fbr.env))
     q_start = call(*, p_start, lvl.I)
     q_stop = call(*, p_stop, lvl.I)
     if interval_assembly_depth(lvl.lvl) >= 1

@@ -10,7 +10,7 @@ using Base: @kwdef
 export @index, @index_code_lowered
 
 export Fiber, HollowList, HollowHash, HollowCoo, HollowByte, Solid, Element, FiberArray, Scalar
-export walk, gallop, follow, extrude, laminate
+export walk, gallop, follow, extrude, laminate, select
 
 include("util.jl")
 
@@ -23,16 +23,22 @@ include("transform_ssa.jl")
 include("lower.jl")
 include("dimensionalize.jl")
 include("annihilate.jl")
+
 include("shifts.jl")
 include("chunks.jl")
 include("runs.jl")
 include("spikes.jl")
 include("cases.jl")
-include("steppers.jl")
-include("jumpers.jl")
+
 include("phases.jl")
+include("pipelines.jl")
+include("cycles.jl")
+include("jumpers.jl")
+include("steppers.jl")
+
 include("execute.jl")
 include("virtual_abstractarray.jl")
+include("select.jl")
 include("fibers.jl")
 include("scalars.jl")
 include("hollowlistlevels.jl")
@@ -41,6 +47,7 @@ include("hollowcoolevels.jl")
 include("hollowbytelevels.jl")
 include("solidlevels.jl")
 include("elementlevels.jl")
+
 
 module h
     using Finch
