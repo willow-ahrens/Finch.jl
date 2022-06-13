@@ -5,10 +5,7 @@
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
     B = Scalar{0.0}()
 
-
-    ex = @index_program_instance (@loop j if j == 1 B[] += A[j] end)
-    display(execute_code_lowered(:ex, typeof(ex)))
-    println()
+    @test diff("sieve_hl_cond", @index_code_lowered (@loop j if j == 1 B[] += A[j] end))
 
     @index (@loop j if j == 1 B[] += A[j] end)
 
@@ -18,9 +15,7 @@
 
     @test B() == 0.0
 
-    ex = @index_program_instance (@loop j if select[3, j] B[] += A[j] end)
-    display(execute_code_lowered(:ex, typeof(ex)))
-    println()
+    @test diff("sieve_hl_select", @index_code_lowered (@loop j if select[3, j] B[] += A[j] end))
 
     @index (@loop j if select[3, j] B[] += A[j] end)
 
@@ -30,9 +25,7 @@
 
     @test B() == 0.0
 
-    ex = @index_program_instance (B[] += A[5])
-    display(execute_code_lowered(:ex, typeof(ex)))
-    println()
+    @test diff("gather_hl", @index_code_lowered (B[] += A[5]))
 
     @index (B[] += A[5])
 
