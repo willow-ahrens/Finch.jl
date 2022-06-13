@@ -63,7 +63,7 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSimpleRunLength{Tv, Ti
                         body = Simplify(Virtual{Tv}(:($(vec.ex).val[$my_p]))),
                     ),
                     next = (ctx, idx, ext) -> quote
-                        if $my_i′ == $(ctx.ctx(step)) && $my_p < length($(vec.ex).idx)
+                        if $my_p < length($(vec.ex).idx)
                             $my_p += 1
                             $my_i′ = $(vec.ex).idx[$my_p]
                         end
