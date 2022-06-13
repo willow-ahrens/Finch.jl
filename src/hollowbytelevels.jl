@@ -236,7 +236,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Read, idx:
                         ),
                         body = Step(
                             stride = (ctx, idx, ext) -> my_i,
-                            body = Spike(
+                            chunk = Spike(
                                 body = Simplify(default(fbr)),
                                 tail = Thunk(
                                     preamble = quote
@@ -322,7 +322,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Read, idx:
                                         ),
                                         body = Step(
                                             stride = (ctx, idx, ext) -> my_i,
-                                            body = Spike(
+                                            chunk = Spike(
                                                 body = Simplify(default(fbr)),
                                                 tail = Thunk(
                                                     preamble = quote

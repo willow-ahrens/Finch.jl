@@ -195,58 +195,47 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx:
                         preamble = :(
                             $my_i = last(first($(lvl.ex).srt[$my_q]))[$R]
                         ),
-                        body = Phase(
-                            guard = (start) -> :($my_q < $my_q_stop),
-                            stride = (start) -> my_i,
-                            body = (start, step) -> Thunk(
-                                body = Cases([
-                                    :($(ctx(step)) == $my_i) => if R == lvl.N
-                                        Thunk(
-                                            body = Spike(
-                                                body = Simplify(default(fbr)),
-                                                tail = begin
-                                                    env_2 = VirtualEnvironment(
-                                                    position=Virtual{lvl.Ti}(:(last($(lvl.ex).srt[$my_q])[$R])),
-                                                    index=Virtual{lvl.Ti}(my_i),
-                                                    parent=fbr.env)
-                                                    refurl(VirtualFiber(lvl.lvl, env_2), ctx, mode, idxs...)
-                                                end,
-                                            ),
-                                            epilogue = quote
-                                                $my_q += 1
-                                            end
-                                        )
-                                    else
-                                        Thunk(
-                                            preamble = quote
-                                                $my_q_step = $my_q + 1
-                                                while $my_q_step < $my_q_stop && last(first($(lvl.ex).srt[$my_q_step]))[$R] == $my_i
-                                                    $my_q_step += 1
-                                                end
-                                            end,
-                                            body = Spike(
-                                                body = Simplify(default(fbr)),
-                                                tail = begin
-                                                    env_2 = VirtualEnvironment(
-                                                        start=Virtual{lvl.Ti}(my_q),
-                                                        stop=Virtual{lvl.Ti}(my_q_step),
-                                                        index=Virtual{lvl.Ti}(my_i),
-                                                        parent=fbr.env,
-                                                        internal=true)
-                                                    refurl(VirtualFiber(lvl, env_2), ctx, mode, idxs...)
-                                                end,
-                                            ),
-                                            epilogue = quote
-                                                $my_q = $my_q_step
-                                            end
-                                        )
+                        body = if R == lvl.N
+                            Step(
+                                stride =  (ctx, idx, ext) -> my_i,
+                                chunk = Spike(
+                                    body = Simplify(default(fbr)),
+                                    tail = begin
+                                        env_2 = VirtualEnvironment(
+                                        position=Virtual{lvl.Ti}(:(last($(lvl.ex).srt[$my_q])[$R])),
+                                        index=Virtual{lvl.Ti}(my_i),
+                                        parent=fbr.env)
+                                        refurl(VirtualFiber(lvl.lvl, env_2), ctx, mode, idxs...)
                                     end,
-                                    true => Run(
-                                        body = Simplify(default(fbr)),
-                                    ),
-                                ])
+                                ),
+                                next =  (ctx, idx, ext) -> quote
+                                    $my_q += 1
+                                end
                             )
-                        )
+                        else
+                            Step(
+                                stride =  (ctx, idx, ext) -> my_i,
+                                chunk = Spike(
+                                    body = Simplify(default(fbr)),
+                                    tail = begin
+                                        env_2 = VirtualEnvironment(
+                                            start=Virtual{lvl.Ti}(my_q),
+                                            stop=Virtual{lvl.Ti}(my_q_step),
+                                            index=Virtual{lvl.Ti}(my_i),
+                                            parent=fbr.env,
+                                            internal=true)
+                                        refurl(VirtualFiber(lvl, env_2), ctx, mode, idxs...)
+                                    end,
+                                ),
+                                next =  (ctx, idx, ext) -> quote
+                                    $my_q = $my_q_step
+                                    $my_q_step = $my_q + 1
+                                    while $my_q_step < $my_q_stop && last(first($(lvl.ex).srt[$my_q_step]))[$R] == $my_i
+                                        $my_q_step += 1
+                                    end
+                                end
+                            )
+                        end
                     )
                 )
             ),

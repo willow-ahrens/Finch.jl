@@ -86,27 +86,16 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSimpleJumpVector{Tv, T
                                     $my_i = $(ctx(getstart(ext)))
                                     $my_i′ = $(vec.ex).idx[$my_p]
                                 end,
-                                body = Phase(
-                                    stride = (start) -> my_i′,
-                                    body = (start, step) -> begin
-                                        Cases([
-                                            :($(ctx(step)) < $my_i′) =>
-                                                Run(
-                                                    body = Simplify(zero(Tv)),
-                                                ),
-                                            true =>
-                                                Thunk(
-                                                    body = Spike(
-                                                        body = Simplify(zero(Tv)),
-                                                        tail = Virtual{Tv}(:($(vec.ex).val[$my_p])),
-                                                    ),
-                                                    epilogue = quote
-                                                        $my_p += 1
-                                                        $my_i = $my_i′ + 1
-                                                        $my_i′ = $(vec.ex).idx[$my_p]
-                                                    end
-                                                ),
-                                        ])
+                                body = Step(
+                                    stride = (ctx, idx, ext) -> my_i′,
+                                    chunk = Spike(
+                                        body = Simplify(zero(Tv)),
+                                        tail = Virtual{Tv}(:($(vec.ex).val[$my_p])),
+                                    ),
+                                    next = (ctx, idx, ext) -> quote
+                                        $my_p += 1
+                                        $my_i = $my_i′ + 1
+                                        $my_i′ = $(vec.ex).idx[$my_p]
                                     end
                                 )
                             )

@@ -174,44 +174,33 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Read, idx::
                         preamble = quote
                             $my_i = $(lvl.ex).tbl[$R][$my_q]
                         end,
-                        body = Phase(
-                            guard = (start) -> :($my_q < $my_q_stop),
-                            stride = (start) -> my_i,
-                            body = (start, step) -> Thunk(
-                                body = Cases([
-                                    :($(ctx(step)) == $my_i) => if R == lvl.N
-                                        Thunk(
-                                            body = Spike(
-                                                body = Simplify(default(fbr)),
-                                                tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Tq}(:($my_q)), index=Virtual{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
-                                            ),
-                                            epilogue = quote
-                                                $my_q += 1
-                                            end
-                                        )
-                                    else
-                                        Thunk(
-                                            preamble = quote
-                                                $my_q_step = $my_q + 1
-                                                while $my_q_step < $my_q_stop && $(lvl.ex).tbl[$R][$my_q_step] == $my_i
-                                                    $my_q_step += 1
-                                                end
-                                            end,
-                                            body = Spike(
-                                                body = Simplify(default(fbr)),
-                                                tail = refurl(VirtualFiber(lvl, VirtualEnvironment(start=Virtual{lvl.Ti}(my_q), stop=Virtual{lvl.Ti}(my_q_step), index=Virtual{lvl.Ti}(my_i), parent=fbr.env, internal=true)), ctx, mode, idxs...),
-                                            ),
-                                            epilogue = quote
-                                                $my_q = $my_q_step
-                                            end
-                                        )
-                                    end,
-                                    true => Run(
-                                        body = default(fbr),
-                                    ),
-                                ])
+                        body = if R == lvl.N
+                            Step(
+                                stride =  (ctx, idx, ext) -> my_i,
+                                chunk = Spike(
+                                    body = Simplify(default(fbr)),
+                                    tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Tq}(:($my_q)), index=Virtual{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
+                                ),
+                                next =  (ctx, idx, ext) -> quote
+                                    $my_q += 1
+                                end
                             )
-                        )
+                        else
+                            Step(
+                                stride =  (ctx, idx, ext) -> my_i,
+                                chunk = Spike(
+                                    body = Simplify(default(fbr)),
+                                    tail = refurl(VirtualFiber(lvl, VirtualEnvironment(start=Virtual{lvl.Ti}(my_q), stop=Virtual{lvl.Ti}(my_q_step), index=Virtual{lvl.Ti}(my_i), parent=fbr.env, internal=true)), ctx, mode, idxs...),
+                                ),
+                                epilogue = quote
+                                    $my_q = $my_q_step
+                                    $my_q_step = $my_q + 1
+                                    while $my_q_step < $my_q_stop && $(lvl.ex).tbl[$R][$my_q_step] == $my_i
+                                        $my_q_step += 1
+                                    end
+                                end
+                            )
+                        end
                     )
                 )
             ),
