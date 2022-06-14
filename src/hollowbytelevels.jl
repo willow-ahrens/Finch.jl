@@ -81,10 +81,13 @@ end
 
 function getdims(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode)
     ext = Extent(1, Virtual{Int}(:($(fbr.lvl.I))))
+    if mode != Read()
+        ext = suggest(ext)
+    end
     (ext, getdims(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)...)
 end
 
-function setdims!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode, dim, dims...)
+function setdims!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Union{Write, Update}, dim, dims...)
     push!(ctx.preamble, :($(fbr.lvl.I) = $(ctx(getstop(dim)))))
     fbr.lvl.lvl = setdims!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode, dims...).lvl
     fbr

@@ -53,10 +53,11 @@ end
 
 function getdims(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode)
     ext = Extent(1, Virtual{Int}(fbr.lvl.I))
+    ext = suggest(ext)
     (ext, getdims(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)...)
 end
 
-function setdims!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode, dim, dims...)
+function setdims!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode::Union{Write, Update}, dim, dims...)
     push!(ctx.preamble, :($(fbr.lvl.I) = $(ctx(getstop(dim)))))
     fbr.lvl.lvl = setdims!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode, dims...).lvl
     fbr

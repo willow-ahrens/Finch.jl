@@ -43,7 +43,7 @@ function Finch.initialize!(arr::VirtualSingleBlock{D, Tv}, ctx::Finch.LowerJulia
 end 
 
 function Finch.getdims(arr::VirtualSingleBlock{Tv, Ti}, ctx::Finch.LowerJulia, mode) where {Tv, Ti}
-    ex = ctx.freshen(arr.name, :_stop)
+    ex = Symbol(arr.name, :_stop)
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))
     (Extent(1, Virtual{Ti}(ex)),)
 end

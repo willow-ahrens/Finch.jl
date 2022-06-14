@@ -58,11 +58,11 @@ function (ctx::LowerJulia)(root::Chunk, ::PhaseStyle)
 
     ext_2 = NoDimension()
     Postwalk(node->begin
-        ext_2 = resultdim(ctx, false, ext_2, phase_range(node, ctx, root.idx, root.ext))
+        ext_2 = resultdim(ext_2, phase_range(node, ctx, root.idx, root.ext))
         nothing
     end)(body)
 
-    ext_2 = resolvedim(ctx, combinedim(ctx, false, Narrow(root.ext), resolvedim(ctx, ext_2)))
+    ext_2 = cache!(ctx, :phase, resolvedim(resultdim(Narrow(root.ext), resolvedim(ext_2))))
 
     body = Postwalk(node->phase_body(node, ctx, root.idx, root.ext, ext_2))(body)
     body = quote

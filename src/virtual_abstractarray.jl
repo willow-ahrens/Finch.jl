@@ -5,7 +5,7 @@
 end
 
 function getdims(arr::VirtualAbstractArray, ctx::LowerJulia, mode) where {T <: AbstractArray}
-    dims = map(i -> ctx.freshen(arr.name, :_mode, i, :_stop), 1:arr.ndims)
+    dims = map(i -> Symbol(arr.name, :_mode, i, :_stop), 1:arr.ndims)
     push!(ctx.preamble, quote
         ($(dims...),) = size($(arr.ex))
     end)

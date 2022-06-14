@@ -37,7 +37,7 @@ function Finch.initialize!(arr::VirtualSimpleSparseVector{D, Tv}, ctx::Finch.Low
 end 
 
 function Finch.getdims(arr::VirtualSimpleSparseVector{Tv, Ti}, ctx::Finch.LowerJulia, mode) where {Tv, Ti}
-    ex = ctx.freshen(arr.name, :_stop)
+    ex = Symbol(arr.name, :_stop)
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))
     (Extent(1, Virtual{Ti}(ex)),)
 end

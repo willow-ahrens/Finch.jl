@@ -21,15 +21,15 @@ function (ctx::ForLoopVisitor)(node::Access{Shift}, ::DefaultStyle)
     ctx_2(node.tns.body)
 end
 
-function shiftdim(ext::Extent, ctx, delta)
+function shiftdim(ext::Extent, delta)
     Extent(
-        start = cache!(ctx, ctx.freshen(:start), call(+, ext.start, delta)),
-        stop = cache!(ctx, ctx.freshen(:stop), call(+, ext.stop, delta)),
+        start = call(+, ext.start, delta),
+        stop = call(+, ext.stop, delta),
         lower = ext.lower,
         upper = ext.upper
     )
 end
 
-shiftdim(ext::Widen, ctx, delta) = Widen(shiftdim(ext.ext, ctx, delta))
-shiftdim(ext::Narrow, ctx, delta) = Narrow(shiftdim(ext.ext, ctx, delta))
+shiftdim(ext::Widen, ctx, delta) = Widen(shiftdim(ext.ext, delta))
+shiftdim(ext::Narrow, ctx, delta) = Narrow(shiftdim(ext.ext, delta))
 shiftdim(ext::NoDimension, ctx, delta) = NoDimension()

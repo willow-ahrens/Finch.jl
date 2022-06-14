@@ -1,6 +1,8 @@
-struct Virtual{T}
+struct Virtual{T} <: IndexTerminal
     ex
 end
+
+Base.:(==)(a::Virtual{T}, b::Virtual{T}) where {T} = a.ex == b.ex
 
 virtualize(ex, T, ctx, tag) = virtualize(ex, T, ctx)
 

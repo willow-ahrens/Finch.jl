@@ -87,6 +87,7 @@ end
 
 function postvisit!(acc::Access{<:Any}, ctx::Initialize, args)
     if (ctx.target === nothing || (getname(acc.tns) in ctx.target)) && !(getname(acc.tns) in ctx.escape)
+        setdims!(acc.tns, ctx.ctx, acc.mode, map(InferDimensions(ctx=ctx.ctx, dims=ctx.ctx.dims), acc.idxs))
         initialize!(acc.tns, ctx.ctx, acc.mode, acc.idxs...)
     else
         acc
