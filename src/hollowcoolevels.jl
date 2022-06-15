@@ -90,7 +90,7 @@ function getdims(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx::LowerJulia, mode
     (ext..., getdims(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^fbr.lvl.N)(fbr.env)), ctx, mode)...)
 end
 
-function setdims!(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx::LowerJulia, mode::Union{Write, Update}, dims...)
+function setdims!(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx::LowerJulia, mode, dims...)
     push!(ctx.preamble, :($(fbr.lvl.I) = ($(map(dim->ctx(getstop(dim)), dims[1:fbr.lvl.N])...),)))
     fbr.lvl.lvl = setdims!(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^fbr.lvl.N)(fbr.env)), ctx, mode, dims[fbr.lvl.N + 1:end]...).lvl
     fbr

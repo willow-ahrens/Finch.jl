@@ -61,6 +61,9 @@ function (ctx::InferDimensions)(node::Access)
         exts = map(ctx, node.idxs, exts)
     elseif node.mode != Read() && ctx.mode == define_dims
         ctx.shapes[getname(node.tns)] = map(idx -> resolvedim(ctx(idx, nodim)), node.idxs)
+        if getname(node.tns) in ctx.shapes
+            setdims!(node.tns, ctx.ctx, node.mode, exts...)
+        end
     end
     ctx(node.tns)
     return nodim

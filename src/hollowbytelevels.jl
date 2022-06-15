@@ -87,7 +87,7 @@ function getdims(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode)
     (ext, getdims(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)...)
 end
 
-function setdims!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Union{Write, Update}, dim, dims...)
+function setdims!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode, dim, dims...)
     push!(ctx.preamble, :($(fbr.lvl.I) = $(ctx(getstop(dim)))))
     fbr.lvl.lvl = setdims!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode, dims...).lvl
     fbr
@@ -104,7 +104,6 @@ function initialize_level!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx::Lower
     i = ctx.freshen(lvl.ex, :_i)
     p_prev = ctx.freshen(lvl.ex, :_p_prev)
     push!(ctx.preamble, quote
-        $(lvl.I) = $(lvl.Ti)($(ctx(getstop(ctx.dims[(getname(fbr), envdepth(fbr.env) + 1)]))))
         # fill!($(lvl.ex).tbl, 0)
         # empty!($(lvl.ex).srt)
         $(lvl.ex).pos[1] = 1
