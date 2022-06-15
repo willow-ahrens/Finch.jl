@@ -62,7 +62,9 @@ end
 
 function getdims(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
     ext = Extent(1, Virtual{Int}(fbr.lvl.I))
-    ext = suggest(ext)
+    if mode != Read()
+        ext = suggest(ext)
+    end
     (ext, getdims(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)...)
 end
 

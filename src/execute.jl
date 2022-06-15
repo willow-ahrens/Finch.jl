@@ -20,7 +20,6 @@ function execute_code_lowered(ex, T)
                 contain(ctx) do ctx_2
                     prgm = TransformSSA(Freshen())(prgm)
                     (prgm, dims) = dimensionalize!(prgm, ctx_2)
-                    merge!(ctx.dims, dims)
                     prgm = Initialize(ctx = ctx_2)(prgm)
                     prgm = ThunkVisitor(ctx_2)(prgm) #TODO this is a bit of a hack.
                     ctx_2(prgm)
@@ -87,7 +86,9 @@ end
 
 function postvisit!(acc::Access{<:Any}, ctx::Initialize, args)
     if (ctx.target === nothing || (getname(acc.tns) in ctx.target)) && !(getname(acc.tns) in ctx.escape)
-        setdims!(acc.tns, ctx.ctx, acc.mode, map(InferDimensions(ctx=ctx.ctx, dims=ctx.ctx.dims), acc.idxs))
+        setdims!(acc.tns, ctx.ctx, acc.mode, map(acc.idxs) do idx
+            resolvedim(InferDimensions(ctx=ctx.ctx, dims=ctx.ctx.dims, mode=define_dims)(idx, nodim))
+        end...)
         initialize!(acc.tns, ctx.ctx, acc.mode, acc.idxs...)
     else
         acc

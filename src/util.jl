@@ -1,6 +1,8 @@
 #TODO should we just have another IR? Ugh idk
 shallowcopy(x::T) where T = T([getfield(x, k) for k ∈ fieldnames(T)]...)
 
+kwfields(x::T) where T = Dict((k=>getfield(x, k) for k ∈ fieldnames(T))...)
+
 function refill!(arr, val, p, q)
     p_2 = regrow!(arr, p, q)
     @simd for p_3 = p + 1:p_2

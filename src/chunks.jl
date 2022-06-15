@@ -11,7 +11,8 @@ end
 
 function (ctx::LowerJulia)(root::Loop, ::ChunkStyle)
     idx = root.idx
-    ext = ctx.dims[getname(idx)]
+    #TODO is every read of dims gonna be like this? When do we lock it in?
+    ext = resolvedim(ctx.dims[getname(idx)])
     body = (ChunkifyVisitor(ctx, idx))(root.body)
     #TODO add a simplify step here perhaps
     ctx(Chunk(

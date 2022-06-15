@@ -46,8 +46,8 @@
     (@rule @i(min(a...) > $b) => @i all($(map(x -> @i($x > $b), a)...))),
     (@rule @i(min(a..., min(b...), c...)) => @i min(a..., b..., c...)),
     (@rule @i(max(a..., max(b...), c...)) => @i max(a..., b..., c...)),
-    (@rule @i(min(a...)) => if !(issorted(a)) @i min($(sort(a)...)) end),
-    (@rule @i(max(a...)) => if !(issorted(a)) @i max($(sort(a)...)) end),
+    (@rule @i(min(a...)) => if !(issorted(a, by = literalize)) @i min($(sort(a, by = literalize)...)) end),
+    (@rule @i(max(a...)) => if !(issorted(a, by = literalize)) @i max($(sort(a, by = literalize)...)) end),
     (@rule @i(min(a...)) => if !(allunique(a)) @i min($(unique(a)...)) end),
     (@rule @i(max(a...)) => if !(allunique(a)) @i max($(unique(a)...)) end),
     (@rule @i(+(a..., +(b...), c...)) => @i +(a..., b..., c...)),
@@ -72,6 +72,11 @@
     (@rule @i(if true; $a end) => a),
     (@rule @i(if false; $a end) => pass(getresults(a)...)),
 ]
+
+literalize(x::Symbol) = Virtual{Any}(x)
+literalize(x::Expr) = Virtual{Any}(x)
+literalize(x::Literal) = x
+literalize(x) = isliteral(x) ? Literal(x) : x
 
 @kwdef mutable struct Simplify
     body

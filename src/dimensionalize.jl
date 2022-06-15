@@ -12,22 +12,22 @@ The program is assumed to be in SSA form.
 See also: [`getdims`](@ref), [`getsites`](@ref), [`combinedim`](@ref),
 [`TransformSSA`](@ref)
 """
+@enum InferDimensionsMode declare_dims define_dims
+
 @kwdef mutable struct InferDimensions
     ctx
+    mode::InferDimensionsMode
     dims = Dict()
     shapes = Dict()
 end
 
+#NOTE TO SELF
+#ITS A BIG DEAL THAT WHERE STATEMENTS FORBID TEMP TENSORS WITH INDICES OUTSIDE OF SCOPE
+
 function dimensionalize!(prgm, ctx) 
     dims = ctx.dims
-    while true
-        prev_dims = deepcopy(dims)
-        println(dims)
-        InferDimensions(ctx=ctx, dims = dims)(prgm)
-        if prev_dims == dims
-            break
-        end
-    end
+    InferDimensions(ctx=ctx, mode=declare_dims, dims = dims)(prgm)
+    InferDimensions(ctx=ctx, mode=define_dims, dims = dims)(prgm)
     for k in keys(dims)
         dims[k] = cache!(ctx, :dim, dims[k])
     end
@@ -40,10 +40,13 @@ nodim = NoDimension()
 (ctx::InferDimensions)(node, ext) = (ctx(node); nodim)
 
 function (ctx::InferDimensions)(node::With)
-    ctx_2 = shallowcopy(ctx)
-    prod = ctx_2(node.prod)
-    cons = ctx_2(node.cons)
-    With(cons, prod)
+    if ctx.mode == declare_dims
+        ctx(node.prod)
+        InferDimensions(;kwfields(ctx)..., mode=define_dims)(node.prod)
+        ctx(node.cons)
+    else
+        ctx(node.cons)
+    end
 end
 
 function (ctx::InferDimensions)(node::Name, ext)
@@ -53,10 +56,11 @@ end
 (ctx::InferDimensions)(node::Protocol, ext) = ctx(node.idx, ext)
 
 function (ctx::InferDimensions)(node::Access)
-    exts = get(ctx.shapes, getname(node.tns), getdims(node.tns, ctx.ctx, node.mode))
-    exts = map(ctx, node.idxs, exts)
-    if node.mode != Read()
-        ctx.shapes[getname(node.tns)] = map(resolvedim, exts)
+    if ctx.mode == declare_dims
+        exts = get(ctx.shapes, getname(node.tns), getdims(node.tns, ctx.ctx, node.mode))
+        exts = map(ctx, node.idxs, exts)
+    elseif node.mode != Read() && ctx.mode == define_dims
+        ctx.shapes[getname(node.tns)] = map(idx -> resolvedim(ctx(idx, nodim)), node.idxs)
     end
     ctx(node.tns)
     return nodim
@@ -64,10 +68,12 @@ end
 
 function setdims!(tns, ctx, mode, dims...)
     for (dim, ref) in zip(dims, getdims(tns, ctx, mode))
-        push!(ctx.preamble, quote
-            $(getstart(dim)) == $(getstart(ref)) || throw(DimensionMismatch("Mismatched Dimension Start"))
-            $(getstop(dim)) == $(getstop(ref)) || throw(DimensionMismatch("Mismatched Dimension Stop"))
-        end)
+        if dim !== nodim && ref !== nodim #TODO this should be a function like checkdim or something haha
+            push!(ctx.preamble, quote
+                $(ctx(getstart(dim))) == $(ctx(getstart(ref))) || throw(DimensionMismatch("mismatched dimension start"))
+                $(ctx(getstop(dim))) == $(ctx(getstop(ref))) || throw(DimensionMismatch("mismatched dimension stop"))
+            end)
+        end
     end
 end
 
@@ -122,12 +128,12 @@ Base.:(==)(a::Extent, b::Extent) =
 
 Extent(start, stop) = Extent(start, stop, (@i $stop - $start + 1), (@i $stop - $start + 1))
 
-function cache!(ctx, var, ext::Extent)
-    start = cache!(ctx, Symbol(var, :_start), ext.start)
-    stop = cache!(ctx, Symbol(var, :_stop), ext.stop)
-    lower = cache!(ctx, Symbol(var, :_lower), ext.lower)
-    upper = cache!(ctx, Symbol(var, :_upper), ext.upper)
-end
+cache!(ctx, var, ext::Extent) = Extent(
+    start = cache!(ctx, Symbol(var, :_start), ext.start),
+    stop = cache!(ctx, Symbol(var, :_stop), ext.stop),
+    lower = cache!(ctx, Symbol(var, :_lower), ext.lower),
+    upper = cache!(ctx, Symbol(var, :_upper), ext.upper),
+)
 
 getstart(ext::Extent) = ext.start
 getstop(ext::Extent) = ext.stop
@@ -156,6 +162,7 @@ suggest(ext::SuggestedExtent) = ext
 suggest(ext::NoDimension) = nodim
 
 resolvedim(ext::SuggestedExtent) = ext.ext
+cache!(ctx, tag, ext::SuggestedExtent) = SuggestedExtent(cache!(ctx, tag, ext.ext))
 
 #TODO maybe just call something like resolve_extent to unwrap?
 getstart(ext::SuggestedExtent) = getstart(ext.ext)
@@ -259,3 +266,5 @@ end
 resolvedim(ext) = ext
 resolvedim(ext::Narrow) = resolvedim(ext.ext)
 resolvedim(ext::Widen) = resolvedim(ext.ext)
+cache!(ctx, tag, ext::Narrow) = Narrow(cache!(ctx, tag, ext.ext))
+cache!(ctx, tag, ext::Widen) = Widen(cache!(ctx, tag, ext.ext))

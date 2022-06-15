@@ -34,6 +34,9 @@ end
 end
 
 function cache!(ctx, var, val)
+    if isliteral(val)
+        return val
+    end
     body = contain(ctx) do ctx_2
         ctx(val)
     end
@@ -222,7 +225,7 @@ end
 function (ctx::LowerJulia)(stmt::Loop, ::DefaultStyle)
     ctx(Chunk(
         idx = stmt.idx,
-        ext = ctx.dims[getname(stmt.idx)],
+        ext = resolvedim(ctx.dims[getname(stmt.idx)]),
         body = stmt.body)
     )
 end
