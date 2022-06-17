@@ -20,14 +20,12 @@
         B_lvl_2 = B_lvl.lvl
         B_lvl_2_val_alloc = length(B_lvl.lvl.val)
         B_lvl_2_val = 0.0
-        C_lvl_I = A_lvl_I
-        A_lvl_I == B_lvl_I || throw(DimensionMismatch("mismatched dimension limits"))
+        i_stop = A_lvl_I
         C_lvl_pos_alloc = length(C_lvl.pos)
         C_lvl.pos[1] = 1
         C_lvl_idx_alloc = length(C_lvl.idx)
         C_lvl_2_val_alloc = (Finch).refill!(C_lvl_2.val, 0.0, 0, 4)
-        C_lvl_p_stop_2 = 1
-        C_lvl_pos_alloc < C_lvl_p_stop_2 + 1 && (C_lvl_pos_alloc = (Finch).regrow!(C_lvl.pos, C_lvl_pos_alloc, C_lvl_p_stop_2 + 1))
+        C_lvl_pos_alloc < 1 + 1 && (C_lvl_pos_alloc = (Finch).regrow!(C_lvl.pos, C_lvl_pos_alloc, 1 + 1))
         C_lvl_q = C_lvl.pos[1]
         A_lvl_q = A_lvl.pos[1]
         A_lvl_q_stop = A_lvl.pos[1 + 1]
@@ -49,14 +47,12 @@
         end
         i = 1
         i_start = i
-        start = max(i_start, i_start)
-        stop = min(A_lvl_i1, B_lvl_i1)
-        start_3 = max(i_start, start)
-        stop_3 = min(A_lvl_I, stop)
-        if stop_3 >= start_3
+        phase_start = max(i_start)
+        phase_stop = min(i_stop, B_lvl_i1, A_lvl_i1)
+        if phase_stop >= phase_start
             i = i
-            i = start_3
-            while i <= stop_3
+            i = phase_start
+            while i <= phase_stop
                 i_start_2 = i
                 while A_lvl_q < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < i_start_2
                     A_lvl_q += 1
@@ -66,16 +62,14 @@
                     B_lvl_q += 1
                 end
                 B_lvl_i = B_lvl.idx[B_lvl_q]
-                start_5 = min(i_start_2, i_start_2)
-                stop_5 = max(A_lvl_i, B_lvl_i)
-                start_7 = max(i_start_2, start_5)
-                stop_7 = min(stop_3, stop_5)
-                if stop_7 >= start_7
+                phase_start_2 = max(min(i_start_2), i_start_2)
+                phase_stop_2 = min(phase_stop, max(B_lvl_i, A_lvl_i))
+                if phase_stop_2 >= phase_start_2
                     i_2 = i
-                    if stop_7 == A_lvl_i && stop_7 == B_lvl_i
+                    if phase_stop_2 == A_lvl_i && phase_stop_2 == B_lvl_i
                         A_lvl_2_val = A_lvl_2.val[A_lvl_q]
                         B_lvl_2_val = B_lvl_2.val[B_lvl_q]
-                        i_3 = stop_7
+                        i_3 = phase_stop_2
                         C_lvl_2_val_alloc < C_lvl_q && (C_lvl_2_val_alloc = (Finch).refill!(C_lvl_2.val, 0.0, C_lvl_2_val_alloc, C_lvl_q))
                         C_lvl_isdefault = true
                         C_lvl_2_val = C_lvl_2.val[C_lvl_q]
@@ -90,19 +84,19 @@
                         end
                         A_lvl_q += 1
                         B_lvl_q += 1
-                    elseif stop_7 == B_lvl_i
-                        i = start_7
-                        while A_lvl_q < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < start_7
+                    elseif phase_stop_2 == B_lvl_i
+                        i = phase_start_2
+                        while A_lvl_q < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < phase_start_2
                             A_lvl_q += 1
                         end
-                        while i <= stop_7 - 1
+                        while i <= phase_stop_2 - 1
                             i_start_3 = i
                             A_lvl_i = A_lvl.idx[A_lvl_q]
-                            stop_9 = min(stop_7 - 1, A_lvl_i)
+                            phase_stop_3 = min(phase_stop_2 - 1, A_lvl_i)
                             i_4 = i
-                            if A_lvl_i == stop_9
+                            if A_lvl_i == phase_stop_3
                                 A_lvl_2_val = A_lvl_2.val[A_lvl_q]
-                                i_5 = stop_9
+                                i_5 = phase_stop_3
                                 C_lvl_2_val_alloc < C_lvl_q && (C_lvl_2_val_alloc = (Finch).refill!(C_lvl_2.val, 0.0, C_lvl_2_val_alloc, C_lvl_q))
                                 C_lvl_isdefault = true
                                 C_lvl_2_val = C_lvl_2.val[C_lvl_q]
@@ -118,20 +112,20 @@
                                 A_lvl_q += 1
                             else
                             end
-                            i = stop_9 + 1
+                            i = phase_stop_3 + 1
                         end
                         B_lvl_2_val = B_lvl_2.val[B_lvl_q]
-                        i = stop_7
-                        while A_lvl_q < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < stop_7
+                        i = phase_stop_2
+                        while A_lvl_q < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < phase_stop_2
                             A_lvl_q += 1
                         end
                         i_start_4 = i
                         A_lvl_i = A_lvl.idx[A_lvl_q]
-                        start_11 = max(i_start_4, i_start_4)
-                        stop_11 = min(stop_7, A_lvl_i)
+                        phase_start_4 = max(i_start_4)
+                        phase_stop_4 = min(phase_stop_2, A_lvl_i)
                         i_6 = i
-                        if A_lvl_i == stop_11
-                            for i_7 = start_11:stop_11 - 1
+                        if A_lvl_i == phase_stop_4
+                            for i_7 = phase_start_4:phase_stop_4 - 1
                                 C_lvl_2_val_alloc < C_lvl_q && (C_lvl_2_val_alloc = (Finch).refill!(C_lvl_2.val, 0.0, C_lvl_2_val_alloc, C_lvl_q))
                                 C_lvl_isdefault = true
                                 C_lvl_2_val = C_lvl_2.val[C_lvl_q]
@@ -146,7 +140,7 @@
                                 end
                             end
                             A_lvl_2_val = A_lvl_2.val[A_lvl_q]
-                            i_8 = stop_11
+                            i_8 = phase_stop_4
                             C_lvl_2_val_alloc < C_lvl_q && (C_lvl_2_val_alloc = (Finch).refill!(C_lvl_2.val, 0.0, C_lvl_2_val_alloc, C_lvl_q))
                             C_lvl_isdefault = true
                             C_lvl_2_val = C_lvl_2.val[C_lvl_q]
@@ -161,7 +155,7 @@
                             end
                             A_lvl_q += 1
                         else
-                            for i_9 = start_11:stop_11
+                            for i_9 = phase_start_4:phase_stop_4
                                 C_lvl_2_val_alloc < C_lvl_q && (C_lvl_2_val_alloc = (Finch).refill!(C_lvl_2.val, 0.0, C_lvl_2_val_alloc, C_lvl_q))
                                 C_lvl_isdefault = true
                                 C_lvl_2_val = C_lvl_2.val[C_lvl_q]
@@ -176,21 +170,21 @@
                                 end
                             end
                         end
-                        i = stop_11 + 1
+                        i = phase_stop_4 + 1
                         B_lvl_q += 1
-                    elseif stop_7 == A_lvl_i
-                        i = start_7
-                        while B_lvl_q < B_lvl_q_stop && B_lvl.idx[B_lvl_q] < start_7
+                    elseif phase_stop_2 == A_lvl_i
+                        i = phase_start_2
+                        while B_lvl_q < B_lvl_q_stop && B_lvl.idx[B_lvl_q] < phase_start_2
                             B_lvl_q += 1
                         end
-                        while i <= stop_7 - 1
+                        while i <= phase_stop_2 - 1
                             i_start_5 = i
                             B_lvl_i = B_lvl.idx[B_lvl_q]
-                            stop_13 = min(stop_7 - 1, B_lvl_i)
+                            phase_stop_5 = min(B_lvl_i, phase_stop_2 - 1)
                             i_10 = i
-                            if B_lvl_i == stop_13
+                            if B_lvl_i == phase_stop_5
                                 B_lvl_2_val = B_lvl_2.val[B_lvl_q]
-                                i_11 = stop_13
+                                i_11 = phase_stop_5
                                 C_lvl_2_val_alloc < C_lvl_q && (C_lvl_2_val_alloc = (Finch).refill!(C_lvl_2.val, 0.0, C_lvl_2_val_alloc, C_lvl_q))
                                 C_lvl_isdefault = true
                                 C_lvl_2_val = C_lvl_2.val[C_lvl_q]
@@ -206,20 +200,20 @@
                                 B_lvl_q += 1
                             else
                             end
-                            i = stop_13 + 1
+                            i = phase_stop_5 + 1
                         end
                         A_lvl_2_val = A_lvl_2.val[A_lvl_q]
-                        i = stop_7
-                        while B_lvl_q < B_lvl_q_stop && B_lvl.idx[B_lvl_q] < stop_7
+                        i = phase_stop_2
+                        while B_lvl_q < B_lvl_q_stop && B_lvl.idx[B_lvl_q] < phase_stop_2
                             B_lvl_q += 1
                         end
                         i_start_6 = i
                         B_lvl_i = B_lvl.idx[B_lvl_q]
-                        start_15 = max(i_start_6, i_start_6)
-                        stop_15 = min(stop_7, B_lvl_i)
+                        phase_start_6 = max(i_start_6)
+                        phase_stop_6 = min(phase_stop_2, B_lvl_i)
                         i_12 = i
-                        if B_lvl_i == stop_15
-                            for i_13 = start_15:stop_15 - 1
+                        if B_lvl_i == phase_stop_6
+                            for i_13 = phase_start_6:phase_stop_6 - 1
                                 C_lvl_2_val_alloc < C_lvl_q && (C_lvl_2_val_alloc = (Finch).refill!(C_lvl_2.val, 0.0, C_lvl_2_val_alloc, C_lvl_q))
                                 C_lvl_isdefault = true
                                 C_lvl_2_val = C_lvl_2.val[C_lvl_q]
@@ -234,7 +228,7 @@
                                 end
                             end
                             B_lvl_2_val = B_lvl_2.val[B_lvl_q]
-                            i_14 = stop_15
+                            i_14 = phase_stop_6
                             C_lvl_2_val_alloc < C_lvl_q && (C_lvl_2_val_alloc = (Finch).refill!(C_lvl_2.val, 0.0, C_lvl_2_val_alloc, C_lvl_q))
                             C_lvl_isdefault = true
                             C_lvl_2_val = C_lvl_2.val[C_lvl_q]
@@ -249,7 +243,7 @@
                             end
                             B_lvl_q += 1
                         else
-                            for i_15 = start_15:stop_15
+                            for i_15 = phase_start_6:phase_stop_6
                                 C_lvl_2_val_alloc < C_lvl_q && (C_lvl_2_val_alloc = (Finch).refill!(C_lvl_2.val, 0.0, C_lvl_2_val_alloc, C_lvl_q))
                                 C_lvl_isdefault = true
                                 C_lvl_2_val = C_lvl_2.val[C_lvl_q]
@@ -264,30 +258,28 @@
                                 end
                             end
                         end
-                        i = stop_15 + 1
+                        i = phase_stop_6 + 1
                         A_lvl_q += 1
                     else
-                        i = start_7
-                        while A_lvl_q < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < start_7
+                        i = phase_start_2
+                        while A_lvl_q < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < phase_start_2
                             A_lvl_q += 1
                         end
-                        while B_lvl_q < B_lvl_q_stop && B_lvl.idx[B_lvl_q] < start_7
+                        while B_lvl_q < B_lvl_q_stop && B_lvl.idx[B_lvl_q] < phase_start_2
                             B_lvl_q += 1
                         end
-                        while i <= stop_7
+                        while i <= phase_stop_2
                             i_start_7 = i
                             A_lvl_i = A_lvl.idx[A_lvl_q]
                             B_lvl_i = B_lvl.idx[B_lvl_q]
-                            start_17 = max(i_start_7, i_start_7)
-                            stop_17 = min(A_lvl_i, B_lvl_i)
-                            start_19 = max(i_start_7, start_17)
-                            stop_19 = min(stop_7, stop_17)
-                            if stop_19 >= start_19
+                            phase_start_7 = max(i_start_7)
+                            phase_stop_7 = min(phase_stop_2, B_lvl_i, A_lvl_i)
+                            if phase_stop_7 >= phase_start_7
                                 i_16 = i
-                                if A_lvl_i == stop_19 && B_lvl_i == stop_19
+                                if A_lvl_i == phase_stop_7 && B_lvl_i == phase_stop_7
                                     A_lvl_2_val = A_lvl_2.val[A_lvl_q]
                                     B_lvl_2_val = B_lvl_2.val[B_lvl_q]
-                                    i_17 = stop_19
+                                    i_17 = phase_stop_7
                                     C_lvl_2_val_alloc < C_lvl_q && (C_lvl_2_val_alloc = (Finch).refill!(C_lvl_2.val, 0.0, C_lvl_2_val_alloc, C_lvl_q))
                                     C_lvl_isdefault = true
                                     C_lvl_2_val = C_lvl_2.val[C_lvl_q]
@@ -302,9 +294,9 @@
                                     end
                                     A_lvl_q += 1
                                     B_lvl_q += 1
-                                elseif B_lvl_i == stop_19
+                                elseif B_lvl_i == phase_stop_7
                                     B_lvl_2_val = B_lvl_2.val[B_lvl_q]
-                                    i_18 = stop_19
+                                    i_18 = phase_stop_7
                                     C_lvl_2_val_alloc < C_lvl_q && (C_lvl_2_val_alloc = (Finch).refill!(C_lvl_2.val, 0.0, C_lvl_2_val_alloc, C_lvl_q))
                                     C_lvl_isdefault = true
                                     C_lvl_2_val = C_lvl_2.val[C_lvl_q]
@@ -318,9 +310,9 @@
                                         C_lvl_q += 1
                                     end
                                     B_lvl_q += 1
-                                elseif A_lvl_i == stop_19
+                                elseif A_lvl_i == phase_stop_7
                                     A_lvl_2_val = A_lvl_2.val[A_lvl_q]
-                                    i_19 = stop_19
+                                    i_19 = phase_stop_7
                                     C_lvl_2_val_alloc < C_lvl_q && (C_lvl_2_val_alloc = (Finch).refill!(C_lvl_2.val, 0.0, C_lvl_2_val_alloc, C_lvl_q))
                                     C_lvl_isdefault = true
                                     C_lvl_2_val = C_lvl_2.val[C_lvl_q]
@@ -336,34 +328,34 @@
                                     A_lvl_q += 1
                                 else
                                 end
-                                i = stop_19 + 1
+                                i = phase_stop_7 + 1
                             end
                         end
                     end
-                    i = stop_7 + 1
+                    i = phase_stop_2 + 1
                 end
             end
-            i = stop_3 + 1
+            i = phase_stop + 1
         end
         i_start = i
-        start_21 = max(i_start, i_start)
-        stop_21 = min(A_lvl_I, A_lvl_i1)
-        if stop_21 >= start_21
+        phase_start_8 = max(i_start)
+        phase_stop_8 = min(i_stop, A_lvl_i1)
+        if phase_stop_8 >= phase_start_8
             i_20 = i
-            i = start_21
-            while i <= stop_21
+            i = phase_start_8
+            while i <= phase_stop_8
                 i_start_8 = i
                 while A_lvl_q < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < i_start_8
                     A_lvl_q += 1
                 end
                 A_lvl_i = A_lvl.idx[A_lvl_q]
-                start_23 = max(i_start_8, i_start_8)
-                stop_23 = min(stop_21, A_lvl_i)
-                if stop_23 >= start_23
+                phase_start_9 = max(i_start_8)
+                phase_stop_9 = min(phase_stop_8, A_lvl_i)
+                if phase_stop_9 >= phase_start_9
                     i_21 = i
-                    if stop_23 == A_lvl_i
+                    if phase_stop_9 == A_lvl_i
                         A_lvl_2_val = A_lvl_2.val[A_lvl_q]
-                        i_22 = stop_23
+                        i_22 = phase_stop_9
                         C_lvl_2_val_alloc < C_lvl_q && (C_lvl_2_val_alloc = (Finch).refill!(C_lvl_2.val, 0.0, C_lvl_2_val_alloc, C_lvl_q))
                         C_lvl_isdefault = true
                         C_lvl_2_val = C_lvl_2.val[C_lvl_q]
@@ -378,18 +370,18 @@
                         end
                         A_lvl_q += 1
                     else
-                        i = start_23
-                        while A_lvl_q < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < start_23
+                        i = phase_start_9
+                        while A_lvl_q < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < phase_start_9
                             A_lvl_q += 1
                         end
-                        while i <= stop_23
+                        while i <= phase_stop_9
                             i_start_9 = i
                             A_lvl_i = A_lvl.idx[A_lvl_q]
-                            stop_25 = min(stop_23, A_lvl_i)
+                            phase_stop_10 = min(A_lvl_i, phase_stop_9)
                             i_23 = i
-                            if A_lvl_i == stop_25
+                            if A_lvl_i == phase_stop_10
                                 A_lvl_2_val = A_lvl_2.val[A_lvl_q]
-                                i_24 = stop_25
+                                i_24 = phase_stop_10
                                 C_lvl_2_val_alloc < C_lvl_q && (C_lvl_2_val_alloc = (Finch).refill!(C_lvl_2.val, 0.0, C_lvl_2_val_alloc, C_lvl_q))
                                 C_lvl_isdefault = true
                                 C_lvl_2_val = C_lvl_2.val[C_lvl_q]
@@ -405,33 +397,33 @@
                                 A_lvl_q += 1
                             else
                             end
-                            i = stop_25 + 1
+                            i = phase_stop_10 + 1
                         end
                     end
-                    i = stop_23 + 1
+                    i = phase_stop_9 + 1
                 end
             end
-            i = stop_21 + 1
+            i = phase_stop_8 + 1
         end
         i_start = i
-        start_27 = max(i_start, i_start)
-        stop_27 = min(A_lvl_I, B_lvl_i1)
-        if stop_27 >= start_27
+        phase_start_11 = max(i_start)
+        phase_stop_11 = min(i_stop, B_lvl_i1)
+        if phase_stop_11 >= phase_start_11
             i_25 = i
-            i = start_27
-            while i <= stop_27
+            i = phase_start_11
+            while i <= phase_stop_11
                 i_start_10 = i
                 while B_lvl_q < B_lvl_q_stop && B_lvl.idx[B_lvl_q] < i_start_10
                     B_lvl_q += 1
                 end
                 B_lvl_i = B_lvl.idx[B_lvl_q]
-                start_29 = max(i_start_10, i_start_10)
-                stop_29 = min(stop_27, B_lvl_i)
-                if stop_29 >= start_29
+                phase_start_12 = max(i_start_10)
+                phase_stop_12 = min(B_lvl_i, phase_stop_11)
+                if phase_stop_12 >= phase_start_12
                     i_26 = i
-                    if stop_29 == B_lvl_i
+                    if phase_stop_12 == B_lvl_i
                         B_lvl_2_val = B_lvl_2.val[B_lvl_q]
-                        i_27 = stop_29
+                        i_27 = phase_stop_12
                         C_lvl_2_val_alloc < C_lvl_q && (C_lvl_2_val_alloc = (Finch).refill!(C_lvl_2.val, 0.0, C_lvl_2_val_alloc, C_lvl_q))
                         C_lvl_isdefault = true
                         C_lvl_2_val = C_lvl_2.val[C_lvl_q]
@@ -446,18 +438,18 @@
                         end
                         B_lvl_q += 1
                     else
-                        i = start_29
-                        while B_lvl_q < B_lvl_q_stop && B_lvl.idx[B_lvl_q] < start_29
+                        i = phase_start_12
+                        while B_lvl_q < B_lvl_q_stop && B_lvl.idx[B_lvl_q] < phase_start_12
                             B_lvl_q += 1
                         end
-                        while i <= stop_29
+                        while i <= phase_stop_12
                             i_start_11 = i
                             B_lvl_i = B_lvl.idx[B_lvl_q]
-                            stop_31 = min(stop_29, B_lvl_i)
+                            phase_stop_13 = min(B_lvl_i, phase_stop_12)
                             i_28 = i
-                            if B_lvl_i == stop_31
+                            if B_lvl_i == phase_stop_13
                                 B_lvl_2_val = B_lvl_2.val[B_lvl_q]
-                                i_29 = stop_31
+                                i_29 = phase_stop_13
                                 C_lvl_2_val_alloc < C_lvl_q && (C_lvl_2_val_alloc = (Finch).refill!(C_lvl_2.val, 0.0, C_lvl_2_val_alloc, C_lvl_q))
                                 C_lvl_isdefault = true
                                 C_lvl_2_val = C_lvl_2.val[C_lvl_q]
@@ -473,17 +465,18 @@
                                 B_lvl_q += 1
                             else
                             end
-                            i = stop_31 + 1
+                            i = phase_stop_13 + 1
                         end
                     end
-                    i = stop_29 + 1
+                    i = phase_stop_12 + 1
                 end
             end
-            i = stop_27 + 1
+            i = phase_stop_11 + 1
         end
         i_start = i
+        phase_stop_14 = i_stop
         i_30 = i
-        i = A_lvl_I + 1
+        i = phase_stop_14 + 1
         C_lvl.pos[1 + 1] = C_lvl_q
-        (C = Fiber((Finch.HollowListLevel){Int64}(C_lvl_I, C_lvl.pos, C_lvl.idx, C_lvl_2), (Finch.Environment)(; name = :C)),)
+        (C = Fiber((Finch.HollowListLevel){Int64}(A_lvl_I, C_lvl.pos, C_lvl.idx, C_lvl_2), (Finch.Environment)(; name = :C)),)
     end

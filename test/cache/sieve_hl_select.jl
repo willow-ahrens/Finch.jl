@@ -8,6 +8,7 @@
         A_lvl_2 = A_lvl.lvl
         A_lvl_2_val_alloc = length(A_lvl.lvl.val)
         A_lvl_2_val = 0.0
+        j_stop = A_lvl_I
         B_val = 0.0
         selectj = 3
         A_lvl_q = A_lvl.pos[1]
@@ -21,64 +22,61 @@
         end
         j = 1
         j_start = j
-        start = max(j_start, j_start)
-        stop = min(selectj - 1, A_lvl_i1)
-        start_3 = max(j_start, start)
-        stop_3 = min(A_lvl_I, stop)
-        if stop_3 >= start_3
+        phase_start = max(j_start)
+        phase_stop = min(A_lvl_i1, selectj - 1, j_stop)
+        if phase_stop >= phase_start
             j = j
-            j = stop_3 + 1
+            j = phase_stop + 1
         end
         j_start = j
-        start_5 = max(j_start, j_start)
-        stop_5 = min(A_lvl_I, selectj - 1)
-        if stop_5 >= start_5
+        phase_start_2 = max(j_start)
+        phase_stop_2 = min(selectj - 1, j_stop)
+        if phase_stop_2 >= phase_start_2
             j_2 = j
-            j = stop_5 + 1
+            j = phase_stop_2 + 1
         end
         j_start = j
-        start_7 = max(j_start, j_start)
-        stop_7 = min(selectj, A_lvl_i1)
-        start_9 = max(j_start, start_7)
-        stop_9 = min(A_lvl_I, stop_7)
-        if stop_9 >= start_9
+        phase_start_3 = max(j_start)
+        phase_stop_3 = min(A_lvl_i1, selectj, j_stop)
+        if phase_stop_3 >= phase_start_3
             j_3 = j
-            j = start_9
-            while A_lvl_q < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < start_9
+            j = phase_start_3
+            while A_lvl_q < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < phase_start_3
                 A_lvl_q += 1
             end
-            while j <= stop_9
+            while j <= phase_stop_3
                 j_start_2 = j
                 A_lvl_i = A_lvl.idx[A_lvl_q]
-                stop_11 = min(stop_9, A_lvl_i)
+                phase_stop_4 = min(phase_stop_3, A_lvl_i)
                 j_4 = j
-                if A_lvl_i == stop_11
+                if A_lvl_i == phase_stop_4
                     A_lvl_2_val = A_lvl_2.val[A_lvl_q]
-                    j_5 = stop_11
+                    j_5 = phase_stop_4
                     B_val = B_val + A_lvl_2_val
                     A_lvl_q += 1
                 else
                 end
-                j = stop_11 + 1
+                j = phase_stop_4 + 1
             end
-            j = stop_9 + 1
+            j = phase_stop_3 + 1
         end
         j_start = j
-        start_13 = max(j_start, j_start)
-        stop_13 = min(A_lvl_I, selectj)
-        if stop_13 >= start_13
+        phase_start_5 = max(j_start)
+        phase_stop_5 = min(selectj, j_stop)
+        if phase_stop_5 >= phase_start_5
             j_6 = j
-            j = stop_13 + 1
+            j = phase_stop_5 + 1
         end
         j_start = j
-        start_15 = max(j_start, j_start)
-        stop_15 = min(A_lvl_I, A_lvl_i1)
-        if stop_15 >= start_15
+        phase_start_6 = max(j_start)
+        phase_stop_6 = min(A_lvl_i1, j_stop)
+        if phase_stop_6 >= phase_start_6
             j_7 = j
-            j = stop_15 + 1
+            j = phase_stop_6 + 1
         end
         j_start = j
+        phase_stop_7 = j_stop
         j_8 = j
-        j = A_lvl_I + 1
+        j = phase_stop_7 + 1
         (B = (Scalar){0.0, Float64}(B_val),)
     end

@@ -53,12 +53,14 @@ end
 
 function getdims(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode)
     ext = Extent(1, Virtual{Int}(fbr.lvl.I))
-    ext = suggest(ext)
+    if mode != Read()
+        ext = suggest(ext)
+    end
     (ext, getdims(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)...)
 end
 
 function setdims!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode, dim, dims...)
-    push!(ctx.preamble, :($(fbr.lvl.I) = $(ctx(getstop(dim)))))
+    fbr.lvl.I = getstop(dim)
     fbr.lvl.lvl = setdims!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode, dims...).lvl
     fbr
 end
@@ -86,7 +88,7 @@ function reinitialize!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode)
         push!(ctx.preamble, quote
             for $p = $(ctx(p_start)):$(ctx(p_stop))
                 for $i = 1:$(lvl.I)
-                    $q = ($p - 1) * $(lvl.I) + $i
+                    $q = ($p - 1) * $(ctx(lvl.I)) + $i
                     reinitialize!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual(q), index=Virtual(i), parent=fbr.env)), ctx, mode)
                 end
             end
@@ -110,8 +112,8 @@ function assemble!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode)
         i_2 = ctx.freshen(lvl.ex, :_i)
         push!(ctx.preamble, quote
             for $p = $(ctx(p_start)):$(ctx(p_stop))
-                for $i = 1:$(lvl.I)
-                    $q = ($p - 1) * $(lvl.I) + $i
+                for $i = 1:$(ctx(lvl.I))
+                    $q = ($p - 1) * $(ctx(lvl.I)) + $i
                     assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual(q), index=Virtual(i), parent=fbr.env)), ctx, mode)
                 end
             end
@@ -135,7 +137,7 @@ function unfurl(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode::Union{Read, Wri
     Leaf(
         body = (i) -> Thunk(
             preamble = quote
-                $q = ($(ctx(p)) - 1) * $(lvl.ex).I + $(ctx(i))
+                $q = ($(ctx(p)) - 1) * $(ctx(lvl.I)) + $(ctx(i))
             end,
             body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(q), index=i, guard=envdefaultcheck(fbr.env), parent=fbr.env)), ctx, mode, idxs...),
         )

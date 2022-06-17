@@ -5,17 +5,7 @@
         C_stop = (size(C))[1]
         A_stop = (size(A))[1]
         (B_mode1_stop,) = size(B)
-        C_stop_2 = (size(C))[1]
-        A_stop_2 = (size(A))[1]
-        (B_mode1_stop_2,) = size(B)
-        C_stop_3 = (size(C))[1]
-        A_stop_3 = (size(A))[1]
-        (B_mode1_stop_3,) = size(B)
-        C_stop_4 = (size(C))[1]
-        A_stop_4 = (size(A))[1]
-        A_stop_2 == A_stop_4 || throw(DimensionMismatch("mismatched dimension limits"))
-        (B_mode1_stop_4,) = size(B)
-        A_stop_2 == B_mode1_stop_4 || throw(DimensionMismatch("mismatched dimension limits"))
+        i_stop = C_stop
         C.idx = [C.idx[end]]
         C.val = [0.0]
         C_p = 0
@@ -26,13 +16,13 @@
         i = 1
         A_p = searchsortedfirst(A.idx, 1, A_p, length(A.idx), Base.Forward)
         A_i1 = A.idx[A_p]
-        while i <= A_stop
+        while i <= i_stop
             i_start = i
-            start = max(i_start, i_start)
-            stop = min(A_stop, A_i1)
+            phase_start = max(i_start)
+            phase_stop = min(i_stop, A_i1)
             i = i
-            if A_i1 == stop
-                for i_2 = start:stop
+            if A_i1 == phase_stop
+                for i_2 = phase_start:phase_stop
                     push!(C.val, zero(Float64))
                     C_p += 1
                     C.val[C_p] = C.val[C_p] + (A.val[A_p] + B[i_2])
@@ -43,14 +33,14 @@
                     A_i1 = A.idx[A_p]
                 end
             else
-                for i_3 = start:stop
+                for i_3 = phase_start:phase_stop
                     push!(C.val, zero(Float64))
                     C_p += 1
                     C.val[C_p] = C.val[C_p] + (A.val[A_p] + B[i_3])
                     push!(C.idx, i_3)
                 end
             end
-            i = stop + 1
+            i = phase_stop + 1
         end
         (C = C,)
     end

@@ -5,21 +5,11 @@
         C_stop = (size(C))[1]
         A_stop = (size(A))[1]
         B_stop = (size(B))[1]
-        C_stop_2 = (size(C))[1]
-        A_stop_2 = (size(A))[1]
-        B_stop_2 = (size(B))[1]
-        C_stop_3 = (size(C))[1]
-        A_stop_3 = (size(A))[1]
-        B_stop_3 = (size(B))[1]
-        C_stop_4 = (size(C))[1]
-        A_stop_4 = (size(A))[1]
-        A_stop_2 == A_stop_4 || throw(DimensionMismatch("mismatched dimension limits"))
-        B_stop_4 = (size(B))[1]
-        A_stop_2 == B_stop_4 || throw(DimensionMismatch("mismatched dimension limits"))
+        i_stop = C_stop
         C.idx = [C.idx[end]]
         C.val = (Int64)[]
         C_p = 0
-        C_I = A_stop + 1
+        C_I = i_stop + 1
         C.idx = (Int64)[C_I]
         C.val = (Float64)[]
         B_p = 1
@@ -27,27 +17,27 @@
         B_i1 = B.idx[B_p]
         i = 1
         i_start = i
-        start = max(i_start, i_start)
-        stop = min(A_stop, A.start - 1)
-        if stop >= start
+        phase_start = max(i_start)
+        phase_stop = min(i_stop, A.start - 1)
+        if phase_stop >= phase_start
             i = i
-            i = stop + 1
+            i = phase_stop + 1
         end
         i_start = i
-        start_3 = max(i_start, i_start)
-        stop_3 = min(A_stop, A.stop)
-        if stop_3 >= start_3
+        phase_start_2 = max(i_start)
+        phase_stop_2 = min(i_stop, A.stop)
+        if phase_stop_2 >= phase_start_2
             i_2 = i
-            i = start_3
-            B_p = searchsortedfirst(B.idx, start_3, B_p, length(B.idx), Base.Forward)
-            B_i0 = start_3
+            i = phase_start_2
+            B_p = searchsortedfirst(B.idx, phase_start_2, B_p, length(B.idx), Base.Forward)
+            B_i0 = phase_start_2
             B_i1 = B.idx[B_p]
-            while i <= stop_3
+            while i <= phase_stop_2
                 i_start_2 = i
-                stop_5 = min(stop_3, B_i1)
+                phase_stop_3 = min(phase_stop_2, B_i1)
                 i_3 = i
-                if B_i1 == stop_5
-                    i_4 = stop_5
+                if B_i1 == phase_stop_3
+                    i_4 = phase_stop_3
                     push!(C.idx, C_I)
                     push!(C.val, zero(Float64))
                     C_p += 1
@@ -58,12 +48,13 @@
                     B_i1 = B.idx[B_p]
                 else
                 end
-                i = stop_5 + 1
+                i = phase_stop_3 + 1
             end
-            i = stop_3 + 1
+            i = phase_stop_2 + 1
         end
         i_start = i
+        phase_stop_4 = i_stop
         i_5 = i
-        i = A_stop + 1
+        i = phase_stop_4 + 1
         (C = C,)
     end

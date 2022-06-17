@@ -14,7 +14,7 @@
         A_lvl_2 = A_lvl.lvl
         A_lvl_2_val_alloc = length(A_lvl.lvl.val)
         A_lvl_2_val = 0.0
-        B_lvl_I = (A_lvl_I,)
+        i_stop = A_lvl_I
         B_lvl_idx_alloc = 0
         empty!(B_lvl.tbl)
         empty!(B_lvl.srt)
@@ -22,8 +22,7 @@
         B_lvl.pos[1] = 1
         B_lvl_P = 0
         B_lvl_2_val_alloc = (Finch).refill!(B_lvl_2.val, 0.0, 0, 4)
-        B_lvl_p_stop_2 = 1
-        B_lvl_P = max(B_lvl_p_stop_2, B_lvl_P)
+        B_lvl_P = max(1, B_lvl_P)
         B_lvl_pos_alloc < B_lvl_P + 1 && (B_lvl_pos_alloc = Finch.refill!(B_lvl.pos, 0, B_lvl_pos_alloc, B_lvl_P + 1))
         B_lvl_q = B_lvl.pos[1]
         A_lvl_q = A_lvl.pos[1]
@@ -37,22 +36,22 @@
         end
         i = 1
         i_start = i
-        start = max(i_start, i_start)
-        stop = min(A_lvl_I, A_lvl_i1)
-        if stop >= start
+        phase_start = max(i_start)
+        phase_stop = min(i_stop, A_lvl_i1)
+        if phase_stop >= phase_start
             i = i
-            i = start
-            while A_lvl_q < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < start
+            i = phase_start
+            while A_lvl_q < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < phase_start
                 A_lvl_q += 1
             end
-            while i <= stop
+            while i <= phase_stop
                 i_start_2 = i
                 A_lvl_i = A_lvl.idx[A_lvl_q]
-                stop_3 = min(stop, A_lvl_i)
+                phase_stop_2 = min(phase_stop, A_lvl_i)
                 i_2 = i
-                if A_lvl_i == stop_3
+                if A_lvl_i == phase_stop_2
                     A_lvl_2_val = A_lvl_2.val[A_lvl_q]
-                    i_3 = stop_3
+                    i_3 = phase_stop_2
                     B_lvl_guard = true
                     B_lvl_key = (1, (i_3,))
                     B_lvl_q = get(B_lvl.tbl, B_lvl_key, B_lvl_idx_alloc + 1)
@@ -72,18 +71,19 @@
                     A_lvl_q += 1
                 else
                 end
-                i = stop_3 + 1
+                i = phase_stop_2 + 1
             end
-            i = stop + 1
+            i = phase_stop + 1
         end
         i_start = i
+        phase_stop_3 = i_stop
         i_4 = i
-        i = A_lvl_I + 1
+        i = phase_stop_3 + 1
         resize!(B_lvl.srt, length(B_lvl.tbl))
         copyto!(B_lvl.srt, pairs(B_lvl.tbl))
         sort!(B_lvl.srt)
         for B_lvl_p_2 = 1:B_lvl_P
             B_lvl.pos[B_lvl_p_2 + 1] += B_lvl.pos[B_lvl_p_2]
         end
-        (B = Fiber((Finch.HollowHashLevel){1, Tuple{Int64}, Int64, Int64, Dict{Tuple{Int64, Tuple{Int64}}, Int64}}(B_lvl_I, B_lvl.tbl, B_lvl.srt, B_lvl.pos, B_lvl_2), (Finch.Environment)(; name = :B)),)
+        (B = Fiber((Finch.HollowHashLevel){1, Tuple{Int64}, Int64, Int64, Dict{Tuple{Int64, Tuple{Int64}}, Int64}}((A_lvl_I,), B_lvl.tbl, B_lvl.srt, B_lvl.pos, B_lvl_2), (Finch.Environment)(; name = :B)),)
     end

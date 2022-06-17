@@ -63,7 +63,7 @@ function virtualize(ex, ::Type{HollowByteLevel{Ti, Tp, Tq, Lvl}}, ctx, tag=:lvl)
         $pos_alloc = length($sym.pos)
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualHollowByteLevel(sym, Ti, Tp, Tq, I, tbl_alloc, srt_alloc, srt_stop, pos_alloc, lvl_2)
+    VirtualHollowByteLevel(sym, Ti, Tp, Tq, Virtual{Int}(I), tbl_alloc, srt_alloc, srt_stop, pos_alloc, lvl_2)
 end
 function (ctx::Finch.LowerJulia)(lvl::VirtualHollowByteLevel)
     quote
@@ -80,7 +80,7 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualHollowByteLevel)
 end
 
 function getdims(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode)
-    ext = Extent(1, Virtual{Int}(:($(fbr.lvl.I))))
+    ext = Extent(1, fbr.lvl.I)
     if mode != Read()
         ext = suggest(ext)
     end
@@ -88,7 +88,7 @@ function getdims(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode)
 end
 
 function setdims!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode, dim, dims...)
-    push!(ctx.preamble, :($(fbr.lvl.I) = $(ctx(getstop(dim)))))
+    fbr.lvl.I = getstop(dim)
     fbr.lvl.lvl = setdims!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode, dims...).lvl
     fbr
 end
@@ -122,7 +122,7 @@ function initialize_level!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx::Lower
                 push!(ctx.preamble, quote
                     $p = first($(lvl.ex).srt[$r])
                     $i = last($(lvl.ex).srt[$r])
-                    $q = ($p - 1) * $(lvl.I) + $i
+                    $q = ($p - 1) * $(ctx(lvl.I)) + $i
                 end)
                 reinitialize(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env, position = Virtual{Ti}(q), index = Virtual{Ti}(i))))
             else
@@ -151,8 +151,8 @@ function assemble!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode)
     q = ctx.freshen(lvl.ex, :q)
 
     push!(ctx.preamble, quote
-        $q_start = ($p_start - 1) * $(lvl.I) + 1
-        $q_stop = $p_stop * $(lvl.I)
+        $q_start = ($p_start - 1) * $(ctx(lvl.I)) + 1
+        $q_stop = $p_stop * $(ctx(lvl.I))
         $(lvl.pos_alloc) < ($p_stop + 1) && ($(lvl.pos_alloc) = Finch.refill!($(lvl.ex).pos, $(zero(lvl.Ti)), $(lvl.pos_alloc), $p_stop + 1))
         $(lvl.tbl_alloc) < $q_stop && ($(lvl.tbl_alloc) = Finch.refill!($(lvl.ex).tbl, false, $(lvl.tbl_alloc), $q_stop))
     end)
@@ -163,8 +163,8 @@ function assemble!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode)
         i = ctx.freshen(lvl.ex, :_i)
         push!(ctx.preamble, quote
             for $q = $q_start:$q_stop
-                for $i = 1:$(lvl.I)
-                    $q = ($q - 1) * $(lvl.I) + $i
+                for $i = 1:$(ctx(lvl.I))
+                    $q = ($q - 1) * $(ctx(lvl.I)) + $i
                     assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual(q), index=Virtual(i), parent=fbr.env)), ctx, mode)
                 end
             end
@@ -240,7 +240,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Read, idx:
                                 body = Simplify(default(fbr)),
                                 tail = Thunk(
                                     preamble = quote
-                                        $my_q = ($(ctx(envposition(fbr.env))) - 1) * $(lvl.I) + $my_i
+                                        $my_q = ($(ctx(envposition(fbr.env))) - 1) * $(ctx(lvl.I)) + $my_i
                                     end,
                                     body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=Virtual{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
                                 ),
@@ -300,7 +300,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Read, idx:
                                         body = Simplify(default(fbr)),
                                         tail = Thunk(
                                             preamble = quote
-                                                $my_q = ($(ctx(envposition(fbr.env))) - 1) * $(lvl.I) + $my_i
+                                                $my_q = ($(ctx(envposition(fbr.env))) - 1) * $(ctx(lvl.I)) + $my_i
                                             end,
                                             body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=Virtual{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
                                         ),
@@ -326,7 +326,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Read, idx:
                                                 body = Simplify(default(fbr)),
                                                 tail = Thunk(
                                                     preamble = quote
-                                                        $my_q = ($(ctx(envposition(fbr.env))) - 1) * $(lvl.I) + $my_i
+                                                        $my_q = ($(ctx(envposition(fbr.env))) - 1) * $(ctx(lvl.I)) + $my_i
                                                     end,
                                                     body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=Virtual{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
                                                 ),
@@ -360,7 +360,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Read, idx:
     Leaf(
         body = (i) -> Thunk(
             preamble = quote
-                $my_q = $(ctx(q)) * $(lvl.I) + $i
+                $my_q = $(ctx(q)) * $(ctx(lvl.I)) + $i
             end,
             body = Cases([
                 :($tbl[$my_q]) => refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Tq}(my_q), index=i, parent=fbr.env)), ctx, mode, idxs...),
@@ -391,7 +391,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Union{Writ
             tail = (ctx, idx) -> Thunk(
                 preamble = quote
                     $my_guard = true
-                    $my_q = ($(ctx(envposition(fbr.env))) - 1) * $(lvl.I) + $idx
+                    $my_q = ($(ctx(envposition(fbr.env))) - 1) * $(ctx(lvl.I)) + $idx
                 end,
                 body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode, idxs...),
                 epilogue = begin

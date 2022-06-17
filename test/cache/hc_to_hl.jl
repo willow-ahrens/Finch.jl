@@ -13,13 +13,12 @@
         B_lvl_2 = B_lvl.lvl
         B_lvl_2_val_alloc = length(B_lvl.lvl.val)
         B_lvl_2_val = 0.0
-        A_lvl_I = B_lvl_I[1]
+        i_stop = B_lvl_I[1]
         A_lvl_pos_alloc = length(A_lvl.pos)
         A_lvl.pos[1] = 1
         A_lvl_idx_alloc = length(A_lvl.idx)
         A_lvl_2_val_alloc = (Finch).refill!(A_lvl_2.val, 0.0, 0, 4)
-        A_lvl_p_stop_2 = 1
-        A_lvl_pos_alloc < A_lvl_p_stop_2 + 1 && (A_lvl_pos_alloc = (Finch).regrow!(A_lvl.pos, A_lvl_pos_alloc, A_lvl_p_stop_2 + 1))
+        A_lvl_pos_alloc < 1 + 1 && (A_lvl_pos_alloc = (Finch).regrow!(A_lvl.pos, A_lvl_pos_alloc, 1 + 1))
         A_lvl_q = A_lvl.pos[1]
         B_lvl_q = B_lvl.pos[1]
         B_lvl_q_stop = B_lvl.pos[1 + 1]
@@ -32,23 +31,23 @@
         end
         i = 1
         i_start = i
-        start = max(i_start, i_start)
-        stop = min(B_lvl_I[1], B_lvl_i_stop)
-        if stop >= start
+        phase_start = max(i_start)
+        phase_stop = min(i_stop, B_lvl_i_stop)
+        if phase_stop >= phase_start
             i = i
-            i = start
+            i = phase_start
             B_lvl_q_step = B_lvl_q + 1
-            while B_lvl_q_step < B_lvl_q_stop && (B_lvl.tbl[1])[B_lvl_q_step] < start
+            while B_lvl_q_step < B_lvl_q_stop && (B_lvl.tbl[1])[B_lvl_q_step] < phase_start
                 B_lvl_q_step += 1
             end
-            while i <= stop
+            while i <= phase_stop
                 i_start_2 = i
                 B_lvl_i = (B_lvl.tbl[1])[B_lvl_q]
-                stop_3 = min(stop, B_lvl_i)
+                phase_stop_2 = min(B_lvl_i, phase_stop)
                 i_2 = i
-                if B_lvl_i == stop_3
+                if B_lvl_i == phase_stop_2
                     B_lvl_2_val = B_lvl_2.val[B_lvl_q]
-                    i_3 = stop_3
+                    i_3 = phase_stop_2
                     A_lvl_2_val_alloc < A_lvl_q && (A_lvl_2_val_alloc = (Finch).refill!(A_lvl_2.val, 0.0, A_lvl_2_val_alloc, A_lvl_q))
                     A_lvl_isdefault = true
                     A_lvl_2_val = A_lvl_2.val[A_lvl_q]
@@ -64,13 +63,14 @@
                     B_lvl_q += 1
                 else
                 end
-                i = stop_3 + 1
+                i = phase_stop_2 + 1
             end
-            i = stop + 1
+            i = phase_stop + 1
         end
         i_start = i
+        phase_stop_3 = i_stop
         i_4 = i
-        i = B_lvl_I[1] + 1
+        i = phase_stop_3 + 1
         A_lvl.pos[1 + 1] = A_lvl_q
-        (A = Fiber((Finch.HollowListLevel){Int64}(A_lvl_I, A_lvl.pos, A_lvl.idx, A_lvl_2), (Finch.Environment)(; name = :A)),)
+        (A = Fiber((Finch.HollowListLevel){Int64}(B_lvl_I[1], A_lvl.pos, A_lvl.idx, A_lvl_2), (Finch.Environment)(; name = :A)),)
     end

@@ -30,6 +30,7 @@ end
     bindings::Dict{Any, Any} = Dict()
     epilogue::Vector{Any} = []
     dims::Dict = Dict()
+    shapes::Dict = Dict()
     freshen::Freshen = Freshen()
 end
 

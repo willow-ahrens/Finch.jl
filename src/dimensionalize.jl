@@ -26,12 +26,13 @@ end
 
 function dimensionalize!(prgm, ctx) 
     dims = ctx.dims
-    InferDimensions(ctx=ctx, mode=declare_dims, dims = dims)(prgm)
-    InferDimensions(ctx=ctx, mode=define_dims, dims = dims)(prgm)
+    shapes = ctx.shapes
+    InferDimensions(ctx=ctx, mode=declare_dims, dims = dims, shapes = shapes)(prgm)
+    InferDimensions(ctx=ctx, mode=define_dims, dims = dims, shapes = shapes)(prgm)
     for k in keys(dims)
-        dims[k] = cache!(ctx, :dim, dims[k])
+        dims[k] = cache!(ctx, k, dims[k])
     end
-    return (prgm, dims)
+    return (dims, shapes)
 end
 
 struct NoDimension end
@@ -58,12 +59,11 @@ end
 function (ctx::InferDimensions)(node::Access)
     if ctx.mode == declare_dims
         exts = get(ctx.shapes, getname(node.tns), getdims(node.tns, ctx.ctx, node.mode))
+        #TODO consider setting dims here
         exts = map(ctx, node.idxs, exts)
     elseif node.mode != Read() && ctx.mode == define_dims
         ctx.shapes[getname(node.tns)] = map(idx -> resolvedim(ctx(idx, nodim)), node.idxs)
-        if getname(node.tns) in ctx.shapes
-            setdims!(node.tns, ctx.ctx, node.mode, exts...)
-        end
+        #TODO consider setting dims here
     end
     ctx(node.tns)
     return nodim
@@ -78,6 +78,7 @@ function setdims!(tns, ctx, mode, dims...)
             end)
         end
     end
+    tns
 end
 
 function (ctx::InferDimensions)(node)

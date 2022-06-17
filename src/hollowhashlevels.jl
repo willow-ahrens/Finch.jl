@@ -80,7 +80,7 @@ end
 function (ctx::Finch.LowerJulia)(lvl::VirtualHollowHashLevel)
     quote
         $HollowHashLevel{$(lvl.N), $(lvl.Ti), $(lvl.Tp), $(lvl.T_q), $(lvl.Tbl)}(
-            $(ctx(lvl.I)),
+            ($(map(ctx, lvl.I)...),),
             $(lvl.ex).tbl,
             $(lvl.ex).srt,
             $(lvl.ex).pos,
@@ -98,7 +98,7 @@ function getdims(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx::LowerJulia, mod
 end
 
 function setdims!(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx::LowerJulia, mode, dims...)
-    push!(ctx.preamble, :($(fbr.lvl.I) = ($(map(dim->ctx(getstop(dim)), dims[1:fbr.lvl.N])...),)))
+    fbr.lvl.I = map(getstop, dims[1:fbr.lvl.N])
     fbr.lvl.lvl = setdims!(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^fbr.lvl.N)(fbr.env)), ctx, mode, dims[fbr.lvl.N + 1:end]...).lvl
     fbr
 end
