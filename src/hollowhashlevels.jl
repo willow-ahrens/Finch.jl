@@ -63,13 +63,12 @@ mutable struct VirtualHollowHashLevel
 end
 function virtualize(ex, ::Type{HollowHashLevel{N, Ti, Tp, T_q, Tbl, Lvl}}, ctx, tag=:lvl) where {N, Ti, Tp, T_q, Tbl, Lvl}   
     sym = ctx.freshen(tag)
-    I = ctx.freshen(sym, :_I)
+    I = map(n->Virtual{Int}(:($sym.I[$n])), 1:N)
     P = ctx.freshen(sym, :_P)
     pos_alloc = ctx.freshen(sym, :_pos_alloc)
     idx_alloc = ctx.freshen(sym, :_idx_alloc)
     push!(ctx.preamble, quote
         $sym = $ex
-        $I = $sym.I
         $P = length($sym.pos)
         $pos_alloc = $P
         $idx_alloc = length($sym.tbl)
@@ -90,7 +89,7 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualHollowHashLevel)
 end
 
 function getdims(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx::LowerJulia, mode)
-    ext = map(n->Extent(1, Virtual{Int}(:($(fbr.lvl.I)[$n]))), 1:fbr.lvl.N)
+    ext = map(stop->Extent(1, stop), fbr.lvl.I)
     if mode != Read()
         ext = map(suggest, ext)
     end

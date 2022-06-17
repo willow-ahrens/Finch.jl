@@ -32,10 +32,9 @@ mutable struct VirtualSolidLevel
 end
 function virtualize(ex, ::Type{SolidLevel{Ti, Lvl}}, ctx, tag=:lvl) where {Ti, Lvl}
     sym = ctx.freshen(tag)
-    I = ctx.freshen(sym, :_I)
+    I = Virtual{Int}(:($sym.I))
     push!(ctx.preamble, quote
         $sym = $ex
-        $I = $sym.I
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
     VirtualSolidLevel(sym, Ti, I, lvl_2)
@@ -52,7 +51,7 @@ function reconstruct!(lvl::VirtualSolidLevel, ctx)
 end
 
 function getdims(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode)
-    ext = Extent(1, Virtual{Int}(fbr.lvl.I))
+    ext = Extent(1, fbr.lvl.I)
     if mode != Read()
         ext = suggest(ext)
     end

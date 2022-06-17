@@ -59,12 +59,11 @@ mutable struct VirtualHollowCooLevel
 end
 function virtualize(ex, ::Type{HollowCooLevel{N, Ti, Tq, Tbl, Lvl}}, ctx, tag=:lvl) where {N, Ti, Tq, Tbl, Lvl}   
     sym = ctx.freshen(tag)
-    I = ctx.freshen(sym, :_I)
+    I = map(n->Virtual{Int}(:($sym.I[$n])), 1:N)
     pos_alloc = ctx.freshen(sym, :_pos_alloc)
     idx_alloc = ctx.freshen(sym, :_idx_alloc)
     push!(ctx.preamble, quote
         $sym = $ex
-        $I = $sym.I
         $pos_alloc = length($sym.pos)
         $idx_alloc = length($sym.tbl)
     end)
@@ -83,7 +82,7 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualHollowCooLevel)
 end
 
 function getdims(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx::LowerJulia, mode)
-    ext = map(n->Extent(1, Virtual{Int}(:($(fbr.lvl.I)[$n]))), 1:fbr.lvl.N)
+    ext = map(stop->Extent(1, stop), fbr.lvl.I)
     if mode != Read()
         ext = map(suggest, ext)
     end

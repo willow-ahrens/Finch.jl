@@ -49,21 +49,20 @@ mutable struct VirtualHollowByteLevel
 end
 function virtualize(ex, ::Type{HollowByteLevel{Ti, Tp, Tq, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Tq, Lvl}   
     sym = ctx.freshen(tag)
-    I = ctx.freshen(sym, :_I)
+    I = Virtual{Int}(:($sym.I))
     tbl_alloc = ctx.freshen(sym, :_tbl_alloc)
     srt_stop = ctx.freshen(sym, :_srt_stop)
     srt_alloc = ctx.freshen(sym, :_srt_alloc)
     pos_alloc = ctx.freshen(sym, :_pos_alloc)
     push!(ctx.preamble, quote
         $sym = $ex
-        $I = $sym.I
         $tbl_alloc = length($sym.tbl)
         $srt_alloc = length($sym.srt)
         $srt_stop = $sym.srt_stop[]
         $pos_alloc = length($sym.pos)
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualHollowByteLevel(sym, Ti, Tp, Tq, Virtual{Int}(I), tbl_alloc, srt_alloc, srt_stop, pos_alloc, lvl_2)
+    VirtualHollowByteLevel(sym, Ti, Tp, Tq, I, tbl_alloc, srt_alloc, srt_stop, pos_alloc, lvl_2)
 end
 function (ctx::Finch.LowerJulia)(lvl::VirtualHollowByteLevel)
     quote

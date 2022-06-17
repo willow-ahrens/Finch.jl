@@ -37,12 +37,11 @@ mutable struct VirtualHollowListLevel
 end
 function virtualize(ex, ::Type{HollowListLevel{Ti, Lvl}}, ctx, tag=:lvl) where {Ti, Lvl}
     sym = ctx.freshen(tag)
-    I = ctx.freshen(sym, :_I)
+    I = Virtual{Int}(:($sym.I))
     pos_alloc = ctx.freshen(sym, :_pos_alloc)
     idx_alloc = ctx.freshen(sym, :_idx_alloc)
     push!(ctx.preamble, quote
         $sym = $ex
-        $I = $sym.I
         $pos_alloc = length($sym.pos)
         $idx_alloc = length($sym.idx)
     end)
@@ -61,7 +60,7 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualHollowListLevel)
 end
 
 function getdims(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
-    ext = Extent(1, Virtual{Int}(fbr.lvl.I))
+    ext = Extent(1, fbr.lvl.I)
     if mode != Read()
         ext = suggest(ext)
     end
