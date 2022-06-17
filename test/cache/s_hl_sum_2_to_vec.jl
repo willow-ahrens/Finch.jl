@@ -1,23 +1,21 @@
 @inbounds begin
         B = ex.body.body.lhs.tns.tns
         A_lvl = ex.body.body.rhs.tns.tns.lvl
-        A_lvl_I = A_lvl.I
         A_lvl_2 = A_lvl.lvl
-        A_lvl_2_I = A_lvl_2.I
         A_lvl_2_pos_alloc = length(A_lvl_2.pos)
         A_lvl_2_idx_alloc = length(A_lvl_2.idx)
         A_lvl_3 = A_lvl_2.lvl
         A_lvl_3_val_alloc = length(A_lvl_2.lvl.val)
         A_lvl_3_val = 0.0
         (B_mode1_stop,) = size(B)
-        j_stop = A_lvl_I
+        j_stop = A_lvl.I
         i_stop = B_mode1_stop
         (B_mode1_stop,) = size(B)
         1 == 1 || throw(DimensionMismatch("mismatched dimension start"))
         B_mode1_stop == B_mode1_stop || throw(DimensionMismatch("mismatched dimension stop"))
         fill!(B, 0)
         for j = 1:j_stop
-            A_lvl_q = (1 - 1) * A_lvl_I + j
+            A_lvl_q = (1 - 1) * A_lvl.I + j
             A_lvl_2_q = A_lvl_2.pos[A_lvl_q]
             A_lvl_2_q_stop = A_lvl_2.pos[A_lvl_q + 1]
             if A_lvl_2_q < A_lvl_2_q_stop

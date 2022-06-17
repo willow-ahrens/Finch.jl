@@ -1,14 +1,12 @@
 @inbounds begin
         C = ex.body.lhs.tns.tns
         A_lvl = (ex.body.rhs.args[1]).tns.tns.lvl
-        A_lvl_I = A_lvl.I
         A_lvl_pos_alloc = length(A_lvl.pos)
         A_lvl_idx_alloc = length(A_lvl.idx)
         A_lvl_2 = A_lvl.lvl
         A_lvl_2_val_alloc = length(A_lvl.lvl.val)
         A_lvl_2_val = 0.0
         B_lvl = (ex.body.rhs.args[2]).tns.tns.lvl
-        B_lvl_I = B_lvl.I
         B_lvl_pos_alloc = length(B_lvl.pos)
         B_lvl_idx_alloc = length(B_lvl.idx)
         B_lvl_2 = B_lvl.lvl
@@ -41,7 +39,7 @@
         i = 1
         i_start = i
         phase_start = max(i_start)
-        phase_stop = min(i_stop, B_lvl_i1, A_lvl_i1)
+        phase_stop = min(A_lvl_i1, i_stop, B_lvl_i1)
         if phase_stop >= phase_start
             i = i
             i = phase_start
@@ -85,7 +83,7 @@
         end
         i_start = i
         phase_start_3 = max(i_start)
-        phase_stop_3 = min(i_stop, A_lvl_i1)
+        phase_stop_3 = min(A_lvl_i1, i_stop)
         if phase_stop_3 >= phase_start_3
             i_6 = i
             i = phase_start_3
@@ -95,7 +93,7 @@
             while i <= phase_stop_3
                 i_start_3 = i
                 A_lvl_i = A_lvl.idx[A_lvl_q]
-                phase_stop_4 = min(phase_stop_3, A_lvl_i)
+                phase_stop_4 = min(A_lvl_i, phase_stop_3)
                 i_7 = i
                 if A_lvl_i == phase_stop_4
                     A_lvl_2_val = A_lvl_2.val[A_lvl_q]

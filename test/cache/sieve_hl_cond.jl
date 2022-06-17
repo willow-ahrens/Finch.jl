@@ -2,13 +2,12 @@
         B = ex.body.body.lhs.tns.tns
         B_val = B.val
         A_lvl = ex.body.body.rhs.tns.tns.lvl
-        A_lvl_I = A_lvl.I
         A_lvl_pos_alloc = length(A_lvl.pos)
         A_lvl_idx_alloc = length(A_lvl.idx)
         A_lvl_2 = A_lvl.lvl
         A_lvl_2_val_alloc = length(A_lvl.lvl.val)
         A_lvl_2_val = 0.0
-        j_stop = A_lvl_I
+        j_stop = A_lvl.I
         B_val = 0.0
         A_lvl_q = A_lvl.pos[1]
         A_lvl_q_stop = A_lvl.pos[1 + 1]
@@ -22,7 +21,7 @@
         j = 1
         j_start = j
         phase_start = max(j_start)
-        phase_stop = min(A_lvl_i1, j_stop)
+        phase_stop = min(j_stop, A_lvl_i1)
         if phase_stop >= phase_start
             j = j
             j = phase_start

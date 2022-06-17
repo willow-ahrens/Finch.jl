@@ -41,7 +41,7 @@
         A_p = searchsortedfirst(A.idx, i_stop, A_p, length(A.idx), Base.Forward)
         A_i1 = A.idx[A_p]
         i_start_2 = i
-        phase_stop_2 = min(i_stop, A_i1)
+        phase_stop_2 = min(A_i1, i_stop)
         i_2 = i
         if A_i1 == phase_stop_2
             push!(C.val, zero(Float64))

@@ -1,19 +1,17 @@
 @inbounds begin
         B_lvl = ex.body.lhs.tns.tns.lvl
-        B_lvl_I = B_lvl.I
         B_lvl_pos_alloc = length(B_lvl.pos)
         B_lvl_idx_alloc = length(B_lvl.tbl)
         B_lvl_2 = B_lvl.lvl
         B_lvl_2_val_alloc = length(B_lvl.lvl.val)
         B_lvl_2_val = 0.0
         A_lvl = ex.body.rhs.tns.tns.lvl
-        A_lvl_I = A_lvl.I
         A_lvl_pos_alloc = length(A_lvl.pos)
         A_lvl_idx_alloc = length(A_lvl.idx)
         A_lvl_2 = A_lvl.lvl
         A_lvl_2_val_alloc = length(A_lvl.lvl.val)
         A_lvl_2_val = 0.0
-        i_stop = A_lvl_I
+        i_stop = A_lvl.I
         B_lvl_pos_alloc = length(B_lvl.pos) - 1
         B_lvl.pos[1] = 1
         B_lvl_idx_alloc = length(B_lvl.tbl[1])
@@ -32,7 +30,7 @@
         i = 1
         i_start = i
         phase_start = max(i_start)
-        phase_stop = min(i_stop, A_lvl_i1)
+        phase_stop = min(A_lvl_i1, i_stop)
         if phase_stop >= phase_start
             i = i
             i = phase_start
@@ -73,5 +71,5 @@
         i_4 = i
         i = phase_stop_3 + 1
         B_lvl.pos[1 + 1] = B_lvl_q
-        (B = Fiber((Finch.HollowCooLevel){1, Tuple{Int64}, Int64, Tuple{Vector{Int64}}}((A_lvl_I,), B_lvl.tbl, B_lvl.pos, B_lvl_2), (Finch.Environment)(; name = :B)),)
+        (B = Fiber((Finch.HollowCooLevel){1, Tuple{Int64}, Int64, Tuple{Vector{Int64}}}((A_lvl.I,), B_lvl.tbl, B_lvl.pos, B_lvl_2), (Finch.Environment)(; name = :B)),)
     end
