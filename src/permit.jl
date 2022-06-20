@@ -39,5 +39,19 @@ end
 
 (ctx::InferDimensions)(node::Protocol, ext) = ctx(node.idx, ext)
 
-Finch.make_style(root::Loop, ctx::Finch.LowerJulia, node::Access{<:Permit}) =
-    getname(root.idx) == getname(node.idxs[1]) ? Finch.ChunkStyle() : Finch.DefaultStyle()
+function unfurl(tns, ctx, mode, idx::Permit)
+    obj = unfurl(tns, ctx, mode, idx)
+    Pipeline([
+        Phase(
+            stride(start) = idx
+            body = ...
+
+        ),
+        Phase(
+            stride(start) = idx
+            body = ...
+
+        )
+    ])
+    truncate(ctx, obj, )
+end

@@ -202,9 +202,7 @@ getsites(arr::VirtualFiber) = 1:arity(arr) #TODO maybe check how deep the name i
 
 function (ctx::Finch.ChunkifyVisitor)(node::Access{<:VirtualFiber}, ::DefaultStyle) where {Tv, Ti}
     if !isempty(node.idxs)
-        if (node.idxs[1] isa Name && getname(ctx.idx) == getname(node.idxs[1])) ||
-            (node.idxs[1] isa Protocol && getname(ctx.idx) == getname(node.idxs[1].idx))
-            #TODO I think we probably shouldn't wrap this in an Access, but life is complicated and I don't know what the right choice is right now.
+        if getname(node.idxs[1]) !== nothing && getname(ctx.idx) == getname(node.idxs[1])
             return Access(unfurl(node.tns, ctx.ctx, node.mode, node.idxs...), node.mode, node.idxs)
         end
     end
