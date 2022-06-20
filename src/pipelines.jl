@@ -2,11 +2,17 @@
     phases
 end
 
+struct MakePipeline
+    ctr
+end
+
 isliteral(::Pipeline) = false
+isliteral(::MakePipeline) = false
 
 struct PipelineStyle end
 
 make_style(root, ctx::LowerJulia, node::Pipeline) = PipelineStyle()
+make_style(root, ctx::LowerJulia, node::MakePipeline) = PipelineStyle()
 combine_style(a::DefaultStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::ThunkStyle, b::PipelineStyle) = ThunkStyle()
 combine_style(a::RunStyle, b::PipelineStyle) = PipelineStyle()
@@ -20,10 +26,12 @@ supports_shift(::PipelineStyle) = true
 
 struct PipelineVisitor <: AbstractCollectVisitor
     ctx
+    idx
+    ext
 end
 
 function (ctx::LowerJulia)(root::Chunk, ::PipelineStyle)
-    phases = Dict(PipelineVisitor(ctx)(root.body))
+    phases = Dict(PipelineVisitor(ctx, root.idx, root.ext)(root.body))
     children(key) = intersect(map(i->(key_2 = copy(key); key_2[i] += 1; key_2), 1:length(key)), keys(phases))
     parents(key) = intersect(map(i->(key_2 = copy(key); key_2[i] -= 1; key_2), 1:length(key)), keys(phases))
 
@@ -68,3 +76,4 @@ function postvisit!(node, ctx::PipelineVisitor, args)
 end
 postvisit!(node, ctx::PipelineVisitor) = [([], node)]
 (ctx::PipelineVisitor)(node::Pipeline, ::DefaultStyle) = enumerate(node.phases)
+(ctx::PipelineVisitor)(node::MakePipeline, ::DefaultStyle) = ctx(node.ctr(ctx.ctx, ctx.idx, ctx.ext))

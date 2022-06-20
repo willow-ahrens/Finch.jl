@@ -34,7 +34,7 @@
             j = 1
             j_start = j
             phase_start = max(j_start)
-            phase_stop = min(j_stop, A_lvl_2_i1)
+            phase_stop = min(A_lvl_2_i1, j_stop)
             if phase_stop >= phase_start
                 j = j
                 j = phase_start
