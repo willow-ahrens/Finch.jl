@@ -39,19 +39,21 @@ end
 
 (ctx::InferDimensions)(node::Protocol, ext) = ctx(node.idx, ext)
 
-function unfurl(tns, ctx, mode, idx::Permit)
-    obj = unfurl(tns, ctx, mode, idx)
+Finch.getname(node::Access{Permit}) = Finch.getname(first(node.idxs))
+
+function unfurl(tns, ctx, mode, idx::Access{Permit})
+    ext = InferDimension(ctx=ctx, dims = ctx.dims, shapes = ctx.shapes)(idx.idxs[1])
     Pipeline([
         Phase(
-            stride(start) = idx
-            body = ...
-
+            stride = (start) -> ctx(start(idx.I)),
+            body = (start, step) -> missing,
         ),
         Phase(
-            stride(start) = idx
-            body = ...
-
+            stride = (start) -> ctx(stop(idx.I)),
+            body = (start, step) -> truncate(unfurl(tns, ctx, mode, idx.idxs[1]), ctx, ext, Extent(start, step))
+        ),
+        Phase(
+            body = (start, step) -> missing,
         )
     ])
-    truncate(ctx, obj, )
 end

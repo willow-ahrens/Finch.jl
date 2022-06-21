@@ -34,7 +34,21 @@ function Base.show(io::IO, ex::IndexNode)
     end
 end
 
-Base.isless(a::IndexNode, b::IndexNode) = hash(a) < hash(b)
+#TODO one of these days, it might be nice to define something more principled.
+function Base.isless(a::IndexNode, b::IndexNode)
+    if a != b
+        h = UInt64(0xDEADBEEF)
+        while true
+            ah = hash(a, h)
+            bh = hash(b, h)
+            if ah != bh
+                return ah < bh
+            end
+            h += 1
+        end
+    end
+    return false
+end
 function Base.hash(a::IndexNode, h::UInt)
     if istree(a)
         hash(operation(a), hash(arguments(a), h))
@@ -130,6 +144,7 @@ Base.:(==)(a::Protocol, b::Protocol) = a.idx == b.idx && a.val == b.val
 protocol(args...) = protocol!(vcat(args...))
 protocol!(args) = Protocol(args[1], args[2])
 
+Finch.getname(ex::Protocol) = Finch.getname(ex.idx)
 SyntaxInterface.istree(::Protocol) = true
 SyntaxInterface.operation(ex::Protocol) = protocol
 SyntaxInterface.arguments(ex::Protocol) = Any[ex.idx, ex.val]

@@ -102,7 +102,7 @@
         i_2 = 1
         i_2_start = i_2
         phase_start_4 = max(i_2_start)
-        phase_stop_4 = min(B_lvl_i_stop, i_2_stop)
+        phase_stop_4 = min(i_2_stop, B_lvl_i_stop)
         if phase_stop_4 >= phase_start_4
             i_5 = i_2
             i_2 = phase_start_4
@@ -113,7 +113,7 @@
             while i_2 <= phase_stop_4
                 i_2_start_2 = i_2
                 B_lvl_i = (B_lvl.tbl[1])[B_lvl_q]
-                phase_stop_5 = min(phase_stop_4, B_lvl_i)
+                phase_stop_5 = min(B_lvl_i, phase_stop_4)
                 i_6 = i_2
                 if B_lvl_i == phase_stop_5
                     B_lvl_2_val = B_lvl_2.val[B_lvl_q]

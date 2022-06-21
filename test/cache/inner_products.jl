@@ -59,7 +59,7 @@
                 k = 1
                 k_start = k
                 phase_start = max(k_start)
-                phase_stop = min(A_lvl_2_i1, A_lvl_5_i1, k_stop)
+                phase_stop = min(A_lvl_5_i1, k_stop, A_lvl_2_i1)
                 if phase_stop >= phase_start
                     k = k
                     k = phase_start
@@ -101,7 +101,7 @@
                 end
                 k_start = k
                 phase_start_3 = max(k_start)
-                phase_stop_3 = min(A_lvl_2_i1, k_stop)
+                phase_stop_3 = min(k_stop, A_lvl_2_i1)
                 if phase_stop_3 >= phase_start_3
                     k_4 = k
                     k = phase_stop_3 + 1

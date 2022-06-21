@@ -48,6 +48,8 @@ include("hollowbytelevels.jl")
 include("solidlevels.jl")
 include("elementlevels.jl")
 
+include("permit.jl")
+
 
 module h
     using Finch

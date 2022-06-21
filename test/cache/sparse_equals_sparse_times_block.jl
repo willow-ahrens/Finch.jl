@@ -18,7 +18,7 @@
         i = 1
         i_start = i
         phase_start = max(i_start)
-        phase_stop = min(i_stop, A.start - 1)
+        phase_stop = min(A.start - 1, i_stop)
         if phase_stop >= phase_start
             i = i
             i = phase_stop + 1
