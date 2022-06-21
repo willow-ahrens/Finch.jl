@@ -22,21 +22,21 @@
         j = 1
         j_start = j
         phase_start = max(j_start)
-        phase_stop = min(j_stop, A_lvl_i1, selectj - 1)
+        phase_stop = min(A_lvl_i1, j_stop, selectj - 1)
         if phase_stop >= phase_start
             j = j
             j = phase_stop + 1
         end
         j_start = j
         phase_start_2 = max(j_start)
-        phase_stop_2 = min(j_stop, selectj - 1)
+        phase_stop_2 = min(selectj - 1, j_stop)
         if phase_stop_2 >= phase_start_2
             j_2 = j
             j = phase_stop_2 + 1
         end
         j_start = j
         phase_start_3 = max(j_start)
-        phase_stop_3 = min(j_stop, A_lvl_i1, selectj)
+        phase_stop_3 = min(A_lvl_i1, selectj, j_stop)
         if phase_stop_3 >= phase_start_3
             j_3 = j
             j = phase_start_3
@@ -61,14 +61,14 @@
         end
         j_start = j
         phase_start_5 = max(j_start)
-        phase_stop_5 = min(j_stop, selectj)
+        phase_stop_5 = min(selectj, j_stop)
         if phase_stop_5 >= phase_start_5
             j_6 = j
             j = phase_stop_5 + 1
         end
         j_start = j
         phase_start_6 = max(j_start)
-        phase_stop_6 = min(j_stop, A_lvl_i1)
+        phase_stop_6 = min(A_lvl_i1, j_stop)
         if phase_stop_6 >= phase_start_6
             j_7 = j
             j = phase_stop_6 + 1

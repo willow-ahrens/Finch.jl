@@ -27,8 +27,8 @@
             B_p = searchsortedfirst(B.idx, i_start, B_p, length(B.idx), Base.Forward)
             B_i0 = i_start
             B_i1 = B.idx[B_p]
-            phase_start = max(min(i_start), i_start)
-            phase_stop = min(i_stop, max(A_i1, B_i1))
+            phase_start = max(i_start, min(i_start))
+            phase_stop = min(max(A_i1, B_i1), i_stop)
             if phase_stop >= phase_start
                 i = i
                 if phase_stop == A_i1 && phase_stop == B_i1
@@ -134,7 +134,7 @@
                     B_i1 = B.idx[B_p]
                     i_start_5 = i
                     phase_start_5 = max(i_start_5)
-                    phase_stop_5 = min(phase_stop, B_i1)
+                    phase_stop_5 = min(B_i1, phase_stop)
                     i_11 = i
                     if B_i1 == phase_stop_5
                         for i_12 = phase_start_5:phase_stop_5 - 1
@@ -177,7 +177,7 @@
                     while i <= phase_stop
                         i_start_6 = i
                         phase_start_6 = max(i_start_6)
-                        phase_stop_6 = min(A_i1, phase_stop, B_i1)
+                        phase_stop_6 = min(A_i1, B_i1, phase_stop)
                         if phase_stop_6 >= phase_start_6
                             i_15 = i
                             if A_i1 == phase_stop_6 && B_i1 == phase_stop_6
