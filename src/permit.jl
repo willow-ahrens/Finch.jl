@@ -33,7 +33,7 @@ Finch.setdims!(arr::VirtualPermit, ctx::Finch.LowerJulia, mode, dim) = VirtualPe
 
 function (ctx::InferDimensions)(node::Access{VirtualPermit}, ext)
     @assert length(node.idxs) == 1
-    ctx(node.idx, ext)
+    ctx(node.idx, Widen(ext))
     return ext
 end
 

@@ -1,4 +1,4 @@
-@testset "fibers" begin
+@testset "skips" begin
 
     A = Finch.Fiber(
         HollowList(10, [1, 6], [1, 3, 5, 7, 9],
