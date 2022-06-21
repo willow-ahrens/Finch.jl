@@ -34,25 +34,71 @@ function Base.show(io::IO, ex::IndexNode)
     end
 end
 
-#TODO one of these days, it might be nice to define something more principled.
+#=
+struct IndexLexicography{T}
+    arg
+end
+
+Base.isless(a::T, b::T) where {T <: IndexLexicography{<:Any}} = a === b ? false : throw(MethodError(Base.isless, typeof((a, b))))
+Base.isless(a::IndexLexicography, b::IndexLexicography) = IndexLexicography(typeof(a.arg)) < IndexLexicography(typeof(b.arg))
+Base.isless(a::IndexLexicography{<:IndexNode}, b::IndexLexicography) = false
+Base.isless(a::IndexLexicography, b::IndexLexicography{<:IndexNode}) = true
+
+lexicographic_types = [Symbol, Expr,]
+
+function Base.isless(a::IndexLexicography{Expr}, b::IndexLexicography{Expr}) where {T}
+    (a, b) = (a.arg, b.arg)
+    if a.head < b.head
+        return true
+    elseif a.head == b.head
+        return (map(IndexLexicography, a.args)...,) < (map(IndexLexicography, b.args)...,)
+    end
+    return false
+end
+function Base.:(==)(a::T, b::T) with {T <: IndexNode}
+function Base.isless(a::IndexLexicography{T}, b::IndexLexicography{T}) where {T}
+    return a < b
+end
+function Base.isless(a::IndexLexicography, b::IndexLexicography) where {T}
+    err = MethodError(Base.isless, typeof((a, b)))
+    (a, b) = (a.arg, b.arg)
+    (ai, bi) = (findfirst(map(t -> a isa t, lexicographic_types)), findfirst(map(t -> b isa t, lexicographic_types)))
+    (ai, bi) = (something(ai, 0), something(bi, 0))
+    if ai == bi
+        if ai == bi == 0
+            return string(typeof(a)) < string(typeof(b))
+        else
+            throw(err)
+        end
+    end
+    return ai < bi
+end
+=#
+
 function Base.isless(a::IndexNode, b::IndexNode)
     if a != b
         h = UInt64(0xDEADBEEF)
-        while true
-            ah = hash(a, h)
-            bh = hash(b, h)
+        for i = 1:10
+            ah = hash(a, h + i)
+            bh = hash(b, h + i)
             if ah != bh
                 return ah < bh
             end
             h += 1
         end
+        error()
     end
     return false
 end
+
 function Base.hash(a::IndexNode, h::UInt)
     if istree(a)
-        hash(operation(a), hash(arguments(a), h))
+        for arg in arguments(a)
+            h = hash(arg, h)
+        end
+        hash(operation(a), h)
     else
+        error()
         invoke(hash, Tuple{Any, UInt}, a, h)
     end
 end
@@ -74,11 +120,20 @@ struct Literal <: IndexTerminal
 end
 
 SyntaxInterface.istree(::Literal) = false
-Base.hash(ex::Literal, h::UInt) = hash((Literal, ex.val), h)
+Base.hash(ex::Literal, h::UInt) = hash(Literal, hash(ex.val, h))
 show_expression(io, mime, ex::Literal) = print(io, ex.val)
 Finch.isliteral(ex::Literal) = true
 Finch.getvalue(ex::Literal) = ex.val
 
+struct Virtual{T} <: IndexTerminal
+    ex
+end
+
+Base.:(==)(a::Virtual{T}, b::Virtual{T}) where {T} = a.ex == b.ex
+
+SyntaxInterface.istree(::Virtual) = false
+
+isliteral(::Virtual) = false
 
 struct Pass <: IndexStatement
 	tnss::Vector{Any}

@@ -74,7 +74,7 @@
                         A_lvl_2_i = A_lvl_2.idx[A_lvl_2_q]
                         A_lvl_5_i = A_lvl_5.idx[A_lvl_5_q]
                         phase_start_2 = max(k_start_2)
-                        phase_stop_2 = min(A_lvl_5_i, A_lvl_2_i, phase_stop)
+                        phase_stop_2 = min(A_lvl_2_i, A_lvl_5_i, phase_stop)
                         if phase_stop_2 >= phase_start_2
                             k_2 = k
                             if A_lvl_2_i == phase_stop_2 && A_lvl_5_i == phase_stop_2

@@ -3,6 +3,7 @@ struct Virtual{T} <: IndexTerminal
 end
 
 Base.:(==)(a::Virtual{T}, b::Virtual{T}) where {T} = a.ex == b.ex
+Base.hash(ex::Virtual{T}, h::UInt) where {T} = hash(Virtual{T}, hash(ex.ex, h))
 
 virtualize(ex, T, ctx, tag) = virtualize(ex, T, ctx)
 

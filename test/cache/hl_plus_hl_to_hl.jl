@@ -60,7 +60,7 @@
                 A_lvl_i = A_lvl.idx[A_lvl_q]
                 B_lvl_i = B_lvl.idx[B_lvl_q]
                 phase_start_2 = max(i_start_2)
-                phase_stop_2 = min(B_lvl_i, A_lvl_i, phase_stop)
+                phase_stop_2 = min(phase_stop, B_lvl_i, A_lvl_i)
                 if phase_stop_2 >= phase_start_2
                     i_2 = i
                     if A_lvl_i == phase_stop_2 && B_lvl_i == phase_stop_2

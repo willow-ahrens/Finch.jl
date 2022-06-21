@@ -45,7 +45,7 @@
             while i <= phase_stop
                 i_start_2 = i
                 A_lvl_i = A_lvl.idx[A_lvl_q]
-                phase_stop_2 = min(A_lvl_i, phase_stop)
+                phase_stop_2 = min(phase_stop, A_lvl_i)
                 i_2 = i
                 if A_lvl_i == phase_stop_2
                     A_lvl_2_val = A_lvl_2.val[A_lvl_q]

@@ -21,7 +21,7 @@
         j = 1
         j_start = j
         phase_start = max(j_start)
-        phase_stop = min(A_lvl_i1, j_stop)
+        phase_stop = min(j_stop, A_lvl_i1)
         if phase_stop >= phase_start
             j = j
             j = phase_start
@@ -32,7 +32,7 @@
                 j_start_2 = j
                 A_lvl_i = A_lvl.idx[A_lvl_q]
                 phase_start_2 = max(j_start_2)
-                phase_stop_2 = min(A_lvl_i, phase_stop)
+                phase_stop_2 = min(phase_stop, A_lvl_i)
                 j_2 = j
                 if A_lvl_i == phase_stop_2
                     for j_3 = phase_start_2:phase_stop_2 - 1

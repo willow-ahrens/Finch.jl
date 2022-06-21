@@ -25,7 +25,7 @@
         while i <= i_stop
             i_start = i
             phase_start = max(i_start)
-            phase_stop = min(A_i1, B_i1, i_stop)
+            phase_stop = min(B_i1, A_i1, i_stop)
             if phase_stop >= phase_start
                 i = i
                 if A_i1 == phase_stop && B_i1 == phase_stop

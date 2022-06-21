@@ -41,7 +41,7 @@
             while i <= phase_stop
                 i_start_2 = i
                 B_lvl_i = (B_lvl.tbl[1])[B_lvl_q]
-                phase_stop_2 = min(B_lvl_i, phase_stop)
+                phase_stop_2 = min(phase_stop, B_lvl_i)
                 i_2 = i
                 if B_lvl_i == phase_stop_2
                     B_lvl_2_val = B_lvl_2.val[B_lvl_q]

@@ -60,7 +60,7 @@
                 end
                 B_lvl_i = B_lvl.idx[B_lvl_q]
                 phase_start_2 = max(i_start_2, min(i_start_2))
-                phase_stop_2 = min(max(B_lvl_i, A_lvl_i), phase_stop)
+                phase_stop_2 = min(phase_stop, max(B_lvl_i, A_lvl_i))
                 if phase_stop_2 >= phase_start_2
                     i_2 = i
                     if phase_stop_2 == A_lvl_i && phase_stop_2 == B_lvl_i
@@ -374,7 +374,7 @@
                         while i <= phase_stop_9
                             i_start_9 = i
                             A_lvl_i = A_lvl.idx[A_lvl_q]
-                            phase_stop_10 = min(phase_stop_9, A_lvl_i)
+                            phase_stop_10 = min(A_lvl_i, phase_stop_9)
                             i_23 = i
                             if A_lvl_i == phase_stop_10
                                 A_lvl_2_val = A_lvl_2.val[A_lvl_q]
