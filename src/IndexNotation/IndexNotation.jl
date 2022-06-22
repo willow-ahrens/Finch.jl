@@ -4,6 +4,7 @@ module IndexNotation
     export IndexNode, IndexStatement, IndexExpression, IndexTerminal
     export Literal
     export Name
+    export Virtual
     export Workspace
     export Pass, pass
     export With, with

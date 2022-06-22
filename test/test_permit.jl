@@ -8,6 +8,6 @@
         Element{0.0}([10, 20])))
     C = Finch.Fiber(Solid(Element{0.0}()))
 
-    println(@index_code_lowered @loop i C[i] += A[i] + B[permit[i]])
-    @index @loop i C[i] += A[i] + B[permit[i]]
+    println(@index_code_lowered @loop i C[i] += A[i] + coalesce(B[permit[i]], 0))
+    @index @loop i C[i] += A[i] + coalesce(B[permit[i]], 0)
 end

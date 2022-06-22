@@ -2,6 +2,8 @@ struct Permit{T}
     I::T
 end
 
+IndexNotation.value_instance(arg::Permit) = arg
+
 const permit = Permit(nodim)
 
 Base.size(vec::Permit) = stop(vec.I) - start(vec.I) + 1
@@ -20,6 +22,8 @@ function virtualize(ex, ::Type{Permit{T}}, ctx) where {T}
     return VirtualPermit(virtualize(:($ex.I), T, ctx))
 end
 
+virtualize(ex, ::Type{NoDimension}, ctx) = nodim
+
 function (ctx::Finch.LowerJulia)(tns::VirtualPermit)
     quote
         Permit($(ctx(tns.I)))
@@ -29,31 +33,34 @@ end
 function Finch.getdims(arr::VirtualPermit, ctx::Finch.LowerJulia, mode)
     return arr.I
 end
-Finch.setdims!(arr::VirtualPermit, ctx::Finch.LowerJulia, mode, dim) = VirtualPermit(dim)
+#Finch.setdims!(arr::VirtualPermit, ctx::Finch.LowerJulia, mode, dim) = VirtualPermit(dim)
 
 function (ctx::InferDimensions)(node::Access{VirtualPermit}, ext)
     @assert length(node.idxs) == 1
-    ctx(node.idx, Widen(ext))
+    ctx(node.idxs[1], Widen(ext))
     return ext
 end
 
 (ctx::InferDimensions)(node::Protocol, ext) = ctx(node.idx, ext)
 
-Finch.getname(node::Access{Permit}) = Finch.getname(first(node.idxs))
+Finch.getname(node::Access{VirtualPermit}) = Finch.getname(first(node.idxs))
 
-function unfurl(tns, ctx, mode, idx::Access{Permit})
-    ext = InferDimension(ctx=ctx, dims = ctx.dims, shapes = ctx.shapes)(idx.idxs[1])
+Finch.getname(node::VirtualPermit) = gensym()
+Finch.setname(node::VirtualPermit, name) = node
+
+function unfurl(tns, ctx, mode, idx::Access{VirtualPermit}, tail...)
+    ext = InferDimensions(ctx=ctx, mode=define_dims, dims = ctx.dims, shapes = ctx.shapes)(idx.idxs[1])
     Pipeline([
         Phase(
-            stride = (start) -> ctx(start(idx.I)),
-            body = (start, step) -> missing,
+            stride = (start) -> ctx(getstart(idx.tns.I)),
+            body = (start, step) -> Run(Simplify(missing)),
         ),
         Phase(
-            stride = (start) -> ctx(stop(idx.I)),
-            body = (start, step) -> truncate(unfurl(tns, ctx, mode, idx.idxs[1]), ctx, ext, Extent(start, step))
+            stride = (start) -> ctx(getstop(idx.tns.I)),
+            body = (start, step) -> truncate(unfurl(tns, ctx, mode, idx.idxs[1], tail...), ctx, ext, Extent(start, step))
         ),
         Phase(
-            body = (start, step) -> missing,
+            body = (start, step) -> Run(Simplify(missing)),
         )
     ])
 end

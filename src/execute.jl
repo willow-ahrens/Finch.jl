@@ -14,6 +14,7 @@ function execute_code_lowered(ex, T)
         quote
             $(begin
                 prgm = virtualize(ex, T, ctx)
+                println(prgm)
                 #The following call separates tensor and index names from environment symbols.
                 #TODO we might want to keep the namespace around, and/or further stratify index
                 #names from tensor names
@@ -38,7 +39,7 @@ function execute_code_lowered(ex, T)
             $code
         end
     end
-    code = MacroTools.prettify(lower_cleanup(lower_caches(code)), alias=false, lines=false)
+    code = code |> lower_caches |> lower_cleanup |> MacroTools.striplines |> MacroTools.flatten
 end
 
 macro index(ex)

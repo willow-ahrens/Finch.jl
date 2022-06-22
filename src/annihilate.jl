@@ -59,6 +59,12 @@
     (@rule @i(- +($a, b...)) => @i +(- $a, - +(b...))),
     (@rule @i(a[i...] += 0) => pass(a)),
 
+    (@rule @i(a[i...] <<f>>= missing) => pass(a)),
+    (@rule @i(a[i..., missing, j...] <<f>>= $b) => pass(a)),
+    (@rule @i(a[i..., missing, j...]) => missing),
+    (@rule @i($f(a..., missing, b...)) => f === coalesce ? (@i $f(a..., b...)) : missing),
+    (@rule @i($(coalesce)($a, b...)) => if a isa Virtual && !(Virtual{missing} <: typeof(a)); a end),
+
     (@rule @i($a - $b) => @i $a + - $b),
     (@rule @i(- (- $a)) => a),
 
