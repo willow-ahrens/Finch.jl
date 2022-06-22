@@ -34,8 +34,8 @@
         end
         i = 1
         i_start = i
-        phase_start = max(i_start)
-        phase_stop = min(A_lvl_i1, i_stop)
+        phase_start = (max)(i_start)
+        phase_stop = (min)(i_stop, A_lvl_i1)
         if phase_stop >= phase_start
             i = i
             i = phase_start
@@ -45,7 +45,7 @@
             while i <= phase_stop
                 i_start_2 = i
                 A_lvl_i = A_lvl.idx[A_lvl_q]
-                phase_stop_2 = min(phase_stop, A_lvl_i)
+                phase_stop_2 = (min)(phase_stop, A_lvl_i)
                 i_2 = i
                 if A_lvl_i == phase_stop_2
                     A_lvl_2_val = A_lvl_2.val[A_lvl_q]
@@ -59,7 +59,7 @@
                     B_lvl_2_val = B_lvl_2.val[B_lvl_q]
                     B_lvl_guard = false
                     B_lvl_guard = false
-                    B_lvl_2_val = B_lvl_2_val + A_lvl_2_val
+                    B_lvl_2_val = (+)(B_lvl_2_val, A_lvl_2_val)
                     B_lvl_2.val[B_lvl_q] = B_lvl_2_val
                     if !B_lvl_guard
                         B_lvl_idx_alloc = B_lvl_q

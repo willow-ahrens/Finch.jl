@@ -47,8 +47,8 @@
         end
         i = 1
         i_start = i
-        phase_start = max(i_start)
-        phase_stop = min(A_lvl_i1, i_stop)
+        phase_start = (max)(i_start)
+        phase_stop = (min)(i_stop, A_lvl_i1)
         if phase_stop >= phase_start
             i = i
             i = phase_start
@@ -58,7 +58,7 @@
             while i <= phase_stop
                 i_start_2 = i
                 A_lvl_i = A_lvl.idx[A_lvl_q]
-                phase_stop_2 = min(phase_stop, A_lvl_i)
+                phase_stop_2 = (min)(phase_stop, A_lvl_i)
                 i_2 = i
                 if A_lvl_i == phase_stop_2
                     A_lvl_2_val = A_lvl_2.val[A_lvl_q]
@@ -68,7 +68,7 @@
                     B_lvl_4_val = B_lvl_4.val[B_lvl_3_q]
                     B_lvl_3_guard = false
                     B_lvl_3_guard = false
-                    B_lvl_4_val = B_lvl_4_val + A_lvl_2_val
+                    B_lvl_4_val = (+)(B_lvl_4_val, A_lvl_2_val)
                     B_lvl_4.val[B_lvl_3_q] = B_lvl_4_val
                     if !B_lvl_3_guard
                         if B_lvl_3_idx_alloc < B_lvl_3_q
@@ -101,8 +101,8 @@
         end
         i_2 = 1
         i_2_start = i_2
-        phase_start_4 = max(i_2_start)
-        phase_stop_4 = min(B_lvl_i_stop, i_2_stop)
+        phase_start_4 = (max)(i_2_start)
+        phase_stop_4 = (min)(B_lvl_i_stop, i_2_stop)
         if phase_stop_4 >= phase_start_4
             i_5 = i_2
             i_2 = phase_start_4
@@ -113,7 +113,7 @@
             while i_2 <= phase_stop_4
                 i_2_start_2 = i_2
                 B_lvl_i = (B_lvl.tbl[1])[B_lvl_q]
-                phase_stop_5 = min(B_lvl_i, phase_stop_4)
+                phase_stop_5 = (min)(B_lvl_i, phase_stop_4)
                 i_6 = i_2
                 if B_lvl_i == phase_stop_5
                     B_lvl_2_val = B_lvl_2.val[B_lvl_q]
@@ -123,7 +123,7 @@
                     C_lvl_2_val = C_lvl_2.val[C_lvl_q]
                     C_lvl_isdefault = false
                     C_lvl_isdefault = false
-                    C_lvl_2_val = C_lvl_2_val + B_lvl_2_val
+                    C_lvl_2_val = (+)(C_lvl_2_val, B_lvl_2_val)
                     C_lvl_2.val[C_lvl_q] = C_lvl_2_val
                     if !C_lvl_isdefault
                         C_lvl_idx_alloc < C_lvl_q && (C_lvl_idx_alloc = (Finch).regrow!(C_lvl.idx, C_lvl_idx_alloc, C_lvl_q))

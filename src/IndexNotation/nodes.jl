@@ -79,8 +79,8 @@ function Base.isless(a::IndexNode, b::IndexNode)
     if a != b
         h = UInt64(0xDEADBEEF)
         for i = 1:10
-            ah = hash(a, h + i)
-            bh = hash(b, h + i)
+            ah = hash(a, h)
+            bh = hash(b, h)
             if ah != bh
                 return ah < bh
             end

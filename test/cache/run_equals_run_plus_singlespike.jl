@@ -2,9 +2,9 @@
         C = ex.body.lhs.tns.tns
         A = (ex.body.rhs.args[1]).tns.tns
         B = (ex.body.rhs.args[2]).tns.tns
-        C_stop = (size(C))[1]
-        A_stop = (size(A))[1]
-        B_stop = (size(B))[1]
+        C_stop = ((size)(C))[1]
+        A_stop = ((size)(A))[1]
+        B_stop = ((size)(B))[1]
         i_stop = C_stop
         C.idx = [C.idx[end]]
         C.val = [0.0]
@@ -18,12 +18,12 @@
         A_i1 = A.idx[A_p]
         while i <= i_stop - 1
             i_start = i
-            phase_stop = min(A_i1, i_stop - 1)
+            phase_stop = (min)(A_i1, i_stop - 1)
             i = i
             if A_i1 == phase_stop
                 push!(C.val, zero(Float64))
                 C_p += 1
-                C.val[C_p] = C.val[C_p] + A.val[A_p]
+                C.val[C_p] = (+)(C.val[C_p], A.val[A_p])
                 push!(C.idx, phase_stop)
                 if A_p < length(A.idx)
                     A_p += 1
@@ -32,7 +32,7 @@
             else
                 push!(C.val, zero(Float64))
                 C_p += 1
-                C.val[C_p] = C.val[C_p] + A.val[A_p]
+                C.val[C_p] = (+)(C.val[C_p], A.val[A_p])
                 push!(C.idx, phase_stop)
             end
             i = phase_stop + 1
@@ -41,12 +41,12 @@
         A_p = searchsortedfirst(A.idx, i_stop, A_p, length(A.idx), Base.Forward)
         A_i1 = A.idx[A_p]
         i_start_2 = i
-        phase_stop_2 = min(A_i1, i_stop)
+        phase_stop_2 = (min)(i_stop, A_i1)
         i_2 = i
         if A_i1 == phase_stop_2
             push!(C.val, zero(Float64))
             C_p += 1
-            C.val[C_p] = C.val[C_p] + (A.val[A_p] + B.tail)
+            C.val[C_p] = (+)(C.val[C_p], (+)(A.val[A_p], B.tail))
             push!(C.idx, phase_stop_2)
             if A_p < length(A.idx)
                 A_p += 1
@@ -55,7 +55,7 @@
         else
             push!(C.val, zero(Float64))
             C_p += 1
-            C.val[C_p] = C.val[C_p] + (A.val[A_p] + B.tail)
+            C.val[C_p] = (+)(C.val[C_p], (+)(A.val[A_p], B.tail))
             push!(C.idx, phase_stop_2)
         end
         i = phase_stop_2 + 1
