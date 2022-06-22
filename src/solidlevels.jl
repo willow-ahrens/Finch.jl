@@ -39,9 +39,7 @@ function virtualize(ex, ::Type{SolidLevel{Ti, Lvl}}, ctx, tag=:lvl) where {Ti, L
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
     VirtualSolidLevel(sym, Ti, I, lvl_2)
 end
-(ctx::Finch.LowerJulia)(lvl::VirtualSolidLevel) = lvl.ex
-
-function reconstruct!(lvl::VirtualSolidLevel, ctx)
+function (ctx::Finch.LowerJulia)(lvl::VirtualSolidLevel)
     quote
         $SolidLevel{$(lvl.Ti)}(
             $(ctx(lvl.I)),

@@ -10,4 +10,5 @@
 
     println(@index_code_lowered @loop i C[i] += A[i] + coalesce(B[permit[i]], 0))
     @index @loop i C[i] += A[i] + coalesce(B[permit[i]], 0)
+    println(FiberArray(C))
 end

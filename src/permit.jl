@@ -41,8 +41,6 @@ function (ctx::InferDimensions)(node::Access{VirtualPermit}, ext)
     return ext
 end
 
-(ctx::InferDimensions)(node::Protocol, ext) = ctx(node.idx, ext)
-
 Finch.getname(node::Access{VirtualPermit}) = Finch.getname(first(node.idxs))
 
 Finch.getname(node::VirtualPermit) = gensym()
@@ -50,14 +48,15 @@ Finch.setname(node::VirtualPermit, name) = node
 
 function unfurl(tns, ctx, mode, idx::Access{VirtualPermit}, tail...)
     ext = InferDimensions(ctx=ctx, mode=define_dims, dims = ctx.dims, shapes = ctx.shapes)(idx.idxs[1])
+    ext_2 = first(getdims(tns, ctx, mode)) #Is this okay?
     Pipeline([
         Phase(
-            stride = (start) -> ctx(getstart(idx.tns.I)),
+            stride = (start) -> @i($(getstart(ext_2)) - 1),
             body = (start, step) -> Run(Simplify(missing)),
         ),
         Phase(
-            stride = (start) -> ctx(getstop(idx.tns.I)),
-            body = (start, step) -> truncate(unfurl(tns, ctx, mode, idx.idxs[1], tail...), ctx, ext, Extent(start, step))
+            stride = (start) -> ctx(getstop(ext_2)),
+            body = (start, step) -> truncate(unfurl(tns, ctx, mode, idx.idxs[1], tail...), ctx, ext_2, Extent(start, step))
         ),
         Phase(
             body = (start, step) -> Run(Simplify(missing)),
