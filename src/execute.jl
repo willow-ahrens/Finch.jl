@@ -19,7 +19,7 @@ function execute_code_lowered(ex, T)
                 #names from tensor names
                 contain(ctx) do ctx_2
                     prgm = TransformSSA(Freshen())(prgm)
-                    dimensionalize!(prgm, ctx_2)
+                    (prgm, dims, shapes) = dimensionalize!(prgm, ctx_2)
                     prgm = Initialize(ctx = ctx_2)(prgm)
                     prgm = ThunkVisitor(ctx_2)(prgm) #TODO this is a bit of a hack.
                     ctx_2(prgm)
@@ -87,12 +87,7 @@ end
 #TODO this really isn't a valid postvisit bc we ignore args
 function postvisit!(acc::Access{<:Any}, ctx::Initialize, args)
     if (ctx.target === nothing || (getname(acc.tns) in ctx.target)) && !(getname(acc.tns) in ctx.escape)
-        if haskey(ctx.ctx.shapes, getname(acc.tns))
-            tns = setdims!(acc.tns, ctx.ctx, acc.mode, ctx.ctx.shapes[getname(acc.tns)]...)
-        else
-            tns = acc.tns
-        end
-        initialize!(tns, ctx.ctx, acc.mode, acc.idxs...)
+        initialize!(acc.tns, ctx.ctx, acc.mode, acc.idxs...)
     else
         acc
     end

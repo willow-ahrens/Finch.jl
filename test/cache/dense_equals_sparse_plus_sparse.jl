@@ -5,10 +5,10 @@
         (C_mode1_stop,) = size(C)
         A_stop = ((size)(A))[1]
         B_stop = ((size)(B))[1]
-        i_stop = C_mode1_stop
         (C_mode1_stop,) = size(C)
         1 == 1 || throw(DimensionMismatch("mismatched dimension start"))
         C_mode1_stop == C_mode1_stop || throw(DimensionMismatch("mismatched dimension stop"))
+        i_stop = C_mode1_stop
         fill!(C, 0)
         A_p = 1
         A_i0 = 1
@@ -26,7 +26,7 @@
         while i <= i_stop
             i_start = i
             phase_start = (max)(i_start)
-            phase_stop = (min)(i_stop, A_i1, B_i1)
+            phase_stop = (min)(i_stop, B_i1, A_i1)
             if phase_stop >= phase_start
                 i = i
                 if A_i1 == phase_stop && B_i1 == phase_stop

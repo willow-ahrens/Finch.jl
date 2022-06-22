@@ -8,11 +8,11 @@
         A_lvl_3_val_alloc = length(A_lvl_2.lvl.val)
         A_lvl_3_val = 0.0
         (B_mode1_stop,) = size(B)
-        j_stop = A_lvl.I
-        i_stop = B_mode1_stop
         (B_mode1_stop,) = size(B)
         1 == 1 || throw(DimensionMismatch("mismatched dimension start"))
         B_mode1_stop == B_mode1_stop || throw(DimensionMismatch("mismatched dimension stop"))
+        j_stop = A_lvl.I
+        i_stop = B_mode1_stop
         fill!(B, 0)
         for j = 1:j_stop
             A_lvl_q = (1 - 1) * A_lvl.I + j
@@ -28,7 +28,7 @@
             i = 1
             i_start = i
             phase_start = (max)(i_start)
-            phase_stop = (min)(A_lvl_2_i1, i_stop)
+            phase_stop = (min)(i_stop, A_lvl_2_i1)
             if phase_stop >= phase_start
                 i = i
                 i = phase_start

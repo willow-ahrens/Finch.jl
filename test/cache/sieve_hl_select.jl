@@ -22,7 +22,7 @@
         j = 1
         j_start = j
         phase_start = (max)(j_start)
-        phase_stop = (min)(selectj - 1, A_lvl_i1, j_stop)
+        phase_stop = (min)(selectj - 1, j_stop, A_lvl_i1)
         if phase_stop >= phase_start
             j = j
             j = phase_stop + 1
@@ -36,7 +36,7 @@
         end
         j_start = j
         phase_start_3 = (max)(j_start)
-        phase_stop_3 = (min)(selectj, A_lvl_i1, j_stop)
+        phase_stop_3 = (min)(selectj, j_stop, A_lvl_i1)
         if phase_stop_3 >= phase_start_3
             j_3 = j
             j = phase_start_3
@@ -46,7 +46,7 @@
             while j <= phase_stop_3
                 j_start_2 = j
                 A_lvl_i = A_lvl.idx[A_lvl_q]
-                phase_stop_4 = (min)(phase_stop_3, A_lvl_i)
+                phase_stop_4 = (min)(A_lvl_i, phase_stop_3)
                 j_4 = j
                 if A_lvl_i == phase_stop_4
                     A_lvl_2_val = A_lvl_2.val[A_lvl_q]
@@ -68,7 +68,7 @@
         end
         j_start = j
         phase_start_6 = (max)(j_start)
-        phase_stop_6 = (min)(A_lvl_i1, j_stop)
+        phase_stop_6 = (min)(j_stop, A_lvl_i1)
         if phase_stop_6 >= phase_start_6
             j_7 = j
             j = phase_stop_6 + 1

@@ -1,5 +1,37 @@
+struct NoDimension end
+nodim = NoDimension()
+
+@kwdef mutable struct DeclareDimensions
+    ctx
+    dims = Dict()
+    shapes = Dict()
+end
+function (ctx::DeclareDimensions)(node, dim)
+    if istree(node)
+        similarterm(node, operation(node), map(arg->ctx(arg, nodim), arguments(node)))
+    else
+        node
+    end
+end
+
+@kwdef mutable struct InferDimensions
+    ctx
+    dims = Dict()
+    shapes = Dict()
+end
+function (ctx::InferDimensions)(node)
+    if istree(node)
+        (similarterm(node, operation(node), map(first, map(ctx, arguments(node)))), nodim)
+    else
+        (node, nodim)
+    end
+end
+
+#NOTE TO SELF
+#ITS A BIG DEAL THAT WHERE STATEMENTS FORBID TEMP TENSORS WITH INDICES OUTSIDE OF SCOPE
+
 """
-    InferDimensions(ctx)
+    dimensionalize!(prgm, ctx)
 
 A program traversal which gathers dimensions of tensors based on shared indices.
 Index sharing is transitive, so `A[i] = B[i]` and `B[j] = C[j]` will induce a
@@ -12,61 +44,64 @@ The program is assumed to be in SSA form.
 See also: [`getdims`](@ref), [`getsites`](@ref), [`combinedim`](@ref),
 [`TransformSSA`](@ref)
 """
-@enum InferDimensionsMode declare_dims define_dims
-
-@kwdef mutable struct InferDimensions
-    ctx
-    mode::InferDimensionsMode
-    dims = Dict()
-    shapes = Dict()
-end
-
-#NOTE TO SELF
-#ITS A BIG DEAL THAT WHERE STATEMENTS FORBID TEMP TENSORS WITH INDICES OUTSIDE OF SCOPE
-
 function dimensionalize!(prgm, ctx) 
     dims = ctx.dims
     shapes = ctx.shapes
-    InferDimensions(ctx=ctx, mode=declare_dims, dims = dims, shapes = shapes)(prgm)
-    InferDimensions(ctx=ctx, mode=define_dims, dims = dims, shapes = shapes)(prgm)
+    prgm = DeclareDimensions(ctx=ctx, dims = dims, shapes = shapes)(prgm, nodim)
+    (prgm, _) = InferDimensions(ctx=ctx, dims = dims, shapes = shapes)(prgm)
     for k in keys(dims)
         dims[k] = cache!(ctx, k, dims[k])
     end
-    return (dims, shapes)
+    return (prgm, dims, shapes)
 end
 
-struct NoDimension end
-nodim = NoDimension()
-
-(ctx::InferDimensions)(node, ext) = (ctx(node); nodim)
-
+function (ctx::DeclareDimensions)(node::With, dim)
+    prod = ctx(node.prod, nodim)
+    (prod, _) = InferDimensions(;kwfields(ctx)...)(prod)
+    cons = ctx(node.cons, nodim)
+    with(cons, prod)
+end
 function (ctx::InferDimensions)(node::With)
-    if ctx.mode == declare_dims
-        ctx(node.prod)
-        InferDimensions(;kwfields(ctx)..., mode=define_dims)(node.prod)
-        ctx(node.cons)
-    else
-        ctx(node.cons)
-    end
+    (cons, _) = ctx(node.cons)
+    (with(cons, node.prod), nodim)
 end
 
-function (ctx::InferDimensions)(node::Name, ext)
+function (ctx::DeclareDimensions)(node::Name, ext)
     ctx.dims[getname(node)] = resultdim(get(ctx.dims, getname(node), nodim), ext)
+    node
+end
+function (ctx::InferDimensions)(node::Name)
+    (node, ctx.dims[getname(node)])
 end
 
-(ctx::InferDimensions)(node::Protocol, ext) = ctx(node.idx, ext)
+(ctx::DeclareDimensions)(node::Protocol, ext) = protocol(ctx(node.idx, ext), node.val)
+function (ctx::InferDimensions)(node::Protocol)
+    (idx, dim) = ctx(node.idx)
+    (protocol(idx, node.val), dim)
+end
 
-function (ctx::InferDimensions)(node::Access)
-    if ctx.mode == declare_dims
-        exts = get(ctx.shapes, getname(node.tns), getdims(node.tns, ctx.ctx, node.mode))
-        #TODO consider setting dims here
-        exts = map(ctx, node.idxs, exts)
-    elseif node.mode != Read() && ctx.mode == define_dims
-        ctx.shapes[getname(node.tns)] = map(idx -> resolvedim(ctx(idx, nodim)), node.idxs)
-        #TODO consider setting dims here
+function (ctx::DeclareDimensions)(node::Access, dim)
+    if haskey(ctx.shapes, getname(node.tns))
+        dims = ctx.shapes[getname(node.tns)]
+        tns = setdims!(node.tns, ctx.ctx, node.mode, dims...)
+    else
+        dims = getdims(node.tns, ctx.ctx, node.mode)
+        tns = node.tns
     end
-    ctx(node.tns)
-    return nodim
+    idxs = map(ctx, node.idxs, dims)
+    access(tns, node.mode, idxs...)
+end
+function (ctx::InferDimensions)(node::Access)
+    res = map(ctx, node.idxs)
+    dims = map(resolvedim, map(last, res))
+    idxs = map(first, res)
+    if node.mode != Read()
+        ctx.shapes[getname(node.tns)] = dims
+        tns = setdims!(node.tns, ctx.ctx, node.mode, dims...)
+    else
+        tns = node.tns
+    end
+    (access(tns, node.mode, idxs...), nodim)
 end
 
 function setdims!(tns, ctx, mode, dims...)
@@ -80,14 +115,6 @@ function setdims!(tns, ctx, mode, dims...)
     end
     tns
 end
-
-function (ctx::InferDimensions)(node)
-    if istree(node)
-        foreach(ctx, arguments(node))
-    end
-    nodim
-end
-
 
 struct UnknownDimension end
 

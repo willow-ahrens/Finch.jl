@@ -35,10 +35,13 @@ function Finch.getdims(arr::VirtualPermit, ctx::Finch.LowerJulia, mode)
 end
 #Finch.setdims!(arr::VirtualPermit, ctx::Finch.LowerJulia, mode, dim) = VirtualPermit(dim)
 
-function (ctx::InferDimensions)(node::Access{VirtualPermit}, ext)
-    @assert length(node.idxs) == 1
-    ctx(node.idxs[1], Widen(ext))
-    return ext
+function (ctx::DeclareDimensions)(node::Access{VirtualPermit}, ext)
+    idx = ctx(node.idxs[1], Widen(ext))
+    return access(VirtualPermit(ext), node.mode, idx)
+end
+function (ctx::InferDimensions)(node::Access{VirtualPermit})
+    (idx, _) = ctx(node.idxs[1])
+    return (access(node.tns, node.mode, idx), node.tns.I)
 end
 
 Finch.getname(node::Access{VirtualPermit}) = Finch.getname(first(node.idxs))
@@ -47,8 +50,7 @@ Finch.getname(node::VirtualPermit) = gensym()
 Finch.setname(node::VirtualPermit, name) = node
 
 function unfurl(tns, ctx, mode, idx::Access{VirtualPermit}, tail...)
-    ext = InferDimensions(ctx=ctx, mode=define_dims, dims = ctx.dims, shapes = ctx.shapes)(idx.idxs[1])
-    ext_2 = first(getdims(tns, ctx, mode)) #Is this okay?
+    ext_2 = idx.tns.I
     Pipeline([
         Phase(
             stride = (start) -> @i($(getstart(ext_2)) - 1),
