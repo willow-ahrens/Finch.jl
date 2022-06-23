@@ -6,9 +6,6 @@ end
 
 isliteral(::Phase) = false
 
-#=
-isliteral(::Phase) = false
-
 @kwdef struct PhaseStride
     ctx
     idx
@@ -23,18 +20,8 @@ function (ctx::PhaseStride)(node)
     end
 end
 
-(ctx::PhaseStride)(node::Phase) = Narrow(Extent(start = getstart(ctx.ext), stop = node.stride))
+(ctx::PhaseStride)(node::Phase) = Narrow(Extent(start = getstart(ctx.ext), stop = node.stride === nothing ? getstop(ctx.ext) : node.stride(getstart(ctx.ext))))
 (ctx::PhaseStride)(node::Shift) = shiftdim(PhaseStride(;kwfields(ctx)..., ext = shiftdim(ctx.ext, call(-, node.shift)))(node.body), node.shift)
-=#
-
-@kwdef struct PhaseStrideVisitor <: AbstractCollectVisitor
-    ctx
-    idx
-    start
-end
-collect_op(::PhaseStrideVisitor) = (args) -> vcat(args...) #flatten?
-collect_zero(::PhaseStrideVisitor) = []
-(ctx::PhaseStrideVisitor)(node::Phase, ::DefaultStyle) = node.stride === nothing ? [] : [something(node.stride)(ctx.start)]
 
 @kwdef struct PhaseBodyVisitor <: AbstractTransformVisitor
     ctx
@@ -45,7 +32,6 @@ end
 (ctx::PhaseBodyVisitor)(node::Phase, ::DefaultStyle) = node.body(getstart(ctx.ext_2), getstop(ctx.ext_2))
 (ctx::PhaseBodyVisitor)(node::Spike, ::DefaultStyle) = truncate(node, ctx.ctx, ctx.ext, ctx.ext_2)
 
-(ctx::PhaseStrideVisitor)(node::Shift, ::DefaultStyle) = map(stride -> call(+, stride, node.shift), ctx(node.body))
 (ctx::PhaseBodyVisitor)(node::Shift, ::DefaultStyle) = PhaseBodyVisitor(ctx.ctx, ctx.idx, shiftdim(ctx.ext, call(-, node.shift)), shiftdim(ctx.ext_2, call(-, node.shift)))(node.body)
 
 struct PhaseStyle end
@@ -100,15 +86,7 @@ function (ctx::LowerJulia)(root::Chunk, ::PhaseStyle)
 end
 
 phase_range(node, ctx, idx, ext) = NoDimension()
-#phase_range(node::Phase, ctx, idx, ext) = Narrow(Extent(start = getstart(ext), stop = PhaseStrideVisitor(ctx, idx, getstart(ext))(node)[1], lower = 1))
-phase_range(node::Phase, ctx, idx, ext) = begin
-    strides = PhaseStrideVisitor(ctx, idx, getstart(ext))(node)
-    if isempty(strides)
-        return NoDimension()
-    else
-        Narrow(Extent(start = getstart(ext), stop = PhaseStrideVisitor(ctx, idx, getstart(ext))(node)[1]))
-    end
-end
+phase_range(node::Phase, ctx, idx, ext) = PhaseStride(ctx, idx, ext)(node)
 
 phase_body(node, ctx, idx, ext, ext_2) = truncate(node, ctx, ext, ext_2)
 phase_body(node::Phase, ctx, idx, ext, ext_2) = node.body(getstart(ext_2), getstop(ext_2))
