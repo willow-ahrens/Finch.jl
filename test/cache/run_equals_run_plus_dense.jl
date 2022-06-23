@@ -19,7 +19,7 @@
         while i <= i_stop
             i_start = i
             phase_start = (max)(i_start)
-            phase_stop = (min)(i_stop, A_i1)
+            phase_stop = (min)(A_i1, i_stop)
             i = i
             if A_i1 == phase_stop
                 for i_2 = phase_start:phase_stop

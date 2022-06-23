@@ -74,7 +74,7 @@
                     B_i0 = phase_stop
                     B_i1 = B.idx[B_p]
                     i_start_3 = i
-                    phase_stop_3 = (min)(phase_stop, B_i1)
+                    phase_stop_3 = (min)(B_i1, phase_stop)
                     i_5 = i
                     if B_i1 == phase_stop_3
                         i_6 = phase_stop_3
@@ -103,7 +103,7 @@
                     while i <= phase_stop
                         i_start_4 = i
                         phase_start_4 = (max)(i_start_4)
-                        phase_stop_4 = (min)(A_i1, phase_stop, B_i1)
+                        phase_stop_4 = (min)(A_i1, B_i1, phase_stop)
                         if phase_stop_4 >= phase_start_4
                             i_7 = i
                             if A_i1 == phase_stop_4 && B_i1 == phase_stop_4

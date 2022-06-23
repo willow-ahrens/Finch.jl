@@ -28,7 +28,7 @@
             i = 1
             i_start = i
             phase_start = (max)(i_start)
-            phase_stop = (min)(i_stop, A_lvl_2_i1)
+            phase_stop = (min)(A_lvl_2_i1, i_stop)
             if phase_stop >= phase_start
                 i = i
                 i = phase_start

@@ -17,6 +17,8 @@ module IndexNotation
     export Protocol, protocol
     export Sieve, sieve
 
+    export Lexicography
+
     export Follow, follow
     export Walk, walk
     export Gallop, gallop

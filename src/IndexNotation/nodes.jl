@@ -34,63 +34,6 @@ function Base.show(io::IO, ex::IndexNode)
     end
 end
 
-#=
-struct IndexLexicography{T}
-    arg
-end
-
-Base.isless(a::T, b::T) where {T <: IndexLexicography{<:Any}} = a === b ? false : throw(MethodError(Base.isless, typeof((a, b))))
-Base.isless(a::IndexLexicography, b::IndexLexicography) = IndexLexicography(typeof(a.arg)) < IndexLexicography(typeof(b.arg))
-Base.isless(a::IndexLexicography{<:IndexNode}, b::IndexLexicography) = false
-Base.isless(a::IndexLexicography, b::IndexLexicography{<:IndexNode}) = true
-
-lexicographic_types = [Symbol, Expr,]
-
-function Base.isless(a::IndexLexicography{Expr}, b::IndexLexicography{Expr}) where {T}
-    (a, b) = (a.arg, b.arg)
-    if a.head < b.head
-        return true
-    elseif a.head == b.head
-        return (map(IndexLexicography, a.args)...,) < (map(IndexLexicography, b.args)...,)
-    end
-    return false
-end
-function Base.:(==)(a::T, b::T) with {T <: IndexNode}
-function Base.isless(a::IndexLexicography{T}, b::IndexLexicography{T}) where {T}
-    return a < b
-end
-function Base.isless(a::IndexLexicography, b::IndexLexicography) where {T}
-    err = MethodError(Base.isless, typeof((a, b)))
-    (a, b) = (a.arg, b.arg)
-    (ai, bi) = (findfirst(map(t -> a isa t, lexicographic_types)), findfirst(map(t -> b isa t, lexicographic_types)))
-    (ai, bi) = (something(ai, 0), something(bi, 0))
-    if ai == bi
-        if ai == bi == 0
-            return string(typeof(a)) < string(typeof(b))
-        else
-            throw(err)
-        end
-    end
-    return ai < bi
-end
-=#
-
-function Base.isless(a::IndexNode, b::IndexNode)
-    if a != b
-        h = UInt64(0xDEADBEEF)
-        for i = 1:10
-            ah = hash(a, h)
-            bh = hash(b, h)
-            if ah != bh
-                return ah < bh
-            end
-            h += 1
-        end
-        error()
-    end
-    return false
-end
-
 function Base.hash(a::IndexNode, h::UInt)
     if istree(a)
         for arg in arguments(a)
@@ -129,6 +72,7 @@ struct Virtual{T} <: IndexTerminal
     ex
 end
 
+Base.:(==)(a::Virtual, b::Virtual) = false
 Base.:(==)(a::Virtual{T}, b::Virtual{T}) where {T} = a.ex == b.ex
 Base.hash(ex::Virtual{T}, h::UInt) where {T} = hash(Virtual{T}, hash(ex.ex, h))
 
@@ -451,3 +395,58 @@ end
 Finch.getresults(stmt::Access) = [stmt.tns]
 
 show_expression(io, mime, ex) = print(io, ex)
+
+struct Lexicography{T}
+    arg::T
+end
+
+function Base.isless(a::Lexicography, b::Lexicography)
+    @assert which(priority, Tuple{typeof(a)}) != which(priority, Tuple{typeof(b)}) || priority(a) == priority(b)
+    if a.arg != b.arg
+        a_key = (priority(a.arg), comparators(a.arg)...)
+        b_key = (priority(b.arg), comparators(b.arg)...)
+        @assert a_key < b_key || b_key < a_key
+        return a_key < b_key
+    end
+    return false
+end
+
+priority(::Number) = (1, 1)
+comparators(x::Number) = (x, sizeof(x), typeof(x))
+
+priority(::Function) = (1, 2)
+comparators(x::Function) = (string(x),)
+
+priority(::Symbol) = (2, 0)
+comparators(x::Symbol) = (x,)
+
+priority(::Expr) = (2, 1)
+comparators(x::Expr) = (x.head, map(Lexicography, x.args)...)
+
+priority(::Name) = (3,0)
+comparators(x::Name) = (x.name,)
+
+priority(::Literal) = (3,1)
+comparators(x::Literal) = (Lexicography(x.val),)
+
+priority(::Read) = (3,2,1)
+comparators(x::Read) = ()
+
+priority(::Write) = (3,2,2)
+comparators(x::Write) = ()
+
+priority(::Update) = (3,2,3)
+comparators(x::Update) = ()
+
+priority(::Workspace) = (3,3)
+comparators(x::Workspace) = (x.n,)
+
+priority(::Virtual) = (3,4)
+comparators(x::Virtual) = (typeof(x), Lexicography(x.ex))
+
+priority(::IndexNode) = (3,Inf)
+comparators(x::IndexNode) = (@assert istree(x); (string(operation(x)), map(Lexicography, arguments(x))...))
+
+#TODO these are nice defaults if we want to allow nondeterminism
+#priority(::Any) = (Inf,)
+#comparators(x::Any) = hash(x)
