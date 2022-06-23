@@ -2,19 +2,30 @@
     head = nothing
     body
     stride = nothing
-    guard = nothing
 end
 
 isliteral(::Phase) = false
 
-@kwdef struct PhaseGuardVisitor <: AbstractCollectVisitor
+#=
+isliteral(::Phase) = false
+
+@kwdef struct PhaseStride
     ctx
     idx
-    start
+    ext
 end
-collect_op(::PhaseGuardVisitor) = (args) -> vcat(args...) #flatten?
-collect_zero(::PhaseGuardVisitor) = []
-(ctx::PhaseGuardVisitor)(node::Phase, ::DefaultStyle) = node.guard === nothing ? [] : [something(node.guard)(ctx.start)]
+
+function (ctx::PhaseStride)(node)
+    if istree(node)
+        return mapreduce(ctx, reducedim, arguments(node))
+    else
+        return nodim
+    end
+end
+
+(ctx::PhaseStride)(node::Phase) = Narrow(Extent(start = getstart(ctx.ext), stop = node.stride))
+(ctx::PhaseStride)(node::Shift) = shiftdim(PhaseStride(;kwfields(ctx)..., ext = shiftdim(ctx.ext, call(-, node.shift)))(node.body), node.shift)
+=#
 
 @kwdef struct PhaseStrideVisitor <: AbstractCollectVisitor
     ctx
