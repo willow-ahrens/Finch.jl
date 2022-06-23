@@ -21,7 +21,7 @@
         j = 1
         j_start = j
         phase_start = (max)(j_start)
-        phase_stop = (min)(j_stop, A_lvl_i1)
+        phase_stop = (min)(A_lvl_i1, j_stop)
         if phase_stop >= phase_start
             j = j
             j = phase_start
@@ -32,7 +32,7 @@
                 j_start_2 = j
                 A_lvl_i = A_lvl.idx[A_lvl_q]
                 phase_start_2 = (max)(j_start_2)
-                phase_stop_2 = (min)(A_lvl_i, phase_stop)
+                phase_stop_2 = (min)(phase_stop, A_lvl_i)
                 j_2 = j
                 if A_lvl_i == phase_stop_2
                     for j_3 = phase_start_2:phase_stop_2 - 1
@@ -59,14 +59,16 @@
             j = phase_stop + 1
         end
         j_start = j
-        phase_start_3 = j_start
-        phase_stop_3 = j_stop
-        j_6 = j
-        for j_7 = phase_start_3:phase_stop_3
-            cond_4 = (==)(j_7, 1)
-            if cond_4
+        phase_start_3 = (max)(j_start)
+        phase_stop_3 = (min)(j_stop)
+        if phase_stop_3 >= phase_start_3
+            j_6 = j
+            for j_7 = phase_start_3:phase_stop_3
+                cond_4 = (==)(j_7, 1)
+                if cond_4
+                end
             end
+            j = phase_stop_3 + 1
         end
-        j = phase_stop_3 + 1
         (B = (Scalar){0.0, Float64}(B_val),)
     end

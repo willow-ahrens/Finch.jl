@@ -88,9 +88,12 @@
                 j = phase_stop + 1
             end
             j_start = j
-            phase_stop_3 = j_stop
-            j_4 = j
-            j = phase_stop_3 + 1
+            phase_start_3 = (max)(j_start)
+            phase_stop_3 = (min)(j_stop)
+            if phase_stop_3 >= phase_start_3
+                j_4 = j
+                j = phase_stop_3 + 1
+            end
         end
         sort!(@view(B_lvl.srt[1:B_lvl_srt_stop]))
         B_lvl_p_prev_2 = 0

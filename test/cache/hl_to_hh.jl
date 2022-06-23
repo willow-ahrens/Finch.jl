@@ -45,7 +45,7 @@
             while i <= phase_stop
                 i_start_2 = i
                 A_lvl_i = A_lvl.idx[A_lvl_q]
-                phase_stop_2 = (min)(A_lvl_i, phase_stop)
+                phase_stop_2 = (min)(phase_stop, A_lvl_i)
                 i_2 = i
                 if A_lvl_i == phase_stop_2
                     A_lvl_2_val = A_lvl_2.val[A_lvl_q]
@@ -74,9 +74,12 @@
             i = phase_stop + 1
         end
         i_start = i
-        phase_stop_3 = i_stop
-        i_4 = i
-        i = phase_stop_3 + 1
+        phase_start_3 = (max)(i_start)
+        phase_stop_3 = (min)(i_stop)
+        if phase_stop_3 >= phase_start_3
+            i_4 = i
+            i = phase_stop_3 + 1
+        end
         resize!(B_lvl.srt, length(B_lvl.tbl))
         copyto!(B_lvl.srt, pairs(B_lvl.tbl))
         sort!(B_lvl.srt)

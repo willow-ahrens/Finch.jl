@@ -23,11 +23,11 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{Select}, ::Finch.DefaultStyle
         end)
         tns = Pipeline([
             Phase(
-                stride = (start) -> :($sym - 1),
+                stride = (ctx, idx, ext) -> :($sym - 1),
                 body = (start, step) -> Run(body=Simplify(false))
             ),
             Phase(
-                stride = (start) -> sym,
+                stride = (ctx, idx, ext) -> sym,
                 body = (start, step) -> Run(body=Simplify(true)),
             ),
             Phase(body = (start, step) -> Run(body=Simplify(false)))

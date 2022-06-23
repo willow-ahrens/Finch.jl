@@ -53,11 +53,11 @@ function unfurl(tns, ctx, mode, idx::Access{VirtualPermit}, tail...)
     ext_2 = idx.tns.I
     Pipeline([
         Phase(
-            stride = (start) -> @i($(getstart(ext_2)) - 1),
+            stride = (ctx, idx, ext) -> @i($(getstart(ext_2)) - 1),
             body = (start, step) -> Run(Simplify(missing)),
         ),
         Phase(
-            stride = (start) -> ctx(getstop(ext_2)),
+            stride = (ctx, idx, ext) -> ctx(getstop(ext_2)),
             body = (start, step) -> truncate(unfurl(tns, ctx, mode, idx.idxs[1], tail...), ctx, ext_2, Extent(start, step))
         ),
         Phase(

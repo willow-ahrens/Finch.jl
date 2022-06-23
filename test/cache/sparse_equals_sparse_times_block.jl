@@ -18,7 +18,7 @@
         i = 1
         i_start = i
         phase_start = (max)(i_start)
-        phase_stop = (min)(i_stop, A.start - 1)
+        phase_stop = (min)(A.start - 1, i_stop)
         if phase_stop >= phase_start
             i = i
             i = phase_stop + 1
@@ -53,8 +53,11 @@
             i = phase_stop_2 + 1
         end
         i_start = i
-        phase_stop_4 = i_stop
-        i_5 = i
-        i = phase_stop_4 + 1
+        phase_start_4 = (max)(i_start)
+        phase_stop_4 = (min)(i_stop)
+        if phase_stop_4 >= phase_start_4
+            i_5 = i
+            i = phase_stop_4 + 1
+        end
         (C = C,)
     end

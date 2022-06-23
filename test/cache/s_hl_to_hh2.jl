@@ -78,9 +78,12 @@
                 j = phase_stop + 1
             end
             j_start = j
-            phase_stop_3 = j_stop
-            j_4 = j
-            j = phase_stop_3 + 1
+            phase_start_3 = (max)(j_start)
+            phase_stop_3 = (min)(j_stop)
+            if phase_stop_3 >= phase_start_3
+                j_4 = j
+                j = phase_stop_3 + 1
+            end
         end
         resize!(B_lvl.srt, length(B_lvl.tbl))
         copyto!(B_lvl.srt, pairs(B_lvl.tbl))

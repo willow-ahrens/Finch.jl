@@ -127,7 +127,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
         end,
         body = Pipeline([
             Phase(
-                stride = (start) -> my_i1,
+                stride = (ctx, idx, ext) -> my_i1,
                 body = (start, step) -> Stepper(
                     seek = (ctx, ext) -> quote
                         #$my_q = searchsortedfirst($(lvl.ex).idx, $start, $my_q, $my_q_stop, Base.Forward)
@@ -181,7 +181,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
         end,
         body = Pipeline([
             Phase(
-                stride = (start) -> my_i1,
+                stride = (ctx, idx, ext) -> my_i1,
                 body = (start, step) -> Jumper(
                     body = Thunk(
                         body = Jump(

@@ -52,9 +52,12 @@
                 i = phase_stop + 1
             end
             i_start = i
-            phase_stop_3 = i_stop
-            i_4 = i
-            i = phase_stop_3 + 1
+            phase_start_3 = (max)(i_start)
+            phase_stop_3 = (min)(i_stop)
+            if phase_stop_3 >= phase_start_3
+                i_4 = i
+                i = phase_stop_3 + 1
+            end
         end
         (B = B,)
     end

@@ -45,7 +45,7 @@
         i = 1
         i_start = i
         phase_start = (max)(i_start)
-        phase_stop = (min)(i_stop, B_lvl_i1, A_lvl_i1)
+        phase_stop = (min)(i_stop, A_lvl_i1, B_lvl_i1)
         if phase_stop >= phase_start
             i = i
             i = phase_start
@@ -59,8 +59,8 @@
                     B_lvl_q += 1
                 end
                 B_lvl_i = B_lvl.idx[B_lvl_q]
-                phase_start_2 = (max)(i_start_2, (min)(i_start_2))
-                phase_stop_2 = (min)(phase_stop, (max)(A_lvl_i, B_lvl_i))
+                phase_start_2 = (max)((min)(i_start_2), i_start_2)
+                phase_stop_2 = (min)(phase_stop, (max)(B_lvl_i, A_lvl_i))
                 if phase_stop_2 >= phase_start_2
                     i_2 = i
                     if phase_stop_2 == A_lvl_i && phase_stop_2 == B_lvl_i
@@ -177,7 +177,7 @@
                         while i <= phase_stop_2 - 1
                             i_start_5 = i
                             B_lvl_i = B_lvl.idx[B_lvl_q]
-                            phase_stop_5 = (min)(phase_stop_2 - 1, B_lvl_i)
+                            phase_stop_5 = (min)(B_lvl_i, phase_stop_2 - 1)
                             i_10 = i
                             if B_lvl_i == phase_stop_5
                                 B_lvl_2_val = B_lvl_2.val[B_lvl_q]
@@ -207,7 +207,7 @@
                         i_start_6 = i
                         B_lvl_i = B_lvl.idx[B_lvl_q]
                         phase_start_6 = (max)(i_start_6)
-                        phase_stop_6 = (min)(phase_stop_2, B_lvl_i)
+                        phase_stop_6 = (min)(B_lvl_i, phase_stop_2)
                         i_12 = i
                         if B_lvl_i == phase_stop_6
                             for i_13 = phase_start_6:phase_stop_6 - 1
@@ -270,7 +270,7 @@
                             A_lvl_i = A_lvl.idx[A_lvl_q]
                             B_lvl_i = B_lvl.idx[B_lvl_q]
                             phase_start_7 = (max)(i_start_7)
-                            phase_stop_7 = (min)(phase_stop_2, A_lvl_i, B_lvl_i)
+                            phase_stop_7 = (min)(B_lvl_i, phase_stop_2, A_lvl_i)
                             if phase_stop_7 >= phase_start_7
                                 i_16 = i
                                 if A_lvl_i == phase_stop_7 && B_lvl_i == phase_stop_7
@@ -347,7 +347,7 @@
                 end
                 A_lvl_i = A_lvl.idx[A_lvl_q]
                 phase_start_9 = (max)(i_start_8)
-                phase_stop_9 = (min)(A_lvl_i, phase_stop_8)
+                phase_stop_9 = (min)(phase_stop_8, A_lvl_i)
                 if phase_stop_9 >= phase_start_9
                     i_21 = i
                     if phase_stop_9 == A_lvl_i
@@ -415,7 +415,7 @@
                 end
                 B_lvl_i = B_lvl.idx[B_lvl_q]
                 phase_start_12 = (max)(i_start_10)
-                phase_stop_12 = (min)(B_lvl_i, phase_stop_11)
+                phase_stop_12 = (min)(phase_stop_11, B_lvl_i)
                 if phase_stop_12 >= phase_start_12
                     i_26 = i
                     if phase_stop_12 == B_lvl_i
@@ -442,7 +442,7 @@
                         while i <= phase_stop_12
                             i_start_11 = i
                             B_lvl_i = B_lvl.idx[B_lvl_q]
-                            phase_stop_13 = (min)(phase_stop_12, B_lvl_i)
+                            phase_stop_13 = (min)(B_lvl_i, phase_stop_12)
                             i_28 = i
                             if B_lvl_i == phase_stop_13
                                 B_lvl_2_val = B_lvl_2.val[B_lvl_q]
@@ -471,9 +471,12 @@
             i = phase_stop_11 + 1
         end
         i_start = i
-        phase_stop_14 = i_stop
-        i_30 = i
-        i = phase_stop_14 + 1
+        phase_start_14 = (max)(i_start)
+        phase_stop_14 = (min)(i_stop)
+        if phase_stop_14 >= phase_start_14
+            i_30 = i
+            i = phase_stop_14 + 1
+        end
         C_lvl.pos[1 + 1] = C_lvl_q
         (C = Fiber((Finch.HollowListLevel){Int64}(A_lvl.I, C_lvl.pos, C_lvl.idx, C_lvl_2), (Finch.Environment)(; name = :C)),)
     end

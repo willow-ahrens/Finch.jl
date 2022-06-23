@@ -21,7 +21,7 @@
         s = 1
         s_start = s
         phase_start = (max)(s_start)
-        phase_stop = (min)(selects - 1, A_lvl_i1, A_lvl.I)
+        phase_stop = (min)(A_lvl_i1, selects - 1, A_lvl.I)
         if phase_stop >= phase_start
             s_2 = s
             s = phase_stop + 1
@@ -45,7 +45,7 @@
             while s <= phase_stop_3
                 s_start_2 = s
                 A_lvl_i = A_lvl.idx[A_lvl_q]
-                phase_stop_4 = (min)(A_lvl_i, phase_stop_3)
+                phase_stop_4 = (min)(phase_stop_3, A_lvl_i)
                 s_5 = s
                 if A_lvl_i == phase_stop_4
                     A_lvl_2_val = A_lvl_2.val[A_lvl_q]
@@ -73,8 +73,11 @@
             s = phase_stop_6 + 1
         end
         s_start = s
-        phase_stop_7 = A_lvl.I
-        s_9 = s
-        s = phase_stop_7 + 1
+        phase_start_7 = (max)(s_start)
+        phase_stop_7 = (min)(A_lvl.I)
+        if phase_stop_7 >= phase_start_7
+            s_9 = s
+            s = phase_stop_7 + 1
+        end
         (B = (Scalar){0.0, Float64}(B_val),)
     end

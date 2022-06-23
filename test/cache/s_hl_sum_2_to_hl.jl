@@ -69,9 +69,12 @@
                 j = phase_stop + 1
             end
             j_start = j
-            phase_stop_3 = j_stop
-            j_4 = j
-            j = phase_stop_3 + 1
+            phase_start_3 = (max)(j_start)
+            phase_stop_3 = (min)(j_stop)
+            if phase_stop_3 >= phase_start_3
+                j_4 = j
+                j = phase_stop_3 + 1
+            end
             B_lvl.pos[1 + 1] = B_lvl_q
         end
         (B = Fiber((Finch.HollowListLevel){Int64}(A_lvl_2.I, B_lvl.pos, B_lvl.idx, B_lvl_2), (Finch.Environment)(; name = :B)),)

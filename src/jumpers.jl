@@ -38,9 +38,9 @@ isliteral(::Jump) = false
 
 make_style(root::Chunk, ctx::LowerJulia, node::Jump) = PhaseStyle()
 
-function phase_range(node::Jump, ctx, idx, ext)
-    push!(ctx.preamble, node.seek !== nothing ? node.seek(ctx, ext) : quote end)
-    Widen(Extent(getstart(ext), node.stride(ctx, ext)))
+function (ctx::PhaseStride)(node::Jump)
+    push!(ctx.ctx.preamble, node.seek !== nothing ? node.seek(ctx.ctx, ctx.ext) : quote end)
+    Widen(Extent(getstart(ctx.ext), node.stride(ctx.ctx, ctx.ext)))
 end
 
 phase_body(node::Jump, ctx, idx, ext, ext_2) = node.body(ctx, ext, ext_2)

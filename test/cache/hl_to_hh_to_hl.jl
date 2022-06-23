@@ -64,7 +64,7 @@
             while i <= phase_stop
                 i_start_2 = i
                 A_lvl_i = A_lvl.idx[A_lvl_q]
-                phase_stop_2 = (min)(A_lvl_i, phase_stop)
+                phase_stop_2 = (min)(phase_stop, A_lvl_i)
                 i_2 = i
                 if A_lvl_i == phase_stop_2
                     A_lvl_2_val = A_lvl_2.val[A_lvl_q]
@@ -93,9 +93,12 @@
             i = phase_stop + 1
         end
         i_start = i
-        phase_stop_3 = i_stop
-        i_4 = i
-        i = phase_stop_3 + 1
+        phase_start_3 = (max)(i_start)
+        phase_stop_3 = (min)(i_stop)
+        if phase_stop_3 >= phase_start_3
+            i_4 = i
+            i = phase_stop_3 + 1
+        end
         resize!(B_lvl_3.srt, length(B_lvl_3.tbl))
         copyto!(B_lvl_3.srt, pairs(B_lvl_3.tbl))
         sort!(B_lvl_3.srt)
@@ -151,9 +154,12 @@
             i_2 = phase_stop_4 + 1
         end
         i_2_start = i_2
-        phase_stop_6 = i_2_stop
-        i_8 = i_2
-        i_2 = phase_stop_6 + 1
+        phase_start_6 = (max)(i_2_start)
+        phase_stop_6 = (min)(i_2_stop)
+        if phase_stop_6 >= phase_start_6
+            i_8 = i_2
+            i_2 = phase_stop_6 + 1
+        end
         C_lvl.pos[1 + 1] = C_lvl_q
         (C = Fiber((Finch.HollowListLevel){Int64}(A_lvl.I, C_lvl.pos, C_lvl.idx, C_lvl_2), (Finch.Environment)(; name = :C)),)
     end

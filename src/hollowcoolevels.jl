@@ -164,7 +164,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Read, idx::
         end,
         body = Pipeline([
             Phase(
-                stride = (start) -> my_i_stop,
+                stride = (ctx, idx, ext) -> my_i_stop,
                 body = (start, stop) -> Stepper(
                     seek = (ctx, ext) -> quote
                         $my_q_step = $my_q + 1

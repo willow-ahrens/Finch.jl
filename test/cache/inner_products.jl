@@ -59,7 +59,7 @@
                 k = 1
                 k_start = k
                 phase_start = (max)(k_start)
-                phase_stop = (min)(k_stop, A_lvl_2_i1, A_lvl_5_i1)
+                phase_stop = (min)(A_lvl_5_i1, A_lvl_2_i1, k_stop)
                 if phase_stop >= phase_start
                     k = k
                     k = phase_start
@@ -101,22 +101,25 @@
                 end
                 k_start = k
                 phase_start_3 = (max)(k_start)
-                phase_stop_3 = (min)(k_stop, A_lvl_2_i1)
+                phase_stop_3 = (min)(A_lvl_2_i1, k_stop)
                 if phase_stop_3 >= phase_start_3
                     k_4 = k
                     k = phase_stop_3 + 1
                 end
                 k_start = k
                 phase_start_4 = (max)(k_start)
-                phase_stop_4 = (min)(k_stop, A_lvl_5_i1)
+                phase_stop_4 = (min)(A_lvl_5_i1, k_stop)
                 if phase_stop_4 >= phase_start_4
                     k_5 = k
                     k = phase_stop_4 + 1
                 end
                 k_start = k
-                phase_stop_5 = k_stop
-                k_6 = k
-                k = phase_stop_5 + 1
+                phase_start_5 = (max)(k_start)
+                phase_stop_5 = (min)(k_stop)
+                if phase_stop_5 >= phase_start_5
+                    k_6 = k
+                    k = phase_stop_5 + 1
+                end
                 B_lvl_3.val[B_lvl_2_q] = B_lvl_3_val
                 if !B_lvl_2_isdefault
                     B_lvl_2_idx_alloc < B_lvl_2_q && (B_lvl_2_idx_alloc = (Finch).regrow!(B_lvl_2.idx, B_lvl_2_idx_alloc, B_lvl_2_q))

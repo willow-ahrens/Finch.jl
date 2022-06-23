@@ -1,9 +1,9 @@
 @kwdef struct Phase
     head = nothing
     body
-    stride = nothing
+    stride = (ctx, idx, ext) -> nothing
+    range = (ctx, idx, ext) -> Extent(start = getstart(ext), stop = something(stride(ctx, idx, ext), getstop(ext)))
 end
-
 isliteral(::Phase) = false
 
 @kwdef struct PhaseStride
@@ -14,13 +14,13 @@ end
 
 function (ctx::PhaseStride)(node)
     if istree(node)
-        return mapreduce(ctx, reducedim, arguments(node))
+        return mapreduce(ctx, resultdim, arguments(node), init = nodim)
     else
         return nodim
     end
 end
 
-(ctx::PhaseStride)(node::Phase) = Narrow(Extent(start = getstart(ctx.ext), stop = node.stride === nothing ? getstop(ctx.ext) : node.stride(getstart(ctx.ext))))
+(ctx::PhaseStride)(node::Phase) = Narrow(node.range(ctx.ctx, ctx.idx, ctx.ext))
 (ctx::PhaseStride)(node::Shift) = shiftdim(PhaseStride(;kwfields(ctx)..., ext = shiftdim(ctx.ext, call(-, node.shift)))(node.body), node.shift)
 
 @kwdef struct PhaseBodyVisitor <: AbstractTransformVisitor
@@ -53,13 +53,8 @@ function (ctx::LowerJulia)(root::Chunk, ::PhaseStyle)
 
     body = root.body
 
-    ext_2 = NoDimension()
-    Postwalk(node->begin
-        ext_2 = resultdim(ext_2, phase_range(node, ctx, root.idx, root.ext))
-        nothing
-    end)(body)
-
-    ext_2 = cache!(ctx, :phase, resolvedim(resultdim(Narrow(root.ext), resolvedim(ext_2))))
+    ext_2 = resolvedim(PhaseStride(ctx, root.idx, root.ext)(body))
+    ext_2 = cache!(ctx, :phase, resolvedim(resultdim(Narrow(root.ext), ext_2)))
 
     body = Postwalk(node->phase_body(node, ctx, root.idx, root.ext, ext_2))(body)
     body = quote
@@ -85,8 +80,6 @@ function (ctx::LowerJulia)(root::Chunk, ::PhaseStyle)
     end
 end
 
-phase_range(node, ctx, idx, ext) = NoDimension()
-phase_range(node::Phase, ctx, idx, ext) = PhaseStride(ctx, idx, ext)(node)
 
 phase_body(node, ctx, idx, ext, ext_2) = truncate(node, ctx, ext, ext_2)
 phase_body(node::Phase, ctx, idx, ext, ext_2) = node.body(getstart(ext_2), getstop(ext_2))

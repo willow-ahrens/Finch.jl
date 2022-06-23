@@ -58,11 +58,11 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSingleBlock{Tv, Ti}, R
     if getname(ctx.idx) == getname(node.idxs[1])
         tns = Pipeline([
             Phase(
-                stride = (start) -> :($(vec.ex).start - 1),
+                stride = (ctx, idx, ext) -> :($(vec.ex).start - 1),
                 body = (start, step) -> Run(body = Simplify(vec.D))
             ),
             Phase(
-                stride = (start) -> :($(vec.ex).stop),
+                stride = (ctx, idx, ext) -> :($(vec.ex).stop),
                 body = (start, step) -> Leaf(
                     body = (i) -> :($(vec.ex).val[$(ctx.ctx(i)) - $(vec.ex).start + 1]) #TODO all of these functions should really have a ctx
                 )
