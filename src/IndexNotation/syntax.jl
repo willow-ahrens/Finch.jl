@@ -34,6 +34,13 @@ const instance_nodes = (
     value = (ex) -> :($value_instance($(esc(ex))))
 )
 
+and() = true
+and(x) = x
+and(x, y, tail...) = x && and(y, tail...)
+or() = false
+or(x) = x
+or(x, y, tail...) = x || or(y, tail...)
+
 function capture_index(ex, ctx)
     #extra sugar
     if ex isa Expr && ex.head == :macrocall && length(ex.args) >= 3 && ex.args[1] == Symbol("@∀")
@@ -60,10 +67,10 @@ function capture_index(ex, ctx)
         end
     elseif ex isa Expr && ex.head == :&&
         (a, b) = ex.args
-        return capture_index(:($a & $b), ctx)
+        return capture_index(:($and($a, $b)), ctx)
     elseif ex isa Expr && ex.head == :||
         (a, b) = ex.args
-        return capture_index(:($a | $b), ctx)
+        return capture_index(:($or($a, $b)), ctx)
     end
 
     if @capture ex (@pass(args__))

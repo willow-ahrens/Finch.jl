@@ -95,7 +95,7 @@ using Finch.IndexNotation: call_instance, assign_instance, access_instance, valu
         assign(
             access(:A, Update(), Name(:i)),
             +,
-            call(&,
+            call(Finch.IndexNotation.and,
                 call(<, Name(:i), Name(:j)),
                 call(<, Name(:j), Name(:k))))
 
@@ -103,7 +103,7 @@ using Finch.IndexNotation: call_instance, assign_instance, access_instance, valu
         assign(
             access(:A, Write(), Name(:i)),
             nothing,
-            call(&,
+            call(Finch.IndexNotation.and,
                 call(==, Name(:i), Name(:j)),
                 call(<, Name(:k), Name(:l))))
 

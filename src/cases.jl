@@ -15,7 +15,20 @@ combine_style(a::AcceptRunStyle, b::CaseStyle) = CaseStyle()
 combine_style(a::SpikeStyle, b::CaseStyle) = CaseStyle()
 combine_style(a::CaseStyle, b::CaseStyle) = CaseStyle()
 
-struct CasesVisitor <: AbstractCollectVisitor end
+struct CasesVisitor end
+
+function (ctx::CasesVisitor)(node)
+    if istree(node)
+        map(product(map(ctx, arguments(node))...)) do case
+            guards = map(first, case)
+            bodies = map(last, case)
+            return simplify(@i(and($(guards...)))) => similarterm(node, operation(node), collect(bodies))
+        end
+    else
+        [(true => node)]
+    end
+end
+(ctx::CasesVisitor)(node::Cases) = node.cases
 
 function (ctx::LowerJulia)(stmt, ::CaseStyle)
     cases = (CasesVisitor())(stmt)
@@ -25,22 +38,8 @@ function (ctx::LowerJulia)(stmt, ::CaseStyle)
             (ctx_2)(body)
         end
         length(cases) == 1 && return body
-        inner && return Expr(:elseif, guard, body, nest(cases[2:end], true))
-        return Expr(:if, guard, body, nest(cases[2:end], true))
+        inner && return Expr(:elseif, ctx(guard), body, nest(cases[2:end], true))
+        return Expr(:if, ctx(guard), body, nest(cases[2:end], true))
     end
     return nest(cases)
 end
-
-virtual_and(x, y) = x === true ? y :
-                    y === true ? x :
-                    :($x && $y)
-
-function postvisit!(node, ctx::CasesVisitor, args)
-    map(product(args...)) do case
-        guards = map(first, case)
-        bodies = map(last, case)
-        return reduce(virtual_and, guards, init=true) => similarterm(node, operation(node), collect(bodies))
-    end
-end
-postvisit!(node, ctx::CasesVisitor) = [(true => node)]
-(ctx::CasesVisitor)(node::Cases, ::DefaultStyle) = node.cases

@@ -134,7 +134,13 @@ function (ctx::LowerJulia)(root::Assign, ::DefaultStyle)
 end
 
 function (ctx::LowerJulia)(root::Call, ::DefaultStyle)
-    :($(ctx(root.op))($(map(ctx, root.args)...)))
+    if root.op == and
+        reduce((x, y) -> :($x && $y), map(ctx, root.args))
+    elseif root.op == or
+        reduce((x, y) -> :($x || $y), map(ctx, root.args))
+    else
+        :($(ctx(root.op))($(map(ctx, root.args)...)))
+    end
 end
 
 function (ctx::LowerJulia)(root::Name, ::DefaultStyle)

@@ -2,10 +2,6 @@ virtualize(ex, T, ctx, tag) = virtualize(ex, T, ctx)
 
 virtualize(ex, T, ctx) = Virtual{T}(ex)
 
-SyntaxInterface.istree(::Virtual) = false
-
-isliteral(::Virtual) = false
-
 virtualize(ex, ::Type{IndexNotation.LiteralInstance{val}}, ctx) where {val} = Literal(val)
 function virtualize(ex, ::Type{IndexNotation.PassInstance{Tnss}}, ctx) where {Tnss}
     tnss = map(enumerate(Tnss.parameters)) do (n, Tns)
