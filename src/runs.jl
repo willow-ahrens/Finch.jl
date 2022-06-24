@@ -24,11 +24,18 @@ function (ctx::LowerJulia)(root::Chunk, ::RunStyle)
     ctx(root)
 end
 
-struct AccessRunVisitor <: AbstractTransformVisitor
+@kwdef struct AccessRunVisitor
     root
 end
+function (ctx::AccessRunVisitor)(node)
+    if istree(node)
+        return similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        return node
+    end
+end
 
-function (ctx::AccessRunVisitor)(node::Access{Run, Read}, ::DefaultStyle)
+function (ctx::AccessRunVisitor)(node::Access{Run, Read})
     return node.tns.body
 end
 
@@ -57,16 +64,24 @@ function (ctx::LowerJulia)(root::Chunk, ::AcceptRunStyle)
     end
 end
 
-@kwdef mutable struct AcceptRunVisitor <: AbstractTransformVisitor
+@kwdef struct AcceptRunVisitor
     root
     idx
     ctx
 end
 
-function (ctx::AcceptRunVisitor)(node::Access{AcceptRun, <:Union{Write, Update}}, ::DefaultStyle)
+function (ctx::AcceptRunVisitor)(node)
+    if istree(node)
+        return similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        return node
+    end
+end
+
+function (ctx::AcceptRunVisitor)(node::Access{AcceptRun, <:Union{Write, Update}})
     node.tns.body(ctx.ctx, getstart(ctx.root.ext), getstop(ctx.root.ext))
 end
 
-function (ctx::ForLoopVisitor)(node::Access{AcceptRun, <:Union{Write, Update}}, ::DefaultStyle)
+function (ctx::ForLoopVisitor)(node::Access{AcceptRun, <:Union{Write, Update}})
     node.tns.body(ctx.ctx, ctx.val, ctx.val)
 end

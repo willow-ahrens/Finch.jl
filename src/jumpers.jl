@@ -20,12 +20,10 @@ combine_style(a::JumperStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::ThunkStyle, b::JumperStyle) = ThunkStyle()
 
 function (ctx::LowerJulia)(root::Chunk, style::JumperStyle)
-    lower_cycle(root, ctx, root.ext, style)
+    lower_cycle(root, ctx, root.idx, root.ext, style)
 end
 
-function unwrap_cycle(node::Jumper, ctx, ext, ::JumperStyle)
-    node.body
-end
+(ctx::CycleVisitor{JumperStyle})(node::Jumper) = node.body
 
 @kwdef struct Jump
     seek = nothing

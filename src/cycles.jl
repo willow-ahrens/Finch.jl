@@ -1,4 +1,4 @@
-function lower_cycle(root, ctx, ext, style)
+function lower_cycle(root, ctx, idx, ext, style)
     i = getname(root.idx)
     i0 = ctx.freshen(i, :_start)
     push!(ctx.preamble, quote
@@ -6,7 +6,7 @@ function lower_cycle(root, ctx, ext, style)
     end)
 
     guard = :($i <= $(ctx(getstop(root.ext))))
-    body = Postwalk(node->unwrap_cycle(node, ctx, ext, style))(root.body)
+    body = CycleVisitor(style, ctx, idx, ext)(root.body)
 
     body_2 = contain(ctx) do ctx_2
         push!(ctx_2.preamble, :($i0 = $i))
@@ -24,4 +24,17 @@ function lower_cycle(root, ctx, ext, style)
     end
 end
 
-unwrap_cycle(node, ctx, ext, style) = nothing
+@kwdef struct CycleVisitor{Style}
+    style::Style
+    ctx
+    idx
+    ext
+end
+
+function (ctx::CycleVisitor)(node)
+    if istree(node)
+        return similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        return node
+    end
+end

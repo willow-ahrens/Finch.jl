@@ -22,11 +22,11 @@ combine_style(a::StepperStyle, b::JumperStyle) = JumperStyle()
 combine_style(a::StepperStyle, b::PhaseStyle) = PhaseStyle()
 
 function (ctx::LowerJulia)(root::Chunk, style::StepperStyle)
-    lower_cycle(root, ctx, root.ext, style)
+    lower_cycle(root, ctx, root.idx, root.ext, style)
 end
 
-function unwrap_cycle(node::Stepper, ctx, ext, ::StepperStyle)
-    push!(ctx.preamble, node.seek(ctx, ext))
+function (ctx::CycleVisitor{StepperStyle})(node::Stepper)
+    push!(ctx.ctx.preamble, node.seek(ctx.ctx, ctx.ext))
     node.body
 end
 

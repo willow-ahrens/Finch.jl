@@ -2,17 +2,11 @@
     phases
 end
 
-struct MakePipeline
-    ctr
-end
-
 isliteral(::Pipeline) = false
-isliteral(::MakePipeline) = false
 
 struct PipelineStyle end
 
 make_style(root, ctx::LowerJulia, node::Pipeline) = PipelineStyle()
-make_style(root, ctx::LowerJulia, node::MakePipeline) = PipelineStyle()
 combine_style(a::DefaultStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::ThunkStyle, b::PipelineStyle) = ThunkStyle()
 combine_style(a::RunStyle, b::PipelineStyle) = PipelineStyle()
@@ -23,12 +17,6 @@ combine_style(a::PipelineStyle, b::CaseStyle) = CaseStyle()
 combine_style(a::SpikeStyle, b::PipelineStyle) = PipelineStyle()
 
 supports_shift(::PipelineStyle) = true
-
-struct PipelineVisitor <: AbstractCollectVisitor
-    ctx
-    idx
-    ext
-end
 
 function (ctx::LowerJulia)(root::Chunk, ::PipelineStyle)
     phases = Dict(PipelineVisitor(ctx, root.idx, root.ext)(root.body))
@@ -66,14 +54,21 @@ function (ctx::LowerJulia)(root::Chunk, ::PipelineStyle)
     return thunk
 end
 
-function postvisit!(node, ctx::PipelineVisitor, args)
-    res = map(flatten((product(args...),))) do phases
-        keys = map(first, phases)
-        bodies = map(last, phases)
-        return (reduce(vcat, keys),
-            similarterm(node, operation(node), collect(bodies)))
+struct PipelineVisitor
+    ctx
+    idx
+    ext
+end
+
+function (ctx::PipelineVisitor)(node)
+    if istree(node)
+        map(flatten((product(map(ctx, arguments(node))...),))) do phases
+            keys = map(first, phases)
+            bodies = map(last, phases)
+            return reduce(vcat, keys) => similarterm(node, operation(node), collect(bodies))
+        end
+    else
+        [[] => node]
     end
 end
-postvisit!(node, ctx::PipelineVisitor) = [([], node)]
-(ctx::PipelineVisitor)(node::Pipeline, ::DefaultStyle) = enumerate(node.phases)
-(ctx::PipelineVisitor)(node::MakePipeline, ::DefaultStyle) = ctx(node.ctr(ctx.ctx, ctx.idx, ctx.ext))
+(ctx::PipelineVisitor)(node::Pipeline) = enumerate(node.phases)
