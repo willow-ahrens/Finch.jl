@@ -72,24 +72,31 @@ A transformation to initialize tensors that have just entered into scope.
 
 See also: [`initialize!`](@ref)
 """
-@kwdef struct Initialize{Ctx} <: AbstractTransformVisitor
+@kwdef struct Initialize{Ctx}
     ctx::Ctx
     target=nothing
     escape=[]
 end
 initialize!(tns, ctx, mode, idxs...) = access(tns, mode, idxs...)
+function (ctx::Initialize)(node)
+    if istree(node)
+        return similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        return node
+    end
+end
 
-function (ctx::Initialize)(node::With, ::DefaultStyle) 
+function (ctx::Initialize)(node::With) 
     ctx_2 = Initialize(ctx.ctx, ctx.target, union(ctx.escape, map(getname, getresults(node.prod))))
     With(ctx_2(node.cons), ctx_2(node.prod))
 end
 
 #TODO this really isn't a valid postvisit bc we ignore args
-function postvisit!(acc::Access{<:Any}, ctx::Initialize, args)
+function (ctx::Initialize)(acc::Access{<:Any})
     if (ctx.target === nothing || (getname(acc.tns) in ctx.target)) && !(getname(acc.tns) in ctx.escape)
-        initialize!(acc.tns, ctx.ctx, acc.mode, acc.idxs...)
+        initialize!(acc.tns, ctx.ctx, acc.mode, map(ctx, acc.idxs)...)
     else
-        acc
+        return Access(acc.tns, acc.mode, map(ctx, acc.idxs))
     end
 end
 
@@ -101,23 +108,30 @@ returned to the caller.
 
 See also: [`finalize!`](@ref)
 """
-@kwdef struct Finalize{Ctx} <: AbstractTransformVisitor
+@kwdef struct Finalize{Ctx}
     ctx::Ctx
     target=nothing
     escape=[]
 end
 finalize!(tns, ctx, mode, idxs...) = tns
+function (ctx::Finalize)(node)
+    if istree(node)
+        return similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        return node
+    end
+end
 
-function (ctx::Finalize)(node::With, ::DefaultStyle) 
+function (ctx::Finalize)(node::With) 
     ctx_2 = Finalize(ctx.ctx, ctx.target, union(ctx.escape, map(getname, getresults(node.prod))))
     With(ctx_2(node.cons), ctx_2(node.prod))
 end
 
-function postvisit!(acc::Access{<:Any}, ctx::Finalize, args)
+function (ctx::Finalize)(acc::Access{<:Any})
     if (ctx.target === nothing || (getname(acc.tns) in ctx.target)) && !(getname(acc.tns) in ctx.escape)
         Access(finalize!(acc.tns, ctx.ctx, acc.mode, acc.idxs...), acc.mode, acc.idxs)
     else
-        acc
+        Access(acc.tns, acc.mode, map(ctx, acc.idxs))
     end
 end
 
