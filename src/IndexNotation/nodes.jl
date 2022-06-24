@@ -401,10 +401,11 @@ struct Lexicography{T}
 end
 
 function Base.isless(a::Lexicography, b::Lexicography)
-    @assert which(priority, Tuple{typeof(a)}) != which(priority, Tuple{typeof(b)}) || priority(a) == priority(b)
-    if a.arg != b.arg
-        a_key = (priority(a.arg), comparators(a.arg)...)
-        b_key = (priority(b.arg), comparators(b.arg)...)
+    (a, b) = a.arg, b.arg
+    @assert which(priority, Tuple{typeof(a)}) == which(priority, Tuple{typeof(b)}) || priority(a) != priority(b)
+    if a != b
+        a_key = (priority(a), comparators(a)...)
+        b_key = (priority(b), comparators(b)...)
         @assert a_key < b_key || b_key < a_key
         return a_key < b_key
     end
