@@ -43,6 +43,6 @@ function (ctx::PhaseStride)(node::Jump)
     Widen(Extent(getstart(ctx.ext), node.stride(ctx.ctx, ctx.ext)))
 end
 
-phase_body(node::Jump, ctx, idx, ext, ext_2) = node.body(ctx, ext, ext_2)
+(ctx::PhaseBodyVisitor)(node::Jump) = node.body(ctx.ctx, ctx.ext, ctx.ext_2)
 
 supports_shift(::JumperStyle) = true

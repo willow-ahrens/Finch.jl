@@ -23,16 +23,25 @@ end
 (ctx::PhaseStride)(node::Phase) = Narrow(node.range(ctx.ctx, ctx.idx, ctx.ext))
 (ctx::PhaseStride)(node::Shift) = shiftdim(PhaseStride(;kwfields(ctx)..., ext = shiftdim(ctx.ext, call(-, node.shift)))(node.body), node.shift)
 
-@kwdef struct PhaseBodyVisitor <: AbstractTransformVisitor
+@kwdef struct PhaseBodyVisitor
     ctx
     idx
     ext
     ext_2
 end
-(ctx::PhaseBodyVisitor)(node::Phase, ::DefaultStyle) = node.body(getstart(ctx.ext_2), getstop(ctx.ext_2))
-(ctx::PhaseBodyVisitor)(node::Spike, ::DefaultStyle) = truncate(node, ctx.ctx, ctx.ext, ctx.ext_2)
 
-(ctx::PhaseBodyVisitor)(node::Shift, ::DefaultStyle) = PhaseBodyVisitor(ctx.ctx, ctx.idx, shiftdim(ctx.ext, call(-, node.shift)), shiftdim(ctx.ext_2, call(-, node.shift)))(node.body)
+function (ctx::PhaseBodyVisitor)(node)
+    if istree(node)
+        return similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        return node
+    end
+end
+
+(ctx::PhaseBodyVisitor)(node::Phase) = node.body(getstart(ctx.ext_2), getstop(ctx.ext_2))
+(ctx::PhaseBodyVisitor)(node::Spike) = truncate(node, ctx.ctx, ctx.ext, ctx.ext_2) #TODO This should be called on everything
+
+(ctx::PhaseBodyVisitor)(node::Shift) = PhaseBodyVisitor(ctx.ctx, ctx.idx, shiftdim(ctx.ext, call(-, node.shift)), shiftdim(ctx.ext_2, call(-, node.shift)))(node.body)
 
 struct PhaseStyle end
 
@@ -56,7 +65,7 @@ function (ctx::LowerJulia)(root::Chunk, ::PhaseStyle)
     ext_2 = resolvedim(PhaseStride(ctx, root.idx, root.ext)(body))
     ext_2 = cache!(ctx, :phase, resolvedim(resultdim(Narrow(root.ext), ext_2)))
 
-    body = Postwalk(node->phase_body(node, ctx, root.idx, root.ext, ext_2))(body)
+    body = PhaseBodyVisitor(ctx, root.idx, root.ext, ext_2)(body)
     body = quote
         $i0 = $i
         $(contain(ctx) do ctx_4
@@ -77,15 +86,5 @@ function (ctx::LowerJulia)(root::Chunk, ::PhaseStyle)
                 $body
             end
         end
-    end
-end
-
-
-phase_body(node, ctx, idx, ext, ext_2) = truncate(node, ctx, ext, ext_2)
-phase_body(node::Phase, ctx, idx, ext, ext_2) = node.body(getstart(ext_2), getstop(ext_2))
-function phase_body(node::Shift, ctx, idx, ext, ext_2)
-    body_2 = phase_body(node.body, ctx, idx, shiftdim(ext, call(-, node.shift)), shiftdim(ext_2, call(-, node.shift)))
-    if body_2 != nothing
-        return Shift(body = body_2, shift=node.shift)
     end
 end

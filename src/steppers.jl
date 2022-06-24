@@ -50,6 +50,6 @@ make_style(root::Chunk, ctx::LowerJulia, node::Step) = PhaseStyle()
 
 (ctx::PhaseStride)(node::Step) = Narrow(Extent(start = getstart(ctx.ext), stop = node.stride(ctx.ctx, ctx.idx, ctx.ext), lower = 1))
 
-phase_body(node::Step, ctx, idx, ext, ext_2) = node.body(ctx, idx, ext, ext_2)
+(ctx::PhaseBodyVisitor)(node::Step) = node.body(ctx.ctx, ctx.idx, ctx.ext, ctx.ext_2)
 
 supports_shift(::StepperStyle) = true
