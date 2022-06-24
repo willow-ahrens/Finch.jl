@@ -31,10 +31,17 @@ function unwrap_cycle(node::Stepper, ctx, ext, ::StepperStyle)
 end
 
 @kwdef struct Step
-    body = nothing
-    chunk = nothing
     stride
-    next = nothing
+    next = (ctx, idx, ext) -> quote end
+    chunk = nothing
+    body = (ctx, idx, ext, ext_2) -> Cases([
+        :($(ctx(stride(ctx, idx, ext))) == $(ctx(getstop(ext_2)))) => Thunk(
+            body = truncate_weak(chunk, ctx, ext, ext_2),
+            epilogue = next(ctx, idx, ext_2)
+        ),
+        true => 
+            truncate_strong(chunk, ctx, ext, ext_2),
+        ])
 end
 
 isliteral(::Step) = false
@@ -43,19 +50,6 @@ make_style(root::Chunk, ctx::LowerJulia, node::Step) = PhaseStyle()
 
 (ctx::PhaseStride)(node::Step) = Narrow(Extent(start = getstart(ctx.ext), stop = node.stride(ctx.ctx, ctx.idx, ctx.ext), lower = 1))
 
-phase_body(node::Step, ctx, idx, ext, ext_2) = begin
-    if node.chunk != nothing
-        Cases([
-        :($(ctx(node.stride(ctx, idx, ext))) == $(ctx(getstop(ext_2)))) => Thunk(
-            body = truncate_weak(node.chunk, ctx, ext, ext_2),
-            epilogue = (node.next != nothing ? something(node.next)(ctx, idx, ext_2) : quote end)
-        ),
-        true => 
-            truncate_strong(node.chunk, ctx, ext, ext_2),
-        ])
-    else
-        node.body(ctx, ext, ext_2)
-    end
-end
+phase_body(node::Step, ctx, idx, ext, ext_2) = node.body(ctx, idx, ext, ext_2)
 
 supports_shift(::StepperStyle) = true
