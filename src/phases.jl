@@ -47,7 +47,7 @@ struct PhaseStyle end
 
 #isliteral(::Step) = false
 
-make_style(root::Chunk, ctx::LowerJulia, node::Phase) = PhaseStyle()
+(ctx::Stylize{LowerJulia})(node::Phase) = PhaseStyle()
 
 combine_style(a::DefaultStyle, b::PhaseStyle) = PhaseStyle()
 combine_style(a::PhaseStyle, b::PhaseStyle) = PhaseStyle()

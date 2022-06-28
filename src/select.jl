@@ -11,8 +11,13 @@ virtualize(ex, ::Type{Select}, ctx) = select
 
 (ctx::LowerJulia)(tns::Select) = error("Select not lowered")
 
-Finch.make_style(root::Loop, ctx::Finch.LowerJulia, node::Access{Select}) =
-    getname(root.idx) == getname(node.idxs[2]) ? Finch.ChunkStyle() : Finch.DefaultStyle()
+function (ctx::Stylize{LowerJulia})(node::Access{Select})
+    if ctx.root isa Loop && getname(ctx.root.idx) == getname(node.idxs[2])
+        Finch.ChunkStyle()
+    else
+        Finch.DefaultStyle()
+    end
+end
 
 function (ctx::Finch.ChunkifyVisitor)(node::Access{Select}, ::Finch.DefaultStyle) where {Tv, Ti}
     vec = node.tns

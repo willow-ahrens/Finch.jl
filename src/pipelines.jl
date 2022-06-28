@@ -6,7 +6,7 @@ isliteral(::Pipeline) = false
 
 struct PipelineStyle end
 
-make_style(root, ctx::LowerJulia, node::Pipeline) = PipelineStyle()
+(ctx::Stylize{LowerJulia})(node::Pipeline) = PipelineStyle()
 combine_style(a::DefaultStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::ThunkStyle, b::PipelineStyle) = ThunkStyle()
 combine_style(a::RunStyle, b::PipelineStyle) = PipelineStyle()

@@ -7,7 +7,7 @@ end
 
 isliteral(::Stepper) = false
 
-make_style(root::Chunk, ctx::LowerJulia, node::Stepper) = StepperStyle()
+(ctx::Stylize{LowerJulia})(node::Stepper) = StepperStyle()
 
 combine_style(a::DefaultStyle, b::StepperStyle) = StepperStyle()
 combine_style(a::StepperStyle, b::PipelineStyle) = PipelineStyle()
@@ -46,7 +46,7 @@ end
 
 isliteral(::Step) = false
 
-make_style(root::Chunk, ctx::LowerJulia, node::Step) = PhaseStyle()
+(ctx::Stylize{LowerJulia})(node::Step) = PhaseStyle()
 
 (ctx::PhaseStride)(node::Step) = Narrow(Extent(start = getstart(ctx.ext), stop = node.stride(ctx.ctx, ctx.idx, ctx.ext), lower = 1))
 

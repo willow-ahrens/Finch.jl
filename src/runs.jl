@@ -10,7 +10,7 @@ getname(arr::Run) = getname(arr.body)
 
 struct RunStyle end
 
-make_style(root::Chunk, ctx::LowerJulia, node::Run) = RunStyle()
+(ctx::Stylize{LowerJulia})(node::Run) = RunStyle()
 combine_style(a::DefaultStyle, b::RunStyle) = RunStyle()
 combine_style(a::ThunkStyle, b::RunStyle) = ThunkStyle()
 combine_style(a::SimplifyStyle, b::RunStyle) = SimplifyStyle()
@@ -18,7 +18,7 @@ combine_style(a::RunStyle, b::RunStyle) = RunStyle()
 
 function (ctx::LowerJulia)(root::Chunk, ::RunStyle)
     root = (AccessRunVisitor(root))(root)
-    if make_style(root, ctx) isa RunStyle
+    if Stylize(root, ctx)(root) isa RunStyle #TODO do we need this always? Can we do this generically?
         error("run style couldn't lower runs")
     end
     ctx(root)
@@ -47,7 +47,7 @@ end
 
 struct AcceptRunStyle end
 
-make_style(root::Chunk, ctx::LowerJulia, node::Access{AcceptRun, <:Union{Write, Update}}) = AcceptRunStyle()
+(ctx::Stylize{LowerJulia})(node::AcceptRun) = AcceptRunStyle()
 combine_style(a::DefaultStyle, b::AcceptRunStyle) = AcceptRunStyle()
 combine_style(a::ThunkStyle, b::AcceptRunStyle) = ThunkStyle()
 combine_style(a::SimplifyStyle, b::AcceptRunStyle) = SimplifyStyle()

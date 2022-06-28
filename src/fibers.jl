@@ -164,17 +164,16 @@ function finalize_level! end
 
 finalize_level!(fbr, ctx, mode) = fbr.lvl
 
-function make_style(root, ctx::Finch.LowerJulia, node::Access{<:VirtualFiber})
-    style = DefaultStyle()
+function (ctx::Stylize{LowerJulia})(node::Access{<:VirtualFiber})
     if !isempty(node.idxs)
-        if getunbound(node.idxs[1]) ⊆ keys(ctx.bindings)
-            style = SelectStyle()
-        elseif root isa Loop && ((node.idxs[1] isa Name && getname(root.idx) == getname(node.idxs[1])) ||
-            (node.idxs[1] isa Protocol && getname(root.idx) == getname(node.idxs[1].idx)))
-            style = ChunkStyle()
+        if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
+            return SelectStyle()
+        elseif ctx.root isa Loop && ((node.idxs[1] isa Name && getname(ctx.root.idx) == getname(node.idxs[1])) ||
+            (node.idxs[1] isa Protocol && getname(ctx.root.idx) == getname(node.idxs[1].idx)))
+            return ChunkStyle()
         end
     end
-    return DefaultStyle()
+    return mapreduce(ctx, result_style, arguments(node))
 end
 
 function (ctx::Finch.SelectVisitor)(node::Access{<:VirtualFiber}, ::DefaultStyle) where {Tv, Ti}
@@ -199,5 +198,7 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{<:VirtualFiber}, ::DefaultSty
     end
     return node
 end
+
+is_furlable(ctx.root, ctx.)
 
 refurl(tns, ctx, mode, idxs...) = access(tns, mode, idxs...)

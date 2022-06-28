@@ -1,28 +1,32 @@
 struct DefaultStyle end
 struct UnknownStyle end
 
-make_style(root, ctx) = make_style(root, ctx, root)
-function make_style(root, ctx, node)
+@kwdef struct Stylize{Ctx}
+    root
+    ctx::Ctx
+end
+
+function (ctx::Stylize)(node)
     if istree(node)
-        return mapreduce(arg->make_style(root, ctx, arg), (a, b) -> result_style(ctx, a, b), arguments(node); init=DefaultStyle())
+        return mapreduce(ctx, result_style, arguments(node); init=DefaultStyle())
     end
     return DefaultStyle()
 end
 
-result_style(ctx, a, b) = _result_style(a, b, combine_style(ctx, a, b), combine_style(ctx, b, a))
+
+result_style(a, b) = _result_style(a, b, combine_style(a, b), combine_style(b, a))
 _result_style(a, b, c::UnknownStyle, d::UnknownStyle) = throw(MethodError(combine_style, (a, b)))
 _result_style(a, b, c, d::UnknownStyle) = c
 _result_style(a, b, c::UnknownStyle, d) = d
 _result_style(a, b, c::T, d::T) where {T} = (c == d) ? c : @assert false "TODO lower_style_ambiguity_error"
 _result_style(a, b, c, d) = (c == d) ? c : @assert false "TODO lower_style_ambiguity_error"
-combine_style(ctx, a, b) = combine_style(a, b)
 combine_style(a, b) = UnknownStyle()
 
 combine_style(a::DefaultStyle, b) = b
 
 abstract type AbstractVisitor end
 
-(ctx::AbstractVisitor)(root) = ctx(root, make_style(root, ctx))
+(ctx::AbstractVisitor)(root) = ctx(root, Stylize(root, ctx)(root))
 
 abstract type AbstractTransformVisitor <: AbstractVisitor end
 

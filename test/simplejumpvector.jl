@@ -44,8 +44,13 @@ end
 Finch.setdims!(arr::VirtualSimpleJumpVector{Tv, Ti}, ctx::Finch.LowerJulia, mode, dims...) where {Tv, Ti} = arr
 Finch.getname(arr::VirtualSimpleJumpVector) = arr.name
 Finch.setname(arr::VirtualSimpleJumpVector, name) = (arr_2 = deepcopy(arr); arr_2.name = name; arr_2)
-Finch.make_style(root::Loop, ctx::Finch.LowerJulia, node::Access{<:VirtualSimpleJumpVector}) =
-    getname(root.idx) == getname(node.idxs[1]) ? Finch.ChunkStyle() : Finch.DefaultStyle()
+function (ctx::Finch.Stylize{LowerJulia})(node::Access{<:VirtualSimpleJumpVector})
+    if ctx.root isa Loop && node.idxs[1] isa Name && getname(ctx.root.idx) == getname(node.idxs[1])
+        Finch.ChunkStyle()
+    else
+        mapreduce(ctx, result_style, arguments(node))
+    end
+end
 
 function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSimpleJumpVector{Tv, Ti}, Read}, ::Finch.DefaultStyle) where {Tv, Ti}
     vec = node.tns

@@ -69,12 +69,11 @@ Finch.getname(node::Access{VirtualOffset}) = Finch.getname(node.idxs[2])
 Finch.getname(node::VirtualOffset) = gensym()
 Finch.setname(node::VirtualOffset, name) = node
 
-function make_style(root::Loop, ctx::Finch.LowerJulia, node::Access{<:VirtualOffset})
-    println(getunbound(node.idxs[1]))
-    if getunbound(node.idxs[1]) ⊆ keys(ctx.bindings)
+function (ctx::Stylize{LowerJulia})(node::Access{<:VirtualOffset})
+    if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
         return SimplifyStyle()
     end
-    return DefaultStyle()
+    return mapreduce(ctx, result_style, arguments(node))
 end
 
 unwrap_offsets(node) = nothing

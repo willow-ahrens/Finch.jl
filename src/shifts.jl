@@ -5,13 +5,11 @@ end
 
 isliteral(::Shift) = false
 
+#TODO can't we do this more pretty?
 supports_shift(style) = false
 supports_shift(::DefaultStyle) = true
-function make_style(root, ctx::LowerJulia, node::Shift)
-    style = make_style(root, ctx, node.body)
-    @assert supports_shift(style)
-    style
-end
+(ctx::Stylize{LowerJulia})(node::Shift) = (@assert supports_shift(ctx(node.body)); ctx(node.body))
+
 function (ctx::ForLoopVisitor)(node::Shift, ::DefaultStyle)
     ctx_2 = ForLoopVisitor(ctx.ctx, ctx.idx, call(+, ctx.val, node.shift))
     ctx_2(node.body)

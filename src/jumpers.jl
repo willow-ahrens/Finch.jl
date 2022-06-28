@@ -7,7 +7,7 @@ end
 
 isliteral(::Jumper) = false
 
-make_style(root::Chunk, ctx::LowerJulia, node::Jumper) = JumperStyle()
+(ctx::Stylize{LowerJulia})(node::Jumper) = JumperStyle()
 
 combine_style(a::DefaultStyle, b::JumperStyle) = JumperStyle()
 combine_style(a::JumperStyle, b::JumperStyle) = JumperStyle()
@@ -34,7 +34,7 @@ end
 
 isliteral(::Jump) = false
 
-make_style(root::Chunk, ctx::LowerJulia, node::Jump) = PhaseStyle()
+(ctx::Stylize{LowerJulia})(node::Jump) = PhaseStyle()
 
 function (ctx::PhaseStride)(node::Jump)
     push!(ctx.ctx.preamble, node.seek !== nothing ? node.seek(ctx.ctx, ctx.ext) : quote end)

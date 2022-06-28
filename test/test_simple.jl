@@ -1,3 +1,5 @@
+using Finch: LowerJulia
+
 include("simplerunlength.jl")
 include("simplesparsevector.jl")
 include("simplejumpvector.jl")

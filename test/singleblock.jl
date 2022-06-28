@@ -50,8 +50,13 @@ end
 Finch.setdims!(arr::VirtualSingleBlock{Tv, Ti}, ctx::Finch.LowerJulia, mode, dims...) where {Tv, Ti} = arr
 Finch.getname(arr::VirtualSingleBlock) = arr.name
 Finch.setname(arr::VirtualSingleBlock, name) = (arr_2 = deepcopy(arr); arr_2.name = name; arr_2)
-Finch.make_style(root::Loop, ctx::Finch.LowerJulia, node::Access{<:VirtualSingleBlock}) =
-    getname(root.idx) == getname(node.idxs[1]) ? Finch.ChunkStyle() : Finch.DefaultStyle()
+function (ctx::Finch.Stylize{LowerJulia})(node::Access{<:VirtualSingleBlock})
+    if ctx.root isa Loop && node.idxs[1] isa Name && getname(ctx.root.idx) == getname(node.idxs[1])
+        Finch.ChunkStyle()
+    else
+        mapreduce(ctx, result_style, arguments(node))
+    end
+end
 
 function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSingleBlock{Tv, Ti}, Read}, ::Finch.DefaultStyle) where {Tv, Ti}
     vec = node.tns

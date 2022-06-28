@@ -92,7 +92,7 @@ end
 
 struct SimplifyStyle end
 
-make_style(root, ctx::LowerJulia, node::Simplify) = SimplifyStyle()
+(ctx::Stylize{LowerJulia})(::Simplify) = SimplifyStyle()
 combine_style(a::DefaultStyle, b::SimplifyStyle) = SimplifyStyle()
 combine_style(a::ThunkStyle, b::SimplifyStyle) = ThunkStyle() #Not sure about this, but we gotta get rid of thunks to match, so...
 combine_style(a::SimplifyStyle, b::SimplifyStyle) = SimplifyStyle()

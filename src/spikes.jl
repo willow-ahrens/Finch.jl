@@ -7,7 +7,7 @@ isliteral(::Spike) = false
 
 struct SpikeStyle end
 
-make_style(root::Chunk, ctx::LowerJulia, node::Spike) = SpikeStyle()
+(ctx::Stylize{LowerJulia})(node::Spike) = SpikeStyle()
 combine_style(a::DefaultStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::RunStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::ThunkStyle, b::SpikeStyle) = ThunkStyle()
