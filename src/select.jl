@@ -12,7 +12,7 @@ virtualize(ex, ::Type{Select}, ctx) = select
 (ctx::LowerJulia)(tns::Select) = error("Select not lowered")
 
 function (ctx::Stylize{LowerJulia})(node::Access{Select})
-    if ctx.root isa Loop && getname(ctx.root.idx) == getname(node.idxs[2])
+    if ctx.root isa Loop && ctx.root.idx == get_furl_root(node.idxs[2])
         Finch.ChunkStyle()
     else
         Finch.DefaultStyle()

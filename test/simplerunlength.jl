@@ -40,7 +40,7 @@ Finch.setdims!(arr::VirtualSimpleRunLength{Tv, Ti}, ctx::Finch.LowerJulia, mode,
 Finch.getname(arr::VirtualSimpleRunLength) = arr.name
 Finch.setname(arr::VirtualSimpleRunLength, name) = (arr_2 = deepcopy(arr); arr_2.name = name; arr_2)
 function (ctx::Finch.Stylize{LowerJulia})(node::Access{<:VirtualSimpleRunLength})
-    if ctx.root isa Loop && node.idxs[1] isa Name && getname(ctx.root.idx) == getname(node.idxs[1])
+    if ctx.root isa Loop && ctx.root.idx == get_furl_root(node.idxs[1])
         Finch.ChunkStyle()
     else
         mapreduce(ctx, result_style, arguments(node))

@@ -1,4 +1,4 @@
-using Finch: LowerJulia
+using Finch: LowerJulia, get_furl_root
 
 include("simplerunlength.jl")
 include("simplesparsevector.jl")

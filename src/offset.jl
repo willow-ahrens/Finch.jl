@@ -85,6 +85,7 @@ function unwrap_offsets(node::Access{<:VirtualOffset})
 end
 push!(rules, unwrap_offsets) #TODO perhaps we need to get more specific about order of operations on rewrites
 
+get_furl_root(idx::Access{VirtualStaticOffset}) = get_furl_root(idx.idxs[1])
 function unfurl(tns, ctx, mode, idx::Access{VirtualStaticOffset}, tail...)
     shift(unfurl(tns, ctx, mode, idx.idxs[1], tail...), idx.tns.shift)
 end

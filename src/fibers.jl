@@ -168,8 +168,7 @@ function (ctx::Stylize{LowerJulia})(node::Access{<:VirtualFiber})
     if !isempty(node.idxs)
         if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
             return SelectStyle()
-        elseif ctx.root isa Loop && ((node.idxs[1] isa Name && getname(ctx.root.idx) == getname(node.idxs[1])) ||
-            (node.idxs[1] isa Protocol && getname(ctx.root.idx) == getname(node.idxs[1].idx)))
+        elseif ctx.root isa Loop && ctx.root.idx == get_furl_root(node.idxs[1])
             return ChunkStyle()
         end
     end
@@ -199,6 +198,8 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{<:VirtualFiber}, ::DefaultSty
     return node
 end
 
-is_furlable(ctx.root, ctx.)
+get_furl_root(idx) = nothing
+get_furl_root(idx::Name) = idx
+get_furl_root(idx::Protocol) = idx.idx
 
 refurl(tns, ctx, mode, idxs...) = access(tns, mode, idxs...)
