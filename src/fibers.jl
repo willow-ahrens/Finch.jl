@@ -164,23 +164,14 @@ function finalize_level! end
 
 finalize_level!(fbr, ctx, mode) = fbr.lvl
 
-
 function make_style(root, ctx::Finch.LowerJulia, node::Access{<:VirtualFiber})
+    style = DefaultStyle()
     if !isempty(node.idxs)
         if getunbound(node.idxs[1]) ⊆ keys(ctx.bindings)
-            return SelectStyle()
-        end
-    end
-    return DefaultStyle()
-end
-
-function make_style(root::Loop, ctx::Finch.LowerJulia, node::Access{<:VirtualFiber})
-    if !isempty(node.idxs)
-        if getunbound(node.idxs[1]) ⊆ keys(ctx.bindings)
-            return SelectStyle()
-        elseif (node.idxs[1] isa Name && getname(root.idx) == getname(node.idxs[1])) ||
-            (node.idxs[1] isa Protocol && getname(root.idx) == getname(node.idxs[1].idx))
-            return ChunkStyle()
+            style = SelectStyle()
+        elseif root isa Loop && ((node.idxs[1] isa Name && getname(root.idx) == getname(node.idxs[1])) ||
+            (node.idxs[1] isa Protocol && getname(root.idx) == getname(node.idxs[1].idx)))
+            style = ChunkStyle()
         end
     end
     return DefaultStyle()

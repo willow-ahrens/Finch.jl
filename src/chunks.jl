@@ -3,6 +3,7 @@ struct ChunkStyle end
 combine_style(a::DefaultStyle, b::ChunkStyle) = ChunkStyle()
 combine_style(a::ThunkStyle, b::ChunkStyle) = ThunkStyle()
 combine_style(a::ChunkStyle, b::ChunkStyle) = ChunkStyle()
+combine_style(a::ChunkStyle, b::SimplifyStyle) = SimplifyStyle()
 
 struct ChunkifyVisitor <: AbstractTransformVisitor
     ctx

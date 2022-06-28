@@ -1,5 +1,6 @@
 struct NoDimension end
 nodim = NoDimension()
+virtualize(ex, ::Type{NoDimension}, ctx) = nodim
 
 @kwdef mutable struct DeclareDimensions
     ctx
