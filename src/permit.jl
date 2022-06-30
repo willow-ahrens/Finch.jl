@@ -9,7 +9,7 @@ const permit = Permit(nodim)
 Base.size(vec::Permit) = stop(vec.I) - start(vec.I) + 1
 
 function Base.getindex(vec::Permit, i)
-    start(vec.I) <= i <= stop(vec.I) ? i : missing
+    getstart(vec.I) <= i <= getstop(vec.I) ? i : missing
 end
 
 struct VirtualPermit

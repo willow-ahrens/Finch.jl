@@ -205,7 +205,6 @@ function (ctx::LowerJulia)(root::Multi, ::DefaultStyle)
 end
 
 function (ctx::LowerJulia)(root::Access, ::DefaultStyle)
-    @assert map(getname, root.idxs) ⊆ keys(ctx.bindings)
     tns = ctx(root.tns)
     idxs = map(ctx, root.idxs)
     :($(ctx(tns))[$(idxs...)])

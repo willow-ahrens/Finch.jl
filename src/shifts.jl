@@ -28,6 +28,6 @@ function shiftdim(ext::Extent, delta)
     )
 end
 
-shiftdim(ext::Widen, ctx, delta) = Widen(shiftdim(ext.ext, delta))
-shiftdim(ext::Narrow, ctx, delta) = Narrow(shiftdim(ext.ext, delta))
-shiftdim(ext::NoDimension, ctx, delta) = NoDimension()
+shiftdim(ext::Widen, delta) = Widen(shiftdim(ext.ext, delta))
+shiftdim(ext::Narrow, delta) = Narrow(shiftdim(ext.ext, delta))
+shiftdim(ext::NoDimension, delta) = NoDimension()

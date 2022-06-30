@@ -166,6 +166,7 @@ finalize_level!(fbr, ctx, mode) = fbr.lvl
 
 function (ctx::Stylize{LowerJulia})(node::Access{<:VirtualFiber})
     if !isempty(node.idxs)
+        println(get_furl_root(node.idxs[1]))
         if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
             return SelectStyle()
         elseif ctx.root isa Loop && ctx.root.idx == get_furl_root(node.idxs[1])
@@ -184,14 +185,14 @@ function (ctx::Finch.SelectVisitor)(node::Access{<:VirtualFiber}, ::DefaultStyle
             return access(node.tns, node.mode, var, node.idxs[2:end]...)
         end
     end
-    return node
+    return similarterm(node, operation(node), map(ctx, arguments(node)))
 end
 
 getsites(arr::VirtualFiber) = 1:arity(arr) #TODO maybe check how deep the name is in the env first
 
 function (ctx::Finch.ChunkifyVisitor)(node::Access{<:VirtualFiber}, ::DefaultStyle) where {Tv, Ti}
     if !isempty(node.idxs)
-        if getname(node.idxs[1]) !== nothing && getname(ctx.idx) == getname(node.idxs[1])
+        if ctx.idx == get_furl_root(node.idxs[1])
             return Access(unfurl(node.tns, ctx.ctx, node.mode, node.idxs...), node.mode, node.idxs)
         end
     end

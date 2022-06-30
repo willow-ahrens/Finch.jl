@@ -22,7 +22,7 @@ end
 function (ctx::Finch.ChunkifyVisitor)(node::Access{Select}, ::Finch.DefaultStyle) where {Tv, Ti}
     vec = node.tns
     if getname(ctx.idx) == getname(node.idxs[2])
-        sym = ctx.ctx.freshen(:select, getname(node.idxs[2]))
+        sym = ctx.ctx.freshen(:select_, getname(node.idxs[2]))
         push!(ctx.ctx.preamble, quote
             $sym = $(ctx.ctx(node.idxs[1]))
         end)

@@ -31,8 +31,8 @@ end
 isliteral(::VirtualStaticOffset) = false
 
 function virtualize(ex, ::Type{StaticOffset{Shift, Dim}}, ctx) where {Shift, Dim}
-    shift = virtualize(:($ex.d), Shift, ctx)
-    dim = virtualize(:($ex.I), Dim, ctx)
+    shift = virtualize(:($ex.shift), Shift, ctx)
+    dim = virtualize(:($ex.dim), Dim, ctx)
     return VirtualStaticOffset(shift, dim)
 end
 
@@ -41,7 +41,7 @@ end
 function Finch.getdims(arr::VirtualStaticOffset, ctx::Finch.LowerJulia, mode)
     return (arr.dim,)
 end
-Finch.setdims!(arr::VirtualStaticOffset, ctx::Finch.LowerJulia, mode, dim) = VirtualStaticOffset(kwfields(arr)..., dim=dim)
+Finch.setdims!(arr::VirtualStaticOffset, ctx::Finch.LowerJulia, mode, dim) = VirtualStaticOffset(;kwfields(arr)..., dim=dim)
 
 struct VirtualOffset end
 
@@ -55,13 +55,13 @@ Finch.getdims(arr::VirtualOffset, ctx::Finch.LowerJulia, mode) = (nodim, nodim)
 Finch.setdims!(arr::VirtualOffset, ctx::Finch.LowerJulia, mode, dim1, dim2) = arr
 
 function (ctx::DeclareDimensions)(node::Access{VirtualStaticOffset}, ext)
-    idx = ctx(node.idxs[1], shiftdim(ext, node.tns.delta))
-    return access(VirtualStaticOffset(kwfields(node.tns)..., dim=ext), node.mode, idx)
+    idx = ctx(node.idxs[1], shiftdim(ext, node.tns.shift))
+    return access(VirtualStaticOffset(;kwfields(node.tns)..., dim=ext), node.mode, idx)
 end
 
 function (ctx::InferDimensions)(node::Access{VirtualStaticOffset})
     idx, ext = ctx(node.idxs[1])
-    return (access(node, node.mode, delta, idx), shiftdim(ext, call(-, delta)))
+    return (access(node.tns, node.mode, idx), shiftdim(ext, call(-, node.tns.shift)))
 end
 
 Finch.getname(node::Access{VirtualOffset}) = Finch.getname(node.idxs[2])
@@ -71,21 +71,23 @@ Finch.setname(node::VirtualOffset, name) = node
 
 function (ctx::Stylize{LowerJulia})(node::Access{<:VirtualOffset})
     if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
-        return SimplifyStyle()
+        return SelectStyle()
     end
     return mapreduce(ctx, result_style, arguments(node))
 end
 
-unwrap_offsets(node) = nothing
-function unwrap_offsets(node::Access{<:VirtualOffset})
-    if getunbound(node.idxs[1]) ⊆ keys(ctx.bindings)
-        shift = cache!(:ctx, node.idxs[1])
-        return access(Dimensionalize(VirtualStaticOffset(shift)), ctx(node.mode), ctx(node.idxs[2]))
+function (ctx::SelectVisitor)(node::Access{<:VirtualOffset})
+    if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
+        shift = cache!(ctx.ctx, :delta, node.idxs[1])
+        return access(VirtualStaticOffset(shift=shift), node.mode, node.idxs[2])
     end
+    return similarterm(node, operation(node), map(ctx, arguments(node)))
 end
-push!(rules, unwrap_offsets) #TODO perhaps we need to get more specific about order of operations on rewrites
+
+Finch.getname(node::VirtualStaticOffset) = gensym()
+Finch.setname(node::VirtualStaticOffset, name) = node
 
 get_furl_root(idx::Access{VirtualStaticOffset}) = get_furl_root(idx.idxs[1])
 function unfurl(tns, ctx, mode, idx::Access{VirtualStaticOffset}, tail...)
-    shift(unfurl(tns, ctx, mode, idx.idxs[1], tail...), idx.tns.shift)
+    Shift(unfurl(tns, ctx, mode, idx.idxs[1], tail...), idx.tns.shift)
 end

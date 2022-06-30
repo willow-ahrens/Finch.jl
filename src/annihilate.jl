@@ -3,7 +3,7 @@
 
     ((a) -> if a isa Literal && isliteral(getvalue(a)) getvalue(a) end), #only quote when necessary
 
-    (@rule @i(a[i...] = $b) => if b == default(a) pass(a) end),
+    (@rule @i(a[i...] = $b) => if b == default(a) pass(a) end), #TODO either default needs to get defined on all chunks, or we need to guard this
 
     (@rule @i(@loop $i @pass(a...)) => pass(a...)),
     (@rule @i(@chunk $i a @pass(b...)) => pass(b...)),
