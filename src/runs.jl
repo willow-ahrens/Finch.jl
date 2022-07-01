@@ -39,6 +39,15 @@ function (ctx::AccessRunVisitor)(node::Access{Run, Read})
     return node.tns.body
 end
 
+function (ctx::AccessRunVisitor)(node::Access{Shift, Read}) #TODO this is ugly
+    if node.tns.body isa Run
+        return node.tns.body.body
+    else
+        return node
+    end
+end
+
+
 #assume ssa
 
 @kwdef mutable struct AcceptRun
@@ -89,5 +98,8 @@ end
 
 function (ctx::AcceptRunVisitor)(node::Access{Shift}, ::DefaultStyle)
     ctx_2 = AcceptRunVisitor(ctx.root, ctx.idx, call(-, ctx.val, node.shift), shiftdim(ctx.ext, call(-, node.shift)))
-    ctx_2(access(node.tns.body, node.mode, node.idx...))
+    ctx_2(access(node.tns.body, node.mode, node.idxs...))
 end
+
+supports_shift(::RunStyle) = true
+supports_shift(::AcceptRunStyle) = true

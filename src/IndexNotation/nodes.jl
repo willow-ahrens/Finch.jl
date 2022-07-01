@@ -443,7 +443,7 @@ priority(::Workspace) = (3,3)
 comparators(x::Workspace) = (x.n,)
 
 priority(::Virtual) = (3,4)
-comparators(x::Virtual) = (typeof(x), Lexicography(x.ex))
+comparators(x::Virtual) = (string(typeof(x)), Lexicography(x.ex))
 
 priority(::IndexNode) = (3,Inf)
 comparators(x::IndexNode) = (@assert istree(x); (string(operation(x)), map(Lexicography, arguments(x))...))

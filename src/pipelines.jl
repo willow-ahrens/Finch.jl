@@ -54,7 +54,7 @@ function (ctx::LowerJulia)(root::Chunk, ::PipelineStyle)
     return thunk
 end
 
-struct PipelineVisitor
+Base.@kwdef struct PipelineVisitor
     ctx
     idx
     ext

@@ -8,7 +8,7 @@ isliteral(::Shift) = false
 #TODO can't we do this more pretty?
 supports_shift(style) = false
 supports_shift(::DefaultStyle) = true
-(ctx::Stylize{LowerJulia})(node::Shift) = (@assert supports_shift(ctx(node.body)); ctx(node.body))
+(ctx::Stylize{LowerJulia})(node::Shift) = (@assert supports_shift(ctx(node.body)) "$(ctx(node.body))"; ctx(node.body))
 
 function (ctx::ForLoopVisitor)(node::Shift, ::DefaultStyle)
     ctx_2 = ForLoopVisitor(ctx.ctx, ctx.idx, call(-, ctx.val, node.shift))
@@ -31,3 +31,7 @@ end
 shiftdim(ext::Widen, delta) = Widen(shiftdim(ext.ext, delta))
 shiftdim(ext::Narrow, delta) = Narrow(shiftdim(ext.ext, delta))
 shiftdim(ext::NoDimension, delta) = NoDimension()
+
+truncate(node::Shift, ctx, ext, ext_2) = Shift(truncate(node.body, ctx, shiftdim(ext, call(-, node.shift)), shiftdim(ext_2, call(-, node.shift))), node.shift)
+truncate_weak(node::Shift, ctx, ext, ext_2) = Shift(truncate_weak(node.body, ctx, shiftdim(ext, call(-, node.shift)), shiftdim(ext_2, call(-, node.shift))), node.shift)
+truncate_strong(node::Shift, ctx, ext, ext_2) = Shift(truncate_strong(node.body, ctx, shiftdim(ext, call(-, node.shift)), shiftdim(ext_2, call(-, node.shift))), node.shift)
