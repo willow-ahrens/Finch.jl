@@ -55,7 +55,7 @@ combine_style(a::AcceptRunStyle, b::AcceptRunStyle) = AcceptRunStyle()
 combine_style(a::RunStyle, b::AcceptRunStyle) = RunStyle()
 
 function (ctx::LowerJulia)(root::Chunk, ::AcceptRunStyle)
-    body = (AcceptRunVisitor(root, root.idx, ctx))(root.body)
+    body = (AcceptRunVisitor(root, root.idx, root.ext, ctx))(root.body)
     if getname(root.idx) in getunbound(body)
         #call DefaultStyle, the only style that AcceptRunStyle promotes with
         return ctx(root, DefaultStyle())
@@ -67,6 +67,7 @@ end
 @kwdef struct AcceptRunVisitor
     root
     idx
+    ext
     ctx
 end
 
@@ -79,9 +80,14 @@ function (ctx::AcceptRunVisitor)(node)
 end
 
 function (ctx::AcceptRunVisitor)(node::Access{AcceptRun, <:Union{Write, Update}})
-    node.tns.body(ctx.ctx, getstart(ctx.root.ext), getstop(ctx.root.ext))
+    node.tns.body(ctx.ctx, getstart(ctx.ext), getstop(ctx.ext))
 end
 
 function (ctx::ForLoopVisitor)(node::Access{AcceptRun, <:Union{Write, Update}})
     node.tns.body(ctx.ctx, ctx.val, ctx.val)
+end
+
+function (ctx::AcceptRunVisitor)(node::Access{Shift}, ::DefaultStyle)
+    ctx_2 = AcceptRunVisitor(ctx.root, ctx.idx, call(-, ctx.val, node.shift), shiftdim(ctx.ext, call(-, node.shift)))
+    ctx_2(access(node.tns.body, node.mode, node.idx...))
 end

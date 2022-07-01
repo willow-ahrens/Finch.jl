@@ -38,3 +38,5 @@ function (ctx::CycleVisitor)(node)
         return node
     end
 end
+
+(ctx::CycleVisitor)(node::Shift) = Shift(CycleVisitor(; kwfields(ctx)..., ext=shiftdim(ctx.ext, call(-, node.shift)))(node.body), node.shift)

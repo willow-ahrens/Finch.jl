@@ -1,6 +1,6 @@
 @kwdef struct Shift
-    shift
     body
+    shift
 end
 
 isliteral(::Shift) = false
@@ -11,11 +11,11 @@ supports_shift(::DefaultStyle) = true
 (ctx::Stylize{LowerJulia})(node::Shift) = (@assert supports_shift(ctx(node.body)); ctx(node.body))
 
 function (ctx::ForLoopVisitor)(node::Shift, ::DefaultStyle)
-    ctx_2 = ForLoopVisitor(ctx.ctx, ctx.idx, call(+, ctx.val, node.shift))
+    ctx_2 = ForLoopVisitor(ctx.ctx, ctx.idx, call(-, ctx.val, node.shift))
     ctx_2(node.body)
 end
 function (ctx::ForLoopVisitor)(node::Access{Shift}, ::DefaultStyle)
-    ctx_2 = ForLoopVisitor(ctx.ctx, ctx.idx, call(+, ctx.val, node.tns.shift))
+    ctx_2 = ForLoopVisitor(ctx.ctx, ctx.idx, call(-, ctx.val, node.tns.shift))
     ctx_2(node.tns.body)
 end
 

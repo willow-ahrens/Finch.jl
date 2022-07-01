@@ -8,7 +8,7 @@ IndexNotation.value_instance(arg::StaticOffset) = arg
 Base.size(vec::StaticOffset) = (stop(vec.dim) - start(vec.dim) + 1,)
 
 function Base.getindex(arr::StaticOffset, i)
-    arr.shift + i
+    arr.shift - i
 end
 
 struct Offset end
