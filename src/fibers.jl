@@ -166,7 +166,6 @@ finalize_level!(fbr, ctx, mode) = fbr.lvl
 
 function (ctx::Stylize{LowerJulia})(node::Access{<:VirtualFiber})
     if !isempty(node.idxs)
-        println(get_furl_root(node.idxs[1]))
         if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
             return SelectStyle()
         elseif ctx.root isa Loop && ctx.root.idx == get_furl_root(node.idxs[1])

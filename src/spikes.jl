@@ -75,7 +75,7 @@ function (ctx::ForLoopVisitor)(node::Access{Spike}, ::DefaultStyle)
 end
 
 supports_shift(::SpikeStyle) = true
-(ctx::SpikeBodyVisitor)(node::Shift, ::DefaultStyle) = SpikeBodyVisitor(ctx.ctx, ctx.idx, call(-, ctx.start, node.shift), call(-, ctx.step, node.shift), call(-, ctx.stop, node.shift))(node.body)
+(ctx::SpikeBodyVisitor)(node::Shift, ::DefaultStyle) = Shift(SpikeBodyVisitor(ctx.ctx, ctx.idx, call(-, ctx.start, node.shift), call(-, ctx.step, node.shift), call(-, ctx.stop, node.shift))(node.body), node.shift)
 
 @kwdef mutable struct AcceptSpike
     val
