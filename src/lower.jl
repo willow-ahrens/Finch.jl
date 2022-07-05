@@ -95,6 +95,11 @@ struct ThunkStyle end
 end
 isliteral(::Thunk) = false
 
+Base.show(io, ex::Thunk) = Base.show(io, MIME"text/plain", ex)
+function Base.show(io::IO, mime::MIME"text/plain", ex::Thunk)
+    print(io, "Thunk()")
+end
+
 (ctx::Stylize{LowerJulia})(node::Thunk) = ThunkStyle()
 combine_style(a::DefaultStyle, b::ThunkStyle) = ThunkStyle()
 combine_style(a::ThunkStyle, b::ThunkStyle) = ThunkStyle()
@@ -269,6 +274,11 @@ end
 
 @kwdef struct Leaf
     body
+end
+
+Base.show(io::IO, ex::Leaf) = Base.show(io, MIME"text/plain"(), ex)
+function Base.show(io::IO, mime::MIME"text/plain", ex::Leaf)
+    print(io, "Leaf()")
 end
 
 isliteral(node::Leaf) = false

@@ -3,6 +3,15 @@
     shift
 end
 
+Base.show(io::IO, ex::Shift) = Base.show(io, MIME"text/plain"(), ex)
+function Base.show(io::IO, mime::MIME"text/plain", ex::Shift)
+    print(io, "Shift(body = ")
+    print(io, ex.body)
+    print(io, ", shift = ")
+    print(io, ex.shift)
+    print(io, ")")
+end
+
 isliteral(::Shift) = false
 
 #TODO can't we do this more pretty?
@@ -32,6 +41,6 @@ shiftdim(ext::Widen, delta) = Widen(shiftdim(ext.ext, delta))
 shiftdim(ext::Narrow, delta) = Narrow(shiftdim(ext.ext, delta))
 shiftdim(ext::NoDimension, delta) = NoDimension()
 
-truncate(node::Shift, ctx, ext, ext_2) = Shift(truncate(node.body, ctx, shiftdim(ext, call(-, node.shift)), shiftdim(ext_2, call(-, node.shift))), node.shift)
-truncate_weak(node::Shift, ctx, ext, ext_2) = Shift(truncate_weak(node.body, ctx, shiftdim(ext, call(-, node.shift)), shiftdim(ext_2, call(-, node.shift))), node.shift)
-truncate_strong(node::Shift, ctx, ext, ext_2) = Shift(truncate_strong(node.body, ctx, shiftdim(ext, call(-, node.shift)), shiftdim(ext_2, call(-, node.shift))), node.shift)
+truncate(node::Shift, ctx, ext, ext_2) = Shift(truncate(node.body, ctx, shiftdim(ext, node.shift), shiftdim(ext_2, node.shift)), node.shift)
+truncate_weak(node::Shift, ctx, ext, ext_2) = Shift(truncate_weak(node.body, ctx, shiftdim(ext, node.shift), shiftdim(ext_2, node.shift)), node.shift)
+truncate_strong(node::Shift, ctx, ext, ext_2) = Shift(truncate_strong(node.body, ctx, shiftdim(ext, node.shift), shiftdim(ext_2, node.shift)), node.shift)

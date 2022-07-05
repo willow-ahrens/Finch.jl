@@ -2,6 +2,12 @@ struct Permit{T}
     I::T
 end
 
+Base.show(io::IO, ex::Permit) = Base.show(io, MIME"text/plain"(), ex)
+function Base.show(io::IO, mime::MIME"text/plain", ex::Permit)
+	print(io, "Permit()")
+end
+
+
 IndexNotation.value_instance(arg::Permit) = arg
 
 const permit = Permit(nodim)
@@ -14,6 +20,11 @@ end
 
 struct VirtualPermit
     I
+end
+
+Base.show(io::IO, ex::VirtualPermit) = Base.show(io, MIME"text/plain"(), ex)
+function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualPermit)
+	print(io, "VirtualPermit()")
 end
 
 isliteral(::VirtualPermit) = false

@@ -1,6 +1,7 @@
 mutable struct Scalar{D, Tv}# <: AbstractArray{Tv, 0}
     val::Tv
 end
+
 Scalar{D}(args...) where {D} = Scalar{D, typeof(D)}(args...)
 Scalar{D, Tv}() where {D, Tv} = Scalar{D, Tv}(D)
 

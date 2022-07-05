@@ -3,6 +3,13 @@
     dim::Dim = nodim
 end
 
+Base.show(io::IO, ex::StaticOffset) = Base.show(io, MIME"text/plain"(), ex)
+function Base.show(io::IO, mime::MIME"text/plain", ex::StaticOffset)
+	print(io, "StaticOffset(shift = ")
+	print(io, ex.shift)
+	print(io, ")")
+end
+
 IndexNotation.value_instance(arg::StaticOffset) = arg
 
 Base.size(vec::StaticOffset) = (stop(vec.dim) - start(vec.dim) + 1,)
@@ -12,6 +19,11 @@ function Base.getindex(arr::StaticOffset, i)
 end
 
 struct Offset end
+
+Base.show(io::IO, ex::Offset) = Base.show(io, MIME"text/plain"(), ex)
+function Base.show(io::IO, mime::MIME"text/plain", ex::Offset)
+	print(io, "Offset()")
+end
 
 IndexNotation.value_instance(arg::Offset) = arg
 
@@ -28,10 +40,18 @@ end
     dim = nodim
 end
 
+Base.show(io::IO, ex::VirtualStaticOffset) = Base.show(io, MIME"text/plain"(), ex)
+function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualStaticOffset)
+	print(io, "VirtualStaticOffset(shift = ")
+	print(io, ex.shift)
+	print(io, ")")
+end
+
+
 isliteral(::VirtualStaticOffset) = false
 
 function virtualize(ex, ::Type{StaticOffset{Shift, Dim}}, ctx) where {Shift, Dim}
-    shift = virtualize(:($ex.shift), Shift, ctx)
+    shift = cache!(ctx, :shift, virtualize(:($ex.shift), Shift, ctx))
     dim = virtualize(:($ex.dim), Dim, ctx)
     return VirtualStaticOffset(shift, dim)
 end
@@ -44,6 +64,11 @@ end
 Finch.setdims!(arr::VirtualStaticOffset, ctx::Finch.LowerJulia, mode, dim) = VirtualStaticOffset(;kwfields(arr)..., dim=dim)
 
 struct VirtualOffset end
+
+Base.show(io::IO, ex::VirtualOffset) = Base.show(io, MIME"text/plain"(), ex)
+function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualOffset)
+	print(io, "VirtualOffset()")
+end
 
 isliteral(::VirtualOffset) = false
 

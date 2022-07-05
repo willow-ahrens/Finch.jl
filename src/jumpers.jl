@@ -2,7 +2,6 @@ struct JumperStyle end
 
 @kwdef struct Jumper
     body
-    status = gensym()
 end
 
 isliteral(::Jumper) = false
@@ -44,3 +43,13 @@ end
 (ctx::PhaseBodyVisitor)(node::Jump) = node.body(ctx.ctx, ctx.ext, ctx.ext_2)
 
 supports_shift(::JumperStyle) = true
+
+Base.show(io::IO, ex::Jumper) = Base.show(io, MIME"text/plain"(), ex)
+function Base.show(io::IO, mime::MIME"text/plain", ex::Jumper)
+	print(io, "Jumper(...)")
+end
+
+Base.show(io::IO, ex::Jump) = Base.show(io, MIME"text/plain"(), ex)
+function Base.show(io::IO, mime::MIME"text/plain", ex::Jump)
+	print(io, "Jump(...)")
+end

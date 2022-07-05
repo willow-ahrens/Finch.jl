@@ -5,6 +5,11 @@ struct StepperStyle end
     seek = (ctx, start) -> error("seek not implemented error")
 end
 
+Base.show(io::IO, ex::Stepper) = Base.show(io, MIME"text/plain"(), ex)
+function Base.show(io::IO, mime::MIME"text/plain", ex::Stepper)
+    print(io, "Stepper()")
+end
+
 isliteral(::Stepper) = false
 
 (ctx::Stylize{LowerJulia})(node::Stepper) = StepperStyle()

@@ -43,3 +43,8 @@ function (ctx::LowerJulia)(stmt, ::CaseStyle)
     end
     return nest(cases)
 end
+
+Base.show(io::IO, ex::Cases) = Base.show(io, MIME"text/plain"(), ex)
+function Base.show(io::IO, mime::MIME"text/plain", ex::Cases)
+	print(io, "Cases([...])")
+end

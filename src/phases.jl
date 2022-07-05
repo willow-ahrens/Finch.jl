@@ -6,6 +6,11 @@
 end
 isliteral(::Phase) = false
 
+Base.show(io::IO, ex::Phase) = Base.show(io, MIME"text/plain"(), ex)
+function Base.show(io::IO, mime::MIME"text/plain", ex::Phase)
+    print(io, "Phase()")
+end
+
 @kwdef struct PhaseStride
     ctx
     idx
@@ -22,7 +27,6 @@ end
 
 (ctx::PhaseStride)(node::Phase) = Narrow(node.range(ctx.ctx, ctx.idx, ctx.ext))
 (ctx::PhaseStride)(node::Shift) = shiftdim(PhaseStride(;kwfields(ctx)..., ext = shiftdim(ctx.ext, call(-, node.shift)))(node.body), node.shift)
-(ctx::PhaseStride)(node::Shift) = (println(:hewwo); shiftdim(PhaseStride(;kwfields(ctx)..., ext = shiftdim(ctx.ext, call(-, node.shift)))(node.body), node.shift))
 
 @kwdef struct PhaseBodyVisitor
     ctx
@@ -65,10 +69,6 @@ function (ctx::LowerJulia)(root::Chunk, ::PhaseStyle)
     i0=ctx.freshen(i)
 
     body = root.body
-
-    println("foo")
-    println(Postwalk(x -> if x isa Access; (x.tns isa Shift) end)(body))
-    println("bar")
 
     ext_2 = resolvedim(PhaseStride(ctx, root.idx, root.ext)(body))
     ext_2 = cache!(ctx, :phase, resolvedim(resultdim(Narrow(root.ext), ext_2)))

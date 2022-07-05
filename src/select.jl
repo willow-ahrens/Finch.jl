@@ -2,6 +2,11 @@ struct Select end
 
 const select = Select()
 
+Base.show(io::IO, ex::Select) = Base.show(io, MIME"text/plain"(), ex)
+function Base.show(io::IO, mime::MIME"text/plain", ex::Select)
+    print(io, "select")
+end
+
 getdims(::Select, ::LowerJulia, mode) = (NoDimension(), NoDimension())
 getsites(::Select) = 1:2
 getname(x) = gensym() #TODO this is wrong

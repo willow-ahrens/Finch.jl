@@ -2,6 +2,13 @@
     body
 end
 
+Base.show(io::IO, ex::Run) = Base.show(io, MIME"text/plain"(), ex)
+function Base.show(io::IO, mime::MIME"text/plain", ex::Run)
+    print(io, "Run(body = ")
+    println(ex.body)
+    print(io, ")")
+end
+
 isliteral(::Run) = false
 
 #A minor revelation: There's no reason to store extents in chunks, they just modify the extents of the context.
@@ -52,6 +59,10 @@ end
 
 @kwdef mutable struct AcceptRun
     body
+end
+
+function Base.show(io::IO, mime::MIME"text/plain", ex::AcceptRun)
+    print(io, "AcceptRun()")
 end
 
 struct AcceptRunStyle end

@@ -3,6 +3,13 @@
     tail
 end
 
+Base.show(io::IO, ex::Spike) = Base.show(io, MIME"text/plain"(), ex)
+function Base.show(io::IO, mime::MIME"text/plain", ex::Spike)
+    print(io, "Spike(body = ")
+    print(io, ex.body)
+    print(io, ")")
+end
+
 isliteral(::Spike) = false
 
 struct SpikeStyle end
@@ -80,6 +87,12 @@ supports_shift(::SpikeStyle) = true
 @kwdef mutable struct AcceptSpike
     val
     tail
+end
+
+function Base.show(io::IO, mime::MIME"text/plain", ex::AcceptSpike)
+    print(io, "AcceptSpike(val = ")
+    print(io, ex.body)
+    print(io, ")")
 end
 
 default(node::AcceptSpike) = node.val #TODO is this semantically... okay?
