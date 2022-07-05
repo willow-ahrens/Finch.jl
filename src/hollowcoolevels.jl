@@ -130,10 +130,10 @@ function finalize_level!(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx::LowerJul
     return lvl
 end
 
-unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Read, idx::Name, idxs...) =
+unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Read, idx, idxs...) =
     unfurl(fbr, ctx, mode, protocol(idx, walk))
 
-function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Read, idx::Protocol{Name, Walk}, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Read, idx::Protocol{<:Any, Walk}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
@@ -150,7 +150,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Read, idx::
         q_stop = fbr.env.stop
     end
 
-    Thunk(
+    body = Thunk(
         preamble = quote
             $my_q = $(ctx(q_start))
             $my_q_stop = $(ctx(q_stop))
@@ -211,11 +211,16 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Read, idx::
             )
         ])
     )
+
+    exfurl(body, ctx, mode, idx.idx)
 end
 
 hasdefaultcheck(lvl::VirtualHollowCooLevel) = true
 
-function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Union{Write, Update}, idx::Union{Name, Protocol{Name, <:Union{Extrude}}}, idxs...)
+unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Union{Write, Update}, idx, idxs...) =
+    unfurl(fbr, ctx, mode, protocol(idx, extrude), idxs...)
+
+function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Union{Write, Update}, idx::Protocol{<:Any, <:Union{Extrude}}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     R = length(envdeferred(fbr.env)) + 1
@@ -224,7 +229,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Union{Write
     my_guard = ctx.freshen(tag, :_guard)
 
     if R == lvl.N
-        Thunk(
+        body = Thunk(
             preamble = quote
                 $my_q = $(lvl.ex).pos[$(ctx(envposition(envexternal(fbr.env))))]
             end,
@@ -289,8 +294,10 @@ function unfurl(fbr::VirtualFiber{VirtualHollowCooLevel}, ctx, mode::Union{Write
             end
         )
     else
-        Leaf(
+        body = Leaf(
             body = (i) -> refurl(VirtualFiber(lvl, VirtualEnvironment(index=i, parent=fbr.env, internal=true)), ctx, mode, idxs...)
         )
     end
+
+    exfurl(body, ctx, mode, idx.idx)
 end

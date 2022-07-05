@@ -203,3 +203,4 @@ get_furl_root(idx::Name) = idx
 get_furl_root(idx::Protocol) = idx.idx
 
 refurl(tns, ctx, mode, idxs...) = access(tns, mode, idxs...)
+exfurl(tns, ctx, mode, idx::Name) = tns

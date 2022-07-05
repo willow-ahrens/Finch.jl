@@ -195,10 +195,10 @@ function finalize_level!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx::LowerJu
     return lvl
 end
 
-unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Read, idx::Name, idxs...) =
-    unfurl(fbr, ctx, mode, protocol(idx, walk))
+unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Read, idx, idxs...) =
+    unfurl(fbr, ctx, mode, protocol(idx, walk), idxs...)
 
-function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Read, idx::Protocol{Name, Walk}, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Read, idx::Protocol{<:Any, Walk}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
@@ -207,7 +207,8 @@ function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Read, idx:
     my_r_stop = ctx.freshen(tag, :_r_stop)
     my_i_stop = ctx.freshen(tag, :_i_stop)
 
-    Thunk(
+
+    body = Thunk(
         preamble = quote
             $my_r = $(lvl.ex).pos[$(ctx(envposition(fbr.env)))]
             $my_r_stop = $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1]
@@ -256,9 +257,11 @@ function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Read, idx:
             )
         ])
     )
+
+    exfurl(body, ctx, mode, idx.idx)
 end
 
-function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Read, idx::Protocol{Name, Gallop}, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Read, idx::Protocol{<:Any, Gallop}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
@@ -267,7 +270,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Read, idx:
     my_r_stop = ctx.freshen(tag, :_r_stop)
     my_i_stop = ctx.freshen(tag, :_i_stop)
 
-    Thunk(
+    body = Thunk(
         preamble = quote
             $my_r = $(lvl.ex).pos[$(ctx(envposition(fbr.env)))]
             $my_r_stop = $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1]
@@ -346,9 +349,11 @@ function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Read, idx:
             )
         ])
     )
+
+    exfurl(body, ctx, mode, idx.idx)
 end
 
-function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Read, idx::Protocol{Name, Follow}, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Read, idx::Protocol{<:Any, Follow}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     R = length(envdeferred(fbr.env)) + 1
@@ -356,7 +361,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Read, idx:
     my_q = cgx.freshen(tag, :_q)
     q = envposition(fbr.env)
 
-    Leaf(
+    body = Leaf(
         body = (i) -> Thunk(
             preamble = quote
                 $my_q = $(ctx(q)) * $(ctx(lvl.I)) + $i
@@ -367,14 +372,16 @@ function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Read, idx:
             ])
         )
     )
+
+    exfurl(body, ctx, mode, idx.idx)
 end
 
-unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Union{Write, Update}, idx::Name, idxs...) =
+unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Union{Write, Update}, idx, idxs...) =
     unfurl(fbr, ctx, mode, protocol(idx, laminate), idxs...)
 
 hasdefaultcheck(lvl::VirtualHollowByteLevel) = true
 
-function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Union{Write, Update}, idx::Union{Name, Protocol{Name, <:Union{Extrude, Laminate}}}, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Union{Write, Update}, idx::Protocol{<:Any, <:Union{Extrude, Laminate}}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_key = ctx.freshen(tag, :_key)
@@ -382,7 +389,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Union{Writ
     my_guard = ctx.freshen(tag, :_guard)
     my_seen = ctx.freshen(tag, :_seen)
 
-    Thunk(
+    body = Thunk(
         preamble = quote
         end,
         body = AcceptSpike(
@@ -420,4 +427,6 @@ function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Union{Writ
             )
         )
     )
+
+    exfurl(body, ctx, mode, idx.idx)
 end

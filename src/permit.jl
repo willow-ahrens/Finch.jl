@@ -63,17 +63,19 @@ Finch.setname(node::VirtualPermit, name) = node
 get_furl_root(idx::Access{VirtualPermit}) = get_furl_root(idx.idxs[1])
 function unfurl(tns, ctx, mode, idx::Access{VirtualPermit}, tail...)
     ext_2 = idx.tns.I
-    Pipeline([
+    body = Pipeline([
         Phase(
             stride = (ctx, idx, ext) -> @i($(getstart(ext_2)) - 1),
             body = (start, step) -> Run(Simplify(missing)),
         ),
         Phase(
             stride = (ctx, idx, ext) -> ctx(getstop(ext_2)),
-            body = (start, step) -> truncate(unfurl(tns, ctx, mode, idx.idxs[1], tail...), ctx, ext_2, Extent(start, step))
+            body = (start, step) -> truncate(tns, ctx, ext_2, Extent(start, step))
         ),
         Phase(
             body = (start, step) -> Run(Simplify(missing)),
         )
     ])
+
+    exfurl(body, ctx, mode, idx.idxs[1])
 end

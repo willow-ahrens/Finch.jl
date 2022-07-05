@@ -102,10 +102,10 @@ function finalize_level!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx::LowerJu
     return fbr.lvl
 end
 
-unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx::Name, idxs...) =
+unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx, idxs...) =
     unfurl(fbr, ctx, mode, protocol(idx, walk))
 
-function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx::Protocol{Name, Walk}, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx::Protocol{<:Any, Walk}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
@@ -113,7 +113,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
     my_q_stop = ctx.freshen(tag, :_q_stop)
     my_i1 = ctx.freshen(tag, :_i1)
 
-    Thunk(
+    body = Thunk(
         preamble = quote
             $my_q = $(lvl.ex).pos[$(ctx(envposition(fbr.env)))]
             $my_q_stop = $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1]
@@ -157,9 +157,11 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
             )
         ])
     )
+
+    exfurl(body, ctx, mode, idx.idx)
 end
 
-function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx::Protocol{Name, Gallop}, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx::Protocol{<:Any, Gallop}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
@@ -167,7 +169,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
     my_q_stop = ctx.freshen(tag, :_q_stop)
     my_i1 = ctx.freshen(tag, :_i1)
 
-    Thunk(
+    body = Thunk(
         preamble = quote
             $my_q = $(lvl.ex).pos[$(ctx(envposition(fbr.env)))]
             $my_q_stop = $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1]
@@ -236,12 +238,14 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Read, idx:
             )
         ])
     )
+
+    exfurl(body, ctx, mode, idx.idx)
 end
 
-unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Union{Write, Update}, idx::Name, idxs...) =
+unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Union{Write, Update}, idx, idxs...) =
     unfurl(fbr, ctx, mode, protocol(idx, extrude), idxs...)
 
-function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Union{Write, Update}, idx::Protocol{Name, Extrude}, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Union{Write, Update}, idx::Protocol{<:Any, Extrude}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
@@ -252,7 +256,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Union{Writ
         ctx.freshen(tag, :_isdefault)
     end
 
-    Thunk(
+    body = Thunk(
         preamble = quote
             $my_q = $(lvl.ex).pos[$(ctx(envposition(fbr.env)))]
         end,
@@ -301,4 +305,6 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Union{Writ
             $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1] = $my_q
         end
     )
+
+    exfurl(body, ctx, mode, idx.idx)
 end

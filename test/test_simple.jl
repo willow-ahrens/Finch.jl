@@ -9,7 +9,7 @@ include("singleshift.jl")
 
 @testset "simplevectors" begin
     println("dense = shift")
-    A = SingleShift{Float64, Int}(10, 1, collect(1.0:15.0))
+    A = SingleShift{Float64, Int}(10, -1, collect(1.0:15.0))
     B = zeros(10)
 
     @test diff("dense=shift", @index_code_lowered @loop i B[i] = A[i])

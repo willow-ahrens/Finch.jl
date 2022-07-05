@@ -150,10 +150,10 @@ function finalize_level!(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx::LowerJu
     return lvl
 end
 
-unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx::Name, idxs...) =
+unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx, idxs...) =
     unfurl(fbr, ctx, mode, protocol(idx, walk))
 
-function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx::Protocol{Name, Walk}, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx::Protocol{<:Any, Walk}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
@@ -171,7 +171,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx:
         q_stop = envgetstop(fbr.env)
     end
 
-    Thunk(
+    body = Thunk(
         preamble = quote
             $my_q = $(ctx(q_start))
             $my_q_stop = $(ctx(q_stop))
@@ -246,9 +246,11 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx:
             )
         ])
     )
+
+    exfurl(body, ctx, mode, idx.idx)
 end
 
-function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx::Protocol{Name, Follow}, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx::Protocol{<:Any, Follow}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     R = length(envdeferred(fbr.env)) + 1
@@ -256,7 +258,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx:
     my_q = cgx.freshen(tag, :_q)
 
     if R == lvl.N
-        Leaf(
+        body = Leaf(
             body = (i) -> Thunk(
                 preamble = quote
                     $my_key = ($(ctx(envposition(envexternal(fbr.env)))), ($(map(ctx, envdeferred(fbr.env))...), $(ctx(i))))
@@ -269,18 +271,20 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Read, idx:
             )
         )
     else
-        Leaf(
+        body = Leaf(
             body = (i) -> refurl(VirtualFiber(lvl, VirtualEnvironment(index=i, parent=fbr.env, internal=true)), ctx, mode, idxs...)
         )
     end
+
+    exfurl(body, ctx, mode, idx.idx)
 end
 
-unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Union{Write, Update}, idx::Name, idxs...) =
+unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Union{Write, Update}, idx, idxs...) =
     unfurl(fbr, ctx, mode, protocol(idx, laminate), idxs...)
 
 hasdefaultcheck(lvl::VirtualHollowHashLevel) = true
 
-function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Union{Write, Update}, idx::Union{Name, Protocol{Name, <:Union{Extrude, Laminate}}}, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Union{Write, Update}, idx::Protocol{<:Any, <:Union{Extrude, Laminate}}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     R = length(envdeferred(fbr.env)) + 1
@@ -289,7 +293,7 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Union{Writ
     my_guard = ctx.freshen(tag, :_guard)
 
     if R == lvl.N
-        Thunk(
+        body = Thunk(
             preamble = quote
                 $my_q = $(lvl.ex).pos[$(ctx(envposition(envexternal(fbr.env))))]
             end,
@@ -334,8 +338,10 @@ function unfurl(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx, mode::Union{Writ
             )
         )
     else
-        Leaf(
+        body = Leaf(
             body = (i) -> refurl(VirtualFiber(lvl, VirtualEnvironment(index=i, parent=fbr.env, internal=true)), ctx, mode, idxs...)
         )
     end
+
+    exfurl(body, ctx, mode, idx.idx)
 end

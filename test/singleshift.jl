@@ -11,7 +11,7 @@ end
 Base.size(vec::SingleShift) = (vec.I,)
 
 function Base.getindex(vec::SingleShift{Tv, Ti}, i) where {Tv, Ti}
-    vec.val[vec.shift + i]
+    vec.val[i - vec.shift]
 end
 
 mutable struct VirtualSingleShift{Tv, Ti}

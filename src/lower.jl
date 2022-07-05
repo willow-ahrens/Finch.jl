@@ -140,7 +140,7 @@ end
 
 function (ctx::LowerJulia)(root::Call, ::DefaultStyle)
     if root.op == and
-        reduce((x, y) -> :($x && $y), map(ctx, root.args))
+        reduce((x, y) -> :($x && $y), map(ctx, root.args)) #TODO This could be better. should be able to handle empty case
     elseif root.op == or
         reduce((x, y) -> :($x || $y), map(ctx, root.args))
     else
