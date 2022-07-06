@@ -61,7 +61,7 @@ Finch.getname(node::VirtualPermit) = gensym()
 Finch.setname(node::VirtualPermit, name) = node
 
 get_furl_root(idx::Access{VirtualPermit}) = get_furl_root(idx.idxs[1])
-function unfurl(tns, ctx, mode, idx::Access{VirtualPermit}, tail...)
+function exfurl(tns, ctx, mode, idx::Access{VirtualPermit}, tail...)
     ext_2 = idx.tns.I
     body = Pipeline([
         Phase(

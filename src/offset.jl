@@ -115,5 +115,5 @@ Finch.setname(node::VirtualStaticOffset, name) = node
 get_furl_root(idx::Access{VirtualStaticOffset}) = get_furl_root(idx.idxs[1])
 function exfurl(tns, ctx, mode, idx::Access{VirtualStaticOffset})
     body = Shift(tns, idx.tns.shift)
-    exfurl(tns, ctx, mode, idx.idxs[1])
+    exfurl(body, ctx, mode, idx.idxs[1])
 end

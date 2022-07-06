@@ -125,13 +125,16 @@ end
 
 hasdefaultcheck(lvl::VirtualSolidLevel) = hasdefaultcheck(lvl.lvl)
 
-function unfurl(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode::Union{Read, Write, Update}, idx::Union{Name, Protocol{Name, <:Union{Follow, Laminate, Extrude}}}, idxs...) #TODO should protocol be strict?
+unfurl(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode::Union{Write, Update, Read}, idx, idxs...) =
+    unfurl(fbr, ctx, mode, protocol(idx, follow), idxs...)
+
+function unfurl(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode::Union{Read, Write, Update}, idx::Protocol{<:Any, <:Union{Follow, Laminate, Extrude}}, idxs...) #TODO should protocol be strict?
     lvl = fbr.lvl
     tag = lvl.ex
 
     p = envposition(fbr.env)
     q = ctx.freshen(tag, :_q)
-    Leaf(
+    body = Leaf(
         body = (i) -> Thunk(
             preamble = quote
                 $q = ($(ctx(p)) - 1) * $(ctx(lvl.I)) + $(ctx(i))
@@ -139,4 +142,6 @@ function unfurl(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode::Union{Read, Wri
             body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(q), index=i, guard=envdefaultcheck(fbr.env), parent=fbr.env)), ctx, mode, idxs...),
         )
     )
+
+    exfurl(body, ctx, mode, idx.idx)
 end
