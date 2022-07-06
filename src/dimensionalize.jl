@@ -83,7 +83,7 @@ end
 
 function (ctx::DeclareDimensions)(node::Access, dim)
     if haskey(ctx.shapes, getname(node.tns))
-        dims = ctx.shapes[getname(node.tns)]
+        dims = ctx.shapes[getname(node.tns)][getsites(node.tns)]
         tns = setdims!(node.tns, ctx.ctx, node.mode, dims...)
     else
         dims = getdims(node.tns, ctx.ctx, node.mode)

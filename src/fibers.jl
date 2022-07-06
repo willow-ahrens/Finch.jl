@@ -187,7 +187,7 @@ function (ctx::Finch.SelectVisitor)(node::Access{<:VirtualFiber}, ::DefaultStyle
     return similarterm(node, operation(node), map(ctx, arguments(node)))
 end
 
-getsites(arr::VirtualFiber) = 1:arity(arr) #TODO maybe check how deep the name is in the env first
+getsites(arr::VirtualFiber) = envdepth(arr.env):envdepth(arr.env) + arity(arr)
 
 function (ctx::Finch.ChunkifyVisitor)(node::Access{<:VirtualFiber}, ::DefaultStyle) where {Tv, Ti}
     if !isempty(node.idxs)
