@@ -31,7 +31,28 @@ end
 #NOTE TO SELF
 #ITS A BIG DEAL THAT WHERE STATEMENTS FORBID TEMP TENSORS WITH INDICES OUTSIDE OF SCOPE
 
+@kwdef struct Dimensionalize
+    body
+end
+
+isliteral(::Dimensionalize) = false
+
+struct DimensionalizeStyle end
+
+Base.show(io, ex::Dimensionalize) = Base.show(io, MIME"text/plain", ex)
+function Base.show(io::IO, mime::MIME"text/plain", ex::Dimensionalize)
+    print(io, "Dimensionalize(")
+    print(io, ex.body)
+    print(io, ")")
+end
+
+(ctx::Stylize{LowerJulia})(node::Dimensionalize) = DimensionalizeStyle()
+combine_style(a::DefaultStyle, b::DimensionalizeStyle) = DimensionalizeStyle()
+combine_style(a::ThunkStyle, b::DimensionalizeStyle) = ThunkStyle()
+combine_style(a::DimensionalizeStyle, b::DimensionalizeStyle) = DimensionalizeStyle()
+
 """
+TODO out of date
     dimensionalize!(prgm, ctx)
 
 A program traversal which gathers dimensions of tensors based on shared indices.
@@ -45,6 +66,11 @@ The program is assumed to be in SSA form.
 See also: [`getdims`](@ref), [`getsites`](@ref), [`combinedim`](@ref),
 [`TransformSSA`](@ref)
 """
+function (ctx::LowerJulia)(prgm, ::DimensionalizeStyle) 
+    (prgm, dims, shapes) = dimensionalize!(ctx, prgm)
+    ctx(prgm)
+end
+
 function dimensionalize!(prgm, ctx) 
     dims = ctx.dims
     shapes = ctx.shapes
@@ -56,6 +82,9 @@ function dimensionalize!(prgm, ctx)
     return (prgm, dims, shapes)
 end
 
+function (ctx::DeclareDimensions)(node::Dimensionalize, dim)
+    ctx(node.body, dim)
+end
 function (ctx::DeclareDimensions)(node::With, dim)
     prod = ctx(node.prod, nodim)
     (prod, _) = InferDimensions(;kwfields(ctx)...)(prod)
