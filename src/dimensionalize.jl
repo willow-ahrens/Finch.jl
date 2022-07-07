@@ -67,7 +67,7 @@ See also: [`getdims`](@ref), [`getsites`](@ref), [`combinedim`](@ref),
 [`TransformSSA`](@ref)
 """
 function (ctx::LowerJulia)(prgm, ::DimensionalizeStyle) 
-    (prgm, dims, shapes) = dimensionalize!(ctx, prgm)
+    (prgm, dims, shapes) = dimensionalize!(prgm, ctx)
     ctx(prgm)
 end
 
