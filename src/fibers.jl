@@ -110,14 +110,12 @@ end
 """
     default(fbr)
 
-The default for a fiber is the value the fiber will have after initialization.
-This could be a scalar or another fiber. This value is most often zero or the
-fiber itself.
+The default for a fiber is the value that each element of the fiber will have
+after initialization. This value is most often zero, and defaults to nothing.
 
 See also: [`initialize`](@ref)
 """
 function default end
-
 
 """
     initialize!(fbr, ctx, mode)

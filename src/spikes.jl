@@ -95,7 +95,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::AcceptSpike)
     print(io, ")")
 end
 
-default(node::AcceptSpike) = node.val #TODO is this semantically... okay?
+default(node::AcceptSpike) = node.val
 
 function (ctx::ForLoopVisitor)(node::Access{AcceptSpike}, ::DefaultStyle)
     node.tns.tail(ctx.ctx, ctx.val)
