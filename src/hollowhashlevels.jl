@@ -88,6 +88,11 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualHollowHashLevel)
     end
 end
 
+function getsites(fbr::VirtualFiber{VirtualHollowHashLevel})
+    d = envdepth(fbr.env)
+    return [(d + 1:d + fbr.lvl.N)..., getsites(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^fbr.lvl.N)(fbr.env)))...]
+end
+
 function getdims(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx::LowerJulia, mode)
     ext = map(stop->Extent(1, stop), fbr.lvl.I)
     if mode != Read()

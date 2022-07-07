@@ -40,7 +40,7 @@ function virtualize(ex, ::Type{ElementLevel{D, Tv}}, ctx, tag) where {D, Tv}
 end
 
 function getsites(fbr::VirtualFiber{VirtualElementLevel})
-    return ()
+    return []
 end
 
 setdims!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode) = fbr

@@ -187,8 +187,6 @@ function (ctx::Finch.SelectVisitor)(node::Access{<:VirtualFiber}, ::DefaultStyle
     return similarterm(node, operation(node), map(ctx, arguments(node)))
 end
 
-getsites(arr::VirtualFiber) = envdepth(arr.env):envdepth(arr.env) + arity(arr)
-
 function (ctx::Finch.ChunkifyVisitor)(node::Access{<:VirtualFiber}, ::DefaultStyle) where {Tv, Ti}
     if !isempty(node.idxs)
         if ctx.idx == get_furl_root(node.idxs[1])

@@ -59,6 +59,9 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualHollowListLevel)
     end
 end
 
+getsites(fbr::VirtualFiber{VirtualHollowListLevel}) =
+    [envdepth(fbr.env) + 1, getsites(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))...]
+
 function getdims(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode)
     ext = Extent(1, fbr.lvl.I)
     if mode != Read()
