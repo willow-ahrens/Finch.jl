@@ -22,7 +22,7 @@
         Element{0.0}([10, 20])))
     C = Finch.Fiber(Solid(Element{0.0}()))
 
-    println(@index_code_lowered @loop i C[i] = coalesce(A[permit[i]], B[$(Finch.StaticOffset(shift=5))[permit[i]]], 0)) #TODO get rid of + and 0 and also add in the right offset syntax
+    println(@index_code_lowered @loop i C[i] = coalesce(A[permit[i]], B[$(Finch.StaticOffset(shift=5))[permit[i]]])) #TODO get rid of + and 0 and also add in the right offset syntax
     #@index @loop i C[i] += coalesce(A[permit[i]], B[permit[offset[5, i]]], 0)
     @index @loop i C[i] += coalesce(A[permit[i]], B[$(Finch.StaticOffset(shift=5))[permit[i]]], 0)
     println(FiberArray(C))
