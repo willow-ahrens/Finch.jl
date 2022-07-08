@@ -47,7 +47,7 @@ end
 #Finch.setdims!(arr::VirtualPermit, ctx::Finch.LowerJulia, mode, dim) = VirtualPermit(dim)
 
 function (ctx::DeclareDimensions)(node::Access{VirtualPermit}, ext)
-    idx = ctx(node.idxs[1], Widen(ext))
+    idx = ctx(node.idxs[1], widendim(ext))
     return access(VirtualPermit(ext), node.mode, idx)
 end
 function (ctx::InferDimensions)(node::Access{VirtualPermit})

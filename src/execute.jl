@@ -62,9 +62,9 @@ function execute_code_lowered(ex, T)
                 #names from tensor names
                 contain(ctx) do ctx_2
                     prgm = TransformSSA(Freshen())(prgm)
+                    prgm = ThunkVisitor(ctx_2)(prgm) #TODO this is a bit of a hack.
                     (prgm, dims, shapes) = dimensionalize!(prgm, ctx_2)
                     prgm = Initialize(ctx = ctx_2)(prgm)
-                    prgm = ThunkVisitor(ctx_2)(prgm) #TODO this is a bit of a hack.
                     ctx_2(prgm)
                 end
             end)

@@ -277,6 +277,9 @@ struct Narrow{Ext}
     ext::Ext
 end
 
+narrowdim(dim) = Narrow(dim)
+narrowdim(::NoDimension) = nodim
+
 Base.:(==)(a::Narrow, b::Narrow) = a.ext == b.ext
 
 getstart(ext::Narrow) = getstart(ext.ext)
@@ -285,6 +288,9 @@ getstop(ext::Narrow) = getstop(ext.ext)
 struct Widen{Ext}
     ext::Ext
 end
+
+widendim(dim) = Widen(dim)
+widendim(::NoDimension) = nodim
 
 Base.:(==)(a::Widen, b::Widen) = a.ext == b.ext
 

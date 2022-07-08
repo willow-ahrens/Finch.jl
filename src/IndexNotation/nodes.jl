@@ -407,20 +407,28 @@ function Base.isless(a::Lexicography, b::Lexicography)
     if a != b
         a_key = (priority(a), comparators(a)...)
         b_key = (priority(b), comparators(b)...)
-        @assert a_key < b_key || b_key < a_key
+        @assert a_key < b_key || b_key < a_key "a = $a b = $b a_key = $a_key b_key = $b_key"
         return a_key < b_key
     end
     return false
 end
+
+function Base.:(==)(a::Lexicography, b::Lexicography)
+    (a, b) = a.arg, b.arg
+    @assert which(priority, Tuple{typeof(a)}) == which(priority, Tuple{typeof(b)}) || priority(a) != priority(b)
+    a_key = (priority(a), comparators(a)...)
+    b_key = (priority(b), comparators(b)...)
+    return a_key == b_key
+end
+
+priority(::Missing) = (0, 4)
+comparators(::Missing) = (1,)
 
 priority(::Number) = (1, 1)
 comparators(x::Number) = (x, sizeof(x), typeof(x))
 
 priority(::Function) = (1, 2)
 comparators(x::Function) = (string(x),)
-
-priority(::Missing) = (1, 4)
-comparators(::Missing) = (1,)
 
 priority(::Symbol) = (2, 0)
 comparators(x::Symbol) = (x,)
