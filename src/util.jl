@@ -96,5 +96,12 @@ function lower_cleanup(ex, ignore=false)
     end
 end
 
+unquote_literals(ex) = ex
+unquote_literals(ex::Expr) = Expr(ex.head, map(unquote_literals, ex.args)...)
+unquote_literals(ex::QuoteNode) = unquote_quoted(ex.value)
+
+unquote_quoted(::Missing) = missing
+unquote_quoted(ex) = QuoteNode(ex)
+
 (Base.:^)(T::Type, i::Int) = ∘(repeated(T, i)..., identity)
 (Base.:^)(f::Function, i::Int) = ∘(repeated(f, i)..., identity)

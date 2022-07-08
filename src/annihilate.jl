@@ -63,11 +63,13 @@
     (@rule @i(- +($a, b...)) => @i +(- $a, - +(b...))),
     (@rule @i(a[i...] += 0) => pass(a)),
 
-    (@rule @i(a[i...] <<f>>= missing) => pass(a)),
-    (@rule @i(a[i..., missing, j...] <<f>>= $b) => pass(a)),
-    (@rule @i(a[i..., missing, j...]) => missing),
-    (@rule @i($f(a..., missing, b...)) => f === coalesce ? (@i $f(a..., b...)) : missing),
-    (@rule @i($(coalesce)($a, b...)) => if a isa Virtual && !(Virtual{missing} <: typeof(a)); a end),
+    (@rule @i(a[i...] <<f>>= $($(Literal(missing)))) => pass(a)),
+    (@rule @i(a[i..., $($(Literal(missing))), j...] <<f>>= $b) => pass(a)),
+    (@rule @i(a[i..., $($(Literal(missing))), j...]) => Literal(missing)),
+    (@rule @i(coalesce(a..., $($(Literal(missing))), b...)) => @i coalesce(a..., b...)),
+    (@rule @i(coalesce(a..., $b, c...)) => if b isa Virtual && !(Virtual{missing} <: typeof(b)); @i(coalesce(a..., $b)) end),
+    (@rule @i(coalesce(a..., $b, c...)) => if b isa Literal && b != Literal(missing); @i(coalesce(a..., $b)) end),
+    (@rule @i(coalesce($a)) => a),
 
     (@rule @i($a - $b) => @i $a + - $b),
     (@rule @i(- (- $a)) => a),
@@ -82,11 +84,6 @@
     (@rule @i(if true; $a end) => a),
     (@rule @i(if false; $a end) => pass(getresults(a)...)),
 ]
-
-literalize(x::Symbol) = Virtual{Any}(x)
-literalize(x::Expr) = Virtual{Any}(x)
-literalize(x::Literal) = x
-literalize(x) = isliteral(x) ? Literal(x) : x
 
 @kwdef mutable struct Simplify
     body

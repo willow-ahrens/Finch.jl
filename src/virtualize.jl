@@ -54,7 +54,7 @@ virtualize(ex, ::Type{Update}, ctx) = Update()
 function virtualize(ex, ::Type{IndexNotation.LabelInstance{tag, Tns}}, ctx) where {tag, Tns}
     return virtualize(:($ex.tns), Tns, ctx, tag)
 end
-virtualize(ex, ::Type{IndexNotation.ValueInstance{arg}}, ctx) where {arg} = arg
+virtualize(ex, ::Type{IndexNotation.ValueInstance{arg}}, ctx) where {arg} = isliteral(arg) ? arg : Literal(arg)
 virtualize(ex, ::Type{Walk}, ctx) = walk
 virtualize(ex, ::Type{Gallop}, ctx) = gallop
 virtualize(ex, ::Type{Follow}, ctx) = follow

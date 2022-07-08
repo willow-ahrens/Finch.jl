@@ -58,15 +58,16 @@ function Base.:(==)(a::T, b::T) with {T <: IndexNode}
 end
 =#
 
-struct Literal <: IndexTerminal
-    val
+struct Literal{T} <: IndexTerminal
+    val::T
 end
 
 SyntaxInterface.istree(::Literal) = false
 Base.hash(ex::Literal, h::UInt) = hash(Literal, hash(ex.val, h))
 show_expression(io, mime, ex::Literal) = print(io, ex.val)
-Finch.isliteral(ex::Literal) = true
+Finch.isliteral(::Literal) = true
 Finch.getvalue(ex::Literal) = ex.val
+Base.:(==)(a::Literal, b::Literal) = isequal(a.val, b.val)
 
 struct Virtual{T} <: IndexTerminal
     ex
@@ -417,6 +418,9 @@ comparators(x::Number) = (x, sizeof(x), typeof(x))
 
 priority(::Function) = (1, 2)
 comparators(x::Function) = (string(x),)
+
+priority(::Missing) = (1, 4)
+comparators(::Missing) = (1,)
 
 priority(::Symbol) = (2, 0)
 comparators(x::Symbol) = (x,)

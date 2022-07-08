@@ -157,16 +157,10 @@ function (ctx::LowerJulia)(root::Protocol, ::DefaultStyle)
     :($(ctx(root.idx)))
 end
 
-function (ctx::LowerJulia)(root::Literal, ::DefaultStyle)
-    if root.val isa Union{Symbol, Expr}
-        return QuoteNode(root.val)
-    else
-        return root.val
-    end
-end
-
-isliteral(::Union{Symbol, Expr}) = false
+isliteral(::Union{Symbol, Expr, Missing}) = false
 (ctx::LowerJulia)(root::Union{Symbol, Expr}, ::DefaultStyle) = root
+(ctx::LowerJulia)(root::Literal{<:Union{Symbol, Expr, Missing}}, ::DefaultStyle) = QuoteNode(root.val)
+(ctx::LowerJulia)(root::Literal, ::DefaultStyle) = root.val
 
 function (ctx::LowerJulia)(root, ::DefaultStyle)
     if isliteral(root)

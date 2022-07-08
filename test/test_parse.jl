@@ -23,26 +23,26 @@ using Finch.IndexNotation: call_instance, assign_instance, access_instance, valu
             value_instance(42))
 
     @test Finch.virtualize(:ex, typeof(@index_program_instance(:f(:B[i::walk, k] * :C[k, j]^3, 42))), Finch.LowerJulia()) ==
-        call(:f, 
+        call(Literal(:f), 
             call(*,
-                access(:B, Read(), Protocol(Name(:i), walk), Name(:k)),
+                access(Literal(:B), Read(), Protocol(Name(:i), walk), Name(:k)),
                 call(^,
-                    access(:C, Read(), Name(:k), Name(:j)),
+                    access(Literal(:C), Read(), Name(:k), Name(:j)),
                     3)),
             42) 
 
     @test Finch.virtualize(:ex, typeof(@index_program_instance((:A[] = 1; :B[] = 2))), Finch.LowerJulia()) ==
         multi(
             assign(
-                access(:A, Read()), 1),
+                access(Literal(:A), Read()), 1),
                 assign(
-                    access(:B, Read()),
+                    access(Literal(:B), Read()),
                     2))
 
     @test @index_program(@loop i :A[i] += :B[i] * i) ==
         loop(Name(:i),
             assign(
-                access(:A,Update(), Name(:i)),
+                access(:A, Update(), Name(:i)),
                 +,
                 call(*,
                     access(:B, Read(), Name(:i)),
@@ -68,7 +68,7 @@ using Finch.IndexNotation: call_instance, assign_instance, access_instance, valu
     @test @index_program(@loop i :A[i] <<(+)>>= :B[i] * i) ==
         loop(Name(:i),
             assign(
-                access(:A,Update(), Name(:i)),
+                access(:A, Update(), Name(:i)),
                 +,
                 call(*,
                     access(:B, Read(), Name(:i)),

@@ -81,7 +81,7 @@ function execute_code_lowered(ex, T)
             $code
         end
     end
-    code = code |> lower_caches |> lower_cleanup |> MacroTools.striplines |> MacroTools.flatten
+    code = code |> lower_caches |> lower_cleanup |> MacroTools.striplines |> MacroTools.flatten |> MacroTools.resyntax |> unquote_literals
 end
 
 macro index(ex)
