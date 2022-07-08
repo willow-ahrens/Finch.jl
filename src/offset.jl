@@ -96,12 +96,12 @@ Finch.setname(node::VirtualOffset, name) = node
 
 function (ctx::Stylize{LowerJulia})(node::Access{<:VirtualOffset})
     if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
-        return SelectStyle()
+        return ThunkStyle()
     end
     return mapreduce(ctx, result_style, arguments(node))
 end
 
-function (ctx::SelectVisitor)(node::Access{<:VirtualOffset})
+function (ctx::ThunkVisitor)(node::Access{<:VirtualOffset})
     if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
         shift = cache!(ctx.ctx, :delta, node.idxs[1])
         return access(VirtualStaticOffset(shift=shift), node.mode, node.idxs[2])

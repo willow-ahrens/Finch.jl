@@ -273,8 +273,11 @@ end
 end
 
 @kwdef struct Leaf
+    val = nothing
     body
 end
+
+default(ex::Leaf) = something(ex.val)
 
 Base.show(io::IO, ex::Leaf) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::Leaf)

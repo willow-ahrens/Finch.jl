@@ -135,6 +135,7 @@ function unfurl(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode::Union{Read, Wri
     p = envposition(fbr.env)
     q = ctx.freshen(tag, :_q)
     body = Leaf(
+        val = default(fbr),
         body = (i) -> Thunk(
             preamble = quote
                 $q = ($(ctx(p)) - 1) * $(ctx(lvl.I)) + $(ctx(i))
