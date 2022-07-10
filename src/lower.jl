@@ -95,7 +95,7 @@ struct ThunkStyle end
 end
 isliteral(::Thunk) = false
 
-Base.show(io, ex::Thunk) = Base.show(io, MIME"text/plain", ex)
+Base.show(io::IO, ex::Thunk) = Base.show(io, MIME"text/plain", ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::Thunk)
     print(io, "Thunk()")
 end

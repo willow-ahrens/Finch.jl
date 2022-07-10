@@ -27,8 +27,8 @@
     #@index @loop i C[i] = coalesce(A[permit[i]], B[offset[5, permit[i]]])
     #@index @loop i C[i] = coalesce(A[permit[i]], B[permit[offset[5, i]]])
     #println(FiberArray(C))
-    println(@index_code_lowered @loop j i C[i] += B[j] * coalesce(A[offset[j - 1, permit[i]]], 0))
-    println(@index_code_lowered @loop i j C[i] += B[j] * coalesce(A[offset[i - 1, permit[j]]], 0))
+    #println(@index_code_lowered @loop j i C[i] += B[j] * coalesce(A[offset[j - 1, permit[i]]], 0))
+    #println(@index_code_lowered @loop i j C[i] += B[j] * coalesce(A[offset[i - 1, permit[j]]], 0))
     println(FiberArray(C))
 
 end

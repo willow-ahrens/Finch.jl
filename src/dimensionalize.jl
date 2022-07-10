@@ -1,6 +1,10 @@
 struct NoDimension end
-nodim = NoDimension()
+const nodim = NoDimension()
 virtualize(ex, ::Type{NoDimension}, ctx) = nodim
+
+struct DeferDimension end
+const deferdim = DeferDimension()
+virtualize(ex, ::Type{DeferDimension}, ctx) = deferdim
 
 @kwdef mutable struct DeclareDimensions
     ctx
@@ -173,6 +177,7 @@ combinedim(::B, ::A)
 combinedim(a, b) = UnknownDimension()
 
 combinedim(a::NoDimension, b) = b
+combinedim(::DeferDimension, b) = deferdim
 
 @kwdef struct Extent
     start
@@ -221,6 +226,7 @@ Base.:(==)(a::SuggestedExtent, b::SuggestedExtent) = a.ext == b.ext
 suggest(ext) = SuggestedExtent(ext)
 suggest(ext::SuggestedExtent) = ext
 suggest(ext::NoDimension) = nodim
+suggest(ext::DeferDimension) = deferdim
 
 resolvedim(ext::SuggestedExtent) = ext.ext
 cache!(ctx, tag, ext::SuggestedExtent) = SuggestedExtent(cache!(ctx, tag, ext.ext))
@@ -279,6 +285,7 @@ end
 
 narrowdim(dim) = Narrow(dim)
 narrowdim(::NoDimension) = nodim
+narrowdim(::DeferDimension) = deferdim
 
 Base.:(==)(a::Narrow, b::Narrow) = a.ext == b.ext
 
@@ -291,6 +298,7 @@ end
 
 widendim(dim) = Widen(dim)
 widendim(::NoDimension) = nodim
+widendim(::DeferDimension) = deferdim
 
 Base.:(==)(a::Widen, b::Widen) = a.ext == b.ext
 
@@ -301,6 +309,7 @@ getstop(ext::Widen) = getstop(ext.ext)
 combinedim(a::Narrow, b::Extent) = resultdim(a, Narrow(b))
 combinedim(a::Narrow, b::SuggestedExtent) = a
 combinedim(a::Narrow, b::NoDimension) = a
+combinedim(a::Narrow, ::DeferDimension) = deferdim
 
 function combinedim(a::Narrow{<:Extent}, b::Narrow{<:Extent})
     Narrow(Extent(
@@ -318,6 +327,7 @@ end
 combinedim(a::Widen, b::Extent) = resultdim(a, Widen(b))
 combinedim(a::Widen, b::NoDimension) = a
 combinedim(a::Widen, b::SuggestedExtent) = a
+combinedim(a::Widen, ::DeferDimension) = deferdim
 
 function combinedim(a::Widen{<:Extent}, b::Widen{<:Extent})
     Widen(Extent(
