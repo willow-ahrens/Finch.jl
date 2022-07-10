@@ -9,7 +9,7 @@
         i_stop = B_mode1_stop
         fill!(B, 0)
         for i = 1:i_stop
-            B[i] = A.val[(+)(i, A.shift)]
+            B[i] = A.val[(-)(i, A.shift)]
         end
         (B = B,)
     end
