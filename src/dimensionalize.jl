@@ -77,7 +77,6 @@ end
 
 function dimensionalize!(prgm, ctx) 
     prgm = Rewrite(Postwalk(x -> if x isa Dimensionalize x.body end))(prgm)
-    println(prgm)
     dims = filter!(((idx, dim),) -> dim !== deferdim, ctx.dims)
     shapes = Dict()
     prgm = DeclareDimensions(ctx=ctx, dims = dims, shapes = shapes)(prgm, nodim)
