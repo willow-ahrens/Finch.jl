@@ -71,19 +71,22 @@ See also: [`getdims`](@ref), [`getsites`](@ref), [`combinedim`](@ref),
 [`TransformSSA`](@ref)
 """
 function (ctx::LowerJulia)(prgm, ::DimensionalizeStyle) 
-    (prgm, dims, shapes) = dimensionalize!(prgm, ctx)
+    (prgm, dims) = dimensionalize!(prgm, ctx)
     ctx(prgm)
 end
 
 function dimensionalize!(prgm, ctx) 
-    dims = ctx.dims
-    shapes = ctx.shapes
+    prgm = Rewrite(Postwalk(x -> if x isa Dimensionalize x.body end))(prgm)
+    println(prgm)
+    dims = filter!(((idx, dim),) -> dim !== deferdim, ctx.dims)
+    shapes = Dict()
     prgm = DeclareDimensions(ctx=ctx, dims = dims, shapes = shapes)(prgm, nodim)
     (prgm, _) = InferDimensions(ctx=ctx, dims = dims, shapes = shapes)(prgm)
     for k in keys(dims)
         dims[k] = cache!(ctx, k, dims[k])
     end
-    return (prgm, dims, shapes)
+    ctx.dims = dims
+    return (prgm, dims)
 end
 
 function (ctx::DeclareDimensions)(node::Dimensionalize, dim)

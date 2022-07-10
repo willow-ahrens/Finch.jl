@@ -76,7 +76,7 @@ virtualize(ex, ::Type{Offset}, ctx) = VirtualOffset()
 
 (ctx::Finch.LowerJulia)(tns::VirtualOffset) = :(Offset($(ctx(tns.I))))
 
-Finch.getdims(arr::VirtualOffset, ctx::Finch.LowerJulia, mode) = (nodim, nodim)
+Finch.getdims(arr::VirtualOffset, ctx::Finch.LowerJulia, mode) = (nodim, deferdim)
 Finch.setdims!(arr::VirtualOffset, ctx::Finch.LowerJulia, mode, dim1, dim2) = arr
 
 function (ctx::DeclareDimensions)(node::Access{VirtualStaticOffset}, ext)
@@ -104,7 +104,7 @@ end
 function (ctx::ThunkVisitor)(node::Access{<:VirtualOffset})
     if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
         shift = cache!(ctx.ctx, :delta, node.idxs[1])
-        return access(VirtualStaticOffset(shift=shift), node.mode, node.idxs[2])
+        return access(Dimensionalize(VirtualStaticOffset(shift=shift)), node.mode, node.idxs[2])
     end
     return similarterm(node, operation(node), map(ctx, arguments(node)))
 end

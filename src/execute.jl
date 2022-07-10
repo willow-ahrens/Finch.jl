@@ -63,7 +63,7 @@ function execute_code_lowered(ex, T)
                 contain(ctx) do ctx_2
                     prgm = TransformSSA(Freshen())(prgm)
                     prgm = ThunkVisitor(ctx_2)(prgm) #TODO this is a bit of a hack.
-                    (prgm, dims, shapes) = dimensionalize!(prgm, ctx_2)
+                    (prgm, dims) = dimensionalize!(prgm, ctx_2)
                     prgm = Initialize(ctx = ctx_2)(prgm)
                     ctx_2(prgm)
                 end
