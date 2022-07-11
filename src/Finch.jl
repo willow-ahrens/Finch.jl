@@ -12,7 +12,7 @@ export @index, @index_code_lowered
 export Fiber, HollowList, HollowHash, HollowCoo, HollowByte, Solid, Element, FiberArray, Scalar
 export walk, gallop, follow, extrude, laminate, select
 
-export permit, offset
+export permit, offset, window
 
 include("util.jl")
 
@@ -53,6 +53,7 @@ include("elementlevels.jl")
 
 include("permit.jl")
 include("offset.jl")
+include("window.jl")
 
 module h
     using Finch
