@@ -1,5 +1,6 @@
 module Finch
 
+using Requires
 using SyntaxInterface
 using RewriteTools
 using RewriteTools.Rewriters
@@ -40,7 +41,6 @@ include("jumpers.jl")
 include("steppers.jl")
 
 include("execute.jl")
-include("virtual_abstractarray.jl")
 include("select.jl")
 include("fibers.jl")
 include("scalars.jl")
@@ -54,6 +54,8 @@ include("elementlevels.jl")
 include("permit.jl")
 include("offset.jl")
 include("window.jl")
+
+include("fibers_meta.jl")
 
 module h
     using Finch
@@ -75,6 +77,11 @@ module h
     end
 
     generate_embed_docs()
+end
+
+include("glue_AbstractArrays.jl")
+function __init__()
+    @require SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf" include("glue_SparseArrays.jl")
 end
 
 end

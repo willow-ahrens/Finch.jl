@@ -16,8 +16,6 @@ end
 Fiber(lvl::Lvl) where {Lvl} = Fiber{Lvl}(lvl)
 Fiber{Lvl}(lvl::Lvl, env::Env=Environment()) where {Lvl, Env} = Fiber{Lvl, Env}(lvl, env)
 
-fiber(lvl) = FiberArray(Fiber(lvl))
-
 """
     VirtualFiber(lvl, env)
 

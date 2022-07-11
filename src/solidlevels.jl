@@ -48,6 +48,9 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualSolidLevel)
     end
 end
 
+getsites(fbr::VirtualFiber{VirtualSolidLevel}) =
+    [envdepth(fbr.env) + 1, getsites(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))...]
+
 function getdims(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode)
     ext = Extent(1, fbr.lvl.I)
     if mode != Read()

@@ -6,7 +6,7 @@ struct HollowListLevel{Ti, Lvl}
 end
 const HollowList = HollowListLevel
 HollowListLevel(lvl) = HollowListLevel(0, lvl)
-HollowListLevel{Ti}(lvl) where {Ti} = HollowListLevel(zero{Ti}, lvl)
+HollowListLevel{Ti}(lvl) where {Ti} = HollowListLevel(zero(Ti), lvl)
 HollowListLevel(I::Ti, lvl::Lvl) where {Ti, Lvl} = HollowListLevel{Ti, Lvl}(I, lvl)
 HollowListLevel{Ti}(I::Ti, lvl::Lvl) where {Ti, Lvl} = HollowListLevel{Ti, Lvl}(I, lvl)
 HollowListLevel{Ti}(I::Ti, pos, idx, lvl::Lvl) where {Ti, Lvl} = HollowListLevel{Ti, Lvl}(I, pos, idx, lvl)
