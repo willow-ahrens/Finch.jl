@@ -198,3 +198,30 @@ get_furl_root(idx::Protocol) = idx.idx
 
 refurl(tns, ctx, mode, idxs...) = access(tns, mode, idxs...)
 exfurl(tns, ctx, mode, idx::Name) = tns
+
+function Base.show(io::IO, fbr::Fiber)
+    print(io, "Fiber(")
+    print(io, fbr.lvl)
+    if fbr.env != Environment()
+        print(io, ", ")
+        print(io, fbr.env)
+    end
+    print(io, ")")
+end
+
+function show_region(io::IO, vec::Vector) 
+    print(io, "[")
+    if length(vec) > 3
+        for i = 1:3
+            print(io, vec[i])
+            print(io, ", ")
+        end
+        print(io, "…")
+    else
+        for i = 1:length(vec)
+            print(io, vec[i])
+            i != length(vec) && print(io, ", ")
+        end
+    end
+    print(io, "]")
+end

@@ -6,7 +6,7 @@ struct HollowHashLevel{N, Ti<:Tuple, Tp, T_q, Tbl, Lvl}
     lvl::Lvl
 end
 const HollowHash = HollowHashLevel
-HollowHashLevel{N}(lvl) where {N} = HollowHashLevel{N}((0 for _ in 1:N...), lvl)
+HollowHashLevel{N}(lvl) where {N} = HollowHashLevel{N}(((0 for _ in 1:N)...,), lvl)
 HollowHashLevel{N, Ti}(lvl) where {N, Ti} = HollowHashLevel{N, Ti}((map(zero, Ti.parameters)..., ), lvl)
 HollowHashLevel{N}(I::Ti, lvl) where {N, Ti} = HollowHashLevel{N, Ti}(I, lvl)
 HollowHashLevel{N, Ti}(I::Ti, lvl) where {N, Ti} = HollowHashLevel{N, Ti, Int, Int}(I, lvl)
@@ -21,6 +21,24 @@ HollowHashLevel{N, Ti, Tp, T_q, Tbl}(I::Ti, tbl::Tbl, lvl) where {N, Ti, Tp, T_q
     HollowHashLevel{N, Ti, Tp, T_q, Tbl}(I::Ti, tbl, Vector{Pair{Tuple{Tp, Ti}, T_q}}(undef, 0), T_q[1, 1, 2:17...], lvl) 
 HollowHashLevel{N, Ti, Tp, T_q, Tbl}(I::Ti, tbl::Tbl, srt, pos, lvl::Lvl) where {N, Ti, Tp, T_q, Tbl, Lvl} =
     HollowHashLevel{N, Ti, Tp, T_q, Tbl, Lvl}(I, tbl, srt, pos, lvl)
+
+function Base.show(io::IO, lvl::HollowHashLevel{N}) where {N}
+    print(io, "HollowHash{$N}(")
+    print(io, lvl.I)
+    print(io, ", ")
+    if get(io, :compact, true)
+        print(io, "…")
+    else
+        print(io, typeof(lvl.tbl))
+        print(io, "(…), ")
+        show_region(io, lvl.srt)
+        print(io, ", ")
+        show_region(io, lvl.pos)
+    end
+    print(io, ", ")
+    show(io, lvl.lvl)
+    print(io, ")")
+end
 
 @inline arity(fbr::Fiber{<:HollowHashLevel{N}}) where {N} = N + arity(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))
 @inline shape(fbr::Fiber{<:HollowHashLevel{N}}) where {N} = (fbr.lvl.I..., shape(Fiber(fbr.lvl.lvl,  (Environment^N)(fbr.env)))...)

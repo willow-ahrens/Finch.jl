@@ -1,6 +1,5 @@
 struct HollowByteLevel{Ti, Tp, Tq, Lvl}
     I::Ti
-    P::Ref{Int}
     tbl::Vector{Bool}
     srt::Vector{Tuple{Tp, Ti}}
     srt_stop::Ref{Int}
@@ -13,9 +12,30 @@ HollowByteLevel{Ti}(lvl) where {Ti} = HollowByteLevel{Ti}(zero(Ti), lvl)
 HollowByteLevel(I::Ti, lvl) where {Ti} = HollowByteLevel{Ti}(I, lvl)
 HollowByteLevel{Ti}(I::Ti, lvl) where {Ti} = HollowByteLevel{Ti, Int, Int}(I, lvl)
 HollowByteLevel{Ti, Tp, Tq}(I::Ti, lvl) where {Ti, Tp, Tq} =
-    HollowByteLevel{Ti, Tp, Tq}(I::Ti, Ref(0), [false, false, false, false], Vector{Tuple{Tp, Ti}}(undef, 4), Ref(0), Tq[1, 1, 0, 0, 0], lvl)
-HollowByteLevel{Ti, Tp, Tq}(I::Ti, P, tbl, srt, srt_stop, pos, lvl::Lvl) where {Ti, Tp, Tq, Lvl} =
-    HollowByteLevel{Ti, Tp, Tq, Lvl}(I, P, tbl, srt, srt_stop, pos, lvl)
+    HollowByteLevel{Ti, Tp, Tq}(I::Ti, [false, false, false, false], Vector{Tuple{Tp, Ti}}(undef, 4), Ref(0), Tq[1, 1, 0, 0, 0], lvl)
+HollowByteLevel{Ti, Tp, Tq}(I::Ti, tbl, srt, srt_stop, pos, lvl::Lvl) where {Ti, Tp, Tq, Lvl} =
+    HollowByteLevel{Ti, Tp, Tq, Lvl}(I, tbl, srt, srt_stop, pos, lvl)
+
+function Base.show(io::IO, lvl::HollowByteLevel)
+    print(io, "HollowByte(")
+    print(io, lvl.I)
+    print(io, ", ")
+    if get(io, :compact, true)
+        print(io, "…")
+    else
+        show_region(io, lvl.tbl)
+        print(io, ", ")
+        show_region(io, lvl.srt)
+        print(io, ", ")
+        print(io, lvl.srt_stop)
+        print(io, ", ")
+        show_region(io, lvl.pos)
+    end
+    print(io, ", ")
+    show(io, lvl.lvl)
+    print(io, ")")
+end
+
 
 @inline arity(fbr::Fiber{<:HollowByteLevel}) = 1 + arity(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
 @inline shape(fbr::Fiber{<:HollowByteLevel}) = (fbr.lvl.I, shape(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
@@ -68,7 +88,6 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualHollowByteLevel)
     quote
         $HollowByteLevel{$(lvl.Ti), $(lvl.Tp), $(lvl.Tq)}(
             $(ctx(lvl.I)),
-            $(lvl.ex).P,
             $(lvl.ex).tbl,
             $(lvl.ex).srt,
             $(lvl.ex).srt_stop,
@@ -146,7 +165,7 @@ function assemble!(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode)
     if extent(envposition(fbr.env)) == 1
         p_start = p_stop
     else
-        p_start = ctx(cache!(ctx, freshen(lvl.ex, :_p), getstart(envposition(fbr.env))))
+        p_start = ctx(cache!(ctx, ctx.freshen(lvl.ex, :_p), getstart(envposition(fbr.env))))
     end
     q_start = ctx.freshen(lvl.ex, :q_start)
     q_stop = ctx.freshen(lvl.ex, :q_stop)

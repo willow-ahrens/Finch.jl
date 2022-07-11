@@ -12,6 +12,22 @@ HollowListLevel{Ti}(I::Ti, lvl::Lvl) where {Ti, Lvl} = HollowListLevel{Ti, Lvl}(
 HollowListLevel{Ti}(I::Ti, pos, idx, lvl::Lvl) where {Ti, Lvl} = HollowListLevel{Ti, Lvl}(I, pos, idx, lvl)
 HollowListLevel{Ti, Lvl}(I::Ti, lvl::Lvl) where {Ti, Lvl} = HollowListLevel{Ti, Lvl}(I, Ti[1, fill(0, 16)...], Vector{Ti}(undef, 16), lvl)
 
+function Base.show(io::IO, lvl::HollowListLevel)
+    print(io, "HollowList(")
+    print(io, lvl.I)
+    print(io, ", ")
+    if get(io, :compact, true)
+        print(io, "…")
+    else
+        show_region(io, lvl.pos)
+        print(io, ", ")
+        show_region(io, lvl.idx)
+    end
+    print(io, ", ")
+    show(io, lvl.lvl)
+    print(io, ")")
+end 
+
 @inline arity(fbr::Fiber{<:HollowListLevel}) = 1 + arity(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
 @inline shape(fbr::Fiber{<:HollowListLevel}) = (fbr.lvl.I, shape(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
 @inline domain(fbr::Fiber{<:HollowListLevel}) = (1:fbr.lvl.I, domain(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)

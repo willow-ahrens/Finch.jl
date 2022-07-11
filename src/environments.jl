@@ -32,6 +32,19 @@ struct Environment{Props <: NamedTuple}
 end
 Environment(parent; kwargs...) = Environment(; parent=parent, kwargs...)
 
+const Env = Environment
+
+function Base.show(io::IO, env::Environment)
+    print(io, "Env(")
+    props = getfield(env, :props)
+    for (i, (key, value)) in enumerate(pairs(props))
+        print(io, key, "=")
+        print(io, value)
+        if i != length(props) print(io, ", ") end
+    end
+    print(io, ")")
+end
+
 Base.getproperty(env::Environment, name::Symbol) = getproperty(getfield(env, :props), name)
 
 Base.hasproperty(env::Environment, name::Symbol) = hasproperty(getfield(env, :props), name)

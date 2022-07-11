@@ -5,6 +5,18 @@ ElementLevel{D}(args...) where {D} = ElementLevel{D, typeof(D)}(args...)
 ElementLevel{D, Tv}() where {D, Tv} = ElementLevel{D, Tv}(Vector{Tv}(undef, 4))
 const Element = ElementLevel
 
+function Base.show(io::IO, lvl::ElementLevel{D}) where {D}
+    print(io, "Element{")
+    show(io, D)
+    print(io, "}(")
+    if get(io, :compact, true)
+        print(io, "…")
+    else
+        show_region(io, lvl.val)
+    end
+    print(io, ")")
+end 
+
 @inline arity(fbr::Fiber{<:ElementLevel}) = 0
 @inline shape(fbr::Fiber{<:ElementLevel}) = ()
 @inline domain(fbr::Fiber{<:ElementLevel}) = ()

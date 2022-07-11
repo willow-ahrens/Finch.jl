@@ -5,7 +5,7 @@ struct HollowCooLevel{N, Ti<:Tuple, Tq, Tbl, Lvl}
     lvl::Lvl
 end
 const HollowCoo = HollowCooLevel
-HollowCooLevel{N}(lvl) where {N} = HollowCooLevel{N}((0 for _ in 1:N...), lvl)
+HollowCooLevel{N}(lvl) where {N} = HollowCooLevel{N}(((0 for _ in 1:N)..., ), lvl)
 HollowCooLevel{N, Ti}(lvl) where {N, Ti} = HollowCooLevel{N, Ti}((map(zero, Ti.parameters)..., ), lvl)
 HollowCooLevel{N}(I::Ti, lvl) where {N, Ti} = HollowCooLevel{N, Ti}(I, lvl)
 HollowCooLevel{N, Ti}(I::Ti, lvl) where {N, Ti} = HollowCooLevel{N, Ti, Int}(I, lvl)
@@ -14,6 +14,26 @@ HollowCooLevel{N, Ti, Tq}(I::Ti, tbl::Tbl, pos, lvl) where {N, Ti, Tq, Tbl} =
     HollowCooLevel{N, Ti, Tq, Tbl}(I, tbl, pos, lvl)
 HollowCooLevel{N, Ti, Tq, Tbl}(I::Ti, tbl::Tbl, pos, lvl::Lvl) where {N, Ti, Tq, Tbl, Lvl} =
     HollowCooLevel{N, Ti, Tq, Tbl, Lvl}(I, tbl, pos, lvl)
+
+function Base.show(io::IO, lvl::HollowCooLevel{N}) where {N}
+    print(io, "HollowCoo{$N}(")
+    print(io, lvl.I)
+    print(io, ", ")
+    if get(io, :compact, true)
+        print(io, "…")
+    else
+        print(io, "(")
+        for n = 1:N
+            show_region(io, lvl.tbl[n])
+            print(io, ", ")
+        end
+        print(io, "), ")
+        show_region(io, lvl.pos)
+    end
+    print(io, ", ")
+    show(io, lvl.lvl)
+    print(io, ")")
+end
 
 @inline arity(fbr::Fiber{<:HollowCooLevel{N}}) where {N} = N + arity(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))
 @inline shape(fbr::Fiber{<:HollowCooLevel{N}}) where {N} = (fbr.lvl.I..., shape(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))...)

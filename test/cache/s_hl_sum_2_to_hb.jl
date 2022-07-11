@@ -107,5 +107,5 @@
         end
         B_lvl.pos[B_lvl_p_prev_2 + 1] = B_lvl_srt_stop + 1
         B_lvl.srt_stop[] = B_lvl_srt_stop
-        (B = Fiber((Finch.HollowByteLevel){Int64, Int64, Int64}(A_lvl_2.I, B_lvl.P, B_lvl.tbl, B_lvl.srt, B_lvl.srt_stop, B_lvl.pos, B_lvl_2), (Finch.Environment)(; name = :B)),)
+        (B = Fiber((Finch.HollowByteLevel){Int64, Int64, Int64}(A_lvl_2.I, B_lvl.tbl, B_lvl.srt, B_lvl.srt_stop, B_lvl.pos, B_lvl_2), (Finch.Environment)(; name = :B)),)
     end

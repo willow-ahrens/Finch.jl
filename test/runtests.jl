@@ -27,10 +27,13 @@ using Finch: VirtualAbstractArray, Run, Spike, Extent, Scalar, Cases, Stepper, J
 using Finch: @i, @index_program_instance, execute, execute_code_lowered, getstart, getstop
 using Finch: getname, Virtual
 
+verbose = "verbose" in ARGS
+
 @testset "Finch.jl" begin
     include("test_util.jl")
     include("test_ssa.jl")
     include("test_parse.jl")
+    include("test_print.jl")
     include("test_permit.jl")
     include("test_skips.jl")
     include("test_fibers.jl")

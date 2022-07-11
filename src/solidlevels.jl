@@ -23,6 +23,14 @@ function (fbr::Fiber{<:SolidLevel{Ti}})(i, tail...) where {D, Tv, Ti, N, R}
     fbr_2(tail...)
 end
 
+function Base.show(io::IO, lvl::SolidLevel)
+    print(io, "Solid(")
+    print(io, lvl.I)
+    print(io, ", ")
+    show(io, lvl.lvl)
+    print(io, ")")
+end 
+
 
 mutable struct VirtualSolidLevel
     ex
