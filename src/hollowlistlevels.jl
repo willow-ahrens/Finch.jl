@@ -26,7 +26,7 @@ function Base.show(io::IO, lvl::HollowListLevel)
     print(io, ", ")
     show(io, lvl.lvl)
     print(io, ")")
-end 
+end
 
 @inline arity(fbr::Fiber{<:HollowListLevel}) = 1 + arity(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
 @inline shape(fbr::Fiber{<:HollowListLevel}) = (fbr.lvl.I, shape(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)

@@ -85,4 +85,6 @@ function __init__()
     @require SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf" include("glue_SparseArrays.jl")
 end
 
+include("print.jl")
+
 end
