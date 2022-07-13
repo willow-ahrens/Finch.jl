@@ -32,10 +32,10 @@ function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber{<:HollowListLevel}
     (height, width) = get(io, :displaysize, (40, 80))
     indent = get(io, :indent, 0)
     p = envposition(fbr.env)
-    crds = @view(lvl.idx[lvl.pos[p]:lvl.pos[p + 1] - 1])
+    crds = @view(fbr.lvl.idx[fbr.lvl.pos[p]:fbr.lvl.pos[p + 1] - 1])
 
     print_coord(io, crd) = (print(io, "["); show(io, crd); print(io, "]"))
-    println(io, "HollowList: ")
+    print(io, "HollowList ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); show(io, 1); print(io, ":"); show(io, fbr.lvl.I); println(io, "]:")
     if arity(fbr) == 1
         print_elem(io, crd) = show(IOContext(io, :compact=>true), fbr(crd))
         calc_pad(crd) = max(textwidth(sprint(print_coord, crd)), textwidth(sprint(print_elem, crd)))

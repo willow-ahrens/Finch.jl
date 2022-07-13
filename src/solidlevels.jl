@@ -39,7 +39,7 @@ function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber{<:SolidLevel})
     crds = 1:fbr.lvl.I
 
     print_coord(io, crd) = (print(io, "["); show(io, crd); print(io, "]"))
-    println(io, "Solid: ")
+    print(io, "Solid ["); show(io, 1); print(io, ":"); show(io, fbr.lvl.I); println(io, "]:")
     if arity(fbr) == 1
         print_elem(io, crd) = show(IOContext(io, :compact=>true), fbr(crd))
         calc_pad(crd) = max(textwidth(sprint(print_coord, crd)), textwidth(sprint(print_elem, crd)))
@@ -65,10 +65,10 @@ function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber{<:SolidLevel})
         N = 2
         indent = max(maximum(crd -> textwidth(sprint(print_coord, crd)), crds[[1:N ; end-N:end]]) + 1, indent + 2)
         print_slice_pad(io, crd) = (print(io, " "^(indent - 1 - textwidth(sprint(print_coord, crd)))); print_coord(io, crd); print(io, " "))
-        print_fibers(io, crds) = foreach((crd -> (print_slice_pad(io, crd); show(IOContext(io, :indent => indent), mime, fbr(crd)))), crds)
+        print_fibers(io, crds) = foreach((crd -> (print_slice_pad(io, crd); show(IOContext(io, :indent => indent), mime, fbr(crd)); println(io))), crds)
+        println(io)
         if length(crds) > 2N + 1
             print_fibers(io, crds[1:N])
-            println(io)
             println(io,  " " ^ (indent - 1), "⋮", " ")
             println(io)
             print_fibers(io, crds[end - N + 1:end])
