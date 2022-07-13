@@ -40,6 +40,19 @@ function Base.show(io::IO, lvl::HollowHashLevel{N}) where {N}
     print(io, ")")
 end
 
+function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber{<:HollowHashLevel{N}}) where {N}
+    p = envposition(fbr.env)
+    crds = fbr.lvl.srt[fbr.lvl.pos[p]:fbr.lvl.pos[p + 1] - 1]
+    depth = envdepth(fbr.env)
+
+    print_coord(io, crd) = (print(io, "["); foreach(n -> (show(io, crd[1][2][n]); println(io, ", ")), 1:N-1); show(io, crd[1][2][N]); print(io, "]"))
+    get_coord(crd) = crd[1][2]
+
+    dims = shape(fbr)
+    print(io, "│ " ^ depth); print(io, "HollowHash ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ")"); foreach(dim -> (print(io, "1:"); show(io, dim); print(io, "×")), dims[1:N-1]); print(io, "1:"); show(io, dims[end]); println(io)
+    pretty_fiber(io, mime, fbr, 1, crds, print_coord, get_coord)
+end
+
 @inline arity(fbr::Fiber{<:HollowHashLevel{N}}) where {N} = N + arity(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))
 @inline shape(fbr::Fiber{<:HollowHashLevel{N}}) where {N} = (fbr.lvl.I..., shape(Fiber(fbr.lvl.lvl,  (Environment^N)(fbr.env)))...)
 @inline domain(fbr::Fiber{<:HollowHashLevel{N}}) where {N} = (map(Base.OneTo, fbr.lvl.I)..., domain(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))...)

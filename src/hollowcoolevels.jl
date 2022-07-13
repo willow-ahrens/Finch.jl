@@ -37,14 +37,15 @@ end
 
 function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber{<:HollowCooLevel{N}}) where {N}
     p = envposition(fbr.env)
-    crds = fbr.lvl.pos[p]:fbr.lvl.pos[p + 1]
+    crds = fbr.lvl.pos[p]:fbr.lvl.pos[p + 1] - 1
     depth = envdepth(fbr.env)
 
-    print_coord(io, q) = (print(io, "["); foreach(n -> (show(io, fbr.lvl.tbl[n][q]); println(io, ", ")), 1:N-1); show(io, fbr.lvl.tbl[N][q]); print(io, "]"))
+    print_coord(io, q) = (print(io, "["); foreach(n -> (show(io, fbr.lvl.tbl[n][q]); print(io, ", ")), 1:N-1); show(io, fbr.lvl.tbl[N][q]); print(io, "]"))
+    get_coord(q) = map(n -> fbr.lvl.tbl[n][q], 1:N)
 
-    dims = domain(fbr)
-    print(io, "│ " ^ depth); print(io, "HollowCoo ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ")"); foreach(dim -> (show(io, dim); println(io, "×")), dims[1:N-1]); show(io, dims[end]); println(io)
-    pretty_fiber(io, mime, fbr, 1, crds, print_coord)
+    dims = shape(fbr)
+    print(io, "│ " ^ depth); print(io, "HollowCoo ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ")"); foreach(dim -> (print(io, "1:"); show(io, dim); print(io, "×")), dims[1:N-1]); print(io, "1:"); show(io, dims[end]); println(io)
+    pretty_fiber(io, mime, fbr, 1, crds, print_coord, get_coord)
 end
 
 @inline arity(fbr::Fiber{<:HollowCooLevel{N}}) where {N} = N + arity(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))

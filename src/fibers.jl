@@ -227,13 +227,13 @@ function show_region(io::IO, vec::Vector)
 end
 
 
-function pretty_fiber(io::IO, mime::MIME"text/plain", fbr, N, crds, print_coord)
+function pretty_fiber(io::IO, mime::MIME"text/plain", fbr, N, crds, print_coord, get_coord)
     (height, width) = get(io, :displaysize, (40, 80))
     depth = envdepth(fbr.env)
 
     println(io, "│ "^(depth + N))
     if arity(fbr) == N
-        print_elem(io, crd) = show(IOContext(io, :compact=>true), fbr(crd))
+        print_elem(io, crd) = show(IOContext(io, :compact=>true), fbr(get_coord(crd)...))
         calc_pad(crd) = max(textwidth(sprint(print_coord, crd)), textwidth(sprint(print_elem, crd)))
         print_coord_pad(io, crd) = (print_coord(io, crd); print(io, " "^(calc_pad(crd) - textwidth(sprint(print_coord, crd)))))
         print_elem_pad(io, crd) = (print_elem(io, crd); print(io, " "^(calc_pad(crd) - textwidth(sprint(print_elem, crd)))))
@@ -256,15 +256,15 @@ function pretty_fiber(io::IO, mime::MIME"text/plain", fbr, N, crds, print_coord)
     else
         cap = 2
         if length(crds) > 2cap + 1
-            foreach((crd -> (print(io, "│ " ^ depth, "├─"^N); print_coord(io, crd); println(io, ":"); show(io, mime, fbr(crd)); println(io, "│ "^(depth + N)))), crds[1:cap])
+            foreach((crd -> (print(io, "│ " ^ depth, "├─"^N); print_coord(io, crd); println(io, ":"); show(io, mime, fbr(get_coord(crd)...)); println(io, "│ "^(depth + N)))), crds[1:cap])
             
             println(io, "│ " ^ depth, "│ ⋮")
             println(io, "│ " ^ depth, "│")
-            foreach((crd -> (print(io, "│ " ^ depth, "├─"^N); print_coord(io, crd); println(io, ":"); show(io, mime, fbr(crd)); println(io, "│ "^(depth + N)))), crds[end - cap + 1:end - 1])
-            !isempty(crds) && (print(io, "│ " ^ depth, "├─"^N); print_coord(io, crds[end]); println(io, ":"); show(io, mime, fbr(crds[end])))
+            foreach((crd -> (print(io, "│ " ^ depth, "├─"^N); print_coord(io, crd); println(io, ":"); show(io, mime, fbr(get_coord(crd)...)); println(io, "│ "^(depth + N)))), crds[end - cap + 1:end - 1])
+            !isempty(crds) && (print(io, "│ " ^ depth, "├─"^N); print_coord(io, crds[end]); println(io, ":"); show(io, mime, fbr(get_coord(crds[end])...)))
         else
-            foreach((crd -> (print(io, "│ " ^ depth, "├─"^N); print_coord(io, crd); println(io, ":"); show(io, mime, fbr(crd)); println(io, "│ "^(depth + N)))), crds[1:end - 1])
-            !isempty(crds) && (print(io, "│ " ^ depth, "├─"^N); print_coord(io, crds[end]); println(io, ":"); show(io, mime, fbr(crds[end])))
+            foreach((crd -> (print(io, "│ " ^ depth, "├─"^N); print_coord(io, crd); println(io, ":"); show(io, mime, fbr(get_coord(crd)...)); println(io, "│ "^(depth + N)))), crds[1:end - 1])
+            !isempty(crds) && (print(io, "│ " ^ depth, "├─"^N); print_coord(io, crds[end]); println(io, ":"); show(io, mime, fbr(get_coord(crds[end])...)))
         end
     end
 end

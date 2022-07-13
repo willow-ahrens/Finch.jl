@@ -34,9 +34,10 @@ function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber{<:HollowListLevel}
     depth = envdepth(fbr.env)
 
     print_coord(io, crd) = (print(io, "["); show(io, crd); print(io, "]"))
+    get_coord(crd) = crd
 
     print(io, "│ " ^ depth); print(io, "HollowList ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); show(io, 1); print(io, ":"); show(io, fbr.lvl.I); println(io, "]")
-    pretty_fiber(io, mime, fbr, 1, crds, print_coord)
+    pretty_fiber(io, mime, fbr, 1, crds, print_coord, get_coord)
 end
 
 

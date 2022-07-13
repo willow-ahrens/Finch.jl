@@ -36,15 +36,16 @@ function Base.show(io::IO, lvl::HollowByteLevel)
     print(io, ")")
 end
 
-function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber{<:HollowListLevel})
+function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber{<:HollowByteLevel})
     p = envposition(fbr.env)
     crds = @view(fbr.lvl.srt[1:length(fbr.lvl.srt_stop[])])
     depth = envdepth(fbr.env)
 
     print_coord(io, (p, i)) = (print(io, "["); show(io, i); print(io, "]"))
+    get_coord((p, i),) = i
 
     print(io, "│ " ^ depth); print(io, "HollowByte ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); show(io, 1); print(io, ":"); show(io, fbr.lvl.I); println(io, "]")
-    pretty_fiber(io, mime, fbr, 1, crds, print_coord)
+    pretty_fiber(io, mime, fbr, 1, crds, print_coord, get_coord)
 end
 
 
