@@ -41,6 +41,7 @@ end
 @inline image(fbr::Fiber{<:HollowCooLevel{N}}) where {N} = image(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))
 @inline default(fbr::Fiber{<:HollowCooLevel{N}}) where {N} = default(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))
 
+(fbr::Fiber{<:HollowCooLevel})() = fbr
 function (fbr::Fiber{<:HollowCooLevel{N, Ti}})(i, tail...) where {N, Ti}
     lvl = fbr.lvl
     R = length(envdeferred(fbr.env)) + 1

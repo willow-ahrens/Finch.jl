@@ -15,6 +15,7 @@ dimension(lvl::SolidLevel) = lvl.I
 @inline image(fbr::Fiber{<:SolidLevel}) = image(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
 @inline default(fbr::Fiber{<:SolidLevel}) = default(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
 
+(fbr::Fiber{<:SolidLevel})() = fbr
 function (fbr::Fiber{<:SolidLevel{Ti}})(i, tail...) where {D, Tv, Ti, N, R}
     lvl = fbr.lvl
     p = envposition(fbr.env)
@@ -30,6 +31,52 @@ function Base.show(io::IO, lvl::SolidLevel)
     show(io, lvl.lvl)
     print(io, ")")
 end 
+
+function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber{<:SolidLevel})
+    (height, width) = get(io, :displaysize, (40, 80))
+    indent = get(io, :indent, 0)
+    p = envposition(fbr.env)
+    crds = 1:fbr.lvl.I
+
+    print_coord(io, crd) = (print(io, "["); show(io, crd); print(io, "]"))
+    println(io, "Solid: ")
+    if arity(fbr) == 1
+        print_elem(io, crd) = show(IOContext(io, :compact=>true), fbr(crd))
+        calc_pad(crd) = max(textwidth(sprint(print_coord, crd)), textwidth(sprint(print_elem, crd)))
+        print_coord_pad(io, crd) = (print_coord(io, crd); print(io, " "^(calc_pad(crd) - textwidth(sprint(print_coord, crd)))))
+        print_elem_pad(io, crd) = (print_elem(io, crd); print(io, " "^(calc_pad(crd) - textwidth(sprint(print_elem, crd)))))
+        print_coords(io, crds) = (foreach(crd -> (print_coord_pad(io, crd); print(io, " ")), crds[1:end-1]); if !isempty(crds) print_coord_pad(io, crds[end]) end)
+        print_elems(io, crds) = (foreach(crd -> (print_elem_pad(io, crd); print(io, " ")), crds[1:end-1]); if !isempty(crds) print_elem_pad(io, crds[end]) end)
+        width -= indent
+        if length(crds) < width && textwidth(sprint(print_coords, crds)) < width
+            print(io, " " ^ indent); print_coords(io, crds); println(io)
+            print(io, " " ^ indent); print_elems(io, crds); println(io)
+        else
+            leftwidth = cld(width - 1, 2)
+            leftsize = searchsortedlast(cumsum(map(calc_pad, crds[1:min(end, leftwidth)]) .+ 1), leftwidth)
+            leftpad = " " ^ (leftwidth - textwidth(sprint(print_coords, crds[1:leftsize])))
+            rightwidth = width - leftwidth - 1
+            rightsize = searchsortedlast(cumsum(map(calc_pad, reverse(crds[max(end - rightwidth, 1):end])) .+ 1), rightwidth)
+            rightpad = " " ^ (rightwidth - textwidth(sprint(print_coords, crds[end-rightsize + 1:end])))
+            print(io, " " ^ indent); print_coords(io, crds[1:leftsize]); print(io, leftpad, " ", rightpad); print_coords(io, crds[end-rightsize + 1:end]); println(io)
+            print(io, " " ^ indent); print_elems(io, crds[1:leftsize]); print(io, leftpad, "…", rightpad); print_elems(io, crds[end-rightsize + 1:end]); println(io)
+        end
+    else
+        N = 2
+        indent = max(maximum(crd -> textwidth(sprint(print_coord, crd)), crds[[1:N ; end-N:end]]) + 1, indent + 2)
+        print_slice_pad(io, crd) = (print(io, " "^(indent - 1 - textwidth(sprint(print_coord, crd)))); print_coord(io, crd); print(io, " "))
+        print_fibers(io, crds) = foreach((crd -> (print_slice_pad(io, crd); show(IOContext(io, :indent => indent), mime, fbr(crd)))), crds)
+        if length(crds) > 2N + 1
+            print_fibers(io, crds[1:N])
+            println(io)
+            println(io,  " " ^ (indent - 1), "⋮", " ")
+            println(io)
+            print_fibers(io, crds[end - N + 1:end])
+        else
+            print_fibers(io, crds)
+        end
+    end
+end
 
 
 mutable struct VirtualSolidLevel

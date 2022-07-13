@@ -33,8 +33,6 @@ function virtualize(ex, ::Type{Permit{T}}, ctx) where {T}
     return VirtualPermit(virtualize(:($ex.I), T, ctx))
 end
 
-virtualize(ex, ::Type{NoDimension}, ctx) = nodim
-
 function (ctx::Finch.LowerJulia)(tns::VirtualPermit)
     quote
         Permit($(ctx(tns.I)))

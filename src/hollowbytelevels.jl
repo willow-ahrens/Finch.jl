@@ -43,6 +43,7 @@ end
 @inline image(fbr::Fiber{<:HollowByteLevel}) = image(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
 @inline default(fbr::Fiber{<:HollowByteLevel}) = default(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
 
+(fbr::Fiber{<:HollowByteLevel})() = fbr
 function (fbr::Fiber{<:HollowByteLevel{Ti}})(i, tail...) where {D, Tv, Ti}
     lvl = fbr.lvl
     p = envposition(fbr.env)

@@ -46,6 +46,7 @@ end
 @inline image(fbr::Fiber{<:HollowHashLevel{N}}) where {N} = image(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))
 @inline default(fbr::Fiber{<:HollowHashLevel{N}}) where {N} = default(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))
 
+(fbr::Fiber{<:HollowHashLevel})() = fbr
 function (fbr::Fiber{<:HollowHashLevel{N, Ti}})(i, tail...) where {N, Ti}
     lvl = fbr.lvl
     if length(envdeferred(fbr.env)) == N - 1
