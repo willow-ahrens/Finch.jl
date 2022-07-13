@@ -44,8 +44,8 @@ function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber{<:HollowCooLevel{N
     get_coord(q) = map(n -> fbr.lvl.tbl[n][q], 1:N)
 
     dims = shape(fbr)
-    print(io, "│ " ^ depth); print(io, "HollowCoo ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ")"); foreach(dim -> (print(io, "1:"); show(io, dim); print(io, "×")), dims[1:N-1]); print(io, "1:"); show(io, dims[end]); println(io)
-    pretty_fiber(io, mime, fbr, 1, crds, print_coord, get_coord)
+    print(io, "│ " ^ depth); print(io, "HollowCoo ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); foreach(dim -> (print(io, "1:"); show(io, dim); print(io, "×")), dims[1:N-1]); print(io, "1:"); show(io, dims[end]); println(io, "]")
+    pretty_fiber(io, mime, fbr, N, crds, print_coord, get_coord)
 end
 
 @inline arity(fbr::Fiber{<:HollowCooLevel{N}}) where {N} = N + arity(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))

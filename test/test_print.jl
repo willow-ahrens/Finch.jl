@@ -1,32 +1,38 @@
 @testset "Print" begin
     A = fiber([(i + j) % 3 for i = 1:5, j = 1:10])
 
-    ntests = 0
+    formats = [
+        "list" => HollowList,
+        "byte" => HollowByte,
+        "hash1" => HollowHash{1},
+        "coo1" => HollowCoo{1},
+        "solid" => Solid
+    ]
 
-    formats = [HollowList, HollowByte, HollowHash{1}, HollowCoo{1}, Solid]
-
-
-    for rowf in formats
+    for (rown, rowf) in formats
         B = copyto!(Fiber(rowf(Solid(Element{0.0}()))), A)
-        @test diff("print_$(ntests += 1)", sprint(show, B))
-        @test diff("print_$(ntests += 1)", sprint(show, B, context=:compact=>false))
-        @test diff("print_$(ntests += 1)", sprint(show, MIME"text/plain"(), B))
+        @test diff("print_$(rown)_solid", sprint(show, B))
+        @test diff("print_$(rown)_solid_small", sprint(show, B, context=:compact=>false))
+        @test diff("display_$(rown)_solid", sprint(show, MIME"text/plain"(), B))
     end
 
-    for colf in formats
+    for (coln, colf) in formats
         B = copyto!(Fiber(Solid(colf(Element{0.0}()))), A)
-        @test diff("print_$(ntests += 1)", sprint(show, B))
-        @test diff("print_$(ntests += 1)", sprint(show, B, context=:compact=>false))
-        @test diff("print_$(ntests += 1)", sprint(show, MIME"text/plain"(), B))
+        @test diff("print_solid_$coln", sprint(show, B))
+        @test diff("print_solid_$(coln)_small", sprint(show, B, context=:compact=>false))
+        @test diff("display_solid_$(coln)", sprint(show, MIME"text/plain"(), B))
     end
 
-    formats = [HollowHash{2}, HollowCoo{2}]
+    formats = [
+        "hash2" => HollowHash{2},
+        "coo2" =>HollowCoo{2},
+        ]
 
-    for rowcolf in formats
+    for (rowcoln, rowcolf) in formats
         B = copyto!(Fiber(rowcolf(Element{0.0}())), A)
-        @test diff("print_$(ntests += 1)", sprint(show, B))
-        @test diff("print_$(ntests += 1)", sprint(show, B, context=:compact=>false))
-        @test diff("print_$(ntests += 1)", sprint(show, MIME"text/plain"(), B))
+        @test diff("print_$rowcoln", sprint(show, B))
+        @test diff("print_$(rowcoln)_small", sprint(show, B, context=:compact=>false))
+        @test diff("display_$(rowcoln)", sprint(show, MIME"text/plain"(), B))
     end
     
 end
