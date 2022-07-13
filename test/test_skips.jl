@@ -5,7 +5,7 @@
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
     B = Scalar{0.0}()
 
-    @test diff("sieve_hl_cond", @index_code_lowered (@loop j if j == 1 B[] += A[j] end))
+    @test diff("sieve_hl_cond", @index_code (@loop j if j == 1 B[] += A[j] end))
 
     @index (@loop j if j == 1 B[] += A[j] end)
 
@@ -15,7 +15,7 @@
 
     @test B() == 0.0
 
-    @test diff("sieve_hl_select", @index_code_lowered (@loop j if select[3, j] B[] += A[j] end))
+    @test diff("sieve_hl_select", @index_code (@loop j if select[3, j] B[] += A[j] end))
 
     @index (@loop j if select[3, j] B[] += A[j] end)
 
@@ -25,7 +25,7 @@
 
     @test B() == 0.0
 
-    @test diff("gather_hl", @index_code_lowered (B[] += A[5]))
+    @test diff("gather_hl", @index_code (B[] += A[5]))
 
     @index (B[] += A[5])
 

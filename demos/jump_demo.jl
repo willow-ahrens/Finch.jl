@@ -28,7 +28,7 @@ function add_vec(n, p, q; verbose=false)
     
     println("C[i] = A[i] + B[i]")
     if verbose
-        display(@index_code_lowered @loop i C[i] = A[i] + B[i])
+        display(@index_code @loop i C[i] = A[i] + B[i])
         println()
     end
     display((@benchmark (A = $A; B = $B; C = $C; @index @loop i C[i] = A[i] + B[i])))
@@ -36,7 +36,7 @@ function add_vec(n, p, q; verbose=false)
 
     println("C[i] = A[i] + B[i::gallop]")
     if verbose
-        display(@index_code_lowered @loop i C[i] = A[i] + B[i::gallop])
+        display(@index_code @loop i C[i] = A[i] + B[i::gallop])
         println()
     end
     display((@benchmark (A = $A; B = $B; C = $C; @index @loop i C[i] = A[i] + B[i::gallop])))
@@ -44,7 +44,7 @@ function add_vec(n, p, q; verbose=false)
 
     println("C[i] = A[i::gallop] + B[i::gallop]")
     if verbose
-        display(@index_code_lowered @loop i C[i] = A[i::gallop] + B[i::gallop])
+        display(@index_code @loop i C[i] = A[i::gallop] + B[i::gallop])
         println()
     end
     display((@benchmark (A = $A; B = $B; C = $C; @index @loop i C[i] = A[i::gallop] + B[i::gallop])))
@@ -77,7 +77,7 @@ function mul_vec(n, p, q; verbose=false)
     
     println("C[i] = A[i] * B[i]")
     if verbose
-        display(@index_code_lowered @loop i C[i] = A[i] * B[i])
+        display(@index_code @loop i C[i] = A[i] * B[i])
         println()
     end
     display((@benchmark (A = $A; B = $B; C = $C; @index @loop i C[i] = A[i] * B[i])))
@@ -85,7 +85,7 @@ function mul_vec(n, p, q; verbose=false)
 
     println("C[i] = A[i] * B[i::gallop]")
     if verbose
-        display(@index_code_lowered @loop i C[i] = A[i] * B[i::gallop])
+        display(@index_code @loop i C[i] = A[i] * B[i::gallop])
         println()
     end
     display((@benchmark (A = $A; B = $B; C = $C; @index @loop i C[i] = A[i] * B[i::gallop])))
@@ -93,7 +93,7 @@ function mul_vec(n, p, q; verbose=false)
 
     println("C[i] = A[i::gallop] * B[i::gallop]")
     if verbose
-        display(@index_code_lowered @loop i C[i] = A[i::gallop] * B[i::gallop])
+        display(@index_code @loop i C[i] = A[i::gallop] * B[i::gallop])
         println()
     end
     display((@benchmark (A = $A; B = $B; C = $C; @index @loop i C[i] = A[i::gallop] * B[i::gallop])))
@@ -123,7 +123,7 @@ function dot(n, p, q; verbose=false)
     
     println("C[] += A[i] * B[i]")
     if verbose
-        display(@index_code_lowered @loop i C[] += A[i] * B[i])
+        display(@index_code @loop i C[] += A[i] * B[i])
         println()
     end
     display((@benchmark (A = $A; B = $B; C = $C; @index @loop i C[] += A[i] * B[i])))
@@ -131,7 +131,7 @@ function dot(n, p, q; verbose=false)
 
     println("C[] += A[i] * B[i::gallop]")
     if verbose
-        display(@index_code_lowered @loop i C[] += A[i] * B[i::gallop])
+        display(@index_code @loop i C[] += A[i] * B[i::gallop])
         println()
     end
     display((@benchmark (A = $A; B = $B; C = $C; @index @loop i C[] += A[i] * B[i::gallop])))
@@ -139,7 +139,7 @@ function dot(n, p, q; verbose=false)
 
     println("C[] += A[i::gallop] * B[i::gallop]")
     if verbose
-        display(@index_code_lowered @loop i C[] += A[i::gallop] * B[i::gallop])
+        display(@index_code @loop i C[] += A[i::gallop] * B[i::gallop])
         println()
     end
     display((@benchmark (A = $A; B = $B; C = $C; @index @loop i C[] += A[i::gallop] * B[i::gallop])))
@@ -169,7 +169,7 @@ function minplus(n, p, q; verbose=false)
     
     println("C[] <<min>>= A[i] + B[i]")
     if verbose
-        display(@index_code_lowered @loop i C[] <<min>>= A[i] + B[i])
+        display(@index_code @loop i C[] <<min>>= A[i] + B[i])
         println()
     end
     display((@benchmark (A = $A; B = $B; C = $C; @index @loop i C[] <<min>>= A[i] + B[i])))
@@ -177,7 +177,7 @@ function minplus(n, p, q; verbose=false)
 
     println("C[] += A[i] * B[i::gallop]")
     if verbose
-        display(@index_code_lowered @loop i C[] <<min>>= A[i] + B[i::gallop])
+        display(@index_code @loop i C[] <<min>>= A[i] + B[i::gallop])
         println()
     end
     display((@benchmark (A = $A; B = $B; C = $C; @index @loop i C[] <<min>>= A[i] + B[i::gallop])))
@@ -185,7 +185,7 @@ function minplus(n, p, q; verbose=false)
 
     println("C[] += A[i::gallop] * B[i::gallop]")
     if verbose
-        display(@index_code_lowered @loop i C[] <<min>>= A[i::gallop] + B[i::gallop])
+        display(@index_code @loop i C[] <<min>>= A[i::gallop] + B[i::gallop])
         println()
     end
     display((@benchmark (A = $A; B = $B; C = $C; @index @loop i C[] <<min>>= A[i::gallop] + B[i::gallop])))

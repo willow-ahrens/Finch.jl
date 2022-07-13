@@ -102,7 +102,7 @@ macro index(ex)
     thunk
 end
 
-macro index_code_lowered(ex)
+macro index_code(ex)
     prgm = IndexNotation.capture_index_instance(ex)
     return quote
         $execute_code_lowered(:ex, typeof($prgm))

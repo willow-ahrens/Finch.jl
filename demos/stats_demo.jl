@@ -42,7 +42,7 @@ function stats(n, p)
     maxim = Scalar{-Inf}()
 
     println("fused stats")
-    display(@index_code_lowered @loop i (begin
+    display(@index_code @loop i (begin
         total[] += a[]
         total2[] += a[]*a[]
         minim[] <<min>>= a[]
