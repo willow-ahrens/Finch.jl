@@ -37,9 +37,12 @@ function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber{<:SolidLevel})
     indent = get(io, :indent, 0)
     p = envposition(fbr.env)
     crds = 1:fbr.lvl.I
+    depth = envdepth(fbr.env)
 
     print_coord(io, crd) = (print(io, "["); show(io, crd); print(io, "]"))
-    print(io, "Solid ["); show(io, 1); print(io, ":"); show(io, fbr.lvl.I); println(io, "]:")
+
+    print(io, "│ " ^ depth); print(io, "Solid ["); show(io, 1); print(io, ":"); show(io, fbr.lvl.I); println(io, "]")
+    println(io, "│ " ^ depth, "│")
     if arity(fbr) == 1
         print_elem(io, crd) = show(IOContext(io, :compact=>true), fbr(crd))
         calc_pad(crd) = max(textwidth(sprint(print_coord, crd)), textwidth(sprint(print_elem, crd)))
@@ -47,10 +50,10 @@ function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber{<:SolidLevel})
         print_elem_pad(io, crd) = (print_elem(io, crd); print(io, " "^(calc_pad(crd) - textwidth(sprint(print_elem, crd)))))
         print_coords(io, crds) = (foreach(crd -> (print_coord_pad(io, crd); print(io, " ")), crds[1:end-1]); if !isempty(crds) print_coord_pad(io, crds[end]) end)
         print_elems(io, crds) = (foreach(crd -> (print_elem_pad(io, crd); print(io, " ")), crds[1:end-1]); if !isempty(crds) print_elem_pad(io, crds[end]) end)
-        width -= indent
+        width -= depth * 2 + 2
         if length(crds) < width && textwidth(sprint(print_coords, crds)) < width
-            print(io, " " ^ indent); print_coords(io, crds); println(io)
-            print(io, " " ^ indent); print_elems(io, crds); println(io)
+            print(io, "│ " ^ depth, "└─", " " ^ indent); print_coords(io, crds); println(io)
+            print(io, "│ " ^ depth, "  ", " " ^ indent); print_elems(io, crds); println(io)
         else
             leftwidth = cld(width - 1, 2)
             leftsize = searchsortedlast(cumsum(map(calc_pad, crds[1:min(end, leftwidth)]) .+ 1), leftwidth)
@@ -58,22 +61,21 @@ function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber{<:SolidLevel})
             rightwidth = width - leftwidth - 1
             rightsize = searchsortedlast(cumsum(map(calc_pad, reverse(crds[max(end - rightwidth, 1):end])) .+ 1), rightwidth)
             rightpad = " " ^ (rightwidth - textwidth(sprint(print_coords, crds[end-rightsize + 1:end])))
-            print(io, " " ^ indent); print_coords(io, crds[1:leftsize]); print(io, leftpad, " ", rightpad); print_coords(io, crds[end-rightsize + 1:end]); println(io)
-            print(io, " " ^ indent); print_elems(io, crds[1:leftsize]); print(io, leftpad, "…", rightpad); print_elems(io, crds[end-rightsize + 1:end]); println(io)
+            print(io, "│ " ^ depth, "└─", " " ^ indent); print_coords(io, crds[1:leftsize]); print(io, leftpad, " ", rightpad); print_coords(io, crds[end-rightsize + 1:end]); println(io)
+            print(io, "│ " ^ depth, "  ", " " ^ indent); print_elems(io, crds[1:leftsize]); print(io, leftpad, "…", rightpad); print_elems(io, crds[end-rightsize + 1:end]); println(io)
         end
     else
         N = 2
-        indent = max(maximum(crd -> textwidth(sprint(print_coord, crd)), crds[[1:N ; end-N:end]]) + 1, indent + 2)
-        print_slice_pad(io, crd) = (print(io, " "^(indent - 1 - textwidth(sprint(print_coord, crd)))); print_coord(io, crd); print(io, " "))
-        print_fibers(io, crds) = foreach((crd -> (print_slice_pad(io, crd); show(IOContext(io, :indent => indent), mime, fbr(crd)); println(io))), crds)
-        println(io)
         if length(crds) > 2N + 1
-            print_fibers(io, crds[1:N])
-            println(io,  " " ^ (indent - 1), "⋮", " ")
-            println(io)
-            print_fibers(io, crds[end - N + 1:end])
+            foreach((crd -> (print(io, "│ " ^ depth, "├─"); print_coord(io, crd); println(io, ":"); show(io, mime, fbr(crd)); println(io, "│ " ^ depth, "│"))), crds[1:N])
+            
+            println(io, "│ " ^ depth, "│ ⋮")
+            println(io, "│ " ^ depth, "│")
+            foreach((crd -> (print(io, "│ " ^ depth, "├─"); print_coord(io, crd); println(io, ":"); show(io, mime, fbr(crd)); println(io, "│ " ^ depth, "│"))), crds[end - N + 1:end - 1])
+            !isempty(crds) && (print(io, "│ " ^ depth, "├─"); print_coord(io, crds[end]); println(io, ":"); show(io, mime, fbr(crds[end])))
         else
-            print_fibers(io, crds)
+            foreach((crd -> (print(io, "│ " ^ depth, "├─"); print_coord(io, crd); println(io, ":"); show(io, mime, fbr(crd)); println(io, "│ " ^ depth, "│"))), crds[1:end - 1])
+            !isempty(crds) && (print(io, "│ " ^ depth, "├─"); print_coord(io, crds[end]); println(io, ":"); show(io, mime, fbr(crds[end])))
         end
     end
 end
