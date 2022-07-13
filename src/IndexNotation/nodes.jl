@@ -255,7 +255,7 @@ function show_statement(io, mime, stmt::Loop, level)
         print(io," ")
         stmt = stmt.body
     end
-    print(io," (\n")
+    print(io,"(\n")
     show_statement(io, mime, stmt, level + 1)
     print(io, tab^level * ")\n")
 end
