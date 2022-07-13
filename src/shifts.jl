@@ -28,6 +28,9 @@ function (ctx::ForLoopVisitor)(node::Access{Shift}, ::DefaultStyle)
     ctx_2(node.tns.body)
 end
 
+supports_shift(::ThunkStyle) = true
+(ctx::ThunkVisitor)(node::Shift, ::DefaultStyle) = Shift(;kwfields(node)..., body = ctx(body))
+
 function shiftdim(ext::Extent, delta)
     Extent(
         start = call(+, ext.start, delta),
