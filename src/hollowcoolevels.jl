@@ -35,6 +35,18 @@ function Base.show(io::IO, lvl::HollowCooLevel{N}) where {N}
     print(io, ")")
 end
 
+function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber{<:HollowCooLevel{N}}) where {N}
+    p = envposition(fbr.env)
+    crds = fbr.lvl.pos[p]:fbr.lvl.pos[p + 1]
+    depth = envdepth(fbr.env)
+
+    print_coord(io, q) = (print(io, "["); foreach(n -> (show(io, fbr.lvl.tbl[n][q]); println(io, ", ")), 1:N-1); show(io, fbr.lvl.tbl[N][q]); print(io, "]"))
+
+    dims = domain(fbr)
+    print(io, "│ " ^ depth); print(io, "HollowCoo ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ")"); foreach(dim -> (show(io, dim); println(io, "×")), dims[1:N-1]); show(io, dims[end]); println(io)
+    pretty_fiber(io, mime, fbr, 1, crds, print_coord)
+end
+
 @inline arity(fbr::Fiber{<:HollowCooLevel{N}}) where {N} = N + arity(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))
 @inline shape(fbr::Fiber{<:HollowCooLevel{N}}) where {N} = (fbr.lvl.I..., shape(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))...)
 @inline domain(fbr::Fiber{<:HollowCooLevel{N}}) where {N} = (map(Base.OneTo, fbr.lvl.I)..., domain(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))...)

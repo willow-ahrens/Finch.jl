@@ -29,8 +29,6 @@ function Base.show(io::IO, lvl::HollowListLevel)
 end
 
 function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber{<:HollowListLevel})
-    (height, width) = get(io, :displaysize, (40, 80))
-    indent = get(io, :indent, 0)
     p = envposition(fbr.env)
     crds = @view(fbr.lvl.idx[fbr.lvl.pos[p]:fbr.lvl.pos[p + 1] - 1])
     depth = envdepth(fbr.env)
@@ -38,43 +36,9 @@ function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber{<:HollowListLevel}
     print_coord(io, crd) = (print(io, "["); show(io, crd); print(io, "]"))
 
     print(io, "│ " ^ depth); print(io, "HollowList ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); show(io, 1); print(io, ":"); show(io, fbr.lvl.I); println(io, "]")
-    println(io, "│ " ^ depth, "│")
-    if arity(fbr) == 1
-        print_elem(io, crd) = show(IOContext(io, :compact=>true), fbr(crd))
-        calc_pad(crd) = max(textwidth(sprint(print_coord, crd)), textwidth(sprint(print_elem, crd)))
-        print_coord_pad(io, crd) = (print_coord(io, crd); print(io, " "^(calc_pad(crd) - textwidth(sprint(print_coord, crd)))))
-        print_elem_pad(io, crd) = (print_elem(io, crd); print(io, " "^(calc_pad(crd) - textwidth(sprint(print_elem, crd)))))
-        print_coords(io, crds) = (foreach(crd -> (print_coord_pad(io, crd); print(io, " ")), crds[1:end-1]); if !isempty(crds) print_coord_pad(io, crds[end]) end)
-        print_elems(io, crds) = (foreach(crd -> (print_elem_pad(io, crd); print(io, " ")), crds[1:end-1]); if !isempty(crds) print_elem_pad(io, crds[end]) end)
-        width -= depth * 2 + 2
-        if length(crds) < width && textwidth(sprint(print_coords, crds)) < width
-            print(io, "│ " ^ depth, "└─"); print_coords(io, crds); println(io)
-            print(io, "│ " ^ depth, "  "); print_elems(io, crds); println(io)
-        else
-            leftwidth = cld(width - 1, 2)
-            leftsize = searchsortedlast(cumsum(map(calc_pad, crds[1:min(end, leftwidth)]) .+ 1), leftwidth)
-            leftpad = " " ^ (leftwidth - textwidth(sprint(print_coords, crds[1:leftsize])))
-            rightwidth = width - leftwidth - 1
-            rightsize = searchsortedlast(cumsum(map(calc_pad, reverse(crds[max(end - rightwidth, 1):end])) .+ 1), rightwidth)
-            rightpad = " " ^ (rightwidth - textwidth(sprint(print_coords, crds[end-rightsize + 1:end])))
-            print(io, "│ " ^ depth, "└─"); print_coords(io, crds[1:leftsize]); print(io, leftpad, " ", rightpad); print_coords(io, crds[end-rightsize + 1:end]); println(io)
-            print(io, "│ " ^ depth, "  "); print_elems(io, crds[1:leftsize]); print(io, leftpad, "…", rightpad); print_elems(io, crds[end-rightsize + 1:end]); println(io)
-        end
-    else
-        N = 2
-        if length(crds) > 2N + 1
-            foreach((crd -> (print(io, "│ " ^ depth, "├─"); print_coord(io, crd); println(io, ":"); show(io, mime, fbr(crd)); println(io, "│ " ^ depth, "│"))), crds[1:N])
-            
-            println(io, "│ " ^ depth, "│ ⋮")
-            println(io, "│ " ^ depth, "│")
-            foreach((crd -> (print(io, "│ " ^ depth, "├─"); print_coord(io, crd); println(io, ":"); show(io, mime, fbr(crd)); println(io, "│ " ^ depth, "│"))), crds[end - N + 1:end - 1])
-            !isempty(crds) && (print(io, "│ " ^ depth, "├─"); print_coord(io, crds[end]); println(io, ":"); show(io, mime, fbr(crds[end])))
-        else
-            foreach((crd -> (print(io, "│ " ^ depth, "├─"); print_coord(io, crd); println(io, ":"); show(io, mime, fbr(crd)); println(io, "│ " ^ depth, "│"))), crds[1:end - 1])
-            !isempty(crds) && (print(io, "│ " ^ depth, "├─"); print_coord(io, crds[end]); println(io, ":"); show(io, mime, fbr(crds[end])))
-        end
-    end
+    pretty_fiber(io, mime, fbr, 1, crds, print_coord)
 end
+
 
 @inline arity(fbr::Fiber{<:HollowListLevel}) = 1 + arity(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
 @inline shape(fbr::Fiber{<:HollowListLevel}) = (fbr.lvl.I, shape(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)

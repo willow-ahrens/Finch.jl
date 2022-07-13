@@ -225,3 +225,46 @@ function show_region(io::IO, vec::Vector)
     end
     print(io, "]")
 end
+
+
+function pretty_fiber(io::IO, mime::MIME"text/plain", fbr, N, crds, print_coord)
+    (height, width) = get(io, :displaysize, (40, 80))
+    depth = envdepth(fbr.env)
+
+    println(io, "│ "^(depth + N))
+    if arity(fbr) == N
+        print_elem(io, crd) = show(IOContext(io, :compact=>true), fbr(crd))
+        calc_pad(crd) = max(textwidth(sprint(print_coord, crd)), textwidth(sprint(print_elem, crd)))
+        print_coord_pad(io, crd) = (print_coord(io, crd); print(io, " "^(calc_pad(crd) - textwidth(sprint(print_coord, crd)))))
+        print_elem_pad(io, crd) = (print_elem(io, crd); print(io, " "^(calc_pad(crd) - textwidth(sprint(print_elem, crd)))))
+        print_coords(io, crds) = (foreach(crd -> (print_coord_pad(io, crd); print(io, " ")), crds[1:end-1]); if !isempty(crds) print_coord_pad(io, crds[end]) end)
+        print_elems(io, crds) = (foreach(crd -> (print_elem_pad(io, crd); print(io, " ")), crds[1:end-1]); if !isempty(crds) print_elem_pad(io, crds[end]) end)
+        width -= depth * 2 + 2
+        if length(crds) < width && textwidth(sprint(print_coords, crds)) < width
+            print(io, "│ "^depth, "└─"^N); print_coords(io, crds); println(io)
+            print(io, "│ "^depth, "  "^N); print_elems(io, crds); println(io)
+        else
+            leftwidth = cld(width - 1, 2)
+            leftsize = searchsortedlast(cumsum(map(calc_pad, crds[1:min(end, leftwidth)]) .+ 1), leftwidth)
+            leftpad = " " ^ (leftwidth - textwidth(sprint(print_coords, crds[1:leftsize])))
+            rightwidth = width - leftwidth - 1
+            rightsize = searchsortedlast(cumsum(map(calc_pad, reverse(crds[max(end - rightwidth, 1):end])) .+ 1), rightwidth)
+            rightpad = " " ^ (rightwidth - textwidth(sprint(print_coords, crds[end-rightsize + 1:end])))
+            print(io, "│ "^depth, "└─"^N); print_coords(io, crds[1:leftsize]); print(io, leftpad, " ", rightpad); print_coords(io, crds[end-rightsize + 1:end]); println(io)
+            print(io, "│ "^depth, "  "^N); print_elems(io, crds[1:leftsize]); print(io, leftpad, "…", rightpad); print_elems(io, crds[end-rightsize + 1:end]); println(io)
+        end
+    else
+        cap = 2
+        if length(crds) > 2cap + 1
+            foreach((crd -> (print(io, "│ " ^ depth, "├─"^N); print_coord(io, crd); println(io, ":"); show(io, mime, fbr(crd)); println(io, "│ "^(depth + N)))), crds[1:cap])
+            
+            println(io, "│ " ^ depth, "│ ⋮")
+            println(io, "│ " ^ depth, "│")
+            foreach((crd -> (print(io, "│ " ^ depth, "├─"^N); print_coord(io, crd); println(io, ":"); show(io, mime, fbr(crd)); println(io, "│ "^(depth + N)))), crds[end - cap + 1:end - 1])
+            !isempty(crds) && (print(io, "│ " ^ depth, "├─"^N); print_coord(io, crds[end]); println(io, ":"); show(io, mime, fbr(crds[end])))
+        else
+            foreach((crd -> (print(io, "│ " ^ depth, "├─"^N); print_coord(io, crd); println(io, ":"); show(io, mime, fbr(crd)); println(io, "│ "^(depth + N)))), crds[1:end - 1])
+            !isempty(crds) && (print(io, "│ " ^ depth, "├─"^N); print_coord(io, crds[end]); println(io, ":"); show(io, mime, fbr(crds[end])))
+        end
+    end
+end
