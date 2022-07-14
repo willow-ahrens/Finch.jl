@@ -14,6 +14,7 @@
         @test diff("print_$(rown)_solid", sprint(show, B))
         @test diff("print_$(rown)_solid_small", sprint(show, B, context=:compact=>false))
         @test diff("display_$(rown)_solid", sprint(show, MIME"text/plain"(), B))
+        @test diff("summary_$(rown)_solid", summary(B))
     end
 
     for (coln, colf) in formats
@@ -21,6 +22,7 @@
         @test diff("print_solid_$coln", sprint(show, B))
         @test diff("print_solid_$(coln)_small", sprint(show, B, context=:compact=>false))
         @test diff("display_solid_$(coln)", sprint(show, MIME"text/plain"(), B))
+        @test diff("summary_solid_$(coln)", summary(B))
     end
 
     formats = [
@@ -33,6 +35,7 @@
         @test diff("print_$rowcoln", sprint(show, B))
         @test diff("print_$(rowcoln)_small", sprint(show, B, context=:compact=>false))
         @test diff("display_$(rowcoln)", sprint(show, MIME"text/plain"(), B))
+        @test diff("summary_$(rowcoln)", summary(B))
     end
     
 end

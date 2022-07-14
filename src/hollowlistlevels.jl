@@ -12,6 +12,10 @@ HollowListLevel{Ti}(I::Ti, lvl::Lvl) where {Ti, Lvl} = HollowListLevel{Ti, Lvl}(
 HollowListLevel{Ti}(I::Ti, pos, idx, lvl::Lvl) where {Ti, Lvl} = HollowListLevel{Ti, Lvl}(I, pos, idx, lvl)
 HollowListLevel{Ti, Lvl}(I::Ti, lvl::Lvl) where {Ti, Lvl} = HollowListLevel{Ti, Lvl}(I, Ti[1, fill(0, 16)...], Vector{Ti}(undef, 16), lvl)
 
+parse_level(args, ::Val{:l}, words...) = HollowList(parse_level(args, words...))
+summary_f_str(lvl::HollowListLevel) = "l$(summary_f_str(lvl.lvl))"
+summary_f_str_args(lvl::HollowListLevel) = summary_f_str_args(lvl.lvl)
+
 function Base.show(io::IO, lvl::HollowListLevel)
     print(io, "HollowList(")
     print(io, lvl.I)

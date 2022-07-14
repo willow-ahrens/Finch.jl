@@ -12,7 +12,7 @@ export @index, @index_code
 
 export Fiber, HollowList, HollowHash, HollowCoo, HollowByte, Solid, Element, FiberArray, Scalar
 export walk, gallop, follow, extrude, laminate, select
-export fiber
+export fiber, @f_str
 
 export permit, offset, window
 

@@ -16,6 +16,10 @@ HollowByteLevel{Ti, Tp, Tq}(I::Ti, lvl) where {Ti, Tp, Tq} =
 HollowByteLevel{Ti, Tp, Tq}(I::Ti, tbl, srt, srt_stop, pos, lvl::Lvl) where {Ti, Tp, Tq, Lvl} =
     HollowByteLevel{Ti, Tp, Tq, Lvl}(I, tbl, srt, srt_stop, pos, lvl)
 
+parse_level(args, ::Val{:b}, words...) = HollowByte(parse_level(args, words...))
+summary_f_str(lvl::HollowByteLevel) = "b$(summary_f_str(lvl.lvl))"
+summary_f_str_args(lvl::HollowByteLevel) = summary_f_str_args(lvl.lvl)
+
 function Base.show(io::IO, lvl::HollowByteLevel)
     print(io, "HollowByte(")
     print(io, lvl.I)

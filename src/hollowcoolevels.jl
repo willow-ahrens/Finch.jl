@@ -15,6 +15,10 @@ HollowCooLevel{N, Ti, Tq}(I::Ti, tbl::Tbl, pos, lvl) where {N, Ti, Tq, Tbl} =
 HollowCooLevel{N, Ti, Tq, Tbl}(I::Ti, tbl::Tbl, pos, lvl::Lvl) where {N, Ti, Tq, Tbl, Lvl} =
     HollowCooLevel{N, Ti, Tq, Tbl, Lvl}(I, tbl, pos, lvl)
 
+parse_level(args, ::Val{:c}, ::Val{N}, words...) where {N} = HollowCoo{N}(parse_level(args, words...))
+summary_f_str(lvl::HollowCooLevel{N}) where {N} = "c$(N)$(summary_f_str(lvl.lvl))"
+summary_f_str_args(lvl::HollowCooLevel) = summary_f_str_args(lvl.lvl)
+
 function Base.show(io::IO, lvl::HollowCooLevel{N}) where {N}
     print(io, "HollowCoo{$N}(")
     print(io, lvl.I)

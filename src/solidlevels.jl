@@ -7,6 +7,10 @@ SolidLevel{Ti}(lvl::Lvl) where {Ti, Lvl} = SolidLevel{Ti, Lvl}(zero(Ti), lvl)
 SolidLevel(lvl) = SolidLevel(0, lvl)
 const Solid = SolidLevel
 
+parse_level(args, ::Val{:s}, words...) = Solid(parse_level(args, words...))
+summary_f_str(lvl::SolidLevel) = "b$(summary_f_str(lvl.lvl))"
+summary_f_str_args(lvl::SolidLevel) = summary_f_str_args(lvl.lvl)
+
 dimension(lvl::SolidLevel) = lvl.I
 
 @inline arity(fbr::Fiber{<:SolidLevel}) = 1 + arity(Fiber(fbr.lvl.lvl, Environment(fbr.env)))

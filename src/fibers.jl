@@ -268,3 +268,27 @@ function pretty_fiber(io::IO, mime::MIME"text/plain", fbr, N, crds, print_coord,
         end
     end
 end
+
+struct LevelParser{Words}
+    words::Words
+end
+
+(parser::LevelParser)(args...) = Fiber(parse_level(args, parser.words...))
+
+macro f_str(str)
+    chars = collect(str)
+    words = []
+    for c in chars
+        if isdigit(c) && tryparse(Int, string(words[end])) !== nothing
+            words[end] *= c
+        else
+            push!(words, c)
+        end
+    end
+    words = tuple(map(Val, map(word -> something(tryparse(Int, string(word)), Symbol(word)), words))...)
+    return quote
+        LevelParser($words)
+    end
+end
+
+Base.summary(fbr::Fiber) = "$(join(shape(fbr), "×")) Fiber f\"$(summary_f_str(fbr.lvl))\"($(summary_f_str_args(fbr.lvl)...))"

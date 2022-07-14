@@ -22,6 +22,10 @@ HollowHashLevel{N, Ti, Tp, T_q, Tbl}(I::Ti, tbl::Tbl, lvl) where {N, Ti, Tp, T_q
 HollowHashLevel{N, Ti, Tp, T_q, Tbl}(I::Ti, tbl::Tbl, srt, pos, lvl::Lvl) where {N, Ti, Tp, T_q, Tbl, Lvl} =
     HollowHashLevel{N, Ti, Tp, T_q, Tbl, Lvl}(I, tbl, srt, pos, lvl)
 
+parse_level(args, ::Val{:h}, ::Val{N}, words...) where {N} = HollowHash{N}(parse_level(args, words...))
+summary_f_str(lvl::HollowHashLevel{N}) where {N} = "h$(N)$(summary_f_str(lvl.lvl))"
+summary_f_str_args(lvl::HollowHashLevel) = summary_f_str_args(lvl.lvl)
+
 function Base.show(io::IO, lvl::HollowHashLevel{N}) where {N}
     print(io, "HollowHash{$N}(")
     print(io, lvl.I)
