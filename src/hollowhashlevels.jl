@@ -54,7 +54,7 @@ function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber{<:HollowHashLevel{
 
     dims = shape(fbr)
     print(io, "│ " ^ depth); print(io, "HollowHash ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); foreach(dim -> (print(io, "1:"); show(io, dim); print(io, "×")), dims[1:N-1]); print(io, "1:"); show(io, dims[end]); println(io, "]")
-    pretty_fiber(io, mime, fbr, N, crds, print_coord, get_coord)
+    show_fiber_data(io, mime, fbr, N, crds, print_coord, get_coord)
 end
 
 @inline arity(fbr::Fiber{<:HollowHashLevel{N}}) where {N} = N + arity(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))

@@ -43,7 +43,7 @@ function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber{<:SolidLevel})
     print_coord(io, crd) = (print(io, "["); show(io, crd); print(io, "]"))
     get_coord(crd) = crd
     print(io, "│ " ^ depth); print(io, "Solid ["); show(io, 1); print(io, ":"); show(io, fbr.lvl.I); println(io, "]")
-    pretty_fiber(io, mime, fbr, 1, crds, print_coord, get_coord)
+    show_fiber_data(io, mime, fbr, 1, crds, print_coord, get_coord)
 end
 
 

@@ -227,7 +227,7 @@ function show_region(io::IO, vec::Vector)
 end
 
 
-function pretty_fiber(io::IO, mime::MIME"text/plain", fbr, N, crds, print_coord, get_coord)
+function show_fiber_data(io::IO, mime::MIME"text/plain", fbr, N, crds, print_coord, get_coord)
     (height, width) = get(io, :displaysize, (40, 80))
     depth = envdepth(fbr.env)
 

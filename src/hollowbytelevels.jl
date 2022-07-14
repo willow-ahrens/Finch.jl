@@ -49,7 +49,7 @@ function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber{<:HollowByteLevel}
     get_coord((p, i),) = i
 
     print(io, "│ " ^ depth); print(io, "HollowByte ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); show(io, 1); print(io, ":"); show(io, fbr.lvl.I); println(io, "]")
-    pretty_fiber(io, mime, fbr, 1, crds, print_coord, get_coord)
+    show_fiber_data(io, mime, fbr, 1, crds, print_coord, get_coord)
 end
 
 
