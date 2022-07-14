@@ -186,7 +186,7 @@ end
 function (ctx::Finch.ChunkifyVisitor)(node::Access{<:VirtualFiber}, ::DefaultStyle) where {Tv, Ti}
     if !isempty(node.idxs)
         if ctx.idx == get_furl_root(node.idxs[1])
-            return Access(unfurl(node.tns, ctx.ctx, node.mode, node.idxs...), node.mode, node.idxs)
+            return access(unfurl(node.tns, ctx.ctx, node.mode, node.idxs...), node.mode, get_furl_root(node.idxs[1])) #TODO do this nicer
         end
     end
     return node

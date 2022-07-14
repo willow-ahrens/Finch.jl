@@ -5,7 +5,7 @@ end
 Base.show(io::IO, ex::Run) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::Run)
     print(io, "Run(body = ")
-    println(ex.body)
+    print(io, ex.body)
     print(io, ")")
 end
 
@@ -61,8 +61,9 @@ end
     body
 end
 
+Base.show(io::IO, ex::AcceptRun) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::AcceptRun)
-    print(io, "AcceptRun()")
+    print(io, "AcceptRun(…)")
 end
 
 struct AcceptRunStyle end
@@ -99,18 +100,11 @@ function (ctx::AcceptRunVisitor)(node)
     end
 end
 
-function (ctx::AcceptRunVisitor)(node::Access{AcceptRun, <:Union{Write, Update}})
-    node.tns.body(ctx.ctx, getstart(ctx.ext), getstop(ctx.ext))
-end
+(ctx::AcceptRunVisitor)(node::Access{<:Any, <:Union{Write, Update}}) = something(unchunk(node.tns, ctx), node)
+unchunk(node::AcceptRun, ctx::AcceptRunVisitor) = node.body(ctx.ctx, getstart(ctx.ext), getstop(ctx.ext))
+unchunk(node::Shift, ctx::AcceptRunVisitor) = unchunk(node.body, AcceptRunVisitor(;kwfields(ctx)..., ext = shiftdim(ctx.ext, call(-, node.delta))))
 
-function (ctx::ForLoopVisitor)(node::Access{AcceptRun, <:Union{Write, Update}})
-    node.tns.body(ctx.ctx, ctx.val, ctx.val)
-end
-
-function (ctx::AcceptRunVisitor)(node::Access{Shift}, ::DefaultStyle)
-    ctx_2 = AcceptRunVisitor(ctx.root, ctx.idx, call(-, ctx.val, node.shift), shiftdim(ctx.ext, call(-, node.shift)))
-    ctx_2(access(node.tns.body, node.mode, node.idxs...))
-end
+unchunk(node::AcceptRun, ctx::ForLoopVisitor) = node.body(ctx.ctx, ctx.val, ctx.val)
 
 supports_shift(::RunStyle) = true
 supports_shift(::AcceptRunStyle) = true

@@ -12,7 +12,6 @@
     println(@index_code @loop i C[i] += A[i] + coalesce(B[permit[i]], 0))
     @index @loop i C[i] += A[i] + coalesce(B[permit[i]], 0)
     println(FiberArray(C))
-    =#
 
     A = Finch.Fiber(
         Solid(5,
@@ -21,6 +20,16 @@
         Solid(2,
         Element{0.0}([1, 1])))
     C = Finch.Fiber(Solid(Element{0.0}()))
+    =#
+
+    A_ref = sprand(10, 0.5); B_ref = sprand(10, 0.5); C_ref = vcat(A_ref, B_ref)
+    A = fiber(A_ref); B = fiber(B_ref); C = f"l"(0.0)
+    println(@index_code @loop i C[i] = coalesce(A[permit[i]], B[permit[offset[10, i]]]))
+    @index @loop i C[i] = coalesce(A[permit[i]], B[permit[offset[10, i]]])
+    
+    println(@index_code @loop i C[i] = coalesce(A[permit[i]], B[offset[10, permit[i]]]))
+    @index @loop i C[i] = coalesce(A[permit[i]], B[offset[10, permit[i]]])
+    @test FiberArray(C) == C_ref
 
     #println(@index_code @loop i C[i] = coalesce(A[permit[i]], B[offset[5, permit[i]]]))
     #println(@index_code @loop i C[i] = coalesce(A[permit[i]], B[permit[offset[5, i]]]))

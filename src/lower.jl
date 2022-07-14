@@ -286,3 +286,7 @@ end
 function (ctx::ForLoopVisitor)(node::Leaf, ::DefaultStyle)
     node.body(ctx.val)
 end
+
+unchunk(node, ctx) = nothing
+(ctx::ForLoopVisitor)(node::Access, ::DefaultStyle) = something(unchunk(node.tns, ctx), node)
+unchunk(node::Leaf, ctx::ForLoopVisitor) = node.body(ctx.val)

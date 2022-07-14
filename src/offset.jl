@@ -1,12 +1,12 @@
-@kwdef struct StaticOffset{Shift, Dim}
-    shift::Shift
+@kwdef struct StaticOffset{Delta, Dim}
+    delta::Delta
     dim::Dim = nodim
 end
 
 Base.show(io::IO, ex::StaticOffset) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::StaticOffset)
-	print(io, "StaticOffset(shift = ")
-	print(io, ex.shift)
+	print(io, "StaticOffset(delta = ")
+	print(io, ex.delta)
 	print(io, ")")
 end
 
@@ -15,7 +15,7 @@ IndexNotation.value_instance(arg::StaticOffset) = arg
 Base.size(vec::StaticOffset) = (stop(vec.dim) - start(vec.dim) + 1,)
 
 function Base.getindex(arr::StaticOffset, i)
-    arr.shift - i
+    arr.delta - i
 end
 
 struct Offset end
@@ -32,30 +32,30 @@ const offset = Offset()
 Base.size(vec::Offset) = (nodim, nodim)
 
 function Base.getindex(arr::Offset, d, i)
-    StaticOffset(shift = d)[i]
+    StaticOffset(delta = d)[i]
 end
 
 @kwdef struct VirtualStaticOffset
-    shift
+    delta
     dim = nodim
 end
 
 Base.show(io::IO, ex::VirtualStaticOffset) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualStaticOffset)
-	print(io, "VirtualStaticOffset(shift = ")
-	print(io, ex.shift)
+	print(io, "VirtualStaticOffset(delta = ")
+	print(io, ex.delta)
 	print(io, ")")
 end
 
 isliteral(::VirtualStaticOffset) = false
 
-function virtualize(ex, ::Type{StaticOffset{Shift, Dim}}, ctx) where {Shift, Dim}
-    shift = cache!(ctx, :shift, virtualize(:($ex.shift), Shift, ctx))
+function virtualize(ex, ::Type{StaticOffset{Delta, Dim}}, ctx) where {Delta, Dim}
+    delta = cache!(ctx, :delta, virtualize(:($ex.delta), Delta, ctx))
     dim = virtualize(:($ex.dim), Dim, ctx)
-    return VirtualStaticOffset(shift, dim)
+    return VirtualStaticOffset(delta, dim)
 end
 
-(ctx::Finch.LowerJulia)(tns::VirtualStaticOffset) = :(StaticOffset($(ctx(tns.shift)), $(ctx(tns.dim))))
+(ctx::Finch.LowerJulia)(tns::VirtualStaticOffset) = :(StaticOffset($(ctx(tns.delta)), $(ctx(tns.dim))))
 
 function Finch.getdims(arr::VirtualStaticOffset, ctx::Finch.LowerJulia, mode)
     return (arr.dim,)
@@ -79,13 +79,13 @@ Finch.getdims(arr::VirtualOffset, ctx::Finch.LowerJulia, mode) = (nodim, deferdi
 Finch.setdims!(arr::VirtualOffset, ctx::Finch.LowerJulia, mode, dim1, dim2) = arr
 
 function (ctx::DeclareDimensions)(node::Access{VirtualStaticOffset}, ext)
-    idx = ctx(node.idxs[1], shiftdim(ext, node.tns.shift))
+    idx = ctx(node.idxs[1], shiftdim(ext, node.tns.delta))
     return access(VirtualStaticOffset(;kwfields(node.tns)..., dim=ext), node.mode, idx)
 end
 
 function (ctx::InferDimensions)(node::Access{VirtualStaticOffset})
     idx, ext = ctx(node.idxs[1])
-    return (access(node.tns, node.mode, idx), shiftdim(ext, call(-, node.tns.shift)))
+    return (access(node.tns, node.mode, idx), shiftdim(ext, call(-, node.tns.delta)))
 end
 
 Finch.getname(node::Access{VirtualOffset}) = Finch.getname(node.idxs[2])
@@ -102,8 +102,8 @@ end
 
 function (ctx::ThunkVisitor)(node::Access{<:VirtualOffset})
     if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
-        shift = cache!(ctx.ctx, :delta, node.idxs[1])
-        return access(Dimensionalize(VirtualStaticOffset(shift=shift)), node.mode, node.idxs[2])
+        delta = cache!(ctx.ctx, :delta, node.idxs[1])
+        return access(Dimensionalize(VirtualStaticOffset(delta=delta)), node.mode, node.idxs[2])
     end
     return similarterm(node, operation(node), map(ctx, arguments(node)))
 end
@@ -113,6 +113,6 @@ Finch.setname(node::VirtualStaticOffset, name) = node
 
 get_furl_root(idx::Access{VirtualStaticOffset}) = get_furl_root(idx.idxs[1])
 function exfurl(tns, ctx, mode, idx::Access{VirtualStaticOffset})
-    body = Shift(tns, idx.tns.shift)
+    body = Shift(tns, idx.tns.delta)
     exfurl(body, ctx, mode, idx.idxs[1])
 end

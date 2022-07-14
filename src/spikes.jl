@@ -47,59 +47,70 @@ function (ctx::LowerJulia)(root::Chunk, ::SpikeStyle)
     return Expr(:block, body_expr, tail_expr)
 end
 
-@kwdef struct SpikeBodyVisitor <: AbstractTransformVisitor
+@kwdef struct SpikeBodyVisitor
     ctx
     idx
     ext
     ext_2
 end
 
-function (ctx::SpikeBodyVisitor)(node::Access, ::DefaultStyle)
-    return Access(truncate(node.tns, ctx.ctx, ctx.ext, ctx.ext_2), node.mode, node.idxs)
+function (ctx::SpikeBodyVisitor)(node)
+    if istree(node)
+        similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        truncate(node, ctx.ctx, ctx.ext, ctx.ext_2)
+    end
 end
 
-function (ctx::SpikeBodyVisitor)(node::Access{Spike}, ::DefaultStyle)
-    return Access(Run(node.tns.body), node.mode, node.idxs)
+function (ctx::SpikeBodyVisitor)(node::Spike)
+    return Run(node.body)
 end
+
+(ctx::SpikeBodyVisitor)(node::Shift) = Shift(SpikeBodyVisitor(;kwfields(ctx)..., ext = shiftdim(ctx.ext, call(-, node.delta)), ext_2 = shiftdim(ctx.ext_2, call(-, node.delta)))(node.body), node.delta)
 
 spike_body_getstop(stop, ctx) = :($(ctx(stop)) - 1)
 spike_body_getstop(stop::Integer, ctx) = stop - 1
 
 spike_body_range(ext, ctx) = Extent(getstart(ext), spike_body_getstop(getstop(ext), ctx))
 
-@kwdef struct SpikeTailVisitor <: AbstractTransformVisitor
+@kwdef struct SpikeTailVisitor
     ctx
     idx
     val
 end
 
-function (ctx::SpikeTailVisitor)(node::Access{Spike}, ::DefaultStyle)
-    return node.tns.tail
+function (ctx::SpikeTailVisitor)(node)
+    if istree(node)
+        similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        node
+    end
 end
 
-function (ctx::ForLoopVisitor)(node::Access{Spike}, ::DefaultStyle)
-    return node.tns.tail
-end
+(ctx::SpikeTailVisitor)(node::Access) = something(unchunk(node.tns, ctx), node)
+unchunk(node::Spike, ctx::SpikeTailVisitor) = node.tail
+unchunk(node::Shift, ctx::SpikeTailVisitor) = unchunk(node.body, SpikeTailVisitor(;kwfields(ctx)..., val = call(-, ctx.val, node.delta)))
+
+#TODO this is sus
+unchunk(node::Spike, ctx::ForLoopVisitor) = node.tail
 
 supports_shift(::SpikeStyle) = true
-(ctx::SpikeBodyVisitor)(node::Shift, ::DefaultStyle) = Shift(SpikeBodyVisitor(ctx.ctx, ctx.idx, call(-, ctx.start, node.shift), call(-, ctx.step, node.shift), call(-, ctx.stop, node.shift))(node.body), node.shift)
 
 @kwdef mutable struct AcceptSpike
     val
     tail
 end
 
+Base.show(io::IO, ex::AcceptSpike) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::AcceptSpike)
     print(io, "AcceptSpike(val = ")
-    print(io, ex.body)
+    print(io, ex.val)
     print(io, ")")
 end
 
 default(node::AcceptSpike) = node.val
 
-function (ctx::ForLoopVisitor)(node::Access{AcceptSpike}, ::DefaultStyle)
-    node.tns.tail(ctx.ctx, ctx.val)
-end
+unchunk(node::AcceptSpike, ctx::ForLoopVisitor) = node.tail(ctx.ctx, ctx.val)
 
 function truncate(node::Spike, ctx, ext, ext_2)
     return Cases([

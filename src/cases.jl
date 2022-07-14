@@ -14,6 +14,7 @@ combine_style(a::RunStyle, b::CaseStyle) = CaseStyle()
 combine_style(a::AcceptRunStyle, b::CaseStyle) = CaseStyle()
 combine_style(a::SpikeStyle, b::CaseStyle) = CaseStyle()
 combine_style(a::CaseStyle, b::CaseStyle) = CaseStyle()
+supports_shift(::CaseStyle) = true
 
 struct CasesVisitor end
 

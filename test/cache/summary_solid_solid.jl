@@ -1,1 +1,1 @@
-5×10 Fiber f"bb"(0.0)
+5×10 Fiber f"ss"(0.0)

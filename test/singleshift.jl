@@ -11,7 +11,7 @@ end
 Base.size(vec::SingleShift) = (vec.I,)
 
 function Base.getindex(vec::SingleShift{Tv, Ti}, i) where {Tv, Ti}
-    vec.val[i - vec.shift]
+    vec.val[i - vec.delta]
 end
 
 mutable struct VirtualSingleShift{Tv, Ti}
@@ -50,7 +50,7 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSingleShift{Tv, Ti}, R
             body = Leaf(
                 body = (i) -> :($(vec.ex).val[$(ctx.ctx(i))])
             ),
-            shift = Virtual{Ti}(:($(vec.ex).shift))
+            shift = Virtual{Ti}(:($(vec.ex).delta))
         )
         Access(tns, node.mode, node.idxs)
     else
