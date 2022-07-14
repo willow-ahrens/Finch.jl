@@ -47,7 +47,6 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualStaticOffset)
 	print(io, ")")
 end
 
-
 isliteral(::VirtualStaticOffset) = false
 
 function virtualize(ex, ::Type{StaticOffset{Shift, Dim}}, ctx) where {Shift, Dim}

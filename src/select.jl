@@ -64,9 +64,9 @@ function (ctx::LowerJulia)(root, ::SelectStyle)
     for (idx, val) in pairs(idxs)
         root = @i(
             @loop $idx (
-                if select[$val, $idx]
+                @sieve select[$val, $idx] (
                     $root
-                end
+                )
             )
         )
     end

@@ -81,8 +81,8 @@
     (@rule @i((*)($a)) => a),
     (@rule @i((*)(a..., - $b, c...)) => @i -(*(a..., $b, c...))),
     (@rule @i(a[i...] *= 1) => pass(a)),
-    (@rule @i(if true; $a end) => a),
-    (@rule @i(if false; $a end) => pass(getresults(a)...)),
+    (@rule @i(@sieve true $a) => a),
+    (@rule @i(@sieve false $a) => pass(getresults(a)...)),
 ]
 
 @kwdef mutable struct Simplify

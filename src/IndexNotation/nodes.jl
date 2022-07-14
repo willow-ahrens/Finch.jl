@@ -282,15 +282,17 @@ SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(sieve), args) = sieve!
 Finch.getunbound(ex::Sieve) = setdiff(getunbound(ex.body), getunbound(ex.cond))
 
 function display_statement(io, mime, stmt::Sieve, level)
-    print(io, tab^level * "if ")
-    while stmt isa Sieve
+    print(io, tab^level * "@sieve ")
+    while stmt.body isa Sieve
         display_expression(io, mime, stmt.cond)
         print(io," && ")
         stmt = stmt.body
     end
-    print(io,"\n")
+    display_expression(io, mime, stmt.cond)
+    stmt = stmt.body
+    print(io," (\n")
     display_statement(io, mime, stmt, level + 1)
-    print(io, tab^level * "end\n")
+    print(io, tab^level * ")\n")
 end
 
 Finch.getresults(stmt::Sieve) = Finch.getresults(stmt.body)

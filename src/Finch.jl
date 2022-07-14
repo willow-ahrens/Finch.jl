@@ -8,7 +8,7 @@ using MacroTools
 using Base.Iterators
 using Base: @kwdef
 
-export @index, @index_code
+export @index, @index_program, @index_code
 
 export Fiber, HollowList, HollowHash, HollowCoo, HollowByte, Solid, Element, FiberArray, Scalar
 export walk, gallop, follow, extrude, laminate, select
