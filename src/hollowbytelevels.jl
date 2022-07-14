@@ -40,7 +40,7 @@ function Base.show(io::IO, lvl::HollowByteLevel)
     print(io, ")")
 end
 
-function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber{<:HollowByteLevel})
+function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:HollowByteLevel})
     p = envposition(fbr.env)
     crds = @view(fbr.lvl.srt[1:length(fbr.lvl.srt_stop[])])
     depth = envdepth(fbr.env)
@@ -49,7 +49,7 @@ function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber{<:HollowByteLevel}
     get_coord((p, i),) = i
 
     print(io, "│ " ^ depth); print(io, "HollowByte ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); show(io, 1); print(io, ":"); show(io, fbr.lvl.I); println(io, "]")
-    show_fiber_data(io, mime, fbr, 1, crds, print_coord, get_coord)
+    display_fiber_data(io, mime, fbr, 1, crds, print_coord, get_coord)
 end
 
 
@@ -113,6 +113,9 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualHollowByteLevel)
         )
     end
 end
+
+summary_f_str(lvl::VirtualHollowByteLevel) = "b$(summary_f_str(lvl.lvl))"
+summary_f_str_args(lvl::VirtualHollowByteLevel) = summary_f_str_args(lvl.lvl)
 
 getsites(fbr::VirtualFiber{VirtualHollowByteLevel}) =
     [envdepth(fbr.env) + 1, getsites(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))...]

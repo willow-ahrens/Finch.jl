@@ -8,7 +8,7 @@ SolidLevel(lvl) = SolidLevel(0, lvl)
 const Solid = SolidLevel
 
 parse_level(args, ::Val{:s}, words...) = Solid(parse_level(args, words...))
-summary_f_str(lvl::SolidLevel) = "b$(summary_f_str(lvl.lvl))"
+summary_f_str(lvl::SolidLevel) = "s$(summary_f_str(lvl.lvl))"
 summary_f_str_args(lvl::SolidLevel) = summary_f_str_args(lvl.lvl)
 
 dimension(lvl::SolidLevel) = lvl.I
@@ -36,14 +36,14 @@ function Base.show(io::IO, lvl::SolidLevel)
     print(io, ")")
 end 
 
-function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber{<:SolidLevel})
+function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:SolidLevel})
     crds = 1:fbr.lvl.I
     depth = envdepth(fbr.env)
 
     print_coord(io, crd) = (print(io, "["); show(io, crd); print(io, "]"))
     get_coord(crd) = crd
     print(io, "│ " ^ depth); print(io, "Solid ["); show(io, 1); print(io, ":"); show(io, fbr.lvl.I); println(io, "]")
-    show_fiber_data(io, mime, fbr, 1, crds, print_coord, get_coord)
+    display_fiber_data(io, mime, fbr, 1, crds, print_coord, get_coord)
 end
 
 
@@ -70,6 +70,9 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualSolidLevel)
         )
     end
 end
+
+summary_f_str(lvl::VirtualSolidLevel) = "s$(summary_f_str(lvl.lvl))"
+summary_f_str_args(lvl::VirtualSolidLevel) = summary_f_str_args(lvl.lvl)
 
 getsites(fbr::VirtualFiber{VirtualSolidLevel}) =
     [envdepth(fbr.env) + 1, getsites(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))...]

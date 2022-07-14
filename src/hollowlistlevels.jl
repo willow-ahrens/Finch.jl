@@ -32,7 +32,7 @@ function Base.show(io::IO, lvl::HollowListLevel)
     print(io, ")")
 end
 
-function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber{<:HollowListLevel})
+function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:HollowListLevel})
     p = envposition(fbr.env)
     crds = @view(fbr.lvl.idx[fbr.lvl.pos[p]:fbr.lvl.pos[p + 1] - 1])
     depth = envdepth(fbr.env)
@@ -41,7 +41,7 @@ function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber{<:HollowListLevel}
     get_coord(crd) = crd
 
     print(io, "│ " ^ depth); print(io, "HollowList ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); show(io, 1); print(io, ":"); show(io, fbr.lvl.I); println(io, "]")
-    show_fiber_data(io, mime, fbr, 1, crds, print_coord, get_coord)
+    display_fiber_data(io, mime, fbr, 1, crds, print_coord, get_coord)
 end
 
 
@@ -92,6 +92,9 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualHollowListLevel)
         )
     end
 end
+
+summary_f_str(lvl::VirtualHollowListLevel) = "l$(summary_f_str(lvl.lvl))"
+summary_f_str_args(lvl::VirtualHollowListLevel) = summary_f_str_args(lvl.lvl)
 
 getsites(fbr::VirtualFiber{VirtualHollowListLevel}) =
     [envdepth(fbr.env) + 1, getsites(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))...]

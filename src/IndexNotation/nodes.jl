@@ -3,19 +3,21 @@ abstract type IndexStatement <: IndexNode end
 abstract type IndexExpression <: IndexNode end
 abstract type IndexTerminal <: IndexExpression end
 
-const tab = "  "
+tab = "  "
 
 function Base.show(io::IO, mime::MIME"text/plain", stmt::IndexStatement)
-	println(io, "\"\"\"")
-	show_statement(io, mime, stmt, 0)
-	println(io, "\"\"\"")
+    if get(io, :compact, false)
+        print(io, "@index(…)")
+    else
+        display_statement(io, mime, stmt, 0)
+    end
 end
 
 function Base.show(io::IO, mime::MIME"text/plain", ex::IndexExpression)
-	print(io, "\"")
-	show_expression(io, mime, ex)
-	print(io, "\"")
+	display_expression(io, mime, ex)
 end
+
+display_expression(io, mime, ex) = show(IOContext(io, :compact=>true), mime, ex)
 
 function Base.show(io::IO, ex::IndexNode)
     if istree(ex)
@@ -64,7 +66,7 @@ end
 
 SyntaxInterface.istree(::Literal) = false
 Base.hash(ex::Literal, h::UInt) = hash(Literal, hash(ex.val, h))
-show_expression(io, mime, ex::Literal) = print(io, ex.val)
+display_expression(io, mime, ex::Literal) = print(io, ex.val)
 Finch.isliteral(::Literal) = true
 Finch.getvalue(ex::Literal) = ex.val
 Base.:(==)(a::Literal, b::Literal) = isequal(a.val, b.val)
@@ -94,14 +96,14 @@ SyntaxInterface.operation(stmt::Pass) = pass
 SyntaxInterface.arguments(stmt::Pass) = stmt.tnss
 SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(pass), args) = pass!(args)
 
-function show_statement(io, mime, stmt::Pass, level)
+function display_statement(io, mime, stmt::Pass, level)
     print(io, tab^level * "(")
     for tns in arguments(stmt)[1:end-1]
-        show_expression(io, mime, tns)
+        display_expression(io, mime, tns)
         print(io, ", ")
     end
     if length(arguments(stmt)) >= 1
-        show_expression(io, mime, last(arguments(stmt)))
+        display_expression(io, mime, last(arguments(stmt)))
     end
     print(io, ")")
 end
@@ -115,9 +117,9 @@ end
 SyntaxInterface.istree(::Workspace) = false
 Base.hash(ex::Workspace, h::UInt) = hash((Workspace, ex.n), h)
 
-function show_expression(io, ex::Workspace)
+function display_expression(io, ex::Workspace)
     print(io, "{")
-    show_expression(io, mime, ex.n)
+    display_expression(io, mime, ex.n)
     print(io, "}[...]")
 end
 
@@ -130,7 +132,7 @@ end
 SyntaxInterface.istree(::Name) = false
 Base.hash(ex::Name, h::UInt) = hash((Name, ex.name), h)
 
-show_expression(io, mime, ex::Name) = print(io, ex.name)
+display_expression(io, mime, ex::Name) = print(io, ex.name)
 
 Finch.getname(ex::Name) = ex.name
 Finch.setname(ex::Name, name) = Name(name)
@@ -151,10 +153,10 @@ SyntaxInterface.operation(ex::Protocol) = protocol
 SyntaxInterface.arguments(ex::Protocol) = Any[ex.idx, ex.val]
 SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(protocol), args) = protocol!(args)
 
-function show_expression(io, mime, ex::Protocol)
-    show_expression(io, mime, ex.idx)
+function display_expression(io, mime, ex::Protocol)
+    display_expression(io, mime, ex.idx)
     print(io, "::")
-    show_expression(io, mime, ex.val)
+    display_expression(io, mime, ex.val)
 end
 
 struct With <: IndexStatement
@@ -171,11 +173,11 @@ SyntaxInterface.operation(stmt::With) = with
 SyntaxInterface.arguments(stmt::With) = Any[stmt.cons, stmt.prod]
 SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(with), args) = with!(args)
 
-function show_statement(io, mime, stmt::With, level)
+function display_statement(io, mime, stmt::With, level)
     print(io, tab^level * "(\n")
-    show_statement(io, mime, stmt.cons, level + 1)
+    display_statement(io, mime, stmt.cons, level + 1)
     print(io, tab^level * ") where (\n")
-    show_statement(io, mime, stmt.prod, level + 1)
+    display_statement(io, mime, stmt.prod, level + 1)
     print(io, tab^level * ")\n")
 end
 
@@ -194,10 +196,10 @@ SyntaxInterface.operation(stmt::Multi) = multi
 SyntaxInterface.arguments(stmt::Multi) = stmt.bodies
 SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(multi), args) = multi!(args)
 
-function show_statement(io, mime, stmt::Multi, level)
+function display_statement(io, mime, stmt::Multi, level)
     print(io, tab^level * "begin\n")
     for body in stmt.bodies
-        show_statement(io, mime, body, level + 1)
+        display_statement(io, mime, body, level + 1)
     end
     print(io, tab^level * "end\n")
 end
@@ -220,13 +222,13 @@ SyntaxInterface.arguments(stmt::Chunk) = Any[stmt.idx, stmt.ext, stmt.body]
 SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(chunk), args) = chunk!(args)
 Finch.getunbound(ex::Chunk) = setdiff(union(getunbound(ex.body), getunbound(ex.ext)), getunbound(ex.idx))
 
-function show_statement(io, mime, stmt::Chunk, level)
+function display_statement(io, mime, stmt::Chunk, level)
     print(io, tab^level * "@∀ ")
-    show_expression(io, mime, stmt.idx)
+    display_expression(io, mime, stmt.idx)
     print(io, " : ")
-    show_expression(io, mime, stmt.ext)
+    display_expression(io, mime, stmt.ext)
     print(io," (\n")
-    show_statement(io, mime, stmt.body, level + 1)
+    display_statement(io, mime, stmt.body, level + 1)
     print(io, tab^level * ")\n")
 end
 
@@ -248,15 +250,15 @@ SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(loop), args) = loop!(a
 
 Finch.getunbound(ex::Loop) = setdiff(getunbound(ex.body), getunbound(ex.idx))
 
-function show_statement(io, mime, stmt::Loop, level)
+function display_statement(io, mime, stmt::Loop, level)
     print(io, tab^level * "@∀ ")
     while stmt isa Loop
-        show_expression(io, mime, stmt.idx)
+        display_expression(io, mime, stmt.idx)
         print(io," ")
         stmt = stmt.body
     end
     print(io,"(\n")
-    show_statement(io, mime, stmt, level + 1)
+    display_statement(io, mime, stmt, level + 1)
     print(io, tab^level * ")\n")
 end
 
@@ -279,15 +281,15 @@ SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(sieve), args) = sieve!
 
 Finch.getunbound(ex::Sieve) = setdiff(getunbound(ex.body), getunbound(ex.cond))
 
-function show_statement(io, mime, stmt::Sieve, level)
+function display_statement(io, mime, stmt::Sieve, level)
     print(io, tab^level * "if ")
     while stmt isa Sieve
-        show_expression(io, mime, stmt.cond)
+        display_expression(io, mime, stmt.cond)
         print(io," && ")
         stmt = stmt.body
     end
     print(io,"\n")
-    show_statement(io, mime, stmt, level + 1)
+    display_statement(io, mime, stmt, level + 1)
     print(io, tab^level * "end\n")
 end
 
@@ -322,15 +324,15 @@ function SyntaxInterface.arguments(stmt::Assign)
 end
 SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(assign), args) = assign!(args)
 
-function show_statement(io, mime, stmt::Assign, level)
+function display_statement(io, mime, stmt::Assign, level)
     print(io, tab^level)
-    show_expression(io, mime, stmt.lhs)
+    display_expression(io, mime, stmt.lhs)
     print(io, " ")
     if stmt.op !== nothing
-        show_expression(io, mime, stmt.op)
+        display_expression(io, mime, stmt.op)
     end
     print(io, "= ")
-    show_expression(io, mime, stmt.rhs)
+    display_expression(io, mime, stmt.rhs)
     print(io, "\n")
 end
 
@@ -350,14 +352,14 @@ SyntaxInterface.operation(ex::Call) = call
 SyntaxInterface.arguments(ex::Call) = Any[ex.op; ex.args]
 SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(call), args) = call!(args)
 
-function show_expression(io, mime, ex::Call)
-    show_expression(io, mime, ex.op)
+function display_expression(io, mime, ex::Call)
+    display_expression(io, mime, ex.op)
     print(io, "(")
     for arg in ex.args[1:end-1]
-        show_expression(io, mime, arg)
+        display_expression(io, mime, arg)
         print(io, ", ")
     end
-    show_expression(io, mime, ex.args[end])
+    display_expression(io, mime, ex.args[end])
     print(io, ")")
 end
 
@@ -380,22 +382,20 @@ SyntaxInterface.operation(ex::Access) = access
 SyntaxInterface.arguments(ex::Access) = Any[ex.tns; ex.mode; ex.idxs]
 SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(access), args) = access!(args)
 
-function show_expression(io, mime, ex::Access)
-    show_expression(io, mime, ex.tns)
+function display_expression(io, mime, ex::Access)
+    display_expression(io, mime, ex.tns)
     print(io, "[")
     if length(ex.idxs) >= 1
         for idx in ex.idxs[1:end-1]
-            show_expression(io, mime, idx)
+            display_expression(io, mime, idx)
             print(io, ", ")
         end
-        show_expression(io, mime, ex.idxs[end])
+        display_expression(io, mime, ex.idxs[end])
     end
     print(io, "]")
 end
 
 Finch.getresults(stmt::Access) = [stmt.tns]
-
-show_expression(io, mime, ex) = print(io, ex)
 
 struct Lexicography{T}
     arg::T

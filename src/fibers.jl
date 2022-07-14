@@ -226,8 +226,23 @@ function show_region(io::IO, vec::Vector)
     print(io, "]")
 end
 
+function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber)
+    if get(io, :compact, false)
+        print(io, "f\"$(summary_f_str(fbr.lvl))\"($(summary_f_str_args(fbr.lvl)...))")
+    else
+        display_fiber(io, mime, fbr)
+    end
+end
 
-function show_fiber_data(io::IO, mime::MIME"text/plain", fbr, N, crds, print_coord, get_coord)
+function Base.show(io::IO, mime::MIME"text/plain", fbr::VirtualFiber)
+    if get(io, :compact, false)
+        print(io, "v\"$(summary_f_str(fbr.lvl))\"($(summary_f_str_args(fbr.lvl)...))")
+    else
+        show(io, fbr)
+    end
+end
+
+function display_fiber_data(io::IO, mime::MIME"text/plain", fbr, N, crds, print_coord, get_coord)
     (height, width) = get(io, :displaysize, (40, 80))
     depth = envdepth(fbr.env)
 

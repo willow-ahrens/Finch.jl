@@ -44,7 +44,7 @@ function Base.show(io::IO, lvl::HollowHashLevel{N}) where {N}
     print(io, ")")
 end
 
-function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber{<:HollowHashLevel{N}}) where {N}
+function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:HollowHashLevel{N}}) where {N}
     p = envposition(fbr.env)
     crds = fbr.lvl.srt[fbr.lvl.pos[p]:fbr.lvl.pos[p + 1] - 1]
     depth = envdepth(fbr.env)
@@ -54,7 +54,7 @@ function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber{<:HollowHashLevel{
 
     dims = shape(fbr)
     print(io, "│ " ^ depth); print(io, "HollowHash ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); foreach(dim -> (print(io, "1:"); show(io, dim); print(io, "×")), dims[1:N-1]); print(io, "1:"); show(io, dims[end]); println(io, "]")
-    show_fiber_data(io, mime, fbr, N, crds, print_coord, get_coord)
+    display_fiber_data(io, mime, fbr, N, crds, print_coord, get_coord)
 end
 
 @inline arity(fbr::Fiber{<:HollowHashLevel{N}}) where {N} = N + arity(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))
@@ -123,6 +123,9 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualHollowHashLevel)
         )
     end
 end
+
+summary_f_str(lvl::VirtualHollowHashLevel) = "h$(lvl.N)$(summary_f_str(lvl.lvl))"
+summary_f_str_args(lvl::VirtualHollowHashLevel) = summary_f_str_args(lvl.lvl)
 
 function getsites(fbr::VirtualFiber{VirtualHollowHashLevel})
     d = envdepth(fbr.env)
