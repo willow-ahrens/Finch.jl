@@ -7,7 +7,7 @@
         HollowHash{1}((10,),
         Element{0.0}()))
 
-    @test diff("hl_to_hh", @index_code @loop i B[i] += A[i])
+    @test diff("hl_to_hh.jl", @index_code @loop i B[i] += A[i])
 
     @index @loop i B[i] += A[i]
 
@@ -17,7 +17,7 @@
 
     println("A(s)[i] = B(h)[i]")
 
-    @test diff("hh_to_hs", @index_code @loop i A[i] += B[i])
+    @test diff("hh_to_hs.jl", @index_code @loop i A[i] += B[i])
 
     @index @loop i A[i] += B[i]
 
@@ -46,7 +46,7 @@
         HollowHash{2}((3,5),
         Element{0.0}()))
     
-    @test diff("s_hl_to_hh2", @index_code @loop i j B[i, j] += A[i, j])
+    @test diff("s_hl_to_hh2.jl", @index_code @loop i j B[i, j] += A[i, j])
 
     @index @loop i j B[i, j] += A[i, j] 
 
@@ -63,7 +63,7 @@
         HollowList(10, 
         Element{0.0}()))
 
-    @test diff("hl_to_hh_to_hl", @index_code (@loop i C[i] += B[i]) where (@loop i B[i] += A[i]))
+    @test diff("hl_to_hh_to_hl.jl", @index_code (@loop i C[i] += B[i]) where (@loop i B[i] += A[i]))
 
     @index (@loop i C[i] += B[i]) where (@loop i B[i] += A[i])
 
@@ -79,7 +79,7 @@
         HollowCoo{1}((10,),
         Element{0.0}()))
 
-    @test diff("hl_to_hc", @index_code @loop i B[i] += A[i])
+    @test diff("hl_to_hc.jl", @index_code @loop i B[i] += A[i])
 
     @index @loop i B[i] += A[i]
 
@@ -89,7 +89,7 @@
 
     println("A(s)[i] = B(c)[i]")
 
-    @test diff("hc_to_hl", @index_code @loop i A[i] += B[i])
+    @test diff("hc_to_hl.jl", @index_code @loop i A[i] += B[i])
 
     println(A)
     println(B)
@@ -111,7 +111,7 @@
         HollowCoo{2}((3,5),
         Element{0.0}()))
     
-    @test diff("s_hl_to_hc2", @index_code @loop i j B[i, j] += A[i, j])
+    @test diff("s_hl_to_hc2.jl", @index_code @loop i j B[i, j] += A[i, j])
 
     @index @loop i j B[i, j] += A[i, j] 
 
@@ -128,7 +128,7 @@
         HollowList(10, 
         Element{0.0}()))
 
-    @test diff("hl_to_hc_to_hl", @index_code (@loop i C[i] += B[i]) where (@loop i B[i] += A[i]))
+    @test diff("hl_to_hc_to_hl.jl", @index_code (@loop i C[i] += B[i]) where (@loop i B[i] += A[i]))
 
     @index (@loop i C[i] += B[i]) where (@loop i B[i] += A[i])
 
@@ -146,7 +146,7 @@
         Element{0.0}([1.0, 1.0, 1.0])))
     C = Finch.Fiber(HollowList(10, Element{0.0}()))
 
-    @test diff("hl_plus_hl_to_hl", @index_code @loop i C[i] += A[i] + B[i])
+    @test diff("hl_plus_hl_to_hl.jl", @index_code @loop i C[i] += A[i] + B[i])
 
     @index @loop i C[i] += A[i] + B[i]
 
@@ -167,7 +167,7 @@
         Element{0.0}([1.0, 1.0, 1.0])))
     C = zeros(10)
 
-    @test diff("hl_plus_hl_to_vec", @index_code @loop i C[i] += A[i] + B[i])
+    @test diff("hl_plus_hl_to_vec.jl", @index_code @loop i C[i] += A[i] + B[i])
 
     @index @loop i C[i] += A[i] + B[i]
 
@@ -185,7 +185,7 @@
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0, 1.0, 1.0, 1.0]))))
     B = zeros(10)
 
-    @test diff("s_hl_sum_2_to_vec", @index_code @loop j i B[i] += A[j, i])
+    @test diff("s_hl_sum_2_to_vec.jl", @index_code @loop j i B[i] += A[j, i])
 
     @index @loop j i B[i] += A[j, i]
 
@@ -204,7 +204,7 @@
         Element{0.0}([1.0, 1.0, 1.0])))
     C = Finch.Fiber(HollowList(10, Element{0.0}()))
 
-    @test diff("hl_gallop_plus_hl_gallop_to_hl", @index_code @loop i C[i] += A[i::gallop] + B[i::gallop])
+    @test diff("hl_gallop_plus_hl_gallop_to_hl.jl", @index_code @loop i C[i] += A[i::gallop] + B[i::gallop])
 
     @index @loop i C[i] += A[i::gallop] + B[i::gallop]
 
@@ -225,7 +225,7 @@
         Element{0.0}([1.0, 1.0, 1.0, 1.0])))
     C = Finch.Fiber(HollowList(10, Element{0.0}()))
 
-    @test diff("hl_gallop_times_hl_gallop_to_hl", @index_code @loop i C[i] += A[i::gallop] * B[i::gallop])
+    @test diff("hl_gallop_times_hl_gallop_to_hl.jl", @index_code @loop i C[i] += A[i::gallop] * B[i::gallop])
 
     @index @loop i C[i] += A[i::gallop] * B[i::gallop]
 
@@ -245,7 +245,7 @@
         HollowList(3,
         Element{0.0}()))
 
-    @test diff("s_hl_sum_2_to_hl", @index_code @loop i j B[j] += A[i, j])
+    @test diff("s_hl_sum_2_to_hl.jl", @index_code @loop i j B[j] += A[i, j])
 
     @index @loop i j B[i] += A[i, j]
 
@@ -261,7 +261,7 @@
         HollowByte(4,
         Element{0.0}()))
 
-    @test diff("s_hl_sum_2_to_hb", @index_code @loop i j B[j] += A[i, j])
+    @test diff("s_hl_sum_2_to_hb.jl", @index_code @loop i j B[j] += A[i, j])
 
     @index @loop i j B[j] += A[i, j]
 
