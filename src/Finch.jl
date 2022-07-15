@@ -7,6 +7,7 @@ using RewriteTools.Rewriters
 using MacroTools
 using Base.Iterators
 using Base: @kwdef
+using SparseArrays
 
 export @index, @index_program, @index_code
 
@@ -57,6 +58,7 @@ include("offset.jl")
 include("window.jl")
 
 include("fibers_meta.jl")
+export fsparse, fsparse!, fsprand, fspzeros
 
 module h
     using Finch
@@ -81,8 +83,9 @@ module h
 end
 
 include("glue_AbstractArrays.jl")
+include("glue_SparseArrays.jl")
 function __init__()
-    @require SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf" include("glue_SparseArrays.jl")
+    #@require SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf" include("glue_SparseArrays.jl")
 end
 
 end
