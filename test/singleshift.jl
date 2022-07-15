@@ -1,11 +1,11 @@
 mutable struct SingleShift{Tv, Ti} <: AbstractVector{Tv}
     I::Ti
-    shift::Ti
+    delta::Ti
     val::Vector{Tv}
 end
 
-function SingleShift(I::Ti, shift::Ti, val::Vector{Tv}) where {Ti, Tv}
-    SingleShift{Tv, Ti}(I, shift, val)
+function SingleShift(I::Ti, delta::Ti, val::Vector{Tv}) where {Ti, Tv}
+    SingleShift{Tv, Ti}(I, delta, val)
 end
 
 Base.size(vec::SingleShift) = (vec.I,)
