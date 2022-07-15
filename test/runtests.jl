@@ -8,8 +8,8 @@ function diff(name, body)
     global ARGS
     cache_dir = mkpath(joinpath(@__DIR__, "cache"))
     temp_dir = mkpath(joinpath(@__DIR__, "temp"))
-    cache_file = joinpath(cache_dir, "$name.jl")
-    temp_file = joinpath(temp_dir, "$name.jl")
+    cache_file = joinpath(cache_dir, name)
+    temp_file = joinpath(temp_dir, name)
     open(temp_file, "w") do f
         println(f, body)
     end
