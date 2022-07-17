@@ -48,8 +48,6 @@ getname(fbr::VirtualFiber) = envname(fbr.env)
 setname(fbr::VirtualFiber, name) = VirtualFiber(fbr.lvl, envrename!(fbr.env, name))
 #setname(fbr::VirtualFiber, name) = (fbr.env.name = name; fbr)
 
-
-
 struct FiberArray{Fbr, T, N} <: AbstractArray{T, N}
     fbr::Fbr
 end
@@ -307,3 +305,6 @@ macro f_str(str)
 end
 
 Base.summary(fbr::Fiber) = "$(join(shape(fbr), "×")) Fiber f\"$(summary_f_str(fbr.lvl))\"($(summary_f_str_args(fbr.lvl)...))"
+
+Base.similar(fbr::Fiber) = Fiber(similar_level(fbr.lvl))
+Base.similar(fbr::Fiber, dims::Tuple) = Fiber(similar_level(fbr.lvl, dims...))

@@ -10,6 +10,8 @@ const Solid = SolidLevel
 parse_level(args, ::Val{:s}, words...) = Solid(parse_level(args, words...))
 summary_f_str(lvl::SolidLevel) = "s$(summary_f_str(lvl.lvl))"
 summary_f_str_args(lvl::SolidLevel) = summary_f_str_args(lvl.lvl)
+similar_level(lvl::SolidLevel) = Solid(similar_level(lvl.lvl))
+similar_level(lvl::SolidLevel, dim, tail...) = Solid(dim, similar_level(lvl.lvl, tail...))
 
 dimension(lvl::SolidLevel) = lvl.I
 

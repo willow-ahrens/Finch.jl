@@ -17,6 +17,8 @@ HollowByteLevel{Ti, Tp, Tq}(I::Ti, tbl, srt, srt_stop, pos, lvl::Lvl) where {Ti,
     HollowByteLevel{Ti, Tp, Tq, Lvl}(I, tbl, srt, srt_stop, pos, lvl)
 
 parse_level(args, ::Val{:b}, words...) = HollowByte(parse_level(args, words...))
+similar_level(lvl::HollowByteLevel) = HollowByte(similar_level(lvl.lvl))
+similar_level(lvl::HollowByteLevel, dim, tail...) = HollowByte(dim, similar_level(lvl.lvl, tail...))
 summary_f_str(lvl::HollowByteLevel) = "b$(summary_f_str(lvl.lvl))"
 summary_f_str_args(lvl::HollowByteLevel) = summary_f_str_args(lvl.lvl)
 

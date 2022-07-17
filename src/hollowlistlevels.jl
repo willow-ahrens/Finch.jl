@@ -15,6 +15,8 @@ HollowListLevel{Ti, Lvl}(I::Ti, lvl::Lvl) where {Ti, Lvl} = HollowListLevel{Ti, 
 parse_level(args, ::Val{:l}, words...) = HollowList(parse_level(args, words...))
 summary_f_str(lvl::HollowListLevel) = "l$(summary_f_str(lvl.lvl))"
 summary_f_str_args(lvl::HollowListLevel) = summary_f_str_args(lvl.lvl)
+similar_level(lvl::HollowListLevel) = HollowList(similar_level(lvl.lvl))
+similar_level(lvl::HollowListLevel, dim, tail...) = HollowList(dim, similar_level(lvl.lvl, tail...))
 
 function Base.show(io::IO, lvl::HollowListLevel)
     print(io, "HollowList(")

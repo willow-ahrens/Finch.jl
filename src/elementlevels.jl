@@ -8,6 +8,7 @@ const Element = ElementLevel
 parse_level((D,),) = Element{D}()
 summary_f_str(::ElementLevel) = ""
 summary_f_str_args(::ElementLevel{D}) where {D} = (D,)
+similar_level(::ElementLevel{D}) where {D} = ElementLevel{D}()
 
 function Base.show(io::IO, lvl::ElementLevel{D}) where {D}
     print(io, "Element{")
