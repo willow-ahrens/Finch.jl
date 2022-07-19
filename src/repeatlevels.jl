@@ -194,6 +194,7 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Read, idx::Pro
     exfurl(body, ctx, mode, idx.idx)
 end
 
+#=
 unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Union{Write, Update}, idx, idxs...) =
     unfurl(fbr, ctx, mode, protocol(idx, extrude), idxs...)
 
@@ -258,3 +259,4 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Union{Write, U
 
     exfurl(body, ctx, mode, idx.idx)
 end
+=#
