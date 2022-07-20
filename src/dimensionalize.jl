@@ -74,13 +74,15 @@ See also: [`getdims`](@ref), [`getsites`](@ref), [`combinedim`](@ref),
 [`TransformSSA`](@ref)
 """
 function (ctx::LowerJulia)(prgm, ::DimensionalizeStyle) 
-    (prgm, dims) = dimensionalize!(prgm, ctx)
-    ctx(prgm)
+    contain(ctx) do ctx_2
+        (prgm, dims) = dimensionalize!(prgm, ctx_2)
+        ctx_2(prgm)
+    end
 end
 
 function dimensionalize!(prgm, ctx) 
     prgm = Rewrite(Postwalk(x -> if x isa Dimensionalize x.body end))(prgm)
-    dims = filter!(((idx, dim),) -> dim !== deferdim, ctx.dims)
+    dims = filter(((idx, dim),) -> dim !== deferdim, ctx.dims)
     shapes = Dict()
     prgm = DeclareDimensions(ctx=ctx, dims = dims, shapes = shapes)(prgm, nodim)
     (prgm, _) = InferDimensions(ctx=ctx, dims = dims, shapes = shapes)(prgm)

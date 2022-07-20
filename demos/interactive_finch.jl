@@ -17,7 +17,8 @@ C = similar(A)
 
 F = fiber([1, 1, 1, 1, 1])
 
-@index @loop i j C[i] += (A[i] != 0) * coalesce(A[permit[i]] * F[offset[i, permit[j]]], 0)
+@index_code @loop i j C[i] += (A[i] != 0) * coalesce(A[permit[offset[i - 3, j]]], 0) * F[j]
+@index @loop i j C[i] += (A[i] != 0) * coalesce(A[permit[offset[i - 3, j]]], 0) * F[j]
 
 @index_code @loop i C[i] = A[i] + B[i]
 @index @loop i C[i] = A[i] + B[i]
