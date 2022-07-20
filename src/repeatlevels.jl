@@ -38,8 +38,8 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:RepeatLevel}
     crds = fbr.lvl.pos[p]:fbr.lvl.pos[p + 1] - 1
     depth = envdepth(fbr.env)
 
-    print_coord(io, crd) = (print(io, "["); show(io, fbr.lvl.idx[crd]); print(io, "]"); show(io, fbr.lvl.idx[crd + 1] - 1); print(io, "]"))
-    get_coord(crd) = crd
+    print_coord(io, crd) = (print(io, "["); show(io, crd == fbr.lvl.pos[p] ? 1 : fbr.lvl.idx[crd - 1] + 1); print(io, ":"); show(io, fbr.lvl.idx[crd]); print(io, "]"))
+    get_coord(crd) = fbr.lvl.idx[crd]
 
     print(io, "│ " ^ depth); print(io, "Repeat ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); show(io, 1); print(io, ":"); show(io, fbr.lvl.I); println(io, "]")
     display_fiber_data(io, mime, fbr, 1, crds, print_coord, get_coord)
@@ -155,7 +155,7 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Read, idx::Pro
     my_i1 = ctx.freshen(tag, :_i1)
 
     body = Thunk(
-        preamble = quote
+        preamble = (quote
             $my_q = $(lvl.ex).pos[$(ctx(envposition(fbr.env)))]
             $my_q_stop = $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1]
             if $my_q < $my_q_stop
@@ -165,8 +165,8 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Read, idx::Pro
                 $my_i = 1
                 $my_i1 = 0
             end
-        end,
-        body = (start, step) -> Stepper(
+        end),
+        body = Stepper(
             seek = (ctx, ext) -> quote
                 #$my_q = searchsortedfirst($(lvl.ex).idx, $start, $my_q, $my_q_stop, Base.Forward)
                 while $my_q < $my_q_stop && $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
@@ -196,10 +196,9 @@ end
 unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Union{Write, Update}, idx, idxs...) =
     unfurl(fbr, ctx, mode, protocol(idx, extrude), idxs...)
 
-function unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Union{Write, Update}, idx::Protocol{<:Any, Extrude}, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Union{Write, Update}, idx::Protocol{<:Any, Extrude}, tail...)
     lvl = fbr.lvl
     tag = lvl.ex
-    my_i = ctx.freshen(tag, :_i)
     my_q = ctx.freshen(tag, :_q)
     my_v = ctx.freshen(tag, :_v)
     D = lvl.D
@@ -218,9 +217,8 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Union{Write, U
             $my_i_prev = 0
             $my_v_prev = $D
         end,
-        body = AcceptSpike(
-            val = default(fbr),
-            tail = (ctx, idx) -> Thunk(
+        body = AcceptRun(
+            body = (ctx, start, stop) -> Thunk(
                 preamble = quote
                     if $start != $my_i_prev + 1 
                         if $my_q == $my_q_start || $D != $my_v_prev
@@ -255,7 +253,7 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Union{Write, U
                             $(lvl.ex).idx[$my_q] = $(ctx(stop))
                         end
                     end
-                    if hasdefaultcheck(lvl.lvl)
+                    if hasdefaultcheck(lvl.lvl) && envdefaultcheck(fbr.env) !== nothing
                         body = quote
                             $body
                             if !$(my_guard)
@@ -274,3 +272,4 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Union{Write, U
 
     exfurl(body, ctx, mode, idx.idx)
 end
+=#

@@ -405,7 +405,7 @@ end
 
 function Base.isless(a::Lexicography, b::Lexicography)
     (a, b) = a.arg, b.arg
-    @assert which(priority, Tuple{typeof(a)}) == which(priority, Tuple{typeof(b)}) || priority(a) != priority(b)
+    #@assert which(priority, Tuple{typeof(a)}) == which(priority, Tuple{typeof(b)}) || priority(a) != priority(b)
     if a != b
         a_key = (priority(a), comparators(a)...)
         b_key = (priority(b), comparators(b)...)
@@ -417,7 +417,7 @@ end
 
 function Base.:(==)(a::Lexicography, b::Lexicography)
     (a, b) = a.arg, b.arg
-    @assert which(priority, Tuple{typeof(a)}) == which(priority, Tuple{typeof(b)}) || priority(a) != priority(b)
+    #@assert which(priority, Tuple{typeof(a)}) == which(priority, Tuple{typeof(b)}) || priority(a) != priority(b)
     a_key = (priority(a), comparators(a)...)
     b_key = (priority(b), comparators(b)...)
     return a_key == b_key
