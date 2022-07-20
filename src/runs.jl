@@ -59,7 +59,10 @@ end
 
 @kwdef mutable struct AcceptRun
     body
+    val = nothing
 end
+
+default(node::AcceptRun) = node.val
 
 Base.show(io::IO, ex::AcceptRun) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::AcceptRun)

@@ -1,7 +1,6 @@
 @testset "permit" begin
     A = Finch.Fiber(
-        Repeat(10, [1, 7], [1, 3, 5, 7, 9, 10],
-        Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0, 7.0])))
+        Repeat{0.0}(10, [1, 7], [1, 3, 5, 7, 9, 10], [2.0, 3.0, 4.0, 5.0, 6.0, 7.0]))
 
     @test diff("repeat_display.txt", display(A))
 
@@ -9,8 +8,21 @@
 
     B = f"s"(0.0)
 
-    display(@index_code @loop i B[i] = A[i])
     @index @loop i B[i] = A[i]
     @test FiberArray(B) == [2.0, 3.0, 3.0, 4.0, 4.0, 5.0, 5.0, 6.0, 6.0, 7.0]
-    @test diff("s_equals_r", @index_code @loop i B[i] = A[i])
+
+    C = [1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3]
+
+    display(@index_code @loop i A[i] = C[i])
+    println()
+    @index @loop i A[i] = C[i]
+
+    display(A)
+    println()
+
+    D = fiber(sprand(10, 0.5))
+    @index @loop i A[i] = D[i]
+
+    display(A)
+    println()
 end
