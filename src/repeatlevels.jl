@@ -226,7 +226,7 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Union{Write, U
                         $(lvl.idx_alloc) < $my_q && ($(lvl.idx_alloc) = $Finch.regrow!($(lvl.ex).idx, $(lvl.idx_alloc), $my_q))
                         $(lvl.val_alloc) < $my_q && ($(lvl.val_alloc) = $Finch.regrow!($(lvl.ex).val, $(lvl.val_alloc), $my_q))
                         $(lvl.ex).idx[$my_q] = $(ctx(start)) - 1
-                        $(lvl.ex).val[$my_q] = $(lvl.Tv)($D)
+                        $(lvl.ex).val[$my_q] = $D
                         $my_v_prev = $D
                         $my_q += 1
                         else
@@ -241,7 +241,7 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Union{Write, U
                             $(lvl.idx_alloc) < $my_q && ($(lvl.idx_alloc) = $Finch.regrow!($(lvl.ex).idx, $(lvl.idx_alloc), $my_q))
                             $(lvl.val_alloc) < $my_q && ($(lvl.val_alloc) = $Finch.regrow!($(lvl.ex).val, $(lvl.val_alloc), $my_q))
                             $(lvl.ex).idx[$my_q] = $(ctx(stop))
-                            $(lvl.ex).val[$my_q] = $(lvl.Tv)($my_v)
+                            $(lvl.ex).val[$my_q] = $my_v
                             $my_v_prev = $my_v
                             $my_q += 1
                         else
