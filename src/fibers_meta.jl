@@ -13,24 +13,24 @@ end
 end
 
 function SparseArrays.sparse(I::Tuple, V::Vector, shape = map(maximum, I), combine = eltype(V) isa Bool ? (|) : (+))
-    C = map(tuple, I)
+    C = map(tuple, I...)
     update = false
     if !issorted(C)
-        P = sortperm!(C)
+        P = sortperm(C)
         C = C[P]
         V = V[P]
         update = true
     end
-    if !isunique(C)
-        P = unique!(p -> C, 1:length(C))
+    if !allunique(C)
+        P = unique(p -> C[p], 1:length(C))
         C = C[P]
-        push!(P, length(C))
-        V = map((start, stop) -> foldl(combine, @view V[start:stop]), P[1:end - 1], P[2:end])
+        push!(P, length(I[1]) + 1)
+        V = map((start, stop) -> foldl(combine, @view V[start:stop - 1]), P[1:end - 1], P[2:end])
         update = true
     end
-    I = map(copy, I)
-    update && foreach((p, c) -> ntuple(n->I[n][p] = c[n]), enumerate(C))
-    return fsparse!(I, V, shape)
+    I = map(i -> similar(i, length(C)), I)
+    update && foreach(((p, c),) -> ntuple(n->I[n][p] = c[n], length(I)), enumerate(C))
+    return sparse!(I, V, shape)
 end
 function sparse!(I::Tuple, V, shape = map(maximum, I))
     return Fiber(HollowCoo{length(I), Tuple{map(eltype, I)...}, Int}(shape, I, [1, length(I[1]) + 1], Element{zero(eltype(V))}(V)))

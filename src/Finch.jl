@@ -11,7 +11,7 @@ using SparseArrays
 
 export @index, @index_program, @index_code
 
-export Fiber, HollowList, HollowHash, HollowCoo, HollowByte, Solid, Element, FiberArray, Scalar
+export Fiber, HollowList, HollowHash, HollowCoo, HollowByte, Solid, Repeat, Element, FiberArray, Scalar
 export walk, gallop, follow, extrude, laminate, select
 export fiber, @f_str
 
@@ -51,6 +51,7 @@ include("hollowhashlevels.jl")
 include("hollowcoolevels.jl")
 include("hollowbytelevels.jl")
 include("solidlevels.jl")
+include("repeatlevels.jl")
 include("elementlevels.jl")
 
 include("permit.jl")
