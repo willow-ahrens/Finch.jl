@@ -16,6 +16,7 @@ makedocs(;
     pages=[
         "Home" => "index.md",
         "Getting Started" => "getting_started.md",
+        "Level Formats" => "level.md",
         "The Deets" => "listing.md",
         "Embedding" => "embed.md",
     ],
