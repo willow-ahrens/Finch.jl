@@ -241,7 +241,7 @@ function Base.show(io::IO, mime::MIME"text/plain", fbr::VirtualFiber)
 end
 
 function display_fiber_data(io::IO, mime::MIME"text/plain", fbr, N, crds, print_coord, get_coord)
-    (height, width) = get(io, :displaysize, (40, 80))
+    (height, width) = displaysize(io)
     depth = envdepth(fbr.env)
 
     println(io, "│ "^(depth + N))

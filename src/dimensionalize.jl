@@ -6,6 +6,9 @@ struct DeferDimension end
 const deferdim = DeferDimension()
 virtualize(ex, ::Type{DeferDimension}, ctx) = deferdim
 
+getstart(::DeferDimension) = error()
+getstop(::DeferDimension) = error()
+
 @kwdef mutable struct DeclareDimensions
     ctx
     dims = Dict()
