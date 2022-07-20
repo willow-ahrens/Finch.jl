@@ -90,7 +90,7 @@ end
 """
 sparse!(I::Tuple, V,[ M::Tuple])
 
-Like [`sparse`](@ref), but the coordinates must be sorted and unique, and memory
+Like [`sparse`](https://docs.julialang.org/en/v1/stdlib/SparseArrays/#SparseArrays.sparse), but the coordinates must be sorted and unique, and memory
 is reused.
 """
 function sparse!(I::Tuple, V, shape = map(maximum, I))

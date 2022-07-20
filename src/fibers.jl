@@ -62,7 +62,7 @@ FiberArray{Fbr, N}(fbr::Fbr) where {Fbr, N} = FiberArray{Fbr, N, arity(fbr)}(fbr
 The "arity" of a fiber is the number of arguments that fiber can be indexed by
 before it returns a value. 
 
-See also: [`Base.ndims`](@ref)
+See also: [`ndims`](https://docs.julialang.org/en/v1/base/arrays/#Base.ndims)
 """
 function arity end
 Base.ndims(arr::FiberArray) = arity(arr.fbr)
@@ -72,7 +72,7 @@ Base.ndims(arr::FiberArray) = arity(arr.fbr)
 
 The "image" of a fiber is the smallest julia type that its values assume. 
 
-See also: [`Base.eltype`](@ref)
+See also: [`eltype`](https://docs.julialang.org/en/v1/base/collections/#Base.eltype)
 """
 function image end
 Base.eltype(arr::FiberArray) = image(arr.fbr)
@@ -83,7 +83,7 @@ Base.eltype(arr::FiberArray) = image(arr.fbr)
 The "shape" of a fiber is a tuple where each element describes the number of
 distinct values that might be given as each argument to the fiber.
 
-See also: [`Base.size`](@ref)
+See also: [`Base.size`](https://docs.julialang.org/en/v1/base/arrays/#Base.size)
 """
 function shape end
 Base.size(arr::FiberArray) = shape(arr.fbr)
@@ -94,7 +94,7 @@ Base.size(arr::FiberArray) = shape(arr.fbr)
 The "domain" of a fiber is a tuple listing the sets of distinct values that might
 be given as each argument to the fiber.
 
-See also: [`Base.axes`](@ref)
+See also: [`axes`](https://docs.julialang.org/en/v1/base/arrays/#Base.axes-Tuple{Any})
 """
 function domain end
 Base.axes(arr::FiberArray) = domain(arr.fbr)
@@ -109,7 +109,7 @@ end
 The default for a fiber is the value that each element of the fiber will have
 after initialization. This value is most often zero, and defaults to nothing.
 
-See also: [`initialize`](@ref)
+See also: [`initialize!`](@ref)
 """
 function default end
 
