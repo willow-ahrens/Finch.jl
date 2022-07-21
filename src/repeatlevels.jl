@@ -5,7 +5,8 @@ struct RepeatLevel{D, Ti, Tv}
     val::Vector{Tv}
 end
 const Repeat = RepeatLevel
-RepeatLevel{D}() where {D} = RepeatLevel(0)
+RepeatLevel{D}() where {D} = RepeatLevel{D}(0)
+RepeatLevel{D}(I::Ti) where {D, Ti} = RepeatLevel{D, Ti}(I)
 RepeatLevel{D, Ti}() where {D, Ti} = RepeatLevel{D, Ti}(zero(Ti))
 RepeatLevel{D, Ti}(I::Ti) where {D, Ti} = RepeatLevel{D, Ti, typeof(D)}(I)
 RepeatLevel{D, Ti, Tv}(I::Ti) where {D, Ti, Tv} = RepeatLevel{D, Ti, Tv}(I, Ti[1, fill(0, 16)...], Vector{Ti}(undef, 16), Vector{Tv}(undef, 16))
