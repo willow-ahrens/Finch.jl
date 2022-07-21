@@ -8,7 +8,7 @@ const Repeat = RepeatLevel
 RepeatLevel{D}() where {D} = RepeatLevel(0)
 RepeatLevel{D, Ti}() where {D, Ti} = RepeatLevel{D, Ti}(zero(Ti))
 RepeatLevel{D, Ti}(I::Ti) where {D, Ti} = RepeatLevel{D, Ti, typeof(D)}(I)
-RepeatLevel{D, Ti, Tv}(I::Ti) where {D, Ti, Tv} = RepeatLevel{Ti, Lvl}(I, Ti[1, fill(0, 16)...], Vector{Ti}(undef, 16), Vector{Tv}(undef, 16))
+RepeatLevel{D, Ti, Tv}(I::Ti) where {D, Ti, Tv} = RepeatLevel{D, Ti, Tv}(I, Ti[1, fill(0, 16)...], Vector{Ti}(undef, 16), Vector{Tv}(undef, 16))
 RepeatLevel{D}(I::Ti, pos, idx, val::Vector{Tv}) where {D, Ti, Tv} = RepeatLevel{D, Ti, Tv}(I, pos, idx, val)
 
 parse_level((default,), ::Val{:r}) = Repeat{D}()
@@ -205,6 +205,7 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Union{Write, U
     my_q_start = ctx.freshen(tag, :_q_start)
     my_v = ctx.freshen(tag, :_v)
     D = lvl.D
+
     my_i_prev = ctx.freshen(tag, :_i_prev)
     my_v_prev = ctx.freshen(tag, :_v_prev)
 

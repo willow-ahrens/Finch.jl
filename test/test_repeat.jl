@@ -21,6 +21,8 @@
     println()
 
     D = fiber(sprand(10, 0.5))
+    display(@index_code @loop i A[i] = D[i])
+    println()
     @index @loop i A[i] = D[i]
 
     display(A)
