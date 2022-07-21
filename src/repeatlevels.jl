@@ -198,28 +198,37 @@ end
 unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Union{Write, Update}, idx, idxs...) =
     unfurl(fbr, ctx, mode, protocol(idx, extrude), idxs...)
 
-function unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Union{Write, Update}, idx::Protocol{<:Any, Extrude}, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Union{Write, Update}, idx::Protocol{<:Any, Extrude}, tail...)
     lvl = fbr.lvl
     tag = lvl.ex
-    my_i = ctx.freshen(tag, :_i)
     my_q = ctx.freshen(tag, :_q)
-    my_q_stop = ctx.freshen(tag, :_q_stop)
-    my_i1 = ctx.freshen(tag, :_i1)
     my_guard = if hasdefaultcheck(lvl.lvl)
         ctx.freshen(tag, :_isdefault)
     end
 
+    @assert isempty(tail)
+
+    child(q, i) = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(q), index=i, guard=my_guard, parent=fbr.env)), ctx, mode),
+
     body = Thunk(
         preamble = quote
             $my_q = $(lvl.ex).pos[$(ctx(envposition(fbr.env)))]
+            $my_q_start = $my_q
+            $my_i_prev = 0
         end,
         body = AcceptRun(
             body = (ctx, start, stop) -> Thunk(
                 preamble = quote
-                    $(begin
-                        assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=my_q, parent=fbr.env)), ctx, mode)
+                    $(contain(ctx) do ctx_2
+                        assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=my_q + 1, parent=fbr.env)), ctx_2, mode)
                         quote end
                     end)
+                    if $start != $my_i_prev + 1 
+                        $(ctx(assign(child(my_q, call(-, start, 1), default(lvl))))
+                        $(lvl.idx_alloc) < $my_q && ($(lvl.idx_alloc) = $Finch.regrow!($(lvl.ex).idx, $(lvl.idx_alloc), $my_q))
+                        $(lvl.ex).idx[$my_q] = $(ctx(start)) - 1
+                        $my_q += 1
+                    end
                     $(
                         if hasdefaultcheck(lvl.lvl)
                             :($my_guard = true)
@@ -228,22 +237,21 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Union{Write, U
                         end
                     )
                 end,
-                body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=stop, guard=my_guard, parent=fbr.env)), ctx, mode, idxs...),
+                body = child(my_q, stop)
                 epilogue = begin
+                    curr = child(my_q, stop)
+                    prev = child(my_q - 1, call(-, start, 1))
                     body = quote
-                        $(lvl.idx_alloc) < $my_q && ($(lvl.idx_alloc) = $Finch.regrow!($(lvl.ex).idx, $(lvl.idx_alloc), $my_q))
-                        $(lvl.ex).idx[$my_q] = $(ctx(idx))
-                        $my_q += 1
-                    end
-                    if envdefaultcheck(fbr.env) !== nothing
-                        body = quote
-                            $body
-                            $(envdefaultcheck(fbr.env)) = false
+                        elseif $my_q == $my_q_start || ($prev != $curr)
+                            $(lvl.idx_alloc) < $my_q && ($(lvl.idx_alloc) = $Finch.regrow!($(lvl.ex).idx, $(lvl.idx_alloc), $my_q))
+                            $(lvl.ex).idx[$my_q] = $(ctx(idx))
+                            $my_q += 1
                         end
                     end
-                    if hasdefaultcheck(lvl.lvl)
+                    if hasdefaultcheck(lvl.lvl) && envdefaultcheck(fbr.env) !== nothing
                         body = quote
                             if !$(my_guard)
+                                $(envdefaultcheck(fbr.env)) = false
                                 $body
                             end
                         end
