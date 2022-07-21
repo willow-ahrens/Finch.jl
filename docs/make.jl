@@ -1,7 +1,7 @@
 using Finch
 using Documenter
 
-DocMeta.setdocmeta!(Finch, :DocTestSetup, :(using Finch); recursive=true)
+DocMeta.setdocmeta!(Finch, :DocTestSetup, :(using Finch; using SparseArrays); recursive=true)
 
 makedocs(;
     modules=[Finch],

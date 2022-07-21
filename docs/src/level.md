@@ -5,8 +5,8 @@ CurrentModule = Finch
 # Public Functions
 
 ```@docs
-Finch.fiber
-Finch.fiber!
-Finch.sparse
-Finch.sparse!
+fiber
+fiber!
+sparse
+sparse!
 ```

@@ -1,26 +1,30 @@
 """
     fiber!(arr, default = zero(eltype(arr)))
-    Like [`fiber`](@ref), copies an array-like object `arr` into a
-    corresponding, similar `Fiber` datastructure. However, `fiber!` reuses
-    memory whenever possible, meaning `arr` may be rendered unusable.
+
+Like [`fiber`](@ref), copies an array-like object `arr` into a corresponding,
+similar `Fiber` datastructure. However, `fiber!` reuses memory whenever
+possible, meaning `arr` may be rendered unusable.
 """
 fiber!(arr, default=zero(eltype(arr))) = fiber(arr, default=default)
+
 """
     fiber(arr, default = zero(eltype(arr)))
-    Copies an array-like object `arr` into a corresponding, similar `Fiber`
-    datastructure. `default` is the default value to use for initialization and
-    sparse compression.
 
-    See also: [`fiber!`](@ref)
+Copies an array-like object `arr` into a corresponding, similar `Fiber`
+datastructure. `default` is the default value to use for initialization and
+sparse compression.
 
-    # Examples
-    ```jldoctest
-    julia> println(summary(fiber(sparse([1 0; 0 1]))))
-    2×2 Fiber f"sl"(0)
+See also: [`fiber!`](@ref)
 
-    julia> println(summary(fiber(ones(3, 2, 4))))
-    3×2×4 Fiber f"sss"(0.0)
-    ```
+# Examples
+
+```jldoctest
+julia> println(summary(fiber(sparse([1 0; 0 1]))))
+2×2 Fiber f"sl"(0)
+
+julia> println(summary(fiber(ones(3, 2, 4))))
+3×2×4 Fiber f"sss"(0.0)
+```
 """
 function fiber(arr, default=zero(eltype(arr)))
     Base.copyto!(Fiber((SolidLevel^(ndims(arr)))(Element{default}())), arr)
@@ -36,7 +40,7 @@ end
 end
 
 """
-sparse(I::Tuple, V,[ M::Tuple, combine])
+    sparse(I::Tuple, V,[ M::Tuple, combine])
 
 Create a sparse COO fiber `S` such that `size(S) == M` and `S[(i[q] for i =
 I)...] = V[q]`. The combine function is used to combine duplicates. If `M` is
@@ -46,8 +50,7 @@ case combine defaults to `|`. All elements of I must satisfy 1 <= I[n][q] <=
 M[n].  Numerical zeros are retained as structural nonzeros; to drop numerical
 zeros, use dropzeros!.
 
-Examples
-≡≡≡≡≡≡≡≡≡≡
+# Examples
 
 julia> I = (
     [1, 2, 3],
@@ -88,7 +91,7 @@ function SparseArrays.sparse(I::Tuple, V::Vector, shape = map(maximum, I), combi
 end
 
 """
-sparse!(I::Tuple, V,[ M::Tuple])
+    sparse!(I::Tuple, V,[ M::Tuple])
 
 Like [`sparse`](https://docs.julialang.org/en/v1/stdlib/SparseArrays/#SparseArrays.sparse), but the coordinates must be sorted and unique, and memory
 is reused.
