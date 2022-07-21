@@ -78,6 +78,7 @@ combine_style(a::SimplifyStyle, b::AcceptRunStyle) = SimplifyStyle()
 combine_style(a::AcceptRunStyle, b::AcceptRunStyle) = AcceptRunStyle()
 combine_style(a::RunStyle, b::AcceptRunStyle) = RunStyle()
 
+(ctx::LowerJulia)(::Pass, ::AcceptRunStyle) = quote end#TODO this shouldn't need to be specified, I think that Pass needs not to declare a style
 function (ctx::LowerJulia)(root::Chunk, ::AcceptRunStyle)
     body = (AcceptRunVisitor(root, root.idx, root.ext, ctx))(root.body)
     if getname(root.idx) in getunbound(body)

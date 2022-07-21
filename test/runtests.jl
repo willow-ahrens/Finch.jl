@@ -34,7 +34,6 @@ verbose = "verbose" in ARGS
     include("test_ssa.jl")
     include("test_parse.jl")
     include("test_repeat.jl")
-    exit()
     include("test_permit.jl")
     include("test_skips.jl")
     include("test_fibers.jl")
