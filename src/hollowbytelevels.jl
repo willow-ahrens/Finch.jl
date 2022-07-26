@@ -18,6 +18,10 @@ HollowByteLevel{Ti, Tp, Tq}(I::Ti, tbl, srt, srt_stop, pos, lvl::Lvl) where {Ti,
 
 f_str(str::F_Cons{:begin, <:F_Cons{:b}}, args...) = Fiber(cdr(str)(args...))
 f_str(str::F_Cons{:b, <:F_Cons{:end}}, args...) = F_Cons(:b, F_Cons(:e))(args...)
+"""
+    f"b..."([default], [dims])
+Format code constructor for a [HollowByteLevel](@ref).
+"""
 f_str(str::F_Cons{:b}) = HollowByte(cdr(str)())
 f_str(str::F_Cons{:b}, D) = HollowByte(cdr(str)(D))
 f_str(str::F_Cons{:b}, D, (I, dims...)) = HollowByte(I, cdr(str)(D, dims))

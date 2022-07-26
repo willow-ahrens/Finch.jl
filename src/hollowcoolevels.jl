@@ -17,6 +17,10 @@ HollowCooLevel{N, Ti, Tq, Tbl}(I::Ti, tbl::Tbl, pos, lvl::Lvl) where {N, Ti, Tq,
 
 f_str(str::F_Cons{:begin, <:F_Cons{:c}}, args...) = Fiber(cdr(str)(args...))
 f_str(str::F_Cons{:c, <:F_Cons{N, <:F_Cons{:end}}}, args...) where {N} = F_Cons(:c, F_Cons(N, F_Cons(:e)))(args...)
+"""
+    f"c\$(N)..."([default], [dims])
+Format code constructor for a [HollowCooLevel](@ref) of arity \$N.
+"""
 f_str(str::F_Cons{:c, <:F_Cons{N}}) where {N} = HollowCoo{N}(cdr(cdr(str))())
 f_str(str::F_Cons{:c, <:F_Cons{N}}, D) where {N} = HollowCoo{N}(cdr(cdr(str))(D))
 f_str(str::F_Cons{:c, <:F_Cons{N}}, D, dims) where {N} = HollowCoo{N}((dims[1:N]...), cdr(cdr(str))(D, (dims[N + 1:end]...,)))

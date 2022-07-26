@@ -6,6 +6,10 @@ ElementLevel{D, Tv}() where {D, Tv} = ElementLevel{D, Tv}(Vector{Tv}(undef, 4))
 const Element = ElementLevel
 
 f_str(str::F_Cons{:begin, <:F_Cons{:e}}, args...) = Fiber(cdr(str)(args...))
+"""
+    f"e"([default])
+Format code constructor for an [ElementLevel](@ref).
+"""
 f_str(::F_Cons{:e}) = Element{0.0}()
 f_str(::F_Cons{:e}, D) = Element{D}()
 f_str(::F_Cons{:e}, D, ::Tuple{}) = Element{D}()

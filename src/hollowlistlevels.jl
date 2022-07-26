@@ -14,6 +14,10 @@ HollowListLevel{Ti, Lvl}(I::Ti, lvl::Lvl) where {Ti, Lvl} = HollowListLevel{Ti, 
 
 f_str(str::F_Cons{:begin, <:F_Cons{:l}}, args...) = Fiber(cdr(str)(args...))
 f_str(str::F_Cons{:l, <:F_Cons{:end}}, args...) = F_Cons(:l, F_Cons(:e))(args...)
+"""
+    f"l..."([default], [dims])
+Format code constructor for a [HollowListLevel](@ref).
+"""
 f_str(str::F_Cons{:l}) = HollowList(cdr(str)())
 f_str(str::F_Cons{:l}, D) = HollowList(cdr(str)(D))
 f_str(str::F_Cons{:l}, D, (I, dims...)) = HollowList(I, cdr(str)(D, dims))

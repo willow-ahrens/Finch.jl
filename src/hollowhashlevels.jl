@@ -24,7 +24,11 @@ HollowHashLevel{N, Ti, Tp, T_q, Tbl}(I::Ti, tbl::Tbl, srt, pos, lvl::Lvl) where 
 
 f_str(str::F_Cons{:begin, <:F_Cons{:h}}, args...) = Fiber(cdr(str)(args...))
 f_str(str::F_Cons{:h, <:F_Cons{N, <:F_Cons{:end}}}, args...) where {N} = F_Cons(:h, F_Cons(N, F_Cons(:e)))(args...)
-f_str(str::F_Cons{:h, <:F_Cons{N}}, ) where {N} = HollowHash{N}(cdr(cdr(str))())
+"""
+    f"h\$(N)..."([default], [dims])
+Format code constructor for a [HollowHashLevel](@ref) of arity \$N.
+"""
+f_str(str::F_Cons{:h, <:F_Cons{N}}) where {N} = HollowHash{N}(cdr(cdr(str))())
 f_str(str::F_Cons{:h, <:F_Cons{N}}, D) where {N} = HollowHash{N}(cdr(cdr(str))(D))
 f_str(str::F_Cons{:h, <:F_Cons{N}}, D, dims) where {N} = HollowHash{N}((dims[1:N]...), cdr(cdr(str))(D, (dims[N + 1:end]...,)))
 summary_f_str(lvl::HollowHashLevel{N}) where {N} = "h$(N)$(summary_f_str(lvl.lvl))"

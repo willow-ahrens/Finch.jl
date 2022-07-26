@@ -13,6 +13,10 @@ RepeatLevel{D, Ti, Tv}(I::Ti) where {D, Ti, Tv} = RepeatLevel{D, Ti, Tv}(I, Ti[1
 RepeatLevel{D}(I::Ti, pos, idx, val::Vector{Tv}) where {D, Ti, Tv} = RepeatLevel{D, Ti, Tv}(I, pos, idx, val)
 
 f_str(str::F_Cons{:begin, <:F_Cons{:r}}, args...) = Fiber(cdr(str)(args...))
+"""
+    f"r"([default], [dims])
+Format code constructor for a [RepeatLevel](@ref) mode.
+"""
 f_str(::F_Cons{:r}) = Repeat{0.0}()
 f_str(::F_Cons{:r}, D) = Repeat{D}()
 f_str(::F_Cons{:r}, D, (I, )) = Repeat{D}(I)
