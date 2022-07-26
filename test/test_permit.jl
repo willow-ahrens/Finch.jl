@@ -33,6 +33,7 @@
 
     F = fiber([1,1,1,1,1])
 
+    println(@index_code @loop i j C[i] += (A[i] != 0) * coalesce(A[permit[offset[i - 3, j]]], 0) * F[j])
     @index @loop i j C[i] += (A[i] != 0) * coalesce(A[permit[offset[i - 3, j]]], 0) * F[j]
     #println(@index_code @loop i C[i] = coalesce(A[permit[i]], B[offset[5, permit[i]]]))
     #println(@index_code @loop i C[i] = coalesce(A[permit[i]], B[permit[offset[5, i]]]))

@@ -5,7 +5,10 @@ ElementLevel{D}(args...) where {D} = ElementLevel{D, typeof(D)}(args...)
 ElementLevel{D, Tv}() where {D, Tv} = ElementLevel{D, Tv}(Vector{Tv}(undef, 4))
 const Element = ElementLevel
 
-parse_level((D,),) = Element{D}()
+(str::F_Str{:begin, <:F_Str{:e}})(args...) = Fiber(tok(str)(args...))
+(::F_Str{:e})() = Element{0.0}()
+(::F_Str{:e})(D) = Element{D}()
+(::F_Str{:e})(D, ::Tuple{}) = Element{D}()
 summary_f_str(::ElementLevel) = ""
 summary_f_str_args(::ElementLevel{D}) where {D} = (D,)
 similar_level(::ElementLevel{D}) where {D} = ElementLevel{D}()

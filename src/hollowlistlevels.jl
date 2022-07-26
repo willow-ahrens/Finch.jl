@@ -12,7 +12,11 @@ HollowListLevel{Ti}(I::Ti, lvl::Lvl) where {Ti, Lvl} = HollowListLevel{Ti, Lvl}(
 HollowListLevel{Ti}(I::Ti, pos, idx, lvl::Lvl) where {Ti, Lvl} = HollowListLevel{Ti, Lvl}(I, pos, idx, lvl)
 HollowListLevel{Ti, Lvl}(I::Ti, lvl::Lvl) where {Ti, Lvl} = HollowListLevel{Ti, Lvl}(I, Ti[1, fill(0, 16)...], Vector{Ti}(undef, 16), lvl)
 
-parse_level(args, ::Val{:l}, words...) = HollowList(parse_level(args, words...))
+(str::F_Str{:begin, <:F_Str{:l}})(args...) = Fiber(tok(str)(args...))
+(str::F_Str{:l, <:F_Str{:end}})(args...) = F_Str(:l, F_Str(:e))(args...)
+(str::F_Str{:l})() = HollowList(tok(str)())
+(str::F_Str{:l})(D) = HollowList(tok(str)(D))
+(str::F_Str{:l})(D, (I, dims...)) = HollowList(I, tok(str)(D, dims))
 summary_f_str(lvl::HollowListLevel) = "l$(summary_f_str(lvl.lvl))"
 summary_f_str_args(lvl::HollowListLevel) = summary_f_str_args(lvl.lvl)
 similar_level(lvl::HollowListLevel) = HollowList(similar_level(lvl.lvl))

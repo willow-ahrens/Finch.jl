@@ -15,7 +15,11 @@ HollowCooLevel{N, Ti, Tq}(I::Ti, tbl::Tbl, pos, lvl) where {N, Ti, Tq, Tbl} =
 HollowCooLevel{N, Ti, Tq, Tbl}(I::Ti, tbl::Tbl, pos, lvl::Lvl) where {N, Ti, Tq, Tbl, Lvl} =
     HollowCooLevel{N, Ti, Tq, Tbl, Lvl}(I, tbl, pos, lvl)
 
-parse_level(args, ::Val{:c}, ::Val{N}, words...) where {N} = HollowCoo{N}(parse_level(args, words...))
+(str::F_Str{:begin, <:F_Str{:c}})(args...) = Fiber(tok(str)(args...))
+(str::F_Str{:c, <:F_Str{N, <:F_Str{:end}}})(args...) where {N} = F_Str(:c, F_Str(N, F_Str(:e)))(args...)
+(str::F_Str{:c, <:F_Str{N}})() where {N} = HollowCoo{N}(tok(tok(str))())
+(str::F_Str{:c, <:F_Str{N}})(D) where {N} = HollowCoo{N}(tok(tok(str))(D))
+(str::F_Str{:c, <:F_Str{N}})(D, dims) where {N} = HollowCoo{N}((dims[1:N]...), tok(tok(str))(D, (dims[N + 1:end]...,)))
 summary_f_str(lvl::HollowCooLevel{N}) where {N} = "c$(N)$(summary_f_str(lvl.lvl))"
 summary_f_str_args(lvl::HollowCooLevel) = summary_f_str_args(lvl.lvl)
 similar_level(lvl::HollowCooLevel{N}) where {N} = HollowCooLevel{N}(similar_level(lvl.lvl))

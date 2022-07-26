@@ -282,11 +282,13 @@ function display_fiber_data(io::IO, mime::MIME"text/plain", fbr, N, crds, print_
     end
 end
 
-struct LevelParser{Words}
-    words::Words
+struct F_Str{word, Body}
+    body::Body
 end
+F_Str(word) = F_Str(word, missing)
+F_Str(word, body::Body) where {Body} = F_Str{word, Body}(body)
 
-(parser::LevelParser)(args...) = Fiber(parse_level(args, parser.words...))
+tok(str::F_Str) = str.body
 
 macro f_str(str)
     chars = collect(str)
@@ -298,10 +300,9 @@ macro f_str(str)
             push!(words, c)
         end
     end
-    words = tuple(map(Val, map(word -> something(tryparse(Int, string(word)), Symbol(word)), words))...)
-    return quote
-        LevelParser($words)
-    end
+    words = map(word -> something(tryparse(Int, string(word)), Symbol(word)), words)
+    f_str = F_Str(:begin, foldr(F_Str, words, init = F_Str(:end)))
+    return f_str
 end
 
 Base.summary(fbr::Fiber) = "$(join(shape(fbr), "×")) Fiber f\"$(summary_f_str(fbr.lvl))\"($(summary_f_str_args(fbr.lvl)...))"

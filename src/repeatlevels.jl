@@ -12,7 +12,10 @@ RepeatLevel{D, Ti}(I::Ti) where {D, Ti} = RepeatLevel{D, Ti, typeof(D)}(I)
 RepeatLevel{D, Ti, Tv}(I::Ti) where {D, Ti, Tv} = RepeatLevel{D, Ti, Tv}(I, Ti[1, fill(0, 16)...], Vector{Ti}(undef, 16), Vector{Tv}(undef, 16))
 RepeatLevel{D}(I::Ti, pos, idx, val::Vector{Tv}) where {D, Ti, Tv} = RepeatLevel{D, Ti, Tv}(I, pos, idx, val)
 
-parse_level((default,), ::Val{:r}) = Repeat{default}()
+(str::F_Str{:begin, <:F_Str{:r}})(args...) = Fiber(tok(str)(args...))
+(::F_Str{:r})() = Repeat{0.0}()
+(::F_Str{:r})(D) = Repeat{D}()
+(::F_Str{:r})(D, (I, )) = Repeat{D}(I)
 summary_f_str(lvl::RepeatLevel) = "r"
 summary_f_str_args(::RepeatLevel{D}) where {D} = (D,)
 similar_level(::RepeatLevel{D}) where {D} = Repeat{D}()
