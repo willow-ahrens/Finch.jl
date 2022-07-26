@@ -293,6 +293,16 @@ cdr(str::F_Cons) = str.body
 
 (str::F_Cons)(args...) = f_str(str, args...)
 
+"""
+    f"ctr..."(args...)
+
+Construct a fiber using the prefix-free format code `ctr`. Characters are parsed
+as separate tokens, and positive integers are parsed as single tokens. As an
+example, a csr matrix which might be constructed as
+`Fiber(SolidLevel(HollowListLevel(Element{0.0}(...))))`. We can also be specify
+csr format as f"ls"(0.0). Consult the documentation for the helper function
+[f_str](@ref) for a full listing of format codes and behaviors.
+"""
 macro f_str(str)
     chars = collect(str)
     words = []
