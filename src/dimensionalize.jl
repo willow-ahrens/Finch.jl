@@ -331,7 +331,7 @@ function combinedim(a::Narrow{<:Extent}, b::Narrow{<:Extent})
     ))
 end
 
-combinedim(a::Widen, b::Extent) = resultdim(a, Widen(b))
+combinedim(a::Widen, b::Extent) = b
 combinedim(a::Widen, b::NoDimension) = a
 combinedim(a::Widen, b::SuggestedExtent) = a
 combinedim(a::Widen, ::DeferDimension) = deferdim
