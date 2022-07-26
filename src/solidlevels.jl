@@ -7,11 +7,11 @@ SolidLevel{Ti}(lvl::Lvl) where {Ti, Lvl} = SolidLevel{Ti, Lvl}(zero(Ti), lvl)
 SolidLevel(lvl) = SolidLevel(0, lvl)
 const Solid = SolidLevel
 
-(str::F_Str{:begin, <:F_Str{:s}})(args...) = Fiber(tok(str)(args...))
-(str::F_Str{:s, <:F_Str{:end}})(args...) = F_Str(:s, F_Str(:e))(args...)
-(str::F_Str{:s})() = Solid(tok(str)())
-(str::F_Str{:s})(D) = Solid(tok(str)(D))
-(str::F_Str{:s})(D, (I, dims...)) = Solid(I, tok(str)(D, dims))
+f_str(str::F_Cons{:begin, <:F_Cons{:s}}, args...) = Fiber(cdr(str)(args...))
+f_str(str::F_Cons{:s, <:F_Cons{:end}}, args...) = F_Cons(:s, F_Cons(:e))(args...)
+f_str(str::F_Cons{:s}) = Solid(cdr(str)())
+f_str(str::F_Cons{:s}, D) = Solid(cdr(str)(D))
+f_str(str::F_Cons{:s}, D, (I, dims...)) = Solid(I, cdr(str)(D, dims))
 summary_f_str(lvl::SolidLevel) = "s$(summary_f_str(lvl.lvl))"
 summary_f_str_args(lvl::SolidLevel) = summary_f_str_args(lvl.lvl)
 similar_level(lvl::SolidLevel) = Solid(similar_level(lvl.lvl))

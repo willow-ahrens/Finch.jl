@@ -16,11 +16,11 @@ HollowByteLevel{Ti, Tp, Tq}(I::Ti, lvl) where {Ti, Tp, Tq} =
 HollowByteLevel{Ti, Tp, Tq}(I::Ti, tbl, srt, srt_stop, pos, lvl::Lvl) where {Ti, Tp, Tq, Lvl} =
     HollowByteLevel{Ti, Tp, Tq, Lvl}(I, tbl, srt, srt_stop, pos, lvl)
 
-(str::F_Str{:begin, <:F_Str{:b}})(args...) = Fiber(tok(str)(args...))
-(str::F_Str{:b, <:F_Str{:end}})(args...) = F_Str(:b, F_Str(:e))(args...)
-(str::F_Str{:b})() = HollowByte(tok(str)())
-(str::F_Str{:b})(D) = HollowByte(tok(str)(D))
-(str::F_Str{:b})(D, (I, dims...)) = HollowByte(I, tok(str)(D, dims))
+f_str(str::F_Cons{:begin, <:F_Cons{:b}}, args...) = Fiber(cdr(str)(args...))
+f_str(str::F_Cons{:b, <:F_Cons{:end}}, args...) = F_Cons(:b, F_Cons(:e))(args...)
+f_str(str::F_Cons{:b}) = HollowByte(cdr(str)())
+f_str(str::F_Cons{:b}, D) = HollowByte(cdr(str)(D))
+f_str(str::F_Cons{:b}, D, (I, dims...)) = HollowByte(I, cdr(str)(D, dims))
 similar_level(lvl::HollowByteLevel) = HollowByte(similar_level(lvl.lvl))
 similar_level(lvl::HollowByteLevel, dim, tail...) = HollowByte(dim, similar_level(lvl.lvl, tail...))
 summary_f_str(lvl::HollowByteLevel) = "b$(summary_f_str(lvl.lvl))"

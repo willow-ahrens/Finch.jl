@@ -15,11 +15,11 @@ HollowCooLevel{N, Ti, Tq}(I::Ti, tbl::Tbl, pos, lvl) where {N, Ti, Tq, Tbl} =
 HollowCooLevel{N, Ti, Tq, Tbl}(I::Ti, tbl::Tbl, pos, lvl::Lvl) where {N, Ti, Tq, Tbl, Lvl} =
     HollowCooLevel{N, Ti, Tq, Tbl, Lvl}(I, tbl, pos, lvl)
 
-(str::F_Str{:begin, <:F_Str{:c}})(args...) = Fiber(tok(str)(args...))
-(str::F_Str{:c, <:F_Str{N, <:F_Str{:end}}})(args...) where {N} = F_Str(:c, F_Str(N, F_Str(:e)))(args...)
-(str::F_Str{:c, <:F_Str{N}})() where {N} = HollowCoo{N}(tok(tok(str))())
-(str::F_Str{:c, <:F_Str{N}})(D) where {N} = HollowCoo{N}(tok(tok(str))(D))
-(str::F_Str{:c, <:F_Str{N}})(D, dims) where {N} = HollowCoo{N}((dims[1:N]...), tok(tok(str))(D, (dims[N + 1:end]...,)))
+f_str(str::F_Cons{:begin, <:F_Cons{:c}}, args...) = Fiber(cdr(str)(args...))
+f_str(str::F_Cons{:c, <:F_Cons{N, <:F_Cons{:end}}}, args...) where {N} = F_Cons(:c, F_Cons(N, F_Cons(:e)))(args...)
+f_str(str::F_Cons{:c, <:F_Cons{N}}) where {N} = HollowCoo{N}(cdr(cdr(str))())
+f_str(str::F_Cons{:c, <:F_Cons{N}}, D) where {N} = HollowCoo{N}(cdr(cdr(str))(D))
+f_str(str::F_Cons{:c, <:F_Cons{N}}, D, dims) where {N} = HollowCoo{N}((dims[1:N]...), cdr(cdr(str))(D, (dims[N + 1:end]...,)))
 summary_f_str(lvl::HollowCooLevel{N}) where {N} = "c$(N)$(summary_f_str(lvl.lvl))"
 summary_f_str_args(lvl::HollowCooLevel) = summary_f_str_args(lvl.lvl)
 similar_level(lvl::HollowCooLevel{N}) where {N} = HollowCooLevel{N}(similar_level(lvl.lvl))
