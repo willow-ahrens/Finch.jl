@@ -116,3 +116,14 @@ fspzeros(shape) = spzeros(Float64, shape)
 function fspzeros(::Type{T}, shape) where {T}
     return sparse!(((Int[] for _ in shape)...,), T[], shape)
 end
+
+function ffindnz(src)
+    tmp = Fiber(
+        HollowCooLevel{ndims(src)}(
+        ElementLevel{zero(eltype(src)), eltype(src)}()))
+    copyto!(tmp, src)
+    nnz = tmp.lvl.pos[2] - 1
+    tbl = tmp.lvl.tbl
+    val = tmp.lvl.lvl.val
+    (ntuple(n->tmp.lvl.tbl[n][1:nnz], ndims(src)), val[1:nnz])
+end

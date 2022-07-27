@@ -59,7 +59,7 @@ include("offset.jl")
 include("window.jl")
 
 include("fibers_meta.jl")
-export fsparse, fsparse!, fsprand, fspzeros
+export fsparse, fsparse!, fsprand, fspzeros, ffindnz
 
 module h
     using Finch
