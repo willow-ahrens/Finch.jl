@@ -40,7 +40,7 @@ end
 end
 
 """
-    sparse(I::Tuple, V,[ M::Tuple, combine])
+    fsparse(I::Tuple, V,[ M::Tuple, combine])
 
 Create a sparse COO fiber `S` such that `size(S) == M` and `S[(i[q] for i =
 I)...] = V[q]`. The combine function is used to combine duplicates. If `M` is
@@ -59,13 +59,13 @@ julia> I = (
 
 julia> V = [1.0; 2.0; 3.0];
 
-julia> sparse(I, V)
+julia> fsparse(I, V)
 HollowCoo (0.0) [1:3×1:3×1:3]
 │ │ │ 
 └─└─└─[1, 1, 1] [2, 2, 2] [3, 3, 3]
       1.0       2.0       3.0    
 """
-function SparseArrays.sparse(I::Tuple, V::Vector, shape = map(maximum, I), combine = eltype(V) isa Bool ? (|) : (+))
+function fsparse(I::Tuple, V::Vector, shape = map(maximum, I), combine = eltype(V) isa Bool ? (|) : (+))
     C = map(tuple, I...)
     update = false
     if !issorted(C)
@@ -87,32 +87,32 @@ function SparseArrays.sparse(I::Tuple, V::Vector, shape = map(maximum, I), combi
     else
         I = map(copy, I)
     end
-    return sparse!(I, V, shape)
+    return fsparse!(I, V, shape)
 end
 
 """
-    sparse!(I::Tuple, V,[ M::Tuple])
+    fsparse!(I::Tuple, V,[ M::Tuple])
 
-Like [`sparse`](https://docs.julialang.org/en/v1/stdlib/SparseArrays/#SparseArrays.sparse), but the coordinates must be sorted and unique, and memory
+Like [`fsparse`](https://docs.julialang.org/en/v1/stdlib/SparseArrays/#SparseArrays.sparse), but the coordinates must be sorted and unique, and memory
 is reused.
 """
-function sparse!(I::Tuple, V, shape = map(maximum, I))
+function fsparse!(I::Tuple, V, shape = map(maximum, I))
     return Fiber(HollowCoo{length(I), Tuple{map(eltype, I)...}, Int}(shape, I, [1, length(I[1]) + 1], Element{zero(eltype(V))}(V)))
 end
 
-SparseArrays.sprand(n::Tuple, args...) = _sprand_impl(n, sprand(mapfoldl(BigInt, *, n), args...))
-SparseArrays.sprand(r::SparseArrays.AbstractRNG, n::Tuple, args...) = _sprand_impl(r, n, sprand(mapfoldl(BigInt, *, n), args...))
-SparseArrays.sprand(r::SparseArrays.AbstractRNG, T::Type, n::Tuple, args...) = _sprand_impl(r, T, n, sprand(mapfoldl(BigInt, *, n), args...))
-function _sprand_impl(shape::Tuple, vec::SparseVector{Ti, Tv}) where {Ti, Tv}
+fsprand(n::Tuple, args...) = _fsprand_impl(n, sprand(mapfoldl(BigInt, *, n), args...))
+fsprand(r::SparseArrays.AbstractRNG, n::Tuple, args...) = _fsprand_impl(r, n, sprand(mapfoldl(BigInt, *, n), args...))
+fsprand(r::SparseArrays.AbstractRNG, T::Type, n::Tuple, args...) = _fsprand_impl(r, T, n, sprand(mapfoldl(BigInt, *, n), args...))
+function _fsprand_impl(shape::Tuple, vec::SparseVector{Ti, Tv}) where {Ti, Tv}
     I = ((Vector(undef, length(vec.nzind)) for _ in shape)...,)
     for (p, ind) in enumerate(vec.nzind)
         c = CartesianIndices(reverse(shape))[ind]
         ntuple(n->I[n][p] = c[length(shape) - n + 1], length(shape))
     end
-    return sparse!(I, vec.nzval, shape)
+    return fsparse!(I, vec.nzval, shape)
 end
 
-SparseArrays.spzeros(shape) = spzeros(Float64, shape)
-function SparseArrays.spzeros(::Type{T}, shape) where {T}
+fspzeros(shape) = spzeros(Float64, shape)
+function fspzeros(::Type{T}, shape) where {T}
     return sparse!(((Int[] for _ in shape)...,), T[], shape)
 end
