@@ -66,6 +66,7 @@ See also: [`ndims`](https://docs.julialang.org/en/v1/base/arrays/#Base.ndims)
 """
 function arity end
 Base.ndims(arr::FiberArray) = arity(arr.fbr)
+Base.ndims(arr::Fiber) = arity(arr)
 
 """
     image(::Fiber)
@@ -76,6 +77,7 @@ See also: [`eltype`](https://docs.julialang.org/en/v1/base/collections/#Base.elt
 """
 function image end
 Base.eltype(arr::FiberArray) = image(arr.fbr)
+Base.eltype(arr::Fiber) = image(arr)
 
 """
     shape(::Fiber)
@@ -87,6 +89,7 @@ See also: [`Base.size`](https://docs.julialang.org/en/v1/base/arrays/#Base.size)
 """
 function shape end
 Base.size(arr::FiberArray) = shape(arr.fbr)
+Base.size(arr::Fiber) = shape(arr)
 
 """
     domain(::Fiber)
@@ -98,6 +101,7 @@ See also: [`axes`](https://docs.julialang.org/en/v1/base/arrays/#Base.axes-Tuple
 """
 function domain end
 Base.axes(arr::FiberArray) = domain(arr.fbr)
+Base.axes(arr::Fiber) = domain(arr)
 
 function Base.getindex(arr::FiberArray, idxs::Integer...) where {Tv, N}
     arr.fbr(idxs...)
