@@ -121,7 +121,7 @@ function ffindnz(src)
     tmp = Fiber(
         HollowCooLevel{ndims(src)}(
         ElementLevel{zero(eltype(src)), eltype(src)}()))
-    copyto!(tmp, src)
+    tmp = copyto!(tmp, src)
     nnz = tmp.lvl.pos[2] - 1
     tbl = tmp.lvl.tbl
     val = tmp.lvl.lvl.val
