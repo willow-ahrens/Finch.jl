@@ -23,7 +23,7 @@
     =#
 
     A_ref = sprand(10, 0.5); B_ref = sprand(10, 0.5); C_ref = vcat(A_ref, B_ref)
-    A = fiber(A_ref); B = fiber(B_ref); C = f"l"(0.0)
+    A = fiber(A_ref); B = fiber(B_ref); C = @f(l(e(0.0)))
     @test diff("concat_permit_offset.jl", @index_code @loop i C[i] = coalesce(A[permit[i]], B[permit[offset[10, i]]]))
     @index @loop i C[i] = coalesce(A[permit[i]], B[permit[offset[10, i]]])
     

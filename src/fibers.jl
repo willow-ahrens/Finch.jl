@@ -286,43 +286,30 @@ function display_fiber_data(io::IO, mime::MIME"text/plain", fbr, N, crds, print_
     end
 end
 
-struct F_Cons{word, Body}
-    body::Body
-end
-F_Cons(word) = F_Cons(word, missing)
-F_Cons(word, body::Body) where {Body} = F_Cons{word, Body}(body)
-
-car(::F_Cons{word}) where {word} = word
-cdr(str::F_Cons) = str.body
-
-(str::F_Cons)(args...) = f_str(str, args...)
-
 """
-    f"ctr..."(args...)
+    @f ctr
 
-Construct a fiber using the prefix-free format code `ctr`. Characters are parsed
-as separate tokens, and positive integers are parsed as single tokens. As an
-example, a csr matrix which might be constructed as
-`Fiber(SolidLevel(HollowListLevel(Element{0.0}(...))))`. We can also be specify
-csr format as f"ls"(0.0). Consult the documentation for the helper function
-[f_str](@ref) for a full listing of format codes and behaviors.
+Construct a fiber using abbreviated fiber constructor codes. All function names
+in `ctr` must be format codes, but expressions may be interpolated with `\$`. As
+an example, a csr matrix which might be constructed as
+`Fiber(SolidLevel(HollowListLevel(Element{0.0}(...))))` can also be constructed
+as `@f(l(s(e(0.0))))`. Consult the documentation for the helper function
+[f_code](@ref) for a full listing of format codes.
 """
-macro f_str(str)
-    chars = collect(str)
-    words = []
-    for c in chars
-        if isdigit(c) && tryparse(Int, string(words[end])) !== nothing
-            words[end] *= c
+macro f(ex)
+    function walk(ex)
+        if ex isa Expr && ex.head == :call
+            return :(($f_code($(QuoteNode(Val(ex.args[1])))))($(map(walk, ex.args[2:end])...)))
+        elseif ex isa Expr && ex.head == :$
+            return ex.args[1] #TODO ?
         else
-            push!(words, c)
+            esc(ex)
         end
     end
-    words = map(word -> something(tryparse(Int, string(word)), Symbol(word)), words)
-    str = F_Cons(:begin, foldr(F_Cons, words, init = F_Cons(:end)))
-    return str
+    return :($Fiber($(walk(ex))))
 end
 
-Base.summary(fbr::Fiber) = "$(join(shape(fbr), "×")) Fiber f\"$(summary_f_str(fbr.lvl))\"($(summary_f_str_args(fbr.lvl)...))"
+Base.summary(fbr::Fiber) = "$(join(shape(fbr), "×")) Fiber @f($(summary_f_code(fbr.lvl)))"
 
 Base.similar(fbr::Fiber) = Fiber(similar_level(fbr.lvl))
 Base.similar(fbr::Fiber, dims::Tuple) = Fiber(similar_level(fbr.lvl, dims...))

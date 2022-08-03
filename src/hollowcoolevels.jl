@@ -15,17 +15,11 @@ HollowCooLevel{N, Ti, Tq}(I::Ti, tbl::Tbl, pos, lvl) where {N, Ti, Tq, Tbl} =
 HollowCooLevel{N, Ti, Tq, Tbl}(I::Ti, tbl::Tbl, pos, lvl::Lvl) where {N, Ti, Tq, Tbl, Lvl} =
     HollowCooLevel{N, Ti, Tq, Tbl, Lvl}(I, tbl, pos, lvl)
 
-f_str(str::F_Cons{:begin, <:F_Cons{:c}}, args...) = Fiber(cdr(str)(args...))
-f_str(str::F_Cons{:c, <:F_Cons{N, <:F_Cons{:end}}}, args...) where {N} = F_Cons(:c, F_Cons(N, F_Cons(:e)))(args...)
 """
-    f"c\$(N)..."([default], [dims])
-Format code constructor for a [HollowCooLevel](@ref) of arity \$N.
+`f_code(c)` = [HollowCooLevel](@ref).
 """
-f_str(str::F_Cons{:c, <:F_Cons{N}}) where {N} = HollowCoo{N}(cdr(cdr(str))())
-f_str(str::F_Cons{:c, <:F_Cons{N}}, D) where {N} = HollowCoo{N}(cdr(cdr(str))(D))
-f_str(str::F_Cons{:c, <:F_Cons{N}}, D, dims) where {N} = HollowCoo{N}((dims[1:N]...), cdr(cdr(str))(D, (dims[N + 1:end]...,)))
-summary_f_str(lvl::HollowCooLevel{N}) where {N} = "c$(N)$(summary_f_str(lvl.lvl))"
-summary_f_str_args(lvl::HollowCooLevel) = summary_f_str_args(lvl.lvl)
+f_code(::Val{:c}) = HollowCoo
+summary_f_code(lvl::HollowCooLevel{N}) where {N} = "c{$N}($(summary_f_code(lvl.lvl)))"
 similar_level(lvl::HollowCooLevel{N}) where {N} = HollowCooLevel{N}(similar_level(lvl.lvl))
 similar_level(lvl::HollowCooLevel{N}, tail...) where {N} = HollowCooLevel{N}(ntuple(n->tail[n], N), similar_level(lvl.lvl, tail[N + 1:end]...))
 

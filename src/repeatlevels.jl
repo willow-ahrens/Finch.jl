@@ -5,6 +5,7 @@ struct RepeatLevel{D, Ti, Tv}
     val::Vector{Tv}
 end
 const Repeat = RepeatLevel
+RepeatLevel(D, args...) = RepeatLevel{D}(args...)
 RepeatLevel{D}() where {D} = RepeatLevel{D}(0)
 RepeatLevel{D}(I::Ti) where {D, Ti} = RepeatLevel{D, Ti}(I)
 RepeatLevel{D, Ti}() where {D, Ti} = RepeatLevel{D, Ti}(zero(Ti))
@@ -12,16 +13,11 @@ RepeatLevel{D, Ti}(I::Ti) where {D, Ti} = RepeatLevel{D, Ti, typeof(D)}(I)
 RepeatLevel{D, Ti, Tv}(I::Ti) where {D, Ti, Tv} = RepeatLevel{D, Ti, Tv}(I, Ti[1, fill(0, 16)...], Vector{Ti}(undef, 16), Vector{Tv}(undef, 16))
 RepeatLevel{D}(I::Ti, pos, idx, val::Vector{Tv}) where {D, Ti, Tv} = RepeatLevel{D, Ti, Tv}(I, pos, idx, val)
 
-f_str(str::F_Cons{:begin, <:F_Cons{:r}}, args...) = Fiber(cdr(str)(args...))
 """
-    f"r"([default], [dims])
-Format code constructor for a [RepeatLevel](@ref) mode.
+`f_code(r)` = [RepeatLevel](@ref).
 """
-f_str(::F_Cons{:r}) = Repeat{0.0}()
-f_str(::F_Cons{:r}, D) = Repeat{D}()
-f_str(::F_Cons{:r}, D, (I, )) = Repeat{D}(I)
-summary_f_str(lvl::RepeatLevel) = "r"
-summary_f_str_args(::RepeatLevel{D}) where {D} = (D,)
+f_code(::Val{:r}) = Repeat
+summary_f_code(::Repeat{D}) where {D} = "r($(D))"
 similar_level(::RepeatLevel{D}) where {D} = Repeat{D}()
 similar_level(::RepeatLevel{D}, dim, tail...) where {D} = Repeat{D}(dim)
 

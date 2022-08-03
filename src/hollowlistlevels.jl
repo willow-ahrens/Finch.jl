@@ -12,17 +12,11 @@ HollowListLevel{Ti}(I::Ti, lvl::Lvl) where {Ti, Lvl} = HollowListLevel{Ti, Lvl}(
 HollowListLevel{Ti}(I::Ti, pos, idx, lvl::Lvl) where {Ti, Lvl} = HollowListLevel{Ti, Lvl}(I, pos, idx, lvl)
 HollowListLevel{Ti, Lvl}(I::Ti, lvl::Lvl) where {Ti, Lvl} = HollowListLevel{Ti, Lvl}(I, Ti[1, fill(0, 16)...], Vector{Ti}(undef, 16), lvl)
 
-f_str(str::F_Cons{:begin, <:F_Cons{:l}}, args...) = Fiber(cdr(str)(args...))
-f_str(str::F_Cons{:l, <:F_Cons{:end}}, args...) = F_Cons(:l, F_Cons(:e))(args...)
 """
-    f"l..."([default], [dims])
-Format code constructor for a [HollowListLevel](@ref).
+`f_code(l)` = [HollowListLevel](@ref).
 """
-f_str(str::F_Cons{:l}) = HollowList(cdr(str)())
-f_str(str::F_Cons{:l}, D) = HollowList(cdr(str)(D))
-f_str(str::F_Cons{:l}, D, (I, dims...)) = HollowList(I, cdr(str)(D, dims))
-summary_f_str(lvl::HollowListLevel) = "l$(summary_f_str(lvl.lvl))"
-summary_f_str_args(lvl::HollowListLevel) = summary_f_str_args(lvl.lvl)
+f_code(::Val{:l}) = HollowList
+summary_f_code(lvl::HollowListLevel) = "l($(summary_f_code(lvl.lvl)))"
 similar_level(lvl::HollowListLevel) = HollowList(similar_level(lvl.lvl))
 similar_level(lvl::HollowListLevel, dim, tail...) = HollowList(dim, similar_level(lvl.lvl, tail...))
 

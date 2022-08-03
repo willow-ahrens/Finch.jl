@@ -7,13 +7,11 @@ SolidLevel{Ti}(lvl::Lvl) where {Ti, Lvl} = SolidLevel{Ti, Lvl}(zero(Ti), lvl)
 SolidLevel(lvl) = SolidLevel(0, lvl)
 const Solid = SolidLevel
 
-f_str(str::F_Cons{:begin, <:F_Cons{:s}}, args...) = Fiber(cdr(str)(args...))
-f_str(str::F_Cons{:s, <:F_Cons{:end}}, args...) = F_Cons(:s, F_Cons(:e))(args...)
-f_str(str::F_Cons{:s}) = Solid(cdr(str)())
-f_str(str::F_Cons{:s}, D) = Solid(cdr(str)(D))
-f_str(str::F_Cons{:s}, D, (I, dims...)) = Solid(I, cdr(str)(D, dims))
-summary_f_str(lvl::SolidLevel) = "s$(summary_f_str(lvl.lvl))"
-summary_f_str_args(lvl::SolidLevel) = summary_f_str_args(lvl.lvl)
+"""
+`f_code(s)` = [SolidLevel](@ref).
+"""
+f_code(::Val{:s}) = Solid
+summary_f_code(lvl::Solid) = "s($(summary_f_code(lvl.lvl)))"
 similar_level(lvl::SolidLevel) = Solid(similar_level(lvl.lvl))
 similar_level(lvl::SolidLevel, dim, tail...) = Solid(dim, similar_level(lvl.lvl, tail...))
 

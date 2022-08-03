@@ -7,7 +7,7 @@
 
     @test FiberArray(A) == [2.0, 3.0, 3.0, 4.0, 4.0, 5.0, 5.0, 6.0, 6.0, 7.0]
 
-    B = f"s"(0.0)
+    B = @f(s(e(0.0)))
 
     @test diff("r_to_s.jl", @index_code @loop i B[i] = A[i])
     @index @loop i B[i] = A[i]

@@ -1,20 +1,16 @@
 struct ElementLevel{D, Tv}
     val::Vector{Tv}
 end
+ElementLevel(D, args...) = ElementLevel{D}(args...)
 ElementLevel{D}(args...) where {D} = ElementLevel{D, typeof(D)}(args...)
 ElementLevel{D, Tv}() where {D, Tv} = ElementLevel{D, Tv}(Vector{Tv}(undef, 4))
 const Element = ElementLevel
 
-f_str(str::F_Cons{:begin, <:F_Cons{:e}}, args...) = Fiber(cdr(str)(args...))
 """
-    f"e"([default])
-Format code constructor for an [ElementLevel](@ref).
+`f_code(e)` = [ElementLevel](@ref).
 """
-f_str(::F_Cons{:e}) = Element{0.0}()
-f_str(::F_Cons{:e}, D) = Element{D}()
-f_str(::F_Cons{:e}, D, ::Tuple{}) = Element{D}()
-summary_f_str(::ElementLevel) = ""
-summary_f_str_args(::ElementLevel{D}) where {D} = (D,)
+f_code(::Val{:e}) = Element
+summary_f_code(::Element{D}) where {D} = "e($(D))"
 similar_level(::ElementLevel{D}) where {D} = ElementLevel{D}()
 
 function Base.show(io::IO, lvl::ElementLevel{D}) where {D}
