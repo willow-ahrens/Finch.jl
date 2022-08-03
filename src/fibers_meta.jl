@@ -50,6 +50,8 @@ case combine defaults to `|`. All elements of I must satisfy 1 <= I[n][q] <=
 M[n].  Numerical zeros are retained as structural nonzeros; to drop numerical
 zeros, use dropzeros!.
 
+See also: [`sparse`](https://docs.julialang.org/en/v1/stdlib/SparseArrays/#SparseArrays.sparse)
+
 # Examples
 
 julia> I = (
@@ -93,16 +95,44 @@ end
 """
     fsparse!(I::Tuple, V,[ M::Tuple])
 
-Like [`fsparse`](https://docs.julialang.org/en/v1/stdlib/SparseArrays/#SparseArrays.sparse), but the coordinates must be sorted and unique, and memory
+Like [`fsparse`](@ref), but the coordinates must be sorted and unique, and memory
 is reused.
 """
 function fsparse!(I::Tuple, V, shape = map(maximum, I))
     return Fiber(HollowCoo{length(I), Tuple{map(eltype, I)...}, Int}(shape, I, [1, length(I[1]) + 1], Element{zero(eltype(V))}(V)))
 end
 
+"""
+    fsprand([rng],[type], m::Tuple,p::AbstractFloat,[rfn])
+
+Create a random sparse tensor of size `m` in COO format, in which the
+probability of any element being nonzero is independently given by `p` (and
+hence the mean density of nonzeros is also exactly `p`). Nonzero values are
+sampled from the distribution specified by `rfn` and have the type `type`. The
+uniform distribution is used in case `rfn` is not specified. The optional `rng`
+argument specifies a random number generator.
+
+See also: (`sprand`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#SparseArrays.sprand)
+
+# Examples
+```jldoctest; setup = :(using Random; Random.seed!(1234))
+julia> fsprand(Bool, (3, 3), 0.5)
+HollowCoo (false) [1:3×1:3]
+│ │ 
+└─└─[1, 1] [1, 3] [2, 2] [2, 3] [3, 3]
+    true   true   true   true   true  
+
+julia> fsprand(Float64, (2, 2, 2), 0.5)
+HollowCoo (0.0) [1:2×1:2×1:2]
+│ │ │ 
+└─└─└─[1, 2, 2] [2, 1, 1] [2, 1, 2]
+      0.647855  0.996665  0.749194 
+```
+"""
 fsprand(n::Tuple, args...) = _fsprand_impl(n, sprand(mapfoldl(BigInt, *, n), args...))
-fsprand(r::SparseArrays.AbstractRNG, n::Tuple, args...) = _fsprand_impl(r, n, sprand(mapfoldl(BigInt, *, n), args...))
-fsprand(r::SparseArrays.AbstractRNG, T::Type, n::Tuple, args...) = _fsprand_impl(r, T, n, sprand(mapfoldl(BigInt, *, n), args...))
+fsprand(T::Type, n::Tuple, args...) = _fsprand_impl(n, sprand(T, mapfoldl(BigInt, *, n), args...))
+fsprand(r::SparseArrays.AbstractRNG, n::Tuple, args...) = _fsprand_impl(n, sprand(r, mapfoldl(BigInt, *, n), args...))
+fsprand(r::SparseArrays.AbstractRNG, T::Type, n::Tuple, args...) = _fsprand_impl(n, sprand(r, T, mapfoldl(BigInt, *, n), args...))
 function _fsprand_impl(shape::Tuple, vec::SparseVector{Ti, Tv}) where {Ti, Tv}
     I = ((Vector(undef, length(vec.nzind)) for _ in shape)...,)
     for (p, ind) in enumerate(vec.nzind)
@@ -112,11 +142,42 @@ function _fsprand_impl(shape::Tuple, vec::SparseVector{Ti, Tv}) where {Ti, Tv}
     return fsparse!(I, vec.nzval, shape)
 end
 
-fspzeros(shape) = spzeros(Float64, shape)
+"""
+    fspzeros([type], shape::Tuple)
+
+Create a random zero tensor of size `m`, with elements of type `type`. The
+tensor is in COO format.
+
+See also: (`spzeros`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#SparseArrays.spzeros)
+
+# Examples
+```jldoctest
+julia> fspzeros(Bool, (3, 3))
+HollowCoo (false) [1:3×1:3]
+│ │ 
+└─└─
+    
+julia> fspzeros(Float64, (2, 2, 2))
+HollowCoo (0.0) [1:2×1:2×1:2]
+│ │ │ 
+└─└─└─
+```
+"""
+fspzeros(shape) = fspzeros(Float64, shape)
 function fspzeros(::Type{T}, shape) where {T}
-    return sparse!(((Int[] for _ in shape)...,), T[], shape)
+    return fsparse!(((Int[] for _ in shape)...,), T[], shape)
 end
 
+"""
+    ffindnz(arr)
+
+Return the nonzero elements of `arr`, as Finch understands `arr`. Returns `(I,
+V)`, where `I` is a tuple of coordinate vectors, one for each mode of `arr`, and
+`V` is a vector of corresponding nonzero values, which can be passed to
+[`fsparse`](@ref).
+
+See also: (`findnz`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#SparseArrays.findnz)
+"""
 function ffindnz(src)
     tmp = Fiber(
         HollowCooLevel{ndims(src)}(
@@ -125,5 +186,5 @@ function ffindnz(src)
     nnz = tmp.lvl.pos[2] - 1
     tbl = tmp.lvl.tbl
     val = tmp.lvl.lvl.val
-    (ntuple(n->tmp.lvl.tbl[n][1:nnz], ndims(src)), val[1:nnz])
+    (ntuple(n->tbl[n][1:nnz], ndims(src)), val[1:nnz])
 end
