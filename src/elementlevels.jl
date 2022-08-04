@@ -6,6 +6,8 @@ ElementLevel{D}(args...) where {D} = ElementLevel{D, typeof(D)}(args...)
 ElementLevel{D, Tv}() where {D, Tv} = ElementLevel{D, Tv}(Vector{Tv}(undef, 4))
 const Element = ElementLevel
 
+pattern!(lvl::ElementLevel) = Pattern()
+
 """
 `f_code(e)` = [ElementLevel](@ref).
 """

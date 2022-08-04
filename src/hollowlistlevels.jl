@@ -20,6 +20,9 @@ summary_f_code(lvl::HollowListLevel) = "l($(summary_f_code(lvl.lvl)))"
 similar_level(lvl::HollowListLevel) = HollowList(similar_level(lvl.lvl))
 similar_level(lvl::HollowListLevel, dim, tail...) = HollowList(dim, similar_level(lvl.lvl, tail...))
 
+pattern!(lvl::HollowListLevel{Ti}) where {Ti} = 
+    HollowListLevel{Ti}(lvl.I, lvl.pos, lvl.idx, pattern!(lvl.lvl))
+
 function Base.show(io::IO, lvl::HollowListLevel)
     print(io, "HollowList(")
     print(io, lvl.I)
@@ -124,6 +127,7 @@ function initialize_level!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx::Lower
     push!(ctx.preamble, quote
         $(lvl.pos_alloc) = length($(lvl.ex).pos)
         $(lvl.ex).pos[1] = 1
+        $(lvl.ex).pos[2] = 1
         $(lvl.idx_alloc) = length($(lvl.ex).idx)
     end)
     lvl.lvl = initialize_level!(VirtualFiber(fbr.lvl.lvl, Environment(fbr.env)), ctx, mode)
@@ -300,55 +304,55 @@ function unfurl(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode::Union{Writ
         ctx.freshen(tag, :_isdefault)
     end
 
-    body = Thunk(
-        preamble = quote
-            $my_q = $(lvl.ex).pos[$(ctx(envposition(fbr.env)))]
-        end,
-        body = AcceptSpike(
-            val = default(fbr),
-            tail = (ctx, idx) -> Thunk(
-                preamble = quote
-                    $(begin
-                        assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=my_q, parent=fbr.env)), ctx, mode)
-                        quote end
-                    end)
-                    $(
-                        if hasdefaultcheck(lvl.lvl)
-                            :($my_guard = true)
-                        else
-                            quote end
-                        end
-                    )
-                end,
-                body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode, idxs...),
-                epilogue = begin
-                    #We should be careful here. Presumably, we haven't modified the subfiber because it is still default. Is this always true? Should strict assembly happen every time?
-                    body = quote
-                        $(lvl.idx_alloc) < $my_q && ($(lvl.idx_alloc) = $Finch.regrow!($(lvl.ex).idx, $(lvl.idx_alloc), $my_q))
-                        $(lvl.ex).idx[$my_q] = $(ctx(idx))
-                        $my_q += 1
-                    end
-                    if envdefaultcheck(fbr.env) !== nothing
-                        body = quote
-                            $body
-                            $(envdefaultcheck(fbr.env)) = false
-                        end
-                    end
+    push!(ctx.preamble, quote
+        $my_q = $(lvl.ex).pos[$(ctx(envposition(fbr.env)))]
+    end)
+
+    body = AcceptSpike(
+        val = default(fbr),
+        tail = (ctx, idx) -> Thunk(
+            preamble = quote
+                $(begin
+                    assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=my_q, parent=fbr.env)), ctx, mode)
+                    quote end
+                end)
+                $(
                     if hasdefaultcheck(lvl.lvl)
-                        body = quote
-                            if !$(my_guard)
-                                $body
-                            end
+                        :($my_guard = true)
+                    else
+                        quote end
+                    end
+                )
+            end,
+            body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode, idxs...),
+            epilogue = begin
+                #We should be careful here. Presumably, we haven't modified the subfiber because it is still default. Is this always true? Should strict assembly happen every time?
+                body = quote
+                    $(lvl.idx_alloc) < $my_q && ($(lvl.idx_alloc) = $Finch.regrow!($(lvl.ex).idx, $(lvl.idx_alloc), $my_q))
+                    $(lvl.ex).idx[$my_q] = $(ctx(idx))
+                    $my_q += 1
+                end
+                if envdefaultcheck(fbr.env) !== nothing
+                    body = quote
+                        $body
+                        $(envdefaultcheck(fbr.env)) = false
+                    end
+                end
+                if hasdefaultcheck(lvl.lvl)
+                    body = quote
+                        if !$(my_guard)
+                            $body
                         end
                     end
-                    body
                 end
-            )
-        ),
-        epilogue = quote
-            $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1] = $my_q
-        end
+                body
+            end
+        )
     )
+
+    push!(ctx.epilogue, quote
+        $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1] = $my_q
+    end)
 
     exfurl(body, ctx, mode, idx.idx)
 end

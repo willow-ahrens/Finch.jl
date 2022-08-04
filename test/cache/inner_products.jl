@@ -25,6 +25,7 @@
         i_stop = A_lvl.I
         B_lvl_2_pos_alloc = length(B_lvl_2.pos)
         B_lvl_2.pos[1] = 1
+        B_lvl_2.pos[2] = 1
         B_lvl_2_idx_alloc = length(B_lvl_2.idx)
         B_lvl_3_val_alloc = (Finch).refill!(B_lvl_3.val, 0.0, 0, 4)
         B_lvl_2_p_stop_2 = (*)(1, A_lvl.I)

@@ -24,6 +24,7 @@
         i_stop = A_lvl.I
         C_lvl_pos_alloc = length(C_lvl.pos)
         C_lvl.pos[1] = 1
+        C_lvl.pos[2] = 1
         C_lvl_idx_alloc = length(C_lvl.idx)
         C_lvl_2_val_alloc = (Finch).refill!(C_lvl_2.val, 0.0, 0, 4)
         C_lvl_pos_alloc < 1 + 1 && (C_lvl_pos_alloc = (Finch).regrow!(C_lvl.pos, C_lvl_pos_alloc, 1 + 1))
@@ -57,7 +58,7 @@
                     i_3 = phase_stop_2
                     C_lvl_2_val_alloc < C_lvl_q && (C_lvl_2_val_alloc = (Finch).refill!(C_lvl_2.val, 0.0, C_lvl_2_val_alloc, C_lvl_q))
                     C_lvl_isdefault = true
-                    delta = (-)(i_3, 3)
+                    delta = (+)(i_3, -3)
                     C_lvl_2_val = C_lvl_2.val[C_lvl_q]
                     j_start = (min)(1, (+)(1, delta))
                     j_stop = (max)(F_lvl.I, (+)(A_lvl_3.I, delta))

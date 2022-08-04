@@ -20,13 +20,30 @@ end
 
 (fbr::Fiber{<:PatternLevel})() = true
 
-function pattern(fbr) #TODO need cleaner and safer way to traverse a fiber
-    fbr = copy(fbr)
-    fbr.lvl = pattern(fbr)
-    fbr
-end
-pattern(::ElementLevel) = Pattern()
-pattern(::RepeatLevel) = error() #SolidLevel(Pattern())
+"""
+    pattern!(fbr)
+
+Return the pattern of `fbr`. That is, return a fiber which is true wherever
+`fbr` is structurally unequal to it's default. May reuse memory and render the
+original fiber unusable when modified.
+
+```jldoctest
+julia> A = Finch.Fiber(
+    HollowList(10, [1, 6], [1, 3, 5, 7, 9],
+    Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
+HollowList (0.0) [1:10]
+│ 
+└─[1] [3] [5] [7] [9]
+  2.0 3.0 4.0 5.0 6.0
+
+julia> pattern!(A)
+HollowList (false) [1:10]
+│ 
+└─[1]  [3]  [5]  [7]  [9] 
+  true true true true true
+```
+"""
+pattern!(fbr::Fiber) = Fiber(pattern!(fbr.lvl), fbr.env)
 
 struct VirtualPatternLevel end
 
@@ -73,5 +90,7 @@ function (ctx::Finch.LowerJulia)(node::Access{<:VirtualFiber{VirtualPatternLevel
         end)
     end
 
-    ctx.freshen(:_)
+    val = ctx.freshen(:null)
+    push!(ctx.preamble, :($val = false))
+    val
 end

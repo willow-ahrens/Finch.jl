@@ -66,6 +66,7 @@ function execute_code_lowered(ex, T)
                     (prgm, dims) = dimensionalize!(prgm, ctx_2)
                     prgm = Initialize(ctx = ctx_2)(prgm)
                     prgm = ThunkVisitor(ctx_2)(prgm) #TODO this is a bit of a hack.
+                    prgm = simplify(prgm)
                     ctx_2(prgm)
                 end
             end)

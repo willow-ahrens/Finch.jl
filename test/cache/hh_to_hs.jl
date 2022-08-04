@@ -15,6 +15,7 @@
         i_stop = B_lvl.I[1]
         A_lvl_pos_alloc = length(A_lvl.pos)
         A_lvl.pos[1] = 1
+        A_lvl.pos[2] = 1
         A_lvl_idx_alloc = length(A_lvl.idx)
         A_lvl_2_val_alloc = (Finch).refill!(A_lvl_2.val, 0.0, 0, 4)
         A_lvl_pos_alloc < 1 + 1 && (A_lvl_pos_alloc = (Finch).regrow!(A_lvl.pos, A_lvl_pos_alloc, 1 + 1))

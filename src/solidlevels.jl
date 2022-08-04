@@ -15,6 +15,9 @@ summary_f_code(lvl::Solid) = "s($(summary_f_code(lvl.lvl)))"
 similar_level(lvl::SolidLevel) = Solid(similar_level(lvl.lvl))
 similar_level(lvl::SolidLevel, dim, tail...) = Solid(dim, similar_level(lvl.lvl, tail...))
 
+pattern!(lvl::SolidLevel{Ti}) where {Ti} = 
+    SolidLevel{Ti}(lvl.I, pattern!(lvl.lvl))
+
 dimension(lvl::SolidLevel) = lvl.I
 
 @inline arity(fbr::Fiber{<:SolidLevel}) = 1 + arity(Fiber(fbr.lvl.lvl, Environment(fbr.env)))

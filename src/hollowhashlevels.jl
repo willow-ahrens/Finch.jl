@@ -30,6 +30,9 @@ summary_f_code(lvl::HollowHashLevel{N}) where {N} = "h{$N}($(summary_f_code(lvl.
 similar_level(lvl::HollowHashLevel{N}) where {N} = HollowHashLevel{N}(similar_level(lvl.lvl))
 similar_level(lvl::HollowHashLevel{N}, tail...) where {N} = HollowHashLevel{N}(ntuple(n->tail[n], N), similar_level(lvl.lvl, tail[N + 1:end]...))
 
+pattern!(lvl::HollowHashLevel{N, Ti, Tp, T_q, Tbl}) where {N, Ti, Tp, T_q, Tbl} = 
+    HollowHashLevel{N, Ti, Tp, T_q, Tbl}(lvl.I, lvl.tbl, lvl.srt, lvl.pos, pattern!(lvl.lvl))
+
 function Base.show(io::IO, lvl::HollowHashLevel{N}) where {N}
     print(io, "HollowHash{$N}(")
     print(io, lvl.I)

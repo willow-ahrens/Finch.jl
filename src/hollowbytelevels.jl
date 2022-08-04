@@ -16,6 +16,9 @@ HollowByteLevel{Ti, Tp, Tq}(I::Ti, lvl) where {Ti, Tp, Tq} =
 HollowByteLevel{Ti, Tp, Tq}(I::Ti, tbl, srt, srt_stop, pos, lvl::Lvl) where {Ti, Tp, Tq, Lvl} =
     HollowByteLevel{Ti, Tp, Tq, Lvl}(I, tbl, srt, srt_stop, pos, lvl)
 
+pattern!(lvl::HollowByteLevel{Ti, Tp, Tq}) where {Ti, Tp, Tq} = 
+    HollowByteLevel{Ti, Tp, Tq}(lvl.I, lvl.tbl, lvl.srt, lvl.srt_stop, lvl.pos, pattern!(lvl.lvl))
+
 """
 `f_code(b)` = [HollowByteLevel](@ref).
 """
@@ -435,42 +438,38 @@ function unfurl(fbr::VirtualFiber{VirtualHollowByteLevel}, ctx, mode::Union{Writ
     my_guard = ctx.freshen(tag, :_guard)
     my_seen = ctx.freshen(tag, :_seen)
 
-    body = Thunk(
-        preamble = quote
-        end,
-        body = AcceptSpike(
-            val = default(fbr),
-            tail = (ctx, idx) -> Thunk(
-                preamble = quote
-                    $my_guard = true
-                    $my_q = ($(ctx(envposition(fbr.env))) - 1) * $(ctx(lvl.I)) + $idx
-                end,
-                body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode, idxs...),
-                epilogue = begin
-                    body = quote
-                        if !$(lvl.ex).tbl[$my_q]
-                            $(lvl.ex).tbl[$my_q] = true
-                            $(lvl.srt_stop) += 1
-                            $(lvl.srt_alloc) < $(lvl.srt_stop) && ($(lvl.srt_alloc) = $Finch.regrow!($(lvl.ex).srt, $(lvl.srt_alloc), $(lvl.srt_stop)))
-                            $(lvl.ex).srt[$(lvl.srt_stop)] = ($(ctx(envposition(fbr.env))), $idx)
-                        end
+    body = AcceptSpike(
+        val = default(fbr),
+        tail = (ctx, idx) -> Thunk(
+            preamble = quote
+                $my_guard = true
+                $my_q = ($(ctx(envposition(fbr.env))) - 1) * $(ctx(lvl.I)) + $idx
+            end,
+            body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode, idxs...),
+            epilogue = begin
+                body = quote
+                    if !$(lvl.ex).tbl[$my_q]
+                        $(lvl.ex).tbl[$my_q] = true
+                        $(lvl.srt_stop) += 1
+                        $(lvl.srt_alloc) < $(lvl.srt_stop) && ($(lvl.srt_alloc) = $Finch.regrow!($(lvl.ex).srt, $(lvl.srt_alloc), $(lvl.srt_stop)))
+                        $(lvl.ex).srt[$(lvl.srt_stop)] = ($(ctx(envposition(fbr.env))), $idx)
                     end
-                    if envdefaultcheck(fbr.env) !== nothing
-                        body = quote
-                            $body
-                            $(envdefaultcheck(fbr.env)) = false
-                        end
-                    end
-                    if hasdefaultcheck(lvl.lvl)
-                        body = quote
-                            if !$(my_guard)
-                                $body
-                            end
-                        end
-                    end
-                    body
                 end
-            )
+                if envdefaultcheck(fbr.env) !== nothing
+                    body = quote
+                        $body
+                        $(envdefaultcheck(fbr.env)) = false
+                    end
+                end
+                if hasdefaultcheck(lvl.lvl)
+                    body = quote
+                        if !$(my_guard)
+                            $body
+                        end
+                    end
+                end
+                body
+            end
         )
     )
 
