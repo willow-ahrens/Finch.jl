@@ -98,6 +98,6 @@ Base.:(==)(a::LabelInstance{tag}, b::LabelInstance{tag}) where {tag} = a.tns == 
 
 struct ValueInstance{arg} end
 
-@inline value_instance(arg) = isbits(arg) ? ValueInstance{arg}() : arg #TODO how does this interact with immutable outputs?
+@inline value_instance(arg) = (isbits(arg) || arg isa Type) ? ValueInstance{arg}() : arg #TODO how does this interact with immutable outputs?
 @inline value_instance(arg::Symbol) = ValueInstance{arg}()
 @inline value(arg) = value_instance(arg)
