@@ -16,6 +16,7 @@ module IndexNotation
     export Access, Read, Write, Update, access, access
     export Protocol, protocol
     export Sieve, sieve
+    export value
 
     export Lexicography
 

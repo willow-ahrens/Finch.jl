@@ -9,7 +9,7 @@ using Base.Iterators
 using Base: @kwdef
 using SparseArrays
 
-export @index, @index_program, @index_code
+export @index, @index_program, @index_code, value
 
 export Fiber, HollowList, HollowHash, HollowCoo, HollowByte, Solid, Repeat, Element, Pattern, FiberArray, Scalar
 export walk, gallop, follow, extrude, laminate, select
