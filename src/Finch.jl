@@ -13,7 +13,7 @@ export @index, @index_program, @index_code, value
 
 export Fiber, HollowList, HollowHash, HollowCoo, HollowByte, Solid, Repeat, Element, Pattern, FiberArray, Scalar
 export walk, gallop, follow, extrude, laminate, select
-export fiber, @f, pattern!, dropdefaults
+export fiber, @f, pattern!, dropdefaults, dropdefaults!
 
 export permit, offset, window
 
