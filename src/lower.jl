@@ -217,11 +217,12 @@ end
 function (ctx::LowerJulia)(stmt::Sieve, ::DefaultStyle)
     cond = ctx.freshen(:cond)
     push!(ctx.preamble, :($cond = $(ctx(stmt.cond))))
-    body = ctx(stmt.body)
 
     return quote
         if $cond
-            $body
+            $(contain(ctx) do ctx_2
+                ctx_2(stmt.body)
+            end)
         end
     end
 end

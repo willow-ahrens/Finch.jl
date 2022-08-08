@@ -47,7 +47,7 @@ end
     return quote
         dst = similar(src)
         tmp = Scalar{$d, $T}()
-        println(@index_code @loop($(idxs...), (@sieve (tmp[] != $d) dst[$(idxs...)] = tmp[]) where (tmp[] = src[$(idxs...)])))
+        @index @loop($(idxs...), (@sieve (tmp[] != $d) dst[$(idxs...)] = tmp[]) where (tmp[] = src[$(idxs...)]))
         return dst
     end
 end
