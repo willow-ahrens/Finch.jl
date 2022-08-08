@@ -39,13 +39,14 @@ end
     end
 end
 
-@generated function dropdefaults(src::Fiber)
-    src = virtualize(:src, src, LowerJulia())
-    idxs = [Symbol(:i_, n) for n = getsites(src)]
-    T = image(src)
-    d = default(src)
+dropdefaults(src) = dropdefaults!(similar(src), src)
+
+@generated function dropdefaults!(dst::Fiber, src)
+    dst = virtualize(:dst, dst, LowerJulia())
+    idxs = [Symbol(:i_, n) for n = getsites(dst)]
+    T = image(dst)
+    d = default(dst)
     return quote
-        dst = similar(src)
         tmp = Scalar{$d, $T}()
         @index @loop($(idxs...), (@sieve (tmp[] != $d) dst[$(idxs...)] = tmp[]) where (tmp[] = src[$(idxs...)]))
         return dst
