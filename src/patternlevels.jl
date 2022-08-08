@@ -58,6 +58,7 @@ setdims!(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode) = fbr
 getdims(::VirtualFiber{VirtualPatternLevel}, ctx, mode) = ()
 
 @inline default(fbr::VirtualFiber{VirtualPatternLevel}) = false
+@inline image(fbr::VirtualFiber{VirtualPatternLevel}) = Bool
 
 initialize_level!(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode::Union{Write, Update}) = fbr.lvl
 

@@ -39,6 +39,19 @@ end
     end
 end
 
+@generated function dropdefaults(src::Fiber)
+    src = virtualize(:src, src, LowerJulia())
+    idxs = [Symbol(:i_, n) for n = getsites(src)]
+    T = image(src)
+    d = default(src)
+    return quote
+        dst = similar(src)
+        tmp = Scalar{$d, $T}()
+        println(@index_code @loop($(idxs...), (@sieve (tmp[] != $d) dst[$(idxs...)] = tmp[]) where (tmp[] = src[$(idxs...)])))
+        return dst
+    end
+end
+
 """
     fsparse(I::Tuple, V,[ M::Tuple, combine])
 

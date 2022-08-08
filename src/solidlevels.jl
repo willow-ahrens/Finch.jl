@@ -99,6 +99,7 @@ function setdims!(fbr::VirtualFiber{VirtualSolidLevel}, ctx, mode, dim, dims...)
 end
 
 @inline default(fbr::VirtualFiber{<:VirtualSolidLevel}) = default(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
+@inline image(fbr::VirtualFiber{VirtualSolidLevel}) = image(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
 
 reinitializeable(lvl::VirtualSolidLevel) = reinitializeable(lvl.lvl)
 function initialize_level!(fbr::VirtualFiber{VirtualSolidLevel}, ctx::LowerJulia, mode::Union{Write, Update})

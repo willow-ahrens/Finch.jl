@@ -72,6 +72,7 @@ setdims!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode) = fbr
 getdims(::VirtualFiber{VirtualElementLevel}, ctx, mode) = ()
 
 @inline default(fbr::VirtualFiber{VirtualElementLevel}) = fbr.lvl.D
+@inline image(fbr::VirtualFiber{VirtualElementLevel}) = fbr.lvl.Tv
 
 function initialize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode::Union{Write, Update})
     lvl = fbr.lvl

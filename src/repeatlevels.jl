@@ -125,6 +125,7 @@ function setdims!(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode, dim)
 end
 
 @inline default(fbr::VirtualFiber{<:VirtualRepeatLevel}) = fbr.lvl.D
+@inline image(fbr::VirtualFiber{VirtualRepeatLevel}) = fbr.lvl.Tv
 
 function initialize_level!(fbr::VirtualFiber{VirtualRepeatLevel}, ctx::LowerJulia, mode::Union{Write, Update})
     lvl = fbr.lvl

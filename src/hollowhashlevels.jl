@@ -153,7 +153,8 @@ function setdims!(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx::LowerJulia, mo
     fbr
 end
 
-@inline default(fbr::VirtualFiber{VirtualHollowHashLevel}) = default(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^fbr.lvl.N)(fbr.env)))
+@inline default(fbr::VirtualFiber{<:VirtualHollowHashLevel}) = default(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^fbr.lvl.N)(fbr.env)))
+@inline image(fbr::VirtualFiber{<:VirtualHollowHashLevel}) = image(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
 
 function initialize_level!(fbr::VirtualFiber{VirtualHollowHashLevel}, ctx::LowerJulia, mode::Union{Write, Update})
     @assert isempty(envdeferred(fbr.env))

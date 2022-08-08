@@ -121,6 +121,7 @@ function setdims!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx, mode, dim, dim
 end
 
 @inline default(fbr::VirtualFiber{<:VirtualHollowListLevel}) = default(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
+@inline image(fbr::VirtualFiber{VirtualHollowListLevel}) = image(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
 
 function initialize_level!(fbr::VirtualFiber{VirtualHollowListLevel}, ctx::LowerJulia, mode::Union{Write, Update})
     lvl = fbr.lvl
