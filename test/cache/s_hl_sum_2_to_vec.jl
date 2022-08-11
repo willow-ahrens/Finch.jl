@@ -27,8 +27,8 @@
             end
             i = 1
             i_start = i
-            phase_start = (max)(i_start)
-            phase_stop = (min)(A_lvl_2_i1, i_stop)
+            phase_start = max(i_start)
+            phase_stop = min(A_lvl_2_i1, i_stop)
             if phase_stop >= phase_start
                 i = i
                 i = phase_start
@@ -38,12 +38,12 @@
                 while i <= phase_stop
                     i_start_2 = i
                     A_lvl_2_i = A_lvl_2.idx[A_lvl_2_q]
-                    phase_stop_2 = (min)(A_lvl_2_i, phase_stop)
+                    phase_stop_2 = min(A_lvl_2_i, phase_stop)
                     i_2 = i
                     if A_lvl_2_i == phase_stop_2
                         A_lvl_3_val = A_lvl_3.val[A_lvl_2_q]
                         i_3 = phase_stop_2
-                        B[i_3] = (+)(B[i_3], A_lvl_3_val)
+                        B[i_3] = B[i_3] + A_lvl_3_val
                         A_lvl_2_q += 1
                     else
                     end
@@ -52,8 +52,8 @@
                 i = phase_stop + 1
             end
             i_start = i
-            phase_start_3 = (max)(i_start)
-            phase_stop_3 = (min)(i_stop)
+            phase_start_3 = max(i_start)
+            phase_stop_3 = min(i_stop)
             if phase_stop_3 >= phase_start_3
                 i_4 = i
                 i = phase_stop_3 + 1

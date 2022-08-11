@@ -49,8 +49,8 @@
             end
             j = 1
             j_start = j
-            phase_start = (max)(j_start)
-            phase_stop = (min)(A_lvl_2_i1, j_stop)
+            phase_start = max(j_start)
+            phase_stop = min(A_lvl_2_i1, j_stop)
             if phase_stop >= phase_start
                 j = j
                 j = phase_start
@@ -60,7 +60,7 @@
                 while j <= phase_stop
                     j_start_2 = j
                     A_lvl_2_i = A_lvl_2.idx[A_lvl_2_q]
-                    phase_stop_2 = (min)(A_lvl_2_i, phase_stop)
+                    phase_stop_2 = min(A_lvl_2_i, phase_stop)
                     j_2 = j
                     if A_lvl_2_i == phase_stop_2
                         A_lvl_3_val = A_lvl_3.val[A_lvl_2_q]
@@ -70,7 +70,7 @@
                         B_lvl_2_val = B_lvl_2.val[B_lvl_q_2]
                         B_lvl_guard = false
                         B_lvl_guard = false
-                        B_lvl_2_val = (+)(B_lvl_2_val, A_lvl_3_val)
+                        B_lvl_2_val = B_lvl_2_val + A_lvl_3_val
                         B_lvl_2.val[B_lvl_q_2] = B_lvl_2_val
                         if !B_lvl_guard
                             if !(B_lvl.tbl[B_lvl_q_2])
@@ -88,8 +88,8 @@
                 j = phase_stop + 1
             end
             j_start = j
-            phase_start_3 = (max)(j_start)
-            phase_stop_3 = (min)(j_stop)
+            phase_start_3 = max(j_start)
+            phase_stop_3 = min(j_stop)
             if phase_stop_3 >= phase_start_3
                 j_4 = j
                 j = phase_stop_3 + 1

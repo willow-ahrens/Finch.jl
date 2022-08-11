@@ -83,7 +83,14 @@ function execute_code_lowered(ex, T)
             $code
         end
     end
-    code = code |> lower_caches |> lower_cleanup |> MacroTools.striplines |> MacroTools.flatten |> MacroTools.resyntax |> unquote_literals
+    code |>
+        lower_caches |>
+        lower_cleanup |>
+        MacroTools.striplines |>
+        MacroTools.flatten |>
+        MacroTools.unresolve |> #TODO is this okay? I'm not really sure.
+        MacroTools.resyntax |>
+        unquote_literals
 end
 
 macro index(ex)

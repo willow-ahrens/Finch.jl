@@ -2,9 +2,9 @@
         C = ex.body.lhs.tns.tns
         A = (ex.body.rhs.args[1]).tns.tns
         B = (ex.body.rhs.args[2]).tns.tns
-        C_stop = ((size)(C))[1]
-        A_stop = ((size)(A))[1]
-        B_stop = ((size)(B))[1]
+        C_stop = (size(C))[1]
+        A_stop = (size(A))[1]
+        B_stop = (size(B))[1]
         i_stop = C_stop
         C.idx = [C.idx[end]]
         C.val = (Int64)[]
@@ -27,8 +27,8 @@
             B_p = searchsortedfirst(B.idx, i_start, B_p, length(B.idx), Base.Forward)
             B_i0 = i_start
             B_i1 = B.idx[B_p]
-            phase_start = (max)(i_start, (min)(i_start))
-            phase_stop = (min)(i_stop, (max)(A_i1, B_i1))
+            phase_start = max(i_start, min(i_start))
+            phase_stop = min(i_stop, max(A_i1, B_i1))
             if phase_stop >= phase_start
                 i = i
                 if phase_stop == A_i1 && phase_stop == B_i1
@@ -36,7 +36,7 @@
                     push!(C.idx, C_I)
                     push!(C.val, zero(Float64))
                     C_p += 1
-                    C.val[C_p] = (+)(C.val[C_p], (*)(A.val[A_p], B.val[B_p]))
+                    C.val[C_p] = C.val[C_p] + A.val[A_p] * B.val[B_p]
                     C.idx[C_p] = i_2
                     A_p += 1
                     A_i0 = A_i1 + 1
@@ -50,14 +50,14 @@
                     A_i0 = phase_stop
                     A_i1 = A.idx[A_p]
                     i_start_2 = i
-                    phase_stop_2 = (min)(A_i1, phase_stop)
+                    phase_stop_2 = min(A_i1, phase_stop)
                     i_3 = i
                     if A_i1 == phase_stop_2
                         i_4 = phase_stop_2
                         push!(C.idx, C_I)
                         push!(C.val, zero(Float64))
                         C_p += 1
-                        C.val[C_p] = (+)(C.val[C_p], (*)(A.val[A_p], B.val[B_p]))
+                        C.val[C_p] = C.val[C_p] + A.val[A_p] * B.val[B_p]
                         C.idx[C_p] = i_4
                         A_p += 1
                         A_i0 = A_i1 + 1
@@ -74,14 +74,14 @@
                     B_i0 = phase_stop
                     B_i1 = B.idx[B_p]
                     i_start_3 = i
-                    phase_stop_3 = (min)(B_i1, phase_stop)
+                    phase_stop_3 = min(B_i1, phase_stop)
                     i_5 = i
                     if B_i1 == phase_stop_3
                         i_6 = phase_stop_3
                         push!(C.idx, C_I)
                         push!(C.val, zero(Float64))
                         C_p += 1
-                        C.val[C_p] = (+)(C.val[C_p], (*)(A.val[A_p], B.val[B_p]))
+                        C.val[C_p] = C.val[C_p] + A.val[A_p] * B.val[B_p]
                         C.idx[C_p] = i_6
                         B_p += 1
                         B_i0 = B_i1 + 1
@@ -102,8 +102,8 @@
                     B_i1 = B.idx[B_p]
                     while i <= phase_stop
                         i_start_4 = i
-                        phase_start_4 = (max)(i_start_4)
-                        phase_stop_4 = (min)(A_i1, B_i1, phase_stop)
+                        phase_start_4 = max(i_start_4)
+                        phase_stop_4 = min(A_i1, B_i1, phase_stop)
                         if phase_stop_4 >= phase_start_4
                             i_7 = i
                             if A_i1 == phase_stop_4 && B_i1 == phase_stop_4
@@ -111,7 +111,7 @@
                                 push!(C.idx, C_I)
                                 push!(C.val, zero(Float64))
                                 C_p += 1
-                                C.val[C_p] = (+)(C.val[C_p], (*)(A.val[A_p], B.val[B_p]))
+                                C.val[C_p] = C.val[C_p] + A.val[A_p] * B.val[B_p]
                                 C.idx[C_p] = i_8
                                 A_p += 1
                                 A_i0 = A_i1 + 1

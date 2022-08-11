@@ -40,8 +40,8 @@
         end
         i = 1
         i_start = i
-        phase_start = (max)(i_start)
-        phase_stop = (min)(A_lvl_i1, i_stop)
+        phase_start = max(i_start)
+        phase_stop = min(A_lvl_i1, i_stop)
         if phase_stop >= phase_start
             i = i
             i = phase_start
@@ -51,27 +51,27 @@
             while i <= phase_stop
                 i_start_2 = i
                 A_lvl_i = A_lvl.idx[A_lvl_q]
-                phase_stop_2 = (min)(A_lvl_i, phase_stop)
+                phase_stop_2 = min(A_lvl_i, phase_stop)
                 i_2 = i
                 if A_lvl_i == phase_stop_2
                     A_lvl_2_val = A_lvl_2.val[A_lvl_q]
                     i_3 = phase_stop_2
                     C_lvl_2_val_alloc < C_lvl_q && (C_lvl_2_val_alloc = (Finch).refill!(C_lvl_2.val, 0.0, C_lvl_2_val_alloc, C_lvl_q))
                     C_lvl_isdefault = true
-                    delta = (+)(i_3, -3)
+                    delta = i_3 + -3
                     C_lvl_2_val = C_lvl_2.val[C_lvl_q]
                     j_stop = F_lvl.I
                     j = 1
                     j_start = j
-                    phase_start_3 = (max)(j_start, (+)(j_start, (-)(delta), delta))
-                    phase_stop_3 = (min)(delta, j_stop)
+                    phase_start_3 = max(j_start, j_start + -delta + delta)
+                    phase_stop_3 = min(delta, j_stop)
                     if phase_stop_3 >= phase_start_3
                         j = j
                         j = phase_stop_3 + 1
                     end
                     j_start = j
-                    phase_start_4 = (max)(j_start, (+)(j_start, (-)(delta), delta))
-                    phase_stop_4 = (min)(j_stop, (+)(A_lvl_3.I, delta))
+                    phase_start_4 = max(j_start, j_start + -delta + delta)
+                    phase_stop_4 = min(j_stop, A_lvl_3.I + delta)
                     if phase_stop_4 >= phase_start_4
                         j_2 = j
                         A_lvl_3_q = A_lvl_3.pos[1]
@@ -85,29 +85,29 @@
                         end
                         j = phase_start_4
                         j_start_2 = j
-                        phase_start_5 = (max)(j_start_2, (+)(j_start_2, (-)(delta), delta))
-                        phase_stop_5 = (min)(phase_stop_4, (+)(A_lvl_3_i1, delta))
+                        phase_start_5 = max(j_start_2, j_start_2 + -delta + delta)
+                        phase_stop_5 = min(phase_stop_4, A_lvl_3_i1 + delta)
                         if phase_stop_5 >= phase_start_5
                             j_3 = j
                             j = phase_start_5
-                            while A_lvl_3_q < A_lvl_3_q_stop && A_lvl_3.idx[A_lvl_3_q] < (+)(phase_start_5, (-)(delta))
+                            while A_lvl_3_q < A_lvl_3_q_stop && A_lvl_3.idx[A_lvl_3_q] < phase_start_5 + -delta
                                 A_lvl_3_q += 1
                             end
                             while j <= phase_stop_5
                                 j_start_3 = j
                                 A_lvl_3_i = A_lvl_3.idx[A_lvl_3_q]
-                                phase_start_6 = (max)(j_start_3, (+)(j_start_3, (-)(delta), delta))
-                                phase_stop_6 = (min)(phase_stop_5, (+)(A_lvl_3_i, delta))
+                                phase_start_6 = max(j_start_3, j_start_3 + -delta + delta)
+                                phase_stop_6 = min(phase_stop_5, A_lvl_3_i + delta)
                                 if phase_stop_6 >= phase_start_6
                                     j_4 = j
-                                    if A_lvl_3_i == (+)(phase_stop_6, (-)(delta))
+                                    if A_lvl_3_i == phase_stop_6 + -delta
                                         A_lvl_4_val = A_lvl_4.val[A_lvl_3_q]
                                         j_5 = phase_stop_6
                                         F_lvl_q = (1 - 1) * F_lvl.I + j_5
                                         F_lvl_2_val = F_lvl_2.val[F_lvl_q]
                                         C_lvl_isdefault = false
                                         C_lvl_isdefault = false
-                                        C_lvl_2_val = (+)(C_lvl_2_val, (*)((!=)(A_lvl_2_val, 0), (coalesce)(A_lvl_4_val, 0), F_lvl_2_val))
+                                        C_lvl_2_val = C_lvl_2_val + (A_lvl_2_val != 0) * coalesce(A_lvl_4_val, 0) * F_lvl_2_val
                                         A_lvl_3_q += 1
                                     else
                                     end
@@ -117,8 +117,8 @@
                             j = phase_stop_5 + 1
                         end
                         j_start_2 = j
-                        phase_start_7 = (max)(j_start_2, (+)(j_start_2, (-)(delta), delta))
-                        phase_stop_7 = (min)(phase_stop_4, (+)(phase_stop_4, (-)(delta), delta))
+                        phase_start_7 = max(j_start_2, j_start_2 + -delta + delta)
+                        phase_stop_7 = min(phase_stop_4, phase_stop_4 + -delta + delta)
                         if phase_stop_7 >= phase_start_7
                             j_6 = j
                             j = phase_stop_7 + 1
@@ -126,8 +126,8 @@
                         j = phase_stop_4 + 1
                     end
                     j_start = j
-                    phase_start_8 = (max)(j_start, (+)(j_start, (-)(delta), delta))
-                    phase_stop_8 = (min)(j_stop, (+)(j_stop, (-)(delta), delta))
+                    phase_start_8 = max(j_start, j_start + -delta + delta)
+                    phase_stop_8 = min(j_stop, j_stop + -delta + delta)
                     if phase_stop_8 >= phase_start_8
                         j_7 = j
                         j = phase_stop_8 + 1
@@ -146,8 +146,8 @@
             i = phase_stop + 1
         end
         i_start = i
-        phase_start_9 = (max)(i_start)
-        phase_stop_9 = (min)(i_stop)
+        phase_start_9 = max(i_start)
+        phase_stop_9 = min(i_stop)
         if phase_stop_9 >= phase_start_9
             i_4 = i
             i = phase_stop_9 + 1

@@ -38,8 +38,8 @@
         end
         i = 1
         i_start = i
-        phase_start = (max)(i_start)
-        phase_stop = (min)(A_lvl_i1, B_lvl_i1, i_stop)
+        phase_start = max(i_start)
+        phase_stop = min(A_lvl_i1, B_lvl_i1, i_stop)
         if phase_stop >= phase_start
             i = i
             i = phase_start
@@ -53,26 +53,26 @@
                 i_start_2 = i
                 A_lvl_i = A_lvl.idx[A_lvl_q]
                 B_lvl_i = B_lvl.idx[B_lvl_q]
-                phase_start_2 = (max)(i_start_2)
-                phase_stop_2 = (min)(A_lvl_i, B_lvl_i, phase_stop)
+                phase_start_2 = max(i_start_2)
+                phase_stop_2 = min(A_lvl_i, B_lvl_i, phase_stop)
                 if phase_stop_2 >= phase_start_2
                     i_2 = i
                     if A_lvl_i == phase_stop_2 && B_lvl_i == phase_stop_2
                         A_lvl_2_val = A_lvl_2.val[A_lvl_q]
                         B_lvl_2_val = B_lvl_2.val[B_lvl_q]
                         i_3 = phase_stop_2
-                        C[i_3] = (+)(C[i_3], (+)(A_lvl_2_val, B_lvl_2_val))
+                        C[i_3] = C[i_3] + (A_lvl_2_val + B_lvl_2_val)
                         A_lvl_q += 1
                         B_lvl_q += 1
                     elseif B_lvl_i == phase_stop_2
                         B_lvl_2_val = B_lvl_2.val[B_lvl_q]
                         i_4 = phase_stop_2
-                        C[i_4] = (+)(C[i_4], B_lvl_2_val)
+                        C[i_4] = C[i_4] + B_lvl_2_val
                         B_lvl_q += 1
                     elseif A_lvl_i == phase_stop_2
                         A_lvl_2_val = A_lvl_2.val[A_lvl_q]
                         i_5 = phase_stop_2
-                        C[i_5] = (+)(C[i_5], A_lvl_2_val)
+                        C[i_5] = C[i_5] + A_lvl_2_val
                         A_lvl_q += 1
                     else
                     end
@@ -82,8 +82,8 @@
             i = phase_stop + 1
         end
         i_start = i
-        phase_start_3 = (max)(i_start)
-        phase_stop_3 = (min)(A_lvl_i1, i_stop)
+        phase_start_3 = max(i_start)
+        phase_stop_3 = min(A_lvl_i1, i_stop)
         if phase_stop_3 >= phase_start_3
             i_6 = i
             i = phase_start_3
@@ -93,12 +93,12 @@
             while i <= phase_stop_3
                 i_start_3 = i
                 A_lvl_i = A_lvl.idx[A_lvl_q]
-                phase_stop_4 = (min)(A_lvl_i, phase_stop_3)
+                phase_stop_4 = min(A_lvl_i, phase_stop_3)
                 i_7 = i
                 if A_lvl_i == phase_stop_4
                     A_lvl_2_val = A_lvl_2.val[A_lvl_q]
                     i_8 = phase_stop_4
-                    C[i_8] = (+)(C[i_8], A_lvl_2_val)
+                    C[i_8] = C[i_8] + A_lvl_2_val
                     A_lvl_q += 1
                 else
                 end
@@ -107,8 +107,8 @@
             i = phase_stop_3 + 1
         end
         i_start = i
-        phase_start_5 = (max)(i_start)
-        phase_stop_5 = (min)(B_lvl_i1, i_stop)
+        phase_start_5 = max(i_start)
+        phase_stop_5 = min(B_lvl_i1, i_stop)
         if phase_stop_5 >= phase_start_5
             i_9 = i
             i = phase_start_5
@@ -118,12 +118,12 @@
             while i <= phase_stop_5
                 i_start_4 = i
                 B_lvl_i = B_lvl.idx[B_lvl_q]
-                phase_stop_6 = (min)(B_lvl_i, phase_stop_5)
+                phase_stop_6 = min(B_lvl_i, phase_stop_5)
                 i_10 = i
                 if B_lvl_i == phase_stop_6
                     B_lvl_2_val = B_lvl_2.val[B_lvl_q]
                     i_11 = phase_stop_6
-                    C[i_11] = (+)(C[i_11], B_lvl_2_val)
+                    C[i_11] = C[i_11] + B_lvl_2_val
                     B_lvl_q += 1
                 else
                 end
@@ -132,8 +132,8 @@
             i = phase_stop_5 + 1
         end
         i_start = i
-        phase_start_7 = (max)(i_start)
-        phase_stop_7 = (min)(i_stop)
+        phase_start_7 = max(i_start)
+        phase_stop_7 = min(i_stop)
         if phase_stop_7 >= phase_start_7
             i_12 = i
             i = phase_stop_7 + 1
