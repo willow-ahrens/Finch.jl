@@ -49,7 +49,7 @@ D = Scalar{0.0}()
 @index_code @loop i C[i] = coalesce(A[permit[i]], B[permit[offset[$n, i]]])
 @index @loop i C[i] = coalesce(A[permit[i]], B[permit[offset[$n, i]]])
 
-R = @f(s(r(0.0)))
-copyto!(@f(s(r(0.0))), [ones(4, 4) zeros(4, 4); zeros(4, 4) ones(4, 4)])
-b = @f(s(e(0.0)))
+R = @f(d(r(0.0)))
+copyto!(@f(d(r(0.0))), [ones(4, 4) zeros(4, 4); zeros(4, 4) ones(4, 4)])
+b = @f(d(e(0.0)))
 @index @loop i j b[i] += a[i, j]
