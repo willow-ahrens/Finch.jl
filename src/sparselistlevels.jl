@@ -244,7 +244,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode::Read, idx:
                                 $my_i = $(lvl.ex).idx[$my_q]
                             end,
                             stride = (ctx, ext) -> my_i,
-                            body = (ctx, ext, ext_2) -> Cases([
+                            body = (ctx, ext, ext_2) -> Switch([
                                 :($(ctx(getstop(ext_2))) == $my_i) => Thunk(
                                     body = Spike(
                                         body = Simplify(default(fbr)),

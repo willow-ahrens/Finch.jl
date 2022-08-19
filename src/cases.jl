@@ -1,24 +1,32 @@
-@kwdef struct Cases
+@kwdef struct Switch
     cases
 end
 
-isliteral(::Cases) = false
+@kwdef struct Case
+    cond 
+    body
+end
 
-struct CaseStyle end
+Base.first(arg::Case) = arg.cond
+Base.last(arg::Case) = arg.body
 
-(ctx::Stylize{LowerJulia})(node::Cases) = CaseStyle()
-combine_style(a::DefaultStyle, b::CaseStyle) = CaseStyle()
-combine_style(a::ThunkStyle, b::CaseStyle) = ThunkStyle()
-combine_style(a::SimplifyStyle, b::CaseStyle) = SimplifyStyle()
-combine_style(a::RunStyle, b::CaseStyle) = CaseStyle()
-combine_style(a::AcceptRunStyle, b::CaseStyle) = CaseStyle()
-combine_style(a::SpikeStyle, b::CaseStyle) = CaseStyle()
-combine_style(a::CaseStyle, b::CaseStyle) = CaseStyle()
-supports_shift(::CaseStyle) = true
+isliteral(::Switch) = false
 
-struct CasesVisitor end
+struct SwitchStyle end
 
-function (ctx::CasesVisitor)(node)
+(ctx::Stylize{LowerJulia})(node::Switch) = SwitchStyle()
+combine_style(a::DefaultStyle, b::SwitchStyle) = SwitchStyle()
+combine_style(a::ThunkStyle, b::SwitchStyle) = ThunkStyle()
+combine_style(a::SimplifyStyle, b::SwitchStyle) = SimplifyStyle()
+combine_style(a::RunStyle, b::SwitchStyle) = SwitchStyle()
+combine_style(a::AcceptRunStyle, b::SwitchStyle) = SwitchStyle()
+combine_style(a::SpikeStyle, b::SwitchStyle) = SwitchStyle()
+combine_style(a::SwitchStyle, b::SwitchStyle) = SwitchStyle()
+supports_shift(::SwitchStyle) = true
+
+struct SwitchVisitor end
+
+function (ctx::SwitchVisitor)(node)
     if istree(node)
         map(product(map(ctx, arguments(node))...)) do case
             guards = map(first, case)
@@ -29,10 +37,10 @@ function (ctx::CasesVisitor)(node)
         [(true => node)]
     end
 end
-(ctx::CasesVisitor)(node::Cases) = node.cases
+(ctx::SwitchVisitor)(node::Switch) = node.cases
 
-function (ctx::LowerJulia)(stmt, ::CaseStyle)
-    cases = (CasesVisitor())(stmt)
+function (ctx::LowerJulia)(stmt, ::SwitchStyle)
+    cases = (SwitchVisitor())(stmt)
     function nest(cases, inner=false)
         guard, body = cases[1]
         body = contain(ctx) do ctx_2
@@ -45,7 +53,7 @@ function (ctx::LowerJulia)(stmt, ::CaseStyle)
     return nest(cases)
 end
 
-Base.show(io::IO, ex::Cases) = Base.show(io, MIME"text/plain"(), ex)
-function Base.show(io::IO, mime::MIME"text/plain", ex::Cases)
-	print(io, "Cases([...])")
+Base.show(io::IO, ex::Switch) = Base.show(io, MIME"text/plain"(), ex)
+function Base.show(io::IO, mime::MIME"text/plain", ex::Switch)
+	print(io, "Switch([...])")
 end

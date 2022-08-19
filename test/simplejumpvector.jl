@@ -73,7 +73,7 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSimpleJumpVector{Tv, T
                     end,
                     stride = (ctx, ext) -> my_i′,
                     body = (ctx, ext, ext_2) -> begin
-                        Cases([
+                        Switch([
                             :($(ctx(getstop(ext_2))) == $my_i′) => Thunk(
                                 body = Spike(
                                     body = Simplify(zero(Tv)),

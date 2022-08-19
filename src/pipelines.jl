@@ -18,7 +18,7 @@ combine_style(a::RunStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::SimplifyStyle, b::PipelineStyle) = SimplifyStyle()
 combine_style(a::AcceptRunStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::PipelineStyle, b::PipelineStyle) = PipelineStyle()
-combine_style(a::PipelineStyle, b::CaseStyle) = CaseStyle()
+combine_style(a::PipelineStyle, b::SwitchStyle) = SwitchStyle()
 combine_style(a::SpikeStyle, b::PipelineStyle) = PipelineStyle()
 
 supports_shift(::PipelineStyle) = true

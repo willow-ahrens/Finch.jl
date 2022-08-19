@@ -21,7 +21,7 @@ combine_style(a::StepperStyle, b::RunStyle) = RunStyle()
 combine_style(a::SimplifyStyle, b::StepperStyle) = SimplifyStyle()
 combine_style(a::StepperStyle, b::AcceptRunStyle) = StepperStyle()
 combine_style(a::StepperStyle, b::SpikeStyle) = SpikeStyle()
-combine_style(a::StepperStyle, b::CaseStyle) = CaseStyle()
+combine_style(a::StepperStyle, b::SwitchStyle) = SwitchStyle()
 combine_style(a::ThunkStyle, b::StepperStyle) = ThunkStyle()
 combine_style(a::StepperStyle, b::JumperStyle) = JumperStyle()
 combine_style(a::StepperStyle, b::PhaseStyle) = PhaseStyle()
@@ -39,7 +39,7 @@ end
     stride
     next = (ctx, idx, ext) -> quote end
     chunk = nothing
-    body = (ctx, idx, ext, ext_2) -> Cases([
+    body = (ctx, idx, ext, ext_2) -> Switch([
         :($(ctx(stride(ctx, idx, ext))) == $(ctx(getstop(ext_2)))) => Thunk(
             body = truncate_weak(chunk, ctx, ext, ext_2),
             epilogue = next(ctx, idx, ext_2)

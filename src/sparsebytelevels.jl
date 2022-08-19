@@ -346,7 +346,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseByteLevel}, ctx, mode::Read, idx:
                                 $my_i = last($(lvl.ex).srt[$my_r])
                             end,
                             stride = (ctx, ext) -> my_i,
-                            body = (ctx, ext, ext_2) -> Cases([
+                            body = (ctx, ext, ext_2) -> Switch([
                                 :($(ctx(getstop(ext_2))) == $my_i) => Thunk(
                                     body = Spike(
                                         body = Simplify(default(fbr)),
@@ -416,7 +416,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseByteLevel}, ctx, mode::Read, idx:
             preamble = quote
                 $my_q = $(ctx(q)) * $(ctx(lvl.I)) + $i
             end,
-            body = Cases([
+            body = Switch([
                 :($tbl[$my_q]) => refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Tq}(my_q), index=i, parent=fbr.env)), ctx, mode, idxs...),
                 true => Simplify(default(fbr))
             ])

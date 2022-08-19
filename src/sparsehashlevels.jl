@@ -316,7 +316,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode::Read, idx:
                     $my_key = ($(ctx(envposition(envexternal(fbr.env)))), ($(map(ctx, envdeferred(fbr.env))...), $(ctx(i))))
                     $my_q = get($(lvl.ex).tbl, $my_key, 0)
                 end,
-                body = Cases([
+                body = Switch([
                     :($my_q != 0) => refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Tq_2}(my_q), index=i, parent=fbr.env)), ctx, mode, idxs...),
                     true => Simplify(default(fbr))
                 ])

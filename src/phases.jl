@@ -62,7 +62,7 @@ combine_style(a::PhaseStyle, b::PhaseStyle) = PhaseStyle()
 combine_style(a::PhaseStyle, b::RunStyle) = PhaseStyle()
 combine_style(a::SimplifyStyle, b::PhaseStyle) = PhaseStyle()
 combine_style(a::AcceptRunStyle, b::PhaseStyle) = PhaseStyle()
-combine_style(a::CaseStyle, b::PhaseStyle) = CaseStyle()
+combine_style(a::SwitchStyle, b::PhaseStyle) = SwitchStyle()
 combine_style(a::ThunkStyle, b::PhaseStyle) = ThunkStyle()
 
 function (ctx::LowerJulia)(root::Chunk, ::PhaseStyle)
