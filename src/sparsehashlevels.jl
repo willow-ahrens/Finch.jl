@@ -203,7 +203,7 @@ function finalize_level!(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx::LowerJu
 end
 
 unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode::Read, idx, idxs...) =
-    unfurl(fbr, ctx, mode, protocol(idx, walk))
+    unfurl(fbr, ctx, mode, protocol(idx, walk), idxs...)
 
 function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode::Read, idx::Protocol{<:Any, Walk}, idxs...)
     lvl = fbr.lvl
@@ -310,7 +310,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode::Read, idx:
     my_q = cgx.freshen(tag, :_q)
 
     if R == lvl.N
-        body = Leaf(
+        body = Lookup(
             body = (i) -> Thunk(
                 preamble = quote
                     $my_key = ($(ctx(envposition(envexternal(fbr.env)))), ($(map(ctx, envdeferred(fbr.env))...), $(ctx(i))))
@@ -323,7 +323,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode::Read, idx:
             )
         )
     else
-        body = Leaf(
+        body = Lookup(
             body = (i) -> refurl(VirtualFiber(lvl, VirtualEnvironment(index=i, parent=fbr.env, internal=true)), ctx, mode, idxs...)
         )
     end
@@ -390,7 +390,8 @@ function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode::Union{Writ
             )
         )
     else
-        body = Leaf(
+        body = Lookup(
+            val = default(fbr),
             body = (i) -> refurl(VirtualFiber(lvl, VirtualEnvironment(index=i, parent=fbr.env, internal=true)), ctx, mode, idxs...)
         )
     end

@@ -68,7 +68,7 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSingleBlock{Tv, Ti}, R
             ),
             Phase(
                 stride = (ctx, idx, ext) -> :($(vec.ex).stop),
-                body = (start, step) -> Leaf(
+                body = (start, step) -> Lookup(
                     body = (i) -> :($(vec.ex).val[$(ctx.ctx(i)) - $(vec.ex).start + 1]) #TODO all of these functions should really have a ctx
                 )
             ),

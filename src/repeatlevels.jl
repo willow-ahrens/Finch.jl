@@ -153,10 +153,10 @@ function finalize_level!(fbr::VirtualFiber{VirtualRepeatLevel}, ctx::LowerJulia,
     return fbr.lvl
 end
 
-unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Read, idx, idxs...) =
+unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Read, idx) =
     unfurl(fbr, ctx, mode, protocol(idx, walk))
 
-function unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Read, idx::Protocol{<:Any, Walk}, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Read, idx::Protocol{<:Any, Walk})
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
@@ -203,10 +203,10 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Read, idx::Pro
     exfurl(body, ctx, mode, idx.idx)
 end
 
-unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Union{Write, Update}, idx, idxs...) =
-    unfurl(fbr, ctx, mode, protocol(idx, extrude), idxs...)
+unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Union{Write, Update}, idx) =
+    unfurl(fbr, ctx, mode, protocol(idx, extrude))
 
-function unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Union{Write, Update}, idx::Protocol{<:Any, Extrude}, tail...)
+function unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Union{Write, Update}, idx::Protocol{<:Any, Extrude})
     lvl = fbr.lvl
     tag = lvl.ex
     my_q = ctx.freshen(tag, :_q)

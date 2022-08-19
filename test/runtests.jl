@@ -23,7 +23,7 @@ function diff(name, body)
     end
 end
 
-using Finch: VirtualAbstractArray, Run, Spike, Extent, Scalar, Switch, Stepper, Jumper, Step, Jump, AcceptRun, AcceptSpike, Thunk, Phase, Pipeline, Leaf, Simplify, Shift
+using Finch: VirtualAbstractArray, Run, Spike, Extent, Scalar, Switch, Stepper, Jumper, Step, Jump, AcceptRun, AcceptSpike, Thunk, Phase, Pipeline, Lookup, Simplify, Shift
 using Finch: @f, @finch_program_instance, execute, execute_code, getstart, getstop
 using Finch: getname, Virtual
 

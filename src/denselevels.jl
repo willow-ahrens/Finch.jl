@@ -171,7 +171,7 @@ function unfurl(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode::Union{Read, Wri
 
     p = envposition(fbr.env)
     q = ctx.freshen(tag, :_q)
-    body = Leaf(
+    body = Lookup(
         val = default(fbr),
         body = (i) -> Thunk(
             preamble = quote

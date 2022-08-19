@@ -266,28 +266,28 @@ end
     val
 end
 
-@kwdef struct Leaf
+@kwdef struct Lookup
     val = nothing
     body
 end
 
-default(ex::Leaf) = something(ex.val)
+default(ex::Lookup) = something(ex.val)
 
-Base.show(io::IO, ex::Leaf) = Base.show(io, MIME"text/plain"(), ex)
-function Base.show(io::IO, mime::MIME"text/plain", ex::Leaf)
-    print(io, "Leaf()")
+Base.show(io::IO, ex::Lookup) = Base.show(io, MIME"text/plain"(), ex)
+function Base.show(io::IO, mime::MIME"text/plain", ex::Lookup)
+    print(io, "Lookup()")
 end
 
-isliteral(node::Leaf) = false
+isliteral(node::Lookup) = false
 
-function (ctx::ForLoopVisitor)(node::Access{Leaf}, ::DefaultStyle)
+function (ctx::ForLoopVisitor)(node::Access{Lookup}, ::DefaultStyle)
     node.tns.body(ctx.val)
 end
 
-function (ctx::ForLoopVisitor)(node::Leaf, ::DefaultStyle)
+function (ctx::ForLoopVisitor)(node::Lookup, ::DefaultStyle)
     node.body(ctx.val)
 end
 
 unchunk(node, ctx) = nothing
 (ctx::ForLoopVisitor)(node::Access, ::DefaultStyle) = something(unchunk(node.tns, ctx), node)
-unchunk(node::Leaf, ctx::ForLoopVisitor) = node.body(ctx.val)
+unchunk(node::Lookup, ctx::ForLoopVisitor) = node.body(ctx.val)
