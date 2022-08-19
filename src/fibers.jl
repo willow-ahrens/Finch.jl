@@ -293,7 +293,7 @@ Construct a fiber using abbreviated fiber constructor codes. All function names
 in `ctr` must be format codes, but expressions may be interpolated with `\$`. As
 an example, a csr matrix which might be constructed as
 `Fiber(DenseLevel(SparseListLevel(Element{0.0}(...))))` can also be constructed
-as `@f(sl(s(e(0.0))))`. Consult the documentation for the helper function
+as `@f(sl(d(e(0.0))))`. Consult the documentation for the helper function
 [f_code](@ref) for a full listing of format codes.
 """
 macro f(ex)
