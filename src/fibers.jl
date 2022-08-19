@@ -178,7 +178,7 @@ function (ctx::Finch.SelectVisitor)(node::Access{<:VirtualFiber}, ::DefaultStyle
         if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
             var = Name(ctx.ctx.freshen(:s))
             ctx.idxs[var] = node.idxs[1]
-            ctx.ctx.dims[getname(var)] = getdims(node.tns, ctx, node.idxs...)[1] #TODO redimensionalization
+            ctx.ctx.dims[getname(var)] = getdims(node.tns, ctx, node.mode)[1] #TODO redimensionalization
             return access(node.tns, node.mode, var, node.idxs[2:end]...)
         end
     end
