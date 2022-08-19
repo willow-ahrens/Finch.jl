@@ -76,5 +76,5 @@
             i = phase_stop_3 + 1
         end
         C_lvl.pos[1 + 1] = C_lvl_q
-        (C = Fiber((Finch.HollowListLevel){Int64}(4 + (1 - 2), C_lvl.pos, C_lvl.idx, C_lvl_2), (Finch.Environment)(; name = :C)),)
+        (C = Fiber((Finch.SparseListLevel){Int64}(4 + (1 - 2), C_lvl.pos, C_lvl.idx, C_lvl_2), (Finch.Environment)(; name = :C)),)
     end

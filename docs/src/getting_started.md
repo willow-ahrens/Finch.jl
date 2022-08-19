@@ -30,34 +30,34 @@ You can convert an AbstractArray to a Finch Fiber with the `fiber` function:
 julia> using Finch, SparseArrays
 
 julia> A = fiber(sprand(5, 6, 0.5))
-Solid [1:5]
+Dense [1:5]
 │ 
 ├─[1]:
-│ HollowList (0.0) [1:6]
+│ SparseList (0.0) [1:6]
 │ │ 
 │ └─[1]      [3]    
 │   0.758513 0.65606
 │ 
 ├─[2]:
-│ HollowList (0.0) [1:6]
+│ SparseList (0.0) [1:6]
 │ │ 
 │ └─[2]      [5]     
 │   0.103387 0.103223
 │ 
 ├─[3]:
-│ HollowList (0.0) [1:6]
+│ SparseList (0.0) [1:6]
 │ │ 
 │ └─[1]      [2]     
 │   0.653705 0.225958
 │ 
 ├─[4]:
-│ HollowList (0.0) [1:6]
+│ SparseList (0.0) [1:6]
 │ │ 
 │ └─[1]      [2]      [4]      [5]     
 │   0.918955 0.898256 0.444113 0.843331
 │ 
 ├─[5]:
-│ HollowList (0.0) [1:6]
+│ SparseList (0.0) [1:6]
 │ │ 
 │ └─[4]      
 │   0.0701716

@@ -11,8 +11,8 @@ function triangle(mtx)
     A_ref = SparseMatrixCSC(mdopen(mtx).A)
     (m, n) = size(A_ref)
     A = Finch.Fiber(
-        Solid(m,
-        HollowList(n, A_ref.colptr, A_ref.rowval,
+        Dense(m,
+        SparseList(n, A_ref.colptr, A_ref.rowval,
         Element{0.0, Float64}(A_ref.nzval))))
 
     C = Finch.Fiber(

@@ -14,15 +14,15 @@ RepeatLevel{D, Ti, Tv}(I::Ti) where {D, Ti, Tv} = RepeatLevel{D, Ti, Tv}(I, Ti[1
 RepeatLevel{D}(I::Ti, pos, idx, val::Vector{Tv}) where {D, Ti, Tv} = RepeatLevel{D, Ti, Tv}(I, pos, idx, val)
 
 """
-`f_code(r)` = [RepeatLevel](@ref).
+`f_code(rl)` = [RepeatLevel](@ref).
 """
-f_code(::Val{:r}) = Repeat
+f_code(::Val{:rl}) = Repeat
 summary_f_code(::Repeat{D}) where {D} = "r($(D))"
 similar_level(::RepeatLevel{D}) where {D} = Repeat{D}()
 similar_level(::RepeatLevel{D}, dim, tail...) where {D} = Repeat{D}(dim)
 
 pattern!(lvl::RepeatLevel{D, Ti}) where {D, Ti} = 
-    SolidLevel{Ti}(lvl.I, Pattern())
+    DenseLevel{Ti}(lvl.I, Pattern())
 
 function Base.show(io::IO, lvl::RepeatLevel{D}) where {D}
     print(io, "Repeat{")

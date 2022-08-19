@@ -23,18 +23,18 @@ int main(int argc, char** argv){
     double x_val[] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
 
     jl_value_t *y = finch_Fiber(
-        finch_Solid(finch_Int64(m),
+        finch_Dense(finch_Int64(m),
         finch_Element(finch_Float64(0.0))));
 
     jl_value_t *A = finch_Fiber(
-        finch_Solid(finch_Int64(m),
-        finch_HollowListLevel(finch_Int64(n), finch_Vector_Int64(A_pos, 5), finch_Vector_Int64(A_idx, 9),
+        finch_Dense(finch_Int64(m),
+        finch_SparseListLevel(finch_Int64(n), finch_Vector_Int64(A_pos, 5), finch_Vector_Int64(A_idx, 9),
         finch_ElementLevel(finch_Float64(0.0), finch_Vector_Float64(A_val, 9)))));
 
     finch_exec("println(%s)", A);
 
     jl_value_t *x = finch_Fiber(
-        finch_Solid(finch_Int64(n),
+        finch_Dense(finch_Int64(n),
         finch_ElementLevel(finch_Float64(0.0), finch_Vector_Float64(x_val, n))));
 
     finch_exec("println(%s)", x);

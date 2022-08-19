@@ -1,13 +1,13 @@
 @testset "fibers" begin
     println("B(h)[i] = A(s)[i]")
     A = Finch.Fiber(
-        HollowList(10, [1, 6], [1, 3, 5, 7, 9],
+        SparseList(10, [1, 6], [1, 3, 5, 7, 9],
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
     B = Finch.Fiber(
-        HollowHash{1}((10,),
+        SparseHash{1}((10,),
         Element{0.0}()))
 
-    @test diff("hl_to_hh.jl", @index_code @loop i B[i] += A[i])
+    @test diff("sl_to_sh.jl", @index_code @loop i B[i] += A[i])
 
     @index @loop i B[i] += A[i]
 
@@ -17,18 +17,18 @@
 
     println("A(s)[i] = B(h)[i]")
 
-    @test diff("hh_to_hs.jl", @index_code @loop i A[i] += B[i])
+    @test diff("sh_to_sl.jl", @index_code @loop i A[i] += B[i])
 
     @index @loop i A[i] += B[i]
 
     println(FiberArray(A))
     @test FiberArray(A) == FiberArray(B)
 
-    println("A(ds)")
+    println("A(dsl)")
 
     A = Fiber(
-        Solid(3, 
-        HollowList(5, [1, 4, 6, 8], [1, 2, 5, 2, 4, 3, 5],
+        Dense(3, 
+        SparseList(5, [1, 4, 6, 8], [1, 2, 5, 2, 4, 3, 5],
         Element{0.0}([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]))))
     @test ndims(FiberArray(A)) == 2
     @test size(FiberArray(A)) == (3, 5)
@@ -40,13 +40,13 @@
         0.0  0.0  1.0  0.0  1.0;
     ]
 
-    println("B(hh)[i, j] = A(ds)[i, j]")
+    println("B(shsh)[i, j] = A(dsl)[i, j]")
 
     B = Finch.Fiber(
-        HollowHash{2}((3,5),
+        SparseHash{2}((3,5),
         Element{0.0}()))
     
-    @test diff("s_hl_to_hh2.jl", @index_code @loop i j B[i, j] += A[i, j])
+    @test diff("d_sl_to_sh2.jl", @index_code @loop i j B[i, j] += A[i, j])
 
     @index @loop i j B[i, j] += A[i, j] 
 
@@ -54,16 +54,16 @@
 
     println("C(s)[i] = B(h)[i] where B(h)[i] = A(s)[i]")
     A = Finch.Fiber(
-        HollowList(10, [1, 6], [1, 3, 5, 7, 9],
+        SparseList(10, [1, 6], [1, 3, 5, 7, 9],
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
     B = Finch.Fiber(
-        HollowHash{1}((0,),
+        SparseHash{1}((0,),
         Element{0.0}()))
     C = Finch.Fiber(
-        HollowList(10, 
+        SparseList(10, 
         Element{0.0}()))
 
-    @test diff("hl_to_hh_to_hl.jl", @index_code (@loop i C[i] += B[i]) where (@loop i B[i] += A[i]))
+    @test diff("sl_to_sh_to_sl.jl", @index_code (@loop i C[i] += B[i]) where (@loop i B[i] += A[i]))
 
     @index (@loop i C[i] += B[i]) where (@loop i B[i] += A[i])
 
@@ -71,15 +71,15 @@
     @test FiberArray(A) == FiberArray(C)
 
 
-    println("B(c)[i] = A(s)[i]")
+    println("B(sc)[i] = A(sl)[i]")
     A = Finch.Fiber(
-        HollowList(10, [1, 6], [1, 3, 5, 7, 9],
+        SparseList(10, [1, 6], [1, 3, 5, 7, 9],
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
     B = Finch.Fiber(
-        HollowCoo{1}((10,),
+        SparseCoo{1}((10,),
         Element{0.0}()))
 
-    @test diff("hl_to_hc.jl", @index_code @loop i B[i] += A[i])
+    @test diff("sl_to_sc.jl", @index_code @loop i B[i] += A[i])
 
     @index @loop i B[i] += A[i]
 
@@ -87,9 +87,9 @@
     println(FiberArray(B))
     @test FiberArray(A) == FiberArray(B)
 
-    println("A(s)[i] = B(c)[i]")
+    println("A(sl)[i] = B(sc)[i]")
 
-    @test diff("hc_to_hl.jl", @index_code @loop i A[i] += B[i])
+    @test diff("sc_to_sl.jl", @index_code @loop i A[i] += B[i])
 
     println(A)
     println(B)
@@ -100,18 +100,18 @@
     println(FiberArray(A))
     @test FiberArray(A) == FiberArray(B)
 
-    println("B(cc)[i, j] = A(ds)[i, j]")
+    println("B(sc2)[i, j] = A(dsl)[i, j]")
 
     A = Fiber(
-        Solid(3, 
-        HollowList(5, [1, 4, 6, 8], [1, 2, 5, 2, 4, 3, 5],
+        Dense(3, 
+        SparseList(5, [1, 4, 6, 8], [1, 2, 5, 2, 4, 3, 5],
         Element{0.0}([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]))))
 
     B = Finch.Fiber(
-        HollowCoo{2}((3,5),
+        SparseCoo{2}((3,5),
         Element{0.0}()))
     
-    @test diff("s_hl_to_hc2.jl", @index_code @loop i j B[i, j] += A[i, j])
+    @test diff("d_sl_to_sc2.jl", @index_code @loop i j B[i, j] += A[i, j])
 
     @index @loop i j B[i, j] += A[i, j] 
 
@@ -119,16 +119,16 @@
 
     println("C(s)[i] = B(c)[i] where B(c)[i] = A(s)[i]")
     A = Finch.Fiber(
-        HollowList(10, [1, 6], [1, 3, 5, 7, 9],
+        SparseList(10, [1, 6], [1, 3, 5, 7, 9],
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
     B = Finch.Fiber(
-        HollowCoo{1}((10,),
+        SparseCoo{1}((10,),
         Element{0.0}()))
     C = Finch.Fiber(
-        HollowList(10, 
+        SparseList(10, 
         Element{0.0}()))
 
-    @test diff("hl_to_hc_to_hl.jl", @index_code (@loop i C[i] += B[i]) where (@loop i B[i] += A[i]))
+    @test diff("sl_to_sc_to_sl.jl", @index_code (@loop i C[i] += B[i]) where (@loop i B[i] += A[i]))
 
     @index (@loop i C[i] += B[i]) where (@loop i B[i] += A[i])
 
@@ -139,14 +139,14 @@
     println("C(s)[i] = A(s)[i] + B(s)[i]")
 
     A = Finch.Fiber(
-        HollowList(10, [1, 6], [1, 3, 5, 7, 9],
+        SparseList(10, [1, 6], [1, 3, 5, 7, 9],
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
     B = Finch.Fiber(
-        HollowList(10, [1, 4], [2, 5, 8],
+        SparseList(10, [1, 4], [2, 5, 8],
         Element{0.0}([1.0, 1.0, 1.0])))
-    C = Finch.Fiber(HollowList(10, Element{0.0}()))
+    C = Finch.Fiber(SparseList(10, Element{0.0}()))
 
-    @test diff("hl_plus_hl_to_hl.jl", @index_code @loop i C[i] += A[i] + B[i])
+    @test diff("sl_plus_sl_to_sl.jl", @index_code @loop i C[i] += A[i] + B[i])
 
     @index @loop i C[i] += A[i] + B[i]
 
@@ -160,14 +160,14 @@
 
     println("C[i] = A(s)[i] + B(s)[i]")
     A = Finch.Fiber(
-        HollowList(10, [1, 6], [1, 3, 5, 7, 9],
+        SparseList(10, [1, 6], [1, 3, 5, 7, 9],
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
     B = Finch.Fiber(
-        HollowList(10, [1, 4], [2, 5, 8],
+        SparseList(10, [1, 4], [2, 5, 8],
         Element{0.0}([1.0, 1.0, 1.0])))
     C = zeros(10)
 
-    @test diff("hl_plus_hl_to_vec.jl", @index_code @loop i C[i] += A[i] + B[i])
+    @test diff("sl_plus_sl_to_vec.jl", @index_code @loop i C[i] += A[i] + B[i])
 
     @index @loop i C[i] += A[i] + B[i]
 
@@ -180,12 +180,12 @@
 
     println("B[i] = A(ds)[j, i]")
     A = Fiber(
-        Solid(2,
-        HollowList(10, [1, 6, 9], [1, 3, 5, 7, 9, 2, 5, 8],
+        Dense(2,
+        SparseList(10, [1, 6, 9], [1, 3, 5, 7, 9, 2, 5, 8],
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0, 1.0, 1.0, 1.0]))))
     B = zeros(10)
 
-    @test diff("s_hl_sum_2_to_vec.jl", @index_code @loop j i B[i] += A[j, i])
+    @test diff("d_sl_sum_2_to_vec.jl", @index_code @loop j i B[i] += A[j, i])
 
     @index @loop j i B[i] += A[j, i]
 
@@ -197,14 +197,14 @@
 
     println("C(s)[i] = A(s)[i::gallop] + B(s)[i::gallop]")
     A = Finch.Fiber(
-        HollowList(10, [1, 6], [1, 3, 5, 7, 9],
+        SparseList(10, [1, 6], [1, 3, 5, 7, 9],
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
     B = Finch.Fiber(
-        HollowList(10, [1, 4], [2, 5, 8],
+        SparseList(10, [1, 4], [2, 5, 8],
         Element{0.0}([1.0, 1.0, 1.0])))
-    C = Finch.Fiber(HollowList(10, Element{0.0}()))
+    C = Finch.Fiber(SparseList(10, Element{0.0}()))
 
-    @test diff("hl_gallop_plus_hl_gallop_to_hl.jl", @index_code @loop i C[i] += A[i::gallop] + B[i::gallop])
+    @test diff("sl_gallop_plus_sl_gallop_to_sl.jl", @index_code @loop i C[i] += A[i::gallop] + B[i::gallop])
 
     @index @loop i C[i] += A[i::gallop] + B[i::gallop]
 
@@ -218,14 +218,14 @@
     println("C(s)[i] = A(s)[i::gallop] * B(s)[i::gallop]")
 
     A = Finch.Fiber(
-        HollowList(10, [1, 6], [1, 3, 5, 7, 9],
+        SparseList(10, [1, 6], [1, 3, 5, 7, 9],
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
     B = Finch.Fiber(
-        HollowList(10, [1, 5], [2, 5, 7, 8],
+        SparseList(10, [1, 5], [2, 5, 7, 8],
         Element{0.0}([1.0, 1.0, 1.0, 1.0])))
-    C = Finch.Fiber(HollowList(10, Element{0.0}()))
+    C = Finch.Fiber(SparseList(10, Element{0.0}()))
 
-    @test diff("hl_gallop_times_hl_gallop_to_hl.jl", @index_code @loop i C[i] += A[i::gallop] * B[i::gallop])
+    @test diff("sl_gallop_times_sl_gallop_to_sl.jl", @index_code @loop i C[i] += A[i::gallop] * B[i::gallop])
 
     @index @loop i C[i] += A[i::gallop] * B[i::gallop]
 
@@ -236,32 +236,32 @@
     @test Finch.FiberArray(C) == [0.0, 0.0, 0.0, 0.0, 4.0, 0.0, 5.0, 0.0, 0.0, 0.0]
     println()
 
-    println("B(s)[i] = A(ds)[i, j]")
+    println("B(sl)[i] += A(dsl)[i, j]")
     A = Finch.Fiber(
-        Solid(3, 
-        HollowList(10, [1, 6, 6, 7], [1, 3, 5, 7, 9, 4],
+        Dense(3, 
+        SparseList(10, [1, 6, 6, 7], [1, 3, 5, 7, 9, 4],
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0, 4.0]))))
     B = Finch.Fiber(
-        HollowList(3,
+        SparseList(3,
         Element{0.0}()))
 
-    @test diff("s_hl_sum_2_to_hl.jl", @index_code @loop i j B[j] += A[i, j])
+    @test diff("d_sl_sum_2_to_sl.jl", @index_code @loop i j B[j] += A[i, j])
 
     @index @loop i j B[i] += A[i, j]
 
     println(FiberArray(B))
     @test B.lvl.idx[1:B.lvl.pos[2]-1] == [1, 3]
 
-    println("B[i] = A(ds)[j, i]")
+    println("B[i] = A(dsl)[j, i]")
     A = Fiber(
-        Solid(4,
-        HollowList(10, [1, 6, 9, 9, 10], [1, 3, 5, 7, 9, 3, 5, 8, 3],
+        Dense(4,
+        SparseList(10, [1, 6, 9, 9, 10], [1, 3, 5, 7, 9, 3, 5, 8, 3],
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0, 1.0, 1.0, 1.0, 7.0]))))
     B = Fiber(
-        HollowByte(4,
+        SparseByte(4,
         Element{0.0}()))
 
-    @test diff("s_hl_sum_2_to_hb.jl", @index_code @loop i j B[j] += A[i, j])
+    @test diff("d_sl_sum_2_to_sb.jl", @index_code @loop i j B[j] += A[i, j])
 
     @index @loop i j B[j] += A[i, j]
 

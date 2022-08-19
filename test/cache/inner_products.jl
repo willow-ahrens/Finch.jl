@@ -130,5 +130,5 @@
             end
             B_lvl_2.pos[B_lvl_q + 1] = B_lvl_2_q
         end
-        (B = Fiber((Finch.SolidLevel){Int64}(A_lvl.I, (Finch.HollowListLevel){Int64}(A_lvl_4.I, B_lvl_2.pos, B_lvl_2.idx, B_lvl_3)), (Finch.Environment)(; name = :B)),)
+        (B = Fiber((Finch.DenseLevel){Int64}(A_lvl.I, (Finch.SparseListLevel){Int64}(A_lvl_4.I, B_lvl_2.pos, B_lvl_2.idx, B_lvl_3)), (Finch.Environment)(; name = :B)),)
     end

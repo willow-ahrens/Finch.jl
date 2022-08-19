@@ -5,12 +5,12 @@
         println("B[i, j] += A[i,k] * A[j, k]: $mtx")
         B_ref = transpose(A_ref) * A_ref
         A = Finch.Fiber(
-            Solid(n,
-            HollowList(m, A_ref.colptr, A_ref.rowval,
+            Dense(n,
+            SparseList(m, A_ref.colptr, A_ref.rowval,
             Element{0.0}(A_ref.nzval))))
         B = Finch.Fiber(
-            Solid(m,
-            HollowList(m,
+            Dense(m,
+            SparseList(m,
             Element{0.0}())))
         @test diff("inner_products.jl", @index_code @loop i j k B[i, j] += A[i, k] * A[j, k])
         @index @loop i j k B[i, j] += A[i, k] * A[j, k]
@@ -24,8 +24,8 @@
         if m == n
             println("B[] += A[i,k] * A[i, j] * A[j, k] : $mtx")
             A = Finch.Fiber(
-                Solid(n,
-                HollowList(m, A_ref.colptr, A_ref.rowval,
+                Dense(n,
+                SparseList(m, A_ref.colptr, A_ref.rowval,
                 Element{0.0}(A_ref.nzval))))
             B = Finch.Fiber(Element{0.0}())
             @index @loop i j k B[] += A[i, k] * A[i, j] * A[j, k]
@@ -44,15 +44,15 @@
         I, V = findnz(A_ref)
         J, W = findnz(B_ref)
         A = Fiber(
-            HollowList(n, [1, length(I) + 1], I,
+            SparseList(n, [1, length(I) + 1], I,
             Element{0.0}(V))
         )
         B = Fiber(
-            HollowList(n, [1, length(J) + 1], J,
+            SparseList(n, [1, length(J) + 1], J,
             Element{0.0}(W))
         )
         C = Fiber(
-            HollowList(
+            SparseList(
             Element{0.0}())
         )
         d = Fiber(Element{0.0}())
@@ -73,15 +73,15 @@
         if m == n
             println("B(ds)[i, j] = w[j] where w[j] += A(ds)[i, k] * A(ds)(k, j)")
             A = Finch.Fiber(
-                Solid(n,
-                HollowList(m, A_ref.colptr, A_ref.rowval,
+                Dense(n,
+                SparseList(m, A_ref.colptr, A_ref.rowval,
                 Element{0.0}(A_ref.nzval))))
             B = Fiber(
-                Solid(0,
-                HollowList(0,
+                Dense(0,
+                SparseList(0,
                 Element{0.0}())))
             w = Fiber(
-                HollowByte(m, #TODO
+                SparseByte(m, #TODO
                 Element{0.0}()))
 
             ex = @index_program_instance @loop i ((@loop j B[i, j] = w[j]) where (@loop k j w[j] = A[i, k] * A[k, j]))

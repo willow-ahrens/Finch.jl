@@ -1,7 +1,7 @@
 @testset "skips" begin
 
     A = Finch.Fiber(
-        HollowList(10, [1, 6], [1, 3, 5, 7, 9],
+        SparseList(10, [1, 6], [1, 3, 5, 7, 9],
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
     B = Scalar{0.0}()
 

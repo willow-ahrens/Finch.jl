@@ -33,7 +33,7 @@ function stats(n, p)
     A_ref = sprand(n, p)
     I, V = findnz(A_ref)
     A = Fiber(
-        HollowList(n, [1, length(I) + 1], I,
+        SparseList(n, [1, length(I) + 1], I,
         Element{0.0}(V)))
     a = Scalar{0.0}()
     total = Scalar{0.0}()

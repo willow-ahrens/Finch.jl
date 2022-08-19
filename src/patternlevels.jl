@@ -29,15 +29,15 @@ original fiber unusable when modified.
 
 ```jldoctest
 julia> A = Finch.Fiber(
-    HollowList(10, [1, 6], [1, 3, 5, 7, 9],
+    SparseList(10, [1, 6], [1, 3, 5, 7, 9],
     Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
-HollowList (0.0) [1:10]
+SparseList (0.0) [1:10]
 │ 
 └─[1] [3] [5] [7] [9]
   2.0 3.0 4.0 5.0 6.0
 
 julia> pattern!(A)
-HollowList (false) [1:10]
+SparseList (false) [1:10]
 │ 
 └─[1]  [3]  [5]  [7]  [9] 
   true true true true true

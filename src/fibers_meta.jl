@@ -20,14 +20,14 @@ See also: [`fiber!`](@ref)
 
 ```jldoctest
 julia> println(summary(fiber(sparse([1 0; 0 1]))))
-2×2 Fiber @f(s(l(e(0)))
+2×2 Fiber @f(s(sl(e(0)))
 
 julia> println(summary(fiber(ones(3, 2, 4))))
 3×2×4 Fiber @f(s(s(s(e(0.0)))))
 ```
 """
 function fiber(arr, default=zero(eltype(arr)))
-    Base.copyto!(Fiber((SolidLevel^(ndims(arr)))(Element{default}())), arr)
+    Base.copyto!(Fiber((DenseLevel^(ndims(arr)))(Element{default}())), arr)
 end
 
 @generated function Base.copyto!(dst::Fiber, src)
@@ -76,7 +76,7 @@ julia> I = (
 julia> V = [1.0; 2.0; 3.0];
 
 julia> fsparse(I, V)
-HollowCoo (0.0) [1:3×1:3×1:3]
+SparseCoo (0.0) [1:3×1:3×1:3]
 │ │ │ 
 └─└─└─[1, 1, 1] [2, 2, 2] [3, 3, 3]
       1.0       2.0       3.0    
@@ -113,7 +113,7 @@ Like [`fsparse`](@ref), but the coordinates must be sorted and unique, and memor
 is reused.
 """
 function fsparse!(I::Tuple, V, shape = map(maximum, I))
-    return Fiber(HollowCoo{length(I), Tuple{map(eltype, I)...}, Int}(shape, I, [1, length(I[1]) + 1], Element{zero(eltype(V))}(V)))
+    return Fiber(SparseCoo{length(I), Tuple{map(eltype, I)...}, Int}(shape, I, [1, length(I[1]) + 1], Element{zero(eltype(V))}(V)))
 end
 
 """
@@ -131,13 +131,13 @@ See also: (`sprand`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#Spars
 # Examples
 ```jldoctest; setup = :(using Random; Random.seed!(1234))
 julia> fsprand(Bool, (3, 3), 0.5)
-HollowCoo (false) [1:3×1:3]
+SparseCoo (false) [1:3×1:3]
 │ │ 
 └─└─[1, 1] [1, 3] [2, 2] [2, 3] [3, 3]
     true   true   true   true   true  
 
 julia> fsprand(Float64, (2, 2, 2), 0.5)
-HollowCoo (0.0) [1:2×1:2×1:2]
+SparseCoo (0.0) [1:2×1:2×1:2]
 │ │ │ 
 └─└─└─[1, 2, 2] [2, 1, 1] [2, 1, 2]
       0.647855  0.996665  0.749194 
@@ -167,12 +167,12 @@ See also: (`spzeros`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#Spar
 # Examples
 ```jldoctest
 julia> fspzeros(Bool, (3, 3))
-HollowCoo (false) [1:3×1:3]
+SparseCoo (false) [1:3×1:3]
 │ │ 
 └─└─
     
 julia> fspzeros(Float64, (2, 2, 2))
-HollowCoo (0.0) [1:2×1:2×1:2]
+SparseCoo (0.0) [1:2×1:2×1:2]
 │ │ │ 
 └─└─└─
 ```
@@ -194,7 +194,7 @@ See also: (`findnz`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#Spars
 """
 function ffindnz(src)
     tmp = Fiber(
-        HollowCooLevel{ndims(src)}(
+        SparseCooLevel{ndims(src)}(
         ElementLevel{zero(eltype(src)), eltype(src)}()))
     tmp = copyto!(tmp, src)
     nnz = tmp.lvl.pos[2] - 1

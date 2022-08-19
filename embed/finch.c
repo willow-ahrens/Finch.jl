@@ -25,9 +25,9 @@ jl_function_t* catch_backtrace;
 jl_datatype_t* reft;
 
 jl_function_t* Fiber;
-jl_function_t* HollowList;
-jl_function_t* HollowListLevel;
-jl_function_t* Solid;
+jl_function_t* SparseList;
+jl_function_t* SparseListLevel;
+jl_function_t* Dense;
 jl_function_t* Element;
 jl_function_t* ElementLevel;
 
@@ -136,12 +136,12 @@ extern void finch_initialize(){
 
     Fiber = (jl_function_t*)jl_eval_string("(lvl) -> Finch.Fiber(lvl)");
     FINCH_ASSERT(!jl_exception_occurred(), "Could not find Fiber");
-    HollowList = (jl_function_t*)jl_eval_string("(m, lvl) -> Finch.HollowList(m, lvl)");
-    FINCH_ASSERT(!jl_exception_occurred(), "Could not find HollowList");
-    HollowListLevel = (jl_function_t*)jl_eval_string("(m, pos, idx, lvl) -> Finch.HollowList(m, pos, idx, lvl)");
-    FINCH_ASSERT(!jl_exception_occurred(), "Could not find HollowListLevel");
-    Solid = (jl_function_t*)jl_eval_string("(m, lvl) -> Finch.Solid(m, lvl)");
-    FINCH_ASSERT(!jl_exception_occurred(), "Could not find Solid");
+    SparseList = (jl_function_t*)jl_eval_string("(m, lvl) -> Finch.SparseList(m, lvl)");
+    FINCH_ASSERT(!jl_exception_occurred(), "Could not find SparseList");
+    SparseListLevel = (jl_function_t*)jl_eval_string("(m, pos, idx, lvl) -> Finch.SparseList(m, pos, idx, lvl)");
+    FINCH_ASSERT(!jl_exception_occurred(), "Could not find SparseListLevel");
+    Dense = (jl_function_t*)jl_eval_string("(m, lvl) -> Finch.Dense(m, lvl)");
+    FINCH_ASSERT(!jl_exception_occurred(), "Could not find Dense");
     Element = (jl_function_t*)jl_eval_string("(default) -> Finch.Element{default}()");
     FINCH_ASSERT(!jl_exception_occurred(), "Could not find Element");
     ElementLevel = (jl_function_t*)jl_eval_string("(default, val) -> Finch.Element{default}(val)");
@@ -319,18 +319,18 @@ jl_value_t* finch_Fiber(jl_value_t* lvl){
     return res;
 }
 
-jl_value_t* finch_HollowList(jl_value_t *n, jl_value_t* lvl){
-    jl_value_t *res = finch_call(HollowList, n, lvl);
+jl_value_t* finch_SparseList(jl_value_t *n, jl_value_t* lvl){
+    jl_value_t *res = finch_call(SparseList, n, lvl);
     return res;
 }
 
-jl_value_t* finch_HollowListLevel(jl_value_t *n, jl_value_t *pos, jl_value_t *idx, jl_value_t* lvl){
-    jl_value_t *res = finch_call(HollowListLevel, n, pos, idx, lvl);
+jl_value_t* finch_SparseListLevel(jl_value_t *n, jl_value_t *pos, jl_value_t *idx, jl_value_t* lvl){
+    jl_value_t *res = finch_call(SparseListLevel, n, pos, idx, lvl);
     return res;
 }
 
-jl_value_t* finch_Solid(jl_value_t *n, jl_value_t* lvl){
-    jl_value_t *res = finch_call(Solid, n, lvl);
+jl_value_t* finch_Dense(jl_value_t *n, jl_value_t* lvl){
+    jl_value_t *res = finch_call(Dense, n, lvl);
     return res;
 }
 

@@ -14,15 +14,15 @@ function add_vec(n, p, q; verbose=false)
     I, V = findnz(A_ref)
     J, W = findnz(B_ref)
     A = Fiber(
-        HollowList(n, [1, length(I) + 1], I,
+        SparseList(n, [1, length(I) + 1], I,
         Element{0.0, Float64}(V))
     )
     B = Fiber(
-        HollowList(n, [1, length(J) + 1], J,
+        SparseList(n, [1, length(J) + 1], J,
         Element{0.0, Float64}(W))
     )
     C = Fiber(
-        HollowList(
+        SparseList(
         Element{0.0, Float64}())
     )
     
@@ -63,15 +63,15 @@ function mul_vec(n, p, q; verbose=false)
     I, V = findnz(A_ref)
     J, W = findnz(B_ref)
     A = Fiber(
-        HollowList(n, [1, length(I) + 1], I,
+        SparseList(n, [1, length(I) + 1], I,
         Element{0.0, Float64}(V))
     )
     B = Fiber(
-        HollowList(n, [1, length(J) + 1], J,
+        SparseList(n, [1, length(J) + 1], J,
         Element{0.0, Float64}(W))
     )
     C = Fiber(
-        HollowList(
+        SparseList(
         Element{0.0, Float64}())
     )
     
@@ -112,11 +112,11 @@ function dot(n, p, q; verbose=false)
     I, V = findnz(A_ref)
     J, W = findnz(B_ref)
     A = Fiber(
-        HollowList(n, [1, length(I) + 1], I,
+        SparseList(n, [1, length(I) + 1], I,
         Element{0.0, Float64}(V))
     )
     B = Fiber(
-        HollowList(n, [1, length(J) + 1], J,
+        SparseList(n, [1, length(J) + 1], J,
         Element{0.0, Float64}(W))
     )
     C = Scalar{0.0}()
@@ -158,11 +158,11 @@ function minplus(n, p, q; verbose=false)
     I, V = findnz(A_ref)
     J, W = findnz(B_ref)
     A = Fiber(
-        HollowList(n, [1, length(I) + 1], I,
+        SparseList(n, [1, length(I) + 1], I,
         Element{0.0, Float64}(V))
     )
     B = Fiber(
-        HollowList(n, [1, length(J) + 1], J,
+        SparseList(n, [1, length(J) + 1], J,
         Element{0.0, Float64}(W))
     )
     C = Scalar{0.0}()
