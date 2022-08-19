@@ -2,7 +2,7 @@ function register()
     Base.eval(Finch, quote
         @generated function execute(ex)
             contain(LowerJulia()) do ctx
-                execute_code_lowered(:ex, ex)
+                execute_code(:ex, ex)
             end
         end
     end)
@@ -51,7 +51,7 @@ function (ctx::LowerJulia)(prgm::Lifetime, ::LifetimeStyle)
     end
 end
 
-function execute_code_lowered(ex, T)
+function execute_code(ex, T)
     prgm = nothing
     code = contain(LowerJulia()) do ctx
         quote
@@ -93,9 +93,9 @@ function execute_code_lowered(ex, T)
         unquote_literals
 end
 
-macro index(ex)
+macro finch(ex)
     results = Set()
-    prgm = IndexNotation.capture_index_instance(ex, results=results)
+    prgm = IndexNotation.capture_finch_instance(ex, results=results)
     thunk = quote
         res = $execute($prgm)
     end
@@ -110,10 +110,10 @@ macro index(ex)
     thunk
 end
 
-macro index_code(ex)
-    prgm = IndexNotation.capture_index_instance(ex)
+macro finch_code(ex)
+    prgm = IndexNotation.capture_finch_instance(ex)
     return quote
-        $execute_code_lowered(:ex, typeof($prgm))
+        $execute_code(:ex, typeof($prgm))
     end
 end
 

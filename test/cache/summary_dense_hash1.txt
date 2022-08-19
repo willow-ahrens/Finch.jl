@@ -1,1 +1,1 @@
-5×10 Fiber @fiber(d(sh{1}(e(0.0))))
+5×10 @fiber(d(sh{1}(e(0.0))))

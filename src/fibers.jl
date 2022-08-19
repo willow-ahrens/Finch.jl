@@ -296,7 +296,7 @@ an example, a csr matrix which might be constructed as
 as `@fiber(sl(d(e(0.0))))`. Consult the documentation for the helper function
 [f_code](@ref) for a full listing of format codes.
 """
-macro f(ex)
+macro fiber(ex)
     function walk(ex)
         if ex isa Expr && ex.head == :call
             return :(($f_code($(QuoteNode(Val(ex.args[1])))))($(map(walk, ex.args[2:end])...)))
