@@ -7,7 +7,7 @@ tab = "  "
 
 function Base.show(io::IO, mime::MIME"text/plain", stmt::IndexStatement)
     if get(io, :compact, false)
-        print(io, "@index(…)")
+        print(io, "@finch(…)")
     else
         display_statement(io, mime, stmt, 0)
     end

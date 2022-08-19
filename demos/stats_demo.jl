@@ -7,21 +7,21 @@ using SparseArrays
 using LinearAlgebra
 
 @slots a b c d e i j Finch.add_rules!([
-    (@rule @i(@chunk $i a (b[j...] <<min>>= $d)) => if Finch.isliteral(d) && i ∉ j
-        @i (b[j...] <<min>>= $d)
+    (@rule @f(@chunk $i a (b[j...] <<min>>= $d)) => if Finch.isliteral(d) && i ∉ j
+        @f (b[j...] <<min>>= $d)
     end),
-    (@rule @i(@chunk $i a @multi b... (c[j...] <<min>>= $d) e...) => begin
+    (@rule @f(@chunk $i a @multi b... (c[j...] <<min>>= $d) e...) => begin
         if Finch.isliteral(d) && i ∉ j
-            @i @multi (c[j...] <<min>>= $d) @chunk $i a @i(@multi b... e...)
+            @f @multi (c[j...] <<min>>= $d) @chunk $i a @f(@multi b... e...)
         end
     end),
-    (@rule @i(@chunk $i a (b[j...] <<max>>= $d)) => if Finch.isliteral(d) && i ∉ j
-        @i (b[j...] <<max>>= $d)
+    (@rule @f(@chunk $i a (b[j...] <<max>>= $d)) => if Finch.isliteral(d) && i ∉ j
+        @f (b[j...] <<max>>= $d)
     end),
-    (@rule @i(@chunk $i a @multi b... (c[j...] <<max>>= $d) e...) => begin
+    (@rule @f(@chunk $i a @multi b... (c[j...] <<max>>= $d) e...) => begin
         if Finch.isliteral(d) && i ∉ j
-            println(@i @multi (c[j...] <<max>>= $d) @chunk $i a @i(@multi b... e...))
-            @i @multi (c[j...] <<max>>= $d) @chunk $i a @i(@multi b... e...)
+            println(@f @multi (c[j...] <<max>>= $d) @chunk $i a @f(@multi b... e...))
+            @f @multi (c[j...] <<max>>= $d) @chunk $i a @f(@multi b... e...)
         end
     end),
 ])
@@ -42,7 +42,7 @@ function stats(n, p)
     maxim = Scalar{-Inf}()
 
     println("fused stats")
-    display(@index_code @loop i (begin
+    display(@finch_code @loop i (begin
         total[] += a[]
         total2[] += a[]*a[]
         minim[] <<min>>= a[]
@@ -56,7 +56,7 @@ function stats(n, p)
         maxim = $maxim
         A = $A
         a = $a
-        @index @loop i (begin
+        @finch @loop i (begin
             total[] += a[]
             total2[] += a[]*a[]
             minim[] <<min>>= a[]
@@ -73,10 +73,10 @@ function stats(n, p)
         maxim = $maxim
         A = $A
         a = $a
-        @index @loop i total[] += A[i]
-        @index @loop i (total2[] += a[] * a[]) where (a[] = A[i])
-        @index @loop i minim[] <<min>>= A[i]
-        @index @loop i maxim[] <<max>>= A[i]
+        @finch @loop i total[] += A[i]
+        @finch @loop i (total2[] += a[] * a[]) where (a[] = A[i])
+        @finch @loop i minim[] <<min>>= A[i]
+        @finch @loop i maxim[] <<max>>= A[i]
     end))
     println()
 end

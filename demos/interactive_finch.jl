@@ -17,39 +17,39 @@ C = similar(A)
 
 F = fiber([1, 1, 1, 1, 1])
 
-@index @loop i j C[i] += (A[i] != 0) * coalesce(A[permit[offset[3-i, j]]], 0) * coalesce(F[permit[j]], 0)
-@index_code @loop i j C[i] += (A[i] != 0) * coalesce(A[permit[offset[3-i, j]]], 0) * coalesce(F[permit[j]], 0)
+@finch @loop i j C[i] += (A[i] != 0) * coalesce(A[permit[offset[3-i, j]]], 0) * coalesce(F[permit[j]], 0)
+@finch_code @loop i j C[i] += (A[i] != 0) * coalesce(A[permit[offset[3-i, j]]], 0) * coalesce(F[permit[j]], 0)
 
-@index_code @loop i C[i] = A[i] + B[i]
-@index @loop i C[i] = A[i] + B[i]
+@finch_code @loop i C[i] = A[i] + B[i]
+@finch @loop i C[i] = A[i] + B[i]
 
-@index_code @loop i C[i] = A[i::gallop] + B[i]
-@index @loop i C[i] = A[i::gallop] + B[i]
+@finch_code @loop i C[i] = A[i::gallop] + B[i]
+@finch @loop i C[i] = A[i::gallop] + B[i]
 
-@index_code @loop i C[i] = A[i] + B[i::gallop]
-@index @loop i C[i] = A[i] + B[i::gallop]
+@finch_code @loop i C[i] = A[i] + B[i::gallop]
+@finch @loop i C[i] = A[i] + B[i::gallop]
 
-@index_code @loop i C[i] = A[i::gallop] + B[i::gallop]
-@index @loop i C[i] = A[i::gallop] + B[i::gallop]
+@finch_code @loop i C[i] = A[i::gallop] + B[i::gallop]
+@finch @loop i C[i] = A[i::gallop] + B[i::gallop]
 
 D = Scalar{0.0}()
 
-@index_code @loop i D[] += A[i] * B[i]
-@index @loop i D[] += A[i] * B[i]
+@finch_code @loop i D[] += A[i] * B[i]
+@finch @loop i D[] += A[i] * B[i]
 
-@index_code @loop i D[] += A[i::gallop] * B[i]
-@index @loop i D[] += A[i::gallop] * B[i]
+@finch_code @loop i D[] += A[i::gallop] * B[i]
+@finch @loop i D[] += A[i::gallop] * B[i]
 
-@index_code @loop i D[] += A[i] * B[i::gallop]
-@index @loop i D[] += A[i] * B[i::gallop]
+@finch_code @loop i D[] += A[i] * B[i::gallop]
+@finch @loop i D[] += A[i] * B[i::gallop]
 
-@index_code @loop i D[] += A[i::gallop] * B[i::gallop]
-@index @loop i D[] += A[i::gallop] * B[i::gallop]
+@finch_code @loop i D[] += A[i::gallop] * B[i::gallop]
+@finch @loop i D[] += A[i::gallop] * B[i::gallop]
 
-@index_code @loop i C[i] = coalesce(A[permit[i]], B[permit[offset[$n, i]]])
-@index @loop i C[i] = coalesce(A[permit[i]], B[permit[offset[$n, i]]])
+@finch_code @loop i C[i] = coalesce(A[permit[i]], B[permit[offset[$n, i]]])
+@finch @loop i C[i] = coalesce(A[permit[i]], B[permit[offset[$n, i]]])
 
-R = @f(d(r(0.0)))
-copyto!(@f(d(r(0.0))), [ones(4, 4) zeros(4, 4); zeros(4, 4) ones(4, 4)])
-b = @f(d(e(0.0)))
-@index @loop i j b[i] += a[i, j]
+R = @fiber(d(r(0.0)))
+copyto!(@fiber(d(r(0.0))), [ones(4, 4) zeros(4, 4); zeros(4, 4) ones(4, 4)])
+b = @fiber(d(e(0.0)))
+@finch @loop i j b[i] += a[i, j]

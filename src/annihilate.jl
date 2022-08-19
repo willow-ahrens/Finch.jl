@@ -1,27 +1,27 @@
 @slots a b c d i j f g rules = [
-    (@rule @i(f(a...)) => if isliteral(f) && all(isliteral, a) && length(a) >= 1 Literal(getvalue(f)(getvalue.(a)...)) end),
+    (@rule @f(f(a...)) => if isliteral(f) && all(isliteral, a) && length(a) >= 1 Literal(getvalue(f)(getvalue.(a)...)) end),
 
     ((a) -> if a isa Literal && isliteral(getvalue(a)) getvalue(a) end), #only quote when necessary
 
-    (@rule @i(a[i...] = $b) => if b == default(a) pass(a) end), #TODO either default needs to get defined on all chunks, or we need to guard this
+    (@rule @f(a[i...] = $b) => if b == default(a) pass(a) end), #TODO either default needs to get defined on all chunks, or we need to guard this
 
-    (@rule @i(@loop $i @pass(a...)) => pass(a...)),
-    (@rule @i(@chunk $i a @pass(b...)) => pass(b...)),
-    (@rule @i(@pass(a...) where $b) => pass(a...)),
-    (@rule @i($a where @pass()) => a),
-    (@rule @i(@multi(a..., @pass(b...), @pass(c...), d...)) => @i(@multi(a..., @pass(b..., c...), d...))),
-    (@rule @i(@multi(@pass(a...))) => @i(@pass(a...))),
-    (@rule @i(@multi()) => @i(@pass())),
-    (@rule @i((@pass(a...);)) => pass(a...)),
-    (@rule @i($a where $b) => begin
+    (@rule @f(@loop $i @pass(a...)) => pass(a...)),
+    (@rule @f(@chunk $i a @pass(b...)) => pass(b...)),
+    (@rule @f(@pass(a...) where $b) => pass(a...)),
+    (@rule @f($a where @pass()) => a),
+    (@rule @f(@multi(a..., @pass(b...), @pass(c...), d...)) => @f(@multi(a..., @pass(b..., c...), d...))),
+    (@rule @f(@multi(@pass(a...))) => @f(@pass(a...))),
+    (@rule @f(@multi()) => @f(@pass())),
+    (@rule @f((@pass(a...);)) => pass(a...)),
+    (@rule @f($a where $b) => begin
         @slots c d i j f g begin
             props = Dict()
             b_2 = Postwalk(Chain([
-                (@rule @i(c[i...] = $d) => if isliteral(d)
+                (@rule @f(c[i...] = $d) => if isliteral(d)
                     props[getname(c)] = d
                     pass()
                 end),
-                (@rule @i(@pass(c...)) => begin
+                (@rule @f(@pass(c...)) => begin
                     for d in c
                         props[getname(d)] = default(d) #TODO is this okay?
                     end
@@ -29,60 +29,60 @@
                 end),
             ]))(b)
             if b_2 != nothing
-                a_2 = Rewrite(Postwalk(@rule @i($c[i...]) => get(props, getname(c), nothing)))(a)
-                @i $a_2 where $b_2
+                a_2 = Rewrite(Postwalk(@rule @f($c[i...]) => get(props, getname(c), nothing)))(a)
+                @f $a_2 where $b_2
             end
         end
     end),
-    #(@rule @i(a where @pass(b...)) => a),#can't do this bc produced tensors won't get initialized ?
+    #(@rule @f(a where @pass(b...)) => a),#can't do this bc produced tensors won't get initialized ?
 
-    (@rule @i(max(a...) >= $b) => @i or($(map(x -> @i($x >= $b), a)...))),
-    (@rule @i(max(a...) > $b) => @i or($(map(x -> @i($x > $b), a)...))),
-    (@rule @i(max(a...) <= $b) => @i and($(map(x -> @i($x <= $b), a)...))),
-    (@rule @i(max(a...) < $b) => @i and($(map(x -> @i($x < $b), a)...))),
-    (@rule @i(min(a...) <= $b) => @i or($(map(x -> @i($x <= $b), a)...))),
-    (@rule @i(min(a...) < $b) => @i or($(map(x -> @i($x < $b), a)...))),
-    (@rule @i(min(a...) >= $b) => @i and($(map(x -> @i($x >= $b), a)...))),
-    (@rule @i(min(a...) > $b) => @i and($(map(x -> @i($x > $b), a)...))),
-    (@rule @i(min(a..., min(b...), c...)) => @i min(a..., b..., c...)),
-    (@rule @i(max(a..., max(b...), c...)) => @i max(a..., b..., c...)),
-    (@rule @i(min(a...)) => if !(issorted(a, by = Lexicography)) @i min($(sort(a, by = Lexicography)...)) end),
-    (@rule @i(max(a...)) => if !(issorted(a, by = Lexicography)) @i max($(sort(a, by = Lexicography)...)) end),
-    (@rule @i(min(a...)) => if !(allunique(a)) @i min($(unique(a)...)) end),
-    (@rule @i(max(a...)) => if !(allunique(a)) @i max($(unique(a)...)) end),
-    (@rule @i(+(a..., +(b...), c...)) => @i +(a..., b..., c...)),
-    (@rule @i(+(a...)) => if count(isliteral, a) >= 2 @i +($(filter(!isliteral, a)...), $(Literal(+(getvalue.(filter(isliteral, a))...)))) end),
-    (@rule @i(+(a..., 0, b...)) => @i +(a..., b...)),
-    (@rule @i(or(a..., false, b...)) => @i or(a..., b...)),
-    (@rule @i(or(a..., true, b...)) => true),
-    (@rule @i(or()) => false),
-    (@rule @i(and(a..., true, b...)) => @i and(a..., b...)),
-    (@rule @i(and(a..., false, b...)) => false),
-    (@rule @i(and()) => true),
-    (@rule @i((+)($a)) => a),
-    (@rule @i(- +($a, b...)) => @i +(- $a, - +(b...))),
-    (@rule @i(a[i...] += 0) => pass(a)),
+    (@rule @f(max(a...) >= $b) => @f or($(map(x -> @f($x >= $b), a)...))),
+    (@rule @f(max(a...) > $b) => @f or($(map(x -> @f($x > $b), a)...))),
+    (@rule @f(max(a...) <= $b) => @f and($(map(x -> @f($x <= $b), a)...))),
+    (@rule @f(max(a...) < $b) => @f and($(map(x -> @f($x < $b), a)...))),
+    (@rule @f(min(a...) <= $b) => @f or($(map(x -> @f($x <= $b), a)...))),
+    (@rule @f(min(a...) < $b) => @f or($(map(x -> @f($x < $b), a)...))),
+    (@rule @f(min(a...) >= $b) => @f and($(map(x -> @f($x >= $b), a)...))),
+    (@rule @f(min(a...) > $b) => @f and($(map(x -> @f($x > $b), a)...))),
+    (@rule @f(min(a..., min(b...), c...)) => @f min(a..., b..., c...)),
+    (@rule @f(max(a..., max(b...), c...)) => @f max(a..., b..., c...)),
+    (@rule @f(min(a...)) => if !(issorted(a, by = Lexicography)) @f min($(sort(a, by = Lexicography)...)) end),
+    (@rule @f(max(a...)) => if !(issorted(a, by = Lexicography)) @f max($(sort(a, by = Lexicography)...)) end),
+    (@rule @f(min(a...)) => if !(allunique(a)) @f min($(unique(a)...)) end),
+    (@rule @f(max(a...)) => if !(allunique(a)) @f max($(unique(a)...)) end),
+    (@rule @f(+(a..., +(b...), c...)) => @f +(a..., b..., c...)),
+    (@rule @f(+(a...)) => if count(isliteral, a) >= 2 @f +($(filter(!isliteral, a)...), $(Literal(+(getvalue.(filter(isliteral, a))...)))) end),
+    (@rule @f(+(a..., 0, b...)) => @f +(a..., b...)),
+    (@rule @f(or(a..., false, b...)) => @f or(a..., b...)),
+    (@rule @f(or(a..., true, b...)) => true),
+    (@rule @f(or()) => false),
+    (@rule @f(and(a..., true, b...)) => @f and(a..., b...)),
+    (@rule @f(and(a..., false, b...)) => false),
+    (@rule @f(and()) => true),
+    (@rule @f((+)($a)) => a),
+    (@rule @f(- +($a, b...)) => @f +(- $a, - +(b...))),
+    (@rule @f(a[i...] += 0) => pass(a)),
 
-    (@rule @i(a[i...] <<f>>= $($(Literal(missing)))) => pass(a)),
-    (@rule @i(a[i..., $($(Literal(missing))), j...] <<f>>= $b) => pass(a)),
-    (@rule @i(a[i..., $($(Literal(missing))), j...]) => Literal(missing)),
-    (@rule @i(coalesce(a..., $($(Literal(missing))), b...)) => @i coalesce(a..., b...)),
-    (@rule @i(coalesce(a..., $b, c...)) => if b isa Virtual && !(Virtual{missing} <: typeof(b)); @i(coalesce(a..., $b)) end),
-    (@rule @i(coalesce(a..., $b, c...)) => if b isa Literal && b != Literal(missing); @i(coalesce(a..., $b)) end),
-    (@rule @i(coalesce($a)) => a),
+    (@rule @f(a[i...] <<f>>= $($(Literal(missing)))) => pass(a)),
+    (@rule @f(a[i..., $($(Literal(missing))), j...] <<f>>= $b) => pass(a)),
+    (@rule @f(a[i..., $($(Literal(missing))), j...]) => Literal(missing)),
+    (@rule @f(coalesce(a..., $($(Literal(missing))), b...)) => @f coalesce(a..., b...)),
+    (@rule @f(coalesce(a..., $b, c...)) => if b isa Virtual && !(Virtual{missing} <: typeof(b)); @f(coalesce(a..., $b)) end),
+    (@rule @f(coalesce(a..., $b, c...)) => if b isa Literal && b != Literal(missing); @f(coalesce(a..., $b)) end),
+    (@rule @f(coalesce($a)) => a),
 
-    (@rule @i($a - $b) => @i $a + - $b),
-    (@rule @i(- (- $a)) => a),
+    (@rule @f($a - $b) => @f $a + - $b),
+    (@rule @f(- (- $a)) => a),
 
-    (@rule @i(*(a..., *(b...), c...)) => @i *(a..., b..., c...)),
-    (@rule @i(*(a...)) => if count(isliteral, a) >= 2 @i(*($(filter(!isliteral, a)...), $(Literal(*(getvalue.(filter(isliteral, a))...))))) end),
-    (@rule @i(*(a..., 1, b...)) => @i *(a..., b...)),
-    (@rule @i(*(a..., 0, b...)) => 0),
-    (@rule @i((*)($a)) => a),
-    (@rule @i((*)(a..., - $b, c...)) => @i -(*(a..., $b, c...))),
-    (@rule @i(a[i...] *= 1) => pass(a)),
-    (@rule @i(@sieve true $a) => a),
-    (@rule @i(@sieve false $a) => pass(getresults(a)...)),
+    (@rule @f(*(a..., *(b...), c...)) => @f *(a..., b..., c...)),
+    (@rule @f(*(a...)) => if count(isliteral, a) >= 2 @f(*($(filter(!isliteral, a)...), $(Literal(*(getvalue.(filter(isliteral, a))...))))) end),
+    (@rule @f(*(a..., 1, b...)) => @f *(a..., b...)),
+    (@rule @f(*(a..., 0, b...)) => 0),
+    (@rule @f((*)($a)) => a),
+    (@rule @f((*)(a..., - $b, c...)) => @f -(*(a..., $b, c...))),
+    (@rule @f(a[i...] *= 1) => pass(a)),
+    (@rule @f(@sieve true $a) => a),
+    (@rule @f(@sieve false $a) => pass(getresults(a)...)),
 ]
 
 @kwdef mutable struct Simplify

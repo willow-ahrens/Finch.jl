@@ -63,7 +63,7 @@ function exfurl(tns, ctx, mode, idx::Access{VirtualPermit}, tail...)
     ext_2 = idx.tns.I
     body = Pipeline([
         Phase(
-            stride = (ctx, idx, ext) -> @i($(getstart(ext_2)) - 1),
+            stride = (ctx, idx, ext) -> @f($(getstart(ext_2)) - 1),
             body = (start, step) -> Run(Simplify(Literal(missing))),
         ),
         Phase(

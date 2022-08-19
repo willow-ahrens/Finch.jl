@@ -28,26 +28,26 @@ function add_vec(n, p, q; verbose=false)
     
     println("C[i] = A[i] + B[i]")
     if verbose
-        display(@index_code @loop i C[i] = A[i] + B[i])
+        display(@finch_code @loop i C[i] = A[i] + B[i])
         println()
     end
-    display((@benchmark (A = $A; B = $B; C = $C; @index @loop i C[i] = A[i] + B[i])))
+    display((@benchmark (A = $A; B = $B; C = $C; @finch @loop i C[i] = A[i] + B[i])))
     println()
 
     println("C[i] = A[i] + B[i::gallop]")
     if verbose
-        display(@index_code @loop i C[i] = A[i] + B[i::gallop])
+        display(@finch_code @loop i C[i] = A[i] + B[i::gallop])
         println()
     end
-    display((@benchmark (A = $A; B = $B; C = $C; @index @loop i C[i] = A[i] + B[i::gallop])))
+    display((@benchmark (A = $A; B = $B; C = $C; @finch @loop i C[i] = A[i] + B[i::gallop])))
     println()
 
     println("C[i] = A[i::gallop] + B[i::gallop]")
     if verbose
-        display(@index_code @loop i C[i] = A[i::gallop] + B[i::gallop])
+        display(@finch_code @loop i C[i] = A[i::gallop] + B[i::gallop])
         println()
     end
-    display((@benchmark (A = $A; B = $B; C = $C; @index @loop i C[i] = A[i::gallop] + B[i::gallop])))
+    display((@benchmark (A = $A; B = $B; C = $C; @finch @loop i C[i] = A[i::gallop] + B[i::gallop])))
     println()
 
     #println("Julia:")
@@ -77,26 +77,26 @@ function mul_vec(n, p, q; verbose=false)
     
     println("C[i] = A[i] * B[i]")
     if verbose
-        display(@index_code @loop i C[i] = A[i] * B[i])
+        display(@finch_code @loop i C[i] = A[i] * B[i])
         println()
     end
-    display((@benchmark (A = $A; B = $B; C = $C; @index @loop i C[i] = A[i] * B[i])))
+    display((@benchmark (A = $A; B = $B; C = $C; @finch @loop i C[i] = A[i] * B[i])))
     println()
 
     println("C[i] = A[i] * B[i::gallop]")
     if verbose
-        display(@index_code @loop i C[i] = A[i] * B[i::gallop])
+        display(@finch_code @loop i C[i] = A[i] * B[i::gallop])
         println()
     end
-    display((@benchmark (A = $A; B = $B; C = $C; @index @loop i C[i] = A[i] * B[i::gallop])))
+    display((@benchmark (A = $A; B = $B; C = $C; @finch @loop i C[i] = A[i] * B[i::gallop])))
     println()
 
     println("C[i] = A[i::gallop] * B[i::gallop]")
     if verbose
-        display(@index_code @loop i C[i] = A[i::gallop] * B[i::gallop])
+        display(@finch_code @loop i C[i] = A[i::gallop] * B[i::gallop])
         println()
     end
-    display((@benchmark (A = $A; B = $B; C = $C; @index @loop i C[i] = A[i::gallop] * B[i::gallop])))
+    display((@benchmark (A = $A; B = $B; C = $C; @finch @loop i C[i] = A[i::gallop] * B[i::gallop])))
     println()
 
     #println("Julia:")
@@ -123,26 +123,26 @@ function dot(n, p, q; verbose=false)
     
     println("C[] += A[i] * B[i]")
     if verbose
-        display(@index_code @loop i C[] += A[i] * B[i])
+        display(@finch_code @loop i C[] += A[i] * B[i])
         println()
     end
-    display((@benchmark (A = $A; B = $B; C = $C; @index @loop i C[] += A[i] * B[i])))
+    display((@benchmark (A = $A; B = $B; C = $C; @finch @loop i C[] += A[i] * B[i])))
     println()
 
     println("C[] += A[i] * B[i::gallop]")
     if verbose
-        display(@index_code @loop i C[] += A[i] * B[i::gallop])
+        display(@finch_code @loop i C[] += A[i] * B[i::gallop])
         println()
     end
-    display((@benchmark (A = $A; B = $B; C = $C; @index @loop i C[] += A[i] * B[i::gallop])))
+    display((@benchmark (A = $A; B = $B; C = $C; @finch @loop i C[] += A[i] * B[i::gallop])))
     println()
 
     println("C[] += A[i::gallop] * B[i::gallop]")
     if verbose
-        display(@index_code @loop i C[] += A[i::gallop] * B[i::gallop])
+        display(@finch_code @loop i C[] += A[i::gallop] * B[i::gallop])
         println()
     end
-    display((@benchmark (A = $A; B = $B; C = $C; @index @loop i C[] += A[i::gallop] * B[i::gallop])))
+    display((@benchmark (A = $A; B = $B; C = $C; @finch @loop i C[] += A[i::gallop] * B[i::gallop])))
     println()
 
     #println("Julia:")
@@ -169,26 +169,26 @@ function minplus(n, p, q; verbose=false)
     
     println("C[] <<min>>= A[i] + B[i]")
     if verbose
-        display(@index_code @loop i C[] <<min>>= A[i] + B[i])
+        display(@finch_code @loop i C[] <<min>>= A[i] + B[i])
         println()
     end
-    display((@benchmark (A = $A; B = $B; C = $C; @index @loop i C[] <<min>>= A[i] + B[i])))
+    display((@benchmark (A = $A; B = $B; C = $C; @finch @loop i C[] <<min>>= A[i] + B[i])))
     println()
 
     println("C[] += A[i] * B[i::gallop]")
     if verbose
-        display(@index_code @loop i C[] <<min>>= A[i] + B[i::gallop])
+        display(@finch_code @loop i C[] <<min>>= A[i] + B[i::gallop])
         println()
     end
-    display((@benchmark (A = $A; B = $B; C = $C; @index @loop i C[] <<min>>= A[i] + B[i::gallop])))
+    display((@benchmark (A = $A; B = $B; C = $C; @finch @loop i C[] <<min>>= A[i] + B[i::gallop])))
     println()
 
     println("C[] += A[i::gallop] * B[i::gallop]")
     if verbose
-        display(@index_code @loop i C[] <<min>>= A[i::gallop] + B[i::gallop])
+        display(@finch_code @loop i C[] <<min>>= A[i::gallop] + B[i::gallop])
         println()
     end
-    display((@benchmark (A = $A; B = $B; C = $C; @index @loop i C[] <<min>>= A[i::gallop] + B[i::gallop])))
+    display((@benchmark (A = $A; B = $B; C = $C; @finch @loop i C[] <<min>>= A[i::gallop] + B[i::gallop])))
     println()
 
     #println("Julia:")

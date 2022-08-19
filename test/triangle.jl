@@ -17,18 +17,18 @@ function tri(mtx)
     C = Finch.Fiber(
         Element{0.0, Float64}(zeros(1)))
 
-    #@index @loop i j k C[] += A[i, k::gallop] * A[i, j] * A[j, k::gallop]
+    #@finch @loop i j k C[] += A[i, k::gallop] * A[i, j] * A[j, k::gallop]
     #println(FiberArray(C)[])
-    #@index @loop i j k C[] += A[i, k] * A[i, j] * A[j, k]
+    #@finch @loop i j k C[] += A[i, k] * A[i, j] * A[j, k]
     #println(FiberArray(C)[])
     #println(sum(A_ref .* (A_ref * A_ref)))
     
     println("Finch:")
-    display(@benchmark (A = $A; C = $C; @index @loop i j k C[] += A[i, k] * A[i, j] * A[j, k]))
+    display(@benchmark (A = $A; C = $C; @finch @loop i j k C[] += A[i, k] * A[i, j] * A[j, k]))
     #println()
 
     println("Finch(gallop):")
-    display(@benchmark (A = $A; C = $C; @index @loop i j k C[] += A[i, k::gallop] * A[i, j] * A[j, k::gallop]))
+    display(@benchmark (A = $A; C = $C; @finch @loop i j k C[] += A[i, k::gallop] * A[i, j] * A[j, k::gallop]))
     #println()
 
     #println("Julia:")

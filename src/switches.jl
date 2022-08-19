@@ -31,7 +31,7 @@ function (ctx::SwitchVisitor)(node)
         map(product(map(ctx, arguments(node))...)) do case
             guards = map(first, case)
             bodies = map(last, case)
-            return simplify(@i(and($(guards...)))) => similarterm(node, operation(node), collect(bodies))
+            return simplify(@f(and($(guards...)))) => similarterm(node, operation(node), collect(bodies))
         end
     else
         [(true => node)]

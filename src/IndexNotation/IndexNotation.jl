@@ -26,7 +26,7 @@ module IndexNotation
     export Extrude, extrude
     export Laminate, laminate
 
-    export @i, @index_program, @index_program_instance
+    export @f, @finch_program, @finch_program_instance
 
     include("nodes.jl")
     include("instances.jl")

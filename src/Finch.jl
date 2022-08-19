@@ -9,11 +9,11 @@ using Base.Iterators
 using Base: @kwdef
 using SparseArrays
 
-export @index, @index_program, @index_code, value
+export @finch, @finch_program, @finch_code, value
 
 export Fiber, SparseList, SparseHash, SparseCoo, SparseByte, Dense, Repeat, Element, Pattern, FiberArray, Scalar
 export walk, gallop, follow, extrude, laminate, select
-export fiber, @f, pattern!, dropdefaults, dropdefaults!
+export fiber, @fiber, pattern!, dropdefaults, dropdefaults!
 
 export permit, offset, window
 

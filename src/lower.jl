@@ -236,7 +236,7 @@ function (ctx::LowerJulia)(stmt::Loop, ::DefaultStyle)
 end
 function (ctx::LowerJulia)(stmt::Chunk, ::DefaultStyle)
     idx_sym = ctx.freshen(getname(stmt.idx))
-    if simplify((@i $(getlower(stmt.ext)) >= 1)) == true  && simplify((@i $(getupper(stmt.ext)) <= 1)) == true
+    if simplify((@f $(getlower(stmt.ext)) >= 1)) == true  && simplify((@f $(getupper(stmt.ext)) <= 1)) == true
         return quote
             $idx_sym = $(ctx(getstart(stmt.ext)))
             $(bind(ctx, getname(stmt.idx) => idx_sym) do 

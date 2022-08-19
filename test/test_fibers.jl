@@ -7,9 +7,9 @@
         SparseHash{1}((10,),
         Element{0.0}()))
 
-    @test diff("sl_to_sh.jl", @index_code @loop i B[i] += A[i])
+    @test diff("sl_to_sh.jl", @finch_code @loop i B[i] += A[i])
 
-    @index @loop i B[i] += A[i]
+    @finch @loop i B[i] += A[i]
 
     println(FiberArray(B))
     println(B)
@@ -17,9 +17,9 @@
 
     println("A(s)[i] = B(h)[i]")
 
-    @test diff("sh_to_sl.jl", @index_code @loop i A[i] += B[i])
+    @test diff("sh_to_sl.jl", @finch_code @loop i A[i] += B[i])
 
-    @index @loop i A[i] += B[i]
+    @finch @loop i A[i] += B[i]
 
     println(FiberArray(A))
     @test FiberArray(A) == FiberArray(B)
@@ -46,9 +46,9 @@
         SparseHash{2}((3,5),
         Element{0.0}()))
     
-    @test diff("d_sl_to_sh2.jl", @index_code @loop i j B[i, j] += A[i, j])
+    @test diff("d_sl_to_sh2.jl", @finch_code @loop i j B[i, j] += A[i, j])
 
-    @index @loop i j B[i, j] += A[i, j] 
+    @finch @loop i j B[i, j] += A[i, j] 
 
     println(FiberArray(B))
 
@@ -63,9 +63,9 @@
         SparseList(10, 
         Element{0.0}()))
 
-    @test diff("sl_to_sh_to_sl.jl", @index_code (@loop i C[i] += B[i]) where (@loop i B[i] += A[i]))
+    @test diff("sl_to_sh_to_sl.jl", @finch_code (@loop i C[i] += B[i]) where (@loop i B[i] += A[i]))
 
-    @index (@loop i C[i] += B[i]) where (@loop i B[i] += A[i])
+    @finch (@loop i C[i] += B[i]) where (@loop i B[i] += A[i])
 
     println(FiberArray(C))
     @test FiberArray(A) == FiberArray(C)
@@ -79,9 +79,9 @@
         SparseCoo{1}((10,),
         Element{0.0}()))
 
-    @test diff("sl_to_sc.jl", @index_code @loop i B[i] += A[i])
+    @test diff("sl_to_sc.jl", @finch_code @loop i B[i] += A[i])
 
-    @index @loop i B[i] += A[i]
+    @finch @loop i B[i] += A[i]
 
     println(B)
     println(FiberArray(B))
@@ -89,12 +89,12 @@
 
     println("A(sl)[i] = B(sc)[i]")
 
-    @test diff("sc_to_sl.jl", @index_code @loop i A[i] += B[i])
+    @test diff("sc_to_sl.jl", @finch_code @loop i A[i] += B[i])
 
     println(A)
     println(B)
 
-    @index @loop i A[i] += B[i]
+    @finch @loop i A[i] += B[i]
 
     println(A)
     println(FiberArray(A))
@@ -111,9 +111,9 @@
         SparseCoo{2}((3,5),
         Element{0.0}()))
     
-    @test diff("d_sl_to_sc2.jl", @index_code @loop i j B[i, j] += A[i, j])
+    @test diff("d_sl_to_sc2.jl", @finch_code @loop i j B[i, j] += A[i, j])
 
-    @index @loop i j B[i, j] += A[i, j] 
+    @finch @loop i j B[i, j] += A[i, j] 
 
     println(FiberArray(B))
 
@@ -128,9 +128,9 @@
         SparseList(10, 
         Element{0.0}()))
 
-    @test diff("sl_to_sc_to_sl.jl", @index_code (@loop i C[i] += B[i]) where (@loop i B[i] += A[i]))
+    @test diff("sl_to_sc_to_sl.jl", @finch_code (@loop i C[i] += B[i]) where (@loop i B[i] += A[i]))
 
-    @index (@loop i C[i] += B[i]) where (@loop i B[i] += A[i])
+    @finch (@loop i C[i] += B[i]) where (@loop i B[i] += A[i])
 
     println(FiberArray(C))
     @test FiberArray(A) == FiberArray(C)
@@ -146,9 +146,9 @@
         Element{0.0}([1.0, 1.0, 1.0])))
     C = Finch.Fiber(SparseList(10, Element{0.0}()))
 
-    @test diff("sl_plus_sl_to_sl.jl", @index_code @loop i C[i] += A[i] + B[i])
+    @test diff("sl_plus_sl_to_sl.jl", @finch_code @loop i C[i] += A[i] + B[i])
 
-    @index @loop i C[i] += A[i] + B[i]
+    @finch @loop i C[i] += A[i] + B[i]
 
     println(A)
     println(B)
@@ -167,9 +167,9 @@
         Element{0.0}([1.0, 1.0, 1.0])))
     C = zeros(10)
 
-    @test diff("sl_plus_sl_to_vec.jl", @index_code @loop i C[i] += A[i] + B[i])
+    @test diff("sl_plus_sl_to_vec.jl", @finch_code @loop i C[i] += A[i] + B[i])
 
-    @index @loop i C[i] += A[i] + B[i]
+    @finch @loop i C[i] += A[i] + B[i]
 
     println(A)
     println(B)
@@ -185,9 +185,9 @@
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0, 1.0, 1.0, 1.0]))))
     B = zeros(10)
 
-    @test diff("d_sl_sum_2_to_vec.jl", @index_code @loop j i B[i] += A[j, i])
+    @test diff("d_sl_sum_2_to_vec.jl", @finch_code @loop j i B[i] += A[j, i])
 
-    @index @loop j i B[i] += A[j, i]
+    @finch @loop j i B[i] += A[j, i]
 
     println(A)
     println(B)
@@ -204,9 +204,9 @@
         Element{0.0}([1.0, 1.0, 1.0])))
     C = Finch.Fiber(SparseList(10, Element{0.0}()))
 
-    @test diff("sl_gallop_plus_sl_gallop_to_sl.jl", @index_code @loop i C[i] += A[i::gallop] + B[i::gallop])
+    @test diff("sl_gallop_plus_sl_gallop_to_sl.jl", @finch_code @loop i C[i] += A[i::gallop] + B[i::gallop])
 
-    @index @loop i C[i] += A[i::gallop] + B[i::gallop]
+    @finch @loop i C[i] += A[i::gallop] + B[i::gallop]
 
     println(A)
     println(B)
@@ -225,9 +225,9 @@
         Element{0.0}([1.0, 1.0, 1.0, 1.0])))
     C = Finch.Fiber(SparseList(10, Element{0.0}()))
 
-    @test diff("sl_gallop_times_sl_gallop_to_sl.jl", @index_code @loop i C[i] += A[i::gallop] * B[i::gallop])
+    @test diff("sl_gallop_times_sl_gallop_to_sl.jl", @finch_code @loop i C[i] += A[i::gallop] * B[i::gallop])
 
-    @index @loop i C[i] += A[i::gallop] * B[i::gallop]
+    @finch @loop i C[i] += A[i::gallop] * B[i::gallop]
 
     println(A)
     println(B)
@@ -245,9 +245,9 @@
         SparseList(3,
         Element{0.0}()))
 
-    @test diff("d_sl_sum_2_to_sl.jl", @index_code @loop i j B[j] += A[i, j])
+    @test diff("d_sl_sum_2_to_sl.jl", @finch_code @loop i j B[j] += A[i, j])
 
-    @index @loop i j B[i] += A[i, j]
+    @finch @loop i j B[i] += A[i, j]
 
     println(FiberArray(B))
     @test B.lvl.idx[1:B.lvl.pos[2]-1] == [1, 3]
@@ -261,9 +261,9 @@
         SparseByte(4,
         Element{0.0}()))
 
-    @test diff("d_sl_sum_2_to_sb.jl", @index_code @loop i j B[j] += A[i, j])
+    @test diff("d_sl_sum_2_to_sb.jl", @finch_code @loop i j B[j] += A[i, j])
 
-    @index @loop i j B[j] += A[i, j]
+    @finch @loop i j B[j] += A[i, j]
 
     @test B.lvl.srt[1:6] == [(1, 1), (1, 3), (1, 5), (1, 7), (1, 8), (1, 9)]
 end
