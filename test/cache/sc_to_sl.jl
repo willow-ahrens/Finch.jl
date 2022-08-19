@@ -35,9 +35,8 @@
         if phase_stop >= phase_start
             i = i
             i = phase_start
-            B_lvl_q_step = B_lvl_q + 1
-            while B_lvl_q_step < B_lvl_q_stop && (B_lvl.tbl[1])[B_lvl_q_step] < phase_start
-                B_lvl_q_step += 1
+            while B_lvl_q < B_lvl_q_stop && (B_lvl.tbl[1])[B_lvl_q] < phase_start
+                B_lvl_q += 1
             end
             while i <= phase_stop
                 i_start_2 = i
