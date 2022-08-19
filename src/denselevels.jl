@@ -8,10 +8,10 @@ DenseLevel(lvl) = DenseLevel(0, lvl)
 const Dense = DenseLevel
 
 """
-`f_code(s)` = [DenseLevel](@ref).
+`f_code(d)` = [DenseLevel](@ref).
 """
-f_code(::Val{:s}) = Dense
-summary_f_code(lvl::Dense) = "s($(summary_f_code(lvl.lvl)))"
+f_code(::Val{:d}) = Dense
+summary_f_code(lvl::Dense) = "d($(summary_f_code(lvl.lvl)))"
 similar_level(lvl::DenseLevel) = Dense(similar_level(lvl.lvl))
 similar_level(lvl::DenseLevel, dim, tail...) = Dense(dim, similar_level(lvl.lvl, tail...))
 
