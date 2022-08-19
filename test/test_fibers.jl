@@ -1,4 +1,9 @@
 @testset "fibers" begin
+    A = fsprand((10, 10), 0.5)
+    B = fsprand((10, 10), 0.5)
+    C = similar(B)
+    @finch @loop i j C[i, j] = A[i, j] + B[i, j]
+
     println("B(h)[i] = A(s)[i]")
     A = Finch.Fiber(
         SparseList(10, [1, 6], [1, 3, 5, 7, 9],

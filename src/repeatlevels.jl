@@ -153,16 +153,18 @@ function finalize_level!(fbr::VirtualFiber{VirtualRepeatLevel}, ctx::LowerJulia,
     return fbr.lvl
 end
 
-unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Read, idx) =
-    unfurl(fbr, ctx, mode, protocol(idx, walk))
+unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Read, idx, idxs...) =
+    unfurl(fbr, ctx, mode, protocol(idx, walk), idxs...)
 
-function unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Read, idx::Protocol{<:Any, Walk})
+function unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Read, idx::Protocol{<:Any, Walk}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
     my_q = ctx.freshen(tag, :_q)
     my_q_stop = ctx.freshen(tag, :_q_stop)
     my_i1 = ctx.freshen(tag, :_i1)
+
+    @assert isempty(idxs)
 
     body = Thunk(
         preamble = (quote
@@ -203,10 +205,10 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Read, idx::Pro
     exfurl(body, ctx, mode, idx.idx)
 end
 
-unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Union{Write, Update}, idx) =
-    unfurl(fbr, ctx, mode, protocol(idx, extrude))
+unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Union{Write, Update}, idx, idxs...) =
+    unfurl(fbr, ctx, mode, protocol(idx, extrude), idxs...)
 
-function unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Union{Write, Update}, idx::Protocol{<:Any, Extrude})
+function unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Union{Write, Update}, idx::Protocol{<:Any, Extrude}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_q = ctx.freshen(tag, :_q)
@@ -217,7 +219,7 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Union{Write, U
     my_i_prev = ctx.freshen(tag, :_i_prev)
     my_v_prev = ctx.freshen(tag, :_v_prev)
 
-    @assert isempty(tail)
+    @assert isempty(idxs)
 
     push!(ctx.preamble, quote
         $my_q = $(lvl.ex).pos[$(ctx(envposition(fbr.env)))]

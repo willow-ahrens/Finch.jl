@@ -221,28 +221,36 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode::Read, idx::
                 stride = (ctx, idx, ext) -> my_i_stop,
                 body = (start, stop) -> Stepper(
                     seek = (ctx, ext) -> quote
-                        $my_q_step = $my_q + 1
-                        while $my_q_step < $my_q_stop && $(lvl.ex).tbl[$R][$my_q_step] < $(ctx(getstart(ext)))
-                            $my_q_step += 1
+                        while $my_q < $my_q_stop && $(lvl.ex).tbl[$R][$my_q] < $(ctx(getstart(ext)))
+                            $my_q += 1
                         end
                     end,
-                    body = Thunk(
-                        preamble = quote
-                            $my_i = $(lvl.ex).tbl[$R][$my_q]
-                        end,
-                        body = if R == lvl.N
-                            Step(
+                    body = if R == lvl.N
+                        Thunk(
+                            preamble = quote
+                                $my_i = $(lvl.ex).tbl[$R][$my_q]
+                            end,
+                            body = Step(
                                 stride =  (ctx, idx, ext) -> my_i,
                                 chunk = Spike(
                                     body = Simplify(default(fbr)),
-                                    tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Tq}(:($my_q)), index=Virtual{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
+                                    tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Tq}(my_q), index=Virtual{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
                                 ),
-                                next =  (ctx, idx, ext) -> quote
+                                next = (ctx, idx, ext) -> quote
                                     $my_q += 1
                                 end
                             )
-                        else
-                            Step(
+                        )
+                    else
+                        Thunk(
+                            preamble = quote
+                                $my_i = $(lvl.ex).tbl[$R][$my_q]
+                                $my_q_step = $my_q
+                                while $my_q_step < $my_q_stop && $(lvl.ex).tbl[$R][$my_q_step] == $my_i
+                                    $my_q_step += 1
+                                end
+                            end,
+                            body = Step(
                                 stride = (ctx, idx, ext) -> my_i,
                                 chunk = Spike(
                                     body = Simplify(default(fbr)),
@@ -250,14 +258,10 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode::Read, idx::
                                 ),
                                 next = (ctx, idx, ext) -> quote
                                     $my_q = $my_q_step
-                                    $my_q_step = $my_q + 1
-                                    while $my_q_step < $my_q_stop && $(lvl.ex).tbl[$R][$my_q_step] == $my_i
-                                        $my_q_step += 1
-                                    end
                                 end
                             )
-                        end
-                    )
+                        )
+                    end
                 )
             ),
             Phase(
