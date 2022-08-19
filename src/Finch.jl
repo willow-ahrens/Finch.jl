@@ -34,7 +34,7 @@ include("shifts.jl")
 include("chunks.jl")
 include("runs.jl")
 include("spikes.jl")
-include("cases.jl")
+include("switches.jl")
 
 include("phases.jl")
 include("pipelines.jl")
