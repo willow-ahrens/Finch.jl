@@ -411,7 +411,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseByteLevel}, ctx, mode::Read, idx:
     my_q = cgx.freshen(tag, :_q)
     q = envposition(fbr.env)
 
-    body = Leaf(
+    body = Lookup(
         body = (i) -> Thunk(
             preamble = quote
                 $my_q = $(ctx(q)) * $(ctx(lvl.I)) + $i

@@ -5,7 +5,7 @@ using Finch: Name
     D = Name(:D)
     A_2 = Name(:A_2)
     C_2 = Name(:C_2)
-    ex = Finch.TransformSSA(Finch.Freshen())(Finch.@i(
+    ex = Finch.TransformSSA(Finch.Freshen())(Finch.@f(
         @loop i (
             @loop j (
                 @loop j (
@@ -21,7 +21,7 @@ using Finch: Name
         )
     ))
 
-    @test ex == Finch.@i(
+    @test ex == Finch.@f(
         @loop i (
             @loop j (
                 @loop j_2 (

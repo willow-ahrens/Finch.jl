@@ -62,7 +62,7 @@ function (ctx::LowerJulia)(root, ::SelectStyle)
     idxs = Dict()
     root = SelectVisitor(ctx, idxs)(root)
     for (idx, val) in pairs(idxs)
-        root = @i(
+        root = @f(
             @loop $idx (
                 @sieve select[$val, $idx] (
                     $root

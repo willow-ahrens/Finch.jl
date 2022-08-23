@@ -178,7 +178,7 @@ function (ctx::Finch.SelectVisitor)(node::Access{<:VirtualFiber}, ::DefaultStyle
         if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
             var = Name(ctx.ctx.freshen(:s))
             ctx.idxs[var] = node.idxs[1]
-            ctx.ctx.dims[getname(var)] = getdims(node.tns, ctx, node.idxs...)[1] #TODO redimensionalization
+            ctx.ctx.dims[getname(var)] = getdims(node.tns, ctx, node.mode)[1] #TODO redimensionalization
             return access(node.tns, node.mode, var, node.idxs[2:end]...)
         end
     end
@@ -287,16 +287,16 @@ function display_fiber_data(io::IO, mime::MIME"text/plain", fbr, N, crds, print_
 end
 
 """
-    @f ctr
+    @fiber ctr
 
 Construct a fiber using abbreviated fiber constructor codes. All function names
 in `ctr` must be format codes, but expressions may be interpolated with `\$`. As
 an example, a csr matrix which might be constructed as
 `Fiber(DenseLevel(SparseListLevel(Element{0.0}(...))))` can also be constructed
-as `@f(sl(d(e(0.0))))`. Consult the documentation for the helper function
+as `@fiber(sl(d(e(0.0))))`. Consult the documentation for the helper function
 [f_code](@ref) for a full listing of format codes.
 """
-macro f(ex)
+macro fiber(ex)
     function walk(ex)
         if ex isa Expr && ex.head == :call
             return :(($f_code($(QuoteNode(Val(ex.args[1])))))($(map(walk, ex.args[2:end])...)))
@@ -309,7 +309,7 @@ macro f(ex)
     return :($Fiber($(walk(ex))))
 end
 
-Base.summary(fbr::Fiber) = "$(join(shape(fbr), "×")) Fiber @f($(summary_f_code(fbr.lvl)))"
+Base.summary(fbr::Fiber) = "$(join(shape(fbr), "×")) @fiber($(summary_f_code(fbr.lvl)))"
 
 Base.similar(fbr::Fiber) = Fiber(similar_level(fbr.lvl))
 Base.similar(fbr::Fiber, dims::Tuple) = Fiber(similar_level(fbr.lvl, dims...))

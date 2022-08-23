@@ -20,10 +20,10 @@ See also: [`fiber!`](@ref)
 
 ```jldoctest
 julia> println(summary(fiber(sparse([1 0; 0 1]))))
-2×2 Fiber @f(d(sl(e(0)))
+2×2 Fiber @fiber(d(sl(e(0)))
 
 julia> println(summary(fiber(ones(3, 2, 4))))
-3×2×4 Fiber @f(d(d(d(e(0.0)))))
+3×2×4 Fiber @fiber(d(d(d(e(0.0)))))
 ```
 """
 function fiber(arr, default=zero(eltype(arr)))
@@ -34,7 +34,7 @@ end
     dst = virtualize(:dst, dst, LowerJulia())
     idxs = [Symbol(:i_, n) for n = getsites(dst)]
     return quote
-        @index @loop($(idxs...), dst[$(idxs...)] = src[$(idxs...)])
+        @finch @loop($(idxs...), dst[$(idxs...)] = src[$(idxs...)])
         return dst
     end
 end
@@ -48,7 +48,7 @@ dropdefaults(src) = dropdefaults!(similar(src), src)
     d = default(dst)
     return quote
         tmp = Scalar{$d, $T}()
-        @index @loop($(idxs...), (@sieve (tmp[] != $d) dst[$(idxs...)] = tmp[]) where (tmp[] = src[$(idxs...)]))
+        @finch @loop($(idxs...), (@sieve (tmp[] != $d) dst[$(idxs...)] = tmp[]) where (tmp[] = src[$(idxs...)]))
         return dst
     end
 end

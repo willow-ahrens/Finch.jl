@@ -10,7 +10,7 @@ int main(int argc, char** argv){
     finch_initialize();
 
     jl_function_t* spmv = finch_eval("function spmv(y, A, x)\n\
-        @index @loop i j y[i] += A[i, j] * x[j]\n\
+        @finch @loop i j y[i] += A[i, j] * x[j]\n\
     end");
 
     int m = 4;

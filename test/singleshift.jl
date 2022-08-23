@@ -47,7 +47,7 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSingleShift{Tv, Ti}, R
     vec = node.tns
     if getname(ctx.idx) == getname(node.idxs[1])
         tns = Shift(
-            body = Leaf(
+            body = Lookup(
                 body = (i) -> :($(vec.ex).val[$(ctx.ctx(i))])
             ),
             delta = Virtual{Ti}(:($(vec.ex).delta))

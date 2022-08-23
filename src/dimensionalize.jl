@@ -189,8 +189,8 @@ combinedim(::DeferDimension, b) = deferdim
 @kwdef struct Extent
     start
     stop
-    lower = @i $stop - $start + 1
-    upper = @i $stop - $start + 1
+    lower = @f $stop - $start + 1
+    upper = @f $stop - $start + 1
 end
 
 Base.:(==)(a::Extent, b::Extent) =
@@ -199,7 +199,7 @@ Base.:(==)(a::Extent, b::Extent) =
     a.lower == b.lower &&
     a.upper == b.upper
 
-Extent(start, stop) = Extent(start, stop, (@i $stop - $start + 1), (@i $stop - $start + 1))
+Extent(start, stop) = Extent(start, stop, (@f $stop - $start + 1), (@f $stop - $start + 1))
 
 cache!(ctx, var, ext::Extent) = Extent(
     start = cache!(ctx, Symbol(var, :_start), ext.start),
@@ -212,14 +212,14 @@ getstart(ext::Extent) = ext.start
 getstop(ext::Extent) = ext.stop
 getlower(ext::Extent) = ext.lower
 getupper(ext::Extent) = ext.upper
-extent(ext::Extent) = @i $(ext.stop) - $(ext.start) + 1
+extent(ext::Extent) = @f $(ext.stop) - $(ext.start) + 1
 
 combinedim(a::Extent, b::Extent) =
     Extent(
         start = resultdim(a.start, b.start),
         stop = resultdim(a.stop, b.stop),
-        lower = simplify(@i(min($(a.lower), $(b.lower)))),
-        upper = simplify(@i(min($(a.upper), $(b.upper))))
+        lower = simplify(@f(min($(a.lower), $(b.lower)))),
+        upper = simplify(@f(min($(a.upper), $(b.upper))))
     )
 
 combinedim(a::NoDimension, b::Extent) = b
@@ -320,14 +320,14 @@ combinedim(a::Narrow, ::DeferDimension) = deferdim
 
 function combinedim(a::Narrow{<:Extent}, b::Narrow{<:Extent})
     Narrow(Extent(
-        start = simplify(@i max($(getstart(a)), $(getstart(b)))),
-        stop = simplify(@i min($(getstop(a)), $(getstop(b)))),
+        start = simplify(@f max($(getstart(a)), $(getstart(b)))),
+        stop = simplify(@f min($(getstop(a)), $(getstop(b)))),
         lower = if getstart(a) == getstart(b) || getstop(a) == getstop(b)
-            simplify(@i(min($(a.ext.lower), $(b.ext.lower))))
+            simplify(@f(min($(a.ext.lower), $(b.ext.lower))))
         else
             0
         end,
-        upper = simplify(@i(min($(a.ext.upper), $(b.ext.upper))))
+        upper = simplify(@f(min($(a.ext.upper), $(b.ext.upper))))
     ))
 end
 
@@ -338,13 +338,13 @@ combinedim(a::Widen, ::DeferDimension) = deferdim
 
 function combinedim(a::Widen{<:Extent}, b::Widen{<:Extent})
     Widen(Extent(
-        start = simplify(@i min($(getstart(a)), $(getstart(b)))),
-        stop = simplify(@i max($(getstop(a)), $(getstop(b)))),
-        lower = simplify(@i(max($(a.ext.lower), $(b.ext.lower)))),
+        start = simplify(@f min($(getstart(a)), $(getstart(b)))),
+        stop = simplify(@f max($(getstop(a)), $(getstop(b)))),
+        lower = simplify(@f(max($(a.ext.lower), $(b.ext.lower)))),
         upper = if getstart(a) == getstart(b) || getstop(a) == getstop(b)
-            simplify(@i(max($(a.ext.upper), $(b.ext.upper))))
+            simplify(@f(max($(a.ext.upper), $(b.ext.upper))))
         else
-            simplify(@i($(a.ext.upper) + $(b.ext.upper)))
+            simplify(@f($(a.ext.upper) + $(b.ext.upper)))
         end,
     ))
 end

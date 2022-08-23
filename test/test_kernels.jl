@@ -12,8 +12,8 @@
             Dense(m,
             SparseList(m,
             Element{0.0}())))
-        @test diff("inner_products.jl", @index_code @loop i j k B[i, j] += A[i, k] * A[j, k])
-        @index @loop i j k B[i, j] += A[i, k] * A[j, k]
+        @test diff("inner_products.jl", @finch_code @loop i j k B[i, j] += A[i, k] * A[j, k])
+        @finch @loop i j k B[i, j] += A[i, k] * A[j, k]
         @test B.lvl.lvl.pos[1:length(B_ref.colptr)] == B_ref.colptr
         @test B.lvl.lvl.idx[1:length(B_ref.rowval)] == B_ref.rowval
     end
@@ -28,7 +28,7 @@
                 SparseList(m, A_ref.colptr, A_ref.rowval,
                 Element{0.0}(A_ref.nzval))))
             B = Finch.Fiber(Element{0.0}())
-            @index @loop i j k B[] += A[i, k] * A[i, j] * A[j, k]
+            @finch @loop i j k B[] += A[i, k] * A[i, j] * A[j, k]
             @test FiberArray(B)[] ≈ sum(A_ref .* (A_ref * transpose(A_ref)))
         end
     end
@@ -59,7 +59,7 @@
         a = Fiber(Element{0.0}())
         b = Fiber(Element{0.0}())
 
-        @index @loop i (C[i] = a[] - b[]; d[] += a[] * b[]) where (a[] = A[i]; b[] = B[i])
+        @finch @loop i (C[i] = a[] - b[]; d[] += a[] * b[]) where (a[] = A[i]; b[] = B[i])
 
         @test FiberArray(C) == A_ref .- B_ref
         refidx = (A_ref .- B_ref).nzind
@@ -84,12 +84,12 @@
                 SparseByte(m, #TODO
                 Element{0.0}()))
 
-            ex = @index_program_instance @loop i ((@loop j B[i, j] = w[j]) where (@loop k j w[j] = A[i, k] * A[k, j]))
+            ex = @finch_program_instance @loop i ((@loop j B[i, j] = w[j]) where (@loop k j w[j] = A[i, k] * A[k, j]))
             #println(typeof(ex))
-            #display(execute_code_lowered(:ex, typeof(ex)))
+            #display(execute_code(:ex, typeof(ex)))
             #println()
 
-            @index @loop i ((@loop j B[i, j] = w[j]) where (@loop k j w[j] = A[i, k] * A[k, j]))
+            @finch @loop i ((@loop j B[i, j] = w[j]) where (@loop k j w[j] = A[i, k] * A[k, j]))
         end
     end
 end

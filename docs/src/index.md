@@ -29,5 +29,5 @@ julia> using Pkg; Pkg.add("Finch")
 
 Here's a few examples
 
-```@index
+```@finch
 ```

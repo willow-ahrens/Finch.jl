@@ -13,9 +13,9 @@ function getresults end
 Return an iterator over the names in an index expression that have yet to be
 bound.
 ```julia
-julia> getunbound(@index_program @loop i :a[i, j] += 2)
+julia> getunbound(@finch_program @loop i :a[i, j] += 2)
 [j]
-julia> getunbound(@index_program i + j * 2 * i)
+julia> getunbound(@finch_program i + j * 2 * i)
 [i, j]
 ```
 """

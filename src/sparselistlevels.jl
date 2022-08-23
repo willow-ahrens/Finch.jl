@@ -152,7 +152,7 @@ function finalize_level!(fbr::VirtualFiber{VirtualSparseListLevel}, ctx::LowerJu
 end
 
 unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode::Read, idx, idxs...) =
-    unfurl(fbr, ctx, mode, protocol(idx, walk))
+    unfurl(fbr, ctx, mode, protocol(idx, walk), idxs...)
 
 function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode::Read, idx::Protocol{<:Any, Walk}, idxs...)
     lvl = fbr.lvl
