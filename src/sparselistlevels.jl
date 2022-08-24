@@ -8,9 +8,9 @@ const SparseList = SparseListLevel
 SparseListLevel(lvl) = SparseListLevel(0, lvl)
 SparseListLevel{Ti}(lvl) where {Ti} = SparseListLevel(zero(Ti), lvl)
 SparseListLevel(I::Ti, lvl::Lvl) where {Ti, Lvl} = SparseListLevel{Ti, Lvl}(I, lvl)
-SparseListLevel{Ti}(I::Ti, lvl::Lvl) where {Ti, Lvl} = SparseListLevel{Ti, Lvl}(I, lvl)
-SparseListLevel{Ti}(I::Ti, pos, idx, lvl::Lvl) where {Ti, Lvl} = SparseListLevel{Ti, Lvl}(I, pos, idx, lvl)
-SparseListLevel{Ti, Lvl}(I::Ti, lvl::Lvl) where {Ti, Lvl} = SparseListLevel{Ti, Lvl}(I, Ti[1, fill(0, 16)...], Vector{Ti}(undef, 16), lvl)
+SparseListLevel{Ti}(I, lvl::Lvl) where {Ti, Lvl} = SparseListLevel{Ti, Lvl}(Ti(I), lvl)
+SparseListLevel{Ti}(I, pos, idx, lvl::Lvl) where {Ti, Lvl} = SparseListLevel{Ti, Lvl}(Ti(I), pos, idx, lvl)
+SparseListLevel{Ti, Lvl}(I, lvl::Lvl) where {Ti, Lvl} = SparseListLevel{Ti, Lvl}(Ti(I), Ti[1, fill(0, 16)...], Vector{Ti}(undef, 16), lvl)
 
 """
 `f_code(l)` = [SparseListLevel](@ref).
