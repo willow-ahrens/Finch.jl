@@ -3,7 +3,7 @@
 
     formats = [
         "list" => SparseList,
-        "byte" => SparseByte,
+        "byte" => SparseBytemap,
         "hash1" => SparseHash{1},
         "coo1" => SparseCoo{1},
         "dense" => Dense
