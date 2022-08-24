@@ -81,7 +81,7 @@
                 SparseList(0,
                 Element{0.0}())))
             w = Fiber(
-                SparseByte(m, #TODO
+                SparseBytemap(m, #TODO
                 Element{0.0}()))
 
             ex = @finch_program_instance @loop i ((@loop j B[i, j] = w[j]) where (@loop k j w[j] = A[i, k] * A[k, j]))

@@ -1,4 +1,4 @@
-struct SparseByteLevel{Ti, Tp, Tq, Lvl}
+struct SparseBytemapLevel{Ti, Tp, Tq, Lvl}
     I::Ti
     tbl::Vector{Bool}
     srt::Vector{Tuple{Tp, Ti}}
@@ -6,29 +6,29 @@ struct SparseByteLevel{Ti, Tp, Tq, Lvl}
     pos::Vector{Tq}
     lvl::Lvl
 end
-const SparseByte = SparseByteLevel
-SparseByteLevel(lvl) = SparseByteLevel(0, lvl)
-SparseByteLevel{Ti}(lvl) where {Ti} = SparseByteLevel{Ti}(zero(Ti), lvl)
-SparseByteLevel(I::Ti, lvl) where {Ti} = SparseByteLevel{Ti}(I, lvl)
-SparseByteLevel{Ti}(I::Ti, lvl) where {Ti} = SparseByteLevel{Ti, Int, Int}(I, lvl)
-SparseByteLevel{Ti, Tp, Tq}(I::Ti, lvl) where {Ti, Tp, Tq} =
-    SparseByteLevel{Ti, Tp, Tq}(I::Ti, [false, false, false, false], Vector{Tuple{Tp, Ti}}(undef, 4), Ref(0), Tq[1, 1, 0, 0, 0], lvl)
-SparseByteLevel{Ti, Tp, Tq}(I::Ti, tbl, srt, srt_stop, pos, lvl::Lvl) where {Ti, Tp, Tq, Lvl} =
-    SparseByteLevel{Ti, Tp, Tq, Lvl}(I, tbl, srt, srt_stop, pos, lvl)
+const SparseBytemap = SparseBytemapLevel
+SparseBytemapLevel(lvl) = SparseBytemapLevel(0, lvl)
+SparseBytemapLevel{Ti}(lvl) where {Ti} = SparseBytemapLevel{Ti}(zero(Ti), lvl)
+SparseBytemapLevel(I::Ti, lvl) where {Ti} = SparseBytemapLevel{Ti}(I, lvl)
+SparseBytemapLevel{Ti}(I::Ti, lvl) where {Ti} = SparseBytemapLevel{Ti, Int, Int}(I, lvl)
+SparseBytemapLevel{Ti, Tp, Tq}(I::Ti, lvl) where {Ti, Tp, Tq} =
+    SparseBytemapLevel{Ti, Tp, Tq}(I::Ti, [false, false, false, false], Vector{Tuple{Tp, Ti}}(undef, 4), Ref(0), Tq[1, 1, 0, 0, 0], lvl)
+SparseBytemapLevel{Ti, Tp, Tq}(I::Ti, tbl, srt, srt_stop, pos, lvl::Lvl) where {Ti, Tp, Tq, Lvl} =
+    SparseBytemapLevel{Ti, Tp, Tq, Lvl}(I, tbl, srt, srt_stop, pos, lvl)
 
-pattern!(lvl::SparseByteLevel{Ti, Tp, Tq}) where {Ti, Tp, Tq} = 
-    SparseByteLevel{Ti, Tp, Tq}(lvl.I, lvl.tbl, lvl.srt, lvl.srt_stop, lvl.pos, pattern!(lvl.lvl))
+pattern!(lvl::SparseBytemapLevel{Ti, Tp, Tq}) where {Ti, Tp, Tq} = 
+    SparseBytemapLevel{Ti, Tp, Tq}(lvl.I, lvl.tbl, lvl.srt, lvl.srt_stop, lvl.pos, pattern!(lvl.lvl))
 
 """
-`f_code(b)` = [SparseByteLevel](@ref).
+`f_code(sm)` = [SparseBytemapLevel](@ref).
 """
-f_code(::Val{:sb}) = SparseByte
-summary_f_code(lvl::SparseByteLevel) = "sb($(summary_f_code(lvl.lvl)))"
-similar_level(lvl::SparseByteLevel) = SparseByte(similar_level(lvl.lvl))
-similar_level(lvl::SparseByteLevel, dim, tail...) = SparseByte(dim, similar_level(lvl.lvl, tail...))
+f_code(::Val{:sm}) = SparseBytemap
+summary_f_code(lvl::SparseBytemapLevel) = "sm($(summary_f_code(lvl.lvl)))"
+similar_level(lvl::SparseBytemapLevel) = SparseBytemap(similar_level(lvl.lvl))
+similar_level(lvl::SparseBytemapLevel, dim, tail...) = SparseBytemap(dim, similar_level(lvl.lvl, tail...))
 
-function Base.show(io::IO, lvl::SparseByteLevel)
-    print(io, "SparseByte(")
+function Base.show(io::IO, lvl::SparseBytemapLevel)
+    print(io, "SparseBytemap(")
     print(io, lvl.I)
     print(io, ", ")
     if get(io, :compact, true)
@@ -47,7 +47,7 @@ function Base.show(io::IO, lvl::SparseByteLevel)
     print(io, ")")
 end
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:SparseByteLevel})
+function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:SparseBytemapLevel})
     p = envposition(fbr.env)
     crds = @view(fbr.lvl.srt[1:length(fbr.lvl.srt_stop[])])
     depth = envdepth(fbr.env)
@@ -55,19 +55,19 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:SparseByteLe
     print_coord(io, (p, i)) = (print(io, "["); show(io, i); print(io, "]"))
     get_coord((p, i),) = i
 
-    print(io, "│ " ^ depth); print(io, "SparseByte ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); show(io, 1); print(io, ":"); show(io, fbr.lvl.I); println(io, "]")
+    print(io, "│ " ^ depth); print(io, "SparseBytemap ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); show(io, 1); print(io, ":"); show(io, fbr.lvl.I); println(io, "]")
     display_fiber_data(io, mime, fbr, 1, crds, print_coord, get_coord)
 end
 
 
-@inline arity(fbr::Fiber{<:SparseByteLevel}) = 1 + arity(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
-@inline shape(fbr::Fiber{<:SparseByteLevel}) = (fbr.lvl.I, shape(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
-@inline domain(fbr::Fiber{<:SparseByteLevel}) = (1:fbr.lvl.I, domain(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
-@inline image(fbr::Fiber{<:SparseByteLevel}) = image(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
-@inline default(fbr::Fiber{<:SparseByteLevel}) = default(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
+@inline arity(fbr::Fiber{<:SparseBytemapLevel}) = 1 + arity(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
+@inline shape(fbr::Fiber{<:SparseBytemapLevel}) = (fbr.lvl.I, shape(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
+@inline domain(fbr::Fiber{<:SparseBytemapLevel}) = (1:fbr.lvl.I, domain(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
+@inline image(fbr::Fiber{<:SparseBytemapLevel}) = image(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
+@inline default(fbr::Fiber{<:SparseBytemapLevel}) = default(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
 
-(fbr::Fiber{<:SparseByteLevel})() = fbr
-function (fbr::Fiber{<:SparseByteLevel{Ti}})(i, tail...) where {D, Tv, Ti}
+(fbr::Fiber{<:SparseBytemapLevel})() = fbr
+function (fbr::Fiber{<:SparseBytemapLevel{Ti}})(i, tail...) where {D, Tv, Ti}
     lvl = fbr.lvl
     p = envposition(fbr.env)
     q = (p - 1) * lvl.I + i
@@ -79,7 +79,7 @@ function (fbr::Fiber{<:SparseByteLevel{Ti}})(i, tail...) where {D, Tv, Ti}
     end
 end
 
-mutable struct VirtualSparseByteLevel
+mutable struct VirtualSparseBytemapLevel
     ex
     Ti
     Tp
@@ -91,7 +91,7 @@ mutable struct VirtualSparseByteLevel
     pos_alloc
     lvl
 end
-function virtualize(ex, ::Type{SparseByteLevel{Ti, Tp, Tq, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Tq, Lvl}   
+function virtualize(ex, ::Type{SparseBytemapLevel{Ti, Tp, Tq, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Tq, Lvl}   
     sym = ctx.freshen(tag)
     I = Virtual{Int}(:($sym.I))
     tbl_alloc = ctx.freshen(sym, :_tbl_alloc)
@@ -106,11 +106,11 @@ function virtualize(ex, ::Type{SparseByteLevel{Ti, Tp, Tq, Lvl}}, ctx, tag=:lvl)
         $pos_alloc = length($sym.pos)
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualSparseByteLevel(sym, Ti, Tp, Tq, I, tbl_alloc, srt_alloc, srt_stop, pos_alloc, lvl_2)
+    VirtualSparseBytemapLevel(sym, Ti, Tp, Tq, I, tbl_alloc, srt_alloc, srt_stop, pos_alloc, lvl_2)
 end
-function (ctx::Finch.LowerJulia)(lvl::VirtualSparseByteLevel)
+function (ctx::Finch.LowerJulia)(lvl::VirtualSparseBytemapLevel)
     quote
-        $SparseByteLevel{$(lvl.Ti), $(lvl.Tp), $(lvl.Tq)}(
+        $SparseBytemapLevel{$(lvl.Ti), $(lvl.Tp), $(lvl.Tq)}(
             $(ctx(lvl.I)),
             $(lvl.ex).tbl,
             $(lvl.ex).srt,
@@ -121,13 +121,13 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualSparseByteLevel)
     end
 end
 
-summary_f_str(lvl::VirtualSparseByteLevel) = "b$(summary_f_str(lvl.lvl))"
-summary_f_str_args(lvl::VirtualSparseByteLevel) = summary_f_str_args(lvl.lvl)
+summary_f_str(lvl::VirtualSparseBytemapLevel) = "b$(summary_f_str(lvl.lvl))"
+summary_f_str_args(lvl::VirtualSparseBytemapLevel) = summary_f_str_args(lvl.lvl)
 
-getsites(fbr::VirtualFiber{VirtualSparseByteLevel}) =
+getsites(fbr::VirtualFiber{VirtualSparseBytemapLevel}) =
     [envdepth(fbr.env) + 1, getsites(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))...]
 
-function getdims(fbr::VirtualFiber{VirtualSparseByteLevel}, ctx, mode)
+function getdims(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode)
     ext = Extent(1, fbr.lvl.I)
     if mode != Read()
         ext = suggest(ext)
@@ -135,16 +135,16 @@ function getdims(fbr::VirtualFiber{VirtualSparseByteLevel}, ctx, mode)
     (ext, getdims(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)...)
 end
 
-function setdims!(fbr::VirtualFiber{VirtualSparseByteLevel}, ctx, mode, dim, dims...)
+function setdims!(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode, dim, dims...)
     fbr.lvl.I = getstop(dim)
     fbr.lvl.lvl = setdims!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode, dims...).lvl
     fbr
 end
 
-@inline default(fbr::VirtualFiber{VirtualSparseByteLevel}) = default(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
-@inline image(fbr::VirtualFiber{VirtualSparseByteLevel}) = image(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
+@inline default(fbr::VirtualFiber{VirtualSparseBytemapLevel}) = default(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
+@inline image(fbr::VirtualFiber{VirtualSparseBytemapLevel}) = image(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
 
-function initialize_level!(fbr::VirtualFiber{VirtualSparseByteLevel}, ctx::LowerJulia, mode::Union{Write, Update})
+function initialize_level!(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx::LowerJulia, mode::Union{Write, Update})
     @assert isempty(envdeferred(fbr.env))
     lvl = fbr.lvl
     r = ctx.freshen(lvl.ex, :_r)
@@ -184,10 +184,10 @@ function initialize_level!(fbr::VirtualFiber{VirtualSparseByteLevel}, ctx::Lower
     return lvl
 end
 
-interval_assembly_depth(lvl::VirtualSparseByteLevel) = min(Inf, interval_assembly_depth(lvl.lvl) - 1)
+interval_assembly_depth(lvl::VirtualSparseBytemapLevel) = min(Inf, interval_assembly_depth(lvl.lvl) - 1)
 
 #TODO does this actually support reassembly? I think it needs to filter out indices with unset table entries during finalization
-function assemble!(fbr::VirtualFiber{VirtualSparseByteLevel}, ctx, mode)
+function assemble!(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode)
     lvl = fbr.lvl
     p_stop = ctx(cache!(ctx, ctx.freshen(lvl.ex, :_p), getstop(envposition(fbr.env))))
     if extent(envposition(fbr.env)) == 1
@@ -221,7 +221,7 @@ function assemble!(fbr::VirtualFiber{VirtualSparseByteLevel}, ctx, mode)
     end
 end
 
-function finalize_level!(fbr::VirtualFiber{VirtualSparseByteLevel}, ctx::LowerJulia, mode::Union{Write, Update})
+function finalize_level!(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx::LowerJulia, mode::Union{Write, Update})
     @assert isempty(envdeferred(fbr.env))
     lvl = fbr.lvl
     r = ctx.freshen(lvl.ex, :_r)
@@ -245,10 +245,10 @@ function finalize_level!(fbr::VirtualFiber{VirtualSparseByteLevel}, ctx::LowerJu
     return lvl
 end
 
-unfurl(fbr::VirtualFiber{VirtualSparseByteLevel}, ctx, mode::Read, idx, idxs...) =
+unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Read, idx, idxs...) =
     unfurl(fbr, ctx, mode, protocol(idx, walk), idxs...)
 
-function unfurl(fbr::VirtualFiber{VirtualSparseByteLevel}, ctx, mode::Read, idx::Protocol{<:Any, Walk}, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Read, idx::Protocol{<:Any, Walk}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
@@ -311,7 +311,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseByteLevel}, ctx, mode::Read, idx:
     exfurl(body, ctx, mode, idx.idx)
 end
 
-function unfurl(fbr::VirtualFiber{VirtualSparseByteLevel}, ctx, mode::Read, idx::Protocol{<:Any, Gallop}, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Read, idx::Protocol{<:Any, Gallop}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
@@ -403,7 +403,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseByteLevel}, ctx, mode::Read, idx:
     exfurl(body, ctx, mode, idx.idx)
 end
 
-function unfurl(fbr::VirtualFiber{VirtualSparseByteLevel}, ctx, mode::Read, idx::Protocol{<:Any, Follow}, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Read, idx::Protocol{<:Any, Follow}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     R = length(envdeferred(fbr.env)) + 1
@@ -426,12 +426,12 @@ function unfurl(fbr::VirtualFiber{VirtualSparseByteLevel}, ctx, mode::Read, idx:
     exfurl(body, ctx, mode, idx.idx)
 end
 
-unfurl(fbr::VirtualFiber{VirtualSparseByteLevel}, ctx, mode::Union{Write, Update}, idx, idxs...) =
+unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Union{Write, Update}, idx, idxs...) =
     unfurl(fbr, ctx, mode, protocol(idx, laminate), idxs...)
 
-hasdefaultcheck(lvl::VirtualSparseByteLevel) = true
+hasdefaultcheck(lvl::VirtualSparseBytemapLevel) = true
 
-function unfurl(fbr::VirtualFiber{VirtualSparseByteLevel}, ctx, mode::Union{Write, Update}, idx::Protocol{<:Any, <:Union{Extrude, Laminate}}, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Union{Write, Update}, idx::Protocol{<:Any, <:Union{Extrude, Laminate}}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_key = ctx.freshen(tag, :_key)

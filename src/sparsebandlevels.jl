@@ -1,30 +1,41 @@
-struct SparseListLevel{Ti, Lvl}
+struct SparseBandLevel{Ti, Lvl}
     I::Ti
     pos::Vector{Ti}
     idx::Vector{Ti}
     lvl::Lvl
 end
-const SparseList = SparseListLevel
-SparseListLevel(lvl) = SparseListLevel(0, lvl)
-SparseListLevel{Ti}(lvl) where {Ti} = SparseListLevel(zero(Ti), lvl)
-SparseListLevel(I::Ti, lvl::Lvl) where {Ti, Lvl} = SparseListLevel{Ti, Lvl}(I, lvl)
-SparseListLevel{Ti}(I, lvl::Lvl) where {Ti, Lvl} = SparseListLevel{Ti, Lvl}(Ti(I), lvl)
-SparseListLevel{Ti}(I, pos, idx, lvl::Lvl) where {Ti, Lvl} = SparseListLevel{Ti, Lvl}(Ti(I), pos, idx, lvl)
-SparseListLevel{Ti, Lvl}(I, lvl::Lvl) where {Ti, Lvl} = SparseListLevel{Ti, Lvl}(Ti(I), Ti[1, fill(0, 16)...], Vector{Ti}(undef, 16), lvl)
+const SparseBand = SparseBandLevel
+SparseBandLevel(lvl) = SparseBandLevel(0, lvl)
+SparseBandLevel{Ti}(lvl) where {Ti} = SparseBandLevel(zero(Ti), lvl)
+SparseBandLevel(I::Ti, lvl::Lvl) where {Ti, Lvl} = SparseBandLevel{Ti, Lvl}(I, lvl)
+SparseBandLevel{Ti}(I::Ti, lvl::Lvl) where {Ti, Lvl} = SparseBandLevel{Ti, Lvl}(I, lvl)
+SparseBandLevel{Ti}(I::Ti, pos, idx, lvl::Lvl) where {Ti, Lvl} = SparseBandLevel{Ti, Lvl}(I, pos, idx, lvl)
+SparseBandLevel{Ti, Lvl}(I::Ti, lvl::Lvl) where {Ti, Lvl} = SparseBandLevel{Ti, Lvl}(I, Ti[1, fill(0, 16)...], Vector{Ti}(undef, 16), lvl)
 
 """
-`f_code(l)` = [SparseListLevel](@ref).
+`f_code(l)` = [SparseBandLevel](@ref).
 """
-f_code(::Val{:sl}) = SparseList
-summary_f_code(lvl::SparseListLevel) = "sl($(summary_f_code(lvl.lvl)))"
-similar_level(lvl::SparseListLevel) = SparseList(similar_level(lvl.lvl))
-similar_level(lvl::SparseListLevel, dim, tail...) = SparseList(dim, similar_level(lvl.lvl, tail...))
+f_code(::Val{:sl}) = SparseBand
+summary_f_code(lvl::SparseBandLevel) = "sl($(summary_f_code(lvl.lvl)))"
+similar_level(lvl::SparseBandLevel) = SparseBand(similar_level(lvl.lvl))
+similar_level(lvl::SparseBandLevel, dim, tail...) = SparseBand(dim, similar_level(lvl.lvl, tail...))
 
-pattern!(lvl::SparseListLevel{Ti}) where {Ti} = 
-    SparseListLevel{Ti}(lvl.I, lvl.pos, lvl.idx, pattern!(lvl.lvl))
+(fbr::Fiber{<:SparseBandLevel})() = fbr
+function (fbr::Fiber{<:SparseBandLevel{Ti}})(i, tail...) where {D, Tv, Ti, N, R}
+    lvl = fbr.lvl
+    p = envposition(fbr.env)
+    start = idx[p]
+    stop = idx[p] + pos[p + 1] - pos[p]
+    q = lvl.pos[p] + i - pos[p]
+    fbr_2 = Fiber(lvl.lvl, Environment(position=q, index=i, parent=fbr.env))
+    start < i <= stop ? fbr_2(tail...) : default(fbr_2)
+end
 
-function Base.show(io::IO, lvl::SparseListLevel)
-    print(io, "SparseList(")
+pattern!(lvl::SparseBandLevel{Ti}) where {Ti} = 
+    SparseBandLevel{Ti}(lvl.I, lvl.pos, lvl.idx, pattern!(lvl.lvl))
+
+function Base.show(io::IO, lvl::SparseBandLevel)
+    print(io, "SparseBand(")
     print(io, lvl.I)
     print(io, ", ")
     if get(io, :compact, true)
@@ -39,36 +50,26 @@ function Base.show(io::IO, lvl::SparseListLevel)
     print(io, ")")
 end
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:SparseListLevel})
+function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:SparseBandLevel})
     p = envposition(fbr.env)
-    crds = @view(fbr.lvl.idx[fbr.lvl.pos[p]:fbr.lvl.pos[p + 1] - 1])
+    crds = @view((fbr.lvl.idx[fbr.lvl.pos[p]] + 1) : (fbr.lvl.idx[fbr.lvl.pos[p]] + fbr.lvl.pos[p + 1] - fbr.lvl.pos[p]))
     depth = envdepth(fbr.env)
 
     print_coord(io, crd) = (print(io, "["); show(io, crd); print(io, "]"))
     get_coord(crd) = crd
 
-    print(io, "│ " ^ depth); print(io, "SparseList ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); show(io, 1); print(io, ":"); show(io, fbr.lvl.I); println(io, "]")
+    print(io, "│ " ^ depth); print(io, "SparseBand ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); show(io, 1); print(io, ":"); show(io, fbr.lvl.I); println(io, "]")
     display_fiber_data(io, mime, fbr, 1, crds, print_coord, get_coord)
 end
 
+@inline arity(fbr::Fiber{<:SparseBandLevel}) = 1 + arity(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
+@inline shape(fbr::Fiber{<:SparseBandLevel}) = (fbr.lvl.I, shape(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
+@inline domain(fbr::Fiber{<:SparseBandLevel}) = (1:fbr.lvl.I, domain(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
+@inline image(fbr::Fiber{<:SparseBandLevel}) = image(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
+@inline default(fbr::Fiber{<:SparseBandLevel}) = default(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
 
-@inline arity(fbr::Fiber{<:SparseListLevel}) = 1 + arity(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
-@inline shape(fbr::Fiber{<:SparseListLevel}) = (fbr.lvl.I, shape(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
-@inline domain(fbr::Fiber{<:SparseListLevel}) = (1:fbr.lvl.I, domain(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
-@inline image(fbr::Fiber{<:SparseListLevel}) = image(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
-@inline default(fbr::Fiber{<:SparseListLevel}) = default(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
 
-(fbr::Fiber{<:SparseListLevel})() = fbr
-function (fbr::Fiber{<:SparseListLevel{Ti}})(i, tail...) where {D, Tv, Ti, N, R}
-    lvl = fbr.lvl
-    p = envposition(fbr.env)
-    r = searchsorted(@view(lvl.idx[lvl.pos[p]:lvl.pos[p + 1] - 1]), i)
-    q = lvl.pos[p] + first(r) - 1
-    fbr_2 = Fiber(lvl.lvl, Environment(position=q, index=i, parent=fbr.env))
-    length(r) == 0 ? default(fbr_2) : fbr_2(tail...)
-end
-
-mutable struct VirtualSparseListLevel
+mutable struct VirtualSparseBandLevel
     ex
     Ti
     I
@@ -76,7 +77,7 @@ mutable struct VirtualSparseListLevel
     idx_alloc
     lvl
 end
-function virtualize(ex, ::Type{SparseListLevel{Ti, Lvl}}, ctx, tag=:lvl) where {Ti, Lvl}
+function virtualize(ex, ::Type{SparseBandLevel{Ti, Lvl}}, ctx, tag=:lvl) where {Ti, Lvl}
     sym = ctx.freshen(tag)
     I = Virtual{Int}(:($sym.I))
     pos_alloc = ctx.freshen(sym, :_pos_alloc)
@@ -87,11 +88,11 @@ function virtualize(ex, ::Type{SparseListLevel{Ti, Lvl}}, ctx, tag=:lvl) where {
         $idx_alloc = length($sym.idx)
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualSparseListLevel(sym, Ti, I, pos_alloc, idx_alloc, lvl_2)
+    VirtualSparseBandLevel(sym, Ti, I, pos_alloc, idx_alloc, lvl_2)
 end
-function (ctx::Finch.LowerJulia)(lvl::VirtualSparseListLevel)
+function (ctx::Finch.LowerJulia)(lvl::VirtualSparseBandLevel)
     quote
-        $SparseListLevel{$(lvl.Ti)}(
+        $SparseBandLevel{$(lvl.Ti)}(
             $(ctx(lvl.I)),
             $(lvl.ex).pos,
             $(lvl.ex).idx,
@@ -100,13 +101,13 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualSparseListLevel)
     end
 end
 
-summary_f_str(lvl::VirtualSparseListLevel) = "l$(summary_f_str(lvl.lvl))"
-summary_f_str_args(lvl::VirtualSparseListLevel) = summary_f_str_args(lvl.lvl)
+summary_f_str(lvl::VirtualSparseBandLevel) = "l$(summary_f_str(lvl.lvl))"
+summary_f_str_args(lvl::VirtualSparseBandLevel) = summary_f_str_args(lvl.lvl)
 
-getsites(fbr::VirtualFiber{VirtualSparseListLevel}) =
+getsites(fbr::VirtualFiber{VirtualSparseBandLevel}) =
     [envdepth(fbr.env) + 1, getsites(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))...]
 
-function getdims(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode)
+function getdims(fbr::VirtualFiber{VirtualSparseBandLevel}, ctx, mode)
     ext = Extent(1, fbr.lvl.I)
     if mode != Read()
         ext = suggest(ext)
@@ -114,16 +115,16 @@ function getdims(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode)
     (ext, getdims(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)...)
 end
 
-function setdims!(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode, dim, dims...)
+function setdims!(fbr::VirtualFiber{VirtualSparseBandLevel}, ctx, mode, dim, dims...)
     fbr.lvl.I = getstop(dim)
     fbr.lvl.lvl = setdims!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode, dims...).lvl
     fbr
 end
 
-@inline default(fbr::VirtualFiber{<:VirtualSparseListLevel}) = default(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
-@inline image(fbr::VirtualFiber{VirtualSparseListLevel}) = image(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
+@inline default(fbr::VirtualFiber{<:VirtualSparseBandLevel}) = default(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
+@inline image(fbr::VirtualFiber{VirtualSparseBandLevel}) = image(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
 
-function initialize_level!(fbr::VirtualFiber{VirtualSparseListLevel}, ctx::LowerJulia, mode::Union{Write, Update})
+function initialize_level!(fbr::VirtualFiber{VirtualSparseBandLevel}, ctx::LowerJulia, mode::Union{Write, Update})
     lvl = fbr.lvl
     push!(ctx.preamble, quote
         $(lvl.pos_alloc) = length($(lvl.ex).pos)
@@ -135,10 +136,10 @@ function initialize_level!(fbr::VirtualFiber{VirtualSparseListLevel}, ctx::Lower
     return lvl
 end
 
-interval_assembly_depth(lvl::VirtualSparseListLevel) = Inf
+interval_assembly_depth(lvl::VirtualSparseBandLevel) = Inf
 
-#This function is quite simple, since SparseListLevels don't support reassembly.
-function assemble!(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode)
+#This function is quite simple, since SparseBandLevels don't support reassembly.
+function assemble!(fbr::VirtualFiber{VirtualSparseBandLevel}, ctx, mode)
     lvl = fbr.lvl
     p_stop = ctx(cache!(ctx, ctx.freshen(lvl.ex, :_p_stop), getstop(envposition(fbr.env))))
     push!(ctx.preamble, quote
@@ -146,15 +147,15 @@ function assemble!(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode)
     end)
 end
 
-function finalize_level!(fbr::VirtualFiber{VirtualSparseListLevel}, ctx::LowerJulia, mode::Union{Write, Update})
+function finalize_level!(fbr::VirtualFiber{VirtualSparseBandLevel}, ctx::LowerJulia, mode::Union{Write, Update})
     fbr.lvl.lvl = finalize_level!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)
     return fbr.lvl
 end
 
-unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode::Read, idx, idxs...) =
+unfurl(fbr::VirtualFiber{VirtualSparseBandLevel}, ctx, mode::Read, idx, idxs...) =
     unfurl(fbr, ctx, mode, protocol(idx, walk), idxs...)
 
-function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode::Read, idx::Protocol{<:Any, Walk}, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualSparseBandLevel}, ctx, mode::Read, idx::Protocol{<:Any, Walk}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
@@ -210,7 +211,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode::Read, idx:
     exfurl(body, ctx, mode, idx.idx)
 end
 
-function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode::Read, idx::Protocol{<:Any, Gallop}, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualSparseBandLevel}, ctx, mode::Read, idx::Protocol{<:Any, Gallop}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
@@ -291,10 +292,10 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode::Read, idx:
     exfurl(body, ctx, mode, idx.idx)
 end
 
-unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode::Union{Write, Update}, idx, idxs...) =
+unfurl(fbr::VirtualFiber{VirtualSparseBandLevel}, ctx, mode::Union{Write, Update}, idx, idxs...) =
     unfurl(fbr, ctx, mode, protocol(idx, extrude), idxs...)
 
-function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode::Union{Write, Update}, idx::Protocol{<:Any, Extrude}, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualSparseBandLevel}, ctx, mode::Union{Write, Update}, idx::Protocol{<:Any, Extrude}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
