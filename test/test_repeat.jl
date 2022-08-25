@@ -28,4 +28,27 @@
 
     @test A.lvl.idx[1:5] == [2, 3, 6, 7, 9]
     @test A.lvl.val[1:5] == [0.0, 1.0, 0.0, 3.0, 0.0]
+
+    A = Finch.Fiber(
+        SparseVBL(10, [1, 4], [3, 5, 9], [1, 2, 3, 6],
+        Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
+
+    B = Finch.Fiber(Dense(Element{0.0}()))
+    @finch @loop i B[i] = A[i]
+
+    @test FiberArray(B) == [0, 0, 2, 0, 3, 0, 4, 5, 6, 0]
+
+    B = Finch.Fiber(SparseList(Element{0.0}()))
+    @finch @loop i B[i] = A[i]
+
+    @test FiberArray(B) == [0, 0, 2, 0, 3, 0, 4, 5, 6, 0]
+    @test B.lvl.idx[1:5] == [3, 5, 7, 8, 9]
+
+    C = Finch.Fiber(SparseVBL(Element{0.0}()))
+
+    @finch @loop i C[i] = B[i]
+
+    @test C.lvl.pos[1:2] == [1, 4]
+    @test C.lvl.idx[1:3] == [3, 5, 9]
+    @test C.lvl.ofs[1:4] == [1, 2, 3, 6]
 end
