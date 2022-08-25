@@ -1,6 +1,6 @@
-@testset "repeat" begin
+@testset "RepeatRLE" begin
     A = Finch.Fiber(
-        Repeat{0.0}(10, [1, 7], [1, 3, 5, 7, 9, 10], [2.0, 3.0, 4.0, 5.0, 6.0, 7.0]))
+        RepeatRLE{0.0}(10, [1, 7], [1, 3, 5, 7, 9, 10], [2.0, 3.0, 4.0, 5.0, 6.0, 7.0]))
 
     @test diff("repeat_display.txt", sprint(show, MIME"text/plain"(), A))
     @test diff("repeat_print.txt", sprint(show, A))

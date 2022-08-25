@@ -59,5 +59,5 @@
             end
         end
         A_lvl.pos[1 + 1] = A_lvl_q
-        (A = Fiber((Finch.RepeatLevel){0.0, Int64, Float64}(C_mode1_stop, A_lvl.pos, A_lvl.idx, A_lvl.val), (Finch.Environment)(; name = :A)),)
+        (A = Fiber((Finch.RepeatRLELevel){0.0, Int64, Float64}(C_mode1_stop, A_lvl.pos, A_lvl.idx, A_lvl.val), (Finch.Environment)(; name = :A)),)
     end

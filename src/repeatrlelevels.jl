@@ -1,31 +1,31 @@
-struct RepeatLevel{D, Ti, Tv}
+struct RepeatRLELevel{D, Ti, Tv}
     I::Ti
     pos::Vector{Ti}
     idx::Vector{Ti}
     val::Vector{Tv}
 end
-const Repeat = RepeatLevel
-RepeatLevel(D, args...) = RepeatLevel{D}(args...)
-RepeatLevel{D}() where {D} = RepeatLevel{D}(0)
-RepeatLevel{D}(I::Ti) where {D, Ti} = RepeatLevel{D, Ti}(I)
-RepeatLevel{D, Ti}() where {D, Ti} = RepeatLevel{D, Ti}(zero(Ti))
-RepeatLevel{D, Ti}(I::Ti) where {D, Ti} = RepeatLevel{D, Ti, typeof(D)}(I)
-RepeatLevel{D, Ti, Tv}(I::Ti) where {D, Ti, Tv} = RepeatLevel{D, Ti, Tv}(I, Ti[1, fill(0, 16)...], Vector{Ti}(undef, 16), Vector{Tv}(undef, 16))
-RepeatLevel{D}(I::Ti, pos, idx, val::Vector{Tv}) where {D, Ti, Tv} = RepeatLevel{D, Ti, Tv}(I, pos, idx, val)
+const RepeatRLE = RepeatRLELevel
+RepeatRLELevel(D, args...) = RepeatRLELevel{D}(args...)
+RepeatRLELevel{D}() where {D} = RepeatRLELevel{D}(0)
+RepeatRLELevel{D}(I::Ti) where {D, Ti} = RepeatRLELevel{D, Ti}(I)
+RepeatRLELevel{D, Ti}() where {D, Ti} = RepeatRLELevel{D, Ti}(zero(Ti))
+RepeatRLELevel{D, Ti}(I::Ti) where {D, Ti} = RepeatRLELevel{D, Ti, typeof(D)}(I)
+RepeatRLELevel{D, Ti, Tv}(I::Ti) where {D, Ti, Tv} = RepeatRLELevel{D, Ti, Tv}(I, Ti[1, fill(0, 16)...], Vector{Ti}(undef, 16), Vector{Tv}(undef, 16))
+RepeatRLELevel{D}(I::Ti, pos, idx, val::Vector{Tv}) where {D, Ti, Tv} = RepeatRLELevel{D, Ti, Tv}(I, pos, idx, val)
 
 """
-`f_code(rl)` = [RepeatLevel](@ref).
+`f_code(rl)` = [RepeatRLELevel](@ref).
 """
-f_code(::Val{:rl}) = Repeat
-summary_f_code(::Repeat{D}) where {D} = "r($(D))"
-similar_level(::RepeatLevel{D}) where {D} = Repeat{D}()
-similar_level(::RepeatLevel{D}, dim, tail...) where {D} = Repeat{D}(dim)
+f_code(::Val{:rl}) = RepeatRLE
+summary_f_code(::RepeatRLE{D}) where {D} = "r($(D))"
+similar_level(::RepeatRLELevel{D}) where {D} = RepeatRLE{D}()
+similar_level(::RepeatRLELevel{D}, dim, tail...) where {D} = RepeatRLE{D}(dim)
 
-pattern!(lvl::RepeatLevel{D, Ti}) where {D, Ti} = 
+pattern!(lvl::RepeatRLELevel{D, Ti}) where {D, Ti} = 
     DenseLevel{Ti}(lvl.I, Pattern())
 
-function Base.show(io::IO, lvl::RepeatLevel{D}) where {D}
-    print(io, "Repeat{")
+function Base.show(io::IO, lvl::RepeatRLELevel{D}) where {D}
+    print(io, "RepeatRLE{")
     print(io, D)
     print(io, "}(")
     print(io, lvl.I)
@@ -42,7 +42,7 @@ function Base.show(io::IO, lvl::RepeatLevel{D}) where {D}
     print(io, ")")
 end
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:RepeatLevel})
+function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:RepeatRLELevel})
     p = envposition(fbr.env)
     crds = fbr.lvl.pos[p]:fbr.lvl.pos[p + 1] - 1
     depth = envdepth(fbr.env)
@@ -50,19 +50,19 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:RepeatLevel}
     print_coord(io, crd) = (print(io, "["); show(io, crd == fbr.lvl.pos[p] ? 1 : fbr.lvl.idx[crd - 1] + 1); print(io, ":"); show(io, fbr.lvl.idx[crd]); print(io, "]"))
     get_coord(crd) = fbr.lvl.idx[crd]
 
-    print(io, "│ " ^ depth); print(io, "Repeat ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); show(io, 1); print(io, ":"); show(io, fbr.lvl.I); println(io, "]")
+    print(io, "│ " ^ depth); print(io, "RepeatRLE ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); show(io, 1); print(io, ":"); show(io, fbr.lvl.I); println(io, "]")
     display_fiber_data(io, mime, fbr, 1, crds, print_coord, get_coord)
 end
 
 
-@inline arity(fbr::Fiber{<:RepeatLevel}) = 1
-@inline shape(fbr::Fiber{<:RepeatLevel}) = (fbr.lvl.I,)
-@inline domain(fbr::Fiber{<:RepeatLevel}) = (1:fbr.lvl.I,)
-@inline image(::Fiber{<:RepeatLevel{D, Ti, Tv}}) where {D, Ti, Tv} = Tv
-@inline default(::Fiber{<:RepeatLevel{D}}) where {D} = D
+@inline arity(fbr::Fiber{<:RepeatRLELevel}) = 1
+@inline shape(fbr::Fiber{<:RepeatRLELevel}) = (fbr.lvl.I,)
+@inline domain(fbr::Fiber{<:RepeatRLELevel}) = (1:fbr.lvl.I,)
+@inline image(::Fiber{<:RepeatRLELevel{D, Ti, Tv}}) where {D, Ti, Tv} = Tv
+@inline default(::Fiber{<:RepeatRLELevel{D}}) where {D} = D
 
-(fbr::Fiber{<:RepeatLevel})() = fbr
-function (fbr::Fiber{<:RepeatLevel})(i, tail...)
+(fbr::Fiber{<:RepeatRLELevel})() = fbr
+function (fbr::Fiber{<:RepeatRLELevel})(i, tail...)
     lvl = fbr.lvl
     p = envposition(fbr.env)
     r = searchsortedfirst(@view(lvl.idx[lvl.pos[p]:lvl.pos[p + 1] - 1]), i)
@@ -70,7 +70,7 @@ function (fbr::Fiber{<:RepeatLevel})(i, tail...)
     return lvl.val[q]
 end
 
-mutable struct VirtualRepeatLevel
+mutable struct VirtualRepeatRLELevel
     ex
     D
     Ti
@@ -80,7 +80,7 @@ mutable struct VirtualRepeatLevel
     idx_alloc
     val_alloc
 end
-function virtualize(ex, ::Type{RepeatLevel{D, Ti, Tv}}, ctx, tag=:lvl) where {D, Ti, Tv}
+function virtualize(ex, ::Type{RepeatRLELevel{D, Ti, Tv}}, ctx, tag=:lvl) where {D, Ti, Tv}
     sym = ctx.freshen(tag)
     I = Virtual{Int}(:($sym.I))
     pos_alloc = ctx.freshen(sym, :_pos_alloc)
@@ -92,11 +92,11 @@ function virtualize(ex, ::Type{RepeatLevel{D, Ti, Tv}}, ctx, tag=:lvl) where {D,
         $idx_alloc = length($sym.idx)
         $val_alloc = length($sym.val)
     end)
-    VirtualRepeatLevel(sym, D, Ti, Tv, I, pos_alloc, idx_alloc, val_alloc)
+    VirtualRepeatRLELevel(sym, D, Ti, Tv, I, pos_alloc, idx_alloc, val_alloc)
 end
-function (ctx::Finch.LowerJulia)(lvl::VirtualRepeatLevel)
+function (ctx::Finch.LowerJulia)(lvl::VirtualRepeatRLELevel)
     quote
-        $RepeatLevel{$(lvl.D), $(lvl.Ti), $(lvl.Tv)}(
+        $RepeatRLELevel{$(lvl.D), $(lvl.Ti), $(lvl.Tv)}(
             $(ctx(lvl.I)),
             $(lvl.ex).pos,
             $(lvl.ex).idx,
@@ -105,13 +105,13 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualRepeatLevel)
     end
 end
 
-summary_f_str(lvl::VirtualRepeatLevel) = "r"
-summary_f_str_args(lvl::VirtualRepeatLevel) = lvl.D
+summary_f_str(lvl::VirtualRepeatRLELevel) = "r"
+summary_f_str_args(lvl::VirtualRepeatRLELevel) = lvl.D
 
-getsites(fbr::VirtualFiber{VirtualRepeatLevel}) =
+getsites(fbr::VirtualFiber{VirtualRepeatRLELevel}) =
     [envdepth(fbr.env) + 1, ]
 
-function getdims(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode)
+function getdims(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode)
     ext = Extent(1, fbr.lvl.I)
     if mode != Read()
         ext = suggest(ext)
@@ -119,15 +119,15 @@ function getdims(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode)
     (ext,)
 end
 
-function setdims!(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode, dim)
+function setdims!(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode, dim)
     fbr.lvl.I = getstop(dim)
     fbr
 end
 
-@inline default(fbr::VirtualFiber{<:VirtualRepeatLevel}) = fbr.lvl.D
-@inline image(fbr::VirtualFiber{VirtualRepeatLevel}) = fbr.lvl.Tv
+@inline default(fbr::VirtualFiber{<:VirtualRepeatRLELevel}) = fbr.lvl.D
+@inline image(fbr::VirtualFiber{VirtualRepeatRLELevel}) = fbr.lvl.Tv
 
-function initialize_level!(fbr::VirtualFiber{VirtualRepeatLevel}, ctx::LowerJulia, mode::Union{Write, Update})
+function initialize_level!(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx::LowerJulia, mode::Union{Write, Update})
     lvl = fbr.lvl
     push!(ctx.preamble, quote
         $(lvl.pos_alloc) = length($(lvl.ex).pos)
@@ -138,10 +138,10 @@ function initialize_level!(fbr::VirtualFiber{VirtualRepeatLevel}, ctx::LowerJuli
     return lvl
 end
 
-interval_assembly_depth(::VirtualRepeatLevel) = Inf
+interval_assembly_depth(::VirtualRepeatRLELevel) = Inf
 
-#This function is quite simple, since RepeatLevels don't support reassembly.
-function assemble!(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode)
+#This function is quite simple, since RepeatRLELevels don't support reassembly.
+function assemble!(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode)
     lvl = fbr.lvl
     p_stop = ctx(cache!(ctx, ctx.freshen(lvl.ex, :_p_stop), getstop(envposition(fbr.env))))
     push!(ctx.preamble, quote
@@ -149,14 +149,14 @@ function assemble!(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode)
     end)
 end
 
-function finalize_level!(fbr::VirtualFiber{VirtualRepeatLevel}, ctx::LowerJulia, mode::Union{Write, Update})
+function finalize_level!(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx::LowerJulia, mode::Union{Write, Update})
     return fbr.lvl
 end
 
-unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Read, idx, idxs...) =
+unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode::Read, idx, idxs...) =
     unfurl(fbr, ctx, mode, protocol(idx, walk), idxs...)
 
-function unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Read, idx::Protocol{<:Any, Walk}, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode::Read, idx::Protocol{<:Any, Walk}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
@@ -205,10 +205,10 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Read, idx::Pro
     exfurl(body, ctx, mode, idx.idx)
 end
 
-unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Union{Write, Update}, idx, idxs...) =
+unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode::Union{Write, Update}, idx, idxs...) =
     unfurl(fbr, ctx, mode, protocol(idx, extrude), idxs...)
 
-function unfurl(fbr::VirtualFiber{VirtualRepeatLevel}, ctx, mode::Union{Write, Update}, idx::Protocol{<:Any, Extrude}, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode::Union{Write, Update}, idx::Protocol{<:Any, Extrude}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_q = ctx.freshen(tag, :_q)
