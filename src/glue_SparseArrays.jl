@@ -2,12 +2,7 @@ using SparseArrays
 
 function fiber(arr::SparseMatrixCSC{Tv, Ti}, default=zero(Tv)) where {Tv, Ti}
     @assert iszero(default)
-    (m, n) = size(arr)
-    return Fiber(Dense(m, SparseList{Ti}(n, copy(arr.colptr), copy(arr.rowval), Element{zero(Tv)}(copy(arr.nzval)))))
-end
-
-function fiber!(arr::SparseMatrixCSC{Tv, Ti}, default=zero(Tv)) where {Tv, Ti}
-    @assert iszero(default)
+    arr = permutedims(arr)
     (m, n) = size(arr)
     return Fiber(Dense(m, SparseList{Ti}(n, arr.colptr, arr.rowval, Element{zero(Tv)}(arr.nzval))))
 end
