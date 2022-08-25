@@ -288,6 +288,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode::Union{Write
                 body = quote
                     if $(ctx(idx)) > $my_i_prev + 1
                         $(lvl.idx_alloc) < $my_r && ($(lvl.idx_alloc) = $Finch.regrow!($(lvl.ex).idx, $(lvl.idx_alloc), $my_r))
+                        $(lvl.ofs_alloc) < $my_r + 1 && ($(lvl.ofs_alloc) = $Finch.regrow!($(lvl.ex).idx, $(lvl.ofs_alloc), $my_r + 1))
                         $my_r += 1
                     end
                     $(lvl.ex).idx[$my_r - 1] = $my_i_prev = $(ctx(idx))
