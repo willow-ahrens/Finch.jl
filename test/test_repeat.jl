@@ -28,4 +28,14 @@
 
     @test A.lvl.idx[1:5] == [2, 3, 6, 7, 9]
     @test A.lvl.val[1:5] == [0.0, 1.0, 0.0, 3.0, 0.0]
+
+    println("B(sl)[i] = A(sv)[i]")
+    A = Finch.Fiber(
+        SparseVBL(10, [1, 4], [3, 5, 9], [1, 2, 3, 6],
+        Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
+
+    display(A)
+    display(FiberArray(A))
+
+    B = Finch.Fiber(SparseList(Element{0.0}()))
 end
