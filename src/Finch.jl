@@ -11,7 +11,7 @@ using SparseArrays
 
 export @finch, @finch_program, @finch_code, value
 
-export Fiber, SparseList, SparseHash, SparseCoo, SparseBytemap, Dense, Repeat, Element, Pattern, FiberArray, Scalar
+export Fiber, SparseList, SparseHash, SparseCoo, SparseBytemap, SparseVBL, Dense, Repeat, Element, Pattern, FiberArray, Scalar
 export walk, gallop, follow, extrude, laminate, select
 export fiber, @fiber, pattern!, dropdefaults, dropdefaults!
 
@@ -50,6 +50,7 @@ include("sparselistlevels.jl")
 include("sparsehashlevels.jl")
 include("sparsecoolevels.jl")
 include("sparsebytemaplevels.jl")
+include("sparseVBLlevels.jl")
 include("denselevels.jl")
 include("repeatlevels.jl")
 include("elementlevels.jl")
