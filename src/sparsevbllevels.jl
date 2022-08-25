@@ -247,23 +247,23 @@ function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode::Read, idx::
     exfurl(body, ctx, mode, idx.idx)
 end
 
-#=
 unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode::Union{Write, Update}, idx, idxs...) =
     unfurl(fbr, ctx, mode, protocol(idx, extrude), idxs...)
 
 function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode::Union{Write, Update}, idx::Protocol{<:Any, Extrude}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
-    my_i = ctx.freshen(tag, :_i)
     my_q = ctx.freshen(tag, :_q)
-    my_q_stop = ctx.freshen(tag, :_q_stop)
-    my_i1 = ctx.freshen(tag, :_i1)
+    my_i_prev = ctx.freshen(tag, :_i_prev)
+    my_r = ctx.freshen(tag, :_r)
     my_guard = if hasdefaultcheck(lvl.lvl)
         ctx.freshen(tag, :_isdefault)
     end
 
     push!(ctx.preamble, quote
-        $my_q = $(lvl.ex).ofs[$(ctx(envposition(fbr.env)))]
+        $my_r = $(lvl.ex).pos[$(ctx(envposition(fbr.env)))]
+        $my_q = $(lvl.ex).ofs[$my_r]
+        $my_i_prev = -1
     end)
 
     body = AcceptSpike(
@@ -286,9 +286,13 @@ function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode::Union{Write
             epilogue = begin
                 #We should be careful here. Presumably, we haven't modified the subfiber because it is still default. Is this always true? Should strict assembly happen every time?
                 body = quote
-                    $(lvl.idx_alloc) < $my_q && ($(lvl.idx_alloc) = $Finch.regrow!($(lvl.ex).idx, $(lvl.idx_alloc), $my_q))
-                    $(lvl.ex).idx[$my_q] = $(ctx(idx))
-                    $my_q += 1
+                    if $(ctx(idx)) > $my_i_prev + 1
+                        $(lvl.idx_alloc) < $my_r && ($(lvl.idx_alloc) = $Finch.regrow!($(lvl.ex).idx, $(lvl.idx_alloc), $my_r))
+                        $my_r += 1
+                    end
+                    $(lvl.ex).idx[$my_r - 1] = $my_i_prev = $(ctx(idx))
+                    $(my_q) += 1
+                    $(lvl.ex).ofs[$my_r] = $my_q
                 end
                 if envdefaultcheck(fbr.env) !== nothing
                     body = quote
@@ -309,9 +313,8 @@ function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode::Union{Write
     )
 
     push!(ctx.epilogue, quote
-        $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1] = $my_q
+        $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1] = $my_r
     end)
 
     exfurl(body, ctx, mode, idx.idx)
 end
-=#
