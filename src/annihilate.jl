@@ -106,12 +106,12 @@
         end
     end),
     (@rule @f(@chunk $i $a (b[j...] += $d)) => begin
-        if i ∉ getunbound(d) && i ∉ j
+        if getname(i) ∉ getunbound(d) && i ∉ j
             @f (b[j...] += $(extent(a)) * $d)
         end
     end),
     (@rule @f(@chunk $i a @multi b... (c[j...] += $d) e...) => begin
-        if i ∉ getunbound(d) && i ∉ j
+        if getname(i) ∉ getunbound(d) && i ∉ j
             @f @multi (c[j...] += $(extent(a)) * $d) @chunk $i a @f(@multi b... e...)
         end
     end),
