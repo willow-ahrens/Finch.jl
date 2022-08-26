@@ -192,7 +192,7 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode::Read, idx::
                 body = Step(
                     stride = (ctx, idx, ext) -> my_i,
                     chunk = Run(
-                        body = Virtual{lvl.Tv}(:($(lvl.ex).val[$my_q]))
+                        body = Simplify(Virtual{lvl.Tv}(:($(lvl.ex).val[$my_q])))
                     ),
                     next = (ctx, idx, ext) -> quote
                         $my_q += 1
