@@ -1,4 +1,4 @@
-@slots a b c d i j f g rules = [
+@slots a b c d e i j f g rules = [
     (@rule @f(f(a...)) => if isliteral(f) && all(isliteral, a) && length(a) >= 1 Literal(getvalue(f)(getvalue.(a)...)) end),
 
     ((a) -> if a isa Literal && isliteral(getvalue(a)) getvalue(a) end), #only quote when necessary
@@ -87,6 +87,34 @@
     (@rule @f(a[i...] *= 1) => pass(a)),
     (@rule @f(@sieve true $a) => a),
     (@rule @f(@sieve false $a) => pass(getresults(a)...)),
+
+    (@rule @f(@chunk $i a (b[j...] <<min>>= $d)) => if Finch.isliteral(d) && i ∉ j
+        @f (b[j...] <<min>>= $d)
+    end),
+    (@rule @f(@chunk $i a @multi b... (c[j...] <<min>>= $d) e...) => begin
+        if Finch.isliteral(d) && i ∉ j
+            @f @multi (c[j...] <<min>>= $d) @chunk $i a @f(@multi b... e...)
+        end
+    end),
+    (@rule @f(@chunk $i a (b[j...] <<max>>= $d)) => if Finch.isliteral(d) && i ∉ j
+        @f (b[j...] <<max>>= $d)
+    end),
+    (@rule @f(@chunk $i a @multi b... (c[j...] <<max>>= $d) e...) => begin
+        if Finch.isliteral(d) && i ∉ j
+            println(@f @multi (c[j...] <<max>>= $d) @chunk $i a @f(@multi b... e...))
+            @f @multi (c[j...] <<max>>= $d) @chunk $i a @f(@multi b... e...)
+        end
+    end),
+    (@rule @f(@chunk $i $a (b[j...] += $d)) => begin
+        if i ∉ getunbound(d) && i ∉ j
+            @f (b[j...] += $(extent(a)) * $d)
+        end
+    end),
+    (@rule @f(@chunk $i a @multi b... (c[j...] += $d) e...) => begin
+        if i ∉ getunbound(d) && i ∉ j
+            @f @multi (c[j...] += $(extent(a)) * $d) @chunk $i a @f(@multi b... e...)
+        end
+    end),
 ]
 
 @kwdef mutable struct Simplify
