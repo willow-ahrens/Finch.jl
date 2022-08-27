@@ -60,6 +60,7 @@ supports_shift(::PhaseStyle) = true
 combine_style(a::DefaultStyle, b::PhaseStyle) = PhaseStyle()
 combine_style(a::PhaseStyle, b::PhaseStyle) = PhaseStyle()
 combine_style(a::PhaseStyle, b::RunStyle) = PhaseStyle()
+combine_style(a::PhaseStyle, b::SpikeStyle) = PhaseStyle()
 combine_style(a::SimplifyStyle, b::PhaseStyle) = PhaseStyle()
 combine_style(a::AcceptRunStyle, b::PhaseStyle) = PhaseStyle()
 combine_style(a::SwitchStyle, b::PhaseStyle) = SwitchStyle()
