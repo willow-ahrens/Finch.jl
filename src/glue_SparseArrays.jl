@@ -2,8 +2,8 @@ using SparseArrays
 
 function fiber(arr::SparseMatrixCSC{Tv, Ti}, default=zero(Tv)) where {Tv, Ti}
     @assert iszero(default)
-    arr = permutedims(arr)
     (m, n) = size(arr)
+    arr = permutedims(arr)
     return Fiber(Dense(m, SparseList{Ti}(n, arr.colptr, arr.rowval, Element{zero(Tv)}(arr.nzval))))
 end
 
