@@ -238,7 +238,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode::Read, idx:
                 stride = (ctx, idx, ext) -> my_i1,
                 body = (start, step) -> Stepper(
                     seek = (ctx, ext) -> quote
-                        $my_q = searchsortedfirst($(lvl.ex).idx, $start, $my_q, $my_q_stop, Base.Forward)
+                        $my_q = searchsortedfirst($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop, Base.Forward)
                         #while $my_q < $my_q_stop && $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
                         #    $my_q += 1
                         #end
