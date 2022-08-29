@@ -22,6 +22,7 @@ module IndexNotation
 
     export Follow, follow
     export Walk, walk
+    export FastWalk, fastwalk
     export Gallop, gallop
     export Extrude, extrude
     export Laminate, laminate

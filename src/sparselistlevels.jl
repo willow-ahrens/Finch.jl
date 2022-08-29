@@ -213,6 +213,62 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode::Read, idx:
     exfurl(body, ctx, mode, idx.idx)
 end
 
+function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode::Read, idx::Protocol{<:Any, FastWalk}, idxs...)
+    lvl = fbr.lvl
+    tag = lvl.ex
+    my_i = ctx.freshen(tag, :_i)
+    my_q = ctx.freshen(tag, :_q)
+    my_q_stop = ctx.freshen(tag, :_q_stop)
+    my_i1 = ctx.freshen(tag, :_i1)
+
+    body = Thunk(
+        preamble = quote
+            $my_q = $(lvl.ex).pos[$(ctx(envposition(fbr.env)))]
+            $my_q_stop = $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1]
+            if $my_q < $my_q_stop
+                $my_i = $(lvl.ex).idx[$my_q]
+                $my_i1 = $(lvl.ex).idx[$my_q_stop - 1]
+            else
+                $my_i = 1
+                $my_i1 = 0
+            end
+        end,
+        body = Pipeline([
+            Phase(
+                stride = (ctx, idx, ext) -> my_i1,
+                body = (start, step) -> Stepper(
+                    seek = (ctx, ext) -> quote
+                        $my_q = searchsortedfirst($(lvl.ex).idx, $start, $my_q, $my_q_stop, Base.Forward)
+                        #while $my_q < $my_q_stop && $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
+                        #    $my_q += 1
+                        #end
+                    end,
+                    body = Thunk(
+                        preamble = :(
+                            $my_i = $(lvl.ex).idx[$my_q]
+                        ),
+                        body = Step(
+                            stride = (ctx, idx, ext) -> my_i,
+                            chunk = Spike(
+                                body = Simplify(default(fbr)),
+                                tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=Virtual{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
+                            ),
+                            next = (ctx, idx, ext) -> quote
+                                $my_q += 1
+                            end
+                        )
+                    )
+                )
+            ),
+            Phase(
+                body = (start, step) -> Run(Simplify(default(fbr)))
+            )
+        ])
+    )
+
+    exfurl(body, ctx, mode, idx.idx)
+end
+
 function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode::Read, idx::Protocol{<:Any, Gallop}, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
