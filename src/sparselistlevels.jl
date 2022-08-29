@@ -72,6 +72,7 @@ mutable struct VirtualSparseListLevel
     ex
     Ti
     I
+    pos_fill
     pos_alloc
     idx_alloc
     lvl
@@ -79,6 +80,7 @@ end
 function virtualize(ex, ::Type{SparseListLevel{Ti, Lvl}}, ctx, tag=:lvl) where {Ti, Lvl}
     sym = ctx.freshen(tag)
     I = Virtual{Int}(:($sym.I))
+    pos_fill = ctx.freshen(sym, :_pos_fill)
     pos_alloc = ctx.freshen(sym, :_pos_alloc)
     idx_alloc = ctx.freshen(sym, :_idx_alloc)
     push!(ctx.preamble, quote
@@ -87,7 +89,7 @@ function virtualize(ex, ::Type{SparseListLevel{Ti, Lvl}}, ctx, tag=:lvl) where {
         $idx_alloc = length($sym.idx)
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualSparseListLevel(sym, Ti, I, pos_alloc, idx_alloc, lvl_2)
+    VirtualSparseListLevel(sym, Ti, I, pos_fill, pos_alloc, idx_alloc, lvl_2)
 end
 function (ctx::Finch.LowerJulia)(lvl::VirtualSparseListLevel)
     quote
@@ -127,6 +129,7 @@ function initialize_level!(fbr::VirtualFiber{VirtualSparseListLevel}, ctx::Lower
     lvl = fbr.lvl
     push!(ctx.preamble, quote
         $(lvl.pos_alloc) = length($(lvl.ex).pos)
+        $(lvl.pos_fill) = 1
         $(lvl.ex).pos[1] = 1
         $(lvl.ex).pos[2] = 1
         $(lvl.idx_alloc) = length($(lvl.ex).idx)
@@ -305,8 +308,14 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode::Union{Writ
         ctx.freshen(tag, :_isdefault)
     end
 
+    my_p = ctx.freshen(tag, :_p)
+
+
     push!(ctx.preamble, quote
-        $my_q = $(lvl.ex).pos[$(ctx(envposition(fbr.env)))]
+        $my_q = $(lvl.ex).pos[$(lvl.pos_fill)]
+        for $my_p = $(lvl.pos_fill):$(ctx(envposition(fbr.env)))
+            $(lvl.ex).pos[$(my_p)] = $my_q
+        end
     end)
 
     body = AcceptSpike(
@@ -353,6 +362,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode::Union{Writ
 
     push!(ctx.epilogue, quote
         $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1] = $my_q
+        $(lvl.pos_fill) = $(ctx(envposition(fbr.env))) + 1
     end)
 
     exfurl(body, ctx, mode, idx.idx)
