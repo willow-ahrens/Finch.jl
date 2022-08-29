@@ -12,7 +12,7 @@ using SparseArrays
 export @finch, @finch_program, @finch_code, value
 
 export Fiber, SparseList, SparseHash, SparseCoo, SparseBytemap, SparseVBL, Dense, RepeatRLE, Element, Pattern, FiberArray, Scalar
-export walk, gallop, follow, extrude, laminate, select
+export walk, fastwalk, gallop, follow, extrude, laminate, select
 export fiber, @fiber, pattern!, dropdefaults, dropdefaults!
 
 export permit, offset, window
