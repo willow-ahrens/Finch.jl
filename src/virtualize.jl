@@ -56,6 +56,7 @@ function virtualize(ex, ::Type{IndexNotation.LabelInstance{tag, Tns}}, ctx) wher
 end
 virtualize(ex, ::Type{IndexNotation.ValueInstance{arg}}, ctx) where {arg} = isliteral(arg) ? arg : Literal(arg)
 virtualize(ex, ::Type{Walk}, ctx) = walk
+virtualize(ex, ::Type{FastWalk}, ctx) = fastwalk
 virtualize(ex, ::Type{Gallop}, ctx) = gallop
 virtualize(ex, ::Type{Follow}, ctx) = follow
 virtualize(ex, ::Type{Laminate}, ctx) = laminate
