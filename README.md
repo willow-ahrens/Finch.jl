@@ -8,7 +8,7 @@
 Finch is an adaptable Julia-to-Julia compiler for loop nests over sparse or structured
 multidimensional arrays. In addition to supporting [sparse
 arrays](https://en.wikipedia.org/wiki/Sparse_matrix), Finch can also handle
-[fill values other than zero](https://en.wikipedia.org/wiki/GraphBLAS),
+[custom operators and fill values other than zero](https://en.wikipedia.org/wiki/GraphBLAS),
 [runs](https://en.wikipedia.org/wiki/Run-length_encoding) of repeated values, or
 even [special
 structures](https://en.wikipedia.org/wiki/Sparse_matrix#Special_structure) such
