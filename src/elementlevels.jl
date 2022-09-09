@@ -27,10 +27,10 @@ function Base.show(io::IO, lvl::ElementLevel{D}) where {D}
     print(io, ")")
 end 
 
-@inline arity(fbr::Fiber{<:ElementLevel}) = 0
+@inline Base.ndims(fbr::Fiber{<:ElementLevel}) = 0
 @inline Base.size(fbr::Fiber{<:ElementLevel}) = ()
-@inline domain(fbr::Fiber{<:ElementLevel}) = ()
-@inline image(fbr::Fiber{ElementLevel{D, Tv}}) where {D, Tv} = Tv
+@inline Base.axes(fbr::Fiber{<:ElementLevel}) = ()
+@inline Base.eltype(fbr::Fiber{ElementLevel{D, Tv}}) where {D, Tv} = Tv
 @inline default(lvl::Fiber{<:ElementLevel{D}}) where {D} = D
 
 function (fbr::Fiber{<:ElementLevel})()
@@ -68,11 +68,11 @@ function getsites(fbr::VirtualFiber{VirtualElementLevel})
     return []
 end
 
-setdims!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode) = fbr
-getdims(::VirtualFiber{VirtualElementLevel}, ctx, mode) = ()
+setsize!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode) = fbr
+getsize(::VirtualFiber{VirtualElementLevel}, ctx, mode) = ()
 
 @inline default(fbr::VirtualFiber{VirtualElementLevel}) = fbr.lvl.D
-@inline image(fbr::VirtualFiber{VirtualElementLevel}) = fbr.lvl.Tv
+Base.eltype(fbr::VirtualFiber{VirtualElementLevel}) = fbr.lvl.Tv
 
 function initialize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode::Union{Write, Update})
     lvl = fbr.lvl

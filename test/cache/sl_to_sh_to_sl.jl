@@ -28,11 +28,12 @@
         i_2_stop = A_lvl.I
         i_stop = A_lvl.I
         C_lvl_pos_alloc = length(C_lvl.pos)
+        C_lvl_pos_fill = 1
         C_lvl.pos[1] = 1
         C_lvl.pos[2] = 1
         C_lvl_idx_alloc = length(C_lvl.idx)
         C_lvl_2_val_alloc = (Finch).refill!(C_lvl_2.val, 0.0, 0, 4)
-        C_lvl_pos_alloc < 1 + 1 && (C_lvl_pos_alloc = (Finch).regrow!(C_lvl.pos, C_lvl_pos_alloc, 1 + 1))
+        C_lvl_pos_alloc < 1 + 1 && (C_lvl_pos_alloc = (Finch).refill!(C_lvl.pos, 0, C_lvl_pos_alloc, 1 + 1))
         B_lvl_3_idx_alloc = 0
         empty!(B_lvl_3.tbl)
         empty!(B_lvl_3.srt)
@@ -106,7 +107,10 @@
         for B_lvl_3_p_2 = 1:B_lvl_3_P
             B_lvl_3.pos[B_lvl_3_p_2 + 1] += B_lvl_3.pos[B_lvl_3_p_2]
         end
-        C_lvl_q = C_lvl.pos[1]
+        C_lvl_q = C_lvl.pos[C_lvl_pos_fill]
+        for C_lvl_p = C_lvl_pos_fill:1
+            C_lvl.pos[C_lvl_p] = C_lvl_q
+        end
         B_lvl_q = B_lvl.pos[1]
         B_lvl_q_stop = B_lvl.pos[1 + 1]
         if B_lvl_q < B_lvl_q_stop
@@ -162,5 +166,6 @@
             i_2 = phase_stop_6 + 1
         end
         C_lvl.pos[1 + 1] = C_lvl_q
+        C_lvl_pos_fill = 1 + 1
         (C = Fiber((Finch.SparseListLevel){Int64}(A_lvl.I, C_lvl.pos, C_lvl.idx, C_lvl_2), (Finch.Environment)(; name = :C)),)
     end

@@ -58,10 +58,10 @@ end
 
 (ctx::Finch.LowerJulia)(tns::VirtualStaticWindow) = :(StaticWindow(dim = $(ctx(tns.dim)), target = $(ctx(tns.target))))
 
-function Finch.getdims(arr::VirtualStaticWindow, ctx::Finch.LowerJulia, mode)
+function Finch.getsize(arr::VirtualStaticWindow, ctx::Finch.LowerJulia, mode)
     return (arr.target,)
 end
-Finch.setdims!(arr::VirtualStaticWindow, ctx::Finch.LowerJulia, mode, dim) = arr
+Finch.setsize!(arr::VirtualStaticWindow, ctx::Finch.LowerJulia, mode, dim) = arr
 
 struct VirtualWindow end
 
@@ -76,8 +76,8 @@ virtualize(ex, ::Type{Window}, ctx) = VirtualWindow()
 
 (ctx::Finch.LowerJulia)(tns::VirtualWindow) = :(Window($(ctx(tns.I))))
 
-Finch.getdims(arr::VirtualWindow, ctx::Finch.LowerJulia, mode) = (nodim, nodim, nodim)
-Finch.setdims!(arr::VirtualWindow, ctx::Finch.LowerJulia, mode, dim1, dim2, dim3) = arr
+Finch.getsize(arr::VirtualWindow, ctx::Finch.LowerJulia, mode) = (nodim, nodim, nodim)
+Finch.setsize!(arr::VirtualWindow, ctx::Finch.LowerJulia, mode, dim1, dim2, dim3) = arr
 
 function (ctx::DeclareDimensions)(node::Access{VirtualStaticWindow}, dim)
     idx = ctx(node.idxs[1], shiftdim(node.tns.target, call(-, getstart(dim), getstart(node.tns.target))))

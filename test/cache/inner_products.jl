@@ -24,16 +24,20 @@
         k_stop = A_lvl_2.I
         i_stop = A_lvl.I
         B_lvl_2_pos_alloc = length(B_lvl_2.pos)
+        B_lvl_2_pos_fill = 1
         B_lvl_2.pos[1] = 1
         B_lvl_2.pos[2] = 1
         B_lvl_2_idx_alloc = length(B_lvl_2.idx)
         B_lvl_3_val_alloc = (Finch).refill!(B_lvl_3.val, 0.0, 0, 4)
         B_lvl_2_p_stop_2 = 1 * A_lvl.I
-        B_lvl_2_pos_alloc < B_lvl_2_p_stop_2 + 1 && (B_lvl_2_pos_alloc = (Finch).regrow!(B_lvl_2.pos, B_lvl_2_pos_alloc, B_lvl_2_p_stop_2 + 1))
+        B_lvl_2_pos_alloc < B_lvl_2_p_stop_2 + 1 && (B_lvl_2_pos_alloc = (Finch).refill!(B_lvl_2.pos, 0, B_lvl_2_pos_alloc, B_lvl_2_p_stop_2 + 1))
         for i = 1:i_stop
             B_lvl_q = (1 - 1) * A_lvl.I + i
             A_lvl_q = (1 - 1) * A_lvl.I + i
-            B_lvl_2_q = B_lvl_2.pos[B_lvl_q]
+            B_lvl_2_q = B_lvl_2.pos[B_lvl_2_pos_fill]
+            for B_lvl_2_p = B_lvl_2_pos_fill:B_lvl_q
+                B_lvl_2.pos[B_lvl_2_p] = B_lvl_2_q
+            end
             for j = 1:j_stop
                 B_lvl_3_val_alloc < B_lvl_2_q && (B_lvl_3_val_alloc = (Finch).refill!(B_lvl_3.val, 0.0, B_lvl_3_val_alloc, B_lvl_2_q))
                 B_lvl_2_isdefault = true
@@ -129,6 +133,7 @@
                 end
             end
             B_lvl_2.pos[B_lvl_q + 1] = B_lvl_2_q
+            B_lvl_2_pos_fill = B_lvl_q + 1
         end
         (B = Fiber((Finch.DenseLevel){Int64}(A_lvl.I, (Finch.SparseListLevel){Int64}(A_lvl_4.I, B_lvl_2.pos, B_lvl_2.idx, B_lvl_3)), (Finch.Environment)(; name = :B)),)
     end

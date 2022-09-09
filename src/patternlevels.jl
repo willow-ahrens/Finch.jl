@@ -12,10 +12,10 @@ function Base.show(io::IO, lvl::PatternLevel)
     print(io, "Pattern()")
 end 
 
-@inline arity(fbr::Fiber{<:PatternLevel}) = 0
+@inline Base.ndims(fbr::Fiber{<:PatternLevel}) = 0
 @inline Base.size(fbr::Fiber{<:PatternLevel}) = ()
-@inline domain(fbr::Fiber{<:PatternLevel}) = ()
-@inline image(fbr::Fiber{<:PatternLevel}) = Bool
+@inline Base.axes(fbr::Fiber{<:PatternLevel}) = ()
+@inline Base.eltype(fbr::Fiber{<:PatternLevel}) = Bool
 @inline default(lvl::Fiber{<:PatternLevel}) = false
 
 (fbr::Fiber{<:PatternLevel})() = true
@@ -54,11 +54,11 @@ function getsites(fbr::VirtualFiber{VirtualPatternLevel})
     return []
 end
 
-setdims!(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode) = fbr
-getdims(::VirtualFiber{VirtualPatternLevel}, ctx, mode) = ()
+setsize!(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode) = fbr
+getsize(::VirtualFiber{VirtualPatternLevel}, ctx, mode) = ()
 
 @inline default(fbr::VirtualFiber{VirtualPatternLevel}) = false
-@inline image(fbr::VirtualFiber{VirtualPatternLevel}) = Bool
+Base.eltype(fbr::VirtualFiber{VirtualPatternLevel}) = Bool
 
 initialize_level!(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode::Union{Write, Update}) = fbr.lvl
 

@@ -53,11 +53,11 @@ struct FiberArray{Fbr, T, N} <: AbstractArray{T, N}
 end
 
 FiberArray(fbr::Fbr) where {Fbr} = FiberArray{Fbr}(fbr)
-FiberArray{Fbr}(fbr::Fbr) where {Fbr} = FiberArray{Fbr, image(fbr)}(fbr)
-FiberArray{Fbr, N}(fbr::Fbr) where {Fbr, N} = FiberArray{Fbr, N, arity(fbr)}(fbr)
+FiberArray{Fbr}(fbr::Fbr) where {Fbr} = FiberArray{Fbr, eltype(fbr)}(fbr)
+FiberArray{Fbr, N}(fbr::Fbr) where {Fbr, N} = FiberArray{Fbr, N, ndims(fbr)}(fbr)
 
 """
-    arity(::Fiber)
+    ndims(::Fiber)
 
 The "arity" of a fiber is the number of arguments that fiber can be indexed by
 before it returns a value. 
@@ -65,19 +65,19 @@ before it returns a value.
 See also: [`ndims`](https://docs.julialang.org/en/v1/base/arrays/#Base.ndims)
 """
 function arity end
-Base.ndims(arr::FiberArray) = arity(arr.fbr)
-Base.ndims(arr::Fiber) = arity(arr)
+Base.ndims(arr::FiberArray) = ndims(arr.fbr)
+Base.ndims(arr::Fiber) = ndims(arr)
 
 """
-    image(::Fiber)
+    eltype(::Fiber)
 
 The "image" of a fiber is the smallest julia type that its values assume. 
 
 See also: [`eltype`](https://docs.julialang.org/en/v1/base/collections/#Base.eltype)
 """
 function image end
-Base.eltype(arr::FiberArray) = image(arr.fbr)
-Base.eltype(arr::Fiber) = image(arr)
+Base.eltype(arr::FiberArray) = eltype(arr.fbr)
+Base.eltype(arr::Fiber) = eltype(arr)
 
 """
     size(::Fiber)
@@ -92,7 +92,7 @@ Base.size(arr::FiberArray) = size(arr.fbr)
 Base.size(arr::Fiber) = size(arr)
 
 """
-    domain(::Fiber)
+    axes(::Fiber)
 
 The "domain" of a fiber is a tuple listing the sets of distinct values that might
 be given as each argument to the fiber.
@@ -100,8 +100,8 @@ be given as each argument to the fiber.
 See also: [`axes`](https://docs.julialang.org/en/v1/base/arrays/#Base.axes-Tuple{Any})
 """
 function domain end
-Base.axes(arr::FiberArray) = domain(arr.fbr)
-Base.axes(arr::Fiber) = domain(arr)
+Base.axes(arr::FiberArray) = axes(arr.fbr)
+Base.axes(arr::Fiber) = axes(arr)
 
 function Base.getindex(arr::FiberArray, idxs::Integer...) where {Tv, N}
     arr.fbr(idxs...)
@@ -178,7 +178,7 @@ function (ctx::Finch.SelectVisitor)(node::Access{<:VirtualFiber}, ::DefaultStyle
         if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
             var = Name(ctx.ctx.freshen(:s))
             ctx.idxs[var] = node.idxs[1]
-            ctx.ctx.dims[getname(var)] = getdims(node.tns, ctx, node.mode)[1] #TODO redimensionalization
+            ctx.ctx.dims[getname(var)] = getsize(node.tns, ctx, node.mode)[1] #TODO redimensionalization
             return access(node.tns, node.mode, var, node.idxs[2:end]...)
         end
     end
@@ -249,7 +249,7 @@ function display_fiber_data(io::IO, mime::MIME"text/plain", fbr, N, crds, print_
     depth = envdepth(fbr.env)
 
     println(io, "│ "^(depth + N))
-    if arity(fbr) == N
+    if ndims(fbr) == N
         print_elem(io, crd) = show(IOContext(io, :compact=>true), fbr(get_coord(crd)...))
         calc_pad(crd) = max(textwidth(sprint(print_coord, crd)), textwidth(sprint(print_elem, crd)))
         print_coord_pad(io, crd) = (print_coord(io, crd); print(io, " "^(calc_pad(crd) - textwidth(sprint(print_coord, crd)))))
