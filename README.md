@@ -18,7 +18,7 @@ Finch supports loops and reductions over pointwise expressions on arrays,
 incorporating arbitrary element types and operators. Users can add rewrite rules
 to inform the compiler about any special properties or optimizations that might
 apply to the situation at hand. You can even modify indexing expressions to 
-perform affine indexing arithmetic, or to describe windows into structured
+express sparse convolution, or to describe windows into structured
 arrays.
 
 Finch is very experimental, and more documentation is incoming, in the meantime, check this out:
