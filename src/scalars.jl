@@ -5,24 +5,14 @@ end
 Scalar{D}(args...) where {D} = Scalar{D, typeof(D)}(args...)
 Scalar{D, Tv}() where {D, Tv} = Scalar{D, Tv}(D)
 
-
 @inline Base.ndims(tns::Scalar) = 0
-#Base.ndims(tns::Scalar) = ndims(tns)
-@inline Base.size(tns::Scalar) = ()
-#Base.size(tns::Scalar) = size(tns)
-@inline Base.axes(tns::Scalar) = ()
-#Base.axes(tns::Scalar) = axes(tns)
-@inline Base.eltype(tns::Scalar{D, Tv}) where {D, Tv} = Tv
-#Base.eltype(tns::Scalar) = eltype(tns)
-@inline default(tns::Scalar{D}) where {D} = D
+@inline Base.size(::Scalar) = ()
+@inline Base.axes(::Scalar) = ()
+@inline Base.eltype(::Scalar{D, Tv}) where {D, Tv} = Tv
+@inline default(::Scalar{D}) where {D} = D
 
-function (tns::Scalar)()
-    return tns.val
-end
-
-#function Base.getindex(tns::Scalar, idxs::Integer...) where {Tv, N}
-#    tns(idxs...)
-#end
+(tns::Scalar)() = tns.val
+@inline Base.getindex(tns::Scalar) = tns.val
 
 struct VirtualScalar
     ex
