@@ -80,7 +80,7 @@ Base.eltype(arr::FiberArray) = image(arr.fbr)
 Base.eltype(arr::Fiber) = image(arr)
 
 """
-    shape(::Fiber)
+    size(::Fiber)
 
 The "shape" of a fiber is a tuple where each element describes the number of
 distinct values that might be given as each argument to the fiber.
@@ -88,8 +88,8 @@ distinct values that might be given as each argument to the fiber.
 See also: [`Base.size`](https://docs.julialang.org/en/v1/base/arrays/#Base.size)
 """
 function shape end
-Base.size(arr::FiberArray) = shape(arr.fbr)
-Base.size(arr::Fiber) = shape(arr)
+Base.size(arr::FiberArray) = size(arr.fbr)
+Base.size(arr::Fiber) = size(arr)
 
 """
     domain(::Fiber)
@@ -309,7 +309,7 @@ macro fiber(ex)
     return :($Fiber($(walk(ex))))
 end
 
-Base.summary(fbr::Fiber) = "$(join(shape(fbr), "×")) @fiber($(summary_f_code(fbr.lvl)))"
+Base.summary(fbr::Fiber) = "$(join(size(fbr), "×")) @fiber($(summary_f_code(fbr.lvl)))"
 
 Base.similar(fbr::Fiber) = Fiber(similar_level(fbr.lvl))
 Base.similar(fbr::Fiber, dims::Tuple) = Fiber(similar_level(fbr.lvl, dims...))

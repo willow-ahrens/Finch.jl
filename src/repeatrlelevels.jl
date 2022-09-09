@@ -56,7 +56,7 @@ end
 
 
 @inline arity(fbr::Fiber{<:RepeatRLELevel}) = 1
-@inline shape(fbr::Fiber{<:RepeatRLELevel}) = (fbr.lvl.I,)
+@inline Base.size(fbr::Fiber{<:RepeatRLELevel}) = (fbr.lvl.I,)
 @inline domain(fbr::Fiber{<:RepeatRLELevel}) = (1:fbr.lvl.I,)
 @inline image(::Fiber{<:RepeatRLELevel{D, Ti, Tv}}) where {D, Ti, Tv} = Tv
 @inline default(::Fiber{<:RepeatRLELevel{D}}) where {D} = D

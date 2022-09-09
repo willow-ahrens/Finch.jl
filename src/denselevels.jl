@@ -21,7 +21,7 @@ pattern!(lvl::DenseLevel{Ti}) where {Ti} =
 dimension(lvl::DenseLevel) = lvl.I
 
 @inline arity(fbr::Fiber{<:DenseLevel}) = 1 + arity(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
-@inline shape(fbr::Fiber{<:DenseLevel}) = (fbr.lvl.I, shape(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
+@inline Base.size(fbr::Fiber{<:DenseLevel}) = (fbr.lvl.I, size(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
 @inline domain(fbr::Fiber{<:DenseLevel}) = (1:fbr.lvl.I, domain(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
 @inline image(fbr::Fiber{<:DenseLevel}) = image(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
 @inline default(fbr::Fiber{<:DenseLevel}) = default(Fiber(fbr.lvl.lvl, Environment(fbr.env)))

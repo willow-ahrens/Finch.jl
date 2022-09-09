@@ -61,7 +61,7 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:SparseVBLLev
 end
 
 @inline arity(fbr::Fiber{<:SparseVBLLevel}) = 1 + arity(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
-@inline shape(fbr::Fiber{<:SparseVBLLevel}) = (fbr.lvl.I, shape(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
+@inline Base.size(fbr::Fiber{<:SparseVBLLevel}) = (fbr.lvl.I, size(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
 @inline domain(fbr::Fiber{<:SparseVBLLevel}) = (1:fbr.lvl.I, domain(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
 @inline image(fbr::Fiber{<:SparseVBLLevel}) = image(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
 @inline default(fbr::Fiber{<:SparseVBLLevel}) = default(Fiber(fbr.lvl.lvl, Environment(fbr.env)))

@@ -28,7 +28,7 @@ function Base.show(io::IO, lvl::ElementLevel{D}) where {D}
 end 
 
 @inline arity(fbr::Fiber{<:ElementLevel}) = 0
-@inline shape(fbr::Fiber{<:ElementLevel}) = ()
+@inline Base.size(fbr::Fiber{<:ElementLevel}) = ()
 @inline domain(fbr::Fiber{<:ElementLevel}) = ()
 @inline image(fbr::Fiber{ElementLevel{D, Tv}}) where {D, Tv} = Tv
 @inline default(lvl::Fiber{<:ElementLevel{D}}) where {D} = D

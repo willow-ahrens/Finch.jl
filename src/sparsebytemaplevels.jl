@@ -61,7 +61,7 @@ end
 
 
 @inline arity(fbr::Fiber{<:SparseBytemapLevel}) = 1 + arity(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
-@inline shape(fbr::Fiber{<:SparseBytemapLevel}) = (fbr.lvl.I, shape(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
+@inline Base.size(fbr::Fiber{<:SparseBytemapLevel}) = (fbr.lvl.I, size(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
 @inline domain(fbr::Fiber{<:SparseBytemapLevel}) = (1:fbr.lvl.I, domain(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
 @inline image(fbr::Fiber{<:SparseBytemapLevel}) = image(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
 @inline default(fbr::Fiber{<:SparseBytemapLevel}) = default(Fiber(fbr.lvl.lvl, Environment(fbr.env)))

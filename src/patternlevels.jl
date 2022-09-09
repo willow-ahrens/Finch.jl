@@ -13,7 +13,7 @@ function Base.show(io::IO, lvl::PatternLevel)
 end 
 
 @inline arity(fbr::Fiber{<:PatternLevel}) = 0
-@inline shape(fbr::Fiber{<:PatternLevel}) = ()
+@inline Base.size(fbr::Fiber{<:PatternLevel}) = ()
 @inline domain(fbr::Fiber{<:PatternLevel}) = ()
 @inline image(fbr::Fiber{<:PatternLevel}) = Bool
 @inline default(lvl::Fiber{<:PatternLevel}) = false

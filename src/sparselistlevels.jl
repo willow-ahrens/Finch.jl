@@ -53,7 +53,7 @@ end
 
 
 @inline arity(fbr::Fiber{<:SparseListLevel}) = 1 + arity(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
-@inline shape(fbr::Fiber{<:SparseListLevel}) = (fbr.lvl.I, shape(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
+@inline Base.size(fbr::Fiber{<:SparseListLevel}) = (fbr.lvl.I, size(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
 @inline domain(fbr::Fiber{<:SparseListLevel}) = (1:fbr.lvl.I, domain(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
 @inline image(fbr::Fiber{<:SparseListLevel}) = image(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
 @inline default(fbr::Fiber{<:SparseListLevel}) = default(Fiber(fbr.lvl.lvl, Environment(fbr.env)))

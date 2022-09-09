@@ -8,8 +8,8 @@ Scalar{D, Tv}() where {D, Tv} = Scalar{D, Tv}(D)
 
 @inline arity(tns::Scalar) = 0
 #Base.ndims(tns::Scalar) = arity(tns)
-@inline shape(tns::Scalar) = ()
-#Base.size(tns::Scalar) = shape(tns)
+@inline Base.size(tns::Scalar) = ()
+#Base.size(tns::Scalar) = size(tns)
 @inline domain(tns::Scalar) = ()
 #Base.axes(tns::Scalar) = domain(tns)
 @inline image(tns::Scalar{D, Tv}) where {D, Tv} = Tv
