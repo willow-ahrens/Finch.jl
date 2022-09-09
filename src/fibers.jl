@@ -48,65 +48,6 @@ getname(fbr::VirtualFiber) = envname(fbr.env)
 setname(fbr::VirtualFiber, name) = VirtualFiber(fbr.lvl, envrename!(fbr.env, name))
 #setname(fbr::VirtualFiber, name) = (fbr.env.name = name; fbr)
 
-struct FiberArray{Fbr, T, N} <: AbstractArray{T, N}
-    fbr::Fbr
-end
-
-FiberArray(fbr::Fbr) where {Fbr} = FiberArray{Fbr}(fbr)
-FiberArray{Fbr}(fbr::Fbr) where {Fbr} = FiberArray{Fbr, eltype(fbr)}(fbr)
-FiberArray{Fbr, N}(fbr::Fbr) where {Fbr, N} = FiberArray{Fbr, N, ndims(fbr)}(fbr)
-
-"""
-    ndims(::Fiber)
-
-The "arity" of a fiber is the number of arguments that fiber can be indexed by
-before it returns a value. 
-
-See also: [`ndims`](https://docs.julialang.org/en/v1/base/arrays/#Base.ndims)
-"""
-function arity end
-Base.ndims(arr::FiberArray) = ndims(arr.fbr)
-Base.ndims(arr::Fiber) = ndims(arr)
-
-"""
-    eltype(::Fiber)
-
-The "image" of a fiber is the smallest julia type that its values assume. 
-
-See also: [`eltype`](https://docs.julialang.org/en/v1/base/collections/#Base.eltype)
-"""
-function image end
-Base.eltype(arr::FiberArray) = eltype(arr.fbr)
-Base.eltype(arr::Fiber) = eltype(arr)
-
-"""
-    size(::Fiber)
-
-The "shape" of a fiber is a tuple where each element describes the number of
-distinct values that might be given as each argument to the fiber.
-
-See also: [`Base.size`](https://docs.julialang.org/en/v1/base/arrays/#Base.size)
-"""
-function shape end
-Base.size(arr::FiberArray) = size(arr.fbr)
-Base.size(arr::Fiber) = size(arr)
-
-"""
-    axes(::Fiber)
-
-The "domain" of a fiber is a tuple listing the sets of distinct values that might
-be given as each argument to the fiber.
-
-See also: [`axes`](https://docs.julialang.org/en/v1/base/arrays/#Base.axes-Tuple{Any})
-"""
-function domain end
-Base.axes(arr::FiberArray) = axes(arr.fbr)
-Base.axes(arr::Fiber) = axes(arr)
-
-function Base.getindex(arr::FiberArray, idxs::Integer...) where {Tv, N}
-    arr.fbr(idxs...)
-end
-
 """
     default(fbr)
 

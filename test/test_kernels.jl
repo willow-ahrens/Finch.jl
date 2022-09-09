@@ -55,9 +55,9 @@
             SparseList(
             Element{0.0}())
         )
-        d = Fiber(Element{0.0}())
-        a = Fiber(Element{0.0}())
-        b = Fiber(Element{0.0}())
+        d = Scalar{0.0}()
+        a = Scalar{0.0}()
+        b = Scalar{0.0}()
 
         @finch @loop i (C[i] = a[] - b[]; d[] += a[] * b[]) where (a[] = A[i]; b[] = B[i])
 

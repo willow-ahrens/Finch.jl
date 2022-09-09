@@ -18,9 +18,9 @@ function tri(mtx)
         Element{0.0, Float64}(zeros(1)))
 
     #@finch @loop i j k C[] += A[i, k::gallop] * A[i, j] * A[j, k::gallop]
-    #println(FiberArray(C)[])
+    #println(C[])
     #@finch @loop i j k C[] += A[i, k] * A[i, j] * A[j, k]
-    #println(FiberArray(C)[])
+    #println(C[])
     #println(sum(A_ref .* (A_ref * A_ref)))
     
     println("Finch:")
