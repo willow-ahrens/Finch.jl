@@ -21,7 +21,10 @@ apply to the situation at hand. You can even modify indexing expressions to
 express sparse convolution, or to describe windows into structured
 arrays.
 
-Finch is very experimental, and more documentation is incoming, in the meantime, check this out:
+Finch is very experimental. There are still known bugs and long compile times
+that I am currently addressing. Some interfaces will change dramatically.
+
+More documentation is incoming, in the meantime, check this out:
 
 ```julia
 using Finch
