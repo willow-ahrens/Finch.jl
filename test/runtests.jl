@@ -23,6 +23,18 @@ function diff(name, body)
     end
 end
 
+reference_getindex(arr, inds...) = getindex(arr, inds...)
+reference_getindex(arr::Fiber, inds...) = arr(inds...)
+
+function reference_isequal(a,b)
+    size(a) == size(b) || return false
+    axes(a) == axes(b) || return false
+    for i in Base.product(axes(a)...)
+        reference_getindex(a, i...) == reference_getindex(b, i...) || return false
+    end
+    return true
+end
+
 using Finch: VirtualAbstractArray, Run, Spike, Extent, Scalar, Switch, Stepper, Jumper, Step, Jump, AcceptRun, AcceptSpike, Thunk, Phase, Pipeline, Lookup, Simplify, Shift
 using Finch: @f, @finch_program_instance, execute, execute_code, getstart, getstop
 using Finch: getname, Virtual

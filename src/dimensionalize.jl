@@ -70,7 +70,7 @@ index name or a `(tensor_name, mode_name)` tuple.
 
 The program is assumed to be in SSA form.
 
-See also: [`getdims`](@ref), [`getsites`](@ref), [`combinedim`](@ref),
+See also: [`getsize`](@ref), [`getsites`](@ref), [`combinedim`](@ref),
 [`TransformSSA`](@ref)
 """
 function (ctx::LowerJulia)(prgm, ::DimensionalizeStyle) 
@@ -124,9 +124,9 @@ end
 function (ctx::DeclareDimensions)(node::Access, dim)
     if haskey(ctx.shapes, getname(node.tns))
         dims = ctx.shapes[getname(node.tns)][getsites(node.tns)]
-        tns = setdims!(node.tns, ctx.ctx, node.mode, dims...)
+        tns = setsize!(node.tns, ctx.ctx, node.mode, dims...)
     else
-        dims = getdims(node.tns, ctx.ctx, node.mode)
+        dims = getsize(node.tns, ctx.ctx, node.mode)
         tns = node.tns
     end
     idxs = map(ctx, node.idxs, dims)
@@ -138,15 +138,15 @@ function (ctx::InferDimensions)(node::Access)
     idxs = map(first, res)
     if node.mode != Read()
         ctx.shapes[getname(node.tns)] = dims
-        tns = setdims!(node.tns, ctx.ctx, node.mode, dims...)
+        tns = setsize!(node.tns, ctx.ctx, node.mode, dims...)
     else
         tns = node.tns
     end
     (access(tns, node.mode, idxs...), nodim)
 end
 
-function setdims!(tns, ctx, mode, dims...)
-    for (dim, ref) in zip(dims, getdims(tns, ctx, mode))
+function setsize!(tns, ctx, mode, dims...)
+    for (dim, ref) in zip(dims, getsize(tns, ctx, mode))
         if dim !== nodim && ref !== nodim #TODO this should be a function like checkdim or something haha
             push!(ctx.preamble, quote
                 $(ctx(getstart(dim))) == $(ctx(getstart(ref))) || throw(DimensionMismatch("mismatched dimension start"))
@@ -265,12 +265,12 @@ function combinedim(a::T, b::T) where {T <: Number}
 end
 
 """
-    getdims(tns, ctx, mode)
+    getsize(tns, ctx, mode)
 
 Return an iterable over the dimensions of `tns` in the context `ctx` with access
 mode `mode`. This is a function similar in spirit to `Base.axes`.
 """
-function getdims end
+function getsize end
 
 """
     getsites(tns)

@@ -44,7 +44,7 @@ dropdefaults(src) = dropdefaults!(similar(src), src)
 @generated function dropdefaults!(dst::Fiber, src)
     dst = virtualize(:dst, dst, LowerJulia())
     idxs = [Symbol(:i_, n) for n = getsites(dst)]
-    T = image(dst)
+    T = eltype(dst)
     d = default(dst)
     return quote
         tmp = Scalar{$d, $T}()

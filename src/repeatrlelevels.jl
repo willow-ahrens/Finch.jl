@@ -55,10 +55,10 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:RepeatRLELev
 end
 
 
-@inline arity(fbr::Fiber{<:RepeatRLELevel}) = 1
-@inline shape(fbr::Fiber{<:RepeatRLELevel}) = (fbr.lvl.I,)
-@inline domain(fbr::Fiber{<:RepeatRLELevel}) = (1:fbr.lvl.I,)
-@inline image(::Fiber{<:RepeatRLELevel{D, Ti, Tv}}) where {D, Ti, Tv} = Tv
+@inline Base.ndims(fbr::Fiber{<:RepeatRLELevel}) = 1
+@inline Base.size(fbr::Fiber{<:RepeatRLELevel}) = (fbr.lvl.I,)
+@inline Base.axes(fbr::Fiber{<:RepeatRLELevel}) = (1:fbr.lvl.I,)
+@inline Base.eltype(::Fiber{<:RepeatRLELevel{D, Ti, Tv}}) where {D, Ti, Tv} = Tv
 @inline default(::Fiber{<:RepeatRLELevel{D}}) where {D} = D
 
 (fbr::Fiber{<:RepeatRLELevel})() = fbr
@@ -111,7 +111,7 @@ summary_f_str_args(lvl::VirtualRepeatRLELevel) = lvl.D
 getsites(fbr::VirtualFiber{VirtualRepeatRLELevel}) =
     [envdepth(fbr.env) + 1, ]
 
-function getdims(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode)
+function getsize(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode)
     ext = Extent(1, fbr.lvl.I)
     if mode != Read()
         ext = suggest(ext)
@@ -119,13 +119,13 @@ function getdims(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode)
     (ext,)
 end
 
-function setdims!(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode, dim)
+function setsize!(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode, dim)
     fbr.lvl.I = getstop(dim)
     fbr
 end
 
 @inline default(fbr::VirtualFiber{<:VirtualRepeatRLELevel}) = fbr.lvl.D
-@inline image(fbr::VirtualFiber{VirtualRepeatRLELevel}) = fbr.lvl.Tv
+Base.eltype(fbr::VirtualFiber{VirtualRepeatRLELevel}) = fbr.lvl.Tv
 
 function initialize_level!(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx::LowerJulia, mode::Union{Write, Update})
     lvl = fbr.lvl

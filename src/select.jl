@@ -7,7 +7,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Select)
     print(io, "select")
 end
 
-getdims(::Select, ::LowerJulia, mode) = (NoDimension(), NoDimension())
+getsize(::Select, ::LowerJulia, mode) = (NoDimension(), NoDimension())
 getsites(::Select) = 1:2
 getname(x) = gensym() #TODO this is wrong
 setname(::Select, name) = select
