@@ -30,7 +30,7 @@ function fiber(arr, default=zero(eltype(arr)))
     Base.copyto!(Fiber((DenseLevel^(ndims(arr)))(Element{default}())), arr)
 end
 
-@generated function Base.copyto!(dst::Fiber, src)
+@generated function Base.copyto!(dst::Fiber, src::Union{Fiber, AbstractArray})
     dst = virtualize(:dst, dst, LowerJulia())
     idxs = [Symbol(:i_, n) for n = getsites(dst)]
     return quote

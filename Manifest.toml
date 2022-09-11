@@ -2,7 +2,7 @@
 
 julia_version = "1.8.0"
 manifest_format = "2.0"
-project_hash = "00334ceb0fb1c515696c04492457397fc22f6ae0"
+project_hash = "fd59561a2f9387dc77b9e9049cdbdb8351b02116"
 
 [[deps.ANSIColoredPrinters]]
 git-tree-sha1 = "574baf8110975760d391c710b6341da1afa48d8c"
@@ -193,7 +193,7 @@ version = "3.4.0"
 
 [[deps.RewriteTools]]
 deps = ["AbstractTrees", "Documenter", "SyntaxInterface"]
-git-tree-sha1 = "fc47228c89ebc4b55dcd0f364f3b674633a654a0"
+path = "/Users/Peter/Projects/RewriteTools.jl"
 uuid = "5969e224-3634-4c61-9f66-721b69e98b8a"
 version = "0.1.1"
 
@@ -203,6 +203,11 @@ version = "0.7.0"
 
 [[deps.Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
+
+[[deps.SnoopPrecompile]]
+git-tree-sha1 = "f604441450a3c0569830946e5b33b78c928e1a85"
+uuid = "66db9d55-30c0-4569-8b51-7e840670fc0c"
+version = "1.0.1"
 
 [[deps.Sockets]]
 uuid = "6462fe0b-24de-5631-8697-dd941f90decc"

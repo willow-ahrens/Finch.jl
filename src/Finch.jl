@@ -8,6 +8,7 @@ using MacroTools
 using Base.Iterators
 using Base: @kwdef
 using SparseArrays
+using SnoopPrecompile
 
 export @finch, @finch_program, @finch_code, value
 
@@ -89,6 +90,17 @@ include("glue_AbstractArrays.jl")
 include("glue_SparseArrays.jl")
 function __init__()
     #@require SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf" include("glue_SparseArrays.jl")
+end
+
+@precompile_setup begin
+    # Putting some things in `setup` can reduce the size of the
+    # precompile file and potentially make loading faster.
+    @precompile_all_calls begin
+        # all calls in this block will be precompiled, regardless of whether
+        # they belong to your package or not (on Julia 1.8 and higher)
+        a = @fiber sl(e(0.0))
+        Finch.execute_code(:ex, typeof(Finch.@finch_program_instance @loop i a[i] += a[i] * a[i] * a[i]))
+    end
 end
 
 end
