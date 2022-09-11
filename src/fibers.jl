@@ -48,65 +48,6 @@ getname(fbr::VirtualFiber) = envname(fbr.env)
 setname(fbr::VirtualFiber, name) = VirtualFiber(fbr.lvl, envrename!(fbr.env, name))
 #setname(fbr::VirtualFiber, name) = (fbr.env.name = name; fbr)
 
-struct FiberArray{Fbr, T, N} <: AbstractArray{T, N}
-    fbr::Fbr
-end
-
-FiberArray(fbr::Fbr) where {Fbr} = FiberArray{Fbr}(fbr)
-FiberArray{Fbr}(fbr::Fbr) where {Fbr} = FiberArray{Fbr, image(fbr)}(fbr)
-FiberArray{Fbr, N}(fbr::Fbr) where {Fbr, N} = FiberArray{Fbr, N, arity(fbr)}(fbr)
-
-"""
-    arity(::Fiber)
-
-The "arity" of a fiber is the number of arguments that fiber can be indexed by
-before it returns a value. 
-
-See also: [`ndims`](https://docs.julialang.org/en/v1/base/arrays/#Base.ndims)
-"""
-function arity end
-Base.ndims(arr::FiberArray) = arity(arr.fbr)
-Base.ndims(arr::Fiber) = arity(arr)
-
-"""
-    image(::Fiber)
-
-The "image" of a fiber is the smallest julia type that its values assume. 
-
-See also: [`eltype`](https://docs.julialang.org/en/v1/base/collections/#Base.eltype)
-"""
-function image end
-Base.eltype(arr::FiberArray) = image(arr.fbr)
-Base.eltype(arr::Fiber) = image(arr)
-
-"""
-    shape(::Fiber)
-
-The "shape" of a fiber is a tuple where each element describes the number of
-distinct values that might be given as each argument to the fiber.
-
-See also: [`Base.size`](https://docs.julialang.org/en/v1/base/arrays/#Base.size)
-"""
-function shape end
-Base.size(arr::FiberArray) = shape(arr.fbr)
-Base.size(arr::Fiber) = shape(arr)
-
-"""
-    domain(::Fiber)
-
-The "domain" of a fiber is a tuple listing the sets of distinct values that might
-be given as each argument to the fiber.
-
-See also: [`axes`](https://docs.julialang.org/en/v1/base/arrays/#Base.axes-Tuple{Any})
-"""
-function domain end
-Base.axes(arr::FiberArray) = domain(arr.fbr)
-Base.axes(arr::Fiber) = domain(arr)
-
-function Base.getindex(arr::FiberArray, idxs::Integer...) where {Tv, N}
-    arr.fbr(idxs...)
-end
-
 """
     default(fbr)
 
@@ -178,7 +119,7 @@ function (ctx::Finch.SelectVisitor)(node::Access{<:VirtualFiber}, ::DefaultStyle
         if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
             var = Name(ctx.ctx.freshen(:s))
             ctx.idxs[var] = node.idxs[1]
-            ctx.ctx.dims[getname(var)] = getdims(node.tns, ctx, node.mode)[1] #TODO redimensionalization
+            ctx.ctx.dims[getname(var)] = getsize(node.tns, ctx, node.mode)[1] #TODO redimensionalization
             return access(node.tns, node.mode, var, node.idxs[2:end]...)
         end
     end
@@ -249,7 +190,7 @@ function display_fiber_data(io::IO, mime::MIME"text/plain", fbr, N, crds, print_
     depth = envdepth(fbr.env)
 
     println(io, "│ "^(depth + N))
-    if arity(fbr) == N
+    if ndims(fbr) == N
         print_elem(io, crd) = show(IOContext(io, :compact=>true), fbr(get_coord(crd)...))
         calc_pad(crd) = max(textwidth(sprint(print_coord, crd)), textwidth(sprint(print_elem, crd)))
         print_coord_pad(io, crd) = (print_coord(io, crd); print(io, " "^(calc_pad(crd) - textwidth(sprint(print_coord, crd)))))
@@ -309,7 +250,7 @@ macro fiber(ex)
     return :($Fiber($(walk(ex))))
 end
 
-Base.summary(fbr::Fiber) = "$(join(shape(fbr), "×")) @fiber($(summary_f_code(fbr.lvl)))"
+Base.summary(fbr::Fiber) = "$(join(size(fbr), "×")) @fiber($(summary_f_code(fbr.lvl)))"
 
 Base.similar(fbr::Fiber) = Fiber(similar_level(fbr.lvl))
 Base.similar(fbr::Fiber, dims::Tuple) = Fiber(similar_level(fbr.lvl, dims...))

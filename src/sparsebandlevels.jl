@@ -62,10 +62,10 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:SparseBandLe
     display_fiber_data(io, mime, fbr, 1, crds, print_coord, get_coord)
 end
 
-@inline arity(fbr::Fiber{<:SparseBandLevel}) = 1 + arity(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
-@inline shape(fbr::Fiber{<:SparseBandLevel}) = (fbr.lvl.I, shape(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
-@inline domain(fbr::Fiber{<:SparseBandLevel}) = (1:fbr.lvl.I, domain(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
-@inline image(fbr::Fiber{<:SparseBandLevel}) = image(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
+@inline Base.ndims(fbr::Fiber{<:SparseBandLevel}) = 1 + ndims(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
+@inline Base.size(fbr::Fiber{<:SparseBandLevel}) = (fbr.lvl.I, size(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
+@inline Base.axes(fbr::Fiber{<:SparseBandLevel}) = (1:fbr.lvl.I, axes(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
+@inline Base.eltype(fbr::Fiber{<:SparseBandLevel}) = eltype(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
 @inline default(fbr::Fiber{<:SparseBandLevel}) = default(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
 
 
@@ -107,22 +107,22 @@ summary_f_str_args(lvl::VirtualSparseBandLevel) = summary_f_str_args(lvl.lvl)
 getsites(fbr::VirtualFiber{VirtualSparseBandLevel}) =
     [envdepth(fbr.env) + 1, getsites(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))...]
 
-function getdims(fbr::VirtualFiber{VirtualSparseBandLevel}, ctx, mode)
+function getsize(fbr::VirtualFiber{VirtualSparseBandLevel}, ctx, mode)
     ext = Extent(1, fbr.lvl.I)
     if mode != Read()
         ext = suggest(ext)
     end
-    (ext, getdims(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)...)
+    (ext, getsize(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)...)
 end
 
-function setdims!(fbr::VirtualFiber{VirtualSparseBandLevel}, ctx, mode, dim, dims...)
+function setsize!(fbr::VirtualFiber{VirtualSparseBandLevel}, ctx, mode, dim, dims...)
     fbr.lvl.I = getstop(dim)
-    fbr.lvl.lvl = setdims!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode, dims...).lvl
+    fbr.lvl.lvl = setsize!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode, dims...).lvl
     fbr
 end
 
 @inline default(fbr::VirtualFiber{<:VirtualSparseBandLevel}) = default(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
-@inline image(fbr::VirtualFiber{VirtualSparseBandLevel}) = image(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
+Base.eltype(fbr::VirtualFiber{VirtualSparseBandLevel}) = eltype(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
 
 function initialize_level!(fbr::VirtualFiber{VirtualSparseBandLevel}, ctx::LowerJulia, mode::Union{Write, Update})
     lvl = fbr.lvl

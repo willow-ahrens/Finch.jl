@@ -27,12 +27,12 @@ end
 
 (ctx::Finch.LowerJulia)(tns::VirtualSingleSpike) = tns.ex
 
-function Finch.getdims(arr::VirtualSingleSpike{Tv}, ctx::Finch.LowerJulia, mode) where {Tv}
+function Finch.getsize(arr::VirtualSingleSpike{Tv}, ctx::Finch.LowerJulia, mode) where {Tv}
     ex = Symbol(arr.name, :_stop)
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))
     (Extent(1, Virtual{Int}(ex)),)
 end
-Finch.setdims!(arr::VirtualSingleSpike, ctx::Finch.LowerJulia, mode, dims...) = arr
+Finch.setsize!(arr::VirtualSingleSpike, ctx::Finch.LowerJulia, mode, dims...) = arr
 Finch.getname(arr::VirtualSingleSpike) = arr.name
 Finch.setname(arr::VirtualSingleSpike, name) = (arr_2 = deepcopy(arr); arr_2.name = name; arr_2)
 function (ctx::Finch.Stylize{LowerJulia})(node::Access{<:VirtualSingleSpike})

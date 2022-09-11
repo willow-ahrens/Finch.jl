@@ -27,9 +27,9 @@
                 Dense(n,
                 SparseList(m, A_ref.colptr, A_ref.rowval,
                 Element{0.0}(A_ref.nzval))))
-            B = Finch.Fiber(Element{0.0}())
+            B = Finch.Scalar{0.0}()
             @finch @loop i j k B[] += A[i, k] * A[i, j] * A[j, k]
-            @test FiberArray(B)[] ≈ sum(A_ref .* (A_ref * transpose(A_ref)))
+            @test B() ≈ sum(A_ref .* (A_ref * transpose(A_ref)))
         end
     end
 
@@ -55,16 +55,16 @@
             SparseList(
             Element{0.0}())
         )
-        d = Fiber(Element{0.0}())
-        a = Fiber(Element{0.0}())
-        b = Fiber(Element{0.0}())
+        d = Scalar{0.0}()
+        a = Scalar{0.0}()
+        b = Scalar{0.0}()
 
         @finch @loop i (C[i] = a[] - b[]; d[] += a[] * b[]) where (a[] = A[i]; b[] = B[i])
 
-        @test FiberArray(C) == A_ref .- B_ref
+        @test reference_isequal(C, A_ref .- B_ref)
         refidx = (A_ref .- B_ref).nzind
         @test C.lvl.idx[1:length(refidx)] == refidx
-        @test FiberArray(d)[] ≈ dot(A_ref, B_ref)
+        @test d[] ≈ dot(A_ref, B_ref)
     end
 
     for (mtx, A_ref) in matrices

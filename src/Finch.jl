@@ -12,7 +12,7 @@ using SnoopPrecompile
 
 export @finch, @finch_program, @finch_code, value
 
-export Fiber, SparseList, SparseHash, SparseCoo, SparseBytemap, SparseVBL, Dense, RepeatRLE, Element, Pattern, FiberArray, Scalar
+export Fiber, SparseList, SparseHash, SparseCoo, SparseBytemap, SparseVBL, Dense, RepeatRLE, Element, Pattern, Scalar
 export walk, fastwalk, gallop, follow, extrude, laminate, select
 export fiber, @fiber, pattern!, dropdefaults, dropdefaults!
 

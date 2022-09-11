@@ -5,24 +5,14 @@ end
 Scalar{D}(args...) where {D} = Scalar{D, typeof(D)}(args...)
 Scalar{D, Tv}() where {D, Tv} = Scalar{D, Tv}(D)
 
+@inline Base.ndims(tns::Scalar) = 0
+@inline Base.size(::Scalar) = ()
+@inline Base.axes(::Scalar) = ()
+@inline Base.eltype(::Scalar{D, Tv}) where {D, Tv} = Tv
+@inline default(::Scalar{D}) where {D} = D
 
-@inline arity(tns::Scalar) = 0
-#Base.ndims(tns::Scalar) = arity(tns)
-@inline shape(tns::Scalar) = ()
-#Base.size(tns::Scalar) = shape(tns)
-@inline domain(tns::Scalar) = ()
-#Base.axes(tns::Scalar) = domain(tns)
-@inline image(tns::Scalar{D, Tv}) where {D, Tv} = Tv
-#Base.eltype(tns::Scalar) = image(tns)
-@inline default(tns::Scalar{D}) where {D} = D
-
-function (tns::Scalar)()
-    return tns.val
-end
-
-#function Base.getindex(tns::Scalar, idxs::Integer...) where {Tv, N}
-#    tns(idxs...)
-#end
+(tns::Scalar)() = tns.val
+@inline Base.getindex(tns::Scalar) = tns.val
 
 struct VirtualScalar
     ex
@@ -43,7 +33,7 @@ function virtualize(ex, ::Type{Scalar{D, Tv}}, ctx, tag) where {D, Tv}
     VirtualScalar(sym, Tv, D, tag, val)
 end
 
-getdims(::VirtualScalar, ctx, mode) = ()
+getsize(::VirtualScalar, ctx, mode) = ()
 getsites(::VirtualScalar) = []
 
 @inline default(tns::VirtualScalar) = tns.D
