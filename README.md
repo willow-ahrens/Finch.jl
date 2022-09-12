@@ -2,7 +2,7 @@
 
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://peterahrens.github.io/Finch.jl/stable)
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://peterahrens.github.io/Finch.jl/dev)
-[![Build Status](https://github.com/peterahrens/Finch.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/peterahrens/Finch.jl/actions/workflows/CI.yml?query=branch%3Amain)
+[![Build Status](https://github.com/peterahrens/Finch.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/peterahrens/Finch.jl/actions/workflows/CI.yml?query=branch%3Amaster)
 [![Coverage](https://codecov.io/gh/peterahrens/Finch.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/peterahrens/Finch.jl)
 
 Finch is an adaptable Julia-to-Julia compiler for loop nests over sparse or structured
