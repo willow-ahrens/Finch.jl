@@ -21,8 +21,7 @@ apply to the situation at hand. You can even modify indexing expressions to
 express sparse convolution, or to describe windows into structured
 arrays.
 
-Finch is very experimental. There are still known bugs and long compile times
-that I am currently addressing. Some interfaces will change dramatically.
+Finch is very experimental. There are known bugs, and some interfaces will change dramatically.
 
 More documentation is incoming, in the meantime, check this out:
 
@@ -274,4 +273,4 @@ coiteration, breaking structured iterators into control flow units we call
 **Looplets**. Looplets are lowered progressively, leaving several opportunities to
 rewrite and simplify intermediate expressions.
 
-More description coming in an upcoming Arxiv manuscript.
+More description on its way in an upcoming Arxiv manuscript.
