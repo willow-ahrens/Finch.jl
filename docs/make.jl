@@ -5,7 +5,7 @@ DocMeta.setdocmeta!(Finch, :DocTestSetup, :(using Finch; using SparseArrays); re
 
 makedocs(;
     modules=[Finch],
-    authors="Peter Ahrens",
+    authors="Willow Ahrens",
     repo="https://github.com/willowahrens/Finch.jl/blob/{commit}{path}#{line}",
     sitename="Finch.jl",
     format=Documenter.HTML(;
