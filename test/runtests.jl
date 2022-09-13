@@ -23,7 +23,7 @@ function diff(name, body)
             return true
         else
             println("=== reference ===")
-            open(cache_file, "w") do f
+            open(cache_file, "r") do f
                 for line in eachline(f)
                     println(line)
                 end
