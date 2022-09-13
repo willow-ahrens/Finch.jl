@@ -6,31 +6,35 @@ include("data_matrices.jl")
 
 function diff(name, body)
     global ARGS
-    cache_dir = mkpath(joinpath(@__DIR__, "cache"))
-    temp_dir = mkpath(joinpath(@__DIR__, "temp"))
-    cache_file = joinpath(cache_dir, name)
-    temp_file = joinpath(temp_dir, name)
-    open(temp_file, "w") do f
-        println(f, body)
-    end
-    if "overwrite" in ARGS
-        open(cache_file, "w") do f
+    if "diff" in ARGS
+        cache_dir = mkpath(joinpath(@__DIR__, "cache"))
+        temp_dir = mkpath(joinpath(@__DIR__, "temp"))
+        cache_file = joinpath(cache_dir, name)
+        temp_file = joinpath(temp_dir, name)
+        open(temp_file, "w") do f
             println(f, body)
         end
-        true
-    else
-        if success(`diff --strip-trailing-cr $cache_file $temp_file`)
-            return true
-        else
-            println("=== reference ===")
-            open(cache_file, "r") do f
-                for line in eachline(f)
-                    println(line)
-                end
+        if "overwrite" in ARGS
+            open(cache_file, "w") do f
+                println(f, body)
             end
-            println("=== test ===")
-            println(body)
-            return false
+            true
+        else
+            if success(`diff --strip-trailing-cr $cache_file $temp_file`)
+                return true
+            else
+                if "verbose" in ARGS
+                    println("=== reference ===")
+                    open(cache_file, "r") do f
+                        for line in eachline(f)
+                            println(line)
+                        end
+                    end
+                    println("=== test ===")
+                    println(body)
+                end
+                return false
+            end
         end
     end
 end
