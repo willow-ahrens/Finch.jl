@@ -16,6 +16,11 @@ SyntaxInterface = "b33eeca9-aacb-4496-a840-e75f1646a4fb"
 
 [compat]
 RewriteTools = "0.1"
+MacroTools = "0.5"
+Revise = "3"
+SyntaxInterface = "0.1"
+Requires = "1"
+SnoopPrecompile = "1"
 julia = "1.6.7"
 
 [extras]
