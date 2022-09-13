@@ -84,30 +84,30 @@
     (@rule @f(@sieve true $a) => a),
     (@rule @f(@sieve false $a) => pass(getresults(a)...)),
 
-    (@rule @f(@chunk $i a (b[j...] <<min>>= $d)) => if Finch.isliteral(d) && i ∉ j
+    (@rule @f(@chunk $i a (b[j...] <<min>>= $d)) => if Finch.isliteral(d) && i ∉ j
         @f (b[j...] <<min>>= $d)
     end),
     (@rule @f(@chunk $i a @multi b... (c[j...] <<min>>= $d) e...) => begin
-        if Finch.isliteral(d) && i ∉ j
+        if Finch.isliteral(d) && i ∉ j
             @f @multi (c[j...] <<min>>= $d) @chunk $i a @f(@multi b... e...)
         end
     end),
-    (@rule @f(@chunk $i a (b[j...] <<max>>= $d)) => if Finch.isliteral(d) && i ∉ j
+    (@rule @f(@chunk $i a (b[j...] <<max>>= $d)) => if Finch.isliteral(d) && i ∉ j
         @f (b[j...] <<max>>= $d)
     end),
     (@rule @f(@chunk $i a @multi b... (c[j...] <<max>>= $d) e...) => begin
-        if Finch.isliteral(d) && i ∉ j
+        if Finch.isliteral(d) && i ∉ j
             println(@f @multi (c[j...] <<max>>= $d) @chunk $i a @f(@multi b... e...))
             @f @multi (c[j...] <<max>>= $d) @chunk $i a @f(@multi b... e...)
         end
     end),
     (@rule @f(@chunk $i $a (b[j...] += $d)) => begin
-        if getname(i) ∉ getunbound(d) && i ∉ j
+        if getname(i) ∉ getunbound(d) && i ∉ j
             @f (b[j...] += $(extent(a)) * $d)
         end
     end),
     (@rule @f(@chunk $i a @multi b... (c[j...] += $d) e...) => begin
-        if getname(i) ∉ getunbound(d) && i ∉ j
+        if getname(i) ∉ getunbound(d) && i ∉ j
             @f @multi (c[j...] += $(extent(a)) * $d) @chunk $i a @f(@multi b... e...)
         end
     end),
