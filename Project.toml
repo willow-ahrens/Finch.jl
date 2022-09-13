@@ -15,6 +15,7 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 SyntaxInterface = "b33eeca9-aacb-4496-a840-e75f1646a4fb"
 
 [compat]
+Revise = "3"
 SyntaxInterface = "0.1"
 Requires = "1"
 SnoopPrecompile = "1"
