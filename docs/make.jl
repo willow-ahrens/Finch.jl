@@ -10,7 +10,7 @@ makedocs(;
     sitename="Finch.jl",
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
-        canonical="https://peterahrens.github.io/Finch.jl",
+        canonical="https://willowahrens.github.io/Finch.jl",
         assets=String[],
     ),
     pages=[
