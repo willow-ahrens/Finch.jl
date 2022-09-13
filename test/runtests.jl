@@ -19,7 +19,19 @@ function diff(name, body)
         end
         true
     else
-        success(`diff --strip-trailing-cr $cache_file $temp_file`)
+        if success(`diff --strip-trailing-cr $cache_file $temp_file`)
+            return true
+        else
+            println("=== reference ===")
+            open(cache_file, "w") do f
+                for line in eachline(f)
+                    println(line)
+                end
+            end
+            println("=== test ===")
+            println(body)
+            return false
+        end
     end
 end
 
