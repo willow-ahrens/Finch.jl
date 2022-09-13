@@ -20,10 +20,10 @@ See also: [`fiber!`](@ref)
 
 ```jldoctest
 julia> println(summary(fiber(sparse([1 0; 0 1]))))
-2×2 Fiber @fiber(d(sl(e(0)))
+2×2 @fiber(d(sl(e(0))))
 
 julia> println(summary(fiber(ones(3, 2, 4))))
-3×2×4 Fiber @fiber(d(d(d(e(0.0)))))
+3×2×4 @fiber(d(d(d(e(0.0)))))
 ```
 """
 function fiber(arr, default=zero(eltype(arr)))
@@ -132,13 +132,13 @@ See also: (`sprand`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#Spars
 ```jldoctest; setup = :(using Random; Random.seed!(1234))
 julia> fsprand(Bool, (3, 3), 0.5)
 SparseCoo (false) [1:3×1:3]
-│ │ 
+│ │
 └─└─[1, 1] [1, 3] [2, 2] [2, 3] [3, 3]
     true   true   true   true   true  
 
 julia> fsprand(Float64, (2, 2, 2), 0.5)
 SparseCoo (0.0) [1:2×1:2×1:2]
-│ │ │ 
+│ │ │
 └─└─└─[1, 2, 2] [2, 1, 1] [2, 1, 2]
       0.647855  0.996665  0.749194 
 ```
@@ -168,12 +168,12 @@ See also: (`spzeros`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#Spar
 ```jldoctest
 julia> fspzeros(Bool, (3, 3))
 SparseCoo (false) [1:3×1:3]
-│ │ 
+│ │
 └─└─
     
 julia> fspzeros(Float64, (2, 2, 2))
 SparseCoo (0.0) [1:2×1:2×1:2]
-│ │ │ 
+│ │ │
 └─└─└─
 ```
 """

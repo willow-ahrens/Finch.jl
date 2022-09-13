@@ -28,9 +28,7 @@ Return the pattern of `fbr`. That is, return a fiber which is true wherever
 original fiber unusable when modified.
 
 ```jldoctest
-julia> A = Finch.Fiber(
-    SparseList(10, [1, 6], [1, 3, 5, 7, 9],
-    Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
+julia> A = Finch.Fiber(SparseList(10, [1, 6], [1, 3, 5, 7, 9], Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
 SparseList (0.0) [1:10]
 │ 
 └─[1] [3] [5] [7] [9]
