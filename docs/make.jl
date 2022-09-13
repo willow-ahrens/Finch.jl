@@ -6,7 +6,7 @@ DocMeta.setdocmeta!(Finch, :DocTestSetup, :(using Finch; using SparseArrays); re
 makedocs(;
     modules=[Finch],
     authors="Peter Ahrens",
-    repo="https://github.com/peterahrens/Finch.jl/blob/{commit}{path}#{line}",
+    repo="https://github.com/willowahrens/Finch.jl/blob/{commit}{path}#{line}",
     sitename="Finch.jl",
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
@@ -23,6 +23,6 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/peterahrens/Finch.jl",
+    repo="github.com/willowahrens/Finch.jl",
     devbranch="main",
 )
