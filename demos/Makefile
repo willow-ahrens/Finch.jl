@@ -8,7 +8,7 @@ CFLAGS   += $(shell $(JL_SHARE)/julia-config.jl --cflags) -I../embed
 LDFLAGS  += $(shell $(JL_SHARE)/julia-config.jl --ldflags) -L../embed
 LDLIBS   += $(shell $(JL_SHARE)/julia-config.jl --ldlibs) -lfinch
 
-all: embed_demo sssp
+all: embed_demo sssp bfs pr cc
 
 embed_demo: embed_demo.o
 	$(CC) $^ -o $@ $(CFLAGS) $(LDFLAGS) $(LDLIBS)
@@ -22,5 +22,22 @@ sssp: sssp.o
 sssp.o: sssp.c
 	$(CC) -c $< -o $@ $(CFLAGS)
 
+bfs: bfs.o
+	$(CC) $^ -o $@ $(CFLAGS) $(LDFLAGS) $(LDLIBS)
+
+bfs.o: bfs.c
+	$(CC) -c $< -o $@ $(CFLAGS)
+
+pr: pr.o
+	$(CC) $^ -o $@ $(CFLAGS) $(LDFLAGS) $(LDLIBS)
+
+pr.o: pr.c
+	$(CC) -c $< -o $@ $(CFLAGS)
+
+cc: cc.o
+	$(CC) $^ -o $@ $(CFLAGS) $(LDFLAGS) $(LDLIBS)
+
+cc.o: cc.c
+	$(CC) -c $< -o $@ $(CFLAGS)
 clean:
 	rm -f *.o embed_demo
