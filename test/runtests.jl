@@ -19,7 +19,7 @@ function diff(name, body)
         end
         true
     else
-        success(`diff $cache_file $temp_file`)
+        success(`diff --strip-trailing-cr $cache_file $temp_file`)
     end
 end
 
