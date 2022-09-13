@@ -273,4 +273,4 @@ coiteration, breaking structured iterators into control flow units we call
 **Looplets**. Looplets are lowered progressively, leaving several opportunities to
 rewrite and simplify intermediate expressions.
 
-More description on its way in an upcoming Arxiv manuscript.
+The technologies enabling Finch are described in our [manuscript](https://arxiv.org/abs/2209.05250).
