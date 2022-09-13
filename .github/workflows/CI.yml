@@ -64,5 +64,5 @@ jobs:
           julia --project=docs -e '
             using Documenter: DocMeta, doctest
             using Finch
-            DocMeta.setdocmeta!(Finch, :DocTestSetup, :(using Finch); recursive=true)
+            DocMeta.setdocmeta!(Finch, :DocTestSetup, :(using Finch, SparseArrays); recursive=true)
             doctest(Finch)'
