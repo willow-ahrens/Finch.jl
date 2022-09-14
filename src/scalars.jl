@@ -43,6 +43,9 @@ isliteral(::VirtualScalar) = false
 getname(tns::VirtualScalar) = tns.name
 setname(tns::VirtualScalar, name) = VirtualScalar(tns.ex, tns.Tv, tns.D, name, tns.val)
 
+priority(::VirtualScalar) = (3,5)
+comparators(x::VirtualScalar) = (Lexicography(getname(x)),) #TODO this is probably good enough, but let's think about it later.
+
 function initialize!(tns::VirtualScalar, ctx, mode::Union{Write, Update}, idxs...)
     push!(ctx.preamble, quote
         $(tns.val) = $(tns.D)
