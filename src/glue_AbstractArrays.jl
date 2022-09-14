@@ -15,6 +15,9 @@ end
 getname(arr::VirtualAbstractArray) = arr.name
 setname(arr::VirtualAbstractArray, name) = (arr_2 = deepcopy(arr); arr_2.name = name; arr_2)
 
+priority(::VirtualAbstractArray) = (3,7)
+comparators(x::VirtualAbstractArray) = (Lexicography(getname(x)),) #TODO this is probably good enough, but let's think about it later.
+
 function (ctx::LowerJulia)(arr::VirtualAbstractArray, ::DefaultStyle)
     return arr.ex
 end

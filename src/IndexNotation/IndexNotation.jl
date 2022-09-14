@@ -18,8 +18,6 @@ module IndexNotation
     export Sieve, sieve
     export value
 
-    export Lexicography
-
     export Follow, follow
     export Walk, walk
     export FastWalk, fastwalk

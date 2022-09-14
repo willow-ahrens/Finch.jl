@@ -147,3 +147,71 @@ end
 add_rules!(new_rules) = union!(rules, new_rules)
 
 isliteral(::Simplify) = false
+
+
+struct Lexicography{T}
+    arg::T
+end
+
+function Base.isless(a::Lexicography, b::Lexicography)
+    (a, b) = a.arg, b.arg
+    #@assert which(priority, Tuple{typeof(a)}) == which(priority, Tuple{typeof(b)}) || priority(a) != priority(b)
+    if a != b
+        a_key = (priority(a), comparators(a)...)
+        b_key = (priority(b), comparators(b)...)
+        @assert a_key < b_key || b_key < a_key "a = $a b = $b a_key = $a_key b_key = $b_key"
+        return a_key < b_key
+    end
+    return false
+end
+
+function Base.:(==)(a::Lexicography, b::Lexicography)
+    (a, b) = a.arg, b.arg
+    #@assert which(priority, Tuple{typeof(a)}) == which(priority, Tuple{typeof(b)}) || priority(a) != priority(b)
+    a_key = (priority(a), comparators(a)...)
+    b_key = (priority(b), comparators(b)...)
+    return a_key == b_key
+end
+
+priority(::Missing) = (0, 4)
+comparators(::Missing) = (1,)
+
+priority(::Number) = (1, 1)
+comparators(x::Number) = (x, sizeof(x), typeof(x))
+
+priority(::Function) = (1, 2)
+comparators(x::Function) = (string(x),)
+
+priority(::Symbol) = (2, 0)
+comparators(x::Symbol) = (x,)
+
+priority(::Expr) = (2, 1)
+comparators(x::Expr) = (x.head, map(Lexicography, x.args)...)
+
+priority(::Name) = (3,0)
+comparators(x::Name) = (x.name,)
+
+priority(::Literal) = (3,1)
+comparators(x::Literal) = (Lexicography(x.val),)
+
+priority(::Read) = (3,2,1)
+comparators(x::Read) = ()
+
+priority(::Write) = (3,2,2)
+comparators(x::Write) = ()
+
+priority(::Update) = (3,2,3)
+comparators(x::Update) = ()
+
+priority(::Workspace) = (3,3)
+comparators(x::Workspace) = (x.n,)
+
+priority(::Virtual) = (3,4)
+comparators(x::Virtual) = (string(typeof(x)), Lexicography(x.ex))
+
+priority(::IndexNode) = (3,Inf)
+comparators(x::IndexNode) = (@assert istree(x); (string(operation(x)), map(Lexicography, arguments(x))...))
+
+#TODO these are nice defaults if we want to allow nondeterminism
+#priority(::Any) = (Inf,)
+#comparators(x::Any) = hash(x)

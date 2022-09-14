@@ -48,6 +48,9 @@ getname(fbr::VirtualFiber) = envname(fbr.env)
 setname(fbr::VirtualFiber, name) = VirtualFiber(fbr.lvl, envrename!(fbr.env, name))
 #setname(fbr::VirtualFiber, name) = (fbr.env.name = name; fbr)
 
+priority(::VirtualFiber) = (3,6)
+comparators(x::VirtualFiber) = (Lexicography(getname(x)),) #TODO this is probably good enough, but let's think about it later.
+
 """
     default(fbr)
 
