@@ -40,23 +40,16 @@ end
 
 Finch.register()
 
-function IDs_init(ID)
-    @finch @loop i ID[i] = i
+function out_d_init(out_d, edges)
+    @finch @loop i j out_d[j] += edges[i, j]
 end
 
-function RevIDs_update(RevID, ID)
-    @finch @loop i j RevID[i] <<$or>>= j * (ID[j] == i) 
+function r_init(r, N)
+    @finch @loop j r[j] = 1.0 / $N
 end
 
-function updateIDs(edges, old_ID, RevID, new_ID, N)
-    val = typemax(Cint)
-    B = Finch.Fiber(
-        Dense(N,
-            Element{val, Cint}([])
-        )
-    )
-    @finch @loop a b B[a] <<min>>= old_ID[b] * (edges[RevID[a],RevID[b]] || edges[RevID[b], RevID[a]])
-    @finch @loop a new_ID[a] = min(old_ID[a], B[a])
+function c_init(contrib, r_in, out_d)
+    @finch @loop i contrib[i] = r_in[i] / out_d[i]
 end
 
 function main()
@@ -72,33 +65,32 @@ function main()
     println("Edges:")
     println(edges.lvl.lvl.lvl.val)
 
-    ID = Finch.Fiber(
+    out_d = Finch.Fiber(
         Dense(N,
             Element{0, Cint}([])
         )
     )
-    IDs_init(ID);
-    println("IDs:");
-    println(ID.lvl.lvl.val);
+    out_d_init(out_d, edges);
+    println("Out degree:");
+    println(out_d.lvl.lvl.val);
 
-    RevID = Finch.Fiber(
+    r = Finch.Fiber(
         Dense(N,
-            Element{0, Cint}([])
+            Element{0, Float64}([])
         )
     )
-    RevIDs_update(RevID, ID)
-    println("RevID:")
-    println(RevID.lvl.lvl.val);
+    r_init(r, N);
+    println("R: ");
+    println(r.lvl.lvl.val);
 
-    new_ID = Finch.Fiber(
+    contrib = Finch.Fiber(
         Dense(N,
-            Element{0, Cint}([])
+            Element{0, Float64}([])
         )
     )
-    updateIDs(edges, ID, RevID, new_ID, N)
-    println("New IDs: ")
-    println(new_IDs.lvl.lvl.va)
-
+    c_init(contrib, r, out_d);
+    println("contrib: ");
+    println(contrib.lvl.lvl.val);
 end
 
 main()

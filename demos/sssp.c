@@ -29,39 +29,41 @@ struct sssp_data {
 //     priorityQ[p][j] = (p == 0 && j == source) + (p == (P - 1) && j != source)
 jl_value_t* Init_priorityQ() {
     jl_function_t* pq_init = finch_eval("function pq_init(source, P, priorityQ)\n\
-    @index @loop p j priorityQ[p, j] = (p == 1 && j == $source) + (p == $P && j != $source)\n\
+    @finch @loop p j priorityQ[p, j] = (p == 1 && j == $source) + (p == $P && j != $source)\n\
 end");
 
     jl_value_t* val = finch_eval("Cint[]");
     jl_value_t *priorityQ = finch_Fiber(
-        finch_Solid(finch_Cint(P),
+        finch_Dense(finch_Cint(P),
         // finch_HollowListLevel(
         //     finch_Int64(N),
         //     pos, 
         //     idx,
         //     finch_ElementLevel(finch_Int64(0),val)
         // )
-        finch_Solid(finch_Cint(N), finch_ElementLevel(finch_Cint(0), val))
+        finch_Dense(finch_Cint(N), finch_ElementLevel(finch_Cint(0), val))
         ));
 
     finch_call(pq_init, finch_Cint(source), finch_Cint(P), priorityQ);
-    // finch_exec("println(%s)", priorityQ);
+    printf("PQ init: ");
+    finch_exec("println(%s.lvl.lvl.lvl.val)", priorityQ);
     return priorityQ;
 }
 
 //     dist[j] = (j != source) * P
 jl_value_t* Init_dist() {
     jl_function_t* dist_init = finch_eval("function dist_init(source, P, dist)\n\
-    @index @loop j dist[j] = (j != $source) * ($P - 1)\n\
+    @finch @loop j dist[j] = (j != $source) * ($P - 1)\n\
 end");
 
     jl_value_t* val = finch_eval("Cint[]");
     jl_value_t* dist = finch_Fiber(
-        finch_Solid(finch_Cint(N),
+        finch_Dense(finch_Cint(N),
         finch_ElementLevel(finch_Cint(0), val))
     );
     finch_call(dist_init, finch_Cint(source), finch_Cint(P), dist);
-    // finch_exec("println(%s)", dist);
+    printf("Dist init: ");
+    finch_exec("println(%s.lvl.lvl.val)", dist);
     return dist;
 }
 
@@ -89,34 +91,34 @@ void UpdateEdges(struct sssp_data* old_data, struct sssp_data* new_data, int pri
 function new_dist_func(priority, N, P, new_dist, edges, priorityQ, weights, dist)\n\
     val = typemax(Cint)\n\
     B = Finch.Fiber(\n\
-        Solid(N,\n\
+        Dense(N,\n\
             Element{val, Cint}([])\n\
         )\n\
     )\n\
     \n\
-    @index @loop p j k B[j] <<min>>= (p == $priority) * (edges[j, k] * priorityQ[p, k] * (weights[j, k] + dist[k]) + (edges[j, k] * priorityQ[p, k] == 0) * ($P-1)) + (p != $priority) * $val\n\
-    @index @loop j new_dist[j] = min(B[j], dist[j])\n\
+    @finch @loop p j k B[j] <<min>>= (p == $priority) * (edges[j, k] * priorityQ[p, k] * (weights[j, k] + dist[k]) + (edges[j, k] * priorityQ[p, k] == 0) * ($P-1)) + (p != $priority) * $val\n\
+    @finch @loop j new_dist[j] = min(B[j], dist[j])\n\
 end");
     jl_value_t* val = finch_eval("Cint[]");
     jl_value_t* new_dist = finch_Fiber(
-        finch_Solid(finch_Cint(N),
+        finch_Dense(finch_Cint(N),
         finch_ElementLevel(finch_Cint(0), val))
     );
     finch_call(new_dist_func, finch_Cint(priority), finch_Cint(N), finch_Cint(P), new_dist, edges, old_data->priorityQ, weights, old_data->dist);
-    // printf("New dist: \n");
-    // finch_exec("println(%s)", new_dist);
+    printf("New dist: \n");
+    finch_exec("println(%s.lvl.lvl.val)", new_dist);
 
     jl_function_t* new_pq_func = finch_eval("function new_pq_func(new_priorityQ, old_priorityQ, dist, new_dist, priority)\n\
-    @index @loop j k new_priorityQ[j, k] = (dist[k] > new_dist[k]) * (new_dist[k] == j-1) + (dist[k] == new_dist[k] && j != $priority) * old_priorityQ[j, k]\n\
+    @finch @loop j k new_priorityQ[j, k] = (dist[k] > new_dist[k]) * (new_dist[k] == j-1) + (dist[k] == new_dist[k] && j != $priority) * old_priorityQ[j, k]\n\
 end");
     jl_value_t* val_pq = finch_eval("Cint[]");
     jl_value_t *new_priorityQ = finch_Fiber(
-        finch_Solid(finch_Cint(P),
-        finch_Solid(finch_Cint(N), finch_ElementLevel(finch_Cint(0), val_pq))
+        finch_Dense(finch_Cint(P),
+        finch_Dense(finch_Cint(N), finch_ElementLevel(finch_Cint(0), val_pq))
         ));
     finch_call(new_pq_func, new_priorityQ, old_data->priorityQ, old_data->dist, new_dist, finch_Cint(priority));
-    // printf("New pQ: \n");
-    // finch_exec("println(%s)", new_priorityQ);
+    printf("New pQ: \n");
+    finch_exec("println(%s.lvl.lvl.lvl.val)", new_priorityQ);
 
     new_data->dist = new_dist;
     new_data->priorityQ = new_priorityQ;
@@ -126,11 +128,11 @@ end");
 int inner_loop_condition(jl_value_t* priorityQ, int priority) {
 
     jl_value_t* access_func = finch_eval("function access_func(tensor1D, tensor2D, index)\n\
-    @index @loop i j tensor1D[j] += tensor2D[i, j] * (i == $index)\n\
+    @finch @loop i j tensor1D[j] += tensor2D[i, j] * (i == $index)\n\
 end");
     jl_value_t* val = finch_eval("Cint[]");
      jl_value_t* pq_slice = finch_Fiber(
-        finch_Solid(finch_Cint(N), finch_ElementLevel(finch_Cint(0), val))
+        finch_Dense(finch_Cint(N), finch_ElementLevel(finch_Cint(0), val))
     );
     finch_call(access_func, pq_slice, priorityQ, finch_Cint(priority));
     
@@ -207,12 +209,12 @@ int main(int argc, char** argv) {
     using Finch.IndexNotation\n");
 
     res = finch_eval("@slots a b c d e i j Finch.add_rules!([\n\
-    (@rule @i(@chunk $i a (b[j...] <<min>>= $d)) => if Finch.isliteral(d) && i ∉ j\n\
-        @i (b[j...] <<min>>= $d)\n\
+    (@rule @f(@chunk $i a (b[j...] <<min>>= $d)) => if Finch.isliteral(d) && i ∉ j\n\
+        @f (b[j...] <<min>>= $d)\n\
     end),\n\
-    (@rule @i(@chunk $i a @multi b... (c[j...] <<min>>= $d) e...) => begin\n\
+    (@rule @f(@chunk $i a @multi b... (c[j...] <<min>>= $d) e...) => begin\n\
         if Finch.isliteral(d) && i ∉ j\n\
-            @i @multi (c[j...] <<min>>= $d) @chunk $i a @i(@multi b... e...)\n\
+            @f @multi (c[j...] <<min>>= $d) @chunk $i a @f(@multi b... e...)\n\
         end\n\
     end),\n\
 ])\n\
@@ -235,14 +237,14 @@ Finch.register()");
 
 
     edges = finch_Fiber(
-        finch_Solid(finch_Cint(N),
+        finch_Dense(finch_Cint(N),
             // finch_HollowListLevel(
             //     finch_Cint(N),
             //     pos, 
             //     idx,
             //     finch_ElementLevel(finch_Int64(0),val)
             // )
-                finch_Solid(finch_Cint(N),
+                finch_Dense(finch_Cint(N),
                     finch_ElementLevel(finch_Cint(0), edge_vector)
                 )
             )
@@ -259,14 +261,14 @@ Finch.register()");
     jl_value_t* weight_vector = finch_eval("Cint[0, 0, 0, 0, 1, 0, 0, 0, 3, 1, 0, 5, 0, 0, 0, 0]");
 
     weights = finch_Fiber(
-        finch_Solid(finch_Cint(N),
+        finch_Dense(finch_Cint(N),
             // finch_HollowListLevel(
             //     finch_Cint(N),
             //     pos_w, 
             //     idx_w,
             //     finch_ElementLevel(finch_Int64(0),val_w)
             // )
-                finch_Solid(finch_Cint(N),
+                finch_Dense(finch_Cint(N),
                     finch_ElementLevel(finch_Cint(0), weight_vector)
                 )
             )
@@ -276,10 +278,10 @@ Finch.register()");
     int p = SSSP(new_data);
 
     printf("Final Dist: \n");
-    finch_exec("println(%s)", new_data->dist);
+    finch_exec("println(%s.lvl.lvl.val)", new_data->dist);
 
     printf("Final priorityQ: \n");
-    finch_exec("println(%s)", new_data->priorityQ);
+    finch_exec("println(%s.lvl.lvl.lvl.val)", new_data->priorityQ);
 
     printf("Final priority: %d\n", p);
 

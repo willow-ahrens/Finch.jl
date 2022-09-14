@@ -116,7 +116,7 @@ struct cc_data {
 // end
 void Init(struct cc_data* data) {
     jl_function_t* ids_init = finch_eval("function ids_init(ids)\n\
-    @index @loop i ids[i] = i\n\
+    @finch @loop i ids[i] = i\n\
 end");
 
     jl_value_t* ids = finch_Fiber(
@@ -129,7 +129,7 @@ end");
     finch_exec("println(%s)", ids);
 
     jl_function_t* update_init = finch_eval("function update_init(update)\n\
-        @index @loop i update[i] = 1\n\
+        @finch @loop i update[i] = 1\n\
     end");
     jl_value_t* update = finch_Fiber(
         finch_Solid(finch_Cint(2),
@@ -172,13 +172,13 @@ void UpdateEdges(struct cc_data* in_data, struct cc_data* out_data) {
     jl_function_t* ids_func = finch_eval("function ids_func(old_ids, new_ids)\n\
     val = typemax(Cint)\n\
     B = Finch.Fiber(\n\
-        Solid(N,\n\
+        Dense(N,\n\
             Element{val, Cint}([])\n\
         )\n\
     )\n\
     \n\
-    @index @loop i B[i] <<min>>= edges[j,i] * old_ids[j] + (1 - edges[j,i]) * old_ids[i]\n\
-    @index @loop i new_ids[i] = min(B[i], old_ids[i])\n\
+    @finch @loop i B[i] <<min>>= edges[j,i] * old_ids[j] + (1 - edges[j,i]) * old_ids[i]\n\
+    @finch @loop i new_ids[i] = min(B[i], old_ids[i])\n\
 end");
     jl_value_t* new_ids = finch_Fiber(
         finch_Solid(finch_Cint(N),
@@ -201,13 +201,13 @@ void Backward(struct cc_data* in_data, struct cc_data* out_data) {
     jl_function_t* backward_func = finch_eval("function backward(old_ids, new_ids)\n\
     val = typemax(Cint)\n\
     B = Finch.Fiber(\n\
-        Solid(N,\n\
+        Dense(N,\n\
             Element{val, Cint}([])\n\
         )\n\
     )\n\
     \n\
-    @index @loop j B[j] <<min>>= edges[j,i] * old_ids[i] + (1 - edges[j,i]) * old_ids[j]\n\
-    @index @loop j new_ids[j] = min(B[j], old_ids[j])\n\
+    @finch @loop j B[j] <<min>>= edges[j,i] * old_ids[i] + (1 - edges[j,i]) * old_ids[j]\n\
+    @finch @loop j new_ids[j] = min(B[j], old_ids[j])\n\
 end");
     jl_value_t* new_ids = finch_Fiber(
         finch_Solid(finch_Cint(N),
@@ -237,7 +237,7 @@ void UpdateEdges(struct cc_data* in_data, struct cc_data* out_data) {
     Backward(inter_data, out_data);
 
     jl_function_t* update_edge_func = finch_eval("function r_func(old_ids, new_ids, new_update)\n\
-    @index @loop i  new_update <<$or>>= (old_ids[i] != new_ids[i])\n\
+    @finch @loop i  new_update <<$or>>= (old_ids[i] != new_ids[i])\n\
 end");
     jl_value_t* update = finch_Fiber(
             finch_Solid(finch_Cint(1),
@@ -284,20 +284,20 @@ int main(int argc, char** argv) {
     res = finch_eval("or(x,y) = x == 1|| y == 1\n");
 
     res = finch_eval("@slots a b c d e i j Finch.add_rules!([\n\
-    (@rule @i(@chunk $i a (b[j...] <<min>>= $d)) => if Finch.isliteral(d) && i ∉ j\n\
-        @i (b[j...] <<min>>= $d)\n\
+    (@rule @f(@chunk $i a (b[j...] <<min>>= $d)) => if Finch.isliteral(d) && i ∉ j\n\
+        @f (b[j...] <<min>>= $d)\n\
     end),\n\
-    (@rule @i(@chunk $i a @multi b... (c[j...] <<min>>= $d) e...) => begin\n\
+    (@rule @f(@chunk $i a @multi b... (c[j...] <<min>>= $d) e...) => begin\n\
         if Finch.isliteral(d) && i ∉ j\n\
-            @i @multi (c[j...] <<min>>= $d) @chunk $i a @i(@multi b... e...)\n\
+            @f @multi (c[j...] <<min>>= $d) @chunk $i a @f(@multi b... e...)\n\
         end\n\
     end),\n\
-    (@rule @i(@chunk $i a (b[j...] <<$or>>= $d)) => if Finch.isliteral(d) && i ∉ j\n\
-        @i (b[j...] <<$or>>= $d)\n\
+    (@rule @f(@chunk $i a (b[j...] <<$or>>= $d)) => if Finch.isliteral(d) && i ∉ j\n\
+        @f (b[j...] <<$or>>= $d)\n\
     end),\n\
-    (@rule @i(@chunk $i a @multi b... (c[j...] <<$or>>= $d) e...) => begin\n\
+    (@rule @f(@chunk $i a @multi b... (c[j...] <<$or>>= $d) e...) => begin\n\
         if Finch.isliteral(d) && i ∉ j\n\
-            @i @multi (c[j...] <<$or>>= $d) @chunk $i a @i(@multi b... e...)\n\
+            @f @multi (c[j...] <<$or>>= $d) @chunk $i a @f(@multi b... e...)\n\
         end\n\
     end),\n\
 ])\n\
