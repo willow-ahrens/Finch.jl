@@ -39,7 +39,7 @@ end");
     finch_call(ids_init, ids);
 
     printf("IDs: \n");
-    finch_exec("println(%s)", ids);
+    finch_exec("println(%s.lvl.lvl.val)", ids);
 
     jl_function_t* update_init = finch_eval("function update_init(update)\n\
         @finch @loop i update[i] = 1\n\
@@ -51,7 +51,7 @@ end");
     finch_call(update_init, update);
 
     printf("Update: \n");
-    finch_exec("println(%s)", update);
+    finch_exec("println(%s.lvl.lvl.val)", update);
 
     data->IDs = ids;
     data->update = update;
@@ -79,7 +79,7 @@ end");
     );
     finch_call(forward_func, edges, in_data->IDs, new_ids, finch_Cint(N));
     printf("Forward IDs: \n");
-    finch_exec("println(%s)", new_ids);
+    finch_exec("println(%s.lvl.lvl.val)", new_ids);
 
     out_data->IDs = new_ids;
     out_data->update = in_data->update;
@@ -108,7 +108,7 @@ end");
     );
     finch_call(backward_func, edges, in_data->IDs, new_ids, finch_Cint(N));
     printf("Backward IDs: \n");
-    finch_exec("println(%s)", new_ids);
+    finch_exec("println(%s.lvl.lvl.val)", new_ids);
 
     out_data->IDs = new_ids;
     out_data->update = in_data->update;
@@ -141,7 +141,7 @@ end");
     out_data->update = update;
 
     printf("New Update: \n");
-    finch_exec("println(%s)", out_data->update);
+    finch_exec("println(%s.lvl.lvl.val)", out_data->update);
 }
 
 int has_changed(jl_value_t* update_arr) {
@@ -204,15 +204,14 @@ Finch.register()");
     // 1 5, 4 5, 3 4, 2 3, 1 2
     // jl_value_t* edge_vector = finch_eval("Cint[0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]");
     // N = 5;
-    // source = 5;
 
-    // 2 1, 3 1, 3 2, 1 3, 3 4
-    // jl_value_t* edge_vector = finch_eval("Cint[0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0]");
-    // N = 4;
+    // 2 1, 3 1, 3 2, 1 3, 3 4 + isolated 5
+    jl_value_t* edge_vector = finch_eval("Cint[0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]");
+    N = 5;
 
     // 2 1, 3 1, 1 2, 3 2, 1 3
-    jl_value_t* edge_vector = finch_eval("Cint[0, 1, 1, 1, 0, 0, 1, 1, 0]");
-    N = 3;
+    // jl_value_t* edge_vector = finch_eval("Cint[0, 1, 1, 1, 0, 0, 1, 1, 0]");
+    // N = 3;
 
 
     edges = finch_Fiber(
@@ -228,7 +227,7 @@ Finch.register()");
     CC(data);
 
     printf("Final IDs: \n");
-    finch_exec("println(%s)", data->IDs);
+    finch_exec("println(%s.lvl.lvl.val)", data->IDs);
 
     finch_finalize();
 }
