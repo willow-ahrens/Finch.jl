@@ -233,25 +233,29 @@ end
 """
     @fiber ctr
 
-Construct a fiber using abbreviated fiber constructor codes. All function names
-in `ctr` must be format codes, but expressions may be interpolated with `\$`. As
-an example, a csr matrix which might be constructed as
-`Fiber(DenseLevel(SparseListLevel(Element{0.0}(...))))` can also be constructed
+Construct a fiber using abbreviated level constructor names. Variable names that
+correspond to abbreviations will be substituted with corresponding level constructors,
+otherwise they have normal scoping rules. Expressions may be interpolated with `\$`.
+`Fiber(DenseLevel(SparseListLevel(Element(0.0))))` can also be constructed
 as `@fiber(sl(d(e(0.0))))`. Consult the documentation for the helper function
 [f_code](@ref) for a full listing of format codes.
 """
 macro fiber(ex)
     function walk(ex)
-        if ex isa Expr && ex.head == :call
-            return :(($f_code($(QuoteNode(Val(ex.args[1])))))($(map(walk, ex.args[2:end])...)))
-        elseif ex isa Expr && ex.head == :$
+        if ex isa Expr && ex.head == :$
             return ex.args[1] #TODO ?
+        elseif ex isa Expr
+            return Expr(ex.head, map(walk, ex.args)...)
+        elseif ex isa Symbol
+            return :(@something($f_code($(Val(ex))), $ex))
         else
-            esc(ex)
+            return esc(ex)
         end
     end
     return :($Fiber($(walk(ex))))
 end
+
+@inline f_code(@nospecialize ::Any) = nothing
 
 Base.summary(fbr::Fiber) = "$(join(size(fbr), "×")) @fiber($(summary_f_code(fbr.lvl)))"
 
