@@ -9,6 +9,7 @@ using Base.Iterators
 using Base: @kwdef
 using SparseArrays
 using SnoopPrecompile
+using Compat
 
 export @finch, @finch_program, @finch_code, value
 
