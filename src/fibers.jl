@@ -233,12 +233,11 @@ end
 """
     @fiber ctr
 
-Construct a fiber using abbreviated level constructor names. Variable names that
-correspond to abbreviations will be substituted with corresponding level constructors,
-otherwise they have normal scoping rules. Expressions may be interpolated with `\$`.
-`Fiber(DenseLevel(SparseListLevel(Element(0.0))))` can also be constructed
-as `@fiber(sl(d(e(0.0))))`. Consult the documentation for the helper function
-[f_code](@ref) for a full listing of format codes.
+Construct a fiber using abbreviated level constructor names. To override
+abbreviations, expressions may be interpolated with `\$`. For example,
+`Fiber(DenseLevel(SparseListLevel(Element(0.0))))` can also be constructed as
+`@fiber(sl(d(e(0.0))))`. Consult the documentation for the helper function
+[f_code](@ref) for a full listing of level format codes.
 """
 macro fiber(ex)
     function walk(ex)
