@@ -99,10 +99,10 @@ end
     @precompile_all_calls begin
         # all calls in this block will be precompiled, regardless of whether
         # they belong to your package or not (on Julia 1.8 and higher)
-        #y = @fiber d(e(0.0))
-        #A = @fiber d(sl(e(0.0)))
-        #x = @fiber sl(e(0.0))
-        #Finch.execute_code(:ex, typeof(Finch.@finch_program_instance @loop i j y[i] += A[i, j] * x[i]))
+        y = @fiber d(e(0.0))
+        A = @fiber d(sl(e(0.0)))
+        x = @fiber sl(e(0.0))
+        Finch.execute_code(:ex, typeof(Finch.@finch_program_instance @loop i j y[i] += A[i, j] * x[i]))
     end
 end
 
