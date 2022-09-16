@@ -183,7 +183,7 @@ end
 Finch.getresults(stmt::With) = Finch.getresults(stmt.cons)
 
 struct Multi <: IndexStatement
-    bodies
+    bodies::Vector{Any}
 end
 Base.:(==)(a::Multi, b::Multi) = a.bodies == b.bodies
 
@@ -396,4 +396,4 @@ function display_expression(io, mime, ex::Access)
     print(io, "]")
 end
 
-Finch.getresults(stmt::Access) = [stmt.tns]
+Finch.getresults(stmt::Access) = Any[stmt.tns]
