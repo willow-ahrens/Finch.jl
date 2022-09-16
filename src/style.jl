@@ -23,23 +23,3 @@ _result_style(a, b, c, d) = (c == d) ? c : @assert false "TODO lower_style_ambig
 combine_style(a, b) = UnknownStyle()
 
 combine_style(a::DefaultStyle, b) = b
-
-abstract type AbstractVisitor end
-
-(ctx::AbstractVisitor)(root) = ctx(root, Stylize(root, ctx)(root))
-
-abstract type AbstractTransformVisitor <: AbstractVisitor end
-
-(ctx::AbstractTransformVisitor)(node, style::DefaultStyle) = visit_default!(node, ctx)
-function visit_default!(node, ctx)
-    node = previsit!(node, ctx)
-    if istree(node)
-        postvisit!(node, ctx, map(ctx, arguments(node)))
-    else
-        postvisit!(node, ctx)
-    end
-end
-
-previsit!(node, ctx::AbstractTransformVisitor) = node
-postvisit!(node, ctx::AbstractTransformVisitor, args) = similarterm(node, operation(node), args)
-postvisit!(node, ctx::AbstractTransformVisitor) = node

@@ -124,13 +124,19 @@ combine_style(a::DefaultStyle, b::SimplifyStyle) = SimplifyStyle()
 combine_style(a::ThunkStyle, b::SimplifyStyle) = ThunkStyle()
 combine_style(a::SimplifyStyle, b::SimplifyStyle) = SimplifyStyle()
 
-@kwdef struct SimplifyContext{Ctx} <: AbstractTransformVisitor
-    ctx::Ctx
+@kwdef struct SimplifyVisitor
+    ctx
 end
 
-function postvisit!(node::Simplify, ctx::SimplifyContext)
-    node.body
+function (ctx::SimplifyVisitor)(node)
+    if istree(node)
+        similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        node
+    end
 end
+
+(ctx::SimplifyVisitor)(node::Simplify) = node.body
 
 function simplify(node)
     global rules
@@ -139,7 +145,7 @@ end
 
 function (ctx::LowerJulia)(root, ::SimplifyStyle)
     global rules
-    root = SimplifyContext(ctx)(root)
+    root = SimplifyVisitor(ctx)(root)
     root = simplify(root)
     ctx(root)
 end
@@ -147,7 +153,6 @@ end
 add_rules!(new_rules) = union!(rules, new_rules)
 
 isliteral(::Simplify) = false
-
 
 struct Lexicography{T}
     arg::T

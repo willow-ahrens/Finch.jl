@@ -58,7 +58,7 @@ function (ctx::Finch.Stylize{LowerJulia})(node::Access{<:VirtualSingleBlock})
     end
 end
 
-function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSingleBlock{Tv, Ti}, Read}, ::Finch.DefaultStyle) where {Tv, Ti}
+function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSingleBlock{Tv, Ti}, Read}) where {Tv, Ti}
     vec = node.tns
     if getname(ctx.idx) == getname(node.idxs[1])
         tns = Pipeline([

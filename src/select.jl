@@ -24,7 +24,7 @@ function (ctx::Stylize{LowerJulia})(node::Access{Select})
     end
 end
 
-function (ctx::Finch.ChunkifyVisitor)(node::Access{Select}, ::Finch.DefaultStyle) where {Tv, Ti}
+function (ctx::Finch.ChunkifyVisitor)(node::Access{Select}) where {Tv, Ti}
     vec = node.tns
     if getname(ctx.idx) == getname(node.idxs[2])
         sym = ctx.ctx.freshen(:select_, getname(node.idxs[2]))
@@ -48,9 +48,17 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{Select}, ::Finch.DefaultStyle
     end
 end
 
-struct SelectVisitor <: AbstractTransformVisitor
+struct SelectVisitor
     ctx
     idxs
+end
+
+function (ctx::SelectVisitor)(node)
+    if istree(node)
+        similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        node
+    end
 end
 
 struct SelectStyle end

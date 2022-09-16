@@ -52,7 +52,7 @@ function (ctx::Finch.Stylize{LowerJulia})(node::Access{<:VirtualSimpleJumpVector
     end
 end
 
-function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSimpleJumpVector{Tv, Ti}, Read}, ::Finch.DefaultStyle) where {Tv, Ti}
+function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSimpleJumpVector{Tv, Ti}, Read}) where {Tv, Ti}
     vec = node.tns
     my_i = ctx.ctx.freshen(getname(vec), :_i0)
     my_i′ = ctx.ctx.freshen(getname(vec), :_i1)
@@ -115,7 +115,7 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSimpleJumpVector{Tv, T
     end
 end
 
-function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSimpleJumpVector{Tv, Ti}, <:Union{Write, Update}}, ::Finch.DefaultStyle) where {Tv, Ti}
+function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSimpleJumpVector{Tv, Ti}, <:Union{Write, Update}}) where {Tv, Ti}
     vec = node.tns
     my_p = ctx.ctx.freshen(node.tns.name, :_p)
     my_I = ctx.ctx.freshen(node.tns.name, :_I)

@@ -4,10 +4,18 @@
 A transformation of a program to SSA form. Fresh names will be generated with
 `freshen(name)`.
 """
-@kwdef mutable struct TransformSSA <: AbstractTransformVisitor
+@kwdef mutable struct TransformSSA
     renames
     binds
     freshen
+end
+
+function (ctx::TransformSSA)(node)
+    if istree(node)
+        similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        node
+    end
 end
 
 TransformSSA(freshen) = TransformSSA(Dict(), [], freshen)

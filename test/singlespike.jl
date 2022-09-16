@@ -43,7 +43,7 @@ function (ctx::Finch.Stylize{LowerJulia})(node::Access{<:VirtualSingleSpike})
     end
 end
 
-function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSingleSpike{Tv}, Read}, ::Finch.DefaultStyle) where {Tv}
+function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSingleSpike{Tv}, Read}) where {Tv}
     vec = node.tns
     if getname(ctx.idx) == getname(node.idxs[1])
         tns = Spike(

@@ -117,7 +117,7 @@ function (ctx::Stylize{LowerJulia})(node::Access{<:VirtualFiber})
     return mapreduce(ctx, result_style, arguments(node))
 end
 
-function (ctx::Finch.SelectVisitor)(node::Access{<:VirtualFiber}, ::DefaultStyle) where {Tv, Ti}
+function (ctx::Finch.SelectVisitor)(node::Access{<:VirtualFiber}) where {Tv, Ti}
     if !isempty(node.idxs)
         if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
             var = Name(ctx.ctx.freshen(:s))
@@ -129,7 +129,7 @@ function (ctx::Finch.SelectVisitor)(node::Access{<:VirtualFiber}, ::DefaultStyle
     return similarterm(node, operation(node), map(ctx, arguments(node)))
 end
 
-function (ctx::Finch.ChunkifyVisitor)(node::Access{<:VirtualFiber}, ::DefaultStyle) where {Tv, Ti}
+function (ctx::Finch.ChunkifyVisitor)(node::Access{<:VirtualFiber}) where {Tv, Ti}
     if !isempty(node.idxs)
         if ctx.idx == get_furl_root(node.idxs[1])
             return access(unfurl(node.tns, ctx.ctx, node.mode, node.idxs...), node.mode, get_furl_root(node.idxs[1])) #TODO do this nicer

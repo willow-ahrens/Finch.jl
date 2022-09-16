@@ -143,7 +143,6 @@ function (ctx::Initialize)(node::With)
     With(ctx_2(node.cons), ctx_2(node.prod))
 end
 
-#TODO this really isn't a valid postvisit bc we ignore args
 function (ctx::Initialize)(acc::Access{<:Any})
     if (ctx.target === nothing || (getname(acc.tns) in ctx.target)) && !(getname(acc.tns) in ctx.escape)
         initialize!(acc.tns, ctx.ctx, acc.mode, map(ctx, acc.idxs)...)

@@ -28,7 +28,7 @@ supports_shift(::DefaultStyle) = true
 unchunk(node::Shift, ctx::ForLoopVisitor) = unchunk(node.body, ForLoopVisitor(;kwfields(ctx)..., val = call(-, ctx.val, node.delta)))
 
 supports_shift(::ThunkStyle) = true
-(ctx::ThunkVisitor)(node::Shift, ::DefaultStyle) = Shift(;kwfields(node)..., body = ctx(node.body))
+(ctx::ThunkVisitor)(node::Shift) = Shift(;kwfields(node)..., body = ctx(node.body))
 
 function shiftdim(ext::Extent, delta)
     Extent(

@@ -6,9 +6,17 @@ combine_style(a::ChunkStyle, b::ChunkStyle) = ChunkStyle()
 combine_style(a::ChunkStyle, b::DimensionalizeStyle) = DimensionalizeStyle()
 combine_style(a::ChunkStyle, b::SimplifyStyle) = SimplifyStyle()
 
-struct ChunkifyVisitor <: AbstractTransformVisitor
+struct ChunkifyVisitor
     ctx
     idx
+end
+
+function (ctx::ChunkifyVisitor)(node)
+    if istree(node)
+        similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        node
+    end
 end
 
 function (ctx::LowerJulia)(root::Loop, ::ChunkStyle)

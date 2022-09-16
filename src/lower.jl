@@ -25,13 +25,15 @@ function (spc::Freshen)(tags...)
     end
 end
 
-@kwdef mutable struct LowerJulia <: AbstractVisitor
+@kwdef mutable struct LowerJulia
     preamble::Vector{Any} = []
     bindings::Dict{Any, Any} = Dict()
     epilogue::Vector{Any} = []
     dims::Dict = Dict()
     freshen::Freshen = Freshen()
 end
+
+(ctx::LowerJulia)(root) = ctx(root, Stylize(root, ctx)(root))
 
 function cache!(ctx, var, val)
     if isliteral(val)
@@ -103,8 +105,16 @@ end
 combine_style(a::DefaultStyle, b::ThunkStyle) = ThunkStyle()
 combine_style(a::ThunkStyle, b::ThunkStyle) = ThunkStyle()
 
-struct ThunkVisitor <: AbstractTransformVisitor
+struct ThunkVisitor
     ctx
+end
+
+function (ctx::ThunkVisitor)(node)
+    if istree(node)
+        similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        node
+    end
 end
 
 function (ctx::LowerJulia)(node, ::ThunkStyle)
@@ -114,7 +124,7 @@ function (ctx::LowerJulia)(node, ::ThunkStyle)
     end
 end
 
-function (ctx::ThunkVisitor)(node::Thunk, ::DefaultStyle)
+function (ctx::ThunkVisitor)(node::Thunk)
     push!(ctx.ctx.preamble, node.preamble)
     push!(ctx.ctx.epilogue, node.epilogue)
     for (var, val) in node.binds
@@ -260,10 +270,18 @@ function (ctx::LowerJulia)(stmt::Chunk, ::DefaultStyle)
     end
 end
 
-@kwdef struct ForLoopVisitor <: AbstractTransformVisitor
+@kwdef struct ForLoopVisitor
     ctx
     idx
     val
+end
+
+function (ctx::ForLoopVisitor)(node)
+    if istree(node)
+        similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        node
+    end
 end
 
 @kwdef struct Lookup
@@ -280,14 +298,14 @@ end
 
 isliteral(node::Lookup) = false
 
-function (ctx::ForLoopVisitor)(node::Access{Lookup}, ::DefaultStyle)
+function (ctx::ForLoopVisitor)(node::Access{Lookup})
     node.tns.body(ctx.val)
 end
 
-function (ctx::ForLoopVisitor)(node::Lookup, ::DefaultStyle)
+function (ctx::ForLoopVisitor)(node::Lookup)
     node.body(ctx.val)
 end
 
 unchunk(node, ctx) = nothing
-(ctx::ForLoopVisitor)(node::Access, ::DefaultStyle) = something(unchunk(node.tns, ctx), node)
+(ctx::ForLoopVisitor)(node::Access) = something(unchunk(node.tns, ctx), node)
 unchunk(node::Lookup, ctx::ForLoopVisitor) = node.body(ctx.val)
