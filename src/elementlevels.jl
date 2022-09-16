@@ -159,24 +159,15 @@ function refurl(fbr::VirtualFiber{VirtualElementLevel}, ctx, ::Update)
     )
 end
 
-function (ctx::Finch.LowerJulia)(node::Access{<:VirtualFiber{VirtualElementLevel}}, ::DefaultStyle) where {Tv, Ti}
+function lowerjulia_access(ctx::Finch.LowerJulia, node::Access, tns::VirtualFiber{VirtualElementLevel})
     @assert isempty(node.idxs)
-    tns = node.tns
 
-    node.tns.lvl.val
-end
-
-hasdefaultcheck(::VirtualElementLevel) = true
-
-function (ctx::Finch.LowerJulia)(node::Access{<:VirtualFiber{VirtualElementLevel}, <:Union{Write, Update}}, ::DefaultStyle) where {Tv, Ti}
-    @assert isempty(node.idxs)
-    tns = node.tns
-
-    if envdefaultcheck(tns.env) !== nothing
+    if node.mode isa Union{Write, Update} && envdefaultcheck(tns.env) !== nothing
         push!(ctx.preamble, quote
             $(envdefaultcheck(tns.env)) = false
         end)
     end
-
-    node.tns.lvl.val
+    tns.lvl.val
 end
+
+hasdefaultcheck(::VirtualElementLevel) = true

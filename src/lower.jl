@@ -212,16 +212,18 @@ function (ctx::LowerJulia)(root::Multi, ::DefaultStyle)
     thunk
 end
 
-function (ctx::LowerJulia)(root::Access, ::DefaultStyle)
-    tns = ctx(root.tns)
-    idxs = map(ctx, root.idxs)
+(ctx::Finch.LowerJulia)(node::Access, style::DefaultStyle) = lowerjulia_access(ctx, node, node.tns)
+
+function lowerjulia_access(ctx::Finch.LowerJulia, node::Access, tns)
+    tns = ctx(tns)
+    idxs = map(ctx, node.idxs)
     :($(ctx(tns))[$(idxs...)])
 end
 
 
-function (ctx::LowerJulia)(root::Access{<:Number, Read}, ::DefaultStyle)
-    @assert isempty(root.idxs)
-    return root.tns
+function lowerjulia_access(ctx::Finch.LowerJulia, node::Access, tns::Number)
+    @assert node.mode === Read()
+    tns
 end
 
 function (ctx::LowerJulia)(stmt::Sieve, ::DefaultStyle)

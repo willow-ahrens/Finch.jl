@@ -72,16 +72,12 @@ function refurl(fbr::VirtualFiber{VirtualPatternLevel}, ctx, ::Read)
     Simplify(Literal(true))
 end
 
-function (ctx::Finch.LowerJulia)(node::Access{<:VirtualFiber{VirtualPatternLevel}}, ::DefaultStyle) where {Tv, Ti}
-    @assert isempty(node.idxs)
-    true
-end
-
 hasdefaultcheck(::VirtualPatternLevel) = true
 
-function (ctx::Finch.LowerJulia)(node::Access{<:VirtualFiber{VirtualPatternLevel}, <:Union{Write, Update}}, ::DefaultStyle) where {Tv, Ti}
+function lowerjulia_access(ctx::LowerJulia, node::Access, tns::VirtualFiber{VirtualPatternLevel})
     @assert isempty(node.idxs)
-    tns = node.tns
+
+    node.mode == Read() && return true
 
     if envdefaultcheck(tns.env) !== nothing
         push!(ctx.preamble, quote
