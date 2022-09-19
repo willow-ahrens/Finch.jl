@@ -134,9 +134,10 @@ function (ctx::DeclareDimensions)(node::Access, dim)
 end
 function (ctx::InferDimensions)(node::Access)
     res = map(ctx, node.idxs)
-    dims = map(resolvedim, map(last, res))
     idxs = map(first, res)
     if node.mode != Read()
+        prev_dims = getsize(node.tns, ctx.ctx, node.mode)
+        dims = map(resolvedim, map(resultdim, map(last, res), prev_dims))
         ctx.shapes[getname(node.tns)] = dims
         tns = setsize!(node.tns, ctx.ctx, node.mode, dims...)
     else
