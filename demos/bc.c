@@ -387,18 +387,27 @@ int main(int argc, char** argv) {
 Finch.register()");
 
     // 1 5, 4 5, 3 4, 2 3, 1 2
-    jl_value_t* edge_vector = finch_eval("Cint[0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]");
-    N = 5;
-    source = 5;
+    // expected: [0,0,1,2,0]
+    // jl_value_t* edge_vector = finch_eval("Cint[0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]");
+    // N = 5;
+    // source = 5;
 
     // 2 1, 3 1, 3 2, 1 3, 3 4
+    // expected: [0,0,0,0]
     // jl_value_t* edge_vector = finch_eval("Cint[0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0]");
     // N = 4;
+    // source = 1;
 
     // 2 1, 3 1, 1 2, 3 2, 1 3
+    // expected: [0,0,0]
     // jl_value_t* edge_vector = finch_eval("Cint[0, 1, 1, 1, 0, 0, 1, 1, 0]");
     // N = 3;
 
+    // 2 3, 3 1, 4 3, 5 4, 6 5, 6 7, 7 5, 7 6
+    // expected: [0,0,5,3,2,0]
+    jl_value_t* edge_vector = finch_eval("Cint[0,0,0,0,0,0,0, 0,0,1,0,0,0,0, 1,0,0,0,0,0,0, 0,0,1,0,0,0,0, 0,0,0,1,0,0,0, 0,0,0,0,1,0,1, 0,0,0,0,1,1,0]");
+    N = 7;
+    source = 1;
 
     edges = finch_Fiber(
         finch_Dense(finch_Cint(N),
