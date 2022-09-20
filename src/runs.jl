@@ -43,7 +43,7 @@ function (ctx::AccessRunVisitor)(node)
 end
 
 (ctx::AccessRunVisitor)(node::Access) = something(unchunk(node.tns, ctx), node)
-unchunk(node::AccessRun, ctx::AccessRunVisitor) = node.body(ctx.ctx, getstart(ctx.ext), getstop(ctx.ext))
+unchunk(node::Run, ::AccessRunVisitor) = node.body
 unchunk(node::Shift, ctx::AccessRunVisitor) = unchunk(node.body, ctx)
 
 
