@@ -122,7 +122,6 @@ function (ctx::Finch.SelectVisitor)(node::Access{<:VirtualFiber}, ::DefaultStyle
         if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
             var = Name(ctx.ctx.freshen(:s))
             ctx.idxs[var] = node.idxs[1]
-            ctx.ctx.dims[getname(var)] = getsize(node.tns, ctx, node.mode)[1] #TODO redimensionalization
             return access(node.tns, node.mode, var, node.idxs[2:end]...)
         end
     end
@@ -131,8 +130,11 @@ end
 
 function (ctx::Finch.ChunkifyVisitor)(node::Access{<:VirtualFiber}, ::DefaultStyle) where {Tv, Ti}
     if !isempty(node.idxs)
+        idxs = map(ctx, node.idxs)
         if ctx.idx == get_furl_root(node.idxs[1])
-            return access(unfurl(node.tns, ctx.ctx, node.mode, node.idxs...), node.mode, get_furl_root(node.idxs[1])) #TODO do this nicer
+            return access(unfurl(node.tns, ctx.ctx, node.mode, idxs...), node.mode, get_furl_root(node.idxs[1]))
+        else
+            return access(node.tns, node.mode, idxs...)
         end
     end
     return node
