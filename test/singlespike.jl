@@ -35,7 +35,7 @@ end
 Finch.setsize!(arr::VirtualSingleSpike, ctx::Finch.LowerJulia, mode, dims...) = arr
 Finch.getname(arr::VirtualSingleSpike) = arr.name
 Finch.setname(arr::VirtualSingleSpike, name) = (arr_2 = deepcopy(arr); arr_2.name = name; arr_2)
-function (ctx::Finch.Stylize{LowerJulia})(node::Access{<:VirtualSingleSpike})
+function Finch.stylize_access(node, ctx::Finch.Stylize{LowerJulia}, tns::VirtualSingleSpike)
     if ctx.root isa Loop && ctx.root.idx == get_furl_root(node.idxs[1])
         Finch.ChunkStyle()
     else

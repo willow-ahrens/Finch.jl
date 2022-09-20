@@ -106,7 +106,7 @@ function finalize_level! end
 
 finalize_level!(fbr, ctx, mode) = fbr.lvl
 
-function (ctx::Stylize{LowerJulia})(node::Access{<:VirtualFiber})
+function stylize_access(node, ctx::Stylize{LowerJulia}, tns::VirtualFiber)
     if !isempty(node.idxs)
         if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
             return SelectStyle()

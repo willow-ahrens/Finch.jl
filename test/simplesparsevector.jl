@@ -46,7 +46,7 @@ end
 Finch.setsize!(arr::VirtualSimpleSparseVector{Tv, Ti}, ctx::Finch.LowerJulia, mode, dims...) where {Tv, Ti} = arr
 Finch.getname(arr::VirtualSimpleSparseVector) = arr.name
 Finch.setname(arr::VirtualSimpleSparseVector, name) = (arr_2 = deepcopy(arr); arr_2.name = name; arr_2)
-function (ctx::Finch.Stylize{LowerJulia})(node::Access{<:VirtualSimpleSparseVector})
+function Finch.stylize_access(node, ctx::Finch.Stylize{LowerJulia}, tns::VirtualSimpleSparseVector)
     if ctx.root isa Loop && ctx.root.idx == get_furl_root(node.idxs[1])
         Finch.ChunkStyle()
     else

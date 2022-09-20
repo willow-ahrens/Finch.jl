@@ -13,6 +13,8 @@ function (ctx::Stylize)(node)
     return DefaultStyle()
 end
 
+(ctx::Finch.Stylize)(node::Access) = stylize_access(node, ctx, node.tns)
+stylize_access(node, ctx, tns) = mapreduce(ctx, result_style, arguments(node); init=DefaultStyle())
 
 result_style(a, b) = _result_style(a, b, combine_style(a, b), combine_style(b, a))
 _result_style(a, b, c::UnknownStyle, d::UnknownStyle) = throw(MethodError(combine_style, (a, b)))

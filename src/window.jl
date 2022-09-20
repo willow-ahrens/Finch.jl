@@ -93,7 +93,7 @@ end
 Finch.getname(node::VirtualWindow) = gensym()
 Finch.setname(node::VirtualWindow, name) = node
 
-function (ctx::Stylize{LowerJulia})(node::Access{<:VirtualWindow})
+function stylize_access(node, ctx::Stylize{LowerJulia}, tns::VirtualWindow)
     if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings) && getunbound(node.idxs[2]) ⊆ keys(ctx.ctx.bindings)
         return ThunkStyle()
     end

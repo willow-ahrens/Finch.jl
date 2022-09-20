@@ -93,7 +93,7 @@ Finch.getname(node::Access{VirtualOffset}) = Finch.getname(node.idxs[2])
 Finch.getname(node::VirtualOffset) = gensym()
 Finch.setname(node::VirtualOffset, name) = node
 
-function (ctx::Stylize{LowerJulia})(node::Access{<:VirtualOffset})
+function stylize_access(node, ctx::Stylize{LowerJulia}, tns::VirtualOffset)
     if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
         return ThunkStyle()
     end
