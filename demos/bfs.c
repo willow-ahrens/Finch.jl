@@ -178,6 +178,22 @@ end");
             @f @multi (c[j...] <<min>>= $d) @chunk $i a @f(@multi b... e...)\n\
         end\n\
     end),\n\
+    \n\
+    (@rule @f($or(false, $a)) => a),\n\
+    (@rule @f($or($a, false)) => a),\n\
+    (@rule @f($or($a, true)) => true),\n\
+    (@rule @f($or(true, $a)) => true),\n\
+    \n\
+    (@rule @f(@chunk $i a (b[j...] <<$choose>>= $d)) => if Finch.isliteral(d) && i ∉ j\n\
+        @f (b[j...] <<$choose>>= $d)\n\
+    end),\n\
+    (@rule @f(@chunk $i a @multi b... (c[j...] <<choose>>= $d) e...) => begin\n\
+        if Finch.isliteral(d) && i ∉ j\n\
+            @f @multi (c[j...] <<choose>>= $d) @chunk $i a @f(@multi b... e...)\n\
+        end\n\
+    end),\n\
+    (@rule @f($choose(0, $a)) => a),\n\
+    (@rule @f($choose($a, 0)) => a),\n\
     (@rule @f(@chunk $i a (b[j...] <<$or>>= $d)) => if Finch.isliteral(d) && i ∉ j\n\
         @f (b[j...] <<$or>>= $d)\n\
     end),\n\
