@@ -133,6 +133,8 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{<:VirtualFiber}, ::DefaultSty
         idxs = map(ctx, node.idxs)
         if ctx.idx == get_furl_root(node.idxs[1])
             return access(unfurl(node.tns, ctx.ctx, node.mode, idxs...), node.mode, get_furl_root(node.idxs[1]))
+        else
+            return access(node.tns, node.mode, idxs...)
         end
     end
     return node
