@@ -42,17 +42,9 @@ function (ctx::AccessRunVisitor)(node)
     end
 end
 
-function (ctx::AccessRunVisitor)(node::Access{Run, Read})
-    return node.tns.body
-end
-
-function (ctx::AccessRunVisitor)(node::Access{Shift, Read}) #TODO this is ugly
-    if node.tns.body isa Run
-        return node.tns.body.body
-    else
-        return node
-    end
-end
+(ctx::AccessRunVisitor)(node::Access) = something(unchunk(node.tns, ctx), node)
+unchunk(node::AccessRun, ctx::AccessRunVisitor) = node.body(ctx.ctx, getstart(ctx.ext), getstop(ctx.ext))
+unchunk(node::Shift, ctx::AccessRunVisitor) = unchunk(node.body, ctx)
 
 
 #assume ssa
@@ -104,7 +96,7 @@ function (ctx::AcceptRunVisitor)(node)
     end
 end
 
-(ctx::AcceptRunVisitor)(node::Access{<:Any, <:Union{Write, Update}}) = something(unchunk(node.tns, ctx), node)
+(ctx::AcceptRunVisitor)(node::Access) = node.mode === Read() ? node : something(unchunk(node.tns, ctx), node)
 unchunk(node::AcceptRun, ctx::AcceptRunVisitor) = node.body(ctx.ctx, getstart(ctx.ext), getstop(ctx.ext))
 unchunk(node::Shift, ctx::AcceptRunVisitor) = unchunk(node.body, AcceptRunVisitor(;kwfields(ctx)..., ext = shiftdim(ctx.ext, call(-, node.delta))))
 

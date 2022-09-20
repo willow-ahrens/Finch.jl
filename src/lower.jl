@@ -300,10 +300,6 @@ end
 
 isliteral(node::Lookup) = false
 
-function (ctx::ForLoopVisitor)(node::Access{Lookup})
-    node.tns.body(ctx.val)
-end
-
 function (ctx::ForLoopVisitor)(node::Lookup)
     node.body(ctx.val)
 end
