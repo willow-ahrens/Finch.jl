@@ -8,4 +8,11 @@
         @test y[] == 14
     end
 
+    #https://github.com/willow-ahrens/Finch.jl/issues/59
+    let
+        B = @fiber d(3, e(0, [2, 4, 5]))
+        A = @fiber d(6, e(0))
+        @finch @loop i A[B[i]] = i
+        @test reference_isequal(A, [0, 1, 0, 2, 3, 0])
+    end
 end

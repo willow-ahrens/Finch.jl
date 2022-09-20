@@ -289,5 +289,5 @@ function (ctx::ForLoopVisitor)(node::Lookup, ::DefaultStyle)
 end
 
 unchunk(node, ctx) = nothing
-(ctx::ForLoopVisitor)(node::Access, ::DefaultStyle) = something(unchunk(node.tns, ctx), node)
+(ctx::ForLoopVisitor)(node::Access, ::DefaultStyle) = something(ctx(unchunk(node.tns, ctx)), access(node.tns, node.mode, map(ctx, node.idxs)))
 unchunk(node::Lookup, ctx::ForLoopVisitor) = node.body(ctx.val)
