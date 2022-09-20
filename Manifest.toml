@@ -48,13 +48,7 @@ git-tree-sha1 = "5856d3031cdb1f3b2b6340dfdc66b6d9a149a374"
 uuid = "34da2185-b29b-5c13-b0c7-acf172513d20"
 version = "4.2.0"
 
-[[Compat]]
-deps = ["Dates", "LinearAlgebra", "UUIDs"]
-git-tree-sha1 = "5856d3031cdb1f3b2b6340dfdc66b6d9a149a374"
-uuid = "34da2185-b29b-5c13-b0c7-acf172513d20"
-version = "4.2.0"
-
-[[deps.CompilerSupportLibraries_jll]]
+[[CompilerSupportLibraries_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
 
