@@ -114,25 +114,25 @@ function stylize_access(node, ctx::Stylize{LowerJulia}, tns::VirtualFiber)
             return ChunkStyle()
         end
     end
-    return mapreduce(ctx, result_style, arguments(node))
+    return DefaultStyle()
 end
 
-function (ctx::Finch.SelectVisitor)(node::Access{<:VirtualFiber}) where {Tv, Ti}
+function select_access(node, ctx::Finch.SelectVisitor, tns::VirtualFiber)
     if !isempty(node.idxs)
         if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
             var = Name(ctx.ctx.freshen(:s))
             ctx.idxs[var] = node.idxs[1]
-            ctx.ctx.dims[getname(var)] = getsize(node.tns, ctx, node.mode)[1] #TODO redimensionalization
+            ctx.ctx.dims[getname(var)] = getsize(tns, ctx, node.mode)[1] #TODO redimensionalization
             return access(node.tns, node.mode, var, node.idxs[2:end]...)
         end
     end
     return similarterm(node, operation(node), map(ctx, arguments(node)))
 end
 
-function (ctx::Finch.ChunkifyVisitor)(node::Access{<:VirtualFiber}) where {Tv, Ti}
+function chunkify_access(node, ctx, tns::VirtualFiber)
     if !isempty(node.idxs)
         if ctx.idx == get_furl_root(node.idxs[1])
-            return access(unfurl(node.tns, ctx.ctx, node.mode, node.idxs...), node.mode, get_furl_root(node.idxs[1])) #TODO do this nicer
+            return access(unfurl(tns, ctx.ctx, node.mode, node.idxs...), node.mode, get_furl_root(node.idxs[1])) #TODO do this nicer
         end
     end
     return node

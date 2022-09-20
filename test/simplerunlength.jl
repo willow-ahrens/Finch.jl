@@ -43,69 +43,62 @@ function Finch.stylize_access(node, ctx::Finch.Stylize{LowerJulia}, tns::Virtual
     if ctx.root isa Loop && ctx.root.idx == get_furl_root(node.idxs[1])
         Finch.ChunkStyle()
     else
-        mapreduce(ctx, result_style, arguments(node))
+        Finch.DefaultStyle()
     end
 end
 
-function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSimpleRunLength{Tv, Ti}, Read}) where {Tv, Ti}
-    vec = node.tns
+function Finch.chunkify_access(node, ctx, vec::VirtualSimpleRunLength{Tv, Ti}) where {Tv, Ti}
     my_i′ = ctx.ctx.freshen(getname(vec), :_i1)
     my_p = ctx.ctx.freshen(getname(vec), :_p)
     if getname(ctx.idx) == getname(node.idxs[1])
-        tns = Thunk(
-            preamble = quote
-                $my_p = 1
-                $my_i′ = $(vec.ex).idx[$my_p]
-            end,
-            body = Stepper(
-                seek = (ctx, ext) -> quote
-                    $my_p = searchsortedfirst($(vec.ex).idx, $(ctx(getstart(ext))), $my_p, length($(vec.ex).idx), Base.Forward)
+        if node.mode === Read()
+            tns = Thunk(
+                preamble = quote
+                    $my_p = 1
                     $my_i′ = $(vec.ex).idx[$my_p]
                 end,
-                body = Step(
-                    stride = (ctx, idx, ext) -> my_i′,
-                    chunk = Run(
-                        body = Simplify(Virtual{Tv}(:($(vec.ex).val[$my_p]))),
-                    ),
-                    next = (ctx, idx, ext) -> quote
-                        if $my_p < length($(vec.ex).idx)
-                            $my_p += 1
-                            $my_i′ = $(vec.ex).idx[$my_p]
-                        end
-                    end
-                )
-            )
-        )
-        Access(tns, node.mode, node.idxs)
-    else
-        node
-    end
-end
-
-function (ctx::Finch.ChunkifyVisitor)(node::Access{<:VirtualSimpleRunLength{Tv, Ti}, <: Union{Write, Update}}) where {Tv, Ti}
-    vec = node.tns
-    my_p = ctx.ctx.freshen(node.tns.name, :_p)
-    if getname(ctx.idx) == getname(node.idxs[1])
-        tns = Thunk(
-            preamble = quote
-                $my_p = 0
-                $(vec.ex).idx = $Ti[]
-                $(vec.ex).val = $Tv[]
-            end,
-            body = AcceptRun(
-                body = (ctx, start, stop) -> Thunk(
-                    preamble = quote
-                        push!($(vec.ex).val, zero($Tv))
-                        $my_p += 1
+                body = Stepper(
+                    seek = (ctx, ext) -> quote
+                        $my_p = searchsortedfirst($(vec.ex).idx, $(ctx(getstart(ext))), $my_p, length($(vec.ex).idx), Base.Forward)
+                        $my_i′ = $(vec.ex).idx[$my_p]
                     end,
-                    body = Virtual{Tv}(:($(vec.ex).val[$my_p])),
-                    epilogue = quote
-                        push!($(vec.ex).idx, $(ctx(stop)))
-                    end
+                    body = Step(
+                        stride = (ctx, idx, ext) -> my_i′,
+                        chunk = Run(
+                            body = Simplify(Virtual{Tv}(:($(vec.ex).val[$my_p]))),
+                        ),
+                        next = (ctx, idx, ext) -> quote
+                            if $my_p < length($(vec.ex).idx)
+                                $my_p += 1
+                                $my_i′ = $(vec.ex).idx[$my_p]
+                            end
+                        end
+                    )
                 )
             )
-        )
-        Access(tns, node.mode, node.idxs)
+            Access(tns, node.mode, node.idxs)
+        else
+            tns = Thunk(
+                preamble = quote
+                    $my_p = 0
+                    $(vec.ex).idx = $Ti[]
+                    $(vec.ex).val = $Tv[]
+                end,
+                body = AcceptRun(
+                    body = (ctx, start, stop) -> Thunk(
+                        preamble = quote
+                            push!($(vec.ex).val, zero($Tv))
+                            $my_p += 1
+                        end,
+                        body = Virtual{Tv}(:($(vec.ex).val[$my_p])),
+                        epilogue = quote
+                            push!($(vec.ex).idx, $(ctx(stop)))
+                        end
+                    )
+                )
+            )
+            Access(tns, node.mode, node.idxs)
+        end
     else
         node
     end

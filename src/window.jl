@@ -97,7 +97,7 @@ function stylize_access(node, ctx::Stylize{LowerJulia}, tns::VirtualWindow)
     if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings) && getunbound(node.idxs[2]) ⊆ keys(ctx.ctx.bindings)
         return ThunkStyle()
     end
-    return mapreduce(ctx, result_style, arguments(node))
+    return DefaultStyle()
 end
 
 #TODO needs its own lowering pass, or thunks need to be strictly recursive

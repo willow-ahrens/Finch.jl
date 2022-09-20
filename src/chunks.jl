@@ -19,6 +19,10 @@ function (ctx::ChunkifyVisitor)(node)
     end
 end
 
+(ctx::ChunkifyVisitor)(node::Access) = chunkify_access(node, ctx, node.tns)
+
+chunkify_access(node, ctx, tns) = similarterm(node, operation(node), map(ctx, arguments(node)))
+
 function (ctx::LowerJulia)(root::Loop, ::ChunkStyle)
     idx = root.idx
     #TODO is every read of dims gonna be like this? When do we lock it in?

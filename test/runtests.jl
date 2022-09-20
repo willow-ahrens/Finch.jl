@@ -1,6 +1,7 @@
 using Finch
 using Test
 using MacroTools
+using SyntaxInterface
 
 include("data_matrices.jl")
 

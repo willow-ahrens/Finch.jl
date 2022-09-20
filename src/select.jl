@@ -24,8 +24,7 @@ function stylize_access(node, ctx::Stylize{LowerJulia}, tns::Select)
     end
 end
 
-function (ctx::Finch.ChunkifyVisitor)(node::Access{Select}) where {Tv, Ti}
-    vec = node.tns
+function chunkify_access(node, ctx, ::Select)
     if getname(ctx.idx) == getname(node.idxs[2])
         sym = ctx.ctx.freshen(:select_, getname(node.idxs[2]))
         push!(ctx.ctx.preamble, quote
@@ -60,6 +59,9 @@ function (ctx::SelectVisitor)(node)
         node
     end
 end
+
+(ctx::Finch.SelectVisitor)(node::Access) = select_access(node, ctx, node.tns)
+select_access(node, ctx, tns) = similarterm(node, operation(node), map(ctx, arguments(node)))
 
 struct SelectStyle end
 

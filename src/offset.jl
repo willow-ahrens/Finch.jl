@@ -97,7 +97,7 @@ function stylize_access(node, ctx::Stylize{LowerJulia}, tns::VirtualOffset)
     if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
         return ThunkStyle()
     end
-    return mapreduce(ctx, result_style, arguments(node))
+    return DefaultStyle()
 end
 
 function (ctx::ThunkVisitor)(node::Access{<:VirtualOffset})

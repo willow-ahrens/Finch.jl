@@ -54,12 +54,11 @@ function Finch.stylize_access(node, ctx::Finch.Stylize{LowerJulia}, tns::Virtual
     if ctx.root isa Loop && ctx.root.idx == get_furl_root(node.idxs[1])
         Finch.ChunkStyle()
     else
-        mapreduce(ctx, result_style, arguments(node))
+        Finch.DefaultStyle()
     end
 end
 
-function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSingleBlock{Tv, Ti}, Read}) where {Tv, Ti}
-    vec = node.tns
+function Finch.chunkify_access(node, ctx, vec::VirtualSingleBlock{Tv, Ti}) where {Tv, Ti}
     if getname(ctx.idx) == getname(node.idxs[1])
         tns = Pipeline([
             Phase(
