@@ -143,7 +143,7 @@ function (ctx::Initialize)(node::With)
     With(ctx_2(node.cons), ctx_2(node.prod))
 end
 
-function (ctx::Initialize)(acc::Access{<:Any})
+function (ctx::Initialize)(acc::Access)
     if (ctx.target === nothing || (getname(acc.tns) in ctx.target)) && !(getname(acc.tns) in ctx.escape)
         initialize!(acc.tns, ctx.ctx, acc.mode, map(ctx, acc.idxs)...)
     else
@@ -178,7 +178,7 @@ function (ctx::Finalize)(node::With)
     With(ctx_2(node.cons), ctx_2(node.prod))
 end
 
-function (ctx::Finalize)(acc::Access{<:Any})
+function (ctx::Finalize)(acc::Access)
     if (ctx.target === nothing || (getname(acc.tns) in ctx.target)) && !(getname(acc.tns) in ctx.escape)
         Access(finalize!(acc.tns, ctx.ctx, acc.mode, acc.idxs...), acc.mode, acc.idxs)
     else
