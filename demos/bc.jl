@@ -1,6 +1,5 @@
 using Finch
 using Finch.IndexNotation
-using Finch: execute_code_lowered
 using RewriteTools
 using BenchmarkTools
 using SparseArrays
@@ -40,23 +39,12 @@ end
 
 Finch.register()
 
-function IDs_init(ID)
-    @finch @loop i ID[i] = i
-end
-
-function RevIDs_update(RevID, ID)
-    @finch @loop i j RevID[i] <<$or>>= j * (ID[j] == i) 
-end
-
-function updateIDs(edges, old_ID, RevID, new_ID, N)
-    val = typemax(Cint)
-    B = Finch.Fiber(
-        Dense(N,
-            Element{val, Cint}([])
-        )
-    )
-    @finch @loop a b B[a] <<min>>= old_ID[b] * (edges[RevID[a],RevID[b]] || edges[RevID[b], RevID[a]])
-    @finch @loop a new_ID[a] = min(old_ID[a], B[a])
+function frontier_visit_paths(new_frontier, new_visited, new_num_paths, edges, round, frontier_list, old_visited, old_num_paths)
+    @finch @loop j k begin
+        new_frontier[j] <<$or>>= edges[j,k] * frontier_list[($round-1),k] * (old_visited[j] == 0)
+        new_visited[j] <<$or>>= (old_visited[j] != 0) * 1 + edges[j,k] * frontier_list[($round-1),k] * (old_visited[j] == 0)
+        new_num_paths[j] += edges[j,k] * frontier_list[($round-1),k] * (old_visited[j] == 0) * old_num_paths[k]
+     end
 end
 
 function main()
@@ -72,32 +60,47 @@ function main()
     println("Edges:")
     println(edges.lvl.lvl.lvl.val)
 
-    ID = Finch.Fiber(
+    num_paths = Finch.Fiber(
         Dense(N,
-            Element{0, Cint}([])
+            Element{0, Cint}([0,0,0,1])
         )
     )
-    IDs_init(ID);
-    println("IDs:");
-    println(ID.lvl.lvl.val);
 
-    RevID = Finch.Fiber(
+    new_num_paths = Finch.Fiber(
         Dense(N,
-            Element{0, Cint}([])
+            Element{0, Cint}([0,0,0,1])
         )
     )
-    RevIDs_update(RevID, ID)
-    println("RevID:")
-    println(RevID.lvl.lvl.val);
 
-    new_ID = Finch.Fiber(
+    visited = Finch.Fiber(
         Dense(N,
-            Element{0, Cint}([])
+            Element{0, Cint}([0,0,0,1])
         )
     )
-    updateIDs(edges, ID, RevID, new_ID, N)
-    println("New IDs: ")
-    println(new_IDs.lvl.lvl.va)
+
+    new_visited = Finch.Fiber(
+        Dense(N,
+            Element{0, Cint}([0,0,0,1])
+        )
+    )
+
+    frontier = Finch.Fiber(
+        Dense(N,
+            Element{0, Cint}([0,0,0,1])
+        )
+    )
+
+    frontier_list = Finch.Fiber(
+        Dense(N,
+            Dense(N,
+            Element{0, Cint}([0,0,0,1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+            )
+        )
+    );
+
+    frontier_visit_paths(frontier, new_visited, new_num_paths, edges, 2, frontier_list, visited, num_paths)
+    
+    println(new_num_paths.lvl.lvl.val)
 
 end
 
