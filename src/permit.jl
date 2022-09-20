@@ -53,8 +53,6 @@ function (ctx::InferDimensions)(node::Access{VirtualPermit})
     return (access(node.tns, node.mode, idx), node.tns.I)
 end
 
-Finch.getname(node::Access{VirtualPermit}) = Finch.getname(first(node.idxs))
-
 Finch.getname(node::VirtualPermit) = gensym()
 Finch.setname(node::VirtualPermit, name) = node
 

@@ -88,8 +88,6 @@ function (ctx::InferDimensions)(node::Access{VirtualStaticOffset})
     return (access(node.tns, node.mode, idx), shiftdim(ext, call(-, node.tns.delta)))
 end
 
-Finch.getname(node::Access{VirtualOffset}) = Finch.getname(node.idxs[2])
-
 Finch.getname(node::VirtualOffset) = gensym()
 Finch.setname(node::VirtualOffset, name) = node
 
