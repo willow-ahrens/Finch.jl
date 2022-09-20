@@ -102,24 +102,9 @@ void UpdateEdges(struct cc_data* in_data, struct cc_data* out_data) {
         )\n\
     )\n\
     \n\
-    valid =  Finch.Fiber(\n\
-        Dense(N,\n\
-                Dense(N,\n\
-                    Dense(N,\n\
-                            Dense(N,\n\
-                            Element{val, Cint}([]) \n\
-                        )\n\
-                    )\n\ 
-            )\n\
-        )\n\
-    )\n\
-    \n\
-    # old_ids[j] = a\n\
-    # old_ids[i] = b\n\
-    @finch @loop j i a b valid[a,b,i,j] = (old_ids[j] == a) * (old_ids[i] == b) * (edges[j,i] == 1|| edges[i,j] == 1)\n\
-    @finch @loop a b i j B[a] <<min>>= valid[a,b,i,j] * old_ids[b] + (1-valid[a,b,i,j]) * ($N+1)\n\
-    @finch @loop i new_ids[i] = min(B[i],old_ids[i])\n\
-    @finch @loop i j a b new_update1[] <<$or>>= (old_ids[a] != new_ids[a] || old_ids[b] != new_ids[b]) * valid[a,b,i,j]\n\
+    @finch @loop j i B[old_ids[j]] <<min>>= old_ids[old_ids[i]] * (edges[j,i] == 1|| edges[i,j] == 1) + (edges[j,i] == 0 && edges[i,j] == 0) * ($N + 1)\n\
+    @finch @loop i new_ids[old_ids[i]] = min(B[i],old_ids[i])\n\
+    @finch @loop i j new_update1[] <<$or>>= (old_ids[old_ids[j]] != new_ids[old_ids[j]] || old_ids[old_ids[i]] != new_ids[old_ids[i]]) * (edges[j,i] == 1|| edges[i,j] == 1)\n\
 end");
     jl_value_t* new_ids = finch_Fiber(
         finch_Dense(finch_Cint(N),
@@ -154,9 +139,9 @@ end");
 // update[0] = new[new[i]] != new[i] | i:(OR, 0)
 void UpdateVertices(struct cc_data* in_data, struct cc_data* out_data) {
     jl_function_t* vertex_update = finch_eval("function vertex_update(old_ids, new_ids, new_update0)\n\
-    @finch @loop i a begin\n\
-        new_ids[i] += (old_ids[i] == a) * ( (old_ids[a] != a) * old_ids[a] + (old_ids[a] == a) * a)\n\
-        new_update0[] <<$or>>= (old_ids[i] == a) * (old_ids[a] != a)\n\
+    @finch @loop i begin\n\
+        new_ids[i] += old_ids[old_ids[i]]\n\
+        new_update0[] <<$or>>= (old_ids[old_ids[i]] != old_ids[i])\n\
     end\n\
 end");
     jl_value_t* new_ids = finch_Fiber(
