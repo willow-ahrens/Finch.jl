@@ -7,3 +7,4 @@ println(@elapsed Finch.execute_code(:ex, typeof(Finch.@finch_program_instance @l
 # With precompilation, this takes 48.013980111s on my garbage macbookpro
 # With precompilation and removing excess style computations, this takes 45.323332916s on my garbage macbookpro
 # After making arrays more reliably Any, this takes 44.811293213
+# After deparameterizing Access, this takes 37.820099751
