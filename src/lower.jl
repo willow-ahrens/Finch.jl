@@ -133,6 +133,10 @@ function (ctx::ThunkVisitor)(node::Thunk)
     node.body
 end
 
+#TODO this shouldn't exist
+(ctx::ThunkVisitor)(node::Access) = thunk_access(node, ctx, node.tns)
+thunk_access(node, ctx, tns) = similarterm(node, operation(node), map(ctx, arguments(node)))
+
 #default lowering
 
 (ctx::LowerJulia)(::Pass, ::DefaultStyle) = quote end

@@ -98,7 +98,7 @@ function stylize_access(node, ctx::Stylize{LowerJulia}, tns::VirtualOffset)
     return DefaultStyle()
 end
 
-function (ctx::ThunkVisitor)(node::Access{<:VirtualOffset})
+function thunk_access(node, ctx, tns::VirtualOffset)
     if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
         delta = cache!(ctx.ctx, :delta, node.idxs[1])
         return access(Dimensionalize(VirtualStaticOffset(delta=delta)), node.mode, node.idxs[2])

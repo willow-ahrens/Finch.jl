@@ -368,9 +368,9 @@ struct Read <: IndexTerminal end
 struct Write <: IndexTerminal end
 struct Update <: IndexTerminal end
 
-struct Access{T, M} <: IndexExpression
-    tns::T
-    mode::M
+struct Access <: IndexExpression
+    tns::Any
+    mode::Any
     idxs::Vector
 end
 Base.:(==)(a::Access, b::Access) = a.tns == b.tns && a.idxs == b.idxs
