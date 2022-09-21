@@ -111,9 +111,8 @@ end
 Finch.getname(node::VirtualStaticWindow) = gensym()
 Finch.setname(node::VirtualStaticWindow, name) = node
 
-get_furl_root(idx::Access{VirtualStaticWindow}) = get_furl_root(idx.idxs[1])
-function exfurl(tns, ctx, mode, idx::Access{VirtualStaticWindow})
-    node = idx.tns
+get_furl_root_access(idx::Access, ::VirtualStaticWindow) = get_furl_root(idx.idxs[1])
+function exfurl_access(tns, ctx, mode, idx, node::VirtualStaticWindow)
     body = Shift(truncate(tns, ctx, node.dim, node.target), call(-, getstart(node.dim), getstart(node.target)))
     exfurl(body, ctx, mode, idx.idxs[1])
 end
