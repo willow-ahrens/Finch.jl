@@ -88,7 +88,6 @@ function execute_code(ex, T)
         lower_cleanup |>
         MacroTools.striplines |>
         MacroTools.flatten |>
-        MacroTools.unresolve |> #TODO is this okay? I'm not really sure.
         MacroTools.resyntax |>
         unquote_literals
 end
