@@ -13,13 +13,24 @@ finch_methods = length(methodinstances(Finch))
 rewrite_methods = length(methodinstances(RewriteTools))
 
 @info "results" first_run second_run finch_methods rewrite_methods
-# With no precompilation or anything, this takes 71.272644599s on my garbage macbookpro
-# With precompilation, this takes 48.013980111s on my garbage macbookpro
-# With precompilation and removing excess style computations, this takes 45.323332916s on my garbage macbookpro
-# After making arrays more reliably Any, this takes 44.811293213
-# After deparameterizing Access and removing unresolve:
+# Starting point
+#┌ Info: results
+#│   first_run = 67.862103246
+#│   second_run = 0.22789351
+#│   tests = 7m22.4s
+#│   finch_methods = 866
+#└   rewrite_methods = 1788
+# With precompilation
+#┌ Info: results
+#│   first_run = 43.688420017
+#│   second_run = 0.137507335
+#│   tests = 6m49.2s
+#│   finch_methods = 866
+#└   rewrite_methods = 1784
+# After deparameterizing Access and cleaning up:
 #┌ Info: results
 #│   first_run = 39.680086167
 #│   second_run = 0.138437737
+#│   tests = 4m04.4s
 #│   finch_methods = 994
 #└   rewrite_methods = 1612
