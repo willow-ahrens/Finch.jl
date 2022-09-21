@@ -121,26 +121,27 @@ function (ctx::InferDimensions)(node::Protocol)
     (protocol(idx, node.val), dim)
 end
 
-function (ctx::DeclareDimensions)(node::Access, dim)
-    if haskey(ctx.shapes, getname(node.tns))
-        dims = ctx.shapes[getname(node.tns)][getsites(node.tns)]
-        tns = setsize!(node.tns, ctx.ctx, node.mode, dims...)
+(ctx::DeclareDimensions)(node::Access, dim) = declare_dimensions_access(node, ctx, node.tns, dim)
+function declare_dimensions_access(node, ctx, tns, dim)
+    if haskey(ctx.shapes, getname(tns))
+        dims = ctx.shapes[getname(tns)][getsites(tns)]
+        tns = setsize!(tns, ctx.ctx, node.mode, dims...)
     else
-        dims = getsize(node.tns, ctx.ctx, node.mode)
-        tns = node.tns
+        dims = getsize(tns, ctx.ctx, node.mode)
     end
     idxs = map(ctx, node.idxs, dims)
     access(tns, node.mode, idxs...)
 end
-function (ctx::InferDimensions)(node::Access)
+
+(ctx::InferDimensions)(node::Access) = infer_dimensions_access(node, ctx, node.tns)
+#TODO this would be a good candidate for an index modifier node
+function infer_dimensions_access(node, ctx, tns)
     res = map(ctx, node.idxs)
     dims = map(resolvedim, map(last, res))
     idxs = map(first, res)
     if node.mode != Read()
-        ctx.shapes[getname(node.tns)] = dims
-        tns = setsize!(node.tns, ctx.ctx, node.mode, dims...)
-    else
-        tns = node.tns
+        ctx.shapes[getname(tns)] = dims
+        tns = setsize!(tns, ctx.ctx, node.mode, dims...)
     end
     (access(tns, node.mode, idxs...), nodim)
 end

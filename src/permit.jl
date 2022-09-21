@@ -44,13 +44,14 @@ function Finch.getsize(arr::VirtualPermit, ctx::Finch.LowerJulia, mode)
 end
 #Finch.setsize!(arr::VirtualPermit, ctx::Finch.LowerJulia, mode, dim) = VirtualPermit(dim)
 
-function (ctx::DeclareDimensions)(node::Access{VirtualPermit}, ext)
+function declare_dimensions_access(node, ctx, tns::VirtualPermit, ext)
     idx = ctx(node.idxs[1], widendim(ext))
     return access(VirtualPermit(ext), node.mode, idx)
 end
-function (ctx::InferDimensions)(node::Access{VirtualPermit})
+
+function infer_dimensions_access(node, ctx, tns::VirtualPermit)
     (idx, _) = ctx(node.idxs[1])
-    return (access(node.tns, node.mode, idx), node.tns.I)
+    return (access(tns, node.mode, idx), tns.I)
 end
 
 Finch.getname(node::VirtualPermit) = gensym()

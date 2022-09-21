@@ -78,14 +78,14 @@ virtualize(ex, ::Type{Offset}, ctx) = VirtualOffset()
 Finch.getsize(arr::VirtualOffset, ctx::Finch.LowerJulia, mode) = (nodim, deferdim)
 Finch.setsize!(arr::VirtualOffset, ctx::Finch.LowerJulia, mode, dim1, dim2) = arr
 
-function (ctx::DeclareDimensions)(node::Access{VirtualStaticOffset}, ext)
-    idx = ctx(node.idxs[1], shiftdim(ext, node.tns.delta))
-    return access(VirtualStaticOffset(;kwfields(node.tns)..., dim=ext), node.mode, idx)
+function declare_dimensions_access(node, ctx, tns::VirtualStaticOffset, ext)
+    idx = ctx(node.idxs[1], shiftdim(ext, tns.delta))
+    return access(VirtualStaticOffset(;kwfields(tns)..., dim=ext), node.mode, idx)
 end
 
-function (ctx::InferDimensions)(node::Access{VirtualStaticOffset})
+function infer_dimensions_access(node, ctx, tns::VirtualStaticOffset)
     idx, ext = ctx(node.idxs[1])
-    return (access(node.tns, node.mode, idx), shiftdim(ext, call(-, node.tns.delta)))
+    return (access(tns, node.mode, idx), shiftdim(ext, call(-, tns.delta)))
 end
 
 Finch.getname(node::VirtualOffset) = gensym()

@@ -79,15 +79,15 @@ virtualize(ex, ::Type{Window}, ctx) = VirtualWindow()
 Finch.getsize(arr::VirtualWindow, ctx::Finch.LowerJulia, mode) = (nodim, nodim, nodim)
 Finch.setsize!(arr::VirtualWindow, ctx::Finch.LowerJulia, mode, dim1, dim2, dim3) = arr
 
-function (ctx::DeclareDimensions)(node::Access{VirtualStaticWindow}, dim)
-    idx = ctx(node.idxs[1], shiftdim(node.tns.target, call(-, getstart(dim), getstart(node.tns.target))))
+function declare_dimensions_access(node, ctx, tns::VirtualStaticWindow, dim)
+    idx = ctx(node.idxs[1], shiftdim(tns.target, call(-, getstart(dim), getstart(tns.target))))
     #TODO we should check that dim is subset of ext here somehow. I think we check on the first time dim is not nodim or deferdim
-    return access(VirtualStaticWindow(; kwfields(node.tns)..., dim=dim), node.mode, idx)
+    return access(VirtualStaticWindow(; kwfields(tns)..., dim=dim), node.mode, idx)
 end
 
-function (ctx::InferDimensions)(node::Access{VirtualStaticWindow})
+function infer_dimensions_access(node, ctx, tns::VirtualStaticWindow)
     idx, ext = ctx(node.idxs[1])
-    return (access(node.tns, node.mode, idx), node.tns.target) #TODO this feels only partially correct
+    return (access(tns, node.mode, idx), tns.target) #TODO this feels only partially correct
 end
 
 Finch.getname(node::VirtualWindow) = gensym()
