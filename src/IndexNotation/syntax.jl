@@ -2,6 +2,7 @@
 
 const incs = Dict(:+= => :+, :*= => :*, :&= => :&, :|= => :|)
 
+dollar(x) = x
 const program_nodes = (
     pass = pass,
     loop = loop,
@@ -14,8 +15,9 @@ const program_nodes = (
     access = access,
     protocol = protocol,
     name = Name,
-    label = esc,
-    value = esc,
+    label = (ex) -> :($(esc(:dollar))(index_terminal($(esc(ex))))),
+    literal = Literal,
+    value = (ex) -> :($(esc(:dollar))(index_terminal($(esc(ex))))),
 )
 
 const instance_nodes = (
@@ -31,6 +33,7 @@ const instance_nodes = (
     protocol = protocol_instance,
     name = name_instance,
     label = (ex) -> :($label_instance($(QuoteNode(ex)), $value_instance($(esc(ex))))),
+    literal = literal_instance,
     value = (ex) -> :($value_instance($(esc(ex))))
 )
 
@@ -119,14 +122,18 @@ function _finch_capture(ex, ctx)
     elseif @capture ex (idx_::proto_)
         idx = _finch_capture(idx, ctx)
         return :($(ctx.nodes.protocol)($idx, $(esc(proto))))
+    elseif ex isa Expr && ex.head == :...
+        return esc(ex)
     elseif ex isa Expr && ex.head == :$ && length(ex.args) == 1
         return esc(ex.args[1])
     elseif ex isa Symbol && ctx.namify
         return ctx.nodes.name(ex)
     elseif ex isa Symbol
         return ctx.nodes.label(ex)
-    else
+    elseif ex isa Expr
         return ctx.nodes.value(ex)
+    else
+        return ctx.nodes.literal(ex)
     end
 end
 
