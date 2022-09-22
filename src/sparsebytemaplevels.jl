@@ -93,7 +93,7 @@ mutable struct VirtualSparseBytemapLevel
 end
 function virtualize(ex, ::Type{SparseBytemapLevel{Ti, Tp, Tq, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Tq, Lvl}   
     sym = ctx.freshen(tag)
-    I = Virtual{Int}(:($sym.I))
+    I = Value{Int}(:($sym.I))
     tbl_alloc = ctx.freshen(sym, :_tbl_alloc)
     srt_stop = ctx.freshen(sym, :_srt_stop)
     srt_alloc = ctx.freshen(sym, :_srt_alloc)
@@ -173,7 +173,7 @@ function initialize_level!(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx::Lo
                     $i = last($(lvl.ex).srt[$r])
                     $q = ($p - 1) * $(ctx(lvl.I)) + $i
                 end)
-                reinitialize(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env, position = Virtual{Ti}(q), index = Virtual{Ti}(i))))
+                reinitialize(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env, position = Value{Ti}(q), index = Value{Ti}(i))))
             else
                 quote end
             end)
@@ -214,7 +214,7 @@ function assemble!(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode)
             for $q = $q_start:$q_stop
                 for $i = 1:$(ctx(lvl.I))
                     $q = ($q - 1) * $(ctx(lvl.I)) + $i
-                    assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual(q), index=Virtual(i), parent=fbr.env)), ctx, mode)
+                    assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value(q), index=Value(i), parent=fbr.env)), ctx, mode)
                 end
             end
         end)
@@ -292,7 +292,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Read, i
                                     preamble = quote
                                         $my_q = ($(ctx(envposition(fbr.env))) - 1) * $(ctx(lvl.I)) + $my_i
                                     end,
-                                    body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=Virtual{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
+                                    body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Ti}(my_q), index=Value{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
                                 ),
                             ),
                             next = (ctx, idx, ext) -> quote
@@ -354,7 +354,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Read, i
                                             preamble = quote
                                                 $my_q = ($(ctx(envposition(fbr.env))) - 1) * $(ctx(lvl.I)) + $my_i
                                             end,
-                                            body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=Virtual{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
+                                            body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Ti}(my_q), index=Value{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
                                         ),
                                     ),
                                     epilogue = quote
@@ -380,7 +380,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Read, i
                                                     preamble = quote
                                                         $my_q = ($(ctx(envposition(fbr.env))) - 1) * $(ctx(lvl.I)) + $my_i
                                                     end,
-                                                    body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=Virtual{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
+                                                    body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Ti}(my_q), index=Value{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
                                                 ),
                                             ),
                                             next = (ctx, idx, ext) -> quote
@@ -417,7 +417,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Read, i
                 $my_q = $(ctx(q)) * $(ctx(lvl.I)) + $i
             end,
             body = Switch([
-                :($tbl[$my_q]) => refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Tq}(my_q), index=i, parent=fbr.env)), ctx, mode, idxs...),
+                :($tbl[$my_q]) => refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Tq}(my_q), index=i, parent=fbr.env)), ctx, mode, idxs...),
                 true => Simplify(default(fbr))
             ])
         )
@@ -446,7 +446,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Union{W
                 $my_guard = true
                 $my_q = ($(ctx(envposition(fbr.env))) - 1) * $(ctx(lvl.I)) + $idx
             end,
-            body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode, idxs...),
+            body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Ti}(my_q), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode, idxs...),
             epilogue = begin
                 body = quote
                     if !$(lvl.ex).tbl[$my_q]

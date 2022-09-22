@@ -50,7 +50,7 @@ function cache!(ctx, var, val)
         quote
             $var = $body
         end))
-        return Virtual{Any}(var)
+        return Value{Any}(var)
     end
 end
 
@@ -182,7 +182,7 @@ function (ctx::LowerJulia)(root, ::DefaultStyle)
     error("Don't know how to lower $root")
 end
 
-function (ctx::LowerJulia)(root::Virtual, ::DefaultStyle)
+function (ctx::LowerJulia)(root::Value, ::DefaultStyle)
     return root.ex
 end
 

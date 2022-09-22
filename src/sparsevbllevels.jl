@@ -89,7 +89,7 @@ mutable struct VirtualSparseVBLLevel
 end
 function virtualize(ex, ::Type{SparseVBLLevel{Ti, Lvl}}, ctx, tag=:lvl) where {Ti, Lvl}
     sym = ctx.freshen(tag)
-    I = Virtual{Int}(:($sym.I))
+    I = Value{Int}(:($sym.I))
     pos_alloc = ctx.freshen(sym, :_pos_alloc)
     idx_alloc = ctx.freshen(sym, :_idx_alloc)
     ofs_alloc = ctx.freshen(sym, :_ofs_alloc)
@@ -225,7 +225,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode::Read, idx::
                                                 preamble = quote
                                                     $my_q = $my_q_ofs + $i
                                                 end,
-                                                body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=Virtual{lvl.Ti}(i), parent=fbr.env)), ctx, mode, idxs...),
+                                                body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Ti}(my_q), index=Value{lvl.Ti}(i), parent=fbr.env)), ctx, mode, idxs...),
                                             )
                                         )
                                     )
@@ -307,7 +307,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode::Read, idx::
                                                     preamble = quote
                                                         $my_q = $my_q_ofs + $i
                                                     end,
-                                                    body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=Virtual{lvl.Ti}(i), parent=fbr.env)), ctx, mode, idxs...),
+                                                    body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Ti}(my_q), index=Value{lvl.Ti}(i), parent=fbr.env)), ctx, mode, idxs...),
                                                 )
                                             )
                                         )
@@ -344,7 +344,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode::Read, idx::
                                                                 preamble = quote
                                                                     $my_q = $my_q_ofs + $i
                                                                 end,
-                                                                body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=Virtual{lvl.Ti}(i), parent=fbr.env)), ctx, mode, idxs...),
+                                                                body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Ti}(my_q), index=Value{lvl.Ti}(i), parent=fbr.env)), ctx, mode, idxs...),
                                                             )
                                                         )
                                                     )
@@ -405,7 +405,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode::Union{Write
                     end
                 )
             end,
-            body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode, idxs...),
+            body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Ti}(my_q), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode, idxs...),
             epilogue = begin
                 #We should be careful here. Presumably, we haven't modified the subfiber because it is still default. Is this always true? Should strict assembly happen every time?
                 body = quote

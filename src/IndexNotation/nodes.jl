@@ -70,17 +70,17 @@ Finch.isliteral(::Literal) = true
 Finch.getvalue(ex::Literal) = ex.val
 Base.:(==)(a::Literal, b::Literal) = isequal(a.val, b.val)
 
-struct Virtual{T} <: IndexTerminal
+struct Value{T} <: IndexTerminal
     ex
 end
 
-Base.:(==)(a::Virtual, b::Virtual) = false
-Base.:(==)(a::Virtual{T}, b::Virtual{T}) where {T} = a.ex == b.ex
-Base.hash(ex::Virtual{T}, h::UInt) where {T} = hash(Virtual{T}, hash(ex.ex, h))
+Base.:(==)(a::Value, b::Value) = false
+Base.:(==)(a::Value{T}, b::Value{T}) where {T} = a.ex == b.ex
+Base.hash(ex::Value{T}, h::UInt) where {T} = hash(Value{T}, hash(ex.ex, h))
 
-SyntaxInterface.istree(::Virtual) = false
+SyntaxInterface.istree(::Value) = false
 
-isliteral(::Virtual) = false
+isliteral(::Value) = false
 
 struct Pass <: IndexStatement
 	tnss::Vector{Any}

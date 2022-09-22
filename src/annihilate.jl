@@ -67,7 +67,7 @@
     (@rule @f(a[i..., $($(Literal(missing))), j...] <<f>>= $b) => pass(a)),
     (@rule @f(a[i..., $($(Literal(missing))), j...]) => Literal(missing)),
     (@rule @f(coalesce(a..., $($(Literal(missing))), b...)) => @f coalesce(a..., b...)),
-    (@rule @f(coalesce(a..., $b, c...)) => if b isa Virtual && !(Virtual{missing} <: typeof(b)); @f(coalesce(a..., $b)) end),
+    (@rule @f(coalesce(a..., $b, c...)) => if b isa Value && !(Value{missing} <: typeof(b)); @f(coalesce(a..., $b)) end),
     (@rule @f(coalesce(a..., $b, c...)) => if b isa Literal && b != Literal(missing); @f(coalesce(a..., $b)) end),
     (@rule @f(coalesce($a)) => a),
 
@@ -211,8 +211,8 @@ comparators(x::Update) = ()
 priority(::Workspace) = (3,3)
 comparators(x::Workspace) = (x.n,)
 
-priority(::Virtual) = (3,4)
-comparators(x::Virtual) = (string(typeof(x)), Lexicography(x.ex))
+priority(::Value) = (3,4)
+comparators(x::Value) = (string(typeof(x)), Lexicography(x.ex))
 
 priority(::IndexNode) = (3,Inf)
 comparators(x::IndexNode) = (@assert istree(x); (string(operation(x)), map(Lexicography, arguments(x))...))

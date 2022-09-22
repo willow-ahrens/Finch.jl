@@ -106,7 +106,7 @@ mutable struct VirtualSparseHashLevel
 end
 function virtualize(ex, ::Type{SparseHashLevel{N, Ti, Tp, T_q, Tbl, Lvl}}, ctx, tag=:lvl) where {N, Ti, Tp, T_q, Tbl, Lvl}   
     sym = ctx.freshen(tag)
-    I = map(n->Virtual{Int}(:($sym.I[$n])), 1:N)
+    I = map(n->Value{Int}(:($sym.I[$n])), 1:N)
     P = ctx.freshen(sym, :_P)
     pos_alloc = ctx.freshen(sym, :_pos_alloc)
     idx_alloc = ctx.freshen(sym, :_idx_alloc)
@@ -216,8 +216,8 @@ function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode::Read, idx:
     R = length(envdeferred(fbr.env)) + 1
     @assert R == 1 || (envgetstart(fbr.env) !== nothing && envgetstop(fbr.env) !== nothing)
     if R == 1
-        q_start = Virtual{lvl.Tp}(:($(lvl.ex).pos[$(ctx(envposition(fbr.env)))]))
-        q_stop = Virtual{lvl.Tp}(:($(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1]))
+        q_start = Value{lvl.Tp}(:($(lvl.ex).pos[$(ctx(envposition(fbr.env)))]))
+        q_stop = Value{lvl.Tp}(:($(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1]))
     else
         q_start = envgetstart(fbr.env)
         q_stop = envgetstop(fbr.env)
@@ -256,8 +256,8 @@ function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode::Read, idx:
                                     body = Simplify(default(fbr)),
                                     tail = begin
                                         env_2 = VirtualEnvironment(
-                                        position=Virtual{lvl.Ti}(:(last($(lvl.ex).srt[$my_q])[$R])),
-                                        index=Virtual{lvl.Ti}(my_i),
+                                        position=Value{lvl.Ti}(:(last($(lvl.ex).srt[$my_q])[$R])),
+                                        index=Value{lvl.Ti}(my_i),
                                         parent=fbr.env)
                                         refurl(VirtualFiber(lvl.lvl, env_2), ctx, mode, idxs...)
                                     end,
@@ -273,9 +273,9 @@ function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode::Read, idx:
                                     body = Simplify(default(fbr)),
                                     tail = begin
                                         env_2 = VirtualEnvironment(
-                                            start=Virtual{lvl.Ti}(my_q),
-                                            stop=Virtual{lvl.Ti}(my_q_step),
-                                            index=Virtual{lvl.Ti}(my_i),
+                                            start=Value{lvl.Ti}(my_q),
+                                            stop=Value{lvl.Ti}(my_q_step),
+                                            index=Value{lvl.Ti}(my_i),
                                             parent=fbr.env,
                                             internal=true)
                                         refurl(VirtualFiber(lvl, env_2), ctx, mode, idxs...)
@@ -317,7 +317,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode::Read, idx:
                     $my_q = get($(lvl.ex).tbl, $my_key, 0)
                 end,
                 body = Switch([
-                    :($my_q != 0) => refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Tq_2}(my_q), index=i, parent=fbr.env)), ctx, mode, idxs...),
+                    :($my_q != 0) => refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Tq_2}(my_q), index=i, parent=fbr.env)), ctx, mode, idxs...),
                     true => Simplify(default(fbr))
                 ])
             )
@@ -364,7 +364,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode::Union{Writ
                             end)
                         end
                     end,
-                    body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode, idxs...),
+                    body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Ti}(my_q), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode, idxs...),
                     epilogue = begin
                         body = quote
                             $(lvl.idx_alloc) = $my_q

@@ -79,7 +79,7 @@ mutable struct VirtualSparseListLevel
 end
 function virtualize(ex, ::Type{SparseListLevel{Ti, Lvl}}, ctx, tag=:lvl) where {Ti, Lvl}
     sym = ctx.freshen(tag)
-    I = Virtual{Int}(:($sym.I))
+    I = Value{Int}(:($sym.I))
     pos_fill = ctx.freshen(sym, :_pos_fill)
     pos_alloc = ctx.freshen(sym, :_pos_alloc)
     idx_alloc = ctx.freshen(sym, :_idx_alloc)
@@ -195,7 +195,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode::Read, idx:
                             stride = (ctx, idx, ext) -> my_i,
                             chunk = Spike(
                                 body = Simplify(default(fbr)),
-                                tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=Virtual{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
+                                tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Ti}(my_q), index=Value{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
                             ),
                             next = (ctx, idx, ext) -> quote
                                 $my_q += 1
@@ -251,7 +251,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode::Read, idx:
                             stride = (ctx, idx, ext) -> my_i,
                             chunk = Spike(
                                 body = Simplify(default(fbr)),
-                                tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=Virtual{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
+                                tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Ti}(my_q), index=Value{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
                             ),
                             next = (ctx, idx, ext) -> quote
                                 $my_q += 1
@@ -307,7 +307,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode::Read, idx:
                                 :($(ctx(getstop(ext_2))) == $my_i) => Thunk(
                                     body = Spike(
                                         body = Simplify(default(fbr)),
-                                        tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=Virtual{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
+                                        tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Ti}(my_q), index=Value{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
                                     ),
                                     epilogue = quote
                                         $my_q += 1
@@ -328,7 +328,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode::Read, idx:
                                             stride = (ctx, idx, ext) -> my_i,
                                             chunk = Spike(
                                                 body = Simplify(default(fbr)),
-                                                tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=Virtual{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
+                                                tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Ti}(my_q), index=Value{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
                                             ),
                                             next = (ctx, idx, ext) -> quote
                                                 $my_q += 1
@@ -390,7 +390,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode::Union{Writ
                     end
                 )
             end,
-            body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(my_q), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode, idxs...),
+            body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Ti}(my_q), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode, idxs...),
             epilogue = begin
                 #We should be careful here. Presumably, we haven't modified the subfiber because it is still default. Is this always true? Should strict assembly happen every time?
                 body = quote

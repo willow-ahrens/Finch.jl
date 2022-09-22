@@ -30,7 +30,7 @@ end
 function Finch.getsize(arr::VirtualSingleSpike{Tv}, ctx::Finch.LowerJulia, mode) where {Tv}
     ex = Symbol(arr.name, :_stop)
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))
-    (Extent(1, Virtual{Int}(ex)),)
+    (Extent(1, Value{Int}(ex)),)
 end
 Finch.setsize!(arr::VirtualSingleSpike, ctx::Finch.LowerJulia, mode, dims...) = arr
 Finch.getname(arr::VirtualSingleSpike) = arr.name
@@ -47,7 +47,7 @@ function Finch.chunkify_access(node, ctx, vec::VirtualSingleSpike{Tv}) where {Tv
     if getname(ctx.idx) == getname(node.idxs[1])
         tns = Spike(
             body = Simplify(zero(Tv)),
-            tail = Virtual{Tv}(:($(vec.ex).tail))
+            tail = Value{Tv}(:($(vec.ex).tail))
         )
         Access(tns, node.mode, node.idxs)
     else

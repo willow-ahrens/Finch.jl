@@ -250,15 +250,15 @@ combinedim(a::SuggestedExtent, b::NoDimension) = a
 
 combinedim(a::SuggestedExtent, b::SuggestedExtent) = SuggestedExtent(combinedim(a.ext, b.ext))
 
-function combinedim(a::Virtual, b::Virtual)
+function combinedim(a::Value, b::Value)
     a
 end
 
-combinedim(a::Union{<:Virtual, <:Number}, b::IndexExpression) = a
+combinedim(a::Union{<:Value, <:Number}, b::IndexExpression) = a
 
 combinedim(a::IndexExpression, b::IndexExpression) = min(string(a), string(b)) #TODO
 
-combinedim(a::Number, b::Virtual) = a
+combinedim(a::Number, b::Value) = a
 
 function combinedim(a::T, b::T) where {T <: Number}
     a == b || throw(DimensionMismatch("mismatched dimension limits ($a != $b)"))
