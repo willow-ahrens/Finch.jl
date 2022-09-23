@@ -14,11 +14,6 @@ int P = 1000;
 int source = 5;
 jl_value_t* edges = 0;
 
-struct cc_data {
-    jl_value_t* IDs;
-
-    jl_value_t* update;
-};
 
 struct bc_data {
     jl_value_t* frontier_list;
@@ -356,12 +351,95 @@ void BC(struct bc_data* data) {
     *data = new_data;
 }
 
+
+void setup1() {
+    // 1 5, 4 5, 3 4, 2 3, 1 2
+    // expected: [0,0,1,2,0]
+    // jl_value_t* edge_vector = finch_eval("Cint[0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]");
+    N = 5;
+    source = 5;
+    edges = finch_eval("N = 5\n\
+        edge_matrix = sparse([0 0 0 0 0; 1 0 0 0 0; 0 1 0 0 0; 0 0 1 0 0; 1 0 0 1 0])\n\
+        Finch.Fiber(\n\
+                 Dense(N,\n\
+                 SparseList(N, edge_matrix.colptr, edge_matrix.rowval,\n\
+                 Element{0.0}(edge_matrix.nzval))))");
+    
+    struct bc_data d = {};
+    struct bc_data* data = &d;
+    BC(data);
+
+    printf("EXAMPLE1\nFinal deps: \n");
+    finch_exec("println(%s.lvl.lvl.val)", data->deps);
+}
+
+void setup2() {
+    // 2 1, 3 1, 3 2, 3 4
+    // expected: [0,0,0,0]
+    N = 4;
+    source = 1;
+    edges = finch_eval("N = 4\n\
+        edge_matrix = sparse([0 1 1 0; 0 0 1 0; 0 0 0 0; 0 0 1 0])\n\
+        Finch.Fiber(\n\
+                 Dense(N,\n\
+                 SparseList(N, edge_matrix.colptr, edge_matrix.rowval,\n\
+                 Element{0.0}(edge_matrix.nzval))))");
+    
+    struct bc_data d = {};
+    struct bc_data* data = &d;
+    BC(data);
+
+    printf("EXAMPLE2\nFinal deps: \n");
+    finch_exec("println(%s.lvl.lvl.val)", data->deps);
+}
+
+void setup3() {
+    // 2 1, 3 1, 1 2, 3 2, 1 3
+    // expected: [0,0,0]
+    // jl_value_t* edge_vector = finch_eval("Cint[0, 1, 1, 1, 0, 0, 1, 1, 0]");
+    N = 3;
+    edges = finch_eval("N = 3\n\
+        edge_matrix = sparse([0 1 1; 1 0 1; 1 0 0])\n\
+        Finch.Fiber(\n\
+                 Dense(N,\n\
+                 SparseList(N, edge_matrix.colptr, edge_matrix.rowval,\n\
+                 Element{0.0}(edge_matrix.nzval))))");
+    struct bc_data d = {};
+    struct bc_data* data = &d;
+    BC(data);
+
+    printf("EXAMPLE3\nFinal deps: \n");
+    finch_exec("println(%s.lvl.lvl.val)", data->deps);
+}
+
+void setup4() {
+    // 2 3, 3 1, 4 3, 5 4, 6 5, 6 7, 7 5, 7 6
+    // expected: [0,0,5,3,2,0]
+    // jl_value_t* edge_vector = finch_eval("Cint[0,0,0,0,0,0,0, 0,0,1,0,0,0,0, 1,0,0,0,0,0,0, 0,0,1,0,0,0,0, 0,0,0,1,0,0,0, 0,0,0,0,1,0,1, 0,0,0,0,1,1,0]");
+    N = 7;
+    source = 1;
+    edges = finch_eval("N = 7\n\
+    edge_matrix = sparse([0 0 1 0 0 0 0; 0 0 0 0 0 0 0; 0 1 0 1 0 0 0; 0 0 0 0 1 0 0; 0 0 0 0 0 1 1; 0 0 0 0 0 0 1; 0 0 0 0 0 1 0])\n\
+    Finch.Fiber(\n\
+                Dense(N,\n\
+                SparseList(N, edge_matrix.colptr, edge_matrix.rowval,\n\
+                Element{0.0}(edge_matrix.nzval))))");
+
+    struct bc_data d = {};
+    struct bc_data* data = &d;
+    BC(data);
+
+    printf("EXAMPLE4\n Final deps: \n");
+    finch_exec("println(%s.lvl.lvl.val)", data->deps);
+}
+
 int main(int argc, char** argv) {
 
     finch_initialize();
 
     jl_value_t* res = finch_eval("using RewriteTools\n\
     using Finch.IndexNotation\n\
+    using SparseArrays\n\
     ");
 
     res = finch_eval("or(x,y) = x == 1|| y == 1\n\
@@ -410,43 +488,13 @@ end");
 \n\
 Finch.register()");
 
-    // 1 5, 4 5, 3 4, 2 3, 1 2
-    // expected: [0,0,1,2,0]
-    // jl_value_t* edge_vector = finch_eval("Cint[0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]");
-    // N = 5;
-    // source = 5;
+    setup1();
 
-    // 2 1, 3 1, 3 2, 1 3, 3 4
-    // expected: [0,0,0,0]
-    // jl_value_t* edge_vector = finch_eval("Cint[0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0]");
-    // N = 4;
-    // source = 1;
+    setup2();
 
-    // 2 1, 3 1, 1 2, 3 2, 1 3
-    // expected: [0,0,0]
-    // jl_value_t* edge_vector = finch_eval("Cint[0, 1, 1, 1, 0, 0, 1, 1, 0]");
-    // N = 3;
+    setup3();
 
-    // 2 3, 3 1, 4 3, 5 4, 6 5, 6 7, 7 5, 7 6
-    // expected: [0,0,5,3,2,0]
-    jl_value_t* edge_vector = finch_eval("Cint[0,0,0,0,0,0,0, 0,0,1,0,0,0,0, 1,0,0,0,0,0,0, 0,0,1,0,0,0,0, 0,0,0,1,0,0,0, 0,0,0,0,1,0,1, 0,0,0,0,1,1,0]");
-    N = 7;
-    source = 1;
-
-    edges = finch_Fiber(
-        finch_Dense(finch_Cint(N),
-                finch_Dense(finch_Cint(N),
-                    finch_ElementLevel(finch_Cint(0), edge_vector)
-                )
-            )
-        );
-
-    struct bc_data d = {};
-    struct bc_data* data = &d;
-    BC(data);
-
-    printf("Final deps: \n");
-    finch_exec("println(%s.lvl.lvl.val)", data->deps);
+    setup4();
 
     finch_finalize();
 }

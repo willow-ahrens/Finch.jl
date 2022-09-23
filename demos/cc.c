@@ -171,12 +171,95 @@ void CC(struct cc_data* data) {
     data->update = new_data.update;
 }
 
+
+void setup1() {
+    // 1 5, 4 5, 3 4, 2 3, 1 2
+    //jl_value_t* edge_vector = finch_eval("Cint[0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]");
+    N = 5;
+    edges = finch_eval("N = 5\n\
+        edge_matrix = sparse([0 0 0 0 0; 1 0 0 0 0; 0 1 0 0 0; 0 0 1 0 0; 1 0 0 1 0])\n\
+        Finch.Fiber(\n\
+                 Dense(N,\n\
+                 SparseList(N, edge_matrix.colptr, edge_matrix.rowval,\n\
+                 Element{0.0}(edge_matrix.nzval))))");
+    struct cc_data d = {};
+    struct cc_data* data = &d;
+    CC(data);
+
+    printf("EXAMPLE1\nFinal: \n");
+    finch_exec("println(%s.lvl.lvl.val)", data->IDs);
+}
+
+void setup2() {
+    // 2 1, 3 1, 3 2, 3 4
+    N = 4;
+    edges = finch_eval("N = 4\n\
+         edge_matrix = sparse([0 1 1 0; 0 0 1 0; 0 0 0 0; 0 0 1 0])\n\
+         Finch.Fiber(\n\
+                 Dense(N,\n\
+                 SparseList(N, edge_matrix.colptr, edge_matrix.rowval,\n\
+                 Element{0.0}(edge_matrix.nzval))))");
+    // jl_value_t* edge_vector = finch_eval("Cint[0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0]");
+    // N = 4;
+    // edges = finch_Fiber(
+    //     finch_Dense(finch_Cint(N),
+    //             finch_Dense(finch_Cint(N),
+    //                 finch_ElementLevel(finch_Cint(0), edge_vector)
+    //             )
+    //         )
+    //     );
+    struct cc_data d = {};
+    struct cc_data* data = &d;
+    CC(data);
+
+    printf("EXAMPLE2\nFinal: \n");
+    finch_exec("println(%s.lvl.lvl.val)", data->IDs);
+}
+
+void setup3() {
+    // 2 1, 3 1, 1 2, 3 2, 1 3
+    // jl_value_t* edge_vector = finch_eval("Cint[0, 1, 1, 1, 0, 0, 1, 1, 0]");
+    N = 3;
+    edges = finch_eval("N = 3\n\
+        edge_matrix = sparse([0 1 1; 1 0 1; 1 0 0])\n\
+        Finch.Fiber(\n\
+                 Dense(N,\n\
+                 SparseList(N, edge_matrix.colptr, edge_matrix.rowval,\n\
+                 Element{0.0}(edge_matrix.nzval))))");
+    struct cc_data d = {};
+    struct cc_data* data = &d;
+    CC(data);
+
+    printf("EXAMPLE3\nFinal: \n");
+    finch_exec("println(%s.lvl.lvl.val)", data->IDs);
+}
+
+void setup4() {
+    // 2 3, 3 1, 4 3, 5 4, 6 5, 6 7, 7 5, 7 6
+    // jl_value_t* edge_vector = finch_eval("Cint[0,0,0,0,0,0,0, 0,0,1,0,0,0,0, 1,0,0,0,0,0,0, 0,0,1,0,0,0,0, 0,0,0,1,0,0,0, 0,0,0,0,1,0,1, 0,0,0,0,1,1,0]");
+    N = 7;
+    edges = finch_eval("N = 7\n\
+    edge_matrix = sparse([0 0 1 0 0 0 0; 0 0 0 0 0 0 0; 0 1 0 1 0 0 0; 0 0 0 0 1 0 0; 0 0 0 0 0 1 1; 0 0 0 0 0 0 1; 0 0 0 0 0 1 0])\n\
+    Finch.Fiber(\n\
+                Dense(N,\n\
+                SparseList(N, edge_matrix.colptr, edge_matrix.rowval,\n\
+                Element{0.0}(edge_matrix.nzval))))");
+    struct cc_data d = {};
+    struct cc_data* data = &d;
+    CC(data);
+
+    printf("EXAMPLE4\n Final: \n");
+    finch_exec("println(%s.lvl.lvl.val)", data->IDs);
+}
+
+
 int main(int argc, char** argv) {
 
     finch_initialize();
 
     jl_value_t* res = finch_eval("using RewriteTools\n\
     using Finch.IndexNotation\n\
+    using SparseArrays\n\
     ");
 
     res = finch_eval("or(x,y) = x == 1|| y == 1\n\
@@ -225,33 +308,13 @@ end");
 \n\
 Finch.register()");
 
-    // 1 5, 4 5, 3 4, 2 3, 1 2
-    // jl_value_t* edge_vector = finch_eval("Cint[0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]");
-    // N = 5;
+    setup1();
 
-    // 2 1, 3 1, 3 2, 1 3, 3 4 + isolated 5
-    jl_value_t* edge_vector = finch_eval("Cint[0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]");
-    N = 5;
+    setup2();
 
-    // 2 1, 3 1, 1 2, 3 2, 1 3
-    // jl_value_t* edge_vector = finch_eval("Cint[0, 1, 1, 1, 0, 0, 1, 1, 0]");
-    // N = 3;
+    setup3();
 
-
-    edges = finch_Fiber(
-        finch_Dense(finch_Cint(N),
-                finch_Dense(finch_Cint(N),
-                    finch_ElementLevel(finch_Cint(0), edge_vector)
-                )
-            )
-        );
-
-    struct cc_data d = {};
-    struct cc_data* data = &d;
-    CC(data);
-
-    printf("Final IDs: \n");
-    finch_exec("println(%s.lvl.lvl.val)", data->IDs);
+    setup4();
 
     finch_finalize();
 }

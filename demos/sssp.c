@@ -53,7 +53,7 @@ end");
 //     dist[j] = (j != source) * P
 jl_value_t* Init_dist() {
     jl_function_t* dist_init = finch_eval("function dist_init(source, P, dist)\n\
-    @finch @loop j dist[j] = (j != $source) * ($P - 1)\n\
+    @finch @loop j dist[j] = (j != $source) * $P\n\
 end");
 
     jl_value_t* val = finch_eval("Cint[]");
@@ -202,11 +202,118 @@ int SSSP(struct sssp_data* final_data) {
     return priority;
 }
 
+
+void setup1() {
+    // 1 5, 4 5, 3 4, 2 3, 1 2
+    // jl_value_t* edge_vector = finch_eval("Cint[0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]");
+    N = 5;
+    source = 5;
+    P = 5;
+    edges = finch_eval("N = 5\n\
+        edge_matrix = sparse([0 0 0 0 0; 1 0 0 0 0; 0 1 0 0 0; 0 0 1 0 0; 1 0 0 1 0])\n\
+        Finch.Fiber(\n\
+                 Dense(N,\n\
+                 SparseList(N, edge_matrix.colptr, edge_matrix.rowval,\n\
+                 Element{0.0}(edge_matrix.nzval))))");
+    // 0, 1, 0, 0, 3, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0
+    weights = finch_eval("N = 4\n\
+        matrix = sparse([0 0 0 0 0; 1 0 0 0 0; 0 1 0 0 0; 0 0 1 0 0; 3 0 0 1 0])\n\
+        Finch.Fiber(\n\
+                 Dense(N,\n\
+                 SparseList(N, matrix.colptr, matrix.rowval,\n\
+                 Element{0.0}(matrix.nzval))))");
+    struct sssp_data d = {};
+    struct sssp_data* data = &d;
+    SSSP(data);
+
+    printf("EXAMPLE1\nFinal: \n");
+    finch_exec("println(%s.lvl.lvl.val)", data->dist);
+}
+
+void setup2() {
+    // 2 1, 3 1, 3 2, 3 4
+    N = 4;
+    source = 1;
+    P = 4;
+    edges = finch_eval("N = 4\n\
+        edge_matrix = sparse([0 1 1 0; 0 0 1 0; 0 0 0 0; 0 0 1 0])\n\
+        Finch.Fiber(\n\
+                 Dense(N,\n\
+                 SparseList(N, edge_matrix.colptr, edge_matrix.rowval,\n\
+                 Element{0.0}(edge_matrix.nzval))))");
+    weights = finch_eval("N = 4\n\
+        matrix = sparse([0 1 3 0; 0 0 1 0; 0 0 0 0; 0 0 5 0])\n\
+        Finch.Fiber(\n\
+                 Dense(N,\n\
+                 SparseList(N, matrix.colptr, matrix.rowval,\n\
+                 Element{0.0}(matrix.nzval))))");
+    
+    struct sssp_data d = {};
+    struct sssp_data* data = &d;
+    SSSP(data);
+
+    printf("EXAMPLE2\nFinal: \n");
+    finch_exec("println(%s.lvl.lvl.val)", data->dist);
+}
+
+void setup3() {
+    // 2 1, 3 1, 1 2, 3 2, 1 3
+    // jl_value_t* edge_vector = finch_eval("Cint[0, 1, 1, 1, 0, 0, 1, 1, 0]");
+    N = 3;
+    source = 1;
+    P = 3;
+    edges = finch_eval("N = 3\n\
+        edge_matrix = sparse([0 1 1; 1 0 1; 1 0 0])\n\
+        Finch.Fiber(\n\
+                 Dense(N,\n\
+                 SparseList(N, edge_matrix.colptr, edge_matrix.rowval,\n\
+                 Element{0.0}(edge_matrix.nzval))))");
+    weights = finch_eval("N = 4\n\
+        matrix = sparse([0 1 5; 2 0 1; 1 0 0])\n\
+        Finch.Fiber(\n\
+                 Dense(N,\n\
+                 SparseList(N, matrix.colptr, matrix.rowval,\n\
+                 Element{0.0}(matrix.nzval))))");
+    struct sssp_data d = {};
+    struct sssp_data* data = &d;
+    SSSP(data);
+
+    printf("EXAMPLE3\nFinal: \n");
+    finch_exec("println(%s.lvl.lvl.val)", data->dist);
+}
+
+void setup4() {
+    // 2 3, 3 1, 4 3, 5 4, 6 5, 6 7, 7 5, 7 6
+    // jl_value_t* edge_vector = finch_eval("Cint[0,0,0,0,0,0,0, 0,0,1,0,0,0,0, 1,0,0,0,0,0,0, 0,0,1,0,0,0,0, 0,0,0,1,0,0,0, 0,0,0,0,1,0,1, 0,0,0,0,1,1,0]");
+    N = 7;
+    P = 20;
+    source = 1;
+    edges = finch_eval("N = 7\n\
+    edge_matrix = sparse([0 0 1 0 0 0 0; 0 0 0 0 0 0 0; 0 1 0 1 0 0 0; 0 0 0 0 1 0 0; 0 0 0 0 0 1 1; 0 0 0 0 0 0 1; 0 0 0 0 0 1 0])\n\
+    Finch.Fiber(\n\
+                Dense(N,\n\
+                SparseList(N, edge_matrix.colptr, edge_matrix.rowval,\n\
+                Element{0.0}(edge_matrix.nzval))))");
+    weights = finch_eval("N = 4\n\
+        matrix = sparse([0 0 1 0 0 0 0; 0 0 0 0 0 0 0; 0 9 0 1 0 0 0; 0 0 0 0 1 0 0; 0 0 0 0 0 3 1; 0 0 0 0 0 0 1; 0 0 0 0 0 1 0])\n\
+        Finch.Fiber(\n\
+                 Dense(N,\n\
+                 SparseList(N, matrix.colptr, matrix.rowval,\n\
+                 Element{0.0}(matrix.nzval))))");
+    struct sssp_data d = {};
+    struct sssp_data* data = &d;
+    SSSP(data);
+
+    printf("EXAMPLE4\n Final: \n");
+    finch_exec("println(%s.lvl.lvl.val)", data->dist);
+}
+
 int main(int argc, char** argv) {
     finch_initialize();
 
     jl_value_t* res = finch_eval("using RewriteTools\n\
     using Finch.IndexNotation\n\
+     using SparseArrays\n\
     ");
 
     res = finch_eval("or(x,y) = x == 1|| y == 1\n\
@@ -254,71 +361,13 @@ end");
 ])\n\
 \n\
 Finch.register()");
+    setup1();
 
-    jl_value_t* pos = finch_eval("Cint[1, 3, 4, 5, 6, 6]");
-    jl_value_t* idx = finch_eval("Cint[2, 5, 3, 4, 5]");
-    jl_value_t* val = finch_eval("Cint[1, 1, 1, 1, 1]");
+    setup2();
 
-    // 1 5, 4 5, 3 4, 2 3, 1 2
-    // jl_value_t* edge_vector = finch_eval("Cint[0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]");
-    // N = 5;
-    // source = 5;
+    setup3();
 
-    // 2 1, 3 1, 3 2, 3 4
-    jl_value_t* edge_vector = finch_eval("Cint[0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0]");
-    N = 4;
-    source = 4;
-
-
-    edges = finch_Fiber(
-        finch_Dense(finch_Cint(N),
-            // finch_HollowListLevel(
-            //     finch_Cint(N),
-            //     pos, 
-            //     idx,
-            //     finch_ElementLevel(finch_Int64(0),val)
-            // )
-                finch_Dense(finch_Cint(N),
-                    finch_ElementLevel(finch_Cint(0), edge_vector)
-                )
-            )
-        );
-
-    jl_value_t* pos_w = finch_eval("Cint[1, 3, 4, 5, 6, 6]");
-    jl_value_t* idx_w= finch_eval("Cint[2, 5, 3, 4, 5]");
-    jl_value_t* val_w = finch_eval("Cint[1, 3, 1, 1, 1]");
-
-    // 1 5, 4 5, 3 4, 2 3, 1 2
-    // jl_value_t* weight_vector = finch_eval("Cint[0, 1, 0, 0, 3, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]");
-
-     // 2 1, 3 1, 3 2, 3 4
-    jl_value_t* weight_vector = finch_eval("Cint[0, 0, 0, 0, 1, 0, 0, 0, 3, 1, 0, 5, 0, 0, 0, 0]");
-
-    weights = finch_Fiber(
-        finch_Dense(finch_Cint(N),
-            // finch_HollowListLevel(
-            //     finch_Cint(N),
-            //     pos_w, 
-            //     idx_w,
-            //     finch_ElementLevel(finch_Int64(0),val_w)
-            // )
-                finch_Dense(finch_Cint(N),
-                    finch_ElementLevel(finch_Cint(0), weight_vector)
-                )
-            )
-        );
-    struct sssp_data new_data_val = {};
-    struct sssp_data* new_data = &new_data_val;
-    int p = SSSP(new_data);
-
-    printf("Final Dist: \n");
-    finch_exec("println(%s.lvl.lvl.val)", new_data->dist);
-
-    printf("Final priorityQ: \n");
-    finch_exec("println(%s.lvl.lvl.lvl.val)", new_data->priorityQ);
-
-    printf("Final priority: %d\n", p);
-
+    setup4();
 
     finch_finalize();
 }

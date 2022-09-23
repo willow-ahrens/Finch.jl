@@ -1,6 +1,5 @@
 using Finch
 using Finch.IndexNotation
-using Finch: execute_code_lowered
 using RewriteTools
 using BenchmarkTools
 using SparseArrays
@@ -37,6 +36,21 @@ end
             @f @multi (c[j...] <<$or>>= $d) @chunk $i a @f(@multi b... e...)
         end
     end),
+    (@rule @f($or(0, $a)) => a),
+    (@rule @f($or($a, 0)) => a),
+    (@rule @f($or($a, 1)) => 1),
+    (@rule @f($or(1, $a)) => 1),
+    
+    (@rule @f(@chunk $i a (b[j...] <<$choose>>= $d)) => if Finch.isliteral(d) && i ∉ j
+        @f (b[j...] <<$choose>>= $d)
+    end),
+    (@rule @f(@chunk $i a @multi b... (c[j...] <<choose>>= $d) e...) => begin
+        if Finch.isliteral(d) && i ∉ j
+            @f @multi (c[j...] <<choose>>= $d) @chunk $i a @f(@multi b... e...)
+        end
+    end),
+    (@rule @f($choose(0, $a)) => a),
+    (@rule @f($choose($a, 0)) => a)
 ])
 
 Finch.register()
@@ -88,7 +102,7 @@ function main()
     N = 5
     source = 5
     F = Finch.Fiber(
-        Dense(N,
+        SparseList(N,
         Element{0, Cint}([]))
     );
     
@@ -112,19 +126,27 @@ function main()
     println("V_out:")
     println(V_out.lvl.lvl.val)
 
-    edge_vector = Cint[0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]
+    # [0 1 0 0 1; 0 0 1 0 0; 0 0 0 1 0; 0 0 0 0 1; 0 0 0 0 0]
+    edge_matrix = sparse([0 0 0 0 0; 1 0 0 0 0; 0 1 0 0 0; 0 0 1 0 0; 1 0 0 1 0])
     edges = Finch.Fiber(
-        Dense(N,
                 Dense(N,
-                    Element{0, Cint}(edge_vector)
-                )
-            )
-    )
+                SparseList(N, edge_matrix.colptr, edge_matrix.rowval,
+                Element{0.0}(edge_matrix.nzval))))
+    # edge_pos = [1, 3, 4, 5, 6, 6]
+    # edge_idx = [2, 5, 3, 4, 5]
+    # edge_vals = [1, 1, 1, 1, 1]
+    # edges = Finch.Fiber(
+    #             Dense(N,
+    #             SparseList(N, edge_pos, edge_idx,
+    #             Element{0.0}(edge_vals))))
     println("Edges:")
     println(edges.lvl.lvl.lvl.val)
+    println(edges.lvl.lvl.pos)
+    println(edges.lvl.lvl.idx)
+    println(edges.lvl.lvl.I)
 
     F_out = Finch.Fiber(
-        Dense(N,
+        SparseList(N,
         Element{0, Cint}([]))
     );
     # F_out_func(F_out, edges, F, V_out);
@@ -147,3 +169,8 @@ function main()
 end
 
 main()
+
+# works on F dense, edges dense
+# fails on F sparse, edges sparse
+# fails on F dense, edges sparse
+# works on F sparse, edges dense 

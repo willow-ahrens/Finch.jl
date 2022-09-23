@@ -33,13 +33,13 @@ void Init(struct bfs_data* data) {
 end");
     jl_value_t *val = finch_eval("Cint[]");
     jl_value_t* F = finch_Fiber(
-        finch_Dense(finch_Cint(N),
+        finch_SparseList(finch_Cint(N),
         finch_ElementLevel(finch_Cint(0), val))
     );
     finch_call(F_init, F, finch_Cint(source));
     data->F = F;
     printf("F init:\n");
-    finch_exec("println(%s)\n", F);
+    finch_exec("println(%s.lvl.lvl.val)\n", F);
 
      jl_function_t* P_init = finch_eval("function P_init(P, source)\n\
     @finch @loop j P[j] = (j == $source) * (0 - 2) + (j != $source) * (0 - 1)\n\
@@ -80,7 +80,7 @@ void F_P_update(struct bfs_data* in_data, struct bfs_data* out_data, jl_value_t*
 end");
 
     jl_value_t* F_out = finch_Fiber(
-        finch_Dense(finch_Cint(N),
+        finch_SparseList(finch_Cint(N),
         finch_ElementLevel(finch_Cint(0), finch_eval("Cint[]")))
     );
 
@@ -89,6 +89,8 @@ end");
         finch_ElementLevel(finch_Cint(0), finch_eval("Cint[]")))
     );
 
+    printf("F_in: \n");
+    finch_exec("println(%s.lvl.lvl.val)\n", in_data->F);
     finch_call(P_F_func, F_out, P_out, in_data->P, edges, in_data->F, V_out, finch_Cint(N));
     printf("F_out: \n");
     finch_exec("println(%s.lvl.lvl.val)\n", F_out);
@@ -118,7 +120,7 @@ end");
 //End
 void BFS_Step(struct bfs_data* in_data, struct bfs_data* out_data) {
     jl_value_t* V_out = finch_Fiber(
-        finch_Dense(finch_Cint(N),
+        finch_SparseList(finch_Cint(N),
         finch_ElementLevel(finch_Cint(0), finch_eval("Cint[]")))
     );
     V_update(in_data, V_out);
@@ -153,11 +155,89 @@ void BFS(struct bfs_data* data) {
     }
 }
 
+
+void setup1() {
+    // 1 5, 4 5, 3 4, 2 3, 1 2
+    // jl_value_t* edge_vector = finch_eval("Cint[0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]");
+    N = 5;
+    source = 5;
+    edges = finch_eval("N = 5\n\
+        edge_matrix = sparse([0 0 0 0 0; 1 0 0 0 0; 0 1 0 0 0; 0 0 1 0 0; 1 0 0 1 0])\n\
+        Finch.Fiber(\n\
+                 Dense(N,\n\
+                 SparseList(N, edge_matrix.colptr, edge_matrix.rowval,\n\
+                 Element{0.0}(edge_matrix.nzval))))");
+    struct bfs_data d = {};
+    struct bfs_data* data = &d;
+    BFS(data);
+
+    printf("EXAMPLE1\nFinal: \n");
+    finch_exec("println(%s.lvl.lvl.val)", data->P);
+}
+
+void setup2() {
+    // 2 1, 3 1, 3 2, 3 4
+    N = 4;
+    source = 1;
+    edges = finch_eval("N = 4\n\
+        edge_matrix = sparse([0 1 1 0; 0 0 1 0; 0 0 0 0; 0 0 1 0])\n\
+        Finch.Fiber(\n\
+                 Dense(N,\n\
+                 SparseList(N, edge_matrix.colptr, edge_matrix.rowval,\n\
+                 Element{0.0}(edge_matrix.nzval))))");
+    
+    struct bfs_data d = {};
+    struct bfs_data* data = &d;
+    BFS(data);
+
+    printf("EXAMPLE2\nFinal: \n");
+    finch_exec("println(%s.lvl.lvl.val)", data->P);
+}
+
+void setup3() {
+    // 2 1, 3 1, 1 2, 3 2, 1 3
+    // jl_value_t* edge_vector = finch_eval("Cint[0, 1, 1, 1, 0, 0, 1, 1, 0]");
+    N = 3;
+    source = 1;
+    edges = finch_eval("N = 3\n\
+        edge_matrix = sparse([0 1 1; 1 0 1; 1 0 0])\n\
+        Finch.Fiber(\n\
+                 Dense(N,\n\
+                 SparseList(N, edge_matrix.colptr, edge_matrix.rowval,\n\
+                 Element{0.0}(edge_matrix.nzval))))");
+    struct bfs_data d = {};
+    struct bfs_data* data = &d;
+    BFS(data);
+
+    printf("EXAMPLE3\nFinal: \n");
+    finch_exec("println(%s.lvl.lvl.val)", data->P);
+}
+
+void setup4() {
+    // 2 3, 3 1, 4 3, 5 4, 6 5, 6 7, 7 5, 7 6
+    // jl_value_t* edge_vector = finch_eval("Cint[0,0,0,0,0,0,0, 0,0,1,0,0,0,0, 1,0,0,0,0,0,0, 0,0,1,0,0,0,0, 0,0,0,1,0,0,0, 0,0,0,0,1,0,1, 0,0,0,0,1,1,0]");
+    N = 7;
+    source = 1;
+    edges = finch_eval("N = 7\n\
+    edge_matrix = sparse([0 0 1 0 0 0 0; 0 0 0 0 0 0 0; 0 1 0 1 0 0 0; 0 0 0 0 1 0 0; 0 0 0 0 0 1 1; 0 0 0 0 0 0 1; 0 0 0 0 0 1 0])\n\
+    Finch.Fiber(\n\
+                Dense(N,\n\
+                SparseList(N, edge_matrix.colptr, edge_matrix.rowval,\n\
+                Element{0.0}(edge_matrix.nzval))))");
+    struct bfs_data d = {};
+    struct bfs_data* data = &d;
+    BFS(data);
+
+    printf("EXAMPLE4\n Final: \n");
+    finch_exec("println(%s.lvl.lvl.val)", data->P);
+}
+
 int main(int argc, char** argv) {
     finch_initialize();
 
     jl_value_t* res = finch_eval("using RewriteTools\n\
     using Finch.IndexNotation\n\
+    using SparseArrays\n\
     ");
 
     res = finch_eval("or(x,y) = x == 1|| y == 1\n\
@@ -206,38 +286,13 @@ end");
 \n\
 Finch.register()");
 
-    jl_value_t* pos = finch_eval("Cint[1, 3, 4, 5, 6, 6]");
-    jl_value_t* idx = finch_eval("Cint[2, 5, 3, 4, 5]");
-    jl_value_t* val = finch_eval("Cint[1, 1, 1, 1, 1]");
+    setup1();
 
-    // 1 5, 4 5, 3 4, 2 3, 1 2
-    jl_value_t* edge_vector = finch_eval("Cint[0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]");
-    N = 5;
-    source = 5;
+    setup2();
 
-    // 2 1, 3 1, 3 2, 3 4
-    // jl_value_t* edge_vector = finch_eval("Cint[0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0]");
-    // N = 4;
-    // source = 4;
+    setup3();
 
-
-    edges = finch_Fiber(
-        finch_Dense(finch_Cint(N),
-                finch_Dense(finch_Cint(N),
-                    finch_ElementLevel(finch_Cint(0), edge_vector)
-                )
-            )
-        );
-
-    struct bfs_data nd = {};
-    struct bfs_data* new_data = &nd;
-    BFS(new_data);
-
-    printf("Final P: \n");
-    finch_exec("println(%s.lvl.lvl.val)\n", new_data->P);
-
-    printf("Final F: \n");
-    finch_exec("println(%s.lvl.lvl.val)\n", new_data->F);
+    setup4();
 
     finch_finalize();
 }
