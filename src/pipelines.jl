@@ -45,7 +45,7 @@ function (ctx::LowerJulia)(root::Chunk, ::PipelineStyle)
 
         push!(thunk.args, contain(ctx) do ctx_2
             push!(ctx_2.preamble, :($i0 = $i))
-            ctx_2(Chunk(root.idx, Extent(start = i0, stop = getstop(root.ext), lower = 1), body))
+            ctx_2(Chunk(root.idx, Extent(start = Value(i0), stop = getstop(root.ext), lower = Literal(1)), body))
         end)
 
         push!(visited, key)
@@ -76,6 +76,7 @@ function (ctx::PipelineVisitor)(node)
         [[] => node]
     end
 end
+(ctx::PipelineVisitor)(node::Virtual) = ctx(node.arg)
 (ctx::PipelineVisitor)(node::Pipeline) = enumerate(node.phases)
 
 function (ctx::PipelineVisitor)(node::Shift)

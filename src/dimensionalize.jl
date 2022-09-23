@@ -304,6 +304,8 @@ struct Narrow{Ext}
     ext::Ext
 end
 
+Narrow(ex::Virtual) = Narrow(ex.arg)
+
 IndexNotation.isliteral(::Narrow) = false
 
 narrowdim(dim) = Narrow(dim)
@@ -318,6 +320,8 @@ getstop(ext::Narrow) = getstop(ext.ext)
 struct Widen{Ext}
     ext::Ext
 end
+
+Widen(ex::Virtual) = Widen(ex.arg)
 
 IndexNotation.isliteral(::Widen) = false
 

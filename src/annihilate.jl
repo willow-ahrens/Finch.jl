@@ -158,8 +158,8 @@ add_rules!(new_rules) = union!(rules, new_rules)
 
 IndexNotation.isliteral(::Simplify) =  false
 
-struct Lexicography{T}
-    arg::T
+struct Lexicography
+    arg
 end
 
 function Base.isless(a::Lexicography, b::Lexicography)
@@ -217,6 +217,9 @@ comparators(x::Workspace) = (x.n,)
 
 priority(::Value) = (3,4)
 comparators(x::Value) = (string(typeof(x)), Lexicography(x.ex))
+
+priority(::Virtual) = (3,5)
+comparators(x::Virtual) = (Lexicography(x.arg), )
 
 priority(::IndexNode) = (3,Inf)
 comparators(x::IndexNode) = (@assert istree(x); (string(operation(x)), map(Lexicography, arguments(x))...))

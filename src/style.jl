@@ -13,8 +13,13 @@ function (ctx::Stylize)(node)
     return DefaultStyle()
 end
 
+(ctx::Finch.Stylize)(node::Virtual) = ctx(node.arg)
 (ctx::Finch.Stylize)(node::Access) = mapreduce(ctx, result_style, arguments(node); init=stylize_access(node, ctx, node.tns))
-stylize_access(node, ctx, tns) = DefaultStyle()
+stylize_access(node, ctx, tns::Virtual) = 
+stylize_access(node, ctx, tns.arg)
+stylize_access(node, ctx, @nospecialize tns) = DefaultStyle()
+
+@nospecialize
 
 result_style(a, b) = _result_style(a, b, combine_style(a, b), combine_style(b, a))
 _result_style(a, b, c::UnknownStyle, d::UnknownStyle) = throw(MethodError(combine_style, (a, b)))
@@ -25,3 +30,5 @@ _result_style(a, b, c, d) = (c == d) ? c : @assert false "TODO lower_style_ambig
 combine_style(a, b) = UnknownStyle()
 
 combine_style(a::DefaultStyle, b) = b
+
+@specialize

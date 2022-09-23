@@ -123,6 +123,7 @@ function (ctx::LowerJulia)(node, ::ThunkStyle)
         (ctx2)(node)
     end
 end
+(ctx::ThunkVisitor)(node::Virtual) = ctx(node.arg)
 
 function (ctx::ThunkVisitor)(node::Thunk)
     push!(ctx.ctx.preamble, node.preamble)
@@ -310,5 +311,6 @@ function (ctx::ForLoopVisitor)(node::Lookup)
 end
 
 unchunk(node, ctx) = nothing
+unchunk(node::Virtual, ctx) = unchunk(node.arg, ctx)
 (ctx::ForLoopVisitor)(node::Access) = something(unchunk(node.tns, ctx), node)
 unchunk(node::Lookup, ctx::ForLoopVisitor) = node.body(ctx.val)

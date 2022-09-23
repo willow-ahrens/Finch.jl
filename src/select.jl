@@ -61,12 +61,14 @@ function (ctx::SelectVisitor)(node)
 end
 
 (ctx::Finch.SelectVisitor)(node::Access) = select_access(node, ctx, node.tns)
+select_access(node, ctx, tns::Virtual) = select_access(node, ctx, tns.arg)
 select_access(node, ctx, tns) = similarterm(node, operation(node), map(ctx, arguments(node)))
 
 struct SelectStyle end
 
 combine_style(a::SelectStyle, b::ThunkStyle) = b
 combine_style(a::SelectStyle, b::ChunkStyle) = a
+combine_style(a::SelectStyle, b::SelectStyle) = a
 
 function (ctx::LowerJulia)(root, ::SelectStyle)
     idxs = Dict()

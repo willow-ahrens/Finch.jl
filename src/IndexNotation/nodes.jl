@@ -80,6 +80,7 @@ Value(x) = Value{Any}(x)
 Base.:(==)(a::Value, b::Value) = false
 Base.:(==)(a::Value{T}, b::Value{T}) where {T} = a.ex == b.ex
 Base.hash(ex::Value{T}, h::UInt) where {T} = hash(Value{T}, hash(ex.ex, h))
+display_expression(io, mime, ex::Value) = print(io, "Value($(ex.ex))")
 
 SyntaxInterface.istree(::Value) = false
 
@@ -91,6 +92,7 @@ end
 
 Base.:(==)(a::Virtual, b::Virtual) where {T} = a.arg == b.arg
 Base.hash(ex::Virtual, h::UInt) where {T} = hash(Virtual, hash(ex.arg, h))
+display_expression(io, mime, ex::Virtual) = print(io, "Virtual($(ex.arg))")
 
 SyntaxInterface.istree(::Virtual) = false
 

@@ -41,6 +41,7 @@ function (ctx::AccessRunVisitor)(node)
         return node
     end
 end
+(ctx::AccessRunVisitor)(node::Virtual) = ctx(node.arg)
 
 (ctx::AccessRunVisitor)(node::Access) = something(unchunk(node.tns, ctx), node)
 unchunk(node::Run, ::AccessRunVisitor) = node.body
@@ -95,6 +96,7 @@ function (ctx::AcceptRunVisitor)(node)
         return node
     end
 end
+(ctx::AcceptRunVisitor)(node::Virtual) = ctx(node.arg)
 
 (ctx::AcceptRunVisitor)(node::Access) = node.mode === Read() ? node : something(unchunk(node.tns, ctx), node)
 unchunk(node::AcceptRun, ctx::AcceptRunVisitor) = node.body(ctx.ctx, getstart(ctx.ext), getstop(ctx.ext))

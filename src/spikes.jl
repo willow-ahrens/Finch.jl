@@ -62,6 +62,8 @@ function (ctx::SpikeBodyVisitor)(node)
     end
 end
 
+(ctx::SpikeBodyVisitor)(node::Virtual) = ctx(node.arg)
+
 function (ctx::SpikeBodyVisitor)(node::Spike)
     return Run(node.body)
 end
@@ -86,6 +88,8 @@ function (ctx::SpikeTailVisitor)(node)
         node
     end
 end
+
+(ctx::SpikeTailVisitor)(node::Virtual) = ctx(node.arg)
 
 (ctx::SpikeTailVisitor)(node::Access) = something(unchunk(node.tns, ctx), node)
 unchunk(node::Spike, ctx::SpikeTailVisitor) = node.tail
