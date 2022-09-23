@@ -233,7 +233,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode::Read, idx::
                             body = Step(
                                 stride =  (ctx, idx, ext) -> my_i,
                                 chunk = Spike(
-                                    body = Simplify(default(fbr)),
+                                    body = Simplify(Literal(default(fbr))),
                                     tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Tq}(my_q), index=Value{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
                                 ),
                                 next = (ctx, idx, ext) -> quote
@@ -253,7 +253,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode::Read, idx::
                             body = Step(
                                 stride = (ctx, idx, ext) -> my_i,
                                 chunk = Spike(
-                                    body = Simplify(default(fbr)),
+                                    body = Simplify(Literal(default(fbr))),
                                     tail = refurl(VirtualFiber(lvl, VirtualEnvironment(start=Value{lvl.Ti}(my_q), stop=Value{lvl.Ti}(my_q_step), index=Value{lvl.Ti}(my_i), parent=fbr.env, internal=true)), ctx, mode, idxs...),
                                 ),
                                 next = (ctx, idx, ext) -> quote
@@ -265,7 +265,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode::Read, idx::
                 )
             ),
             Phase(
-                body = (start, step) -> Run(Simplify(default(fbr)))
+                body = (start, step) -> Run(Simplify(Literal(default(fbr))))
             )
         ])
     )

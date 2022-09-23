@@ -1,7 +1,7 @@
 module IndexNotation
     using MacroTools, SyntaxInterface, Finch
 
-    export IndexNode, IndexStatement, IndexExpression, IndexTerminal
+    export IndexNode, IndexStatement, IndexExpression, IndexTerminal, index_terminal
     export Literal
     export Name
     export Value
@@ -25,7 +25,7 @@ module IndexNotation
     export Extrude, extrude
     export Laminate, laminate
 
-    export @f, @finch_program, @finch_program_instance
+    export @f, @_f, @finch_program, @finch_program_instance
 
     include("nodes.jl")
     include("instances.jl")

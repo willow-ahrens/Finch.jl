@@ -13,7 +13,7 @@ function lower_cycle(root, ctx, idx, ext, style)
         ctx_2(Chunk(root.idx, Extent(start = i0, stop = getstop(root.ext), lower = 1), body))
     end
 
-    if simplify((@f $(getlower(ext)) >= 1)) == true  && simplify((@f $(getupper(ext)) <= 1)) == true
+    if simplify((@f $(getlower(ext)) >= 1)) == (@f true) && simplify((@f $(getupper(ext)) <= 1)) == (@f true)
         body_2
     else
         return quote

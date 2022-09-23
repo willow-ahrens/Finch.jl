@@ -75,9 +75,9 @@ function Finch.chunkify_access(node, ctx, vec::VirtualSimpleJumpVector{Tv, Ti}) 
                         stride = (ctx, ext) -> my_i′,
                         body = (ctx, ext, ext_2) -> begin
                             Switch([
-                                :($(ctx(getstop(ext_2))) == $my_i′) => Thunk(
+                                Value(:($(ctx(getstop(ext_2))) == $my_i′)) => Thunk(
                                     body = Spike(
-                                        body = Simplify(zero(Tv)),
+                                        body = Simplify(Literal(zero(Tv))),
                                         tail = Value{Tv}(:($(vec.ex).val[$my_p])),
                                     ),
                                     epilogue = quote
@@ -86,7 +86,7 @@ function Finch.chunkify_access(node, ctx, vec::VirtualSimpleJumpVector{Tv, Ti}) 
                                         $my_i′ = $(vec.ex).idx[$my_p]
                                     end
                                 ),
-                                true => Stepper(
+                                Literal(true) => Stepper(
                                     seek = (ctx, ext) -> quote
                                         $my_p = searchsortedfirst($(vec.ex).idx, $(ctx(getstart(ext))), $my_p, length($(vec.ex).idx), Base.Forward)
                                         $my_i = $(ctx(getstart(ext)))
@@ -95,7 +95,7 @@ function Finch.chunkify_access(node, ctx, vec::VirtualSimpleJumpVector{Tv, Ti}) 
                                     body = Step(
                                         stride = (ctx, idx, ext) -> my_i′,
                                         chunk = Spike(
-                                            body = Simplify(zero(Tv)),
+                                            body = Simplify(Literal(zero(Tv))),
                                             tail = Value{Tv}(:($(vec.ex).val[$my_p])),
                                         ),
                                         next = (ctx, idx, ext) -> quote

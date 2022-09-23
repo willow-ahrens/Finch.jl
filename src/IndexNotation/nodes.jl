@@ -59,8 +59,8 @@ function Base.:(==)(a::T, b::T) with {T <: IndexNode}
 end
 =#
 
-struct Literal{T} <: IndexTerminal
-    val::T
+struct Literal <: IndexTerminal
+    val
 end
 
 SyntaxInterface.istree(::Literal) = false
@@ -73,6 +73,8 @@ Base.:(==)(a::Literal, b::Literal) = isequal(a.val, b.val)
 struct Value{T} <: IndexTerminal
     ex
 end
+
+Value(x) = Value{Any}(x)
 
 Base.:(==)(a::Value, b::Value) = false
 Base.:(==)(a::Value{T}, b::Value{T}) where {T} = a.ex == b.ex

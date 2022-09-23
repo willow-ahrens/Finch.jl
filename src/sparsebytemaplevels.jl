@@ -287,7 +287,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Read, i
                         body = Step(
                             stride = (ctx, idx, ext) -> my_i,
                             chunk = Spike(
-                                body = Simplify(default(fbr)),
+                                body = Simplify(Literal(default(fbr))),
                                 tail = Thunk(
                                     preamble = quote
                                         $my_q = ($(ctx(envposition(fbr.env))) - 1) * $(ctx(lvl.I)) + $my_i
@@ -303,7 +303,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Read, i
                 )
             ),
             Phase(
-                body = (start, step) -> Run(Simplify(default(fbr)))
+                body = (start, step) -> Run(Simplify(Literal(default(fbr))))
             )
         ])
     )
@@ -347,9 +347,9 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Read, i
                             end,
                             stride = (ctx, ext) -> my_i,
                             body = (ctx, ext, ext_2) -> Switch([
-                                :($(ctx(getstop(ext_2))) == $my_i) => Thunk(
+                                Value(:($(ctx(getstop(ext_2))) == $my_i)) => Thunk(
                                     body = Spike(
-                                        body = Simplify(default(fbr)),
+                                        body = Simplify(Literal(default(fbr))),
                                         tail = Thunk(
                                             preamble = quote
                                                 $my_q = ($(ctx(envposition(fbr.env))) - 1) * $(ctx(lvl.I)) + $my_i
@@ -361,7 +361,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Read, i
                                         $my_r += 1
                                     end
                                 ),
-                                true => Stepper(
+                                Literal(true) => Stepper(
                                     seek = (ctx, ext) -> quote
                                         #$my_r = searchsortedfirst($(lvl.ex).idx, $start, $my_r, $my_r_stop, Base.Forward)
                                         while $my_r < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext)))
@@ -375,7 +375,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Read, i
                                         body = Step(
                                             stride = (ctx, idx, ext) -> my_i,
                                             chunk = Spike(
-                                                body = Simplify(default(fbr)),
+                                                body = Simplify(Literal(default(fbr))),
                                                 tail = Thunk(
                                                     preamble = quote
                                                         $my_q = ($(ctx(envposition(fbr.env))) - 1) * $(ctx(lvl.I)) + $my_i
@@ -395,7 +395,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Read, i
                 )
             ),
             Phase(
-                body = (start, step) -> Run(Simplify(default(fbr)))
+                body = (start, step) -> Run(Simplify(Literal(default(fbr))))
             )
         ])
     )
@@ -417,8 +417,8 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Read, i
                 $my_q = $(ctx(q)) * $(ctx(lvl.I)) + $i
             end,
             body = Switch([
-                :($tbl[$my_q]) => refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Tq}(my_q), index=i, parent=fbr.env)), ctx, mode, idxs...),
-                true => Simplify(default(fbr))
+                Value(:($tbl[$my_q])) => refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Tq}(my_q), index=i, parent=fbr.env)), ctx, mode, idxs...),
+                Literal(true) => Simplify(Literal(default(fbr)))
             ])
         )
     )

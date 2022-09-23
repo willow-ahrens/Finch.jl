@@ -172,8 +172,9 @@ end
 
 isliteral(::Union{Symbol, Expr, Missing}) = false
 (ctx::LowerJulia)(root::Union{Symbol, Expr}, ::DefaultStyle) = root
-(ctx::LowerJulia)(root::Literal{<:Union{Symbol, Expr, Missing}}, ::DefaultStyle) = QuoteNode(root.val)
-(ctx::LowerJulia)(root::Literal, ::DefaultStyle) = root.val
+(ctx::LowerJulia)(root::Literal, ::DefaultStyle) = lowerjulia_literal(root.val)
+lowerjulia_literal(val) = val
+lowerjulia_literal(val::Union{Symbol, Expr, Missing}) = QuoteNode(val)
 
 function (ctx::LowerJulia)(root, ::DefaultStyle)
     if isliteral(root)
@@ -252,7 +253,7 @@ function (ctx::LowerJulia)(stmt::Loop, ::DefaultStyle)
 end
 function (ctx::LowerJulia)(stmt::Chunk, ::DefaultStyle)
     idx_sym = ctx.freshen(getname(stmt.idx))
-    if simplify((@f $(getlower(stmt.ext)) >= 1)) == true  && simplify((@f $(getupper(stmt.ext)) <= 1)) == true
+    if simplify((@f $(getlower(stmt.ext)) >= 1)) == (@f true)  && simplify((@f $(getupper(stmt.ext)) <= 1)) == (@f true)
         return quote
             $idx_sym = $(ctx(getstart(stmt.ext)))
             $(bind(ctx, getname(stmt.idx) => idx_sym) do 

@@ -253,7 +253,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode::Read, idx:
                             Step(
                                 stride =  (ctx, idx, ext) -> my_i,
                                 chunk = Spike(
-                                    body = Simplify(default(fbr)),
+                                    body = Simplify(Literal(default(fbr))),
                                     tail = begin
                                         env_2 = VirtualEnvironment(
                                         position=Value{lvl.Ti}(:(last($(lvl.ex).srt[$my_q])[$R])),
@@ -270,7 +270,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode::Read, idx:
                             Step(
                                 stride =  (ctx, idx, ext) -> my_i,
                                 chunk = Spike(
-                                    body = Simplify(default(fbr)),
+                                    body = Simplify(Literal(default(fbr))),
                                     tail = begin
                                         env_2 = VirtualEnvironment(
                                             start=Value{lvl.Ti}(my_q),
@@ -294,7 +294,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode::Read, idx:
                 )
             ),
             Phase(
-                body = (start, step) -> Run(Simplify(default(fbr)))
+                body = (start, step) -> Run(Simplify(Literal(default(fbr))))
             )
         ])
     )
@@ -317,8 +317,8 @@ function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode::Read, idx:
                     $my_q = get($(lvl.ex).tbl, $my_key, 0)
                 end,
                 body = Switch([
-                    :($my_q != 0) => refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Tq_2}(my_q), index=i, parent=fbr.env)), ctx, mode, idxs...),
-                    true => Simplify(default(fbr))
+                    Value(:($my_q != 0)) => refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Tq_2}(my_q), index=i, parent=fbr.env)), ctx, mode, idxs...),
+                    Literal(true) => Simplify(Literal(default(fbr)))
                 ])
             )
         )

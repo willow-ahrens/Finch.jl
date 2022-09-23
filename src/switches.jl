@@ -34,7 +34,7 @@ function (ctx::SwitchVisitor)(node)
             return simplify(@f(and($(guards...)))) => similarterm(node, operation(node), collect(bodies))
         end
     else
-        [(true => node)]
+        [(Literal(true) => node)]
     end
 end
 (ctx::SwitchVisitor)(node::Switch) = node.cases

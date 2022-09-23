@@ -7,18 +7,18 @@ using SparseArrays
 using LinearAlgebra
 
 @slots a b c d e i j Finch.add_rules!([
-    (@rule @f(@chunk $i a (b[j...] <<min>>= $d)) => if Finch.isliteral(d) && i ∉ j
+    (@rule @_f(@chunk $i a (b[j...] <<min>>= $d)) => if Finch.isliteral(d) && i ∉ j
         @f (b[j...] <<min>>= $d)
     end),
-    (@rule @f(@chunk $i a @multi b... (c[j...] <<min>>= $d) e...) => begin
+    (@rule @_f(@chunk $i a @multi b... (c[j...] <<min>>= $d) e...) => begin
         if Finch.isliteral(d) && i ∉ j
             @f @multi (c[j...] <<min>>= $d) @chunk $i a @f(@multi b... e...)
         end
     end),
-    (@rule @f(@chunk $i a (b[j...] <<max>>= $d)) => if Finch.isliteral(d) && i ∉ j
+    (@rule @_f(@chunk $i a (b[j...] <<max>>= $d)) => if Finch.isliteral(d) && i ∉ j
         @f (b[j...] <<max>>= $d)
     end),
-    (@rule @f(@chunk $i a @multi b... (c[j...] <<max>>= $d) e...) => begin
+    (@rule @_f(@chunk $i a @multi b... (c[j...] <<max>>= $d) e...) => begin
         if Finch.isliteral(d) && i ∉ j
             println(@f @multi (c[j...] <<max>>= $d) @chunk $i a @f(@multi b... e...))
             @f @multi (c[j...] <<max>>= $d) @chunk $i a @f(@multi b... e...)
