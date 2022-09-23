@@ -148,7 +148,7 @@ thunk_access(node, ctx, tns) = similarterm(node, operation(node), map(ctx, argum
 (ctx::LowerJulia)(::Pass, ::DefaultStyle) = quote end
 
 function (ctx::LowerJulia)(root::Assign, ::DefaultStyle)
-    if root.op == nothing
+    if root.op == Literal(nothing)
         rhs = ctx(root.rhs)
     else
         rhs = ctx(call(root.op, root.lhs, root.rhs))
