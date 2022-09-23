@@ -1,5 +1,3 @@
-using Finch.IndexNotation
-using Finch.IndexNotation: call_instance, assign_instance, access_instance, value_instance, name_instance, loop_instance, with_instance, label_instance, protocol_instance
 
 @testset "Parse" begin
     @test @finch_program_instance(:f(:B[i::walk, k] * :C[k, j]^3, 42)) ==

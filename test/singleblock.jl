@@ -63,7 +63,7 @@ function Finch.chunkify_access(node, ctx, vec::VirtualSingleBlock{Tv, Ti}) where
         tns = Pipeline([
             Phase(
                 stride = (ctx, idx, ext) -> :($(vec.ex).start - 1),
-                body = (start, step) -> Run(body = Simplify(vec.D))
+                body = (start, step) -> Run(body = Simplify(Literal(vec.D)))
             ),
             Phase(
                 stride = (ctx, idx, ext) -> :($(vec.ex).stop),
@@ -71,7 +71,7 @@ function Finch.chunkify_access(node, ctx, vec::VirtualSingleBlock{Tv, Ti}) where
                     body = (i) -> :($(vec.ex).val[$(ctx.ctx(i)) - $(vec.ex).start + 1]) #TODO all of these functions should really have a ctx
                 )
             ),
-            Phase(body = (start, step) -> Run(body = Simplify(vec.D)))
+            Phase(body = (start, step) -> Run(body = Simplify(Literal(vec.D))))
         ])
         Access(tns, node.mode, node.idxs)
     else

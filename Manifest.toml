@@ -199,7 +199,7 @@ version = "3.4.0"
 
 [[RewriteTools]]
 deps = ["AbstractTrees", "Documenter", "SyntaxInterface"]
-path = "/Users/willow/Projects/RewriteTools.jl/"
+path = "/Users/Peter/Projects/RewriteTools.jl/"
 uuid = "5969e224-3634-4c61-9f66-721b69e98b8a"
 version = "0.1.1"
 

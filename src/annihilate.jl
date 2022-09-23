@@ -20,7 +20,7 @@
             props = Dict()
             b_2 = Postwalk(Chain([
                 (@rule @_f($c[i...] = $d) => if isliteral(d)
-                    props[getname(c)] = Literal(d)
+                    props[getname(c)] = d
                     pass()
                 end),
                 (@rule @_f(@pass(c...)) => begin
