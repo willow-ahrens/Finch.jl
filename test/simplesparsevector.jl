@@ -74,7 +74,7 @@ function Finch.chunkify_access(node, ctx, vec::VirtualSimpleSparseVector{Tv, Ti}
                         $my_i′ = $(vec.ex).idx[$my_p]
                     end,
                     body = Step(
-                        stride = (ctx, idx, ext) -> my_i′,
+                        stride = (ctx, idx, ext) -> Value(my_i′),
                         chunk = Spike(
                             body = Simplify(Literal(zero(Tv))),
                             tail = Value{Tv}(:($(vec.ex).val[$my_p])),

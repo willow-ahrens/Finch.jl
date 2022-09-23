@@ -272,7 +272,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Read, i
         end,
         body = Pipeline([
             Phase(
-                stride = (ctx, idx, ext) -> my_i_stop,
+                stride = (ctx, idx, ext) -> Value(my_i_stop),
                 body = (start, step) -> Stepper(
                     seek = (ctx, ext) -> quote
                         #$my_r = searchsortedfirst($(lvl.ex).idx, $start, $my_r, $my_r_stop, Base.Forward)
@@ -285,7 +285,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Read, i
                             $my_i = last($(lvl.ex).srt[$my_r])
                         ),
                         body = Step(
-                            stride = (ctx, idx, ext) -> my_i,
+                            stride = (ctx, idx, ext) -> Value(my_i),
                             chunk = Spike(
                                 body = Simplify(Literal(default(fbr))),
                                 tail = Thunk(
@@ -334,7 +334,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Read, i
         end,
         body = Pipeline([
             Phase(
-                stride = (ctx, idx, ext) -> my_i_stop,
+                stride = (ctx, idx, ext) -> Value(my_i_stop),
                 body = (start, step) -> Jumper(
                     body = Thunk(
                         body = Jump(
@@ -345,7 +345,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Read, i
                                 end
                                 $my_i = last($(lvl.ex).srt[$my_r])
                             end,
-                            stride = (ctx, ext) -> my_i,
+                            stride = (ctx, ext) -> Value(my_i),
                             body = (ctx, ext, ext_2) -> Switch([
                                 Value(:($(ctx(getstop(ext_2))) == $my_i)) => Thunk(
                                     body = Spike(
@@ -373,7 +373,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Read, i
                                             $my_i = last($(lvl.ex).srt[$my_r])
                                         ),
                                         body = Step(
-                                            stride = (ctx, idx, ext) -> my_i,
+                                            stride = (ctx, idx, ext) -> Value(my_i),
                                             chunk = Spike(
                                                 body = Simplify(Literal(default(fbr))),
                                                 tail = Thunk(

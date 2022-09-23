@@ -218,7 +218,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode::Read, idx::
         end,
         body = Pipeline([
             Phase(
-                stride = (ctx, idx, ext) -> my_i_stop,
+                stride = (ctx, idx, ext) -> Value(my_i_stop),
                 body = (start, stop) -> Stepper(
                     seek = (ctx, ext) -> quote
                         while $my_q < $my_q_stop && $(lvl.ex).tbl[$R][$my_q] < $(ctx(getstart(ext)))
@@ -231,7 +231,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode::Read, idx::
                                 $my_i = $(lvl.ex).tbl[$R][$my_q]
                             end,
                             body = Step(
-                                stride =  (ctx, idx, ext) -> my_i,
+                                stride =  (ctx, idx, ext) -> Value(my_i),
                                 chunk = Spike(
                                     body = Simplify(Literal(default(fbr))),
                                     tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Tq}(my_q), index=Value{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
@@ -251,7 +251,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode::Read, idx::
                                 end
                             end,
                             body = Step(
-                                stride = (ctx, idx, ext) -> my_i,
+                                stride = (ctx, idx, ext) -> Value(my_i),
                                 chunk = Spike(
                                     body = Simplify(Literal(default(fbr))),
                                     tail = refurl(VirtualFiber(lvl, VirtualEnvironment(start=Value{lvl.Ti}(my_q), stop=Value{lvl.Ti}(my_q_step), index=Value{lvl.Ti}(my_i), parent=fbr.env, internal=true)), ctx, mode, idxs...),

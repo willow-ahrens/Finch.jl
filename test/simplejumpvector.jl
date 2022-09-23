@@ -72,7 +72,7 @@ function Finch.chunkify_access(node, ctx, vec::VirtualSimpleJumpVector{Tv, Ti}) 
                             $my_i = $(ctx(getstart(ext)))
                             $my_i′ = $(vec.ex).idx[$my_p]
                         end,
-                        stride = (ctx, ext) -> my_i′,
+                        stride = (ctx, ext) -> Value(my_i′),
                         body = (ctx, ext, ext_2) -> begin
                             Switch([
                                 Value(:($(ctx(getstop(ext_2))) == $my_i′)) => Thunk(
@@ -93,7 +93,7 @@ function Finch.chunkify_access(node, ctx, vec::VirtualSimpleJumpVector{Tv, Ti}) 
                                         $my_i′ = $(vec.ex).idx[$my_p]
                                     end,
                                     body = Step(
-                                        stride = (ctx, idx, ext) -> my_i′,
+                                        stride = (ctx, idx, ext) -> Value(my_i′),
                                         chunk = Spike(
                                             body = Simplify(Literal(zero(Tv))),
                                             tail = Value{Tv}(:($(vec.ex).val[$my_p])),

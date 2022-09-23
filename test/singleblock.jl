@@ -62,11 +62,11 @@ function Finch.chunkify_access(node, ctx, vec::VirtualSingleBlock{Tv, Ti}) where
     if getname(ctx.idx) == getname(node.idxs[1])
         tns = Pipeline([
             Phase(
-                stride = (ctx, idx, ext) -> :($(vec.ex).start - 1),
+                stride = (ctx, idx, ext) -> Value(:($(vec.ex).start - 1)),
                 body = (start, step) -> Run(body = Simplify(Literal(vec.D)))
             ),
             Phase(
-                stride = (ctx, idx, ext) -> :($(vec.ex).stop),
+                stride = (ctx, idx, ext) -> Value(:($(vec.ex).stop)),
                 body = (start, step) -> Lookup(
                     body = (i) -> :($(vec.ex).val[$(ctx.ctx(i)) - $(vec.ex).start + 1]) #TODO all of these functions should really have a ctx
                 )

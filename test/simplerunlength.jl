@@ -63,7 +63,7 @@ function Finch.chunkify_access(node, ctx, vec::VirtualSimpleRunLength{Tv, Ti}) w
                         $my_i′ = $(vec.ex).idx[$my_p]
                     end,
                     body = Step(
-                        stride = (ctx, idx, ext) -> my_i′,
+                        stride = (ctx, idx, ext) -> Value(my_i′),
                         chunk = Run(
                             body = Simplify(Value{Tv}(:($(vec.ex).val[$my_p]))),
                         ),

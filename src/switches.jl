@@ -38,6 +38,7 @@ function (ctx::SwitchVisitor)(node)
     end
 end
 (ctx::SwitchVisitor)(node::Switch) = node.cases
+(ctx::SwitchVisitor)(node::Virtual) = ctx(node.arg)
 
 function (ctx::LowerJulia)(stmt, ::SwitchStyle)
     cases = (SwitchVisitor())(stmt)

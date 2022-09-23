@@ -196,7 +196,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode::Read, idx::
         end,
         body = Pipeline([
             Phase(
-                stride = (ctx, idx, ext) -> my_i1,
+                stride = (ctx, idx, ext) -> Value(my_i1),
                 body = (start, step) -> Stepper(
                     seek = (ctx, ext) -> quote
                         #$my_r = searchsortedfirst($(lvl.ex).idx, $start, $my_r, $my_r_stop, Base.Forward)
@@ -212,11 +212,11 @@ function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode::Read, idx::
                             $my_q_ofs = $my_q_stop - $my_i - 1
                         end,
                         body = Step(
-                            stride = (ctx, idx, ext) -> my_i,
+                            stride = (ctx, idx, ext) -> Value(my_i),
                             body = (ctx, idx, ext, ext_2) -> Thunk(
                                 body = Pipeline([
                                     Phase(
-                                        stride = (ctx, idx, ext) -> my_i_start,
+                                        stride = (ctx, idx, ext) -> Value(my_i_start),
                                         body = (start, step) -> Run(Simplify(Literal(default(fbr)))),
                                     ),
                                     Phase(
@@ -274,7 +274,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode::Read, idx::
 
         body = Pipeline([
             Phase(
-                stride = (ctx, idx, ext) -> my_i1,
+                stride = (ctx, idx, ext) -> Value(my_i1),
                 body = (start, step) -> Jumper(
                     body = Thunk(
                         preamble = quote
@@ -288,7 +288,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode::Read, idx::
                                 end
                                 $my_i = $(lvl.ex).idx[$my_r]
                             end,
-                            stride = (ctx, ext) -> my_i,
+                            stride = (ctx, ext) -> Value(my_i),
                             body = (ctx, ext, ext_2) -> Switch([
                                 Value(:($(ctx(getstop(ext_2))) == $my_i)) => Thunk(
                                     preamble=quote
@@ -298,7 +298,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode::Read, idx::
                                     end,
                                     body = Pipeline([
                                         Phase(
-                                            stride = (ctx, idx, ext) -> my_i_start,
+                                            stride = (ctx, idx, ext) -> Value(my_i_start),
                                             body = (start, step) -> Run(Simplify(Literal(default(fbr)))),
                                         ),
                                         Phase(
@@ -331,11 +331,11 @@ function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode::Read, idx::
                                             $my_q_ofs = $my_q_stop - $my_i - 1
                                         end,
                                         body = Step(
-                                            stride = (ctx, idx, ext) -> my_i,
+                                            stride = (ctx, idx, ext) -> Value(my_i),
                                             body = (ctx, idx, ext, ext_2) -> Thunk(
                                                 body = Pipeline([
                                                     Phase(
-                                                        stride = (ctx, idx, ext) -> my_i_start,
+                                                        stride = (ctx, idx, ext) -> Value(my_i_start),
                                                         body = (start, step) -> Run(Simplify(Literal(default(fbr)))),
                                                     ),
                                                     Phase(

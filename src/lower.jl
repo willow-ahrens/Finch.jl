@@ -220,6 +220,8 @@ end
 
 (ctx::Finch.LowerJulia)(node::Access, style::DefaultStyle) = lowerjulia_access(ctx, node, node.tns)
 
+lowerjulia_access(ctx::Finch.LowerJulia, node::Access, tns::Virtual) = lowerjulia_access(ctx, node, tns.arg)
+
 function lowerjulia_access(ctx::Finch.LowerJulia, node::Access, tns)
     tns = ctx(tns)
     idxs = map(ctx, node.idxs)

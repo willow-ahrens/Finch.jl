@@ -237,7 +237,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode::Read, idx:
         end,
         body = Pipeline([
             Phase(
-                stride = (ctx, idx, ext) -> my_i_stop,
+                stride = (ctx, idx, ext) -> Value(my_i_stop),
                 body = (start, step) -> Stepper(
                     seek = (ctx, ext) -> quote
                         $my_q_step = $my_q + 1
@@ -251,7 +251,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode::Read, idx:
                         ),
                         body = if R == lvl.N
                             Step(
-                                stride =  (ctx, idx, ext) -> my_i,
+                                stride =  (ctx, idx, ext) -> Value(my_i),
                                 chunk = Spike(
                                     body = Simplify(Literal(default(fbr))),
                                     tail = begin
@@ -268,7 +268,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode::Read, idx:
                             )
                         else
                             Step(
-                                stride =  (ctx, idx, ext) -> my_i,
+                                stride =  (ctx, idx, ext) -> Value(my_i),
                                 chunk = Spike(
                                     body = Simplify(Literal(default(fbr))),
                                     tail = begin

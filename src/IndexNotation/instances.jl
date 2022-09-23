@@ -114,3 +114,4 @@ struct ValueInstance{arg} end
 
 Base.convert(::Type{IndexNode}, x) = index_terminal(x)
 Base.convert(::Type{IndexNode}, x::IndexNode) = x
+Base.convert(::Type{IndexNode}, x::Symbol) = error()
