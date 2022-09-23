@@ -93,17 +93,21 @@ function __init__()
     #@require SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf" include("glue_SparseArrays.jl")
 end
 
-@precompile_setup begin
-    # Putting some things in `setup` can reduce the size of the
-    # precompile file and potentially make loading faster.
-    @precompile_all_calls begin
-        # all calls in this block will be precompiled, regardless of whether
-        # they belong to your package or not (on Julia 1.8 and higher)
-        y = @fiber d(e(0.0))
-        A = @fiber d(sl(e(0.0)))
-        x = @fiber sl(e(0.0))
-        Finch.execute_code(:ex, typeof(Finch.@finch_program_instance @loop i j y[i] += A[i, j] * x[i]))
-    end
-end
+y = @fiber d(e(0.0))
+A = @fiber d(sl(e(0.0)))
+x = @fiber sl(e(0.0))
+Finch.execute_code(:ex, typeof(Finch.@finch_program_instance @loop i j y[i] += A[i, j] * x[i]))
+#@precompile_setup begin
+#    # Putting some things in `setup` can reduce the size of the
+#    # precompile file and potentially make loading faster.
+#    @precompile_all_calls begin
+#        # all calls in this block will be precompiled, regardless of whether
+#        # they belong to your package or not (on Julia 1.8 and higher)
+#        y = @fiber d(e(0.0))
+#        A = @fiber d(sl(e(0.0)))
+#        x = @fiber sl(e(0.0))
+#        Finch.execute_code(:ex, typeof(Finch.@finch_program_instance @loop i j y[i] += A[i, j] * x[i]))
+#    end
+#end
 
 end

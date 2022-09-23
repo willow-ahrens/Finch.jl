@@ -34,6 +34,11 @@ end
 end
 
 (ctx::LowerJulia)(root) = ctx(root, Stylize(root, ctx)(root))
+#function(ctx::LowerJulia)(root)
+#    style = Stylize(root, ctx)(root)
+#    @info :lower typeof(root) style
+#    ctx(root, style)
+#end
 
 function cache!(ctx, var, val)
     if isliteral(val)
@@ -219,6 +224,8 @@ function (ctx::LowerJulia)(root::Multi, ::DefaultStyle)
 end
 
 (ctx::Finch.LowerJulia)(node::Access, style::DefaultStyle) = lowerjulia_access(ctx, node, node.tns)
+
+(ctx::Finch.LowerJulia)(node::Virtual, style::DefaultStyle) = (ctx)(node.arg) 
 
 lowerjulia_access(ctx::Finch.LowerJulia, node::Access, tns::Virtual) = lowerjulia_access(ctx, node, tns.arg)
 

@@ -140,6 +140,8 @@ function (ctx::SimplifyVisitor)(node)
     end
 end
 
+(ctx::SimplifyVisitor)(node::Virtual) = ctx(node.arg)
+
 (ctx::SimplifyVisitor)(node::Simplify) = node.body
 
 function simplify(node)
