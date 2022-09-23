@@ -156,7 +156,7 @@ end
 
 add_rules!(new_rules) = union!(rules, new_rules)
 
-isliteral(::Simplify) = false
+IndexNotation.isliteral(::Simplify) =  false
 
 struct Lexicography{T}
     arg::T

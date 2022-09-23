@@ -48,7 +48,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualStaticWindow)
 end
 
 
-isliteral(::VirtualStaticWindow) = false
+IndexNotation.isliteral(::VirtualStaticWindow) =  false
 
 function virtualize(ex, ::Type{StaticWindow{Dim, Target}}, ctx) where {Dim, Target}
     dim = virtualize(:($ex.dim), Dim, ctx)
@@ -70,7 +70,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualWindow)
 	print(io, "VirtualWindow()")
 end
 
-isliteral(::VirtualWindow) = false
+IndexNotation.isliteral(::VirtualWindow) =  false
 
 virtualize(ex, ::Type{Window}, ctx) = VirtualWindow()
 

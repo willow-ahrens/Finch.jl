@@ -71,7 +71,7 @@ struct VirtualEnvironment
 end
 VirtualEnvironment(parent; kwargs...) = VirtualEnvironment(; parent=parent, kwargs...)
 
-isliteral(env::VirtualEnvironment) = false
+IndexNotation.isliteral(env::VirtualEnvironment) =  false
 
 function (ctx::Finch.LowerJulia)(env::VirtualEnvironment)
     kwargs = map(collect(getfield(env, :props))) do (name, arg)

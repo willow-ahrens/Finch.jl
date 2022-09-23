@@ -94,7 +94,7 @@ struct ThunkStyle end
     epilogue = quote end
     binds = ()
 end
-isliteral(::Thunk) = false
+IndexNotation.isliteral(::Thunk) =  false
 
 Base.show(io::IO, ex::Thunk) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::Thunk)
@@ -170,7 +170,7 @@ function (ctx::LowerJulia)(root::Protocol, ::DefaultStyle)
     :($(ctx(root.idx)))
 end
 
-isliteral(::Union{Symbol, Expr, Missing}) = false
+IndexNotation.isliteral(::Union{Symbol, Expr, Missing}) =  false
 (ctx::LowerJulia)(root::Union{Symbol, Expr}, ::DefaultStyle) = root
 (ctx::LowerJulia)(root::Literal, ::DefaultStyle) = lowerjulia_literal(root.val)
 lowerjulia_literal(val) = val
@@ -303,7 +303,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Lookup)
     print(io, "Lookup()")
 end
 
-isliteral(node::Lookup) = false
+IndexNotation.isliteral(node::Lookup) =  false
 
 function (ctx::ForLoopVisitor)(node::Lookup)
     node.body(ctx.val)

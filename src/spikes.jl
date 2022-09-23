@@ -10,7 +10,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Spike)
     print(io, ")")
 end
 
-isliteral(::Spike) = false
+IndexNotation.isliteral(::Spike) =  false
 
 struct SpikeStyle end
 

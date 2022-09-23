@@ -19,7 +19,7 @@ SyntaxInterface.arguments(ex::Lifetime) = [ex.body]
 SyntaxInterface.operation(::Lifetime) = lifetime
 SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(lifetime), args) = Lifetime(args...)
 
-isliteral(::Lifetime) = false
+IndexNotation.isliteral(::Lifetime) =  false
 
 struct LifetimeStyle end
 

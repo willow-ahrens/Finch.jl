@@ -39,17 +39,6 @@ Return a new expression, identical to `ex`, with the name `name`.
 function setname end
 
 """
-    isliteral(ex)
-
-Return a boolean indicating whether the expression is a literal. If an
-expression is a literal, `getvalue(ex)` should return the literal value it
-corresponds to. `getvalue` defaults to the identity.
-
-See also: [`getvalue`](@ref)
-"""
-isliteral(ex) = true
-
-"""
     getvalue(ex)
 
 If `isliteral(ex)` is `true`, return the value of `ex`. Defaults to

@@ -35,6 +35,6 @@ function initialize!(arr::VirtualAbstractArray, ctx::LowerJulia, mode::Union{Wri
     access(arr, mode, idxs...)
 end
 
-isliteral(::VirtualAbstractArray) = false
+IndexNotation.isliteral(::VirtualAbstractArray) =  false
 
 default(::VirtualAbstractArray) = 0

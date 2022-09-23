@@ -27,7 +27,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualPermit)
 	print(io, "VirtualPermit()")
 end
 
-isliteral(::VirtualPermit) = false
+IndexNotation.isliteral(::VirtualPermit) =  false
 
 function virtualize(ex, ::Type{Permit{T}}, ctx) where {T}
     return VirtualPermit(virtualize(:($ex.I), T, ctx))

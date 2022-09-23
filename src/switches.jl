@@ -10,7 +10,7 @@ end
 Base.first(arg::Case) = arg.cond
 Base.last(arg::Case) = arg.body
 
-isliteral(::Switch) = false
+IndexNotation.isliteral(::Switch) =  false
 
 struct SwitchStyle end
 

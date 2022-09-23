@@ -1,9 +1,11 @@
 struct NoDimension end
 const nodim = NoDimension()
+IndexNotation.isliteral(::NoDimension) = false
 virtualize(ex, ::Type{NoDimension}, ctx) = nodim
 
 struct DeferDimension end
 const deferdim = DeferDimension()
+IndexNotation.isliteral(::DeferDimension) = false
 virtualize(ex, ::Type{DeferDimension}, ctx) = deferdim
 
 getstart(::DeferDimension) = error()
@@ -42,7 +44,7 @@ end
     body
 end
 
-isliteral(::Dimensionalize) = false
+IndexNotation.isliteral(::Dimensionalize) =  false
 
 struct DimensionalizeStyle end
 
@@ -122,6 +124,7 @@ function (ctx::InferDimensions)(node::Protocol)
 end
 
 (ctx::DeclareDimensions)(node::Access, dim) = declare_dimensions_access(node, ctx, node.tns, dim)
+declare_dimensions_access(node, ctx, tns::Virtual, dim) = declare_dimensions_access(node, ctx, tns.arg, dim)
 function declare_dimensions_access(node, ctx, tns, dim)
     if haskey(ctx.shapes, getname(tns))
         dims = ctx.shapes[getname(tns)][getsites(tns)]
@@ -135,6 +138,7 @@ end
 
 (ctx::InferDimensions)(node::Access) = infer_dimensions_access(node, ctx, node.tns)
 #TODO this would be a good candidate for an index modifier node
+infer_dimensions_access(node, ctx, tns::Virtual) = infer_dimensions_access(node, ctx, tns.arg)
 function infer_dimensions_access(node, ctx, tns)
     res = map(ctx, node.idxs)
     dims = map(resolvedim, map(last, res))
@@ -194,6 +198,8 @@ combinedim(::DeferDimension, b) = deferdim
     upper = @f $stop - $start + 1
 end
 
+IndexNotation.isliteral(::Extent) = false
+
 Base.:(==)(a::Extent, b::Extent) =
     a.start == b.start &&
     a.stop == b.stop &&
@@ -215,6 +221,11 @@ getlower(ext::Extent) = ext.lower
 getupper(ext::Extent) = ext.upper
 extent(ext::Extent) = @f $(ext.stop) - $(ext.start) + 1
 
+getstart(ext::Virtual) = getstart(ext.arg)
+getstop(ext::Virtual) = getstop(ext.arg)
+getlower(ext::Virtual) = getlower(ext.arg)
+getupper(ext::Virtual) = getupper(ext.arg)
+
 combinedim(a::Extent, b::Extent) =
     Extent(
         start = resultdim(a.start, b.start),
@@ -228,6 +239,8 @@ combinedim(a::NoDimension, b::Extent) = b
 struct SuggestedExtent{Ext}
     ext::Ext
 end
+
+IndexNotation.isliteral(::SuggestedExtent) = false
 
 Base.:(==)(a::SuggestedExtent, b::SuggestedExtent) = a.ext == b.ext
 
@@ -291,6 +304,8 @@ struct Narrow{Ext}
     ext::Ext
 end
 
+IndexNotation.isliteral(::Narrow) = false
+
 narrowdim(dim) = Narrow(dim)
 narrowdim(::NoDimension) = nodim
 narrowdim(::DeferDimension) = deferdim
@@ -303,6 +318,8 @@ getstop(ext::Narrow) = getstop(ext.ext)
 struct Widen{Ext}
     ext::Ext
 end
+
+IndexNotation.isliteral(::Widen) = false
 
 widendim(dim) = Widen(dim)
 widendim(::NoDimension) = nodim

@@ -10,7 +10,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Stepper)
     print(io, "Stepper()")
 end
 
-isliteral(::Stepper) = false
+IndexNotation.isliteral(::Stepper) =  false
 
 (ctx::Stylize{LowerJulia})(node::Stepper) = StepperStyle()
 
@@ -49,7 +49,7 @@ end
         ])
 end
 
-isliteral(::Step) = false
+IndexNotation.isliteral(::Step) =  false
 
 (ctx::Stylize{LowerJulia})(node::Step) = PhaseStyle()
 

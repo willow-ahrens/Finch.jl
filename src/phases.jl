@@ -4,7 +4,7 @@
     stride = (ctx, idx, ext) -> nothing
     range = (ctx, idx, ext) -> Extent(start = getstart(ext), stop = something(stride(ctx, idx, ext), getstop(ext)))
 end
-isliteral(::Phase) = false
+IndexNotation.isliteral(::Phase) =  false
 
 Base.show(io::IO, ex::Phase) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::Phase)
@@ -53,7 +53,7 @@ struct PhaseStyle end
 
 supports_shift(::PhaseStyle) = true
 
-#isliteral(::Step) = false
+#IndexNotation.isliteral(::Step) =  false
 
 (ctx::Stylize{LowerJulia})(node::Phase) = PhaseStyle()
 

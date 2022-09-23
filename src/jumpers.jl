@@ -4,7 +4,7 @@ struct JumperStyle end
     body
 end
 
-isliteral(::Jumper) = false
+IndexNotation.isliteral(::Jumper) =  false
 
 (ctx::Stylize{LowerJulia})(node::Jumper) = JumperStyle()
 
@@ -31,7 +31,7 @@ end
     next = nothing
 end
 
-isliteral(::Jump) = false
+IndexNotation.isliteral(::Jump) =  false
 
 (ctx::Stylize{LowerJulia})(node::Jump) = PhaseStyle()
 

@@ -7,7 +7,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Pipeline)
     print(io, "Pipeline()")
 end
 
-isliteral(::Pipeline) = false
+IndexNotation.isliteral(::Pipeline) =  false
 
 struct PipelineStyle end
 
