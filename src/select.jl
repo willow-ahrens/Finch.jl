@@ -2,6 +2,8 @@ struct Select end
 
 const select = Select()
 
+IndexNotation.isliteral(::Select) =  false
+
 Base.show(io::IO, ex::Select) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::Select)
     print(io, "select")

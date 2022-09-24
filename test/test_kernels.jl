@@ -60,7 +60,6 @@
         b = Scalar{0.0}()
 
         @finch @loop i (C[i] = a[] - b[]; d[] += a[] * b[]) where (a[] = A[i]; b[] = B[i])
-        println(@finch_code @loop i (C[i] = a[] - b[]; d[] += a[] * b[]) where (a[] = A[i]; b[] = B[i]))
 
         @test reference_isequal(C, A_ref .- B_ref)
         refidx = (A_ref .- B_ref).nzind
