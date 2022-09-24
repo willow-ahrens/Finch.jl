@@ -105,6 +105,8 @@ supports_shift(::SpikeStyle) = true
     tail
 end
 
+IndexNotation.isliteral(::AcceptSpike) = false
+
 Base.show(io::IO, ex::AcceptSpike) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::AcceptSpike)
     print(io, "AcceptSpike(val = ")

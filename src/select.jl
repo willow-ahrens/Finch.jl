@@ -9,7 +9,7 @@ end
 
 getsize(::Select, ::LowerJulia, mode) = (NoDimension(), NoDimension())
 getsites(::Select) = 1:2
-getname(x) = gensym() #TODO this is wrong
+getname(x::Select) = gensym()
 setname(::Select, name) = select
 
 virtualize(ex, ::Type{Select}, ctx) = select

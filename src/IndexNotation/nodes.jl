@@ -96,6 +96,8 @@ display_expression(io, mime, ex::Virtual) = print(io, "Virtual($(ex.arg))")
 
 SyntaxInterface.istree(::Virtual) = false
 
+Finch.getname(x::Virtual) = Finch.getname(x.arg)
+
 IndexNotation.isliteral(::Virtual) =  false
 
 struct Pass <: IndexStatement
@@ -333,7 +335,7 @@ end
 SyntaxInterface.istree(::Assign)= true
 SyntaxInterface.operation(stmt::Assign) = assign
 function SyntaxInterface.arguments(stmt::Assign)
-    if stmt.op === nothing
+    if (stmt.op === nothing || stmt.op == Literal(nothing))
         Any[stmt.lhs, stmt.rhs]
     else
         Any[stmt.lhs, stmt.op, stmt.rhs]
@@ -345,7 +347,7 @@ function display_statement(io, mime, stmt::Assign, level)
     print(io, tab^level)
     display_expression(io, mime, stmt.lhs)
     print(io, " ")
-    if stmt.op !== nothing
+    if (stmt.op !== nothing && stmt.op != Literal(nothing)) #TODO this feels kinda garbage.
         display_expression(io, mime, stmt.op)
     end
     print(io, "= ")

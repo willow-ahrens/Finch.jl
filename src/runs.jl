@@ -55,7 +55,11 @@ unchunk(node::Shift, ctx::AccessRunVisitor) = unchunk(node.body, ctx)
     val = nothing
 end
 
+IndexNotation.isliteral(::AcceptRun) = false
+
 default(node::AcceptRun) = node.val
+
+Finch.default(x::Virtual) = Finch.default(x.arg) #TODO this should go somewhere else
 
 Base.show(io::IO, ex::AcceptRun) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::AcceptRun)

@@ -129,6 +129,7 @@ See also: [`initialize!`](@ref)
     escape=[]
 end
 initialize!(tns, ctx, mode, idxs...) = access(tns, mode, idxs...)
+initialize!(tns::Virtual, ctx, mode, idxs...) = initialize!(tns.arg, ctx, mode, idxs...)
 function (ctx::Initialize)(node)
     if istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))
@@ -164,6 +165,7 @@ See also: [`finalize!`](@ref)
     escape=[]
 end
 finalize!(tns, ctx, mode, idxs...) = tns
+finalize!(tns::Virtual, ctx, mode, idxs...) = finalize!(tns.arg, ctx, mode, idxs...)
 function (ctx::Finalize)(node)
     if istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))
