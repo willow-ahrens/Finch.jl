@@ -36,7 +36,7 @@ end
 (ctx::LowerJulia)(root) = ctx(root, Stylize(root, ctx)(root))
 #function(ctx::LowerJulia)(root)
 #    style = Stylize(root, ctx)(root)
-#    @info :lower typeof(root) style
+#    @info :lower root style
 #    ctx(root, style)
 #end
 
@@ -142,6 +142,7 @@ end
 #TODO this shouldn't exist
 (ctx::ThunkVisitor)(node::Access) = thunk_access(node, ctx, node.tns)
 thunk_access(node, ctx, tns) = similarterm(node, operation(node), map(ctx, arguments(node)))
+thunk_access(node, ctx, tns::Virtual) = thunk_access(node, ctx, tns.arg)
 
 #default lowering
 

@@ -125,6 +125,7 @@ end
 
 (ctx::DeclareDimensions)(node::Access, dim) = declare_dimensions_access(node, ctx, node.tns, dim)
 declare_dimensions_access(node, ctx, tns::Virtual, dim) = declare_dimensions_access(node, ctx, tns.arg, dim)
+declare_dimensions_access(node, ctx, tns::Dimensionalize, dim) = declare_dimensions_access(node, ctx, tns.body, dim)
 function declare_dimensions_access(node, ctx, tns, dim)
     if haskey(ctx.shapes, getname(tns))
         dims = ctx.shapes[getname(tns)][getsites(tns)]

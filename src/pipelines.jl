@@ -79,6 +79,8 @@ end
 (ctx::PipelineVisitor)(node::Virtual) = ctx(node.arg)
 (ctx::PipelineVisitor)(node::Pipeline) = enumerate(node.phases)
 
+shiftdim(ext::Virtual, body) = shiftdim(ext.arg, body)
+
 function (ctx::PipelineVisitor)(node::Shift)
     map(PipelineVisitor(; kwfields(ctx)..., ext = shiftdim(ctx.ext, call(-, node.delta)))(node.body)) do (keys, body)
         return keys => Shift(body, node.delta)
