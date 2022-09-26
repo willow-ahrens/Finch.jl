@@ -68,7 +68,7 @@ end");
 
     jl_value_t* frontier_list = finch_Fiber(
         finch_Dense(finch_Cint(N),
-            finch_Dense(finch_Cint(N),
+            finch_SparseList(finch_Cint(N),
                 finch_ElementLevel(finch_Cint(0), finch_eval("Cint[]"))
             )
         )
@@ -100,10 +100,15 @@ void ForwardStep(struct bc_data* in_data, struct bc_data* out_data) {
     // 	frontier[j] = edges[j][k] * frontier_list[round][k] * (visited[j] == 0) | k:(OR, 0)
     // 	forward_num_paths[j] = edges[j][k] * frontier_list[round - 1][k] * (visited[j] == 0) * num_paths[k] | k:(+, num_paths[j])
     // 	forward_visited[j] = edges[j][k] * frontier_list[round-1][k] * (visited[j] == 0) | k:(OR, visited[j])
+    
+    // Finch.Fiber(
+    //     SparseList(10, [1, 6], [1, 3, 5, 7, 9],
+    //     Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
     jl_value_t* new_frontier = finch_Fiber(
-        finch_Dense(finch_Cint(N),
+        finch_SparseListLevel(finch_Cint(N), finch_eval("Cint[1, 1]"), finch_eval("Cint[]"),
         finch_ElementLevel(finch_Cint(0), finch_eval("Cint[]")))
     );
+    
     jl_value_t* new_num_paths = finch_Fiber(
         finch_Dense(finch_Cint(N),
         finch_ElementLevel(finch_Cint(0), finch_eval("Cint[]")))
@@ -118,11 +123,9 @@ void ForwardStep(struct bc_data* in_data, struct bc_data* out_data) {
                 Element{0, Cint}([])\n\
             )\n\
         )\n\
-        @finch @loop j k begin\n\
-            new_frontier[j] <<$or>>= edges[j,k] * frontier_list[($round-1),k] * (old_visited[j] == 0)\n\
-            new_visited[j] <<$or>>= (old_visited[j] != 0) * 1 + edges[j,k] * frontier_list[($round-1),k] * (old_visited[j] == 0)\n\
-            B[j] += edges[j,k] * frontier_list[($round-1),k] * (old_visited[j] == 0) * old_num_paths[k]\n\
-        end\n\
+        @finch @loop j k new_frontier[j] <<$or>>= edges[j,k] * frontier_list[($round-1),k] * (old_visited[j] == 0)\n\
+        @finch @loop j k new_visited[j] <<$or>>= (old_visited[j] != 0) * 1 + edges[j,k] * frontier_list[($round-1),k] * (old_visited[j] == 0)\n\
+        @finch @loop j k B[j] += edges[j,k] * frontier_list[($round-1),k] * (old_visited[j] == 0) * old_num_paths[k]\n\
         @finch @loop j new_num_paths[j] = B[j] + old_num_paths[j]\n\
     end");
     finch_call(frontier_visit_paths, new_frontier, new_visited, new_num_paths, edges, finch_Cint(N), finch_Cint(in_data->round), in_data->frontier_list, in_data->visited, in_data->num_paths);
@@ -141,7 +144,7 @@ void ForwardStep(struct bc_data* in_data, struct bc_data* out_data) {
     // 	forward_frontier_list[r][j] = frontier[j] * (r == round) + frontier_list[r][j] * (r != round)
     jl_value_t* new_frontier_list = finch_Fiber(
         finch_Dense(finch_Cint(N),
-            finch_Dense(finch_Cint(N),
+            finch_SparseList(finch_Cint(N),
                 finch_ElementLevel(finch_Cint(0), finch_eval("Cint[]"))
             )
         )
@@ -398,6 +401,7 @@ void setup3() {
     // expected: [0,0,0]
     // jl_value_t* edge_vector = finch_eval("Cint[0, 1, 1, 1, 0, 0, 1, 1, 0]");
     N = 3;
+    source = 1;
     edges = finch_eval("N = 3\n\
         edge_matrix = sparse([0 1 1; 1 0 1; 1 0 0])\n\
         Finch.Fiber(\n\
