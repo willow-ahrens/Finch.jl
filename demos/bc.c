@@ -123,9 +123,11 @@ void ForwardStep(struct bc_data* in_data, struct bc_data* out_data) {
                 Element{0, Cint}([])\n\
             )\n\
         )\n\
-        @finch @loop j k new_frontier[j] <<$or>>= edges[j,k] * frontier_list[($round-1),k] * (old_visited[j] == 0)\n\
-        @finch @loop j k new_visited[j] <<$or>>= (old_visited[j] != 0) * 1 + edges[j,k] * frontier_list[($round-1),k] * (old_visited[j] == 0)\n\
-        @finch @loop j k B[j] += edges[j,k] * frontier_list[($round-1),k] * (old_visited[j] == 0) * old_num_paths[k]\n\
+        @finch @loop j k begin\n\
+            new_frontier[j] <<$or>>= edges[j,k] * frontier_list[($round-1),k] * (old_visited[j] == 0)\n\
+            new_visited[j] <<$or>>= (old_visited[j] != 0) * 1 + edges[j,k] * frontier_list[($round-1),k] * (old_visited[j] == 0)\n\
+            B[j] += edges[j,k] * frontier_list[($round-1),k] * (old_visited[j] == 0) * old_num_paths[k]\n\
+        end\n\
         @finch @loop j new_num_paths[j] = B[j] + old_num_paths[j]\n\
     end");
     finch_call(frontier_visit_paths, new_frontier, new_visited, new_num_paths, edges, finch_Cint(N), finch_Cint(in_data->round), in_data->frontier_list, in_data->visited, in_data->num_paths);
