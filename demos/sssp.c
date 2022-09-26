@@ -32,17 +32,13 @@ jl_value_t* Init_priorityQ() {
     @finch @loop p j priorityQ[p, j] = (p == 1 && j == $source) + (p == $P && j != $source)\n\
 end");
 
-    jl_value_t* val = finch_eval("Cint[]");
-    jl_value_t *priorityQ = finch_Fiber(
+    jl_value_t* priorityQ = finch_Fiber(
         finch_Dense(finch_Cint(P),
-        // finch_HollowListLevel(
-        //     finch_Int64(N),
-        //     pos, 
-        //     idx,
-        //     finch_ElementLevel(finch_Int64(0),val)
-        // )
-        finch_Dense(finch_Cint(N), finch_ElementLevel(finch_Cint(0), val))
-        ));
+            finch_SparseList(finch_Cint(N),
+                finch_ElementLevel(finch_Cint(0), finch_eval("Cint[]"))
+            )
+        )
+    );
 
     finch_call(pq_init, finch_Cint(source), finch_Cint(P), priorityQ);
     printf("PQ init: ");
@@ -96,7 +92,7 @@ function new_dist_func(priority, N, P, new_dist, edges, priorityQ, weights, dist
         )\n\
     )\n\
     \n\
-    @finch @loop p j k B[j] <<min>>= (p == $priority) * (edges[j, k] * priorityQ[p, k] * (weights[j, k] + dist[k]) + (edges[j, k] * priorityQ[p, k] == 0) * ($P-1)) + (p != $priority) * $val\n\
+    @finch @loop p j k B[j] <<min>>= (p == $priority) * (edges[j, k] * priorityQ[p, k] * (weights[j, k] + dist[k]) + (edges[j, k] * priorityQ[p, k] == 0) * $P) + (p != $priority) * $val\n\
     @finch @loop j new_dist[j] = min(B[j], dist[j])\n\
 end");
     jl_value_t* val = finch_eval("Cint[]");
@@ -114,8 +110,11 @@ end");
     jl_value_t* val_pq = finch_eval("Cint[]");
     jl_value_t *new_priorityQ = finch_Fiber(
         finch_Dense(finch_Cint(P),
-        finch_Dense(finch_Cint(N), finch_ElementLevel(finch_Cint(0), val_pq))
-        ));
+            finch_SparseList(finch_Cint(N),
+                finch_ElementLevel(finch_Cint(0), finch_eval("Cint[]"))
+            )
+        )
+    );
     finch_call(new_pq_func, new_priorityQ, old_data->priorityQ, old_data->dist, new_dist, finch_Cint(priority));
     printf("New pQ: \n");
     finch_exec("println(%s.lvl.lvl.lvl.val)", new_priorityQ);
@@ -128,11 +127,12 @@ end");
 int inner_loop_condition(jl_value_t* priorityQ, int priority) {
 
     jl_value_t* access_func = finch_eval("function access_func(tensor1D, tensor2D, index)\n\
-    @finch @loop i j tensor1D[j] += tensor2D[i, j] * (i == $index)\n\
+    @finch @loop j tensor1D[j] = tensor2D[$index, j]\n\
 end");
     jl_value_t* val = finch_eval("Cint[]");
      jl_value_t* pq_slice = finch_Fiber(
-        finch_Dense(finch_Cint(N), finch_ElementLevel(finch_Cint(0), val))
+        finch_SparseListLevel(finch_Cint(N), finch_eval("Cint[1, 1]"), finch_eval("Cint[]"),
+        finch_ElementLevel(finch_Cint(0), finch_eval("Cint[]")))
     );
     finch_call(access_func, pq_slice, priorityQ, finch_Cint(priority));
     
