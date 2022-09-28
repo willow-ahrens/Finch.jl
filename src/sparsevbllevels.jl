@@ -223,9 +223,9 @@ function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode::Read, idx::
                                         body = (start, step) -> Lookup(
                                             body = (i) -> Thunk(
                                                 preamble = quote
-                                                    $my_q = $my_q_ofs + $i
+                                                    $my_q = $my_q_ofs + $(ctx(i))
                                                 end,
-                                                body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Ti}(my_q), index=Value{lvl.Ti}(i), parent=fbr.env)), ctx, mode, idxs...),
+                                                body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Ti}(my_q), index=i, parent=fbr.env)), ctx, mode, idxs...),
                                             )
                                         )
                                     )
@@ -305,9 +305,9 @@ function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode::Read, idx::
                                             body = (start, step) -> Lookup(
                                                 body = (i) -> Thunk(
                                                     preamble = quote
-                                                        $my_q = $my_q_ofs + $i
+                                                        $my_q = $my_q_ofs + $(ctx(i))
                                                     end,
-                                                    body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Ti}(my_q), index=Value{lvl.Ti}(i), parent=fbr.env)), ctx, mode, idxs...),
+                                                    body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Ti}(my_q), index=i, parent=fbr.env)), ctx, mode, idxs...),
                                                 )
                                             )
                                         )
@@ -342,9 +342,9 @@ function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode::Read, idx::
                                                         body = (start, step) -> Lookup(
                                                             body = (i) -> Thunk(
                                                                 preamble = quote
-                                                                    $my_q = $my_q_ofs + $i
+                                                                    $my_q = $my_q_ofs + $(ctx(i))
                                                                 end,
-                                                                body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Ti}(my_q), index=Value{lvl.Ti}(i), parent=fbr.env)), ctx, mode, idxs...),
+                                                                body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Ti}(my_q), index=i, parent=fbr.env)), ctx, mode, idxs...),
                                                             )
                                                         )
                                                     )

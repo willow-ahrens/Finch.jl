@@ -414,7 +414,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Read, i
     body = Lookup(
         body = (i) -> Thunk(
             preamble = quote
-                $my_q = $(ctx(q)) * $(ctx(lvl.I)) + $i
+                $my_q = $(ctx(q)) * $(ctx(lvl.I)) + $(ctx(i))
             end,
             body = Switch([
                 Value(:($tbl[$my_q])) => refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Tq}(my_q), index=i, parent=fbr.env)), ctx, mode, idxs...),

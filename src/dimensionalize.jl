@@ -270,7 +270,7 @@ end
 
 combinedim(a::Union{<:Value, <:Number}, b::IndexExpression) = a
 
-combinedim(a::IndexExpression, b::IndexExpression) = min(string(a), string(b)) #TODO
+combinedim(a::IndexExpression, b::IndexExpression) = a #TODO need to add symbolic equivalence operator and simplification rewrites
 
 combinedim(a::Number, b::Value) = a
 
