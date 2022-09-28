@@ -30,7 +30,7 @@ end
 function Finch.getsize(arr::VirtualSingleSpike{Tv}, ctx::Finch.LowerJulia, mode) where {Tv}
     ex = Symbol(arr.name, :_stop)
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))
-    (Extent(1, Value{Int}(ex)),)
+    (Extent(Literal(1), Value{Int}(ex)),)
 end
 Finch.setsize!(arr::VirtualSingleSpike, ctx::Finch.LowerJulia, mode, dims...) = arr
 Finch.getname(arr::VirtualSingleSpike) = arr.name

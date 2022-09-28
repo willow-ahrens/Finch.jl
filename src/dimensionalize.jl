@@ -348,7 +348,7 @@ function combinedim(a::Narrow{<:Extent}, b::Narrow{<:Extent})
         lower = if getstart(a) == getstart(b) || getstop(a) == getstop(b)
             simplify(@f(min($(a.ext.lower), $(b.ext.lower))))
         else
-            0
+            Literal(0)
         end,
         upper = simplify(@f(min($(a.ext.upper), $(b.ext.upper))))
     ))

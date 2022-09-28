@@ -112,7 +112,7 @@ getsites(fbr::VirtualFiber{VirtualRepeatRLELevel}) =
     [envdepth(fbr.env) + 1, ]
 
 function getsize(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode)
-    ext = Extent(1, fbr.lvl.I)
+    ext = Extent(Literal(1), fbr.lvl.I)
     if mode != Read()
         ext = suggest(ext)
     end

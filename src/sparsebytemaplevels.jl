@@ -128,7 +128,7 @@ getsites(fbr::VirtualFiber{VirtualSparseBytemapLevel}) =
     [envdepth(fbr.env) + 1, getsites(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))...]
 
 function getsize(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode)
-    ext = Extent(1, fbr.lvl.I)
+    ext = Extent(Literal(1), fbr.lvl.I)
     if mode != Read()
         ext = suggest(ext)
     end
@@ -189,25 +189,25 @@ interval_assembly_depth(lvl::VirtualSparseBytemapLevel) = min(Inf, interval_asse
 #TODO does this actually support reassembly? I think it needs to filter out indices with unset table entries during finalization
 function assemble!(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode)
     lvl = fbr.lvl
-    p_stop = ctx(cache!(ctx, ctx.freshen(lvl.ex, :_p), getstop(envposition(fbr.env))))
+    p_stop = cache!(ctx, ctx.freshen(lvl.ex, :_p), getstop(envposition(fbr.env)))
     if extent(envposition(fbr.env)) == 1
         p_start = p_stop
     else
-        p_start = ctx(cache!(ctx, ctx.freshen(lvl.ex, :_p), getstart(envposition(fbr.env))))
+        p_start = cache!(ctx, ctx.freshen(lvl.ex, :_p), getstart(envposition(fbr.env)))
     end
     q_start = ctx.freshen(lvl.ex, :q_start)
     q_stop = ctx.freshen(lvl.ex, :q_stop)
     q = ctx.freshen(lvl.ex, :q)
 
     push!(ctx.preamble, quote
-        $q_start = ($p_start - 1) * $(ctx(lvl.I)) + 1
-        $q_stop = $p_stop * $(ctx(lvl.I))
-        $(lvl.pos_alloc) < ($p_stop + 1) && ($(lvl.pos_alloc) = Finch.refill!($(lvl.ex).pos, $(zero(lvl.Ti)), $(lvl.pos_alloc), $p_stop + 1))
+        $q_start = ($(ctx(p_start)) - 1) * $(ctx(lvl.I)) + 1
+        $q_stop = $(ctx(p_stop)) * $(ctx(lvl.I))
+        $(lvl.pos_alloc) < ($(ctx(p_stop)) + 1) && ($(lvl.pos_alloc) = Finch.refill!($(lvl.ex).pos, $(zero(lvl.Ti)), $(lvl.pos_alloc), $(ctx(p_stop)) + 1))
         $(lvl.tbl_alloc) < $q_stop && ($(lvl.tbl_alloc) = Finch.refill!($(lvl.ex).tbl, false, $(lvl.tbl_alloc), $q_stop))
     end)
 
     if interval_assembly_depth(lvl.lvl) >= 1
-        assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Extent(q_start, q_stop), index = Extent(1, lvl.I), parent=fbr.env)), ctx, mode)
+        assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Extent(Value(q_start), Value(q_stop)), index = Extent(Literal(1), lvl.I), parent=fbr.env)), ctx, mode)
     else
         i = ctx.freshen(lvl.ex, :_i)
         push!(ctx.preamble, quote

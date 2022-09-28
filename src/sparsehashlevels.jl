@@ -140,7 +140,7 @@ function getsites(fbr::VirtualFiber{VirtualSparseHashLevel})
 end
 
 function getsize(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx::LowerJulia, mode)
-    ext = map(stop->Extent(1, stop), fbr.lvl.I)
+    ext = map(stop->Extent(Literal(1), stop), fbr.lvl.I)
     if mode != Read()
         ext = map(suggest, ext)
     end

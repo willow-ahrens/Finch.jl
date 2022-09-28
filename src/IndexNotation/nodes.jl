@@ -61,7 +61,10 @@ end
 
 struct Literal <: IndexTerminal
     val
+Literal(x::Literal) = error()
+Literal(x) = new(x)
 end
+
 
 SyntaxInterface.istree(::Literal) = false
 Base.hash(ex::Literal, h::UInt) = hash(Literal, hash(ex.val, h))
@@ -76,6 +79,8 @@ struct Value{T} <: IndexTerminal
 end
 
 Value(x) = Value{Any}(x)
+Value(x::Value) = error()
+Value(x::Literal) = error()
 
 Base.:(==)(a::Value, b::Value) = false
 Base.:(==)(a::Value{T}, b::Value{T}) where {T} = a.ex == b.ex

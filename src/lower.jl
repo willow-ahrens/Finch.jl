@@ -269,7 +269,7 @@ function (ctx::LowerJulia)(stmt::Chunk, ::DefaultStyle)
             $idx_sym = $(ctx(getstart(stmt.ext)))
             $(bind(ctx, getname(stmt.idx) => idx_sym) do 
                 contain(ctx) do ctx_2
-                    body_3 = ForLoopVisitor(ctx_2, stmt.idx, idx_sym)(stmt.body)
+                    body_3 = ForLoopVisitor(ctx_2, stmt.idx, Value(idx_sym))(stmt.body)
                     (ctx_2)(body_3)
                 end
             end)
@@ -279,7 +279,7 @@ function (ctx::LowerJulia)(stmt::Chunk, ::DefaultStyle)
             for $idx_sym = $(ctx(getstart(stmt.ext))):$(ctx(getstop(stmt.ext)))
                 $(bind(ctx, getname(stmt.idx) => idx_sym) do 
                     contain(ctx) do ctx_2
-                        body_3 = ForLoopVisitor(ctx_2, stmt.idx, idx_sym)(stmt.body)
+                        body_3 = ForLoopVisitor(ctx_2, stmt.idx, Value(idx_sym))(stmt.body)
                         (ctx_2)(body_3)
                     end
                 end)
