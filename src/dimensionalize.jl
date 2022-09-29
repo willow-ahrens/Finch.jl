@@ -229,6 +229,7 @@ getstart(ext::Virtual) = getstart(ext.arg)
 getstop(ext::Virtual) = getstop(ext.arg)
 getlower(ext::Virtual) = getlower(ext.arg)
 getupper(ext::Virtual) = getupper(ext.arg)
+extent(ext::Virtual) = extent(ext.arg)
 
 combinedim(a::Extent, b::Extent) =
     Extent(
@@ -300,9 +301,8 @@ transpose of `tns`, then `getsites(tns_2)` should be a permutation of
 function getsites end
 
 
-getstart(val) = val
-getstop(val) = val
-extent(val) = 1
+getstart(val) = val #TODO avoid generic definition here
+getstop(val) = val #TODO avoid generic herer
 
 struct Narrow{Ext}
     ext::Ext
