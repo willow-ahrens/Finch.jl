@@ -1,10 +1,15 @@
 struct NoDimension end
 const nodim = NoDimension()
+IndexNotation.isliteral(::NoDimension) = false
 virtualize(ex, ::Type{NoDimension}, ctx) = nodim
 
 struct DeferDimension end
 const deferdim = DeferDimension()
+IndexNotation.isliteral(::DeferDimension) = false
 virtualize(ex, ::Type{DeferDimension}, ctx) = deferdim
+
+cache_dim!(ctx, tag, ext::DeferDimension) = ext
+cache_dim!(ctx, tag, ext::NoDimension) = ext
 
 getstart(::DeferDimension) = error()
 getstop(::DeferDimension) = error()
@@ -42,7 +47,7 @@ end
     body
 end
 
-isliteral(::Dimensionalize) = false
+IndexNotation.isliteral(::Dimensionalize) =  false
 
 struct DimensionalizeStyle end
 
@@ -87,7 +92,7 @@ function dimensionalize!(prgm, ctx)
     prgm = DeclareDimensions(ctx=ctx, dims = dims, shapes = shapes)(prgm, nodim)
     (prgm, _) = InferDimensions(ctx=ctx, dims = dims, shapes = shapes)(prgm)
     for k in keys(dims)
-        dims[k] = cache!(ctx, k, dims[k])
+        dims[k] = cache_dim!(ctx, k, dims[k])
     end
     ctx.dims = dims
     return (prgm, dims)
@@ -122,6 +127,8 @@ function (ctx::InferDimensions)(node::Protocol)
 end
 
 (ctx::DeclareDimensions)(node::Access, dim) = declare_dimensions_access(node, ctx, node.tns, dim)
+declare_dimensions_access(node, ctx, tns::Virtual, dim) = declare_dimensions_access(node, ctx, tns.arg, dim)
+declare_dimensions_access(node, ctx, tns::Dimensionalize, dim) = declare_dimensions_access(node, ctx, tns.body, dim)
 function declare_dimensions_access(node, ctx, tns, dim)
     if haskey(ctx.shapes, getname(tns))
         dims = ctx.shapes[getname(tns)][getsites(tns)]
@@ -135,6 +142,7 @@ end
 
 (ctx::InferDimensions)(node::Access) = infer_dimensions_access(node, ctx, node.tns)
 #TODO this would be a good candidate for an index modifier node
+infer_dimensions_access(node, ctx, tns::Virtual) = infer_dimensions_access(node, ctx, tns.arg)
 function infer_dimensions_access(node, ctx, tns)
     res = map(ctx, node.idxs)
     dims = map(resolvedim, map(last, res))
@@ -194,6 +202,8 @@ combinedim(::DeferDimension, b) = deferdim
     upper = @f $stop - $start + 1
 end
 
+IndexNotation.isliteral(::Extent) = false
+
 Base.:(==)(a::Extent, b::Extent) =
     a.start == b.start &&
     a.stop == b.stop &&
@@ -202,7 +212,7 @@ Base.:(==)(a::Extent, b::Extent) =
 
 Extent(start, stop) = Extent(start, stop, (@f $stop - $start + 1), (@f $stop - $start + 1))
 
-cache!(ctx, var, ext::Extent) = Extent(
+cache_dim!(ctx, var, ext::Extent) = Extent(
     start = cache!(ctx, Symbol(var, :_start), ext.start),
     stop = cache!(ctx, Symbol(var, :_stop), ext.stop),
     lower = cache!(ctx, Symbol(var, :_lower), ext.lower),
@@ -214,6 +224,14 @@ getstop(ext::Extent) = ext.stop
 getlower(ext::Extent) = ext.lower
 getupper(ext::Extent) = ext.upper
 extent(ext::Extent) = @f $(ext.stop) - $(ext.start) + 1
+
+getstart(ext::Virtual) = getstart(ext.arg)
+getstop(ext::Virtual) = getstop(ext.arg)
+getlower(ext::Virtual) = getlower(ext.arg)
+getupper(ext::Virtual) = getupper(ext.arg)
+extent(ext::Virtual) = extent(ext.arg)
+extent(ext::Literal) = extent(ext.val)
+extent(ext::Integer) = 1
 
 combinedim(a::Extent, b::Extent) =
     Extent(
@@ -229,6 +247,8 @@ struct SuggestedExtent{Ext}
     ext::Ext
 end
 
+IndexNotation.isliteral(::SuggestedExtent) = false
+
 Base.:(==)(a::SuggestedExtent, b::SuggestedExtent) = a.ext == b.ext
 
 suggest(ext) = SuggestedExtent(ext)
@@ -236,8 +256,9 @@ suggest(ext::SuggestedExtent) = ext
 suggest(ext::NoDimension) = nodim
 suggest(ext::DeferDimension) = deferdim
 
+resolvedim(ext::Symbol) = error()
 resolvedim(ext::SuggestedExtent) = ext.ext
-cache!(ctx, tag, ext::SuggestedExtent) = SuggestedExtent(cache!(ctx, tag, ext.ext))
+cache_dim!(ctx, tag, ext::SuggestedExtent) = SuggestedExtent(cache_dim!(ctx, tag, ext.ext))
 
 #TODO maybe just call something like resolve_extent to unwrap?
 getstart(ext::SuggestedExtent) = getstart(ext.ext)
@@ -256,7 +277,7 @@ end
 
 combinedim(a::Union{<:Value, <:Number}, b::IndexExpression) = a
 
-combinedim(a::IndexExpression, b::IndexExpression) = min(string(a), string(b)) #TODO
+combinedim(a::IndexExpression, b::IndexExpression) = a #TODO need to add symbolic equivalence operator and simplification rewrites
 
 combinedim(a::Number, b::Value) = a
 
@@ -283,13 +304,16 @@ transpose of `tns`, then `getsites(tns_2)` should be a permutation of
 function getsites end
 
 
-getstart(val) = val
-getstop(val) = val
-extent(val) = 1
+getstart(val) = val #TODO avoid generic definition here
+getstop(val) = val #TODO avoid generic herer
 
 struct Narrow{Ext}
     ext::Ext
 end
+
+Narrow(ex::Virtual) = Narrow(ex.arg)
+
+IndexNotation.isliteral(::Narrow) = false
 
 narrowdim(dim) = Narrow(dim)
 narrowdim(::NoDimension) = nodim
@@ -303,6 +327,10 @@ getstop(ext::Narrow) = getstop(ext.ext)
 struct Widen{Ext}
     ext::Ext
 end
+
+Widen(ex::Virtual) = Widen(ex.arg)
+
+IndexNotation.isliteral(::Widen) = false
 
 widendim(dim) = Widen(dim)
 widendim(::NoDimension) = nodim
@@ -326,7 +354,7 @@ function combinedim(a::Narrow{<:Extent}, b::Narrow{<:Extent})
         lower = if getstart(a) == getstart(b) || getstop(a) == getstop(b)
             simplify(@f(min($(a.ext.lower), $(b.ext.lower))))
         else
-            0
+            Literal(0)
         end,
         upper = simplify(@f(min($(a.ext.upper), $(b.ext.upper))))
     ))
@@ -353,5 +381,5 @@ end
 resolvedim(ext) = ext
 resolvedim(ext::Narrow) = resolvedim(ext.ext)
 resolvedim(ext::Widen) = resolvedim(ext.ext)
-cache!(ctx, tag, ext::Narrow) = Narrow(cache!(ctx, tag, ext.ext))
-cache!(ctx, tag, ext::Widen) = Widen(cache!(ctx, tag, ext.ext))
+cache_dim!(ctx, tag, ext::Narrow) = Narrow(cache_dim!(ctx, tag, ext.ext))
+cache_dim!(ctx, tag, ext::Widen) = Widen(cache_dim!(ctx, tag, ext.ext))

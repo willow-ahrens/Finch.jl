@@ -10,7 +10,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Spike)
     print(io, ")")
 end
 
-isliteral(::Spike) = false
+IndexNotation.isliteral(::Spike) =  false
 
 struct SpikeStyle end
 
@@ -62,6 +62,8 @@ function (ctx::SpikeBodyVisitor)(node)
     end
 end
 
+(ctx::SpikeBodyVisitor)(node::Virtual) = ctx(node.arg)
+
 function (ctx::SpikeBodyVisitor)(node::Spike)
     return Run(node.body)
 end
@@ -87,6 +89,8 @@ function (ctx::SpikeTailVisitor)(node)
     end
 end
 
+(ctx::SpikeTailVisitor)(node::Virtual) = ctx(node.arg)
+
 (ctx::SpikeTailVisitor)(node::Access) = something(unchunk(node.tns, ctx), node)
 unchunk(node::Spike, ctx::SpikeTailVisitor) = node.tail
 unchunk(node::Shift, ctx::SpikeTailVisitor) = unchunk(node.body, SpikeTailVisitor(;kwfields(ctx)..., val = call(-, ctx.val, node.delta)))
@@ -101,6 +105,8 @@ supports_shift(::SpikeStyle) = true
     tail
 end
 
+IndexNotation.isliteral(::AcceptSpike) = false
+
 Base.show(io::IO, ex::AcceptSpike) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::AcceptSpike)
     print(io, "AcceptSpike(val = ")
@@ -114,8 +120,8 @@ unchunk(node::AcceptSpike, ctx::ForLoopVisitor) = node.tail(ctx.ctx, ctx.val)
 
 function truncate(node::Spike, ctx, ext, ext_2)
     return Switch([
-        :($(ctx(getstop(ext_2))) < $(ctx(getstop(ext)))) => Run(node.body),
-        true => node,
+        Value(:($(ctx(getstop(ext_2))) < $(ctx(getstop(ext))))) => Run(node.body),
+        Literal(true) => node,
     ])
 end
 truncate_weak(node::Spike, ctx, ext, ext_2) = node

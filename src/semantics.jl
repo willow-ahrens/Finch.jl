@@ -30,6 +30,7 @@ Tensors can have the same name only if they are `===` to each other. The names
 of indices are used to distinguish the loops they reference.
 """
 function getname end
+getname(x) = (println(x); error())
 
 """
     setname(ex, name)
@@ -37,17 +38,6 @@ function getname end
 Return a new expression, identical to `ex`, with the name `name`.
 """
 function setname end
-
-"""
-    isliteral(ex)
-
-Return a boolean indicating whether the expression is a literal. If an
-expression is a literal, `getvalue(ex)` should return the literal value it
-corresponds to. `getvalue` defaults to the identity.
-
-See also: [`getvalue`](@ref)
-"""
-isliteral(ex) = true
 
 """
     getvalue(ex)

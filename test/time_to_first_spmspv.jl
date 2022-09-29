@@ -34,3 +34,10 @@ rewrite_methods = length(methodinstances(RewriteTools))
 #│   tests = 4m04.4s
 #│   finch_methods = 994
 #└   rewrite_methods = 1612
+#After enforcing Literals and Values:
+#┌ Info: results
+#│   first_run = 32.952320614
+#│   second_run = 0.785031029
+#│   tests = 3m46.5s
+#│   finch_methods = 991
+#└   rewrite_methods = 917

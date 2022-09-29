@@ -34,6 +34,11 @@ end
 end
 
 (ctx::LowerJulia)(root) = ctx(root, Stylize(root, ctx)(root))
+#function(ctx::LowerJulia)(root)
+#    style = Stylize(root, ctx)(root)
+#    @info :lower root style
+#    ctx(root, style)
+#end
 
 function cache!(ctx, var, val)
     if isliteral(val)
@@ -94,7 +99,7 @@ struct ThunkStyle end
     epilogue = quote end
     binds = ()
 end
-isliteral(::Thunk) = false
+IndexNotation.isliteral(::Thunk) =  false
 
 Base.show(io::IO, ex::Thunk) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::Thunk)
@@ -123,6 +128,7 @@ function (ctx::LowerJulia)(node, ::ThunkStyle)
         (ctx2)(node)
     end
 end
+(ctx::ThunkVisitor)(node::Virtual) = ctx(node.arg)
 
 function (ctx::ThunkVisitor)(node::Thunk)
     push!(ctx.ctx.preamble, node.preamble)
@@ -136,13 +142,14 @@ end
 #TODO this shouldn't exist
 (ctx::ThunkVisitor)(node::Access) = thunk_access(node, ctx, node.tns)
 thunk_access(node, ctx, tns) = similarterm(node, operation(node), map(ctx, arguments(node)))
+thunk_access(node, ctx, tns::Virtual) = thunk_access(node, ctx, tns.arg)
 
 #default lowering
 
 (ctx::LowerJulia)(::Pass, ::DefaultStyle) = quote end
 
 function (ctx::LowerJulia)(root::Assign, ::DefaultStyle)
-    if root.op == nothing
+    if root.op == Literal(nothing)
         rhs = ctx(root.rhs)
     else
         rhs = ctx(call(root.op, root.lhs, root.rhs))
@@ -170,10 +177,11 @@ function (ctx::LowerJulia)(root::Protocol, ::DefaultStyle)
     :($(ctx(root.idx)))
 end
 
-isliteral(::Union{Symbol, Expr, Missing}) = false
+IndexNotation.isliteral(::Union{Symbol, Expr, Missing}) =  false
 (ctx::LowerJulia)(root::Union{Symbol, Expr}, ::DefaultStyle) = root
-(ctx::LowerJulia)(root::Literal{<:Union{Symbol, Expr, Missing}}, ::DefaultStyle) = QuoteNode(root.val)
-(ctx::LowerJulia)(root::Literal, ::DefaultStyle) = root.val
+(ctx::LowerJulia)(root::Literal, ::DefaultStyle) = lowerjulia_literal(root.val)
+lowerjulia_literal(val) = val
+lowerjulia_literal(val::Union{Symbol, Expr, Missing}) = QuoteNode(val)
 
 function (ctx::LowerJulia)(root, ::DefaultStyle)
     if isliteral(root)
@@ -218,6 +226,10 @@ end
 
 (ctx::Finch.LowerJulia)(node::Access, style::DefaultStyle) = lowerjulia_access(ctx, node, node.tns)
 
+(ctx::Finch.LowerJulia)(node::Virtual, style::DefaultStyle) = (ctx)(node.arg) 
+
+lowerjulia_access(ctx::Finch.LowerJulia, node::Access, tns::Virtual) = lowerjulia_access(ctx, node, tns.arg)
+
 function lowerjulia_access(ctx::Finch.LowerJulia, node::Access, tns)
     tns = ctx(tns)
     idxs = map(ctx, node.idxs)
@@ -252,12 +264,12 @@ function (ctx::LowerJulia)(stmt::Loop, ::DefaultStyle)
 end
 function (ctx::LowerJulia)(stmt::Chunk, ::DefaultStyle)
     idx_sym = ctx.freshen(getname(stmt.idx))
-    if simplify((@f $(getlower(stmt.ext)) >= 1)) == true  && simplify((@f $(getupper(stmt.ext)) <= 1)) == true
+    if simplify((@f $(getlower(stmt.ext)) >= 1)) == (@f true)  && simplify((@f $(getupper(stmt.ext)) <= 1)) == (@f true)
         return quote
             $idx_sym = $(ctx(getstart(stmt.ext)))
             $(bind(ctx, getname(stmt.idx) => idx_sym) do 
                 contain(ctx) do ctx_2
-                    body_3 = ForLoopVisitor(ctx_2, stmt.idx, idx_sym)(stmt.body)
+                    body_3 = ForLoopVisitor(ctx_2, stmt.idx, Value(idx_sym))(stmt.body)
                     (ctx_2)(body_3)
                 end
             end)
@@ -267,7 +279,7 @@ function (ctx::LowerJulia)(stmt::Chunk, ::DefaultStyle)
             for $idx_sym = $(ctx(getstart(stmt.ext))):$(ctx(getstop(stmt.ext)))
                 $(bind(ctx, getname(stmt.idx) => idx_sym) do 
                     contain(ctx) do ctx_2
-                        body_3 = ForLoopVisitor(ctx_2, stmt.idx, idx_sym)(stmt.body)
+                        body_3 = ForLoopVisitor(ctx_2, stmt.idx, Value(idx_sym))(stmt.body)
                         (ctx_2)(body_3)
                     end
                 end)
@@ -302,12 +314,13 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Lookup)
     print(io, "Lookup()")
 end
 
-isliteral(node::Lookup) = false
+IndexNotation.isliteral(node::Lookup) =  false
 
 function (ctx::ForLoopVisitor)(node::Lookup)
     node.body(ctx.val)
 end
 
 unchunk(node, ctx) = nothing
+unchunk(node::Virtual, ctx) = unchunk(node.arg, ctx)
 (ctx::ForLoopVisitor)(node::Access) = something(unchunk(node.tns, ctx), node)
 unchunk(node::Lookup, ctx::ForLoopVisitor) = node.body(ctx.val)

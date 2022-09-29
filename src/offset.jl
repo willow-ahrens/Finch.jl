@@ -47,7 +47,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualStaticOffset)
 	print(io, ")")
 end
 
-isliteral(::VirtualStaticOffset) = false
+IndexNotation.isliteral(::VirtualStaticOffset) =  false
 
 function virtualize(ex, ::Type{StaticOffset{Delta, Dim}}, ctx) where {Delta, Dim}
     delta = cache!(ctx, :delta, virtualize(:($ex.delta), Delta, ctx))
@@ -69,7 +69,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualOffset)
 	print(io, "VirtualOffset()")
 end
 
-isliteral(::VirtualOffset) = false
+IndexNotation.isliteral(::VirtualOffset) =  false
 
 virtualize(ex, ::Type{Offset}, ctx) = VirtualOffset()
 

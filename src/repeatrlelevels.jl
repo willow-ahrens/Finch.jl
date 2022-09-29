@@ -112,7 +112,7 @@ getsites(fbr::VirtualFiber{VirtualRepeatRLELevel}) =
     [envdepth(fbr.env) + 1, ]
 
 function getsize(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode)
-    ext = Extent(1, fbr.lvl.I)
+    ext = Extent(Literal(1), fbr.lvl.I)
     if mode != Read()
         ext = suggest(ext)
     end
@@ -190,7 +190,7 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode::Read, idx::
                     $my_i = $(lvl.ex).idx[$my_q]
                 ),
                 body = Step(
-                    stride = (ctx, idx, ext) -> my_i,
+                    stride = (ctx, idx, ext) -> Value(my_i),
                     chunk = Run(
                         body = Simplify(Value{lvl.Tv}(:($(lvl.ex).val[$my_q])))
                     ),

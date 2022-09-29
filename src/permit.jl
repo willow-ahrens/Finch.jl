@@ -27,7 +27,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualPermit)
 	print(io, "VirtualPermit()")
 end
 
-isliteral(::VirtualPermit) = false
+IndexNotation.isliteral(::VirtualPermit) =  false
 
 function virtualize(ex, ::Type{Permit{T}}, ctx) where {T}
     return VirtualPermit(virtualize(:($ex.I), T, ctx))
@@ -66,7 +66,7 @@ function exfurl_access(tns, ctx, mode, idx, node::VirtualPermit)
             body = (start, step) -> Run(Simplify(Literal(missing))),
         ),
         Phase(
-            stride = (ctx, idx, ext) -> ctx(getstop(ext_2)),
+            stride = (ctx, idx, ext) -> getstop(ext_2),
             body = (start, step) -> truncate(tns, ctx, ext_2, Extent(start, step))
         ),
         Phase(

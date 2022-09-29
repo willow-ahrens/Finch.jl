@@ -135,7 +135,7 @@ function getsites(fbr::VirtualFiber{VirtualSparseCooLevel})
 end
 
 function getsize(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx::LowerJulia, mode)
-    ext = map(stop->Extent(1, stop), fbr.lvl.I)
+    ext = map(stop->Extent(Literal(1), stop), fbr.lvl.I)
     if mode != Read()
         ext = map(suggest, ext)
     end
@@ -218,7 +218,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode::Read, idx::
         end,
         body = Pipeline([
             Phase(
-                stride = (ctx, idx, ext) -> my_i_stop,
+                stride = (ctx, idx, ext) -> Value(my_i_stop),
                 body = (start, stop) -> Stepper(
                     seek = (ctx, ext) -> quote
                         while $my_q < $my_q_stop && $(lvl.ex).tbl[$R][$my_q] < $(ctx(getstart(ext)))
@@ -231,9 +231,9 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode::Read, idx::
                                 $my_i = $(lvl.ex).tbl[$R][$my_q]
                             end,
                             body = Step(
-                                stride =  (ctx, idx, ext) -> my_i,
+                                stride =  (ctx, idx, ext) -> Value(my_i),
                                 chunk = Spike(
-                                    body = Simplify(default(fbr)),
+                                    body = Simplify(Literal(default(fbr))),
                                     tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Tq}(my_q), index=Value{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
                                 ),
                                 next = (ctx, idx, ext) -> quote
@@ -251,9 +251,9 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode::Read, idx::
                                 end
                             end,
                             body = Step(
-                                stride = (ctx, idx, ext) -> my_i,
+                                stride = (ctx, idx, ext) -> Value(my_i),
                                 chunk = Spike(
-                                    body = Simplify(default(fbr)),
+                                    body = Simplify(Literal(default(fbr))),
                                     tail = refurl(VirtualFiber(lvl, VirtualEnvironment(start=Value{lvl.Ti}(my_q), stop=Value{lvl.Ti}(my_q_step), index=Value{lvl.Ti}(my_i), parent=fbr.env, internal=true)), ctx, mode, idxs...),
                                 ),
                                 next = (ctx, idx, ext) -> quote
@@ -265,7 +265,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode::Read, idx::
                 )
             ),
             Phase(
-                body = (start, step) -> Run(Simplify(default(fbr)))
+                body = (start, step) -> Run(Simplify(Literal(default(fbr))))
             )
         ])
     )
@@ -300,7 +300,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode::Union{Write
                 preamble = quote
                     $my_guard = true
                     $(contain(ctx) do ctx_2 
-                        assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=my_q, parent=fbr.env)), ctx_2, mode)
+                        assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Ti}(my_q), parent=fbr.env)), ctx_2, mode)
                         quote end
                     end)
                 end,

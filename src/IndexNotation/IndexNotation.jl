@@ -1,7 +1,7 @@
 module IndexNotation
     using MacroTools, SyntaxInterface, Finch
 
-    export IndexNode, IndexStatement, IndexExpression, IndexTerminal
+    export IndexNode, IndexStatement, IndexExpression, IndexTerminal, index_terminal
     export Literal
     export Name
     export Value
@@ -25,7 +25,22 @@ module IndexNotation
     export Extrude, extrude
     export Laminate, laminate
 
-    export @f, @finch_program, @finch_program_instance
+    export @f, @_f, @finch_program, @finch_program_instance
+
+    export isliteral, Virtual
+
+    """
+        isliteral(ex)
+
+    Return a boolean indicating whether the expression is a literal. If an
+    expression is a literal, `getvalue(ex)` should return the literal value it
+    corresponds to. `getvalue` defaults to the identity.
+    TODO this is out of date
+
+    See also: [`getvalue`](@ref)
+    """
+    isliteral(ex) = true
+
 
     include("nodes.jl")
     include("instances.jl")

@@ -10,7 +10,7 @@ end
 Base.first(arg::Case) = arg.cond
 Base.last(arg::Case) = arg.body
 
-isliteral(::Switch) = false
+IndexNotation.isliteral(::Switch) =  false
 
 struct SwitchStyle end
 
@@ -34,10 +34,11 @@ function (ctx::SwitchVisitor)(node)
             return simplify(@f(and($(guards...)))) => similarterm(node, operation(node), collect(bodies))
         end
     else
-        [(true => node)]
+        [(Literal(true) => node)]
     end
 end
 (ctx::SwitchVisitor)(node::Switch) = node.cases
+(ctx::SwitchVisitor)(node::Virtual) = ctx(node.arg)
 
 function (ctx::LowerJulia)(stmt, ::SwitchStyle)
     cases = (SwitchVisitor())(stmt)

@@ -2,6 +2,8 @@ struct Select end
 
 const select = Select()
 
+IndexNotation.isliteral(::Select) =  false
+
 Base.show(io::IO, ex::Select) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::Select)
     print(io, "select")
@@ -9,7 +11,7 @@ end
 
 getsize(::Select, ::LowerJulia, mode) = (NoDimension(), NoDimension())
 getsites(::Select) = 1:2
-getname(x) = gensym() #TODO this is wrong
+getname(x::Select) = gensym()
 setname(::Select, name) = select
 
 virtualize(ex, ::Type{Select}, ctx) = select
@@ -32,14 +34,14 @@ function chunkify_access(node, ctx, ::Select)
         end)
         tns = Pipeline([
             Phase(
-                stride = (ctx, idx, ext) -> :($sym - 1),
-                body = (start, step) -> Run(body=Simplify(false))
+                stride = (ctx, idx, ext) -> Value(:($sym - 1)),
+                body = (start, step) -> Run(body=Simplify(Literal(false)))
             ),
             Phase(
-                stride = (ctx, idx, ext) -> sym,
-                body = (start, step) -> Run(body=Simplify(true)),
+                stride = (ctx, idx, ext) -> Value(sym),
+                body = (start, step) -> Run(body=Simplify(Literal(true))),
             ),
-            Phase(body = (start, step) -> Run(body=Simplify(false)))
+            Phase(body = (start, step) -> Run(body=Simplify(Literal(false))))
         ])
         access(tns, node.mode, node.idxs[2])
     else
@@ -61,12 +63,14 @@ function (ctx::SelectVisitor)(node)
 end
 
 (ctx::Finch.SelectVisitor)(node::Access) = select_access(node, ctx, node.tns)
+select_access(node, ctx, tns::Virtual) = select_access(node, ctx, tns.arg)
 select_access(node, ctx, tns) = similarterm(node, operation(node), map(ctx, arguments(node)))
 
 struct SelectStyle end
 
 combine_style(a::SelectStyle, b::ThunkStyle) = b
 combine_style(a::SelectStyle, b::ChunkStyle) = a
+combine_style(a::SelectStyle, b::SelectStyle) = a
 
 function (ctx::LowerJulia)(root, ::SelectStyle)
     idxs = Dict()

@@ -18,7 +18,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Shift)
     print(io, ")")
 end
 
-isliteral(::Shift) = false
+IndexNotation.isliteral(::Shift) =  false
 
 #TODO can't we do this more pretty?
 supports_shift(style) = false

@@ -9,7 +9,7 @@ function getsize(arr::VirtualAbstractArray, ctx::LowerJulia, mode) where {T <: A
     push!(ctx.preamble, quote
         ($(dims...),) = size($(arr.ex))
     end)
-    return map(i->Extent(1, Value{Int}(dims[i])), 1:arr.ndims)
+    return map(i->Extent(Literal(1), Value{Int}(dims[i])), 1:arr.ndims)
 end
 
 getname(arr::VirtualAbstractArray) = arr.name
@@ -35,6 +35,6 @@ function initialize!(arr::VirtualAbstractArray, ctx::LowerJulia, mode::Union{Wri
     access(arr, mode, idxs...)
 end
 
-isliteral(::VirtualAbstractArray) = false
+IndexNotation.isliteral(::VirtualAbstractArray) =  false
 
 default(::VirtualAbstractArray) = 0

@@ -9,7 +9,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Run)
     print(io, ")")
 end
 
-isliteral(::Run) = false
+IndexNotation.isliteral(::Run) =  false
 
 #A minor revelation: There's no reason to store extents in chunks, they just modify the extents of the context.
 
@@ -41,6 +41,7 @@ function (ctx::AccessRunVisitor)(node)
         return node
     end
 end
+(ctx::AccessRunVisitor)(node::Virtual) = ctx(node.arg)
 
 (ctx::AccessRunVisitor)(node::Access) = something(unchunk(node.tns, ctx), node)
 unchunk(node::Run, ::AccessRunVisitor) = node.body
@@ -54,7 +55,11 @@ unchunk(node::Shift, ctx::AccessRunVisitor) = unchunk(node.body, ctx)
     val = nothing
 end
 
+IndexNotation.isliteral(::AcceptRun) = false
+
 default(node::AcceptRun) = node.val
+
+Finch.default(x::Virtual) = Finch.default(x.arg) #TODO this should go somewhere else
 
 Base.show(io::IO, ex::AcceptRun) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::AcceptRun)
@@ -95,6 +100,7 @@ function (ctx::AcceptRunVisitor)(node)
         return node
     end
 end
+(ctx::AcceptRunVisitor)(node::Virtual) = ctx(node.arg)
 
 (ctx::AcceptRunVisitor)(node::Access) = node.mode === Read() ? node : something(unchunk(node.tns, ctx), node)
 unchunk(node::AcceptRun, ctx::AcceptRunVisitor) = node.body(ctx.ctx, getstart(ctx.ext), getstop(ctx.ext))

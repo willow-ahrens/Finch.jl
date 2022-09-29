@@ -71,7 +71,7 @@ struct VirtualEnvironment
 end
 VirtualEnvironment(parent; kwargs...) = VirtualEnvironment(; parent=parent, kwargs...)
 
-isliteral(env::VirtualEnvironment) = false
+IndexNotation.isliteral(env::VirtualEnvironment) =  false
 
 function (ctx::Finch.LowerJulia)(env::VirtualEnvironment)
     kwargs = map(collect(getfield(env, :props))) do (name, arg)
@@ -96,7 +96,8 @@ Base.get!(env::VirtualEnvironment, name::Symbol, x) = get!(getfield(env, :props)
 Get the position in the environment. The position is an integer identifying
 which fiber to access in a level.
 """
-envposition(env) = envparent(env) === nothing ? 1 : env.position
+envposition(env::Environment) = envparent(env) === nothing ? 1 : env.position
+envposition(env::VirtualEnvironment) = envparent(env) === nothing ? Literal(1) : env.position
 """
     envcoordinate(env)
 

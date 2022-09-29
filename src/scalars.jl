@@ -39,7 +39,7 @@ getsites(::VirtualScalar) = []
 
 @inline default(tns::VirtualScalar) = tns.D
 
-isliteral(::VirtualScalar) = false
+IndexNotation.isliteral(::VirtualScalar) =  false
 
 getname(tns::VirtualScalar) = tns.name
 setname(tns::VirtualScalar, name) = VirtualScalar(tns.ex, tns.Tv, tns.D, name, tns.val)

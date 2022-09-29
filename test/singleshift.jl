@@ -19,6 +19,8 @@ mutable struct VirtualSingleShift{Tv, Ti}
     name
 end
 
+IndexNotation.isliteral(::VirtualSingleShift) =  false
+
 function Finch.virtualize(ex, ::Type{SingleShift{Tv, Ti}}, ctx, tag=:tns) where {Tv, Ti}
     sym = ctx.freshen(tag)
     push!(ctx.preamble, :($sym = $ex))
@@ -30,7 +32,7 @@ end
 function Finch.getsize(arr::VirtualSingleShift{Tv, Ti}, ctx::Finch.LowerJulia, mode) where {Tv, Ti}
     ex = Symbol(arr.name, :_stop)
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))
-    (Extent(1, Value{Ti}(ex)),)
+    (Extent(Literal(1), Value{Ti}(ex)),)
 end
 Finch.setsize!(arr::VirtualSingleShift, ctx::Finch.LowerJulia, mode, dims...) = arr
 Finch.getname(arr::VirtualSingleShift) = arr.name

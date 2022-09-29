@@ -20,6 +20,8 @@ mutable struct VirtualSimpleJumpVector{Tv, Ti}
     D
 end
 
+Finch.IndexNotation.isliteral(::VirtualSimpleJumpVector) = false
+
 function Finch.virtualize(ex, ::Type{SimpleJumpVector{D, Tv, Ti}}, ctx, tag=:tns) where {D, Tv, Ti}
     sym = ctx.freshen(tag)
     push!(ctx.preamble, :($sym = $ex))
@@ -39,7 +41,7 @@ end
 function Finch.getsize(arr::VirtualSimpleJumpVector{Tv, Ti}, ctx::Finch.LowerJulia, mode) where {Tv, Ti}
     ex = Symbol(arr.name, :_stop)
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))
-    (Extent(1, Value{Ti}(ex)),)
+    (Extent(Literal(1), Value{Ti}(ex)),)
 end
 Finch.setsize!(arr::VirtualSimpleJumpVector{Tv, Ti}, ctx::Finch.LowerJulia, mode, dims...) where {Tv, Ti} = arr
 Finch.getname(arr::VirtualSimpleJumpVector) = arr.name
@@ -72,12 +74,12 @@ function Finch.chunkify_access(node, ctx, vec::VirtualSimpleJumpVector{Tv, Ti}) 
                             $my_i = $(ctx(getstart(ext)))
                             $my_i′ = $(vec.ex).idx[$my_p]
                         end,
-                        stride = (ctx, ext) -> my_i′,
+                        stride = (ctx, ext) -> Value(my_i′),
                         body = (ctx, ext, ext_2) -> begin
                             Switch([
-                                :($(ctx(getstop(ext_2))) == $my_i′) => Thunk(
+                                Value(:($(ctx(getstop(ext_2))) == $my_i′)) => Thunk(
                                     body = Spike(
-                                        body = Simplify(zero(Tv)),
+                                        body = Simplify(Literal(zero(Tv))),
                                         tail = Value{Tv}(:($(vec.ex).val[$my_p])),
                                     ),
                                     epilogue = quote
@@ -86,16 +88,16 @@ function Finch.chunkify_access(node, ctx, vec::VirtualSimpleJumpVector{Tv, Ti}) 
                                         $my_i′ = $(vec.ex).idx[$my_p]
                                     end
                                 ),
-                                true => Stepper(
+                                Literal(true) => Stepper(
                                     seek = (ctx, ext) -> quote
                                         $my_p = searchsortedfirst($(vec.ex).idx, $(ctx(getstart(ext))), $my_p, length($(vec.ex).idx), Base.Forward)
                                         $my_i = $(ctx(getstart(ext)))
                                         $my_i′ = $(vec.ex).idx[$my_p]
                                     end,
                                     body = Step(
-                                        stride = (ctx, idx, ext) -> my_i′,
+                                        stride = (ctx, idx, ext) -> Value(my_i′),
                                         chunk = Spike(
-                                            body = Simplify(zero(Tv)),
+                                            body = Simplify(Literal(zero(Tv))),
                                             tail = Value{Tv}(:($(vec.ex).val[$my_p])),
                                         ),
                                         next = (ctx, idx, ext) -> quote

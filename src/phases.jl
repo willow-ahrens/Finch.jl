@@ -4,7 +4,7 @@
     stride = (ctx, idx, ext) -> nothing
     range = (ctx, idx, ext) -> Extent(start = getstart(ext), stop = something(stride(ctx, idx, ext), getstop(ext)))
 end
-isliteral(::Phase) = false
+IndexNotation.isliteral(::Phase) =  false
 
 Base.show(io::IO, ex::Phase) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::Phase)
@@ -24,6 +24,7 @@ function (ctx::PhaseStride)(node)
         return nodim
     end
 end
+(ctx::PhaseStride)(node::Virtual) = ctx(node.arg)
 
 (ctx::PhaseStride)(node::Phase) = Narrow(node.range(ctx.ctx, ctx.idx, ctx.ext))
 (ctx::PhaseStride)(node::Shift) = shiftdim(PhaseStride(;kwfields(ctx)..., ext = shiftdim(ctx.ext, call(-, node.delta)))(node.body), node.delta)
@@ -42,6 +43,7 @@ function (ctx::PhaseBodyVisitor)(node)
         return node
     end
 end
+(ctx::PhaseBodyVisitor)(node::Virtual) = ctx(node.arg)
 
 (ctx::PhaseBodyVisitor)(node::Phase) = node.body(getstart(ctx.ext_2), getstop(ctx.ext_2))
 (ctx::PhaseBodyVisitor)(node::Spike) = truncate(node, ctx.ctx, ctx.ext, ctx.ext_2) #TODO This should be called on everything
@@ -53,7 +55,7 @@ struct PhaseStyle end
 
 supports_shift(::PhaseStyle) = true
 
-#isliteral(::Step) = false
+#IndexNotation.isliteral(::Step) =  false
 
 (ctx::Stylize{LowerJulia})(node::Phase) = PhaseStyle()
 
@@ -73,7 +75,7 @@ function (ctx::LowerJulia)(root::Chunk, ::PhaseStyle)
     body = root.body
 
     ext_2 = resolvedim(PhaseStride(ctx, root.idx, root.ext)(body))
-    ext_2 = cache!(ctx, :phase, resolvedim(resultdim(Narrow(root.ext), ext_2)))
+    ext_2 = cache_dim!(ctx, :phase, resolvedim(resultdim(Narrow(root.ext), ext_2)))
 
     body = PhaseBodyVisitor(ctx, root.idx, root.ext, ext_2)(body)
     body = quote
@@ -88,7 +90,7 @@ function (ctx::LowerJulia)(root::Chunk, ::PhaseStyle)
         $i = $(ctx(getstop(ext_2))) + 1
     end
 
-    if simplify(@f $(getlower(ext_2)) >= 1) == true
+    if simplify(@f $(getlower(ext_2)) >= 1) == Literal(true)
         return body
     else
         return quote

@@ -10,10 +10,10 @@ function lower_cycle(root, ctx, idx, ext, style)
 
     body_2 = contain(ctx) do ctx_2
         push!(ctx_2.preamble, :($i0 = $i))
-        ctx_2(Chunk(root.idx, Extent(start = i0, stop = getstop(root.ext), lower = 1), body))
+        ctx_2(Chunk(root.idx, Extent(start = Value(i0), stop = getstop(root.ext), lower = Literal(1)), body))
     end
 
-    if simplify((@f $(getlower(ext)) >= 1)) == true  && simplify((@f $(getupper(ext)) <= 1)) == true
+    if simplify((@f $(getlower(ext)) >= 1)) == (@f true) && simplify((@f $(getupper(ext)) <= 1)) == (@f true)
         body_2
     else
         return quote
@@ -38,5 +38,7 @@ function (ctx::CycleVisitor)(node)
         return node
     end
 end
+
+(ctx::CycleVisitor)(node::Virtual) = ctx(node.arg)
 
 (ctx::CycleVisitor)(node::Shift) = Shift(CycleVisitor(; kwfields(ctx)..., ext=shiftdim(ctx.ext, call(-, node.delta)))(node.body), node.delta)

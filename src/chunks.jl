@@ -21,6 +21,7 @@ end
 
 (ctx::ChunkifyVisitor)(node::Access) = chunkify_access(node, ctx, node.tns)
 
+chunkify_access(node, ctx, tns::Virtual) = chunkify_access(node, ctx, tns.arg)
 chunkify_access(node, ctx, tns) = similarterm(node, operation(node), map(ctx, arguments(node)))
 
 function (ctx::LowerJulia)(root::Loop, ::ChunkStyle)

@@ -20,6 +20,8 @@ mutable struct VirtualSimpleSparseVector{Tv, Ti}
     D
 end
 
+Finch.IndexNotation.isliteral(::VirtualSimpleSparseVector) = false
+
 Finch.default(vec::VirtualSimpleSparseVector) = vec.D
 
 function Finch.virtualize(ex, ::Type{SimpleSparseVector{D, Tv, Ti}}, ctx, tag=:tns) where {D, Tv, Ti}
@@ -41,7 +43,7 @@ end
 function Finch.getsize(arr::VirtualSimpleSparseVector{Tv, Ti}, ctx::Finch.LowerJulia, mode) where {Tv, Ti}
     ex = Symbol(arr.name, :_stop)
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))
-    (Extent(1, Value{Ti}(ex)),)
+    (Extent(Literal(1), Value{Ti}(ex)),)
 end
 Finch.setsize!(arr::VirtualSimpleSparseVector{Tv, Ti}, ctx::Finch.LowerJulia, mode, dims...) where {Tv, Ti} = arr
 Finch.getname(arr::VirtualSimpleSparseVector) = arr.name
@@ -55,7 +57,7 @@ function Finch.stylize_access(node, ctx::Finch.Stylize{LowerJulia}, ::VirtualSim
 end
 
 function Finch.chunkify_access(node, ctx, vec::VirtualSimpleSparseVector{Tv, Ti}) where {Tv, Ti}
-    my_I = ctx.ctx.freshen(node.tns.name, :_I)
+    my_I = ctx.ctx.freshen(vec.name, :_I)
     my_i = ctx.ctx.freshen(getname(vec), :_i0)
     my_i′ = ctx.ctx.freshen(getname(vec), :_i1)
     my_p = ctx.ctx.freshen(getname(vec), :_p)
@@ -74,9 +76,9 @@ function Finch.chunkify_access(node, ctx, vec::VirtualSimpleSparseVector{Tv, Ti}
                         $my_i′ = $(vec.ex).idx[$my_p]
                     end,
                     body = Step(
-                        stride = (ctx, idx, ext) -> my_i′,
+                        stride = (ctx, idx, ext) -> Value(my_i′),
                         chunk = Spike(
-                            body = Simplify(zero(Tv)),
+                            body = Simplify(Literal(zero(Tv))),
                             tail = Value{Tv}(:($(vec.ex).val[$my_p])),
                         ),
                         next = (ctx, idx, ext) -> quote

@@ -21,6 +21,8 @@ function Finch.virtualize(ex, ::Type{SimpleRunLength{Tv, Ti}}, ctx, tag=:tns) wh
     VirtualSimpleRunLength{Tv, Ti}(sym, tag)
 end
 
+Finch.IndexNotation.isliteral(::VirtualSimpleRunLength) = false
+
 (ctx::Finch.LowerJulia)(tns::VirtualSimpleRunLength) = tns.ex
 
 function Finch.initialize!(arr::VirtualSimpleRunLength{Tv}, ctx::Finch.LowerJulia, mode::Union{Write, Update}, idxs...) where {Tv}
@@ -34,7 +36,7 @@ end
 function Finch.getsize(arr::VirtualSimpleRunLength{Tv, Ti}, ctx::Finch.LowerJulia, mode) where {Tv, Ti}
     ex = Symbol(arr.name, :_stop)
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))
-    (Extent(1, Value{Ti}(ex)),)
+    (Extent(Literal(1), Value{Ti}(ex)),)
 end
 Finch.setsize!(arr::VirtualSimpleRunLength{Tv, Ti}, ctx::Finch.LowerJulia, mode, dims...) where {Tv, Ti} = arr
 Finch.getname(arr::VirtualSimpleRunLength) = arr.name
@@ -63,7 +65,7 @@ function Finch.chunkify_access(node, ctx, vec::VirtualSimpleRunLength{Tv, Ti}) w
                         $my_i′ = $(vec.ex).idx[$my_p]
                     end,
                     body = Step(
-                        stride = (ctx, idx, ext) -> my_i′,
+                        stride = (ctx, idx, ext) -> Value(my_i′),
                         chunk = Run(
                             body = Simplify(Value{Tv}(:($(vec.ex).val[$my_p]))),
                         ),

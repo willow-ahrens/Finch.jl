@@ -2,6 +2,24 @@
 
 const incs = Dict(:+= => :+, :*= => :*, :&= => :&, :|= => :|)
 
+dollar(x) = x
+const pattern_nodes = (
+    pass = pass,
+    loop = loop,
+    chunk = chunk,
+    with = with,
+    sieve = sieve,
+    multi = multi,
+    assign = assign,
+    call = call,
+    access = access,
+    protocol = protocol,
+    name = Name,
+    label = (ex) -> Expr(:$, :(index_terminal($(esc(ex))))),
+    literal = Literal,
+    value = (ex) -> Expr(:$, :(index_terminal($(esc(ex))))),
+)
+
 const program_nodes = (
     pass = pass,
     loop = loop,
@@ -14,8 +32,9 @@ const program_nodes = (
     access = access,
     protocol = protocol,
     name = Name,
-    label = esc,
-    value = esc,
+    label = (ex) -> :(index_terminal($(esc(ex)))),
+    literal = Literal,
+    value = (ex) -> :(index_terminal($(esc(ex)))),
 )
 
 const instance_nodes = (
@@ -31,6 +50,7 @@ const instance_nodes = (
     protocol = protocol_instance,
     name = name_instance,
     label = (ex) -> :($label_instance($(QuoteNode(ex)), $value_instance($(esc(ex))))),
+    literal = literal_instance,
     value = (ex) -> :($value_instance($(esc(ex))))
 )
 
@@ -119,17 +139,24 @@ function _finch_capture(ex, ctx)
     elseif @capture ex (idx_::proto_)
         idx = _finch_capture(idx, ctx)
         return :($(ctx.nodes.protocol)($idx, $(esc(proto))))
+    elseif ex isa Expr && ex.head == :...
+        return esc(ex)
     elseif ex isa Expr && ex.head == :$ && length(ex.args) == 1
         return esc(ex.args[1])
     elseif ex isa Symbol && ctx.namify
         return ctx.nodes.name(ex)
     elseif ex isa Symbol
         return ctx.nodes.label(ex)
-    else
+    elseif ex isa Expr
         return ctx.nodes.value(ex)
+    elseif ex isa QuoteNode
+        return ctx.nodes.literal(ex.value)
+    else
+        return ctx.nodes.literal(ex)
     end
 end
 
+capture_finch_pattern(ex; results=Set()) = _finch_capture(ex, (nodes=pattern_nodes, namify=true, mode = Read(), results = results))
 capture_finch_program(ex; results=Set()) = _finch_capture(ex, (nodes=program_nodes, namify=true, mode = Read(), results = results))
 capture_finch_instance(ex; results=Set()) = _finch_capture(ex, (nodes=instance_nodes, namify=true, mode = Read(), results = results))
 
@@ -139,6 +166,10 @@ end
 
 macro f(ex)
     return capture_finch_program(ex)
+end
+
+macro _f(ex)
+    return capture_finch_pattern(ex)
 end
 
 macro finch_program_instance(ex)

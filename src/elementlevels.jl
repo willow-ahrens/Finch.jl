@@ -62,7 +62,7 @@ function virtualize(ex, ::Type{ElementLevel{D, Tv}}, ctx, tag) where {D, Tv}
 end
 
 summary_f_str(::VirtualElementLevel) = ""
-summary_f_str_args(::VirtualElementLevel) = (lvl.D,)
+summary_f_str_args(lvl::VirtualElementLevel) = (lvl.D,)
 
 function getsites(fbr::VirtualFiber{VirtualElementLevel})
     return []

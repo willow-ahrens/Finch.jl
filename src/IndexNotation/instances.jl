@@ -98,6 +98,20 @@ Base.:(==)(a::LabelInstance{tag}, b::LabelInstance{tag}) where {tag} = a.tns == 
 
 struct ValueInstance{arg} end
 
-@inline value_instance(arg) = (isbits(arg) || arg isa Type) ? ValueInstance{arg}() : arg #TODO how does this interact with immutable outputs?
-@inline value_instance(arg::Symbol) = ValueInstance{arg}()
+#@inline value_instance(arg) = (isbits(arg) || arg isa Type) ? ValueInstance{arg}() : arg #TODO how does this interact with immutable outputs?
+#@inline value_instance(arg::Symbol) = ValueInstance{arg}()
+@inline value_instance(arg) = index_terminal_instance(arg)
 @inline value(arg) = value_instance(arg)
+@inline index_terminal_instance(arg::Type) = literal_instance(arg)
+@inline index_terminal_instance(arg::Function) = literal_instance(arg)
+@inline index_terminal_instance(arg::IndexNodeInstance) = arg
+@inline index_terminal_instance(arg) = arg #TODO ValueInstance
+
+@inline index_terminal(arg::Type) = Literal(arg)
+@inline index_terminal(arg::Function) = Literal(arg)
+@inline index_terminal(arg::IndexNode) = arg
+@inline index_terminal(arg) = isliteral(arg) ? Literal(arg) : Virtual(arg)
+
+Base.convert(::Type{IndexNode}, x) = index_terminal(x)
+Base.convert(::Type{IndexNode}, x::IndexNode) = x
+Base.convert(::Type{IndexNode}, x::Symbol) = error()

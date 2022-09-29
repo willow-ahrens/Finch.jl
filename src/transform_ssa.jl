@@ -20,6 +20,7 @@ end
 
 TransformSSA(freshen) = TransformSSA(Dict(), [], freshen)
 
+resolvename!(root::Virtual, ctx::TransformSSA) = resolvename!(root.arg, ctx)
 function resolvename!(root, ctx::TransformSSA)
     name = getname(root)
     if haskey(ctx.renames, name)
@@ -36,6 +37,7 @@ function resolvename!(root, ctx::TransformSSA)
     end
 end
 
+definename!(root::Virtual, ctx::TransformSSA) = definename!(root.arg, ctx)
 function definename!(root, ctx::TransformSSA)
     name = getname(root)
     push!(ctx.binds, name)

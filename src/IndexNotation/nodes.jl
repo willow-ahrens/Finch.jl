@@ -47,7 +47,7 @@ function Base.hash(a::IndexNode, h::UInt)
     end
 end
 
-Finch.isliteral(ex::IndexNode) = false
+Finch.IndexNotation.isliteral(ex::IndexNode) =  false
 #=
 function Base.:(==)(a::T, b::T) with {T <: IndexNode}
     if istree(a) && istree(b)
@@ -59,31 +59,54 @@ function Base.:(==)(a::T, b::T) with {T <: IndexNode}
 end
 =#
 
-struct Literal{T} <: IndexTerminal
-    val::T
+struct Literal <: IndexTerminal
+    val
+Literal(x::Literal) = error()
+Literal(x) = new(x)
 end
+
 
 SyntaxInterface.istree(::Literal) = false
 Base.hash(ex::Literal, h::UInt) = hash(Literal, hash(ex.val, h))
 display_expression(io, mime, ex::Literal) = print(io, ex.val)
-Finch.isliteral(::Literal) = true
+Finch.IndexNotation.isliteral(::Literal) =  true
 Finch.getvalue(ex::Literal) = ex.val
 Base.:(==)(a::Literal, b::Literal) = isequal(a.val, b.val)
+Base.isequal(a::Literal, b::Literal) = isequal(a.val, b.val)
 
 struct Value{T} <: IndexTerminal
     ex
 end
 
+Value(x) = Value{Any}(x)
+Value(x::Value) = error()
+Value(x::Literal) = error()
+
 Base.:(==)(a::Value, b::Value) = false
 Base.:(==)(a::Value{T}, b::Value{T}) where {T} = a.ex == b.ex
 Base.hash(ex::Value{T}, h::UInt) where {T} = hash(Value{T}, hash(ex.ex, h))
+display_expression(io, mime, ex::Value) = print(io, "Value($(ex.ex))")
 
 SyntaxInterface.istree(::Value) = false
 
-isliteral(::Value) = false
+IndexNotation.isliteral(::Value) =  false
+
+struct Virtual <: IndexTerminal
+    arg
+end
+
+Base.:(==)(a::Virtual, b::Virtual) where {T} = a.arg == b.arg
+Base.hash(ex::Virtual, h::UInt) where {T} = hash(Virtual, hash(ex.arg, h))
+display_expression(io, mime, ex::Virtual) = print(io, "Virtual($(ex.arg))")
+
+SyntaxInterface.istree(::Virtual) = false
+
+Finch.getname(x::Virtual) = Finch.getname(x.arg)
+
+IndexNotation.isliteral(::Virtual) =  false
 
 struct Pass <: IndexStatement
-	tnss::Vector{Any}
+	tnss::Vector{IndexNode}
 end
 Base.:(==)(a::Pass, b::Pass) = Set(a.tnss) == Set(b.tnss) #TODO This feels... not quite right
 
@@ -137,7 +160,7 @@ Finch.getname(ex::Name) = ex.name
 Finch.setname(ex::Name, name) = Name(name)
 Finch.getunbound(ex::Name) = [ex.name]
 
-struct Protocol{Idx, Val} <: IndexExpression
+struct Protocol{Idx<:IndexNode, Val} <: IndexExpression
     idx::Idx
     val::Val
 end
@@ -159,8 +182,8 @@ function display_expression(io, mime, ex::Protocol)
 end
 
 struct With <: IndexStatement
-	cons::Any
-	prod::Any
+	cons::IndexNode
+	prod::IndexNode
 end
 Base.:(==)(a::With, b::With) = a.cons == b.cons && a.prod == b.prod
 
@@ -183,7 +206,7 @@ end
 Finch.getresults(stmt::With) = Finch.getresults(stmt.cons)
 
 struct Multi <: IndexStatement
-    bodies::Vector{Any}
+    bodies::Vector{IndexNode}
 end
 Base.:(==)(a::Multi, b::Multi) = a.bodies == b.bodies
 
@@ -206,9 +229,9 @@ end
 Finch.getresults(stmt::Multi) = mapreduce(Finch.getresults, vcat, stmt.bodies)
 
 Base.@kwdef struct Chunk <: IndexStatement
-	idx::Any
-    ext::Any
-	body::Any
+	idx::IndexNode
+    ext::IndexNode
+	body::IndexNode
 end
 Base.:(==)(a::Chunk, b::Chunk) = a.idx == b.idx && a.ext == b.ext && a.body == b.body
 
@@ -234,8 +257,8 @@ end
 Finch.getresults(stmt::Chunk) = Finch.getresults(stmt.body)
 
 struct Loop <: IndexStatement
-	idx::Any
-	body::Any
+	idx::IndexNode
+	body::IndexNode
 end
 Base.:(==)(a::Loop, b::Loop) = a.idx == b.idx && a.body == b.body
 
@@ -265,8 +288,8 @@ Finch.getresults(stmt::Loop) = Finch.getresults(stmt.body)
 
 
 struct Sieve <: IndexStatement
-	cond::Any
-	body::Any
+	cond::IndexNode
+	body::IndexNode
 end
 Base.:(==)(a::Sieve, b::Sieve) = a.cond == b.cond && a.body == b.body
 
@@ -296,10 +319,10 @@ end
 
 Finch.getresults(stmt::Sieve) = Finch.getresults(stmt.body)
 
-struct Assign{Lhs} <: IndexStatement
-	lhs::Lhs
-	op::Any
-	rhs::Any
+struct Assign <: IndexStatement
+	lhs::IndexNode
+	op::IndexNode
+	rhs::IndexNode
 end
 Base.:(==)(a::Assign, b::Assign) = a.lhs == b.lhs && a.op == b.op && a.rhs == b.rhs
 
@@ -317,7 +340,7 @@ end
 SyntaxInterface.istree(::Assign)= true
 SyntaxInterface.operation(stmt::Assign) = assign
 function SyntaxInterface.arguments(stmt::Assign)
-    if stmt.op === nothing
+    if (stmt.op === nothing || stmt.op == Literal(nothing))
         Any[stmt.lhs, stmt.rhs]
     else
         Any[stmt.lhs, stmt.op, stmt.rhs]
@@ -329,7 +352,7 @@ function display_statement(io, mime, stmt::Assign, level)
     print(io, tab^level)
     display_expression(io, mime, stmt.lhs)
     print(io, " ")
-    if stmt.op !== nothing
+    if (stmt.op !== nothing && stmt.op != Literal(nothing)) #TODO this feels kinda garbage.
         display_expression(io, mime, stmt.op)
     end
     print(io, "= ")
@@ -340,8 +363,8 @@ end
 Finch.getresults(stmt::Assign) = Finch.getresults(stmt.lhs)
 
 struct Call <: IndexExpression
-    op::Any
-    args::Vector{Any}
+    op::IndexNode
+    args::Vector{IndexNode}
 end
 Base.:(==)(a::Call, b::Call) = a.op == b.op && a.args == b.args
 
@@ -369,9 +392,9 @@ struct Write <: IndexTerminal end
 struct Update <: IndexTerminal end
 
 struct Access <: IndexExpression
-    tns::Any
-    mode::Any
-    idxs::Vector
+    tns::IndexNode
+    mode::IndexNode
+    idxs::Vector{IndexNode}
 end
 Base.:(==)(a::Access, b::Access) = a.tns == b.tns && a.idxs == b.idxs
 

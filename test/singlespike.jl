@@ -19,6 +19,8 @@ mutable struct VirtualSingleSpike{Tv}
     D
 end
 
+Finch.IndexNotation.isliteral(::VirtualSingleSpike) = false
+
 function Finch.virtualize(ex, ::Type{SingleSpike{D, Tv}}, ctx, tag=:tns) where {D, Tv}
     sym = ctx.freshen(tag)
     push!(ctx.preamble, :($sym = $ex))
@@ -30,7 +32,7 @@ end
 function Finch.getsize(arr::VirtualSingleSpike{Tv}, ctx::Finch.LowerJulia, mode) where {Tv}
     ex = Symbol(arr.name, :_stop)
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))
-    (Extent(1, Value{Int}(ex)),)
+    (Extent(Literal(1), Value{Int}(ex)),)
 end
 Finch.setsize!(arr::VirtualSingleSpike, ctx::Finch.LowerJulia, mode, dims...) = arr
 Finch.getname(arr::VirtualSingleSpike) = arr.name
