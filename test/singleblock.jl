@@ -27,6 +27,8 @@ mutable struct VirtualSingleBlock{Tv, Ti}
     D
 end
 
+IndexNotation.isliteral(::VirtualSingleBlock) =  false
+
 function Finch.virtualize(ex, ::Type{SingleBlock{D, Tv, Ti}}, ctx, tag=:tns) where {D, Tv, Ti}
     sym = ctx.freshen(tag)
     push!(ctx.preamble, :($sym = $ex))

@@ -230,6 +230,8 @@ getstop(ext::Virtual) = getstop(ext.arg)
 getlower(ext::Virtual) = getlower(ext.arg)
 getupper(ext::Virtual) = getupper(ext.arg)
 extent(ext::Virtual) = extent(ext.arg)
+extent(ext::Literal) = extent(ext.val)
+extent(ext::Integer) = 1
 
 combinedim(a::Extent, b::Extent) =
     Extent(
@@ -254,6 +256,7 @@ suggest(ext::SuggestedExtent) = ext
 suggest(ext::NoDimension) = nodim
 suggest(ext::DeferDimension) = deferdim
 
+resolvedim(ext::Symbol) = error()
 resolvedim(ext::SuggestedExtent) = ext.ext
 cache_dim!(ctx, tag, ext::SuggestedExtent) = SuggestedExtent(cache_dim!(ctx, tag, ext.ext))
 

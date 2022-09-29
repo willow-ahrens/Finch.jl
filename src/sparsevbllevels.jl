@@ -394,7 +394,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode::Union{Write
         tail = (ctx, idx) -> Thunk(
             preamble = quote
                 $(begin
-                    assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=my_q, parent=fbr.env)), ctx, mode)
+                    assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Ti}(my_q), parent=fbr.env)), ctx, mode)
                     quote end
                 end)
                 $(

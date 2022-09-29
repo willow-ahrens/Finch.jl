@@ -300,7 +300,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode::Union{Write
                 preamble = quote
                     $my_guard = true
                     $(contain(ctx) do ctx_2 
-                        assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=my_q, parent=fbr.env)), ctx_2, mode)
+                        assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Ti}(my_q), parent=fbr.env)), ctx_2, mode)
                         quote end
                     end)
                 end,

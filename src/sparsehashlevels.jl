@@ -359,7 +359,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode::Union{Writ
                         if $(lvl.idx_alloc) < $my_q 
                             $(contain(ctx) do ctx_2 
                                 #THIS code reassembles every time. TODO
-                                assemble!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(position=my_q, parent=(VirtualEnvironment^(lvl.N - 1))(fbr.env))), ctx_2, mode)
+                                assemble!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(position=Value{lvl.Ti}(my_q), parent=(VirtualEnvironment^(lvl.N - 1))(fbr.env))), ctx_2, mode)
                                 quote end
                             end)
                         end

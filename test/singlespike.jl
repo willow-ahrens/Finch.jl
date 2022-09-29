@@ -19,6 +19,8 @@ mutable struct VirtualSingleSpike{Tv}
     D
 end
 
+Finch.IndexNotation.isliteral(::VirtualSingleSpike) = false
+
 function Finch.virtualize(ex, ::Type{SingleSpike{D, Tv}}, ctx, tag=:tns) where {D, Tv}
     sym = ctx.freshen(tag)
     push!(ctx.preamble, :($sym = $ex))

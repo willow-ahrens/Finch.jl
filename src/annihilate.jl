@@ -66,6 +66,7 @@
     (@rule @_f((+)($a)) => a),
     (@rule @_f(- +($a, b...)) => @f +(- $a, - +(b...))),
     (@rule @_f($a[i...] += 0) => pass(a)),
+    (@rule @_f(-0.0) => @f 0.0),
 
     (@rule @_f($a[i...] <<$f>>= $($(Literal(missing)))) => pass(a)),
     (@rule @_f($a[i..., $($(Literal(missing))), j...] <<$f>>= $b) => pass(a)),

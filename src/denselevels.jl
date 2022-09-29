@@ -117,7 +117,7 @@ function reinitialize!(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode)
         reinitialize!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Extent(q_start, q_stop), index = Extent(Literal(1), lvl.I), parent=fbr.env)), ctx, mode)
     else
         p = ctx.freshen(lvl.ex, :_p)
-        p = ctx.freshen(lvl.ex, :_q)
+        q = ctx.freshen(lvl.ex, :_q)
         i_2 = ctx.freshen(lvl.ex, :_i)
         push!(ctx.preamble, quote
             for $p = $(ctx(p_start)):$(ctx(p_stop))
