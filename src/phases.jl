@@ -75,7 +75,7 @@ function (ctx::LowerJulia)(root::Chunk, ::PhaseStyle)
     body = root.body
 
     ext_2 = resolvedim(PhaseStride(ctx, root.idx, root.ext)(body))
-    ext_2 = cache!(ctx, :phase, resolvedim(resultdim(Narrow(root.ext), ext_2)))
+    ext_2 = cache_dim!(ctx, :phase, resolvedim(resultdim(Narrow(root.ext), ext_2)))
 
     body = PhaseBodyVisitor(ctx, root.idx, root.ext, ext_2)(body)
     body = quote

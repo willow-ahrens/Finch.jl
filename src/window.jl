@@ -103,7 +103,7 @@ end
 #TODO needs its own lowering pass, or thunks need to be strictly recursive
 function thunk_access(node, ctx, tns::VirtualWindow)
     if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings) && getunbound(node.idxs[2]) ⊆ keys(ctx.ctx.bindings)
-        return access(Dimensionalize(VirtualStaticWindow(target=cache!(ctx.ctx, :window, Extent(start = ctx(node.idxs[1]), stop = ctx(node.idxs[2]))))), node.mode, ctx(node.idxs[3]))
+        return access(Dimensionalize(VirtualStaticWindow(target=cache_dim!(ctx.ctx, :window, Extent(start = ctx(node.idxs[1]), stop = ctx(node.idxs[2]))))), node.mode, ctx(node.idxs[3]))
     end
     return similarterm(node, operation(node), map(ctx, arguments(node)))
 end

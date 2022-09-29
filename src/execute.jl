@@ -88,6 +88,7 @@ function execute_code(ex, T)
         lower_cleanup |>
         MacroTools.striplines |>
         MacroTools.flatten |>
+        MacroTools.unresolve |>
         MacroTools.resyntax |>
         unquote_literals
 end

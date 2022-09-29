@@ -8,6 +8,9 @@ const deferdim = DeferDimension()
 IndexNotation.isliteral(::DeferDimension) = false
 virtualize(ex, ::Type{DeferDimension}, ctx) = deferdim
 
+cache_dim!(ctx, tag, ext::DeferDimension) = ext
+cache_dim!(ctx, tag, ext::NoDimension) = ext
+
 getstart(::DeferDimension) = error()
 getstop(::DeferDimension) = error()
 
@@ -89,7 +92,7 @@ function dimensionalize!(prgm, ctx)
     prgm = DeclareDimensions(ctx=ctx, dims = dims, shapes = shapes)(prgm, nodim)
     (prgm, _) = InferDimensions(ctx=ctx, dims = dims, shapes = shapes)(prgm)
     for k in keys(dims)
-        dims[k] = cache!(ctx, k, dims[k])
+        dims[k] = cache_dim!(ctx, k, dims[k])
     end
     ctx.dims = dims
     return (prgm, dims)
@@ -209,7 +212,7 @@ Base.:(==)(a::Extent, b::Extent) =
 
 Extent(start, stop) = Extent(start, stop, (@f $stop - $start + 1), (@f $stop - $start + 1))
 
-cache!(ctx, var, ext::Extent) = Extent(
+cache_dim!(ctx, var, ext::Extent) = Extent(
     start = cache!(ctx, Symbol(var, :_start), ext.start),
     stop = cache!(ctx, Symbol(var, :_stop), ext.stop),
     lower = cache!(ctx, Symbol(var, :_lower), ext.lower),
@@ -251,7 +254,7 @@ suggest(ext::NoDimension) = nodim
 suggest(ext::DeferDimension) = deferdim
 
 resolvedim(ext::SuggestedExtent) = ext.ext
-cache!(ctx, tag, ext::SuggestedExtent) = SuggestedExtent(cache!(ctx, tag, ext.ext))
+cache_dim!(ctx, tag, ext::SuggestedExtent) = SuggestedExtent(cache_dim!(ctx, tag, ext.ext))
 
 #TODO maybe just call something like resolve_extent to unwrap?
 getstart(ext::SuggestedExtent) = getstart(ext.ext)
@@ -375,5 +378,5 @@ end
 resolvedim(ext) = ext
 resolvedim(ext::Narrow) = resolvedim(ext.ext)
 resolvedim(ext::Widen) = resolvedim(ext.ext)
-cache!(ctx, tag, ext::Narrow) = Narrow(cache!(ctx, tag, ext.ext))
-cache!(ctx, tag, ext::Widen) = Widen(cache!(ctx, tag, ext.ext))
+cache_dim!(ctx, tag, ext::Narrow) = Narrow(cache_dim!(ctx, tag, ext.ext))
+cache_dim!(ctx, tag, ext::Widen) = Widen(cache_dim!(ctx, tag, ext.ext))

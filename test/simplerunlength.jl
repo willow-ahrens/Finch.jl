@@ -21,6 +21,8 @@ function Finch.virtualize(ex, ::Type{SimpleRunLength{Tv, Ti}}, ctx, tag=:tns) wh
     VirtualSimpleRunLength{Tv, Ti}(sym, tag)
 end
 
+Finch.IndexNotation.isliteral(::VirtualSimpleRunLength) = false
+
 (ctx::Finch.LowerJulia)(tns::VirtualSimpleRunLength) = tns.ex
 
 function Finch.initialize!(arr::VirtualSimpleRunLength{Tv}, ctx::Finch.LowerJulia, mode::Union{Write, Update}, idxs...) where {Tv}

@@ -20,6 +20,8 @@ mutable struct VirtualSimpleSparseVector{Tv, Ti}
     D
 end
 
+Finch.IndexNotation.isliteral(::VirtualSimpleSparseVector) = false
+
 Finch.default(vec::VirtualSimpleSparseVector) = vec.D
 
 function Finch.virtualize(ex, ::Type{SimpleSparseVector{D, Tv, Ti}}, ctx, tag=:tns) where {D, Tv, Ti}
@@ -55,7 +57,7 @@ function Finch.stylize_access(node, ctx::Finch.Stylize{LowerJulia}, ::VirtualSim
 end
 
 function Finch.chunkify_access(node, ctx, vec::VirtualSimpleSparseVector{Tv, Ti}) where {Tv, Ti}
-    my_I = ctx.ctx.freshen(node.tns.name, :_I)
+    my_I = ctx.ctx.freshen(vec.name, :_I)
     my_i = ctx.ctx.freshen(getname(vec), :_i0)
     my_i′ = ctx.ctx.freshen(getname(vec), :_i1)
     my_p = ctx.ctx.freshen(getname(vec), :_p)

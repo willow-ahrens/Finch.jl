@@ -444,7 +444,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Union{W
         tail = (ctx, idx) -> Thunk(
             preamble = quote
                 $my_guard = true
-                $my_q = ($(ctx(envposition(fbr.env))) - 1) * $(ctx(lvl.I)) + $idx
+                $my_q = ($(ctx(envposition(fbr.env))) - 1) * $(ctx(lvl.I)) + $(ctx(idx))
             end,
             body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Ti}(my_q), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode, idxs...),
             epilogue = begin
@@ -453,7 +453,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Union{W
                         $(lvl.ex).tbl[$my_q] = true
                         $(lvl.srt_stop) += 1
                         $(lvl.srt_alloc) < $(lvl.srt_stop) && ($(lvl.srt_alloc) = $Finch.regrow!($(lvl.ex).srt, $(lvl.srt_alloc), $(lvl.srt_stop)))
-                        $(lvl.ex).srt[$(lvl.srt_stop)] = ($(ctx(envposition(fbr.env))), $idx)
+                        $(lvl.ex).srt[$(lvl.srt_stop)] = ($(ctx(envposition(fbr.env))), $(ctx(idx)))
                     end
                 end
                 if envdefaultcheck(fbr.env) !== nothing

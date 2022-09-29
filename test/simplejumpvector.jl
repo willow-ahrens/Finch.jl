@@ -20,6 +20,8 @@ mutable struct VirtualSimpleJumpVector{Tv, Ti}
     D
 end
 
+Finch.IndexNotation.isliteral(::VirtualSimpleJumpVector) = false
+
 function Finch.virtualize(ex, ::Type{SimpleJumpVector{D, Tv, Ti}}, ctx, tag=:tns) where {D, Tv, Ti}
     sym = ctx.freshen(tag)
     push!(ctx.preamble, :($sym = $ex))
