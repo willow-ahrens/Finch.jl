@@ -1,13 +1,12 @@
 TEXFLAGS= -shell-escape -synctex=1 -interaction=nonstopmode -file-line-error -pdf
 
-all: figure-birb-matrix icon logo
-
-figure-birb-matrix: figure-birb-matrix.png
-icon: icon.png
-logo: logo.png
+all: figure-birb-matrix.png logo.png favicon.ico
 
 %.png: %.pdf # requires ImageMagick
-	convert -density 600x600 $^ -quality 90 -resize 800x600 $@
+	convert -density 600x600 $^ -quality 90 -resize 600x600 $@
+
+favicon.ico: icon.png # requires ImageMagick
+	convert -background transparent $^ -define icon:auto-resize=16,24,32,48,64,72,96,128,256 $@
 
 %.pdf: %.tex # requires TexShop
 	latexmk $(TEXFLAGS) $^
