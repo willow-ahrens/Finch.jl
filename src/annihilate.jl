@@ -59,6 +59,8 @@
     (@rule @f(and(a..., true, b...)) => @f and(a..., b...)),
     (@rule @f(and(a..., false, b...)) => false),
     (@rule @f(and()) => true),
+    (@rule @f(ifelse(true, $a, $b)) => a),
+    (@rule @f(ifelse(false, $a, $b)) => b),
     (@rule @f((+)($a)) => a),
     (@rule @f(- +($a, b...)) => @f +(- $a, - +(b...))),
     (@rule @f(a[i...] += 0) => pass(a)),
