@@ -1,0 +1,26 @@
+\begin{minipage}{\linewidth}
+  \flushright
+\scalebox{\loopletscale}{%
+\begin{tikzpicture}[>=latex]
+  \matrix (looplet) [matrix of nodes,
+              nodes = {indexsty},
+              ampersand replacement=\&,
+              anchor=north west
+              ] at (0,0)
+  {
+|[scalarsty, fill=blue!50,minimum width=6*\myunit]|\juliainline{A} \& |[scalarsty, fill=red!50,minimum width=3*\myunit]|\juliainline{B}\\
+  };
+
+  \draw ([xshift=\myunit]looplet-1-1.north west) -- ([yshift=1*\myunit, xshift=\myunit] looplet-1-1.north west);
+  \draw[<->] ([xshift=1*\myunit, yshift=0.5*\myunit] looplet-1-1.north west) -- ([xshift=-1*\myunit, yshift=0.5*\myunit] looplet-1-1.north east) node[midway, fill=white]{\juliainline{sub_i:sub_j}};
+  \draw ([xshift=-1*\myunit]looplet-1-1.north east) -- ([xshift=-1*\myunit, yshift=1*\myunit] looplet-1-1.north east);
+
+  \draw (looplet-1-1.south west) -- ([yshift=-1*\myunit] looplet-1-1.south west);
+  \draw[<->] ([yshift=-0.5*\myunit] looplet-1-1.south west) -- ([yshift=-0.5*\myunit] looplet-1-1.south east) node[midway, fill=white]{\juliainline{i:k}};
+  \draw (looplet-1-1.south east) -- ([yshift=-1*\myunit] looplet-1-1.south east);
+  \draw[<->] ([yshift=-0.5*\myunit] looplet-1-2.south west) -- ([yshift=-0.5*\myunit] looplet-1-2.south east) node[midway, fill=white]{\juliainline{k + 1:j}};
+  \draw (looplet-1-2.south east) -- ([yshift=-1*\myunit] looplet-1-2.south east);
+
+\end{tikzpicture}%
+}
+\end{minipage}

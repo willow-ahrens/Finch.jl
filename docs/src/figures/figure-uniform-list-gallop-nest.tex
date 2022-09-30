@@ -1,0 +1,29 @@
+\begin{juliacode}
+Pipeline(
+  Phase(
+    stride = idx[pos[i+1]-1],
+    body = begin
+      p = pos[i]
+      Jumper(
+        seek(j) = (p = search(idx, j)),
+        stride = idx[p],
+        body(j) = Switch(
+          Case(
+            cond = idx[p] == j,
+            body = Spike(
+              body = Run(0)
+              tail = val[p])),
+          Case(
+            body = Stepper(
+              seek(j) =
+                (p = search(idx, j)),
+              stride = idx[p],
+              body = Spike(
+                body = Run(0)
+                tail = val[p]),
+              next = p += 1))),
+        next = p += 1)
+    end),
+  Phase(
+    body = Run(0)))
+\end{juliacode}

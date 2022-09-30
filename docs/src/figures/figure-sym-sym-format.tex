@@ -1,0 +1,22 @@
+\scalebox{\formatscale}{%
+\begin{tikzpicture}[>=latex]
+  \matrix (vals) [matrix of math nodes,
+              nodes = {whclsty},
+              ampersand replacement=\&,
+              anchor=north west] at (0,0)
+  {
+  ... \& |[nzsty, fill=red!9!blue!63!green]|5.9 \& |[nzsty, fill=red!18!blue!63!green]|1.9 \& |[nzsty, fill=red!27!blue!63!green]|0.3 \& |[nzsty, fill=red!36!blue!63!green]|4.1 \& |[nzsty, fill=red!45!blue!63!green]|3.9 \& |[nzsty, fill=red!54!blue!63!green]|4.9 \& |[nzsty, fill=red!63!blue!63!green]|2.3 \& ... \\
+  };
+  \node [draw, whclsty, left=of vals] {\juliainline{.val}};
+
+%  \matrix (size) [matrix of math nodes,
+%  nodes = {whclsty},
+%  ampersand replacement=\&,
+%  anchor = north west] at (0,4.5*\myunit)
+%  {
+%  |[nzsty]|11\\
+%  };
+%  \node [draw, whclsty, left=of size] {\juliainline{.size}};
+
+\end{tikzpicture}%
+}

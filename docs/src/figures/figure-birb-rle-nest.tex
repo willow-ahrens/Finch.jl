@@ -1,0 +1,9 @@
+\begin{juliacode}
+p = pos[i]
+Stepper(
+  seek(j) = (p = search(idx, j)),
+  stride = idx[p],
+  body = Run(
+    body = val[p]),
+  next = p += 1)
+\end{juliacode}

@@ -1,0 +1,5 @@
+\begin{juliacode} 
+getnnz(A::SpBand) = A.stop-A.start
+getidx(A::SpBand, p) = A.start+p-1
+getval(A::SpBand, p) = A.val[p]
+\end{juliacode}

@@ -1,0 +1,31 @@
+\scalebox{\formatscale}{%
+\begin{tikzpicture}[>=latex]
+  \matrix (vals) [matrix of math nodes,
+              nodes = {whclsty},
+              ampersand replacement=\&,
+              anchor=north west] at (0,0)
+  {
+  ... \& \becl \& \blcl \& \& \brcl \& \bkcl \& \brcl \& \orcl \& ...\\
+  };
+  \node [draw, whclsty, left=of vals] {\juliainline{.val}};
+
+  \matrix (idx) [matrix of math nodes,
+              nodes = {whclsty},
+              ampersand replacement=\&,
+              anchor=north west] at (0,1.5 * \myunit)
+  {
+  ... \& |[nzsty]|3 \& 6 \& 8 \& 9 \& 10 \& 11 \& ... \\
+  };
+  \node [draw, whclsty, left=of idx] {\juliainline{.idx}};
+
+  \matrix (pos) [matrix of math nodes,
+              nodes = {whclsty},
+              ampersand replacement=\&,
+              anchor=north west] at (0,3 * \myunit)
+  {
+  ... \& |[nzsty]|8 \& |[nzsty]| 14 \& ... \\
+  };
+  \node [draw, whclsty, left=of pos] {\juliainline{.pos}};
+
+\end{tikzpicture}%
+}

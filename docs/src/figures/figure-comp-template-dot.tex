@@ -1,0 +1,22 @@
+\begin{juliacode} 
+function dot(A::SpList, B::SpBand)
+  C = 0
+  pA = 1
+  PA = length(A.idx) #getnnz(A)
+  pB = 1
+  PB = B.stop-B.start #getnnz(B)
+  while pA <= PA && pB <= PB
+    iA = A.idx[pA] #getidx(A, pA)
+    iB = B.start+pB-1 #getidx(B, pB)
+    i = min(iA, iB)
+    if i == iA && i == iB
+      vA = A.val[pA] #getval(A, pA)
+      vB = B.val[pB] #getval(B, pB)
+      C += vA * vB
+    end
+    pA += iA == i
+    pB += iB == i
+  end
+  return C
+end
+\end{juliacode}

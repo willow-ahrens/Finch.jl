@@ -1,0 +1,40 @@
+\scalebox{\formatscale}{%
+\begin{tikzpicture}[>=latex]
+  \matrix (vals) [matrix of math nodes,
+              nodes = {whclsty},
+              ampersand replacement=\&,
+              anchor=north west] at (0,0)
+  {
+  ... \& |[nzsty]|2.7 \& |[nzsty]|5.0 \& |[nzsty]|0.9 \& |[nzsty]|1.4 \& |[nzsty]|2.3 \& ... \\
+  };
+  \node [draw, whclsty, left=of vals] {\juliainline{.val}};
+
+  \matrix (idx) [matrix of math nodes,
+              nodes = {whclsty},
+              ampersand replacement=\&,
+              anchor=north west] at (0,3 * \myunit)
+  {
+  ... \& |[nzsty]|5 \& 9 \& ... \\
+  };
+  \node [draw, whclsty, left=of idx] {\juliainline{.idx}};
+
+  \matrix (ofs) [matrix of math nodes,
+              nodes = {whclsty},
+              ampersand replacement=\&,
+              anchor=north west] at (0,1.5 * \myunit)
+  {
+  ... \& 19 \& 22 \& 24 \& ... \\
+  };
+  \node [draw, whclsty, left=of ofs] {\juliainline{.ofs}};
+
+  \matrix (pos) [matrix of math nodes,
+              nodes = {whclsty},
+              ampersand replacement=\&,
+              anchor=north west] at (0,4.5 * \myunit)
+  {
+  ... \& |[nzsty]|9 \& |[nzsty]| 11 \& ... \\
+  };
+  \node [draw, whclsty, left=of pos] {\juliainline{.pos}};
+
+\end{tikzpicture}%
+}

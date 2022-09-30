@@ -1,0 +1,24 @@
+\begin{juliacode} 
+function dot(A::SpList, B::SpBand)
+  C = 0
+  i = B.start
+  phase_stop = min(B.stop, A.idx[end])
+  if phase_stop >= i
+    pA = search(A.idx, i)
+    iA = A.idx[pA]
+    while i <= phase_stop
+      if iA <= phase_stop 
+        i = iA
+        vA = A.val[pA]
+        vB = B.val[(i - B.start) + 1]
+        C += vA * vB
+        pA += 1
+        iA = A.idx[pA]
+      else
+        i = phase_stop
+      end
+      i += 1
+    end
+  end
+end
+\end{juliacode}

@@ -1,0 +1,9 @@
+\begin{juliacode}
+Pipeline(
+  Phase(
+    stride = pos[i+1]-pos[i],
+    body = Lookup(
+      body(j) = val[pos[i]+j-1])),
+  Phase(
+    body = Run(0)))
+\end{juliacode}
