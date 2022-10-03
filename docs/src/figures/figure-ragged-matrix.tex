@@ -1,4 +1,6 @@
-\resizebox{\linewidth}{!}{%
+\documentclass{standalone}
+\input{common.tex}
+\begin{document}
 \begin{tikzpicture}[>=latex]
 \matrix (A) [matrix of math nodes,
             nodes = {whclsty},
@@ -21,4 +23,5 @@
 };
 
 \draw[hlsty] (A-5-1.south west) rectangle (A-5-11.north east);
-\end{tikzpicture}}
+\end{tikzpicture}
+\end{document}

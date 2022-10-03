@@ -1,4 +1,6 @@
-\resizebox{\linewidth}{!}{%
+\documentclass{standalone}
+\input{common.tex}
+\begin{document}
 \begin{tikzpicture}[>=latex]
   \matrix (A) [matrix of math nodes,
               nodes = {whclsty},
@@ -13,4 +15,4 @@
   \draw[lpltsty] ([yshift=-0*\myunit]A-1-8.south west) -- ([yshift=-0*\myunit]A-1-11.south east) node[namesty]{Lookup};
   \draw[lpltsty] ([yshift=-1*\myunit]A-1-1.south west) -- ([yshift=-1*\myunit]A-1-11.south east) node[namesty]{Pipeline};
 \end{tikzpicture}%
-}  
+\end{document}
