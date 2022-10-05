@@ -58,14 +58,14 @@ verbose = "verbose" in ARGS
 
 @testset "Finch.jl" begin
     include("test_util.jl")
-    include("test_ssa.jl")
-    include("test_parse.jl")
-    include("test_repeat.jl")
-    include("test_permit.jl")
-    include("test_skips.jl")
-    include("test_fibers.jl")
+    #include("test_ssa.jl")
+    #include("test_parse.jl")
+    #include("test_repeat.jl")
+    #include("test_permit.jl")
+    #include("test_skips.jl")
+    #include("test_fibers.jl")
     include("test_issues.jl")
-    include("test_simple.jl")
-    include("test_kernels.jl")
-    include("test_print.jl")
+    #include("test_simple.jl")
+    #include("test_kernels.jl")
+    #include("test_print.jl")
 end

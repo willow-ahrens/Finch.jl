@@ -278,8 +278,6 @@ SyntaxInterface.operation(stmt::Sieve) = sieve
 SyntaxInterface.arguments(stmt::Sieve) = Any[stmt.cond; stmt.body]
 SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(sieve), args) = sieve!(args)
 
-Finch.getunbound(ex::Sieve) = setdiff(getunbound(ex.body), getunbound(ex.cond))
-
 function display_statement(io, mime, stmt::Sieve, level)
     print(io, tab^level * "@sieve ")
     while stmt.body isa Sieve
