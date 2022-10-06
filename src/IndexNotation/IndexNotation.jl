@@ -4,7 +4,7 @@ module IndexNotation
     export IndexNode, IndexStatement, IndexExpression, IndexTerminal, index_terminal
     export Literal
     export Name
-    export Value
+    export value
     export Workspace
     export Pass, pass
     export With, with
@@ -16,7 +16,7 @@ module IndexNotation
     export Access, Read, Write, Update, access, access
     export Protocol, protocol
     export Sieve, sieve
-    export value
+    export CINNode, value, isvalue
 
     export Follow, follow
     export Walk, walk

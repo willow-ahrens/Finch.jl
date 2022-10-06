@@ -53,7 +53,7 @@ end
 
 using Finch: VirtualAbstractArray, Run, Spike, Extent, Scalar, Switch, Stepper, Jumper, Step, Jump, AcceptRun, AcceptSpike, Thunk, Phase, Pipeline, Lookup, Simplify, Shift
 using Finch: @f, @finch_program_instance, execute, execute_code, getstart, getstop
-using Finch: getname, Value
+using Finch: getname, value
 using Finch.IndexNotation
 using Finch.IndexNotation: call_instance, assign_instance, access_instance, value_instance, name_instance, loop_instance, with_instance, label_instance, protocol_instance
 

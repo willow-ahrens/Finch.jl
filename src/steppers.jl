@@ -40,7 +40,7 @@ end
     next = (ctx, idx, ext) -> quote end
     chunk = nothing
     body = (ctx, idx, ext, ext_2) -> Switch([
-        Value(:($(ctx(stride(ctx, idx, ext))) == $(ctx(getstop(ext_2))))) => Thunk(
+        value(:($(ctx(stride(ctx, idx, ext))) == $(ctx(getstop(ext_2))))) => Thunk(
             body = truncate_weak(chunk, ctx, ext, ext_2),
             epilogue = next(ctx, idx, ext_2)
         ),

@@ -104,7 +104,7 @@ mutable struct VirtualSparseCooLevel
 end
 function virtualize(ex, ::Type{SparseCooLevel{N, Ti, Tq, Tbl, Lvl}}, ctx, tag=:lvl) where {N, Ti, Tq, Tbl, Lvl}   
     sym = ctx.freshen(tag)
-    I = map(n->Value{Int}(:($sym.I[$n])), 1:N)
+    I = map(n->value(:($sym.I[$n]), Int), 1:N)
     pos_alloc = ctx.freshen(sym, :_pos_alloc)
     idx_alloc = ctx.freshen(sym, :_idx_alloc)
     push!(ctx.preamble, quote
@@ -197,8 +197,8 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode::Read, idx::
     my_i_stop = ctx.freshen(tag, :_i_stop)
     R = length(envdeferred(fbr.env)) + 1
     if R == 1
-        q_start = Value{lvl.Tq}(:($(lvl.ex).pos[$(ctx(envposition(fbr.env)))]))
-        q_stop = Value{lvl.Tq}(:($(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1]))
+        q_start = value(:($(lvl.ex).pos[$(ctx(envposition(fbr.env)))]), lvl.Tq)
+        q_stop = value(:($(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1]), lvl.Tq)
     else
         q_start = fbr.env.start
         q_stop = fbr.env.stop
@@ -218,7 +218,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode::Read, idx::
         end,
         body = Pipeline([
             Phase(
-                stride = (ctx, idx, ext) -> Value(my_i_stop),
+                stride = (ctx, idx, ext) -> value(my_i_stop),
                 body = (start, stop) -> Stepper(
                     seek = (ctx, ext) -> quote
                         while $my_q < $my_q_stop && $(lvl.ex).tbl[$R][$my_q] < $(ctx(getstart(ext)))
@@ -231,10 +231,10 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode::Read, idx::
                                 $my_i = $(lvl.ex).tbl[$R][$my_q]
                             end,
                             body = Step(
-                                stride =  (ctx, idx, ext) -> Value(my_i),
+                                stride =  (ctx, idx, ext) -> value(my_i),
                                 chunk = Spike(
                                     body = Simplify(Literal(default(fbr))),
-                                    tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Tq}(my_q), index=Value{lvl.Ti}(my_i), parent=fbr.env)), ctx, mode, idxs...),
+                                    tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, lvl.Tq), index=value(my_i, lvl.Ti), parent=fbr.env)), ctx, mode, idxs...),
                                 ),
                                 next = (ctx, idx, ext) -> quote
                                     $my_q += 1
@@ -251,10 +251,10 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode::Read, idx::
                                 end
                             end,
                             body = Step(
-                                stride = (ctx, idx, ext) -> Value(my_i),
+                                stride = (ctx, idx, ext) -> value(my_i),
                                 chunk = Spike(
                                     body = Simplify(Literal(default(fbr))),
-                                    tail = refurl(VirtualFiber(lvl, VirtualEnvironment(start=Value{lvl.Ti}(my_q), stop=Value{lvl.Ti}(my_q_step), index=Value{lvl.Ti}(my_i), parent=fbr.env, internal=true)), ctx, mode, idxs...),
+                                    tail = refurl(VirtualFiber(lvl, VirtualEnvironment(start=value(my_q, lvl.Ti), stop=value(my_q_step, lvl.Ti), index=value(my_i, lvl.Ti), parent=fbr.env, internal=true)), ctx, mode, idxs...),
                                 ),
                                 next = (ctx, idx, ext) -> quote
                                     $my_q = $my_q_step
@@ -300,11 +300,11 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode::Union{Write
                 preamble = quote
                     $my_guard = true
                     $(contain(ctx) do ctx_2 
-                        assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Ti}(my_q), parent=fbr.env)), ctx_2, mode)
+                        assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, lvl.Ti), parent=fbr.env)), ctx_2, mode)
                         quote end
                     end)
                 end,
-                body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Ti}(my_q), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode, idxs...),
+                body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, lvl.Ti), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode, idxs...),
                 epilogue = begin
                     resize_body = quote end
                     write_body = quote end

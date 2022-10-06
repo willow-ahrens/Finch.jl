@@ -120,7 +120,7 @@ unchunk(node::AcceptSpike, ctx::ForLoopVisitor) = node.tail(ctx.ctx, ctx.val)
 
 function truncate(node::Spike, ctx, ext, ext_2)
     return Switch([
-        Value(:($(ctx(getstop(ext_2))) < $(ctx(getstop(ext))))) => Run(node.body),
+        value(:($(ctx(getstop(ext_2))) < $(ctx(getstop(ext))))) => Run(node.body),
         Literal(true) => node,
     ])
 end

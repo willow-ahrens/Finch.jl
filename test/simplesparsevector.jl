@@ -43,7 +43,7 @@ end
 function Finch.getsize(arr::VirtualSimpleSparseVector{Tv, Ti}, ctx::Finch.LowerJulia, mode) where {Tv, Ti}
     ex = Symbol(arr.name, :_stop)
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))
-    (Extent(Literal(1), Value{Ti}(ex)),)
+    (Extent(Literal(1), value(ex, Ti)),)
 end
 Finch.setsize!(arr::VirtualSimpleSparseVector{Tv, Ti}, ctx::Finch.LowerJulia, mode, dims...) where {Tv, Ti} = arr
 Finch.getname(arr::VirtualSimpleSparseVector) = arr.name
@@ -76,10 +76,10 @@ function Finch.chunkify_access(node, ctx, vec::VirtualSimpleSparseVector{Tv, Ti}
                         $my_i′ = $(vec.ex).idx[$my_p]
                     end,
                     body = Step(
-                        stride = (ctx, idx, ext) -> Value(my_i′),
+                        stride = (ctx, idx, ext) -> value(my_i′),
                         chunk = Spike(
                             body = Simplify(Literal(zero(Tv))),
-                            tail = Value{Tv}(:($(vec.ex).val[$my_p])),
+                            tail = value(:($(vec.ex).val[$my_p]), Tv),
                         ),
                         next = (ctx, idx, ext) -> quote
 
@@ -106,7 +106,7 @@ function Finch.chunkify_access(node, ctx, vec::VirtualSimpleSparseVector{Tv, Ti}
                         push!($(vec.ex).val, zero($Tv))
                         $my_p += 1
                     end,
-                    body = Value{Tv}(:($(vec.ex).val[$my_p])),
+                    body = value(:($(vec.ex).val[$my_p]), Tv),
                     epilogue = quote
                         $(vec.ex).idx[$my_p] = $(ctx(idx))
                     end

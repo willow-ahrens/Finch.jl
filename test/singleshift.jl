@@ -32,7 +32,7 @@ end
 function Finch.getsize(arr::VirtualSingleShift{Tv, Ti}, ctx::Finch.LowerJulia, mode) where {Tv, Ti}
     ex = Symbol(arr.name, :_stop)
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))
-    (Extent(Literal(1), Value{Ti}(ex)),)
+    (Extent(Literal(1), value(ex, Ti)),)
 end
 Finch.setsize!(arr::VirtualSingleShift, ctx::Finch.LowerJulia, mode, dims...) = arr
 Finch.getname(arr::VirtualSingleShift) = arr.name
@@ -51,7 +51,7 @@ function Finch.chunkify_access(node, ctx, vec::VirtualSingleShift{Tv, Ti}) where
             body = Lookup(
                 body = (i) -> :($(vec.ex).val[$(ctx.ctx(i))])
             ),
-            delta = Value{Ti}(:($(vec.ex).delta))
+            delta = value(:($(vec.ex).delta), Ti)
         )
         Access(tns, node.mode, node.idxs)
     else

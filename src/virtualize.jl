@@ -1,6 +1,6 @@
 virtualize(ex, T, ctx, tag) = virtualize(ex, T, ctx)
 
-virtualize(ex, T, ctx) = Value{T}(ex)
+virtualize(ex, (@nospecialize T), ctx) = value(ex, T)
 
 virtualize(ex, ::Type{IndexNotation.LiteralInstance{val}}, ctx) where {val} = Literal(val)
 function virtualize(ex, ::Type{IndexNotation.PassInstance{Tnss}}, ctx) where {Tnss}

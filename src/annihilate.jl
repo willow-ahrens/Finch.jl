@@ -72,7 +72,7 @@
     (@rule @_f($a[i..., $($(Literal(missing))), j...] <<$f>>= $b) => pass(a)),
     (@rule @_f($a[i..., $($(Literal(missing))), j...]) => Literal(missing)),
     (@rule @_f(coalesce(a..., $($(Literal(missing))), b...)) => @f coalesce(a..., b...)),
-    (@rule @_f(coalesce(a..., $b, c...)) => if b isa Value && !(Value{Missing} <: typeof(b)); @f(coalesce(a..., $b)) end),
+    (@rule @_f(coalesce(a..., $b, c...)) => if isvalue(b) && !(Missing <: b.type); @f(coalesce(a..., $b)) end),
     (@rule @_f(coalesce(a..., $b, c...)) => if b isa Literal && b != Literal(missing); @f(coalesce(a..., $b)) end),
     (@rule @_f(coalesce($a)) => a),
 
@@ -185,6 +185,9 @@ function Base.:(==)(a::Lexicography, b::Lexicography)
     return a_key == b_key
 end
 
+priority(::Type) = (0, 5)
+comparators(x::Type) = (string(x),)
+
 priority(::Missing) = (0, 4)
 comparators(::Missing) = (1,)
 
@@ -218,8 +221,8 @@ comparators(x::Update) = ()
 priority(::Workspace) = (3,3)
 comparators(x::Workspace) = (x.n,)
 
-priority(::Value) = (3,4)
-comparators(x::Value) = (string(typeof(x)), Lexicography(x.ex))
+priority(node::CINNode) = (3, 4)
+comparators(node::CINNode) = (node.head, node.args, Lexicography(node.val), Lexicography(node.type))
 
 priority(::Virtual) = (3,5)
 comparators(x::Virtual) = (Lexicography(x.arg), )

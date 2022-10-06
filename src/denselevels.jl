@@ -62,7 +62,7 @@ mutable struct VirtualDenseLevel
 end
 function virtualize(ex, ::Type{DenseLevel{Ti, Lvl}}, ctx, tag=:lvl) where {Ti, Lvl}
     sym = ctx.freshen(tag)
-    I = Value{Int}(:($sym.I))
+    I = value(:($sym.I), Int)
     push!(ctx.preamble, quote
         $sym = $ex
     end)
@@ -123,7 +123,7 @@ function reinitialize!(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode)
             for $p = $(ctx(p_start)):$(ctx(p_stop))
                 for $i = 1:$(lvl.I)
                     $q = ($p - 1) * $(ctx(lvl.I)) + $i
-                    reinitialize!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value(q), index=Value(i), parent=fbr.env)), ctx, mode)
+                    reinitialize!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(q), index=value(i), parent=fbr.env)), ctx, mode)
                 end
             end
         end)
@@ -147,7 +147,7 @@ function assemble!(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode)
             for $p = $(ctx(p_start)):$(ctx(p_stop))
                 for $i = 1:$(ctx(lvl.I))
                     $q = ($p - 1) * $(ctx(lvl.I)) + $i
-                    $(assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value(q), index=Value(i), parent=fbr.env)), ctx, mode))
+                    $(assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(q), index=value(i), parent=fbr.env)), ctx, mode))
                 end
             end
         end)
@@ -176,7 +176,7 @@ function unfurl(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode::Union{Read, Wri
             preamble = quote
                 $q = ($(ctx(p)) - 1) * $(ctx(lvl.I)) + $(ctx(i))
             end,
-            body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Value{lvl.Ti}(q), index=i, guard=envdefaultcheck(fbr.env), parent=fbr.env)), ctx, mode, idxs...),
+            body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(q, lvl.Ti), index=i, guard=envdefaultcheck(fbr.env), parent=fbr.env)), ctx, mode, idxs...),
         )
     )
 

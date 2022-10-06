@@ -45,7 +45,7 @@ function (ctx::LowerJulia)(root::Chunk, ::PipelineStyle)
 
         push!(thunk.args, contain(ctx) do ctx_2
             push!(ctx_2.preamble, :($i0 = $i))
-            ctx_2(Chunk(root.idx, Extent(start = Value(i0), stop = getstop(root.ext), lower = Literal(1)), body))
+            ctx_2(Chunk(root.idx, Extent(start = value(i0), stop = getstop(root.ext), lower = Literal(1)), body))
         end)
 
         push!(visited, key)

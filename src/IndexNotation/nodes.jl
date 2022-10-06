@@ -3,6 +3,105 @@ abstract type IndexStatement <: IndexNode end
 abstract type IndexExpression <: IndexNode end
 abstract type IndexTerminal <: IndexExpression end
 
+@enum CINHead begin
+    value=1
+end
+
+struct CINNode <: IndexNode
+    head::CINHead
+    val::Any
+    type::Any
+    args::Vector{IndexNode}
+end
+
+isvalue(node::CINNode) = node.head === value
+#TODO Delete this one when you can
+isvalue(node) = false
+
+
+SyntaxInterface.istree(node::CINNode) = node.head > value
+
+function CINNode(op::CINHead, args::Union{Tuple, Vector})
+    if op === value
+        if length(args) == 1
+            return CINNode(value, args[1], Any, IndexNode[])
+        elseif length(args) == 2
+            return CINNode(value, args[1], args[2], IndexNode[])
+        else
+            error("wrong number of arguments to value(...)")
+        end
+    else
+        error("unimplemented")
+    end
+end
+
+function (op::CINHead)(args...)
+    CINNode(op, args)
+end
+
+function Base.getproperty(node::CINNode, name::Symbol)
+    if name === :head || name === :val || name === :type || name === :args
+        return Base.getfield(node, name)
+    elseif node.head === value
+        error("type CINNode(:value, ...) has no property $name")
+    else
+        error("type CINNode has no property $name")
+    end
+end
+
+function Base.show(io::IO, mime::MIME"text/plain", node::CINNode)
+    if get(io, :compact, false)
+        print(io, "@finch(…)")
+    elseif node.head === value
+        print(io, node.val)
+        if type !== Any
+            print(io, "::")
+            print(io, node.type)
+        end
+    elseif istree(node)
+        print(io, operation(node))
+        print(io, "(")
+        for arg in arguments(node)[1:end-1]
+            print(io, arg)
+            print(io, ",")
+        end
+        print(arguments(node)[end])
+    else
+        error("unimplemented")
+    end
+end
+
+function Base.:(==)(a::CINNode, b::CINNode)
+    if !istree(a)
+        if a.head === value
+            return b.head === value && a.val == b.val && a.type === b.type
+        else
+            error("unimplemented")
+        end
+    elseif istree(a)
+        return a.head === b.head && a.args == b.args
+    else
+        return false
+    end
+end
+
+function Base.hash(a::CINNode, h::UInt)
+    if !istree(a)
+        if a.head === value
+            return hash(value, hash(a.val, hash(a.type, h)))
+        else
+            error("unimplemented")
+        end
+    elseif istree(a)
+        return hash(a.head, hash(a.args, h))
+    else
+        return false
+    end
+end
+
+#IndexNotation.isliteral(node::CINNode) = node.head === literal
+IndexNotation.isliteral(node::CINNode) = false
+
 tab = "  "
 
 function Base.show(io::IO, mime::MIME"text/plain", stmt::IndexStatement)
@@ -74,22 +173,6 @@ Finch.getvalue(ex::Literal) = ex.val
 Base.:(==)(a::Literal, b::Literal) = isequal(a.val, b.val)
 Base.isequal(a::Literal, b::Literal) = isequal(a.val, b.val)
 
-struct Value{T} <: IndexTerminal
-    ex
-end
-
-Value(x) = Value{Any}(x)
-Value(x::Value) = error()
-Value(x::Literal) = error()
-
-Base.:(==)(a::Value, b::Value) = false
-Base.:(==)(a::Value{T}, b::Value{T}) where {T} = a.ex == b.ex
-Base.hash(ex::Value{T}, h::UInt) where {T} = hash(Value{T}, hash(ex.ex, h))
-display_expression(io, mime, ex::Value) = print(io, "Value($(ex.ex))")
-
-SyntaxInterface.istree(::Value) = false
-
-IndexNotation.isliteral(::Value) =  false
 
 struct Virtual <: IndexTerminal
     arg

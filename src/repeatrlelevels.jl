@@ -82,7 +82,7 @@ mutable struct VirtualRepeatRLELevel
 end
 function virtualize(ex, ::Type{RepeatRLELevel{D, Ti, Tv}}, ctx, tag=:lvl) where {D, Ti, Tv}
     sym = ctx.freshen(tag)
-    I = Value{Int}(:($sym.I))
+    I = value(:($sym.I), Int)
     pos_alloc = ctx.freshen(sym, :_pos_alloc)
     idx_alloc = ctx.freshen(sym, :_idx_alloc)
     val_alloc = ctx.freshen(sym, :_val_alloc)
@@ -190,9 +190,9 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode::Read, idx::
                     $my_i = $(lvl.ex).idx[$my_q]
                 ),
                 body = Step(
-                    stride = (ctx, idx, ext) -> Value(my_i),
+                    stride = (ctx, idx, ext) -> value(my_i),
                     chunk = Run(
-                        body = Simplify(Value{lvl.Tv}(:($(lvl.ex).val[$my_q])))
+                        body = Simplify(value(:($(lvl.ex).val[$my_q]), lvl.Tv))
                     ),
                     next = (ctx, idx, ext) -> quote
                         $my_q += 1
@@ -248,7 +248,7 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode::Union{Write
                         end
                     end
                 end,
-                body = Value{lvl.Tv}(my_v),
+                body = value(my_v, lvl.Tv),
                 epilogue = begin
                     body = quote
                         if $my_q == $my_q_start || $my_v != $my_v_prev

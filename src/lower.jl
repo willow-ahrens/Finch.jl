@@ -55,7 +55,7 @@ function cache!(ctx, var, val)
         quote
             $var = $body
         end))
-        return Value{Any}(var)
+        return value(var, Any) #TODO could we do better here?
     end
 end
 
@@ -190,8 +190,12 @@ function (ctx::LowerJulia)(root, ::DefaultStyle)
     error("Don't know how to lower $root")
 end
 
-function (ctx::LowerJulia)(root::Value, ::DefaultStyle)
-    return root.ex
+function (ctx::LowerJulia)(root::CINNode, ::DefaultStyle)
+    if root.head === value
+        return root.val
+    else
+        error("unimplemented")
+    end
 end
 
 function (ctx::LowerJulia)(root::With, ::DefaultStyle)
@@ -269,7 +273,7 @@ function (ctx::LowerJulia)(stmt::Chunk, ::DefaultStyle)
             $idx_sym = $(ctx(getstart(stmt.ext)))
             $(bind(ctx, getname(stmt.idx) => idx_sym) do 
                 contain(ctx) do ctx_2
-                    body_3 = ForLoopVisitor(ctx_2, stmt.idx, Value(idx_sym))(stmt.body)
+                    body_3 = ForLoopVisitor(ctx_2, stmt.idx, value(idx_sym))(stmt.body)
                     (ctx_2)(body_3)
                 end
             end)
@@ -279,7 +283,7 @@ function (ctx::LowerJulia)(stmt::Chunk, ::DefaultStyle)
             for $idx_sym = $(ctx(getstart(stmt.ext))):$(ctx(getstop(stmt.ext)))
                 $(bind(ctx, getname(stmt.idx) => idx_sym) do 
                     contain(ctx) do ctx_2
-                        body_3 = ForLoopVisitor(ctx_2, stmt.idx, Value(idx_sym))(stmt.body)
+                        body_3 = ForLoopVisitor(ctx_2, stmt.idx, value(idx_sym))(stmt.body)
                         (ctx_2)(body_3)
                     end
                 end)

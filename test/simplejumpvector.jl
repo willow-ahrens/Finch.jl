@@ -41,7 +41,7 @@ end
 function Finch.getsize(arr::VirtualSimpleJumpVector{Tv, Ti}, ctx::Finch.LowerJulia, mode) where {Tv, Ti}
     ex = Symbol(arr.name, :_stop)
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))
-    (Extent(Literal(1), Value{Ti}(ex)),)
+    (Extent(Literal(1), value(ex, Ti)),)
 end
 Finch.setsize!(arr::VirtualSimpleJumpVector{Tv, Ti}, ctx::Finch.LowerJulia, mode, dims...) where {Tv, Ti} = arr
 Finch.getname(arr::VirtualSimpleJumpVector) = arr.name
@@ -74,13 +74,13 @@ function Finch.chunkify_access(node, ctx, vec::VirtualSimpleJumpVector{Tv, Ti}) 
                             $my_i = $(ctx(getstart(ext)))
                             $my_i′ = $(vec.ex).idx[$my_p]
                         end,
-                        stride = (ctx, ext) -> Value(my_i′),
+                        stride = (ctx, ext) -> value(my_i′),
                         body = (ctx, ext, ext_2) -> begin
                             Switch([
-                                Value(:($(ctx(getstop(ext_2))) == $my_i′)) => Thunk(
+                                value(:($(ctx(getstop(ext_2))) == $my_i′)) => Thunk(
                                     body = Spike(
                                         body = Simplify(Literal(zero(Tv))),
-                                        tail = Value{Tv}(:($(vec.ex).val[$my_p])),
+                                        tail = value(:($(vec.ex).val[$my_p]), Tv),
                                     ),
                                     epilogue = quote
                                         $my_p += 1
@@ -95,10 +95,10 @@ function Finch.chunkify_access(node, ctx, vec::VirtualSimpleJumpVector{Tv, Ti}) 
                                         $my_i′ = $(vec.ex).idx[$my_p]
                                     end,
                                     body = Step(
-                                        stride = (ctx, idx, ext) -> Value(my_i′),
+                                        stride = (ctx, idx, ext) -> value(my_i′),
                                         chunk = Spike(
                                             body = Simplify(Literal(zero(Tv))),
-                                            tail = Value{Tv}(:($(vec.ex).val[$my_p])),
+                                            tail = value(:($(vec.ex).val[$my_p]), Tv),
                                         ),
                                         next = (ctx, idx, ext) -> quote
                                             $my_p += 1
@@ -128,7 +128,7 @@ function Finch.chunkify_access(node, ctx, vec::VirtualSimpleJumpVector{Tv, Ti}) 
                         push!($(vec.ex).val, zero($Tv))
                         $my_p += 1
                     end,
-                    body = Value{Tv}(:($(vec.ex).val[$my_p])),
+                    body = value(:($(vec.ex).val[$my_p]), Tv),
                     epilogue = quote
                         $(vec.ex).idx[$my_p] = $(ctx(idx))
                     end

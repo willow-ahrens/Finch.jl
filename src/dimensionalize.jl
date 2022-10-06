@@ -271,20 +271,14 @@ combinedim(a::SuggestedExtent, b::NoDimension) = a
 
 combinedim(a::SuggestedExtent, b::SuggestedExtent) = SuggestedExtent(combinedim(a.ext, b.ext))
 
-function combinedim(a::Value, b::Value)
-    a
+function combinedim(a::CINNode, b::CINNode)
+    if isliteral(a) && isliteral(b)
+        a == b || throw(DimensionMismatch("mismatched dimension limits ($a != $b)"))
+    end
+    Lexicography(a) < Lexicography(b) ? a : b
 end
 
-combinedim(a::Union{<:Value, <:Number}, b::IndexExpression) = a
-
-combinedim(a::IndexExpression, b::IndexExpression) = a #TODO need to add symbolic equivalence operator and simplification rewrites
-
-combinedim(a::Number, b::Value) = a
-
-function combinedim(a::T, b::T) where {T <: Number}
-    a == b || throw(DimensionMismatch("mismatched dimension limits ($a != $b)"))
-    a
-end
+combinedim(a::IndexExpression, b::IndexExpression) = a #TODO this should be removed eventually
 
 """
     getsize(tns, ctx, mode)
