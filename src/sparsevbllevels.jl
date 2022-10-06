@@ -114,8 +114,7 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualSparseVBLLevel)
     end
 end
 
-summary_f_str(lvl::VirtualSparseVBLLevel) = "l$(summary_f_str(lvl.lvl))"
-summary_f_str_args(lvl::VirtualSparseVBLLevel) = summary_f_str_args(lvl.lvl)
+summary_f_code(lvl::VirtualSparseVBLLevel) = "sv($(summary_f_code(lvl.lvl)))"
 
 getsites(fbr::VirtualFiber{VirtualSparseVBLLevel}) =
     [envdepth(fbr.env) + 1, getsites(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))...]

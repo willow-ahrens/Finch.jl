@@ -55,7 +55,7 @@ supports_shift(::PhaseStyle) = true
 
 #isliteral(::Step) = false
 
-(ctx::Stylize{LowerJulia})(node::Phase) = PhaseStyle()
+(ctx::Stylize{LowerJulia})(node::Phase) = ctx.root isa Chunk ? PhaseStyle() : DefaultStyle()
 
 combine_style(a::DefaultStyle, b::PhaseStyle) = PhaseStyle()
 combine_style(a::PhaseStyle, b::PhaseStyle) = PhaseStyle()

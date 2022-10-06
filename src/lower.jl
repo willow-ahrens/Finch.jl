@@ -33,6 +33,12 @@ end
     freshen::Freshen = Freshen()
 end
 
+#function (ctx::LowerJulia)(root)
+#    display(root)
+#    ctx(root, Stylize(root, ctx)(root))
+#end
+
+
 function cache!(ctx, var, val)
     if isliteral(val)
         return val
