@@ -77,6 +77,12 @@ end
 Base.:(==)(a::Virtual, b::Virtual) = false
 Base.:(==)(a::Virtual{T}, b::Virtual{T}) where {T} = a.ex == b.ex
 Base.hash(ex::Virtual{T}, h::UInt) where {T} = hash(Virtual{T}, hash(ex.ex, h))
+function display_expression(io, mime, ex::Virtual{T}) where {T}
+    print(io, "(")
+    print(io, ex.ex);
+    print(io, ")::");
+    print(io, T);
+end
 
 SyntaxInterface.istree(::Virtual) = false
 
@@ -278,8 +284,6 @@ SyntaxInterface.operation(stmt::Sieve) = sieve
 SyntaxInterface.arguments(stmt::Sieve) = Any[stmt.cond; stmt.body]
 SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(sieve), args) = sieve!(args)
 
-Finch.getunbound(ex::Sieve) = setdiff(getunbound(ex.body), getunbound(ex.cond))
-
 function display_statement(io, mime, stmt::Sieve, level)
     print(io, tab^level * "@sieve ")
     while stmt.body isa Sieve
@@ -367,6 +371,10 @@ end
 struct Read <: IndexTerminal end
 struct Write <: IndexTerminal end
 struct Update <: IndexTerminal end
+
+display_expression(io, mime, ex::Read) = show(io, "Read()")
+display_expression(io, mime, ex::Write) = show(io, "Write()")
+display_expression(io, mime, ex::Update) = show(io, "Update()")
 
 struct Access{T, M} <: IndexExpression
     tns::T

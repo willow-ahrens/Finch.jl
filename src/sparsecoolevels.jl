@@ -126,8 +126,7 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualSparseCooLevel)
     end
 end
 
-summary_f_str(lvl::VirtualSparseCooLevel) = "c$(lvl.N)$(summary_f_str(lvl.lvl))"
-summary_f_str_args(lvl::VirtualSparseCooLevel) = summary_f_str_args(lvl.lvl)
+summary_f_code(lvl::VirtualSparseCooLevel) = "sc{$(lvl.N)}($(summary_f_code(lvl.lvl)))"
 
 function getsites(fbr::VirtualFiber{VirtualSparseCooLevel})
     d = envdepth(fbr.env)
