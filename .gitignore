@@ -8,7 +8,6 @@ embed/finch.o
 embed/libfinch.a
 demos/embed_demo.o
 Manifest.toml
-<<<<<<< HEAD
 *.o
 demos/graphs
 */bc
@@ -23,7 +22,6 @@ demos/Manifest*
 .idea/
 demos/sssp
 demos/sssp.o
-=======
 .idea/
 demos/sssp
 demos/sssp.o
@@ -33,4 +31,11 @@ demos/bfs
 demos/bfs.o
 demos/pr
 demos/pr.o
->>>>>>> eec5a21 (Implemented unoptimized cc and starting on bc in Finch)
+demos/cc2
+demos/cc2.o
+demos/bc
+demos/bc.o
+*.dSYM/
+.vscode/
+!demos/graphs/
+demos/graphs/soc-Live*

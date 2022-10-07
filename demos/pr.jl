@@ -1,6 +1,5 @@
 using Finch
 using Finch.IndexNotation
-using Finch: execute_code_lowered
 using RewriteTools
 using BenchmarkTools
 using SparseArrays

@@ -1,0 +1,69 @@
+// @finch_code @loop i j out_d[j] += edges[i, j]
+
+
+:(@inbounds begin
+          out_d_lvl = ex.body.body.lhs.tns.tns.lvl
+          out_d_lvl_2 = out_d_lvl.lvl
+          out_d_lvl_2_val_alloc = length(out_d_lvl.lvl.val)
+          out_d_lvl_2_val = 0
+          edges_lvl = ex.body.body.rhs.tns.tns.lvl
+          edges_lvl_2 = edges_lvl.lvl
+          edges_lvl_2_pos_alloc = length(edges_lvl_2.pos)
+          edges_lvl_2_idx_alloc = length(edges_lvl_2.idx)
+          edges_lvl_3 = edges_lvl_2.lvl
+          edges_lvl_3_val_alloc = length(edges_lvl_2.lvl.val)
+          edges_lvl_3_val = 0
+          j_stop = edges_lvl_2.I
+          i_stop = edges_lvl.I
+          out_d_lvl_2_val_alloc = (Finch).refill!(out_d_lvl_2.val, 0, 0, 4)
+          out_d_lvl_2_val_alloc < 1 * edges_lvl_2.I && (out_d_lvl_2_val_alloc = (Finch).refill!(out_d_lvl_2.val, 0, out_d_lvl_2_val_alloc, 1 * edges_lvl_2.I))
+          for i = 1:i_stop
+              edges_lvl_q = (1 - 1) * edges_lvl.I + i
+              edges_lvl_2_q = edges_lvl_2.pos[edges_lvl_q]
+              edges_lvl_2_q_stop = edges_lvl_2.pos[edges_lvl_q + 1]
+              if edges_lvl_2_q < edges_lvl_2_q_stop
+                  edges_lvl_2_i = edges_lvl_2.idx[edges_lvl_2_q]
+                  edges_lvl_2_i1 = edges_lvl_2.idx[edges_lvl_2_q_stop - 1]
+              else
+                  edges_lvl_2_i = 1
+                  edges_lvl_2_i1 = 0
+              end
+              j = 1
+              j_start = j
+              phase_start = max(j_start)
+              phase_stop = min(edges_lvl_2_i1, j_stop)
+              if phase_stop >= phase_start
+                  j = j
+                  j = phase_start
+                  while edges_lvl_2_q < edges_lvl_2_q_stop && edges_lvl_2.idx[edges_lvl_2_q] < phase_start
+                      edges_lvl_2_q += 1
+                  end
+                  while j <= phase_stop
+                      j_start_2 = j
+                      edges_lvl_2_i = edges_lvl_2.idx[edges_lvl_2_q]
+                      phase_stop_2 = min(edges_lvl_2_i, phase_stop)
+                      j_2 = j
+                      if edges_lvl_2_i == phase_stop_2
+                          edges_lvl_3_val = edges_lvl_3.val[edges_lvl_2_q]
+                          j_3 = phase_stop_2
+                          out_d_lvl_q = (1 - 1) * edges_lvl_2.I + j_3
+                          out_d_lvl_2_val = out_d_lvl_2.val[out_d_lvl_q]
+                          out_d_lvl_2_val = out_d_lvl_2_val + edges_lvl_3_val
+                          out_d_lvl_2.val[out_d_lvl_q] = out_d_lvl_2_val
+                          edges_lvl_2_q += 1
+                      else
+                      end
+                      j = phase_stop_2 + 1
+                  end
+                  j = phase_stop + 1
+              end
+              j_start = j
+              phase_start_3 = max(j_start)
+              phase_stop_3 = min(j_stop)
+              if phase_stop_3 >= phase_start_3
+                  j_4 = j
+                  j = phase_stop_3 + 1
+              end
+          end
+          (out_d = Fiber((Finch.DenseLevel){Int32}(edges_lvl_2.I, out_d_lvl_2), (Finch.Environment)(; name = :out_d)),)
+      end)

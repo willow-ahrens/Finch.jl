@@ -35,26 +35,21 @@ struct bc_data {
 //    frontier_list[r][j] = (r == 0 && j == source)
 // End
 void Init(struct bc_data* data) {
-    jl_function_t* num_paths_init = finch_eval("function num_paths(num_paths, source)\n\
-    @finch @loop i num_paths[i] = (i == $source)\n\
-end");
-
     jl_value_t* num_paths = finch_Fiber(
         finch_Dense(finch_Cint(N),
         finch_ElementLevel(finch_Cint(0), finch_eval("Cint[]")))
     );
-    finch_call(num_paths_init, num_paths, finch_Cint(source));
+    finch_exec("num_paths=%s; source=%s\n\
+    @finch @loop i num_paths[i] = (i == $source)", num_paths, finch_Cint(source));
     printf("Num paths: \n");
     finch_exec("println(%s.lvl.lvl.val)", num_paths);
 
-    jl_function_t* deps_init = finch_eval("function deps_init(deps)\n\
-    @finch @loop i deps[i] = 0\n\
-end");
     jl_value_t* deps = finch_Fiber(
         finch_Dense(finch_Cint(N),
         finch_ElementLevel(finch_Cint(0), finch_eval("Cint[]")))
     );
-    finch_call(deps_init, deps);
+    finch_exec("deps=%s\n\
+    @finch @loop i deps[i] = 0", deps);
     printf("Deps: \n");
     finch_exec("println(%s.lvl.lvl.val)", deps);
 
@@ -62,7 +57,8 @@ end");
         finch_Dense(finch_Cint(N),
         finch_ElementLevel(finch_Cint(0), finch_eval("Cint[]")))
     );
-    finch_call(num_paths_init, visited, finch_Cint(source));
+    finch_exec("visited=%s; source=%s\n\
+    @finch @loop i visited[i] = (i == $source)", visited, finch_Cint(source));
     printf("Visited: \n");
     finch_exec("println(%s.lvl.lvl.val)", visited);
 
@@ -73,10 +69,8 @@ end");
             )
         )
     );
-    jl_function_t* frontier_init = finch_eval("function frontier_init(frontier, source)\n\
-        @finch @loop i j frontier[i,j] = (i == 1 && j == $source) * 1\n\
-    end");
-    finch_call(frontier_init, frontier_list, finch_Cint(source));
+    finch_exec("frontier=%s; source=%s\n\
+        @finch @loop i j frontier[i,j] = (i == 1 && j == $source) * 1", frontier_list, finch_Cint(source));
     printf("Frontier list: \n");
     finch_exec("println(%s.lvl.lvl.lvl.val)", frontier_list);
 
@@ -95,7 +89,7 @@ end");
 // 	forward_round = round + 1
 // End
 void ForwardStep(struct bc_data* in_data, struct bc_data* out_data) {
-    printf("Starting round %d\n", in_data->round);
+    // printf("Starting round %d\n", in_data->round);
     out_data->deps = in_data->deps;
     // 	frontier[j] = edges[j][k] * frontier_list[round][k] * (visited[j] == 0) | k:(OR, 0)
     // 	forward_num_paths[j] = edges[j][k] * frontier_list[round - 1][k] * (visited[j] == 0) * num_paths[k] | k:(+, num_paths[j])
@@ -117,20 +111,22 @@ void ForwardStep(struct bc_data* in_data, struct bc_data* out_data) {
         finch_Dense(finch_Cint(N),
         finch_ElementLevel(finch_Cint(0), finch_eval("Cint[]")))
     );
-    jl_function_t* frontier_visit_paths = finch_eval("function frontier_visit_paths(new_frontier, new_visited, new_num_paths, edges, N, round, frontier_list, old_visited, old_num_paths)\n\
+    finch_exec("new_frontier=%s; new_visited=%s; new_num_paths=%s; edges=%s; N=%s; round=%s; frontier_list=%s; old_visited=%s; old_num_paths=%s\n\
         B = Finch.Fiber(\n\
             Dense(N,\n\
                 Element{0, Cint}([])\n\
             )\n\
         )\n\
-        @finch @loop j k begin\n\
-            new_frontier[j] <<$or>>= edges[j,k] * frontier_list[($round-1),k] * (old_visited[j] == 0)\n\
-            new_visited[j] <<$or>>= (old_visited[j] != 0) * 1 + edges[j,k] * frontier_list[($round-1),k] * (old_visited[j] == 0)\n\
-            B[j] += edges[j,k] * frontier_list[($round-1),k] * (old_visited[j] == 0) * old_num_paths[k]\n\
+        w = Scalar{0}()\n\
+        @finch (@loop j @loop k (begin\n\
+            new_frontier[j] <<$or>>= w[]\n\
+            new_visited[j] <<$or>>= (old_visited[j] != 0) * 1 + w[]\n\
+            B[j] += w[] * old_num_paths[k]\n\
         end\n\
-        @finch @loop j new_num_paths[j] = B[j] + old_num_paths[j]\n\
-    end");
-    finch_call(frontier_visit_paths, new_frontier, new_visited, new_num_paths, edges, finch_Cint(N), finch_Cint(in_data->round), in_data->frontier_list, in_data->visited, in_data->num_paths);
+            where (w[] = edges[j,k] * frontier_list[($round-1),k] * (old_visited[j] == 0)) ) )\n\
+        @finch @loop j new_num_paths[j] = B[j] + old_num_paths[j]", 
+        new_frontier, new_visited, new_num_paths, edges, finch_Cint(N), finch_Cint(in_data->round), in_data->frontier_list, in_data->visited, in_data->num_paths);
+    
     out_data->visited = new_visited;
     out_data->num_paths = new_num_paths;
 
@@ -151,17 +147,16 @@ void ForwardStep(struct bc_data* in_data, struct bc_data* out_data) {
             )
         )
     );
-    jl_function_t* frontier_list_func = finch_eval("function frontier_list_func(new_frontier_list, frontier, old_frontier_list, round)\n\
-        @finch @loop r j new_frontier_list[r,j] <<$or>>= frontier[j] * (r == $round) + old_frontier_list[r,j] * (r != $round)\n\
-    end");
-    finch_call(frontier_list_func, new_frontier_list, new_frontier, in_data->frontier_list, finch_Cint(in_data->round));
+    finch_exec("new_frontier_list=%s; frontier=%s; old_frontier_list=%s; round=%s\n\
+        @finch @loop r j new_frontier_list[r,j] <<$or>>= frontier[j] * (r == $round) + old_frontier_list[r,j] * (r != $round)", 
+    new_frontier_list, new_frontier, in_data->frontier_list, finch_Cint(in_data->round));
+    
     out_data->frontier_list = new_frontier_list;
     printf("New Frontier list: \n");
     finch_exec("println(%s.lvl.lvl.lvl.val)", new_frontier_list);
 
-    // 	forward_round = round + 1
     out_data->round = in_data->round + 1;
-    printf("New round: %d\n", out_data->round);
+    // printf("New round: %d\n", out_data->round);
 }
 
 
@@ -169,7 +164,7 @@ int is_nonempty_frontier(jl_value_t* frontier_arr, int row) {
     finch_exec("println(%s.lvl.lvl.lvl.val)", frontier_arr);
     jl_value_t *frontier_val = finch_exec("%s.lvl.lvl.lvl.val", frontier_arr);
     int *frontier_data = jl_array_data(frontier_val);
-     printf("Iterating from %d to %d\n", (row-1)*N, row * N);
+    //  printf("Iterating from %d to %d\n", (row-1)*N, row * N);
     for (int i=(row-1)*N; i < row * N; i++) {
         if (frontier_data[i] != 0) {
             return 1;
@@ -189,6 +184,11 @@ void Forward(struct bc_data* in_data, struct bc_data* out_data) {
     
     while (is_nonempty_frontier(old_data->frontier_list, old_data->round - 1)) {
         ForwardStep(old_data, out_data);
+
+        finch_free(old_data->frontier_list);
+        finch_free(old_data->visited);
+        finch_free(old_data->num_paths);
+
         *old_data = *out_data;
     }
 }
@@ -202,18 +202,17 @@ void BackwardVertex(struct bc_data* in_data, struct bc_data* out_data) {
     out_data->num_paths = in_data->num_paths;
     out_data->round = in_data->round - 1;
 
-    printf("Backward vertex\n");
-    printf("Indata deps: %p\n", in_data->deps);
-    finch_exec("println(%s.lvl.lvl.val)", in_data->deps);
+    // printf("Backward vertex\n");
+    // printf("Indata deps: %p\n", in_data->deps);
+    // finch_exec("println(%s.lvl.lvl.val)", in_data->deps);
     //  final_deps[j] = deps[j] + (num_paths[j] != 0) * frontier_list[round][j] / ( (num_paths[j] == 0) * P + num_paths[j])
     jl_value_t* final_deps = finch_Fiber(
         finch_Dense(finch_Cint(N),
         finch_ElementLevel(finch_Cint(0), finch_eval("Cint[]")))
     );
-    jl_function_t* deps_func = finch_eval("function deps_func(new_deps, old_deps, frontier_list, num_paths, round, P)\n\
-        @finch @loop j new_deps[j] = old_deps[j] + (num_paths[j] != 0) * frontier_list[$round,j] / ( (num_paths[j] == 0) * $P + num_paths[j])\n\
-    end");
-    finch_call(deps_func, final_deps, in_data->deps, in_data->frontier_list, in_data->num_paths, finch_Cint(out_data->round), finch_Cint(P));
+    finch_exec("new_deps=%s; old_deps=%s; frontier_list=%s; num_paths=%s; round=%s; P=%s\n\
+        @finch @loop j new_deps[j] = old_deps[j] + (num_paths[j] != 0) * frontier_list[$round,j] / ( (num_paths[j] == 0) * $P + num_paths[j])",
+        final_deps, in_data->deps, in_data->frontier_list, in_data->num_paths, finch_Cint(out_data->round), finch_Cint(P));
     printf("New deps: \n");
     finch_exec("println(%s.lvl.lvl.val)", final_deps);
     out_data->deps = final_deps;
@@ -223,14 +222,12 @@ void BackwardVertex(struct bc_data* in_data, struct bc_data* out_data) {
         finch_Dense(finch_Cint(N),
         finch_ElementLevel(finch_Cint(0), finch_eval("Cint[]")))
     );
-    jl_function_t* final_visited_func = finch_eval("function final_visited_func(final_visited, frontier_list, old_visited, round)\n\
-        @finch @loop j final_visited[j] = $or(frontier_list[$round,j], old_visited[j])\n\
-    end");
-    finch_call(final_visited_func, final_visited, in_data->frontier_list, in_data->visited, finch_Cint(out_data->round));
+    finch_exec("final_visited=%s; frontier_list=%s; old_visited=%s; round=%s\n\
+        @finch @loop j final_visited[j] = $or(frontier_list[$round,j], old_visited[j])",
+         final_visited, in_data->frontier_list, in_data->visited, finch_Cint(out_data->round));
     printf("New visited: \n");
     finch_exec("println(%s.lvl.lvl.val)", final_visited);
     out_data->visited = final_visited;
-
 }
 
 //          round = round - 1
@@ -249,29 +246,21 @@ void BackwardVertex(struct bc_data* in_data, struct bc_data* out_data) {
 // End
 void BackwardStep(struct bc_data* in_data, struct bc_data* out_data) {
     BackwardVertex(in_data, out_data);
-    printf("Backward round: %d\n", out_data->round);
+
     // 	backward_deps[j] = edges[j][k] * frontier_list[round][k] * (visited[j] == 0) * deps[k] | k:(+, deps[j])
     jl_value_t* new_deps = finch_Fiber(
         finch_Dense(finch_Cint(N),
         finch_ElementLevel(finch_Cint(0), finch_eval("Cint[]")))
     );
-    printf("Intermediary deps: \n");
-    finch_exec("println(%s.lvl.lvl.val)", out_data->deps);
-    printf("Edges: \n");
-    finch_exec("println(%s.lvl.lvl.lvl.val)", edges);
-    printf("Frontier list: \n");
-    finch_exec("println(%s.lvl.lvl.lvl.val)", out_data->frontier_list);
-    printf("Visited: \n");
-    jl_function_t* new_deps_func = finch_eval("function deps_func(new_deps, deps, visited, frontier_list, edges, round, N, source)\n\
+    finch_exec("new_deps=%s; deps=%s; visited=%s; frontier_list=%s; edges=%s; round=%s; N=%s; source=%s\n\
         B = Finch.Fiber(\n\
                 Dense(N,\n\
                     Element{0, Cint}([])\n\
                 )\n\
             )\n\
         @finch @loop j k B[j] += edges[k,j] * frontier_list[$round,k] * (visited[j] == 0) * deps[k] * (j != $source)\n\
-        @finch @loop j new_deps[j] = B[j] + deps[j]\n\
-    end");
-    finch_call(new_deps_func, new_deps, out_data->deps, out_data->visited, out_data->frontier_list, edges, finch_Cint(out_data->round), finch_Cint(N), finch_Cint(source));
+        @finch @loop j new_deps[j] = B[j] + deps[j]",
+        new_deps, out_data->deps, out_data->visited, out_data->frontier_list, edges, finch_Cint(out_data->round), finch_Cint(N), finch_Cint(source));
     printf("Out deps: \n");
     finch_exec("println(%s.lvl.lvl.val)", new_deps);
 
@@ -294,10 +283,14 @@ void Backward(struct bc_data* in_data, struct bc_data* out_data) {
     
     while (old_data->round > 2) {
         BackwardStep(old_data, out_data);
+        finch_free(old_data->deps);
+        finch_free(old_data->visited);
         *old_data = *out_data;
     }
 
     BackwardVertex(old_data, out_data);
+    finch_free(old_data->deps);
+    finch_free(old_data->visited);
     *old_data = *out_data;
 }
 
@@ -318,10 +311,9 @@ void ComputeFinalDeps(struct bc_data* in_data, struct bc_data* out_data) {
         finch_Dense(finch_Cint(N),
         finch_ElementLevel(finch_Cint(0), finch_eval("Cint[]")))
     );
-    jl_function_t* final_deps_func = finch_eval("function deps_func(final_deps, deps, num_paths)\n\
-        @finch @loop j final_deps[j] = (num_paths[j] != 0) * (deps[j] * num_paths[j] - 1)\n\
-    end");
-    finch_call(final_deps_func, final_deps, in_data->deps, in_data->num_paths);
+    finch_exec("final_deps=%s; deps=%s; num_paths=%s\n\
+        @finch @loop j final_deps[j] = (num_paths[j] != 0) * (deps[j] * num_paths[j] - 1)",
+        final_deps, in_data->deps, in_data->num_paths);
     printf("Final deps: ");
     finch_exec("println(%s.lvl.lvl.val)", final_deps);
     out_data->deps = final_deps;
@@ -344,18 +336,48 @@ void BC(struct bc_data* data) {
     *data = new_data;
 
     // clear visited trensor
-    jl_function_t* clear = finch_eval("function clear(visited)\n\
-        @finch @loop i visited[i] = 0\n\
-    end");
-    finch_call(clear, data->visited);
+    finch_exec("visited=%s\n\
+        @finch @loop i visited[i] = 0", data->visited);
 
     Backward(data, &new_data);
     *data = new_data;
 
     ComputeFinalDeps(data, &new_data);
+    finch_free(data->deps);
     *data = new_data;
 }
 
+void make_weights_and_edges(const char* graph_name, int n) {
+    // 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0
+    char code[1000];
+    sprintf(code, "N = %d\n\
+        matrix = copy(transpose(MatrixMarket.mmread(\"./graphs/%s\")))\n\
+        nzval = ones(size(matrix.nzval, 1))\n\
+        Finch.Fiber(\n\
+                 Dense(N,\n\
+                 SparseList(N, matrix.colptr, matrix.rowval,\n\
+                 Element{0}(nzval))))", n, graph_name);
+    edges = finch_eval(code);
+    
+    // finch_exec("println(%s.lvl.lvl.lvl.val)", edges);
+    // finch_exec("println(%s.lvl.lvl.idx)", edges);
+    // finch_exec("println(%s.lvl.lvl.pos)", edges);
+}
+
+
+void starter() {
+    N = 1;
+    source = 1;
+
+    make_weights_and_edges("starter.mtx", N);
+
+    struct bc_data d = {};
+    struct bc_data* data = &d;
+    BC(data);
+
+    printf("EXAMPLE\nFinal: \n");
+    finch_exec("println(%s.lvl.lvl.val)", data->deps);
+}
 
 void setup1() {
     // 1 5, 4 5, 3 4, 2 3, 1 2
@@ -363,13 +385,9 @@ void setup1() {
     // jl_value_t* edge_vector = finch_eval("Cint[0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]");
     N = 5;
     source = 5;
-    edges = finch_eval("N = 5\n\
-        edge_matrix = sparse([0 0 0 0 0; 1 0 0 0 0; 0 1 0 0 0; 0 0 1 0 0; 1 0 0 1 0])\n\
-        Finch.Fiber(\n\
-                 Dense(N,\n\
-                 SparseList(N, edge_matrix.colptr, edge_matrix.rowval,\n\
-                 Element{0.0}(edge_matrix.nzval))))");
     
+    make_weights_and_edges("dag5.mtx", N);
+
     struct bc_data d = {};
     struct bc_data* data = &d;
     BC(data);
@@ -383,13 +401,9 @@ void setup2() {
     // expected: [0,0,0,0]
     N = 4;
     source = 1;
-    edges = finch_eval("N = 4\n\
-        edge_matrix = sparse([0 1 1 0; 0 0 1 0; 0 0 0 0; 0 0 1 0])\n\
-        Finch.Fiber(\n\
-                 Dense(N,\n\
-                 SparseList(N, edge_matrix.colptr, edge_matrix.rowval,\n\
-                 Element{0.0}(edge_matrix.nzval))))");
     
+    make_weights_and_edges("dag4.mtx", N);
+
     struct bc_data d = {};
     struct bc_data* data = &d;
     BC(data);
@@ -404,12 +418,9 @@ void setup3() {
     // jl_value_t* edge_vector = finch_eval("Cint[0, 1, 1, 1, 0, 0, 1, 1, 0]");
     N = 3;
     source = 1;
-    edges = finch_eval("N = 3\n\
-        edge_matrix = sparse([0 1 1; 1 0 1; 1 0 0])\n\
-        Finch.Fiber(\n\
-                 Dense(N,\n\
-                 SparseList(N, edge_matrix.colptr, edge_matrix.rowval,\n\
-                 Element{0.0}(edge_matrix.nzval))))");
+    
+    make_weights_and_edges("dag3.mtx", N);
+
     struct bc_data d = {};
     struct bc_data* data = &d;
     BC(data);
@@ -424,18 +435,28 @@ void setup4() {
     // jl_value_t* edge_vector = finch_eval("Cint[0,0,0,0,0,0,0, 0,0,1,0,0,0,0, 1,0,0,0,0,0,0, 0,0,1,0,0,0,0, 0,0,0,1,0,0,0, 0,0,0,0,1,0,1, 0,0,0,0,1,1,0]");
     N = 7;
     source = 1;
-    edges = finch_eval("N = 7\n\
-    edge_matrix = sparse([0 0 1 0 0 0 0; 0 0 0 0 0 0 0; 0 1 0 1 0 0 0; 0 0 0 0 1 0 0; 0 0 0 0 0 1 1; 0 0 0 0 0 0 1; 0 0 0 0 0 1 0])\n\
-    Finch.Fiber(\n\
-                Dense(N,\n\
-                SparseList(N, edge_matrix.colptr, edge_matrix.rowval,\n\
-                Element{0.0}(edge_matrix.nzval))))");
+    
+    make_weights_and_edges("dag7.mtx", N);
 
     struct bc_data d = {};
     struct bc_data* data = &d;
     BC(data);
 
     printf("EXAMPLE4\n Final deps: \n");
+    finch_exec("println(%s.lvl.lvl.val)", data->deps);
+}
+
+void setup5() {
+    N = 4847571;
+    source = 1;
+    
+    make_weights_and_edges("soc-LiveJournal1.mtx", N);
+
+    struct bc_data d = {};
+    struct bc_data* data = &d;
+    BC(data);
+
+    printf("LARGE GRAPH\n Final: \n");
     finch_exec("println(%s.lvl.lvl.val)", data->deps);
 }
 
@@ -446,6 +467,7 @@ int main(int argc, char** argv) {
     jl_value_t* res = finch_eval("using RewriteTools\n\
     using Finch.IndexNotation\n\
     using SparseArrays\n\
+     using MatrixMarket\n\
     ");
 
     res = finch_eval("or(x,y) = x == 1|| y == 1\n\
@@ -494,6 +516,8 @@ end");
 \n\
 Finch.register()");
 
+    starter();
+
     setup1();
 
     setup2();
@@ -502,5 +526,7 @@ Finch.register()");
 
     setup4();
 
+    // setup5();
+    
     finch_finalize();
 }

@@ -33,6 +33,7 @@ jl_function_t* SparseListLevel;
 jl_function_t* Dense;
 jl_function_t* Element;
 jl_function_t* ElementLevel;
+jl_function_t* Scalar;
 
 int finch_call_begin_ = 0;
 int finch_call_end_ = 0;
@@ -149,6 +150,8 @@ extern void finch_initialize(){
     FINCH_ASSERT(!jl_exception_occurred(), "Could not find Element");
     ElementLevel = (jl_function_t*)jl_eval_string("(default, val) -> Finch.Element{default}(val)");
     FINCH_ASSERT(!jl_exception_occurred(), "Could not find ElementLevel");
+    Scalar = (jl_function_t*)jl_eval_string("(default) -> Finch.Scalar{default}()");
+    FINCH_ASSERT(!jl_exception_occurred(), "Could not find Scalar");
 }
 
 jl_value_t* finch_root(jl_value_t* var){
@@ -344,5 +347,10 @@ jl_value_t* finch_Element(jl_value_t *fill){
 
 jl_value_t* finch_ElementLevel(jl_value_t *fill, jl_value_t *val){
     jl_value_t *res = finch_call(ElementLevel, fill, val);
+    return res;
+}
+
+jl_value_t* finch_Scalar(jl_value_t* fill) {
+    jl_value_t *res = finch_call(Scalar, fill);
     return res;
 }

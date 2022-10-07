@@ -30,15 +30,12 @@ struct cc_data {
 //      IDs[v] = v;
 // end
 void Init(struct cc_data* data) {
-    jl_function_t* ids_init = finch_eval("function ids_init(ids)\n\
-    @finch @loop i ids[i] = i\n\
-end");
-
     jl_value_t* ids = finch_Fiber(
         finch_Dense(finch_Cint(N),
         finch_ElementLevel(finch_Cint(0), finch_eval("Cint[]")))
     );
-    finch_call(ids_init, ids);
+    finch_exec("ids=%s\n\
+    @finch @loop i ids[i] = i", ids);
 
     printf("IDs: \n");
     finch_exec("println(%s.lvl.lvl.val)", ids);
@@ -47,11 +44,10 @@ end");
         finch_Dense(finch_Cint(1),
         finch_ElementLevel(finch_Cint(1), finch_eval("Cint[1]")))
     );
-        //finch_Scalar(finch_Cint(1));
     jl_value_t* up1 = finch_Fiber(
         finch_Dense(finch_Cint(1),
         finch_ElementLevel(finch_Cint(1), finch_eval("Cint[1]")))
-    );//finch_Scalar(finch_Cint(1));
+    );
 
     printf("Update: \n");
     finch_exec("println(%s)", up0);
@@ -93,7 +89,17 @@ end");
 //     end\n\
 
 void UpdateEdges(struct cc_data* in_data, struct cc_data* out_data) {
-    jl_function_t* edge_update = finch_eval("function edge_update(edges, N, old_ids, new_ids, new_update1)\n\
+     jl_value_t* new_ids = finch_Fiber(
+        finch_Dense(finch_Cint(N),
+        finch_ElementLevel(finch_Cint(0), finch_eval("Cint[]")))
+    );
+
+    jl_value_t* new_update1 = finch_Fiber(
+        finch_Dense(finch_Cint(1),
+        finch_ElementLevel(finch_Cint(0), finch_eval("Cint[]")))
+    );
+
+    finch_exec("edges=%s; N=%s; old_ids=%s; new_ids=%s; new_update1=%s\n\
     val = typemax(Cint)\n\
     B = Finch.Fiber(\n\
         Dense(N,\n\
@@ -101,32 +107,10 @@ void UpdateEdges(struct cc_data* in_data, struct cc_data* out_data) {
         )\n\
     )\n\
     \n\
-    @finch @loop j i a b B[a] <<min>>= old_ids[b] * ((edges[j,i] == 1|| edges[i,j] == 1) && old_ids[j] == a && old_ids[i] == b) + ((edges[j,i] == 0 && edges[i,j] == 0) || old_ids[j] != a || old_ids[i] != b) * ($N + 1)\n\
-    println(B.lvl.lvl.val)\n\
+    @finch @loop j i B[old_ids[j]] <<min>>= old_ids[old_ids[i]] * (edges[j,i] == 1 || edges[i,j] == 1) + (edges[j,i] == 0 && edges[i,j] == 0) * ($N + 1)\n\
     @finch @loop i new_ids[i] = min(B[i],old_ids[i])\n\
-    # @finch @loop i j new_update1[] <<$or>>= (old_ids[old_ids[j]] != new_ids[old_ids[j]] || old_ids[old_ids[i]] != new_ids[old_ids[i]]) * (edges[j,i] == 1 || edges[i,j] == 1)\n\
-    C = Finch.Fiber(\n\
-        Dense(N,\n\
-            Element{0, Cint}([])\n\
-        )\n\
-    )\n\
-    @finch @loop i C[i] <<$or>>= old_ids[old_ids[i]] != new_ids[old_ids[i]]\n\
-    println(C.lvl.lvl.val)\n\
-    @finch @loop j i new_update1[j] <<$or>>= C[i]\n\
-    println(new_update1)\n\
-end");
-    jl_value_t* new_ids = finch_Fiber(
-        finch_Dense(finch_Cint(N),
-        finch_ElementLevel(finch_Cint(0), finch_eval("Cint[]")))
-    );
-    jl_value_t* new_update1 = finch_Fiber(
-        finch_Dense(finch_Cint(1),
-        finch_ElementLevel(finch_Cint(0), finch_eval("Cint[]")))
-    );//finch_Scalar(finch_Cint(0));
-    printf("old IDs: \n");
-    finch_exec("println(%s.lvl.lvl.val)", in_data->IDs);
-    finch_call(edge_update, edges, finch_Cint(N), in_data->IDs, new_ids, new_update1);
-
+    @finch @loop j i new_update1[j] <<$or>>= old_ids[old_ids[i]] != new_ids[old_ids[i]]", edges, finch_Cint(N), in_data->IDs, new_ids, new_update1);
+    
     printf("New IDs: \n");
     finch_exec("println(%s.lvl.lvl.val)", new_ids);
 
@@ -152,12 +136,6 @@ end");
 // final[i] = (new[new[i]] != new[i]) * new[new[i]] + (new[new[i]] == new[i]) * new[i]
 // update[0] = new[new[i]] != new[i] | i:(OR, 0)
 void UpdateVertices(struct cc_data* in_data, struct cc_data* out_data) {
-    jl_function_t* vertex_update = finch_eval("function vertex_update(old_ids, new_ids, new_update0)\n\
-    @finch @loop i j begin\n\
-        new_ids[i] = old_ids[old_ids[i]]\n\
-        new_update0[j] <<$or>>= (old_ids[old_ids[i]] != old_ids[i])\n\
-    end\n\
-end");
     jl_value_t* new_ids = finch_Fiber(
         finch_Dense(finch_Cint(N),
         finch_ElementLevel(finch_Cint(0), finch_eval("Cint[]")))
@@ -165,11 +143,17 @@ end");
     jl_value_t* new_update0 = finch_Fiber(
         finch_Dense(finch_Cint(1),
         finch_ElementLevel(finch_Cint(0), finch_eval("Cint[]")))
-    );//finch_Scalar(finch_Cint(0));
-    finch_call(vertex_update, in_data->IDs, new_ids, new_update0);
+    );
+
+    finch_exec("old_ids=%s; new_ids=%s; new_update0=%s\n\
+    @finch @loop i j begin\n\
+        new_ids[i] = old_ids[old_ids[i]]\n\
+        new_update0[j] <<$or>>= (old_ids[old_ids[i]] != old_ids[i])\n\
+    end", in_data->IDs, new_ids, new_update0);
 
     printf("New IDs: \n");
     finch_exec("println(%s.lvl.lvl.val)", new_ids);
+
     printf("New update 0: \n");
     finch_exec("println(%s.lvl.lvl.val)", new_update0);
 
@@ -194,6 +178,8 @@ int has_changed(jl_value_t* update) {
 //             end
 void CC_Step(struct cc_data* in_data, struct cc_data* out_data) {
     UpdateEdges(in_data, out_data);
+    finch_free(in_data->IDs);
+    finch_free(in_data->update1);
 
     struct cc_data final_data = {};
 
@@ -205,6 +191,10 @@ void CC_Step(struct cc_data* in_data, struct cc_data* out_data) {
 
     while (has_changed(out_data->update0)) {
         UpdateVertices(out_data, &final_data);
+
+        finch_free(in_data->IDs);
+        finch_free(in_data->update0);
+
         *out_data = final_data;
     }           
 }
@@ -233,16 +223,43 @@ void CC(struct cc_data* data) {
 }
 
 
+void make_weights_and_edges(const char* graph_name, int n) {
+    // 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0
+    char code[1000];
+    sprintf(code, "N = %d\n\
+        matrix = copy(transpose(MatrixMarket.mmread(\"./graphs/%s\")))\n\
+        nzval = ones(size(matrix.nzval, 1))\n\
+        Finch.Fiber(\n\
+                 Dense(N,\n\
+                 SparseList(N, matrix.colptr, matrix.rowval,\n\
+                 Element{0}(nzval))))", n, graph_name);
+    edges = finch_eval(code);
+    
+    // finch_exec("println(%s.lvl.lvl.lvl.val)", edges);
+    // finch_exec("println(%s.lvl.lvl.idx)", edges);
+    // finch_exec("println(%s.lvl.lvl.pos)", edges);
+}
+
+void starter() {
+    N = 1;
+
+    make_weights_and_edges("starter.mtx", N);
+
+    struct cc_data d = {};
+    struct cc_data* data = &d;
+    CC(data);
+
+    printf("EXAMPLE\nFinal: \n");
+    finch_exec("println(%s.lvl.lvl.val)", data->IDs);
+}
+
 void setup1() {
     // 1 5, 4 5, 3 4, 2 3, 1 2
     //jl_value_t* edge_vector = finch_eval("Cint[0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]");
     N = 5;
-    edges = finch_eval("N = 5\n\
-        edge_matrix = sparse([0 0 0 0 0; 1 0 0 0 0; 0 1 0 0 0; 0 0 1 0 0; 1 0 0 1 0])\n\
-        Finch.Fiber(\n\
-                 Dense(N,\n\
-                 SparseList(N, edge_matrix.colptr, edge_matrix.rowval,\n\
-                 Element{0.0}(edge_matrix.nzval))))");
+    
+    make_weights_and_edges("dag5.mtx", N);
+
     struct cc_data d = {};
     struct cc_data* data = &d;
     CC(data);
@@ -254,12 +271,9 @@ void setup1() {
 void setup2() {
     // 2 1, 3 1, 3 2, 3 4
     N = 4;
-    edges = finch_eval("N = 4\n\
-        edge_matrix = sparse([0 1 1 0; 0 0 1 0; 0 0 0 0; 0 0 1 0])\n\
-        Finch.Fiber(\n\
-                 Dense(N,\n\
-                 SparseList(N, edge_matrix.colptr, edge_matrix.rowval,\n\
-                 Element{0.0}(edge_matrix.nzval))))");
+   
+    make_weights_and_edges("dag4.mtx", N);
+
     struct cc_data d = {};
     struct cc_data* data = &d;
     CC(data);
@@ -272,12 +286,9 @@ void setup3() {
     // 2 1, 3 1, 1 2, 3 2, 1 3
     // jl_value_t* edge_vector = finch_eval("Cint[0, 1, 1, 1, 0, 0, 1, 1, 0]");
     N = 3;
-    edges = finch_eval("N = 3\n\
-        edge_matrix = sparse([0 1 1; 1 0 1; 1 0 0])\n\
-        Finch.Fiber(\n\
-                 Dense(N,\n\
-                 SparseList(N, edge_matrix.colptr, edge_matrix.rowval,\n\
-                 Element{0.0}(edge_matrix.nzval))))");
+    
+    make_weights_and_edges("dag3.mtx", N);
+
     struct cc_data d = {};
     struct cc_data* data = &d;
     CC(data);
@@ -290,17 +301,27 @@ void setup4() {
     // 2 3, 3 1, 4 3, 5 4, 6 5, 6 7, 7 5, 7 6
     // jl_value_t* edge_vector = finch_eval("Cint[0,0,0,0,0,0,0, 0,0,1,0,0,0,0, 1,0,0,0,0,0,0, 0,0,1,0,0,0,0, 0,0,0,1,0,0,0, 0,0,0,0,1,0,1, 0,0,0,0,1,1,0]");
     N = 7;
-    edges = finch_eval("N = 7\n\
-    edge_matrix = sparse([0 0 1 0 0 0 0; 0 0 0 0 0 0 0; 0 1 0 1 0 0 0; 0 0 0 0 1 0 0; 0 0 0 0 0 1 1; 0 0 0 0 0 0 1; 0 0 0 0 0 1 0])\n\
-    Finch.Fiber(\n\
-                Dense(N,\n\
-                SparseList(N, edge_matrix.colptr, edge_matrix.rowval,\n\
-                Element{0.0}(edge_matrix.nzval))))");
+    
+    make_weights_and_edges("dag7.mtx", N);
+
     struct cc_data d = {};
     struct cc_data* data = &d;
     CC(data);
 
     printf("EXAMPLE4\n Final: \n");
+    finch_exec("println(%s.lvl.lvl.val)", data->IDs);
+}
+
+void setup5() {
+    N = 4847571;
+    
+    make_weights_and_edges("soc-LiveJournal1.mtx", N);
+
+    struct cc_data d = {};
+    struct cc_data* data = &d;
+    CC(data);
+
+    printf("LARGE GRAPH\n Final: \n");
     finch_exec("println(%s.lvl.lvl.val)", data->IDs);
 }
 
@@ -311,6 +332,7 @@ int main(int argc, char** argv) {
     jl_value_t* res = finch_eval("using RewriteTools\n\
     using Finch.IndexNotation\n\
     using SparseArrays\n\
+     using MatrixMarket\n\
     ");
 
     res = finch_eval("or(x,y) = x == 1|| y == 1\n\
@@ -359,6 +381,8 @@ end");
 \n\
 Finch.register()");
 
+    starter();
+
     setup1();
 
     setup2();
@@ -366,6 +390,8 @@ Finch.register()");
     setup3();
 
     setup4();
+
+    // setup5();
 
     finch_finalize();
 }

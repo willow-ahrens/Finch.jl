@@ -41,36 +41,6 @@ struct pr_data {
     jl_value_t* r;
 };
 
-// jl_value_t* call_finch(jl_function_t* b, va_list args)
-// {
-//     printf("in Call helper, func to call: %p\n", b);
-//     return finch_call(b, args);
-// }
-
-#define call_finch(f, ...) finch_call(f, ##__VA_ARGS__)
-
-#define run_finch(codegen, exgen, funcode, ...) {\
-    jl_value_t* code = finch_call(codegen, ##__VA_ARGS__); \
-    jl_value_t* ex = finch_call(exgen, ##__VA_ARGS__); \
-    finch_call(funcode, code, ex);\
-}
-
-// jl_value_t* run_finch(jl_function_t* codegen, jl_function_t* exgen, jl_function_t* funcode, ...) {
-//     va_list args;
-//     va_start(args, funcode);
-//     printf("Getting codegen\n");
-//     jl_value_t* code = call_finch(codegen, args);
-//     va_end(args);
-
-//     va_list args_;
-//     va_start(args_, funcode);
-//     printf("Getting ex\n");
-//     jl_value_t* ex = call_finch(exgen, args_);
-//     va_end(args_);
-    
-//     return finch_call(funcode, code, ex);
-// }
-
 // Let InitRank() -> (r_out float[N])
 //     out_d[j] = edges[i][j] | i:(+, 0)
 //     r_out[j] = 1.0 / N
@@ -80,51 +50,45 @@ void Init(struct pr_data* data) {
         finch_Dense(finch_Cint(N),
         finch_ElementLevel(finch_Cint(0), finch_eval("Cint[]")))
     );
-    run_finch(out_deg_code, out_deg_ex, funcode, out_degree, edges);
-    printf("Out degree: \n");
+    finch_exec("deg=%s\n\
+edges=%s\n\
+@finch @loop i j deg[j] += edges[i, j]", out_degree, edges);
+    // printf("Out degree: \n");
     // finch_exec("println(%s.lvl.lvl.val)", out_degree);
 
     jl_value_t* r = finch_Fiber(
         finch_Dense(finch_Cint(N),
         finch_ElementLevel(finch_Float64(0), finch_eval("Float64[]")))
     );
-    run_finch(rinit_code, rinit_ex, funcode, r, finch_Cint(N));
-    printf("r: \n");
+    finch_exec("r=%s\n\
+N=%s\n\
+@finch @loop j r[j] = 1.0 / $N", r, finch_Cint(N));
+
+    // printf("r: \n");
     // finch_exec("println(%s.lvl.lvl.val)", r);
 
     data->r = r;
 }
 
 void Rank_Update(struct pr_data* in_data, struct pr_data* out_data) {
-    jl_value_t* rank = finch_Fiber(
-        finch_Dense(finch_Cint(N),
-        finch_ElementLevel(finch_Float64(0), finch_eval("Float64[]")))
-    );
-    run_finch(rank_code, rank_ex, funcode,  rank, edges, in_data->r, out_degree);
-    printf("New Rank: \n");
-    // finch_exec("println(%s.lvl.lvl.val)", rank);
 
-    out_data->ranks = rank;
-    
-    
-//     jl_function_t* display = finch_eval("function display_lowered(rank, edges, r_in, out_d)\n\
-//     ex = @index_program_instance (@loop i j rank[i] += edges[i, j] * r_in[j] / out_d[j])\n\
-//     display(execute_code_lowered(:ex, typeof(ex)))\n\
-//     println()\n\
-// end");
-//     finch_call(display, rank, edges, in_data->r, out_degree);
+    finch_exec("rank=%s\n\
+edges=%s\n\
+r_in=%s\n\
+out_d=%s\n\
+@finch @loop j i rank[j] += ifelse(out_d[i] != 0, edges[j, i] * r_in[i] / out_d[i], 0)", out_data->ranks, edges, in_data->r, out_degree);
+    // printf("New Rank: \n");
+    // finch_exec("println(%s.lvl.lvl.val)", rank);
 }
 
 void R_Update(struct pr_data* out_data) {
-    jl_value_t* r_out = finch_Fiber(
-        finch_Dense(finch_Cint(N),
-        finch_ElementLevel(finch_Float64(0), finch_eval("Float64[]")))
-    );
-    run_finch(r_code, r_ex, funcode, r_out, finch_Float64(beta_score), finch_Float64(damp), out_data->ranks);
-    printf("New R: \n");
+    finch_exec("r_out=%s\n\
+beta_score=%s\n\
+damp=%s\n\
+rank=%s\n\
+@finch @loop i r_out[i] = $beta_score + $damp * rank[i]", out_data->r, finch_Float64(beta_score), finch_Float64(damp), out_data->ranks);
+    // printf("New R: \n");
     // finch_exec("println(%s.lvl.lvl.val)", r_out);
-
-    out_data->r = r_out;
 }
 
 // Let PageRankStep(contrib_in float[N], rank_in float[N], r_in float[N]) -> (contrib float[N], rank float[N], r_out float[N])
@@ -145,61 +109,25 @@ void PageRankStep(struct pr_data* in_data, struct pr_data* out_data) {
 void PageRank(struct pr_data* data) {
     Init(data);
 
+    jl_value_t* r_out = finch_Fiber(
+        finch_Dense(finch_Cint(N),
+        finch_ElementLevel(finch_Float64(0), finch_eval("Float64[]")))
+    );
+    jl_value_t* rank = finch_Fiber(
+        finch_Dense(finch_Cint(N),
+        finch_ElementLevel(finch_Float64(0), finch_eval("Float64[]")))
+    );
     struct pr_data new_data = {};
+    new_data.ranks = rank;
+    new_data.r = r_out;
+
 
     for(int i=0; i < 20; i++) {
         PageRankStep(data, &new_data);
-        printf("iteration %d DONE\n", i);
-        finch_free(data->r);
-        finch_free(data->ranks);
+        // printf("iteration %d DONE\n", i);
         data->r = new_data.r;
         data->ranks = new_data.ranks;
     }
-}
-
-
-void compile_finch() {
-    funcode = finch_eval("function call(code, ex_)\n\
-        fun = eval(Expr(:->,:ex, code))\n\
-        Base.invokelatest(fun, ex_)\n\
-    end");
-
-    out_deg_code = finch_eval("println(\"HELLO\")\n\
-    function outdeg_codegen(out_d, edges)\n\
-            code = @finch_code @loop i j out_d[j] += edges[i, j]\n\
-            return code\n\
-    end");
-    out_deg_ex = finch_eval("function outdeg_ex(out_d, edges)\n\
-            ex = @finch_program_instance @loop i j out_d[j] += edges[i, j]\n\
-            return ex\n\
-    end");
-    
-    rinit_code = finch_eval("function rinit_codegen(r, N)\n\
-        code = @finch_code @loop j r[j] = 1.0 / $N\n\
-        return code\n\
-    end");  
-    rinit_ex = finch_eval("function rinit_ex(r, N)\n\
-        ex = @finch_program_instance @loop j r[j] = 1.0 / $N\n\
-        return ex\n\
-    end");
-
-    rank_code = finch_eval("function rank_codegen(rank, edges, r_in, out_d)\n\
-        code = @finch_code @loop j i rank[j] += ifelse(out_d[i] != 0, edges[j, i] * r_in[i] / out_d[i], 0)\n\
-        return code\n\
-    end");
-    rank_ex = finch_eval("function rank_ex(rank, edges, r_in, out_d)\n\
-        ex = @finch_program_instance @loop j i rank[j] += ifelse(out_d[i] != 0, edges[j, i] * r_in[i] / out_d[i], 0)\n\
-        return ex\n\
-    end");
-
-    r_code = finch_eval("function r_codegen(r_out, beta_score, damp, rank)\n\
-        code = @finch_code @loop i r_out[i] = $beta_score + $damp * rank[i]\n\
-        return code\n\
-    end");
-    r_ex = finch_eval("function r_ex(r_out, beta_score, damp, rank)\n\
-        ex = @finch_program_instance @loop i r_out[i] = $beta_score + $damp * rank[i]\n\
-        return ex\n\
-    end");
 }
 
 
@@ -219,7 +147,7 @@ void make_weights_and_edges(const char* graph_name, int n) {
 
 void starter() {
     N = 1;
-
+    beta_score = (1.0 - damp) / N;
     make_weights_and_edges("starter.mtx", N);
 
     struct pr_data d = {};
@@ -234,7 +162,7 @@ void setup1() {
     // 1 5, 4 5, 3 4, 2 3, 1 2
     // jl_value_t* edge_vector = finch_eval("Cint[0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]");
     N = 5;
-
+    beta_score = (1.0 - damp) / N;
     make_weights_and_edges("dag5.mtx", N);
 
     struct pr_data d = {};
@@ -248,7 +176,7 @@ void setup1() {
 void setup2() {
     // 2 1, 3 1, 3 2, 3 4
     N = 4;
-
+    beta_score = (1.0 - damp) / N;
     make_weights_and_edges("dag4.mtx", N);
 
     struct pr_data d = {};
@@ -263,7 +191,7 @@ void setup3() {
     // 2 1, 3 1, 1 2, 3 2, 1 3
     // jl_value_t* edge_vector = finch_eval("Cint[0, 1, 1, 1, 0, 0, 1, 1, 0]");
     N = 3;
-    
+    beta_score = (1.0 - damp) / N;
     make_weights_and_edges("dag3.mtx", N);
 
     struct pr_data d = {};
@@ -278,6 +206,7 @@ void setup4() {
     // 3 2, 3 1, 4 3, 5 4, 6 5, 6 7, 7 5, 7 6
     // jl_value_t* edge_vector = finch_eval("Cint[0,0,0,0,0,0,0, 0,0,1,0,0,0,0, 1,0,0,0,0,0,0, 0,0,1,0,0,0,0, 0,0,0,1,0,0,0, 0,0,0,0,1,0,1, 0,0,0,0,1,1,0]");
     N = 7;
+    beta_score = (1.0 - damp) / N;
     
     make_weights_and_edges("dag7.mtx", N);
 
@@ -291,7 +220,7 @@ void setup4() {
 
 void setup5() {
     N = 4847571;
-    
+    beta_score = (1.0 - damp) / N;
     make_weights_and_edges("soc-LiveJournal1.mtx", N);
 
     struct pr_data d = {};
@@ -359,24 +288,17 @@ end");
 Finch.register()");
 
     damp = 0.85;
-    beta_score = (1.0 - damp) / N;
-
-    N = 1;
-
-    // compile all the necessary functions first
-    compile_finch();
-    printf("Compiled finch\n");
 
     starter();
     printf("Ran starter\n");
 
     setup1();
 
-    // setup2();
+    setup2();
 
-    // setup3();
+    setup3();
 
-    // setup4();
+    setup4();
 
     // setup5();
 

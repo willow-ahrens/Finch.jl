@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdarg.h>
+#include <string.h>
  
 
 //  priorityQ[j][k] += (dist[k] > new_dist[k]) * (new_dist[k] == j) - (dist[k] > new_dist[k]) * (dist[k] == j)
@@ -17,7 +18,6 @@ JULIA_DEFINE_FAST_TLS // only define this once, in an executable
 int P = 5;
 int N = 5;
 int source = 5;
-jl_value_t* edges = 0;
 jl_value_t* weights = 0;
 
 struct sssp_data {
@@ -28,38 +28,38 @@ struct sssp_data {
 
 //     priorityQ[p][j] = (p == 0 && j == source) + (p == (P - 1) && j != source)
 jl_value_t* Init_priorityQ() {
-    jl_function_t* pq_init = finch_eval("function pq_init(source, P, priorityQ)\n\
-    @finch @loop p j priorityQ[p, j] = (p == 1 && j == $source) + (p == $P && j != $source)\n\
-end");
-
     jl_value_t* priorityQ = finch_Fiber(
-        finch_Dense(finch_Cint(P),
-            finch_SparseList(finch_Cint(N),
-                finch_ElementLevel(finch_Cint(0), finch_eval("Cint[]"))
+        finch_Dense(finch_Int64(P),
+            finch_SparseList(finch_Int64(N),
+                finch_ElementLevel(finch_Int64(0), finch_eval("Int64[]"))
             )
         )
     );
+    finch_exec("priorityQ=%s\n\
+    source=%s\n\
+    P=%s\n\
+    @finch @loop p j priorityQ[p, j] = (p == 1 && j == $source) + (p == $P && j != $source)", priorityQ, finch_Int64(source), finch_Int64(P));
 
-    finch_call(pq_init, finch_Cint(source), finch_Cint(P), priorityQ);
-    printf("PQ init: ");
+    printf("PQ init: \n");
     finch_exec("println(%s.lvl.lvl.lvl.val)", priorityQ);
     return priorityQ;
 }
 
 //     dist[j] = (j != source) * P
 jl_value_t* Init_dist() {
-    jl_function_t* dist_init = finch_eval("function dist_init(source, P, dist)\n\
-    @finch @loop j dist[j] = (j != $source) * $P\n\
-end");
-
     jl_value_t* val = finch_eval("Cint[]");
     jl_value_t* dist = finch_Fiber(
-        finch_Dense(finch_Cint(N),
-        finch_ElementLevel(finch_Cint(0), val))
+        finch_Dense(finch_Int64(N),
+        finch_ElementLevel(finch_Int64(0), val))
     );
-    finch_call(dist_init, finch_Cint(source), finch_Cint(P), dist);
-    printf("Dist init: ");
+    finch_exec("source=%s\n\
+    P=%s\n\
+    dist=%s\n\
+    @finch @loop j dist[j] = (j != $source) * $P", finch_Int64(source), finch_Int64(P), dist);
+    
+    printf("Dist init: \n");
     finch_exec("println(%s.lvl.lvl.val)", dist);
+
     return dist;
 }
 
@@ -83,8 +83,13 @@ void Init(struct sssp_data* data) {
 // 	new_priority = priority
 // End
 void UpdateEdges(struct sssp_data* old_data, struct sssp_data* new_data, int priority) {
-    jl_function_t* new_dist_func = finch_eval("# new_dist[j] = edges[j][k] * priorityQ[priority][k] * (weights[j][k] + dist[k]) + (edges[j][k] * priorityQ[priority][k] == 0) * P | k:(MIN, dist[j])\n\
-function new_dist_func(priority, N, P, new_dist, edges, priorityQ, weights, dist)\n\
+    jl_value_t* val = finch_eval("Cint[]");
+    jl_value_t* new_dist = finch_Fiber(
+        finch_Dense(finch_Int64(N),
+        finch_ElementLevel(finch_Int64(0), val))
+    );
+
+    finch_exec("priority=%s; N=%s; P=%s; new_dist=%s; priorityQ=%s; weights=%s; dist=%s\n\
     val = typemax(Cint)\n\
     B = Finch.Fiber(\n\
         Dense(N,\n\
@@ -92,30 +97,25 @@ function new_dist_func(priority, N, P, new_dist, edges, priorityQ, weights, dist
         )\n\
     )\n\
     \n\
-    @finch @loop p j k B[j] <<min>>= (p == $priority) * (edges[j, k] * priorityQ[p, k] * (weights[j, k] + dist[k]) + (edges[j, k] * priorityQ[p, k] == 0) * $P) + (p != $priority) * $val\n\
-    @finch @loop j new_dist[j] = min(B[j], dist[j])\n\
-end");
-    jl_value_t* val = finch_eval("Cint[]");
-    jl_value_t* new_dist = finch_Fiber(
-        finch_Dense(finch_Cint(N),
-        finch_ElementLevel(finch_Cint(0), val))
-    );
-    finch_call(new_dist_func, finch_Cint(priority), finch_Cint(N), finch_Cint(P), new_dist, edges, old_data->priorityQ, weights, old_data->dist);
+    @finch @loop p j k B[j] <<min>>= ifelse(p == $priority, ifelse(weights[j, k] * priorityQ[p, k] != 0, weights[j, k] + dist[k], $val), $val)\n\
+    @finch @loop j new_dist[j] = min(B[j], dist[j])",
+    finch_Int64(priority), finch_Int64(N), finch_Int64(P), new_dist, old_data->priorityQ, weights, old_data->dist);
+    
     printf("New dist: \n");
     finch_exec("println(%s.lvl.lvl.val)", new_dist);
 
-    jl_function_t* new_pq_func = finch_eval("function new_pq_func(new_priorityQ, old_priorityQ, dist, new_dist, priority)\n\
-    @finch @loop j k new_priorityQ[j, k] = (dist[k] > new_dist[k]) * (new_dist[k] == j-1) + (dist[k] == new_dist[k] && j != $priority) * old_priorityQ[j, k]\n\
-end");
     jl_value_t* val_pq = finch_eval("Cint[]");
     jl_value_t *new_priorityQ = finch_Fiber(
-        finch_Dense(finch_Cint(P),
-            finch_SparseList(finch_Cint(N),
-                finch_ElementLevel(finch_Cint(0), finch_eval("Cint[]"))
+        finch_Dense(finch_Int64(P),
+            finch_SparseList(finch_Int64(N),
+                finch_ElementLevel(finch_Int64(0), finch_eval("Int64[]"))
             )
         )
     );
-    finch_call(new_pq_func, new_priorityQ, old_data->priorityQ, old_data->dist, new_dist, finch_Cint(priority));
+    finch_exec("new_priorityQ=%s; old_priorityQ=%s; dist=%s; new_dist=%s; priority=%s\n\
+    @finch @loop j k new_priorityQ[j, k] = (dist[k] > new_dist[k]) * (new_dist[k] == j-1) + (dist[k] == new_dist[k] && j != $priority) * old_priorityQ[j, k]",
+    new_priorityQ, old_data->priorityQ, old_data->dist, new_dist, finch_Int64(priority));
+    
     printf("New pQ: \n");
     finch_exec("println(%s.lvl.lvl.lvl.val)", new_priorityQ);
 
@@ -126,24 +126,24 @@ end");
 // returns true if need to exit the loop
 int inner_loop_condition(jl_value_t* priorityQ, int priority) {
 
-    jl_value_t* access_func = finch_eval("function access_func(tensor1D, tensor2D, index)\n\
-    @finch @loop j tensor1D[j] = tensor2D[$index, j]\n\
-end");
     jl_value_t* val = finch_eval("Cint[]");
      jl_value_t* pq_slice = finch_Fiber(
-        finch_SparseListLevel(finch_Cint(N), finch_eval("Cint[1, 1]"), finch_eval("Cint[]"),
-        finch_ElementLevel(finch_Cint(0), finch_eval("Cint[]")))
+        finch_SparseListLevel(finch_Int64(N), finch_eval("Int64[1, 1]"), finch_eval("Int64[]"),
+        finch_ElementLevel(finch_Int64(0), finch_eval("Cint[]")))
     );
-    finch_call(access_func, pq_slice, priorityQ, finch_Cint(priority));
+    finch_exec("tensor1D=%s; tensor2D=%s; index=%s\n\
+    @finch @loop j tensor1D[j] = tensor2D[$index, j]", pq_slice, priorityQ, finch_Int64(priority));
     
     jl_value_t *pq_val = finch_exec("%s.lvl.lvl.val", pq_slice);
     double *pq_data = jl_array_data(pq_val);
     for(int i = 0; i < N; i++){
         if (pq_data[i] != 0) {
+            finch_free(pq_slice);
             return 0;
         }
     }
 
+    finch_free(pq_slice);
     return 1;   
 }
 
@@ -158,6 +158,10 @@ int SSSP_one_priority_lvl(struct sssp_data* old_data, struct sssp_data* new_data
 
     while (inner_loop_condition(new_data->priorityQ, priority) == 0) {
         UpdateEdges(old_data, new_data, priority);
+
+        finch_free(old_data->dist);
+        finch_free(old_data->priorityQ);
+
         old_data->dist = new_data->dist;
         old_data->priorityQ = new_data->priorityQ;
     }
@@ -189,17 +193,37 @@ int outer_loop_condition(jl_value_t* priorityQ, int priority) {
 int SSSP(struct sssp_data* final_data) {
     struct sssp_data data_val = {};
     struct sssp_data *old_data = &data_val;
+    printf("START SSSP\n");
     Init(old_data);
 
     int priority = 1;
 
     while(outer_loop_condition(old_data->priorityQ, priority) == 0) {
         priority = SSSP_one_priority_lvl(old_data, final_data, priority);
+
+        finch_free(old_data->priorityQ);
+        finch_free(old_data->dist);
+
         old_data->priorityQ = final_data->priorityQ;
         old_data->dist = final_data->dist;
     }
 
     return priority;
+}
+
+
+void make_weights_and_edges(const char* graph_name, int n) {
+    // 0, 1, 0, 0, 3, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0
+    char code[1000];
+    sprintf(code, "N = %d\n\
+        matrix = copy(transpose(MatrixMarket.mmread(\"./graphs/%s\")))\n\
+        Finch.Fiber(\n\
+                 Dense(N,\n\
+                 SparseList(N, matrix.colptr, matrix.rowval,\n\
+                 Element{0}(matrix.nzval))))", n, graph_name);
+
+    weights = finch_eval(code);
+    printf("Loaded weights\n");
 }
 
 
@@ -209,19 +233,9 @@ void setup1() {
     N = 5;
     source = 5;
     P = 5;
-    edges = finch_eval("N = 5\n\
-        edge_matrix = sparse([0 0 0 0 0; 1 0 0 0 0; 0 1 0 0 0; 0 0 1 0 0; 1 0 0 1 0])\n\
-        Finch.Fiber(\n\
-                 Dense(N,\n\
-                 SparseList(N, edge_matrix.colptr, edge_matrix.rowval,\n\
-                 Element{0.0}(edge_matrix.nzval))))");
-    // 0, 1, 0, 0, 3, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0
-    weights = finch_eval("N = 4\n\
-        matrix = sparse([0 0 0 0 0; 1 0 0 0 0; 0 1 0 0 0; 0 0 1 0 0; 3 0 0 1 0])\n\
-        Finch.Fiber(\n\
-                 Dense(N,\n\
-                 SparseList(N, matrix.colptr, matrix.rowval,\n\
-                 Element{0.0}(matrix.nzval))))");
+    
+    make_weights_and_edges("dag5.mtx", N);
+
     struct sssp_data d = {};
     struct sssp_data* data = &d;
     SSSP(data);
@@ -235,18 +249,8 @@ void setup2() {
     N = 4;
     source = 1;
     P = 4;
-    edges = finch_eval("N = 4\n\
-        edge_matrix = sparse([0 1 1 0; 0 0 1 0; 0 0 0 0; 0 0 1 0])\n\
-        Finch.Fiber(\n\
-                 Dense(N,\n\
-                 SparseList(N, edge_matrix.colptr, edge_matrix.rowval,\n\
-                 Element{0.0}(edge_matrix.nzval))))");
-    weights = finch_eval("N = 4\n\
-        matrix = sparse([0 1 3 0; 0 0 1 0; 0 0 0 0; 0 0 5 0])\n\
-        Finch.Fiber(\n\
-                 Dense(N,\n\
-                 SparseList(N, matrix.colptr, matrix.rowval,\n\
-                 Element{0.0}(matrix.nzval))))");
+    
+    make_weights_and_edges("dag4.mtx", N);
     
     struct sssp_data d = {};
     struct sssp_data* data = &d;
@@ -262,18 +266,9 @@ void setup3() {
     N = 3;
     source = 1;
     P = 3;
-    edges = finch_eval("N = 3\n\
-        edge_matrix = sparse([0 1 1; 1 0 1; 1 0 0])\n\
-        Finch.Fiber(\n\
-                 Dense(N,\n\
-                 SparseList(N, edge_matrix.colptr, edge_matrix.rowval,\n\
-                 Element{0.0}(edge_matrix.nzval))))");
-    weights = finch_eval("N = 4\n\
-        matrix = sparse([0 1 5; 2 0 1; 1 0 0])\n\
-        Finch.Fiber(\n\
-                 Dense(N,\n\
-                 SparseList(N, matrix.colptr, matrix.rowval,\n\
-                 Element{0.0}(matrix.nzval))))");
+    
+    make_weights_and_edges("dag3.mtx", N);
+
     struct sssp_data d = {};
     struct sssp_data* data = &d;
     SSSP(data);
@@ -288,23 +283,44 @@ void setup4() {
     N = 7;
     P = 20;
     source = 1;
-    edges = finch_eval("N = 7\n\
-    edge_matrix = sparse([0 0 1 0 0 0 0; 0 0 0 0 0 0 0; 0 1 0 1 0 0 0; 0 0 0 0 1 0 0; 0 0 0 0 0 1 1; 0 0 0 0 0 0 1; 0 0 0 0 0 1 0])\n\
-    Finch.Fiber(\n\
-                Dense(N,\n\
-                SparseList(N, edge_matrix.colptr, edge_matrix.rowval,\n\
-                Element{0.0}(edge_matrix.nzval))))");
-    weights = finch_eval("N = 4\n\
-        matrix = sparse([0 0 1 0 0 0 0; 0 0 0 0 0 0 0; 0 9 0 1 0 0 0; 0 0 0 0 1 0 0; 0 0 0 0 0 3 1; 0 0 0 0 0 0 1; 0 0 0 0 0 1 0])\n\
-        Finch.Fiber(\n\
-                 Dense(N,\n\
-                 SparseList(N, matrix.colptr, matrix.rowval,\n\
-                 Element{0.0}(matrix.nzval))))");
+    
+    make_weights_and_edges("dag7.mtx", N);
+
     struct sssp_data d = {};
     struct sssp_data* data = &d;
     SSSP(data);
 
     printf("EXAMPLE4\n Final: \n");
+    finch_exec("println(%s.lvl.lvl.val)", data->dist);
+}
+
+void setup5() {
+    N = 4847571;
+    P = 10000;
+    source = 1;
+    
+    make_weights_and_edges("soc-LiveJournal1.mtx", N);
+
+    struct sssp_data d = {};
+    struct sssp_data* data = &d;
+    SSSP(data);
+
+    printf("LARGE GRAPH\n Final: \n");
+    finch_exec("println(%s.lvl.lvl.val)", data->dist);
+}
+
+void starter() {
+    N = 1;
+    P = 2;
+    source = 1;
+
+    make_weights_and_edges("starter.mtx", N);
+
+    struct sssp_data d = {};
+    struct sssp_data* data = &d;
+    SSSP(data);
+
+    printf("EXAMPLE\nFinal: \n");
     finch_exec("println(%s.lvl.lvl.val)", data->dist);
 }
 
@@ -314,6 +330,7 @@ int main(int argc, char** argv) {
     jl_value_t* res = finch_eval("using RewriteTools\n\
     using Finch.IndexNotation\n\
      using SparseArrays\n\
+     using MatrixMarket\n\
     ");
 
     res = finch_eval("or(x,y) = x == 1|| y == 1\n\
@@ -361,6 +378,10 @@ end");
 ])\n\
 \n\
 Finch.register()");
+
+    starter();
+    printf("Ran starter\n");
+
     setup1();
 
     setup2();
@@ -368,6 +389,8 @@ Finch.register()");
     setup3();
 
     setup4();
+
+    // setup5();
 
     finch_finalize();
 }

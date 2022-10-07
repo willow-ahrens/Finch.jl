@@ -146,6 +146,7 @@ jl_value_t* finch_SparseListLevel(jl_value_t* n, jl_value_t* pos, jl_value_t* id
 jl_value_t* finch_Dense(jl_value_t* n, jl_value_t* lvl);
 jl_value_t* finch_Element(jl_value_t *fill);
 jl_value_t* finch_ElementLevel(jl_value_t *fill, jl_value_t *val);
+jl_value_t* finch_Scalar(jl_value_t *fill);
 
 #ifdef __cplusplus
     }
