@@ -48,3 +48,10 @@ rewrite_methods = length(methodinstances(RewriteTools))
 #│   tests = 3m35.3s
 #│   finch_methods = 1011
 #└   rewrite_methods = 716
+#After unityping With
+#┌ Info: results
+#│   first_run = 33.423286476
+#│   second_run = 0.767126124
+#│   tests = 3m35.0s
+#│   finch_methods = 953
+#└   rewrite_methods = 722

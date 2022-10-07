@@ -139,9 +139,15 @@ function (ctx::Initialize)(node)
     end
 end
 
-function (ctx::Initialize)(node::With) 
-    ctx_2 = Initialize(ctx.ctx, ctx.target, union(ctx.escape, map(getname, getresults(node.prod))))
-    With(ctx_2(node.cons), ctx_2(node.prod))
+function (ctx::Initialize)(node::CINNode)
+    if node.head === with
+        ctx_2 = Initialize(ctx.ctx, ctx.target, union(ctx.escape, map(getname, getresults(node.prod))))
+        with(ctx_2(node.cons), ctx_2(node.prod))
+    elseif istree(node)
+        return similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        return node
+    end
 end
 
 function (ctx::Initialize)(acc::Access)
@@ -175,9 +181,15 @@ function (ctx::Finalize)(node)
     end
 end
 
-function (ctx::Finalize)(node::With) 
-    ctx_2 = Finalize(ctx.ctx, ctx.target, union(ctx.escape, map(getname, getresults(node.prod))))
-    With(ctx_2(node.cons), ctx_2(node.prod))
+function (ctx::Finalize)(node::CINNode)
+    if node.head === with
+        ctx_2 = Finalize(ctx.ctx, ctx.target, union(ctx.escape, map(getname, getresults(node.prod))))
+        with(ctx_2(node.cons), ctx_2(node.prod))
+    elseif istree(node)
+        return similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        return node
+    end
 end
 
 function (ctx::Finalize)(acc::Access)

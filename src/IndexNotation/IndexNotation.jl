@@ -7,7 +7,7 @@ module IndexNotation
     export value
     export Workspace
     export Pass, pass
-    export With, with
+    export with
     export Multi, multi
     export Loop, loop
     export Chunk, chunk

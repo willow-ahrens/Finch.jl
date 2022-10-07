@@ -1,3 +1,5 @@
+tab = "  "
+
 abstract type IndexNode end
 abstract type IndexStatement <: IndexNode end
 abstract type IndexExpression <: IndexNode end
@@ -6,6 +8,7 @@ abstract type IndexTerminal <: IndexExpression end
 @enum CINHead begin
     value=1
     literal=2
+    with=3
 end
 
 struct CINNode <: IndexNode
@@ -21,8 +24,16 @@ isvalue(node) = false
 
 
 SyntaxInterface.istree(node::CINNode) = node.head > literal
+SyntaxInterface.arguments(node::CINNode) = node.args
+SyntaxInterface.operation(node::CINNode) = node.head
 
-function CINNode(op::CINHead, args::Union{Tuple, Vector})
+#TODO clean this up eventually
+function SyntaxInterface.similarterm(::Type{<:Union{IndexNode, CINNode}}, op::CINHead, args)
+    @assert istree(CINNode(op, nothing, nothing, []))
+    CINNode(op, nothing, nothing, args)
+end
+
+function CINNode(op::CINHead, args::Vector)
     if op === value
         if length(args) == 1
             return CINNode(value, args[1], Any, IndexNode[])
@@ -37,13 +48,19 @@ function CINNode(op::CINHead, args::Union{Tuple, Vector})
         else
             error("wrong number of arguments to literal(...)")
         end
+    elseif op === with
+        if length(args) == 2
+            return CINNode(with, nothing, nothing, args)
+        else
+            error("wrong number of arguments to with(...)")
+        end
     else
         error("unimplemented")
     end
 end
 
 function (op::CINHead)(args...)
-    CINNode(op, args)
+    CINNode(op, Any[args...,])
 end
 
 function Base.getproperty(node::CINNode, name::Symbol)
@@ -53,12 +70,28 @@ function Base.getproperty(node::CINNode, name::Symbol)
         error("type CINNode(value, ...) has no property $name")
     elseif node.head === literal
         error("type CINNode(literal, ...) has no property $name")
+    elseif node.head === with
+        if name === :cons
+            return node.args[1]
+        elseif name === :prod
+            return node.args[2]
+        else
+            error("type CINNode(with, ...) has no property $name")
+        end
     else
         error("type CINNode has no property $name")
     end
 end
 
-function Base.show(io::IO, mime::MIME"text/plain", node::CINNode)
+function Base.show(io::IO, mime::MIME"text/plain", node::CINNode) 
+    if node.head === with
+        display_statement(io, mime, node, 0)
+    else
+        display_expression(io, mime, node)
+    end
+end
+
+function display_expression(io, mime, node::CINNode)
     if get(io, :compact, false)
         print(io, "@finch(…)")
     elseif node.head === value
@@ -69,14 +102,26 @@ function Base.show(io::IO, mime::MIME"text/plain", node::CINNode)
         end
     elseif node.head === literal
         print(io, node.val)
-    elseif istree(node)
-        print(io, operation(node))
-        print(io, "(")
-        for arg in arguments(node)[1:end-1]
-            print(io, arg)
-            print(io, ",")
-        end
-        print(arguments(node)[end])
+    #elseif istree(node)
+    #    print(io, operation(node))
+    #    print(io, "(")
+    #    for arg in arguments(node)[1:end-1]
+    #        print(io, arg)
+    #        print(io, ",")
+    #    end
+    #    print(arguments(node)[end])
+    else
+        error("unimplemented")
+    end
+end
+
+function display_statement(io, mime, node::CINNode, level)
+    if node.head === with
+        print(io, tab^level * "(\n")
+        display_statement(io, mime, node.cons, level + 1)
+        print(io, tab^level * ") where (\n")
+        display_statement(io, mime, node.prod, level + 1)
+        print(io, tab^level * ")\n")
     else
         error("unimplemented")
     end
@@ -121,7 +166,13 @@ function Finch.getvalue(ex::CINNode)
     ex.val
 end
 
-tab = "  "
+function Finch.getresults(node::CINNode)
+    if node.head === with
+        Finch.getresults(node.cons)
+    else
+        error("unimplemented")
+    end
+end
 
 function Base.show(io::IO, mime::MIME"text/plain", stmt::IndexStatement)
     if get(io, :compact, false)
@@ -266,30 +317,6 @@ function display_expression(io, mime, ex::Protocol)
     print(io, "::")
     display_expression(io, mime, ex.val)
 end
-
-struct With <: IndexStatement
-	cons::IndexNode
-	prod::IndexNode
-end
-Base.:(==)(a::With, b::With) = a.cons == b.cons && a.prod == b.prod
-
-with(args...) = with!(vcat(args...))
-with!(args) = With(args[1], args[2])
-
-SyntaxInterface.istree(::With) = true
-SyntaxInterface.operation(stmt::With) = with
-SyntaxInterface.arguments(stmt::With) = Any[stmt.cons, stmt.prod]
-SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(with), args) = with!(args)
-
-function display_statement(io, mime, stmt::With, level)
-    print(io, tab^level * "(\n")
-    display_statement(io, mime, stmt.cons, level + 1)
-    print(io, tab^level * ") where (\n")
-    display_statement(io, mime, stmt.prod, level + 1)
-    print(io, tab^level * ")\n")
-end
-
-Finch.getresults(stmt::With) = Finch.getresults(stmt.cons)
 
 struct Multi <: IndexStatement
     bodies::Vector{IndexNode}

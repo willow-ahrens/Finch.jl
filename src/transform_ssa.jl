@@ -81,11 +81,17 @@ function (ctx::TransformSSA)(root::Loop)
     end
 end
 
-function (ctx::TransformSSA)(root::With)
-    contain(ctx) do ctx_2
-        prod = ctx_2(root.prod)
-        cons = ctx(root.cons)
-        return with(cons, prod)
+function (ctx::TransformSSA)(node::CINNode)
+    if node.head === with
+        contain(ctx) do ctx_2
+            prod = ctx_2(node.prod)
+            cons = ctx(node.cons)
+            return with(cons, prod)
+        end
+    elseif istree(node)
+        similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        node
     end
 end
 

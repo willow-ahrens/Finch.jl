@@ -101,15 +101,27 @@ end
 function (ctx::DeclareDimensions)(node::Dimensionalize, dim)
     ctx(node.body, dim)
 end
-function (ctx::DeclareDimensions)(node::With, dim)
-    prod = ctx(node.prod, nodim)
-    (prod, _) = InferDimensions(;kwfields(ctx)...)(prod)
-    cons = ctx(node.cons, nodim)
-    with(cons, prod)
+function (ctx::DeclareDimensions)(node::CINNode, dim)
+    if node.head === with
+        prod = ctx(node.prod, nodim)
+        (prod, _) = InferDimensions(;kwfields(ctx)...)(prod)
+        cons = ctx(node.cons, nodim)
+        with(cons, prod)
+    elseif istree(node)
+        similarterm(node, operation(node), map(arg->ctx(arg, nodim), arguments(node)))
+    else
+        node
+    end
 end
-function (ctx::InferDimensions)(node::With)
-    (cons, _) = ctx(node.cons)
-    (with(cons, node.prod), nodim)
+function (ctx::InferDimensions)(node::CINNode)
+    if node.head === with
+        (cons, _) = ctx(node.cons)
+        (with(cons, node.prod), nodim)
+    elseif istree(node)
+        (similarterm(node, operation(node), map(first, map(ctx, arguments(node)))), nodim)
+    else
+        (node, nodim)
+    end
 end
 
 function (ctx::DeclareDimensions)(node::Name, ext)

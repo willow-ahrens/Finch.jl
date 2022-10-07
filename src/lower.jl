@@ -198,26 +198,24 @@ function (ctx::LowerJulia)(root::CINNode, ::DefaultStyle)
         else
             return root.val
         end
+    elseif root.head === with
+        prod = nothing
+        target = map(getname, getresults(root.prod))
+        return quote
+            $(contain(ctx) do ctx_2
+                prod = Initialize(ctx = ctx_2, target=target)(root.prod)
+                (ctx_2)(prod)
+            end)
+            $(contain(ctx) do ctx_2
+                Finalize(ctx = ctx_2, target=target)(prod)
+                cons = Initialize(ctx = ctx_2, target=target)(root.cons)
+                res = (ctx_2)(cons)
+                Finalize(ctx = ctx_2, target=target)(cons)
+                res
+            end)
+        end
     else
         error("unimplemented")
-    end
-end
-
-function (ctx::LowerJulia)(root::With, ::DefaultStyle)
-    prod = nothing
-    target = map(getname, getresults(root.prod))
-    return quote
-        $(contain(ctx) do ctx_2
-            prod = Initialize(ctx = ctx_2, target=target)(root.prod)
-            (ctx_2)(prod)
-        end)
-        $(contain(ctx) do ctx_2
-            Finalize(ctx = ctx_2, target=target)(prod)
-            cons = Initialize(ctx = ctx_2, target=target)(root.cons)
-            res = (ctx_2)(cons)
-            Finalize(ctx = ctx_2, target=target)(cons)
-            res
-        end)
     end
 end
 
