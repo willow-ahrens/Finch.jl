@@ -2,7 +2,7 @@ virtualize(ex, T, ctx, tag) = virtualize(ex, T, ctx)
 
 virtualize(ex, (@nospecialize T), ctx) = value(ex, T)
 
-virtualize(ex, ::Type{IndexNotation.LiteralInstance{val}}, ctx) where {val} = Literal(val)
+virtualize(ex, ::Type{IndexNotation.literalInstance{val}}, ctx) where {val} = literal(val)
 function virtualize(ex, ::Type{IndexNotation.PassInstance{Tnss}}, ctx) where {Tnss}
     tnss = map(enumerate(Tnss.parameters)) do (n, Tns)
         virtualize(:($ex.tnss[$n]), Tns, ctx)
@@ -54,7 +54,7 @@ virtualize(ex, ::Type{Update}, ctx) = Update()
 function virtualize(ex, ::Type{IndexNotation.LabelInstance{tag, Tns}}, ctx) where {tag, Tns}
     return virtualize(:($ex.tns), Tns, ctx, tag)
 end
-virtualize(ex, ::Type{IndexNotation.ValueInstance{arg}}, ctx) where {arg} = isliteral(arg) ? arg : Literal(arg)
+virtualize(ex, ::Type{IndexNotation.ValueInstance{arg}}, ctx) where {arg} = isliteral(arg) ? arg : literal(arg)
 virtualize(ex, ::Type{Walk}, ctx) = walk
 virtualize(ex, ::Type{FastWalk}, ctx) = fastwalk
 virtualize(ex, ::Type{Gallop}, ctx) = gallop

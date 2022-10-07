@@ -9,7 +9,7 @@ function getsize(arr::VirtualAbstractArray, ctx::LowerJulia, mode) where {T <: A
     push!(ctx.preamble, quote
         ($(dims...),) = size($(arr.ex))
     end)
-    return map(i->Extent(Literal(1), value(dims[i], Int)), 1:arr.ndims)
+    return map(i->Extent(literal(1), value(dims[i], Int)), 1:arr.ndims)
 end
 
 getname(arr::VirtualAbstractArray) = arr.name

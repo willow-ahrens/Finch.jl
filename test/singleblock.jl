@@ -47,7 +47,7 @@ end
 function Finch.getsize(arr::VirtualSingleBlock{Tv, Ti}, ctx::Finch.LowerJulia, mode) where {Tv, Ti}
     ex = Symbol(arr.name, :_stop)
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))
-    (Extent(Literal(1), value(ex, Ti)),)
+    (Extent(literal(1), value(ex, Ti)),)
 end
 Finch.setsize!(arr::VirtualSingleBlock{Tv, Ti}, ctx::Finch.LowerJulia, mode, dims...) where {Tv, Ti} = arr
 Finch.getname(arr::VirtualSingleBlock) = arr.name
@@ -65,7 +65,7 @@ function Finch.chunkify_access(node, ctx, vec::VirtualSingleBlock{Tv, Ti}) where
         tns = Pipeline([
             Phase(
                 stride = (ctx, idx, ext) -> value(:($(vec.ex).start - 1)),
-                body = (start, step) -> Run(body = Simplify(Literal(vec.D)))
+                body = (start, step) -> Run(body = Simplify(literal(vec.D)))
             ),
             Phase(
                 stride = (ctx, idx, ext) -> value(:($(vec.ex).stop)),
@@ -73,7 +73,7 @@ function Finch.chunkify_access(node, ctx, vec::VirtualSingleBlock{Tv, Ti}) where
                     body = (i) -> :($(vec.ex).val[$(ctx.ctx(i)) - $(vec.ex).start + 1]) #TODO all of these functions should really have a ctx
                 )
             ),
-            Phase(body = (start, step) -> Run(body = Simplify(Literal(vec.D))))
+            Phase(body = (start, step) -> Run(body = Simplify(literal(vec.D))))
         ])
         Access(tns, node.mode, node.idxs)
     else

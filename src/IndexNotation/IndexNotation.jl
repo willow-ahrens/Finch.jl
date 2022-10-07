@@ -2,7 +2,7 @@ module IndexNotation
     using MacroTools, SyntaxInterface, Finch
 
     export IndexNode, IndexStatement, IndexExpression, IndexTerminal, index_terminal
-    export Literal
+    export literal
     export Name
     export value
     export Workspace

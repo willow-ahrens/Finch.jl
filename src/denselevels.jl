@@ -85,7 +85,7 @@ getsites(fbr::VirtualFiber{VirtualDenseLevel}) =
     [envdepth(fbr.env) + 1, getsites(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))...]
 
 function getsize(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode)
-    ext = Extent(Literal(1), fbr.lvl.I)
+    ext = Extent(literal(1), fbr.lvl.I)
     if mode != Read()
         ext = suggest(ext)
     end
@@ -114,7 +114,7 @@ function reinitialize!(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode)
     q_start = call(*, p_start, lvl.I)
     q_stop = call(*, p_stop, lvl.I)
     if interval_assembly_depth(lvl.lvl) >= 1
-        reinitialize!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Extent(q_start, q_stop), index = Extent(Literal(1), lvl.I), parent=fbr.env)), ctx, mode)
+        reinitialize!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Extent(q_start, q_stop), index = Extent(literal(1), lvl.I), parent=fbr.env)), ctx, mode)
     else
         p = ctx.freshen(lvl.ex, :_p)
         q = ctx.freshen(lvl.ex, :_q)
@@ -139,7 +139,7 @@ function assemble!(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode)
     q_start = call(*, p_start, lvl.I)
     q_stop = call(*, p_stop, lvl.I)
     if interval_assembly_depth(lvl.lvl) >= 1
-        assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Extent(q_start, q_stop), index = Extent(Literal(1), lvl.I), parent=fbr.env)), ctx, mode)
+        assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Extent(q_start, q_stop), index = Extent(literal(1), lvl.I), parent=fbr.env)), ctx, mode)
     else
         p = ctx.freshen(lvl.ex, :_p)
         q = ctx.freshen(lvl.ex, :_q)

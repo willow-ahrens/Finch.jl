@@ -1,10 +1,10 @@
 
 @slots a b c d e i j f g rules = [
-    (@rule @_f($f(a...)) => if isliteral(f) && all(isliteral, a) && length(a) >= 1 Literal(getvalue(f)(getvalue.(a)...)) end),
+    (@rule @_f($f(a...)) => if isliteral(f) && all(isliteral, a) && length(a) >= 1 literal(getvalue(f)(getvalue.(a)...)) end),
 
-    #((a) -> if a isa Literal && isliteral(getvalue(a)) getvalue(a) end), #only quote when necessary
+    #((a) -> if isliteral(a) && isliteral(getvalue(a)) getvalue(a) end), #only quote when necessary
 
-    (@rule @_f($a[i...] = $b) => if b == Literal(default(a)) pass(a) end), #TODO either default needs to get defined on all chunks, or we need to guard this
+    (@rule @_f($a[i...] = $b) => if b == literal(default(a)) pass(a) end), #TODO either default needs to get defined on all chunks, or we need to guard this
 
     (@rule @_f(@loop $i @pass(a...)) => pass(a...)),
     (@rule @_f(@chunk $i $a @pass(b...)) => pass(b...)),
@@ -25,7 +25,7 @@
                 end),
                 (@rule @_f(@pass(c...)) => begin
                     for d in c
-                        props[getname(d)] = Literal(default(d)) #TODO is this okay?
+                        props[getname(d)] = literal(default(d)) #TODO is this okay?
                     end
                     pass()
                 end),
@@ -53,7 +53,7 @@
     (@rule @_f(min(a...)) => if !(allunique(a)) @f min($(unique(a)...)) end),
     (@rule @_f(max(a...)) => if !(allunique(a)) @f max($(unique(a)...)) end),
     (@rule @_f(+(a..., +(b...), c...)) => @f +(a..., b..., c...)),
-    (@rule @_f(+(a...)) => if count(isliteral, a) >= 2 @f +($(filter(!isliteral, a)...), $(Literal(+(getvalue.(filter(isliteral, a))...)))) end),
+    (@rule @_f(+(a...)) => if count(isliteral, a) >= 2 @f +($(filter(!isliteral, a)...), $(literal(+(getvalue.(filter(isliteral, a))...)))) end),
     (@rule @_f(+(a..., 0, b...)) => @f +(a..., b...)),
     (@rule @_f(or(a..., false, b...)) => @f or(a..., b...)),
     (@rule @_f(or(a..., true, b...)) => @f true),
@@ -68,19 +68,19 @@
     (@rule @_f($a[i...] += 0) => pass(a)),
     (@rule @_f(-0.0) => @f 0.0),
 
-    (@rule @_f($a[i...] <<$f>>= $($(Literal(missing)))) => pass(a)),
-    (@rule @_f($a[i..., $($(Literal(missing))), j...] <<$f>>= $b) => pass(a)),
-    (@rule @_f($a[i..., $($(Literal(missing))), j...]) => Literal(missing)),
-    (@rule @_f(coalesce(a..., $($(Literal(missing))), b...)) => @f coalesce(a..., b...)),
+    (@rule @_f($a[i...] <<$f>>= $($(literal(missing)))) => pass(a)),
+    (@rule @_f($a[i..., $($(literal(missing))), j...] <<$f>>= $b) => pass(a)),
+    (@rule @_f($a[i..., $($(literal(missing))), j...]) => literal(missing)),
+    (@rule @_f(coalesce(a..., $($(literal(missing))), b...)) => @f coalesce(a..., b...)),
     (@rule @_f(coalesce(a..., $b, c...)) => if isvalue(b) && !(Missing <: b.type); @f(coalesce(a..., $b)) end),
-    (@rule @_f(coalesce(a..., $b, c...)) => if b isa Literal && b != Literal(missing); @f(coalesce(a..., $b)) end),
+    (@rule @_f(coalesce(a..., $b, c...)) => if isliteral(b) && b != literal(missing); @f(coalesce(a..., $b)) end),
     (@rule @_f(coalesce($a)) => a),
 
     (@rule @_f($a - $b) => @f $a + - $b),
     (@rule @_f(- (- $a)) => a),
 
     (@rule @_f(*(a..., *(b...), c...)) => @f *(a..., b..., c...)),
-    (@rule @_f(*(a...)) => if count(isliteral, a) >= 2 @f(*($(filter(!isliteral, a)...), $(Literal(*(getvalue.(filter(isliteral, a))...))))) end),
+    (@rule @_f(*(a...)) => if count(isliteral, a) >= 2 @f(*($(filter(!isliteral, a)...), $(literal(*(getvalue.(filter(isliteral, a))...))))) end),
     (@rule @_f(*(a..., 1, b...)) => @f *(a..., b...)),
     (@rule @_f(*(a..., 0, b...)) => @f 0),
     (@rule @_f((*)($a)) => a),
@@ -206,9 +206,6 @@ comparators(x::Expr) = (x.head, map(Lexicography, x.args)...)
 priority(::Name) = (3,0)
 comparators(x::Name) = (x.name,)
 
-priority(::Literal) = (3,1)
-comparators(x::Literal) = (Lexicography(x.val),)
-
 priority(::Read) = (3,2,1)
 comparators(x::Read) = ()
 
@@ -221,8 +218,17 @@ comparators(x::Update) = ()
 priority(::Workspace) = (3,3)
 comparators(x::Workspace) = (x.n,)
 
+#TODO this works for now, but reconsider this later
 priority(node::CINNode) = (3, 4)
-comparators(node::CINNode) = (node.head, node.args, Lexicography(node.val), Lexicography(node.type))
+function comparators(node::CINNode)
+    if node.head === value
+        return (node.head, Lexicography(node.val), Lexicography(node.type))
+    elseif node.head === literal
+        return (node.head, Lexicography(node.val))
+    else
+        error("unimplemented")
+    end
+end
 
 priority(::Virtual) = (3,5)
 comparators(x::Virtual) = (Lexicography(x.arg), )

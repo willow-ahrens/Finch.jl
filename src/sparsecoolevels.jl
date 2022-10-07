@@ -135,7 +135,7 @@ function getsites(fbr::VirtualFiber{VirtualSparseCooLevel})
 end
 
 function getsize(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx::LowerJulia, mode)
-    ext = map(stop->Extent(Literal(1), stop), fbr.lvl.I)
+    ext = map(stop->Extent(literal(1), stop), fbr.lvl.I)
     if mode != Read()
         ext = map(suggest, ext)
     end
@@ -233,7 +233,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode::Read, idx::
                             body = Step(
                                 stride =  (ctx, idx, ext) -> value(my_i),
                                 chunk = Spike(
-                                    body = Simplify(Literal(default(fbr))),
+                                    body = Simplify(literal(default(fbr))),
                                     tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, lvl.Tq), index=value(my_i, lvl.Ti), parent=fbr.env)), ctx, mode, idxs...),
                                 ),
                                 next = (ctx, idx, ext) -> quote
@@ -253,7 +253,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode::Read, idx::
                             body = Step(
                                 stride = (ctx, idx, ext) -> value(my_i),
                                 chunk = Spike(
-                                    body = Simplify(Literal(default(fbr))),
+                                    body = Simplify(literal(default(fbr))),
                                     tail = refurl(VirtualFiber(lvl, VirtualEnvironment(start=value(my_q, lvl.Ti), stop=value(my_q_step, lvl.Ti), index=value(my_i, lvl.Ti), parent=fbr.env, internal=true)), ctx, mode, idxs...),
                                 ),
                                 next = (ctx, idx, ext) -> quote
@@ -265,7 +265,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode::Read, idx::
                 )
             ),
             Phase(
-                body = (start, step) -> Run(Simplify(Literal(default(fbr))))
+                body = (start, step) -> Run(Simplify(literal(default(fbr))))
             )
         ])
     )

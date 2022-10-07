@@ -16,7 +16,7 @@ const pattern_nodes = (
     protocol = protocol,
     name = Name,
     label = (ex) -> Expr(:$, :(index_terminal($(esc(ex))))),
-    literal = Literal,
+    literal = literal,
     value = (ex) -> Expr(:$, :(index_terminal($(esc(ex))))),
 )
 
@@ -33,7 +33,7 @@ const program_nodes = (
     protocol = protocol,
     name = Name,
     label = (ex) -> :(index_terminal($(esc(ex)))),
-    literal = Literal,
+    literal = literal,
     value = (ex) -> :(index_terminal($(esc(ex)))),
 )
 

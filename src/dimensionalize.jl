@@ -230,7 +230,16 @@ getstop(ext::Virtual) = getstop(ext.arg)
 getlower(ext::Virtual) = getlower(ext.arg)
 getupper(ext::Virtual) = getupper(ext.arg)
 extent(ext::Virtual) = extent(ext.arg)
-extent(ext::Literal) = extent(ext.val)
+#TODO I don't like this def
+function extent(ext::CINNode)
+    if ext.head === value
+        return 1
+    elseif ext.head === literal
+        return 1
+    else
+        error("unimplemented")
+    end
+end
 extent(ext::Integer) = 1
 
 combinedim(a::Extent, b::Extent) =
@@ -348,7 +357,7 @@ function combinedim(a::Narrow{<:Extent}, b::Narrow{<:Extent})
         lower = if getstart(a) == getstart(b) || getstop(a) == getstop(b)
             simplify(@f(min($(a.ext.lower), $(b.ext.lower))))
         else
-            Literal(0)
+            literal(0)
         end,
         upper = simplify(@f(min($(a.ext.upper), $(b.ext.upper))))
     ))

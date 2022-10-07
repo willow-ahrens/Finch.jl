@@ -10,7 +10,7 @@ function lower_cycle(root, ctx, idx, ext, style)
 
     body_2 = contain(ctx) do ctx_2
         push!(ctx_2.preamble, :($i0 = $i))
-        ctx_2(Chunk(root.idx, Extent(start = value(i0), stop = getstop(root.ext), lower = Literal(1)), body))
+        ctx_2(Chunk(root.idx, Extent(start = value(i0), stop = getstop(root.ext), lower = literal(1)), body))
     end
 
     if simplify((@f $(getlower(ext)) >= 1)) == (@f true) && simplify((@f $(getupper(ext)) <= 1)) == (@f true)

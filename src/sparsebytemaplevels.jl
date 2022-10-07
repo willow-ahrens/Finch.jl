@@ -93,7 +93,7 @@ mutable struct VirtualSparseBytemapLevel
 end
 function virtualize(ex, ::Type{SparseBytemapLevel{Ti, Tp, Tq, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Tq, Lvl}   
     sym = ctx.freshen(tag)
-    I = value{Int}(:($sym.I))
+    I = value(:($sym.I))
     tbl_alloc = ctx.freshen(sym, :_tbl_alloc)
     srt_stop = ctx.freshen(sym, :_srt_stop)
     srt_alloc = ctx.freshen(sym, :_srt_alloc)
@@ -128,7 +128,7 @@ getsites(fbr::VirtualFiber{VirtualSparseBytemapLevel}) =
     [envdepth(fbr.env) + 1, getsites(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))...]
 
 function getsize(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode)
-    ext = Extent(Literal(1), fbr.lvl.I)
+    ext = Extent(literal(1), fbr.lvl.I)
     if mode != Read()
         ext = suggest(ext)
     end
@@ -207,7 +207,7 @@ function assemble!(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode)
     end)
 
     if interval_assembly_depth(lvl.lvl) >= 1
-        assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Extent(value(q_start), value(q_stop)), index = Extent(Literal(1), lvl.I), parent=fbr.env)), ctx, mode)
+        assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Extent(value(q_start), value(q_stop)), index = Extent(literal(1), lvl.I), parent=fbr.env)), ctx, mode)
     else
         i = ctx.freshen(lvl.ex, :_i)
         push!(ctx.preamble, quote
@@ -287,7 +287,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Read, i
                         body = Step(
                             stride = (ctx, idx, ext) -> value(my_i),
                             chunk = Spike(
-                                body = Simplify(Literal(default(fbr))),
+                                body = Simplify(literal(default(fbr))),
                                 tail = Thunk(
                                     preamble = quote
                                         $my_q = ($(ctx(envposition(fbr.env))) - 1) * $(ctx(lvl.I)) + $my_i
@@ -303,7 +303,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Read, i
                 )
             ),
             Phase(
-                body = (start, step) -> Run(Simplify(Literal(default(fbr))))
+                body = (start, step) -> Run(Simplify(literal(default(fbr))))
             )
         ])
     )
@@ -349,7 +349,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Read, i
                             body = (ctx, ext, ext_2) -> Switch([
                                 value(:($(ctx(getstop(ext_2))) == $my_i)) => Thunk(
                                     body = Spike(
-                                        body = Simplify(Literal(default(fbr))),
+                                        body = Simplify(literal(default(fbr))),
                                         tail = Thunk(
                                             preamble = quote
                                                 $my_q = ($(ctx(envposition(fbr.env))) - 1) * $(ctx(lvl.I)) + $my_i
@@ -361,7 +361,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Read, i
                                         $my_r += 1
                                     end
                                 ),
-                                Literal(true) => Stepper(
+                                literal(true) => Stepper(
                                     seek = (ctx, ext) -> quote
                                         #$my_r = searchsortedfirst($(lvl.ex).idx, $start, $my_r, $my_r_stop, Base.Forward)
                                         while $my_r < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext)))
@@ -375,7 +375,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Read, i
                                         body = Step(
                                             stride = (ctx, idx, ext) -> value(my_i),
                                             chunk = Spike(
-                                                body = Simplify(Literal(default(fbr))),
+                                                body = Simplify(literal(default(fbr))),
                                                 tail = Thunk(
                                                     preamble = quote
                                                         $my_q = ($(ctx(envposition(fbr.env))) - 1) * $(ctx(lvl.I)) + $my_i
@@ -395,7 +395,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Read, i
                 )
             ),
             Phase(
-                body = (start, step) -> Run(Simplify(Literal(default(fbr))))
+                body = (start, step) -> Run(Simplify(literal(default(fbr))))
             )
         ])
     )
@@ -418,7 +418,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Read, i
             end,
             body = Switch([
                 value(:($tbl[$my_q])) => refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, lvl.Tq), index=i, parent=fbr.env)), ctx, mode, idxs...),
-                Literal(true) => Simplify(Literal(default(fbr)))
+                literal(true) => Simplify(literal(default(fbr)))
             ])
         )
     )

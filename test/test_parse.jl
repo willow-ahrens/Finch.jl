@@ -21,20 +21,20 @@
             value_instance(42))
 
     @test Finch.virtualize(:ex, typeof(@finch_program_instance(:f(:B[i::walk, k] * :C[k, j]^3, 42))), Finch.LowerJulia()) ==
-        call(Literal(:f), 
+        call(literal(:f), 
             call(*,
-                access(Literal(:B), Read(), Protocol(Name(:i), walk), Name(:k)),
+                access(literal(:B), Read(), Protocol(Name(:i), walk), Name(:k)),
                 call(^,
-                    access(Literal(:C), Read(), Name(:k), Name(:j)),
+                    access(literal(:C), Read(), Name(:k), Name(:j)),
                     3)),
             42) 
 
     @test Finch.virtualize(:ex, typeof(@finch_program_instance((:A[] = 1; :B[] = 2))), Finch.LowerJulia()) ==
         multi(
             assign(
-                access(Literal(:A), Read()), 1),
+                access(literal(:A), Read()), 1),
                 assign(
-                    access(Literal(:B), Read()),
+                    access(literal(:B), Read()),
                     2))
 
     @test @finch_program(@loop i :A[i] += :B[i] * i) ==

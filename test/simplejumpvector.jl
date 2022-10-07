@@ -41,7 +41,7 @@ end
 function Finch.getsize(arr::VirtualSimpleJumpVector{Tv, Ti}, ctx::Finch.LowerJulia, mode) where {Tv, Ti}
     ex = Symbol(arr.name, :_stop)
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))
-    (Extent(Literal(1), value(ex, Ti)),)
+    (Extent(literal(1), value(ex, Ti)),)
 end
 Finch.setsize!(arr::VirtualSimpleJumpVector{Tv, Ti}, ctx::Finch.LowerJulia, mode, dims...) where {Tv, Ti} = arr
 Finch.getname(arr::VirtualSimpleJumpVector) = arr.name
@@ -79,7 +79,7 @@ function Finch.chunkify_access(node, ctx, vec::VirtualSimpleJumpVector{Tv, Ti}) 
                             Switch([
                                 value(:($(ctx(getstop(ext_2))) == $my_i′)) => Thunk(
                                     body = Spike(
-                                        body = Simplify(Literal(zero(Tv))),
+                                        body = Simplify(literal(zero(Tv))),
                                         tail = value(:($(vec.ex).val[$my_p]), Tv),
                                     ),
                                     epilogue = quote
@@ -88,7 +88,7 @@ function Finch.chunkify_access(node, ctx, vec::VirtualSimpleJumpVector{Tv, Ti}) 
                                         $my_i′ = $(vec.ex).idx[$my_p]
                                     end
                                 ),
-                                Literal(true) => Stepper(
+                                literal(true) => Stepper(
                                     seek = (ctx, ext) -> quote
                                         $my_p = searchsortedfirst($(vec.ex).idx, $(ctx(getstart(ext))), $my_p, length($(vec.ex).idx), Base.Forward)
                                         $my_i = $(ctx(getstart(ext)))
@@ -97,7 +97,7 @@ function Finch.chunkify_access(node, ctx, vec::VirtualSimpleJumpVector{Tv, Ti}) 
                                     body = Step(
                                         stride = (ctx, idx, ext) -> value(my_i′),
                                         chunk = Spike(
-                                            body = Simplify(Literal(zero(Tv))),
+                                            body = Simplify(literal(zero(Tv))),
                                             tail = value(:($(vec.ex).val[$my_p]), Tv),
                                         ),
                                         next = (ctx, idx, ext) -> quote

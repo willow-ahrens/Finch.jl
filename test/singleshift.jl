@@ -32,7 +32,7 @@ end
 function Finch.getsize(arr::VirtualSingleShift{Tv, Ti}, ctx::Finch.LowerJulia, mode) where {Tv, Ti}
     ex = Symbol(arr.name, :_stop)
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))
-    (Extent(Literal(1), value(ex, Ti)),)
+    (Extent(literal(1), value(ex, Ti)),)
 end
 Finch.setsize!(arr::VirtualSingleShift, ctx::Finch.LowerJulia, mode, dims...) = arr
 Finch.getname(arr::VirtualSingleShift) = arr.name

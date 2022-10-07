@@ -140,7 +140,7 @@ function getsites(fbr::VirtualFiber{VirtualSparseHashLevel})
 end
 
 function getsize(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx::LowerJulia, mode)
-    ext = map(stop->Extent(Literal(1), stop), fbr.lvl.I)
+    ext = map(stop->Extent(literal(1), stop), fbr.lvl.I)
     if mode != Read()
         ext = map(suggest, ext)
     end
@@ -253,7 +253,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode::Read, idx:
                             Step(
                                 stride =  (ctx, idx, ext) -> value(my_i),
                                 chunk = Spike(
-                                    body = Simplify(Literal(default(fbr))),
+                                    body = Simplify(literal(default(fbr))),
                                     tail = begin
                                         env_2 = VirtualEnvironment(
                                         position=value(:(last($(lvl.ex).srt[$my_q])[$R]), lvl.Ti),
@@ -270,7 +270,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode::Read, idx:
                             Step(
                                 stride =  (ctx, idx, ext) -> value(my_i),
                                 chunk = Spike(
-                                    body = Simplify(Literal(default(fbr))),
+                                    body = Simplify(literal(default(fbr))),
                                     tail = begin
                                         env_2 = VirtualEnvironment(
                                             start=value(my_q, lvl.Ti),
@@ -294,7 +294,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode::Read, idx:
                 )
             ),
             Phase(
-                body = (start, step) -> Run(Simplify(Literal(default(fbr))))
+                body = (start, step) -> Run(Simplify(literal(default(fbr))))
             )
         ])
     )
@@ -318,7 +318,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode::Read, idx:
                 end,
                 body = Switch([
                     value(:($my_q != 0)) => refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, lvl.Tq_2), index=i, parent=fbr.env)), ctx, mode, idxs...),
-                    Literal(true) => Simplify(Literal(default(fbr)))
+                    literal(true) => Simplify(literal(default(fbr)))
                 ])
             )
         )

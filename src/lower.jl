@@ -149,7 +149,7 @@ thunk_access(node, ctx, tns::Virtual) = thunk_access(node, ctx, tns.arg)
 (ctx::LowerJulia)(::Pass, ::DefaultStyle) = quote end
 
 function (ctx::LowerJulia)(root::Assign, ::DefaultStyle)
-    if root.op == Literal(nothing)
+    if root.op == literal(nothing)
         rhs = ctx(root.rhs)
     else
         rhs = ctx(call(root.op, root.lhs, root.rhs))
@@ -179,9 +179,6 @@ end
 
 IndexNotation.isliteral(::Union{Symbol, Expr, Missing}) =  false
 (ctx::LowerJulia)(root::Union{Symbol, Expr}, ::DefaultStyle) = root
-(ctx::LowerJulia)(root::Literal, ::DefaultStyle) = lowerjulia_literal(root.val)
-lowerjulia_literal(val) = val
-lowerjulia_literal(val::Union{Symbol, Expr, Missing}) = QuoteNode(val)
 
 function (ctx::LowerJulia)(root, ::DefaultStyle)
     if isliteral(root)
@@ -193,6 +190,14 @@ end
 function (ctx::LowerJulia)(root::CINNode, ::DefaultStyle)
     if root.head === value
         return root.val
+    elseif root.head === literal
+        if typeof(root.val) === Symbol ||
+          typeof(root.val) === Expr ||
+          typeof(root.val) === Missing
+            return QuoteNode(root.val)
+        else
+            return root.val
+        end
     else
         error("unimplemented")
     end

@@ -5,6 +5,7 @@ abstract type IndexTerminal <: IndexExpression end
 
 @enum CINHead begin
     value=1
+    literal=2
 end
 
 struct CINNode <: IndexNode
@@ -19,7 +20,7 @@ isvalue(node::CINNode) = node.head === value
 isvalue(node) = false
 
 
-SyntaxInterface.istree(node::CINNode) = node.head > value
+SyntaxInterface.istree(node::CINNode) = node.head > literal
 
 function CINNode(op::CINHead, args::Union{Tuple, Vector})
     if op === value
@@ -29,6 +30,12 @@ function CINNode(op::CINHead, args::Union{Tuple, Vector})
             return CINNode(value, args[1], args[2], IndexNode[])
         else
             error("wrong number of arguments to value(...)")
+        end
+    elseif op === literal
+        if length(args) == 1
+            return CINNode(literal, args[1], nothing, IndexNode[])
+        else
+            error("wrong number of arguments to literal(...)")
         end
     else
         error("unimplemented")
@@ -43,7 +50,9 @@ function Base.getproperty(node::CINNode, name::Symbol)
     if name === :head || name === :val || name === :type || name === :args
         return Base.getfield(node, name)
     elseif node.head === value
-        error("type CINNode(:value, ...) has no property $name")
+        error("type CINNode(value, ...) has no property $name")
+    elseif node.head === literal
+        error("type CINNode(literal, ...) has no property $name")
     else
         error("type CINNode has no property $name")
     end
@@ -58,6 +67,8 @@ function Base.show(io::IO, mime::MIME"text/plain", node::CINNode)
             print(io, "::")
             print(io, node.type)
         end
+    elseif node.head === literal
+        print(io, node.val)
     elseif istree(node)
         print(io, operation(node))
         print(io, "(")
@@ -75,6 +86,8 @@ function Base.:(==)(a::CINNode, b::CINNode)
     if !istree(a)
         if a.head === value
             return b.head === value && a.val == b.val && a.type === b.type
+        elseif a.head === literal
+            return b.head === literal && isequal(a.val, b.val) #TODO Feels iffy idk
         else
             error("unimplemented")
         end
@@ -89,6 +102,8 @@ function Base.hash(a::CINNode, h::UInt)
     if !istree(a)
         if a.head === value
             return hash(value, hash(a.val, hash(a.type, h)))
+        elseif a.head === literal
+            return hash(literal, hash(a.val, h))
         else
             error("unimplemented")
         end
@@ -99,8 +114,12 @@ function Base.hash(a::CINNode, h::UInt)
     end
 end
 
-#IndexNotation.isliteral(node::CINNode) = node.head === literal
-IndexNotation.isliteral(node::CINNode) = false
+IndexNotation.isliteral(node::CINNode) = node.head === literal
+
+function Finch.getvalue(ex::CINNode)
+    ex.head === literal || error("expected literal")
+    ex.val
+end
 
 tab = "  "
 
@@ -157,22 +176,6 @@ function Base.:(==)(a::T, b::T) with {T <: IndexNode}
     end
 end
 =#
-
-struct Literal <: IndexTerminal
-    val
-Literal(x::Literal) = error()
-Literal(x) = new(x)
-end
-
-
-SyntaxInterface.istree(::Literal) = false
-Base.hash(ex::Literal, h::UInt) = hash(Literal, hash(ex.val, h))
-display_expression(io, mime, ex::Literal) = print(io, ex.val)
-Finch.IndexNotation.isliteral(::Literal) =  true
-Finch.getvalue(ex::Literal) = ex.val
-Base.:(==)(a::Literal, b::Literal) = isequal(a.val, b.val)
-Base.isequal(a::Literal, b::Literal) = isequal(a.val, b.val)
-
 
 struct Virtual <: IndexTerminal
     arg
@@ -423,7 +426,7 @@ end
 SyntaxInterface.istree(::Assign)= true
 SyntaxInterface.operation(stmt::Assign) = assign
 function SyntaxInterface.arguments(stmt::Assign)
-    if (stmt.op === nothing || stmt.op == Literal(nothing))
+    if (stmt.op === nothing || stmt.op == literal(nothing))
         Any[stmt.lhs, stmt.rhs]
     else
         Any[stmt.lhs, stmt.op, stmt.rhs]
@@ -435,7 +438,7 @@ function display_statement(io, mime, stmt::Assign, level)
     print(io, tab^level)
     display_expression(io, mime, stmt.lhs)
     print(io, " ")
-    if (stmt.op !== nothing && stmt.op != Literal(nothing)) #TODO this feels kinda garbage.
+    if (stmt.op !== nothing && stmt.op != literal(nothing)) #TODO this feels kinda garbage.
         display_expression(io, mime, stmt.op)
     end
     print(io, "= ")

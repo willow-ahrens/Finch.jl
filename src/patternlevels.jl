@@ -69,7 +69,7 @@ assemble!(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode) = fbr.lvl
 reinitialize!(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode) = fbr.lvl
 
 function refurl(fbr::VirtualFiber{VirtualPatternLevel}, ctx, ::Read)
-    Simplify(Literal(true))
+    Simplify(literal(true))
 end
 
 hasdefaultcheck(::VirtualPatternLevel) = true

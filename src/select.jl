@@ -35,13 +35,13 @@ function chunkify_access(node, ctx, ::Select)
         tns = Pipeline([
             Phase(
                 stride = (ctx, idx, ext) -> value(:($sym - 1)),
-                body = (start, step) -> Run(body=Simplify(Literal(false)))
+                body = (start, step) -> Run(body=Simplify(literal(false)))
             ),
             Phase(
                 stride = (ctx, idx, ext) -> value(sym),
-                body = (start, step) -> Run(body=Simplify(Literal(true))),
+                body = (start, step) -> Run(body=Simplify(literal(true))),
             ),
-            Phase(body = (start, step) -> Run(body=Simplify(Literal(false))))
+            Phase(body = (start, step) -> Run(body=Simplify(literal(false))))
         ])
         access(tns, node.mode, node.idxs[2])
     else

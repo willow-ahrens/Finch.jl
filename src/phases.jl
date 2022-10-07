@@ -90,7 +90,7 @@ function (ctx::LowerJulia)(root::Chunk, ::PhaseStyle)
         $i = $(ctx(getstop(ext_2))) + 1
     end
 
-    if simplify(@f $(getlower(ext_2)) >= 1) == Literal(true)
+    if simplify(@f $(getlower(ext_2)) >= 1) == literal(true)
         return body
     else
         return quote

@@ -44,7 +44,7 @@ end
             body = truncate_weak(chunk, ctx, ext, ext_2),
             epilogue = next(ctx, idx, ext_2)
         ),
-        Literal(true) => 
+        literal(true) => 
             truncate_strong(chunk, ctx, ext, ext_2),
         ])
 end
@@ -53,7 +53,7 @@ IndexNotation.isliteral(::Step) =  false
 
 (ctx::Stylize{LowerJulia})(node::Step) = PhaseStyle()
 
-(ctx::PhaseStride)(node::Step) = Narrow(Extent(start = getstart(ctx.ext), stop = node.stride(ctx.ctx, ctx.idx, ctx.ext), lower = Literal(1)))
+(ctx::PhaseStride)(node::Step) = Narrow(Extent(start = getstart(ctx.ext), stop = node.stride(ctx.ctx, ctx.idx, ctx.ext), lower = literal(1)))
 
 (ctx::PhaseBodyVisitor)(node::Step) = node.body(ctx.ctx, ctx.idx, ctx.ext, ctx.ext_2)
 
