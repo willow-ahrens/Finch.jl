@@ -109,7 +109,7 @@ end
 Finch.getname(node::VirtualStaticOffset) = gensym()
 Finch.setname(node::VirtualStaticOffset, name) = node
 
-get_furl_root_access(idx::Access, ::VirtualStaticOffset) = get_furl_root(idx.idxs[1])
+get_furl_root_access(idx, ::VirtualStaticOffset) = get_furl_root(idx.idxs[1])
 function exfurl_access(tns, ctx, mode, idx, node::VirtualStaticOffset)
     body = Shift(tns, node.delta)
     exfurl(body, ctx, mode, idx.idxs[1])

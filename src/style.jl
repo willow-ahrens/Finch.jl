@@ -13,10 +13,17 @@ function (ctx::Stylize)(node)
     return DefaultStyle()
 end
 
-(ctx::Finch.Stylize)(node::Virtual) = ctx(node.arg)
-(ctx::Finch.Stylize)(node::Access) = mapreduce(ctx, result_style, arguments(node); init=stylize_access(node, ctx, node.tns))
-stylize_access(node, ctx, tns::Virtual) = 
-stylize_access(node, ctx, tns.arg)
+function (ctx::Stylize)(node::CINNode)
+    if node.head === virtual
+        ctx(node.val)
+    elseif node.head === access && node.tns isa CINNode && node.tns.head === virtual
+        mapreduce(ctx, result_style, arguments(node); init=stylize_access(node, ctx, node.tns))
+    elseif istree(node)
+        return mapreduce(ctx, result_style, arguments(node); init=DefaultStyle())
+    end
+    return DefaultStyle()
+end
+
 stylize_access(node, ctx, @nospecialize tns) = DefaultStyle()
 
 @nospecialize

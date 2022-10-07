@@ -76,10 +76,20 @@ function (ctx::PipelineVisitor)(node)
         [[] => node]
     end
 end
-(ctx::PipelineVisitor)(node::Virtual) = ctx(node.arg)
+function (ctx::PipelineVisitor)(node::CINNode)
+    if node.head === virtual
+        ctx(node.val)
+    elseif istree(node)
+        map(flatten((product(map(ctx, arguments(node))...),))) do phases
+            keys = map(first, phases)
+            bodies = map(last, phases)
+            return reduce(vcat, keys) => similarterm(node, operation(node), collect(bodies))
+        end
+    else
+        [[] => node]
+    end
+end
 (ctx::PipelineVisitor)(node::Pipeline) = enumerate(node.phases)
-
-shiftdim(ext::Virtual, body) = shiftdim(ext.arg, body)
 
 function (ctx::PipelineVisitor)(node::Shift)
     map(PipelineVisitor(; kwfields(ctx)..., ext = shiftdim(ctx.ext, call(-, node.delta)))(node.body)) do (keys, body)

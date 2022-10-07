@@ -57,7 +57,7 @@ end
 Finch.getname(node::VirtualPermit) = gensym()
 Finch.setname(node::VirtualPermit, name) = node
 
-get_furl_root_access(idx::Access, ::VirtualPermit) = get_furl_root(idx.idxs[1])
+get_furl_root_access(idx, ::VirtualPermit) = get_furl_root(idx.idxs[1])
 function exfurl_access(tns, ctx, mode, idx, node::VirtualPermit)
     ext_2 = node.I
     body = Pipeline([

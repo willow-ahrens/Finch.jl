@@ -141,15 +141,25 @@ end
 get_furl_root(idx) = nothing
 get_furl_root(idx::Name) = idx
 get_furl_root(idx::Protocol) = get_furl_root(idx.idx)
-get_furl_root(idx::Access) = get_furl_root_access(idx, idx.tns)
-get_furl_root_access(idx, tns::Virtual) = get_furl_root_access(idx, tns.arg)
+function get_furl_root(idx::CINNode)
+    if idx.head === access && idx.tns.head === virtual
+        get_furl_root_access(idx, idx.tns.val)
+    else
+        return nothing
+    end
+end
 get_furl_root_access(idx, tns) = nothing
 #These are also good examples of where modifiers might be great.
 
 refurl(tns, ctx, mode, idxs...) = access(tns, mode, idxs...)
 exfurl(tns, ctx, mode, idx::Name) = tns
-exfurl(tns, ctx, mode, idx::Access) = exfurl_access(tns, ctx, mode, idx, idx.tns)
-exfurl_access(arr, ctx, mode, idx, tns::Virtual) = exfurl_access(arr, ctx, mode, idx, tns.arg)
+function exfurl(tns, ctx, mode, idx::CINNode)
+    if idx.head === access && idx.tns.head === virtual
+        exfurl_access(tns, ctx, mode, idx, idx.tns.val)
+    else
+        error("unimplemented")
+    end
+end
 
 function Base.show(io::IO, fbr::Fiber)
     print(io, "Fiber(")

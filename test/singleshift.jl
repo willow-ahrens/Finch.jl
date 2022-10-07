@@ -53,7 +53,7 @@ function Finch.chunkify_access(node, ctx, vec::VirtualSingleShift{Tv, Ti}) where
             ),
             delta = value(:($(vec.ex).delta), Ti)
         )
-        Access(tns, node.mode, node.idxs)
+        access(tns, node.mode, node.idxs...)
     else
         node
     end

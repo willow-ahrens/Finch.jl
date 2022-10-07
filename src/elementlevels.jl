@@ -127,7 +127,7 @@ function refurl(fbr::VirtualFiber{VirtualElementLevel}, ctx, ::Read)
         preamble = quote
             $(lvl.val) = $(lvl.ex).val[$(ctx(envposition(fbr.env)))]
         end,
-        body = Access(fbr, Read(), []),
+        body = access(fbr, Read()),
     )
 end
 
@@ -138,7 +138,7 @@ function refurl(fbr::VirtualFiber{VirtualElementLevel}, ctx, ::Write)
         preamble = quote
             $(lvl.val) = $(lvl.D)
         end,
-        body = Access(fbr, Write(), []),
+        body = access(fbr, Write()),
         epilogue = quote
             $(lvl.ex).val[$(ctx(envposition(fbr.env)))] = $(lvl.val)
         end,
@@ -152,14 +152,14 @@ function refurl(fbr::VirtualFiber{VirtualElementLevel}, ctx, ::Update)
         preamble = quote
             $(lvl.val) = $(lvl.ex).val[$(ctx(envposition(fbr.env)))]
         end,
-        body = Access(fbr, Update(), []),
+        body = access(fbr, Update()),
         epilogue = quote
             $(lvl.ex).val[$(ctx(envposition(fbr.env)))] = $(lvl.val)
         end,
     )
 end
 
-function lowerjulia_access(ctx::Finch.LowerJulia, node::Access, tns::VirtualFiber{VirtualElementLevel})
+function lowerjulia_access(ctx::Finch.LowerJulia, node, tns::VirtualFiber{VirtualElementLevel})
     @assert isempty(node.idxs)
 
     if node.mode isa Union{Write, Update} && envdefaultcheck(tns.env) !== nothing

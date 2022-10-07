@@ -102,7 +102,9 @@ function (ctx::DeclareDimensions)(node::Dimensionalize, dim)
     ctx(node.body, dim)
 end
 function (ctx::DeclareDimensions)(node::CINNode, dim)
-    if node.head === with
+    if node.head === access && node.tns isa CINNode && node.tns.head === virtual
+        declare_dimensions_access(node, ctx, node.tns.val, dim)
+    elseif node.head === with
         prod = ctx(node.prod, nodim)
         (prod, _) = InferDimensions(;kwfields(ctx)...)(prod)
         cons = ctx(node.cons, nodim)
@@ -114,9 +116,12 @@ function (ctx::DeclareDimensions)(node::CINNode, dim)
     end
 end
 function (ctx::InferDimensions)(node::CINNode)
-    if node.head === with
+    if node.head === access && node.tns isa CINNode && node.tns.head === virtual
+        infer_dimensions_access(node, ctx, node.tns.val)
+    elseif node.head === with
         (cons, _) = ctx(node.cons)
         (with(cons, node.prod), nodim)
+    
     elseif istree(node)
         (similarterm(node, operation(node), map(first, map(ctx, arguments(node)))), nodim)
     else
@@ -138,8 +143,6 @@ function (ctx::InferDimensions)(node::Protocol)
     (protocol(idx, node.val), dim)
 end
 
-(ctx::DeclareDimensions)(node::Access, dim) = declare_dimensions_access(node, ctx, node.tns, dim)
-declare_dimensions_access(node, ctx, tns::Virtual, dim) = declare_dimensions_access(node, ctx, tns.arg, dim)
 declare_dimensions_access(node, ctx, tns::Dimensionalize, dim) = declare_dimensions_access(node, ctx, tns.body, dim)
 function declare_dimensions_access(node, ctx, tns, dim)
     if haskey(ctx.shapes, getname(tns))
@@ -152,9 +155,6 @@ function declare_dimensions_access(node, ctx, tns, dim)
     access(tns, node.mode, idxs...)
 end
 
-(ctx::InferDimensions)(node::Access) = infer_dimensions_access(node, ctx, node.tns)
-#TODO this would be a good candidate for an index modifier node
-infer_dimensions_access(node, ctx, tns::Virtual) = infer_dimensions_access(node, ctx, tns.arg)
 function infer_dimensions_access(node, ctx, tns)
     res = map(ctx, node.idxs)
     dims = map(resolvedim, map(last, res))
@@ -237,14 +237,39 @@ getlower(ext::Extent) = ext.lower
 getupper(ext::Extent) = ext.upper
 extent(ext::Extent) = @f $(ext.stop) - $(ext.start) + 1
 
-getstart(ext::Virtual) = getstart(ext.arg)
-getstop(ext::Virtual) = getstop(ext.arg)
-getlower(ext::Virtual) = getlower(ext.arg)
-getupper(ext::Virtual) = getupper(ext.arg)
-extent(ext::Virtual) = extent(ext.arg)
+function getstop(ext::CINNode)
+    if ext.head === virtual
+        getstop(ext.val)
+    else
+        ext
+    end
+end
+function getstart(ext::CINNode)
+    if ext.head === virtual
+        getstart(ext.val)
+    else
+        ext
+    end
+end
+function getlower(ext::CINNode)
+    if ext.head === virtual
+        getlower(ext.val)
+    else
+        1
+    end
+end
+function getupper(ext::CINNode)
+    if ext.head === virtual
+        getupper(ext.val)
+    else
+        1
+    end
+end
 #TODO I don't like this def
 function extent(ext::CINNode)
-    if ext.head === value
+    if ext.head === virtual
+        extent(ext.val)
+    elseif ext.head === value
         return 1
     elseif ext.head === literal
         return 1
@@ -326,7 +351,13 @@ struct Narrow{Ext}
     ext::Ext
 end
 
-Narrow(ex::Virtual) = Narrow(ex.arg)
+function Narrow(ext::CINNode)
+    if ext.head === virtual
+        Narrow(ext.val)
+    else
+        error("unimplemented")
+    end
+end
 
 IndexNotation.isliteral(::Narrow) = false
 
@@ -343,7 +374,13 @@ struct Widen{Ext}
     ext::Ext
 end
 
-Widen(ex::Virtual) = Widen(ex.arg)
+function Widen(ext::CINNode)
+    if ext.head === virtual
+        Widen(ext.val)
+    else
+        error("unimplemented")
+    end
+end
 
 IndexNotation.isliteral(::Widen) = false
 

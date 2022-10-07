@@ -128,7 +128,21 @@ function (ctx::LowerJulia)(node, ::ThunkStyle)
         (ctx2)(node)
     end
 end
-(ctx::ThunkVisitor)(node::Virtual) = ctx(node.arg)
+
+function (ctx::ThunkVisitor)(node::CINNode)
+    if node.head === virtual
+        ctx(node.val)
+    elseif node.head === access && node.tns isa CINNode && node.tns.head === virtual
+        #TODO this case morally shouldn't exist
+        thunk_access(node, ctx, node.tns)
+    elseif istree(node)
+        similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        node
+    end
+end
+
+thunk_access(node, ctx, tns) = similarterm(node, operation(node), map(ctx, arguments(node)))
 
 function (ctx::ThunkVisitor)(node::Thunk)
     push!(ctx.ctx.preamble, node.preamble)
@@ -139,10 +153,6 @@ function (ctx::ThunkVisitor)(node::Thunk)
     node.body
 end
 
-#TODO this shouldn't exist
-(ctx::ThunkVisitor)(node::Access) = thunk_access(node, ctx, node.tns)
-thunk_access(node, ctx, tns) = similarterm(node, operation(node), map(ctx, arguments(node)))
-thunk_access(node, ctx, tns::Virtual) = thunk_access(node, ctx, tns.arg)
 
 #default lowering
 
@@ -214,6 +224,16 @@ function (ctx::LowerJulia)(root::CINNode, ::DefaultStyle)
                 res
             end)
         end
+    elseif root.head === access
+        if root.tns isa CINNode && root.tns.head === virtual
+            lowerjulia_access(ctx, root, root.tns)
+        else
+            tns = ctx(tns)
+            idxs = map(ctx, root.idxs)
+            :($(ctx(tns))[$(idxs...)])
+        end
+    elseif root.head === virtual
+        ctx(root.val)
     else
         error("unimplemented")
     end
@@ -231,20 +251,14 @@ function (ctx::LowerJulia)(root::Multi, ::DefaultStyle)
     thunk
 end
 
-(ctx::Finch.LowerJulia)(node::Access, style::DefaultStyle) = lowerjulia_access(ctx, node, node.tns)
-
-(ctx::Finch.LowerJulia)(node::Virtual, style::DefaultStyle) = (ctx)(node.arg) 
-
-lowerjulia_access(ctx::Finch.LowerJulia, node::Access, tns::Virtual) = lowerjulia_access(ctx, node, tns.arg)
-
-function lowerjulia_access(ctx::Finch.LowerJulia, node::Access, tns)
+function lowerjulia_access(ctx, node, tns)
     tns = ctx(tns)
     idxs = map(ctx, node.idxs)
     :($(ctx(tns))[$(idxs...)])
 end
 
 
-function lowerjulia_access(ctx::Finch.LowerJulia, node::Access, tns::Number)
+function lowerjulia_access(ctx, node, tns::Number)
     @assert node.mode === Read()
     tns
 end
@@ -309,6 +323,17 @@ function (ctx::ForLoopVisitor)(node)
     end
 end
 
+function (ctx::ForLoopVisitor)(node::CINNode)
+    if node.head === access && node.tns isa CINNode && node.tns.head === virtual
+        #TODO this is a problem
+        something(unchunk(node.tns.val, ctx), node)
+    elseif istree(node)
+        similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        node
+    end
+end
+
 @kwdef struct Lookup
     val = nothing
     body
@@ -328,6 +353,4 @@ function (ctx::ForLoopVisitor)(node::Lookup)
 end
 
 unchunk(node, ctx) = nothing
-unchunk(node::Virtual, ctx) = unchunk(node.arg, ctx)
-(ctx::ForLoopVisitor)(node::Access) = something(unchunk(node.tns, ctx), node)
 unchunk(node::Lookup, ctx::ForLoopVisitor) = node.body(ctx.val)

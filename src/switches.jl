@@ -37,8 +37,21 @@ function (ctx::SwitchVisitor)(node)
         [(literal(true) => node)]
     end
 end
+
+function (ctx::SwitchVisitor)(node::CINNode)
+    if node.head === virtual
+        ctx(node.val)
+    elseif istree(node)
+        map(product(map(ctx, arguments(node))...)) do case
+            guards = map(first, case)
+            bodies = map(last, case)
+            return simplify(@f(and($(guards...)))) => similarterm(node, operation(node), collect(bodies))
+        end
+    else
+        [(literal(true) => node)]
+    end
+end
 (ctx::SwitchVisitor)(node::Switch) = node.cases
-(ctx::SwitchVisitor)(node::Virtual) = ctx(node.arg)
 
 function (ctx::LowerJulia)(stmt, ::SwitchStyle)
     cases = (SwitchVisitor())(stmt)

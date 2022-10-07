@@ -78,7 +78,7 @@ function Finch.chunkify_access(node, ctx, vec::VirtualSimpleRunLength{Tv, Ti}) w
                     )
                 )
             )
-            Access(tns, node.mode, node.idxs)
+            access(tns, node.mode, node.idxs...)
         else
             tns = Thunk(
                 preamble = quote
@@ -99,7 +99,7 @@ function Finch.chunkify_access(node, ctx, vec::VirtualSimpleRunLength{Tv, Ti}) w
                     )
                 )
             )
-            Access(tns, node.mode, node.idxs)
+            access(tns, node.mode, node.idxs...)
         end
     else
         node

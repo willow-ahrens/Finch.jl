@@ -24,7 +24,16 @@ function (ctx::PhaseStride)(node)
         return nodim
     end
 end
-(ctx::PhaseStride)(node::Virtual) = ctx(node.arg)
+
+function (ctx::PhaseStride)(node::CINNode)
+    if node.head === virtual
+        ctx(node.val)
+    elseif istree(node)
+        return mapreduce(ctx, resultdim, arguments(node), init = nodim)
+    else
+        return nodim
+    end
+end
 
 (ctx::PhaseStride)(node::Phase) = Narrow(node.range(ctx.ctx, ctx.idx, ctx.ext))
 (ctx::PhaseStride)(node::Shift) = shiftdim(PhaseStride(;kwfields(ctx)..., ext = shiftdim(ctx.ext, call(-, node.delta)))(node.body), node.delta)
@@ -43,7 +52,15 @@ function (ctx::PhaseBodyVisitor)(node)
         return node
     end
 end
-(ctx::PhaseBodyVisitor)(node::Virtual) = ctx(node.arg)
+function (ctx::PhaseBodyVisitor)(node::CINNode)
+    if node.head === virtual
+        ctx(node.val)
+    elseif istree(node)
+        return similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        return node
+    end
+end
 
 (ctx::PhaseBodyVisitor)(node::Phase) = node.body(getstart(ctx.ext_2), getstop(ctx.ext_2))
 (ctx::PhaseBodyVisitor)(node::Spike) = truncate(node, ctx.ctx, ctx.ext, ctx.ext_2) #TODO This should be called on everything

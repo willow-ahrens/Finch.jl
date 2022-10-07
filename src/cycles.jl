@@ -39,6 +39,14 @@ function (ctx::CycleVisitor)(node)
     end
 end
 
-(ctx::CycleVisitor)(node::Virtual) = ctx(node.arg)
+function (ctx::CycleVisitor)(node::CINNode)
+    if node.head === virtual
+        ctx(node.val)
+    elseif istree(node)
+        return similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        return node
+    end
+end
 
 (ctx::CycleVisitor)(node::Shift) = Shift(CycleVisitor(; kwfields(ctx)..., ext=shiftdim(ctx.ext, call(-, node.delta)))(node.body), node.delta)

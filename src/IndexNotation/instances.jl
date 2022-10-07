@@ -109,7 +109,7 @@ struct ValueInstance{arg} end
 @inline index_terminal(arg::Type) = literal(arg)
 @inline index_terminal(arg::Function) = literal(arg)
 @inline index_terminal(arg::IndexNode) = arg
-@inline index_terminal(arg) = isliteral(arg) ? literal(arg) : Virtual(arg)
+@inline index_terminal(arg) = isliteral(arg) ? literal(arg) : virtual(arg)
 
 Base.convert(::Type{IndexNode}, x) = index_terminal(x)
 Base.convert(::Type{IndexNode}, x::IndexNode) = x

@@ -141,7 +141,15 @@ function (ctx::SimplifyVisitor)(node)
     end
 end
 
-(ctx::SimplifyVisitor)(node::Virtual) = ctx(node.arg)
+function (ctx::SimplifyVisitor)(node::CINNode)
+    if node.head === virtual
+        convert(IndexNode, ctx(node.val))
+    elseif istree(node)
+        similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        node
+    end
+end
 
 (ctx::SimplifyVisitor)(node::Simplify) = node.body
 
@@ -225,13 +233,12 @@ function comparators(node::CINNode)
         return (node.head, Lexicography(node.val), Lexicography(node.type))
     elseif node.head === literal
         return (node.head, Lexicography(node.val))
+    elseif node.head === virtual
+        return (node.head, Lexicography(node.val))
     else
         error("unimplemented")
     end
 end
-
-priority(::Virtual) = (3,5)
-comparators(x::Virtual) = (Lexicography(x.arg), )
 
 priority(::IndexNode) = (3,Inf)
 comparators(x::IndexNode) = (@assert istree(x); (string(operation(x)), map(Lexicography, arguments(x))...))

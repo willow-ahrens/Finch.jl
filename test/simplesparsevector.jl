@@ -90,7 +90,7 @@ function Finch.chunkify_access(node, ctx, vec::VirtualSimpleSparseVector{Tv, Ti}
                     )
                 )
             )
-            return Access(tns, node.mode, node.idxs)
+            return access(tns, node.mode, node.idxs...)
         else
             push!(ctx.ctx.preamble, quote
                 $my_p = 0
@@ -112,7 +112,7 @@ function Finch.chunkify_access(node, ctx, vec::VirtualSimpleSparseVector{Tv, Ti}
                     end
                 )
             )
-            return Access(tns, node.mode, node.idxs)
+            return access(tns, node.mode, node.idxs...)
         end
     else
         node

@@ -41,9 +41,16 @@ function (ctx::AccessRunVisitor)(node)
         return node
     end
 end
-(ctx::AccessRunVisitor)(node::Virtual) = ctx(node.arg)
 
-(ctx::AccessRunVisitor)(node::Access) = something(unchunk(node.tns, ctx), node)
+function (ctx::AccessRunVisitor)(node::CINNode)
+    if node.head === access && node.tns isa CINNode && node.tns.head === virtual
+        something(unchunk(node.tns.val, ctx), node)
+    elseif istree(node)
+        return similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        return node
+    end
+end
 unchunk(node::Run, ::AccessRunVisitor) = node.body
 unchunk(node::Shift, ctx::AccessRunVisitor) = unchunk(node.body, ctx)
 
@@ -59,7 +66,14 @@ IndexNotation.isliteral(::AcceptRun) = false
 
 default(node::AcceptRun) = node.val
 
-Finch.default(x::Virtual) = Finch.default(x.arg) #TODO this should go somewhere else
+#TODO this should go somewhere else
+function Finch.default(x::CINNode)
+    if x.head === virtual
+        Finch.default(x.val)
+    else
+        error("unimplemented")
+    end
+end
 
 Base.show(io::IO, ex::AcceptRun) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::AcceptRun)
@@ -100,9 +114,19 @@ function (ctx::AcceptRunVisitor)(node)
         return node
     end
 end
-(ctx::AcceptRunVisitor)(node::Virtual) = ctx(node.arg)
 
-(ctx::AcceptRunVisitor)(node::Access) = node.mode === Read() ? node : something(unchunk(node.tns, ctx), node)
+function (ctx::AcceptRunVisitor)(node::CINNode)
+    if node.head === virtual
+        ctx(node.val)
+    elseif node.head === access && node.tns isa CINNode && node.tns.head === virtual
+        node.mode === Read() ? node : something(unchunk(node.tns.val, ctx), node)
+    elseif istree(node)
+        return similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        return node
+    end
+end
+
 unchunk(node::AcceptRun, ctx::AcceptRunVisitor) = node.body(ctx.ctx, getstart(ctx.ext), getstop(ctx.ext))
 unchunk(node::Shift, ctx::AcceptRunVisitor) = unchunk(node.body, AcceptRunVisitor(;kwfields(ctx)..., ext = shiftdim(ctx.ext, call(-, node.delta))))
 

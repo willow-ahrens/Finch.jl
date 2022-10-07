@@ -46,7 +46,7 @@ function virtualize(ex, ::Type{IndexNotation.AccessInstance{Tns, Mode, Idxs}}, c
     idxs = map(enumerate(Idxs.parameters)) do (n, Idx)
         virtualize(:($ex.idxs[$n]), Idx, ctx)
     end
-    Access(tns, virtualize(:($ex.mode), Mode, ctx), idxs)
+    access(tns, virtualize(:($ex.mode), Mode, ctx), idxs...)
 end
 virtualize(ex, ::Type{Read}, ctx) = Read()
 virtualize(ex, ::Type{Write}, ctx) = Write()

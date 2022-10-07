@@ -30,7 +30,6 @@ Tensors can have the same name only if they are `===` to each other. The names
 of indices are used to distinguish the loops they reference.
 """
 function getname end
-getname(x) = (println(x); error())
 
 """
     setname(ex, name)

@@ -20,7 +20,6 @@ end
 
 TransformSSA(freshen) = TransformSSA(Dict(), [], freshen)
 
-resolvename!(root::Virtual, ctx::TransformSSA) = resolvename!(root.arg, ctx)
 function resolvename!(root, ctx::TransformSSA)
     name = getname(root)
     if haskey(ctx.renames, name)
@@ -37,7 +36,6 @@ function resolvename!(root, ctx::TransformSSA)
     end
 end
 
-definename!(root::Virtual, ctx::TransformSSA) = definename!(root.arg, ctx)
 function definename!(root, ctx::TransformSSA)
     name = getname(root)
     push!(ctx.binds, name)
@@ -88,18 +86,16 @@ function (ctx::TransformSSA)(node::CINNode)
             cons = ctx(node.cons)
             return with(cons, prod)
         end
+    elseif node.head === access
+        if node.mode != Read()
+            tns = definename!(node.tns, ctx)
+        else
+            tns = resolvename!(node.tns, ctx)
+        end
+        return access(tns, node.mode, map(ctx, node.idxs)...)
     elseif istree(node)
         similarterm(node, operation(node), map(ctx, arguments(node)))
     else
         node
     end
-end
-
-function (ctx::TransformSSA)(root::Access)
-    if root.mode != Read()
-        tns = definename!(root.tns, ctx)
-    else
-        tns = resolvename!(root.tns, ctx)
-    end
-    return Access(tns, root.mode, map(ctx, root.idxs))
 end

@@ -74,7 +74,7 @@ end
 
 hasdefaultcheck(::VirtualPatternLevel) = true
 
-function lowerjulia_access(ctx::LowerJulia, node::Access, tns::VirtualFiber{VirtualPatternLevel})
+function lowerjulia_access(ctx::LowerJulia, node, tns::VirtualFiber{VirtualPatternLevel})
     @assert isempty(node.idxs)
 
     node.mode == Read() && return true

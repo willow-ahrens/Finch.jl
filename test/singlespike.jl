@@ -51,7 +51,7 @@ function Finch.chunkify_access(node, ctx, vec::VirtualSingleSpike{Tv}) where {Tv
             body = Simplify(zero(Tv)),
             tail = value(:($(vec.ex).tail), Tv)
         )
-        Access(tns, node.mode, node.idxs)
+        access(tns, node.mode, node.idxs...)
     else
         node
     end

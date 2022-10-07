@@ -62,8 +62,15 @@ function (ctx::SelectVisitor)(node)
     end
 end
 
-(ctx::Finch.SelectVisitor)(node::Access) = select_access(node, ctx, node.tns)
-select_access(node, ctx, tns::Virtual) = select_access(node, ctx, tns.arg)
+function (ctx::SelectVisitor)(node::CINNode)
+    if node.head === access && node.tns isa CINNode && node.tns.head === virtual
+        select_access(node, ctx, node.tns.val)
+    elseif istree(node)
+        similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        node
+    end
+end
 select_access(node, ctx, tns) = similarterm(node, operation(node), map(ctx, arguments(node)))
 
 struct SelectStyle end

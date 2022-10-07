@@ -7,8 +7,10 @@ abstract type IndexTerminal <: IndexExpression end
 
 @enum CINHead begin
     value=1
-    literal=2
-    with=3
+    virtual=2
+    literal=3
+    with=4
+    access=5
 end
 
 struct CINNode <: IndexNode
@@ -44,15 +46,27 @@ function CINNode(op::CINHead, args::Vector)
         end
     elseif op === literal
         if length(args) == 1
-            return CINNode(literal, args[1], nothing, IndexNode[])
+            return CINNode(op, args[1], nothing, IndexNode[])
         else
-            error("wrong number of arguments to literal(...)")
+            error("wrong number of arguments to $op(...)")
+        end
+    elseif op === virtual
+        if length(args) == 1
+            return CINNode(op, args[1], nothing, IndexNode[])
+        else
+            error("wrong number of arguments to $op(...)")
         end
     elseif op === with
         if length(args) == 2
             return CINNode(with, nothing, nothing, args)
         else
             error("wrong number of arguments to with(...)")
+        end
+    elseif op === access
+        if length(args) >= 2
+            return CINNode(access, nothing, nothing, args)
+        else
+            error("wrong number of arguments to access(...)")
         end
     else
         error("unimplemented")
@@ -70,6 +84,8 @@ function Base.getproperty(node::CINNode, name::Symbol)
         error("type CINNode(value, ...) has no property $name")
     elseif node.head === literal
         error("type CINNode(literal, ...) has no property $name")
+    elseif node.head === virtual
+        error("type CINNode(virtual, ...) has no property $name")
     elseif node.head === with
         if name === :cons
             return node.args[1]
@@ -77,6 +93,16 @@ function Base.getproperty(node::CINNode, name::Symbol)
             return node.args[2]
         else
             error("type CINNode(with, ...) has no property $name")
+        end
+    elseif node.head === access
+        if name === :tns
+            return node.args[1]
+        elseif name === :mode
+            return node.args[2]
+        elseif name === :idxs
+            return @view node.args[3:end]
+        else
+            error("type CINNode(access, ...) has no property $name")
         end
     else
         error("type CINNode has no property $name")
@@ -102,6 +128,21 @@ function display_expression(io, mime, node::CINNode)
         end
     elseif node.head === literal
         print(io, node.val)
+    elseif node.head === virtual
+        print(io, "virtual(")
+        print(io, node.val)
+        print(io, ")")
+    elseif node.head === access
+        display_expression(io, mime, ex.tns)
+        print(io, "[")
+        if length(ex.idxs) >= 1
+            for idx in ex.idxs[1:end-1]
+                display_expression(io, mime, idx)
+                print(io, ", ")
+            end
+            display_expression(io, mime, ex.idxs[end])
+        end
+        print(io, "]")
     #elseif istree(node)
     #    print(io, operation(node))
     #    print(io, "(")
@@ -133,6 +174,8 @@ function Base.:(==)(a::CINNode, b::CINNode)
             return b.head === value && a.val == b.val && a.type === b.type
         elseif a.head === literal
             return b.head === literal && isequal(a.val, b.val) #TODO Feels iffy idk
+        elseif a.head === virtual
+            return b.head === virtual && a.val == b.val #TODO Feels iffy idk
         else
             error("unimplemented")
         end
@@ -149,6 +192,8 @@ function Base.hash(a::CINNode, h::UInt)
             return hash(value, hash(a.val, hash(a.type, h)))
         elseif a.head === literal
             return hash(literal, hash(a.val, h))
+        elseif a.head === virtual
+            return hash(virtual, hash(a.val, h))
         else
             error("unimplemented")
         end
@@ -169,10 +214,29 @@ end
 function Finch.getresults(node::CINNode)
     if node.head === with
         Finch.getresults(node.cons)
+    elseif node.head === access
+        [node.tns]
     else
         error("unimplemented")
     end
 end
+
+function Finch.getname(x::CINNode)
+    if x.head === virtual
+        return Finch.getname(x.val)
+    else
+        error("unimplemented")
+    end
+end
+
+function Finch.setname(x::CINNode, name)
+    if x.head === virtual
+        return Finch.setname(x.val, name)
+    else
+        error("unimplemented")
+    end
+end
+
 
 function Base.show(io::IO, mime::MIME"text/plain", stmt::IndexStatement)
     if get(io, :compact, false)
@@ -227,20 +291,6 @@ function Base.:(==)(a::T, b::T) with {T <: IndexNode}
     end
 end
 =#
-
-struct Virtual <: IndexTerminal
-    arg
-end
-
-Base.:(==)(a::Virtual, b::Virtual) where {T} = a.arg == b.arg
-Base.hash(ex::Virtual, h::UInt) where {T} = hash(Virtual, hash(ex.arg, h))
-display_expression(io, mime, ex::Virtual) = print(io, "Virtual($(ex.arg))")
-
-SyntaxInterface.istree(::Virtual) = false
-
-Finch.getname(x::Virtual) = Finch.getname(x.arg)
-
-IndexNotation.isliteral(::Virtual) =  false
 
 struct Pass <: IndexStatement
 	tnss::Vector{IndexNode}
@@ -503,33 +553,3 @@ end
 struct Read <: IndexTerminal end
 struct Write <: IndexTerminal end
 struct Update <: IndexTerminal end
-
-struct Access <: IndexExpression
-    tns::IndexNode
-    mode::IndexNode
-    idxs::Vector{IndexNode}
-end
-Base.:(==)(a::Access, b::Access) = a.tns == b.tns && a.idxs == b.idxs
-
-access(args...) = access!(vcat(Any[], args...))
-access!(args) = Access(popfirst!(args), popfirst!(args), args)
-
-SyntaxInterface.istree(::Access) = true
-SyntaxInterface.operation(ex::Access) = access
-SyntaxInterface.arguments(ex::Access) = Any[ex.tns; ex.mode; ex.idxs]
-SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(access), args) = access!(args)
-
-function display_expression(io, mime, ex::Access)
-    display_expression(io, mime, ex.tns)
-    print(io, "[")
-    if length(ex.idxs) >= 1
-        for idx in ex.idxs[1:end-1]
-            display_expression(io, mime, idx)
-            print(io, ", ")
-        end
-        display_expression(io, mime, ex.idxs[end])
-    end
-    print(io, "]")
-end
-
-Finch.getresults(stmt::Access) = Any[stmt.tns]

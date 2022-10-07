@@ -27,7 +27,7 @@ rewrite_methods = length(methodinstances(RewriteTools))
 #│   tests = 6m49.2s
 #│   finch_methods = 866
 #└   rewrite_methods = 1784
-# After deparameterizing Access and cleaning up:
+# After deparameterizing access and cleaning up:
 #┌ Info: results
 #│   first_run = 39.680086167
 #│   second_run = 0.138437737

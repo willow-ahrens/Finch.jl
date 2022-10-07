@@ -75,7 +75,7 @@ function Finch.chunkify_access(node, ctx, vec::VirtualSingleBlock{Tv, Ti}) where
             ),
             Phase(body = (start, step) -> Run(body = Simplify(literal(vec.D))))
         ])
-        Access(tns, node.mode, node.idxs)
+        access(tns, node.mode, node.idxs...)
     else
         node
     end

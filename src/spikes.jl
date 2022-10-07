@@ -62,7 +62,15 @@ function (ctx::SpikeBodyVisitor)(node)
     end
 end
 
-(ctx::SpikeBodyVisitor)(node::Virtual) = ctx(node.arg)
+function (ctx::SpikeBodyVisitor)(node::CINNode)
+    if node.head === virtual
+        return ctx(node.val)
+    elseif istree(node)
+        similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        truncate(node, ctx.ctx, ctx.ext, ctx.ext_2)
+    end
+end
 
 function (ctx::SpikeBodyVisitor)(node::Spike)
     return Run(node.body)
@@ -89,9 +97,17 @@ function (ctx::SpikeTailVisitor)(node)
     end
 end
 
-(ctx::SpikeTailVisitor)(node::Virtual) = ctx(node.arg)
-
-(ctx::SpikeTailVisitor)(node::Access) = something(unchunk(node.tns, ctx), node)
+function (ctx::SpikeTailVisitor)(node::CINNode)
+    if node.head === access && node.tns isa CINNode && node.tns.head === virtual
+        something(unchunk(node.tns.val, ctx), node)
+    elseif node.tns isa CINNode && node.tns.head === virtual
+        ctx(node.val)
+    elseif istree(node)
+        similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        node
+    end
+end
 unchunk(node::Spike, ctx::SpikeTailVisitor) = node.tail
 unchunk(node::Shift, ctx::SpikeTailVisitor) = unchunk(node.body, SpikeTailVisitor(;kwfields(ctx)..., val = call(-, ctx.val, node.delta)))
 

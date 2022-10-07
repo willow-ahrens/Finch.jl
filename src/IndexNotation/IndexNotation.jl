@@ -13,7 +13,7 @@ module IndexNotation
     export Chunk, chunk
     export Assign, assign
     export Call, call
-    export Access, Read, Write, Update, access, access
+    export Read, Write, Update, access
     export Protocol, protocol
     export Sieve, sieve
     export CINNode, value, isvalue
@@ -27,7 +27,7 @@ module IndexNotation
 
     export @f, @_f, @finch_program, @finch_program_instance
 
-    export isliteral, Virtual
+    export isliteral, virtual
 
     """
         isliteral(ex)

@@ -58,7 +58,7 @@ function finalize!(tns::VirtualScalar, ctx, mode)
     return tns
 end
 
-function lowerjulia_access(ctx::LowerJulia, node::Access, tns::VirtualScalar)
+function lowerjulia_access(ctx::LowerJulia, node, tns::VirtualScalar)
     @assert isempty(node.idxs)
     return tns.val
 end

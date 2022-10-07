@@ -130,7 +130,6 @@ See also: [`initialize!`](@ref)
     escape=[]
 end
 initialize!(tns, ctx, mode, idxs...) = access(tns, mode, idxs...)
-initialize!(tns::Virtual, ctx, mode, idxs...) = initialize!(tns.arg, ctx, mode, idxs...)
 function (ctx::Initialize)(node)
     if istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))
@@ -140,21 +139,19 @@ function (ctx::Initialize)(node)
 end
 
 function (ctx::Initialize)(node::CINNode)
-    if node.head === with
+    if node.head === access && node.tns isa CINNode && node.tns.head === virtual
+        if (ctx.target === nothing || (getname(node.tns) in ctx.target)) && !(getname(node.tns) in ctx.escape)
+            initialize!(node.tns.val, ctx.ctx, node.mode, map(ctx, node.idxs)...)
+        else
+            return access(node.tns, node.mode, map(ctx, node.idxs)...)
+        end
+    elseif node.head === with
         ctx_2 = Initialize(ctx.ctx, ctx.target, union(ctx.escape, map(getname, getresults(node.prod))))
         with(ctx_2(node.cons), ctx_2(node.prod))
     elseif istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))
     else
         return node
-    end
-end
-
-function (ctx::Initialize)(acc::Access)
-    if (ctx.target === nothing || (getname(acc.tns) in ctx.target)) && !(getname(acc.tns) in ctx.escape)
-        initialize!(acc.tns, ctx.ctx, acc.mode, map(ctx, acc.idxs)...)
-    else
-        return Access(acc.tns, acc.mode, map(ctx, acc.idxs))
     end
 end
 
@@ -172,7 +169,6 @@ See also: [`finalize!`](@ref)
     escape=[]
 end
 finalize!(tns, ctx, mode, idxs...) = tns
-finalize!(tns::Virtual, ctx, mode, idxs...) = finalize!(tns.arg, ctx, mode, idxs...)
 function (ctx::Finalize)(node)
     if istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))
@@ -182,21 +178,19 @@ function (ctx::Finalize)(node)
 end
 
 function (ctx::Finalize)(node::CINNode)
-    if node.head === with
+    if node.head === access && node.tns isa CINNode && node.tns.head === virtual
+        if (ctx.target === nothing || (getname(node.tns) in ctx.target)) && !(getname(node.tns) in ctx.escape)
+            access(finalize!(node.tns.val, ctx.ctx, node.mode, node.idxs...), node.mode, node.idxs...)
+        else
+            access(node.tns, node.mode, map(ctx, node.idxs)...)
+        end
+    elseif node.head === with
         ctx_2 = Finalize(ctx.ctx, ctx.target, union(ctx.escape, map(getname, getresults(node.prod))))
         with(ctx_2(node.cons), ctx_2(node.prod))
     elseif istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))
     else
         return node
-    end
-end
-
-function (ctx::Finalize)(acc::Access)
-    if (ctx.target === nothing || (getname(acc.tns) in ctx.target)) && !(getname(acc.tns) in ctx.escape)
-        Access(finalize!(acc.tns, ctx.ctx, acc.mode, acc.idxs...), acc.mode, acc.idxs)
-    else
-        Access(acc.tns, acc.mode, map(ctx, acc.idxs))
     end
 end
 

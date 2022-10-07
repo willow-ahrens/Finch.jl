@@ -19,9 +19,16 @@ function (ctx::ChunkifyVisitor)(node)
     end
 end
 
-(ctx::ChunkifyVisitor)(node::Access) = chunkify_access(node, ctx, node.tns)
+function (ctx::ChunkifyVisitor)(node::CINNode)
+    if node.head === access && node.tns isa CINNode && node.tns.head === virtual
+        chunkify_access(node, ctx, node.tns.val)
+    elseif istree(node)
+        similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        node
+    end
+end
 
-chunkify_access(node, ctx, tns::Virtual) = chunkify_access(node, ctx, tns.arg)
 chunkify_access(node, ctx, tns) = similarterm(node, operation(node), map(ctx, arguments(node)))
 
 function (ctx::LowerJulia)(root::Loop, ::ChunkStyle)

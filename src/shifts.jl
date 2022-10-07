@@ -44,6 +44,15 @@ shiftdim(ext::Narrow, delta) = Narrow(shiftdim(ext.ext, delta))
 shiftdim(ext::NoDimension, delta) = nodim
 shiftdim(ext::DeferDimension, delta) = deferdim
 
+function shiftdim(ext::CINNode, body)
+    if ext.head === virtual
+        shiftdim(ext.val, body)
+    else
+        error("unimplemented")
+    end
+end
+
+
 truncate(node::Shift, ctx, ext, ext_2) = Shift(truncate(node.body, ctx, shiftdim(ext, node.delta), shiftdim(ext_2, node.delta)), node.delta)
 truncate_weak(node::Shift, ctx, ext, ext_2) = Shift(truncate_weak(node.body, ctx, shiftdim(ext, node.delta), shiftdim(ext_2, node.delta)), node.delta)
 truncate_strong(node::Shift, ctx, ext, ext_2) = Shift(truncate_strong(node.body, ctx, shiftdim(ext, node.delta), shiftdim(ext_2, node.delta)), node.delta)
