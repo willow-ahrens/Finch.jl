@@ -97,7 +97,7 @@ void UpdateEdges(struct sssp_data* old_data, struct sssp_data* new_data, int pri
         )\n\
     )\n\
     \n\
-    @finch @loop p j k B[j] <<min>>= ifelse(p == $priority, ifelse(weights[j, k] * priorityQ[p, k] != 0, weights[j, k] + dist[k], $val), $val)\n\
+    @finch @loop j k B[j] <<min>>= ifelse(weights[j, k] * priorityQ[$priority, k] != 0, weights[j, k] + dist[k], $val)\n\
     @finch @loop j new_dist[j] = min(B[j], dist[j])",
     finch_Int64(priority), finch_Int64(N), finch_Int64(P), new_dist, old_data->priorityQ, weights, old_data->dist);
     
