@@ -235,6 +235,8 @@ function comparators(node::CINNode)
         return (node.head, Lexicography(node.val))
     elseif node.head === virtual
         return (node.head, Lexicography(node.val))
+    elseif istree(node)
+        return (node.head, map(Lexicography, node.args))
     else
         error("unimplemented")
     end

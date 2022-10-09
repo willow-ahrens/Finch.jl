@@ -134,7 +134,7 @@ function (ctx::ThunkVisitor)(node::CINNode)
         ctx(node.val)
     elseif node.head === access && node.tns isa CINNode && node.tns.head === virtual
         #TODO this case morally shouldn't exist
-        thunk_access(node, ctx, node.tns)
+        thunk_access(node, ctx, node.tns.val)
     elseif istree(node)
         similarterm(node, operation(node), map(ctx, arguments(node)))
     else
@@ -226,7 +226,7 @@ function (ctx::LowerJulia)(root::CINNode, ::DefaultStyle)
         end
     elseif root.head === access
         if root.tns isa CINNode && root.tns.head === virtual
-            lowerjulia_access(ctx, root, root.tns)
+            lowerjulia_access(ctx, root, root.tns.val)
         else
             tns = ctx(tns)
             idxs = map(ctx, root.idxs)

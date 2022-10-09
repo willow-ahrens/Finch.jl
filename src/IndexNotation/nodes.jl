@@ -122,7 +122,7 @@ function display_expression(io, mime, node::CINNode)
         print(io, "@finch(…)")
     elseif node.head === value
         print(io, node.val)
-        if type !== Any
+        if node.type !== Any
             print(io, "::")
             print(io, node.type)
         end
@@ -133,14 +133,14 @@ function display_expression(io, mime, node::CINNode)
         print(io, node.val)
         print(io, ")")
     elseif node.head === access
-        display_expression(io, mime, ex.tns)
+        display_expression(io, mime, node.tns)
         print(io, "[")
-        if length(ex.idxs) >= 1
-            for idx in ex.idxs[1:end-1]
+        if length(node.idxs) >= 1
+            for idx in node.idxs[1:end-1]
                 display_expression(io, mime, idx)
                 print(io, ", ")
             end
-            display_expression(io, mime, ex.idxs[end])
+            display_expression(io, mime, node.idxs[end])
         end
         print(io, "]")
     #elseif istree(node)

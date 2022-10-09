@@ -100,7 +100,7 @@ end
 function (ctx::SpikeTailVisitor)(node::CINNode)
     if node.head === access && node.tns isa CINNode && node.tns.head === virtual
         something(unchunk(node.tns.val, ctx), node)
-    elseif node.tns isa CINNode && node.tns.head === virtual
+    elseif node isa CINNode && node.head === virtual
         ctx(node.val)
     elseif istree(node)
         similarterm(node, operation(node), map(ctx, arguments(node)))
