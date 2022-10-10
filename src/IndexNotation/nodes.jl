@@ -77,7 +77,7 @@ function CINNode(op::CINHead, args::Vector)
             error("wrong number of arguments to access(...)")
         end
     elseif op === chunk
-        if length(args) != 3
+        if length(args) == 3
             return CINNode(chunk, nothing, nothing, args)
         else
             error("wrong number of arguments to chunk(...)")

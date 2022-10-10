@@ -38,9 +38,9 @@ function (ctx::LowerJulia)(root::Loop, ::ChunkStyle)
     body = (ChunkifyVisitor(ctx, idx))(root.body)
     #TODO add a simplify step here perhaps
     ctx(chunk(
-        idx = idx,
-        ext = ext,
-        body = body
+        idx,
+        ext,
+        body
     ))
 end
 

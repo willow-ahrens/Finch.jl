@@ -100,9 +100,9 @@ function (ctx::LowerJulia)(root::CINNode, ::PhaseStyle)
             $i0 = $i
             $(contain(ctx) do ctx_4
                 (ctx_4)(chunk(
-                    idx = root.idx,
-                    ext = ext_2,
-                    body = body
+                    root.idx,
+                    ext_2,
+                    body
                 ))
             end)
             $i = $(ctx(getstop(ext_2))) + 1
