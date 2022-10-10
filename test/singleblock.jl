@@ -53,7 +53,7 @@ Finch.setsize!(arr::VirtualSingleBlock{Tv, Ti}, ctx::Finch.LowerJulia, mode, dim
 Finch.getname(arr::VirtualSingleBlock) = arr.name
 Finch.setname(arr::VirtualSingleBlock, name) = (arr_2 = deepcopy(arr); arr_2.name = name; arr_2)
 function Finch.stylize_access(node, ctx::Finch.Stylize{LowerJulia}, tns::VirtualSingleBlock)
-    if ctx.root isa CINNode && ctx.root.head === loop && ctx.root.idx == get_furl_root(node.idxs[1])
+    if ctx.root isa CINNode && ctx.root.kind === loop && ctx.root.idx == get_furl_root(node.idxs[1])
         Finch.ChunkStyle()
     else
         Finch.DefaultStyle()

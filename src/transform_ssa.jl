@@ -68,21 +68,21 @@ end
 =#
 
 function (ctx::TransformSSA)(node::CINNode)
-    if node.head === name
+    if node.kind === name
         resolvename!(node, ctx)
-    elseif node.head === with
+    elseif node.kind === with
         contain(ctx) do ctx_2
             prod = ctx_2(node.prod)
             cons = ctx(node.cons)
             return with(cons, prod)
         end
-    elseif node.head === loop
+    elseif node.kind === loop
         contain(ctx) do ctx_2
             idx = definename!(node.idx, ctx_2)
             body = ctx(node.body)
             return loop(idx, body)
         end
-    elseif node.head === access
+    elseif node.kind === access
         if node.mode != Read()
             tns = definename!(node.tns, ctx)
         else

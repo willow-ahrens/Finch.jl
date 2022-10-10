@@ -112,7 +112,7 @@ function stylize_access(node, ctx::Stylize{LowerJulia}, tns::VirtualFiber)
     if !isempty(node.idxs)
         if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
             return SelectStyle()
-        elseif ctx.root isa CINNode && ctx.root.head === loop && ctx.root.idx == get_furl_root(node.idxs[1])
+        elseif ctx.root isa CINNode && ctx.root.kind === loop && ctx.root.idx == get_furl_root(node.idxs[1])
             return ChunkStyle()
         end
     end
@@ -143,9 +143,9 @@ end
 get_furl_root(idx) = nothing
 get_furl_root(idx::Protocol) = get_furl_root(idx.idx)
 function get_furl_root(idx::CINNode)
-    if idx.head === name
+    if idx.kind === name
         return idx
-    elseif idx.head === access && idx.tns.head === virtual
+    elseif idx.kind === access && idx.tns.kind === virtual
         get_furl_root_access(idx, idx.tns.val)
     else
         return nothing
@@ -156,9 +156,9 @@ get_furl_root_access(idx, tns) = nothing
 
 refurl(tns, ctx, mode, idxs...) = access(tns, mode, idxs...)
 function exfurl(tns, ctx, mode, idx::CINNode)
-    if idx.head === name
+    if idx.kind === name
         return tns
-    elseif idx.head === access && idx.tns.head === virtual
+    elseif idx.kind === access && idx.tns.kind === virtual
         exfurl_access(tns, ctx, mode, idx, idx.tns.val)
     else
         error("unimplemented")

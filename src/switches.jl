@@ -39,7 +39,7 @@ function (ctx::SwitchVisitor)(node)
 end
 
 function (ctx::SwitchVisitor)(node::CINNode)
-    if node.head === virtual
+    if node.kind === virtual
         ctx(node.val)
     elseif istree(node)
         map(product(map(ctx, arguments(node))...)) do case

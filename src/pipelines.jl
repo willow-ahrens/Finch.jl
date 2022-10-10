@@ -24,7 +24,7 @@ combine_style(a::SpikeStyle, b::PipelineStyle) = PipelineStyle()
 supports_shift(::PipelineStyle) = true
 
 function (ctx::LowerJulia)(root::CINNode, ::PipelineStyle)
-    if root.head === chunk
+    if root.kind === chunk
         phases = Dict(PipelineVisitor(ctx, root.idx, root.ext)(root.body))
         children(key) = intersect(map(i->(key_2 = copy(key); key_2[i] += 1; key_2), 1:length(key)), keys(phases))
         parents(key) = intersect(map(i->(key_2 = copy(key); key_2[i] -= 1; key_2), 1:length(key)), keys(phases))
@@ -81,7 +81,7 @@ function (ctx::PipelineVisitor)(node)
     end
 end
 function (ctx::PipelineVisitor)(node::CINNode)
-    if node.head === virtual
+    if node.kind === virtual
         ctx(node.val)
     elseif istree(node)
         map(flatten((product(map(ctx, arguments(node))...),))) do phases
