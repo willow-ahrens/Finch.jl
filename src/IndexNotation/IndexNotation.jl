@@ -6,7 +6,7 @@ module IndexNotation
     export name
     export value
     export Workspace
-    export Pass, pass
+    export pass
     export with
     export Multi, multi
     export loop

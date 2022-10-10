@@ -16,6 +16,7 @@ abstract type IndexTerminal <: IndexExpression end
     chunk=8
     sieve=9
     assign=10
+    pass = 11
 end
 
 struct CINNode <: IndexNode
@@ -105,6 +106,8 @@ function CINNode(op::CINHead, args::Vector)
         else
             error("wrong number of arguments to assign(...)")
         end
+    elseif op === pass
+        return CINNode(pass, nothing, nothing, args)
     else
         error("unimplemented")
     end
@@ -183,6 +186,13 @@ function Base.getproperty(node::CINNode, sym::Symbol)
             return node.args[3]
         else
             error("type CINNode(assign, ...) has no property $sym")
+        end
+    elseif node.head === pass
+        #TODO move op into update
+        if sym === :tnss
+            return node.args
+        else
+            error("type CINNode(pass, ...) has no property $sym")
         end
     else
         error("type CINNode has no property $sym")
@@ -300,6 +310,16 @@ function display_statement(io, mime, node::CINNode, level)
         print(io, "= ")
         display_expression(io, mime, node.rhs)
         print(io, "\n")
+    elseif node.head === pass
+        print(io, tab^level * "(")
+        for tns in arguments(node)[1:end-1]
+            display_expression(io, mime, tns)
+            print(io, ", ")
+        end
+        if length(arguments(node)) >= 1
+            display_expression(io, mime, last(arguments(node)))
+        end
+        print(io, ")")
     else
         error("unimplemented")
     end
@@ -318,6 +338,8 @@ function Base.:(==)(a::CINNode, b::CINNode)
         else
             error("unimplemented")
         end
+    elseif a.head === pass
+        return b.head === pass && Set(a.tnss) == Set(b.tnss) #TODO This feels... not quite right
     elseif istree(a)
         return a.head === b.head && a.args == b.args
     else
@@ -365,6 +387,8 @@ function Finch.getresults(node::CINNode)
         Finch.getresults(node.body)
     elseif node.head === assign
         Finch.getresults(node.lhs)
+    elseif node.head === pass
+        stmt.tnss
     else
         error("unimplemented")
     end
@@ -445,32 +469,6 @@ function Base.:(==)(a::T, b::T) with {T <: IndexNode}
 end
 =#
 
-struct Pass <: IndexStatement
-	tnss::Vector{IndexNode}
-end
-Base.:(==)(a::Pass, b::Pass) = Set(a.tnss) == Set(b.tnss) #TODO This feels... not quite right
-
-pass(args...) = pass!(vcat(args...))
-pass!(args) = Pass(args)
-
-SyntaxInterface.istree(stmt::Pass) = true
-SyntaxInterface.operation(stmt::Pass) = pass
-SyntaxInterface.arguments(stmt::Pass) = stmt.tnss
-SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(pass), args) = pass!(args)
-
-function display_statement(io, mime, stmt::Pass, level)
-    print(io, tab^level * "(")
-    for tns in arguments(stmt)[1:end-1]
-        display_expression(io, mime, tns)
-        print(io, ", ")
-    end
-    if length(arguments(stmt)) >= 1
-        display_expression(io, mime, last(arguments(stmt)))
-    end
-    print(io, ")")
-end
-
-Finch.getresults(stmt::Pass) = stmt.tnss
 
 struct Workspace <: IndexTerminal
     n

@@ -7,7 +7,7 @@ function virtualize(ex, ::Type{IndexNotation.PassInstance{Tnss}}, ctx) where {Tn
     tnss = map(enumerate(Tnss.parameters)) do (n, Tns)
         virtualize(:($ex.tnss[$n]), Tns, ctx)
     end
-    Pass(tnss)
+    pass(tnss)
 end
 virtualize(ex, ::Type{IndexNotation.NameInstance{sym}}, ctx) where {sym} = name(sym)
 virtualize(ex, ::Type{IndexNotation.ProtocolInstance{Idx, Val}}, ctx) where {Idx, Val} = Protocol(virtualize(:($ex.idx), Idx, ctx), virtualize(:($ex.val), Val, ctx))

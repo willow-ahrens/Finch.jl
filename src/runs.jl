@@ -93,7 +93,6 @@ combine_style(a::SimplifyStyle, b::AcceptRunStyle) = SimplifyStyle()
 combine_style(a::AcceptRunStyle, b::AcceptRunStyle) = AcceptRunStyle()
 combine_style(a::RunStyle, b::AcceptRunStyle) = RunStyle()
 
-(ctx::LowerJulia)(::Pass, ::AcceptRunStyle) = quote end#TODO this shouldn't need to be specified, I think that Pass needs not to declare a style
 function (ctx::LowerJulia)(root::CINNode, ::AcceptRunStyle)
     if root.head === chunk
         body = (AcceptRunVisitor(root, root.idx, root.ext, ctx))(root.body)
@@ -103,6 +102,8 @@ function (ctx::LowerJulia)(root::CINNode, ::AcceptRunStyle)
         else
             return ctx(body)
         end
+    elseif root.head === pass
+        quote end#TODO this shouldn't need to be specified, I think that Pass needs not to declare a style
     else
         error("unimplemented")
     end

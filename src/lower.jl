@@ -154,9 +154,7 @@ function (ctx::ThunkVisitor)(node::Thunk)
 end
 
 
-#default lowering
 
-(ctx::LowerJulia)(::Pass, ::DefaultStyle) = quote end
 
 
 function (ctx::LowerJulia)(root::Call, ::DefaultStyle)
@@ -264,7 +262,7 @@ function (ctx::LowerJulia)(root::CINNode, ::DefaultStyle)
         end
     elseif root.head === virtual
         ctx(root.val)
-    elseif root.head == assign
+    elseif root.head === assign
         if root.op == literal(nothing)
             rhs = ctx(root.rhs)
         else
@@ -272,6 +270,8 @@ function (ctx::LowerJulia)(root::CINNode, ::DefaultStyle)
         end
         lhs = ctx(root.lhs)
         return :($lhs = $rhs)
+    elseif root.head === pass
+        return quote end
     else
         error("unimplemented")
     end
