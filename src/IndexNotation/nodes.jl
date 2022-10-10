@@ -12,11 +12,12 @@ abstract type IndexTerminal <: IndexExpression end
     literal=4
     with=5
     access=6
-    loop=7
-    chunk=8
-    sieve=9
-    assign=10
-    pass = 11
+    call=7
+    loop=8
+    chunk=9
+    sieve=10
+    assign=11
+    pass=12
 end
 
 struct CINNode <: IndexNode
@@ -79,6 +80,12 @@ function CINNode(op::CINHead, args::Vector)
             return CINNode(access, nothing, nothing, args)
         else
             error("wrong number of arguments to access(...)")
+        end
+    elseif op === call
+        if length(args) >= 1
+            return CINNode(call, nothing, nothing, args)
+        else
+            error("wrong number of arguments to call(...)")
         end
     elseif op === loop
         if length(args) == 2
@@ -150,6 +157,14 @@ function Base.getproperty(node::CINNode, sym::Symbol)
         else
             error("type CINNode(access, ...) has no property $sym")
         end
+    elseif node.head === call
+        if sym === :op
+            return node.args[1]
+        elseif sym === :brgs
+            return @view node.args[2:end]
+        else
+            error("type CINNode(call, ...) has no property $sym")
+        end
     elseif node.head === loop
         if sym === :idx
             return node.args[1]
@@ -207,7 +222,6 @@ function Base.show(io::IO, mime::MIME"text/plain", node::CINNode)
     end
 end
 
-
 function Finch.getunbound(ex::CINNode)
     if ex.head === name
         return [ex.name]
@@ -250,6 +264,15 @@ function display_expression(io, mime, node::CINNode)
             display_expression(io, mime, node.idxs[end])
         end
         print(io, "]")
+    elseif node.head === call
+        display_expression(io, mime, node.op)
+        print(io, "(")
+        for arg in node.brgs[1:end-1]
+            display_expression(io, mime, arg)
+            print(io, ", ")
+        end
+        display_expression(io, mime, node.brgs[end])
+        print(io, ")")
     #elseif istree(node)
     #    print(io, operation(node))
     #    print(io, "(")
@@ -388,7 +411,7 @@ function Finch.getresults(node::CINNode)
     elseif node.head === assign
         Finch.getresults(node.lhs)
     elseif node.head === pass
-        stmt.tnss
+        node.tnss
     else
         error("unimplemented")
     end
@@ -530,31 +553,6 @@ function display_statement(io, mime, stmt::Multi, level)
 end
 
 Finch.getresults(stmt::Multi) = mapreduce(Finch.getresults, vcat, stmt.bodies)
-
-struct Call <: IndexExpression
-    op::IndexNode
-    args::Vector{IndexNode}
-end
-Base.:(==)(a::Call, b::Call) = a.op == b.op && a.args == b.args
-
-call(args...) = call!(vcat(args...))
-call!(args) = Call(popfirst!(args), args)
-
-SyntaxInterface.istree(::Call) = true
-SyntaxInterface.operation(ex::Call) = call
-SyntaxInterface.arguments(ex::Call) = Any[ex.op; ex.args]
-SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(call), args) = call!(args)
-
-function display_expression(io, mime, ex::Call)
-    display_expression(io, mime, ex.op)
-    print(io, "(")
-    for arg in ex.args[1:end-1]
-        display_expression(io, mime, arg)
-        print(io, ", ")
-    end
-    display_expression(io, mime, ex.args[end])
-    print(io, ")")
-end
 
 struct Read <: IndexTerminal end
 struct Write <: IndexTerminal end

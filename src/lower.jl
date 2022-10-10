@@ -155,17 +155,7 @@ end
 
 
 
-
-
-function (ctx::LowerJulia)(root::Call, ::DefaultStyle)
-    if root.op == and
-        reduce((x, y) -> :($x && $y), map(ctx, root.args)) #TODO This could be better. should be able to handle empty case
-    elseif root.op == or
-        reduce((x, y) -> :($x || $y), map(ctx, root.args))
-    else
-        :($(ctx(root.op))($(map(ctx, root.args)...)))
-    end
-end
+#TODO rename brgs
 
 function (ctx::LowerJulia)(root::Protocol, ::DefaultStyle)
     :($(ctx(root.idx)))
@@ -218,6 +208,14 @@ function (ctx::LowerJulia)(root::CINNode, ::DefaultStyle)
             tns = ctx(tns)
             idxs = map(ctx, root.idxs)
             return :($(ctx(tns))[$(idxs...)])
+        end
+    elseif root.head === call
+        if root.op == literal(and)
+            reduce((x, y) -> :($x && $y), map(ctx, root.brgs)) #TODO This could be better. should be able to handle empty case
+        elseif root.op == literal(or)
+            reduce((x, y) -> :($x || $y), map(ctx, root.brgs))
+        else
+            :($(ctx(root.op))($(map(ctx, root.brgs)...)))
         end
     elseif root.head === loop
         return ctx(chunk(

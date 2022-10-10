@@ -12,7 +12,7 @@ module IndexNotation
     export loop
     export Chunk, chunk
     export assign
-    export Call, call
+    export call
     export Read, Write, Update, access
     export Protocol, protocol
     export sieve

@@ -39,7 +39,7 @@ function virtualize(ex, ::Type{IndexNotation.CallInstance{Op, Args}}, ctx) where
     args = map(enumerate(Args.parameters)) do (n, Arg)
         virtualize(:($ex.args[$n]), Arg, ctx)
     end
-    Call(op, args)
+    call(op, args...)
 end
 function virtualize(ex, ::Type{IndexNotation.AccessInstance{Tns, Mode, Idxs}}, ctx) where {Tns, Mode, Idxs}
     tns = virtualize(:($ex.tns), Tns, ctx)
