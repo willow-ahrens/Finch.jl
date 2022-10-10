@@ -31,17 +31,21 @@ end
 
 chunkify_access(node, ctx, tns) = similarterm(node, operation(node), map(ctx, arguments(node)))
 
-function (ctx::LowerJulia)(root::Loop, ::ChunkStyle)
-    idx = root.idx
-    #TODO is every read of dims gonna be like this? When do we lock it in?
-    ext = resolvedim(ctx.dims[getname(idx)])
-    body = (ChunkifyVisitor(ctx, idx))(root.body)
-    #TODO add a simplify step here perhaps
-    ctx(chunk(
-        idx,
-        ext,
-        body
-    ))
+function (ctx::LowerJulia)(root::CINNode, ::ChunkStyle)
+    if root.head === loop
+        idx = root.idx
+        #TODO is every read of dims gonna be like this? When do we lock it in?
+        ext = resolvedim(ctx.dims[getname(idx)])
+        body = (ChunkifyVisitor(ctx, idx))(root.body)
+        #TODO add a simplify step here perhaps
+        ctx(chunk(
+            idx,
+            ext,
+            body
+        ))
+    else
+        error("unimplemented")
+    end
 end
 
 #TODO one day this might be nothing?

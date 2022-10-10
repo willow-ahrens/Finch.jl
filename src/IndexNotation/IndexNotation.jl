@@ -9,13 +9,13 @@ module IndexNotation
     export Pass, pass
     export with
     export Multi, multi
-    export Loop, loop
+    export loop
     export Chunk, chunk
-    export Assign, assign
+    export assign
     export Call, call
     export Read, Write, Update, access
     export Protocol, protocol
-    export Sieve, sieve
+    export sieve
     export CINNode, value, isvalue
 
     export Follow, follow

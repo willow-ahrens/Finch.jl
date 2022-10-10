@@ -55,3 +55,17 @@ rewrite_methods = length(methodinstances(RewriteTools))
 #│   tests = 3m35.0s
 #│   finch_methods = 953
 #└   rewrite_methods = 722
+#After unityping Access, Virtual, and Chunk
+#┌ Info: results
+#│   first_run = 30.872168248
+#│   second_run = 0.790361734
+#│   tests = 3m24.2s
+#│   finch_methods = 998
+#└   rewrite_methods = 569
+#After unityping Loop, Sieve, and Assign
+#┌ Info: results
+#│   first_run = 26.72391913
+#│   second_run = 0.765605838
+#│   tests = 3m13.1s
+#│   finch_methods = 961
+#└   rewrite_methods = 531

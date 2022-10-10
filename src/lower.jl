@@ -158,15 +158,6 @@ end
 
 (ctx::LowerJulia)(::Pass, ::DefaultStyle) = quote end
 
-function (ctx::LowerJulia)(root::Assign, ::DefaultStyle)
-    if root.op == literal(nothing)
-        rhs = ctx(root.rhs)
-    else
-        rhs = ctx(call(root.op, root.lhs, root.rhs))
-    end
-    lhs = ctx(root.lhs)
-    :($lhs = $rhs)
-end
 
 function (ctx::LowerJulia)(root::Call, ::DefaultStyle)
     if root.op == and
@@ -224,12 +215,18 @@ function (ctx::LowerJulia)(root::CINNode, ::DefaultStyle)
         end
     elseif root.head === access
         if root.tns isa CINNode && root.tns.head === virtual
-            lowerjulia_access(ctx, root, root.tns.val)
+            return lowerjulia_access(ctx, root, root.tns.val)
         else
             tns = ctx(tns)
             idxs = map(ctx, root.idxs)
-            :($(ctx(tns))[$(idxs...)])
+            return :($(ctx(tns))[$(idxs...)])
         end
+    elseif root.head === loop
+        return ctx(chunk(
+            idx = stmt.idx,
+            ext = resolvedim(ctx.dims[getname(stmt.idx)]),
+            body = stmt.body)
+        )
     elseif root.head === chunk
         idx_sym = ctx.freshen(getname(root.idx))
         if simplify((@f $(getlower(root.ext)) >= 1)) == (@f true)  && simplify((@f $(getupper(root.ext)) <= 1)) == (@f true)
@@ -254,8 +251,27 @@ function (ctx::LowerJulia)(root::CINNode, ::DefaultStyle)
                 end
             end
         end
+    elseif root.head === sieve
+        cond = ctx.freshen(:cond)
+        push!(ctx.preamble, :($cond = $(ctx(root.cond))))
+    
+        return quote
+            if $cond
+                $(contain(ctx) do ctx_2
+                    ctx_2(root.body)
+                end)
+            end
+        end
     elseif root.head === virtual
         ctx(root.val)
+    elseif root.head == assign
+        if root.op == literal(nothing)
+            rhs = ctx(root.rhs)
+        else
+            rhs = ctx(call(root.op, root.lhs, root.rhs))
+        end
+        lhs = ctx(root.lhs)
+        return :($lhs = $rhs)
     else
         error("unimplemented")
     end
@@ -283,27 +299,6 @@ end
 function lowerjulia_access(ctx, node, tns::Number)
     @assert node.mode === Read()
     tns
-end
-
-function (ctx::LowerJulia)(stmt::Sieve, ::DefaultStyle)
-    cond = ctx.freshen(:cond)
-    push!(ctx.preamble, :($cond = $(ctx(stmt.cond))))
-
-    return quote
-        if $cond
-            $(contain(ctx) do ctx_2
-                ctx_2(stmt.body)
-            end)
-        end
-    end
-end
-
-function (ctx::LowerJulia)(stmt::Loop, ::DefaultStyle)
-    ctx(chunk(
-        idx = stmt.idx,
-        ext = resolvedim(ctx.dims[getname(stmt.idx)]),
-        body = stmt.body)
-    )
 end
 
 @kwdef struct ForLoopVisitor

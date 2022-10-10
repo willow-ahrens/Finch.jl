@@ -21,18 +21,18 @@ end
 function virtualize(ex, ::Type{IndexNotation.SieveInstance{Cond, Body}}, ctx) where {Cond, Body}
     cond = virtualize(:($ex.cond), Cond, ctx)
     body = virtualize(:($ex.body), Body, ctx)
-    Sieve(cond, body)
+    sieve(cond, body)
 end
 function virtualize(ex, ::Type{IndexNotation.LoopInstance{Idx, Body}}, ctx) where {Idx, Body}
     idx = virtualize(:($ex.idx), Idx, ctx)
     body = virtualize(:($ex.body), Body, ctx)
-    Loop(idx, body)
+    loop(idx, body)
 end
 function virtualize(ex, ::Type{IndexNotation.AssignInstance{Lhs, Nothing, Rhs}}, ctx) where {Lhs, Rhs}
-    Assign(virtualize(:($ex.lhs), Lhs, ctx), nothing, virtualize(:($ex.rhs), Rhs, ctx))
+    assign(virtualize(:($ex.lhs), Lhs, ctx), literal(nothing), virtualize(:($ex.rhs), Rhs, ctx))
 end
 function virtualize(ex, ::Type{IndexNotation.AssignInstance{Lhs, Op, Rhs}}, ctx) where {Lhs, Op, Rhs}
-    Assign(virtualize(:($ex.lhs), Lhs, ctx), virtualize(:($ex.op), Op, ctx), virtualize(:($ex.rhs), Rhs, ctx))
+    assign(virtualize(:($ex.lhs), Lhs, ctx), virtualize(:($ex.op), Op, ctx), virtualize(:($ex.rhs), Rhs, ctx))
 end
 function virtualize(ex, ::Type{IndexNotation.CallInstance{Op, Args}}, ctx) where {Op, Args}
     op = virtualize(:($ex.op), Op, ctx)

@@ -67,14 +67,6 @@ function getglobals(prgm)
 end
 =#
 
-function (ctx::TransformSSA)(root::Loop)
-    contain(ctx) do ctx_2
-        idx = definename!(root.idx, ctx_2)
-        body = ctx(root.body)
-        return loop(idx, body)
-    end
-end
-
 function (ctx::TransformSSA)(node::CINNode)
     if node.head === name
         resolvename!(node, ctx)
@@ -83,6 +75,12 @@ function (ctx::TransformSSA)(node::CINNode)
             prod = ctx_2(node.prod)
             cons = ctx(node.cons)
             return with(cons, prod)
+        end
+    elseif node.head === loop
+        contain(ctx) do ctx_2
+            idx = definename!(node.idx, ctx_2)
+            body = ctx(node.body)
+            return loop(idx, body)
         end
     elseif node.head === access
         if node.mode != Read()

@@ -12,7 +12,10 @@ abstract type IndexTerminal <: IndexExpression end
     literal=4
     with=5
     access=6
-    chunk=7
+    loop=7
+    chunk=8
+    sieve=9
+    assign=10
 end
 
 struct CINNode <: IndexNode
@@ -76,11 +79,31 @@ function CINNode(op::CINHead, args::Vector)
         else
             error("wrong number of arguments to access(...)")
         end
+    elseif op === loop
+        if length(args) == 2
+            return CINNode(loop, nothing, nothing, args)
+        else
+            error("wrong number of arguments to loop(...)")
+        end
     elseif op === chunk
         if length(args) == 3
             return CINNode(chunk, nothing, nothing, args)
         else
             error("wrong number of arguments to chunk(...)")
+        end
+    elseif op === sieve
+        if length(args) == 2
+            return CINNode(sieve, nothing, nothing, args)
+        else
+            error("wrong number of arguments to sieve(...)")
+        end
+    elseif op === assign
+        if length(args) == 2
+            return CINNode(assign, nothing, nothing, [args[1], literal(nothing), args[2]])
+        elseif length(args) == 3
+            return CINNode(assign, nothing, nothing, args)
+        else
+            error("wrong number of arguments to assign(...)")
         end
     else
         error("unimplemented")
@@ -124,6 +147,14 @@ function Base.getproperty(node::CINNode, sym::Symbol)
         else
             error("type CINNode(access, ...) has no property $sym")
         end
+    elseif node.head === loop
+        if sym === :idx
+            return node.args[1]
+        elseif sym === :body
+            return node.args[2]
+        else
+            error("type CINNode(loop, ...) has no property $sym")
+        end
     elseif node.head === chunk
         if sym === :idx
             return node.args[1]
@@ -133,6 +164,25 @@ function Base.getproperty(node::CINNode, sym::Symbol)
             return node.args[3]
         else
             error("type CINNode(chunk, ...) has no property $sym")
+        end
+    elseif node.head === sieve
+        if sym === :cond
+            return node.args[1]
+        elseif sym === :body
+            return node.args[2]
+        else
+            error("type CINNode(sieve, ...) has no property $sym")
+        end
+    elseif node.head === assign
+        #TODO move op into update
+        if sym === :lhs
+            return node.args[1]
+        elseif sym === :op
+            return node.args[2]
+        elseif sym === :rhs
+            return node.args[3]
+        else
+            error("type CINNode(assign, ...) has no property $sym")
         end
     else
         error("type CINNode has no property $sym")
@@ -151,6 +201,8 @@ end
 function Finch.getunbound(ex::CINNode)
     if ex.head === name
         return [ex.name]
+    elseif ex.head === loop
+        return setdiff(getunbound(ex.body), getunbound(ex.idx))
     elseif ex.head === chunk
         return setdiff(union(getunbound(ex.body), getunbound(ex.ext)), getunbound(ex.idx))
     elseif istree(ex)
@@ -208,6 +260,16 @@ function display_statement(io, mime, node::CINNode, level)
         print(io, tab^level * ") where (\n")
         display_statement(io, mime, node.prod, level + 1)
         print(io, tab^level * ")\n")
+    elseif node.head === loop
+        print(io, tab^level * "@∀ ")
+        while node.body.head === loop
+            display_expression(io, mime, node.idx)
+            print(io," ")
+            node = node.body
+        end
+        print(io,"(\n")
+        display_statement(io, mime, node, level + 1)
+        print(io, tab^level * ")\n")
     elseif node.head === chunk
         print(io, tab^level * "@∀ ")
         display_expression(io, mime, node.idx)
@@ -216,6 +278,28 @@ function display_statement(io, mime, node::CINNode, level)
         print(io," (\n")
         display_statement(io, mime, node.body, level + 1)
         print(io, tab^level * ")\n")
+    elseif node.head === sieve
+        print(io, tab^level * "@sieve ")
+        while node.body.head === sieve
+            display_expression(io, mime, node.cond)
+            print(io," && ")
+            node = node.body
+        end
+        display_expression(io, mime, node.cond)
+        node = node.body
+        print(io," (\n")
+        display_statement(io, mime, node, level + 1)
+        print(io, tab^level * ")\n")
+    elseif node.head === assign
+        print(io, tab^level)
+        display_expression(io, mime, node.lhs)
+        print(io, " ")
+        if (node.op !== nothing && node.op != literal(nothing)) #TODO this feels kinda garbage.
+            display_expression(io, mime, node.op)
+        end
+        print(io, "= ")
+        display_expression(io, mime, node.rhs)
+        print(io, "\n")
     else
         error("unimplemented")
     end
@@ -273,8 +357,14 @@ function Finch.getresults(node::CINNode)
         Finch.getresults(node.cons)
     elseif node.head === access
         [node.tns]
+    elseif node.head === loop
+        Finch.getresults(node.body)
     elseif node.head === chunk
-        getresults(node.body)
+        Finch.getresults(node.body)
+    elseif node.head === sieve
+        Finch.getresults(node.body)
+    elseif node.head === assign
+        Finch.getresults(node.lhs)
     else
         error("unimplemented")
     end
@@ -442,113 +532,6 @@ function display_statement(io, mime, stmt::Multi, level)
 end
 
 Finch.getresults(stmt::Multi) = mapreduce(Finch.getresults, vcat, stmt.bodies)
-
-
-struct Loop <: IndexStatement
-	idx::IndexNode
-	body::IndexNode
-end
-Base.:(==)(a::Loop, b::Loop) = a.idx == b.idx && a.body == b.body
-
-loop(args...) = loop!(args)
-loop!(args) = foldr(Loop, args)
-
-SyntaxInterface.istree(::Loop) = true
-SyntaxInterface.operation(stmt::Loop) = loop
-SyntaxInterface.arguments(stmt::Loop) = Any[stmt.idx; stmt.body]
-SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(loop), args) = loop!(args)
-
-Finch.getunbound(ex::Loop) = setdiff(getunbound(ex.body), getunbound(ex.idx))
-
-function display_statement(io, mime, stmt::Loop, level)
-    print(io, tab^level * "@∀ ")
-    while stmt isa Loop
-        display_expression(io, mime, stmt.idx)
-        print(io," ")
-        stmt = stmt.body
-    end
-    print(io,"(\n")
-    display_statement(io, mime, stmt, level + 1)
-    print(io, tab^level * ")\n")
-end
-
-Finch.getresults(stmt::Loop) = Finch.getresults(stmt.body)
-
-
-struct Sieve <: IndexStatement
-	cond::IndexNode
-	body::IndexNode
-end
-Base.:(==)(a::Sieve, b::Sieve) = a.cond == b.cond && a.body == b.body
-
-sieve(args...) = sieve!(args)
-sieve!(args) = foldr(Sieve, args)
-
-SyntaxInterface.istree(::Sieve) = true
-SyntaxInterface.operation(stmt::Sieve) = sieve
-SyntaxInterface.arguments(stmt::Sieve) = Any[stmt.cond; stmt.body]
-SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(sieve), args) = sieve!(args)
-
-Finch.getunbound(ex::Sieve) = setdiff(getunbound(ex.body), getunbound(ex.cond))
-
-function display_statement(io, mime, stmt::Sieve, level)
-    print(io, tab^level * "@sieve ")
-    while stmt.body isa Sieve
-        display_expression(io, mime, stmt.cond)
-        print(io," && ")
-        stmt = stmt.body
-    end
-    display_expression(io, mime, stmt.cond)
-    stmt = stmt.body
-    print(io," (\n")
-    display_statement(io, mime, stmt, level + 1)
-    print(io, tab^level * ")\n")
-end
-
-Finch.getresults(stmt::Sieve) = Finch.getresults(stmt.body)
-
-struct Assign <: IndexStatement
-	lhs::IndexNode
-	op::IndexNode
-	rhs::IndexNode
-end
-Base.:(==)(a::Assign, b::Assign) = a.lhs == b.lhs && a.op == b.op && a.rhs == b.rhs
-
-assign(args...) = assign!(vcat(args...))
-function assign!(args)
-    if length(args) == 2
-        Assign(args[1], nothing, args[2])
-    elseif length(args) == 3
-        Assign(args[1], args[2], args[3])
-    else
-        throw(ArgumentError("wrong number of arguments to assign"))
-    end
-end
-
-SyntaxInterface.istree(::Assign)= true
-SyntaxInterface.operation(stmt::Assign) = assign
-function SyntaxInterface.arguments(stmt::Assign)
-    if (stmt.op === nothing || stmt.op == literal(nothing))
-        Any[stmt.lhs, stmt.rhs]
-    else
-        Any[stmt.lhs, stmt.op, stmt.rhs]
-    end
-end
-SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(assign), args) = assign!(args)
-
-function display_statement(io, mime, stmt::Assign, level)
-    print(io, tab^level)
-    display_expression(io, mime, stmt.lhs)
-    print(io, " ")
-    if (stmt.op !== nothing && stmt.op != literal(nothing)) #TODO this feels kinda garbage.
-        display_expression(io, mime, stmt.op)
-    end
-    print(io, "= ")
-    display_expression(io, mime, stmt.rhs)
-    print(io, "\n")
-end
-
-Finch.getresults(stmt::Assign) = Finch.getresults(stmt.lhs)
 
 struct Call <: IndexExpression
     op::IndexNode
