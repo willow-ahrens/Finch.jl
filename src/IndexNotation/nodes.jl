@@ -12,6 +12,7 @@ abstract type IndexTerminal <: IndexExpression end
     literal=4
     with=5
     access=6
+    chunk=7
 end
 
 struct CINNode <: IndexNode
@@ -75,6 +76,12 @@ function CINNode(op::CINHead, args::Vector)
         else
             error("wrong number of arguments to access(...)")
         end
+    elseif op === chunk
+        if length(args) != 3
+            return CINNode(chunk, nothing, nothing, args)
+        else
+            error("wrong number of arguments to chunk(...)")
+        end
     else
         error("unimplemented")
     end
@@ -117,6 +124,16 @@ function Base.getproperty(node::CINNode, sym::Symbol)
         else
             error("type CINNode(access, ...) has no property $sym")
         end
+    elseif node.head === chunk
+        if sym === :idx
+            return node.args[1]
+        elseif sym === :ext
+            return node.args[2]
+        elseif sym === :body
+            return node.args[3]
+        else
+            error("type CINNode(chunk, ...) has no property $sym")
+        end
     else
         error("type CINNode has no property $sym")
     end
@@ -134,6 +151,8 @@ end
 function Finch.getunbound(ex::CINNode)
     if ex.head === name
         return [ex.name]
+    elseif ex.head === chunk
+        return setdiff(union(getunbound(ex.body), getunbound(ex.ext)), getunbound(ex.idx))
     elseif istree(ex)
         return mapreduce(Finch.getunbound, union, arguments(ex), init=[])
     else
@@ -188,6 +207,14 @@ function display_statement(io, mime, node::CINNode, level)
         display_statement(io, mime, node.cons, level + 1)
         print(io, tab^level * ") where (\n")
         display_statement(io, mime, node.prod, level + 1)
+        print(io, tab^level * ")\n")
+    elseif node.head === chunk
+        print(io, tab^level * "@∀ ")
+        display_expression(io, mime, node.idx)
+        print(io, " : ")
+        display_expression(io, mime, node.ext)
+        print(io," (\n")
+        display_statement(io, mime, node.body, level + 1)
         print(io, tab^level * ")\n")
     else
         error("unimplemented")
@@ -246,6 +273,8 @@ function Finch.getresults(node::CINNode)
         Finch.getresults(node.cons)
     elseif node.head === access
         [node.tns]
+    elseif node.head === chunk
+        getresults(node.body)
     else
         error("unimplemented")
     end
@@ -414,33 +443,6 @@ end
 
 Finch.getresults(stmt::Multi) = mapreduce(Finch.getresults, vcat, stmt.bodies)
 
-Base.@kwdef struct Chunk <: IndexStatement
-	idx::IndexNode
-    ext::IndexNode
-	body::IndexNode
-end
-Base.:(==)(a::Chunk, b::Chunk) = a.idx == b.idx && a.ext == b.ext && a.body == b.body
-
-chunk(args...) = chunk!(vcat(args...))
-chunk!(args) = Chunk(args[1], args[2], args[3])
-
-SyntaxInterface.istree(::Chunk) = true
-SyntaxInterface.operation(stmt::Chunk) = chunk
-SyntaxInterface.arguments(stmt::Chunk) = Any[stmt.idx, stmt.ext, stmt.body]
-SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(chunk), args) = chunk!(args)
-Finch.getunbound(ex::Chunk) = setdiff(union(getunbound(ex.body), getunbound(ex.ext)), getunbound(ex.idx))
-
-function display_statement(io, mime, stmt::Chunk, level)
-    print(io, tab^level * "@∀ ")
-    display_expression(io, mime, stmt.idx)
-    print(io, " : ")
-    display_expression(io, mime, stmt.ext)
-    print(io," (\n")
-    display_statement(io, mime, stmt.body, level + 1)
-    print(io, tab^level * ")\n")
-end
-
-Finch.getresults(stmt::Chunk) = Finch.getresults(stmt.body)
 
 struct Loop <: IndexStatement
 	idx::IndexNode

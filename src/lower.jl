@@ -230,6 +230,30 @@ function (ctx::LowerJulia)(root::CINNode, ::DefaultStyle)
             idxs = map(ctx, root.idxs)
             :($(ctx(tns))[$(idxs...)])
         end
+    elseif root.head === chunk
+        idx_sym = ctx.freshen(getname(root.idx))
+        if simplify((@f $(getlower(root.ext)) >= 1)) == (@f true)  && simplify((@f $(getupper(root.ext)) <= 1)) == (@f true)
+            return quote
+                $idx_sym = $(ctx(getstart(root.ext)))
+                $(bind(ctx, getname(root.idx) => idx_sym) do 
+                    contain(ctx) do ctx_2
+                        body_3 = ForLoopVisitor(ctx_2, root.idx, value(idx_sym))(root.body)
+                        (ctx_2)(body_3)
+                    end
+                end)
+            end
+        else
+            return quote
+                for $idx_sym = $(ctx(getstart(root.ext))):$(ctx(getstop(root.ext)))
+                    $(bind(ctx, getname(root.idx) => idx_sym) do 
+                        contain(ctx) do ctx_2
+                            body_3 = ForLoopVisitor(ctx_2, root.idx, value(idx_sym))(root.body)
+                            (ctx_2)(body_3)
+                        end
+                    end)
+                end
+            end
+        end
     elseif root.head === virtual
         ctx(root.val)
     else
@@ -275,36 +299,11 @@ function (ctx::LowerJulia)(stmt::Sieve, ::DefaultStyle)
 end
 
 function (ctx::LowerJulia)(stmt::Loop, ::DefaultStyle)
-    ctx(Chunk(
+    ctx(chunk(
         idx = stmt.idx,
         ext = resolvedim(ctx.dims[getname(stmt.idx)]),
         body = stmt.body)
     )
-end
-function (ctx::LowerJulia)(stmt::Chunk, ::DefaultStyle)
-    idx_sym = ctx.freshen(getname(stmt.idx))
-    if simplify((@f $(getlower(stmt.ext)) >= 1)) == (@f true)  && simplify((@f $(getupper(stmt.ext)) <= 1)) == (@f true)
-        return quote
-            $idx_sym = $(ctx(getstart(stmt.ext)))
-            $(bind(ctx, getname(stmt.idx) => idx_sym) do 
-                contain(ctx) do ctx_2
-                    body_3 = ForLoopVisitor(ctx_2, stmt.idx, value(idx_sym))(stmt.body)
-                    (ctx_2)(body_3)
-                end
-            end)
-        end
-    else
-        return quote
-            for $idx_sym = $(ctx(getstart(stmt.ext))):$(ctx(getstop(stmt.ext)))
-                $(bind(ctx, getname(stmt.idx) => idx_sym) do 
-                    contain(ctx) do ctx_2
-                        body_3 = ForLoopVisitor(ctx_2, stmt.idx, value(idx_sym))(stmt.body)
-                        (ctx_2)(body_3)
-                    end
-                end)
-            end
-        end
-    end
 end
 
 @kwdef struct ForLoopVisitor

@@ -22,29 +22,33 @@ combine_style(a::SimplifyStyle, b::SpikeStyle) = SimplifyStyle()
 combine_style(a::AcceptRunStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::SpikeStyle, b::SpikeStyle) = SpikeStyle()
 
-function (ctx::LowerJulia)(root::Chunk, ::SpikeStyle)
-    root_body = SpikeBodyVisitor(ctx, root.idx, root.ext, Extent(spike_body_getstop(getstop(root.ext), ctx), getstop(root.ext)))(root.body)
-    if extent(root.ext) == 1
-        body_expr = quote end
-    else
-        #TODO check body nonempty
-        body_expr = contain(ctx) do ctx_2
-            (ctx_2)(Chunk(
+function (ctx::LowerJulia)(root::CINNode, ::SpikeStyle)
+    if root.head === chunk
+        root_body = SpikeBodyVisitor(ctx, root.idx, root.ext, Extent(spike_body_getstop(getstop(root.ext), ctx), getstop(root.ext)))(root.body)
+        if extent(root.ext) == 1
+            body_expr = quote end
+        else
+            #TODO check body nonempty
+            body_expr = contain(ctx) do ctx_2
+                (ctx_2)(chunk(
+                    idx = root.idx,
+                    ext = spike_body_range(root.ext, ctx),
+                    body = root_body,
+                ))
+            end
+        end
+        root_tail = SpikeTailVisitor(ctx, root.idx, getstop(root.ext))(root.body)
+        tail_expr = contain(ctx) do ctx_2
+            (ctx_2)(chunk(
                 idx = root.idx,
-                ext = spike_body_range(root.ext, ctx),
-                body = root_body,
+                ext = Extent(start = getstop(root.ext), stop = getstop(root.ext), lower = 1, upper = 1),
+                body = root_tail,
             ))
         end
+        return Expr(:block, body_expr, tail_expr)
+    else
+        error("unimplemented")
     end
-    root_tail = SpikeTailVisitor(ctx, root.idx, getstop(root.ext))(root.body)
-    tail_expr = contain(ctx) do ctx_2
-        (ctx_2)(Chunk(
-            idx = root.idx,
-            ext = Extent(start = getstop(root.ext), stop = getstop(root.ext), lower = 1, upper = 1),
-            body = root_tail,
-        ))
-    end
-    return Expr(:block, body_expr, tail_expr)
 end
 
 @kwdef struct SpikeBodyVisitor

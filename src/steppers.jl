@@ -26,8 +26,12 @@ combine_style(a::ThunkStyle, b::StepperStyle) = ThunkStyle()
 combine_style(a::StepperStyle, b::JumperStyle) = JumperStyle()
 combine_style(a::StepperStyle, b::PhaseStyle) = PhaseStyle()
 
-function (ctx::LowerJulia)(root::Chunk, style::StepperStyle)
-    lower_cycle(root, ctx, root.idx, root.ext, style)
+function (ctx::LowerJulia)(root::CINNode, style::StepperStyle)
+    if root.head === chunk
+        return lower_cycle(root, ctx, root.idx, root.ext, style)
+    else
+        error("unimplemented")
+    end
 end
 
 function (ctx::CycleVisitor{StepperStyle})(node::Stepper)

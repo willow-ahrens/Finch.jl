@@ -18,8 +18,12 @@ combine_style(a::JumperStyle, b::SwitchStyle) = SwitchStyle()
 combine_style(a::JumperStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::ThunkStyle, b::JumperStyle) = ThunkStyle()
 
-function (ctx::LowerJulia)(root::Chunk, style::JumperStyle)
-    lower_cycle(root, ctx, root.idx, root.ext, style)
+function (ctx::LowerJulia)(root::CINNode, style::JumperStyle)
+    if root.head === chunk
+        return lower_cycle(root, ctx, root.idx, root.ext, style)
+    else
+        error("unimplemented")
+    end
 end
 
 (ctx::CycleVisitor{JumperStyle})(node::Jumper) = node.body

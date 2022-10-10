@@ -37,7 +37,7 @@ function (ctx::LowerJulia)(root::Loop, ::ChunkStyle)
     ext = resolvedim(ctx.dims[getname(idx)])
     body = (ChunkifyVisitor(ctx, idx))(root.body)
     #TODO add a simplify step here perhaps
-    ctx(Chunk(
+    ctx(chunk(
         idx = idx,
         ext = ext,
         body = body

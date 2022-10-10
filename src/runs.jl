@@ -23,12 +23,16 @@ combine_style(a::ThunkStyle, b::RunStyle) = ThunkStyle()
 combine_style(a::SimplifyStyle, b::RunStyle) = SimplifyStyle()
 combine_style(a::RunStyle, b::RunStyle) = RunStyle()
 
-function (ctx::LowerJulia)(root::Chunk, ::RunStyle)
-    root = (AccessRunVisitor(root))(root)
-    if Stylize(root, ctx)(root) isa RunStyle #TODO do we need this always? Can we do this generically?
-        error("run style couldn't lower runs")
+function (ctx::LowerJulia)(root::CINNode, ::RunStyle)
+    if root.head === chunk
+        root = (AccessRunVisitor(root))(root)
+        if Stylize(root, ctx)(root) isa RunStyle #TODO do we need this always? Can we do this generically?
+            error("run style couldn't lower runs")
+        end
+        return ctx(root)
+    else
+        error("unimplemented")
     end
-    ctx(root)
 end
 
 @kwdef struct AccessRunVisitor
@@ -90,13 +94,17 @@ combine_style(a::AcceptRunStyle, b::AcceptRunStyle) = AcceptRunStyle()
 combine_style(a::RunStyle, b::AcceptRunStyle) = RunStyle()
 
 (ctx::LowerJulia)(::Pass, ::AcceptRunStyle) = quote end#TODO this shouldn't need to be specified, I think that Pass needs not to declare a style
-function (ctx::LowerJulia)(root::Chunk, ::AcceptRunStyle)
-    body = (AcceptRunVisitor(root, root.idx, root.ext, ctx))(root.body)
-    if getname(root.idx) in getunbound(body)
-        #call DefaultStyle, the only style that AcceptRunStyle promotes with
-        return ctx(root, DefaultStyle())
+function (ctx::LowerJulia)(root::CINNode, ::AcceptRunStyle)
+    if root.head === chunk
+        body = (AcceptRunVisitor(root, root.idx, root.ext, ctx))(root.body)
+        if getname(root.idx) in getunbound(body)
+            #call DefaultStyle, the only style that AcceptRunStyle promotes with
+            return ctx(root, DefaultStyle())
+        else
+            return ctx(body)
+        end
     else
-        return ctx(body)
+        error("unimplemented")
     end
 end
 

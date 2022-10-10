@@ -85,35 +85,39 @@ combine_style(a::AcceptRunStyle, b::PhaseStyle) = PhaseStyle()
 combine_style(a::SwitchStyle, b::PhaseStyle) = SwitchStyle()
 combine_style(a::ThunkStyle, b::PhaseStyle) = ThunkStyle()
 
-function (ctx::LowerJulia)(root::Chunk, ::PhaseStyle)
-    i = getname(root.idx)
-    i0=ctx.freshen(i)
+function (ctx::LowerJulia)(root::CINNode, ::PhaseStyle)
+    if root.head === chunk
+        i = getname(root.idx)
+        i0=ctx.freshen(i)
 
-    body = root.body
+        body = root.body
 
-    ext_2 = resolvedim(PhaseStride(ctx, root.idx, root.ext)(body))
-    ext_2 = cache_dim!(ctx, :phase, resolvedim(resultdim(Narrow(root.ext), ext_2)))
+        ext_2 = resolvedim(PhaseStride(ctx, root.idx, root.ext)(body))
+        ext_2 = cache_dim!(ctx, :phase, resolvedim(resultdim(Narrow(root.ext), ext_2)))
 
-    body = PhaseBodyVisitor(ctx, root.idx, root.ext, ext_2)(body)
-    body = quote
-        $i0 = $i
-        $(contain(ctx) do ctx_4
-            (ctx_4)(Chunk(
-                idx = root.idx,
-                ext = ext_2,
-                body = body
-            ))
-        end)
-        $i = $(ctx(getstop(ext_2))) + 1
-    end
+        body = PhaseBodyVisitor(ctx, root.idx, root.ext, ext_2)(body)
+        body = quote
+            $i0 = $i
+            $(contain(ctx) do ctx_4
+                (ctx_4)(chunk(
+                    idx = root.idx,
+                    ext = ext_2,
+                    body = body
+                ))
+            end)
+            $i = $(ctx(getstop(ext_2))) + 1
+        end
 
-    if simplify(@f $(getlower(ext_2)) >= 1) == literal(true)
-        return body
-    else
-        return quote
-            if $(ctx(getstop(ext_2))) >= $(ctx(getstart(ext_2)))
-                $body
+        if simplify(@f $(getlower(ext_2)) >= 1) == literal(true)
+            return body
+        else
+            return quote
+                if $(ctx(getstop(ext_2))) >= $(ctx(getstart(ext_2)))
+                    $body
+                end
             end
         end
+    else
+        error("unimplemented")
     end
 end
