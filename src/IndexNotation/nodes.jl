@@ -8,9 +8,10 @@ abstract type IndexTerminal <: IndexExpression end
 @enum CINHead begin
     value=1
     virtual=2
-    literal=3
-    with=4
-    access=5
+    name=3
+    literal=4
+    with=5
+    access=6
 end
 
 struct CINNode <: IndexNode
@@ -50,6 +51,12 @@ function CINNode(op::CINHead, args::Vector)
         else
             error("wrong number of arguments to $op(...)")
         end
+    elseif op === name
+        if length(args) == 1
+            return CINNode(op, args[1], nothing, IndexNode[])
+        else
+            error("wrong number of arguments to $op(...)")
+        end
     elseif op === virtual
         if length(args) == 1
             return CINNode(op, args[1], nothing, IndexNode[])
@@ -77,35 +84,41 @@ function (op::CINHead)(args...)
     CINNode(op, Any[args...,])
 end
 
-function Base.getproperty(node::CINNode, name::Symbol)
-    if name === :head || name === :val || name === :type || name === :args
-        return Base.getfield(node, name)
+function Base.getproperty(node::CINNode, sym::Symbol)
+    if sym === :head || sym === :val || sym === :type || sym === :args
+        return Base.getfield(node, sym)
     elseif node.head === value
-        error("type CINNode(value, ...) has no property $name")
+        error("type CINNode(value, ...) has no property $sym")
     elseif node.head === literal
-        error("type CINNode(literal, ...) has no property $name")
+        error("type CINNode(literal, ...) has no property $sym")
     elseif node.head === virtual
-        error("type CINNode(virtual, ...) has no property $name")
+        error("type CINNode(virtual, ...) has no property $sym")
+    elseif node.head === name
+        if sym === :name
+            return node.val::Symbol
+        else
+            error("type CINNode(virtual, ...) has no property $name")
+        end
     elseif node.head === with
-        if name === :cons
+        if sym === :cons
             return node.args[1]
-        elseif name === :prod
+        elseif sym === :prod
             return node.args[2]
         else
-            error("type CINNode(with, ...) has no property $name")
+            error("type CINNode(with, ...) has no property $sym")
         end
     elseif node.head === access
-        if name === :tns
+        if sym === :tns
             return node.args[1]
-        elseif name === :mode
+        elseif sym === :mode
             return node.args[2]
-        elseif name === :idxs
+        elseif sym === :idxs
             return @view node.args[3:end]
         else
-            error("type CINNode(access, ...) has no property $name")
+            error("type CINNode(access, ...) has no property $sym")
         end
     else
-        error("type CINNode has no property $name")
+        error("type CINNode has no property $sym")
     end
 end
 
@@ -114,6 +127,17 @@ function Base.show(io::IO, mime::MIME"text/plain", node::CINNode)
         display_statement(io, mime, node, 0)
     else
         display_expression(io, mime, node)
+    end
+end
+
+
+function Finch.getunbound(ex::CINNode)
+    if ex.head === name
+        return [ex.name]
+    elseif istree(ex)
+        return mapreduce(Finch.getunbound, union, arguments(ex), init=[])
+    else
+        return []
     end
 end
 
@@ -128,6 +152,8 @@ function display_expression(io, mime, node::CINNode)
         end
     elseif node.head === literal
         print(io, node.val)
+    elseif node.head === name
+        print(io, node.name)
     elseif node.head === virtual
         print(io, "virtual(")
         print(io, node.val)
@@ -174,6 +200,8 @@ function Base.:(==)(a::CINNode, b::CINNode)
             return b.head === value && a.val == b.val && a.type === b.type
         elseif a.head === literal
             return b.head === literal && isequal(a.val, b.val) #TODO Feels iffy idk
+        elseif a.head === name
+            return b.head === name && a.name == b.name
         elseif a.head === virtual
             return b.head === virtual && a.val == b.val #TODO Feels iffy idk
         else
@@ -194,6 +222,8 @@ function Base.hash(a::CINNode, h::UInt)
             return hash(literal, hash(a.val, h))
         elseif a.head === virtual
             return hash(virtual, hash(a.val, h))
+        elseif a.head === name
+            return hash(name, hash(a.name, h))
         else
             error("unimplemented")
         end
@@ -222,16 +252,20 @@ function Finch.getresults(node::CINNode)
 end
 
 function Finch.getname(x::CINNode)
-    if x.head === virtual
+    if x.head === name
+        return x.val
+    elseif x.head === virtual
         return Finch.getname(x.val)
     else
         error("unimplemented")
     end
 end
 
-function Finch.setname(x::CINNode, name)
-    if x.head === virtual
-        return Finch.setname(x.val, name)
+function Finch.setname(x::CINNode, sym)
+    if x.head === name
+        return name(sym)
+    elseif x.head === virtual
+        return Finch.setname(x.val, sym)
     else
         error("unimplemented")
     end
@@ -334,18 +368,7 @@ end
 
 setname(tns::Workspace, name) = Workspace(name)
 
-struct Name <: IndexTerminal
-    name
-end
 
-SyntaxInterface.istree(::Name) = false
-Base.hash(ex::Name, h::UInt) = hash((Name, ex.name), h)
-
-display_expression(io, mime, ex::Name) = print(io, ex.name)
-
-Finch.getname(ex::Name) = ex.name
-Finch.setname(ex::Name, name) = Name(name)
-Finch.getunbound(ex::Name) = [ex.name]
 
 struct Protocol{Idx<:IndexNode, Val} <: IndexExpression
     idx::Idx

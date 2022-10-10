@@ -178,11 +178,6 @@ function (ctx::LowerJulia)(root::Call, ::DefaultStyle)
     end
 end
 
-function (ctx::LowerJulia)(root::Name, ::DefaultStyle)
-    @assert haskey(ctx.bindings, getname(root)) "variable $(getname(root)) unbound"
-    return ctx(ctx.bindings[getname(root)]) #This unwraps indices that are virtuals. Arguably these virtuals should be precomputed, but whatevs.
-end
-
 function (ctx::LowerJulia)(root::Protocol, ::DefaultStyle)
     :($(ctx(root.idx)))
 end
@@ -200,6 +195,9 @@ end
 function (ctx::LowerJulia)(root::CINNode, ::DefaultStyle)
     if root.head === value
         return root.val
+    elseif root.head === name
+        @assert haskey(ctx.bindings, getname(root)) "variable $(getname(root)) unbound"
+        return ctx(ctx.bindings[getname(root)]) #This unwraps indices that are virtuals. Arguably these virtuals should be precomputed, but whatevs.
     elseif root.head === literal
         if typeof(root.val) === Symbol ||
           typeof(root.val) === Expr ||

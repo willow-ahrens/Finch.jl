@@ -102,39 +102,35 @@ function (ctx::DeclareDimensions)(node::Dimensionalize, dim)
     ctx(node.body, dim)
 end
 function (ctx::DeclareDimensions)(node::CINNode, dim)
-    if node.head === access && node.tns isa CINNode && node.tns.head === virtual
-        declare_dimensions_access(node, ctx, node.tns.val, dim)
+    if node.head === name
+        ctx.dims[getname(node)] = resultdim(get(ctx.dims, getname(node), nodim), dim)
+        return node
+    elseif node.head === access && node.tns isa CINNode && node.tns.head === virtual
+        return declare_dimensions_access(node, ctx, node.tns.val, dim)
     elseif node.head === with
         prod = ctx(node.prod, nodim)
         (prod, _) = InferDimensions(;kwfields(ctx)...)(prod)
         cons = ctx(node.cons, nodim)
-        with(cons, prod)
+        return with(cons, prod)
     elseif istree(node)
-        similarterm(node, operation(node), map(arg->ctx(arg, nodim), arguments(node)))
+        return similarterm(node, operation(node), map(arg->ctx(arg, nodim), arguments(node)))
     else
-        node
+        return node
     end
 end
 function (ctx::InferDimensions)(node::CINNode)
-    if node.head === access && node.tns isa CINNode && node.tns.head === virtual
-        infer_dimensions_access(node, ctx, node.tns.val)
+    if node.head === name
+        return (node, ctx.dims[getname(node)])
+    elseif node.head === access && node.tns isa CINNode && node.tns.head === virtual
+        return infer_dimensions_access(node, ctx, node.tns.val)
     elseif node.head === with
         (cons, _) = ctx(node.cons)
-        (with(cons, node.prod), nodim)
-    
+        return (with(cons, node.prod), nodim)
     elseif istree(node)
-        (similarterm(node, operation(node), map(first, map(ctx, arguments(node)))), nodim)
+        return (similarterm(node, operation(node), map(first, map(ctx, arguments(node)))), nodim)
     else
-        (node, nodim)
+        return (node, nodim)
     end
-end
-
-function (ctx::DeclareDimensions)(node::Name, ext)
-    ctx.dims[getname(node)] = resultdim(get(ctx.dims, getname(node), nodim), ext)
-    node
-end
-function (ctx::InferDimensions)(node::Name)
-    (node, ctx.dims[getname(node)])
 end
 
 (ctx::DeclareDimensions)(node::Protocol, ext) = protocol(ctx(node.idx, ext), node.val)

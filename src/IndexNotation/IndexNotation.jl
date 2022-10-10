@@ -3,7 +3,7 @@ module IndexNotation
 
     export IndexNode, IndexStatement, IndexExpression, IndexTerminal, index_terminal
     export literal
-    export Name
+    export name
     export value
     export Workspace
     export Pass, pass

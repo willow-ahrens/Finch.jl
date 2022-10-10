@@ -211,9 +211,6 @@ comparators(x::Symbol) = (x,)
 priority(::Expr) = (2, 1)
 comparators(x::Expr) = (x.head, map(Lexicography, x.args)...)
 
-priority(::Name) = (3,0)
-comparators(x::Name) = (x.name,)
-
 priority(::Read) = (3,2,1)
 comparators(x::Read) = ()
 
@@ -234,6 +231,8 @@ function comparators(node::CINNode)
     elseif node.head === literal
         return (node.head, Lexicography(node.val))
     elseif node.head === virtual
+        return (node.head, Lexicography(node.val))
+    elseif node.head === name
         return (node.head, Lexicography(node.val))
     elseif istree(node)
         return (node.head, map(Lexicography, node.args))

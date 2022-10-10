@@ -23,9 +23,9 @@
     @test Finch.virtualize(:ex, typeof(@finch_program_instance(:f(:B[i::walk, k] * :C[k, j]^3, 42))), Finch.LowerJulia()) ==
         call(literal(:f), 
             call(*,
-                access(literal(:B), Read(), Protocol(Name(:i), walk), Name(:k)),
+                access(literal(:B), Read(), Protocol(name(:i), walk), name(:k)),
                 call(^,
-                    access(literal(:C), Read(), Name(:k), Name(:j)),
+                    access(literal(:C), Read(), name(:k), name(:j)),
                     3)),
             42) 
 
@@ -38,13 +38,13 @@
                     2))
 
     @test @finch_program(@loop i :A[i] += :B[i] * i) ==
-        loop(Name(:i),
+        loop(name(:i),
             assign(
-                access(:A, Update(), Name(:i)),
+                access(:A, Update(), name(:i)),
                 +,
                 call(*,
-                    access(:B, Read(), Name(:i)),
-                    Name(:i))))
+                    access(:B, Read(), name(:i)),
+                    name(:i))))
 
     @test @finch_program_instance(@loop i :A[i] += :B[i] * i) ==
         loop_instance(
@@ -64,13 +64,13 @@
                     name_instance(:i))))
 
     @test @finch_program(@loop i :A[i] <<(+)>>= :B[i] * i) ==
-        loop(Name(:i),
+        loop(name(:i),
             assign(
-                access(:A, Update(), Name(:i)),
+                access(:A, Update(), name(:i)),
                 +,
                 call(*,
-                    access(:B, Read(), Name(:i)),
-                    Name(:i))))
+                    access(:B, Read(), name(:i)),
+                    name(:i))))
 
     @test @finch_program_instance(@loop i :A[i] <<(+)>>= :B[i] * i) ==
         loop_instance(
@@ -91,18 +91,18 @@
 
     @test @finch_program(:A[i] += i < j < k) ==
         assign(
-            access(:A, Update(), Name(:i)),
+            access(:A, Update(), name(:i)),
             +,
             call(Finch.IndexNotation.and,
-                call(<, Name(:i), Name(:j)),
-                call(<, Name(:j), Name(:k))))
+                call(<, name(:i), name(:j)),
+                call(<, name(:j), name(:k))))
 
     @test @finch_program(:A[i] = i == j && k < l) ==
         assign(
-            access(:A, Write(), Name(:i)),
+            access(:A, Write(), name(:i)),
             nothing,
             call(Finch.IndexNotation.and,
-                call(==, Name(:i), Name(:j)),
-                call(<, Name(:k), Name(:l))))
+                call(==, name(:i), name(:j)),
+                call(<, name(:k), name(:l))))
 
 end
