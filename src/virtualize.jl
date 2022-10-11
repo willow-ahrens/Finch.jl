@@ -16,7 +16,7 @@ function virtualize(ex, ::Type{IndexNotation.MultiInstance{Bodies}}, ctx) where 
     bodies = map(enumerate(Bodies.parameters)) do (n, Body)
         virtualize(:($ex.bodies[$n]), Body, ctx)
     end
-    Multi(bodies)
+    multi(bodies...)
 end
 function virtualize(ex, ::Type{IndexNotation.SieveInstance{Cond, Body}}, ctx) where {Cond, Body}
     cond = virtualize(:($ex.cond), Cond, ctx)

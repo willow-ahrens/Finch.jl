@@ -5,10 +5,10 @@ module IndexNotation
     export literal
     export name
     export value
-    export Workspace
+#    export Workspace
     export pass
     export with
-    export Multi, multi
+    export multi
     export loop
     export Chunk, chunk
     export assign

@@ -201,6 +201,16 @@ function (ctx::LowerJulia)(root::CINNode, ::DefaultStyle)
                 res
             end)
         end
+    elseif root.kind === multi
+        thunk = Expr(:block)
+        for body in root.bodies
+            push!(thunk.args, quote
+                $(contain(ctx) do ctx_2
+                    (ctx_2)(body)
+                end)
+            end)
+        end
+        thunk
     elseif root.kind === access
         if root.tns isa CINNode && root.tns.kind === virtual
             return lowerjulia_access(ctx, root, root.tns.val)
@@ -275,24 +285,11 @@ function (ctx::LowerJulia)(root::CINNode, ::DefaultStyle)
     end
 end
 
-function (ctx::LowerJulia)(root::Multi, ::DefaultStyle)
-    thunk = Expr(:block)
-    for body in root.bodies
-        push!(thunk.args, quote
-            $(contain(ctx) do ctx_2
-                (ctx_2)(body)
-            end)
-        end)
-    end
-    thunk
-end
-
 function lowerjulia_access(ctx, node, tns)
     tns = ctx(tns)
     idxs = map(ctx, node.idxs)
     :($(ctx(tns))[$(idxs...)])
 end
-
 
 function lowerjulia_access(ctx, node, tns::Number)
     @assert node.mode === Read()

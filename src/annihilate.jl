@@ -220,8 +220,8 @@ comparators(x::Write) = ()
 priority(::Update) = (3,2,3)
 comparators(x::Update) = ()
 
-priority(::Workspace) = (3,3)
-comparators(x::Workspace) = (x.n,)
+#priority(::Workspace) = (3,3)
+#comparators(x::Workspace) = (x.n,)
 
 #TODO this works for now, but reconsider this later
 priority(node::CINNode) = (3, 4)

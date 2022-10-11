@@ -11,13 +11,14 @@ abstract type IndexTerminal <: IndexExpression end
     name=3
     literal=4
     with=5
-    access=6
-    call=7
-    loop=8
-    chunk=9
-    sieve=10
-    assign=11
-    pass=12
+    multi=6
+    access=7
+    call=8
+    loop=9
+    chunk=10
+    sieve=11
+    assign=12
+    pass=13
 end
 
 struct CINNode <: IndexNode
@@ -75,6 +76,8 @@ function CINNode(kind::CINHead, args::Vector)
         else
             error("wrong number of arguments to with(...)")
         end
+    elseif kind === multi
+        return CINNode(multi, nothing, nothing, args)
     elseif kind === access
         if length(args) >= 2
             return CINNode(access, nothing, nothing, args)
@@ -146,6 +149,12 @@ function Base.getproperty(node::CINNode, sym::Symbol)
             return node.children[2]
         else
             error("type CINNode(with, ...) has no property $sym")
+        end
+    elseif node.kind === multi
+        if sym === :bodies
+            return node.children
+        else
+            error("type CINNode(multi, ...) has no property $sym")
         end
     elseif node.kind === access
         if sym === :tns
@@ -293,6 +302,12 @@ function display_statement(io, mime, node::CINNode, level)
         print(io, tab^level * ") where (\n")
         display_statement(io, mime, node.prod, level + 1)
         print(io, tab^level * ")\n")
+    elseif node.kind === multi
+        print(io, tab^level * "begin\n")
+        for body in node.bodies
+            display_statement(io, mime, body, level + 1)
+        end
+        print(io, tab^level * "end\n")
     elseif node.kind === loop
         print(io, tab^level * "@∀ ")
         while node.body.kind === loop
@@ -400,6 +415,8 @@ end
 function Finch.getresults(node::CINNode)
     if node.kind === with
         Finch.getresults(node.cons)
+    elseif node.kind === multi
+        return mapreduce(Finch.getresults, vcat, node.bodies)
     elseif node.kind === access
         [node.tns]
     elseif node.kind === loop
@@ -493,6 +510,7 @@ end
 =#
 
 
+#=
 struct Workspace <: IndexTerminal
     n
 end
@@ -507,6 +525,7 @@ function display_expression(io, ex::Workspace)
 end
 
 setname(tns::Workspace, name) = Workspace(name)
+=#
 
 
 
@@ -530,29 +549,6 @@ function display_expression(io, mime, ex::Protocol)
     print(io, "::")
     display_expression(io, mime, ex.val)
 end
-
-struct Multi <: IndexStatement
-    bodies::Vector{IndexNode}
-end
-Base.:(==)(a::Multi, b::Multi) = a.bodies == b.bodies
-
-multi(args...) = multi!(vcat(args...))
-multi!(args) = Multi(args)
-
-SyntaxInterface.istree(::Multi) = true
-SyntaxInterface.operation(stmt::Multi) = multi
-SyntaxInterface.arguments(stmt::Multi) = stmt.bodies
-SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(multi), args) = multi!(args)
-
-function display_statement(io, mime, stmt::Multi, level)
-    print(io, tab^level * "begin\n")
-    for body in stmt.bodies
-        display_statement(io, mime, body, level + 1)
-    end
-    print(io, tab^level * "end\n")
-end
-
-Finch.getresults(stmt::Multi) = mapreduce(Finch.getresults, vcat, stmt.bodies)
 
 struct Read <: IndexTerminal end
 struct Write <: IndexTerminal end
