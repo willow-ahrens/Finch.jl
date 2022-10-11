@@ -235,7 +235,7 @@ function comparators(node::CINNode)
     elseif node.kind === name
         return (node.kind, Lexicography(node.val))
     elseif istree(node)
-        return (node.kind, map(Lexicography, node.args))
+        return (node.kind, map(Lexicography, node.children))
     else
         error("unimplemented")
     end

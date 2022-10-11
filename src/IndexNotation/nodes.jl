@@ -384,7 +384,7 @@ function Base.hash(a::CINNode, h::UInt)
             error("unimplemented")
         end
     elseif istree(a)
-        return hash(a.kind, hash(a.args, h))
+        return hash(a.kind, hash(a.children, h))
     else
         return false
     end
