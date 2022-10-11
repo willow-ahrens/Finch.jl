@@ -142,7 +142,7 @@ function (ctx::SimplifyVisitor)(node)
 end
 
 function (ctx::SimplifyVisitor)(node::CINNode)
-    if node.head === virtual
+    if node.kind === virtual
         convert(IndexNode, ctx(node.val))
     elseif istree(node)
         similarterm(node, operation(node), map(ctx, arguments(node)))
@@ -220,22 +220,22 @@ comparators(x::Write) = ()
 priority(::Update) = (3,2,3)
 comparators(x::Update) = ()
 
-priority(::Workspace) = (3,3)
-comparators(x::Workspace) = (x.n,)
+#priority(::Workspace) = (3,3)
+#comparators(x::Workspace) = (x.n,)
 
 #TODO this works for now, but reconsider this later
 priority(node::CINNode) = (3, 4)
 function comparators(node::CINNode)
-    if node.head === value
-        return (node.head, Lexicography(node.val), Lexicography(node.type))
-    elseif node.head === literal
-        return (node.head, Lexicography(node.val))
-    elseif node.head === virtual
-        return (node.head, Lexicography(node.val))
-    elseif node.head === name
-        return (node.head, Lexicography(node.val))
+    if node.kind === value
+        return (node.kind, Lexicography(node.val), Lexicography(node.type))
+    elseif node.kind === literal
+        return (node.kind, Lexicography(node.val))
+    elseif node.kind === virtual
+        return (node.kind, Lexicography(node.val))
+    elseif node.kind === name
+        return (node.kind, Lexicography(node.val))
     elseif istree(node)
-        return (node.head, map(Lexicography, node.args))
+        return (node.kind, map(Lexicography, node.children))
     else
         error("unimplemented")
     end

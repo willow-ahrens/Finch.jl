@@ -45,7 +45,7 @@ shiftdim(ext::NoDimension, delta) = nodim
 shiftdim(ext::DeferDimension, delta) = deferdim
 
 function shiftdim(ext::CINNode, body)
-    if ext.head === virtual
+    if ext.kind === virtual
         shiftdim(ext.val, body)
     else
         error("unimplemented")

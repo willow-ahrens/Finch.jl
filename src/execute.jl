@@ -139,13 +139,13 @@ function (ctx::Initialize)(node)
 end
 
 function (ctx::Initialize)(node::CINNode)
-    if node.head === access && node.tns isa CINNode && node.tns.head === virtual
+    if node.kind === access && node.tns isa CINNode && node.tns.kind === virtual
         if (ctx.target === nothing || (getname(node.tns) in ctx.target)) && !(getname(node.tns) in ctx.escape)
             initialize!(node.tns.val, ctx.ctx, node.mode, map(ctx, node.idxs)...)
         else
             return access(node.tns, node.mode, map(ctx, node.idxs)...)
         end
-    elseif node.head === with
+    elseif node.kind === with
         ctx_2 = Initialize(ctx.ctx, ctx.target, union(ctx.escape, map(getname, getresults(node.prod))))
         with(ctx_2(node.cons), ctx_2(node.prod))
     elseif istree(node)
@@ -178,13 +178,13 @@ function (ctx::Finalize)(node)
 end
 
 function (ctx::Finalize)(node::CINNode)
-    if node.head === access && node.tns isa CINNode && node.tns.head === virtual
+    if node.kind === access && node.tns isa CINNode && node.tns.kind === virtual
         if (ctx.target === nothing || (getname(node.tns) in ctx.target)) && !(getname(node.tns) in ctx.escape)
             access(finalize!(node.tns.val, ctx.ctx, node.mode, node.idxs...), node.mode, node.idxs...)
         else
             access(node.tns, node.mode, map(ctx, node.idxs)...)
         end
-    elseif node.head === with
+    elseif node.kind === with
         ctx_2 = Finalize(ctx.ctx, ctx.target, union(ctx.escape, map(getname, getresults(node.prod))))
         with(ctx_2(node.cons), ctx_2(node.prod))
     elseif istree(node)

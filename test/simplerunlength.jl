@@ -42,7 +42,7 @@ Finch.setsize!(arr::VirtualSimpleRunLength{Tv, Ti}, ctx::Finch.LowerJulia, mode,
 Finch.getname(arr::VirtualSimpleRunLength) = arr.name
 Finch.setname(arr::VirtualSimpleRunLength, name) = (arr_2 = deepcopy(arr); arr_2.name = name; arr_2)
 function Finch.stylize_access(node, ctx::Finch.Stylize{LowerJulia}, tns::VirtualSimpleRunLength)
-    if ctx.root isa CINNode && ctx.root.head === loop && ctx.root.idx == get_furl_root(node.idxs[1])
+    if ctx.root isa CINNode && ctx.root.kind === loop && ctx.root.idx == get_furl_root(node.idxs[1])
         Finch.ChunkStyle()
     else
         Finch.DefaultStyle()

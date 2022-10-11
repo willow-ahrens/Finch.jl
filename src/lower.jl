@@ -130,9 +130,9 @@ function (ctx::LowerJulia)(node, ::ThunkStyle)
 end
 
 function (ctx::ThunkVisitor)(node::CINNode)
-    if node.head === virtual
+    if node.kind === virtual
         ctx(node.val)
-    elseif node.head === access && node.tns isa CINNode && node.tns.head === virtual
+    elseif node.kind === access && node.tns isa CINNode && node.tns.kind === virtual
         #TODO this case morally shouldn't exist
         thunk_access(node, ctx, node.tns.val)
     elseif istree(node)
@@ -172,12 +172,12 @@ function (ctx::LowerJulia)(root, ::DefaultStyle)
 end
 
 function (ctx::LowerJulia)(root::CINNode, ::DefaultStyle)
-    if root.head === value
+    if root.kind === value
         return root.val
-    elseif root.head === name
+    elseif root.kind === name
         @assert haskey(ctx.bindings, getname(root)) "variable $(getname(root)) unbound"
         return ctx(ctx.bindings[getname(root)]) #This unwraps indices that are virtuals. Arguably these virtuals should be precomputed, but whatevs.
-    elseif root.head === literal
+    elseif root.kind === literal
         if typeof(root.val) === Symbol ||
           typeof(root.val) === Expr ||
           typeof(root.val) === Missing
@@ -185,7 +185,7 @@ function (ctx::LowerJulia)(root::CINNode, ::DefaultStyle)
         else
             return root.val
         end
-    elseif root.head === with
+    elseif root.kind === with
         prod = nothing
         target = map(getname, getresults(root.prod))
         return quote
@@ -201,15 +201,25 @@ function (ctx::LowerJulia)(root::CINNode, ::DefaultStyle)
                 res
             end)
         end
-    elseif root.head === access
-        if root.tns isa CINNode && root.tns.head === virtual
+    elseif root.kind === multi
+        thunk = Expr(:block)
+        for body in root.bodies
+            push!(thunk.args, quote
+                $(contain(ctx) do ctx_2
+                    (ctx_2)(body)
+                end)
+            end)
+        end
+        thunk
+    elseif root.kind === access
+        if root.tns isa CINNode && root.tns.kind === virtual
             return lowerjulia_access(ctx, root, root.tns.val)
         else
             tns = ctx(tns)
             idxs = map(ctx, root.idxs)
             return :($(ctx(tns))[$(idxs...)])
         end
-    elseif root.head === call
+    elseif root.kind === call
         if root.op == literal(and)
             reduce((x, y) -> :($x && $y), map(ctx, root.brgs)) #TODO This could be better. should be able to handle empty case
         elseif root.op == literal(or)
@@ -217,13 +227,13 @@ function (ctx::LowerJulia)(root::CINNode, ::DefaultStyle)
         else
             :($(ctx(root.op))($(map(ctx, root.brgs)...)))
         end
-    elseif root.head === loop
+    elseif root.kind === loop
         return ctx(chunk(
             idx = stmt.idx,
             ext = resolvedim(ctx.dims[getname(stmt.idx)]),
             body = stmt.body)
         )
-    elseif root.head === chunk
+    elseif root.kind === chunk
         idx_sym = ctx.freshen(getname(root.idx))
         if simplify((@f $(getlower(root.ext)) >= 1)) == (@f true)  && simplify((@f $(getupper(root.ext)) <= 1)) == (@f true)
             return quote
@@ -247,7 +257,7 @@ function (ctx::LowerJulia)(root::CINNode, ::DefaultStyle)
                 end
             end
         end
-    elseif root.head === sieve
+    elseif root.kind === sieve
         cond = ctx.freshen(:cond)
         push!(ctx.preamble, :($cond = $(ctx(root.cond))))
     
@@ -258,9 +268,9 @@ function (ctx::LowerJulia)(root::CINNode, ::DefaultStyle)
                 end)
             end
         end
-    elseif root.head === virtual
+    elseif root.kind === virtual
         ctx(root.val)
-    elseif root.head === assign
+    elseif root.kind === assign
         if root.op == literal(nothing)
             rhs = ctx(root.rhs)
         else
@@ -268,23 +278,11 @@ function (ctx::LowerJulia)(root::CINNode, ::DefaultStyle)
         end
         lhs = ctx(root.lhs)
         return :($lhs = $rhs)
-    elseif root.head === pass
+    elseif root.kind === pass
         return quote end
     else
         error("unimplemented")
     end
-end
-
-function (ctx::LowerJulia)(root::Multi, ::DefaultStyle)
-    thunk = Expr(:block)
-    for body in root.bodies
-        push!(thunk.args, quote
-            $(contain(ctx) do ctx_2
-                (ctx_2)(body)
-            end)
-        end)
-    end
-    thunk
 end
 
 function lowerjulia_access(ctx, node, tns)
@@ -292,7 +290,6 @@ function lowerjulia_access(ctx, node, tns)
     idxs = map(ctx, node.idxs)
     :($(ctx(tns))[$(idxs...)])
 end
-
 
 function lowerjulia_access(ctx, node, tns::Number)
     @assert node.mode === Read()
@@ -314,7 +311,7 @@ function (ctx::ForLoopVisitor)(node)
 end
 
 function (ctx::ForLoopVisitor)(node::CINNode)
-    if node.head === access && node.tns isa CINNode && node.tns.head === virtual
+    if node.kind === access && node.tns isa CINNode && node.tns.kind === virtual
         #TODO this is a problem
         something(unchunk(node.tns.val, ctx), node)
     elseif istree(node)

@@ -40,7 +40,7 @@ function (ctx::CycleVisitor)(node)
 end
 
 function (ctx::CycleVisitor)(node::CINNode)
-    if node.head === virtual
+    if node.kind === virtual
         ctx(node.val)
     elseif istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))

@@ -24,7 +24,7 @@ combine_style(a::SimplifyStyle, b::RunStyle) = SimplifyStyle()
 combine_style(a::RunStyle, b::RunStyle) = RunStyle()
 
 function (ctx::LowerJulia)(root::CINNode, ::RunStyle)
-    if root.head === chunk
+    if root.kind === chunk
         root = (AccessRunVisitor(root))(root)
         if Stylize(root, ctx)(root) isa RunStyle #TODO do we need this always? Can we do this generically?
             error("run style couldn't lower runs")
@@ -47,7 +47,7 @@ function (ctx::AccessRunVisitor)(node)
 end
 
 function (ctx::AccessRunVisitor)(node::CINNode)
-    if node.head === access && node.tns isa CINNode && node.tns.head === virtual
+    if node.kind === access && node.tns isa CINNode && node.tns.kind === virtual
         something(unchunk(node.tns.val, ctx), node)
     elseif istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))
@@ -72,7 +72,7 @@ default(node::AcceptRun) = node.val
 
 #TODO this should go somewhere else
 function Finch.default(x::CINNode)
-    if x.head === virtual
+    if x.kind === virtual
         Finch.default(x.val)
     else
         error("unimplemented")
@@ -94,7 +94,7 @@ combine_style(a::AcceptRunStyle, b::AcceptRunStyle) = AcceptRunStyle()
 combine_style(a::RunStyle, b::AcceptRunStyle) = RunStyle()
 
 function (ctx::LowerJulia)(root::CINNode, ::AcceptRunStyle)
-    if root.head === chunk
+    if root.kind === chunk
         body = (AcceptRunVisitor(root, root.idx, root.ext, ctx))(root.body)
         if getname(root.idx) in getunbound(body)
             #call DefaultStyle, the only style that AcceptRunStyle promotes with
@@ -102,7 +102,7 @@ function (ctx::LowerJulia)(root::CINNode, ::AcceptRunStyle)
         else
             return ctx(body)
         end
-    elseif root.head === pass
+    elseif root.kind === pass
         quote end#TODO this shouldn't need to be specified, I think that Pass needs not to declare a style
     else
         error("unimplemented")
@@ -125,9 +125,9 @@ function (ctx::AcceptRunVisitor)(node)
 end
 
 function (ctx::AcceptRunVisitor)(node::CINNode)
-    if node.head === virtual
+    if node.kind === virtual
         ctx(node.val)
-    elseif node.head === access && node.tns isa CINNode && node.tns.head === virtual
+    elseif node.kind === access && node.tns isa CINNode && node.tns.kind === virtual
         node.mode === Read() ? node : something(unchunk(node.tns.val, ctx), node)
     elseif istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))

@@ -102,12 +102,12 @@ function (ctx::DeclareDimensions)(node::Dimensionalize, dim)
     ctx(node.body, dim)
 end
 function (ctx::DeclareDimensions)(node::CINNode, dim)
-    if node.head === name
+    if node.kind === name
         ctx.dims[getname(node)] = resultdim(get(ctx.dims, getname(node), nodim), dim)
         return node
-    elseif node.head === access && node.tns isa CINNode && node.tns.head === virtual
+    elseif node.kind === access && node.tns isa CINNode && node.tns.kind === virtual
         return declare_dimensions_access(node, ctx, node.tns.val, dim)
-    elseif node.head === with
+    elseif node.kind === with
         prod = ctx(node.prod, nodim)
         (prod, _) = InferDimensions(;kwfields(ctx)...)(prod)
         cons = ctx(node.cons, nodim)
@@ -119,11 +119,11 @@ function (ctx::DeclareDimensions)(node::CINNode, dim)
     end
 end
 function (ctx::InferDimensions)(node::CINNode)
-    if node.head === name
+    if node.kind === name
         return (node, ctx.dims[getname(node)])
-    elseif node.head === access && node.tns isa CINNode && node.tns.head === virtual
+    elseif node.kind === access && node.tns isa CINNode && node.tns.kind === virtual
         return infer_dimensions_access(node, ctx, node.tns.val)
-    elseif node.head === with
+    elseif node.kind === with
         (cons, _) = ctx(node.cons)
         return (with(cons, node.prod), nodim)
     elseif istree(node)
@@ -234,28 +234,28 @@ getupper(ext::Extent) = ext.upper
 extent(ext::Extent) = @f $(ext.stop) - $(ext.start) + 1
 
 function getstop(ext::CINNode)
-    if ext.head === virtual
+    if ext.kind === virtual
         getstop(ext.val)
     else
         ext
     end
 end
 function getstart(ext::CINNode)
-    if ext.head === virtual
+    if ext.kind === virtual
         getstart(ext.val)
     else
         ext
     end
 end
 function getlower(ext::CINNode)
-    if ext.head === virtual
+    if ext.kind === virtual
         getlower(ext.val)
     else
         1
     end
 end
 function getupper(ext::CINNode)
-    if ext.head === virtual
+    if ext.kind === virtual
         getupper(ext.val)
     else
         1
@@ -263,11 +263,11 @@ function getupper(ext::CINNode)
 end
 #TODO I don't like this def
 function extent(ext::CINNode)
-    if ext.head === virtual
+    if ext.kind === virtual
         extent(ext.val)
-    elseif ext.head === value
+    elseif ext.kind === value
         return 1
-    elseif ext.head === literal
+    elseif ext.kind === literal
         return 1
     else
         error("unimplemented")
@@ -348,7 +348,7 @@ struct Narrow{Ext}
 end
 
 function Narrow(ext::CINNode)
-    if ext.head === virtual
+    if ext.kind === virtual
         Narrow(ext.val)
     else
         error("unimplemented")
@@ -371,7 +371,7 @@ struct Widen{Ext}
 end
 
 function Widen(ext::CINNode)
-    if ext.head === virtual
+    if ext.kind === virtual
         Widen(ext.val)
     else
         error("unimplemented")

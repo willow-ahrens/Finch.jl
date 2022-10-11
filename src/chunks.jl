@@ -20,7 +20,7 @@ function (ctx::ChunkifyVisitor)(node)
 end
 
 function (ctx::ChunkifyVisitor)(node::CINNode)
-    if node.head === access && node.tns isa CINNode && node.tns.head === virtual
+    if node.kind === access && node.tns isa CINNode && node.tns.kind === virtual
         chunkify_access(node, ctx, node.tns.val)
     elseif istree(node)
         similarterm(node, operation(node), map(ctx, arguments(node)))
@@ -32,7 +32,7 @@ end
 chunkify_access(node, ctx, tns) = similarterm(node, operation(node), map(ctx, arguments(node)))
 
 function (ctx::LowerJulia)(root::CINNode, ::ChunkStyle)
-    if root.head === loop
+    if root.kind === loop
         idx = root.idx
         #TODO is every read of dims gonna be like this? When do we lock it in?
         ext = resolvedim(ctx.dims[getname(idx)])
