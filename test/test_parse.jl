@@ -23,7 +23,7 @@
     @test Finch.virtualize(:ex, typeof(@finch_program_instance(:f(:B[i::walk, k] * :C[k, j]^3, 42))), Finch.LowerJulia()) ==
         call(literal(:f), 
             call(*,
-                access(literal(:B), Read(), Protocol(name(:i), walk), name(:k)),
+                access(literal(:B), Read(), protocol(name(:i), walk), name(:k)),
                 call(^,
                     access(literal(:C), Read(), name(:k), name(:j)),
                     3)),

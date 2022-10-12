@@ -14,7 +14,7 @@ module IndexNotation
     export assign
     export call
     export Read, Write, Update, access
-    export Protocol, protocol
+    export protocol
     export sieve
     export CINNode, value, isvalue
 

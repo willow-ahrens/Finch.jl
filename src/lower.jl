@@ -153,14 +153,6 @@ function (ctx::ThunkVisitor)(node::Thunk)
     node.body
 end
 
-
-
-#TODO rename brgs
-
-function (ctx::LowerJulia)(root::Protocol, ::DefaultStyle)
-    :($(ctx(root.idx)))
-end
-
 IndexNotation.isliteral(::Union{Symbol, Expr, Missing}) =  false
 (ctx::LowerJulia)(root::Union{Symbol, Expr}, ::DefaultStyle) = root
 
@@ -219,6 +211,8 @@ function (ctx::LowerJulia)(root::CINNode, ::DefaultStyle)
             idxs = map(ctx, root.idxs)
             return :($(ctx(tns))[$(idxs...)])
         end
+    elseif root.kind === protocol
+        :($(ctx(root.idx)))
     elseif root.kind === call
         if root.op == literal(and)
             reduce((x, y) -> :($x && $y), map(ctx, root.brgs)) #TODO This could be better. should be able to handle empty case

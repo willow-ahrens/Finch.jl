@@ -161,10 +161,16 @@ end
 
 hasdefaultcheck(lvl::VirtualDenseLevel) = hasdefaultcheck(lvl.lvl)
 
-unfurl(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode::Union{Write, Update, Read}, idx, idxs...) =
-    unfurl(fbr, ctx, mode, protocol(idx, follow), idxs...)
+function unfurl(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode::Union{Write, Update, Read}, ::Nothing, idx::CINNode, idxs...)
+    if idx.kind === protocol
+        @assert idx.mode.head === virtual
+        unfurl(fbr, ctx, mode, idx.mode.val, idx.idx, idxs...)
+    else
+        unfurl(fbr, ctx, mode, follow, idx, idxs...)
+    end
+end
 
-function unfurl(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode::Union{Read, Write, Update}, idx::Protocol{<:Any, <:Union{Follow, Laminate, Extrude}}, idxs...) #TODO should protocol be strict?
+function unfurl(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode::Union{Read, Write, Update}, ::Union{Follow, Laminate, Extrude}, idx, idxs...) #TODO should protocol be strict?
     lvl = fbr.lvl
     tag = lvl.ex
 
@@ -180,5 +186,5 @@ function unfurl(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode::Union{Read, Wri
         )
     )
 
-    exfurl(body, ctx, mode, idx.idx)
+    exfurl(body, ctx, mode, idx)
 end

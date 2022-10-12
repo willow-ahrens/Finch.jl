@@ -153,10 +153,16 @@ function finalize_level!(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx::LowerJul
     return fbr.lvl
 end
 
-unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode::Read, idx, idxs...) =
-    unfurl(fbr, ctx, mode, protocol(idx, walk), idxs...)
+function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode::Read, ::Nothing, idx, idxs...)
+    if idx.kind === protocol
+        @assert idx.mode.head === virtual
+        unfurl(fbr, ctx, mode, idx.mode.val, idx.idx, idxs...)
+    else
+        unfurl(fbr, ctx, mode, walk, idx, idxs...)
+    end
+end
 
-function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode::Read, idx::Protocol{<:Any, Walk}, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode::Read, ::Walk, idx, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
@@ -202,13 +208,19 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode::Read, idx::
         )
     )
 
-    exfurl(body, ctx, mode, idx.idx)
+    exfurl(body, ctx, mode, idx)
 end
 
-unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode::Union{Write, Update}, idx, idxs...) =
-    unfurl(fbr, ctx, mode, protocol(idx, extrude), idxs...)
+function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode::Union{Write, Update}, ::Nothing, idx, idxs...)
+    if idx.kind === protocol
+        @assert idx.mode.head === virtual
+        unfurl(fbr, ctx, mode, idx.mode.val, idx.idx, idxs...)
+    else
+        unfurl(fbr, ctx, mode, extrude, idx, idxs...)
+    end
+end
 
-function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode::Union{Write, Update}, idx::Protocol{<:Any, Extrude}, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode::Union{Write, Update}, ::Extrude, idx, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_q = ctx.freshen(tag, :_q)
@@ -296,5 +308,5 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode::Union{Write
         $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1] = $my_q
     end)
 
-    exfurl(body, ctx, mode, idx.idx)
+    exfurl(body, ctx, mode, idx)
 end

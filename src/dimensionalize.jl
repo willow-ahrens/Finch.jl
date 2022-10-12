@@ -112,6 +112,8 @@ function (ctx::DeclareDimensions)(node::CINNode, dim)
         (prod, _) = InferDimensions(;kwfields(ctx)...)(prod)
         cons = ctx(node.cons, nodim)
         return with(cons, prod)
+    elseif node.kind === protocol
+        return protocol(ctx(node.idx, ext), node.val)
     elseif istree(node)
         return similarterm(node, operation(node), map(arg->ctx(arg, nodim), arguments(node)))
     else
@@ -126,17 +128,14 @@ function (ctx::InferDimensions)(node::CINNode)
     elseif node.kind === with
         (cons, _) = ctx(node.cons)
         return (with(cons, node.prod), nodim)
+    elseif node.kind === protocol
+        (idx, dim) = ctx(node.idx)
+        (protocol(idx, node.val), dim)
     elseif istree(node)
         return (similarterm(node, operation(node), map(first, map(ctx, arguments(node)))), nodim)
     else
         return (node, nodim)
     end
-end
-
-(ctx::DeclareDimensions)(node::Protocol, ext) = protocol(ctx(node.idx, ext), node.val)
-function (ctx::InferDimensions)(node::Protocol)
-    (idx, dim) = ctx(node.idx)
-    (protocol(idx, node.val), dim)
 end
 
 declare_dimensions_access(node, ctx, tns::Dimensionalize, dim) = declare_dimensions_access(node, ctx, tns.body, dim)

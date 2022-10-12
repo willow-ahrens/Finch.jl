@@ -134,19 +134,20 @@ end
 function chunkify_access(node, ctx, tns::VirtualFiber)
     if !isempty(node.idxs)
         if ctx.idx == get_furl_root(node.idxs[1])
-            return access(unfurl(tns, ctx.ctx, node.mode, node.idxs...), node.mode, get_furl_root(node.idxs[1])) #TODO do this nicer
+            return access(unfurl(tns, ctx.ctx, node.mode, nothing, node.idxs...), node.mode, get_furl_root(node.idxs[1])) #TODO do this nicer
         end
     end
     return node
 end
 
 get_furl_root(idx) = nothing
-get_furl_root(idx::Protocol) = get_furl_root(idx.idx)
 function get_furl_root(idx::CINNode)
     if idx.kind === name
         return idx
     elseif idx.kind === access && idx.tns.kind === virtual
         get_furl_root_access(idx, idx.tns.val)
+    elseif idx.kind === protocol
+        return get_furl_root(idx.idx)
     else
         return nothing
     end

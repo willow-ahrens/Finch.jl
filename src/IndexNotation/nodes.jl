@@ -13,12 +13,13 @@ abstract type IndexTerminal <: IndexExpression end
     with=5
     multi=6
     access=7
-    call=8
-    loop=9
-    chunk=10
-    sieve=11
-    assign=12
-    pass=13
+    protocol=8
+    call=9
+    loop=10
+    chunk=11
+    sieve=12
+    assign=13
+    pass=14
 end
 
 struct CINNode <: IndexNode
@@ -84,6 +85,12 @@ function CINNode(kind::CINHead, args::Vector)
         else
             error("wrong number of arguments to access(...)")
         end
+    elseif kind === protocol
+        if length(args) == 2
+            return CINNode(protocol, nothing, nothing, args)
+        else
+            error("wrong number of arguments to protocol(...)")
+        end
     elseif kind === call
         if length(args) >= 1
             return CINNode(call, nothing, nothing, args)
@@ -140,7 +147,7 @@ function Base.getproperty(node::CINNode, sym::Symbol)
         if sym === :name
             return node.val::Symbol
         else
-            error("type CINNode(virtual, ...) has no property $name")
+            error("type CINNode(virtual, ...) has no property $sym")
         end
     elseif node.kind === with
         if sym === :cons
@@ -173,6 +180,14 @@ function Base.getproperty(node::CINNode, sym::Symbol)
             return @view node.children[2:end]
         else
             error("type CINNode(call, ...) has no property $sym")
+        end
+    elseif node.kind === protocol
+        if sym === :idx
+            return node.children[1]
+        elseif sym === :mode
+            return node.children[2]
+        else
+            error("type CINNode(protocol, ...) has no property $sym")
         end
     elseif node.kind === loop
         if sym === :idx
@@ -348,6 +363,10 @@ function display_statement(io, mime, node::CINNode, level)
         print(io, "= ")
         display_expression(io, mime, node.rhs)
         print(io, "\n")
+    elseif node.kind === protocol
+        display_expression(io, mime, ex.idx)
+        print(io, "::")
+        display_expression(io, mime, ex.mode)
     elseif node.kind === pass
         print(io, tab^level * "(")
         for tns in arguments(node)[1:end-1]
@@ -526,29 +545,6 @@ end
 
 setname(tns::Workspace, name) = Workspace(name)
 =#
-
-
-
-struct Protocol{Idx<:IndexNode, Val} <: IndexExpression
-    idx::Idx
-    val::Val
-end
-Base.:(==)(a::Protocol, b::Protocol) = a.idx == b.idx && a.val == b.val
-
-protocol(args...) = protocol!(vcat(args...))
-protocol!(args) = Protocol(args[1], args[2])
-
-Finch.getname(ex::Protocol) = Finch.getname(ex.idx)
-SyntaxInterface.istree(::Protocol) = true
-SyntaxInterface.operation(ex::Protocol) = protocol
-SyntaxInterface.arguments(ex::Protocol) = Any[ex.idx, ex.val]
-SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(protocol), args) = protocol!(args)
-
-function display_expression(io, mime, ex::Protocol)
-    display_expression(io, mime, ex.idx)
-    print(io, "::")
-    display_expression(io, mime, ex.val)
-end
 
 struct Read <: IndexTerminal end
 struct Write <: IndexTerminal end

@@ -10,7 +10,7 @@ function virtualize(ex, ::Type{IndexNotation.PassInstance{Tnss}}, ctx) where {Tn
     pass(tnss)
 end
 virtualize(ex, ::Type{IndexNotation.NameInstance{sym}}, ctx) where {sym} = name(sym)
-virtualize(ex, ::Type{IndexNotation.ProtocolInstance{Idx, Val}}, ctx) where {Idx, Val} = Protocol(virtualize(:($ex.idx), Idx, ctx), virtualize(:($ex.val), Val, ctx))
+virtualize(ex, ::Type{IndexNotation.ProtocolInstance{Idx, Val}}, ctx) where {Idx, Val} = protocol(virtualize(:($ex.idx), Idx, ctx), virtualize(:($ex.val), Val, ctx))
 virtualize(ex, ::Type{IndexNotation.WithInstance{Cons, Prod}}, ctx) where {Cons, Prod} = with(virtualize(:($ex.cons), Cons, ctx), virtualize(:($ex.prod), Prod, ctx))
 function virtualize(ex, ::Type{IndexNotation.MultiInstance{Bodies}}, ctx) where {Bodies}
     bodies = map(enumerate(Bodies.parameters)) do (n, Body)
