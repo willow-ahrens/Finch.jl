@@ -163,7 +163,7 @@ hasdefaultcheck(lvl::VirtualDenseLevel) = hasdefaultcheck(lvl.lvl)
 
 function unfurl(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode::Union{Write, Update, Read}, ::Nothing, idx::CINNode, idxs...)
     if idx.kind === protocol
-        @assert idx.mode.head === virtual
+        @assert idx.mode.kind === literal
         unfurl(fbr, ctx, mode, idx.mode.val, idx.idx, idxs...)
     else
         unfurl(fbr, ctx, mode, follow, idx, idxs...)

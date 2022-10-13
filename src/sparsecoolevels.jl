@@ -186,7 +186,7 @@ end
 
 function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode::Read, ::Nothing, idx, idxs...)
     if idx.kind === protocol
-        @assert idx.mode.head === virtual
+        @assert idx.mode.kind === literal
         unfurl(fbr, ctx, mode, idx.mode.val, idx.idx, idxs...)
     else
         unfurl(fbr, ctx, mode, walk, idx, idxs...)
@@ -283,7 +283,7 @@ hasdefaultcheck(lvl::VirtualSparseCooLevel) = true
 
 function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode::Union{Write, Update}, ::Nothing, idx, idxs...)
     if idx.kind === protocol
-        @assert idx.mode.head === virtual
+        @assert idx.mode.kind === literal
         unfurl(fbr, ctx, mode, idx.mode.val, idx.idx, idxs...)
     else
         unfurl(fbr, ctx, mode, extrude, idx, idxs...)

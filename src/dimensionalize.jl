@@ -113,7 +113,7 @@ function (ctx::DeclareDimensions)(node::CINNode, dim)
         cons = ctx(node.cons, nodim)
         return with(cons, prod)
     elseif node.kind === protocol
-        return protocol(ctx(node.idx, ext), node.val)
+        return protocol(ctx(node.idx, dim), node.val)
     elseif istree(node)
         return similarterm(node, operation(node), map(arg->ctx(arg, nodim), arguments(node)))
     else

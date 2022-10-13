@@ -169,7 +169,7 @@ end
 
 function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode::Read, ::Nothing, idx, idxs...)
     if idx.kind === protocol
-        @assert idx.mode.head === virtual
+        @assert idx.mode.kind === literal
         unfurl(fbr, ctx, mode, idx.mode.val, idx.idx, idxs...)
     else
         unfurl(fbr, ctx, mode, walk, idx, idxs...)
@@ -378,7 +378,7 @@ end
 
 function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode::Union{Write, Update}, ::Nothing, idx, idxs...)
     if idx.kind === protocol
-        @assert idx.mode.head === virtual
+        @assert idx.mode.kind === literal
         unfurl(fbr, ctx, mode, idx.mode.val, idx.idx, idxs...)
     else
         unfurl(fbr, ctx, mode, extrude, idx, idxs...)
