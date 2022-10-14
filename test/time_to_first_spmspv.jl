@@ -3,6 +3,9 @@ y = @fiber d(e(0.0))
 A = @fiber d(sl(e(0.0)))
 x = @fiber sl(e(0.0))
 
+#using ProfileView
+#@profview @elapsed Finch.execute_code(:ex, typeof(Finch.@finch_program_instance @loop i j y[i] += A[i, j] * x[i]))
+
 first_run = @elapsed Finch.execute_code(:ex, typeof(Finch.@finch_program_instance @loop i j y[i] += A[i, j] * x[i]))
 second_run = @elapsed Finch.execute_code(:ex, typeof(Finch.@finch_program_instance @loop i j y[i] += A[i, j] * x[i]))
 
@@ -82,4 +85,11 @@ rewrite_methods = length(methodinstances(RewriteTools))
 #│   second_run = 0.744349017
 #│   tests = 2m31.4s
 #│   finch_methods = 819
+#└   rewrite_methods = 305
+#Remove unresolve/resyntax
+#┌ Info: results
+#│   first_run = 21.224471498
+#│   second_run = 0.067946879
+#│   tests = 2m09.2s
+#│   finch_methods = 820
 #└   rewrite_methods = 305
