@@ -143,7 +143,7 @@ end
 
 function (ctx::SimplifyVisitor)(node::CINNode)
     if node.kind === virtual
-        convert(IndexNode, ctx(node.val))
+        convert(CINNode, ctx(node.val))
     elseif istree(node)
         similarterm(node, operation(node), map(ctx, arguments(node)))
     else
@@ -231,10 +231,6 @@ function comparators(node::CINNode)
         error("unimplemented")
     end
 end
-
-priority(::IndexNode) = (3,Inf)
-comparators(x::IndexNode) = (@assert istree(x); (string(operation(x)), map(Lexicography, arguments(x))...))
-
 #TODO these are nice defaults if we want to allow nondeterminism
 #priority(::Any) = (Inf,)
 #comparators(x::Any) = hash(x)

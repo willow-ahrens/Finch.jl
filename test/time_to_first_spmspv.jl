@@ -76,3 +76,10 @@ rewrite_methods = length(methodinstances(RewriteTools))
 #│   tests = 2m39.2s
 #│   finch_methods = 804
 #└   rewrite_methods = 318
+#Remove IndexNode
+#┌ Info: results
+#│   first_run = 21.343022603
+#│   second_run = 0.744349017
+#│   tests = 2m31.4s
+#│   finch_methods = 819
+#└   rewrite_methods = 305

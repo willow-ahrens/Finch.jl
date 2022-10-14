@@ -8,48 +8,48 @@ function register()
     end)
 end
 
-struct Lifetime <: IndexNode
-    body
-end
-
-lifetime(arg) = Lifetime(arg)
-
-SyntaxInterface.istree(::Lifetime) = true
-SyntaxInterface.arguments(ex::Lifetime) = [ex.body]
-SyntaxInterface.operation(::Lifetime) = lifetime
-SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(lifetime), args) = Lifetime(args...)
-
-IndexNotation.isliteral(::Lifetime) =  false
-
-struct LifetimeStyle end
-
-Base.show(io, ex::Lifetime) = Base.show(io, MIME"text/plain", ex)
-function Base.show(io::IO, mime::MIME"text/plain", ex::Lifetime)
-    print(io, "Lifetime(")
-    print(io, ex.body)
-    print(io, ")")
-end
-
-(ctx::Stylize{LowerJulia})(node::Lifetime) = result_style(LifetimeStyle(), ctx(node.body))
-combine_style(a::DefaultStyle, b::LifetimeStyle) = LifetimeStyle()
-combine_style(a::ThunkStyle, b::LifetimeStyle) = ThunkStyle()
-combine_style(a::LifetimeStyle, b::LifetimeStyle) = LifetimeStyle()
-
-function (ctx::LowerJulia)(prgm::Lifetime, ::LifetimeStyle)
-    prgm = prgm.body
-    quote
-        $(contain(ctx) do ctx_2
-            prgm = Initialize(ctx = ctx_2)(prgm)
-            ctx_2(prgm)
-        end)
-        $(contain(ctx) do ctx_2
-            prgm = Finalize(ctx = ctx_2)(prgm)
-            :(($(map(getresults(prgm)) do tns
-                :($(getname(tns)) = $(ctx_2(tns)))
-            end...), ))
-        end)
-    end
-end
+#struct Lifetime <: IndexNode
+#    body
+#end
+#
+#lifetime(arg) = Lifetime(arg)
+#
+#SyntaxInterface.istree(::Lifetime) = true
+#SyntaxInterface.arguments(ex::Lifetime) = [ex.body]
+#SyntaxInterface.operation(::Lifetime) = lifetime
+#SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(lifetime), args) = Lifetime(args...)
+#
+#IndexNotation.isliteral(::Lifetime) =  false
+#
+#struct LifetimeStyle end
+#
+#Base.show(io, ex::Lifetime) = Base.show(io, MIME"text/plain", ex)
+#function Base.show(io::IO, mime::MIME"text/plain", ex::Lifetime)
+#    print(io, "Lifetime(")
+#    print(io, ex.body)
+#    print(io, ")")
+#end
+#
+#(ctx::Stylize{LowerJulia})(node::Lifetime) = result_style(LifetimeStyle(), ctx(node.body))
+#combine_style(a::DefaultStyle, b::LifetimeStyle) = LifetimeStyle()
+#combine_style(a::ThunkStyle, b::LifetimeStyle) = ThunkStyle()
+#combine_style(a::LifetimeStyle, b::LifetimeStyle) = LifetimeStyle()
+#
+#function (ctx::LowerJulia)(prgm::Lifetime, ::LifetimeStyle)
+#    prgm = prgm.body
+#    quote
+#        $(contain(ctx) do ctx_3
+#            prgm = Initialize(ctx = ctx_3)(prgm)
+#            ctx_3(prgm)
+#        end)
+#        $(contain(ctx) do ctx_3
+#            prgm = Finalize(ctx = ctx_3)(prgm)
+#            :(($(map(getresults(prgm)) do tns
+#                :($(getname(tns)) = $(ctx_3(tns)))
+#            end...), ))
+#        end)
+#    end
+#end
 
 function execute_code(ex, T)
     prgm = nothing

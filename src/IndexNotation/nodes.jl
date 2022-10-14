@@ -1,10 +1,4 @@
 tab = "  "
-
-abstract type IndexNode end
-abstract type IndexStatement <: IndexNode end
-abstract type IndexExpression <: IndexNode end
-abstract type IndexTerminal <: IndexExpression end
-
 @enum CINHead begin
     value=1
     virtual=2
@@ -23,13 +17,14 @@ abstract type IndexTerminal <: IndexExpression end
     reader=15
     writer=16
     updater=17
+    lifetime=18
 end
 
-struct CINNode <: IndexNode
+struct CINNode
     kind::CINHead
     val::Any
     type::Any
-    children::Vector{IndexNode}
+    children::Vector{CINNode}
 end
 
 isvalue(node::CINNode) = node.kind === value
@@ -44,7 +39,7 @@ SyntaxInterface.arguments(node::CINNode) = node.children
 SyntaxInterface.operation(node::CINNode) = node.kind
 
 #TODO clean this up eventually
-function SyntaxInterface.similarterm(::Type{<:Union{IndexNode, CINNode}}, op::CINHead, args)
+function SyntaxInterface.similarterm(::Type{CINNode}, op::CINHead, args)
     @assert istree(CINNode(op, nothing, nothing, []))
     CINNode(op, nothing, nothing, args)
 end
@@ -52,27 +47,27 @@ end
 function CINNode(kind::CINHead, args::Vector)
     if kind === value
         if length(args) == 1
-            return CINNode(value, args[1], Any, IndexNode[])
+            return CINNode(value, args[1], Any, CINNode[])
         elseif length(args) == 2
-            return CINNode(value, args[1], args[2], IndexNode[])
+            return CINNode(value, args[1], args[2], CINNode[])
         else
             error("wrong number of arguments to value(...)")
         end
     elseif kind === literal
         if length(args) == 1
-            return CINNode(kind, args[1], nothing, IndexNode[])
+            return CINNode(kind, args[1], nothing, CINNode[])
         else
             error("wrong number of arguments to $kind(...)")
         end
     elseif kind === name
         if length(args) == 1
-            return CINNode(kind, args[1], nothing, IndexNode[])
+            return CINNode(kind, args[1], nothing, CINNode[])
         else
             error("wrong number of arguments to $kind(...)")
         end
     elseif kind === virtual
         if length(args) == 1
-            return CINNode(kind, args[1], nothing, IndexNode[])
+            return CINNode(kind, args[1], nothing, CINNode[])
         else
             error("wrong number of arguments to $kind(...)")
         end
@@ -132,7 +127,7 @@ function CINNode(kind::CINHead, args::Vector)
         return CINNode(pass, nothing, nothing, args)
     elseif kind === reader || kind === writer || kind === updater
         if length(args) == 0
-            return CINNode(kind, nothing, nothing, IndexNode[])
+            return CINNode(kind, nothing, nothing, CINNode[])
         else
             error("wrong number of arguments to $kind(...)")
         end
@@ -485,61 +480,7 @@ function Finch.setname(x::CINNode, sym)
     end
 end
 
-
-function Base.show(io::IO, mime::MIME"text/plain", stmt::IndexStatement)
-    if get(io, :compact, false)
-        print(io, "@finch(…)")
-    else
-        display_statement(io, mime, stmt, 0)
-    end
-end
-
-function Base.show(io::IO, mime::MIME"text/plain", ex::IndexExpression)
-	display_expression(io, mime, ex)
-end
-
 display_expression(io, mime, ex) = show(IOContext(io, :compact=>true), mime, ex)
-
-function Base.show(io::IO, ex::IndexNode)
-    if istree(ex)
-        print(io, operation(ex))
-        print(io, "(")
-        for arg in arguments(ex)[1:end-1]
-            show(io, arg)
-            print(io, ", ")
-        end
-        if length(arguments(ex)) >= 1
-            show(io, last(arguments(ex)))
-        end
-        print(io, ")")
-    else
-        invoke(show, Tuple{IO, Any}, io, ex)
-    end
-end
-
-function Base.hash(a::IndexNode, h::UInt)
-    if istree(a)
-        for arg in arguments(a)
-            h = hash(arg, h)
-        end
-        hash(operation(a), h)
-    else
-        invoke(hash, Tuple{Any, UInt}, a, h)
-    end
-end
-
-Finch.IndexNotation.isliteral(ex::IndexNode) =  false
-#=
-function Base.:(==)(a::T, b::T) with {T <: IndexNode}
-    if istree(a) && istree(b)
-        (operation(a) == operation(b)) && 
-        (arguments(a) == arguments(b))
-    else
-        invoke(==, Tuple{Any, Any}, a, b)
-    end
-end
-=#
-
 
 #=
 struct Workspace <: IndexTerminal

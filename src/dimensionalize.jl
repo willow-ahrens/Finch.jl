@@ -319,8 +319,6 @@ function combinedim(a::CINNode, b::CINNode)
     Lexicography(a) < Lexicography(b) ? a : b
 end
 
-combinedim(a::IndexExpression, b::IndexExpression) = a #TODO this should be removed eventually
-
 """
     getsize(tns, ctx, mode)
 

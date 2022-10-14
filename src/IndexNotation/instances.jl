@@ -108,6 +108,7 @@ Base.:(==)(a::UpdaterInstance, b::UpdaterInstance) = true
 
 struct ValueInstance{arg} end
 
+#TODO what is going on here?
 #@inline value_instance(arg) = (isbits(arg) || arg isa Type) ? ValueInstance{arg}() : arg #TODO how does this interact with immutable outputs?
 #@inline value_instance(arg::Symbol) = ValueInstance{arg}()
 @inline value_instance(arg) = index_terminal_instance(arg)
@@ -118,9 +119,9 @@ struct ValueInstance{arg} end
 
 @inline index_terminal(arg::Type) = literal(arg)
 @inline index_terminal(arg::Function) = literal(arg)
-@inline index_terminal(arg::IndexNode) = arg
+@inline index_terminal(arg::CINNode) = arg
 @inline index_terminal(arg) = isliteral(arg) ? literal(arg) : virtual(arg)
 
-Base.convert(::Type{IndexNode}, x) = index_terminal(x)
-Base.convert(::Type{IndexNode}, x::IndexNode) = x
-Base.convert(::Type{IndexNode}, x::Symbol) = error()
+Base.convert(::Type{CINNode}, x) = index_terminal(x)
+Base.convert(::Type{CINNode}, x::CINNode) = x
+Base.convert(::Type{CINNode}, x::Symbol) = error()

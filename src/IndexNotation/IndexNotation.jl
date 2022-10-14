@@ -1,7 +1,7 @@
 module IndexNotation
     using MacroTools, SyntaxInterface, Finch
 
-    export IndexNode, IndexStatement, IndexExpression, IndexTerminal, index_terminal
+    export index_terminal
     export literal
     export name
     export value
