@@ -48,9 +48,9 @@ function virtualize(ex, ::Type{IndexNotation.AccessInstance{Tns, Mode, Idxs}}, c
     end
     access(tns, virtualize(:($ex.mode), Mode, ctx), idxs...)
 end
-virtualize(ex, ::Type{Read}, ctx) = Read()
-virtualize(ex, ::Type{Write}, ctx) = Write()
-virtualize(ex, ::Type{Update}, ctx) = Update()
+virtualize(ex, ::Type{IndexNotation.ReaderInstance}, ctx) = reader()
+virtualize(ex, ::Type{IndexNotation.WriterInstance}, ctx) = writer()
+virtualize(ex, ::Type{IndexNotation.UpdaterInstance}, ctx) = updater()
 function virtualize(ex, ::Type{IndexNotation.LabelInstance{tag, Tns}}, ctx) where {tag, Tns}
     return virtualize(:($ex.tns), Tns, ctx, tag)
 end

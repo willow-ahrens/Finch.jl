@@ -86,7 +86,7 @@ getsites(fbr::VirtualFiber{VirtualDenseLevel}) =
 
 function getsize(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode)
     ext = Extent(literal(1), fbr.lvl.I)
-    if mode != Read()
+    if mode.kind !== reader
         ext = suggest(ext)
     end
     (ext, getsize(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)...)
@@ -102,7 +102,7 @@ end
 Base.eltype(fbr::VirtualFiber{VirtualDenseLevel}) = eltype(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
 
 reinitializeable(lvl::VirtualDenseLevel) = reinitializeable(lvl.lvl)
-function initialize_level!(fbr::VirtualFiber{VirtualDenseLevel}, ctx::LowerJulia, mode::Union{Write, Update})
+function initialize_level!(fbr::VirtualFiber{VirtualDenseLevel}, ctx::LowerJulia, mode)
     fbr.lvl.lvl = initialize_level!(VirtualFiber(fbr.lvl.lvl, Environment(fbr.env, reinitialized=envreinitialized(fbr.env))), ctx, mode)
     return fbr.lvl
 end
@@ -154,14 +154,14 @@ function assemble!(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode)
     end
 end
 
-function finalize_level!(fbr::VirtualFiber{VirtualDenseLevel}, ctx::LowerJulia, mode::Union{Write, Update})
+function finalize_level!(fbr::VirtualFiber{VirtualDenseLevel}, ctx::LowerJulia, mode)
     fbr.lvl.lvl = finalize_level!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)
     return fbr.lvl
 end
 
 hasdefaultcheck(lvl::VirtualDenseLevel) = hasdefaultcheck(lvl.lvl)
 
-function unfurl(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode::Union{Write, Update, Read}, ::Nothing, idx::CINNode, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode, ::Nothing, idx::CINNode, idxs...)
     if idx.kind === protocol
         @assert idx.mode.kind === literal
         unfurl(fbr, ctx, mode, idx.mode.val, idx.idx, idxs...)
@@ -170,7 +170,7 @@ function unfurl(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode::Union{Write, Up
     end
 end
 
-function unfurl(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode::Union{Read, Write, Update}, ::Union{Follow, Laminate, Extrude}, idx, idxs...) #TODO should protocol be strict?
+function unfurl(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode, ::Union{Follow, Laminate, Extrude}, idx, idxs...) #TODO should protocol be strict?
     lvl = fbr.lvl
     tag = lvl.ex
 

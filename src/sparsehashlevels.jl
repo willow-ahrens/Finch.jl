@@ -141,7 +141,7 @@ end
 
 function getsize(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx::LowerJulia, mode)
     ext = map(stop->Extent(literal(1), stop), fbr.lvl.I)
-    if mode != Read()
+    if mode.kind !== reader
         ext = map(suggest, ext)
     end
     (ext..., getsize(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^fbr.lvl.N)(fbr.env)), ctx, mode)...)
@@ -156,7 +156,7 @@ end
 @inline default(fbr::VirtualFiber{<:VirtualSparseHashLevel}) = default(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^fbr.lvl.N)(fbr.env)))
 Base.eltype(fbr::VirtualFiber{<:VirtualSparseHashLevel}) = eltype(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
 
-function initialize_level!(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx::LowerJulia, mode::Union{Write, Update})
+function initialize_level!(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx::LowerJulia, mode)
     @assert isempty(envdeferred(fbr.env))
     lvl = fbr.lvl
     my_p = ctx.freshen(lvl.ex, :_p)
@@ -185,7 +185,7 @@ function assemble!(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode)
     end)
 end
 
-function finalize_level!(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx::LowerJulia, mode::Union{Write, Update})
+function finalize_level!(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx::LowerJulia, mode)
     @assert isempty(envdeferred(fbr.env))
     lvl = fbr.lvl
     my_p = ctx.freshen(lvl.ex, :_p)
@@ -202,16 +202,18 @@ function finalize_level!(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx::LowerJu
     return lvl
 end
 
-function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode::Read, ::Nothing, idx, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode, ::Nothing, idx, idxs...)
     if idx.kind === protocol
         @assert idx.mode.kind === literal
         unfurl(fbr, ctx, mode, idx.mode.val, idx.idx, idxs...)
-    else
+    elseif mode.kind === reader
         unfurl(fbr, ctx, mode, walk, idx, idxs...)
+    else
+        unfurl(fbr, ctx, mode, laminate, idx, idxs...)
     end
 end
 
-function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode::Read, ::Walk, idx, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode, ::Walk, idx, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
@@ -308,7 +310,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode::Read, ::Wa
     exfurl(body, ctx, mode, idx)
 end
 
-function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode::Read, ::Follow, idx, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode, ::Follow, idx, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     R = length(envdeferred(fbr.env)) + 1
@@ -337,19 +339,9 @@ function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode::Read, ::Fo
     exfurl(body, ctx, mode, idx)
 end
 
-function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode::Union{Write, Update}, ::Nothing, idx, idxs...)
-    if idx.kind === protocol
-        @assert idx.mode.kind === literal
-        unfurl(fbr, ctx, mode, idx.mode.val, idx.idx, idxs...)
-    else
-        unfurl(fbr, ctx, mode, laminate, idx, idxs...)
-    end
-end
-
-
 hasdefaultcheck(lvl::VirtualSparseHashLevel) = true
 
-function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode::Union{Write, Update}, ::Union{Extrude, Laminate}, idx, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode, ::Union{Extrude, Laminate}, idx, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     R = length(envdeferred(fbr.env)) + 1

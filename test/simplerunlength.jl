@@ -25,11 +25,13 @@ Finch.IndexNotation.isliteral(::VirtualSimpleRunLength) = false
 
 (ctx::Finch.LowerJulia)(tns::VirtualSimpleRunLength) = tns.ex
 
-function Finch.initialize!(arr::VirtualSimpleRunLength{Tv}, ctx::Finch.LowerJulia, mode::Union{Write, Update}, idxs...) where {Tv}
-    push!(ctx.preamble, quote 
-        $(arr.ex).idx = [$(arr.ex).idx[end]]
-        $(arr.ex).val = [$(zero(Tv))]
-    end)
+function Finch.initialize!(arr::VirtualSimpleRunLength{Tv}, ctx::Finch.LowerJulia, mode, idxs...) where {Tv}
+    if mode.kind === writer || mode.kind === updater
+        push!(ctx.preamble, quote 
+            $(arr.ex).idx = [$(arr.ex).idx[end]]
+            $(arr.ex).val = [$(zero(Tv))]
+        end)
+    end
     access(arr, mode, idxs...)
 end 
 
@@ -53,7 +55,7 @@ function Finch.chunkify_access(node, ctx, vec::VirtualSimpleRunLength{Tv, Ti}) w
     my_i′ = ctx.ctx.freshen(getname(vec), :_i1)
     my_p = ctx.ctx.freshen(getname(vec), :_p)
     if getname(ctx.idx) == getname(node.idxs[1])
-        if node.mode === Read()
+        if node.mode.kind === reader
             tns = Thunk(
                 preamble = quote
                     $my_p = 1

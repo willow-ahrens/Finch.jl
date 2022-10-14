@@ -211,15 +211,6 @@ comparators(x::Symbol) = (x,)
 priority(::Expr) = (2, 1)
 comparators(x::Expr) = (x.head, map(Lexicography, x.args)...)
 
-priority(::Read) = (3,2,1)
-comparators(x::Read) = ()
-
-priority(::Write) = (3,2,2)
-comparators(x::Write) = ()
-
-priority(::Update) = (3,2,3)
-comparators(x::Update) = ()
-
 #priority(::Workspace) = (3,3)
 #comparators(x::Workspace) = (x.n,)
 

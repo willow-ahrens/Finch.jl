@@ -20,6 +20,9 @@ abstract type IndexTerminal <: IndexExpression end
     sieve=12
     assign=13
     pass=14
+    reader=15
+    writer=16
+    updater=17
 end
 
 struct CINNode <: IndexNode
@@ -33,6 +36,8 @@ isvalue(node::CINNode) = node.kind === value
 #TODO Delete this one when you can
 isvalue(node) = false
 
+#TODO
+isstateful(node::CINNode) = istree(node) && (node !== call || node !== access || node !== reader || node !== writer || node !== updater)
 
 SyntaxInterface.istree(node::CINNode) = node.kind > literal
 SyntaxInterface.arguments(node::CINNode) = node.children
@@ -125,6 +130,12 @@ function CINNode(kind::CINHead, args::Vector)
         end
     elseif kind === pass
         return CINNode(pass, nothing, nothing, args)
+    elseif kind === reader || kind === writer || kind === updater
+        if length(args) == 0
+            return CINNode(kind, nothing, nothing, IndexNode[])
+        else
+            error("wrong number of arguments to $kind(...)")
+        end
     else
         error("unimplemented")
     end
@@ -137,12 +148,13 @@ end
 function Base.getproperty(node::CINNode, sym::Symbol)
     if sym === :kind || sym === :val || sym === :type || sym === :children
         return Base.getfield(node, sym)
-    elseif node.kind === value
-        error("type CINNode(value, ...) has no property $sym")
-    elseif node.kind === literal
-        error("type CINNode(literal, ...) has no property $sym")
-    elseif node.kind === virtual
-        error("type CINNode(virtual, ...) has no property $sym")
+    elseif node.kind === value ||
+            node.kind === literal || 
+            node.kind === virtual ||
+            node.kind === reader ||
+            node.kind === writer ||
+            node.kind === updater
+        error("type CINNode($(node.kind), ...) has no property $sym")
     elseif node.kind === name
         if sym === :name
             return node.val::Symbol
@@ -216,7 +228,7 @@ function Base.getproperty(node::CINNode, sym::Symbol)
             error("type CINNode(sieve, ...) has no property $sym")
         end
     elseif node.kind === assign
-        #TODO move op into update
+        #TODO move op into updater
         if sym === :lhs
             return node.children[1]
         elseif sym === :op
@@ -227,7 +239,7 @@ function Base.getproperty(node::CINNode, sym::Symbol)
             error("type CINNode(assign, ...) has no property $sym")
         end
     elseif node.kind === pass
-        #TODO move op into update
+        #TODO move op into updater
         if sym === :tnss
             return node.children
         else
@@ -239,7 +251,7 @@ function Base.getproperty(node::CINNode, sym::Symbol)
 end
 
 function Base.show(io::IO, mime::MIME"text/plain", node::CINNode) 
-    if node.kind === with
+    if isstateful(node)
         display_statement(io, mime, node, 0)
     else
         display_expression(io, mime, node)
@@ -545,7 +557,3 @@ end
 
 setname(tns::Workspace, name) = Workspace(name)
 =#
-
-struct Read <: IndexTerminal end
-struct Write <: IndexTerminal end
-struct Update <: IndexTerminal end

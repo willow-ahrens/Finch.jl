@@ -129,7 +129,7 @@ getsites(fbr::VirtualFiber{VirtualSparseBytemapLevel}) =
 
 function getsize(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode)
     ext = Extent(literal(1), fbr.lvl.I)
-    if mode != Read()
+    if mode.kind !== reader
         ext = suggest(ext)
     end
     (ext, getsize(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)...)
@@ -144,7 +144,7 @@ end
 @inline default(fbr::VirtualFiber{VirtualSparseBytemapLevel}) = default(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
 Base.eltype(fbr::VirtualFiber{VirtualSparseBytemapLevel}) = eltype(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
 
-function initialize_level!(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx::LowerJulia, mode::Union{Write, Update})
+function initialize_level!(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx::LowerJulia, mode)
     @assert isempty(envdeferred(fbr.env))
     lvl = fbr.lvl
     r = ctx.freshen(lvl.ex, :_r)
@@ -221,7 +221,7 @@ function assemble!(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode)
     end
 end
 
-function finalize_level!(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx::LowerJulia, mode::Union{Write, Update})
+function finalize_level!(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx::LowerJulia, mode)
     @assert isempty(envdeferred(fbr.env))
     lvl = fbr.lvl
     r = ctx.freshen(lvl.ex, :_r)
@@ -245,16 +245,18 @@ function finalize_level!(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx::Lowe
     return lvl
 end
 
-function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Read, ::Nothing, idx, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode, ::Nothing, idx, idxs...)
     if idx.kind === protocol
         @assert idx.mode.kind === literal
         unfurl(fbr, ctx, mode, idx.mode.val, idx.idx, idxs...)
-    else
+    elseif mode.kind === reader
         unfurl(fbr, ctx, mode, walk, idx, idxs...)
+    else
+        unfurl(fbr, ctx, mode, laminate, idx, idxs...)
     end
 end
 
-function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Read, ::Walk, idx, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode, ::Walk, idx, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
@@ -317,7 +319,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Read, :
     exfurl(body, ctx, mode, idx)
 end
 
-function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Read, ::Gallop, idx, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode, ::Gallop, idx, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
@@ -409,7 +411,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Read, :
     exfurl(body, ctx, mode, idx)
 end
 
-function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Read, ::Follow, idx, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode, ::Follow, idx, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     R = length(envdeferred(fbr.env)) + 1
@@ -432,18 +434,9 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Read, :
     exfurl(body, ctx, mode, idx)
 end
 
-function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Union{Write, Update}, ::Nothing, idx, idxs...)
-    if idx.kind === protocol
-        @assert idx.mode.kind === literal
-        unfurl(fbr, ctx, mode, idx.mode.val, idx.idx, idxs...)
-    else
-        unfurl(fbr, ctx, mode, laminate, idx, idxs...)
-    end
-end
-
 hasdefaultcheck(lvl::VirtualSparseBytemapLevel) = true
 
-function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode::Union{Write, Update}, ::Union{Extrude, Laminate}, idx, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode, ::Union{Extrude, Laminate}, idx, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_key = ctx.freshen(tag, :_key)

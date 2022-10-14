@@ -83,7 +83,7 @@ function (ctx::TransformSSA)(node::CINNode)
             return loop(idx, body)
         end
     elseif node.kind === access
-        if node.mode != Read()
+        if node.mode.kind !== reader
             tns = definename!(node.tns, ctx)
         else
             tns = resolvename!(node.tns, ctx)

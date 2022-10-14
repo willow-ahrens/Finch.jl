@@ -37,10 +37,12 @@ end
 
 (ctx::Finch.LowerJulia)(tns::VirtualSingleBlock) = tns.ex
 
-function Finch.initialize!(arr::VirtualSingleBlock{D, Tv}, ctx::Finch.LowerJulia, mode::Union{Write, Update}, idxs...) where {D, Tv}
-    push!(ctx.preamble, quote
-        fill!($(arr.ex).val, D)
-    end)
+function Finch.initialize!(arr::VirtualSingleBlock{D, Tv}, ctx::Finch.LowerJulia, mode, idxs...) where {D, Tv}
+    if mode.kind === writer || mode.kind === updater
+        push!(ctx.preamble, quote
+            fill!($(arr.ex).val, D)
+        end)
+    end
     access(arr, mode, idxs...)
 end 
 

@@ -113,7 +113,7 @@ getsites(fbr::VirtualFiber{VirtualRepeatRLELevel}) =
 
 function getsize(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode)
     ext = Extent(literal(1), fbr.lvl.I)
-    if mode != Read()
+    if mode.kind !== reader
         ext = suggest(ext)
     end
     (ext,)
@@ -127,7 +127,7 @@ end
 @inline default(fbr::VirtualFiber{<:VirtualRepeatRLELevel}) = fbr.lvl.D
 Base.eltype(fbr::VirtualFiber{VirtualRepeatRLELevel}) = fbr.lvl.Tv
 
-function initialize_level!(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx::LowerJulia, mode::Union{Write, Update})
+function initialize_level!(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx::LowerJulia, mode)
     lvl = fbr.lvl
     push!(ctx.preamble, quote
         $(lvl.pos_alloc) = length($(lvl.ex).pos)
@@ -149,20 +149,22 @@ function assemble!(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode)
     end)
 end
 
-function finalize_level!(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx::LowerJulia, mode::Union{Write, Update})
+function finalize_level!(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx::LowerJulia, mode)
     return fbr.lvl
 end
 
-function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode::Read, ::Nothing, idx, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode, ::Nothing, idx, idxs...)
     if idx.kind === protocol
         @assert idx.mode.kind === literal
         unfurl(fbr, ctx, mode, idx.mode.val, idx.idx, idxs...)
-    else
+    elseif mode.kind === reader
         unfurl(fbr, ctx, mode, walk, idx, idxs...)
+    else
+        unfurl(fbr, ctx, mode, extrude, idx, idxs...)
     end
 end
 
-function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode::Read, ::Walk, idx, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode, ::Walk, idx, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
@@ -211,16 +213,7 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode::Read, ::Wal
     exfurl(body, ctx, mode, idx)
 end
 
-function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode::Union{Write, Update}, ::Nothing, idx, idxs...)
-    if idx.kind === protocol
-        @assert idx.mode.kind === literal
-        unfurl(fbr, ctx, mode, idx.mode.val, idx.idx, idxs...)
-    else
-        unfurl(fbr, ctx, mode, extrude, idx, idxs...)
-    end
-end
-
-function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode::Union{Write, Update}, ::Extrude, idx, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode, ::Extrude, idx, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_q = ctx.freshen(tag, :_q)

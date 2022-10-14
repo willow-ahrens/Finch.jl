@@ -68,8 +68,8 @@ Initialize the virtual fiber to it's default value in the context `ctx` with
 access mode `mode`. Return the new fiber object.
 """
 function initialize!(fbr::VirtualFiber, ctx::LowerJulia, mode, idxs...)
-    fbr = VirtualFiber(initialize_level!(fbr, ctx, mode), fbr.env)
-    if mode isa Union{Write, Update}
+    if mode.kind === writer || mode.kind === updater
+        fbr = VirtualFiber(initialize_level!(fbr, ctx, mode), fbr.env)
         assemble!(fbr, ctx, mode)
     end
     return refurl(fbr, ctx, mode, idxs...)
@@ -94,7 +94,11 @@ Finalize the virtual fiber in the context `ctx` with access mode `mode`. Return
 the new fiber object.
 """
 function finalize!(fbr::VirtualFiber, ctx::LowerJulia, mode, idxs...)
-    VirtualFiber(finalize_level!(fbr, ctx, mode), fbr.env)
+    if mode.kind === writer || mode.kind === updater
+        return VirtualFiber(finalize_level!(fbr, ctx, mode), fbr.env)
+    else
+        return fbr
+    end
 end
 
 """

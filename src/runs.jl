@@ -128,7 +128,7 @@ function (ctx::AcceptRunVisitor)(node::CINNode)
     if node.kind === virtual
         ctx(node.val)
     elseif node.kind === access && node.tns isa CINNode && node.tns.kind === virtual
-        node.mode === Read() ? node : something(unchunk(node.tns.val, ctx), node)
+        node.mode.kind === reader ? node : something(unchunk(node.tns.val, ctx), node)
     elseif istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))
     else

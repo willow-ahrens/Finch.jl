@@ -136,7 +136,7 @@ end
 
 function getsize(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx::LowerJulia, mode)
     ext = map(stop->Extent(literal(1), stop), fbr.lvl.I)
-    if mode != Read()
+    if mode.kind !== reader
         ext = map(suggest, ext)
     end
     (ext..., getsize(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^fbr.lvl.N)(fbr.env)), ctx, mode)...)
@@ -151,7 +151,7 @@ end
 @inline default(fbr::VirtualFiber{<:VirtualSparseCooLevel}) = default(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^fbr.lvl.N)(fbr.env)))
 Base.eltype(fbr::VirtualFiber{<:VirtualSparseCooLevel}) = eltype(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
 
-function initialize_level!(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx::LowerJulia, mode::Union{Write, Update})
+function initialize_level!(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx::LowerJulia, mode)
     @assert isempty(envdeferred(fbr.env))
     lvl = fbr.lvl
     my_p = ctx.freshen(lvl.ex, :_p)
@@ -176,7 +176,7 @@ function assemble!(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode)
     end)
 end
 
-function finalize_level!(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx::LowerJulia, mode::Union{Write, Update})
+function finalize_level!(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx::LowerJulia, mode)
     @assert isempty(envdeferred(fbr.env))
     lvl = fbr.lvl
 
@@ -184,16 +184,18 @@ function finalize_level!(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx::LowerJul
     return lvl
 end
 
-function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode::Read, ::Nothing, idx, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode, ::Nothing, idx, idxs...)
     if idx.kind === protocol
         @assert idx.mode.kind === literal
         unfurl(fbr, ctx, mode, idx.mode.val, idx.idx, idxs...)
-    else
+    elseif mode.kind === reader
         unfurl(fbr, ctx, mode, walk, idx, idxs...)
+    else
+        unfurl(fbr, ctx, mode, extrude, idx, idxs...)
     end
 end
 
-function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode::Read, ::Walk, idx, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode, ::Walk, idx, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
@@ -281,16 +283,7 @@ end
 
 hasdefaultcheck(lvl::VirtualSparseCooLevel) = true
 
-function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode::Union{Write, Update}, ::Nothing, idx, idxs...)
-    if idx.kind === protocol
-        @assert idx.mode.kind === literal
-        unfurl(fbr, ctx, mode, idx.mode.val, idx.idx, idxs...)
-    else
-        unfurl(fbr, ctx, mode, extrude, idx, idxs...)
-    end
-end
-
-function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode::Union{Write, Update}, ::Extrude, idx, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode, ::Extrude, idx, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     R = length(envdeferred(fbr.env)) + 1
@@ -319,7 +312,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode::Union{Write
                 body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, lvl.Ti), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode, idxs...),
                 epilogue = begin
                     resize_body = quote end
-                    write_body = quote end
+                    writer_body = quote end
                     my_idxs = map(ctx, (envdeferred(fbr.env)..., idx))
                     for n = 1:lvl.N
                         if n == lvl.N
@@ -333,8 +326,8 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode::Union{Write
                                 $Finch.regrow!($(lvl.ex).tbl[$n], $(lvl.idx_alloc), $my_q)
                             end
                         end
-                        write_body = quote
-                            $write_body
+                        writer_body = quote
+                            $writer_body
                             $(lvl.ex).tbl[$n][$my_q] = $(my_idxs[n])
                         end
                     end
@@ -342,7 +335,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode::Union{Write
                         if $(lvl.idx_alloc) < $my_q
                             $resize_body
                         end
-                        $write_body
+                        $writer_body
                         $my_q += 1
                     end
                     if envdefaultcheck(fbr.env) !== nothing

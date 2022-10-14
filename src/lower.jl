@@ -286,7 +286,7 @@ function lowerjulia_access(ctx, node, tns)
 end
 
 function lowerjulia_access(ctx, node, tns::Number)
-    @assert node.mode === Read()
+    @assert node.mode.kind === reader
     tns
 end
 

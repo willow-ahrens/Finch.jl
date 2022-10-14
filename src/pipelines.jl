@@ -74,7 +74,7 @@ function (ctx::PipelineVisitor)(node)
         map(flatten((product(map(ctx, arguments(node))...),))) do phases
             keys = map(first, phases)
             bodies = map(last, phases)
-            return reduce(vcat, keys) => similarterm(node, operation(node), collect(bodies))
+            return reduce(vcat, keys, init=[]) => similarterm(node, operation(node), collect(bodies))
         end
     else
         [[] => node]
@@ -87,7 +87,7 @@ function (ctx::PipelineVisitor)(node::CINNode)
         map(flatten((product(map(ctx, arguments(node))...),))) do phases
             keys = map(first, phases)
             bodies = map(last, phases)
-            return reduce(vcat, keys) => similarterm(node, operation(node), collect(bodies))
+            return reduce(vcat, keys, init=[]) => similarterm(node, operation(node), collect(bodies))
         end
     else
         [[] => node]

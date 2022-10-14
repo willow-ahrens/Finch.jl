@@ -96,6 +96,16 @@ Base.:(==)(a::LabelInstance{tag}, b::LabelInstance{tag}) where {tag} = a.tns == 
 
 @inline label_instance(tag, tns) = LabelInstance{tag, typeof(tns)}(tns)
 
+struct ReaderInstance end
+reader_instance() = ReaderInstance()
+Base.:(==)(a::ReaderInstance, b::ReaderInstance) = true
+struct WriterInstance end
+writer_instance() = WriterInstance()
+Base.:(==)(a::WriterInstance, b::WriterInstance) = true
+struct UpdaterInstance end
+updater_instance() = UpdaterInstance()
+Base.:(==)(a::UpdaterInstance, b::UpdaterInstance) = true
+
 struct ValueInstance{arg} end
 
 #@inline value_instance(arg) = (isbits(arg) || arg isa Type) ? ValueInstance{arg}() : arg #TODO how does this interact with immutable outputs?

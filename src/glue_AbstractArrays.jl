@@ -28,10 +28,12 @@ function virtualize(ex, ::Type{<:AbstractArray{T, N}}, ctx, tag=:tns) where {T, 
     VirtualAbstractArray(N, tag, sym)
 end
 
-function initialize!(arr::VirtualAbstractArray, ctx::LowerJulia, mode::Union{Write, Update}, idxs...)
-    push!(ctx.preamble, quote
-        fill!($(arr.ex), 0) #TODO
-    end)
+function initialize!(arr::VirtualAbstractArray, ctx::LowerJulia, mode, idxs...)
+    if mode.kind === writer || mode.kind === updater
+        push!(ctx.preamble, quote
+            fill!($(arr.ex), 0) #TODO
+        end)
+    end
     access(arr, mode, idxs...)
 end
 

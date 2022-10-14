@@ -110,7 +110,7 @@ getsites(fbr::VirtualFiber{VirtualSparseListLevel}) =
 
 function getsize(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode)
     ext = Extent(literal(1), fbr.lvl.I)
-    if mode != Read()
+    if mode.kind !== reader
         ext = suggest(ext)
     end
     (ext, getsize(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)...)
@@ -125,7 +125,7 @@ end
 @inline default(fbr::VirtualFiber{<:VirtualSparseListLevel}) = default(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
 Base.eltype(fbr::VirtualFiber{VirtualSparseListLevel}) = eltype(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
 
-function initialize_level!(fbr::VirtualFiber{VirtualSparseListLevel}, ctx::LowerJulia, mode::Union{Write, Update})
+function initialize_level!(fbr::VirtualFiber{VirtualSparseListLevel}, ctx::LowerJulia, mode)
     lvl = fbr.lvl
     push!(ctx.preamble, quote
         $(lvl.pos_alloc) = length($(lvl.ex).pos)
@@ -149,21 +149,23 @@ function assemble!(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode)
     end)
 end
 
-function finalize_level!(fbr::VirtualFiber{VirtualSparseListLevel}, ctx::LowerJulia, mode::Union{Write, Update})
+function finalize_level!(fbr::VirtualFiber{VirtualSparseListLevel}, ctx::LowerJulia, mode)
     fbr.lvl.lvl = finalize_level!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)
     return fbr.lvl
 end
 
-function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode::Read, ::Nothing, idx, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode, ::Nothing, idx, idxs...)
     if idx.kind === protocol
         @assert idx.mode.kind === literal
         unfurl(fbr, ctx, mode, idx.mode.val, idx.idx, idxs...)
-    else
+    elseif mode.kind === reader
         unfurl(fbr, ctx, mode, walk, idx, idxs...)
+    else
+        unfurl(fbr, ctx, mode, extrude, idx, idxs...)
     end
 end
 
-function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode::Read, ::Walk, idx, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode, ::Walk, idx, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
@@ -219,7 +221,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode::Read, ::Wa
     exfurl(body, ctx, mode, idx)
 end
 
-function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode::Read, ::FastWalk, idx, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode, ::FastWalk, idx, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
@@ -275,7 +277,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode::Read, ::Fa
     exfurl(body, ctx, mode, idx)
 end
 
-function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode::Read, ::Gallop, idx, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode, ::Gallop, idx, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
@@ -356,16 +358,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode::Read, ::Ga
     exfurl(body, ctx, mode, idx)
 end
 
-function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode::Union{Write, Update}, ::Nothing, idx, idxs...)
-    if idx.kind === protocol
-        @assert idx.mode.kind === literal
-        unfurl(fbr, ctx, mode, idx.mode.val, idx.idx, idxs...)
-    else
-        unfurl(fbr, ctx, mode, extrude, idx, idxs...)
-    end
-end
-
-function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode::Union{Write, Update}, ::Extrude, idx, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode, ::Extrude, idx, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
