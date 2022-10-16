@@ -33,7 +33,6 @@ let
         y, A, x = ($y, $A, $x)
         Finch.execute_code(:ex, typeof(Finch.@finch_program_instance @loop i j y[i] += A[i, j] * x[i]))
     end
-    BenchmarkTools.warmup(SUITE["compile"]["compile_SpMV"])
 end
 
 code = """
@@ -57,5 +56,4 @@ let
         A, B, C = ($A, $B, $C)
         Finch.execute_code(:ex, typeof(Finch.@finch_program_instance @loop i j k C[i, j] += A[i, k] * B[j, k]))
     end
-    BenchmarkTools.warmup(SUITE["compile"]["compile_SpGeMM"])
 end

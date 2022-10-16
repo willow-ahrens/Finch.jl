@@ -19,3 +19,5 @@ group_baseline = benchmarkpkg(
 )
 
 judgement = judge(group_target, group_baseline)
+
+include("pprintjudge.jl")
