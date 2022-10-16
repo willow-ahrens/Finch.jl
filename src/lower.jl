@@ -223,9 +223,9 @@ function (ctx::LowerJulia)(root::CINNode, ::DefaultStyle)
         end
     elseif root.kind === loop
         return ctx(chunk(
-            idx = stmt.idx,
-            ext = resolvedim(ctx.dims[getname(stmt.idx)]),
-            body = stmt.body)
+            idx = root.idx,
+            ext = resolvedim(ctx.dims[getname(root.idx)]),
+            body = root.body)
         )
     elseif root.kind === chunk
         idx_sym = ctx.freshen(getname(root.idx))
