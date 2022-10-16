@@ -58,4 +58,4 @@ let
     end
 end
 
-foreach(BeenchmarkTools.warmup, Suite)
+foreach(BenchmarkTools.warmup, Suite)
