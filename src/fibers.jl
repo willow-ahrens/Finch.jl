@@ -128,7 +128,6 @@ function select_access(node, ctx::Finch.SelectVisitor, tns::VirtualFiber)
         if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
             var = name(ctx.ctx.freshen(:s))
             ctx.idxs[var] = node.idxs[1]
-            ctx.ctx.dims[getname(var)] = getsize(tns, ctx, node.mode)[1] #TODO redimensionalization
             return access(node.tns, node.mode, var, node.idxs[2:end]...)
         end
     end
@@ -137,8 +136,11 @@ end
 
 function chunkify_access(node, ctx, tns::VirtualFiber)
     if !isempty(node.idxs)
+        idxs = map(ctx, node.idxs)
         if ctx.idx == get_furl_root(node.idxs[1])
             return access(unfurl(tns, ctx.ctx, node.mode, nothing, node.idxs...), node.mode, get_furl_root(node.idxs[1])) #TODO do this nicer
+        else
+            return access(node.tns, node.mode, idxs...)
         end
     end
     return node
@@ -199,7 +201,7 @@ end
 
 function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber)
     if get(io, :compact, false)
-        print(io, "f\"$(summary_f_str(fbr.lvl))\"($(summary_f_str_args(fbr.lvl)...))")
+        print(io, "@fiber($(summary_f_code(fbr.lvl)))")
     else
         display_fiber(io, mime, fbr)
     end
@@ -207,7 +209,7 @@ end
 
 function Base.show(io::IO, mime::MIME"text/plain", fbr::VirtualFiber)
     if get(io, :compact, false)
-        print(io, "v\"$(summary_f_str(fbr.lvl))\"($(summary_f_str_args(fbr.lvl)...))")
+        print(io, "@virtualfiber($(summary_f_code(fbr.lvl)))")
     else
         show(io, fbr)
     end

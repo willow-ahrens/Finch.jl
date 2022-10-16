@@ -17,7 +17,7 @@ getname(arr::Run) = getname(arr.body)
 
 struct RunStyle end
 
-(ctx::Stylize{LowerJulia})(node::Run) = RunStyle()
+(ctx::Stylize{LowerJulia})(node::Run) = ctx.root.kind === chunk ? RunStyle() : DefaultStyle()
 combine_style(a::DefaultStyle, b::RunStyle) = RunStyle()
 combine_style(a::ThunkStyle, b::RunStyle) = ThunkStyle()
 combine_style(a::SimplifyStyle, b::RunStyle) = SimplifyStyle()
@@ -86,7 +86,7 @@ end
 
 struct AcceptRunStyle end
 
-(ctx::Stylize{LowerJulia})(node::AcceptRun) = AcceptRunStyle()
+(ctx::Stylize{LowerJulia})(node::AcceptRun) = ctx.root.kind === chunk ? AcceptRunStyle() : DefaultStyle()
 combine_style(a::DefaultStyle, b::AcceptRunStyle) = AcceptRunStyle()
 combine_style(a::ThunkStyle, b::AcceptRunStyle) = ThunkStyle()
 combine_style(a::SimplifyStyle, b::AcceptRunStyle) = SimplifyStyle()

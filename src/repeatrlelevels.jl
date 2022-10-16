@@ -105,8 +105,7 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualRepeatRLELevel)
     end
 end
 
-summary_f_str(lvl::VirtualRepeatRLELevel) = "r"
-summary_f_str_args(lvl::VirtualRepeatRLELevel) = lvl.D
+summary_f_code(lvl::VirtualRepeatRLELevel) = "rl($(lvl.D))"
 
 getsites(fbr::VirtualFiber{VirtualRepeatRLELevel}) =
     [envdepth(fbr.env) + 1, ]

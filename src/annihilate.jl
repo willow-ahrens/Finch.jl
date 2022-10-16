@@ -62,6 +62,10 @@
     (@rule @_f(and(a..., true, b...)) => @f and(a..., b...)),
     (@rule @_f(and(a..., false, b...)) => @f false),
     (@rule @_f(and($a)) => a),
+
+    (@rule @_f(ifelse(true, $a, $b)) => a),
+    (@rule @_f(ifelse(false, $a, $b)) => b),
+
     (@rule @_f(and()) => @f true),
     (@rule @_f((+)($a)) => a),
     (@rule @_f(- +($a, b...)) => @f +(- $a, - +(b...))),
@@ -102,7 +106,6 @@
     end),
     (@rule @_f(@chunk $i $a @multi b... ($c[j...] <<max>>= $d) e...) => begin
         if Finch.isliteral(d) && i ∉ j
-            println(@f @multi (c[j...] <<max>>= $d) @chunk $i a @f(@multi b... e...))
             @f @multi (c[j...] <<max>>= $d) @chunk $i a @f(@multi b... e...)
         end
     end),

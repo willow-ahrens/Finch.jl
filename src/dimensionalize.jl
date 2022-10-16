@@ -152,9 +152,10 @@ end
 
 function infer_dimensions_access(node, ctx, tns)
     res = map(ctx, node.idxs)
-    dims = map(resolvedim, map(last, res))
     idxs = map(first, res)
     if node.mode.kind !== reader
+        prev_dims = getsize(tns, ctx.ctx, node.mode)
+        dims = map(resolvedim, map(resultdim, map(last, res), prev_dims))
         ctx.shapes[getname(tns)] = dims
         tns = setsize!(tns, ctx.ctx, node.mode, dims...)
     end

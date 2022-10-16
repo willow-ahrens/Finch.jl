@@ -121,8 +121,7 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualSparseBytemapLevel)
     end
 end
 
-summary_f_str(lvl::VirtualSparseBytemapLevel) = "b$(summary_f_str(lvl.lvl))"
-summary_f_str_args(lvl::VirtualSparseBytemapLevel) = summary_f_str_args(lvl.lvl)
+summary_f_code(lvl::VirtualSparseBytemapLevel) = "sm($(summary_f_code(lvl.lvl)))"
 
 getsites(fbr::VirtualFiber{VirtualSparseBytemapLevel}) =
     [envdepth(fbr.env) + 1, getsites(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))...]

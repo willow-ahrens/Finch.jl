@@ -131,8 +131,7 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualSparseHashLevel)
     end
 end
 
-summary_f_str(lvl::VirtualSparseHashLevel) = "h$(lvl.N)$(summary_f_str(lvl.lvl))"
-summary_f_str_args(lvl::VirtualSparseHashLevel) = summary_f_str_args(lvl.lvl)
+summary_f_code(lvl::VirtualSparseHashLevel) = "sh{$(lvl.N)}($(summary_f_code(lvl.lvl)))"
 
 function getsites(fbr::VirtualFiber{VirtualSparseHashLevel})
     d = envdepth(fbr.env)

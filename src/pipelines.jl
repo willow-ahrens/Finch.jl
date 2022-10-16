@@ -11,7 +11,7 @@ IndexNotation.isliteral(::Pipeline) =  false
 
 struct PipelineStyle end
 
-(ctx::Stylize{LowerJulia})(node::Pipeline) = PipelineStyle()
+(ctx::Stylize{LowerJulia})(node::Pipeline) = ctx.root.kind === chunk ? PipelineStyle() : DefaultStyle()
 combine_style(a::DefaultStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::ThunkStyle, b::PipelineStyle) = ThunkStyle()
 combine_style(a::RunStyle, b::PipelineStyle) = PipelineStyle()

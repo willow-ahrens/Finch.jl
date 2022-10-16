@@ -78,8 +78,7 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualDenseLevel)
     end
 end
 
-summary_f_str(lvl::VirtualDenseLevel) = "s$(summary_f_str(lvl.lvl))"
-summary_f_str_args(lvl::VirtualDenseLevel) = summary_f_str_args(lvl.lvl)
+summary_f_code(lvl::VirtualDenseLevel) = "d($(summary_f_code(lvl.lvl)))"
 
 getsites(fbr::VirtualFiber{VirtualDenseLevel}) =
     [envdepth(fbr.env) + 1, getsites(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))...]

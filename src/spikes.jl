@@ -14,7 +14,7 @@ IndexNotation.isliteral(::Spike) =  false
 
 struct SpikeStyle end
 
-(ctx::Stylize{LowerJulia})(node::Spike) = SpikeStyle()
+(ctx::Stylize{LowerJulia})(node::Spike) = ctx.root.kind === chunk ? SpikeStyle() : DefaultStyle()
 combine_style(a::DefaultStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::RunStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::ThunkStyle, b::SpikeStyle) = ThunkStyle()

@@ -6,7 +6,7 @@ end
 
 IndexNotation.isliteral(::Jumper) =  false
 
-(ctx::Stylize{LowerJulia})(node::Jumper) = JumperStyle()
+(ctx::Stylize{LowerJulia})(node::Jumper) = ctx.root.kind === chunk ? JumperStyle() : DefaultStyle()
 
 combine_style(a::DefaultStyle, b::JumperStyle) = JumperStyle()
 combine_style(a::JumperStyle, b::JumperStyle) = JumperStyle()
@@ -37,7 +37,7 @@ end
 
 IndexNotation.isliteral(::Jump) =  false
 
-(ctx::Stylize{LowerJulia})(node::Jump) = PhaseStyle()
+(ctx::Stylize{LowerJulia})(node::Jump) = ctx.root.kind === chunk ? PhaseStyle() : DefaultStyle()
 
 function (ctx::PhaseStride)(node::Jump)
     push!(ctx.ctx.preamble, node.seek !== nothing ? node.seek(ctx.ctx, ctx.ext) : quote end)

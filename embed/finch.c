@@ -116,7 +116,7 @@ extern void finch_initialize(){
                 fmt = Printf.Format(proc)\n\
                 args = [gensym(Symbol(:arg, n)) for n in 1:length(fmt.formats)]\n\
                 proc = Printf.format(fmt, (\"var$(repr(string(arg)))\" for arg in args)...)\n\
-                body = Meta.parse(proc)\n\
+                body = Meta.parse(\"begin $proc end\")\n\
                 eval(quote\n\
                     function $(gensym(:exec))($(args...))\n\
                         $body\n\

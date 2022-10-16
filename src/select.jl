@@ -91,5 +91,8 @@ function (ctx::LowerJulia)(root, ::SelectStyle)
             )
         )
     end
-    ctx(root)
+    contain(ctx) do ctx_2
+        dimensionalize!(root, ctx_2)
+        ctx_2(root)
+    end
 end

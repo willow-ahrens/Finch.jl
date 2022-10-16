@@ -307,7 +307,7 @@ end
 function (ctx::ForLoopVisitor)(node::CINNode)
     if node.kind === access && node.tns isa CINNode && node.tns.kind === virtual
         #TODO this is a problem
-        something(unchunk(node.tns.val, ctx), node)
+        something(unchunk(node.tns.val, ctx), access(node.tns, node.mode, map(ctx, node.idxs)...))
     elseif istree(node)
         similarterm(node, operation(node), map(ctx, arguments(node)))
     else

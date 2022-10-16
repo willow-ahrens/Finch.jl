@@ -12,7 +12,7 @@ end
 
 IndexNotation.isliteral(::Stepper) =  false
 
-(ctx::Stylize{LowerJulia})(node::Stepper) = StepperStyle()
+(ctx::Stylize{LowerJulia})(node::Stepper) = ctx.root.kind === chunk ? StepperStyle() : DefaultStyle()
 
 combine_style(a::DefaultStyle, b::StepperStyle) = StepperStyle()
 combine_style(a::StepperStyle, b::PipelineStyle) = PipelineStyle()
@@ -55,7 +55,7 @@ end
 
 IndexNotation.isliteral(::Step) =  false
 
-(ctx::Stylize{LowerJulia})(node::Step) = PhaseStyle()
+(ctx::Stylize{LowerJulia})(node::Step) = ctx.root.kind === chunk ? PhaseStyle() : DefaultStyle()
 
 (ctx::PhaseStride)(node::Step) = Narrow(Extent(start = getstart(ctx.ext), stop = node.stride(ctx.ctx, ctx.idx, ctx.ext), lower = literal(1)))
 
