@@ -57,3 +57,5 @@ let
         Finch.execute_code(:ex, typeof(Finch.@finch_program_instance @loop i j k C[i, j] += A[i, k] * B[j, k]))
     end
 end
+
+foreach(BeenchmarkTools.warmup, Suite)
