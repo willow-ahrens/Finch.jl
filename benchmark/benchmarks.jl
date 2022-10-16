@@ -29,12 +29,11 @@ let
     A = @fiber d(sl(e(0.0)))
     x = @fiber sl(e(0.0))
 
-    Finch.execute_code(:ex, typeof(Finch.@finch_program_instance @loop i j y[i] += A[i, j] * x[i]))
-
     SUITE["compile"]["compile_SpMV"] = @benchmarkable begin
         y, A, x = ($y, $A, $x)
         Finch.execute_code(:ex, typeof(Finch.@finch_program_instance @loop i j y[i] += A[i, j] * x[i]))
     end
+    BenchmarkTools.warmup(SUITE["compile"]["compile_SpMV"])
 end
 
 code = """
@@ -54,10 +53,9 @@ let
     B = @fiber d(sl(e(0.0)))
     C = @fiber d(sl(e(0.0)))
 
-    Finch.execute_code(:ex, typeof(Finch.@finch_program_instance @loop i j k C[i, j] += A[i, k] * B[j, k]))
-
     SUITE["compile"]["compile_SpGeMM"] = @benchmarkable begin   
         A, B, C = ($A, $B, $C)
         Finch.execute_code(:ex, typeof(Finch.@finch_program_instance @loop i j k C[i, j] += A[i, k] * B[j, k]))
     end
+    BenchmarkTools.warmup(SUITE["compile"]["compile_SpGeMM"])
 end
