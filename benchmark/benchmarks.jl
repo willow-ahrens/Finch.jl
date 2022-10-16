@@ -58,4 +58,4 @@ let
     end
 end
 
-foreach(BenchmarkTools.warmup, Suite)
+foreach(((k, v),) -> BenchmarkTools.warmup(v), SUITE)
