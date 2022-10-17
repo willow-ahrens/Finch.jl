@@ -10,7 +10,6 @@ using BenchmarkTools
 
 const SUITE = BenchmarkGroup()
 
-#=
 SUITE["compile"] = BenchmarkGroup()
 
 code = """
@@ -58,29 +57,28 @@ let
         Finch.execute_code(:ex, typeof(Finch.@finch_program_instance @loop i j k C[i, j] += A[i, k] * B[j, k]))
     end
 end
-=#
 
 SUITE["embed"] = BenchmarkGroup()
 
-f() = 1
-function mysample((), params::BenchmarkTools.Parameters)
-    evals = params.evals
-    start_time = time_ns()
-    return_val = f()
-    for _ in 2:evals
-        f()
+libembedbenchmarks_file = joinpath(@__DIR__, "libembedbenchmarks.so")
+if isfile(libembedbenchmarks_file)
+    Base.Libc.Libdl.dlopen(libembedbenchmarks_file)
+
+    println(ccall((:benchmarks_initialize, "libembedbenchmarks.so"), Cvoid, ()))
+
+    f() = 1
+    function mysample((), params::BenchmarkTools.Parameters)
+        evals = params.evals
+        sample_time = ccall((:benchmark_spmv, "libembedbenchmarks.so"), Clong, (Cint,), evals)
+        time = max((sample_time / evals) - params.overhead, 0.001)
+        gctime = 0
+        memory = 0
+        return time, gctime, 0, 0, nothing
     end
-    stop_time = time_ns()
-    sample_time = stop_time - start_time
-    time = max((sample_time / evals) - params.overhead, 0.001)
-    gctime = 0
-    memory = 0
-    return time, gctime, 0, 0, return_val
+    SUITE["embed"]["spmv"] = BenchmarkTools.Benchmark(mysample, (), BenchmarkTools.Parameters())
+
+    #TODO how to call this at the right time?
+    #println(ccall((:benchmarks_finalize, "libembedbenchmarks.so"), Cvoid, ()))
 end
-SUITE["embed"]["test"] = BenchmarkTools.Benchmark(mysample, (), BenchmarkTools.Parameters())
-
-Base.Libc.Libdl.dlopen(joinpath(@__DIR__, "libembedbenchmarks.so"))
-
-println(ccall((:hello, "libembedbenchmarks.so"), Cint, (Cint,), 1))
 
 foreach(((k, v),) -> BenchmarkTools.warmup(v), SUITE)
