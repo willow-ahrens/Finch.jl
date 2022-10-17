@@ -5,7 +5,7 @@ CFLAGS= -g -O0
 
 JL_SHARE = $(shell $(JULIA) -e 'print(joinpath(Sys.BINDIR, Base.DATAROOTDIR, "julia"))')
 CFLAGS   += $(shell $(JL_SHARE)/julia-config.jl --cflags) -I../embed -fPIC #need fPIC to include with shared objects
-LDFLAGS  += $(shell $(JL_SHARE)/julia-config.jl --ldflags) -L../embed -shared -all_load
+LDFLAGS  += $(shell $(JL_SHARE)/julia-config.jl --ldflags) -L../embed -shared
 LDLIBS   += $(shell $(JL_SHARE)/julia-config.jl --ldlibs) -lfinch
 
 all: libembedbenchmarks.so

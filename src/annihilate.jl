@@ -61,6 +61,7 @@
     (@rule @f(and()) => true),
     (@rule @f(ifelse(true, $a, $b)) => a),
     (@rule @f(ifelse(false, $a, $b)) => b),
+    (@rule @f(ifelse($a, $b, $b)) => b),
     (@rule @f((+)($a)) => a),
     (@rule @f(- +($a, b...)) => @f +(- $a, - +(b...))),
     (@rule @f(a[i...] += 0) => pass(a)),
@@ -85,6 +86,7 @@
     (@rule @f(a[i...] *= 1) => pass(a)),
     (@rule @f(@sieve true $a) => a),
     (@rule @f(@sieve false $a) => pass(getresults(a)...)),
+    (@rule @f((0 / $a)) => 0),
 
     (@rule @f(@chunk $i a (b[j...] <<min>>= $d)) => if Finch.isliteral(d) && i ∉ j
         @f (b[j...] <<min>>= $d)

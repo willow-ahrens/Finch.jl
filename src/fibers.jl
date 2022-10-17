@@ -244,11 +244,11 @@ abbreviations, expressions may be interpolated with `\$`. For example,
 macro fiber(ex)
     function walk(ex)
         if ex isa Expr && ex.head == :$
-            return ex.args[1] #TODO ?
+            return esc(ex.args[1])
         elseif ex isa Expr
             return Expr(ex.head, map(walk, ex.args)...)
         elseif ex isa Symbol
-            return :(@something($f_code($(Val(ex))), $ex))
+            return :(@something($f_code($(Val(ex))), $(esc(ex))))
         else
             return esc(ex)
         end

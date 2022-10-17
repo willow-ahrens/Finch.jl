@@ -8,6 +8,9 @@ Pkg.resolve()
 using Finch
 using BenchmarkTools
 
+using MatrixDepot
+using SparseArrays
+
 const SUITE = BenchmarkGroup()
 
 SUITE["compile"] = BenchmarkGroup()
@@ -64,21 +67,44 @@ libembedbenchmarks_file = joinpath(@__DIR__, "libembedbenchmarks.so")
 if isfile(libembedbenchmarks_file)
     Base.Libc.Libdl.dlopen(libembedbenchmarks_file)
 
-    println(ccall((:benchmarks_initialize, "libembedbenchmarks.so"), Cvoid, ()))
+    ccall((:benchmarks_initialize, "libembedbenchmarks.so"), Cvoid, ())
 
-    f() = 1
-    function mysample((), params::BenchmarkTools.Parameters)
+    function sample_spmv_tiny((), params::BenchmarkTools.Parameters)
         evals = params.evals
         sample_time = ccall((:benchmark_spmv_tiny, "libembedbenchmarks.so"), Clong, (Cint,), evals)
         time = max((sample_time / evals) - params.overhead, 0.001)
-        gctime = 0
-        memory = 0
-        return time, gctime, 0, 0, nothing
+        gctime = memory = allocs = return_val = 0
+        return time, gctime, memory, allocs, return_val
     end
-    SUITE["embed"]["spmv_tiny"] = BenchmarkTools.Benchmark(mysample, (), BenchmarkTools.Parameters())
+
+    SUITE["embed"]["spmv_tiny"] = BenchmarkTools.Benchmark(sample_spmv_tiny, (), BenchmarkTools.Parameters())
 
     #TODO how to call this at the right time?
     #println(ccall((:benchmarks_finalize, "libembedbenchmarks.so"), Cvoid, ()))
+end
+
+SUITE["graphs"] = BenchmarkGroup()
+
+function pagerank(edges; nsteps=20, damp = 0.85)
+    (n, m) = size(edges)
+    @assert n == m
+    out_degree = @fiber d(e(0))
+    @finch @loop i j out_degree[j] += edges[i, j]
+    r = @fiber d(n, e(0.0))
+    @finch @loop j r[j] += $(1.0/n)
+    rank = @fiber d(n, e(0.0))
+    beta_score = (1 - damp)/n
+
+    for step = 1:nsteps
+        @finch @loop j i rank[j] += ifelse(out_degree[i] != 0, edges[j, i] * r[i] / out_degree[i], 0)
+        @finch @loop i r[i] = $beta_score + $damp * rank[i]
+    end
+    return r
+end
+
+SUITE["graphs"]["pagerank"] = BenchmarkGroup()
+for mtx in ["SNAP/soc-Epinions1",]
+    SUITE["graphs"]["pagerank"][mtx] = @benchmarkable pagerank($(fiber(SparseMatrixCSC(matrixdepot(mtx))))) 
 end
 
 foreach(((k, v),) -> BenchmarkTools.warmup(v), SUITE)

@@ -1,2 +1,3 @@
 [deps]
+MatrixDepot = "b51810bb-c9f3-55da-ae3c-350fc1fbce05"
 PkgBenchmark = "32113eaa-f34f-5b0d-bd6c-c81e245fc73d"
