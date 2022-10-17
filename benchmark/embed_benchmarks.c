@@ -46,7 +46,7 @@ void benchmarks_initialize(){
         finch_ElementLevel(finch_Float64(0.0), finch_Vector_Float64(x_val, n))));
 }
 
-long benchmark_spmv(int evals){
+long benchmark_spmv_tiny(int evals){
     struct timespec tic;
     struct timespec toc;
     clock_gettime(CLOCK_REALTIME, &tic);

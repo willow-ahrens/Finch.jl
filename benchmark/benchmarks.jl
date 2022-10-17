@@ -69,13 +69,13 @@ if isfile(libembedbenchmarks_file)
     f() = 1
     function mysample((), params::BenchmarkTools.Parameters)
         evals = params.evals
-        sample_time = ccall((:benchmark_spmv, "libembedbenchmarks.so"), Clong, (Cint,), evals)
+        sample_time = ccall((:benchmark_spmv_tiny, "libembedbenchmarks.so"), Clong, (Cint,), evals)
         time = max((sample_time / evals) - params.overhead, 0.001)
         gctime = 0
         memory = 0
         return time, gctime, 0, 0, nothing
     end
-    SUITE["embed"]["spmv"] = BenchmarkTools.Benchmark(mysample, (), BenchmarkTools.Parameters())
+    SUITE["embed"]["spmv_tiny"] = BenchmarkTools.Benchmark(mysample, (), BenchmarkTools.Parameters())
 
     #TODO how to call this at the right time?
     #println(ccall((:benchmarks_finalize, "libembedbenchmarks.so"), Cvoid, ()))
