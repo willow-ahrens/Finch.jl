@@ -183,7 +183,7 @@ function Base.getproperty(node::CINNode, sym::Symbol)
     elseif node.kind === call
         if sym === :op
             return node.children[1]
-        elseif sym === :brgs
+        elseif sym === :args
             return @view node.children[2:end]
         else
             error("type CINNode(call, ...) has no property $sym")
@@ -298,11 +298,11 @@ function display_expression(io, mime, node::CINNode)
     elseif node.kind === call
         display_expression(io, mime, node.op)
         print(io, "(")
-        for arg in node.brgs[1:end-1]
+        for arg in node.args[1:end-1]
             display_expression(io, mime, arg)
             print(io, ", ")
         end
-        display_expression(io, mime, node.brgs[end])
+        display_expression(io, mime, node.args[end])
         print(io, ")")
     #elseif istree(node)
     #    print(io, operation(node))

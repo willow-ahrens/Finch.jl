@@ -2,7 +2,6 @@
 
 const incs = Dict(:+= => :+, :*= => :*, :&= => :&, :|= => :|)
 
-dollar(x) = x
 const pattern_nodes = (
     pass = pass,
     loop = loop,
@@ -170,17 +169,33 @@ capture_finch_program(ex; results=Set()) = _finch_capture(ex, (nodes=program_nod
 capture_finch_instance(ex; results=Set()) = _finch_capture(ex, (nodes=instance_nodes, namify=true, mode = instance_nodes.reader, results = results))
 
 macro finch_program(ex)
-    return capture_finch_program(ex)
+    return quote
+        let dollar=identity
+            $(capture_finch_program(ex))
+        end
+    end
 end
 
 macro f(ex)
-    return capture_finch_program(ex)
+    return quote
+        let dollar=identity
+            $(capture_finch_program(ex))
+        end
+    end
 end
 
 macro _f(ex)
-    return capture_finch_pattern(ex)
+    return quote
+        let dollar=identity
+            $(capture_finch_pattern(ex))
+        end
+    end
 end
 
 macro finch_program_instance(ex)
-    return capture_finch_instance(ex)
+    return quote
+        let dollar=identity
+            $(capture_finch_instance(ex))
+        end
+    end
 end
