@@ -190,7 +190,7 @@ jl_value_t* finch_eval(const char* prg){
     JL_TRY {
         const char filename[] = "none";
         jl_value_t *ast = jl_parse_all(prg, strlen(prg),
-                filename, strlen(filename));
+                filename, strlen(filename), 1);
         JL_GC_PUSH1(&ast);
         res = jl_toplevel_eval_in(jl_main_module, ast);
         JL_GC_POP();

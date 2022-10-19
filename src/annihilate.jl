@@ -62,9 +62,11 @@
     (@rule @_f(and(a..., true, b...)) => @f and(a..., b...)),
     (@rule @_f(and(a..., false, b...)) => @f false),
     (@rule @_f(and($a)) => a),
+    (@rule @_f((0 / $a)) => 0),
 
     (@rule @_f(ifelse(true, $a, $b)) => a),
     (@rule @_f(ifelse(false, $a, $b)) => b),
+    (@rule @f(ifelse($a, $b, $b)) => b),
 
     (@rule @_f(and()) => @f true),
     (@rule @_f((+)($a)) => a),
