@@ -90,13 +90,15 @@ function pagerank(edges; nsteps=20, damp = 0.85)
     @assert n == m
     out_degree = @fiber d(e(0))
     @finch @loop i j out_degree[j] += edges[i, j]
+    scaled_edges = @fiber d(sl(e(0.0)))
+    @finch @loop i j scaled_edges[i, j] = ifelse(out_degree[i] != 0, edges[i, j] / out_degree[j], 0)
     r = @fiber d(n, e(0.0))
     @finch @loop j r[j] += $(1.0/n)
     rank = @fiber d(n, e(0.0))
     beta_score = (1 - damp)/n
 
     for step = 1:nsteps
-        @finch @loop j i rank[j] += ifelse(out_degree[i] != 0, edges[j, i] * r[i] / out_degree[i], 0)
+        @finch @loop i j rank[i] += edges[i, j] * r[j]
         @finch @loop i r[i] = $beta_score + $damp * rank[i]
     end
     return r
