@@ -105,7 +105,7 @@ function pagerank(edges; nsteps=20, damp = 0.85)
 end
 
 SUITE["graphs"]["pagerank"] = BenchmarkGroup()
-for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
+for mtx in ["SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
     SUITE["graphs"]["pagerank"][mtx] = @benchmarkable pagerank($(fiber(SparseMatrixCSC(matrixdepot(mtx))))) 
 end
 
