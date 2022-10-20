@@ -66,7 +66,7 @@
 
     (@rule @_f(ifelse(true, $a, $b)) => a),
     (@rule @_f(ifelse(false, $a, $b)) => b),
-    (@rule @f(ifelse($a, $b, $b)) => b),
+    (@rule @_f(ifelse($a, $b, $b)) => b),
 
     (@rule @_f(and()) => @f true),
     (@rule @_f((+)($a)) => a),
