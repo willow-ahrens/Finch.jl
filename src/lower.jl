@@ -215,11 +215,19 @@ function (ctx::LowerJulia)(root::CINNode, ::DefaultStyle)
         :($(ctx(root.idx)))
     elseif root.kind === call
         if root.op == literal(and)
-            reduce((x, y) -> :($x && $y), map(ctx, root.brgs)) #TODO This could be better. should be able to handle empty case
+            if isempty(root.args)
+                return true
+            else
+                reduce((x, y) -> :($x && $y), map(ctx, root.args)) #TODO This could be better. should be able to handle empty case
+            end
         elseif root.op == literal(or)
-            reduce((x, y) -> :($x || $y), map(ctx, root.brgs))
+            if isempty(root.args)
+                return false
+            else
+                reduce((x, y) -> :($x || $y), map(ctx, root.args))
+            end
         else
-            :($(ctx(root.op))($(map(ctx, root.brgs)...)))
+            :($(ctx(root.op))($(map(ctx, root.args)...)))
         end
     elseif root.kind === loop
         return ctx(chunk(
