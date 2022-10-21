@@ -91,6 +91,48 @@ function execute_code(ex, T)
         unquote_literals
 end
 
+
+function execute_code_virtualized(ex, T)
+    prgm = ex
+    code = contain(LowerJulia()) do ctx
+        quote
+            $(begin
+                #The following call separates tensor and index names from environment symbols.
+                #TODO we might want to keep the namespace around, and/or further stratify index
+                #names from tensor names
+                contain(ctx) do ctx_2
+                    prgm = TransformSSA(Freshen())(prgm)
+                    prgm = ThunkVisitor(ctx_2)(prgm) #TODO this is a bit of a hack.
+                    (prgm, dims) = dimensionalize!(prgm, ctx_2)
+                    prgm = Initialize(ctx = ctx_2)(prgm)
+                    prgm = ThunkVisitor(ctx_2)(prgm) #TODO this is a bit of a hack.
+                    prgm = simplify(prgm)
+                    ctx_2(prgm)
+                end
+            end)
+            $(contain(ctx) do ctx_2
+                prgm = Finalize(ctx = ctx_2)(prgm)
+                :(($(map(getresults(prgm)) do tns
+                    :($(getname(tns)) = $(ctx_2(tns)))
+                end...), ))
+            end)
+        end
+    end
+    code = quote
+        @inbounds begin
+            $code
+        end
+    end
+    code |>
+        lower_caches |>
+        lower_cleanup |>
+        MacroTools.striplines |>
+        MacroTools.flatten |>
+        MacroTools.unresolve |> #TODO is this okay? I'm not really sure.
+        MacroTools.resyntax |>
+        unquote_literals
+end
+
 macro finch(ex)
     results = Set()
     prgm = IndexNotation.finch_parse_instance(ex, results)

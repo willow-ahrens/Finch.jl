@@ -92,6 +92,72 @@ add_rules!([
     (@rule loop(~i, multi(~a..., assign(access(~b, updater(~m), ~j...), ~c), ~f::isidempotent, ~d...)) => begin
         if i ∉ j && getname(i) ∉ getunbound(c) #=TODO this doesn't work because chunkify temporarily drops indicies so we add =# && isliteral(c)
             multi(assign(access(b, updater(m), j...), c), f, loop(i, multi(a..., d...)))
+    #(@rule @f(a where @pass(b...)) => a),#can't do this bc produced tensors won't get initialized ?
+
+    (@rule @f(max(a...) >= $b) => @f or($(map(x -> @f($x >= $b), a)...))),
+    (@rule @f(max(a...) > $b) => @f or($(map(x -> @f($x > $b), a)...))),
+    (@rule @f(max(a...) <= $b) => @f and($(map(x -> @f($x <= $b), a)...))),
+    (@rule @f(max(a...) < $b) => @f and($(map(x -> @f($x < $b), a)...))),
+    (@rule @f(min(a...) <= $b) => @f or($(map(x -> @f($x <= $b), a)...))),
+    (@rule @f(min(a...) < $b) => @f or($(map(x -> @f($x < $b), a)...))),
+    (@rule @f(min(a...) >= $b) => @f and($(map(x -> @f($x >= $b), a)...))),
+    (@rule @f(min(a...) > $b) => @f and($(map(x -> @f($x > $b), a)...))),
+    (@rule @f(min(a..., min(b...), c...)) => @f min(a..., b..., c...)),
+    (@rule @f(max(a..., max(b...), c...)) => @f max(a..., b..., c...)),
+    (@rule @f(min(a...)) => if !(issorted(a, by = Lexicography)) @f min($(sort(a, by = Lexicography)...)) end),
+    (@rule @f(max(a...)) => if !(issorted(a, by = Lexicography)) @f max($(sort(a, by = Lexicography)...)) end),
+    (@rule @f(min(a...)) => if !(allunique(a)) @f min($(unique(a)...)) end),
+    (@rule @f(max(a...)) => if !(allunique(a)) @f max($(unique(a)...)) end),
+    (@rule @f(+(a..., +(b...), c...)) => @f +(a..., b..., c...)),
+    (@rule @f(+(a...)) => if count(isliteral, a) >= 2 @f +($(filter(!isliteral, a)...), $(literal(+(getvalue.(filter(isliteral, a))...)))) end),
+    (@rule @f(+(a..., 0, b...)) => @f +(a..., b...)),
+    (@rule @f(or(a..., false, b...)) => @f or(a..., b...)),
+    (@rule @f(or(a..., true, b...)) => @f true),
+    (@rule @f(or($a)) => a),
+    (@rule @f(or()) => @f false),
+    (@rule @f(and(a..., true, b...)) => @f and(a..., b...)),
+    (@rule @f(and(a..., false, b...)) => @f false),
+    (@rule @f(and($a)) => a),
+    (@rule @f((0 / $a)) => 0),
+
+    (@rule @f(ifelse(true, $a, $b)) => a),
+    (@rule @f(ifelse(false, $a, $b)) => b),
+    (@rule @f(ifelse($a, $b, $b)) => b),
+
+    (@rule @f(and()) => @f true),
+    (@rule @f((+)($a)) => a),
+    (@rule @f(- +($a, b...)) => @f +(- $a, - +(b...))),
+    (@rule @f($a[i...] += 0) => pass(a)),
+    (@rule @f(-0.0) => @f 0.0),
+
+    (@rule @f($a[i...] <<$f>>= $($(literal(missing)))) => pass(a)),
+    (@rule @f($a[i..., $($(literal(missing))), j...] <<$f>>= $b) => pass(a)),
+    (@rule @f($a[i..., $($(literal(missing))), j...]) => literal(missing)),
+    (@rule @f(coalesce(a..., $($(literal(missing))), b...)) => @f coalesce(a..., b...)),
+    (@rule @f(coalesce(a..., $b, c...)) => if isvalue(b) && !(Missing <: b.type); @f(coalesce(a..., $b)) end),
+    (@rule @f(coalesce(a..., $b, c...)) => if isliteral(b) && b != literal(missing); @f(coalesce(a..., $b)) end),
+    (@rule @f(coalesce($a)) => a),
+
+    (@rule @f($a - $b) => @f $a + - $b),
+    (@rule @f(- (- $a)) => a),
+
+    (@rule @f(*(a..., *(b...), c...)) => @f *(a..., b..., c...)),
+    (@rule @f(*(a...)) => if count(isliteral, a) >= 2 @f(*($(filter(!isliteral, a)...), $(literal(*(getvalue.(filter(isliteral, a))...))))) end),
+    (@rule @f(*(a..., 1, b...)) => @f *(a..., b...)),
+    (@rule @f(*(a..., 0, b...)) => @f 0),
+    (@rule @f((*)($a)) => a),
+    (@rule @f((*)(a..., - $b, c...)) => @f -(*(a..., $b, c...))),
+    (@rule @f($a[i...] *= 1) => pass(a)),
+    (@rule @f(@sieve true $a) => a),
+    (@rule @f(@sieve false $a) => pass(getresults(a)...)),
+    (@rule @f((0 / $a)) => 0),
+
+    (@rule @f(@chunk $i $a ($b[j...] <<min>>= $d)) => if Finch.isliteral(d) && i ∉ j
+        @f (b[j...] <<min>>= $d)
+    end),
+    (@rule @f(@chunk $i $a @multi b... ($c[j...] <<min>>= $d) e...) => begin
+        if Finch.isliteral(d) && i ∉ j
+            @f @multi (c[j...] <<min>>= $d) @chunk $i a @f(@multi b... e...)
         end
     end),
 
