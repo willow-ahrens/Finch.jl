@@ -2,26 +2,6 @@
 
 const incs = Dict(:+= => :+, :*= => :*, :&= => :&, :|= => :|)
 
-const pattern_nodes = (
-    pass = pass,
-    loop = loop,
-    chunk = chunk,
-    with = with,
-    sieve = sieve,
-    multi = multi,
-    assign = assign,
-    call = call,
-    access = access,
-    protocol = protocol,
-    name = name,
-    reader = reader,
-    writer = writer,
-    updater = updater,
-    label = (ex) -> Expr(:$, :(index_terminal($(esc(ex))))),
-    literal = literal,
-    value = (ex) -> Expr(:$, :(index_terminal($(esc(ex))))),
-)
-
 const program_nodes = (
     pass = pass,
     loop = loop,
@@ -37,9 +17,9 @@ const program_nodes = (
     writer = writer,
     updater = updater,
     name = name,
-    label = (ex) -> :(index_terminal($(esc(ex)))),
+    label = (ex) -> :($(esc(:dollar))(index_terminal($(esc(ex))))),
     literal = literal,
-    value = (ex) -> :(index_terminal($(esc(ex)))),
+    value = (ex) -> :($(esc(:dollar))(index_terminal($(esc(ex))))),
 )
 
 const instance_nodes = (
@@ -164,13 +144,12 @@ function _finch_capture(ex, ctx)
     end
 end
 
-capture_finch_pattern(ex; results=Set()) = _finch_capture(ex, (nodes=pattern_nodes, namify=true, mode = pattern_nodes.reader, results = results))
 capture_finch_program(ex; results=Set()) = _finch_capture(ex, (nodes=program_nodes, namify=true, mode = program_nodes.reader, results = results))
 capture_finch_instance(ex; results=Set()) = _finch_capture(ex, (nodes=instance_nodes, namify=true, mode = instance_nodes.reader, results = results))
 
 macro finch_program(ex)
     return quote
-        let dollar=identity
+        let $(esc(:dollar))=identity
             $(capture_finch_program(ex))
         end
     end
@@ -178,24 +157,14 @@ end
 
 macro f(ex)
     return quote
-        let dollar=identity
+        let $(esc(:dollar))=identity
             $(capture_finch_program(ex))
-        end
-    end
-end
-
-macro _f(ex)
-    return quote
-        let dollar=identity
-            $(capture_finch_pattern(ex))
         end
     end
 end
 
 macro finch_program_instance(ex)
     return quote
-        let dollar=identity
-            $(capture_finch_instance(ex))
-        end
+        $(capture_finch_instance(ex))
     end
 end

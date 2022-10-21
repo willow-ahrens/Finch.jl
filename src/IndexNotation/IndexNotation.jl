@@ -25,7 +25,7 @@ module IndexNotation
     export Extrude, extrude
     export Laminate, laminate
 
-    export @f, @_f, @finch_program, @finch_program_instance
+    export @f, @finch_program, @finch_program_instance
 
     export isliteral, virtual
 
