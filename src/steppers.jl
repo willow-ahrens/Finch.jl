@@ -34,18 +34,6 @@ function (ctx::LowerJulia)(root::IndexNode, style::StepperStyle)
     end
 end
 
-function (ctx::LowerJulia)(root::Multi, style::StepperStyle)
-    thunk = Expr(:block)
-    for body in root.bodies
-        push!(thunk.args, quote
-            $(contain(ctx) do ctx_2
-                (ctx_2)(body)
-            end)
-        end)
-    end
-    thunk
-end
-
 function (ctx::CycleVisitor{StepperStyle})(node::Stepper)
     push!(ctx.ctx.preamble, node.seek(ctx.ctx, ctx.ext))
     node.body
