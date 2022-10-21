@@ -10,10 +10,10 @@ function lower_cycle(root, ctx, idx, ext, style)
 
     body_2 = contain(ctx) do ctx_2
         push!(ctx_2.preamble, :($i0 = $i))
-        ctx_2(Chunk(root.idx, Extent(start = i0, stop = getstop(root.ext), lower = 1), body))
+        ctx_2(chunk(root.idx, Extent(start = value(i0), stop = getstop(root.ext), lower = literal(1)), body))
     end
 
-    if simplify((@f $(getlower(ext)) >= 1)) == true  && simplify((@f $(getupper(ext)) <= 1)) == true
+    if simplify((@f $(getlower(ext)) >= 1)) == (@f true) && simplify((@f $(getupper(ext)) <= 1)) == (@f true)
         body_2
     else
         return quote
@@ -33,6 +33,16 @@ end
 
 function (ctx::CycleVisitor)(node)
     if istree(node)
+        return similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        return node
+    end
+end
+
+function (ctx::CycleVisitor)(node::CINNode)
+    if node.kind === virtual
+        ctx(node.val)
+    elseif istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))
     else
         return node

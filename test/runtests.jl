@@ -1,6 +1,7 @@
 using Finch
 using Test
 using MacroTools
+using SyntaxInterface
 
 include("data_matrices.jl")
 
@@ -14,7 +15,7 @@ function diff(name, body)
     open(temp_file, "w") do f
         println(f, body)
     end
-    if "overwrite" in ARGS
+    if "overwriter" in ARGS
         open(cache_file, "w") do f
             println(f, body)
         end
@@ -52,14 +53,16 @@ end
 
 using Finch: VirtualAbstractArray, Run, Spike, Extent, Scalar, Switch, Stepper, Jumper, Step, Jump, AcceptRun, AcceptSpike, Thunk, Phase, Pipeline, Lookup, Simplify, Shift
 using Finch: @f, @finch_program_instance, execute, execute_code, getstart, getstop
-using Finch: getname, Virtual
+using Finch: getname, value
+using Finch.IndexNotation
+using Finch.IndexNotation: call_instance, assign_instance, access_instance, value_instance, name_instance, loop_instance, with_instance, label_instance, protocol_instance
 
 verbose = "verbose" in ARGS
 
 @testset "Finch.jl" begin
     include("test_util.jl")
     include("test_ssa.jl")
-    include("test_parse.jl")
+    #include("test_parse.jl")
     include("test_repeat.jl")
     include("test_permit.jl")
     include("test_skips.jl")

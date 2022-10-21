@@ -82,7 +82,7 @@ mutable struct VirtualRepeatRLELevel
 end
 function virtualize(ex, ::Type{RepeatRLELevel{D, Ti, Tv}}, ctx, tag=:lvl) where {D, Ti, Tv}
     sym = ctx.freshen(tag)
-    I = Virtual{Int}(:($sym.I))
+    I = value(:($sym.I), Int)
     pos_alloc = ctx.freshen(sym, :_pos_alloc)
     idx_alloc = ctx.freshen(sym, :_idx_alloc)
     val_alloc = ctx.freshen(sym, :_val_alloc)
@@ -111,8 +111,8 @@ getsites(fbr::VirtualFiber{VirtualRepeatRLELevel}) =
     [envdepth(fbr.env) + 1, ]
 
 function getsize(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode)
-    ext = Extent(1, fbr.lvl.I)
-    if mode != Read()
+    ext = Extent(literal(1), fbr.lvl.I)
+    if mode.kind !== reader
         ext = suggest(ext)
     end
     (ext,)
@@ -126,7 +126,7 @@ end
 @inline default(fbr::VirtualFiber{<:VirtualRepeatRLELevel}) = fbr.lvl.D
 Base.eltype(fbr::VirtualFiber{VirtualRepeatRLELevel}) = fbr.lvl.Tv
 
-function initialize_level!(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx::LowerJulia, mode::Union{Write, Update})
+function initialize_level!(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx::LowerJulia, mode)
     lvl = fbr.lvl
     push!(ctx.preamble, quote
         $(lvl.pos_alloc) = length($(lvl.ex).pos)
@@ -148,14 +148,22 @@ function assemble!(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode)
     end)
 end
 
-function finalize_level!(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx::LowerJulia, mode::Union{Write, Update})
+function finalize_level!(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx::LowerJulia, mode)
     return fbr.lvl
 end
 
-unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode::Read, idx, idxs...) =
-    unfurl(fbr, ctx, mode, protocol(idx, walk), idxs...)
+function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode, ::Nothing, idx, idxs...)
+    if idx.kind === protocol
+        @assert idx.mode.kind === literal
+        unfurl(fbr, ctx, mode, idx.mode.val, idx.idx, idxs...)
+    elseif mode.kind === reader
+        unfurl(fbr, ctx, mode, walk, idx, idxs...)
+    else
+        unfurl(fbr, ctx, mode, extrude, idx, idxs...)
+    end
+end
 
-function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode::Read, idx::Protocol{<:Any, Walk}, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode, ::Walk, idx, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
@@ -189,9 +197,9 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode::Read, idx::
                     $my_i = $(lvl.ex).idx[$my_q]
                 ),
                 body = Step(
-                    stride = (ctx, idx, ext) -> my_i,
+                    stride = (ctx, idx, ext) -> value(my_i),
                     chunk = Run(
-                        body = Simplify(Virtual{lvl.Tv}(:($(lvl.ex).val[$my_q])))
+                        body = Simplify(value(:($(lvl.ex).val[$my_q]), lvl.Tv))
                     ),
                     next = (ctx, idx, ext) -> quote
                         $my_q += 1
@@ -201,13 +209,10 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode::Read, idx::
         )
     )
 
-    exfurl(body, ctx, mode, idx.idx)
+    exfurl(body, ctx, mode, idx)
 end
 
-unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode::Union{Write, Update}, idx, idxs...) =
-    unfurl(fbr, ctx, mode, protocol(idx, extrude), idxs...)
-
-function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode::Union{Write, Update}, idx::Protocol{<:Any, Extrude}, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode, ::Extrude, idx, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_q = ctx.freshen(tag, :_q)
@@ -247,7 +252,7 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode::Union{Write
                         end
                     end
                 end,
-                body = Virtual{lvl.Tv}(my_v),
+                body = value(my_v, lvl.Tv),
                 epilogue = begin
                     body = quote
                         if $my_q == $my_q_start || $my_v != $my_v_prev
@@ -295,5 +300,5 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode::Union{Write
         $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1] = $my_q
     end)
 
-    exfurl(body, ctx, mode, idx.idx)
+    exfurl(body, ctx, mode, idx)
 end

@@ -19,6 +19,8 @@ mutable struct VirtualSingleShift{Tv, Ti}
     name
 end
 
+IndexNotation.isliteral(::VirtualSingleShift) =  false
+
 function Finch.virtualize(ex, ::Type{SingleShift{Tv, Ti}}, ctx, tag=:tns) where {Tv, Ti}
     sym = ctx.freshen(tag)
     push!(ctx.preamble, :($sym = $ex))
@@ -30,29 +32,28 @@ end
 function Finch.getsize(arr::VirtualSingleShift{Tv, Ti}, ctx::Finch.LowerJulia, mode) where {Tv, Ti}
     ex = Symbol(arr.name, :_stop)
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))
-    (Extent(1, Virtual{Ti}(ex)),)
+    (Extent(literal(1), value(ex, Ti)),)
 end
 Finch.setsize!(arr::VirtualSingleShift, ctx::Finch.LowerJulia, mode, dims...) = arr
 Finch.getname(arr::VirtualSingleShift) = arr.name
 Finch.setname(arr::VirtualSingleShift, name) = (arr_2 = deepcopy(arr); arr_2.name = name; arr_2)
-function (ctx::Finch.Stylize{LowerJulia})(node::Access{<:VirtualSingleShift})
-    if ctx.root isa Loop && ctx.root.idx == get_furl_root(node.idxs[1])
+function Finch.stylize_access(node, ctx::Finch.Stylize{LowerJulia}, ::VirtualSingleShift)
+    if ctx.root isa CINNode && ctx.root.kind === loop && ctx.root.idx == get_furl_root(node.idxs[1])
         Finch.ChunkStyle()
     else
-        mapreduce(ctx, result_style, arguments(node))
+        Finch.DefaultStyle()
     end
 end
 
-function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSingleShift{Tv, Ti}, Read}, ::Finch.DefaultStyle) where {Tv, Ti}
-    vec = node.tns
+function Finch.chunkify_access(node, ctx, vec::VirtualSingleShift{Tv, Ti}) where {Tv, Ti}
     if getname(ctx.idx) == getname(node.idxs[1])
         tns = Shift(
             body = Lookup(
                 body = (i) -> :($(vec.ex).val[$(ctx.ctx(i))])
             ),
-            delta = Virtual{Ti}(:($(vec.ex).delta))
+            delta = value(:($(vec.ex).delta), Ti)
         )
-        Access(tns, node.mode, node.idxs)
+        access(tns, node.mode, node.idxs...)
     else
         node
     end

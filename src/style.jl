@@ -13,6 +13,21 @@ function (ctx::Stylize)(node)
     return DefaultStyle()
 end
 
+function (ctx::Stylize)(node::CINNode)
+    if node.kind === virtual
+        return ctx(node.val)
+    elseif node.kind === access && node.tns isa CINNode && node.tns.kind === virtual
+        return mapreduce(ctx, result_style, arguments(node); init=stylize_access(node, ctx, node.tns.val))
+    elseif istree(node)
+        return mapreduce(ctx, result_style, arguments(node); init=DefaultStyle())
+    else
+        return DefaultStyle()
+    end
+end
+
+stylize_access(node, ctx, @nospecialize tns) = DefaultStyle()
+
+@nospecialize
 
 result_style(a, b) = _result_style(a, b, combine_style(a, b), combine_style(b, a))
 _result_style(a, b, c::UnknownStyle, d::UnknownStyle) = throw(MethodError(combine_style, (a, b)))
@@ -24,22 +39,4 @@ combine_style(a, b) = UnknownStyle()
 
 combine_style(a::DefaultStyle, b) = b
 
-abstract type AbstractVisitor end
-
-(ctx::AbstractVisitor)(root) = ctx(root, Stylize(root, ctx)(root))
-
-abstract type AbstractTransformVisitor <: AbstractVisitor end
-
-(ctx::AbstractTransformVisitor)(node, style::DefaultStyle) = visit_default!(node, ctx)
-function visit_default!(node, ctx)
-    node = previsit!(node, ctx)
-    if istree(node)
-        postvisit!(node, ctx, map(ctx, arguments(node)))
-    else
-        postvisit!(node, ctx)
-    end
-end
-
-previsit!(node, ctx::AbstractTransformVisitor) = node
-postvisit!(node, ctx::AbstractTransformVisitor, args) = similarterm(node, operation(node), args)
-postvisit!(node, ctx::AbstractTransformVisitor) = node
+@specialize

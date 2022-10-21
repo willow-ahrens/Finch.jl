@@ -3,10 +3,10 @@ abstract type IndexStatementInstance <: IndexNodeInstance end
 abstract type IndexExpressionInstance <: IndexNodeInstance end
 abstract type IndexTerminalInstance <: IndexExpressionInstance end
 
-struct LiteralInstance{val} <: IndexTerminalInstance
+struct literalInstance{val} <: IndexTerminalInstance
 end
 
-@inline literal_instance(tns) = LiteralInstance{tns}()
+@inline literal_instance(tns) = literalInstance{tns}()
 
 struct PassInstance{Tnss<:Tuple} <: IndexStatementInstance
     tnss::Tnss
@@ -96,8 +96,32 @@ Base.:(==)(a::LabelInstance{tag}, b::LabelInstance{tag}) where {tag} = a.tns == 
 
 @inline label_instance(tag, tns) = LabelInstance{tag, typeof(tns)}(tns)
 
+struct ReaderInstance end
+reader_instance() = ReaderInstance()
+Base.:(==)(a::ReaderInstance, b::ReaderInstance) = true
+struct WriterInstance end
+writer_instance() = WriterInstance()
+Base.:(==)(a::WriterInstance, b::WriterInstance) = true
+struct UpdaterInstance end
+updater_instance() = UpdaterInstance()
+Base.:(==)(a::UpdaterInstance, b::UpdaterInstance) = true
+
 struct ValueInstance{arg} end
 
-@inline value_instance(arg) = (isbits(arg) || arg isa Type) ? ValueInstance{arg}() : arg #TODO how does this interact with immutable outputs?
-@inline value_instance(arg::Symbol) = ValueInstance{arg}()
-@inline value(arg) = value_instance(arg)
+#TODO what is going on here?
+#@inline value_instance(arg) = (isbits(arg) || arg isa Type) ? ValueInstance{arg}() : arg #TODO how does this interact with immutable outputs?
+#@inline value_instance(arg::Symbol) = ValueInstance{arg}()
+@inline value_instance(arg) = index_terminal_instance(arg)
+@inline index_terminal_instance(arg::Type) = literal_instance(arg)
+@inline index_terminal_instance(arg::Function) = literal_instance(arg)
+@inline index_terminal_instance(arg::IndexNodeInstance) = arg
+@inline index_terminal_instance(arg) = arg #TODO ValueInstance
+
+@inline index_terminal(arg::Type) = literal(arg)
+@inline index_terminal(arg::Function) = literal(arg)
+@inline index_terminal(arg::CINNode) = arg
+@inline index_terminal(arg) = isliteral(arg) ? literal(arg) : virtual(arg)
+
+Base.convert(::Type{CINNode}, x) = index_terminal(x)
+Base.convert(::Type{CINNode}, x::CINNode) = x
+Base.convert(::Type{CINNode}, x::Symbol) = error()

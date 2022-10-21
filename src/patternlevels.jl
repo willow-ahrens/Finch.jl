@@ -58,9 +58,9 @@ getsize(::VirtualFiber{VirtualPatternLevel}, ctx, mode) = ()
 @inline default(fbr::VirtualFiber{VirtualPatternLevel}) = false
 Base.eltype(fbr::VirtualFiber{VirtualPatternLevel}) = Bool
 
-initialize_level!(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode::Union{Write, Update}) = fbr.lvl
+initialize_level!(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode) = fbr.lvl
 
-finalize_level!(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode::Union{Write, Update}) = fbr.lvl
+finalize_level!(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode) = fbr.lvl
 
 interval_assembly_depth(lvl::VirtualPatternLevel) = Inf
 
@@ -68,20 +68,20 @@ assemble!(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode) = fbr.lvl
 
 reinitialize!(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode) = fbr.lvl
 
-function refurl(fbr::VirtualFiber{VirtualPatternLevel}, ctx, ::Read)
-    Simplify(Literal(true))
-end
-
-function (ctx::Finch.LowerJulia)(node::Access{<:VirtualFiber{VirtualPatternLevel}}, ::DefaultStyle) where {Tv, Ti}
-    @assert isempty(node.idxs)
-    true
+function refurl(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode)
+    if mode.kind === reader
+        return Simplify(literal(true))
+    else
+        error("unimplemented")
+    end
 end
 
 hasdefaultcheck(::VirtualPatternLevel) = true
 
-function (ctx::Finch.LowerJulia)(node::Access{<:VirtualFiber{VirtualPatternLevel}, <:Union{Write, Update}}, ::DefaultStyle) where {Tv, Ti}
+function lowerjulia_access(ctx::LowerJulia, node, tns::VirtualFiber{VirtualPatternLevel})
     @assert isempty(node.idxs)
-    tns = node.tns
+
+    node.mode.kind === reader && return true
 
     if envdefaultcheck(tns.env) !== nothing
         push!(ctx.preamble, quote

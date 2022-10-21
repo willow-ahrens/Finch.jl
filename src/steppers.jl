@@ -10,9 +10,9 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Stepper)
     print(io, "Stepper()")
 end
 
-isliteral(::Stepper) = false
+IndexNotation.isliteral(::Stepper) =  false
 
-(ctx::Stylize{LowerJulia})(node::Stepper) = ctx.root isa Chunk ? StepperStyle() : DefaultStyle()
+(ctx::Stylize{LowerJulia})(node::Stepper) = ctx.root.kind === chunk ? StepperStyle() : DefaultStyle()
 
 combine_style(a::DefaultStyle, b::StepperStyle) = StepperStyle()
 combine_style(a::StepperStyle, b::PipelineStyle) = PipelineStyle()
@@ -26,8 +26,12 @@ combine_style(a::ThunkStyle, b::StepperStyle) = ThunkStyle()
 combine_style(a::StepperStyle, b::JumperStyle) = JumperStyle()
 combine_style(a::StepperStyle, b::PhaseStyle) = PhaseStyle()
 
-function (ctx::LowerJulia)(root::Chunk, style::StepperStyle)
-    lower_cycle(root, ctx, root.idx, root.ext, style)
+function (ctx::LowerJulia)(root::CINNode, style::StepperStyle)
+    if root.kind === chunk
+        return lower_cycle(root, ctx, root.idx, root.ext, style)
+    else
+        error("unimplemented")
+    end
 end
 
 function (ctx::CycleVisitor{StepperStyle})(node::Stepper)
@@ -40,20 +44,20 @@ end
     next = (ctx, idx, ext) -> quote end
     chunk = nothing
     body = (ctx, idx, ext, ext_2) -> Switch([
-        :($(ctx(stride(ctx, idx, ext))) == $(ctx(getstop(ext_2)))) => Thunk(
+        value(:($(ctx(stride(ctx, idx, ext))) == $(ctx(getstop(ext_2))))) => Thunk(
             body = truncate_weak(chunk, ctx, ext, ext_2),
             epilogue = next(ctx, idx, ext_2)
         ),
-        true => 
+        literal(true) => 
             truncate_strong(chunk, ctx, ext, ext_2),
         ])
 end
 
-isliteral(::Step) = false
+IndexNotation.isliteral(::Step) =  false
 
-(ctx::Stylize{LowerJulia})(node::Step) = ctx.root isa Chunk ? PhaseStyle() : DefaultStyle()
+(ctx::Stylize{LowerJulia})(node::Step) = ctx.root.kind === chunk ? PhaseStyle() : DefaultStyle()
 
-(ctx::PhaseStride)(node::Step) = Narrow(Extent(start = getstart(ctx.ext), stop = node.stride(ctx.ctx, ctx.idx, ctx.ext), lower = 1))
+(ctx::PhaseStride)(node::Step) = Narrow(Extent(start = getstart(ctx.ext), stop = node.stride(ctx.ctx, ctx.idx, ctx.ext), lower = literal(1)))
 
 (ctx::PhaseBodyVisitor)(node::Step) = node.body(ctx.ctx, ctx.idx, ctx.ext, ctx.ext_2)
 

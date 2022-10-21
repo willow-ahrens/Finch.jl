@@ -62,7 +62,7 @@ mutable struct VirtualDenseLevel
 end
 function virtualize(ex, ::Type{DenseLevel{Ti, Lvl}}, ctx, tag=:lvl) where {Ti, Lvl}
     sym = ctx.freshen(tag)
-    I = Virtual{Int}(:($sym.I))
+    I = value(:($sym.I), Int)
     push!(ctx.preamble, quote
         $sym = $ex
     end)
@@ -84,8 +84,8 @@ getsites(fbr::VirtualFiber{VirtualDenseLevel}) =
     [envdepth(fbr.env) + 1, getsites(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))...]
 
 function getsize(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode)
-    ext = Extent(1, fbr.lvl.I)
-    if mode != Read()
+    ext = Extent(literal(1), fbr.lvl.I)
+    if mode.kind !== reader
         ext = suggest(ext)
     end
     (ext, getsize(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)...)
@@ -101,7 +101,7 @@ end
 Base.eltype(fbr::VirtualFiber{VirtualDenseLevel}) = eltype(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
 
 reinitializeable(lvl::VirtualDenseLevel) = reinitializeable(lvl.lvl)
-function initialize_level!(fbr::VirtualFiber{VirtualDenseLevel}, ctx::LowerJulia, mode::Union{Write, Update})
+function initialize_level!(fbr::VirtualFiber{VirtualDenseLevel}, ctx::LowerJulia, mode)
     fbr.lvl.lvl = initialize_level!(VirtualFiber(fbr.lvl.lvl, Environment(fbr.env, reinitialized=envreinitialized(fbr.env))), ctx, mode)
     return fbr.lvl
 end
@@ -113,16 +113,16 @@ function reinitialize!(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode)
     q_start = call(*, p_start, lvl.I)
     q_stop = call(*, p_stop, lvl.I)
     if interval_assembly_depth(lvl.lvl) >= 1
-        reinitialize!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Extent(q_start, q_stop), index = Extent(1, lvl.I), parent=fbr.env)), ctx, mode)
+        reinitialize!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Extent(q_start, q_stop), index = Extent(literal(1), lvl.I), parent=fbr.env)), ctx, mode)
     else
         p = ctx.freshen(lvl.ex, :_p)
-        p = ctx.freshen(lvl.ex, :_q)
+        q = ctx.freshen(lvl.ex, :_q)
         i_2 = ctx.freshen(lvl.ex, :_i)
         push!(ctx.preamble, quote
             for $p = $(ctx(p_start)):$(ctx(p_stop))
                 for $i = 1:$(lvl.I)
                     $q = ($p - 1) * $(ctx(lvl.I)) + $i
-                    reinitialize!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual(q), index=Virtual(i), parent=fbr.env)), ctx, mode)
+                    reinitialize!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(q), index=value(i), parent=fbr.env)), ctx, mode)
                 end
             end
         end)
@@ -138,33 +138,38 @@ function assemble!(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode)
     q_start = call(*, p_start, lvl.I)
     q_stop = call(*, p_stop, lvl.I)
     if interval_assembly_depth(lvl.lvl) >= 1
-        assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Extent(q_start, q_stop), index = Extent(1, lvl.I), parent=fbr.env)), ctx, mode)
+        assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Extent(q_start, q_stop), index = Extent(literal(1), lvl.I), parent=fbr.env)), ctx, mode)
     else
         p = ctx.freshen(lvl.ex, :_p)
-        p = ctx.freshen(lvl.ex, :_q)
-        i_2 = ctx.freshen(lvl.ex, :_i)
+        q = ctx.freshen(lvl.ex, :_q)
         push!(ctx.preamble, quote
             for $p = $(ctx(p_start)):$(ctx(p_stop))
                 for $i = 1:$(ctx(lvl.I))
                     $q = ($p - 1) * $(ctx(lvl.I)) + $i
-                    assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual(q), index=Virtual(i), parent=fbr.env)), ctx, mode)
+                    $(assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(q), index=value(i), parent=fbr.env)), ctx, mode))
                 end
             end
         end)
     end
 end
 
-function finalize_level!(fbr::VirtualFiber{VirtualDenseLevel}, ctx::LowerJulia, mode::Union{Write, Update})
+function finalize_level!(fbr::VirtualFiber{VirtualDenseLevel}, ctx::LowerJulia, mode)
     fbr.lvl.lvl = finalize_level!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)
     return fbr.lvl
 end
 
 hasdefaultcheck(lvl::VirtualDenseLevel) = hasdefaultcheck(lvl.lvl)
 
-unfurl(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode::Union{Write, Update, Read}, idx, idxs...) =
-    unfurl(fbr, ctx, mode, protocol(idx, follow), idxs...)
+function unfurl(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode, ::Nothing, idx::CINNode, idxs...)
+    if idx.kind === protocol
+        @assert idx.mode.kind === literal
+        unfurl(fbr, ctx, mode, idx.mode.val, idx.idx, idxs...)
+    else
+        unfurl(fbr, ctx, mode, follow, idx, idxs...)
+    end
+end
 
-function unfurl(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode::Union{Read, Write, Update}, idx::Protocol{<:Any, <:Union{Follow, Laminate, Extrude}}, idxs...) #TODO should protocol be strict?
+function unfurl(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode, ::Union{Follow, Laminate, Extrude}, idx, idxs...) #TODO should protocol be strict?
     lvl = fbr.lvl
     tag = lvl.ex
 
@@ -176,9 +181,9 @@ function unfurl(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode::Union{Read, Wri
             preamble = quote
                 $q = ($(ctx(p)) - 1) * $(ctx(lvl.I)) + $(ctx(i))
             end,
-            body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Virtual{lvl.Ti}(q), index=i, guard=envdefaultcheck(fbr.env), parent=fbr.env)), ctx, mode, idxs...),
+            body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(q, lvl.Ti), index=i, guard=envdefaultcheck(fbr.env), parent=fbr.env)), ctx, mode, idxs...),
         )
     )
 
-    exfurl(body, ctx, mode, idx.idx)
+    exfurl(body, ctx, mode, idx)
 end

@@ -18,7 +18,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Shift)
     print(io, ")")
 end
 
-isliteral(::Shift) = false
+IndexNotation.isliteral(::Shift) =  false
 
 #TODO can't we do this more pretty?
 supports_shift(style) = false
@@ -28,7 +28,7 @@ supports_shift(::DefaultStyle) = true
 unchunk(node::Shift, ctx::ForLoopVisitor) = unchunk(node.body, ForLoopVisitor(;kwfields(ctx)..., val = call(-, ctx.val, node.delta)))
 
 supports_shift(::ThunkStyle) = true
-(ctx::ThunkVisitor)(node::Shift, ::DefaultStyle) = Shift(;kwfields(node)..., body = ctx(node.body))
+(ctx::ThunkVisitor)(node::Shift) = Shift(;kwfields(node)..., body = ctx(node.body))
 
 function shiftdim(ext::Extent, delta)
     Extent(
@@ -43,6 +43,15 @@ shiftdim(ext::Widen, delta) = Widen(shiftdim(ext.ext, delta))
 shiftdim(ext::Narrow, delta) = Narrow(shiftdim(ext.ext, delta))
 shiftdim(ext::NoDimension, delta) = nodim
 shiftdim(ext::DeferDimension, delta) = deferdim
+
+function shiftdim(ext::CINNode, body)
+    if ext.kind === virtual
+        shiftdim(ext.val, body)
+    else
+        error("unimplemented")
+    end
+end
+
 
 truncate(node::Shift, ctx, ext, ext_2) = Shift(truncate(node.body, ctx, shiftdim(ext, node.delta), shiftdim(ext_2, node.delta)), node.delta)
 truncate_weak(node::Shift, ctx, ext, ext_2) = Shift(truncate_weak(node.body, ctx, shiftdim(ext, node.delta), shiftdim(ext_2, node.delta)), node.delta)

@@ -42,7 +42,7 @@ function virtualize(ex, ::Type{<:Fiber{Lvl, Env}}, ctx, tag=ctx.freshen(:tns)) w
     VirtualFiber(lvl, env)
 end
 (ctx::Finch.LowerJulia)(fbr::VirtualFiber) = :(Fiber($(ctx(fbr.lvl)), $(ctx(fbr.env))))
-isliteral(::VirtualFiber) = false
+IndexNotation.isliteral(::VirtualFiber) =  false
 
 getname(fbr::VirtualFiber) = envname(fbr.env)
 setname(fbr::VirtualFiber, name) = VirtualFiber(fbr.lvl, envrename!(fbr.env, name))
@@ -68,8 +68,8 @@ Initialize the virtual fiber to it's default value in the context `ctx` with
 access mode `mode`. Return the new fiber object.
 """
 function initialize!(fbr::VirtualFiber, ctx::LowerJulia, mode, idxs...)
-    fbr = VirtualFiber(initialize_level!(fbr, ctx, mode), fbr.env)
-    if mode isa Union{Write, Update}
+    if mode.kind === writer || mode.kind === updater
+        fbr = VirtualFiber(initialize_level!(fbr, ctx, mode), fbr.env)
         assemble!(fbr, ctx, mode)
     end
     return refurl(fbr, ctx, mode, idxs...)
@@ -94,7 +94,11 @@ Finalize the virtual fiber in the context `ctx` with access mode `mode`. Return
 the new fiber object.
 """
 function finalize!(fbr::VirtualFiber, ctx::LowerJulia, mode, idxs...)
-    VirtualFiber(finalize_level!(fbr, ctx, mode), fbr.env)
+    if mode.kind === writer || mode.kind === updater
+        return VirtualFiber(finalize_level!(fbr, ctx, mode), fbr.env)
+    else
+        return fbr
+    end
 end
 
 """
@@ -106,21 +110,23 @@ function finalize_level! end
 
 finalize_level!(fbr, ctx, mode) = fbr.lvl
 
-function (ctx::Stylize{LowerJulia})(node::Access{<:VirtualFiber})
+#TODO get rid of isa CINNode when this is all over
+
+function stylize_access(node, ctx::Stylize{LowerJulia}, tns::VirtualFiber)
     if !isempty(node.idxs)
         if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
             return SelectStyle()
-        elseif ctx.root isa Loop && ctx.root.idx == get_furl_root(node.idxs[1])
+        elseif ctx.root isa CINNode && ctx.root.kind === loop && ctx.root.idx == get_furl_root(node.idxs[1])
             return ChunkStyle()
         end
     end
-    return mapreduce(ctx, result_style, arguments(node))
+    return DefaultStyle()
 end
 
-function (ctx::Finch.SelectVisitor)(node::Access{<:VirtualFiber}, ::DefaultStyle) where {Tv, Ti}
+function select_access(node, ctx::Finch.SelectVisitor, tns::VirtualFiber)
     if !isempty(node.idxs)
         if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
-            var = Name(ctx.ctx.freshen(:s))
+            var = name(ctx.ctx.freshen(:s))
             ctx.idxs[var] = node.idxs[1]
             return access(node.tns, node.mode, var, node.idxs[2:end]...)
         end
@@ -128,11 +134,11 @@ function (ctx::Finch.SelectVisitor)(node::Access{<:VirtualFiber}, ::DefaultStyle
     return similarterm(node, operation(node), map(ctx, arguments(node)))
 end
 
-function (ctx::Finch.ChunkifyVisitor)(node::Access{<:VirtualFiber}, ::DefaultStyle) where {Tv, Ti}
+function chunkify_access(node, ctx, tns::VirtualFiber)
     if !isempty(node.idxs)
         idxs = map(ctx, node.idxs)
         if ctx.idx == get_furl_root(node.idxs[1])
-            return access(unfurl(node.tns, ctx.ctx, node.mode, idxs...), node.mode, get_furl_root(node.idxs[1]))
+            return access(unfurl(tns, ctx.ctx, node.mode, nothing, node.idxs...), node.mode, get_furl_root(node.idxs[1])) #TODO do this nicer
         else
             return access(node.tns, node.mode, idxs...)
         end
@@ -141,11 +147,30 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{<:VirtualFiber}, ::DefaultSty
 end
 
 get_furl_root(idx) = nothing
-get_furl_root(idx::Name) = idx
-get_furl_root(idx::Protocol) = get_furl_root(idx.idx)
+function get_furl_root(idx::CINNode)
+    if idx.kind === name
+        return idx
+    elseif idx.kind === access && idx.tns.kind === virtual
+        get_furl_root_access(idx, idx.tns.val)
+    elseif idx.kind === protocol
+        return get_furl_root(idx.idx)
+    else
+        return nothing
+    end
+end
+get_furl_root_access(idx, tns) = nothing
+#These are also good examples of where modifiers might be great.
 
 refurl(tns, ctx, mode, idxs...) = access(tns, mode, idxs...)
-exfurl(tns, ctx, mode, idx::Name) = tns
+function exfurl(tns, ctx, mode, idx::CINNode)
+    if idx.kind === name
+        return tns
+    elseif idx.kind === access && idx.tns.kind === virtual
+        exfurl_access(tns, ctx, mode, idx, idx.tns.val)
+    else
+        error("unimplemented")
+    end
+end
 
 function Base.show(io::IO, fbr::Fiber)
     print(io, "Fiber(")

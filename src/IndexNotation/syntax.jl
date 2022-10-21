@@ -13,9 +13,13 @@ const program_nodes = (
     call = call,
     access = access,
     protocol = protocol,
-    name = Name,
-    label = esc,
-    value = esc,
+    reader = reader,
+    writer = writer,
+    updater = updater,
+    name = name,
+    label = (ex) -> :($(esc(:dollar))(index_terminal($(esc(ex))))),
+    literal = literal,
+    value = (ex) -> :($(esc(:dollar))(index_terminal($(esc(ex))))),
 )
 
 const instance_nodes = (
@@ -30,7 +34,11 @@ const instance_nodes = (
     access = access_instance,
     protocol = protocol_instance,
     name = name_instance,
+    reader = reader_instance,
+    writer = writer_instance,
+    updater = updater_instance,
     label = (ex) -> :($label_instance($(QuoteNode(ex)), $value_instance($(esc(ex))))),
+    literal = literal_instance,
     value = (ex) -> :($value_instance($(esc(ex))))
 )
 
@@ -97,50 +105,66 @@ function _finch_capture(ex, ctx)
         bodies = map(arg -> _finch_capture(arg, ctx), bodies)
         return :($(ctx.nodes.multi)($(bodies...)))
     elseif @capture ex (lhs_ = rhs_)
-        lhs = _finch_capture(lhs, (ctx..., mode=Write()))
+        lhs = _finch_capture(lhs, (ctx..., mode=ctx.nodes.writer))
         rhs = _finch_capture(rhs, ctx)
-        return :($(ctx.nodes.assign)($lhs, $rhs))
+        return :($(ctx.nodes.assign)($lhs, $(ctx.nodes.literal(nothing)), $rhs))
     elseif @capture ex (lhs_ << op_ >>= rhs_)
-        lhs = _finch_capture(lhs, (ctx..., mode=Update()))
+        lhs = _finch_capture(lhs, (ctx..., mode=ctx.nodes.updater))
         rhs = _finch_capture(rhs, ctx)
         op = _finch_capture(op, (ctx..., namify=false))
         return :($(ctx.nodes.assign)($lhs, $op, $rhs))
     elseif @capture ex (op_(args__))
-        op = _finch_capture(op, (ctx..., namify=false, mode=Read()))
-        args = map(arg->_finch_capture(arg, (ctx..., mode=Read())), args)
+        op = _finch_capture(op, (ctx..., namify=false, mode=ctx.nodes.reader))
+        args = map(arg->_finch_capture(arg, (ctx..., mode=ctx.nodes.reader)), args)
         return :($(ctx.nodes.call)($op, $(args...)))
     elseif @capture ex (tns_[idxs__])
-        if ctx.mode isa Union{Write, Update} && tns isa Symbol
+        if ctx.mode != ctx.nodes.reader && tns isa Symbol
             push!(ctx.results, tns)
         end
-        tns = _finch_capture(tns, (ctx..., namify=false, mode=Read()))
-        idxs = map(idx->_finch_capture(idx, (ctx..., namify=true, mode=Read())), idxs)
-        return :($(ctx.nodes.access)($tns, $(ctx.mode), $(idxs...)))
+        tns = _finch_capture(tns, (ctx..., namify=false, mode=ctx.nodes.reader))
+        idxs = map(idx->_finch_capture(idx, (ctx..., namify=true, mode=ctx.nodes.reader)), idxs)
+        return :($(ctx.nodes.access)($tns, $(ctx.mode()), $(idxs...)))
     elseif @capture ex (idx_::proto_)
         idx = _finch_capture(idx, ctx)
         return :($(ctx.nodes.protocol)($idx, $(esc(proto))))
+    elseif ex isa Expr && ex.head == :...
+        return esc(ex)
     elseif ex isa Expr && ex.head == :$ && length(ex.args) == 1
         return esc(ex.args[1])
     elseif ex isa Symbol && ctx.namify
         return ctx.nodes.name(ex)
     elseif ex isa Symbol
         return ctx.nodes.label(ex)
-    else
+    elseif ex isa Expr
         return ctx.nodes.value(ex)
+    elseif ex isa QuoteNode
+        return ctx.nodes.literal(ex.value)
+    else
+        return ctx.nodes.literal(ex)
     end
 end
 
-capture_finch_program(ex; results=Set()) = _finch_capture(ex, (nodes=program_nodes, namify=true, mode = Read(), results = results))
-capture_finch_instance(ex; results=Set()) = _finch_capture(ex, (nodes=instance_nodes, namify=true, mode = Read(), results = results))
+capture_finch_program(ex; results=Set()) = _finch_capture(ex, (nodes=program_nodes, namify=true, mode = program_nodes.reader, results = results))
+capture_finch_instance(ex; results=Set()) = _finch_capture(ex, (nodes=instance_nodes, namify=true, mode = instance_nodes.reader, results = results))
 
 macro finch_program(ex)
-    return capture_finch_program(ex)
+    return quote
+        let $(esc(:dollar))=identity
+            $(capture_finch_program(ex))
+        end
+    end
 end
 
 macro f(ex)
-    return capture_finch_program(ex)
+    return quote
+        let $(esc(:dollar))=identity
+            $(capture_finch_program(ex))
+        end
+    end
 end
 
 macro finch_program_instance(ex)
-    return capture_finch_instance(ex)
+    return quote
+        $(capture_finch_instance(ex))
+    end
 end

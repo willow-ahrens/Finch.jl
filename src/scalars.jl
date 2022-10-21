@@ -39,7 +39,7 @@ getsites(::VirtualScalar) = []
 
 @inline default(tns::VirtualScalar) = tns.D
 
-isliteral(::VirtualScalar) = false
+IndexNotation.isliteral(::VirtualScalar) =  false
 
 getname(tns::VirtualScalar) = tns.name
 setname(tns::VirtualScalar, name) = VirtualScalar(tns.ex, tns.Tv, tns.D, name, tns.val)
@@ -47,10 +47,12 @@ setname(tns::VirtualScalar, name) = VirtualScalar(tns.ex, tns.Tv, tns.D, name, t
 priority(::VirtualScalar) = (3,5)
 comparators(x::VirtualScalar) = (Lexicography(getname(x)),) #TODO this is probably good enough, but let's think about it later.
 
-function initialize!(tns::VirtualScalar, ctx, mode::Union{Write, Update}, idxs...)
-    push!(ctx.preamble, quote
-        $(tns.val) = $(tns.D)
-    end)
+function initialize!(tns::VirtualScalar, ctx, mode, idxs...)
+    if mode.kind === writer || mode.kind === updater
+        push!(ctx.preamble, quote
+            $(tns.val) = $(tns.D)
+        end)
+    end
     access(tns, mode, idxs...)
 end
 
@@ -58,8 +60,7 @@ function finalize!(tns::VirtualScalar, ctx, mode)
     return tns
 end
 
-function (ctx::LowerJulia)(root::Access{<:VirtualScalar}, ::DefaultStyle)
-    @assert isempty(root.idxs)
-    tns = root.tns
+function lowerjulia_access(ctx::LowerJulia, node, tns::VirtualScalar)
+    @assert isempty(node.idxs)
     return tns.val
 end

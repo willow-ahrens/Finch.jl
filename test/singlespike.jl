@@ -19,6 +19,8 @@ mutable struct VirtualSingleSpike{Tv}
     D
 end
 
+Finch.IndexNotation.isliteral(::VirtualSingleSpike) = false
+
 function Finch.virtualize(ex, ::Type{SingleSpike{D, Tv}}, ctx, tag=:tns) where {D, Tv}
     sym = ctx.freshen(tag)
     push!(ctx.preamble, :($sym = $ex))
@@ -30,27 +32,26 @@ end
 function Finch.getsize(arr::VirtualSingleSpike{Tv}, ctx::Finch.LowerJulia, mode) where {Tv}
     ex = Symbol(arr.name, :_stop)
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))
-    (Extent(1, Virtual{Int}(ex)),)
+    (Extent(literal(1), value(ex, Int)),)
 end
 Finch.setsize!(arr::VirtualSingleSpike, ctx::Finch.LowerJulia, mode, dims...) = arr
 Finch.getname(arr::VirtualSingleSpike) = arr.name
 Finch.setname(arr::VirtualSingleSpike, name) = (arr_2 = deepcopy(arr); arr_2.name = name; arr_2)
-function (ctx::Finch.Stylize{LowerJulia})(node::Access{<:VirtualSingleSpike})
-    if ctx.root isa Loop && ctx.root.idx == get_furl_root(node.idxs[1])
+function Finch.stylize_access(node, ctx::Finch.Stylize{LowerJulia}, ::VirtualSingleSpike)
+    if ctx.root isa CINNode && ctx.root.kind === loop && ctx.root.idx == get_furl_root(node.idxs[1])
         Finch.ChunkStyle()
     else
-        mapreduce(ctx, result_style, arguments(node))
+        Finch.DefaultStyle()
     end
 end
 
-function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSingleSpike{Tv}, Read}, ::Finch.DefaultStyle) where {Tv}
-    vec = node.tns
+function Finch.chunkify_access(node, ctx, vec::VirtualSingleSpike{Tv}) where {Tv}
     if getname(ctx.idx) == getname(node.idxs[1])
         tns = Spike(
             body = Simplify(zero(Tv)),
-            tail = Virtual{Tv}(:($(vec.ex).tail))
+            tail = value(:($(vec.ex).tail), Tv)
         )
-        Access(tns, node.mode, node.idxs)
+        access(tns, node.mode, node.idxs...)
     else
         node
     end

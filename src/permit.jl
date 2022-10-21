@@ -27,7 +27,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualPermit)
 	print(io, "VirtualPermit()")
 end
 
-isliteral(::VirtualPermit) = false
+IndexNotation.isliteral(::VirtualPermit) =  false
 
 function virtualize(ex, ::Type{Permit{T}}, ctx) where {T}
     return VirtualPermit(virtualize(:($ex.I), T, ctx))
@@ -44,34 +44,33 @@ function Finch.getsize(arr::VirtualPermit, ctx::Finch.LowerJulia, mode)
 end
 #Finch.setsize!(arr::VirtualPermit, ctx::Finch.LowerJulia, mode, dim) = VirtualPermit(dim)
 
-function (ctx::DeclareDimensions)(node::Access{VirtualPermit}, ext)
+function declare_dimensions_access(node, ctx, tns::VirtualPermit, ext)
     idx = ctx(node.idxs[1], widendim(ext))
     return access(VirtualPermit(ext), node.mode, idx)
 end
-function (ctx::InferDimensions)(node::Access{VirtualPermit})
-    (idx, _) = ctx(node.idxs[1])
-    return (access(node.tns, node.mode, idx), node.tns.I)
-end
 
-Finch.getname(node::Access{VirtualPermit}) = Finch.getname(first(node.idxs))
+function infer_dimensions_access(node, ctx, tns::VirtualPermit)
+    (idx, _) = ctx(node.idxs[1])
+    return (access(tns, node.mode, idx), tns.I)
+end
 
 Finch.getname(node::VirtualPermit) = gensym()
 Finch.setname(node::VirtualPermit, name) = node
 
-get_furl_root(idx::Access{VirtualPermit}) = get_furl_root(idx.idxs[1])
-function exfurl(tns, ctx, mode, idx::Access{VirtualPermit}, tail...)
-    ext_2 = idx.tns.I
+get_furl_root_access(idx, ::VirtualPermit) = get_furl_root(idx.idxs[1])
+function exfurl_access(tns, ctx, mode, idx, node::VirtualPermit)
+    ext_2 = node.I
     body = Pipeline([
         Phase(
             stride = (ctx, idx, ext) -> @f($(getstart(ext_2)) - 1),
-            body = (start, step) -> Run(Simplify(Literal(missing))),
+            body = (start, step) -> Run(Simplify(literal(missing))),
         ),
         Phase(
-            stride = (ctx, idx, ext) -> ctx(getstop(ext_2)),
+            stride = (ctx, idx, ext) -> getstop(ext_2),
             body = (start, step) -> truncate(tns, ctx, ext_2, Extent(start, step))
         ),
         Phase(
-            body = (start, step) -> Run(Simplify(Literal(missing))),
+            body = (start, step) -> Run(Simplify(literal(missing))),
         )
     ])
 

@@ -73,7 +73,7 @@ getsize(::VirtualFiber{VirtualElementLevel}, ctx, mode) = ()
 @inline default(fbr::VirtualFiber{VirtualElementLevel}) = fbr.lvl.D
 Base.eltype(fbr::VirtualFiber{VirtualElementLevel}) = fbr.lvl.Tv
 
-function initialize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode::Union{Write, Update})
+function initialize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
     lvl = fbr.lvl
     my_q = ctx.freshen(lvl.ex, :_q)
     if !envreinitialized(fbr.env)
@@ -84,7 +84,7 @@ function initialize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode::Un
     lvl
 end
 
-finalize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode::Union{Write, Update}) = fbr.lvl
+finalize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode) = fbr.lvl
 
 interval_assembly_depth(lvl::VirtualElementLevel) = Inf
 
@@ -109,7 +109,7 @@ end
 
 #=
 #TODO This assumes that all of the elements will eventually be written to, which isn't always true sadly.
-function assemble!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode::Write)
+function assemble!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode::Writer)
     lvl = fbr.lvl
     q = envposition(fbr.env)
     push!(ctx.preamble, quote
@@ -119,63 +119,48 @@ function assemble!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode::Write)
 end
 =#
 
-function refurl(fbr::VirtualFiber{VirtualElementLevel}, ctx, ::Read)
+function refurl(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
     lvl = fbr.lvl
 
-    Thunk(
-        preamble = quote
-            $(lvl.val) = $(lvl.ex).val[$(ctx(envposition(fbr.env)))]
-        end,
-        body = Access(fbr, Read(), []),
-    )
+    if mode.kind === reader
+        return Thunk(
+            preamble = quote
+                $(lvl.val) = $(lvl.ex).val[$(ctx(envposition(fbr.env)))]
+            end,
+            body = access(fbr, reader()),
+        )
+    elseif mode.kind === writer
+        return Thunk(
+            preamble = quote
+                $(lvl.val) = $(lvl.D)
+            end,
+            body = access(fbr, writer()),
+            epilogue = quote
+                $(lvl.ex).val[$(ctx(envposition(fbr.env)))] = $(lvl.val)
+            end,
+        )
+    elseif mode.kind === updater
+        return Thunk(
+            preamble = quote
+                $(lvl.val) = $(lvl.ex).val[$(ctx(envposition(fbr.env)))]
+            end,
+            body = access(fbr, updater()),
+            epilogue = quote
+                $(lvl.ex).val[$(ctx(envposition(fbr.env)))] = $(lvl.val)
+            end,
+        )
+    end
 end
 
-function refurl(fbr::VirtualFiber{VirtualElementLevel}, ctx, ::Write)
-    lvl = fbr.lvl
-
-    Thunk(
-        preamble = quote
-            $(lvl.val) = $(lvl.D)
-        end,
-        body = Access(fbr, Write(), []),
-        epilogue = quote
-            $(lvl.ex).val[$(ctx(envposition(fbr.env)))] = $(lvl.val)
-        end,
-    )
-end
-
-function refurl(fbr::VirtualFiber{VirtualElementLevel}, ctx, ::Update)
-    lvl = fbr.lvl
-
-    Thunk(
-        preamble = quote
-            $(lvl.val) = $(lvl.ex).val[$(ctx(envposition(fbr.env)))]
-        end,
-        body = Access(fbr, Update(), []),
-        epilogue = quote
-            $(lvl.ex).val[$(ctx(envposition(fbr.env)))] = $(lvl.val)
-        end,
-    )
-end
-
-function (ctx::Finch.LowerJulia)(node::Access{<:VirtualFiber{VirtualElementLevel}}, ::DefaultStyle) where {Tv, Ti}
+function lowerjulia_access(ctx::Finch.LowerJulia, node, tns::VirtualFiber{VirtualElementLevel})
     @assert isempty(node.idxs)
-    tns = node.tns
 
-    node.tns.lvl.val
-end
-
-hasdefaultcheck(::VirtualElementLevel) = true
-
-function (ctx::Finch.LowerJulia)(node::Access{<:VirtualFiber{VirtualElementLevel}, <:Union{Write, Update}}, ::DefaultStyle) where {Tv, Ti}
-    @assert isempty(node.idxs)
-    tns = node.tns
-
-    if envdefaultcheck(tns.env) !== nothing
+    if (node.mode.kind === writer || node.mode.kind === updater) && envdefaultcheck(tns.env) !== nothing
         push!(ctx.preamble, quote
             $(envdefaultcheck(tns.env)) = false
         end)
     end
-
-    node.tns.lvl.val
+    tns.lvl.val
 end
+
+hasdefaultcheck(::VirtualElementLevel) = true

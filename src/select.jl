@@ -2,6 +2,8 @@ struct Select end
 
 const select = Select()
 
+IndexNotation.isliteral(::Select) =  false
+
 Base.show(io::IO, ex::Select) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::Select)
     print(io, "select")
@@ -9,23 +11,22 @@ end
 
 getsize(::Select, ::LowerJulia, mode) = (NoDimension(), NoDimension())
 getsites(::Select) = 1:2
-getname(x) = gensym() #TODO this is wrong
+getname(x::Select) = gensym()
 setname(::Select, name) = select
 
 virtualize(ex, ::Type{Select}, ctx) = select
 
 (ctx::LowerJulia)(tns::Select) = error("Select not lowered")
 
-function (ctx::Stylize{LowerJulia})(node::Access{Select})
-    if ctx.root isa Loop && ctx.root.idx == get_furl_root(node.idxs[2])
+function stylize_access(node, ctx::Stylize{LowerJulia}, tns::Select)
+    if ctx.root isa CINNode && ctx.root.kind === loop && ctx.root.idx == get_furl_root(node.idxs[2])
         Finch.ChunkStyle()
     else
         Finch.DefaultStyle()
     end
 end
 
-function (ctx::Finch.ChunkifyVisitor)(node::Access{Select}, ::Finch.DefaultStyle) where {Tv, Ti}
-    vec = node.tns
+function chunkify_access(node, ctx, ::Select)
     if getname(ctx.idx) == getname(node.idxs[2])
         sym = ctx.ctx.freshen(:select_, getname(node.idxs[2]))
         push!(ctx.ctx.preamble, quote
@@ -33,14 +34,14 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{Select}, ::Finch.DefaultStyle
         end)
         tns = Pipeline([
             Phase(
-                stride = (ctx, idx, ext) -> :($sym - 1),
-                body = (start, step) -> Run(body=Simplify(false))
+                stride = (ctx, idx, ext) -> value(:($sym - 1)),
+                body = (start, step) -> Run(body=Simplify(literal(false)))
             ),
             Phase(
-                stride = (ctx, idx, ext) -> sym,
-                body = (start, step) -> Run(body=Simplify(true)),
+                stride = (ctx, idx, ext) -> value(sym),
+                body = (start, step) -> Run(body=Simplify(literal(true))),
             ),
-            Phase(body = (start, step) -> Run(body=Simplify(false)))
+            Phase(body = (start, step) -> Run(body=Simplify(literal(false))))
         ])
         access(tns, node.mode, node.idxs[2])
     else
@@ -48,27 +49,50 @@ function (ctx::Finch.ChunkifyVisitor)(node::Access{Select}, ::Finch.DefaultStyle
     end
 end
 
-struct SelectVisitor <: AbstractTransformVisitor
+struct SelectVisitor
     ctx
     idxs
 end
+
+function (ctx::SelectVisitor)(node)
+    if istree(node)
+        similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        node
+    end
+end
+
+function (ctx::SelectVisitor)(node::CINNode)
+    if node.kind === access && node.tns isa CINNode && node.tns.kind === virtual
+        select_access(node, ctx, node.tns.val)
+    elseif istree(node)
+        similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        node
+    end
+end
+select_access(node, ctx, tns) = similarterm(node, operation(node), map(ctx, arguments(node)))
 
 struct SelectStyle end
 
 combine_style(a::SelectStyle, b::ThunkStyle) = b
 combine_style(a::SelectStyle, b::ChunkStyle) = a
+combine_style(a::SelectStyle, b::SelectStyle) = a
 
 function (ctx::LowerJulia)(root, ::SelectStyle)
     idxs = Dict()
     root = SelectVisitor(ctx, idxs)(root)
     for (idx, val) in pairs(idxs)
-        root = Dimensionalize(@f(
+        root = @f(
             @loop $idx (
                 @sieve select[$val, $idx] (
                     $root
                 )
             )
-        ))
+        )
     end
-    ctx(root)
+    contain(ctx) do ctx_2
+        dimensionalize!(root, ctx_2)
+        ctx_2(root)
+    end
 end

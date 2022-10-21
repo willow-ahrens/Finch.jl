@@ -34,6 +34,7 @@ end
     dst = virtualize(:dst, dst, LowerJulia())
     idxs = [Symbol(:i_, n) for n = getsites(dst)]
     return quote
+        @finch_code @loop($(idxs...), dst[$(idxs...)] = src[$(idxs...)])
         @finch @loop($(idxs...), dst[$(idxs...)] = src[$(idxs...)])
         return dst
     end
@@ -83,21 +84,21 @@ SparseCoo (0.0) [1:3×1:3×1:3]
 """
 function fsparse(I::Tuple, V::Vector, shape = map(maximum, I), combine = eltype(V) isa Bool ? (|) : (+))
     C = map(tuple, I...)
-    update = false
+    updater = false
     if !issorted(C)
         P = sortperm(C)
         C = C[P]
         V = V[P]
-        update = true
+        updater = true
     end
     if !allunique(C)
         P = unique(p -> C[p], 1:length(C))
         C = C[P]
         push!(P, length(I[1]) + 1)
         V = map((start, stop) -> foldl(combine, @view V[start:stop - 1]), P[1:end - 1], P[2:end])
-        update = true
+        updater = true
     end
-    if update
+    if updater
         I = map(i -> similar(i, length(C)), I)
         foreach(((p, c),) -> ntuple(n->I[n][p] = c[n], length(I)), enumerate(C))
     else

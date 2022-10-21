@@ -47,7 +47,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualStaticOffset)
 	print(io, ")")
 end
 
-isliteral(::VirtualStaticOffset) = false
+IndexNotation.isliteral(::VirtualStaticOffset) =  false
 
 function virtualize(ex, ::Type{StaticOffset{Delta, Dim}}, ctx) where {Delta, Dim}
     delta = cache!(ctx, :delta, virtualize(:($ex.delta), Delta, ctx))
@@ -69,7 +69,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualOffset)
 	print(io, "VirtualOffset()")
 end
 
-isliteral(::VirtualOffset) = false
+IndexNotation.isliteral(::VirtualOffset) =  false
 
 virtualize(ex, ::Type{Offset}, ctx) = VirtualOffset()
 
@@ -78,29 +78,27 @@ virtualize(ex, ::Type{Offset}, ctx) = VirtualOffset()
 Finch.getsize(arr::VirtualOffset, ctx::Finch.LowerJulia, mode) = (nodim, deferdim)
 Finch.setsize!(arr::VirtualOffset, ctx::Finch.LowerJulia, mode, dim1, dim2) = arr
 
-function (ctx::DeclareDimensions)(node::Access{VirtualStaticOffset}, ext)
-    idx = ctx(node.idxs[1], shiftdim(ext, node.tns.delta))
-    return access(VirtualStaticOffset(;kwfields(node.tns)..., dim=ext), node.mode, idx)
+function declare_dimensions_access(node, ctx, tns::VirtualStaticOffset, ext)
+    idx = ctx(node.idxs[1], shiftdim(ext, tns.delta))
+    return access(VirtualStaticOffset(;kwfields(tns)..., dim=ext), node.mode, idx)
 end
 
-function (ctx::InferDimensions)(node::Access{VirtualStaticOffset})
+function infer_dimensions_access(node, ctx, tns::VirtualStaticOffset)
     idx, ext = ctx(node.idxs[1])
-    return (access(node.tns, node.mode, idx), shiftdim(ext, call(-, node.tns.delta)))
+    return (access(tns, node.mode, idx), shiftdim(ext, call(-, tns.delta)))
 end
-
-Finch.getname(node::Access{VirtualOffset}) = Finch.getname(node.idxs[2])
 
 Finch.getname(node::VirtualOffset) = gensym()
 Finch.setname(node::VirtualOffset, name) = node
 
-function (ctx::Stylize{LowerJulia})(node::Access{<:VirtualOffset})
+function stylize_access(node, ctx::Stylize{LowerJulia}, tns::VirtualOffset)
     if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
         return ThunkStyle()
     end
-    return mapreduce(ctx, result_style, arguments(node))
+    return DefaultStyle()
 end
 
-function (ctx::ThunkVisitor)(node::Access{<:VirtualOffset})
+function thunk_access(node, ctx, tns::VirtualOffset)
     if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
         delta = cache!(ctx.ctx, :delta, node.idxs[1])
         return access(Dimensionalize(VirtualStaticOffset(delta=delta)), node.mode, node.idxs[2])
@@ -111,8 +109,8 @@ end
 Finch.getname(node::VirtualStaticOffset) = gensym()
 Finch.setname(node::VirtualStaticOffset, name) = node
 
-get_furl_root(idx::Access{VirtualStaticOffset}) = get_furl_root(idx.idxs[1])
-function exfurl(tns, ctx, mode, idx::Access{VirtualStaticOffset})
-    body = Shift(tns, idx.tns.delta)
+get_furl_root_access(idx, ::VirtualStaticOffset) = get_furl_root(idx.idxs[1])
+function exfurl_access(tns, ctx, mode, idx, node::VirtualStaticOffset)
+    body = Shift(tns, node.delta)
     exfurl(body, ctx, mode, idx.idxs[1])
 end
