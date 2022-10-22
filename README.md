@@ -23,9 +23,10 @@ arrays.
 
 Finch is very experimental. There are known bugs, and some interfaces will change dramatically.
 
-We're always trying to make Finch code simpler! Here's a pagerank kernel from @adadima:
+We're always trying to make Finch code simpler! Here's a pagerank kernel:
 
 ```julia
+#submitted by Alexandra Dima
 using Finch
 function pagerank(edges; nsteps=20, damp = 0.85)
     (n, m) = size(edges)
