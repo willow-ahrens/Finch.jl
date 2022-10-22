@@ -82,10 +82,10 @@ function _finch_capture(ex, ctx)
     end
 
     if @capture ex (@pass(args__))
-        args = map(arg -> _finch_capture(arg, (ctx..., namify=false)), args)
+        args = map(arg -> _finch_capture(arg, ctx), args)
         return :($(ctx.nodes.pass)($(args...)))
     elseif @capture ex (@sieve cond_ body_)
-        cond = _finch_capture(cond, (ctx..., namify=true))
+        cond = _finch_capture(cond, ctx)
         body = _finch_capture(body, ctx)
         return :($(ctx.nodes.sieve)($cond, $body))
     elseif @capture ex (@loop idxs__ body_)
@@ -95,7 +95,7 @@ function _finch_capture(ex, ctx)
                 push!(preamble.args, :($(esc(idx)) = $(ctx.nodes.name(idx))))
             end
         end
-        idxs = map(idx -> _finch_capture(idx, (ctx..., namify=true)), idxs)
+        idxs = map(idx -> _finch_capture(idx, ctx), idxs)
         body = _finch_capture(body, ctx)
         return quote
             let
@@ -109,7 +109,7 @@ function _finch_capture(ex, ctx)
             push!(preamble, :($(esc(idx)) = $(ctx.nodes.name(idx))))
         end
         idx = _finch_capture(idx, ctx)
-        ext = _finch_capture(ext, (ctx..., namify=false))
+        ext = _finch_capture(ext, ctx)
         body = _finch_capture(body, ctx)
         return quote
             let
@@ -131,18 +131,18 @@ function _finch_capture(ex, ctx)
     elseif @capture ex (lhs_ << op_ >>= rhs_)
         lhs = _finch_capture(lhs, (ctx..., mode=ctx.nodes.updater))
         rhs = _finch_capture(rhs, ctx)
-        op = _finch_capture(op, (ctx..., namify=false))
+        op = _finch_capture(op, ctx)
         return :($(ctx.nodes.assign)($lhs, $op, $rhs))
     elseif @capture ex (op_(args__))
-        op = _finch_capture(op, (ctx..., namify=false, mode=ctx.nodes.reader))
+        op = _finch_capture(op, (ctx..., mode=ctx.nodes.reader))
         args = map(arg->_finch_capture(arg, (ctx..., mode=ctx.nodes.reader)), args)
         return :($(ctx.nodes.call)($op, $(args...)))
     elseif @capture ex (tns_[idxs__])
         if ctx.mode != ctx.nodes.reader && tns isa Symbol
             push!(ctx.results, tns)
         end
-        tns = _finch_capture(tns, (ctx..., namify=false, mode=ctx.nodes.reader))
-        idxs = map(idx->_finch_capture(idx, (ctx..., namify=true, mode=ctx.nodes.reader)), idxs)
+        tns = _finch_capture(tns, (ctx..., mode=ctx.nodes.reader))
+        idxs = map(idx->_finch_capture(idx, (ctx..., mode=ctx.nodes.reader)), idxs)
         return :($(ctx.nodes.access)($tns, $(ctx.mode()), $(idxs...)))
     elseif @capture ex (idx_::proto_)
         idx = _finch_capture(idx, ctx)
@@ -162,8 +162,8 @@ function _finch_capture(ex, ctx)
     end
 end
 
-capture_finch_program(ex; results=Set()) = _finch_capture(ex, (nodes=program_nodes, namify=true, mode = program_nodes.reader, results = results))
-capture_finch_instance(ex; results=Set()) = _finch_capture(ex, (nodes=instance_nodes, namify=true, mode = instance_nodes.reader, results = results))
+capture_finch_program(ex; results=Set()) = _finch_capture(ex, (nodes=program_nodes, mode = program_nodes.reader, results = results))
+capture_finch_instance(ex; results=Set()) = _finch_capture(ex, (nodes=instance_nodes, mode = instance_nodes.reader, results = results))
 
 macro finch_program(ex)
     return quote
