@@ -106,7 +106,7 @@ function _finch_capture(ex, ctx)
     elseif @capture ex (@chunk idx_ ext_ body_)
         preamble = quote end
         if idx isa Symbol
-            push!(preamble, :($(esc(idx)) = $(ctx.nodes.name(idx))))
+            preamble = :($(esc(idx)) = $(ctx.nodes.name(idx)))
         end
         idx = _finch_capture(idx, ctx)
         ext = _finch_capture(ext, ctx)
