@@ -41,7 +41,7 @@ function pagerank(edges; nsteps=20, damp = 0.85)
     beta_score = (1 - damp)/n
 
     for step = 1:nsteps
-        @finch @loop i j rank[i] += edges[i, j] * r[j]
+        @finch @loop i j rank[i] += scaled_edges[i, j] * r[j]
         @finch @loop i r[i] = beta_score + damp * rank[i]
     end
     return r
