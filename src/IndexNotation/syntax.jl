@@ -89,14 +89,34 @@ function _finch_capture(ex, ctx)
         body = _finch_capture(body, ctx)
         return :($(ctx.nodes.sieve)($cond, $body))
     elseif @capture ex (@loop idxs__ body_)
+        preamble = Expr(:block)
+        for idx in idxs
+            if idx isa Symbol
+                push!(preamble.args, :($(esc(idx)) = $(ctx.nodes.name(idx))))
+            end
+        end
         idxs = map(idx -> _finch_capture(idx, (ctx..., namify=true)), idxs)
         body = _finch_capture(body, ctx)
-        return :($(ctx.nodes.loop)($(idxs...), $body))
+        return quote
+            let
+                $preamble
+                $(ctx.nodes.loop)($(idxs...), $body)
+            end
+        end
     elseif @capture ex (@chunk idx_ ext_ body_)
+        preamble = quote end
+        if idx isa Symbol
+            push!(preamble, :($(esc(idx)) = $(ctx.nodes.name(idx))))
+        end
         idx = _finch_capture(idx, ctx)
         ext = _finch_capture(ext, (ctx..., namify=false))
         body = _finch_capture(body, ctx)
-        return :($(ctx.nodes.chunk)($idx, $ext, $body))
+        return quote
+            let
+                $preamble
+                $(ctx.nodes.chunk)($idx, $ext, $body)
+            end
+        end
     elseif @capture ex (cons_ where prod_)
         cons = _finch_capture(cons, ctx)
         prod = _finch_capture(prod, (ctx..., results=Set()))
@@ -131,8 +151,6 @@ function _finch_capture(ex, ctx)
         return esc(ex)
     elseif ex isa Expr && ex.head == :$ && length(ex.args) == 1
         return esc(ex.args[1])
-    elseif ex isa Symbol && ctx.namify
-        return ctx.nodes.name(ex)
     elseif ex isa Symbol
         return ctx.nodes.label(ex)
     elseif ex isa Expr
