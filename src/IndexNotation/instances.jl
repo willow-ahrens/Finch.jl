@@ -119,9 +119,9 @@ struct ValueInstance{arg} end
 
 @inline index_terminal(arg::Type) = literal(arg)
 @inline index_terminal(arg::Function) = literal(arg)
-@inline index_terminal(arg::CINNode) = arg
+@inline index_terminal(arg::IndexNode) = arg
 @inline index_terminal(arg) = isliteral(arg) ? literal(arg) : virtual(arg)
 
-Base.convert(::Type{CINNode}, x) = index_terminal(x)
-Base.convert(::Type{CINNode}, x::CINNode) = x
-Base.convert(::Type{CINNode}, x::Symbol) = error()
+Base.convert(::Type{IndexNode}, x) = index_terminal(x)
+Base.convert(::Type{IndexNode}, x::IndexNode) = x
+Base.convert(::Type{IndexNode}, x::Symbol) = error()

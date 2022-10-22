@@ -38,7 +38,7 @@ function (ctx::SwitchVisitor)(node)
     end
 end
 
-function (ctx::SwitchVisitor)(node::CINNode)
+function (ctx::SwitchVisitor)(node::IndexNode)
     if node.kind === virtual
         ctx(node.val)
     elseif istree(node)

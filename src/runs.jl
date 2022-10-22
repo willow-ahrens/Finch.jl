@@ -23,7 +23,7 @@ combine_style(a::ThunkStyle, b::RunStyle) = ThunkStyle()
 combine_style(a::SimplifyStyle, b::RunStyle) = SimplifyStyle()
 combine_style(a::RunStyle, b::RunStyle) = RunStyle()
 
-function (ctx::LowerJulia)(root::CINNode, ::RunStyle)
+function (ctx::LowerJulia)(root::IndexNode, ::RunStyle)
     if root.kind === chunk
         root = (AccessRunVisitor(root))(root)
         if Stylize(root, ctx)(root) isa RunStyle #TODO do we need this always? Can we do this generically?
@@ -46,8 +46,8 @@ function (ctx::AccessRunVisitor)(node)
     end
 end
 
-function (ctx::AccessRunVisitor)(node::CINNode)
-    if node.kind === access && node.tns isa CINNode && node.tns.kind === virtual
+function (ctx::AccessRunVisitor)(node::IndexNode)
+    if node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
         something(unchunk(node.tns.val, ctx), node)
     elseif istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))
@@ -71,7 +71,7 @@ IndexNotation.isliteral(::AcceptRun) = false
 default(node::AcceptRun) = node.val
 
 #TODO this should go somewhere else
-function Finch.default(x::CINNode)
+function Finch.default(x::IndexNode)
     if x.kind === virtual
         Finch.default(x.val)
     else
@@ -93,7 +93,7 @@ combine_style(a::SimplifyStyle, b::AcceptRunStyle) = SimplifyStyle()
 combine_style(a::AcceptRunStyle, b::AcceptRunStyle) = AcceptRunStyle()
 combine_style(a::RunStyle, b::AcceptRunStyle) = RunStyle()
 
-function (ctx::LowerJulia)(root::CINNode, ::AcceptRunStyle)
+function (ctx::LowerJulia)(root::IndexNode, ::AcceptRunStyle)
     if root.kind === chunk
         body = (AcceptRunVisitor(root, root.idx, root.ext, ctx))(root.body)
         if getname(root.idx) in getunbound(body)
@@ -124,10 +124,10 @@ function (ctx::AcceptRunVisitor)(node)
     end
 end
 
-function (ctx::AcceptRunVisitor)(node::CINNode)
+function (ctx::AcceptRunVisitor)(node::IndexNode)
     if node.kind === virtual
         ctx(node.val)
-    elseif node.kind === access && node.tns isa CINNode && node.tns.kind === virtual
+    elseif node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
         node.mode.kind === reader ? node : something(unchunk(node.tns.val, ctx), node)
     elseif istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))

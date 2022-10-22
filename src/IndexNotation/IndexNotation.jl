@@ -16,7 +16,7 @@ module IndexNotation
     export reader, writer, updater, access
     export protocol
     export sieve
-    export CINNode, value, isvalue
+    export IndexNode, value, isvalue
 
     export Follow, follow
     export Walk, walk

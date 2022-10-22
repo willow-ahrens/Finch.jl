@@ -138,8 +138,8 @@ function (ctx::Initialize)(node)
     end
 end
 
-function (ctx::Initialize)(node::CINNode)
-    if node.kind === access && node.tns isa CINNode && node.tns.kind === virtual
+function (ctx::Initialize)(node::IndexNode)
+    if node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
         if (ctx.target === nothing || (getname(node.tns) in ctx.target)) && !(getname(node.tns) in ctx.escape)
             initialize!(node.tns.val, ctx.ctx, node.mode, map(ctx, node.idxs)...)
         else
@@ -177,8 +177,8 @@ function (ctx::Finalize)(node)
     end
 end
 
-function (ctx::Finalize)(node::CINNode)
-    if node.kind === access && node.tns isa CINNode && node.tns.kind === virtual
+function (ctx::Finalize)(node::IndexNode)
+    if node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
         if (ctx.target === nothing || (getname(node.tns) in ctx.target)) && !(getname(node.tns) in ctx.escape)
             access(finalize!(node.tns.val, ctx.ctx, node.mode, node.idxs...), node.mode, node.idxs...)
         else

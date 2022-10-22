@@ -25,7 +25,7 @@ function (ctx::PhaseStride)(node)
     end
 end
 
-function (ctx::PhaseStride)(node::CINNode)
+function (ctx::PhaseStride)(node::IndexNode)
     if node.kind === virtual
         ctx(node.val)
     elseif istree(node)
@@ -52,7 +52,7 @@ function (ctx::PhaseBodyVisitor)(node)
         return node
     end
 end
-function (ctx::PhaseBodyVisitor)(node::CINNode)
+function (ctx::PhaseBodyVisitor)(node::IndexNode)
     if node.kind === virtual
         ctx(node.val)
     elseif istree(node)
@@ -85,7 +85,7 @@ combine_style(a::AcceptRunStyle, b::PhaseStyle) = PhaseStyle()
 combine_style(a::SwitchStyle, b::PhaseStyle) = SwitchStyle()
 combine_style(a::ThunkStyle, b::PhaseStyle) = ThunkStyle()
 
-function (ctx::LowerJulia)(root::CINNode, ::PhaseStyle)
+function (ctx::LowerJulia)(root::IndexNode, ::PhaseStyle)
     if root.kind === chunk
         i = getname(root.idx)
         i0=ctx.freshen(i)

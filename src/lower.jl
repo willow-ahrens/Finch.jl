@@ -129,10 +129,10 @@ function (ctx::LowerJulia)(node, ::ThunkStyle)
     end
 end
 
-function (ctx::ThunkVisitor)(node::CINNode)
+function (ctx::ThunkVisitor)(node::IndexNode)
     if node.kind === virtual
         ctx(node.val)
-    elseif node.kind === access && node.tns isa CINNode && node.tns.kind === virtual
+    elseif node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
         #TODO this case morally shouldn't exist
         thunk_access(node, ctx, node.tns.val)
     elseif istree(node)
@@ -163,7 +163,7 @@ function (ctx::LowerJulia)(root, ::DefaultStyle)
     error("Don't know how to lower $root")
 end
 
-function (ctx::LowerJulia)(root::CINNode, ::DefaultStyle)
+function (ctx::LowerJulia)(root::IndexNode, ::DefaultStyle)
     if root.kind === value
         return root.val
     elseif root.kind === name
@@ -204,7 +204,7 @@ function (ctx::LowerJulia)(root::CINNode, ::DefaultStyle)
         end
         thunk
     elseif root.kind === access
-        if root.tns isa CINNode && root.tns.kind === virtual
+        if root.tns isa IndexNode && root.tns.kind === virtual
             return lowerjulia_access(ctx, root, root.tns.val)
         else
             tns = ctx(tns)
@@ -312,8 +312,8 @@ function (ctx::ForLoopVisitor)(node)
     end
 end
 
-function (ctx::ForLoopVisitor)(node::CINNode)
-    if node.kind === access && node.tns isa CINNode && node.tns.kind === virtual
+function (ctx::ForLoopVisitor)(node::IndexNode)
+    if node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
         #TODO this is a problem
         something(unchunk(node.tns.val, ctx), access(node.tns, node.mode, map(ctx, node.idxs)...))
     elseif istree(node)
