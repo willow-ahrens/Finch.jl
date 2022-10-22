@@ -23,7 +23,7 @@ arrays.
 
 Finch is very experimental. There are known bugs, and some interfaces will change dramatically.
 
-We're always trying to make Finch code simpler! Here's a pagerank kernel:
+We're always trying to make Finch easier to use! Here's pagerank:
 
 ```julia
 #submitted by Alexandra Dima
