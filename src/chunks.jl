@@ -19,8 +19,8 @@ function (ctx::ChunkifyVisitor)(node)
     end
 end
 
-function (ctx::ChunkifyVisitor)(node::CINNode)
-    if node.kind === access && node.tns isa CINNode && node.tns.kind === virtual
+function (ctx::ChunkifyVisitor)(node::IndexNode)
+    if node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
         chunkify_access(node, ctx, node.tns.val)
     elseif istree(node)
         similarterm(node, operation(node), map(ctx, arguments(node)))
@@ -31,7 +31,7 @@ end
 
 chunkify_access(node, ctx, tns) = similarterm(node, operation(node), map(ctx, arguments(node)))
 
-function (ctx::LowerJulia)(root::CINNode, ::ChunkStyle)
+function (ctx::LowerJulia)(root::IndexNode, ::ChunkStyle)
     if root.kind === loop
         idx = root.idx
         #TODO is every read of dims gonna be like this? When do we lock it in?

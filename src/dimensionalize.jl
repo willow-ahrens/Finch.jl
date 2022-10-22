@@ -101,11 +101,11 @@ end
 function (ctx::DeclareDimensions)(node::Dimensionalize, dim)
     ctx(node.body, dim)
 end
-function (ctx::DeclareDimensions)(node::CINNode, dim)
+function (ctx::DeclareDimensions)(node::IndexNode, dim)
     if node.kind === name
         ctx.dims[getname(node)] = resultdim(get(ctx.dims, getname(node), nodim), dim)
         return node
-    elseif node.kind === access && node.tns isa CINNode && node.tns.kind === virtual
+    elseif node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
         return declare_dimensions_access(node, ctx, node.tns.val, dim)
     elseif node.kind === with
         prod = ctx(node.prod, nodim)
@@ -120,10 +120,10 @@ function (ctx::DeclareDimensions)(node::CINNode, dim)
         return node
     end
 end
-function (ctx::InferDimensions)(node::CINNode)
+function (ctx::InferDimensions)(node::IndexNode)
     if node.kind === name
         return (node, ctx.dims[getname(node)])
-    elseif node.kind === access && node.tns isa CINNode && node.tns.kind === virtual
+    elseif node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
         return infer_dimensions_access(node, ctx, node.tns.val)
     elseif node.kind === with
         (cons, _) = ctx(node.cons)
@@ -233,28 +233,28 @@ getlower(ext::Extent) = ext.lower
 getupper(ext::Extent) = ext.upper
 extent(ext::Extent) = @f $(ext.stop) - $(ext.start) + 1
 
-function getstop(ext::CINNode)
+function getstop(ext::IndexNode)
     if ext.kind === virtual
         getstop(ext.val)
     else
         ext
     end
 end
-function getstart(ext::CINNode)
+function getstart(ext::IndexNode)
     if ext.kind === virtual
         getstart(ext.val)
     else
         ext
     end
 end
-function getlower(ext::CINNode)
+function getlower(ext::IndexNode)
     if ext.kind === virtual
         getlower(ext.val)
     else
         1
     end
 end
-function getupper(ext::CINNode)
+function getupper(ext::IndexNode)
     if ext.kind === virtual
         getupper(ext.val)
     else
@@ -262,7 +262,7 @@ function getupper(ext::CINNode)
     end
 end
 #TODO I don't like this def
-function extent(ext::CINNode)
+function extent(ext::IndexNode)
     if ext.kind === virtual
         extent(ext.val)
     elseif ext.kind === value
@@ -313,7 +313,7 @@ combinedim(a::SuggestedExtent, b::NoDimension) = a
 
 combinedim(a::SuggestedExtent, b::SuggestedExtent) = SuggestedExtent(combinedim(a.ext, b.ext))
 
-function combinedim(a::CINNode, b::CINNode)
+function combinedim(a::IndexNode, b::IndexNode)
     if isliteral(a) && isliteral(b)
         a == b || throw(DimensionMismatch("mismatched dimension limits ($a != $b)"))
     end
@@ -345,7 +345,7 @@ struct Narrow{Ext}
     ext::Ext
 end
 
-function Narrow(ext::CINNode)
+function Narrow(ext::IndexNode)
     if ext.kind === virtual
         Narrow(ext.val)
     else
@@ -368,7 +368,7 @@ struct Widen{Ext}
     ext::Ext
 end
 
-function Widen(ext::CINNode)
+function Widen(ext::IndexNode)
     if ext.kind === virtual
         Widen(ext.val)
     else

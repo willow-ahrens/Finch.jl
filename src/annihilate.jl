@@ -146,9 +146,9 @@ function (ctx::SimplifyVisitor)(node)
     end
 end
 
-function (ctx::SimplifyVisitor)(node::CINNode)
+function (ctx::SimplifyVisitor)(node::IndexNode)
     if node.kind === virtual
-        convert(CINNode, ctx(node.val))
+        convert(IndexNode, ctx(node.val))
     elseif istree(node)
         similarterm(node, operation(node), map(ctx, arguments(node)))
     else
@@ -220,8 +220,8 @@ comparators(x::Expr) = (x.head, map(Lexicography, x.args)...)
 #comparators(x::Workspace) = (x.n,)
 
 #TODO this works for now, but reconsider this later
-priority(node::CINNode) = (3, 4)
-function comparators(node::CINNode)
+priority(node::IndexNode) = (3, 4)
+function comparators(node::IndexNode)
     if node.kind === value
         return (node.kind, Lexicography(node.val), Lexicography(node.type))
     elseif node.kind === literal
