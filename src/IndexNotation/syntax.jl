@@ -49,6 +49,10 @@ or() = false
 or(x) = x
 or(x, y, tail...) = x || or(y, tail...)
 
+or_(x,y) = x == 1|| y == 1
+
+choose(x, y) = ifelse(x!=0, x, y)
+
 function _finch_capture(ex, ctx)
     #extra sugar
     if ex isa Expr && ex.head == :macrocall && length(ex.args) >= 3 && ex.args[1] == Symbol("@∀")

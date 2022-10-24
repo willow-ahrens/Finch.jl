@@ -121,6 +121,28 @@
             @f @multi (c[j...] += $(extent(a)) * $d) @chunk $i a @f(@multi b... e...)
         end
     end),
+    (@rule @f(@chunk $i $a ($b[j...] <<choose>>= $d)) => if Finch.isliteral(d) && i ∉ j
+        @f (b[j...] <<choose>>= $d)
+    end),
+    (@rule @f(@chunk $i $a @multi b... ($c[j...] <<choose>>= $d) e...) => begin
+        if Finch.isliteral(d) && i ∉ j
+            @f @multi (c[j...] <<choose>>= $d) @chunk $i a @f(@multi b... e...)
+        end
+    end),
+    (@rule @f(choose(0, $a)) => a),
+    (@rule @f(choose($a, 0)) => a),
+    (@rule @f(@chunk $i $a ($b[j...] <<or_>>= $d)) => if Finch.isliteral(d) && i ∉ j
+        @f (b[j...] <<or_>>= $d)
+    end),
+    (@rule @f(@chunk $i $a @multi b... ($c[j...] <<or_>>= $d) e...) => begin
+        if Finch.isliteral(d) && i ∉ j
+            @f @multi (c[j...] <<or_>>= $d) @chunk $i a @f(@multi b... e...)
+        end
+    end),
+    (@rule @f(or_(false, $a)) => a),
+    (@rule @f(or_($a, false)) => a),
+    (@rule @f(or_($a, true)) => true),
+    (@rule @f(or_(true, $a)) => true),
 ]
 
 @kwdef mutable struct Simplify
