@@ -34,7 +34,6 @@ end
     dst = virtualize(:dst, dst, LowerJulia())
     idxs = [Symbol(:i_, n) for n = getsites(dst)]
     return quote
-        @finch_code @loop($(idxs...), dst[$(idxs...)] = src[$(idxs...)])
         @finch @loop($(idxs...), dst[$(idxs...)] = src[$(idxs...)])
         return dst
     end
