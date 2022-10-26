@@ -112,43 +112,28 @@ end
 
 function bfs(edges, source=5)
     (n, m) = size(edges)
+    edges = pattern!(edges)
 
     @assert n == m
-    F_in = @fiber sl(n, e(0))
-    F_out = @fiber sl(n, e(0))
-    F_tmp = @fiber sl(n, e(0))
-    @finch @loop j F_in[j] = (j == $source)
-
-    P_in = @fiber d(n, e(0))
-    P_out = @fiber d(n, e(0))
-    P_tmp = @fiber d(n, e(0))
-    @finch @loop j P_in[j] = (j == $source) * (0 - 2) + (j != $source) * (0 - 1)
+    F = @fiber sl(n,p())
+    F' = @fiber sl(n,p())
+    @finch F[source] = true
 
     V = @fiber d(n, e(0))
-    B = @fiber d(n, e(0))
-    w = Scalar{0}()
+    V' = @fiber d(n, e(0))
+    @finch V[source] = 1
 
-    while !iszero(F_in.lvl.lvl.val)
-        @finch @loop j V[j] = (P_in[j] == (0 - 1))
-    
-        @finch (@loop j @loop k (begin
-            F_out[j] <<or_>>= w[]
-            B[j] <<choose>>= w[] * k
-        end
-            where (w[] = edges[j, k] * F_in[k] * V[j]) ) )
-        
-            @finch @loop j P_out[j] = choose(B[j], P_in[j])
-       
-        P_tmp = P_in
-        P_in = P_out
-        P_out = P_tmp
-
-        F_tmp = F_in
-        F_in = F_out
-        F_out = F_tmp
+    level = 2
+    while !iszero(F)
+        (V, V') = (V', V)
+        @finch @loop j k begin
+            F'[j] = w[]
+            V'[j] = ifelse(w[], level, 0)
+        end where (w[] = F[j] && edges[j, k] && !(visited[j]))
+        (F, F') = (F', F)
+        (V, V') = (V', V)
     end
-
-    return P_in
+    return F
 end
 
 SUITE["graphs"]["bfs"] = BenchmarkGroup()
@@ -156,6 +141,7 @@ for mtx in ["SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
     SUITE["graphs"]["bfs"][mtx] = @benchmarkable bfs($(fiber(SparseMatrixCSC(matrixdepot(mtx))))) 
 end
 
+#=
 # For sssp we should probably compress priorityQ on both dimensions, since many entires in rowptr will be equal
 # ( due to many rows being zero )
 function sssp(weights, source=1)
@@ -207,5 +193,6 @@ SUITE["graphs"]["sssp"] = BenchmarkGroup()
 for mtx in ["SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
     SUITE["graphs"]["sssp"][mtx] = @benchmarkable sssp($(fiber(SparseMatrixCSC(matrixdepot(mtx))))) 
 end
+=#
 
 foreach(((k, v),) -> BenchmarkTools.warmup(v), SUITE)
