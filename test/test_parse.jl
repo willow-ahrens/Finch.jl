@@ -40,8 +40,7 @@
     @test @finch_program(@loop i :A[i] += :B[i] * i) ==
         loop(name(:i),
             assign(
-                access(:A, updater(), name(:i)),
-                +,
+                access(:A, updater(+, false), name(:i)),
                 call(*,
                     access(:B, reader(), name(:i)),
                     name(:i))))
@@ -66,8 +65,7 @@
     @test @finch_program(@loop i :A[i] <<(+)>>= :B[i] * i) ==
         loop(name(:i),
             assign(
-                access(:A, updater(), name(:i)),
-                +,
+                access(:A, updater(+, false), name(:i)),
                 call(*,
                     access(:B, reader(), name(:i)),
                     name(:i))))
@@ -91,15 +89,14 @@
 
     @test @finch_program(:A[i] += i < j < k) ==
         assign(
-            access(:A, updater(), name(:i)),
-            +,
+            access(:A, updater(+, false), name(:i)),
             call(Finch.IndexNotation.and,
                 call(<, name(:i), name(:j)),
                 call(<, name(:j), name(:k))))
 
     @test @finch_program(:A[i] = i == j && k < l) ==
         assign(
-            access(:A, writer(), name(:i)),
+            access(:A, writer(false), name(:i)),
             nothing,
             call(Finch.IndexNotation.and,
                 call(==, name(:i), name(:j)),

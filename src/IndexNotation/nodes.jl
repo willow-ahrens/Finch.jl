@@ -117,19 +117,29 @@ function CINNode(kind::CINHead, args::Vector)
         end
     elseif kind === assign
         if length(args) == 2
-            return CINNode(assign, nothing, nothing, [args[1], literal(nothing), args[2]])
-        elseif length(args) == 3
             return CINNode(assign, nothing, nothing, args)
         else
             error("wrong number of arguments to assign(...)")
         end
     elseif kind === pass
         return CINNode(pass, nothing, nothing, args)
-    elseif kind === reader || kind === writer || kind === updater
+    elseif kind === reader
         if length(args) == 0
             return CINNode(kind, nothing, nothing, CINNode[])
         else
-            error("wrong number of arguments to $kind(...)")
+            error("wrong number of arguments to reader(...)")
+        end
+    elseif kind === writer
+        if length(args) == 1
+            return CINNode(writer, nothing, nothing, args)
+        else
+            error("wrong number of arguments to writer(...)")
+        end
+    elseif kind === updater
+        if length(args) == 2
+            return CINNode(updater, nothing, nothing, args)
+        else
+            error("wrong number of arguments to updater(...)")
         end
     else
         error("unimplemented")
@@ -145,16 +155,29 @@ function Base.getproperty(node::CINNode, sym::Symbol)
         return Base.getfield(node, sym)
     elseif node.kind === value ||
             node.kind === literal || 
-            node.kind === virtual ||
-            node.kind === reader ||
-            node.kind === writer ||
-            node.kind === updater
+            node.kind === virtual
         error("type CINNode($(node.kind), ...) has no property $sym")
     elseif node.kind === name
         if sym === :name
             return node.val::Symbol
         else
-            error("type CINNode(virtual, ...) has no property $sym")
+            error("type CINNode(name, ...) has no property $sym")
+        end
+    elseif node.kind === reader
+        error("type CINNode(reader, ...) has no property $sym")
+    elseif node.kind === writer
+        if sym === :inplace
+            return node.children[1]
+        else
+            error("type CINNode(writer, ...) has no property $sym")
+        end
+    elseif node.kind === updater
+        if sym === :op
+            return node.children[1]
+        elseif sym === :inplace
+            return node.children[2]
+        else
+            error("type CINNode(updater, ...) has no property $sym")
         end
     elseif node.kind === with
         if sym === :cons
@@ -223,13 +246,10 @@ function Base.getproperty(node::CINNode, sym::Symbol)
             error("type CINNode(sieve, ...) has no property $sym")
         end
     elseif node.kind === assign
-        #TODO move op into updater
         if sym === :lhs
             return node.children[1]
-        elseif sym === :op
-            return node.children[2]
         elseif sym === :rhs
-            return node.children[3]
+            return node.children[2]
         else
             error("type CINNode(assign, ...) has no property $sym")
         end
@@ -332,7 +352,7 @@ function display_statement(io, mime, node::CINNode, level)
         print(io, tab^level * "end\n")
     elseif node.kind === loop
         print(io, tab^level * "@∀ ")
-        while node.body.kind === loop
+        while node.kind === loop
             display_expression(io, mime, node.idx)
             print(io," ")
             node = node.body
@@ -364,7 +384,8 @@ function display_statement(io, mime, node::CINNode, level)
         print(io, tab^level)
         display_expression(io, mime, node.lhs)
         print(io, " ")
-        if (node.op !== nothing && node.op != literal(nothing)) #TODO this feels kinda garbage.
+        if node.lhs.mode.kind === updater
+            #TODO add << >>
             display_expression(io, mime, node.op)
         end
         print(io, "= ")

@@ -207,7 +207,7 @@ function (ctx::LowerJulia)(root::CINNode, ::DefaultStyle)
         if root.tns isa CINNode && root.tns.kind === virtual
             return lowerjulia_access(ctx, root, root.tns.val)
         else
-            tns = ctx(tns)
+            tns = ctx(root.tns)
             idxs = map(ctx, root.idxs)
             return :($(ctx(tns))[$(idxs...)])
         end
@@ -230,10 +230,13 @@ function (ctx::LowerJulia)(root::CINNode, ::DefaultStyle)
             :($(ctx(root.op))($(map(ctx, root.args)...)))
         end
     elseif root.kind === loop
+        display(root)
+        println()
+        error() #TODO remove before merge
         return ctx(chunk(
-            idx = root.idx,
-            ext = resolvedim(ctx.dims[getname(root.idx)]),
-            body = root.body)
+            root.idx,
+            resolvedim(ctx.dims[getname(root.idx)]),
+            root.body)
         )
     elseif root.kind === chunk
         idx_sym = ctx.freshen(getname(root.idx))
@@ -273,10 +276,10 @@ function (ctx::LowerJulia)(root::CINNode, ::DefaultStyle)
     elseif root.kind === virtual
         ctx(root.val)
     elseif root.kind === assign
-        if root.op == literal(nothing)
+        if root.lhs.mode.kind == writer
             rhs = ctx(root.rhs)
-        else
-            rhs = ctx(call(root.op, root.lhs, root.rhs))
+        elseif root.lhs.mode.kind == updater
+            rhs = ctx(call(root.lhs.mode.op, root.lhs, root.rhs))
         end
         lhs = ctx(root.lhs)
         return :($lhs = $rhs)
