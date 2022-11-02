@@ -1,6 +1,9 @@
 #ifndef __FINCH_H
 #define __FINCH_H
 
+#ifdef __cplusplus
+    extern "C" {
+#endif
 /*! function FINCH_SCOPE end
 
     FINCH_SCOPE([stmt])
@@ -98,8 +101,8 @@ Call the Julia function `f` on the arguments `args` and return the result. This
 is a macro that counts the number of arguments.
 */
 #define finch_call(f, ...) finch_call_(f, (jl_value_t*[]){finch_call_begin, ##__VA_ARGS__, finch_call_end})
-int finch_call_begin_;
-int finch_call_end_;
+extern int finch_call_begin_;
+extern int finch_call_end_;
 #define finch_call_begin ((jl_value_t*)&finch_call_begin_)
 #define finch_call_end ((jl_value_t*)&finch_call_end_)
 jl_value_t *finch_call_(jl_value_t *f, jl_value_t **args);
@@ -143,5 +146,9 @@ jl_value_t* finch_SparseListLevel(jl_value_t* n, jl_value_t* pos, jl_value_t* id
 jl_value_t* finch_Dense(jl_value_t* n, jl_value_t* lvl);
 jl_value_t* finch_Element(jl_value_t *fill);
 jl_value_t* finch_ElementLevel(jl_value_t *fill, jl_value_t *val);
+
+#ifdef __cplusplus
+    }
+#endif
 
 #endif

@@ -4,6 +4,9 @@
 #include <string.h>
 #include <stdarg.h>
 
+int finch_call_begin_;
+int finch_call_end_;
+
 //JULIA_DEFINE_FAST_TLS // only define this once, in an executable (not in a shared library) if you want fast code.
 
 #define FINCH_ASSERT(check, message, ...) {\
