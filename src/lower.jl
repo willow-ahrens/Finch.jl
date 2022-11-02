@@ -276,10 +276,14 @@ function (ctx::LowerJulia)(root::CINNode, ::DefaultStyle)
     elseif root.kind === virtual
         ctx(root.val)
     elseif root.kind === assign
-        if root.lhs.mode.kind == writer
+        if root.lhs.kind === access
+            if root.lhs.mode.kind == writer
+                rhs = ctx(root.rhs)
+            elseif root.lhs.mode.kind == updater
+                rhs = ctx(call(root.lhs.mode.op, root.lhs, root.rhs))
+            end
+        else
             rhs = ctx(root.rhs)
-        elseif root.lhs.mode.kind == updater
-            rhs = ctx(call(root.lhs.mode.op, root.lhs, root.rhs))
         end
         lhs = ctx(root.lhs)
         return :($lhs = $rhs)
