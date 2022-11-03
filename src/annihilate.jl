@@ -1,19 +1,16 @@
+@slots a b c d e i j f g m n rules = [
+    (@rule call(f, a...) => if isliteral(f) && all(isliteral, a) && length(a) >= 1 literal(getvalue(f)(getvalue.(a)...)) end),
 
-@slots a b c d e i j f g rules = [
-    (@rule @f($f(a...)) => if isliteral(f) && all(isliteral, a) && length(a) >= 1 literal(getvalue(f)(getvalue.(a)...)) end),
+    #TODO default needs to get defined on all writable chunks
+    (@rule assign(access(a, writer(m), i...), b) => if b == literal(default(a)) pass(a) end),
 
-    #((a) -> if isliteral(a) && isliteral(getvalue(a)) getvalue(a) end), #only quote when necessary
-
-    (@rule @f($a[i...] = $b) => if b == literal(default(a)) pass(a) end), #TODO either default needs to get defined on all chunks, or we need to guard this
-
-    (@rule @f(@loop $i @pass(a...)) => pass(a...)),
-    (@rule @f(@chunk $i $a @pass(b...)) => pass(b...)),
-    (@rule @f(@pass(a...) where $b) => pass(a...)),
-    (@rule @f($a where @pass()) => a),
-    (@rule @f(@multi(a..., @pass(b...), @pass(c...), d...)) => @f(@multi(a..., @pass(b..., c...), d...))),
-    (@rule @f(@multi(@pass(a...))) => @f(@pass(a...))),
-    (@rule @f(@multi()) => @f(@pass())),
-    (@rule @f((@pass(a...);)) => pass(a...)),
+    (@rule loop(i, pass(a...)) => pass(a...)),
+    (@rule chunk(i, a, pass(b...)) => pass(b...)),
+    (@rule with(pass(a...), b) => pass(a...)),
+    (@rule with(a, pass()) => a),
+    (@rule multi(a..., pass(b...), pass(c...)) => multi(a..., pass(b..., c...))),
+    (@rule multi(pass(a...)) => pass(a...)),
+    (@rule multi() => pass()),
 
     (@rule @f($a where $b) => begin
         @slots c d i j f g begin
