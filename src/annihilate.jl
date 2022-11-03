@@ -1,44 +1,6 @@
 rules = []
 add_rules!(new_rules) = union!(rules, new_rules)
 
-add_rules!(@slots a b c d e i j f g m n [
-    (@rule call(f, a...) => if isliteral(f) && all(isliteral, a) && length(a) >= 1 literal(getvalue(f)(getvalue.(a)...)) end),
-
-    #TODO default needs to get defined on all writable chunks
-    (@rule assign(access(a, writer(m), i...), b) => if b == literal(default(a)) pass(a) end),
-
-    (@rule loop(i, pass(a...)) => pass(a...)),
-    (@rule chunk(i, a, pass(b...)) => pass(b...)),
-    (@rule with(pass(a...), b) => pass(a...)),
-    (@rule with(a, pass()) => a),
-    (@rule multi(a..., pass(b...), pass(c...)) => multi(a..., pass(b..., c...))),
-    (@rule multi(pass(a...)) => pass(a...)),
-    (@rule multi() => pass()),
-
-    (@rule with(a, b) => begin
-        @slots c d i j f g m begin
-            props = Dict()
-            b_2 = Postwalk(Chain([
-                (@rule assign(access(c, writer($(literal(false))), i...), d) => if isliteral(d)
-                    props[getname(c)] = d
-                    pass()
-                end),
-                (@rule pass(c...) => begin
-                    for d in c
-                        props[getname(d)] = literal(default(d)) #TODO is this okay?
-                    end
-                    pass()
-                end),
-            ]))(b)
-            if b_2 != nothing
-                a_2 = Rewrite(Postwalk(@rule access(c, reader(), i...) => get(props, getname(c), nothing)))(a)
-                with(a_2, b_2)
-            end
-        end
-    end),
-    #(@rule @f(a where @pass(b...)) => a),#can't do this bc produced tensors won't get initialized ?
-])
-
 isassociative(f) = false
 isassociative(::typeof(min)) = true
 isassociative(::typeof(max)) = true
@@ -102,79 +64,112 @@ isinverse(f::CINNode, x::CINNode) = isliteral(f) && isliteral(x) && isinverse(f.
 hasinverse(f::CINNode) = isliteral(f) && (getinverse(f.val) !== nothing)
 getinverse(f::CINNode) = something(getinverse(f.val))
 
-add_rules!(@slots a b c d e i j f g m n z [
-    (@rule call($(literal(>=)), call($(literal(max)), a...), b) => call(or, map(x -> call(x >= b), a)...)),
-    (@rule call($(literal(>)), call($(literal(max)), a...), b) => call(or, map(x -> call(x > b), a)...)),
-    (@rule call($(literal(<=)), call($(literal(max)), a...), b) => call(and, map(x -> call(x <= b), a)...)),
-    (@rule call($(literal(<)), call($(literal(max)), a...), b) => call(and, map(x -> call(x < b), a)...)),
-    (@rule call($(literal(>=)), call($(literal(min)), a...), b) => call(and, map(x -> call(x >= b), a)...)),
-    (@rule call($(literal(>)), call($(literal(min)), a...), b) => call(and, map(x -> call(x > b), a)...)),
-    (@rule call($(literal(<=)), call($(literal(min)), a...), b) => call(or, map(x -> call(x <= b), a)...)),
-    (@rule call($(literal(<)), call($(literal(min)), a...), b) => call(or, map(x -> call(x < b), a)...)),
-    (@rule call(f::isassociative, a..., call(f, b...), c...) => call(f, a..., b..., c...)),
-    (@rule call(f::iscommutative, a...) => if !(issorted(a, by = Lexicography))
+add_rules!([
+    (@rule call(~f, ~a...) => if isliteral(f) && all(isliteral, a) && length(a) >= 1 literal(getvalue(f)(getvalue.(a)...)) end),
+
+    #TODO default needs to get defined on all writable chunks
+    (@rule assign(access(~a, writer(~m), ~i...), ~b) => if b == literal(default(a)) pass(a) end),
+
+    (@rule loop(~i, pass(~a...)) => pass(a...)),
+    (@rule chunk(~i, ~a, pass(~b...)) => pass(b...)),
+    (@rule with(pass(~a...), ~b) => pass(a...)),
+    (@rule with(~a, pass()) => a),
+    (@rule multi(~a..., pass(~b...), pass(~c...)) => multi(a..., pass(b..., c...))),
+    (@rule multi(pass(~a...)) => pass(a...)),
+    (@rule multi() => pass()),
+
+    (@rule with(~a, ~b) => begin
+        props = Dict()
+        b_2 = Postwalk(Chain([
+            (@rule assign(access(~c, writer($(literal(false))), ~i...), ~d) => if isliteral(d)
+                props[getname(c)] = d
+                pass()
+            end),
+            (@rule pass(~c...) => begin
+                for d in c
+                    props[getname(d)] = literal(default(d)) #TODO is this okay?
+                end
+                pass()
+            end),
+        ]))(b)
+        if b_2 != nothing
+            a_2 = Rewrite(Postwalk(@rule access(c, reader(), i...) => get(props, getname(c), nothing)))(a)
+            with(a_2, b_2)
+        end
+    end),
+    #(@rule @f(a where @pass(b...)) => a),#can't do this bc produced tensors won't get initialized ?
+    (@rule call($(literal(>=)), call($(literal(max)), ~a...), ~b) => call(or, map(x -> call(x >= b), a)...)),
+    (@rule call($(literal(>)), call($(literal(max)), ~a...), ~b) => call(or, map(x -> call(x > b), a)...)),
+    (@rule call($(literal(<=)), call($(literal(max)), ~a...), ~b) => call(and, map(x -> call(x <= b), a)...)),
+    (@rule call($(literal(<)), call($(literal(max)), ~a...), ~b) => call(and, map(x -> call(x < b), a)...)),
+    (@rule call($(literal(>=)), call($(literal(min)), ~a...), ~b) => call(and, map(x -> call(x >= b), a)...)),
+    (@rule call($(literal(>)), call($(literal(min)), ~a...), ~b) => call(and, map(x -> call(x > b), a)...)),
+    (@rule call($(literal(<=)), call($(literal(min)), ~a...), ~b) => call(or, map(x -> call(x <= b), a)...)),
+    (@rule call($(literal(<)), call($(literal(min)), ~a...), ~b) => call(or, map(x -> call(x < b), a)...)),
+    (@rule call(~f::isassociative, ~a..., call(~f, ~b...), ~c...) => call(f, a..., b..., c...)),
+    (@rule call(~f::iscommutative, ~a...) => if !(issorted(a, by = Lexicography))
         call(f, sort(a, by = Lexicography)...)
     end),
-    (@rule call(f::isidempotent, a...) => if !allunique(a)
+    (@rule call(~f::isidempotent, ~a...) => if !allunique(a)
         call(f, unique(a)...)
     end),
-    (@rule call(f::isassociative, a..., b::isliteral, c::isliteral, d...) => call(f, a..., f.val(b.val, c.val), d...)),
-    (@rule call(f::isabelian, a..., b::isliteral, c..., d::isliteral, e...) => call(f, a..., f.val(b.val, d.val), c..., e...)),
-    (@rule call(f, a..., b, c...) => if isannihilator(f, b) b end),
-    (@rule call(f, a..., b, c, d...) => if isidentity(f, b)
+    (@rule call(~f::isassociative, ~a..., ~b::isliteral, ~c::isliteral, ~d...) => call(f, a..., f.val(b.val, c.val), d...)),
+    (@rule call(~f::isabelian, ~a..., ~b::isliteral, ~c..., ~d::isliteral, ~e...) => call(f, a..., f.val(b.val, d.val), c..., e...)),
+    (@rule call(~f, ~a..., ~b, ~c...) => if isannihilator(f, b) b end),
+    (@rule call(~f, ~a..., ~b, ~c, ~d...) => if isidentity(f, b)
         call(f, a..., c, d...)
     end),
-    (@rule call(f, a..., b, c, d...) => if isidentity(f, c)
+    (@rule call(~f, ~a..., ~b, ~c, ~d...) => if isidentity(f, c)
         call(f, a..., b, d...)
     end),
-    (@rule call(f, a) => if isassociative(f) a end), #TODO
+    (@rule call(~f, ~a) => if isassociative(f) a end), #TODO
 
     #TODO we need to modify pass to say whether it needs to update a tensor
-    (@rule assign(access(a, updater(f, m), i...), b) => if isidentity(f, b) pass(a) end),
-    (@rule assign(access(a, m, i...), $(literal(missing))) => pass(a)),
-    (@rule assign(access(a, m, i..., $(literal(missing)), j...), b) => pass(a)),
-    (@rule call($(literal(coalesce)), a..., b, c...) => if isvalue(b) && !(Missing <: b.type) || isliteral(b) && !ismissing(b.val)
+    (@rule assign(access(~a, updater(~f, ~m), ~i...), ~b) => if isidentity(f, b) pass(a) end),
+    (@rule assign(access(~a, ~m, ~i...), $(literal(missing))) => pass(a)),
+    (@rule assign(access(~a, ~m, ~i..., $(literal(missing)), ~j...), ~b) => pass(a)),
+    (@rule call($(literal(coalesce)), ~a..., ~b, ~c...) => if isvalue(b) && !(Missing <: b.type) || isliteral(b) && !ismissing(b.val)
         call(coalesce, a..., b)
     end),
 
-    (@rule call($(literal(ifelse)), $(literal(true)), a, b) => a),
-    (@rule call($(literal(ifelse)), $(literal(false)), a, b) => b),
-    (@rule call($(literal(ifelse)), a, b, b) => b),
+    (@rule call($(literal(ifelse)), $(literal(true)), ~a, ~b) => a),
+    (@rule call($(literal(ifelse)), $(literal(false)), ~a, ~b) => b),
+    (@rule call($(literal(ifelse)), ~a, ~b, ~b) => b),
     (@rule $(literal(-0.0)) => literal(0.0)),
 
     (@rule @f(or()) => @f false),
     (@rule @f(and()) => @f true),
 
-    (@rule call(f::hasinverse, call(g::isliteral, a, b...)) => if g.val == getinverse(f) && isassociative(g)
+    (@rule call(~f::hasinverse, call(~g::isliteral, ~a, ~b...)) => if g.val == getinverse(f) && isassociative(g)
         call(g, call(f, a), call(f, call(g, b...)))
     end),
 
-    (@rule call(f::hasinverse, a, b) => call(getinverse(f), a, call(f, b))),
-    (@rule call(f::hasinverse, call(f, a)) => a),
-    (@rule call(f::isliteral, a..., call(g::hasinverse, b), c...) => if isdistributive(getinverse(g), f.val)
+    (@rule call(~f::hasinverse, ~a, ~b) => call(getinverse(f), a, call(f, b))),
+    (@rule call(~f::hasinverse, call(~f, ~a)) => a),
+    (@rule call(~f::isliteral, ~a..., call(~g::hasinverse, ~b), ~c...) => if isdistributive(getinverse(g), f.val)
         call(g, call(f, a..., b, c...))
     end),
 
-    (@rule call($(literal(/)), a) => call(inv, a)),
+    (@rule call($(literal(/)), ~a) => call(inv, a)),
 
-    (@rule sieve($(literal(true)), a) => a),
-    (@rule sieve($(literal(false)), a) => pass(getresults(a)...)),
+    (@rule sieve($(literal(true)), ~a) => a),
+    (@rule sieve($(literal(false)), ~a) => pass(getresults(a)...)),
 
-    (@rule chunk(i, a, assign(access(b, updater(f::isidempotent, m), j...), d::isliteral)) => if i ∉ j
+    (@rule chunk(~i, ~a, assign(access(~b, updater(~f::isidempotent, ~m), ~j...), ~d::isliteral)) => if i ∉ j
         assign(access(b, updater(f, m), j...), d)
     end),
-    (@rule chunk(i, a, multi(b...,
-        assign(access(c, updater(f::isidempotent, m), j...), d::isliteral),
-        e...)) => if i ∉ j
+    (@rule chunk(~i, ~a, multi(~b...,
+        assign(access(~c, updater(~f::isidempotent, ~m), ~j...), ~d::isliteral),
+        ~e...)) => if i ∉ j
         multi(assign(access(b, updater(f, m), j...), d), chunk(i, a, multi(b..., e...)))
     end),
 
-    (@rule chunk(i, a, assign(access(b, updater($(literal(+)), m), j...), d)) => begin
+    (@rule chunk(~i, ~a, assign(access(~b, updater($(literal(+)), ~m), ~j...), ~d)) => begin
         if i ∉ j && getname(i) ∉ getunbound(d)
             assign(access(b, updater(+, m), j...), call(*, extent(a), d))
         end
     end),
-    (@rule chunk(i, a, multi(b..., assign(access(c, updater($(literal(+)), m), j...), d), e...)) => begin
+    (@rule chunk(~i, ~a, multi(~b..., assign(access(~c, updater($(literal(+)), ~m), ~j...), ~d), ~e...)) => begin
         if i ∉ j && getname(i) ∉ getunbound(d)
             multi(assign(access(c, updater(+, m), j...), call(*, extent(a), d)),
                 chunk(i, a, multi(b..., e...)))
