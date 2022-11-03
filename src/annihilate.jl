@@ -59,26 +59,30 @@ isidempotent(f) = false
 isidempotent(::typeof(min)) = true
 isidempotent(::typeof(max)) = true
 
-#=
 isidentity(f, x) = false
 isidentity(::typeof(+), x) = iszero(x)
 isidentity(::typeof(*), x) = isone(x)
-isidentity(::typeof(min), x) = isinf(x) && x < 0
-isidentity(::typeof(max), x) = isinf(x) && x > 0
+isidentity(::typeof(min), x) = isinf(x) && x > 0
+isidentity(::typeof(max), x) = isinf(x) && x < 0
+isidentity(::typeof(or), x) = x == false
+isidentity(::typeof(and), x) = x == true
 
 isannihilator(f, x) = false
 isannihilator(::typeof(+), x) = isinf(x)
 isannihilator(::typeof(*), x) = iszero(x)
-isidentity(::typeof(min), x) = isinf(x) && x < 0
-isidentity(::typeof(max), x) = isinf(x) && x > 0
-=#
+isannihilator(::typeof(min), x) = isinf(x) && x < 0
+isannihilator(::typeof(max), x) = isinf(x) && x > 0
+isannihilator(::typeof(or), x) = x == true
+isannihilator(::typeof(and), x) = x == false
 
 isassociative(f::CINNode) = f.kind === literal && isassociative(f.val)
 iscommutative(f::CINNode) = f.kind === literal && iscommutative(f.val)
 isidempotent(f::CINNode) = f.kind === literal && isidempotent(f.val)
 isabelian(f) = isassociative(f) && iscommutative(f)
+isidentity(f::CINNode, x::CINNode) = isliteral(f) && isliteral(x) && isidentity(f.val, x.val)
+isannihilator(f::CINNode, x::CINNode) = isliteral(f) && isliteral(x) && isannihilator(f.val, x.val)
 
-add_rules!(@slots a b c d e i j f g m n [
+add_rules!(@slots a b c d e i j f g m n z [
     (@rule call($(literal(>=)), call($(literal(max)), a...), b) => call(or, map(x -> call(x >= b), a)...)),
     (@rule call($(literal(>)), call($(literal(max)), a...), b) => call(or, map(x -> call(x > b), a)...)),
     (@rule call($(literal(<=)), call($(literal(max)), a...), b) => call(and, map(x -> call(x <= b), a)...)),
@@ -96,6 +100,20 @@ add_rules!(@slots a b c d e i j f g m n [
     end),
     (@rule call(f::isassociative, a..., b::isliteral, c::isliteral, d...) => call(f, a..., f.val(b.val, c.val), d...)),
     (@rule call(f::isabelian, a..., b::isliteral, c..., d::isliteral, e...) => call(f, a..., f.val(b.val, d.val), c..., e...)),
+    (@rule call(f, a..., b, c...) => if isannihilator(f, b) b end),
+    (@rule call(f, a..., b, c, d...) => if isidentity(f, b)
+        call(f, a..., c, d...)
+    end),
+    (@rule call(f, a..., b, c, d...) => if isidentity(f, c)
+        call(f, a..., b, d...)
+    end),
+    (@rule call(f, a) => if isassociative(f) a end), #TODO
+
+    (@rule call($(literal(/)), z::iszero, a) => z),
+    (@rule call($(literal(ifelse)), $(literal(true)), a, b) => a),
+    (@rule call($(literal(ifelse)), $(literal(false)), a, b) => b),
+    (@rule call($(literal(ifelse)), a, b, b) => b),
+
     (@rule @f(+(a..., 0, b...)) => @f +(a..., b...)),
     (@rule @f(or(a..., false, b...)) => @f or(a..., b...)),
     (@rule @f(or(a..., true, b...)) => @f true),
@@ -104,11 +122,7 @@ add_rules!(@slots a b c d e i j f g m n [
     (@rule @f(and(a..., true, b...)) => @f and(a..., b...)),
     (@rule @f(and(a..., false, b...)) => @f false),
     (@rule @f(and($a)) => a),
-    (@rule @f((0 / $a)) => 0),
 
-    (@rule @f(ifelse(true, $a, $b)) => a),
-    (@rule @f(ifelse(false, $a, $b)) => b),
-    (@rule @f(ifelse($a, $b, $b)) => b),
 
     (@rule @f(and()) => @f true),
     (@rule @f((+)($a)) => a),
@@ -162,28 +176,6 @@ add_rules!(@slots a b c d e i j f g m n [
             @f @multi (c[j...] += $(extent(a)) * $d) @chunk $i a @f(@multi b... e...)
         end
     end),
-    (@rule @f(@chunk $i $a ($b[j...] <<choose>>= $d)) => if Finch.isliteral(d) && i ∉ j
-        @f (b[j...] <<choose>>= $d)
-    end),
-    (@rule @f(@chunk $i $a @multi b... ($c[j...] <<choose>>= $d) e...) => begin
-        if Finch.isliteral(d) && i ∉ j
-            @f @multi (c[j...] <<choose>>= $d) @chunk $i a @f(@multi b... e...)
-        end
-    end),
-    (@rule @f(choose(0, $a)) => a),
-    (@rule @f(choose($a, 0)) => a),
-    (@rule @f(@chunk $i $a ($b[j...] <<or_>>= $d)) => if Finch.isliteral(d) && i ∉ j
-        @f (b[j...] <<or_>>= $d)
-    end),
-    (@rule @f(@chunk $i $a @multi b... ($c[j...] <<or_>>= $d) e...) => begin
-        if Finch.isliteral(d) && i ∉ j
-            @f @multi (c[j...] <<or_>>= $d) @chunk $i a @f(@multi b... e...)
-        end
-    end),
-    (@rule @f(or_(false, $a)) => a),
-    (@rule @f(or_($a, false)) => a),
-    (@rule @f(or_($a, true)) => true),
-    (@rule @f(or_(true, $a)) => true),
 ])
 
 @kwdef mutable struct Simplify
