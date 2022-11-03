@@ -12,15 +12,15 @@
     (@rule multi(pass(a...)) => pass(a...)),
     (@rule multi() => pass()),
 
-    (@rule @f($a where $b) => begin
-        @slots c d i j f g begin
+    (@rule with(a, b) => begin
+        @slots c d i j f g m begin
             props = Dict()
             b_2 = Postwalk(Chain([
-                (@rule @f($c[i...] = $d) => if isliteral(d)
+                (@rule assign(access(c, writer(m), i...), d) => if isliteral(d)
                     props[getname(c)] = d
                     pass()
                 end),
-                (@rule @f(@pass(c...)) => begin
+                (@rule pass(c...) => begin
                     for d in c
                         props[getname(d)] = literal(default(d)) #TODO is this okay?
                     end
@@ -28,8 +28,8 @@
                 end),
             ]))(b)
             if b_2 != nothing
-                a_2 = Rewrite(Postwalk(@rule @f($c[i...]) => get(props, getname(c), nothing)))(a)
-                @f $a_2 where $b_2
+                a_2 = Rewrite(Postwalk(@rule access(c, reader(), i...) => get(props, getname(c), nothing)))(a)
+                with(a_2, b_2)
             end
         end
     end),
