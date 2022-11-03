@@ -8,3 +8,14 @@ embed/finch.o
 embed/libfinch.a
 demos/embed_demo.o
 Manifest.toml
+*.o
+demos/graphs
+*/bc
+*/bfs
+*/cc
+*/cc2
+*/pr
+*/sssp
+.vscode/
+demos/Manifest*
+*.dSYM/
