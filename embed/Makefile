@@ -4,7 +4,7 @@ JULIA = julia
 CFLAGS= -O3
 
 JL_SHARE = $(shell $(JULIA) -e 'print(joinpath(Sys.BINDIR, Base.DATAROOTDIR, "julia"))')
-CFLAGS   += $(shell $(JL_SHARE)/julia-config.jl --cflags) -fPIC #need fPIC to include with shared objects
+CFLAGS   += $(shell $(JL_SHARE)/julia-config.jl --cflags) -fPIC -g #need fPIC to include with shared objects
 LDFLAGS  += $(shell $(JL_SHARE)/julia-config.jl --ldflags)
 LDLIBS   += $(shell $(JL_SHARE)/julia-config.jl --ldlibs)
 
