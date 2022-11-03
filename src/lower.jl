@@ -230,14 +230,11 @@ function (ctx::LowerJulia)(root::CINNode, ::DefaultStyle)
             :($(ctx(root.op))($(map(ctx, root.args)...)))
         end
     elseif root.kind === loop
-        display(root)
-        println()
-        error() #TODO remove before merge
-        return ctx(chunk(
+        return ctx(simplify(chunk(
             root.idx,
             resolvedim(ctx.dims[getname(root.idx)]),
             root.body)
-        )
+        ))
     elseif root.kind === chunk
         idx_sym = ctx.freshen(getname(root.idx))
         if simplify((@f $(getlower(root.ext)) >= 1)) == (@f true)  && simplify((@f $(getupper(root.ext)) <= 1)) == (@f true)

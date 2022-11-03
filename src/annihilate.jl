@@ -169,14 +169,15 @@ add_rules!(@slots a b c d e i j f g m n z [
         multi(assign(access(b, updater(f, m), j...), d), chunk(i, a, multi(b..., e...)))
     end),
 
-    (@rule @f(@chunk $i $a ($b[j...] += $d)) => begin
-        if getname(i) ∉ getunbound(d) && i ∉ j
-            @f (b[j...] += $(extent(a)) * $d)
+    (@rule chunk(i, a, assign(access(b, updater($(literal(+)), m), j...), d)) => begin
+        if i ∉ j && getname(i) ∉ getunbound(d)
+            assign(access(b, updater(+, m), j...), call(*, extent(a), d))
         end
     end),
-    (@rule @f(@chunk $i $a @multi b... ($c[j...] += $d) e...) => begin
-        if getname(i) ∉ getunbound(d) && i ∉ j
-            @f @multi (c[j...] += $(extent(a)) * $d) @chunk $i a @f(@multi b... e...)
+    (@rule chunk(i, a, multi(b..., assign(access(c, updater($(literal(+)), m), j...), d), e...)) => begin
+        if i ∉ j && getname(i) ∉ getunbound(d)
+            multi(assign(access(c, updater(+, m), j...), call(*, extent(a), d)),
+                chunk(i, a, multi(b..., e...)))
         end
     end),
 ])

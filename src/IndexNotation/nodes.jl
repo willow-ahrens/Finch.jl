@@ -386,7 +386,7 @@ function display_statement(io, mime, node::CINNode, level)
         print(io, " ")
         if node.lhs.mode.kind === updater
             #TODO add << >>
-            display_expression(io, mime, node.op)
+            display_expression(io, mime, node.lhs.mode.op)
         end
         print(io, "= ")
         display_expression(io, mime, node.rhs)
