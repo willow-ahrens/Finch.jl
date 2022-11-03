@@ -46,6 +46,7 @@ isassociative(::typeof(+)) = true
 isassociative(::typeof(*)) = true
 isassociative(::typeof(or)) = true
 isassociative(::typeof(and)) = true
+isassociative(::typeof(coalesce)) = true
 
 iscommutative(f) = false
 iscommutative(::typeof(min)) = true
@@ -66,6 +67,7 @@ isidentity(::typeof(min), x) = isinf(x) && x > 0
 isidentity(::typeof(max), x) = isinf(x) && x < 0
 isidentity(::typeof(or), x) = x == false
 isidentity(::typeof(and), x) = x == true
+isidentity(::typeof(coalesce), x) = ismissing(x)
 
 isannihilator(f, x) = false
 isannihilator(::typeof(+), x) = isinf(x)
@@ -79,6 +81,11 @@ isinverse(f, g) = false
 isinverse(::typeof(+), ::typeof(-)) = true
 isinverse(::typeof(*), ::typeof(inv)) = true
 
+getinverse(f) = nothing
+getinverse(::typeof(-)) = +
+getinverse(::typeof(/)) = *
+getinverse(::typeof(inv)) = *
+
 isassociative(f::CINNode) = f.kind === literal && isassociative(f.val)
 iscommutative(f::CINNode) = f.kind === literal && iscommutative(f.val)
 isidempotent(f::CINNode) = f.kind === literal && isidempotent(f.val)
@@ -87,6 +94,9 @@ isidentity(f::CINNode, x::CINNode) = isliteral(f) && isliteral(x) && isidentity(
 isannihilator(f::CINNode, x::CINNode) = isliteral(f) && isliteral(x) && isannihilator(f.val, x.val)
 
 isinverse(f::CINNode, x::CINNode) = isliteral(f) && isliteral(x) && isinverse(f.val, x.val)
+
+hasinverse(f::CINNode) = isliteral(f) && (getinverse(f) !== nothing)
+getinverse(f::CINNode) = something(getinverse(f))
 
 add_rules!(@slots a b c d e i j f g m n z [
     (@rule call($(literal(>=)), call($(literal(max)), a...), b) => call(or, map(x -> call(x >= b), a)...)),
@@ -115,7 +125,14 @@ add_rules!(@slots a b c d e i j f g m n z [
     end),
     (@rule call(f, a) => if isassociative(f) a end), #TODO
 
-    (@rule call($(literal(/)), z::iszero, a) => z),
+    #TODO we need to modify pass to say whether it needs to update a tensor
+    (@rule assign(access(a, updater(f, m), i...), b) => if isidentity(f, b) pass(a) end),
+    (@rule assign(access(a, m, i...), $(literal(missing))) => pass(a)),
+    (@rule assign(access(a, m, i..., $(literal(missing)), j...), b) => pass(a)),
+    (@rule call($(literal(coalesce)), a..., b, c...) => if isvalue(b) && !(Missing <: b.type) || isliteral(b) && !ismissing(b.val)
+        call(coalesce, a..., b)
+    end),
+
     (@rule call($(literal(ifelse)), $(literal(true)), a, b) => a),
     (@rule call($(literal(ifelse)), $(literal(false)), a, b) => b),
     (@rule call($(literal(ifelse)), a, b, b) => b),
@@ -127,21 +144,14 @@ add_rules!(@slots a b c d e i j f g m n z [
     (@rule call(f, call(g, a, b...)) => if isinverse(g, f) && isassociative(g)
         call(g, call(f, a), call(f, call(g, b...)))
     end),
-    (@rule @f($a[i...] += 0) => pass(a)),
 
-    (@rule @f($a[i...] <<$f>>= $($(literal(missing)))) => pass(a)),
-    (@rule @f($a[i..., $($(literal(missing))), j...] <<$f>>= $b) => pass(a)),
-    (@rule @f($a[i..., $($(literal(missing))), j...]) => literal(missing)),
-    (@rule @f(coalesce(a..., $($(literal(missing))), b...)) => @f coalesce(a..., b...)),
-    (@rule @f(coalesce(a..., $b, c...)) => if isvalue(b) && !(Missing <: b.type); @f(coalesce(a..., $b)) end),
-    (@rule @f(coalesce(a..., $b, c...)) => if isliteral(b) && b != literal(missing); @f(coalesce(a..., $b)) end),
-    (@rule @f(coalesce($a)) => a),
+
 
     (@rule @f($a - $b) => @f $a + - $b),
     (@rule @f(- (- $a)) => a),
 
+    (@rule call($(literal(/)), z::iszero, a) => z),
     (@rule @f((*)(a..., - $b, c...)) => @f -(*(a..., $b, c...))),
-    (@rule @f($a[i...] *= 1) => pass(a)),
     (@rule @f(@sieve true $a) => a),
     (@rule @f(@sieve false $a) => pass(getresults(a)...)),
 
