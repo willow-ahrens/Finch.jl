@@ -8,7 +8,6 @@ Pkg.resolve()
 using Finch
 using BenchmarkTools
 using RewriteTools
-using Finch.IndexNotation: or_, choose
 using MatrixDepot
 using SparseArrays
 
