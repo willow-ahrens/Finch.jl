@@ -120,18 +120,13 @@ function bfs(edges, source=5)
     @finch F[source] = true
 
     V = @fiber d(n, e(0))
-    V' = @fiber d(n, e(0))
     @finch V[source] = 1
 
     level = 2
     while !iszero(F)
-        (V, V') = (V', V)
-        @finch @loop j k begin
-            F'[j] = w[]
-            V'[j] = ifelse(w[], level, 0)
-        end where (w[] = F[j] && edges[j, k] && !(visited[j]))
+        @finch @loop j k F'[k] = F[j] && edges[j, k] && !(V[k])
+        @finch @loop j !V[k] |= F'[k]
         (F, F') = (F', F)
-        (V, V') = (V', V)
     end
     return F
 end

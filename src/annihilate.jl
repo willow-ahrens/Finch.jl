@@ -1,4 +1,7 @@
-@slots a b c d e i j f g m n rules = [
+rules = []
+add_rules!(new_rules) = union!(rules, new_rules)
+
+add_rules!(@slots a b c d e i j f g m n [
     (@rule call(f, a...) => if isliteral(f) && all(isliteral, a) && length(a) >= 1 literal(getvalue(f)(getvalue.(a)...)) end),
 
     #TODO default needs to get defined on all writable chunks
@@ -16,7 +19,7 @@
         @slots c d i j f g m begin
             props = Dict()
             b_2 = Postwalk(Chain([
-                (@rule assign(access(c, writer(m), i...), d) => if isliteral(d)
+                (@rule assign(access(c, writer($(literal(false))), i...), d) => if isliteral(d)
                     props[getname(c)] = d
                     pass()
                 end),
@@ -34,7 +37,29 @@
         end
     end),
     #(@rule @f(a where @pass(b...)) => a),#can't do this bc produced tensors won't get initialized ?
+])
 
+isassociative(f) = false
+isassociative(::typeof(min)) = true
+isassociative(::typeof(max)) = true
+isassociative(::typeof(+)) = true
+isassociative(::typeof(*)) = true
+
+iscommutative(f) = false
+iscommutative(::typeof(min)) = true
+iscommutative(::typeof(max)) = true
+iscommutative(::typeof(+)) = true
+iscommutative(::typeof(*)) = true
+
+isidempotent(f) = false
+isidempotent(::typeof(min)) = true
+isidempotent(::typeof(max)) = true
+
+isassociative(f::CINNode) = f.kind === literal && isassociative(f.val)
+iscommutative(f::CINNode) = f.kind === literal && iscommutative(f.val)
+isidempotent(f::CINNode) = f.kind === literal && isidempotent(f.val)
+
+add_rules!(@slots a b c d e i j f g m n [
     (@rule call($(literal(>=)), call($(literal(max)), a...), b) => call(or, map(x -> call(x >= b), a)...)),
     (@rule call($(literal(>)), call($(literal(max)), a...), b) => call(or, map(x -> call(x > b), a)...)),
     (@rule call($(literal(<=)), call($(literal(max)), a...), b) => call(and, map(x -> call(x <= b), a)...)),
@@ -43,13 +68,13 @@
     (@rule call($(literal(>)), call($(literal(min)), a...), b) => call(and, map(x -> call(x > b), a)...)),
     (@rule call($(literal(<=)), call($(literal(min)), a...), b) => call(or, map(x -> call(x <= b), a)...)),
     (@rule call($(literal(<)), call($(literal(min)), a...), b) => call(or, map(x -> call(x < b), a)...)),
-    (@rule @f(min(a..., min(b...), c...)) => @f min(a..., b..., c...)),
-    (@rule @f(max(a..., max(b...), c...)) => @f max(a..., b..., c...)),
-    (@rule @f(min(a...)) => if !(issorted(a, by = Lexicography)) @f min($(sort(a, by = Lexicography)...)) end),
-    (@rule @f(max(a...)) => if !(issorted(a, by = Lexicography)) @f max($(sort(a, by = Lexicography)...)) end),
-    (@rule @f(min(a...)) => if !(allunique(a)) @f min($(unique(a)...)) end),
-    (@rule @f(max(a...)) => if !(allunique(a)) @f max($(unique(a)...)) end),
-    (@rule @f(+(a..., +(b...), c...)) => @f +(a..., b..., c...)),
+    (@rule call(f::isassociative, a..., call(f, b...), c...) => call(f, a..., b..., c...)),
+    (@rule call(f::iscommutative, a...) => if !(issorted(a, by = Lexicography))
+        call(f, sort(a, by = Lexicography)...)
+    end),
+    (@rule call(f::isidempotent, a...) => if isidempotent(value(f)) && !allunique(a)
+        call(f, unique(a)...)
+    end),
     (@rule @f(+(a...)) => if count(isliteral, a) >= 2 @f +($(filter(!isliteral, a)...), $(literal(+(getvalue.(filter(isliteral, a))...)))) end),
     (@rule @f(+(a..., 0, b...)) => @f +(a..., b...)),
     (@rule @f(or(a..., false, b...)) => @f or(a..., b...)),
@@ -140,7 +165,7 @@
     (@rule @f(or_($a, false)) => a),
     (@rule @f(or_($a, true)) => true),
     (@rule @f(or_(true, $a)) => true),
-]
+])
 
 @kwdef mutable struct Simplify
     body
@@ -189,7 +214,6 @@ function (ctx::LowerJulia)(root, ::SimplifyStyle)
     ctx(root)
 end
 
-add_rules!(new_rules) = union!(rules, new_rules)
 
 IndexNotation.isliteral(::Simplify) =  false
 
@@ -217,6 +241,7 @@ function Base.:(==)(a::Lexicography, b::Lexicography)
     return a_key == b_key
 end
 
+#=
 priority(::Type) = (0, 5)
 comparators(x::Type) = (string(x),)
 
@@ -255,6 +280,7 @@ function comparators(node::CINNode)
         error("unimplemented")
     end
 end
+=#
 #TODO these are nice defaults if we want to allow nondeterminism
-#priority(::Any) = (Inf,)
-#comparators(x::Any) = hash(x)
+priority(::Any) = (Inf,)
+comparators(x::Any) = hash(x)
