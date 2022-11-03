@@ -145,13 +145,13 @@ add_rules!(@slots a b c d e i j f g m n z [
     (@rule @f(or()) => @f false),
     (@rule @f(and()) => @f true),
 
-    (@rule call(f, call(g, a, b...)) => if isinverse(g, f) && isassociative(g)
+    (@rule call(f::hasinverse, call(g::isliteral, a, b...)) => if g.val == getinverse(f) && isassociative(g)
         call(g, call(f, a), call(f, call(g, b...)))
     end),
 
     (@rule call(f::hasinverse, a, b) => call(getinverse(f), a, call(f, b))),
     (@rule call(f::hasinverse, call(f, a)) => a),
-    (@rule call(f, a..., call(g::hasinverse, b), c...) => if isdistributive(getinverse(g), f.val)
+    (@rule call(f::isliteral, a..., call(g::hasinverse, b), c...) => if isdistributive(getinverse(g), f.val)
         call(g, call(f, a..., b, c...))
     end),
 
@@ -160,22 +160,15 @@ add_rules!(@slots a b c d e i j f g m n z [
     (@rule sieve($(literal(true)), a) => a),
     (@rule sieve($(literal(false)), a) => pass(getresults(a)...)),
 
-    (@rule @f(@chunk $i $a ($b[j...] <<min>>= $d)) => if Finch.isliteral(d) && i ∉ j
-        @f (b[j...] <<min>>= $d)
+    (@rule chunk(i, a, assign(access(b, updater(f::isidempotent, m), j...), d::isliteral)) => if i ∉ j
+        assign(access(b, updater(f, m), j...), d)
     end),
-    (@rule @f(@chunk $i $a @multi b... ($c[j...] <<min>>= $d) e...) => begin
-        if Finch.isliteral(d) && i ∉ j
-            @f @multi (c[j...] <<min>>= $d) @chunk $i a @f(@multi b... e...)
-        end
+    (@rule chunk(i, a, multi(b...,
+        assign(access(c, updater(f::isidempotent, m), j...), d::isliteral),
+        e...)) => if i ∉ j
+        multi(assign(access(b, updater(f, m), j...), d), chunk(i, a, multi(b..., e...)))
     end),
-    (@rule @f(@chunk $i $a ($b[j...] <<max>>= $d)) => if Finch.isliteral(d) && i ∉ j
-        @f (b[j...] <<max>>= $d)
-    end),
-    (@rule @f(@chunk $i $a @multi b... ($c[j...] <<max>>= $d) e...) => begin
-        if Finch.isliteral(d) && i ∉ j
-            @f @multi (c[j...] <<max>>= $d) @chunk $i a @f(@multi b... e...)
-        end
-    end),
+
     (@rule @f(@chunk $i $a ($b[j...] += $d)) => begin
         if getname(i) ∉ getunbound(d) && i ∉ j
             @f (b[j...] += $(extent(a)) * $d)
