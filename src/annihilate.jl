@@ -155,9 +155,10 @@ add_rules!(@slots a b c d e i j f g m n z [
         call(g, call(f, a..., b, c...))
     end),
 
-    (@rule @f((*)(a..., - $b, c...)) => @f -(*(a..., $b, c...))),
-    (@rule @f(@sieve true $a) => a),
-    (@rule @f(@sieve false $a) => pass(getresults(a)...)),
+    (@rule call($(literal(/)), a) => call(inv, a)),
+
+    (@rule sieve($(literal(true)), a) => a),
+    (@rule sieve($(literal(false)), a) => pass(getresults(a)...)),
 
     (@rule @f(@chunk $i $a ($b[j...] <<min>>= $d)) => if Finch.isliteral(d) && i ∉ j
         @f (b[j...] <<min>>= $d)
