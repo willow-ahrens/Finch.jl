@@ -95,7 +95,7 @@ add_rules!(@slots a b c d e i j f g m n z [
     (@rule call(f::iscommutative, a...) => if !(issorted(a, by = Lexicography))
         call(f, sort(a, by = Lexicography)...)
     end),
-    (@rule call(f::isidempotent, a...) => if isidempotent(value(f)) && !allunique(a)
+    (@rule call(f::isidempotent, a...) => if !allunique(a)
         call(f, unique(a)...)
     end),
     (@rule call(f::isassociative, a..., b::isliteral, c::isliteral, d...) => call(f, a..., f.val(b.val, c.val), d...)),
@@ -113,22 +113,13 @@ add_rules!(@slots a b c d e i j f g m n z [
     (@rule call($(literal(ifelse)), $(literal(true)), a, b) => a),
     (@rule call($(literal(ifelse)), $(literal(false)), a, b) => b),
     (@rule call($(literal(ifelse)), a, b, b) => b),
+    (@rule $(literal(-0.0)) => literal(0.0)),
 
-    (@rule @f(+(a..., 0, b...)) => @f +(a..., b...)),
-    (@rule @f(or(a..., false, b...)) => @f or(a..., b...)),
-    (@rule @f(or(a..., true, b...)) => @f true),
-    (@rule @f(or($a)) => a),
     (@rule @f(or()) => @f false),
-    (@rule @f(and(a..., true, b...)) => @f and(a..., b...)),
-    (@rule @f(and(a..., false, b...)) => @f false),
-    (@rule @f(and($a)) => a),
-
-
     (@rule @f(and()) => @f true),
-    (@rule @f((+)($a)) => a),
+
     (@rule @f(- +($a, b...)) => @f +(- $a, - +(b...))),
     (@rule @f($a[i...] += 0) => pass(a)),
-    (@rule @f(-0.0) => @f 0.0),
 
     (@rule @f($a[i...] <<$f>>= $($(literal(missing)))) => pass(a)),
     (@rule @f($a[i..., $($(literal(missing))), j...] <<$f>>= $b) => pass(a)),
@@ -141,10 +132,6 @@ add_rules!(@slots a b c d e i j f g m n z [
     (@rule @f($a - $b) => @f $a + - $b),
     (@rule @f(- (- $a)) => a),
 
-    (@rule @f(*(a..., *(b...), c...)) => @f *(a..., b..., c...)),
-    (@rule @f(*(a..., 1, b...)) => @f *(a..., b...)),
-    (@rule @f(*(a..., 0, b...)) => @f 0),
-    (@rule @f((*)($a)) => a),
     (@rule @f((*)(a..., - $b, c...)) => @f -(*(a..., $b, c...))),
     (@rule @f($a[i...] *= 1) => pass(a)),
     (@rule @f(@sieve true $a) => a),
