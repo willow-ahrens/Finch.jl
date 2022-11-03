@@ -44,20 +44,39 @@ isassociative(::typeof(min)) = true
 isassociative(::typeof(max)) = true
 isassociative(::typeof(+)) = true
 isassociative(::typeof(*)) = true
+isassociative(::typeof(or)) = true
+isassociative(::typeof(and)) = true
 
 iscommutative(f) = false
 iscommutative(::typeof(min)) = true
 iscommutative(::typeof(max)) = true
 iscommutative(::typeof(+)) = true
 iscommutative(::typeof(*)) = true
+iscommutative(::typeof(or)) = true
+iscommutative(::typeof(and)) = true
 
 isidempotent(f) = false
 isidempotent(::typeof(min)) = true
 isidempotent(::typeof(max)) = true
 
+#=
+isidentity(f, x) = false
+isidentity(::typeof(+), x) = iszero(x)
+isidentity(::typeof(*), x) = isone(x)
+isidentity(::typeof(min), x) = isinf(x) && x < 0
+isidentity(::typeof(max), x) = isinf(x) && x > 0
+
+isannihilator(f, x) = false
+isannihilator(::typeof(+), x) = isinf(x)
+isannihilator(::typeof(*), x) = iszero(x)
+isidentity(::typeof(min), x) = isinf(x) && x < 0
+isidentity(::typeof(max), x) = isinf(x) && x > 0
+=#
+
 isassociative(f::CINNode) = f.kind === literal && isassociative(f.val)
 iscommutative(f::CINNode) = f.kind === literal && iscommutative(f.val)
 isidempotent(f::CINNode) = f.kind === literal && isidempotent(f.val)
+isabelian(f) = isassociative(f) && iscommutative(f)
 
 add_rules!(@slots a b c d e i j f g m n [
     (@rule call($(literal(>=)), call($(literal(max)), a...), b) => call(or, map(x -> call(x >= b), a)...)),
@@ -75,7 +94,8 @@ add_rules!(@slots a b c d e i j f g m n [
     (@rule call(f::isidempotent, a...) => if isidempotent(value(f)) && !allunique(a)
         call(f, unique(a)...)
     end),
-    (@rule @f(+(a...)) => if count(isliteral, a) >= 2 @f +($(filter(!isliteral, a)...), $(literal(+(getvalue.(filter(isliteral, a))...)))) end),
+    (@rule call(f::isassociative, a..., b::isliteral, c::isliteral, d...) => call(f, a..., f.val(b.val, c.val), d...)),
+    (@rule call(f::isabelian, a..., b::isliteral, c..., d::isliteral, e...) => call(f, a..., f.val(b.val, d.val), c..., e...)),
     (@rule @f(+(a..., 0, b...)) => @f +(a..., b...)),
     (@rule @f(or(a..., false, b...)) => @f or(a..., b...)),
     (@rule @f(or(a..., true, b...)) => @f true),
@@ -108,7 +128,6 @@ add_rules!(@slots a b c d e i j f g m n [
     (@rule @f(- (- $a)) => a),
 
     (@rule @f(*(a..., *(b...), c...)) => @f *(a..., b..., c...)),
-    (@rule @f(*(a...)) => if count(isliteral, a) >= 2 @f(*($(filter(!isliteral, a)...), $(literal(*(getvalue.(filter(isliteral, a))...))))) end),
     (@rule @f(*(a..., 1, b...)) => @f *(a..., b...)),
     (@rule @f(*(a..., 0, b...)) => @f 0),
     (@rule @f((*)($a)) => a),
