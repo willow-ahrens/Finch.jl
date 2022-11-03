@@ -75,12 +75,18 @@ isannihilator(::typeof(max), x) = isinf(x) && x > 0
 isannihilator(::typeof(or), x) = x == true
 isannihilator(::typeof(and), x) = x == false
 
+isinverse(f, g) = false
+isinverse(::typeof(+), ::typeof(-)) = true
+isinverse(::typeof(*), ::typeof(inv)) = true
+
 isassociative(f::CINNode) = f.kind === literal && isassociative(f.val)
 iscommutative(f::CINNode) = f.kind === literal && iscommutative(f.val)
 isidempotent(f::CINNode) = f.kind === literal && isidempotent(f.val)
 isabelian(f) = isassociative(f) && iscommutative(f)
 isidentity(f::CINNode, x::CINNode) = isliteral(f) && isliteral(x) && isidentity(f.val, x.val)
 isannihilator(f::CINNode, x::CINNode) = isliteral(f) && isliteral(x) && isannihilator(f.val, x.val)
+
+isinverse(f::CINNode, x::CINNode) = isliteral(f) && isliteral(x) && isinverse(f.val, x.val)
 
 add_rules!(@slots a b c d e i j f g m n z [
     (@rule call($(literal(>=)), call($(literal(max)), a...), b) => call(or, map(x -> call(x >= b), a)...)),
@@ -118,7 +124,9 @@ add_rules!(@slots a b c d e i j f g m n z [
     (@rule @f(or()) => @f false),
     (@rule @f(and()) => @f true),
 
-    (@rule @f(- +($a, b...)) => @f +(- $a, - +(b...))),
+    (@rule call(f, call(g, a, b...)) => if isinverse(g, f) && isassociative(g)
+        call(g, call(f, a), call(f, call(g, b...)))
+    end),
     (@rule @f($a[i...] += 0) => pass(a)),
 
     (@rule @f($a[i...] <<$f>>= $($(literal(missing)))) => pass(a)),
