@@ -56,6 +56,9 @@ iscommutative(::typeof(*)) = true
 iscommutative(::typeof(or)) = true
 iscommutative(::typeof(and)) = true
 
+isdistributive(f, g) = false
+isdistributive(::typeof(+), ::typeof(*)) = true
+
 isidempotent(f) = false
 isidempotent(::typeof(min)) = true
 isidempotent(::typeof(max)) = true
@@ -89,14 +92,15 @@ getinverse(::typeof(inv)) = *
 isassociative(f::CINNode) = f.kind === literal && isassociative(f.val)
 iscommutative(f::CINNode) = f.kind === literal && iscommutative(f.val)
 isidempotent(f::CINNode) = f.kind === literal && isidempotent(f.val)
+isdistributive(f::CINNode, x::CINNode) = isliteral(f) && isliteral(x) && isdistributive(f.val, x.val)
 isabelian(f) = isassociative(f) && iscommutative(f)
 isidentity(f::CINNode, x::CINNode) = isliteral(f) && isliteral(x) && isidentity(f.val, x.val)
 isannihilator(f::CINNode, x::CINNode) = isliteral(f) && isliteral(x) && isannihilator(f.val, x.val)
 
 isinverse(f::CINNode, x::CINNode) = isliteral(f) && isliteral(x) && isinverse(f.val, x.val)
 
-hasinverse(f::CINNode) = isliteral(f) && (getinverse(f) !== nothing)
-getinverse(f::CINNode) = something(getinverse(f))
+hasinverse(f::CINNode) = isliteral(f) && (getinverse(f.val) !== nothing)
+getinverse(f::CINNode) = something(getinverse(f.val))
 
 add_rules!(@slots a b c d e i j f g m n z [
     (@rule call($(literal(>=)), call($(literal(max)), a...), b) => call(or, map(x -> call(x >= b), a)...)),
@@ -145,12 +149,12 @@ add_rules!(@slots a b c d e i j f g m n z [
         call(g, call(f, a), call(f, call(g, b...)))
     end),
 
+    (@rule call(f::hasinverse, a, b) => call(getinverse(f), a, call(f, b))),
+    (@rule call(f::hasinverse, call(f, a)) => a),
+    (@rule call(f, a..., call(g::hasinverse, b), c...) => if isdistributive(getinverse(g), f.val)
+        call(g, call(f, a..., b, c...))
+    end),
 
-
-    (@rule @f($a - $b) => @f $a + - $b),
-    (@rule @f(- (- $a)) => a),
-
-    (@rule call($(literal(/)), z::iszero, a) => z),
     (@rule @f((*)(a..., - $b, c...)) => @f -(*(a..., $b, c...))),
     (@rule @f(@sieve true $a) => a),
     (@rule @f(@sieve false $a) => pass(getresults(a)...)),
