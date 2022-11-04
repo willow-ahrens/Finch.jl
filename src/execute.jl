@@ -72,8 +72,8 @@ function execute_code(ex, T)
             end)
             $(contain(ctx) do ctx_2
                 prgm = Finalize(ctx = ctx_2)(prgm)
-                :(($(map(getresults(prgm)) do tns
-                    :($(getname(tns)) = $(ctx_2(tns)))
+                :(($(map(getresults(prgm)) do acc
+                    :($(getname(acc)) = $(ctx_2(acc.tns)))
                 end...), ))
             end)
         end

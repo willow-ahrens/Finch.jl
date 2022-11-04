@@ -68,7 +68,7 @@ add_rules!([
     (@rule call(~f, ~a...) => if isliteral(f) && all(isliteral, a) && length(a) >= 1 literal(getvalue(f)(getvalue.(a)...)) end),
 
     #TODO default needs to get defined on all writable chunks
-    (@rule assign(access(~a, writer(~m), ~i...), ~b) => if b == literal(default(a)) pass(a) end),
+    (@rule assign(access(~a, writer(~m), ~i...), ~b) => if b == literal(default(a)) pass(access(~a, writer(~m))) end),
 
     (@rule loop(~i, pass(~a...)) => pass(a...)),
     (@rule chunk(~i, ~a, pass(~b...)) => pass(b...)),
@@ -87,13 +87,15 @@ add_rules!([
             end),
             (@rule pass(~c...) => begin
                 for d in c
-                    props[getname(d)] = literal(default(d)) #TODO is this okay?
+                    props[getname(d.tns)] = literal(default(d)) #TODO is this okay?
                 end
                 pass()
             end),
         ]))(b)
         if b_2 != nothing
-            a_2 = Rewrite(Postwalk(@rule access(c, reader(), i...) => get(props, getname(c), nothing)))(a)
+            a_2 = Rewrite(Postwalk(Chain([
+                @rule access(~c, reader(), ~i...) => get(props, getname(c), nothing),
+            ])))(a)
             with(a_2, b_2)
         end
     end),
@@ -124,10 +126,9 @@ add_rules!([
     end),
     (@rule call(~f, ~a) => if isassociative(f) a end), #TODO
 
-    #TODO we need to modify pass to say whether it needs to update a tensor
-    (@rule assign(access(~a, updater(~f, ~m), ~i...), ~b) => if isidentity(f, b) pass(a) end),
-    (@rule assign(access(~a, ~m, ~i...), $(literal(missing))) => pass(a)),
-    (@rule assign(access(~a, ~m, ~i..., $(literal(missing)), ~j...), ~b) => pass(a)),
+    (@rule assign(access(~a, updater(~f, ~m), ~i...), ~b) => if isidentity(f, b) pass(access(a, updater(f, m))) end),
+    (@rule assign(access(~a, ~m, ~i...), $(literal(missing))) => pass(access(a, m))),
+    (@rule assign(access(~a, ~m, ~i..., $(literal(missing)), ~j...), ~b) => pass(access(a, m))),
     (@rule call($(literal(coalesce)), ~a..., ~b, ~c...) => if isvalue(b) && !(Missing <: b.type) || isliteral(b) && !ismissing(b.val)
         call(coalesce, a..., b)
     end),

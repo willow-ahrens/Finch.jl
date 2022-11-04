@@ -465,7 +465,7 @@ function Finch.getresults(node::CINNode)
     elseif node.kind === multi
         return mapreduce(Finch.getresults, vcat, node.bodies)
     elseif node.kind === access
-        [node.tns]
+        [access(node.tns, node.mode)]
     elseif node.kind === loop
         Finch.getresults(node.body)
     elseif node.kind === chunk
@@ -475,7 +475,7 @@ function Finch.getresults(node::CINNode)
     elseif node.kind === assign
         Finch.getresults(node.lhs)
     elseif node.kind === pass
-        node.tnss
+        return node.tnss
     else
         error("unimplemented")
     end
@@ -486,6 +486,8 @@ function Finch.getname(x::CINNode)
         return x.val
     elseif x.kind === virtual
         return Finch.getname(x.val)
+    elseif x.kind === access
+        return Finch.getname(x.tns)
     else
         error("unimplemented")
     end
