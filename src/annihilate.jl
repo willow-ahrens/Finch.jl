@@ -81,6 +81,7 @@ add_rules!([
     (@rule with(~a, ~b) => begin
         props = Dict()
         b_2 = Postwalk(Chain([
+            #TODO this is a combination of several simplifcations, and things would be more correct if we did them one by one.
             (@rule assign(access(~c, writer($(literal(false))), ~i...), ~d) => if isliteral(d)
                 props[getname(c)] = d
                 pass()
