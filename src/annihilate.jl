@@ -94,7 +94,7 @@ add_rules!([
         ]))(b)
         if b_2 != nothing
             a_2 = Rewrite(Postwalk(Chain([
-                @rule access(~c, reader(), ~i...) => get(props, getname(c), nothing),
+                (@rule access(~c, reader(), ~i...) => get(props, getname(c), nothing)),
             ])))(a)
             with(a_2, b_2)
         end
@@ -138,8 +138,6 @@ add_rules!([
     (@rule call($(literal(ifelse)), ~a, ~b, ~b) => b),
     (@rule $(literal(-0.0)) => literal(0.0)),
 
-    (@rule @f(or()) => @f false),
-    (@rule @f(and()) => @f true),
 
     (@rule call(~f::hasinverse, call(~g::isliteral, ~a, ~b...)) => if g.val == getinverse(f) && isassociative(g)
         call(g, call(f, a), call(f, call(g, b...)))
