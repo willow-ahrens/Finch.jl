@@ -7,7 +7,6 @@ Pkg.resolve()
 
 using Finch
 using BenchmarkTools
-using RewriteTools
 using MatrixDepot
 using SparseArrays
 
