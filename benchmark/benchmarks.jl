@@ -114,7 +114,7 @@ function bfs(edges, source=5)
 
     @assert n == m
     F = @fiber sl(n,p())
-    F' = @fiber sl(n,p())
+    F′ = @fiber sl(n,p())
     @finch F[source] = true
 
     V = @fiber d(n, e(0))
@@ -122,9 +122,9 @@ function bfs(edges, source=5)
 
     level = 2
     while !iszero(F)
-        @finch @loop j k F'[k] = F[j] && edges[j, k] && !(V[k])
+        @finch @loop j k F′[k] = F[j] && edges[j, k] && !(V[k])
         @finch @loop j !V[k] |= F'[k]
-        (F, F') = (F', F)
+        (F, F′) = (F′, F)
     end
     return F
 end
