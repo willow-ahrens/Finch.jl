@@ -77,9 +77,11 @@ function initialize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
     lvl = fbr.lvl
     my_q = ctx.freshen(lvl.ex, :_q)
     if !envreinitialized(fbr.env)
-        push!(ctx.preamble, quote
-            $(lvl.val_alloc) = $Finch.refill!($(lvl.ex).val, $(lvl.D), 0, 4)
-        end)
+        if (mode.kind === writer || mode.kind === updater) && !mode.inplace.val
+            push!(ctx.preamble, quote
+                $(lvl.val_alloc) = $Finch.refill!($(lvl.ex).val, $(lvl.D), 0, 4)
+            end)
+        end
     end
     lvl
 end

@@ -48,7 +48,7 @@ priority(::VirtualScalar) = (3,5)
 comparators(x::VirtualScalar) = (Lexicography(getname(x)),) #TODO this is probably good enough, but let's think about it later.
 
 function initialize!(tns::VirtualScalar, ctx, mode, idxs...)
-    if mode.kind === writer || mode.kind === updater
+    if (mode.kind === writer || mode.kind === updater) && !mode.inplace.val
         push!(ctx.preamble, quote
             $(tns.val) = $(tns.D)
         end)
