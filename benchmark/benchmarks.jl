@@ -123,8 +123,9 @@ function bfs(edges, source=5)
     level = 2
     while F.lvl.pos[2] != 1 #TODO this could be cleaner if we could get early exit working.
         @finch @loop j k _F[k] = F[j] && edges[j, k] && !(V[k])
-        @finch @loop k !V[k] |= _F[k]
+        @finch @loop k !V[k] += ifelse(_F[k], level, 0)
         (F, _F) = (_F, F)
+        level += 1
     end
     return F
 end
