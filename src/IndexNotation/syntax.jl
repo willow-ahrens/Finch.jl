@@ -37,9 +37,9 @@ const instance_nodes = (
     reader = reader_instance,
     writer = writer_instance,
     updater = updater_instance,
-    label = (ex) -> :($label_instance($(QuoteNode(ex)), $value_instance($(esc(ex))))),
+    label = (ex) -> :($label_instance($(QuoteNode(ex)), $index_terminal_instance($(esc(ex))))),
     literal = literal_instance,
-    value = (ex) -> :($value_instance($(esc(ex))))
+    value = (ex) -> :($index_terminal_instance($(esc(ex))))
 )
 
 and() = true
@@ -89,9 +89,38 @@ function _finch_capture(ex, ctx)
         body = _finch_capture(body, ctx)
         return :($(ctx.nodes.sieve)($cond, $body))
     elseif @capture ex (@loop idxs__ body_)
-        idxs = map(idx -> _finch_capture(idx, (ctx..., namify=true)), idxs)
+        preamble = Expr(:block)
+        idxs = map(idxs) do idx
+            if idx isa Symbol
+                push!(preamble.args, :($(esc(idx)) = $(ctx.nodes.name(idx))))
+                esc(idx)
+            else
+                _finch_capture(idx, ctx)
+            end
+        end
         body = _finch_capture(body, ctx)
-        return :($(ctx.nodes.loop)($(idxs...), $body))
+        return quote
+            let
+                $preamble
+                $(ctx.nodes.loop)($(idxs...), $body)
+            end
+        end
+    elseif @capture ex (@chunk idx_ ext_ body_)
+        preamble = Expr(:block)
+        if idx isa Symbol
+            push!(preamble.args, :($(esc(idx)) = $(ctx.nodes.name(idx))))
+            esc(idx)
+        else
+            _finch_capture(idx, ctx)
+        end
+        ext = _finch_capture(idx, ctx)
+        body = _finch_capture(body, ctx)
+        return quote
+            let
+                $preamble
+                $(ctx.nodes.chunk)($idx, $ext, $body)
+            end
+        end
     elseif @capture ex (@chunk idx_ ext_ body_)
         idx = _finch_capture(idx, ctx)
         ext = _finch_capture(ext, (ctx..., namify=false))
@@ -154,8 +183,6 @@ function _finch_capture(ex, ctx)
         return esc(ex)
     elseif ex isa Expr && ex.head == :$ && length(ex.args) == 1
         return esc(ex.args[1])
-    elseif ex isa Symbol && ctx.namify
-        return ctx.nodes.name(ex)
     elseif ex isa Symbol
         return ctx.nodes.label(ex)
     elseif ex isa Expr
