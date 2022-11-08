@@ -121,7 +121,7 @@ function bfs(edges, source=5)
     @finch @loop source V[source] = 1
 
     level = 2
-    for step = 1:20
+    while F.lvl.pos[2] != 1 #TODO this could be cleaner if we could get early exit working.
         @finch @loop j k _F[k] = F[j] && edges[j, k] && !(V[k])
         @finch @loop k !V[k] |= _F[k]
         (F, _F) = (_F, F)
@@ -133,8 +133,6 @@ SUITE["graphs"]["bfs"] = BenchmarkGroup()
 for mtx in ["SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
     SUITE["graphs"]["bfs"][mtx] = @benchmarkable bfs($(fiber(SparseMatrixCSC(matrixdepot(mtx))))) 
 end
-
-bfs((fiber(SparseMatrixCSC(matrixdepot("SNAP/soc-Epinions1"))))) 
 
 #=
 # For sssp we should probably compress priorityQ on both dimensions, since many entires in rowptr will be equal
