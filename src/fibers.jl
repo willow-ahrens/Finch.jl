@@ -207,6 +207,17 @@ function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber)
     end
 end
 
+#=
+function Base.show(io::IO, fbr::VirtualFiber)
+    print(io, getname(fbr))
+end
+function Base.show(io::IO, ext::Extent)
+    print(io, ext.start)
+    print(io, ":")
+    print(io, ext.stop)
+end
+=#
+
 function Base.show(io::IO, mime::MIME"text/plain", fbr::VirtualFiber)
     if get(io, :compact, false)
         print(io, "@virtualfiber($(summary_f_code(fbr.lvl)))")

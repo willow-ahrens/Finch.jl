@@ -64,11 +64,18 @@ isinverse(f::CINNode, x::CINNode) = isliteral(f) && isliteral(x) && isinverse(f.
 hasinverse(f::CINNode) = isliteral(f) && (getinverse(f.val) !== nothing)
 getinverse(f::CINNode) = something(getinverse(f.val))
 
+isinplace(f::CINNode) = f.inplace == literal(false)
+
 add_rules!([
     (@rule call(~f, ~a...) => if isliteral(f) && all(isliteral, a) && length(a) >= 1 literal(getvalue(f)(getvalue.(a)...)) end),
 
     #TODO default needs to get defined on all writable chunks
-    (@rule assign(access(~a, writer(~m), ~i...), ~b) => if b == literal(default(a)) pass(access(~a, m)) end),
+    (@rule assign(access(~a, writer(~m), ~i...), ~b) => if b == literal(default(a)) pass(access(a, writer(m))) end),
+
+    #TODO we probably can just drop modes from pass
+    (@rule pass(~a..., access(~b, writer($(literal(true)))), ~c...) => pass(a..., c...)),
+    (@rule pass(~a..., access(~b, updater(~f, $(literal(true)))), ~c...) => pass(a..., c...)),
+
 
     (@rule loop(~i, pass(~a...)) => pass(a...)),
     (@rule chunk(~i, ~a, pass(~b...)) => pass(b...)),
@@ -99,42 +106,31 @@ add_rules!([
         end
     end),
 
+    (@rule with(~a, assign(access(~b, writer($(literal(false)))), ~c::isliteral)) => begin
+        Rewrite(Postwalk(@rule access(~x, reader()) => if getname(x) === getname(b) c end))(a)
+    end),
+    (@rule with(~a, multi(~b..., assign(access(~c, writer($(literal(false)))), ~d::isliteral), ~e...)) => begin
+        with(Rewrite(Postwalk(@rule access(~x, reader()) => if getname(x) === getname(c) d end))(a), multi(b..., e...))
+    end),
+    (@rule with(~a, assign(access(~b, updater(~f, $(literal(false)))), ~c::isliteral)) => begin
+        Rewrite(Postwalk(@rule access(~x, reader()) => if getname(x) === getname(b) call(f, default(b), c) end))(a)
+    end),
+    (@rule with(~a, multi(~b..., assign(access(~c, updater(~f, $(literal(false)))), ~d::isliteral), ~e...)) => begin
+        with(Rewrite(Postwalk(@rule access(~x, reader()) => if getname(x) === getname(c) call(f, default(c), d) end))(a), multi(b..., e...))
+    end),
+    (@rule with(~a, pass(~b..., access(~c, ~m::isinplace), ~d...)) => begin
+        with(Rewrite(Postwalk(@rule access(~x, reader(), ~i...) => if getname(x) === getname(c) default(c) end))(a), pass(b..., d...))
+    end),
+    (@rule with(~a, multi(~b..., pass(~c..., access(~d, ~m::isinplace), ~e...), ~f...)) => begin
+        with(Rewrite(Postwalk(@rule access(~x, reader(), ~i...) => if getname(x) === getname(d) default(d) end))(a), multi(b..., pass(c..., e...), f...))
+    end),
+
     #=
     #what problems need solving here?
     #Want inplace const prop to be handled correctly
     #Want const prop to be handled correctly
     #Want modes to be cleaner (stop duplicating write and update)
-
-    (@rule with(~a, assign(access(~b, writer($(literal(false)))), ~c)) => begin
-        Rewrite(Postwalk(@rule access(~b, reader()) => ~d))(a)
-    end)
-    (@rule with(~a, pass(~b..., access(~c, ~m, ~d), ~e...)) => begin
-        with(a, Rewrite(Postwalk(@rule access(~c, reader()) => default(c)))(a), pass(b..., e...))
-    end)
     =#
-    (@rule with(~a, ~b) => begin
-        props = Dict()
-        b_2 = Postwalk(Chain([
-            #TODO this is a combination of several simplifcations, and things would be more correct if we did them one by one.
-            (@rule assign(access(~c, writer($(literal(false))), ~i...), ~d) => if isliteral(d)
-                props[getname(c)] = d
-                pass()
-            end),
-            (@rule pass(~c...) => begin
-                for d in c
-                    props[getname(d.tns)] = literal(default(d)) #TODO is this okay?
-                end
-                pass()
-            end),
-        ]))(b)
-        if b_2 != nothing
-            a_2 = Rewrite(Postwalk(Chain([
-                (@rule access(~c, reader(), ~i...) => get(props, getname(c), nothing)),
-            ])))(a)
-            with(a_2, b_2)
-        end
-    end),
-    #(@rule @f(a where @pass(b...)) => a),#can't do this bc produced tensors won't get initialized ?
     (@rule call($(literal(>=)), call($(literal(max)), ~a...), ~b) => call(or, map(x -> call(x >= b), a)...)),
     (@rule call($(literal(>)), call($(literal(max)), ~a...), ~b) => call(or, map(x -> call(x > b), a)...)),
     (@rule call($(literal(<=)), call($(literal(max)), ~a...), ~b) => call(and, map(x -> call(x <= b), a)...)),

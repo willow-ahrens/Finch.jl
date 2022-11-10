@@ -324,14 +324,16 @@ function display_expression(io, mime, node::CINNode)
         end
         display_expression(io, mime, node.args[end])
         print(io, ")")
-    #elseif istree(node)
-    #    print(io, operation(node))
-    #    print(io, "(")
-    #    for arg in arguments(node)[1:end-1]
-    #        print(io, arg)
-    #        print(io, ",")
-    #    end
-    #    print(arguments(node)[end])
+    elseif istree(node)
+        print(io, operation(node))
+        print(io, "(")
+        for arg in arguments(node)[1:end-1]
+            print(io, arg)
+            print(io, ",")
+        end
+        if !isempty(arguments(node))
+            print(arguments(node)[end])
+        end
     else
         error("unimplemented")
     end
