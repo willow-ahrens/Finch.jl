@@ -32,7 +32,7 @@ isvalue(node::CINNode) = node.kind === value
 isvalue(node) = false
 
 #TODO
-isstateful(node::CINNode) = istree(node) && (node !== call || node !== access || node !== reader || node !== writer || node !== updater)
+isstateful(node::CINNode) = istree(node) && !(node.kind in [call, access, reader, writer, updater])
 
 SyntaxInterface.istree(node::CINNode) = node.kind > literal
 SyntaxInterface.arguments(node::CINNode) = node.children

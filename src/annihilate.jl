@@ -78,31 +78,32 @@ add_rules!([
     (@rule multi(pass(~a...)) => pass(a...)),
     (@rule multi() => pass()),
 
+    (@rule loop(~i, assign(access(~a, updater(~f::isidempotent, ~m), ~j...), ~b)) => begin
+        if i ∉ j && getname(i) ∉ getunbound(b) #=TODO this doesn't work because chunkify temporarily drops indicies so we add =# && isliteral(b)
+            assign(access(a, updater(f, m), j...), b)
+        end
+    end),
+    (@rule loop(~i, multi(~a..., assign(access(~b, updater(~f::isidempotent, ~m), ~j...), ~c), ~d...)) => begin
+        if i ∉ j && getname(i) ∉ getunbound(c) #=TODO this doesn't work because chunkify temporarily drops indicies so we add =# && isliteral(c)
+            multi(assign(access(b, updater(f, m), j...), c), loop(i, multi(a..., d...)))
+        end
+    end),
+    (@rule loop(~i, assign(access(~a, writer(~m), ~j...), ~b)) => begin
+        if i ∉ j && getname(i) ∉ getunbound(b) #=TODO this doesn't work because chunkify temporarily drops indicies so we add =# && isliteral(b)
+            assign(access(a, writer(m), j...), b)
+        end
+    end),
+    (@rule loop(~i, multi(~a..., assign(access(~b, writer(~m), ~j...), ~c), ~d...)) => begin
+        if i ∉ j && getname(i) ∉ getunbound(c) #=TODO this doesn't work because chunkify temporarily drops indicies so we add =# && isliteral(c)
+            multi(assign(access(b, writer(m), j...), c), loop(i, multi(a..., d...)))
+        end
+    end),
+
     #=
     #what problems need solving here?
     #Want inplace const prop to be handled correctly
     #Want const prop to be handled correctly
     #Want modes to be cleaner (stop duplicating write and update)
-    (@rule loop(~i, assign(access(~a, updater(~f::isidempotent, ~m), ~j...), ~b)) => begin
-        if i ∉ j && getname(i) ∉ getunbound(b)
-            assign(access(a, updater(f, m), j...), b)
-        end
-    end),
-    (@rule loop(~i, multi(~a..., assign(access(~b, updater(~f::isidempotent, ~m), ~j...), ~c), ~d...)) => begin
-        if i ∉ j && getname(i) ∉ getunbound(c)
-            multi(assign(access(b, updater(f, m), j...), c), loop(i, multi(a..., d...)))
-        end
-    end),
-    (@rule loop(~i, assign(access(~a, writer(~m), ~j...), ~b)) => begin
-        if i ∉ j && getname(i) ∉ getunbound(b)
-            assign(access(a, writer(m), j...), b)
-        end
-    end),
-    (@rule loop(~i, multi(~a..., assign(access(~b, writer(~m), ~j...), ~c), ~d...)) => begin
-        if i ∉ j && getname(i) ∉ getunbound(c)
-            multi(assign(access(b, writer(m), j...), c), loop(i, multi(a..., d...)))
-        end
-    end),
 
     (@rule with(~a, assign(access(~b, writer($(literal(false)))), ~c)) => begin
         Rewrite(Postwalk(@rule access(~b, reader()) => ~d))(a)
