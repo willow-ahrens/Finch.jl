@@ -68,7 +68,7 @@ add_rules!([
     (@rule call(~f, ~a...) => if isliteral(f) && all(isliteral, a) && length(a) >= 1 literal(getvalue(f)(getvalue.(a)...)) end),
 
     #TODO default needs to get defined on all writable chunks
-    (@rule assign(access(~a, writer(~m), ~i...), ~b) => if b == literal(default(a)) pass(access(~a, writer(~m))) end),
+    (@rule assign(access(~a, writer($(literal(false))), ~i...), ~b) => if b == literal(default(a)) pass(access(~a, writer(false))) end),
 
     (@rule loop(~i, pass(~a...)) => pass(a...)),
     (@rule chunk(~i, ~a, pass(~b...)) => pass(b...)),
@@ -78,6 +78,35 @@ add_rules!([
     (@rule multi(pass(~a...)) => pass(a...)),
     (@rule multi() => pass()),
 
+    #=
+    (@rule loop(~i, assign(access(~a, updater(~f::isidempotent, ~m), ~j...), ~b)) => begin
+        if i ∉ j && getname(i) ∉ getunbound(b)
+            assign(access(a, updater(f, m), j...), b)
+        end
+    end),
+    (@rule loop(~i, multi(~a..., assign(access(~b, updater(~f::isidempotent, ~m), ~j...), ~c), ~d...)) => begin
+        if i ∉ j && getname(i) ∉ getunbound(c)
+            multi(assign(access(b, updater(f, m), j...), c), loop(i, multi(a..., d...)))
+        end
+    end),
+    (@rule loop(~i, assign(access(~a, writer(~m), ~j...), ~b)) => begin
+        if i ∉ j && getname(i) ∉ getunbound(b)
+            assign(access(a, writer(m), j...), b)
+        end
+    end),
+    (@rule loop(~i, multi(~a..., assign(access(~b, writer(~m), ~j...), ~c), ~d...)) => begin
+        if i ∉ j && getname(i) ∉ getunbound(c)
+            multi(assign(access(b, writer(m), j...), c), loop(i, multi(a..., d...)))
+        end
+    end),
+
+    (@rule with(~a, assign(access(~b, writer($(literal(false)))), ~c)) => begin
+        Rewrite(Postwalk(@rule access(~b, reader()) => ~d))(a)
+    end)
+    (@rule with(~a, pass(~b..., access(~c, ~m, ~d), ~e...)) => begin
+        with(a, Rewrite(Postwalk(@rule access(~c, reader()) => default(c)))(a), pass(b..., e...))
+    end)
+    =#
     (@rule with(~a, ~b) => begin
         props = Dict()
         b_2 = Postwalk(Chain([
@@ -154,13 +183,15 @@ add_rules!([
     (@rule sieve($(literal(true)), ~a) => a),
     (@rule sieve($(literal(false)), ~a) => pass(getresults(a)...)),
 
-    (@rule chunk(~i, ~a, assign(access(~b, updater(~f::isidempotent, ~m), ~j...), ~d::isliteral)) => if i ∉ j
-        assign(access(b, updater(f, m), j...), d)
+    (@rule chunk(~i, ~a, assign(access(~b, updater(~f::isidempotent, ~m), ~j...), ~c)) => begin
+        if i ∉ j && getname(i) ∉ getunbound(c)
+            assign(access(b, updater(f, m), j...), c)
+        end
     end),
-    (@rule chunk(~i, ~a, multi(~b...,
-        assign(access(~c, updater(~f::isidempotent, ~m), ~j...), ~d::isliteral),
-        ~e...)) => if i ∉ j
-        multi(assign(access(b, updater(f, m), j...), d), chunk(i, a, multi(b..., e...)))
+    (@rule chunk(~i, ~a, multi(~b..., assign(access(~c, updater(~f::isidempotent, ~m), ~j...), ~d), ~e...)) => begin
+        if i ∉ j && getname(i) ∉ getunbound(d)
+            multi(assign(access(b, updater(f, m), j...), d), chunk(i, a, multi(b..., e...)))
+        end
     end),
 
     (@rule chunk(~i, ~a, assign(access(~b, updater($(literal(+)), ~m), ~j...), ~d)) => begin
