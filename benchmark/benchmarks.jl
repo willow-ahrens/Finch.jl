@@ -7,7 +7,6 @@ Pkg.resolve()
 
 using Finch
 using BenchmarkTools
-using RewriteTools
 using MatrixDepot
 using SparseArrays
 
@@ -99,7 +98,7 @@ function pagerank(edges; nsteps=20, damp = 0.85)
 
     for step = 1:nsteps
         @finch @loop i j rank[i] += edges[i, j] * r[j]
-        @finch @loop i r[i] = $beta_score + $damp * rank[i]
+        @finch @loop i r[i] = beta_score + damp * rank[i]
     end
     return r
 end
@@ -115,17 +114,18 @@ function bfs(edges, source=5)
 
     @assert n == m
     F = @fiber sl(n,p())
-    F' = @fiber sl(n,p())
-    @finch F[source] = true
+    _F = @fiber sl(n,p())
+    @finch @loop source F[source] = true
 
     V = @fiber d(n, e(0))
-    @finch V[source] = 1
+    @finch @loop source V[source] = 1
 
     level = 2
-    while !iszero(F)
-        @finch @loop j k F'[k] = F[j] && edges[j, k] && !(V[k])
-        @finch @loop j !V[k] |= F'[k]
-        (F, F') = (F', F)
+    while F.lvl.pos[2] != 1 #TODO this could be cleaner if we could get early exit working.
+        @finch @loop j k _F[k] = F[j] && edges[j, k] && !(V[k])
+        @finch @loop k !V[k] += ifelse(_F[k], level, 0)
+        (F, _F) = (_F, F)
+        level += 1
     end
     return F
 end
