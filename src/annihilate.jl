@@ -68,7 +68,7 @@ add_rules!([
     (@rule call(~f, ~a...) => if isliteral(f) && all(isliteral, a) && length(a) >= 1 literal(getvalue(f)(getvalue.(a)...)) end),
 
     #TODO default needs to get defined on all writable chunks
-    (@rule assign(access(~a, writer($(literal(false))), ~i...), ~b) => if b == literal(default(a)) pass(access(~a, writer(false))) end),
+    (@rule assign(access(~a, writer(~m), ~i...), ~b) => if b == literal(default(a)) pass(access(~a, m)) end),
 
     (@rule loop(~i, pass(~a...)) => pass(a...)),
     (@rule chunk(~i, ~a, pass(~b...)) => pass(b...)),
@@ -82,7 +82,6 @@ add_rules!([
     #what problems need solving here?
     #Want inplace const prop to be handled correctly
     #Want const prop to be handled correctly
-    #Want const prop to be cleaner (stop duplicating write and update)
     #Want modes to be cleaner (stop duplicating write and update)
     (@rule loop(~i, assign(access(~a, updater(~f::isidempotent, ~m), ~j...), ~b)) => begin
         if i ∉ j && getname(i) ∉ getunbound(b)
