@@ -127,8 +127,6 @@ add_rules!([
 
     #=
     #what problems need solving here?
-    #Want inplace const prop to be handled correctly
-    #Want const prop to be handled correctly
     #Want modes to be cleaner (stop duplicating write and update)
     =#
     (@rule call($(literal(>=)), call($(literal(max)), ~a...), ~b) => call(or, map(x -> call(x >= b), a)...)),
