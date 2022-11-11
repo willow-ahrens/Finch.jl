@@ -33,7 +33,7 @@ end
 (ctx::Finch.LowerJulia)(tns::VirtualSimpleSparseVector) = tns.ex
 
 function Finch.initialize!(arr::VirtualSimpleSparseVector{D, Tv}, ctx::Finch.LowerJulia, mode, idxs...) where {D, Tv}
-    if mode.kind === writer || mode.kind === updater
+    if mode.kind === updater
         push!(ctx.preamble, quote
             $(arr.ex).idx = [$(arr.ex).idx[end]]
             $(arr.ex).val = $Tv[]

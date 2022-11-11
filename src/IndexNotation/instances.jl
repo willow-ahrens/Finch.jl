@@ -97,11 +97,6 @@ Base.:(==)(a::LabelInstance{tag}, b::LabelInstance{tag}) where {tag} = a.tns == 
 struct ReaderInstance end
 reader_instance() = ReaderInstance()
 Base.:(==)(a::ReaderInstance, b::ReaderInstance) = true
-struct WriterInstance{InPlace}
-	inplace::InPlace
-end
-@inline writer_instance(inplace) = WriterInstance(inplace)
-Base.:(==)(a::WriterInstance, b::WriterInstance) = a.inplace == b.inplace
 struct UpdaterInstance{Op, InPlace}
 	op::Op
 	inplace::InPlace

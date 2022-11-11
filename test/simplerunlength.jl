@@ -26,7 +26,7 @@ Finch.IndexNotation.isliteral(::VirtualSimpleRunLength) = false
 (ctx::Finch.LowerJulia)(tns::VirtualSimpleRunLength) = tns.ex
 
 function Finch.initialize!(arr::VirtualSimpleRunLength{Tv}, ctx::Finch.LowerJulia, mode, idxs...) where {Tv}
-    if mode.kind === writer || mode.kind === updater
+    if mode.kind === updater
         push!(ctx.preamble, quote 
             $(arr.ex).idx = [$(arr.ex).idx[end]]
             $(arr.ex).val = [$(zero(Tv))]

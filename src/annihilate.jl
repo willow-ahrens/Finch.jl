@@ -72,11 +72,9 @@ add_rules!([
     (@rule call(~f, ~a...) => if isliteral(f) && all(isliteral, a) && length(a) >= 1 literal(getvalue(f)(getvalue.(a)...)) end),
 
     #TODO default needs to get defined on all writable chunks
-    (@rule assign(access(~a, writer(~m), ~i...), ~b) => if b == literal(default(a)) pass(access(a, writer(m))) end),
     (@rule assign(access(~a, updater($(literal(right)), ~m), ~i...), ~b) => if b == literal(default(a)) pass(access(a, updater(right, m))) end),
 
     #TODO we probably can just drop modes from pass
-    (@rule pass(~a..., access(~b, writer($(literal(true)))), ~c...) => pass(a..., c...)),
     (@rule pass(~a..., access(~b, updater(~f, $(literal(true)))), ~c...) => pass(a..., c...)),
 
 
@@ -98,23 +96,7 @@ add_rules!([
             multi(assign(access(b, updater(f, m), j...), c), loop(i, multi(a..., d...)))
         end
     end),
-    (@rule loop(~i, assign(access(~a, writer(~m), ~j...), ~b)) => begin
-        if i ∉ j && getname(i) ∉ getunbound(b) #=TODO this doesn't work because chunkify temporarily drops indicies so we add =# && isliteral(b)
-            assign(access(a, writer(m), j...), b)
-        end
-    end),
-    (@rule loop(~i, multi(~a..., assign(access(~b, writer(~m), ~j...), ~c), ~d...)) => begin
-        if i ∉ j && getname(i) ∉ getunbound(c) #=TODO this doesn't work because chunkify temporarily drops indicies so we add =# && isliteral(c)
-            multi(assign(access(b, writer(m), j...), c), loop(i, multi(a..., d...)))
-        end
-    end),
 
-    (@rule with(~a, assign(access(~b, writer($(literal(false)))), ~c::isliteral)) => begin
-        Rewrite(Postwalk(@rule access(~x, reader()) => if getname(x) === getname(b) c end))(a)
-    end),
-    (@rule with(~a, multi(~b..., assign(access(~c, writer($(literal(false)))), ~d::isliteral), ~e...)) => begin
-        with(Rewrite(Postwalk(@rule access(~x, reader()) => if getname(x) === getname(c) d end))(a), multi(b..., e...))
-    end),
     (@rule with(~a, assign(access(~b, updater(~f, $(literal(false)))), ~c::isliteral)) => begin
         Rewrite(Postwalk(@rule access(~x, reader()) => if getname(x) === getname(b) call(f, default(b), c) end))(a)
     end),

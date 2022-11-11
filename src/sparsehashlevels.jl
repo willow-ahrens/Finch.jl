@@ -160,7 +160,7 @@ function initialize_level!(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx::Lower
     lvl = fbr.lvl
     my_p = ctx.freshen(lvl.ex, :_p)
 
-    if mode.kind in [writer, updater] && !getvalue(mode.inplace)
+    if mode.kind === updater && !getvalue(mode.inplace)
         push!(ctx.preamble, quote
             $(lvl.idx_alloc) = 0
             empty!($(lvl.ex).tbl)

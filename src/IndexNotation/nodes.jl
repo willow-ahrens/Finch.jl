@@ -15,9 +15,8 @@ tab = "  "
     assign=13
     pass=14
     reader=15
-    writer=16
-    updater=17
-    lifetime=18
+    updater=16
+    lifetime=17
 end
 
 struct CINNode
@@ -32,7 +31,7 @@ isvalue(node::CINNode) = node.kind === value
 isvalue(node) = false
 
 #TODO
-isstateful(node::CINNode) = istree(node) && !(node.kind in [call, access, reader, writer, updater])
+isstateful(node::CINNode) = istree(node) && !(node.kind in [call, access, reader, updater])
 
 SyntaxInterface.istree(node::CINNode) = node.kind > literal
 SyntaxInterface.arguments(node::CINNode) = node.children
@@ -129,12 +128,6 @@ function CINNode(kind::CINHead, args::Vector)
         else
             error("wrong number of arguments to reader(...)")
         end
-    elseif kind === writer
-        if length(args) == 1
-            return CINNode(writer, nothing, nothing, args)
-        else
-            error("wrong number of arguments to writer(...)")
-        end
     elseif kind === updater
         if length(args) == 2
             return CINNode(updater, nothing, nothing, args)
@@ -165,12 +158,6 @@ function Base.getproperty(node::CINNode, sym::Symbol)
         end
     elseif node.kind === reader
         error("type CINNode(reader, ...) has no property $sym")
-    elseif node.kind === writer
-        if sym === :inplace
-            return node.children[1]
-        else
-            error("type CINNode(writer, ...) has no property $sym")
-        end
     elseif node.kind === updater
         if sym === :op
             return node.children[1]
