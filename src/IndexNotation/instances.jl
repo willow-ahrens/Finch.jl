@@ -15,9 +15,9 @@ Base.:(==)(a::PassInstance, b::PassInstance) = Set([a.tnss...]) == Set([b.tnss..
 
 @inline pass_instance(tnss...) = PassInstance(tnss)
 
-struct NameInstance{name} <: IndexTerminalInstance end
+struct IndexInstance{name} <: IndexTerminalInstance end
 
-@inline name_instance(name) = NameInstance{name}()
+@inline index_instance(name) = IndexInstance{name}()
 
 struct ProtocolInstance{Idx, Val} <: IndexExpressionInstance
 	idx::Idx
@@ -68,7 +68,6 @@ struct AssignInstance{Lhs, Op, Rhs} <: IndexStatementInstance
 end
 Base.:(==)(a::AssignInstance, b::AssignInstance) = a.lhs == b.lhs && a.op == b.op && a.rhs == b.rhs
 
-@inline assign_instance(lhs, rhs) = AssignInstance(lhs, nothing, rhs)
 @inline assign_instance(lhs, op, rhs) = AssignInstance(lhs, op, rhs)
 
 struct CallInstance{Op, Args<:Tuple} <: IndexExpressionInstance
@@ -99,12 +98,11 @@ Base.:(==)(a::LabelInstance{tag}, b::LabelInstance{tag}) where {tag} = a.tns == 
 struct ReaderInstance end
 reader_instance() = ReaderInstance()
 Base.:(==)(a::ReaderInstance, b::ReaderInstance) = true
-struct WriterInstance end
-writer_instance() = WriterInstance()
-Base.:(==)(a::WriterInstance, b::WriterInstance) = true
-struct UpdaterInstance end
-updater_instance() = UpdaterInstance()
-Base.:(==)(a::UpdaterInstance, b::UpdaterInstance) = true
+struct UpdaterInstance{InPlace}
+	inplace::InPlace
+end
+@inline updater_instance(inplace) = UpdaterInstance(inplace)
+Base.:(==)(a::UpdaterInstance, b::UpdaterInstance) = a.inplace == b.inplace
 
 struct ValueInstance{arg} end
 

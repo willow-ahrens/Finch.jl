@@ -166,7 +166,7 @@ end
 function (ctx::LowerJulia)(root::IndexNode, ::DefaultStyle)
     if root.kind === value
         return root.val
-    elseif root.kind === name
+    elseif root.kind === index
         @assert haskey(ctx.bindings, getname(root)) "variable $(getname(root)) unbound"
         return ctx(ctx.bindings[getname(root)]) #This unwraps indices that are virtuals. Arguably these virtuals should be precomputed, but whatevs.
     elseif root.kind === literal
@@ -207,7 +207,7 @@ function (ctx::LowerJulia)(root::IndexNode, ::DefaultStyle)
         if root.tns isa IndexNode && root.tns.kind === virtual
             return lowerjulia_access(ctx, root, root.tns.val)
         else
-            tns = ctx(tns)
+            tns = ctx(root.tns)
             idxs = map(ctx, root.idxs)
             return :($(ctx(tns))[$(idxs...)])
         end
@@ -230,11 +230,11 @@ function (ctx::LowerJulia)(root::IndexNode, ::DefaultStyle)
             :($(ctx(root.op))($(map(ctx, root.args)...)))
         end
     elseif root.kind === loop
-        return ctx(chunk(
-            idx = root.idx,
-            ext = resolvedim(ctx.dims[getname(root.idx)]),
-            body = root.body)
-        )
+        return ctx(simplify(chunk(
+            root.idx,
+            resolvedim(ctx.dims[getname(root.idx)]),
+            root.body)
+        ))
     elseif root.kind === chunk
         idx_sym = ctx.freshen(getname(root.idx))
         if simplify((@f $(getlower(root.ext)) >= 1)) == (@f true)  && simplify((@f $(getupper(root.ext)) <= 1)) == (@f true)
@@ -273,10 +273,11 @@ function (ctx::LowerJulia)(root::IndexNode, ::DefaultStyle)
     elseif root.kind === virtual
         ctx(root.val)
     elseif root.kind === assign
-        if root.op == literal(nothing)
-            rhs = ctx(root.rhs)
+        if root.lhs.kind === access
+            @assert root.lhs.mode.kind == updater
+            rhs = ctx(simplify(call(root.op, root.lhs, root.rhs)))
         else
-            rhs = ctx(call(root.op, root.lhs, root.rhs))
+            rhs = ctx(root.rhs)
         end
         lhs = ctx(root.lhs)
         return :($lhs = $rhs)

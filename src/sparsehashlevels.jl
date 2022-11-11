@@ -159,14 +159,17 @@ function initialize_level!(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx::Lower
     @assert isempty(envdeferred(fbr.env))
     lvl = fbr.lvl
     my_p = ctx.freshen(lvl.ex, :_p)
-    push!(ctx.preamble, quote
-        $(lvl.idx_alloc) = 0
-        empty!($(lvl.ex).tbl)
-        empty!($(lvl.ex).srt)
-        $(lvl.pos_alloc) = $Finch.refill!($(lvl.ex).pos, 0, 0, 5)
-        $(lvl.ex).pos[1] = 1
-        $(lvl.P) = 0
-    end)
+
+    if mode.kind === updater && !getvalue(mode.inplace)
+        push!(ctx.preamble, quote
+            $(lvl.idx_alloc) = 0
+            empty!($(lvl.ex).tbl)
+            empty!($(lvl.ex).srt)
+            $(lvl.pos_alloc) = $Finch.refill!($(lvl.ex).pos, 0, 0, 5)
+            $(lvl.ex).pos[1] = 1
+            $(lvl.P) = 0
+        end)
+    end
     lvl.lvl = initialize_level!(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^lvl.N)(fbr.env)), ctx, mode)
     return lvl
 end

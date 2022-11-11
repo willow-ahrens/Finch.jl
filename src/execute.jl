@@ -72,8 +72,8 @@ function execute_code(ex, T)
             end)
             $(contain(ctx) do ctx_2
                 prgm = Finalize(ctx = ctx_2)(prgm)
-                :(($(map(getresults(prgm)) do tns
-                    :($(getname(tns)) = $(ctx_2(tns)))
+                :(($(map(getresults(prgm)) do acc
+                    :($(getname(acc)) = $(ctx_2(acc.tns)))
                 end...), ))
             end)
         end
@@ -95,7 +95,7 @@ end
 
 macro finch(ex)
     results = Set()
-    prgm = IndexNotation.capture_finch_instance(ex, results=results)
+    prgm = IndexNotation.finch_parse_instance(ex, results)
     thunk = quote
         res = $execute($prgm)
     end
@@ -111,7 +111,7 @@ macro finch(ex)
 end
 
 macro finch_code(ex)
-    prgm = IndexNotation.capture_finch_instance(ex)
+    prgm = IndexNotation.finch_parse_instance(ex)
     return quote
         $execute_code(:ex, typeof($prgm))
     end

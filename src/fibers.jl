@@ -68,7 +68,7 @@ Initialize the virtual fiber to it's default value in the context `ctx` with
 access mode `mode`. Return the new fiber object.
 """
 function initialize!(fbr::VirtualFiber, ctx::LowerJulia, mode, idxs...)
-    if mode.kind === writer || mode.kind === updater
+    if mode.kind === updater
         fbr = VirtualFiber(initialize_level!(fbr, ctx, mode), fbr.env)
         assemble!(fbr, ctx, mode)
     end
@@ -94,7 +94,7 @@ Finalize the virtual fiber in the context `ctx` with access mode `mode`. Return
 the new fiber object.
 """
 function finalize!(fbr::VirtualFiber, ctx::LowerJulia, mode, idxs...)
-    if mode.kind === writer || mode.kind === updater
+    if mode.kind === updater
         return VirtualFiber(finalize_level!(fbr, ctx, mode), fbr.env)
     else
         return fbr
@@ -126,7 +126,7 @@ end
 function select_access(node, ctx::Finch.SelectVisitor, tns::VirtualFiber)
     if !isempty(node.idxs)
         if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
-            var = name(ctx.ctx.freshen(:s))
+            var = index(ctx.ctx.freshen(:s))
             ctx.idxs[var] = node.idxs[1]
             return access(node.tns, node.mode, var, node.idxs[2:end]...)
         end
@@ -148,7 +148,7 @@ end
 
 get_furl_root(idx) = nothing
 function get_furl_root(idx::IndexNode)
-    if idx.kind === name
+    if idx.kind === index
         return idx
     elseif idx.kind === access && idx.tns.kind === virtual
         get_furl_root_access(idx, idx.tns.val)
@@ -163,7 +163,7 @@ get_furl_root_access(idx, tns) = nothing
 
 refurl(tns, ctx, mode, idxs...) = access(tns, mode, idxs...)
 function exfurl(tns, ctx, mode, idx::IndexNode)
-    if idx.kind === name
+    if idx.kind === index
         return tns
     elseif idx.kind === access && idx.tns.kind === virtual
         exfurl_access(tns, ctx, mode, idx, idx.tns.val)
@@ -206,6 +206,17 @@ function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber)
         display_fiber(io, mime, fbr)
     end
 end
+
+#=
+function Base.show(io::IO, fbr::VirtualFiber)
+    print(io, getname(fbr))
+end
+function Base.show(io::IO, ext::Extent)
+    print(io, ext.start)
+    print(io, ":")
+    print(io, ext.stop)
+end
+=#
 
 function Base.show(io::IO, mime::MIME"text/plain", fbr::VirtualFiber)
     if get(io, :compact, false)

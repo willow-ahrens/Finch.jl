@@ -31,7 +31,7 @@ end
 (ctx::Finch.LowerJulia)(tns::VirtualSimpleJumpVector) = tns.ex
 
 function Finch.initialize!(arr::VirtualSimpleJumpVector{D, Tv}, ctx::Finch.LowerJulia, mode, idxs...) where {D, Tv}
-    if mode.kind === writer || mode.kind === updater
+    if mode.kind === updater
         push!(ctx.preamble, quote
             $(arr.ex).idx = [$(arr.ex).idx[end]]
             $(arr.ex).val = $Tv[]

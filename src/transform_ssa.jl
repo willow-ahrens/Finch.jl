@@ -68,7 +68,7 @@ end
 =#
 
 function (ctx::TransformSSA)(node::IndexNode)
-    if node.kind === name
+    if node.kind === index
         resolvename!(node, ctx)
     elseif node.kind === with
         contain(ctx) do ctx_2

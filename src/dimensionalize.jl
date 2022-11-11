@@ -102,7 +102,7 @@ function (ctx::DeclareDimensions)(node::Dimensionalize, dim)
     ctx(node.body, dim)
 end
 function (ctx::DeclareDimensions)(node::IndexNode, dim)
-    if node.kind === name
+    if node.kind === index
         ctx.dims[getname(node)] = resultdim(get(ctx.dims, getname(node), nodim), dim)
         return node
     elseif node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
@@ -121,7 +121,7 @@ function (ctx::DeclareDimensions)(node::IndexNode, dim)
     end
 end
 function (ctx::InferDimensions)(node::IndexNode)
-    if node.kind === name
+    if node.kind === index
         return (node, ctx.dims[getname(node)])
     elseif node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
         return infer_dimensions_access(node, ctx, node.tns.val)

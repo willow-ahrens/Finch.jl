@@ -14,12 +14,11 @@ const program_nodes = (
     access = access,
     protocol = protocol,
     reader = reader,
-    writer = writer,
     updater = updater,
-    name = name,
-    label = (ex) -> :($(esc(:dollar))(index_terminal($(esc(ex))))),
+    index = index,
+    label = (ex) -> :(index_terminal($(esc(ex)))),
     literal = literal,
-    value = (ex) -> :($(esc(:dollar))(index_terminal($(esc(ex))))),
+    value = (ex) -> :(index_terminal($(esc(ex)))),
 )
 
 const instance_nodes = (
@@ -33,13 +32,12 @@ const instance_nodes = (
     call = call_instance,
     access = access_instance,
     protocol = protocol_instance,
-    name = name_instance,
+    index = index_instance,
     reader = reader_instance,
-    writer = writer_instance,
     updater = updater_instance,
-    label = (ex) -> :($label_instance($(QuoteNode(ex)), $value_instance($(esc(ex))))),
+    label = (ex) -> :($label_instance($(QuoteNode(ex)), $index_terminal_instance($(esc(ex))))),
     literal = literal_instance,
-    value = (ex) -> :($value_instance($(esc(ex))))
+    value = (ex) -> :($index_terminal_instance($(esc(ex))))
 )
 
 and() = true
@@ -48,141 +46,153 @@ and(x, y, tail...) = x && and(y, tail...)
 or() = false
 or(x) = x
 or(x, y, tail...) = x || or(y, tail...)
+right(l, m, r...) = right(m, r)
+right(l, r) = r
 
-function _finch_capture(ex, ctx)
+function finch_parse(ex, nodes=program_nodes, results=Set())
     #extra sugar
     if ex isa Expr && ex.head == :macrocall && length(ex.args) >= 3 && ex.args[1] == Symbol("@∀")
         idxs = ex.args[3:end-1]; body = ex.args[end]
-        return _finch_capture(:(@loop($(idxs...), $body)), ctx)
+        return finch_parse(:(@loop($(idxs...), $body)), nodes, results)
     elseif ex isa Expr && ex.head == :block
         bodies = filter(arg->!(arg isa LineNumberNode), ex.args)
         if length(bodies) == 1
-            return _finch_capture(:($(bodies[1])), ctx)
+            return finch_parse(:($(bodies[1])), nodes, results)
         else
-            return _finch_capture(:(@multi($(bodies...),)), ctx)
+            return finch_parse(:(@multi($(bodies...),)), nodes, results)
         end
     elseif ex isa Expr && haskey(incs, ex.head)
         (lhs, rhs) = ex.args; op = incs[ex.head]
-        return _finch_capture(:($lhs << $op >>= $rhs), ctx)
+        return finch_parse(:($lhs << $op >>= $rhs), nodes, results)
     elseif ex isa Expr && ex.head == :comparison
         @assert length(ex.args) >= 3
         (a, cmp, b, tail...) = ex.args
         ex = :($cmp($a, $b))
         if isempty(tail)
-            return _finch_capture(:($cmp($a, $b)), ctx)
+            return finch_parse(:($cmp($a, $b)), nodes, results)
         else
-            return _finch_capture(:($cmp($a, $b) && $(Expr(:comparison, b, tail...))), ctx)
+            return finch_parse(:($cmp($a, $b) && $(Expr(:comparison, b, tail...))), nodes, results)
         end
     elseif ex isa Expr && ex.head == :&&
         (a, b) = ex.args
-        return _finch_capture(:($and($a, $b)), ctx)
+        return finch_parse(:($and($a, $b)), nodes, results)
     elseif ex isa Expr && ex.head == :||
         (a, b) = ex.args
-        return _finch_capture(:($or($a, $b)), ctx)
+        return finch_parse(:($or($a, $b)), nodes, results)
     end
 
     if @capture ex (@pass(args__))
-        args = map(arg -> _finch_capture(arg, ctx), args)
-        return :($(ctx.nodes.pass)($(args...)))
+        args = map(arg -> finch_parse(arg, nodes, results), args)
+        return :($(nodes.pass)($(args...)))
     elseif @capture ex (@sieve cond_ body_)
-        cond = _finch_capture(cond, ctx)
-        body = _finch_capture(body, ctx)
-        return :($(ctx.nodes.sieve)($cond, $body))
+        cond = finch_parse(cond, nodes, results)
+        body = finch_parse(body, nodes, results)
+        return :($(nodes.sieve)($cond, $body))
     elseif @capture ex (@loop idxs__ body_)
         preamble = Expr(:block)
-        for idx in idxs
+        idxs = map(idxs) do idx
             if idx isa Symbol
-                push!(preamble.args, :($(esc(idx)) = $(ctx.nodes.name(idx))))
+                push!(preamble.args, :($(esc(idx)) = $(nodes.index(idx))))
+                esc(idx)
+            else
+                finch_parse(idx, nodes, results)
             end
         end
-        idxs = map(idx -> _finch_capture(idx, ctx), idxs)
-        body = _finch_capture(body, ctx)
+        body = finch_parse(body, nodes, results)
         return quote
             let
                 $preamble
-                $(ctx.nodes.loop)($(idxs...), $body)
+                $(nodes.loop)($(idxs...), $body)
             end
         end
     elseif @capture ex (@chunk idx_ ext_ body_)
-        preamble = quote end
+        preamble = Expr(:block)
         if idx isa Symbol
-            preamble = :($(esc(idx)) = $(ctx.nodes.name(idx)))
+            push!(preamble.args, :($(esc(idx)) = $(nodes.index(idx))))
+            esc(idx)
+        else
+            finch_parse(idx, nodes, results)
         end
-        idx = _finch_capture(idx, ctx)
-        ext = _finch_capture(ext, ctx)
-        body = _finch_capture(body, ctx)
+        ext = finch_parse(idx, nodes, results)
+        body = finch_parse(body, nodes, results)
         return quote
             let
                 $preamble
-                $(ctx.nodes.chunk)($idx, $ext, $body)
+                $(nodes.chunk)($idx, $ext, $body)
             end
         end
+    elseif @capture ex (@chunk idx_ ext_ body_)
+        idx = finch_parse(idx, nodes, results)
+        ext = finch_parse(ext, nodes, results)
+        body = finch_parse(body, nodes, results)
+        return :($(nodes.chunk)($idx, $ext, $body))
     elseif @capture ex (cons_ where prod_)
-        cons = _finch_capture(cons, ctx)
-        prod = _finch_capture(prod, (ctx..., results=Set()))
-        return :($(ctx.nodes.with)($cons, $prod))
+        cons = finch_parse(cons, nodes, results)
+        prod = finch_parse(prod, nodes)
+        return :($(nodes.with)($cons, $prod))
     elseif @capture ex (@multi bodies__)
-        bodies = map(arg -> _finch_capture(arg, ctx), bodies)
-        return :($(ctx.nodes.multi)($(bodies...)))
-    elseif @capture ex (lhs_ = rhs_)
-        lhs = _finch_capture(lhs, (ctx..., mode=ctx.nodes.writer))
-        rhs = _finch_capture(rhs, ctx)
-        return :($(ctx.nodes.assign)($lhs, $(ctx.nodes.literal(nothing)), $rhs))
-    elseif @capture ex (lhs_ << op_ >>= rhs_)
-        lhs = _finch_capture(lhs, (ctx..., mode=ctx.nodes.updater))
-        rhs = _finch_capture(rhs, ctx)
-        op = _finch_capture(op, ctx)
-        return :($(ctx.nodes.assign)($lhs, $op, $rhs))
-    elseif @capture ex (op_(args__))
-        op = _finch_capture(op, (ctx..., mode=ctx.nodes.reader))
-        args = map(arg->_finch_capture(arg, (ctx..., mode=ctx.nodes.reader)), args)
-        return :($(ctx.nodes.call)($op, $(args...)))
+        bodies = map(arg -> finch_parse(arg, nodes, results), bodies)
+        return :($(nodes.multi)($(bodies...)))
     elseif @capture ex (tns_[idxs__])
-        if ctx.mode != ctx.nodes.reader && tns isa Symbol
-            push!(ctx.results, tns)
-        end
-        tns = _finch_capture(tns, (ctx..., mode=ctx.nodes.reader))
-        idxs = map(idx->_finch_capture(idx, (ctx..., mode=ctx.nodes.reader)), idxs)
-        return :($(ctx.nodes.access)($tns, $(ctx.mode()), $(idxs...)))
+        tns = finch_parse(tns, nodes, results)
+        idxs = map(idx->finch_parse(idx, nodes, results), idxs)
+        mode = :($(nodes.reader)())
+        return :($(nodes.access)($tns, $mode, $(idxs...)))
+    elseif @capture ex (tns_[idxs__] = rhs_)
+        return finch_parse(:($tns[$(idxs...)] << $right >>= $rhs), nodes, results)
+    elseif @capture ex (!tns_[idxs__] = rhs_)
+        return finch_parse(:(!$tns[$(idxs...)] << $right >>= $rhs), nodes, results)
+    elseif @capture ex (tns_[idxs__] <<op_>>= rhs_)
+        tns isa Symbol && push!(results, tns)
+        tns = finch_parse(tns, nodes, results)
+        op = finch_parse(op, nodes, results)
+        mode = :($(nodes.updater)($(nodes.literal(false))))
+        idxs = map(idx->finch_parse(idx, nodes, results), idxs)
+        rhs = finch_parse(rhs, nodes, results)
+        lhs = :($(nodes.access)($tns, $mode, $(idxs...)))
+        return :($(nodes.assign)($lhs, $op, $rhs))
+    elseif @capture ex (!tns_[idxs__] <<op_>>= rhs_)
+        tns isa Symbol && push!(results, tns)
+        tns = finch_parse(tns, nodes, results)
+        op = finch_parse(op, nodes, results)
+        mode = :($(nodes.updater)($(nodes.literal(true))))
+        idxs = map(idx->finch_parse(idx, nodes, results), idxs)
+        rhs = finch_parse(rhs, nodes, results)
+        lhs = :($(nodes.access)($tns, $mode, $(idxs...)))
+        return :($(nodes.assign)($lhs, $op, $rhs))
+    elseif @capture ex (op_(args__))
+        op = finch_parse(op, nodes, results)
+        args = map(arg->finch_parse(arg, nodes, results), args)
+        return :($(nodes.call)($op, $(args...)))
     elseif @capture ex (idx_::proto_)
-        idx = _finch_capture(idx, ctx)
-        return :($(ctx.nodes.protocol)($idx, $(esc(proto))))
+        idx = finch_parse(idx, nodes, results)
+        return :($(nodes.protocol)($idx, $(esc(proto))))
     elseif ex isa Expr && ex.head == :...
         return esc(ex)
     elseif ex isa Expr && ex.head == :$ && length(ex.args) == 1
         return esc(ex.args[1])
     elseif ex isa Symbol
-        return ctx.nodes.label(ex)
+        return nodes.label(ex)
     elseif ex isa Expr
-        return ctx.nodes.value(ex)
+        return nodes.value(ex)
     elseif ex isa QuoteNode
-        return ctx.nodes.literal(ex.value)
+        return nodes.literal(ex.value)
     else
-        return ctx.nodes.literal(ex)
+        return nodes.literal(ex)
     end
 end
 
-capture_finch_program(ex; results=Set()) = _finch_capture(ex, (nodes=program_nodes, mode = program_nodes.reader, results = results))
-capture_finch_instance(ex; results=Set()) = _finch_capture(ex, (nodes=instance_nodes, mode = instance_nodes.reader, results = results))
+finch_parse_program(ex, results=Set()) = finch_parse(ex, program_nodes, results)
+finch_parse_instance(ex, results=Set()) = finch_parse(ex, instance_nodes, results)
 
 macro finch_program(ex)
-    return quote
-        let $(esc(:dollar))=identity
-            $(capture_finch_program(ex))
-        end
-    end
+    return finch_parse_program(ex)
 end
 
 macro f(ex)
-    return quote
-        let $(esc(:dollar))=identity
-            $(capture_finch_program(ex))
-        end
-    end
+    return finch_parse_program(ex)
 end
 
 macro finch_program_instance(ex)
-    return quote
-        $(capture_finch_instance(ex))
-    end
+    return finch_parse_instance(ex)
 end
