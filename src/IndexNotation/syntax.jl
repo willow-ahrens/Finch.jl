@@ -83,16 +83,16 @@ function finch_parse(ex, nodes=program_nodes, results=Set())
 
     if @capture ex (@pass(args__))
         args = map(arg -> finch_parse(arg, nodes, results), args)
-        return :($(nodes, results.nodes.pass)($(args...)))
+        return :($(nodes.pass)($(args...)))
     elseif @capture ex (@sieve cond_ body_)
         cond = finch_parse(cond, nodes, results)
         body = finch_parse(body, nodes, results)
-        return :($(nodes, results.nodes.sieve)($cond, $body))
+        return :($(nodes.sieve)($cond, $body))
     elseif @capture ex (@loop idxs__ body_)
         preamble = Expr(:block)
         idxs = map(idxs) do idx
             if idx isa Symbol
-                push!(preamble.args, :($(esc(idx)) = $(nodes, results.nodes.index(idx))))
+                push!(preamble.args, :($(esc(idx)) = $(nodes.index(idx))))
                 esc(idx)
             else
                 finch_parse(idx, nodes, results)
@@ -102,13 +102,13 @@ function finch_parse(ex, nodes=program_nodes, results=Set())
         return quote
             let
                 $preamble
-                $(nodes, results.nodes.loop)($(idxs...), $body)
+                $(nodes.loop)($(idxs...), $body)
             end
         end
     elseif @capture ex (@chunk idx_ ext_ body_)
         preamble = Expr(:block)
         if idx isa Symbol
-            push!(preamble.args, :($(esc(idx)) = $(nodes, results.nodes.index(idx))))
+            push!(preamble.args, :($(esc(idx)) = $(nodes.index(idx))))
             esc(idx)
         else
             finch_parse(idx, nodes, results)
@@ -118,67 +118,67 @@ function finch_parse(ex, nodes=program_nodes, results=Set())
         return quote
             let
                 $preamble
-                $(nodes, results.nodes.chunk)($idx, $ext, $body)
+                $(nodes.chunk)($idx, $ext, $body)
             end
         end
     elseif @capture ex (@chunk idx_ ext_ body_)
         idx = finch_parse(idx, nodes, results)
         ext = finch_parse(ext, nodes, results)
         body = finch_parse(body, nodes, results)
-        return :($(nodes, results.nodes.chunk)($idx, $ext, $body))
+        return :($(nodes.chunk)($idx, $ext, $body))
     elseif @capture ex (cons_ where prod_)
         cons = finch_parse(cons, nodes, results)
         prod = finch_parse(prod, nodes)
-        return :($(nodes, results.nodes.with)($cons, $prod))
+        return :($(nodes.with)($cons, $prod))
     elseif @capture ex (@multi bodies__)
         bodies = map(arg -> finch_parse(arg, nodes, results), bodies)
-        return :($(nodes, results.nodes.multi)($(bodies...)))
+        return :($(nodes.multi)($(bodies...)))
     elseif @capture ex (tns_[idxs__])
         tns = finch_parse(tns, nodes, results)
         idxs = map(idx->finch_parse(idx, nodes, results), idxs)
-        mode = :($(nodes, results.nodes.reader)())
-        return :($(nodes, results.nodes.access)($tns, $mode, $(idxs...)))
+        mode = :($(nodes.reader)())
+        return :($(nodes.access)($tns, $mode, $(idxs...)))
     elseif @capture ex (tns_[idxs__] = rhs_)
         return finch_parse(:($tns[$(idxs...)] << $right >>= $rhs), nodes, results)
     elseif @capture ex (!tns_[idxs__] = rhs_)
         return finch_parse(:(!$tns[$(idxs...)] << $right >>= $rhs), nodes, results)
     elseif @capture ex (tns_[idxs__] <<op_>>= rhs_)
-        tns isa Symbol && push!(nodes, results.results, tns)
+        tns isa Symbol && push!(results, tns)
         tns = finch_parse(tns, nodes, results)
         op = finch_parse(op, nodes, results)
-        mode = :($(nodes, results.nodes.updater)($(ctx.nodes.literal(false))))
+        mode = :($(nodes.updater)($(nodes.literal(false))))
         idxs = map(idx->finch_parse(idx, nodes, results), idxs)
         rhs = finch_parse(rhs, nodes, results)
-        lhs = :($(nodes, results.nodes.access)($tns, $mode, $(idxs...)))
-        return :($(nodes, results.nodes.assign)($lhs, $op, $rhs))
+        lhs = :($(nodes.access)($tns, $mode, $(idxs...)))
+        return :($(nodes.assign)($lhs, $op, $rhs))
     elseif @capture ex (!tns_[idxs__] <<op_>>= rhs_)
-        tns isa Symbol && push!(nodes, results.results, tns)
+        tns isa Symbol && push!(results, tns)
         tns = finch_parse(tns, nodes, results)
         op = finch_parse(op, nodes, results)
-        mode = :($(nodes, results.nodes.updater)($(ctx.nodes.literal(true))))
+        mode = :($(nodes.updater)($(nodes.literal(true))))
         idxs = map(idx->finch_parse(idx, nodes, results), idxs)
         rhs = finch_parse(rhs, nodes, results)
-        lhs = :($(nodes, results.nodes.access)($tns, $mode, $(idxs...)))
-        return :($(nodes, results.nodes.assign)($lhs, $op, $rhs))
+        lhs = :($(nodes.access)($tns, $mode, $(idxs...)))
+        return :($(nodes.assign)($lhs, $op, $rhs))
     elseif @capture ex (op_(args__))
         op = finch_parse(op, nodes, results)
         args = map(arg->finch_parse(arg, nodes, results), args)
-        return :($(nodes, results.nodes.call)($op, $(args...)))
+        return :($(nodes.call)($op, $(args...)))
     elseif @capture ex (idx_::proto_)
         idx = finch_parse(idx, nodes, results)
-        return :($(nodes, results.nodes.protocol)($idx, $(esc(proto))))
+        return :($(nodes.protocol)($idx, $(esc(proto))))
     elseif ex isa Expr && ex.head == :...
         return esc(ex)
     elseif ex isa Expr && ex.head == :$ && length(ex.args) == 1
         return esc(ex.args[1])
     elseif ex isa Symbol
-        return nodes, results.nodes.label(ex)
+        return nodes.label(ex)
     elseif ex isa Expr
-        return nodes, results.nodes.value(ex)
+        return nodes.value(ex)
     elseif ex isa QuoteNode
-        return nodes, results.nodes.literal(ex.value)
+        return nodes.literal(ex.value)
     else
-        return nodes, results.nodes.literal(ex)
+        return nodes.literal(ex)
     end
 end
 
