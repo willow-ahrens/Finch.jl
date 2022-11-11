@@ -120,9 +120,15 @@ function bfs(edges, source=5)
     V = @fiber d(n, e(0))
     @finch @loop source V[source] = 1
 
+    P = @fiber d(n, e(0))
+    @finch @loop source P[source] = source
+
     level = 2
     while F.lvl.pos[2] != 1 #TODO this could be cleaner if we could get early exit working.
-        @finch @loop j k _F[k] = F[j] && edges[j, k] && !(V[k])
+        @finch @loop j k begin
+            _F[k] = v[] #Set the frontier vertex
+            @sieve v[] !P[k] = j #Only set the parent for this vertex
+        end where (v[] = F[j] && edges[j, k] && !(V[k]))
         @finch @loop k !V[k] += ifelse(_F[k], level, 0)
         (F, _F) = (_F, F)
         level += 1
@@ -136,6 +142,7 @@ for mtx in ["SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
 end
 
 #=
+TODO
 # For sssp we should probably compress priorityQ on both dimensions, since many entires in rowptr will be equal
 # ( due to many rows being zero )
 function sssp(weights, source=1)
