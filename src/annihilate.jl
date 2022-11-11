@@ -2,37 +2,39 @@ rules = []
 add_rules!(new_rules) = union!(rules, new_rules)
 
 isassociative(f) = false
-isassociative(::typeof(min)) = true
-isassociative(::typeof(max)) = true
-isassociative(::typeof(+)) = true
-isassociative(::typeof(*)) = true
+isassociative(::typeof(right)) = true
 isassociative(::typeof(or)) = true
 isassociative(::typeof(and)) = true
 isassociative(::typeof(coalesce)) = true
+isassociative(::typeof(+)) = true
+isassociative(::typeof(*)) = true
+isassociative(::typeof(min)) = true
+isassociative(::typeof(max)) = true
 
 iscommutative(f) = false
-iscommutative(::typeof(min)) = true
-iscommutative(::typeof(max)) = true
-iscommutative(::typeof(+)) = true
-iscommutative(::typeof(*)) = true
 iscommutative(::typeof(or)) = true
 iscommutative(::typeof(and)) = true
+iscommutative(::typeof(+)) = true
+iscommutative(::typeof(*)) = true
+iscommutative(::typeof(min)) = true
+iscommutative(::typeof(max)) = true
 
 isdistributive(f, g) = false
 isdistributive(::typeof(+), ::typeof(*)) = true
 
 isidempotent(f) = false
+isidempotent(::typeof(right)) = true
 isidempotent(::typeof(min)) = true
 isidempotent(::typeof(max)) = true
 
 isidentity(f, x) = false
+isidentity(::typeof(or), x) = x == false
+isidentity(::typeof(and), x) = x == true
+isidentity(::typeof(coalesce), x) = ismissing(x)
 isidentity(::typeof(+), x) = iszero(x)
 isidentity(::typeof(*), x) = isone(x)
 isidentity(::typeof(min), x) = isinf(x) && x > 0
 isidentity(::typeof(max), x) = isinf(x) && x < 0
-isidentity(::typeof(or), x) = x == false
-isidentity(::typeof(and), x) = x == true
-isidentity(::typeof(coalesce), x) = ismissing(x)
 
 isannihilator(f, x) = false
 isannihilator(::typeof(+), x) = isinf(x)
@@ -71,6 +73,7 @@ add_rules!([
 
     #TODO default needs to get defined on all writable chunks
     (@rule assign(access(~a, writer(~m), ~i...), ~b) => if b == literal(default(a)) pass(access(a, writer(m))) end),
+    (@rule assign(access(~a, updater($(literal(right)), ~m), ~i...), ~b) => if b == literal(default(a)) pass(access(a, updater(right, m))) end),
 
     #TODO we probably can just drop modes from pass
     (@rule pass(~a..., access(~b, writer($(literal(true)))), ~c...) => pass(a..., c...)),
@@ -162,6 +165,7 @@ add_rules!([
         call(coalesce, a..., b)
     end),
 
+    (@rule call($(literal(right)), ~a..., ~b, ~c) => c),
     (@rule call($(literal(ifelse)), $(literal(true)), ~a, ~b) => a),
     (@rule call($(literal(ifelse)), $(literal(false)), ~a, ~b) => b),
     (@rule call($(literal(ifelse)), ~a, ~b, ~b) => b),

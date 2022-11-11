@@ -131,7 +131,7 @@ function refurl(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
             end,
             body = access(fbr, mode),
         )
-    elseif mode.kind === writer
+    elseif mode.kind === writer #This should be an assertion or protocol or something.
         return Thunk(
             preamble = quote
                 $(lvl.val) = $(lvl.D)
