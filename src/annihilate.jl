@@ -294,7 +294,7 @@ function comparators(node::CINNode)
         return (node.kind, Lexicography(node.val))
     elseif node.kind === virtual
         return (node.kind, Lexicography(node.val))
-    elseif node.kind === name
+    elseif node.kind === index
         return (node.kind, Lexicography(node.val))
     elseif istree(node)
         return (node.kind, map(Lexicography, node.children))

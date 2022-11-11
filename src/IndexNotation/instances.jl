@@ -15,9 +15,9 @@ Base.:(==)(a::PassInstance, b::PassInstance) = Set([a.tnss...]) == Set([b.tnss..
 
 @inline pass_instance(tnss...) = PassInstance(tnss)
 
-struct NameInstance{name} <: IndexTerminalInstance end
+struct IndexInstance{name} <: IndexTerminalInstance end
 
-@inline name_instance(name) = NameInstance{name}()
+@inline index_instance(name) = IndexInstance{name}()
 
 struct ProtocolInstance{Idx, Val} <: IndexExpressionInstance
 	idx::Idx

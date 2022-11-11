@@ -1,10 +1,10 @@
-using Finch: name
+using Finch: index
 @testset "SSA" begin
-    A = name(:A)
-    C = name(:C)
-    D = name(:D)
-    A_2 = name(:A_2)
-    C_2 = name(:C_2)
+    A = index(:A)
+    C = index(:C)
+    D = index(:D)
+    A_2 = index(:A_2)
+    C_2 = index(:C_2)
     ex = Finch.TransformSSA(Finch.Freshen())(Finch.@f(
         @loop i (
             @loop j (

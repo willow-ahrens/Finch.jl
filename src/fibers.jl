@@ -126,7 +126,7 @@ end
 function select_access(node, ctx::Finch.SelectVisitor, tns::VirtualFiber)
     if !isempty(node.idxs)
         if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
-            var = name(ctx.ctx.freshen(:s))
+            var = index(ctx.ctx.freshen(:s))
             ctx.idxs[var] = node.idxs[1]
             return access(node.tns, node.mode, var, node.idxs[2:end]...)
         end
@@ -148,7 +148,7 @@ end
 
 get_furl_root(idx) = nothing
 function get_furl_root(idx::CINNode)
-    if idx.kind === name
+    if idx.kind === index
         return idx
     elseif idx.kind === access && idx.tns.kind === virtual
         get_furl_root_access(idx, idx.tns.val)
@@ -163,7 +163,7 @@ get_furl_root_access(idx, tns) = nothing
 
 refurl(tns, ctx, mode, idxs...) = access(tns, mode, idxs...)
 function exfurl(tns, ctx, mode, idx::CINNode)
-    if idx.kind === name
+    if idx.kind === index
         return tns
     elseif idx.kind === access && idx.tns.kind === virtual
         exfurl_access(tns, ctx, mode, idx, idx.tns.val)

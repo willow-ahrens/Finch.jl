@@ -15,7 +15,7 @@ const program_nodes = (
     protocol = protocol,
     reader = reader,
     updater = updater,
-    name = name,
+    index = index,
     label = (ex) -> :($(esc(:dollar))(index_terminal($(esc(ex))))),
     literal = literal,
     value = (ex) -> :($(esc(:dollar))(index_terminal($(esc(ex))))),
@@ -32,7 +32,7 @@ const instance_nodes = (
     call = call_instance,
     access = access_instance,
     protocol = protocol_instance,
-    name = name_instance,
+    index = index_instance,
     reader = reader_instance,
     updater = updater_instance,
     label = (ex) -> :($label_instance($(QuoteNode(ex)), $index_terminal_instance($(esc(ex))))),
@@ -92,7 +92,7 @@ function _finch_capture(ex, ctx)
         preamble = Expr(:block)
         idxs = map(idxs) do idx
             if idx isa Symbol
-                push!(preamble.args, :($(esc(idx)) = $(ctx.nodes.name(idx))))
+                push!(preamble.args, :($(esc(idx)) = $(ctx.nodes.index(idx))))
                 esc(idx)
             else
                 _finch_capture(idx, ctx)
@@ -108,7 +108,7 @@ function _finch_capture(ex, ctx)
     elseif @capture ex (@chunk idx_ ext_ body_)
         preamble = Expr(:block)
         if idx isa Symbol
-            push!(preamble.args, :($(esc(idx)) = $(ctx.nodes.name(idx))))
+            push!(preamble.args, :($(esc(idx)) = $(ctx.nodes.index(idx))))
             esc(idx)
         else
             _finch_capture(idx, ctx)

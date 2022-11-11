@@ -166,7 +166,7 @@ end
 function (ctx::LowerJulia)(root::CINNode, ::DefaultStyle)
     if root.kind === value
         return root.val
-    elseif root.kind === name
+    elseif root.kind === index
         @assert haskey(ctx.bindings, getname(root)) "variable $(getname(root)) unbound"
         return ctx(ctx.bindings[getname(root)]) #This unwraps indices that are virtuals. Arguably these virtuals should be precomputed, but whatevs.
     elseif root.kind === literal

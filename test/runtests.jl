@@ -55,7 +55,7 @@ using Finch: VirtualAbstractArray, Run, Spike, Extent, Scalar, Switch, Stepper, 
 using Finch: @f, @finch_program_instance, execute, execute_code, getstart, getstop
 using Finch: getname, value
 using Finch.IndexNotation
-using Finch.IndexNotation: call_instance, assign_instance, access_instance, value_instance, name_instance, loop_instance, with_instance, label_instance, protocol_instance
+using Finch.IndexNotation: call_instance, assign_instance, access_instance, value_instance, index_instance, loop_instance, with_instance, label_instance, protocol_instance
 
 verbose = "verbose" in ARGS
 

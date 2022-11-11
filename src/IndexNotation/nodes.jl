@@ -7,7 +7,7 @@ const ID = 4
 @enum CINHead begin
     value    =  1ID
     virtual  =  2ID
-    name     =  3ID
+    index     =  3ID
     literal  =  4ID
     with     =  5ID | IS_TREE | IS_STATEFUL
     multi    =  6ID | IS_TREE | IS_STATEFUL
@@ -84,7 +84,7 @@ function CINNode(kind::CINHead, args::Vector)
         else
             error("wrong number of arguments to $kind(...)")
         end
-    elseif kind === name
+    elseif kind === index
         if length(args) == 1
             return CINNode(kind, args[1], nothing, CINNode[])
         else
@@ -176,11 +176,11 @@ function Base.getproperty(node::CINNode, sym::Symbol)
             node.kind === literal || 
             node.kind === virtual
         error("type CINNode($(node.kind), ...) has no property $sym")
-    elseif node.kind === name
+    elseif node.kind === index
         if sym === :name
             return node.val::Symbol
         else
-            error("type CINNode(name, ...) has no property $sym")
+            error("type CINNode(index, ...) has no property $sym")
         end
     elseif node.kind === reader
         error("type CINNode(reader, ...) has no property $sym")
@@ -287,7 +287,7 @@ function Base.show(io::IO, mime::MIME"text/plain", node::CINNode)
 end
 
 function Finch.getunbound(ex::CINNode)
-    if ex.kind === name
+    if ex.kind === index
         return [ex.name]
     elseif ex.kind === loop
         return setdiff(getunbound(ex.body), getunbound(ex.idx))
@@ -311,7 +311,7 @@ function display_expression(io, mime, node::CINNode)
         end
     elseif node.kind === literal
         print(io, node.val)
-    elseif node.kind === name
+    elseif node.kind === index
         print(io, node.name)
     elseif node.kind === reader
         print(io, "reader()")
@@ -437,8 +437,8 @@ function Base.:(==)(a::CINNode, b::CINNode)
             return b.kind === value && a.val == b.val && a.type === b.type
         elseif a.kind === literal
             return b.kind === literal && isequal(a.val, b.val) #TODO Feels iffy idk
-        elseif a.kind === name
-            return b.kind === name && a.name == b.name
+        elseif a.kind === index
+            return b.kind === index && a.name == b.name
         elseif a.kind === virtual
             return b.kind === virtual && a.val == b.val #TODO Feels iffy idk
         else
@@ -461,8 +461,8 @@ function Base.hash(a::CINNode, h::UInt)
             return hash(literal, hash(a.val, h))
         elseif a.kind === virtual
             return hash(virtual, hash(a.val, h))
-        elseif a.kind === name
-            return hash(name, hash(a.name, h))
+        elseif a.kind === index
+            return hash(index, hash(a.name, h))
         else
             error("unimplemented")
         end
@@ -503,7 +503,7 @@ function Finch.getresults(node::CINNode)
 end
 
 function Finch.getname(x::CINNode)
-    if x.kind === name
+    if x.kind === index
         return x.val
     elseif x.kind === virtual
         return Finch.getname(x.val)
@@ -515,8 +515,8 @@ function Finch.getname(x::CINNode)
 end
 
 function Finch.setname(x::CINNode, sym)
-    if x.kind === name
-        return name(sym)
+    if x.kind === index
+        return index(sym)
     elseif x.kind === virtual
         return Finch.setname(x.val, sym)
     else
