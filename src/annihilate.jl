@@ -53,20 +53,20 @@ getinverse(::typeof(-)) = +
 getinverse(::typeof(/)) = *
 getinverse(::typeof(inv)) = *
 
-isassociative(f::CINNode) = f.kind === literal && isassociative(f.val)
-iscommutative(f::CINNode) = f.kind === literal && iscommutative(f.val)
-isidempotent(f::CINNode) = f.kind === literal && isidempotent(f.val)
-isdistributive(f::CINNode, x::CINNode) = isliteral(f) && isliteral(x) && isdistributive(f.val, x.val)
+isassociative(f::IndexNode) = f.kind === literal && isassociative(f.val)
+iscommutative(f::IndexNode) = f.kind === literal && iscommutative(f.val)
+isidempotent(f::IndexNode) = f.kind === literal && isidempotent(f.val)
+isdistributive(f::IndexNode, x::IndexNode) = isliteral(f) && isliteral(x) && isdistributive(f.val, x.val)
 isabelian(f) = isassociative(f) && iscommutative(f)
-isidentity(f::CINNode, x::CINNode) = isliteral(f) && isliteral(x) && isidentity(f.val, x.val)
-isannihilator(f::CINNode, x::CINNode) = isliteral(f) && isliteral(x) && isannihilator(f.val, x.val)
+isidentity(f::IndexNode, x::IndexNode) = isliteral(f) && isliteral(x) && isidentity(f.val, x.val)
+isannihilator(f::IndexNode, x::IndexNode) = isliteral(f) && isliteral(x) && isannihilator(f.val, x.val)
 
-isinverse(f::CINNode, x::CINNode) = isliteral(f) && isliteral(x) && isinverse(f.val, x.val)
+isinverse(f::IndexNode, x::IndexNode) = isliteral(f) && isliteral(x) && isinverse(f.val, x.val)
 
-hasinverse(f::CINNode) = isliteral(f) && (getinverse(f.val) !== nothing)
-getinverse(f::CINNode) = something(getinverse(f.val))
+hasinverse(f::IndexNode) = isliteral(f) && (getinverse(f.val) !== nothing)
+getinverse(f::IndexNode) = something(getinverse(f.val))
 
-isinplace(f::CINNode) = f.inplace == literal(false)
+isinplace(f::IndexNode) = f.inplace == literal(false)
 
 add_rules!([
     (@rule call(~f, ~a...) => if isliteral(f) && all(isliteral, a) && length(a) >= 1 literal(getvalue(f)(getvalue.(a)...)) end),

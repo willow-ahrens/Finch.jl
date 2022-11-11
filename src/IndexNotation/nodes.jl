@@ -180,15 +180,15 @@ function Base.getproperty(node::IndexNode, sym::Symbol)
         if sym === :name
             return node.val::Symbol
         else
-            error("type CINNode(index, ...) has no property $sym")
+            error("type IndexNode(index, ...) has no property $sym")
         end
     elseif node.kind === reader
-        error("type CINNode(reader, ...) has no property $sym")
+        error("type IndexNode(reader, ...) has no property $sym")
     elseif node.kind === updater
         if sym === :inplace
             return node.children[1]
         else
-            error("type CINNode(updater, ...) has no property $sym")
+            error("type IndexNode(updater, ...) has no property $sym")
         end
     elseif node.kind === with
         if sym === :cons
