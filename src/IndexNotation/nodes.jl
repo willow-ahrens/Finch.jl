@@ -24,6 +24,21 @@ const ID = 4
     lifetime = 17ID | IS_TREE | IS_STATEFUL
 end
 
+"""
+    value(val, type)
+
+Finch AST node representing an expression `val` of type `type`.
+"""
+value
+
+"""
+    virtual(val)
+
+Finch AST node representing an object `val` which has special meaning to the compiler. This
+type allows users to substitute their own ASTs, etc. into Finch expressions.
+"""
+virtual
+
 struct CINNode
     kind::CINHead
     val::Any
@@ -42,9 +57,9 @@ Returns true if the node is an index statement, and false if the node is an
 index expression. Typically, index statements specify control flow and 
 index expressions describe values.
 """
-isstateful(node::CINNode) = node.kind & IS_STATEFUL != 0
+isstateful(node::CINNode) = Int(node.kind) & IS_STATEFUL != 0
 
-SyntaxInterface.istree(node::CINNode) = node.kind & IS_TREE != 0
+SyntaxInterface.istree(node::CINNode) = Int(node.kind) & IS_TREE != 0
 SyntaxInterface.arguments(node::CINNode) = node.children
 SyntaxInterface.operation(node::CINNode) = node.kind
 
