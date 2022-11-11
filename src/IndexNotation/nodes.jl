@@ -1,22 +1,27 @@
 tab = "  "
+
+const IS_TREE = 1
+const IS_STATEFUL = 2
+const ID = 4
+
 @enum CINHead begin
-    value=1
-    virtual=2
-    name=3
-    literal=4
-    with=5
-    multi=6
-    access=7
-    protocol=8
-    call=9
-    loop=10
-    chunk=11
-    sieve=12
-    assign=13
-    pass=14
-    reader=15
-    updater=16
-    lifetime=17
+    value    =  1ID
+    virtual  =  2ID
+    name     =  3ID
+    literal  =  4ID
+    with     =  5ID | IS_TREE | IS_STATEFUL
+    multi    =  6ID | IS_TREE | IS_STATEFUL
+    access   =  7ID | IS_TREE 
+    protocol =  8ID | IS_TREE
+    call     =  9ID | IS_TREE
+    loop     = 10ID | IS_TREE | IS_STATEFUL
+    chunk    = 11ID | IS_TREE | IS_STATEFUL
+    sieve    = 12ID | IS_TREE | IS_STATEFUL
+    assign   = 13ID | IS_TREE | IS_STATEFUL
+    pass     = 14ID | IS_TREE | IS_STATEFUL
+    reader   = 15ID | IS_TREE
+    updater  = 16ID | IS_TREE
+    lifetime = 17ID | IS_TREE | IS_STATEFUL
 end
 
 struct CINNode
@@ -30,10 +35,16 @@ isvalue(node::CINNode) = node.kind === value
 #TODO Delete this one when you can
 isvalue(node) = false
 
-#TODO
-isstateful(node::CINNode) = istree(node) && !(node.kind in [call, access, reader, updater])
+"""
+    isstateful(node)
 
-SyntaxInterface.istree(node::CINNode) = node.kind > literal
+Returns true if the node is an index statement, and false if the node is an
+index expression. Typically, index statements specify control flow and 
+index expressions describe values.
+"""
+isstateful(node::CINNode) = node.kind & IS_STATEFUL != 0
+
+SyntaxInterface.istree(node::CINNode) = node.kind & IS_TREE != 0
 SyntaxInterface.arguments(node::CINNode) = node.children
 SyntaxInterface.operation(node::CINNode) = node.kind
 
