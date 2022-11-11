@@ -16,9 +16,9 @@ const program_nodes = (
     reader = reader,
     updater = updater,
     index = index,
-    label = (ex) -> :($(esc(:dollar))(index_terminal($(esc(ex))))),
+    label = (ex) -> :(index_terminal($(esc(ex)))),
     literal = literal,
-    value = (ex) -> :($(esc(:dollar))(index_terminal($(esc(ex))))),
+    value = (ex) -> :(index_terminal($(esc(ex)))),
 )
 
 const instance_nodes = (
