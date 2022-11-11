@@ -67,7 +67,7 @@ function getglobals(prgm)
 end
 =#
 
-function (ctx::TransformSSA)(node::CINNode)
+function (ctx::TransformSSA)(node::IndexNode)
     if node.kind === index
         resolvename!(node, ctx)
     elseif node.kind === with

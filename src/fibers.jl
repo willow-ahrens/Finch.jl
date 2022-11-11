@@ -110,13 +110,13 @@ function finalize_level! end
 
 finalize_level!(fbr, ctx, mode) = fbr.lvl
 
-#TODO get rid of isa CINNode when this is all over
+#TODO get rid of isa IndexNode when this is all over
 
 function stylize_access(node, ctx::Stylize{LowerJulia}, tns::VirtualFiber)
     if !isempty(node.idxs)
         if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
             return SelectStyle()
-        elseif ctx.root isa CINNode && ctx.root.kind === loop && ctx.root.idx == get_furl_root(node.idxs[1])
+        elseif ctx.root isa IndexNode && ctx.root.kind === loop && ctx.root.idx == get_furl_root(node.idxs[1])
             return ChunkStyle()
         end
     end
@@ -147,7 +147,7 @@ function chunkify_access(node, ctx, tns::VirtualFiber)
 end
 
 get_furl_root(idx) = nothing
-function get_furl_root(idx::CINNode)
+function get_furl_root(idx::IndexNode)
     if idx.kind === index
         return idx
     elseif idx.kind === access && idx.tns.kind === virtual
@@ -162,7 +162,7 @@ get_furl_root_access(idx, tns) = nothing
 #These are also good examples of where modifiers might be great.
 
 refurl(tns, ctx, mode, idxs...) = access(tns, mode, idxs...)
-function exfurl(tns, ctx, mode, idx::CINNode)
+function exfurl(tns, ctx, mode, idx::IndexNode)
     if idx.kind === index
         return tns
     elseif idx.kind === access && idx.tns.kind === virtual

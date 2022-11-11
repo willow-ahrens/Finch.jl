@@ -19,7 +19,7 @@ virtualize(ex, ::Type{Select}, ctx) = select
 (ctx::LowerJulia)(tns::Select) = error("Select not lowered")
 
 function stylize_access(node, ctx::Stylize{LowerJulia}, tns::Select)
-    if ctx.root isa CINNode && ctx.root.kind === loop && ctx.root.idx == get_furl_root(node.idxs[2])
+    if ctx.root isa IndexNode && ctx.root.kind === loop && ctx.root.idx == get_furl_root(node.idxs[2])
         Finch.ChunkStyle()
     else
         Finch.DefaultStyle()
@@ -62,8 +62,8 @@ function (ctx::SelectVisitor)(node)
     end
 end
 
-function (ctx::SelectVisitor)(node::CINNode)
-    if node.kind === access && node.tns isa CINNode && node.tns.kind === virtual
+function (ctx::SelectVisitor)(node::IndexNode)
+    if node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
         select_access(node, ctx, node.tns.val)
     elseif istree(node)
         similarterm(node, operation(node), map(ctx, arguments(node)))
