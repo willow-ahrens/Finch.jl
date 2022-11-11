@@ -275,7 +275,7 @@ function (ctx::LowerJulia)(root::CINNode, ::DefaultStyle)
     elseif root.kind === assign
         if root.lhs.kind === access
             @assert root.lhs.mode.kind == updater
-            rhs = ctx(simplify(call(root.lhs.mode.op, root.lhs, root.rhs)))
+            rhs = ctx(simplify(call(root.op, root.lhs, root.rhs)))
         else
             rhs = ctx(root.rhs)
         end

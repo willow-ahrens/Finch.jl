@@ -28,8 +28,8 @@ function virtualize(ex, ::Type{IndexNotation.LoopInstance{Idx, Body}}, ctx) wher
     body = virtualize(:($ex.body), Body, ctx)
     loop(idx, body)
 end
-function virtualize(ex, ::Type{IndexNotation.AssignInstance{Lhs, Rhs}}, ctx) where {Lhs, Rhs}
-    assign(virtualize(:($ex.lhs), Lhs, ctx), virtualize(:($ex.rhs), Rhs, ctx))
+function virtualize(ex, ::Type{IndexNotation.AssignInstance{Lhs, Op, Rhs}}, ctx) where {Lhs, Op, Rhs}
+    assign(virtualize(:($ex.lhs), Lhs, ctx), virtualize(:($ex.op), Op, ctx), virtualize(:($ex.rhs), Rhs, ctx))
 end
 function virtualize(ex, ::Type{IndexNotation.CallInstance{Op, Args}}, ctx) where {Op, Args}
     op = virtualize(:($ex.op), Op, ctx)
@@ -46,10 +46,9 @@ function virtualize(ex, ::Type{IndexNotation.AccessInstance{Tns, Mode, Idxs}}, c
     access(tns, virtualize(:($ex.mode), Mode, ctx), idxs...)
 end
 virtualize(ex, ::Type{IndexNotation.ReaderInstance}, ctx) = reader()
-function virtualize(ex, ::Type{IndexNotation.UpdaterInstance{Op, InPlace}}, ctx) where {Op, InPlace}
-    op = virtualize(:($ex.op), Op, ctx)
+function virtualize(ex, ::Type{IndexNotation.UpdaterInstance{InPlace}}, ctx) where {InPlace}
     inplace = virtualize(:($ex.inplace), InPlace, ctx)
-    updater(op, inplace)
+    updater(inplace)
 end
 function virtualize(ex, ::Type{IndexNotation.LabelInstance{tag, Tns}}, ctx) where {tag, Tns}
     return virtualize(:($ex.tns), Tns, ctx, tag)

@@ -115,7 +115,7 @@ function CINNode(kind::CINHead, args::Vector)
             error("wrong number of arguments to sieve(...)")
         end
     elseif kind === assign
-        if length(args) == 2
+        if length(args) == 3
             return CINNode(assign, nothing, nothing, args)
         else
             error("wrong number of arguments to assign(...)")
@@ -129,7 +129,7 @@ function CINNode(kind::CINHead, args::Vector)
             error("wrong number of arguments to reader(...)")
         end
     elseif kind === updater
-        if length(args) == 2
+        if length(args) == 1
             return CINNode(updater, nothing, nothing, args)
         else
             error("wrong number of arguments to updater(...)")
@@ -159,10 +159,8 @@ function Base.getproperty(node::CINNode, sym::Symbol)
     elseif node.kind === reader
         error("type CINNode(reader, ...) has no property $sym")
     elseif node.kind === updater
-        if sym === :op
+        if sym === :inplace
             return node.children[1]
-        elseif sym === :inplace
-            return node.children[2]
         else
             error("type CINNode(updater, ...) has no property $sym")
         end
@@ -235,8 +233,10 @@ function Base.getproperty(node::CINNode, sym::Symbol)
     elseif node.kind === assign
         if sym === :lhs
             return node.children[1]
-        elseif sym === :rhs
+        elseif sym === :op
             return node.children[2]
+        elseif sym === :rhs
+            return node.children[3]
         else
             error("type CINNode(assign, ...) has no property $sym")
         end
@@ -287,6 +287,12 @@ function display_expression(io, mime, node::CINNode)
         print(io, node.val)
     elseif node.kind === name
         print(io, node.name)
+    elseif node.kind === reader
+        print(io, "reader()")
+    elseif node.kind === updater
+        print(io, "updater(")
+        display_expression(io, node.inplace)
+        print(io, ")")
     elseif node.kind === virtual
         print(io, "virtual(")
         print(io, node.val)
@@ -375,7 +381,7 @@ function display_statement(io, mime, node::CINNode, level)
         print(io, " ")
         if node.lhs.mode.kind === updater
             #TODO add << >>
-            display_expression(io, mime, node.lhs.mode.op)
+            display_expression(io, mime, node.op)
         end
         print(io, "= ")
         display_expression(io, mime, node.rhs)

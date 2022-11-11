@@ -61,13 +61,14 @@ Base.:(==)(a::SieveInstance, b::SieveInstance) = a.cond == b.cond && a.body == b
 @inline sieve_instance(body) = body
 @inline sieve_instance(cond, args...) = SieveInstance(cond, sieve_instance(args...))
 
-struct AssignInstance{Lhs, Rhs} <: IndexStatementInstance
+struct AssignInstance{Lhs, Op, Rhs} <: IndexStatementInstance
 	lhs::Lhs
+	op::Op
 	rhs::Rhs
 end
-Base.:(==)(a::AssignInstance, b::AssignInstance) = a.lhs == b.lhs && a.rhs == b.rhs
+Base.:(==)(a::AssignInstance, b::AssignInstance) = a.lhs == b.lhs && a.op == b.op && a.rhs == b.rhs
 
-@inline assign_instance(lhs, rhs) = AssignInstance(lhs, rhs)
+@inline assign_instance(lhs, op, rhs) = AssignInstance(lhs, op, rhs)
 
 struct CallInstance{Op, Args<:Tuple} <: IndexExpressionInstance
     op::Op
@@ -97,12 +98,11 @@ Base.:(==)(a::LabelInstance{tag}, b::LabelInstance{tag}) where {tag} = a.tns == 
 struct ReaderInstance end
 reader_instance() = ReaderInstance()
 Base.:(==)(a::ReaderInstance, b::ReaderInstance) = true
-struct UpdaterInstance{Op, InPlace}
-	op::Op
+struct UpdaterInstance{InPlace}
 	inplace::InPlace
 end
-@inline updater_instance(op, inplace) = UpdaterInstance(op, inplace)
-Base.:(==)(a::UpdaterInstance, b::UpdaterInstance) = a.op == b.op && a.inplace == b.inplace
+@inline updater_instance(inplace) = UpdaterInstance(inplace)
+Base.:(==)(a::UpdaterInstance, b::UpdaterInstance) = a.inplace == b.inplace
 
 struct ValueInstance{arg} end
 
