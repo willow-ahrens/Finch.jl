@@ -95,7 +95,7 @@ end
 
 macro finch(ex)
     results = Set()
-    prgm = IndexNotation.capture_finch_instance(ex, results=results)
+    prgm = IndexNotation.finch_parse_instance(ex, results)
     thunk = quote
         res = $execute($prgm)
     end
@@ -111,7 +111,7 @@ macro finch(ex)
 end
 
 macro finch_code(ex)
-    prgm = IndexNotation.capture_finch_instance(ex)
+    prgm = IndexNotation.finch_parse_instance(ex)
     return quote
         $execute_code(:ex, typeof($prgm))
     end
