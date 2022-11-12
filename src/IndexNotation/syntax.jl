@@ -50,45 +50,37 @@ right(l, m, r...) = right(m, r)
 right(l, r) = r
 
 function finch_parse(ex, nodes=program_nodes, results=Set())
+    islinenum(x) = x isa LineNumberNode
     #extra sugar
-    if ex isa Expr && ex.head == :macrocall && length(ex.args) >= 3 && ex.args[1] == Symbol("@∀")
-        idxs = ex.args[3:end-1]; body = ex.args[end]
+    if Finch.RewriteTools.@capture ex :macrocall($(Symbol("@∀")), ~ln::islinenum, ~idxs..., ~body)
         return finch_parse(:(@loop($(idxs...), $body)), nodes, results)
-    elseif ex isa Expr && ex.head == :block
-        bodies = filter(arg->!(arg isa LineNumberNode), ex.args)
+    elseif Finch.RewriteTools.@capture ex :block(~bodies...)
+        bodies = filter(!islinenum, bodies)
         if length(bodies) == 1
             return finch_parse(:($(bodies[1])), nodes, results)
         else
             return finch_parse(:(@multi($(bodies...),)), nodes, results)
         end
-    elseif ex isa Expr && haskey(incs, ex.head)
-        (lhs, rhs) = ex.args; op = incs[ex.head]
-        return finch_parse(:($lhs << $op >>= $rhs), nodes, results)
-    elseif ex isa Expr && ex.head == :comparison
-        @assert length(ex.args) >= 3
-        (a, cmp, b, tail...) = ex.args
-        ex = :($cmp($a, $b))
-        if isempty(tail)
-            return finch_parse(:($cmp($a, $b)), nodes, results)
-        else
-            return finch_parse(:($cmp($a, $b) && $(Expr(:comparison, b, tail...))), nodes, results)
-        end
-    elseif ex isa Expr && ex.head == :&&
-        (a, b) = ex.args
+    elseif (Finch.RewriteTools.@capture ex (~op)(~lhs, ~rhs)) && haskey(incs, op)
+        return finch_parse(:($lhs << $(incs[op]) >>= $rhs), nodes, results)
+    elseif Finch.RewriteTools.@capture ex :comparison(~a, ~cmp, ~b)
+        return finch_parse(:($cmp($a, $b)), nodes, results)
+    elseif Finch.RewriteTools.@capture ex :comparison(~a, ~cmp, ~b, ~tail...)
+        return finch_parse(:($cmp($a, $b) && $(Expr(:comparison, b, tail...))), nodes, results)
+    elseif Finch.RewriteTools.@capture ex :&&(~a, ~b)
         return finch_parse(:($and($a, $b)), nodes, results)
-    elseif ex isa Expr && ex.head == :||
-        (a, b) = ex.args
+    elseif Finch.RewriteTools.@capture ex :||(~a, ~b)
         return finch_parse(:($or($a, $b)), nodes, results)
     end
 
-    if @capture ex (@pass(args__))
+    if Finch.RewriteTools.@capture ex :macrocall($(Symbol("@pass")), ~ln::islinenum, ~args...)
         args = map(arg -> finch_parse(arg, nodes, results), args)
         return :($(nodes.pass)($(args...)))
-    elseif @capture ex (@sieve cond_ body_)
+    elseif Finch.RewriteTools.@capture ex :macrocall($(Symbol("@sieve")), ~ln::islinenum, ~cond, ~body)
         cond = finch_parse(cond, nodes, results)
         body = finch_parse(body, nodes, results)
         return :($(nodes.sieve)($cond, $body))
-    elseif @capture ex (@loop idxs__ body_)
+    elseif Finch.RewriteTools.@capture ex :macrocall($(Symbol("@loop")), ~ln::islinenum, ~idxs..., ~body)
         preamble = Expr(:block)
         idxs = map(idxs) do idx
             if idx isa Symbol
@@ -105,7 +97,7 @@ function finch_parse(ex, nodes=program_nodes, results=Set())
                 $(nodes.loop)($(idxs...), $body)
             end
         end
-    elseif @capture ex (@chunk idx_ ext_ body_)
+    elseif Finch.RewriteTools.@capture ex :macrocall($(Symbol("@chunk")), ~ln::islinenum, ~idx, ~ext, ~body)
         preamble = Expr(:block)
         if idx isa Symbol
             push!(preamble.args, :($(esc(idx)) = $(nodes.index(idx))))
@@ -121,28 +113,23 @@ function finch_parse(ex, nodes=program_nodes, results=Set())
                 $(nodes.chunk)($idx, $ext, $body)
             end
         end
-    elseif @capture ex (@chunk idx_ ext_ body_)
-        idx = finch_parse(idx, nodes, results)
-        ext = finch_parse(ext, nodes, results)
-        body = finch_parse(body, nodes, results)
-        return :($(nodes.chunk)($idx, $ext, $body))
-    elseif @capture ex (cons_ where prod_)
+    elseif Finch.RewriteTools.@capture ex :where(~cons, ~prod)
         cons = finch_parse(cons, nodes, results)
         prod = finch_parse(prod, nodes)
         return :($(nodes.with)($cons, $prod))
-    elseif @capture ex (@multi bodies__)
+    elseif Finch.RewriteTools.@capture ex :macrocall($(Symbol("@multi")), ~ln::islinenum, ~bodies...)
         bodies = map(arg -> finch_parse(arg, nodes, results), bodies)
         return :($(nodes.multi)($(bodies...)))
-    elseif @capture ex (tns_[idxs__])
+    elseif Finch.RewriteTools.@capture ex :ref(~tns, ~idxs...)
         tns = finch_parse(tns, nodes, results)
         idxs = map(idx->finch_parse(idx, nodes, results), idxs)
         mode = :($(nodes.reader)())
         return :($(nodes.access)($tns, $mode, $(idxs...)))
-    elseif @capture ex (tns_[idxs__] = rhs_)
+    elseif Finch.RewriteTools.@capture ex :(=)(:ref(~tns, ~idxs...), ~rhs)
         return finch_parse(:($tns[$(idxs...)] << $right >>= $rhs), nodes, results)
-    elseif @capture ex (!tns_[idxs__] = rhs_)
+    elseif Finch.RewriteTools.@capture ex :(=)(:ref(:call(:!, ~tns), ~idxs...), ~rhs)
         return finch_parse(:(!$tns[$(idxs...)] << $right >>= $rhs), nodes, results)
-    elseif @capture ex (tns_[idxs__] <<op_>>= rhs_)
+    elseif Finch.RewriteTools.@capture ex :>>=(:call(:<<, :ref(~tns, ~idxs...), ~op), ~rhs)
         tns isa Symbol && push!(results, tns)
         tns = finch_parse(tns, nodes, results)
         op = finch_parse(op, nodes, results)
@@ -151,7 +138,7 @@ function finch_parse(ex, nodes=program_nodes, results=Set())
         rhs = finch_parse(rhs, nodes, results)
         lhs = :($(nodes.access)($tns, $mode, $(idxs...)))
         return :($(nodes.assign)($lhs, $op, $rhs))
-    elseif @capture ex (!tns_[idxs__] <<op_>>= rhs_)
+    elseif Finch.RewriteTools.@capture ex :>>=(:call(:<<, :call(:!, :ref(~tns, ~idxs...)), ~op), ~rhs)
         tns isa Symbol && push!(results, tns)
         tns = finch_parse(tns, nodes, results)
         op = finch_parse(op, nodes, results)
@@ -160,17 +147,17 @@ function finch_parse(ex, nodes=program_nodes, results=Set())
         rhs = finch_parse(rhs, nodes, results)
         lhs = :($(nodes.access)($tns, $mode, $(idxs...)))
         return :($(nodes.assign)($lhs, $op, $rhs))
-    elseif @capture ex (op_(args__))
+    elseif Finch.RewriteTools.@capture ex :call(~op, ~args...)
         op = finch_parse(op, nodes, results)
         args = map(arg->finch_parse(arg, nodes, results), args)
         return :($(nodes.call)($op, $(args...)))
-    elseif @capture ex (idx_::proto_)
+    elseif Finch.RewriteTools.@capture ex :(::)(~idx, ~proto)
         idx = finch_parse(idx, nodes, results)
         return :($(nodes.protocol)($idx, $(esc(proto))))
-    elseif ex isa Expr && ex.head == :...
+    elseif Finch.RewriteTools.@capture ex :(...)(~arg)
         return esc(ex)
-    elseif ex isa Expr && ex.head == :$ && length(ex.args) == 1
-        return esc(ex.args[1])
+    elseif Finch.RewriteTools.@capture ex :$(~arg)
+        return esc(arg)
     elseif ex isa Symbol
         return nodes.label(ex)
     elseif ex isa Expr
