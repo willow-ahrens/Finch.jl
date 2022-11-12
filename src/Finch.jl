@@ -4,7 +4,6 @@ using Requires
 using SyntaxInterface
 using RewriteTools
 using RewriteTools.Rewriters
-using MacroTools
 using Base.Iterators
 using Base: @kwdef
 using SparseArrays

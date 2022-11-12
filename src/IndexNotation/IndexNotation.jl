@@ -1,5 +1,5 @@
 module IndexNotation
-    using MacroTools, SyntaxInterface, Finch
+    using RewriteTools, SyntaxInterface, Finch
 
     export index_terminal
     export literal

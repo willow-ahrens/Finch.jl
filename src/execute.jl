@@ -86,10 +86,8 @@ function execute_code(ex, T)
     code |>
         lower_caches |>
         lower_cleanup |>
-        MacroTools.striplines |>
-        MacroTools.flatten |>
-        #MacroTools.unresolve |>
-        #MacroTools.resyntax |>
+        striplines |>
+        unblock |>
         unquote_literals
 end
 
