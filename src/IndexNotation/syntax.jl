@@ -1,8 +1,7 @@
-#TODO use MacroTools?
-
 const incs = Dict(:+= => :+, :*= => :*, :&= => :&, :|= => :|)
 
 const program_nodes = (
+    index = index,
     pass = pass,
     loop = loop,
     chunk = chunk,
@@ -15,13 +14,13 @@ const program_nodes = (
     protocol = protocol,
     reader = reader,
     updater = updater,
-    index = index,
     label = (ex) -> :(index_terminal($(esc(ex)))),
     literal = literal,
     value = (ex) -> :(index_terminal($(esc(ex)))),
 )
 
 const instance_nodes = (
+    index = index_instance,
     pass = pass_instance,
     loop = loop_instance,
     chunk = :(throw(NotImplementedError("TODO"))),
@@ -32,7 +31,6 @@ const instance_nodes = (
     call = call_instance,
     access = access_instance,
     protocol = protocol_instance,
-    index = index_instance,
     reader = reader_instance,
     updater = updater_instance,
     label = (ex) -> :($label_instance($(QuoteNode(ex)), $index_terminal_instance($(esc(ex))))),
@@ -49,7 +47,12 @@ or(x, y, tail...) = x || or(y, tail...)
 right(l, m, r...) = right(m, r)
 right(l, r) = r
 
-function finch_parse(ex, nodes=program_nodes, results=Set())
+
+
+finch_parse(ex::Symbol, nodes=program_nodes, results=Set()) = nodes.label(ex)
+finch_parse(ex::QuoteNode, nodes=program_nodes, results=Set()) = nodes.literal(ex.value)
+finch_parse(ex, nodes=program_nodes, results=Set()) = nodes.literal(ex)
+function finch_parse(ex::Expr, nodes=program_nodes, results=Set())
     islinenum(x) = x isa LineNumberNode
     #extra sugar
     if Finch.RewriteTools.@capture ex :macrocall($(Symbol("@∀")), ~ln::islinenum, ~idxs..., ~body)
@@ -158,14 +161,8 @@ function finch_parse(ex, nodes=program_nodes, results=Set())
         return esc(ex)
     elseif Finch.RewriteTools.@capture ex :$(~arg)
         return esc(arg)
-    elseif ex isa Symbol
-        return nodes.label(ex)
-    elseif ex isa Expr
-        return nodes.value(ex)
-    elseif ex isa QuoteNode
-        return nodes.literal(ex.value)
     else
-        return nodes.literal(ex)
+        return nodes.value(ex)
     end
 end
 
