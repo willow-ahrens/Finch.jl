@@ -7,37 +7,173 @@ const ID = 4
 @enum IndexHead begin
     value    =  1ID
     virtual  =  2ID
-    index     =  3ID
-    literal  =  4ID
-    with     =  5ID | IS_TREE | IS_STATEFUL
-    multi    =  6ID | IS_TREE | IS_STATEFUL
-    access   =  7ID | IS_TREE 
-    protocol =  8ID | IS_TREE
-    call     =  9ID | IS_TREE
-    loop     = 10ID | IS_TREE | IS_STATEFUL
-    chunk    = 11ID | IS_TREE | IS_STATEFUL
-    sieve    = 12ID | IS_TREE | IS_STATEFUL
-    assign   = 13ID | IS_TREE | IS_STATEFUL
-    pass     = 14ID | IS_TREE | IS_STATEFUL
-    reader   = 15ID | IS_TREE
-    updater  = 16ID | IS_TREE
-    lifetime = 17ID | IS_TREE | IS_STATEFUL
+    literal  =  3ID
+    index    =  4ID
+    protocol =  5ID | IS_TREE
+    access   =  6ID | IS_TREE 
+    reader   =  7ID | IS_TREE
+    updater  =  8ID | IS_TREE
+    inplace  =  9ID | IS_TREE
+    alloc    = 10ID | IS_TREE
+    call     = 11ID | IS_TREE
+    assign   = 12ID | IS_TREE | IS_STATEFUL
+    with     = 13ID | IS_TREE | IS_STATEFUL
+    multi    = 14ID | IS_TREE | IS_STATEFUL
+    loop     = 15ID | IS_TREE | IS_STATEFUL
+    chunk    = 16ID | IS_TREE | IS_STATEFUL
+    sieve    = 17ID | IS_TREE | IS_STATEFUL
+    pass     = 18ID | IS_TREE | IS_STATEFUL
+    lifetime = 19ID | IS_TREE | IS_STATEFUL
 end
 
 """
     value(val, type)
 
-Finch AST node representing an expression `val` of type `type`.
+Finch AST expression for host code `val` expected to evaluate to a value of type `type`.
 """
 value
 
 """
     virtual(val)
 
-Finch AST node representing an object `val` which has special meaning to the compiler. This
+Finch AST expression for an object `val` which has special meaning to the compiler. This
 type allows users to substitute their own ASTs, etc. into Finch expressions.
 """
 virtual
+
+"""
+    literal(val)
+
+Finch AST expression for the literal value `val`.
+"""
+literal
+
+"""
+    index(name)
+
+Finch AST expression for an index named `name`. Each index must be quantified by a corresponding `loop`
+which iterates over all values of the index.
+"""
+index
+
+"""
+    protocol(idx, proto)
+
+Finch AST expression marking an indexing expression `idx` with the protocol `proto`.
+These usually reside at the toplevel of an indexing expression to an access.
+"""
+protocol
+
+"""
+    access(tns, mode, idx...)
+
+Finch AST expression representing the value of tensor `tns` at the indices
+`idx...`. The `mode` differentiates between reads or updates and whether the
+access is in-place.
+"""
+access
+
+"""
+    reader()
+
+Finch AST expression for an access mode that is read-only.
+"""
+reader
+
+"""
+    updater(mode)
+
+Finch AST expression for an access mode that may modify the tensor. The `mode`
+field specifies whether this access returns this tensor (initializing and
+finalizing) or modifies it in place.
+"""
+updater
+
+"""
+    alloc()
+
+Finch AST expression for an "allocating" update mode. This access will
+initialize and finalize the tensor, and we can be sure that any values
+the tensor held before have been forgotten.
+"""
+alloc
+
+"""
+    inplace()
+
+Finch AST expression for an "in place" update mode. The access will not
+initialize or finalize the tensor.
+"""
+inplace
+
+"""
+    call(op, args...)
+
+Finch AST expression for the result of calling the function `op` on `args...`.
+"""
+call
+
+"""
+    with(cons, prod)
+
+Finch AST statement that runs `cons` with the tensors produced by `prod`.
+"""
+with
+
+"""
+    multi(bodies...)
+
+Finch AST statement that runs `bodies...` independently and returns all their results.
+"""
+multi
+
+"""
+    loop(idxs..., body) 
+
+Finch AST statement that runs `body` for each value of `idxs...`.
+"""
+loop
+
+"""
+    chunk(idx, ext, body) 
+
+Finch AST statement that runs `body` for each value of `idx` in `ext`. Tensors
+in `body` must have ranges that agree with `ext`. This is an internal node.
+"""
+chunk
+
+"""
+    sieve(cond, body)
+
+Finch AST statement that only executes `body` if `cond` is true.
+"""
+sieve
+
+"""
+    assign(lhs, op, rhs)
+
+Finch AST statement that updates the value of `lhs` to `op(lhs, rhs)`. The
+tensors of `lhs` are returned.  Overwriting is accomplished with the function
+`right(lhs, rhs) = rhs`.
+"""
+assign
+
+#TODO get rid of access expressions in pass
+"""
+    pass(tnss...)
+
+Finch AST statement that initializes, finalizes, and returns each tensor in `tnss...`.
+"""
+pass
+
+#TODO figure this one out already
+"""
+    lifetime(body)
+
+Finch AST statement that initializes and finalizes all results in `body`. Most
+finch programs are wrapped by an outer `lifetime`.
+"""
+lifetime
 
 struct IndexNode
     kind::IndexHead
@@ -525,20 +661,3 @@ function Finch.setname(x::IndexNode, sym)
 end
 
 display_expression(io, mime, ex) = show(IOContext(io, :compact=>true), mime, ex)
-
-#=
-struct Workspace <: IndexTerminal
-    n
-end
-
-SyntaxInterface.istree(::Workspace) = false
-Base.hash(ex::Workspace, h::UInt) = hash((Workspace, ex.n), h)
-
-function display_expression(io, ex::Workspace)
-    print(io, "{")
-    display_expression(io, mime, ex.n)
-    print(io, "}[...]")
-end
-
-setname(tns::Workspace, name) = Workspace(name)
-=#

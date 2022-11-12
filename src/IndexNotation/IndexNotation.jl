@@ -1,7 +1,7 @@
 module IndexNotation
     using RewriteTools, SyntaxInterface, Finch
 
-    export index_terminal
+    export index_leaf
     export literal
     export index
     export value

@@ -1,32 +1,29 @@
 abstract type IndexNodeInstance end
-abstract type IndexStatementInstance <: IndexNodeInstance end
-abstract type IndexExpressionInstance <: IndexNodeInstance end
-abstract type IndexTerminalInstance <: IndexExpressionInstance end
 
-struct literalInstance{val} <: IndexTerminalInstance
+struct literalInstance{val} <: IndexNodeInstance
 end
 
 @inline literal_instance(tns) = literalInstance{tns}()
 
-struct PassInstance{Tnss<:Tuple} <: IndexStatementInstance
+struct PassInstance{Tnss<:Tuple} <: IndexNodeInstance
     tnss::Tnss
 end
 Base.:(==)(a::PassInstance, b::PassInstance) = Set([a.tnss...]) == Set([b.tnss...])
 
 @inline pass_instance(tnss...) = PassInstance(tnss)
 
-struct IndexInstance{name} <: IndexTerminalInstance end
+struct IndexInstance{name} <: IndexNodeInstance end
 
 @inline index_instance(name) = IndexInstance{name}()
 
-struct ProtocolInstance{Idx, Val} <: IndexExpressionInstance
+struct ProtocolInstance{Idx, Val} <: IndexNodeInstance
 	idx::Idx
 	val::Val
 end
 Base.:(==)(a::ProtocolInstance, b::ProtocolInstance) = a.idx == b.idx && a.val == b.val
 @inline protocol_instance(idx, val) = ProtocolInstance(idx, val)
 
-struct WithInstance{Cons, Prod} <: IndexStatementInstance
+struct WithInstance{Cons, Prod} <: IndexNodeInstance
 	cons::Cons
 	prod::Prod
 end
@@ -34,14 +31,14 @@ Base.:(==)(a::WithInstance, b::WithInstance) = a.cons == b.cons && a.prod == b.p
 
 @inline with_instance(cons, prod) = WithInstance(cons, prod)
 
-struct MultiInstance{Bodies} <: IndexStatementInstance
+struct MultiInstance{Bodies} <: IndexNodeInstance
     bodies::Bodies
 end
 Base.:(==)(a::MultiInstance, b::MultiInstance) = all(a.bodies .== b.bodies)
 
 multi_instance(bodies...) = MultiInstance(bodies)
 
-struct LoopInstance{Idx, Body} <: IndexStatementInstance
+struct LoopInstance{Idx, Body} <: IndexNodeInstance
 	idx::Idx
 	body::Body
 end
@@ -51,7 +48,7 @@ Base.:(==)(a::LoopInstance, b::LoopInstance) = a.idx == b.idx && a.body == b.bod
 @inline loop_instance(body) = body
 @inline loop_instance(idx, args...) = LoopInstance(idx, loop_instance(args...))
 
-struct SieveInstance{Cond, Body} <: IndexStatementInstance
+struct SieveInstance{Cond, Body} <: IndexNodeInstance
 	cond::Cond
 	body::Body
 end
@@ -61,7 +58,7 @@ Base.:(==)(a::SieveInstance, b::SieveInstance) = a.cond == b.cond && a.body == b
 @inline sieve_instance(body) = body
 @inline sieve_instance(cond, args...) = SieveInstance(cond, sieve_instance(args...))
 
-struct AssignInstance{Lhs, Op, Rhs} <: IndexStatementInstance
+struct AssignInstance{Lhs, Op, Rhs} <: IndexNodeInstance
 	lhs::Lhs
 	op::Op
 	rhs::Rhs
@@ -70,7 +67,7 @@ Base.:(==)(a::AssignInstance, b::AssignInstance) = a.lhs == b.lhs && a.op == b.o
 
 @inline assign_instance(lhs, op, rhs) = AssignInstance(lhs, op, rhs)
 
-struct CallInstance{Op, Args<:Tuple} <: IndexExpressionInstance
+struct CallInstance{Op, Args<:Tuple} <: IndexNodeInstance
     op::Op
     args::Args
 end
@@ -78,7 +75,7 @@ Base.:(==)(a::CallInstance, b::CallInstance) = a.op == b.op && a.args == b.args
 
 @inline call_instance(op, args...) = CallInstance(op, args)
 
-struct AccessInstance{Tns, Mode, Idxs} <: IndexExpressionInstance
+struct AccessInstance{Tns, Mode, Idxs} <: IndexNodeInstance
     tns::Tns
     mode::Mode
     idxs::Idxs
@@ -87,7 +84,7 @@ Base.:(==)(a::AccessInstance, b::AccessInstance) = a.tns == b.tns && a.mode == b
 
 @inline access_instance(tns, mode, idxs...) = AccessInstance(tns, mode, idxs)
 
-struct LabelInstance{tag, Tns} <: IndexExpressionInstance
+struct LabelInstance{tag, Tns} <: IndexNodeInstance
     tns::Tns
 end
 Base.:(==)(a::LabelInstance, b::LabelInstance) = false
@@ -109,17 +106,17 @@ struct ValueInstance{arg} end
 #TODO what is going on here?
 #@inline value_instance(arg) = (isbits(arg) || arg isa Type) ? ValueInstance{arg}() : arg #TODO how does this interact with immutable outputs?
 #@inline value_instance(arg::Symbol) = ValueInstance{arg}()
-@inline value_instance(arg) = index_terminal_instance(arg)
-@inline index_terminal_instance(arg::Type) = literal_instance(arg)
-@inline index_terminal_instance(arg::Function) = literal_instance(arg)
-@inline index_terminal_instance(arg::IndexNodeInstance) = arg
-@inline index_terminal_instance(arg) = arg #TODO ValueInstance
+@inline value_instance(arg) = index_leaf_instance(arg)
+@inline index_leaf_instance(arg::Type) = literal_instance(arg)
+@inline index_leaf_instance(arg::Function) = literal_instance(arg)
+@inline index_leaf_instance(arg::IndexNodeInstance) = arg
+@inline index_leaf_instance(arg) = arg #TODO ValueInstance
 
-@inline index_terminal(arg::Type) = literal(arg)
-@inline index_terminal(arg::Function) = literal(arg)
-@inline index_terminal(arg::IndexNode) = arg
-@inline index_terminal(arg) = isliteral(arg) ? literal(arg) : virtual(arg)
+@inline index_leaf(arg::Type) = literal(arg)
+@inline index_leaf(arg::Function) = literal(arg)
+@inline index_leaf(arg::IndexNode) = arg
+@inline index_leaf(arg) = isliteral(arg) ? literal(arg) : virtual(arg)
 
-Base.convert(::Type{IndexNode}, x) = index_terminal(x)
+Base.convert(::Type{IndexNode}, x) = index_leaf(x)
 Base.convert(::Type{IndexNode}, x::IndexNode) = x
 Base.convert(::Type{IndexNode}, x::Symbol) = error()

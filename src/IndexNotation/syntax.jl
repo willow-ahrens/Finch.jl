@@ -14,9 +14,9 @@ const program_nodes = (
     protocol = protocol,
     reader = reader,
     updater = updater,
-    label = (ex) -> :(index_terminal($(esc(ex)))),
+    label = (ex) -> :(index_leaf($(esc(ex)))),
     literal = literal,
-    value = (ex) -> :(index_terminal($(esc(ex)))),
+    value = (ex) -> :(index_leaf($(esc(ex)))),
 )
 
 const instance_nodes = (
@@ -33,9 +33,9 @@ const instance_nodes = (
     protocol = protocol_instance,
     reader = reader_instance,
     updater = updater_instance,
-    label = (ex) -> :($label_instance($(QuoteNode(ex)), $index_terminal_instance($(esc(ex))))),
+    label = (ex) -> :($label_instance($(QuoteNode(ex)), $index_leaf_instance($(esc(ex))))),
     literal = literal_instance,
-    value = (ex) -> :($index_terminal_instance($(esc(ex))))
+    value = (ex) -> :($index_leaf_instance($(esc(ex))))
 )
 
 and() = true
