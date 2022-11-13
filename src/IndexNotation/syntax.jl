@@ -14,6 +14,8 @@ const program_nodes = (
     protocol = protocol,
     reader = reader,
     updater = updater,
+    modify = modify,
+    create = create,
     label = (ex) -> :(index_leaf($(esc(ex)))),
     literal = literal,
     value = (ex) -> :(index_leaf($(esc(ex)))),
@@ -33,6 +35,8 @@ const instance_nodes = (
     protocol = protocol_instance,
     reader = reader_instance,
     updater = updater_instance,
+    modify = modify_instance,
+    create = create_instance,
     label = (ex) -> :($label_instance($(QuoteNode(ex)), $index_leaf_instance($(esc(ex))))),
     literal = literal_instance,
     value = (ex) -> :($index_leaf_instance($(esc(ex))))
@@ -101,12 +105,12 @@ function (ctx::FinchParserContext)(ex::Expr)
         return ctx(:(!$tns[$(idxs...)] << $right >>= $rhs))
     elseif @capture ex :>>=(:call(:<<, :ref(~tns, ~idxs...), ~op), ~rhs)
         tns isa Symbol && push!(ctx.results, tns)
-        mode = :($(ctx.nodes.updater)($(ctx.nodes.literal(false))))
+        mode = :($(ctx.nodes.updater)($(ctx.nodes.create)()))
         lhs = :($(ctx.nodes.access)($(ctx(tns)), $mode, $(map(ctx, idxs)...)))
         return :($(ctx.nodes.assign)($lhs, $(ctx(op)), $(ctx(rhs))))
     elseif @capture ex :>>=(:call(:<<, :call(:!, :ref(~tns, ~idxs...)), ~op), ~rhs)
         tns isa Symbol && push!(ctx.results, tns)
-        mode = :($(ctx.nodes.updater)($(ctx.nodes.literal(true))))
+        mode = :($(ctx.nodes.updater)($(ctx.nodes.modify)()))
         lhs = :($(ctx.nodes.access)($(ctx(tns)), $mode, $(map(ctx, idxs)...)))
         return :($(ctx.nodes.assign)($lhs, $(ctx(op)), $(ctx(rhs))))
     elseif @capture ex :comparison(~a, ~cmp, ~b)

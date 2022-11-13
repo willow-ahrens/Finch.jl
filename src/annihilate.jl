@@ -66,8 +66,6 @@ isinverse(f::IndexNode, x::IndexNode) = isliteral(f) && isliteral(x) && isinvers
 hasinverse(f::IndexNode) = isliteral(f) && (getinverse(f.val) !== nothing)
 getinverse(f::IndexNode) = something(getinverse(f.val))
 
-isinplace(f::IndexNode) = f.mode == literal(false)
-
 add_rules!([
     (@rule call(~f, ~a...) => if isliteral(f) && all(isliteral, a) && length(a) >= 1 literal(getvalue(f)(getvalue.(a)...)) end),
 
@@ -75,7 +73,7 @@ add_rules!([
     (@rule assign(access(~a, ~m, ~i...), $(literal(right)), ~b) => if b == literal(default(a)) pass(access(a, m)) end),
 
     #TODO we probably can just drop modes from pass
-    (@rule pass(~a..., access(~b, updater($(literal(true)))), ~c...) => pass(a..., c...)),
+    (@rule pass(~a..., access(~b, updater(modify())), ~c...) => pass(a..., c...)),
 
 
     (@rule loop(~i, pass(~a...)) => pass(a...)),
@@ -97,16 +95,16 @@ add_rules!([
         end
     end),
 
-    (@rule with(~a, assign(access(~b, updater($(literal(false)))), ~f, ~c::isliteral)) => begin
+    (@rule with(~a, assign(access(~b, updater(create())), ~f, ~c::isliteral)) => begin
         Rewrite(Postwalk(@rule access(~x, reader()) => if getname(x) === getname(b) call(f, default(b), c) end))(a)
     end),
-    (@rule with(~a, multi(~b..., assign(access(~c, updater($(literal(false)))), ~f, ~d::isliteral), ~e...)) => begin
+    (@rule with(~a, multi(~b..., assign(access(~c, updater(create())), ~f, ~d::isliteral), ~e...)) => begin
         with(Rewrite(Postwalk(@rule access(~x, reader()) => if getname(x) === getname(c) call(f, default(c), d) end))(a), multi(b..., e...))
     end),
-    (@rule with(~a, pass(~b..., access(~c, ~m::isinplace), ~d...)) => begin
+    (@rule with(~a, pass(~b..., access(~c, updater(create())), ~d...)) => begin
         with(Rewrite(Postwalk(@rule access(~x, reader(), ~i...) => if getname(x) === getname(c) default(c) end))(a), pass(b..., d...))
     end),
-    (@rule with(~a, multi(~b..., pass(~c..., access(~d, ~m::isinplace), ~e...), ~f...)) => begin
+    (@rule with(~a, multi(~b..., pass(~c..., access(~d, updater(create())), ~e...), ~f...)) => begin
         with(Rewrite(Postwalk(@rule access(~x, reader(), ~i...) => if getname(x) === getname(d) default(d) end))(a), multi(b..., pass(c..., e...), f...))
     end),
 

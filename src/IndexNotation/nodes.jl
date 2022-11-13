@@ -301,13 +301,25 @@ function IndexNode(kind::IndexHead, args::Vector)
         if length(args) == 0
             return IndexNode(kind, nothing, nothing, IndexNode[])
         else
-            error("wrong number of arguments to reader(...)")
+            error("wrong number of arguments to reader()")
         end
     elseif kind === updater
         if length(args) == 1
             return IndexNode(updater, nothing, nothing, args)
         else
             error("wrong number of arguments to updater(...)")
+        end
+    elseif kind === modify
+        if length(args) == 0
+            return IndexNode(kind, nothing, nothing, IndexNode[])
+        else
+            error("wrong number of arguments to modify()")
+        end
+    elseif kind === create
+        if length(args) == 0
+            return IndexNode(kind, nothing, nothing, IndexNode[])
+        else
+            error("wrong number of arguments to create()")
         end
     else
         error("unimplemented")
@@ -427,14 +439,6 @@ function Base.getproperty(node::IndexNode, sym::Symbol)
     end
 end
 
-function Base.show(io::IO, mime::MIME"text/plain", node::IndexNode) 
-    if isstateful(node)
-        display_statement(io, mime, node, 0)
-    else
-        display_expression(io, mime, node)
-    end
-end
-
 function Finch.getunbound(ex::IndexNode)
     if ex.kind === index
         return [ex.name]
@@ -446,6 +450,14 @@ function Finch.getunbound(ex::IndexNode)
         return mapreduce(Finch.getunbound, union, arguments(ex), init=[])
     else
         return []
+    end
+end
+
+function Base.show(io::IO, mime::MIME"text/plain", node::IndexNode) 
+    if isstateful(node)
+        display_statement(io, mime, node, 0)
+    else
+        display_expression(io, mime, node)
     end
 end
 

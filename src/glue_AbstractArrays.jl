@@ -29,7 +29,7 @@ function virtualize(ex, ::Type{<:AbstractArray{T, N}}, ctx, tag=:tns) where {T, 
 end
 
 function initialize!(arr::VirtualAbstractArray, ctx::LowerJulia, mode, idxs...)
-    if mode.kind === updater && !mode.mode.val
+    if mode.kind === updater && mode.mode.kind === create
         push!(ctx.preamble, quote
             fill!($(arr.ex), 0) #TODO
         end)

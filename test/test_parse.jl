@@ -96,7 +96,7 @@
 
     @test @finch_program(:A[i] = i == j && k < l) ==
         assign(
-            access(:A, updater(false), index(:i)),
+            access(:A, updater(inplace()), index(:i)),
             nothing,
             call(Finch.IndexNotation.and,
                 call(==, index(:i), index(:j)),
