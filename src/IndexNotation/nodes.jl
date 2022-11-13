@@ -4,6 +4,12 @@ const IS_TREE = 1
 const IS_STATEFUL = 2
 const ID = 4
 
+"""
+    IndexHead
+
+An IndexNode type represents many different Finch IR nodes, and an IndexHead
+enum is used to differentiate which kind of node is represented.
+"""
 @enum IndexHead begin
     value    =  1ID
     virtual  =  2ID
@@ -175,6 +181,13 @@ finch programs are wrapped by an outer `lifetime`.
 """
 lifetime
 
+"""
+    IndexNode
+
+A Finch IR node. Finch uses a variant of Concrete Index Notation as an
+intermediate representation. Consult the documentation of each node kind
+for more information.
+"""
 struct IndexNode
     kind::IndexHead
     val::Any
