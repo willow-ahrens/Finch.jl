@@ -95,11 +95,17 @@ Base.:(==)(a::LabelInstance{tag}, b::LabelInstance{tag}) where {tag} = a.tns == 
 struct ReaderInstance end
 reader_instance() = ReaderInstance()
 Base.:(==)(a::ReaderInstance, b::ReaderInstance) = true
-struct UpdaterInstance{InPlace}
-	inplace::InPlace
+struct UpdaterInstance{Mode}
+	mode::Mode
 end
-@inline updater_instance(inplace) = UpdaterInstance(inplace)
-Base.:(==)(a::UpdaterInstance, b::UpdaterInstance) = a.inplace == b.inplace
+@inline updater_instance(mode) = UpdaterInstance(mode)
+Base.:(==)(a::UpdaterInstance, b::UpdaterInstance) = a.mode == b.mode
+struct ModifyInstance end
+modify_instance() = ModifyInstance()
+Base.:(==)(a::ModifyInstance, b::ModifyInstance) = true
+struct CreateInstance end
+create_instance() = CreateInstance()
+Base.:(==)(a::CreateInstance, b::CreateInstance) = true
 
 struct ValueInstance{arg} end
 

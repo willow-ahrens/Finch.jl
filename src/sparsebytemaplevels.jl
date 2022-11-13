@@ -151,7 +151,7 @@ function initialize_level!(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx::Lo
     q = ctx.freshen(lvl.ex, :_q)
     i = ctx.freshen(lvl.ex, :_i)
     p_prev = ctx.freshen(lvl.ex, :_p_prev)
-    if mode.kind === updater && !getvalue(mode.inplace)
+    if mode.kind === updater && !getvalue(mode.mode)
         push!(ctx.preamble, quote
             # fill!($(lvl.ex).tbl, 0)
             # empty!($(lvl.ex).srt)

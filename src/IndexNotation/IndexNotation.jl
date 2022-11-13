@@ -13,7 +13,7 @@ module IndexNotation
     export Chunk, chunk
     export assign
     export call
-    export reader, updater, access
+    export reader, updater, create, modify, access
     export protocol
     export sieve
     export IndexNode, value, isvalue

@@ -19,8 +19,8 @@ enum is used to differentiate which kind of node is represented.
     access   =  6ID | IS_TREE 
     reader   =  7ID | IS_TREE
     updater  =  8ID | IS_TREE
-    inplace  =  9ID | IS_TREE
-    alloc    = 10ID | IS_TREE
+    modify   =  9ID | IS_TREE
+    create   = 10ID | IS_TREE
     call     = 11ID | IS_TREE
     assign   = 12ID | IS_TREE | IS_STATEFUL
     with     = 13ID | IS_TREE | IS_STATEFUL
@@ -96,21 +96,21 @@ finalizing) or modifies it in place.
 updater
 
 """
-    alloc()
+    create()
 
-Finch AST expression for an "allocating" update mode. This access will
+Finch AST expression for an "allocating" update. This access will
 initialize and finalize the tensor, and we can be sure that any values
 the tensor held before have been forgotten.
 """
-alloc
+create
 
 """
-    inplace()
+    modify()
 
-Finch AST expression for an "in place" update mode. The access will not
-initialize or finalize the tensor.
+Finch AST expression for an "in place" update. The access will not
+initialize or finalize the tensor, but can modify it's existing values.
 """
-inplace
+modify
 
 """
     call(op, args...)
@@ -334,7 +334,7 @@ function Base.getproperty(node::IndexNode, sym::Symbol)
     elseif node.kind === reader
         error("type IndexNode(reader, ...) has no property $sym")
     elseif node.kind === updater
-        if sym === :inplace
+        if sym === :mode
             return node.children[1]
         else
             error("type IndexNode(updater, ...) has no property $sym")
@@ -466,7 +466,7 @@ function display_expression(io, mime, node::IndexNode)
         print(io, "reader()")
     elseif node.kind === updater
         print(io, "updater(")
-        display_expression(io, node.inplace)
+        display_expression(io, node.mode)
         print(io, ")")
     elseif node.kind === virtual
         print(io, "virtual(")

@@ -46,10 +46,12 @@ function virtualize(ex, ::Type{IndexNotation.AccessInstance{Tns, Mode, Idxs}}, c
     access(tns, virtualize(:($ex.mode), Mode, ctx), idxs...)
 end
 virtualize(ex, ::Type{IndexNotation.ReaderInstance}, ctx) = reader()
-function virtualize(ex, ::Type{IndexNotation.UpdaterInstance{InPlace}}, ctx) where {InPlace}
-    inplace = virtualize(:($ex.inplace), InPlace, ctx)
-    updater(inplace)
+function virtualize(ex, ::Type{IndexNotation.UpdaterInstance{Mode}}, ctx) where {Mode}
+    mode = virtualize(:($ex.mode), Mode, ctx)
+    updater(mode)
 end
+virtualize(ex, ::Type{IndexNotation.ModifyInstance}, ctx) = modify()
+virtualize(ex, ::Type{IndexNotation.CreateInstance}, ctx) = create()
 function virtualize(ex, ::Type{IndexNotation.LabelInstance{tag, Tns}}, ctx) where {tag, Tns}
     return virtualize(:($ex.tns), Tns, ctx, tag)
 end

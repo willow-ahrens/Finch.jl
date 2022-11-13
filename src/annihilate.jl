@@ -66,7 +66,7 @@ isinverse(f::IndexNode, x::IndexNode) = isliteral(f) && isliteral(x) && isinvers
 hasinverse(f::IndexNode) = isliteral(f) && (getinverse(f.val) !== nothing)
 getinverse(f::IndexNode) = something(getinverse(f.val))
 
-isinplace(f::IndexNode) = f.inplace == literal(false)
+isinplace(f::IndexNode) = f.mode == literal(false)
 
 add_rules!([
     (@rule call(~f, ~a...) => if isliteral(f) && all(isliteral, a) && length(a) >= 1 literal(getvalue(f)(getvalue.(a)...)) end),
