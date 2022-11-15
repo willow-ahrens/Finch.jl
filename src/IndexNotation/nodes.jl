@@ -1,467 +1,688 @@
-abstract type IndexNode end
-abstract type IndexStatement <: IndexNode end
-abstract type IndexExpression <: IndexNode end
-abstract type IndexTerminal <: IndexExpression end
-
 tab = "  "
 
-function Base.show(io::IO, mime::MIME"text/plain", stmt::IndexStatement)
-    if get(io, :compact, false)
-        print(io, "@finch(…)")
+const IS_TREE = 1
+const IS_STATEFUL = 2
+const ID = 4
+
+"""
+    IndexHead
+
+An IndexNode type represents many different Finch IR nodes, and an IndexHead
+enum is used to differentiate which kind of node is represented.
+"""
+@enum IndexHead begin
+    value    =  1ID
+    virtual  =  2ID
+    literal  =  3ID
+    index    =  4ID
+    protocol =  5ID | IS_TREE
+    access   =  6ID | IS_TREE 
+    reader   =  7ID | IS_TREE
+    updater  =  8ID | IS_TREE
+    modify   =  9ID | IS_TREE
+    create   = 10ID | IS_TREE
+    call     = 11ID | IS_TREE
+    assign   = 12ID | IS_TREE | IS_STATEFUL
+    with     = 13ID | IS_TREE | IS_STATEFUL
+    multi    = 14ID | IS_TREE | IS_STATEFUL
+    loop     = 15ID | IS_TREE | IS_STATEFUL
+    chunk    = 16ID | IS_TREE | IS_STATEFUL
+    sieve    = 17ID | IS_TREE | IS_STATEFUL
+    pass     = 18ID | IS_TREE | IS_STATEFUL
+    lifetime = 19ID | IS_TREE | IS_STATEFUL
+end
+
+"""
+    value(val, type)
+
+Finch AST expression for host code `val` expected to evaluate to a value of type `type`.
+"""
+value
+
+"""
+    virtual(val)
+
+Finch AST expression for an object `val` which has special meaning to the compiler. This
+type allows users to substitute their own ASTs, etc. into Finch expressions.
+"""
+virtual
+
+"""
+    literal(val)
+
+Finch AST expression for the literal value `val`.
+"""
+literal
+
+"""
+    index(name)
+
+Finch AST expression for an index named `name`. Each index must be quantified by a corresponding `loop`
+which iterates over all values of the index.
+"""
+index
+
+"""
+    protocol(idx, proto)
+
+Finch AST expression marking an indexing expression `idx` with the protocol `proto`.
+These usually reside at the toplevel of an indexing expression to an access.
+"""
+protocol
+
+"""
+    access(tns, mode, idx...)
+
+Finch AST expression representing the value of tensor `tns` at the indices
+`idx...`. The `mode` differentiates between reads or updates and whether the
+access is in-place.
+"""
+access
+
+"""
+    reader()
+
+Finch AST expression for an access mode that is read-only.
+"""
+reader
+
+"""
+    updater(mode)
+
+Finch AST expression for an access mode that may modify the tensor. The `mode`
+field specifies whether this access returns this tensor (initializing and
+finalizing) or modifies it in place.
+"""
+updater
+
+"""
+    create()
+
+Finch AST expression for an "allocating" update. This access will
+initialize and finalize the tensor, and we can be sure that any values
+the tensor held before have been forgotten.
+"""
+create
+
+"""
+    modify()
+
+Finch AST expression for an "in place" update. The access will not
+initialize or finalize the tensor, but can modify it's existing values.
+"""
+modify
+
+"""
+    call(op, args...)
+
+Finch AST expression for the result of calling the function `op` on `args...`.
+"""
+call
+
+"""
+    with(cons, prod)
+
+Finch AST statement that runs `cons` with the tensors produced by `prod`.
+"""
+with
+
+"""
+    multi(bodies...)
+
+Finch AST statement that runs `bodies...` independently and returns all their results.
+"""
+multi
+
+"""
+    loop(idxs..., body) 
+
+Finch AST statement that runs `body` for each value of `idxs...`.
+"""
+loop
+
+"""
+    chunk(idx, ext, body) 
+
+Finch AST statement that runs `body` for each value of `idx` in `ext`. Tensors
+in `body` must have ranges that agree with `ext`. This is an internal node.
+"""
+chunk
+
+"""
+    sieve(cond, body)
+
+Finch AST statement that only executes `body` if `cond` is true.
+"""
+sieve
+
+"""
+    assign(lhs, op, rhs)
+
+Finch AST statement that updates the value of `lhs` to `op(lhs, rhs)`. The
+tensors of `lhs` are returned.  Overwriting is accomplished with the function
+`right(lhs, rhs) = rhs`.
+"""
+assign
+
+#TODO get rid of access expressions in pass
+"""
+    pass(tnss...)
+
+Finch AST statement that initializes, finalizes, and returns each tensor in `tnss...`.
+"""
+pass
+
+#TODO figure this one out already
+"""
+    lifetime(body)
+
+Finch AST statement that initializes and finalizes all results in `body`. Most
+finch programs are wrapped by an outer `lifetime`.
+"""
+lifetime
+
+"""
+    IndexNode
+
+A Finch IR node. Finch uses a variant of Concrete Index Notation as an
+intermediate representation. Consult the documentation of each node kind
+for more information.
+"""
+struct IndexNode
+    kind::IndexHead
+    val::Any
+    type::Any
+    children::Vector{IndexNode}
+end
+
+isvalue(node::IndexNode) = node.kind === value
+#TODO Delete this one when you can
+isvalue(node) = false
+
+"""
+    isstateful(node)
+
+Returns true if the node is an index statement, and false if the node is an
+index expression. Typically, index statements specify control flow and 
+index expressions describe values.
+"""
+isstateful(node::IndexNode) = Int(node.kind) & IS_STATEFUL != 0
+
+SyntaxInterface.istree(node::IndexNode) = Int(node.kind) & IS_TREE != 0
+SyntaxInterface.arguments(node::IndexNode) = node.children
+SyntaxInterface.operation(node::IndexNode) = node.kind
+
+#TODO clean this up eventually
+function SyntaxInterface.similarterm(::Type{IndexNode}, op::IndexHead, args)
+    @assert istree(IndexNode(op, nothing, nothing, []))
+    IndexNode(op, nothing, nothing, args)
+end
+
+function IndexNode(kind::IndexHead, args::Vector)
+    if kind === value
+        if length(args) == 1
+            return IndexNode(value, args[1], Any, IndexNode[])
+        elseif length(args) == 2
+            return IndexNode(value, args[1], args[2], IndexNode[])
+        else
+            error("wrong number of arguments to value(...)")
+        end
+    elseif kind === literal
+        if length(args) == 1
+            return IndexNode(kind, args[1], nothing, IndexNode[])
+        else
+            error("wrong number of arguments to $kind(...)")
+        end
+    elseif kind === index
+        if length(args) == 1
+            return IndexNode(kind, args[1], nothing, IndexNode[])
+        else
+            error("wrong number of arguments to $kind(...)")
+        end
+    elseif kind === virtual
+        if length(args) == 1
+            return IndexNode(kind, args[1], nothing, IndexNode[])
+        else
+            error("wrong number of arguments to $kind(...)")
+        end
+    elseif kind === with
+        if length(args) == 2
+            return IndexNode(with, nothing, nothing, args)
+        else
+            error("wrong number of arguments to with(...)")
+        end
+    elseif kind === multi
+        return IndexNode(multi, nothing, nothing, args)
+    elseif kind === access
+        if length(args) >= 2
+            return IndexNode(access, nothing, nothing, args)
+        else
+            error("wrong number of arguments to access(...)")
+        end
+    elseif kind === protocol
+        if length(args) == 2
+            return IndexNode(protocol, nothing, nothing, args)
+        else
+            error("wrong number of arguments to protocol(...)")
+        end
+    elseif kind === call
+        if length(args) >= 1
+            return IndexNode(call, nothing, nothing, args)
+        else
+            error("wrong number of arguments to call(...)")
+        end
+    elseif kind === loop
+        if length(args) == 2
+            return IndexNode(loop, nothing, nothing, args)
+        else
+            error("wrong number of arguments to loop(...)")
+        end
+    elseif kind === chunk
+        if length(args) == 3
+            return IndexNode(chunk, nothing, nothing, args)
+        else
+            error("wrong number of arguments to chunk(...)")
+        end
+    elseif kind === sieve
+        if length(args) == 2
+            return IndexNode(sieve, nothing, nothing, args)
+        else
+            error("wrong number of arguments to sieve(...)")
+        end
+    elseif kind === assign
+        if length(args) == 3
+            return IndexNode(assign, nothing, nothing, args)
+        else
+            error("wrong number of arguments to assign(...)")
+        end
+    elseif kind === pass
+        return IndexNode(pass, nothing, nothing, args)
+    elseif kind === reader
+        if length(args) == 0
+            return IndexNode(kind, nothing, nothing, IndexNode[])
+        else
+            error("wrong number of arguments to reader()")
+        end
+    elseif kind === updater
+        if length(args) == 1
+            return IndexNode(updater, nothing, nothing, args)
+        else
+            error("wrong number of arguments to updater(...)")
+        end
+    elseif kind === modify
+        if length(args) == 0
+            return IndexNode(kind, nothing, nothing, IndexNode[])
+        else
+            error("wrong number of arguments to modify()")
+        end
+    elseif kind === create
+        if length(args) == 0
+            return IndexNode(kind, nothing, nothing, IndexNode[])
+        else
+            error("wrong number of arguments to create()")
+        end
     else
-        display_statement(io, mime, stmt, 0)
+        error("unimplemented")
     end
 end
 
-function Base.show(io::IO, mime::MIME"text/plain", ex::IndexExpression)
-	display_expression(io, mime, ex)
+function (kind::IndexHead)(args...)
+    IndexNode(kind, Any[args...,])
 end
 
-display_expression(io, mime, ex) = show(IOContext(io, :compact=>true), mime, ex)
+function Base.getproperty(node::IndexNode, sym::Symbol)
+    if sym === :kind || sym === :val || sym === :type || sym === :children
+        return Base.getfield(node, sym)
+    elseif node.kind === value ||
+            node.kind === literal || 
+            node.kind === virtual
+        error("type IndexNode($(node.kind), ...) has no property $sym")
+    elseif node.kind === index
+        if sym === :name
+            return node.val::Symbol
+        else
+            error("type IndexNode(index, ...) has no property $sym")
+        end
+    elseif node.kind === reader
+        error("type IndexNode(reader, ...) has no property $sym")
+    elseif node.kind === updater
+        if sym === :mode
+            return node.children[1]
+        else
+            error("type IndexNode(updater, ...) has no property $sym")
+        end
+    elseif node.kind === with
+        if sym === :cons
+            return node.children[1]
+        elseif sym === :prod
+            return node.children[2]
+        else
+            error("type IndexNode(with, ...) has no property $sym")
+        end
+    elseif node.kind === multi
+        if sym === :bodies
+            return node.children
+        else
+            error("type IndexNode(multi, ...) has no property $sym")
+        end
+    elseif node.kind === access
+        if sym === :tns
+            return node.children[1]
+        elseif sym === :mode
+            return node.children[2]
+        elseif sym === :idxs
+            return @view node.children[3:end]
+        else
+            error("type IndexNode(access, ...) has no property $sym")
+        end
+    elseif node.kind === call
+        if sym === :op
+            return node.children[1]
+        elseif sym === :args
+            return @view node.children[2:end]
+        else
+            error("type IndexNode(call, ...) has no property $sym")
+        end
+    elseif node.kind === protocol
+        if sym === :idx
+            return node.children[1]
+        elseif sym === :mode
+            return node.children[2]
+        else
+            error("type IndexNode(protocol, ...) has no property $sym")
+        end
+    elseif node.kind === loop
+        if sym === :idx
+            return node.children[1]
+        elseif sym === :body
+            return node.children[2]
+        else
+            error("type IndexNode(loop, ...) has no property $sym")
+        end
+    elseif node.kind === chunk
+        if sym === :idx
+            return node.children[1]
+        elseif sym === :ext
+            return node.children[2]
+        elseif sym === :body
+            return node.children[3]
+        else
+            error("type IndexNode(chunk, ...) has no property $sym")
+        end
+    elseif node.kind === sieve
+        if sym === :cond
+            return node.children[1]
+        elseif sym === :body
+            return node.children[2]
+        else
+            error("type IndexNode(sieve, ...) has no property $sym")
+        end
+    elseif node.kind === assign
+        if sym === :lhs
+            return node.children[1]
+        elseif sym === :op
+            return node.children[2]
+        elseif sym === :rhs
+            return node.children[3]
+        else
+            error("type IndexNode(assign, ...) has no property $sym")
+        end
+    elseif node.kind === pass
+        #TODO move op into updater
+        if sym === :tnss
+            return node.children
+        else
+            error("type IndexNode(pass, ...) has no property $sym")
+        end
+    else
+        error("type IndexNode has no property $sym")
+    end
+end
 
-function Base.show(io::IO, ex::IndexNode)
-    if istree(ex)
-        print(io, operation(ex))
+function Finch.getunbound(ex::IndexNode)
+    if ex.kind === index
+        return [ex.name]
+    elseif ex.kind === loop
+        return setdiff(getunbound(ex.body), getunbound(ex.idx))
+    elseif ex.kind === chunk
+        return setdiff(union(getunbound(ex.body), getunbound(ex.ext)), getunbound(ex.idx))
+    elseif istree(ex)
+        return mapreduce(Finch.getunbound, union, arguments(ex), init=[])
+    else
+        return []
+    end
+end
+
+function Base.show(io::IO, mime::MIME"text/plain", node::IndexNode) 
+    if isstateful(node)
+        display_statement(io, mime, node, 0)
+    else
+        display_expression(io, mime, node)
+    end
+end
+
+function display_expression(io, mime, node::IndexNode)
+    if get(io, :compact, false)
+        print(io, "@finch(…)")
+    elseif node.kind === value
+        print(io, node.val)
+        if node.type !== Any
+            print(io, "::")
+            print(io, node.type)
+        end
+    elseif node.kind === literal
+        print(io, node.val)
+    elseif node.kind === index
+        print(io, node.name)
+    elseif node.kind === reader
+        print(io, "reader()")
+    elseif node.kind === updater
+        print(io, "updater(")
+        display_expression(io, node.mode)
+        print(io, ")")
+    elseif node.kind === virtual
+        print(io, "virtual(")
+        print(io, node.val)
+        print(io, ")")
+    elseif node.kind === access
+        display_expression(io, mime, node.tns)
+        print(io, "[")
+        if length(node.idxs) >= 1
+            for idx in node.idxs[1:end-1]
+                display_expression(io, mime, idx)
+                print(io, ", ")
+            end
+            display_expression(io, mime, node.idxs[end])
+        end
+        print(io, "]")
+    elseif node.kind === call
+        display_expression(io, mime, node.op)
         print(io, "(")
-        for arg in arguments(ex)[1:end-1]
-            show(io, arg)
+        for arg in node.args[1:end-1]
+            display_expression(io, mime, arg)
             print(io, ", ")
         end
-        if length(arguments(ex)) >= 1
-            show(io, last(arguments(ex)))
+        display_expression(io, mime, node.args[end])
+        print(io, ")")
+    elseif istree(node)
+        print(io, operation(node))
+        print(io, "(")
+        for arg in arguments(node)[1:end-1]
+            print(io, arg)
+            print(io, ",")
+        end
+        if !isempty(arguments(node))
+            print(arguments(node)[end])
+        end
+    else
+        error("unimplemented")
+    end
+end
+
+function display_statement(io, mime, node::IndexNode, level)
+    if node.kind === with
+        print(io, tab^level * "(\n")
+        display_statement(io, mime, node.cons, level + 1)
+        print(io, tab^level * ") where (\n")
+        display_statement(io, mime, node.prod, level + 1)
+        print(io, tab^level * ")\n")
+    elseif node.kind === multi
+        print(io, tab^level * "begin\n")
+        for body in node.bodies
+            display_statement(io, mime, body, level + 1)
+        end
+        print(io, tab^level * "end\n")
+    elseif node.kind === loop
+        print(io, tab^level * "@∀ ")
+        while node.kind === loop
+            display_expression(io, mime, node.idx)
+            print(io," ")
+            node = node.body
+        end
+        print(io,"(\n")
+        display_statement(io, mime, node, level + 1)
+        print(io, tab^level * ")\n")
+    elseif node.kind === chunk
+        print(io, tab^level * "@∀ ")
+        display_expression(io, mime, node.idx)
+        print(io, " : ")
+        display_expression(io, mime, node.ext)
+        print(io," (\n")
+        display_statement(io, mime, node.body, level + 1)
+        print(io, tab^level * ")\n")
+    elseif node.kind === sieve
+        print(io, tab^level * "@sieve ")
+        while node.body.kind === sieve
+            display_expression(io, mime, node.cond)
+            print(io," && ")
+            node = node.body
+        end
+        display_expression(io, mime, node.cond)
+        node = node.body
+        print(io," (\n")
+        display_statement(io, mime, node, level + 1)
+        print(io, tab^level * ")\n")
+    elseif node.kind === assign
+        print(io, tab^level)
+        display_expression(io, mime, node.lhs)
+        print(io, " ")
+        if node.lhs.mode.kind === updater
+            #TODO add << >>
+            display_expression(io, mime, node.op)
+        end
+        print(io, "= ")
+        display_expression(io, mime, node.rhs)
+        print(io, "\n")
+    elseif node.kind === protocol
+        display_expression(io, mime, ex.idx)
+        print(io, "::")
+        display_expression(io, mime, ex.mode)
+    elseif node.kind === pass
+        print(io, tab^level * "(")
+        for tns in arguments(node)[1:end-1]
+            display_expression(io, mime, tns)
+            print(io, ", ")
+        end
+        if length(arguments(node)) >= 1
+            display_expression(io, mime, last(arguments(node)))
         end
         print(io, ")")
     else
-        invoke(show, Tuple{IO, Any}, io, ex)
+        error("unimplemented")
+    end
+end
+
+function Base.:(==)(a::IndexNode, b::IndexNode)
+    if !istree(a)
+        if a.kind === value
+            return b.kind === value && a.val == b.val && a.type === b.type
+        elseif a.kind === literal
+            return b.kind === literal && isequal(a.val, b.val) #TODO Feels iffy idk
+        elseif a.kind === index
+            return b.kind === index && a.name == b.name
+        elseif a.kind === virtual
+            return b.kind === virtual && a.val == b.val #TODO Feels iffy idk
+        else
+            error("unimplemented")
+        end
+    elseif a.kind === pass
+        return b.kind === pass && Set(a.tnss) == Set(b.tnss) #TODO This feels... not quite right
+    elseif istree(a)
+        return a.kind === b.kind && a.children == b.children
+    else
+        return false
     end
 end
 
 function Base.hash(a::IndexNode, h::UInt)
-    if istree(a)
-        for arg in arguments(a)
-            h = hash(arg, h)
+    if !istree(a)
+        if a.kind === value
+            return hash(value, hash(a.val, hash(a.type, h)))
+        elseif a.kind === literal
+            return hash(literal, hash(a.val, h))
+        elseif a.kind === virtual
+            return hash(virtual, hash(a.val, h))
+        elseif a.kind === index
+            return hash(index, hash(a.name, h))
+        else
+            error("unimplemented")
         end
-        hash(operation(a), h)
+    elseif istree(a)
+        return hash(a.kind, hash(a.children, h))
     else
-        error()
-        invoke(hash, Tuple{Any, UInt}, a, h)
+        return false
     end
 end
 
-Finch.isliteral(ex::IndexNode) = false
-#=
-function Base.:(==)(a::T, b::T) with {T <: IndexNode}
-    if istree(a) && istree(b)
-        (operation(a) == operation(b)) && 
-        (arguments(a) == arguments(b))
+IndexNotation.isliteral(node::IndexNode) = node.kind === literal
+
+function Finch.getvalue(ex::IndexNode)
+    ex.kind === literal || error("expected literal")
+    ex.val
+end
+
+function Finch.getresults(node::IndexNode)
+    if node.kind === with
+        Finch.getresults(node.cons)
+    elseif node.kind === multi
+        return mapreduce(Finch.getresults, vcat, node.bodies)
+    elseif node.kind === access
+        [access(node.tns, node.mode)]
+    elseif node.kind === loop
+        Finch.getresults(node.body)
+    elseif node.kind === chunk
+        Finch.getresults(node.body)
+    elseif node.kind === sieve
+        Finch.getresults(node.body)
+    elseif node.kind === assign
+        Finch.getresults(node.lhs)
+    elseif node.kind === pass
+        return node.tnss
     else
-        invoke(==, Tuple{Any, Any}, a, b)
+        error("unimplemented")
     end
 end
-=#
 
-struct Literal{T} <: IndexTerminal
-    val::T
-end
-
-SyntaxInterface.istree(::Literal) = false
-Base.hash(ex::Literal, h::UInt) = hash(Literal, hash(ex.val, h))
-display_expression(io, mime, ex::Literal) = print(io, ex.val)
-Finch.isliteral(::Literal) = true
-Finch.getvalue(ex::Literal) = ex.val
-Base.:(==)(a::Literal, b::Literal) = isequal(a.val, b.val)
-
-struct Virtual{T} <: IndexTerminal
-    ex
-end
-
-Base.:(==)(a::Virtual, b::Virtual) = false
-Base.:(==)(a::Virtual{T}, b::Virtual{T}) where {T} = a.ex == b.ex
-Base.hash(ex::Virtual{T}, h::UInt) where {T} = hash(Virtual{T}, hash(ex.ex, h))
-
-SyntaxInterface.istree(::Virtual) = false
-
-isliteral(::Virtual) = false
-
-struct Pass <: IndexStatement
-	tnss::Vector{Any}
-end
-Base.:(==)(a::Pass, b::Pass) = Set(a.tnss) == Set(b.tnss) #TODO This feels... not quite right
-
-pass(args...) = pass!(vcat(args...))
-pass!(args) = Pass(args)
-
-SyntaxInterface.istree(stmt::Pass) = true
-SyntaxInterface.operation(stmt::Pass) = pass
-SyntaxInterface.arguments(stmt::Pass) = stmt.tnss
-SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(pass), args) = pass!(args)
-
-function display_statement(io, mime, stmt::Pass, level)
-    print(io, tab^level * "(")
-    for tns in arguments(stmt)[1:end-1]
-        display_expression(io, mime, tns)
-        print(io, ", ")
-    end
-    if length(arguments(stmt)) >= 1
-        display_expression(io, mime, last(arguments(stmt)))
-    end
-    print(io, ")")
-end
-
-Finch.getresults(stmt::Pass) = stmt.tnss
-
-struct Workspace <: IndexTerminal
-    n
-end
-
-SyntaxInterface.istree(::Workspace) = false
-Base.hash(ex::Workspace, h::UInt) = hash((Workspace, ex.n), h)
-
-function display_expression(io, ex::Workspace)
-    print(io, "{")
-    display_expression(io, mime, ex.n)
-    print(io, "}[...]")
-end
-
-setname(tns::Workspace, name) = Workspace(name)
-
-struct Name <: IndexTerminal
-    name
-end
-
-SyntaxInterface.istree(::Name) = false
-Base.hash(ex::Name, h::UInt) = hash((Name, ex.name), h)
-
-display_expression(io, mime, ex::Name) = print(io, ex.name)
-
-Finch.getname(ex::Name) = ex.name
-Finch.setname(ex::Name, name) = Name(name)
-Finch.getunbound(ex::Name) = [ex.name]
-
-struct Protocol{Idx, Val} <: IndexExpression
-    idx::Idx
-    val::Val
-end
-Base.:(==)(a::Protocol, b::Protocol) = a.idx == b.idx && a.val == b.val
-
-protocol(args...) = protocol!(vcat(args...))
-protocol!(args) = Protocol(args[1], args[2])
-
-Finch.getname(ex::Protocol) = Finch.getname(ex.idx)
-SyntaxInterface.istree(::Protocol) = true
-SyntaxInterface.operation(ex::Protocol) = protocol
-SyntaxInterface.arguments(ex::Protocol) = Any[ex.idx, ex.val]
-SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(protocol), args) = protocol!(args)
-
-function display_expression(io, mime, ex::Protocol)
-    display_expression(io, mime, ex.idx)
-    print(io, "::")
-    display_expression(io, mime, ex.val)
-end
-
-struct With <: IndexStatement
-	cons::Any
-	prod::Any
-end
-Base.:(==)(a::With, b::With) = a.cons == b.cons && a.prod == b.prod
-
-with(args...) = with!(vcat(args...))
-with!(args) = With(args[1], args[2])
-
-SyntaxInterface.istree(::With) = true
-SyntaxInterface.operation(stmt::With) = with
-SyntaxInterface.arguments(stmt::With) = Any[stmt.cons, stmt.prod]
-SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(with), args) = with!(args)
-
-function display_statement(io, mime, stmt::With, level)
-    print(io, tab^level * "(\n")
-    display_statement(io, mime, stmt.cons, level + 1)
-    print(io, tab^level * ") where (\n")
-    display_statement(io, mime, stmt.prod, level + 1)
-    print(io, tab^level * ")\n")
-end
-
-Finch.getresults(stmt::With) = Finch.getresults(stmt.cons)
-
-struct Multi <: IndexStatement
-    bodies
-end
-Base.:(==)(a::Multi, b::Multi) = a.bodies == b.bodies
-
-multi(args...) = multi!(vcat(args...))
-multi!(args) = Multi(args)
-
-SyntaxInterface.istree(::Multi) = true
-SyntaxInterface.operation(stmt::Multi) = multi
-SyntaxInterface.arguments(stmt::Multi) = stmt.bodies
-SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(multi), args) = multi!(args)
-
-function display_statement(io, mime, stmt::Multi, level)
-    print(io, tab^level * "begin\n")
-    for body in stmt.bodies
-        display_statement(io, mime, body, level + 1)
-    end
-    print(io, tab^level * "end\n")
-end
-
-Finch.getresults(stmt::Multi) = mapreduce(Finch.getresults, vcat, stmt.bodies)
-
-Base.@kwdef struct Chunk <: IndexStatement
-	idx::Any
-    ext::Any
-	body::Any
-end
-Base.:(==)(a::Chunk, b::Chunk) = a.idx == b.idx && a.ext == b.ext && a.body == b.body
-
-chunk(args...) = chunk!(vcat(args...))
-chunk!(args) = Chunk(args[1], args[2], args[3])
-
-SyntaxInterface.istree(::Chunk) = true
-SyntaxInterface.operation(stmt::Chunk) = chunk
-SyntaxInterface.arguments(stmt::Chunk) = Any[stmt.idx, stmt.ext, stmt.body]
-SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(chunk), args) = chunk!(args)
-Finch.getunbound(ex::Chunk) = setdiff(union(getunbound(ex.body), getunbound(ex.ext)), getunbound(ex.idx))
-
-function display_statement(io, mime, stmt::Chunk, level)
-    print(io, tab^level * "@∀ ")
-    display_expression(io, mime, stmt.idx)
-    print(io, " : ")
-    display_expression(io, mime, stmt.ext)
-    print(io," (\n")
-    display_statement(io, mime, stmt.body, level + 1)
-    print(io, tab^level * ")\n")
-end
-
-Finch.getresults(stmt::Chunk) = Finch.getresults(stmt.body)
-
-struct Loop <: IndexStatement
-	idx::Any
-	body::Any
-end
-Base.:(==)(a::Loop, b::Loop) = a.idx == b.idx && a.body == b.body
-
-loop(args...) = loop!(args)
-loop!(args) = foldr(Loop, args)
-
-SyntaxInterface.istree(::Loop) = true
-SyntaxInterface.operation(stmt::Loop) = loop
-SyntaxInterface.arguments(stmt::Loop) = Any[stmt.idx; stmt.body]
-SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(loop), args) = loop!(args)
-
-Finch.getunbound(ex::Loop) = setdiff(getunbound(ex.body), getunbound(ex.idx))
-
-function display_statement(io, mime, stmt::Loop, level)
-    print(io, tab^level * "@∀ ")
-    while stmt isa Loop
-        display_expression(io, mime, stmt.idx)
-        print(io," ")
-        stmt = stmt.body
-    end
-    print(io,"(\n")
-    display_statement(io, mime, stmt, level + 1)
-    print(io, tab^level * ")\n")
-end
-
-Finch.getresults(stmt::Loop) = Finch.getresults(stmt.body)
-
-
-struct Sieve <: IndexStatement
-	cond::Any
-	body::Any
-end
-Base.:(==)(a::Sieve, b::Sieve) = a.cond == b.cond && a.body == b.body
-
-sieve(args...) = sieve!(args)
-sieve!(args) = foldr(Sieve, args)
-
-SyntaxInterface.istree(::Sieve) = true
-SyntaxInterface.operation(stmt::Sieve) = sieve
-SyntaxInterface.arguments(stmt::Sieve) = Any[stmt.cond; stmt.body]
-SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(sieve), args) = sieve!(args)
-
-Finch.getunbound(ex::Sieve) = setdiff(getunbound(ex.body), getunbound(ex.cond))
-
-function display_statement(io, mime, stmt::Sieve, level)
-    print(io, tab^level * "@sieve ")
-    while stmt.body isa Sieve
-        display_expression(io, mime, stmt.cond)
-        print(io," && ")
-        stmt = stmt.body
-    end
-    display_expression(io, mime, stmt.cond)
-    stmt = stmt.body
-    print(io," (\n")
-    display_statement(io, mime, stmt, level + 1)
-    print(io, tab^level * ")\n")
-end
-
-Finch.getresults(stmt::Sieve) = Finch.getresults(stmt.body)
-
-struct Assign{Lhs} <: IndexStatement
-	lhs::Lhs
-	op::Any
-	rhs::Any
-end
-Base.:(==)(a::Assign, b::Assign) = a.lhs == b.lhs && a.op == b.op && a.rhs == b.rhs
-
-assign(args...) = assign!(vcat(args...))
-function assign!(args)
-    if length(args) == 2
-        Assign(args[1], nothing, args[2])
-    elseif length(args) == 3
-        Assign(args[1], args[2], args[3])
+function Finch.getname(x::IndexNode)
+    if x.kind === index
+        return x.val
+    elseif x.kind === virtual
+        return Finch.getname(x.val)
+    elseif x.kind === access
+        return Finch.getname(x.tns)
     else
-        throw(ArgumentError("wrong number of arguments to assign"))
+        error("unimplemented")
     end
 end
 
-SyntaxInterface.istree(::Assign)= true
-SyntaxInterface.operation(stmt::Assign) = assign
-function SyntaxInterface.arguments(stmt::Assign)
-    if stmt.op === nothing
-        Any[stmt.lhs, stmt.rhs]
+function Finch.setname(x::IndexNode, sym)
+    if x.kind === index
+        return index(sym)
+    elseif x.kind === virtual
+        return Finch.setname(x.val, sym)
     else
-        Any[stmt.lhs, stmt.op, stmt.rhs]
+        error("unimplemented")
     end
 end
-SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(assign), args) = assign!(args)
 
-function display_statement(io, mime, stmt::Assign, level)
-    print(io, tab^level)
-    display_expression(io, mime, stmt.lhs)
-    print(io, " ")
-    if stmt.op !== nothing
-        display_expression(io, mime, stmt.op)
-    end
-    print(io, "= ")
-    display_expression(io, mime, stmt.rhs)
-    print(io, "\n")
-end
-
-Finch.getresults(stmt::Assign) = Finch.getresults(stmt.lhs)
-
-struct Call <: IndexExpression
-    op::Any
-    args::Vector{Any}
-end
-Base.:(==)(a::Call, b::Call) = a.op == b.op && a.args == b.args
-
-call(args...) = call!(vcat(args...))
-call!(args) = Call(popfirst!(args), args)
-
-SyntaxInterface.istree(::Call) = true
-SyntaxInterface.operation(ex::Call) = call
-SyntaxInterface.arguments(ex::Call) = Any[ex.op; ex.args]
-SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(call), args) = call!(args)
-
-function display_expression(io, mime, ex::Call)
-    display_expression(io, mime, ex.op)
-    print(io, "(")
-    for arg in ex.args[1:end-1]
-        display_expression(io, mime, arg)
-        print(io, ", ")
-    end
-    display_expression(io, mime, ex.args[end])
-    print(io, ")")
-end
-
-struct Read <: IndexTerminal end
-struct Write <: IndexTerminal end
-struct Update <: IndexTerminal end
-
-struct Access{T, M} <: IndexExpression
-    tns::T
-    mode::M
-    idxs::Vector
-end
-Base.:(==)(a::Access, b::Access) = a.tns == b.tns && a.idxs == b.idxs
-
-access(args...) = access!(vcat(Any[], args...))
-access!(args) = Access(popfirst!(args), popfirst!(args), args)
-
-SyntaxInterface.istree(::Access) = true
-SyntaxInterface.operation(ex::Access) = access
-SyntaxInterface.arguments(ex::Access) = Any[ex.tns; ex.mode; ex.idxs]
-SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(access), args) = access!(args)
-
-function display_expression(io, mime, ex::Access)
-    display_expression(io, mime, ex.tns)
-    print(io, "[")
-    if length(ex.idxs) >= 1
-        for idx in ex.idxs[1:end-1]
-            display_expression(io, mime, idx)
-            print(io, ", ")
-        end
-        display_expression(io, mime, ex.idxs[end])
-    end
-    print(io, "]")
-end
-
-Finch.getresults(stmt::Access) = [stmt.tns]
-
-struct Lexicography{T}
-    arg::T
-end
-
-function Base.isless(a::Lexicography, b::Lexicography)
-    (a, b) = a.arg, b.arg
-    #@assert which(priority, Tuple{typeof(a)}) == which(priority, Tuple{typeof(b)}) || priority(a) != priority(b)
-    if a != b
-        a_key = (priority(a), comparators(a)...)
-        b_key = (priority(b), comparators(b)...)
-        @assert a_key < b_key || b_key < a_key "a = $a b = $b a_key = $a_key b_key = $b_key"
-        return a_key < b_key
-    end
-    return false
-end
-
-function Base.:(==)(a::Lexicography, b::Lexicography)
-    (a, b) = a.arg, b.arg
-    #@assert which(priority, Tuple{typeof(a)}) == which(priority, Tuple{typeof(b)}) || priority(a) != priority(b)
-    a_key = (priority(a), comparators(a)...)
-    b_key = (priority(b), comparators(b)...)
-    return a_key == b_key
-end
-
-priority(::Missing) = (0, 4)
-comparators(::Missing) = (1,)
-
-priority(::Number) = (1, 1)
-comparators(x::Number) = (x, sizeof(x), typeof(x))
-
-priority(::Function) = (1, 2)
-comparators(x::Function) = (string(x),)
-
-priority(::Symbol) = (2, 0)
-comparators(x::Symbol) = (x,)
-
-priority(::Expr) = (2, 1)
-comparators(x::Expr) = (x.head, map(Lexicography, x.args)...)
-
-priority(::Name) = (3,0)
-comparators(x::Name) = (x.name,)
-
-priority(::Literal) = (3,1)
-comparators(x::Literal) = (Lexicography(x.val),)
-
-priority(::Read) = (3,2,1)
-comparators(x::Read) = ()
-
-priority(::Write) = (3,2,2)
-comparators(x::Write) = ()
-
-priority(::Update) = (3,2,3)
-comparators(x::Update) = ()
-
-priority(::Workspace) = (3,3)
-comparators(x::Workspace) = (x.n,)
-
-priority(::Virtual) = (3,4)
-comparators(x::Virtual) = (string(typeof(x)), Lexicography(x.ex))
-
-priority(::IndexNode) = (3,Inf)
-comparators(x::IndexNode) = (@assert istree(x); (string(operation(x)), map(Lexicography, arguments(x))...))
-
-#TODO these are nice defaults if we want to allow nondeterminism
-#priority(::Any) = (Inf,)
-#comparators(x::Any) = hash(x)
+display_expression(io, mime, ex) = show(IOContext(io, :compact=>true), mime, ex)

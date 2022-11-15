@@ -27,10 +27,10 @@ function Base.show(io::IO, lvl::ElementLevel{D}) where {D}
     print(io, ")")
 end 
 
-@inline arity(fbr::Fiber{<:ElementLevel}) = 0
-@inline shape(fbr::Fiber{<:ElementLevel}) = ()
-@inline domain(fbr::Fiber{<:ElementLevel}) = ()
-@inline image(fbr::Fiber{ElementLevel{D, Tv}}) where {D, Tv} = Tv
+@inline Base.ndims(fbr::Fiber{<:ElementLevel}) = 0
+@inline Base.size(fbr::Fiber{<:ElementLevel}) = ()
+@inline Base.axes(fbr::Fiber{<:ElementLevel}) = ()
+@inline Base.eltype(fbr::Fiber{ElementLevel{D, Tv}}) where {D, Tv} = Tv
 @inline default(lvl::Fiber{<:ElementLevel{D}}) where {D} = D
 
 function (fbr::Fiber{<:ElementLevel})()
@@ -61,31 +61,32 @@ function virtualize(ex, ::Type{ElementLevel{D, Tv}}, ctx, tag) where {D, Tv}
     VirtualElementLevel(sym, Tv, D, val_alloc, val)
 end
 
-summary_f_str(::VirtualElementLevel) = ""
-summary_f_str_args(::VirtualElementLevel) = (lvl.D,)
+summary_f_code(lvl::VirtualElementLevel) = "e($(lvl.D))"
 
 function getsites(fbr::VirtualFiber{VirtualElementLevel})
     return []
 end
 
-setdims!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode) = fbr
-getdims(::VirtualFiber{VirtualElementLevel}, ctx, mode) = ()
+setsize!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode) = fbr
+getsize(::VirtualFiber{VirtualElementLevel}, ctx, mode) = ()
 
 @inline default(fbr::VirtualFiber{VirtualElementLevel}) = fbr.lvl.D
-@inline image(fbr::VirtualFiber{VirtualElementLevel}) = fbr.lvl.Tv
+Base.eltype(fbr::VirtualFiber{VirtualElementLevel}) = fbr.lvl.Tv
 
-function initialize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode::Union{Write, Update})
+function initialize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
     lvl = fbr.lvl
     my_q = ctx.freshen(lvl.ex, :_q)
     if !envreinitialized(fbr.env)
-        push!(ctx.preamble, quote
-            $(lvl.val_alloc) = $Finch.refill!($(lvl.ex).val, $(lvl.D), 0, 4)
-        end)
+        if mode.kind === updater && mode.mode.kind === create
+            push!(ctx.preamble, quote
+                $(lvl.val_alloc) = $Finch.refill!($(lvl.ex).val, $(lvl.D), 0, 4)
+            end)
+        end
     end
     lvl
 end
 
-finalize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode::Union{Write, Update}) = fbr.lvl
+finalize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode) = fbr.lvl
 
 interval_assembly_depth(lvl::VirtualElementLevel) = Inf
 
@@ -108,75 +109,40 @@ function reinitialize!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
     end)
 end
 
-#=
-#TODO This assumes that all of the elements will eventually be written to, which isn't always true sadly.
-function assemble!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode::Write)
-    lvl = fbr.lvl
-    q = envposition(fbr.env)
-    push!(ctx.preamble, quote
-        $(lvl.val_alloc) < $q && ($(lvl.val_alloc) = $Finch.regrow!($(lvl.ex).val, $(lvl.val_alloc), $q))
-    end)
-    return nothing
-end
-=#
-
-function refurl(fbr::VirtualFiber{VirtualElementLevel}, ctx, ::Read)
+function refurl(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
     lvl = fbr.lvl
 
-    Thunk(
-        preamble = quote
-            $(lvl.val) = $(lvl.ex).val[$(ctx(envposition(fbr.env)))]
-        end,
-        body = Access(fbr, Read(), []),
-    )
+    if mode.kind === reader
+        return Thunk(
+            preamble = quote
+                $(lvl.val) = $(lvl.ex).val[$(ctx(envposition(fbr.env)))]
+            end,
+            body = access(fbr, mode),
+        )
+    elseif mode.kind === updater
+        return Thunk(
+            preamble = quote
+                $(lvl.val) = $(lvl.ex).val[$(ctx(envposition(fbr.env)))]
+            end,
+            body = access(fbr, mode),
+            epilogue = quote
+                $(lvl.ex).val[$(ctx(envposition(fbr.env)))] = $(lvl.val)
+            end,
+        )
+    else
+        error("unimplemented")
+    end
 end
 
-function refurl(fbr::VirtualFiber{VirtualElementLevel}, ctx, ::Write)
-    lvl = fbr.lvl
-
-    Thunk(
-        preamble = quote
-            $(lvl.val) = $(lvl.D)
-        end,
-        body = Access(fbr, Write(), []),
-        epilogue = quote
-            $(lvl.ex).val[$(ctx(envposition(fbr.env)))] = $(lvl.val)
-        end,
-    )
-end
-
-function refurl(fbr::VirtualFiber{VirtualElementLevel}, ctx, ::Update)
-    lvl = fbr.lvl
-
-    Thunk(
-        preamble = quote
-            $(lvl.val) = $(lvl.ex).val[$(ctx(envposition(fbr.env)))]
-        end,
-        body = Access(fbr, Update(), []),
-        epilogue = quote
-            $(lvl.ex).val[$(ctx(envposition(fbr.env)))] = $(lvl.val)
-        end,
-    )
-end
-
-function (ctx::Finch.LowerJulia)(node::Access{<:VirtualFiber{VirtualElementLevel}}, ::DefaultStyle) where {Tv, Ti}
+function lowerjulia_access(ctx::Finch.LowerJulia, node, tns::VirtualFiber{VirtualElementLevel})
     @assert isempty(node.idxs)
-    tns = node.tns
 
-    node.tns.lvl.val
-end
-
-hasdefaultcheck(::VirtualElementLevel) = true
-
-function (ctx::Finch.LowerJulia)(node::Access{<:VirtualFiber{VirtualElementLevel}, <:Union{Write, Update}}, ::DefaultStyle) where {Tv, Ti}
-    @assert isempty(node.idxs)
-    tns = node.tns
-
-    if envdefaultcheck(tns.env) !== nothing
+    if node.mode.kind === updater && envdefaultcheck(tns.env) !== nothing
         push!(ctx.preamble, quote
             $(envdefaultcheck(tns.env)) = false
         end)
     end
-
-    node.tns.lvl.val
+    tns.lvl.val
 end
+
+hasdefaultcheck(::VirtualElementLevel) = true

@@ -1,5 +1,3 @@
-using Finch.IndexNotation
-using Finch.IndexNotation: call_instance, assign_instance, access_instance, value_instance, name_instance, loop_instance, with_instance, label_instance, protocol_instance
 
 @testset "Parse" begin
     @test @finch_program_instance(:f(:B[i::walk, k] * :C[k, j]^3, 42)) ==
@@ -9,102 +7,99 @@ using Finch.IndexNotation: call_instance, assign_instance, access_instance, valu
                 label_instance(:*, value_instance(*)),
                 access_instance(
                     value_instance(:B),
-                    Read(),
-                    protocol_instance(name_instance(:i), walk),
-                    name_instance(:k)),
+                    reader(),
+                    protocol_instance(index_instance(:i), walk),
+                    index_instance(:k)),
                 call_instance(
                     label_instance(:^, value_instance(^)),
                     access_instance(
                         value_instance(:C),
-                        Read(),
-                        name_instance(:k),
-                        name_instance(:j)),
+                        reader(),
+                        index_instance(:k),
+                        index_instance(:j)),
                     value_instance(3))),
             value_instance(42))
 
     @test Finch.virtualize(:ex, typeof(@finch_program_instance(:f(:B[i::walk, k] * :C[k, j]^3, 42))), Finch.LowerJulia()) ==
-        call(Literal(:f), 
+        call(literal(:f), 
             call(*,
-                access(Literal(:B), Read(), Protocol(Name(:i), walk), Name(:k)),
+                access(literal(:B), reader(), protocol(index(:i), walk), index(:k)),
                 call(^,
-                    access(Literal(:C), Read(), Name(:k), Name(:j)),
+                    access(literal(:C), reader(), index(:k), index(:j)),
                     3)),
             42) 
 
     @test Finch.virtualize(:ex, typeof(@finch_program_instance((:A[] = 1; :B[] = 2))), Finch.LowerJulia()) ==
         multi(
             assign(
-                access(Literal(:A), Read()), 1),
+                access(literal(:A), reader()), 1),
                 assign(
-                    access(Literal(:B), Read()),
+                    access(literal(:B), reader()),
                     2))
 
     @test @finch_program(@loop i :A[i] += :B[i] * i) ==
-        loop(Name(:i),
+        loop(index(:i),
             assign(
-                access(:A, Update(), Name(:i)),
-                +,
+                access(:A, updater(+, false), index(:i)),
                 call(*,
-                    access(:B, Read(), Name(:i)),
-                    Name(:i))))
+                    access(:B, reader(), index(:i)),
+                    index(:i))))
 
     @test @finch_program_instance(@loop i :A[i] += :B[i] * i) ==
         loop_instance(
-            name_instance(:i),
+            index_instance(:i),
             assign_instance(
                 access_instance(
                     value_instance(:A),
-                    Update(),
-                    name_instance(:i)),
+                    updater_instance(),
+                    index_instance(:i)),
                 label_instance(:+, value_instance(+)),
                 call_instance(
                     label_instance(:*, value_instance(*)),
                     access_instance(
                         value_instance(:B),
-                        Read(),
-                        name_instance(:i)),
-                    name_instance(:i))))
+                        reader_instance(),
+                        index_instance(:i)),
+                    index_instance(:i))))
 
     @test @finch_program(@loop i :A[i] <<(+)>>= :B[i] * i) ==
-        loop(Name(:i),
+        loop(index(:i),
             assign(
-                access(:A, Update(), Name(:i)),
-                +,
+                access(:A, updater(+, false), index(:i)),
                 call(*,
-                    access(:B, Read(), Name(:i)),
-                    Name(:i))))
+                    access(:B, reader(), index(:i)),
+                    index(:i))))
 
     @test @finch_program_instance(@loop i :A[i] <<(+)>>= :B[i] * i) ==
         loop_instance(
-            name_instance(:i),
+            index_instance(:i),
             assign_instance(
                 access_instance(
                     value_instance(:A),
-                    Update(),
-                    name_instance(:i)),
+                    updater_instance(),
+                    index_instance(:i)),
                 label_instance(:+, value_instance(+)),
                 call_instance(
                     label_instance(:*, value_instance(*)),
                     access_instance(
                         value_instance(:B),
-                        Read(),
-                        name_instance(:i)),
-                    name_instance(:i))))
+                        reader_instance(),
+                        index_instance(:i)),
+                    index_instance(:i))))
 
     @test @finch_program(:A[i] += i < j < k) ==
         assign(
-            access(:A, Update(), Name(:i)),
-            +,
+            access(:A, updater(+, false), index(:i)),
             call(Finch.IndexNotation.and,
-                call(<, Name(:i), Name(:j)),
-                call(<, Name(:j), Name(:k))))
+                call(<, index(:i), index(:j)),
+                call(<, index(:j), index(:k))))
 
     @test @finch_program(:A[i] = i == j && k < l) ==
         assign(
-            access(:A, Write(), Name(:i)),
+            access(:A, updater(inplace()), index(:i)),
             nothing,
             call(Finch.IndexNotation.and,
-                call(==, Name(:i), Name(:j)),
-                call(<, Name(:k), Name(:l))))
+                call(==, index(:i), index(:j)),
+                call(<, index(:k), index(:l))))
 
 end

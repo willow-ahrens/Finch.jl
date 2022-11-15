@@ -20,17 +20,17 @@ See also: [`fiber!`](@ref)
 
 ```jldoctest
 julia> println(summary(fiber(sparse([1 0; 0 1]))))
-2×2 Fiber @fiber(d(sl(e(0)))
+2×2 @fiber(d(sl(e(0))))
 
 julia> println(summary(fiber(ones(3, 2, 4))))
-3×2×4 Fiber @fiber(d(d(d(e(0.0)))))
+3×2×4 @fiber(d(d(d(e(0.0)))))
 ```
 """
 function fiber(arr, default=zero(eltype(arr)))
     Base.copyto!(Fiber((DenseLevel^(ndims(arr)))(Element{default}())), arr)
 end
 
-@generated function Base.copyto!(dst::Fiber, src)
+@generated function Base.copyto!(dst::Fiber, src::Union{Fiber, AbstractArray})
     dst = virtualize(:dst, dst, LowerJulia())
     idxs = [Symbol(:i_, n) for n = getsites(dst)]
     return quote
@@ -44,7 +44,7 @@ dropdefaults(src) = dropdefaults!(similar(src), src)
 @generated function dropdefaults!(dst::Fiber, src)
     dst = virtualize(:dst, dst, LowerJulia())
     idxs = [Symbol(:i_, n) for n = getsites(dst)]
-    T = image(dst)
+    T = eltype(dst)
     d = default(dst)
     return quote
         tmp = Scalar{$d, $T}()
@@ -83,21 +83,21 @@ SparseCoo (0.0) [1:3×1:3×1:3]
 """
 function fsparse(I::Tuple, V::Vector, shape = map(maximum, I), combine = eltype(V) isa Bool ? (|) : (+))
     C = map(tuple, I...)
-    update = false
+    updater = false
     if !issorted(C)
         P = sortperm(C)
         C = C[P]
         V = V[P]
-        update = true
+        updater = true
     end
     if !allunique(C)
         P = unique(p -> C[p], 1:length(C))
         C = C[P]
         push!(P, length(I[1]) + 1)
         V = map((start, stop) -> foldl(combine, @view V[start:stop - 1]), P[1:end - 1], P[2:end])
-        update = true
+        updater = true
     end
-    if update
+    if updater
         I = map(i -> similar(i, length(C)), I)
         foreach(((p, c),) -> ntuple(n->I[n][p] = c[n], length(I)), enumerate(C))
     else
@@ -132,13 +132,13 @@ See also: (`sprand`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#Spars
 ```jldoctest; setup = :(using Random; Random.seed!(1234))
 julia> fsprand(Bool, (3, 3), 0.5)
 SparseCoo (false) [1:3×1:3]
-│ │ 
+│ │
 └─└─[1, 1] [1, 3] [2, 2] [2, 3] [3, 3]
     true   true   true   true   true  
 
 julia> fsprand(Float64, (2, 2, 2), 0.5)
 SparseCoo (0.0) [1:2×1:2×1:2]
-│ │ │ 
+│ │ │
 └─└─└─[1, 2, 2] [2, 1, 1] [2, 1, 2]
       0.647855  0.996665  0.749194 
 ```
@@ -168,12 +168,12 @@ See also: (`spzeros`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#Spar
 ```jldoctest
 julia> fspzeros(Bool, (3, 3))
 SparseCoo (false) [1:3×1:3]
-│ │ 
+│ │
 └─└─
     
 julia> fspzeros(Float64, (2, 2, 2))
 SparseCoo (0.0) [1:2×1:2×1:2]
-│ │ │ 
+│ │ │
 └─└─└─
 ```
 """

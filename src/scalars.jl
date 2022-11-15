@@ -2,27 +2,18 @@ mutable struct Scalar{D, Tv}# <: AbstractArray{Tv, 0}
     val::Tv
 end
 
+Scalar(D, args...) = Scalar{D}(args...)
 Scalar{D}(args...) where {D} = Scalar{D, typeof(D)}(args...)
 Scalar{D, Tv}() where {D, Tv} = Scalar{D, Tv}(D)
 
+@inline Base.ndims(tns::Scalar) = 0
+@inline Base.size(::Scalar) = ()
+@inline Base.axes(::Scalar) = ()
+@inline Base.eltype(::Scalar{D, Tv}) where {D, Tv} = Tv
+@inline default(::Scalar{D}) where {D} = D
 
-@inline arity(tns::Scalar) = 0
-#Base.ndims(tns::Scalar) = arity(tns)
-@inline shape(tns::Scalar) = ()
-#Base.size(tns::Scalar) = shape(tns)
-@inline domain(tns::Scalar) = ()
-#Base.axes(tns::Scalar) = domain(tns)
-@inline image(tns::Scalar{D, Tv}) where {D, Tv} = Tv
-#Base.eltype(tns::Scalar) = image(tns)
-@inline default(tns::Scalar{D}) where {D} = D
-
-function (tns::Scalar)()
-    return tns.val
-end
-
-#function Base.getindex(tns::Scalar, idxs::Integer...) where {Tv, N}
-#    tns(idxs...)
-#end
+(tns::Scalar)() = tns.val
+@inline Base.getindex(tns::Scalar) = tns.val
 
 struct VirtualScalar
     ex
@@ -43,20 +34,25 @@ function virtualize(ex, ::Type{Scalar{D, Tv}}, ctx, tag) where {D, Tv}
     VirtualScalar(sym, Tv, D, tag, val)
 end
 
-getdims(::VirtualScalar, ctx, mode) = ()
+getsize(::VirtualScalar, ctx, mode) = ()
 getsites(::VirtualScalar) = []
 
 @inline default(tns::VirtualScalar) = tns.D
 
-isliteral(::VirtualScalar) = false
+IndexNotation.isliteral(::VirtualScalar) =  false
 
 getname(tns::VirtualScalar) = tns.name
 setname(tns::VirtualScalar, name) = VirtualScalar(tns.ex, tns.Tv, tns.D, name, tns.val)
 
-function initialize!(tns::VirtualScalar, ctx, mode::Union{Write, Update}, idxs...)
-    push!(ctx.preamble, quote
-        $(tns.val) = $(tns.D)
-    end)
+priority(::VirtualScalar) = (3,5)
+comparators(x::VirtualScalar) = (Lexicography(getname(x)),) #TODO this is probably good enough, but let's think about it later.
+
+function initialize!(tns::VirtualScalar, ctx, mode, idxs...)
+    if mode.kind === updater && mode.mode.kind === create
+        push!(ctx.preamble, quote
+            $(tns.val) = $(tns.D)
+        end)
+    end
     access(tns, mode, idxs...)
 end
 
@@ -64,8 +60,7 @@ function finalize!(tns::VirtualScalar, ctx, mode)
     return tns
 end
 
-function (ctx::LowerJulia)(root::Access{<:VirtualScalar}, ::DefaultStyle)
-    @assert isempty(root.idxs)
-    tns = root.tns
+function lowerjulia_access(ctx::LowerJulia, node, tns::VirtualScalar)
+    @assert isempty(node.idxs)
     return tns.val
 end

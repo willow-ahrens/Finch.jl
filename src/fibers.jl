@@ -42,70 +42,14 @@ function virtualize(ex, ::Type{<:Fiber{Lvl, Env}}, ctx, tag=ctx.freshen(:tns)) w
     VirtualFiber(lvl, env)
 end
 (ctx::Finch.LowerJulia)(fbr::VirtualFiber) = :(Fiber($(ctx(fbr.lvl)), $(ctx(fbr.env))))
-isliteral(::VirtualFiber) = false
+IndexNotation.isliteral(::VirtualFiber) =  false
 
 getname(fbr::VirtualFiber) = envname(fbr.env)
 setname(fbr::VirtualFiber, name) = VirtualFiber(fbr.lvl, envrename!(fbr.env, name))
 #setname(fbr::VirtualFiber, name) = (fbr.env.name = name; fbr)
 
-struct FiberArray{Fbr, T, N} <: AbstractArray{T, N}
-    fbr::Fbr
-end
-
-FiberArray(fbr::Fbr) where {Fbr} = FiberArray{Fbr}(fbr)
-FiberArray{Fbr}(fbr::Fbr) where {Fbr} = FiberArray{Fbr, image(fbr)}(fbr)
-FiberArray{Fbr, N}(fbr::Fbr) where {Fbr, N} = FiberArray{Fbr, N, arity(fbr)}(fbr)
-
-"""
-    arity(::Fiber)
-
-The "arity" of a fiber is the number of arguments that fiber can be indexed by
-before it returns a value. 
-
-See also: [`ndims`](https://docs.julialang.org/en/v1/base/arrays/#Base.ndims)
-"""
-function arity end
-Base.ndims(arr::FiberArray) = arity(arr.fbr)
-Base.ndims(arr::Fiber) = arity(arr)
-
-"""
-    image(::Fiber)
-
-The "image" of a fiber is the smallest julia type that its values assume. 
-
-See also: [`eltype`](https://docs.julialang.org/en/v1/base/collections/#Base.eltype)
-"""
-function image end
-Base.eltype(arr::FiberArray) = image(arr.fbr)
-Base.eltype(arr::Fiber) = image(arr)
-
-"""
-    shape(::Fiber)
-
-The "shape" of a fiber is a tuple where each element describes the number of
-distinct values that might be given as each argument to the fiber.
-
-See also: [`Base.size`](https://docs.julialang.org/en/v1/base/arrays/#Base.size)
-"""
-function shape end
-Base.size(arr::FiberArray) = shape(arr.fbr)
-Base.size(arr::Fiber) = shape(arr)
-
-"""
-    domain(::Fiber)
-
-The "domain" of a fiber is a tuple listing the sets of distinct values that might
-be given as each argument to the fiber.
-
-See also: [`axes`](https://docs.julialang.org/en/v1/base/arrays/#Base.axes-Tuple{Any})
-"""
-function domain end
-Base.axes(arr::FiberArray) = domain(arr.fbr)
-Base.axes(arr::Fiber) = domain(arr)
-
-function Base.getindex(arr::FiberArray, idxs::Integer...) where {Tv, N}
-    arr.fbr(idxs...)
-end
+priority(::VirtualFiber) = (3,6)
+comparators(x::VirtualFiber) = (Lexicography(getname(x)),) #TODO this is probably good enough, but let's think about it later.
 
 """
     default(fbr)
@@ -124,8 +68,8 @@ Initialize the virtual fiber to it's default value in the context `ctx` with
 access mode `mode`. Return the new fiber object.
 """
 function initialize!(fbr::VirtualFiber, ctx::LowerJulia, mode, idxs...)
-    fbr = VirtualFiber(initialize_level!(fbr, ctx, mode), fbr.env)
-    if mode isa Union{Write, Update}
+    if mode.kind === updater
+        fbr = VirtualFiber(initialize_level!(fbr, ctx, mode), fbr.env)
         assemble!(fbr, ctx, mode)
     end
     return refurl(fbr, ctx, mode, idxs...)
@@ -150,7 +94,11 @@ Finalize the virtual fiber in the context `ctx` with access mode `mode`. Return
 the new fiber object.
 """
 function finalize!(fbr::VirtualFiber, ctx::LowerJulia, mode, idxs...)
-    VirtualFiber(finalize_level!(fbr, ctx, mode), fbr.env)
+    if mode.kind === updater
+        return VirtualFiber(finalize_level!(fbr, ctx, mode), fbr.env)
+    else
+        return fbr
+    end
 end
 
 """
@@ -162,44 +110,67 @@ function finalize_level! end
 
 finalize_level!(fbr, ctx, mode) = fbr.lvl
 
-function (ctx::Stylize{LowerJulia})(node::Access{<:VirtualFiber})
+#TODO get rid of isa IndexNode when this is all over
+
+function stylize_access(node, ctx::Stylize{LowerJulia}, tns::VirtualFiber)
     if !isempty(node.idxs)
         if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
             return SelectStyle()
-        elseif ctx.root isa Loop && ctx.root.idx == get_furl_root(node.idxs[1])
+        elseif ctx.root isa IndexNode && ctx.root.kind === loop && ctx.root.idx == get_furl_root(node.idxs[1])
             return ChunkStyle()
         end
     end
-    return mapreduce(ctx, result_style, arguments(node))
+    return DefaultStyle()
 end
 
-function (ctx::Finch.SelectVisitor)(node::Access{<:VirtualFiber}, ::DefaultStyle) where {Tv, Ti}
+function select_access(node, ctx::Finch.SelectVisitor, tns::VirtualFiber)
     if !isempty(node.idxs)
         if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
-            var = Name(ctx.ctx.freshen(:s))
+            var = index(ctx.ctx.freshen(:s))
             ctx.idxs[var] = node.idxs[1]
-            ctx.ctx.dims[getname(var)] = getdims(node.tns, ctx, node.mode)[1] #TODO redimensionalization
             return access(node.tns, node.mode, var, node.idxs[2:end]...)
         end
     end
     return similarterm(node, operation(node), map(ctx, arguments(node)))
 end
 
-function (ctx::Finch.ChunkifyVisitor)(node::Access{<:VirtualFiber}, ::DefaultStyle) where {Tv, Ti}
+function chunkify_access(node, ctx, tns::VirtualFiber)
     if !isempty(node.idxs)
+        idxs = map(ctx, node.idxs)
         if ctx.idx == get_furl_root(node.idxs[1])
-            return access(unfurl(node.tns, ctx.ctx, node.mode, node.idxs...), node.mode, get_furl_root(node.idxs[1])) #TODO do this nicer
+            return access(unfurl(tns, ctx.ctx, node.mode, nothing, node.idxs...), node.mode, get_furl_root(node.idxs[1])) #TODO do this nicer
+        else
+            return access(node.tns, node.mode, idxs...)
         end
     end
     return node
 end
 
 get_furl_root(idx) = nothing
-get_furl_root(idx::Name) = idx
-get_furl_root(idx::Protocol) = get_furl_root(idx.idx)
+function get_furl_root(idx::IndexNode)
+    if idx.kind === index
+        return idx
+    elseif idx.kind === access && idx.tns.kind === virtual
+        get_furl_root_access(idx, idx.tns.val)
+    elseif idx.kind === protocol
+        return get_furl_root(idx.idx)
+    else
+        return nothing
+    end
+end
+get_furl_root_access(idx, tns) = nothing
+#These are also good examples of where modifiers might be great.
 
 refurl(tns, ctx, mode, idxs...) = access(tns, mode, idxs...)
-exfurl(tns, ctx, mode, idx::Name) = tns
+function exfurl(tns, ctx, mode, idx::IndexNode)
+    if idx.kind === index
+        return tns
+    elseif idx.kind === access && idx.tns.kind === virtual
+        exfurl_access(tns, ctx, mode, idx, idx.tns.val)
+    else
+        error("unimplemented")
+    end
+end
 
 function Base.show(io::IO, fbr::Fiber)
     print(io, "Fiber(")
@@ -230,15 +201,26 @@ end
 
 function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber)
     if get(io, :compact, false)
-        print(io, "f\"$(summary_f_str(fbr.lvl))\"($(summary_f_str_args(fbr.lvl)...))")
+        print(io, "@fiber($(summary_f_code(fbr.lvl)))")
     else
         display_fiber(io, mime, fbr)
     end
 end
 
+#=
+function Base.show(io::IO, fbr::VirtualFiber)
+    print(io, getname(fbr))
+end
+function Base.show(io::IO, ext::Extent)
+    print(io, ext.start)
+    print(io, ":")
+    print(io, ext.stop)
+end
+=#
+
 function Base.show(io::IO, mime::MIME"text/plain", fbr::VirtualFiber)
     if get(io, :compact, false)
-        print(io, "v\"$(summary_f_str(fbr.lvl))\"($(summary_f_str_args(fbr.lvl)...))")
+        print(io, "@virtualfiber($(summary_f_code(fbr.lvl)))")
     else
         show(io, fbr)
     end
@@ -249,7 +231,7 @@ function display_fiber_data(io::IO, mime::MIME"text/plain", fbr, N, crds, print_
     depth = envdepth(fbr.env)
 
     println(io, "│ "^(depth + N))
-    if arity(fbr) == N
+    if ndims(fbr) == N
         print_elem(io, crd) = show(IOContext(io, :compact=>true), fbr(get_coord(crd)...))
         calc_pad(crd) = max(textwidth(sprint(print_coord, crd)), textwidth(sprint(print_elem, crd)))
         print_coord_pad(io, crd) = (print_coord(io, crd); print(io, " "^(calc_pad(crd) - textwidth(sprint(print_coord, crd)))))
@@ -289,27 +271,30 @@ end
 """
     @fiber ctr
 
-Construct a fiber using abbreviated fiber constructor codes. All function names
-in `ctr` must be format codes, but expressions may be interpolated with `\$`. As
-an example, a csr matrix which might be constructed as
-`Fiber(DenseLevel(SparseListLevel(Element{0.0}(...))))` can also be constructed
-as `@fiber(sl(d(e(0.0))))`. Consult the documentation for the helper function
-[f_code](@ref) for a full listing of format codes.
+Construct a fiber using abbreviated level constructor names. To override
+abbreviations, expressions may be interpolated with `\$`. For example,
+`Fiber(DenseLevel(SparseListLevel(Element(0.0))))` can also be constructed as
+`@fiber(sl(d(e(0.0))))`. Consult the documentation for the helper function
+[f_code](@ref) for a full listing of level format codes.
 """
 macro fiber(ex)
     function walk(ex)
-        if ex isa Expr && ex.head == :call
-            return :(($f_code($(QuoteNode(Val(ex.args[1])))))($(map(walk, ex.args[2:end])...)))
-        elseif ex isa Expr && ex.head == :$
-            return ex.args[1] #TODO ?
+        if ex isa Expr && ex.head == :$
+            return esc(ex.args[1])
+        elseif ex isa Expr
+            return Expr(ex.head, map(walk, ex.args)...)
+        elseif ex isa Symbol
+            return :(@something($f_code($(Val(ex))), $(esc(ex))))
         else
-            esc(ex)
+            return esc(ex)
         end
     end
     return :($Fiber($(walk(ex))))
 end
 
-Base.summary(fbr::Fiber) = "$(join(shape(fbr), "×")) @fiber($(summary_f_code(fbr.lvl)))"
+@inline f_code(@nospecialize ::Any) = nothing
+
+Base.summary(fbr::Fiber) = "$(join(size(fbr), "×")) @fiber($(summary_f_code(fbr.lvl)))"
 
 Base.similar(fbr::Fiber) = Fiber(similar_level(fbr.lvl))
 Base.similar(fbr::Fiber, dims::Tuple) = Fiber(similar_level(fbr.lvl, dims...))

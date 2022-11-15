@@ -5,13 +5,13 @@
     @test diff("repeat_display.txt", sprint(show, MIME"text/plain"(), A))
     @test diff("repeat_print.txt", sprint(show, A))
 
-    @test FiberArray(A) == [2.0, 3.0, 3.0, 4.0, 4.0, 5.0, 5.0, 6.0, 6.0, 7.0]
+    @test reference_isequal(A, [2.0, 3.0, 3.0, 4.0, 4.0, 5.0, 5.0, 6.0, 6.0, 7.0])
 
     B = @fiber(d(e(0.0)))
 
     @test diff("r_to_d.jl", @finch_code @loop i B[i] = A[i])
     @finch @loop i B[i] = A[i]
-    @test FiberArray(B) == [2.0, 3.0, 3.0, 4.0, 4.0, 5.0, 5.0, 6.0, 6.0, 7.0]
+    @test reference_isequal(B, [2.0, 3.0, 3.0, 4.0, 4.0, 5.0, 5.0, 6.0, 6.0, 7.0])
 
     C = [1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3]
 
@@ -36,12 +36,12 @@
     B = Finch.Fiber(Dense(Element{0.0}()))
     @finch @loop i B[i] = A[i]
 
-    @test FiberArray(B) == [0, 0, 2, 0, 3, 0, 4, 5, 6, 0]
+    @test reference_isequal(B, [0, 0, 2, 0, 3, 0, 4, 5, 6, 0])
 
     B = Finch.Fiber(SparseList(Element{0.0}()))
     @finch @loop i B[i] = A[i]
 
-    @test FiberArray(B) == [0, 0, 2, 0, 3, 0, 4, 5, 6, 0]
+    @test reference_isequal(B, [0, 0, 2, 0, 3, 0, 4, 5, 6, 0])
     @test B.lvl.idx[1:5] == [3, 5, 7, 8, 9]
 
     C = Finch.Fiber(SparseVBL(Element{0.0}()))

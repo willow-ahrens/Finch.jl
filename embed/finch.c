@@ -116,7 +116,7 @@ extern void finch_initialize(){
                 fmt = Printf.Format(proc)\n\
                 args = [gensym(Symbol(:arg, n)) for n in 1:length(fmt.formats)]\n\
                 proc = Printf.format(fmt, (\"var$(repr(string(arg)))\" for arg in args)...)\n\
-                body = Meta.parse(proc)\n\
+                body = Meta.parse(\"begin $proc end\")\n\
                 eval(quote\n\
                     function $(gensym(:exec))($(args...))\n\
                         $body\n\
@@ -190,7 +190,7 @@ jl_value_t* finch_eval(const char* prg){
     JL_TRY {
         const char filename[] = "none";
         jl_value_t *ast = jl_parse_all(prg, strlen(prg),
-                filename, strlen(filename));
+                filename, strlen(filename), 1);
         JL_GC_PUSH1(&ast);
         res = jl_toplevel_eval_in(jl_main_module, ast);
         JL_GC_POP();

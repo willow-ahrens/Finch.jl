@@ -48,7 +48,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualStaticWindow)
 end
 
 
-isliteral(::VirtualStaticWindow) = false
+IndexNotation.isliteral(::VirtualStaticWindow) =  false
 
 function virtualize(ex, ::Type{StaticWindow{Dim, Target}}, ctx) where {Dim, Target}
     dim = virtualize(:($ex.dim), Dim, ctx)
@@ -58,10 +58,10 @@ end
 
 (ctx::Finch.LowerJulia)(tns::VirtualStaticWindow) = :(StaticWindow(dim = $(ctx(tns.dim)), target = $(ctx(tns.target))))
 
-function Finch.getdims(arr::VirtualStaticWindow, ctx::Finch.LowerJulia, mode)
+function Finch.getsize(arr::VirtualStaticWindow, ctx::Finch.LowerJulia, mode)
     return (arr.target,)
 end
-Finch.setdims!(arr::VirtualStaticWindow, ctx::Finch.LowerJulia, mode, dim) = arr
+Finch.setsize!(arr::VirtualStaticWindow, ctx::Finch.LowerJulia, mode, dim) = arr
 
 struct VirtualWindow end
 
@@ -70,40 +70,40 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualWindow)
 	print(io, "VirtualWindow()")
 end
 
-isliteral(::VirtualWindow) = false
+IndexNotation.isliteral(::VirtualWindow) =  false
 
 virtualize(ex, ::Type{Window}, ctx) = VirtualWindow()
 
 (ctx::Finch.LowerJulia)(tns::VirtualWindow) = :(Window($(ctx(tns.I))))
 
-Finch.getdims(arr::VirtualWindow, ctx::Finch.LowerJulia, mode) = (nodim, nodim, nodim)
-Finch.setdims!(arr::VirtualWindow, ctx::Finch.LowerJulia, mode, dim1, dim2, dim3) = arr
+Finch.getsize(arr::VirtualWindow, ctx::Finch.LowerJulia, mode) = (nodim, nodim, nodim)
+Finch.setsize!(arr::VirtualWindow, ctx::Finch.LowerJulia, mode, dim1, dim2, dim3) = arr
 
-function (ctx::DeclareDimensions)(node::Access{VirtualStaticWindow}, dim)
-    idx = ctx(node.idxs[1], shiftdim(node.tns.target, call(-, getstart(dim), getstart(node.tns.target))))
+function declare_dimensions_access(node, ctx, tns::VirtualStaticWindow, dim)
+    idx = ctx(node.idxs[1], shiftdim(tns.target, call(-, getstart(dim), getstart(tns.target))))
     #TODO we should check that dim is subset of ext here somehow. I think we check on the first time dim is not nodim or deferdim
-    return access(VirtualStaticWindow(; kwfields(node.tns)..., dim=dim), node.mode, idx)
+    return access(VirtualStaticWindow(; kwfields(tns)..., dim=dim), node.mode, idx)
 end
 
-function (ctx::InferDimensions)(node::Access{VirtualStaticWindow})
+function infer_dimensions_access(node, ctx, tns::VirtualStaticWindow)
     idx, ext = ctx(node.idxs[1])
-    return (access(node.tns, node.mode, idx), node.tns.target) #TODO this feels only partially correct
+    return (access(tns, node.mode, idx), tns.target) #TODO this feels only partially correct
 end
 
 Finch.getname(node::VirtualWindow) = gensym()
 Finch.setname(node::VirtualWindow, name) = node
 
-function (ctx::Stylize{LowerJulia})(node::Access{<:VirtualWindow})
+function stylize_access(node, ctx::Stylize{LowerJulia}, tns::VirtualWindow)
     if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings) && getunbound(node.idxs[2]) ⊆ keys(ctx.ctx.bindings)
         return ThunkStyle()
     end
-    return mapreduce(ctx, result_style, arguments(node))
+    return DefaultStyle()
 end
 
 #TODO needs its own lowering pass, or thunks need to be strictly recursive
-function (ctx::ThunkVisitor)(node::Access{<:VirtualWindow})
+function thunk_access(node, ctx, tns::VirtualWindow)
     if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings) && getunbound(node.idxs[2]) ⊆ keys(ctx.ctx.bindings)
-        return access(Dimensionalize(VirtualStaticWindow(target=cache!(ctx.ctx, :window, Extent(start = ctx(node.idxs[1]), stop = ctx(node.idxs[2]))))), node.mode, ctx(node.idxs[3]))
+        return access(Dimensionalize(VirtualStaticWindow(target=cache_dim!(ctx.ctx, :window, Extent(start = ctx(node.idxs[1]), stop = ctx(node.idxs[2]))))), node.mode, ctx(node.idxs[3]))
     end
     return similarterm(node, operation(node), map(ctx, arguments(node)))
 end
@@ -111,9 +111,8 @@ end
 Finch.getname(node::VirtualStaticWindow) = gensym()
 Finch.setname(node::VirtualStaticWindow, name) = node
 
-get_furl_root(idx::Access{VirtualStaticWindow}) = get_furl_root(idx.idxs[1])
-function exfurl(tns, ctx, mode, idx::Access{VirtualStaticWindow})
-    node = idx.tns
+get_furl_root_access(idx, ::VirtualStaticWindow) = get_furl_root(idx.idxs[1])
+function exfurl_access(tns, ctx, mode, idx, node::VirtualStaticWindow)
     body = Shift(truncate(tns, ctx, node.dim, node.target), call(-, getstart(node.dim), getstart(node.target)))
     exfurl(body, ctx, mode, idx.idxs[1])
 end

@@ -10,7 +10,7 @@ end
 Base.first(arg::Case) = arg.cond
 Base.last(arg::Case) = arg.body
 
-isliteral(::Switch) = false
+IndexNotation.isliteral(::Switch) =  false
 
 struct SwitchStyle end
 
@@ -34,7 +34,21 @@ function (ctx::SwitchVisitor)(node)
             return simplify(@f(and($(guards...)))) => similarterm(node, operation(node), collect(bodies))
         end
     else
-        [(true => node)]
+        [(literal(true) => node)]
+    end
+end
+
+function (ctx::SwitchVisitor)(node::IndexNode)
+    if node.kind === virtual
+        ctx(node.val)
+    elseif istree(node)
+        map(product(map(ctx, arguments(node))...)) do case
+            guards = map(first, case)
+            bodies = map(last, case)
+            return simplify(@f(and($(guards...)))) => similarterm(node, operation(node), collect(bodies))
+        end
+    else
+        [(literal(true) => node)]
     end
 end
 (ctx::SwitchVisitor)(node::Switch) = node.cases

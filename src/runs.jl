@@ -9,7 +9,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Run)
     print(io, ")")
 end
 
-isliteral(::Run) = false
+IndexNotation.isliteral(::Run) =  false
 
 #A minor revelation: There's no reason to store extents in chunks, they just modify the extents of the context.
 
@@ -17,18 +17,22 @@ getname(arr::Run) = getname(arr.body)
 
 struct RunStyle end
 
-(ctx::Stylize{LowerJulia})(node::Run) = RunStyle()
+(ctx::Stylize{LowerJulia})(node::Run) = ctx.root.kind === chunk ? RunStyle() : DefaultStyle()
 combine_style(a::DefaultStyle, b::RunStyle) = RunStyle()
 combine_style(a::ThunkStyle, b::RunStyle) = ThunkStyle()
 combine_style(a::SimplifyStyle, b::RunStyle) = SimplifyStyle()
 combine_style(a::RunStyle, b::RunStyle) = RunStyle()
 
-function (ctx::LowerJulia)(root::Chunk, ::RunStyle)
-    root = (AccessRunVisitor(root))(root)
-    if Stylize(root, ctx)(root) isa RunStyle #TODO do we need this always? Can we do this generically?
-        error("run style couldn't lower runs")
+function (ctx::LowerJulia)(root::IndexNode, ::RunStyle)
+    if root.kind === chunk
+        root = (AccessRunVisitor(root))(root)
+        if Stylize(root, ctx)(root) isa RunStyle #TODO do we need this always? Can we do this generically?
+            error("run style couldn't lower runs")
+        end
+        return ctx(root)
+    else
+        error("unimplemented")
     end
-    ctx(root)
 end
 
 @kwdef struct AccessRunVisitor
@@ -42,17 +46,17 @@ function (ctx::AccessRunVisitor)(node)
     end
 end
 
-function (ctx::AccessRunVisitor)(node::Access{Run, Read})
-    return node.tns.body
-end
-
-function (ctx::AccessRunVisitor)(node::Access{Shift, Read}) #TODO this is ugly
-    if node.tns.body isa Run
-        return node.tns.body.body
+function (ctx::AccessRunVisitor)(node::IndexNode)
+    if node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
+        something(unchunk(node.tns.val, ctx), node)
+    elseif istree(node)
+        return similarterm(node, operation(node), map(ctx, arguments(node)))
     else
         return node
     end
 end
+unchunk(node::Run, ::AccessRunVisitor) = node.body
+unchunk(node::Shift, ctx::AccessRunVisitor) = unchunk(node.body, ctx)
 
 
 #assume ssa
@@ -62,7 +66,18 @@ end
     val = nothing
 end
 
+IndexNotation.isliteral(::AcceptRun) = false
+
 default(node::AcceptRun) = node.val
+
+#TODO this should go somewhere else
+function Finch.default(x::IndexNode)
+    if x.kind === virtual
+        Finch.default(x.val)
+    else
+        error("unimplemented")
+    end
+end
 
 Base.show(io::IO, ex::AcceptRun) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::AcceptRun)
@@ -71,21 +86,26 @@ end
 
 struct AcceptRunStyle end
 
-(ctx::Stylize{LowerJulia})(node::AcceptRun) = AcceptRunStyle()
+(ctx::Stylize{LowerJulia})(node::AcceptRun) = ctx.root.kind === chunk ? AcceptRunStyle() : DefaultStyle()
 combine_style(a::DefaultStyle, b::AcceptRunStyle) = AcceptRunStyle()
 combine_style(a::ThunkStyle, b::AcceptRunStyle) = ThunkStyle()
 combine_style(a::SimplifyStyle, b::AcceptRunStyle) = SimplifyStyle()
 combine_style(a::AcceptRunStyle, b::AcceptRunStyle) = AcceptRunStyle()
 combine_style(a::RunStyle, b::AcceptRunStyle) = RunStyle()
 
-(ctx::LowerJulia)(::Pass, ::AcceptRunStyle) = quote end#TODO this shouldn't need to be specified, I think that Pass needs not to declare a style
-function (ctx::LowerJulia)(root::Chunk, ::AcceptRunStyle)
-    body = (AcceptRunVisitor(root, root.idx, root.ext, ctx))(root.body)
-    if getname(root.idx) in getunbound(body)
-        #call DefaultStyle, the only style that AcceptRunStyle promotes with
-        return ctx(root, DefaultStyle())
+function (ctx::LowerJulia)(root::IndexNode, ::AcceptRunStyle)
+    if root.kind === chunk
+        body = (AcceptRunVisitor(root, root.idx, root.ext, ctx))(root.body)
+        if getname(root.idx) in getunbound(body)
+            #call DefaultStyle, the only style that AcceptRunStyle promotes with
+            return ctx(root, DefaultStyle())
+        else
+            return ctx(body)
+        end
+    elseif root.kind === pass
+        quote end#TODO this shouldn't need to be specified, I think that Pass needs not to declare a style
     else
-        return ctx(body)
+        error("unimplemented")
     end
 end
 
@@ -104,7 +124,18 @@ function (ctx::AcceptRunVisitor)(node)
     end
 end
 
-(ctx::AcceptRunVisitor)(node::Access{<:Any, <:Union{Write, Update}}) = something(unchunk(node.tns, ctx), node)
+function (ctx::AcceptRunVisitor)(node::IndexNode)
+    if node.kind === virtual
+        ctx(node.val)
+    elseif node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
+        node.mode.kind === reader ? node : something(unchunk(node.tns.val, ctx), node)
+    elseif istree(node)
+        return similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        return node
+    end
+end
+
 unchunk(node::AcceptRun, ctx::AcceptRunVisitor) = node.body(ctx.ctx, getstart(ctx.ext), getstop(ctx.ext))
 unchunk(node::Shift, ctx::AcceptRunVisitor) = unchunk(node.body, AcceptRunVisitor(;kwfields(ctx)..., ext = shiftdim(ctx.ext, call(-, node.delta))))
 

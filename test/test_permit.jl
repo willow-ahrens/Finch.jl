@@ -11,7 +11,7 @@
 
     println(@finch_code @loop i C[i] += A[i] + coalesce(B[permit[i]], 0))
     @finch @loop i C[i] += A[i] + coalesce(B[permit[i]], 0)
-    println(FiberArray(C))
+    println(C)
 
     A = Finch.Fiber(
         Dense(5,
@@ -29,7 +29,7 @@
     
     @test diff("concat_offset_permit.jl", @finch_code @loop i C[i] = coalesce(A[permit[i]], B[offset[10, permit[i]]]))
     @finch @loop i C[i] = coalesce(A[permit[i]], B[offset[10, permit[i]]])
-    @test FiberArray(C) == C_ref
+    @test reference_isequal(C, C_ref)
 
     F = fiber([1,1,1,1,1])
 
@@ -46,12 +46,12 @@
             end
         end
     end
-    @test FiberArray(C) == C_ref
+    @test reference_isequal(C, C_ref)
     @test diff("sparse_conv_guarded.jl", @finch_code @loop i j C[i] += (A[i] != 0) * coalesce(A[permit[offset[i - 3, j]]], 0) * coalesce(F[permit[j]], 0))
     @finch @loop i j C[i] += (A[i] != 0) * coalesce(A[permit[offset[i - 3, j]]], 0) * coalesce(F[permit[j]], 0)
-    @test FiberArray(C) == C_ref
+    @test reference_isequal(C, C_ref)
 
     @test diff("sparse_window.jl", @finch_code @loop i C[i] = A[window[2, 4, i]])
     @finch @loop i C[i] = A[window[2, 4, i]]
-    @test FiberArray(C) == FiberArray(A)[2:4]
+    @test reference_isequal(C, [A(2), A(3), A(4)])
 end

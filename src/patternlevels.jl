@@ -12,10 +12,10 @@ function Base.show(io::IO, lvl::PatternLevel)
     print(io, "Pattern()")
 end 
 
-@inline arity(fbr::Fiber{<:PatternLevel}) = 0
-@inline shape(fbr::Fiber{<:PatternLevel}) = ()
-@inline domain(fbr::Fiber{<:PatternLevel}) = ()
-@inline image(fbr::Fiber{<:PatternLevel}) = Bool
+@inline Base.ndims(fbr::Fiber{<:PatternLevel}) = 0
+@inline Base.size(fbr::Fiber{<:PatternLevel}) = ()
+@inline Base.axes(fbr::Fiber{<:PatternLevel}) = ()
+@inline Base.eltype(fbr::Fiber{<:PatternLevel}) = Bool
 @inline default(lvl::Fiber{<:PatternLevel}) = false
 
 (fbr::Fiber{<:PatternLevel})() = true
@@ -28,9 +28,7 @@ Return the pattern of `fbr`. That is, return a fiber which is true wherever
 original fiber unusable when modified.
 
 ```jldoctest
-julia> A = Finch.Fiber(
-    SparseList(10, [1, 6], [1, 3, 5, 7, 9],
-    Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
+julia> A = Finch.Fiber(SparseList(10, [1, 6], [1, 3, 5, 7, 9], Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
 SparseList (0.0) [1:10]
 │ 
 └─[1] [3] [5] [7] [9]
@@ -54,15 +52,15 @@ function getsites(fbr::VirtualFiber{VirtualPatternLevel})
     return []
 end
 
-setdims!(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode) = fbr
-getdims(::VirtualFiber{VirtualPatternLevel}, ctx, mode) = ()
+setsize!(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode) = fbr
+getsize(::VirtualFiber{VirtualPatternLevel}, ctx, mode) = ()
 
 @inline default(fbr::VirtualFiber{VirtualPatternLevel}) = false
-@inline image(fbr::VirtualFiber{VirtualPatternLevel}) = Bool
+Base.eltype(fbr::VirtualFiber{VirtualPatternLevel}) = Bool
 
-initialize_level!(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode::Union{Write, Update}) = fbr.lvl
+initialize_level!(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode) = fbr.lvl
 
-finalize_level!(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode::Union{Write, Update}) = fbr.lvl
+finalize_level!(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode) = fbr.lvl
 
 interval_assembly_depth(lvl::VirtualPatternLevel) = Inf
 
@@ -70,20 +68,22 @@ assemble!(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode) = fbr.lvl
 
 reinitialize!(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode) = fbr.lvl
 
-function refurl(fbr::VirtualFiber{VirtualPatternLevel}, ctx, ::Read)
-    Simplify(Literal(true))
-end
-
-function (ctx::Finch.LowerJulia)(node::Access{<:VirtualFiber{VirtualPatternLevel}}, ::DefaultStyle) where {Tv, Ti}
-    @assert isempty(node.idxs)
-    true
+function refurl(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode)
+    if mode.kind === reader
+        return Simplify(literal(true))
+    else
+        null = ctx.freshen(:null)
+        push!(ctx.preamble, :($null = true))
+        return value(null)
+    end
 end
 
 hasdefaultcheck(::VirtualPatternLevel) = true
 
-function (ctx::Finch.LowerJulia)(node::Access{<:VirtualFiber{VirtualPatternLevel}, <:Union{Write, Update}}, ::DefaultStyle) where {Tv, Ti}
+function lowerjulia_access(ctx::LowerJulia, node, tns::VirtualFiber{VirtualPatternLevel})
     @assert isempty(node.idxs)
-    tns = node.tns
+
+    node.mode.kind === reader && return true
 
     if envdefaultcheck(tns.env) !== nothing
         push!(ctx.preamble, quote

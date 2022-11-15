@@ -27,6 +27,8 @@ mutable struct VirtualSingleBlock{Tv, Ti}
     D
 end
 
+IndexNotation.isliteral(::VirtualSingleBlock) =  false
+
 function Finch.virtualize(ex, ::Type{SingleBlock{D, Tv, Ti}}, ctx, tag=:tns) where {D, Tv, Ti}
     sym = ctx.freshen(tag)
     push!(ctx.preamble, :($sym = $ex))
@@ -35,46 +37,47 @@ end
 
 (ctx::Finch.LowerJulia)(tns::VirtualSingleBlock) = tns.ex
 
-function Finch.initialize!(arr::VirtualSingleBlock{D, Tv}, ctx::Finch.LowerJulia, mode::Union{Write, Update}, idxs...) where {D, Tv}
-    push!(ctx.preamble, quote
-        fill!($(arr.ex).val, D)
-    end)
+function Finch.initialize!(arr::VirtualSingleBlock{D, Tv}, ctx::Finch.LowerJulia, mode, idxs...) where {D, Tv}
+    if mode.kind === updater
+        push!(ctx.preamble, quote
+            fill!($(arr.ex).val, D)
+        end)
+    end
     access(arr, mode, idxs...)
 end 
 
-function Finch.getdims(arr::VirtualSingleBlock{Tv, Ti}, ctx::Finch.LowerJulia, mode) where {Tv, Ti}
+function Finch.getsize(arr::VirtualSingleBlock{Tv, Ti}, ctx::Finch.LowerJulia, mode) where {Tv, Ti}
     ex = Symbol(arr.name, :_stop)
     push!(ctx.preamble, :($ex = $size($(arr.ex))[1]))
-    (Extent(1, Virtual{Ti}(ex)),)
+    (Extent(literal(1), value(ex, Ti)),)
 end
-Finch.setdims!(arr::VirtualSingleBlock{Tv, Ti}, ctx::Finch.LowerJulia, mode, dims...) where {Tv, Ti} = arr
+Finch.setsize!(arr::VirtualSingleBlock{Tv, Ti}, ctx::Finch.LowerJulia, mode, dims...) where {Tv, Ti} = arr
 Finch.getname(arr::VirtualSingleBlock) = arr.name
 Finch.setname(arr::VirtualSingleBlock, name) = (arr_2 = deepcopy(arr); arr_2.name = name; arr_2)
-function (ctx::Finch.Stylize{LowerJulia})(node::Access{<:VirtualSingleBlock})
-    if ctx.root isa Loop && ctx.root.idx == get_furl_root(node.idxs[1])
+function Finch.stylize_access(node, ctx::Finch.Stylize{LowerJulia}, tns::VirtualSingleBlock)
+    if ctx.root isa IndexNode && ctx.root.kind === loop && ctx.root.idx == get_furl_root(node.idxs[1])
         Finch.ChunkStyle()
     else
-        mapreduce(ctx, result_style, arguments(node))
+        Finch.DefaultStyle()
     end
 end
 
-function (ctx::Finch.ChunkifyVisitor)(node::Access{VirtualSingleBlock{Tv, Ti}, Read}, ::Finch.DefaultStyle) where {Tv, Ti}
-    vec = node.tns
+function Finch.chunkify_access(node, ctx, vec::VirtualSingleBlock{Tv, Ti}) where {Tv, Ti}
     if getname(ctx.idx) == getname(node.idxs[1])
         tns = Pipeline([
             Phase(
-                stride = (ctx, idx, ext) -> :($(vec.ex).start - 1),
-                body = (start, step) -> Run(body = Simplify(vec.D))
+                stride = (ctx, idx, ext) -> value(:($(vec.ex).start - 1)),
+                body = (start, step) -> Run(body = Simplify(literal(vec.D)))
             ),
             Phase(
-                stride = (ctx, idx, ext) -> :($(vec.ex).stop),
+                stride = (ctx, idx, ext) -> value(:($(vec.ex).stop)),
                 body = (start, step) -> Lookup(
                     body = (i) -> :($(vec.ex).val[$(ctx.ctx(i)) - $(vec.ex).start + 1]) #TODO all of these functions should really have a ctx
                 )
             ),
-            Phase(body = (start, step) -> Run(body = Simplify(vec.D)))
+            Phase(body = (start, step) -> Run(body = Simplify(literal(vec.D))))
         ])
-        Access(tns, node.mode, node.idxs)
+        access(tns, node.mode, node.idxs...)
     else
         node
     end

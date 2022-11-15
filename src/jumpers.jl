@@ -4,9 +4,9 @@ struct JumperStyle end
     body
 end
 
-isliteral(::Jumper) = false
+IndexNotation.isliteral(::Jumper) =  false
 
-(ctx::Stylize{LowerJulia})(node::Jumper) = JumperStyle()
+(ctx::Stylize{LowerJulia})(node::Jumper) = ctx.root.kind === chunk ? JumperStyle() : DefaultStyle()
 
 combine_style(a::DefaultStyle, b::JumperStyle) = JumperStyle()
 combine_style(a::JumperStyle, b::JumperStyle) = JumperStyle()
@@ -18,8 +18,12 @@ combine_style(a::JumperStyle, b::SwitchStyle) = SwitchStyle()
 combine_style(a::JumperStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::ThunkStyle, b::JumperStyle) = ThunkStyle()
 
-function (ctx::LowerJulia)(root::Chunk, style::JumperStyle)
-    lower_cycle(root, ctx, root.idx, root.ext, style)
+function (ctx::LowerJulia)(root::IndexNode, style::JumperStyle)
+    if root.kind === chunk
+        return lower_cycle(root, ctx, root.idx, root.ext, style)
+    else
+        error("unimplemented")
+    end
 end
 
 (ctx::CycleVisitor{JumperStyle})(node::Jumper) = node.body
@@ -31,9 +35,9 @@ end
     next = nothing
 end
 
-isliteral(::Jump) = false
+IndexNotation.isliteral(::Jump) =  false
 
-(ctx::Stylize{LowerJulia})(node::Jump) = PhaseStyle()
+(ctx::Stylize{LowerJulia})(node::Jump) = ctx.root.kind === chunk ? PhaseStyle() : DefaultStyle()
 
 function (ctx::PhaseStride)(node::Jump)
     push!(ctx.ctx.preamble, node.seek !== nothing ? node.seek(ctx.ctx, ctx.ext) : quote end)

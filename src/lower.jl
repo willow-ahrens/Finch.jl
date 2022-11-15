@@ -25,13 +25,20 @@ function (spc::Freshen)(tags...)
     end
 end
 
-@kwdef mutable struct LowerJulia <: AbstractVisitor
+@kwdef mutable struct LowerJulia
     preamble::Vector{Any} = []
     bindings::Dict{Any, Any} = Dict()
     epilogue::Vector{Any} = []
     dims::Dict = Dict()
     freshen::Freshen = Freshen()
 end
+
+(ctx::LowerJulia)(root) = ctx(root, Stylize(root, ctx)(root))
+#function(ctx::LowerJulia)(root)
+#    style = Stylize(root, ctx)(root)
+#    @info :lower root style
+#    ctx(root, style)
+#end
 
 function cache!(ctx, var, val)
     if isliteral(val)
@@ -48,7 +55,7 @@ function cache!(ctx, var, val)
         quote
             $var = $body
         end))
-        return Virtual{Any}(var)
+        return value(var, Any) #TODO could we do better here?
     end
 end
 
@@ -92,7 +99,7 @@ struct ThunkStyle end
     epilogue = quote end
     binds = ()
 end
-isliteral(::Thunk) = false
+IndexNotation.isliteral(::Thunk) =  false
 
 Base.show(io::IO, ex::Thunk) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::Thunk)
@@ -103,8 +110,16 @@ end
 combine_style(a::DefaultStyle, b::ThunkStyle) = ThunkStyle()
 combine_style(a::ThunkStyle, b::ThunkStyle) = ThunkStyle()
 
-struct ThunkVisitor <: AbstractTransformVisitor
+struct ThunkVisitor
     ctx
+end
+
+function (ctx::ThunkVisitor)(node)
+    if istree(node)
+        similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        node
+    end
 end
 
 function (ctx::LowerJulia)(node, ::ThunkStyle)
@@ -114,7 +129,22 @@ function (ctx::LowerJulia)(node, ::ThunkStyle)
     end
 end
 
-function (ctx::ThunkVisitor)(node::Thunk, ::DefaultStyle)
+function (ctx::ThunkVisitor)(node::IndexNode)
+    if node.kind === virtual
+        ctx(node.val)
+    elseif node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
+        #TODO this case morally shouldn't exist
+        thunk_access(node, ctx, node.tns.val)
+    elseif istree(node)
+        similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        node
+    end
+end
+
+thunk_access(node, ctx, tns) = similarterm(node, operation(node), map(ctx, arguments(node)))
+
+function (ctx::ThunkVisitor)(node::Thunk)
     push!(ctx.ctx.preamble, node.preamble)
     push!(ctx.ctx.epilogue, node.epilogue)
     for (var, val) in node.binds
@@ -123,43 +153,8 @@ function (ctx::ThunkVisitor)(node::Thunk, ::DefaultStyle)
     node.body
 end
 
-#default lowering
-
-(ctx::LowerJulia)(::Pass, ::DefaultStyle) = quote end
-
-function (ctx::LowerJulia)(root::Assign, ::DefaultStyle)
-    if root.op == nothing
-        rhs = ctx(root.rhs)
-    else
-        rhs = ctx(call(root.op, root.lhs, root.rhs))
-    end
-    lhs = ctx(root.lhs)
-    :($lhs = $rhs)
-end
-
-function (ctx::LowerJulia)(root::Call, ::DefaultStyle)
-    if root.op == and
-        reduce((x, y) -> :($x && $y), map(ctx, root.args)) #TODO This could be better. should be able to handle empty case
-    elseif root.op == or
-        reduce((x, y) -> :($x || $y), map(ctx, root.args))
-    else
-        :($(ctx(root.op))($(map(ctx, root.args)...)))
-    end
-end
-
-function (ctx::LowerJulia)(root::Name, ::DefaultStyle)
-    @assert haskey(ctx.bindings, getname(root)) "variable $(getname(root)) unbound"
-    return ctx(ctx.bindings[getname(root)]) #This unwraps indices that are virtuals. Arguably these virtuals should be precomputed, but whatevs.
-end
-
-function (ctx::LowerJulia)(root::Protocol, ::DefaultStyle)
-    :($(ctx(root.idx)))
-end
-
-isliteral(::Union{Symbol, Expr, Missing}) = false
+IndexNotation.isliteral(::Union{Symbol, Expr, Missing}) =  false
 (ctx::LowerJulia)(root::Union{Symbol, Expr}, ::DefaultStyle) = root
-(ctx::LowerJulia)(root::Literal{<:Union{Symbol, Expr, Missing}}, ::DefaultStyle) = QuoteNode(root.val)
-(ctx::LowerJulia)(root::Literal, ::DefaultStyle) = root.val
 
 function (ctx::LowerJulia)(root, ::DefaultStyle)
     if isliteral(root)
@@ -168,102 +163,165 @@ function (ctx::LowerJulia)(root, ::DefaultStyle)
     error("Don't know how to lower $root")
 end
 
-function (ctx::LowerJulia)(root::Virtual, ::DefaultStyle)
-    return root.ex
-end
-
-function (ctx::LowerJulia)(root::With, ::DefaultStyle)
-    prod = nothing
-    target = map(getname, getresults(root.prod))
-    return quote
-        $(contain(ctx) do ctx_2
-            prod = Initialize(ctx = ctx_2, target=target)(root.prod)
-            (ctx_2)(prod)
-        end)
-        $(contain(ctx) do ctx_2
-            Finalize(ctx = ctx_2, target=target)(prod)
-            cons = Initialize(ctx = ctx_2, target=target)(root.cons)
-            res = (ctx_2)(cons)
-            Finalize(ctx = ctx_2, target=target)(cons)
-            res
-        end)
-    end
-end
-
-function (ctx::LowerJulia)(root::Multi, ::DefaultStyle)
-    thunk = Expr(:block)
-    for body in root.bodies
-        push!(thunk.args, quote
+function (ctx::LowerJulia)(root::IndexNode, ::DefaultStyle)
+    if root.kind === value
+        return root.val
+    elseif root.kind === index
+        @assert haskey(ctx.bindings, getname(root)) "variable $(getname(root)) unbound"
+        return ctx(ctx.bindings[getname(root)]) #This unwraps indices that are virtuals. Arguably these virtuals should be precomputed, but whatevs.
+    elseif root.kind === literal
+        if typeof(root.val) === Symbol ||
+          typeof(root.val) === Expr ||
+          typeof(root.val) === Missing
+            return QuoteNode(root.val)
+        else
+            return root.val
+        end
+    elseif root.kind === with
+        prod = nothing
+        target = map(getname, getresults(root.prod))
+        return quote
             $(contain(ctx) do ctx_2
-                (ctx_2)(body)
+                prod = Initialize(ctx = ctx_2, target=target)(root.prod)
+                (ctx_2)(prod)
             end)
-        end)
-    end
-    thunk
-end
-
-function (ctx::LowerJulia)(root::Access, ::DefaultStyle)
-    tns = ctx(root.tns)
-    idxs = map(ctx, root.idxs)
-    :($(ctx(tns))[$(idxs...)])
-end
-
-
-function (ctx::LowerJulia)(root::Access{<:Number, Read}, ::DefaultStyle)
-    @assert isempty(root.idxs)
-    return root.tns
-end
-
-function (ctx::LowerJulia)(stmt::Sieve, ::DefaultStyle)
-    cond = ctx.freshen(:cond)
-    push!(ctx.preamble, :($cond = $(ctx(stmt.cond))))
-
-    return quote
-        if $cond
             $(contain(ctx) do ctx_2
-                ctx_2(stmt.body)
+                Finalize(ctx = ctx_2, target=target)(prod)
+                cons = Initialize(ctx = ctx_2, target=target)(root.cons)
+                res = (ctx_2)(cons)
+                Finalize(ctx = ctx_2, target=target)(cons)
+                res
             end)
         end
-    end
-end
-
-function (ctx::LowerJulia)(stmt::Loop, ::DefaultStyle)
-    ctx(Chunk(
-        idx = stmt.idx,
-        ext = resolvedim(ctx.dims[getname(stmt.idx)]),
-        body = stmt.body)
-    )
-end
-function (ctx::LowerJulia)(stmt::Chunk, ::DefaultStyle)
-    idx_sym = ctx.freshen(getname(stmt.idx))
-    if simplify((@f $(getlower(stmt.ext)) >= 1)) == true  && simplify((@f $(getupper(stmt.ext)) <= 1)) == true
-        return quote
-            $idx_sym = $(ctx(getstart(stmt.ext)))
-            $(bind(ctx, getname(stmt.idx) => idx_sym) do 
-                contain(ctx) do ctx_2
-                    body_3 = ForLoopVisitor(ctx_2, stmt.idx, idx_sym)(stmt.body)
-                    (ctx_2)(body_3)
-                end
+    elseif root.kind === multi
+        thunk = Expr(:block)
+        for body in root.bodies
+            push!(thunk.args, quote
+                $(contain(ctx) do ctx_2
+                    (ctx_2)(body)
+                end)
             end)
         end
-    else
-        return quote
-            for $idx_sym = $(ctx(getstart(stmt.ext))):$(ctx(getstop(stmt.ext)))
-                $(bind(ctx, getname(stmt.idx) => idx_sym) do 
+        thunk
+    elseif root.kind === access
+        if root.tns isa IndexNode && root.tns.kind === virtual
+            return lowerjulia_access(ctx, root, root.tns.val)
+        else
+            tns = ctx(root.tns)
+            idxs = map(ctx, root.idxs)
+            return :($(ctx(tns))[$(idxs...)])
+        end
+    elseif root.kind === protocol
+        :($(ctx(root.idx)))
+    elseif root.kind === call
+        if root.op == literal(and)
+            if isempty(root.args)
+                return true
+            else
+                reduce((x, y) -> :($x && $y), map(ctx, root.args)) #TODO This could be better. should be able to handle empty case
+            end
+        elseif root.op == literal(or)
+            if isempty(root.args)
+                return false
+            else
+                reduce((x, y) -> :($x || $y), map(ctx, root.args))
+            end
+        else
+            :($(ctx(root.op))($(map(ctx, root.args)...)))
+        end
+    elseif root.kind === loop
+        return ctx(simplify(chunk(
+            root.idx,
+            resolvedim(ctx.dims[getname(root.idx)]),
+            root.body)
+        ))
+    elseif root.kind === chunk
+        idx_sym = ctx.freshen(getname(root.idx))
+        if simplify((@f $(getlower(root.ext)) >= 1)) == (@f true)  && simplify((@f $(getupper(root.ext)) <= 1)) == (@f true)
+            return quote
+                $idx_sym = $(ctx(getstart(root.ext)))
+                $(bind(ctx, getname(root.idx) => idx_sym) do 
                     contain(ctx) do ctx_2
-                        body_3 = ForLoopVisitor(ctx_2, stmt.idx, idx_sym)(stmt.body)
+                        body_3 = ForLoopVisitor(ctx_2, root.idx, value(idx_sym))(root.body)
                         (ctx_2)(body_3)
                     end
                 end)
             end
+        else
+            return quote
+                for $idx_sym = $(ctx(getstart(root.ext))):$(ctx(getstop(root.ext)))
+                    $(bind(ctx, getname(root.idx) => idx_sym) do 
+                        contain(ctx) do ctx_2
+                            body_3 = ForLoopVisitor(ctx_2, root.idx, value(idx_sym))(root.body)
+                            (ctx_2)(body_3)
+                        end
+                    end)
+                end
+            end
         end
+    elseif root.kind === sieve
+        cond = ctx.freshen(:cond)
+        push!(ctx.preamble, :($cond = $(ctx(root.cond))))
+    
+        return quote
+            if $cond
+                $(contain(ctx) do ctx_2
+                    ctx_2(root.body)
+                end)
+            end
+        end
+    elseif root.kind === virtual
+        ctx(root.val)
+    elseif root.kind === assign
+        if root.lhs.kind === access
+            @assert root.lhs.mode.kind == updater
+            rhs = ctx(simplify(call(root.op, root.lhs, root.rhs)))
+        else
+            rhs = ctx(root.rhs)
+        end
+        lhs = ctx(root.lhs)
+        return :($lhs = $rhs)
+    elseif root.kind === pass
+        return quote end
+    else
+        error("unimplemented")
     end
 end
 
-@kwdef struct ForLoopVisitor <: AbstractTransformVisitor
+function lowerjulia_access(ctx, node, tns)
+    tns = ctx(tns)
+    idxs = map(ctx, node.idxs)
+    :($(ctx(tns))[$(idxs...)])
+end
+
+function lowerjulia_access(ctx, node, tns::Number)
+    @assert node.mode.kind === reader
+    tns
+end
+
+@kwdef struct ForLoopVisitor
     ctx
     idx
     val
+end
+
+function (ctx::ForLoopVisitor)(node)
+    if istree(node)
+        similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        node
+    end
+end
+
+function (ctx::ForLoopVisitor)(node::IndexNode)
+    if node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
+        #TODO this is a problem
+        something(unchunk(node.tns.val, ctx), access(node.tns, node.mode, map(ctx, node.idxs)...))
+    elseif istree(node)
+        similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        node
+    end
 end
 
 @kwdef struct Lookup
@@ -278,16 +336,11 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Lookup)
     print(io, "Lookup()")
 end
 
-isliteral(node::Lookup) = false
+IndexNotation.isliteral(node::Lookup) =  false
 
-function (ctx::ForLoopVisitor)(node::Access{Lookup}, ::DefaultStyle)
-    node.tns.body(ctx.val)
-end
-
-function (ctx::ForLoopVisitor)(node::Lookup, ::DefaultStyle)
+function (ctx::ForLoopVisitor)(node::Lookup)
     node.body(ctx.val)
 end
 
 unchunk(node, ctx) = nothing
-(ctx::ForLoopVisitor)(node::Access, ::DefaultStyle) = something(unchunk(node.tns, ctx), node)
 unchunk(node::Lookup, ctx::ForLoopVisitor) = node.body(ctx.val)

@@ -1,24 +1,22 @@
 module IndexNotation
-    using MacroTools, SyntaxInterface, Finch
+    using RewriteTools, SyntaxInterface, Finch
 
-    export IndexNode, IndexStatement, IndexExpression, IndexTerminal
-    export Literal
-    export Name
-    export Virtual
-    export Workspace
-    export Pass, pass
-    export With, with
-    export Multi, multi
-    export Loop, loop
-    export Chunk, chunk
-    export Assign, assign
-    export Call, call
-    export Access, Read, Write, Update, access, access
-    export Protocol, protocol
-    export Sieve, sieve
+    export index_leaf
+    export literal
+    export index
     export value
-
-    export Lexicography
+#    export Workspace
+    export pass
+    export with
+    export multi
+    export loop
+    export Chunk, chunk
+    export assign
+    export call
+    export reader, updater, create, modify, access
+    export protocol
+    export sieve
+    export IndexNode, value, isvalue
 
     export Follow, follow
     export Walk, walk
@@ -28,6 +26,21 @@ module IndexNotation
     export Laminate, laminate
 
     export @f, @finch_program, @finch_program_instance
+
+    export isliteral, virtual
+
+    """
+        isliteral(ex)
+
+    Return a boolean indicating whether the expression is a literal. If an
+    expression is a literal, `getvalue(ex)` should return the literal value it
+    corresponds to. `getvalue` defaults to the identity.
+    TODO this is out of date
+
+    See also: [`getvalue`](@ref)
+    """
+    isliteral(ex) = true
+
 
     include("nodes.jl")
     include("instances.jl")
