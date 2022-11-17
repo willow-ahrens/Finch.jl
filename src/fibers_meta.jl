@@ -39,6 +39,15 @@ end
     end
 end
 
+@generated function Base.copyto!(dst::Array, src::Fiber)
+    dst = virtualize(:dst, dst, LowerJulia())
+    idxs = [Symbol(:i_, n) for n = getsites(dst)]
+    return quote
+        @finch @loop($(idxs...), dst[$(idxs...)] = src[$(idxs...)])
+        return dst
+    end
+end
+
 dropdefaults(src) = dropdefaults!(similar(src), src)
 
 @generated function dropdefaults!(dst::Fiber, src)
