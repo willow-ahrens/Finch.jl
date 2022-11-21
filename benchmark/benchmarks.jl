@@ -125,18 +125,12 @@ function bfs(edges, source=5)
 
     level = 2
     while F.lvl.pos[2] != 1 #TODO this could be cleaner if we could get early exit working.
-        @finch begin
-            _F = 0
-            for j = auto
-                for k = auto
-                    v = F[j] && edges[j, k] && !(V[k])
-                    _F[k] = v #Set the frontier vertex
-                    if v
-                        P[k] = j #Only set the parent for this vertex
-                    end
-                end
-            end
-        end
+        @finch @loop j k (begin
+            _F[k] = v #Set the frontier vertex
+            @sieve v P[k] = j #Only set the parent for this vertex
+        end) where (
+            v = F[j] && edges[j, k] && !(V[k])
+        )
         @finch @loop k !V[k] += ifelse(_F[k], level, 0)
         (F, _F) = (_F, F)
         level += 1
