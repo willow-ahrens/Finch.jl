@@ -7,8 +7,6 @@ Pkg.resolve()
 
 using Finch
 using BenchmarkTools
-using RewriteTools
-using Finch.IndexNotation: or_, choose
 using MatrixDepot
 using SparseArrays
 
@@ -94,13 +92,13 @@ function pagerank(edges; nsteps=20, damp = 0.85)
     scaled_edges = @fiber d(sl(e(0.0)))
     @finch @loop i j scaled_edges[i, j] = ifelse(out_degree[i] != 0, edges[i, j] / out_degree[j], 0)
     r = @fiber d(n, e(0.0))
-    @finch @loop j r[j] += $(1.0/n)
+    @finch @loop j r[j] = 1.0/n
     rank = @fiber d(n, e(0.0))
     beta_score = (1 - damp)/n
 
     for step = 1:nsteps
-        @finch @loop i j rank[i] += edges[i, j] * r[j]
-        @finch @loop i r[i] = $beta_score + $damp * rank[i]
+        @finch @loop i j rank[i] += scaled_edges[i, j] * r[j]
+        @finch @loop i r[i] = beta_score + damp * rank[i]
     end
     return r
 end
@@ -112,43 +110,38 @@ end
 
 function bfs(edges, source=5)
     (n, m) = size(edges)
+    edges = pattern!(edges)
 
     @assert n == m
-    F_in = @fiber sl(n, e(0))
-    F_out = @fiber sl(n, e(0))
-    F_tmp = @fiber sl(n, e(0))
-    @finch @loop j F_in[j] = (j == $source)
-
-    P_in = @fiber d(n, e(0))
-    P_out = @fiber d(n, e(0))
-    P_tmp = @fiber d(n, e(0))
-    @finch @loop j P_in[j] = (j == $source) * (0 - 2) + (j != $source) * (0 - 1)
+    F = @fiber sl(n,p())
+    _F = @fiber sl(n,p())
+    @finch @loop source F[source] = true
 
     V = @fiber d(n, e(0))
-    B = @fiber d(n, e(0))
-    w = Scalar{0}()
+    @finch @loop source V[source] = 1
 
-    while !iszero(F_in.lvl.lvl.val)
-        @finch @loop j V[j] = (P_in[j] == (0 - 1))
-    
-        @finch (@loop j @loop k (begin
-            F_out[j] <<or_>>= w[]
-            B[j] <<choose>>= w[] * k
+    P = @fiber d(n, e(0))
+    @finch @loop source P[source] = source
+
+    level = 2
+    while F.lvl.pos[2] != 1 #TODO this could be cleaner if we could get early exit working.
+        @finch begin
+            _F = 0
+            for j = auto
+                for k = auto
+                    v = F[j] && edges[j, k] && !(V[k])
+                    _F[k] = v #Set the frontier vertex
+                    if v
+                        P[k] = j #Only set the parent for this vertex
+                    end
+                end
+            end
         end
-            where (w[] = edges[j, k] * F_in[k] * V[j]) ) )
-        
-            @finch @loop j P_out[j] = choose(B[j], P_in[j])
-       
-        P_tmp = P_in
-        P_in = P_out
-        P_out = P_tmp
-
-        F_tmp = F_in
-        F_in = F_out
-        F_out = F_tmp
+        @finch @loop k !V[k] += ifelse(_F[k], level, 0)
+        (F, _F) = (_F, F)
+        level += 1
     end
-
-    return P_in
+    return F
 end
 
 SUITE["graphs"]["bfs"] = BenchmarkGroup()
@@ -156,6 +149,8 @@ for mtx in ["SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
     SUITE["graphs"]["bfs"][mtx] = @benchmarkable bfs($(fiber(SparseMatrixCSC(matrixdepot(mtx))))) 
 end
 
+#=
+TODO
 # For sssp we should probably compress priorityQ on both dimensions, since many entires in rowptr will be equal
 # ( due to many rows being zero )
 function sssp(weights, source=1)
@@ -206,6 +201,59 @@ end
 SUITE["graphs"]["sssp"] = BenchmarkGroup()
 for mtx in ["SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
     SUITE["graphs"]["sssp"][mtx] = @benchmarkable sssp($(fiber(SparseMatrixCSC(matrixdepot(mtx))))) 
+end
+=#
+
+SUITE["matrices"] = BenchmarkGroup()
+
+function spgemm_inner(A, B)
+    C = @fiber d(sl(e(0.0)))
+    w = @fiber sh{2}(e(0.0))
+    BT = @fiber d(sl(e(0.0)))
+    @finch @loop k j w[j, k] = B[k, j]
+    @finch @loop j k BT[j, k] = w[j, k]
+    @finch @loop i j k C[i, j] += A[i, k] * BT[j, k]
+    return C
+end
+
+SUITE["matrices"]["ATA_spgemm_inner"] = BenchmarkGroup()
+for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
+    A = fiber(SparseMatrixCSC(matrixdepot(mtx)))
+    SUITE["matrices"]["ATA_spgemm_inner"][mtx] = @benchmarkable spgemm_inner($A, $A) 
+end
+
+function spgemm_gustavsons(A, B)
+    C = @fiber d(sl(e(0.0)))
+    w = @fiber sm(e(0.0))
+    @finch @loop i (
+        @loop j C[i, j] = w[j]
+    ) where (
+        @loop k j w[j] += A[i, k] * B[k, j]
+    )
+    return C
+end
+
+SUITE["matrices"]["ATA_spgemm_gustavsons"] = BenchmarkGroup()
+for mtx in ["SNAP/soc-Epinions1"]#], "SNAP/soc-LiveJournal1"]
+    A = fiber(SparseMatrixCSC(matrixdepot(mtx)))
+    SUITE["matrices"]["ATA_spgemm_gustavsons"][mtx] = @benchmarkable spgemm_gustavsons($A, $A) 
+end
+
+function spgemm_outer(A, B)
+    C = @fiber d(sl(e(0.0)))
+    w = @fiber sh{2}(e(0.0))
+    AT = @fiber d(sl(e(0.0)))
+    @finch @loop i k w[k, i] = A[i, k]
+    @finch @loop k i AT[k, i] = w[k, i]
+    @finch @loop k i j w[i, j] += AT[k, i] * B[k, j]
+    @finch @loop i j C[i, j] = w[i, j]
+    return C
+end
+
+SUITE["matrices"]["ATA_spgemm_outer"] = BenchmarkGroup()
+for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
+    A = fiber(SparseMatrixCSC(matrixdepot(mtx)))
+    SUITE["matrices"]["ATA_spgemm_outer"][mtx] = @benchmarkable spgemm_outer($A, $A) 
 end
 
 foreach(((k, v),) -> BenchmarkTools.warmup(v), SUITE)

@@ -77,9 +77,11 @@ function initialize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
     lvl = fbr.lvl
     my_q = ctx.freshen(lvl.ex, :_q)
     if !envreinitialized(fbr.env)
-        push!(ctx.preamble, quote
-            $(lvl.val_alloc) = $Finch.refill!($(lvl.ex).val, $(lvl.D), 0, 4)
-        end)
+        if mode.kind === updater && mode.mode.kind === create
+            push!(ctx.preamble, quote
+                $(lvl.val_alloc) = $Finch.refill!($(lvl.ex).val, $(lvl.D), 0, 4)
+            end)
+        end
     end
     lvl
 end
@@ -107,18 +109,6 @@ function reinitialize!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
     end)
 end
 
-#=
-#TODO This assumes that all of the elements will eventually be written to, which isn't always true sadly.
-function assemble!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode::Writer)
-    lvl = fbr.lvl
-    q = envposition(fbr.env)
-    push!(ctx.preamble, quote
-        $(lvl.val_alloc) < $q && ($(lvl.val_alloc) = $Finch.regrow!($(lvl.ex).val, $(lvl.val_alloc), $q))
-    end)
-    return nothing
-end
-=#
-
 function refurl(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
     lvl = fbr.lvl
 
@@ -127,35 +117,27 @@ function refurl(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
             preamble = quote
                 $(lvl.val) = $(lvl.ex).val[$(ctx(envposition(fbr.env)))]
             end,
-            body = access(fbr, reader()),
-        )
-    elseif mode.kind === writer
-        return Thunk(
-            preamble = quote
-                $(lvl.val) = $(lvl.D)
-            end,
-            body = access(fbr, writer()),
-            epilogue = quote
-                $(lvl.ex).val[$(ctx(envposition(fbr.env)))] = $(lvl.val)
-            end,
+            body = access(fbr, mode),
         )
     elseif mode.kind === updater
         return Thunk(
             preamble = quote
                 $(lvl.val) = $(lvl.ex).val[$(ctx(envposition(fbr.env)))]
             end,
-            body = access(fbr, updater()),
+            body = access(fbr, mode),
             epilogue = quote
                 $(lvl.ex).val[$(ctx(envposition(fbr.env)))] = $(lvl.val)
             end,
         )
+    else
+        error("unimplemented")
     end
 end
 
 function lowerjulia_access(ctx::Finch.LowerJulia, node, tns::VirtualFiber{VirtualElementLevel})
     @assert isempty(node.idxs)
 
-    if (node.mode.kind === writer || node.mode.kind === updater) && envdefaultcheck(tns.env) !== nothing
+    if node.mode.kind === updater && envdefaultcheck(tns.env) !== nothing
         push!(ctx.preamble, quote
             $(envdefaultcheck(tns.env)) = false
         end)

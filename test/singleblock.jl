@@ -38,7 +38,7 @@ end
 (ctx::Finch.LowerJulia)(tns::VirtualSingleBlock) = tns.ex
 
 function Finch.initialize!(arr::VirtualSingleBlock{D, Tv}, ctx::Finch.LowerJulia, mode, idxs...) where {D, Tv}
-    if mode.kind === writer || mode.kind === updater
+    if mode.kind === updater
         push!(ctx.preamble, quote
             fill!($(arr.ex).val, D)
         end)
@@ -55,7 +55,7 @@ Finch.setsize!(arr::VirtualSingleBlock{Tv, Ti}, ctx::Finch.LowerJulia, mode, dim
 Finch.getname(arr::VirtualSingleBlock) = arr.name
 Finch.setname(arr::VirtualSingleBlock, name) = (arr_2 = deepcopy(arr); arr_2.name = name; arr_2)
 function Finch.stylize_access(node, ctx::Finch.Stylize{LowerJulia}, tns::VirtualSingleBlock)
-    if ctx.root isa CINNode && ctx.root.kind === loop && ctx.root.idx == get_furl_root(node.idxs[1])
+    if ctx.root isa IndexNode && ctx.root.kind === loop && ctx.root.idx == get_furl_root(node.idxs[1])
         Finch.ChunkStyle()
     else
         Finch.DefaultStyle()

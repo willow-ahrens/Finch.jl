@@ -31,7 +31,7 @@ end
 (ctx::Finch.LowerJulia)(tns::VirtualSimpleJumpVector) = tns.ex
 
 function Finch.initialize!(arr::VirtualSimpleJumpVector{D, Tv}, ctx::Finch.LowerJulia, mode, idxs...) where {D, Tv}
-    if mode.kind === writer || mode.kind === updater
+    if mode.kind === updater
         push!(ctx.preamble, quote
             $(arr.ex).idx = [$(arr.ex).idx[end]]
             $(arr.ex).val = $Tv[]
@@ -49,7 +49,7 @@ Finch.setsize!(arr::VirtualSimpleJumpVector{Tv, Ti}, ctx::Finch.LowerJulia, mode
 Finch.getname(arr::VirtualSimpleJumpVector) = arr.name
 Finch.setname(arr::VirtualSimpleJumpVector, name) = (arr_2 = deepcopy(arr); arr_2.name = name; arr_2)
 function Finch.stylize_access(node, ctx::Finch.Stylize{LowerJulia}, tns::VirtualSimpleJumpVector)
-    if ctx.root isa CINNode && ctx.root.kind === loop && ctx.root.idx == get_furl_root(node.idxs[1])
+    if ctx.root isa IndexNode && ctx.root.kind === loop && ctx.root.idx == get_furl_root(node.idxs[1])
         Finch.ChunkStyle()
     else
         Finch.DefaultStyle()

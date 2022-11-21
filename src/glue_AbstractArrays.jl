@@ -15,6 +15,8 @@ end
 getname(arr::VirtualAbstractArray) = arr.name
 setname(arr::VirtualAbstractArray, name) = (arr_2 = deepcopy(arr); arr_2.name = name; arr_2)
 
+getsites(arr::VirtualAbstractArray) = 1:arr.ndims
+
 priority(::VirtualAbstractArray) = (3,7)
 comparators(x::VirtualAbstractArray) = (Lexicography(getname(x)),) #TODO this is probably good enough, but let's think about it later.
 
@@ -29,7 +31,7 @@ function virtualize(ex, ::Type{<:AbstractArray{T, N}}, ctx, tag=:tns) where {T, 
 end
 
 function initialize!(arr::VirtualAbstractArray, ctx::LowerJulia, mode, idxs...)
-    if mode.kind === writer || mode.kind === updater
+    if mode.kind === updater && mode.mode.kind === create
         push!(ctx.preamble, quote
             fill!($(arr.ex), 0) #TODO
         end)

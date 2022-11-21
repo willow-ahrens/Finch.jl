@@ -72,8 +72,8 @@ function execute_code(ex, T)
             end)
             $(contain(ctx) do ctx_2
                 prgm = Finalize(ctx = ctx_2)(prgm)
-                :(($(map(getresults(prgm)) do tns
-                    :($(getname(tns)) = $(ctx_2(tns)))
+                :(($(map(getresults(prgm)) do acc
+                    :($(getname(acc)) = $(ctx_2(acc.tns)))
                 end...), ))
             end)
         end
@@ -86,16 +86,14 @@ function execute_code(ex, T)
     code |>
         lower_caches |>
         lower_cleanup |>
-        MacroTools.striplines |>
-        MacroTools.flatten |>
-        #MacroTools.unresolve |>
-        #MacroTools.resyntax |>
+        striplines |>
+        unblock |>
         unquote_literals
 end
 
 macro finch(ex)
     results = Set()
-    prgm = IndexNotation.capture_finch_instance(ex, results=results)
+    prgm = IndexNotation.finch_parse_instance(ex, results)
     thunk = quote
         res = $execute($prgm)
     end
@@ -111,7 +109,7 @@ macro finch(ex)
 end
 
 macro finch_code(ex)
-    prgm = IndexNotation.capture_finch_instance(ex)
+    prgm = IndexNotation.finch_parse_instance(ex)
     return quote
         $execute_code(:ex, typeof($prgm))
     end
@@ -138,8 +136,8 @@ function (ctx::Initialize)(node)
     end
 end
 
-function (ctx::Initialize)(node::CINNode)
-    if node.kind === access && node.tns isa CINNode && node.tns.kind === virtual
+function (ctx::Initialize)(node::IndexNode)
+    if node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
         if (ctx.target === nothing || (getname(node.tns) in ctx.target)) && !(getname(node.tns) in ctx.escape)
             initialize!(node.tns.val, ctx.ctx, node.mode, map(ctx, node.idxs)...)
         else
@@ -177,8 +175,8 @@ function (ctx::Finalize)(node)
     end
 end
 
-function (ctx::Finalize)(node::CINNode)
-    if node.kind === access && node.tns isa CINNode && node.tns.kind === virtual
+function (ctx::Finalize)(node::IndexNode)
+    if node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
         if (ctx.target === nothing || (getname(node.tns) in ctx.target)) && !(getname(node.tns) in ctx.escape)
             access(finalize!(node.tns.val, ctx.ctx, node.mode, node.idxs...), node.mode, node.idxs...)
         else

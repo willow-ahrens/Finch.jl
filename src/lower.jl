@@ -129,10 +129,10 @@ function (ctx::LowerJulia)(node, ::ThunkStyle)
     end
 end
 
-function (ctx::ThunkVisitor)(node::CINNode)
+function (ctx::ThunkVisitor)(node::IndexNode)
     if node.kind === virtual
         ctx(node.val)
-    elseif node.kind === access && node.tns isa CINNode && node.tns.kind === virtual
+    elseif node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
         #TODO this case morally shouldn't exist
         thunk_access(node, ctx, node.tns.val)
     elseif istree(node)
@@ -163,10 +163,10 @@ function (ctx::LowerJulia)(root, ::DefaultStyle)
     error("Don't know how to lower $root")
 end
 
-function (ctx::LowerJulia)(root::CINNode, ::DefaultStyle)
+function (ctx::LowerJulia)(root::IndexNode, ::DefaultStyle)
     if root.kind === value
         return root.val
-    elseif root.kind === name
+    elseif root.kind === index
         @assert haskey(ctx.bindings, getname(root)) "variable $(getname(root)) unbound"
         return ctx(ctx.bindings[getname(root)]) #This unwraps indices that are virtuals. Arguably these virtuals should be precomputed, but whatevs.
     elseif root.kind === literal
@@ -204,10 +204,10 @@ function (ctx::LowerJulia)(root::CINNode, ::DefaultStyle)
         end
         thunk
     elseif root.kind === access
-        if root.tns isa CINNode && root.tns.kind === virtual
+        if root.tns isa IndexNode && root.tns.kind === virtual
             return lowerjulia_access(ctx, root, root.tns.val)
         else
-            tns = ctx(tns)
+            tns = ctx(root.tns)
             idxs = map(ctx, root.idxs)
             return :($(ctx(tns))[$(idxs...)])
         end
@@ -230,11 +230,11 @@ function (ctx::LowerJulia)(root::CINNode, ::DefaultStyle)
             :($(ctx(root.op))($(map(ctx, root.args)...)))
         end
     elseif root.kind === loop
-        return ctx(chunk(
-            idx = root.idx,
-            ext = resolvedim(ctx.dims[getname(root.idx)]),
-            body = root.body)
-        )
+        return ctx(simplify(chunk(
+            root.idx,
+            resolvedim(ctx.dims[getname(root.idx)]),
+            root.body)
+        ))
     elseif root.kind === chunk
         idx_sym = ctx.freshen(getname(root.idx))
         if simplify((@f $(getlower(root.ext)) >= 1)) == (@f true)  && simplify((@f $(getupper(root.ext)) <= 1)) == (@f true)
@@ -273,10 +273,11 @@ function (ctx::LowerJulia)(root::CINNode, ::DefaultStyle)
     elseif root.kind === virtual
         ctx(root.val)
     elseif root.kind === assign
-        if root.op == literal(nothing)
-            rhs = ctx(root.rhs)
+        if root.lhs.kind === access
+            @assert root.lhs.mode.kind == updater
+            rhs = ctx(simplify(call(root.op, root.lhs, root.rhs)))
         else
-            rhs = ctx(call(root.op, root.lhs, root.rhs))
+            rhs = ctx(root.rhs)
         end
         lhs = ctx(root.lhs)
         return :($lhs = $rhs)
@@ -312,8 +313,8 @@ function (ctx::ForLoopVisitor)(node)
     end
 end
 
-function (ctx::ForLoopVisitor)(node::CINNode)
-    if node.kind === access && node.tns isa CINNode && node.tns.kind === virtual
+function (ctx::ForLoopVisitor)(node::IndexNode)
+    if node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
         #TODO this is a problem
         something(unchunk(node.tns.val, ctx), access(node.tns, node.mode, map(ctx, node.idxs)...))
     elseif istree(node)

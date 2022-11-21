@@ -1,160 +1,355 @@
 tab = "  "
-@enum CINHead begin
-    value=1
-    virtual=2
-    name=3
-    literal=4
-    with=5
-    multi=6
-    access=7
-    protocol=8
-    call=9
-    loop=10
-    chunk=11
-    sieve=12
-    assign=13
-    pass=14
-    reader=15
-    writer=16
-    updater=17
-    lifetime=18
+
+const IS_TREE = 1
+const IS_STATEFUL = 2
+const ID = 4
+
+"""
+    IndexHead
+
+An IndexNode type represents many different Finch IR nodes, and an IndexHead
+enum is used to differentiate which kind of node is represented.
+"""
+@enum IndexHead begin
+    value    =  1ID
+    virtual  =  2ID
+    literal  =  3ID
+    index    =  4ID
+    protocol =  5ID | IS_TREE
+    access   =  6ID | IS_TREE 
+    reader   =  7ID | IS_TREE
+    updater  =  8ID | IS_TREE
+    modify   =  9ID | IS_TREE
+    create   = 10ID | IS_TREE
+    call     = 11ID | IS_TREE
+    assign   = 12ID | IS_TREE | IS_STATEFUL
+    with     = 13ID | IS_TREE | IS_STATEFUL
+    multi    = 14ID | IS_TREE | IS_STATEFUL
+    loop     = 15ID | IS_TREE | IS_STATEFUL
+    chunk    = 16ID | IS_TREE | IS_STATEFUL
+    sieve    = 17ID | IS_TREE | IS_STATEFUL
+    pass     = 18ID | IS_TREE | IS_STATEFUL
+    lifetime = 19ID | IS_TREE | IS_STATEFUL
 end
 
-struct CINNode
-    kind::CINHead
+"""
+    value(val, type)
+
+Finch AST expression for host code `val` expected to evaluate to a value of type `type`.
+"""
+value
+
+"""
+    virtual(val)
+
+Finch AST expression for an object `val` which has special meaning to the compiler. This
+type allows users to substitute their own ASTs, etc. into Finch expressions.
+"""
+virtual
+
+"""
+    literal(val)
+
+Finch AST expression for the literal value `val`.
+"""
+literal
+
+"""
+    index(name)
+
+Finch AST expression for an index named `name`. Each index must be quantified by a corresponding `loop`
+which iterates over all values of the index.
+"""
+index
+
+"""
+    protocol(idx, proto)
+
+Finch AST expression marking an indexing expression `idx` with the protocol `proto`.
+These usually reside at the toplevel of an indexing expression to an access.
+"""
+protocol
+
+"""
+    access(tns, mode, idx...)
+
+Finch AST expression representing the value of tensor `tns` at the indices
+`idx...`. The `mode` differentiates between reads or updates and whether the
+access is in-place.
+"""
+access
+
+"""
+    reader()
+
+Finch AST expression for an access mode that is read-only.
+"""
+reader
+
+"""
+    updater(mode)
+
+Finch AST expression for an access mode that may modify the tensor. The `mode`
+field specifies whether this access returns this tensor (initializing and
+finalizing) or modifies it in place.
+"""
+updater
+
+"""
+    create()
+
+Finch AST expression for an "allocating" update. This access will
+initialize and finalize the tensor, and we can be sure that any values
+the tensor held before have been forgotten.
+"""
+create
+
+"""
+    modify()
+
+Finch AST expression for an "in place" update. The access will not
+initialize or finalize the tensor, but can modify it's existing values.
+"""
+modify
+
+"""
+    call(op, args...)
+
+Finch AST expression for the result of calling the function `op` on `args...`.
+"""
+call
+
+"""
+    with(cons, prod)
+
+Finch AST statement that runs `cons` with the tensors produced by `prod`.
+"""
+with
+
+"""
+    multi(bodies...)
+
+Finch AST statement that runs `bodies...` independently and returns all their results.
+"""
+multi
+
+"""
+    loop(idxs..., body) 
+
+Finch AST statement that runs `body` for each value of `idxs...`.
+"""
+loop
+
+"""
+    chunk(idx, ext, body) 
+
+Finch AST statement that runs `body` for each value of `idx` in `ext`. Tensors
+in `body` must have ranges that agree with `ext`. This is an internal node.
+"""
+chunk
+
+"""
+    sieve(cond, body)
+
+Finch AST statement that only executes `body` if `cond` is true.
+"""
+sieve
+
+"""
+    assign(lhs, op, rhs)
+
+Finch AST statement that updates the value of `lhs` to `op(lhs, rhs)`. The
+tensors of `lhs` are returned.  Overwriting is accomplished with the function
+`right(lhs, rhs) = rhs`.
+"""
+assign
+
+#TODO get rid of access expressions in pass
+"""
+    pass(tnss...)
+
+Finch AST statement that initializes, finalizes, and returns each tensor in `tnss...`.
+"""
+pass
+
+#TODO figure this one out already
+"""
+    lifetime(body)
+
+Finch AST statement that initializes and finalizes all results in `body`. Most
+finch programs are wrapped by an outer `lifetime`.
+"""
+lifetime
+
+"""
+    IndexNode
+
+A Finch IR node. Finch uses a variant of Concrete Index Notation as an
+intermediate representation. Consult the documentation of each node kind
+for more information.
+"""
+struct IndexNode
+    kind::IndexHead
     val::Any
     type::Any
-    children::Vector{CINNode}
+    children::Vector{IndexNode}
 end
 
-isvalue(node::CINNode) = node.kind === value
+isvalue(node::IndexNode) = node.kind === value
 #TODO Delete this one when you can
 isvalue(node) = false
 
-#TODO
-isstateful(node::CINNode) = istree(node) && (node !== call || node !== access || node !== reader || node !== writer || node !== updater)
+"""
+    isstateful(node)
 
-SyntaxInterface.istree(node::CINNode) = node.kind > literal
-SyntaxInterface.arguments(node::CINNode) = node.children
-SyntaxInterface.operation(node::CINNode) = node.kind
+Returns true if the node is an index statement, and false if the node is an
+index expression. Typically, index statements specify control flow and 
+index expressions describe values.
+"""
+isstateful(node::IndexNode) = Int(node.kind) & IS_STATEFUL != 0
+
+SyntaxInterface.istree(node::IndexNode) = Int(node.kind) & IS_TREE != 0
+SyntaxInterface.arguments(node::IndexNode) = node.children
+SyntaxInterface.operation(node::IndexNode) = node.kind
 
 #TODO clean this up eventually
-function SyntaxInterface.similarterm(::Type{CINNode}, op::CINHead, args)
-    @assert istree(CINNode(op, nothing, nothing, []))
-    CINNode(op, nothing, nothing, args)
+function SyntaxInterface.similarterm(::Type{IndexNode}, op::IndexHead, args)
+    @assert istree(IndexNode(op, nothing, nothing, []))
+    IndexNode(op, nothing, nothing, args)
 end
 
-function CINNode(kind::CINHead, args::Vector)
+function IndexNode(kind::IndexHead, args::Vector)
     if kind === value
         if length(args) == 1
-            return CINNode(value, args[1], Any, CINNode[])
+            return IndexNode(value, args[1], Any, IndexNode[])
         elseif length(args) == 2
-            return CINNode(value, args[1], args[2], CINNode[])
+            return IndexNode(value, args[1], args[2], IndexNode[])
         else
             error("wrong number of arguments to value(...)")
         end
     elseif kind === literal
         if length(args) == 1
-            return CINNode(kind, args[1], nothing, CINNode[])
+            return IndexNode(kind, args[1], nothing, IndexNode[])
         else
             error("wrong number of arguments to $kind(...)")
         end
-    elseif kind === name
+    elseif kind === index
         if length(args) == 1
-            return CINNode(kind, args[1], nothing, CINNode[])
+            return IndexNode(kind, args[1], nothing, IndexNode[])
         else
             error("wrong number of arguments to $kind(...)")
         end
     elseif kind === virtual
         if length(args) == 1
-            return CINNode(kind, args[1], nothing, CINNode[])
+            return IndexNode(kind, args[1], nothing, IndexNode[])
         else
             error("wrong number of arguments to $kind(...)")
         end
     elseif kind === with
         if length(args) == 2
-            return CINNode(with, nothing, nothing, args)
+            return IndexNode(with, nothing, nothing, args)
         else
             error("wrong number of arguments to with(...)")
         end
     elseif kind === multi
-        return CINNode(multi, nothing, nothing, args)
+        return IndexNode(multi, nothing, nothing, args)
     elseif kind === access
         if length(args) >= 2
-            return CINNode(access, nothing, nothing, args)
+            return IndexNode(access, nothing, nothing, args)
         else
             error("wrong number of arguments to access(...)")
         end
     elseif kind === protocol
         if length(args) == 2
-            return CINNode(protocol, nothing, nothing, args)
+            return IndexNode(protocol, nothing, nothing, args)
         else
             error("wrong number of arguments to protocol(...)")
         end
     elseif kind === call
         if length(args) >= 1
-            return CINNode(call, nothing, nothing, args)
+            return IndexNode(call, nothing, nothing, args)
         else
             error("wrong number of arguments to call(...)")
         end
     elseif kind === loop
         if length(args) == 2
-            return CINNode(loop, nothing, nothing, args)
+            return IndexNode(loop, nothing, nothing, args)
         else
             error("wrong number of arguments to loop(...)")
         end
     elseif kind === chunk
         if length(args) == 3
-            return CINNode(chunk, nothing, nothing, args)
+            return IndexNode(chunk, nothing, nothing, args)
         else
             error("wrong number of arguments to chunk(...)")
         end
     elseif kind === sieve
         if length(args) == 2
-            return CINNode(sieve, nothing, nothing, args)
+            return IndexNode(sieve, nothing, nothing, args)
         else
             error("wrong number of arguments to sieve(...)")
         end
     elseif kind === assign
-        if length(args) == 2
-            return CINNode(assign, nothing, nothing, [args[1], literal(nothing), args[2]])
-        elseif length(args) == 3
-            return CINNode(assign, nothing, nothing, args)
+        if length(args) == 3
+            return IndexNode(assign, nothing, nothing, args)
         else
             error("wrong number of arguments to assign(...)")
         end
     elseif kind === pass
-        return CINNode(pass, nothing, nothing, args)
-    elseif kind === reader || kind === writer || kind === updater
+        return IndexNode(pass, nothing, nothing, args)
+    elseif kind === reader
         if length(args) == 0
-            return CINNode(kind, nothing, nothing, CINNode[])
+            return IndexNode(kind, nothing, nothing, IndexNode[])
         else
-            error("wrong number of arguments to $kind(...)")
+            error("wrong number of arguments to reader()")
+        end
+    elseif kind === updater
+        if length(args) == 1
+            return IndexNode(updater, nothing, nothing, args)
+        else
+            error("wrong number of arguments to updater(...)")
+        end
+    elseif kind === modify
+        if length(args) == 0
+            return IndexNode(kind, nothing, nothing, IndexNode[])
+        else
+            error("wrong number of arguments to modify()")
+        end
+    elseif kind === create
+        if length(args) == 0
+            return IndexNode(kind, nothing, nothing, IndexNode[])
+        else
+            error("wrong number of arguments to create()")
         end
     else
         error("unimplemented")
     end
 end
 
-function (kind::CINHead)(args...)
-    CINNode(kind, Any[args...,])
+function (kind::IndexHead)(args...)
+    IndexNode(kind, Any[args...,])
 end
 
-function Base.getproperty(node::CINNode, sym::Symbol)
+function Base.getproperty(node::IndexNode, sym::Symbol)
     if sym === :kind || sym === :val || sym === :type || sym === :children
         return Base.getfield(node, sym)
     elseif node.kind === value ||
             node.kind === literal || 
-            node.kind === virtual ||
-            node.kind === reader ||
-            node.kind === writer ||
-            node.kind === updater
-        error("type CINNode($(node.kind), ...) has no property $sym")
-    elseif node.kind === name
+            node.kind === virtual
+        error("type IndexNode($(node.kind), ...) has no property $sym")
+    elseif node.kind === index
         if sym === :name
             return node.val::Symbol
         else
-            error("type CINNode(virtual, ...) has no property $sym")
+            error("type IndexNode(index, ...) has no property $sym")
+        end
+    elseif node.kind === reader
+        error("type IndexNode(reader, ...) has no property $sym")
+    elseif node.kind === updater
+        if sym === :mode
+            return node.children[1]
+        else
+            error("type IndexNode(updater, ...) has no property $sym")
         end
     elseif node.kind === with
         if sym === :cons
@@ -162,13 +357,13 @@ function Base.getproperty(node::CINNode, sym::Symbol)
         elseif sym === :prod
             return node.children[2]
         else
-            error("type CINNode(with, ...) has no property $sym")
+            error("type IndexNode(with, ...) has no property $sym")
         end
     elseif node.kind === multi
         if sym === :bodies
             return node.children
         else
-            error("type CINNode(multi, ...) has no property $sym")
+            error("type IndexNode(multi, ...) has no property $sym")
         end
     elseif node.kind === access
         if sym === :tns
@@ -178,7 +373,7 @@ function Base.getproperty(node::CINNode, sym::Symbol)
         elseif sym === :idxs
             return @view node.children[3:end]
         else
-            error("type CINNode(access, ...) has no property $sym")
+            error("type IndexNode(access, ...) has no property $sym")
         end
     elseif node.kind === call
         if sym === :op
@@ -186,7 +381,7 @@ function Base.getproperty(node::CINNode, sym::Symbol)
         elseif sym === :args
             return @view node.children[2:end]
         else
-            error("type CINNode(call, ...) has no property $sym")
+            error("type IndexNode(call, ...) has no property $sym")
         end
     elseif node.kind === protocol
         if sym === :idx
@@ -194,7 +389,7 @@ function Base.getproperty(node::CINNode, sym::Symbol)
         elseif sym === :mode
             return node.children[2]
         else
-            error("type CINNode(protocol, ...) has no property $sym")
+            error("type IndexNode(protocol, ...) has no property $sym")
         end
     elseif node.kind === loop
         if sym === :idx
@@ -202,7 +397,7 @@ function Base.getproperty(node::CINNode, sym::Symbol)
         elseif sym === :body
             return node.children[2]
         else
-            error("type CINNode(loop, ...) has no property $sym")
+            error("type IndexNode(loop, ...) has no property $sym")
         end
     elseif node.kind === chunk
         if sym === :idx
@@ -212,7 +407,7 @@ function Base.getproperty(node::CINNode, sym::Symbol)
         elseif sym === :body
             return node.children[3]
         else
-            error("type CINNode(chunk, ...) has no property $sym")
+            error("type IndexNode(chunk, ...) has no property $sym")
         end
     elseif node.kind === sieve
         if sym === :cond
@@ -220,10 +415,9 @@ function Base.getproperty(node::CINNode, sym::Symbol)
         elseif sym === :body
             return node.children[2]
         else
-            error("type CINNode(sieve, ...) has no property $sym")
+            error("type IndexNode(sieve, ...) has no property $sym")
         end
     elseif node.kind === assign
-        #TODO move op into updater
         if sym === :lhs
             return node.children[1]
         elseif sym === :op
@@ -231,30 +425,22 @@ function Base.getproperty(node::CINNode, sym::Symbol)
         elseif sym === :rhs
             return node.children[3]
         else
-            error("type CINNode(assign, ...) has no property $sym")
+            error("type IndexNode(assign, ...) has no property $sym")
         end
     elseif node.kind === pass
         #TODO move op into updater
         if sym === :tnss
             return node.children
         else
-            error("type CINNode(pass, ...) has no property $sym")
+            error("type IndexNode(pass, ...) has no property $sym")
         end
     else
-        error("type CINNode has no property $sym")
+        error("type IndexNode has no property $sym")
     end
 end
 
-function Base.show(io::IO, mime::MIME"text/plain", node::CINNode) 
-    if isstateful(node)
-        display_statement(io, mime, node, 0)
-    else
-        display_expression(io, mime, node)
-    end
-end
-
-function Finch.getunbound(ex::CINNode)
-    if ex.kind === name
+function Finch.getunbound(ex::IndexNode)
+    if ex.kind === index
         return [ex.name]
     elseif ex.kind === loop
         return setdiff(getunbound(ex.body), getunbound(ex.idx))
@@ -267,7 +453,15 @@ function Finch.getunbound(ex::CINNode)
     end
 end
 
-function display_expression(io, mime, node::CINNode)
+function Base.show(io::IO, mime::MIME"text/plain", node::IndexNode) 
+    if isstateful(node)
+        display_statement(io, mime, node, 0)
+    else
+        display_expression(io, mime, node)
+    end
+end
+
+function display_expression(io, mime, node::IndexNode)
     if get(io, :compact, false)
         print(io, "@finch(…)")
     elseif node.kind === value
@@ -278,8 +472,14 @@ function display_expression(io, mime, node::CINNode)
         end
     elseif node.kind === literal
         print(io, node.val)
-    elseif node.kind === name
+    elseif node.kind === index
         print(io, node.name)
+    elseif node.kind === reader
+        print(io, "reader()")
+    elseif node.kind === updater
+        print(io, "updater(")
+        display_expression(io, node.mode)
+        print(io, ")")
     elseif node.kind === virtual
         print(io, "virtual(")
         print(io, node.val)
@@ -304,20 +504,22 @@ function display_expression(io, mime, node::CINNode)
         end
         display_expression(io, mime, node.args[end])
         print(io, ")")
-    #elseif istree(node)
-    #    print(io, operation(node))
-    #    print(io, "(")
-    #    for arg in arguments(node)[1:end-1]
-    #        print(io, arg)
-    #        print(io, ",")
-    #    end
-    #    print(arguments(node)[end])
+    elseif istree(node)
+        print(io, operation(node))
+        print(io, "(")
+        for arg in arguments(node)[1:end-1]
+            print(io, arg)
+            print(io, ",")
+        end
+        if !isempty(arguments(node))
+            print(arguments(node)[end])
+        end
     else
         error("unimplemented")
     end
 end
 
-function display_statement(io, mime, node::CINNode, level)
+function display_statement(io, mime, node::IndexNode, level)
     if node.kind === with
         print(io, tab^level * "(\n")
         display_statement(io, mime, node.cons, level + 1)
@@ -332,7 +534,7 @@ function display_statement(io, mime, node::CINNode, level)
         print(io, tab^level * "end\n")
     elseif node.kind === loop
         print(io, tab^level * "@∀ ")
-        while node.body.kind === loop
+        while node.kind === loop
             display_expression(io, mime, node.idx)
             print(io," ")
             node = node.body
@@ -364,7 +566,8 @@ function display_statement(io, mime, node::CINNode, level)
         print(io, tab^level)
         display_expression(io, mime, node.lhs)
         print(io, " ")
-        if (node.op !== nothing && node.op != literal(nothing)) #TODO this feels kinda garbage.
+        if node.lhs.mode.kind === updater
+            #TODO add << >>
             display_expression(io, mime, node.op)
         end
         print(io, "= ")
@@ -389,14 +592,14 @@ function display_statement(io, mime, node::CINNode, level)
     end
 end
 
-function Base.:(==)(a::CINNode, b::CINNode)
+function Base.:(==)(a::IndexNode, b::IndexNode)
     if !istree(a)
         if a.kind === value
             return b.kind === value && a.val == b.val && a.type === b.type
         elseif a.kind === literal
             return b.kind === literal && isequal(a.val, b.val) #TODO Feels iffy idk
-        elseif a.kind === name
-            return b.kind === name && a.name == b.name
+        elseif a.kind === index
+            return b.kind === index && a.name == b.name
         elseif a.kind === virtual
             return b.kind === virtual && a.val == b.val #TODO Feels iffy idk
         else
@@ -411,7 +614,7 @@ function Base.:(==)(a::CINNode, b::CINNode)
     end
 end
 
-function Base.hash(a::CINNode, h::UInt)
+function Base.hash(a::IndexNode, h::UInt)
     if !istree(a)
         if a.kind === value
             return hash(value, hash(a.val, hash(a.type, h)))
@@ -419,8 +622,8 @@ function Base.hash(a::CINNode, h::UInt)
             return hash(literal, hash(a.val, h))
         elseif a.kind === virtual
             return hash(virtual, hash(a.val, h))
-        elseif a.kind === name
-            return hash(name, hash(a.name, h))
+        elseif a.kind === index
+            return hash(index, hash(a.name, h))
         else
             error("unimplemented")
         end
@@ -431,20 +634,20 @@ function Base.hash(a::CINNode, h::UInt)
     end
 end
 
-IndexNotation.isliteral(node::CINNode) = node.kind === literal
+IndexNotation.isliteral(node::IndexNode) = node.kind === literal
 
-function Finch.getvalue(ex::CINNode)
+function Finch.getvalue(ex::IndexNode)
     ex.kind === literal || error("expected literal")
     ex.val
 end
 
-function Finch.getresults(node::CINNode)
+function Finch.getresults(node::IndexNode)
     if node.kind === with
         Finch.getresults(node.cons)
     elseif node.kind === multi
         return mapreduce(Finch.getresults, vcat, node.bodies)
     elseif node.kind === access
-        [node.tns]
+        [access(node.tns, node.mode)]
     elseif node.kind === loop
         Finch.getresults(node.body)
     elseif node.kind === chunk
@@ -454,25 +657,27 @@ function Finch.getresults(node::CINNode)
     elseif node.kind === assign
         Finch.getresults(node.lhs)
     elseif node.kind === pass
-        node.tnss
+        return node.tnss
     else
         error("unimplemented")
     end
 end
 
-function Finch.getname(x::CINNode)
-    if x.kind === name
+function Finch.getname(x::IndexNode)
+    if x.kind === index
         return x.val
     elseif x.kind === virtual
         return Finch.getname(x.val)
+    elseif x.kind === access
+        return Finch.getname(x.tns)
     else
         error("unimplemented")
     end
 end
 
-function Finch.setname(x::CINNode, sym)
-    if x.kind === name
-        return name(sym)
+function Finch.setname(x::IndexNode, sym)
+    if x.kind === index
+        return index(sym)
     elseif x.kind === virtual
         return Finch.setname(x.val, sym)
     else
@@ -481,20 +686,3 @@ function Finch.setname(x::CINNode, sym)
 end
 
 display_expression(io, mime, ex) = show(IOContext(io, :compact=>true), mime, ex)
-
-#=
-struct Workspace <: IndexTerminal
-    n
-end
-
-SyntaxInterface.istree(::Workspace) = false
-Base.hash(ex::Workspace, h::UInt) = hash((Workspace, ex.n), h)
-
-function display_expression(io, ex::Workspace)
-    print(io, "{")
-    display_expression(io, mime, ex.n)
-    print(io, "}[...]")
-end
-
-setname(tns::Workspace, name) = Workspace(name)
-=#

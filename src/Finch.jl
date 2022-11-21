@@ -4,7 +4,6 @@ using Requires
 using SyntaxInterface
 using RewriteTools
 using RewriteTools.Rewriters
-using MacroTools
 using Base.Iterators
 using Base: @kwdef
 using SparseArrays
@@ -24,7 +23,7 @@ include("util.jl")
 include("semantics.jl")
 include("IndexNotation/IndexNotation.jl")
 using .IndexNotation
-using .IndexNotation: and, or, or_, choose
+using .IndexNotation: and, or, right
 include("virtualize.jl")
 include("style.jl")
 include("transform_ssa.jl")

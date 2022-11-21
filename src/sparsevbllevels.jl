@@ -121,7 +121,7 @@ getsites(fbr::VirtualFiber{VirtualSparseVBLLevel}) =
 
 function getsize(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode)
     ext = Extent(literal(1), fbr.lvl.I)
-    if mode !== reader
+    if mode.kind !== reader
         ext = suggest(ext)
     end
     (ext, getsize(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)...)

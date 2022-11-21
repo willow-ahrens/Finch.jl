@@ -33,7 +33,7 @@ end
 (ctx::Finch.LowerJulia)(tns::VirtualSimpleSparseVector) = tns.ex
 
 function Finch.initialize!(arr::VirtualSimpleSparseVector{D, Tv}, ctx::Finch.LowerJulia, mode, idxs...) where {D, Tv}
-    if mode.kind === writer || mode.kind === updater
+    if mode.kind === updater
         push!(ctx.preamble, quote
             $(arr.ex).idx = [$(arr.ex).idx[end]]
             $(arr.ex).val = $Tv[]
@@ -51,7 +51,7 @@ Finch.setsize!(arr::VirtualSimpleSparseVector{Tv, Ti}, ctx::Finch.LowerJulia, mo
 Finch.getname(arr::VirtualSimpleSparseVector) = arr.name
 Finch.setname(arr::VirtualSimpleSparseVector, name) = (arr_2 = deepcopy(arr); arr_2.name = name; arr_2)
 function Finch.stylize_access(node, ctx::Finch.Stylize{LowerJulia}, ::VirtualSimpleSparseVector)
-    if ctx.root isa CINNode && ctx.root.kind === loop && ctx.root.idx == get_furl_root(node.idxs[1])
+    if ctx.root isa IndexNode && ctx.root.kind === loop && ctx.root.idx == get_furl_root(node.idxs[1])
         Finch.ChunkStyle()
     else
         Finch.DefaultStyle()

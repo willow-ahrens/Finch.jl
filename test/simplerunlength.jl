@@ -26,7 +26,7 @@ Finch.IndexNotation.isliteral(::VirtualSimpleRunLength) = false
 (ctx::Finch.LowerJulia)(tns::VirtualSimpleRunLength) = tns.ex
 
 function Finch.initialize!(arr::VirtualSimpleRunLength{Tv}, ctx::Finch.LowerJulia, mode, idxs...) where {Tv}
-    if mode.kind === writer || mode.kind === updater
+    if mode.kind === updater
         push!(ctx.preamble, quote 
             $(arr.ex).idx = [$(arr.ex).idx[end]]
             $(arr.ex).val = [$(zero(Tv))]
@@ -44,7 +44,7 @@ Finch.setsize!(arr::VirtualSimpleRunLength{Tv, Ti}, ctx::Finch.LowerJulia, mode,
 Finch.getname(arr::VirtualSimpleRunLength) = arr.name
 Finch.setname(arr::VirtualSimpleRunLength, name) = (arr_2 = deepcopy(arr); arr_2.name = name; arr_2)
 function Finch.stylize_access(node, ctx::Finch.Stylize{LowerJulia}, tns::VirtualSimpleRunLength)
-    if ctx.root isa CINNode && ctx.root.kind === loop && ctx.root.idx == get_furl_root(node.idxs[1])
+    if ctx.root isa IndexNode && ctx.root.kind === loop && ctx.root.idx == get_furl_root(node.idxs[1])
         Finch.ChunkStyle()
     else
         Finch.DefaultStyle()

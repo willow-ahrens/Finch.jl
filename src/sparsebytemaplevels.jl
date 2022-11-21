@@ -151,34 +151,36 @@ function initialize_level!(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx::Lo
     q = ctx.freshen(lvl.ex, :_q)
     i = ctx.freshen(lvl.ex, :_i)
     p_prev = ctx.freshen(lvl.ex, :_p_prev)
-    push!(ctx.preamble, quote
-        # fill!($(lvl.ex).tbl, 0)
-        # empty!($(lvl.ex).srt)
-        $(lvl.ex).pos[1] = 1
-        $p_prev = 0
-        for $r = 1:$(lvl.srt_stop)
-            $p = first($(lvl.ex).srt[$r])
-            if $p != $p_prev
-                $(lvl.ex).pos[$p] = 0
-                $(lvl.ex).pos[$p + 1] = 0
+    if mode.kind === updater && mode.mode.kind === create
+        push!(ctx.preamble, quote
+            # fill!($(lvl.ex).tbl, 0)
+            # empty!($(lvl.ex).srt)
+            $(lvl.ex).pos[1] = 1
+            $p_prev = 0
+            for $r = 1:$(lvl.srt_stop)
+                $p = first($(lvl.ex).srt[$r])
+                if $p != $p_prev
+                    $(lvl.ex).pos[$p] = 0
+                    $(lvl.ex).pos[$p + 1] = 0
+                end
+                $p_prev = $p
             end
-            $p_prev = $p
-        end
-        for $r = 1:$(lvl.srt_stop)
-            $(lvl.ex).tbl[$r] = false
-            $(if reinitializeable(lvl.lvl)
-                push!(ctx.preamble, quote
-                    $p = first($(lvl.ex).srt[$r])
-                    $i = last($(lvl.ex).srt[$r])
-                    $q = ($p - 1) * $(ctx(lvl.I)) + $i
+            for $r = 1:$(lvl.srt_stop)
+                $(lvl.ex).tbl[$r] = false
+                $(if reinitializeable(lvl.lvl)
+                    push!(ctx.preamble, quote
+                        $p = first($(lvl.ex).srt[$r])
+                        $i = last($(lvl.ex).srt[$r])
+                        $q = ($p - 1) * $(ctx(lvl.I)) + $i
+                    end)
+                    reinitialize(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env, position = value(q, Ti), index = value(i, Ti))))
+                else
+                    quote end
                 end)
-                reinitialize(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env, position = value(q, Ti), index = value(i, Ti))))
-            else
-                quote end
-            end)
-        end
-        $(lvl.ex).srt_stop[] = $(lvl.srt_stop) = 0
-    end)
+            end
+            $(lvl.ex).srt_stop[] = $(lvl.srt_stop) = 0
+        end)
+    end
     lvl.lvl = initialize_level!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env, reinitialized = reinitializeable(lvl.lvl))), ctx, mode)
     return lvl
 end

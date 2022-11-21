@@ -1,9 +1,9 @@
 module IndexNotation
-    using MacroTools, SyntaxInterface, Finch
+    using RewriteTools, SyntaxInterface, Finch
 
-    export index_terminal
+    export index_leaf
     export literal
-    export name
+    export index
     export value
 #    export Workspace
     export pass
@@ -13,10 +13,10 @@ module IndexNotation
     export Chunk, chunk
     export assign
     export call
-    export reader, writer, updater, access
+    export reader, updater, create, modify, access
     export protocol
     export sieve
-    export CINNode, value, isvalue
+    export IndexNode, value, isvalue
 
     export Follow, follow
     export Walk, walk
