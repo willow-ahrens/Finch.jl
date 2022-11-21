@@ -5,6 +5,8 @@ using SparseArrays
 using LinearAlgebra
 using Cthulhu
 using Profile
+using RewriteTools
+using Finch.IndexNotation
 
 function add_vec(n, p, q; verbose=false)
     @info "add vec" n p q
@@ -196,6 +198,29 @@ function minplus(n, p, q; verbose=false)
     #println()
 end
 
-dot(100_000, 0.1, 0.001, verbose=true)
-add_vec(100_000, 0.1, 0.001, verbose=true)
-mul_vec(100_000, 0.1, 0.001)
+# dot(100_000, 0.1, 0.001, verbose=true)
+# add_vec(100_000, 0.1, 0.001, verbose=true)
+# mul_vec(100_000, 0.1, 0.001)
+
+function test()
+
+ctx = Finch.LowerJulia()
+code = Finch.contain(ctx) do ctx_2
+t_A = typeof(@fiber d(e(0)))
+A = Finch.virtualize(:A, t_A, ctx_2)
+t_B = typeof(@fiber d(d(e(0))))
+B = Finch.virtualize(:B, t_B, ctx_2)
+t_C = typeof(@fiber d(e(0)))
+C = Finch.virtualize(:C, t_C, ctx_2)
+w_0 = Finch.virtualize(:w_0, typeof(Scalar{0, Int64}()), ctx_2, :w_0)
+kernel = @finch_program (@loop i A[i] = w_0[] where (@loop j w_0[] += B[i,j] * C[j]))
+kernel_code = Finch.execute_code_virtualized(kernel, ctx_2)
+end
+return quote
+function def_0(C, B, A)
+    $code
+end
+end
+end
+
+println(test())

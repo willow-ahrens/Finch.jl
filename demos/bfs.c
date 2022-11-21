@@ -92,8 +92,8 @@ void compile() {
         w = Finch.virtualize(:w, typeof(Scalar{0, Int64}()), ctx_2, :w)\n\
         \n\
         kernel = @finch_program (@loop j @loop k (begin\n\
-            F_out[j] <<$or>>= w[]\n\
-            B[j] <<$choose>>= w[] * k\n\
+            F_out[j] <<or_>>= w[]\n\
+            B[j] <<choose>>= w[] * k\n\
         end\n\
             where (w[] = edges[j, k] * F_in[k] * V_out[j]) ) )\n\
         kernel_code = Finch.execute_code_virtualized(kernel, ctx_2)\n\
@@ -113,7 +113,7 @@ void compile() {
         P_out = Finch.virtualize(:P_out, t1, ctx_2)\n\
         B = Finch.virtualize(:B, t1, ctx_2)\n\
         \n\
-        kernel = @finch_program @loop j P_out[j] = $choose(B[j], P_in[j])\n\
+        kernel = @finch_program @loop j P_out[j] = choose(B[j], P_in[j])\n\
         kernel_code = Finch.execute_code_virtualized(kernel, ctx_2)\n\
     end\n\
     return quote\n\
@@ -162,9 +162,6 @@ void Init(struct bfs_data* data) {
 
 void V_update(struct bfs_data* in_data, jl_value_t* V_out) {
     finch_call(V_code, V_out, in_data->P);
-
-    // printf("V_out:\n");
-    // finch_exec("println(%s)\n", V_out);
 }
 
 void F_P_update(struct bfs_data* in_data, struct bfs_data* out_data, jl_value_t* V_out)  {
@@ -174,14 +171,8 @@ void F_P_update(struct bfs_data* in_data, struct bfs_data* out_data, jl_value_t*
         )\n\
     )", finch_Int64(N));
     finch_call(update_code1, out_data->F, B, edges, in_data->F, V_out);
-    // printf("B: \n");
-    // finch_exec("println(%s.lvl.lvl.val)\n", B);
-    // printf("F_out: \n");
-    // finch_exec("println(%s.lvl.lvl.val)\n", out_data->F);
-
     finch_call(update_code2, out_data->P, B, in_data->P);
-    // printf("P_out: \n");
-    // finch_exec("println(%s.lvl.lvl.val)\n", out_data->P);
+    finch_free(B);
 }
 
 //Let BFS_Step(F_in int[N], P_in int[N], V_in int[N]) -> (F_out int[N], P_out int[N], V_out int[N])
@@ -354,56 +345,11 @@ int main(int argc, char** argv) {
     finch_initialize();
 
     jl_value_t* res = finch_eval("using RewriteTools\n\
-    using Finch.IndexNotation\n\
+    using Finch.IndexNotation: or_, choose\n\
     using SparseArrays\n\
      using MatrixMarket\n\
     ");
 
-    res = finch_eval("or(x,y) = x == 1|| y == 1\n\
-function choose(x, y)\n\
-    if x != 0\n\
-        return x\n\
-    else\n\
-        return y\n\
-    end\n\
-end");
-
-    res = finch_eval("@slots a b c d e i j Finch.add_rules!([\n\
-    (@rule @f(@chunk $i a (b[j...] <<min>>= $d)) => if Finch.isliteral(d) && i ∉ j\n\
-        @f (b[j...] <<min>>= $d)\n\
-    end),\n\
-    (@rule @f(@chunk $i a @multi b... (c[j...] <<min>>= $d) e...) => begin\n\
-        if Finch.isliteral(d) && i ∉ j\n\
-            @f @multi (c[j...] <<min>>= $d) @chunk $i a @f(@multi b... e...)\n\
-        end\n\
-    end),\n\
-    \n\
-    (@rule @f($or(false, $a)) => a),\n\
-    (@rule @f($or($a, false)) => a),\n\
-    (@rule @f($or($a, true)) => true),\n\
-    (@rule @f($or(true, $a)) => true),\n\
-    \n\
-    (@rule @f(@chunk $i a (b[j...] <<$choose>>= $d)) => if Finch.isliteral(d) && i ∉ j\n\
-        @f (b[j...] <<$choose>>= $d)\n\
-    end),\n\
-    (@rule @f(@chunk $i a @multi b... (c[j...] <<choose>>= $d) e...) => begin\n\
-        if Finch.isliteral(d) && i ∉ j\n\
-            @f @multi (c[j...] <<choose>>= $d) @chunk $i a @f(@multi b... e...)\n\
-        end\n\
-    end),\n\
-    (@rule @f($choose(0, $a)) => a),\n\
-    (@rule @f($choose($a, 0)) => a),\n\
-    (@rule @f(@chunk $i a (b[j...] <<$or>>= $d)) => if Finch.isliteral(d) && i ∉ j\n\
-        @f (b[j...] <<$or>>= $d)\n\
-    end),\n\
-    (@rule @f(@chunk $i a @multi b... (c[j...] <<$or>>= $d) e...) => begin\n\
-        if Finch.isliteral(d) && i ∉ j\n\
-            @f @multi (c[j...] <<$or>>= $d) @chunk $i a @f(@multi b... e...)\n\
-        end\n\
-    end),\n\
-])\n\
-\n\
-Finch.register()");
     compile();
     printf("COMPILE DONE\n");
 
@@ -418,7 +364,7 @@ Finch.register()");
 
     setup4();
 
-    setup5();
+    // setup5();
     
     finch_finalize();
 }

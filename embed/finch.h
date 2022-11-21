@@ -103,6 +103,7 @@ is a macro that counts the number of arguments.
 #define finch_call(f, ...) finch_call_(f, (jl_value_t*[]){finch_call_begin, ##__VA_ARGS__, finch_call_end})
 extern int finch_call_begin_;
 extern int finch_call_end_;
+extern int is_active_jl_session;
 #define finch_call_begin ((jl_value_t*)&finch_call_begin_)
 #define finch_call_end ((jl_value_t*)&finch_call_end_)
 jl_value_t *finch_call_(jl_value_t *f, jl_value_t **args);

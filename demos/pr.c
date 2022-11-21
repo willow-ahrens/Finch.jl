@@ -190,16 +190,17 @@ void PageRank(struct pr_data* data) {
 }
 
 
-void make_weights_and_edges(const char* graph_name, int n) {
+void make_weights_and_edges(const char* graph_name) {
     // 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0
     char code[1000];
-    sprintf(code, "N = %d\n\
-        matrix = copy(transpose(MatrixMarket.mmread(\"./graphs/%s\")))\n\
+    sprintf(code, "matrix = copy(transpose(MatrixMarket.mmread(\"./graphs/%s\")))\n\
+        (n, m) = size(matrix)\n\
+        @assert n == m\n\
         nzval = ones(size(matrix.nzval, 1))\n\
         Finch.Fiber(\n\
-                 Dense(N,\n\
+                 Dense(n,\n\
                  SparseList(N, matrix.colptr, matrix.rowval,\n\
-                 Element{0}(nzval))))", n, graph_name);
+                 Element{0}(nzval))))", graph_name);
     edges = finch_eval(code);
     printf("Loaded edges\n");
 }
@@ -232,7 +233,7 @@ void setup1() {
     // compile and cache 
     starter();
 
-    make_weights_and_edges("dag5.mtx", N);
+    make_weights_and_edges("dag5.mtx");
 
     struct pr_data d = {};
     struct pr_data* data = &d;
@@ -250,7 +251,7 @@ void setup2() {
     // compile and cache 
     starter();
 
-    make_weights_and_edges("dag4.mtx", N);
+    make_weights_and_edges("dag4.mtx");
 
     struct pr_data d = {};
     struct pr_data* data = &d;
@@ -269,7 +270,7 @@ void setup3() {
     // compile and cache 
     starter();
 
-    make_weights_and_edges("dag3.mtx", N);
+    make_weights_and_edges("dag3.mtx");
     
     struct pr_data d = {};
     struct pr_data* data = &d;
@@ -288,7 +289,7 @@ void setup4() {
     // compile and cache 
     starter();
 
-    make_weights_and_edges("dag7.mtx", N);
+    make_weights_and_edges("dag7.mtx");
 
     struct pr_data d = {};
     struct pr_data* data = &d;
@@ -305,7 +306,7 @@ void setup5() {
     // compile and cache 
     starter();
 
-    make_weights_and_edges("soc-LiveJournal1.mtx", N);
+    make_weights_and_edges("soc-LiveJournal1.mtx");
 
     time_t start;
     time_t end;
@@ -328,55 +329,10 @@ int main(int argc, char** argv) {
 
     jl_value_t* res = finch_eval("using RewriteTools\n\
     using Finch.IndexNotation\n\
+    using Finch.IndexNotation: or_, choose\n\
     using SparseArrays\n\
-     using MatrixMarket\n\
+    using MatrixMarket\n\
     ");
-
-    res = finch_eval("or(x,y) = x == 1|| y == 1\n\
-function choose(x, y)\n\
-    if x != 0\n\
-        return x\n\
-    else\n\
-        return y\n\
-    end\n\
-end");
-
-    res = finch_eval("@slots a b c d e i j Finch.add_rules!([\n\
-    (@rule @f(@chunk $i a (b[j...] <<min>>= $d)) => if Finch.isliteral(d) && i ∉ j\n\
-        @f (b[j...] <<min>>= $d)\n\
-    end),\n\
-    (@rule @f(@chunk $i a @multi b... (c[j...] <<min>>= $d) e...) => begin\n\
-        if Finch.isliteral(d) && i ∉ j\n\
-            @f @multi (c[j...] <<min>>= $d) @chunk $i a @f(@multi b... e...)\n\
-        end\n\
-    end),\n\
-    \n\
-    (@rule @f($or(false, $a)) => a),\n\
-    (@rule @f($or($a, false)) => a),\n\
-    (@rule @f($or($a, true)) => true),\n\
-    (@rule @f($or(true, $a)) => true),\n\
-    \n\
-    (@rule @f(@chunk $i a (b[j...] <<$choose>>= $d)) => if Finch.isliteral(d) && i ∉ j\n\
-        @f (b[j...] <<$choose>>= $d)\n\
-    end),\n\
-    (@rule @f(@chunk $i a @multi b... (c[j...] <<choose>>= $d) e...) => begin\n\
-        if Finch.isliteral(d) && i ∉ j\n\
-            @f @multi (c[j...] <<choose>>= $d) @chunk $i a @f(@multi b... e...)\n\
-        end\n\
-    end),\n\
-    (@rule @f($choose(0, $a)) => a),\n\
-    (@rule @f($choose($a, 0)) => a),\n\
-    (@rule @f(@chunk $i a (b[j...] <<$or>>= $d)) => if Finch.isliteral(d) && i ∉ j\n\
-        @f (b[j...] <<$or>>= $d)\n\
-    end),\n\
-    (@rule @f(@chunk $i a @multi b... (c[j...] <<$or>>= $d) e...) => begin\n\
-        if Finch.isliteral(d) && i ∉ j\n\
-            @f @multi (c[j...] <<$or>>= $d) @chunk $i a @f(@multi b... e...)\n\
-        end\n\
-    end),\n\
-])\n\
-\n\
-Finch.register()");
 
     damp = 0.85;
 
@@ -388,7 +344,7 @@ Finch.register()");
 
     setup4();
 
-    setup5();
+    // setup5();
 
     finch_finalize();
 }

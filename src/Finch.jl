@@ -44,6 +44,7 @@ include("jumpers.jl")
 include("steppers.jl")
 
 include("execute.jl")
+export execute_code_virtualized
 include("select.jl")
 include("fibers.jl")
 include("scalars.jl")

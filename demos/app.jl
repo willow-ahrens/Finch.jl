@@ -1,127 +1,115 @@
 using Finch
 using Finch.IndexNotation
-using Finch: execute_code_lowered
 using RewriteTools
 using BenchmarkTools
 using SparseArrays
 using LinearAlgebra
+using MatrixMarket
 
-@slots a b c d e i j Finch.add_rules!([
-    (@rule @f(@chunk $i a (b[j...] <<min>>= $d)) => if Finch.isliteral(d) && i ∉ j
-        @f (b[j...] <<min>>= $d)
-    end),
-    (@rule @f(@chunk $i a @multi b... (c[j...] <<min>>= $d) e...) => begin
-        if Finch.isliteral(d) && i ∉ j
-            @f @multi (c[j...] <<min>>= $d) @chunk $i a @f(@multi b... e...)
-        end
-    end),
-])
 
-Finch.register()
+function def_1_pagerank(edges, out_d)
+                 #= none:12 =#
+                 #= none:13 =#
+               w_0 = Scalar{0}()
+                 begin
+                     begin
+                         #= /Users/adadima/mit/commit/Finch.jl/src/denselevels.jl:67 =#
+                         tns_lvl = out_d.lvl
+                     end
+                     begin
+                         #= /Users/adadima/mit/commit/Finch.jl/src/elementlevels.jl:57 =#
+                         tns_lvl_2 = tns_lvl.lvl
+                         #= /Users/adadima/mit/commit/Finch.jl/src/elementlevels.jl:58 =#
+                         tns_lvl_2_val_alloc = length(tns_lvl.lvl.val)
+                         #= /Users/adadima/mit/commit/Finch.jl/src/elementlevels.jl:59 =#
+                         tns_lvl_2_val = 0
+                     end
+                     begin
+                         #= /Users/adadima/mit/commit/Finch.jl/src/denselevels.jl:67 =#
+                         tns_2_lvl = edges.lvl
+                     end
+                     begin
+                         #= /Users/adadima/mit/commit/Finch.jl/src/denselevels.jl:67 =#
+                         tns_2_lvl_2 = tns_2_lvl.lvl
+                     end
+                     begin
+                         #= /Users/adadima/mit/commit/Finch.jl/src/elementlevels.jl:57 =#
+                         tns_2_lvl_3 = tns_2_lvl_2.lvl
+                         #= /Users/adadima/mit/commit/Finch.jl/src/elementlevels.jl:58 =#
+                         tns_2_lvl_3_val_alloc = length(tns_2_lvl_2.lvl.val)
+                         #= /Users/adadima/mit/commit/Finch.jl/src/elementlevels.jl:59 =#
+                         tns_2_lvl_3_val = 0
+                     end
+                     begin
+                         #= /Users/adadima/mit/commit/Finch.jl/src/scalars.jl:31 =#
+                         w_0 = w_0
+                         #= /Users/adadima/mit/commit/Finch.jl/src/scalars.jl:32 =#
+                         w_0_val = w_0.val
+                     end
+                     @inbounds begin
+                             j_stop = tns_2_lvl_2.I
+                             i_stop = tns_2_lvl.I
+                             tns_lvl_2_val_alloc = (Finch).refill!(tns_lvl_2.val, 0, 0, 4)
+                             tns_lvl_2_val_alloc < 1 * tns_2_lvl_2.I && (tns_lvl_2_val_alloc = (Finch).refill!(tns_lvl_2.val, 0, tns_lvl_2_val_alloc, 1 * tns_2_lvl_2.I))
+                             for j = 1:j_stop
+                                 tns_lvl_q = (1 - 1) * tns_2_lvl_2.I + j
+                                 tns_lvl_2_val = 0
+                                 tns_lvl_2_val = begin
+                                         w_0_val = 0
+                                         for i = 1:i_stop
+                                             tns_2_lvl_q = (1 - 1) * tns_2_lvl.I + i
+                                             s_stop = tns_2_lvl_2.I
+                                             select_s = j
+                                             s = 1
+                                             s_start = s
+                                             phase_start = max(s_start)
+                                             phase_stop = min(s_stop, select_s - 1)
+                                             if phase_stop >= phase_start
+                                                 s_2 = s
+                                                 s = phase_stop + 1
+                                             end
+                                             s_start = s
+                                             phase_start_2 = max(s_start)
+                                             phase_stop_2 = min(s_stop, select_s)
+                                             if phase_stop_2 >= phase_start_2
+                                                 s_3 = s
+                                                 for s_4 = phase_start_2:phase_stop_2
+                                                     tns_2_lvl_2_q = (tns_2_lvl_q - 1) * tns_2_lvl_2.I + s_4
+                                                     tns_2_lvl_3_val = tns_2_lvl_3.val[tns_2_lvl_2_q]
+                                                     w_0_val = w_0_val + tns_2_lvl_3_val
+                                                 end
+                                                 s = phase_stop_2 + 1
+                                             end
+                                             s_start = s
+                                             phase_start_3 = max(s_start)
+                                             phase_stop_3 = min(s_stop)
+                                             if phase_stop_3 >= phase_start_3
+                                                 s_5 = s
+                                                 s = phase_stop_3 + 1
+                                             end
+                                         end
+                                         w_0_val
+                                     end
+                                 tns_lvl_2.val[tns_lvl_q] = tns_lvl_2_val
+                             end
+                             (tns = Fiber((Finch.DenseLevel){Int64}(tns_2_lvl_2.I, tns_lvl_2), (Finch.Environment)(; name = :tns)),)
+                         end
+    end
+ end
 
-# @finch @loop p j priorityQ[p, j] += (&) ((==) (p, 1), ((==) (j, source))) + (&) ((==) (p, P), (!=) (j, source))
-function pq_init(source, P, priorityQ)
-    @finch @loop p j priorityQ[p, j] = (p == 1 && j == $source) + (p == $P && j != $source)
-end
-
-# dist[j] = (j != source) * P
-function dist_init(source, P, dist)
-    @finch @loop j dist[j] = (j != $source) * ($P - 1)
-end
-
-# new_dist[j] = edges[j][k] * priorityQ[priority][k] * (weights[j][k] + dist[k]) + (edges[j][k] * priorityQ[priority][k] == 0) * P | k:(MIN, dist[j])
-function new_dist_func(priority, N, P, new_dist, edges, priorityQ, weights, dist)
-    val = typemax(Cint)
-    B = Finch.Fiber(
-        Dense(N,
-            Element{val, Cint}([])
-        )
-    )
-    
-    @finch @loop p j k B[j] <<min>>= (p == $priority) * (edges[j, k] * priorityQ[p, k] * (weights[j, k] + dist[k]) + (edges[j, k] * priorityQ[p, k] == 0) * ($P-1)) + (p != $priority) * $val
-    @finch @loop j new_dist[j] = min(B[j], dist[j])
-end
-
-# new_priorityQ[j][k] = (dist[k] > new_dist[k]) * (j <= new_dist[k] &&  new_dist[k] < j + 1) + (dist[k] == new_dist[k] && j != priority) * priorityQ[j][k]
-function new_pq_func(new_priorityQ, old_priorityQ, dist, new_dist, priority) 
-    # @finch @loop j k new_priorityQ[j, k] = old_priorityQ[j, k] + ((dist[k] > new_dist[k]) * (new_dist[k] == j-1) - (dist[k] > new_dist[k]) * (dist[k] == j-1))
-    @finch @loop j k new_priorityQ[j, k] = (dist[k] > new_dist[k]) * (new_dist[k] == j-1) + (dist[k] == new_dist[k] && j != $priority) * old_priorityQ[j, k]
-end
-
-function access_func(tensor1D, tensor2D, index)
-    @finch @loop i j tensor1D[j] += tensor2D[i, j] * (i == $index)
-end
-
-function add_vec()
-
-    P = 5;
-    N = 5;
-    source = 5;
-
-    #  1 5, 4 5, 3 4, 2 3, 1 2
-    edge_vector = Cint[0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]
+function main()
+    matrix = copy(transpose(MatrixMarket.mmread("graphs/dag3.mtx")))
+    (n, m) = size(matrix)
+    @assert n == m
+    nzval = ones(size(matrix.nzval, 1))
     edges = Finch.Fiber(
-        Dense(N,
-                Dense(N,
-                    Element{0, Cint}(edge_vector)
-                )
-            )
-        )
-    
-    edge_slice = Finch.Fiber(
-        Dense(N,
-        Element{0, Cint}([]))
-    );
-    access_func(edge_slice, edges, 1);
-    println(edge_slice.lvl.lvl.val);
-
-    access_func(edge_slice, edges, 3);
-    println(edge_slice.lvl.lvl.val);
-
-    weight_vector = Cint[0, 1, 0, 0, 3, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]
-    weights = Finch.Fiber(
-        Dense(N,
-                Dense(N,
-                    Element{0, Cint}(weight_vector)
-                )
-            )
-        )
-
-    priorityQ = Finch.Fiber(
-        Dense(P,
-        # HollowList(N, Vector{Int64}(), [1, 1, 1, 1, 1, 1],
-        # Element{0.0, Int64}([])))
-            Dense(N, Element{0, Cint}([]))
-        )
-        );
-    pq_init(source, P, priorityQ);
-    println(priorityQ.lvl.lvl.lvl.val);
-
-    dist = Finch.Fiber(
-        Dense(N,
-        Element{0, Cint}([]))
-    );
-    dist_init(source, P, dist);
-    println("Dist: \n")
-    println(dist.lvl.lvl.val);
-
-    new_dist = Finch.Fiber(
-        Dense(N,
-        Element{0, Cint}([])
-        )
-    )
-    new_dist_func(1, N, P, new_dist, edges, priorityQ, weights, dist)
-    println("New dist: \n")
-    println(new_dist.lvl.lvl.val)
-
-    new_priorityQ = Finch.Fiber(
-        Dense(P,
-            Dense(N, Element{0, Cint}([]))
-        )
-        );
-    new_pq_func(new_priorityQ, priorityQ, dist, new_dist, 1)
-    println("New priorityQ: \n")
-    println(new_priorityQ.lvl.lvl.lvl.val)
+                Dense(n,
+                SparseList(n, matrix.colptr, matrix.rowval,
+                Element{0}(nzval))))
+    out_d = Finch.Fiber(Dense(n, Element{0, Int64}()))
+    def_1_pagerank(edges, out_d)
+    println(out_d.lvl.lvl.val)
 end
 
-add_vec();
+
+main()

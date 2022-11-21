@@ -6,6 +6,7 @@
 
 int finch_call_begin_;
 int finch_call_end_;
+int is_active_jl_session;
 
 //JULIA_DEFINE_FAST_TLS // only define this once, in an executable (not in a shared library) if you want fast code.
 
@@ -37,6 +38,7 @@ jl_function_t* Scalar;
 
 int finch_call_begin_ = 0;
 int finch_call_end_ = 0;
+int is_active_jl_session = 0;
 
 /* required: setup the Julia context */
 extern void finch_initialize(){
@@ -48,10 +50,10 @@ extern void finch_initialize(){
         refs = IdDict();\n\
     ");
     FINCH_ASSERT(!jl_exception_occurred(), "Could not eval Julia string");
-
     Finch = jl_eval_string("\
         using Pkg;\n\
-        Pkg.activate(joinpath(dirname(\""__FILE__"\"), \"..\"), io=devnull)\n\
+        # Pkg.activate(joinpath(dirname(\""__FILE__"\"), \"..\"), io=devnull)\n\
+        Pkg.activate(joinpath(dirname(\"/Users/adadima/mit/commit/Finch.jl/embed/finch.c\"), \"..\"), io=devnull)\n\
         Pkg.instantiate()\n\
         using Finch;\n\
         using Printf;\n\
@@ -152,6 +154,9 @@ extern void finch_initialize(){
     FINCH_ASSERT(!jl_exception_occurred(), "Could not find ElementLevel");
     Scalar = (jl_function_t*)jl_eval_string("(default) -> Finch.Scalar{default}()");
     FINCH_ASSERT(!jl_exception_occurred(), "Could not find Scalar");
+
+    is_active_jl_session = 1;
+    atexit(finch_finalize);
 }
 
 jl_value_t* finch_root(jl_value_t* var){
@@ -285,6 +290,7 @@ void finch_finalize(){
     */
     jl_atexit_hook(0);
     FINCH_ASSERT(!jl_exception_occurred(), "Could not finalize Julia");
+    is_active_jl_session = 0;
 }
 
 jl_value_t* finch_Int64(int64_t x){

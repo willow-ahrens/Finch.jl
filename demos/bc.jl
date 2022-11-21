@@ -4,103 +4,99 @@ using RewriteTools
 using BenchmarkTools
 using SparseArrays
 using LinearAlgebra
+using MatrixMarket
 
-or(x,y) = x == 1|| y == 1
 
-function choose(x, y)
-    if x != 0
-        return x
-    else
-        return y
+function back_edge2(new_deps, B, deps)
+    #= none:12 =#
+    #= none:13 =#
+    begin
+        begin
+            #= /Users/adadima/mit/commit/Finch.jl/src/denselevels.jl:67 =#
+            tns_lvl = new_deps.lvl
+        end
+        begin
+            #= /Users/adadima/mit/commit/Finch.jl/src/elementlevels.jl:57 =#
+            tns_lvl_2 = tns_lvl.lvl
+            #= /Users/adadima/mit/commit/Finch.jl/src/elementlevels.jl:58 =#
+            tns_lvl_2_val_alloc = length(tns_lvl.lvl.val)
+            #= /Users/adadima/mit/commit/Finch.jl/src/elementlevels.jl:59 =#
+            tns_lvl_2_val = 0
+        end
+        begin
+            #= /Users/adadima/mit/commit/Finch.jl/src/denselevels.jl:67 =#
+            tns_2_lvl = deps.lvl
+        end
+        begin
+            #= /Users/adadima/mit/commit/Finch.jl/src/elementlevels.jl:57 =#
+            tns_2_lvl_2 = tns_2_lvl.lvl
+            #= /Users/adadima/mit/commit/Finch.jl/src/elementlevels.jl:58 =#
+            tns_2_lvl_2_val_alloc = length(tns_2_lvl.lvl.val)
+            #= /Users/adadima/mit/commit/Finch.jl/src/elementlevels.jl:59 =#
+            tns_2_lvl_2_val = 0
+        end
+        begin
+            #= /Users/adadima/mit/commit/Finch.jl/src/denselevels.jl:67 =#
+            tns_3_lvl = B.lvl
+        end
+        begin
+            #= /Users/adadima/mit/commit/Finch.jl/src/elementlevels.jl:57 =#
+            tns_3_lvl_2 = tns_3_lvl.lvl
+            #= /Users/adadima/mit/commit/Finch.jl/src/elementlevels.jl:58 =#
+            tns_3_lvl_2_val_alloc = length(tns_3_lvl.lvl.val)
+            #= /Users/adadima/mit/commit/Finch.jl/src/elementlevels.jl:59 =#
+            tns_3_lvl_2_val = 0
+        end
+        @inbounds begin
+                j_stop = tns_2_lvl.I
+                tns_lvl_2_val_alloc = (Finch).refill!(tns_lvl_2.val, 0, 0, 4)
+                tns_lvl_2_val_alloc < 1 * tns_2_lvl.I && (tns_lvl_2_val_alloc = (Finch).refill!(tns_lvl_2.val, 0, tns_lvl_2_val_alloc, 1 * tns_2_lvl.I))
+                for j = 1:j_stop
+                    tns_lvl_q = (1 - 1) * tns_2_lvl.I + j
+                    tns_3_lvl_q = (1 - 1) * tns_3_lvl.I + j
+                    tns_2_lvl_q = (1 - 1) * tns_2_lvl.I + j
+                    tns_lvl_2_val = 0
+                    tns_3_lvl_2_val = tns_3_lvl_2.val[tns_3_lvl_q]
+                    tns_2_lvl_2_val = tns_2_lvl_2.val[tns_2_lvl_q]
+                    tns_lvl_2_val = tns_3_lvl_2_val + tns_2_lvl_2_val
+                    tns_lvl_2.val[tns_lvl_q] = tns_lvl_2_val
+                end
+                (tns = Fiber((Finch.DenseLevel){Int64}(tns_2_lvl.I, tns_lvl_2), (Finch.Environment)(; name = :tns)),)
+            end
     end
 end
 
-@slots a b c d e i j Finch.add_rules!([
-    (@rule @f(@chunk $i a (b[j...] <<min>>= $d)) => if Finch.isliteral(d) && i ∉ j
-        @f (b[j...] <<min>>= $d)
-    end),
-
-    (@rule @f(@chunk $i a @multi b... (c[j...] <<min>>= $d) e...) => begin
-        if Finch.isliteral(d) && i ∉ j
-            @f @multi (c[j...] <<min>>= $d) @chunk $i a @f(@multi b... e...)
-        end
-    end),
-
-    (@rule @f(@chunk $i a (b[j...] <<$or>>= $d)) => if Finch.isliteral(d) && i ∉ j
-        @f (b[j...] <<$or>>= $d)
-    end),
-
-    (@rule @f(@chunk $i a @multi b... (c[j...] <<$or>>= $d) e...) => begin
-        if Finch.isliteral(d) && i ∉ j
-            @f @multi (c[j...] <<$or>>= $d) @chunk $i a @f(@multi b... e...)
-        end
-    end),
-])
-
-Finch.register()
-
-function frontier_visit_paths(new_frontier, new_visited, new_num_paths, edges, round, frontier_list, old_visited, old_num_paths)
-    @finch @loop j k begin
-        new_frontier[j] <<$or>>= edges[j,k] * frontier_list[($round-1),k] * (old_visited[j] == 0)
-        new_visited[j] <<$or>>= (old_visited[j] != 0) * 1 + edges[j,k] * frontier_list[($round-1),k] * (old_visited[j] == 0)
-        new_num_paths[j] += edges[j,k] * frontier_list[($round-1),k] * (old_visited[j] == 0) * old_num_paths[k]
-     end
-end
 
 function main()
-    N = 4
-    edge_vector = Cint[0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0]
+    N = 5
+    matrix = copy(transpose(MatrixMarket.mmread("./graphs/dag5.mtx")))
+    nzval = ones(size(matrix.nzval, 1))
     edges = Finch.Fiber(
-        Dense(N,
                 Dense(N,
-                    Element{0, Cint}(edge_vector)
-                )
-            )
-    )
-    println("Edges:")
-    println(edges.lvl.lvl.lvl.val)
-
-    num_paths = Finch.Fiber(
+                SparseList(N, matrix.colptr, matrix.rowval,
+                Element{0}(nzval))))
+   
+    B = Finch.Fiber(
         Dense(N,
-            Element{0, Cint}([0,0,0,1])
+            Element{typemax(Int64), Int64}([0,0,1,0,0])
         )
     )
 
-    new_num_paths = Finch.Fiber(
+    in_deps = Finch.Fiber(
         Dense(N,
-            Element{0, Cint}([0,0,0,1])
+            Element{typemax(Int64), Int64}([0,1,0,0,0])
         )
     )
 
-    visited = Finch.Fiber(
+    out_deps = Finch.Fiber(
         Dense(N,
-            Element{0, Cint}([0,0,0,1])
+            Element{typemax(Int64), Int64}()
         )
     )
 
-    new_visited = Finch.Fiber(
-        Dense(N,
-            Element{0, Cint}([0,0,0,1])
-        )
-    )
+    back_edge2(out_deps, B, in_deps)
 
-    frontier = Finch.Fiber(
-        Dense(N,
-            Element{0, Cint}([0,0,0,1])
-        )
-    )
-
-    frontier_list = Finch.Fiber(
-        Dense(N,
-            Dense(N,
-            Element{0, Cint}([0,0,0,1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-            )
-        )
-    );
-
-    frontier_visit_paths(frontier, new_visited, new_num_paths, edges, 2, frontier_list, visited, num_paths)
-    
-    println(new_num_paths.lvl.lvl.val)
+    println(out_deps.lvl.lvl.val)
 
 end
 

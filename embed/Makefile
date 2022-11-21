@@ -1,6 +1,6 @@
 CC = gcc
 LD = ld
-JULIA = julia
+JULIA = /usr/local/Cellar/julia/1.8.2/bin/julia #  /Users/adadima/mit/commit/julia/usr/bin/julia-debug
 CFLAGS= -O3
 
 JL_SHARE = $(shell $(JULIA) -e 'print(joinpath(Sys.BINDIR, Base.DATAROOTDIR, "julia"))')
