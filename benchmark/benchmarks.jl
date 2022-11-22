@@ -125,10 +125,12 @@ function bfs(edges, source=5)
 
     level = 2
     while F.lvl.pos[2] != 1 #TODO this could be cleaner if we could get early exit working.
-        @finch @loop j k begin
-            _F[k] = v[] #Set the frontier vertex
-            @sieve v[] !P[k] = j #Only set the parent for this vertex
-        end where (v[] = F[j] && edges[j, k] && !(V[k]))
+        @finch @loop j k (begin
+            _F[k] = v #Set the frontier vertex
+            @sieve v P[k] = j #Only set the parent for this vertex
+        end) where (
+            v = F[j] && edges[j, k] && !(V[k])
+        )
         @finch @loop k !V[k] += ifelse(_F[k], level, 0)
         (F, _F) = (_F, F)
         level += 1
@@ -195,5 +197,57 @@ for mtx in ["SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
     SUITE["graphs"]["sssp"][mtx] = @benchmarkable sssp($(fiber(SparseMatrixCSC(matrixdepot(mtx))))) 
 end
 =#
+
+SUITE["matrices"] = BenchmarkGroup()
+
+function spgemm_inner(A, B)
+    C = @fiber d(sl(e(0.0)))
+    w = @fiber sh{2}(e(0.0))
+    BT = @fiber d(sl(e(0.0)))
+    @finch @loop k j w[j, k] = B[k, j]
+    @finch @loop j k BT[j, k] = w[j, k]
+    @finch @loop i j k C[i, j] += A[i, k] * BT[j, k]
+    return C
+end
+
+SUITE["matrices"]["ATA_spgemm_inner"] = BenchmarkGroup()
+for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
+    A = fiber(SparseMatrixCSC(matrixdepot(mtx)))
+    SUITE["matrices"]["ATA_spgemm_inner"][mtx] = @benchmarkable spgemm_inner($A, $A) 
+end
+
+function spgemm_gustavsons(A, B)
+    C = @fiber d(sl(e(0.0)))
+    w = @fiber sm(e(0.0))
+    @finch @loop i (
+        @loop j C[i, j] = w[j]
+    ) where (
+        @loop k j w[j] += A[i, k] * B[k, j]
+    )
+    return C
+end
+
+SUITE["matrices"]["ATA_spgemm_gustavsons"] = BenchmarkGroup()
+for mtx in ["SNAP/soc-Epinions1"]#], "SNAP/soc-LiveJournal1"]
+    A = fiber(SparseMatrixCSC(matrixdepot(mtx)))
+    SUITE["matrices"]["ATA_spgemm_gustavsons"][mtx] = @benchmarkable spgemm_gustavsons($A, $A) 
+end
+
+function spgemm_outer(A, B)
+    C = @fiber d(sl(e(0.0)))
+    w = @fiber sh{2}(e(0.0))
+    AT = @fiber d(sl(e(0.0)))
+    @finch @loop i k w[k, i] = A[i, k]
+    @finch @loop k i AT[k, i] = w[k, i]
+    @finch @loop k i j w[i, j] += AT[k, i] * B[k, j]
+    @finch @loop i j C[i, j] = w[i, j]
+    return C
+end
+
+SUITE["matrices"]["ATA_spgemm_outer"] = BenchmarkGroup()
+for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
+    A = fiber(SparseMatrixCSC(matrixdepot(mtx)))
+    SUITE["matrices"]["ATA_spgemm_outer"][mtx] = @benchmarkable spgemm_outer($A, $A) 
+end
 
 foreach(((k, v),) -> BenchmarkTools.warmup(v), SUITE)

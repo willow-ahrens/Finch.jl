@@ -139,16 +139,18 @@ function getsites(fbr::VirtualFiber{VirtualSparseHashLevel})
 end
 
 function getsize(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx::LowerJulia, mode)
-    ext = map(stop->Extent(literal(1), stop), fbr.lvl.I)
+    R = length(envdeferred(fbr.env)) + 1
+    ext = map(stop->Extent(literal(1), stop), fbr.lvl.I[R:end])
     if mode.kind !== reader
         ext = map(suggest, ext)
     end
-    (ext..., getsize(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^fbr.lvl.N)(fbr.env)), ctx, mode)...)
+    (ext..., getsize(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^(fbr.lvl.N - R + 1))(fbr.env)), ctx, mode)...)
 end
 
 function setsize!(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx::LowerJulia, mode, dims...)
-    fbr.lvl.I = map(getstop, dims[1:fbr.lvl.N])
-    fbr.lvl.lvl = setsize!(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^fbr.lvl.N)(fbr.env)), ctx, mode, dims[fbr.lvl.N + 1:end]...).lvl
+    R = length(envdeferred(fbr.env)) + 1
+    fbr.lvl.I = (fbr.lvl.I[1:R-1]..., map(getstop, dims[1:fbr.lvl.N-R+1])...)
+    fbr.lvl.lvl = setsize!(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^(fbr.lvl.N - R + 1))(fbr.env)), ctx, mode, dims[fbr.lvl.N + 1 - R + 1:end]...).lvl
     fbr
 end
 
@@ -224,13 +226,13 @@ function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode, ::Walk, id
     my_q_stop = ctx.freshen(tag, :_q_stop)
     my_i_stop = ctx.freshen(tag, :_i_stop)
     R = length(envdeferred(fbr.env)) + 1
-    @assert R == 1 || (envgetstart(fbr.env) !== nothing && envgetstop(fbr.env) !== nothing)
+    @assert R == 1 || (fbr.env.start !== nothing && fbr.env.stop !== nothing)
     if R == 1
         q_start = value(:($(lvl.ex).pos[$(ctx(envposition(fbr.env)))]), lvl.Tp)
         q_stop = value(:($(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1]), lvl.Tp)
     else
-        q_start = envgetstart(fbr.env)
-        q_stop = envgetstop(fbr.env)
+        q_start = fbr.env.start
+        q_stop = fbr.env.stop
     end
 
     body = Thunk(
