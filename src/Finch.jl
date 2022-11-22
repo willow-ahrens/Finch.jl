@@ -23,7 +23,7 @@ include("util.jl")
 include("semantics.jl")
 include("IndexNotation/IndexNotation.jl")
 using .IndexNotation
-using .IndexNotation: and, or, right
+using .IndexNotation: and, or, right, choose
 include("virtualize.jl")
 include("style.jl")
 include("transform_ssa.jl")

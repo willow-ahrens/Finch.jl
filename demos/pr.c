@@ -45,12 +45,14 @@ void compile() {
         t2 = typeof(@fiber d(e(0)))\n\
         edges = Finch.virtualize(:edges, t1, ctx_2)\n\
         deg = Finch.virtualize(:deg, t2, ctx_2)\n\
+        w = Finch.virtualize(:w, typeof(Scalar{0, Int64}()), ctx_2, :w)\n\
         \n\
-        kernel = @finch_program @loop i (@loop j deg[j] += edges[i, j])\n\
+        kernel = @finch_program (@loop j deg[j] = w[] where (@loop i w[] += edges[i, j]))\n\
         kernel_code = Finch.execute_code_virtualized(kernel, ctx_2)\n\
     end\n\
     return quote\n\
             function out_degree(deg, edges)\n\
+                w = Scalar{0}()\n\
                 $code\n\
             end\n\
     end");
@@ -329,7 +331,6 @@ int main(int argc, char** argv) {
 
     jl_value_t* res = finch_eval("using RewriteTools\n\
     using Finch.IndexNotation\n\
-    using Finch.IndexNotation: or_, choose\n\
     using SparseArrays\n\
     using MatrixMarket\n\
     ");

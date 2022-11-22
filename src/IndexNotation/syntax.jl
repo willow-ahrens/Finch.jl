@@ -51,6 +51,14 @@ or(x, y, tail...) = x || or(y, tail...)
 right(l, m, r...) = right(m, r)
 right(l, r) = r
 
+function choose(x, y)
+    if x != 0
+        return x
+    else
+        return y
+    end
+end
+
 struct FinchParserContext
     nodes
     results
@@ -146,7 +154,5 @@ macro f(ex)
 end
 
 macro finch_program_instance(ex)
-    return quote
-        $(capture_finch_instance(ex))
-    end
+    return finch_parse_instance(ex)
 end

@@ -134,6 +134,7 @@ Create a Julia object of type T from corresponding C object `x` of type S.
 */
 jl_value_t* finch_Int32(int32_t x);
 jl_value_t* finch_Int64(int64_t x);
+jl_value_t* finch_Bool(int8_t x);
 jl_value_t* finch_Cint(int x);
 jl_value_t* finch_Float32(float x);
 jl_value_t* finch_Float64(double x);

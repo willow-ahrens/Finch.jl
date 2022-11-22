@@ -25,17 +25,18 @@ jl_function_t* dist_init_code;
 jl_function_t* pq_update_code;
 jl_function_t* dist_update_code1;
 jl_function_t* dist_update_code2;
-jl_function_t* slicing_code;
+jl_function_t* condition_code;
+jl_function_t* condition_code2;
 
 void compile() {
     jl_value_t*  pq_init_expr = finch_exec("ctx = Finch.LowerJulia()\n\
     code = Finch.contain(ctx) do ctx_2\n\
         P = %s\n\
         source = %s\n\
-        t = typeof(@fiber sl(sl(e(0))))\n\
+        t = typeof(@fiber d(sl(e(0))))\n\
         priorityQ = Finch.virtualize(:priorityQ, t, ctx_2)\n\
         \n\
-        kernel = @finch_program @loop p (@loop j priorityQ[p, j] = (p == 1 && j == $source) + (p == $P && j != $source))\n\
+        kernel = @finch_program @loop p (@loop j priorityQ[p, j] = ifelse( ((p == 1 && j == $source) || (p == $P && j != $source)), 1, 0))\n\
         kernel_code = Finch.execute_code_virtualized(kernel, ctx_2)\n\
     end\n\
     return quote\n\
@@ -69,7 +70,7 @@ void compile() {
         N = %s\n\
         val = typemax(Int64)\n\
         t1 = typeof(@fiber d(N, sl(N, e(0))))\n\
-        t2 = typeof(@fiber sl(P, sl(N, e(0))))\n\
+        t2 = typeof(@fiber d(P, sl(N, e(0))))\n\
         t4 = typeof(@fiber d(N, e($val)))\n\
         priority = Finch.virtualize(:priority, Int64, ctx_2)\n\
         weights = Finch.virtualize(:weights, t1, ctx_2)\n\
@@ -110,7 +111,7 @@ void compile() {
     jl_value_t*  pq_update_expr = finch_exec("ctx = Finch.LowerJulia()\n\
     code = Finch.contain(ctx) do ctx_2\n\
         val = typemax(Int64)\n\
-        t1 = typeof(@fiber sl(sl(e(0))))\n\
+        t1 = typeof(@fiber d(sl(e(0))))\n\
         t3 = typeof(@fiber d(e($val)))\n\
         priority = Finch.virtualize(:priority, Int64, ctx_2)\n\
         priorityQ = Finch.virtualize(:priorityQ, t1, ctx_2)\n\
@@ -129,24 +130,48 @@ void compile() {
     // finch_exec("println(%s)", pq_update_expr);
     pq_update_code = finch_exec("eval(last(%s.args))", pq_update_expr);
 
-    jl_value_t*  slicing_expr = finch_exec("ctx = Finch.LowerJulia()\n\
+    jl_value_t*  condition_expr = finch_exec("ctx = Finch.LowerJulia()\n\
     code = Finch.contain(ctx) do ctx_2\n\
-        t1 = typeof(@fiber sl(e(0)))\n\
-        t2 = typeof(@fiber sl(sl(e(0))))\n\
-        tensor1D = Finch.virtualize(:tensor1D, t1, ctx_2)\n\
+        t2 = typeof(@fiber d(sl(e(0))))\n\
         tensor2D = Finch.virtualize(:tensor2D, t2, ctx_2)\n\
         index = Finch.virtualize(:index, Int64, ctx_2)\n\
+        t1 = typeof(@fiber d(e(false)))\n\
+        tensor1D = Finch.virtualize(:tensor1D, t1, ctx_2)\n\
         \n\
-        kernel = @finch_program @loop j tensor1D[j] = tensor2D[$index, j]\n\
+        kernel = @finch_program (@loop k (@loop j tensor1D[k] <<or>>= (tensor2D[$index, j] == 1)))\n\
         kernel_code = Finch.execute_code_virtualized(kernel, ctx_2)\n\
     end\n\
     return quote\n\
             function slice(tensor1D, tensor2D, index)\n\
+                println(index)\n\
                 $code\n\
+                println(tensor1D.lvl.lvl.val)\n\
             end\n\
     end");
     // finch_exec("println(%s)", slicing_expr);
-    slicing_code = finch_exec("eval(last(%s.args))", slicing_expr);
+    condition_code = finch_exec("eval(last(%s.args))", condition_expr);
+
+    jl_value_t*  condition_expr2 = finch_exec("ctx = Finch.LowerJulia()\n\
+    code = Finch.contain(ctx) do ctx_2\n\
+        t2 = typeof(@fiber d(sl(e(0))))\n\
+        tensor2D = Finch.virtualize(:tensor2D, t2, ctx_2)\n\
+        t1 = typeof(@fiber d(e(false)))\n\
+        tensor1D = Finch.virtualize(:tensor1D, t1, ctx_2)\n\
+        \n\
+        kernel = @finch_program (@loop i (@loop j tensor1D[i] <<or>>= (tensor2D[i, j] == 1)))\n\
+        kernel_code = Finch.execute_code_virtualized(kernel, ctx_2)\n\
+    end\n\
+    return quote\n\
+            function slice2(tensor1D, tensor2D, index)\n\
+                println(index)\n\
+                $code\n\
+                println(tensor1D.lvl.lvl.val)\n\
+            end\n\
+    end");
+    // finch_exec("println(%s)", slicing_expr);
+    condition_code2 = finch_exec("eval(last(%s.args))", condition_expr2);
+
+    printf("COMPILE DONE\n");
 }
 
 
@@ -159,7 +184,7 @@ struct sssp_data {
 //     priorityQ[p][j] = (p == 0 && j == source) + (p == (P - 1) && j != source)
 void Init_priorityQ(struct sssp_data* data) {
     jl_value_t* priorityQ = finch_Fiber(
-        finch_SparseList(finch_Int64(P),
+        finch_Dense(finch_Int64(P),
             finch_SparseList(finch_Int64(N),
                 finch_ElementLevel(finch_Int64(0), finch_eval("Int64[]"))
             )
@@ -169,10 +194,6 @@ void Init_priorityQ(struct sssp_data* data) {
     finch_call(pq_init_code, data->priorityQ);
 
     printf("PQ init: \n");
-    finch_exec("println(%s.lvl.idx)", priorityQ);
-    finch_exec("println(%s.lvl.pos)", priorityQ);
-    finch_exec("println(%s.lvl.lvl.idx)", priorityQ);
-    finch_exec("println(%s.lvl.lvl.pos)", priorityQ);
     finch_exec("println(%s.lvl.lvl.lvl.val)", priorityQ);
 }
 
@@ -229,25 +250,22 @@ void UpdateEdges(struct sssp_data* old_data, struct sssp_data* new_data, int pri
 
 // returns true if need to exit the loop
 int inner_loop_condition(jl_value_t* priorityQ, int priority) {
-
-    jl_value_t* val = finch_eval("Int64[]");
-     jl_value_t* pq_slice = finch_Fiber(
-        finch_SparseListLevel(finch_Int64(N), finch_eval("Int64[1, 1]"), finch_eval("Int64[]"),
-        finch_ElementLevel(finch_Int64(0), finch_eval("Int64[]")))
+    printf("Priority: %d\n", priority);
+    jl_value_t* condition_result = finch_Fiber(
+        finch_Dense(finch_Int64(P),
+        finch_ElementLevel(finch_Bool(0), finch_eval("Bool[]")))
     );
-    finch_call(slicing_code, pq_slice, priorityQ, finch_Int64(priority));
-    
-    jl_value_t *pq_val = finch_exec("%s.lvl.lvl.val", pq_slice);
-    double *pq_data = jl_array_data(pq_val);
-    for(int i = 0; i < N; i++) {
-        if (pq_data[i] != 0) {
-            finch_free(pq_slice);
-            return 0;
-        }
-    }
-
-    finch_free(pq_slice);
-    return 1;   
+    printf("PQ: \n");
+    finch_exec("println(%s.lvl.lvl.lvl.val)", priorityQ);
+    finch_call(condition_code2, condition_result, priorityQ, finch_Int64(priority));
+    condition_result = finch_Fiber(
+        finch_Dense(finch_Int64(1),
+        finch_ElementLevel(finch_Bool(0), finch_eval("Bool[]")))
+    );
+    finch_call(condition_code, condition_result, priorityQ, finch_Int64(priority));
+    jl_value_t *pq_val = finch_exec("%s.lvl.lvl.val", condition_result);
+    int8_t* pq_data = jl_array_data(pq_val);
+    return !pq_data[0];
 }
 
 // Let SSSP_one_priority_lvl(dist float[N], priorityQ int[P][N], priority int) -> (new_dist float[N], new_priorityQ int[P][N], new_priority int)
@@ -300,7 +318,7 @@ int SSSP(struct sssp_data* final_data) {
     final_data->dist = dist;
 
     jl_value_t* priorityQ = finch_Fiber(
-        finch_SparseList(finch_Int64(P),
+        finch_Dense(finch_Int64(P),
             finch_SparseList(finch_Int64(N),
                 finch_ElementLevel(finch_Int64(0), finch_eval("Int64[]"))
             )
@@ -330,15 +348,16 @@ int SSSP(struct sssp_data* final_data) {
 void make_weights_and_edges(const char* graph_name, int n) {
     // 0, 1, 0, 0, 3, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0
     char code[1000];
-    sprintf(code, "N = %d\n\
-        matrix = copy(transpose(MatrixMarket.mmread(\"./graphs/%s\")))\n\
+    sprintf(code, "matrix = copy(transpose(MatrixMarket.mmread(\"./graphs/%s\")))\n\
+        (n, m) = size(matrix)\n\
+        @assert n == m\n\
         Finch.Fiber(\n\
-                 Dense(N,\n\
-                 SparseList(N, matrix.colptr, matrix.rowval,\n\
-                 Element{0}(matrix.nzval))))", n, graph_name);
-
+                 Dense(n,\n\
+                 SparseList(n, matrix.colptr, matrix.rowval,\n\
+                 Element{0}(matrix.nzval))))", graph_name);
+    printf("%s\n", code);
     weights = finch_eval(code);
-    // finch_exec("println(%s.lvl.lvl.lvl.val)", weights);
+    finch_exec("println(%s.lvl.lvl.lvl.val)", weights);
     printf("Loaded weights\n");
 }
 
@@ -360,6 +379,7 @@ void starter() {
 
     printf("Ran starter\n");
 }
+
 void setup1() {
     // 1 5, 4 5, 3 4, 2 3, 1 2
     // jl_value_t* edge_vector = finch_eval("Int64[0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]");
@@ -368,7 +388,7 @@ void setup1() {
     P = 5;
     
     // compile and cache 
-    starter();
+    compile();
 
     make_weights_and_edges("dag5.mtx", N);
 
@@ -387,7 +407,7 @@ void setup2() {
     P = 4;
     
     // compile and cache 
-    starter();
+    compile();
 
     make_weights_and_edges("dag4.mtx", N);
     
@@ -407,7 +427,7 @@ void setup3() {
     P = 3;
     
     // compile and cache 
-    starter();
+    compile();
 
     make_weights_and_edges("dag3.mtx", N);
 
@@ -427,7 +447,7 @@ void setup4() {
     source = 1;
     
     // compile and cache 
-    starter();
+    compile();
 
     make_weights_and_edges("dag7.mtx", N);
 
@@ -459,9 +479,10 @@ void setup5() {
 
 int main(int argc, char** argv) {
     finch_initialize();
+    printf("Initialized finch\n");
 
     jl_value_t* res = finch_eval("using RewriteTools\n\
-    using Finch.IndexNotation: or_, choose\n\
+    using Finch.IndexNotation: or, choose\n\
      using SparseArrays\n\
      using MatrixMarket\n\
     ");

@@ -112,8 +112,8 @@ function execute_code_virtualized(ex, T)
             end)
             $(contain(ctx) do ctx_2
                 prgm = Finalize(ctx = ctx_2)(prgm)
-                :(($(map(getresults(prgm)) do tns
-                    :($(getname(tns)) = $(ctx_2(tns)))
+                :(($(map(getresults(prgm)) do acc
+                    :($(getname(acc)) = $(ctx_2(acc.tns)))
                 end...), ))
             end)
         end
@@ -126,10 +126,8 @@ function execute_code_virtualized(ex, T)
     code |>
         lower_caches |>
         lower_cleanup |>
-        MacroTools.striplines |>
-        MacroTools.flatten |>
-        MacroTools.unresolve |> #TODO is this okay? I'm not really sure.
-        MacroTools.resyntax |>
+        striplines |>
+        unblock |>
         unquote_literals
 end
 

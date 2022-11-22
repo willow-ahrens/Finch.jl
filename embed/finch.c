@@ -52,9 +52,11 @@ extern void finch_initialize(){
     FINCH_ASSERT(!jl_exception_occurred(), "Could not eval Julia string");
     Finch = jl_eval_string("\
         using Pkg;\n\
-        # Pkg.activate(joinpath(dirname(\""__FILE__"\"), \"..\"), io=devnull)\n\
-        Pkg.activate(joinpath(dirname(\"/Users/adadima/mit/commit/Finch.jl/embed/finch.c\"), \"..\"), io=devnull)\n\
-        Pkg.instantiate()\n\
+        Pkg.activate(\"/Users/adadima/mit/commit/Finch.jl/embed\")\n\
+        Pkg.develop(path=\"/Users/adadima/mit/commit/Finch.jl\")\n\
+        # Pkg.instantiate()\n\
+        Pkg.resolve()\n\
+        # Pkg.precompile()\n\
         using Finch;\n\
         using Printf;\n\
         Finch\n\
@@ -299,6 +301,10 @@ jl_value_t* finch_Int64(int64_t x){
 
 jl_value_t* finch_Int32(int32_t x){
     return finch_root(jl_box_int32(x));
+}
+
+jl_value_t* finch_Bool(int8_t x) {
+    return finch_root(jl_box_bool(x));
 }
 
 jl_value_t* finch_Cint(int x){

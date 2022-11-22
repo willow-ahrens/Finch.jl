@@ -28,7 +28,7 @@ void compile() {
     jl_value_t*  F_init_expr = finch_exec("ctx = Finch.LowerJulia()\n\
     code = Finch.contain(ctx) do ctx_2\n\
         source = Finch.virtualize(:source, Int64, ctx_2)\n\
-        t = typeof(@fiber sl(e(0)))\n\
+        t = typeof(@fiber sl(e(false)))\n\
         F = Finch.virtualize(:F, t, ctx_2)\n\
         \n\
         kernel = @finch_program @loop j F[j] = (j == $source)\n\
@@ -47,7 +47,7 @@ void compile() {
         t = typeof(@fiber d(e(0)))\n\
         P = Finch.virtualize(:P, t, ctx_2)\n\
         \n\
-        kernel = @finch_program @loop j P[j] = (j == $source) * (0 - 2) + (j != $source) * (0 - 1)\n\
+        kernel = @finch_program @loop j P[j] = ifelse(j == $source, -2, -1)\n\
         kernel_code = Finch.execute_code_virtualized(kernel, ctx_2)\n\
     end\n\
     return quote\n\
@@ -84,7 +84,7 @@ void compile() {
         B = Finch.virtualize(:B, t1, ctx_2)\n\
         t2 = typeof(@fiber sl(e(0)))\n\
         V_out = Finch.virtualize(:V_out, t2, ctx_2)\n\
-        t3 = typeof(@fiber sl(e(0)))\n\
+        t3 = typeof(@fiber sl(e(false)))\n\
         F_in = Finch.virtualize(:F_in, t3, ctx_2)\n\
         F_out = Finch.virtualize(:F_out, t3, ctx_2)\n\
         t4 = typeof(@fiber d(sl(e(0))))\n\
@@ -92,7 +92,7 @@ void compile() {
         w = Finch.virtualize(:w, typeof(Scalar{0, Int64}()), ctx_2, :w)\n\
         \n\
         kernel = @finch_program (@loop j @loop k (begin\n\
-            F_out[j] <<or_>>= w[]\n\
+            F_out[j] <<or>>= (w[] == 1)\n\
             B[j] <<choose>>= w[] * k\n\
         end\n\
             where (w[] = edges[j, k] * F_in[k] * V_out[j]) ) )\n\
@@ -100,7 +100,7 @@ void compile() {
     end\n\
     return quote\n\
             function P_update1(F_out, B, edges, F_in, V_out)\n\
-                w = Scalar{0}()\n\
+                w = Scalar{false}()\n\
                 $code\n\
             end\n\
     end");
@@ -139,7 +139,7 @@ void Init(struct bfs_data* data) {
     jl_value_t *val = finch_eval("Int64[]");
     jl_value_t* F = finch_Fiber(
         finch_SparseList(finch_Int64(N),
-        finch_ElementLevel(finch_Int64(0), val))
+        finch_ElementLevel(finch_Bool(0), val))
     );
 
     finch_call(F_init_code, F, finch_Int64(source));
@@ -192,7 +192,7 @@ void BFS_Step(struct bfs_data* in_data, struct bfs_data* out_data) {
 int outer_loop_condition(jl_value_t* F) {
 
     jl_value_t *F_val = finch_exec("%s.lvl.lvl.val", F);
-    double *F_data = jl_array_data(F_val);
+    int8_t* F_data = jl_array_data(F_val);
     for(int i = 0; i < N; i++){
         if (F_data[i] != 0) {
             return 0;
@@ -213,7 +213,7 @@ void BFS(struct bfs_data* data) {
     jl_value_t *val = finch_eval("Int64[]");
     jl_value_t* F = finch_Fiber(
         finch_SparseList(finch_Int64(N),
-        finch_ElementLevel(finch_Int64(0), val))
+        finch_ElementLevel(finch_Bool(0), val))
     );
     jl_value_t* P = finch_Fiber(
         finch_Dense(finch_Int64(N),
@@ -345,7 +345,7 @@ int main(int argc, char** argv) {
     finch_initialize();
 
     jl_value_t* res = finch_eval("using RewriteTools\n\
-    using Finch.IndexNotation: or_, choose\n\
+    using Finch.IndexNotation: or, choose\n\
     using SparseArrays\n\
      using MatrixMarket\n\
     ");
