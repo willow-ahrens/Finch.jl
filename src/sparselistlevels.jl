@@ -59,7 +59,7 @@ end
 @inline default(fbr::Fiber{<:SparseListLevel}) = default(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
 
 (fbr::Fiber{<:SparseListLevel})() = fbr
-function (fbr::Fiber{<:SparseListLevel{Ti}})(i, tail...) where {D, Tv, Ti, N, R}
+function (fbr::Fiber{<:SparseListLevel{Ti}})(i, tail...) where {Ti}
     lvl = fbr.lvl
     p = envposition(fbr.env)
     r = searchsorted(@view(lvl.idx[lvl.pos[p]:lvl.pos[p + 1] - 1]), i)

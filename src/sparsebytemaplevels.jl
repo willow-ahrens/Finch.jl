@@ -67,7 +67,7 @@ end
 @inline default(fbr::Fiber{<:SparseBytemapLevel}) = default(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
 
 (fbr::Fiber{<:SparseBytemapLevel})() = fbr
-function (fbr::Fiber{<:SparseBytemapLevel{Ti}})(i, tail...) where {D, Tv, Ti}
+function (fbr::Fiber{<:SparseBytemapLevel{Ti}})(i, tail...) where {Ti}
     lvl = fbr.lvl
     p = envposition(fbr.env)
     q = (p - 1) * lvl.I + i
