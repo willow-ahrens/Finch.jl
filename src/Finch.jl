@@ -16,6 +16,8 @@ export Fiber, SparseList, SparseHash, SparseCoo, SparseBytemap, SparseVBL, Dense
 export walk, fastwalk, gallop, follow, extrude, laminate, select
 export fiber, @fiber, pattern!, dropdefaults, dropdefaults!
 
+export choose
+
 export permit, offset, window
 
 include("util.jl")

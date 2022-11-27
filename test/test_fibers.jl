@@ -268,4 +268,20 @@
     @finch @loop i j B[j] += A[i, j]
 
     @test B.lvl.srt[1:6] == [(1, 1), (1, 3), (1, 5), (1, 7), (1, 8), (1, 9)]
+
+    r = Scalar(0.0)
+    B = Finch.Fiber(
+        SparseList(10, [1, 5], [2, 5, 7, 8],
+        Element{0.0}([2.0, 1.0, 1.0, 1.0])))
+
+    @finch @loop i r[] <<choose(0)>>= B[i]
+
+    @test r[] == 2.0
+
+    C = Finch.Fiber(
+        SparseList(10, [1, 4], [3, 4, 8],
+        Element{0.0}([3.0, 3.0, 3.0, 3.0])))
+    A = similar(B)
+
+    @finch @loop i A[i] = choose(0)(B[i], C[i])
 end
