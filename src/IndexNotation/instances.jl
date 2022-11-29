@@ -16,12 +16,12 @@ struct IndexInstance{name} <: IndexNodeInstance end
 
 @inline index_instance(name) = IndexInstance{name}()
 
-struct ProtocolInstance{Idx, Val} <: IndexNodeInstance
+struct ProtocolInstance{Idx, Mode} <: IndexNodeInstance
 	idx::Idx
-	val::Val
+	mode::Mode
 end
-Base.:(==)(a::ProtocolInstance, b::ProtocolInstance) = a.idx == b.idx && a.val == b.val
-@inline protocol_instance(idx, val) = ProtocolInstance(idx, val)
+Base.:(==)(a::ProtocolInstance, b::ProtocolInstance) = a.idx == b.idx && a.mode == b.mode
+@inline protocol_instance(idx, mode) = ProtocolInstance(idx, mode)
 
 struct WithInstance{Cons, Prod} <: IndexNodeInstance
 	cons::Cons

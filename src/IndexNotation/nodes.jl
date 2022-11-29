@@ -63,9 +63,9 @@ which iterates over all values of the index.
 index
 
 """
-    protocol(idx, proto)
+    protocol(idx, mode)
 
-Finch AST expression marking an indexing expression `idx` with the protocol `proto`.
+Finch AST expression marking an indexing expression `idx` with the protocol `mode`.
 These usually reside at the toplevel of an indexing expression to an access.
 """
 protocol

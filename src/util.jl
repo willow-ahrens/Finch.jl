@@ -108,10 +108,10 @@ unquote_quoted(ex) = QuoteNode(ex)
 Flatten any redundant blocks into a single block, over the whole expression.
 """
 function unblock(ex::Expr)
-    Rewrite(Postwalk(Chain([
+    Rewrite(Postwalk(Fixpoint(Chain([
         (@rule :block(~a..., :block(~b...), ~c...) => Expr(:block, a..., b..., c...)),
         (@rule :block(~a) => a),
-    ])))(ex)
+    ]))))(ex)
 end
 unblock(ex) = ex
 
@@ -121,7 +121,7 @@ Remove line numbers
 """
 function striplines(ex::Expr)
     islinenum(x) = x isa LineNumberNode
-    Rewrite(Postwalk(@rule :block(~a..., ~b::islinenum, ~c...) => Expr(:block, a..., c...)))(ex)
+    Rewrite(Postwalk(Fixpoint(@rule :block(~a..., ~b::islinenum, ~c...) => Expr(:block, a..., c...))))(ex)
 end
 striplines(ex) = ex
 

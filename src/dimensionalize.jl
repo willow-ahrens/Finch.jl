@@ -113,7 +113,7 @@ function (ctx::DeclareDimensions)(node::IndexNode, dim)
         cons = ctx(node.cons, nodim)
         return with(cons, prod)
     elseif node.kind === protocol
-        return protocol(ctx(node.idx, dim), node.val)
+        return protocol(ctx(node.idx, dim), node.mode)
     elseif istree(node)
         return similarterm(node, operation(node), map(arg->ctx(arg, nodim), arguments(node)))
     else
@@ -130,7 +130,7 @@ function (ctx::InferDimensions)(node::IndexNode)
         return (with(cons, node.prod), nodim)
     elseif node.kind === protocol
         (idx, dim) = ctx(node.idx)
-        (protocol(idx, node.val), dim)
+        (protocol(idx, node.mode), dim)
     elseif istree(node)
         return (similarterm(node, operation(node), map(first, map(ctx, arguments(node)))), nodim)
     else
