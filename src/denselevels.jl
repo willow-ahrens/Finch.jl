@@ -27,7 +27,7 @@ dimension(lvl::DenseLevel) = lvl.I
 @inline default(fbr::Fiber{<:DenseLevel}) = default(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
 
 (fbr::Fiber{<:DenseLevel})() = fbr
-function (fbr::Fiber{<:DenseLevel{Ti}})(i, tail...) where {D, Tv, Ti, N, R}
+function (fbr::Fiber{<:DenseLevel{Ti}})(i, tail...) where {Ti}
     lvl = fbr.lvl
     p = envposition(fbr.env)
     q = (p - 1) * lvl.I + i

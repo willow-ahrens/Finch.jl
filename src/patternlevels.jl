@@ -72,9 +72,7 @@ function refurl(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode)
     if mode.kind === reader
         return Simplify(literal(true))
     else
-        null = ctx.freshen(:null)
-        push!(ctx.preamble, :($null = true))
-        return value(null)
+        access(fbr, mode)
     end
 end
 

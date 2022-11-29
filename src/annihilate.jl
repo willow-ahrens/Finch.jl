@@ -1,6 +1,19 @@
 rules = []
 add_rules!(new_rules) = union!(rules, new_rules)
 
+struct Chooser{D} end
+
+(f::Chooser{D})(x) where {D} = x
+function (f::Chooser{D})(x, y, tail...) where {D}
+    if x == D
+        return f(y, tail...)
+    else
+        return x
+    end
+end
+
+choose(d) = Chooser{d}()
+
 isassociative(f) = false
 isassociative(::typeof(right)) = true
 isassociative(::typeof(or)) = true
@@ -10,6 +23,7 @@ isassociative(::typeof(+)) = true
 isassociative(::typeof(*)) = true
 isassociative(::typeof(min)) = true
 isassociative(::typeof(max)) = true
+isassociative(::Chooser) = true
 
 iscommutative(f) = false
 iscommutative(::typeof(or)) = true
@@ -26,6 +40,7 @@ isidempotent(f) = false
 isidempotent(::typeof(right)) = true
 isidempotent(::typeof(min)) = true
 isidempotent(::typeof(max)) = true
+isidempotent(::Chooser) = true
 
 isidentity(f, x) = false
 isidentity(::typeof(or), x) = x == false
@@ -35,6 +50,7 @@ isidentity(::typeof(+), x) = iszero(x)
 isidentity(::typeof(*), x) = isone(x)
 isidentity(::typeof(min), x) = isinf(x) && x > 0
 isidentity(::typeof(max), x) = isinf(x) && x < 0
+isidentity(::Chooser{D}, x) where {D} = x == D
 
 isannihilator(f, x) = false
 isannihilator(::typeof(+), x) = isinf(x)
