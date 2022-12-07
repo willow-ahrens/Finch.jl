@@ -31,6 +31,20 @@ end
     epilogue::Vector{Any} = []
     dims::Dict = Dict()
     freshen::Freshen = Freshen()
+    shash = StaticHash()
+end
+
+struct StaticHash
+    counts::Dict{Any, Int}
+end
+StaticHash() = StaticHash(Dict{Any, Int}())
+
+function (h::StaticHash)(x)
+    if haskey(h.counts, x)
+        return h.counts[x]
+    else
+        return (h.counts[x] = UInt(length(h.counts)))
+    end
 end
 
 (ctx::LowerJulia)(root) = ctx(root, Stylize(root, ctx)(root))
