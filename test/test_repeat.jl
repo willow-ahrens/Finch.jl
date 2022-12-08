@@ -7,7 +7,7 @@
 
     @test reference_isequal(A, [2.0, 3.0, 3.0, 4.0, 4.0, 5.0, 5.0, 6.0, 6.0, 7.0])
 
-    B = @fiber(d(e(0.0)))
+    B = @fiber(d{Int64}(e(0.0)))
 
     @test diff("r_to_d.jl", @finch_code @loop i B[i] = A[i])
     @finch @loop i B[i] = A[i]

@@ -47,7 +47,7 @@
     println("B(shsh)[i, j] = A(dsl)[i, j]")
 
     B = Finch.Fiber(
-        SparseHash{2, Tuple{Int64, Int64}}((3,5),
+        SparseHash{2, Tuple{Int64, Int64}, Int64, Int64}((3,5),
         Element{0.0}()))
     
     @test diff("d_sl_to_sh2.jl", @finch_code @loop i j B[i, j] += A[i, j])
