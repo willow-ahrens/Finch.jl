@@ -11,8 +11,8 @@
         A_lvl_2 = A_lvl.lvl
         A_lvl_2_val_alloc = length(A_lvl.lvl.val)
         A_lvl_2_val = 0.0
-        i_start = 2 + (1 - 2)
-        i_stop = 4 + (1 - 2)
+        i_start = (+)(2, (-)(1, 2))
+        i_stop = (+)(4, (-)(1, 2))
         C_lvl_pos_alloc = length(C_lvl.pos)
         C_lvl_pos_fill = 1
         C_lvl.pos[1] = 1
@@ -35,27 +35,27 @@
         end
         i = i_start
         i_start_2 = i
-        phase_start = max(i_start_2)
-        phase_stop = min(i_stop, A_lvl_i1 + -1)
+        phase_start = i_start_2
+        phase_stop = (min)(i_stop, (+)(-1, A_lvl_i1))
         if phase_stop >= phase_start
             i = i
             i = phase_start
-            while A_lvl_q < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < phase_start + -((1 - 2))
+            while A_lvl_q < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < (+)(phase_start, (-)((-)(1, 2)))
                 A_lvl_q += 1
             end
             while i <= phase_stop
                 i_start_3 = i
                 A_lvl_i = A_lvl.idx[A_lvl_q]
-                phase_start_2 = max(i_start_3)
-                phase_stop_2 = min(phase_stop, A_lvl_i + -1)
+                phase_start_2 = i_start_3
+                phase_stop_2 = (min)(phase_stop, (+)(-1, A_lvl_i))
                 if phase_stop_2 >= phase_start_2
                     i_2 = i
-                    if A_lvl_i == phase_stop_2 + -((1 - 2))
+                    if A_lvl_i == (+)(phase_stop_2, (-)((-)(1, 2)))
                         A_lvl_2_val = A_lvl_2.val[A_lvl_q]
                         i_3 = phase_stop_2
                         C_lvl_2_val_alloc < C_lvl_q && (C_lvl_2_val_alloc = (Finch).refill!(C_lvl_2.val, 0.0, C_lvl_2_val_alloc, C_lvl_q))
                         C_lvl_isdefault = true
-                        C_lvl_2_val = 0.0
+                        C_lvl_2_val = C_lvl_2.val[C_lvl_q]
                         C_lvl_isdefault = false
                         C_lvl_2_val = A_lvl_2_val
                         C_lvl_2.val[C_lvl_q] = C_lvl_2_val
@@ -73,13 +73,13 @@
             i = phase_stop + 1
         end
         i_start_2 = i
-        phase_start_3 = max(i_start_2)
-        phase_stop_3 = min(i_stop)
+        phase_start_3 = i_start_2
+        phase_stop_3 = i_stop
         if phase_stop_3 >= phase_start_3
             i_4 = i
             i = phase_stop_3 + 1
         end
         C_lvl.pos[1 + 1] = C_lvl_q
         C_lvl_pos_fill = 1 + 1
-        (C = Fiber((Finch.SparseListLevel){Int64}(4 + (1 - 2), C_lvl.pos, C_lvl.idx, C_lvl_2), (Finch.Environment)(; name = :C)),)
+        (C = Fiber((Finch.SparseListLevel){Int64}((+)(4, (-)(1, 2)), C_lvl.pos, C_lvl.idx, C_lvl_2), (Finch.Environment)(; name = :C)),)
     end
