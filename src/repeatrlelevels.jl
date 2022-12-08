@@ -11,7 +11,6 @@ RepeatRLELevel{D}(I::Ti) where {D, Ti} = RepeatRLELevel{D, Ti}(I)
 RepeatRLELevel{D, Ti}() where {D, Ti} = RepeatRLELevel{D, Ti}(zero(Ti))
 RepeatRLELevel{D, Ti}(I::Ti) where {D, Ti} = RepeatRLELevel{D, Ti, typeof(D)}(I)
 RepeatRLELevel{D, Ti, Tv}(I::Ti) where {D, Ti, Tv} = RepeatRLELevel{D, Ti, Tv}(I, Ti[1, fill(0, 16)...], Vector{Ti}(undef, 16), Vector{Tv}(undef, 16))
-RepeatRLELevel{D}(I::Ti, pos, idx, val::Vector{Tv}) where {D, Ti, Tv} = RepeatRLELevel{D, Ti, Tv}(I, pos, idx, val)
 
 """
 `f_code(rl)` = [RepeatRLELevel](@ref).

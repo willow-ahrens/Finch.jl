@@ -8,6 +8,7 @@ end
 const SparseHash = SparseHashLevel
 SparseHashLevel{N}(lvl) where {N} = SparseHashLevel{N}(((0 for _ in 1:N)...,), lvl)
 SparseHashLevel{N, Ti}(lvl) where {N, Ti} = SparseHashLevel{N, Ti}((map(zero, Ti.parameters)..., ), lvl)
+SparseHashLevel{N, Ti, Tp, T_q}(lvl) where {N, Ti, Tp, T_q} = SparseHashLevel{N, Ti, Tp, T_q}((map(zero, Ti.parameters)..., ), lvl)
 SparseHashLevel{N}(I::Ti, lvl) where {N, Ti} = SparseHashLevel{N, Ti}(I, lvl)
 SparseHashLevel{N, Ti}(I::Ti, lvl) where {N, Ti} = SparseHashLevel{N, Ti, Int, Int}(I, lvl)
 SparseHashLevel{N, Ti, Tp, T_q}(I::Ti, lvl) where {N, Ti, Tp, T_q} =

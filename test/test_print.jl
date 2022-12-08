@@ -2,15 +2,15 @@
     A = fiber([(i + j) % 3 for i = 1:5, j = 1:10])
 
     formats = [
-        "list" => SparseList,
-        "byte" => SparseBytemap,
-        "hash1" => SparseHash{1},
-        "coo1" => SparseCoo{1},
+        "list" => SparseList{Int64},
+        "byte" => SparseBytemap{Int64, Int64, Int64},
+        "hash1" => SparseHash{1, Tuple{Int64}, Int64, Int64},
+        "coo1" => SparseCoo{1, Tuple{Int64}, Int64},
         "dense" => Dense
     ]
 
     for (rown, rowf) in formats
-        B = copyto!(Fiber(rowf(Dense(Element{0.0}()))), A)
+        B = copyto!(Fiber(rowf(Dense{Int64}(Element{0.0}()))), A)
         @test diff("print_$(rown)_dense.txt", sprint(show, B))
         @test diff("print_$(rown)_dense_small.txt", sprint(show, B, context=:compact=>false))
         @test diff("display_$(rown)_dense.txt", sprint(show, MIME"text/plain"(), B))
@@ -26,8 +26,8 @@
     end
 
     formats = [
-        "hash2" => SparseHash{2},
-        "coo2" =>SparseCoo{2},
+        "hash2" => SparseHash{2, Tuple{Int64, Int64}, Int64, Int64},
+        "coo2" =>SparseCoo{2, Tuple{Int64, Int64}, Int64},
         ]
 
     for (rowcoln, rowcolf) in formats

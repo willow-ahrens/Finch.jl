@@ -7,6 +7,7 @@ end
 const SparseCoo = SparseCooLevel
 SparseCooLevel{N}(lvl) where {N} = SparseCooLevel{N}(((0 for _ in 1:N)..., ), lvl)
 SparseCooLevel{N, Ti}(lvl) where {N, Ti} = SparseCooLevel{N, Ti}((map(zero, Ti.parameters)..., ), lvl)
+SparseCooLevel{N, Ti, Tq}(lvl) where {N, Ti, Tq} = SparseCooLevel{N, Ti, Tq}((map(zero, Ti.parameters)..., ), lvl)
 SparseCooLevel{N}(I::Ti, lvl) where {N, Ti} = SparseCooLevel{N, Ti}(I, lvl)
 SparseCooLevel{N, Ti}(I::Ti, lvl) where {N, Ti} = SparseCooLevel{N, Ti, Int}(I, lvl)
 SparseCooLevel{N, Ti, Tq}(I::Ti, lvl) where {N, Ti, Tq} = SparseCooLevel{N, Ti, Tq}(I, ((Vector{T}(undef, 16) for T in Ti.parameters)...,), Tq[1, 1, 3:17...], lvl)
