@@ -6,7 +6,7 @@ include("data_matrices.jl")
 
 function diff(name, body)
     global ARGS
-    "diff" in ARGS || return true
+    "nodiff" in ARGS && return true
     cache_dir = mkpath(joinpath(@__DIR__, "cache"))
     temp_dir = mkpath(joinpath(@__DIR__, "temp"))
     cache_file = joinpath(cache_dir, name)
