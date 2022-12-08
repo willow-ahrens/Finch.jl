@@ -2,7 +2,7 @@ struct SparseBytemapLevel{Ti, Tp, Tq, Lvl}
     I::Ti
     tbl::Vector{Bool}
     srt::Vector{Tuple{Tp, Ti}}
-    srt_stop::Ref{Int}
+    srt_stop::Ref{Int64} #TODO remove this after trimming levels
     pos::Vector{Tq}
     lvl::Lvl
 end
