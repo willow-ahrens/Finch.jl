@@ -67,7 +67,7 @@ function execute_code(ex, T, algebra)
                     (prgm, dims) = dimensionalize!(prgm, ctx_2)
                     prgm = Initialize(ctx = ctx_2)(prgm)
                     prgm = ThunkVisitor(ctx_2)(prgm) #TODO this is a bit of a hack.
-                    prgm = simplify(prgm)
+                    prgm = simplify(prgm, ctx_2)
                     ctx_2(prgm)
                 end
             end)

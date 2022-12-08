@@ -247,11 +247,11 @@ function (ctx::LowerJulia)(root::IndexNode, ::DefaultStyle)
         return ctx(simplify(chunk(
             root.idx,
             resolvedim(ctx.dims[getname(root.idx)]),
-            root.body)
-        ))
+            root.body),
+            ctx))
     elseif root.kind === chunk
         idx_sym = ctx.freshen(getname(root.idx))
-        if simplify((@f $(getlower(root.ext)) >= 1)) == (@f true)  && simplify((@f $(getupper(root.ext)) <= 1)) == (@f true)
+        if simplify((@f $(getlower(root.ext)) >= 1), ctx) == (@f true)  && simplify((@f $(getupper(root.ext)) <= 1), ctx) == (@f true)
             return quote
                 $idx_sym = $(ctx(getstart(root.ext)))
                 $(bind(ctx, getname(root.idx) => idx_sym) do 
@@ -289,7 +289,7 @@ function (ctx::LowerJulia)(root::IndexNode, ::DefaultStyle)
     elseif root.kind === assign
         if root.lhs.kind === access
             @assert root.lhs.mode.kind == updater
-            rhs = ctx(simplify(call(root.op, root.lhs, root.rhs)))
+            rhs = ctx(simplify(call(root.op, root.lhs, root.rhs), ctx))
         else
             rhs = ctx(root.rhs)
         end
