@@ -10,12 +10,12 @@ const SparseBytemap = SparseBytemapLevel
 SparseBytemapLevel(lvl) = SparseBytemapLevel(0, lvl)
 SparseBytemapLevel{Ti}(lvl) where {Ti} = SparseBytemapLevel{Ti}(zero(Ti), lvl)
 SparseBytemapLevel(I::Ti, lvl) where {Ti} = SparseBytemapLevel{Ti}(I, lvl)
-SparseBytemapLevel{Ti}(I::Ti, lvl) where {Ti} = SparseBytemapLevel{Ti, Int, Int}(I, lvl)
+SparseBytemapLevel{Ti}(I, lvl) where {Ti} = SparseBytemapLevel{Ti, Int, Int}(Ti(I), lvl)
 SparseBytemapLevel{Ti, Tp, Tq}(lvl) where {Ti, Tp, Tq} = SparseBytemapLevel{Ti, Tp, Tq}(zero(Ti), lvl)
-SparseBytemapLevel{Ti, Tp, Tq}(I::Ti, lvl) where {Ti, Tp, Tq} =
-    SparseBytemapLevel{Ti, Tp, Tq}(I::Ti, [false, false, false, false], Vector{Tuple{Tp, Ti}}(undef, 4), Ref(0), Tq[1, 1, 0, 0, 0], lvl)
-SparseBytemapLevel{Ti, Tp, Tq}(I::Ti, tbl, srt, srt_stop, pos, lvl::Lvl) where {Ti, Tp, Tq, Lvl} =
-    SparseBytemapLevel{Ti, Tp, Tq, Lvl}(I, tbl, srt, srt_stop, pos, lvl)
+SparseBytemapLevel{Ti, Tp, Tq}(I, lvl) where {Ti, Tp, Tq} =
+    SparseBytemapLevel{Ti, Tp, Tq}(Ti(I), [false, false, false, false], Vector{Tuple{Tp, Ti}}(undef, 4), Ref(0), Tq[1, 1, 0, 0, 0], lvl)
+SparseBytemapLevel{Ti, Tp, Tq}(I, tbl, srt, srt_stop, pos, lvl::Lvl) where {Ti, Tp, Tq, Lvl} =
+    SparseBytemapLevel{Ti, Tp, Tq, Lvl}(Ti(I), tbl, srt, srt_stop, pos, lvl)
 
 pattern!(lvl::SparseBytemapLevel{Ti, Tp, Tq}) where {Ti, Tp, Tq} = 
     SparseBytemapLevel{Ti, Tp, Tq}(lvl.I, lvl.tbl, lvl.srt, lvl.srt_stop, lvl.pos, pattern!(lvl.lvl))

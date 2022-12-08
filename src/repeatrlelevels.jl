@@ -9,8 +9,8 @@ RepeatRLELevel(D, args...) = RepeatRLELevel{D}(args...)
 RepeatRLELevel{D}() where {D} = RepeatRLELevel{D}(0)
 RepeatRLELevel{D}(I::Ti) where {D, Ti} = RepeatRLELevel{D, Ti}(I)
 RepeatRLELevel{D, Ti}() where {D, Ti} = RepeatRLELevel{D, Ti}(zero(Ti))
-RepeatRLELevel{D, Ti}(I::Ti) where {D, Ti} = RepeatRLELevel{D, Ti, typeof(D)}(I)
-RepeatRLELevel{D, Ti, Tv}(I::Ti) where {D, Ti, Tv} = RepeatRLELevel{D, Ti, Tv}(I, Ti[1, fill(0, 16)...], Vector{Ti}(undef, 16), Vector{Tv}(undef, 16))
+RepeatRLELevel{D, Ti}(I) where {D, Ti} = RepeatRLELevel{D, Ti, typeof(D)}(Ti(I))
+RepeatRLELevel{D, Ti, Tv}(I) where {D, Ti, Tv} = RepeatRLELevel{D, Ti, Tv}(Ti(I), Ti[1, fill(0, 16)...], Vector{Ti}(undef, 16), Vector{Tv}(undef, 16))
 
 """
 `f_code(rl)` = [RepeatRLELevel](@ref).
