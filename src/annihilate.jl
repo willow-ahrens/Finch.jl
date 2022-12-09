@@ -250,7 +250,14 @@ end
 
 (ctx::SimplifyVisitor)(node::Simplify) = node.body
 
-getrules(alg::AbstractAlgebra, ctx) = base_rules(alg, ctx)
+"""
+    getrules(alg, ctx)
+
+Return an array of rules to use for annihilation/simplification during 
+compilation. One can dispatch on the `alg` trait to specialize the rule set for
+different algebras.
+"""
+getrules(alg, ctx) = base_rules(alg, ctx)
 
 getrules(ctx::LowerJulia) = getrules(ctx.algebra, ctx)
 
