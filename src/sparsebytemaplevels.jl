@@ -13,7 +13,7 @@ SparseBytemapLevel(I::Ti, lvl) where {Ti} = SparseBytemapLevel{Ti}(I, lvl)
 SparseBytemapLevel{Ti}(I, lvl) where {Ti} = SparseBytemapLevel{Ti, Int, Int}(Ti(I), lvl)
 SparseBytemapLevel{Ti, Tp, Tq}(lvl) where {Ti, Tp, Tq} = SparseBytemapLevel{Ti, Tp, Tq}(zero(Ti), lvl)
 SparseBytemapLevel{Ti, Tp, Tq}(I, lvl) where {Ti, Tp, Tq} =
-    SparseBytemapLevel{Ti, Tp, Tq}(Ti(I), [false, false, false, false], Vector{Tuple{Tp, Ti}}(undef, 4), Ref(Ti(0)), Tq[1, 1, 0, 0, 0], lvl)
+    SparseBytemapLevel{Ti, Tp, Tq}(Ti(I), [false, false, false, false], Vector{Tuple{Tp, Ti}}(undef, 4), Ref(Int64(0)), Tq[1, 1, 0, 0, 0], lvl)
 SparseBytemapLevel{Ti, Tp, Tq}(I, tbl, srt, srt_stop, pos, lvl::Lvl) where {Ti, Tp, Tq, Lvl} =
     SparseBytemapLevel{Ti, Tp, Tq, Lvl}(Ti(I), tbl, srt, srt_stop, pos, lvl)
 
