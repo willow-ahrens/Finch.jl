@@ -395,8 +395,8 @@ combinedim(ctx, a::Narrow, ::DeferDimension) = deferdim
 
 function combinedim(ctx, a::Narrow{<:Extent}, b::Narrow{<:Extent})
     Narrow(Extent(
-        start = simplify(@f max($(getstart(a)), $(getstart(b))), ctx),
-        stop = simplify(@f min($(getstop(a)), $(getstop(b))), ctx),
+        start = simplify(@f(max($(getstart(a)), $(getstart(b)))), ctx),
+        stop = simplify(@f(min($(getstop(a)), $(getstop(b)))), ctx),
         lower = if getstart(a) == getstart(b) || getstop(a) == getstop(b)
             simplify(@f(min($(a.ext.lower), $(b.ext.lower))), ctx)
         else
@@ -413,8 +413,8 @@ combinedim(ctx, a::Widen, ::DeferDimension) = deferdim
 
 function combinedim(ctx, a::Widen{<:Extent}, b::Widen{<:Extent})
     Widen(Extent(
-        start = simplify(@f min($(getstart(a)), $(getstart(b))), ctx),
-        stop = simplify(@f max($(getstop(a)), $(getstop(b))), ctx),
+        start = simplify(@f(min($(getstart(a)), $(getstart(b)))), ctx),
+        stop = simplify(@f(max($(getstop(a)), $(getstop(b)))), ctx),
         lower = simplify(@f(max($(a.ext.lower), $(b.ext.lower))), ctx),
         upper = if getstart(a) == getstart(b) || getstop(a) == getstop(b)
             simplify(@f(max($(a.ext.upper), $(b.ext.upper))), ctx)

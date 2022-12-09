@@ -108,7 +108,7 @@ function (ctx::LowerJulia)(root::IndexNode, ::PhaseStyle)
             $i = $(ctx(getstop(ext_2))) + 1
         end
 
-        if simplify(@f $(getlower(ext_2)) >= 1, ctx) == literal(true)
+        if simplify(@f($(getlower(ext_2)) >= 1), ctx) == literal(true)
             return body
         else
             return quote

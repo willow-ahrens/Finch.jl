@@ -88,7 +88,7 @@ module h
     generate_embed_docs()
 end
 
-register(DefaultAlgebra())
+register(DefaultAlgebra)
 
 include("glue_AbstractArrays.jl")
 include("glue_SparseArrays.jl")

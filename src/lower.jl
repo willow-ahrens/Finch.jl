@@ -26,6 +26,7 @@ function (spc::Freshen)(tags...)
 end
 
 @kwdef mutable struct LowerJulia
+    algebra = DefaultAlgebra()
     preamble::Vector{Any} = []
     bindings::Dict{Any, Any} = Dict()
     epilogue::Vector{Any} = []

@@ -2,9 +2,7 @@ execute(ex) = execute(ex, DefaultAlgebra())
 function register(algebra)
     Base.eval(Finch, quote
         @generated function execute(ex, a::$algebra)
-            contain(LowerJulia()) do ctx
-                execute_code(:ex, ex, a)
-            end
+            execute_code(:ex, ex, a())
         end
     end)
 end
@@ -52,9 +50,9 @@ end
 #    end
 #end
 
-function execute_code(ex, T, algebra)
+function execute_code(ex, T, algebra = DefaultAlgebra())
     prgm = nothing
-    code = contain(LowerJulia(algebra)) do ctx
+    code = contain(LowerJulia(algebra = algebra)) do ctx
         quote
             $(begin
                 prgm = virtualize(ex, T, ctx)
@@ -196,5 +194,3 @@ function (ctx::Finalize)(node::IndexNode)
         return node
     end
 end
-
-register()
