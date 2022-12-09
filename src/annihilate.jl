@@ -76,20 +76,16 @@ isannihilator(::AbstractAlgebra, ::typeof(or), x) = x == true
 isannihilator(::AbstractAlgebra, ::typeof(and), x) = x == false
 
 isinverse(alg) = (f, g) -> isinverse(alg, f, g)
-isinverse(alg, f::IndexNode, x::IndexNode) = isliteral(f) && isliteral(x) && isinverse(alg, f.val, x.val)
+isinverse(alg, f::IndexNode, g::IndexNode) = isliteral(f) && isliteral(g) && isinverse(alg, f.val, g.val)
 isinverse(::Any, f, g) = false
-isinverse(::AbstractAlgebra, ::typeof(+), ::typeof(-)) = true
-isinverse(::AbstractAlgebra, ::typeof(*), ::typeof(inv)) = true
+isinverse(::AbstractAlgebra, ::typeof(-), ::typeof(+)) = true
+isinverse(::AbstractAlgebra, ::typeof(inv), ::typeof(*)) = true
 
-getinverse(alg) = (f) -> getinverse(alg, f)
-getinverse(alg, f::IndexNode) = something(getinverse(alg, f.val))
-getinverse(::Any, f) = nothing
-getinverse(::AbstractAlgebra, ::typeof(-)) = +
-getinverse(::AbstractAlgebra, ::typeof(/)) = *
-getinverse(::AbstractAlgebra, ::typeof(inv)) = *
-
-hasinverse(alg) = (f) -> hasinverse(alg, f)
-hasinverse(alg, f::IndexNode) = isliteral(f) && (getinverse(alg, f.val) !== nothing)
+isinvolution(alg) = (f) -> isinvolution(alg, f)
+isinvolution(alg, f::IndexNode) = isliteral(f) && isinvolution(alg, f.val)
+isinvolution(::Any, f) = false
+isinvolution(::AbstractAlgebra, ::typeof(-)) = true
+isinvolution(::AbstractAlgebra, ::typeof(inv)) = true
 
 function base_rules(alg, ctx)
     shash = ctx.shash
@@ -175,13 +171,15 @@ function base_rules(alg, ctx)
         (@rule $(literal(-0.0)) => literal(0.0)),
 
 
-        (@rule call(~f::hasinverse(alg), call(~g::isliteral, ~a, ~b...)) => if g.val == getinverse(alg, f) && isassociative(alg, g)
+        (@rule call(~f, call(~g, ~a, ~b...)) => if isinverse(alg, f, g) && isassociative(alg, g)
             call(g, call(f, a), call(f, call(g, b...)))
         end),
 
-        (@rule call(~f::hasinverse(alg), ~a, ~b) => call(getinverse(alg, f), a, call(f, b))),
-        (@rule call(~f::hasinverse(alg), call(~f, ~a)) => a),
-        (@rule call(~f::isliteral, ~a..., call(~g::hasinverse(alg), ~b), ~c...) => if isdistributive(alg, getinverse(alg, g), f.val)
+        (@rule call($(literal(-)), ~a, ~b) => call(+, a, call(-, b))),
+        (@rule call($(literal(/)), ~a, ~b) => call(*, a, call(inv, b))),
+
+        (@rule call(~f::isinvolution(alg), call(~f, ~a)) => a),
+        (@rule call(~f, ~a..., call(~g, ~b), ~c...) => if isdistributive(alg, g, f)
             call(g, call(f, a..., b, c...))
         end),
 
