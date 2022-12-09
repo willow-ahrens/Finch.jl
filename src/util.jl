@@ -121,7 +121,10 @@ Remove line numbers
 """
 function striplines(ex::Expr)
     islinenum(x) = x isa LineNumberNode
-    Rewrite(Postwalk(Fixpoint(@rule :block(~a..., ~b::islinenum, ~c...) => Expr(:block, a..., c...))))(ex)
+    Rewrite(Postwalk(Fixpoint(Chain([
+        (@rule :block(~a..., ~b::islinenum, ~c...) => Expr(:block, a..., c...)),
+        (@rule :macrocall(~a, ~b, ~c...) => Expr(:macrocall, a, nothing, c...)),
+    ]))))(ex)
 end
 striplines(ex) = ex
 

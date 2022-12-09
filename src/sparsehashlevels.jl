@@ -8,19 +8,20 @@ end
 const SparseHash = SparseHashLevel
 SparseHashLevel{N}(lvl) where {N} = SparseHashLevel{N}(((0 for _ in 1:N)...,), lvl)
 SparseHashLevel{N, Ti}(lvl) where {N, Ti} = SparseHashLevel{N, Ti}((map(zero, Ti.parameters)..., ), lvl)
+SparseHashLevel{N, Ti, Tp, T_q}(lvl) where {N, Ti, Tp, T_q} = SparseHashLevel{N, Ti, Tp, T_q}((map(zero, Ti.parameters)..., ), lvl)
 SparseHashLevel{N}(I::Ti, lvl) where {N, Ti} = SparseHashLevel{N, Ti}(I, lvl)
-SparseHashLevel{N, Ti}(I::Ti, lvl) where {N, Ti} = SparseHashLevel{N, Ti, Int, Int}(I, lvl)
-SparseHashLevel{N, Ti, Tp, T_q}(I::Ti, lvl) where {N, Ti, Tp, T_q} =
-    SparseHashLevel{N, Ti, Tp, T_q}(I, Dict{Tuple{Tp, Ti}, T_q}(), lvl)
-SparseHashLevel{N, Ti, Tp, T_q}(I::Ti, tbl::Tbl, lvl) where {N, Ti, Tp, T_q, Tbl} =
-    SparseHashLevel{N, Ti, Tp, T_q, Tbl}(I, tbl, lvl)
-SparseHashLevel{N, Ti}(I::Ti, tbl::Tbl, lvl) where {N, Ti, Tp, T_q, Tbl <: AbstractDict{Tuple{Tp, Ti}, T_q}} =
-    SparseHashLevel{N, Ti, Tp, T_q, Tbl}(I, tbl, lvl)
+SparseHashLevel{N, Ti}(I, lvl) where {N, Ti} = SparseHashLevel{N, Ti, Int, Int}(Ti(I), lvl)
+SparseHashLevel{N, Ti, Tp, T_q}(I, lvl) where {N, Ti, Tp, T_q} =
+    SparseHashLevel{N, Ti, Tp, T_q}(Ti(I), Dict{Tuple{Tp, Ti}, T_q}(), lvl)
+SparseHashLevel{N, Ti, Tp, T_q}(I, tbl::Tbl, lvl) where {N, Ti, Tp, T_q, Tbl} =
+    SparseHashLevel{N, Ti, Tp, T_q, Tbl}(Ti(I), tbl, lvl)
+SparseHashLevel{N, Ti}(I, tbl::Tbl, lvl) where {N, Ti, Tp, T_q, Tbl <: AbstractDict{Tuple{Tp, Ti}, T_q}} =
+    SparseHashLevel{N, Ti, Tp, T_q, Tbl}(Ti(I), tbl, lvl)
 #TODO it would be best if we could supply defaults all at once.
-SparseHashLevel{N, Ti, Tp, T_q, Tbl}(I::Ti, tbl::Tbl, lvl) where {N, Ti, Tp, T_q, Tbl} =
-    SparseHashLevel{N, Ti, Tp, T_q, Tbl}(I::Ti, tbl, Vector{Pair{Tuple{Tp, Ti}, T_q}}(undef, 0), T_q[1, 1, 2:17...], lvl) 
-SparseHashLevel{N, Ti, Tp, T_q, Tbl}(I::Ti, tbl::Tbl, srt, pos, lvl::Lvl) where {N, Ti, Tp, T_q, Tbl, Lvl} =
-    SparseHashLevel{N, Ti, Tp, T_q, Tbl, Lvl}(I, tbl, srt, pos, lvl)
+SparseHashLevel{N, Ti, Tp, T_q, Tbl}(I, tbl::Tbl, lvl) where {N, Ti, Tp, T_q, Tbl} =
+    SparseHashLevel{N, Ti, Tp, T_q, Tbl}(Ti(I), tbl, Vector{Pair{Tuple{Tp, Ti}, T_q}}(undef, 0), T_q[1, 1, 2:17...], lvl) 
+SparseHashLevel{N, Ti, Tp, T_q, Tbl}(I, tbl::Tbl, srt, pos, lvl::Lvl) where {N, Ti, Tp, T_q, Tbl, Lvl} =
+    SparseHashLevel{N, Ti, Tp, T_q, Tbl, Lvl}(Ti(I), tbl, srt, pos, lvl)
 
 """
 `f_code(sh)` = [SparseHashLevel](@ref).

@@ -15,7 +15,6 @@
         @test y[] == 6
         a = 3
         b = -1
-        #@test diff("ifelse53.jl", @finch_code @loop i y[] += ifelse(x[i], $a, $b))
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/59

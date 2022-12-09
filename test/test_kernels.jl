@@ -12,7 +12,6 @@
             Dense(m,
             SparseList(m,
             Element{0.0}())))
-        @test diff("inner_products.jl", @finch_code @loop i j k B[i, j] += A[i, k] * A[j, k])
         @finch @loop i j k B[i, j] += A[i, k] * A[j, k]
         @test B.lvl.lvl.pos[1:length(B_ref.colptr)] == B_ref.colptr
         @test B.lvl.lvl.idx[1:length(B_ref.rowval)] == B_ref.rowval
