@@ -23,7 +23,7 @@
     =#
 
     A_ref = sprand(10, 0.5); B_ref = sprand(10, 0.5); C_ref = vcat(A_ref, B_ref)
-    A = fiber(A_ref); B = fiber(B_ref); C = @fiber(sl(e(0.0)))
+    A = fiber(SparseVector{Float64, Int64}(A_ref)); B = fiber(SparseVector{Float64, Int64}(B_ref)); C = @fiber(sl{Int64}(e(0.0)))
     @test diff("concat_permit_offset.jl", @finch_code @loop i C[i] = coalesce(A[permit[i]], B[permit[offset[10, i]]]))
     @finch @loop i C[i] = coalesce(A[permit[i]], B[permit[offset[10, i]]])
     
@@ -31,7 +31,7 @@
     @finch @loop i C[i] = coalesce(A[permit[i]], B[offset[10, permit[i]]])
     @test reference_isequal(C, C_ref)
 
-    F = fiber([1,1,1,1,1])
+    F = fiber(Int64[1,1,1,1,1])
 
     @test diff("sparse_conv.jl", @finch_code @loop i j C[i] += (A[i] != 0) * coalesce(A[permit[offset[i - 3, j]]], 0) * F[j])
     @finch @loop i j C[i] += (A[i] != 0) * coalesce(A[permit[offset[i - 3, j]]], 0) * F[j]

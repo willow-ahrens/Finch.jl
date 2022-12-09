@@ -51,7 +51,25 @@ end
 #    end
 #end
 
+shash_counts = Dict{Any, UInt}()
+
+function shash(x)
+    global shash_counts
+    if haskey(shash_counts, x)
+        return shash_counts[x]
+    else
+        return (shash_counts[x] = UInt(length(shash_counts)))
+    end
+end
+
+function reset_shash()
+    global shash_counts
+    shash_counts = Dict{Any, UInt}()
+end
+
+
 function execute_code(ex, T)
+    reset_shash() #TODO bit of a hack
     prgm = nothing
     code = contain(LowerJulia()) do ctx
         quote

@@ -30,8 +30,8 @@
         end
         i = 1
         i_start = i
-        phase_start = max(i_start)
-        phase_stop = min(D_lvl_i1, i_stop)
+        phase_start = i_start
+        phase_stop = (min)(D_lvl_i1, i_stop)
         if phase_stop >= phase_start
             i = i
             i = phase_start
@@ -41,7 +41,7 @@
             while i <= phase_stop
                 i_start_2 = i
                 D_lvl_i = D_lvl.idx[D_lvl_q]
-                phase_stop_2 = min(D_lvl_i, phase_stop)
+                phase_stop_2 = (min)(D_lvl_i, phase_stop)
                 i_2 = i
                 if D_lvl_i == phase_stop_2
                     D_lvl_2_val = D_lvl_2.val[D_lvl_q]
@@ -77,8 +77,8 @@
             i = phase_stop + 1
         end
         i_start = i
-        phase_start_3 = max(i_start)
-        phase_stop_3 = min(i_stop)
+        phase_start_3 = i_start
+        phase_stop_3 = i_stop
         if phase_stop_3 >= phase_start_3
             i_3 = i
             i = phase_stop_3 + 1

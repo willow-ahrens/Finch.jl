@@ -1,13 +1,13 @@
 @testset "RepeatRLE" begin
     A = Finch.Fiber(
-        RepeatRLE{0.0}(10, [1, 7], [1, 3, 5, 7, 9, 10], [2.0, 3.0, 4.0, 5.0, 6.0, 7.0]))
+        RepeatRLE{0.0, Int64, Float64}(10, [1, 7], [1, 3, 5, 7, 9, 10], [2.0, 3.0, 4.0, 5.0, 6.0, 7.0]))
 
     @test diff("repeat_display.txt", sprint(show, MIME"text/plain"(), A))
     @test diff("repeat_print.txt", sprint(show, A))
 
     @test reference_isequal(A, [2.0, 3.0, 3.0, 4.0, 4.0, 5.0, 5.0, 6.0, 6.0, 7.0])
 
-    B = @fiber(d(e(0.0)))
+    B = @fiber(d{Int64}(e(0.0)))
 
     @test diff("r_to_d.jl", @finch_code @loop i B[i] = A[i])
     @finch @loop i B[i] = A[i]
@@ -30,7 +30,7 @@
     @test A.lvl.val[1:5] == [0.0, 1.0, 0.0, 3.0, 0.0]
 
     A = Finch.Fiber(
-        SparseVBL(10, [1, 4], [3, 5, 9], [1, 2, 3, 6],
+        SparseVBL{Int64}(10, [1, 4], [3, 5, 9], [1, 2, 3, 6],
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
 
     B = Finch.Fiber(Dense(Element{0.0}()))

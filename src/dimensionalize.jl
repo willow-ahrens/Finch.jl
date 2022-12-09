@@ -317,7 +317,7 @@ function combinedim(a::IndexNode, b::IndexNode)
     if isliteral(a) && isliteral(b)
         a == b || throw(DimensionMismatch("mismatched dimension limits ($a != $b)"))
     end
-    Lexicography(a) < Lexicography(b) ? a : b
+    shash(a) < shash(b) ? a : b #TODO instead of this, we should introduce a lazy operator to assert equality and use simplification rules or similar to choose types
 end
 
 """
