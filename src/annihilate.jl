@@ -91,7 +91,8 @@ getinverse(::AbstractAlgebra, ::typeof(inv)) = *
 hasinverse(alg) = (f) -> hasinverse(alg, f)
 hasinverse(alg, f::IndexNode) = isliteral(f) && (getinverse(alg, f.val) !== nothing)
 
-function getrules(alg, shash)
+function base_rules(alg, ctx)
+    shash = ctx.shash
     return [
         (@rule call(~f, ~a...) => if isliteral(f) && all(isliteral, a) && length(a) >= 1 literal(getvalue(f)(getvalue.(a)...)) end),
 
@@ -249,7 +250,9 @@ end
 
 (ctx::SimplifyVisitor)(node::Simplify) = node.body
 
-getrules(ctx::LowerJulia) = getrules(ctx.algebra, ctx.shash)
+getrules(alg::AbstractAlgebra, ctx) = base_rules(alg, ctx)
+
+getrules(ctx::LowerJulia) = getrules(ctx.algebra, ctx)
 
 function simplify(node, ctx)
     Rewrite(Fixpoint(Prewalk(Chain(getrules(ctx)))))(node)
@@ -262,73 +265,4 @@ function (ctx::LowerJulia)(root, ::SimplifyStyle)
     ctx(root)
 end
 
-
-IndexNotation.isliteral(::Simplify) =  false
-
-struct Lexicography
-    arg
-end
-
-function Base.isless(a::Lexicography, b::Lexicography)
-    (a, b) = a.arg, b.arg
-    #@assert which(priority, Tuple{typeof(a)}) == which(priority, Tuple{typeof(b)}) || priority(a) != priority(b)
-    if a != b
-        a_key = (priority(a), comparators(a)...)
-        b_key = (priority(b), comparators(b)...)
-        @assert a_key < b_key || b_key < a_key "a = $a b = $b a_key = $a_key b_key = $b_key"
-        return a_key < b_key
-    end
-    return false
-end
-
-function Base.:(==)(a::Lexicography, b::Lexicography)
-    (a, b) = a.arg, b.arg
-    #@assert which(priority, Tuple{typeof(a)}) == which(priority, Tuple{typeof(b)}) || priority(a) != priority(b)
-    a_key = (priority(a), comparators(a)...)
-    b_key = (priority(b), comparators(b)...)
-    return a_key == b_key
-end
-
-#=
-priority(::Type) = (0, 5)
-comparators(x::Type) = (string(x),)
-
-priority(::Missing) = (0, 4)
-comparators(::Missing) = (1,)
-
-priority(::Number) = (1, 1)
-comparators(x::Number) = (x, sizeof(x), typeof(x))
-
-priority(::Function) = (1, 2)
-comparators(x::Function) = (string(x),)
-
-priority(::Symbol) = (2, 0)
-comparators(x::Symbol) = (x,)
-
-priority(::Expr) = (2, 1)
-comparators(x::Expr) = (x.head, map(Lexicography, x.args)...)
-
-#priority(::Workspace) = (3,3)
-#comparators(x::Workspace) = (x.n,)
-
-#TODO this works for now, but reconsider this later
-priority(node::IndexNode) = (3, 4)
-function comparators(node::IndexNode)
-    if node.kind === value
-        return (node.kind, Lexicography(node.val), Lexicography(node.type))
-    elseif node.kind === literal
-        return (node.kind, Lexicography(node.val))
-    elseif node.kind === virtual
-        return (node.kind, Lexicography(node.val))
-    elseif node.kind === index
-        return (node.kind, Lexicography(node.val))
-    elseif istree(node)
-        return (node.kind, map(Lexicography, node.children))
-    else
-        error("unimplemented")
-    end
-end
-=#
-#TODO these are nice defaults if we want to allow nondeterminism
-priority(::Any) = (Inf,)
-comparators(x::Any) = hash(x)
+IndexNotation.isliteral(::Simplify) = false
