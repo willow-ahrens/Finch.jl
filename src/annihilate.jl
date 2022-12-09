@@ -1,5 +1,5 @@
 abstract type AbstractAlgebra end
-struct DefaultAlgebra end
+struct DefaultAlgebra<:AbstractAlgebra end
 
 struct Chooser{D} end
 
@@ -181,7 +181,7 @@ function base_rules(alg, ctx)
 
         (@rule call(~f::hasinverse(alg), ~a, ~b) => call(getinverse(alg, f), a, call(f, b))),
         (@rule call(~f::hasinverse(alg), call(~f, ~a)) => a),
-        (@rule call(~f::isliteral, ~a..., call(~g::hasinverse(alg), ~b), ~c...) => if isdistributive(getinverse(alg, g), f.val)
+        (@rule call(~f::isliteral, ~a..., call(~g::hasinverse(alg), ~b), ~c...) => if isdistributive(alg, getinverse(alg, g), f.val)
             call(g, call(f, a..., b, c...))
         end),
 
@@ -214,6 +214,8 @@ function base_rules(alg, ctx)
         end),
     ]
 end
+
+getrules(alg, ctx) = base_rules(alg, ctx)
 
 @kwdef mutable struct Simplify
     body

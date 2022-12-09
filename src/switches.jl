@@ -24,14 +24,16 @@ combine_style(a::SpikeStyle, b::SwitchStyle) = SwitchStyle()
 combine_style(a::SwitchStyle, b::SwitchStyle) = SwitchStyle()
 supports_shift(::SwitchStyle) = true
 
-struct SwitchVisitor end
+@kwdef struct SwitchVisitor
+    ctx
+end
 
 function (ctx::SwitchVisitor)(node)
     if istree(node)
         map(product(map(ctx, arguments(node))...)) do case
             guards = map(first, case)
             bodies = map(last, case)
-            return simplify(@f(and($(guards...))), ctx) => similarterm(node, operation(node), collect(bodies))
+            return simplify(@f(and($(guards...))), ctx.ctx) => similarterm(node, operation(node), collect(bodies))
         end
     else
         [(literal(true) => node)]
@@ -45,7 +47,7 @@ function (ctx::SwitchVisitor)(node::IndexNode)
         map(product(map(ctx, arguments(node))...)) do case
             guards = map(first, case)
             bodies = map(last, case)
-            return simplify(@f(and($(guards...))), ctx) => similarterm(node, operation(node), collect(bodies))
+            return simplify(@f(and($(guards...))), ctx.ctx) => similarterm(node, operation(node), collect(bodies))
         end
     else
         [(literal(true) => node)]
@@ -54,7 +56,7 @@ end
 (ctx::SwitchVisitor)(node::Switch) = node.cases
 
 function (ctx::LowerJulia)(stmt, ::SwitchStyle)
-    cases = (SwitchVisitor())(stmt)
+    cases = (SwitchVisitor(ctx=ctx))(stmt)
     function nest(cases, inner=false)
         guard, body = cases[1]
         body = contain(ctx) do ctx_2

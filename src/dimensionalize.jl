@@ -103,7 +103,7 @@ function (ctx::DeclareDimensions)(node::Dimensionalize, dim)
 end
 function (ctx::DeclareDimensions)(node::IndexNode, dim)
     if node.kind === index
-        ctx.dims[getname(node)] = resultdim(ctx, get(ctx.dims, getname(node), nodim), dim)
+        ctx.dims[getname(node)] = resultdim(ctx.ctx, get(ctx.dims, getname(node), nodim), dim)
         return node
     elseif node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
         return declare_dimensions_access(node, ctx, node.tns.val, dim)
@@ -155,7 +155,7 @@ function infer_dimensions_access(node, ctx, tns)
     idxs = map(first, res)
     if node.mode.kind !== reader
         prev_dims = getsize(tns, ctx.ctx, node.mode)
-        dims = map(resolvedim, map((a, b) -> resultdim(ctx, a, b), map(last, res), prev_dims))
+        dims = map(resolvedim, map((a, b) -> resultdim(ctx.ctx, a, b), map(last, res), prev_dims))
         ctx.shapes[getname(tns)] = dims
         tns = setsize!(tns, ctx.ctx, node.mode, dims...)
     end

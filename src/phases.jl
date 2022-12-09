@@ -19,7 +19,7 @@ end
 
 function (ctx::PhaseStride)(node)
     if istree(node)
-        return mapreduce(ctx, resultdim, arguments(node), init = nodim)
+        return mapreduce(ctx, (a, b) -> resultdim(ctx.ctx, a, b), arguments(node), init = nodim)
     else
         return nodim
     end
@@ -29,7 +29,7 @@ function (ctx::PhaseStride)(node::IndexNode)
     if node.kind === virtual
         ctx(node.val)
     elseif istree(node)
-        return mapreduce(ctx, resultdim, arguments(node), init = nodim)
+        return mapreduce(ctx, (a, b) -> resultdim(ctx.ctx, a, b), arguments(node), init = nodim)
     else
         return nodim
     end
