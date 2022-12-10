@@ -2,11 +2,21 @@
 CurrentModule = Finch
 ```
 
-# Public Functions
+## Register User Functions
+
+Finch uses generated functions to compile kernels. If any functions have been
+defined after Finch was loaded, Finch needs to be notified about them. The most
+correct approach is to create a trait datatype that subtypes
+`Finch.AbstractAlgebra` and call `Finch.register` on that type. After you call
+`register`, that subtype reflects the methods you know to be currently defined
+at that world age. You can pass your algebra to Finch to run Finch in that world
+age.
+
+## Declare Algebraic Properties
 
 Users can help Finch optimize expressions over new functions by declaring key
-function properties in an "algebra". Finch kernels can then be executed using
-the algebra.
+function properties in the algebra. Finch kernels can then be executed using the
+algebra.
 
 As an example, suppose we wanted to declare some properties for the greatest
 common divisor function `gcd`. This function is associative and commutative, and
