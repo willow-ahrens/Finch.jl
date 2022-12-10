@@ -16,6 +16,11 @@ choose(d) = Chooser{d}()
 
 isassociative(alg) = (f) -> isassociative(alg, f)
 isassociative(alg, f::IndexNode) = f.kind === literal && isassociative(alg, f.val)
+"""
+    isassociative(algebra, f)
+
+Return true when `f(a..., f(b...), c...) = f(a..., b..., c...)` in `algebra`.
+"""
 isassociative(::Any, f) = false
 isassociative(::AbstractAlgebra, ::typeof(right)) = true
 isassociative(::AbstractAlgebra, ::typeof(or)) = true
@@ -29,6 +34,11 @@ isassociative(::AbstractAlgebra, ::Chooser) = true
 
 iscommutative(alg) = (f) -> iscommutative(alg, f)
 iscommutative(alg, f::IndexNode) = f.kind === literal && iscommutative(alg, f.val)
+"""
+    iscommutative(algebra, f)
+
+Return true when for all permutations p, `f(a...) = f(a[p]...)` in `algebra`.
+"""
 iscommutative(::Any, f) = false
 iscommutative(::AbstractAlgebra, ::typeof(or)) = true
 iscommutative(::AbstractAlgebra, ::typeof(and)) = true
@@ -42,17 +52,32 @@ isabelian(alg, f) = isassociative(alg, f) && iscommutative(alg, f)
 
 isdistributive(alg) = (f, g) -> isdistributive(alg, f, g)
 isdistributive(alg, f::IndexNode, x::IndexNode) = isliteral(f) && isliteral(x) && isdistributive(alg, f.val, x.val)
+"""
+    isidempotent(algebra, f)
+
+Return true when `f(a, b) = f(f(a, b), b)` in `algebra`.
+"""
 isdistributive(::Any, f, g) = false
 isdistributive(::AbstractAlgebra, ::typeof(+), ::typeof(*)) = true
 
 isidempotent(alg) = (f) -> isidempotent(alg, f)
 isidempotent(alg, f::IndexNode) = f.kind === literal && isidempotent(alg, f.val)
+"""
+    isidempotent(algebra, f)
+
+Return true when `f(a, b) = f(f(a, b), b)` in `algebra`.
+"""
 isidempotent(::Any, f) = false
 isidempotent(::AbstractAlgebra, ::typeof(right)) = true
 isidempotent(::AbstractAlgebra, ::typeof(min)) = true
 isidempotent(::AbstractAlgebra, ::typeof(max)) = true
 isidempotent(::AbstractAlgebra, ::Chooser) = true
 
+"""
+    isidentity(algebra, f, x)
+
+Return true when `f(a..., x, b...) = f(a..., b...)` in `algebra`.
+"""
 isidentity(alg) = (f, x) -> isidentity(alg, f, x)
 isidentity(alg, f::IndexNode, x::IndexNode) = isliteral(f) && isliteral(x) && isidentity(alg, f.val, x.val)
 isidentity(::Any, f, x) = false
@@ -67,6 +92,11 @@ isidentity(::AbstractAlgebra, ::Chooser{D}, x) where {D} = x == D
 
 isannihilator(alg) = (f, x) -> isannihilator(alg, f, x)
 isannihilator(alg, f::IndexNode, x::IndexNode) = isliteral(f) && isliteral(x) && isannihilator(alg, f.val, x.val)
+"""
+    isannihilator(algebra, f, x)
+
+Return true when `f(a..., x, b...) = x` in `algebra`.
+"""
 isannihilator(::Any, f, x) = false
 isannihilator(::AbstractAlgebra, ::typeof(+), x) = isinf(x)
 isannihilator(::AbstractAlgebra, ::typeof(*), x) = iszero(x)
@@ -77,16 +107,34 @@ isannihilator(::AbstractAlgebra, ::typeof(and), x) = x == false
 
 isinverse(alg) = (f, g) -> isinverse(alg, f, g)
 isinverse(alg, f::IndexNode, g::IndexNode) = isliteral(f) && isliteral(g) && isinverse(alg, f.val, g.val)
+"""
+    isinverse(algebra, f, g)
+
+Return true when `f(a, g(a))` is the identity under `f` in `algebra`.
+"""
 isinverse(::Any, f, g) = false
 isinverse(::AbstractAlgebra, ::typeof(-), ::typeof(+)) = true
 isinverse(::AbstractAlgebra, ::typeof(inv), ::typeof(*)) = true
 
 isinvolution(alg) = (f) -> isinvolution(alg, f)
 isinvolution(alg, f::IndexNode) = isliteral(f) && isinvolution(alg, f.val)
+"""
+    isinvolution(algebra, f)
+
+Return true when `f(f(a)) = a` in `algebra`.
+"""
 isinvolution(::Any, f) = false
 isinvolution(::AbstractAlgebra, ::typeof(-)) = true
 isinvolution(::AbstractAlgebra, ::typeof(inv)) = true
 
+"""
+    base_rules(alg, ctx)
+
+The basic rule set for Finch, uses the algebra to check properties of functions
+like associativity, commutativity, etc. Also assumes the context has a static
+hash names `shash`. This rule set simplifies, normalizes, and propagates
+constants, and is the basis for how Finch understands sparsity.
+"""
 function base_rules(alg, ctx)
     shash = ctx.shash
     return [
