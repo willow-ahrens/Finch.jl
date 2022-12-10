@@ -261,8 +261,6 @@ function base_rules(alg, ctx)
     ]
 end
 
-getrules(alg, ctx) = base_rules(alg, ctx)
-
 @kwdef mutable struct Simplify
     body
 end

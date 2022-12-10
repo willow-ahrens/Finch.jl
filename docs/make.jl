@@ -19,6 +19,7 @@ makedocs(;
         "Level Formats" => "level.md",
         "The Deets" => "listing.md",
         "Embedding" => "embed.md",
+        "Custom User Functions" => "algebra.md",
     ],
 )
 
