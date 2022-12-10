@@ -103,7 +103,7 @@ function (ctx::DeclareDimensions)(node::Dimensionalize, dim)
 end
 function (ctx::DeclareDimensions)(node::IndexNode, dim)
     if node.kind === index
-        ctx.dims[getname(node)] = resultdim(get(ctx.dims, getname(node), nodim), dim)
+        ctx.dims[getname(node)] = resultdim(ctx.ctx, get(ctx.dims, getname(node), nodim), dim)
         return node
     elseif node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
         return declare_dimensions_access(node, ctx, node.tns.val, dim)
@@ -155,7 +155,7 @@ function infer_dimensions_access(node, ctx, tns)
     idxs = map(first, res)
     if node.mode.kind !== reader
         prev_dims = getsize(tns, ctx.ctx, node.mode)
-        dims = map(resolvedim, map(resultdim, map(last, res), prev_dims))
+        dims = map(resolvedim, map((a, b) -> resultdim(ctx.ctx, a, b), map(last, res), prev_dims))
         ctx.shapes[getname(tns)] = dims
         tns = setsize!(tns, ctx.ctx, node.mode, dims...)
     end
@@ -176,32 +176,32 @@ end
 
 struct UnknownDimension end
 
-resultdim(a, b, c, tail...) = resultdim(a, resultdim(b, c, tail...))
-function resultdim(a, b)
-    c = combinedim(a, b)
-    d = combinedim(b, a)
-    return _resultdim(a, b, c, d)
+resultdim(ctx, a, b, c, tail...) = resultdim(ctx, a, resultdim(ctx, b, c, tail...))
+function resultdim(ctx, a, b)
+    c = combinedim(ctx, a, b)
+    d = combinedim(ctx, b, a)
+    return _resultdim(ctx, a, b, c, d)
 end
-_resultdim(a, b, c::UnknownDimension, d::UnknownDimension) = throw(MethodError(combinedim, (a, b)))
-_resultdim(a, b, c, d::UnknownDimension) = c
-_resultdim(a, b, c::UnknownDimension, d) = d
-_resultdim(a, b, c, d) = c #TODO assert same lattice type here.
+_resultdim(ctx, a, b, c::UnknownDimension, d::UnknownDimension) = throw(MethodError(combinedim, (ctx, a, b)))
+_resultdim(ctx, a, b, c, d::UnknownDimension) = c
+_resultdim(ctx, a, b, c::UnknownDimension, d) = d
+_resultdim(ctx, a, b, c, d) = c #TODO assert same lattice type here.
 #_resultdim(a, b, c::T, d::T) where {T} = (c == d) ? c : @assert false "TODO combinedim_ambiguity_error"
 
 """
-    combinedim(a, b)
+    combinedim(ctx, a, b)
 
 Combine the two dimensions `a` and `b`.  To avoid ambiguity, only define one of
 
 ```
-combinedim(::A, ::B)
-combinedim(::B, ::A)
+combinedim(ctx, ::A, ::B)
+combinedim(ctx, ::B, ::A)
 ```
 """
-combinedim(a, b) = UnknownDimension()
+combinedim(ctx, a, b) = UnknownDimension()
 
-combinedim(a::NoDimension, b) = b
-combinedim(::DeferDimension, b) = deferdim
+combinedim(ctx, a::NoDimension, b) = b
+combinedim(ctx, ::DeferDimension, b) = deferdim
 
 @kwdef struct Extent
     start
@@ -275,15 +275,15 @@ function extent(ext::IndexNode)
 end
 extent(ext::Integer) = 1
 
-combinedim(a::Extent, b::Extent) =
+combinedim(ctx, a::Extent, b::Extent) =
     Extent(
-        start = resultdim(a.start, b.start),
-        stop = resultdim(a.stop, b.stop),
-        lower = simplify(@f(min($(a.lower), $(b.lower)))),
-        upper = simplify(@f(min($(a.upper), $(b.upper))))
+        start = resultdim(ctx, a.start, b.start),
+        stop = resultdim(ctx, a.stop, b.stop),
+        lower = simplify(@f(min($(a.lower), $(b.lower))), ctx),
+        upper = simplify(@f(min($(a.upper), $(b.upper))), ctx)
     )
 
-combinedim(a::NoDimension, b::Extent) = b
+combinedim(ctx, a::NoDimension, b::Extent) = b
 
 struct SuggestedExtent{Ext}
     ext::Ext
@@ -307,17 +307,17 @@ getstart(ext::SuggestedExtent) = getstart(ext.ext)
 getstop(ext::SuggestedExtent) = getstop(ext.ext)
 extent(ext::SuggestedExtent) = extent(ext.ext)
 
-combinedim(a::SuggestedExtent, b::Extent) = b
+combinedim(ctx, a::SuggestedExtent, b::Extent) = b
 
-combinedim(a::SuggestedExtent, b::NoDimension) = a
+combinedim(ctx, a::SuggestedExtent, b::NoDimension) = a
 
-combinedim(a::SuggestedExtent, b::SuggestedExtent) = SuggestedExtent(combinedim(a.ext, b.ext))
+combinedim(ctx, a::SuggestedExtent, b::SuggestedExtent) = SuggestedExtent(combinedim(ctx, a.ext, b.ext))
 
-function combinedim(a::IndexNode, b::IndexNode)
+function combinedim(ctx, a::IndexNode, b::IndexNode)
     if isliteral(a) && isliteral(b)
         a == b || throw(DimensionMismatch("mismatched dimension limits ($a != $b)"))
     end
-    shash(a) < shash(b) ? a : b #TODO instead of this, we should introduce a lazy operator to assert equality and use simplification rules or similar to choose types
+    ctx.shash(a) < ctx.shash(b) ? a : b #TODO instead of this, we should introduce a lazy operator to assert equality and use simplification rules or similar to choose types
 end
 
 """
@@ -388,38 +388,38 @@ getstart(ext::Widen) = getstart(ext.ext)
 getstop(ext::Widen) = getstop(ext.ext)
 
 
-combinedim(a::Narrow, b::Extent) = resultdim(a, Narrow(b))
-combinedim(a::Narrow, b::SuggestedExtent) = a
-combinedim(a::Narrow, b::NoDimension) = a
-combinedim(a::Narrow, ::DeferDimension) = deferdim
+combinedim(ctx, a::Narrow, b::Extent) = resultdim(ctx, a, Narrow(b))
+combinedim(ctx, a::Narrow, b::SuggestedExtent) = a
+combinedim(ctx, a::Narrow, b::NoDimension) = a
+combinedim(ctx, a::Narrow, ::DeferDimension) = deferdim
 
-function combinedim(a::Narrow{<:Extent}, b::Narrow{<:Extent})
+function combinedim(ctx, a::Narrow{<:Extent}, b::Narrow{<:Extent})
     Narrow(Extent(
-        start = simplify(@f max($(getstart(a)), $(getstart(b)))),
-        stop = simplify(@f min($(getstop(a)), $(getstop(b)))),
+        start = simplify(@f(max($(getstart(a)), $(getstart(b)))), ctx),
+        stop = simplify(@f(min($(getstop(a)), $(getstop(b)))), ctx),
         lower = if getstart(a) == getstart(b) || getstop(a) == getstop(b)
-            simplify(@f(min($(a.ext.lower), $(b.ext.lower))))
+            simplify(@f(min($(a.ext.lower), $(b.ext.lower))), ctx)
         else
             literal(0)
         end,
-        upper = simplify(@f(min($(a.ext.upper), $(b.ext.upper))))
+        upper = simplify(@f(min($(a.ext.upper), $(b.ext.upper))), ctx)
     ))
 end
 
-combinedim(a::Widen, b::Extent) = b
-combinedim(a::Widen, b::NoDimension) = a
-combinedim(a::Widen, b::SuggestedExtent) = a
-combinedim(a::Widen, ::DeferDimension) = deferdim
+combinedim(ctx, a::Widen, b::Extent) = b
+combinedim(ctx, a::Widen, b::NoDimension) = a
+combinedim(ctx, a::Widen, b::SuggestedExtent) = a
+combinedim(ctx, a::Widen, ::DeferDimension) = deferdim
 
-function combinedim(a::Widen{<:Extent}, b::Widen{<:Extent})
+function combinedim(ctx, a::Widen{<:Extent}, b::Widen{<:Extent})
     Widen(Extent(
-        start = simplify(@f min($(getstart(a)), $(getstart(b)))),
-        stop = simplify(@f max($(getstop(a)), $(getstop(b)))),
-        lower = simplify(@f(max($(a.ext.lower), $(b.ext.lower)))),
+        start = simplify(@f(min($(getstart(a)), $(getstart(b)))), ctx),
+        stop = simplify(@f(max($(getstop(a)), $(getstop(b)))), ctx),
+        lower = simplify(@f(max($(a.ext.lower), $(b.ext.lower))), ctx),
         upper = if getstart(a) == getstart(b) || getstop(a) == getstop(b)
-            simplify(@f(max($(a.ext.upper), $(b.ext.upper))))
+            simplify(@f(max($(a.ext.upper), $(b.ext.upper))), ctx)
         else
-            simplify(@f($(a.ext.upper) + $(b.ext.upper)))
+            simplify(@f($(a.ext.upper) + $(b.ext.upper)), ctx)
         end,
     ))
 end

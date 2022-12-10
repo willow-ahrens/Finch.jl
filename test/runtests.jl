@@ -63,6 +63,7 @@ verbose = "verbose" in ARGS
     include("test_ssa.jl")
     include("test_print.jl")
     #include("test_parse.jl")
+    include("test_algebra.jl")
     include("test_repeat.jl")
     include("test_permit.jl")
     include("test_skips.jl")

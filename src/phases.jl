@@ -19,7 +19,7 @@ end
 
 function (ctx::PhaseStride)(node)
     if istree(node)
-        return mapreduce(ctx, resultdim, arguments(node), init = nodim)
+        return mapreduce(ctx, (a, b) -> resultdim(ctx.ctx, a, b), arguments(node), init = nodim)
     else
         return nodim
     end
@@ -29,7 +29,7 @@ function (ctx::PhaseStride)(node::IndexNode)
     if node.kind === virtual
         ctx(node.val)
     elseif istree(node)
-        return mapreduce(ctx, resultdim, arguments(node), init = nodim)
+        return mapreduce(ctx, (a, b) -> resultdim(ctx.ctx, a, b), arguments(node), init = nodim)
     else
         return nodim
     end
@@ -93,7 +93,7 @@ function (ctx::LowerJulia)(root::IndexNode, ::PhaseStyle)
         body = root.body
 
         ext_2 = resolvedim(PhaseStride(ctx, root.idx, root.ext)(body))
-        ext_2 = cache_dim!(ctx, :phase, resolvedim(resultdim(Narrow(root.ext), ext_2)))
+        ext_2 = cache_dim!(ctx, :phase, resolvedim(resultdim(ctx, Narrow(root.ext), ext_2)))
 
         body = PhaseBodyVisitor(ctx, root.idx, root.ext, ext_2)(body)
         body = quote
@@ -108,7 +108,7 @@ function (ctx::LowerJulia)(root::IndexNode, ::PhaseStyle)
             $i = $(ctx(getstop(ext_2))) + 1
         end
 
-        if simplify(@f $(getlower(ext_2)) >= 1) == literal(true)
+        if simplify(@f($(getlower(ext_2)) >= 1), ctx) == literal(true)
             return body
         else
             return quote

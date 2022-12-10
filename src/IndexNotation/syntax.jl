@@ -51,15 +51,15 @@ or(x, y, tail...) = x || or(y, tail...)
 right(l, m, r...) = right(m, r)
 right(l, r) = r
 
-struct FinchParserContext
+struct FinchParserVisitor
     nodes
     results
 end
 
-(ctx::FinchParserContext)(ex::Symbol) = ctx.nodes.label(ex)
-(ctx::FinchParserContext)(ex::QuoteNode) = ctx.nodes.literal(ex.value)
-(ctx::FinchParserContext)(ex) = ctx.nodes.literal(ex)
-function (ctx::FinchParserContext)(ex::Expr)
+(ctx::FinchParserVisitor)(ex::Symbol) = ctx.nodes.label(ex)
+(ctx::FinchParserVisitor)(ex::QuoteNode) = ctx.nodes.literal(ex.value)
+(ctx::FinchParserVisitor)(ex) = ctx.nodes.literal(ex)
+function (ctx::FinchParserVisitor)(ex::Expr)
     islinenum(x) = x isa LineNumberNode
 
     if @capture ex :macrocall($(Symbol("@pass")), ~ln::islinenum, ~args...)
@@ -81,7 +81,7 @@ function (ctx::FinchParserContext)(ex::Expr)
             end
         end
     elseif @capture ex :where(~cons, ~prod)
-        ctx2 = FinchParserContext(ctx.nodes, Set())
+        ctx2 = FinchParserVisitor(ctx.nodes, Set())
         return :($(ctx.nodes.with)($(ctx(cons)), $(ctx2(prod))))
     elseif @capture ex :block(~bodies...)
         bodies = filter(!islinenum, bodies)
@@ -132,8 +132,8 @@ function (ctx::FinchParserContext)(ex::Expr)
     end
 end
 
-finch_parse_program(ex, results=Set()) = FinchParserContext(program_nodes, results)(ex)
-finch_parse_instance(ex, results=Set()) = FinchParserContext(instance_nodes, results)(ex)
+finch_parse_program(ex, results=Set()) = FinchParserVisitor(program_nodes, results)(ex)
+finch_parse_instance(ex, results=Set()) = FinchParserVisitor(instance_nodes, results)(ex)
 
 macro finch_program(ex)
     return finch_parse_program(ex)

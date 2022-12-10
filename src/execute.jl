@@ -1,9 +1,8 @@
-function register()
+execute(ex) = execute(ex, DefaultAlgebra())
+function register(algebra)
     Base.eval(Finch, quote
-        @generated function execute(ex)
-            contain(LowerJulia()) do ctx
-                execute_code(:ex, ex)
-            end
+        @generated function execute(ex, a::$algebra)
+            execute_code(:ex, ex, a())
         end
     end)
 end
@@ -51,27 +50,9 @@ end
 #    end
 #end
 
-shash_counts = Dict{Any, UInt}()
-
-function shash(x)
-    global shash_counts
-    if haskey(shash_counts, x)
-        return shash_counts[x]
-    else
-        return (shash_counts[x] = UInt(length(shash_counts)))
-    end
-end
-
-function reset_shash()
-    global shash_counts
-    shash_counts = Dict{Any, UInt}()
-end
-
-
-function execute_code(ex, T)
-    reset_shash() #TODO bit of a hack
+function execute_code(ex, T, algebra = DefaultAlgebra())
     prgm = nothing
-    code = contain(LowerJulia()) do ctx
+    code = contain(LowerJulia(algebra = algebra)) do ctx
         quote
             $(begin
                 prgm = virtualize(ex, T, ctx)
@@ -84,7 +65,7 @@ function execute_code(ex, T)
                     (prgm, dims) = dimensionalize!(prgm, ctx_2)
                     prgm = Initialize(ctx = ctx_2)(prgm)
                     prgm = ThunkVisitor(ctx_2)(prgm) #TODO this is a bit of a hack.
-                    prgm = simplify(prgm)
+                    prgm = simplify(prgm, ctx_2)
                     ctx_2(prgm)
                 end
             end)
@@ -109,11 +90,13 @@ function execute_code(ex, T)
         unquote_literals
 end
 
-macro finch(ex)
+macro finch(args_ex...)
+    @assert length(args_ex) >= 1
+    (args, ex) = (args_ex[1:end-1], args_ex[end])
     results = Set()
     prgm = IndexNotation.finch_parse_instance(ex, results)
     thunk = quote
-        res = $execute($prgm)
+        res = $execute($prgm, $(map(esc, args)...))
     end
     for tns in results
         push!(thunk.args, quote
@@ -126,10 +109,12 @@ macro finch(ex)
     thunk
 end
 
-macro finch_code(ex)
+macro finch_code(args_ex...)
+    @assert length(args_ex) >= 1
+    (args, ex) = (args_ex[1:end-1], args_ex[end])
     prgm = IndexNotation.finch_parse_instance(ex)
     return quote
-        $execute_code(:ex, typeof($prgm))
+        $execute_code(:ex, typeof($prgm), $(map(esc, args)...))
     end
 end
 
@@ -209,5 +194,3 @@ function (ctx::Finalize)(node::IndexNode)
         return node
     end
 end
-
-register()
