@@ -1,27 +1,27 @@
-struct SparseHashLevel{N, Ti<:Tuple, Tp, T_q, Tbl, Lvl}
+struct SparseHashLevel{N, Ti<:Tuple, Tp, Tbl, Lvl}
     I::Ti
     tbl::Tbl
-    srt::Vector{Pair{Tuple{Tp, Ti}, T_q}}
-    pos::Vector{T_q}
+    srt::Vector{Pair{Tuple{Tp, Ti}}}
+    pos::Vector{Tp}
     lvl::Lvl
 end
 const SparseHash = SparseHashLevel
 SparseHashLevel{N}(lvl) where {N} = SparseHashLevel{N}(((0 for _ in 1:N)...,), lvl)
 SparseHashLevel{N, Ti}(lvl) where {N, Ti} = SparseHashLevel{N, Ti}((map(zero, Ti.parameters)..., ), lvl)
-SparseHashLevel{N, Ti, Tp, T_q}(lvl) where {N, Ti, Tp, T_q} = SparseHashLevel{N, Ti, Tp, T_q}((map(zero, Ti.parameters)..., ), lvl)
+SparseHashLevel{N, Ti, Tp}(lvl) where {N, Ti, Tp} = SparseHashLevel{N, Ti, Tp}((map(zero, Ti.parameters)..., ), lvl)
 SparseHashLevel{N}(I::Ti, lvl) where {N, Ti} = SparseHashLevel{N, Ti}(I, lvl)
-SparseHashLevel{N, Ti}(I, lvl) where {N, Ti} = SparseHashLevel{N, Ti, Int, Int}(Ti(I), lvl)
-SparseHashLevel{N, Ti, Tp, T_q}(I, lvl) where {N, Ti, Tp, T_q} =
-    SparseHashLevel{N, Ti, Tp, T_q}(Ti(I), Dict{Tuple{Tp, Ti}, T_q}(), lvl)
-SparseHashLevel{N, Ti, Tp, T_q}(I, tbl::Tbl, lvl) where {N, Ti, Tp, T_q, Tbl} =
-    SparseHashLevel{N, Ti, Tp, T_q, Tbl}(Ti(I), tbl, lvl)
-SparseHashLevel{N, Ti}(I, tbl::Tbl, lvl) where {N, Ti, Tp, T_q, Tbl <: AbstractDict{Tuple{Tp, Ti}, T_q}} =
-    SparseHashLevel{N, Ti, Tp, T_q, Tbl}(Ti(I), tbl, lvl)
+SparseHashLevel{N, Ti}(I, lvl) where {N, Ti} = SparseHashLevel{N, Ti, Int}(Ti(I), lvl)
+SparseHashLevel{N, Ti, Tp}(I, lvl) where {N, Ti, Tp} =
+    SparseHashLevel{N, Ti, Tp}(Ti(I), Dict{Tuple{Tp, Ti}, Tp}(), lvl)
+SparseHashLevel{N, Ti, Tp}(I, tbl::Tbl, lvl) where {N, Ti, Tp, Tbl} =
+    SparseHashLevel{N, Ti, Tp, Tbl}(Ti(I), tbl, lvl)
+SparseHashLevel{N, Ti}(I, tbl::Tbl, lvl) where {N, Ti, Tp, Tbl <: AbstractDict{Tuple{Tp, Ti}}} =
+    SparseHashLevel{N, Ti, Tp, Tbl}(Ti(I), tbl, lvl)
 #TODO it would be best if we could supply defaults all at once.
-SparseHashLevel{N, Ti, Tp, T_q, Tbl}(I, tbl::Tbl, lvl) where {N, Ti, Tp, T_q, Tbl} =
-    SparseHashLevel{N, Ti, Tp, T_q, Tbl}(Ti(I), tbl, Vector{Pair{Tuple{Tp, Ti}, T_q}}(undef, 0), T_q[1, 1, 2:17...], lvl) 
-SparseHashLevel{N, Ti, Tp, T_q, Tbl}(I, tbl::Tbl, srt, pos, lvl::Lvl) where {N, Ti, Tp, T_q, Tbl, Lvl} =
-    SparseHashLevel{N, Ti, Tp, T_q, Tbl, Lvl}(Ti(I), tbl, srt, pos, lvl)
+SparseHashLevel{N, Ti, Tp, Tbl}(I, tbl::Tbl, lvl) where {N, Ti, Tp, Tbl} =
+    SparseHashLevel{N, Ti, Tp, Tbl}(Ti(I), tbl, Vector{Pair{Tuple{Tp, Ti}}}(undef, 0), Tp[1, 1, 2:17...], lvl) 
+SparseHashLevel{N, Ti, Tp, Tbl}(I, tbl::Tbl, srt, pos, lvl::Lvl) where {N, Ti, Tp, Tbl, Lvl} =
+    SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(Ti(I), tbl, srt, pos, lvl)
 
 """
 `f_code(sh)` = [SparseHashLevel](@ref).
@@ -31,8 +31,8 @@ summary_f_code(lvl::SparseHashLevel{N}) where {N} = "sh{$N}($(summary_f_code(lvl
 similar_level(lvl::SparseHashLevel{N}) where {N} = SparseHashLevel{N}(similar_level(lvl.lvl))
 similar_level(lvl::SparseHashLevel{N}, tail...) where {N} = SparseHashLevel{N}(ntuple(n->tail[n], N), similar_level(lvl.lvl, tail[N + 1:end]...))
 
-pattern!(lvl::SparseHashLevel{N, Ti, Tp, T_q, Tbl}) where {N, Ti, Tp, T_q, Tbl} = 
-    SparseHashLevel{N, Ti, Tp, T_q, Tbl}(lvl.I, lvl.tbl, lvl.srt, lvl.pos, pattern!(lvl.lvl))
+pattern!(lvl::SparseHashLevel{N, Ti, Tp, Tbl}) where {N, Ti, Tp, Tbl} = 
+    SparseHashLevel{N, Ti, Tp, Tbl}(lvl.I, lvl.tbl, lvl.srt, lvl.pos, pattern!(lvl.lvl))
 
 function Base.show(io::IO, lvl::SparseHashLevel{N}) where {N}
     print(io, "SparseHash{$N}(")
@@ -97,7 +97,6 @@ mutable struct VirtualSparseHashLevel
     N
     Ti
     Tp
-    T_q
     Tbl
     I
     P
@@ -105,7 +104,7 @@ mutable struct VirtualSparseHashLevel
     idx_alloc
     lvl
 end
-function virtualize(ex, ::Type{SparseHashLevel{N, Ti, Tp, T_q, Tbl, Lvl}}, ctx, tag=:lvl) where {N, Ti, Tp, T_q, Tbl, Lvl}   
+function virtualize(ex, ::Type{SparseHashLevel{N, Ti, Tp, Tbl, Lvl}}, ctx, tag=:lvl) where {N, Ti, Tp, Tbl, Lvl}   
     sym = ctx.freshen(tag)
     I = map(n->value(:($sym.I[$n]), Int), 1:N)
     P = ctx.freshen(sym, :_P)
@@ -118,11 +117,11 @@ function virtualize(ex, ::Type{SparseHashLevel{N, Ti, Tp, T_q, Tbl, Lvl}}, ctx, 
         $idx_alloc = length($sym.tbl)
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualSparseHashLevel(sym, N, Ti, Tp, T_q, Tbl, I, P, pos_alloc, idx_alloc, lvl_2)
+    VirtualSparseHashLevel(sym, N, Ti, Tp, Tbl, I, P, pos_alloc, idx_alloc, lvl_2)
 end
 function (ctx::Finch.LowerJulia)(lvl::VirtualSparseHashLevel)
     quote
-        $SparseHashLevel{$(lvl.N), $(lvl.Ti), $(lvl.Tp), $(lvl.T_q), $(lvl.Tbl)}(
+        $SparseHashLevel{$(lvl.N), $(lvl.Ti), $(lvl.Tp), $(lvl.Tbl)}(
             ($(map(ctx, lvl.I)...),),
             $(lvl.ex).tbl,
             $(lvl.ex).srt,
@@ -330,7 +329,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode, ::Follow, 
                     $my_q = get($(lvl.ex).tbl, $my_key, 0)
                 end,
                 body = Switch([
-                    value(:($my_q != 0)) => refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, lvl.Tq_2), index=i, parent=fbr.env)), ctx, mode, idxs...),
+                    value(:($my_q != 0)) => refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, lvl.Tp), index=i, parent=fbr.env)), ctx, mode, idxs...),
                     literal(true) => Simplify(literal(default(fbr)))
                 ])
             )

@@ -3,8 +3,8 @@
 
     formats = [
         "list" => SparseList{Int64},
-        "byte" => SparseBytemap{Int64, Int64, Int64},
-        "hash1" => SparseHash{1, Tuple{Int64}, Int64, Int64},
+        "byte" => SparseBytemap{Int64, Int64},
+        "hash1" => SparseHash{1, Tuple{Int64}, Int64},
         "coo1" => SparseCoo{1, Tuple{Int64}, Int64},
         "dense" => Dense{Int64}
     ]
@@ -30,7 +30,7 @@
     end
 
     formats = [
-        "hash2" => SparseHash{2, Tuple{Int64, Int64}, Int64, Int64},
+        "hash2" => SparseHash{2, Tuple{Int64, Int64}, Int64},
         "coo2" =>SparseCoo{2, Tuple{Int64, Int64}, Int64},
         ]
 

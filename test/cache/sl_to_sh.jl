@@ -86,5 +86,5 @@
         for B_lvl_p_2 = 1:B_lvl_P
             B_lvl.pos[B_lvl_p_2 + 1] += B_lvl.pos[B_lvl_p_2]
         end
-        (B = Fiber((Finch.SparseHashLevel){1, Tuple{Int64}, Int64, Int64, Dict{Tuple{Int64, Tuple{Int64}}, Int64}}((A_lvl.I,), B_lvl.tbl, B_lvl.srt, B_lvl.pos, B_lvl_2), (Finch.Environment)(; name = :B)),)
+        (B = Fiber((Finch.SparseHashLevel){1, Tuple{Int64}, Int64, Dict{Tuple{Int64, Tuple{Int64}}, Int64}}((A_lvl.I,), B_lvl.tbl, B_lvl.srt, B_lvl.pos, B_lvl_2), (Finch.Environment)(; name = :B)),)
     end

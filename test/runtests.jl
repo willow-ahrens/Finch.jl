@@ -14,7 +14,7 @@ function diff(name, body)
     open(temp_file, "w") do f
         println(f, body)
     end
-    if "overwriter" in ARGS
+    if "overwrite" in ARGS
         open(cache_file, "w") do f
             println(f, body)
         end

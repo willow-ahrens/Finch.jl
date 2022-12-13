@@ -9,7 +9,7 @@
         SparseList{Int64}(10, [1, 6], [1, 3, 5, 7, 9],
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
     B = Finch.Fiber(
-        SparseHash{1, Tuple{Int64}, Int64, Int64}((10,),
+        SparseHash{1, Tuple{Int64}, Int64}((10,),
         Element{0.0}()))
 
     @test diff("sl_to_sh.jl", @finch_code @loop i B[i] += A[i])
@@ -47,7 +47,7 @@
     println("B(shsh)[i, j] = A(dsl)[i, j]")
 
     B = Finch.Fiber(
-        SparseHash{2, Tuple{Int64, Int64}, Int64, Int64}((3,5),
+        SparseHash{2, Tuple{Int64, Int64}, Int64}((3,5),
         Element{0.0}()))
     
     @test diff("d_sl_to_sh2.jl", @finch_code @loop i j B[i, j] += A[i, j])
@@ -61,7 +61,7 @@
         SparseList{Int64}(10, [1, 6], [1, 3, 5, 7, 9],
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
     B = Finch.Fiber(
-        SparseHash{1, Tuple{Int64}, Int64, Int64}((0,),
+        SparseHash{1, Tuple{Int64}, Int64}((0,),
         Element{0.0}()))
     C = Finch.Fiber(
         SparseList{Int64}(10, 
@@ -260,7 +260,7 @@
         SparseList{Int64}(10, [1, 6, 9, 9, 10], [1, 3, 5, 7, 9, 3, 5, 8, 3],
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0, 1.0, 1.0, 1.0, 7.0]))))
     B = Fiber(
-        SparseBytemap{Int64, Int64, Int64}(4,
+        SparseBytemap{Int64, Int64}(4,
         Element{0.0}()))
 
     @test diff("d_sl_sum_2_to_sb.jl", @finch_code @loop i j B[j] += A[i, j])
