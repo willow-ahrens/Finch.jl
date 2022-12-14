@@ -28,7 +28,7 @@ function Base.show(io::IO, lvl::SparseVBLLevel)
     print(io, "SparseVBL(")
     print(io, lvl.I)
     print(io, ", ")
-    if get(io, :compact, true)
+    if get(io, :compact, false)
         print(io, "…")
     else
         show_region(io, lvl.pos)

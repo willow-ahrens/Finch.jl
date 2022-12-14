@@ -38,7 +38,7 @@ function Base.show(io::IO, lvl::SparseHashLevel{N}) where {N}
     print(io, "SparseHash{$N}(")
     print(io, lvl.I)
     print(io, ", ")
-    if get(io, :compact, true)
+    if get(io, :compact, false)
         print(io, "…")
     else
         print(io, typeof(lvl.tbl))

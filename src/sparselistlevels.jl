@@ -27,7 +27,7 @@ function Base.show(io::IO, lvl::SparseListLevel)
     print(io, "SparseList(")
     print(io, lvl.I)
     print(io, ", ")
-    if get(io, :compact, true)
+    if get(io, :compact, false)
         print(io, "…")
     else
         show_region(io, lvl.pos)
@@ -138,7 +138,6 @@ function initialize_level!(fbr::VirtualFiber{VirtualSparseListLevel}, ctx::Lower
 end
 
 function trim_level!(lvl::VirtualSparseListLevel, ctx::LowerJulia, pos)
-    qos = ctx.freshen(:qos)
     push!(ctx.preamble, quote
         $(lvl.pos_alloc) = $(ctx(pos)) + 1
         resize!($(lvl.ex).pos, $(lvl.pos_alloc))

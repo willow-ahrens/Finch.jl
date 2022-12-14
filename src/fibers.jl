@@ -184,7 +184,7 @@ end
 
 function show_region(io::IO, vec::Vector) 
     print(io, "[")
-    if length(vec) > 3
+    if get(io, :compact, false) && length(vec) > 3
         for i = 1:3
             print(io, vec[i])
             print(io, ", ")

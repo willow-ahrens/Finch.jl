@@ -163,8 +163,6 @@ function trim_level!(lvl::VirtualRepeatRLELevel, ctx::LowerJulia, pos)
     return lvl
 end
 
-trim_level!(lvl::VirtualRepeatRLELevel, ctx::LowerJulia, pos) = lvl
-
 function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode, ::Nothing, idx, idxs...)
     if idx.kind === protocol
         @assert idx.mode.kind === literal

@@ -19,7 +19,7 @@ function Base.show(io::IO, lvl::ElementLevel{D}) where {D}
     print(io, "Element{")
     show(io, D)
     print(io, "}(")
-    if get(io, :compact, true)
+    if get(io, :compact, false)
         print(io, "…")
     else
         show_region(io, lvl.val)
@@ -89,7 +89,6 @@ end
 finalize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode) = fbr.lvl
 
 function trim_level!(lvl::VirtualElementLevel, ctx::LowerJulia, pos)
-    qos = ctx.freshen(:qos)
     push!(ctx.preamble, quote
         resize!($(lvl.ex).val, $(ctx(pos)))
     end)

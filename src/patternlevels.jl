@@ -68,7 +68,7 @@ assemble!(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode) = fbr.lvl
 
 reinitialize!(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode) = fbr.lvl
 
-trim_level!(lvl::VirtualElementLevel, ctx::LowerJulia, pos) = lvl
+trim_level!(lvl::VirtualPatternLevel, ctx::LowerJulia, pos) = lvl
 
 function refurl(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode)
     if mode.kind === reader

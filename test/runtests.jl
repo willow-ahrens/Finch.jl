@@ -56,6 +56,62 @@ using Finch: getname, value
 using Finch.IndexNotation
 using Finch.IndexNotation: call_instance, assign_instance, access_instance, value_instance, index_instance, loop_instance, with_instance, label_instance, protocol_instance
 
+isstructequal(a, b) = a === b
+
+isstructequal(a::T, b::T) where {T <: Fiber} = 
+    isstructequal(a.lvl, b.lvl) &&
+    isstructequal(a.env, b.env)
+
+isstructequal(a::T, b::T)  where {T <: Pattern} =
+    a.val == b.val
+
+isstructequal(a::T, b::T) where {T <: Element} =
+    a.val == b.val
+
+isstructequal(a::T, b::T) where {T <: RepeatRLE} =
+    a.I == b.I &&
+    a.pos == b.pos &&
+    a.idx == b.idx &&
+    a.val == b.val
+
+isstructequal(a::T, b::T) where {T <: Dense} =
+    a.I == b.I &&
+    isstructequal(a.lvl, b.lvl)
+
+isstructequal(a::T, b::T) where {T <: SparseList} =
+    a.I == b.I &&
+    a.pos == b.pos &&
+    a.idx == b.idx &&
+    isstructequal(a.lvl, b.lvl)
+
+isstructequal(a::T, b::T) where {T <: SparseHash} =
+    a.I == b.I &&
+    a.pos == b.pos &&
+    a.tbl == b.tbl &&
+    a.srt == b.srt &&
+    isstructequal(a.lvl, b.lvl)
+
+isstructequal(a::T, b::T) where {T <: SparseCoo} =
+    a.I == b.I &&
+    a.pos == b.pos &&
+    a.tbl == b.tbl &&
+    isstructequal(a.lvl, b.lvl)
+
+isstructequal(a::T, b::T) where {T <: SparseVBL} =
+    a.I == b.I &&
+    a.pos == b.pos &&
+    a.idx == b.idx &&
+    a.ofs == b.ofs &&
+    isstructequal(a.lvl, b.lvl)
+
+isstructequal(a::T, b::T) where {T <: SparseBytemap} =
+    a.I == b.I &&
+    a.pos == b.pos &&
+    a.tbl == b.tbl &&
+    a.srt == b.srt &&
+    a.srt_stop == b.srt_stop &&
+    isstructequal(a.lvl, b.lvl)
+
 verbose = "verbose" in ARGS
 
 @testset "Finch.jl" begin
@@ -63,6 +119,7 @@ verbose = "verbose" in ARGS
     include("test_ssa.jl")
     include("test_print.jl")
     #include("test_parse.jl")
+    include("test_constructors.jl")
     include("test_algebra.jl")
     include("test_repeat.jl")
     include("test_permit.jl")

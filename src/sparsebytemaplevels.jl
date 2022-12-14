@@ -32,7 +32,7 @@ function Base.show(io::IO, lvl::SparseBytemapLevel)
     print(io, "SparseBytemap(")
     print(io, lvl.I)
     print(io, ", ")
-    if get(io, :compact, true)
+    if get(io, :compact, false)
         print(io, "…")
     else
         show_region(io, lvl.tbl)
