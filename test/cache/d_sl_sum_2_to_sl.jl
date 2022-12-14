@@ -83,5 +83,9 @@
             B_lvl.pos[1 + 1] = B_lvl_q
             B_lvl_pos_fill = 1 + 1
         end
+        B_lvl_pos_alloc = 1 + 1
+        resize!(B_lvl.pos, B_lvl_pos_alloc)
+        B_lvl_idx_alloc = B_lvl.pos[B_lvl_pos_alloc] - 1
+        resize!(B_lvl.idx, B_lvl_idx_alloc)
         (B = Fiber((Finch.SparseListLevel){Int64}(A_lvl_2.I, B_lvl.pos, B_lvl.idx, B_lvl_2), (Finch.Environment)(; name = :B)),)
     end

@@ -88,6 +88,14 @@ end
 
 finalize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode) = fbr.lvl
 
+function trim_level!(lvl::VirtualElementLevel, ctx::LowerJulia, pos)
+    qos = ctx.freshen(:qos)
+    push!(ctx.preamble, quote
+        resize!($(lvl.ex).val, $(ctx(pos)))
+    end)
+    return lvl
+end
+
 interval_assembly_depth(lvl::VirtualElementLevel) = Inf
 
 function assemble!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)

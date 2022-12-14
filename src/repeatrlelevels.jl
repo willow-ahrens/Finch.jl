@@ -151,6 +151,20 @@ function finalize_level!(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx::LowerJul
     return fbr.lvl
 end
 
+function trim_level!(lvl::VirtualRepeatRLELevel, ctx::LowerJulia, pos)
+    qos = ctx.freshen(:qos)
+    push!(ctx.preamble, quote
+        $(lvl.pos_alloc) = $(ctx(pos)) + 1
+        resize!($(lvl.ex).pos, $(lvl.pos_alloc))
+        $(lvl.val_alloc) = $(lvl.idx_alloc) = $(lvl.ex).pos[$(lvl.pos_alloc)] - 1
+        resize!($(lvl.ex).idx, $(lvl.idx_alloc))
+        resize!($(lvl.ex).val, $(lvl.val_alloc))
+    end)
+    return lvl
+end
+
+trim_level!(lvl::VirtualRepeatRLELevel, ctx::LowerJulia, pos) = lvl
+
 function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode, ::Nothing, idx, idxs...)
     if idx.kind === protocol
         @assert idx.mode.kind === literal

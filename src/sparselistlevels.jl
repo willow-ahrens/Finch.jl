@@ -137,6 +137,18 @@ function initialize_level!(fbr::VirtualFiber{VirtualSparseListLevel}, ctx::Lower
     return lvl
 end
 
+function trim_level!(lvl::VirtualSparseListLevel, ctx::LowerJulia, pos)
+    qos = ctx.freshen(:qos)
+    push!(ctx.preamble, quote
+        $(lvl.pos_alloc) = $(ctx(pos)) + 1
+        resize!($(lvl.ex).pos, $(lvl.pos_alloc))
+        $(lvl.idx_alloc) = $(lvl.ex).pos[$(lvl.pos_alloc)] - 1
+        resize!($(lvl.ex).idx, $(lvl.idx_alloc))
+    end)
+    lvl.lvl = trim_level!(lvl.lvl, ctx, lvl.idx_alloc)
+    return lvl
+end
+
 interval_assembly_depth(lvl::VirtualSparseListLevel) = Inf
 
 #This function is quite simple, since SparseListLevels don't support reassembly.

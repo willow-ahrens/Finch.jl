@@ -107,6 +107,9 @@ function finalize_level! end
 
 finalize_level!(fbr, ctx, mode) = fbr.lvl
 
+trim!(fbr::VirtualFiber, ctx) = trim_level!(fbr.lvl, ctx, 1)
+trim!(fbr, ctx) = fbr
+
 #TODO get rid of isa IndexNode when this is all over
 
 function stylize_access(node, ctx::Stylize{LowerJulia}, tns::VirtualFiber)

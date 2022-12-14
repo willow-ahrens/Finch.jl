@@ -72,6 +72,8 @@ function execute_code(ex, T, algebra = DefaultAlgebra())
             $(contain(ctx) do ctx_2
                 prgm = Finalize(ctx = ctx_2)(prgm)
                 :(($(map(getresults(prgm)) do acc
+                    @assert acc.tns.kind === virtual
+                    trim!(acc.tns.val, ctx_2)
                     :($(getname(acc)) = $(ctx_2(acc.tns)))
                 end...), ))
             end)

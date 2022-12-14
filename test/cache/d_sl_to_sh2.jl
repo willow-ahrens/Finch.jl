@@ -91,5 +91,9 @@
         for B_lvl_p_2 = 1:B_lvl_P
             B_lvl.pos[B_lvl_p_2 + 1] += B_lvl.pos[B_lvl_p_2]
         end
+        B_lvl_pos_alloc = 1 + 1
+        resize!(B_lvl.pos, B_lvl_pos_alloc)
+        B_lvl_idx_alloc = B_lvl.pos[B_lvl_pos_alloc] - 1
+        resize!(B_lvl.srt, B_lvl_idx_alloc)
         (B = Fiber((Finch.SparseHashLevel){2, Tuple{Int64, Int64}, Int64, Dict{Tuple{Int64, Tuple{Int64, Int64}}, Int64}}((A_lvl.I, A_lvl_2.I), B_lvl.tbl, B_lvl.srt, B_lvl.pos, B_lvl_2), (Finch.Environment)(; name = :B)),)
     end

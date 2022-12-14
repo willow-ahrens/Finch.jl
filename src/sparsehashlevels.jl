@@ -206,6 +206,18 @@ function finalize_level!(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx::LowerJu
     return lvl
 end
 
+function trim_level!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, pos)
+    idx = ctx.freshen(:idx)
+    push!(ctx.preamble, quote
+        $(lvl.pos_alloc) = $(ctx(pos)) + 1
+        resize!($(lvl.ex).pos, $(lvl.pos_alloc))
+        $(lvl.idx_alloc) = $(lvl.ex).pos[$(lvl.pos_alloc)] - 1
+        resize!($(lvl.ex).srt, $(lvl.idx_alloc))
+    end)
+    lvl.lvl = trim_level!(lvl.lvl, ctx, lvl.idx_alloc)
+    return lvl
+end
+
 function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode, ::Nothing, idx, idxs...)
     if idx.kind === protocol
         @assert idx.mode.kind === literal

@@ -129,6 +129,16 @@ function reinitialize!(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode)
     end
 end
 
+function trim_level!(lvl::VirtualDenseLevel, ctx::LowerJulia, pos)
+    qos = ctx.freshen(:qos)
+    push!(ctx.preamble, quote
+        $qos = $pos * $(ctx(lvl.I))
+    end)
+    lvl.lvl = trim_level!(lvl.lvl, ctx, qos)
+    return lvl
+end
+
+
 interval_assembly_depth(lvl::VirtualDenseLevel) = min(Inf, interval_assembly_depth(lvl.lvl) - 1)
 
 function assemble!(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode)

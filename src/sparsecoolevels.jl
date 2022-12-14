@@ -166,6 +166,20 @@ function initialize_level!(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx::LowerJ
     return lvl
 end
 
+function trim_level!(lvl::VirtualSparseCooLevel, ctx::LowerJulia, pos)
+    idx = ctx.freshen(:idx)
+    push!(ctx.preamble, quote
+        $(lvl.pos_alloc) = $(ctx(pos)) + 1
+        resize!($(lvl.ex).pos, $(lvl.pos_alloc))
+        $(lvl.idx_alloc) = $(lvl.ex).pos[$(lvl.pos_alloc)] - 1
+        for $idx in $(lvl.ex).tbl
+            resize!($idx, $(lvl.idx_alloc))
+        end
+    end)
+    lvl.lvl = trim_level!(lvl.lvl, ctx, lvl.idx_alloc)
+    return lvl
+end
+
 interval_assembly_depth(lvl::VirtualSparseCooLevel) = Inf
 
 #This function is quite simple, since SparseCooLevels don't support reassembly.
