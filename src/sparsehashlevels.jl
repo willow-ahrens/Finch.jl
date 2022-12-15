@@ -34,8 +34,12 @@ similar_level(lvl::SparseHashLevel{N}, tail...) where {N} = SparseHashLevel{N}(n
 pattern!(lvl::SparseHashLevel{N, Ti, Tp, Tbl}) where {N, Ti, Tp, Tbl} = 
     SparseHashLevel{N, Ti, Tp, Tbl}(lvl.I, lvl.tbl, lvl.srt, lvl.pos, pattern!(lvl.lvl))
 
-function Base.show(io::IO, lvl::SparseHashLevel{N}) where {N}
-    print(io, "SparseHash{$N}(")
+function Base.show(io::IO, lvl::SparseHashLevel{N, Ti}) where {N, Ti}
+    if get(io, :compact, false)
+        print(io, "SparseHash{$N}(")
+    else
+        print(io, "SparseHash{$N, $Ti}(")
+    end
     print(io, lvl.I)
     print(io, ", ")
     if get(io, :compact, false)
@@ -43,9 +47,9 @@ function Base.show(io::IO, lvl::SparseHashLevel{N}) where {N}
     else
         print(io, typeof(lvl.tbl))
         print(io, "(…), ")
-        show_region(io, lvl.srt)
+        show(io, lvl.srt)
         print(io, ", ")
-        show_region(io, lvl.pos)
+        show(io, lvl.pos)
     end
     print(io, ", ")
     show(io, lvl.lvl)

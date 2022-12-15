@@ -13,7 +13,7 @@ SparseBytemapLevel(I::Ti, lvl) where {Ti} = SparseBytemapLevel{Ti}(I, lvl)
 SparseBytemapLevel{Ti}(I, lvl) where {Ti} = SparseBytemapLevel{Ti, Int}(Ti(I), lvl)
 SparseBytemapLevel{Ti, Tp}(lvl) where {Ti, Tp} = SparseBytemapLevel{Ti, Tp}(zero(Ti), lvl)
 SparseBytemapLevel{Ti, Tp}(I, lvl) where {Ti, Tp} =
-    SparseBytemapLevel{Ti, Tp}(Ti(I), [false, false, false, false], Vector{Tuple{Tp, Ti}}(undef, 4), Ref(Int64(0)), Tp[1, 1, 0, 0, 0], lvl)
+    SparseBytemapLevel{Ti, Tp}(Ti(I), Bool[], Tuple{Tp, Ti}[], Ref(Int64(0)), Tp[1, 1], lvl)
 SparseBytemapLevel{Ti, Tp}(I, tbl, srt, srt_stop, pos, lvl::Lvl) where {Ti, Tp, Lvl} =
     SparseBytemapLevel{Ti, Tp, Lvl}(Ti(I), tbl, srt, srt_stop, pos, lvl)
 
@@ -28,20 +28,24 @@ summary_f_code(lvl::SparseBytemapLevel) = "sm($(summary_f_code(lvl.lvl)))"
 similar_level(lvl::SparseBytemapLevel) = SparseBytemap(similar_level(lvl.lvl))
 similar_level(lvl::SparseBytemapLevel, dim, tail...) = SparseBytemap(dim, similar_level(lvl.lvl, tail...))
 
-function Base.show(io::IO, lvl::SparseBytemapLevel)
-    print(io, "SparseBytemap(")
-    print(io, lvl.I)
+function Base.show(io::IO, lvl::SparseBytemapLevel{Ti}) where {Ti}
+    if get(io, :compact, false)
+        print(io, "SparseBytemap(")
+    else
+        print(io, "SparseBytemap{$Ti}(")
+    end
+    show(io, lvl.I)
     print(io, ", ")
     if get(io, :compact, false)
         print(io, "…")
     else
-        show_region(io, lvl.tbl)
+        show(io, lvl.tbl)
         print(io, ", ")
-        show_region(io, lvl.srt)
+        show(io, lvl.srt)
         print(io, ", ")
         print(io, lvl.srt_stop)
         print(io, ", ")
-        show_region(io, lvl.pos)
+        show(io, lvl.pos)
     end
     print(io, ", ")
     show(io, lvl.lvl)

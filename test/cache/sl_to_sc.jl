@@ -80,5 +80,6 @@
         for idx = B_lvl.tbl
             resize!(idx, B_lvl_idx_alloc)
         end
+        resize!(B_lvl_2.val, B_lvl_idx_alloc)
         (B = Fiber((Finch.SparseCooLevel){1, Tuple{Int64}, Int64, Tuple{Vector{Int64}}}((A_lvl.I,), B_lvl.tbl, B_lvl.pos, B_lvl_2), (Finch.Environment)(; name = :B)),)
     end

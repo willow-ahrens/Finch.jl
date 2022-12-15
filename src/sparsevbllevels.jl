@@ -11,7 +11,7 @@ SparseVBLLevel{Ti}(lvl) where {Ti} = SparseVBLLevel(zero(Ti), lvl)
 SparseVBLLevel(I::Ti, lvl::Lvl) where {Ti, Lvl} = SparseVBLLevel{Ti, Lvl}(I, lvl)
 SparseVBLLevel{Ti}(I, lvl::Lvl) where {Ti, Lvl} = SparseVBLLevel{Ti, Lvl}(Ti(I), lvl)
 SparseVBLLevel{Ti}(I, pos, idx, ofs, lvl::Lvl) where {Ti, Lvl} = SparseVBLLevel{Ti, Lvl}(Ti(I), pos, idx, ofs, lvl)
-SparseVBLLevel{Ti, Lvl}(I, lvl::Lvl) where {Ti, Lvl} = SparseVBLLevel{Ti, Lvl}(Ti(I), Ti[1, fill(0, 16)...], Vector{Ti}(undef, 16), Vector{Ti}(undef, 16), lvl)
+SparseVBLLevel{Ti, Lvl}(I, lvl::Lvl) where {Ti, Lvl} = SparseVBLLevel{Ti, Lvl}(Ti(I), Ti[1, 1], Ti[], Ti[1], lvl)
 
 """
 `f_code(sv)` = [SparseVBLLevel](@ref).
@@ -24,18 +24,22 @@ similar_level(lvl::SparseVBLLevel, dim, tail...) = SparseVBL(dim, similar_level(
 pattern!(lvl::SparseVBLLevel{Ti}) where {Ti} = 
     SparseVBLLevel{Ti}(lvl.I, lvl.pos, lvl.idx, lvl.ofs, pattern!(lvl.lvl))
 
-function Base.show(io::IO, lvl::SparseVBLLevel)
-    print(io, "SparseVBL(")
-    print(io, lvl.I)
+function Base.show(io::IO, lvl::SparseVBLLevel{Ti}) where {Ti}
+    if get(io, :compact, false)
+        print(io, "SparseVBL(")
+    else
+        print(io, "SparseVBL{$Ti}(")
+    end
+    show(io, lvl.I)
     print(io, ", ")
     if get(io, :compact, false)
         print(io, "…")
     else
-        show_region(io, lvl.pos)
+        show(io, lvl.pos)
         print(io, ", ")
-        show_region(io, lvl.idx)
+        show(io, lvl.idx)
         print(io, ", ")
-        show_region(io, lvl.ofs)
+        show(io, lvl.ofs)
     end
     print(io, ", ")
     show(io, lvl.lvl)

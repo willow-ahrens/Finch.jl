@@ -182,23 +182,6 @@ function Base.show(io::IO, fbr::Fiber)
     print(io, ")")
 end
 
-function show_region(io::IO, vec::Vector) 
-    print(io, "[")
-    if get(io, :compact, false) && length(vec) > 3
-        for i = 1:3
-            print(io, vec[i])
-            print(io, ", ")
-        end
-        print(io, "…")
-    else
-        for i = 1:length(vec)
-            print(io, vec[i])
-            i != length(vec) && print(io, ", ")
-        end
-    end
-    print(io, "]")
-end
-
 function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber)
     if get(io, :compact, false)
         print(io, "@fiber($(summary_f_code(fbr.lvl)))")

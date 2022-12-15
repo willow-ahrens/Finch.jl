@@ -10,7 +10,7 @@ RepeatRLELevel{D}() where {D} = RepeatRLELevel{D}(0)
 RepeatRLELevel{D}(I::Ti) where {D, Ti} = RepeatRLELevel{D, Ti}(I)
 RepeatRLELevel{D, Ti}() where {D, Ti} = RepeatRLELevel{D, Ti}(zero(Ti))
 RepeatRLELevel{D, Ti}(I) where {D, Ti} = RepeatRLELevel{D, Ti, typeof(D)}(Ti(I))
-RepeatRLELevel{D, Ti, Tv}(I) where {D, Ti, Tv} = RepeatRLELevel{D, Ti, Tv}(Ti(I), Ti[1, fill(0, 16)...], Vector{Ti}(undef, 16), Vector{Tv}(undef, 16))
+RepeatRLELevel{D, Ti, Tv}(I) where {D, Ti, Tv} = RepeatRLELevel{D, Ti, Tv}(Ti(I), Ti[1, 1], Ti[], Tv[])
 
 """
 `f_code(rl)` = [RepeatRLELevel](@ref).
@@ -23,20 +23,25 @@ similar_level(::RepeatRLELevel{D}, dim, tail...) where {D} = RepeatRLE{D}(dim)
 pattern!(lvl::RepeatRLELevel{D, Ti}) where {D, Ti} = 
     DenseLevel{Ti}(lvl.I, Pattern())
 
-function Base.show(io::IO, lvl::RepeatRLELevel{D}) where {D}
+function Base.show(io::IO, lvl::RepeatRLELevel{D, Ti}) where {D, Ti}
     print(io, "RepeatRLE{")
     print(io, D)
-    print(io, "}(")
-    print(io, lvl.I)
+    if get(io, :compact, false)
+        print(io, "}(")
+    else
+        print(io, ", $Ti}(")
+    end
+
+    show(io, lvl.I)
     print(io, ", ")
     if get(io, :compact, false)
         print(io, "…")
     else
-        show_region(io, lvl.pos)
+        show(io, lvl.pos)
         print(io, ", ")
-        show_region(io, lvl.idx)
+        show(io, lvl.idx)
         print(io, ", ")
-        show_region(io, lvl.val)
+        show(io, lvl.val)
     end
     print(io, ")")
 end

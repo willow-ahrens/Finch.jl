@@ -1,1 +1,1 @@
-Fiber(SparseList(5, [1, 6], [1, 2, 3, …], Dense(10, Element{0.0}([2.0, 0.0, 1.0, …]))), Env(name=dst))
+Fiber(SparseList(5, …, Dense(10, Element{0.0}(…))), Env(name=dst))

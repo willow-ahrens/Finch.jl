@@ -10,7 +10,7 @@ SparseListLevel{Ti}(lvl) where {Ti} = SparseListLevel(zero(Ti), lvl)
 SparseListLevel(I::Ti, lvl::Lvl) where {Ti, Lvl} = SparseListLevel{Ti, Lvl}(I, lvl)
 SparseListLevel{Ti}(I, lvl::Lvl) where {Ti, Lvl} = SparseListLevel{Ti, Lvl}(Ti(I), lvl)
 SparseListLevel{Ti}(I, pos, idx, lvl::Lvl) where {Ti, Lvl} = SparseListLevel{Ti, Lvl}(Ti(I), pos, idx, lvl)
-SparseListLevel{Ti, Lvl}(I, lvl::Lvl) where {Ti, Lvl} = SparseListLevel{Ti, Lvl}(Ti(I), Ti[1, fill(0, 16)...], Vector{Ti}(undef, 16), lvl)
+SparseListLevel{Ti, Lvl}(I, lvl::Lvl) where {Ti, Lvl} = SparseListLevel{Ti, Lvl}(Ti(I), Ti[1, 1], Ti[], lvl)
 
 """
 `f_code(l)` = [SparseListLevel](@ref).
@@ -23,16 +23,20 @@ similar_level(lvl::SparseListLevel, dim, tail...) = SparseList(dim, similar_leve
 pattern!(lvl::SparseListLevel{Ti}) where {Ti} = 
     SparseListLevel{Ti}(lvl.I, lvl.pos, lvl.idx, pattern!(lvl.lvl))
 
-function Base.show(io::IO, lvl::SparseListLevel)
-    print(io, "SparseList(")
-    print(io, lvl.I)
+function Base.show(io::IO, lvl::SparseListLevel{Ti}) where {Ti}
+    if get(io, :compact, false)
+        print(io, "SparseList(")
+    else
+        print(io, "SparseList{$Ti}(")
+    end
+    show(io, lvl.I)
     print(io, ", ")
     if get(io, :compact, false)
         print(io, "…")
     else
-        show_region(io, lvl.pos)
+        show(io, lvl.pos)
         print(io, ", ")
-        show_region(io, lvl.idx)
+        show(io, lvl.idx)
     end
     print(io, ", ")
     show(io, lvl.lvl)

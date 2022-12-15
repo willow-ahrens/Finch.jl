@@ -35,9 +35,13 @@ function (fbr::Fiber{<:DenseLevel{Ti}})(i, tail...) where {Ti}
     fbr_2(tail...)
 end
 
-function Base.show(io::IO, lvl::DenseLevel)
-    print(io, "Dense(")
-    print(io, lvl.I)
+function Base.show(io::IO, lvl::DenseLevel{Ti}) where {Ti}
+    if get(io, :compact, false)
+        print(io, "Dense(")
+    else
+        print(io, "Dense{$Ti}(")
+    end
+    show(io, lvl.I)
     print(io, ", ")
     show(io, lvl.lvl)
     print(io, ")")

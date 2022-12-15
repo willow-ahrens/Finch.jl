@@ -3,7 +3,7 @@ struct ElementLevel{D, Tv}
 end
 ElementLevel(D, args...) = ElementLevel{D}(args...)
 ElementLevel{D}(args...) where {D} = ElementLevel{D, typeof(D)}(args...)
-ElementLevel{D, Tv}() where {D, Tv} = ElementLevel{D, Tv}(Vector{Tv}(undef, 4))
+ElementLevel{D, Tv}() where {D, Tv} = ElementLevel{D, Tv}(Tv[])
 const Element = ElementLevel
 
 pattern!(lvl::ElementLevel) = Pattern()
@@ -22,7 +22,7 @@ function Base.show(io::IO, lvl::ElementLevel{D}) where {D}
     if get(io, :compact, false)
         print(io, "…")
     else
-        show_region(io, lvl.val)
+        show(io, lvl.val)
     end
     print(io, ")")
 end 
