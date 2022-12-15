@@ -1,7 +1,7 @@
 struct SparseHashLevel{N, Ti<:Tuple, Tp, Tbl, Lvl}
     I::Ti
     tbl::Tbl
-    srt::Vector{Pair{Tuple{Tp, Ti}}}
+    srt::Vector{Pair{Tuple{Tp, Ti}, Tp}}
     pos::Vector{Tp}
     lvl::Lvl
 end
@@ -19,7 +19,7 @@ SparseHashLevel{N, Ti}(I, tbl::Tbl, lvl) where {N, Ti, Tp, Tbl <: AbstractDict{T
     SparseHashLevel{N, Ti, Tp, Tbl}(Ti(I), tbl, lvl)
 #TODO it would be best if we could supply defaults all at once.
 SparseHashLevel{N, Ti, Tp, Tbl}(I, tbl::Tbl, lvl) where {N, Ti, Tp, Tbl} =
-    SparseHashLevel{N, Ti, Tp, Tbl}(Ti(I), tbl, Vector{Pair{Tuple{Tp, Ti}}}(undef, 0), Tp[1, 1, 2:17...], lvl) 
+    SparseHashLevel{N, Ti, Tp, Tbl}(Ti(I), tbl, Pair{Tuple{Tp, Ti}, Tp}[], Tp[1, 1], lvl) 
 SparseHashLevel{N, Ti, Tp, Tbl}(I, tbl::Tbl, srt, pos, lvl::Lvl) where {N, Ti, Tp, Tbl, Lvl} =
     SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(Ti(I), tbl, srt, pos, lvl)
 
@@ -46,7 +46,9 @@ function Base.show(io::IO, lvl::SparseHashLevel{N, Ti}) where {N, Ti}
         print(io, "…")
     else
         print(io, typeof(lvl.tbl))
-        print(io, "(…), ")
+        print(io, "(")
+        print(io, join(sort!(collect(pairs(lvl.tbl))), ", "))
+        print(io, "), ")
         show(io, lvl.srt)
         print(io, ", ")
         show(io, lvl.pos)

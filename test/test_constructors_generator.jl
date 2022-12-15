@@ -53,5 +53,41 @@ open("test_constructors.jl", "w") do file
         end
     end
 
+
+    for arr in [
+        Bool[],
+        Bool[;;],
+        Bool[;;;],
+        [false, false, false, false],
+        [false false false; false false false],
+        [false false false; false false false;;; false false false; false false false ],
+        [false, true, false, false],
+        [false false false; true false false],
+        [false false false; false true false;;; false false false; false false true ],
+        Float64[],
+        Float64[;;],
+        Float64[;;;],
+        [0.0, 0.0, 0.0, 0.0],
+        [0.0 0.0 0.0; 0.0 0.0 0.0],
+        [0.0 0.0 0.0; 0.0 0.0 0.0;;; 0.0 0.0 0.0; 0.0 0.0 0.0 ],
+        [0.0, 2.0, 0.0, 0.0],
+        [0.0 0.0 0.0; 3.0 0.0 0.0],
+        [0.0 0.0 0.0; 0.0 4.0 0.0;;; 0.0 0.0 0.0; 0.0 0.0 5.0 ],
+    ]
+
+        N = ndims(arr)
+        for ctrs = [
+            [SparseCoo{N}, SparseCoo{N, NTuple{N, Int}}],
+            [SparseCoo{N, NTuple{N, Int8}}],
+        ]
+            argss = []
+            push!(argss, lvl -> map(name -> getproperty(lvl, name), propertynames(lvl)))
+            all(iszero, arr) && push!(argss, lvl -> (lvl.I, lvl.lvl,))
+            length(arr) == 0 && push!(argss, lvl -> (lvl.lvl,))
+            test_outer_constructor(arr, ctrs, argss)
+        end
+    
+    end
+
     println(file, "end")
 end
