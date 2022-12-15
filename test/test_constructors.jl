@@ -76,14 +76,35 @@
         @test isstructequal(res, ref)
         res = Fiber(Finch.SparseVBLLevel{Int64}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int64, Int64}(0, [1, 1], Int64[], [1], Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int64, Int64}(0, Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int64, Int64}(Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
     end
     @testset "Finch.SparseVBLLevel{Int8} constructors" begin
-        ref = Fiber(SparseVBL{Int8}(0, Int8[1, 1], Int8[], Int8[1], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseVBLLevel{Int8}(0, Int8[1, 1], Int8[], Int8[1], Element{0.0}(Float64[])))
+        ref = Fiber(SparseVBL{Int8}(0, [1, 1], Int8[], [1], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int8}(0, [1, 1], Int8[], [1], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
         res = Fiber(Finch.SparseVBLLevel{Int8}(0, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
         res = Fiber(Finch.SparseVBLLevel{Int8}(Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int8, Int64}(0, [1, 1], Int8[], [1], Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int8, Int64}(0, Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int8, Int64}(Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseVBLLevel{Int8, Int8} constructors" begin
+        ref = Fiber(SparseVBL{Int8}(0, Int8[1, 1], Int8[], Int8[1], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int8, Int8}(0, Int8[1, 1], Int8[], Int8[1], Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int8, Int8}(0, Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int8, Int8}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.DenseLevel constructors" begin
@@ -141,12 +162,27 @@
         @test isstructequal(res, ref)
         res = Fiber(Finch.SparseVBLLevel{Int64}(4, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int64, Int64}(4, [1, 1], Int64[], [1], Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int64, Int64}(4, Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
     end
     @testset "Finch.SparseVBLLevel{Int8} constructors" begin
-        ref = Fiber(SparseVBL{Int8}(4, Int8[1, 1], Int8[], Int8[1], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseVBLLevel{Int8}(4, Int8[1, 1], Int8[], Int8[1], Element{0.0}(Float64[])))
+        ref = Fiber(SparseVBL{Int8}(4, [1, 1], Int8[], [1], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int8}(4, [1, 1], Int8[], [1], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
         res = Fiber(Finch.SparseVBLLevel{Int8}(4, Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int8, Int64}(4, [1, 1], Int8[], [1], Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int8, Int64}(4, Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseVBLLevel{Int8, Int8} constructors" begin
+        ref = Fiber(SparseVBL{Int8}(4, Int8[1, 1], Int8[], Int8[1], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int8, Int8}(4, Int8[1, 1], Int8[], Int8[1], Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int8, Int8}(4, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.DenseLevel constructors" begin
@@ -188,10 +224,19 @@
         @test isstructequal(res, ref)
         res = Fiber(Finch.SparseVBLLevel{Int64}(6, [1, 3], [2, 4], [1, 2, 3], Element{0.0}([1.0, 1.0])))
         @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int64, Int64}(6, [1, 3], [2, 4], [1, 2, 3], Element{0.0}([1.0, 1.0])))
+        @test isstructequal(res, ref)
     end
     @testset "Finch.SparseVBLLevel{Int8} constructors" begin
+        ref = Fiber(SparseVBL{Int8}(6, [1, 3], Int8[2, 4], [1, 2, 3], Element{0.0}([1.0, 1.0])))
+        res = Fiber(Finch.SparseVBLLevel{Int8}(6, [1, 3], Int8[2, 4], [1, 2, 3], Element{0.0}([1.0, 1.0])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int8, Int64}(6, [1, 3], Int8[2, 4], [1, 2, 3], Element{0.0}([1.0, 1.0])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseVBLLevel{Int8, Int8} constructors" begin
         ref = Fiber(SparseVBL{Int8}(6, Int8[1, 3], Int8[2, 4], Int8[1, 2, 3], Element{0.0}([1.0, 1.0])))
-        res = Fiber(Finch.SparseVBLLevel{Int8}(6, Int8[1, 3], Int8[2, 4], Int8[1, 2, 3], Element{0.0}([1.0, 1.0])))
+        res = Fiber(Finch.SparseVBLLevel{Int8, Int8}(6, Int8[1, 3], Int8[2, 4], Int8[1, 2, 3], Element{0.0}([1.0, 1.0])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.DenseLevel constructors" begin
@@ -271,14 +316,35 @@
         @test isstructequal(res, ref)
         res = Fiber(Finch.SparseVBLLevel{Int64}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int64, Int64}(0, [1, 1], Int64[], [1], Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int64, Int64}(0, Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int64, Int64}(Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
     end
     @testset "Finch.SparseVBLLevel{Int8} constructors" begin
-        ref = Fiber(SparseVBL{Int8}(0, Int8[1, 1], Int8[], Int8[1], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseVBLLevel{Int8}(0, Int8[1, 1], Int8[], Int8[1], Element{0.0}(Float64[])))
+        ref = Fiber(SparseVBL{Int8}(0, [1, 1], Int8[], [1], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int8}(0, [1, 1], Int8[], [1], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
         res = Fiber(Finch.SparseVBLLevel{Int8}(0, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
         res = Fiber(Finch.SparseVBLLevel{Int8}(Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int8, Int64}(0, [1, 1], Int8[], [1], Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int8, Int64}(0, Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int8, Int64}(Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseVBLLevel{Int8, Int8} constructors" begin
+        ref = Fiber(SparseVBL{Int8}(0, Int8[1, 1], Int8[], Int8[1], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int8, Int8}(0, Int8[1, 1], Int8[], Int8[1], Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int8, Int8}(0, Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int8, Int8}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.DenseLevel constructors" begin
@@ -336,12 +402,27 @@
         @test isstructequal(res, ref)
         res = Fiber(Finch.SparseVBLLevel{Int64}(4, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int64, Int64}(4, [1, 1], Int64[], [1], Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int64, Int64}(4, Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
     end
     @testset "Finch.SparseVBLLevel{Int8} constructors" begin
-        ref = Fiber(SparseVBL{Int8}(4, Int8[1, 1], Int8[], Int8[1], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseVBLLevel{Int8}(4, Int8[1, 1], Int8[], Int8[1], Element{0.0}(Float64[])))
+        ref = Fiber(SparseVBL{Int8}(4, [1, 1], Int8[], [1], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int8}(4, [1, 1], Int8[], [1], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
         res = Fiber(Finch.SparseVBLLevel{Int8}(4, Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int8, Int64}(4, [1, 1], Int8[], [1], Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int8, Int64}(4, Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseVBLLevel{Int8, Int8} constructors" begin
+        ref = Fiber(SparseVBL{Int8}(4, Int8[1, 1], Int8[], Int8[1], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int8, Int8}(4, Int8[1, 1], Int8[], Int8[1], Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int8, Int8}(4, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.DenseLevel constructors" begin
@@ -378,15 +459,24 @@
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseVBLLevel constructors" begin
-        ref = Fiber(SparseVBL{Int64}(6, [1, 3], [2, 6, 5039], [1, 2, 4], Element{0.0}([0.2, 0.3, 0.4])))
-        res = Fiber(Finch.SparseVBLLevel(6, [1, 3], [2, 6, 5039], [1, 2, 4], Element{0.0}([0.2, 0.3, 0.4])))
+        ref = Fiber(SparseVBL{Int64}(6, [1, 3], [2, 6, 559108], [1, 2, 4], Element{0.0}([0.2, 0.3, 0.4])))
+        res = Fiber(Finch.SparseVBLLevel(6, [1, 3], [2, 6, 559108], [1, 2, 4], Element{0.0}([0.2, 0.3, 0.4])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseVBLLevel{Int64}(6, [1, 3], [2, 6, 5039], [1, 2, 4], Element{0.0}([0.2, 0.3, 0.4])))
+        res = Fiber(Finch.SparseVBLLevel{Int64}(6, [1, 3], [2, 6, 559108], [1, 2, 4], Element{0.0}([0.2, 0.3, 0.4])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int64, Int64}(6, [1, 3], [2, 6, 559108], [1, 2, 4], Element{0.0}([0.2, 0.3, 0.4])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseVBLLevel{Int8} constructors" begin
+        ref = Fiber(SparseVBL{Int8}(6, [1, 3], Int8[2, 6, 0], [1, 2, 4], Element{0.0}([0.2, 0.3, 0.4])))
+        res = Fiber(Finch.SparseVBLLevel{Int8}(6, [1, 3], Int8[2, 6, 0], [1, 2, 4], Element{0.0}([0.2, 0.3, 0.4])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int8, Int64}(6, [1, 3], Int8[2, 6, 0], [1, 2, 4], Element{0.0}([0.2, 0.3, 0.4])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseVBLLevel{Int8, Int8} constructors" begin
         ref = Fiber(SparseVBL{Int8}(6, Int8[1, 3], Int8[2, 6, 0], Int8[1, 2, 4], Element{0.0}([0.2, 0.3, 0.4])))
-        res = Fiber(Finch.SparseVBLLevel{Int8}(6, Int8[1, 3], Int8[2, 6, 0], Int8[1, 2, 4], Element{0.0}([0.2, 0.3, 0.4])))
+        res = Fiber(Finch.SparseVBLLevel{Int8, Int8}(6, Int8[1, 3], Int8[2, 6, 0], Int8[1, 2, 4], Element{0.0}([0.2, 0.3, 0.4])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseCooLevel{1} constructors" begin

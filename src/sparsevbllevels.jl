@@ -1,17 +1,22 @@
-struct SparseVBLLevel{Ti, Lvl}
+struct SparseVBLLevel{Ti, Tp, Lvl}
     I::Ti
-    pos::Vector{Ti}
+    pos::Vector{Tp}
     idx::Vector{Ti}
-    ofs::Vector{Ti}
+    ofs::Vector{Tp}
     lvl::Lvl
 end
 const SparseVBL = SparseVBLLevel
 SparseVBLLevel(lvl) = SparseVBLLevel(0, lvl)
-SparseVBLLevel{Ti}(lvl) where {Ti} = SparseVBLLevel(zero(Ti), lvl)
-SparseVBLLevel(I::Ti, lvl::Lvl) where {Ti, Lvl} = SparseVBLLevel{Ti, Lvl}(I, lvl)
-SparseVBLLevel{Ti}(I, lvl::Lvl) where {Ti, Lvl} = SparseVBLLevel{Ti, Lvl}(Ti(I), lvl)
-SparseVBLLevel{Ti}(I, pos, idx, ofs, lvl::Lvl) where {Ti, Lvl} = SparseVBLLevel{Ti, Lvl}(Ti(I), pos, idx, ofs, lvl)
-SparseVBLLevel{Ti, Lvl}(I, lvl::Lvl) where {Ti, Lvl} = SparseVBLLevel{Ti, Lvl}(Ti(I), Ti[1, 1], Ti[], Ti[1], lvl)
+SparseVBLLevel{Ti}(lvl) where {Ti} = SparseVBLLevel{Ti}(zero(Ti), lvl)
+SparseVBLLevel{Ti, Tp}(lvl) where {Ti, Tp} = SparseVBLLevel{Ti, Tp}(zero(Ti), lvl)
+
+SparseVBLLevel(I::Ti, lvl) where {Ti} = SparseVBLLevel{Ti}(I, lvl)
+SparseVBLLevel{Ti}(I, lvl) where {Ti} = SparseVBLLevel{Ti, Int}(Ti(I), lvl)
+SparseVBLLevel{Ti, Tp}(I, lvl::Lvl) where {Ti, Tp, Lvl} = SparseVBLLevel{Ti, Tp, Lvl}(Ti(I), Ti[1, 1], Ti[], Ti[1], lvl)
+
+SparseVBLLevel(I::Ti, pos::Vector{Tp}, idx, ofs, lvl::Lvl) where {Ti, Tp, Lvl} = SparseVBLLevel{Ti, Tp, Lvl}(I, pos, idx, ofs, lvl)
+SparseVBLLevel{Ti}(I, pos::Vector{Tp}, idx, ofs, lvl::Lvl) where {Ti, Tp, Lvl} = SparseVBLLevel{Ti, Tp, Lvl}(Ti(I), pos, idx, ofs, lvl)
+SparseVBLLevel{Ti, Tp}(I, pos, idx, ofs, lvl::Lvl) where {Ti, Tp, Lvl} = SparseVBLLevel{Ti, Tp, Lvl}(Ti(I), pos, idx, ofs, lvl)
 
 """
 `f_code(sv)` = [SparseVBLLevel](@ref).
@@ -85,13 +90,14 @@ end
 mutable struct VirtualSparseVBLLevel
     ex
     Ti
+    Tp
     I
     pos_alloc
     idx_alloc
     ofs_alloc
     lvl
 end
-function virtualize(ex, ::Type{SparseVBLLevel{Ti, Lvl}}, ctx, tag=:lvl) where {Ti, Lvl}
+function virtualize(ex, ::Type{SparseVBLLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}
     sym = ctx.freshen(tag)
     I = value(:($sym.I), Int)
     pos_alloc = ctx.freshen(sym, :_pos_alloc)
@@ -104,7 +110,7 @@ function virtualize(ex, ::Type{SparseVBLLevel{Ti, Lvl}}, ctx, tag=:lvl) where {T
         $ofs_alloc = length($sym.ofs)
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualSparseVBLLevel(sym, Ti, I, pos_alloc, idx_alloc, ofs_alloc, lvl_2)
+    VirtualSparseVBLLevel(sym, Ti, Tp, I, pos_alloc, idx_alloc, ofs_alloc, lvl_2)
 end
 function (ctx::Finch.LowerJulia)(lvl::VirtualSparseVBLLevel)
     quote
