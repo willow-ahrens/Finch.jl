@@ -1,16 +1,21 @@
-struct SparseListLevel{Ti, Lvl}
+struct SparseListLevel{Ti, Tp, Lvl}
     I::Ti
-    pos::Vector{Ti}
+    pos::Vector{Tp}
     idx::Vector{Ti}
     lvl::Lvl
 end
 const SparseList = SparseListLevel
 SparseListLevel(lvl) = SparseListLevel(0, lvl)
-SparseListLevel{Ti}(lvl) where {Ti} = SparseListLevel(zero(Ti), lvl)
-SparseListLevel(I::Ti, lvl::Lvl) where {Ti, Lvl} = SparseListLevel{Ti, Lvl}(I, lvl)
-SparseListLevel{Ti}(I, lvl::Lvl) where {Ti, Lvl} = SparseListLevel{Ti, Lvl}(Ti(I), lvl)
-SparseListLevel{Ti}(I, pos, idx, lvl::Lvl) where {Ti, Lvl} = SparseListLevel{Ti, Lvl}(Ti(I), pos, idx, lvl)
-SparseListLevel{Ti, Lvl}(I, lvl::Lvl) where {Ti, Lvl} = SparseListLevel{Ti, Lvl}(Ti(I), Ti[1, 1], Ti[], lvl)
+SparseListLevel{Ti}(lvl) where {Ti} = SparseListLevel{Ti}(zero(Ti), lvl)
+SparseListLevel{Ti, Tp}(lvl) where {Ti, Tp} = SparseListLevel{Ti, Tp}(zero(Ti), lvl)
+
+SparseListLevel(I::Ti, lvl) where {Ti} = SparseListLevel{Ti}(I, lvl)
+SparseListLevel{Ti}(I, lvl) where {Ti} = SparseListLevel{Ti, Int}(Ti(I), lvl)
+SparseListLevel{Ti, Tp}(I, lvl::Lvl) where {Ti, Tp, Lvl} = SparseListLevel{Ti, Tp, Lvl}(Ti(I), Tp[1, 1], Ti[], lvl)
+
+SparseListLevel(I::Ti, pos::Vector{Tp}, idx, lvl) where {Ti, Tp} = SparseListLevel{Ti}(I, pos, idx, lvl)
+SparseListLevel{Ti}(I, pos::Vector{Tp}, idx, lvl::Lvl) where {Ti, Tp, Lvl} = SparseListLevel{Ti, Tp, Lvl}(Ti(I), pos, idx, lvl)
+SparseListLevel{Ti, Tp}(I, pos, idx, lvl::Lvl) where {Ti, Tp, Lvl} = SparseListLevel{Ti, Tp, Lvl}(Ti(I), pos, idx, lvl)
 
 """
 `f_code(l)` = [SparseListLevel](@ref).
@@ -75,13 +80,14 @@ end
 mutable struct VirtualSparseListLevel
     ex
     Ti
+    Tp
     I
     pos_fill
     pos_alloc
     idx_alloc
     lvl
 end
-function virtualize(ex, ::Type{SparseListLevel{Ti, Lvl}}, ctx, tag=:lvl) where {Ti, Lvl}
+function virtualize(ex, ::Type{SparseListLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}
     sym = ctx.freshen(tag)
     I = value(:($sym.I), Int)
     pos_fill = ctx.freshen(sym, :_pos_fill)
@@ -93,7 +99,7 @@ function virtualize(ex, ::Type{SparseListLevel{Ti, Lvl}}, ctx, tag=:lvl) where {
         $idx_alloc = length($sym.idx)
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualSparseListLevel(sym, Ti, I, pos_fill, pos_alloc, idx_alloc, lvl_2)
+    VirtualSparseListLevel(sym, Ti, Tp, I, pos_fill, pos_alloc, idx_alloc, lvl_2)
 end
 function (ctx::Finch.LowerJulia)(lvl::VirtualSparseListLevel)
     quote

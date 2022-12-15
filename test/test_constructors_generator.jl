@@ -40,8 +40,9 @@ open("test_constructors.jl", "w") do file
             test_outer_constructor(arr, ctrs, argss)
         end
         for ctrs = [
-            [SparseList, SparseList{Int}],
-            [SparseList{Int8}],
+            [SparseList, SparseList{Int}, SparseList{Int, Int}],
+            [SparseList{Int8}, SparseList{Int8, Int}],
+            [SparseList{Int8, Int8},],
             [SparseVBL, SparseVBL{Int}],
             [SparseVBL{Int8}],
         ]
