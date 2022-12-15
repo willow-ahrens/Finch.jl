@@ -114,6 +114,8 @@ end
 
 summary_f_code(lvl::VirtualSparseListLevel) = "sl($(summary_f_code(lvl.lvl)))"
 
+hasdefaultcheck(lvl::VirtualSparseListLevel) = true
+
 getsites(fbr::VirtualFiber{VirtualSparseListLevel}) =
     [envdepth(fbr.env) + 1, getsites(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))...]
 

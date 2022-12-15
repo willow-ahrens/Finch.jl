@@ -140,7 +140,9 @@ end
 function (ctx::LowerJulia)(node, ::ThunkStyle)
     contain(ctx) do ctx2
         node = (ThunkVisitor(ctx2))(node)
-        (ctx2)(node)
+        contain(ctx2) do ctx3
+            (ctx3)(node)
+        end
     end
 end
 

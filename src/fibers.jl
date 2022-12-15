@@ -107,7 +107,10 @@ function finalize_level! end
 
 finalize_level!(fbr, ctx, mode) = fbr.lvl
 
-trim!(fbr::VirtualFiber, ctx) = trim_level!(fbr.lvl, ctx, 1)
+function trim!(fbr::VirtualFiber, ctx)
+    delete!(fbr.env, :name)
+    VirtualFiber(trim_level!(fbr.lvl, ctx, 1), fbr.env)
+end
 trim!(fbr, ctx) = fbr
 
 #TODO get rid of isa IndexNode when this is all over
