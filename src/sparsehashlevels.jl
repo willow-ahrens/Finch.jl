@@ -1,27 +1,40 @@
 struct SparseHashLevel{N, Ti<:Tuple, Tp, Tbl, Lvl}
     I::Ti
     tbl::Tbl
-    srt::Vector{Pair{Tuple{Tp, Ti}, Tp}}
     pos::Vector{Tp}
+    srt::Vector{Pair{Tuple{Tp, Ti}, Tp}}
     lvl::Lvl
 end
 const SparseHash = SparseHashLevel
 SparseHashLevel{N}(lvl) where {N} = SparseHashLevel{N}(((0 for _ in 1:N)...,), lvl)
 SparseHashLevel{N, Ti}(lvl) where {N, Ti} = SparseHashLevel{N, Ti}((map(zero, Ti.parameters)..., ), lvl)
 SparseHashLevel{N, Ti, Tp}(lvl) where {N, Ti, Tp} = SparseHashLevel{N, Ti, Tp}((map(zero, Ti.parameters)..., ), lvl)
+SparseHashLevel{N, Ti, Tp, Tbl}(lvl) where {N, Ti, Tp, Tbl} = SparseHashLevel{N, Ti, Tp, Tbl}((map(zero, Ti.parameters)..., ), lvl)
+
 SparseHashLevel{N}(I::Ti, lvl) where {N, Ti} = SparseHashLevel{N, Ti}(I, lvl)
 SparseHashLevel{N, Ti}(I, lvl) where {N, Ti} = SparseHashLevel{N, Ti, Int}(Ti(I), lvl)
 SparseHashLevel{N, Ti, Tp}(I, lvl) where {N, Ti, Tp} =
     SparseHashLevel{N, Ti, Tp}(Ti(I), Dict{Tuple{Tp, Ti}, Tp}(), lvl)
+SparseHashLevel{N, Ti, Tp, Tbl}(I, lvl) where {N, Ti, Tp, Tbl} =
+    SparseHashLevel{N, Ti, Tp, Tbl}(Ti(I), Tbl(), lvl)
+
+SparseHashLevel{N}(I::Ti, tbl::Tbl, lvl) where {N, Ti, Tp, Tbl<:AbstractDict{Tuple{Tp, Ti}}} =
+    SparseHashLevel{N, Ti, Tp, Tbl}(I, tbl, lvl)
+SparseHashLevel{N, Ti}(I, tbl::Tbl, lvl) where {N, Ti, Tp, Tbl<:AbstractDict{Tuple{Tp, Ti}}} =
+    SparseHashLevel{N, Ti, Tp, Tbl}(Ti(I), tbl, lvl)
 SparseHashLevel{N, Ti, Tp}(I, tbl::Tbl, lvl) where {N, Ti, Tp, Tbl} =
     SparseHashLevel{N, Ti, Tp, Tbl}(Ti(I), tbl, lvl)
-SparseHashLevel{N, Ti}(I, tbl::Tbl, lvl) where {N, Ti, Tp, Tbl <: AbstractDict{Tuple{Tp, Ti}}} =
-    SparseHashLevel{N, Ti, Tp, Tbl}(Ti(I), tbl, lvl)
-#TODO it would be best if we could supply defaults all at once.
-SparseHashLevel{N, Ti, Tp, Tbl}(I, tbl::Tbl, lvl) where {N, Ti, Tp, Tbl} =
-    SparseHashLevel{N, Ti, Tp, Tbl}(Ti(I), tbl, Pair{Tuple{Tp, Ti}, Tp}[], Tp[1, 1], lvl) 
-SparseHashLevel{N, Ti, Tp, Tbl}(I, tbl::Tbl, srt, pos, lvl::Lvl) where {N, Ti, Tp, Tbl, Lvl} =
-    SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(Ti(I), tbl, srt, pos, lvl)
+SparseHashLevel{N, Ti, Tp, Tbl}(I, tbl, lvl::Lvl) where {N, Ti, Tp, Tbl, Lvl} =
+    SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(Ti(I), tbl, Tp[1, 1], Pair{Tuple{Tp, Ti}, Tp}[], lvl)
+
+SparseHashLevel{N}(I::Ti, tbl::Tbl, pos::Vector{Tp}, srt, lvl::Lvl) where {N, Ti, Tp, Tbl, Lvl} =
+    SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(I, tbl, pos, srt, lvl) 
+SparseHashLevel{N, Ti}(I, tbl::Tbl, pos::Vector{Tp}, srt, lvl::Lvl) where {N, Ti, Tp, Tbl, Lvl} =
+    SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(Ti(I), tbl, pos, srt, lvl) 
+SparseHashLevel{N, Ti, Tp}(I, tbl::Tbl, pos, srt, lvl::Lvl) where {N, Ti, Tp, Tbl, Lvl} =
+    SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(Ti(I), tbl, pos, srt, lvl) 
+SparseHashLevel{N, Ti, Tp, Tbl}(I, tbl, pos, srt, lvl::Lvl) where {N, Ti, Tp, Tbl, Lvl} =
+    SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(Ti(I), tbl, pos, srt, lvl) 
 
 """
 `f_code(sh)` = [SparseHashLevel](@ref).
@@ -32,7 +45,7 @@ similar_level(lvl::SparseHashLevel{N}) where {N} = SparseHashLevel{N}(similar_le
 similar_level(lvl::SparseHashLevel{N}, tail...) where {N} = SparseHashLevel{N}(ntuple(n->tail[n], N), similar_level(lvl.lvl, tail[N + 1:end]...))
 
 pattern!(lvl::SparseHashLevel{N, Ti, Tp, Tbl}) where {N, Ti, Tp, Tbl} = 
-    SparseHashLevel{N, Ti, Tp, Tbl}(lvl.I, lvl.tbl, lvl.srt, lvl.pos, pattern!(lvl.lvl))
+    SparseHashLevel{N, Ti, Tp, Tbl}(lvl.I, lvl.tbl, lvl.pos, lvl.srt, pattern!(lvl.lvl))
 
 function Base.show(io::IO, lvl::SparseHashLevel{N, Ti}) where {N, Ti}
     if get(io, :compact, false)
@@ -49,9 +62,9 @@ function Base.show(io::IO, lvl::SparseHashLevel{N, Ti}) where {N, Ti}
         print(io, "(")
         print(io, join(sort!(collect(pairs(lvl.tbl))), ", "))
         print(io, "), ")
-        show(io, lvl.srt)
-        print(io, ", ")
         show(io, lvl.pos)
+        print(io, ", ")
+        show(io, lvl.srt)
     end
     print(io, ", ")
     show(io, lvl.lvl)
@@ -130,8 +143,8 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualSparseHashLevel)
         $SparseHashLevel{$(lvl.N), $(lvl.Ti), $(lvl.Tp), $(lvl.Tbl)}(
             ($(map(ctx, lvl.I)...),),
             $(lvl.ex).tbl,
-            $(lvl.ex).srt,
             $(lvl.ex).pos,
+            $(lvl.ex).srt,
             $(ctx(lvl.lvl)),
         )
     end

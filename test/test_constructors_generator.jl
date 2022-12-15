@@ -88,7 +88,20 @@ open("test_constructors.jl", "w") do file
             length(arr) == 0 && push!(argss, lvl -> (lvl.lvl,))
             test_outer_constructor(arr, ctrs, argss)
         end
-    
+
+        for ctrs = [
+            [SparseHash{N}, SparseHash{N, NTuple{N, Int}}, SparseHash{N, NTuple{N, Int}, Int}, SparseHash{N, NTuple{N, Int}, Int, Dict{Tuple{Int, NTuple{N, Int}}, Int}}],
+            [SparseHash{N, NTuple{N, Int8}}, SparseHash{N, NTuple{N, Int8}, Int}, SparseHash{N, NTuple{N, Int8}, Int, Dict{Tuple{Int, NTuple{N, Int8}}, Int}}],
+            [SparseHash{N, NTuple{N, Int8}, Int8}, SparseHash{N, NTuple{N, Int8}, Int8, Dict{Tuple{Int8, NTuple{N, Int8}}, Int8}}],
+            [SparseHash{N, NTuple{N, Int8}, Int8, Dict{Tuple{Int8, NTuple{N, Int8}}, Int8}}],
+        ]
+            argss = []
+            push!(argss, lvl -> map(name -> getproperty(lvl, name), propertynames(lvl)))
+            all(iszero, arr) && push!(argss, lvl -> (lvl.I, lvl.lvl,))
+            all(iszero, arr) && push!(argss, lvl -> (lvl.I, lvl.tbl, lvl.lvl,))
+            length(arr) == 0 && push!(argss, lvl -> (lvl.lvl,))
+            test_outer_constructor(arr, ctrs, argss)
+        end
     end
 
     println(file, "end")
