@@ -46,6 +46,9 @@ open("test_constructors.jl", "w") do file
             [SparseVBL, SparseVBL{Int}, SparseVBL{Int, Int}],
             [SparseVBL{Int8}, SparseVBL{Int8, Int}],
             [SparseVBL{Int8, Int8},],
+            [SparseBytemap, SparseBytemap{Int}, SparseBytemap{Int, Int}],
+            [SparseBytemap{Int8}, SparseBytemap{Int8, Int}],
+            [SparseBytemap{Int8, Int8},],
         ]
             argss = []
             push!(argss, lvl -> map(name -> getproperty(lvl, name), propertynames(lvl)))
@@ -103,6 +106,27 @@ open("test_constructors.jl", "w") do file
             test_outer_constructor(arr, ctrs, argss)
         end
     end
+
+    for arr in [
+        Bool[],
+        Bool[;;],
+        Bool[;;;],
+        [false, false, false, false],
+        [false false false; false false false],
+        [false false false; false false false;;; false false false; false false false ],
+        [false, true, false, false],
+        [false false false; true false false],
+        [false false false; false true false;;; false false false; false false true ],
+        Float64[],
+        Float64[;;],
+        Float64[;;;],
+        [0.0, 0.0, 0.0, 0.0],
+        [0.0 0.0 0.0; 0.0 0.0 0.0],
+        [0.0 0.0 0.0; 0.0 0.0 0.0;;; 0.0 0.0 0.0; 0.0 0.0 0.0 ],
+        [0.0, 2.0, 0.0, 0.0],
+        [0.0 0.0 0.0; 3.0 0.0 0.0],
+        [0.0 0.0 0.0; 0.0 4.0 0.0;;; 0.0 0.0 0.0; 0.0 0.0 5.0 ],
+    ]
 
     println(file, "end")
 end

@@ -7,13 +7,20 @@ struct SparseBytemapLevel{Ti, Tp, Lvl}
     lvl::Lvl
 end
 const SparseBytemap = SparseBytemapLevel
+
 SparseBytemapLevel(lvl) = SparseBytemapLevel(0, lvl)
 SparseBytemapLevel{Ti}(lvl) where {Ti} = SparseBytemapLevel{Ti}(zero(Ti), lvl)
+SparseBytemapLevel{Ti, Tp}(lvl) where {Ti, Tp} = SparseBytemapLevel{Ti, Tp}(zero(Ti), lvl)
+
 SparseBytemapLevel(I::Ti, lvl) where {Ti} = SparseBytemapLevel{Ti}(I, lvl)
 SparseBytemapLevel{Ti}(I, lvl) where {Ti} = SparseBytemapLevel{Ti, Int}(Ti(I), lvl)
-SparseBytemapLevel{Ti, Tp}(lvl) where {Ti, Tp} = SparseBytemapLevel{Ti, Tp}(zero(Ti), lvl)
 SparseBytemapLevel{Ti, Tp}(I, lvl) where {Ti, Tp} =
     SparseBytemapLevel{Ti, Tp}(Ti(I), Tp[1, 1], Bool[], Tuple{Tp, Ti}[], Ref(Tp(0)), lvl)
+
+SparseBytemapLevel(I::Ti, pos::Vector{Tp}, tbl, srt, srt_stop, lvl::Lvl) where {Ti, Tp, Lvl} =
+    SparseBytemapLevel{Ti, Tp, Lvl}(I, pos, tbl, srt, srt_stop, lvl)
+SparseBytemapLevel{Ti}(I, pos::Vector{Tp}, tbl, srt, srt_stop, lvl::Lvl) where {Ti, Tp, Lvl} =
+    SparseBytemapLevel{Ti, Tp, Lvl}(Ti(I), pos, tbl, srt, srt_stop, lvl)
 SparseBytemapLevel{Ti, Tp}(I, pos, tbl, srt, srt_stop, lvl::Lvl) where {Ti, Tp, Lvl} =
     SparseBytemapLevel{Ti, Tp, Lvl}(Ti(I), pos, tbl, srt, srt_stop, lvl)
 
