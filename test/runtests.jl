@@ -62,8 +62,7 @@ isstructequal(a::T, b::T) where {T <: Fiber} =
     isstructequal(a.lvl, b.lvl) &&
     isstructequal(a.env, b.env)
 
-isstructequal(a::T, b::T)  where {T <: Pattern} =
-    a.val == b.val
+isstructequal(a::T, b::T)  where {T <: Pattern} = true
 
 isstructequal(a::T, b::T) where {T <: Element} =
     a.val == b.val

@@ -114,5 +114,5 @@
         B_lvl_srt_alloc = B_lvl.pos[B_lvl_pos_alloc] - 1
         resize!(B_lvl.srt, B_lvl_srt_alloc)
         resize!(B_lvl_2.val, B_lvl_srt_alloc)
-        (B = Fiber((Finch.SparseBytemapLevel){Int64, Int64}(A_lvl_2.I, B_lvl.tbl, B_lvl.srt, B_lvl.srt_stop, B_lvl.pos, B_lvl_2), (Finch.Environment)(; name = :B)),)
+        (B = Fiber((Finch.SparseBytemapLevel){Int64, Int64}(A_lvl_2.I, B_lvl.tbl, B_lvl.srt, B_lvl.srt_stop, B_lvl.pos, B_lvl_2), (Finch.Environment)(; )),)
     end
