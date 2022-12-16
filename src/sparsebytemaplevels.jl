@@ -1,9 +1,9 @@
 struct SparseBytemapLevel{Ti, Tp, Lvl}
     I::Ti
+    pos::Vector{Tp}
     tbl::Vector{Bool}
     srt::Vector{Tuple{Tp, Ti}}
-    srt_stop::Ref{Int64} #TODO remove this after trimming levels
-    pos::Vector{Tp}
+    srt_stop::Ref{Tp} #TODO remove this after trimming levels
     lvl::Lvl
 end
 const SparseBytemap = SparseBytemapLevel
@@ -13,12 +13,12 @@ SparseBytemapLevel(I::Ti, lvl) where {Ti} = SparseBytemapLevel{Ti}(I, lvl)
 SparseBytemapLevel{Ti}(I, lvl) where {Ti} = SparseBytemapLevel{Ti, Int}(Ti(I), lvl)
 SparseBytemapLevel{Ti, Tp}(lvl) where {Ti, Tp} = SparseBytemapLevel{Ti, Tp}(zero(Ti), lvl)
 SparseBytemapLevel{Ti, Tp}(I, lvl) where {Ti, Tp} =
-    SparseBytemapLevel{Ti, Tp}(Ti(I), Bool[], Tuple{Tp, Ti}[], Ref(Int64(0)), Tp[1, 1], lvl)
-SparseBytemapLevel{Ti, Tp}(I, tbl, srt, srt_stop, pos, lvl::Lvl) where {Ti, Tp, Lvl} =
-    SparseBytemapLevel{Ti, Tp, Lvl}(Ti(I), tbl, srt, srt_stop, pos, lvl)
+    SparseBytemapLevel{Ti, Tp}(Ti(I), Tp[1, 1], Bool[], Tuple{Tp, Ti}[], Ref(Tp(0)), lvl)
+SparseBytemapLevel{Ti, Tp}(I, pos, tbl, srt, srt_stop, lvl::Lvl) where {Ti, Tp, Lvl} =
+    SparseBytemapLevel{Ti, Tp, Lvl}(Ti(I), pos, tbl, srt, srt_stop, lvl)
 
 pattern!(lvl::SparseBytemapLevel{Ti, Tp}) where {Ti, Tp} = 
-    SparseBytemapLevel{Ti, Tp}(lvl.I, lvl.tbl, lvl.srt, lvl.srt_stop, lvl.pos, pattern!(lvl.lvl))
+    SparseBytemapLevel{Ti, Tp}(lvl.I, lvl.pos, lvl.tbl, lvl.srt, lvl.srt_stop, pattern!(lvl.lvl))
 
 """
 `f_code(sm)` = [SparseBytemapLevel](@ref).
@@ -39,13 +39,13 @@ function Base.show(io::IO, lvl::SparseBytemapLevel{Ti}) where {Ti}
     if get(io, :compact, false)
         print(io, "…")
     else
+        show(io, lvl.pos)
+        print(io, ", ")
         show(io, lvl.tbl)
         print(io, ", ")
         show(io, lvl.srt)
         print(io, ", ")
         print(io, lvl.srt_stop)
-        print(io, ", ")
-        show(io, lvl.pos)
     end
     print(io, ", ")
     show(io, lvl.lvl)
@@ -89,37 +89,37 @@ mutable struct VirtualSparseBytemapLevel
     Ti
     Tp
     I
+    pos_alloc
     tbl_alloc
     srt_alloc
     srt_stop
-    pos_alloc
     lvl
 end
 function virtualize(ex, ::Type{SparseBytemapLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}   
     sym = ctx.freshen(tag)
     I = value(:($sym.I))
+    pos_alloc = ctx.freshen(sym, :_pos_alloc)
     tbl_alloc = ctx.freshen(sym, :_tbl_alloc)
     srt_stop = ctx.freshen(sym, :_srt_stop)
     srt_alloc = ctx.freshen(sym, :_srt_alloc)
-    pos_alloc = ctx.freshen(sym, :_pos_alloc)
     push!(ctx.preamble, quote
         $sym = $ex
+        $pos_alloc = length($sym.pos)
         $tbl_alloc = length($sym.tbl)
         $srt_alloc = length($sym.srt)
         $srt_stop = $sym.srt_stop[]
-        $pos_alloc = length($sym.pos)
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualSparseBytemapLevel(sym, Ti, Tp, I, tbl_alloc, srt_alloc, srt_stop, pos_alloc, lvl_2)
+    VirtualSparseBytemapLevel(sym, Ti, Tp, I, pos_alloc, tbl_alloc, srt_alloc, srt_stop, lvl_2)
 end
 function (ctx::Finch.LowerJulia)(lvl::VirtualSparseBytemapLevel)
     quote
         $SparseBytemapLevel{$(lvl.Ti), $(lvl.Tp)}(
             $(ctx(lvl.I)),
+            $(lvl.ex).pos,
             $(lvl.ex).tbl,
             $(lvl.ex).srt,
             $(lvl.ex).srt_stop,
-            $(lvl.ex).pos,
             $(ctx(lvl.lvl)),
         )
     end
