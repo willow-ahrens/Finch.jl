@@ -141,6 +141,7 @@ open("test_constructors.jl", "w") do file
             argss = []
             push!(argss, lvl -> map(name -> getproperty(lvl, name), propertynames(lvl)))
             all(iszero, arr) && push!(argss, lvl -> (lvl.I, ))
+            length(arr) == 0 && push!(argss, lvl -> ())
             test_inner_constructor(arr, ctrs, argss)
         end
 
@@ -150,6 +151,7 @@ open("test_constructors.jl", "w") do file
             argss = []
             push!(argss, lvl -> (D, map(name -> getproperty(lvl, name), propertynames(lvl))...))
             all(iszero, arr) && push!(argss, lvl -> (D, lvl.I, ))
+            length(arr) == 0 && push!(argss, lvl -> (D,))
             test_inner_constructor(arr, ctrs, argss, D)
         end
     end

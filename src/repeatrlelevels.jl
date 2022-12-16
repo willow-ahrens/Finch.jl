@@ -15,7 +15,13 @@ RepeatRLELevel{D, Ti, Tp, Tv}() where {D, Ti, Tp, Tv} = RepeatRLELevel{D, Ti, Tp
 RepeatRLELevel{D}(I::Ti) where {D, Ti} = RepeatRLELevel{D, Ti}(I)
 RepeatRLELevel{D, Ti}(I) where {D, Ti} = RepeatRLELevel{D, Ti, Int}(Ti(I))
 RepeatRLELevel{D, Ti, Tp}(I) where {D, Ti, Tp} = RepeatRLELevel{D, Ti, Tp, typeof(D)}(Ti(I))
-RepeatRLELevel{D, Ti, Tp, Tv}(I) where {D, Ti, Tp, Tv} = RepeatRLELevel{D, Ti, Tp, Tv}(Ti(I), Ti[1, 2], Ti[Ti(I)], Tv[D])
+function RepeatRLELevel{D, Ti, Tp, Tv}(I) where {D, Ti, Tp, Tv}
+    if iszero(I)
+        RepeatRLELevel{D, Ti, Tp, Tv}(Ti(I), Tp[1, 1], Ti[], Tv[])
+    else
+        RepeatRLELevel{D, Ti, Tp, Tv}(Ti(I), Tp[1, 2], Ti[Ti(I)], Tv[D])
+    end
+end
 
 RepeatRLELevel{D}(I::Ti, pos::Vector{Tp}, idx, val::Vector{Tv}) where {D, Ti, Tp, Tv} = RepeatRLELevel{D, Ti, Tp, Tv}(I, pos, idx, val)
 RepeatRLELevel{D, Ti}(I, pos::Vector{Tp}, idx, val::Vector{Tv}) where {D, Ti, Tp, Tv} = RepeatRLELevel{D, Ti, Tp, Tv}(Ti(I), pos, idx, val)

@@ -167,10 +167,10 @@ function trim_level!(lvl::VirtualSparseVBLLevel, ctx::LowerJulia, pos)
     push!(ctx.preamble, quote
         $(lvl.pos_alloc) = $(ctx(pos)) + 1
         resize!($(lvl.ex).pos, $(lvl.pos_alloc))
-        $(lvl.ofs_alloc) = $(lvl.ex).pos[$(lvl.pos_alloc)]
-        resize!($(lvl.ex).ofs, $(lvl.ofs_alloc))
-        $(lvl.idx_alloc) = $(lvl.ex).ofs[$(lvl.ofs_alloc)] - 1
+        $(lvl.idx_alloc) = $(lvl.ex).pos[$(lvl.pos_alloc)] - 1
         resize!($(lvl.ex).idx, $(lvl.idx_alloc))
+        $(lvl.ofs_alloc) = $(lvl.idx_alloc) + 1
+        resize!($(lvl.ex).ofs, $(lvl.ofs_alloc))
     end)
     lvl.lvl = trim_level!(lvl.lvl, ctx, lvl.idx_alloc)
     return lvl

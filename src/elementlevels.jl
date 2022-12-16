@@ -2,8 +2,10 @@ struct ElementLevel{D, Tv}
     val::Vector{Tv}
 end
 ElementLevel(D, args...) = ElementLevel{D}(args...)
-ElementLevel{D}(args...) where {D} = ElementLevel{D, typeof(D)}(args...)
-ElementLevel{D, Tv}() where {D, Tv} = ElementLevel{D, Tv}(Tv[])
+
+ElementLevel{D}() where {D} = ElementLevel{D, typeof(D)}()
+ElementLevel{D}(val::Vector{Tv}) where {D, Tv} = ElementLevel{D, Tv}(val)
+ElementLevel{D, Tv}() where {D, Tv} = ElementLevel{D, Tv}(Tv[D])
 const Element = ElementLevel
 
 pattern!(lvl::ElementLevel) = Pattern()

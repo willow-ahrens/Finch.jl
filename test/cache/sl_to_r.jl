@@ -17,6 +17,7 @@
         A_lvl_pos_alloc < 1 + 1 && (A_lvl_pos_alloc = (Finch).regrow!(A_lvl.pos, A_lvl_pos_alloc, 1 + 1))
         A_lvl_q = A_lvl.pos[1]
         A_lvl_q_start = A_lvl_q
+        A_lvl_v = 0.0
         A_lvl_i_prev = 0
         A_lvl_v_prev = 0.0
         D_lvl_q = D_lvl.pos[1]
@@ -106,5 +107,5 @@
         A_lvl_val_alloc = (A_lvl_idx_alloc = A_lvl.pos[A_lvl_pos_alloc] - 1)
         resize!(A_lvl.idx, A_lvl_idx_alloc)
         resize!(A_lvl.val, A_lvl_val_alloc)
-        (A = Fiber((Finch.RepeatRLELevel){0.0, Int64, Float64}(D_lvl.I, A_lvl.pos, A_lvl.idx, A_lvl.val), (Finch.Environment)(; )),)
+        (A = Fiber((Finch.RepeatRLELevel){0.0, Int64, Int64, Float64}(D_lvl.I, A_lvl.pos, A_lvl.idx, A_lvl.val), (Finch.Environment)(; )),)
     end
