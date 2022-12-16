@@ -15,7 +15,7 @@ SparseBytemapLevel{Ti, Tp}(lvl) where {Ti, Tp} = SparseBytemapLevel{Ti, Tp}(zero
 SparseBytemapLevel(I::Ti, lvl) where {Ti} = SparseBytemapLevel{Ti}(I, lvl)
 SparseBytemapLevel{Ti}(I, lvl) where {Ti} = SparseBytemapLevel{Ti, Int}(Ti(I), lvl)
 SparseBytemapLevel{Ti, Tp}(I, lvl) where {Ti, Tp} =
-    SparseBytemapLevel{Ti, Tp}(Ti(I), Tp[1, 1], Bool[], Tuple{Tp, Ti}[], Ref(Tp(0)), lvl)
+    SparseBytemapLevel{Ti, Tp}(Ti(I), Tp[1, 1], fill(false, I), Tuple{Tp, Ti}[], Ref(Tp(0)), lvl)
 
 SparseBytemapLevel(I::Ti, pos::Vector{Tp}, tbl, srt, srt_stop, lvl::Lvl) where {Ti, Tp, Lvl} =
     SparseBytemapLevel{Ti, Tp, Lvl}(I, pos, tbl, srt, srt_stop, lvl)
@@ -200,7 +200,7 @@ function trim_level!(lvl::VirtualSparseBytemapLevel, ctx::LowerJulia, pos)
     push!(ctx.preamble, quote
         $(lvl.pos_alloc) = $(ctx(pos)) + 1
         resize!($(lvl.ex).pos, $(lvl.pos_alloc))
-        $(lvl.tbl_alloc) = $(lvl.pos_alloc) * $(ctx(lvl.I))
+        $(lvl.tbl_alloc) = ($(lvl.pos_alloc) - 1) * $(ctx(lvl.I))
         resize!($(lvl.ex).tbl, $(lvl.tbl_alloc))
         $(lvl.srt_alloc) = $(lvl.ex).pos[$(lvl.pos_alloc)] - 1
         resize!($(lvl.ex).srt, $(lvl.srt_alloc))

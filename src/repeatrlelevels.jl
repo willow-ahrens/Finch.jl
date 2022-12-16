@@ -1,16 +1,25 @@
-struct RepeatRLELevel{D, Ti, Tv}
+struct RepeatRLELevel{D, Ti, Tp, Tv}
     I::Ti
-    pos::Vector{Ti}
+    pos::Vector{Tp}
     idx::Vector{Ti}
     val::Vector{Tv}
 end
 const RepeatRLE = RepeatRLELevel
 RepeatRLELevel(D, args...) = RepeatRLELevel{D}(args...)
+
 RepeatRLELevel{D}() where {D} = RepeatRLELevel{D}(0)
-RepeatRLELevel{D}(I::Ti) where {D, Ti} = RepeatRLELevel{D, Ti}(I)
 RepeatRLELevel{D, Ti}() where {D, Ti} = RepeatRLELevel{D, Ti}(zero(Ti))
-RepeatRLELevel{D, Ti}(I) where {D, Ti} = RepeatRLELevel{D, Ti, typeof(D)}(Ti(I))
-RepeatRLELevel{D, Ti, Tv}(I) where {D, Ti, Tv} = RepeatRLELevel{D, Ti, Tv}(Ti(I), Ti[1, 1], Ti[], Tv[])
+RepeatRLELevel{D, Ti, Tp}() where {D, Ti, Tp} = RepeatRLELevel{D, Ti, Tp}(zero(Ti))
+RepeatRLELevel{D, Ti, Tp, Tv}() where {D, Ti, Tp, Tv} = RepeatRLELevel{D, Ti, Tp, Tv}(zero(Ti))
+
+RepeatRLELevel{D}(I::Ti) where {D, Ti} = RepeatRLELevel{D, Ti}(I)
+RepeatRLELevel{D, Ti}(I) where {D, Ti} = RepeatRLELevel{D, Ti, Int}(Ti(I))
+RepeatRLELevel{D, Ti, Tp}(I) where {D, Ti, Tp} = RepeatRLELevel{D, Ti, Tp, typeof(D)}(Ti(I))
+RepeatRLELevel{D, Ti, Tp, Tv}(I) where {D, Ti, Tp, Tv} = RepeatRLELevel{D, Ti, Tp, Tv}(Ti(I), Ti[1, 2], Ti[Ti(I)], Tv[D])
+
+RepeatRLELevel{D}(I::Ti, pos::Vector{Tp}, idx, val::Vector{Tv}) where {D, Ti, Tp, Tv} = RepeatRLELevel{D, Ti, Tp, Tv}(I, pos, idx, val)
+RepeatRLELevel{D, Ti}(I, pos::Vector{Tp}, idx, val::Vector{Tv}) where {D, Ti, Tp, Tv} = RepeatRLELevel{D, Ti, Tp, Tv}(Ti(I), pos, idx, val)
+RepeatRLELevel{D, Ti, Tp}(I, pos, idx, val::Vector{Tv}) where {D, Ti, Tp, Tv} = RepeatRLELevel{D, Ti, Tp, Tv}(Ti(I), pos, idx, val)
 
 """
 `f_code(rl)` = [RepeatRLELevel](@ref).
@@ -78,13 +87,14 @@ mutable struct VirtualRepeatRLELevel
     ex
     D
     Ti
+    Tp
     Tv
     I
     pos_alloc
     idx_alloc
     val_alloc
 end
-function virtualize(ex, ::Type{RepeatRLELevel{D, Ti, Tv}}, ctx, tag=:lvl) where {D, Ti, Tv}
+function virtualize(ex, ::Type{RepeatRLELevel{D, Ti, Tp, Tv}}, ctx, tag=:lvl) where {D, Ti, Tp, Tv}
     sym = ctx.freshen(tag)
     I = value(:($sym.I), Int)
     pos_alloc = ctx.freshen(sym, :_pos_alloc)
@@ -96,11 +106,11 @@ function virtualize(ex, ::Type{RepeatRLELevel{D, Ti, Tv}}, ctx, tag=:lvl) where 
         $idx_alloc = length($sym.idx)
         $val_alloc = length($sym.val)
     end)
-    VirtualRepeatRLELevel(sym, D, Ti, Tv, I, pos_alloc, idx_alloc, val_alloc)
+    VirtualRepeatRLELevel(sym, D, Ti, Tp, Tv, I, pos_alloc, idx_alloc, val_alloc)
 end
 function (ctx::Finch.LowerJulia)(lvl::VirtualRepeatRLELevel)
     quote
-        $RepeatRLELevel{$(lvl.D), $(lvl.Ti), $(lvl.Tv)}(
+        $RepeatRLELevel{$(lvl.D), $(lvl.Ti), $(lvl.Tp), $(lvl.Tv)}(
             $(ctx(lvl.I)),
             $(lvl.ex).pos,
             $(lvl.ex).idx,
@@ -193,6 +203,7 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode, ::Walk, idx
         preamble = (quote
             $my_q = $(lvl.ex).pos[$(ctx(envposition(fbr.env)))]
             $my_q_stop = $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1]
+            #TODO I think this if is only ever true
             if $my_q < $my_q_stop
                 $my_i = $(lvl.ex).idx[$my_q]
                 $my_i1 = $(lvl.ex).idx[$my_q_stop - 1]
@@ -244,6 +255,7 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode, ::Extrude, 
     push!(ctx.preamble, quote
         $my_q = $(lvl.ex).pos[$(ctx(envposition(fbr.env)))]
         $my_q_start = $my_q
+        $my_v = $(default(fbr))
     end)
 
     body = Thunk(

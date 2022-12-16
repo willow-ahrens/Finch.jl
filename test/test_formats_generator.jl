@@ -44,6 +44,8 @@ open("test_formats.jl", "w") do file
             for outer in [
                 :(Dense($inner)),
                 :(SparseList($inner)),
+#                :(SparseCoo{2}($inner))
+#                :(SparseHash{2}($inner))
             ]
 
                 for arr in [

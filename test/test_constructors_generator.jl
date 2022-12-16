@@ -27,7 +27,7 @@ open("test_constructors.jl", "w") do file
         [false, true, false, true, false, false],
         Vector{Float64}(),
         [0.0, 0.0, 0.0, 0.0],
-        [0.0, 0.2, 0.0, 0.0, 0.3, 0.4],
+        [0.0, 2.0, 2.0, 0.0, 3.0, 3.0],
     ]
 
         for ctrs = [
@@ -57,7 +57,6 @@ open("test_constructors.jl", "w") do file
             test_outer_constructor(arr, ctrs, argss)
         end
     end
-
 
     for arr in [
         Bool[],
@@ -107,26 +106,84 @@ open("test_constructors.jl", "w") do file
         end
     end
 
+    function test_inner_constructor(arr, ctrs, argss, prefix...)
+
+        println(file, "    @testset \"$(first(ctrs)) constructors\" begin")
+        ref = dropdefaults!(Fiber(first(ctrs)(prefix...)), arr)
+
+        println(file, "        ref = Fiber($(repr(ref.lvl)))")
+
+        for ctr in ctrs
+            for args in argss
+                println(file, "        res = Fiber($(ctr)($(join(map(repr, args(ref.lvl)), ", "))))")
+                println(file, "        @test isstructequal(res, ref)")
+            end
+        end
+        println(file, "    end")
+    end
+
     for arr in [
-        Bool[],
-        Bool[;;],
-        Bool[;;;],
+        Vector{Bool}(),
         [false, false, false, false],
-        [false false false; false false false],
-        [false false false; false false false;;; false false false; false false false ],
-        [false, true, false, false],
-        [false false false; true false false],
-        [false false false; false true false;;; false false false; false false true ],
-        Float64[],
-        Float64[;;],
-        Float64[;;;],
+        [false, true, false, true, false, false],
+        Vector{Float64}(),
         [0.0, 0.0, 0.0, 0.0],
-        [0.0 0.0 0.0; 0.0 0.0 0.0],
-        [0.0 0.0 0.0; 0.0 0.0 0.0;;; 0.0 0.0 0.0; 0.0 0.0 0.0 ],
-        [0.0, 2.0, 0.0, 0.0],
-        [0.0 0.0 0.0; 3.0 0.0 0.0],
-        [0.0 0.0 0.0; 0.0 4.0 0.0;;; 0.0 0.0 0.0; 0.0 0.0 5.0 ],
+        [0.0, 2.0, 2.0, 0.0, 3.0, 3.0],
     ]
+
+        D = zero(eltype(arr))
+        for ctrs = [
+            [RepeatRLE{D}, RepeatRLE{D, Int}, RepeatRLE{D, Int, Int}, RepeatRLE{D, Int, Int, typeof(D)}],
+            [RepeatRLE{D, Int8}, RepeatRLE{D, Int8, Int}, RepeatRLE{D, Int8, Int, typeof(D)}],
+            [RepeatRLE{D, Int8, Int8}, RepeatRLE{D, Int8, Int8, typeof(D)}],
+            [RepeatRLE{D, Int8, Int8, Any}],
+        ]
+            argss = []
+            push!(argss, lvl -> map(name -> getproperty(lvl, name), propertynames(lvl)))
+            all(iszero, arr) && push!(argss, lvl -> (lvl.I, ))
+            test_inner_constructor(arr, ctrs, argss)
+        end
+
+        for ctrs = [
+            [RepeatRLE],
+        ]
+            argss = []
+            push!(argss, lvl -> (D, map(name -> getproperty(lvl, name), propertynames(lvl))...))
+            all(iszero, arr) && push!(argss, lvl -> (D, lvl.I, ))
+            test_inner_constructor(arr, ctrs, argss, D)
+        end
+    end
+
+    for arr in [
+        fill(false),
+        fill(true),
+        fill(0.0),
+        fill(1.0),
+    ]
+
+        D = zero(eltype(arr))
+        ctrss = [
+            [Element{D}, Element{D, typeof(D)}],
+            [Element{D, Any}],
+        ]
+        eltype(arr) == Bool && push!(ctrss, [[Pattern,],])
+        for ctrs in ctrss
+            argss = []
+            push!(argss, lvl -> map(name -> getproperty(lvl, name), propertynames(lvl)))
+            all(iszero, arr) && push!(argss, lvl -> ())
+            test_inner_constructor(arr, ctrs, argss)
+        end
+
+        D = zero(eltype(arr))
+        for ctrs in [
+            [Element],
+        ]
+            argss = []
+            push!(argss, lvl -> (D, map(name -> getproperty(lvl, name), propertynames(lvl))...))
+            all(iszero, arr) && push!(argss, lvl -> (D, ))
+            test_inner_constructor(arr, ctrs, argss, D)
+        end
+    end
 
     println(file, "end")
 end

@@ -108,7 +108,7 @@ isstructequal(a::T, b::T) where {T <: SparseBytemap} =
     a.pos == b.pos &&
     a.tbl == b.tbl &&
     a.srt == b.srt &&
-    a.srt_stop == b.srt_stop &&
+    a.srt_stop[] == b.srt_stop[] &&
     isstructequal(a.lvl, b.lvl)
 
 verbose = "verbose" in ARGS
