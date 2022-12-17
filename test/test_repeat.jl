@@ -30,7 +30,7 @@
     @test A.lvl.val[1:5] == [0.0, 1.0, 0.0, 3.0, 0.0]
 
     A = Finch.Fiber(
-        SparseVBL{Int64}(10, [1, 4], [3, 5, 9], [1, 2, 3, 6],
+        SparseVBL(10, [1, 4], [3, 5, 9], [1, 2, 3, 6],
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
 
     B = Finch.Fiber(Dense(Element{0.0}()))
