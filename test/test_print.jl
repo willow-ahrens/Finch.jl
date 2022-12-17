@@ -2,7 +2,7 @@
     A = fiber([(i + j) % 3 for i = 1:5, j = 1:10])
 
     formats = [
-        "list" => SparseList{Int64},
+        "list" => SparseList{Int64, Int64},
         "byte" => SparseBytemap{Int64, Int64},
         "hash1" => SparseHash{1, Tuple{Int64}, Int64},
         "coo1" => SparseCoo{1, Tuple{Int64}, Int64},

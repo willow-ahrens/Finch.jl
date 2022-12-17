@@ -6,6 +6,7 @@ open("test_formats.jl", "w") do file
     println(file, "@testset \"formats\" begin")
 
     function test_format(arr, fmt)
+        println(fmt)
         ref = dropdefaults!(@eval($fmt), arr)
 
         println(file, "    arr = $arr")
@@ -28,9 +29,9 @@ open("test_formats.jl", "w") do file
         for inner in [
             :(Dense($base)),
             :(SparseList($base)),
-            #:(sm($base)),
-            #:(sv($base)),
-            #:(sh{1}($base)),
+            :(SparseVBL($base)),
+            :(SparseBytemap($base)),
+            :(SparseHash{1}($base)),
             :(SparseCoo{1}($base))
         ]
             for arr in [
@@ -44,8 +45,8 @@ open("test_formats.jl", "w") do file
             for outer in [
                 :(Dense($inner)),
                 :(SparseList($inner)),
-#                :(SparseCoo{2}($inner))
-#                :(SparseHash{2}($inner))
+                :(SparseCoo{2}($base)),
+                :(SparseHash{2}($base))
             ]
 
                 for arr in [
