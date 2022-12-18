@@ -21,7 +21,7 @@
 
     for (coln, colf) in formats
         @testset "print d $coln" begin
-            B = copyto!(Fiber(Dense(colf(Element{0.0}()))), A)
+            B = copyto!(Fiber(Dense{Int64}(colf(Element{0.0}()))), A)
             @test diff("print_dense_$coln.txt", sprint(show, B))
             @test diff("print_dense_$(coln)_small.txt", sprint(show, B, context=:compact=>true))
             @test diff("display_dense_$(coln).txt", sprint(show, MIME"text/plain"(), B))
