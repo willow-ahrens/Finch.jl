@@ -1,16 +1,21 @@
-struct SparseListLevel{Ti, Lvl}
+struct SparseListLevel{Ti, Tp, Lvl}
     I::Ti
-    pos::Vector{Ti}
+    pos::Vector{Tp}
     idx::Vector{Ti}
     lvl::Lvl
 end
 const SparseList = SparseListLevel
 SparseListLevel(lvl) = SparseListLevel(0, lvl)
-SparseListLevel{Ti}(lvl) where {Ti} = SparseListLevel(zero(Ti), lvl)
-SparseListLevel(I::Ti, lvl::Lvl) where {Ti, Lvl} = SparseListLevel{Ti, Lvl}(I, lvl)
-SparseListLevel{Ti}(I, lvl::Lvl) where {Ti, Lvl} = SparseListLevel{Ti, Lvl}(Ti(I), lvl)
-SparseListLevel{Ti}(I, pos, idx, lvl::Lvl) where {Ti, Lvl} = SparseListLevel{Ti, Lvl}(Ti(I), pos, idx, lvl)
-SparseListLevel{Ti, Lvl}(I, lvl::Lvl) where {Ti, Lvl} = SparseListLevel{Ti, Lvl}(Ti(I), Ti[1, fill(0, 16)...], Vector{Ti}(undef, 16), lvl)
+SparseListLevel{Ti}(lvl) where {Ti} = SparseListLevel{Ti}(zero(Ti), lvl)
+SparseListLevel{Ti, Tp}(lvl) where {Ti, Tp} = SparseListLevel{Ti, Tp}(zero(Ti), lvl)
+
+SparseListLevel(I::Ti, lvl) where {Ti} = SparseListLevel{Ti}(I, lvl)
+SparseListLevel{Ti}(I, lvl) where {Ti} = SparseListLevel{Ti, Int}(Ti(I), lvl)
+SparseListLevel{Ti, Tp}(I, lvl::Lvl) where {Ti, Tp, Lvl} = SparseListLevel{Ti, Tp, Lvl}(Ti(I), Tp[1, 1], Ti[], lvl)
+
+SparseListLevel(I::Ti, pos::Vector{Tp}, idx, lvl) where {Ti, Tp} = SparseListLevel{Ti}(I, pos, idx, lvl)
+SparseListLevel{Ti}(I, pos::Vector{Tp}, idx, lvl::Lvl) where {Ti, Tp, Lvl} = SparseListLevel{Ti, Tp, Lvl}(Ti(I), pos, idx, lvl)
+SparseListLevel{Ti, Tp}(I, pos, idx, lvl::Lvl) where {Ti, Tp, Lvl} = SparseListLevel{Ti, Tp, Lvl}(Ti(I), pos, idx, lvl)
 
 """
 `f_code(l)` = [SparseListLevel](@ref).
@@ -23,16 +28,20 @@ similar_level(lvl::SparseListLevel, dim, tail...) = SparseList(dim, similar_leve
 pattern!(lvl::SparseListLevel{Ti}) where {Ti} = 
     SparseListLevel{Ti}(lvl.I, lvl.pos, lvl.idx, pattern!(lvl.lvl))
 
-function Base.show(io::IO, lvl::SparseListLevel)
-    print(io, "SparseList(")
-    print(io, lvl.I)
+function Base.show(io::IO, lvl::SparseListLevel{Ti, Tp}) where {Ti, Tp}
+    if get(io, :compact, false)
+        print(io, "SparseList(")
+    else
+        print(io, "SparseList{$Ti, $Tp}(")
+    end
+    show(IOContext(io, :typeinfo=>Ti), lvl.I)
     print(io, ", ")
-    if get(io, :compact, true)
+    if get(io, :compact, false)
         print(io, "…")
     else
-        show_region(io, lvl.pos)
+        show(IOContext(io, :typeinfo=>Vector{Tp}), lvl.pos)
         print(io, ", ")
-        show_region(io, lvl.idx)
+        show(IOContext(io, :typeinfo=>Vector{Ti}), lvl.idx)
     end
     print(io, ", ")
     show(io, lvl.lvl)
@@ -71,13 +80,14 @@ end
 mutable struct VirtualSparseListLevel
     ex
     Ti
+    Tp
     I
     pos_fill
     pos_alloc
     idx_alloc
     lvl
 end
-function virtualize(ex, ::Type{SparseListLevel{Ti, Lvl}}, ctx, tag=:lvl) where {Ti, Lvl}
+function virtualize(ex, ::Type{SparseListLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}
     sym = ctx.freshen(tag)
     I = value(:($sym.I), Int)
     pos_fill = ctx.freshen(sym, :_pos_fill)
@@ -89,7 +99,7 @@ function virtualize(ex, ::Type{SparseListLevel{Ti, Lvl}}, ctx, tag=:lvl) where {
         $idx_alloc = length($sym.idx)
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualSparseListLevel(sym, Ti, I, pos_fill, pos_alloc, idx_alloc, lvl_2)
+    VirtualSparseListLevel(sym, Ti, Tp, I, pos_fill, pos_alloc, idx_alloc, lvl_2)
 end
 function (ctx::Finch.LowerJulia)(lvl::VirtualSparseListLevel)
     quote
@@ -103,6 +113,8 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualSparseListLevel)
 end
 
 summary_f_code(lvl::VirtualSparseListLevel) = "sl($(summary_f_code(lvl.lvl)))"
+
+hasdefaultcheck(lvl::VirtualSparseListLevel) = true
 
 getsites(fbr::VirtualFiber{VirtualSparseListLevel}) =
     [envdepth(fbr.env) + 1, getsites(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))...]
@@ -134,6 +146,17 @@ function initialize_level!(fbr::VirtualFiber{VirtualSparseListLevel}, ctx::Lower
         $(lvl.idx_alloc) = length($(lvl.ex).idx)
     end)
     lvl.lvl = initialize_level!(VirtualFiber(fbr.lvl.lvl, Environment(fbr.env)), ctx, mode)
+    return lvl
+end
+
+function trim_level!(lvl::VirtualSparseListLevel, ctx::LowerJulia, pos)
+    push!(ctx.preamble, quote
+        $(lvl.pos_alloc) = $(ctx(pos)) + 1
+        resize!($(lvl.ex).pos, $(lvl.pos_alloc))
+        $(lvl.idx_alloc) = $(lvl.ex).pos[$(lvl.pos_alloc)] - 1
+        resize!($(lvl.ex).idx, $(lvl.idx_alloc))
+    end)
+    lvl.lvl = trim_level!(lvl.lvl, ctx, lvl.idx_alloc)
     return lvl
 end
 

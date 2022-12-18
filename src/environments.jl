@@ -86,6 +86,8 @@ Base.hasproperty(env::VirtualEnvironment, name::Symbol) = haskey(getfield(env, :
 
 Base.setproperty!(env::VirtualEnvironment, name::Symbol, x) = setindex!(getfield(env, :props), x, name)
 
+Base.delete!(env::VirtualEnvironment, name::Symbol) = delete!(getfield(env, :props), name)
+
 Base.get(env::VirtualEnvironment, name::Symbol, x) = get(getfield(env, :props), name, x)
 
 Base.get!(env::VirtualEnvironment, name::Symbol, x) = get!(getfield(env, :props), name, x)

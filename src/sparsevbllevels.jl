@@ -1,17 +1,22 @@
-struct SparseVBLLevel{Ti, Lvl}
+struct SparseVBLLevel{Ti, Tp, Lvl}
     I::Ti
-    pos::Vector{Ti}
+    pos::Vector{Tp}
     idx::Vector{Ti}
-    ofs::Vector{Ti}
+    ofs::Vector{Tp}
     lvl::Lvl
 end
 const SparseVBL = SparseVBLLevel
 SparseVBLLevel(lvl) = SparseVBLLevel(0, lvl)
-SparseVBLLevel{Ti}(lvl) where {Ti} = SparseVBLLevel(zero(Ti), lvl)
-SparseVBLLevel(I::Ti, lvl::Lvl) where {Ti, Lvl} = SparseVBLLevel{Ti, Lvl}(I, lvl)
-SparseVBLLevel{Ti}(I, lvl::Lvl) where {Ti, Lvl} = SparseVBLLevel{Ti, Lvl}(Ti(I), lvl)
-SparseVBLLevel{Ti}(I, pos, idx, ofs, lvl::Lvl) where {Ti, Lvl} = SparseVBLLevel{Ti, Lvl}(Ti(I), pos, idx, ofs, lvl)
-SparseVBLLevel{Ti, Lvl}(I, lvl::Lvl) where {Ti, Lvl} = SparseVBLLevel{Ti, Lvl}(Ti(I), Ti[1, fill(0, 16)...], Vector{Ti}(undef, 16), Vector{Ti}(undef, 16), lvl)
+SparseVBLLevel{Ti}(lvl) where {Ti} = SparseVBLLevel{Ti}(zero(Ti), lvl)
+SparseVBLLevel{Ti, Tp}(lvl) where {Ti, Tp} = SparseVBLLevel{Ti, Tp}(zero(Ti), lvl)
+
+SparseVBLLevel(I::Ti, lvl) where {Ti} = SparseVBLLevel{Ti}(I, lvl)
+SparseVBLLevel{Ti}(I, lvl) where {Ti} = SparseVBLLevel{Ti, Int}(Ti(I), lvl)
+SparseVBLLevel{Ti, Tp}(I, lvl::Lvl) where {Ti, Tp, Lvl} = SparseVBLLevel{Ti, Tp, Lvl}(Ti(I), Ti[1, 1], Ti[], Ti[1], lvl)
+
+SparseVBLLevel(I::Ti, pos::Vector{Tp}, idx, ofs, lvl::Lvl) where {Ti, Tp, Lvl} = SparseVBLLevel{Ti, Tp, Lvl}(I, pos, idx, ofs, lvl)
+SparseVBLLevel{Ti}(I, pos::Vector{Tp}, idx, ofs, lvl::Lvl) where {Ti, Tp, Lvl} = SparseVBLLevel{Ti, Tp, Lvl}(Ti(I), pos, idx, ofs, lvl)
+SparseVBLLevel{Ti, Tp}(I, pos, idx, ofs, lvl::Lvl) where {Ti, Tp, Lvl} = SparseVBLLevel{Ti, Tp, Lvl}(Ti(I), pos, idx, ofs, lvl)
 
 """
 `f_code(sv)` = [SparseVBLLevel](@ref).
@@ -24,18 +29,22 @@ similar_level(lvl::SparseVBLLevel, dim, tail...) = SparseVBL(dim, similar_level(
 pattern!(lvl::SparseVBLLevel{Ti}) where {Ti} = 
     SparseVBLLevel{Ti}(lvl.I, lvl.pos, lvl.idx, lvl.ofs, pattern!(lvl.lvl))
 
-function Base.show(io::IO, lvl::SparseVBLLevel)
-    print(io, "SparseVBL(")
-    print(io, lvl.I)
+function Base.show(io::IO, lvl::SparseVBLLevel{Ti, Tp}) where {Ti, Tp}
+    if get(io, :compact, false)
+        print(io, "SparseVBL(")
+    else
+        print(io, "SparseVBL{$Ti, $Tp}(")
+    end
+    show(IOContext(io, :typeinfo=>Ti), lvl.I)
     print(io, ", ")
-    if get(io, :compact, true)
+    if get(io, :compact, false)
         print(io, "…")
     else
-        show_region(io, lvl.pos)
+        show(IOContext(io, :typeinfo=>Vector{Tp}), lvl.pos)
         print(io, ", ")
-        show_region(io, lvl.idx)
+        show(IOContext(io, :typeinfo=>Vector{Ti}), lvl.idx)
         print(io, ", ")
-        show_region(io, lvl.ofs)
+        show(IOContext(io, :typeinfo=>Vector{Tp}), lvl.ofs)
     end
     print(io, ", ")
     show(io, lvl.lvl)
@@ -81,13 +90,14 @@ end
 mutable struct VirtualSparseVBLLevel
     ex
     Ti
+    Tp
     I
     pos_alloc
     idx_alloc
     ofs_alloc
     lvl
 end
-function virtualize(ex, ::Type{SparseVBLLevel{Ti, Lvl}}, ctx, tag=:lvl) where {Ti, Lvl}
+function virtualize(ex, ::Type{SparseVBLLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}
     sym = ctx.freshen(tag)
     I = value(:($sym.I), Int)
     pos_alloc = ctx.freshen(sym, :_pos_alloc)
@@ -100,7 +110,7 @@ function virtualize(ex, ::Type{SparseVBLLevel{Ti, Lvl}}, ctx, tag=:lvl) where {T
         $ofs_alloc = length($sym.ofs)
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualSparseVBLLevel(sym, Ti, I, pos_alloc, idx_alloc, ofs_alloc, lvl_2)
+    VirtualSparseVBLLevel(sym, Ti, Tp, I, pos_alloc, idx_alloc, ofs_alloc, lvl_2)
 end
 function (ctx::Finch.LowerJulia)(lvl::VirtualSparseVBLLevel)
     quote
@@ -115,6 +125,8 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualSparseVBLLevel)
 end
 
 summary_f_code(lvl::VirtualSparseVBLLevel) = "sv($(summary_f_code(lvl.lvl)))"
+
+hasdefaultcheck(lvl::VirtualSparseVBLLevel) = true
 
 getsites(fbr::VirtualFiber{VirtualSparseVBLLevel}) =
     [envdepth(fbr.env) + 1, getsites(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))...]
@@ -147,6 +159,20 @@ function initialize_level!(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx::LowerJ
         $(lvl.idx_alloc) = length($(lvl.ex).idx)
     end)
     lvl.lvl = initialize_level!(VirtualFiber(fbr.lvl.lvl, Environment(fbr.env)), ctx, mode)
+    return lvl
+end
+
+function trim_level!(lvl::VirtualSparseVBLLevel, ctx::LowerJulia, pos)
+    qos = ctx.freshen(:qos)
+    push!(ctx.preamble, quote
+        $(lvl.pos_alloc) = $(ctx(pos)) + 1
+        resize!($(lvl.ex).pos, $(lvl.pos_alloc))
+        $(lvl.idx_alloc) = $(lvl.ex).pos[$(lvl.pos_alloc)] - 1
+        resize!($(lvl.ex).idx, $(lvl.idx_alloc))
+        $(lvl.ofs_alloc) = $(lvl.idx_alloc) + 1
+        resize!($(lvl.ex).ofs, $(lvl.ofs_alloc))
+    end)
+    lvl.lvl = trim_level!(lvl.lvl, ctx, lvl.idx_alloc)
     return lvl
 end
 

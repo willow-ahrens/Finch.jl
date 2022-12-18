@@ -107,6 +107,12 @@ function finalize_level! end
 
 finalize_level!(fbr, ctx, mode) = fbr.lvl
 
+function trim!(fbr::VirtualFiber, ctx)
+    delete!(fbr.env, :name)
+    VirtualFiber(trim_level!(fbr.lvl, ctx, 1), fbr.env)
+end
+trim!(fbr, ctx) = fbr
+
 #TODO get rid of isa IndexNode when this is all over
 
 function stylize_access(node, ctx::Stylize{LowerJulia}, tns::VirtualFiber)
@@ -177,23 +183,6 @@ function Base.show(io::IO, fbr::Fiber)
         print(io, fbr.env)
     end
     print(io, ")")
-end
-
-function show_region(io::IO, vec::Vector) 
-    print(io, "[")
-    if length(vec) > 3
-        for i = 1:3
-            print(io, vec[i])
-            print(io, ", ")
-        end
-        print(io, "…")
-    else
-        for i = 1:length(vec)
-            print(io, vec[i])
-            i != length(vec) && print(io, ", ")
-        end
-    end
-    print(io, "]")
 end
 
 function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber)

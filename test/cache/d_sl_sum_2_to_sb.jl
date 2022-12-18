@@ -1,9 +1,9 @@
 @inbounds begin
         B_lvl = ex.body.body.lhs.tns.tns.lvl
+        B_lvl_pos_alloc = length(B_lvl.pos)
         B_lvl_tbl_alloc = length(B_lvl.tbl)
         B_lvl_srt_alloc = length(B_lvl.srt)
         B_lvl_srt_stop = B_lvl.srt_stop[]
-        B_lvl_pos_alloc = length(B_lvl.pos)
         B_lvl_2 = B_lvl.lvl
         B_lvl_2_val_alloc = length(B_lvl.lvl.val)
         B_lvl_2_val = 0.0
@@ -107,5 +107,12 @@
         end
         B_lvl.pos[B_lvl_p_prev_2 + 1] = B_lvl_srt_stop + 1
         B_lvl.srt_stop[] = B_lvl_srt_stop
-        (B = Fiber((Finch.SparseBytemapLevel){Int64, Int64, Int64}(A_lvl_2.I, B_lvl.tbl, B_lvl.srt, B_lvl.srt_stop, B_lvl.pos, B_lvl_2), (Finch.Environment)(; name = :B)),)
+        B_lvl_pos_alloc = 1 + 1
+        resize!(B_lvl.pos, B_lvl_pos_alloc)
+        B_lvl_tbl_alloc = (B_lvl_pos_alloc - 1) * A_lvl_2.I
+        resize!(B_lvl.tbl, B_lvl_tbl_alloc)
+        B_lvl_srt_alloc = B_lvl.srt_stop[]
+        resize!(B_lvl.srt, B_lvl_srt_alloc)
+        resize!(B_lvl_2.val, B_lvl_srt_alloc)
+        (B = Fiber((Finch.SparseBytemapLevel){Int64, Int64}(A_lvl_2.I, B_lvl.pos, B_lvl.tbl, B_lvl.srt, B_lvl.srt_stop, B_lvl_2), (Finch.Environment)(; )),)
     end

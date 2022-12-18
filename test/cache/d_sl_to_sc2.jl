@@ -81,5 +81,12 @@
             end
         end
         B_lvl.pos[1 + 1] = B_lvl_q
-        (B = Fiber((Finch.SparseCooLevel){2, Tuple{Int64, Int64}, Int64, Tuple{Vector{Int64}, Vector{Int64}}}((A_lvl.I, A_lvl_2.I), B_lvl.tbl, B_lvl.pos, B_lvl_2), (Finch.Environment)(; name = :B)),)
+        B_lvl_pos_alloc = 1 + 1
+        resize!(B_lvl.pos, B_lvl_pos_alloc)
+        B_lvl_idx_alloc = B_lvl.pos[B_lvl_pos_alloc] - 1
+        for idx = B_lvl.tbl
+            resize!(idx, B_lvl_idx_alloc)
+        end
+        resize!(B_lvl_2.val, B_lvl_idx_alloc)
+        (B = Fiber((Finch.SparseCooLevel){2, Tuple{Int64, Int64}, Int64}((A_lvl.I, A_lvl_2.I), B_lvl.tbl, B_lvl.pos, B_lvl_2), (Finch.Environment)(; )),)
     end

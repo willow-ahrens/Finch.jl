@@ -2,8 +2,10 @@ struct ElementLevel{D, Tv}
     val::Vector{Tv}
 end
 ElementLevel(D, args...) = ElementLevel{D}(args...)
-ElementLevel{D}(args...) where {D} = ElementLevel{D, typeof(D)}(args...)
-ElementLevel{D, Tv}() where {D, Tv} = ElementLevel{D, Tv}(Vector{Tv}(undef, 4))
+
+ElementLevel{D}() where {D} = ElementLevel{D, typeof(D)}()
+ElementLevel{D}(val::Vector{Tv}) where {D, Tv} = ElementLevel{D, Tv}(val)
+ElementLevel{D, Tv}() where {D, Tv} = ElementLevel{D, Tv}(Tv[D])
 const Element = ElementLevel
 
 pattern!(lvl::ElementLevel) = Pattern()
@@ -15,14 +17,14 @@ f_code(::Val{:e}) = Element
 summary_f_code(::Element{D}) where {D} = "e($(D))"
 similar_level(::ElementLevel{D}) where {D} = ElementLevel{D}()
 
-function Base.show(io::IO, lvl::ElementLevel{D}) where {D}
+function Base.show(io::IO, lvl::ElementLevel{D, Tv}) where {D, Tv}
     print(io, "Element{")
     show(io, D)
-    print(io, "}(")
-    if get(io, :compact, true)
+    print(io, ", $Tv}(")
+    if get(io, :compact, false)
         print(io, "…")
     else
-        show_region(io, lvl.val)
+        show(IOContext(io, :typeinfo=>Vector{Tv}), lvl.val)
     end
     print(io, ")")
 end 
@@ -87,6 +89,13 @@ function initialize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
 end
 
 finalize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode) = fbr.lvl
+
+function trim_level!(lvl::VirtualElementLevel, ctx::LowerJulia, pos)
+    push!(ctx.preamble, quote
+        resize!($(lvl.ex).val, $(ctx(pos)))
+    end)
+    return lvl
+end
 
 interval_assembly_depth(lvl::VirtualElementLevel) = Inf
 

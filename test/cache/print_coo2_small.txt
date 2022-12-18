@@ -1,1 +1,1 @@
-Fiber(SparseCoo{2}((5, 10), ([1, 1, 1, …], [1, 2, 3, …], ), [1, 51, 3, …], Element{0.0}([2.0, 0.0, 1.0, …])), Env(name=dst))
+Fiber(SparseCoo{2}((5, 10), …, Element{0.0, Float64}(…)))
