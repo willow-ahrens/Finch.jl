@@ -87,10 +87,7 @@ function execute_code(ex, T, algebra = DefaultAlgebra())
     end
     code |>
         lower_caches |>
-        lower_cleanup |>
-        striplines |>
-        unblock |>
-        unquote_literals
+        lower_cleanup
 end
 
 macro finch(args_ex...)
@@ -117,7 +114,10 @@ macro finch_code(args_ex...)
     (args, ex) = (args_ex[1:end-1], args_ex[end])
     prgm = IndexNotation.finch_parse_instance(ex)
     return quote
-        $execute_code(:ex, typeof($prgm), $(map(esc, args)...))
+        $execute_code(:ex, typeof($prgm), $(map(esc, args)...)) |>
+        striplines |>
+        unblock |>
+        unquote_literals
     end
 end
 
