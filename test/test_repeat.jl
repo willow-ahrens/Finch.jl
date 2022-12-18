@@ -1,4 +1,4 @@
-@testset "RepeatRLE" begin
+@testset "Repeat" begin
     A = Finch.Fiber(
         RepeatRLE{0.0, Int64, Int64, Float64}(10, [1, 7], [1, 3, 5, 7, 9, 10], [2.0, 3.0, 4.0, 5.0, 6.0, 7.0]))
 
