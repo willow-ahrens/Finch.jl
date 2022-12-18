@@ -35,24 +35,24 @@ summary_f_code(lvl::SparseBytemapLevel) = "sm($(summary_f_code(lvl.lvl)))"
 similar_level(lvl::SparseBytemapLevel) = SparseBytemap(similar_level(lvl.lvl))
 similar_level(lvl::SparseBytemapLevel, dim, tail...) = SparseBytemap(dim, similar_level(lvl.lvl, tail...))
 
-function Base.show(io::IO, lvl::SparseBytemapLevel{Ti}) where {Ti}
+function Base.show(io::IO, lvl::SparseBytemapLevel{Ti, Tp}) where {Ti, Tp}
     if get(io, :compact, false)
         print(io, "SparseBytemap(")
     else
-        print(io, "SparseBytemap{$Ti}(")
+        print(io, "SparseBytemap{$Ti, $Tp}(")
     end
-    show(io, lvl.I)
+    show(IOContext(io, :typeinfo=>Ti), lvl.I)
     print(io, ", ")
     if get(io, :compact, false)
         print(io, "…")
     else
-        show(io, lvl.pos)
+        show(IOContext(io, :typeinfo=>Vector{Tp}), lvl.pos)
         print(io, ", ")
-        show(io, lvl.tbl)
+        show(IOContext(io, :typeinfo=>Vector{Bool}), lvl.tbl)
         print(io, ", ")
-        show(io, lvl.srt)
+        show(IOContext(io, :typeinfo=>Vector{Tuple{Tp, Ti}}), lvl.srt)
         print(io, ", ")
-        print(io, lvl.srt_stop)
+        show(IOContext(io, :typeinfo=>Ref{Tp}), lvl.srt_stop)
     end
     print(io, ", ")
     show(io, lvl.lvl)

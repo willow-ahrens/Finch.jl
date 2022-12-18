@@ -32,24 +32,24 @@ similar_level(lvl::SparseCooLevel{N}, tail...) where {N} = SparseCooLevel{N}(ntu
 pattern!(lvl::SparseCooLevel{N, Ti, Tp}) where {N, Ti, Tp} = 
     SparseCooLevel{N, Ti, Tp}(lvl.I, lvl.tbl, lvl.pos, pattern!(lvl.lvl))
 
-function Base.show(io::IO, lvl::SparseCooLevel{N, Ti}) where {N, Ti}
+function Base.show(io::IO, lvl::SparseCooLevel{N, Ti, Tp}) where {N, Ti, Tp}
     if get(io, :compact, false)
         print(io, "SparseCoo{$N}(")
     else
-        print(io, "SparseCoo{$N, $Ti}(")
+        print(io, "SparseCoo{$N, $Ti, $Tp}(")
     end
-    show(io, lvl.I)
+    show(IOContext(io, :typeinfo=>Ti), lvl.I)
     print(io, ", ")
     if get(io, :compact, false)
         print(io, "…")
     else
         print(io, "(")
-        for n = 1:N
-            show(io, lvl.tbl[n])
+        for (n, ti) = enumerate(Ti.parameters)
+            show(IOContext(io, :typeinfo=>Vector{ti}), lvl.tbl[n])
             print(io, ", ")
         end
         print(io, "), ")
-        show(io, lvl.pos)
+        show(IOContext(io, :typeinfo=>Vector{Tp}), lvl.pos)
     end
     print(io, ", ")
     show(io, lvl.lvl)

@@ -1,1 +1,1 @@
-Fiber(Dense(5, SparseHash{1}((10,), …, Element{0.0}(…))))
+Fiber(Dense(5, SparseHash{1}((10,), …, Element{0.0, Float64}(…))))

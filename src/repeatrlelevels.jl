@@ -38,13 +38,13 @@ similar_level(::RepeatRLELevel{D}, dim, tail...) where {D} = RepeatRLE{D}(dim)
 pattern!(lvl::RepeatRLELevel{D, Ti}) where {D, Ti} = 
     DenseLevel{Ti}(lvl.I, Pattern())
 
-function Base.show(io::IO, lvl::RepeatRLELevel{D, Ti}) where {D, Ti}
+function Base.show(io::IO, lvl::RepeatRLELevel{D, Ti, Tp, Tv}) where {D, Ti, Tp, Tv}
     print(io, "RepeatRLE{")
     print(io, D)
     if get(io, :compact, false)
         print(io, "}(")
     else
-        print(io, ", $Ti}(")
+        print(io, ", $Ti, $Tp, $Tv}(")
     end
 
     show(io, lvl.I)
@@ -52,11 +52,11 @@ function Base.show(io::IO, lvl::RepeatRLELevel{D, Ti}) where {D, Ti}
     if get(io, :compact, false)
         print(io, "…")
     else
-        show(io, lvl.pos)
+        show(IOContext(io, :typeinfo=>Vector{Tp}), lvl.pos)
         print(io, ", ")
-        show(io, lvl.idx)
+        show(IOContext(io, :typeinfo=>Vector{Ti}), lvl.idx)
         print(io, ", ")
-        show(io, lvl.val)
+        show(IOContext(io, :typeinfo=>Vector{Tv}), lvl.val)
     end
     print(io, ")")
 end

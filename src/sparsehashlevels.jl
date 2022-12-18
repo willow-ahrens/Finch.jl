@@ -47,13 +47,13 @@ similar_level(lvl::SparseHashLevel{N}, tail...) where {N} = SparseHashLevel{N}(n
 pattern!(lvl::SparseHashLevel{N, Ti, Tp, Tbl}) where {N, Ti, Tp, Tbl} = 
     SparseHashLevel{N, Ti, Tp, Tbl}(lvl.I, lvl.tbl, lvl.pos, lvl.srt, pattern!(lvl.lvl))
 
-function Base.show(io::IO, lvl::SparseHashLevel{N, Ti}) where {N, Ti}
+function Base.show(io::IO, lvl::SparseHashLevel{N, Ti, Tp}) where {N, Ti, Tp}
     if get(io, :compact, false)
         print(io, "SparseHash{$N}(")
     else
-        print(io, "SparseHash{$N, $Ti}(")
+        print(io, "SparseHash{$N, $Ti, $Tp}(")
     end
-    print(io, lvl.I)
+    show(IOContext(io, :typeinfo=>Ti), lvl.I)
     print(io, ", ")
     if get(io, :compact, false)
         print(io, "…")
@@ -62,9 +62,9 @@ function Base.show(io::IO, lvl::SparseHashLevel{N, Ti}) where {N, Ti}
         print(io, "(")
         print(io, join(sort!(collect(pairs(lvl.tbl))), ", "))
         print(io, "), ")
-        show(io, lvl.pos)
+        show(IOContext(io, :typeinfo=>Vector{Tp}), lvl.pos)
         print(io, ", ")
-        show(io, lvl.srt)
+        show(IOContext(io, :typeinfo=>Vector{Pair{Tuple{Tp, Ti}, Tp}}), lvl.srt)
     end
     print(io, ", ")
     show(io, lvl.lvl)

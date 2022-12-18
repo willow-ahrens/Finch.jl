@@ -17,14 +17,14 @@ f_code(::Val{:e}) = Element
 summary_f_code(::Element{D}) where {D} = "e($(D))"
 similar_level(::ElementLevel{D}) where {D} = ElementLevel{D}()
 
-function Base.show(io::IO, lvl::ElementLevel{D}) where {D}
+function Base.show(io::IO, lvl::ElementLevel{D, Tv}) where {D, Tv}
     print(io, "Element{")
     show(io, D)
-    print(io, "}(")
+    print(io, ", $Tv}(")
     if get(io, :compact, false)
         print(io, "…")
     else
-        show(io, lvl.val)
+        show(IOContext(io, :typeinfo=>Vector{Tv}), lvl.val)
     end
     print(io, ")")
 end 
