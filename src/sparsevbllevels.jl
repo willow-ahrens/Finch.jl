@@ -171,8 +171,9 @@ function trim_level!(lvl::VirtualSparseVBLLevel, ctx::LowerJulia, pos)
         resize!($(lvl.ex).idx, $(lvl.idx_alloc))
         $(lvl.ofs_alloc) = $(lvl.idx_alloc) + 1
         resize!($(lvl.ex).ofs, $(lvl.ofs_alloc))
+        $(qos) = $(lvl.ex).ofs[$(lvl.ofs_alloc)] - 1
     end)
-    lvl.lvl = trim_level!(lvl.lvl, ctx, lvl.idx_alloc)
+    lvl.lvl = trim_level!(lvl.lvl, ctx, qos)
     return lvl
 end
 

@@ -6,7 +6,6 @@ open("test_formats.jl", "w") do file
     println(file, "@testset \"formats\" begin")
 
     function test_format(arr, fmt)
-        println(fmt)
         ref = dropdefaults!(@eval($fmt), arr)
 
         println(file, "    arr = $arr")
