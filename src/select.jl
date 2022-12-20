@@ -96,3 +96,50 @@ function (ctx::LowerJulia)(root, ::SelectStyle)
         ctx_2(root)
     end
 end
+
+@kwdef struct Furlable
+    name = gensym()
+    size
+    body
+end
+
+getsize(tns::Furlable, ::LowerJulia, mode) = tns.size
+getname(tns::Furlable) = tns.name
+
+IndexNotation.isliteral(::Furlable) = false
+
+Base.show(io::IO, ex::Furlable) = Base.show(io, MIME"text/plain"(), ex)
+function Base.show(io::IO, mime::MIME"text/plain", ex::Furlable)
+    print(io, "Furlable()")
+end
+
+struct DiagMask end
+
+const diagmask = DiagMask()
+
+Base.show(io::IO, ex::DiagMask) = Base.show(io, MIME"text/plain"(), ex)
+function Base.show(io::IO, mime::MIME"text/plain", ex::DiagMask)
+    print(io, "diagmask")
+end
+
+virtualize(ex, ::Type{DiagMask}, ctx) = diagmask
+
+initialize(::DiagMask, ctx, mode, idxs...) = begin
+    Furlable(
+        body = (ctx, idx, ext) -> Lookup(
+            (i) -> Furlable(
+                body = Pipeline([
+                    Phase(
+                        stride = (ctx, idx, ext) -> value(:($i - 1)),
+                        body = (start, step) -> Run(body=Simplify(literal(false)))
+                    ),
+                    Phase(
+                        stride = (ctx, idx, ext) -> value(i),
+                        body = (start, step) -> Run(body=Simplify(literal(true))),
+                    ),
+                    Phase(body = (start, step) -> Run(body=Simplify(literal(false))))
+                ])
+            )
+        )
+    )
+end
