@@ -8,8 +8,6 @@
         A_lvl_2_val_alloc = length(A_lvl.lvl.val)
         A_lvl_2_val = 0.0
         B_val = 0.0
-        s_stop = A_lvl.I
-        select_s = 5
         A_lvl_q = A_lvl.pos[1]
         A_lvl_q_stop = A_lvl.pos[1 + 1]
         if A_lvl_q < A_lvl_q_stop
@@ -19,66 +17,37 @@
             A_lvl_i = 1
             A_lvl_i1 = 0
         end
-        s = 1
+        s = 5
         s_start = s
         phase_start = s_start
-        phase_stop = (min)(A_lvl_i1, select_s - 1, s_stop)
+        phase_stop = (min)(A_lvl_i1, 5)
         if phase_stop >= phase_start
             s_2 = s
-            s = phase_stop + 1
-        end
-        s_start = s
-        phase_start_2 = s_start
-        phase_stop_2 = (min)(select_s - 1, s_stop)
-        if phase_stop_2 >= phase_start_2
-            s_3 = s
-            s = phase_stop_2 + 1
-        end
-        s_start = s
-        phase_start_3 = s_start
-        phase_stop_3 = (min)(A_lvl_i1, s_stop, select_s)
-        if phase_stop_3 >= phase_start_3
-            s_4 = s
-            s = phase_start_3
-            while A_lvl_q < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < phase_start_3
+            s = phase_start
+            while A_lvl_q < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < phase_start
                 A_lvl_q += 1
             end
-            while s <= phase_stop_3
+            while s <= phase_stop
                 s_start_2 = s
                 A_lvl_i = A_lvl.idx[A_lvl_q]
-                phase_stop_4 = (min)(A_lvl_i, phase_stop_3)
-                s_5 = s
-                if A_lvl_i == phase_stop_4
+                phase_stop_2 = (min)(A_lvl_i, phase_stop)
+                s_3 = s
+                if A_lvl_i == phase_stop_2
                     A_lvl_2_val = A_lvl_2.val[A_lvl_q]
-                    s_6 = phase_stop_4
+                    s_4 = phase_stop_2
                     B_val = (+)(A_lvl_2_val, B_val)
                     A_lvl_q += 1
                 else
                 end
-                s = phase_stop_4 + 1
+                s = phase_stop_2 + 1
             end
-            s = phase_stop_3 + 1
+            s = phase_stop + 1
         end
         s_start = s
-        phase_start_5 = s_start
-        phase_stop_5 = (min)(s_stop, select_s)
-        if phase_stop_5 >= phase_start_5
-            s_7 = s
-            s = phase_stop_5 + 1
-        end
-        s_start = s
-        phase_start_6 = s_start
-        phase_stop_6 = (min)(A_lvl_i1, s_stop)
-        if phase_stop_6 >= phase_start_6
-            s_8 = s
-            s = phase_stop_6 + 1
-        end
-        s_start = s
-        phase_start_7 = s_start
-        phase_stop_7 = s_stop
-        if phase_stop_7 >= phase_start_7
-            s_9 = s
-            s = phase_stop_7 + 1
+        phase_start_3 = s_start
+        if 5 >= phase_start_3
+            s_5 = s
+            s = 5 + 1
         end
         (B = (Scalar){0.0, Float64}(B_val),)
     end
