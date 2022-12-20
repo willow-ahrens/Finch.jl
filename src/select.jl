@@ -1,54 +1,3 @@
-struct Select end
-
-const select = Select()
-
-IndexNotation.isliteral(::Select) =  false
-
-Base.show(io::IO, ex::Select) = Base.show(io, MIME"text/plain"(), ex)
-function Base.show(io::IO, mime::MIME"text/plain", ex::Select)
-    print(io, "select")
-end
-
-getsize(::Select, ::LowerJulia, mode) = (NoDimension(), NoDimension())
-getsites(::Select) = 1:2
-getname(x::Select) = gensym()
-setname(::Select, name) = select
-
-virtualize(ex, ::Type{Select}, ctx) = select
-
-(ctx::LowerJulia)(tns::Select) = error("Select not lowered")
-
-function stylize_access(node, ctx::Stylize{LowerJulia}, tns::Select)
-    if ctx.root isa IndexNode && ctx.root.kind === loop && ctx.root.idx == get_furl_root(node.idxs[2])
-        Finch.ChunkStyle()
-    else
-        Finch.DefaultStyle()
-    end
-end
-
-function chunkify_access(node, ctx, ::Select)
-    if getname(ctx.idx) == getname(node.idxs[2])
-        sym = ctx.ctx.freshen(:select_, getname(node.idxs[2]))
-        push!(ctx.ctx.preamble, quote
-            $sym = $(ctx.ctx(node.idxs[1]))
-        end)
-        tns = Pipeline([
-            Phase(
-                stride = (ctx, idx, ext) -> value(:($sym - 1)),
-                body = (start, step) -> Run(body=Simplify(Fill(false)))
-            ),
-            Phase(
-                stride = (ctx, idx, ext) -> value(sym),
-                body = (start, step) -> Run(body=Simplify(Fill(true))),
-            ),
-            Phase(body = (start, step) -> Run(body=Simplify(Fill(false))))
-        ])
-        access(tns, node.mode, node.idxs[2])
-    else
-        node
-    end
-end
-
 struct SelectVisitor
     ctx
     idxs
@@ -83,17 +32,10 @@ function (ctx::LowerJulia)(root, ::SelectStyle)
     idxs = Dict()
     root = SelectVisitor(ctx, idxs)(root)
     for (idx, val) in pairs(idxs)
-        ext = 
-        root = @f(
-            @loop $idx (
-                @sieve select[$val, $idx] (
-                    $root
-                )
-            )
-        )
+        ctx.dims[getname(idx)] = Extent(val, val)
+        root = loop(idx, root)
     end
     contain(ctx) do ctx_2
-        dimensionalize!(root, ctx_2)
         ctx_2(root)
     end
 end
@@ -129,8 +71,12 @@ function select_access(node, ctx::Finch.SelectVisitor, tns::Furlable)
     if !isempty(node.idxs)
         if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
             var = index(ctx.ctx.freshen(:s))
-            ctx.idxs[var] = node.idxs[1]
-            return access(node.tns, node.mode, var, node.idxs[2:end]...)
+            val = cache!(ctx.ctx, :s, node.idxs[1])
+            ctx.idxs[var] = val
+            ext = first(getsize(tns, ctx.ctx, node.mode))
+            ext_2 = Extent(val, val)
+            tns_2 = truncate(tns, ctx.ctx, ext, ext_2)
+            return access(tns_2, node.mode, var, node.idxs[2:end]...)
         end
     end
     return similarterm(node, operation(node), map(ctx, arguments(node)))

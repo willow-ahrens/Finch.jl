@@ -15,13 +15,13 @@
 
     @test B() == 0.0
 
-    @test diff("sieve_hl_select.jl", @finch_code (@loop j @sieve select[3, j] B[] += A[j]))
+    @test diff("sieve_hl_select.jl", @finch_code (@loop j @sieve diagmask[3, j] B[] += A[j]))
 
-    @finch (@loop j @sieve select[3, j] B[] += A[j])
+    @finch (@loop j @sieve diagmask[3, j] B[] += A[j])
 
     @test B() == 3.0
 
-    @finch (@loop j @sieve select[4, j] B[] += A[j])
+    @finch (@loop j @sieve diagmask[4, j] B[] += A[j])
 
     @test B() == 0.0
 

@@ -130,8 +130,12 @@ function select_access(node, ctx::Finch.SelectVisitor, tns::VirtualFiber)
     if !isempty(node.idxs)
         if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
             var = index(ctx.ctx.freshen(:s))
-            ctx.idxs[var] = node.idxs[1]
-            return access(node.tns, node.mode, var, node.idxs[2:end]...)
+            val = cache!(ctx.ctx, :s, node.idxs[1])
+            ctx.idxs[var] = val
+            ext = first(getsize(tns, ctx.ctx, node.mode))
+            ext_2 = Extent(val, val)
+            tns_2 = truncate(tns, ctx.ctx, ext, ext_2)
+            return access(tns_2, node.mode, var, node.idxs[2:end]...)
         end
     end
     return similarterm(node, operation(node), map(ctx, arguments(node)))
