@@ -44,15 +44,15 @@
     res = dropdefaults!(Fiber(SparseList(Dense(Pattern()))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), ([], [], ), [1, 1], Pattern()))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), (Int[], Int[], ), [1, 1], Pattern()))
     res = dropdefaults!(Fiber(SparseCoo{2}(Pattern())), arr)
     @test isstructequal(res, ref)
     arr = Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), ([1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5], [1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 26], Pattern()))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), (Int[1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5], Int[1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 26], Pattern()))
     res = dropdefaults!(Fiber(SparseCoo{2}(Pattern())), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((4, 4), ([1, 1, 3, 3, 3, 3, 4, 4], [2, 4, 1, 2, 3, 4, 2, 4], ), [1, 9], Pattern()))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((4, 4), (Int[1, 1, 3, 3, 3, 3, 4, 4], Int[2, 4, 1, 2, 3, 4, 2, 4], ), [1, 9], Pattern()))
     res = dropdefaults!(Fiber(SparseCoo{2}(Pattern())), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
@@ -104,15 +104,15 @@
     res = dropdefaults!(Fiber(SparseList(SparseList(Pattern()))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), ([], [], ), [1, 1], Pattern()))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), (Int[], Int[], ), [1, 1], Pattern()))
     res = dropdefaults!(Fiber(SparseCoo{2}(Pattern())), arr)
     @test isstructequal(res, ref)
     arr = Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), ([1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5], [1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 26], Pattern()))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), (Int[1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5], Int[1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 26], Pattern()))
     res = dropdefaults!(Fiber(SparseCoo{2}(Pattern())), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((4, 4), ([1, 1, 3, 3, 3, 3, 4, 4], [2, 4, 1, 2, 3, 4, 2, 4], ), [1, 9], Pattern()))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((4, 4), (Int[1, 1, 3, 3, 3, 3, 4, 4], Int[2, 4, 1, 2, 3, 4, 2, 4], ), [1, 9], Pattern()))
     res = dropdefaults!(Fiber(SparseCoo{2}(Pattern())), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
@@ -164,15 +164,15 @@
     res = dropdefaults!(Fiber(SparseList(SparseVBL(Pattern()))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), ([], [], ), [1, 1], Pattern()))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), (Int[], Int[], ), [1, 1], Pattern()))
     res = dropdefaults!(Fiber(SparseCoo{2}(Pattern())), arr)
     @test isstructequal(res, ref)
     arr = Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), ([1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5], [1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 26], Pattern()))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), (Int[1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5], Int[1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 26], Pattern()))
     res = dropdefaults!(Fiber(SparseCoo{2}(Pattern())), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((4, 4), ([1, 1, 3, 3, 3, 3, 4, 4], [2, 4, 1, 2, 3, 4, 2, 4], ), [1, 9], Pattern()))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((4, 4), (Int[1, 1, 3, 3, 3, 3, 4, 4], Int[2, 4, 1, 2, 3, 4, 2, 4], ), [1, 9], Pattern()))
     res = dropdefaults!(Fiber(SparseCoo{2}(Pattern())), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
@@ -224,15 +224,15 @@
     res = dropdefaults!(Fiber(SparseList(SparseBytemap(Pattern()))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), ([], [], ), [1, 1], Pattern()))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), (Int[], Int[], ), [1, 1], Pattern()))
     res = dropdefaults!(Fiber(SparseCoo{2}(Pattern())), arr)
     @test isstructequal(res, ref)
     arr = Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), ([1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5], [1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 26], Pattern()))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), (Int[1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5], Int[1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 26], Pattern()))
     res = dropdefaults!(Fiber(SparseCoo{2}(Pattern())), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((4, 4), ([1, 1, 3, 3, 3, 3, 4, 4], [2, 4, 1, 2, 3, 4, 2, 4], ), [1, 9], Pattern()))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((4, 4), (Int[1, 1, 3, 3, 3, 3, 4, 4], Int[2, 4, 1, 2, 3, 4, 2, 4], ), [1, 9], Pattern()))
     res = dropdefaults!(Fiber(SparseCoo{2}(Pattern())), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
@@ -284,15 +284,15 @@
     res = dropdefaults!(Fiber(SparseList(SparseHash{1}(Pattern()))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), ([], [], ), [1, 1], Pattern()))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), (Int[], Int[], ), [1, 1], Pattern()))
     res = dropdefaults!(Fiber(SparseCoo{2}(Pattern())), arr)
     @test isstructequal(res, ref)
     arr = Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), ([1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5], [1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 26], Pattern()))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), (Int[1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5], Int[1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 26], Pattern()))
     res = dropdefaults!(Fiber(SparseCoo{2}(Pattern())), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((4, 4), ([1, 1, 3, 3, 3, 3, 4, 4], [2, 4, 1, 2, 3, 4, 2, 4], ), [1, 9], Pattern()))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((4, 4), (Int[1, 1, 3, 3, 3, 3, 4, 4], Int[2, 4, 1, 2, 3, 4, 2, 4], ), [1, 9], Pattern()))
     res = dropdefaults!(Fiber(SparseCoo{2}(Pattern())), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
@@ -308,51 +308,51 @@
     res = dropdefaults!(Fiber(SparseHash{2}(Pattern())), arr)
     @test isstructequal(res, ref)
     arr = Bool[0, 0, 0, 0, 0]
-    ref = Fiber(SparseCoo{1, Tuple{Int}, Int}((5,), ([], ), [1, 1], Pattern()))
+    ref = Fiber(SparseCoo{1, Tuple{Int}, Int}((5,), (Int[], ), [1, 1], Pattern()))
     res = dropdefaults!(Fiber(SparseCoo{1}(Pattern())), arr)
     @test isstructequal(res, ref)
     arr = Bool[1, 1, 1, 1, 1]
-    ref = Fiber(SparseCoo{1, Tuple{Int}, Int}((5,), ([1, 2, 3, 4, 5], ), [1, 6], Pattern()))
+    ref = Fiber(SparseCoo{1, Tuple{Int}, Int}((5,), (Int[1, 2, 3, 4, 5], ), [1, 6], Pattern()))
     res = dropdefaults!(Fiber(SparseCoo{1}(Pattern())), arr)
     @test isstructequal(res, ref)
     arr = Bool[0, 1, 0, 1]
-    ref = Fiber(SparseCoo{1, Tuple{Int}, Int}((4,), ([2, 4], ), [1, 3], Pattern()))
+    ref = Fiber(SparseCoo{1, Tuple{Int}, Int}((4,), (Int[2, 4], ), [1, 3], Pattern()))
     res = dropdefaults!(Fiber(SparseCoo{1}(Pattern())), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
-    ref = Fiber(Dense{Int}(5, SparseCoo{1, Tuple{Int}, Int}((5,), ([], ), [1, 1, 1, 1, 1, 1], Pattern())))
+    ref = Fiber(Dense{Int}(5, SparseCoo{1, Tuple{Int}, Int}((5,), (Int[], ), [1, 1, 1, 1, 1, 1], Pattern())))
     res = dropdefaults!(Fiber(Dense(SparseCoo{1}(Pattern()))), arr)
     @test isstructequal(res, ref)
     arr = Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
-    ref = Fiber(Dense{Int}(5, SparseCoo{1, Tuple{Int}, Int}((5,), ([1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 6, 11, 16, 21, 26], Pattern())))
+    ref = Fiber(Dense{Int}(5, SparseCoo{1, Tuple{Int}, Int}((5,), (Int[1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 6, 11, 16, 21, 26], Pattern())))
     res = dropdefaults!(Fiber(Dense(SparseCoo{1}(Pattern()))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(Dense{Int}(4, SparseCoo{1, Tuple{Int}, Int}((4,), ([2, 4, 1, 2, 3, 4, 2, 4], ), [1, 3, 3, 7, 9], Pattern())))
+    ref = Fiber(Dense{Int}(4, SparseCoo{1, Tuple{Int}, Int}((4,), (Int[2, 4, 1, 2, 3, 4, 2, 4], ), [1, 3, 3, 7, 9], Pattern())))
     res = dropdefaults!(Fiber(Dense(SparseCoo{1}(Pattern()))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
-    ref = Fiber(SparseList{Int, Int}(5, [1, 1], [], SparseCoo{1, Tuple{Int}, Int}((5,), ([], ), [1], Pattern())))
+    ref = Fiber(SparseList{Int, Int}(5, [1, 1], [], SparseCoo{1, Tuple{Int}, Int}((5,), (Int[], ), [1], Pattern())))
     res = dropdefaults!(Fiber(SparseList(SparseCoo{1}(Pattern()))), arr)
     @test isstructequal(res, ref)
     arr = Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
-    ref = Fiber(SparseList{Int, Int}(5, [1, 6], [1, 2, 3, 4, 5], SparseCoo{1, Tuple{Int}, Int}((5,), ([1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 6, 11, 16, 21, 26], Pattern())))
+    ref = Fiber(SparseList{Int, Int}(5, [1, 6], [1, 2, 3, 4, 5], SparseCoo{1, Tuple{Int}, Int}((5,), (Int[1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 6, 11, 16, 21, 26], Pattern())))
     res = dropdefaults!(Fiber(SparseList(SparseCoo{1}(Pattern()))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(SparseList{Int, Int}(4, [1, 4], [1, 3, 4], SparseCoo{1, Tuple{Int}, Int}((4,), ([2, 4, 1, 2, 3, 4, 2, 4], ), [1, 3, 7, 9], Pattern())))
+    ref = Fiber(SparseList{Int, Int}(4, [1, 4], [1, 3, 4], SparseCoo{1, Tuple{Int}, Int}((4,), (Int[2, 4, 1, 2, 3, 4, 2, 4], ), [1, 3, 7, 9], Pattern())))
     res = dropdefaults!(Fiber(SparseList(SparseCoo{1}(Pattern()))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), ([], [], ), [1, 1], Pattern()))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), (Int[], Int[], ), [1, 1], Pattern()))
     res = dropdefaults!(Fiber(SparseCoo{2}(Pattern())), arr)
     @test isstructequal(res, ref)
     arr = Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), ([1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5], [1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 26], Pattern()))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), (Int[1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5], Int[1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 26], Pattern()))
     res = dropdefaults!(Fiber(SparseCoo{2}(Pattern())), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((4, 4), ([1, 1, 3, 3, 3, 3, 4, 4], [2, 4, 1, 2, 3, 4, 2, 4], ), [1, 9], Pattern()))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((4, 4), (Int[1, 1, 3, 3, 3, 3, 4, 4], Int[2, 4, 1, 2, 3, 4, 2, 4], ), [1, 9], Pattern()))
     res = dropdefaults!(Fiber(SparseCoo{2}(Pattern())), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
@@ -412,15 +412,15 @@
     res = dropdefaults!(Fiber(SparseList(Dense(Element(false)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), ([], [], ), [1, 1], Element{false, Bool}([])))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), (Int[], Int[], ), [1, 1], Element{false, Bool}([])))
     res = dropdefaults!(Fiber(SparseCoo{2}(Element(false))), arr)
     @test isstructequal(res, ref)
     arr = Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), ([1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5], [1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 26], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), (Int[1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5], Int[1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 26], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])))
     res = dropdefaults!(Fiber(SparseCoo{2}(Element(false))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((4, 4), ([1, 1, 3, 3, 3, 3, 4, 4], [2, 4, 1, 2, 3, 4, 2, 4], ), [1, 9], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1])))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((4, 4), (Int[1, 1, 3, 3, 3, 3, 4, 4], Int[2, 4, 1, 2, 3, 4, 2, 4], ), [1, 9], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1])))
     res = dropdefaults!(Fiber(SparseCoo{2}(Element(false))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
@@ -472,15 +472,15 @@
     res = dropdefaults!(Fiber(SparseList(SparseList(Element(false)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), ([], [], ), [1, 1], Element{false, Bool}([])))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), (Int[], Int[], ), [1, 1], Element{false, Bool}([])))
     res = dropdefaults!(Fiber(SparseCoo{2}(Element(false))), arr)
     @test isstructequal(res, ref)
     arr = Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), ([1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5], [1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 26], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), (Int[1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5], Int[1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 26], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])))
     res = dropdefaults!(Fiber(SparseCoo{2}(Element(false))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((4, 4), ([1, 1, 3, 3, 3, 3, 4, 4], [2, 4, 1, 2, 3, 4, 2, 4], ), [1, 9], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1])))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((4, 4), (Int[1, 1, 3, 3, 3, 3, 4, 4], Int[2, 4, 1, 2, 3, 4, 2, 4], ), [1, 9], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1])))
     res = dropdefaults!(Fiber(SparseCoo{2}(Element(false))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
@@ -532,15 +532,15 @@
     res = dropdefaults!(Fiber(SparseList(SparseVBL(Element(false)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), ([], [], ), [1, 1], Element{false, Bool}([])))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), (Int[], Int[], ), [1, 1], Element{false, Bool}([])))
     res = dropdefaults!(Fiber(SparseCoo{2}(Element(false))), arr)
     @test isstructequal(res, ref)
     arr = Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), ([1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5], [1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 26], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), (Int[1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5], Int[1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 26], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])))
     res = dropdefaults!(Fiber(SparseCoo{2}(Element(false))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((4, 4), ([1, 1, 3, 3, 3, 3, 4, 4], [2, 4, 1, 2, 3, 4, 2, 4], ), [1, 9], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1])))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((4, 4), (Int[1, 1, 3, 3, 3, 3, 4, 4], Int[2, 4, 1, 2, 3, 4, 2, 4], ), [1, 9], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1])))
     res = dropdefaults!(Fiber(SparseCoo{2}(Element(false))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
@@ -592,15 +592,15 @@
     res = dropdefaults!(Fiber(SparseList(SparseBytemap(Element(false)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), ([], [], ), [1, 1], Element{false, Bool}([])))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), (Int[], Int[], ), [1, 1], Element{false, Bool}([])))
     res = dropdefaults!(Fiber(SparseCoo{2}(Element(false))), arr)
     @test isstructequal(res, ref)
     arr = Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), ([1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5], [1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 26], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), (Int[1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5], Int[1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 26], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])))
     res = dropdefaults!(Fiber(SparseCoo{2}(Element(false))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((4, 4), ([1, 1, 3, 3, 3, 3, 4, 4], [2, 4, 1, 2, 3, 4, 2, 4], ), [1, 9], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1])))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((4, 4), (Int[1, 1, 3, 3, 3, 3, 4, 4], Int[2, 4, 1, 2, 3, 4, 2, 4], ), [1, 9], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1])))
     res = dropdefaults!(Fiber(SparseCoo{2}(Element(false))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
@@ -652,15 +652,15 @@
     res = dropdefaults!(Fiber(SparseList(SparseHash{1}(Element(false)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), ([], [], ), [1, 1], Element{false, Bool}([])))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), (Int[], Int[], ), [1, 1], Element{false, Bool}([])))
     res = dropdefaults!(Fiber(SparseCoo{2}(Element(false))), arr)
     @test isstructequal(res, ref)
     arr = Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), ([1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5], [1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 26], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), (Int[1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5], Int[1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 26], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])))
     res = dropdefaults!(Fiber(SparseCoo{2}(Element(false))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((4, 4), ([1, 1, 3, 3, 3, 3, 4, 4], [2, 4, 1, 2, 3, 4, 2, 4], ), [1, 9], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1])))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((4, 4), (Int[1, 1, 3, 3, 3, 3, 4, 4], Int[2, 4, 1, 2, 3, 4, 2, 4], ), [1, 9], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1])))
     res = dropdefaults!(Fiber(SparseCoo{2}(Element(false))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
@@ -676,51 +676,51 @@
     res = dropdefaults!(Fiber(SparseHash{2}(Element(false))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0, 0, 0, 0, 0]
-    ref = Fiber(SparseCoo{1, Tuple{Int}, Int}((5,), ([], ), [1, 1], Element{false, Bool}([])))
+    ref = Fiber(SparseCoo{1, Tuple{Int}, Int}((5,), (Int[], ), [1, 1], Element{false, Bool}([])))
     res = dropdefaults!(Fiber(SparseCoo{1}(Element(false))), arr)
     @test isstructequal(res, ref)
     arr = Bool[1, 1, 1, 1, 1]
-    ref = Fiber(SparseCoo{1, Tuple{Int}, Int}((5,), ([1, 2, 3, 4, 5], ), [1, 6], Element{false, Bool}([1, 1, 1, 1, 1])))
+    ref = Fiber(SparseCoo{1, Tuple{Int}, Int}((5,), (Int[1, 2, 3, 4, 5], ), [1, 6], Element{false, Bool}([1, 1, 1, 1, 1])))
     res = dropdefaults!(Fiber(SparseCoo{1}(Element(false))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0, 1, 0, 1]
-    ref = Fiber(SparseCoo{1, Tuple{Int}, Int}((4,), ([2, 4], ), [1, 3], Element{false, Bool}([1, 1])))
+    ref = Fiber(SparseCoo{1, Tuple{Int}, Int}((4,), (Int[2, 4], ), [1, 3], Element{false, Bool}([1, 1])))
     res = dropdefaults!(Fiber(SparseCoo{1}(Element(false))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
-    ref = Fiber(Dense{Int}(5, SparseCoo{1, Tuple{Int}, Int}((5,), ([], ), [1, 1, 1, 1, 1, 1], Element{false, Bool}([]))))
+    ref = Fiber(Dense{Int}(5, SparseCoo{1, Tuple{Int}, Int}((5,), (Int[], ), [1, 1, 1, 1, 1, 1], Element{false, Bool}([]))))
     res = dropdefaults!(Fiber(Dense(SparseCoo{1}(Element(false)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
-    ref = Fiber(Dense{Int}(5, SparseCoo{1, Tuple{Int}, Int}((5,), ([1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 6, 11, 16, 21, 26], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]))))
+    ref = Fiber(Dense{Int}(5, SparseCoo{1, Tuple{Int}, Int}((5,), (Int[1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 6, 11, 16, 21, 26], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]))))
     res = dropdefaults!(Fiber(Dense(SparseCoo{1}(Element(false)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(Dense{Int}(4, SparseCoo{1, Tuple{Int}, Int}((4,), ([2, 4, 1, 2, 3, 4, 2, 4], ), [1, 3, 3, 7, 9], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1]))))
+    ref = Fiber(Dense{Int}(4, SparseCoo{1, Tuple{Int}, Int}((4,), (Int[2, 4, 1, 2, 3, 4, 2, 4], ), [1, 3, 3, 7, 9], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1]))))
     res = dropdefaults!(Fiber(Dense(SparseCoo{1}(Element(false)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
-    ref = Fiber(SparseList{Int, Int}(5, [1, 1], [], SparseCoo{1, Tuple{Int}, Int}((5,), ([], ), [1], Element{false, Bool}([]))))
+    ref = Fiber(SparseList{Int, Int}(5, [1, 1], [], SparseCoo{1, Tuple{Int}, Int}((5,), (Int[], ), [1], Element{false, Bool}([]))))
     res = dropdefaults!(Fiber(SparseList(SparseCoo{1}(Element(false)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
-    ref = Fiber(SparseList{Int, Int}(5, [1, 6], [1, 2, 3, 4, 5], SparseCoo{1, Tuple{Int}, Int}((5,), ([1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 6, 11, 16, 21, 26], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]))))
+    ref = Fiber(SparseList{Int, Int}(5, [1, 6], [1, 2, 3, 4, 5], SparseCoo{1, Tuple{Int}, Int}((5,), (Int[1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 6, 11, 16, 21, 26], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]))))
     res = dropdefaults!(Fiber(SparseList(SparseCoo{1}(Element(false)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(SparseList{Int, Int}(4, [1, 4], [1, 3, 4], SparseCoo{1, Tuple{Int}, Int}((4,), ([2, 4, 1, 2, 3, 4, 2, 4], ), [1, 3, 7, 9], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1]))))
+    ref = Fiber(SparseList{Int, Int}(4, [1, 4], [1, 3, 4], SparseCoo{1, Tuple{Int}, Int}((4,), (Int[2, 4, 1, 2, 3, 4, 2, 4], ), [1, 3, 7, 9], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1]))))
     res = dropdefaults!(Fiber(SparseList(SparseCoo{1}(Element(false)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), ([], [], ), [1, 1], Element{false, Bool}([])))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), (Int[], Int[], ), [1, 1], Element{false, Bool}([])))
     res = dropdefaults!(Fiber(SparseCoo{2}(Element(false))), arr)
     @test isstructequal(res, ref)
     arr = Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), ([1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5], [1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 26], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), (Int[1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5], Int[1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 26], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])))
     res = dropdefaults!(Fiber(SparseCoo{2}(Element(false))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((4, 4), ([1, 1, 3, 3, 3, 3, 4, 4], [2, 4, 1, 2, 3, 4, 2, 4], ), [1, 9], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1])))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((4, 4), (Int[1, 1, 3, 3, 3, 3, 4, 4], Int[2, 4, 1, 2, 3, 4, 2, 4], ), [1, 9], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1])))
     res = dropdefaults!(Fiber(SparseCoo{2}(Element(false))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
@@ -780,15 +780,15 @@
     res = dropdefaults!(Fiber(SparseList(Dense(Element(true)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), ([1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5], [1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 26], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), (Int[1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5], Int[1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 26], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])))
     res = dropdefaults!(Fiber(SparseCoo{2}(Element(true))), arr)
     @test isstructequal(res, ref)
     arr = Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), ([], [], ), [1, 1], Element{true, Bool}([])))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), (Int[], Int[], ), [1, 1], Element{true, Bool}([])))
     res = dropdefaults!(Fiber(SparseCoo{2}(Element(true))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((4, 4), ([1, 1, 2, 2, 2, 2, 4, 4], [1, 3, 1, 2, 3, 4, 1, 3], ), [1, 9], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0])))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((4, 4), (Int[1, 1, 2, 2, 2, 2, 4, 4], Int[1, 3, 1, 2, 3, 4, 1, 3], ), [1, 9], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0])))
     res = dropdefaults!(Fiber(SparseCoo{2}(Element(true))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
@@ -840,15 +840,15 @@
     res = dropdefaults!(Fiber(SparseList(SparseList(Element(true)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), ([1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5], [1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 26], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), (Int[1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5], Int[1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 26], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])))
     res = dropdefaults!(Fiber(SparseCoo{2}(Element(true))), arr)
     @test isstructequal(res, ref)
     arr = Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), ([], [], ), [1, 1], Element{true, Bool}([])))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), (Int[], Int[], ), [1, 1], Element{true, Bool}([])))
     res = dropdefaults!(Fiber(SparseCoo{2}(Element(true))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((4, 4), ([1, 1, 2, 2, 2, 2, 4, 4], [1, 3, 1, 2, 3, 4, 1, 3], ), [1, 9], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0])))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((4, 4), (Int[1, 1, 2, 2, 2, 2, 4, 4], Int[1, 3, 1, 2, 3, 4, 1, 3], ), [1, 9], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0])))
     res = dropdefaults!(Fiber(SparseCoo{2}(Element(true))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
@@ -900,15 +900,15 @@
     res = dropdefaults!(Fiber(SparseList(SparseVBL(Element(true)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), ([1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5], [1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 26], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), (Int[1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5], Int[1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 26], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])))
     res = dropdefaults!(Fiber(SparseCoo{2}(Element(true))), arr)
     @test isstructequal(res, ref)
     arr = Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), ([], [], ), [1, 1], Element{true, Bool}([])))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), (Int[], Int[], ), [1, 1], Element{true, Bool}([])))
     res = dropdefaults!(Fiber(SparseCoo{2}(Element(true))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((4, 4), ([1, 1, 2, 2, 2, 2, 4, 4], [1, 3, 1, 2, 3, 4, 1, 3], ), [1, 9], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0])))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((4, 4), (Int[1, 1, 2, 2, 2, 2, 4, 4], Int[1, 3, 1, 2, 3, 4, 1, 3], ), [1, 9], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0])))
     res = dropdefaults!(Fiber(SparseCoo{2}(Element(true))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
@@ -960,15 +960,15 @@
     res = dropdefaults!(Fiber(SparseList(SparseBytemap(Element(true)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), ([1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5], [1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 26], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), (Int[1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5], Int[1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 26], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])))
     res = dropdefaults!(Fiber(SparseCoo{2}(Element(true))), arr)
     @test isstructequal(res, ref)
     arr = Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), ([], [], ), [1, 1], Element{true, Bool}([])))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), (Int[], Int[], ), [1, 1], Element{true, Bool}([])))
     res = dropdefaults!(Fiber(SparseCoo{2}(Element(true))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((4, 4), ([1, 1, 2, 2, 2, 2, 4, 4], [1, 3, 1, 2, 3, 4, 1, 3], ), [1, 9], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0])))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((4, 4), (Int[1, 1, 2, 2, 2, 2, 4, 4], Int[1, 3, 1, 2, 3, 4, 1, 3], ), [1, 9], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0])))
     res = dropdefaults!(Fiber(SparseCoo{2}(Element(true))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
@@ -1020,15 +1020,15 @@
     res = dropdefaults!(Fiber(SparseList(SparseHash{1}(Element(true)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), ([1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5], [1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 26], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), (Int[1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5], Int[1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 26], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])))
     res = dropdefaults!(Fiber(SparseCoo{2}(Element(true))), arr)
     @test isstructequal(res, ref)
     arr = Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), ([], [], ), [1, 1], Element{true, Bool}([])))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), (Int[], Int[], ), [1, 1], Element{true, Bool}([])))
     res = dropdefaults!(Fiber(SparseCoo{2}(Element(true))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((4, 4), ([1, 1, 2, 2, 2, 2, 4, 4], [1, 3, 1, 2, 3, 4, 1, 3], ), [1, 9], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0])))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((4, 4), (Int[1, 1, 2, 2, 2, 2, 4, 4], Int[1, 3, 1, 2, 3, 4, 1, 3], ), [1, 9], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0])))
     res = dropdefaults!(Fiber(SparseCoo{2}(Element(true))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
@@ -1044,51 +1044,51 @@
     res = dropdefaults!(Fiber(SparseHash{2}(Element(true))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0, 0, 0, 0, 0]
-    ref = Fiber(SparseCoo{1, Tuple{Int}, Int}((5,), ([1, 2, 3, 4, 5], ), [1, 6], Element{true, Bool}([0, 0, 0, 0, 0])))
+    ref = Fiber(SparseCoo{1, Tuple{Int}, Int}((5,), (Int[1, 2, 3, 4, 5], ), [1, 6], Element{true, Bool}([0, 0, 0, 0, 0])))
     res = dropdefaults!(Fiber(SparseCoo{1}(Element(true))), arr)
     @test isstructequal(res, ref)
     arr = Bool[1, 1, 1, 1, 1]
-    ref = Fiber(SparseCoo{1, Tuple{Int}, Int}((5,), ([], ), [1, 1], Element{true, Bool}([])))
+    ref = Fiber(SparseCoo{1, Tuple{Int}, Int}((5,), (Int[], ), [1, 1], Element{true, Bool}([])))
     res = dropdefaults!(Fiber(SparseCoo{1}(Element(true))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0, 1, 0, 1]
-    ref = Fiber(SparseCoo{1, Tuple{Int}, Int}((4,), ([1, 3], ), [1, 3], Element{true, Bool}([0, 0])))
+    ref = Fiber(SparseCoo{1, Tuple{Int}, Int}((4,), (Int[1, 3], ), [1, 3], Element{true, Bool}([0, 0])))
     res = dropdefaults!(Fiber(SparseCoo{1}(Element(true))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
-    ref = Fiber(Dense{Int}(5, SparseCoo{1, Tuple{Int}, Int}((5,), ([1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 6, 11, 16, 21, 26], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))))
+    ref = Fiber(Dense{Int}(5, SparseCoo{1, Tuple{Int}, Int}((5,), (Int[1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 6, 11, 16, 21, 26], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))))
     res = dropdefaults!(Fiber(Dense(SparseCoo{1}(Element(true)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
-    ref = Fiber(Dense{Int}(5, SparseCoo{1, Tuple{Int}, Int}((5,), ([], ), [1, 1, 1, 1, 1, 1], Element{true, Bool}([]))))
+    ref = Fiber(Dense{Int}(5, SparseCoo{1, Tuple{Int}, Int}((5,), (Int[], ), [1, 1, 1, 1, 1, 1], Element{true, Bool}([]))))
     res = dropdefaults!(Fiber(Dense(SparseCoo{1}(Element(true)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(Dense{Int}(4, SparseCoo{1, Tuple{Int}, Int}((4,), ([1, 3, 1, 2, 3, 4, 1, 3], ), [1, 3, 7, 7, 9], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0]))))
+    ref = Fiber(Dense{Int}(4, SparseCoo{1, Tuple{Int}, Int}((4,), (Int[1, 3, 1, 2, 3, 4, 1, 3], ), [1, 3, 7, 7, 9], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0]))))
     res = dropdefaults!(Fiber(Dense(SparseCoo{1}(Element(true)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
-    ref = Fiber(SparseList{Int, Int}(5, [1, 6], [1, 2, 3, 4, 5], SparseCoo{1, Tuple{Int}, Int}((5,), ([1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 6, 11, 16, 21, 26], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))))
+    ref = Fiber(SparseList{Int, Int}(5, [1, 6], [1, 2, 3, 4, 5], SparseCoo{1, Tuple{Int}, Int}((5,), (Int[1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 6, 11, 16, 21, 26], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))))
     res = dropdefaults!(Fiber(SparseList(SparseCoo{1}(Element(true)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
-    ref = Fiber(SparseList{Int, Int}(5, [1, 1], [], SparseCoo{1, Tuple{Int}, Int}((5,), ([], ), [1], Element{true, Bool}([]))))
+    ref = Fiber(SparseList{Int, Int}(5, [1, 1], [], SparseCoo{1, Tuple{Int}, Int}((5,), (Int[], ), [1], Element{true, Bool}([]))))
     res = dropdefaults!(Fiber(SparseList(SparseCoo{1}(Element(true)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(SparseList{Int, Int}(4, [1, 4], [1, 2, 4], SparseCoo{1, Tuple{Int}, Int}((4,), ([1, 3, 1, 2, 3, 4, 1, 3], ), [1, 3, 7, 9], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0]))))
+    ref = Fiber(SparseList{Int, Int}(4, [1, 4], [1, 2, 4], SparseCoo{1, Tuple{Int}, Int}((4,), (Int[1, 3, 1, 2, 3, 4, 1, 3], ), [1, 3, 7, 9], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0]))))
     res = dropdefaults!(Fiber(SparseList(SparseCoo{1}(Element(true)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), ([1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5], [1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 26], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), (Int[1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5], Int[1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5], ), [1, 26], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])))
     res = dropdefaults!(Fiber(SparseCoo{2}(Element(true))), arr)
     @test isstructequal(res, ref)
     arr = Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), ([], [], ), [1, 1], Element{true, Bool}([])))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((5, 5), (Int[], Int[], ), [1, 1], Element{true, Bool}([])))
     res = dropdefaults!(Fiber(SparseCoo{2}(Element(true))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((4, 4), ([1, 1, 2, 2, 2, 2, 4, 4], [1, 3, 1, 2, 3, 4, 1, 3], ), [1, 9], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0])))
+    ref = Fiber(SparseCoo{2, Tuple{Int, Int}, Int}((4, 4), (Int[1, 1, 2, 2, 2, 2, 4, 4], Int[1, 3, 1, 2, 3, 4, 1, 3], ), [1, 9], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0])))
     res = dropdefaults!(Fiber(SparseCoo{2}(Element(true))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]

@@ -45,6 +45,7 @@ function Base.show(io::IO, lvl::SparseCooLevel{N, Ti, Tp}) where {N, Ti, Tp}
     else
         print(io, "(")
         for (n, ti) = enumerate(Ti.parameters)
+            print(io, ti) #TODO we have to do something about this.
             show(IOContext(io, :typeinfo=>Vector{ti}), lvl.tbl[n])
             print(io, ", ")
         end
