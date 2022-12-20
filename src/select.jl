@@ -214,8 +214,6 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::BandMask)
     print(io, "bandmask")
 end
 
-bigdim = Extent(literal(-Inf), literal(Inf)) 
-
 virtualize(ex, ::Type{BandMask}, ctx) = bandmask
 IndexNotation.isliteral(::BandMask) = false
 Finch.getname(::BandMask) = gensym()
