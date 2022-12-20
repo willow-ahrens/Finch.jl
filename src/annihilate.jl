@@ -127,6 +127,18 @@ isinvolution(::Any, f) = false
 isinvolution(::AbstractAlgebra, ::typeof(-)) = true
 isinvolution(::AbstractAlgebra, ::typeof(inv)) = true
 
+struct Fill
+    body::IndexNode
+    default
+    Fill(x, d=nothing) = new(index_leaf(x), d)
+end
+
+IndexNotation.isliteral(::Fill) = false
+default(f::Fill) = something(f.default)
+
+isfill(tns) = false
+isfill(tns::IndexNode) = tns.kind == virtual && tns.val isa Fill
+
 """
     base_rules(alg, ctx)
 
@@ -138,6 +150,8 @@ constants, and is the basis for how Finch understands sparsity.
 function base_rules(alg, ctx)
     shash = ctx.shash
     return [
+        (@rule access(~a::isfill, ~m, ~i...) => a.val.body), #TODO flesh this out
+
         (@rule call(~f, ~a...) => if isliteral(f) && all(isliteral, a) && length(a) >= 1 literal(getvalue(f)(getvalue.(a)...)) end),
 
         #TODO default needs to get defined on all writable chunks

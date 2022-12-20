@@ -232,7 +232,7 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode, ::Walk, idx
                 body = Step(
                     stride = (ctx, idx, ext) -> value(my_i),
                     chunk = Run(
-                        body = Simplify(value(:($(lvl.ex).val[$my_q]), lvl.Tv))
+                        body = Simplify(Fill(value(:($(lvl.ex).val[$my_q]), lvl.Tv))) #TODO Flesh out fill to assert ndims and handle writes
                     ),
                     next = (ctx, idx, ext) -> quote
                         $my_q += 1
@@ -286,7 +286,7 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode, ::Extrude, 
                         end
                     end
                 end,
-                body = value(my_v, lvl.Tv),
+                body = Simplify(Fill(value(my_v, lvl.Tv), D)),
                 epilogue = begin
                     body = quote
                         if $my_q == $my_q_start || $my_v != $my_v_prev

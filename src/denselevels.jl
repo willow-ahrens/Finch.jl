@@ -195,7 +195,7 @@ function unfurl(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode, ::Union{Follow,
             preamble = quote
                 $q = ($(ctx(p)) - 1) * $(ctx(lvl.I)) + $(ctx(i))
             end,
-            body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(q, lvl.Ti), index=i, guard=envdefaultcheck(fbr.env), parent=fbr.env)), ctx, mode, idxs...),
+            body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(q, lvl.Ti), index=i, guard=envdefaultcheck(fbr.env), parent=fbr.env)), ctx, mode),
         )
     )
 

@@ -69,7 +69,7 @@ function initialize!(fbr::VirtualFiber, ctx::LowerJulia, mode, idxs...)
         fbr = VirtualFiber(initialize_level!(fbr, ctx, mode), fbr.env)
         assemble!(fbr, ctx, mode)
     end
-    return refurl(fbr, ctx, mode, idxs...)
+    return access(refurl(fbr, ctx, mode), mode, idxs...)
 end
 
 """
@@ -139,10 +139,11 @@ end
 
 function chunkify_access(node, ctx, tns::VirtualFiber)
     if !isempty(node.idxs)
-        idxs = map(ctx, node.idxs)
         if ctx.idx == get_furl_root(node.idxs[1])
-            return access(unfurl(tns, ctx.ctx, node.mode, nothing, node.idxs...), node.mode, get_furl_root(node.idxs[1])) #TODO do this nicer
+            idxs = map(ctx, node.idxs)
+            return access(unfurl(tns, ctx.ctx, node.mode, nothing, node.idxs...), node.mode, get_furl_root(node.idxs[1]), idxs[2:end]...)
         else
+            idxs = map(ctx, node.idxs)
             return access(node.tns, node.mode, idxs...)
         end
     end
@@ -164,7 +165,7 @@ end
 get_furl_root_access(idx, tns) = nothing
 #These are also good examples of where modifiers might be great.
 
-refurl(tns, ctx, mode, idxs...) = access(tns, mode, idxs...)
+refurl(tns, ctx, mode) = tns
 function exfurl(tns, ctx, mode, idx::IndexNode)
     if idx.kind === index
         return tns

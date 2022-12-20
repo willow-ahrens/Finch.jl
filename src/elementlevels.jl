@@ -126,14 +126,14 @@ function refurl(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
             preamble = quote
                 $(lvl.val) = $(lvl.ex).val[$(ctx(envposition(fbr.env)))]
             end,
-            body = access(fbr, mode),
+            body = fbr,
         )
     elseif mode.kind === updater
         return Thunk(
             preamble = quote
                 $(lvl.val) = $(lvl.ex).val[$(ctx(envposition(fbr.env)))]
             end,
-            body = access(fbr, mode),
+            body = fbr,
             epilogue = quote
                 $(lvl.ex).val[$(ctx(envposition(fbr.env)))] = $(lvl.val)
             end,

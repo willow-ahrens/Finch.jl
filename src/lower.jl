@@ -332,8 +332,12 @@ end
 
 function (ctx::ForLoopVisitor)(node::IndexNode)
     if node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
-        #TODO this is a problem
-        something(unchunk(node.tns.val, ctx), access(node.tns, node.mode, map(ctx, node.idxs)...))
+        tns_2 = unchunk(node.tns.val, ctx)
+        if tns_2 === nothing
+            access(node.tns, node.mode, map(ctx, node.idxs)...)
+        else
+            access(tns_2, node.mode, map(ctx, node.idxs[2:end])...)
+        end
     elseif istree(node)
         similarterm(node, operation(node), map(ctx, arguments(node)))
     else

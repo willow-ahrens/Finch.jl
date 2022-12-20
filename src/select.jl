@@ -35,13 +35,13 @@ function chunkify_access(node, ctx, ::Select)
         tns = Pipeline([
             Phase(
                 stride = (ctx, idx, ext) -> value(:($sym - 1)),
-                body = (start, step) -> Run(body=Simplify(literal(false)))
+                body = (start, step) -> Run(body=Simplify(Fill(false)))
             ),
             Phase(
                 stride = (ctx, idx, ext) -> value(sym),
-                body = (start, step) -> Run(body=Simplify(literal(true))),
+                body = (start, step) -> Run(body=Simplify(Fill(true))),
             ),
-            Phase(body = (start, step) -> Run(body=Simplify(literal(false))))
+            Phase(body = (start, step) -> Run(body=Simplify(Fill(false))))
         ])
         access(tns, node.mode, node.idxs[2])
     else
@@ -97,6 +97,7 @@ function (ctx::LowerJulia)(root, ::SelectStyle)
     end
 end
 
+#=
 @kwdef struct Furlable
     name = gensym()
     size
@@ -111,6 +112,42 @@ IndexNotation.isliteral(::Furlable) = false
 Base.show(io::IO, ex::Furlable) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::Furlable)
     print(io, "Furlable()")
+end
+
+function stylize_access(node, ctx::Stylize{LowerJulia}, tns::Furlable)
+    if !isempty(node.idxs)
+        if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
+            return SelectStyle()
+        elseif ctx.root isa IndexNode && ctx.root.kind === loop && ctx.root.idx == get_furl_root(node.idxs[1])
+            return ChunkStyle()
+        end
+    end
+    return DefaultStyle()
+end
+
+function select_access(node, ctx::Finch.SelectVisitor, tns::Furlable)
+    if !isempty(node.idxs)
+        if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
+            var = index(ctx.ctx.freshen(:s))
+            ctx.idxs[var] = node.idxs[1]
+            return access(node.tns, node.mode, var, node.idxs[2:end]...)
+        end
+    end
+    return similarterm(node, operation(node), map(ctx, arguments(node)))
+end
+
+function chunkify_access(node, ctx, tns::Furlable)
+    if !isempty(node.idxs)
+        idxs = map(ctx, node.idxs)
+        if ctx.idx == get_furl_root(node.idxs[1])
+            lpt = tns.body(ctx.ctx, ctx.idx, ctx.ext)
+            lpt = exfurl(lpt, ctx.ctx, node.mode, node.idxs[1])
+            return access(lpt, node.mode, get_furl_root(node.idxs[1]))
+        else
+            return access(node.tns, node.mode, idxs...)
+        end
+    end
+    return node
 end
 
 struct DiagMask end
@@ -131,15 +168,16 @@ initialize(::DiagMask, ctx, mode, idxs...) = begin
                 body = Pipeline([
                     Phase(
                         stride = (ctx, idx, ext) -> value(:($i - 1)),
-                        body = (start, step) -> Run(body=Simplify(literal(false)))
+                        body = (start, step) -> Run(body=Simplify(Fill(false)))
                     ),
                     Phase(
                         stride = (ctx, idx, ext) -> value(i),
-                        body = (start, step) -> Run(body=Simplify(literal(true))),
+                        body = (start, step) -> Run(body=Simplify(Fill(true))),
                     ),
-                    Phase(body = (start, step) -> Run(body=Simplify(literal(false))))
+                    Phase(body = (start, step) -> Run(body=Simplify(Fill(false))))
                 ])
             )
         )
     )
 end
+=#
