@@ -83,6 +83,7 @@ mutable struct VirtualSparseListLevel
     Tp
     I
     pos_fill
+    pos_stop
     pos_alloc
     idx_alloc
     lvl
@@ -91,6 +92,7 @@ function virtualize(ex, ::Type{SparseListLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) whe
     sym = ctx.freshen(tag)
     I = value(:($sym.I), Int)
     pos_fill = ctx.freshen(sym, :_pos_fill)
+    pos_stop = ctx.freshen(sym, :_pos_stop)
     pos_alloc = ctx.freshen(sym, :_pos_alloc)
     idx_alloc = ctx.freshen(sym, :_idx_alloc)
     push!(ctx.preamble, quote
@@ -99,7 +101,7 @@ function virtualize(ex, ::Type{SparseListLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) whe
         $idx_alloc = length($sym.idx)
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualSparseListLevel(sym, Ti, Tp, I, pos_fill, pos_alloc, idx_alloc, lvl_2)
+    VirtualSparseListLevel(sym, Ti, Tp, I, pos_fill, pos_stop, pos_alloc, idx_alloc, lvl_2)
 end
 function (ctx::Finch.LowerJulia)(lvl::VirtualSparseListLevel)
     quote
@@ -141,6 +143,7 @@ function initialize_level!(fbr::VirtualFiber{VirtualSparseListLevel}, ctx::Lower
     push!(ctx.preamble, quote
         $(lvl.pos_alloc) = length($(lvl.ex).pos)
         $(lvl.pos_fill) = 1
+        $(lvl.pos_stop) = 2
         $(lvl.ex).pos[1] = 1
         $(lvl.ex).pos[2] = 1
         $(lvl.idx_alloc) = length($(lvl.ex).idx)
@@ -168,10 +171,20 @@ function assemble!(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode)
     p_stop = ctx(cache!(ctx, ctx.freshen(lvl.ex, :_p_stop), getstop(envposition(fbr.env))))
     push!(ctx.preamble, quote
         $(lvl.pos_alloc) < ($p_stop + 1) && ($(lvl.pos_alloc) = $Finch.refill!($(lvl.ex).pos, 0, $(lvl.pos_alloc), $p_stop + 1))
+        $(lvl.pos_stop) = $p_stop + 1
     end)
 end
 
 function finalize_level!(fbr::VirtualFiber{VirtualSparseListLevel}, ctx::LowerJulia, mode)
+    lvl = fbr.lvl
+    my_p = ctx.freshen(:p)
+    my_q = ctx.freshen(:q)
+    push!(ctx.preamble, quote
+        $my_q = $(lvl.ex).pos[$(lvl.pos_fill)]
+        for $my_p = $(lvl.pos_fill):$(lvl.pos_stop)
+            $(lvl.ex).pos[$(my_p)] = $my_q
+        end
+    end)
     fbr.lvl.lvl = finalize_level!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)
     return fbr.lvl
 end
