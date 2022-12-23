@@ -278,22 +278,21 @@ function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode, ::Walk, id
                 $my_i_stop = 0
             end
         end,
-        body = Pipeline([
-            Phase(
-                stride = (ctx, idx, ext) -> value(my_i_stop),
-                body = (start, step) -> Stepper(
-                    seek = (ctx, ext) -> quote
-                        $my_q_step = $my_q + 1
-                        while $my_q_step < $my_q_stop && last(first($(lvl.ex).srt[$my_q_step]))[$R] < $(ctx(getstart(ext)))
-                            $my_q_step += 1
-                        end
-                    end,
-                    body = Thunk(
-                        preamble = :(
-                            $my_i = last(first($(lvl.ex).srt[$my_q]))[$R]
-                        ),
-                        body = if R == lvl.N
-                            Step(
+        body = if R == lvl.N
+            Pipeline([
+                Phase(
+                    stride = (ctx, idx, ext) -> value(my_i_stop),
+                    body = (start, step) -> Stepper(
+                        seek = (ctx, ext) -> quote
+                            while $my_q + 1 < $my_q_stop && last(first($(lvl.ex).srt[$my_q]))[$R] < $(ctx(getstart(ext)))
+                                $my_q += 1
+                            end
+                        end,
+                        body = Thunk(
+                            preamble = :(
+                                $my_i = last(first($(lvl.ex).srt[$my_q]))[$R]
+                            ),
+                            body = Step(
                                 stride =  (ctx, idx, ext) -> value(my_i),
                                 chunk = Spike(
                                     body = Simplify(Fill(default(fbr))),
@@ -309,8 +308,32 @@ function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode, ::Walk, id
                                     $my_q += 1
                                 end
                             )
-                        else
-                            Step(
+                        )
+                    )
+                ),
+                Phase(
+                    body = (start, step) -> Run(Simplify(Fill(default(fbr))))
+                )
+            ])
+        else
+            Pipeline([
+                Phase(
+                    stride = (ctx, idx, ext) -> value(my_i_stop),
+                    body = (start, step) -> Stepper(
+                        seek = (ctx, ext) -> quote
+                            while $my_q + 1 < $my_q_stop && last(first($(lvl.ex).srt[$my_q]))[$R] < $(ctx(start))
+                                $my_q += 1
+                            end
+                        end,
+                        body = Thunk(
+                            preamble = quote
+                                $my_i = last(first($(lvl.ex).srt[$my_q]))[$R]
+                                $my_q_step = $my_q + 1
+                                while $my_q_step < $my_q_stop && last(first($(lvl.ex).srt[$my_q_step]))[$R] == $my_i
+                                    $my_q_step += 1
+                                end
+                            end,
+                            body = Step(
                                 stride =  (ctx, idx, ext) -> value(my_i),
                                 chunk = Spike(
                                     body = Simplify(Fill(default(fbr))),
@@ -322,24 +345,20 @@ function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode, ::Walk, id
                                             parent=fbr.env,
                                             internal=true)
                                         refurl(VirtualFiber(lvl, env_2), ctx, mode)
-                                    end,
+                                    end
                                 ),
                                 next =  (ctx, idx, ext) -> quote
                                     $my_q = $my_q_step
-                                    $my_q_step = $my_q + 1
-                                    while $my_q_step < $my_q_stop && last(first($(lvl.ex).srt[$my_q_step]))[$R] == $my_i
-                                        $my_q_step += 1
-                                    end
                                 end
                             )
-                        end
+                        )
                     )
+                ),
+                Phase(
+                    body = (start, step) -> Run(Simplify(Fill(default(fbr))))
                 )
-            ),
-            Phase(
-                body = (start, step) -> Run(Simplify(Fill(default(fbr))))
-            )
-        ])
+            ])
+        end
     )
 
     exfurl(body, ctx, mode, idx)

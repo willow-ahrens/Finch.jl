@@ -56,13 +56,16 @@
                     true  true  true  true
                     false true  false true ]
                 ]
-                    ref = @fiber sc{2}(e(false))
-                    res = @fiber sc{2}(e(false))
+                    ref = @fiber sl(sl(e(false)))
+                    res = @fiber sl(sl(e(false)))
                     ref = dropdefaults!(ref, arr)
                     tmp = Fiber(outer())
                     @testset "convert $(summary(tmp))"  begin
                         @finch @loop i j tmp[i, j] = ref[i, j]
                         @finch @loop i j res[i, j] = tmp[i, j]
+                        println(ref)
+                        println(tmp)
+                        println(res)
                         @test isstructequal(ref, res)
                     end
                 end
