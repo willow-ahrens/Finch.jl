@@ -556,7 +556,7 @@
     res = dropdefaults!(Fiber(SparseHash{2}(Element(false))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0, 0, 0, 0, 0]
-    ref = Fiber(SparseBytemap{Int, Int}(5, [1, 1], [0, 0, 0, 0, 0], [], Base.RefValue{Int}(0), Element{false, Bool}([])))
+    ref = Fiber(SparseBytemap{Int, Int}(5, [1, 1], [0, 0, 0, 0, 0], [], Base.RefValue{Int}(0), Element{false, Bool}([0, 0, 0, 0, 0])))
     res = dropdefaults!(Fiber(SparseBytemap(Element(false))), arr)
     @test isstructequal(res, ref)
     arr = Bool[1, 1, 1, 1, 1]
@@ -564,11 +564,11 @@
     res = dropdefaults!(Fiber(SparseBytemap(Element(false))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0, 1, 0, 1]
-    ref = Fiber(SparseBytemap{Int, Int}(4, [1, 3], [0, 1, 0, 1], [(1, 2), (1, 4)], Base.RefValue{Int}(2), Element{false, Bool}([0, 1])))
+    ref = Fiber(SparseBytemap{Int, Int}(4, [1, 3], [0, 1, 0, 1], [(1, 2), (1, 4)], Base.RefValue{Int}(2), Element{false, Bool}([0, 1, 0, 1])))
     res = dropdefaults!(Fiber(SparseBytemap(Element(false))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
-    ref = Fiber(Dense{Int}(5, SparseBytemap{Int, Int}(5, [1, 1, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [], Base.RefValue{Int}(0), Element{false, Bool}([]))))
+    ref = Fiber(Dense{Int}(5, SparseBytemap{Int, Int}(5, [1, 1, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [], Base.RefValue{Int}(0), Element{false, Bool}([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))))
     res = dropdefaults!(Fiber(Dense(SparseBytemap(Element(false)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
@@ -576,7 +576,7 @@
     res = dropdefaults!(Fiber(Dense(SparseBytemap(Element(false)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(Dense{Int}(4, SparseBytemap{Int, Int}(4, [1, 3, 3, 7, 9], [0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1], [(1, 2), (1, 4), (3, 1), (3, 2), (3, 3), (3, 4), (4, 2), (4, 4)], Base.RefValue{Int}(8), Element{false, Bool}([0, 1, 0, 1, 0, 0, 0, 0]))))
+    ref = Fiber(Dense{Int}(4, SparseBytemap{Int, Int}(4, [1, 3, 3, 7, 9], [0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1], [(1, 2), (1, 4), (3, 1), (3, 2), (3, 3), (3, 4), (4, 2), (4, 4)], Base.RefValue{Int}(8), Element{false, Bool}([0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1]))))
     res = dropdefaults!(Fiber(Dense(SparseBytemap(Element(false)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
@@ -588,7 +588,7 @@
     res = dropdefaults!(Fiber(SparseList(SparseBytemap(Element(false)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(SparseList{Int, Int}(4, [1, 4], [1, 3, 4], SparseBytemap{Int, Int}(4, [1, 3, 7, 9], [0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1], [(1, 2), (1, 4), (2, 1), (2, 2), (2, 3), (2, 4), (3, 2), (3, 4)], Base.RefValue{Int}(8), Element{false, Bool}([0, 1, 0, 1, 1, 1, 1, 1]))))
+    ref = Fiber(SparseList{Int, Int}(4, [1, 4], [1, 3, 4], SparseBytemap{Int, Int}(4, [1, 3, 7, 9], [0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1], [(1, 2), (1, 4), (2, 1), (2, 2), (2, 3), (2, 4), (3, 2), (3, 4)], Base.RefValue{Int}(8), Element{false, Bool}([0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1]))))
     res = dropdefaults!(Fiber(SparseList(SparseBytemap(Element(false)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
@@ -928,11 +928,11 @@
     res = dropdefaults!(Fiber(SparseBytemap(Element(true))), arr)
     @test isstructequal(res, ref)
     arr = Bool[1, 1, 1, 1, 1]
-    ref = Fiber(SparseBytemap{Int, Int}(5, [1, 1], [0, 0, 0, 0, 0], [], Base.RefValue{Int}(0), Element{true, Bool}([])))
+    ref = Fiber(SparseBytemap{Int, Int}(5, [1, 1], [0, 0, 0, 0, 0], [], Base.RefValue{Int}(0), Element{true, Bool}([1, 1, 1, 1, 1])))
     res = dropdefaults!(Fiber(SparseBytemap(Element(true))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0, 1, 0, 1]
-    ref = Fiber(SparseBytemap{Int, Int}(4, [1, 3], [1, 0, 1, 0], [(1, 1), (1, 3)], Base.RefValue{Int}(2), Element{true, Bool}([0, 1])))
+    ref = Fiber(SparseBytemap{Int, Int}(4, [1, 3], [1, 0, 1, 0], [(1, 1), (1, 3)], Base.RefValue{Int}(2), Element{true, Bool}([0, 1, 0, 1])))
     res = dropdefaults!(Fiber(SparseBytemap(Element(true))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
@@ -940,11 +940,11 @@
     res = dropdefaults!(Fiber(Dense(SparseBytemap(Element(true)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
-    ref = Fiber(Dense{Int}(5, SparseBytemap{Int, Int}(5, [1, 1, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [], Base.RefValue{Int}(0), Element{true, Bool}([]))))
+    ref = Fiber(Dense{Int}(5, SparseBytemap{Int, Int}(5, [1, 1, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [], Base.RefValue{Int}(0), Element{true, Bool}([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]))))
     res = dropdefaults!(Fiber(Dense(SparseBytemap(Element(true)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(Dense{Int}(4, SparseBytemap{Int, Int}(4, [1, 3, 7, 7, 9], [1, 0, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 0], [(1, 1), (1, 3), (2, 1), (2, 2), (2, 3), (2, 4), (4, 1), (4, 3)], Base.RefValue{Int}(8), Element{true, Bool}([0, 1, 0, 1, 0, 0, 0, 0]))))
+    ref = Fiber(Dense{Int}(4, SparseBytemap{Int, Int}(4, [1, 3, 7, 7, 9], [1, 0, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 0], [(1, 1), (1, 3), (2, 1), (2, 2), (2, 3), (2, 4), (4, 1), (4, 3)], Base.RefValue{Int}(8), Element{true, Bool}([0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1]))))
     res = dropdefaults!(Fiber(Dense(SparseBytemap(Element(true)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
@@ -956,7 +956,7 @@
     res = dropdefaults!(Fiber(SparseList(SparseBytemap(Element(true)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(SparseList{Int, Int}(4, [1, 4], [1, 2, 4], SparseBytemap{Int, Int}(4, [1, 3, 7, 9], [1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0], [(1, 1), (1, 3), (2, 1), (2, 2), (2, 3), (2, 4), (3, 1), (3, 3)], Base.RefValue{Int}(8), Element{true, Bool}([0, 1, 0, 1, 0, 0, 0, 0]))))
+    ref = Fiber(SparseList{Int, Int}(4, [1, 4], [1, 2, 4], SparseBytemap{Int, Int}(4, [1, 3, 7, 9], [1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0], [(1, 1), (1, 3), (2, 1), (2, 2), (2, 3), (2, 4), (3, 1), (3, 3)], Base.RefValue{Int}(8), Element{true, Bool}([0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1]))))
     res = dropdefaults!(Fiber(SparseList(SparseBytemap(Element(true)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
