@@ -48,23 +48,23 @@
                 () -> SparseHash{2}(base())
             ]
 
-                for arr in [
-                    fill(false, 5, 5),
-                    fill(true, 5, 5),
-                    [false true  false true ;
+                for (arr_key, arr) in [
+                    ("5x5_falses", fill(false, 5, 5)),
+                    ("5x5_trues", fill(true, 5, 5)),
+                    ("4x4_bool_mix", [false true  false true ;
                     false false false false
                     true  true  true  true
-                    false true  false true ]
+                    false true  false true ])
                 ]
                     ref = @fiber sl(sl(e(false)))
                     res = @fiber sl(sl(e(false)))
                     ref = dropdefaults!(ref, arr)
                     tmp = Fiber(outer())
-                    @testset "convert $(summary(tmp))"  begin
-                        @finch @loop i j tmp[i, j] = ref[i, j]
-                        @finch @loop i j res[i, j] = tmp[i, j]
+                    @testset "convert $arr_key $(summary(tmp))"  begin
                         println(ref)
+                        @finch @loop i j tmp[i, j] = ref[i, j]
                         println(tmp)
+                        @finch @loop i j res[i, j] = tmp[i, j]
                         println(res)
                         @test isstructequal(ref, res)
                     end

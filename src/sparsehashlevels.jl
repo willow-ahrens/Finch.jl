@@ -298,7 +298,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode, ::Walk, id
                                     body = Simplify(Fill(default(fbr))),
                                     tail = begin
                                         env_2 = VirtualEnvironment(
-                                        position=value(:(last($(lvl.ex).srt[$my_q])[$R]), lvl.Ti),
+                                        position=value(:(last($(lvl.ex).srt[$my_q])), lvl.Ti),
                                         index=value(my_i, lvl.Ti),
                                         parent=fbr.env)
                                         refurl(VirtualFiber(lvl.lvl, env_2), ctx, mode)
