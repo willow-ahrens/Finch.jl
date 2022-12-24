@@ -27,17 +27,26 @@
         i_stop = A_lvl.I
         C_lvl_pos_alloc = length(C_lvl.pos)
         C_lvl_pos_fill = 1
+        C_lvl_pos_stop = 2
         C_lvl.pos[1] = 1
         C_lvl.pos[2] = 1
         C_lvl_idx_alloc = length(C_lvl.idx)
         C_lvl_2_val_alloc = (Finch).refill!(C_lvl_2.val, 0.0, 0, 4)
         C_lvl_pos_alloc < 1 + 1 && (C_lvl_pos_alloc = (Finch).refill!(C_lvl.pos, 0, C_lvl_pos_alloc, 1 + 1))
-        B_lvl_3_pos_alloc = length(B_lvl_3.pos) - 1
+        C_lvl_pos_stop = 1 + 1
+        B_lvl_3_pos_alloc = length(B_lvl_3.pos)
+        B_lvl_3_pos_fill = 1
+        B_lvl_3_pos_stop = 2
         B_lvl_3.pos[1] = 1
+        B_lvl_3.pos[2] = 1
         B_lvl_3_idx_alloc = length(B_lvl_3.tbl[1])
         B_lvl_4_val_alloc = (Finch).refill!(B_lvl_4.val, 0.0, 0, 4)
         B_lvl_3_pos_alloc < 1 + 1 && (B_lvl_3_pos_alloc = (Finch).regrow!(B_lvl_3.pos, B_lvl_3_pos_alloc, 1 + 1))
-        B_lvl_3_q = B_lvl_3.pos[1]
+        B_lvl_3_pos_stop = 1 + 1
+        B_lvl_3_q = B_lvl_3.pos[B_lvl_3_pos_fill]
+        for B_lvl_3_p_2 = B_lvl_3_pos_fill:1
+            B_lvl_3.pos[B_lvl_3_p_2] = B_lvl_3_q
+        end
         A_lvl_q = A_lvl.pos[1]
         A_lvl_q_stop = A_lvl.pos[1 + 1]
         if A_lvl_q < A_lvl_q_stop
@@ -94,6 +103,11 @@
             i = phase_stop_3 + 1
         end
         B_lvl_3.pos[1 + 1] = B_lvl_3_q
+        B_lvl_3_pos_fill = 1 + 1
+        q = B_lvl_3.pos[B_lvl_3_pos_fill]
+        for p = B_lvl_3_pos_fill:B_lvl_3_pos_stop
+            B_lvl_3.pos[p] = q
+        end
         C_lvl_q = C_lvl.pos[C_lvl_pos_fill]
         for C_lvl_p = C_lvl_pos_fill:1
             C_lvl.pos[C_lvl_p] = C_lvl_q
@@ -153,6 +167,10 @@
         end
         C_lvl.pos[1 + 1] = C_lvl_q
         C_lvl_pos_fill = 1 + 1
+        q_2 = C_lvl.pos[C_lvl_pos_fill]
+        for p_2 = C_lvl_pos_fill:C_lvl_pos_stop
+            C_lvl.pos[p_2] = q_2
+        end
         C_lvl_pos_alloc = 1 + 1
         resize!(C_lvl.pos, C_lvl_pos_alloc)
         C_lvl_idx_alloc = C_lvl.pos[C_lvl_pos_alloc] - 1
