@@ -54,6 +54,7 @@
         71 72 73 74 75;
         81 82 83 84 85;
         91 92 93 94 95]
+    A = copyto!(@fiber(d{Int64}(d{Int64}(e(0)))), A)
     B = @fiber(d{Int64}(e(0)))
     
     @test diff("fiber_as_idx.jl", @finch_code @loop i B[i] = A[i, I[i]])
