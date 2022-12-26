@@ -44,8 +44,6 @@ open("test_formats.jl", "w") do file
             for outer in [
                 :(Dense($inner)),
                 :(SparseList($inner)),
-                :(SparseCoo{2}($base)),
-                :(SparseHash{2}($base))
             ]
 
                 for arr in [
@@ -58,6 +56,22 @@ open("test_formats.jl", "w") do file
                 ]
                     test_format(arr, :(Fiber($outer)))
                 end
+            end
+        end
+
+        for outer in [
+            :(SparseCoo{2}($base)),
+            :(SparseHash{2}($base))
+        ]
+            for arr in [
+                fill(false, 5, 5),
+                fill(true, 5, 5),
+                [false true  false true ;
+                false false false false
+                true  true  true  true
+                false true  false true ]
+            ]
+                test_format(arr, :(Fiber($outer)))
             end
         end
     end
