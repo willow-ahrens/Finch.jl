@@ -268,7 +268,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode, ::Walk, idx
                 stride = (ctx, idx, ext) -> value(my_i_stop),
                 body = (start, stop) -> Stepper(
                     seek = (ctx, ext) -> quote
-                        while $my_q < $my_q_stop && $(lvl.ex).tbl[$R][$my_q] < $(ctx(getstart(ext)))
+                        while $my_q + 1 < $my_q_stop && $(lvl.ex).tbl[$R][$my_q] < $(ctx(getstart(ext)))
                             $my_q += 1
                         end
                     end,

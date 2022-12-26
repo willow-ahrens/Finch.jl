@@ -42,7 +42,6 @@
        end
     end
 
-
     #https://github.com/willow-ahrens/Finch.jl/issues/61
     I = copyto!(@fiber(rl(0)), [1, 1, 1, 3, 3, 1, 5, 5, 5])
     A = [
@@ -60,7 +59,7 @@
     @test diff("fiber_as_idx.jl", @finch_code @loop i B[i] = A[i, I[i]])
     @finch @loop i B[i] = A[i, I[i]]
 
-    B_ref = Fiber(Dense(9, [11, 12, 13, 43, 53, 61, 75, 85, 95]))
+    B_ref = Fiber(Dense(9, Element(0, [11, 21, 31, 43, 53, 61, 75, 85, 95])))
 
     @test isstructequal(B, B_ref)
     

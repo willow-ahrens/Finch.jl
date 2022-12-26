@@ -308,8 +308,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode, ::Walk,
                 stride = (ctx, idx, ext) -> value(my_i_stop),
                 body = (start, step) -> Stepper(
                     seek = (ctx, ext) -> quote
-                        #$my_r = searchsortedfirst($(lvl.ex).idx, $start, $my_r, $my_r_stop, Base.Forward)
-                        while $my_r < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext)))
+                        while $my_r + 1 < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext)))
                             $my_r += 1
                         end
                     end,
@@ -372,8 +371,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode, ::Gallo
                     body = Thunk(
                         body = Jump(
                             seek = (ctx, ext) -> quote
-                                #$my_r = searchsortedfirst($(lvl.ex).idx, $start, $my_r, $my_r_stop, Base.Forward)
-                                while $my_r < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext)))
+                                while $my_r + 1 < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext)))
                                     $my_r += 1
                                 end
                                 $my_i = last($(lvl.ex).srt[$my_r])
@@ -396,8 +394,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode, ::Gallo
                                 ),
                                 literal(true) => Stepper(
                                     seek = (ctx, ext) -> quote
-                                        #$my_r = searchsortedfirst($(lvl.ex).idx, $start, $my_r, $my_r_stop, Base.Forward)
-                                        while $my_r < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext)))
+                                        while $my_r + 1 < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext)))
                                             $my_r += 1
                                         end
                                     end,

@@ -220,8 +220,7 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode, ::Walk, idx
         end),
         body = Stepper(
             seek = (ctx, ext) -> quote
-                #$my_q = searchsortedfirst($(lvl.ex).idx, $start, $my_q, $my_q_stop, Base.Forward)
-                while $my_q < $my_q_stop && $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
+                while $my_q + 1 < $my_q_stop && $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
                     $my_q += 1
                 end
             end,

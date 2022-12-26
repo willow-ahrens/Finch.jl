@@ -225,8 +225,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode, ::Walk, id
                 stride = (ctx, idx, ext) -> value(my_i1),
                 body = (start, step) -> Stepper(
                     seek = (ctx, ext) -> quote
-                        #$my_q = searchsortedfirst($(lvl.ex).idx, $start, $my_q, $my_q_stop, Base.Forward)
-                        while $my_q < $my_q_stop && $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
+                        while $my_q + 1 < $my_q_stop && $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
                             $my_q += 1
                         end
                     end,
@@ -282,9 +281,6 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode, ::FastWalk
                 body = (start, step) -> Stepper(
                     seek = (ctx, ext) -> quote
                         $my_q = searchsortedfirst($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1, Base.Forward)
-                        #while $my_q < $my_q_stop && $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
-                        #    $my_q += 1
-                        #end
                     end,
                     body = Thunk(
                         preamble = :(
@@ -339,8 +335,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode, ::Gallop, 
                     body = Thunk(
                         body = Jump(
                             seek = (ctx, ext) -> quote
-                                #$my_q = searchsortedfirst($(lvl.ex).idx, $start, $my_q, $my_q_stop, Base.Forward)
-                                while $my_q < $my_q_stop && $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
+                                while $my_q + 1 < $my_q_stop && $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
                                     $my_q += 1
                                 end
                                 $my_i = $(lvl.ex).idx[$my_q]
@@ -358,8 +353,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode, ::Gallop, 
                                 ),
                                 literal(true) => Stepper(
                                     seek = (ctx, ext) -> quote
-                                        #$my_q = searchsortedfirst($(lvl.ex).idx, $start, $my_q, $my_q_stop, Base.Forward)
-                                        while $my_q < $my_q_stop && $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
+                                        while $my_q + 1 < $my_q_stop && $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
                                             $my_q += 1
                                         end
                                     end,
