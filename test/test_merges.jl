@@ -4,6 +4,8 @@
         (;fmt = (z) -> @fiber(d(sl(e(z)))), proto = [follow, walk]),
         (;fmt = (z) -> @fiber(d(sl(e(z)))), proto = [follow, fastwalk]),
         (;fmt = (z) -> @fiber(d(sl(e(z)))), proto = [follow, gallop]),
+        (;fmt = (z) -> @fiber(d(sv(e(z)))), proto = [follow, walk]),
+        (;fmt = (z) -> @fiber(d(sv(e(z)))), proto = [follow, gallop]),
         (;fmt = (z) -> @fiber(d(sm(e(z)))), proto = [follow, walk]),
         (;fmt = (z) -> @fiber(d(sm(e(z)))), proto = [follow, gallop]),
         (;fmt = (z) -> @fiber(d(sc{1}(e(z)))), proto = [follow, walk]),
