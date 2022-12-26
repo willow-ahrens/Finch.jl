@@ -1,6 +1,7 @@
 using Finch
 using Test
 using SyntaxInterface
+using Base.Iterators
 
 include("data_matrices.jl")
 
@@ -118,6 +119,7 @@ verbose = "verbose" in ARGS
     include("test_ssa.jl")
     include("test_print.jl")
     #include("test_parse.jl")
+    include("test_merges.jl")
     include("test_constructors.jl")
     include("test_conversions.jl")
     include("test_formats.jl")

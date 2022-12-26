@@ -373,7 +373,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode, ::Gallo
                         body = Jump(
                             seek = (ctx, ext) -> quote
                                 #$my_r = searchsortedfirst($(lvl.ex).idx, $start, $my_r, $my_r_stop, Base.Forward)
-                                while $my_r < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext_2)))
+                                while $my_r < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext)))
                                     $my_r += 1
                                 end
                                 $my_i = last($(lvl.ex).srt[$my_r])
