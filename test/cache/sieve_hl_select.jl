@@ -40,7 +40,7 @@
         if phase_stop_3 >= phase_start_3
             j_3 = j
             j = phase_start_3
-            while A_lvl_q < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < phase_start_3
+            while A_lvl_q + 1 < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < phase_start_3
                 A_lvl_q += 1
             end
             while j <= phase_stop_3

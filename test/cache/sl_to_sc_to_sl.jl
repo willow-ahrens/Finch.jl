@@ -63,7 +63,7 @@
         if phase_stop >= phase_start
             i = i
             i = phase_start
-            while A_lvl_q < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < phase_start
+            while A_lvl_q + 1 < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < phase_start
                 A_lvl_q += 1
             end
             while i <= phase_stop
@@ -128,7 +128,7 @@
         if phase_stop_4 >= phase_start_4
             i_5 = i_2
             i_2 = phase_start_4
-            while B_lvl_q < B_lvl_q_stop && (B_lvl.tbl[1])[B_lvl_q] < phase_start_4
+            while B_lvl_q + 1 < B_lvl_q_stop && (B_lvl.tbl[1])[B_lvl_q] < phase_start_4
                 B_lvl_q += 1
             end
             while i_2 <= phase_stop_4

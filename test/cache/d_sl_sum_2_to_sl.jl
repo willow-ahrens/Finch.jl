@@ -45,7 +45,7 @@
             if phase_stop >= phase_start
                 j = j
                 j = phase_start
-                while A_lvl_2_q < A_lvl_2_q_stop && A_lvl_2.idx[A_lvl_2_q] < phase_start
+                while A_lvl_2_q + 1 < A_lvl_2_q_stop && A_lvl_2.idx[A_lvl_2_q] < phase_start
                     A_lvl_2_q += 1
                 end
                 while j <= phase_stop

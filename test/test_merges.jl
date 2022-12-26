@@ -105,14 +105,18 @@
                     for b_dts in dtss
                         a = dropdefaults!(a_fmt.fmt(a_dts.default), a_dts.data)
                         b = dropdefaults!(b_fmt.fmt(b_dts.default), b_dts.data)
-                        c = @fiber(sc{2}(e(a_dts.default)))
-                        d = @fiber(sc{2}(e(a_dts.default)))
-                        @finch @loop i j c[i, j] = a[i::(a_fmt.proto[1]), j::(a_fmt.proto[2])] + b[i::(b_fmt.proto[1]), j::(b_fmt.proto[2])]
-                        @finch @loop i j d[i, j] = a[i::(a_fmt.proto[1]), j::(a_fmt.proto[2])] * b[i::(b_fmt.proto[1]), j::(b_fmt.proto[2])]
-                        c_ref = dropdefaults!(@fiber(sc{2}(e(a_dts.default))), a_dts.data .+ b_dts.data)
-                        d_ref = dropdefaults!(@fiber(sc{2}(e(a_dts.default))), a_dts.data .* b_dts.data)
-                        @test isstructequal(c, c_ref)
-                        @test isstructequal(d, d_ref)
+                        a_str = "$(summary(a))[::$(a_fmt.proto[1]), ::$(a_fmt.proto[2])]"
+                        b_str = "$(summary(b))[::$(b_fmt.proto[1]), ::$(b_fmt.proto[2])]"
+                        @testset "+* $a_str $b_str" begin
+                            c = @fiber(sc{2}(e(a_dts.default)))
+                            d = @fiber(sc{2}(e(a_dts.default)))
+                            @finch @loop i j c[i, j] = a[i::(a_fmt.proto[1]), j::(a_fmt.proto[2])] + b[i::(b_fmt.proto[1]), j::(b_fmt.proto[2])]
+                            @finch @loop i j d[i, j] = a[i::(a_fmt.proto[1]), j::(a_fmt.proto[2])] * b[i::(b_fmt.proto[1]), j::(b_fmt.proto[2])]
+                            c_ref = dropdefaults!(@fiber(sc{2}(e(a_dts.default))), a_dts.data .+ b_dts.data)
+                            d_ref = dropdefaults!(@fiber(sc{2}(e(a_dts.default))), a_dts.data .* b_dts.data)
+                            @test isstructequal(c, c_ref)
+                            @test isstructequal(d, d_ref)
+                        end
                     end
                 end
             end

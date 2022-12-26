@@ -20,7 +20,7 @@
             A_lvl_i1 = 0
         end
         i = 1
-        while A_lvl_q < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < 1
+        while A_lvl_q + 1 < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < 1
             A_lvl_q += 1
         end
         while i <= i_stop

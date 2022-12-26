@@ -33,7 +33,7 @@
             if phase_stop >= phase_start
                 i = i
                 i = phase_start
-                while A_lvl_2_q < A_lvl_2_q_stop && A_lvl_2.idx[A_lvl_2_q] < phase_start
+                while A_lvl_2_q + 1 < A_lvl_2_q_stop && A_lvl_2.idx[A_lvl_2_q] < phase_start
                     A_lvl_2_q += 1
                 end
                 while i <= phase_stop
