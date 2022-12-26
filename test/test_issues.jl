@@ -54,7 +54,7 @@
         71 72 73 74 75;
         81 82 83 84 85;
         91 92 93 94 95]
-    B = @fiber(d(e(0)))
+    B = @fiber(d{Int64}(e(0)))
     
     @test diff("fiber_as_idx.jl", @finch_code @loop i B[i] = A[i, I[i]])
     @finch @loop i B[i] = A[i, I[i]]
