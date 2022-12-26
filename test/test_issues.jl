@@ -43,7 +43,7 @@
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/61
-    I = copyto!(@fiber(rl(0)), [1, 1, 1, 3, 3, 1, 5, 5, 5])
+    I = copyto!(@fiber(rl{0, Int64, Int64}()), [1, 1, 1, 3, 3, 1, 5, 5, 5])
     A = [
         11 12 13 14 15;
         21 22 23 24 25;
