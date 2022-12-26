@@ -103,7 +103,12 @@ end
 
 function (ctx::SpikeTailVisitor)(node::IndexNode)
     if node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
-        something(unchunk(node.tns.val, ctx), node)
+        tns_2 = unchunk(node.tns.val, ctx)
+        if tns_2 === nothing
+            access(node.tns, node.mode, map(ctx, node.idxs)...)
+        else
+            access(tns_2, node.mode, map(ctx, node.idxs[2:end])...)
+        end
     elseif node isa IndexNode && node.kind === virtual
         ctx(node.val)
     elseif istree(node)

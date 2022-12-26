@@ -54,7 +54,7 @@
             if phase_stop >= phase_start
                 j = j
                 j = phase_start
-                while A_lvl_2_q < A_lvl_2_q_stop && A_lvl_2.idx[A_lvl_2_q] < phase_start
+                while A_lvl_2_q + 1 < A_lvl_2_q_stop && A_lvl_2.idx[A_lvl_2_q] < phase_start
                     A_lvl_2_q += 1
                 end
                 while j <= phase_stop
@@ -113,6 +113,6 @@
         resize!(B_lvl.tbl, B_lvl_tbl_alloc)
         B_lvl_srt_alloc = B_lvl.srt_stop[]
         resize!(B_lvl.srt, B_lvl_srt_alloc)
-        resize!(B_lvl_2.val, B_lvl_srt_alloc)
+        resize!(B_lvl_2.val, B_lvl_tbl_alloc)
         (B = Fiber((Finch.SparseBytemapLevel){Int64, Int64}(A_lvl_2.I, B_lvl.pos, B_lvl.tbl, B_lvl.srt, B_lvl.srt_stop, B_lvl_2), (Finch.Environment)(; )),)
     end

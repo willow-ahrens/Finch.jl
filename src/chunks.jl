@@ -9,6 +9,7 @@ combine_style(a::ChunkStyle, b::SimplifyStyle) = SimplifyStyle()
 struct ChunkifyVisitor
     ctx
     idx
+    ext
 end
 
 function (ctx::ChunkifyVisitor)(node)
@@ -36,7 +37,7 @@ function (ctx::LowerJulia)(root::IndexNode, ::ChunkStyle)
         idx = root.idx
         #TODO is every read of dims gonna be like this? When do we lock it in?
         ext = resolvedim(ctx.dims[getname(idx)])
-        body = (ChunkifyVisitor(ctx, idx))(root.body)
+        body = (ChunkifyVisitor(ctx, idx, ext))(root.body)
         #TODO add a simplify step here perhaps
         ctx(chunk(
             idx,

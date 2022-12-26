@@ -205,7 +205,7 @@ function trim_level!(lvl::VirtualSparseBytemapLevel, ctx::LowerJulia, pos)
         $(lvl.srt_alloc) = $(lvl.ex).srt_stop[]
         resize!($(lvl.ex).srt, $(lvl.srt_alloc))
     end)
-    lvl.lvl = trim_level!(lvl.lvl, ctx, lvl.srt_alloc)
+    lvl.lvl = trim_level!(lvl.lvl, ctx, lvl.tbl_alloc)
     return lvl
 end
 
@@ -308,8 +308,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode, ::Walk,
                 stride = (ctx, idx, ext) -> value(my_i_stop),
                 body = (start, step) -> Stepper(
                     seek = (ctx, ext) -> quote
-                        #$my_r = searchsortedfirst($(lvl.ex).idx, $start, $my_r, $my_r_stop, Base.Forward)
-                        while $my_r < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext)))
+                        while $my_r + 1 < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext)))
                             $my_r += 1
                         end
                     end,
@@ -320,12 +319,12 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode, ::Walk,
                         body = Step(
                             stride = (ctx, idx, ext) -> value(my_i),
                             chunk = Spike(
-                                body = Simplify(literal(default(fbr))),
+                                body = Simplify(Fill(default(fbr))),
                                 tail = Thunk(
                                     preamble = quote
                                         $my_q = ($(ctx(envposition(fbr.env))) - 1) * $(ctx(lvl.I)) + $my_i
                                     end,
-                                    body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, lvl.Ti), index=value(my_i, lvl.Ti), parent=fbr.env)), ctx, mode, idxs...),
+                                    body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, lvl.Ti), index=value(my_i, lvl.Ti), parent=fbr.env)), ctx, mode),
                                 ),
                             ),
                             next = (ctx, idx, ext) -> quote
@@ -336,7 +335,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode, ::Walk,
                 )
             ),
             Phase(
-                body = (start, step) -> Run(Simplify(literal(default(fbr))))
+                body = (start, step) -> Run(Simplify(Fill(default(fbr))))
             )
         ])
     )
@@ -372,8 +371,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode, ::Gallo
                     body = Thunk(
                         body = Jump(
                             seek = (ctx, ext) -> quote
-                                #$my_r = searchsortedfirst($(lvl.ex).idx, $start, $my_r, $my_r_stop, Base.Forward)
-                                while $my_r < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext_2)))
+                                while $my_r + 1 < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext)))
                                     $my_r += 1
                                 end
                                 $my_i = last($(lvl.ex).srt[$my_r])
@@ -382,12 +380,12 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode, ::Gallo
                             body = (ctx, ext, ext_2) -> Switch([
                                 value(:($(ctx(getstop(ext_2))) == $my_i)) => Thunk(
                                     body = Spike(
-                                        body = Simplify(literal(default(fbr))),
+                                        body = Simplify(Fill(default(fbr))),
                                         tail = Thunk(
                                             preamble = quote
                                                 $my_q = ($(ctx(envposition(fbr.env))) - 1) * $(ctx(lvl.I)) + $my_i
                                             end,
-                                            body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, lvl.Ti), index=value(my_i, lvl.Ti), parent=fbr.env)), ctx, mode, idxs...),
+                                            body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, lvl.Ti), index=value(my_i, lvl.Ti), parent=fbr.env)), ctx, mode),
                                         ),
                                     ),
                                     epilogue = quote
@@ -396,8 +394,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode, ::Gallo
                                 ),
                                 literal(true) => Stepper(
                                     seek = (ctx, ext) -> quote
-                                        #$my_r = searchsortedfirst($(lvl.ex).idx, $start, $my_r, $my_r_stop, Base.Forward)
-                                        while $my_r < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext)))
+                                        while $my_r + 1 < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext)))
                                             $my_r += 1
                                         end
                                     end,
@@ -408,12 +405,12 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode, ::Gallo
                                         body = Step(
                                             stride = (ctx, idx, ext) -> value(my_i),
                                             chunk = Spike(
-                                                body = Simplify(literal(default(fbr))),
+                                                body = Simplify(Fill(default(fbr))),
                                                 tail = Thunk(
                                                     preamble = quote
                                                         $my_q = ($(ctx(envposition(fbr.env))) - 1) * $(ctx(lvl.I)) + $my_i
                                                     end,
-                                                    body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, lvl.Ti), index=value(my_i, lvl.Ti), parent=fbr.env)), ctx, mode, idxs...),
+                                                    body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, lvl.Ti), index=value(my_i, lvl.Ti), parent=fbr.env)), ctx, mode),
                                                 ),
                                             ),
                                             next = (ctx, idx, ext) -> quote
@@ -428,7 +425,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode, ::Gallo
                 )
             ),
             Phase(
-                body = (start, step) -> Run(Simplify(literal(default(fbr))))
+                body = (start, step) -> Run(Simplify(Fill(default(fbr))))
             )
         ])
     )
@@ -450,8 +447,8 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode, ::Follo
                 $my_q = $(ctx(q)) * $(ctx(lvl.I)) + $(ctx(i))
             end,
             body = Switch([
-                value(:($tbl[$my_q])) => refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, lvl.Tp), index=i, parent=fbr.env)), ctx, mode, idxs...),
-                literal(true) => Simplify(literal(default(fbr)))
+                value(:($tbl[$my_q])) => refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, lvl.Tp), index=i, parent=fbr.env)), ctx, mode),
+                literal(true) => Simplify(Fill(default(fbr)))
             ])
         )
     )
@@ -476,7 +473,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode, ::Union
                 $my_guard = true
                 $my_q = ($(ctx(envposition(fbr.env))) - 1) * $(ctx(lvl.I)) + $(ctx(idx))
             end,
-            body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, lvl.Ti), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode, idxs...),
+            body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, lvl.Ti), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode),
             epilogue = begin
                 body = quote
                     if !$(lvl.ex).tbl[$my_q]
