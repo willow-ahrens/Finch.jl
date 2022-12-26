@@ -41,4 +41,28 @@
             B[j] += edges[j,k] && frontier_list[k] && old_num_paths[k] && !(old_visited[j])
        end
     end
+
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/61
+    I = copyto!(@fiber(rl(0)), [1, 1, 1, 3, 3, 1, 5, 5, 5])
+    A = [
+        11 12 13 14 15;
+        21 22 23 24 25;
+        31 32 33 34 35;
+        41 42 43 44 45;
+        51 52 53 54 55;
+        61 62 63 64 65;
+        71 72 73 74 75;
+        81 82 83 84 85;
+        91 92 93 94 95]
+    B = @fiber(d(e(0)))
+    
+    @test diff("fiber_as_idx.jl", @finch_code @loop i B[i] = A[i, I[i]])
+    @finch @loop i B[i] = A[i, I[i]]
+
+    B_ref = Fiber(Dense(9, [11, 12, 13, 43, 53, 61, 75, 85, 95]))
+
+    @test isstructequal(B, B_ref)
+    
+    
 end
