@@ -366,7 +366,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode, ::Gallop, i
                                 ),
                                 literal(true) => Stepper(
                                     seek = (ctx, ext) -> quote
-                                        while $my_r + 1 < $my_r_stop && $(lvl.ex).idx[$my_r] < $(ctx(getstart(ext_2)))
+                                        while $my_r + 1 < $my_r_stop && $(lvl.ex).idx[$my_r] < $(ctx(getstart(ext)))
                                             $my_r += 1
                                         end
                                     end,
