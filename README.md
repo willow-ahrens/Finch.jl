@@ -21,7 +21,7 @@ apply to the situation at hand. You can even modify indexing expressions to
 express sparse convolution, or to describe windows into structured
 arrays.
 
-Finch is very experimental. There are known bugs, and some interfaces will change dramatically.
+Finch is very experimental, the interfaces are subject to change.
 
 We're always trying to make Finch easier to use! Here's pagerank:
 
