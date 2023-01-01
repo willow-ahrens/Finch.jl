@@ -20,6 +20,7 @@
         for inner in [
             #() -> Dense(base()),
             () -> SparseList(base()),
+            () -> SparseListDiff(base()),
             () -> SparseVBL(base()),
             () -> SparseBytemap(base()),
             () -> SparseHash{1}(base()),
