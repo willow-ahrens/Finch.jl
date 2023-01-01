@@ -10,11 +10,11 @@
         res = Fiber(Finch.DenseLevel{Int}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.DenseLevel{Int8} constructors" begin
-        ref = Fiber(Dense{Int8}(0, Element{0.0}(Float64[])))
-        res = Fiber(Finch.DenseLevel{Int8}(0, Element{0.0}(Float64[])))
+    @testset "Finch.DenseLevel{Int16} constructors" begin
+        ref = Fiber(Dense{Int16}(0, Element{0.0}(Float64[])))
+        res = Fiber(Finch.DenseLevel{Int16}(0, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.DenseLevel{Int8}(Element{0.0}(Float64[])))
+        res = Fiber(Finch.DenseLevel{Int16}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseListLevel constructors" begin
@@ -38,28 +38,28 @@
         res = Fiber(Finch.SparseListLevel{Int, Int}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseListLevel{Int8} constructors" begin
-        ref = Fiber(SparseList{Int8}(0, [1, 1], Int8[], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseListLevel{Int8}(0, [1, 1], Int8[], Element{0.0}(Float64[])))
+    @testset "Finch.SparseListLevel{Int16} constructors" begin
+        ref = Fiber(SparseList{Int16}(0, [1, 1], Int16[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseListLevel{Int16}(0, [1, 1], Int16[], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListLevel{Int8}(0, Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseListLevel{Int16}(0, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListLevel{Int8}(Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseListLevel{Int16}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListLevel{Int8, Int}(0, [1, 1], Int8[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseListLevel{Int16, Int}(0, [1, 1], Int16[], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListLevel{Int8, Int}(0, Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseListLevel{Int16, Int}(0, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListLevel{Int8, Int}(Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseListLevel{Int16, Int}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseListLevel{Int8, Int8} constructors" begin
-        ref = Fiber(SparseList{Int8}(0, Int8[1, 1], Int8[], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseListLevel{Int8, Int8}(0, Int8[1, 1], Int8[], Element{0.0}(Float64[])))
+    @testset "Finch.SparseListLevel{Int16, Int16} constructors" begin
+        ref = Fiber(SparseList{Int16}(0, Int16[1, 1], Int16[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseListLevel{Int16, Int16}(0, Int16[1, 1], Int16[], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListLevel{Int8, Int8}(0, Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseListLevel{Int16, Int16}(0, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListLevel{Int8, Int8}(Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseListLevel{Int16, Int16}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseVBLLevel constructors" begin
@@ -83,28 +83,28 @@
         res = Fiber(Finch.SparseVBLLevel{Int, Int}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseVBLLevel{Int8} constructors" begin
-        ref = Fiber(SparseVBL{Int8}(0, [1, 1], Int8[], [1], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseVBLLevel{Int8}(0, [1, 1], Int8[], [1], Element{0.0}(Float64[])))
+    @testset "Finch.SparseVBLLevel{Int16} constructors" begin
+        ref = Fiber(SparseVBL{Int16}(0, [1, 1], Int16[], [1], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int16}(0, [1, 1], Int16[], [1], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseVBLLevel{Int8}(0, Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int16}(0, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseVBLLevel{Int8}(Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int16}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseVBLLevel{Int8, Int}(0, [1, 1], Int8[], [1], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int}(0, [1, 1], Int16[], [1], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseVBLLevel{Int8, Int}(0, Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int}(0, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseVBLLevel{Int8, Int}(Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseVBLLevel{Int8, Int8} constructors" begin
-        ref = Fiber(SparseVBL{Int8}(0, Int8[1, 1], Int8[], Int8[1], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseVBLLevel{Int8, Int8}(0, Int8[1, 1], Int8[], Int8[1], Element{0.0}(Float64[])))
+    @testset "Finch.SparseVBLLevel{Int16, Int16} constructors" begin
+        ref = Fiber(SparseVBL{Int16}(0, Int16[1, 1], Int16[], Int16[1], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int16}(0, Int16[1, 1], Int16[], Int16[1], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseVBLLevel{Int8, Int8}(0, Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int16}(0, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseVBLLevel{Int8, Int8}(Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int16}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseBytemapLevel constructors" begin
@@ -128,28 +128,28 @@
         res = Fiber(Finch.SparseBytemapLevel{Int, Int}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseBytemapLevel{Int8} constructors" begin
-        ref = Fiber(SparseBytemap{Int8}(0, [1, 1], Bool[], Tuple{Int, Int8}[], Base.RefValue{Int}(0), Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseBytemapLevel{Int8}(0, [1, 1], Bool[], Tuple{Int, Int8}[], Base.RefValue{Int}(0), Element{0.0}(Float64[])))
+    @testset "Finch.SparseBytemapLevel{Int16} constructors" begin
+        ref = Fiber(SparseBytemap{Int16}(0, [1, 1], Bool[], Tuple{Int, Int16}[], Base.RefValue{Int}(0), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseBytemapLevel{Int16}(0, [1, 1], Bool[], Tuple{Int, Int16}[], Base.RefValue{Int}(0), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseBytemapLevel{Int8}(0, Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseBytemapLevel{Int16}(0, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseBytemapLevel{Int8}(Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseBytemapLevel{Int16}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseBytemapLevel{Int8, Int}(0, [1, 1], Bool[], Tuple{Int, Int8}[], Base.RefValue{Int}(0), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseBytemapLevel{Int16, Int}(0, [1, 1], Bool[], Tuple{Int, Int16}[], Base.RefValue{Int}(0), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseBytemapLevel{Int8, Int}(0, Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseBytemapLevel{Int16, Int}(0, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseBytemapLevel{Int8, Int}(Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseBytemapLevel{Int16, Int}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseBytemapLevel{Int8, Int8} constructors" begin
-        ref = Fiber(SparseBytemap{Int8}(0, Int8[1, 1], Bool[], Tuple{Int8, Int8}[], Base.RefValue{Int8}(0), Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseBytemapLevel{Int8, Int8}(0, Int8[1, 1], Bool[], Tuple{Int8, Int8}[], Base.RefValue{Int8}(0), Element{0.0}(Float64[])))
+    @testset "Finch.SparseBytemapLevel{Int16, Int16} constructors" begin
+        ref = Fiber(SparseBytemap{Int16}(0, Int16[1, 1], Bool[], Tuple{Int16, Int16}[], Base.RefValue{Int16}(0), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseBytemapLevel{Int16, Int16}(0, Int16[1, 1], Bool[], Tuple{Int16, Int16}[], Base.RefValue{Int16}(0), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseBytemapLevel{Int8, Int8}(0, Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseBytemapLevel{Int16, Int16}(0, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseBytemapLevel{Int8, Int8}(Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseBytemapLevel{Int16, Int16}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.DenseLevel constructors" begin
@@ -159,9 +159,9 @@
         res = Fiber(Finch.DenseLevel{Int}(4, Element{0.0}([0.0, 0.0, 0.0, 0.0])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.DenseLevel{Int8} constructors" begin
-        ref = Fiber(Dense{Int8}(4, Element{0.0}([0.0, 0.0, 0.0, 0.0])))
-        res = Fiber(Finch.DenseLevel{Int8}(4, Element{0.0}([0.0, 0.0, 0.0, 0.0])))
+    @testset "Finch.DenseLevel{Int16} constructors" begin
+        ref = Fiber(Dense{Int16}(4, Element{0.0}([0.0, 0.0, 0.0, 0.0])))
+        res = Fiber(Finch.DenseLevel{Int16}(4, Element{0.0}([0.0, 0.0, 0.0, 0.0])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseListLevel constructors" begin
@@ -179,22 +179,22 @@
         res = Fiber(Finch.SparseListLevel{Int, Int}(4, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseListLevel{Int8} constructors" begin
-        ref = Fiber(SparseList{Int8}(4, [1, 1], Int8[], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseListLevel{Int8}(4, [1, 1], Int8[], Element{0.0}(Float64[])))
+    @testset "Finch.SparseListLevel{Int16} constructors" begin
+        ref = Fiber(SparseList{Int16}(4, [1, 1], Int16[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseListLevel{Int16}(4, [1, 1], Int16[], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListLevel{Int8}(4, Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseListLevel{Int16}(4, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListLevel{Int8, Int}(4, [1, 1], Int8[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseListLevel{Int16, Int}(4, [1, 1], Int16[], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListLevel{Int8, Int}(4, Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseListLevel{Int16, Int}(4, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseListLevel{Int8, Int8} constructors" begin
-        ref = Fiber(SparseList{Int8}(4, Int8[1, 1], Int8[], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseListLevel{Int8, Int8}(4, Int8[1, 1], Int8[], Element{0.0}(Float64[])))
+    @testset "Finch.SparseListLevel{Int16, Int16} constructors" begin
+        ref = Fiber(SparseList{Int16}(4, Int16[1, 1], Int16[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseListLevel{Int16, Int16}(4, Int16[1, 1], Int16[], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListLevel{Int8, Int8}(4, Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseListLevel{Int16, Int16}(4, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseVBLLevel constructors" begin
@@ -212,22 +212,22 @@
         res = Fiber(Finch.SparseVBLLevel{Int, Int}(4, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseVBLLevel{Int8} constructors" begin
-        ref = Fiber(SparseVBL{Int8}(4, [1, 1], Int8[], [1], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseVBLLevel{Int8}(4, [1, 1], Int8[], [1], Element{0.0}(Float64[])))
+    @testset "Finch.SparseVBLLevel{Int16} constructors" begin
+        ref = Fiber(SparseVBL{Int16}(4, [1, 1], Int16[], [1], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int16}(4, [1, 1], Int16[], [1], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseVBLLevel{Int8}(4, Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int16}(4, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseVBLLevel{Int8, Int}(4, [1, 1], Int8[], [1], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int}(4, [1, 1], Int16[], [1], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseVBLLevel{Int8, Int}(4, Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int}(4, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseVBLLevel{Int8, Int8} constructors" begin
-        ref = Fiber(SparseVBL{Int8}(4, Int8[1, 1], Int8[], Int8[1], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseVBLLevel{Int8, Int8}(4, Int8[1, 1], Int8[], Int8[1], Element{0.0}(Float64[])))
+    @testset "Finch.SparseVBLLevel{Int16, Int16} constructors" begin
+        ref = Fiber(SparseVBL{Int16}(4, Int16[1, 1], Int16[], Int16[1], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int16}(4, Int16[1, 1], Int16[], Int16[1], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseVBLLevel{Int8, Int8}(4, Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int16}(4, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseBytemapLevel constructors" begin
@@ -245,22 +245,22 @@
         res = Fiber(Finch.SparseBytemapLevel{Int, Int}(4, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseBytemapLevel{Int8} constructors" begin
-        ref = Fiber(SparseBytemap{Int8}(4, [1, 1], Bool[0, 0, 0, 0], Tuple{Int, Int8}[], Base.RefValue{Int}(0), Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseBytemapLevel{Int8}(4, [1, 1], Bool[0, 0, 0, 0], Tuple{Int, Int8}[], Base.RefValue{Int}(0), Element{0.0}(Float64[])))
+    @testset "Finch.SparseBytemapLevel{Int16} constructors" begin
+        ref = Fiber(SparseBytemap{Int16}(4, [1, 1], Bool[0, 0, 0, 0], Tuple{Int, Int16}[], Base.RefValue{Int}(0), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseBytemapLevel{Int16}(4, [1, 1], Bool[0, 0, 0, 0], Tuple{Int, Int16}[], Base.RefValue{Int}(0), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseBytemapLevel{Int8}(4, Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseBytemapLevel{Int16}(4, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseBytemapLevel{Int8, Int}(4, [1, 1], Bool[0, 0, 0, 0], Tuple{Int, Int8}[], Base.RefValue{Int}(0), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseBytemapLevel{Int16, Int}(4, [1, 1], Bool[0, 0, 0, 0], Tuple{Int, Int16}[], Base.RefValue{Int}(0), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseBytemapLevel{Int8, Int}(4, Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseBytemapLevel{Int16, Int}(4, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseBytemapLevel{Int8, Int8} constructors" begin
-        ref = Fiber(SparseBytemap{Int8}(4, Int8[1, 1], Bool[0, 0, 0, 0], Tuple{Int8, Int8}[], Base.RefValue{Int8}(0), Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseBytemapLevel{Int8, Int8}(4, Int8[1, 1], Bool[0, 0, 0, 0], Tuple{Int8, Int8}[], Base.RefValue{Int8}(0), Element{0.0}(Float64[])))
+    @testset "Finch.SparseBytemapLevel{Int16, Int16} constructors" begin
+        ref = Fiber(SparseBytemap{Int16}(4, Int16[1, 1], Bool[0, 0, 0, 0], Tuple{Int16, Int16}[], Base.RefValue{Int16}(0), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseBytemapLevel{Int16, Int16}(4, Int16[1, 1], Bool[0, 0, 0, 0], Tuple{Int16, Int16}[], Base.RefValue{Int16}(0), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseBytemapLevel{Int8, Int8}(4, Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseBytemapLevel{Int16, Int16}(4, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.DenseLevel constructors" begin
@@ -270,9 +270,9 @@
         res = Fiber(Finch.DenseLevel{Int}(6, Element{0.0}([0.0, 1.0, 0.0, 1.0, 0.0, 0.0])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.DenseLevel{Int8} constructors" begin
-        ref = Fiber(Dense{Int8}(6, Element{0.0}([0.0, 1.0, 0.0, 1.0, 0.0, 0.0])))
-        res = Fiber(Finch.DenseLevel{Int8}(6, Element{0.0}([0.0, 1.0, 0.0, 1.0, 0.0, 0.0])))
+    @testset "Finch.DenseLevel{Int16} constructors" begin
+        ref = Fiber(Dense{Int16}(6, Element{0.0}([0.0, 1.0, 0.0, 1.0, 0.0, 0.0])))
+        res = Fiber(Finch.DenseLevel{Int16}(6, Element{0.0}([0.0, 1.0, 0.0, 1.0, 0.0, 0.0])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseListLevel constructors" begin
@@ -284,16 +284,16 @@
         res = Fiber(Finch.SparseListLevel{Int, Int}(6, [1, 3], [2, 4], Element{0.0}([1.0, 1.0])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseListLevel{Int8} constructors" begin
-        ref = Fiber(SparseList{Int8}(6, [1, 3], Int8[2, 4], Element{0.0}([1.0, 1.0])))
-        res = Fiber(Finch.SparseListLevel{Int8}(6, [1, 3], Int8[2, 4], Element{0.0}([1.0, 1.0])))
+    @testset "Finch.SparseListLevel{Int16} constructors" begin
+        ref = Fiber(SparseList{Int16}(6, [1, 3], Int16[2, 4], Element{0.0}([1.0, 1.0])))
+        res = Fiber(Finch.SparseListLevel{Int16}(6, [1, 3], Int16[2, 4], Element{0.0}([1.0, 1.0])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListLevel{Int8, Int}(6, [1, 3], Int8[2, 4], Element{0.0}([1.0, 1.0])))
+        res = Fiber(Finch.SparseListLevel{Int16, Int}(6, [1, 3], Int16[2, 4], Element{0.0}([1.0, 1.0])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseListLevel{Int8, Int8} constructors" begin
-        ref = Fiber(SparseList{Int8}(6, Int8[1, 3], Int8[2, 4], Element{0.0}([1.0, 1.0])))
-        res = Fiber(Finch.SparseListLevel{Int8, Int8}(6, Int8[1, 3], Int8[2, 4], Element{0.0}([1.0, 1.0])))
+    @testset "Finch.SparseListLevel{Int16, Int16} constructors" begin
+        ref = Fiber(SparseList{Int16}(6, Int16[1, 3], Int16[2, 4], Element{0.0}([1.0, 1.0])))
+        res = Fiber(Finch.SparseListLevel{Int16, Int16}(6, Int16[1, 3], Int16[2, 4], Element{0.0}([1.0, 1.0])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseVBLLevel constructors" begin
@@ -305,16 +305,16 @@
         res = Fiber(Finch.SparseVBLLevel{Int, Int}(6, [1, 3], [2, 4], [1, 2, 3], Element{0.0}([1.0, 1.0])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseVBLLevel{Int8} constructors" begin
-        ref = Fiber(SparseVBL{Int8}(6, [1, 3], Int8[2, 4], [1, 2, 3], Element{0.0}([1.0, 1.0])))
-        res = Fiber(Finch.SparseVBLLevel{Int8}(6, [1, 3], Int8[2, 4], [1, 2, 3], Element{0.0}([1.0, 1.0])))
+    @testset "Finch.SparseVBLLevel{Int16} constructors" begin
+        ref = Fiber(SparseVBL{Int16}(6, [1, 3], Int16[2, 4], [1, 2, 3], Element{0.0}([1.0, 1.0])))
+        res = Fiber(Finch.SparseVBLLevel{Int16}(6, [1, 3], Int16[2, 4], [1, 2, 3], Element{0.0}([1.0, 1.0])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseVBLLevel{Int8, Int}(6, [1, 3], Int8[2, 4], [1, 2, 3], Element{0.0}([1.0, 1.0])))
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int}(6, [1, 3], Int16[2, 4], [1, 2, 3], Element{0.0}([1.0, 1.0])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseVBLLevel{Int8, Int8} constructors" begin
-        ref = Fiber(SparseVBL{Int8}(6, Int8[1, 3], Int8[2, 4], Int8[1, 2, 3], Element{0.0}([1.0, 1.0])))
-        res = Fiber(Finch.SparseVBLLevel{Int8, Int8}(6, Int8[1, 3], Int8[2, 4], Int8[1, 2, 3], Element{0.0}([1.0, 1.0])))
+    @testset "Finch.SparseVBLLevel{Int16, Int16} constructors" begin
+        ref = Fiber(SparseVBL{Int16}(6, Int16[1, 3], Int16[2, 4], Int16[1, 2, 3], Element{0.0}([1.0, 1.0])))
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int16}(6, Int16[1, 3], Int16[2, 4], Int16[1, 2, 3], Element{0.0}([1.0, 1.0])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseBytemapLevel constructors" begin
@@ -326,16 +326,16 @@
         res = Fiber(Finch.SparseBytemapLevel{Int, Int}(6, [1, 3], Bool[0, 1, 0, 1, 0, 0], [(1, 2), (1, 4)], Base.RefValue{Int}(2), Element{0.0}([0.0, 1.0])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseBytemapLevel{Int8} constructors" begin
-        ref = Fiber(SparseBytemap{Int8}(6, [1, 3], Bool[0, 1, 0, 1, 0, 0], Tuple{Int, Int8}[(1, 2), (1, 4)], Base.RefValue{Int}(2), Element{0.0}([0.0, 1.0])))
-        res = Fiber(Finch.SparseBytemapLevel{Int8}(6, [1, 3], Bool[0, 1, 0, 1, 0, 0], Tuple{Int, Int8}[(1, 2), (1, 4)], Base.RefValue{Int}(2), Element{0.0}([0.0, 1.0])))
+    @testset "Finch.SparseBytemapLevel{Int16} constructors" begin
+        ref = Fiber(SparseBytemap{Int16}(6, [1, 3], Bool[0, 1, 0, 1, 0, 0], Tuple{Int, Int16}[(1, 2), (1, 4)], Base.RefValue{Int}(2), Element{0.0}([0.0, 1.0])))
+        res = Fiber(Finch.SparseBytemapLevel{Int16}(6, [1, 3], Bool[0, 1, 0, 1, 0, 0], Tuple{Int, Int16}[(1, 2), (1, 4)], Base.RefValue{Int}(2), Element{0.0}([0.0, 1.0])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseBytemapLevel{Int8, Int}(6, [1, 3], Bool[0, 1, 0, 1, 0, 0], Tuple{Int, Int8}[(1, 2), (1, 4)], Base.RefValue{Int}(2), Element{0.0}([0.0, 1.0])))
+        res = Fiber(Finch.SparseBytemapLevel{Int16, Int}(6, [1, 3], Bool[0, 1, 0, 1, 0, 0], Tuple{Int, Int16}[(1, 2), (1, 4)], Base.RefValue{Int}(2), Element{0.0}([0.0, 1.0])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseBytemapLevel{Int8, Int8} constructors" begin
-        ref = Fiber(SparseBytemap{Int8}(6, Int8[1, 3], Bool[0, 1, 0, 1, 0, 0], Tuple{Int8, Int8}[(1, 2), (1, 4)], Base.RefValue{Int8}(2), Element{0.0}([0.0, 1.0])))
-        res = Fiber(Finch.SparseBytemapLevel{Int8, Int8}(6, Int8[1, 3], Bool[0, 1, 0, 1, 0, 0], Tuple{Int8, Int8}[(1, 2), (1, 4)], Base.RefValue{Int8}(2), Element{0.0}([0.0, 1.0])))
+    @testset "Finch.SparseBytemapLevel{Int16, Int16} constructors" begin
+        ref = Fiber(SparseBytemap{Int16}(6, Int16[1, 3], Bool[0, 1, 0, 1, 0, 0], Tuple{Int16, Int16}[(1, 2), (1, 4)], Base.RefValue{Int16}(2), Element{0.0}([0.0, 1.0])))
+        res = Fiber(Finch.SparseBytemapLevel{Int16, Int16}(6, Int16[1, 3], Bool[0, 1, 0, 1, 0, 0], Tuple{Int16, Int16}[(1, 2), (1, 4)], Base.RefValue{Int16}(2), Element{0.0}([0.0, 1.0])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.DenseLevel constructors" begin
@@ -349,11 +349,11 @@
         res = Fiber(Finch.DenseLevel{Int}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.DenseLevel{Int8} constructors" begin
-        ref = Fiber(Dense{Int8}(0, Element{0.0}(Float64[])))
-        res = Fiber(Finch.DenseLevel{Int8}(0, Element{0.0}(Float64[])))
+    @testset "Finch.DenseLevel{Int16} constructors" begin
+        ref = Fiber(Dense{Int16}(0, Element{0.0}(Float64[])))
+        res = Fiber(Finch.DenseLevel{Int16}(0, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.DenseLevel{Int8}(Element{0.0}(Float64[])))
+        res = Fiber(Finch.DenseLevel{Int16}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseListLevel constructors" begin
@@ -377,28 +377,28 @@
         res = Fiber(Finch.SparseListLevel{Int, Int}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseListLevel{Int8} constructors" begin
-        ref = Fiber(SparseList{Int8}(0, [1, 1], Int8[], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseListLevel{Int8}(0, [1, 1], Int8[], Element{0.0}(Float64[])))
+    @testset "Finch.SparseListLevel{Int16} constructors" begin
+        ref = Fiber(SparseList{Int16}(0, [1, 1], Int16[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseListLevel{Int16}(0, [1, 1], Int16[], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListLevel{Int8}(0, Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseListLevel{Int16}(0, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListLevel{Int8}(Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseListLevel{Int16}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListLevel{Int8, Int}(0, [1, 1], Int8[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseListLevel{Int16, Int}(0, [1, 1], Int16[], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListLevel{Int8, Int}(0, Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseListLevel{Int16, Int}(0, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListLevel{Int8, Int}(Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseListLevel{Int16, Int}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseListLevel{Int8, Int8} constructors" begin
-        ref = Fiber(SparseList{Int8}(0, Int8[1, 1], Int8[], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseListLevel{Int8, Int8}(0, Int8[1, 1], Int8[], Element{0.0}(Float64[])))
+    @testset "Finch.SparseListLevel{Int16, Int16} constructors" begin
+        ref = Fiber(SparseList{Int16}(0, Int16[1, 1], Int16[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseListLevel{Int16, Int16}(0, Int16[1, 1], Int16[], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListLevel{Int8, Int8}(0, Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseListLevel{Int16, Int16}(0, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListLevel{Int8, Int8}(Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseListLevel{Int16, Int16}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseVBLLevel constructors" begin
@@ -422,28 +422,28 @@
         res = Fiber(Finch.SparseVBLLevel{Int, Int}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseVBLLevel{Int8} constructors" begin
-        ref = Fiber(SparseVBL{Int8}(0, [1, 1], Int8[], [1], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseVBLLevel{Int8}(0, [1, 1], Int8[], [1], Element{0.0}(Float64[])))
+    @testset "Finch.SparseVBLLevel{Int16} constructors" begin
+        ref = Fiber(SparseVBL{Int16}(0, [1, 1], Int16[], [1], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int16}(0, [1, 1], Int16[], [1], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseVBLLevel{Int8}(0, Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int16}(0, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseVBLLevel{Int8}(Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int16}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseVBLLevel{Int8, Int}(0, [1, 1], Int8[], [1], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int}(0, [1, 1], Int16[], [1], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseVBLLevel{Int8, Int}(0, Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int}(0, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseVBLLevel{Int8, Int}(Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseVBLLevel{Int8, Int8} constructors" begin
-        ref = Fiber(SparseVBL{Int8}(0, Int8[1, 1], Int8[], Int8[1], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseVBLLevel{Int8, Int8}(0, Int8[1, 1], Int8[], Int8[1], Element{0.0}(Float64[])))
+    @testset "Finch.SparseVBLLevel{Int16, Int16} constructors" begin
+        ref = Fiber(SparseVBL{Int16}(0, Int16[1, 1], Int16[], Int16[1], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int16}(0, Int16[1, 1], Int16[], Int16[1], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseVBLLevel{Int8, Int8}(0, Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int16}(0, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseVBLLevel{Int8, Int8}(Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int16}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseBytemapLevel constructors" begin
@@ -467,28 +467,28 @@
         res = Fiber(Finch.SparseBytemapLevel{Int, Int}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseBytemapLevel{Int8} constructors" begin
-        ref = Fiber(SparseBytemap{Int8}(0, [1, 1], Bool[], Tuple{Int, Int8}[], Base.RefValue{Int}(0), Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseBytemapLevel{Int8}(0, [1, 1], Bool[], Tuple{Int, Int8}[], Base.RefValue{Int}(0), Element{0.0}(Float64[])))
+    @testset "Finch.SparseBytemapLevel{Int16} constructors" begin
+        ref = Fiber(SparseBytemap{Int16}(0, [1, 1], Bool[], Tuple{Int, Int16}[], Base.RefValue{Int}(0), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseBytemapLevel{Int16}(0, [1, 1], Bool[], Tuple{Int, Int16}[], Base.RefValue{Int}(0), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseBytemapLevel{Int8}(0, Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseBytemapLevel{Int16}(0, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseBytemapLevel{Int8}(Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseBytemapLevel{Int16}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseBytemapLevel{Int8, Int}(0, [1, 1], Bool[], Tuple{Int, Int8}[], Base.RefValue{Int}(0), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseBytemapLevel{Int16, Int}(0, [1, 1], Bool[], Tuple{Int, Int16}[], Base.RefValue{Int}(0), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseBytemapLevel{Int8, Int}(0, Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseBytemapLevel{Int16, Int}(0, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseBytemapLevel{Int8, Int}(Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseBytemapLevel{Int16, Int}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseBytemapLevel{Int8, Int8} constructors" begin
-        ref = Fiber(SparseBytemap{Int8}(0, Int8[1, 1], Bool[], Tuple{Int8, Int8}[], Base.RefValue{Int8}(0), Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseBytemapLevel{Int8, Int8}(0, Int8[1, 1], Bool[], Tuple{Int8, Int8}[], Base.RefValue{Int8}(0), Element{0.0}(Float64[])))
+    @testset "Finch.SparseBytemapLevel{Int16, Int16} constructors" begin
+        ref = Fiber(SparseBytemap{Int16}(0, Int16[1, 1], Bool[], Tuple{Int16, Int16}[], Base.RefValue{Int16}(0), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseBytemapLevel{Int16, Int16}(0, Int16[1, 1], Bool[], Tuple{Int16, Int16}[], Base.RefValue{Int16}(0), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseBytemapLevel{Int8, Int8}(0, Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseBytemapLevel{Int16, Int16}(0, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseBytemapLevel{Int8, Int8}(Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseBytemapLevel{Int16, Int16}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.DenseLevel constructors" begin
@@ -498,9 +498,9 @@
         res = Fiber(Finch.DenseLevel{Int}(4, Element{0.0}([0.0, 0.0, 0.0, 0.0])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.DenseLevel{Int8} constructors" begin
-        ref = Fiber(Dense{Int8}(4, Element{0.0}([0.0, 0.0, 0.0, 0.0])))
-        res = Fiber(Finch.DenseLevel{Int8}(4, Element{0.0}([0.0, 0.0, 0.0, 0.0])))
+    @testset "Finch.DenseLevel{Int16} constructors" begin
+        ref = Fiber(Dense{Int16}(4, Element{0.0}([0.0, 0.0, 0.0, 0.0])))
+        res = Fiber(Finch.DenseLevel{Int16}(4, Element{0.0}([0.0, 0.0, 0.0, 0.0])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseListLevel constructors" begin
@@ -518,22 +518,22 @@
         res = Fiber(Finch.SparseListLevel{Int, Int}(4, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseListLevel{Int8} constructors" begin
-        ref = Fiber(SparseList{Int8}(4, [1, 1], Int8[], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseListLevel{Int8}(4, [1, 1], Int8[], Element{0.0}(Float64[])))
+    @testset "Finch.SparseListLevel{Int16} constructors" begin
+        ref = Fiber(SparseList{Int16}(4, [1, 1], Int16[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseListLevel{Int16}(4, [1, 1], Int16[], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListLevel{Int8}(4, Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseListLevel{Int16}(4, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListLevel{Int8, Int}(4, [1, 1], Int8[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseListLevel{Int16, Int}(4, [1, 1], Int16[], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListLevel{Int8, Int}(4, Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseListLevel{Int16, Int}(4, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseListLevel{Int8, Int8} constructors" begin
-        ref = Fiber(SparseList{Int8}(4, Int8[1, 1], Int8[], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseListLevel{Int8, Int8}(4, Int8[1, 1], Int8[], Element{0.0}(Float64[])))
+    @testset "Finch.SparseListLevel{Int16, Int16} constructors" begin
+        ref = Fiber(SparseList{Int16}(4, Int16[1, 1], Int16[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseListLevel{Int16, Int16}(4, Int16[1, 1], Int16[], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListLevel{Int8, Int8}(4, Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseListLevel{Int16, Int16}(4, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseVBLLevel constructors" begin
@@ -551,22 +551,22 @@
         res = Fiber(Finch.SparseVBLLevel{Int, Int}(4, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseVBLLevel{Int8} constructors" begin
-        ref = Fiber(SparseVBL{Int8}(4, [1, 1], Int8[], [1], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseVBLLevel{Int8}(4, [1, 1], Int8[], [1], Element{0.0}(Float64[])))
+    @testset "Finch.SparseVBLLevel{Int16} constructors" begin
+        ref = Fiber(SparseVBL{Int16}(4, [1, 1], Int16[], [1], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int16}(4, [1, 1], Int16[], [1], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseVBLLevel{Int8}(4, Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int16}(4, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseVBLLevel{Int8, Int}(4, [1, 1], Int8[], [1], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int}(4, [1, 1], Int16[], [1], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseVBLLevel{Int8, Int}(4, Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int}(4, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseVBLLevel{Int8, Int8} constructors" begin
-        ref = Fiber(SparseVBL{Int8}(4, Int8[1, 1], Int8[], Int8[1], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseVBLLevel{Int8, Int8}(4, Int8[1, 1], Int8[], Int8[1], Element{0.0}(Float64[])))
+    @testset "Finch.SparseVBLLevel{Int16, Int16} constructors" begin
+        ref = Fiber(SparseVBL{Int16}(4, Int16[1, 1], Int16[], Int16[1], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int16}(4, Int16[1, 1], Int16[], Int16[1], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseVBLLevel{Int8, Int8}(4, Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int16}(4, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseBytemapLevel constructors" begin
@@ -584,22 +584,22 @@
         res = Fiber(Finch.SparseBytemapLevel{Int, Int}(4, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseBytemapLevel{Int8} constructors" begin
-        ref = Fiber(SparseBytemap{Int8}(4, [1, 1], Bool[0, 0, 0, 0], Tuple{Int, Int8}[], Base.RefValue{Int}(0), Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseBytemapLevel{Int8}(4, [1, 1], Bool[0, 0, 0, 0], Tuple{Int, Int8}[], Base.RefValue{Int}(0), Element{0.0}(Float64[])))
+    @testset "Finch.SparseBytemapLevel{Int16} constructors" begin
+        ref = Fiber(SparseBytemap{Int16}(4, [1, 1], Bool[0, 0, 0, 0], Tuple{Int, Int16}[], Base.RefValue{Int}(0), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseBytemapLevel{Int16}(4, [1, 1], Bool[0, 0, 0, 0], Tuple{Int, Int16}[], Base.RefValue{Int}(0), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseBytemapLevel{Int8}(4, Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseBytemapLevel{Int16}(4, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseBytemapLevel{Int8, Int}(4, [1, 1], Bool[0, 0, 0, 0], Tuple{Int, Int8}[], Base.RefValue{Int}(0), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseBytemapLevel{Int16, Int}(4, [1, 1], Bool[0, 0, 0, 0], Tuple{Int, Int16}[], Base.RefValue{Int}(0), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseBytemapLevel{Int8, Int}(4, Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseBytemapLevel{Int16, Int}(4, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseBytemapLevel{Int8, Int8} constructors" begin
-        ref = Fiber(SparseBytemap{Int8}(4, Int8[1, 1], Bool[0, 0, 0, 0], Tuple{Int8, Int8}[], Base.RefValue{Int8}(0), Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseBytemapLevel{Int8, Int8}(4, Int8[1, 1], Bool[0, 0, 0, 0], Tuple{Int8, Int8}[], Base.RefValue{Int8}(0), Element{0.0}(Float64[])))
+    @testset "Finch.SparseBytemapLevel{Int16, Int16} constructors" begin
+        ref = Fiber(SparseBytemap{Int16}(4, Int16[1, 1], Bool[0, 0, 0, 0], Tuple{Int16, Int16}[], Base.RefValue{Int16}(0), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseBytemapLevel{Int16, Int16}(4, Int16[1, 1], Bool[0, 0, 0, 0], Tuple{Int16, Int16}[], Base.RefValue{Int16}(0), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseBytemapLevel{Int8, Int8}(4, Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseBytemapLevel{Int16, Int16}(4, Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.DenseLevel constructors" begin
@@ -609,9 +609,9 @@
         res = Fiber(Finch.DenseLevel{Int}(6, Element{0.0}([0.0, 2.0, 2.0, 0.0, 3.0, 3.0])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.DenseLevel{Int8} constructors" begin
-        ref = Fiber(Dense{Int8}(6, Element{0.0}([0.0, 2.0, 2.0, 0.0, 3.0, 3.0])))
-        res = Fiber(Finch.DenseLevel{Int8}(6, Element{0.0}([0.0, 2.0, 2.0, 0.0, 3.0, 3.0])))
+    @testset "Finch.DenseLevel{Int16} constructors" begin
+        ref = Fiber(Dense{Int16}(6, Element{0.0}([0.0, 2.0, 2.0, 0.0, 3.0, 3.0])))
+        res = Fiber(Finch.DenseLevel{Int16}(6, Element{0.0}([0.0, 2.0, 2.0, 0.0, 3.0, 3.0])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseListLevel constructors" begin
@@ -623,16 +623,16 @@
         res = Fiber(Finch.SparseListLevel{Int, Int}(6, [1, 5], [2, 3, 5, 6], Element{0.0}([2.0, 2.0, 3.0, 3.0])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseListLevel{Int8} constructors" begin
-        ref = Fiber(SparseList{Int8}(6, [1, 5], Int8[2, 3, 5, 6], Element{0.0}([2.0, 2.0, 3.0, 3.0])))
-        res = Fiber(Finch.SparseListLevel{Int8}(6, [1, 5], Int8[2, 3, 5, 6], Element{0.0}([2.0, 2.0, 3.0, 3.0])))
+    @testset "Finch.SparseListLevel{Int16} constructors" begin
+        ref = Fiber(SparseList{Int16}(6, [1, 5], Int16[2, 3, 5, 6], Element{0.0}([2.0, 2.0, 3.0, 3.0])))
+        res = Fiber(Finch.SparseListLevel{Int16}(6, [1, 5], Int16[2, 3, 5, 6], Element{0.0}([2.0, 2.0, 3.0, 3.0])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListLevel{Int8, Int}(6, [1, 5], Int8[2, 3, 5, 6], Element{0.0}([2.0, 2.0, 3.0, 3.0])))
+        res = Fiber(Finch.SparseListLevel{Int16, Int}(6, [1, 5], Int16[2, 3, 5, 6], Element{0.0}([2.0, 2.0, 3.0, 3.0])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseListLevel{Int8, Int8} constructors" begin
-        ref = Fiber(SparseList{Int8}(6, Int8[1, 5], Int8[2, 3, 5, 6], Element{0.0}([2.0, 2.0, 3.0, 3.0])))
-        res = Fiber(Finch.SparseListLevel{Int8, Int8}(6, Int8[1, 5], Int8[2, 3, 5, 6], Element{0.0}([2.0, 2.0, 3.0, 3.0])))
+    @testset "Finch.SparseListLevel{Int16, Int16} constructors" begin
+        ref = Fiber(SparseList{Int16}(6, Int16[1, 5], Int16[2, 3, 5, 6], Element{0.0}([2.0, 2.0, 3.0, 3.0])))
+        res = Fiber(Finch.SparseListLevel{Int16, Int16}(6, Int16[1, 5], Int16[2, 3, 5, 6], Element{0.0}([2.0, 2.0, 3.0, 3.0])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseVBLLevel constructors" begin
@@ -644,16 +644,16 @@
         res = Fiber(Finch.SparseVBLLevel{Int, Int}(6, [1, 3], [3, 6], [1, 3, 5], Element{0.0}([2.0, 2.0])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseVBLLevel{Int8} constructors" begin
-        ref = Fiber(SparseVBL{Int8}(6, [1, 3], Int8[3, 6], [1, 3, 5], Element{0.0}([2.0, 2.0])))
-        res = Fiber(Finch.SparseVBLLevel{Int8}(6, [1, 3], Int8[3, 6], [1, 3, 5], Element{0.0}([2.0, 2.0])))
+    @testset "Finch.SparseVBLLevel{Int16} constructors" begin
+        ref = Fiber(SparseVBL{Int16}(6, [1, 3], Int16[3, 6], [1, 3, 5], Element{0.0}([2.0, 2.0])))
+        res = Fiber(Finch.SparseVBLLevel{Int16}(6, [1, 3], Int16[3, 6], [1, 3, 5], Element{0.0}([2.0, 2.0])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseVBLLevel{Int8, Int}(6, [1, 3], Int8[3, 6], [1, 3, 5], Element{0.0}([2.0, 2.0])))
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int}(6, [1, 3], Int16[3, 6], [1, 3, 5], Element{0.0}([2.0, 2.0])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseVBLLevel{Int8, Int8} constructors" begin
-        ref = Fiber(SparseVBL{Int8}(6, Int8[1, 3], Int8[3, 6], Int8[1, 3, 5], Element{0.0}([2.0, 2.0])))
-        res = Fiber(Finch.SparseVBLLevel{Int8, Int8}(6, Int8[1, 3], Int8[3, 6], Int8[1, 3, 5], Element{0.0}([2.0, 2.0])))
+    @testset "Finch.SparseVBLLevel{Int16, Int16} constructors" begin
+        ref = Fiber(SparseVBL{Int16}(6, Int16[1, 3], Int16[3, 6], Int16[1, 3, 5], Element{0.0}([2.0, 2.0])))
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int16}(6, Int16[1, 3], Int16[3, 6], Int16[1, 3, 5], Element{0.0}([2.0, 2.0])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseBytemapLevel constructors" begin
@@ -665,16 +665,16 @@
         res = Fiber(Finch.SparseBytemapLevel{Int, Int}(6, [1, 5], Bool[0, 1, 1, 0, 1, 1], [(1, 2), (1, 3), (1, 5), (1, 6)], Base.RefValue{Int}(4), Element{0.0}([0.0, 2.0, 2.0, 0.0])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseBytemapLevel{Int8} constructors" begin
-        ref = Fiber(SparseBytemap{Int8}(6, [1, 5], Bool[0, 1, 1, 0, 1, 1], Tuple{Int, Int8}[(1, 2), (1, 3), (1, 5), (1, 6)], Base.RefValue{Int}(4), Element{0.0}([0.0, 2.0, 2.0, 0.0])))
-        res = Fiber(Finch.SparseBytemapLevel{Int8}(6, [1, 5], Bool[0, 1, 1, 0, 1, 1], Tuple{Int, Int8}[(1, 2), (1, 3), (1, 5), (1, 6)], Base.RefValue{Int}(4), Element{0.0}([0.0, 2.0, 2.0, 0.0])))
+    @testset "Finch.SparseBytemapLevel{Int16} constructors" begin
+        ref = Fiber(SparseBytemap{Int16}(6, [1, 5], Bool[0, 1, 1, 0, 1, 1], Tuple{Int, Int16}[(1, 2), (1, 3), (1, 5), (1, 6)], Base.RefValue{Int}(4), Element{0.0}([0.0, 2.0, 2.0, 0.0])))
+        res = Fiber(Finch.SparseBytemapLevel{Int16}(6, [1, 5], Bool[0, 1, 1, 0, 1, 1], Tuple{Int, Int16}[(1, 2), (1, 3), (1, 5), (1, 6)], Base.RefValue{Int}(4), Element{0.0}([0.0, 2.0, 2.0, 0.0])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseBytemapLevel{Int8, Int}(6, [1, 5], Bool[0, 1, 1, 0, 1, 1], Tuple{Int, Int8}[(1, 2), (1, 3), (1, 5), (1, 6)], Base.RefValue{Int}(4), Element{0.0}([0.0, 2.0, 2.0, 0.0])))
+        res = Fiber(Finch.SparseBytemapLevel{Int16, Int}(6, [1, 5], Bool[0, 1, 1, 0, 1, 1], Tuple{Int, Int16}[(1, 2), (1, 3), (1, 5), (1, 6)], Base.RefValue{Int}(4), Element{0.0}([0.0, 2.0, 2.0, 0.0])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseBytemapLevel{Int8, Int8} constructors" begin
-        ref = Fiber(SparseBytemap{Int8}(6, Int8[1, 5], Bool[0, 1, 1, 0, 1, 1], Tuple{Int8, Int8}[(1, 2), (1, 3), (1, 5), (1, 6)], Base.RefValue{Int8}(4), Element{0.0}([0.0, 2.0, 2.0, 0.0])))
-        res = Fiber(Finch.SparseBytemapLevel{Int8, Int8}(6, Int8[1, 5], Bool[0, 1, 1, 0, 1, 1], Tuple{Int8, Int8}[(1, 2), (1, 3), (1, 5), (1, 6)], Base.RefValue{Int8}(4), Element{0.0}([0.0, 2.0, 2.0, 0.0])))
+    @testset "Finch.SparseBytemapLevel{Int16, Int16} constructors" begin
+        ref = Fiber(SparseBytemap{Int16}(6, Int16[1, 5], Bool[0, 1, 1, 0, 1, 1], Tuple{Int16, Int16}[(1, 2), (1, 3), (1, 5), (1, 6)], Base.RefValue{Int16}(4), Element{0.0}([0.0, 2.0, 2.0, 0.0])))
+        res = Fiber(Finch.SparseBytemapLevel{Int16, Int16}(6, Int16[1, 5], Bool[0, 1, 1, 0, 1, 1], Tuple{Int16, Int16}[(1, 2), (1, 3), (1, 5), (1, 6)], Base.RefValue{Int16}(4), Element{0.0}([0.0, 2.0, 2.0, 0.0])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseCooLevel{1} constructors" begin
@@ -692,13 +692,13 @@
         res = Fiber(Finch.SparseCooLevel{1, Tuple{Int}}(Element{false}(Bool[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseCooLevel{1, Tuple{Int8}} constructors" begin
-        ref = Fiber(SparseCoo{1, Tuple{Int8}}((0,), (Int8[], ), [1, 1], Element{false}(Bool[])))
-        res = Fiber(Finch.SparseCooLevel{1, Tuple{Int8}}((0,), (Int8[],), [1, 1], Element{false}(Bool[])))
+    @testset "Finch.SparseCooLevel{1, Tuple{Int16}} constructors" begin
+        ref = Fiber(SparseCoo{1, Tuple{Int16}}((0,), (Int16[], ), [1, 1], Element{false}(Bool[])))
+        res = Fiber(Finch.SparseCooLevel{1, Tuple{Int16}}((0,), (Int16[],), [1, 1], Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseCooLevel{1, Tuple{Int8}}((0,), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseCooLevel{1, Tuple{Int16}}((0,), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseCooLevel{1, Tuple{Int8}}(Element{false}(Bool[])))
+        res = Fiber(Finch.SparseCooLevel{1, Tuple{Int16}}(Element{false}(Bool[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseHashLevel{1} constructors" begin
@@ -736,61 +736,61 @@
         res = Fiber(Finch.SparseHashLevel{1, Tuple{Int}, Int, Dict{Tuple{Int, Tuple{Int}}, Int}}(Element{false}(Bool[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseHashLevel{1, Tuple{Int8}} constructors" begin
-        ref = Fiber(SparseHash{1, Tuple{Int8}}((0,), Dict{Tuple{Int, Tuple{Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8}}, Int}[], Element{false}(Bool[])))
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}}((0,), Dict{Tuple{Int, Tuple{Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8}}, Int}[], Element{false}(Bool[])))
+    @testset "Finch.SparseHashLevel{1, Tuple{Int16}} constructors" begin
+        ref = Fiber(SparseHash{1, Tuple{Int16}}((0,), Dict{Tuple{Int, Tuple{Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16}}, Int}[], Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}}((0,), Dict{Tuple{Int, Tuple{Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16}}, Int}[], Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}}((0,), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}}((0,), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}}((0,), Dict{Tuple{Int, Tuple{Int8}}, Int}(), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}}((0,), Dict{Tuple{Int, Tuple{Int16}}, Int}(), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}}(Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}}(Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int}((0,), Dict{Tuple{Int, Tuple{Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8}}, Int}[], Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int}((0,), Dict{Tuple{Int, Tuple{Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16}}, Int}[], Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int}((0,), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int}((0,), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int}((0,), Dict{Tuple{Int, Tuple{Int8}}, Int}(), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int}((0,), Dict{Tuple{Int, Tuple{Int16}}, Int}(), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int}(Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int}(Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int, Dict{Tuple{Int, Tuple{Int8}}, Int}}((0,), Dict{Tuple{Int, Tuple{Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8}}, Int}[], Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int, Dict{Tuple{Int, Tuple{Int16}}, Int}}((0,), Dict{Tuple{Int, Tuple{Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16}}, Int}[], Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int, Dict{Tuple{Int, Tuple{Int8}}, Int}}((0,), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int, Dict{Tuple{Int, Tuple{Int16}}, Int}}((0,), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int, Dict{Tuple{Int, Tuple{Int8}}, Int}}((0,), Dict{Tuple{Int, Tuple{Int8}}, Int}(), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int, Dict{Tuple{Int, Tuple{Int16}}, Int}}((0,), Dict{Tuple{Int, Tuple{Int16}}, Int}(), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int, Dict{Tuple{Int, Tuple{Int8}}, Int}}(Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.SparseHashLevel{1, Tuple{Int8}, Int8} constructors" begin
-        ref = Fiber(SparseHash{1, Tuple{Int8}}((0,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8}}, Int8}[], Element{false}(Bool[])))
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8}((0,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8}}, Int8}[], Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8}((0,), Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8}((0,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}(), Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8}(Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}}((0,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8}}, Int8}[], Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}}((0,), Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}}((0,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}(), Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}}(Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int, Dict{Tuple{Int, Tuple{Int16}}, Int}}(Element{false}(Bool[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}} constructors" begin
-        ref = Fiber(SparseHash{1, Tuple{Int8}}((0,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8}}, Int8}[], Element{false}(Bool[])))
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}}((0,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8}}, Int8}[], Element{false}(Bool[])))
+    @testset "Finch.SparseHashLevel{1, Tuple{Int16}, Int16} constructors" begin
+        ref = Fiber(SparseHash{1, Tuple{Int16}}((0,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16}}, Int16}[], Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16}((0,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16}}, Int16}[], Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}}((0,), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16}((0,), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}}((0,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}(), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16}((0,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}(), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}}(Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16}(Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}}((0,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16}}, Int16}[], Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}}((0,), Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}}((0,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}(), Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}}(Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}} constructors" begin
+        ref = Fiber(SparseHash{1, Tuple{Int16}}((0,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16}}, Int16}[], Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}}((0,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16}}, Int16}[], Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}}((0,), Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}}((0,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}(), Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}}(Element{false}(Bool[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseCooLevel{2} constructors" begin
@@ -808,13 +808,13 @@
         res = Fiber(Finch.SparseCooLevel{2, Tuple{Int, Int}}(Element{false}(Bool[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseCooLevel{2, Tuple{Int8, Int8}} constructors" begin
-        ref = Fiber(SparseCoo{2, Tuple{Int8, Int8}}((0, 0), (Int8[], Int8[], ), [1, 1], Element{false}(Bool[])))
-        res = Fiber(Finch.SparseCooLevel{2, Tuple{Int8, Int8}}((0, 0), (Int8[], Int8[]), [1, 1], Element{false}(Bool[])))
+    @testset "Finch.SparseCooLevel{2, Tuple{Int16, Int16}} constructors" begin
+        ref = Fiber(SparseCoo{2, Tuple{Int16, Int16}}((0, 0), (Int16[], Int16[], ), [1, 1], Element{false}(Bool[])))
+        res = Fiber(Finch.SparseCooLevel{2, Tuple{Int16, Int16}}((0, 0), (Int16[], Int16[]), [1, 1], Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseCooLevel{2, Tuple{Int8, Int8}}((0, 0), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseCooLevel{2, Tuple{Int16, Int16}}((0, 0), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseCooLevel{2, Tuple{Int8, Int8}}(Element{false}(Bool[])))
+        res = Fiber(Finch.SparseCooLevel{2, Tuple{Int16, Int16}}(Element{false}(Bool[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseHashLevel{2} constructors" begin
@@ -852,61 +852,61 @@
         res = Fiber(Finch.SparseHashLevel{2, Tuple{Int, Int}, Int, Dict{Tuple{Int, Tuple{Int, Int}}, Int}}(Element{false}(Bool[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseHashLevel{2, Tuple{Int8, Int8}} constructors" begin
-        ref = Fiber(SparseHash{2, Tuple{Int8, Int8}}((0, 0), Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8, Int8}}, Int}[], Element{false}(Bool[])))
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}}((0, 0), Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8, Int8}}, Int}[], Element{false}(Bool[])))
+    @testset "Finch.SparseHashLevel{2, Tuple{Int16, Int16}} constructors" begin
+        ref = Fiber(SparseHash{2, Tuple{Int16, Int16}}((0, 0), Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16, Int16}}, Int}[], Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}}((0, 0), Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16, Int16}}, Int}[], Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}}((0, 0), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}}((0, 0), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}}((0, 0), Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}(), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}}((0, 0), Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}(), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}}(Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}}(Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int}((0, 0), Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8, Int8}}, Int}[], Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int}((0, 0), Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16, Int16}}, Int}[], Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int}((0, 0), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int}((0, 0), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int}((0, 0), Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}(), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int}((0, 0), Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}(), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int}(Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int}(Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int, Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}}((0, 0), Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8, Int8}}, Int}[], Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int, Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}}((0, 0), Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16, Int16}}, Int}[], Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int, Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}}((0, 0), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int, Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}}((0, 0), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int, Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}}((0, 0), Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}(), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int, Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}}((0, 0), Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}(), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int, Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}}(Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8} constructors" begin
-        ref = Fiber(SparseHash{2, Tuple{Int8, Int8}}((0, 0), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8}}, Int8}[], Element{false}(Bool[])))
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8}((0, 0), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8}}, Int8}[], Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8}((0, 0), Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8}((0, 0), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}(), Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8}(Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}}((0, 0), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8}}, Int8}[], Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}}((0, 0), Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}}((0, 0), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}(), Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}}(Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int, Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}}(Element{false}(Bool[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}} constructors" begin
-        ref = Fiber(SparseHash{2, Tuple{Int8, Int8}}((0, 0), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8}}, Int8}[], Element{false}(Bool[])))
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}}((0, 0), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8}}, Int8}[], Element{false}(Bool[])))
+    @testset "Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16} constructors" begin
+        ref = Fiber(SparseHash{2, Tuple{Int16, Int16}}((0, 0), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16}}, Int16}[], Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16}((0, 0), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16}}, Int16}[], Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}}((0, 0), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16}((0, 0), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}}((0, 0), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}(), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16}((0, 0), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}(), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}}(Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16}(Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}}((0, 0), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16}}, Int16}[], Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}}((0, 0), Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}}((0, 0), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}(), Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}}(Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}} constructors" begin
+        ref = Fiber(SparseHash{2, Tuple{Int16, Int16}}((0, 0), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16}}, Int16}[], Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}}((0, 0), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16}}, Int16}[], Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}}((0, 0), Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}}((0, 0), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}(), Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}}(Element{false}(Bool[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseCooLevel{3} constructors" begin
@@ -924,13 +924,13 @@
         res = Fiber(Finch.SparseCooLevel{3, Tuple{Int, Int, Int}}(Element{false}(Bool[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseCooLevel{3, Tuple{Int8, Int8, Int8}} constructors" begin
-        ref = Fiber(SparseCoo{3, Tuple{Int8, Int8, Int8}}((0, 0, 0), (Int8[], Int8[], Int8[], ), [1, 1], Element{false}(Bool[])))
-        res = Fiber(Finch.SparseCooLevel{3, Tuple{Int8, Int8, Int8}}((0, 0, 0), (Int8[], Int8[], Int8[]), [1, 1], Element{false}(Bool[])))
+    @testset "Finch.SparseCooLevel{3, Tuple{Int16, Int16, Int16}} constructors" begin
+        ref = Fiber(SparseCoo{3, Tuple{Int16, Int16, Int16}}((0, 0, 0), (Int16[], Int16[], Int16[], ), [1, 1], Element{false}(Bool[])))
+        res = Fiber(Finch.SparseCooLevel{3, Tuple{Int16, Int16, Int16}}((0, 0, 0), (Int16[], Int16[], Int16[]), [1, 1], Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseCooLevel{3, Tuple{Int8, Int8, Int8}}((0, 0, 0), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseCooLevel{3, Tuple{Int16, Int16, Int16}}((0, 0, 0), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseCooLevel{3, Tuple{Int8, Int8, Int8}}(Element{false}(Bool[])))
+        res = Fiber(Finch.SparseCooLevel{3, Tuple{Int16, Int16, Int16}}(Element{false}(Bool[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseHashLevel{3} constructors" begin
@@ -968,61 +968,61 @@
         res = Fiber(Finch.SparseHashLevel{3, Tuple{Int, Int, Int}, Int, Dict{Tuple{Int, Tuple{Int, Int, Int}}, Int}}(Element{false}(Bool[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}} constructors" begin
-        ref = Fiber(SparseHash{3, Tuple{Int8, Int8, Int8}}((0, 0, 0), Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}[], Element{false}(Bool[])))
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}}((0, 0, 0), Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}[], Element{false}(Bool[])))
+    @testset "Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}} constructors" begin
+        ref = Fiber(SparseHash{3, Tuple{Int16, Int16, Int16}}((0, 0, 0), Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}[], Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}}((0, 0, 0), Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}[], Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}}((0, 0, 0), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}}((0, 0, 0), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}}((0, 0, 0), Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}(), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}}((0, 0, 0), Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}(), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}}(Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}}(Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int}((0, 0, 0), Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}[], Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int}((0, 0, 0), Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}[], Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int}((0, 0, 0), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int}((0, 0, 0), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int}((0, 0, 0), Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}(), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int}((0, 0, 0), Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}(), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int}(Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int}(Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int, Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}}((0, 0, 0), Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}[], Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int, Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}}((0, 0, 0), Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}[], Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int, Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}}((0, 0, 0), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int, Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}}((0, 0, 0), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int, Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}}((0, 0, 0), Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}(), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int, Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}}((0, 0, 0), Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}(), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int, Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}}(Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8} constructors" begin
-        ref = Fiber(SparseHash{3, Tuple{Int8, Int8, Int8}}((0, 0, 0), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}[], Element{false}(Bool[])))
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8}((0, 0, 0), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}[], Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8}((0, 0, 0), Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8}((0, 0, 0), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}(), Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8}(Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}}((0, 0, 0), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}[], Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}}((0, 0, 0), Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}}((0, 0, 0), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}(), Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}}(Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int, Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}}(Element{false}(Bool[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}} constructors" begin
-        ref = Fiber(SparseHash{3, Tuple{Int8, Int8, Int8}}((0, 0, 0), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}[], Element{false}(Bool[])))
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}}((0, 0, 0), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}[], Element{false}(Bool[])))
+    @testset "Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16} constructors" begin
+        ref = Fiber(SparseHash{3, Tuple{Int16, Int16, Int16}}((0, 0, 0), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}[], Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16}((0, 0, 0), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}[], Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}}((0, 0, 0), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16}((0, 0, 0), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}}((0, 0, 0), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}(), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16}((0, 0, 0), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}(), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}}(Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16}(Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}}((0, 0, 0), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}[], Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}}((0, 0, 0), Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}}((0, 0, 0), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}(), Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}}(Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}} constructors" begin
+        ref = Fiber(SparseHash{3, Tuple{Int16, Int16, Int16}}((0, 0, 0), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}[], Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}}((0, 0, 0), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}[], Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}}((0, 0, 0), Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}}((0, 0, 0), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}(), Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}}(Element{false}(Bool[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseCooLevel{1} constructors" begin
@@ -1036,11 +1036,11 @@
         res = Fiber(Finch.SparseCooLevel{1, Tuple{Int}}((4,), Element{false}(Bool[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseCooLevel{1, Tuple{Int8}} constructors" begin
-        ref = Fiber(SparseCoo{1, Tuple{Int8}}((4,), (Int8[], ), [1, 1], Element{false}(Bool[])))
-        res = Fiber(Finch.SparseCooLevel{1, Tuple{Int8}}((4,), (Int8[],), [1, 1], Element{false}(Bool[])))
+    @testset "Finch.SparseCooLevel{1, Tuple{Int16}} constructors" begin
+        ref = Fiber(SparseCoo{1, Tuple{Int16}}((4,), (Int16[], ), [1, 1], Element{false}(Bool[])))
+        res = Fiber(Finch.SparseCooLevel{1, Tuple{Int16}}((4,), (Int16[],), [1, 1], Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseCooLevel{1, Tuple{Int8}}((4,), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseCooLevel{1, Tuple{Int16}}((4,), Element{false}(Bool[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseHashLevel{1} constructors" begin
@@ -1070,49 +1070,49 @@
         res = Fiber(Finch.SparseHashLevel{1, Tuple{Int}, Int, Dict{Tuple{Int, Tuple{Int}}, Int}}((4,), Dict{Tuple{Int, Tuple{Int}}, Int}(), Element{false}(Bool[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseHashLevel{1, Tuple{Int8}} constructors" begin
-        ref = Fiber(SparseHash{1, Tuple{Int8}}((4,), Dict{Tuple{Int, Tuple{Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8}}, Int}[], Element{false}(Bool[])))
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}}((4,), Dict{Tuple{Int, Tuple{Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8}}, Int}[], Element{false}(Bool[])))
+    @testset "Finch.SparseHashLevel{1, Tuple{Int16}} constructors" begin
+        ref = Fiber(SparseHash{1, Tuple{Int16}}((4,), Dict{Tuple{Int, Tuple{Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16}}, Int}[], Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}}((4,), Dict{Tuple{Int, Tuple{Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16}}, Int}[], Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}}((4,), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}}((4,), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}}((4,), Dict{Tuple{Int, Tuple{Int8}}, Int}(), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}}((4,), Dict{Tuple{Int, Tuple{Int16}}, Int}(), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int}((4,), Dict{Tuple{Int, Tuple{Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8}}, Int}[], Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int}((4,), Dict{Tuple{Int, Tuple{Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16}}, Int}[], Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int}((4,), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int}((4,), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int}((4,), Dict{Tuple{Int, Tuple{Int8}}, Int}(), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int}((4,), Dict{Tuple{Int, Tuple{Int16}}, Int}(), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int, Dict{Tuple{Int, Tuple{Int8}}, Int}}((4,), Dict{Tuple{Int, Tuple{Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8}}, Int}[], Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int, Dict{Tuple{Int, Tuple{Int16}}, Int}}((4,), Dict{Tuple{Int, Tuple{Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16}}, Int}[], Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int, Dict{Tuple{Int, Tuple{Int8}}, Int}}((4,), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int, Dict{Tuple{Int, Tuple{Int16}}, Int}}((4,), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int, Dict{Tuple{Int, Tuple{Int8}}, Int}}((4,), Dict{Tuple{Int, Tuple{Int8}}, Int}(), Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.SparseHashLevel{1, Tuple{Int8}, Int8} constructors" begin
-        ref = Fiber(SparseHash{1, Tuple{Int8}}((4,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8}}, Int8}[], Element{false}(Bool[])))
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8}((4,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8}}, Int8}[], Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8}((4,), Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8}((4,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}(), Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}}((4,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8}}, Int8}[], Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}}((4,), Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}}((4,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}(), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int, Dict{Tuple{Int, Tuple{Int16}}, Int}}((4,), Dict{Tuple{Int, Tuple{Int16}}, Int}(), Element{false}(Bool[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}} constructors" begin
-        ref = Fiber(SparseHash{1, Tuple{Int8}}((4,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8}}, Int8}[], Element{false}(Bool[])))
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}}((4,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8}}, Int8}[], Element{false}(Bool[])))
+    @testset "Finch.SparseHashLevel{1, Tuple{Int16}, Int16} constructors" begin
+        ref = Fiber(SparseHash{1, Tuple{Int16}}((4,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16}}, Int16}[], Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16}((4,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16}}, Int16}[], Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}}((4,), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16}((4,), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}}((4,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}(), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16}((4,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}(), Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}}((4,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16}}, Int16}[], Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}}((4,), Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}}((4,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}(), Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}} constructors" begin
+        ref = Fiber(SparseHash{1, Tuple{Int16}}((4,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16}}, Int16}[], Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}}((4,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16}}, Int16}[], Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}}((4,), Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}}((4,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}(), Element{false}(Bool[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseCooLevel{2} constructors" begin
@@ -1126,11 +1126,11 @@
         res = Fiber(Finch.SparseCooLevel{2, Tuple{Int, Int}}((2, 3), Element{false}(Bool[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseCooLevel{2, Tuple{Int8, Int8}} constructors" begin
-        ref = Fiber(SparseCoo{2, Tuple{Int8, Int8}}((2, 3), (Int8[], Int8[], ), [1, 1], Element{false}(Bool[])))
-        res = Fiber(Finch.SparseCooLevel{2, Tuple{Int8, Int8}}((2, 3), (Int8[], Int8[]), [1, 1], Element{false}(Bool[])))
+    @testset "Finch.SparseCooLevel{2, Tuple{Int16, Int16}} constructors" begin
+        ref = Fiber(SparseCoo{2, Tuple{Int16, Int16}}((2, 3), (Int16[], Int16[], ), [1, 1], Element{false}(Bool[])))
+        res = Fiber(Finch.SparseCooLevel{2, Tuple{Int16, Int16}}((2, 3), (Int16[], Int16[]), [1, 1], Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseCooLevel{2, Tuple{Int8, Int8}}((2, 3), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseCooLevel{2, Tuple{Int16, Int16}}((2, 3), Element{false}(Bool[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseHashLevel{2} constructors" begin
@@ -1160,49 +1160,49 @@
         res = Fiber(Finch.SparseHashLevel{2, Tuple{Int, Int}, Int, Dict{Tuple{Int, Tuple{Int, Int}}, Int}}((2, 3), Dict{Tuple{Int, Tuple{Int, Int}}, Int}(), Element{false}(Bool[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseHashLevel{2, Tuple{Int8, Int8}} constructors" begin
-        ref = Fiber(SparseHash{2, Tuple{Int8, Int8}}((2, 3), Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8, Int8}}, Int}[], Element{false}(Bool[])))
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}}((2, 3), Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8, Int8}}, Int}[], Element{false}(Bool[])))
+    @testset "Finch.SparseHashLevel{2, Tuple{Int16, Int16}} constructors" begin
+        ref = Fiber(SparseHash{2, Tuple{Int16, Int16}}((2, 3), Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16, Int16}}, Int}[], Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}}((2, 3), Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16, Int16}}, Int}[], Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}}((2, 3), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}}((2, 3), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}}((2, 3), Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}(), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}}((2, 3), Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}(), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int}((2, 3), Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8, Int8}}, Int}[], Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int}((2, 3), Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16, Int16}}, Int}[], Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int}((2, 3), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int}((2, 3), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int}((2, 3), Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}(), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int}((2, 3), Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}(), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int, Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}}((2, 3), Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8, Int8}}, Int}[], Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int, Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}}((2, 3), Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16, Int16}}, Int}[], Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int, Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}}((2, 3), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int, Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}}((2, 3), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int, Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}}((2, 3), Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}(), Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8} constructors" begin
-        ref = Fiber(SparseHash{2, Tuple{Int8, Int8}}((2, 3), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8}}, Int8}[], Element{false}(Bool[])))
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8}((2, 3), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8}}, Int8}[], Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8}((2, 3), Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8}((2, 3), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}(), Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}}((2, 3), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8}}, Int8}[], Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}}((2, 3), Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}}((2, 3), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}(), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int, Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}}((2, 3), Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}(), Element{false}(Bool[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}} constructors" begin
-        ref = Fiber(SparseHash{2, Tuple{Int8, Int8}}((2, 3), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8}}, Int8}[], Element{false}(Bool[])))
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}}((2, 3), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8}}, Int8}[], Element{false}(Bool[])))
+    @testset "Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16} constructors" begin
+        ref = Fiber(SparseHash{2, Tuple{Int16, Int16}}((2, 3), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16}}, Int16}[], Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16}((2, 3), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16}}, Int16}[], Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}}((2, 3), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16}((2, 3), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}}((2, 3), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}(), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16}((2, 3), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}(), Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}}((2, 3), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16}}, Int16}[], Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}}((2, 3), Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}}((2, 3), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}(), Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}} constructors" begin
+        ref = Fiber(SparseHash{2, Tuple{Int16, Int16}}((2, 3), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16}}, Int16}[], Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}}((2, 3), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16}}, Int16}[], Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}}((2, 3), Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}}((2, 3), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}(), Element{false}(Bool[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseCooLevel{3} constructors" begin
@@ -1216,11 +1216,11 @@
         res = Fiber(Finch.SparseCooLevel{3, Tuple{Int, Int, Int}}((2, 3, 2), Element{false}(Bool[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseCooLevel{3, Tuple{Int8, Int8, Int8}} constructors" begin
-        ref = Fiber(SparseCoo{3, Tuple{Int8, Int8, Int8}}((2, 3, 2), (Int8[], Int8[], Int8[], ), [1, 1], Element{false}(Bool[])))
-        res = Fiber(Finch.SparseCooLevel{3, Tuple{Int8, Int8, Int8}}((2, 3, 2), (Int8[], Int8[], Int8[]), [1, 1], Element{false}(Bool[])))
+    @testset "Finch.SparseCooLevel{3, Tuple{Int16, Int16, Int16}} constructors" begin
+        ref = Fiber(SparseCoo{3, Tuple{Int16, Int16, Int16}}((2, 3, 2), (Int16[], Int16[], Int16[], ), [1, 1], Element{false}(Bool[])))
+        res = Fiber(Finch.SparseCooLevel{3, Tuple{Int16, Int16, Int16}}((2, 3, 2), (Int16[], Int16[], Int16[]), [1, 1], Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseCooLevel{3, Tuple{Int8, Int8, Int8}}((2, 3, 2), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseCooLevel{3, Tuple{Int16, Int16, Int16}}((2, 3, 2), Element{false}(Bool[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseHashLevel{3} constructors" begin
@@ -1250,49 +1250,49 @@
         res = Fiber(Finch.SparseHashLevel{3, Tuple{Int, Int, Int}, Int, Dict{Tuple{Int, Tuple{Int, Int, Int}}, Int}}((2, 3, 2), Dict{Tuple{Int, Tuple{Int, Int, Int}}, Int}(), Element{false}(Bool[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}} constructors" begin
-        ref = Fiber(SparseHash{3, Tuple{Int8, Int8, Int8}}((2, 3, 2), Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}[], Element{false}(Bool[])))
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}}((2, 3, 2), Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}[], Element{false}(Bool[])))
+    @testset "Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}} constructors" begin
+        ref = Fiber(SparseHash{3, Tuple{Int16, Int16, Int16}}((2, 3, 2), Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}[], Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}}((2, 3, 2), Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}[], Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}}((2, 3, 2), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}}((2, 3, 2), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}}((2, 3, 2), Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}(), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}}((2, 3, 2), Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}(), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int}((2, 3, 2), Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}[], Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int}((2, 3, 2), Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}[], Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int}((2, 3, 2), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int}((2, 3, 2), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int}((2, 3, 2), Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}(), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int}((2, 3, 2), Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}(), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int, Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}}((2, 3, 2), Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}[], Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int, Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}}((2, 3, 2), Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}[], Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int, Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}}((2, 3, 2), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int, Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}}((2, 3, 2), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int, Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}}((2, 3, 2), Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}(), Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8} constructors" begin
-        ref = Fiber(SparseHash{3, Tuple{Int8, Int8, Int8}}((2, 3, 2), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}[], Element{false}(Bool[])))
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8}((2, 3, 2), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}[], Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8}((2, 3, 2), Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8}((2, 3, 2), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}(), Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}}((2, 3, 2), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}[], Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}}((2, 3, 2), Element{false}(Bool[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}}((2, 3, 2), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}(), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int, Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}}((2, 3, 2), Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}(), Element{false}(Bool[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}} constructors" begin
-        ref = Fiber(SparseHash{3, Tuple{Int8, Int8, Int8}}((2, 3, 2), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}[], Element{false}(Bool[])))
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}}((2, 3, 2), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}[], Element{false}(Bool[])))
+    @testset "Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16} constructors" begin
+        ref = Fiber(SparseHash{3, Tuple{Int16, Int16, Int16}}((2, 3, 2), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}[], Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16}((2, 3, 2), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}[], Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}}((2, 3, 2), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16}((2, 3, 2), Element{false}(Bool[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}}((2, 3, 2), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}(), Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16}((2, 3, 2), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}(), Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}}((2, 3, 2), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}[], Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}}((2, 3, 2), Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}}((2, 3, 2), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}(), Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}} constructors" begin
+        ref = Fiber(SparseHash{3, Tuple{Int16, Int16, Int16}}((2, 3, 2), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}[], Element{false}(Bool[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}}((2, 3, 2), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}[], Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}}((2, 3, 2), Element{false}(Bool[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}}((2, 3, 2), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}(), Element{false}(Bool[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseCooLevel{1} constructors" begin
@@ -1302,9 +1302,9 @@
         res = Fiber(Finch.SparseCooLevel{1, Tuple{Int}}((4,), ([2],), [1, 2], Element{false}(Bool[1])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseCooLevel{1, Tuple{Int8}} constructors" begin
-        ref = Fiber(SparseCoo{1, Tuple{Int8}}((4,), (Int8[2], ), [1, 2], Element{false}(Bool[1])))
-        res = Fiber(Finch.SparseCooLevel{1, Tuple{Int8}}((4,), (Int8[2],), [1, 2], Element{false}(Bool[1])))
+    @testset "Finch.SparseCooLevel{1, Tuple{Int16}} constructors" begin
+        ref = Fiber(SparseCoo{1, Tuple{Int16}}((4,), (Int16[2], ), [1, 2], Element{false}(Bool[1])))
+        res = Fiber(Finch.SparseCooLevel{1, Tuple{Int16}}((4,), (Int16[2],), [1, 2], Element{false}(Bool[1])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseHashLevel{1} constructors" begin
@@ -1318,25 +1318,25 @@
         res = Fiber(Finch.SparseHashLevel{1, Tuple{Int}, Int, Dict{Tuple{Int, Tuple{Int}}, Int}}((4,), Dict((1, (2,)) => 1), [1, 2], [(1, (2,)) => 1], Element{false}(Bool[1])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseHashLevel{1, Tuple{Int8}} constructors" begin
-        ref = Fiber(SparseHash{1, Tuple{Int8}}((4,), Dict{Tuple{Int, Tuple{Int8}}, Int}((1, (2,)) => 1), [1, 2], Pair{Tuple{Int, Tuple{Int8}}, Int}[(1, (2,)) => 1], Element{false}(Bool[1])))
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}}((4,), Dict{Tuple{Int, Tuple{Int8}}, Int}((1, (2,)) => 1), [1, 2], Pair{Tuple{Int, Tuple{Int8}}, Int}[(1, (2,)) => 1], Element{false}(Bool[1])))
+    @testset "Finch.SparseHashLevel{1, Tuple{Int16}} constructors" begin
+        ref = Fiber(SparseHash{1, Tuple{Int16}}((4,), Dict{Tuple{Int, Tuple{Int16}}, Int}((1, (2,)) => 1), [1, 2], Pair{Tuple{Int, Tuple{Int16}}, Int}[(1, (2,)) => 1], Element{false}(Bool[1])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}}((4,), Dict{Tuple{Int, Tuple{Int16}}, Int}((1, (2,)) => 1), [1, 2], Pair{Tuple{Int, Tuple{Int16}}, Int}[(1, (2,)) => 1], Element{false}(Bool[1])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int}((4,), Dict{Tuple{Int, Tuple{Int8}}, Int}((1, (2,)) => 1), [1, 2], Pair{Tuple{Int, Tuple{Int8}}, Int}[(1, (2,)) => 1], Element{false}(Bool[1])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int}((4,), Dict{Tuple{Int, Tuple{Int16}}, Int}((1, (2,)) => 1), [1, 2], Pair{Tuple{Int, Tuple{Int16}}, Int}[(1, (2,)) => 1], Element{false}(Bool[1])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int, Dict{Tuple{Int, Tuple{Int8}}, Int}}((4,), Dict{Tuple{Int, Tuple{Int8}}, Int}((1, (2,)) => 1), [1, 2], Pair{Tuple{Int, Tuple{Int8}}, Int}[(1, (2,)) => 1], Element{false}(Bool[1])))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.SparseHashLevel{1, Tuple{Int8}, Int8} constructors" begin
-        ref = Fiber(SparseHash{1, Tuple{Int8}}((4,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}((1, (2,)) => 1), Int8[1, 2], Pair{Tuple{Int8, Tuple{Int8}}, Int8}[(1, (2,)) => 1], Element{false}(Bool[1])))
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8}((4,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}((1, (2,)) => 1), Int8[1, 2], Pair{Tuple{Int8, Tuple{Int8}}, Int8}[(1, (2,)) => 1], Element{false}(Bool[1])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}}((4,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}((1, (2,)) => 1), Int8[1, 2], Pair{Tuple{Int8, Tuple{Int8}}, Int8}[(1, (2,)) => 1], Element{false}(Bool[1])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int, Dict{Tuple{Int, Tuple{Int16}}, Int}}((4,), Dict{Tuple{Int, Tuple{Int16}}, Int}((1, (2,)) => 1), [1, 2], Pair{Tuple{Int, Tuple{Int16}}, Int}[(1, (2,)) => 1], Element{false}(Bool[1])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}} constructors" begin
-        ref = Fiber(SparseHash{1, Tuple{Int8}}((4,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}((1, (2,)) => 1), Int8[1, 2], Pair{Tuple{Int8, Tuple{Int8}}, Int8}[(1, (2,)) => 1], Element{false}(Bool[1])))
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}}((4,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}((1, (2,)) => 1), Int8[1, 2], Pair{Tuple{Int8, Tuple{Int8}}, Int8}[(1, (2,)) => 1], Element{false}(Bool[1])))
+    @testset "Finch.SparseHashLevel{1, Tuple{Int16}, Int16} constructors" begin
+        ref = Fiber(SparseHash{1, Tuple{Int16}}((4,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}((1, (2,)) => 1), Int16[1, 2], Pair{Tuple{Int16, Tuple{Int16}}, Int16}[(1, (2,)) => 1], Element{false}(Bool[1])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16}((4,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}((1, (2,)) => 1), Int16[1, 2], Pair{Tuple{Int16, Tuple{Int16}}, Int16}[(1, (2,)) => 1], Element{false}(Bool[1])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}}((4,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}((1, (2,)) => 1), Int16[1, 2], Pair{Tuple{Int16, Tuple{Int16}}, Int16}[(1, (2,)) => 1], Element{false}(Bool[1])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}} constructors" begin
+        ref = Fiber(SparseHash{1, Tuple{Int16}}((4,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}((1, (2,)) => 1), Int16[1, 2], Pair{Tuple{Int16, Tuple{Int16}}, Int16}[(1, (2,)) => 1], Element{false}(Bool[1])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}}((4,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}((1, (2,)) => 1), Int16[1, 2], Pair{Tuple{Int16, Tuple{Int16}}, Int16}[(1, (2,)) => 1], Element{false}(Bool[1])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseCooLevel{2} constructors" begin
@@ -1346,9 +1346,9 @@
         res = Fiber(Finch.SparseCooLevel{2, Tuple{Int, Int}}((2, 3), ([2], [1]), [1, 2], Element{false}(Bool[1])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseCooLevel{2, Tuple{Int8, Int8}} constructors" begin
-        ref = Fiber(SparseCoo{2, Tuple{Int8, Int8}}((2, 3), (Int8[2], Int8[1], ), [1, 2], Element{false}(Bool[1])))
-        res = Fiber(Finch.SparseCooLevel{2, Tuple{Int8, Int8}}((2, 3), (Int8[2], Int8[1]), [1, 2], Element{false}(Bool[1])))
+    @testset "Finch.SparseCooLevel{2, Tuple{Int16, Int16}} constructors" begin
+        ref = Fiber(SparseCoo{2, Tuple{Int16, Int16}}((2, 3), (Int16[2], Int16[1], ), [1, 2], Element{false}(Bool[1])))
+        res = Fiber(Finch.SparseCooLevel{2, Tuple{Int16, Int16}}((2, 3), (Int16[2], Int16[1]), [1, 2], Element{false}(Bool[1])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseHashLevel{2} constructors" begin
@@ -1362,25 +1362,25 @@
         res = Fiber(Finch.SparseHashLevel{2, Tuple{Int, Int}, Int, Dict{Tuple{Int, Tuple{Int, Int}}, Int}}((2, 3), Dict((1, (2, 1)) => 1), [1, 2], [(1, (2, 1)) => 1], Element{false}(Bool[1])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseHashLevel{2, Tuple{Int8, Int8}} constructors" begin
-        ref = Fiber(SparseHash{2, Tuple{Int8, Int8}}((2, 3), Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}((1, (2, 1)) => 1), [1, 2], Pair{Tuple{Int, Tuple{Int8, Int8}}, Int}[(1, (2, 1)) => 1], Element{false}(Bool[1])))
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}}((2, 3), Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}((1, (2, 1)) => 1), [1, 2], Pair{Tuple{Int, Tuple{Int8, Int8}}, Int}[(1, (2, 1)) => 1], Element{false}(Bool[1])))
+    @testset "Finch.SparseHashLevel{2, Tuple{Int16, Int16}} constructors" begin
+        ref = Fiber(SparseHash{2, Tuple{Int16, Int16}}((2, 3), Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}((1, (2, 1)) => 1), [1, 2], Pair{Tuple{Int, Tuple{Int16, Int16}}, Int}[(1, (2, 1)) => 1], Element{false}(Bool[1])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}}((2, 3), Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}((1, (2, 1)) => 1), [1, 2], Pair{Tuple{Int, Tuple{Int16, Int16}}, Int}[(1, (2, 1)) => 1], Element{false}(Bool[1])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int}((2, 3), Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}((1, (2, 1)) => 1), [1, 2], Pair{Tuple{Int, Tuple{Int8, Int8}}, Int}[(1, (2, 1)) => 1], Element{false}(Bool[1])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int}((2, 3), Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}((1, (2, 1)) => 1), [1, 2], Pair{Tuple{Int, Tuple{Int16, Int16}}, Int}[(1, (2, 1)) => 1], Element{false}(Bool[1])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int, Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}}((2, 3), Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}((1, (2, 1)) => 1), [1, 2], Pair{Tuple{Int, Tuple{Int8, Int8}}, Int}[(1, (2, 1)) => 1], Element{false}(Bool[1])))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8} constructors" begin
-        ref = Fiber(SparseHash{2, Tuple{Int8, Int8}}((2, 3), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}((1, (2, 1)) => 1), Int8[1, 2], Pair{Tuple{Int8, Tuple{Int8, Int8}}, Int8}[(1, (2, 1)) => 1], Element{false}(Bool[1])))
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8}((2, 3), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}((1, (2, 1)) => 1), Int8[1, 2], Pair{Tuple{Int8, Tuple{Int8, Int8}}, Int8}[(1, (2, 1)) => 1], Element{false}(Bool[1])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}}((2, 3), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}((1, (2, 1)) => 1), Int8[1, 2], Pair{Tuple{Int8, Tuple{Int8, Int8}}, Int8}[(1, (2, 1)) => 1], Element{false}(Bool[1])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int, Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}}((2, 3), Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}((1, (2, 1)) => 1), [1, 2], Pair{Tuple{Int, Tuple{Int16, Int16}}, Int}[(1, (2, 1)) => 1], Element{false}(Bool[1])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}} constructors" begin
-        ref = Fiber(SparseHash{2, Tuple{Int8, Int8}}((2, 3), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}((1, (2, 1)) => 1), Int8[1, 2], Pair{Tuple{Int8, Tuple{Int8, Int8}}, Int8}[(1, (2, 1)) => 1], Element{false}(Bool[1])))
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}}((2, 3), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}((1, (2, 1)) => 1), Int8[1, 2], Pair{Tuple{Int8, Tuple{Int8, Int8}}, Int8}[(1, (2, 1)) => 1], Element{false}(Bool[1])))
+    @testset "Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16} constructors" begin
+        ref = Fiber(SparseHash{2, Tuple{Int16, Int16}}((2, 3), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}((1, (2, 1)) => 1), Int16[1, 2], Pair{Tuple{Int16, Tuple{Int16, Int16}}, Int16}[(1, (2, 1)) => 1], Element{false}(Bool[1])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16}((2, 3), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}((1, (2, 1)) => 1), Int16[1, 2], Pair{Tuple{Int16, Tuple{Int16, Int16}}, Int16}[(1, (2, 1)) => 1], Element{false}(Bool[1])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}}((2, 3), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}((1, (2, 1)) => 1), Int16[1, 2], Pair{Tuple{Int16, Tuple{Int16, Int16}}, Int16}[(1, (2, 1)) => 1], Element{false}(Bool[1])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}} constructors" begin
+        ref = Fiber(SparseHash{2, Tuple{Int16, Int16}}((2, 3), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}((1, (2, 1)) => 1), Int16[1, 2], Pair{Tuple{Int16, Tuple{Int16, Int16}}, Int16}[(1, (2, 1)) => 1], Element{false}(Bool[1])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}}((2, 3), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}((1, (2, 1)) => 1), Int16[1, 2], Pair{Tuple{Int16, Tuple{Int16, Int16}}, Int16}[(1, (2, 1)) => 1], Element{false}(Bool[1])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseCooLevel{3} constructors" begin
@@ -1390,9 +1390,9 @@
         res = Fiber(Finch.SparseCooLevel{3, Tuple{Int, Int, Int}}((2, 3, 2), ([2, 3], [2, 2], [1, 2]), [1, 3], Element{false}(Bool[1, 1])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseCooLevel{3, Tuple{Int8, Int8, Int8}} constructors" begin
-        ref = Fiber(SparseCoo{3, Tuple{Int8, Int8, Int8}}((2, 3, 2), (Int8[2, 3], Int8[2, 2], Int8[1, 2], ), [1, 3], Element{false}(Bool[1, 1])))
-        res = Fiber(Finch.SparseCooLevel{3, Tuple{Int8, Int8, Int8}}((2, 3, 2), (Int8[2, 3], Int8[2, 2], Int8[1, 2]), [1, 3], Element{false}(Bool[1, 1])))
+    @testset "Finch.SparseCooLevel{3, Tuple{Int16, Int16, Int16}} constructors" begin
+        ref = Fiber(SparseCoo{3, Tuple{Int16, Int16, Int16}}((2, 3, 2), (Int16[2, 3], Int16[2, 2], Int16[1, 2], ), [1, 3], Element{false}(Bool[1, 1])))
+        res = Fiber(Finch.SparseCooLevel{3, Tuple{Int16, Int16, Int16}}((2, 3, 2), (Int16[2, 3], Int16[2, 2], Int16[1, 2]), [1, 3], Element{false}(Bool[1, 1])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseHashLevel{3} constructors" begin
@@ -1406,25 +1406,25 @@
         res = Fiber(Finch.SparseHashLevel{3, Tuple{Int, Int, Int}, Int, Dict{Tuple{Int, Tuple{Int, Int, Int}}, Int}}((2, 3, 2), Dict((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), [1, 3], [(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{false}(Bool[1, 1])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}} constructors" begin
-        ref = Fiber(SparseHash{3, Tuple{Int8, Int8, Int8}}((2, 3, 2), Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), [1, 3], Pair{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}[(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{false}(Bool[1, 1])))
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}}((2, 3, 2), Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), [1, 3], Pair{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}[(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{false}(Bool[1, 1])))
+    @testset "Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}} constructors" begin
+        ref = Fiber(SparseHash{3, Tuple{Int16, Int16, Int16}}((2, 3, 2), Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), [1, 3], Pair{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}[(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{false}(Bool[1, 1])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}}((2, 3, 2), Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), [1, 3], Pair{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}[(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{false}(Bool[1, 1])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int}((2, 3, 2), Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), [1, 3], Pair{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}[(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{false}(Bool[1, 1])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int}((2, 3, 2), Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), [1, 3], Pair{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}[(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{false}(Bool[1, 1])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int, Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}}((2, 3, 2), Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), [1, 3], Pair{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}[(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{false}(Bool[1, 1])))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8} constructors" begin
-        ref = Fiber(SparseHash{3, Tuple{Int8, Int8, Int8}}((2, 3, 2), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), Int8[1, 3], Pair{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}[(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{false}(Bool[1, 1])))
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8}((2, 3, 2), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), Int8[1, 3], Pair{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}[(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{false}(Bool[1, 1])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}}((2, 3, 2), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), Int8[1, 3], Pair{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}[(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{false}(Bool[1, 1])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int, Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}}((2, 3, 2), Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), [1, 3], Pair{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}[(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{false}(Bool[1, 1])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}} constructors" begin
-        ref = Fiber(SparseHash{3, Tuple{Int8, Int8, Int8}}((2, 3, 2), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), Int8[1, 3], Pair{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}[(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{false}(Bool[1, 1])))
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}}((2, 3, 2), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), Int8[1, 3], Pair{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}[(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{false}(Bool[1, 1])))
+    @testset "Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16} constructors" begin
+        ref = Fiber(SparseHash{3, Tuple{Int16, Int16, Int16}}((2, 3, 2), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), Int16[1, 3], Pair{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}[(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{false}(Bool[1, 1])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16}((2, 3, 2), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), Int16[1, 3], Pair{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}[(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{false}(Bool[1, 1])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}}((2, 3, 2), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), Int16[1, 3], Pair{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}[(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{false}(Bool[1, 1])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}} constructors" begin
+        ref = Fiber(SparseHash{3, Tuple{Int16, Int16, Int16}}((2, 3, 2), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), Int16[1, 3], Pair{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}[(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{false}(Bool[1, 1])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}}((2, 3, 2), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), Int16[1, 3], Pair{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}[(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{false}(Bool[1, 1])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseCooLevel{1} constructors" begin
@@ -1442,13 +1442,13 @@
         res = Fiber(Finch.SparseCooLevel{1, Tuple{Int}}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseCooLevel{1, Tuple{Int8}} constructors" begin
-        ref = Fiber(SparseCoo{1, Tuple{Int8}}((0,), (Int8[], ), [1, 1], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseCooLevel{1, Tuple{Int8}}((0,), (Int8[],), [1, 1], Element{0.0}(Float64[])))
+    @testset "Finch.SparseCooLevel{1, Tuple{Int16}} constructors" begin
+        ref = Fiber(SparseCoo{1, Tuple{Int16}}((0,), (Int16[], ), [1, 1], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseCooLevel{1, Tuple{Int16}}((0,), (Int16[],), [1, 1], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseCooLevel{1, Tuple{Int8}}((0,), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseCooLevel{1, Tuple{Int16}}((0,), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseCooLevel{1, Tuple{Int8}}(Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseCooLevel{1, Tuple{Int16}}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseHashLevel{1} constructors" begin
@@ -1486,61 +1486,61 @@
         res = Fiber(Finch.SparseHashLevel{1, Tuple{Int}, Int, Dict{Tuple{Int, Tuple{Int}}, Int}}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseHashLevel{1, Tuple{Int8}} constructors" begin
-        ref = Fiber(SparseHash{1, Tuple{Int8}}((0,), Dict{Tuple{Int, Tuple{Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8}}, Int}[], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}}((0,), Dict{Tuple{Int, Tuple{Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8}}, Int}[], Element{0.0}(Float64[])))
+    @testset "Finch.SparseHashLevel{1, Tuple{Int16}} constructors" begin
+        ref = Fiber(SparseHash{1, Tuple{Int16}}((0,), Dict{Tuple{Int, Tuple{Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16}}, Int}[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}}((0,), Dict{Tuple{Int, Tuple{Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16}}, Int}[], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}}((0,), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}}((0,), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}}((0,), Dict{Tuple{Int, Tuple{Int8}}, Int}(), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}}((0,), Dict{Tuple{Int, Tuple{Int16}}, Int}(), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}}(Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int}((0,), Dict{Tuple{Int, Tuple{Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8}}, Int}[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int}((0,), Dict{Tuple{Int, Tuple{Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16}}, Int}[], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int}((0,), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int}((0,), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int}((0,), Dict{Tuple{Int, Tuple{Int8}}, Int}(), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int}((0,), Dict{Tuple{Int, Tuple{Int16}}, Int}(), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int}(Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int, Dict{Tuple{Int, Tuple{Int8}}, Int}}((0,), Dict{Tuple{Int, Tuple{Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8}}, Int}[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int, Dict{Tuple{Int, Tuple{Int16}}, Int}}((0,), Dict{Tuple{Int, Tuple{Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16}}, Int}[], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int, Dict{Tuple{Int, Tuple{Int8}}, Int}}((0,), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int, Dict{Tuple{Int, Tuple{Int16}}, Int}}((0,), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int, Dict{Tuple{Int, Tuple{Int8}}, Int}}((0,), Dict{Tuple{Int, Tuple{Int8}}, Int}(), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int, Dict{Tuple{Int, Tuple{Int16}}, Int}}((0,), Dict{Tuple{Int, Tuple{Int16}}, Int}(), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int, Dict{Tuple{Int, Tuple{Int8}}, Int}}(Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.SparseHashLevel{1, Tuple{Int8}, Int8} constructors" begin
-        ref = Fiber(SparseHash{1, Tuple{Int8}}((0,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8}}, Int8}[], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8}((0,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8}}, Int8}[], Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8}((0,), Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8}((0,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}(), Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8}(Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}}((0,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8}}, Int8}[], Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}}((0,), Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}}((0,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}(), Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}}(Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int, Dict{Tuple{Int, Tuple{Int16}}, Int}}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}} constructors" begin
-        ref = Fiber(SparseHash{1, Tuple{Int8}}((0,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8}}, Int8}[], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}}((0,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8}}, Int8}[], Element{0.0}(Float64[])))
+    @testset "Finch.SparseHashLevel{1, Tuple{Int16}, Int16} constructors" begin
+        ref = Fiber(SparseHash{1, Tuple{Int16}}((0,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16}}, Int16}[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16}((0,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16}}, Int16}[], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}}((0,), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16}((0,), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}}((0,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}(), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16}((0,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}(), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}}(Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16}(Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}}((0,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16}}, Int16}[], Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}}((0,), Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}}((0,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}(), Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}}(Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}} constructors" begin
+        ref = Fiber(SparseHash{1, Tuple{Int16}}((0,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16}}, Int16}[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}}((0,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16}}, Int16}[], Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}}((0,), Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}}((0,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}(), Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseCooLevel{2} constructors" begin
@@ -1558,13 +1558,13 @@
         res = Fiber(Finch.SparseCooLevel{2, Tuple{Int, Int}}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseCooLevel{2, Tuple{Int8, Int8}} constructors" begin
-        ref = Fiber(SparseCoo{2, Tuple{Int8, Int8}}((0, 0), (Int8[], Int8[], ), [1, 1], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseCooLevel{2, Tuple{Int8, Int8}}((0, 0), (Int8[], Int8[]), [1, 1], Element{0.0}(Float64[])))
+    @testset "Finch.SparseCooLevel{2, Tuple{Int16, Int16}} constructors" begin
+        ref = Fiber(SparseCoo{2, Tuple{Int16, Int16}}((0, 0), (Int16[], Int16[], ), [1, 1], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseCooLevel{2, Tuple{Int16, Int16}}((0, 0), (Int16[], Int16[]), [1, 1], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseCooLevel{2, Tuple{Int8, Int8}}((0, 0), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseCooLevel{2, Tuple{Int16, Int16}}((0, 0), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseCooLevel{2, Tuple{Int8, Int8}}(Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseCooLevel{2, Tuple{Int16, Int16}}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseHashLevel{2} constructors" begin
@@ -1602,61 +1602,61 @@
         res = Fiber(Finch.SparseHashLevel{2, Tuple{Int, Int}, Int, Dict{Tuple{Int, Tuple{Int, Int}}, Int}}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseHashLevel{2, Tuple{Int8, Int8}} constructors" begin
-        ref = Fiber(SparseHash{2, Tuple{Int8, Int8}}((0, 0), Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8, Int8}}, Int}[], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}}((0, 0), Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8, Int8}}, Int}[], Element{0.0}(Float64[])))
+    @testset "Finch.SparseHashLevel{2, Tuple{Int16, Int16}} constructors" begin
+        ref = Fiber(SparseHash{2, Tuple{Int16, Int16}}((0, 0), Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16, Int16}}, Int}[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}}((0, 0), Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16, Int16}}, Int}[], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}}((0, 0), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}}((0, 0), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}}((0, 0), Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}(), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}}((0, 0), Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}(), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}}(Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int}((0, 0), Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8, Int8}}, Int}[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int}((0, 0), Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16, Int16}}, Int}[], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int}((0, 0), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int}((0, 0), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int}((0, 0), Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}(), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int}((0, 0), Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}(), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int}(Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int, Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}}((0, 0), Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8, Int8}}, Int}[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int, Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}}((0, 0), Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16, Int16}}, Int}[], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int, Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}}((0, 0), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int, Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}}((0, 0), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int, Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}}((0, 0), Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}(), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int, Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}}((0, 0), Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}(), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int, Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}}(Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8} constructors" begin
-        ref = Fiber(SparseHash{2, Tuple{Int8, Int8}}((0, 0), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8}}, Int8}[], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8}((0, 0), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8}}, Int8}[], Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8}((0, 0), Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8}((0, 0), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}(), Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8}(Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}}((0, 0), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8}}, Int8}[], Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}}((0, 0), Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}}((0, 0), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}(), Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}}(Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int, Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}} constructors" begin
-        ref = Fiber(SparseHash{2, Tuple{Int8, Int8}}((0, 0), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8}}, Int8}[], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}}((0, 0), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8}}, Int8}[], Element{0.0}(Float64[])))
+    @testset "Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16} constructors" begin
+        ref = Fiber(SparseHash{2, Tuple{Int16, Int16}}((0, 0), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16}}, Int16}[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16}((0, 0), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16}}, Int16}[], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}}((0, 0), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16}((0, 0), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}}((0, 0), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}(), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16}((0, 0), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}(), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}}(Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16}(Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}}((0, 0), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16}}, Int16}[], Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}}((0, 0), Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}}((0, 0), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}(), Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}}(Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}} constructors" begin
+        ref = Fiber(SparseHash{2, Tuple{Int16, Int16}}((0, 0), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16}}, Int16}[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}}((0, 0), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16}}, Int16}[], Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}}((0, 0), Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}}((0, 0), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}(), Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseCooLevel{3} constructors" begin
@@ -1674,13 +1674,13 @@
         res = Fiber(Finch.SparseCooLevel{3, Tuple{Int, Int, Int}}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseCooLevel{3, Tuple{Int8, Int8, Int8}} constructors" begin
-        ref = Fiber(SparseCoo{3, Tuple{Int8, Int8, Int8}}((0, 0, 0), (Int8[], Int8[], Int8[], ), [1, 1], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseCooLevel{3, Tuple{Int8, Int8, Int8}}((0, 0, 0), (Int8[], Int8[], Int8[]), [1, 1], Element{0.0}(Float64[])))
+    @testset "Finch.SparseCooLevel{3, Tuple{Int16, Int16, Int16}} constructors" begin
+        ref = Fiber(SparseCoo{3, Tuple{Int16, Int16, Int16}}((0, 0, 0), (Int16[], Int16[], Int16[], ), [1, 1], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseCooLevel{3, Tuple{Int16, Int16, Int16}}((0, 0, 0), (Int16[], Int16[], Int16[]), [1, 1], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseCooLevel{3, Tuple{Int8, Int8, Int8}}((0, 0, 0), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseCooLevel{3, Tuple{Int16, Int16, Int16}}((0, 0, 0), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseCooLevel{3, Tuple{Int8, Int8, Int8}}(Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseCooLevel{3, Tuple{Int16, Int16, Int16}}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseHashLevel{3} constructors" begin
@@ -1718,61 +1718,61 @@
         res = Fiber(Finch.SparseHashLevel{3, Tuple{Int, Int, Int}, Int, Dict{Tuple{Int, Tuple{Int, Int, Int}}, Int}}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}} constructors" begin
-        ref = Fiber(SparseHash{3, Tuple{Int8, Int8, Int8}}((0, 0, 0), Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}[], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}}((0, 0, 0), Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}[], Element{0.0}(Float64[])))
+    @testset "Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}} constructors" begin
+        ref = Fiber(SparseHash{3, Tuple{Int16, Int16, Int16}}((0, 0, 0), Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}}((0, 0, 0), Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}[], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}}((0, 0, 0), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}}((0, 0, 0), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}}((0, 0, 0), Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}(), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}}((0, 0, 0), Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}(), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}}(Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int}((0, 0, 0), Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int}((0, 0, 0), Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}[], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int}((0, 0, 0), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int}((0, 0, 0), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int}((0, 0, 0), Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}(), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int}((0, 0, 0), Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}(), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int}(Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int, Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}}((0, 0, 0), Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int, Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}}((0, 0, 0), Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}[], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int, Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}}((0, 0, 0), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int, Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}}((0, 0, 0), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int, Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}}((0, 0, 0), Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}(), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int, Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}}((0, 0, 0), Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}(), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int, Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}}(Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8} constructors" begin
-        ref = Fiber(SparseHash{3, Tuple{Int8, Int8, Int8}}((0, 0, 0), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}[], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8}((0, 0, 0), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}[], Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8}((0, 0, 0), Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8}((0, 0, 0), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}(), Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8}(Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}}((0, 0, 0), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}[], Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}}((0, 0, 0), Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}}((0, 0, 0), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}(), Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}}(Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int, Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}} constructors" begin
-        ref = Fiber(SparseHash{3, Tuple{Int8, Int8, Int8}}((0, 0, 0), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}[], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}}((0, 0, 0), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}[], Element{0.0}(Float64[])))
+    @testset "Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16} constructors" begin
+        ref = Fiber(SparseHash{3, Tuple{Int16, Int16, Int16}}((0, 0, 0), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16}((0, 0, 0), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}[], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}}((0, 0, 0), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16}((0, 0, 0), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}}((0, 0, 0), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}(), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16}((0, 0, 0), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}(), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}}(Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16}(Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}}((0, 0, 0), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}[], Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}}((0, 0, 0), Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}}((0, 0, 0), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}(), Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}}(Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}} constructors" begin
+        ref = Fiber(SparseHash{3, Tuple{Int16, Int16, Int16}}((0, 0, 0), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}}((0, 0, 0), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}[], Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}}((0, 0, 0), Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}}((0, 0, 0), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}(), Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}}(Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseCooLevel{1} constructors" begin
@@ -1786,11 +1786,11 @@
         res = Fiber(Finch.SparseCooLevel{1, Tuple{Int}}((4,), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseCooLevel{1, Tuple{Int8}} constructors" begin
-        ref = Fiber(SparseCoo{1, Tuple{Int8}}((4,), (Int8[], ), [1, 1], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseCooLevel{1, Tuple{Int8}}((4,), (Int8[],), [1, 1], Element{0.0}(Float64[])))
+    @testset "Finch.SparseCooLevel{1, Tuple{Int16}} constructors" begin
+        ref = Fiber(SparseCoo{1, Tuple{Int16}}((4,), (Int16[], ), [1, 1], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseCooLevel{1, Tuple{Int16}}((4,), (Int16[],), [1, 1], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseCooLevel{1, Tuple{Int8}}((4,), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseCooLevel{1, Tuple{Int16}}((4,), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseHashLevel{1} constructors" begin
@@ -1820,49 +1820,49 @@
         res = Fiber(Finch.SparseHashLevel{1, Tuple{Int}, Int, Dict{Tuple{Int, Tuple{Int}}, Int}}((4,), Dict{Tuple{Int, Tuple{Int}}, Int}(), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseHashLevel{1, Tuple{Int8}} constructors" begin
-        ref = Fiber(SparseHash{1, Tuple{Int8}}((4,), Dict{Tuple{Int, Tuple{Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8}}, Int}[], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}}((4,), Dict{Tuple{Int, Tuple{Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8}}, Int}[], Element{0.0}(Float64[])))
+    @testset "Finch.SparseHashLevel{1, Tuple{Int16}} constructors" begin
+        ref = Fiber(SparseHash{1, Tuple{Int16}}((4,), Dict{Tuple{Int, Tuple{Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16}}, Int}[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}}((4,), Dict{Tuple{Int, Tuple{Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16}}, Int}[], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}}((4,), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}}((4,), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}}((4,), Dict{Tuple{Int, Tuple{Int8}}, Int}(), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}}((4,), Dict{Tuple{Int, Tuple{Int16}}, Int}(), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int}((4,), Dict{Tuple{Int, Tuple{Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8}}, Int}[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int}((4,), Dict{Tuple{Int, Tuple{Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16}}, Int}[], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int}((4,), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int}((4,), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int}((4,), Dict{Tuple{Int, Tuple{Int8}}, Int}(), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int}((4,), Dict{Tuple{Int, Tuple{Int16}}, Int}(), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int, Dict{Tuple{Int, Tuple{Int8}}, Int}}((4,), Dict{Tuple{Int, Tuple{Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8}}, Int}[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int, Dict{Tuple{Int, Tuple{Int16}}, Int}}((4,), Dict{Tuple{Int, Tuple{Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16}}, Int}[], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int, Dict{Tuple{Int, Tuple{Int8}}, Int}}((4,), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int, Dict{Tuple{Int, Tuple{Int16}}, Int}}((4,), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int, Dict{Tuple{Int, Tuple{Int8}}, Int}}((4,), Dict{Tuple{Int, Tuple{Int8}}, Int}(), Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.SparseHashLevel{1, Tuple{Int8}, Int8} constructors" begin
-        ref = Fiber(SparseHash{1, Tuple{Int8}}((4,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8}}, Int8}[], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8}((4,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8}}, Int8}[], Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8}((4,), Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8}((4,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}(), Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}}((4,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8}}, Int8}[], Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}}((4,), Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}}((4,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}(), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int, Dict{Tuple{Int, Tuple{Int16}}, Int}}((4,), Dict{Tuple{Int, Tuple{Int16}}, Int}(), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}} constructors" begin
-        ref = Fiber(SparseHash{1, Tuple{Int8}}((4,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8}}, Int8}[], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}}((4,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8}}, Int8}[], Element{0.0}(Float64[])))
+    @testset "Finch.SparseHashLevel{1, Tuple{Int16}, Int16} constructors" begin
+        ref = Fiber(SparseHash{1, Tuple{Int16}}((4,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16}}, Int16}[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16}((4,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16}}, Int16}[], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}}((4,), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16}((4,), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}}((4,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}(), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16}((4,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}(), Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}}((4,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16}}, Int16}[], Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}}((4,), Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}}((4,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}(), Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}} constructors" begin
+        ref = Fiber(SparseHash{1, Tuple{Int16}}((4,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16}}, Int16}[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}}((4,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16}}, Int16}[], Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}}((4,), Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}}((4,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}(), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseCooLevel{2} constructors" begin
@@ -1876,11 +1876,11 @@
         res = Fiber(Finch.SparseCooLevel{2, Tuple{Int, Int}}((2, 3), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseCooLevel{2, Tuple{Int8, Int8}} constructors" begin
-        ref = Fiber(SparseCoo{2, Tuple{Int8, Int8}}((2, 3), (Int8[], Int8[], ), [1, 1], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseCooLevel{2, Tuple{Int8, Int8}}((2, 3), (Int8[], Int8[]), [1, 1], Element{0.0}(Float64[])))
+    @testset "Finch.SparseCooLevel{2, Tuple{Int16, Int16}} constructors" begin
+        ref = Fiber(SparseCoo{2, Tuple{Int16, Int16}}((2, 3), (Int16[], Int16[], ), [1, 1], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseCooLevel{2, Tuple{Int16, Int16}}((2, 3), (Int16[], Int16[]), [1, 1], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseCooLevel{2, Tuple{Int8, Int8}}((2, 3), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseCooLevel{2, Tuple{Int16, Int16}}((2, 3), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseHashLevel{2} constructors" begin
@@ -1910,49 +1910,49 @@
         res = Fiber(Finch.SparseHashLevel{2, Tuple{Int, Int}, Int, Dict{Tuple{Int, Tuple{Int, Int}}, Int}}((2, 3), Dict{Tuple{Int, Tuple{Int, Int}}, Int}(), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseHashLevel{2, Tuple{Int8, Int8}} constructors" begin
-        ref = Fiber(SparseHash{2, Tuple{Int8, Int8}}((2, 3), Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8, Int8}}, Int}[], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}}((2, 3), Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8, Int8}}, Int}[], Element{0.0}(Float64[])))
+    @testset "Finch.SparseHashLevel{2, Tuple{Int16, Int16}} constructors" begin
+        ref = Fiber(SparseHash{2, Tuple{Int16, Int16}}((2, 3), Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16, Int16}}, Int}[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}}((2, 3), Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16, Int16}}, Int}[], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}}((2, 3), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}}((2, 3), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}}((2, 3), Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}(), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}}((2, 3), Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}(), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int}((2, 3), Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8, Int8}}, Int}[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int}((2, 3), Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16, Int16}}, Int}[], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int}((2, 3), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int}((2, 3), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int}((2, 3), Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}(), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int}((2, 3), Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}(), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int, Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}}((2, 3), Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8, Int8}}, Int}[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int, Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}}((2, 3), Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16, Int16}}, Int}[], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int, Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}}((2, 3), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int, Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}}((2, 3), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int, Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}}((2, 3), Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}(), Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8} constructors" begin
-        ref = Fiber(SparseHash{2, Tuple{Int8, Int8}}((2, 3), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8}}, Int8}[], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8}((2, 3), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8}}, Int8}[], Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8}((2, 3), Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8}((2, 3), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}(), Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}}((2, 3), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8}}, Int8}[], Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}}((2, 3), Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}}((2, 3), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}(), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int, Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}}((2, 3), Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}(), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}} constructors" begin
-        ref = Fiber(SparseHash{2, Tuple{Int8, Int8}}((2, 3), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8}}, Int8}[], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}}((2, 3), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8}}, Int8}[], Element{0.0}(Float64[])))
+    @testset "Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16} constructors" begin
+        ref = Fiber(SparseHash{2, Tuple{Int16, Int16}}((2, 3), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16}}, Int16}[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16}((2, 3), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16}}, Int16}[], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}}((2, 3), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16}((2, 3), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}}((2, 3), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}(), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16}((2, 3), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}(), Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}}((2, 3), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16}}, Int16}[], Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}}((2, 3), Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}}((2, 3), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}(), Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}} constructors" begin
+        ref = Fiber(SparseHash{2, Tuple{Int16, Int16}}((2, 3), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16}}, Int16}[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}}((2, 3), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16}}, Int16}[], Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}}((2, 3), Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}}((2, 3), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}(), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseCooLevel{3} constructors" begin
@@ -1966,11 +1966,11 @@
         res = Fiber(Finch.SparseCooLevel{3, Tuple{Int, Int, Int}}((2, 3, 2), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseCooLevel{3, Tuple{Int8, Int8, Int8}} constructors" begin
-        ref = Fiber(SparseCoo{3, Tuple{Int8, Int8, Int8}}((2, 3, 2), (Int8[], Int8[], Int8[], ), [1, 1], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseCooLevel{3, Tuple{Int8, Int8, Int8}}((2, 3, 2), (Int8[], Int8[], Int8[]), [1, 1], Element{0.0}(Float64[])))
+    @testset "Finch.SparseCooLevel{3, Tuple{Int16, Int16, Int16}} constructors" begin
+        ref = Fiber(SparseCoo{3, Tuple{Int16, Int16, Int16}}((2, 3, 2), (Int16[], Int16[], Int16[], ), [1, 1], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseCooLevel{3, Tuple{Int16, Int16, Int16}}((2, 3, 2), (Int16[], Int16[], Int16[]), [1, 1], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseCooLevel{3, Tuple{Int8, Int8, Int8}}((2, 3, 2), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseCooLevel{3, Tuple{Int16, Int16, Int16}}((2, 3, 2), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseHashLevel{3} constructors" begin
@@ -2000,49 +2000,49 @@
         res = Fiber(Finch.SparseHashLevel{3, Tuple{Int, Int, Int}, Int, Dict{Tuple{Int, Tuple{Int, Int, Int}}, Int}}((2, 3, 2), Dict{Tuple{Int, Tuple{Int, Int, Int}}, Int}(), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}} constructors" begin
-        ref = Fiber(SparseHash{3, Tuple{Int8, Int8, Int8}}((2, 3, 2), Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}[], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}}((2, 3, 2), Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}[], Element{0.0}(Float64[])))
+    @testset "Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}} constructors" begin
+        ref = Fiber(SparseHash{3, Tuple{Int16, Int16, Int16}}((2, 3, 2), Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}}((2, 3, 2), Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}[], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}}((2, 3, 2), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}}((2, 3, 2), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}}((2, 3, 2), Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}(), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}}((2, 3, 2), Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}(), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int}((2, 3, 2), Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int}((2, 3, 2), Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}[], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int}((2, 3, 2), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int}((2, 3, 2), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int}((2, 3, 2), Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}(), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int}((2, 3, 2), Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}(), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int, Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}}((2, 3, 2), Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int, Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}}((2, 3, 2), Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}(), [1, 1], Pair{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}[], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int, Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}}((2, 3, 2), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int, Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}}((2, 3, 2), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int, Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}}((2, 3, 2), Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}(), Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8} constructors" begin
-        ref = Fiber(SparseHash{3, Tuple{Int8, Int8, Int8}}((2, 3, 2), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}[], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8}((2, 3, 2), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}[], Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8}((2, 3, 2), Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8}((2, 3, 2), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}(), Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}}((2, 3, 2), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}[], Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}}((2, 3, 2), Element{0.0}(Float64[])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}}((2, 3, 2), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}(), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int, Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}}((2, 3, 2), Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}(), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}} constructors" begin
-        ref = Fiber(SparseHash{3, Tuple{Int8, Int8, Int8}}((2, 3, 2), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}[], Element{0.0}(Float64[])))
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}}((2, 3, 2), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}(), Int8[1, 1], Pair{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}[], Element{0.0}(Float64[])))
+    @testset "Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16} constructors" begin
+        ref = Fiber(SparseHash{3, Tuple{Int16, Int16, Int16}}((2, 3, 2), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16}((2, 3, 2), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}[], Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}}((2, 3, 2), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16}((2, 3, 2), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}}((2, 3, 2), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}(), Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16}((2, 3, 2), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}(), Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}}((2, 3, 2), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}[], Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}}((2, 3, 2), Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}}((2, 3, 2), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}(), Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}} constructors" begin
+        ref = Fiber(SparseHash{3, Tuple{Int16, Int16, Int16}}((2, 3, 2), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}[], Element{0.0}(Float64[])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}}((2, 3, 2), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}(), Int16[1, 1], Pair{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}[], Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}}((2, 3, 2), Element{0.0}(Float64[])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}}((2, 3, 2), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}(), Element{0.0}(Float64[])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseCooLevel{1} constructors" begin
@@ -2052,9 +2052,9 @@
         res = Fiber(Finch.SparseCooLevel{1, Tuple{Int}}((4,), ([2],), [1, 2], Element{0.0}([2.0])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseCooLevel{1, Tuple{Int8}} constructors" begin
-        ref = Fiber(SparseCoo{1, Tuple{Int8}}((4,), (Int8[2], ), [1, 2], Element{0.0}([2.0])))
-        res = Fiber(Finch.SparseCooLevel{1, Tuple{Int8}}((4,), (Int8[2],), [1, 2], Element{0.0}([2.0])))
+    @testset "Finch.SparseCooLevel{1, Tuple{Int16}} constructors" begin
+        ref = Fiber(SparseCoo{1, Tuple{Int16}}((4,), (Int16[2], ), [1, 2], Element{0.0}([2.0])))
+        res = Fiber(Finch.SparseCooLevel{1, Tuple{Int16}}((4,), (Int16[2],), [1, 2], Element{0.0}([2.0])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseHashLevel{1} constructors" begin
@@ -2068,25 +2068,25 @@
         res = Fiber(Finch.SparseHashLevel{1, Tuple{Int}, Int, Dict{Tuple{Int, Tuple{Int}}, Int}}((4,), Dict((1, (2,)) => 1), [1, 2], [(1, (2,)) => 1], Element{0.0}([2.0])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseHashLevel{1, Tuple{Int8}} constructors" begin
-        ref = Fiber(SparseHash{1, Tuple{Int8}}((4,), Dict{Tuple{Int, Tuple{Int8}}, Int}((1, (2,)) => 1), [1, 2], Pair{Tuple{Int, Tuple{Int8}}, Int}[(1, (2,)) => 1], Element{0.0}([2.0])))
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}}((4,), Dict{Tuple{Int, Tuple{Int8}}, Int}((1, (2,)) => 1), [1, 2], Pair{Tuple{Int, Tuple{Int8}}, Int}[(1, (2,)) => 1], Element{0.0}([2.0])))
+    @testset "Finch.SparseHashLevel{1, Tuple{Int16}} constructors" begin
+        ref = Fiber(SparseHash{1, Tuple{Int16}}((4,), Dict{Tuple{Int, Tuple{Int16}}, Int}((1, (2,)) => 1), [1, 2], Pair{Tuple{Int, Tuple{Int16}}, Int}[(1, (2,)) => 1], Element{0.0}([2.0])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}}((4,), Dict{Tuple{Int, Tuple{Int16}}, Int}((1, (2,)) => 1), [1, 2], Pair{Tuple{Int, Tuple{Int16}}, Int}[(1, (2,)) => 1], Element{0.0}([2.0])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int}((4,), Dict{Tuple{Int, Tuple{Int8}}, Int}((1, (2,)) => 1), [1, 2], Pair{Tuple{Int, Tuple{Int8}}, Int}[(1, (2,)) => 1], Element{0.0}([2.0])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int}((4,), Dict{Tuple{Int, Tuple{Int16}}, Int}((1, (2,)) => 1), [1, 2], Pair{Tuple{Int, Tuple{Int16}}, Int}[(1, (2,)) => 1], Element{0.0}([2.0])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int, Dict{Tuple{Int, Tuple{Int8}}, Int}}((4,), Dict{Tuple{Int, Tuple{Int8}}, Int}((1, (2,)) => 1), [1, 2], Pair{Tuple{Int, Tuple{Int8}}, Int}[(1, (2,)) => 1], Element{0.0}([2.0])))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.SparseHashLevel{1, Tuple{Int8}, Int8} constructors" begin
-        ref = Fiber(SparseHash{1, Tuple{Int8}}((4,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}((1, (2,)) => 1), Int8[1, 2], Pair{Tuple{Int8, Tuple{Int8}}, Int8}[(1, (2,)) => 1], Element{0.0}([2.0])))
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8}((4,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}((1, (2,)) => 1), Int8[1, 2], Pair{Tuple{Int8, Tuple{Int8}}, Int8}[(1, (2,)) => 1], Element{0.0}([2.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}}((4,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}((1, (2,)) => 1), Int8[1, 2], Pair{Tuple{Int8, Tuple{Int8}}, Int8}[(1, (2,)) => 1], Element{0.0}([2.0])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int, Dict{Tuple{Int, Tuple{Int16}}, Int}}((4,), Dict{Tuple{Int, Tuple{Int16}}, Int}((1, (2,)) => 1), [1, 2], Pair{Tuple{Int, Tuple{Int16}}, Int}[(1, (2,)) => 1], Element{0.0}([2.0])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}} constructors" begin
-        ref = Fiber(SparseHash{1, Tuple{Int8}}((4,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}((1, (2,)) => 1), Int8[1, 2], Pair{Tuple{Int8, Tuple{Int8}}, Int8}[(1, (2,)) => 1], Element{0.0}([2.0])))
-        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8}}, Int8}}((4,), Dict{Tuple{Int8, Tuple{Int8}}, Int8}((1, (2,)) => 1), Int8[1, 2], Pair{Tuple{Int8, Tuple{Int8}}, Int8}[(1, (2,)) => 1], Element{0.0}([2.0])))
+    @testset "Finch.SparseHashLevel{1, Tuple{Int16}, Int16} constructors" begin
+        ref = Fiber(SparseHash{1, Tuple{Int16}}((4,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}((1, (2,)) => 1), Int16[1, 2], Pair{Tuple{Int16, Tuple{Int16}}, Int16}[(1, (2,)) => 1], Element{0.0}([2.0])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16}((4,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}((1, (2,)) => 1), Int16[1, 2], Pair{Tuple{Int16, Tuple{Int16}}, Int16}[(1, (2,)) => 1], Element{0.0}([2.0])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}}((4,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}((1, (2,)) => 1), Int16[1, 2], Pair{Tuple{Int16, Tuple{Int16}}, Int16}[(1, (2,)) => 1], Element{0.0}([2.0])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}} constructors" begin
+        ref = Fiber(SparseHash{1, Tuple{Int16}}((4,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}((1, (2,)) => 1), Int16[1, 2], Pair{Tuple{Int16, Tuple{Int16}}, Int16}[(1, (2,)) => 1], Element{0.0}([2.0])))
+        res = Fiber(Finch.SparseHashLevel{1, Tuple{Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16}}, Int16}}((4,), Dict{Tuple{Int16, Tuple{Int16}}, Int16}((1, (2,)) => 1), Int16[1, 2], Pair{Tuple{Int16, Tuple{Int16}}, Int16}[(1, (2,)) => 1], Element{0.0}([2.0])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseCooLevel{2} constructors" begin
@@ -2096,9 +2096,9 @@
         res = Fiber(Finch.SparseCooLevel{2, Tuple{Int, Int}}((2, 3), ([2], [1]), [1, 2], Element{0.0}([3.0])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseCooLevel{2, Tuple{Int8, Int8}} constructors" begin
-        ref = Fiber(SparseCoo{2, Tuple{Int8, Int8}}((2, 3), (Int8[2], Int8[1], ), [1, 2], Element{0.0}([3.0])))
-        res = Fiber(Finch.SparseCooLevel{2, Tuple{Int8, Int8}}((2, 3), (Int8[2], Int8[1]), [1, 2], Element{0.0}([3.0])))
+    @testset "Finch.SparseCooLevel{2, Tuple{Int16, Int16}} constructors" begin
+        ref = Fiber(SparseCoo{2, Tuple{Int16, Int16}}((2, 3), (Int16[2], Int16[1], ), [1, 2], Element{0.0}([3.0])))
+        res = Fiber(Finch.SparseCooLevel{2, Tuple{Int16, Int16}}((2, 3), (Int16[2], Int16[1]), [1, 2], Element{0.0}([3.0])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseHashLevel{2} constructors" begin
@@ -2112,25 +2112,25 @@
         res = Fiber(Finch.SparseHashLevel{2, Tuple{Int, Int}, Int, Dict{Tuple{Int, Tuple{Int, Int}}, Int}}((2, 3), Dict((1, (2, 1)) => 1), [1, 2], [(1, (2, 1)) => 1], Element{0.0}([3.0])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseHashLevel{2, Tuple{Int8, Int8}} constructors" begin
-        ref = Fiber(SparseHash{2, Tuple{Int8, Int8}}((2, 3), Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}((1, (2, 1)) => 1), [1, 2], Pair{Tuple{Int, Tuple{Int8, Int8}}, Int}[(1, (2, 1)) => 1], Element{0.0}([3.0])))
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}}((2, 3), Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}((1, (2, 1)) => 1), [1, 2], Pair{Tuple{Int, Tuple{Int8, Int8}}, Int}[(1, (2, 1)) => 1], Element{0.0}([3.0])))
+    @testset "Finch.SparseHashLevel{2, Tuple{Int16, Int16}} constructors" begin
+        ref = Fiber(SparseHash{2, Tuple{Int16, Int16}}((2, 3), Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}((1, (2, 1)) => 1), [1, 2], Pair{Tuple{Int, Tuple{Int16, Int16}}, Int}[(1, (2, 1)) => 1], Element{0.0}([3.0])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}}((2, 3), Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}((1, (2, 1)) => 1), [1, 2], Pair{Tuple{Int, Tuple{Int16, Int16}}, Int}[(1, (2, 1)) => 1], Element{0.0}([3.0])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int}((2, 3), Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}((1, (2, 1)) => 1), [1, 2], Pair{Tuple{Int, Tuple{Int8, Int8}}, Int}[(1, (2, 1)) => 1], Element{0.0}([3.0])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int}((2, 3), Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}((1, (2, 1)) => 1), [1, 2], Pair{Tuple{Int, Tuple{Int16, Int16}}, Int}[(1, (2, 1)) => 1], Element{0.0}([3.0])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int, Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}}((2, 3), Dict{Tuple{Int, Tuple{Int8, Int8}}, Int}((1, (2, 1)) => 1), [1, 2], Pair{Tuple{Int, Tuple{Int8, Int8}}, Int}[(1, (2, 1)) => 1], Element{0.0}([3.0])))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8} constructors" begin
-        ref = Fiber(SparseHash{2, Tuple{Int8, Int8}}((2, 3), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}((1, (2, 1)) => 1), Int8[1, 2], Pair{Tuple{Int8, Tuple{Int8, Int8}}, Int8}[(1, (2, 1)) => 1], Element{0.0}([3.0])))
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8}((2, 3), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}((1, (2, 1)) => 1), Int8[1, 2], Pair{Tuple{Int8, Tuple{Int8, Int8}}, Int8}[(1, (2, 1)) => 1], Element{0.0}([3.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}}((2, 3), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}((1, (2, 1)) => 1), Int8[1, 2], Pair{Tuple{Int8, Tuple{Int8, Int8}}, Int8}[(1, (2, 1)) => 1], Element{0.0}([3.0])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int, Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}}((2, 3), Dict{Tuple{Int, Tuple{Int16, Int16}}, Int}((1, (2, 1)) => 1), [1, 2], Pair{Tuple{Int, Tuple{Int16, Int16}}, Int}[(1, (2, 1)) => 1], Element{0.0}([3.0])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}} constructors" begin
-        ref = Fiber(SparseHash{2, Tuple{Int8, Int8}}((2, 3), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}((1, (2, 1)) => 1), Int8[1, 2], Pair{Tuple{Int8, Tuple{Int8, Int8}}, Int8}[(1, (2, 1)) => 1], Element{0.0}([3.0])))
-        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}}((2, 3), Dict{Tuple{Int8, Tuple{Int8, Int8}}, Int8}((1, (2, 1)) => 1), Int8[1, 2], Pair{Tuple{Int8, Tuple{Int8, Int8}}, Int8}[(1, (2, 1)) => 1], Element{0.0}([3.0])))
+    @testset "Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16} constructors" begin
+        ref = Fiber(SparseHash{2, Tuple{Int16, Int16}}((2, 3), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}((1, (2, 1)) => 1), Int16[1, 2], Pair{Tuple{Int16, Tuple{Int16, Int16}}, Int16}[(1, (2, 1)) => 1], Element{0.0}([3.0])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16}((2, 3), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}((1, (2, 1)) => 1), Int16[1, 2], Pair{Tuple{Int16, Tuple{Int16, Int16}}, Int16}[(1, (2, 1)) => 1], Element{0.0}([3.0])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}}((2, 3), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}((1, (2, 1)) => 1), Int16[1, 2], Pair{Tuple{Int16, Tuple{Int16, Int16}}, Int16}[(1, (2, 1)) => 1], Element{0.0}([3.0])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}} constructors" begin
+        ref = Fiber(SparseHash{2, Tuple{Int16, Int16}}((2, 3), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}((1, (2, 1)) => 1), Int16[1, 2], Pair{Tuple{Int16, Tuple{Int16, Int16}}, Int16}[(1, (2, 1)) => 1], Element{0.0}([3.0])))
+        res = Fiber(Finch.SparseHashLevel{2, Tuple{Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}}((2, 3), Dict{Tuple{Int16, Tuple{Int16, Int16}}, Int16}((1, (2, 1)) => 1), Int16[1, 2], Pair{Tuple{Int16, Tuple{Int16, Int16}}, Int16}[(1, (2, 1)) => 1], Element{0.0}([3.0])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseCooLevel{3} constructors" begin
@@ -2140,9 +2140,9 @@
         res = Fiber(Finch.SparseCooLevel{3, Tuple{Int, Int, Int}}((2, 3, 2), ([2, 3], [2, 2], [1, 2]), [1, 3], Element{0.0}([4.0, 5.0])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseCooLevel{3, Tuple{Int8, Int8, Int8}} constructors" begin
-        ref = Fiber(SparseCoo{3, Tuple{Int8, Int8, Int8}}((2, 3, 2), (Int8[2, 3], Int8[2, 2], Int8[1, 2], ), [1, 3], Element{0.0}([4.0, 5.0])))
-        res = Fiber(Finch.SparseCooLevel{3, Tuple{Int8, Int8, Int8}}((2, 3, 2), (Int8[2, 3], Int8[2, 2], Int8[1, 2]), [1, 3], Element{0.0}([4.0, 5.0])))
+    @testset "Finch.SparseCooLevel{3, Tuple{Int16, Int16, Int16}} constructors" begin
+        ref = Fiber(SparseCoo{3, Tuple{Int16, Int16, Int16}}((2, 3, 2), (Int16[2, 3], Int16[2, 2], Int16[1, 2], ), [1, 3], Element{0.0}([4.0, 5.0])))
+        res = Fiber(Finch.SparseCooLevel{3, Tuple{Int16, Int16, Int16}}((2, 3, 2), (Int16[2, 3], Int16[2, 2], Int16[1, 2]), [1, 3], Element{0.0}([4.0, 5.0])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseHashLevel{3} constructors" begin
@@ -2156,25 +2156,25 @@
         res = Fiber(Finch.SparseHashLevel{3, Tuple{Int, Int, Int}, Int, Dict{Tuple{Int, Tuple{Int, Int, Int}}, Int}}((2, 3, 2), Dict((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), [1, 3], [(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{0.0}([4.0, 5.0])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}} constructors" begin
-        ref = Fiber(SparseHash{3, Tuple{Int8, Int8, Int8}}((2, 3, 2), Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), [1, 3], Pair{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}[(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{0.0}([4.0, 5.0])))
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}}((2, 3, 2), Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), [1, 3], Pair{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}[(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{0.0}([4.0, 5.0])))
+    @testset "Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}} constructors" begin
+        ref = Fiber(SparseHash{3, Tuple{Int16, Int16, Int16}}((2, 3, 2), Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), [1, 3], Pair{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}[(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{0.0}([4.0, 5.0])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}}((2, 3, 2), Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), [1, 3], Pair{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}[(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{0.0}([4.0, 5.0])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int}((2, 3, 2), Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), [1, 3], Pair{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}[(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{0.0}([4.0, 5.0])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int}((2, 3, 2), Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), [1, 3], Pair{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}[(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{0.0}([4.0, 5.0])))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int, Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}}((2, 3, 2), Dict{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), [1, 3], Pair{Tuple{Int, Tuple{Int8, Int8, Int8}}, Int}[(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{0.0}([4.0, 5.0])))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8} constructors" begin
-        ref = Fiber(SparseHash{3, Tuple{Int8, Int8, Int8}}((2, 3, 2), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), Int8[1, 3], Pair{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}[(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{0.0}([4.0, 5.0])))
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8}((2, 3, 2), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), Int8[1, 3], Pair{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}[(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{0.0}([4.0, 5.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}}((2, 3, 2), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), Int8[1, 3], Pair{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}[(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{0.0}([4.0, 5.0])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int, Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}}((2, 3, 2), Dict{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), [1, 3], Pair{Tuple{Int, Tuple{Int16, Int16, Int16}}, Int}[(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{0.0}([4.0, 5.0])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}} constructors" begin
-        ref = Fiber(SparseHash{3, Tuple{Int8, Int8, Int8}}((2, 3, 2), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), Int8[1, 3], Pair{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}[(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{0.0}([4.0, 5.0])))
-        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int8, Int8, Int8}, Int8, Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}}((2, 3, 2), Dict{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), Int8[1, 3], Pair{Tuple{Int8, Tuple{Int8, Int8, Int8}}, Int8}[(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{0.0}([4.0, 5.0])))
+    @testset "Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16} constructors" begin
+        ref = Fiber(SparseHash{3, Tuple{Int16, Int16, Int16}}((2, 3, 2), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), Int16[1, 3], Pair{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}[(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{0.0}([4.0, 5.0])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16}((2, 3, 2), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), Int16[1, 3], Pair{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}[(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{0.0}([4.0, 5.0])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}}((2, 3, 2), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), Int16[1, 3], Pair{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}[(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{0.0}([4.0, 5.0])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}} constructors" begin
+        ref = Fiber(SparseHash{3, Tuple{Int16, Int16, Int16}}((2, 3, 2), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), Int16[1, 3], Pair{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}[(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{0.0}([4.0, 5.0])))
+        res = Fiber(Finch.SparseHashLevel{3, Tuple{Int16, Int16, Int16}, Int16, Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}}((2, 3, 2), Dict{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}((1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2), Int16[1, 3], Pair{Tuple{Int16, Tuple{Int16, Int16, Int16}}, Int16}[(1, (2, 2, 1)) => 1, (1, (3, 2, 2)) => 2], Element{0.0}([4.0, 5.0])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.RepeatRLELevel{0.0} constructors" begin
@@ -2204,49 +2204,49 @@
         res = Fiber(Finch.RepeatRLELevel{0.0, Int, Int, Float64}())
         @test isstructequal(res, ref)
     end
-    @testset "Finch.RepeatRLELevel{0.0, Int8} constructors" begin
-        ref = Fiber(RepeatRLE{0.0, Int8}(0, [1, 1], Int8[], Float64[]))
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8}(0, [1, 1], Int8[], Float64[]))
+    @testset "Finch.RepeatRLELevel{0.0, Int16} constructors" begin
+        ref = Fiber(RepeatRLE{0.0, Int16}(0, [1, 1], Int16[], Float64[]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16}(0, [1, 1], Int16[], Float64[]))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8}(0))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16}(0))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8}())
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16}())
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int}(0, [1, 1], Int8[], Float64[]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int}(0, [1, 1], Int16[], Float64[]))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int}(0))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int}(0))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int}())
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int}())
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int, Float64}(0, [1, 1], Int8[], Float64[]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int, Float64}(0, [1, 1], Int16[], Float64[]))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int, Float64}(0))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int, Float64}(0))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int, Float64}())
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.RepeatRLELevel{0.0, Int8, Int8} constructors" begin
-        ref = Fiber(RepeatRLE{0.0, Int8}(0, Int8[1, 1], Int8[], Float64[]))
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int8}(0, Int8[1, 1], Int8[], Float64[]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int8}(0))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int8}())
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int8, Float64}(0, Int8[1, 1], Int8[], Float64[]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int8, Float64}(0))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int8, Float64}())
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int, Float64}())
         @test isstructequal(res, ref)
     end
-    @testset "Finch.RepeatRLELevel{0.0, Int8, Int8, Any} constructors" begin
-        ref = Fiber(RepeatRLE{0.0, Int8}(0, Int8[1, 1], Int8[], Any[]))
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int8, Any}(0, Int8[1, 1], Int8[], Any[]))
+    @testset "Finch.RepeatRLELevel{0.0, Int16, Int16} constructors" begin
+        ref = Fiber(RepeatRLE{0.0, Int16}(0, Int16[1, 1], Int16[], Float64[]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16}(0, Int16[1, 1], Int16[], Float64[]))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int8, Any}(0))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16}(0))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int8, Any}())
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16}())
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Float64}(0, Int16[1, 1], Int16[], Float64[]))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Float64}(0))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Float64}())
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.RepeatRLELevel{0.0, Int16, Int16, Any} constructors" begin
+        ref = Fiber(RepeatRLE{0.0, Int16}(0, Int16[1, 1], Int16[], Any[]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Any}(0, Int16[1, 1], Int16[], Any[]))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Any}(0))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Any}())
         @test isstructequal(res, ref)
     end
     @testset "Finch.RepeatRLELevel constructors" begin
@@ -2277,37 +2277,37 @@
         res = Fiber(Finch.RepeatRLELevel{0.0, Int, Int, Float64}(4))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.RepeatRLELevel{0.0, Int8} constructors" begin
-        ref = Fiber(RepeatRLE{0.0, Int8}(4, [1, 2], Int8[4], [0.0]))
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8}(4, [1, 2], Int8[4], [0.0]))
+    @testset "Finch.RepeatRLELevel{0.0, Int16} constructors" begin
+        ref = Fiber(RepeatRLE{0.0, Int16}(4, [1, 2], Int16[4], [0.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16}(4, [1, 2], Int16[4], [0.0]))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8}(4))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16}(4))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int}(4, [1, 2], Int8[4], [0.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int}(4, [1, 2], Int16[4], [0.0]))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int}(4))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int}(4))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int, Float64}(4, [1, 2], Int8[4], [0.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int, Float64}(4, [1, 2], Int16[4], [0.0]))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int, Float64}(4))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.RepeatRLELevel{0.0, Int8, Int8} constructors" begin
-        ref = Fiber(RepeatRLE{0.0, Int8}(4, Int8[1, 2], Int8[4], [0.0]))
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int8}(4, Int8[1, 2], Int8[4], [0.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int8}(4))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int8, Float64}(4, Int8[1, 2], Int8[4], [0.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int8, Float64}(4))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int, Float64}(4))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.RepeatRLELevel{0.0, Int8, Int8, Any} constructors" begin
-        ref = Fiber(RepeatRLE{0.0, Int8}(4, Int8[1, 2], Int8[4], Any[0.0]))
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int8, Any}(4, Int8[1, 2], Int8[4], Any[0.0]))
+    @testset "Finch.RepeatRLELevel{0.0, Int16, Int16} constructors" begin
+        ref = Fiber(RepeatRLE{0.0, Int16}(4, Int16[1, 2], Int16[4], [0.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16}(4, Int16[1, 2], Int16[4], [0.0]))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int8, Any}(4))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16}(4))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Float64}(4, Int16[1, 2], Int16[4], [0.0]))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Float64}(4))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.RepeatRLELevel{0.0, Int16, Int16, Any} constructors" begin
+        ref = Fiber(RepeatRLE{0.0, Int16}(4, Int16[1, 2], Int16[4], Any[0.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Any}(4, Int16[1, 2], Int16[4], Any[0.0]))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Any}(4))
         @test isstructequal(res, ref)
     end
     @testset "Finch.RepeatRLELevel constructors" begin
@@ -2328,25 +2328,25 @@
         res = Fiber(Finch.RepeatRLELevel{0.0, Int, Int, Float64}(6, [1, 3], [1, 6], [0.0, 1.0]))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.RepeatRLELevel{0.0, Int8} constructors" begin
-        ref = Fiber(RepeatRLE{0.0, Int8}(6, [1, 3], Int8[1, 6], [0.0, 1.0]))
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8}(6, [1, 3], Int8[1, 6], [0.0, 1.0]))
+    @testset "Finch.RepeatRLELevel{0.0, Int16} constructors" begin
+        ref = Fiber(RepeatRLE{0.0, Int16}(6, [1, 3], Int16[1, 6], [0.0, 1.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16}(6, [1, 3], Int16[1, 6], [0.0, 1.0]))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int}(6, [1, 3], Int8[1, 6], [0.0, 1.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int}(6, [1, 3], Int16[1, 6], [0.0, 1.0]))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int, Float64}(6, [1, 3], Int8[1, 6], [0.0, 1.0]))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.RepeatRLELevel{0.0, Int8, Int8} constructors" begin
-        ref = Fiber(RepeatRLE{0.0, Int8}(6, Int8[1, 3], Int8[1, 6], [0.0, 1.0]))
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int8}(6, Int8[1, 3], Int8[1, 6], [0.0, 1.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int8, Float64}(6, Int8[1, 3], Int8[1, 6], [0.0, 1.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int, Float64}(6, [1, 3], Int16[1, 6], [0.0, 1.0]))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.RepeatRLELevel{0.0, Int8, Int8, Any} constructors" begin
-        ref = Fiber(RepeatRLE{0.0, Int8}(6, Int8[1, 3], Int8[1, 6], Any[0.0, 1.0]))
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int8, Any}(6, Int8[1, 3], Int8[1, 6], Any[0.0, 1.0]))
+    @testset "Finch.RepeatRLELevel{0.0, Int16, Int16} constructors" begin
+        ref = Fiber(RepeatRLE{0.0, Int16}(6, Int16[1, 3], Int16[1, 6], [0.0, 1.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16}(6, Int16[1, 3], Int16[1, 6], [0.0, 1.0]))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Float64}(6, Int16[1, 3], Int16[1, 6], [0.0, 1.0]))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.RepeatRLELevel{0.0, Int16, Int16, Any} constructors" begin
+        ref = Fiber(RepeatRLE{0.0, Int16}(6, Int16[1, 3], Int16[1, 6], Any[0.0, 1.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Any}(6, Int16[1, 3], Int16[1, 6], Any[0.0, 1.0]))
         @test isstructequal(res, ref)
     end
     @testset "Finch.RepeatRLELevel constructors" begin
@@ -2381,49 +2381,49 @@
         res = Fiber(Finch.RepeatRLELevel{0.0, Int, Int, Float64}())
         @test isstructequal(res, ref)
     end
-    @testset "Finch.RepeatRLELevel{0.0, Int8} constructors" begin
-        ref = Fiber(RepeatRLE{0.0, Int8}(0, [1, 1], Int8[], Float64[]))
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8}(0, [1, 1], Int8[], Float64[]))
+    @testset "Finch.RepeatRLELevel{0.0, Int16} constructors" begin
+        ref = Fiber(RepeatRLE{0.0, Int16}(0, [1, 1], Int16[], Float64[]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16}(0, [1, 1], Int16[], Float64[]))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8}(0))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16}(0))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8}())
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16}())
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int}(0, [1, 1], Int8[], Float64[]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int}(0, [1, 1], Int16[], Float64[]))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int}(0))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int}(0))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int}())
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int}())
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int, Float64}(0, [1, 1], Int8[], Float64[]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int, Float64}(0, [1, 1], Int16[], Float64[]))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int, Float64}(0))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int, Float64}(0))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int, Float64}())
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.RepeatRLELevel{0.0, Int8, Int8} constructors" begin
-        ref = Fiber(RepeatRLE{0.0, Int8}(0, Int8[1, 1], Int8[], Float64[]))
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int8}(0, Int8[1, 1], Int8[], Float64[]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int8}(0))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int8}())
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int8, Float64}(0, Int8[1, 1], Int8[], Float64[]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int8, Float64}(0))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int8, Float64}())
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int, Float64}())
         @test isstructequal(res, ref)
     end
-    @testset "Finch.RepeatRLELevel{0.0, Int8, Int8, Any} constructors" begin
-        ref = Fiber(RepeatRLE{0.0, Int8}(0, Int8[1, 1], Int8[], Any[]))
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int8, Any}(0, Int8[1, 1], Int8[], Any[]))
+    @testset "Finch.RepeatRLELevel{0.0, Int16, Int16} constructors" begin
+        ref = Fiber(RepeatRLE{0.0, Int16}(0, Int16[1, 1], Int16[], Float64[]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16}(0, Int16[1, 1], Int16[], Float64[]))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int8, Any}(0))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16}(0))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int8, Any}())
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16}())
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Float64}(0, Int16[1, 1], Int16[], Float64[]))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Float64}(0))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Float64}())
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.RepeatRLELevel{0.0, Int16, Int16, Any} constructors" begin
+        ref = Fiber(RepeatRLE{0.0, Int16}(0, Int16[1, 1], Int16[], Any[]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Any}(0, Int16[1, 1], Int16[], Any[]))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Any}(0))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Any}())
         @test isstructequal(res, ref)
     end
     @testset "Finch.RepeatRLELevel constructors" begin
@@ -2454,37 +2454,37 @@
         res = Fiber(Finch.RepeatRLELevel{0.0, Int, Int, Float64}(4))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.RepeatRLELevel{0.0, Int8} constructors" begin
-        ref = Fiber(RepeatRLE{0.0, Int8}(4, [1, 2], Int8[4], [0.0]))
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8}(4, [1, 2], Int8[4], [0.0]))
+    @testset "Finch.RepeatRLELevel{0.0, Int16} constructors" begin
+        ref = Fiber(RepeatRLE{0.0, Int16}(4, [1, 2], Int16[4], [0.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16}(4, [1, 2], Int16[4], [0.0]))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8}(4))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16}(4))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int}(4, [1, 2], Int8[4], [0.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int}(4, [1, 2], Int16[4], [0.0]))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int}(4))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int}(4))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int, Float64}(4, [1, 2], Int8[4], [0.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int, Float64}(4, [1, 2], Int16[4], [0.0]))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int, Float64}(4))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.RepeatRLELevel{0.0, Int8, Int8} constructors" begin
-        ref = Fiber(RepeatRLE{0.0, Int8}(4, Int8[1, 2], Int8[4], [0.0]))
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int8}(4, Int8[1, 2], Int8[4], [0.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int8}(4))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int8, Float64}(4, Int8[1, 2], Int8[4], [0.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int8, Float64}(4))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int, Float64}(4))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.RepeatRLELevel{0.0, Int8, Int8, Any} constructors" begin
-        ref = Fiber(RepeatRLE{0.0, Int8}(4, Int8[1, 2], Int8[4], Any[0.0]))
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int8, Any}(4, Int8[1, 2], Int8[4], Any[0.0]))
+    @testset "Finch.RepeatRLELevel{0.0, Int16, Int16} constructors" begin
+        ref = Fiber(RepeatRLE{0.0, Int16}(4, Int16[1, 2], Int16[4], [0.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16}(4, Int16[1, 2], Int16[4], [0.0]))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int8, Any}(4))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16}(4))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Float64}(4, Int16[1, 2], Int16[4], [0.0]))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Float64}(4))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.RepeatRLELevel{0.0, Int16, Int16, Any} constructors" begin
+        ref = Fiber(RepeatRLE{0.0, Int16}(4, Int16[1, 2], Int16[4], Any[0.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Any}(4, Int16[1, 2], Int16[4], Any[0.0]))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Any}(4))
         @test isstructequal(res, ref)
     end
     @testset "Finch.RepeatRLELevel constructors" begin
@@ -2505,25 +2505,25 @@
         res = Fiber(Finch.RepeatRLELevel{0.0, Int, Int, Float64}(6, [1, 4], [1, 4, 6], [0.0, 2.0, 3.0]))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.RepeatRLELevel{0.0, Int8} constructors" begin
-        ref = Fiber(RepeatRLE{0.0, Int8}(6, [1, 4], Int8[1, 4, 6], [0.0, 2.0, 3.0]))
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8}(6, [1, 4], Int8[1, 4, 6], [0.0, 2.0, 3.0]))
+    @testset "Finch.RepeatRLELevel{0.0, Int16} constructors" begin
+        ref = Fiber(RepeatRLE{0.0, Int16}(6, [1, 4], Int16[1, 4, 6], [0.0, 2.0, 3.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16}(6, [1, 4], Int16[1, 4, 6], [0.0, 2.0, 3.0]))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int}(6, [1, 4], Int8[1, 4, 6], [0.0, 2.0, 3.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int}(6, [1, 4], Int16[1, 4, 6], [0.0, 2.0, 3.0]))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int, Float64}(6, [1, 4], Int8[1, 4, 6], [0.0, 2.0, 3.0]))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.RepeatRLELevel{0.0, Int8, Int8} constructors" begin
-        ref = Fiber(RepeatRLE{0.0, Int8}(6, Int8[1, 4], Int8[1, 4, 6], [0.0, 2.0, 3.0]))
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int8}(6, Int8[1, 4], Int8[1, 4, 6], [0.0, 2.0, 3.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int8, Float64}(6, Int8[1, 4], Int8[1, 4, 6], [0.0, 2.0, 3.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int, Float64}(6, [1, 4], Int16[1, 4, 6], [0.0, 2.0, 3.0]))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.RepeatRLELevel{0.0, Int8, Int8, Any} constructors" begin
-        ref = Fiber(RepeatRLE{0.0, Int8}(6, Int8[1, 4], Int8[1, 4, 6], Any[0.0, 2.0, 3.0]))
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int8, Int8, Any}(6, Int8[1, 4], Int8[1, 4, 6], Any[0.0, 2.0, 3.0]))
+    @testset "Finch.RepeatRLELevel{0.0, Int16, Int16} constructors" begin
+        ref = Fiber(RepeatRLE{0.0, Int16}(6, Int16[1, 4], Int16[1, 4, 6], [0.0, 2.0, 3.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16}(6, Int16[1, 4], Int16[1, 4, 6], [0.0, 2.0, 3.0]))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Float64}(6, Int16[1, 4], Int16[1, 4, 6], [0.0, 2.0, 3.0]))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.RepeatRLELevel{0.0, Int16, Int16, Any} constructors" begin
+        ref = Fiber(RepeatRLE{0.0, Int16}(6, Int16[1, 4], Int16[1, 4, 6], Any[0.0, 2.0, 3.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Any}(6, Int16[1, 4], Int16[1, 4, 6], Any[0.0, 2.0, 3.0]))
         @test isstructequal(res, ref)
     end
     @testset "Finch.RepeatRLELevel constructors" begin
