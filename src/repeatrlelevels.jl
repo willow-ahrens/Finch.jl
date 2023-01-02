@@ -291,6 +291,8 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode, ::Extrude, 
         end
         $my_q_start = $my_q
         $my_v = $(default(fbr))
+        $my_i_prev = 0
+        $my_v_prev = $D
     end)
 
     function record_run(ctx, stop, v)
@@ -309,31 +311,28 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode, ::Extrude, 
         end
     end
     
-    body = Thunk(
-        preamble = quote
-            $my_i_prev = 0
-            $my_v_prev = $D
-        end,
-        body = AcceptRun(
-            val = D,
-            body = (ctx, start, stop) -> Thunk(
-                body = Simplify(Fill(value(my_v, lvl.Tv), D)),
-                epilogue = begin
-                    body = quote
-                        if $my_i_prev < $(ctx(call(-, start, 1)))
-                            $(record_run(ctx, call(-, start, 1), D))
-                        end
-                        $(record_run(ctx, stop, my_v))
-                    end
-                    if envdefaultcheck(fbr.env) !== nothing
-                        body = quote
-                            $body
-                            $(envdefaultcheck(fbr.env)) = false
-                        end
-                    end
-                    body
+    body = AcceptRun(
+        val = D,
+        body = (ctx, start, stop) -> Thunk(
+            preamble = quote
+                if $my_i_prev < $(ctx(call(-, start, 1)))
+                    $(record_run(ctx, call(-, start, 1), D))
                 end
-            )
+                $my_v = $D
+            end,
+            body = Simplify(Fill(value(my_v, lvl.Tv), D)),
+            epilogue = begin
+                body = quote
+                    $(record_run(ctx, stop, my_v))
+                end
+                if envdefaultcheck(fbr.env) !== nothing
+                    body = quote
+                        $body
+                        $(envdefaultcheck(fbr.env)) = false
+                    end
+                end
+                body
+            end
         )
     )
 

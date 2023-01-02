@@ -2600,40 +2600,40 @@
         @test isstructequal(res, ref)
     end
     @testset "Finch.RepeatRLELevel{0.0} constructors" begin
-        ref = Fiber(RepeatRLE{0.0, Int, Int, Float64}(6, [1, 3], [1, 6], [0.0, 1.0]))
-        res = Fiber(Finch.RepeatRLELevel{0.0}(6, [1, 3], [1, 6], [0.0, 1.0]))
+        ref = Fiber(RepeatRLE{0.0, Int, Int, Float64}(6, [1, 6], [1, 2, 3, 4, 6], [0.0, 1.0, 0.0, 1.0, 0.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0}(6, [1, 6], [1, 2, 3, 4, 6], [0.0, 1.0, 0.0, 1.0, 0.0]))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int}(6, [1, 3], [1, 6], [0.0, 1.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int}(6, [1, 6], [1, 2, 3, 4, 6], [0.0, 1.0, 0.0, 1.0, 0.0]))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int, Int}(6, [1, 3], [1, 6], [0.0, 1.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int, Int}(6, [1, 6], [1, 2, 3, 4, 6], [0.0, 1.0, 0.0, 1.0, 0.0]))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int, Int, Float64}(6, [1, 3], [1, 6], [0.0, 1.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int, Int, Float64}(6, [1, 6], [1, 2, 3, 4, 6], [0.0, 1.0, 0.0, 1.0, 0.0]))
         @test isstructequal(res, ref)
     end
     @testset "Finch.RepeatRLELevel{0.0, Int16} constructors" begin
-        ref = Fiber(RepeatRLE{0.0, Int16, Int, Float64}(6, [1, 3], [1, 6], [0.0, 1.0]))
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int16}(6, [1, 3], Int16[1, 6], [0.0, 1.0]))
+        ref = Fiber(RepeatRLE{0.0, Int16, Int, Float64}(6, [1, 6], [1, 2, 3, 4, 6], [0.0, 1.0, 0.0, 1.0, 0.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16}(6, [1, 6], Int16[1, 2, 3, 4, 6], [0.0, 1.0, 0.0, 1.0, 0.0]))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int}(6, [1, 3], Int16[1, 6], [0.0, 1.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int}(6, [1, 6], Int16[1, 2, 3, 4, 6], [0.0, 1.0, 0.0, 1.0, 0.0]))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int, Float64}(6, [1, 3], Int16[1, 6], [0.0, 1.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int, Float64}(6, [1, 6], Int16[1, 2, 3, 4, 6], [0.0, 1.0, 0.0, 1.0, 0.0]))
         @test isstructequal(res, ref)
     end
     @testset "Finch.RepeatRLELevel{0.0, Int16, Int16} constructors" begin
-        ref = Fiber(RepeatRLE{0.0, Int16, Int16, Float64}(6, [1, 3], [1, 6], [0.0, 1.0]))
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16}(6, Int16[1, 3], Int16[1, 6], [0.0, 1.0]))
+        ref = Fiber(RepeatRLE{0.0, Int16, Int16, Float64}(6, [1, 6], [1, 2, 3, 4, 6], [0.0, 1.0, 0.0, 1.0, 0.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16}(6, Int16[1, 6], Int16[1, 2, 3, 4, 6], [0.0, 1.0, 0.0, 1.0, 0.0]))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Float64}(6, Int16[1, 3], Int16[1, 6], [0.0, 1.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Float64}(6, Int16[1, 6], Int16[1, 2, 3, 4, 6], [0.0, 1.0, 0.0, 1.0, 0.0]))
         @test isstructequal(res, ref)
     end
     @testset "Finch.RepeatRLELevel{0.0, Int16, Int16, Any} constructors" begin
-        ref = Fiber(RepeatRLE{0.0, Int16, Int16, Any}(6, [1, 3], [1, 6], [0.0, 1.0]))
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Any}(6, Int16[1, 3], Int16[1, 6], Any[0.0, 1.0]))
+        ref = Fiber(RepeatRLE{0.0, Int16, Int16, Any}(6, [1, 6], [1, 2, 3, 4, 6], [0.0, 1.0, 0.0, 1.0, 0.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Any}(6, Int16[1, 6], Int16[1, 2, 3, 4, 6], Any[0.0, 1.0, 0.0, 1.0, 0.0]))
         @test isstructequal(res, ref)
     end
     @testset "Finch.RepeatRLELevel constructors" begin
-        ref = Fiber(RepeatRLE{0.0, Int, Int, Float64}(6, [1, 3], [1, 6], [0.0, 1.0]))
-        res = Fiber(Finch.RepeatRLELevel(0.0, 6, [1, 3], [1, 6], [0.0, 1.0]))
+        ref = Fiber(RepeatRLE{0.0, Int, Int, Float64}(6, [1, 6], [1, 2, 3, 4, 6], [0.0, 1.0, 0.0, 1.0, 0.0]))
+        res = Fiber(Finch.RepeatRLELevel(0.0, 6, [1, 6], [1, 2, 3, 4, 6], [0.0, 1.0, 0.0, 1.0, 0.0]))
         @test isstructequal(res, ref)
     end
     @testset "Finch.RepeatRLELevel{0.0} constructors" begin
@@ -2777,40 +2777,40 @@
         @test isstructequal(res, ref)
     end
     @testset "Finch.RepeatRLELevel{0.0} constructors" begin
-        ref = Fiber(RepeatRLE{0.0, Int, Int, Float64}(6, [1, 4], [1, 4, 6], [0.0, 2.0, 3.0]))
-        res = Fiber(Finch.RepeatRLELevel{0.0}(6, [1, 4], [1, 4, 6], [0.0, 2.0, 3.0]))
+        ref = Fiber(RepeatRLE{0.0, Int, Int, Float64}(6, [1, 5], [1, 3, 4, 6], [0.0, 2.0, 0.0, 3.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0}(6, [1, 5], [1, 3, 4, 6], [0.0, 2.0, 0.0, 3.0]))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int}(6, [1, 4], [1, 4, 6], [0.0, 2.0, 3.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int}(6, [1, 5], [1, 3, 4, 6], [0.0, 2.0, 0.0, 3.0]))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int, Int}(6, [1, 4], [1, 4, 6], [0.0, 2.0, 3.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int, Int}(6, [1, 5], [1, 3, 4, 6], [0.0, 2.0, 0.0, 3.0]))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int, Int, Float64}(6, [1, 4], [1, 4, 6], [0.0, 2.0, 3.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int, Int, Float64}(6, [1, 5], [1, 3, 4, 6], [0.0, 2.0, 0.0, 3.0]))
         @test isstructequal(res, ref)
     end
     @testset "Finch.RepeatRLELevel{0.0, Int16} constructors" begin
-        ref = Fiber(RepeatRLE{0.0, Int16, Int, Float64}(6, [1, 4], [1, 4, 6], [0.0, 2.0, 3.0]))
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int16}(6, [1, 4], Int16[1, 4, 6], [0.0, 2.0, 3.0]))
+        ref = Fiber(RepeatRLE{0.0, Int16, Int, Float64}(6, [1, 5], [1, 3, 4, 6], [0.0, 2.0, 0.0, 3.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16}(6, [1, 5], Int16[1, 3, 4, 6], [0.0, 2.0, 0.0, 3.0]))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int}(6, [1, 4], Int16[1, 4, 6], [0.0, 2.0, 3.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int}(6, [1, 5], Int16[1, 3, 4, 6], [0.0, 2.0, 0.0, 3.0]))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int, Float64}(6, [1, 4], Int16[1, 4, 6], [0.0, 2.0, 3.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int, Float64}(6, [1, 5], Int16[1, 3, 4, 6], [0.0, 2.0, 0.0, 3.0]))
         @test isstructequal(res, ref)
     end
     @testset "Finch.RepeatRLELevel{0.0, Int16, Int16} constructors" begin
-        ref = Fiber(RepeatRLE{0.0, Int16, Int16, Float64}(6, [1, 4], [1, 4, 6], [0.0, 2.0, 3.0]))
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16}(6, Int16[1, 4], Int16[1, 4, 6], [0.0, 2.0, 3.0]))
+        ref = Fiber(RepeatRLE{0.0, Int16, Int16, Float64}(6, [1, 5], [1, 3, 4, 6], [0.0, 2.0, 0.0, 3.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16}(6, Int16[1, 5], Int16[1, 3, 4, 6], [0.0, 2.0, 0.0, 3.0]))
         @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Float64}(6, Int16[1, 4], Int16[1, 4, 6], [0.0, 2.0, 3.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Float64}(6, Int16[1, 5], Int16[1, 3, 4, 6], [0.0, 2.0, 0.0, 3.0]))
         @test isstructequal(res, ref)
     end
     @testset "Finch.RepeatRLELevel{0.0, Int16, Int16, Any} constructors" begin
-        ref = Fiber(RepeatRLE{0.0, Int16, Int16, Any}(6, [1, 4], [1, 4, 6], [0.0, 2.0, 3.0]))
-        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Any}(6, Int16[1, 4], Int16[1, 4, 6], Any[0.0, 2.0, 3.0]))
+        ref = Fiber(RepeatRLE{0.0, Int16, Int16, Any}(6, [1, 5], [1, 3, 4, 6], [0.0, 2.0, 0.0, 3.0]))
+        res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Any}(6, Int16[1, 5], Int16[1, 3, 4, 6], Any[0.0, 2.0, 0.0, 3.0]))
         @test isstructequal(res, ref)
     end
     @testset "Finch.RepeatRLELevel constructors" begin
-        ref = Fiber(RepeatRLE{0.0, Int, Int, Float64}(6, [1, 4], [1, 4, 6], [0.0, 2.0, 3.0]))
-        res = Fiber(Finch.RepeatRLELevel(0.0, 6, [1, 4], [1, 4, 6], [0.0, 2.0, 3.0]))
+        ref = Fiber(RepeatRLE{0.0, Int, Int, Float64}(6, [1, 5], [1, 3, 4, 6], [0.0, 2.0, 0.0, 3.0]))
+        res = Fiber(Finch.RepeatRLELevel(0.0, 6, [1, 5], [1, 3, 4, 6], [0.0, 2.0, 0.0, 3.0]))
         @test isstructequal(res, ref)
     end
     @testset "Finch.ElementLevel{0.0} constructors" begin
