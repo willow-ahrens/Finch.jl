@@ -16,6 +16,7 @@ open("test_formats.jl", "w") do file
 
     for inner in [
         :(RepeatRLE(0.0)),
+        :(RepeatRLEDiff(0.0)),
     ]
         for arr in [
             fill(0.0, 5),
