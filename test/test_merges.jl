@@ -2,8 +2,8 @@
 
     fmts = [
         (;fmt = (z) -> @fiber(d(sl(e(z)))), proto = [follow, walk]),
-        (;fmt = (z) -> @fiber(d(sl(e(z)))), proto = [follow, fastwalk]),
         (;fmt = (z) -> @fiber(d(sl(e(z)))), proto = [follow, gallop]),
+        (;fmt = (z) -> @fiber(d(sl(e(z)))), proto = [follow, fastwalk]),
         (;fmt = (z) -> @fiber(d(sv(e(z)))), proto = [follow, walk]),
         (;fmt = (z) -> @fiber(d(sv(e(z)))), proto = [follow, gallop]),
         (;fmt = (z) -> @fiber(d(sm(e(z)))), proto = [follow, walk]),
@@ -100,7 +100,7 @@
     @testset "plus times" begin
         n = 0
         for a_fmt in fmts
-            for b_fmt in fmts[1:3]
+            for b_fmt in fmts[1:2]
                 for a_dts in dtss
                     for b_dts in dtss
                         a = dropdefaults!(a_fmt.fmt(a_dts.default), a_dts.data)

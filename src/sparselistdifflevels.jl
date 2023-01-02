@@ -12,7 +12,7 @@ SparseListDiffLevel{Ti, Tp}(lvl) where {Ti, Tp} = SparseListDiffLevel{Ti, Tp}(ze
 
 SparseListDiffLevel(I::Ti, lvl) where {Ti} = SparseListDiffLevel{Ti}(I, lvl)
 SparseListDiffLevel{Ti}(I, lvl) where {Ti} = SparseListDiffLevel{Ti, Int}(Ti(I), lvl)
-SparseListDiffLevel{Ti, Tp}(I, lvl::Lvl) where {Ti, Tp, Lvl} = SparseListDiffLevel{Ti, Tp, Lvl}(Ti(I), Tp[1, 1], UInt8[], Ti[], lvl)
+SparseListDiffLevel{Ti, Tp}(I, lvl::Lvl) where {Ti, Tp, Lvl} = SparseListDiffLevel{Ti, Tp, Lvl}(Ti(I), Tp[1, 1], UInt8[0x00], Ti[0], lvl)
 
 SparseListDiffLevel(I::Ti, pos::Vector{Tp}, idx, jdx, lvl) where {Ti, Tp} = SparseListDiffLevel{Ti}(I, pos, idx, jdx, lvl)
 SparseListDiffLevel{Ti}(I, pos::Vector{Tp}, idx, jdx, lvl::Lvl) where {Ti, Tp, Lvl} = SparseListDiffLevel{Ti, Tp, Lvl}(Ti(I), pos, idx, jdx, lvl)
@@ -172,7 +172,7 @@ function trim_level!(lvl::VirtualSparseListDiffLevel, ctx::LowerJulia, pos)
         resize!($(lvl.ex).pos, $(lvl.pos_alloc))
         $(lvl.jdx_alloc) = $(lvl.pos_alloc) - 1
         resize!($(lvl.ex).jdx, $(lvl.jdx_alloc))
-        $(lvl.idx_alloc) = $(lvl.ex).pos[$(lvl.pos_alloc)] - 1
+        $(lvl.idx_alloc) = $(lvl.ex).pos[$(lvl.pos_alloc)]
         resize!($(lvl.ex).idx, $(lvl.idx_alloc))
     end)
     lvl.lvl = trim_level!(lvl.lvl, ctx, lvl.idx_alloc)
@@ -201,6 +201,9 @@ function finalize_level!(fbr::VirtualFiber{VirtualSparseListDiffLevel}, ctx::Low
         for $my_p = $(lvl.pos_fill):$(lvl.pos_stop)
             $(lvl.ex).pos[$(my_p)] = $my_q
         end
+        #add a dummy value to the end so we can access out of bounds sometimes.
+        $(lvl.idx_alloc) < $my_q && ($(lvl.idx_alloc) = $Finch.regrow!($(lvl.ex).idx, $(lvl.idx_alloc), $my_q))
+        $(lvl.ex).idx[$my_q] = 0x00
     end)
     fbr.lvl.lvl = finalize_level!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)
     return fbr.lvl
@@ -250,7 +253,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListDiffLevel}, ctx, mode, ::Walk
                         ),
                         next = (ctx, idx, ext) -> quote
                             $my_q += 1
-                            $my_i += $(lvl.ex).idx[$my_q]
+                            $my_i += $(lvl.ex).idx[$my_q] #The last read is garbage
                         end
                     )
                 )
