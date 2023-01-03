@@ -74,7 +74,6 @@ isstructequal(a::T, b::T) where {T <: RepeatRLEDiff} =
     a.idx == b.idx &&
     a.val == b.val
 
-
 isstructequal(a::T, b::T) where {T <: Dense} =
     a.I == b.I &&
     isstructequal(a.lvl, b.lvl)

@@ -54,14 +54,14 @@ end
 function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:SparseListDiffLevel})
     #TODO this is wrong
     p = envposition(fbr.env)
-    crds = @view(fbr.lvl.idx[fbr.lvl.pos[p]:fbr.lvl.pos[p + 1] - 1])
+    crds = fbr.lvl.pos[p]:fbr.lvl.pos[p + 1] - 1
     depth = envdepth(fbr.env)
 
-    print_coord(io, crd) = (print(io, "[+"); show(io, crd); print(io, "]"))
-    get_coord(crd) = crd
+    print_coord(io, crd) = (print(io, "[+"); show(io, fbr.lvl.idx[crd]); print(io, "]"))
+    get_fbr(crd) = Fiber(fbr.lvl.lvl, Environment(position=crd, parent=fbr.env))()
 
     print(io, "│ " ^ depth); print(io, "SparseListDiff ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); show(io, 1); print(io, ":"); show(io, fbr.lvl.I); println(io, "]")
-    display_fiber_data(io, mime, fbr, 1, crds, print_coord, get_coord)
+    display_fiber_data(io, mime, fbr, 1, crds, print_coord, get_fbr)
 end
 
 
@@ -75,13 +75,12 @@ end
 function (fbr::Fiber{<:SparseListDiffLevel{Ti}})(i, tail...) where {Ti}
     lvl = fbr.lvl
     p = envposition(fbr.env)
-    q = lvl.pos[p]
+    q = lvl.pos[p] - 1
     j = 0
-    while q < lvl.pos[p + 1] && j < i
-        j = lvl.idx[q]
+    while q + 1 < lvl.pos[p + 1] && j < i
         q += 1
+        j += lvl.idx[q]
     end
-    q -= 1
     fbr_2 = Fiber(lvl.lvl, Environment(position=q, index=i, parent=fbr.env))
     i == j ? default(fbr_2) : fbr_2(tail...)
 end

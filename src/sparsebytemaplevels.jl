@@ -61,14 +61,14 @@ end
 
 function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:SparseBytemapLevel})
     p = envposition(fbr.env)
-    crds = @view(fbr.lvl.srt[1:length(fbr.lvl.srt_stop[])])
+    crds = @view(fbr.lvl.srt[fbr.lvl.pos[p]:fbr.lvl.pos[p + 1] - 1])
     depth = envdepth(fbr.env)
 
     print_coord(io, (p, i)) = (print(io, "["); show(io, i); print(io, "]"))
-    get_coord((p, i),) = i
+    get_fbr((p, i),) = fbr(i)
 
     print(io, "│ " ^ depth); print(io, "SparseBytemap ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); show(io, 1); print(io, ":"); show(io, fbr.lvl.I); println(io, "]")
-    display_fiber_data(io, mime, fbr, 1, crds, print_coord, get_coord)
+    display_fiber_data(io, mime, fbr, 1, crds, print_coord, get_fbr)
 end
 
 
@@ -87,7 +87,7 @@ function (fbr::Fiber{<:SparseBytemapLevel{Ti}})(i, tail...) where {Ti}
         fbr_2 = Fiber(lvl.lvl, Environment(position=q, index=i, parent=fbr.env))
         fbr_2(tail...)
     else
-        default(fbr_2)
+        default(fbr)
     end
 end
 

@@ -63,11 +63,11 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:SparseCooLev
     depth = envdepth(fbr.env)
 
     print_coord(io, q) = (print(io, "["); foreach(n -> (show(io, fbr.lvl.tbl[n][q]); print(io, ", ")), 1:N-1); show(io, fbr.lvl.tbl[N][q]); print(io, "]"))
-    get_coord(q) = map(n -> fbr.lvl.tbl[n][q], 1:N)
+    get_fbr(q) = fbr(map(n -> fbr.lvl.tbl[n][q], 1:N)...)
 
     dims = size(fbr)
     print(io, "│ " ^ depth); print(io, "SparseCoo ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); foreach(dim -> (print(io, "1:"); show(io, dim); print(io, "×")), dims[1:N-1]); print(io, "1:"); show(io, dims[end]); println(io, "]")
-    display_fiber_data(io, mime, fbr, N, crds, print_coord, get_coord)
+    display_fiber_data(io, mime, fbr, N, crds, print_coord, get_fbr)
 end
 
 @inline Base.ndims(fbr::Fiber{<:SparseCooLevel{N}}) where {N} = N + ndims(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))

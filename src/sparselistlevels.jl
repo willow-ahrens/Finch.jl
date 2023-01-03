@@ -54,10 +54,10 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:SparseListLe
     depth = envdepth(fbr.env)
 
     print_coord(io, crd) = (print(io, "["); show(io, crd); print(io, "]"))
-    get_coord(crd) = crd
+    get_fbr(crd) = fbr(crd)
 
     print(io, "│ " ^ depth); print(io, "SparseList ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); show(io, 1); print(io, ":"); show(io, fbr.lvl.I); println(io, "]")
-    display_fiber_data(io, mime, fbr, 1, crds, print_coord, get_coord)
+    display_fiber_data(io, mime, fbr, 1, crds, print_coord, get_fbr)
 end
 
 

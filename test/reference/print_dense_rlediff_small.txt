@@ -1,0 +1,1 @@
+Fiber(Dense(5, RepeatRLEDiff{0.0}(10, …)))

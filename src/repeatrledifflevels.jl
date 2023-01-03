@@ -66,11 +66,11 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:RepeatRLEDif
     crds = fbr.lvl.pos[p]:fbr.lvl.pos[p + 1] - 1
     depth = envdepth(fbr.env)
 
-    print_coord(io, crd) = (print(io, "[+"); show(io, crd == fbr.lvl.pos[p] ? 1 : fbr.lvl.idx[crd - 1] + 1); print(io, ":"); show(io, fbr.lvl.idx[crd]); print(io, "]"))
-    get_coord(crd) = fbr.lvl.val[crd]
+    print_coord(io, crd) = (print(io, "[:+"); show(io, fbr.lvl.idx[crd]); print(io, "]"))
+    get_fbr(crd) = fbr.lvl.val[crd]
 
     print(io, "│ " ^ depth); print(io, "RepeatRLEDiff ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); show(io, 1); print(io, ":"); show(io, fbr.lvl.I); println(io, "]")
-    display_fiber_data(io, mime, fbr, 1, crds, print_coord, get_coord)
+    display_fiber_data(io, mime, fbr, 1, crds, print_coord, get_fbr)
 end
 
 
@@ -84,8 +84,12 @@ end
 function (fbr::Fiber{<:RepeatRLEDiffLevel})(i, tail...)
     lvl = fbr.lvl
     p = envposition(fbr.env)
-    r = searchsortedfirst(@view(lvl.idx[lvl.pos[p]:lvl.pos[p + 1] - 1]), i)
-    q = lvl.pos[p] + r - 1
+    q = lvl.pos[p] - 1
+    j = 0
+    while j < i
+        q += 1
+        j += lvl.idx[q]
+    end
     return lvl.val[q]
 end
 
