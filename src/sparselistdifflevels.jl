@@ -1,38 +1,39 @@
-struct SparseListLevel{Ti, Tp, Lvl}
+struct SparseListDiffLevel{Ti, Tp, Lvl}
     I::Ti
     pos::Vector{Tp}
-    idx::Vector{Ti}
+    idx::Vector{UInt8}
+    jdx::Vector{Ti}
     lvl::Lvl
 end
-const SparseList = SparseListLevel
-SparseListLevel(lvl) = SparseListLevel(0, lvl)
-SparseListLevel{Ti}(lvl) where {Ti} = SparseListLevel{Ti}(zero(Ti), lvl)
-SparseListLevel{Ti, Tp}(lvl) where {Ti, Tp} = SparseListLevel{Ti, Tp}(zero(Ti), lvl)
+const SparseListDiff = SparseListDiffLevel
+SparseListDiffLevel(lvl) = SparseListDiffLevel(0, lvl)
+SparseListDiffLevel{Ti}(lvl) where {Ti} = SparseListDiffLevel{Ti}(zero(Ti), lvl)
+SparseListDiffLevel{Ti, Tp}(lvl) where {Ti, Tp} = SparseListDiffLevel{Ti, Tp}(zero(Ti), lvl)
 
-SparseListLevel(I::Ti, lvl) where {Ti} = SparseListLevel{Ti}(I, lvl)
-SparseListLevel{Ti}(I, lvl) where {Ti} = SparseListLevel{Ti, Int}(Ti(I), lvl)
-SparseListLevel{Ti, Tp}(I, lvl::Lvl) where {Ti, Tp, Lvl} = SparseListLevel{Ti, Tp, Lvl}(Ti(I), Tp[1, 1], Ti[], lvl)
+SparseListDiffLevel(I::Ti, lvl) where {Ti} = SparseListDiffLevel{Ti}(I, lvl)
+SparseListDiffLevel{Ti}(I, lvl) where {Ti} = SparseListDiffLevel{Ti, Int}(Ti(I), lvl)
+SparseListDiffLevel{Ti, Tp}(I, lvl::Lvl) where {Ti, Tp, Lvl} = SparseListDiffLevel{Ti, Tp, Lvl}(Ti(I), Tp[1, 1], UInt8[0x00], Ti[0], lvl)
 
-SparseListLevel(I::Ti, pos::Vector{Tp}, idx, lvl) where {Ti, Tp} = SparseListLevel{Ti}(I, pos, idx, lvl)
-SparseListLevel{Ti}(I, pos::Vector{Tp}, idx, lvl::Lvl) where {Ti, Tp, Lvl} = SparseListLevel{Ti, Tp, Lvl}(Ti(I), pos, idx, lvl)
-SparseListLevel{Ti, Tp}(I, pos, idx, lvl::Lvl) where {Ti, Tp, Lvl} = SparseListLevel{Ti, Tp, Lvl}(Ti(I), pos, idx, lvl)
+SparseListDiffLevel(I::Ti, pos::Vector{Tp}, idx, jdx, lvl) where {Ti, Tp} = SparseListDiffLevel{Ti}(I, pos, idx, jdx, lvl)
+SparseListDiffLevel{Ti}(I, pos::Vector{Tp}, idx, jdx, lvl::Lvl) where {Ti, Tp, Lvl} = SparseListDiffLevel{Ti, Tp, Lvl}(Ti(I), pos, idx, jdx, lvl)
+SparseListDiffLevel{Ti, Tp}(I, pos, idx, jdx, lvl::Lvl) where {Ti, Tp, Lvl} = SparseListDiffLevel{Ti, Tp, Lvl}(Ti(I), pos, idx, jdx, lvl)
 
 """
-`f_code(l)` = [SparseListLevel](@ref).
+`f_code(l)` = [SparseListDiffLevel](@ref).
 """
-f_code(::Val{:sl}) = SparseList
-summary_f_code(lvl::SparseListLevel) = "sl($(summary_f_code(lvl.lvl)))"
-similar_level(lvl::SparseListLevel) = SparseList(similar_level(lvl.lvl))
-similar_level(lvl::SparseListLevel, dim, tail...) = SparseList(dim, similar_level(lvl.lvl, tail...))
+f_code(::Val{:sld}) = SparseListDiff
+summary_f_code(lvl::SparseListDiffLevel) = "sld($(summary_f_code(lvl.lvl)))"
+similar_level(lvl::SparseListDiffLevel) = SparseListDiff(similar_level(lvl.lvl))
+similar_level(lvl::SparseListDiffLevel, dim, tail...) = SparseListDiff(dim, similar_level(lvl.lvl, tail...))
 
-pattern!(lvl::SparseListLevel{Ti}) where {Ti} = 
-    SparseListLevel{Ti}(lvl.I, lvl.pos, lvl.idx, pattern!(lvl.lvl))
+pattern!(lvl::SparseListDiffLevel{Ti}) where {Ti} = 
+    SparseListDiffLevel{Ti}(lvl.I, lvl.pos, lvl.idx, pattern!(lvl.lvl))
 
-function Base.show(io::IO, lvl::SparseListLevel{Ti, Tp}) where {Ti, Tp}
+function Base.show(io::IO, lvl::SparseListDiffLevel{Ti, Tp}) where {Ti, Tp}
     if get(io, :compact, false)
-        print(io, "SparseList(")
+        print(io, "SparseListDiff(")
     else
-        print(io, "SparseList{$Ti, $Tp}(")
+        print(io, "SparseListDiff{$Ti, $Tp}(")
     end
     show(IOContext(io, :typeinfo=>Ti), lvl.I)
     print(io, ", ")
@@ -41,43 +42,50 @@ function Base.show(io::IO, lvl::SparseListLevel{Ti, Tp}) where {Ti, Tp}
     else
         show(IOContext(io, :typeinfo=>Vector{Tp}), lvl.pos)
         print(io, ", ")
-        show(IOContext(io, :typeinfo=>Vector{Ti}), lvl.idx)
+        show(IOContext(io, :typeinfo=>Vector{UInt8}), lvl.idx)
+        print(io, ", ")
+        show(IOContext(io, :typeinfo=>Vector{Ti}), lvl.jdx)
     end
     print(io, ", ")
     show(io, lvl.lvl)
     print(io, ")")
 end
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:SparseListLevel})
+function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:SparseListDiffLevel})
+    #TODO this is wrong
     p = envposition(fbr.env)
-    crds = @view(fbr.lvl.idx[fbr.lvl.pos[p]:fbr.lvl.pos[p + 1] - 1])
+    crds = fbr.lvl.pos[p]:fbr.lvl.pos[p + 1] - 1
     depth = envdepth(fbr.env)
 
-    print_coord(io, crd) = (print(io, "["); show(io, crd); print(io, "]"))
-    get_fbr(crd) = fbr(crd)
+    print_coord(io, crd) = (print(io, "[+"); show(io, fbr.lvl.idx[crd]); print(io, "]"))
+    get_fbr(crd) = Fiber(fbr.lvl.lvl, Environment(position=crd, parent=fbr.env))()
 
-    print(io, "│ " ^ depth); print(io, "SparseList ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); show(io, 1); print(io, ":"); show(io, fbr.lvl.I); println(io, "]")
+    print(io, "│ " ^ depth); print(io, "SparseListDiff ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); show(io, 1); print(io, ":"); show(io, fbr.lvl.I); println(io, "]")
     display_fiber_data(io, mime, fbr, 1, crds, print_coord, get_fbr)
 end
 
 
-@inline Base.ndims(fbr::Fiber{<:SparseListLevel}) = 1 + ndims(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
-@inline Base.size(fbr::Fiber{<:SparseListLevel}) = (fbr.lvl.I, size(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
-@inline Base.axes(fbr::Fiber{<:SparseListLevel}) = (1:fbr.lvl.I, axes(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
-@inline Base.eltype(fbr::Fiber{<:SparseListLevel}) = eltype(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
-@inline default(fbr::Fiber{<:SparseListLevel}) = default(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
+@inline Base.ndims(fbr::Fiber{<:SparseListDiffLevel}) = 1 + ndims(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
+@inline Base.size(fbr::Fiber{<:SparseListDiffLevel}) = (fbr.lvl.I, size(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
+@inline Base.axes(fbr::Fiber{<:SparseListDiffLevel}) = (1:fbr.lvl.I, axes(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
+@inline Base.eltype(fbr::Fiber{<:SparseListDiffLevel}) = eltype(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
+@inline default(fbr::Fiber{<:SparseListDiffLevel}) = default(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
 
-(fbr::Fiber{<:SparseListLevel})() = fbr
-function (fbr::Fiber{<:SparseListLevel{Ti}})(i, tail...) where {Ti}
+(fbr::Fiber{<:SparseListDiffLevel})() = fbr
+function (fbr::Fiber{<:SparseListDiffLevel{Ti}})(i, tail...) where {Ti}
     lvl = fbr.lvl
     p = envposition(fbr.env)
-    r = searchsorted(@view(lvl.idx[lvl.pos[p]:lvl.pos[p + 1] - 1]), i)
-    q = lvl.pos[p] + first(r) - 1
+    q = lvl.pos[p] - 1
+    j = 0
+    while q + 1 < lvl.pos[p + 1] && j < i
+        q += 1
+        j += lvl.idx[q]
+    end
     fbr_2 = Fiber(lvl.lvl, Environment(position=q, index=i, parent=fbr.env))
-    length(r) == 0 ? default(fbr_2) : fbr_2(tail...)
+    i == j ? default(fbr_2) : fbr_2(tail...)
 end
 
-mutable struct VirtualSparseListLevel
+mutable struct VirtualSparseListDiffLevel
     ex
     Ti
     Tp
@@ -86,42 +94,46 @@ mutable struct VirtualSparseListLevel
     pos_stop
     pos_alloc
     idx_alloc
+    jdx_alloc
     lvl
 end
-function virtualize(ex, ::Type{SparseListLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}
+function virtualize(ex, ::Type{SparseListDiffLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}
     sym = ctx.freshen(tag)
     I = value(:($sym.I), Int)
     pos_fill = ctx.freshen(sym, :_pos_fill)
     pos_stop = ctx.freshen(sym, :_pos_stop)
     pos_alloc = ctx.freshen(sym, :_pos_alloc)
     idx_alloc = ctx.freshen(sym, :_idx_alloc)
+    jdx_alloc = ctx.freshen(sym, :_jdx_alloc)
     push!(ctx.preamble, quote
         $sym = $ex
         $pos_alloc = length($sym.pos)
         $idx_alloc = length($sym.idx)
+        $jdx_alloc = length($sym.jdx)
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualSparseListLevel(sym, Ti, Tp, I, pos_fill, pos_stop, pos_alloc, idx_alloc, lvl_2)
+    VirtualSparseListDiffLevel(sym, Ti, Tp, I, pos_fill, pos_stop, pos_alloc, idx_alloc, jdx_alloc, lvl_2)
 end
-function (ctx::Finch.LowerJulia)(lvl::VirtualSparseListLevel)
+function (ctx::Finch.LowerJulia)(lvl::VirtualSparseListDiffLevel)
     quote
-        $SparseListLevel{$(lvl.Ti)}(
+        $SparseListDiffLevel{$(lvl.Ti)}(
             $(ctx(lvl.I)),
             $(lvl.ex).pos,
             $(lvl.ex).idx,
+            $(lvl.ex).jdx,
             $(ctx(lvl.lvl)),
         )
     end
 end
 
-summary_f_code(lvl::VirtualSparseListLevel) = "sl($(summary_f_code(lvl.lvl)))"
+summary_f_code(lvl::VirtualSparseListDiffLevel) = "sld($(summary_f_code(lvl.lvl)))"
 
-hasdefaultcheck(lvl::VirtualSparseListLevel) = true
+hasdefaultcheck(lvl::VirtualSparseListDiffLevel) = true
 
-getsites(fbr::VirtualFiber{VirtualSparseListLevel}) =
+getsites(fbr::VirtualFiber{VirtualSparseListDiffLevel}) =
     [envdepth(fbr.env) + 1, getsites(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))...]
 
-function getsize(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode)
+function getsize(fbr::VirtualFiber{VirtualSparseListDiffLevel}, ctx, mode)
     ext = Extent(literal(1), fbr.lvl.I)
     if mode.kind !== reader
         ext = suggest(ext)
@@ -129,16 +141,16 @@ function getsize(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode)
     (ext, getsize(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)...)
 end
 
-function setsize!(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode, dim, dims...)
+function setsize!(fbr::VirtualFiber{VirtualSparseListDiffLevel}, ctx, mode, dim, dims...)
     fbr.lvl.I = getstop(dim)
     fbr.lvl.lvl = setsize!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode, dims...).lvl
     fbr
 end
 
-@inline default(fbr::VirtualFiber{<:VirtualSparseListLevel}) = default(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
-Base.eltype(fbr::VirtualFiber{VirtualSparseListLevel}) = eltype(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
+@inline default(fbr::VirtualFiber{<:VirtualSparseListDiffLevel}) = default(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
+Base.eltype(fbr::VirtualFiber{VirtualSparseListDiffLevel}) = eltype(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
 
-function initialize_level!(fbr::VirtualFiber{VirtualSparseListLevel}, ctx::LowerJulia, mode)
+function initialize_level!(fbr::VirtualFiber{VirtualSparseListDiffLevel}, ctx::LowerJulia, mode)
     lvl = fbr.lvl
     push!(ctx.preamble, quote
         $(lvl.pos_alloc) = length($(lvl.ex).pos)
@@ -147,35 +159,39 @@ function initialize_level!(fbr::VirtualFiber{VirtualSparseListLevel}, ctx::Lower
         $(lvl.ex).pos[1] = 1
         $(lvl.ex).pos[2] = 1
         $(lvl.idx_alloc) = length($(lvl.ex).idx)
+        $(lvl.jdx_alloc) = length($(lvl.ex).jdx)
     end)
     lvl.lvl = initialize_level!(VirtualFiber(fbr.lvl.lvl, Environment(fbr.env)), ctx, mode)
     return lvl
 end
 
-function trim_level!(lvl::VirtualSparseListLevel, ctx::LowerJulia, pos)
+function trim_level!(lvl::VirtualSparseListDiffLevel, ctx::LowerJulia, pos)
     push!(ctx.preamble, quote
         $(lvl.pos_alloc) = $(ctx(pos)) + 1
         resize!($(lvl.ex).pos, $(lvl.pos_alloc))
-        $(lvl.idx_alloc) = $(lvl.ex).pos[$(lvl.pos_alloc)] - 1
+        $(lvl.jdx_alloc) = $(lvl.pos_alloc) - 1
+        resize!($(lvl.ex).jdx, $(lvl.jdx_alloc))
+        $(lvl.idx_alloc) = $(lvl.ex).pos[$(lvl.pos_alloc)]
         resize!($(lvl.ex).idx, $(lvl.idx_alloc))
     end)
     lvl.lvl = trim_level!(lvl.lvl, ctx, lvl.idx_alloc)
     return lvl
 end
 
-interval_assembly_depth(lvl::VirtualSparseListLevel) = Inf
+interval_assembly_depth(lvl::VirtualSparseListDiffLevel) = Inf
 
-#This function is quite simple, since SparseListLevels don't support reassembly.
-function assemble!(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode)
+#This function is quite simple, since SparseListDiffLevels don't support reassembly.
+function assemble!(fbr::VirtualFiber{VirtualSparseListDiffLevel}, ctx, mode)
     lvl = fbr.lvl
     p_stop = ctx(cache!(ctx, ctx.freshen(lvl.ex, :_p_stop), getstop(envposition(fbr.env))))
     push!(ctx.preamble, quote
         $(lvl.pos_alloc) < ($p_stop + 1) && ($(lvl.pos_alloc) = $Finch.refill!($(lvl.ex).pos, 0, $(lvl.pos_alloc), $p_stop + 1))
         $(lvl.pos_stop) = $p_stop + 1
+        $(lvl.jdx_alloc) < $p_stop && ($(lvl.jdx_alloc) = $Finch.refill!($(lvl.ex).jdx, 0, $(lvl.jdx_alloc), $p_stop))
     end)
 end
 
-function finalize_level!(fbr::VirtualFiber{VirtualSparseListLevel}, ctx::LowerJulia, mode)
+function finalize_level!(fbr::VirtualFiber{VirtualSparseListDiffLevel}, ctx::LowerJulia, mode)
     lvl = fbr.lvl
     my_p = ctx.freshen(:p)
     my_q = ctx.freshen(:q)
@@ -184,12 +200,15 @@ function finalize_level!(fbr::VirtualFiber{VirtualSparseListLevel}, ctx::LowerJu
         for $my_p = $(lvl.pos_fill):$(lvl.pos_stop)
             $(lvl.ex).pos[$(my_p)] = $my_q
         end
+        #add a dummy value to the end so we can access out of bounds sometimes.
+        $(lvl.idx_alloc) < $my_q && ($(lvl.idx_alloc) = $Finch.regrow!($(lvl.ex).idx, $(lvl.idx_alloc), $my_q))
+        $(lvl.ex).idx[$my_q] = 0x00
     end)
     fbr.lvl.lvl = finalize_level!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)
     return fbr.lvl
 end
 
-function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode, ::Nothing, idx, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualSparseListDiffLevel}, ctx, mode, ::Nothing, idx, idxs...)
     if idx.kind === protocol
         @assert idx.mode.kind === literal
         unfurl(fbr, ctx, mode, idx.mode.val, idx.idx, idxs...)
@@ -200,7 +219,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode, ::Nothing,
     end
 end
 
-function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode, ::Walk, idx, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualSparseListDiffLevel}, ctx, mode, ::Walk, idx, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
@@ -210,39 +229,31 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode, ::Walk, id
 
     body = Thunk(
         preamble = quote
-            $my_q = $(lvl.ex).pos[$(ctx(envposition(fbr.env)))]
+            $my_q = $(lvl.ex).pos[$(ctx(envposition(fbr.env)))] - 1
             $my_q_stop = $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1]
-            if $my_q < $my_q_stop
-                $my_i = $(lvl.ex).idx[$my_q]
-                $my_i1 = $(lvl.ex).idx[$my_q_stop - 1]
-            else
-                $my_i = 1
-                $my_i1 = 0
-            end
+            $my_i = $(lvl.Ti)(0)
+            $my_i1 = $(lvl.ex).jdx[$(ctx(envposition(fbr.env)))]
         end,
         body = Pipeline([
             Phase(
                 stride = (ctx, idx, ext) -> value(my_i1),
                 body = (start, step) -> Stepper(
                     seek = (ctx, ext) -> quote
-                        while $my_q + 1 < $my_q_stop && $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
+                        while $my_q + 1 < $my_q_stop && $my_i < $(ctx(getstart(ext)))
                             $my_q += 1
+                            $my_i += $(lvl.ex).idx[$my_q]
                         end
                     end,
-                    body = Thunk(
-                        preamble = :(
-                            $my_i = $(lvl.ex).idx[$my_q]
+                    body = Step(
+                        stride = (ctx, idx, ext) -> value(my_i),
+                        chunk = Spike(
+                            body = Simplify(Fill(default(fbr))),
+                            tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, lvl.Ti), index=value(my_i, lvl.Ti), parent=fbr.env)), ctx, mode),
                         ),
-                        body = Step(
-                            stride = (ctx, idx, ext) -> value(my_i),
-                            chunk = Spike(
-                                body = Simplify(Fill(default(fbr))),
-                                tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, lvl.Ti), index=value(my_i, lvl.Ti), parent=fbr.env)), ctx, mode),
-                            ),
-                            next = (ctx, idx, ext) -> quote
-                                $my_q += 1
-                            end
-                        )
+                        next = (ctx, idx, ext) -> quote
+                            $my_q += 1
+                            $my_i += $(lvl.ex).idx[$my_q] #The last read is garbage
+                        end
                     )
                 )
             ),
@@ -255,60 +266,8 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode, ::Walk, id
     exfurl(body, ctx, mode, idx)
 end
 
-function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode, ::FastWalk, idx, idxs...)
-    lvl = fbr.lvl
-    tag = lvl.ex
-    my_i = ctx.freshen(tag, :_i)
-    my_q = ctx.freshen(tag, :_q)
-    my_q_stop = ctx.freshen(tag, :_q_stop)
-    my_i1 = ctx.freshen(tag, :_i1)
-
-    body = Thunk(
-        preamble = quote
-            $my_q = $(lvl.ex).pos[$(ctx(envposition(fbr.env)))]
-            $my_q_stop = $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1]
-            if $my_q < $my_q_stop
-                $my_i = $(lvl.ex).idx[$my_q]
-                $my_i1 = $(lvl.ex).idx[$my_q_stop - 1]
-            else
-                $my_i = 1
-                $my_i1 = 0
-            end
-        end,
-        body = Pipeline([
-            Phase(
-                stride = (ctx, idx, ext) -> value(my_i1),
-                body = (start, step) -> Stepper(
-                    seek = (ctx, ext) -> quote
-                        $my_q = searchsortedfirst($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1, Base.Forward)
-                    end,
-                    body = Thunk(
-                        preamble = :(
-                            $my_i = $(lvl.ex).idx[$my_q]
-                        ),
-                        body = Step(
-                            stride = (ctx, idx, ext) -> value(my_i),
-                            chunk = Spike(
-                                body = Simplify(Fill(default(fbr))),
-                                tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, lvl.Ti), index=value(my_i, lvl.Ti), parent=fbr.env)), ctx, mode),
-                            ),
-                            next = (ctx, idx, ext) -> quote
-                                $my_q += 1
-                            end
-                        )
-                    )
-                )
-            ),
-            Phase(
-                body = (start, step) -> Run(Simplify(Fill(default(fbr))))
-            )
-        ])
-    )
-
-    exfurl(body, ctx, mode, idx)
-end
-
-function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode, ::Gallop, idx, idxs...)
+#=
+function unfurl(fbr::VirtualFiber{VirtualSparseListDiffLevel}, ctx, mode, ::Gallop, idx, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
@@ -386,8 +345,9 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode, ::Gallop, 
 
     exfurl(body, ctx, mode, idx)
 end
+=#
 
-function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode, ::Extrude, idx, idxs...)
+function unfurl(fbr::VirtualFiber{VirtualSparseListDiffLevel}, ctx, mode, ::Extrude, idx, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
     my_i = ctx.freshen(tag, :_i)
@@ -403,15 +363,24 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode, ::Extrude,
 
     push!(ctx.preamble, quote
         $my_q = $(lvl.ex).pos[$(lvl.pos_fill)]
+        $my_q_stop = $my_q
         for $my_p = $(lvl.pos_fill):$(ctx(envposition(fbr.env)))
             $(lvl.ex).pos[$(my_p)] = $my_q
         end
+        $my_i = $(lvl.Ti)(0)
+        $my_i1 = $my_i
     end)
 
     body = AcceptSpike(
         val = default(fbr),
         tail = (ctx, idx) -> Thunk(
             preamble = quote
+                while $(ctx(idx)) - $my_i > 0xff
+                    $(lvl.idx_alloc) < $my_q && ($(lvl.idx_alloc) = $Finch.regrow!($(lvl.ex).idx, $(lvl.idx_alloc), $my_q))
+                    $(lvl.ex).idx[$my_q] = 0xff
+                    $my_i += 0xff
+                    $my_q += 1
+                end
                 $(begin
                     assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, lvl.Ti), parent=fbr.env)), ctx, mode)
                     quote end
@@ -429,8 +398,11 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode, ::Extrude,
                 #We should be careful here. Presumably, we haven't modified the subfiber because it is still default. Is this always true? Should strict assembly happen every time?
                 body = quote
                     $(lvl.idx_alloc) < $my_q && ($(lvl.idx_alloc) = $Finch.regrow!($(lvl.ex).idx, $(lvl.idx_alloc), $my_q))
-                    $(lvl.ex).idx[$my_q] = $(ctx(idx))
+                    $(lvl.ex).idx[$my_q] = $(ctx(idx)) - $my_i
+                    $my_i = $(ctx(idx))
+                    $my_i1 = $(ctx(idx))
                     $my_q += 1
+                    $my_q_stop = $my_q
                 end
                 if envdefaultcheck(fbr.env) !== nothing
                     body = quote
@@ -451,7 +423,8 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode, ::Extrude,
     )
 
     push!(ctx.epilogue, quote
-        $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1] = $my_q
+        $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1] = $my_q_stop
+        $(lvl.ex).jdx[$(ctx(envposition(fbr.env)))] = $my_i1
         $(lvl.pos_fill) = $(ctx(envposition(fbr.env))) + 1
     end)
 

@@ -77,11 +77,11 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:SparseHashLe
     depth = envdepth(fbr.env)
 
     print_coord(io, crd) = (print(io, "["); foreach(n -> (show(io, crd[1][2][n]); print(io, ", ")), 1:N-1); show(io, crd[1][2][N]); print(io, "]"))
-    get_coord(crd) = crd[1][2]
+    get_fbr(crd) = fbr(crd[1][2]...)
 
     dims = size(fbr)
     print(io, "│ " ^ depth); print(io, "SparseHash ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); foreach(dim -> (print(io, "1:"); show(io, dim); print(io, "×")), dims[1:N-1]); print(io, "1:"); show(io, dims[end]); println(io, "]")
-    display_fiber_data(io, mime, fbr, N, crds, print_coord, get_coord)
+    display_fiber_data(io, mime, fbr, N, crds, print_coord, get_fbr)
 end
 
 @inline Base.ndims(fbr::Fiber{<:SparseHashLevel{N}}) where {N} = N + ndims(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))

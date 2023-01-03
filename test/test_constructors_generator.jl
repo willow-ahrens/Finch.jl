@@ -28,27 +28,41 @@ open("test_constructors.jl", "w") do file
         Vector{Float64}(),
         [0.0, 0.0, 0.0, 0.0],
         [0.0, 2.0, 2.0, 0.0, 3.0, 3.0],
+        begin
+            x = zeros(1111)
+            x[2] = 20.0
+            x[3]=30.0
+            x[555]=5550.0
+            x[666]=6660.0
+            x
+        end,
     ]
 
-        for ctrs = [
-            [Dense, Dense{Int}],
-            [Dense{Int8}],
-        ]
-            argss = []
-            push!(argss, lvl -> (lvl.I, lvl.lvl,))
-            length(arr) == 0 && push!(argss, lvl -> (lvl.lvl,))
-            test_outer_constructor(arr, ctrs, argss)
+        if length(arr) < 100
+            for ctrs = [
+                [Dense, Dense{Int}],
+                [Dense{Int16}],
+            ]
+                argss = []
+                push!(argss, lvl -> (lvl.I, lvl.lvl,))
+                length(arr) == 0 && push!(argss, lvl -> (lvl.lvl,))
+                test_outer_constructor(arr, ctrs, argss)
+            end
         end
+
         for ctrs = [
             [SparseList, SparseList{Int}, SparseList{Int, Int}],
-            [SparseList{Int8}, SparseList{Int8, Int}],
-            [SparseList{Int8, Int8},],
+            [SparseList{Int16}, SparseList{Int16, Int}],
+            [SparseList{Int16, Int16},],
+            [SparseListDiff, SparseListDiff{Int}, SparseListDiff{Int, Int}],
+            [SparseListDiff{Int16}, SparseListDiff{Int16, Int}],
+            [SparseListDiff{Int16, Int16},],
             [SparseVBL, SparseVBL{Int}, SparseVBL{Int, Int}],
-            [SparseVBL{Int8}, SparseVBL{Int8, Int}],
-            [SparseVBL{Int8, Int8},],
+            [SparseVBL{Int16}, SparseVBL{Int16, Int}],
+            [SparseVBL{Int16, Int16},],
             [SparseBytemap, SparseBytemap{Int}, SparseBytemap{Int, Int}],
-            [SparseBytemap{Int8}, SparseBytemap{Int8, Int}],
-            [SparseBytemap{Int8, Int8},],
+            [SparseBytemap{Int16}, SparseBytemap{Int16, Int}],
+            [SparseBytemap{Int16, Int16},],
         ]
             argss = []
             push!(argss, lvl -> map(name -> getproperty(lvl, name), propertynames(lvl)))
@@ -82,7 +96,7 @@ open("test_constructors.jl", "w") do file
         N = ndims(arr)
         for ctrs = [
             [SparseCoo{N}, SparseCoo{N, NTuple{N, Int}}],
-            [SparseCoo{N, NTuple{N, Int8}}],
+            [SparseCoo{N, NTuple{N, Int16}}],
         ]
             argss = []
             push!(argss, lvl -> map(name -> getproperty(lvl, name), propertynames(lvl)))
@@ -93,9 +107,9 @@ open("test_constructors.jl", "w") do file
 
         for ctrs = [
             [SparseHash{N}, SparseHash{N, NTuple{N, Int}}, SparseHash{N, NTuple{N, Int}, Int}, SparseHash{N, NTuple{N, Int}, Int, Dict{Tuple{Int, NTuple{N, Int}}, Int}}],
-            [SparseHash{N, NTuple{N, Int8}}, SparseHash{N, NTuple{N, Int8}, Int}, SparseHash{N, NTuple{N, Int8}, Int, Dict{Tuple{Int, NTuple{N, Int8}}, Int}}],
-            [SparseHash{N, NTuple{N, Int8}, Int8}, SparseHash{N, NTuple{N, Int8}, Int8, Dict{Tuple{Int8, NTuple{N, Int8}}, Int8}}],
-            [SparseHash{N, NTuple{N, Int8}, Int8, Dict{Tuple{Int8, NTuple{N, Int8}}, Int8}}],
+            [SparseHash{N, NTuple{N, Int16}}, SparseHash{N, NTuple{N, Int16}, Int}, SparseHash{N, NTuple{N, Int16}, Int, Dict{Tuple{Int, NTuple{N, Int16}}, Int}}],
+            [SparseHash{N, NTuple{N, Int16}, Int16}, SparseHash{N, NTuple{N, Int16}, Int16, Dict{Tuple{Int16, NTuple{N, Int16}}, Int16}}],
+            [SparseHash{N, NTuple{N, Int16}, Int16, Dict{Tuple{Int16, NTuple{N, Int16}}, Int16}}],
         ]
             argss = []
             push!(argss, lvl -> map(name -> getproperty(lvl, name), propertynames(lvl)))
@@ -134,9 +148,13 @@ open("test_constructors.jl", "w") do file
         D = zero(eltype(arr))
         for ctrs = [
             [RepeatRLE{D}, RepeatRLE{D, Int}, RepeatRLE{D, Int, Int}, RepeatRLE{D, Int, Int, typeof(D)}],
-            [RepeatRLE{D, Int8}, RepeatRLE{D, Int8, Int}, RepeatRLE{D, Int8, Int, typeof(D)}],
-            [RepeatRLE{D, Int8, Int8}, RepeatRLE{D, Int8, Int8, typeof(D)}],
-            [RepeatRLE{D, Int8, Int8, Any}],
+            [RepeatRLE{D, Int16}, RepeatRLE{D, Int16, Int}, RepeatRLE{D, Int16, Int, typeof(D)}],
+            [RepeatRLE{D, Int16, Int16}, RepeatRLE{D, Int16, Int16, typeof(D)}],
+            [RepeatRLE{D, Int16, Int16, Any}],
+            [RepeatRLEDiff{D}, RepeatRLEDiff{D, Int}, RepeatRLEDiff{D, Int, Int}, RepeatRLEDiff{D, Int, Int, typeof(D)}],
+            [RepeatRLEDiff{D, Int16}, RepeatRLEDiff{D, Int16, Int}, RepeatRLEDiff{D, Int16, Int, typeof(D)}],
+            [RepeatRLEDiff{D, Int16, Int16}, RepeatRLEDiff{D, Int16, Int16, typeof(D)}],
+            [RepeatRLEDiff{D, Int16, Int16, Any}],
         ]
             argss = []
             push!(argss, lvl -> map(name -> getproperty(lvl, name), propertynames(lvl)))

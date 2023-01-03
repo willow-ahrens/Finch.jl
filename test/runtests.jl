@@ -68,6 +68,12 @@ isstructequal(a::T, b::T) where {T <: RepeatRLE} =
     a.idx == b.idx &&
     a.val == b.val
 
+isstructequal(a::T, b::T) where {T <: RepeatRLEDiff} =
+    a.I == b.I &&
+    a.pos == b.pos &&
+    a.idx == b.idx &&
+    a.val == b.val
+
 isstructequal(a::T, b::T) where {T <: Dense} =
     a.I == b.I &&
     isstructequal(a.lvl, b.lvl)
@@ -76,6 +82,13 @@ isstructequal(a::T, b::T) where {T <: SparseList} =
     a.I == b.I &&
     a.pos == b.pos &&
     a.idx == b.idx &&
+    isstructequal(a.lvl, b.lvl)
+
+isstructequal(a::T, b::T) where {T <: SparseListDiff} =
+    a.I == b.I &&
+    a.pos == b.pos &&
+    a.idx == b.idx &&
+    a.jdx == b.jdx &&
     isstructequal(a.lvl, b.lvl)
 
 isstructequal(a::T, b::T) where {T <: SparseHash} =
@@ -113,10 +126,10 @@ verbose = "verbose" in ARGS
     include("test_ssa.jl")
     include("test_print.jl")
     #include("test_parse.jl")
-    include("test_merges.jl")
+    include("test_formats.jl")
     include("test_constructors.jl")
     include("test_conversions.jl")
-    include("test_formats.jl")
+    include("test_merges.jl")
     include("test_algebra.jl")
     include("test_repeat.jl")
     include("test_permit.jl")

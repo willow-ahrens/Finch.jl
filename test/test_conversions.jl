@@ -17,8 +17,67 @@
             @test ref[] == res[]
         end
         =#
+
+        if base != Pattern
+            for inner in [
+                () -> Dense(base()),
+                () -> SparseListDiff(base()),
+                () -> RepeatRLE{false}(),
+                () -> RepeatRLEDiff{false}(),
+            ]
+                for arr in [
+                    fill(false, 5),
+                    fill(true, 5),
+                    [false, true, true, false, false, true],
+                    begin
+                        x = fill(false, 1111)
+                        x[2] = true 
+                        x[3]= true
+                        x[555:999] .= true
+                        x[1001] = true
+                        x
+                    end,
+                ]
+                    ref = @fiber sl(e(false))
+                    res = @fiber sl(e(false))
+                    ref = dropdefaults!(ref, arr)
+                    tmp = Fiber(inner())
+                    @testset "convert $(summary(tmp))" begin
+                        @finch @loop i tmp[i] = ref[i]
+                        check = Scalar(true)
+                        @finch @loop i check[] &= tmp[i] == ref[i]
+                        @test check[]
+                    end
+                end
+                for outer in [
+                    () -> Dense(inner()),
+                    () -> SparseList(inner()),
+                ]
+
+                    for (arr_key, arr) in [
+                        ("5x5_falses", fill(false, 5, 5)),
+                        ("5x5_trues", fill(true, 5, 5)),
+                        ("4x4_bool_mix", [false true  false true ;
+                        false false false false
+                        true  true  true  true
+                        false true  false true ])
+                    ]
+                        ref = @fiber sl(sl(e(false)))
+                        res = @fiber sl(sl(e(false)))
+                        ref = dropdefaults!(ref, arr)
+                        tmp = Fiber(outer())
+                        @testset "convert $arr_key $(summary(tmp))"  begin
+                            @finch @loop i j tmp[i, j] = ref[i, j]
+                            check = Scalar(true)
+                            @finch @loop i j check[] &= tmp[i, j] == ref[i, j]
+                            @test check[]
+                        end
+                    end
+                end
+            end
+        end
+
         for inner in [
-            #() -> Dense(base()),
             () -> SparseList(base()),
             () -> SparseVBL(base()),
             () -> SparseBytemap(base()),

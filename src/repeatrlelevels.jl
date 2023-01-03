@@ -67,10 +67,10 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:RepeatRLELev
     depth = envdepth(fbr.env)
 
     print_coord(io, crd) = (print(io, "["); show(io, crd == fbr.lvl.pos[p] ? 1 : fbr.lvl.idx[crd - 1] + 1); print(io, ":"); show(io, fbr.lvl.idx[crd]); print(io, "]"))
-    get_coord(crd) = fbr.lvl.idx[crd]
+    get_fbr(crd) = fbr.lvl.val[crd]
 
     print(io, "│ " ^ depth); print(io, "RepeatRLE ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); show(io, 1); print(io, ":"); show(io, fbr.lvl.I); println(io, "]")
-    display_fiber_data(io, mime, fbr, 1, crds, print_coord, get_coord)
+    display_fiber_data(io, mime, fbr, 1, crds, print_coord, get_fbr)
 end
 
 
@@ -97,6 +97,8 @@ mutable struct VirtualRepeatRLELevel
     Tv
     I
     pos_alloc
+    pos_fill
+    pos_stop
     idx_alloc
     val_alloc
 end
@@ -104,6 +106,8 @@ function virtualize(ex, ::Type{RepeatRLELevel{D, Ti, Tp, Tv}}, ctx, tag=:lvl) wh
     sym = ctx.freshen(tag)
     I = value(:($sym.I), Int)
     pos_alloc = ctx.freshen(sym, :_pos_alloc)
+    pos_fill = ctx.freshen(sym, :_pos_fill)
+    pos_stop = ctx.freshen(sym, :_pos_stop)
     idx_alloc = ctx.freshen(sym, :_idx_alloc)
     val_alloc = ctx.freshen(sym, :_val_alloc)
     push!(ctx.preamble, quote
@@ -112,7 +116,7 @@ function virtualize(ex, ::Type{RepeatRLELevel{D, Ti, Tp, Tv}}, ctx, tag=:lvl) wh
         $idx_alloc = length($sym.idx)
         $val_alloc = length($sym.val)
     end)
-    VirtualRepeatRLELevel(sym, D, Ti, Tp, Tv, I, pos_alloc, idx_alloc, val_alloc)
+    VirtualRepeatRLELevel(sym, D, Ti, Tp, Tv, I, pos_alloc, pos_fill, pos_stop, idx_alloc, val_alloc)
 end
 function (ctx::Finch.LowerJulia)(lvl::VirtualRepeatRLELevel)
     quote
@@ -151,6 +155,8 @@ function initialize_level!(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx::LowerJ
     push!(ctx.preamble, quote
         $(lvl.pos_alloc) = length($(lvl.ex).pos)
         $(lvl.ex).pos[1] = 1
+        $(lvl.pos_fill) = 1
+        $(lvl.pos_stop) = 1
         $(lvl.idx_alloc) = length($(lvl.ex).idx)
         $(lvl.val_alloc) = length($(lvl.ex).val)
     end)
@@ -165,10 +171,25 @@ function assemble!(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode)
     p_stop = ctx(cache!(ctx, ctx.freshen(lvl.ex, :_p_stop), getstop(envposition(fbr.env))))
     push!(ctx.preamble, quote
         $(lvl.pos_alloc) < ($p_stop + 1) && ($(lvl.pos_alloc) = $Finch.regrow!($(lvl.ex).pos, $(lvl.pos_alloc), $p_stop + 1))
+        $(lvl.pos_stop) = $p_stop + 1
     end)
 end
 
 function finalize_level!(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx::LowerJulia, mode)
+    lvl = fbr.lvl
+    my_p = ctx.freshen(:p)
+    my_q = ctx.freshen(:q)
+    push!(ctx.preamble, quote
+        $my_q = $(lvl.ex).pos[$(lvl.pos_fill)]
+        for $my_p = $(lvl.pos_fill) + 1:$(lvl.pos_stop)
+            $(lvl.idx_alloc) < $my_q && ($(lvl.idx_alloc) = $Finch.regrow!($(lvl.ex).idx, $(lvl.idx_alloc), $my_q))
+            $(lvl.val_alloc) < $my_q && ($(lvl.val_alloc) = $Finch.regrow!($(lvl.ex).val, $(lvl.val_alloc), $my_q))
+            $(lvl.ex).idx[$(my_q)] = $(ctx(lvl.I))
+            $(lvl.ex).val[$(my_q)] = $(lvl.D)
+            $my_q += 1
+            $(lvl.ex).pos[$(my_p)] = $my_q
+        end
+    end)
     return fbr.lvl
 end
 
@@ -248,7 +269,7 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode, ::Extrude, 
     lvl = fbr.lvl
     tag = lvl.ex
     my_q = ctx.freshen(tag, :_q)
-    my_q_start = ctx.freshen(tag, :_q_start)
+    my_p = ctx.freshen(tag, :_p)
     my_v = ctx.freshen(tag, :_v)
     D = lvl.D
 
@@ -257,80 +278,66 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode, ::Extrude, 
 
     @assert isempty(idxs)
 
+    function record_run(ctx, stop, v)
+        quote
+            $(lvl.idx_alloc) < $my_q && ($(lvl.idx_alloc) = $Finch.regrow!($(lvl.ex).idx, $(lvl.idx_alloc), $my_q))
+            $(lvl.val_alloc) < $my_q && ($(lvl.val_alloc) = $Finch.regrow!($(lvl.ex).val, $(lvl.val_alloc), $my_q))
+            $(lvl.ex).idx[$my_q] = $(ctx(stop))
+            $(lvl.ex).val[$my_q] = $v
+            $my_q += 1
+        end
+    end
+    
     push!(ctx.preamble, quote
-        $my_q = $(lvl.ex).pos[$(ctx(envposition(fbr.env)))]
-        $my_q_start = $my_q
-        $my_v = $(default(fbr))
+        $my_q = $(lvl.ex).pos[$(lvl.pos_fill)]
+        for $my_p = $(lvl.pos_fill) + 1:$(ctx(envposition(fbr.env)))
+            $(record_run(ctx, lvl.I, D))
+            $(lvl.ex).pos[$(my_p)] = $my_q
+        end
+        $my_i_prev = 0
+        $my_v_prev = $D
     end)
 
-    body = Thunk(
-        preamble = quote
-            $my_i_prev = 0
-            $my_v_prev = $D
-        end,
-        body = AcceptRun(
-            val = D,
-            body = (ctx, start, stop) -> Thunk(
-                preamble = quote
-                    if $my_i_prev < $(ctx(start)) - 1
-                        if $my_q == $my_q_start || $D != $my_v_prev
-                            $(lvl.idx_alloc) < $my_q && ($(lvl.idx_alloc) = $Finch.regrow!($(lvl.ex).idx, $(lvl.idx_alloc), $my_q))
-                            $(lvl.val_alloc) < $my_q && ($(lvl.val_alloc) = $Finch.regrow!($(lvl.ex).val, $(lvl.val_alloc), $my_q))
-                            $(lvl.ex).idx[$my_q] = $(ctx(start)) - 1
-                            $(lvl.ex).val[$my_q] = $D
-                            $my_v_prev = $D
-                            $my_q += 1
-                        else
-                            $(lvl.ex).idx[$my_q - 1] = $(ctx(start)) - 1
-                        end
-                    end
-                end,
-                body = Simplify(Fill(value(my_v, lvl.Tv), D)),
-                epilogue = begin
-                    body = quote
-                        if $my_q == $my_q_start || $my_v != $my_v_prev
-                            $(lvl.idx_alloc) < $my_q && ($(lvl.idx_alloc) = $Finch.regrow!($(lvl.ex).idx, $(lvl.idx_alloc), $my_q))
-                            $(lvl.val_alloc) < $my_q && ($(lvl.val_alloc) = $Finch.regrow!($(lvl.ex).val, $(lvl.val_alloc), $my_q))
-                            $(lvl.ex).idx[$my_q] = $(ctx(stop))
-                            $(lvl.ex).val[$my_q] = $my_v
-                            $my_v_prev = $my_v
-                            $my_q += 1
-                        else
-                            $(lvl.ex).idx[$my_q - 1] = $(ctx(stop))
-                        end
-                        $my_i_prev = $(ctx(stop))
-                    end
-                    if envdefaultcheck(fbr.env) !== nothing
-                        body = quote
-                            $body
-                            $(envdefaultcheck(fbr.env)) = false
-                        end
-                    end
-                    body
+    body = AcceptRun(
+        val = D,
+        body = (ctx, start, stop) -> Thunk(
+            preamble = quote
+                if $my_v_prev != $D && ($my_i_prev + 1) < $(ctx(start))
+                    $(record_run(ctx, my_i_prev, my_v_prev))
+                    $my_v_prev = $D
                 end
-            )
+                $my_i_prev = $(ctx(start)) - 1
+                $my_v = $D
+            end,
+            body = Simplify(Fill(value(my_v, lvl.Tv), D)),
+            epilogue = begin
+                body = quote
+                    if $my_v_prev != $my_v && $my_i_prev > 0
+                        $(record_run(ctx, my_i_prev, my_v_prev))
+                    end
+                    $my_v_prev = $my_v
+                    $my_i_prev = $(ctx(stop))
+                end
+                if envdefaultcheck(fbr.env) !== nothing
+                    body = quote
+                        $body
+                        $(envdefaultcheck(fbr.env)) = false
+                    end
+                end
+                body
+            end
         )
     )
 
     push!(ctx.epilogue, quote
-        if $my_q == $my_q_start && $(ctx(lvl.I)) > 1
-            $(lvl.idx_alloc) < $my_q && ($(lvl.idx_alloc) = $Finch.regrow!($(lvl.ex).idx, $(lvl.idx_alloc), $my_q))
-            $(lvl.val_alloc) < $my_q && ($(lvl.val_alloc) = $Finch.regrow!($(lvl.ex).val, $(lvl.val_alloc), $my_q))
-            $(lvl.ex).idx[$my_q] = $(ctx(lvl.I))
-            $(lvl.ex).val[$my_q] = $(lvl.D)
-            $my_q += 1
-        elseif $my_i_prev < $(ctx(lvl.I))
-            if $my_v_prev == $D
-                $(lvl.ex).idx[$my_q - 1] = $(ctx(lvl.I))
-            else
-                $(lvl.idx_alloc) < $my_q && ($(lvl.idx_alloc) = $Finch.regrow!($(lvl.ex).idx, $(lvl.idx_alloc), $my_q))
-                $(lvl.val_alloc) < $my_q && ($(lvl.val_alloc) = $Finch.regrow!($(lvl.ex).val, $(lvl.val_alloc), $my_q))
-                $(lvl.ex).idx[$my_q] = $(ctx(lvl.I))
-                $(lvl.ex).val[$my_q] = $(lvl.D)
-                $my_q += 1
-            end
+        if $my_v_prev != $D && $my_i_prev < $(ctx(lvl.I))
+            $(record_run(ctx, my_i_prev, my_v_prev))
+            $(record_run(ctx, lvl.I, D))
+        elseif $(ctx(lvl.I)) > 0
+            $(record_run(ctx, lvl.I, my_v_prev))
         end
         $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1] = $my_q
+        $(lvl.pos_fill) = $(ctx(envposition(fbr.env))) + 1
     end)
 
     exfurl(body, ctx, mode, idx)
