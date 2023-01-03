@@ -151,6 +151,10 @@ open("test_constructors.jl", "w") do file
             [RepeatRLE{D, Int16}, RepeatRLE{D, Int16, Int}, RepeatRLE{D, Int16, Int, typeof(D)}],
             [RepeatRLE{D, Int16, Int16}, RepeatRLE{D, Int16, Int16, typeof(D)}],
             [RepeatRLE{D, Int16, Int16, Any}],
+            [RepeatRLEDiff{D}, RepeatRLEDiff{D, Int}, RepeatRLEDiff{D, Int, Int}, RepeatRLEDiff{D, Int, Int, typeof(D)}],
+            [RepeatRLEDiff{D, Int16}, RepeatRLEDiff{D, Int16, Int}, RepeatRLEDiff{D, Int16, Int, typeof(D)}],
+            [RepeatRLEDiff{D, Int16, Int16}, RepeatRLEDiff{D, Int16, Int16, typeof(D)}],
+            [RepeatRLEDiff{D, Int16, Int16, Any}],
         ]
             argss = []
             push!(argss, lvl -> map(name -> getproperty(lvl, name), propertynames(lvl)))

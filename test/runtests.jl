@@ -68,6 +68,13 @@ isstructequal(a::T, b::T) where {T <: RepeatRLE} =
     a.idx == b.idx &&
     a.val == b.val
 
+isstructequal(a::T, b::T) where {T <: RepeatRLEDiff} =
+    a.I == b.I &&
+    a.pos == b.pos &&
+    a.idx == b.idx &&
+    a.val == b.val
+
+
 isstructequal(a::T, b::T) where {T <: Dense} =
     a.I == b.I &&
     isstructequal(a.lvl, b.lvl)

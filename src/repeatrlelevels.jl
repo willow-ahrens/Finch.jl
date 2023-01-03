@@ -156,7 +156,7 @@ function initialize_level!(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx::LowerJ
         $(lvl.pos_alloc) = length($(lvl.ex).pos)
         $(lvl.ex).pos[1] = 1
         $(lvl.pos_fill) = 1
-        $(lvl.pos_stop) = 2
+        $(lvl.pos_stop) = 1
         $(lvl.idx_alloc) = length($(lvl.ex).idx)
         $(lvl.val_alloc) = length($(lvl.ex).val)
     end)
@@ -333,7 +333,7 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode, ::Extrude, 
         if $my_v_prev != $D && $my_i_prev < $(ctx(lvl.I))
             $(record_run(ctx, my_i_prev, my_v_prev))
             $(record_run(ctx, lvl.I, D))
-        else
+        elseif $(ctx(lvl.I)) > 0
             $(record_run(ctx, lvl.I, my_v_prev))
         end
         $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1] = $my_q

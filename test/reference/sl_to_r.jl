@@ -13,7 +13,7 @@
         A_lvl_pos_alloc = length(A_lvl.pos)
         A_lvl.pos[1] = 1
         A_lvl_pos_fill = 1
-        A_lvl_pos_stop = 2
+        A_lvl_pos_stop = 1
         A_lvl_idx_alloc = length(A_lvl.idx)
         A_lvl_val_alloc = length(A_lvl.val)
         A_lvl_pos_alloc < 1 + 1 && (A_lvl_pos_alloc = (Finch).regrow!(A_lvl.pos, A_lvl_pos_alloc, 1 + 1))
@@ -66,7 +66,7 @@
                     A_lvl_i_prev = phase_stop_2 - 1
                     A_lvl_v = 0.0
                     A_lvl_v = D_lvl_2_val
-                    if A_lvl_v_prev != A_lvl_v && A_lvl_i_prev != 0
+                    if A_lvl_v_prev != A_lvl_v && A_lvl_i_prev > 0
                         A_lvl_idx_alloc < A_lvl_q && (A_lvl_idx_alloc = (Finch).regrow!(A_lvl.idx, A_lvl_idx_alloc, A_lvl_q))
                         A_lvl_val_alloc < A_lvl_q && (A_lvl_val_alloc = (Finch).regrow!(A_lvl.val, A_lvl_val_alloc, A_lvl_q))
                         A_lvl.idx[A_lvl_q] = A_lvl_i_prev
@@ -100,7 +100,7 @@
             A_lvl.idx[A_lvl_q] = D_lvl.I
             A_lvl.val[A_lvl_q] = 0.0
             A_lvl_q += 1
-        else
+        elseif D_lvl.I > 0
             A_lvl_idx_alloc < A_lvl_q && (A_lvl_idx_alloc = (Finch).regrow!(A_lvl.idx, A_lvl_idx_alloc, A_lvl_q))
             A_lvl_val_alloc < A_lvl_q && (A_lvl_val_alloc = (Finch).regrow!(A_lvl.val, A_lvl_val_alloc, A_lvl_q))
             A_lvl.idx[A_lvl_q] = D_lvl.I

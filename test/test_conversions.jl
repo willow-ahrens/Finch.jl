@@ -23,11 +23,20 @@
                 () -> Dense(base()),
                 () -> SparseListDiff(base()),
                 () -> RepeatRLE{false}(),
+                () -> RepeatRLEDiff{false}(),
             ]
                 for arr in [
                     fill(false, 5),
                     fill(true, 5),
-                    [false, true, true, false, false, true]
+                    [false, true, true, false, false, true],
+                    begin
+                        x = fill(false, 1111)
+                        x[2] = true 
+                        x[3]= true
+                        x[555:999] .= true
+                        x[1001] = true
+                        x
+                    end,
                 ]
                     ref = @fiber sl(e(false))
                     res = @fiber sl(e(false))

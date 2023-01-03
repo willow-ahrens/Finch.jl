@@ -17,9 +17,9 @@ RepeatRLEDiffLevel{D, Ti}(I) where {D, Ti} = RepeatRLEDiffLevel{D, Ti, Int}(Ti(I
 RepeatRLEDiffLevel{D, Ti, Tp}(I) where {D, Ti, Tp} = RepeatRLEDiffLevel{D, Ti, Tp, typeof(D)}(Ti(I))
 function RepeatRLEDiffLevel{D, Ti, Tp, Tv}(I) where {D, Ti, Tp, Tv}
     if iszero(I)
-        RepeatRLEDiffLevel{D, Ti, Tp, Tv}(Ti(I), Tp[1, 1], UInt8[], Tv[])
+        RepeatRLEDiffLevel{D, Ti, Tp, Tv}(Ti(I), Tp[1, 1], UInt8[0x00], Tv[])
     else
-        RepeatRLEDiffLevel{D, Ti, Tp, Tv}(Ti(I), Tp[1, 2], UInt8[[0xff for i in 1:cld(I, 0xff) - 1]; mod1(I, 0xff)], Tv[D])
+        RepeatRLEDiffLevel{D, Ti, Tp, Tv}(Ti(I), Tp[1, 2], UInt8[[0xff for i in 1:cld(I, 0xff) - 1]; mod1(I, 0xff); 0x00], Tv[D])
     end
 end
 
@@ -189,6 +189,7 @@ function finalize_level!(fbr::VirtualFiber{VirtualRepeatRLEDiffLevel}, ctx::Lowe
                 $(lvl.val_alloc) < $my_q && ($(lvl.val_alloc) = $Finch.regrow!($(lvl.ex).val, $(lvl.val_alloc), $my_q))
                 $(lvl.ex).idx[$my_q] = 0xff
                 $(lvl.ex).val[$my_q] = $(lvl.D)
+                $my_i += 0xff
                 my_q += 1
             end
             $(lvl.idx_alloc) < $my_q && ($(lvl.idx_alloc) = $Finch.regrow!($(lvl.ex).idx, $(lvl.idx_alloc), $my_q))
@@ -239,17 +240,17 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatRLEDiffLevel}, ctx, mode, ::Walk,
     @assert isempty(idxs)
 
     body = Thunk(
-        preamble = (quote
+        preamble = quote
             $my_q = $(lvl.ex).pos[$(ctx(envposition(fbr.env)))] - 1
             $my_q_stop = $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1]
             $my_i = $(lvl.Ti)(0)
             $my_i1 = $(lvl.I)
-        end),
+        end,
         body = Stepper(
             seek = (ctx, ext) -> quote
-                while $my_q + 1 < $my_q_stop && $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
+                while $my_q + 1 < $my_q_stop && $my_i < $(ctx(getstart(ext)))
                     $my_q += 1
-                    $my_i = $(lvl.Ti)($(lvl.ex).idx[$my_q])
+                    $my_i += $(lvl.ex).idx[$my_q]
                 end
             end,
             body = Step(
@@ -259,7 +260,7 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatRLEDiffLevel}, ctx, mode, ::Walk,
                 ),
                 next = (ctx, idx, ext) -> quote
                     $my_q += 1
-                    $my_i = $(lvl.Ti)($(lvl.ex).idx[$my_q])
+                    $my_i += $(lvl.ex).idx[$my_q]
                 end
             )
         )
@@ -289,7 +290,8 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatRLEDiffLevel}, ctx, mode, ::Extru
                 $(lvl.val_alloc) < $my_q && ($(lvl.val_alloc) = $Finch.regrow!($(lvl.ex).val, $(lvl.val_alloc), $my_q))
                 $(lvl.ex).idx[$my_q] = 0xff
                 $(lvl.ex).val[$my_q] = $v
-                my_q += 1
+                $my_i += 0xff
+                $my_q += 1
             end
             $(lvl.idx_alloc) < $my_q && ($(lvl.idx_alloc) = $Finch.regrow!($(lvl.ex).idx, $(lvl.idx_alloc), $my_q))
             $(lvl.val_alloc) < $my_q && ($(lvl.val_alloc) = $Finch.regrow!($(lvl.ex).val, $(lvl.val_alloc), $my_q))
@@ -303,6 +305,7 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatRLEDiffLevel}, ctx, mode, ::Extru
     push!(ctx.preamble, quote
         $my_q = $(lvl.ex).pos[$(lvl.pos_fill)]
         for $my_p = $(lvl.pos_fill) + 1:$(ctx(envposition(fbr.env)))
+            $my_i = 0
             $(record_run(ctx, lvl.I, D))
             $(lvl.ex).pos[$(my_p)] = $my_q
         end
@@ -346,7 +349,7 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatRLEDiffLevel}, ctx, mode, ::Extru
         if $my_v_prev != $D && $my_i_prev < $(ctx(lvl.I))
             $(record_run(ctx, my_i_prev, my_v_prev))
             $(record_run(ctx, lvl.I, D))
-        else
+        elseif $(ctx(lvl.I)) > 0
             $(record_run(ctx, lvl.I, my_v_prev))
         end
         $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1] = $my_q
