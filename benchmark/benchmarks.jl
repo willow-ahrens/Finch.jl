@@ -113,35 +113,40 @@ function bfs(edges, source=5)
     edges = pattern!(edges)
 
     @assert n == m
-    F = @fiber sl(n,p())
-    _F = @fiber sl(n,p())
-    @finch @loop source F[source] = true
+    F = @fiber sm(n,p())
+    _F = @fiber sm(n,p())
+    @finch F[source] = true
 
-    V = @fiber d(n, e(0))
-    @finch @loop source V[source] = 1
+    V = @fiber d(n, e(false))
+    @finch V[source] = true
 
     P = @fiber d(n, e(0))
-    @finch @loop source P[source] = source
+    @finch P[source] = source
 
-    level = 2
+    v = Scalar(false)
+
     while F.lvl.pos[2] != 1 #TODO this could be cleaner if we could get early exit working.
+        println(F.lvl.pos[2])
         @finch @loop j k (begin
-            _F[k] = v #Set the frontier vertex
-            @sieve v P[k] = j #Only set the parent for this vertex
+            _F[k] |= v[] #Set the frontier vertex
+            @sieve v[] !P[k] = j #Only set the parent for this vertex
         end) where (
-            v = F[j] && edges[j, k] && !(V[k])
+            v[] = F[j] && edges[j, k] && !(V[k])
         )
-        @finch @loop k !V[k] += ifelse(_F[k], level, 0)
+        @finch @loop k V[k] = !(P[k] == 0)
+        #@finch @loop k !V[k] |= _F[k]
         (F, _F) = (_F, F)
-        level += 1
     end
     return F
 end
 
+using MatrixMarket
+
 SUITE["graphs"]["bfs"] = BenchmarkGroup()
-for mtx in ["SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
-    SUITE["graphs"]["bfs"][mtx] = @benchmarkable bfs($(fiber(SparseMatrixCSC(matrixdepot(mtx))))) 
-end
+SUITE["graphs"]["bfs"]["ajay"] = @benchmarkable bfs($(fiber(SparseMatrixCSC(mmread("ajay.mtx"))))) 
+#for mtx in ["SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
+#    SUITE["graphs"]["bfs"][mtx] = @benchmarkable bfs($(fiber(SparseMatrixCSC(matrixdepot(mtx))))) 
+#end
 
 #=
 TODO
@@ -249,5 +254,7 @@ for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
     A = fiber(SparseMatrixCSC(matrixdepot(mtx)))
     SUITE["matrices"]["ATA_spgemm_outer"][mtx] = @benchmarkable spgemm_outer($A, $A) 
 end
+
+SUITE = SUITE["graphs"]["bfs"]
 
 foreach(((k, v),) -> BenchmarkTools.warmup(v), SUITE)
