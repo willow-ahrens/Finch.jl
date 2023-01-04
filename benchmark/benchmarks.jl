@@ -1,16 +1,16 @@
-using Pkg
-tempdir = mktempdir()
-Pkg.activate(tempdir)
-Pkg.develop(PackageSpec(path = joinpath(@__DIR__, "..")))
-Pkg.add(["BenchmarkTools", "PkgBenchmark", "MatrixDepot"])
-Pkg.resolve()
+#using Pkg
+#tempdir = mktempdir()
+#Pkg.activate(tempdir)
+#Pkg.develop(PackageSpec(path = joinpath(@__DIR__, "..")))
+#Pkg.add(["BenchmarkTools", "PkgBenchmark", "MatrixDepot"])
+#Pkg.resolve()
 
 using Finch
 using BenchmarkTools
 using MatrixDepot
 using SparseArrays
 
-const SUITE = BenchmarkGroup()
+SUITE = BenchmarkGroup()
 
 SUITE["compile"] = BenchmarkGroup()
 
@@ -125,16 +125,16 @@ function bfs(edges, source=5)
 
     v = Scalar(false)
 
-    while F.lvl.pos[2] != 1 #TODO this could be cleaner if we could get early exit working.
-        println(F.lvl.pos[2])
+    while F.lvl.pos[2] > 1 #TODO this could be cleaner if we could get early exit working.
         @finch @loop j k (begin
-            _F[k] |= v[] #Set the frontier vertex
-            @sieve v[] !P[k] = j #Only set the parent for this vertex
+            @sieve v[] begin
+                _F[k] |= true
+                !P[k] <<choose(0)>>= j #Only set the parent for this vertex
+            end
         end) where (
             v[] = F[j] && edges[j, k] && !(V[k])
         )
-        @finch @loop k V[k] = !(P[k] == 0)
-        #@finch @loop k !V[k] |= _F[k]
+        @finch @loop k !V[k] |= _F[k]
         (F, _F) = (_F, F)
     end
     return F
@@ -143,10 +143,10 @@ end
 using MatrixMarket
 
 SUITE["graphs"]["bfs"] = BenchmarkGroup()
-SUITE["graphs"]["bfs"]["ajay"] = @benchmarkable bfs($(fiber(SparseMatrixCSC(mmread("ajay.mtx"))))) 
-#for mtx in ["SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
-#    SUITE["graphs"]["bfs"][mtx] = @benchmarkable bfs($(fiber(SparseMatrixCSC(matrixdepot(mtx))))) 
-#end
+#SUITE["graphs"]["bfs"]["ajay"] = @benchmarkable bfs($(fiber(SparseMatrixCSC(mmread("ajay.mtx"))))) 
+for mtx in ["SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
+    SUITE["graphs"]["bfs"][mtx] = @benchmarkable bfs($(fiber(SparseMatrixCSC(matrixdepot(mtx))))) 
+end
 
 #=
 TODO
@@ -254,7 +254,5 @@ for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
     A = fiber(SparseMatrixCSC(matrixdepot(mtx)))
     SUITE["matrices"]["ATA_spgemm_outer"][mtx] = @benchmarkable spgemm_outer($A, $A) 
 end
-
-SUITE = SUITE["graphs"]["bfs"]
 
 foreach(((k, v),) -> BenchmarkTools.warmup(v), SUITE)
