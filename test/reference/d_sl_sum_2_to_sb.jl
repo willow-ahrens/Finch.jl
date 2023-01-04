@@ -27,7 +27,10 @@
             B_lvl_p_prev = B_lvl_p
         end
         for B_lvl_r = 1:B_lvl_srt_stop
-            B_lvl.tbl[B_lvl_r] = false
+            B_lvl_p = first(B_lvl.srt[B_lvl_r])
+            B_lvl_i = last(B_lvl.srt[B_lvl_r])
+            B_lvl_q = (B_lvl_p - 1) * A_lvl_2.I + B_lvl_i
+            B_lvl.tbl[B_lvl_q] = false
         end
         B_lvl.srt_stop[] = (B_lvl_srt_stop = 0)
         B_lvl_2_val_alloc = (Finch).refill!(B_lvl_2.val, 0.0, 0, 4)
