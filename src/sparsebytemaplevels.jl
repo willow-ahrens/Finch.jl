@@ -177,13 +177,11 @@ function initialize_level!(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx::Lo
                 $p_prev = $p
             end
             for $r = 1:$(lvl.srt_stop)
-                $(lvl.ex).tbl[$r] = false
+                $p = first($(lvl.ex).srt[$r])
+                $i = last($(lvl.ex).srt[$r])
+                $q = ($p - 1) * $(ctx(lvl.I)) + $i
+                $(lvl.ex).tbl[$q] = false
                 $(if reinitializeable(lvl.lvl)
-                    push!(ctx.preamble, quote
-                        $p = first($(lvl.ex).srt[$r])
-                        $i = last($(lvl.ex).srt[$r])
-                        $q = ($p - 1) * $(ctx(lvl.I)) + $i
-                    end)
                     reinitialize(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env, position = value(q, Ti), index = value(i, Ti))))
                 else
                     quote end
