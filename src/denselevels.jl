@@ -88,7 +88,7 @@ getsites(fbr::VirtualFiber{VirtualDenseLevel}) =
     [envdepth(fbr.env) + 1, getsites(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))...]
 
 function getsize(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode)
-    ext = Extent(literal(1), fbr.lvl.I)
+    ext = Extent(literal(fbr.lvl.Ti(1)), fbr.lvl.I)
     if mode.kind !== reader
         ext = suggest(ext)
     end
@@ -152,14 +152,14 @@ function assemble!(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode)
     q_start = call(*, p_start, lvl.I)
     q_stop = call(*, p_stop, lvl.I)
     if interval_assembly_depth(lvl.lvl) >= 1
-        assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Extent(q_start, q_stop), index = Extent(literal(1), lvl.I), parent=fbr.env)), ctx, mode)
+        assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Extent(q_start, q_stop), index = Extent(literal(lvl.Ti(1)), lvl.I), parent=fbr.env)), ctx, mode)
     else
         p = ctx.freshen(lvl.ex, :_p)
         q = ctx.freshen(lvl.ex, :_q)
         push!(ctx.preamble, quote
             for $p = $(ctx(p_start)):$(ctx(p_stop))
-                for $i = 1:$(ctx(lvl.I))
-                    $q = ($p - 1) * $(ctx(lvl.I)) + $i
+                for $i = $(lvl.Ti)(1):$(ctx(lvl.I))
+                    $q = ($p - $(lvl.Ti)(1)) * $(ctx(lvl.I)) + $i
                     $(assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(q), index=value(i), parent=fbr.env)), ctx, mode))
                 end
             end
@@ -193,7 +193,7 @@ function unfurl(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode, ::Union{Follow,
         val = default(fbr),
         body = (i) -> Thunk(
             preamble = quote
-                $q = ($(ctx(p)) - 1) * $(ctx(lvl.I)) + $(ctx(i))
+                $q = ($(ctx(p)) - $(lvl.Ti)(1)) * $(ctx(lvl.I)) + $(ctx(i))
             end,
             body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(q, lvl.Ti), index=i, guard=envdefaultcheck(fbr.env), parent=fbr.env)), ctx, mode),
         )
