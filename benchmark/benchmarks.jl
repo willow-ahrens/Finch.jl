@@ -1,4 +1,4 @@
-#using Pkg
+using Pkg
 #tempdir = mktempdir()
 #Pkg.activate(tempdir)
 #Pkg.develop(PackageSpec(path = joinpath(@__DIR__, "..")))
@@ -140,10 +140,7 @@ function bfs(edges, source=5)
     return F
 end
 
-using MatrixMarket
-
 SUITE["graphs"]["bfs"] = BenchmarkGroup()
-#SUITE["graphs"]["bfs"]["ajay"] = @benchmarkable bfs($(fiber(SparseMatrixCSC(mmread("ajay.mtx"))))) 
 for mtx in ["SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
     SUITE["graphs"]["bfs"][mtx] = @benchmarkable bfs($(fiber(SparseMatrixCSC(matrixdepot(mtx))))) 
 end
@@ -254,5 +251,37 @@ for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
     A = fiber(SparseMatrixCSC(matrixdepot(mtx)))
     SUITE["matrices"]["ATA_spgemm_outer"][mtx] = @benchmarkable spgemm_outer($A, $A) 
 end
+
+SUITE["indices"] = BenchmarkGroup()
+
+function spmv32(A, x)
+    y = @fiber d{Int32}(e(0.0))
+    @finch @loop i j y[i] += A[i, j] * x[j]
+    return y
+end
+
+SUITE["indices"]["SpMV_32"] = BenchmarkGroup()
+for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
+    A = fiber(SparseMatrixCSC(matrixdepot(mtx)))
+    A = copyto!(@fiber(d{Int32}(sl{Int32, Int32}(e(0.0)))), A)
+    x = copyto!(@fiber(d{Int32}(e(0.0))), rand(size(A)[2]))
+    SUITE["indices"]["SpMV_32"][mtx] = @benchmarkable spmv32($A, $x) 
+end
+
+function spmv64(A, x)
+    y = @fiber d{Int64}(e(0.0))
+    @finch @loop i j y[i] += A[i, j] * x[j]
+    return y
+end
+
+SUITE["indices"]["SpMV_64"] = BenchmarkGroup()
+for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
+    A = fiber(SparseMatrixCSC(matrixdepot(mtx)))
+    A = copyto!(@fiber(d{Int64}(sl{Int64, Int64}(e(0.0)))), A)
+    x = copyto!(@fiber(d{Int64}(e(0.0))), rand(size(A)[2]))
+    SUITE["indices"]["SpMV_64"][mtx] = @benchmarkable spmv64($A, $x) 
+end
+
+SUITE = SUITE["indices"]
 
 foreach(((k, v),) -> BenchmarkTools.warmup(v), SUITE)
