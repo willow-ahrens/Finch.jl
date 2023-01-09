@@ -5,6 +5,7 @@ function register(algebra)
             execute_code(:ex, ex, a())
         end
     end)
+    nothing
 end
 
 #struct Lifetime <: IndexNode
