@@ -147,6 +147,7 @@ interval_assembly_depth(lvl::VirtualDenseLevel) = min(Inf, interval_assembly_dep
 
 function assemble!(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode)
     lvl = fbr.lvl
+    Ti = lvl.Ti
     p_start = getstart(envposition(fbr.env))
     p_stop = getstop(envposition(fbr.env))
     q_start = call(*, p_start, lvl.I)
@@ -158,8 +159,8 @@ function assemble!(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode)
         q = ctx.freshen(lvl.ex, :_q)
         push!(ctx.preamble, quote
             for $p = $(ctx(p_start)):$(ctx(p_stop))
-                for $i = $(lvl.Ti)(1):$(ctx(lvl.I))
-                    $q = ($p - $(lvl.Ti)(1)) * $(ctx(lvl.I)) + $i
+                for $i = $(Ti(1)):$(ctx(lvl.I))
+                    $q = ($p - $(Ti(1))) * $(ctx(lvl.I)) + $i
                     $(assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(q), index=value(i), parent=fbr.env)), ctx, mode))
                 end
             end
@@ -186,6 +187,7 @@ end
 function unfurl(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode, ::Union{Follow, Laminate, Extrude}, idx, idxs...) #TODO should protocol be strict?
     lvl = fbr.lvl
     tag = lvl.ex
+    Ti = lvl.Ti
 
     p = envposition(fbr.env)
     q = ctx.freshen(tag, :_q)
@@ -193,7 +195,7 @@ function unfurl(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode, ::Union{Follow,
         val = default(fbr),
         body = (i) -> Thunk(
             preamble = quote
-                $q = ($(ctx(p)) - $(lvl.Ti)(1)) * $(ctx(lvl.I)) + $(ctx(i))
+                $q = ($(ctx(p)) - $(Ti(1))) * $(ctx(lvl.I)) + $(ctx(i))
             end,
             body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(q, lvl.Ti), index=i, guard=envdefaultcheck(fbr.env), parent=fbr.env)), ctx, mode),
         )

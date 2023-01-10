@@ -25,8 +25,8 @@
         C_lvl.pos[2] = 1
         C_lvl_idx_alloc = length(C_lvl.idx)
         C_lvl_2_val_alloc = (Finch).refill!(C_lvl_2.val, 0.0, 0, 4)
-        C_lvl_pos_alloc < 1 + 1 && (C_lvl_pos_alloc = (Finch).refill!(C_lvl.pos, 0, C_lvl_pos_alloc, 1 + 1))
         C_lvl_pos_stop = 1 + 1
+        (Finch).@regrow! C_lvl.pos C_lvl_pos_alloc C_lvl_pos_stop
         C_lvl_q = C_lvl.pos[C_lvl_pos_fill]
         for C_lvl_p = C_lvl_pos_fill:1
             C_lvl.pos[C_lvl_p] = C_lvl_q
@@ -45,7 +45,7 @@
                 C_lvl_2_val = missing
                 C_lvl_2.val[C_lvl_q] = C_lvl_2_val
                 if !C_lvl_isdefault
-                    C_lvl_idx_alloc < C_lvl_q && (C_lvl_idx_alloc = (Finch).regrow!(C_lvl.idx, C_lvl_idx_alloc, C_lvl_q))
+                    (Finch).@regrow! C_lvl.idx C_lvl_idx_alloc C_lvl_q
                     C_lvl.idx[C_lvl_q] = i_2
                     C_lvl_q += 1
                 end
@@ -93,7 +93,7 @@
                             C_lvl_2_val = B_lvl_2_val
                             C_lvl_2.val[C_lvl_q] = C_lvl_2_val
                             if !C_lvl_isdefault
-                                C_lvl_idx_alloc < C_lvl_q && (C_lvl_idx_alloc = (Finch).regrow!(C_lvl.idx, C_lvl_idx_alloc, C_lvl_q))
+                                (Finch).@regrow! C_lvl.idx C_lvl_idx_alloc C_lvl_q
                                 C_lvl.idx[C_lvl_q] = i_6
                                 C_lvl_q += 1
                             end
@@ -127,7 +127,7 @@
                 C_lvl_2_val = missing
                 C_lvl_2.val[C_lvl_q] = C_lvl_2_val
                 if !C_lvl_isdefault
-                    C_lvl_idx_alloc < C_lvl_q && (C_lvl_idx_alloc = (Finch).regrow!(C_lvl.idx, C_lvl_idx_alloc, C_lvl_q))
+                    (Finch).@regrow! C_lvl.idx C_lvl_idx_alloc C_lvl_q
                     C_lvl.idx[C_lvl_q] = i_9
                     C_lvl_q += 1
                 end
@@ -173,7 +173,7 @@
                         C_lvl_2_val = A_lvl_2_val
                         C_lvl_2.val[C_lvl_q] = C_lvl_2_val
                         if !C_lvl_isdefault
-                            C_lvl_idx_alloc < C_lvl_q && (C_lvl_idx_alloc = (Finch).regrow!(C_lvl.idx, C_lvl_idx_alloc, C_lvl_q))
+                            (Finch).@regrow! C_lvl.idx C_lvl_idx_alloc C_lvl_q
                             C_lvl.idx[C_lvl_q] = i_13
                             C_lvl_q += 1
                         end
@@ -248,7 +248,7 @@
                             C_lvl_2_val = (coalesce)(A_lvl_2_val, B_lvl_2_val)
                             C_lvl_2.val[C_lvl_q] = C_lvl_2_val
                             if !C_lvl_isdefault
-                                C_lvl_idx_alloc < C_lvl_q && (C_lvl_idx_alloc = (Finch).regrow!(C_lvl.idx, C_lvl_idx_alloc, C_lvl_q))
+                                (Finch).@regrow! C_lvl.idx C_lvl_idx_alloc C_lvl_q
                                 C_lvl.idx[C_lvl_q] = i_18
                                 C_lvl_q += 1
                             end
@@ -267,7 +267,7 @@
                             C_lvl_2_val = (coalesce)(A_lvl_2_val, 0.0)
                             C_lvl_2.val[C_lvl_q] = C_lvl_2_val
                             if !C_lvl_isdefault
-                                C_lvl_idx_alloc < C_lvl_q && (C_lvl_idx_alloc = (Finch).regrow!(C_lvl.idx, C_lvl_idx_alloc, C_lvl_q))
+                                (Finch).@regrow! C_lvl.idx C_lvl_idx_alloc C_lvl_q
                                 C_lvl.idx[C_lvl_q] = i_19
                                 C_lvl_q += 1
                             end
@@ -303,7 +303,7 @@
                         C_lvl_2_val = (coalesce)(A_lvl_2_val, 0.0)
                         C_lvl_2.val[C_lvl_q] = C_lvl_2_val
                         if !C_lvl_isdefault
-                            C_lvl_idx_alloc < C_lvl_q && (C_lvl_idx_alloc = (Finch).regrow!(C_lvl.idx, C_lvl_idx_alloc, C_lvl_q))
+                            (Finch).@regrow! C_lvl.idx C_lvl_idx_alloc C_lvl_q
                             C_lvl.idx[C_lvl_q] = i_22
                             C_lvl_q += 1
                         end
@@ -369,7 +369,7 @@
                         C_lvl_2_val = A_lvl_2_val
                         C_lvl_2.val[C_lvl_q] = C_lvl_2_val
                         if !C_lvl_isdefault
-                            C_lvl_idx_alloc < C_lvl_q && (C_lvl_idx_alloc = (Finch).regrow!(C_lvl.idx, C_lvl_idx_alloc, C_lvl_q))
+                            (Finch).@regrow! C_lvl.idx C_lvl_idx_alloc C_lvl_q
                             C_lvl.idx[C_lvl_q] = i_28
                             C_lvl_q += 1
                         end
@@ -402,7 +402,7 @@
                 C_lvl_2_val = missing
                 C_lvl_2.val[C_lvl_q] = C_lvl_2_val
                 if !C_lvl_isdefault
-                    C_lvl_idx_alloc < C_lvl_q && (C_lvl_idx_alloc = (Finch).regrow!(C_lvl.idx, C_lvl_idx_alloc, C_lvl_q))
+                    (Finch).@regrow! C_lvl.idx C_lvl_idx_alloc C_lvl_q
                     C_lvl.idx[C_lvl_q] = i_31
                     C_lvl_q += 1
                 end
@@ -450,7 +450,7 @@
                             C_lvl_2_val = B_lvl_2_val
                             C_lvl_2.val[C_lvl_q] = C_lvl_2_val
                             if !C_lvl_isdefault
-                                C_lvl_idx_alloc < C_lvl_q && (C_lvl_idx_alloc = (Finch).regrow!(C_lvl.idx, C_lvl_idx_alloc, C_lvl_q))
+                                (Finch).@regrow! C_lvl.idx C_lvl_idx_alloc C_lvl_q
                                 C_lvl.idx[C_lvl_q] = i_35
                                 C_lvl_q += 1
                             end
@@ -484,7 +484,7 @@
                 C_lvl_2_val = missing
                 C_lvl_2.val[C_lvl_q] = C_lvl_2_val
                 if !C_lvl_isdefault
-                    C_lvl_idx_alloc < C_lvl_q && (C_lvl_idx_alloc = (Finch).regrow!(C_lvl.idx, C_lvl_idx_alloc, C_lvl_q))
+                    (Finch).@regrow! C_lvl.idx C_lvl_idx_alloc C_lvl_q
                     C_lvl.idx[C_lvl_q] = i_38
                     C_lvl_q += 1
                 end
