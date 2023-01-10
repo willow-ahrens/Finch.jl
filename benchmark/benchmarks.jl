@@ -282,6 +282,59 @@ for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
     SUITE["indices"]["SpMV_64"][mtx] = @benchmarkable spmv64($A, $x) 
 end
 
+global dummySize=5000000
+global dummyA=[]
+global dummyB=[]
+
+@noinline
+function clear_cache()
+    global dummySize
+    global dummyA
+    global dummyB
+
+    ret = 0.0
+    if length(dummyA) == 0
+        dummyA = Array{Float64}(undef, dummySize)
+        dummyB = Array{Float64}(undef, dummySize)
+    end
+    for i in 1:100 
+        dummyA[rand(1:dummySize)] = rand(Int64)/typemax(Int64)
+        dummyB[rand(1:dummySize)] = rand(Int64)/typemax(Int64)
+    end
+    for i in 1:dummySize
+        ret += dummyA[i] * dummyB[i];
+    end
+    return ret
+end
+
+function rleadd_32!(C, A, B)
+    @finch @loop i j C[i, j] = A[i, j] + B[i, j]
+end
+
+SUITE["indices"]["rleadd_32"] = BenchmarkGroup()
+for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
+    A = fiber(SparseMatrixCSC(matrixdepot(mtx)))
+    A = copyto!(@fiber(d{Int32}(rl{0.0, Int32, Int32}())), A)
+    B = similar(A)
+    @finch @loop i j B[i, j] = A[i, j]
+    C = similar(A)
+    SUITE["indices"]["rleadd_32"][mtx] = @benchmarkable rleadd_32!($C, $A, $B) evals=1 setup=clear_cache()
+end
+
+function rleadd_64!(C, A, B)
+    @finch @loop i j C[i, j] = A[i, j] + B[i, j]
+end
+
+SUITE["indices"]["rleadd_64"] = BenchmarkGroup()
+for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
+    A = fiber(SparseMatrixCSC(matrixdepot(mtx)))
+    A = copyto!(@fiber(d{Int64}(rl{0.0, Int64, Int64}())), A)
+    B = similar(A)
+    @finch @loop i j B[i, j] = A[i, j]
+    C = similar(A)
+    SUITE["indices"]["rleadd_64"][mtx] = @benchmarkable rleadd_64!($C, $A, $B) evals=1 setup=clear_cache()
+end
+
 SUITE = SUITE["indices"]
 
 foreach(((k, v),) -> BenchmarkTools.warmup(v), SUITE)
