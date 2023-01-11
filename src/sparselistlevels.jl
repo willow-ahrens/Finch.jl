@@ -286,7 +286,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode, ::FastWalk
                 stride = (ctx, idx, ext) -> value(my_i1),
                 body = (start, step) -> Stepper(
                     seek = (ctx, ext) -> quote
-                        $my_q = $Tp(searchsortedfirst($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1, Base.Forward))
+                        $my_q = $Tp(searchsortedfirst($(lvl.ex).idx, Int($(ctx(getstart(ext)))), Int($my_q), Int($my_q_stop - 1), Base.Forward))
                     end,
                     body = Thunk(
                         preamble = :(
