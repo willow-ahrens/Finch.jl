@@ -43,7 +43,7 @@
         B_lvl_3.pos[1] = 1
         B_lvl_3_P = 0
         B_lvl_4_val_alloc = (Finch).refill!(B_lvl_4.val, 0.0, 0, 4)
-        B_lvl_3_P = max(1, B_lvl_3_P)
+        B_lvl_3_P = max((Int64)(1), B_lvl_3_P)
         B_lvl_3_pos_alloc < B_lvl_3_P + 1 && (B_lvl_3_pos_alloc = Finch.refill!(B_lvl_3.pos, 0, B_lvl_3_pos_alloc, B_lvl_3_P + 1))
         B_lvl_3_q = B_lvl_3.pos[1]
         A_lvl_q = A_lvl.pos[1]
