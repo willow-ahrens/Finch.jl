@@ -21,8 +21,8 @@
         B_lvl.pos[2] = 1
         B_lvl_idx_alloc = length(B_lvl.idx)
         B_lvl_2_val_alloc = (Finch).refill!(B_lvl_2.val, 0.0, 0, 4)
-        B_lvl_pos_alloc < 1 + 1 && (B_lvl_pos_alloc = (Finch).refill!(B_lvl.pos, 0, B_lvl_pos_alloc, 1 + 1))
         B_lvl_pos_stop = 1 + 1
+        (Finch).@regrow! B_lvl.pos B_lvl_pos_alloc B_lvl_pos_stop
         for i = 1:i_stop
             A_lvl_q = (1 - 1) * A_lvl.I + i
             B_lvl_q = B_lvl.pos[B_lvl_pos_fill]
@@ -64,7 +64,7 @@
                         B_lvl_2_val = (+)(A_lvl_3_val, B_lvl_2_val)
                         B_lvl_2.val[B_lvl_q] = B_lvl_2_val
                         if !B_lvl_isdefault
-                            B_lvl_idx_alloc < B_lvl_q && (B_lvl_idx_alloc = (Finch).regrow!(B_lvl.idx, B_lvl_idx_alloc, B_lvl_q))
+                            (Finch).@regrow! B_lvl.idx B_lvl_idx_alloc B_lvl_q
                             B_lvl.idx[B_lvl_q] = j_3
                             B_lvl_q += 1
                         end
