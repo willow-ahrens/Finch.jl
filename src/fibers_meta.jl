@@ -122,7 +122,7 @@ Like [`fsparse`](@ref), but the coordinates must be sorted and unique, and memor
 is reused.
 """
 function fsparse!(I::Tuple, V, shape = map(maximum, I))
-    return Fiber(SparseCoo{length(I), Tuple{map(typeof, shape)...}, Int}(shape, I, [1, length(V) + 1], Element{zero(eltype(V))}(V)))
+    return Fiber(SparseCoo{length(I), Tuple{map(eltype, I)...}, Int}(shape, I, [1, length(V) + 1], Element{zero(eltype(V))}(V)))
 end
 
 """
@@ -157,7 +157,7 @@ fsprand(T::Type, n::Tuple, args...) = _fsprand_impl(n, sprand(T, mapfoldl(BigInt
 fsprand(r::SparseArrays.AbstractRNG, n::Tuple, args...) = _fsprand_impl(n, sprand(r, mapfoldl(BigInt, *, n), args...))
 fsprand(r::SparseArrays.AbstractRNG, T::Type, n::Tuple, args...) = _fsprand_impl(n, sprand(r, T, mapfoldl(BigInt, *, n), args...))
 function _fsprand_impl(shape::Tuple, vec::SparseVector{Ti, Tv}) where {Ti, Tv}
-    I = ((Vector(undef, length(vec.nzind)) for _ in shape)...,)
+    I = ((Vector{Ti}(undef, length(vec.nzind)) for _ in shape)...,)
     for (p, ind) in enumerate(vec.nzind)
         c = CartesianIndices(reverse(shape))[ind]
         ntuple(n->I[n][p] = c[length(shape) - n + 1], length(shape))
