@@ -279,10 +279,12 @@ function unfurl(fbr::VirtualFiber{VirtualPackBitsLevel}, ctx, mode, ::Walk, idx,
     header_is_run = () -> is_run(:($my_header))
     high_bit_mask = () -> :(~($(lvl.Th)(0x1) << $(sizeof(lvl.Th)*8 - 1)))
     incr_coord = (i) -> quote
-        if $(is_run(:($(lvl.ex).headers[$my_hpos])))
-            $i += $(lvl.ex).headers[$my_hpos] & $(high_bit_mask())
-        else
-            $i += $(lvl.ex).headers[$my_hpos]
+        if $my_hpos < $my_hend
+            if $(is_run(:($(lvl.ex).headers[$my_hpos])))
+                $i += $(lvl.ex).headers[$my_hpos] & $(high_bit_mask())
+            else
+                $i += $(lvl.ex).headers[$my_hpos]
+            end
         end
     end
 

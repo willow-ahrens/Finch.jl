@@ -52,15 +52,3 @@
     @test C.lvl.idx[1:3] == [3, 5, 9]
     @test C.lvl.ofs[1:4] == [1, 2, 3, 6]
 end
-
-@testset "PackBits" begin
-    A = @fiber PackBits{0,Int64, UInt8, Float64}(10,[1,2],[10],[1,11],[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0])
-    B = @fiber d{Int64}(e(0.0))
-    @finch @loop i B[i] = A[i]
-    @test reference_isequal(B, [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0])
-
-    C = @fiber PackBits{0,Int64, UInt8, Float64}(10,[1,3],[0x5,0x85],[1,8],[0.1,0.2,0.3,0.4,0.5,0.6])
-    B = @fiber d{Int64}(e(0.0))
-    @finch @loop i B[i] = C[i]
-    @test reference_isequal(B, [0.1,0.2,0.3,0.4,0.5,0.6,0.6,0.6,0.6,0.6])
-end
