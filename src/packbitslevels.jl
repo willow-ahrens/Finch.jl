@@ -278,7 +278,6 @@ function unfurl(fbr::VirtualFiber{VirtualPackBitsLevel}, ctx, mode, ::Walk, idx,
     is_run = (h) -> :($h >> $(sizeof(lvl.Th)*8 - 1) == 1)
     header_is_run = () -> is_run(:($my_header))
     high_bit_mask = () -> :(~($(lvl.Th)(0x1) << $(sizeof(lvl.Th)*8 - 1)))
-    # read_val = (arr, index, Tv) -> :(unsafe_load(Ptr{Tv}(pointer($(arr),$(index)))))
     incr_coord = (i) -> quote
         if $(is_run(:($(lvl.ex).headers[$my_hpos])))
             $i += $(lvl.ex).headers[$my_hpos] & $(high_bit_mask())
@@ -294,18 +293,18 @@ function unfurl(fbr::VirtualFiber{VirtualPackBitsLevel}, ctx, mode, ::Walk, idx,
             $my_hpos = $(lvl.ex).hpos[$(ctx(envposition(fbr.env)))]
             $my_hend = $(lvl.ex).hpos[$(ctx(envposition(fbr.env))) + 1]
 
-            $my_i = 1
-            $my_next_i = 0
+            $my_i = $(lvl.Ti)(1)
+            $my_next_i = $(lvl.Ti)(1)
             $(incr_coord(:($my_next_i)))
             # $my_hpos +=1
         end),
         body = Stepper(
             seek = (ctx, ext) -> quote
-                while $my_pos + 1 < $my_end && $my_next_i < $(ctx(getstart(ext)))
+                while $my_pos + $(lvl.Ti)(1) < $my_end && $my_next_i < $(ctx(getstart(ext)))
                     # println("RUNNING SEEK!")
                     $my_header = $(lvl.ex).headers[$my_hpos]
                     if $(header_is_run())
-                        $my_pos += 1
+                        $my_pos += $(lvl.Ti)(1)
                         $my_i = $my_next_i
                         $my_next_i += $(lvl.ex).headers[$my_hpos] & $(high_bit_mask())
                     else
@@ -313,7 +312,7 @@ function unfurl(fbr::VirtualFiber{VirtualPackBitsLevel}, ctx, mode, ::Walk, idx,
                         $my_i = $my_next_i
                         $my_next_i += $(lvl.ex).headers[$my_hpos]
                     end
-                    $my_hpos += 1
+                    $my_hpos += $(lvl.Ti)(1)
                 end
             end,
             body = Thunk(
@@ -324,21 +323,21 @@ function unfurl(fbr::VirtualFiber{VirtualPackBitsLevel}, ctx, mode, ::Walk, idx,
                 body = Switch([
                     value(header_is_run()) => Step(
                         # stride = (ctx, idx, ext) -> value(:($my_i + $my_header & $(high_bit_mask()))),
-                        stride = (ctx, idx, ext) -> value(my_next_i),
+                        stride = (ctx, idx, ext) -> value(:($my_next_i - 1)),
                         chunk = Run(body = Simplify(value(:($(lvl.ex).values[$my_pos]), lvl.Tv))),
                         next = (ctx, idx, ext) -> quote
                             # println("Run -- Incrementing pos $($my_pos) by 1")
-                            $my_pos += 1
+                            $my_pos += $(lvl.Ti)(1)
                         end
                     ),
                     literal(true) => Step(
-                        stride = (ctx, idx, ext) -> value(my_next_i),
+                        stride = (ctx, idx, ext) -> value(:($my_next_i - 1)),
                         chunk = Lookup(
                             body = (i) -> Thunk(
                                 # preamble = quote
-                                #     println("Looking up at $($my_pos + $(ctx(i)) - $my_i -1 ), pos $($my_pos), i $($(ctx(i)))")
+                                #     println("Looking up at $($my_pos + $(ctx(i)) - $my_i), pos $($my_pos), i $($(ctx(i)))")
                                 # end,
-                                body = Simplify(value(:($(lvl.ex).values[$my_pos + $(ctx(i)) - $my_i - 1]), lvl.Tv))
+                                body = Simplify(value(:($(lvl.ex).values[$my_pos + $(ctx(i)) - $my_i]), lvl.Tv))
                             )
                         ),
                         next = (ctx, idx, ext) -> quote
@@ -348,7 +347,7 @@ function unfurl(fbr::VirtualFiber{VirtualPackBitsLevel}, ctx, mode, ::Walk, idx,
                     )
                 ]),
                 epilogue = quote
-                    $my_hpos += 1
+                    $my_hpos += $(lvl.Ti)(1)
                     $my_i = $my_next_i
                     $(incr_coord(:($my_next_i)))
                 end
