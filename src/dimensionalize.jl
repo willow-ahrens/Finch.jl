@@ -105,8 +105,10 @@ function (ctx::DeclareDimensions)(node::IndexNode, dim)
     if node.kind === index
         ctx.dims[getname(node)] = resultdim(ctx.ctx, get(ctx.dims, getname(node), nodim), dim)
         return node
-    elseif node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
+    elseif node.kind === access && node.tns.kind === virtual
         return declare_dimensions_access(node, ctx, node.tns.val, dim)
+    elseif node.kind === access && node.tns.kind === variable #TODO perhaps we can get rid of this
+        return declare_dimensions_access(node, ctx, node.tns, dim)
     elseif node.kind === with
         prod = ctx(node.prod, nodim)
         (prod, _) = InferDimensions(;kwfields(ctx)...)(prod)
@@ -123,8 +125,10 @@ end
 function (ctx::InferDimensions)(node::IndexNode)
     if node.kind === index
         return (node, ctx.dims[getname(node)])
-    elseif node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
+    elseif node.kind === access && node.tns.kind === virtual
         return infer_dimensions_access(node, ctx, node.tns.val)
+    elseif node.kind === access && node.tns.kind === variable #TODO perhaps we can get rid of this
+        return infer_dimensions_access(node, ctx, node.tns)
     elseif node.kind === with
         (cons, _) = ctx(node.cons)
         return (with(cons, node.prod), nodim)
@@ -327,6 +331,26 @@ Return an iterable over the dimensions of `tns` in the context `ctx` with access
 mode `mode`. This is a function similar in spirit to `Base.axes`.
 """
 function getsize end
+function getsize(tns::IndexNode, ctx, mode)
+    @info "getsize" ctx.bindings[tns.name]
+    if tns.kind === variable
+        println(ctx.bindings[tns.name])
+        return getsize(ctx.bindings[tns.name], ctx, mode)
+    else
+        return error("unimplemented")
+    end
+end
+
+function setsize!(tns::IndexNode, ctx, mode, dims...)
+    @info "setsize" ctx.bindings[tns.name]
+    if tns.kind === variable
+        ctx.bindings[tns.name] == setsize!(ctx.bindings[tns.name], ctx, mode, dims...)
+        tns
+    else
+        return error("unimplemented")
+    end
+end
+
 
 """
     getsites(tns)

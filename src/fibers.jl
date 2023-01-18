@@ -36,10 +36,13 @@ end
 VirtualFiber(lvl::Lvl, env) where {Lvl} = VirtualFiber{Lvl}(lvl, env)
 
 function virtualize(ex, ::Type{<:Fiber{Lvl, Env}}, ctx, tag=ctx.freshen(:tns)) where {Lvl, Env}
-    lvl = virtualize(:($ex.lvl), Lvl, ctx, Symbol(tag, :_lvl))
-    env = virtualize(:($ex.env), Env, ctx)
-    env.name = tag
-    VirtualFiber(lvl, env)
+    get!(ctx.bindings, tag) do
+        lvl = virtualize(:($ex.lvl), Lvl, ctx, Symbol(tag, :_lvl))
+        env = virtualize(:($ex.env), Env, ctx)
+        env.name = tag
+        VirtualFiber(lvl, env)
+    end
+    return variable(tag) #TODO perhaps index should be renamed to variable?
 end
 (ctx::Finch.LowerJulia)(fbr::VirtualFiber) = :(Fiber($(ctx(fbr.lvl)), $(ctx(fbr.env))))
 IndexNotation.isliteral(::VirtualFiber) =  false
@@ -112,8 +115,6 @@ function trim!(fbr::VirtualFiber, ctx)
     VirtualFiber(trim_level!(fbr.lvl, ctx, 1), fbr.env)
 end
 trim!(fbr, ctx) = fbr
-
-#TODO get rid of isa IndexNode when this is all over
 
 function stylize_access(node, ctx::Stylize{LowerJulia}, tns::VirtualFiber)
     if !isempty(node.idxs)

@@ -4,6 +4,7 @@ module IndexNotation
     export index_leaf
     export literal
     export index
+    export variable
     export value
 #    export Workspace
     export pass

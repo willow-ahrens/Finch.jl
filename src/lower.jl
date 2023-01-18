@@ -149,7 +149,7 @@ end
 function (ctx::ThunkVisitor)(node::IndexNode)
     if node.kind === virtual
         ctx(node.val)
-    elseif node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
+    elseif node.kind === access && node.tns.kind === virtual
         #TODO this case morally shouldn't exist
         thunk_access(node, ctx, node.tns.val)
     elseif istree(node)
@@ -221,7 +221,7 @@ function (ctx::LowerJulia)(root::IndexNode, ::DefaultStyle)
         end
         thunk
     elseif root.kind === access
-        if root.tns isa IndexNode && root.tns.kind === virtual
+        if root.tns.kind === virtual
             return lowerjulia_access(ctx, root, root.tns.val)
         else
             tns = ctx(root.tns)
@@ -254,7 +254,7 @@ function (ctx::LowerJulia)(root::IndexNode, ::DefaultStyle)
             ctx))
     elseif root.kind === chunk
         idx_sym = ctx.freshen(getname(root.idx))
-        if simplify((@f $(getlower(root.ext)) >= 1), ctx) == (@f true)  && simplify((@f $(getupper(root.ext)) <= 1), ctx) == (@f true)
+        if simplify((@f $(getlower(root.ext)) >= 1), ctx) == (@f true) && simplify((@f $(getupper(root.ext)) <= 1), ctx) == (@f true)
             return quote
                 $idx_sym = $(ctx(getstart(root.ext)))
                 $(bind(ctx, getname(root.idx) => idx_sym) do 
@@ -331,7 +331,7 @@ function (ctx::ForLoopVisitor)(node)
 end
 
 function (ctx::ForLoopVisitor)(node::IndexNode)
-    if node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
+    if node.kind === access && node.tns.kind === virtual
         tns_2 = unchunk(node.tns.val, ctx)
         if tns_2 === nothing
             access(node.tns, node.mode, map(ctx, node.idxs)...)

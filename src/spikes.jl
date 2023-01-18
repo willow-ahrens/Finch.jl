@@ -102,14 +102,14 @@ function (ctx::SpikeTailVisitor)(node)
 end
 
 function (ctx::SpikeTailVisitor)(node::IndexNode)
-    if node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
+    if node.kind === access && node.tns.kind === virtual
         tns_2 = unchunk(node.tns.val, ctx)
         if tns_2 === nothing
             access(node.tns, node.mode, map(ctx, node.idxs)...)
         else
             access(tns_2, node.mode, map(ctx, node.idxs[2:end])...)
         end
-    elseif node isa IndexNode && node.kind === virtual
+    elseif node.kind === virtual
         ctx(node.val)
     elseif istree(node)
         similarterm(node, operation(node), map(ctx, arguments(node)))

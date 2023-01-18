@@ -56,6 +56,8 @@ function execute_code(ex, T, algebra = DefaultAlgebra())
         quote
             $(begin
                 prgm = virtualize(ex, T, ctx)
+                display(prgm)
+                println()
                 #The following call separates tensor and index names from environment symbols.
                 #TODO we might want to keep the namespace around, and/or further stratify index
                 #names from tensor names
@@ -143,7 +145,7 @@ function (ctx::Initialize)(node)
 end
 
 function (ctx::Initialize)(node::IndexNode)
-    if node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
+    if node.kind === access && node.tns.kind === virtual
         if (ctx.target === nothing || (getname(node.tns) in ctx.target)) && !(getname(node.tns) in ctx.escape)
             initialize!(node.tns.val, ctx.ctx, node.mode, map(ctx, node.idxs)...)
         else
@@ -182,7 +184,7 @@ function (ctx::Finalize)(node)
 end
 
 function (ctx::Finalize)(node::IndexNode)
-    if node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
+    if node.kind === access && node.tns.kind === virtual
         if (ctx.target === nothing || (getname(node.tns) in ctx.target)) && !(getname(node.tns) in ctx.escape)
             access(finalize!(node.tns.val, ctx.ctx, node.mode, node.idxs...), node.mode, node.idxs...)
         else

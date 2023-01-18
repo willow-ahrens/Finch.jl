@@ -47,7 +47,7 @@ function (ctx::AccessRunVisitor)(node)
 end
 
 function (ctx::AccessRunVisitor)(node::IndexNode)
-    if node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
+    if node.kind === access && node.tns.kind === virtual
         tns_2 = unchunk(node.tns.val, ctx)
         if tns_2 === nothing
             access(node.tns, node.mode, map(ctx, node.idxs)...)
@@ -132,7 +132,7 @@ end
 function (ctx::AcceptRunVisitor)(node::IndexNode)
     if node.kind === virtual
         ctx(node.val)
-    elseif node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
+    elseif node.kind === access && node.tns.kind === virtual
         node.mode.kind === reader && return node
         tns_2 = unchunk(node.tns.val, ctx)
         if tns_2 === nothing

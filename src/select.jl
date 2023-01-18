@@ -12,7 +12,7 @@ function (ctx::SelectVisitor)(node)
 end
 
 function (ctx::SelectVisitor)(node::IndexNode)
-    if node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
+    if node.kind === access && node.tns.kind === virtual
         select_access(node, ctx, node.tns.val)
     elseif istree(node)
         similarterm(node, operation(node), map(ctx, arguments(node)))

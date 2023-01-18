@@ -11,6 +11,7 @@ An IndexNode type represents many different Finch IR nodes, and an IndexHead
 enum is used to differentiate which kind of node is represented.
 """
 @enum IndexHead begin
+    variable =  0ID
     value    =  1ID
     virtual  =  2ID
     literal  =  3ID
@@ -31,6 +32,7 @@ enum is used to differentiate which kind of node is represented.
     pass     = 18ID | IS_TREE | IS_STATEFUL
     lifetime = 19ID | IS_TREE | IS_STATEFUL
 end
+
 
 """
     value(val, type)
@@ -61,6 +63,13 @@ Finch AST expression for an index named `name`. Each index must be quantified by
 which iterates over all values of the index.
 """
 index
+
+"""
+    variable(name)
+
+Finch AST expression for a variable named `name`. The variable can be looked up in the context.
+"""
+variable
 
 """
     protocol(idx, mode)
@@ -239,6 +248,12 @@ function IndexNode(kind::IndexHead, args::Vector)
         else
             error("wrong number of arguments to $kind(...)")
         end
+    elseif kind === variable
+        if length(args) == 1
+            return IndexNode(kind, args[1], nothing, IndexNode[])
+        else
+            error("wrong number of arguments to $kind(...)")
+        end
     elseif kind === virtual
         if length(args) == 1
             return IndexNode(kind, args[1], nothing, IndexNode[])
@@ -342,6 +357,12 @@ function Base.getproperty(node::IndexNode, sym::Symbol)
             return node.val::Symbol
         else
             error("type IndexNode(index, ...) has no property $sym")
+        end
+    elseif node.kind === variable
+        if sym === :name
+            return node.val::Symbol
+        else
+            error("type IndexNode(variable, ...) has no property $sym")
         end
     elseif node.kind === reader
         error("type IndexNode(reader, ...) has no property $sym")
@@ -474,6 +495,8 @@ function display_expression(io, mime, node::IndexNode)
         print(io, node.val)
     elseif node.kind === index
         print(io, node.name)
+    elseif node.kind === variable
+        print(io, node.name)
     elseif node.kind === reader
         print(io, "reader()")
     elseif node.kind === updater
@@ -600,6 +623,8 @@ function Base.:(==)(a::IndexNode, b::IndexNode)
             return b.kind === literal && isequal(a.val, b.val) #TODO Feels iffy idk
         elseif a.kind === index
             return b.kind === index && a.name == b.name
+        elseif a.kind === variable
+            return b.kind === index && a.name == b.name
         elseif a.kind === virtual
             return b.kind === virtual && a.val == b.val #TODO Feels iffy idk
         else
@@ -624,6 +649,8 @@ function Base.hash(a::IndexNode, h::UInt)
             return hash(virtual, hash(a.val, h))
         elseif a.kind === index
             return hash(index, hash(a.name, h))
+        elseif a.kind === variable
+            return hash(variable, hash(a.name, h))
         else
             error("unimplemented")
         end
@@ -666,6 +693,8 @@ end
 function Finch.getname(x::IndexNode)
     if x.kind === index
         return x.val
+    elseif x.kind === variable
+        return x.val
     elseif x.kind === virtual
         return Finch.getname(x.val)
     elseif x.kind === access
@@ -678,6 +707,8 @@ end
 function Finch.setname(x::IndexNode, sym)
     if x.kind === index
         return index(sym)
+    elseif x.kind === variable
+        return variable(sym)
     elseif x.kind === virtual
         return Finch.setname(x.val, sym)
     else
