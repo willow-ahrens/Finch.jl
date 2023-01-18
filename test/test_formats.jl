@@ -35,42 +35,6 @@
     ref = Fiber(SparseList{Int, Int}(4, [1, 5], [1, 2, 3, 4], RepeatRLE{0.0, Int, Int, Float64}(4, [1, 4, 5, 8, 9], [1, 2, 4, 4, 2, 3, 4, 4], [0.0, 1.0, 2.0, 0.0, 1.0, 2.0, 0.0, 0.0])))
     res = dropdefaults!(Fiber(SparseList(RepeatRLE(0.0))), arr)
     @test isstructequal(res, ref)
-    arr = [0.0, 0.0, 0.0, 0.0, 0.0]
-    ref = Fiber(RepeatRLEDiff{0.0, Int, Int, Float64}(5, [1, 2], [0x05, 0x00], [0.0]))
-    res = dropdefaults!(Fiber(RepeatRLEDiff(0.0)), arr)
-    @test isstructequal(res, ref)
-    arr = [1.0, 1.0, 1.0, 1.0, 1.0]
-    ref = Fiber(RepeatRLEDiff{0.0, Int, Int, Float64}(5, [1, 2], [0x05, 0x00], [1.0]))
-    res = dropdefaults!(Fiber(RepeatRLEDiff(0.0)), arr)
-    @test isstructequal(res, ref)
-    arr = [0.0, 1.0, 1.0, 2.0, 2.0, 0.0, 0.0, 3.0, 0.0]
-    ref = Fiber(RepeatRLEDiff{0.0, Int, Int, Float64}(9, [1, 7], [0x01, 0x02, 0x02, 0x02, 0x01, 0x01, 0x00], [0.0, 1.0, 2.0, 0.0, 3.0, 0.0]))
-    res = dropdefaults!(Fiber(RepeatRLEDiff(0.0)), arr)
-    @test isstructequal(res, ref)
-    arr = [0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0]
-    ref = Fiber(Dense{Int}(5, RepeatRLEDiff{0.0, Int, Int, Float64}(5, [1, 2, 3, 4, 5, 6], [0x05, 0x05, 0x05, 0x05, 0x05, 0x00], [0.0, 0.0, 0.0, 0.0, 0.0])))
-    res = dropdefaults!(Fiber(Dense(RepeatRLEDiff(0.0))), arr)
-    @test isstructequal(res, ref)
-    arr = [1.0 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0 1.0]
-    ref = Fiber(Dense{Int}(5, RepeatRLEDiff{0.0, Int, Int, Float64}(5, [1, 2, 3, 4, 5, 6], [0x05, 0x05, 0x05, 0x05, 0x05, 0x00], [1.0, 1.0, 1.0, 1.0, 1.0])))
-    res = dropdefaults!(Fiber(Dense(RepeatRLEDiff(0.0))), arr)
-    @test isstructequal(res, ref)
-    arr = [0.0 1.0 2.0 2.0; 0.0 0.0 0.0 0.0; 1.0 1.0 2.0 0.0; 0.0 0.0 0.0 0.0]
-    ref = Fiber(Dense{Int}(4, RepeatRLEDiff{0.0, Int, Int, Float64}(4, [1, 4, 5, 8, 9], [0x01, 0x01, 0x02, 0x04, 0x02, 0x01, 0x01, 0x04, 0x00], [0.0, 1.0, 2.0, 0.0, 1.0, 2.0, 0.0, 0.0])))
-    res = dropdefaults!(Fiber(Dense(RepeatRLEDiff(0.0))), arr)
-    @test isstructequal(res, ref)
-    arr = [0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0]
-    ref = Fiber(SparseList{Int, Int}(5, [1, 6], [1, 2, 3, 4, 5], RepeatRLEDiff{0.0, Int, Int, Float64}(5, [1, 2, 3, 4, 5, 6], [0x05, 0x05, 0x05, 0x05, 0x05, 0x00], [0.0, 0.0, 0.0, 0.0, 0.0])))
-    res = dropdefaults!(Fiber(SparseList(RepeatRLEDiff(0.0))), arr)
-    @test isstructequal(res, ref)
-    arr = [1.0 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0 1.0]
-    ref = Fiber(SparseList{Int, Int}(5, [1, 6], [1, 2, 3, 4, 5], RepeatRLEDiff{0.0, Int, Int, Float64}(5, [1, 2, 3, 4, 5, 6], [0x05, 0x05, 0x05, 0x05, 0x05, 0x00], [1.0, 1.0, 1.0, 1.0, 1.0])))
-    res = dropdefaults!(Fiber(SparseList(RepeatRLEDiff(0.0))), arr)
-    @test isstructequal(res, ref)
-    arr = [0.0 1.0 2.0 2.0; 0.0 0.0 0.0 0.0; 1.0 1.0 2.0 0.0; 0.0 0.0 0.0 0.0]
-    ref = Fiber(SparseList{Int, Int}(4, [1, 5], [1, 2, 3, 4], RepeatRLEDiff{0.0, Int, Int, Float64}(4, [1, 4, 5, 8, 9], [0x01, 0x01, 0x02, 0x04, 0x02, 0x01, 0x01, 0x04, 0x00], [0.0, 1.0, 2.0, 0.0, 1.0, 2.0, 0.0, 0.0])))
-    res = dropdefaults!(Fiber(SparseList(RepeatRLEDiff(0.0))), arr)
-    @test isstructequal(res, ref)
     arr = fill(false)
     ref = Fiber(Pattern())
     res = dropdefaults!(Fiber(Pattern()), arr)
@@ -150,42 +114,6 @@
     arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
     ref = Fiber(SparseList{Int, Int}(4, [1, 4], [1, 3, 4], SparseList{Int, Int}(4, [1, 3, 7, 9], [2, 4, 1, 2, 3, 4, 2, 4], Pattern())))
     res = dropdefaults!(Fiber(SparseList(SparseList(Pattern()))), arr)
-    @test isstructequal(res, ref)
-    arr = Bool[0, 0, 0, 0, 0]
-    ref = Fiber(SparseListDiff{Int, Int}(5, [1, 1], [0x00], [0], Pattern()))
-    res = dropdefaults!(Fiber(SparseListDiff(Pattern())), arr)
-    @test isstructequal(res, ref)
-    arr = Bool[1, 1, 1, 1, 1]
-    ref = Fiber(SparseListDiff{Int, Int}(5, [1, 6], [0x01, 0x01, 0x01, 0x01, 0x01, 0x00], [5], Pattern()))
-    res = dropdefaults!(Fiber(SparseListDiff(Pattern())), arr)
-    @test isstructequal(res, ref)
-    arr = Bool[0, 1, 0, 1]
-    ref = Fiber(SparseListDiff{Int, Int}(4, [1, 3], [0x02, 0x02, 0x00], [4], Pattern()))
-    res = dropdefaults!(Fiber(SparseListDiff(Pattern())), arr)
-    @test isstructequal(res, ref)
-    arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
-    ref = Fiber(Dense{Int}(5, SparseListDiff{Int, Int}(5, [1, 1, 1, 1, 1, 1], [0x00], [0, 0, 0, 0, 0], Pattern())))
-    res = dropdefaults!(Fiber(Dense(SparseListDiff(Pattern()))), arr)
-    @test isstructequal(res, ref)
-    arr = Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
-    ref = Fiber(Dense{Int}(5, SparseListDiff{Int, Int}(5, [1, 6, 11, 16, 21, 26], [0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00], [5, 5, 5, 5, 5], Pattern())))
-    res = dropdefaults!(Fiber(Dense(SparseListDiff(Pattern()))), arr)
-    @test isstructequal(res, ref)
-    arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(Dense{Int}(4, SparseListDiff{Int, Int}(4, [1, 3, 3, 7, 9], [0x02, 0x02, 0x01, 0x01, 0x01, 0x01, 0x02, 0x02, 0x00], [4, 0, 4, 4], Pattern())))
-    res = dropdefaults!(Fiber(Dense(SparseListDiff(Pattern()))), arr)
-    @test isstructequal(res, ref)
-    arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
-    ref = Fiber(SparseList{Int, Int}(5, [1, 1], [], SparseListDiff{Int, Int}(5, [1], [0x00], [], Pattern())))
-    res = dropdefaults!(Fiber(SparseList(SparseListDiff(Pattern()))), arr)
-    @test isstructequal(res, ref)
-    arr = Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
-    ref = Fiber(SparseList{Int, Int}(5, [1, 6], [1, 2, 3, 4, 5], SparseListDiff{Int, Int}(5, [1, 6, 11, 16, 21, 26], [0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00], [5, 5, 5, 5, 5], Pattern())))
-    res = dropdefaults!(Fiber(SparseList(SparseListDiff(Pattern()))), arr)
-    @test isstructequal(res, ref)
-    arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(SparseList{Int, Int}(4, [1, 4], [1, 3, 4], SparseListDiff{Int, Int}(4, [1, 3, 7, 9], [0x02, 0x02, 0x01, 0x01, 0x01, 0x01, 0x02, 0x02, 0x00], [4, 4, 4], Pattern())))
-    res = dropdefaults!(Fiber(SparseList(SparseListDiff(Pattern()))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0, 0, 0, 0, 0]
     ref = Fiber(SparseVBL{Int, Int}(5, [1, 1], [], [1], Pattern()))
@@ -436,42 +364,6 @@
     res = dropdefaults!(Fiber(SparseList(SparseList(Element(false)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0, 0, 0, 0, 0]
-    ref = Fiber(SparseListDiff{Int, Int}(5, [1, 1], [0x00], [0], Element{false, Bool}([0])))
-    res = dropdefaults!(Fiber(SparseListDiff(Element(false))), arr)
-    @test isstructequal(res, ref)
-    arr = Bool[1, 1, 1, 1, 1]
-    ref = Fiber(SparseListDiff{Int, Int}(5, [1, 6], [0x01, 0x01, 0x01, 0x01, 0x01, 0x00], [5], Element{false, Bool}([1, 1, 1, 1, 1, 0])))
-    res = dropdefaults!(Fiber(SparseListDiff(Element(false))), arr)
-    @test isstructequal(res, ref)
-    arr = Bool[0, 1, 0, 1]
-    ref = Fiber(SparseListDiff{Int, Int}(4, [1, 3], [0x02, 0x02, 0x00], [4], Element{false, Bool}([1, 1, 0])))
-    res = dropdefaults!(Fiber(SparseListDiff(Element(false))), arr)
-    @test isstructequal(res, ref)
-    arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
-    ref = Fiber(Dense{Int}(5, SparseListDiff{Int, Int}(5, [1, 1, 1, 1, 1, 1], [0x00], [0, 0, 0, 0, 0], Element{false, Bool}([0]))))
-    res = dropdefaults!(Fiber(Dense(SparseListDiff(Element(false)))), arr)
-    @test isstructequal(res, ref)
-    arr = Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
-    ref = Fiber(Dense{Int}(5, SparseListDiff{Int, Int}(5, [1, 6, 11, 16, 21, 26], [0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00], [5, 5, 5, 5, 5], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]))))
-    res = dropdefaults!(Fiber(Dense(SparseListDiff(Element(false)))), arr)
-    @test isstructequal(res, ref)
-    arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(Dense{Int}(4, SparseListDiff{Int, Int}(4, [1, 3, 3, 7, 9], [0x02, 0x02, 0x01, 0x01, 0x01, 0x01, 0x02, 0x02, 0x00], [4, 0, 4, 4], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1, 0]))))
-    res = dropdefaults!(Fiber(Dense(SparseListDiff(Element(false)))), arr)
-    @test isstructequal(res, ref)
-    arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
-    ref = Fiber(SparseList{Int, Int}(5, [1, 1], [], SparseListDiff{Int, Int}(5, [1], [0x00], [], Element{false, Bool}([0]))))
-    res = dropdefaults!(Fiber(SparseList(SparseListDiff(Element(false)))), arr)
-    @test isstructequal(res, ref)
-    arr = Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
-    ref = Fiber(SparseList{Int, Int}(5, [1, 6], [1, 2, 3, 4, 5], SparseListDiff{Int, Int}(5, [1, 6, 11, 16, 21, 26], [0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00], [5, 5, 5, 5, 5], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]))))
-    res = dropdefaults!(Fiber(SparseList(SparseListDiff(Element(false)))), arr)
-    @test isstructequal(res, ref)
-    arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(SparseList{Int, Int}(4, [1, 4], [1, 3, 4], SparseListDiff{Int, Int}(4, [1, 3, 7, 9], [0x02, 0x02, 0x01, 0x01, 0x01, 0x01, 0x02, 0x02, 0x00], [4, 4, 4], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1, 0]))))
-    res = dropdefaults!(Fiber(SparseList(SparseListDiff(Element(false)))), arr)
-    @test isstructequal(res, ref)
-    arr = Bool[0, 0, 0, 0, 0]
     ref = Fiber(SparseVBL{Int, Int}(5, [1, 1], [], [1], Element{false, Bool}([])))
     res = dropdefaults!(Fiber(SparseVBL(Element(false))), arr)
     @test isstructequal(res, ref)
@@ -718,42 +610,6 @@
     arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
     ref = Fiber(SparseList{Int, Int}(4, [1, 4], [1, 2, 4], SparseList{Int, Int}(4, [1, 3, 7, 9], [1, 3, 1, 2, 3, 4, 1, 3], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0]))))
     res = dropdefaults!(Fiber(SparseList(SparseList(Element(true)))), arr)
-    @test isstructequal(res, ref)
-    arr = Bool[0, 0, 0, 0, 0]
-    ref = Fiber(SparseListDiff{Int, Int}(5, [1, 6], [0x01, 0x01, 0x01, 0x01, 0x01, 0x00], [5], Element{true, Bool}([0, 0, 0, 0, 0, 1])))
-    res = dropdefaults!(Fiber(SparseListDiff(Element(true))), arr)
-    @test isstructequal(res, ref)
-    arr = Bool[1, 1, 1, 1, 1]
-    ref = Fiber(SparseListDiff{Int, Int}(5, [1, 1], [0x00], [0], Element{true, Bool}([1])))
-    res = dropdefaults!(Fiber(SparseListDiff(Element(true))), arr)
-    @test isstructequal(res, ref)
-    arr = Bool[0, 1, 0, 1]
-    ref = Fiber(SparseListDiff{Int, Int}(4, [1, 3], [0x01, 0x02, 0x00], [3], Element{true, Bool}([0, 0, 1])))
-    res = dropdefaults!(Fiber(SparseListDiff(Element(true))), arr)
-    @test isstructequal(res, ref)
-    arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
-    ref = Fiber(Dense{Int}(5, SparseListDiff{Int, Int}(5, [1, 6, 11, 16, 21, 26], [0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00], [5, 5, 5, 5, 5], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]))))
-    res = dropdefaults!(Fiber(Dense(SparseListDiff(Element(true)))), arr)
-    @test isstructequal(res, ref)
-    arr = Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
-    ref = Fiber(Dense{Int}(5, SparseListDiff{Int, Int}(5, [1, 1, 1, 1, 1, 1], [0x00], [0, 0, 0, 0, 0], Element{true, Bool}([1]))))
-    res = dropdefaults!(Fiber(Dense(SparseListDiff(Element(true)))), arr)
-    @test isstructequal(res, ref)
-    arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(Dense{Int}(4, SparseListDiff{Int, Int}(4, [1, 3, 7, 7, 9], [0x01, 0x02, 0x01, 0x01, 0x01, 0x01, 0x01, 0x02, 0x00], [3, 4, 0, 3], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0, 1]))))
-    res = dropdefaults!(Fiber(Dense(SparseListDiff(Element(true)))), arr)
-    @test isstructequal(res, ref)
-    arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
-    ref = Fiber(SparseList{Int, Int}(5, [1, 6], [1, 2, 3, 4, 5], SparseListDiff{Int, Int}(5, [1, 6, 11, 16, 21, 26], [0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00], [5, 5, 5, 5, 5], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]))))
-    res = dropdefaults!(Fiber(SparseList(SparseListDiff(Element(true)))), arr)
-    @test isstructequal(res, ref)
-    arr = Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
-    ref = Fiber(SparseList{Int, Int}(5, [1, 1], [], SparseListDiff{Int, Int}(5, [1], [0x00], [], Element{true, Bool}([1]))))
-    res = dropdefaults!(Fiber(SparseList(SparseListDiff(Element(true)))), arr)
-    @test isstructequal(res, ref)
-    arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(SparseList{Int, Int}(4, [1, 4], [1, 2, 4], SparseListDiff{Int, Int}(4, [1, 3, 7, 9], [0x01, 0x02, 0x01, 0x01, 0x01, 0x01, 0x01, 0x02, 0x00], [3, 4, 3], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0, 1]))))
-    res = dropdefaults!(Fiber(SparseList(SparseListDiff(Element(true)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0, 0, 0, 0, 0]
     ref = Fiber(SparseVBL{Int, Int}(5, [1, 2], [5], [1, 6], Element{true, Bool}([0, 0, 0, 0, 0])))

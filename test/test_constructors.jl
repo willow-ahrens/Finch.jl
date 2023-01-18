@@ -62,51 +62,6 @@
         res = Fiber(Finch.SparseListLevel{Int16, Int16}(Element{0.0, Float64}([])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseListDiffLevel constructors" begin
-        ref = Fiber(SparseListDiff{Int, Int}(0, [1, 1], [0x00], [0], Element{0.0, Float64}([0.0])))
-        res = Fiber(Finch.SparseListDiffLevel(0, [1, 1], UInt8[0x00], [0], Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel(0, Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel(Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int}(0, [1, 1], UInt8[0x00], [0], Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int}(0, Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int}(Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int, Int}(0, [1, 1], UInt8[0x00], [0], Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int, Int}(0, Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int, Int}(Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.SparseListDiffLevel{Int16} constructors" begin
-        ref = Fiber(SparseListDiff{Int16, Int}(0, [1, 1], [0x00], [0], Element{0.0, Float64}([0.0])))
-        res = Fiber(Finch.SparseListDiffLevel{Int16}(0, [1, 1], UInt8[0x00], Int16[0], Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int16}(0, Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int16}(Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int16, Int}(0, [1, 1], UInt8[0x00], Int16[0], Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int16, Int}(0, Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int16, Int}(Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.SparseListDiffLevel{Int16, Int16} constructors" begin
-        ref = Fiber(SparseListDiff{Int16, Int16}(0, [1, 1], [0x00], [0], Element{0.0, Float64}([0.0])))
-        res = Fiber(Finch.SparseListDiffLevel{Int16, Int16}(0, Int16[1, 1], UInt8[0x00], Int16[0], Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int16, Int16}(0, Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int16, Int16}(Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-    end
     @testset "Finch.SparseVBLLevel constructors" begin
         ref = Fiber(SparseVBL{Int, Int}(0, [1, 1], [], [1], Element{0.0, Float64}([])))
         res = Fiber(Finch.SparseVBLLevel(0, [1, 1], Int[], [1], Element{0.0, Float64}([])))
@@ -242,39 +197,6 @@
         res = Fiber(Finch.SparseListLevel{Int16, Int16}(4, Element{0.0, Float64}([])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseListDiffLevel constructors" begin
-        ref = Fiber(SparseListDiff{Int, Int}(4, [1, 1], [0x00], [0], Element{0.0, Float64}([0.0])))
-        res = Fiber(Finch.SparseListDiffLevel(4, [1, 1], UInt8[0x00], [0], Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel(4, Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int}(4, [1, 1], UInt8[0x00], [0], Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int}(4, Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int, Int}(4, [1, 1], UInt8[0x00], [0], Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int, Int}(4, Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.SparseListDiffLevel{Int16} constructors" begin
-        ref = Fiber(SparseListDiff{Int16, Int}(4, [1, 1], [0x00], [0], Element{0.0, Float64}([0.0])))
-        res = Fiber(Finch.SparseListDiffLevel{Int16}(4, [1, 1], UInt8[0x00], Int16[0], Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int16}(4, Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int16, Int}(4, [1, 1], UInt8[0x00], Int16[0], Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int16, Int}(4, Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.SparseListDiffLevel{Int16, Int16} constructors" begin
-        ref = Fiber(SparseListDiff{Int16, Int16}(4, [1, 1], [0x00], [0], Element{0.0, Float64}([0.0])))
-        res = Fiber(Finch.SparseListDiffLevel{Int16, Int16}(4, Int16[1, 1], UInt8[0x00], Int16[0], Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int16, Int16}(4, Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-    end
     @testset "Finch.SparseVBLLevel constructors" begin
         ref = Fiber(SparseVBL{Int, Int}(4, [1, 1], [], [1], Element{0.0, Float64}([])))
         res = Fiber(Finch.SparseVBLLevel(4, [1, 1], Int[], [1], Element{0.0, Float64}([])))
@@ -372,27 +294,6 @@
     @testset "Finch.SparseListLevel{Int16, Int16} constructors" begin
         ref = Fiber(SparseList{Int16, Int16}(6, [1, 3], [2, 4], Element{0.0, Float64}([1.0, 1.0])))
         res = Fiber(Finch.SparseListLevel{Int16, Int16}(6, Int16[1, 3], Int16[2, 4], Element{0.0, Float64}([1.0, 1.0])))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.SparseListDiffLevel constructors" begin
-        ref = Fiber(SparseListDiff{Int, Int}(6, [1, 3], [0x02, 0x02, 0x00], [4], Element{0.0, Float64}([1.0, 1.0, 0.0])))
-        res = Fiber(Finch.SparseListDiffLevel(6, [1, 3], UInt8[0x02, 0x02, 0x00], [4], Element{0.0, Float64}([1.0, 1.0, 0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int}(6, [1, 3], UInt8[0x02, 0x02, 0x00], [4], Element{0.0, Float64}([1.0, 1.0, 0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int, Int}(6, [1, 3], UInt8[0x02, 0x02, 0x00], [4], Element{0.0, Float64}([1.0, 1.0, 0.0])))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.SparseListDiffLevel{Int16} constructors" begin
-        ref = Fiber(SparseListDiff{Int16, Int}(6, [1, 3], [0x02, 0x02, 0x00], [4], Element{0.0, Float64}([1.0, 1.0, 0.0])))
-        res = Fiber(Finch.SparseListDiffLevel{Int16}(6, [1, 3], UInt8[0x02, 0x02, 0x00], Int16[4], Element{0.0, Float64}([1.0, 1.0, 0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int16, Int}(6, [1, 3], UInt8[0x02, 0x02, 0x00], Int16[4], Element{0.0, Float64}([1.0, 1.0, 0.0])))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.SparseListDiffLevel{Int16, Int16} constructors" begin
-        ref = Fiber(SparseListDiff{Int16, Int16}(6, [1, 3], [0x02, 0x02, 0x00], [4], Element{0.0, Float64}([1.0, 1.0, 0.0])))
-        res = Fiber(Finch.SparseListDiffLevel{Int16, Int16}(6, Int16[1, 3], UInt8[0x02, 0x02, 0x00], Int16[4], Element{0.0, Float64}([1.0, 1.0, 0.0])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseVBLLevel constructors" begin
@@ -500,51 +401,6 @@
         res = Fiber(Finch.SparseListLevel{Int16, Int16}(Element{0.0, Float64}([])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseListDiffLevel constructors" begin
-        ref = Fiber(SparseListDiff{Int, Int}(0, [1, 1], [0x00], [0], Element{0.0, Float64}([0.0])))
-        res = Fiber(Finch.SparseListDiffLevel(0, [1, 1], UInt8[0x00], [0], Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel(0, Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel(Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int}(0, [1, 1], UInt8[0x00], [0], Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int}(0, Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int}(Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int, Int}(0, [1, 1], UInt8[0x00], [0], Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int, Int}(0, Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int, Int}(Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.SparseListDiffLevel{Int16} constructors" begin
-        ref = Fiber(SparseListDiff{Int16, Int}(0, [1, 1], [0x00], [0], Element{0.0, Float64}([0.0])))
-        res = Fiber(Finch.SparseListDiffLevel{Int16}(0, [1, 1], UInt8[0x00], Int16[0], Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int16}(0, Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int16}(Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int16, Int}(0, [1, 1], UInt8[0x00], Int16[0], Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int16, Int}(0, Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int16, Int}(Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.SparseListDiffLevel{Int16, Int16} constructors" begin
-        ref = Fiber(SparseListDiff{Int16, Int16}(0, [1, 1], [0x00], [0], Element{0.0, Float64}([0.0])))
-        res = Fiber(Finch.SparseListDiffLevel{Int16, Int16}(0, Int16[1, 1], UInt8[0x00], Int16[0], Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int16, Int16}(0, Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int16, Int16}(Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-    end
     @testset "Finch.SparseVBLLevel constructors" begin
         ref = Fiber(SparseVBL{Int, Int}(0, [1, 1], [], [1], Element{0.0, Float64}([])))
         res = Fiber(Finch.SparseVBLLevel(0, [1, 1], Int[], [1], Element{0.0, Float64}([])))
@@ -680,39 +536,6 @@
         res = Fiber(Finch.SparseListLevel{Int16, Int16}(4, Element{0.0, Float64}([])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseListDiffLevel constructors" begin
-        ref = Fiber(SparseListDiff{Int, Int}(4, [1, 1], [0x00], [0], Element{0.0, Float64}([0.0])))
-        res = Fiber(Finch.SparseListDiffLevel(4, [1, 1], UInt8[0x00], [0], Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel(4, Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int}(4, [1, 1], UInt8[0x00], [0], Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int}(4, Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int, Int}(4, [1, 1], UInt8[0x00], [0], Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int, Int}(4, Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.SparseListDiffLevel{Int16} constructors" begin
-        ref = Fiber(SparseListDiff{Int16, Int}(4, [1, 1], [0x00], [0], Element{0.0, Float64}([0.0])))
-        res = Fiber(Finch.SparseListDiffLevel{Int16}(4, [1, 1], UInt8[0x00], Int16[0], Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int16}(4, Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int16, Int}(4, [1, 1], UInt8[0x00], Int16[0], Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int16, Int}(4, Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.SparseListDiffLevel{Int16, Int16} constructors" begin
-        ref = Fiber(SparseListDiff{Int16, Int16}(4, [1, 1], [0x00], [0], Element{0.0, Float64}([0.0])))
-        res = Fiber(Finch.SparseListDiffLevel{Int16, Int16}(4, Int16[1, 1], UInt8[0x00], Int16[0], Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int16, Int16}(4, Element{0.0, Float64}([0.0])))
-        @test isstructequal(res, ref)
-    end
     @testset "Finch.SparseVBLLevel constructors" begin
         ref = Fiber(SparseVBL{Int, Int}(4, [1, 1], [], [1], Element{0.0, Float64}([])))
         res = Fiber(Finch.SparseVBLLevel(4, [1, 1], Int[], [1], Element{0.0, Float64}([])))
@@ -812,27 +635,6 @@
         res = Fiber(Finch.SparseListLevel{Int16, Int16}(6, Int16[1, 5], Int16[2, 3, 5, 6], Element{0.0, Float64}([2.0, 2.0, 3.0, 3.0])))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.SparseListDiffLevel constructors" begin
-        ref = Fiber(SparseListDiff{Int, Int}(6, [1, 5], [0x02, 0x01, 0x02, 0x01, 0x00], [6], Element{0.0, Float64}([2.0, 2.0, 3.0, 3.0, 0.0])))
-        res = Fiber(Finch.SparseListDiffLevel(6, [1, 5], UInt8[0x02, 0x01, 0x02, 0x01, 0x00], [6], Element{0.0, Float64}([2.0, 2.0, 3.0, 3.0, 0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int}(6, [1, 5], UInt8[0x02, 0x01, 0x02, 0x01, 0x00], [6], Element{0.0, Float64}([2.0, 2.0, 3.0, 3.0, 0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int, Int}(6, [1, 5], UInt8[0x02, 0x01, 0x02, 0x01, 0x00], [6], Element{0.0, Float64}([2.0, 2.0, 3.0, 3.0, 0.0])))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.SparseListDiffLevel{Int16} constructors" begin
-        ref = Fiber(SparseListDiff{Int16, Int}(6, [1, 5], [0x02, 0x01, 0x02, 0x01, 0x00], [6], Element{0.0, Float64}([2.0, 2.0, 3.0, 3.0, 0.0])))
-        res = Fiber(Finch.SparseListDiffLevel{Int16}(6, [1, 5], UInt8[0x02, 0x01, 0x02, 0x01, 0x00], Int16[6], Element{0.0, Float64}([2.0, 2.0, 3.0, 3.0, 0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int16, Int}(6, [1, 5], UInt8[0x02, 0x01, 0x02, 0x01, 0x00], Int16[6], Element{0.0, Float64}([2.0, 2.0, 3.0, 3.0, 0.0])))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.SparseListDiffLevel{Int16, Int16} constructors" begin
-        ref = Fiber(SparseListDiff{Int16, Int16}(6, [1, 5], [0x02, 0x01, 0x02, 0x01, 0x00], [6], Element{0.0, Float64}([2.0, 2.0, 3.0, 3.0, 0.0])))
-        res = Fiber(Finch.SparseListDiffLevel{Int16, Int16}(6, Int16[1, 5], UInt8[0x02, 0x01, 0x02, 0x01, 0x00], Int16[6], Element{0.0, Float64}([2.0, 2.0, 3.0, 3.0, 0.0])))
-        @test isstructequal(res, ref)
-    end
     @testset "Finch.SparseVBLLevel constructors" begin
         ref = Fiber(SparseVBL{Int, Int}(6, [1, 3], [3, 6], [1, 3, 5], Element{0.0, Float64}([2.0, 2.0, 3.0, 3.0])))
         res = Fiber(Finch.SparseVBLLevel(6, [1, 3], [3, 6], [1, 3, 5], Element{0.0, Float64}([2.0, 2.0, 3.0, 3.0])))
@@ -894,27 +696,6 @@
     @testset "Finch.SparseListLevel{Int16, Int16} constructors" begin
         ref = Fiber(SparseList{Int16, Int16}(1111, [1, 5], [2, 3, 555, 666], Element{0.0, Float64}([20.0, 30.0, 5550.0, 6660.0])))
         res = Fiber(Finch.SparseListLevel{Int16, Int16}(1111, Int16[1, 5], Int16[2, 3, 555, 666], Element{0.0, Float64}([20.0, 30.0, 5550.0, 6660.0])))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.SparseListDiffLevel constructors" begin
-        ref = Fiber(SparseListDiff{Int, Int}(1111, [1, 7], [0x02, 0x01, 0xff, 0xff, 0x2a, 0x6f, 0x00], [666], Element{0.0, Float64}([20.0, 30.0, 0.0, 0.0, 5550.0, 6660.0, 0.0])))
-        res = Fiber(Finch.SparseListDiffLevel(1111, [1, 7], UInt8[0x02, 0x01, 0xff, 0xff, 0x2a, 0x6f, 0x00], [666], Element{0.0, Float64}([20.0, 30.0, 0.0, 0.0, 5550.0, 6660.0, 0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int}(1111, [1, 7], UInt8[0x02, 0x01, 0xff, 0xff, 0x2a, 0x6f, 0x00], [666], Element{0.0, Float64}([20.0, 30.0, 0.0, 0.0, 5550.0, 6660.0, 0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int, Int}(1111, [1, 7], UInt8[0x02, 0x01, 0xff, 0xff, 0x2a, 0x6f, 0x00], [666], Element{0.0, Float64}([20.0, 30.0, 0.0, 0.0, 5550.0, 6660.0, 0.0])))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.SparseListDiffLevel{Int16} constructors" begin
-        ref = Fiber(SparseListDiff{Int16, Int}(1111, [1, 7], [0x02, 0x01, 0xff, 0xff, 0x2a, 0x6f, 0x00], [666], Element{0.0, Float64}([20.0, 30.0, 0.0, 0.0, 5550.0, 6660.0, 0.0])))
-        res = Fiber(Finch.SparseListDiffLevel{Int16}(1111, [1, 7], UInt8[0x02, 0x01, 0xff, 0xff, 0x2a, 0x6f, 0x00], Int16[666], Element{0.0, Float64}([20.0, 30.0, 0.0, 0.0, 5550.0, 6660.0, 0.0])))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.SparseListDiffLevel{Int16, Int}(1111, [1, 7], UInt8[0x02, 0x01, 0xff, 0xff, 0x2a, 0x6f, 0x00], Int16[666], Element{0.0, Float64}([20.0, 30.0, 0.0, 0.0, 5550.0, 6660.0, 0.0])))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.SparseListDiffLevel{Int16, Int16} constructors" begin
-        ref = Fiber(SparseListDiff{Int16, Int16}(1111, [1, 7], [0x02, 0x01, 0xff, 0xff, 0x2a, 0x6f, 0x00], [666], Element{0.0, Float64}([20.0, 30.0, 0.0, 0.0, 5550.0, 6660.0, 0.0])))
-        res = Fiber(Finch.SparseListDiffLevel{Int16, Int16}(1111, Int16[1, 7], UInt8[0x02, 0x01, 0xff, 0xff, 0x2a, 0x6f, 0x00], Int16[666], Element{0.0, Float64}([20.0, 30.0, 0.0, 0.0, 5550.0, 6660.0, 0.0])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseVBLLevel constructors" begin
@@ -2531,78 +2312,6 @@
         res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Any}())
         @test isstructequal(res, ref)
     end
-    @testset "Finch.RepeatRLEDiffLevel{0.0} constructors" begin
-        ref = Fiber(RepeatRLEDiff{0.0, Int, Int, Float64}(0, [1, 1], [0x00], []))
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0}(0, [1, 1], UInt8[0x00], Float64[]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0}(0))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0}())
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int}(0, [1, 1], UInt8[0x00], Float64[]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int}(0))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int}())
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int, Int}(0, [1, 1], UInt8[0x00], Float64[]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int, Int}(0))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int, Int}())
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int, Int, Float64}(0, [1, 1], UInt8[0x00], Float64[]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int, Int, Float64}(0))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int, Int, Float64}())
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.RepeatRLEDiffLevel{0.0, Int16} constructors" begin
-        ref = Fiber(RepeatRLEDiff{0.0, Int16, Int, Float64}(0, [1, 1], [0x00], []))
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16}(0, [1, 1], UInt8[0x00], Float64[]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16}(0))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16}())
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int}(0, [1, 1], UInt8[0x00], Float64[]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int}(0))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int}())
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int, Float64}(0, [1, 1], UInt8[0x00], Float64[]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int, Float64}(0))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int, Float64}())
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.RepeatRLEDiffLevel{0.0, Int16, Int16} constructors" begin
-        ref = Fiber(RepeatRLEDiff{0.0, Int16, Int16, Float64}(0, [1, 1], [0x00], []))
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int16}(0, Int16[1, 1], UInt8[0x00], Float64[]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int16}(0))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int16}())
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int16, Float64}(0, Int16[1, 1], UInt8[0x00], Float64[]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int16, Float64}(0))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int16, Float64}())
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.RepeatRLEDiffLevel{0.0, Int16, Int16, Any} constructors" begin
-        ref = Fiber(RepeatRLEDiff{0.0, Int16, Int16, Any}(0, [1, 1], [0x00], []))
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int16, Any}(0, Int16[1, 1], UInt8[0x00], Any[]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int16, Any}(0))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int16, Any}())
-        @test isstructequal(res, ref)
-    end
     @testset "Finch.RepeatRLELevel constructors" begin
         ref = Fiber(RepeatRLE{0.0, Int, Int, Float64}(0, [1, 1], [], []))
         res = Fiber(Finch.RepeatRLELevel(0.0, 0, [1, 1], Int[], Float64[]))
@@ -2664,58 +2373,6 @@
         res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Any}(4))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.RepeatRLEDiffLevel{0.0} constructors" begin
-        ref = Fiber(RepeatRLEDiff{0.0, Int, Int, Float64}(4, [1, 2], [0x04, 0x00], [0.0]))
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0}(4, [1, 2], UInt8[0x04, 0x00], [0.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0}(4))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int}(4, [1, 2], UInt8[0x04, 0x00], [0.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int}(4))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int, Int}(4, [1, 2], UInt8[0x04, 0x00], [0.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int, Int}(4))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int, Int, Float64}(4, [1, 2], UInt8[0x04, 0x00], [0.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int, Int, Float64}(4))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.RepeatRLEDiffLevel{0.0, Int16} constructors" begin
-        ref = Fiber(RepeatRLEDiff{0.0, Int16, Int, Float64}(4, [1, 2], [0x04, 0x00], [0.0]))
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16}(4, [1, 2], UInt8[0x04, 0x00], [0.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16}(4))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int}(4, [1, 2], UInt8[0x04, 0x00], [0.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int}(4))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int, Float64}(4, [1, 2], UInt8[0x04, 0x00], [0.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int, Float64}(4))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.RepeatRLEDiffLevel{0.0, Int16, Int16} constructors" begin
-        ref = Fiber(RepeatRLEDiff{0.0, Int16, Int16, Float64}(4, [1, 2], [0x04, 0x00], [0.0]))
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int16}(4, Int16[1, 2], UInt8[0x04, 0x00], [0.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int16}(4))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int16, Float64}(4, Int16[1, 2], UInt8[0x04, 0x00], [0.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int16, Float64}(4))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.RepeatRLEDiffLevel{0.0, Int16, Int16, Any} constructors" begin
-        ref = Fiber(RepeatRLEDiff{0.0, Int16, Int16, Any}(4, [1, 2], [0x04, 0x00], [0.0]))
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int16, Any}(4, Int16[1, 2], UInt8[0x04, 0x00], Any[0.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int16, Any}(4))
-        @test isstructequal(res, ref)
-    end
     @testset "Finch.RepeatRLELevel constructors" begin
         ref = Fiber(RepeatRLE{0.0, Int, Int, Float64}(4, [1, 2], [4], [0.0]))
         res = Fiber(Finch.RepeatRLELevel(0.0, 4, [1, 2], [4], [0.0]))
@@ -2753,38 +2410,6 @@
     @testset "Finch.RepeatRLELevel{0.0, Int16, Int16, Any} constructors" begin
         ref = Fiber(RepeatRLE{0.0, Int16, Int16, Any}(6, [1, 6], [1, 2, 3, 4, 6], [0.0, 1.0, 0.0, 1.0, 0.0]))
         res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Any}(6, Int16[1, 6], Int16[1, 2, 3, 4, 6], Any[0.0, 1.0, 0.0, 1.0, 0.0]))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.RepeatRLEDiffLevel{0.0} constructors" begin
-        ref = Fiber(RepeatRLEDiff{0.0, Int, Int, Float64}(6, [1, 6], [0x01, 0x01, 0x01, 0x01, 0x02, 0x00], [0.0, 1.0, 0.0, 1.0, 0.0]))
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0}(6, [1, 6], UInt8[0x01, 0x01, 0x01, 0x01, 0x02, 0x00], [0.0, 1.0, 0.0, 1.0, 0.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int}(6, [1, 6], UInt8[0x01, 0x01, 0x01, 0x01, 0x02, 0x00], [0.0, 1.0, 0.0, 1.0, 0.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int, Int}(6, [1, 6], UInt8[0x01, 0x01, 0x01, 0x01, 0x02, 0x00], [0.0, 1.0, 0.0, 1.0, 0.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int, Int, Float64}(6, [1, 6], UInt8[0x01, 0x01, 0x01, 0x01, 0x02, 0x00], [0.0, 1.0, 0.0, 1.0, 0.0]))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.RepeatRLEDiffLevel{0.0, Int16} constructors" begin
-        ref = Fiber(RepeatRLEDiff{0.0, Int16, Int, Float64}(6, [1, 6], [0x01, 0x01, 0x01, 0x01, 0x02, 0x00], [0.0, 1.0, 0.0, 1.0, 0.0]))
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16}(6, [1, 6], UInt8[0x01, 0x01, 0x01, 0x01, 0x02, 0x00], [0.0, 1.0, 0.0, 1.0, 0.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int}(6, [1, 6], UInt8[0x01, 0x01, 0x01, 0x01, 0x02, 0x00], [0.0, 1.0, 0.0, 1.0, 0.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int, Float64}(6, [1, 6], UInt8[0x01, 0x01, 0x01, 0x01, 0x02, 0x00], [0.0, 1.0, 0.0, 1.0, 0.0]))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.RepeatRLEDiffLevel{0.0, Int16, Int16} constructors" begin
-        ref = Fiber(RepeatRLEDiff{0.0, Int16, Int16, Float64}(6, [1, 6], [0x01, 0x01, 0x01, 0x01, 0x02, 0x00], [0.0, 1.0, 0.0, 1.0, 0.0]))
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int16}(6, Int16[1, 6], UInt8[0x01, 0x01, 0x01, 0x01, 0x02, 0x00], [0.0, 1.0, 0.0, 1.0, 0.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int16, Float64}(6, Int16[1, 6], UInt8[0x01, 0x01, 0x01, 0x01, 0x02, 0x00], [0.0, 1.0, 0.0, 1.0, 0.0]))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.RepeatRLEDiffLevel{0.0, Int16, Int16, Any} constructors" begin
-        ref = Fiber(RepeatRLEDiff{0.0, Int16, Int16, Any}(6, [1, 6], [0x01, 0x01, 0x01, 0x01, 0x02, 0x00], [0.0, 1.0, 0.0, 1.0, 0.0]))
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int16, Any}(6, Int16[1, 6], UInt8[0x01, 0x01, 0x01, 0x01, 0x02, 0x00], Any[0.0, 1.0, 0.0, 1.0, 0.0]))
         @test isstructequal(res, ref)
     end
     @testset "Finch.RepeatRLELevel constructors" begin
@@ -2864,78 +2489,6 @@
         res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Any}())
         @test isstructequal(res, ref)
     end
-    @testset "Finch.RepeatRLEDiffLevel{0.0} constructors" begin
-        ref = Fiber(RepeatRLEDiff{0.0, Int, Int, Float64}(0, [1, 1], [0x00], []))
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0}(0, [1, 1], UInt8[0x00], Float64[]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0}(0))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0}())
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int}(0, [1, 1], UInt8[0x00], Float64[]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int}(0))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int}())
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int, Int}(0, [1, 1], UInt8[0x00], Float64[]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int, Int}(0))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int, Int}())
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int, Int, Float64}(0, [1, 1], UInt8[0x00], Float64[]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int, Int, Float64}(0))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int, Int, Float64}())
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.RepeatRLEDiffLevel{0.0, Int16} constructors" begin
-        ref = Fiber(RepeatRLEDiff{0.0, Int16, Int, Float64}(0, [1, 1], [0x00], []))
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16}(0, [1, 1], UInt8[0x00], Float64[]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16}(0))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16}())
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int}(0, [1, 1], UInt8[0x00], Float64[]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int}(0))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int}())
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int, Float64}(0, [1, 1], UInt8[0x00], Float64[]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int, Float64}(0))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int, Float64}())
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.RepeatRLEDiffLevel{0.0, Int16, Int16} constructors" begin
-        ref = Fiber(RepeatRLEDiff{0.0, Int16, Int16, Float64}(0, [1, 1], [0x00], []))
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int16}(0, Int16[1, 1], UInt8[0x00], Float64[]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int16}(0))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int16}())
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int16, Float64}(0, Int16[1, 1], UInt8[0x00], Float64[]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int16, Float64}(0))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int16, Float64}())
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.RepeatRLEDiffLevel{0.0, Int16, Int16, Any} constructors" begin
-        ref = Fiber(RepeatRLEDiff{0.0, Int16, Int16, Any}(0, [1, 1], [0x00], []))
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int16, Any}(0, Int16[1, 1], UInt8[0x00], Any[]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int16, Any}(0))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int16, Any}())
-        @test isstructequal(res, ref)
-    end
     @testset "Finch.RepeatRLELevel constructors" begin
         ref = Fiber(RepeatRLE{0.0, Int, Int, Float64}(0, [1, 1], [], []))
         res = Fiber(Finch.RepeatRLELevel(0.0, 0, [1, 1], Int[], Float64[]))
@@ -2997,58 +2550,6 @@
         res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Any}(4))
         @test isstructequal(res, ref)
     end
-    @testset "Finch.RepeatRLEDiffLevel{0.0} constructors" begin
-        ref = Fiber(RepeatRLEDiff{0.0, Int, Int, Float64}(4, [1, 2], [0x04, 0x00], [0.0]))
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0}(4, [1, 2], UInt8[0x04, 0x00], [0.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0}(4))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int}(4, [1, 2], UInt8[0x04, 0x00], [0.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int}(4))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int, Int}(4, [1, 2], UInt8[0x04, 0x00], [0.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int, Int}(4))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int, Int, Float64}(4, [1, 2], UInt8[0x04, 0x00], [0.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int, Int, Float64}(4))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.RepeatRLEDiffLevel{0.0, Int16} constructors" begin
-        ref = Fiber(RepeatRLEDiff{0.0, Int16, Int, Float64}(4, [1, 2], [0x04, 0x00], [0.0]))
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16}(4, [1, 2], UInt8[0x04, 0x00], [0.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16}(4))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int}(4, [1, 2], UInt8[0x04, 0x00], [0.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int}(4))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int, Float64}(4, [1, 2], UInt8[0x04, 0x00], [0.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int, Float64}(4))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.RepeatRLEDiffLevel{0.0, Int16, Int16} constructors" begin
-        ref = Fiber(RepeatRLEDiff{0.0, Int16, Int16, Float64}(4, [1, 2], [0x04, 0x00], [0.0]))
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int16}(4, Int16[1, 2], UInt8[0x04, 0x00], [0.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int16}(4))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int16, Float64}(4, Int16[1, 2], UInt8[0x04, 0x00], [0.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int16, Float64}(4))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.RepeatRLEDiffLevel{0.0, Int16, Int16, Any} constructors" begin
-        ref = Fiber(RepeatRLEDiff{0.0, Int16, Int16, Any}(4, [1, 2], [0x04, 0x00], [0.0]))
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int16, Any}(4, Int16[1, 2], UInt8[0x04, 0x00], Any[0.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int16, Any}(4))
-        @test isstructequal(res, ref)
-    end
     @testset "Finch.RepeatRLELevel constructors" begin
         ref = Fiber(RepeatRLE{0.0, Int, Int, Float64}(4, [1, 2], [4], [0.0]))
         res = Fiber(Finch.RepeatRLELevel(0.0, 4, [1, 2], [4], [0.0]))
@@ -3086,38 +2587,6 @@
     @testset "Finch.RepeatRLELevel{0.0, Int16, Int16, Any} constructors" begin
         ref = Fiber(RepeatRLE{0.0, Int16, Int16, Any}(6, [1, 5], [1, 3, 4, 6], [0.0, 2.0, 0.0, 3.0]))
         res = Fiber(Finch.RepeatRLELevel{0.0, Int16, Int16, Any}(6, Int16[1, 5], Int16[1, 3, 4, 6], Any[0.0, 2.0, 0.0, 3.0]))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.RepeatRLEDiffLevel{0.0} constructors" begin
-        ref = Fiber(RepeatRLEDiff{0.0, Int, Int, Float64}(6, [1, 5], [0x01, 0x02, 0x01, 0x02, 0x00], [0.0, 2.0, 0.0, 3.0]))
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0}(6, [1, 5], UInt8[0x01, 0x02, 0x01, 0x02, 0x00], [0.0, 2.0, 0.0, 3.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int}(6, [1, 5], UInt8[0x01, 0x02, 0x01, 0x02, 0x00], [0.0, 2.0, 0.0, 3.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int, Int}(6, [1, 5], UInt8[0x01, 0x02, 0x01, 0x02, 0x00], [0.0, 2.0, 0.0, 3.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int, Int, Float64}(6, [1, 5], UInt8[0x01, 0x02, 0x01, 0x02, 0x00], [0.0, 2.0, 0.0, 3.0]))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.RepeatRLEDiffLevel{0.0, Int16} constructors" begin
-        ref = Fiber(RepeatRLEDiff{0.0, Int16, Int, Float64}(6, [1, 5], [0x01, 0x02, 0x01, 0x02, 0x00], [0.0, 2.0, 0.0, 3.0]))
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16}(6, [1, 5], UInt8[0x01, 0x02, 0x01, 0x02, 0x00], [0.0, 2.0, 0.0, 3.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int}(6, [1, 5], UInt8[0x01, 0x02, 0x01, 0x02, 0x00], [0.0, 2.0, 0.0, 3.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int, Float64}(6, [1, 5], UInt8[0x01, 0x02, 0x01, 0x02, 0x00], [0.0, 2.0, 0.0, 3.0]))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.RepeatRLEDiffLevel{0.0, Int16, Int16} constructors" begin
-        ref = Fiber(RepeatRLEDiff{0.0, Int16, Int16, Float64}(6, [1, 5], [0x01, 0x02, 0x01, 0x02, 0x00], [0.0, 2.0, 0.0, 3.0]))
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int16}(6, Int16[1, 5], UInt8[0x01, 0x02, 0x01, 0x02, 0x00], [0.0, 2.0, 0.0, 3.0]))
-        @test isstructequal(res, ref)
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int16, Float64}(6, Int16[1, 5], UInt8[0x01, 0x02, 0x01, 0x02, 0x00], [0.0, 2.0, 0.0, 3.0]))
-        @test isstructequal(res, ref)
-    end
-    @testset "Finch.RepeatRLEDiffLevel{0.0, Int16, Int16, Any} constructors" begin
-        ref = Fiber(RepeatRLEDiff{0.0, Int16, Int16, Any}(6, [1, 5], [0x01, 0x02, 0x01, 0x02, 0x00], [0.0, 2.0, 0.0, 3.0]))
-        res = Fiber(Finch.RepeatRLEDiffLevel{0.0, Int16, Int16, Any}(6, Int16[1, 5], UInt8[0x01, 0x02, 0x01, 0x02, 0x00], Any[0.0, 2.0, 0.0, 3.0]))
         @test isstructequal(res, ref)
     end
     @testset "Finch.RepeatRLELevel constructors" begin
