@@ -145,6 +145,9 @@ end
 declare_dimensions_access(node, ctx, tns::Dimensionalize, dim) = declare_dimensions_access(node, ctx, tns.body, dim)
 function declare_dimensions_access(node, ctx, tns, dim)
     if haskey(ctx.shapes, getname(tns))
+        if tns isa IndexNode && tns.kind === variable #TODO does every tensor read need a context now?
+            tns = ctx.bindings[tns.name]
+        end
         dims = ctx.shapes[getname(tns)][getsites(tns)]
         tns = setsize!(tns, ctx.ctx, node.mode, dims...)
     else
@@ -332,9 +335,7 @@ mode `mode`. This is a function similar in spirit to `Base.axes`.
 """
 function getsize end
 function getsize(tns::IndexNode, ctx, mode)
-    @info "getsize" ctx.bindings[tns.name]
     if tns.kind === variable
-        println(ctx.bindings[tns.name])
         return getsize(ctx.bindings[tns.name], ctx, mode)
     else
         return error("unimplemented")
@@ -342,7 +343,6 @@ function getsize(tns::IndexNode, ctx, mode)
 end
 
 function setsize!(tns::IndexNode, ctx, mode, dims...)
-    @info "setsize" ctx.bindings[tns.name]
     if tns.kind === variable
         ctx.bindings[tns.name] == setsize!(ctx.bindings[tns.name], ctx, mode, dims...)
         tns
