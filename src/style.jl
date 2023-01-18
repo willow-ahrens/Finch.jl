@@ -18,6 +18,8 @@ function (ctx::Stylize)(node::IndexNode)
         return ctx(node.val)
     elseif node.kind === access && node.tns.kind === virtual
         return mapreduce(ctx, result_style, arguments(node); init=stylize_access(node, ctx, node.tns.val))
+    elseif node.kind === access && node.tns.kind === variable #TODO is there a way to avoid this?
+        return mapreduce(ctx, result_style, arguments(node); init=stylize_access(node, ctx, ctx.ctx.bindings[node.tns.name]))
     elseif istree(node)
         return mapreduce(ctx, result_style, arguments(node); init=DefaultStyle())
     else

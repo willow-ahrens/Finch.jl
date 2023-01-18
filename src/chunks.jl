@@ -24,7 +24,7 @@ function (ctx::ChunkifyVisitor)(node::IndexNode)
     if node.kind === access && node.tns.kind === virtual
         chunkify_access(node, ctx, node.tns.val)
     elseif node.kind === access && node.tns.kind === variable #TODO there should probably be a call to chunkify the fiber all at once, then stop looking up variables
-        chunkify_access(node, ctx, ctx.bindings[ctx.node.tns.name])
+        chunkify_access(node, ctx, ctx.ctx.bindings[node.tns.name])
     elseif istree(node)
         similarterm(node, operation(node), map(ctx, arguments(node)))
     else
