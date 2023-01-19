@@ -36,13 +36,10 @@ end
 VirtualFiber(lvl::Lvl, env) where {Lvl} = VirtualFiber{Lvl}(lvl, env)
 
 function virtualize(ex, ::Type{<:Fiber{Lvl, Env}}, ctx, tag=ctx.freshen(:tns)) where {Lvl, Env}
-    get!(ctx.bindings, tag) do
-        lvl = virtualize(:($ex.lvl), Lvl, ctx, Symbol(tag, :_lvl))
-        env = virtualize(:($ex.env), Env, ctx)
-        env.name = tag
-        VirtualFiber(lvl, env)
-    end
-    return variable(tag) #TODO perhaps index should be renamed to variable?
+    lvl = virtualize(:($ex.lvl), Lvl, ctx, Symbol(tag, :_lvl))
+    env = virtualize(:($ex.env), Env, ctx)
+    env.name = tag
+    VirtualFiber(lvl, env)
 end
 (ctx::Finch.LowerJulia)(fbr::VirtualFiber) = :(Fiber($(ctx(fbr.lvl)), $(ctx(fbr.env))))
 IndexNotation.isliteral(::VirtualFiber) =  false

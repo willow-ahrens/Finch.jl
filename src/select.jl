@@ -14,6 +14,8 @@ end
 function (ctx::SelectVisitor)(node::IndexNode)
     if node.kind === access && node.tns.kind === virtual
         select_access(node, ctx, node.tns.val)
+    elseif node.kind === access && node.tns.kind === variable
+        select_access(node, ctx, ctx.ctx.bindings[node.tns.name])
     elseif istree(node)
         similarterm(node, operation(node), map(ctx, arguments(node)))
     else

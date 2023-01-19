@@ -52,8 +52,11 @@ function virtualize(ex, ::Type{IndexNotation.UpdaterInstance{Mode}}, ctx) where 
 end
 virtualize(ex, ::Type{IndexNotation.ModifyInstance}, ctx) = modify()
 virtualize(ex, ::Type{IndexNotation.CreateInstance}, ctx) = create()
-function virtualize(ex, ::Type{IndexNotation.LabelInstance{tag, Tns}}, ctx) where {tag, Tns}
-    return virtualize(:($ex.tns), Tns, ctx, tag)
+function virtualize(ex, ::Type{IndexNotation.VariableInstance{tag, Tns}}, ctx) where {tag, Tns}
+    get!(ctx.bindings, tag) do
+        virtualize(:($ex.tns), Tns, ctx, tag)
+    end
+    return variable(tag)
 end
 virtualize(ex, ::Type{IndexNotation.ValueInstance{arg}}, ctx) where {arg} = isliteral(arg) ? arg : literal(arg)
 virtualize(ex, ::Type{Walk}, ctx) = walk

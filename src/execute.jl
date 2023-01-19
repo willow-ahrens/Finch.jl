@@ -56,6 +56,7 @@ function execute_code(ex, T, algebra = DefaultAlgebra())
         quote
             $(begin
                 prgm = virtualize(ex, T, ctx)
+                #println(prgm)
                 #The following call separates tensor and index names from environment symbols.
                 #TODO we might want to keep the namespace around, and/or further stratify index
                 #names from tensor names

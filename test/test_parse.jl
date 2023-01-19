@@ -4,14 +4,14 @@
         call_instance(
             value_instance(:f),
             call_instance(
-                label_instance(:*, value_instance(*)),
+                variable_instance(:*, value_instance(*)),
                 access_instance(
                     value_instance(:B),
                     reader(),
                     protocol_instance(index_instance(:i), walk),
                     index_instance(:k)),
                 call_instance(
-                    label_instance(:^, value_instance(^)),
+                    variable_instance(:^, value_instance(^)),
                     access_instance(
                         value_instance(:C),
                         reader(),
@@ -53,9 +53,9 @@
                     value_instance(:A),
                     updater_instance(),
                     index_instance(:i)),
-                label_instance(:+, value_instance(+)),
+                variable_instance(:+, value_instance(+)),
                 call_instance(
-                    label_instance(:*, value_instance(*)),
+                    variable_instance(:*, value_instance(*)),
                     access_instance(
                         value_instance(:B),
                         reader_instance(),
@@ -78,9 +78,9 @@
                     value_instance(:A),
                     updater_instance(),
                     index_instance(:i)),
-                label_instance(:+, value_instance(+)),
+                variable_instance(:+, value_instance(+)),
                 call_instance(
-                    label_instance(:*, value_instance(*)),
+                    variable_instance(:*, value_instance(*)),
                     access_instance(
                         value_instance(:B),
                         reader_instance(),
