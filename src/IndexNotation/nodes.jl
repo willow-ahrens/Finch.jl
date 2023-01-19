@@ -2,7 +2,8 @@ tab = "  "
 
 const IS_TREE = 1
 const IS_STATEFUL = 2
-const ID = 4
+const IS_CONST = 4
+const ID = 8
 
 """
     IndexHead
@@ -12,9 +13,9 @@ enum is used to differentiate which kind of node is represented.
 """
 @enum IndexHead begin
     variable =  0ID
-    value    =  1ID
+    value    =  1ID | IS_CONST
     virtual  =  2ID
-    literal  =  3ID
+    literal  =  3ID | IS_CONST
     index    =  4ID
     protocol =  5ID | IS_TREE
     access   =  6ID | IS_TREE 
@@ -216,6 +217,8 @@ index expression. Typically, index statements specify control flow and
 index expressions describe values.
 """
 isstateful(node::IndexNode) = Int(node.kind) & IS_STATEFUL != 0
+
+is_constant(node::IndexNode) = Int(node.kind) & IS_CONST != 0
 
 SyntaxInterface.istree(node::IndexNode) = Int(node.kind) & IS_TREE != 0
 SyntaxInterface.arguments(node::IndexNode) = node.children

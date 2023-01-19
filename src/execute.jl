@@ -148,10 +148,18 @@ function (ctx::Initialize)(node)
     end
 end
 
+#Okay so if we have multiple writes, we need to initialize once and unfurl all the writes later.
+
 function (ctx::Initialize)(node::IndexNode)
-    if node.kind === access && node.tns.kind === virtual
-        if (ctx.target === nothing || (getname(node.tns) in ctx.target)) && !(getname(node.tns) in ctx.escape)
-            initialize!(node.tns.val, ctx.ctx, node.mode, map(ctx, node.idxs)...)
+    if node.kind === access
+        tns = node.tns
+        if tns.kind === variable
+            tns = ctx.ctx.bindings[tns.name]
+        elseif tns.kind === virtual
+            tns = tns.val
+        end
+        if (ctx.target === nothing || (getname(tns) in ctx.target)) && !(getname(tns) in ctx.escape)
+            initialize!(tns, ctx.ctx, node.mode, map(ctx, node.idxs)...)
         else
             return access(node.tns, node.mode, map(ctx, node.idxs)...)
         end
@@ -188,9 +196,15 @@ function (ctx::Finalize)(node)
 end
 
 function (ctx::Finalize)(node::IndexNode)
-    if node.kind === access && node.tns.kind === virtual
-        if (ctx.target === nothing || (getname(node.tns) in ctx.target)) && !(getname(node.tns) in ctx.escape)
-            access(finalize!(node.tns.val, ctx.ctx, node.mode, node.idxs...), node.mode, node.idxs...)
+    if node.kind === access
+        tns = node.tns
+        if tns.kind === variable
+            tns = ctx.ctx.bindings[tns.name]
+        elseif tns.kind === virtual
+            tns = tns.val
+        end
+        if (ctx.target === nothing || (getname(tns) in ctx.target)) && !(getname(tns) in ctx.escape)
+            access(finalize!(tns, ctx.ctx, node.mode, node.idxs...), node.mode, node.idxs...)
         else
             access(node.tns, node.mode, map(ctx, node.idxs)...)
         end

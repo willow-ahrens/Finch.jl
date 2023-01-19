@@ -21,7 +21,6 @@
         if base != Pattern
             for inner in [
                 () -> Dense(base()),
-                () -> SparseListDiff(base()),
                 () -> RepeatRLE{false}(),
             ]
                 for arr in [

@@ -34,18 +34,18 @@
         C_lvl_2_val_alloc = (Finch).refill!(C_lvl_2.val, 0.0, 0, 4)
         C_lvl_pos_stop = 1 + 1
         (Finch).@regrow! C_lvl.pos C_lvl_pos_alloc C_lvl_pos_stop
-        B_lvl_3_pos_alloc = length(B_lvl_3.pos)
-        B_lvl_3_pos_fill = 1
-        B_lvl_3_pos_stop = 2
-        B_lvl_3.pos[1] = 1
-        B_lvl_3.pos[2] = 1
-        B_lvl_3_idx_alloc = length(B_lvl_3.tbl[1])
-        B_lvl_4_val_alloc = (Finch).refill!(B_lvl_4.val, 0.0, 0, 4)
-        B_lvl_3_pos_alloc < 1 + 1 && (B_lvl_3_pos_alloc = (Finch).regrow!(B_lvl_3.pos, B_lvl_3_pos_alloc, 1 + 1))
-        B_lvl_3_pos_stop = 1 + 1
-        B_lvl_3_q = B_lvl_3.pos[B_lvl_3_pos_fill]
-        for B_lvl_3_p_2 = B_lvl_3_pos_fill:1
-            B_lvl_3.pos[B_lvl_3_p_2] = B_lvl_3_q
+        B_lvl_pos_alloc = length(B_lvl.pos)
+        B_lvl_pos_fill = 1
+        B_lvl_pos_stop = 2
+        B_lvl.pos[1] = 1
+        B_lvl.pos[2] = 1
+        B_lvl_idx_alloc = length(B_lvl.tbl[1])
+        B_lvl_2_val_alloc = (Finch).refill!(B_lvl_2.val, 0.0, 0, 4)
+        B_lvl_pos_alloc < 1 + 1 && (B_lvl_pos_alloc = (Finch).regrow!(B_lvl.pos, B_lvl_pos_alloc, 1 + 1))
+        B_lvl_pos_stop = 1 + 1
+        B_lvl_q = B_lvl.pos[B_lvl_pos_fill]
+        for B_lvl_p_2 = B_lvl_pos_fill:1
+            B_lvl.pos[B_lvl_p_2] = B_lvl_q
         end
         A_lvl_q = A_lvl.pos[1]
         A_lvl_q_stop = A_lvl.pos[1 + 1]
@@ -74,19 +74,19 @@
                 if A_lvl_i == phase_stop_2
                     A_lvl_2_val = A_lvl_2.val[A_lvl_q]
                     i_3 = phase_stop_2
-                    B_lvl_3_guard = true
-                    B_lvl_4_val_alloc < B_lvl_3_q && (B_lvl_4_val_alloc = (Finch).refill!(B_lvl_4.val, 0.0, B_lvl_4_val_alloc, B_lvl_3_q))
-                    B_lvl_4_val = B_lvl_4.val[B_lvl_3_q]
-                    B_lvl_3_guard = false
-                    B_lvl_3_guard = false
-                    B_lvl_4_val = (+)(A_lvl_2_val, B_lvl_4_val)
-                    B_lvl_4.val[B_lvl_3_q] = B_lvl_4_val
-                    if !B_lvl_3_guard
-                        if B_lvl_3_idx_alloc < B_lvl_3_q
-                            B_lvl_3_idx_alloc = (Finch).regrow!(B_lvl_3.tbl[1], B_lvl_3_idx_alloc, B_lvl_3_q)
+                    B_lvl_guard = true
+                    B_lvl_2_val_alloc < B_lvl_q && (B_lvl_2_val_alloc = (Finch).refill!(B_lvl_2.val, 0.0, B_lvl_2_val_alloc, B_lvl_q))
+                    B_lvl_2_val = B_lvl_2.val[B_lvl_q]
+                    B_lvl_guard = false
+                    B_lvl_guard = false
+                    B_lvl_2_val = (+)(A_lvl_2_val, B_lvl_2_val)
+                    B_lvl_2.val[B_lvl_q] = B_lvl_2_val
+                    if !B_lvl_guard
+                        if B_lvl_idx_alloc < B_lvl_q
+                            B_lvl_idx_alloc = (Finch).regrow!(B_lvl.tbl[1], B_lvl_idx_alloc, B_lvl_q)
                         end
-                        (B_lvl_3.tbl[1])[B_lvl_3_q] = i_3
-                        B_lvl_3_q += 1
+                        (B_lvl.tbl[1])[B_lvl_q] = i_3
+                        B_lvl_q += 1
                     end
                     A_lvl_q += 1
                 else
@@ -102,20 +102,20 @@
             i_4 = i
             i = phase_stop_3 + 1
         end
-        B_lvl_3.pos[1 + 1] = B_lvl_3_q
-        B_lvl_3_pos_fill = 1 + 1
-        q = B_lvl_3.pos[B_lvl_3_pos_fill]
-        for p = B_lvl_3_pos_fill:B_lvl_3_pos_stop
-            B_lvl_3.pos[p] = q
+        B_lvl.pos[1 + 1] = B_lvl_q
+        B_lvl_pos_fill = 1 + 1
+        q = B_lvl.pos[B_lvl_pos_fill]
+        for p = B_lvl_pos_fill:B_lvl_pos_stop
+            B_lvl.pos[p] = q
         end
         C_lvl_q = C_lvl.pos[C_lvl_pos_fill]
         for C_lvl_p = C_lvl_pos_fill:1
             C_lvl.pos[C_lvl_p] = C_lvl_q
         end
-        B_lvl_q = B_lvl.pos[1]
+        B_lvl_q_2 = B_lvl.pos[1]
         B_lvl_q_stop = B_lvl.pos[1 + 1]
-        if B_lvl_q < B_lvl_q_stop
-            B_lvl_i = (B_lvl.tbl[1])[B_lvl_q]
+        if B_lvl_q_2 < B_lvl_q_stop
+            B_lvl_i = (B_lvl.tbl[1])[B_lvl_q_2]
             B_lvl_i_stop = (B_lvl.tbl[1])[B_lvl_q_stop - 1]
         else
             B_lvl_i = 1
@@ -128,16 +128,16 @@
         if phase_stop_4 >= phase_start_4
             i_5 = i_2
             i_2 = phase_start_4
-            while B_lvl_q + 1 < B_lvl_q_stop && (B_lvl.tbl[1])[B_lvl_q] < phase_start_4
-                B_lvl_q += 1
+            while B_lvl_q_2 + 1 < B_lvl_q_stop && (B_lvl.tbl[1])[B_lvl_q_2] < phase_start_4
+                B_lvl_q_2 += 1
             end
             while i_2 <= phase_stop_4
                 i_2_start_2 = i_2
-                B_lvl_i = (B_lvl.tbl[1])[B_lvl_q]
+                B_lvl_i = (B_lvl.tbl[1])[B_lvl_q_2]
                 phase_stop_5 = (min)(B_lvl_i, phase_stop_4)
                 i_6 = i_2
                 if B_lvl_i == phase_stop_5
-                    B_lvl_2_val = B_lvl_2.val[B_lvl_q]
+                    B_lvl_2_val = B_lvl_2.val[B_lvl_q_2]
                     i_7 = phase_stop_5
                     C_lvl_2_val_alloc < C_lvl_q && (C_lvl_2_val_alloc = (Finch).refill!(C_lvl_2.val, 0.0, C_lvl_2_val_alloc, C_lvl_q))
                     C_lvl_isdefault = true
@@ -151,7 +151,7 @@
                         C_lvl.idx[C_lvl_q] = i_7
                         C_lvl_q += 1
                     end
-                    B_lvl_q += 1
+                    B_lvl_q_2 += 1
                 else
                 end
                 i_2 = phase_stop_5 + 1

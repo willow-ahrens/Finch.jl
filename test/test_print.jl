@@ -3,7 +3,6 @@
 
     formats = [
         "list" => SparseList{Int64, Int64},
-        "listdiff" => SparseListDiff{Int64, Int64},
         "byte" => SparseBytemap{Int64, Int64},
         "hash1" => SparseHash{1, Tuple{Int64}, Int64},
         "coo1" => SparseCoo{1, Tuple{Int64}, Int64},
@@ -49,7 +48,6 @@
 
     formats = [
         "rle" => RepeatRLE{0.0, Int64, Int64},
-        "rlediff" => RepeatRLEDiff{0.0, Int64, Int64},
     ]
 
     for (coln, colf) in formats

@@ -155,7 +155,9 @@ function base_rules(alg, ctx)
         (@rule call(~f, ~a...) => if isliteral(f) && all(isliteral, a) && length(a) >= 1 literal(getvalue(f)(getvalue.(a)...)) end),
 
         #TODO default needs to get defined on all writable chunks
-        (@rule assign(access(~a, ~m, ~i...), $(literal(right)), ~b) => if b == literal(default(a)) pass(access(a, m)) end),
+        #TODO Does it really though
+        #TODO I don't think this is safe to assume if we allow arbitrary updates
+        (@rule assign(access(~a, ~m, ~i...), $(literal(right)), ~b) => if default(resolve(a, ctx)) != nothing && b == literal(something(default(resolve(a, ctx)))) pass(access(a, m)) end),
 
         #TODO we probably can just drop modes from pass
         (@rule pass(~a..., access(~b, updater(modify())), ~c...) => pass(a..., c...)),
@@ -180,17 +182,18 @@ function base_rules(alg, ctx)
             end
         end),
 
+        #TODO this should be handled with an abstract intpretation?
         (@rule with(~a, assign(access(~b, updater(create())), ~f, ~c::isliteral)) => begin
-            Rewrite(Postwalk(@rule access(~x, reader()) => if getname(x) === getname(b) call(f, default(b), c) end))(a)
+            Rewrite(Postwalk(@rule access(~x, reader()) => if getname(x) === getname(b) call(f, default(resolve(b, ctx)), c) end))(a)
         end),
         (@rule with(~a, multi(~b..., assign(access(~c, updater(create())), ~f, ~d::isliteral), ~e...)) => begin
-            with(Rewrite(Postwalk(@rule access(~x, reader()) => if getname(x) === getname(c) call(f, default(c), d) end))(a), multi(b..., e...))
+            with(Rewrite(Postwalk(@rule access(~x, reader()) => if getname(x) === getname(c) call(f, default(resolve(c, ctx)), d) end))(a), multi(b..., e...))
         end),
         (@rule with(~a, pass(~b..., access(~c, updater(create())), ~d...)) => begin
-            with(Rewrite(Postwalk(@rule access(~x, reader(), ~i...) => if getname(x) === getname(c) default(c) end))(a), pass(b..., d...))
+            with(Rewrite(Postwalk(@rule access(~x, reader(), ~i...) => if getname(x) === getname(c) default(resolve(c, ctx)) end))(a), pass(b..., d...))
         end),
         (@rule with(~a, multi(~b..., pass(~c..., access(~d, updater(create())), ~e...), ~f...)) => begin
-            with(Rewrite(Postwalk(@rule access(~x, reader(), ~i...) => if getname(x) === getname(d) default(d) end))(a), multi(b..., pass(c..., e...), f...))
+            with(Rewrite(Postwalk(@rule access(~x, reader(), ~i...) => if getname(x) === getname(d) default(resolve(d, ctx)) end))(a), multi(b..., pass(c..., e...), f...))
         end),
 
         (@rule call($(literal(>=)), call($(literal(max)), ~a...), ~b) => call(or, map(x -> call(x >= b), a)...)),

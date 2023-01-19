@@ -90,6 +90,13 @@ function bind(f, ctx::LowerJulia, (var, val′), tail...)
     end
 end
 
+function resolve(var, ctx::LowerJulia)
+    if var isa IndexNode && (var.kind === variable || var.kind === index)
+        return ctx.bindings[var.name]
+    end
+    return var
+end
+
 function contain(f, ctx::LowerJulia)
     ctx_2 = shallowcopy(ctx)
     ctx_2.preamble = []
@@ -300,8 +307,10 @@ function (ctx::LowerJulia)(root::IndexNode, ::DefaultStyle)
         return :($lhs = $rhs)
     elseif root.kind === pass
         return quote end
+    elseif root.kind === variable
+        return ctx(ctx.bindings[root.name])
     else
-        error("unimplemented")
+        error("unimplemented ($root)")
     end
 end
 

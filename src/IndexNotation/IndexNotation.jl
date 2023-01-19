@@ -28,7 +28,7 @@ module IndexNotation
 
     export @f, @finch_program, @finch_program_instance
 
-    export isliteral, virtual
+    export isliteral, is_constant, virtual
 
     """
         isliteral(ex)

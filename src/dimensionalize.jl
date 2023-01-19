@@ -146,7 +146,7 @@ declare_dimensions_access(node, ctx, tns::Dimensionalize, dim) = declare_dimensi
 function declare_dimensions_access(node, ctx, tns, dim)
     if haskey(ctx.shapes, getname(tns))
         if tns isa IndexNode && tns.kind === variable #TODO does every tensor read need a context now?
-            tns = ctx.bindings[tns.name]
+            tns = ctx.ctx.bindings[tns.name]
         end
         dims = ctx.shapes[getname(tns)][getsites(tns)]
         tns = setsize!(tns, ctx.ctx, node.mode, dims...)
