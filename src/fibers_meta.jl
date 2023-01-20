@@ -31,9 +31,7 @@ function fiber(arr, default=zero(eltype(arr)))
 end
 
 @generated function Base.copyto!(dst::Fiber, src::Union{Fiber, AbstractArray})
-    ctx = LowerJulia() #TODO do we really need a context for this?
-    dst = virtualize(:dst, dst, ctx)
-    idxs = [Symbol(:i_, n) for n = 1:length(virtual_size(dst, ctx))]
+    idxs = [Symbol(:i_, n) for n = 1:ndims(dst)]
     return quote
         @finch @loop($(idxs...), dst[$(idxs...)] = src[$(idxs...)])
         return dst
@@ -41,9 +39,7 @@ end
 end
 
 @generated function Base.copyto!(dst::Array, src::Fiber)
-    ctx = LowerJulia() #TODO do we really need a context for this?
-    dst = virtualize(:dst, dst, ctx)
-    idxs = [Symbol(:i_, n) for n = 1:length(virtual_size(dst, ctx))]
+    idxs = [Symbol(:i_, n) for n = 1:ndims(dst)]
     return quote
         @finch @loop($(idxs...), dst[$(idxs...)] = src[$(idxs...)])
         return dst
@@ -53,11 +49,9 @@ end
 dropdefaults(src) = dropdefaults!(similar(src), src)
 
 @generated function dropdefaults!(dst::Fiber, src)
-    ctx = LowerJulia() #TODO do we really need a context for this?
-    dst = virtualize(:dst, dst, ctx)
-    idxs = [Symbol(:i_, n) for n = 1:length(virtual_size(dst, ctx))]
-    T = virtual_eltype(dst)
-    d = virtual_default(dst)
+    idxs = [Symbol(:i_, n) for n = 1:ndims(dst)]
+    T = eltype(dst)
+    d = default(dst)
     return quote
         tmp = Scalar{$d, $T}()
         @finch @loop($(idxs...), (@sieve (tmp[] != $d) dst[$(idxs...)] = tmp[]) where (tmp[] = src[$(idxs...)]))

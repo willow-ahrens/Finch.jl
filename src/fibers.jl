@@ -16,6 +16,15 @@ end
 Fiber(lvl::Lvl) where {Lvl} = Fiber{Lvl}(lvl)
 Fiber{Lvl}(lvl::Lvl, env::Env=Environment()) where {Lvl, Env} = Fiber{Lvl, Env}(lvl, env)
 
+@inline Base.ndims(::Fiber{Lvl}) where {Lvl} = level_ndims(Lvl)
+@inline Base.ndims(::Type{<:Fiber{Lvl}}) where {Lvl} = level_ndims(Lvl)
+@inline Base.size(fbr::Fiber) = level_size(fbr.lvl)
+@inline Base.axes(fbr::Fiber) = level_axes(fbr.lvl)
+@inline Base.eltype(::Fiber{Lvl}) where {Lvl} = level_eltype(Lvl)
+@inline Base.eltype(::Type{<:Fiber{Lvl}}) where {Lvl} = level_eltype(Lvl)
+@inline default(::Fiber{Lvl}) where {Lvl} = level_default(Lvl)
+@inline default(::Type{<:Fiber{Lvl}}) where {Lvl} = level_default(Lvl)
+
 """
     VirtualFiber(lvl, env)
 

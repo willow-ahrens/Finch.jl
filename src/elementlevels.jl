@@ -29,11 +29,11 @@ function Base.show(io::IO, lvl::ElementLevel{D, Tv}) where {D, Tv}
     print(io, ")")
 end 
 
-@inline Base.ndims(fbr::Fiber{<:ElementLevel}) = 0
-@inline Base.size(fbr::Fiber{<:ElementLevel}) = ()
-@inline Base.axes(fbr::Fiber{<:ElementLevel}) = ()
-@inline Base.eltype(fbr::Fiber{ElementLevel{D, Tv}}) where {D, Tv} = Tv
-@inline default(lvl::Fiber{<:ElementLevel{D}}) where {D} = D
+@inline level_ndims(::Type{<:ElementLevel}) = 0
+@inline level_size(::ElementLevel) = ()
+@inline level_axes(::ElementLevel) = ()
+@inline level_eltype(::Type{ElementLevel{D, Tv}}) where {D, Tv} = Tv
+@inline level_default(::Type{<:ElementLevel{D}}) where {D} = D
 
 function (fbr::Fiber{<:ElementLevel})()
     q = envposition(fbr.env)

@@ -71,13 +71,11 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:SparseBytema
     display_fiber_data(io, mime, fbr, 1, crds, print_coord, get_fbr)
 end
 
-
-@inline Base.ndims(fbr::Fiber{<:SparseBytemapLevel}) = 1 + ndims(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
-@inline Base.size(fbr::Fiber{<:SparseBytemapLevel}) = (fbr.lvl.I, size(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
-@inline Base.axes(fbr::Fiber{<:SparseBytemapLevel}) = (1:fbr.lvl.I, axes(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
-@inline Base.eltype(fbr::Fiber{<:SparseBytemapLevel}) = eltype(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
-@inline default(fbr::Fiber{<:SparseBytemapLevel}) = default(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
-
+@inline level_ndims(::Type{<:SparseBytemapLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = 1 + level_ndims(Lvl)
+@inline level_size(lvl::SparseBytemapLevel) = (lvl.I, level_size(lvl.lvl)...)
+@inline level_axes(lvl::SparseBytemapLevel) = (Base.OneTo(lvl.I), level_axes(lvl.lvl)...)
+@inline level_eltype(::Type{<:SparseBytemapLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = level_eltype(Lvl)
+@inline level_default(::Type{<:SparseBytemapLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = level_default(Lvl)
 (fbr::Fiber{<:SparseBytemapLevel})() = fbr
 function (fbr::Fiber{<:SparseBytemapLevel{Ti}})(i, tail...) where {Ti}
     lvl = fbr.lvl

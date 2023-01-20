@@ -70,12 +70,11 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:SparseCooLev
     display_fiber_data(io, mime, fbr, N, crds, print_coord, get_fbr)
 end
 
-@inline Base.ndims(fbr::Fiber{<:SparseCooLevel{N}}) where {N} = N + ndims(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))
-@inline Base.size(fbr::Fiber{<:SparseCooLevel{N}}) where {N} = (fbr.lvl.I..., size(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))...)
-@inline Base.axes(fbr::Fiber{<:SparseCooLevel{N}}) where {N} = (map(Base.OneTo, fbr.lvl.I)..., axes(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))...)
-@inline Base.eltype(fbr::Fiber{<:SparseCooLevel{N}}) where {N} = eltype(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))
-@inline default(fbr::Fiber{<:SparseCooLevel{N}}) where {N} = default(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))
-
+@inline level_ndims(::Type{<:SparseCooLevel{N, Ti, Tp, Tbl, Lvl}}) where {N, Ti, Tp, Tbl, Lvl} = N + level_ndims(Lvl)
+@inline level_size(lvl::SparseCooLevel) = (lvl.I..., level_size(lvl.lvl)...)
+@inline level_axes(lvl::SparseCooLevel) = (map(Base.OneTo, lvl.I)..., level_axes(lvl.lvl)...)
+@inline level_eltype(::Type{<:SparseCooLevel{N, Ti, Tp, Tbl, Lvl}}) where {N, Ti, Tp, Tbl, Lvl} = level_eltype(Lvl)
+@inline level_default(::Type{<:SparseCooLevel{N, Ti, Tp, Tbl, Lvl}}) where {N, Ti, Tp, Tbl, Lvl} = level_default(Lvl)
 (fbr::Fiber{<:SparseCooLevel})() = fbr
 function (fbr::Fiber{<:SparseCooLevel{N, Ti}})(i, tail...) where {N, Ti}
     lvl = fbr.lvl

@@ -83,12 +83,11 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:SparseHashLe
     print(io, "│ " ^ depth); print(io, "SparseHash ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); foreach(dim -> (print(io, "1:"); show(io, dim); print(io, "×")), dims[1:N-1]); print(io, "1:"); show(io, dims[end]); println(io, "]")
     display_fiber_data(io, mime, fbr, N, crds, print_coord, get_fbr)
 end
-
-@inline Base.ndims(fbr::Fiber{<:SparseHashLevel{N}}) where {N} = N + ndims(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))
-@inline Base.size(fbr::Fiber{<:SparseHashLevel{N}}) where {N} = (fbr.lvl.I..., size(Fiber(fbr.lvl.lvl,  (Environment^N)(fbr.env)))...)
-@inline Base.axes(fbr::Fiber{<:SparseHashLevel{N}}) where {N} = (map(Base.OneTo, fbr.lvl.I)..., axes(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))...)
-@inline Base.eltype(fbr::Fiber{<:SparseHashLevel{N}}) where {N} = eltype(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))
-@inline default(fbr::Fiber{<:SparseHashLevel{N}}) where {N} = default(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))
+@inline level_ndims(::Type{<:SparseHashLevel{N, Ti, Tp, Tbl, Lvl}}) where {N, Ti, Tp, Tbl, Lvl} = N + level_ndims(Lvl)
+@inline level_size(lvl::SparseHashLevel) = (lvl.I..., level_size(lvl.lvl)...)
+@inline level_axes(lvl::SparseHashLevel) = (map(Base.OneTo, lvl.I)..., level_axes(lvl.lvl)...)
+@inline level_eltype(::Type{<:SparseHashLevel{N, Ti, Tp, Tbl, Lvl}}) where {N, Ti, Tp, Tbl, Lvl} = level_eltype(Lvl)
+@inline level_default(::Type{<:SparseHashLevel{N, Ti, Tp, Tbl, Lvl}}) where {N, Ti, Tp, Tbl, Lvl} = level_default(Lvl)
 
 (fbr::Fiber{<:SparseHashLevel})() = fbr
 function (fbr::Fiber{<:SparseHashLevel{N, Ti}})(i, tail...) where {N, Ti}

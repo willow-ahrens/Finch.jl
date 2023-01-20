@@ -64,13 +64,11 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:SparseListDi
     display_fiber_data(io, mime, fbr, 1, crds, print_coord, get_fbr)
 end
 
-
-@inline Base.ndims(fbr::Fiber{<:SparseListDiffLevel}) = 1 + ndims(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
-@inline Base.size(fbr::Fiber{<:SparseListDiffLevel}) = (fbr.lvl.I, size(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
-@inline Base.axes(fbr::Fiber{<:SparseListDiffLevel}) = (1:fbr.lvl.I, axes(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
-@inline Base.eltype(fbr::Fiber{<:SparseListDiffLevel}) = eltype(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
-@inline default(fbr::Fiber{<:SparseListDiffLevel}) = default(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
-
+@inline level_ndims(::Type{<:SparseListDiffLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = 1 + level_ndims(Lvl)
+@inline level_size(lvl::SparseListDiffLevel) = (lvl.I, level_size(lvl.lvl)...)
+@inline level_axes(lvl::SparseListDiffLevel) = (Base.OneTo(lvl.I), level_axes(lvl.lvl)...)
+@inline level_eltype(::Type{<:SparseListDiffLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = level_eltype(Lvl)
+@inline level_default(::Type{<:SparseListDiffLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = level_default(Lvl)
 (fbr::Fiber{<:SparseListDiffLevel})() = fbr
 function (fbr::Fiber{<:SparseListDiffLevel{Ti}})(i, tail...) where {Ti}
     lvl = fbr.lvl

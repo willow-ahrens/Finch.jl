@@ -18,13 +18,11 @@ similar_level(lvl::DenseLevel, dim, tail...) = Dense(dim, similar_level(lvl.lvl,
 pattern!(lvl::DenseLevel{Ti}) where {Ti} = 
     DenseLevel{Ti}(lvl.I, pattern!(lvl.lvl))
 
-dimension(lvl::DenseLevel) = lvl.I
-
-@inline Base.ndims(fbr::Fiber{<:DenseLevel}) = 1 + ndims(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
-@inline Base.size(fbr::Fiber{<:DenseLevel}) = (fbr.lvl.I, size(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
-@inline Base.axes(fbr::Fiber{<:DenseLevel}) = (1:fbr.lvl.I, axes(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
-@inline Base.eltype(fbr::Fiber{<:DenseLevel}) = eltype(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
-@inline default(fbr::Fiber{<:DenseLevel}) = default(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
+@inline level_ndims(::Type{<:DenseLevel{Ti, Lvl}}) where {Ti, Lvl} = 1 + level_ndims(Lvl)
+@inline level_size(lvl::DenseLevel) = (lvl.I, level_size(lvl.lvl)...)
+@inline level_axes(lvl::DenseLevel) = (Base.OneTo(lvl.I), level_axes(lvl.lvl)...)
+@inline level_eltype(::Type{<:DenseLevel{Ti, Lvl}}) where {Ti, Lvl} = level_eltype(Lvl)
+@inline level_default(::Type{<:DenseLevel{Ti, Lvl}}) where {Ti, Lvl} = level_default(Lvl)
 
 (fbr::Fiber{<:DenseLevel})() = fbr
 function (fbr::Fiber{<:DenseLevel{Ti}})(i, tail...) where {Ti}
