@@ -129,8 +129,8 @@ function virtual_level_resize!(lvl::VirtualSparseListLevel, ctx, dim, dims...)
     lvl
 end
 
-@inline default(fbr::VirtualFiber{<:VirtualSparseListLevel}) = default(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
-Base.eltype(fbr::VirtualFiber{VirtualSparseListLevel}) = eltype(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
+virtual_level_eltype(lvl::VirtualSparseListLevel) = virtual_level_eltype(lvl.lvl)
+virtual_level_default(lvl::VirtualSparseListLevel) = virtual_level_default(lvl.lvl)
 
 function initialize_level!(fbr::VirtualFiber{VirtualSparseListLevel}, ctx::LowerJulia, mode)
     lvl = fbr.lvl
@@ -234,7 +234,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode, ::Walk, id
                         body = Step(
                             stride = (ctx, idx, ext) -> value(my_i),
                             chunk = Spike(
-                                body = Simplify(Fill(default(fbr))),
+                                body = Simplify(Fill(virtual_default(fbr))),
                                 tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, Ti), index=value(my_i, Ti), parent=fbr.env)), ctx, mode),
                             ),
                             next = (ctx, idx, ext) -> quote
@@ -245,7 +245,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode, ::Walk, id
                 )
             ),
             Phase(
-                body = (start, step) -> Run(Simplify(Fill(default(fbr))))
+                body = (start, step) -> Run(Simplify(Fill(virtual_default(fbr))))
             )
         ])
     )
@@ -289,7 +289,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode, ::FastWalk
                         body = Step(
                             stride = (ctx, idx, ext) -> value(my_i),
                             chunk = Spike(
-                                body = Simplify(Fill(default(fbr))),
+                                body = Simplify(Fill(virtual_default(fbr))),
                                 tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, Ti), index=value(my_i, Ti), parent=fbr.env)), ctx, mode),
                             ),
                             next = (ctx, idx, ext) -> quote
@@ -300,7 +300,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode, ::FastWalk
                 )
             ),
             Phase(
-                body = (start, step) -> Run(Simplify(Fill(default(fbr))))
+                body = (start, step) -> Run(Simplify(Fill(virtual_default(fbr))))
             )
         ])
     )
@@ -346,7 +346,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode, ::Gallop, 
                             body = (ctx, ext, ext_2) -> Switch([
                                 value(:($(ctx(getstop(ext_2))) == $my_i)) => Thunk(
                                     body = Spike(
-                                        body = Simplify(Fill(default(fbr))),
+                                        body = Simplify(Fill(virtual_default(fbr))),
                                         tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, lvl.Ti), index=value(my_i, lvl.Ti), parent=fbr.env)), ctx, mode),
                                     ),
                                     epilogue = quote
@@ -366,7 +366,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode, ::Gallop, 
                                         body = Step(
                                             stride = (ctx, idx, ext) -> value(my_i),
                                             chunk = Spike(
-                                                body = Simplify(Fill(default(fbr))),
+                                                body = Simplify(Fill(virtual_default(fbr))),
                                                 tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, Ti), index=value(my_i, Ti), parent=fbr.env)), ctx, mode),
                                             ),
                                             next = (ctx, idx, ext) -> quote
@@ -381,7 +381,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode, ::Gallop, 
                 )
             ),
             Phase(
-                body = (start, step) -> Run(Simplify(Fill(default(fbr))))
+                body = (start, step) -> Run(Simplify(Fill(virtual_default(fbr))))
             )
         ])
     )
@@ -413,7 +413,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode, ::Extrude,
     end)
 
     body = AcceptSpike(
-        val = default(fbr),
+        val = virtual_default(fbr),
         tail = (ctx, idx) -> Thunk(
             preamble = quote
                 $(begin

@@ -67,9 +67,8 @@ summary_f_code(lvl::VirtualElementLevel) = "e($(lvl.D))"
 
 virtual_level_resize!(lvl::VirtualElementLevel, ctx) = lvl
 virtual_level_size(::VirtualElementLevel, ctx) = ()
-
-@inline default(fbr::VirtualFiber{VirtualElementLevel}) = fbr.lvl.D
-Base.eltype(fbr::VirtualFiber{VirtualElementLevel}) = fbr.lvl.Tv
+virtual_level_eltype(lvl::VirtualElementLevel) = lvl.Tv
+virtual_level_default(lvl::VirtualElementLevel) = lvl.D
 
 function initialize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
     lvl = fbr.lvl

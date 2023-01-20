@@ -141,8 +141,8 @@ function virtual_level_resize!(lvl::VirtualRepeatRLELevel, ctx, dim)
     lvl
 end
 
-@inline default(fbr::VirtualFiber{<:VirtualRepeatRLELevel}) = fbr.lvl.D
-Base.eltype(fbr::VirtualFiber{VirtualRepeatRLELevel}) = fbr.lvl.Tv
+virtual_level_default(lvl::VirtualRepeatRLELevel) = lvl.D
+virtual_level_eltype(lvl::VirtualRepeatRLELevel) = lvl.Tv
 
 function initialize_level!(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx::LowerJulia, mode)
     lvl = fbr.lvl

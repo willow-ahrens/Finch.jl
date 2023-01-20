@@ -49,6 +49,8 @@ function virtual_resize!(tns::VirtualFiber, ctx, dims...)
     tns.lvl = virtual_level_resize!(tns.lvl, ctx, dims...)
     tns
 end
+virtual_eltype(tns::VirtualFiber) = virtual_level_eltype(tns.lvl)
+virtual_default(tns::VirtualFiber) = virtual_level_default(tns.lvl)
 
 getname(fbr::VirtualFiber) = envname(fbr.env)
 setname(fbr::VirtualFiber, name) = VirtualFiber(fbr.lvl, envrename!(fbr.env, name))

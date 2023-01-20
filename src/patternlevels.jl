@@ -50,9 +50,8 @@ virtualize(ex, ::Type{<:PatternLevel}, ctx, tag) = VirtualPatternLevel()
 
 virtual_level_resize!(lvl::VirtualPatternLevel, ctx) = lvl
 virtual_level_size(::VirtualPatternLevel, ctx) = ()
-
-@inline default(fbr::VirtualFiber{VirtualPatternLevel}) = false
-Base.eltype(fbr::VirtualFiber{VirtualPatternLevel}) = Bool
+virtual_level_default(::VirtualPatternLevel) = false
+virtual_level_eltype(::VirtualPatternLevel) = Bool
 
 initialize_level!(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode) = fbr.lvl
 

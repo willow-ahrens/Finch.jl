@@ -145,8 +145,8 @@ function virtual_level_resize!(lvl::VirtualSparseBytemapLevel, ctx, dim, dims...
     lvl
 end
 
-@inline default(fbr::VirtualFiber{VirtualSparseBytemapLevel}) = default(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
-Base.eltype(fbr::VirtualFiber{VirtualSparseBytemapLevel}) = eltype(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
+virtual_level_eltype(lvl::VirtualSparseBytemapLevel) = virtual_level_eltype(lvl.lvl)
+virtual_level_default(lvl::VirtualSparseBytemapLevel) = virtual_level_default(lvl.lvl)
 
 function initialize_level!(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx::LowerJulia, mode)
     @assert isempty(envdeferred(fbr.env))
@@ -319,7 +319,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode, ::Walk,
                         body = Step(
                             stride = (ctx, idx, ext) -> value(my_i),
                             chunk = Spike(
-                                body = Simplify(Fill(default(fbr))),
+                                body = Simplify(Fill(virtual_default(fbr))),
                                 tail = Thunk(
                                     preamble = quote
                                         $my_q = ($(ctx(envposition(fbr.env))) - $(Tp(1))) * $(ctx(lvl.I)) + $my_i
@@ -335,7 +335,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode, ::Walk,
                 )
             ),
             Phase(
-                body = (start, step) -> Run(Simplify(Fill(default(fbr))))
+                body = (start, step) -> Run(Simplify(Fill(virtual_default(fbr))))
             )
         ])
     )
@@ -382,7 +382,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode, ::Gallo
                             body = (ctx, ext, ext_2) -> Switch([
                                 value(:($(ctx(getstop(ext_2))) == $my_i)) => Thunk(
                                     body = Spike(
-                                        body = Simplify(Fill(default(fbr))),
+                                        body = Simplify(Fill(virtual_default(fbr))),
                                         tail = Thunk(
                                             preamble = quote
                                                 $my_q = ($(ctx(envposition(fbr.env))) - $(Tp(1))) * $(ctx(lvl.I)) + $my_i
@@ -407,7 +407,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode, ::Gallo
                                         body = Step(
                                             stride = (ctx, idx, ext) -> value(my_i),
                                             chunk = Spike(
-                                                body = Simplify(Fill(default(fbr))),
+                                                body = Simplify(Fill(virtual_default(fbr))),
                                                 tail = Thunk(
                                                     preamble = quote
                                                         $my_q = ($(ctx(envposition(fbr.env))) - $(Tp(1))) * $(ctx(lvl.I)) + $my_i
@@ -427,7 +427,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode, ::Gallo
                 )
             ),
             Phase(
-                body = (start, step) -> Run(Simplify(Fill(default(fbr))))
+                body = (start, step) -> Run(Simplify(Fill(virtual_default(fbr))))
             )
         ])
     )
@@ -450,7 +450,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode, ::Follo
             end,
             body = Switch([
                 value(:($tbl[$my_q])) => refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, lvl.Tp), index=i, parent=fbr.env)), ctx, mode),
-                literal(true) => Simplify(Fill(default(fbr)))
+                literal(true) => Simplify(Fill(virtual_default(fbr)))
             ])
         )
     )
@@ -471,7 +471,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode, ::Union
     my_seen = ctx.freshen(tag, :_seen)
 
     body = AcceptSpike(
-        val = default(fbr),
+        val = virtual_default(fbr),
         tail = (ctx, idx) -> Thunk(
             preamble = quote
                 $my_guard = true

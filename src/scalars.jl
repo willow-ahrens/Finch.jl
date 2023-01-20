@@ -36,9 +36,10 @@ end
 
 virtual_size(::VirtualScalar, ctx) = ()
 
-@inline default(tns::VirtualScalar) = tns.D
+virtual_default(tns::VirtualScalar) = tns.D
+virtual_eltype(tns::VirtualScalar) = tns.Tv
 
-IndexNotation.isliteral(::VirtualScalar) =  false
+IndexNotation.isliteral(::VirtualScalar) = false
 
 getname(tns::VirtualScalar) = tns.name
 setname(tns::VirtualScalar, name) = VirtualScalar(tns.ex, tns.Tv, tns.D, name, tns.val)

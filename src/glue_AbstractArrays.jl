@@ -1,4 +1,5 @@
 @kwdef mutable struct VirtualAbstractArray
+    eltype
     ndims
     name
     ex
@@ -22,7 +23,7 @@ end
 function virtualize(ex, ::Type{<:AbstractArray{T, N}}, ctx, tag=:tns) where {T, N}
     sym = ctx.freshen(tag)
     push!(ctx.preamble, :($sym = $ex))
-    VirtualAbstractArray(N, tag, sym)
+    VirtualAbstractArray(T, N, tag, sym)
 end
 
 function initialize!(arr::VirtualAbstractArray, ctx::LowerJulia, mode, idxs...)
@@ -36,4 +37,5 @@ end
 
 IndexNotation.isliteral(::VirtualAbstractArray) =  false
 
-default(::VirtualAbstractArray) = 0
+virtual_default(::VirtualAbstractArray) = 0
+virtual_eltype(tns::VirtualAbstractArray) = tns.eltype

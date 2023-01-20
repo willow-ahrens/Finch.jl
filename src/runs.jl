@@ -73,12 +73,12 @@ end
 
 IndexNotation.isliteral(::AcceptRun) = false
 
-default(node::AcceptRun) = node.val
+virtual_default(node::AcceptRun) = node.val
 
 #TODO this should go somewhere else
-function Finch.default(x::IndexNode)
+function Finch.virtual_default(x::IndexNode)
     if x.kind === virtual
-        Finch.default(x.val)
+        Finch.virtual_default(x.val)
     else
         error("unimplemented")
     end

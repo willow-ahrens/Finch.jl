@@ -95,8 +95,8 @@ function virtual_level_resize!(lvl::VirtualDenseLevel, ctx, dim, dims...)
     lvl
 end
 
-@inline default(fbr::VirtualFiber{<:VirtualDenseLevel}) = default(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
-Base.eltype(fbr::VirtualFiber{VirtualDenseLevel}) = eltype(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
+virtual_level_eltype(lvl::VirtualDenseLevel) = virtual_level_eltype(lvl.lvl)
+virtual_level_default(lvl::VirtualDenseLevel) = virtual_level_default(lvl.lvl)
 
 reinitializeable(lvl::VirtualDenseLevel) = reinitializeable(lvl.lvl)
 function initialize_level!(fbr::VirtualFiber{VirtualDenseLevel}, ctx::LowerJulia, mode)
@@ -186,7 +186,7 @@ function unfurl(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode, ::Union{Follow,
     p = envposition(fbr.env)
     q = ctx.freshen(tag, :_q)
     body = Lookup(
-        val = default(fbr),
+        val = virtual_default(fbr),
         body = (i) -> Thunk(
             preamble = quote
                 $q = ($(ctx(p)) - $(Ti(1))) * $(ctx(lvl.I)) + $(ctx(i))

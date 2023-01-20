@@ -56,8 +56,8 @@ dropdefaults(src) = dropdefaults!(similar(src), src)
     ctx = LowerJulia() #TODO do we really need a context for this?
     dst = virtualize(:dst, dst, ctx)
     idxs = [Symbol(:i_, n) for n = 1:length(virtual_size(dst, ctx))]
-    T = eltype(dst)
-    d = default(dst)
+    T = virtual_eltype(dst)
+    d = virtual_default(dst)
     return quote
         tmp = Scalar{$d, $T}()
         @finch @loop($(idxs...), (@sieve (tmp[] != $d) dst[$(idxs...)] = tmp[]) where (tmp[] = src[$(idxs...)]))
