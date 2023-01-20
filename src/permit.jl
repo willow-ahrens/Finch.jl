@@ -39,10 +39,10 @@ function (ctx::Finch.LowerJulia)(tns::VirtualPermit)
     end
 end
 
-function Finch.getsize(arr::VirtualPermit, ctx::Finch.LowerJulia, mode)
+function Finch.virtual_size(arr::VirtualPermit, ctx::Finch.LowerJulia)
     return arr.I
 end
-#Finch.setsize!(arr::VirtualPermit, ctx::Finch.LowerJulia, mode, dim) = VirtualPermit(dim)
+#Finch.virtual_resize!(arr::VirtualPermit, ctx::Finch.LowerJulia, dim) = VirtualPermit(dim)
 
 function declare_dimensions_access(node, ctx, tns::VirtualPermit, ext)
     idx = ctx(node.idxs[1], widendim(ext))

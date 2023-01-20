@@ -52,8 +52,8 @@ function getsites(fbr::VirtualFiber{VirtualPatternLevel})
     return []
 end
 
-setsize!(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode) = fbr
-getsize(::VirtualFiber{VirtualPatternLevel}, ctx, mode) = ()
+virtual_level_resize!(lvl::VirtualPatternLevel, ctx) = lvl
+virtual_level_size(::VirtualPatternLevel, ctx) = ()
 
 @inline default(fbr::VirtualFiber{VirtualPatternLevel}) = false
 Base.eltype(fbr::VirtualFiber{VirtualPatternLevel}) = Bool

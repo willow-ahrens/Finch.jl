@@ -44,6 +44,12 @@ end
 (ctx::Finch.LowerJulia)(fbr::VirtualFiber) = :(Fiber($(ctx(fbr.lvl)), $(ctx(fbr.env))))
 IndexNotation.isliteral(::VirtualFiber) =  false
 
+virtual_size(tns::VirtualFiber, ctx) = virtual_level_size(tns.lvl, ctx)
+function virtual_resize!(tns::VirtualFiber, ctx, dims...)
+    tns.lvl = virtual_level_resize!(tns.lvl, ctx, dims...)
+    tns
+end
+
 getname(fbr::VirtualFiber) = envname(fbr.env)
 setname(fbr::VirtualFiber, name) = VirtualFiber(fbr.lvl, envrename!(fbr.env, name))
 #setname(fbr::VirtualFiber, name) = (fbr.env.name = name; fbr)
@@ -132,7 +138,7 @@ function select_access(node, ctx::Finch.SelectVisitor, tns::VirtualFiber)
             var = index(ctx.ctx.freshen(:s))
             val = cache!(ctx.ctx, :s, node.idxs[1])
             ctx.idxs[var] = val
-            ext = first(getsize(tns, ctx.ctx, node.mode))
+            ext = first(virtual_size(tns, ctx.ctx))
             ext_2 = Extent(val, val)
             tns_2 = truncate(tns, ctx.ctx, ext, ext_2)
             return access(tns_2, node.mode, var, node.idxs[2:end]...)

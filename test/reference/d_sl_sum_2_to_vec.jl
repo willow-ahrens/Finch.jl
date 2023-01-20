@@ -11,9 +11,9 @@
         (B_mode1_stop,) = size(B)
         (B_mode1_stop,) = size(B)
         1 == 1 || throw(DimensionMismatch("mismatched dimension start"))
-        B_mode1_stop == B_mode1_stop || throw(DimensionMismatch("mismatched dimension stop"))
+        A_lvl_2.I == B_mode1_stop || throw(DimensionMismatch("mismatched dimension stop"))
         j_stop = A_lvl.I
-        i_stop = B_mode1_stop
+        i_stop = A_lvl_2.I
         fill!(B, 0)
         for j = 1:j_stop
             A_lvl_q = (1 - 1) * A_lvl.I + j

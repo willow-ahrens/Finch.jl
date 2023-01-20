@@ -137,18 +137,15 @@ summary_f_code(lvl::VirtualSparseBytemapLevel) = "sm($(summary_f_code(lvl.lvl)))
 getsites(fbr::VirtualFiber{VirtualSparseBytemapLevel}) =
     [envdepth(fbr.env) + 1, getsites(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))...]
 
-function getsize(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode)
-    ext = Extent(literal(fbr.lvl.Ti(1)), fbr.lvl.I)
-    if mode.kind !== reader
-        ext = suggest(ext)
-    end
-    (ext, getsize(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)...)
+function virtual_level_size(lvl::VirtualSparseBytemapLevel, ctx)
+    ext = Extent(literal(lvl.Ti(1)), lvl.I)
+    (ext, virtual_level_size(lvl.lvl, ctx)...)
 end
 
-function setsize!(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode, dim, dims...)
-    fbr.lvl.I = getstop(dim)
-    fbr.lvl.lvl = setsize!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode, dims...).lvl
-    fbr
+function virtual_level_resize!(lvl::VirtualSparseBytemapLevel, ctx, dim, dims...)
+    lvl.I = getstop(dim)
+    lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims...)
+    lvl
 end
 
 @inline default(fbr::VirtualFiber{VirtualSparseBytemapLevel}) = default(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))

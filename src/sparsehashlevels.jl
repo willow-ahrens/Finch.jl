@@ -157,20 +157,15 @@ function getsites(fbr::VirtualFiber{VirtualSparseHashLevel})
     return [(d + 1:d + fbr.lvl.N)..., getsites(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^fbr.lvl.N)(fbr.env)))...]
 end
 
-function getsize(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx::LowerJulia, mode)
-    R = length(envdeferred(fbr.env)) + 1
-    ext = map((ti, stop)->Extent(literal(ti(1)), stop), fbr.lvl.Ti.parameters, fbr.lvl.I[R:end])
-    if mode.kind !== reader
-        ext = map(suggest, ext)
-    end
-    (ext..., getsize(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^(fbr.lvl.N - R + 1))(fbr.env)), ctx, mode)...)
+function virtual_level_size(lvl::VirtualSparseHashLevel, ctx::LowerJulia)
+    ext = map((ti, stop)->Extent(literal(ti(1)), stop), lvl.Ti.parameters, lvl.I)
+    (ext..., virtual_level_size(lvl.lvl, ctx)...)
 end
 
-function setsize!(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx::LowerJulia, mode, dims...)
-    R = length(envdeferred(fbr.env)) + 1
-    fbr.lvl.I = (fbr.lvl.I[1:R-1]..., map(getstop, dims[1:fbr.lvl.N-R+1])...)
-    fbr.lvl.lvl = setsize!(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^(fbr.lvl.N - R + 1))(fbr.env)), ctx, mode, dims[fbr.lvl.N + 1 - R + 1:end]...).lvl
-    fbr
+function virtual_level_resize!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, dims...)
+    lvl.I = map(getstop, dims[1:lvl.N])
+    lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims[lvl.N+1:end]...)
+    lvl
 end
 
 @inline default(fbr::VirtualFiber{<:VirtualSparseHashLevel}) = default(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^fbr.lvl.N)(fbr.env)))

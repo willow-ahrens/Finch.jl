@@ -75,7 +75,7 @@ index name or a `(tensor_name, mode_name)` tuple.
 
 The program is assumed to be in SSA form.
 
-See also: [`getsize`](@ref), [`getsites`](@ref), [`combinedim`](@ref),
+See also: [`virtual_size`](@ref), [`getsites`](@ref), [`combinedim`](@ref),
 [`TransformSSA`](@ref)
 """
 function (ctx::LowerJulia)(prgm, ::DimensionalizeStyle) 
@@ -142,9 +142,13 @@ declare_dimensions_access(node, ctx, tns::Dimensionalize, dim) = declare_dimensi
 function declare_dimensions_access(node, ctx, tns, dim)
     if haskey(ctx.shapes, getname(tns))
         dims = ctx.shapes[getname(tns)][getsites(tns)]
-        tns = setsize!(tns, ctx.ctx, node.mode, dims...)
+        tns = virtual_resize!(tns, ctx.ctx, dims...)
     else
-        dims = getsize(tns, ctx.ctx, node.mode)
+        if node.mode.kind !== reader
+            dims = map(suggest, virtual_size(tns, ctx.ctx))
+        else
+            dims = virtual_size(tns, ctx.ctx)
+        end
     end
     idxs = map(ctx, node.idxs, dims)
     access(tns, node.mode, idxs...)
@@ -154,16 +158,16 @@ function infer_dimensions_access(node, ctx, tns)
     res = map(ctx, node.idxs)
     idxs = map(first, res)
     if node.mode.kind !== reader
-        prev_dims = getsize(tns, ctx.ctx, node.mode)
+        prev_dims = map(suggest, virtual_size(tns, ctx.ctx))
         dims = map(resolvedim, map((a, b) -> resultdim(ctx.ctx, a, b), map(last, res), prev_dims))
         ctx.shapes[getname(tns)] = dims
-        tns = setsize!(tns, ctx.ctx, node.mode, dims...)
+        tns = virtual_resize!(tns, ctx.ctx, dims...)
     end
     (access(tns, node.mode, idxs...), nodim)
 end
 
-function setsize!(tns, ctx, mode, dims...)
-    for (dim, ref) in zip(dims, getsize(tns, ctx, mode))
+function virtual_resize!(tns, ctx, dims...)
+    for (dim, ref) in zip(dims, virtual_size(tns, ctx))
         if dim !== nodim && ref !== nodim #TODO this should be a function like checkdim or something haha
             push!(ctx.preamble, quote
                 $(ctx(getstart(dim))) == $(ctx(getstart(ref))) || throw(DimensionMismatch("mismatched dimension start"))
@@ -321,12 +325,12 @@ function combinedim(ctx, a::IndexNode, b::IndexNode)
 end
 
 """
-    getsize(tns, ctx, mode)
+    virtual_size(tns, ctx)
 
-Return an iterable over the dimensions of `tns` in the context `ctx` with access
+Return a tuple of the dimensions of `tns` in the context `ctx` with access
 mode `mode`. This is a function similar in spirit to `Base.axes`.
 """
-function getsize end
+function virtual_size end
 
 """
     getsites(tns)

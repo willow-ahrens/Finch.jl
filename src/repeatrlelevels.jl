@@ -134,17 +134,14 @@ summary_f_code(lvl::VirtualRepeatRLELevel) = "rl($(lvl.D))"
 getsites(fbr::VirtualFiber{VirtualRepeatRLELevel}) =
     [envdepth(fbr.env) + 1, ]
 
-function getsize(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode)
-    ext = Extent(literal(fbr.lvl.Ti(1)), fbr.lvl.I)
-    if mode.kind !== reader
-        ext = suggest(ext)
-    end
+function virtual_level_size(lvl::VirtualRepeatRLELevel, ctx)
+    ext = Extent(literal(lvl.Ti(1)), lvl.I)
     (ext,)
 end
 
-function setsize!(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode, dim)
-    fbr.lvl.I = getstop(dim)
-    fbr
+function virtual_level_resize!(lvl::VirtualRepeatRLELevel, ctx, dim)
+    lvl.I = getstop(dim)
+    lvl
 end
 
 @inline default(fbr::VirtualFiber{<:VirtualRepeatRLELevel}) = fbr.lvl.D

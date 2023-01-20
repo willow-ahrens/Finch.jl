@@ -148,18 +148,15 @@ function getsites(fbr::VirtualFiber{VirtualSparseCooLevel})
     return [(d + 1:d + fbr.lvl.N)..., getsites(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^fbr.lvl.N)(fbr.env)))...]
 end
 
-function getsize(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx::LowerJulia, mode)
-    ext = map((ti, stop)->Extent(literal(ti(1)), stop), fbr.lvl.Ti.parameters, fbr.lvl.I)
-    if mode.kind !== reader
-        ext = map(suggest, ext)
-    end
-    (ext..., getsize(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^fbr.lvl.N)(fbr.env)), ctx, mode)...)
+function virtual_level_size(lvl::VirtualSparseCooLevel, ctx::LowerJulia)
+    ext = map((ti, stop)->Extent(literal(ti(1)), stop), lvl.Ti.parameters, lvl.I)
+    (ext..., virtual_level_size(lvl.lvl, ctx)...)
 end
 
-function setsize!(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx::LowerJulia, mode, dims...)
-    fbr.lvl.I = map(getstop, dims[1:fbr.lvl.N])
-    fbr.lvl.lvl = setsize!(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^fbr.lvl.N)(fbr.env)), ctx, mode, dims[fbr.lvl.N + 1:end]...).lvl
-    fbr
+function virtual_level_resize!(lvl::VirtualSparseCooLevel, ctx::LowerJulia, dims...)
+    lvl.I = map(getstop, dims[1:lvl.N])
+    lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims[lvl.N + 1:end]...)
+    lvl
 end
 
 @inline default(fbr::VirtualFiber{<:VirtualSparseCooLevel}) = default(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^fbr.lvl.N)(fbr.env)))

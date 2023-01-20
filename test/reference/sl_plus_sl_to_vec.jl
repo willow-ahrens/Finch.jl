@@ -16,8 +16,8 @@
         (C_mode1_stop,) = size(C)
         (C_mode1_stop,) = size(C)
         1 == 1 || throw(DimensionMismatch("mismatched dimension start"))
-        C_mode1_stop == C_mode1_stop || throw(DimensionMismatch("mismatched dimension stop"))
-        i_stop = C_mode1_stop
+        A_lvl.I == C_mode1_stop || throw(DimensionMismatch("mismatched dimension stop"))
+        i_stop = A_lvl.I
         fill!(C, 0)
         B_lvl_q = B_lvl.pos[1]
         B_lvl_q_stop = B_lvl.pos[1 + 1]

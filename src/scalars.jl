@@ -34,7 +34,7 @@ function virtualize(ex, ::Type{Scalar{D, Tv}}, ctx, tag) where {D, Tv}
     VirtualScalar(sym, Tv, D, tag, val)
 end
 
-getsize(::VirtualScalar, ctx, mode) = ()
+virtual_size(::VirtualScalar, ctx) = ()
 getsites(::VirtualScalar) = []
 
 @inline default(tns::VirtualScalar) = tns.D

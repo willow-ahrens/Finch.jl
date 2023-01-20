@@ -69,8 +69,8 @@ function getsites(fbr::VirtualFiber{VirtualElementLevel})
     return []
 end
 
-setsize!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode) = fbr
-getsize(::VirtualFiber{VirtualElementLevel}, ctx, mode) = ()
+virtual_level_resize!(lvl::VirtualElementLevel, ctx) = lvl
+virtual_level_size(::VirtualElementLevel, ctx) = ()
 
 @inline default(fbr::VirtualFiber{VirtualElementLevel}) = fbr.lvl.D
 Base.eltype(fbr::VirtualFiber{VirtualElementLevel}) = fbr.lvl.Tv

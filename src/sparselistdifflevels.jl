@@ -133,18 +133,15 @@ hasdefaultcheck(lvl::VirtualSparseListDiffLevel) = true
 getsites(fbr::VirtualFiber{VirtualSparseListDiffLevel}) =
     [envdepth(fbr.env) + 1, getsites(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))...]
 
-function getsize(fbr::VirtualFiber{VirtualSparseListDiffLevel}, ctx, mode)
-    ext = Extent(literal(fbr.lvl.Ti(1)), fbr.lvl.I)
-    if mode.kind !== reader
-        ext = suggest(ext)
-    end
-    (ext, getsize(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)...)
+function virtual_level_size(lvl::VirtualSparseListDiffLevel, ctx)
+    ext = Extent(literal(lvl.Ti(1)), lvl.I)
+    (ext, virtual_level_size(lvl.lvl, ctx)...)
 end
 
-function setsize!(fbr::VirtualFiber{VirtualSparseListDiffLevel}, ctx, mode, dim, dims...)
-    fbr.lvl.I = getstop(dim)
-    fbr.lvl.lvl = setsize!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode, dims...).lvl
-    fbr
+function virtual_level_resize!(lvl::VirtualSparseListDiffLevel, ctx, dim, dims...)
+    lvl.I = getstop(dim)
+    lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims...)
+    lvl
 end
 
 @inline default(fbr::VirtualFiber{<:VirtualSparseListDiffLevel}) = default(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))
