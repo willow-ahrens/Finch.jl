@@ -64,13 +64,6 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:SparseListDi
     display_fiber_data(io, mime, fbr, 1, crds, print_coord, get_fbr)
 end
 
-
-@inline Base.ndims(fbr::Fiber{<:SparseListDiffLevel}) = 1 + ndims(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
-@inline Base.size(fbr::Fiber{<:SparseListDiffLevel}) = (fbr.lvl.I, size(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
-@inline Base.axes(fbr::Fiber{<:SparseListDiffLevel}) = (1:fbr.lvl.I, axes(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
-@inline Base.eltype(fbr::Fiber{<:SparseListDiffLevel}) = eltype(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
-@inline default(fbr::Fiber{<:SparseListDiffLevel}) = default(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
-
 (fbr::Fiber{<:SparseListDiffLevel})() = fbr
 function (fbr::Fiber{<:SparseListDiffLevel{Ti}})(i, tail...) where {Ti}
     lvl = fbr.lvl

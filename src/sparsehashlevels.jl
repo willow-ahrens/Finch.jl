@@ -84,12 +84,6 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:SparseHashLe
     display_fiber_data(io, mime, fbr, N, crds, print_coord, get_fbr)
 end
 
-@inline Base.ndims(fbr::Fiber{<:SparseHashLevel{N}}) where {N} = N + ndims(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))
-@inline Base.size(fbr::Fiber{<:SparseHashLevel{N}}) where {N} = (fbr.lvl.I..., size(Fiber(fbr.lvl.lvl,  (Environment^N)(fbr.env)))...)
-@inline Base.axes(fbr::Fiber{<:SparseHashLevel{N}}) where {N} = (map(Base.OneTo, fbr.lvl.I)..., axes(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))...)
-@inline Base.eltype(fbr::Fiber{<:SparseHashLevel{N}}) where {N} = eltype(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))
-@inline default(fbr::Fiber{<:SparseHashLevel{N}}) where {N} = default(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))
-
 (fbr::Fiber{<:SparseHashLevel})() = fbr
 function (fbr::Fiber{<:SparseHashLevel{N, Ti}})(i, tail...) where {N, Ti}
     lvl = fbr.lvl

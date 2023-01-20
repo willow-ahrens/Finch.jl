@@ -12,12 +12,6 @@ function Base.show(io::IO, lvl::PatternLevel)
     print(io, "Pattern()")
 end 
 
-@inline Base.ndims(fbr::Fiber{<:PatternLevel}) = 0
-@inline Base.size(fbr::Fiber{<:PatternLevel}) = ()
-@inline Base.axes(fbr::Fiber{<:PatternLevel}) = ()
-@inline Base.eltype(fbr::Fiber{<:PatternLevel}) = Bool
-@inline default(lvl::Fiber{<:PatternLevel}) = false
-
 (fbr::Fiber{<:PatternLevel})() = true
 
 """

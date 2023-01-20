@@ -73,13 +73,6 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:RepeatRLELev
     display_fiber_data(io, mime, fbr, 1, crds, print_coord, get_fbr)
 end
 
-
-@inline Base.ndims(fbr::Fiber{<:RepeatRLELevel}) = 1
-@inline Base.size(fbr::Fiber{<:RepeatRLELevel}) = (fbr.lvl.I,)
-@inline Base.axes(fbr::Fiber{<:RepeatRLELevel}) = (1:fbr.lvl.I,)
-@inline Base.eltype(::Fiber{<:RepeatRLELevel{D, Ti, Tv}}) where {D, Ti, Tv} = Tv
-@inline default(::Fiber{<:RepeatRLELevel{D}}) where {D} = D
-
 (fbr::Fiber{<:RepeatRLELevel})() = fbr
 function (fbr::Fiber{<:RepeatRLELevel})(i, tail...)
     lvl = fbr.lvl
