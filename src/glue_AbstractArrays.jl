@@ -15,8 +15,6 @@ end
 getname(arr::VirtualAbstractArray) = arr.name
 setname(arr::VirtualAbstractArray, name) = (arr_2 = deepcopy(arr); arr_2.name = name; arr_2)
 
-getsites(arr::VirtualAbstractArray) = 1:arr.ndims
-
 function (ctx::LowerJulia)(arr::VirtualAbstractArray, ::DefaultStyle)
     return arr.ex
 end

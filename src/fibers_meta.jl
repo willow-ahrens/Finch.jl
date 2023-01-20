@@ -31,8 +31,9 @@ function fiber(arr, default=zero(eltype(arr)))
 end
 
 @generated function Base.copyto!(dst::Fiber, src::Union{Fiber, AbstractArray})
-    dst = virtualize(:dst, dst, LowerJulia())
-    idxs = [Symbol(:i_, n) for n = getsites(dst)]
+    ctx = LowerJulia() #TODO do we really need a context for this?
+    dst = virtualize(:dst, dst, ctx)
+    idxs = [Symbol(:i_, n) for n = 1:length(virtual_size(dst, ctx))]
     return quote
         @finch @loop($(idxs...), dst[$(idxs...)] = src[$(idxs...)])
         return dst
@@ -40,8 +41,9 @@ end
 end
 
 @generated function Base.copyto!(dst::Array, src::Fiber)
-    dst = virtualize(:dst, dst, LowerJulia())
-    idxs = [Symbol(:i_, n) for n = getsites(dst)]
+    ctx = LowerJulia() #TODO do we really need a context for this?
+    dst = virtualize(:dst, dst, ctx)
+    idxs = [Symbol(:i_, n) for n = 1:length(virtual_size(dst, ctx))]
     return quote
         @finch @loop($(idxs...), dst[$(idxs...)] = src[$(idxs...)])
         return dst
@@ -51,8 +53,9 @@ end
 dropdefaults(src) = dropdefaults!(similar(src), src)
 
 @generated function dropdefaults!(dst::Fiber, src)
-    dst = virtualize(:dst, dst, LowerJulia())
-    idxs = [Symbol(:i_, n) for n = getsites(dst)]
+    ctx = LowerJulia() #TODO do we really need a context for this?
+    dst = virtualize(:dst, dst, ctx)
+    idxs = [Symbol(:i_, n) for n = 1:length(virtual_size(dst, ctx))]
     T = eltype(dst)
     d = default(dst)
     return quote

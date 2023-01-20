@@ -152,11 +152,6 @@ end
 
 summary_f_code(lvl::VirtualSparseHashLevel) = "sh{$(lvl.N)}($(summary_f_code(lvl.lvl)))"
 
-function getsites(fbr::VirtualFiber{VirtualSparseHashLevel})
-    d = envdepth(fbr.env)
-    return [(d + 1:d + fbr.lvl.N)..., getsites(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^fbr.lvl.N)(fbr.env)))...]
-end
-
 function virtual_level_size(lvl::VirtualSparseHashLevel, ctx::LowerJulia)
     ext = map((ti, stop)->Extent(literal(ti(1)), stop), lvl.Ti.parameters, lvl.I)
     (ext..., virtual_level_size(lvl.lvl, ctx)...)

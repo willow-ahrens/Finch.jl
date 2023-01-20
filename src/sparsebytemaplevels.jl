@@ -134,9 +134,6 @@ end
 
 summary_f_code(lvl::VirtualSparseBytemapLevel) = "sm($(summary_f_code(lvl.lvl)))"
 
-getsites(fbr::VirtualFiber{VirtualSparseBytemapLevel}) =
-    [envdepth(fbr.env) + 1, getsites(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))...]
-
 function virtual_level_size(lvl::VirtualSparseBytemapLevel, ctx)
     ext = Extent(literal(lvl.Ti(1)), lvl.I)
     (ext, virtual_level_size(lvl.lvl, ctx)...)

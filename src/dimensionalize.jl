@@ -75,7 +75,7 @@ index name or a `(tensor_name, mode_name)` tuple.
 
 The program is assumed to be in SSA form.
 
-See also: [`virtual_size`](@ref), [`getsites`](@ref), [`combinedim`](@ref),
+See also: [`virtual_size`](@ref) [`combinedim`](@ref),
 [`TransformSSA`](@ref)
 """
 function (ctx::LowerJulia)(prgm, ::DimensionalizeStyle) 
@@ -141,7 +141,7 @@ end
 declare_dimensions_access(node, ctx, tns::Dimensionalize, dim) = declare_dimensions_access(node, ctx, tns.body, dim)
 function declare_dimensions_access(node, ctx, tns, dim)
     if haskey(ctx.shapes, getname(tns))
-        dims = ctx.shapes[getname(tns)][getsites(tns)]
+        dims = ctx.shapes[getname(tns)]
         tns = virtual_resize!(tns, ctx.ctx, dims...)
     else
         if node.mode.kind !== reader
@@ -331,16 +331,6 @@ Return a tuple of the dimensions of `tns` in the context `ctx` with access
 mode `mode`. This is a function similar in spirit to `Base.axes`.
 """
 function virtual_size end
-
-"""
-    getsites(tns)
-
-Return an iterable over the identities of the modes of `tns`. If `tns_2` is a
-transpose of `tns`, then `getsites(tns_2)` should be a permutation of
-`getsites(tns)` corresponding to the order in which modes have been permuted.
-"""
-function getsites end
-
 
 getstart(val) = val #TODO avoid generic definition here
 getstop(val) = val #TODO avoid generic herer

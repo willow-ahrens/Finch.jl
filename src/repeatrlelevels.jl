@@ -131,9 +131,6 @@ end
 
 summary_f_code(lvl::VirtualRepeatRLELevel) = "rl($(lvl.D))"
 
-getsites(fbr::VirtualFiber{VirtualRepeatRLELevel}) =
-    [envdepth(fbr.env) + 1, ]
-
 function virtual_level_size(lvl::VirtualRepeatRLELevel, ctx)
     ext = Extent(literal(lvl.Ti(1)), lvl.I)
     (ext,)

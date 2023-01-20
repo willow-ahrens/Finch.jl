@@ -65,10 +65,6 @@ end
 
 summary_f_code(lvl::VirtualElementLevel) = "e($(lvl.D))"
 
-function getsites(fbr::VirtualFiber{VirtualElementLevel})
-    return []
-end
-
 virtual_level_resize!(lvl::VirtualElementLevel, ctx) = lvl
 virtual_level_size(::VirtualElementLevel, ctx) = ()
 

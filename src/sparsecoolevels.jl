@@ -143,11 +143,6 @@ end
 
 summary_f_code(lvl::VirtualSparseCooLevel) = "sc{$(lvl.N)}($(summary_f_code(lvl.lvl)))"
 
-function getsites(fbr::VirtualFiber{VirtualSparseCooLevel})
-    d = envdepth(fbr.env)
-    return [(d + 1:d + fbr.lvl.N)..., getsites(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^fbr.lvl.N)(fbr.env)))...]
-end
-
 function virtual_level_size(lvl::VirtualSparseCooLevel, ctx::LowerJulia)
     ext = map((ti, stop)->Extent(literal(ti(1)), stop), lvl.Ti.parameters, lvl.I)
     (ext..., virtual_level_size(lvl.lvl, ctx)...)

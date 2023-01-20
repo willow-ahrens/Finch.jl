@@ -48,10 +48,6 @@ struct VirtualPatternLevel end
 (ctx::Finch.LowerJulia)(lvl::VirtualPatternLevel) = :(PatternLevel())
 virtualize(ex, ::Type{<:PatternLevel}, ctx, tag) = VirtualPatternLevel()
 
-function getsites(fbr::VirtualFiber{VirtualPatternLevel})
-    return []
-end
-
 virtual_level_resize!(lvl::VirtualPatternLevel, ctx) = lvl
 virtual_level_size(::VirtualPatternLevel, ctx) = ()
 

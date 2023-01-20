@@ -130,9 +130,6 @@ summary_f_code(lvl::VirtualSparseListDiffLevel) = "sld($(summary_f_code(lvl.lvl)
 
 hasdefaultcheck(lvl::VirtualSparseListDiffLevel) = true
 
-getsites(fbr::VirtualFiber{VirtualSparseListDiffLevel}) =
-    [envdepth(fbr.env) + 1, getsites(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))...]
-
 function virtual_level_size(lvl::VirtualSparseListDiffLevel, ctx)
     ext = Extent(literal(lvl.Ti(1)), lvl.I)
     (ext, virtual_level_size(lvl.lvl, ctx)...)

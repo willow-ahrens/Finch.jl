@@ -132,9 +132,6 @@ summary_f_code(lvl::VirtualSparseVBLLevel) = "sv($(summary_f_code(lvl.lvl)))"
 
 hasdefaultcheck(lvl::VirtualSparseVBLLevel) = true
 
-getsites(fbr::VirtualFiber{VirtualSparseVBLLevel}) =
-    [envdepth(fbr.env) + 1, getsites(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)))...]
-
 function virtual_level_size(lvl::VirtualSparseVBLLevel, ctx)
     ext = Extent(literal(lvl.Ti(1)), lvl.I)
     (ext, virtual_level_size(lvl.lvl, ctx)...)
