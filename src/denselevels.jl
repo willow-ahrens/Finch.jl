@@ -128,41 +128,24 @@ end
 function trim_level!(lvl::VirtualDenseLevel, ctx::LowerJulia, pos)
     qos = ctx.freshen(:qos)
     push!(ctx.preamble, quote
-        $qos = $pos * $(ctx(lvl.I))
+        $qos = $(ctx(pos)) * $(ctx(lvl.I))
     end)
     lvl.lvl = trim_level!(lvl.lvl, ctx, qos)
     return lvl
 end
 
-
 interval_assembly_depth(lvl::VirtualDenseLevel) = min(Inf, interval_assembly_depth(lvl.lvl) - 1)
 
-function assemble!(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode)
-    lvl = fbr.lvl
-    Ti = lvl.Ti
-    p_start = getstart(envposition(fbr.env))
-    p_stop = getstop(envposition(fbr.env))
-    q_start = call(*, p_start, lvl.I)
-    q_stop = call(*, p_stop, lvl.I)
-    if interval_assembly_depth(lvl.lvl) >= 1
-        assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Extent(q_start, q_stop), index = Extent(literal(lvl.Ti(1)), lvl.I), parent=fbr.env)), ctx, mode)
-    else
-        p = ctx.freshen(lvl.ex, :_p)
-        q = ctx.freshen(lvl.ex, :_q)
-        push!(ctx.preamble, quote
-            for $p = $(ctx(p_start)):$(ctx(p_stop))
-                for $i = $(Ti(1)):$(ctx(lvl.I))
-                    $q = ($p - $(Ti(1))) * $(ctx(lvl.I)) + $i
-                    $(assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(q), index=value(i), parent=fbr.env)), ctx, mode))
-                end
-            end
-        end)
-    end
+function assemble_level!(lvl::VirtualDenseLevel, ctx, pos_start, pos_stop)
+    qos_start = call(+, call(*, call(-, pos_start, lvl.Ti(1)), lvl.I), 1)
+    qos_stop = call(*, pos_stop, lvl.I)
+    assemble_level!(lvl.lvl, ctx, qos_start, qos_stop)
+    lvl
 end
 
-function freeze_level!(fbr::VirtualFiber{VirtualDenseLevel}, ctx::LowerJulia, mode)
-    fbr.lvl.lvl = freeze_level!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)
-    return fbr.lvl
+function freeze_level!(lvl::VirtualDenseLevel, ctx::LowerJulia, pos)
+    lvl.lvl = freeze_level!(lvl.lvl, ctx, call(*, pos, lvl.I))
+    return lvl
 end
 
 hasdefaultcheck(lvl::VirtualDenseLevel) = hasdefaultcheck(lvl.lvl)

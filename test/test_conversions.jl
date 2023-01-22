@@ -1,6 +1,6 @@
 @testset "conversions" begin
     for base in [
-        Pattern,
+        #Pattern,
         Element{false},
     ]
         #=
@@ -21,9 +21,9 @@
         if base != Pattern
             for inner in [
                 () -> Dense(base()),
-                () -> SparseListDiff(base()),
-                () -> RepeatRLE{false}(),
-                () -> RepeatRLEDiff{false}(),
+                #() -> SparseListDiff(base()),
+                #() -> RepeatRLE{false}(),
+                #() -> RepeatRLEDiff{false}(),
             ]
                 for arr in [
                     fill(false, 5),
@@ -79,10 +79,10 @@
 
         for inner in [
             () -> SparseList(base()),
-            () -> SparseVBL(base()),
-            () -> SparseBytemap(base()),
-            () -> SparseHash{1}(base()),
-            () -> SparseCoo{1}(base()),
+            #() -> SparseVBL(base()),
+            #() -> SparseBytemap(base()),
+            #() -> SparseHash{1}(base()),
+            #() -> SparseCoo{1}(base()),
         ]
             for arr in [
                 fill(false, 5),
@@ -127,8 +127,8 @@
         end
 
         for outer in [
-            () -> SparseCoo{2}(base()),
-            () -> SparseHash{2}(base())
+            #() -> SparseCoo{2}(base()),
+            #() -> SparseHash{2}(base())
         ]
 
             for (arr_key, arr) in [

@@ -54,6 +54,7 @@ dropdefaults(src) = dropdefaults!(similar(src), src)
     d = default(dst)
     return quote
         tmp = Scalar{$d, $T}()
+        println(@finch_code @loop($(idxs...), (@sieve (tmp[] != $d) dst[$(idxs...)] = tmp[]) where (tmp[] = src[$(idxs...)])))
         @finch @loop($(idxs...), (@sieve (tmp[] != $d) dst[$(idxs...)] = tmp[]) where (tmp[] = src[$(idxs...)]))
         return dst
     end

@@ -46,7 +46,6 @@ struct VirtualElementLevel
     ex
     Tv
     D
-    val_alloc
     val
 end
 
@@ -57,10 +56,9 @@ function virtualize(ex, ::Type{ElementLevel{D, Tv}}, ctx, tag) where {D, Tv}
     val = ctx.freshen(sym, :_val)
     push!(ctx.preamble, quote
         $sym = $ex
-        $val_alloc = length($ex.val)
         $val = $D
     end)
-    VirtualElementLevel(sym, Tv, D, val_alloc, val)
+    VirtualElementLevel(sym, Tv, D, val)
 end
 
 summary_f_code(lvl::VirtualElementLevel) = "e($(lvl.D))"
@@ -72,18 +70,10 @@ virtual_level_default(lvl::VirtualElementLevel) = lvl.D
 
 function initialize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
     lvl = fbr.lvl
-    my_q = ctx.freshen(lvl.ex, :_q)
-    if !envreinitialized(fbr.env)
-        if mode.kind === updater && mode.mode.kind === create
-            push!(ctx.preamble, quote
-                $(lvl.val_alloc) = $Finch.refill!($(lvl.ex).val, $(lvl.D), 0, 4)
-            end)
-        end
-    end
     lvl
 end
 
-freeze_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode) = fbr.lvl
+freeze_level!(lvl::VirtualElementLevel, ctx, pos) = lvl
 
 function trim_level!(lvl::VirtualElementLevel, ctx::LowerJulia, pos)
     push!(ctx.preamble, quote
@@ -94,12 +84,14 @@ end
 
 interval_assembly_depth(lvl::VirtualElementLevel) = Inf
 
-function assemble!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
-    lvl = fbr.lvl
-    q = ctx(getstop(envposition(fbr.env)))
+function assemble_level!(lvl::VirtualElementLevel, ctx, pos_start, pos_stop)
+    pos_start = cache!(ctx, :pos_start, simplify(pos_start, ctx))
+    pos_stop = cache!(ctx, :pos_stop, simplify(pos_stop, ctx))
     push!(ctx.preamble, quote
-        $(lvl.val_alloc) < $q && ($(lvl.val_alloc) = $Finch.refill!($(lvl.ex).val, $(lvl.D), $(lvl.val_alloc), $q))
+        resize_if_smaller!($(lvl.ex).val, $(ctx(pos_stop)))
+        fill_range!($(lvl.ex).val, $(lvl.D), $(ctx(pos_start)), $(ctx(pos_stop)))
     end)
+    lvl
 end
 
 function reinitialize!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)

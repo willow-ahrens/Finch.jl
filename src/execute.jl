@@ -80,11 +80,13 @@ function execute_code(ex, T, algebra = DefaultAlgebra())
             end)
         end
     end
+    #=
     code = quote
         @inbounds begin
             $code
         end
     end
+    =#
     code |>
         lower_caches |>
         lower_cleanup

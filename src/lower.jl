@@ -59,6 +59,10 @@ function cache!(ctx, var, val)
     if isliteral(val)
         return val
     end
+    if val isa IndexNode
+        val.kind == literal && return val
+        val.kind == value && return val
+    end
     body = contain(ctx) do ctx_2
         ctx(val)
     end

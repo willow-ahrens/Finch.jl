@@ -84,7 +84,7 @@ access mode `mode`. Return the new fiber object.
 function initialize!(fbr::VirtualFiber, ctx::LowerJulia, mode, idxs...)
     if mode.kind === updater
         fbr = VirtualFiber(initialize_level!(fbr, ctx, mode), fbr.env)
-        assemble!(fbr, ctx, mode)
+        assemble_level!(fbr.lvl, ctx, literal(1), literal(1))
     end
     return access(refurl(fbr, ctx, mode), mode, idxs...)
 end
@@ -109,7 +109,7 @@ the new fiber object.
 """
 function freeze!(fbr::VirtualFiber, ctx::LowerJulia, mode, idxs...)
     if mode.kind === updater
-        return VirtualFiber(freeze_level!(fbr, ctx, mode), fbr.env)
+        return VirtualFiber(freeze_level!(fbr.lvl, ctx, envposition(fbr.env)), fbr.env)
     else
         return fbr
     end
