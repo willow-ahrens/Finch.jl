@@ -96,33 +96,9 @@ end
 virtual_level_eltype(lvl::VirtualDenseLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualDenseLevel) = virtual_level_default(lvl.lvl)
 
-reinitializeable(lvl::VirtualDenseLevel) = reinitializeable(lvl.lvl)
-function initialize_level!(fbr::VirtualFiber{VirtualDenseLevel}, ctx::LowerJulia, mode)
-    fbr.lvl.lvl = initialize_level!(VirtualFiber(fbr.lvl.lvl, Environment(fbr.env, reinitialized=envreinitialized(fbr.env))), ctx, mode)
-    return fbr.lvl
-end
-
-function reinitialize!(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode)
-    lvl = fbr.lvl
-    p_start = getstart(envposition(fbr.env))
-    p_stop = getstop(envposition(fbr.env))
-    q_start = call(*, p_start, lvl.I)
-    q_stop = call(*, p_stop, lvl.I)
-    if interval_assembly_depth(lvl.lvl) >= 1
-        reinitialize!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=Extent(q_start, q_stop), index = Extent(literal(1), lvl.I), parent=fbr.env)), ctx, mode)
-    else
-        p = ctx.freshen(lvl.ex, :_p)
-        q = ctx.freshen(lvl.ex, :_q)
-        i_2 = ctx.freshen(lvl.ex, :_i)
-        push!(ctx.preamble, quote
-            for $p = $(ctx(p_start)):$(ctx(p_stop))
-                for $i = 1:$(lvl.I)
-                    $q = ($p - 1) * $(ctx(lvl.I)) + $i
-                    reinitialize!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(q), index=value(i), parent=fbr.env)), ctx, mode)
-                end
-            end
-        end)
-    end
+function initialize_level!(lvl::VirtualDenseLevel, ctx::LowerJulia, mode)
+    lvl.lvl = initialize_level!(lvl.lvl, ctx, mode)
+    return lvl
 end
 
 function trim_level!(lvl::VirtualDenseLevel, ctx::LowerJulia, pos)
@@ -134,13 +110,18 @@ function trim_level!(lvl::VirtualDenseLevel, ctx::LowerJulia, pos)
     return lvl
 end
 
-interval_assembly_depth(lvl::VirtualDenseLevel) = min(Inf, interval_assembly_depth(lvl.lvl) - 1)
-
 function assemble_level!(lvl::VirtualDenseLevel, ctx, pos_start, pos_stop)
     qos_start = call(+, call(*, call(-, pos_start, lvl.Ti(1)), lvl.I), 1)
     qos_stop = call(*, pos_stop, lvl.I)
     assemble_level!(lvl.lvl, ctx, qos_start, qos_stop)
     lvl
+end
+
+function reassemble_level!(lvl::VirtualDenseLevel, ctx, pos_start, pos_stop)
+qos_start = call(+, call(*, call(-, pos_start, lvl.Ti(1)), lvl.I), 1)
+qos_stop = call(*, pos_stop, lvl.I)
+reassemble_level!(lvl.lvl, ctx, qos_start, qos_stop)
+lvl
 end
 
 function freeze_level!(lvl::VirtualDenseLevel, ctx::LowerJulia, pos)

@@ -124,15 +124,14 @@ end
 virtual_level_eltype(lvl::VirtualSparseListLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSparseListLevel) = virtual_level_default(lvl.lvl)
 
-function initialize_level!(fbr::VirtualFiber{VirtualSparseListLevel}, ctx::LowerJulia, mode)
-    lvl = fbr.lvl
+function initialize_level!(lvl::VirtualSparseListLevel, ctx::LowerJulia, mode)
     Ti = lvl.Ti
     Tp = lvl.Tp
     push!(ctx.preamble, quote
         $(lvl.qos_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
     end)
-    lvl.lvl = initialize_level!(VirtualFiber(fbr.lvl.lvl, Environment(fbr.env)), ctx, mode)
+    lvl.lvl = initialize_level!(lvl.lvl, ctx, mode)
     return lvl
 end
 
@@ -146,8 +145,6 @@ function trim_level!(lvl::VirtualSparseListLevel, ctx::LowerJulia, pos)
     lvl.lvl = trim_level!(lvl.lvl, ctx, value(qos, lvl.Tp))
     return lvl
 end
-
-interval_assembly_depth(lvl::VirtualSparseListLevel) = Inf
 
 function assemble_level!(lvl::VirtualSparseListLevel, ctx, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))

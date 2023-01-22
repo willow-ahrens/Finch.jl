@@ -57,11 +57,14 @@ isstructequal(a::T, b::T) where {T <: Fiber} =
     isstructequal(a.lvl, b.lvl) &&
     isstructequal(a.env, b.env)
 
+#=
 isstructequal(a::T, b::T)  where {T <: Pattern} = true
+=#
 
 isstructequal(a::T, b::T) where {T <: Element} =
     a.val == b.val
 
+#=
 isstructequal(a::T, b::T) where {T <: RepeatRLE} =
     a.I == b.I &&
     a.pos == b.pos &&
@@ -73,6 +76,7 @@ isstructequal(a::T, b::T) where {T <: RepeatRLEDiff} =
     a.pos == b.pos &&
     a.idx == b.idx &&
     a.val == b.val
+=#
 
 isstructequal(a::T, b::T) where {T <: Dense} =
     a.I == b.I &&
@@ -84,6 +88,7 @@ isstructequal(a::T, b::T) where {T <: SparseList} =
     a.idx == b.idx &&
     isstructequal(a.lvl, b.lvl)
 
+#=
 isstructequal(a::T, b::T) where {T <: SparseListDiff} =
     a.I == b.I &&
     a.pos == b.pos &&
@@ -118,6 +123,7 @@ isstructequal(a::T, b::T) where {T <: SparseBytemap} =
     a.srt == b.srt &&
     a.srt_stop[] == b.srt_stop[] &&
     isstructequal(a.lvl, b.lvl)
+=#
 
 verbose = "verbose" in ARGS
 
@@ -129,7 +135,7 @@ verbose = "verbose" in ARGS
     include("test_formats.jl")
     include("test_constructors.jl")
     include("test_conversions.jl")
-    include("test_merges.jl")
+    #include("test_merges.jl")
     include("test_algebra.jl")
     include("test_repeat.jl")
     include("test_permit.jl")

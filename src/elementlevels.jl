@@ -68,10 +68,7 @@ virtual_level_size(::VirtualElementLevel, ctx) = ()
 virtual_level_eltype(lvl::VirtualElementLevel) = lvl.Tv
 virtual_level_default(lvl::VirtualElementLevel) = lvl.D
 
-function initialize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
-    lvl = fbr.lvl
-    lvl
-end
+initialize_level!(lvl::VirtualElementLevel, ctx, mode) = lvl
 
 freeze_level!(lvl::VirtualElementLevel, ctx, pos) = lvl
 
@@ -82,13 +79,20 @@ function trim_level!(lvl::VirtualElementLevel, ctx::LowerJulia, pos)
     return lvl
 end
 
-interval_assembly_depth(lvl::VirtualElementLevel) = Inf
-
 function assemble_level!(lvl::VirtualElementLevel, ctx, pos_start, pos_stop)
     pos_start = cache!(ctx, :pos_start, simplify(pos_start, ctx))
     pos_stop = cache!(ctx, :pos_stop, simplify(pos_stop, ctx))
     push!(ctx.preamble, quote
         resize_if_smaller!($(lvl.ex).val, $(ctx(pos_stop)))
+        fill_range!($(lvl.ex).val, $(lvl.D), $(ctx(pos_start)), $(ctx(pos_stop)))
+    end)
+    lvl
+end
+
+function reassemble_level!(lvl::VirtualElementLevel, ctx, pos_start, pos_stop)
+    pos_start = cache!(ctx, :pos_start, simplify(pos_start, ctx))
+    pos_stop = cache!(ctx, :pos_stop, simplify(pos_stop, ctx))
+    push!(ctx.preamble, quote
         fill_range!($(lvl.ex).val, $(lvl.D), $(ctx(pos_start)), $(ctx(pos_stop)))
     end)
     lvl

@@ -18,7 +18,7 @@
         end
         =#
 
-        if base != Pattern
+        if true #base != Pattern
             for inner in [
                 () -> Dense(base()),
                 #() -> SparseListDiff(base()),
