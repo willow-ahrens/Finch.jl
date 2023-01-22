@@ -102,27 +102,27 @@ initialize_level!(fbr, ctx, mode) = fbr.lvl
 
 
 """
-    finalize!(fbr, ctx, mode, idxs...)
+    freeze!(fbr, ctx, mode, idxs...)
 
-Finalize the virtual fiber in the context `ctx` with access mode `mode`. Return
+Freeze the virtual fiber in the context `ctx` with access mode `mode`. Return
 the new fiber object.
 """
-function finalize!(fbr::VirtualFiber, ctx::LowerJulia, mode, idxs...)
+function freeze!(fbr::VirtualFiber, ctx::LowerJulia, mode, idxs...)
     if mode.kind === updater
-        return VirtualFiber(finalize_level!(fbr, ctx, mode), fbr.env)
+        return VirtualFiber(freeze_level!(fbr, ctx, mode), fbr.env)
     else
         return fbr
     end
 end
 
 """
-    finalize_level!(fbr, ctx, mode)
+    freeze_level!(fbr, ctx, mode)
 
-Finalize the level within the virtual fiber. These are the bulk cleanup steps.
+Freeze the level within the virtual fiber. These are the bulk cleanup steps.
 """
-function finalize_level! end
+function freeze_level! end
 
-finalize_level!(fbr, ctx, mode) = fbr.lvl
+freeze_level!(fbr, ctx, mode) = fbr.lvl
 
 function trim!(fbr::VirtualFiber, ctx)
     delete!(fbr.env, :name)

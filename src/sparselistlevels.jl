@@ -169,7 +169,7 @@ function assemble!(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode)
     end)
 end
 
-function finalize_level!(fbr::VirtualFiber{VirtualSparseListLevel}, ctx::LowerJulia, mode)
+function freeze_level!(fbr::VirtualFiber{VirtualSparseListLevel}, ctx::LowerJulia, mode)
     lvl = fbr.lvl
     my_p = ctx.freshen(:p)
     my_q = ctx.freshen(:q)
@@ -179,7 +179,7 @@ function finalize_level!(fbr::VirtualFiber{VirtualSparseListLevel}, ctx::LowerJu
             $(lvl.ex).pos[$(my_p)] = $my_q
         end
     end)
-    fbr.lvl.lvl = finalize_level!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)
+    fbr.lvl.lvl = freeze_level!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)
     return fbr.lvl
 end
 

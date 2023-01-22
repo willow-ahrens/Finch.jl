@@ -99,7 +99,7 @@ updater
     create()
 
 Finch AST expression for an "allocating" update. This access will
-initialize and finalize the tensor, and we can be sure that any values
+initialize and freeze the tensor, and we can be sure that any values
 the tensor held before have been forgotten.
 """
 create
@@ -108,7 +108,7 @@ create
     modify()
 
 Finch AST expression for an "in place" update. The access will not
-initialize or finalize the tensor, but can modify it's existing values.
+initialize or freeze the tensor, but can modify it's existing values.
 """
 modify
 
@@ -168,7 +168,7 @@ assign
 """
     pass(tnss...)
 
-Finch AST statement that initializes, finalizes, and returns each tensor in `tnss...`.
+Finch AST statement that initializes, freezes, and returns each tensor in `tnss...`.
 """
 pass
 
@@ -176,7 +176,7 @@ pass
 """
     lifetime(body)
 
-Finch AST statement that initializes and finalizes all results in `body`. Most
+Finch AST statement that initializes and freezes all results in `body`. Most
 finch programs are wrapped by an outer `lifetime`.
 """
 lifetime

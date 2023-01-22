@@ -240,7 +240,7 @@ function assemble!(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode)
     end
 end
 
-function finalize_level!(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx::LowerJulia, mode)
+function freeze_level!(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx::LowerJulia, mode)
     @assert isempty(envdeferred(fbr.env))
     lvl = fbr.lvl
     r = ctx.freshen(lvl.ex, :_r)
@@ -262,7 +262,7 @@ function finalize_level!(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx::Lowe
         $(lvl.ex).pos[$p_prev + 1] = $(lvl.srt_stop) + 1
         $(lvl.ex).srt_stop[] = $(lvl.srt_stop)
     end)
-    lvl.lvl = finalize_level!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)
+    lvl.lvl = freeze_level!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)
     return lvl
 end
 

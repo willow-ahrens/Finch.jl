@@ -83,7 +83,7 @@ function initialize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
     lvl
 end
 
-finalize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode) = fbr.lvl
+freeze_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode) = fbr.lvl
 
 function trim_level!(lvl::VirtualElementLevel, ctx::LowerJulia, pos)
     push!(ctx.preamble, quote

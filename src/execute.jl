@@ -42,7 +42,7 @@ end
 #            ctx_3(prgm)
 #        end)
 #        $(contain(ctx) do ctx_3
-#            prgm = Finalize(ctx = ctx_3)(prgm)
+#            prgm = freeze(ctx = ctx_3)(prgm)
 #            :(($(map(getresults(prgm)) do tns
 #                :($(getname(tns)) = $(ctx_3(tns)))
 #            end...), ))
@@ -70,7 +70,7 @@ function execute_code(ex, T, algebra = DefaultAlgebra())
                 end
             end)
             $(contain(ctx) do ctx_2
-                prgm = Finalize(ctx = ctx_2)(prgm)
+                prgm = Freeze(ctx = ctx_2)(prgm)
                 :(($(map(getresults(prgm)) do acc
                     @assert acc.tns.kind === virtual
                     name = getname(acc)
@@ -160,20 +160,20 @@ function (ctx::Initialize)(node::IndexNode)
 end
 
 """
-    Finalize(ctx)
+    Freeze(ctx)
 
-A transformation to finalize output tensors before they leave scope and are
+A transformation to freeze output tensors before they leave scope and are
 returned to the caller.
 
-See also: [`finalize!`](@ref)
+See also: [`freeze!`](@ref)
 """
-@kwdef struct Finalize{Ctx}
+@kwdef struct Freeze{Ctx}
     ctx::Ctx
     target=nothing
     escape=[]
 end
-finalize!(tns, ctx, mode, idxs...) = tns
-function (ctx::Finalize)(node)
+freeze!(tns, ctx, mode, idxs...) = tns
+function (ctx::Freeze)(node)
     if istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))
     else
@@ -181,15 +181,15 @@ function (ctx::Finalize)(node)
     end
 end
 
-function (ctx::Finalize)(node::IndexNode)
+function (ctx::Freeze)(node::IndexNode)
     if node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
         if (ctx.target === nothing || (getname(node.tns) in ctx.target)) && !(getname(node.tns) in ctx.escape)
-            access(finalize!(node.tns.val, ctx.ctx, node.mode, node.idxs...), node.mode, node.idxs...)
+            access(freeze!(node.tns.val, ctx.ctx, node.mode, node.idxs...), node.mode, node.idxs...)
         else
             access(node.tns, node.mode, map(ctx, node.idxs)...)
         end
     elseif node.kind === with
-        ctx_2 = Finalize(ctx.ctx, ctx.target, union(ctx.escape, map(getname, getresults(node.prod))))
+        ctx_2 = Freeze(ctx.ctx, ctx.target, union(ctx.escape, map(getname, getresults(node.prod))))
         with(ctx_2(node.cons), ctx_2(node.prod))
     elseif istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))

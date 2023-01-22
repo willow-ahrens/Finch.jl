@@ -54,7 +54,7 @@ virtual_level_eltype(::VirtualPatternLevel) = Bool
 
 initialize_level!(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode) = fbr.lvl
 
-finalize_level!(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode) = fbr.lvl
+freeze_level!(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode) = fbr.lvl
 
 interval_assembly_depth(lvl::VirtualPatternLevel) = Inf
 

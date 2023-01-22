@@ -185,7 +185,7 @@ function assemble!(fbr::VirtualFiber{VirtualSparseListDiffLevel}, ctx, mode)
     end)
 end
 
-function finalize_level!(fbr::VirtualFiber{VirtualSparseListDiffLevel}, ctx::LowerJulia, mode)
+function freeze_level!(fbr::VirtualFiber{VirtualSparseListDiffLevel}, ctx::LowerJulia, mode)
     lvl = fbr.lvl
     my_p = ctx.freshen(:p)
     my_q = ctx.freshen(:q)
@@ -198,7 +198,7 @@ function finalize_level!(fbr::VirtualFiber{VirtualSparseListDiffLevel}, ctx::Low
         $(lvl.idx_alloc) < $my_q && ($(lvl.idx_alloc) = $Finch.regrow!($(lvl.ex).idx, $(lvl.idx_alloc), $my_q))
         $(lvl.ex).idx[$my_q] = 0x00
     end)
-    fbr.lvl.lvl = finalize_level!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)
+    fbr.lvl.lvl = freeze_level!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)
     return fbr.lvl
 end
 

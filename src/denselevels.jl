@@ -160,8 +160,8 @@ function assemble!(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode)
     end
 end
 
-function finalize_level!(fbr::VirtualFiber{VirtualDenseLevel}, ctx::LowerJulia, mode)
-    fbr.lvl.lvl = finalize_level!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)
+function freeze_level!(fbr::VirtualFiber{VirtualDenseLevel}, ctx::LowerJulia, mode)
+    fbr.lvl.lvl = freeze_level!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)
     return fbr.lvl
 end
 

@@ -172,7 +172,7 @@ function assemble!(fbr::VirtualFiber{VirtualRepeatRLEDiffLevel}, ctx, mode)
     end)
 end
 
-function finalize_level!(fbr::VirtualFiber{VirtualRepeatRLEDiffLevel}, ctx::LowerJulia, mode)
+function freeze_level!(fbr::VirtualFiber{VirtualRepeatRLEDiffLevel}, ctx::LowerJulia, mode)
     lvl = fbr.lvl
     my_i = ctx.freshen(:i)
     my_p = ctx.freshen(:p)

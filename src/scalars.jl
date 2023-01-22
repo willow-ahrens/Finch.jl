@@ -53,7 +53,7 @@ function initialize!(tns::VirtualScalar, ctx, mode, idxs...)
     access(tns, mode, idxs...)
 end
 
-function finalize!(tns::VirtualScalar, ctx, mode)
+function freeze!(tns::VirtualScalar, ctx, mode)
     return tns
 end
 

@@ -201,7 +201,7 @@ function assemble!(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode)
     end)
 end
 
-function finalize_level!(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx::LowerJulia, mode)
+function freeze_level!(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx::LowerJulia, mode)
     @assert isempty(envdeferred(fbr.env))
     lvl = fbr.lvl
     my_p = ctx.freshen(lvl.ex, :_p)
@@ -214,7 +214,7 @@ function finalize_level!(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx::LowerJu
             $(lvl.ex).pos[$my_p + 1] += $(lvl.ex).pos[$my_p]
         end
     end)
-    lvl.lvl = finalize_level!(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^lvl.N)(fbr.env)), ctx, mode)
+    lvl.lvl = freeze_level!(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^lvl.N)(fbr.env)), ctx, mode)
     return lvl
 end
 

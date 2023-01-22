@@ -204,7 +204,7 @@ function assemble!(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode)
     end)
 end
 
-function finalize_level!(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx::LowerJulia, mode)
+function freeze_level!(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx::LowerJulia, mode)
     @assert isempty(envdeferred(fbr.env))
     lvl = fbr.lvl
     my_p = ctx.freshen(:p)
@@ -215,7 +215,7 @@ function finalize_level!(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx::LowerJul
             $(lvl.ex).pos[$(my_p)] = $my_q
         end
     end)
-    lvl.lvl = finalize_level!(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^lvl.N)(fbr.env)), ctx, mode)
+    lvl.lvl = freeze_level!(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^lvl.N)(fbr.env)), ctx, mode)
     return lvl
 end
 

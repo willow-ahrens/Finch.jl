@@ -169,7 +169,7 @@ function assemble!(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode)
     end)
 end
 
-function finalize_level!(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx::LowerJulia, mode)
+function freeze_level!(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx::LowerJulia, mode)
     lvl = fbr.lvl
     Tp = lvl.Tp
     Ti = lvl.Ti

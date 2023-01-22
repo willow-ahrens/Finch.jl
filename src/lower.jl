@@ -203,10 +203,10 @@ function (ctx::LowerJulia)(root::IndexNode, ::DefaultStyle)
                 (ctx_2)(prod)
             end)
             $(contain(ctx) do ctx_2
-                Finalize(ctx = ctx_2, target=target)(prod)
+                Freeze(ctx = ctx_2, target=target)(prod)
                 cons = Initialize(ctx = ctx_2, target=target)(root.cons)
                 res = (ctx_2)(cons)
-                Finalize(ctx = ctx_2, target=target)(cons)
+                Freeze(ctx = ctx_2, target=target)(cons)
                 res
             end)
         end
