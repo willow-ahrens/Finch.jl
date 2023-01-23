@@ -149,11 +149,10 @@ end
 function assemble_level!(lvl::VirtualSparseListLevel, ctx, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_start, pos_stop))
-    push!(ctx.preamble, quote
+    return quote
         $resize_if_smaller!($(lvl.ex).pos, $pos_stop + 1)
         $fill_range!($(lvl.ex).pos, 0, $pos_start + 1, $pos_stop + 1)
-    end)
-    lvl
+    end
 end
 
 function freeze_level!(lvl::VirtualSparseListLevel, ctx::LowerJulia, pos_stop)
@@ -386,10 +385,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode, ::Extrude,
                 if $qos > $qos_stop
                     $qos_stop = max($qos_stop << 1, 1)
                     $resize_if_smaller!($(lvl.ex).idx, $qos_stop)
-                    $(contain(ctx) do ctx_2
-                        lvl.lvl = assemble_level!(lvl.lvl, ctx_2, value(qos, lvl.Tp), value(qos_stop, lvl.Tp))
-                        quote end
-                    end)
+                    $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(qos, lvl.Tp), value(qos_stop, lvl.Tp)), ctx))
                 end
                 $(hasdefaultcheck(lvl.lvl) ? :($my_guard = true) : quote end)
             end,

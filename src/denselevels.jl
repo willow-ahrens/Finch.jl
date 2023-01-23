@@ -114,7 +114,6 @@ function assemble_level!(lvl::VirtualDenseLevel, ctx, pos_start, pos_stop)
     qos_start = call(+, call(*, call(-, pos_start, lvl.Ti(1)), lvl.I), 1)
     qos_stop = call(*, pos_stop, lvl.I)
     assemble_level!(lvl.lvl, ctx, qos_start, qos_stop)
-    lvl
 end
 
 function reassemble_level!(lvl::VirtualDenseLevel, ctx, pos_start, pos_stop)
