@@ -137,4 +137,5 @@ verbose = "verbose" in ARGS
     include("test_fibers.jl")
     include("test_kernels.jl")
     include("test_issues.jl")
+    include("test_meta.jl")
 end
