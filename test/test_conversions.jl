@@ -81,7 +81,7 @@
             () -> SparseList(base()),
             #() -> SparseVBL(base()),
             #() -> SparseBytemap(base()),
-            #() -> SparseHash{1}(base()),
+            () -> SparseHash{1}(base()),
             () -> SparseCoo{1}(base()),
         ]
             for arr in [
@@ -128,7 +128,7 @@
 
         for outer in [
             () -> SparseCoo{2}(base()),
-            #() -> SparseHash{2}(base())
+            () -> SparseHash{2}(base())
         ]
 
             for (arr_key, arr) in [
@@ -146,6 +146,8 @@
                 @testset "convert $arr_key $(summary(tmp))"  begin
                     @finch @loop i j tmp[i, j] = ref[i, j]
                     @finch @loop i j res[i, j] = tmp[i, j]
+                    println(ref)
+                    println(res)
                     @test isstructequal(ref, res)
                 end
             end

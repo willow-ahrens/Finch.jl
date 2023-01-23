@@ -106,10 +106,10 @@ open("test_constructors.jl", "w") do file
         end
 
         for ctrs = [
-            #[SparseHash{N}, SparseHash{N, NTuple{N, Int}}, SparseHash{N, NTuple{N, Int}, Int}, SparseHash{N, NTuple{N, Int}, Int, Dict{Tuple{Int, NTuple{N, Int}}, Int}}],
-            #[SparseHash{N, NTuple{N, Int16}}, SparseHash{N, NTuple{N, Int16}, Int}, SparseHash{N, NTuple{N, Int16}, Int, Dict{Tuple{Int, NTuple{N, Int16}}, Int}}],
-            #[SparseHash{N, NTuple{N, Int16}, Int16}, SparseHash{N, NTuple{N, Int16}, Int16, Dict{Tuple{Int16, NTuple{N, Int16}}, Int16}}],
-            #[SparseHash{N, NTuple{N, Int16}, Int16, Dict{Tuple{Int16, NTuple{N, Int16}}, Int16}}],
+            [SparseHash{N}, SparseHash{N, NTuple{N, Int}}, SparseHash{N, NTuple{N, Int}, Int}, SparseHash{N, NTuple{N, Int}, Int, Dict{Tuple{Int, NTuple{N, Int}}, Int}}],
+            [SparseHash{N, NTuple{N, Int16}}, SparseHash{N, NTuple{N, Int16}, Int}, SparseHash{N, NTuple{N, Int16}, Int, Dict{Tuple{Int, NTuple{N, Int16}}, Int}}],
+            [SparseHash{N, NTuple{N, Int16}, Int16}, SparseHash{N, NTuple{N, Int16}, Int16, Dict{Tuple{Int16, NTuple{N, Int16}}, Int16}}],
+            [SparseHash{N, NTuple{N, Int16}, Int16, Dict{Tuple{Int16, NTuple{N, Int16}}, Int16}}],
         ]
             argss = []
             push!(argss, lvl -> map(name -> getproperty(lvl, name), propertynames(lvl)))
