@@ -30,6 +30,43 @@ function fiber(arr, default=zero(eltype(arr)))
     Base.copyto!(Fiber((DenseLevel^(ndims(arr)))(Element{default}())), arr)
 end
 
+@generated function Base.:(==)(A::Fiber, B::Fiber)
+    A = virtualize(:A, A, LowerJulia())
+    idxs = [Symbol(:i_, n) for n = getsites(A)]
+    idk = getsites(A)
+    return quote
+        check = Scalar(size(A) == size(B))
+        if check[]
+            @finch @loop($(idxs...), check[] &= (A[$(idxs...)] == B[$(idxs...)]))
+        end
+        return check[]
+    end
+end
+
+@generated function Base.:(==)(A::Fiber, B::AbstractArray)
+    A = virtualize(:A, A, LowerJulia())
+    idxs = [Symbol(:i_, n) for n = getsites(A)]
+    return quote
+        check = Scalar(size(A) == size(B))
+        if check[]
+            @finch @loop($(idxs...), check[] &= (A[$(idxs...)] == B[$(idxs...)]))
+        end
+        return check[]
+    end
+end
+
+@generated function Base.:(==)(A::AbstractArray, B::Fiber)
+    A = virtualize(:A, A, LowerJulia())
+    idxs = [Symbol(:i_, n) for n = getsites(A)]
+    return quote
+        check = Scalar(size(A) == size(B))
+        if check[]
+            @finch @loop($(idxs...), check[] &= (A[$(idxs...)] == B[$(idxs...)]))
+        end
+        return check[]
+    end
+end
+
 @generated function Base.copyto!(dst::Fiber, src::Union{Fiber, AbstractArray})
     dst = virtualize(:dst, dst, LowerJulia())
     idxs = [Symbol(:i_, n) for n = getsites(dst)]
