@@ -63,7 +63,7 @@ open("test_formats.jl", "w") do file
             #:(SparseVBL($base)),
             #:(SparseBytemap($base)),
             #:(SparseHash{1}($base)),
-            #:(SparseCoo{1}($base))
+            :(SparseCoo{1}($base))
         ]
             for arr in [
                 fill(false, 5),
@@ -92,7 +92,7 @@ open("test_formats.jl", "w") do file
         end
 
         for outer in [
-            #:(SparseCoo{2}($base)),
+            :(SparseCoo{2}($base)),
             #:(SparseHash{2}($base))
         ]
             for arr in [

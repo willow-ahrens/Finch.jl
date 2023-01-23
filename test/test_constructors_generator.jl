@@ -95,8 +95,8 @@ open("test_constructors.jl", "w") do file
 
         N = ndims(arr)
         for ctrs = [
-            #[SparseCoo{N}, SparseCoo{N, NTuple{N, Int}}],
-            #[SparseCoo{N, NTuple{N, Int16}}],
+            [SparseCoo{N}, SparseCoo{N, NTuple{N, Int}}],
+            [SparseCoo{N, NTuple{N, Int16}}],
         ]
             argss = []
             push!(argss, lvl -> map(name -> getproperty(lvl, name), propertynames(lvl)))

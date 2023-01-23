@@ -53,7 +53,7 @@ include("scalars.jl")
 include("sparselistlevels.jl")
 #include("sparselistdifflevels.jl")
 #include("sparsehashlevels.jl")
-#include("sparsecoolevels.jl")
+include("sparsecoolevels.jl")
 #include("sparsebytemaplevels.jl")
 #include("sparsevbllevels.jl")
 include("denselevels.jl")
@@ -110,9 +110,6 @@ end
         x = @fiber sl(e(0.0))
         Finch.execute_code(:ex, typeof(Finch.@finch_program_instance @loop i j y[i] += A[i, j] * x[i]))
 
-        println(@finch_code @loop i j y[i] += A[i, j] * x[i])
-        B = @fiber d(sl(e(0.0)))
-        println(@finch_code @loop i j B[i, j] = A[i, j])
     end
 end
 

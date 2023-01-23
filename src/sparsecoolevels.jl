@@ -108,26 +108,20 @@ mutable struct VirtualSparseCooLevel
     Tp
     Tbl
     I
-    pos_fill
-    pos_stop
-    pos_alloc
-    idx_alloc
+    qos_fill
+    qos_stop
     lvl
 end
 function virtualize(ex, ::Type{SparseCooLevel{N, Ti, Tp, Tbl, Lvl}}, ctx, tag=:lvl) where {N, Ti, Tp, Tbl, Lvl}   
     sym = ctx.freshen(tag)
     I = map(n->value(:($sym.I[$n]), Int), 1:N)
-    pos_fill = ctx.freshen(sym, :_pos_fill)
-    pos_stop = ctx.freshen(sym, :_pos_stop)
-    pos_alloc = ctx.freshen(sym, :_pos_alloc)
-    idx_alloc = ctx.freshen(sym, :_idx_alloc)
+    qos_fill = ctx.freshen(sym, :_qos_fill)
+    qos_stop = ctx.freshen(sym, :_qos_stop)
     push!(ctx.preamble, quote
         $sym = $ex
-        $pos_alloc = length($sym.pos)
-        $idx_alloc = length($sym.tbl)
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualSparseCooLevel(sym, N, Ti, Tp, Tbl, I, pos_fill, pos_stop, pos_alloc, idx_alloc, lvl_2)
+    VirtualSparseCooLevel(sym, N, Ti, Tp, Tbl, I, qos_fill, qos_stop, lvl_2)
 end
 function (ctx::Finch.LowerJulia)(lvl::VirtualSparseCooLevel)
     quote
@@ -156,66 +150,53 @@ end
 virtual_level_eltype(lvl::VirtualSparseCooLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSparseCooLevel) = virtual_level_default(lvl.lvl)
 
-function initialize_level!(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx::LowerJulia, mode)
-    @assert isempty(envdeferred(fbr.env))
-    lvl = fbr.lvl
-    my_p = ctx.freshen(lvl.ex, :_p)
+function initialize_level!(lvl::VirtualSparseCooLevel, ctx::LowerJulia, mode)
     Ti = lvl.Ti
     Tp = lvl.Tp
     push!(ctx.preamble, quote
-        $(lvl.pos_alloc) = length($(lvl.ex).pos)
-        $(lvl.pos_fill) = 1
-        $(lvl.pos_stop) = 2
-        $(lvl.ex).pos[1] = $(Tp(1))
-        $(lvl.ex).pos[2] = $(Tp(1))
-        $(lvl.idx_alloc) = length($(lvl.ex).tbl[1])
+        $(lvl.qos_fill) = $(Tp(0))
+        $(lvl.qos_stop) = $(Tp(0))
     end)
-
-    lvl.lvl = initialize_level!(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^lvl.N)(fbr.env)), ctx, mode)
+    lvl.lvl = initialize_level!(lvl.lvl, ctx, mode)
     return lvl
 end
 
 function trim_level!(lvl::VirtualSparseCooLevel, ctx::LowerJulia, pos)
-    idx = ctx.freshen(:idx)
-    Ti = lvl.Ti
     Tp = lvl.Tp
+    qos = ctx.freshen(:qos)
+
     push!(ctx.preamble, quote
-        $(lvl.pos_alloc) = $(ctx(pos)) + 1
-        resize!($(lvl.ex).pos, $(lvl.pos_alloc))
-        $(lvl.idx_alloc) = $(lvl.ex).pos[$(lvl.pos_alloc)] - $(Tp(1))
-        for $idx in $(lvl.ex).tbl
-            resize!($idx, $(lvl.idx_alloc))
-        end
+        resize!($(lvl.ex).pos, $(ctx(pos)) + 1)
+        $qos = $(lvl.ex).pos[end] - $(Tp(1))
+        $(Expr(:block, map(1:lvl.N) do n
+            :(resize!($(lvl.ex).tbl[$n], $qos))
+        end...))
     end)
-    lvl.lvl = trim_level!(lvl.lvl, ctx, lvl.idx_alloc)
+    lvl.lvl = trim_level!(lvl.lvl, ctx, value(qos, Tp))
     return lvl
 end
 
-interval_assembly_depth(lvl::VirtualSparseCooLevel) = Inf
-
-#This function is quite simple, since SparseCooLevels don't support reassembly.
-function assemble!(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode)
-    lvl = fbr.lvl
-    p_stop = ctx(cache!(ctx, ctx.freshen(lvl.ex, :_p_stop), getstop(envposition(fbr.env))))
-    
-    push!(ctx.preamble, quote
-        $(lvl.pos_alloc) < ($p_stop + 1) && ($(lvl.pos_alloc) = $Finch.regrow!($(lvl.ex).pos, $(lvl.pos_alloc), $p_stop + 1))
-        $(lvl.pos_stop) = ($p_stop + 1)
-    end)
+function assemble_level!(lvl::VirtualSparseCooLevel, ctx, pos_start, pos_stop)
+    pos_start = ctx(cache!(ctx, :p_start, pos_start))
+    pos_stop = ctx(cache!(ctx, :p_start, pos_stop))
+    return quote
+        $resize_if_smaller!($(lvl.ex).pos, $pos_stop + 1)
+        $fill_range!($(lvl.ex).pos, 0, $pos_start + 1, $pos_stop + 1)
+    end
 end
 
-function freeze_level!(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx::LowerJulia, mode)
-    @assert isempty(envdeferred(fbr.env))
-    lvl = fbr.lvl
-    my_p = ctx.freshen(:p)
-    my_q = ctx.freshen(:q)
+function freeze_level!(lvl::VirtualSparseCooLevel, ctx::LowerJulia, pos_stop)
+    p = ctx.freshen(:p)
+    pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
+    qos_stop = ctx.freshen(:qos_stop)
     push!(ctx.preamble, quote
-        $my_q = $(lvl.ex).pos[$(lvl.pos_fill)]
-        for $my_p = $(lvl.pos_fill):$(lvl.pos_stop)
-            $(lvl.ex).pos[$(my_p)] = $my_q
+        $(lvl.ex).pos[1] = 1
+        for $p = 2:($pos_stop + 1)
+            $(lvl.ex).pos[$p] += $(lvl.ex).pos[$p - 1]
         end
+        $qos_stop = $(lvl.ex).pos[$pos_stop + 1] - 1
     end)
-    lvl.lvl = freeze_level!(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^lvl.N)(fbr.env)), ctx, mode)
+    lvl.lvl = freeze_level!(lvl.lvl, ctx, value(qos_stop))
     return lvl
 end
 
@@ -326,18 +307,19 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode, ::Extrude, 
     Ti = lvl.Ti
     Tp = lvl.Tp
     R = length(envdeferred(fbr.env)) + 1
+    qos_fill = lvl.qos_fill
+    qos_stop = lvl.qos_stop
+    my_guard = if hasdefaultcheck(lvl.lvl)
+        ctx.freshen(tag, :_isdefault)
+    end
 
     if R == 1
-        my_q = ctx.freshen(tag, :_q)
-        my_p = ctx.freshen(tag, :_p)
+        qos = ctx.freshen(tag, :_q)
         push!(ctx.preamble, quote
-            $my_q = $(lvl.ex).pos[$(lvl.pos_fill)]
-            for $my_p = $(lvl.pos_fill):$(ctx(envposition(envexternal(fbr.env))))
-                $(lvl.ex).pos[$(my_p)] = $my_q
-            end
+            $qos = $qos_fill + 1
         end)
     else
-        my_q = fbr.env.my_q
+        qos = fbr.env.qos
     end
 
     if R == lvl.N
@@ -346,40 +328,23 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode, ::Extrude, 
             val = virtual_default(fbr),
             tail = (ctx, idx) -> Thunk(
                 preamble = quote
-                    $my_guard = true
-                    $(contain(ctx) do ctx_2 
-                        assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, lvl.Ti), parent=fbr.env)), ctx_2, mode)
-                        quote end
-                    end)
-                end,
-                body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, lvl.Ti), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode),
-                epilogue = begin
-                    resize_body = quote end
-                    writer_body = quote end
-                    my_idxs = map(ctx, (envdeferred(fbr.env)..., idx))
-                    for n = 1:lvl.N
-                        if n == lvl.N
-                            resize_body = quote
-                                $resize_body
-                                $(lvl.idx_alloc) = $Finch.regrow!($(lvl.ex).tbl[$n], $(lvl.idx_alloc), $my_q)
-                            end
-                        else
-                            resize_body = quote
-                                $resize_body
-                                $Finch.regrow!($(lvl.ex).tbl[$n], $(lvl.idx_alloc), $my_q)
-                            end
-                        end
-                        writer_body = quote
-                            $writer_body
-                            $(lvl.ex).tbl[$n][$my_q] = $(my_idxs[n])
-                        end
+                    if $qos > $qos_stop
+                        $qos_stop = max($qos_stop << 1, 1)
+                        $(Expr(:block, map(1:lvl.N) do n
+                            :(resize_if_smaller!($(lvl.ex).tbl[$n], $qos_stop))
+                        end...))
+                        $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(qos, lvl.Tp), value(qos_stop, lvl.Tp)), ctx))
                     end
+                    $my_guard = true
+                end,
+                body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(qos, lvl.Ti), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode),
+                epilogue = begin
+                    writer_body = quote end
                     body = quote
-                        if $(lvl.idx_alloc) < $my_q
-                            $resize_body
-                        end
-                        $writer_body
-                        $my_q += $(Tp(1))
+                        $(Expr(:block, map(enumerate((envdeferred(fbr.env)..., idx))) do (n, i)
+                            :($(lvl.ex).tbl[$n][$qos] = $(ctx(i)))
+                        end...))
+                        $qos += $(Tp(1))
                     end
                     if envdefaultcheck(fbr.env) !== nothing
                         body = quote
@@ -401,13 +366,13 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode, ::Extrude, 
     else
         body = Lookup(
             val = virtual_default(fbr),
-            body = (i) -> refurl(VirtualFiber(lvl, VirtualEnvironment(index=i, my_q=my_q, parent=fbr.env, internal=true)), ctx, mode)
+            body = (i) -> refurl(VirtualFiber(lvl, VirtualEnvironment(index=i, qos=qos, parent=fbr.env, internal=true)), ctx, mode)
         )
     end
     if R == 1
         push!(ctx.epilogue, quote
-            $(lvl.ex).pos[$(ctx(envposition(envexternal(fbr.env)))) + 1] = $my_q
-            $(lvl.pos_fill) = $(ctx(envposition(envexternal(fbr.env)))) + 1
+            $(lvl.ex).pos[$(ctx(envposition(envexternal(fbr.env)))) + 1] = $qos - $qos_fill - 1
+            $qos_fill = $qos - 1
         end)
     end
 

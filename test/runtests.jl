@@ -88,6 +88,12 @@ isstructequal(a::T, b::T) where {T <: SparseList} =
     a.idx == b.idx &&
     isstructequal(a.lvl, b.lvl)
 
+isstructequal(a::T, b::T) where {T <: SparseCoo} =
+    a.I == b.I &&
+    a.pos == b.pos &&
+    a.tbl == b.tbl &&
+    isstructequal(a.lvl, b.lvl)
+
 #=
 isstructequal(a::T, b::T) where {T <: SparseListDiff} =
     a.I == b.I &&
@@ -101,12 +107,6 @@ isstructequal(a::T, b::T) where {T <: SparseHash} =
     a.pos == b.pos &&
     a.tbl == b.tbl &&
     a.srt == b.srt &&
-    isstructequal(a.lvl, b.lvl)
-
-isstructequal(a::T, b::T) where {T <: SparseCoo} =
-    a.I == b.I &&
-    a.pos == b.pos &&
-    a.tbl == b.tbl &&
     isstructequal(a.lvl, b.lvl)
 
 isstructequal(a::T, b::T) where {T <: SparseVBL} =
