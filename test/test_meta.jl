@@ -61,5 +61,16 @@
         Element{0.0}([0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0]))))
     @test size(A) == size(B) && A != B
     @test B == C
+    
+    A = [NaN, 0.0, 3.14, 0.0]
+    B = copyto!(@fiber(sl(e(0.0))), [NaN, 0.0, 3.14, 0.0])
+    C = copyto!(@fiber(sl(e(0.0))), [NaN, 0.0, 3.14, 0.0])
+    D = [1.0, 2.0, 4.0, 8.0]
+    @test isequal(A, B)
+    @test isequal(A, C)
+    @test isequal(B, C)
+    @test isequal(B, A)
+    @test !isequal(A, D)
+    @test A != B
 
 end
