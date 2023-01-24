@@ -55,6 +55,31 @@ function Base.:(==)(A::AbstractArray, B::Fiber)
     return helper_equal(A, B)
 end
 
+@generated function helper_isequal(A, B)
+    A = virtualize(:A, A, LowerJulia())
+    idxs = [Symbol(:i_, n) for n = getsites(A)]
+    return quote
+        size(A) == size(B) || return false
+        check = Scalar(true)
+        if check[]
+            @finch @loop($(idxs...), check[] &= isequal(A[$(idxs...)], B[$(idxs...)]))
+        end
+        return check[]
+    end
+end
+
+function Base.isequal(A:: Fiber, B::Fiber)
+    return helper_isequal(A, B)
+end
+
+function Base.isequal(A:: Fiber, B::AbstractArray)
+    return helper_isequal(A, B)
+end
+
+function Base.isequal(A:: AbstractArray, B::Fiber)
+    return helper_isequal(A, B)
+end
+
 @generated function copyto_helper!(dst, src)
     dst = virtualize(:dst, dst, LowerJulia())
     idxs = [Symbol(:i_, n) for n = getsites(dst)]
