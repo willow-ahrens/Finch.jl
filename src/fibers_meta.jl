@@ -30,7 +30,57 @@ function fiber(arr, default=zero(eltype(arr)))
     Base.copyto!(Fiber((DenseLevel^(ndims(arr)))(Element{default}())), arr)
 end
 
-@generated function Base.copyto!(dst::Fiber, src::Union{Fiber, AbstractArray})
+@generated function helper_equal(A, B)
+    A = virtualize(:A, A, LowerJulia())
+    idxs = [Symbol(:i_, n) for n = getsites(A)]
+    return quote
+        size(A) == size(B) || return false
+        check = Scalar(true)
+        if check[]
+            @finch @loop($(idxs...), check[] &= (A[$(idxs...)] == B[$(idxs...)]))
+        end
+        return check[]
+    end
+end
+
+function Base.:(==)(A::Fiber, B::Fiber)
+    return helper_equal(A, B)
+end
+
+function Base.:(==)(A::Fiber, B::AbstractArray)
+    return helper_equal(A, B)
+end
+
+function Base.:(==)(A::AbstractArray, B::Fiber)
+    return helper_equal(A, B)
+end
+
+@generated function helper_isequal(A, B)
+    A = virtualize(:A, A, LowerJulia())
+    idxs = [Symbol(:i_, n) for n = getsites(A)]
+    return quote
+        size(A) == size(B) || return false
+        check = Scalar(true)
+        if check[]
+            @finch @loop($(idxs...), check[] &= isequal(A[$(idxs...)], B[$(idxs...)]))
+        end
+        return check[]
+    end
+end
+
+function Base.isequal(A:: Fiber, B::Fiber)
+    return helper_isequal(A, B)
+end
+
+function Base.isequal(A:: Fiber, B::AbstractArray)
+    return helper_isequal(A, B)
+end
+
+function Base.isequal(A:: AbstractArray, B::Fiber)
+    return helper_isequal(A, B)
+end
+
+@generated function copyto_helper!(dst, src)
     dst = virtualize(:dst, dst, LowerJulia())
     idxs = [Symbol(:i_, n) for n = getsites(dst)]
     return quote
@@ -39,13 +89,12 @@ end
     end
 end
 
-@generated function Base.copyto!(dst::Array, src::Fiber)
-    dst = virtualize(:dst, dst, LowerJulia())
-    idxs = [Symbol(:i_, n) for n = getsites(dst)]
-    return quote
-        @finch @loop($(idxs...), dst[$(idxs...)] = src[$(idxs...)])
-        return dst
-    end
+function Base.copyto!(dst::Fiber, src::Union{Fiber, AbstractArray})
+    return copyto_helper!(dst, src)
+end
+
+function Base.copyto!(dst::Array, src::Fiber)
+    return copyto_helper!(dst, src)
 end
 
 dropdefaults(src) = dropdefaults!(similar(src), src)
