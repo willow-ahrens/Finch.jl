@@ -55,7 +55,7 @@ function Base.:(==)(A::AbstractArray, B::Fiber)
     return helper_equal(A, B)
 end
 
-@generated function Base.copyto!(dst::Fiber, src::Union{Fiber, AbstractArray})
+@generated function copyto_helper!(dst, src)
     dst = virtualize(:dst, dst, LowerJulia())
     idxs = [Symbol(:i_, n) for n = getsites(dst)]
     return quote
@@ -64,13 +64,12 @@ end
     end
 end
 
-@generated function Base.copyto!(dst::Array, src::Fiber)
-    dst = virtualize(:dst, dst, LowerJulia())
-    idxs = [Symbol(:i_, n) for n = getsites(dst)]
-    return quote
-        @finch @loop($(idxs...), dst[$(idxs...)] = src[$(idxs...)])
-        return dst
-    end
+function Base.copyto!(dst::Fiber, src::Union{Fiber, AbstractArray})
+    return copyto_helper!(dst, src)
+end
+
+function Base.copyto!(dst::Array, src::Fiber)
+    return copyto_helper!(dst, src)
 end
 
 dropdefaults(src) = dropdefaults!(similar(src), src)
