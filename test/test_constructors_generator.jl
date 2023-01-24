@@ -54,9 +54,6 @@ open("test_constructors.jl", "w") do file
             [SparseList, SparseList{Int}, SparseList{Int, Int}],
             [SparseList{Int16}, SparseList{Int16, Int}],
             [SparseList{Int16, Int16},],
-            #[SparseListDiff, SparseListDiff{Int}, SparseListDiff{Int, Int}],
-            #[SparseListDiff{Int16}, SparseListDiff{Int16, Int}],
-            #[SparseListDiff{Int16, Int16},],
             #[SparseVBL, SparseVBL{Int}, SparseVBL{Int, Int}],
             #[SparseVBL{Int16}, SparseVBL{Int16, Int}],
             #[SparseVBL{Int16, Int16},],
@@ -151,10 +148,6 @@ open("test_constructors.jl", "w") do file
             #[RepeatRLE{D, Int16}, RepeatRLE{D, Int16, Int}, RepeatRLE{D, Int16, Int, typeof(D)}],
             #[RepeatRLE{D, Int16, Int16}, RepeatRLE{D, Int16, Int16, typeof(D)}],
             #[RepeatRLE{D, Int16, Int16, Any}],
-            #[RepeatRLEDiff{D}, RepeatRLEDiff{D, Int}, RepeatRLEDiff{D, Int, Int}, RepeatRLEDiff{D, Int, Int, typeof(D)}],
-            #[RepeatRLEDiff{D, Int16}, RepeatRLEDiff{D, Int16, Int}, RepeatRLEDiff{D, Int16, Int, typeof(D)}],
-            #[RepeatRLEDiff{D, Int16, Int16}, RepeatRLEDiff{D, Int16, Int16, typeof(D)}],
-            #[RepeatRLEDiff{D, Int16, Int16, Any}],
         ]
             argss = []
             push!(argss, lvl -> map(name -> getproperty(lvl, name), propertynames(lvl)))

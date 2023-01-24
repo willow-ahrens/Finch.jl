@@ -70,12 +70,6 @@ isstructequal(a::T, b::T) where {T <: RepeatRLE} =
     a.pos == b.pos &&
     a.idx == b.idx &&
     a.val == b.val
-
-isstructequal(a::T, b::T) where {T <: RepeatRLEDiff} =
-    a.I == b.I &&
-    a.pos == b.pos &&
-    a.idx == b.idx &&
-    a.val == b.val
 =#
 
 isstructequal(a::T, b::T) where {T <: Dense} =
@@ -102,13 +96,6 @@ isstructequal(a::T, b::T) where {T <: SparseHash} =
     isstructequal(a.lvl, b.lvl)
 
 #=
-isstructequal(a::T, b::T) where {T <: SparseListDiff} =
-    a.I == b.I &&
-    a.pos == b.pos &&
-    a.idx == b.idx &&
-    a.jdx == b.jdx &&
-    isstructequal(a.lvl, b.lvl)
-
 isstructequal(a::T, b::T) where {T <: SparseVBL} =
     a.I == b.I &&
     a.pos == b.pos &&
