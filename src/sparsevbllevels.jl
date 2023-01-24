@@ -91,29 +91,24 @@ mutable struct VirtualSparseVBLLevel
     Ti
     Tp
     I
-    pos_alloc
-    pos_fill
-    pos_stop
-    idx_alloc
-    ofs_alloc
+    qos_fill
+    qos_stop
+    ros_fill
+    ros_stop
     lvl
 end
 function virtualize(ex, ::Type{SparseVBLLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}
     sym = ctx.freshen(tag)
     I = value(:($sym.I), Int)
-    pos_alloc = ctx.freshen(sym, :_pos_alloc)
-    pos_fill = ctx.freshen(sym, :_pos_fill)
-    pos_stop = ctx.freshen(sym, :_pos_stop)
-    idx_alloc = ctx.freshen(sym, :_idx_alloc)
-    ofs_alloc = ctx.freshen(sym, :_ofs_alloc)
+    qos_fill = ctx.freshen(sym, :_qos_fill)
+    qos_stop = ctx.freshen(sym, :_qos_stop)
+    ros_fill = ctx.freshen(sym, :_ros_fill)
+    ros_stop = ctx.freshen(sym, :_ros_stop)
     push!(ctx.preamble, quote
         $sym = $ex
-        $pos_alloc = length($sym.pos)
-        $idx_alloc = length($sym.idx)
-        $ofs_alloc = length($sym.ofs)
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualSparseVBLLevel(sym, Ti, Tp, I, pos_alloc, pos_fill, pos_stop, idx_alloc, ofs_alloc, lvl_2)
+    VirtualSparseVBLLevel(sym, Ti, Tp, I, qos_fill, qos_stop, ros_fill, ros_stop, lvl_2)
 end
 function (ctx::Finch.LowerJulia)(lvl::VirtualSparseVBLLevel)
     quote
@@ -145,65 +140,59 @@ end
 virtual_level_eltype(lvl::VirtualSparseVBLLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSparseVBLLevel) = virtual_level_default(lvl.lvl)
 
-function initialize_level!(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx::LowerJulia, mode)
-    lvl = fbr.lvl
+function initialize_level!(lvl::VirtualSparseVBLLevel, ctx::LowerJulia, mode)
     Tp = lvl.Tp
     Ti = lvl.Ti
     push!(ctx.preamble, quote
-        $(lvl.pos_alloc) = length($(lvl.ex).pos)
-        $(lvl.ex).pos[1] = $(Tp(1))
-        $(lvl.ex).pos[2] = $(Tp(1))
-        $(lvl.pos_fill) = 1
-        $(lvl.pos_stop) = 2
-        $(lvl.ofs_alloc) = length($(lvl.ex).ofs)
-        $(lvl.ex).ofs[1] = $(Tp(1))
-        $(lvl.idx_alloc) = length($(lvl.ex).idx)
+        $(lvl.qos_fill) = $(Tp(0))
+        $(lvl.qos_stop) = $(Tp(0))
+        $(lvl.ros_fill) = $(Tp(0))
+        $(lvl.ros_stop) = $(Tp(0))
+        $resize_if_smaller!($(lvl.ex).ofs, 1)
+        $(lvl.ex).ofs[1] = 1
     end)
-    lvl.lvl = initialize_level!(VirtualFiber(fbr.lvl.lvl, Environment(fbr.env)), ctx, mode)
+    lvl.lvl = initialize_level!(lvl.lvl, ctx, mode)
     return lvl
 end
 
 function trim_level!(lvl::VirtualSparseVBLLevel, ctx::LowerJulia, pos)
     Tp = lvl.Tp
     Ti = lvl.Ti
+    ros = ctx.freshen(:ros)
     qos = ctx.freshen(:qos)
     push!(ctx.preamble, quote
-        $(lvl.pos_alloc) = $(ctx(pos)) + 1
-        resize!($(lvl.ex).pos, $(lvl.pos_alloc))
-        $(lvl.idx_alloc) = $(lvl.ex).pos[$(lvl.pos_alloc)] - 1
-        resize!($(lvl.ex).idx, $(lvl.idx_alloc))
-        $(lvl.ofs_alloc) = $(lvl.idx_alloc) + 1
-        resize!($(lvl.ex).ofs, $(lvl.ofs_alloc))
-        $(qos) = $(lvl.ex).ofs[$(lvl.ofs_alloc)] - $(Tp(1))
+        resize!($(lvl.ex).pos, $(ctx(pos)) + 1)
+        $ros = $(lvl.ex).pos[end] - $(lvl.Tp(1))
+        resize!($(lvl.ex).idx, $ros)
+        resize!($(lvl.ex).ofs, $ros + 1)
+        $qos = $(lvl.ex).ofs[end] - $(lvl.Tp(1))
     end)
-    lvl.lvl = trim_level!(lvl.lvl, ctx, qos)
+    lvl.lvl = trim_level!(lvl.lvl, ctx, value(qos, Tp))
     return lvl
 end
 
-interval_assembly_depth(lvl::VirtualSparseVBLLevel) = Inf
-
-#This function is quite simple, since SparseVBLLevels don't support reassembly.
-function assemble!(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode)
-    lvl = fbr.lvl
-    p_stop = ctx(cache!(ctx, ctx.freshen(lvl.ex, :_p_stop), getstop(envposition(fbr.env))))
-    push!(ctx.preamble, quote
-        $(lvl.pos_stop) = $p_stop + 1
-        $Finch.@regrow!($(lvl.ex).pos, $(lvl.pos_alloc), $(lvl.pos_stop))
-    end)
+function assemble_level!(lvl::VirtualSparseVBLLevel, ctx, pos_start, pos_stop)
+    pos_start = ctx(cache!(ctx, :p_start, pos_start))
+    pos_stop = ctx(cache!(ctx, :p_start, pos_stop))
+    return quote
+        $resize_if_smaller!($(lvl.ex).pos, $pos_stop + 1)
+        $fill_range!($(lvl.ex).pos, 0, $pos_start + 1, $pos_stop + 1)
+    end
 end
 
-function freeze_level!(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx::LowerJulia, mode)
-    lvl = fbr.lvl
-    my_p = ctx.freshen(:p)
-    my_q = ctx.freshen(:q)
+function freeze_level!(lvl::VirtualSparseVBLLevel, ctx::LowerJulia, pos_stop)
+    p = ctx.freshen(:p)
+    pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
+    qos_stop = ctx.freshen(:qos_stop)
     push!(ctx.preamble, quote
-        $my_q = $(lvl.ex).pos[$(lvl.pos_fill)]
-        for $my_p = $(lvl.pos_fill):$(lvl.pos_stop)
-            $(lvl.ex).pos[$(my_p)] = $my_q
+        $(lvl.ex).pos[1] = 1
+        for $p = 2:($pos_stop + 1)
+            $(lvl.ex).pos[$p] += $(lvl.ex).pos[$p - 1]
         end
+        $qos_stop = $(lvl.ex).pos[$pos_stop + 1] - 1
     end)
-    fbr.lvl.lvl = freeze_level!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(fbr.env)), ctx, mode)
-    return fbr.lvl
+    lvl.lvl = freeze_level!(lvl.lvl, ctx, value(qos_stop))
+    return lvl
 end
 
 function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode, ::Nothing, idx, idxs...)
@@ -426,17 +415,20 @@ function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode, ::Extrude, 
     my_p = ctx.freshen(tag, :_p)
     my_q = ctx.freshen(tag, :_q)
     my_i_prev = ctx.freshen(tag, :_i_prev)
-    my_r = ctx.freshen(tag, :_r)
+    qos = ctx.freshen(tag, :_qos)
+    ros = ctx.freshen(tag, :_ros)
+    qos_fill = lvl.qos_fill
+    qos_stop = lvl.qos_stop
+    ros_fill = lvl.ros_fill
+    ros_stop = lvl.ros_stop
+
     my_guard = if hasdefaultcheck(lvl.lvl)
         ctx.freshen(tag, :_isdefault)
     end
 
     push!(ctx.preamble, quote
-        $my_r = $(lvl.ex).pos[$(lvl.pos_fill)]
-        $my_q = $(lvl.ex).ofs[$my_r]
-        for $my_p = $(lvl.pos_fill):$(ctx(envposition(fbr.env)))
-            $(lvl.ex).pos[$(my_p)] = $my_r
-        end
+        $ros = $ros_fill
+        $qos = $qos_fill + 1
         $my_i_prev = $(Ti(-1))
     end)
 
@@ -444,30 +436,26 @@ function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode, ::Extrude, 
         val = virtual_default(fbr),
         tail = (ctx, idx) -> Thunk(
             preamble = quote
-                $(begin
-                    assemble!(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, lvl.Ti), parent=fbr.env)), ctx, mode)
-                    quote end
-                end)
-                $(
-                    if hasdefaultcheck(lvl.lvl)
-                        :($my_guard = true)
-                    else
-                        quote end
-                    end
-                )
+                if $qos > $qos_stop
+                    $qos_stop = max($qos_stop << 1, 1)
+                    $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(qos, lvl.Tp), value(qos_stop, lvl.Tp)), ctx))
+                end
+                $(hasdefaultcheck(lvl.lvl) ? :($my_guard = true) : quote end)
             end,
-            body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, lvl.Ti), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode),
+            body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(qos, lvl.Ti), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode),
             epilogue = begin
-                #We should be careful here. Presumably, we haven't modified the subfiber because it is still default. Is this always true? Should strict assembly happen every time?
                 body = quote
                     if $(ctx(idx)) > $my_i_prev + $(Ti(1))
-                        $Finch.@regrow!($(lvl.ex).idx, $(lvl.idx_alloc), $my_r)
-                        $Finch.@regrow!($(lvl.ex).ofs, $(lvl.ofs_alloc), $my_r + $(Tp(1)))
-                        $my_r += $(Tp(1))
+                        $ros += $(Tp(1))
+                        if $ros > $ros_stop
+                            $ros_stop = max($ros_stop << 1, 1)
+                            $resize_if_smaller!($(lvl.ex).idx, $ros_stop)
+                            $resize_if_smaller!($(lvl.ex).ofs, $ros_stop + 1)
+                        end
                     end
-                    $(lvl.ex).idx[$my_r - $(Tp(1))] = $my_i_prev = $(ctx(idx))
-                    $(my_q) += $(Tp(1))
-                    $(lvl.ex).ofs[$my_r] = $my_q
+                    $(lvl.ex).idx[$ros] = $my_i_prev = $(ctx(idx))
+                    $(qos) += $(Tp(1))
+                    $(lvl.ex).ofs[$ros + 1] = $qos
                 end
                 if envdefaultcheck(fbr.env) !== nothing
                     body = quote
@@ -488,8 +476,9 @@ function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode, ::Extrude, 
     )
 
     push!(ctx.epilogue, quote
-        $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + $(Tp(1))] = $my_r
-        $(lvl.pos_fill) = $(ctx(envposition(fbr.env))) + $(Tp(1))
+        $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1] = $ros - $ros_fill
+        $ros_fill = $ros
+        $qos_fill = $qos - 1
     end)
 
     exfurl(body, ctx, mode, idx)

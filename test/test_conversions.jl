@@ -77,7 +77,7 @@
 
         for inner in [
             () -> SparseList(base()),
-            #() -> SparseVBL(base()),
+            () -> SparseVBL(base()),
             #() -> SparseBytemap(base()),
             () -> SparseHash{1}(base()),
             () -> SparseCoo{1}(base()),
@@ -117,7 +117,10 @@
                     tmp = Fiber(outer())
                     @testset "convert $arr_key $(summary(tmp))"  begin
                         @finch @loop i j tmp[i, j] = ref[i, j]
+                        dump(tmp)
                         @finch @loop i j res[i, j] = tmp[i, j]
+                        println(ref)
+                        println(res)
                         @test isstructequal(ref, res)
                     end
                 end
@@ -144,8 +147,6 @@
                 @testset "convert $arr_key $(summary(tmp))"  begin
                     @finch @loop i j tmp[i, j] = ref[i, j]
                     @finch @loop i j res[i, j] = tmp[i, j]
-                    println(ref)
-                    println(res)
                     @test isstructequal(ref, res)
                 end
             end
