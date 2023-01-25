@@ -58,7 +58,7 @@ open("test_formats.jl", "w") do file
         for inner in [
             :(Dense($base)),
             :(SparseList($base)),
-            #:(SparseVBL($base)),
+            :(SparseVBL($base)),
             #:(SparseBytemap($base)),
             :(SparseHash{1}($base)),
             :(SparseCoo{1}($base))

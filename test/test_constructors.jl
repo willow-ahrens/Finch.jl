@@ -62,6 +62,51 @@
         res = Fiber(Finch.SparseListLevel{Int16, Int16}(Element{0.0, Float64}([])))
         @test isstructequal(res, ref)
     end
+    @testset "Finch.SparseVBLLevel constructors" begin
+        ref = Fiber(SparseVBL{Int, Int}(0, [1, 1], [], [1], Element{0.0, Float64}([])))
+        res = Fiber(Finch.SparseVBLLevel(0, [1, 1], Int[], [1], Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel(0, Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel(Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int}(0, [1, 1], Int[], [1], Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int}(0, Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int}(Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int, Int}(0, [1, 1], Int[], [1], Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int, Int}(0, Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int, Int}(Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseVBLLevel{Int16} constructors" begin
+        ref = Fiber(SparseVBL{Int16, Int}(0, [1, 1], [], [1], Element{0.0, Float64}([])))
+        res = Fiber(Finch.SparseVBLLevel{Int16}(0, [1, 1], Int16[], [1], Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int16}(0, Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int16}(Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int}(0, [1, 1], Int16[], [1], Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int}(0, Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int}(Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseVBLLevel{Int16, Int16} constructors" begin
+        ref = Fiber(SparseVBL{Int16, Int16}(0, [1, 1], [], [1], Element{0.0, Float64}([])))
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int16}(0, Int16[1, 1], Int16[], Int16[1], Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int16}(0, Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int16}(Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+    end
     @testset "Finch.DenseLevel constructors" begin
         ref = Fiber(Dense{Int}(4, Element{0.0, Float64}([0.0, 0.0, 0.0, 0.0])))
         res = Fiber(Finch.DenseLevel(4, Element{0.0, Float64}([0.0, 0.0, 0.0, 0.0])))
@@ -107,6 +152,39 @@
         res = Fiber(Finch.SparseListLevel{Int16, Int16}(4, Element{0.0, Float64}([])))
         @test isstructequal(res, ref)
     end
+    @testset "Finch.SparseVBLLevel constructors" begin
+        ref = Fiber(SparseVBL{Int, Int}(4, [1, 1], [], [1], Element{0.0, Float64}([])))
+        res = Fiber(Finch.SparseVBLLevel(4, [1, 1], Int[], [1], Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel(4, Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int}(4, [1, 1], Int[], [1], Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int}(4, Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int, Int}(4, [1, 1], Int[], [1], Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int, Int}(4, Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseVBLLevel{Int16} constructors" begin
+        ref = Fiber(SparseVBL{Int16, Int}(4, [1, 1], [], [1], Element{0.0, Float64}([])))
+        res = Fiber(Finch.SparseVBLLevel{Int16}(4, [1, 1], Int16[], [1], Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int16}(4, Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int}(4, [1, 1], Int16[], [1], Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int}(4, Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseVBLLevel{Int16, Int16} constructors" begin
+        ref = Fiber(SparseVBL{Int16, Int16}(4, [1, 1], [], [1], Element{0.0, Float64}([])))
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int16}(4, Int16[1, 1], Int16[], Int16[1], Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int16}(4, Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+    end
     @testset "Finch.DenseLevel constructors" begin
         ref = Fiber(Dense{Int}(6, Element{0.0, Float64}([0.0, 1.0, 0.0, 1.0, 0.0, 0.0])))
         res = Fiber(Finch.DenseLevel(6, Element{0.0, Float64}([0.0, 1.0, 0.0, 1.0, 0.0, 0.0])))
@@ -138,6 +216,27 @@
     @testset "Finch.SparseListLevel{Int16, Int16} constructors" begin
         ref = Fiber(SparseList{Int16, Int16}(6, [1, 3], [2, 4], Element{0.0, Float64}([1.0, 1.0])))
         res = Fiber(Finch.SparseListLevel{Int16, Int16}(6, Int16[1, 3], Int16[2, 4], Element{0.0, Float64}([1.0, 1.0])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseVBLLevel constructors" begin
+        ref = Fiber(SparseVBL{Int, Int}(6, [1, 3], [2, 4], [1, 2, 3], Element{0.0, Float64}([1.0, 1.0])))
+        res = Fiber(Finch.SparseVBLLevel(6, [1, 3], [2, 4], [1, 2, 3], Element{0.0, Float64}([1.0, 1.0])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int}(6, [1, 3], [2, 4], [1, 2, 3], Element{0.0, Float64}([1.0, 1.0])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int, Int}(6, [1, 3], [2, 4], [1, 2, 3], Element{0.0, Float64}([1.0, 1.0])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseVBLLevel{Int16} constructors" begin
+        ref = Fiber(SparseVBL{Int16, Int}(6, [1, 3], [2, 4], [1, 2, 3], Element{0.0, Float64}([1.0, 1.0])))
+        res = Fiber(Finch.SparseVBLLevel{Int16}(6, [1, 3], Int16[2, 4], [1, 2, 3], Element{0.0, Float64}([1.0, 1.0])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int}(6, [1, 3], Int16[2, 4], [1, 2, 3], Element{0.0, Float64}([1.0, 1.0])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseVBLLevel{Int16, Int16} constructors" begin
+        ref = Fiber(SparseVBL{Int16, Int16}(6, [1, 3], [2, 4], [1, 2, 3], Element{0.0, Float64}([1.0, 1.0])))
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int16}(6, Int16[1, 3], Int16[2, 4], Int16[1, 2, 3], Element{0.0, Float64}([1.0, 1.0])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.DenseLevel constructors" begin
@@ -203,6 +302,51 @@
         res = Fiber(Finch.SparseListLevel{Int16, Int16}(Element{0.0, Float64}([])))
         @test isstructequal(res, ref)
     end
+    @testset "Finch.SparseVBLLevel constructors" begin
+        ref = Fiber(SparseVBL{Int, Int}(0, [1, 1], [], [1], Element{0.0, Float64}([])))
+        res = Fiber(Finch.SparseVBLLevel(0, [1, 1], Int[], [1], Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel(0, Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel(Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int}(0, [1, 1], Int[], [1], Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int}(0, Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int}(Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int, Int}(0, [1, 1], Int[], [1], Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int, Int}(0, Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int, Int}(Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseVBLLevel{Int16} constructors" begin
+        ref = Fiber(SparseVBL{Int16, Int}(0, [1, 1], [], [1], Element{0.0, Float64}([])))
+        res = Fiber(Finch.SparseVBLLevel{Int16}(0, [1, 1], Int16[], [1], Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int16}(0, Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int16}(Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int}(0, [1, 1], Int16[], [1], Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int}(0, Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int}(Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseVBLLevel{Int16, Int16} constructors" begin
+        ref = Fiber(SparseVBL{Int16, Int16}(0, [1, 1], [], [1], Element{0.0, Float64}([])))
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int16}(0, Int16[1, 1], Int16[], Int16[1], Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int16}(0, Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int16}(Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+    end
     @testset "Finch.DenseLevel constructors" begin
         ref = Fiber(Dense{Int}(4, Element{0.0, Float64}([0.0, 0.0, 0.0, 0.0])))
         res = Fiber(Finch.DenseLevel(4, Element{0.0, Float64}([0.0, 0.0, 0.0, 0.0])))
@@ -248,6 +392,39 @@
         res = Fiber(Finch.SparseListLevel{Int16, Int16}(4, Element{0.0, Float64}([])))
         @test isstructequal(res, ref)
     end
+    @testset "Finch.SparseVBLLevel constructors" begin
+        ref = Fiber(SparseVBL{Int, Int}(4, [1, 1], [], [1], Element{0.0, Float64}([])))
+        res = Fiber(Finch.SparseVBLLevel(4, [1, 1], Int[], [1], Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel(4, Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int}(4, [1, 1], Int[], [1], Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int}(4, Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int, Int}(4, [1, 1], Int[], [1], Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int, Int}(4, Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseVBLLevel{Int16} constructors" begin
+        ref = Fiber(SparseVBL{Int16, Int}(4, [1, 1], [], [1], Element{0.0, Float64}([])))
+        res = Fiber(Finch.SparseVBLLevel{Int16}(4, [1, 1], Int16[], [1], Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int16}(4, Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int}(4, [1, 1], Int16[], [1], Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int}(4, Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseVBLLevel{Int16, Int16} constructors" begin
+        ref = Fiber(SparseVBL{Int16, Int16}(4, [1, 1], [], [1], Element{0.0, Float64}([])))
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int16}(4, Int16[1, 1], Int16[], Int16[1], Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int16}(4, Element{0.0, Float64}([])))
+        @test isstructequal(res, ref)
+    end
     @testset "Finch.DenseLevel constructors" begin
         ref = Fiber(Dense{Int}(6, Element{0.0, Float64}([0.0, 2.0, 2.0, 0.0, 3.0, 3.0])))
         res = Fiber(Finch.DenseLevel(6, Element{0.0, Float64}([0.0, 2.0, 2.0, 0.0, 3.0, 3.0])))
@@ -281,6 +458,27 @@
         res = Fiber(Finch.SparseListLevel{Int16, Int16}(6, Int16[1, 5], Int16[2, 3, 5, 6], Element{0.0, Float64}([2.0, 2.0, 3.0, 3.0])))
         @test isstructequal(res, ref)
     end
+    @testset "Finch.SparseVBLLevel constructors" begin
+        ref = Fiber(SparseVBL{Int, Int}(6, [1, 3], [3, 6], [1, 3, 5], Element{0.0, Float64}([2.0, 2.0, 3.0, 3.0])))
+        res = Fiber(Finch.SparseVBLLevel(6, [1, 3], [3, 6], [1, 3, 5], Element{0.0, Float64}([2.0, 2.0, 3.0, 3.0])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int}(6, [1, 3], [3, 6], [1, 3, 5], Element{0.0, Float64}([2.0, 2.0, 3.0, 3.0])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int, Int}(6, [1, 3], [3, 6], [1, 3, 5], Element{0.0, Float64}([2.0, 2.0, 3.0, 3.0])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseVBLLevel{Int16} constructors" begin
+        ref = Fiber(SparseVBL{Int16, Int}(6, [1, 3], [3, 6], [1, 3, 5], Element{0.0, Float64}([2.0, 2.0, 3.0, 3.0])))
+        res = Fiber(Finch.SparseVBLLevel{Int16}(6, [1, 3], Int16[3, 6], [1, 3, 5], Element{0.0, Float64}([2.0, 2.0, 3.0, 3.0])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int}(6, [1, 3], Int16[3, 6], [1, 3, 5], Element{0.0, Float64}([2.0, 2.0, 3.0, 3.0])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseVBLLevel{Int16, Int16} constructors" begin
+        ref = Fiber(SparseVBL{Int16, Int16}(6, [1, 3], [3, 6], [1, 3, 5], Element{0.0, Float64}([2.0, 2.0, 3.0, 3.0])))
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int16}(6, Int16[1, 3], Int16[3, 6], Int16[1, 3, 5], Element{0.0, Float64}([2.0, 2.0, 3.0, 3.0])))
+        @test isstructequal(res, ref)
+    end
     @testset "Finch.SparseListLevel constructors" begin
         ref = Fiber(SparseList{Int, Int}(1111, [1, 5], [2, 3, 555, 666], Element{0.0, Float64}([20.0, 30.0, 5550.0, 6660.0])))
         res = Fiber(Finch.SparseListLevel(1111, [1, 5], [2, 3, 555, 666], Element{0.0, Float64}([20.0, 30.0, 5550.0, 6660.0])))
@@ -300,6 +498,27 @@
     @testset "Finch.SparseListLevel{Int16, Int16} constructors" begin
         ref = Fiber(SparseList{Int16, Int16}(1111, [1, 5], [2, 3, 555, 666], Element{0.0, Float64}([20.0, 30.0, 5550.0, 6660.0])))
         res = Fiber(Finch.SparseListLevel{Int16, Int16}(1111, Int16[1, 5], Int16[2, 3, 555, 666], Element{0.0, Float64}([20.0, 30.0, 5550.0, 6660.0])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseVBLLevel constructors" begin
+        ref = Fiber(SparseVBL{Int, Int}(1111, [1, 4], [3, 555, 666], [1, 3, 4, 5], Element{0.0, Float64}([20.0, 30.0, 5550.0, 6660.0])))
+        res = Fiber(Finch.SparseVBLLevel(1111, [1, 4], [3, 555, 666], [1, 3, 4, 5], Element{0.0, Float64}([20.0, 30.0, 5550.0, 6660.0])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int}(1111, [1, 4], [3, 555, 666], [1, 3, 4, 5], Element{0.0, Float64}([20.0, 30.0, 5550.0, 6660.0])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int, Int}(1111, [1, 4], [3, 555, 666], [1, 3, 4, 5], Element{0.0, Float64}([20.0, 30.0, 5550.0, 6660.0])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseVBLLevel{Int16} constructors" begin
+        ref = Fiber(SparseVBL{Int16, Int}(1111, [1, 4], [3, 555, 666], [1, 3, 4, 5], Element{0.0, Float64}([20.0, 30.0, 5550.0, 6660.0])))
+        res = Fiber(Finch.SparseVBLLevel{Int16}(1111, [1, 4], Int16[3, 555, 666], [1, 3, 4, 5], Element{0.0, Float64}([20.0, 30.0, 5550.0, 6660.0])))
+        @test isstructequal(res, ref)
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int}(1111, [1, 4], Int16[3, 555, 666], [1, 3, 4, 5], Element{0.0, Float64}([20.0, 30.0, 5550.0, 6660.0])))
+        @test isstructequal(res, ref)
+    end
+    @testset "Finch.SparseVBLLevel{Int16, Int16} constructors" begin
+        ref = Fiber(SparseVBL{Int16, Int16}(1111, [1, 4], [3, 555, 666], [1, 3, 4, 5], Element{0.0, Float64}([20.0, 30.0, 5550.0, 6660.0])))
+        res = Fiber(Finch.SparseVBLLevel{Int16, Int16}(1111, Int16[1, 4], Int16[3, 555, 666], Int16[1, 3, 4, 5], Element{0.0, Float64}([20.0, 30.0, 5550.0, 6660.0])))
         @test isstructequal(res, ref)
     end
     @testset "Finch.SparseCooLevel{1} constructors" begin
