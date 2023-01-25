@@ -10,7 +10,7 @@ open("test_constructors.jl", "w") do file
         println(file, "    @testset \"$(first(ctrs)) constructors\" begin")
         ref = dropdefaults!(Fiber(first(ctrs)(Element(zero(eltype(arr))))), arr)
 
-        println(file, "        ref = Fiber($(repr(ref.lvl)))")
+        println(file, "        ref = Fiber($(repr(ref.lvl)), Environment())")
 
         for ctr in ctrs
             for args in argss
@@ -122,7 +122,7 @@ open("test_constructors.jl", "w") do file
         println(file, "    @testset \"$(first(ctrs)) constructors\" begin")
         ref = dropdefaults!(Fiber(first(ctrs)(prefix...)), arr)
 
-        println(file, "        ref = Fiber($(repr(ref.lvl)))")
+        println(file, "        ref = Fiber($(repr(ref.lvl)), Environment())")
 
         for ctr in ctrs
             for args in argss

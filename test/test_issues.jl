@@ -60,7 +60,7 @@
     @test diff("fiber_as_idx.jl", @finch_code @loop i B[i] = A[i, I[i]])
     @finch @loop i B[i] = A[i, I[i]]
 
-    B_ref = Fiber(Dense{Int64}(9, Element(0, [11, 21, 31, 43, 53, 61, 75, 85, 95])))
+    B_ref = Fiber(Dense{Int64}(9, Element(0, [11, 21, 31, 43, 53, 61, 75, 85, 95])), Environment())
 
     @test isstructequal(B, B_ref)
     
