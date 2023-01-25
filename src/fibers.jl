@@ -13,8 +13,8 @@ struct Fiber{Lvl, Env}
     lvl::Lvl
     env::Env
 end
-Fiber(lvl::Lvl) where {Lvl} = Fiber{Lvl}(lvl)
-Fiber{Lvl}(lvl::Lvl, env::Env=Environment()) where {Lvl, Env} = Fiber{Lvl, Env}(lvl, env)
+
+Fiber{Lvl}(lvl::Lvl, env::Env) where {Lvl, Env} = Fiber{Lvl, Env}(lvl, env)
 
 @inline Base.ndims(::Fiber{Lvl}) where {Lvl} = level_ndims(Lvl)
 @inline Base.ndims(::Type{<:Fiber{Lvl}}) where {Lvl} = level_ndims(Lvl)
@@ -201,10 +201,8 @@ end
 function Base.show(io::IO, fbr::Fiber)
     print(io, "Fiber(")
     print(io, fbr.lvl)
-    if fbr.env != Environment()
-        print(io, ", ")
-        print(io, fbr.env)
-    end
+    print(io, ", ")
+    print(io, fbr.env)
     print(io, ")")
 end
 

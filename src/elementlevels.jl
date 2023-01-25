@@ -5,7 +5,7 @@ ElementLevel(D, args...) = ElementLevel{D}(args...)
 
 ElementLevel{D}() where {D} = ElementLevel{D, typeof(D)}()
 ElementLevel{D}(val::Vector{Tv}) where {D, Tv} = ElementLevel{D, Tv}(val)
-ElementLevel{D, Tv}() where {D, Tv} = ElementLevel{D, Tv}(Tv[D])
+ElementLevel{D, Tv}() where {D, Tv} = ElementLevel{D, Tv}(Tv[])
 const Element = ElementLevel
 
 pattern!(lvl::ElementLevel) = Pattern()
@@ -50,7 +50,7 @@ struct VirtualElementLevel
 end
 
 (ctx::Finch.LowerJulia)(lvl::VirtualElementLevel) = lvl.ex
-function virtualize(ex, ::Type{ElementLevel{D, Tv}}, ctx, tag) where {D, Tv}
+function virtualize(ex, ::Type{ElementLevel{D, Tv}}, ctx, tag=:lvl) where {D, Tv}
     sym = ctx.freshen(tag)
     val_alloc = ctx.freshen(sym, :_val_alloc)
     val = ctx.freshen(sym, :_val)

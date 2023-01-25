@@ -12,7 +12,7 @@ SparseCooLevel{N, Ti, Tp}(lvl) where {N, Ti, Tp} = SparseCooLevel{N, Ti, Tp}((ma
 SparseCooLevel{N}(I::Ti, lvl) where {N, Ti} = SparseCooLevel{N, Ti}(I, lvl)
 SparseCooLevel{N, Ti}(I, lvl) where {N, Ti} = SparseCooLevel{N, Ti, Int}(Ti(I), lvl)
 SparseCooLevel{N, Ti, Tp}(I, lvl) where {N, Ti, Tp} =
-    SparseCooLevel{N, Ti, Tp}(Ti(I), ((T[] for T in Ti.parameters)...,), Tp[1, 1], lvl)
+    SparseCooLevel{N, Ti, Tp}(Ti(I), ((T[] for T in Ti.parameters)...,), Tp[1], lvl)
 
 SparseCooLevel{N}(I::Ti, tbl::Tbl, pos::Vector{Tp}, lvl::Lvl) where {N, Ti, Tp, Tbl, Lvl} =
     SparseCooLevel{N, Ti, Tp, Tbl, Lvl}(I, tbl, pos, lvl)
@@ -190,7 +190,6 @@ function freeze_level!(lvl::VirtualSparseCooLevel, ctx::LowerJulia, pos_stop)
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
     qos_stop = ctx.freshen(:qos_stop)
     push!(ctx.preamble, quote
-        $(lvl.ex).pos[1] = 1
         for $p = 2:($pos_stop + 1)
             $(lvl.ex).pos[$p] += $(lvl.ex).pos[$p - 1]
         end

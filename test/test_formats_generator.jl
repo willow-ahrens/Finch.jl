@@ -1,4 +1,5 @@
 using Finch
+using Finch: Environment
 using .Iterators
 
 open("test_formats.jl", "w") do file

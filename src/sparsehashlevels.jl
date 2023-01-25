@@ -25,7 +25,7 @@ SparseHashLevel{N, Ti}(I, tbl::Tbl, lvl) where {N, Ti, Tp, Tbl<:AbstractDict{Tup
 SparseHashLevel{N, Ti, Tp}(I, tbl::Tbl, lvl) where {N, Ti, Tp, Tbl} =
     SparseHashLevel{N, Ti, Tp, Tbl}(Ti(I), tbl, lvl)
 SparseHashLevel{N, Ti, Tp, Tbl}(I, tbl, lvl::Lvl) where {N, Ti, Tp, Tbl, Lvl} =
-    SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(Ti(I), tbl, Tp[1, 1], Pair{Tuple{Tp, Ti}, Tp}[], lvl)
+    SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(Ti(I), tbl, Tp[1], Pair{Tuple{Tp, Ti}, Tp}[], lvl)
 
 SparseHashLevel{N}(I::Ti, tbl::Tbl, pos::Vector{Tp}, srt, lvl::Lvl) where {N, Ti, Tp, Tbl, Lvl} =
     SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(I, tbl, pos, srt, lvl) 
@@ -213,7 +213,6 @@ function freeze_level!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, pos_stop)
         resize!($(lvl.ex).srt, length($(lvl.ex).tbl))
         copyto!($(lvl.ex).srt, pairs($(lvl.ex).tbl))
         sort!($(lvl.ex).srt)
-        $(lvl.ex).pos[1] = 1
         for $p = 2:($pos_stop + 1)
             $(lvl.ex).pos[$p] += $(lvl.ex).pos[$p - 1]
         end

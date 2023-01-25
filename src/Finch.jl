@@ -90,6 +90,17 @@ module h
 end
 
 register(DefaultAlgebra)
+#TODO add an uninitialized_fiber type so that we can perhaps do this through executing pass(fbr),
+#obviating the need to have a separate generated function registration mechanism for fibers.
+@generated function Fiber(lvl)
+    contain(LowerJulia()) do ctx
+        lvl = virtualize(:lvl, lvl, ctx)
+        lvl = initialize_level!(lvl, ctx, updater(create()))
+        push!(ctx.preamble, assemble_level!(lvl, ctx, literal(1), literal(1)))
+        lvl = freeze_level!(lvl, ctx, literal(1))
+        :(Fiber($(ctx(lvl)), Environment()))
+    end |> lower_caches |> lower_cleanup
+end
 
 include("glue_AbstractArrays.jl")
 include("glue_SparseArrays.jl")

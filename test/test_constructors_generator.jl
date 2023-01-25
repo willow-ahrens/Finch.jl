@@ -13,7 +13,9 @@ open("test_constructors.jl", "w") do file
         println(file, "        ref = Fiber($(repr(ref.lvl)), Environment())")
 
         for ctr in ctrs
-            for args in argss
+            println(file, "        res = Fiber($(ctr)($(join(map(repr, argss[1](ref.lvl)), ", "))), Environment())")
+            println(file, "        @test isstructequal(res, ref)")
+            for args in argss[2:end]
                 println(file, "        res = Fiber($(ctr)($(join(map(repr, args(ref.lvl)), ", "))))")
                 println(file, "        @test isstructequal(res, ref)")
             end
@@ -125,7 +127,9 @@ open("test_constructors.jl", "w") do file
         println(file, "        ref = Fiber($(repr(ref.lvl)), Environment())")
 
         for ctr in ctrs
-            for args in argss
+            println(file, "        res = Fiber($(ctr)($(join(map(repr, argss[1](ref.lvl)), ", "))), Environment())")
+            println(file, "        @test isstructequal(res, ref)")
+            for args in argss[2:end]
                 println(file, "        res = Fiber($(ctr)($(join(map(repr, args(ref.lvl)), ", "))))")
                 println(file, "        @test isstructequal(res, ref)")
             end

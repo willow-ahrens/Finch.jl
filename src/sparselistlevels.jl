@@ -11,7 +11,7 @@ SparseListLevel{Ti, Tp}(lvl) where {Ti, Tp} = SparseListLevel{Ti, Tp}(zero(Ti), 
 
 SparseListLevel(I::Ti, lvl) where {Ti} = SparseListLevel{Ti}(I, lvl)
 SparseListLevel{Ti}(I, lvl) where {Ti} = SparseListLevel{Ti, Int}(Ti(I), lvl)
-SparseListLevel{Ti, Tp}(I, lvl::Lvl) where {Ti, Tp, Lvl} = SparseListLevel{Ti, Tp, Lvl}(Ti(I), Tp[1, 1], Ti[], lvl)
+SparseListLevel{Ti, Tp}(I, lvl::Lvl) where {Ti, Tp, Lvl} = SparseListLevel{Ti, Tp, Lvl}(Ti(I), Tp[1], Ti[], lvl)
 
 SparseListLevel(I::Ti, pos::Vector{Tp}, idx, lvl) where {Ti, Tp} = SparseListLevel{Ti}(I, pos, idx, lvl)
 SparseListLevel{Ti}(I, pos::Vector{Tp}, idx, lvl::Lvl) where {Ti, Tp, Lvl} = SparseListLevel{Ti, Tp, Lvl}(Ti(I), pos, idx, lvl)
@@ -160,7 +160,6 @@ function freeze_level!(lvl::VirtualSparseListLevel, ctx::LowerJulia, pos_stop)
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
     qos_stop = ctx.freshen(:qos_stop)
     push!(ctx.preamble, quote
-        $(lvl.ex).pos[1] = 1
         for $p = 2:($pos_stop + 1)
             $(lvl.ex).pos[$p] += $(lvl.ex).pos[$p - 1]
         end
