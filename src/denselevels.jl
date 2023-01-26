@@ -106,7 +106,7 @@ function trim_level!(lvl::VirtualDenseLevel, ctx::LowerJulia, pos)
     push!(ctx.preamble, quote
         $qos = $(ctx(pos)) * $(ctx(lvl.I))
     end)
-    lvl.lvl = trim_level!(lvl.lvl, ctx, qos)
+    lvl.lvl = trim_level!(lvl.lvl, ctx, value(qos))
     return lvl
 end
 

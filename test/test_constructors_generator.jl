@@ -59,9 +59,9 @@ open("test_constructors.jl", "w") do file
             [SparseVBL, SparseVBL{Int}, SparseVBL{Int, Int}],
             [SparseVBL{Int16}, SparseVBL{Int16, Int}],
             [SparseVBL{Int16, Int16},],
-            #[SparseBytemap, SparseBytemap{Int}, SparseBytemap{Int, Int}],
-            #[SparseBytemap{Int16}, SparseBytemap{Int16, Int}],
-            #[SparseBytemap{Int16, Int16},],
+            [SparseBytemap, SparseBytemap{Int}, SparseBytemap{Int, Int}],
+            [SparseBytemap{Int16}, SparseBytemap{Int16, Int}],
+            [SparseBytemap{Int16, Int16},],
         ]
             argss = []
             push!(argss, lvl -> map(name -> getproperty(lvl, name), propertynames(lvl)))

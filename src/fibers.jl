@@ -91,14 +91,15 @@ function initialize!(fbr::VirtualFiber, ctx::LowerJulia, mode, idxs...)
 end
 
 """
-    initialize_level!(fbr, ctx, mode)
+    initialize_level!(fbr, ctx, pos)
 
 Initialize the level within the virtual fiber to it's default value in the
 context `ctx` with access mode `mode`. Return the new level.
 """
 function initialize_level! end
 
-initialize_level!(fbr, ctx, mode) = fbr.lvl
+#TODO this is wrong do we call this?
+initialize_level!(fbr, ctx, pos) = fbr.lvl
 
 
 

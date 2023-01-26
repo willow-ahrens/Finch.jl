@@ -60,7 +60,7 @@ open("test_formats.jl", "w") do file
             :(Dense($base)),
             :(SparseList($base)),
             :(SparseVBL($base)),
-            #:(SparseBytemap($base)),
+            :(SparseBytemap($base)),
             :(SparseHash{1}($base)),
             :(SparseCoo{1}($base))
         ]

@@ -78,10 +78,10 @@
             B = Fiber(
                 Dense(0,
                 SparseList(0,
-                Element{0.0}()), Environment()))
+                Element{0.0}())), Environment())
             w = Fiber(
                 SparseBytemap(m, #TODO
-                Element{0.0}(), Environment()))
+                Element{0.0}()), Environment())
 
             ex = @finch_program_instance @loop i ((@loop j B[i, j] = w[j]) where (@loop k j w[j] = A[i, k] * A[k, j]))
             #println(typeof(ex))

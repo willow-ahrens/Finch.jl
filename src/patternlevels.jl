@@ -52,7 +52,7 @@ virtual_level_size(::VirtualPatternLevel, ctx) = ()
 virtual_level_default(::VirtualPatternLevel) = false
 virtual_level_eltype(::VirtualPatternLevel) = Bool
 
-initialize_level!(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode) = fbr.lvl
+initialize_level!(fbr::VirtualFiber{VirtualPatternLevel}, ctx, pos) = fbr.lvl
 
 freeze_level!(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode) = fbr.lvl
 
