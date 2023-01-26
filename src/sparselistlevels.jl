@@ -124,14 +124,15 @@ end
 virtual_level_eltype(lvl::VirtualSparseListLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSparseListLevel) = virtual_level_default(lvl.lvl)
 
-function initialize_level!(lvl::VirtualSparseListLevel, ctx::LowerJulia, mode)
+function initialize_level!(lvl::VirtualSparseListLevel, ctx::LowerJulia, pos)
     Ti = lvl.Ti
     Tp = lvl.Tp
+    qos = call(-, call(getindex, :($(lvl.ex).pos), call(+, pos, 1)),  1)
     push!(ctx.preamble, quote
         $(lvl.qos_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
     end)
-    lvl.lvl = initialize_level!(lvl.lvl, ctx, mode)
+    lvl.lvl = initialize_level!(lvl.lvl, ctx, qos)
     return lvl
 end
 

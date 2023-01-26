@@ -83,7 +83,7 @@ access mode `mode`. Return the new fiber object.
 """
 function initialize!(fbr::VirtualFiber, ctx::LowerJulia, mode, idxs...)
     if mode.kind === updater
-        lvl = initialize_level!(fbr.lvl, ctx, mode)
+        lvl = initialize_level!(fbr.lvl, ctx, literal(1))
         push!(ctx.preamble, assemble_level!(lvl, ctx, literal(1), literal(1)))
         fbr = VirtualFiber(lvl, fbr.env)
     end

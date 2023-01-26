@@ -129,6 +129,8 @@ function virtualize(ex, ::Type{SparseHashLevel{N, Ti, Tp, Tbl, Lvl}}, ctx, tag=:
     qos_stop = ctx.freshen(sym, :_qos_stop)
     push!(ctx.preamble, quote
         $sym = $ex
+        $(qos_fill) = length($sym.tbl)
+        $(qos_stop) = $(qos_fill)
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
     VirtualSparseHashLevel(sym, N, Ti, Tp, Tbl, I, qos_fill, qos_stop, lvl_2)
@@ -161,25 +163,18 @@ end
 virtual_level_eltype(lvl::VirtualSparseHashLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSparseHashLevel) = virtual_level_default(lvl.lvl)
 
-function initialize_level!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, mode)
+function initialize_level!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, pos)
     Ti = lvl.Ti
     Tp = lvl.Tp
-    my_p = ctx.freshen(lvl.ex, :_p)
 
-    if mode.kind === updater && mode.mode.kind === create
-        push!(ctx.preamble, quote
-            $(lvl.qos_fill) = $(Tp(0))
-            $(lvl.qos_stop) = $(Tp(0))
-            empty!($(lvl.ex).tbl)
-            empty!($(lvl.ex).srt)
-        end)
-    elseif mode.kind === updater && mode.mode.kind === modify
-        push!(ctx.preamble, quote
-            $(lvl.qos_fill) = length($(lvl.ex).tbl)
-            $(lvl.qos_stop) = $(lvl.qos_fill)
-        end)
-    end
-    lvl.lvl = initialize_level!(lvl.lvl, ctx, mode)
+    qos = call(-, call(getindex, :($(lvl.ex).pos), call(+, pos, 1)), 1)
+    push!(ctx.preamble, quote
+        $(lvl.qos_fill) = $(Tp(0))
+        $(lvl.qos_stop) = $(Tp(0))
+        empty!($(lvl.ex).tbl)
+        empty!($(lvl.ex).srt)
+    end)
+    lvl.lvl = initialize_level!(lvl.lvl, ctx, qos)
     return lvl
 end
 

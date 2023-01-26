@@ -140,9 +140,11 @@ end
 virtual_level_eltype(lvl::VirtualSparseVBLLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSparseVBLLevel) = virtual_level_default(lvl.lvl)
 
-function initialize_level!(lvl::VirtualSparseVBLLevel, ctx::LowerJulia, mode)
+function initialize_level!(lvl::VirtualSparseVBLLevel, ctx::LowerJulia, pos)
     Tp = lvl.Tp
     Ti = lvl.Ti
+    ros = call(-, call(getindex, :($(lvl.ex).pos), call(+, pos, 1)), 1)
+    qos = call(-, call(getindex, :($(lvl.ex).ofs), call(+, ros, 1)), 1)
     push!(ctx.preamble, quote
         $(lvl.qos_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
@@ -151,7 +153,7 @@ function initialize_level!(lvl::VirtualSparseVBLLevel, ctx::LowerJulia, mode)
         $resize_if_smaller!($(lvl.ex).ofs, 1)
         $(lvl.ex).ofs[1] = 1
     end)
-    lvl.lvl = initialize_level!(lvl.lvl, ctx, mode)
+    lvl.lvl = initialize_level!(lvl.lvl, ctx, qos)
     return lvl
 end
 

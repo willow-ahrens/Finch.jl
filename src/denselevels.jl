@@ -96,8 +96,8 @@ end
 virtual_level_eltype(lvl::VirtualDenseLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualDenseLevel) = virtual_level_default(lvl.lvl)
 
-function initialize_level!(lvl::VirtualDenseLevel, ctx::LowerJulia, mode)
-    lvl.lvl = initialize_level!(lvl.lvl, ctx, mode)
+function initialize_level!(lvl::VirtualDenseLevel, ctx::LowerJulia, pos)
+    lvl.lvl = initialize_level!(lvl.lvl, ctx, call(*, pos, lvl.I))
     return lvl
 end
 

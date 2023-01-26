@@ -68,7 +68,7 @@ virtual_level_size(::VirtualElementLevel, ctx) = ()
 virtual_level_eltype(lvl::VirtualElementLevel) = lvl.Tv
 virtual_level_default(lvl::VirtualElementLevel) = lvl.D
 
-initialize_level!(lvl::VirtualElementLevel, ctx, mode) = lvl
+initialize_level!(lvl::VirtualElementLevel, ctx, pos) = lvl
 
 freeze_level!(lvl::VirtualElementLevel, ctx, pos) = lvl
 
