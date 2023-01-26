@@ -88,6 +88,7 @@ function assemble_level!(lvl::VirtualElementLevel, ctx, pos_start, pos_stop)
     end
 end
 
+supports_reassembly(::VirtualElementLevel) = true
 function reassemble_level!(lvl::VirtualElementLevel, ctx, pos_start, pos_stop)
     pos_start = cache!(ctx, :pos_start, simplify(pos_start, ctx))
     pos_stop = cache!(ctx, :pos_stop, simplify(pos_stop, ctx))

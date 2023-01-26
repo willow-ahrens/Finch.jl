@@ -187,6 +187,8 @@ end
 get_furl_root_access(idx, tns) = nothing
 #These are also good examples of where modifiers might be great.
 
+supports_reassembly(lvl) = false
+
 refurl(tns, ctx, mode) = tns
 function exfurl(tns, ctx, mode, idx::IndexNode)
     if idx.kind === index
