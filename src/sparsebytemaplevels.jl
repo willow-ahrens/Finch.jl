@@ -172,8 +172,7 @@ function trim_level!(lvl::VirtualSparseBytemapLevel, ctx::LowerJulia, pos)
     push!(ctx.preamble, quote
         resize!($(lvl.ex).pos, $(ctx(pos)) + 1)
         resize!($(lvl.ex).tbl, $(ctx(pos)) * $(ctx(lvl.I)))
-        $ros = $(lvl.ex).pos[end]
-        resize!($(lvl.ex).srt, $ros)
+        resize!($(lvl.ex).srt, $(lvl.qos_fill))
     end)
     lvl.lvl = trim_level!(lvl.lvl, ctx, call(*, pos, lvl.I))
     return lvl

@@ -120,11 +120,11 @@
     res = dropdefaults!(Fiber(SparseBytemap(Element(false))), arr)
     @test isstructequal(res, ref)
     arr = Bool[1, 1, 1, 1, 1]
-    ref = Fiber(SparseBytemap{Int, Int}(5, [1, 6], [1, 1, 1, 1, 1], [(1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (4585126544, 4585126592)], Element{false, Bool}([1, 1, 1, 1, 1])), Env())
+    ref = Fiber(SparseBytemap{Int, Int}(5, [1, 6], [1, 1, 1, 1, 1], [(1, 1), (1, 2), (1, 3), (1, 4), (1, 5)], Element{false, Bool}([1, 1, 1, 1, 1])), Env())
     res = dropdefaults!(Fiber(SparseBytemap(Element(false))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0, 1, 0, 1]
-    ref = Fiber(SparseBytemap{Int, Int}(4, [1, 3], [0, 1, 0, 1], [(1, 2), (1, 4), (5386111760, 4578968576)], Element{false, Bool}([0, 1, 0, 1])), Env())
+    ref = Fiber(SparseBytemap{Int, Int}(4, [1, 3], [0, 1, 0, 1], [(1, 2), (1, 4)], Element{false, Bool}([0, 1, 0, 1])), Env())
     res = dropdefaults!(Fiber(SparseBytemap(Element(false))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
@@ -132,23 +132,23 @@
     res = dropdefaults!(Fiber(Dense(SparseBytemap(Element(false)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
-    ref = Fiber(Dense{Int}(5, SparseBytemap{Int, Int}(5, [1, 6, 11, 16, 21, 26], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [(1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (2, 1), (2, 2), (2, 3), (2, 4), (2, 5), (3, 1), (3, 2), (3, 3), (3, 4), (3, 5), (4, 1), (4, 2), (4, 3), (4, 4), (4, 5), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5), (4565616000, 4348129288)], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]))), Env())
+    ref = Fiber(Dense{Int}(5, SparseBytemap{Int, Int}(5, [1, 6, 11, 16, 21, 26], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [(1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (2, 1), (2, 2), (2, 3), (2, 4), (2, 5), (3, 1), (3, 2), (3, 3), (3, 4), (3, 5), (4, 1), (4, 2), (4, 3), (4, 4), (4, 5), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5)], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]))), Env())
     res = dropdefaults!(Fiber(Dense(SparseBytemap(Element(false)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(Dense{Int}(4, SparseBytemap{Int, Int}(4, [1, 3, 3, 7, 9], [0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1], [(1, 2), (1, 4), (3, 1), (3, 2), (3, 3), (3, 4), (4, 2), (4, 4), (4563780752, 4563780752)], Element{false, Bool}([0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1]))), Env())
+    ref = Fiber(Dense{Int}(4, SparseBytemap{Int, Int}(4, [1, 3, 3, 7, 9], [0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1], [(1, 2), (1, 4), (3, 1), (3, 2), (3, 3), (3, 4), (4, 2), (4, 4)], Element{false, Bool}([0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1]))), Env())
     res = dropdefaults!(Fiber(Dense(SparseBytemap(Element(false)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
-    ref = Fiber(SparseList{Int, Int}(5, [1, 1], [], SparseBytemap{Int, Int}(5, [1], [], [(4560857040, 4560857424)], Element{false, Bool}([]))), Env())
+    ref = Fiber(SparseList{Int, Int}(5, [1, 1], [], SparseBytemap{Int, Int}(5, [1], [], [], Element{false, Bool}([]))), Env())
     res = dropdefaults!(Fiber(SparseList(SparseBytemap(Element(false)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
-    ref = Fiber(SparseList{Int, Int}(5, [1, 6], [1, 2, 3, 4, 5], SparseBytemap{Int, Int}(5, [1, 6, 11, 16, 21, 26], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [(1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (2, 1), (2, 2), (2, 3), (2, 4), (2, 5), (3, 1), (3, 2), (3, 3), (3, 4), (3, 5), (4, 1), (4, 2), (4, 3), (4, 4), (4, 5), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5), (137438953503, 137438953504)], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]))), Env())
+    ref = Fiber(SparseList{Int, Int}(5, [1, 6], [1, 2, 3, 4, 5], SparseBytemap{Int, Int}(5, [1, 6, 11, 16, 21, 26], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [(1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (2, 1), (2, 2), (2, 3), (2, 4), (2, 5), (3, 1), (3, 2), (3, 3), (3, 4), (3, 5), (4, 1), (4, 2), (4, 3), (4, 4), (4, 5), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5)], Element{false, Bool}([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]))), Env())
     res = dropdefaults!(Fiber(SparseList(SparseBytemap(Element(false)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(SparseList{Int, Int}(4, [1, 4], [1, 3, 4], SparseBytemap{Int, Int}(4, [1, 3, 7, 9], [0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1], [(1, 2), (1, 4), (2, 1), (2, 2), (2, 3), (2, 4), (3, 2), (3, 4), (4567890432, 4568523600)], Element{false, Bool}([0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1]))), Env())
+    ref = Fiber(SparseList{Int, Int}(4, [1, 4], [1, 3, 4], SparseBytemap{Int, Int}(4, [1, 3, 7, 9], [0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1], [(1, 2), (1, 4), (2, 1), (2, 2), (2, 3), (2, 4), (3, 2), (3, 4)], Element{false, Bool}([0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1]))), Env())
     res = dropdefaults!(Fiber(SparseList(SparseBytemap(Element(false)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0, 0, 0, 0, 0]
@@ -364,7 +364,7 @@
     res = dropdefaults!(Fiber(SparseList(SparseVBL(Element(true)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0, 0, 0, 0, 0]
-    ref = Fiber(SparseBytemap{Int, Int}(5, [1, 6], [1, 1, 1, 1, 1], [(1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (17, 18)], Element{true, Bool}([0, 0, 0, 0, 0])), Env())
+    ref = Fiber(SparseBytemap{Int, Int}(5, [1, 6], [1, 1, 1, 1, 1], [(1, 1), (1, 2), (1, 3), (1, 4), (1, 5)], Element{true, Bool}([0, 0, 0, 0, 0])), Env())
     res = dropdefaults!(Fiber(SparseBytemap(Element(true))), arr)
     @test isstructequal(res, ref)
     arr = Bool[1, 1, 1, 1, 1]
@@ -372,11 +372,11 @@
     res = dropdefaults!(Fiber(SparseBytemap(Element(true))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0, 1, 0, 1]
-    ref = Fiber(SparseBytemap{Int, Int}(4, [1, 3], [1, 0, 1, 0], [(1, 1), (1, 3), (4593216528, 5390533264)], Element{true, Bool}([0, 1, 0, 1])), Env())
+    ref = Fiber(SparseBytemap{Int, Int}(4, [1, 3], [1, 0, 1, 0], [(1, 1), (1, 3)], Element{true, Bool}([0, 1, 0, 1])), Env())
     res = dropdefaults!(Fiber(SparseBytemap(Element(true))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
-    ref = Fiber(Dense{Int}(5, SparseBytemap{Int, Int}(5, [1, 6, 11, 16, 21, 26], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [(1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (2, 1), (2, 2), (2, 3), (2, 4), (2, 5), (3, 1), (3, 2), (3, 3), (3, 4), (3, 5), (4, 1), (4, 2), (4, 3), (4, 4), (4, 5), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5), (0, 0)], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))), Env())
+    ref = Fiber(Dense{Int}(5, SparseBytemap{Int, Int}(5, [1, 6, 11, 16, 21, 26], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [(1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (2, 1), (2, 2), (2, 3), (2, 4), (2, 5), (3, 1), (3, 2), (3, 3), (3, 4), (3, 5), (4, 1), (4, 2), (4, 3), (4, 4), (4, 5), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5)], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))), Env())
     res = dropdefaults!(Fiber(Dense(SparseBytemap(Element(true)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
@@ -384,19 +384,19 @@
     res = dropdefaults!(Fiber(Dense(SparseBytemap(Element(true)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(Dense{Int}(4, SparseBytemap{Int, Int}(4, [1, 3, 7, 7, 9], [1, 0, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 0], [(1, 1), (1, 3), (2, 1), (2, 2), (2, 3), (2, 4), (4, 1), (4, 3), (4348129288, 4348129288)], Element{true, Bool}([0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1]))), Env())
+    ref = Fiber(Dense{Int}(4, SparseBytemap{Int, Int}(4, [1, 3, 7, 7, 9], [1, 0, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 0], [(1, 1), (1, 3), (2, 1), (2, 2), (2, 3), (2, 4), (4, 1), (4, 3)], Element{true, Bool}([0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1]))), Env())
     res = dropdefaults!(Fiber(Dense(SparseBytemap(Element(true)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
-    ref = Fiber(SparseList{Int, Int}(5, [1, 6], [1, 2, 3, 4, 5], SparseBytemap{Int, Int}(5, [1, 6, 11, 16, 21, 26], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [(1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (2, 1), (2, 2), (2, 3), (2, 4), (2, 5), (3, 1), (3, 2), (3, 3), (3, 4), (3, 5), (4, 1), (4, 2), (4, 3), (4, 4), (4, 5), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5), (4875393264, 4562714256)], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))), Env())
+    ref = Fiber(SparseList{Int, Int}(5, [1, 6], [1, 2, 3, 4, 5], SparseBytemap{Int, Int}(5, [1, 6, 11, 16, 21, 26], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [(1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (2, 1), (2, 2), (2, 3), (2, 4), (2, 5), (3, 1), (3, 2), (3, 3), (3, 4), (3, 5), (4, 1), (4, 2), (4, 3), (4, 4), (4, 5), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5)], Element{true, Bool}([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))), Env())
     res = dropdefaults!(Fiber(SparseList(SparseBytemap(Element(true)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
-    ref = Fiber(SparseList{Int, Int}(5, [1, 1], [], SparseBytemap{Int, Int}(5, [1], [], [(4835656208, 4574998928)], Element{true, Bool}([]))), Env())
+    ref = Fiber(SparseList{Int, Int}(5, [1, 1], [], SparseBytemap{Int, Int}(5, [1], [], [], Element{true, Bool}([]))), Env())
     res = dropdefaults!(Fiber(SparseList(SparseBytemap(Element(true)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-    ref = Fiber(SparseList{Int, Int}(4, [1, 4], [1, 2, 4], SparseBytemap{Int, Int}(4, [1, 3, 7, 9], [1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0], [(1, 1), (1, 3), (2, 1), (2, 2), (2, 3), (2, 4), (3, 1), (3, 3), (42949672970, 42949672970)], Element{true, Bool}([0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1]))), Env())
+    ref = Fiber(SparseList{Int, Int}(4, [1, 4], [1, 2, 4], SparseBytemap{Int, Int}(4, [1, 3, 7, 9], [1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0], [(1, 1), (1, 3), (2, 1), (2, 2), (2, 3), (2, 4), (3, 1), (3, 3)], Element{true, Bool}([0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1]))), Env())
     res = dropdefaults!(Fiber(SparseList(SparseBytemap(Element(true)))), arr)
     @test isstructequal(res, ref)
     arr = Bool[0, 0, 0, 0, 0]
