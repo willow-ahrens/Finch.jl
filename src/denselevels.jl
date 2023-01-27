@@ -129,8 +129,6 @@ function freeze_level!(lvl::VirtualDenseLevel, ctx::LowerJulia, pos)
     return lvl
 end
 
-hasdefaultcheck(lvl::VirtualDenseLevel) = hasdefaultcheck(lvl.lvl)
-
 function unfurl(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode, ::Nothing, idx::IndexNode, idxs...)
     if idx.kind === protocol
         @assert idx.mode.kind === literal
@@ -139,6 +137,9 @@ function unfurl(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode, ::Nothing, idx:
         unfurl(fbr, ctx, mode, follow, idx, idxs...)
     end
 end
+
+set_clean!(lvl::VirtualDenseLevel, ctx) = set_clean!(lvl.lvl, ctx)
+get_dirty(lvl::VirtualDenseLevel, ctx) = get_dirty(lvl.lvl, ctx)
 
 function unfurl(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode, ::Union{Follow, Laminate, Extrude}, idx, idxs...) #TODO should protocol be strict?
     lvl = fbr.lvl
@@ -153,7 +154,7 @@ function unfurl(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode, ::Union{Follow,
             preamble = quote
                 $q = ($(ctx(p)) - $(Ti(1))) * $(ctx(lvl.I)) + $(ctx(i))
             end,
-            body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(q, lvl.Ti), index=i, guard=envdefaultcheck(fbr.env), parent=fbr.env)), ctx, mode),
+            body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(q, lvl.Ti), index=i, parent=fbr.env)), ctx, mode),
         )
     )
 

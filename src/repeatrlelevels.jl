@@ -310,21 +310,13 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode, ::Extrude, 
                 $my_v = $D
             end,
             body = Simplify(Fill(value(my_v, lvl.Tv), D)),
-            epilogue = begin
-                body = quote
-                    if $my_v_prev != $my_v && $my_i_prev > 0
-                        $(record_run(ctx, my_i_prev, my_v_prev))
-                    end
-                    $my_v_prev = $my_v
-                    $my_i_prev = $(ctx(stop))
+            epilogue = quote
+                lvl.dirty = true
+                if $my_v_prev != $my_v && $my_i_prev > 0
+                    $(record_run(ctx, my_i_prev, my_v_prev))
                 end
-                if envdefaultcheck(fbr.env) !== nothing
-                    body = quote
-                        $body
-                        $(envdefaultcheck(fbr.env)) = false
-                    end
-                end
-                body
+                $my_v_prev = $my_v
+                $my_i_prev = $(ctx(stop))
             end
         )
     )

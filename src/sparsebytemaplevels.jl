@@ -93,6 +93,7 @@ mutable struct VirtualSparseBytemapLevel
     I
     qos_fill
     qos_stop
+    dirty
     lvl
 end
 function virtualize(ex, ::Type{SparseBytemapLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}   
@@ -105,8 +106,9 @@ function virtualize(ex, ::Type{SparseBytemapLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) 
         #TODO this line is not strictly correct unless the tensor is trimmed.
         $qos_stop = $qos_fill = length($sym.srt)
     end)
+    dirty = ctx.freshen(sym, :_dirty)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualSparseBytemapLevel(sym, Ti, Tp, I, qos_fill, qos_stop, lvl_2)
+    VirtualSparseBytemapLevel(sym, Ti, Tp, I, qos_fill, qos_stop, dirty, lvl_2)
 end
 function (ctx::Finch.LowerJulia)(lvl::VirtualSparseBytemapLevel)
     quote
@@ -412,7 +414,8 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode, ::Follo
     exfurl(body, ctx, mode, idx)
 end
 
-hasdefaultcheck(lvl::VirtualSparseBytemapLevel) = true
+set_clean!(lvl::VirtualSparseBytemapLevel, ctx) = :($(lvl.dirty) = false)
+get_dirty(lvl::VirtualSparseBytemapLevel, ctx) = value(lvl.dirty, Bool)
 
 function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode, ::Union{Extrude, Laminate}, idx, idxs...)
     lvl = fbr.lvl
@@ -421,19 +424,19 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode, ::Union
     Tp = lvl.Tp
     my_key = ctx.freshen(tag, :_key)
     my_q = ctx.freshen(tag, :_q)
-    my_guard = ctx.freshen(tag, :_guard)
     my_seen = ctx.freshen(tag, :_seen)
     qos = ctx.freshen(tag, :_qos)
     body = AcceptSpike(
         val = virtual_default(fbr),
         tail = (ctx, idx) -> Thunk(
             preamble = quote
-                $my_guard = true
+                $(set_clean!(lvl.lvl, ctx))
                 $my_q = ($(ctx(envposition(fbr.env))) - $(Tp(1))) * $(ctx(lvl.I)) + $(ctx(idx))
             end,
-            body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, lvl.Ti), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode),
-            epilogue = begin
-                body = quote
+            body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, lvl.Ti), index=idx, parent=fbr.env)), ctx, mode),
+            epilogue = quote
+                if $(ctx(get_dirty(lvl.lvl, ctx)))
+                    $(lvl.dirty) = true
                     if !$(lvl.ex).tbl[$my_q]
                         $(lvl.ex).tbl[$my_q] = true
                         $(lvl.qos_fill) += 1
@@ -444,20 +447,6 @@ function unfurl(fbr::VirtualFiber{VirtualSparseBytemapLevel}, ctx, mode, ::Union
                         $(lvl.ex).srt[$(lvl.qos_fill)] = ($(ctx(envposition(fbr.env))), $(ctx(idx)))
                     end
                 end
-                if envdefaultcheck(fbr.env) !== nothing
-                    body = quote
-                        $body
-                        $(envdefaultcheck(fbr.env)) = false
-                    end
-                end
-                if hasdefaultcheck(lvl.lvl)
-                    body = quote
-                        if !$(my_guard)
-                            $body
-                        end
-                    end
-                end
-                body
             end
         )
     )

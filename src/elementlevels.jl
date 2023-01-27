@@ -46,6 +46,7 @@ struct VirtualElementLevel
     ex
     Tv
     D
+    dirty
     val
 end
 
@@ -58,7 +59,8 @@ function virtualize(ex, ::Type{ElementLevel{D, Tv}}, ctx, tag=:lvl) where {D, Tv
         $sym = $ex
         $val = $D
     end)
-    VirtualElementLevel(sym, Tv, D, val)
+    dirty = ctx.freshen(sym, :_dirty)
+    VirtualElementLevel(sym, Tv, D, dirty, val)
 end
 
 summary_f_code(lvl::VirtualElementLevel) = "e($(lvl.D))"
@@ -109,6 +111,9 @@ function reinitialize!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
     end)
 end
 
+set_clean!(lvl::VirtualElementLevel, ctx) = :($(lvl.dirty) = false)
+get_dirty(lvl::VirtualElementLevel, ctx) = value(lvl.dirty, Bool)
+
 function refurl(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
     lvl = fbr.lvl
 
@@ -137,12 +142,10 @@ end
 function lowerjulia_access(ctx::Finch.LowerJulia, node, tns::VirtualFiber{VirtualElementLevel})
     @assert isempty(node.idxs)
 
-    if node.mode.kind === updater && envdefaultcheck(tns.env) !== nothing
+    if node.mode.kind === updater
         push!(ctx.preamble, quote
-            $(envdefaultcheck(tns.env)) = false
+            $(tns.lvl.dirty) = true
         end)
     end
     tns.lvl.val
 end
-
-hasdefaultcheck(::VirtualElementLevel) = true

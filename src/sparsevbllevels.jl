@@ -95,6 +95,7 @@ mutable struct VirtualSparseVBLLevel
     qos_stop
     ros_fill
     ros_stop
+    dirty
     lvl
 end
 function virtualize(ex, ::Type{SparseVBLLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}
@@ -104,11 +105,12 @@ function virtualize(ex, ::Type{SparseVBLLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) wher
     qos_stop = ctx.freshen(sym, :_qos_stop)
     ros_fill = ctx.freshen(sym, :_ros_fill)
     ros_stop = ctx.freshen(sym, :_ros_stop)
+    dirty = ctx.freshen(sym, :_dirty)
     push!(ctx.preamble, quote
         $sym = $ex
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualSparseVBLLevel(sym, Ti, Tp, I, qos_fill, qos_stop, ros_fill, ros_stop, lvl_2)
+    VirtualSparseVBLLevel(sym, Ti, Tp, I, qos_fill, qos_stop, ros_fill, ros_stop, dirty, lvl_2)
 end
 function (ctx::Finch.LowerJulia)(lvl::VirtualSparseVBLLevel)
     quote
@@ -123,8 +125,6 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualSparseVBLLevel)
 end
 
 summary_f_code(lvl::VirtualSparseVBLLevel) = "sv($(summary_f_code(lvl.lvl)))"
-
-hasdefaultcheck(lvl::VirtualSparseVBLLevel) = true
 
 function virtual_level_size(lvl::VirtualSparseVBLLevel, ctx)
     ext = Extent(literal(lvl.Ti(1)), lvl.I)
@@ -408,6 +408,9 @@ function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode, ::Gallop, i
     exfurl(body, ctx, mode, idx)
 end
 
+set_clean!(lvl::VirtualSparseVBLLevel, ctx) = :($(lvl.dirty) = false)
+get_dirty(lvl::VirtualSparseVBLLevel, ctx) = value(lvl.dirty, Bool)
+
 function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode, ::Extrude, idx, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
@@ -423,10 +426,6 @@ function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode, ::Extrude, 
     ros_fill = lvl.ros_fill
     ros_stop = lvl.ros_stop
 
-    my_guard = if hasdefaultcheck(lvl.lvl)
-        ctx.freshen(tag, :_isdefault)
-    end
-
     push!(ctx.preamble, quote
         $ros = $ros_fill
         $qos = $qos_fill + 1
@@ -441,11 +440,12 @@ function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode, ::Extrude, 
                     $qos_stop = max($qos_stop << 1, 1)
                     $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(qos, lvl.Tp), value(qos_stop, lvl.Tp)), ctx))
                 end
-                $(hasdefaultcheck(lvl.lvl) ? :($my_guard = true) : quote end)
+                $(set_clean!(lvl.lvl, ctx))
             end,
-            body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(qos, lvl.Ti), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode),
-            epilogue = begin
-                body = quote
+            body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(qos, lvl.Ti), index=idx, parent=fbr.env)), ctx, mode),
+            epilogue = quote
+                if $(ctx(get_dirty(lvl.lvl, ctx)))
+                    $(lvl.dirty) = true
                     if $(ctx(idx)) > $my_i_prev + $(Ti(1))
                         $ros += $(Tp(1))
                         if $ros > $ros_stop
@@ -458,20 +458,6 @@ function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode, ::Extrude, 
                     $(qos) += $(Tp(1))
                     $(lvl.ex).ofs[$ros + 1] = $qos
                 end
-                if envdefaultcheck(fbr.env) !== nothing
-                    body = quote
-                        $body
-                        $(envdefaultcheck(fbr.env)) = false
-                    end
-                end
-                if hasdefaultcheck(lvl.lvl)
-                    body = quote
-                        if !$(my_guard)
-                            $body
-                        end
-                    end
-                end
-                body
             end
         )
     )

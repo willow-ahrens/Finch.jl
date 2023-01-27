@@ -110,6 +110,7 @@ mutable struct VirtualSparseCooLevel
     I
     qos_fill
     qos_stop
+    dirty
     lvl
 end
 function virtualize(ex, ::Type{SparseCooLevel{N, Ti, Tp, Tbl, Lvl}}, ctx, tag=:lvl) where {N, Ti, Tp, Tbl, Lvl}   
@@ -121,7 +122,8 @@ function virtualize(ex, ::Type{SparseCooLevel{N, Ti, Tp, Tbl, Lvl}}, ctx, tag=:l
         $sym = $ex
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualSparseCooLevel(sym, N, Ti, Tp, Tbl, I, qos_fill, qos_stop, lvl_2)
+    dirty = ctx.freshen(sym, :_dirty)
+    VirtualSparseCooLevel(sym, N, Ti, Tp, Tbl, I, qos_fill, qos_stop, dirty,  lvl_2)
 end
 function (ctx::Finch.LowerJulia)(lvl::VirtualSparseCooLevel)
     quote
@@ -300,7 +302,8 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode, ::Walk, idx
     exfurl(body, ctx, mode, idx)
 end
 
-hasdefaultcheck(lvl::VirtualSparseCooLevel) = true
+set_clean!(lvl::VirtualSparseCooLevel, ctx) = :($(lvl.dirty) = false)
+get_dirty(lvl::VirtualSparseCooLevel, ctx) = value(lvl.dirty, Bool)
 
 function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode, ::Extrude, idx, idxs...)
     lvl = fbr.lvl
@@ -310,9 +313,6 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode, ::Extrude, 
     R = length(envdeferred(fbr.env)) + 1
     qos_fill = lvl.qos_fill
     qos_stop = lvl.qos_stop
-    my_guard = if hasdefaultcheck(lvl.lvl)
-        ctx.freshen(tag, :_isdefault)
-    end
 
     if R == 1
         qos = ctx.freshen(tag, :_q)
@@ -324,7 +324,6 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode, ::Extrude, 
     end
 
     if R == lvl.N
-        my_guard = ctx.freshen(tag, :_guard)
         body = AcceptSpike(
             val = virtual_default(fbr),
             tail = (ctx, idx) -> Thunk(
@@ -336,31 +335,17 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode, ::Extrude, 
                         end...))
                         $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(qos, lvl.Tp), value(qos_stop, lvl.Tp)), ctx))
                     end
-                    $my_guard = true
+                    $(set_clean!(lvl.lvl, ctx))
                 end,
-                body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(qos, lvl.Ti), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode),
-                epilogue = begin
-                    writer_body = quote end
-                    body = quote
+                body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(qos, lvl.Ti), index=idx, parent=fbr.env)), ctx, mode),
+                epilogue = quote
+                    if $(ctx(get_dirty(lvl.lvl, ctx)))
+                        $(lvl.dirty) = true
                         $(Expr(:block, map(enumerate((envdeferred(fbr.env)..., idx))) do (n, i)
                             :($(lvl.ex).tbl[$n][$qos] = $(ctx(i)))
                         end...))
                         $qos += $(Tp(1))
                     end
-                    if envdefaultcheck(fbr.env) !== nothing
-                        body = quote
-                            $body
-                            $(envdefaultcheck(fbr.env)) = false
-                        end
-                    end
-                    if hasdefaultcheck(lvl.lvl)
-                        body = quote
-                            if !$(my_guard)
-                                $body
-                            end
-                        end
-                    end
-                    body
                 end
             )
         )

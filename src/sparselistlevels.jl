@@ -82,6 +82,7 @@ mutable struct VirtualSparseListLevel
     I
     qos_fill
     qos_stop
+    dirty
     lvl
 end
 function virtualize(ex, ::Type{SparseListLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}
@@ -92,8 +93,9 @@ function virtualize(ex, ::Type{SparseListLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) whe
     push!(ctx.preamble, quote
         $sym = $ex
     end)
+    dirty = ctx.freshen(sym, :_dirty)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualSparseListLevel(sym, Ti, Tp, I, qos_fill, qos_stop, lvl_2)
+    VirtualSparseListLevel(sym, Ti, Tp, I, qos_fill, qos_stop, dirty, lvl_2)
 end
 function (ctx::Finch.LowerJulia)(lvl::VirtualSparseListLevel)
     quote
@@ -107,8 +109,6 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualSparseListLevel)
 end
 
 summary_f_code(lvl::VirtualSparseListLevel) = "sl($(summary_f_code(lvl.lvl)))"
-
-hasdefaultcheck(lvl::VirtualSparseListLevel) = true
 
 function virtual_level_size(lvl::VirtualSparseListLevel, ctx)
     ext = Extent(literal(lvl.Ti(1)), lvl.I)
@@ -359,6 +359,9 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode, ::Gallop, 
     exfurl(body, ctx, mode, idx)
 end
 
+set_clean!(lvl::VirtualSparseListLevel, ctx) = :($(lvl.dirty) = false)
+get_dirty(lvl::VirtualSparseListLevel, ctx) = value(lvl.dirty, Bool)
+
 function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode, ::Extrude, idx, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
@@ -369,9 +372,6 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode, ::Extrude,
     qos_fill = lvl.qos_fill
     qos_stop = lvl.qos_stop
     my_i1 = ctx.freshen(tag, :_i1)
-    my_guard = if hasdefaultcheck(lvl.lvl)
-        ctx.freshen(tag, :_isdefault)
-    end
 
     my_p = ctx.freshen(tag, :_p)
 
@@ -387,28 +387,15 @@ function unfurl(fbr::VirtualFiber{VirtualSparseListLevel}, ctx, mode, ::Extrude,
                     $resize_if_smaller!($(lvl.ex).idx, $qos_stop)
                     $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(qos, lvl.Tp), value(qos_stop, lvl.Tp)), ctx))
                 end
-                $(hasdefaultcheck(lvl.lvl) ? :($my_guard = true) : quote end)
+                $(set_clean!(lvl.lvl, ctx))
             end,
-            body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(qos, lvl.Ti), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode),
-            epilogue = begin
-                body = quote
+            body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(qos, lvl.Ti), index=idx, parent=fbr.env)), ctx, mode),
+            epilogue = quote
+                if $(ctx(get_dirty(lvl.lvl, ctx)))
+                    $(lvl.dirty) = true
                     $(lvl.ex).idx[$qos] = $(ctx(idx))
                     $qos += $(Tp(1))
                 end
-                if envdefaultcheck(fbr.env) !== nothing
-                    body = quote
-                        $body
-                        $(envdefaultcheck(fbr.env)) = false
-                    end
-                end
-                if hasdefaultcheck(lvl.lvl)
-                    body = quote
-                        if !$(my_guard)
-                            $body
-                        end
-                    end
-                end
-                body
             end
         )
     )
