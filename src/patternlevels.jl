@@ -80,7 +80,7 @@ function lowerjulia_access(ctx::LowerJulia, node, tns::VirtualFiber{VirtualPatte
     node.mode.kind === reader && return true
 
     push!(ctx.preamble, quote
-        $(lvl.dirty) = false
+        $(tns.lvl.dirty) = false
     end)
 
     val = ctx.freshen(:null)
