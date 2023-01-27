@@ -21,7 +21,7 @@
         if true #base != Pattern
             for inner in [
                 () -> Dense(base()),
-                #() -> RepeatRLE{false}(),
+                () -> RepeatRLE{false}(),
             ]
                 for arr in [
                     fill(false, 5),

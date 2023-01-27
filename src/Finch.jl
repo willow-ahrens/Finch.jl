@@ -56,7 +56,7 @@ include("sparsecoolevels.jl")
 include("sparsebytemaplevels.jl")
 include("sparsevbllevels.jl")
 include("denselevels.jl")
-#include("repeatrlelevels.jl")
+include("repeatrlelevels.jl")
 include("elementlevels.jl")
 #include("patternlevels.jl")
 

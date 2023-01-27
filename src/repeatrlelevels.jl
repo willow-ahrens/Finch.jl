@@ -15,13 +15,7 @@ RepeatRLELevel{D, Ti, Tp, Tv}() where {D, Ti, Tp, Tv} = RepeatRLELevel{D, Ti, Tp
 RepeatRLELevel{D}(I::Ti) where {D, Ti} = RepeatRLELevel{D, Ti}(I)
 RepeatRLELevel{D, Ti}(I) where {D, Ti} = RepeatRLELevel{D, Ti, Int}(Ti(I))
 RepeatRLELevel{D, Ti, Tp}(I) where {D, Ti, Tp} = RepeatRLELevel{D, Ti, Tp, typeof(D)}(Ti(I))
-function RepeatRLELevel{D, Ti, Tp, Tv}(I) where {D, Ti, Tp, Tv}
-    if iszero(I)
-        RepeatRLELevel{D, Ti, Tp, Tv}(Ti(I), Tp[1, 1], Ti[], Tv[])
-    else
-        RepeatRLELevel{D, Ti, Tp, Tv}(Ti(I), Tp[1, 2], Ti[Ti(I)], Tv[D])
-    end
-end
+RepeatRLELevel{D, Ti, Tp, Tv}(I) where {D, Ti, Tp, Tv} = RepeatRLELevel{D, Ti, Tp, Tv}(Ti(I), Tp[1], Ti[], Tv[])
 
 RepeatRLELevel{D}(I::Ti, pos::Vector{Tp}, idx, val::Vector{Tv}) where {D, Ti, Tp, Tv} = RepeatRLELevel{D, Ti, Tp, Tv}(I, pos, idx, val)
 RepeatRLELevel{D, Ti}(I, pos::Vector{Tp}, idx, val::Vector{Tv}) where {D, Ti, Tp, Tv} = RepeatRLELevel{D, Ti, Tp, Tv}(Ti(I), pos, idx, val)
@@ -31,7 +25,7 @@ RepeatRLELevel{D, Ti, Tp}(I, pos, idx, val::Vector{Tv}) where {D, Ti, Tp, Tv} = 
 `f_code(rl)` = [RepeatRLELevel](@ref).
 """
 f_code(::Val{:rl}) = RepeatRLE
-summary_f_code(::RepeatRLE{D}) where {D} = "r($(D))"
+summary_f_code(::RepeatRLE{D}) where {D} = "rl($(D))"
 similar_level(::RepeatRLELevel{D}) where {D} = RepeatRLE{D}()
 similar_level(::RepeatRLELevel{D}, dim, tail...) where {D} = RepeatRLE{D}(dim)
 
@@ -94,27 +88,20 @@ mutable struct VirtualRepeatRLELevel
     Tp
     Tv
     I
-    pos_alloc
-    pos_fill
-    pos_stop
-    idx_alloc
-    val_alloc
+    ros_fill
+    qos_stop
+    dirty
 end
 function virtualize(ex, ::Type{RepeatRLELevel{D, Ti, Tp, Tv}}, ctx, tag=:lvl) where {D, Ti, Tp, Tv}
     sym = ctx.freshen(tag)
     I = value(:($sym.I), Int)
-    pos_alloc = ctx.freshen(sym, :_pos_alloc)
-    pos_fill = ctx.freshen(sym, :_pos_fill)
-    pos_stop = ctx.freshen(sym, :_pos_stop)
-    idx_alloc = ctx.freshen(sym, :_idx_alloc)
-    val_alloc = ctx.freshen(sym, :_val_alloc)
+    ros_fill = ctx.freshen(sym, :_ros_fill)
+    qos_stop = ctx.freshen(sym, :_qos_stop)
     push!(ctx.preamble, quote
         $sym = $ex
-        $pos_alloc = length($sym.pos)
-        $idx_alloc = length($sym.idx)
-        $val_alloc = length($sym.val)
     end)
-    VirtualRepeatRLELevel(sym, D, Ti, Tp, Tv, I, pos_alloc, pos_fill, pos_stop, idx_alloc, val_alloc)
+    dirty = ctx.freshen(sym, :_dirty)
+    VirtualRepeatRLELevel(sym, D, Ti, Tp, Tv, I, ros_fill, qos_stop, dirty)
 end
 function (ctx::Finch.LowerJulia)(lvl::VirtualRepeatRLELevel)
     quote
@@ -142,61 +129,54 @@ end
 virtual_level_default(lvl::VirtualRepeatRLELevel) = lvl.D
 virtual_level_eltype(lvl::VirtualRepeatRLELevel) = lvl.Tv
 
-function initialize_level!(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx::LowerJulia, mode)
-    lvl = fbr.lvl
+function initialize_level!(lvl::VirtualRepeatRLELevel, ctx::LowerJulia, mode)
     Tp = lvl.Tp
     Ti = lvl.Ti
     push!(ctx.preamble, quote
-        $(lvl.pos_alloc) = length($(lvl.ex).pos)
         $(lvl.ex).pos[1] = $(Tp(1))
-        $(lvl.pos_fill) = 1
-        $(lvl.pos_stop) = 1
-        $(lvl.idx_alloc) = length($(lvl.ex).idx)
-        $(lvl.val_alloc) = length($(lvl.ex).val)
+        $(lvl.ros_fill) = $(Tp(0))
+        $(lvl.qos_stop) = $(Tp(0))
     end)
     return lvl
-end
-
-interval_assembly_depth(::VirtualRepeatRLELevel) = Inf
-
-#This function is quite simple, since RepeatRLELevels don't support reassembly.
-function assemble!(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode)
-    lvl = fbr.lvl
-    p_stop = ctx(cache!(ctx, ctx.freshen(lvl.ex, :_p_stop), getstop(envposition(fbr.env))))
-    push!(ctx.preamble, quote
-        $(lvl.pos_alloc) < ($p_stop + 1) && ($(lvl.pos_alloc) = $Finch.regrow!($(lvl.ex).pos, $(lvl.pos_alloc), $p_stop + 1))
-        $(lvl.pos_stop) = $p_stop + 1
-    end)
-end
-
-function freeze_level!(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx::LowerJulia, mode)
-    lvl = fbr.lvl
-    Tp = lvl.Tp
-    Ti = lvl.Ti
-    my_p = ctx.freshen(:p)
-    my_q = ctx.freshen(:q)
-    push!(ctx.preamble, quote
-        $my_q = $(lvl.ex).pos[$(lvl.pos_fill)]
-        for $my_p = $(lvl.pos_fill) + 1:$(lvl.pos_stop)
-            $(lvl.idx_alloc) < $my_q && ($(lvl.idx_alloc) = $Finch.regrow!($(lvl.ex).idx, $(lvl.idx_alloc), $my_q))
-            $(lvl.val_alloc) < $my_q && ($(lvl.val_alloc) = $Finch.regrow!($(lvl.ex).val, $(lvl.val_alloc), $my_q))
-            $(lvl.ex).idx[$(my_q)] = $(ctx(lvl.I))
-            $(lvl.ex).val[$(my_q)] = $(lvl.D)
-            $my_q += $(Tp(1))
-            $(lvl.ex).pos[$(my_p)] = $my_q
-        end
-    end)
-    return fbr.lvl
 end
 
 function trim_level!(lvl::VirtualRepeatRLELevel, ctx::LowerJulia, pos)
     qos = ctx.freshen(:qos)
     push!(ctx.preamble, quote
-        $(lvl.pos_alloc) = $(ctx(pos)) + 1
-        resize!($(lvl.ex).pos, $(lvl.pos_alloc))
-        $(lvl.val_alloc) = $(lvl.idx_alloc) = $(lvl.ex).pos[$(lvl.pos_alloc)] - 1
-        resize!($(lvl.ex).idx, $(lvl.idx_alloc))
-        resize!($(lvl.ex).val, $(lvl.val_alloc))
+        resize!($(lvl.ex).pos, $(ctx(pos)) + 1)
+        $qos = $(lvl.ex).pos[end] - $(lvl.Tp(1))
+        resize!($(lvl.ex).idx, $qos)
+        resize!($(lvl.ex).val, $qos)
+    end)
+    return lvl
+end
+
+function assemble_level!(lvl::VirtualRepeatRLELevel, ctx, pos_start, pos_stop)
+    pos_start = ctx(cache!(ctx, :p_start, pos_start))
+    pos_stop = ctx(cache!(ctx, :p_stop, pos_stop))
+    push!(ctx.preamble, quote
+        $resize_if_smaller!($(lvl.ex).pos, $pos_stop + 1)
+        $fill_range!($(lvl.ex).pos, 1, $pos_start + 1, $pos_stop + 1)
+    end)
+end
+
+function freeze_level!(lvl::VirtualRepeatRLELevel, ctx::LowerJulia, pos_stop)
+    Tp = lvl.Tp
+    Ti = lvl.Ti
+    p = ctx.freshen(:p)
+    pos_stop = ctx(cache!(ctx, :p_stop, pos_stop))
+    qos_stop = lvl.qos_stop
+    ros_fill = lvl.ros_fill
+    qos_fill = ctx.freshen(:qos_stop)
+    push!(ctx.preamble, quote
+        for $p = 2:($pos_stop + 1)
+            $(lvl.ex).pos[$p] += $(lvl.ex).pos[$p - 1]
+        end
+        $qos_fill = $(lvl.ex).pos[$pos_stop + 1] - 1
+        $resize_if_smaller!($(lvl.ex).idx, $qos_fill)
+        $fill_range!($(lvl.ex).idx, $(ctx(lvl.I)), $qos_stop + 1, $qos_fill)
+        $resize_if_smaller!($(lvl.ex).val, $qos_fill)
+        $fill_range!($(lvl.ex).val, $(lvl.D), $qos_stop + 1, $qos_fill)
     end)
     return lvl
 end
@@ -263,6 +243,9 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode, ::Walk, idx
     exfurl(body, ctx, mode, idx)
 end
 
+set_clean!(lvl::VirtualSparseListLevel, ctx) = :($(lvl.dirty) = false)
+get_dirty(lvl::VirtualSparseListLevel, ctx) = value(lvl.dirty, Bool)
+
 function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode, ::Extrude, idx, idxs...)
     lvl = fbr.lvl
     tag = lvl.ex
@@ -276,12 +259,23 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode, ::Extrude, 
     my_i_prev = ctx.freshen(tag, :_i_prev)
     my_v_prev = ctx.freshen(tag, :_v_prev)
 
+    qos_stop = lvl.qos_stop
+    ros_fill = lvl.ros_fill
+    qos_fill = ctx.freshen(tag, :qos_fill)
+
     @assert isempty(idxs)
 
     function record_run(ctx, stop, v)
         quote
-            $(lvl.idx_alloc) < $my_q && ($(lvl.idx_alloc) = $Finch.regrow!($(lvl.ex).idx, $(lvl.idx_alloc), $my_q))
-            $(lvl.val_alloc) < $my_q && ($(lvl.val_alloc) = $Finch.regrow!($(lvl.ex).val, $(lvl.val_alloc), $my_q))
+            if $my_q > $qos_stop
+                $qos_fill = $qos_stop
+                $qos_stop = max($qos_stop << 1, $my_q)
+                $resize_if_smaller!($(lvl.ex).idx, $qos_stop)
+                $fill_range!($(lvl.ex).idx, $(ctx(lvl.I)), $qos_fill + 1, $qos_stop)
+                $resize_if_smaller!($(lvl.ex).val, $qos_stop)
+                $fill_range!($(lvl.ex).val, $(lvl.D), $qos_fill + 1, $qos_stop)
+            end
+            $(lvl.dirty) = true
             $(lvl.ex).idx[$my_q] = $(ctx(stop))
             $(lvl.ex).val[$my_q] = $v
             $my_q += $(Tp(1))
@@ -289,11 +283,7 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode, ::Extrude, 
     end
     
     push!(ctx.preamble, quote
-        $my_q = $(lvl.ex).pos[$(lvl.pos_fill)]
-        for $my_p = $(lvl.pos_fill) + 1:$(ctx(envposition(fbr.env)))
-            $(record_run(ctx, lvl.I, D))
-            $(lvl.ex).pos[$(my_p)] = $my_q
-        end
+        $my_q = $(lvl.ros_fill) + $(ctx(envposition(fbr.env)))
         $my_i_prev = $(Ti(0))
         $my_v_prev = $D
     end)
@@ -303,6 +293,7 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode, ::Extrude, 
         body = (ctx, start, stop) -> Thunk(
             preamble = quote
                 if $my_v_prev != $D && ($my_i_prev + 1) < $(ctx(start))
+                    $(lvl.dirty) = true
                     $(record_run(ctx, my_i_prev, my_v_prev))
                     $my_v_prev = $D
                 end
@@ -311,7 +302,6 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode, ::Extrude, 
             end,
             body = Simplify(Fill(value(my_v, lvl.Tv), D)),
             epilogue = quote
-                lvl.dirty = true
                 if $my_v_prev != $my_v && $my_i_prev > 0
                     $(record_run(ctx, my_i_prev, my_v_prev))
                 end
@@ -322,14 +312,15 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode, ::Extrude, 
     )
 
     push!(ctx.epilogue, quote
-        if $my_v_prev != $D && $my_i_prev < $(ctx(lvl.I))
-            $(record_run(ctx, my_i_prev, my_v_prev))
-            $(record_run(ctx, lvl.I, D))
-        elseif $(ctx(lvl.I)) > 0
-            $(record_run(ctx, lvl.I, my_v_prev))
+        if $my_v_prev != $D
+            if $my_i_prev < $(ctx(lvl.I))
+                $(record_run(ctx, my_i_prev, my_v_prev))
+            else
+                $(record_run(ctx, lvl.I, my_v_prev))
+            end
         end
-        $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + $(Tp(1))] = $my_q
-        $(lvl.pos_fill) = $(ctx(envposition(fbr.env))) + $(Tp(1))
+        $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + $(Tp(1))] += ($my_q - ($(lvl.ros_fill) + $(ctx(envposition(fbr.env)))))
+        $(lvl.ros_fill) += $my_q - ($(lvl.ros_fill) + $(ctx(envposition(fbr.env))))
     end)
 
     exfurl(body, ctx, mode, idx)

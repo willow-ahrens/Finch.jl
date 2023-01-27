@@ -134,7 +134,7 @@ trim!(fbr, ctx) = fbr
 
 #TODO get rid of these when we redo unfurling
 set_clean!(lvl, ctx) = quote end
-get_dirty(lvl, ctx) = false 
+get_dirty(lvl, ctx) = true
 
 function stylize_access(node, ctx::Stylize{LowerJulia}, tns::VirtualFiber)
     if !isempty(node.idxs)
