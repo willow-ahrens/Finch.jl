@@ -5,7 +5,7 @@ ElementLevel(D, args...) = ElementLevel{D}(args...)
 
 ElementLevel{D}() where {D} = ElementLevel{D, typeof(D)}()
 ElementLevel{D}(val::Vector{Tv}) where {D, Tv} = ElementLevel{D, Tv}(val)
-ElementLevel{D, Tv}() where {D, Tv} = ElementLevel{D, Tv}(Tv[D])
+ElementLevel{D, Tv}() where {D, Tv} = ElementLevel{D, Tv}(Tv[])
 const Element = ElementLevel
 
 pattern!(lvl::ElementLevel) = Pattern()
@@ -46,21 +46,21 @@ struct VirtualElementLevel
     ex
     Tv
     D
-    val_alloc
+    dirty
     val
 end
 
 (ctx::Finch.LowerJulia)(lvl::VirtualElementLevel) = lvl.ex
-function virtualize(ex, ::Type{ElementLevel{D, Tv}}, ctx, tag) where {D, Tv}
+function virtualize(ex, ::Type{ElementLevel{D, Tv}}, ctx, tag=:lvl) where {D, Tv}
     sym = ctx.freshen(tag)
     val_alloc = ctx.freshen(sym, :_val_alloc)
     val = ctx.freshen(sym, :_val)
     push!(ctx.preamble, quote
         $sym = $ex
-        $val_alloc = length($ex.val)
         $val = $D
     end)
-    VirtualElementLevel(sym, Tv, D, val_alloc, val)
+    dirty = ctx.freshen(sym, :_dirty)
+    VirtualElementLevel(sym, Tv, D, dirty, val)
 end
 
 summary_f_code(lvl::VirtualElementLevel) = "e($(lvl.D))"
@@ -70,20 +70,9 @@ virtual_level_size(::VirtualElementLevel, ctx) = ()
 virtual_level_eltype(lvl::VirtualElementLevel) = lvl.Tv
 virtual_level_default(lvl::VirtualElementLevel) = lvl.D
 
-function initialize_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
-    lvl = fbr.lvl
-    my_q = ctx.freshen(lvl.ex, :_q)
-    if !envreinitialized(fbr.env)
-        if mode.kind === updater && mode.mode.kind === create
-            push!(ctx.preamble, quote
-                $(lvl.val_alloc) = $Finch.refill!($(lvl.ex).val, $(lvl.D), 0, 4)
-            end)
-        end
-    end
-    lvl
-end
+initialize_level!(lvl::VirtualElementLevel, ctx, pos) = lvl
 
-freeze_level!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode) = fbr.lvl
+freeze_level!(lvl::VirtualElementLevel, ctx, pos) = lvl
 
 function trim_level!(lvl::VirtualElementLevel, ctx::LowerJulia, pos)
     push!(ctx.preamble, quote
@@ -92,14 +81,23 @@ function trim_level!(lvl::VirtualElementLevel, ctx::LowerJulia, pos)
     return lvl
 end
 
-interval_assembly_depth(lvl::VirtualElementLevel) = Inf
+function assemble_level!(lvl::VirtualElementLevel, ctx, pos_start, pos_stop)
+    pos_start = cache!(ctx, :pos_start, simplify(pos_start, ctx))
+    pos_stop = cache!(ctx, :pos_stop, simplify(pos_stop, ctx))
+    quote
+        resize_if_smaller!($(lvl.ex).val, $(ctx(pos_stop)))
+        fill_range!($(lvl.ex).val, $(lvl.D), $(ctx(pos_start)), $(ctx(pos_stop)))
+    end
+end
 
-function assemble!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
-    lvl = fbr.lvl
-    q = ctx(getstop(envposition(fbr.env)))
+supports_reassembly(::VirtualElementLevel) = true
+function reassemble_level!(lvl::VirtualElementLevel, ctx, pos_start, pos_stop)
+    pos_start = cache!(ctx, :pos_start, simplify(pos_start, ctx))
+    pos_stop = cache!(ctx, :pos_stop, simplify(pos_stop, ctx))
     push!(ctx.preamble, quote
-        $(lvl.val_alloc) < $q && ($(lvl.val_alloc) = $Finch.refill!($(lvl.ex).val, $(lvl.D), $(lvl.val_alloc), $q))
+        fill_range!($(lvl.ex).val, $(lvl.D), $(ctx(pos_start)), $(ctx(pos_stop)))
     end)
+    lvl
 end
 
 function reinitialize!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
@@ -112,6 +110,9 @@ function reinitialize!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
         end
     end)
 end
+
+set_clean!(lvl::VirtualElementLevel, ctx) = :($(lvl.dirty) = false)
+get_dirty(lvl::VirtualElementLevel, ctx) = value(lvl.dirty, Bool)
 
 function refurl(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
     lvl = fbr.lvl
@@ -141,12 +142,10 @@ end
 function lowerjulia_access(ctx::Finch.LowerJulia, node, tns::VirtualFiber{VirtualElementLevel})
     @assert isempty(node.idxs)
 
-    if node.mode.kind === updater && envdefaultcheck(tns.env) !== nothing
+    if node.mode.kind === updater
         push!(ctx.preamble, quote
-            $(envdefaultcheck(tns.env)) = false
+            $(tns.lvl.dirty) = true
         end)
     end
     tns.lvl.val
 end
-
-hasdefaultcheck(::VirtualElementLevel) = true

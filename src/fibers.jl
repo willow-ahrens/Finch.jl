@@ -13,8 +13,8 @@ struct Fiber{Lvl, Env}
     lvl::Lvl
     env::Env
 end
-Fiber(lvl::Lvl) where {Lvl} = Fiber{Lvl}(lvl)
-Fiber{Lvl}(lvl::Lvl, env::Env=Environment()) where {Lvl, Env} = Fiber{Lvl, Env}(lvl, env)
+
+Fiber{Lvl}(lvl::Lvl, env::Env) where {Lvl, Env} = Fiber{Lvl, Env}(lvl, env)
 
 @inline Base.ndims(::Fiber{Lvl}) where {Lvl} = level_ndims(Lvl)
 @inline Base.ndims(::Type{<:Fiber{Lvl}}) where {Lvl} = level_ndims(Lvl)
@@ -83,21 +83,23 @@ access mode `mode`. Return the new fiber object.
 """
 function initialize!(fbr::VirtualFiber, ctx::LowerJulia, mode, idxs...)
     if mode.kind === updater
-        fbr = VirtualFiber(initialize_level!(fbr, ctx, mode), fbr.env)
-        assemble!(fbr, ctx, mode)
+        lvl = initialize_level!(fbr.lvl, ctx, literal(1))
+        push!(ctx.preamble, assemble_level!(lvl, ctx, literal(1), literal(1)))
+        fbr = VirtualFiber(lvl, fbr.env)
     end
     return access(refurl(fbr, ctx, mode), mode, idxs...)
 end
 
 """
-    initialize_level!(fbr, ctx, mode)
+    initialize_level!(fbr, ctx, pos)
 
 Initialize the level within the virtual fiber to it's default value in the
 context `ctx` with access mode `mode`. Return the new level.
 """
 function initialize_level! end
 
-initialize_level!(fbr, ctx, mode) = fbr.lvl
+#TODO this is wrong do we call this?
+initialize_level!(fbr, ctx, pos) = fbr.lvl
 
 
 
@@ -109,7 +111,7 @@ the new fiber object.
 """
 function freeze!(fbr::VirtualFiber, ctx::LowerJulia, mode, idxs...)
     if mode.kind === updater
-        return VirtualFiber(freeze_level!(fbr, ctx, mode), fbr.env)
+        return VirtualFiber(freeze_level!(fbr.lvl, ctx, envposition(fbr.env)), fbr.env)
     else
         return fbr
     end
@@ -130,7 +132,9 @@ function trim!(fbr::VirtualFiber, ctx)
 end
 trim!(fbr, ctx) = fbr
 
-#TODO get rid of isa IndexNode when this is all over
+#TODO get rid of these when we redo unfurling
+set_clean!(lvl, ctx) = quote end
+get_dirty(lvl, ctx) = true
 
 function stylize_access(node, ctx::Stylize{LowerJulia}, tns::VirtualFiber)
     if !isempty(node.idxs)
@@ -186,6 +190,8 @@ end
 get_furl_root_access(idx, tns) = nothing
 #These are also good examples of where modifiers might be great.
 
+supports_reassembly(lvl) = false
+
 refurl(tns, ctx, mode) = tns
 function exfurl(tns, ctx, mode, idx::IndexNode)
     if idx.kind === index
@@ -200,10 +206,8 @@ end
 function Base.show(io::IO, fbr::Fiber)
     print(io, "Fiber(")
     print(io, fbr.lvl)
-    if fbr.env != Environment()
-        print(io, ", ")
-        print(io, fbr.env)
-    end
+    print(io, ", ")
+    print(io, fbr.env)
     print(io, ")")
 end
 

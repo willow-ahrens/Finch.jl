@@ -2,7 +2,7 @@
 
     A = Finch.Fiber(
         SparseList{Int64}(10, [1, 6], [1, 3, 5, 7, 9],
-        Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
+        Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])), Environment())
     B = Scalar{0.0}()
 
     @test diff("sieve_hl_cond.jl", @finch_code (@loop j @sieve j == 1 B[] += A[j]))

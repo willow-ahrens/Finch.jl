@@ -42,25 +42,24 @@ SparseList (false) [1:10]
 """
 pattern!(fbr::Fiber) = Fiber(pattern!(fbr.lvl), fbr.env)
 
-struct VirtualPatternLevel end
+struct VirtualPatternLevel
+    dirty
+end
 
 (ctx::Finch.LowerJulia)(lvl::VirtualPatternLevel) = :(PatternLevel())
-virtualize(ex, ::Type{<:PatternLevel}, ctx, tag) = VirtualPatternLevel()
+virtualize(ex, ::Type{<:PatternLevel}, ctx, tag) = VirtualPatternLevel(ctx.freshen(:dirty))
 
 virtual_level_resize!(lvl::VirtualPatternLevel, ctx) = lvl
 virtual_level_size(::VirtualPatternLevel, ctx) = ()
 virtual_level_default(::VirtualPatternLevel) = false
 virtual_level_eltype(::VirtualPatternLevel) = Bool
 
-initialize_level!(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode) = fbr.lvl
+initialize_level!(lvl::VirtualPatternLevel, ctx, pos) = lvl
 
-freeze_level!(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode) = fbr.lvl
+freeze_level!(lvl::VirtualPatternLevel, ctx, pos) = lvl
 
-interval_assembly_depth(lvl::VirtualPatternLevel) = Inf
-
-assemble!(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode) = fbr.lvl
-
-reinitialize!(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode) = fbr.lvl
+assemble_level!(lvl::VirtualPatternLevel, ctx, pos_start, pos_stop) = quote end
+reassemble_level!(lvl::VirtualPatternLevel, ctx, pos_start, pos_stop) = quote end
 
 trim_level!(lvl::VirtualPatternLevel, ctx::LowerJulia, pos) = lvl
 
@@ -72,18 +71,17 @@ function refurl(fbr::VirtualFiber{VirtualPatternLevel}, ctx, mode)
     end
 end
 
-hasdefaultcheck(::VirtualPatternLevel) = true
+set_clean!(lvl::VirtualPatternLevel, ctx) = :($(lvl.dirty) = false)
+get_dirty(lvl::VirtualPatternLevel, ctx) = value(lvl.dirty, Bool)
 
 function lowerjulia_access(ctx::LowerJulia, node, tns::VirtualFiber{VirtualPatternLevel})
     @assert isempty(node.idxs)
 
     node.mode.kind === reader && return true
 
-    if envdefaultcheck(tns.env) !== nothing
-        push!(ctx.preamble, quote
-            $(envdefaultcheck(tns.env)) = false
-        end)
-    end
+    push!(ctx.preamble, quote
+        $(tns.lvl.dirty) = true
+    end)
 
     val = ctx.freshen(:null)
     push!(ctx.preamble, :($val = false))

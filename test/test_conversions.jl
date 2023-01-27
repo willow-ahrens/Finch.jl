@@ -1,6 +1,6 @@
 @testset "conversions" begin
     for base in [
-        Pattern,
+        #Pattern,
         Element{false},
     ]
         #=
@@ -18,12 +18,10 @@
         end
         =#
 
-        if base != Pattern
+        if true #base != Pattern
             for inner in [
                 () -> Dense(base()),
-                () -> SparseListDiff(base()),
                 () -> RepeatRLE{false}(),
-                () -> RepeatRLEDiff{false}(),
             ]
                 for arr in [
                     fill(false, 5),

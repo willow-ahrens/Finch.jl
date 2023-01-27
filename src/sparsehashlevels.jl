@@ -25,7 +25,7 @@ SparseHashLevel{N, Ti}(I, tbl::Tbl, lvl) where {N, Ti, Tp, Tbl<:AbstractDict{Tup
 SparseHashLevel{N, Ti, Tp}(I, tbl::Tbl, lvl) where {N, Ti, Tp, Tbl} =
     SparseHashLevel{N, Ti, Tp, Tbl}(Ti(I), tbl, lvl)
 SparseHashLevel{N, Ti, Tp, Tbl}(I, tbl, lvl::Lvl) where {N, Ti, Tp, Tbl, Lvl} =
-    SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(Ti(I), tbl, Tp[1, 1], Pair{Tuple{Tp, Ti}, Tp}[], lvl)
+    SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(Ti(I), tbl, Tp[1], Pair{Tuple{Tp, Ti}, Tp}[], lvl)
 
 SparseHashLevel{N}(I::Ti, tbl::Tbl, pos::Vector{Tp}, srt, lvl::Lvl) where {N, Ti, Tp, Tbl, Lvl} =
     SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(I, tbl, pos, srt, lvl) 
@@ -117,25 +117,25 @@ mutable struct VirtualSparseHashLevel
     Tp
     Tbl
     I
-    P
-    pos_alloc
-    idx_alloc
+    qos_fill
+    qos_stop
+    dirty
     lvl
 end
 function virtualize(ex, ::Type{SparseHashLevel{N, Ti, Tp, Tbl, Lvl}}, ctx, tag=:lvl) where {N, Ti, Tp, Tbl, Lvl}   
     sym = ctx.freshen(tag)
     I = map(n->value(:($sym.I[$n]), Int), 1:N)
     P = ctx.freshen(sym, :_P)
-    pos_alloc = ctx.freshen(sym, :_pos_alloc)
-    idx_alloc = ctx.freshen(sym, :_idx_alloc)
+    qos_fill = ctx.freshen(sym, :_qos_fill)
+    qos_stop = ctx.freshen(sym, :_qos_stop)
     push!(ctx.preamble, quote
         $sym = $ex
-        $P = length($sym.pos)
-        $pos_alloc = $P
-        $idx_alloc = length($sym.tbl)
+        $(qos_fill) = length($sym.tbl)
+        $(qos_stop) = $(qos_fill)
     end)
+    dirty = ctx.freshen(sym, :_dirty)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualSparseHashLevel(sym, N, Ti, Tp, Tbl, I, P, pos_alloc, idx_alloc, lvl_2)
+    VirtualSparseHashLevel(sym, N, Ti, Tp, Tbl, I, qos_fill, qos_stop, dirty, lvl_2)
 end
 function (ctx::Finch.LowerJulia)(lvl::VirtualSparseHashLevel)
     quote
@@ -165,72 +165,60 @@ end
 virtual_level_eltype(lvl::VirtualSparseHashLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSparseHashLevel) = virtual_level_default(lvl.lvl)
 
-function initialize_level!(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx::LowerJulia, mode)
-    @assert isempty(envdeferred(fbr.env))
-    lvl = fbr.lvl
+function initialize_level!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, pos)
     Ti = lvl.Ti
     Tp = lvl.Tp
-    my_p = ctx.freshen(lvl.ex, :_p)
 
-    if mode.kind === updater && mode.mode.kind === create
-        push!(ctx.preamble, quote
-            $(lvl.idx_alloc) = $(Tp(0))
-            empty!($(lvl.ex).tbl)
-            empty!($(lvl.ex).srt)
-            $(lvl.pos_alloc) = $Finch.refill!($(lvl.ex).pos, 0, 0, 5)
-            $(lvl.ex).pos[1] = $(Tp(1))
-            $(lvl.P) = $(Tp(0))
-        end)
-    end
-    lvl.lvl = initialize_level!(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^lvl.N)(fbr.env)), ctx, mode)
-    return lvl
-end
-
-interval_assembly_depth(lvl::VirtualSparseHashLevel) = Inf #This level supports interval assembly, and this assembly isn't recursive.
-
-#This function is quite simple, since SparseHashLevels don't support reassembly.
-#TODO what would it take to support reassembly?
-function assemble!(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode)
-    lvl = fbr.lvl
-    Ti = lvl.Ti
-    Tp = lvl.Tp
-    p_stop = ctx(cache!(ctx, ctx.freshen(lvl.ex, :_p_stop), getstop(envposition(fbr.env))))
+    qos = call(-, call(getindex, :($(lvl.ex).pos), call(+, pos, 1)), 1)
     push!(ctx.preamble, quote
-        $(lvl.P) = max($Tp($p_stop), $(lvl.P))
-        $(lvl.pos_alloc) < ($(lvl.P) + 1) && ($(lvl.pos_alloc) = Finch.refill!($(lvl.ex).pos, 0, $(lvl.pos_alloc), $(lvl.P) + 1))
+        $(lvl.qos_fill) = $(Tp(0))
+        $(lvl.qos_stop) = $(Tp(0))
+        empty!($(lvl.ex).tbl)
+        empty!($(lvl.ex).srt)
     end)
-end
-
-function freeze_level!(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx::LowerJulia, mode)
-    @assert isempty(envdeferred(fbr.env))
-    lvl = fbr.lvl
-    my_p = ctx.freshen(lvl.ex, :_p)
-    push!(ctx.preamble, quote
-        resize!($(lvl.ex).srt, length($(lvl.ex).tbl))
-        copyto!($(lvl.ex).srt, pairs($(lvl.ex).tbl))
-        sort!($(lvl.ex).srt)
-        #resize!($(lvl.ex).pos, $(lvl.P) + 1)
-        for $my_p = 1:$(lvl.P)
-            $(lvl.ex).pos[$my_p + 1] += $(lvl.ex).pos[$my_p]
-        end
-    end)
-    lvl.lvl = freeze_level!(VirtualFiber(fbr.lvl.lvl, (VirtualEnvironment^lvl.N)(fbr.env)), ctx, mode)
+    lvl.lvl = initialize_level!(lvl.lvl, ctx, qos)
     return lvl
 end
 
 function trim_level!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, pos)
-    idx = ctx.freshen(:idx)
     Ti = lvl.Ti
     Tp = lvl.Tp
+    qos = ctx.freshen(:qos)
     push!(ctx.preamble, quote
-        $(lvl.pos_alloc) = $(ctx(pos)) + 1
-        resize!($(lvl.ex).pos, $(lvl.pos_alloc))
-        $(lvl.idx_alloc) = $(lvl.ex).pos[$(lvl.pos_alloc)] - $(Tp(1))
-        resize!($(lvl.ex).srt, $(lvl.idx_alloc))
+        resize!($(lvl.ex).pos, $(ctx(pos)) + 1)
+        $qos = $(lvl.ex).pos[end] - $(Tp(1))
+        resize!($(lvl.ex).srt, $qos)
     end)
-    lvl.lvl = trim_level!(lvl.lvl, ctx, lvl.idx_alloc)
+    lvl.lvl = trim_level!(lvl.lvl, ctx, value(qos, Tp))
     return lvl
 end
+
+function assemble_level!(lvl::VirtualSparseHashLevel, ctx, pos_start, pos_stop)
+    pos_start = ctx(cache!(ctx, :p_start, pos_start))
+    pos_stop = ctx(cache!(ctx, :p_start, pos_stop))
+    return quote
+        $resize_if_smaller!($(lvl.ex).pos, $pos_stop + 1)
+        $fill_range!($(lvl.ex).pos, 0, $pos_start + 1, $pos_stop + 1)
+    end
+end
+
+function freeze_level!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, pos_stop)
+    p = ctx.freshen(:p)
+    pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
+    qos_stop = ctx.freshen(:qos_stop)
+    push!(ctx.preamble, quote
+        resize!($(lvl.ex).srt, length($(lvl.ex).tbl))
+        copyto!($(lvl.ex).srt, pairs($(lvl.ex).tbl))
+        sort!($(lvl.ex).srt)
+        for $p = 2:($pos_stop + 1)
+            $(lvl.ex).pos[$p] += $(lvl.ex).pos[$p - 1]
+        end
+        $qos_stop = $(lvl.ex).pos[$pos_stop + 1] - 1
+    end)
+    lvl.lvl = freeze_level!(lvl.lvl, ctx, value(qos_stop))
+    return lvl
+end
+
 
 function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode, ::Nothing, idx, idxs...)
     if idx.kind === protocol
@@ -390,7 +378,8 @@ function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode, ::Follow, 
     exfurl(body, ctx, mode, idx)
 end
 
-hasdefaultcheck(lvl::VirtualSparseHashLevel) = true
+set_clean!(lvl::VirtualSparseHashLevel, ctx) = :($(lvl.dirty) = false)
+get_dirty(lvl::VirtualSparseHashLevel, ctx) = value(lvl.dirty, Bool)
 
 function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode, ::Union{Extrude, Laminate}, idx, idxs...)
     lvl = fbr.lvl
@@ -398,53 +387,42 @@ function unfurl(fbr::VirtualFiber{VirtualSparseHashLevel}, ctx, mode, ::Union{Ex
     Ti = lvl.Ti
     Tp = lvl.Tp
     R = length(envdeferred(fbr.env)) + 1
+    qos_fill = lvl.qos_fill
+    qos_stop = lvl.qos_stop
     my_key = ctx.freshen(tag, :_key)
-    my_q = ctx.freshen(tag, :_q)
-    my_guard = ctx.freshen(tag, :_guard)
+
+    qos = ctx.freshen(tag, :_q)
+    if R == 1
+        push!(ctx.preamble, quote
+            $qos_fill = length($(lvl.ex).tbl)
+        end)
+    else
+    end
 
     if R == lvl.N
-        body = Thunk(
-            preamble = quote
-                $my_q = $(lvl.ex).pos[$(ctx(envposition(envexternal(fbr.env))))]
-            end,
-            body = AcceptSpike(
-                val = virtual_default(fbr),
-                tail = (ctx, idx) -> Thunk(
-                    preamble = quote
-                        $my_guard = true
-                        $my_key = ($(ctx(envposition(envexternal(fbr.env)))), ($(map(ctx, envdeferred(fbr.env))...), $(ctx(idx))))
-                        $my_q = get($(lvl.ex).tbl, $my_key, $(lvl.idx_alloc) + $(Tp(1)))
-                        if $(lvl.idx_alloc) < $my_q 
-                            $(contain(ctx) do ctx_2 
-                                #THIS code reassembles every time. TODO
-                                assemble!(VirtualFiber(fbr.lvl.lvl, VirtualEnvironment(position=value(my_q, lvl.Ti), parent=(VirtualEnvironment^(lvl.N - 1))(fbr.env))), ctx_2, mode)
-                                quote end
-                            end)
-                        end
-                    end,
-                    body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, lvl.Ti), index=idx, guard=my_guard, parent=fbr.env)), ctx, mode),
-                    epilogue = begin
-                        body = quote
-                            $(lvl.idx_alloc) = $my_q
-                            $(lvl.ex).tbl[$my_key] = $(lvl.idx_alloc)
+        body = AcceptSpike(
+            val = virtual_default(fbr),
+            tail = (ctx, idx) -> Thunk(
+                preamble = quote
+                    $my_key = ($(ctx(envposition(envexternal(fbr.env)))), ($(map(ctx, envdeferred(fbr.env))...), $(ctx(idx))))
+                    $qos = get($(lvl.ex).tbl, $my_key, $(qos_fill) + $(Tp(1)))
+                    if $qos > $qos_stop
+                        $qos_stop = max($qos_stop << 1, 1)
+                        $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(qos, lvl.Tp), value(qos_stop, lvl.Tp)), ctx))
+                    end
+                    $(set_clean!(lvl.lvl, ctx))
+                end,
+                body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(qos, lvl.Ti), index=idx, parent=fbr.env)), ctx, mode),
+                epilogue = quote
+                    if $(ctx(get_dirty(lvl.lvl, ctx)))
+                        $(lvl.dirty) = true
+                        if $qos > $qos_fill
+                            $(lvl.qos_fill) = $qos
+                            $(lvl.ex).tbl[$my_key] = $qos
                             $(lvl.ex).pos[$(ctx(envposition(envexternal(fbr.env)))) + 1] += $(Tp(1))
                         end
-                        if envdefaultcheck(fbr.env) !== nothing
-                            body = quote
-                                $body
-                                $(envdefaultcheck(fbr.env)) = false
-                            end
-                        end
-                        if hasdefaultcheck(lvl.lvl)
-                            body = quote
-                                if !$(my_guard)
-                                    $body
-                                end
-                            end
-                        end
-                        body
                     end
-                )
+                end
             )
         )
     else

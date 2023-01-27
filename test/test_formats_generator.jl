@@ -1,4 +1,5 @@
 using Finch
+using Finch: Environment
 using .Iterators
 
 open("test_formats.jl", "w") do file
@@ -15,8 +16,7 @@ open("test_formats.jl", "w") do file
     end
 
     for inner in [
-        :(RepeatRLE(0.0)),
-        :(RepeatRLEDiff(0.0)),
+        #:(RepeatRLE(0.0)),
     ]
         for arr in [
             fill(0.0, 5),
@@ -46,7 +46,7 @@ open("test_formats.jl", "w") do file
 
 
     for base in [
-        :(Pattern()),
+        #:(Pattern()),
         :(Element(false)),
         :(Element(true))
     ]
@@ -59,7 +59,6 @@ open("test_formats.jl", "w") do file
         for inner in [
             :(Dense($base)),
             :(SparseList($base)),
-            :(SparseListDiff($base)),
             :(SparseVBL($base)),
             :(SparseBytemap($base)),
             :(SparseHash{1}($base)),

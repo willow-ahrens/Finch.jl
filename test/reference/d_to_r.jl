@@ -1,85 +1,127 @@
-@inbounds begin
-        A_lvl = ex.body.lhs.tns.tns.lvl
-        A_lvl_pos_alloc = length(A_lvl.pos)
-        A_lvl_idx_alloc = length(A_lvl.idx)
-        A_lvl_val_alloc = length(A_lvl.val)
-        C = ex.body.rhs.tns.tns
-        (C_mode1_stop,) = size(C)
-        i_stop = C_mode1_stop
-        A_lvl_pos_alloc = length(A_lvl.pos)
-        A_lvl.pos[1] = 1
-        A_lvl_pos_fill = 1
-        A_lvl_pos_stop = 1
-        A_lvl_idx_alloc = length(A_lvl.idx)
-        A_lvl_val_alloc = length(A_lvl.val)
-        A_lvl_pos_alloc < 1 + 1 && (A_lvl_pos_alloc = (Finch).regrow!(A_lvl.pos, A_lvl_pos_alloc, 1 + 1))
-        A_lvl_pos_stop = 1 + 1
-        A_lvl_q = A_lvl.pos[A_lvl_pos_fill]
-        for A_lvl_p = A_lvl_pos_fill + 1:1
-            A_lvl_idx_alloc < A_lvl_q && (A_lvl_idx_alloc = (Finch).regrow!(A_lvl.idx, A_lvl_idx_alloc, A_lvl_q))
-            A_lvl_val_alloc < A_lvl_q && (A_lvl_val_alloc = (Finch).regrow!(A_lvl.val, A_lvl_val_alloc, A_lvl_q))
-            A_lvl.idx[A_lvl_q] = C_mode1_stop
-            A_lvl.val[A_lvl_q] = 0.0
-            A_lvl_q += 1
-            A_lvl.pos[A_lvl_p] = A_lvl_q
+begin
+    A_lvl = ex.body.lhs.tns.tns.lvl
+    C = ex.body.rhs.tns.tns
+    (C_mode1_stop,) = size(C)
+    A_lvl.pos[1] = 1
+    A_lvl_ros_fill = 0
+    A_lvl_qos_stop = 0
+    (Finch.resize_if_smaller!)(A_lvl.pos, 1 + 1)
+    (Finch.fill_range!)(A_lvl.pos, 1, 1 + 1, 1 + 1)
+    Any[quote
+    #= /Users/Peter/Projects/Finch.jl/src/glue_AbstractArrays.jl:11 =#
+    (C_mode1_stop,) = size(C)
+end, :($(Expr(:cache, :i_lower, quote
+    #= /Users/Peter/Projects/Finch.jl/src/lower.jl:75 =#
+    i_lower = begin
+            (+)((-)(C_mode1_stop, 1), 1)
         end
-        A_lvl_i_prev = 0
-        A_lvl_v_prev = 0.0
-        for i = 1:i_stop
-            if A_lvl_v_prev != 0.0 && A_lvl_i_prev + 1 < i
-                A_lvl_idx_alloc < A_lvl_q && (A_lvl_idx_alloc = (Finch).regrow!(A_lvl.idx, A_lvl_idx_alloc, A_lvl_q))
-                A_lvl_val_alloc < A_lvl_q && (A_lvl_val_alloc = (Finch).regrow!(A_lvl.val, A_lvl_val_alloc, A_lvl_q))
-                A_lvl.idx[A_lvl_q] = A_lvl_i_prev
-                A_lvl.val[A_lvl_q] = A_lvl_v_prev
-                A_lvl_q += 1
-                A_lvl_v_prev = 0.0
-            end
-            A_lvl_i_prev = i - 1
-            A_lvl_v = 0.0
-            A_lvl_v = C[i]
-            if A_lvl_v_prev != A_lvl_v && A_lvl_i_prev > 0
-                A_lvl_idx_alloc < A_lvl_q && (A_lvl_idx_alloc = (Finch).regrow!(A_lvl.idx, A_lvl_idx_alloc, A_lvl_q))
-                A_lvl_val_alloc < A_lvl_q && (A_lvl_val_alloc = (Finch).regrow!(A_lvl.val, A_lvl_val_alloc, A_lvl_q))
-                A_lvl.idx[A_lvl_q] = A_lvl_i_prev
-                A_lvl.val[A_lvl_q] = A_lvl_v_prev
-                A_lvl_q += 1
-            end
-            A_lvl_v_prev = A_lvl_v
-            A_lvl_i_prev = i
+end))), :($(Expr(:cache, :i_upper, quote
+    #= /Users/Peter/Projects/Finch.jl/src/lower.jl:75 =#
+    i_upper = begin
+            (+)((-)(C_mode1_stop, 1), 1)
         end
-        if A_lvl_v_prev != 0.0 && A_lvl_i_prev < C_mode1_stop
-            A_lvl_idx_alloc < A_lvl_q && (A_lvl_idx_alloc = (Finch).regrow!(A_lvl.idx, A_lvl_idx_alloc, A_lvl_q))
-            A_lvl_val_alloc < A_lvl_q && (A_lvl_val_alloc = (Finch).regrow!(A_lvl.val, A_lvl_val_alloc, A_lvl_q))
+end))), quote
+    #= /Users/Peter/Projects/Finch.jl/src/repeatrlelevels.jl:136 =#
+    A_lvl.pos[1] = 1
+    #= /Users/Peter/Projects/Finch.jl/src/repeatrlelevels.jl:137 =#
+    A_lvl_ros_fill = 0
+    #= /Users/Peter/Projects/Finch.jl/src/repeatrlelevels.jl:138 =#
+    A_lvl_qos_stop = 0
+end, quote
+    #= /Users/Peter/Projects/Finch.jl/src/repeatrlelevels.jl:158 =#
+    (Finch.resize_if_smaller!)(A_lvl.pos, 1 + 1)
+    #= /Users/Peter/Projects/Finch.jl/src/repeatrlelevels.jl:159 =#
+    (Finch.fill_range!)(A_lvl.pos, 1, 1 + 1, 1 + 1)
+end, Any[#= circular reference @-1 =#], quote
+    #= /Users/Peter/Projects/Finch.jl/src/repeatrlelevels.jl:286 =#
+    A_lvl_q = A_lvl_ros_fill + 1
+    #= /Users/Peter/Projects/Finch.jl/src/repeatrlelevels.jl:287 =#
+    A_lvl_i_prev = 0
+    #= /Users/Peter/Projects/Finch.jl/src/repeatrlelevels.jl:288 =#
+    A_lvl_v_prev = 0.0
+end]
+    A_lvl_q = A_lvl_ros_fill + 1
+    A_lvl_i_prev = 0
+    A_lvl_v_prev = 0.0
+    for i = 1:C_mode1_stop
+        if A_lvl_v_prev != 0.0 && A_lvl_i_prev + 1 < i
+            A_lvl_dirty = true
+            if A_lvl_q > A_lvl_qos_stop
+                A_lvlqos_fill = A_lvl_qos_stop
+                A_lvl_qos_stop = max(A_lvl_qos_stop << 1, A_lvl_q)
+                (Finch.resize_if_smaller!)(A_lvl.idx, A_lvl_qos_stop)
+                (Finch.fill_range!)(A_lvl.idx, C_mode1_stop, A_lvlqos_fill + 1, A_lvl_qos_stop)
+                (Finch.resize_if_smaller!)(A_lvl.val, A_lvl_qos_stop)
+                (Finch.fill_range!)(A_lvl.val, 0.0, A_lvlqos_fill + 1, A_lvl_qos_stop)
+            end
+            A_lvl_dirty = true
             A_lvl.idx[A_lvl_q] = A_lvl_i_prev
             A_lvl.val[A_lvl_q] = A_lvl_v_prev
             A_lvl_q += 1
-            A_lvl_idx_alloc < A_lvl_q && (A_lvl_idx_alloc = (Finch).regrow!(A_lvl.idx, A_lvl_idx_alloc, A_lvl_q))
-            A_lvl_val_alloc < A_lvl_q && (A_lvl_val_alloc = (Finch).regrow!(A_lvl.val, A_lvl_val_alloc, A_lvl_q))
-            A_lvl.idx[A_lvl_q] = C_mode1_stop
-            A_lvl.val[A_lvl_q] = 0.0
+            A_lvl_v_prev = 0.0
+        end
+        A_lvl_i_prev = i - 1
+        A_lvl_v = 0.0
+        A_lvl_v = C[i]
+        if A_lvl_v_prev != A_lvl_v && A_lvl_i_prev > 0
+            if A_lvl_q > A_lvl_qos_stop
+                A_lvlqos_fill = A_lvl_qos_stop
+                A_lvl_qos_stop = max(A_lvl_qos_stop << 1, A_lvl_q)
+                (Finch.resize_if_smaller!)(A_lvl.idx, A_lvl_qos_stop)
+                (Finch.fill_range!)(A_lvl.idx, C_mode1_stop, A_lvlqos_fill + 1, A_lvl_qos_stop)
+                (Finch.resize_if_smaller!)(A_lvl.val, A_lvl_qos_stop)
+                (Finch.fill_range!)(A_lvl.val, 0.0, A_lvlqos_fill + 1, A_lvl_qos_stop)
+            end
+            A_lvl_dirty = true
+            A_lvl.idx[A_lvl_q] = A_lvl_i_prev
+            A_lvl.val[A_lvl_q] = A_lvl_v_prev
             A_lvl_q += 1
-        elseif C_mode1_stop > 0
-            A_lvl_idx_alloc < A_lvl_q && (A_lvl_idx_alloc = (Finch).regrow!(A_lvl.idx, A_lvl_idx_alloc, A_lvl_q))
-            A_lvl_val_alloc < A_lvl_q && (A_lvl_val_alloc = (Finch).regrow!(A_lvl.val, A_lvl_val_alloc, A_lvl_q))
+        end
+        A_lvl_v_prev = A_lvl_v
+        A_lvl_i_prev = i
+    end
+    if A_lvl_v_prev != 0.0
+        if A_lvl_i_prev < C_mode1_stop
+            if A_lvl_q > A_lvl_qos_stop
+                A_lvlqos_fill = A_lvl_qos_stop
+                A_lvl_qos_stop = max(A_lvl_qos_stop << 1, A_lvl_q)
+                (Finch.resize_if_smaller!)(A_lvl.idx, A_lvl_qos_stop)
+                (Finch.fill_range!)(A_lvl.idx, C_mode1_stop, A_lvlqos_fill + 1, A_lvl_qos_stop)
+                (Finch.resize_if_smaller!)(A_lvl.val, A_lvl_qos_stop)
+                (Finch.fill_range!)(A_lvl.val, 0.0, A_lvlqos_fill + 1, A_lvl_qos_stop)
+            end
+            A_lvl_dirty = true
+            A_lvl.idx[A_lvl_q] = A_lvl_i_prev
+            A_lvl.val[A_lvl_q] = A_lvl_v_prev
+            A_lvl_q += 1
+        else
+            if A_lvl_q > A_lvl_qos_stop
+                A_lvlqos_fill = A_lvl_qos_stop
+                A_lvl_qos_stop = max(A_lvl_qos_stop << 1, A_lvl_q)
+                (Finch.resize_if_smaller!)(A_lvl.idx, A_lvl_qos_stop)
+                (Finch.fill_range!)(A_lvl.idx, C_mode1_stop, A_lvlqos_fill + 1, A_lvl_qos_stop)
+                (Finch.resize_if_smaller!)(A_lvl.val, A_lvl_qos_stop)
+                (Finch.fill_range!)(A_lvl.val, 0.0, A_lvlqos_fill + 1, A_lvl_qos_stop)
+            end
+            A_lvl_dirty = true
             A_lvl.idx[A_lvl_q] = C_mode1_stop
             A_lvl.val[A_lvl_q] = A_lvl_v_prev
             A_lvl_q += 1
         end
-        A_lvl.pos[1 + 1] = A_lvl_q
-        A_lvl_pos_fill = 1 + 1
-        q = A_lvl.pos[A_lvl_pos_fill]
-        for p = A_lvl_pos_fill + 1:A_lvl_pos_stop
-            A_lvl_idx_alloc < q && (A_lvl_idx_alloc = (Finch).regrow!(A_lvl.idx, A_lvl_idx_alloc, q))
-            A_lvl_val_alloc < q && (A_lvl_val_alloc = (Finch).regrow!(A_lvl.val, A_lvl_val_alloc, q))
-            A_lvl.idx[q] = C_mode1_stop
-            A_lvl.val[q] = 0.0
-            q += 1
-            A_lvl.pos[p] = q
-        end
-        A_lvl_pos_alloc = 1 + 1
-        resize!(A_lvl.pos, A_lvl_pos_alloc)
-        A_lvl_val_alloc = (A_lvl_idx_alloc = A_lvl.pos[A_lvl_pos_alloc] - 1)
-        resize!(A_lvl.idx, A_lvl_idx_alloc)
-        resize!(A_lvl.val, A_lvl_val_alloc)
-        (A = Fiber((Finch.RepeatRLELevel){0.0, Int64, Int64, Float64}(C_mode1_stop, A_lvl.pos, A_lvl.idx, A_lvl.val), (Finch.Environment)(; )),)
     end
+    A_lvl.pos[1 + 1] += A_lvl_q - (A_lvl_ros_fill + 1)
+    A_lvl_ros_fill += A_lvl_q - (A_lvl_ros_fill + 1)
+    for p = 2:1 + 1
+        A_lvl.pos[p] += A_lvl.pos[p - 1]
+    end
+    qos_stop = A_lvl.pos[1 + 1] - 1
+    (Finch.resize_if_smaller!)(A_lvl.idx, qos_stop)
+    (Finch.fill_range!)(A_lvl.idx, C_mode1_stop, A_lvl_qos_stop + 1, qos_stop)
+    (Finch.resize_if_smaller!)(A_lvl.val, qos_stop)
+    (Finch.fill_range!)(A_lvl.val, 0.0, A_lvl_qos_stop + 1, qos_stop)
+    resize!(A_lvl.pos, 1 + 1)
+    qos = A_lvl.pos[end] - 1
+    resize!(A_lvl.idx, qos)
+    resize!(A_lvl.val, qos)
+    (A = Fiber((Finch.RepeatRLELevel){0.0, Int64, Int64, Float64}(C_mode1_stop, A_lvl.pos, A_lvl.idx, A_lvl.val), (Environment)(; )),)
+end
