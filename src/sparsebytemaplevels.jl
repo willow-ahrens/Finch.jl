@@ -189,7 +189,7 @@ function assemble_level!(lvl::VirtualSparseBytemapLevel, ctx, pos_start, pos_sto
     q_stop = ctx.freshen(lvl.ex, :q_stop)
     q = ctx.freshen(lvl.ex, :q)
 
-    push!(ctx.preamble, quote
+    quote
         $q_start = ($(ctx(pos_start)) - $(Tp(1))) * $(ctx(lvl.I)) + $(Tp(1))
         $q_stop = $(ctx(pos_stop)) * $(ctx(lvl.I))
         $resize_if_smaller!($(lvl.ex).pos, $pos_stop + 1)
@@ -197,7 +197,7 @@ function assemble_level!(lvl::VirtualSparseBytemapLevel, ctx, pos_start, pos_sto
         $resize_if_smaller!($(lvl.ex).tbl, $q_stop)
         $fill_range!($(lvl.ex).tbl, false, $q_start, $q_stop)
         $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(q_start, lvl.Tp), value(q_stop, lvl.Tp)), ctx))
-    end)
+    end
 end
 
 function freeze_level!(lvl::VirtualSparseBytemapLevel, ctx::LowerJulia, pos_stop)

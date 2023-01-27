@@ -57,20 +57,16 @@ isstructequal(a::T, b::T) where {T <: Fiber} =
     isstructequal(a.lvl, b.lvl) &&
     isstructequal(a.env, b.env)
 
-#=
 isstructequal(a::T, b::T)  where {T <: Pattern} = true
-=#
 
 isstructequal(a::T, b::T) where {T <: Element} =
     a.val == b.val
 
-#=
 isstructequal(a::T, b::T) where {T <: RepeatRLE} =
     a.I == b.I &&
     a.pos == b.pos &&
     a.idx == b.idx &&
     a.val == b.val
-=#
 
 isstructequal(a::T, b::T) where {T <: Dense} =
     a.I == b.I &&

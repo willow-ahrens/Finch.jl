@@ -58,8 +58,8 @@ initialize_level!(lvl::VirtualPatternLevel, ctx, pos) = lvl
 
 freeze_level!(lvl::VirtualPatternLevel, ctx, pos) = lvl
 
-assemble_level!(lvl::VirtualPatternLevel, ctx, pos_start, pos_stop) = lvl
-reassemble_level!(lvl::VirtualPatternLevel, ctx, pos_start, pos_stop) = lvl
+assemble_level!(lvl::VirtualPatternLevel, ctx, pos_start, pos_stop) = quote end
+reassemble_level!(lvl::VirtualPatternLevel, ctx, pos_start, pos_stop) = quote end
 
 trim_level!(lvl::VirtualPatternLevel, ctx::LowerJulia, pos) = lvl
 
@@ -80,7 +80,7 @@ function lowerjulia_access(ctx::LowerJulia, node, tns::VirtualFiber{VirtualPatte
     node.mode.kind === reader && return true
 
     push!(ctx.preamble, quote
-        $(tns.lvl.dirty) = false
+        $(tns.lvl.dirty) = true
     end)
 
     val = ctx.freshen(:null)

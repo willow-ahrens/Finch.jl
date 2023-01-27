@@ -1,1 +1,1 @@
-Fiber(Dense(5, RepeatRLE{0.0}(10, …)))
+Fiber(Dense(5, RepeatRLE{0.0}(10, …)), Env())
