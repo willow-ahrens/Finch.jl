@@ -58,7 +58,7 @@ include("sparsevbllevels.jl")
 include("denselevels.jl")
 include("repeatrlelevels.jl")
 include("elementlevels.jl")
-#include("patternlevels.jl")
+include("patternlevels.jl")
 
 include("permit.jl")
 include("offset.jl")

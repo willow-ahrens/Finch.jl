@@ -1,6 +1,6 @@
 @testset "conversions" begin
     for base in [
-        #Pattern,
+        Pattern,
         Element{false},
     ]
         #=
