@@ -38,7 +38,7 @@ end
 #    prgm = prgm.body
 #    quote
 #        $(contain(ctx) do ctx_3
-#            prgm = Initialize(ctx = ctx_3)(prgm)
+#            prgm = OpenScope(ctx = ctx_3)(prgm)
 #            ctx_3(prgm)
 #        end)
 #        $(contain(ctx) do ctx_3
@@ -63,14 +63,14 @@ function execute_code(ex, T, algebra = DefaultAlgebra())
                     prgm = TransformSSA(Freshen())(prgm)
                     prgm = ThunkVisitor(ctx_2)(prgm) #TODO this is a bit of a hack.
                     (prgm, dims) = dimensionalize!(prgm, ctx_2)
-                    prgm = Initialize(ctx = ctx_2)(prgm)
+                    prgm = OpenScope(ctx = ctx_2)(prgm)
                     prgm = ThunkVisitor(ctx_2)(prgm) #TODO this is a bit of a hack.
                     prgm = simplify(prgm, ctx_2)
                     ctx_2(prgm)
                 end
             end)
             $(contain(ctx) do ctx_2
-                prgm = Freeze(ctx = ctx_2)(prgm)
+                prgm = CloseScope(ctx = ctx_2)(prgm)
                 :(($(map(getresults(prgm)) do acc
                     @assert acc.tns.kind === virtual
                     name = getname(acc)
@@ -124,19 +124,19 @@ macro finch_code(args_ex...)
 end
 
 """
-    Initialize(ctx)
+    OpenScope(ctx)
 
 A transformation to initialize tensors that have just entered into scope.
 
 See also: [`initialize!`](@ref)
 """
-@kwdef struct Initialize{Ctx}
+@kwdef struct OpenScope{Ctx}
     ctx::Ctx
     target=nothing
     escape=[]
 end
 initialize!(tns, ctx, mode, idxs...) = access(tns, mode, idxs...)
-function (ctx::Initialize)(node)
+function (ctx::OpenScope)(node)
     if istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))
     else
@@ -144,7 +144,7 @@ function (ctx::Initialize)(node)
     end
 end
 
-function (ctx::Initialize)(node::IndexNode)
+function (ctx::OpenScope)(node::IndexNode)
     if node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
         if (ctx.target === nothing || (getname(node.tns) in ctx.target)) && !(getname(node.tns) in ctx.escape)
             initialize!(node.tns.val, ctx.ctx, node.mode, map(ctx, node.idxs)...)
@@ -152,7 +152,7 @@ function (ctx::Initialize)(node::IndexNode)
             return access(node.tns, node.mode, map(ctx, node.idxs)...)
         end
     elseif node.kind === with
-        ctx_2 = Initialize(ctx.ctx, ctx.target, union(ctx.escape, map(getname, getresults(node.prod))))
+        ctx_2 = OpenScope(ctx.ctx, ctx.target, union(ctx.escape, map(getname, getresults(node.prod))))
         with(ctx_2(node.cons), ctx_2(node.prod))
     elseif istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))
@@ -162,20 +162,20 @@ function (ctx::Initialize)(node::IndexNode)
 end
 
 """
-    Freeze(ctx)
+    CloseScope(ctx)
 
 A transformation to freeze output tensors before they leave scope and are
 returned to the caller.
 
 See also: [`freeze!`](@ref)
 """
-@kwdef struct Freeze{Ctx}
+@kwdef struct CloseScope{Ctx}
     ctx::Ctx
     target=nothing
     escape=[]
 end
 freeze!(tns, ctx, mode, idxs...) = tns
-function (ctx::Freeze)(node)
+function (ctx::CloseScope)(node)
     if istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))
     else
@@ -183,7 +183,7 @@ function (ctx::Freeze)(node)
     end
 end
 
-function (ctx::Freeze)(node::IndexNode)
+function (ctx::CloseScope)(node::IndexNode)
     if node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
         if (ctx.target === nothing || (getname(node.tns) in ctx.target)) && !(getname(node.tns) in ctx.escape)
             access(freeze!(node.tns.val, ctx.ctx, node.mode, node.idxs...), node.mode, node.idxs...)
@@ -191,7 +191,7 @@ function (ctx::Freeze)(node::IndexNode)
             access(node.tns, node.mode, map(ctx, node.idxs)...)
         end
     elseif node.kind === with
-        ctx_2 = Freeze(ctx.ctx, ctx.target, union(ctx.escape, map(getname, getresults(node.prod))))
+        ctx_2 = CloseScope(ctx.ctx, ctx.target, union(ctx.escape, map(getname, getresults(node.prod))))
         with(ctx_2(node.cons), ctx_2(node.prod))
     elseif istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))

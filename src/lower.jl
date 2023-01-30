@@ -203,14 +203,14 @@ function (ctx::LowerJulia)(root::IndexNode, ::DefaultStyle)
         target = map(getname, getresults(root.prod))
         return quote
             $(contain(ctx) do ctx_2
-                prod = Initialize(ctx = ctx_2, target=target)(root.prod)
+                prod = OpenScope(ctx = ctx_2, target=target)(root.prod)
                 (ctx_2)(prod)
             end)
             $(contain(ctx) do ctx_2
-                Freeze(ctx = ctx_2, target=target)(prod)
-                cons = Initialize(ctx = ctx_2, target=target)(root.cons)
+                CloseScope(ctx = ctx_2, target=target)(prod)
+                cons = OpenScope(ctx = ctx_2, target=target)(root.cons)
                 res = (ctx_2)(cons)
-                Freeze(ctx = ctx_2, target=target)(cons)
+                CloseScope(ctx = ctx_2, target=target)(cons)
                 res
             end)
         end
