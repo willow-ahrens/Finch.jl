@@ -26,13 +26,11 @@ function virtualize(ex, ::Type{<:AbstractArray{T, N}}, ctx, tag=:tns) where {T, 
     VirtualAbstractArray(T, N, tag, sym)
 end
 
-function initialize!(arr::VirtualAbstractArray, ctx::LowerJulia, mode, idxs...)
-    if mode.kind === updater && mode.mode.kind === create
-        push!(ctx.preamble, quote
-            fill!($(arr.ex), 0) #TODO
-        end)
-    end
-    access(arr, mode, idxs...)
+function initialize!(arr::VirtualAbstractArray, ctx::LowerJulia)
+    push!(ctx.preamble, quote
+        fill!($(arr.ex), 0) #TODO
+    end)
+    arr
 end
 
 IndexNotation.isliteral(::VirtualAbstractArray) =  false

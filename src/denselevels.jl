@@ -129,34 +129,28 @@ function freeze_level!(lvl::VirtualDenseLevel, ctx::LowerJulia, pos)
     return lvl
 end
 
-function unfurl(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode, ::Nothing, idx::IndexNode, idxs...)
-    if idx.kind === protocol
-        @assert idx.mode.kind === literal
-        unfurl(fbr, ctx, mode, idx.mode.val, idx.idx, idxs...)
-    else
-        unfurl(fbr, ctx, mode, follow, idx, idxs...)
-    end
-end
-
 set_clean!(lvl::VirtualDenseLevel, ctx) = set_clean!(lvl.lvl, ctx)
 get_dirty(lvl::VirtualDenseLevel, ctx) = get_dirty(lvl.lvl, ctx)
 
-function unfurl(fbr::VirtualFiber{VirtualDenseLevel}, ctx, mode, ::Union{Follow, Laminate, Extrude}, idx, idxs...) #TODO should protocol be strict?
-    lvl = fbr.lvl
+get_level_reader(lvl::VirtualDenseLevel, ctx, p, protos...) = 
+    get_level_updater(lvl, ctx, p, protos...)
+function get_level_updater(lvl::VirtualDenseLevel, ctx, p, ::Union{Nothing, Follow, Laminate, Extrude}, protos...)
     tag = lvl.ex
     Ti = lvl.Ti
 
-    p = envposition(fbr.env)
     q = ctx.freshen(tag, :_q)
-    body = Lookup(
-        val = virtual_default(fbr),
-        body = (i) -> Thunk(
-            preamble = quote
-                $q = ($(ctx(p)) - $(Ti(1))) * $(ctx(lvl.I)) + $(ctx(i))
-            end,
-            body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(q, lvl.Ti), index=i, parent=fbr.env)), ctx, mode),
+
+    Furlable(
+        val = virtual_default(lvl),
+        size = virtual_level_size(lvl, ctx),
+        body = (ctx, idx, ext) -> Lookup(
+            val = virtual_default(fbr),
+            body = (i) -> Thunk(
+                preamble = quote
+                    $q = ($(ctx(p)) - $(Ti(1))) * $(ctx(lvl.I)) + $(ctx(i))
+                end,
+                body = get_level_reader(lvl.lvl, ctx, value(q, lvl.Ti), protos...)
+            )
         )
     )
-
-    exfurl(body, ctx, mode, idx)
 end

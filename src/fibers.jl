@@ -76,18 +76,22 @@ See also: [`initialize!`](@ref)
 function default end
 
 """
-    initialize!(fbr, ctx, mode)
+    initialize!(fbr, ctx)
 
-Initialize the virtual fiber to it's default value in the context `ctx` with
-access mode `mode`. Return the new fiber object.
+Initialize the virtual fiber to it's default value in the context `ctx`. Return the new fiber object.
 """
-function initialize!(fbr::VirtualFiber, ctx::LowerJulia, mode, idxs...)
-    if mode.kind === updater
-        lvl = initialize_level!(fbr.lvl, ctx, literal(1))
-        push!(ctx.preamble, assemble_level!(lvl, ctx, literal(1), literal(1))) #TODO this feels unnecessary?
-        fbr = VirtualFiber(lvl, fbr.env)
-    end
-    return access(refurl(fbr, ctx, mode), mode, idxs...)
+function initialize!(fbr::VirtualFiber, ctx::LowerJulia)
+    lvl = initialize_level!(fbr.lvl, ctx, literal(1))
+    push!(ctx.preamble, assemble_level!(lvl, ctx, literal(1), literal(1))) #TODO this feels unnecessary?
+    fbr = VirtualFiber(lvl, fbr.env)
+end
+
+function get_reader(fbr::VirtualFiber, ctx::LowerJulia, protos...)
+    return get_level_reader(fbr.lvl, ctx, literal(1), protos...)
+end
+
+function get_updater(fbr::VirtualFiber, ctx::LowerJulia, protos...)
+    return get_level_updater(fbr.lvl, ctx, literal(1), protos...)
 end
 
 """

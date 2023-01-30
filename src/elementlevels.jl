@@ -100,43 +100,28 @@ function reassemble_level!(lvl::VirtualElementLevel, ctx, pos_start, pos_stop)
     lvl
 end
 
-function reinitialize!(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
-    lvl = fbr.lvl
-    p_start = getstart(envposition(fbr.env))
-    p_stop = getstop(envposition(fbr.env))
-    push!(ctx.preamble, quote
-        for $p = $(ctx(p_start)):$(ctx(p_stop))
-            $(lvl.ex).val[$p] = $(lvl.D)
-        end
-    end)
-end
-
 set_clean!(lvl::VirtualElementLevel, ctx) = :($(lvl.dirty) = false)
 get_dirty(lvl::VirtualElementLevel, ctx) = value(lvl.dirty, Bool)
 
-function refurl(fbr::VirtualFiber{VirtualElementLevel}, ctx, mode)
-    lvl = fbr.lvl
+function get_level_reader(lvl::VirtualElementLevel, ctx, pos)
+    return Thunk(
+        preamble = quote
+            $(lvl.val) = $(lvl.ex).val[$(ctx(pos))]
+        end,
+        body = VirtualFiber(lvl, VirtualEnvironment(position = pos)),
+    )
+end
 
-    if mode.kind === reader
-        return Thunk(
-            preamble = quote
-                $(lvl.val) = $(lvl.ex).val[$(ctx(envposition(fbr.env)))]
-            end,
-            body = fbr,
-        )
-    elseif mode.kind === updater
-        return Thunk(
-            preamble = quote
-                $(lvl.val) = $(lvl.ex).val[$(ctx(envposition(fbr.env)))]
-            end,
-            body = fbr,
-            epilogue = quote
-                $(lvl.ex).val[$(ctx(envposition(fbr.env)))] = $(lvl.val)
-            end,
-        )
-    else
-        error("unimplemented")
-    end
+function get_level_updater(lvl::VirtualElementLevel, ctx, pos)
+    return Thunk(
+        preamble = quote
+            $(lvl.val) = $(lvl.ex).val[$(ctx(pos))]
+        end,
+        body = VirtualFiber(lvl, VirtualEnvironment(position = pos)),
+        epilogue = quote
+            $(lvl.ex).val[$(ctx(pos))] = $(lvl.val)
+        end,
+    )
 end
 
 function lowerjulia_access(ctx::Finch.LowerJulia, node, tns::VirtualFiber{VirtualElementLevel})

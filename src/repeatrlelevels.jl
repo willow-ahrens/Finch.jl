@@ -181,19 +181,7 @@ function freeze_level!(lvl::VirtualRepeatRLELevel, ctx::LowerJulia, pos_stop)
     return lvl
 end
 
-function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode, ::Nothing, idx, idxs...)
-    if idx.kind === protocol
-        @assert idx.mode.kind === literal
-        unfurl(fbr, ctx, mode, idx.mode.val, idx.idx, idxs...)
-    elseif mode.kind === reader
-        unfurl(fbr, ctx, mode, walk, idx, idxs...)
-    else
-        unfurl(fbr, ctx, mode, extrude, idx, idxs...)
-    end
-end
-
-function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode, ::Walk, idx, idxs...)
-    lvl = fbr.lvl
+function get_level_reader(lvl::VirtualRepeatRLELevel, ctx, pos, ::Union{Nothing, Walk}, protos...)
     tag = lvl.ex
     Tp = lvl.Tp
     Ti = lvl.Ti
@@ -204,49 +192,50 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode, ::Walk, idx
 
     @assert isempty(idxs)
 
-    body = Thunk(
-        preamble = (quote
-            $my_q = $(lvl.ex).pos[$(ctx(envposition(fbr.env)))]
-            $my_q_stop = $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + $(Tp(1))]
-            #TODO I think this if is only ever true
-            if $my_q < $my_q_stop
-                $my_i = $(lvl.ex).idx[$my_q]
-                $my_i1 = $(lvl.ex).idx[$my_q_stop - $(Tp(1))]
-            else
-                $my_i = $(Ti(1))
-                $my_i1 = $(Ti(0))
-            end
-        end),
-        body = Stepper(
-            seek = (ctx, ext) -> quote
-                while $my_q + $(Tp(1)) < $my_q_stop && $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
-                    $my_q += $(Tp(1))
-                end
-            end,
-            body = Thunk(
-                preamble = :(
+    Furlable(
+        size = virtual_level_size(lvl, ctx),
+        body = (ctx, idx, ext) -> Thunk(
+            preamble = (quote
+                $my_q = $(lvl.ex).pos[$(ctx(pos))]
+                $my_q_stop = $(lvl.ex).pos[$(ctx(pos)) + $(Tp(1))]
+                #TODO I think this if is only ever true
+                if $my_q < $my_q_stop
                     $my_i = $(lvl.ex).idx[$my_q]
-                ),
-                body = Step(
-                    stride = (ctx, idx, ext) -> value(my_i),
-                    chunk = Run(
-                        body = Simplify(Fill(value(:($(lvl.ex).val[$my_q]), lvl.Tv))) #TODO Flesh out fill to assert ndims and handle writes
-                    ),
-                    next = (ctx, idx, ext) -> quote
+                    $my_i1 = $(lvl.ex).idx[$my_q_stop - $(Tp(1))]
+                else
+                    $my_i = $(Ti(1))
+                    $my_i1 = $(Ti(0))
+                end
+            end),
+            body = Stepper(
+                seek = (ctx, ext) -> quote
+                    while $my_q + $(Tp(1)) < $my_q_stop && $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
                         $my_q += $(Tp(1))
                     end
+                end,
+                body = Thunk(
+                    preamble = :(
+                        $my_i = $(lvl.ex).idx[$my_q]
+                    ),
+                    body = Step(
+                        stride = (ctx, idx, ext) -> value(my_i),
+                        chunk = Run(
+                            body = Simplify(Fill(value(:($(lvl.ex).val[$my_q]), lvl.Tv))) #TODO Flesh out fill to assert ndims and handle writes
+                        ),
+                        next = (ctx, idx, ext) -> quote
+                            $my_q += $(Tp(1))
+                        end
+                    )
                 )
             )
         )
     )
-
-    exfurl(body, ctx, mode, idx)
 end
 
-set_clean!(lvl::VirtualSparseListLevel, ctx) = :($(lvl.dirty) = false)
-get_dirty(lvl::VirtualSparseListLevel, ctx) = value(lvl.dirty, Bool)
+set_clean!(lvl::VirtualRepeatRLELevel, ctx) = :($(lvl.dirty) = false)
+get_dirty(lvl::VirtualRepeatRLELevel, ctx) = value(lvl.dirty, Bool)
 
-function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode, ::Extrude, idx, idxs...)
+function get_level_updater(lvl::VirtualRepeatRLELevel, ctx, pos, ::Union{Nothing, Extrude})
     lvl = fbr.lvl
     tag = lvl.ex
     Tp = lvl.Tp
@@ -282,46 +271,48 @@ function unfurl(fbr::VirtualFiber{VirtualRepeatRLELevel}, ctx, mode, ::Extrude, 
         end
     end
     
-    push!(ctx.preamble, quote
-        $my_q = $(lvl.ros_fill) + $(ctx(envposition(fbr.env)))
-        $my_i_prev = $(Ti(0))
-        $my_v_prev = $D
-    end)
-
-    body = AcceptRun(
-        val = D,
-        body = (ctx, start, stop) -> Thunk(
+    Furlable(
+        val = virtual_default(lvl),
+        size = virtual_level_size(lvl, ctx),
+        body = (ctx, idx, ext) -> Thunk(
             preamble = quote
-                if $my_v_prev != $D && ($my_i_prev + 1) < $(ctx(start))
-                    $(lvl.dirty) = true
-                    $(record_run(ctx, my_i_prev, my_v_prev))
-                    $my_v_prev = $D
-                end
-                $my_i_prev = $(ctx(start)) - $(Ti(1))
-                $my_v = $D
+                $my_q = $(lvl.ros_fill) + $(ctx(pos))
+                $my_i_prev = $(Ti(0))
+                $my_v_prev = $D
             end,
-            body = Simplify(Fill(value(my_v, lvl.Tv), D)),
+            body = AcceptRun(
+                val = D,
+                body = (ctx, start, stop) -> Thunk(
+                    preamble = quote
+                        if $my_v_prev != $D && ($my_i_prev + 1) < $(ctx(start))
+                            $(lvl.dirty) = true
+                            $(record_run(ctx, my_i_prev, my_v_prev))
+                            $my_v_prev = $D
+                        end
+                        $my_i_prev = $(ctx(start)) - $(Ti(1))
+                        $my_v = $D
+                    end,
+                    body = Simplify(Fill(value(my_v, lvl.Tv), D)),
+                    epilogue = quote
+                        if $my_v_prev != $my_v && $my_i_prev > 0
+                            $(record_run(ctx, my_i_prev, my_v_prev))
+                        end
+                        $my_v_prev = $my_v
+                        $my_i_prev = $(ctx(stop))
+                    end
+                )
+            ),
             epilogue = quote
-                if $my_v_prev != $my_v && $my_i_prev > 0
-                    $(record_run(ctx, my_i_prev, my_v_prev))
+                if $my_v_prev != $D
+                    if $my_i_prev < $(ctx(lvl.I))
+                        $(record_run(ctx, my_i_prev, my_v_prev))
+                    else
+                        $(record_run(ctx, lvl.I, my_v_prev))
+                    end
                 end
-                $my_v_prev = $my_v
-                $my_i_prev = $(ctx(stop))
+                $(lvl.ex).pos[$(ctx(pos)) + $(Tp(1))] += ($my_q - ($(lvl.ros_fill) + $(ctx(pos))))
+                $(lvl.ros_fill) += $my_q - ($(lvl.ros_fill) + $(ctx(pos)))
             end
         )
     )
-
-    push!(ctx.epilogue, quote
-        if $my_v_prev != $D
-            if $my_i_prev < $(ctx(lvl.I))
-                $(record_run(ctx, my_i_prev, my_v_prev))
-            else
-                $(record_run(ctx, lvl.I, my_v_prev))
-            end
-        end
-        $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + $(Tp(1))] += ($my_q - ($(lvl.ros_fill) + $(ctx(envposition(fbr.env)))))
-        $(lvl.ros_fill) += $my_q - ($(lvl.ros_fill) + $(ctx(envposition(fbr.env))))
-    end)
-
-    exfurl(body, ctx, mode, idx)
 end

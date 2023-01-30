@@ -135,7 +135,7 @@ See also: [`initialize!`](@ref)
     target=nothing
     escape=[]
 end
-initialize!(tns, ctx, mode, idxs...) = access(tns, mode, idxs...)
+initialize!(tns, ctx) = tns
 function (ctx::OpenScope)(node)
     if istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))
@@ -147,9 +147,16 @@ end
 function (ctx::OpenScope)(node::IndexNode)
     if node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
         if (ctx.target === nothing || (getname(node.tns) in ctx.target)) && !(getname(node.tns) in ctx.escape)
-            initialize!(node.tns.val, ctx.ctx, node.mode, map(ctx, node.idxs)...)
+            tns = initialize!(node.tns.val, ctx.ctx)
         else
-            return access(node.tns, node.mode, map(ctx, node.idxs)...)
+            tns = node.tns
+        end
+        protos = map(idx -> idx.kind === protocol ? idx.val : nothing, node.idxs)
+        idxs = map(idx -> idx.kind === protocol ? ctx(idx.idx) : ctx(idx), node.idxs)
+        if node.mode.kind === reader
+            return access(get_reader(tns, ctx.ctx, protos...), node.mode, idxs...)
+        else
+            return access(get_updater(tns, ctx.ctx, protos...), node.mode, idxs...)
         end
     elseif node.kind === with
         ctx_2 = OpenScope(ctx.ctx, ctx.target, union(ctx.escape, map(getname, getresults(node.prod))))
