@@ -21,29 +21,4 @@ begin
     while i <= A_lvl.I
         i_start = i
         A_lvl_i = A_lvl.idx[A_lvl_q]
-        phase_stop = (min)(A_lvl.I, A_lvl_i)
-        i = i
-        if A_lvl_i == phase_stop
-            for i_2 = i_start:phase_stop
-                B_lvl_q = (1 - 1) * A_lvl.I + i_2
-                B_lvl_2_val = B_lvl_2.val[B_lvl_q]
-                B_lvl_2_dirty = true
-                B_lvl_2_val = A_lvl.val[A_lvl_q]
-                B_lvl_2.val[B_lvl_q] = B_lvl_2_val
-            end
-            A_lvl_q += 1
-        else
-            for i_3 = i_start:phase_stop
-                B_lvl_q = (1 - 1) * A_lvl.I + i_3
-                B_lvl_2_val = B_lvl_2.val[B_lvl_q]
-                B_lvl_2_dirty = true
-                B_lvl_2_val = A_lvl.val[A_lvl_q]
-                B_lvl_2.val[B_lvl_q] = B_lvl_2_val
-            end
-        end
-        i = phase_stop + 1
-    end
-    qos = 1 * A_lvl.I
-    resize!(B_lvl_2.val, qos)
-    (B = Fiber((Finch.DenseLevel){Int64}(A_lvl.I, B_lvl_2), (Environment)(; )),)
-end
+        phase_stop = (

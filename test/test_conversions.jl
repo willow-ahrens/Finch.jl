@@ -79,7 +79,7 @@
             () -> SparseList(base()),
             () -> SparseVBL(base()),
             () -> SparseBytemap(base()),
-            #() -> SparseHash{1}(base()),
+            () -> SparseHash{1}(base()),
             () -> SparseCoo{1}(base()),
         ]
             for arr in [
@@ -126,7 +126,7 @@
 
         for outer in [
             () -> SparseCoo{2}(base()),
-            #() -> SparseHash{2}(base())
+            () -> SparseHash{2}(base())
         ]
 
             for (arr_key, arr) in [
