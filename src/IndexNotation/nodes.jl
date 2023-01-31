@@ -453,6 +453,16 @@ function Finch.getunbound(ex::IndexNode)
     end
 end
 
+function Base.show(io::IO, node::IndexNode) 
+    if node.kind === literal || node.kind == index || node.kind === virtual
+        print(io, node.kind, "(", node.val, ")")
+    elseif node.kind === value
+        print(io, node.kind, "(", node.val, ", ", node.type, ")")
+    else
+        print(io, node.kind, "("); join(io, node.children, ", "); print(io, ")")
+    end
+end
+
 function Base.show(io::IO, mime::MIME"text/plain", node::IndexNode) 
     if isstateful(node)
         display_statement(io, mime, node, 0)

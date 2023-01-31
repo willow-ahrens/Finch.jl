@@ -56,17 +56,17 @@ function execute_code(ex, T, algebra = DefaultAlgebra())
         quote
             $(begin
                 prgm = virtualize(ex, T, ctx)
+                prgm = TransformSSA(Freshen())(prgm)
+                prgm = ThunkVisitor(ctx)(prgm) #TODO this is a bit of a hack.
+                (prgm, dims) = dimensionalize!(prgm, ctx)
                 #The following call separates tensor and index names from environment symbols.
                 #TODO we might want to keep the namespace around, and/or further stratify index
                 #names from tensor names
                 contain(ctx) do ctx_2
-                    prgm = TransformSSA(Freshen())(prgm)
-                    prgm = ThunkVisitor(ctx_2)(prgm) #TODO this is a bit of a hack.
-                    (prgm, dims) = dimensionalize!(prgm, ctx_2)
-                    prgm = OpenScope(ctx = ctx_2)(prgm)
-                    prgm = ThunkVisitor(ctx_2)(prgm) #TODO this is a bit of a hack.
-                    prgm = simplify(prgm, ctx_2)
-                    ctx_2(prgm)
+                    prgm2 = OpenScope(ctx = ctx_2)(prgm)
+                    prgm2 = ThunkVisitor(ctx_2)(prgm2) #TODO this is a bit of a hack.
+                    prgm2 = simplify(prgm2, ctx_2)
+                    ctx_2(prgm2)
                 end
             end)
             $(contain(ctx) do ctx_2
@@ -135,7 +135,9 @@ See also: [`initialize!`](@ref)
     target=nothing
     escape=[]
 end
-initialize!(tns, ctx, mode, idxs...) = access(tns, mode, idxs...)
+initialize!(tns, ctx) = tns
+get_reader(tns, ctx, protos...) = tns
+get_updater(tns, ctx, protos...) = tns
 function (ctx::OpenScope)(node)
     if istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))
@@ -147,9 +149,17 @@ end
 function (ctx::OpenScope)(node::IndexNode)
     if node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
         if (ctx.target === nothing || (getname(node.tns) in ctx.target)) && !(getname(node.tns) in ctx.escape)
-            initialize!(node.tns.val, ctx.ctx, node.mode, map(ctx, node.idxs)...)
+            protos = map(idx -> idx.kind === protocol ? idx.mode.val : nothing, node.idxs)
+            idxs = map(idx -> idx.kind === protocol ? ctx(idx.idx) : ctx(idx), node.idxs)
+            if node.mode.kind === reader
+                tns = node.tns.val
+                return access(get_reader(tns, ctx.ctx, protos...), node.mode, idxs...)
+            else
+                tns = initialize!(node.tns.val, ctx.ctx)
+                return access(get_updater(tns, ctx.ctx, protos...), node.mode, idxs...)
+            end
         else
-            return access(node.tns, node.mode, map(ctx, node.idxs)...)
+            return access(ctx(node.tns), node.mode, map(ctx, node.idxs)...)
         end
     elseif node.kind === with
         ctx_2 = OpenScope(ctx.ctx, ctx.target, union(ctx.escape, map(getname, getresults(node.prod))))

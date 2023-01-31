@@ -42,10 +42,12 @@ end
 
 @kwdef struct Furlable
     name = gensym()
+    val = nothing
     size
     body
 end
 
+virtual_default(tns::Furlable) = something(tns.val)
 virtual_size(tns::Furlable, ::LowerJulia) = tns.size
 getname(tns::Furlable) = tns.name
 
@@ -86,7 +88,8 @@ function chunkify_access(node, ctx, tns::Furlable)
     if !isempty(node.idxs)
         if ctx.idx == get_furl_root(node.idxs[1])
             idxs = map(ctx, node.idxs)
-            return access(tns.body(ctx.ctx, ctx.idx, ctx.ext), node.mode, get_furl_root(node.idxs[1]), idxs[2:end]...)
+            tns = exfurl(tns.body(ctx.ctx, ctx.idx, ctx.ext), ctx, node.mode, node.idxs[1])
+            return access(tns, node.mode, get_furl_root(node.idxs[1]), idxs[2:end]...)
         else
             idxs = map(ctx, node.idxs)
             return access(node.tns, node.mode, idxs...)
@@ -110,7 +113,7 @@ Finch.getname(::DiagMask) = gensym()
 Finch.setname(::DiagMask, name) = diagmask
 Finch.virtual_size(::DiagMask, ctx) = (nodim, nodim)
 
-function initialize!(::DiagMask, ctx, mode, idxs...)
+function get_reader(::DiagMask, ctx, protos...)
     tns = Furlable(
         size = (nodim, nodim),
         body = (ctx, idx, ext) -> Lookup(
@@ -130,7 +133,6 @@ function initialize!(::DiagMask, ctx, mode, idxs...)
             )
         )
     )
-    return access(tns, mode, idxs...)
 end
 
 struct LoTriMask end
@@ -148,7 +150,7 @@ Finch.getname(::LoTriMask) = gensym()
 Finch.setname(::LoTriMask, name) = lotrimask
 Finch.virtual_size(::LoTriMask, ctx) = (nodim, nodim)
 
-function initialize!(::LoTriMask, ctx, mode, idxs...)
+function get_reader(::LoTriMask, ctx, protos...)
     tns = Furlable(
         size = (nodim, nodim),
         body = (ctx, idx, ext) -> Lookup(
@@ -166,7 +168,6 @@ function initialize!(::LoTriMask, ctx, mode, idxs...)
             )
         )
     )
-    return access(tns, mode, idxs...)
 end
 
 struct UpTriMask end
@@ -184,7 +185,7 @@ Finch.getname(::UpTriMask) = gensym()
 Finch.setname(::UpTriMask, name) = uptrimask
 Finch.virtual_size(::UpTriMask, ctx) = (nodim, nodim)
 
-function initialize!(::UpTriMask, ctx, mode, idxs...)
+function get_reader(::UpTriMask, ctx, protos...)
     tns = Furlable(
         size = (nodim, nodim),
         body = (ctx, idx, ext) -> Lookup(
@@ -202,7 +203,6 @@ function initialize!(::UpTriMask, ctx, mode, idxs...)
             )
         )
     )
-    return access(tns, mode, idxs...)
 end
 
 struct BandMask end
@@ -220,7 +220,7 @@ Finch.getname(::BandMask) = gensym()
 Finch.setname(::BandMask, name) = bandmask
 Finch.virtual_size(::BandMask, ctx) = (nodim, nodim, nodim)
 
-function initialize!(::BandMask, ctx, mode, idxs...)
+function get_reader(::BandMask, ctx, mode, protos...)
     tns = Furlable(
         size = (nodim, nodim, nodim),
         body = (ctx, idx, ext) -> Lookup(
@@ -247,5 +247,4 @@ function initialize!(::BandMask, ctx, mode, idxs...)
             )
         )
     )
-    return access(tns, mode, idxs...)
 end

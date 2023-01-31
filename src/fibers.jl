@@ -76,18 +76,22 @@ See also: [`initialize!`](@ref)
 function default end
 
 """
-    initialize!(fbr, ctx, mode)
+    initialize!(fbr, ctx)
 
-Initialize the virtual fiber to it's default value in the context `ctx` with
-access mode `mode`. Return the new fiber object.
+Initialize the virtual fiber to it's default value in the context `ctx`. Return the new fiber object.
 """
-function initialize!(fbr::VirtualFiber, ctx::LowerJulia, mode, idxs...)
-    if mode.kind === updater
-        lvl = initialize_level!(fbr.lvl, ctx, literal(1))
-        push!(ctx.preamble, assemble_level!(lvl, ctx, literal(1), literal(1))) #TODO this feels unnecessary?
-        fbr = VirtualFiber(lvl, fbr.env)
-    end
-    return access(refurl(fbr, ctx, mode), mode, idxs...)
+function initialize!(fbr::VirtualFiber, ctx::LowerJulia)
+    lvl = initialize_level!(fbr.lvl, ctx, literal(1))
+    push!(ctx.preamble, assemble_level!(lvl, ctx, literal(1), literal(1))) #TODO this feels unnecessary?
+    fbr = VirtualFiber(lvl, fbr.env)
+end
+
+function get_reader(fbr::VirtualFiber, ctx::LowerJulia, protos...)
+    return get_level_reader(fbr.lvl, ctx, literal(1), protos...)
+end
+
+function get_updater(fbr::VirtualFiber, ctx::LowerJulia, protos...)
+    return get_level_updater(fbr.lvl, ctx, literal(1), protos...)
 end
 
 """
@@ -136,44 +140,6 @@ trim!(fbr, ctx) = fbr
 set_clean!(lvl, ctx) = quote end
 get_dirty(lvl, ctx) = true
 
-function stylize_access(node, ctx::Stylize{LowerJulia}, tns::VirtualFiber)
-    if !isempty(node.idxs)
-        if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
-            return SelectStyle()
-        elseif ctx.root isa IndexNode && ctx.root.kind === loop && ctx.root.idx == get_furl_root(node.idxs[1])
-            return ChunkStyle()
-        end
-    end
-    return DefaultStyle()
-end
-
-function select_access(node, ctx::Finch.SelectVisitor, tns::VirtualFiber)
-    if !isempty(node.idxs)
-        if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
-            var = index(ctx.ctx.freshen(:s))
-            val = cache!(ctx.ctx, :s, node.idxs[1])
-            ctx.idxs[var] = val
-            ext = first(virtual_size(tns, ctx.ctx))
-            ext_2 = Extent(val, val)
-            tns_2 = truncate(tns, ctx.ctx, ext, ext_2)
-            return access(tns_2, node.mode, var, node.idxs[2:end]...)
-        end
-    end
-    return similarterm(node, operation(node), map(ctx, arguments(node)))
-end
-
-function chunkify_access(node, ctx, tns::VirtualFiber)
-    if !isempty(node.idxs)
-        if ctx.idx == get_furl_root(node.idxs[1])
-            idxs = map(ctx, node.idxs)
-            return access(unfurl(tns, ctx.ctx, node.mode, nothing, node.idxs...), node.mode, get_furl_root(node.idxs[1]), idxs[2:end]...)
-        else
-            idxs = map(ctx, node.idxs)
-            return access(node.tns, node.mode, idxs...)
-        end
-    end
-    return node
-end
 
 get_furl_root(idx) = nothing
 function get_furl_root(idx::IndexNode)

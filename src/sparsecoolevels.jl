@@ -262,7 +262,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode, ::Walk, idx
                             body = Step(
                                 stride =  (ctx, idx, ext) -> value(my_i),
                                 chunk = Spike(
-                                    body = Simplify(Fill(virtual_default(fbr))),
+                                    body = Simplify(Fill(virtual_level_default(lvl))),
                                     tail = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, lvl.Tp), index=value(my_i, lvl.Ti), parent=fbr.env)), ctx, mode),
                                 ),
                                 next = (ctx, idx, ext) -> quote
@@ -282,7 +282,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode, ::Walk, idx
                             body = Step(
                                 stride = (ctx, idx, ext) -> value(my_i),
                                 chunk = Spike(
-                                    body = Simplify(Fill(virtual_default(fbr))),
+                                    body = Simplify(Fill(virtual_level_default(lvl))),
                                     tail = refurl(VirtualFiber(lvl, VirtualEnvironment(start=value(my_q, lvl.Ti), stop=value(my_q_step, lvl.Ti), index=value(my_i, lvl.Ti), parent=fbr.env, internal=true)), ctx, mode),
                                 ),
                                 next = (ctx, idx, ext) -> quote
@@ -294,7 +294,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode, ::Walk, idx
                 )
             ),
             Phase(
-                body = (start, step) -> Run(Simplify(Fill(virtual_default(fbr))))
+                body = (start, step) -> Run(Simplify(Fill(virtual_level_default(lvl))))
             )
         ])
     )
@@ -325,7 +325,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode, ::Extrude, 
 
     if R == lvl.N
         body = AcceptSpike(
-            val = virtual_default(fbr),
+            val = virtual_level_default(lvl),
             tail = (ctx, idx) -> Thunk(
                 preamble = quote
                     if $qos > $qos_stop
@@ -351,7 +351,7 @@ function unfurl(fbr::VirtualFiber{VirtualSparseCooLevel}, ctx, mode, ::Extrude, 
         )
     else
         body = Lookup(
-            val = virtual_default(fbr),
+            val = virtual_level_default(lvl),
             body = (i) -> refurl(VirtualFiber(lvl, VirtualEnvironment(index=i, qos=qos, parent=fbr.env, internal=true)), ctx, mode)
         )
     end

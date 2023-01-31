@@ -196,19 +196,7 @@ function freeze_level!(lvl::VirtualSparseVBLLevel, ctx::LowerJulia, pos_stop)
     return lvl
 end
 
-function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode, ::Nothing, idx, idxs...)
-    if idx.kind === protocol
-        @assert idx.mode.kind === literal
-        unfurl(fbr, ctx, mode, idx.mode.val, idx.idx, idxs...)
-    elseif mode.kind === reader
-        unfurl(fbr, ctx, mode, walk, idx, idxs...)
-    else
-        unfurl(fbr, ctx, mode, extrude, idx, idxs...)
-    end
-end
-
-function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode, ::Walk, idx, idxs...)
-    lvl = fbr.lvl
+function get_level_reader(lvl::VirtualSparseVBLLevel, ctx, pos, ::Union{Nothing, Walk}, protos...)
     tag = lvl.ex
     Tp = lvl.Tp
     Ti = lvl.Ti
@@ -221,124 +209,43 @@ function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode, ::Walk, idx
     my_q_ofs = ctx.freshen(tag, :_q_ofs)
     my_i1 = ctx.freshen(tag, :_i1)
 
-    body = Thunk(
-        preamble = quote
-            $my_r = $(lvl.ex).pos[$(ctx(envposition(fbr.env)))]
-            $my_r_stop = $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + $(Tp(1))]
-            if $my_r < $my_r_stop
-                $my_i = $(lvl.ex).idx[$my_r]
-                $my_i1 = $(lvl.ex).idx[$my_r_stop - $(Tp(1))]
-            else
-                $my_i = $(Ti(1))
-                $my_i1 = $(Ti(0))
-            end
-        end,
-        body = Pipeline([
-            Phase(
-                stride = (ctx, idx, ext) -> value(my_i1),
-                body = (start, step) -> Stepper(
-                    seek = (ctx, ext) -> quote
-                        while $my_r + $(Tp(1)) < $my_r_stop && $(lvl.ex).idx[$my_r] < $(ctx(getstart(ext)))
-                            $my_r += $(Tp(1))
-                        end
-                    end,
-                    body = Thunk(
-                        preamble = quote
-                            $my_i = $(lvl.ex).idx[$my_r]
-                            $my_q_stop = $(lvl.ex).ofs[$my_r + $(Tp(1))]
-                            $my_i_start = $my_i - ($my_q_stop - $(lvl.ex).ofs[$my_r])
-                            $my_q_ofs = $my_q_stop - $my_i - $(Tp(1))
+    Furlable(
+        size = virtual_level_size(lvl, ctx),
+        body = (ctx, idx, ext) -> Thunk(
+            preamble = quote
+                $my_r = $(lvl.ex).pos[$(ctx(pos))]
+                $my_r_stop = $(lvl.ex).pos[$(ctx(pos)) + $(Tp(1))]
+                if $my_r < $my_r_stop
+                    $my_i = $(lvl.ex).idx[$my_r]
+                    $my_i1 = $(lvl.ex).idx[$my_r_stop - $(Tp(1))]
+                else
+                    $my_i = $(Ti(1))
+                    $my_i1 = $(Ti(0))
+                end
+            end,
+            body = Pipeline([
+                Phase(
+                    stride = (ctx, idx, ext) -> value(my_i1),
+                    body = (start, step) -> Stepper(
+                        seek = (ctx, ext) -> quote
+                            while $my_r + $(Tp(1)) < $my_r_stop && $(lvl.ex).idx[$my_r] < $(ctx(getstart(ext)))
+                                $my_r += $(Tp(1))
+                            end
                         end,
-                        body = Step(
-                            stride = (ctx, idx, ext) -> value(my_i),
-                            body = (ctx, idx, ext, ext_2) -> Thunk(
-                                body = Pipeline([
-                                    Phase(
-                                        stride = (ctx, idx, ext) -> value(my_i_start),
-                                        body = (start, step) -> Run(Simplify(Fill(virtual_default(fbr)))),
-                                    ),
-                                    Phase(
-                                        body = (start, step) -> Lookup(
-                                            body = (i) -> Thunk(
-                                                preamble = quote
-                                                    $my_q = $my_q_ofs + $(ctx(i))
-                                                end,
-                                                body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, lvl.Ti), index=i, parent=fbr.env)), ctx, mode),
-                                            )
-                                        )
-                                    )
-                                ]),
-                                epilogue = quote
-                                    $my_r += ($(ctx(getstop(ext_2))) == $my_i)
-                                end
-                            )
-                        )
-                    )
-                )
-            ),
-            Phase(
-                body = (start, step) -> Run(Simplify(Fill(virtual_default(fbr))))
-            )
-        ])
-    )
-
-    exfurl(body, ctx, mode, idx)
-end
-
-function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode, ::Gallop, idx, idxs...)
-    lvl = fbr.lvl
-    tag = lvl.ex
-    Tp = lvl.Tp
-    Ti = lvl.Ti
-    my_i = ctx.freshen(tag, :_i)
-    my_i_start = ctx.freshen(tag, :_i)
-    my_r = ctx.freshen(tag, :_r)
-    my_r_stop = ctx.freshen(tag, :_r_stop)
-    my_q = ctx.freshen(tag, :_q)
-    my_q_stop = ctx.freshen(tag, :_q_stop)
-    my_q_ofs = ctx.freshen(tag, :_q_ofs)
-    my_i1 = ctx.freshen(tag, :_i1)
-
-    body = Thunk(
-        preamble = quote
-            $my_r = $(lvl.ex).pos[$(ctx(envposition(fbr.env)))]
-            $my_r_stop = $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + $(Tp(1))]
-            if $my_r < $my_r_stop
-                $my_i = $(lvl.ex).idx[$my_r]
-                $my_i1 = $(lvl.ex).idx[$my_r_stop - $(Tp(1))]
-            else
-                $my_i = $(Ti(1))
-                $my_i1 = $(Ti(0))
-            end
-        end,
-
-        body = Pipeline([
-            Phase(
-                stride = (ctx, idx, ext) -> value(my_i1),
-                body = (start, step) -> Jumper(
-                    body = Thunk(
-                        preamble = quote
-                            $my_i = $(lvl.ex).idx[$my_r]
-                        end,
-                        body = Jump(
-                            seek = (ctx, ext) -> quote
-                                while $my_r + $(Tp(1)) < $my_r_stop && $(lvl.ex).idx[$my_r] < $(ctx(getstart(ext)))
-                                    $my_r += $(Tp(1))
-                                end
+                        body = Thunk(
+                            preamble = quote
                                 $my_i = $(lvl.ex).idx[$my_r]
+                                $my_q_stop = $(lvl.ex).ofs[$my_r + $(Tp(1))]
+                                $my_i_start = $my_i - ($my_q_stop - $(lvl.ex).ofs[$my_r])
+                                $my_q_ofs = $my_q_stop - $my_i - $(Tp(1))
                             end,
-                            stride = (ctx, ext) -> value(my_i),
-                            body = (ctx, ext, ext_2) -> Switch([
-                                value(:($(ctx(getstop(ext_2))) == $my_i)) => Thunk(
-                                    preamble=quote
-                                        $my_q_stop = $(lvl.ex).ofs[$my_r + $(Tp(1))]
-                                        $my_i_start = $my_i - ($my_q_stop - $(lvl.ex).ofs[$my_r])
-                                        $my_q_ofs = $my_q_stop - $my_i - $(Tp(1))
-                                    end,
+                            body = Step(
+                                stride = (ctx, idx, ext) -> value(my_i),
+                                body = (ctx, idx, ext, ext_2) -> Thunk(
                                     body = Pipeline([
                                         Phase(
                                             stride = (ctx, idx, ext) -> value(my_i_start),
-                                            body = (start, step) -> Run(Simplify(Fill(virtual_default(fbr)))),
+                                            body = (start, step) -> Run(Simplify(Fill(virtual_level_default(lvl)))),
                                         ),
                                         Phase(
                                             body = (start, step) -> Lookup(
@@ -346,73 +253,154 @@ function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode, ::Gallop, i
                                                     preamble = quote
                                                         $my_q = $my_q_ofs + $(ctx(i))
                                                     end,
-                                                    body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, lvl.Ti), index=i, parent=fbr.env)), ctx, mode),
+                                                    body = get_level_reader(lvl.lvl, ctx, value(my_q, lvl.Tp), protos...),
                                                 )
                                             )
                                         )
                                     ]),
                                     epilogue = quote
+                                        $my_r += ($(ctx(getstop(ext_2))) == $my_i)
+                                    end
+                                )
+                            )
+                        )
+                    )
+                ),
+                Phase(
+                    body = (start, step) -> Run(Simplify(Fill(virtual_level_default(lvl))))
+                )
+            ])
+        )
+    )
+end
+
+function get_level_reader(lvl::VirtualSparseVBLLevel, ctx, pos, ::Gallop, protos...)
+    tag = lvl.ex
+    Tp = lvl.Tp
+    Ti = lvl.Ti
+    my_i = ctx.freshen(tag, :_i)
+    my_i_start = ctx.freshen(tag, :_i)
+    my_r = ctx.freshen(tag, :_r)
+    my_r_stop = ctx.freshen(tag, :_r_stop)
+    my_q = ctx.freshen(tag, :_q)
+    my_q_stop = ctx.freshen(tag, :_q_stop)
+    my_q_ofs = ctx.freshen(tag, :_q_ofs)
+    my_i1 = ctx.freshen(tag, :_i1)
+
+    Furlable(
+        size = virtual_level_size(lvl, ctx),
+        body = (ctx, idx, ext) -> Thunk(
+            preamble = quote
+                $my_r = $(lvl.ex).pos[$(ctx(pos))]
+                $my_r_stop = $(lvl.ex).pos[$(ctx(pos)) + $(Tp(1))]
+                if $my_r < $my_r_stop
+                    $my_i = $(lvl.ex).idx[$my_r]
+                    $my_i1 = $(lvl.ex).idx[$my_r_stop - $(Tp(1))]
+                else
+                    $my_i = $(Ti(1))
+                    $my_i1 = $(Ti(0))
+                end
+            end,
+
+            body = Pipeline([
+                Phase(
+                    stride = (ctx, idx, ext) -> value(my_i1),
+                    body = (start, step) -> Jumper(
+                        body = Thunk(
+                            preamble = quote
+                                $my_i = $(lvl.ex).idx[$my_r]
+                            end,
+                            body = Jump(
+                                seek = (ctx, ext) -> quote
+                                    while $my_r + $(Tp(1)) < $my_r_stop && $(lvl.ex).idx[$my_r] < $(ctx(getstart(ext)))
                                         $my_r += $(Tp(1))
                                     end
-                                ),
-                                literal(true) => Stepper(
-                                    seek = (ctx, ext) -> quote
-                                        while $my_r + $(Tp(1)) < $my_r_stop && $(lvl.ex).idx[$my_r] < $(ctx(getstart(ext)))
-                                            $my_r += $(Tp(1))
-                                        end
-                                    end,
-                                    body = Thunk(
-                                        preamble = quote
-                                            $my_i = $(lvl.ex).idx[$my_r]
+                                    $my_i = $(lvl.ex).idx[$my_r]
+                                end,
+                                stride = (ctx, ext) -> value(my_i),
+                                body = (ctx, ext, ext_2) -> Switch([
+                                    value(:($(ctx(getstop(ext_2))) == $my_i)) => Thunk(
+                                        preamble=quote
                                             $my_q_stop = $(lvl.ex).ofs[$my_r + $(Tp(1))]
                                             $my_i_start = $my_i - ($my_q_stop - $(lvl.ex).ofs[$my_r])
                                             $my_q_ofs = $my_q_stop - $my_i - $(Tp(1))
                                         end,
-                                        body = Step(
-                                            stride = (ctx, idx, ext) -> value(my_i),
-                                            body = (ctx, idx, ext, ext_2) -> Thunk(
-                                                body = Pipeline([
-                                                    Phase(
-                                                        stride = (ctx, idx, ext) -> value(my_i_start),
-                                                        body = (start, step) -> Run(Simplify(Fill(virtual_default(fbr)))),
-                                                    ),
-                                                    Phase(
-                                                        body = (start, step) -> Lookup(
-                                                            body = (i) -> Thunk(
-                                                                preamble = quote
-                                                                    $my_q = $my_q_ofs + $(ctx(i))
-                                                                end,
-                                                                body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(my_q, lvl.Ti), index=i, parent=fbr.env)), ctx, mode),
+                                        body = Pipeline([
+                                            Phase(
+                                                stride = (ctx, idx, ext) -> value(my_i_start),
+                                                body = (start, step) -> Run(Simplify(Fill(virtual_level_default(lvl)))),
+                                            ),
+                                            Phase(
+                                                body = (start, step) -> Lookup(
+                                                    body = (i) -> Thunk(
+                                                        preamble = quote
+                                                            $my_q = $my_q_ofs + $(ctx(i))
+                                                        end,
+                                                        body = get_level_reader(lvl.lvl, ctx, value(my_q, lvl.Tp), protos...),
+                                                    )
+                                                )
+                                            )
+                                        ]),
+                                        epilogue = quote
+                                            $my_r += $(Tp(1))
+                                        end
+                                    ),
+                                    literal(true) => Stepper(
+                                        seek = (ctx, ext) -> quote
+                                            while $my_r + $(Tp(1)) < $my_r_stop && $(lvl.ex).idx[$my_r] < $(ctx(getstart(ext)))
+                                                $my_r += $(Tp(1))
+                                            end
+                                        end,
+                                        body = Thunk(
+                                            preamble = quote
+                                                $my_i = $(lvl.ex).idx[$my_r]
+                                                $my_q_stop = $(lvl.ex).ofs[$my_r + $(Tp(1))]
+                                                $my_i_start = $my_i - ($my_q_stop - $(lvl.ex).ofs[$my_r])
+                                                $my_q_ofs = $my_q_stop - $my_i - $(Tp(1))
+                                            end,
+                                            body = Step(
+                                                stride = (ctx, idx, ext) -> value(my_i),
+                                                body = (ctx, idx, ext, ext_2) -> Thunk(
+                                                    body = Pipeline([
+                                                        Phase(
+                                                            stride = (ctx, idx, ext) -> value(my_i_start),
+                                                            body = (start, step) -> Run(Simplify(Fill(virtual_level_default(lvl)))),
+                                                        ),
+                                                        Phase(
+                                                            body = (start, step) -> Lookup(
+                                                                body = (i) -> Thunk(
+                                                                    preamble = quote
+                                                                        $my_q = $my_q_ofs + $(ctx(i))
+                                                                    end,
+                                                                    body = get_level_reader(lvl.lvl, ctx, value(my_q, lvl.Tp), protos...),
+                                                                )
                                                             )
                                                         )
-                                                    )
-                                                ]),
-                                                epilogue = quote
-                                                    $my_r += ($(ctx(getstop(ext_2))) == $my_i)
-                                                end
+                                                    ]),
+                                                    epilogue = quote
+                                                        $my_r += ($(ctx(getstop(ext_2))) == $my_i)
+                                                    end
+                                                )
                                             )
                                         )
                                     )
-                                )
-                            ])
-                        )
-                    ),
+                                ])
+                            )
+                        ),
+                    )
+                ),
+                Phase(
+                    body = (start, step) -> Run(Simplify(Fill(virtual_level_default(lvl))))
                 )
-            ),
-            Phase(
-                body = (start, step) -> Run(Simplify(Fill(virtual_default(fbr))))
-            )
-        ])
+            ])
+        )
     )
-
-    exfurl(body, ctx, mode, idx)
 end
 
 set_clean!(lvl::VirtualSparseVBLLevel, ctx) = :($(lvl.dirty) = false)
 get_dirty(lvl::VirtualSparseVBLLevel, ctx) = value(lvl.dirty, Bool)
 
-function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode, ::Extrude, idx, idxs...)
-    lvl = fbr.lvl
+function get_level_updater(lvl::VirtualSparseVBLLevel, ctx, pos, ::Union{Nothing, Extrude}, protos...)
     tag = lvl.ex
     Tp = lvl.Tp
     Ti = lvl.Ti
@@ -426,47 +414,49 @@ function unfurl(fbr::VirtualFiber{VirtualSparseVBLLevel}, ctx, mode, ::Extrude, 
     ros_fill = lvl.ros_fill
     ros_stop = lvl.ros_stop
 
-    push!(ctx.preamble, quote
-        $ros = $ros_fill
-        $qos = $qos_fill + 1
-        $my_i_prev = $(Ti(-1))
-    end)
-
-    body = AcceptSpike(
-        val = virtual_default(fbr),
-        tail = (ctx, idx) -> Thunk(
+    Furlable(
+        val = virtual_level_default(lvl),
+        size = virtual_level_size(lvl, ctx),
+        body = (ctx, idx, ext) -> Thunk(
             preamble = quote
-                if $qos > $qos_stop
-                    $qos_stop = max($qos_stop << 1, 1)
-                    $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(qos, lvl.Tp), value(qos_stop, lvl.Tp)), ctx))
-                end
-                $(set_clean!(lvl.lvl, ctx))
+                $ros = $ros_fill
+                $qos = $qos_fill + 1
+                $my_i_prev = $(Ti(-1))
             end,
-            body = refurl(VirtualFiber(lvl.lvl, VirtualEnvironment(position=value(qos, lvl.Ti), index=idx, parent=fbr.env)), ctx, mode),
-            epilogue = quote
-                if $(ctx(get_dirty(lvl.lvl, ctx)))
-                    $(lvl.dirty) = true
-                    if $(ctx(idx)) > $my_i_prev + $(Ti(1))
-                        $ros += $(Tp(1))
-                        if $ros > $ros_stop
-                            $ros_stop = max($ros_stop << 1, 1)
-                            $resize_if_smaller!($(lvl.ex).idx, $ros_stop)
-                            $resize_if_smaller!($(lvl.ex).ofs, $ros_stop + 1)
+            body = AcceptSpike(
+                val = virtual_level_default(lvl),
+                tail = (ctx, idx) -> Thunk(
+                    preamble = quote
+                        if $qos > $qos_stop
+                            $qos_stop = max($qos_stop << 1, 1)
+                            $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(qos, lvl.Tp), value(qos_stop, lvl.Tp)), ctx))
+                        end
+                        $(set_clean!(lvl.lvl, ctx))
+                    end,
+                    body = get_level_updater(lvl.lvl, ctx, value(qos, lvl.Tp), protos...),
+                    epilogue = quote
+                        if $(ctx(get_dirty(lvl.lvl, ctx)))
+                            $(lvl.dirty) = true
+                            if $(ctx(idx)) > $my_i_prev + $(Ti(1))
+                                $ros += $(Tp(1))
+                                if $ros > $ros_stop
+                                    $ros_stop = max($ros_stop << 1, 1)
+                                    $resize_if_smaller!($(lvl.ex).idx, $ros_stop)
+                                    $resize_if_smaller!($(lvl.ex).ofs, $ros_stop + 1)
+                                end
+                            end
+                            $(lvl.ex).idx[$ros] = $my_i_prev = $(ctx(idx))
+                            $(qos) += $(Tp(1))
+                            $(lvl.ex).ofs[$ros + 1] = $qos
                         end
                     end
-                    $(lvl.ex).idx[$ros] = $my_i_prev = $(ctx(idx))
-                    $(qos) += $(Tp(1))
-                    $(lvl.ex).ofs[$ros + 1] = $qos
-                end
+                )
+            ),
+            epilogue = quote
+                $(lvl.ex).pos[$(ctx(pos)) + 1] = $ros - $ros_fill
+                $ros_fill = $ros
+                $qos_fill = $qos - 1
             end
         )
     )
-
-    push!(ctx.epilogue, quote
-        $(lvl.ex).pos[$(ctx(envposition(fbr.env))) + 1] = $ros - $ros_fill
-        $ros_fill = $ros
-        $qos_fill = $qos - 1
-    end)
-
-    exfurl(body, ctx, mode, idx)
 end

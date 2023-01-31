@@ -7,39 +7,6 @@ begin
     A_lvl_qos_stop = 0
     (Finch.resize_if_smaller!)(A_lvl.pos, 1 + 1)
     (Finch.fill_range!)(A_lvl.pos, 1, 1 + 1, 1 + 1)
-    Any[quote
-    #= /Users/Peter/Projects/Finch.jl/src/glue_AbstractArrays.jl:11 =#
-    (C_mode1_stop,) = size(C)
-end, :($(Expr(:cache, :i_lower, quote
-    #= /Users/Peter/Projects/Finch.jl/src/lower.jl:75 =#
-    i_lower = begin
-            (+)((-)(C_mode1_stop, 1), 1)
-        end
-end))), :($(Expr(:cache, :i_upper, quote
-    #= /Users/Peter/Projects/Finch.jl/src/lower.jl:75 =#
-    i_upper = begin
-            (+)((-)(C_mode1_stop, 1), 1)
-        end
-end))), quote
-    #= /Users/Peter/Projects/Finch.jl/src/repeatrlelevels.jl:136 =#
-    A_lvl.pos[1] = 1
-    #= /Users/Peter/Projects/Finch.jl/src/repeatrlelevels.jl:137 =#
-    A_lvl_ros_fill = 0
-    #= /Users/Peter/Projects/Finch.jl/src/repeatrlelevels.jl:138 =#
-    A_lvl_qos_stop = 0
-end, quote
-    #= /Users/Peter/Projects/Finch.jl/src/repeatrlelevels.jl:158 =#
-    (Finch.resize_if_smaller!)(A_lvl.pos, 1 + 1)
-    #= /Users/Peter/Projects/Finch.jl/src/repeatrlelevels.jl:159 =#
-    (Finch.fill_range!)(A_lvl.pos, 1, 1 + 1, 1 + 1)
-end, Any[#= circular reference @-1 =#], quote
-    #= /Users/Peter/Projects/Finch.jl/src/repeatrlelevels.jl:286 =#
-    A_lvl_q = A_lvl_ros_fill + 1
-    #= /Users/Peter/Projects/Finch.jl/src/repeatrlelevels.jl:287 =#
-    A_lvl_i_prev = 0
-    #= /Users/Peter/Projects/Finch.jl/src/repeatrlelevels.jl:288 =#
-    A_lvl_v_prev = 0.0
-end]
     A_lvl_q = A_lvl_ros_fill + 1
     A_lvl_i_prev = 0
     A_lvl_v_prev = 0.0

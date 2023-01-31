@@ -44,13 +44,11 @@ IndexNotation.isliteral(::VirtualScalar) = false
 getname(tns::VirtualScalar) = tns.name
 setname(tns::VirtualScalar, name) = VirtualScalar(tns.ex, tns.Tv, tns.D, name, tns.val)
 
-function initialize!(tns::VirtualScalar, ctx, mode, idxs...)
-    if mode.kind === updater && mode.mode.kind === create
-        push!(ctx.preamble, quote
-            $(tns.val) = $(tns.D)
-        end)
-    end
-    access(tns, mode, idxs...)
+function initialize!(tns::VirtualScalar, ctx)
+    push!(ctx.preamble, quote
+        $(tns.val) = $(tns.D)
+    end)
+    tns
 end
 
 function freeze!(tns::VirtualScalar, ctx, mode)

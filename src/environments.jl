@@ -10,7 +10,7 @@ envdepth(env) = envparent(env) === nothing ? 0 : 1 + envdepth(envparent(env))
 
 The name of the tensor when it was last named.
 """
-envname(env) = hasproperty(env, :name) ? getvalue(env.name) : envname(envparent(env))
+envname(env) = hasproperty(env, :name) ? getvalue(env.name) : gensym()
 function envrename!(env, name)
     if hasproperty(env, :name)
         env.name = literal(name)
