@@ -236,70 +236,74 @@ function get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, R, start,
     my_q_stop = ctx.freshen(tag, :_q_stop)
     my_i_stop = ctx.freshen(tag, :_i_stop)
 
-    Thunk(
-        preamble = quote
-            $my_q = $(ctx(start))
-            $my_q_stop = $(ctx(stop))
-            if $my_q < $my_q_stop
-                $my_i = $(lvl.ex).srt[$my_q][$R]
-                $my_i_stop = $(lvl.ex).tbl[$my_q_stop - 1][$R]
-            else
-                $my_i = $(Ti.parameters[R](1))
-                $my_i_stop = $(Ti.parameters[R](0))
-            end
-        end,
-        body = Pipeline([
-            Phase(
-                stride = (ctx, idx, ext) -> value(my_i_stop),
-                body = (start, stop) -> Stepper(
-                    seek = (ctx, ext) -> quote
-                        while $my_q + $(Tp(1)) < $my_q_stop && $(lvl.ex).srt[$my_q][$R] < $(ctx(getstart(ext)))
-                            $my_q += $(Tp(1))
+    Furlable(
+        val = virtual_level_default(lvl),
+        size = virtual_level_size(lvl, ctx)[R:end],
+        body = (ctx, idx, ext) -> Thunk(
+            preamble = quote
+                $my_q = $(ctx(start))
+                $my_q_stop = $(ctx(stop))
+                if $my_q < $my_q_stop
+                    $my_i = $(lvl.ex).srt[$my_q][2][$R]
+                    $my_i_stop = $(lvl.ex).srt[$my_q_stop - 1][2][$R]
+                else
+                    $my_i = $(Ti.parameters[R](1))
+                    $my_i_stop = $(Ti.parameters[R](0))
+                end
+            end,
+            body = Pipeline([
+                Phase(
+                    stride = (ctx, idx, ext) -> value(my_i_stop),
+                    body = (start, stop) -> Stepper(
+                        seek = (ctx, ext) -> quote
+                            while $my_q + $(Tp(1)) < $my_q_stop && $(lvl.ex).srt[$my_q][2][$R] < $(ctx(getstart(ext)))
+                                $my_q += $(Tp(1))
+                            end
+                        end,
+                        body = if R == lvl.N
+                            Thunk(
+                                preamble = quote
+                                    $my_i = $(lvl.ex).srt[$my_q][2][$R]
+                                end,
+                                body = Step(
+                                    stride =  (ctx, idx, ext) -> value(my_i),
+                                    chunk = Spike(
+                                        body = Simplify(Fill(virtual_level_default(lvl))),
+                                        tail = get_level_reader(lvl.lvl, ctx, my_q, protos...),
+                                    ),
+                                    next = (ctx, idx, ext) -> quote
+                                        $my_q += $(Tp(1))
+                                    end
+                                )
+                            )
+                        else
+                            Thunk(
+                                preamble = quote
+                                    $my_i = $(lvl.ex).srt[$my_q][2][$R]
+                                    $my_q_step = $my_q
+                                    while $my_q_step < $my_q_stop && $(lvl.ex).srt[$my_q_step][2][$R] == $my_i
+                                        $my_q_step += $(Tp(1))
+                                    end
+                                end,
+                                body = Step(
+                                    stride = (ctx, idx, ext) -> value(my_i),
+                                    chunk = Spike(
+                                        body = Simplify(Fill(virtual_level_default(lvl))),
+                                        tail = get_multilevel_range_reader(lvl, ctx, R + 1, value(my_q, lvl.Ti), value(my_q_step, lvl.Ti), protos...),
+                                    ),
+                                    next = (ctx, idx, ext) -> quote
+                                        $my_q = $my_q_step
+                                    end
+                                )
+                            )
                         end
-                    end,
-                    body = if R == lvl.N
-                        Thunk(
-                            preamble = quote
-                                $my_i = $(lvl.ex).srt[$my_q][$R]
-                            end,
-                            body = Step(
-                                stride =  (ctx, idx, ext) -> value(my_i),
-                                chunk = Spike(
-                                    body = Simplify(Fill(virtual_level_default(lvl))),
-                                    tail = get_level_reader(lvl.lvl, ctx, my_q, protos...),
-                                ),
-                                next = (ctx, idx, ext) -> quote
-                                    $my_q += $(Tp(1))
-                                end
-                            )
-                        )
-                    else
-                        Thunk(
-                            preamble = quote
-                                $my_i = $(lvl.ex).srt[$my_q][$R]
-                                $my_q_step = $my_q
-                                while $my_q_step < $my_q_stop && $(lvl.ex).srt[$my_q_step][$R] == $my_i
-                                    $my_q_step += $(Tp(1))
-                                end
-                            end,
-                            body = Step(
-                                stride = (ctx, idx, ext) -> value(my_i),
-                                chunk = Spike(
-                                    body = Simplify(Fill(virtual_level_default(lvl))),
-                                    tail = get_multilevel_range_reader(lvl, ctx, R + 1, value(my_q, lvl.Ti), value(my_q_step, lvl.Ti), protos...),
-                                ),
-                                next = (ctx, idx, ext) -> quote
-                                    $my_q = $my_q_step
-                                end
-                            )
-                        )
-                    end
+                    )
+                ),
+                Phase(
+                    body = (start, step) -> Run(Simplify(Fill(virtual_level_default(lvl))))
                 )
-            ),
-            Phase(
-                body = (start, step) -> Run(Simplify(Fill(virtual_level_default(lvl))))
-            )
-        ])
+            ])
+        )
     )
 end
 
@@ -311,35 +315,44 @@ function get_level_reader(lvl::VirtualSparseHashLevel, ctx, pos, proto::Follow, 
     qos_stop = lvl.qos_stop
     my_key = ctx.freshen(tag, :_key)
 
+    push!(ctx.preamble, begin
+        $qos_fill = length($(lvl.ex).tbl)
+    end)
+
     return get_multilevel_group_reader(lvl, ctx, pos, qos, (), proto, protos...)
 end
 
-function get_multilevel_group_reader(lvl::VirtualSparseHashLevel, ctx, pos, qos, coords, ::Follow, protos...)
+function get_multilevel_group_reader(lvl::VirtualSparseHashLevel, ctx, pos, coords, ::Follow, protos...)
     Ti = lvl.Ti
     Tp = lvl.Tp
     qos_fill = lvl.qos_fill
     qos_stop = lvl.qos_stop
     qos = ctx.freshen(tag, :_q)
-    if length(coords)  + 1 < lvl.N
-        body = Lookup(
-            val = virtual_level_default(lvl),
-            body = (i) -> get_multilevel_group_reader(lvl, ctx, pos, qos, (coords..., i), protos...)
-        )
-    else
-        body = Lookup(
-            val = virtual_level_default(lvl),
-            body = (i) -> Thunk(
-                preamble = quote
-                    $my_key = ($(ctx(pos)), ($(map(ctx, coords)...), $(ctx(i))))
-                    $qos = get($(lvl.ex).tbl, $my_key, 0)
-                end,
-                body = Switch([
-                    value(:($qos != 0)) => get_level_reader(lvl.lvl, ctx, value(qos, lvl.Tp)),
-                    literal(true) => Simplify(Fill(virtual_level_default(lvl)))
-                ])
-            )
-        )
-    end
+    Furlable(
+        val = virtual_level_default(lvl),
+        size = virtual_level_size(lvl, ctx)[1 + length(coords):end],
+        body = (ctx, idx, ext) ->
+            if length(coords)  + 1 < lvl.N
+                Lookup(
+                    val = virtual_level_default(lvl),
+                    body = (i) -> get_multilevel_group_reader(lvl, ctx, pos, qos, (coords..., i), protos...)
+                )
+            else
+                Lookup(
+                    val = virtual_level_default(lvl),
+                    body = (i) -> Thunk(
+                        preamble = quote
+                            $my_key = ($(ctx(pos)), ($(map(ctx, coords)...), $(ctx(i))))
+                            $qos = get($(lvl.ex).tbl, $my_key, 0)
+                        end,
+                        body = Switch([
+                            value(:($qos != 0)) => get_level_reader(lvl.lvl, ctx, value(qos, lvl.Tp)),
+                            literal(true) => Simplify(Fill(virtual_level_default(lvl)))
+                        ])
+                    )
+                )
+            end
+    )
 end
 
 set_clean!(lvl::VirtualSparseHashLevel, ctx) = :($(lvl.dirty) = false)
@@ -357,36 +370,41 @@ function get_multilevel_group_updater(lvl::VirtualSparseHashLevel, ctx, pos, coo
     qos_stop = lvl.qos_stop
     my_key = ctx.freshen(tag, :_key)
     qos = ctx.freshen(tag, :_q)
-    if length(coords)  + 1 < lvl.N
-        body = Lookup(
-            val = virtual_level_default(lvl),
-            body = (i) -> get_multilevel_group_updater(lvl, ctx, pos, (coords..., i), protos...)
-        )
-    else
-        body = AcceptSpike(
-            val = virtual_level_default(lvl),
-            tail = (ctx, idx) -> Thunk(
-                preamble = quote
-                    $my_key = ($(ctx(pos)), ($(map(ctx, coords)...), $(ctx(idx))))
-                    $qos = get($(lvl.ex).tbl, $my_key, $(qos_fill) + $(Tp(1)))
-                    if $qos > $qos_stop
-                        $qos_stop = max($qos_stop << 1, 1)
-                        $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(qos, lvl.Tp), value(qos_stop, lvl.Tp)), ctx))
-                    end
-                    $(set_clean!(lvl.lvl, ctx))
-                end,
-                body = get_level_updater(lvl.lvl, ctx, qos, protos...),
-                epilogue = quote
-                    if $(ctx(get_dirty(lvl.lvl, ctx)))
-                        $(lvl.dirty) = true
-                        if $qos > $qos_fill
-                            $(lvl.qos_fill) = $qos
-                            $(lvl.ex).tbl[$my_key] = $qos
-                            $(lvl.ex).pos[$(ctx(pos)) + 1] += $(Tp(1))
+    Furlable(
+        val = virtual_level_default(lvl),
+        size = virtual_level_size(lvl, ctx)[1 + length(coords):end],
+        body = (ctx, idx, ext) ->
+            if length(coords) + 1 < lvl.N
+                body = Lookup(
+                    val = virtual_level_default(lvl),
+                    body = (i) -> get_multilevel_group_updater(lvl, ctx, pos, (coords..., i), protos...)
+                )
+            else
+                body = AcceptSpike(
+                    val = virtual_level_default(lvl),
+                    tail = (ctx, idx) -> Thunk(
+                        preamble = quote
+                            $my_key = ($(ctx(pos)), ($(map(ctx, coords)...), $(ctx(idx))))
+                            $qos = get($(lvl.ex).tbl, $my_key, $(qos_fill) + $(Tp(1)))
+                            if $qos > $qos_stop
+                                $qos_stop = max($qos_stop << 1, 1)
+                                $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(qos, lvl.Tp), value(qos_stop, lvl.Tp)), ctx))
+                            end
+                            $(set_clean!(lvl.lvl, ctx))
+                        end,
+                        body = get_level_updater(lvl.lvl, ctx, qos, protos...),
+                        epilogue = quote
+                            if $(ctx(get_dirty(lvl.lvl, ctx)))
+                                $(lvl.dirty) = true
+                                if $qos > $qos_fill
+                                    $(lvl.qos_fill) = $qos
+                                    $(lvl.ex).tbl[$my_key] = $qos
+                                    $(lvl.ex).pos[$(ctx(pos)) + 1] += $(Tp(1))
+                                end
+                            end
                         end
-                    end
-                end
-            )
-        )
-    end
+                    )
+                )
+            end
+    )
 end
