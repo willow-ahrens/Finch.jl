@@ -302,14 +302,16 @@ function get_level_updater(lvl::VirtualSparseCooLevel, ctx, pos, protos...)
     qos_stop = lvl.qos_stop
 
     qos = ctx.freshen(tag, :_q)
-    push!(ctx.preamble, quote
-        $qos = $qos_fill + 1
-    end)
-    push!(ctx.epilogue, quote
-        $(lvl.ex).pos[$(ctx(pos)) + 1] = $qos - $qos_fill - 1
-        $qos_fill = $qos - 1
-    end)
-    return get_multilevel_append_updater(lvl, ctx, qos, (), protos...)
+    Thunk(
+        preamble = quote
+            $qos = $qos_fill + 1
+        end,
+        body = get_multilevel_append_updater(lvl, ctx, qos, (), protos...),
+        epilogue = quote
+            $(lvl.ex).pos[$(ctx(pos)) + 1] = $qos - $qos_fill - 1
+            $qos_fill = $qos - 1
+        end
+    )
 end
 
 function get_multilevel_append_updater(lvl::VirtualSparseCooLevel, ctx, qos, coords, ::Union{Nothing, Extrude}, protos...)

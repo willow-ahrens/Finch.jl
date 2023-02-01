@@ -244,8 +244,8 @@ function get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, R, start,
                 $my_q = $(ctx(start))
                 $my_q_stop = $(ctx(stop))
                 if $my_q < $my_q_stop
-                    $my_i = $(lvl.ex).srt[$my_q][2][$R]
-                    $my_i_stop = $(lvl.ex).srt[$my_q_stop - 1][2][$R]
+                    $my_i = $(lvl.ex).srt[$my_q][1][2][$R]
+                    $my_i_stop = $(lvl.ex).srt[$my_q_stop - 1][1][2][$R]
                 else
                     $my_i = $(Ti.parameters[R](1))
                     $my_i_stop = $(Ti.parameters[R](0))
@@ -256,20 +256,20 @@ function get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, R, start,
                     stride = (ctx, idx, ext) -> value(my_i_stop),
                     body = (start, stop) -> Stepper(
                         seek = (ctx, ext) -> quote
-                            while $my_q + $(Tp(1)) < $my_q_stop && $(lvl.ex).srt[$my_q][2][$R] < $(ctx(getstart(ext)))
+                            while $my_q + $(Tp(1)) < $my_q_stop && $(lvl.ex).srt[$my_q][1][2][$R] < $(ctx(getstart(ext)))
                                 $my_q += $(Tp(1))
                             end
                         end,
                         body = if R == lvl.N
                             Thunk(
                                 preamble = quote
-                                    $my_i = $(lvl.ex).srt[$my_q][2][$R]
+                                    $my_i = $(lvl.ex).srt[$my_q][1][2][$R]
                                 end,
                                 body = Step(
                                     stride =  (ctx, idx, ext) -> value(my_i),
                                     chunk = Spike(
                                         body = Simplify(Fill(virtual_level_default(lvl))),
-                                        tail = get_level_reader(lvl.lvl, ctx, my_q, protos...),
+                                        tail = get_level_reader(lvl.lvl, ctx, value(:($(lvl.ex).srt[$my_q][2])), protos...),
                                     ),
                                     next = (ctx, idx, ext) -> quote
                                         $my_q += $(Tp(1))
@@ -279,9 +279,9 @@ function get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, R, start,
                         else
                             Thunk(
                                 preamble = quote
-                                    $my_i = $(lvl.ex).srt[$my_q][2][$R]
+                                    $my_i = $(lvl.ex).srt[$my_q][1][2][$R]
                                     $my_q_step = $my_q
-                                    while $my_q_step < $my_q_stop && $(lvl.ex).srt[$my_q_step][2][$R] == $my_i
+                                    while $my_q_step < $my_q_stop && $(lvl.ex).srt[$my_q_step][1][2][$R] == $my_i
                                         $my_q_step += $(Tp(1))
                                     end
                                 end,
@@ -311,13 +311,8 @@ function get_level_reader(lvl::VirtualSparseHashLevel, ctx, pos, proto::Follow, 
     tag = lvl.ex
     Ti = lvl.Ti
     Tp = lvl.Tp
-    qos_fill = lvl.qos_fill
-    qos_stop = lvl.qos_stop
-    my_key = ctx.freshen(tag, :_key)
 
-    push!(ctx.preamble, begin
-        $qos_fill = length($(lvl.ex).tbl)
-    end)
+
 
     return get_multilevel_group_reader(lvl, ctx, pos, qos, (), proto, protos...)
 end
@@ -359,7 +354,12 @@ set_clean!(lvl::VirtualSparseHashLevel, ctx) = :($(lvl.dirty) = false)
 get_dirty(lvl::VirtualSparseHashLevel, ctx) = value(lvl.dirty, Bool)
 
 function get_level_updater(lvl::VirtualSparseHashLevel, ctx, pos, protos...)
-    return get_multilevel_group_updater(lvl, ctx, pos, (), protos...)
+    return Thunk(
+        preamble = quote
+            $(lvl.qos_fill) = length($(lvl.ex).tbl)
+        end,
+        body = get_multilevel_group_updater(lvl, ctx, pos, (), protos...)
+    )
 end
 
 function get_multilevel_group_updater(lvl::VirtualSparseHashLevel, ctx, pos, coords, ::Union{Nothing, Extrude}, protos...)

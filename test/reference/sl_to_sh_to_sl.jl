@@ -99,8 +99,8 @@ begin
     B_lvl_q = B_lvl.pos[1]
     B_lvl_q_stop = B_lvl.pos[1 + 1]
     if B_lvl_q < B_lvl_q_stop
-        B_lvl_i = (last(first(B_lvl.srt[B_lvl_q])))[1]
-        B_lvl_i_stop = (last(first(B_lvl.srt[B_lvl_q_stop - 1])))[1]
+        B_lvl_i = (((B_lvl.srt[B_lvl_q])[1])[2])[1]
+        B_lvl_i_stop = (((B_lvl.srt[B_lvl_q_stop - 1])[1])[2])[1]
     else
         B_lvl_i = 1
         B_lvl_i_stop = 0
@@ -111,16 +111,16 @@ begin
     if phase_stop_3 >= i_2_start
         i_5 = i_2
         i_2 = i_2_start
-        while B_lvl_q + 1 < B_lvl_q_stop && (last(first(B_lvl.srt[B_lvl_q])))[1] < i_2_start
+        while B_lvl_q + 1 < B_lvl_q_stop && (((B_lvl.srt[B_lvl_q])[1])[2])[1] < i_2_start
             B_lvl_q += 1
         end
         while i_2 <= phase_stop_3
             i_2_start_2 = i_2
-            B_lvl_i = (last(first(B_lvl.srt[B_lvl_q])))[1]
+            B_lvl_i = (((B_lvl.srt[B_lvl_q])[1])[2])[1]
             phase_stop_4 = (min)(B_lvl_i, phase_stop_3)
             i_6 = i_2
             if B_lvl_i == phase_stop_4
-                B_lvl_2_val = B_lvl_2.val[last(B_lvl.srt[B_lvl_q])]
+                B_lvl_2_val = B_lvl_2.val[(B_lvl.srt[B_lvl_q])[2]]
                 i_7 = phase_stop_4
                 if C_lvl_qos > C_lvl_qos_stop
                     C_lvl_qos_stop = max(C_lvl_qos_stop << 1, 1)
