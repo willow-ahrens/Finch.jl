@@ -1,8 +1,13 @@
+using Finch
+using Test
+using Finch: Environment
+
 @testset "issues" begin
     #https://github.com/willow-ahrens/Finch.jl/issues/51
     let
         x = Fiber(Dense(3, Element(0.0, [1, 2, 3])), Environment())
         y = Scalar{0.0}()
+        println(@finch_code @loop i j y[] += min(x[i], x[j]))
         @finch @loop i j y[] += min(x[i], x[j])
         @test y[] == 14
     end

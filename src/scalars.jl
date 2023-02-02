@@ -59,3 +59,27 @@ function lowerjulia_access(ctx::LowerJulia, node, tns::VirtualScalar)
     @assert isempty(node.idxs)
     return tns.val
 end
+
+struct VirtualDirtyScalar
+    ex
+    Tv
+    D
+    name
+    val
+    dirty
+end
+
+virtual_size(::VirtualDirtyScalar, ctx) = ()
+
+virtual_default(tns::VirtualDirtyScalar) = tns.D
+virtual_eltype(tns::VirtualDirtyScalar) = tns.Tv
+
+IndexNotation.isliteral(::VirtualDirtyScalar) = false
+
+function lowerjulia_access(ctx::LowerJulia, node, tns::VirtualDirtyScalar)
+    @assert isempty(node.idxs)
+    push!(ctx.preamble, quote
+        $(tns.dirty) = true
+    end)
+    return tns.val
+end

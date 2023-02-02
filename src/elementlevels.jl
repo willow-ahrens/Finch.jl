@@ -47,7 +47,6 @@ struct VirtualElementLevel
     Tv
     D
     dirty
-    val
 end
 
 (ctx::Finch.LowerJulia)(lvl::VirtualElementLevel) = lvl.ex
@@ -57,10 +56,9 @@ function virtualize(ex, ::Type{ElementLevel{D, Tv}}, ctx, tag=:lvl) where {D, Tv
     val = ctx.freshen(sym, :_val)
     push!(ctx.preamble, quote
         $sym = $ex
-        $val = $D
     end)
     dirty = ctx.freshen(sym, :_dirty)
-    VirtualElementLevel(sym, Tv, D, dirty, val)
+    VirtualElementLevel(sym, Tv, D, dirty)
 end
 
 summary_f_code(lvl::VirtualElementLevel) = "e($(lvl.D))"
@@ -104,33 +102,24 @@ set_clean!(lvl::VirtualElementLevel, ctx) = :($(lvl.dirty) = false)
 get_dirty(lvl::VirtualElementLevel, ctx) = value(lvl.dirty, Bool)
 
 function get_level_reader(lvl::VirtualElementLevel, ctx, pos)
+    val = ctx.freshen(lvl.ex, :_val)
     return Thunk(
         preamble = quote
-            $(lvl.val) = $(lvl.ex).val[$(ctx(pos))]
+            $val = $(lvl.ex).val[$(ctx(pos))]
         end,
-        body = VirtualFiber(lvl, VirtualEnvironment(position = pos)),
+        body = VirtualScalar(nothing, lvl.Tv, lvl.D, gensym(), val)
     )
 end
 
 function get_level_updater(lvl::VirtualElementLevel, ctx, pos)
+    val = ctx.freshen(lvl.ex, :_val)
     return Thunk(
         preamble = quote
-            $(lvl.val) = $(lvl.ex).val[$(ctx(pos))]
+            $val = $(lvl.ex).val[$(ctx(pos))]
         end,
-        body = VirtualFiber(lvl, VirtualEnvironment(position = pos)),
+        body = VirtualScalar(nothing, lvl.Tv, lvl.D, gensym(), val),
         epilogue = quote
-            $(lvl.ex).val[$(ctx(pos))] = $(lvl.val)
-        end,
+            $(lvl.ex).val[$(ctx(pos))] = $val
+        end
     )
-end
-
-function lowerjulia_access(ctx::Finch.LowerJulia, node, tns::VirtualFiber{VirtualElementLevel})
-    @assert isempty(node.idxs)
-
-    if node.mode.kind === updater
-        push!(ctx.preamble, quote
-            $(tns.lvl.dirty) = true
-        end)
-    end
-    tns.lvl.val
 end
