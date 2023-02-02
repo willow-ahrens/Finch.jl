@@ -1,10 +1,8 @@
 begin
     A_lvl = ex.body.lhs.tns.tns.lvl
     A_lvl_2 = A_lvl.lvl
-    A_lvl_2_val = 0.0
     B_lvl = ex.body.rhs.tns.tns.lvl
     B_lvl_2 = B_lvl.lvl
-    B_lvl_2_val = 0.0
     A_lvl_qos_fill = 0
     A_lvl_qos_stop = 0
     (Finch.resize_if_smaller!)(A_lvl.pos, 1 + 1)
@@ -34,7 +32,7 @@ begin
             phase_stop_2 = (min)(B_lvl_i, phase_stop)
             i_2 = i
             if B_lvl_i == phase_stop_2
-                B_lvl_2_val = B_lvl_2.val[B_lvl_q]
+                B_lvl_2_val_2 = B_lvl_2.val[B_lvl_q]
                 i_3 = phase_stop_2
                 if A_lvl_qos > A_lvl_qos_stop
                     A_lvl_qos_stop = max(A_lvl_qos_stop << 1, 1)
@@ -43,11 +41,11 @@ begin
                     fill_range!(A_lvl_2.val, 0.0, A_lvl_qos, A_lvl_qos_stop)
                 end
                 A_lvl_2_dirty = false
-                A_lvl_2_val = A_lvl_2.val[A_lvl_qos]
+                A_lvl_2_val_2 = A_lvl_2.val[A_lvl_qos]
                 A_lvl_2_dirty = true
                 A_lvl_2_dirty = true
-                A_lvl_2_val = (+)(B_lvl_2_val, A_lvl_2_val)
-                A_lvl_2.val[A_lvl_qos] = A_lvl_2_val
+                A_lvl_2_val_2 = (+)(B_lvl_2_val_2, A_lvl_2_val_2)
+                A_lvl_2.val[A_lvl_qos] = A_lvl_2_val_2
                 if A_lvl_2_dirty
                     A_lvl_dirty = true
                     A_lvl.idx[A_lvl_qos] = i_3

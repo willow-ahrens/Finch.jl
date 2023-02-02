@@ -2,11 +2,9 @@ begin
     B_lvl = ex.body.body.lhs.tns.tns.lvl
     B_lvl_qos_stop = (B_lvl_qos_fill = length(B_lvl.srt))
     B_lvl_2 = B_lvl.lvl
-    B_lvl_2_val = 0.0
     A_lvl = ex.body.body.rhs.tns.tns.lvl
     A_lvl_2 = A_lvl.lvl
     A_lvl_3 = A_lvl_2.lvl
-    A_lvl_3_val = 0.0
     for B_lvl_r = 1:B_lvl_qos_fill
         B_lvl_p = first(B_lvl.srt[B_lvl_r])
         B_lvl.pos[B_lvl_p] = 0
@@ -61,15 +59,15 @@ begin
                 phase_stop_2 = (min)(A_lvl_2_i, phase_stop)
                 j_2 = j
                 if A_lvl_2_i == phase_stop_2
-                    A_lvl_3_val = A_lvl_3.val[A_lvl_2_q]
+                    A_lvl_3_val_2 = A_lvl_3.val[A_lvl_2_q]
                     j_3 = phase_stop_2
                     B_lvl_2_dirty = false
                     B_lvl_q_2 = (1 - 1) * A_lvl_2.I + j_3
-                    B_lvl_2_val = B_lvl_2.val[B_lvl_q_2]
+                    B_lvl_2_val_2 = B_lvl_2.val[B_lvl_q_2]
                     B_lvl_2_dirty = true
                     B_lvl_2_dirty = true
-                    B_lvl_2_val = (+)(A_lvl_3_val, B_lvl_2_val)
-                    B_lvl_2.val[B_lvl_q_2] = B_lvl_2_val
+                    B_lvl_2_val_2 = (+)(A_lvl_3_val_2, B_lvl_2_val_2)
+                    B_lvl_2.val[B_lvl_q_2] = B_lvl_2_val_2
                     if B_lvl_2_dirty
                         B_lvl_dirty = true
                         if !(B_lvl.tbl[B_lvl_q_2])

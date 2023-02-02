@@ -7,7 +7,6 @@ using Finch: Environment
     let
         x = Fiber(Dense(3, Element(0.0, [1, 2, 3])), Environment())
         y = Scalar{0.0}()
-        println(@finch_code @loop i j y[] += min(x[i], x[j]))
         @finch @loop i j y[] += min(x[i], x[j])
         @test y[] == 14
     end

@@ -3,7 +3,6 @@ begin
     A_lvl = ex.body.body.rhs.tns.tns.lvl
     A_lvl_2 = A_lvl.lvl
     A_lvl_3 = A_lvl_2.lvl
-    A_lvl_3_val = 0.0
     (B_mode1_stop,) = size(B)
     (B_mode1_stop,) = size(B)
     (B_mode1_stop,) = size(B)
@@ -39,9 +38,9 @@ begin
                 phase_stop_2 = (min)(A_lvl_2_i, phase_stop)
                 i_2 = i
                 if A_lvl_2_i == phase_stop_2
-                    A_lvl_3_val = A_lvl_3.val[A_lvl_2_q]
+                    A_lvl_3_val_2 = A_lvl_3.val[A_lvl_2_q]
                     i_3 = phase_stop_2
-                    B[i_3] = (+)(A_lvl_3_val, B[i_3])
+                    B[i_3] = (+)(A_lvl_3_val_2, B[i_3])
                     A_lvl_2_q += 1
                 else
                 end

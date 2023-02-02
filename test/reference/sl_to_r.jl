@@ -2,7 +2,6 @@ begin
     A_lvl = ex.body.lhs.tns.tns.lvl
     D_lvl = ex.body.rhs.tns.tns.lvl
     D_lvl_2 = D_lvl.lvl
-    D_lvl_2_val = 0
     A_lvl.pos[1] = 1
     A_lvl_ros_fill = 0
     A_lvl_qos_stop = 0
@@ -38,7 +37,7 @@ begin
             phase_stop_2 = (min)(D_lvl_i, phase_stop)
             i_2 = i
             if D_lvl_i == phase_stop_2
-                D_lvl_2_val = D_lvl_2.val[D_lvl_q]
+                D_lvl_2_val_2 = D_lvl_2.val[D_lvl_q]
                 if A_lvl_v_prev != 0.0 && A_lvl_i_prev + 1 < phase_stop_2
                     A_lvl_dirty = true
                     if A_lvl_q > A_lvl_qos_stop
@@ -57,7 +56,7 @@ begin
                 end
                 A_lvl_i_prev = phase_stop_2 - 1
                 A_lvl_v = 0.0
-                A_lvl_v = D_lvl_2_val
+                A_lvl_v = D_lvl_2_val_2
                 if A_lvl_v_prev != A_lvl_v && A_lvl_i_prev > 0
                     if A_lvl_q > A_lvl_qos_stop
                         A_lvlqos_fill = A_lvl_qos_stop

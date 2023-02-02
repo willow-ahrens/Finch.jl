@@ -3,10 +3,8 @@ begin
     B_lvl_qos_fill = length(B_lvl.tbl)
     B_lvl_qos_stop = B_lvl_qos_fill
     B_lvl_2 = B_lvl.lvl
-    B_lvl_2_val = 0.0
     A_lvl = ex.body.rhs.tns.tns.lvl
     A_lvl_2 = A_lvl.lvl
-    A_lvl_2_val = 0.0
     B_lvl_qos_fill = 0
     B_lvl_qos_stop = 0
     empty!(B_lvl.tbl)
@@ -41,7 +39,7 @@ begin
             phase_stop_2 = (min)(A_lvl_i, phase_stop)
             i_2 = i
             if A_lvl_i == phase_stop_2
-                A_lvl_2_val = A_lvl_2.val[A_lvl_q]
+                A_lvl_2_val_2 = A_lvl_2.val[A_lvl_q]
                 i_3 = phase_stop_2
                 B_lvl_key = (1, (i_3,))
                 B_lvl_q = get(B_lvl.tbl, B_lvl_key, B_lvl_qos_fill + 1)
@@ -51,11 +49,11 @@ begin
                     fill_range!(B_lvl_2.val, 0.0, B_lvl_q, B_lvl_qos_stop)
                 end
                 B_lvl_2_dirty = false
-                B_lvl_2_val = B_lvl_2.val[B_lvl_q]
+                B_lvl_2_val_2 = B_lvl_2.val[B_lvl_q]
                 B_lvl_2_dirty = true
                 B_lvl_2_dirty = true
-                B_lvl_2_val = (+)(A_lvl_2_val, B_lvl_2_val)
-                B_lvl_2.val[B_lvl_q] = B_lvl_2_val
+                B_lvl_2_val_2 = (+)(A_lvl_2_val_2, B_lvl_2_val_2)
+                B_lvl_2.val[B_lvl_q] = B_lvl_2_val_2
                 if B_lvl_2_dirty
                     B_lvl_dirty = true
                     if B_lvl_q > B_lvl_qos_fill

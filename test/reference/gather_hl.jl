@@ -3,7 +3,6 @@ begin
     B_val = B.val
     A_lvl = ex.rhs.tns.tns.lvl
     A_lvl_2 = A_lvl.lvl
-    A_lvl_2_val = 0.0
     B_val = 0.0
     A_lvl_q = A_lvl.pos[1]
     A_lvl_q_stop = A_lvl.pos[1 + 1]
@@ -32,9 +31,9 @@ begin
             phase_stop_2 = (min)(A_lvl_i, phase_stop)
             s_3 = s
             if A_lvl_i == phase_stop_2
-                A_lvl_2_val = A_lvl_2.val[A_lvl_q]
+                A_lvl_2_val_2 = A_lvl_2.val[A_lvl_q]
                 s_4 = phase_stop_2
-                B_val = (+)(A_lvl_2_val, B_val)
+                B_val = (+)(A_lvl_2_val_2, B_val)
                 A_lvl_q += 1
             else
             end

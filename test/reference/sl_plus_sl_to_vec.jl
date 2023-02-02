@@ -2,10 +2,8 @@ begin
     C = ex.body.lhs.tns.tns
     A_lvl = (ex.body.rhs.args[1]).tns.tns.lvl
     A_lvl_2 = A_lvl.lvl
-    A_lvl_2_val = 0.0
     B_lvl = (ex.body.rhs.args[2]).tns.tns.lvl
     B_lvl_2 = B_lvl.lvl
-    B_lvl_2_val = 0.0
     (C_mode1_stop,) = size(C)
     (C_mode1_stop,) = size(C)
     (C_mode1_stop,) = size(C)
@@ -55,21 +53,21 @@ begin
             phase_stop_2 = (min)(A_lvl_i, B_lvl_i, phase_stop)
             i_2 = i
             if B_lvl_i == phase_stop_2 && A_lvl_i == phase_stop_2
-                B_lvl_2_val = B_lvl_2.val[B_lvl_q]
-                A_lvl_2_val = A_lvl_2.val[A_lvl_q]
+                B_lvl_2_val_2 = B_lvl_2.val[B_lvl_q]
+                A_lvl_2_val_2 = A_lvl_2.val[A_lvl_q]
                 i_3 = phase_stop_2
-                C[i_3] = (+)(B_lvl_2_val, C[i_3], A_lvl_2_val)
+                C[i_3] = (+)(B_lvl_2_val_2, C[i_3], A_lvl_2_val_2)
                 B_lvl_q += 1
                 A_lvl_q += 1
             elseif A_lvl_i == phase_stop_2
-                A_lvl_2_val = A_lvl_2.val[A_lvl_q]
+                A_lvl_2_val_2 = A_lvl_2.val[A_lvl_q]
                 i_4 = phase_stop_2
-                C[i_4] = (+)(C[i_4], A_lvl_2_val)
+                C[i_4] = (+)(C[i_4], A_lvl_2_val_2)
                 A_lvl_q += 1
             elseif B_lvl_i == phase_stop_2
-                B_lvl_2_val = B_lvl_2.val[B_lvl_q]
+                B_lvl_2_val_2 = B_lvl_2.val[B_lvl_q]
                 i_5 = phase_stop_2
-                C[i_5] = (+)(B_lvl_2_val, C[i_5])
+                C[i_5] = (+)(B_lvl_2_val_2, C[i_5])
                 B_lvl_q += 1
             else
             end
@@ -91,9 +89,9 @@ begin
             phase_stop_4 = (min)(B_lvl_i, phase_stop_3)
             i_7 = i
             if B_lvl_i == phase_stop_4
-                B_lvl_2_val = B_lvl_2.val[B_lvl_q]
+                B_lvl_2_val_3 = B_lvl_2.val[B_lvl_q]
                 i_8 = phase_stop_4
-                C[i_8] = (+)(C[i_8], B_lvl_2_val)
+                C[i_8] = (+)(C[i_8], B_lvl_2_val_3)
                 B_lvl_q += 1
             else
             end
@@ -115,9 +113,9 @@ begin
             phase_stop_6 = (min)(A_lvl_i, phase_stop_5)
             i_10 = i
             if A_lvl_i == phase_stop_6
-                A_lvl_2_val = A_lvl_2.val[A_lvl_q]
+                A_lvl_2_val_3 = A_lvl_2.val[A_lvl_q]
                 i_11 = phase_stop_6
-                C[i_11] = (+)(C[i_11], A_lvl_2_val)
+                C[i_11] = (+)(C[i_11], A_lvl_2_val_3)
                 A_lvl_q += 1
             else
             end

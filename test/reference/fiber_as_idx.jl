@@ -1,11 +1,9 @@
 begin
     B_lvl = ex.body.lhs.tns.tns.lvl
     B_lvl_2 = B_lvl.lvl
-    B_lvl_2_val = 0
     A_lvl = ex.body.rhs.tns.tns.lvl
     A_lvl_2 = A_lvl.lvl
     A_lvl_3 = A_lvl_2.lvl
-    A_lvl_3_val = 0
     I_lvl = (ex.body.rhs.idxs[2]).tns.tns.lvl
     resize_if_smaller!(B_lvl_2.val, A_lvl.I)
     fill_range!(B_lvl_2.val, 0, 1, A_lvl.I)
@@ -31,28 +29,28 @@ begin
             for i_2 = i_start:phase_stop
                 B_lvl_q = (1 - 1) * A_lvl.I + i_2
                 A_lvl_q = (1 - 1) * A_lvl.I + i_2
-                B_lvl_2_val = B_lvl_2.val[B_lvl_q]
+                B_lvl_2_val_2 = B_lvl_2.val[B_lvl_q]
                 for s_2 = I_lvl.val[I_lvl_q]:I_lvl.val[I_lvl_q]
                     A_lvl_2_q = (A_lvl_q - 1) * A_lvl_2.I + s_2
-                    A_lvl_3_val = A_lvl_3.val[A_lvl_2_q]
+                    A_lvl_3_val_2 = A_lvl_3.val[A_lvl_2_q]
                     B_lvl_2_dirty = true
-                    B_lvl_2_val = A_lvl_3_val
+                    B_lvl_2_val_2 = A_lvl_3_val_2
                 end
-                B_lvl_2.val[B_lvl_q] = B_lvl_2_val
+                B_lvl_2.val[B_lvl_q] = B_lvl_2_val_2
             end
             I_lvl_q += 1
         else
             for i_3 = i_start:phase_stop
                 B_lvl_q = (1 - 1) * A_lvl.I + i_3
                 A_lvl_q = (1 - 1) * A_lvl.I + i_3
-                B_lvl_2_val = B_lvl_2.val[B_lvl_q]
+                B_lvl_2_val_3 = B_lvl_2.val[B_lvl_q]
                 for s_4 = I_lvl.val[I_lvl_q]:I_lvl.val[I_lvl_q]
                     A_lvl_2_q_2 = (A_lvl_q - 1) * A_lvl_2.I + s_4
-                    A_lvl_3_val = A_lvl_3.val[A_lvl_2_q_2]
+                    A_lvl_3_val_3 = A_lvl_3.val[A_lvl_2_q_2]
                     B_lvl_2_dirty = true
-                    B_lvl_2_val = A_lvl_3_val
+                    B_lvl_2_val_3 = A_lvl_3_val_3
                 end
-                B_lvl_2.val[B_lvl_q] = B_lvl_2_val
+                B_lvl_2.val[B_lvl_q] = B_lvl_2_val_3
             end
         end
         i = phase_stop + 1

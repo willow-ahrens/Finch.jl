@@ -69,6 +69,9 @@ struct VirtualDirtyScalar
     dirty
 end
 
+#TODO get rid of getname evenutally omg
+getname(tns::VirtualDirtyScalar) = tns.name
+
 virtual_size(::VirtualDirtyScalar, ctx) = ()
 
 virtual_default(tns::VirtualDirtyScalar) = tns.D

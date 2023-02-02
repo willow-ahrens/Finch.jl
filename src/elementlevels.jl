@@ -117,7 +117,7 @@ function get_level_updater(lvl::VirtualElementLevel, ctx, pos)
         preamble = quote
             $val = $(lvl.ex).val[$(ctx(pos))]
         end,
-        body = VirtualScalar(nothing, lvl.Tv, lvl.D, gensym(), val),
+        body = VirtualDirtyScalar(nothing, lvl.Tv, lvl.D, gensym(), val, lvl.dirty),
         epilogue = quote
             $(lvl.ex).val[$(ctx(pos))] = $val
         end

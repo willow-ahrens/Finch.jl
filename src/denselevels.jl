@@ -128,11 +128,13 @@ function freeze_level!(lvl::VirtualDenseLevel, ctx::LowerJulia, pos)
     lvl.lvl = freeze_level!(lvl.lvl, ctx, call(*, pos, lvl.I))
     return lvl
 end
-
 set_clean!(lvl::VirtualDenseLevel, ctx) = set_clean!(lvl.lvl, ctx)
 get_dirty(lvl::VirtualDenseLevel, ctx) = get_dirty(lvl.lvl, ctx)
 
-function get_level_reader(lvl::VirtualDenseLevel, ctx, p, ::Union{Nothing, Follow}, protos...)
+
+get_level_reader(lvl::VirtualDenseLevel, ctx, p, ::Union{Nothing, Follow}, protos...) = get_dense_level_nest(lvl, ctx, p, get_level_reader, protos...)
+get_level_updater(lvl::VirtualDenseLevel, ctx, p, ::Union{Nothing, Laminate, Extrude}, protos...) = get_dense_level_nest(lvl, ctx, p, get_level_updater, protos...)
+function get_dense_level_nest(lvl, ctx, p, get_sublevel_nest, protos...)
     tag = lvl.ex
     Ti = lvl.Ti
 
@@ -147,27 +149,7 @@ function get_level_reader(lvl::VirtualDenseLevel, ctx, p, ::Union{Nothing, Follo
                 preamble = quote
                     $q = ($(ctx(p)) - $(Ti(1))) * $(ctx(lvl.I)) + $(ctx(i))
                 end,
-                body = get_level_reader(lvl.lvl, ctx, value(q, lvl.Ti), protos...)
-            )
-        )
-    )
-end
-function get_level_updater(lvl::VirtualDenseLevel, ctx, p, ::Union{Nothing, Laminate, Extrude}, protos...)
-    tag = lvl.ex
-    Ti = lvl.Ti
-
-    q = ctx.freshen(tag, :_q)
-
-    Furlable(
-        val = virtual_level_default(lvl),
-        size = virtual_level_size(lvl, ctx),
-        body = (ctx, idx, ext) -> Lookup(
-            val = virtual_level_default(lvl),
-            body = (i) -> Thunk(
-                preamble = quote
-                    $q = ($(ctx(p)) - $(Ti(1))) * $(ctx(lvl.I)) + $(ctx(i))
-                end,
-                body = get_level_updater(lvl.lvl, ctx, value(q, lvl.Ti), protos...)
+                body = get_sublevel_nest(lvl.lvl, ctx, value(q, lvl.Ti), protos...)
             )
         )
     )

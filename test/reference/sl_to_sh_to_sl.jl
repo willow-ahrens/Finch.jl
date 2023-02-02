@@ -1,20 +1,16 @@
 begin
     C_lvl = ex.cons.body.lhs.tns.tns.lvl
     C_lvl_2 = C_lvl.lvl
-    C_lvl_2_val = 0.0
     B_lvl = ex.cons.body.rhs.tns.tns.lvl
     B_lvl_qos_fill = length(B_lvl.tbl)
     B_lvl_qos_stop = B_lvl_qos_fill
     B_lvl_2 = B_lvl.lvl
-    B_lvl_2_val = 0.0
     B_lvl_3 = ex.prod.body.lhs.tns.tns.lvl
     B_lvl_3_qos_fill = length(B_lvl_3.tbl)
     B_lvl_3_qos_stop = B_lvl_3_qos_fill
     B_lvl_4 = B_lvl_3.lvl
-    B_lvl_4_val = 0.0
     A_lvl = ex.prod.body.rhs.tns.tns.lvl
     A_lvl_2 = A_lvl.lvl
-    A_lvl_2_val = 0.0
     C_lvl_qos_fill = 0
     C_lvl_qos_stop = 0
     (Finch.resize_if_smaller!)(C_lvl.pos, 1 + 1)
@@ -53,7 +49,7 @@ begin
             phase_stop_2 = (min)(A_lvl_i, phase_stop)
             i_2 = i
             if A_lvl_i == phase_stop_2
-                A_lvl_2_val = A_lvl_2.val[A_lvl_q]
+                A_lvl_2_val_2 = A_lvl_2.val[A_lvl_q]
                 i_3 = phase_stop_2
                 B_lvl_key = (1, (i_3,))
                 B_lvl_q = get(B_lvl.tbl, B_lvl_key, B_lvl_qos_fill + 1)
@@ -63,11 +59,11 @@ begin
                     fill_range!(B_lvl_2.val, 0.0, B_lvl_q, B_lvl_qos_stop)
                 end
                 B_lvl_2_dirty = false
-                B_lvl_2_val = B_lvl_2.val[B_lvl_q]
+                B_lvl_2_val_2 = B_lvl_2.val[B_lvl_q]
                 B_lvl_2_dirty = true
                 B_lvl_2_dirty = true
-                B_lvl_2_val = (+)(A_lvl_2_val, B_lvl_2_val)
-                B_lvl_2.val[B_lvl_q] = B_lvl_2_val
+                B_lvl_2_val_2 = (+)(A_lvl_2_val_2, B_lvl_2_val_2)
+                B_lvl_2.val[B_lvl_q] = B_lvl_2_val_2
                 if B_lvl_2_dirty
                     B_lvl_dirty = true
                     if B_lvl_q > B_lvl_qos_fill
@@ -120,7 +116,7 @@ begin
             phase_stop_4 = (min)(B_lvl_i, phase_stop_3)
             i_6 = i_2
             if B_lvl_i == phase_stop_4
-                B_lvl_2_val = B_lvl_2.val[(B_lvl.srt[B_lvl_q_2])[2]]
+                B_lvl_2_val_3 = B_lvl_2.val[(B_lvl.srt[B_lvl_q_2])[2]]
                 i_7 = phase_stop_4
                 if C_lvl_qos > C_lvl_qos_stop
                     C_lvl_qos_stop = max(C_lvl_qos_stop << 1, 1)
@@ -129,11 +125,11 @@ begin
                     fill_range!(C_lvl_2.val, 0.0, C_lvl_qos, C_lvl_qos_stop)
                 end
                 C_lvl_2_dirty = false
-                C_lvl_2_val = C_lvl_2.val[C_lvl_qos]
+                C_lvl_2_val_2 = C_lvl_2.val[C_lvl_qos]
                 C_lvl_2_dirty = true
                 C_lvl_2_dirty = true
-                C_lvl_2_val = (+)(B_lvl_2_val, C_lvl_2_val)
-                C_lvl_2.val[C_lvl_qos] = C_lvl_2_val
+                C_lvl_2_val_2 = (+)(B_lvl_2_val_3, C_lvl_2_val_2)
+                C_lvl_2.val[C_lvl_qos] = C_lvl_2_val_2
                 if C_lvl_2_dirty
                     C_lvl_dirty = true
                     C_lvl.idx[C_lvl_qos] = i_7

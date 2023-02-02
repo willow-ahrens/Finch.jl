@@ -3,7 +3,6 @@ begin
     B_val = B.val
     A_lvl = ex.body.body.rhs.tns.tns.lvl
     A_lvl_2 = A_lvl.lvl
-    A_lvl_2_val = 0.0
     B_val = 0.0
     A_lvl_q = A_lvl.pos[1]
     A_lvl_q_stop = A_lvl.pos[1 + 1]
@@ -37,11 +36,11 @@ begin
                     if cond
                     end
                 end
-                A_lvl_2_val = A_lvl_2.val[A_lvl_q]
+                A_lvl_2_val_2 = A_lvl_2.val[A_lvl_q]
                 j_4 = phase_stop_2
                 cond_2 = (==)(j_4, 1)
                 if cond_2
-                    B_val = (+)(A_lvl_2_val, B_val)
+                    B_val = (+)(A_lvl_2_val_2, B_val)
                 end
                 A_lvl_q += 1
             else

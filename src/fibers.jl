@@ -25,6 +25,8 @@ Fiber{Lvl}(lvl::Lvl, env::Env) where {Lvl, Env} = Fiber{Lvl, Env}(lvl, env)
 @inline default(::Fiber{Lvl}) where {Lvl} = level_default(Lvl)
 @inline default(::Type{<:Fiber{Lvl}}) where {Lvl} = level_default(Lvl)
 
+#TODO dirty should be a fiber field, because it's global to a fiber and not unique to a level.
+
 """
     VirtualFiber(lvl, env)
 
