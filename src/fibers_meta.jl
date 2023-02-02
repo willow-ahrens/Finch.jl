@@ -80,6 +80,42 @@ function Base.isequal(A:: AbstractArray, B::Fiber)
     return helper_isequal(A, B)
 end
 
+@generated function Base.getindex(arr::Fiber, inds...)
+    arr = virtualize(:arr, arr, LowerJulia())
+    irange = getsites(arr)
+    @assert length(irange) == length(inds)
+
+    inds_ndims = ndims.(inds)
+    if sum(inds_ndims) == 0
+        return quote
+            val = Scalar(0.0)
+            @finch val[] = arr[inds...]
+            return val[]
+        end
+    end
+
+    T = eltype(arr)
+    idxs = [Symbol(:i_, n) for n = irange]
+    indvars = [Symbol(:indvar_, n) for n = irange]
+    cache_indvars = Expr(:block,
+        (:($(indvars[i]) = inds[$i])
+        for i = irange)...
+    )
+    coords = Union{Expr, Symbol}[inds[i] == Int ?
+        indvars[i] : :($(indvars[i])[$(idxs[i])])
+        for i = irange]
+
+    output_dims = [:(length(inds[$i])) for i = irange if inds_ndims[i] > 0]
+    vec_idxs = [idxs[i] for i = irange if inds_ndims[i] > 0]
+
+    return quote
+        vals = zeros($T, $(output_dims...))
+        $cache_indvars
+        @finch @loop($(vec_idxs...), vals[$(vec_idxs...)] = arr[$(coords...)])
+        return vals
+    end
+end
+
 @generated function copyto_helper!(dst, src)
     dst = virtualize(:dst, dst, LowerJulia())
     idxs = [Symbol(:i_, n) for n = getsites(dst)]
