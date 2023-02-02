@@ -10,7 +10,7 @@ envdepth(env) = envparent(env) === nothing ? 0 : 1 + envdepth(envparent(env))
 
 The name of the tensor when it was last named.
 """
-envname(env) = hasproperty(env, :name) ? getvalue(env.name) : envname(envparent(env))
+envname(env) = hasproperty(env, :name) ? getvalue(env.name) : gensym()
 function envrename!(env, name)
     if hasproperty(env, :name)
         env.name = literal(name)
@@ -116,45 +116,3 @@ Strip environments which are internal to the level, leaving the parent environme
 envexternal(env::Union{Environment, VirtualEnvironment}) = hasproperty(env, :internal) ? envexternal(env.parent) : env
 envguard(env::Union{Environment, VirtualEnvironment}) = hasproperty(env, :guard) ? env.guard : nothing
 envparent(env::Union{Environment, VirtualEnvironment}) = get(env, :parent, nothing)
-
-"""
-    hasdefaultcheck(lvl)
-
-Can the level check whether it is entirely default?
-"""
-hasdefaultcheck(lvl) = false
-
-"""
-    getdefaultcheck(env)
-
-Return a variable which should be set to false if the subfiber is not entirely default.
-"""
-getdefaultcheck(lvl) = nothing
-
-"""
-    envdefaultcheck(env)
-
-Return a variable which should be set to false if the subfiber is not entirely default.
-"""
-envdefaultcheck(env) = get(env, :guard, nothing)
-
-"""
-    reinitializeable(lvl)
-
-Does the level support selective initialization through assembly?
-"""
-reinitializeable(lvl) = false
-
-"""
-    envreinitialized(env)
-
-did the previous level selectively initialize this one?
-"""
-envreinitialized(env) = get(env, :reinitialized, false)
-
-"""
-    interval_assembly_depth(lvl)
-
-to what depth will the level tolerate interval environment properties for assembly?
-"""
-interval_assembly_depth(lvl) = 0

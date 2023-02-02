@@ -44,11 +44,13 @@ end
 
 @kwdef struct Furlable
     name = gensym()
+    val = nothing
     size
     body
 end
 
-getsize(tns::Furlable, ::LowerJulia, mode) = tns.size
+virtual_default(tns::Furlable) = something(tns.val)
+virtual_size(tns::Furlable, ::LowerJulia) = tns.size
 getname(tns::Furlable) = tns.name
 
 IndexNotation.isliteral(::Furlable) = false
@@ -75,7 +77,7 @@ function select_access(node, ctx::Finch.SelectVisitor, tns::Furlable)
             var = index(ctx.ctx.freshen(:s))
             val = cache!(ctx.ctx, :s, node.idxs[1])
             ctx.idxs[var] = val
-            ext = first(getsize(tns, ctx.ctx, node.mode))
+            ext = first(virtual_size(tns, ctx.ctx))
             ext_2 = Extent(val, val)
             tns_2 = truncate(tns, ctx.ctx, ext, ext_2)
             return access(tns_2, node.mode, var, node.idxs[2:end]...)
@@ -88,7 +90,8 @@ function chunkify_access(node, ctx, tns::Furlable)
     if !isempty(node.idxs)
         if ctx.idx == get_furl_root(node.idxs[1])
             idxs = map(ctx, node.idxs)
-            return access(tns.body(ctx.ctx, ctx.idx, ctx.ext), node.mode, get_furl_root(node.idxs[1]), idxs[2:end]...)
+            tns = exfurl(tns.body(ctx.ctx, ctx.idx, ctx.ext), ctx, node.mode, node.idxs[1])
+            return access(tns, node.mode, get_furl_root(node.idxs[1]), idxs[2:end]...)
         else
             idxs = map(ctx, node.idxs)
             return access(node.tns, node.mode, idxs...)
@@ -110,9 +113,9 @@ virtualize(ex, ::Type{DiagMask}, ctx) = diagmask
 IndexNotation.isliteral(::DiagMask) = false
 Finch.getname(::DiagMask) = gensym()
 Finch.setname(::DiagMask, name) = diagmask
-Finch.getsize(::DiagMask, ctx, mode) = (nodim, nodim)
+Finch.virtual_size(::DiagMask, ctx) = (nodim, nodim)
 
-function initialize!(::DiagMask, ctx, mode, idxs...)
+function get_reader(::DiagMask, ctx, protos...)
     tns = Furlable(
         size = (nodim, nodim),
         body = (ctx, idx, ext) -> Lookup(
@@ -132,7 +135,6 @@ function initialize!(::DiagMask, ctx, mode, idxs...)
             )
         )
     )
-    return access(tns, mode, idxs...)
 end
 
 struct LoTriMask end
@@ -148,9 +150,9 @@ virtualize(ex, ::Type{LoTriMask}, ctx) = lotrimask
 IndexNotation.isliteral(::LoTriMask) = false
 Finch.getname(::LoTriMask) = gensym()
 Finch.setname(::LoTriMask, name) = lotrimask
-Finch.getsize(::LoTriMask, ctx, mode) = (nodim, nodim)
+Finch.virtual_size(::LoTriMask, ctx) = (nodim, nodim)
 
-function initialize!(::LoTriMask, ctx, mode, idxs...)
+function get_reader(::LoTriMask, ctx, protos...)
     tns = Furlable(
         size = (nodim, nodim),
         body = (ctx, idx, ext) -> Lookup(
@@ -168,7 +170,6 @@ function initialize!(::LoTriMask, ctx, mode, idxs...)
             )
         )
     )
-    return access(tns, mode, idxs...)
 end
 
 struct UpTriMask end
@@ -184,9 +185,9 @@ virtualize(ex, ::Type{UpTriMask}, ctx) = uptrimask
 IndexNotation.isliteral(::UpTriMask) = false
 Finch.getname(::UpTriMask) = gensym()
 Finch.setname(::UpTriMask, name) = uptrimask
-Finch.getsize(::UpTriMask, ctx, mode) = (nodim, nodim)
+Finch.virtual_size(::UpTriMask, ctx) = (nodim, nodim)
 
-function initialize!(::UpTriMask, ctx, mode, idxs...)
+function get_reader(::UpTriMask, ctx, protos...)
     tns = Furlable(
         size = (nodim, nodim),
         body = (ctx, idx, ext) -> Lookup(
@@ -204,7 +205,6 @@ function initialize!(::UpTriMask, ctx, mode, idxs...)
             )
         )
     )
-    return access(tns, mode, idxs...)
 end
 
 struct BandMask end
@@ -220,9 +220,9 @@ virtualize(ex, ::Type{BandMask}, ctx) = bandmask
 IndexNotation.isliteral(::BandMask) = false
 Finch.getname(::BandMask) = gensym()
 Finch.setname(::BandMask, name) = bandmask
-Finch.getsize(::BandMask, ctx, mode) = (nodim, nodim, nodim)
+Finch.virtual_size(::BandMask, ctx) = (nodim, nodim, nodim)
 
-function initialize!(::BandMask, ctx, mode, idxs...)
+function get_reader(::BandMask, ctx, mode, protos...)
     tns = Furlable(
         size = (nodim, nodim, nodim),
         body = (ctx, idx, ext) -> Lookup(
@@ -249,5 +249,4 @@ function initialize!(::BandMask, ctx, mode, idxs...)
             )
         )
     )
-    return access(tns, mode, idxs...)
 end

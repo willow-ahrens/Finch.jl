@@ -1,6 +1,6 @@
 @testset "Repeat" begin
     A = Finch.Fiber(
-        RepeatRLE{0.0, Int64, Int64, Float64}(10, [1, 7], [1, 3, 5, 7, 9, 10], [2.0, 3.0, 4.0, 5.0, 6.0, 7.0]))
+        RepeatRLE{0.0, Int64, Int64, Float64}(10, [1, 7], [1, 3, 5, 7, 9, 10], [2.0, 3.0, 4.0, 5.0, 6.0, 7.0]), Environment())
 
     @test diff("repeat_display.txt", sprint(show, MIME"text/plain"(), A))
     @test diff("repeat_print.txt", sprint(show, A))
@@ -31,7 +31,7 @@
 
     A = Finch.Fiber(
         SparseVBL(10, [1, 4], [3, 5, 9], [1, 2, 3, 6],
-        Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
+        Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])), Environment())
 
     B = Finch.Fiber(Dense(Element{0.0}()))
     @finch @loop i B[i] = A[i]

@@ -12,7 +12,7 @@ using Compat
 
 export @finch, @finch_program, @finch_code, value
 
-export Fiber, SparseList, SparseListDiff, SparseHash, SparseCoo, SparseBytemap, SparseVBL, Dense, RepeatRLE, RepeatRLEDiff, Element, Pattern, Scalar
+export Fiber, SparseList, SparseHash, SparseCoo, SparseBytemap, SparseVBL, Dense, RepeatRLE, Element, Pattern, Scalar
 export walk, fastwalk, gallop, follow, extrude, laminate
 export fiber, @fiber, pattern!, dropdefaults, dropdefaults!
 export diagmask, lotrimask, uptrimask, bandmask
@@ -90,6 +90,18 @@ module h
 end
 
 register(DefaultAlgebra)
+#TODO add an uninitialized_fiber type so that we can perhaps do this through executing pass(fbr),
+#obviating the need to have a separate generated function registration mechanism for fibers.
+@generated function Fiber(lvl)
+    contain(LowerJulia()) do ctx
+        lvl = virtualize(:lvl, lvl, ctx)
+        lvl = resolve(lvl, ctx)
+        lvl = initialize_level!(lvl, ctx, literal(0))
+        push!(ctx.preamble, assemble_level!(lvl, ctx, literal(1), literal(1)))
+        lvl = freeze_level!(lvl, ctx, literal(1))
+        :(Fiber($(ctx(lvl)), Environment()))
+    end |> lower_caches |> lower_cleanup
+end
 
 include("glue_AbstractArrays.jl")
 include("glue_SparseArrays.jl")
@@ -107,6 +119,7 @@ end
         A = @fiber d(sl(e(0.0)))
         x = @fiber sl(e(0.0))
         Finch.execute_code(:ex, typeof(Finch.@finch_program_instance @loop i j y[i] += A[i, j] * x[i]))
+
     end
 end
 

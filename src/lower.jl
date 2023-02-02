@@ -59,6 +59,10 @@ function cache!(ctx, var, val)
     if isliteral(val)
         return val
     end
+    if val isa IndexNode
+        val.kind == literal && return val
+        val.kind == value && return val
+    end
     body = contain(ctx) do ctx_2
         ctx(val)
     end
@@ -202,18 +206,17 @@ function (ctx::LowerJulia)(root::IndexNode, ::DefaultStyle)
             return root.val
         end
     elseif root.kind === with
-        prod = nothing
         target = map(getname, getresults(root.prod))
         return quote
             $(contain(ctx) do ctx_2
-                prod = Initialize(ctx = ctx_2, target=target)(root.prod)
+                prod = OpenScope(ctx = ctx_2, target=target)(root.prod)
                 (ctx_2)(prod)
             end)
             $(contain(ctx) do ctx_2
-                Finalize(ctx = ctx_2, target=target)(prod)
-                cons = Initialize(ctx = ctx_2, target=target)(root.cons)
+                CloseScope(ctx = ctx_2, target=target)(root.prod)
+                cons = OpenScope(ctx = ctx_2, target=target)(root.cons)
                 res = (ctx_2)(cons)
-                Finalize(ctx = ctx_2, target=target)(cons)
+                CloseScope(ctx = ctx_2, target=target)(cons)
                 res
             end)
         end
@@ -230,6 +233,8 @@ function (ctx::LowerJulia)(root::IndexNode, ::DefaultStyle)
     elseif root.kind === access
         if root.tns.kind === virtual
             return lowerjulia_access(ctx, root, root.tns.val)
+        elseif root.tns.kind === variable
+            return lowerjulia_access(ctx, root, resolve(root.tns.name, ctx))
         else
             tns = ctx(root.tns)
             idxs = map(ctx, root.idxs)
@@ -308,6 +313,7 @@ function (ctx::LowerJulia)(root::IndexNode, ::DefaultStyle)
     elseif root.kind === pass
         return quote end
     elseif root.kind === variable
+        error()
         return ctx(ctx.bindings[root.name])
     else
         error("unimplemented ($root)")
@@ -359,7 +365,7 @@ end
     body
 end
 
-default(ex::Lookup) = something(ex.val)
+virtual_default(ex::Lookup) = something(ex.val)
 
 Base.show(io::IO, ex::Lookup) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::Lookup)

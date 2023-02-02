@@ -31,8 +31,7 @@ function fiber(arr, default=zero(eltype(arr)))
 end
 
 @generated function Base.copyto!(dst::Fiber, src::Union{Fiber, AbstractArray})
-    dst = virtualize(:dst, dst, LowerJulia())
-    idxs = [Symbol(:i_, n) for n = getsites(dst)]
+    idxs = [Symbol(:i_, n) for n = 1:ndims(dst)]
     return quote
         @finch @loop($(idxs...), dst[$(idxs...)] = src[$(idxs...)])
         return dst
@@ -40,8 +39,7 @@ end
 end
 
 @generated function Base.copyto!(dst::Array, src::Fiber)
-    dst = virtualize(:dst, dst, LowerJulia())
-    idxs = [Symbol(:i_, n) for n = getsites(dst)]
+    idxs = [Symbol(:i_, n) for n = 1:ndims(dst)]
     return quote
         @finch @loop($(idxs...), dst[$(idxs...)] = src[$(idxs...)])
         return dst
@@ -51,8 +49,7 @@ end
 dropdefaults(src) = dropdefaults!(similar(src), src)
 
 @generated function dropdefaults!(dst::Fiber, src)
-    dst = virtualize(:dst, dst, LowerJulia())
-    idxs = [Symbol(:i_, n) for n = getsites(dst)]
+    idxs = [Symbol(:i_, n) for n = 1:ndims(dst)]
     T = eltype(dst)
     d = default(dst)
     return quote

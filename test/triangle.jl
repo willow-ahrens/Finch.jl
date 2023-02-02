@@ -13,9 +13,9 @@ function tri(mtx)
     A = Finch.Fiber(
         Dense(m,
         SparseList(n, A_ref.colptr, A_ref.rowval,
-        Element{0.0, Float64}(A_ref.nzval))))
+        Element{0.0, Float64}(A_ref.nzval))), Environment())
     C = Finch.Fiber(
-        Element{0.0, Float64}(zeros(1)))
+        Element{0.0, Float64}(zeros(1)), Environment())
 
     #@finch @loop i j k C[] += A[i, k::gallop] * A[i, j] * A[j, k::gallop]
     #println(C[])

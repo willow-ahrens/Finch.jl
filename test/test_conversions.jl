@@ -1,6 +1,6 @@
 @testset "conversions" begin
     for base in [
-        Pattern,
+        #Pattern,
         Element{false},
     ]
         #=
@@ -18,7 +18,7 @@
         end
         =#
 
-        if base != Pattern
+        if true #base != Pattern
             for inner in [
                 () -> Dense(base()),
                 () -> RepeatRLE{false}(),

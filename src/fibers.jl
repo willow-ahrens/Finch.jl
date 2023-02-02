@@ -13,8 +13,17 @@ struct Fiber{Lvl, Env}
     lvl::Lvl
     env::Env
 end
-Fiber(lvl::Lvl) where {Lvl} = Fiber{Lvl}(lvl)
-Fiber{Lvl}(lvl::Lvl, env::Env=Environment()) where {Lvl, Env} = Fiber{Lvl, Env}(lvl, env)
+
+Fiber{Lvl}(lvl::Lvl, env::Env) where {Lvl, Env} = Fiber{Lvl, Env}(lvl, env)
+
+@inline Base.ndims(::Fiber{Lvl}) where {Lvl} = level_ndims(Lvl)
+@inline Base.ndims(::Type{<:Fiber{Lvl}}) where {Lvl} = level_ndims(Lvl)
+@inline Base.size(fbr::Fiber) = level_size(fbr.lvl)
+@inline Base.axes(fbr::Fiber) = level_axes(fbr.lvl)
+@inline Base.eltype(::Fiber{Lvl}) where {Lvl} = level_eltype(Lvl)
+@inline Base.eltype(::Type{<:Fiber{Lvl}}) where {Lvl} = level_eltype(Lvl)
+@inline default(::Fiber{Lvl}) where {Lvl} = level_default(Lvl)
+@inline default(::Type{<:Fiber{Lvl}}) where {Lvl} = level_default(Lvl)
 
 """
     VirtualFiber(lvl, env)
@@ -44,6 +53,14 @@ end
 (ctx::Finch.LowerJulia)(fbr::VirtualFiber) = :(Fiber($(ctx(fbr.lvl)), $(ctx(fbr.env))))
 IndexNotation.isliteral(::VirtualFiber) =  false
 
+virtual_size(tns::VirtualFiber, ctx) = virtual_level_size(tns.lvl, ctx)
+function virtual_resize!(tns::VirtualFiber, ctx, dims...)
+    tns.lvl = virtual_level_resize!(tns.lvl, ctx, dims...)
+    tns
+end
+virtual_eltype(tns::VirtualFiber) = virtual_level_eltype(tns.lvl)
+virtual_default(tns::VirtualFiber) = virtual_level_default(tns.lvl)
+
 getname(fbr::VirtualFiber) = envname(fbr.env)
 setname(fbr::VirtualFiber, name) = VirtualFiber(fbr.lvl, envrename!(fbr.env, name))
 #setname(fbr::VirtualFiber, name) = (fbr.env.name = name; fbr)
@@ -59,53 +76,56 @@ See also: [`initialize!`](@ref)
 function default end
 
 """
-    initialize!(fbr, ctx, mode)
+    initialize!(fbr, ctx)
 
-Initialize the virtual fiber to it's default value in the context `ctx` with
-access mode `mode`. Return the new fiber object.
+Initialize the virtual fiber to it's default value in the context `ctx`. Return the new fiber object.
 """
-function initialize!(fbr::VirtualFiber, ctx::LowerJulia, mode, idxs...)
-    if mode.kind === updater
-        fbr = VirtualFiber(initialize_level!(fbr, ctx, mode), fbr.env)
-        assemble!(fbr, ctx, mode)
-    end
-    return access(refurl(fbr, ctx, mode), mode, idxs...)
+function initialize!(fbr::VirtualFiber, ctx::LowerJulia)
+    lvl = initialize_level!(fbr.lvl, ctx, literal(1))
+    push!(ctx.preamble, assemble_level!(lvl, ctx, literal(1), literal(1))) #TODO this feels unnecessary?
+    fbr = VirtualFiber(lvl, fbr.env)
+end
+
+function get_reader(fbr::VirtualFiber, ctx::LowerJulia, protos...)
+    return get_level_reader(fbr.lvl, ctx, literal(1), protos...)
+end
+
+function get_updater(fbr::VirtualFiber, ctx::LowerJulia, protos...)
+    return get_level_updater(fbr.lvl, ctx, literal(1), protos...)
 end
 
 """
-    initialize_level!(fbr, ctx, mode)
+    initialize_level!(fbr, ctx, pos)
 
 Initialize the level within the virtual fiber to it's default value in the
 context `ctx` with access mode `mode`. Return the new level.
 """
 function initialize_level! end
 
-initialize_level!(fbr, ctx, mode) = fbr.lvl
-
 
 
 """
-    finalize!(fbr, ctx, mode, idxs...)
+    freeze!(fbr, ctx, mode, idxs...)
 
-Finalize the virtual fiber in the context `ctx` with access mode `mode`. Return
+Freeze the virtual fiber in the context `ctx` with access mode `mode`. Return
 the new fiber object.
 """
-function finalize!(fbr::VirtualFiber, ctx::LowerJulia, mode, idxs...)
+function freeze!(fbr::VirtualFiber, ctx::LowerJulia, mode, idxs...)
     if mode.kind === updater
-        return VirtualFiber(finalize_level!(fbr, ctx, mode), fbr.env)
+        return VirtualFiber(freeze_level!(fbr.lvl, ctx, envposition(fbr.env)), fbr.env)
     else
         return fbr
     end
 end
 
 """
-    finalize_level!(fbr, ctx, mode)
+    freeze_level!(fbr, ctx, mode)
 
-Finalize the level within the virtual fiber. These are the bulk cleanup steps.
+Freeze the level within the virtual fiber. These are the bulk cleanup steps.
 """
-function finalize_level! end
+function freeze_level! end
 
-finalize_level!(fbr, ctx, mode) = fbr.lvl
+freeze_level!(fbr, ctx, mode) = fbr.lvl
 
 function trim!(fbr::VirtualFiber, ctx)
     delete!(fbr.env, :name)
@@ -113,44 +133,10 @@ function trim!(fbr::VirtualFiber, ctx)
 end
 trim!(fbr, ctx) = fbr
 
-function stylize_access(node, ctx::Stylize{LowerJulia}, tns::VirtualFiber)
-    if !isempty(node.idxs)
-        if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
-            return SelectStyle()
-        elseif ctx.root isa IndexNode && ctx.root.kind === loop && ctx.root.idx == get_furl_root(node.idxs[1])
-            return ChunkStyle()
-        end
-    end
-    return DefaultStyle()
-end
+#TODO get rid of these when we redo unfurling
+set_clean!(lvl, ctx) = quote end
+get_dirty(lvl, ctx) = true
 
-function select_access(node, ctx::Finch.SelectVisitor, tns::VirtualFiber)
-    if !isempty(node.idxs)
-        if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
-            var = index(ctx.ctx.freshen(:s))
-            val = cache!(ctx.ctx, :s, node.idxs[1])
-            ctx.idxs[var] = val
-            ext = first(getsize(tns, ctx.ctx, node.mode))
-            ext_2 = Extent(val, val)
-            tns_2 = truncate(tns, ctx.ctx, ext, ext_2)
-            return access(tns_2, node.mode, var, node.idxs[2:end]...)
-        end
-    end
-    return similarterm(node, operation(node), map(ctx, arguments(node)))
-end
-
-function chunkify_access(node, ctx, tns::VirtualFiber)
-    if !isempty(node.idxs)
-        if ctx.idx == get_furl_root(node.idxs[1])
-            idxs = map(ctx, node.idxs)
-            return access(unfurl(tns, ctx.ctx, node.mode, nothing, node.idxs...), node.mode, get_furl_root(node.idxs[1]), idxs[2:end]...)
-        else
-            idxs = map(ctx, node.idxs)
-            return access(node.tns, node.mode, idxs...)
-        end
-    end
-    return node
-end
 
 get_furl_root(idx) = nothing
 function get_furl_root(idx::IndexNode)
@@ -167,6 +153,8 @@ end
 get_furl_root_access(idx, tns) = nothing
 #These are also good examples of where modifiers might be great.
 
+supports_reassembly(lvl) = false
+
 refurl(tns, ctx, mode) = tns
 function exfurl(tns, ctx, mode, idx::IndexNode)
     if idx.kind === index
@@ -181,10 +169,8 @@ end
 function Base.show(io::IO, fbr::Fiber)
     print(io, "Fiber(")
     print(io, fbr.lvl)
-    if fbr.env != Environment()
-        print(io, ", ")
-        print(io, fbr.env)
-    end
+    print(io, ", ")
+    print(io, fbr.env)
     print(io, ")")
 end
 

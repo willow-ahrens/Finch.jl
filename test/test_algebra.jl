@@ -7,10 +7,10 @@ Finch.register(MyAlgebra)
 
 u = Finch.Fiber(
     SparseList(10, [1, 6], [1, 3, 5, 7, 9],
-    Element{1}([3, 6, 9, 4, 8])))
+    Element{1}([3, 6, 9, 4, 8])), Environment())
 v = Finch.Fiber(
     SparseList(10, [1, 4], [2, 5, 8],
-    Element{1}([2, 3, 4])))
+    Element{1}([2, 3, 4])), Environment())
 w = Finch.Fiber(SparseList(Element(1)))
 
 @finch MyAlgebra() @loop i w[i] = gcd(u[i], v[i])

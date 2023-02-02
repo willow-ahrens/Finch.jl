@@ -1,27 +1,5 @@
 @testset "permit" begin
 
-    #=
-    A = Finch.Fiber(
-        Dense(5,
-        Element{0.0}([1, 2, 3, 4, 5])))
-    B = Finch.Fiber(
-        Dense(2,
-        Element{0.0}([10, 20])))
-    C = Finch.Fiber(Dense(Element{0.0}()))
-
-    println(@finch_code @loop i C[i] += A[i] + coalesce(B[permit[i]], 0))
-    @finch @loop i C[i] += A[i] + coalesce(B[permit[i]], 0)
-    println(C)
-
-    A = Finch.Fiber(
-        Dense(5,
-        Element{0.0}([1, 2, 3, 4, 5])))
-    B = Finch.Fiber(
-        Dense(2,
-        Element{0.0}([1, 1])))
-    C = Finch.Fiber(Dense(Element{0.0}()))
-    =#
-
     A_ref = sprand(10, 0.5); B_ref = sprand(10, 0.5); C_ref = vcat(A_ref, B_ref)
     A = fiber(SparseVector{Float64, Int64}(A_ref)); B = fiber(SparseVector{Float64, Int64}(B_ref)); C = @fiber(sl{Int64}(e(0.0)))
     @test diff("concat_permit_offset.jl", @finch_code @loop i C[i] = coalesce(A[permit[i]], B[permit[offset[10, i]]]))

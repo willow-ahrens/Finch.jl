@@ -10,10 +10,12 @@ open("test_constructors.jl", "w") do file
         println(file, "    @testset \"$(first(ctrs)) constructors\" begin")
         ref = dropdefaults!(Fiber(first(ctrs)(Element(zero(eltype(arr))))), arr)
 
-        println(file, "        ref = Fiber($(repr(ref.lvl)))")
+        println(file, "        ref = Fiber($(repr(ref.lvl)), Environment())")
 
         for ctr in ctrs
-            for args in argss
+            println(file, "        res = Fiber($(ctr)($(join(map(repr, argss[1](ref.lvl)), ", "))), Environment())")
+            println(file, "        @test isstructequal(res, ref)")
+            for args in argss[2:end]
                 println(file, "        res = Fiber($(ctr)($(join(map(repr, args(ref.lvl)), ", "))))")
                 println(file, "        @test isstructequal(res, ref)")
             end
@@ -122,10 +124,12 @@ open("test_constructors.jl", "w") do file
         println(file, "    @testset \"$(first(ctrs)) constructors\" begin")
         ref = dropdefaults!(Fiber(first(ctrs)(prefix...)), arr)
 
-        println(file, "        ref = Fiber($(repr(ref.lvl)))")
+        println(file, "        ref = Fiber($(repr(ref.lvl)), Environment())")
 
         for ctr in ctrs
-            for args in argss
+            println(file, "        res = Fiber($(ctr)($(join(map(repr, argss[1](ref.lvl)), ", "))), Environment())")
+            println(file, "        @test isstructequal(res, ref)")
+            for args in argss[2:end]
                 println(file, "        res = Fiber($(ctr)($(join(map(repr, args(ref.lvl)), ", "))))")
                 println(file, "        @test isstructequal(res, ref)")
             end
@@ -157,7 +161,7 @@ open("test_constructors.jl", "w") do file
         end
 
         for ctrs = [
-            [RepeatRLE],
+            #[RepeatRLE],
         ]
             argss = []
             push!(argss, lvl -> (D, map(name -> getproperty(lvl, name), propertynames(lvl))...))

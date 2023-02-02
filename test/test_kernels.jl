@@ -7,11 +7,11 @@
         A = Finch.Fiber(
             Dense(n,
             SparseList(m, A_ref.colptr, A_ref.rowval,
-            Element{0.0}(A_ref.nzval))))
+            Element{0.0}(A_ref.nzval))), Environment())
         B = Finch.Fiber(
             Dense(m,
             SparseList(m,
-            Element{0.0}())))
+            Element{0.0}())), Environment())
         @finch @loop i j k B[i, j] += A[i, k] * A[j, k]
         @test B.lvl.lvl.pos[1:length(B_ref.colptr)] == B_ref.colptr
         @test B.lvl.lvl.idx[1:length(B_ref.rowval)] == B_ref.rowval
@@ -25,7 +25,7 @@
             A = Finch.Fiber(
                 Dense(n,
                 SparseList(m, A_ref.colptr, A_ref.rowval,
-                Element{0.0}(A_ref.nzval))))
+                Element{0.0}(A_ref.nzval))), Environment())
             B = Finch.Scalar{0.0}()
             @finch @loop i j k B[] += A[i, k] * A[i, j] * A[j, k]
             @test B() ≈ sum(A_ref .* (A_ref * transpose(A_ref)))
@@ -44,15 +44,15 @@
         J, W = findnz(B_ref)
         A = Fiber(
             SparseList(n, [1, length(I) + 1], I,
-            Element{0.0}(V))
+            Element{0.0}(V)), Environment()
         )
         B = Fiber(
             SparseList(n, [1, length(J) + 1], J,
-            Element{0.0}(W))
+            Element{0.0}(W)), Environment()
         )
         C = Fiber(
             SparseList(
-            Element{0.0}())
+            Element{0.0}()), Environment()
         )
         d = Scalar{0.0}()
         a = Scalar{0.0}()
@@ -74,14 +74,14 @@
             A = Finch.Fiber(
                 Dense(n,
                 SparseList(m, A_ref.colptr, A_ref.rowval,
-                Element{0.0}(A_ref.nzval))))
+                Element{0.0}(A_ref.nzval))), Environment())
             B = Fiber(
                 Dense(0,
                 SparseList(0,
-                Element{0.0}())))
+                Element{0.0}())), Environment())
             w = Fiber(
                 SparseBytemap(m, #TODO
-                Element{0.0}()))
+                Element{0.0}()), Environment())
 
             ex = @finch_program_instance @loop i ((@loop j B[i, j] = w[j]) where (@loop k j w[j] = A[i, k] * A[k, j]))
             #println(typeof(ex))

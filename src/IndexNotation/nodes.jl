@@ -109,7 +109,7 @@ updater
     create()
 
 Finch AST expression for an "allocating" update. This access will
-initialize and finalize the tensor, and we can be sure that any values
+initialize and freeze the tensor, and we can be sure that any values
 the tensor held before have been forgotten.
 """
 create
@@ -118,7 +118,7 @@ create
     modify()
 
 Finch AST expression for an "in place" update. The access will not
-initialize or finalize the tensor, but can modify it's existing values.
+initialize or freeze the tensor, but can modify it's existing values.
 """
 modify
 
@@ -178,7 +178,7 @@ assign
 """
     pass(tnss...)
 
-Finch AST statement that initializes, finalizes, and returns each tensor in `tnss...`.
+Finch AST statement that initializes, freezes, and returns each tensor in `tnss...`.
 """
 pass
 
@@ -186,7 +186,7 @@ pass
 """
     lifetime(body)
 
-Finch AST statement that initializes and finalizes all results in `body`. Most
+Finch AST statement that initializes and freezes all results in `body`. Most
 finch programs are wrapped by an outer `lifetime`.
 """
 lifetime
@@ -474,6 +474,16 @@ function Finch.getunbound(ex::IndexNode)
         return mapreduce(Finch.getunbound, union, arguments(ex), init=[])
     else
         return []
+    end
+end
+
+function Base.show(io::IO, node::IndexNode) 
+    if node.kind === literal || node.kind == index || node.kind === virtual
+        print(io, node.kind, "(", node.val, ")")
+    elseif node.kind === value
+        print(io, node.kind, "(", node.val, ", ", node.type, ")")
+    else
+        print(io, node.kind, "("); join(io, node.children, ", "); print(io, ")")
     end
 end
 
