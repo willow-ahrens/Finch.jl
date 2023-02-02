@@ -15,11 +15,11 @@ begin
     C_lvl_qos_stop = 0
     (Finch.resize_if_smaller!)(C_lvl.pos, 1 + 1)
     (Finch.fill_range!)(C_lvl.pos, 0, 1 + 1, 1 + 1)
-    B_lvl_3_qos_fill = 0
-    B_lvl_3_qos_stop = 0
-    (Finch.resize_if_smaller!)(B_lvl_3.pos, 1 + 1)
-    (Finch.fill_range!)(B_lvl_3.pos, 0, 1 + 1, 1 + 1)
-    B_lvl_3_q = B_lvl_3_qos_fill + 1
+    B_lvl_qos_fill = 0
+    B_lvl_qos_stop = 0
+    (Finch.resize_if_smaller!)(B_lvl.pos, 1 + 1)
+    (Finch.fill_range!)(B_lvl.pos, 0, 1 + 1, 1 + 1)
+    B_lvl_q = B_lvl_qos_fill + 1
     A_lvl_q = A_lvl.pos[1]
     A_lvl_q_stop = A_lvl.pos[1 + 1]
     A_lvl_i = if A_lvl_q < A_lvl_q_stop
@@ -49,22 +49,22 @@ begin
             if A_lvl_i == phase_stop_2
                 A_lvl_2_val = A_lvl_2.val[A_lvl_q]
                 i_3 = phase_stop_2
-                if B_lvl_3_q > B_lvl_3_qos_stop
-                    B_lvl_3_qos_stop = max(B_lvl_3_qos_stop << 1, 1)
-                    resize_if_smaller!(B_lvl_3.tbl[1], B_lvl_3_qos_stop)
-                    resize_if_smaller!(B_lvl_4.val, B_lvl_3_qos_stop)
-                    fill_range!(B_lvl_4.val, 0.0, B_lvl_3_q, B_lvl_3_qos_stop)
+                if B_lvl_q > B_lvl_qos_stop
+                    B_lvl_qos_stop = max(B_lvl_qos_stop << 1, 1)
+                    resize_if_smaller!(B_lvl.tbl[1], B_lvl_qos_stop)
+                    resize_if_smaller!(B_lvl_2.val, B_lvl_qos_stop)
+                    fill_range!(B_lvl_2.val, 0.0, B_lvl_q, B_lvl_qos_stop)
                 end
-                B_lvl_4_dirty = false
-                B_lvl_4_val = B_lvl_4.val[B_lvl_3_q]
-                B_lvl_4_dirty = true
-                B_lvl_4_dirty = true
-                B_lvl_4_val = (+)(A_lvl_2_val, B_lvl_4_val)
-                B_lvl_4.val[B_lvl_3_q] = B_lvl_4_val
-                if B_lvl_4_dirty
-                    B_lvl_3_dirty = true
-                    (B_lvl_3.tbl[1])[B_lvl_3_q] = i_3
-                    B_lvl_3_q += 1
+                B_lvl_2_dirty = false
+                B_lvl_2_val = B_lvl_2.val[B_lvl_q]
+                B_lvl_2_dirty = true
+                B_lvl_2_dirty = true
+                B_lvl_2_val = (+)(A_lvl_2_val, B_lvl_2_val)
+                B_lvl_2.val[B_lvl_q] = B_lvl_2_val
+                if B_lvl_2_dirty
+                    B_lvl_dirty = true
+                    (B_lvl.tbl[1])[B_lvl_q] = i_3
+                    B_lvl_q += 1
                 end
                 A_lvl_q += 1
             else
@@ -78,17 +78,17 @@ begin
         i_4 = i
         i = A_lvl.I + 1
     end
-    B_lvl_3.pos[1 + 1] = (B_lvl_3_q - B_lvl_3_qos_fill) - 1
-    B_lvl_3_qos_fill = B_lvl_3_q - 1
+    B_lvl.pos[1 + 1] = (B_lvl_q - B_lvl_qos_fill) - 1
+    B_lvl_qos_fill = B_lvl_q - 1
     for p = 2:1 + 1
-        B_lvl_3.pos[p] += B_lvl_3.pos[p - 1]
+        B_lvl.pos[p] += B_lvl.pos[p - 1]
     end
-    qos_stop = B_lvl_3.pos[1 + 1] - 1
+    qos_stop = B_lvl.pos[1 + 1] - 1
     C_lvl_qos = C_lvl_qos_fill + 1
-    B_lvl_q = B_lvl.pos[1]
+    B_lvl_q_2 = B_lvl.pos[1]
     B_lvl_q_stop = B_lvl.pos[1 + 1]
-    if B_lvl_q < B_lvl_q_stop
-        B_lvl_i = (B_lvl.tbl[1])[B_lvl_q]
+    if B_lvl_q_2 < B_lvl_q_stop
+        B_lvl_i = (B_lvl.tbl[1])[B_lvl_q_2]
         B_lvl_i_stop = (B_lvl.tbl[1])[B_lvl_q_stop - 1]
     else
         B_lvl_i = 1
@@ -100,16 +100,16 @@ begin
     if phase_stop_3 >= i_2_start
         i_5 = i_2
         i_2 = i_2_start
-        while B_lvl_q + 1 < B_lvl_q_stop && (B_lvl.tbl[1])[B_lvl_q] < i_2_start
-            B_lvl_q += 1
+        while B_lvl_q_2 + 1 < B_lvl_q_stop && (B_lvl.tbl[1])[B_lvl_q_2] < i_2_start
+            B_lvl_q_2 += 1
         end
         while i_2 <= phase_stop_3
             i_2_start_2 = i_2
-            B_lvl_i = (B_lvl.tbl[1])[B_lvl_q]
+            B_lvl_i = (B_lvl.tbl[1])[B_lvl_q_2]
             phase_stop_4 = (min)(B_lvl_i, phase_stop_3)
             i_6 = i_2
             if B_lvl_i == phase_stop_4
-                B_lvl_2_val = B_lvl_2.val[B_lvl_q]
+                B_lvl_2_val = B_lvl_2.val[B_lvl_q_2]
                 i_7 = phase_stop_4
                 if C_lvl_qos > C_lvl_qos_stop
                     C_lvl_qos_stop = max(C_lvl_qos_stop << 1, 1)
@@ -128,7 +128,7 @@ begin
                     C_lvl.idx[C_lvl_qos] = i_7
                     C_lvl_qos += 1
                 end
-                B_lvl_q += 1
+                B_lvl_q_2 += 1
             else
             end
             i_2 = phase_stop_4 + 1
