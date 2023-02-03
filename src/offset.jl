@@ -60,7 +60,7 @@ end
 function Finch.virtual_size(arr::VirtualStaticOffset, ctx::Finch.LowerJulia)
     return (arr.dim,)
 end
-Finch.virtual_resize!(arr::VirtualStaticOffset, ctx::Finch.LowerJulia, dim) = VirtualStaticOffset(;kwfields(arr)..., dim=dim)
+Finch.virtual_resize!(arr::VirtualStaticOffset, ctx::Finch.LowerJulia, dim) = (VirtualStaticOffset(;kwfields(arr)..., dim=dim), shiftdim(dim, call(-, tns.delta)))
 
 struct VirtualOffset end
 
@@ -76,7 +76,7 @@ virtualize(ex, ::Type{Offset}, ctx) = VirtualOffset()
 (ctx::Finch.LowerJulia)(tns::VirtualOffset) = :(Offset($(ctx(tns.I))))
 
 Finch.virtual_size(arr::VirtualOffset, ctx::Finch.LowerJulia) = (nodim, deferdim)
-Finch.virtual_resize!(arr::VirtualOffset, ctx::Finch.LowerJulia, dim1, dim2) = arr
+Finch.virtual_resize!(arr::VirtualOffset, ctx::Finch.LowerJulia, dim1, dim2) = (arr, nodim)
 
 function declare_dimensions_access(node, ctx, tns::VirtualStaticOffset, ext)
     idx = ctx(node.idxs[1], shiftdim(ext, tns.delta))

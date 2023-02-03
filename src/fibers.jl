@@ -58,9 +58,10 @@ IndexNotation.isliteral(::VirtualFiber) =  false
 virtual_size(tns::VirtualFiber, ctx) = virtual_level_size(tns.lvl, ctx)
 function virtual_resize!(tns::VirtualFiber, ctx, dims...)
     tns.lvl = virtual_level_resize!(tns.lvl, ctx, dims...)
-    tns
+    (tns, nodim)
 end
 virtual_eltype(tns::VirtualFiber) = virtual_level_eltype(tns.lvl)
+virtual_elaxis(tns::VirtualFiber) = nodim
 virtual_default(tns::VirtualFiber) = virtual_level_default(tns.lvl)
 
 """

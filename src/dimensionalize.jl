@@ -140,26 +140,33 @@ function (ctx::InferDimensions)(node::IndexNode)
 end
 
 declare_dimensions_access(node, ctx, tns::Dimensionalize, dim) = declare_dimensions_access(node, ctx, tns.body, dim)
-function declare_dimensions_access(node, ctx, tns, dim)
+function declare_dimensions_access(node, ctx, tns, eldim)
     if node.mode.kind !== reader
-        dims = map(suggest, virtual_size(tns, ctx.ctx))
+        shape = map(suggest, virtual_size(tns, ctx.ctx, eldim))
     else
-        dims = virtual_size(tns, ctx.ctx)
+        shape = virtual_size(tns, ctx.ctx, eldim)
     end
-    idxs = map(ctx, node.idxs, dims)
+    idxs = map(ctx, node.idxs, shape)
     access(tns, node.mode, idxs...)
 end
 
 function infer_dimensions_access(node, ctx, tns)
     res = map(ctx, node.idxs)
     idxs = map(first, res)
+    shape = virtual_size(tns, ctx.ctx) #TODO can we eventually add an eldim here?
     if node.mode.kind === updater
-        prev_dims = map(suggest, virtual_size(tns, ctx.ctx))
-        dims = map(resolvedim, map((a, b) -> resultdim(ctx.ctx, a, b), map(last, res), prev_dims))
-        tns = virtual_resize!(tns, ctx.ctx, dims...)
+        shape = map(suggest, shape) #TODO can we eventually add an eldim here?
     end
-    (access(tns, node.mode, idxs...), nodim)
+    shape = map(resolvedim, map((a, b) -> resultdim(ctx.ctx, a, b), shape, map(last, res)))
+    if node.mode.kind === updater
+        eldim = virtual_resize!(tns, ctx.ctx, shape...)
+        (access(tns, node.mode, idxs...), eldim)
+    else
+        (access(tns, node.mode, idxs...), virtual_elaxis(tns, ctx.ctx, shape...))
+    end
 end
+
+virtual_elaxis(tns, ctx, dims...) = nodim
 
 function virtual_resize!(tns, ctx, dims...)
     for (dim, ref) in zip(dims, virtual_size(tns, ctx))
@@ -170,7 +177,7 @@ function virtual_resize!(tns, ctx, dims...)
             end)
         end
     end
-    tns
+    (tns, nodim)
 end
 
 struct UnknownDimension end
@@ -326,7 +333,7 @@ Return a tuple of the dimensions of `tns` in the context `ctx` with access
 mode `mode`. This is a function similar in spirit to `Base.axes`.
 """
 function getsize end
-function virtual_size(tns::IndexNode, ctx)
+function virtual_size(tns::IndexNode, ctx, eldim = nodim)
     if tns.kind === variable
         return virtual_size(ctx.bindings[tns.name], ctx)
     else
@@ -334,12 +341,19 @@ function virtual_size(tns::IndexNode, ctx)
     end
 end
 
-function virtual_resize!(tns::IndexNode, ctx, dims...)
+function virtual_elaxis(tns::IndexNode, ctx, dims...)
     if tns.kind === variable
-        ctx.bindings[tns.name] == virtual_resize!(ctx.bindings[tns.name], ctx, dims...)
-        tns
+        return virtual_elaxis(ctx.bindings[tns.name], ctx, dims...)
     else
         return error("unimplemented")
+    end
+end
+
+function virtual_resize!(tns::IndexNode, ctx, dims...)
+    if tns.kind === variable
+        return (ctx.bindings[tns.name], eldim) = virtual_resize!(ctx.bindings[tns.name], ctx, dims...)
+    else
+        error("unimplemented")
     end
 end
 

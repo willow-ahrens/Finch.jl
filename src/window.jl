@@ -61,7 +61,7 @@ end
 function Finch.virtual_size(arr::VirtualStaticWindow, ctx::Finch.LowerJulia)
     return (arr.target,)
 end
-Finch.virtual_resize!(arr::VirtualStaticWindow, ctx::Finch.LowerJulia, dim) = arr
+Finch.virtual_resize!(arr::VirtualStaticWindow, ctx::Finch.LowerJulia, dim) = (arr, tns.target)
 
 struct VirtualWindow end
 
@@ -77,7 +77,7 @@ virtualize(ex, ::Type{Window}, ctx) = VirtualWindow()
 (ctx::Finch.LowerJulia)(tns::VirtualWindow) = :(Window($(ctx(tns.I))))
 
 Finch.virtual_size(arr::VirtualWindow, ctx::Finch.LowerJulia) = (nodim, nodim, nodim)
-Finch.virtual_resize!(arr::VirtualWindow, ctx::Finch.LowerJulia, dim1, dim2, dim3) = arr
+Finch.virtual_resize!(arr::VirtualWindow, ctx::Finch.LowerJulia, dim1, dim2, dim3) = (arr, nodim)
 
 function declare_dimensions_access(node, ctx, tns::VirtualStaticWindow, dim)
     idx = ctx(node.idxs[1], shiftdim(tns.target, call(-, getstart(dim), getstart(tns.target))))

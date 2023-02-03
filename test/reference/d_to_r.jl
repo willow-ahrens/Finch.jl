@@ -2,6 +2,7 @@ begin
     A_lvl = ex.body.lhs.tns.tns.lvl
     C = ex.body.rhs.tns.tns
     (C_mode1_stop,) = size(C)
+    (C_mode1_stop,) = size(C)
     A_lvl.pos[1] = 1
     A_lvl_ros_fill = 0
     A_lvl_qos_stop = 0

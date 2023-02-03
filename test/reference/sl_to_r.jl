@@ -24,7 +24,7 @@ begin
         end
     i = 1
     i_start = i
-    phase_stop = (min)(D_lvl_i1, D_lvl.I)
+    phase_stop = (min)(D_lvl.I, D_lvl_i1)
     if phase_stop >= i_start
         i = i
         i = i_start

@@ -19,19 +19,19 @@ begin
         end
     j = 1
     j_start = j
-    phase_stop = (min)(A_lvl_i1, s_2 - 1, A_lvl.I)
+    phase_stop = (min)(A_lvl.I, A_lvl_i1, s_2 - 1)
     if phase_stop >= j_start
         j = j
         j = phase_stop + 1
     end
     j_start = j
-    phase_stop_2 = (min)(s_2 - 1, A_lvl.I)
+    phase_stop_2 = (min)(A_lvl.I, s_2 - 1)
     if phase_stop_2 >= j_start
         j_2 = j
         j = phase_stop_2 + 1
     end
     j_start = j
-    phase_stop_3 = (min)(A_lvl_i1, A_lvl.I, s_2)
+    phase_stop_3 = (min)(A_lvl.I, A_lvl_i1, s_2)
     if phase_stop_3 >= j_start
         j_3 = j
         j = j_start
@@ -61,7 +61,7 @@ begin
         j = phase_stop_5 + 1
     end
     j_start = j
-    phase_stop_6 = (min)(A_lvl_i1, A_lvl.I)
+    phase_stop_6 = (min)(A_lvl.I, A_lvl_i1)
     if phase_stop_6 >= j_start
         j_7 = j
         j = phase_stop_6 + 1
