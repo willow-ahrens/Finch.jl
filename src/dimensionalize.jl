@@ -144,18 +144,10 @@ end
 
 declare_dimensions_access(node, ctx, tns::Dimensionalize, dim) = declare_dimensions_access(node, ctx, tns.body, dim)
 function declare_dimensions_access(node, ctx, tns, dim)
-    if haskey(ctx.shapes, getname(tns))
-        if tns isa IndexNode && tns.kind === variable #TODO does every tensor read need a context now?
-            tns = ctx.ctx.bindings[tns.name]
-        end
-        dims = ctx.shapes[getname(tns)]
-        tns = virtual_resize!(tns, ctx.ctx, dims...)
+    if node.mode.kind !== reader
+        dims = map(suggest, virtual_size(tns, ctx.ctx))
     else
-        if node.mode.kind !== reader
-            dims = map(suggest, virtual_size(tns, ctx.ctx))
-        else
-            dims = virtual_size(tns, ctx.ctx)
-        end
+        dims = virtual_size(tns, ctx.ctx)
     end
     idxs = map(ctx, node.idxs, dims)
     access(tns, node.mode, idxs...)
@@ -164,10 +156,9 @@ end
 function infer_dimensions_access(node, ctx, tns)
     res = map(ctx, node.idxs)
     idxs = map(first, res)
-    if node.mode.kind !== reader
+    if node.mode.kind === updater
         prev_dims = map(suggest, virtual_size(tns, ctx.ctx))
         dims = map(resolvedim, map((a, b) -> resultdim(ctx.ctx, a, b), map(last, res), prev_dims))
-        ctx.shapes[getname(tns)] = dims
         tns = virtual_resize!(tns, ctx.ctx, dims...)
     end
     (access(tns, node.mode, idxs...), nodim)

@@ -28,6 +28,8 @@ Return the name of the index expression `ex`. The name serves as a unique
 identifier and often corresponds to the variable name which holds a tensor.
 Tensors can have the same name only if they are `===` to each other. The names
 of indices are used to distinguish the loops they reference.
+
+#TODO this function shouldn't exist
 """
 function getname end
 

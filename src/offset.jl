@@ -88,9 +88,6 @@ function infer_dimensions_access(node, ctx, tns::VirtualStaticOffset)
     return (access(tns, node.mode, idx), shiftdim(ext, call(-, tns.delta)))
 end
 
-Finch.getname(node::VirtualOffset) = gensym()
-Finch.setname(node::VirtualOffset, name) = node
-
 function stylize_access(node, ctx::Stylize{LowerJulia}, tns::VirtualOffset)
     if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
         return ThunkStyle()
@@ -105,9 +102,6 @@ function thunk_access(node, ctx, tns::VirtualOffset)
     end
     return similarterm(node, operation(node), map(ctx, arguments(node)))
 end
-
-Finch.getname(node::VirtualStaticOffset) = gensym()
-Finch.setname(node::VirtualStaticOffset, name) = node
 
 get_furl_root_access(idx, ::VirtualStaticOffset) = get_furl_root(idx.idxs[1])
 function exfurl_access(tns, ctx, mode, idx, node::VirtualStaticOffset)

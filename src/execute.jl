@@ -72,15 +72,10 @@ function execute_code(ex, T, algebra = DefaultAlgebra())
             $(contain(ctx) do ctx_2
                 prgm = CloseScope(ctx = ctx_2)(prgm)
                 :(($(map(getresults(prgm)) do acc
-                    if acc.tns.kind === virtual
-                        name = getname(acc)
-                        tns = trim!(acc.tns.val, ctx_2)
-                        :($name = $(ctx_2(tns)))
-                    elseif acc.tns.kind === variable
-                        name = acc.tns.name
-                        tns = trim!(ctx.bindings[name], ctx_2)
-                        :($name = $(ctx_2(tns)))
-                    end
+                    @assert acc.tns.kind === variable
+                    name = acc.tns.name
+                    tns = trim!(ctx.bindings[name], ctx_2)
+                    :($name = $(ctx_2(tns)))
                 end...), ))
             end)
         end
@@ -157,6 +152,11 @@ function (ctx::OpenScope)(node)
     end
 end
 
+function gettns(acc)
+    @assert acc.kind === access
+    return acc.tns
+end
+
 function (ctx::OpenScope)(node::IndexNode)
     if node.kind === access
         tns = node.tns
@@ -165,20 +165,23 @@ function (ctx::OpenScope)(node::IndexNode)
         elseif tns.kind === virtual
             tns = tns.val
         end
-        if (ctx.target === nothing || (getname(node.tns) in ctx.target)) && !(getname(node.tns) in ctx.escape)
-            protos = map(idx -> idx.kind === protocol ? idx.mode.val : nothing, node.idxs)
-            idxs = map(idx -> idx.kind === protocol ? ctx(idx.idx) : ctx(idx), node.idxs)
-            if node.mode.kind === reader
-                return access(get_reader(tns, ctx.ctx, protos...), node.mode, idxs...)
+        if node.tns.kind === variable
+            if (ctx.target === nothing || (node.tns in ctx.target)) && !(node.tns in ctx.escape)
+                protos = map(idx -> idx.kind === protocol ? idx.mode.val : nothing, node.idxs)
+                idxs = map(idx -> idx.kind === protocol ? ctx(idx.idx) : ctx(idx), node.idxs)
+                if node.mode.kind === reader
+                    return access(get_reader(tns, ctx.ctx, protos...), node.mode, idxs...)
+                else
+                    tns = initialize!(tns, ctx.ctx)
+                    return access(get_updater(tns, ctx.ctx, protos...), node.mode, idxs...)
+                end
             else
-                tns = initialize!(tns, ctx.ctx)
-                return access(get_updater(tns, ctx.ctx, protos...), node.mode, idxs...)
+                return access(ctx(node.tns), node.mode, map(ctx, node.idxs)...)
             end
-        else
-            return access(ctx(node.tns), node.mode, map(ctx, node.idxs)...)
         end
+        return access(ctx(node.tns), node.mode, map(ctx, node.idxs)...)
     elseif node.kind === with
-        ctx_2 = OpenScope(ctx.ctx, ctx.target, union(ctx.escape, map(getname, getresults(node.prod))))
+        ctx_2 = OpenScope(ctx.ctx, ctx.target, union(ctx.escape, map(gettns, getresults(node.prod))))
         with(ctx_2(node.cons), ctx_2(node.prod))
     elseif istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))
@@ -211,19 +214,16 @@ end
 
 function (ctx::CloseScope)(node::IndexNode)
     if node.kind === access
-        tns = node.tns
-        if tns.kind === variable
-            tns = ctx.ctx.bindings[tns.name]
-        elseif tns.kind === virtual
-            tns = tns.val
+        if node.tns.kind === variable
+            if (ctx.target === nothing || (node.tns in ctx.target)) && !(node.tns in ctx.escape)
+                if node.mode.kind !== reader
+                    freeze!(ctx.ctx.bindings[node.tns.name], ctx.ctx, node.mode, node.idxs...)
+                end
+            end
         end
-        if (ctx.target === nothing || (getname(node.tns) in ctx.target)) && !(getname(node.tns) in ctx.escape)
-            access(freeze!(tns, ctx.ctx, node.mode, node.idxs...), node.mode, node.idxs...)
-        else
-            access(node.tns, node.mode, map(ctx, node.idxs)...)
-        end
+        return similarterm(node, operation(node), map(ctx, arguments(node)))
     elseif node.kind === with
-        ctx_2 = CloseScope(ctx.ctx, ctx.target, union(ctx.escape, map(getname, getresults(node.prod))))
+        ctx_2 = CloseScope(ctx.ctx, ctx.target, union(ctx.escape, map(gettns, getresults(node.prod))))
         with(ctx_2(node.cons), ctx_2(node.prod))
     elseif istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))

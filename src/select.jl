@@ -43,7 +43,6 @@ function (ctx::LowerJulia)(root, ::SelectStyle)
 end
 
 @kwdef struct Furlable
-    name = gensym()
     val = nothing
     size
     body
@@ -51,7 +50,6 @@ end
 
 virtual_default(tns::Furlable) = something(tns.val)
 virtual_size(tns::Furlable, ::LowerJulia) = tns.size
-getname(tns::Furlable) = tns.name
 
 IndexNotation.isliteral(::Furlable) = false
 
@@ -111,8 +109,6 @@ end
 
 virtualize(ex, ::Type{DiagMask}, ctx) = diagmask
 IndexNotation.isliteral(::DiagMask) = false
-Finch.getname(::DiagMask) = gensym()
-Finch.setname(::DiagMask, name) = diagmask
 Finch.virtual_size(::DiagMask, ctx) = (nodim, nodim)
 
 function get_reader(::DiagMask, ctx, protos...)
@@ -148,8 +144,6 @@ end
 
 virtualize(ex, ::Type{LoTriMask}, ctx) = lotrimask
 IndexNotation.isliteral(::LoTriMask) = false
-Finch.getname(::LoTriMask) = gensym()
-Finch.setname(::LoTriMask, name) = lotrimask
 Finch.virtual_size(::LoTriMask, ctx) = (nodim, nodim)
 
 function get_reader(::LoTriMask, ctx, protos...)
@@ -183,8 +177,6 @@ end
 
 virtualize(ex, ::Type{UpTriMask}, ctx) = uptrimask
 IndexNotation.isliteral(::UpTriMask) = false
-Finch.getname(::UpTriMask) = gensym()
-Finch.setname(::UpTriMask, name) = uptrimask
 Finch.virtual_size(::UpTriMask, ctx) = (nodim, nodim)
 
 function get_reader(::UpTriMask, ctx, protos...)
@@ -218,8 +210,6 @@ end
 
 virtualize(ex, ::Type{BandMask}, ctx) = bandmask
 IndexNotation.isliteral(::BandMask) = false
-Finch.getname(::BandMask) = gensym()
-Finch.setname(::BandMask, name) = bandmask
 Finch.virtual_size(::BandMask, ctx) = (nodim, nodim, nodim)
 
 function get_reader(::BandMask, ctx, mode, protos...)

@@ -90,9 +90,6 @@ function infer_dimensions_access(node, ctx, tns::VirtualStaticWindow)
     return (access(tns, node.mode, idx), tns.target) #TODO this feels only partially correct
 end
 
-Finch.getname(node::VirtualWindow) = gensym()
-Finch.setname(node::VirtualWindow, name) = node
-
 function stylize_access(node, ctx::Stylize{LowerJulia}, tns::VirtualWindow)
     if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings) && getunbound(node.idxs[2]) ⊆ keys(ctx.ctx.bindings)
         return ThunkStyle()
@@ -107,9 +104,6 @@ function thunk_access(node, ctx, tns::VirtualWindow)
     end
     return similarterm(node, operation(node), map(ctx, arguments(node)))
 end
-
-Finch.getname(node::VirtualStaticWindow) = gensym()
-Finch.setname(node::VirtualStaticWindow, name) = node
 
 get_furl_root_access(idx, ::VirtualStaticWindow) = get_furl_root(idx.idxs[1])
 function exfurl_access(tns, ctx, mode, idx, node::VirtualStaticWindow)

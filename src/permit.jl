@@ -54,9 +54,6 @@ function infer_dimensions_access(node, ctx, tns::VirtualPermit)
     return (access(tns, node.mode, idx), tns.I)
 end
 
-Finch.getname(node::VirtualPermit) = gensym()
-Finch.setname(node::VirtualPermit, name) = node
-
 get_furl_root_access(idx, ::VirtualPermit) = get_furl_root(idx.idxs[1])
 function exfurl_access(tns, ctx, mode, idx, node::VirtualPermit)
     ext_2 = node.I

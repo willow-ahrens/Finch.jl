@@ -13,8 +13,6 @@ IndexNotation.isliteral(::Run) =  false
 
 #A minor revelation: There's no reason to store extents in chunks, they just modify the extents of the context.
 
-getname(arr::Run) = getname(arr.body)
-
 struct RunStyle end
 
 (ctx::Stylize{LowerJulia})(node::Run) = ctx.root.kind === chunk ? RunStyle() : DefaultStyle()

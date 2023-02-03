@@ -206,7 +206,7 @@ function (ctx::LowerJulia)(root::IndexNode, ::DefaultStyle)
             return root.val
         end
     elseif root.kind === with
-        target = map(getname, getresults(root.prod))
+        target = map(gettns, getresults(root.prod))
         return quote
             $(contain(ctx) do ctx_2
                 prod = OpenScope(ctx = ctx_2, target=target)(root.prod)
@@ -215,9 +215,12 @@ function (ctx::LowerJulia)(root::IndexNode, ::DefaultStyle)
             $(contain(ctx) do ctx_2
                 CloseScope(ctx = ctx_2, target=target)(root.prod)
                 cons = OpenScope(ctx = ctx_2, target=target)(root.cons)
-                res = (ctx_2)(cons)
-                CloseScope(ctx = ctx_2, target=target)(cons)
-                res
+                (ctx_2)(cons)
+            end)
+            $(contain(ctx) do ctx_2
+                CloseScope(ctx = ctx_2, target=target)(root.cons)
+                quote
+                end
             end)
         end
     elseif root.kind === multi

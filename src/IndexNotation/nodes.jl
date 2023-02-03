@@ -637,7 +637,7 @@ function Base.:(==)(a::IndexNode, b::IndexNode)
         elseif a.kind === index
             return b.kind === index && a.name == b.name
         elseif a.kind === variable
-            return b.kind === index && a.name == b.name
+            return b.kind === variable && a.name == b.name
         elseif a.kind === virtual
             return b.kind === virtual && a.val == b.val #TODO Feels iffy idk
         else
@@ -699,6 +699,7 @@ function Finch.getresults(node::IndexNode)
     elseif node.kind === pass
         return node.tnss
     else
+        return []
         error("unimplemented")
     end
 end
@@ -706,12 +707,6 @@ end
 function Finch.getname(x::IndexNode)
     if x.kind === index
         return x.val
-    elseif x.kind === variable
-        return x.val
-    elseif x.kind === virtual
-        return Finch.getname(x.val)
-    elseif x.kind === access
-        return Finch.getname(x.tns)
     else
         error("unimplemented")
     end

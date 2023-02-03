@@ -41,9 +41,6 @@ virtual_eltype(tns::VirtualScalar) = tns.Tv
 
 IndexNotation.isliteral(::VirtualScalar) = false
 
-getname(tns::VirtualScalar) = tns.name
-setname(tns::VirtualScalar, name) = VirtualScalar(tns.ex, tns.Tv, tns.D, name, tns.val)
-
 function initialize!(tns::VirtualScalar, ctx)
     push!(ctx.preamble, quote
         $(tns.val) = $(tns.D)
@@ -68,9 +65,6 @@ struct VirtualDirtyScalar
     val
     dirty
 end
-
-#TODO get rid of getname evenutally omg
-getname(tns::VirtualDirtyScalar) = tns.name
 
 virtual_size(::VirtualDirtyScalar, ctx) = ()
 

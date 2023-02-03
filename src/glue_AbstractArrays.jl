@@ -13,9 +13,6 @@ function virtual_size(arr::VirtualAbstractArray, ctx::LowerJulia)
     return map(i->Extent(literal(1), value(dims[i], Int)), 1:arr.ndims)
 end
 
-getname(arr::VirtualAbstractArray) = arr.name
-setname(arr::VirtualAbstractArray, name) = (arr_2 = deepcopy(arr); arr_2.name = name; arr_2)
-
 function (ctx::LowerJulia)(arr::VirtualAbstractArray, ::DefaultStyle)
     return arr.ex
 end
