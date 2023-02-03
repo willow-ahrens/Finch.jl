@@ -17,7 +17,6 @@ getstop(::DeferDimension) = error()
 @kwdef mutable struct DeclareDimensions
     ctx
     dims = Dict()
-    shapes = Dict()
 end
 function (ctx::DeclareDimensions)(node, dim)
     if istree(node)
@@ -30,7 +29,6 @@ end
 @kwdef mutable struct InferDimensions
     ctx
     dims = Dict()
-    shapes = Dict()
 end
 function (ctx::InferDimensions)(node)
     if istree(node)
@@ -88,9 +86,8 @@ end
 function dimensionalize!(prgm, ctx) 
     prgm = Rewrite(Postwalk(x -> if x isa Dimensionalize x.body end))(prgm)
     dims = filter(((idx, dim),) -> dim !== deferdim, ctx.dims)
-    shapes = Dict()
-    prgm = DeclareDimensions(ctx=ctx, dims = dims, shapes = shapes)(prgm, nodim)
-    (prgm, _) = InferDimensions(ctx=ctx, dims = dims, shapes = shapes)(prgm)
+    prgm = DeclareDimensions(ctx=ctx, dims = dims)(prgm, nodim)
+    (prgm, _) = InferDimensions(ctx=ctx, dims = dims)(prgm)
     for k in keys(dims)
         dims[k] = cache_dim!(ctx, k, dims[k])
     end
