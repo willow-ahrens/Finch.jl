@@ -19,7 +19,7 @@ export diagmask, lotrimask, uptrimask, bandmask
 
 export choose
 
-export permit, offset, window
+export permit, offset, staticoffset, window
 
 include("util.jl")
 
@@ -60,9 +60,7 @@ include("repeatrlelevels.jl")
 include("elementlevels.jl")
 include("patternlevels.jl")
 
-include("offset.jl")
-#include("permit.jl")
-#include("window.jl")
+include("modifiers.jl")
 
 include("fibers_meta.jl")
 export fsparse, fsparse!, fsprand, fspzeros, ffindnz
