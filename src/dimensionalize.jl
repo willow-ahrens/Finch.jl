@@ -333,9 +333,11 @@ Return a tuple of the dimensions of `tns` in the context `ctx` with access
 mode `mode`. This is a function similar in spirit to `Base.axes`.
 """
 function getsize end
+
+virtual_size(tns, ctx, eldim) = virtual_size(tns, ctx)
 function virtual_size(tns::IndexNode, ctx, eldim = nodim)
     if tns.kind === variable
-        return virtual_size(ctx.bindings[tns.name], ctx)
+        return virtual_size(ctx.bindings[tns.name], ctx, eldim)
     else
         return error("unimplemented")
     end

@@ -1,5 +1,13 @@
 @testset "permit" begin
 
+    #=
+    v = Array{Any}(zeros(5, 10))
+    a = Fiber(Dense(5, Element(0, [1, 2, 3, 4, 5])), Finch.Environment())
+    println(@finch_code @loop i j v[i, j] = a[offset[i, j]])
+    @finch @loop i j v[i, j] = a[offset[i, j]]
+    display(v)
+    =#
+
     A_ref = sprand(10, 0.5); B_ref = sprand(10, 0.5); C_ref = vcat(A_ref, B_ref)
     A = fiber(SparseVector{Float64, Int64}(A_ref)); B = fiber(SparseVector{Float64, Int64}(B_ref)); C = @fiber(sl{Int64}(e(0.0)))
     @test diff("concat_permit_offset.jl", @finch_code @loop i C[i] = coalesce(A[permit[i]], B[permit[offset[10, i]]]))

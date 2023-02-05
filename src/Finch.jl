@@ -60,9 +60,9 @@ include("repeatrlelevels.jl")
 include("elementlevels.jl")
 include("patternlevels.jl")
 
-include("permit.jl")
 include("offset.jl")
-include("window.jl")
+#include("permit.jl")
+#include("window.jl")
 
 include("fibers_meta.jl")
 export fsparse, fsparse!, fsprand, fspzeros, ffindnz

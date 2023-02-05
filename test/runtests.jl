@@ -112,6 +112,7 @@ verbose = "verbose" in ARGS
     #include("test_ssa.jl") #TODO
     include("test_print.jl")
     #include("test_parse.jl") #TODO
+
     include("test_formats.jl")
     include("test_constructors.jl")
     include("test_conversions.jl")

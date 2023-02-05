@@ -154,17 +154,6 @@ get_furl_root_access(idx, tns) = nothing
 
 supports_reassembly(lvl) = false
 
-refurl(tns, ctx, mode) = tns
-function exfurl(tns, ctx, mode, idx::IndexNode)
-    if idx.kind === index
-        return tns
-    elseif idx.kind === access && idx.tns.kind === virtual
-        exfurl_access(tns, ctx, mode, idx, idx.tns.val)
-    else
-        error("unimplemented")
-    end
-end
-
 function Base.show(io::IO, fbr::Fiber)
     print(io, "Fiber(")
     print(io, fbr.lvl)
