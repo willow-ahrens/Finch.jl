@@ -6,7 +6,11 @@ struct DenseData
     lvl
 end
 
-struct MaybeFill
+struct HollowData
+    lvl
+end
+
+struct SolidData
     lvl
 end
 
@@ -20,30 +24,44 @@ struct RepeatData
     default
 end
 
-getindex_output(lvl::SparseData, ind, inds...) =
-    sublvl = getindex_output(lvl.lvl, inds...)
-    ndims(ind) == 0 && return MaybeFill(sublvl)
-    return getindex_output_sparse(sublvl, ind)
+struct Drop{Idx}
+    idx::Idx
 end
-getindex_output_sparse(sublvl::MaybeFill, ind) = MaybeFill(SparseData(sublvl.lvl))
-getindex_output_sparse(sublvl, ind) = MaybeFill(SparseData(sublvl))
-getindex_output_sparse(sublvl, ind::Base.Slice) = SparseData(sublvl)
-getindex_output_sparse(sublvl::MaybeFill, ind::Base.Slice) = MaybeFill(SparseData(sublvl.lvl))
 
-function getindex_output(lvl::DenseData, ind, inds...)
-    sublvl = getindex_output(lvl.lvl, inds...)
-    ndims(ind) == 0 && return sublvl
-    return getindex_output_dense(sublvl, ind)
-end
-getindex_output_dense(sublvl, ind) = DenseData(sublvl)
-getindex_output_dense(sublvl::MaybeFill, ind) = MaybeFill(SparseData(sublvl.lvl))
+getindex_rep(tns, inds...) = getindex_rep_def(tns, map(ind -> ndims(ind) == 0 ? Drop(ind) : ind, inds)...)
 
-getindex_output(lvl::ElementData) = lvl
+getindex_rep_def(fbr::SolidData, idxs...) = getindex_rep_def(fbr.lvl, idxs...)
+getindex_rep_def(fbr::HollowData, idxs...) = getindex_rep_def_hollow(getindex_rep_def(fbr.lvl, idxs...))
+getindex_rep_def_hollow(subfbr::SolidData, idxs...) = HollowData(subfbr.lvl)
+getindex_rep_def_hollow(subfbr::HollowData, idxs...) = subfbr
 
-function getindex_output(lvl::RepeatData, ind)
-    sublvl = ElementData(lvl.eltype, lvl.default)
-    ndims(ind) == 0 && return sublvl
-    return getindex_output_repeat(sublvl, ind)
-end
-getindex_output_repeat(sublvl, ind) = DenseData(sublvl)
-getindex_output_repeat(sublvl, ind::Base.AbstractUnitRange) = RepeatData(sublvl.eltype, sublvl.default)
+getindex_rep_def(lvl::SparseData, idx, idxs...) = getindex_rep_def_sparse(getindex_rep_def(lvl.lvl, idxs...), idx)
+getindex_rep_def_sparse(subfbr::HollowData, idx::Drop) = HollowData(subfbr.lvl)
+getindex_rep_def_sparse(subfbr::HollowData, idx) = HollowData(SparseData(subfbr.lvl))
+getindex_rep_def_sparse(subfbr::HollowData, idx::Base.Slice) = HollowData(SparseData(subfbr.lvl))
+getindex_rep_def_sparse(subfbr::SolidData, idx::Drop) = HollowData(subfbr.lvl)
+getindex_rep_def_sparse(subfbr::SolidData, idx) = HollowData(SparseData(subfbr.lvl))
+getindex_rep_def_sparse(subfbr::SolidData, idx::Base.Slice) = SolidData(SparseData(subfbr.lvl))
+
+getindex_rep_def(lvl::DenseData, idx, idxs...) = getindex_rep_def_dense(getindex_rep_def(lvl.lvl, idxs...), idx)
+getindex_rep_def_dense(subfbr::HollowData, idx::Drop) = HollowData(subfbr.lvl)
+getindex_rep_def_dense(subfbr::HollowData, idx) = HollowData(DenseData(subfbr.lvl))
+getindex_rep_def_dense(subfbr::SolidData, idx::Drop) = SolidData(subfbr.lvl)
+getindex_rep_def_dense(subfbr::SolidData, idx) = SolidData(DenseData(subfbr.lvl))
+
+getindex_rep_def(lvl::ElementData) = SolidData(lvl)
+
+getindex_rep_def(lvl::RepeatData, idx::Drop) = SolidData(ElementLevel(lvl.eltype, lvl.default))
+getindex_rep_def(lvl::RepeatData, idx) = SolidData(DenseLevel(ElementLevel(lvl.eltype, lvl.default)))
+getindex_rep_def(lvl::RepeatData, idx::AbstractUnitRange) = SolidData(lvl)
+
+fiber_ctr(fbr::SolidData) = :(Fiber($(fiber_ctr_solid(fbr.lvl))))
+fiber_ctr_solid(lvl::DenseData) = :(Dense($(fiber_ctr_solid(lvl.lvl))))
+fiber_ctr_solid(lvl::SparseData) = :(SparseList($(fiber_ctr_solid(lvl.lvl))))
+fiber_ctr_solid(lvl::ElementData) = :(Element{$(lvl.default), $(lvl.eltype)}())
+fiber_ctr_solid(lvl::RepeatData) = :(Repeat{$(lvl.default), $(lvl.eltype)}())
+fiber_ctr(fbr::HollowData) = :(Fiber($(fiber_ctr_hollow(fbr.lvl))))
+fiber_ctr_hollow(lvl::DenseData) = :(SparseList($(fiber_ctr_solid(lvl.lvl))))
+fiber_ctr_hollow(lvl::SparseData) = :(SparseList($(fiber_ctr_solid(lvl.lvl))))
+fiber_ctr_hollow(lvl::ElementData) = :(Element{$(lvl.default), $(lvl.eltype)}())
+fiber_ctr_hollow(lvl::RepeatData) = :(Repeat{$(lvl.default), $(lvl.eltype)}())
