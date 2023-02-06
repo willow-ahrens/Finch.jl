@@ -76,7 +76,7 @@ end
 Return a trait object representing the result of calling getindex(tns, idxs...)
 on the tensor represented by `tns`.
 """
-getidxex_rep(tns, idxs...) = getidxex_rep_def(tns, map(idx -> ndims(idx) == 0 ? Drop(idx) : idx, idxs)...)
+getindex_rep(tns, idxs...) = getidxex_rep_def(tns, map(idx -> ndims(idx) == 0 ? Drop(idx) : idx, idxs)...)
 
 getindex_rep_def(fbr::SolidData, idxs...) = getindex_rep_def(fbr.lvl, idxs...)
 getindex_rep_def(fbr::HollowData, idxs...) = getindex_rep_def_hollow(getindex_rep_def(fbr.lvl, idxs...))

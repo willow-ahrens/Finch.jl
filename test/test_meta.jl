@@ -85,6 +85,6 @@
     @test Finch.fiber_ctr(Finch.getindex_rep(Finch.data_rep(@fiber(d(d(sl(e(0.0)))))), Int, Int, typeof(Base.Slice(1:10)))) ==
         :(Fiber(SparseList(Element{$Float64, $0.0}())))
 
-    @test Finch.striplines(Finch.fiber_ctr(Finch.getindex_rep(Finch.data_rep(@fiber(d(d(sl(e(0.0)))))), Int, typeof(1:2), typeof(Base.Slice(1:10))))) ==
+    @test Finch.fiber_ctr(Finch.getindex_rep(Finch.data_rep(@fiber(d(d(sl(e(0.0)))))), Int, typeof(1:2), typeof(Base.Slice(1:10)))) ==
         :(Fiber(Dense(SparseList(Element{$Float64, $0.0}()))))
 end
