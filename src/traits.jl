@@ -33,9 +33,9 @@ getindex_output_dense(sublvl::MaybeFill, ind) = SparseData(sublvl.lvl)
 getindex_output(lvl::ElementData) = lvl
 
 function getindex_output(lvl::RepeatData, ind, inds...)
-    sublvl = ElementLevel()
+    sublvl = ElementData()
     ndims(ind) == 0 && return sublvl
     return getindex_output_repeat(sublvl, ind)
 end
-getindex_output_repeat(sublvl, ind) = DenseLevel(sublvl)
+getindex_output_repeat(sublvl, ind) = DenseData(sublvl)
 getindex_output_repeat(sublvl, ind::Base.AbstractUnitRange) = RepeatData()
