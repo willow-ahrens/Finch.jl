@@ -74,6 +74,8 @@ end
 @inline level_axes(lvl::SparseVBLLevel) = (Base.OneTo(lvl.I), level_axes(lvl.lvl)...)
 @inline level_eltype(::Type{<:SparseVBLLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = level_eltype(Lvl)
 @inline level_default(::Type{<:SparseVBLLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = level_default(Lvl)
+data_rep_level(::Type{<:SparseVBLLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = SparseData(data_rep_level(Lvl))
+
 (fbr::Fiber{<:SparseVBLLevel})() = fbr
 function (fbr::Fiber{<:SparseVBLLevel})(i, tail...)
     lvl = fbr.lvl

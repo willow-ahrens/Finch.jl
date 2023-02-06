@@ -101,7 +101,8 @@ context `ctx` with access mode `mode`. Return the new level.
 """
 function initialize_level! end
 
-
+data_rep(fbr::Fiber) = data_rep(typeof(fbr))
+data_rep(::Type{<:Fiber{Lvl}}) where {Lvl} = SolidData(data_rep_level(Lvl))
 
 """
     freeze!(fbr, ctx, mode, idxs...)

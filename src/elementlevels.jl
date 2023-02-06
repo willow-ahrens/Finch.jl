@@ -34,6 +34,7 @@ end
 @inline level_axes(::ElementLevel) = ()
 @inline level_eltype(::Type{ElementLevel{D, Tv}}) where {D, Tv} = Tv
 @inline level_default(::Type{<:ElementLevel{D}}) where {D} = D
+data_rep_level(::Type{<:ElementLevel{D, Tv}}) where {D, Tv} = ElementData(D, Tv)
 
 function (fbr::Fiber{<:ElementLevel})()
     q = envposition(fbr.env)

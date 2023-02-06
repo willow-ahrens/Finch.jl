@@ -23,6 +23,7 @@ pattern!(lvl::DenseLevel{Ti}) where {Ti} =
 @inline level_axes(lvl::DenseLevel) = (Base.OneTo(lvl.I), level_axes(lvl.lvl)...)
 @inline level_eltype(::Type{<:DenseLevel{Ti, Lvl}}) where {Ti, Lvl} = level_eltype(Lvl)
 @inline level_default(::Type{<:DenseLevel{Ti, Lvl}}) where {Ti, Lvl} = level_default(Lvl)
+data_rep_level(::Type{<:DenseLevel{Ti, Lvl}}) where {Ti, Lvl} = DenseData(data_rep_level(Lvl))
 
 (fbr::Fiber{<:DenseLevel})() = fbr
 function (fbr::Fiber{<:DenseLevel{Ti}})(i, tail...) where {Ti}

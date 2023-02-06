@@ -46,6 +46,8 @@ include("cycles.jl")
 include("jumpers.jl")
 include("steppers.jl")
 
+include("traits.jl")
+
 include("execute.jl")
 include("select.jl")
 include("fibers.jl")

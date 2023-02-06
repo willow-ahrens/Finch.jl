@@ -73,6 +73,8 @@ end
 @inline level_axes(lvl::SparseBytemapLevel) = (Base.OneTo(lvl.I), level_axes(lvl.lvl)...)
 @inline level_eltype(::Type{<:SparseBytemapLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = level_eltype(Lvl)
 @inline level_default(::Type{<:SparseBytemapLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = level_default(Lvl)
+data_rep_level(::Type{<:SparseBytemapLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = SparseData(data_rep_level(Lvl))
+
 (fbr::Fiber{<:SparseBytemapLevel})() = fbr
 function (fbr::Fiber{<:SparseBytemapLevel{Ti}})(i, tail...) where {Ti}
     lvl = fbr.lvl
