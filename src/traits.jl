@@ -86,10 +86,10 @@ getindex_rep_def_hollow(subfbr::HollowData, idxs...) = subfbr
 getindex_rep_def(lvl::SparseData, idx, idxs...) = getindex_rep_def_sparse(getindex_rep_def(lvl.lvl, idxs...), idx)
 getindex_rep_def_sparse(subfbr::HollowData, idx::Drop) = HollowData(subfbr.lvl)
 getindex_rep_def_sparse(subfbr::HollowData, idx) = HollowData(SparseData(subfbr.lvl))
-getindex_rep_def_sparse(subfbr::HollowData, idx::Base.Slice) = HollowData(SparseData(subfbr.lvl))
+getindex_rep_def_sparse(subfbr::HollowData, idx::Type{<:Base.Slice}) = HollowData(SparseData(subfbr.lvl))
 getindex_rep_def_sparse(subfbr::SolidData, idx::Drop) = HollowData(subfbr.lvl)
 getindex_rep_def_sparse(subfbr::SolidData, idx) = HollowData(SparseData(subfbr.lvl))
-getindex_rep_def_sparse(subfbr::SolidData, idx::Base.Slice) = SolidData(SparseData(subfbr.lvl))
+getindex_rep_def_sparse(subfbr::SolidData, idx::Type{<:Base.Slice}) = SolidData(SparseData(subfbr.lvl))
 
 getindex_rep_def(lvl::DenseData, idx, idxs...) = getindex_rep_def_dense(getindex_rep_def(lvl.lvl, idxs...), idx)
 getindex_rep_def_dense(subfbr::HollowData, idx::Drop) = HollowData(subfbr.lvl)
@@ -101,7 +101,7 @@ getindex_rep_def(lvl::ElementData) = SolidData(lvl)
 
 getindex_rep_def(lvl::RepeatData, idx::Drop) = SolidData(ElementLevel(lvl.eltype, lvl.default))
 getindex_rep_def(lvl::RepeatData, idx) = SolidData(DenseLevel(ElementLevel(lvl.eltype, lvl.default)))
-getindex_rep_def(lvl::RepeatData, idx::AbstractUnitRange) = SolidData(lvl)
+getindex_rep_def(lvl::RepeatData, idx::Type{<:AbstractUnitRange}) = SolidData(lvl)
 
 
 """

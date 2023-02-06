@@ -76,15 +76,15 @@
     @test Finch.data_rep(@fiber(d(d(sl(e(0.0)))))) ==
         Finch.SolidData(Finch.DenseData(Finch.DenseData(Finch.SparseData(Finch.ElementData(0.0, Float64)))))
 
-    @test Finch.getindex_rep(Finch.data_rep(@fiber(d(d(sl(e(0.0)))))), 1, 1, 1) ==
+    @test Finch.getindex_rep(Finch.data_rep(@fiber(d(d(sl(e(0.0)))))), Int, Int, Int) ==
         Finch.HollowData(Finch.ElementData(0.0, Float64))
 
-    @test Finch.fiber_ctr(Finch.getindex_rep(Finch.data_rep(@fiber(d(d(sl(e(0.0)))))), 1, 1, 1)) ==
+    @test Finch.fiber_ctr(Finch.getindex_rep(Finch.data_rep(@fiber(d(d(sl(e(0.0)))))), Int, Int, Int)) ==
         :(Fiber(Element{$Float64, $0.0}()))
 
-    @test Finch.fiber_ctr(Finch.getindex_rep(Finch.data_rep(@fiber(d(d(sl(e(0.0)))))), 1, 1, Base.Slice(1:10))) ==
+    @test Finch.fiber_ctr(Finch.getindex_rep(Finch.data_rep(@fiber(d(d(sl(e(0.0)))))), Int, Int, typeof(Base.Slice(1:10)))) ==
         :(Fiber(SparseList(Element{$Float64, $0.0}())))
 
-    @test Finch.striplines(Finch.fiber_ctr(Finch.getindex_rep(Finch.data_rep(@fiber(d(d(sl(e(0.0)))))), 1, 1:2, Base.Slice(1:10)))) ==
+    @test Finch.striplines(Finch.fiber_ctr(Finch.getindex_rep(Finch.data_rep(@fiber(d(d(sl(e(0.0)))))), Int, typeof(1:2), typeof(Base.Slice(1:10))))) ==
         :(Fiber(Dense(SparseList(Element{$Float64, $0.0}()))))
 end
