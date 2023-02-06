@@ -61,8 +61,8 @@ end
 """
     data_rep(tns)
 
-Return an abstract type representing everything that can be learned about the
-data based on the storage format (type) of the tensor
+Return a trait object representing everything that can be learned about the data
+based on the storage format (type) of the tensor
 """
 data_rep(tns) = SolidData(foldl([DenseData for _ in 1:ndims(tns)], init = ElementData(eltype(tns), default(tns))))
 
@@ -70,7 +70,13 @@ struct Drop{Idx}
     idx::Idx
 end
 
-getindex_rep(tns, inds...) = getindex_rep_def(tns, map(ind -> ndims(ind) == 0 ? Drop(ind) : ind, inds)...)
+"""
+    getindex_rep(tns, idxs...)
+
+Return a trait object representing the result of calling getindex(tns, idxs...)
+on the tensor represented by `tns`.
+"""
+getidxex_rep(tns, idxs...) = getidxex_rep_def(tns, map(idx -> ndims(idx) == 0 ? Drop(idx) : idx, idxs)...)
 
 getindex_rep_def(fbr::SolidData, idxs...) = getindex_rep_def(fbr.lvl, idxs...)
 getindex_rep_def(fbr::HollowData, idxs...) = getindex_rep_def_hollow(getindex_rep_def(fbr.lvl, idxs...))
@@ -97,6 +103,13 @@ getindex_rep_def(lvl::RepeatData, idx::Drop) = SolidData(ElementLevel(lvl.eltype
 getindex_rep_def(lvl::RepeatData, idx) = SolidData(DenseLevel(ElementLevel(lvl.eltype, lvl.default)))
 getindex_rep_def(lvl::RepeatData, idx::AbstractUnitRange) = SolidData(lvl)
 
+
+"""
+    fiber_ctr(tns)
+
+Return an expression that would construct a fiber suitable to hold data with a
+representation described by `tns`
+"""
 fiber_ctr(fbr::SolidData) = :(Fiber($(fiber_ctr_solid(fbr.lvl))))
 fiber_ctr_solid(lvl::DenseData) = :(Dense($(fiber_ctr_solid(lvl.lvl))))
 fiber_ctr_solid(lvl::SparseData) = :(SparseList($(fiber_ctr_solid(lvl.lvl))))
