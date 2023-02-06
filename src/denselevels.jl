@@ -25,6 +25,7 @@ dimension(lvl::DenseLevel) = lvl.I
 @inline Base.axes(fbr::Fiber{<:DenseLevel}) = (1:fbr.lvl.I, axes(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
 @inline Base.eltype(fbr::Fiber{<:DenseLevel}) = eltype(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
 @inline default(fbr::Fiber{<:DenseLevel}) = default(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
+data_rep_level(::Type{<:DenseLevel{Ti, Lvl}}) where {Ti, Lvl} = DenseData(data_rep_level(Lvl))
 
 (fbr::Fiber{<:DenseLevel})() = fbr
 function (fbr::Fiber{<:DenseLevel{Ti}})(i, tail...) where {Ti}

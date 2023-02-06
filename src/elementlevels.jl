@@ -34,6 +34,7 @@ end
 @inline Base.axes(fbr::Fiber{<:ElementLevel}) = ()
 @inline Base.eltype(fbr::Fiber{ElementLevel{D, Tv}}) where {D, Tv} = Tv
 @inline default(lvl::Fiber{<:ElementLevel{D}}) where {D} = D
+data_rep_level(::Type{<:ElementLevel{D, Tv}}) where {D, Tv} = ElementData(D, Tv)
 
 function (fbr::Fiber{<:ElementLevel})()
     q = envposition(fbr.env)

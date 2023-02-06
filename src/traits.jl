@@ -1,28 +1,70 @@
+"""
+    SparseData(lvl)
+    
+Represents a tensor `A` where `A[i, :, ..., :]` is sometimes entirely default(lvl)
+and is sometimes represented by `lvl`.
+"""
 struct SparseData
     lvl
 end
 
+"""
+    DenseData(lvl)
+    
+Represents a tensor `A` where each `A[i, :, ..., :]` is represented by `lvl`.
+"""
 struct DenseData
     lvl
 end
 
+"""
+    HollowData(lvl)
+    
+Represents a tensor which is represented by `lvl` but is sometimes entirely `default(lvl)`.
+"""
 struct HollowData
     lvl
 end
 
+"""
+    SolidData(lvl)
+    
+Represents a tensor which is represented by `lvl`
+"""
 struct SolidData
     lvl
 end
 
+"""
+    ElementData(eltype, default)
+    
+Represents a scalar element of type `eltype` and default `default`.
+"""
 struct ElementData
     eltype
     default
 end
 
+"""
+    RepeatData(eltype, default)
+    
+Represents an array A[i] with many repeated runs of elements of type `eltype`
+and default `default`.
+"""
 struct RepeatData
     eltype
     default
 end
+
+#const SolidData = Union{DenseData, SparseData, RepeatData, ElementData}
+
+"""
+    data_rep(tns)
+
+Return an abstract type representing everything that can be learned about the
+data based on the storage format (type) of the tensor
+"""
+data_rep(tns) = SolidData(foldl([DenseData for _ in 1:ndims(tns)], init = ElementData(eltype(tns), default(tns))))
 
 struct Drop{Idx}
     idx::Idx

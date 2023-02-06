@@ -77,6 +77,7 @@ end
 @inline Base.axes(fbr::Fiber{<:SparseBytemapLevel}) = (1:fbr.lvl.I, axes(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
 @inline Base.eltype(fbr::Fiber{<:SparseBytemapLevel}) = eltype(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
 @inline default(fbr::Fiber{<:SparseBytemapLevel}) = default(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
+data_rep_level(::Type{<:SparseBytemapLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = SparseData(data_rep_level(Lvl))
 
 (fbr::Fiber{<:SparseBytemapLevel})() = fbr
 function (fbr::Fiber{<:SparseBytemapLevel{Ti}})(i, tail...) where {Ti}
