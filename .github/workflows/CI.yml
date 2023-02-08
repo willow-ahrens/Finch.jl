@@ -24,7 +24,7 @@ jobs:
           - ubuntu-latest
         arch:
           - x64
-          - x86
+          #- x86 # not doing 32-bit until we can generate 32-bit reference output
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@v1
