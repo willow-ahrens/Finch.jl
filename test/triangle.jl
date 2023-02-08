@@ -10,12 +10,12 @@ function tri(mtx)
     println("tri: $mtx")
     A_ref = SparseMatrixCSC(mdopen(mtx).A)
     (m, n) = size(A_ref)
-    A = Finch.Fiber(
+    A = Fiber(
         Dense(m,
         SparseList(n, A_ref.colptr, A_ref.rowval,
-        Element{0.0, Float64}(A_ref.nzval))), Environment())
-    C = Finch.Fiber(
-        Element{0.0, Float64}(zeros(1)), Environment())
+        Element{0.0, Float64}(A_ref.nzval))))
+    C = Fiber(
+        Element{0.0, Float64}(zeros(1)))
 
     #@finch @loop i j k C[] += A[i, k::gallop] * A[i, j] * A[j, k::gallop]
     #println(C[])

@@ -39,7 +39,7 @@
                     ref = @fiber sl(e(false))
                     res = @fiber sl(e(false))
                     ref = dropdefaults!(ref, arr)
-                    tmp = Fiber(inner())
+                    tmp = allocate_fiber(inner())
                     @testset "convert $(summary(tmp))" begin
                         @finch @loop i tmp[i] = ref[i]
                         check = Scalar(true)
@@ -63,7 +63,7 @@
                         ref = @fiber sl(sl(e(false)))
                         res = @fiber sl(sl(e(false)))
                         ref = dropdefaults!(ref, arr)
-                        tmp = Fiber(outer())
+                        tmp = allocate_fiber(outer())
                         @testset "convert $arr_key $(summary(tmp))"  begin
                             @finch @loop i j tmp[i, j] = ref[i, j]
                             check = Scalar(true)
@@ -90,7 +90,7 @@
                 ref = @fiber sl(e(false))
                 res = @fiber sl(e(false))
                 ref = dropdefaults!(ref, arr)
-                tmp = Fiber(inner())
+                tmp = allocate_fiber(inner())
                 @testset "convert $(summary(tmp))" begin
                     @finch @loop i tmp[i] = ref[i]
                     @finch @loop i res[i] = tmp[i]
@@ -114,7 +114,7 @@
                     ref = @fiber sl(sl(e(false)))
                     res = @fiber sl(sl(e(false)))
                     ref = dropdefaults!(ref, arr)
-                    tmp = Fiber(outer())
+                    tmp = allocate_fiber(outer())
                     @testset "convert $arr_key $(summary(tmp))"  begin
                         @finch @loop i j tmp[i, j] = ref[i, j]
                         @finch @loop i j res[i, j] = tmp[i, j]
@@ -140,7 +140,7 @@
                 ref = @fiber sl(sl(e(false)))
                 res = @fiber sl(sl(e(false)))
                 ref = dropdefaults!(ref, arr)
-                tmp = Fiber(outer())
+                tmp = allocate_fiber(outer())
                 @testset "convert $arr_key $(summary(tmp))"  begin
                     @finch @loop i j tmp[i, j] = ref[i, j]
                     @finch @loop i j res[i, j] = tmp[i, j]

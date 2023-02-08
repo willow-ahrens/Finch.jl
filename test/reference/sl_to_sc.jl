@@ -76,5 +76,5 @@ begin
     qos = B_lvl.pos[end] - 1
     resize!(B_lvl.tbl[1], qos)
     resize!(B_lvl_2.val, qos)
-    (B = Fiber((Finch.SparseCooLevel){1, Tuple{Int64}, Int64}((A_lvl.I,), B_lvl.tbl, B_lvl.pos, B_lvl_2), (Environment)(; )),)
+    (B = Fiber((Finch.SparseCooLevel){1, Tuple{Int64}, Int64}((A_lvl.I,), B_lvl.tbl, B_lvl.pos, B_lvl_2)),)
 end

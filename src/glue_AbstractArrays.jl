@@ -1,12 +1,11 @@
 @kwdef mutable struct VirtualAbstractArray
+    ex
     eltype
     ndims
-    name
-    ex
 end
 
 function virtual_size(arr::VirtualAbstractArray, ctx::LowerJulia)
-    dims = map(i -> Symbol(arr.name, :_mode, i, :_stop), 1:arr.ndims)
+    dims = map(i -> Symbol(arr.ex, :_mode, i, :_stop), 1:arr.ndims)
     push!(ctx.preamble, quote
         ($(dims...),) = size($(arr.ex))
     end)
@@ -20,7 +19,7 @@ end
 function virtualize(ex, ::Type{<:AbstractArray{T, N}}, ctx, tag=:tns) where {T, N}
     sym = ctx.freshen(tag)
     push!(ctx.preamble, :($sym = $ex))
-    VirtualAbstractArray(T, N, tag, sym)
+    VirtualAbstractArray(sym, T, N)
 end
 
 function initialize!(arr::VirtualAbstractArray, ctx::LowerJulia)

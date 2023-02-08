@@ -2,7 +2,7 @@
 
     #=
     v = Array{Any}(zeros(5, 10))
-    a = Fiber(Dense(5, Element(0, [1, 2, 3, 4, 5])), Finch.Environment())
+    a = Fiber(Dense(5, Element(0, [1, 2, 3, 4, 5])))
     println(@finch_code @loop i j v[i, j] = a[offset[i, j]])
     @finch @loop i j v[i, j] = a[offset[i, j]]
     display(v)

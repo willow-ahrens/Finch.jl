@@ -89,5 +89,5 @@ begin
     qos = B_lvl.pos[end] - 1
     resize!(B_lvl.srt, qos)
     resize!(B_lvl_2.val, qos)
-    (B = Fiber((Finch.SparseHashLevel){2, Tuple{Int64, Int64}, Int64, Dict{Tuple{Int64, Tuple{Int64, Int64}}, Int64}}((A_lvl.I, A_lvl_2.I), B_lvl.tbl, B_lvl.pos, B_lvl.srt, B_lvl_2), (Environment)(; )),)
+    (B = Fiber((Finch.SparseHashLevel){2, Tuple{Int64, Int64}, Int64, Dict{Tuple{Int64, Tuple{Int64, Int64}}, Int64}}((A_lvl.I, A_lvl_2.I), B_lvl.tbl, B_lvl.pos, B_lvl.srt, B_lvl_2)),)
 end

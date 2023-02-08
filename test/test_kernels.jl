@@ -4,14 +4,14 @@
         m, n = size(A_ref)
         println("B[i, j] += A[i,k] * A[j, k]: $mtx")
         B_ref = transpose(A_ref) * A_ref
-        A = Finch.Fiber(
+        A = Fiber(
             Dense(n,
             SparseList(m, A_ref.colptr, A_ref.rowval,
-            Element{0.0}(A_ref.nzval))), Environment())
-        B = Finch.Fiber(
+            Element{0.0}(A_ref.nzval))))
+        B = allocate_fiber(
             Dense(m,
             SparseList(m,
-            Element{0.0}())), Environment())
+            Element{0.0}())))
         @finch @loop i j k B[i, j] += A[i, k] * A[j, k]
         @test B.lvl.lvl.pos[1:length(B_ref.colptr)] == B_ref.colptr
         @test B.lvl.lvl.idx[1:length(B_ref.rowval)] == B_ref.rowval
@@ -22,10 +22,10 @@
         m, n = size(A_ref)
         if m == n
             println("B[] += A[i,k] * A[i, j] * A[j, k] : $mtx")
-            A = Finch.Fiber(
+            A = Fiber(
                 Dense(n,
                 SparseList(m, A_ref.colptr, A_ref.rowval,
-                Element{0.0}(A_ref.nzval))), Environment())
+                Element{0.0}(A_ref.nzval))))
             B = Finch.Scalar{0.0}()
             @finch @loop i j k B[] += A[i, k] * A[i, j] * A[j, k]
             @test B() ≈ sum(A_ref .* (A_ref * transpose(A_ref)))
@@ -44,15 +44,15 @@
         J, W = findnz(B_ref)
         A = Fiber(
             SparseList(n, [1, length(I) + 1], I,
-            Element{0.0}(V)), Environment()
+            Element{0.0}(V))
         )
         B = Fiber(
             SparseList(n, [1, length(J) + 1], J,
-            Element{0.0}(W)), Environment()
+            Element{0.0}(W))
         )
-        C = Fiber(
+        C = allocate_fiber(
             SparseList(
-            Element{0.0}()), Environment()
+            Element{0.0}())
         )
         d = Scalar{0.0}()
         a = Scalar{0.0}()
@@ -71,17 +71,17 @@
         m, n = size(A_ref)
         if m == n
             println("B(ds)[i, j] = w[j] where w[j] += A(ds)[i, k] * A(ds)(k, j)")
-            A = Finch.Fiber(
+            A = Fiber(
                 Dense(n,
                 SparseList(m, A_ref.colptr, A_ref.rowval,
-                Element{0.0}(A_ref.nzval))), Environment())
-            B = Fiber(
+                Element{0.0}(A_ref.nzval))))
+            B = allocate_fiber(
                 Dense(0,
                 SparseList(0,
-                Element{0.0}())), Environment())
-            w = Fiber(
+                Element{0.0}())))
+            w = allocate_fiber(
                 SparseBytemap(m, #TODO
-                Element{0.0}()), Environment())
+                Element{0.0}()))
 
             ex = @finch_program_instance @loop i ((@loop j B[i, j] = w[j]) where (@loop k j w[j] = A[i, k] * A[k, j]))
             #println(typeof(ex))

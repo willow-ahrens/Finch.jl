@@ -108,5 +108,5 @@ begin
     resize!(B_lvl.tbl, 1 * A_lvl_2.I)
     resize!(B_lvl.srt, B_lvl_qos_fill)
     resize!(B_lvl_2.val, (*)(1, A_lvl_2.I))
-    (B = Fiber((Finch.SparseBytemapLevel){Int64, Int64}(A_lvl_2.I, B_lvl.pos, B_lvl.tbl, B_lvl.srt, B_lvl_2), (Environment)(; )),)
+    (B = Fiber((Finch.SparseBytemapLevel){Int64, Int64}(A_lvl_2.I, B_lvl.pos, B_lvl.tbl, B_lvl.srt, B_lvl_2)),)
 end

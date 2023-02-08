@@ -1,5 +1,4 @@
 using Finch
-using Finch: Environment
 using .Iterators
 
 open("test_formats.jl", "w") do file
@@ -23,7 +22,7 @@ open("test_formats.jl", "w") do file
             fill(1.0, 5),
             [0.0, 1.0, 1.0, 2.0, 2.0, 0.0, 0.0, 3.0, 0.0]
         ]
-            test_format(arr, :(Fiber($inner)))
+            test_format(arr, :(allocate_fiber($inner)))
         end
 
         for outer in [
@@ -39,7 +38,7 @@ open("test_formats.jl", "w") do file
                  1.0 1.0 2.0 0.0 ;
                  0.0 0.0 0.0 0.0 ]
             ]
-                test_format(arr, :(Fiber($outer)))
+                test_format(arr, :(allocate_fiber($outer)))
             end
         end
     end
@@ -54,7 +53,7 @@ open("test_formats.jl", "w") do file
             fill(false),
             fill(true)
         ]
-            test_format(arr, :(Fiber($base)))
+            test_format(arr, :(allocate_fiber($base)))
         end
         for inner in [
             :(Dense($base)),
@@ -69,7 +68,7 @@ open("test_formats.jl", "w") do file
                 fill(true, 5),
                 [false, true, false, true]
             ]
-                test_format(arr, :(Fiber($inner)))
+                test_format(arr, :(allocate_fiber($inner)))
             end
 
             for outer in [
@@ -85,7 +84,7 @@ open("test_formats.jl", "w") do file
                     true  true  true  true
                     false true  false true ]
                 ]
-                    test_format(arr, :(Fiber($outer)))
+                    test_format(arr, :(allocate_fiber($outer)))
                 end
             end
         end
@@ -102,7 +101,7 @@ open("test_formats.jl", "w") do file
                 true  true  true  true
                 false true  false true ]
             ]
-                test_format(arr, :(Fiber($outer)))
+                test_format(arr, :(allocate_fiber($outer)))
             end
         end
     end

@@ -539,5 +539,5 @@ begin
     qos = C_lvl.pos[end] - 1
     resize!(C_lvl.idx, qos)
     resize!(C_lvl_2.val, qos)
-    (C = Fiber((Finch.SparseListLevel){Int64}((max)(A_lvl.I, (+)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl.I)), C_lvl.pos, C_lvl.idx, C_lvl_2), (Environment)(; )),)
+    (C = Fiber((Finch.SparseListLevel){Int64}((max)(A_lvl.I, (+)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl.I)), C_lvl.pos, C_lvl.idx, C_lvl_2)),)
 end

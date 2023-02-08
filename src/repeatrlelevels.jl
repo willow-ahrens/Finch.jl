@@ -56,16 +56,15 @@ function Base.show(io::IO, lvl::RepeatRLELevel{D, Ti, Tp, Tv}) where {D, Ti, Tp,
     print(io, ")")
 end
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:RepeatRLELevel})
-    p = envposition(fbr.env)
+function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:RepeatRLELevel}, depth)
+    p = fbr.pos
     crds = fbr.lvl.pos[p]:fbr.lvl.pos[p + 1] - 1
-    depth = envdepth(fbr.env)
 
     print_coord(io, crd) = (print(io, "["); show(io, crd == fbr.lvl.pos[p] ? 1 : fbr.lvl.idx[crd - 1] + 1); print(io, ":"); show(io, fbr.lvl.idx[crd]); print(io, "]"))
     get_fbr(crd) = fbr.lvl.val[crd]
 
     print(io, "│ " ^ depth); print(io, "RepeatRLE ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); show(io, 1); print(io, ":"); show(io, fbr.lvl.I); println(io, "]")
-    display_fiber_data(io, mime, fbr, 1, crds, print_coord, get_fbr)
+    display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
 end
 
 @inline level_ndims(::Type{<:RepeatRLELevel}) = 1
@@ -73,10 +72,11 @@ end
 @inline level_axes(lvl::RepeatRLELevel) = (Base.OneTo(lvl.I),)
 @inline level_eltype(::Type{RepeatRLELevel{D, Ti, Tp, Tv}}) where {D, Ti, Tp, Tv} = Tv
 @inline level_default(::Type{<:RepeatRLELevel{D}}) where {D} = D
-(fbr::Fiber{<:RepeatRLELevel})() = fbr
-function (fbr::Fiber{<:RepeatRLELevel})(i, tail...)
+(fbr::AbstractFiber{<:RepeatRLELevel})() = fbr
+(fbr::Fiber{<:RepeatRLELevel})(idx...) = SubFiber(fbr.lvl, 1)(idx...)
+function (fbr::SubFiber{<:RepeatRLELevel})(i, tail...)
     lvl = fbr.lvl
-    p = envposition(fbr.env)
+    p = fbr.pos
     r = searchsortedfirst(@view(lvl.idx[lvl.pos[p]:lvl.pos[p + 1] - 1]), i)
     q = lvl.pos[p] + r - 1
     return lvl.val[q]

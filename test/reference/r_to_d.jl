@@ -44,5 +44,5 @@ begin
     end
     qos = 1 * A_lvl.I
     resize!(B_lvl_2.val, qos)
-    (B = Fiber((Finch.DenseLevel){Int64}(A_lvl.I, B_lvl_2), (Environment)(; )),)
+    (B = Fiber((Finch.DenseLevel){Int64}(A_lvl.I, B_lvl_2)),)
 end

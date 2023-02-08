@@ -1,1 +1,1 @@
-Fiber(SparseHash{1}((5,), …, Dense(10, Element{0.0, Float64}(…))), Env())
+Fiber(SparseHash{1}((5,), …, Dense(10, Element{0.0, Float64}(…))))

@@ -8,12 +8,12 @@ open("test_constructors.jl", "w") do file
     function test_outer_constructor(arr, ctrs, argss)
 
         println(file, "    @testset \"$(first(ctrs)) constructors\" begin")
-        ref = dropdefaults!(Fiber(first(ctrs)(Element(zero(eltype(arr))))), arr)
+        ref = dropdefaults!(allocate_fiber(first(ctrs)(Element(zero(eltype(arr))))), arr)
 
-        println(file, "        ref = Fiber($(repr(ref.lvl)), Environment())")
+        println(file, "        ref = Fiber($(repr(ref.lvl)))")
 
         for ctr in ctrs
-            println(file, "        res = Fiber($(ctr)($(join(map(repr, argss[1](ref.lvl)), ", "))), Environment())")
+            println(file, "        res = Fiber($(ctr)($(join(map(repr, argss[1](ref.lvl)), ", "))))")
             println(file, "        @test isstructequal(res, ref)")
             for args in argss[2:end]
                 println(file, "        res = Fiber($(ctr)($(join(map(repr, args(ref.lvl)), ", "))))")
@@ -122,12 +122,12 @@ open("test_constructors.jl", "w") do file
     function test_inner_constructor(arr, ctrs, argss, prefix...)
 
         println(file, "    @testset \"$(first(ctrs)) constructors\" begin")
-        ref = dropdefaults!(Fiber(first(ctrs)(prefix...)), arr)
+        ref = dropdefaults!(allocate_fiber(first(ctrs)(prefix...)), arr)
 
-        println(file, "        ref = Fiber($(repr(ref.lvl)), Environment())")
+        println(file, "        ref = Fiber($(repr(ref.lvl)))")
 
         for ctr in ctrs
-            println(file, "        res = Fiber($(ctr)($(join(map(repr, argss[1](ref.lvl)), ", "))), Environment())")
+            println(file, "        res = Fiber($(ctr)($(join(map(repr, argss[1](ref.lvl)), ", "))))")
             println(file, "        @test isstructequal(res, ref)")
             for args in argss[2:end]
                 println(file, "        res = Fiber($(ctr)($(join(map(repr, args(ref.lvl)), ", "))))")

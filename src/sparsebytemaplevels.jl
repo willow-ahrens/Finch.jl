@@ -56,16 +56,15 @@ function Base.show(io::IO, lvl::SparseBytemapLevel{Ti, Tp}) where {Ti, Tp}
     print(io, ")")
 end
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:SparseBytemapLevel})
-    p = envposition(fbr.env)
+function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseBytemapLevel}, depth)
+    p = fbr.pos
     crds = @view(fbr.lvl.srt[fbr.lvl.pos[p]:fbr.lvl.pos[p + 1] - 1])
-    depth = envdepth(fbr.env)
 
     print_coord(io, (p, i)) = (print(io, "["); show(io, i); print(io, "]"))
     get_fbr((p, i),) = fbr(i)
 
     print(io, "│ " ^ depth); print(io, "SparseBytemap ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); show(io, 1); print(io, ":"); show(io, fbr.lvl.I); println(io, "]")
-    display_fiber_data(io, mime, fbr, 1, crds, print_coord, get_fbr)
+    display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
 end
 
 @inline level_ndims(::Type{<:SparseBytemapLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = 1 + level_ndims(Lvl)
@@ -75,13 +74,13 @@ end
 @inline level_default(::Type{<:SparseBytemapLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = level_default(Lvl)
 data_rep_level(::Type{<:SparseBytemapLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = SparseData(data_rep_level(Lvl))
 
-(fbr::Fiber{<:SparseBytemapLevel})() = fbr
-function (fbr::Fiber{<:SparseBytemapLevel{Ti}})(i, tail...) where {Ti}
+(fbr::AbstractFiber{<:SparseBytemapLevel})() = fbr
+function (fbr::SubFiber{<:SparseBytemapLevel{Ti}})(i, tail...) where {Ti}
     lvl = fbr.lvl
-    p = envposition(fbr.env)
+    p = fbr.pos
     q = (p - 1) * lvl.I + i
     if lvl.tbl[q]
-        fbr_2 = Fiber(lvl.lvl, Environment(position=q, index=i, parent=fbr.env))
+        fbr_2 = SubFiber(lvl.lvl, q)
         fbr_2(tail...)
     else
         default(fbr)

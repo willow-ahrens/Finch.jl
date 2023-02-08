@@ -66,6 +66,7 @@ include("modifiers.jl")
 
 include("fibers_meta.jl")
 export fsparse, fsparse!, fsprand, fspzeros, ffindnz
+export allocate_fiber
 
 module h
     using Finch
@@ -92,14 +93,14 @@ end
 register(DefaultAlgebra)
 #TODO add an uninitialized_fiber type so that we can perhaps do this through executing pass(fbr),
 #obviating the need to have a separate generated function registration mechanism for fibers.
-@generated function Fiber(lvl)
+@generated function allocate_fiber(lvl)
     contain(LowerJulia()) do ctx
         lvl = virtualize(:lvl, lvl, ctx)
         lvl = resolve(lvl, ctx)
         lvl = initialize_level!(lvl, ctx, literal(0))
         push!(ctx.preamble, assemble_level!(lvl, ctx, literal(1), literal(1)))
         lvl = freeze_level!(lvl, ctx, literal(1))
-        :(Fiber($(ctx(lvl)), Environment()))
+        :(Fiber($(ctx(lvl))))
     end |> lower_caches |> lower_cleanup
 end
 

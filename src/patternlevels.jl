@@ -17,7 +17,7 @@ end
 @inline level_axes(::PatternLevel) = ()
 @inline level_eltype(::Type{PatternLevel}) = Bool
 @inline level_default(::Type{PatternLevel}) = false
-(fbr::Fiber{<:PatternLevel})() = true
+(fbr::AbstractFiber{<:PatternLevel})() = true
 
 """
     pattern!(fbr)
@@ -40,7 +40,8 @@ SparseList (false) [1:10]
   true true true true true
 ```
 """
-pattern!(fbr::Fiber) = Fiber(pattern!(fbr.lvl), fbr.env)
+pattern!(fbr::Fiber) = Fiber(pattern!(fbr.lvl))
+pattern!(fbr::SubFiber) = SubFiber(pattern!(fbr.lvl), fbr.pos)
 
 struct VirtualPatternLevel
     dirty
@@ -64,7 +65,7 @@ reassemble_level!(lvl::VirtualPatternLevel, ctx, pos_start, pos_stop) = quote en
 trim_level!(lvl::VirtualPatternLevel, ctx::LowerJulia, pos) = lvl
 
 get_level_reader(::VirtualPatternLevel, ctx, pos) = Simplify(Fill(true))
-get_level_updater(lvl::VirtualPatternLevel, ctx, pos) = VirtualFiber(lvl, VirtualEnvironment())
+get_level_updater(lvl::VirtualPatternLevel, ctx, pos) = VirtualFiber(lvl)
 
 set_clean!(lvl::VirtualPatternLevel, ctx) = :($(lvl.dirty) = false)
 get_dirty(lvl::VirtualPatternLevel, ctx) = value(lvl.dirty, Bool)

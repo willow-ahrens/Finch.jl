@@ -91,5 +91,5 @@ begin
     qos = A_lvl.pos[end] - 1
     resize!(A_lvl.idx, qos)
     resize!(A_lvl.val, qos)
-    (A = Fiber((Finch.RepeatRLELevel){0.0, Int64, Int64, Float64}(C_mode1_stop, A_lvl.pos, A_lvl.idx, A_lvl.val), (Environment)(; )),)
+    (A = Fiber((Finch.RepeatRLELevel){0.0, Int64, Int64, Float64}(C_mode1_stop, A_lvl.pos, A_lvl.idx, A_lvl.val)),)
 end

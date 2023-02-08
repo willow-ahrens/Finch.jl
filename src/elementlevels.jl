@@ -36,8 +36,9 @@ end
 @inline level_default(::Type{<:ElementLevel{D}}) where {D} = D
 data_rep_level(::Type{<:ElementLevel{D, Tv}}) where {D, Tv} = ElementData(D, Tv)
 
-function (fbr::Fiber{<:ElementLevel})()
-    q = envposition(fbr.env)
+(fbr::Fiber{<:ElementLevel})() = SubFiber(fbr.lvl, 1)()
+function (fbr::SubFiber{<:ElementLevel})()
+    q = fbr.pos
     return fbr.lvl.val[q]
 end
 

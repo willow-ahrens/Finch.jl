@@ -57,17 +57,16 @@ function Base.show(io::IO, lvl::SparseCooLevel{N, Ti, Tp}) where {N, Ti, Tp}
     print(io, ")")
 end
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:SparseCooLevel{N}}) where {N}
-    p = envposition(fbr.env)
+function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseCooLevel{N}}, depth) where {N}
+    p = fbr.pos
     crds = fbr.lvl.pos[p]:fbr.lvl.pos[p + 1] - 1
-    depth = envdepth(fbr.env)
 
     print_coord(io, q) = (print(io, "["); foreach(n -> (show(io, fbr.lvl.tbl[n][q]); print(io, ", ")), 1:N-1); show(io, fbr.lvl.tbl[N][q]); print(io, "]"))
     get_fbr(q) = fbr(map(n -> fbr.lvl.tbl[n][q], 1:N)...)
 
     dims = size(fbr)
     print(io, "│ " ^ depth); print(io, "SparseCoo ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); foreach(dim -> (print(io, "1:"); show(io, dim); print(io, "×")), dims[1:N-1]); print(io, "1:"); show(io, dims[end]); println(io, "]")
-    display_fiber_data(io, mime, fbr, N, crds, print_coord, get_fbr)
+    display_fiber_data(io, mime, fbr, depth, N, crds, print_coord, get_fbr)
 end
 
 @inline level_ndims(::Type{<:SparseCooLevel{N, Ti, Tp, Tbl, Lvl}}) where {N, Ti, Tp, Tbl, Lvl} = N + level_ndims(Lvl)
@@ -77,31 +76,16 @@ end
 @inline level_default(::Type{<:SparseCooLevel{N, Ti, Tp, Tbl, Lvl}}) where {N, Ti, Tp, Tbl, Lvl} = level_default(Lvl)
 data_rep_level(::Type{<:SparseCooLevel{N, Ti, Tp, Tbl, Lvl}}) where {N, Ti, Tp, Tbl, Lvl} = (SparseData^N)(data_rep_level(Lvl))
 
-(fbr::Fiber{<:SparseCooLevel})() = fbr
-function (fbr::Fiber{<:SparseCooLevel{N, Ti}})(i, tail...) where {N, Ti}
+(fbr::AbstractFiber{<:SparseCooLevel})() = fbr
+(fbr::SubFiber{<:SparseCooLevel})() = fbr
+function (fbr::SubFiber{<:SparseCooLevel{N, Ti}})(idxs...) where {N, Ti}
     lvl = fbr.lvl
-    R = length(envdeferred(fbr.env)) + 1
-    if R == 1
-        p = envposition(fbr.env)
-        start = lvl.pos[p]
-        stop = lvl.pos[p + 1]
-    else
-        start = fbr.env.start
-        stop = fbr.env.stop
+    target = lvl.pos[fbr.pos]:lvl.pos[fbr.pos + 1] - 1
+    for n = 1:N
+        target = searchsorted(view(lvl.tbl[n], target), idxs[n]) .+ (first(target) - 1)
     end
-    r = searchsorted(@view(lvl.tbl[R][start:stop - 1]), i)
-    q = start + first(r) - 1
-    q_2 = start + last(r)
-    if R == N
-        fbr_2 = Fiber(lvl.lvl, Environment(position=q, index=i, parent=fbr.env))
-        length(r) == 0 ? default(fbr_2) : fbr_2(tail...)
-    else
-        fbr_2 = Fiber(lvl, Environment(start=q, stop=q_2, index=i, parent=fbr.env, internal=true))
-        length(r) == 0 ? default(fbr_2) : fbr_2(tail...)
-    end
+    isempty(target) ? default(fbr) : SubFiber(lvl.lvl, first(target))(idxs[N + 1:end]...)
 end
-
-
 
 mutable struct VirtualSparseCooLevel
     ex

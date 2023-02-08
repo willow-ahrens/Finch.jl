@@ -48,16 +48,15 @@ function Base.show(io::IO, lvl::SparseListLevel{Ti, Tp}) where {Ti, Tp}
     print(io, ")")
 end
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:SparseListLevel})
-    p = envposition(fbr.env)
+function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseListLevel}, depth)
+    p = fbr.pos
     crds = @view(fbr.lvl.idx[fbr.lvl.pos[p]:fbr.lvl.pos[p + 1] - 1])
-    depth = envdepth(fbr.env)
 
     print_coord(io, crd) = (print(io, "["); show(io, crd); print(io, "]"))
     get_fbr(crd) = fbr(crd)
 
     print(io, "│ " ^ depth); print(io, "SparseList ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); show(io, 1); print(io, ":"); show(io, fbr.lvl.I); println(io, "]")
-    display_fiber_data(io, mime, fbr, 1, crds, print_coord, get_fbr)
+    display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
 end
 
 @inline level_ndims(::Type{<:SparseListLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = 1 + level_ndims(Lvl)
@@ -67,13 +66,13 @@ end
 @inline level_default(::Type{<:SparseListLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = level_default(Lvl)
 data_rep_level(::Type{<:SparseListLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = SparseData(data_rep_level(Lvl))
 
-(fbr::Fiber{<:SparseListLevel})() = fbr
-function (fbr::Fiber{<:SparseListLevel{Ti}})(i, tail...) where {Ti}
+(fbr::AbstractFiber{<:SparseListLevel})() = fbr
+function (fbr::SubFiber{<:SparseListLevel{Ti}})(i, tail...) where {Ti}
     lvl = fbr.lvl
-    p = envposition(fbr.env)
+    p = fbr.pos
     r = searchsorted(@view(lvl.idx[lvl.pos[p]:lvl.pos[p + 1] - 1]), i)
     q = lvl.pos[p] + first(r) - 1
-    fbr_2 = Fiber(lvl.lvl, Environment(position=q, index=i, parent=fbr.env))
+    fbr_2 = SubFiber(lvl.lvl, q)
     length(r) == 0 ? default(fbr_2) : fbr_2(tail...)
 end
 

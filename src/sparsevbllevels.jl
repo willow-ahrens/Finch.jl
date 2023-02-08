@@ -51,8 +51,8 @@ function Base.show(io::IO, lvl::SparseVBLLevel{Ti, Tp}) where {Ti, Tp}
     print(io, ")")
 end
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:SparseVBLLevel})
-    p = envposition(fbr.env)
+function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseVBLLevel}, depth)
+    p = fbr.pos
     crds = []
     for r in fbr.lvl.pos[p]:fbr.lvl.pos[p + 1] - 1
         i = fbr.lvl.idx[r]
@@ -60,13 +60,11 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:SparseVBLLev
         append!(crds, (i - l + 1):i)
     end
 
-    depth = envdepth(fbr.env)
-
     print_coord(io, crd) = (print(io, "["); show(io, crd); print(io, "]"))
     get_fbr(crd) = fbr(crd)
 
     print(io, "│ " ^ depth); print(io, "SparseVBL ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); show(io, 1); print(io, ":"); show(io, fbr.lvl.I); println(io, "]")
-    display_fiber_data(io, mime, fbr, 1, crds, print_coord, get_fbr)
+    display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
 end
 
 @inline level_ndims(::Type{<:SparseVBLLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = 1 + level_ndims(Lvl)
@@ -76,15 +74,15 @@ end
 @inline level_default(::Type{<:SparseVBLLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = level_default(Lvl)
 data_rep_level(::Type{<:SparseVBLLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = SparseData(data_rep_level(Lvl))
 
-(fbr::Fiber{<:SparseVBLLevel})() = fbr
-function (fbr::Fiber{<:SparseVBLLevel})(i, tail...)
+(fbr::AbstractFiber{<:SparseVBLLevel})() = fbr
+function (fbr::SubFiber{<:SparseVBLLevel})(i, tail...)
     lvl = fbr.lvl
-    p = envposition(fbr.env)
+    p = fbr.pos
     r = lvl.pos[p] + searchsortedfirst(@view(lvl.idx[lvl.pos[p]:lvl.pos[p + 1] - 1]), i) - 1
     r < lvl.pos[p + 1] || return default(fbr)
     q = lvl.ofs[r + 1] - 1 - lvl.idx[r] + i
     q >= lvl.ofs[r] || return default(fbr)
-    fbr_2 = Fiber(lvl.lvl, Environment(position=q, index=i, parent=fbr.env))
+    fbr_2 = SubFiber(lvl.lvl, q)
     return fbr_2(tail...)
 end
 

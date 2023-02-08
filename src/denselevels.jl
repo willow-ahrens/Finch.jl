@@ -25,12 +25,12 @@ pattern!(lvl::DenseLevel{Ti}) where {Ti} =
 @inline level_default(::Type{<:DenseLevel{Ti, Lvl}}) where {Ti, Lvl} = level_default(Lvl)
 data_rep_level(::Type{<:DenseLevel{Ti, Lvl}}) where {Ti, Lvl} = DenseData(data_rep_level(Lvl))
 
-(fbr::Fiber{<:DenseLevel})() = fbr
-function (fbr::Fiber{<:DenseLevel{Ti}})(i, tail...) where {Ti}
+(fbr::AbstractFiber{<:DenseLevel})() = fbr
+function (fbr::SubFiber{<:DenseLevel{Ti}})(i, tail...) where {Ti}
     lvl = fbr.lvl
-    p = envposition(fbr.env)
+    p = fbr.pos
     q = (p - 1) * lvl.I + i
-    fbr_2 = Fiber(lvl.lvl, Environment(position=q, index=i, parent=fbr.env))
+    fbr_2 = SubFiber(lvl.lvl, q)
     fbr_2(tail...)
 end
 
@@ -46,16 +46,14 @@ function Base.show(io::IO, lvl::DenseLevel{Ti}) where {Ti}
     print(io, ")")
 end 
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:DenseLevel})
+function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:DenseLevel}, depth)
     crds = 1:fbr.lvl.I
-    depth = envdepth(fbr.env)
 
     print_coord(io, crd) = (print(io, "["); show(io, crd); print(io, "]"))
     get_fbr(crd) = fbr(crd)
     print(io, "│ " ^ depth); print(io, "Dense ["); show(io, 1); print(io, ":"); show(io, fbr.lvl.I); println(io, "]")
-    display_fiber_data(io, mime, fbr, 1, crds, print_coord, get_fbr)
+    display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
 end
-
 
 mutable struct VirtualDenseLevel
     ex

@@ -71,17 +71,16 @@ function Base.show(io::IO, lvl::SparseHashLevel{N, Ti, Tp}) where {N, Ti, Tp}
     print(io, ")")
 end
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber{<:SparseHashLevel{N}}) where {N}
-    p = envposition(fbr.env)
+function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseHashLevel{N}}, depth) where {N}
+    p = fbr.pos
     crds = fbr.lvl.srt[fbr.lvl.pos[p]:fbr.lvl.pos[p + 1] - 1]
-    depth = envdepth(fbr.env)
 
     print_coord(io, crd) = (print(io, "["); foreach(n -> (show(io, crd[1][2][n]); print(io, ", ")), 1:N-1); show(io, crd[1][2][N]); print(io, "]"))
     get_fbr(crd) = fbr(crd[1][2]...)
 
     dims = size(fbr)
     print(io, "│ " ^ depth); print(io, "SparseHash ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); foreach(dim -> (print(io, "1:"); show(io, dim); print(io, "×")), dims[1:N-1]); print(io, "1:"); show(io, dims[end]); println(io, "]")
-    display_fiber_data(io, mime, fbr, N, crds, print_coord, get_fbr)
+    display_fiber_data(io, mime, fbr, depth, N, crds, print_coord, get_fbr)
 end
 @inline level_ndims(::Type{<:SparseHashLevel{N, Ti, Tp, Tbl, Lvl}}) where {N, Ti, Tp, Tbl, Lvl} = N + level_ndims(Lvl)
 @inline level_size(lvl::SparseHashLevel) = (lvl.I..., level_size(lvl.lvl)...)
@@ -90,22 +89,17 @@ end
 @inline level_default(::Type{<:SparseHashLevel{N, Ti, Tp, Tbl, Lvl}}) where {N, Ti, Tp, Tbl, Lvl} = level_default(Lvl)
 data_rep_level(::Type{<:SparseHashLevel{N, Ti, Tp, Tbl, Lvl}}) where {N, Ti, Tp, Tbl, Lvl} = (SparseData^N)(data_rep_level(Lvl))
 
-(fbr::Fiber{<:SparseHashLevel})() = fbr
-function (fbr::Fiber{<:SparseHashLevel{N, Ti}})(i, tail...) where {N, Ti}
+(fbr::AbstractFiber{<:SparseHashLevel})() = fbr
+(fbr::SubFiber{<:SparseHashLevel})() = fbr
+function (fbr::SubFiber{<:SparseHashLevel{N, Ti}})(idxs...) where {N, Ti}
     lvl = fbr.lvl
-    if length(envdeferred(fbr.env)) == N - 1
-        p = (envposition(envexternal(fbr.env)), (envdeferred(fbr.env)..., i))
+    p = (fbr.pos, (idxs[1:N]...,))
 
-        if !haskey(lvl.tbl, p)
-            return default(fbr)
-        else
-            q = lvl.tbl[p]
-            fbr_2 = Fiber(lvl.lvl, Environment(position=q, index=i, parent=fbr.env))
-            return fbr_2(tail...)
-        end
+    if !haskey(lvl.tbl, p)
+        return default(fbr)
     else
-        fbr_2 = Fiber(lvl, Environment(index=i, parent=fbr.env, internal=true))
-        fbr_2(tail...)
+        q = lvl.tbl[p]
+        return SubFiber(lvl.lvl, q)(idxs[N + 1:end]...)
     end
 end
 
