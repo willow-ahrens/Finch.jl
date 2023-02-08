@@ -1,0 +1,1 @@
+docker run --platform=linux/arm -it --rm -v "$PWD":/usr/myapp -w /usr/myapp arm32v7/julia julia -e 'using Pkg; Pkg.dev("../Finch.jl"); Pkg.test("Finch", test_args="overwrite")'
