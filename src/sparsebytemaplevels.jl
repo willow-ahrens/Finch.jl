@@ -1,3 +1,9 @@
+struct SparseBytemapFormat{Ti, Lvl}
+    lvl::Lvl
+end
+SparseBytemapFormat(lvl) = SparseBytemapFormat{Ti}(lvl)
+const SparseBytemap
+
 struct SparseBytemapLevel{Ti, Tp, Lvl}
     I::Ti
     pos::Vector{Tp}
@@ -5,7 +11,6 @@ struct SparseBytemapLevel{Ti, Tp, Lvl}
     srt::Vector{Tuple{Tp, Ti}}
     lvl::Lvl
 end
-const SparseBytemap = SparseBytemapLevel
 
 SparseBytemapLevel(lvl) = SparseBytemapLevel(0, lvl)
 SparseBytemapLevel{Ti}(lvl) where {Ti} = SparseBytemapLevel{Ti}(zero(Ti), lvl)
