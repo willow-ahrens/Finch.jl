@@ -160,3 +160,60 @@ function get_reader(arr::VirtualStaticOffset, ctx, proto_idx)
         ])
     )
 end
+
+struct Window{Target}
+    target::Target
+end
+
+Window(start, stop) = Window(Extent(start, stop))
+
+const window = Window
+
+Base.show(io::IO, ex::Window) = Base.show(io, MIME"text/plain"(), ex)
+function Base.show(io::IO, mime::MIME"text/plain", ex::Window)
+	print(io, "Window(")
+	print(io, ex.target)
+	print(io, ")")
+end
+
+IndexNotation.value_instance(arg::Window) = arg
+
+Base.size(vec::Window) = (stop(vec.target) - start(vec.target) + 1,)
+
+function Base.getindex(arr::Window, i)
+    getstart(arr.target) + i - 1
+end
+
+struct VirtualWindow
+    target
+end
+
+Base.show(io::IO, ex::VirtualWindow) = Base.show(io, MIME"text/plain"(), ex)
+function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualWindow)
+	print(io, "VirtualWindow(")
+	print(io, ex.target)
+	print(io, ")")
+end
+
+
+IndexNotation.isliteral(::VirtualWindow) =  false
+
+function virtualize(ex, ::Type{Window{Target}}, ctx) where {Target}
+    target = virtualize(:($ex.target), Target, ctx)
+    return VirtualWindow(target)
+end
+
+(ctx::Finch.LowerJulia)(tns::VirtualWindow) = :(Window(dim = $(ctx(tns.dim)), target = $(ctx(tns.target))))
+
+virtual_size(arr::VirtualWindow, ctx::LowerJulia, dim = nodim) = (shiftdim(tns.target, call(-, getstart(dim), getstart(tns.target))),)
+virtual_resize!(arr::VirtualWindow, ctx::LowerJulia, idx_dim) = (arr, tns.target)
+virtual_eldim(arr::VirtualWindow, ctx::LowerJulia, idx_dim) = tns.target
+
+function get_reader(arr::VirtualWindow, ctx, proto_idx)
+    Furlable(
+        size = (nodim,),
+        body = nothing,
+        fuse = (tns, ctx, idx, ext) ->
+            Shift(truncate(tns, ctx, ext, node.target), call(-, getstart(ext), getstart(node.target)))
+    )
+end
