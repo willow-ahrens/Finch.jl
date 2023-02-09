@@ -244,7 +244,7 @@ macro fiber(ex)
             return esc(ex)
         end
     end
-    return :($Fiber($(walk(ex))))
+    return :($Fiber!($(walk(ex))))
 end
 
 @inline f_code(@nospecialize ::Any) = nothing

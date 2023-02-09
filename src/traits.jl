@@ -110,12 +110,12 @@ getindex_rep_def(lvl::RepeatData, idx::Type{<:AbstractUnitRange}) = SolidData(lv
 Return an expression that would construct a fiber suitable to hold data with a
 representation described by `tns`
 """
-fiber_ctr(fbr::SolidData) = :(allocate_fiber($(fiber_ctr_solid(fbr.lvl))))
+fiber_ctr(fbr::SolidData) = :(Fiber!($(fiber_ctr_solid(fbr.lvl))))
 fiber_ctr_solid(lvl::DenseData) = :(Dense($(fiber_ctr_solid(lvl.lvl))))
 fiber_ctr_solid(lvl::SparseData) = :(SparseList($(fiber_ctr_solid(lvl.lvl))))
 fiber_ctr_solid(lvl::ElementData) = :(Element{$(lvl.default), $(lvl.eltype)}())
 fiber_ctr_solid(lvl::RepeatData) = :(Repeat{$(lvl.default), $(lvl.eltype)}())
-fiber_ctr(fbr::HollowData) = :(allocate_fiber($(fiber_ctr_hollow(fbr.lvl))))
+fiber_ctr(fbr::HollowData) = :(Fiber!($(fiber_ctr_hollow(fbr.lvl))))
 fiber_ctr_hollow(lvl::DenseData) = :(SparseList($(fiber_ctr_solid(lvl.lvl))))
 fiber_ctr_hollow(lvl::SparseData) = :(SparseList($(fiber_ctr_solid(lvl.lvl))))
 fiber_ctr_hollow(lvl::ElementData) = :(Element{$(lvl.default), $(lvl.eltype)}())

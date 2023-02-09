@@ -33,18 +33,18 @@
         SparseVBL(10, [1, 4], [3, 5, 9], [1, 2, 3, 6],
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
 
-    B = allocate_fiber(Dense(Element{0.0}()))
+    B = Fiber!(Dense(Element{0.0}()))
     @finch @loop i B[i] = A[i]
 
     @test reference_isequal(B, [0, 0, 2, 0, 3, 0, 4, 5, 6, 0])
 
-    B = allocate_fiber(SparseList(Element{0.0}()))
+    B = Fiber!(SparseList(Element{0.0}()))
     @finch @loop i B[i] = A[i]
 
     @test reference_isequal(B, [0, 0, 2, 0, 3, 0, 4, 5, 6, 0])
     @test B.lvl.idx[1:5] == [3, 5, 7, 8, 9]
 
-    C = allocate_fiber(SparseVBL(Element{0.0}()))
+    C = Fiber!(SparseVBL(Element{0.0}()))
 
     @finch @loop i C[i] = B[i]
 

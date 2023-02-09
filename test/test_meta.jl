@@ -80,11 +80,11 @@
         Finch.HollowData(Finch.ElementData(0.0, Float64))
 
     @test Finch.fiber_ctr(Finch.getindex_rep(Finch.data_rep(@fiber(d(d(sl(e(0.0)))))), Int, Int, Int)) ==
-        :(allocate_fiber(Element{$Float64, $0.0}()))
+        :(Fiber!(Element{$Float64, $0.0}()))
 
     @test Finch.fiber_ctr(Finch.getindex_rep(Finch.data_rep(@fiber(d(d(sl(e(0.0)))))), Int, Int, typeof(Base.Slice(1:10)))) ==
-        :(allocate_fiber(SparseList(Element{$Float64, $0.0}())))
+        :(Fiber!(SparseList(Element{$Float64, $0.0}())))
 
     @test Finch.fiber_ctr(Finch.getindex_rep(Finch.data_rep(@fiber(d(d(sl(e(0.0)))))), Int, typeof(1:2), typeof(Base.Slice(1:10)))) ==
-        :(allocate_fiber(Dense(SparseList(Element{$Float64, $0.0}()))))
+        :(Fiber!(Dense(SparseList(Element{$Float64, $0.0}()))))
 end

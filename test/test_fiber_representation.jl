@@ -41,25 +41,25 @@ include("utils.jl")
     ]
 
     test_format(vecs, name = "@fiber(d(e(zero))", key = "d_e") do arr
-        dropdefaults!(allocate_fiber(Dense(Element(zero(eltype(arr))))), arr)
+        dropdefaults!(Fiber!(Dense(Element(zero(eltype(arr))))), arr)
     end
     test_format(vecs, name = "@fiber(sl(e(zero))", key = "sl_e") do arr
-        dropdefaults!(allocate_fiber(SparseList(Element(zero(eltype(arr))))), arr)
+        dropdefaults!(Fiber!(SparseList(Element(zero(eltype(arr))))), arr)
     end
     test_format(vecs, name = "@fiber(sv(e(zero))", key = "sv_e") do arr
-        dropdefaults!(allocate_fiber(SparseVBL(Element(zero(eltype(arr))))), arr)
+        dropdefaults!(Fiber!(SparseVBL(Element(zero(eltype(arr))))), arr)
     end
     test_format(vecs, name = "@fiber(rl(zero)", key = "rl") do arr
-        dropdefaults!(allocate_fiber(RepeatRLE(zero(eltype(arr)))), arr)
+        dropdefaults!(Fiber!(RepeatRLE(zero(eltype(arr)))), arr)
     end
     test_format(vecs, name = "@fiber(sm(e(zero))", key = "sm_e") do arr
-        dropdefaults!(allocate_fiber(SparseBytemap(Element(zero(eltype(arr))))), arr)
+        dropdefaults!(Fiber!(SparseBytemap(Element(zero(eltype(arr))))), arr)
     end
     test_format(vecs, name = "@fiber(sh{1}(e(zero))", key = "sh1_e") do arr
-        dropdefaults!(allocate_fiber(SparseHash{1}(Element(zero(eltype(arr))))), arr)
+        dropdefaults!(Fiber!(SparseHash{1}(Element(zero(eltype(arr))))), arr)
     end
     test_format(vecs, name = "@fiber(sc{1}(e(zero))", key = "sc1_e") do arr
-        dropdefaults!(allocate_fiber(SparseCoo{1}(Element(zero(eltype(arr))))), arr)
+        dropdefaults!(Fiber!(SparseCoo{1}(Element(zero(eltype(arr))))), arr)
     end
 
     mats = [
@@ -72,46 +72,46 @@ include("utils.jl")
     ]
 
     test_format(mats, name = "@fiber(d(d(e(zero)))", key = "d_d_e") do arr
-        dropdefaults!(allocate_fiber(Dense(Dense(Element(zero(eltype(arr)))))), arr)
+        dropdefaults!(Fiber!(Dense(Dense(Element(zero(eltype(arr)))))), arr)
     end
     test_format(mats, name = "@fiber(d(sl(e(zero)))", key = "d_sl_e") do arr
-        dropdefaults!(allocate_fiber(Dense(SparseList(Element(zero(eltype(arr)))))), arr)
+        dropdefaults!(Fiber!(Dense(SparseList(Element(zero(eltype(arr)))))), arr)
     end
     test_format(mats, name = "@fiber(d(sv(e(zero)))", key = "d_sv_e") do arr
-        dropdefaults!(allocate_fiber(Dense(SparseVBL(Element(zero(eltype(arr)))))), arr)
+        dropdefaults!(Fiber!(Dense(SparseVBL(Element(zero(eltype(arr)))))), arr)
     end
     test_format(mats, name = "@fiber(d(rl(zero))", key = "d_rl") do arr
-        dropdefaults!(allocate_fiber(Dense(RepeatRLE(zero(eltype(arr))))), arr)
+        dropdefaults!(Fiber!(Dense(RepeatRLE(zero(eltype(arr))))), arr)
     end
     test_format(mats, name = "@fiber(d(sm(e(zero)))", key = "d_sm_e") do arr
-        dropdefaults!(allocate_fiber(Dense(SparseBytemap(Element(zero(eltype(arr)))))), arr)
+        dropdefaults!(Fiber!(Dense(SparseBytemap(Element(zero(eltype(arr)))))), arr)
     end
     test_format(mats, name = "@fiber(d(sh{1}(e(zero)))", key = "d_sh1_e") do arr
-        dropdefaults!(allocate_fiber(Dense(SparseHash{1}(Element(zero(eltype(arr)))))), arr)
+        dropdefaults!(Fiber!(Dense(SparseHash{1}(Element(zero(eltype(arr)))))), arr)
     end
     test_format(mats, name = "@fiber(d(sc{1}(e(zero)))", key = "d_sc1_e") do arr
-        dropdefaults!(allocate_fiber(Dense(SparseCoo{1}(Element(zero(eltype(arr)))))), arr)
+        dropdefaults!(Fiber!(Dense(SparseCoo{1}(Element(zero(eltype(arr)))))), arr)
     end
 
     test_format(mats, name = "@fiber(sl(d(e(zero)))", key = "sl_d_e") do arr
-        dropdefaults!(allocate_fiber(SparseList(Dense(Element(zero(eltype(arr)))))), arr)
+        dropdefaults!(Fiber!(SparseList(Dense(Element(zero(eltype(arr)))))), arr)
     end
     test_format(mats, name = "@fiber(sl(sl(e(zero)))", key = "sl_sl_e") do arr
-        dropdefaults!(allocate_fiber(SparseList(SparseList(Element(zero(eltype(arr)))))), arr)
+        dropdefaults!(Fiber!(SparseList(SparseList(Element(zero(eltype(arr)))))), arr)
     end
     test_format(mats, name = "@fiber(sl(sv(e(zero)))", key = "sl_sv_e") do arr
-        dropdefaults!(allocate_fiber(SparseList(SparseVBL(Element(zero(eltype(arr)))))), arr)
+        dropdefaults!(Fiber!(SparseList(SparseVBL(Element(zero(eltype(arr)))))), arr)
     end
     test_format(mats, name = "@fiber(sl(rl(zero))", key = "sl_rl") do arr
-        dropdefaults!(allocate_fiber(SparseList(RepeatRLE(zero(eltype(arr))))), arr)
+        dropdefaults!(Fiber!(SparseList(RepeatRLE(zero(eltype(arr))))), arr)
     end
     test_format(mats, name = "@fiber(sl(sm(e(zero)))", key = "sl_sm_e") do arr
-        dropdefaults!(allocate_fiber(SparseList(SparseBytemap(Element(zero(eltype(arr)))))), arr)
+        dropdefaults!(Fiber!(SparseList(SparseBytemap(Element(zero(eltype(arr)))))), arr)
     end
     test_format(mats, name = "@fiber(sl(sh{1}(e(zero)))", key = "sl_sh1_e") do arr
-        dropdefaults!(allocate_fiber(SparseList(SparseHash{1}(Element(zero(eltype(arr)))))), arr)
+        dropdefaults!(Fiber!(SparseList(SparseHash{1}(Element(zero(eltype(arr)))))), arr)
     end
     test_format(mats, name = "@fiber(sl(sc{1}(e(zero)))", key = "sl_sc1_e") do arr
-        dropdefaults!(allocate_fiber(SparseList(SparseCoo{1}(Element(zero(eltype(arr)))))), arr)
+        dropdefaults!(Fiber!(SparseList(SparseCoo{1}(Element(zero(eltype(arr)))))), arr)
     end
 end

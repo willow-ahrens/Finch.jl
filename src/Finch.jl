@@ -12,7 +12,7 @@ using Compat
 
 export @finch, @finch_program, @finch_code, value
 
-export Fiber, SparseList, SparseHash, SparseCoo, SparseBytemap, SparseVBL, Dense, RepeatRLE, Element, Pattern, Scalar
+export Fiber, Fiber!, SparseList, SparseHash, SparseCoo, SparseBytemap, SparseVBL, Dense, RepeatRLE, Element, Pattern, Scalar
 export walk, fastwalk, gallop, follow, extrude, laminate
 export fiber, @fiber, pattern!, dropdefaults, dropdefaults!
 export diagmask, lotrimask, uptrimask, bandmask
@@ -66,7 +66,6 @@ include("modifiers.jl")
 
 include("fibers_meta.jl")
 export fsparse, fsparse!, fsprand, fspzeros, ffindnz
-export allocate_fiber
 
 module h
     using Finch
@@ -93,7 +92,7 @@ end
 register(DefaultAlgebra)
 #TODO add an uninitialized_fiber type so that we can perhaps do this through executing pass(fbr),
 #obviating the need to have a separate generated function registration mechanism for fibers.
-@generated function allocate_fiber(lvl)
+@generated function Fiber!(lvl)
     contain(LowerJulia()) do ctx
         lvl = virtualize(:lvl, lvl, ctx)
         lvl = resolve(lvl, ctx)

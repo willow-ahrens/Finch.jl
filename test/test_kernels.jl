@@ -8,7 +8,7 @@
             Dense(n,
             SparseList(m, A_ref.colptr, A_ref.rowval,
             Element{0.0}(A_ref.nzval))))
-        B = allocate_fiber(
+        B = Fiber!(
             Dense(m,
             SparseList(m,
             Element{0.0}())))
@@ -50,7 +50,7 @@
             SparseList(n, [1, length(J) + 1], J,
             Element{0.0}(W))
         )
-        C = allocate_fiber(
+        C = Fiber!(
             SparseList(
             Element{0.0}())
         )
@@ -75,11 +75,11 @@
                 Dense(n,
                 SparseList(m, A_ref.colptr, A_ref.rowval,
                 Element{0.0}(A_ref.nzval))))
-            B = allocate_fiber(
+            B = Fiber!(
                 Dense(0,
                 SparseList(0,
                 Element{0.0}())))
-            w = allocate_fiber(
+            w = Fiber!(
                 SparseBytemap(m, #TODO
                 Element{0.0}()))
 
