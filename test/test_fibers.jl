@@ -12,7 +12,7 @@
         SparseHash{1, Tuple{Int64}, Int64}((10,),
         Element{0.0}()))
 
-    @test diff("sl_to_sh.jl", @finch_code @loop i B[i] += A[i])
+    @test check_output("sl_to_sh.jl", @finch_code @loop i B[i] += A[i])
 
     @finch @loop i B[i] += A[i]
 
@@ -21,7 +21,7 @@
 
     println("A(s)[i] = B(h)[i]")
 
-    @test diff("sh_to_sl.jl", @finch_code @loop i A[i] += B[i])
+    @test check_output("sh_to_sl.jl", @finch_code @loop i A[i] += B[i])
 
     @finch @loop i A[i] += B[i]
 
@@ -50,7 +50,7 @@
         SparseHash{2, Tuple{Int64, Int64}, Int64}((3,5),
         Element{0.0}()))
     
-    @test diff("d_sl_to_sh2.jl", @finch_code @loop i j B[i, j] += A[i, j])
+    @test check_output("d_sl_to_sh2.jl", @finch_code @loop i j B[i, j] += A[i, j])
 
     @finch @loop i j B[i, j] += A[i, j] 
 
@@ -67,7 +67,7 @@
         SparseList{Int64, Int64}(10, 
         Element{0.0}()))
 
-    @test diff("sl_to_sh_to_sl.jl", @finch_code (@loop i C[i] += B[i]) where (@loop i B[i] += A[i]))
+    @test check_output("sl_to_sh_to_sl.jl", @finch_code (@loop i C[i] += B[i]) where (@loop i B[i] += A[i]))
 
     @finch (@loop i C[i] += B[i]) where (@loop i B[i] += A[i])
 
@@ -83,7 +83,7 @@
         SparseCoo{1, Tuple{Int64}, Int64}((10,),
         Element{0.0}()))
 
-    @test diff("sl_to_sc.jl", @finch_code @loop i B[i] += A[i])
+    @test check_output("sl_to_sc.jl", @finch_code @loop i B[i] += A[i])
 
     @finch @loop i B[i] += A[i]
 
@@ -92,7 +92,7 @@
 
     println("A(sl)[i] = B(sc)[i]")
 
-    @test diff("sc_to_sl.jl", @finch_code @loop i A[i] += B[i])
+    @test check_output("sc_to_sl.jl", @finch_code @loop i A[i] += B[i])
 
     println(A)
     println(B)
@@ -113,7 +113,7 @@
         SparseCoo{2, Tuple{Int64, Int64}, Int64}((3,5),
         Element{0.0}()))
     
-    @test diff("d_sl_to_sc2.jl", @finch_code @loop i j B[i, j] += A[i, j])
+    @test check_output("d_sl_to_sc2.jl", @finch_code @loop i j B[i, j] += A[i, j])
 
     @finch @loop i j B[i, j] += A[i, j] 
 
@@ -130,7 +130,7 @@
         SparseList{Int64, Int64}(10, 
         Element{0.0}()))
 
-    @test diff("sl_to_sc_to_sl.jl", @finch_code (@loop i C[i] += B[i]) where (@loop i B[i] += A[i]))
+    @test check_output("sl_to_sc_to_sl.jl", @finch_code (@loop i C[i] += B[i]) where (@loop i B[i] += A[i]))
 
     @finch (@loop i C[i] += B[i]) where (@loop i B[i] += A[i])
 
@@ -148,7 +148,7 @@
         Element{0.0}([1.0, 1.0, 1.0])))
     C = Finch.Fiber(SparseList{Int64, Int64}(10, Element{0.0}()))
 
-    @test diff("sl_plus_sl_to_sl.jl", @finch_code @loop i C[i] += A[i] + B[i])
+    @test check_output("sl_plus_sl_to_sl.jl", @finch_code @loop i C[i] += A[i] + B[i])
 
     @finch @loop i C[i] += A[i] + B[i]
 
@@ -169,7 +169,7 @@
         Element{0.0}([1.0, 1.0, 1.0])))
     C = zeros(10)
 
-    @test diff("sl_plus_sl_to_vec.jl", @finch_code @loop i C[i] += A[i] + B[i])
+    @test check_output("sl_plus_sl_to_vec.jl", @finch_code @loop i C[i] += A[i] + B[i])
 
     @finch @loop i C[i] += A[i] + B[i]
 
@@ -187,7 +187,7 @@
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0, 1.0, 1.0, 1.0]))))
     B = zeros(10)
 
-    @test diff("d_sl_sum_2_to_vec.jl", @finch_code @loop j i B[i] += A[j, i])
+    @test check_output("d_sl_sum_2_to_vec.jl", @finch_code @loop j i B[i] += A[j, i])
 
     @finch @loop j i B[i] += A[j, i]
 
@@ -206,7 +206,7 @@
         Element{0.0}([1.0, 1.0, 1.0])))
     C = Finch.Fiber(SparseList{Int64, Int64}(10, Element{0.0}()))
 
-    @test diff("sl_gallop_plus_sl_gallop_to_sl.jl", @finch_code @loop i C[i] += A[i::gallop] + B[i::gallop])
+    @test check_output("sl_gallop_plus_sl_gallop_to_sl.jl", @finch_code @loop i C[i] += A[i::gallop] + B[i::gallop])
 
     @finch @loop i C[i] += A[i::gallop] + B[i::gallop]
 
@@ -227,7 +227,7 @@
         Element{0.0}([1.0, 1.0, 1.0, 1.0])))
     C = Finch.Fiber(SparseList{Int64, Int64}(10, Element{0.0}()))
 
-    @test diff("sl_gallop_times_sl_gallop_to_sl.jl", @finch_code @loop i C[i] += A[i::gallop] * B[i::gallop])
+    @test check_output("sl_gallop_times_sl_gallop_to_sl.jl", @finch_code @loop i C[i] += A[i::gallop] * B[i::gallop])
 
     @finch @loop i C[i] += A[i::gallop] * B[i::gallop]
 
@@ -247,7 +247,7 @@
         SparseList{Int64, Int64}(3,
         Element{0.0}()))
 
-    @test diff("d_sl_sum_2_to_sl.jl", @finch_code @loop i j B[j] += A[i, j])
+    @test check_output("d_sl_sum_2_to_sl.jl", @finch_code @loop i j B[j] += A[i, j])
 
     @finch @loop i j B[i] += A[i, j]
 
@@ -263,7 +263,7 @@
         SparseBytemap{Int64, Int64}(4,
         Element{0.0}()))
 
-    @test diff("d_sl_sum_2_to_sb.jl", @finch_code @loop i j B[j] += A[i, j])
+    @test check_output("d_sl_sum_2_to_sb.jl", @finch_code @loop i j B[j] += A[i, j])
 
     @finch @loop i j B[j] += A[i, j]
 

@@ -1,8 +1,4 @@
-using Finch
 using Base.Meta
-using Test
-
-include("utils.jl")
 
 @testset "fiber representation" begin
     function test_format(f, arrs; name, key)
@@ -18,7 +14,7 @@ include("utils.jl")
                 println(io, "fiber: ", repr(fbr))
             end
 
-            @test diff("format_representation_$key.txt", String(take!(io)))
+            @test check_output("format_representation_$key.txt", String(take!(io)))
         end
     end
 

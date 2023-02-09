@@ -1,4 +1,5 @@
 @testset "merges" begin
+    using Base.Iterators
 
     fmts = [
         (;fmt = (z) -> @fiber(d(sl(e(z)))), proto = [follow, walk]),

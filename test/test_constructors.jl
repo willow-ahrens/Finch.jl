@@ -1,10 +1,5 @@
-using Finch
-using Base.Meta
-using Test
-
-include("utils.jl")
-
 @testset "fiber constructors" begin
+    using Base.Meta
 
     @testset "@fiber(sl(e(0))" begin
         io = IOBuffer()
@@ -61,7 +56,7 @@ include("utils.jl")
         @test isstructequal(fbr, @fiber(sl(Int16(0), e(0.0))))
         @test isstructequal(fbr, @fiber(sl{Int16}(0, e(0.0))))
 
-        @test diff("format_constructors_sl_e.txt", String(take!(io)))
+        @test check_output("format_constructors_sl_e.txt", String(take!(io)))
     end
 
     @testset "@fiber(sv(e(0))" begin
@@ -119,7 +114,7 @@ include("utils.jl")
         @test isstructequal(fbr, @fiber(sv(Int16(0), e(0.0))))
         @test isstructequal(fbr, @fiber(sv{Int16}(0, e(0.0))))
 
-        @test diff("format_constructors_sv_e.txt", String(take!(io)))
+        @test check_output("format_constructors_sv_e.txt", String(take!(io)))
     end
 
     @testset "@fiber(sm(e(0))" begin
@@ -177,7 +172,7 @@ include("utils.jl")
         @test isstructequal(fbr, @fiber(sm(Int16(0), e(0.0))))
         @test isstructequal(fbr, @fiber(sm{Int16}(0, e(0.0))))
 
-        @test diff("format_constructors_sm_e.txt", String(take!(io)))
+        @test check_output("format_constructors_sm_e.txt", String(take!(io)))
     end
 
     @testset "@fiber(sc{1}(e(0))" begin
@@ -235,7 +230,7 @@ include("utils.jl")
         @test isstructequal(fbr, @fiber(sc{1}((Int16(0),), e(0.0))))
         @test isstructequal(fbr, @fiber(sc{1, Tuple{Int16}}((0,), e(0.0))))
 
-        @test diff("format_constructors_sc1_e.txt", String(take!(io)))
+        @test check_output("format_constructors_sc1_e.txt", String(take!(io)))
     end
 
     @testset "@fiber(sc{2}(e(0))" begin
@@ -295,7 +290,7 @@ include("utils.jl")
         @test isstructequal(fbr, @fiber(sc{2}((Int16(0), Int16(0),), e(0.0))))
         @test isstructequal(fbr, @fiber(sc{2, Tuple{Int16, Int16}}((0,0,), e(0.0))))
 
-        @test diff("format_constructors_sc2_e.txt", String(take!(io)))
+        @test check_output("format_constructors_sc2_e.txt", String(take!(io)))
     end
 
     @testset "@fiber(sh{1}(e(0))" begin
@@ -353,7 +348,7 @@ include("utils.jl")
         @test isstructequal(fbr, @fiber(sh{1}((Int16(0),), e(0.0))))
         @test isstructequal(fbr, @fiber(sh{1, Tuple{Int16}}((0,), e(0.0))))
 
-        @test diff("format_constructors_sh1_e.txt", String(take!(io)))
+        @test check_output("format_constructors_sh1_e.txt", String(take!(io)))
     end
 
     @testset "@fiber(sh{2}(e(0))" begin
@@ -413,7 +408,7 @@ include("utils.jl")
         @test isstructequal(fbr, @fiber(sh{2}((Int16(0), Int16(0),), e(0.0))))
         @test isstructequal(fbr, @fiber(sh{2, Tuple{Int16, Int16}}((0,0,), e(0.0))))
 
-        @test diff("format_constructors_sh2_e.txt", String(take!(io)))
+        @test check_output("format_constructors_sh2_e.txt", String(take!(io)))
     end
 
 end
