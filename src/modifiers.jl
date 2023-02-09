@@ -161,7 +161,6 @@ function get_reader(arr::VirtualStaticOffset, ctx, proto_idx)
     )
 end
 
-#=
 struct Window{Start, Stop}
     start::Start
     stop::Stop
@@ -193,7 +192,6 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualWindow)
 	print(io, ")")
 end
 
-
 IndexNotation.isliteral(::VirtualWindow) =  false
 
 function virtualize(ex, ::Type{Window{Start, Stop}}, ctx) where {Start, Stop}
@@ -202,9 +200,9 @@ function virtualize(ex, ::Type{Window{Start, Stop}}, ctx) where {Start, Stop}
     return VirtualWindow(Extent(start, stop))
 end
 
-(ctx::Finch.LowerJulia)(tns::VirtualWindow) = :(Window(dim = $(ctx(tns.dim)), target = $(ctx(tns.target))))
+(ctx::Finch.LowerJulia)(tns::VirtualWindow) = :(Window($(ctx(tns.target))))
 
-virtual_size(arr::VirtualWindow, ctx::LowerJulia, dim = nodim) = (shiftdim(arr.target, call(-, getstart(dim), getstart(arr.target))),)
+virtual_size(arr::VirtualWindow, ctx::LowerJulia, dim) = (shiftdim(arr.target, call(-, getstart(dim), getstart(arr.target))),)
 virtual_resize!(arr::VirtualWindow, ctx::LowerJulia, idx_dim) = (arr, arr.target)
 virtual_eldim(arr::VirtualWindow, ctx::LowerJulia, idx_dim) = arr.target
 
@@ -216,4 +214,3 @@ function get_reader(arr::VirtualWindow, ctx, proto_idx)
             Shift(truncate(tns, ctx, ext, arr.target), call(-, getstart(ext), getstart(arr.target)))
     )
 end
-=#

@@ -237,7 +237,7 @@ function base_rules(alg, ctx)
 
 
         (@rule call(~f, call(~g, ~a, ~b...)) => if isinverse(alg, f, g) && isassociative(alg, g)
-            call(g, call(f, a), call(f, call(g, b...)))
+            call(g, call(f, a), map(c -> call(f, call(g, c)), b)...)
         end),
 
         (@rule call($(literal(-)), ~a, ~b) => call(+, a, call(-, b))),
