@@ -31,8 +31,7 @@ function fiber(arr, default=zero(eltype(arr)))
 end
 
 @generated function helper_equal(A, B)
-    A = virtualize(:A, A, LowerJulia())
-    idxs = [Symbol(:i_, n) for n = getsites(A)]
+    idxs = [Symbol(:i_, n) for n = 1:ndims(A)]
     return quote
         size(A) == size(B) || return false
         check = Scalar(true)
@@ -56,8 +55,7 @@ function Base.:(==)(A::AbstractArray, B::Fiber)
 end
 
 @generated function helper_isequal(A, B)
-    A = virtualize(:A, A, LowerJulia())
-    idxs = [Symbol(:i_, n) for n = getsites(A)]
+    idxs = [Symbol(:i_, n) for n = 1:ndims(A)]
     return quote
         size(A) == size(B) || return false
         check = Scalar(true)
@@ -81,8 +79,7 @@ function Base.isequal(A:: AbstractArray, B::Fiber)
 end
 
 @generated function copyto_helper!(dst, src)
-    dst = virtualize(:dst, dst, LowerJulia())
-    idxs = [Symbol(:i_, n) for n = getsites(dst)]
+    idxs = [Symbol(:i_, n) for n = 1:ndims(dst)]
     return quote
         @finch @loop($(idxs...), dst[$(idxs...)] = src[$(idxs...)])
         return dst
@@ -100,8 +97,7 @@ end
 dropdefaults(src) = dropdefaults!(similar(src), src)
 
 @generated function dropdefaults!(dst::Fiber, src)
-    dst = virtualize(:dst, dst, LowerJulia())
-    idxs = [Symbol(:i_, n) for n = getsites(dst)]
+    idxs = [Symbol(:i_, n) for n = 1:ndims(dst)]
     T = eltype(dst)
     d = default(dst)
     return quote

@@ -16,7 +16,7 @@ const program_nodes = (
     updater = updater,
     modify = modify,
     create = create,
-    label = (ex) -> :(index_leaf($(esc(ex)))),
+    variable = (ex) -> :(index_leaf($(esc(ex)))),
     literal = literal,
     value = (ex) -> :(index_leaf($(esc(ex)))),
 )
@@ -37,7 +37,7 @@ const instance_nodes = (
     updater = updater_instance,
     modify = modify_instance,
     create = create_instance,
-    label = (ex) -> :($label_instance($(QuoteNode(ex)), $index_leaf_instance($(esc(ex))))),
+    variable = (ex) -> :($variable_instance($(QuoteNode(ex)), $index_leaf_instance($(esc(ex))))),
     literal = literal_instance,
     value = (ex) -> :($index_leaf_instance($(esc(ex))))
 )
@@ -56,7 +56,7 @@ struct FinchParserVisitor
     results
 end
 
-(ctx::FinchParserVisitor)(ex::Symbol) = ctx.nodes.label(ex)
+(ctx::FinchParserVisitor)(ex::Symbol) = ctx.nodes.variable(ex)
 (ctx::FinchParserVisitor)(ex::QuoteNode) = ctx.nodes.literal(ex.value)
 (ctx::FinchParserVisitor)(ex) = ctx.nodes.literal(ex)
 function (ctx::FinchParserVisitor)(ex::Expr)

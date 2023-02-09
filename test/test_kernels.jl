@@ -4,11 +4,11 @@
         m, n = size(A_ref)
         println("B[i, j] += A[i,k] * A[j, k]: $mtx")
         B_ref = transpose(A_ref) * A_ref
-        A = Finch.Fiber(
+        A = Fiber(
             Dense(n,
             SparseList(m, A_ref.colptr, A_ref.rowval,
             Element{0.0}(A_ref.nzval))))
-        B = Finch.Fiber(
+        B = Fiber!(
             Dense(m,
             SparseList(m,
             Element{0.0}())))
@@ -22,7 +22,7 @@
         m, n = size(A_ref)
         if m == n
             println("B[] += A[i,k] * A[i, j] * A[j, k] : $mtx")
-            A = Finch.Fiber(
+            A = Fiber(
                 Dense(n,
                 SparseList(m, A_ref.colptr, A_ref.rowval,
                 Element{0.0}(A_ref.nzval))))
@@ -50,7 +50,7 @@
             SparseList(n, [1, length(J) + 1], J,
             Element{0.0}(W))
         )
-        C = Fiber(
+        C = Fiber!(
             SparseList(
             Element{0.0}())
         )
@@ -71,15 +71,15 @@
         m, n = size(A_ref)
         if m == n
             println("B(ds)[i, j] = w[j] where w[j] += A(ds)[i, k] * A(ds)(k, j)")
-            A = Finch.Fiber(
+            A = Fiber(
                 Dense(n,
                 SparseList(m, A_ref.colptr, A_ref.rowval,
                 Element{0.0}(A_ref.nzval))))
-            B = Fiber(
+            B = Fiber!(
                 Dense(0,
                 SparseList(0,
                 Element{0.0}())))
-            w = Fiber(
+            w = Fiber!(
                 SparseBytemap(m, #TODO
                 Element{0.0}()))
 

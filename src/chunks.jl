@@ -20,17 +20,21 @@ function (ctx::ChunkifyVisitor)(node)
     end
 end
 
-function (ctx::ChunkifyVisitor)(node::IndexNode)
-    if node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
-        chunkify_access(node, ctx, node.tns.val)
+function (ctx::ChunkifyVisitor)(node::IndexNode, eldim = nodim)
+    if node.kind === access && node.tns.kind === virtual
+        chunkify_access(node, ctx, eldim, node.tns.val)
+    elseif node.kind === access && node.tns.kind === variable
+        chunkify_access(node, ctx, eldim, ctx.ctx.bindings[node.tns.name])
     elseif istree(node)
+        #TODO propagate eldim here
         similarterm(node, operation(node), map(ctx, arguments(node)))
     else
         node
     end
 end
 
-chunkify_access(node, ctx, tns) = similarterm(node, operation(node), map(ctx, arguments(node)))
+        #TODO propagate eldim here
+chunkify_access(node, ctx, eldim, tns) = similarterm(node, operation(node), map(ctx, arguments(node)))
 
 function (ctx::LowerJulia)(root::IndexNode, ::ChunkStyle)
     if root.kind === loop
@@ -53,3 +57,127 @@ end
 truncate(node, ctx, ext, ext_2) = node
 truncate_weak(node, ctx, ext, ext_2) = truncate(node, ctx, ext, ext_2)
 truncate_strong(node, ctx, ext, ext_2) = truncate(node, ctx, ext, ext_2)
+
+struct SelectVisitor
+    ctx
+    idxs
+end
+
+function (ctx::SelectVisitor)(node)
+    if istree(node)
+        similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        node
+    end
+end
+
+function (ctx::SelectVisitor)(node::IndexNode)
+    if node.kind === access && node.tns.kind === virtual
+        select_access(node, ctx, node.tns.val)
+    elseif node.kind === access && node.tns.kind === variable
+        select_access(node, ctx, ctx.ctx.bindings[node.tns.name])
+    elseif istree(node)
+        similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        node
+    end
+end
+select_access(node, ctx, tns) = similarterm(node, operation(node), map(ctx, arguments(node)))
+
+struct SelectStyle end
+
+combine_style(a::SelectStyle, b::ThunkStyle) = b
+combine_style(a::SelectStyle, b::ChunkStyle) = a
+combine_style(a::SelectStyle, b::SelectStyle) = a
+
+function (ctx::LowerJulia)(root, ::SelectStyle)
+    idxs = Dict()
+    root = SelectVisitor(ctx, idxs)(root)
+    for (idx, val) in pairs(idxs)
+        ctx.dims[getname(idx)] = Extent(val, val)
+        root = loop(idx, root)
+    end
+    contain(ctx) do ctx_2
+        ctx_2(root)
+    end
+end
+
+@kwdef struct Furlable
+    val = nothing
+    fuse = nothing
+    size
+    body
+end
+
+virtual_default(tns::Furlable) = something(tns.val)
+virtual_size(tns::Furlable, ::LowerJulia, dim=nothing) = tns.size
+
+IndexNotation.isliteral(::Furlable) = false
+
+#Base.show(io::IO, ex::Furlable) = Base.show(io, MIME"text/plain"(), ex)
+#function Base.show(io::IO, mime::MIME"text/plain", ex::Furlable)
+#    print(io, "Furlable()")
+#end
+
+function stylize_access(node, ctx::Stylize{LowerJulia}, tns::Furlable)
+    if !isempty(node.idxs)
+        if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
+            return SelectStyle()
+        elseif ctx.root isa IndexNode && ctx.root.kind === loop && ctx.root.idx == get_furl_root(node.idxs[1])
+            return ChunkStyle()
+        end
+    end
+    return DefaultStyle()
+end
+
+function select_access(node, ctx::Finch.SelectVisitor, tns::Furlable)
+    if !isempty(node.idxs)
+        if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
+            var = index(ctx.ctx.freshen(:s))
+            val = cache!(ctx.ctx, :s, node.idxs[1])
+            ctx.idxs[var] = val
+            ext = first(virtual_size(tns, ctx.ctx))
+            ext_2 = Extent(val, val)
+            tns_2 = truncate(tns, ctx.ctx, ext, ext_2)
+            return access(tns_2, node.mode, var, node.idxs[2:end]...)
+        end
+    end
+    return similarterm(node, operation(node), map(ctx, arguments(node)))
+end
+
+function chunkify_access(node, ctx, eldim, tns::Furlable)
+    if !isempty(node.idxs)
+        if ctx.idx == get_furl_root(node.idxs[1])
+            tns = exfurl(tns.body(ctx.ctx, ctx.idx, virtual_size(tns, ctx.ctx, eldim)[1]), ctx.ctx, node.idxs[1], virtual_size(tns, ctx.ctx, eldim)[1])
+            return access(tns, node.mode, get_furl_root(node.idxs[1]), map(ctx, node.idxs[2:end])...)
+        else
+            idxs = map(ctx, node.idxs)
+            return access(node.tns, node.mode, idxs...)
+        end
+    end
+    return node
+end
+
+refurl(tns, ctx, mode) = tns
+function exfurl(tns, ctx, idx::IndexNode, ext)
+    if idx.kind === index
+        return tns
+    elseif idx.kind === access && idx.tns.kind === virtual
+        exfurl_access(tns, ctx, idx, ext, idx.tns.val)
+    else
+        error("unimplemented")
+    end
+end
+
+function get_furl_root_access(idx, tns::Furlable)
+    if tns.fuse !== nothing
+        get_furl_root(idx.idxs[1])
+    else
+        nothing
+    end
+end
+
+function exfurl_access(tns, ctx, idx, ext, node::Furlable)
+    @assert node.fuse !== nothing
+    node.fuse(tns, ctx, idx, ext)
+end

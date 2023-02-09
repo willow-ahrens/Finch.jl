@@ -2,7 +2,8 @@ tab = "  "
 
 const IS_TREE = 1
 const IS_STATEFUL = 2
-const ID = 4
+const IS_CONST = 4
+const ID = 8
 
 """
     IndexHead
@@ -11,9 +12,10 @@ An IndexNode type represents many different Finch IR nodes, and an IndexHead
 enum is used to differentiate which kind of node is represented.
 """
 @enum IndexHead begin
-    value    =  1ID
+    variable =  0ID
+    value    =  1ID | IS_CONST
     virtual  =  2ID
-    literal  =  3ID
+    literal  =  3ID | IS_CONST
     index    =  4ID
     protocol =  5ID | IS_TREE
     access   =  6ID | IS_TREE 
@@ -31,6 +33,7 @@ enum is used to differentiate which kind of node is represented.
     pass     = 18ID | IS_TREE | IS_STATEFUL
     lifetime = 19ID | IS_TREE | IS_STATEFUL
 end
+
 
 """
     value(val, type)
@@ -61,6 +64,13 @@ Finch AST expression for an index named `name`. Each index must be quantified by
 which iterates over all values of the index.
 """
 index
+
+"""
+    variable(name)
+
+Finch AST expression for a variable named `name`. The variable can be looked up in the context.
+"""
+variable
 
 """
     protocol(idx, mode)
@@ -99,7 +109,7 @@ updater
     create()
 
 Finch AST expression for an "allocating" update. This access will
-initialize and finalize the tensor, and we can be sure that any values
+initialize and freeze the tensor, and we can be sure that any values
 the tensor held before have been forgotten.
 """
 create
@@ -108,7 +118,7 @@ create
     modify()
 
 Finch AST expression for an "in place" update. The access will not
-initialize or finalize the tensor, but can modify it's existing values.
+initialize or freeze the tensor, but can modify it's existing values.
 """
 modify
 
@@ -168,7 +178,7 @@ assign
 """
     pass(tnss...)
 
-Finch AST statement that initializes, finalizes, and returns each tensor in `tnss...`.
+Finch AST statement that initializes, freezes, and returns each tensor in `tnss...`.
 """
 pass
 
@@ -176,7 +186,7 @@ pass
 """
     lifetime(body)
 
-Finch AST statement that initializes and finalizes all results in `body`. Most
+Finch AST statement that initializes and freezes all results in `body`. Most
 finch programs are wrapped by an outer `lifetime`.
 """
 lifetime
@@ -208,6 +218,8 @@ index expressions describe values.
 """
 isstateful(node::IndexNode) = Int(node.kind) & IS_STATEFUL != 0
 
+is_constant(node::IndexNode) = Int(node.kind) & IS_CONST != 0
+
 SyntaxInterface.istree(node::IndexNode) = Int(node.kind) & IS_TREE != 0
 SyntaxInterface.arguments(node::IndexNode) = node.children
 SyntaxInterface.operation(node::IndexNode) = node.kind
@@ -234,6 +246,12 @@ function IndexNode(kind::IndexHead, args::Vector)
             error("wrong number of arguments to $kind(...)")
         end
     elseif kind === index
+        if length(args) == 1
+            return IndexNode(kind, args[1], nothing, IndexNode[])
+        else
+            error("wrong number of arguments to $kind(...)")
+        end
+    elseif kind === variable
         if length(args) == 1
             return IndexNode(kind, args[1], nothing, IndexNode[])
         else
@@ -342,6 +360,12 @@ function Base.getproperty(node::IndexNode, sym::Symbol)
             return node.val::Symbol
         else
             error("type IndexNode(index, ...) has no property $sym")
+        end
+    elseif node.kind === variable
+        if sym === :name
+            return node.val::Symbol
+        else
+            error("type IndexNode(variable, ...) has no property $sym")
         end
     elseif node.kind === reader
         error("type IndexNode(reader, ...) has no property $sym")
@@ -453,6 +477,16 @@ function Finch.getunbound(ex::IndexNode)
     end
 end
 
+function Base.show(io::IO, node::IndexNode) 
+    if node.kind === literal || node.kind == index || node.kind === virtual
+        print(io, node.kind, "(", node.val, ")")
+    elseif node.kind === value
+        print(io, node.kind, "(", node.val, ", ", node.type, ")")
+    else
+        print(io, node.kind, "("); join(io, node.children, ", "); print(io, ")")
+    end
+end
+
 function Base.show(io::IO, mime::MIME"text/plain", node::IndexNode) 
     if isstateful(node)
         display_statement(io, mime, node, 0)
@@ -473,6 +507,8 @@ function display_expression(io, mime, node::IndexNode)
     elseif node.kind === literal
         print(io, node.val)
     elseif node.kind === index
+        print(io, node.name)
+    elseif node.kind === variable
         print(io, node.name)
     elseif node.kind === reader
         print(io, "reader()")
@@ -600,6 +636,8 @@ function Base.:(==)(a::IndexNode, b::IndexNode)
             return b.kind === literal && isequal(a.val, b.val) #TODO Feels iffy idk
         elseif a.kind === index
             return b.kind === index && a.name == b.name
+        elseif a.kind === variable
+            return b.kind === variable && a.name == b.name
         elseif a.kind === virtual
             return b.kind === virtual && a.val == b.val #TODO Feels iffy idk
         else
@@ -624,6 +662,8 @@ function Base.hash(a::IndexNode, h::UInt)
             return hash(virtual, hash(a.val, h))
         elseif a.kind === index
             return hash(index, hash(a.name, h))
+        elseif a.kind === variable
+            return hash(variable, hash(a.name, h))
         else
             error("unimplemented")
         end
@@ -659,6 +699,7 @@ function Finch.getresults(node::IndexNode)
     elseif node.kind === pass
         return node.tnss
     else
+        return []
         error("unimplemented")
     end
 end
@@ -666,10 +707,6 @@ end
 function Finch.getname(x::IndexNode)
     if x.kind === index
         return x.val
-    elseif x.kind === virtual
-        return Finch.getname(x.val)
-    elseif x.kind === access
-        return Finch.getname(x.tns)
     else
         error("unimplemented")
     end
@@ -678,6 +715,8 @@ end
 function Finch.setname(x::IndexNode, sym)
     if x.kind === index
         return index(sym)
+    elseif x.kind === variable
+        return variable(sym)
     elseif x.kind === virtual
         return Finch.setname(x.val, sym)
     else

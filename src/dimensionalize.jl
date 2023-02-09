@@ -17,7 +17,6 @@ getstop(::DeferDimension) = error()
 @kwdef mutable struct DeclareDimensions
     ctx
     dims = Dict()
-    shapes = Dict()
 end
 function (ctx::DeclareDimensions)(node, dim)
     if istree(node)
@@ -30,7 +29,6 @@ end
 @kwdef mutable struct InferDimensions
     ctx
     dims = Dict()
-    shapes = Dict()
 end
 function (ctx::InferDimensions)(node)
     if istree(node)
@@ -75,7 +73,7 @@ index name or a `(tensor_name, mode_name)` tuple.
 
 The program is assumed to be in SSA form.
 
-See also: [`getsize`](@ref), [`getsites`](@ref), [`combinedim`](@ref),
+See also: [`virtual_size`](@ref), [`virtual_resize`](@ref), [`combinedim`](@ref),
 [`TransformSSA`](@ref)
 """
 function (ctx::LowerJulia)(prgm, ::DimensionalizeStyle) 
@@ -88,9 +86,8 @@ end
 function dimensionalize!(prgm, ctx) 
     prgm = Rewrite(Postwalk(x -> if x isa Dimensionalize x.body end))(prgm)
     dims = filter(((idx, dim),) -> dim !== deferdim, ctx.dims)
-    shapes = Dict()
-    prgm = DeclareDimensions(ctx=ctx, dims = dims, shapes = shapes)(prgm, nodim)
-    (prgm, _) = InferDimensions(ctx=ctx, dims = dims, shapes = shapes)(prgm)
+    prgm = DeclareDimensions(ctx=ctx, dims = dims)(prgm, nodim)
+    (prgm, _) = InferDimensions(ctx=ctx, dims = dims)(prgm)
     for k in keys(dims)
         dims[k] = cache_dim!(ctx, k, dims[k])
     end
@@ -105,8 +102,10 @@ function (ctx::DeclareDimensions)(node::IndexNode, dim)
     if node.kind === index
         ctx.dims[getname(node)] = resultdim(ctx.ctx, get(ctx.dims, getname(node), nodim), dim)
         return node
-    elseif node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
+    elseif node.kind === access && node.tns.kind === virtual
         return declare_dimensions_access(node, ctx, node.tns.val, dim)
+    elseif node.kind === access && node.tns.kind === variable #TODO perhaps we can get rid of this
+        return declare_dimensions_access(node, ctx, node.tns, dim)
     elseif node.kind === with
         prod = ctx(node.prod, nodim)
         (prod, _) = InferDimensions(;kwfields(ctx)...)(prod)
@@ -123,8 +122,10 @@ end
 function (ctx::InferDimensions)(node::IndexNode)
     if node.kind === index
         return (node, ctx.dims[getname(node)])
-    elseif node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
+    elseif node.kind === access && node.tns.kind === virtual
         return infer_dimensions_access(node, ctx, node.tns.val)
+    elseif node.kind === access && node.tns.kind === variable #TODO perhaps we can get rid of this
+        return infer_dimensions_access(node, ctx, node.tns)
     elseif node.kind === with
         (cons, _) = ctx(node.cons)
         return (with(cons, node.prod), nodim)
@@ -139,31 +140,36 @@ function (ctx::InferDimensions)(node::IndexNode)
 end
 
 declare_dimensions_access(node, ctx, tns::Dimensionalize, dim) = declare_dimensions_access(node, ctx, tns.body, dim)
-function declare_dimensions_access(node, ctx, tns, dim)
-    if haskey(ctx.shapes, getname(tns))
-        dims = ctx.shapes[getname(tns)][getsites(tns)]
-        tns = setsize!(tns, ctx.ctx, node.mode, dims...)
+function declare_dimensions_access(node, ctx, tns, eldim)
+    if node.mode.kind !== reader
+        shape = map(suggest, virtual_size(tns, ctx.ctx, eldim))
     else
-        dims = getsize(tns, ctx.ctx, node.mode)
+        shape = virtual_size(tns, ctx.ctx, eldim)
     end
-    idxs = map(ctx, node.idxs, dims)
+    idxs = map(ctx, node.idxs, shape)
     access(tns, node.mode, idxs...)
 end
 
 function infer_dimensions_access(node, ctx, tns)
     res = map(ctx, node.idxs)
     idxs = map(first, res)
-    if node.mode.kind !== reader
-        prev_dims = getsize(tns, ctx.ctx, node.mode)
-        dims = map(resolvedim, map((a, b) -> resultdim(ctx.ctx, a, b), map(last, res), prev_dims))
-        ctx.shapes[getname(tns)] = dims
-        tns = setsize!(tns, ctx.ctx, node.mode, dims...)
+    shape = virtual_size(tns, ctx.ctx) #TODO can we eventually add an eldim here?
+    if node.mode.kind === updater
+        shape = map(suggest, shape) #TODO can we eventually add an eldim here?
     end
-    (access(tns, node.mode, idxs...), nodim)
+    shape = map(resolvedim, map((a, b) -> resultdim(ctx.ctx, a, b), shape, map(last, res)))
+    if node.mode.kind === updater
+        eldim = virtual_resize!(tns, ctx.ctx, shape...)
+        (access(tns, node.mode, idxs...), eldim)
+    else
+        (access(tns, node.mode, idxs...), virtual_elaxis(tns, ctx.ctx, shape...))
+    end
 end
 
-function setsize!(tns, ctx, mode, dims...)
-    for (dim, ref) in zip(dims, getsize(tns, ctx, mode))
+virtual_elaxis(tns, ctx, dims...) = nodim
+
+function virtual_resize!(tns, ctx, dims...)
+    for (dim, ref) in zip(dims, virtual_size(tns, ctx))
         if dim !== nodim && ref !== nodim #TODO this should be a function like checkdim or something haha
             push!(ctx.preamble, quote
                 $(ctx(getstart(dim))) == $(ctx(getstart(ref))) || throw(DimensionMismatch("mismatched dimension start"))
@@ -171,7 +177,7 @@ function setsize!(tns, ctx, mode, dims...)
             end)
         end
     end
-    tns
+    (tns, nodim)
 end
 
 struct UnknownDimension end
@@ -321,22 +327,37 @@ function combinedim(ctx, a::IndexNode, b::IndexNode)
 end
 
 """
-    getsize(tns, ctx, mode)
+    virtual_size(tns, ctx)
 
-Return an iterable over the dimensions of `tns` in the context `ctx` with access
+Return a tuple of the dimensions of `tns` in the context `ctx` with access
 mode `mode`. This is a function similar in spirit to `Base.axes`.
 """
 function getsize end
 
-"""
-    getsites(tns)
+virtual_size(tns, ctx, eldim) = virtual_size(tns, ctx)
+function virtual_size(tns::IndexNode, ctx, eldim = nodim)
+    if tns.kind === variable
+        return virtual_size(ctx.bindings[tns.name], ctx, eldim)
+    else
+        return error("unimplemented")
+    end
+end
 
-Return an iterable over the identities of the modes of `tns`. If `tns_2` is a
-transpose of `tns`, then `getsites(tns_2)` should be a permutation of
-`getsites(tns)` corresponding to the order in which modes have been permuted.
-"""
-function getsites end
+function virtual_elaxis(tns::IndexNode, ctx, dims...)
+    if tns.kind === variable
+        return virtual_elaxis(ctx.bindings[tns.name], ctx, dims...)
+    else
+        return error("unimplemented")
+    end
+end
 
+function virtual_resize!(tns::IndexNode, ctx, dims...)
+    if tns.kind === variable
+        return (ctx.bindings[tns.name], eldim) = virtual_resize!(ctx.bindings[tns.name], ctx, dims...)
+    else
+        error("unimplemented")
+    end
+end
 
 getstart(val) = val #TODO avoid generic definition here
 getstop(val) = val #TODO avoid generic herer

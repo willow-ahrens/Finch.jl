@@ -59,6 +59,10 @@ function cache!(ctx, var, val)
     if isliteral(val)
         return val
     end
+    if val isa IndexNode
+        val.kind == literal && return val
+        val.kind == value && return val
+    end
     body = contain(ctx) do ctx_2
         ctx(val)
     end
@@ -88,6 +92,13 @@ function bind(f, ctx::LowerJulia, (var, val′), tail...)
         pop!(ctx.bindings, var)
         return res
     end
+end
+
+function resolve(var, ctx::LowerJulia)
+    if var isa IndexNode && (var.kind === variable || var.kind === index)
+        return ctx.bindings[var.name]
+    end
+    return var
 end
 
 function contain(f, ctx::LowerJulia)
@@ -149,7 +160,7 @@ end
 function (ctx::ThunkVisitor)(node::IndexNode)
     if node.kind === virtual
         ctx(node.val)
-    elseif node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
+    elseif node.kind === access && node.tns.kind === virtual
         #TODO this case morally shouldn't exist
         thunk_access(node, ctx, node.tns.val)
     elseif istree(node)
@@ -195,19 +206,21 @@ function (ctx::LowerJulia)(root::IndexNode, ::DefaultStyle)
             return root.val
         end
     elseif root.kind === with
-        prod = nothing
-        target = map(getname, getresults(root.prod))
+        target = map(gettns, getresults(root.prod))
         return quote
             $(contain(ctx) do ctx_2
-                prod = Initialize(ctx = ctx_2, target=target)(root.prod)
+                prod = OpenScope(ctx = ctx_2, target=target)(root.prod)
                 (ctx_2)(prod)
             end)
             $(contain(ctx) do ctx_2
-                Finalize(ctx = ctx_2, target=target)(prod)
-                cons = Initialize(ctx = ctx_2, target=target)(root.cons)
-                res = (ctx_2)(cons)
-                Finalize(ctx = ctx_2, target=target)(cons)
-                res
+                CloseScope(ctx = ctx_2, target=target)(root.prod)
+                cons = OpenScope(ctx = ctx_2, target=target)(root.cons)
+                (ctx_2)(cons)
+            end)
+            $(contain(ctx) do ctx_2
+                CloseScope(ctx = ctx_2, target=target)(root.cons)
+                quote
+                end
             end)
         end
     elseif root.kind === multi
@@ -221,8 +234,10 @@ function (ctx::LowerJulia)(root::IndexNode, ::DefaultStyle)
         end
         thunk
     elseif root.kind === access
-        if root.tns isa IndexNode && root.tns.kind === virtual
+        if root.tns.kind === virtual
             return lowerjulia_access(ctx, root, root.tns.val)
+        elseif root.tns.kind === variable
+            return lowerjulia_access(ctx, root, resolve(root.tns.name, ctx))
         else
             tns = ctx(root.tns)
             idxs = map(ctx, root.idxs)
@@ -254,7 +269,7 @@ function (ctx::LowerJulia)(root::IndexNode, ::DefaultStyle)
             ctx))
     elseif root.kind === chunk
         idx_sym = ctx.freshen(getname(root.idx))
-        if simplify((@f $(getlower(root.ext)) >= 1), ctx) == (@f true)  && simplify((@f $(getupper(root.ext)) <= 1), ctx) == (@f true)
+        if simplify((@f $(getlower(root.ext)) >= 1), ctx) == (@f true) && simplify((@f $(getupper(root.ext)) <= 1), ctx) == (@f true)
             return quote
                 $idx_sym = $(ctx(getstart(root.ext)))
                 $(bind(ctx, getname(root.idx) => idx_sym) do 
@@ -300,8 +315,11 @@ function (ctx::LowerJulia)(root::IndexNode, ::DefaultStyle)
         return :($lhs = $rhs)
     elseif root.kind === pass
         return quote end
+    elseif root.kind === variable
+        error()
+        return ctx(ctx.bindings[root.name])
     else
-        error("unimplemented")
+        error("unimplemented ($root)")
     end
 end
 
@@ -331,7 +349,7 @@ function (ctx::ForLoopVisitor)(node)
 end
 
 function (ctx::ForLoopVisitor)(node::IndexNode)
-    if node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
+    if node.kind === access && node.tns.kind === virtual
         tns_2 = unchunk(node.tns.val, ctx)
         if tns_2 === nothing
             access(node.tns, node.mode, map(ctx, node.idxs)...)
@@ -350,7 +368,7 @@ end
     body
 end
 
-default(ex::Lookup) = something(ex.val)
+virtual_default(ex::Lookup) = something(ex.val)
 
 Base.show(io::IO, ex::Lookup) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::Lookup)

@@ -84,13 +84,13 @@ Base.:(==)(a::AccessInstance, b::AccessInstance) = a.tns == b.tns && a.mode == b
 
 @inline access_instance(tns, mode, idxs...) = AccessInstance(tns, mode, idxs)
 
-struct LabelInstance{tag, Tns} <: IndexNodeInstance
+struct VariableInstance{tag, Tns} <: IndexNodeInstance
     tns::Tns
 end
-Base.:(==)(a::LabelInstance, b::LabelInstance) = false
-Base.:(==)(a::LabelInstance{tag}, b::LabelInstance{tag}) where {tag} = a.tns == b.tns
+Base.:(==)(a::VariableInstance, b::VariableInstance) = false
+Base.:(==)(a::VariableInstance{tag}, b::VariableInstance{tag}) where {tag} = a.tns == b.tns
 
-@inline label_instance(tag, tns) = LabelInstance{tag, typeof(tns)}(tns)
+@inline variable_instance(tag, tns) = VariableInstance{tag, typeof(tns)}(tns)
 
 struct ReaderInstance end
 reader_instance() = ReaderInstance()

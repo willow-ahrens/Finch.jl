@@ -4,6 +4,7 @@ module IndexNotation
     export index_leaf
     export literal
     export index
+    export variable
     export value
 #    export Workspace
     export pass
@@ -27,7 +28,7 @@ module IndexNotation
 
     export @f, @finch_program, @finch_program_instance
 
-    export isliteral, virtual
+    export isliteral, is_constant, virtual
 
     """
         isliteral(ex)

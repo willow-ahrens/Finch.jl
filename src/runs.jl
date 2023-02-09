@@ -13,8 +13,6 @@ IndexNotation.isliteral(::Run) =  false
 
 #A minor revelation: There's no reason to store extents in chunks, they just modify the extents of the context.
 
-getname(arr::Run) = getname(arr.body)
-
 struct RunStyle end
 
 (ctx::Stylize{LowerJulia})(node::Run) = ctx.root.kind === chunk ? RunStyle() : DefaultStyle()
@@ -47,7 +45,7 @@ function (ctx::AccessRunVisitor)(node)
 end
 
 function (ctx::AccessRunVisitor)(node::IndexNode)
-    if node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
+    if node.kind === access && node.tns.kind === virtual
         tns_2 = unchunk(node.tns.val, ctx)
         if tns_2 === nothing
             access(node.tns, node.mode, map(ctx, node.idxs)...)
@@ -73,12 +71,12 @@ end
 
 IndexNotation.isliteral(::AcceptRun) = false
 
-default(node::AcceptRun) = node.val
+virtual_default(node::AcceptRun) = node.val
 
 #TODO this should go somewhere else
-function Finch.default(x::IndexNode)
+function Finch.virtual_default(x::IndexNode)
     if x.kind === virtual
-        Finch.default(x.val)
+        Finch.virtual_default(x.val)
     else
         error("unimplemented")
     end
@@ -132,7 +130,7 @@ end
 function (ctx::AcceptRunVisitor)(node::IndexNode)
     if node.kind === virtual
         ctx(node.val)
-    elseif node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
+    elseif node.kind === access && node.tns.kind === virtual
         node.mode.kind === reader && return node
         tns_2 = unchunk(node.tns.val, ctx)
         if tns_2 === nothing
