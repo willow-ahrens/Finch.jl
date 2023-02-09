@@ -161,27 +161,25 @@ function get_reader(arr::VirtualStaticOffset, ctx, proto_idx)
     )
 end
 
-struct Window{Target}
-    target::Target
+#=
+struct Window{Start, Stop}
+    start::Start
+    stop::Stop
 end
-
-Window(start, stop) = Window(Extent(start, stop))
 
 const window = Window
 
 Base.show(io::IO, ex::Window) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::Window)
-	print(io, "Window(")
-	print(io, ex.target)
-	print(io, ")")
+	print(io, "Window(", start, ", ", stop, ")")
 end
 
 IndexNotation.value_instance(arg::Window) = arg
 
-Base.size(vec::Window) = (stop(vec.target) - start(vec.target) + 1,)
+Base.size(vec::Window) = (vec.stop - vec.start + 1,)
 
 function Base.getindex(arr::Window, i)
-    getstart(arr.target) + i - 1
+    vec.start + i - 1
 end
 
 struct VirtualWindow
@@ -198,22 +196,24 @@ end
 
 IndexNotation.isliteral(::VirtualWindow) =  false
 
-function virtualize(ex, ::Type{Window{Target}}, ctx) where {Target}
-    target = virtualize(:($ex.target), Target, ctx)
-    return VirtualWindow(target)
+function virtualize(ex, ::Type{Window{Start, Stop}}, ctx) where {Start, Stop}
+    start = virtualize(:($ex.start), Start, ctx)
+    stop = virtualize(:($ex.stop), Stop, ctx)
+    return VirtualWindow(Extent(start, stop))
 end
 
 (ctx::Finch.LowerJulia)(tns::VirtualWindow) = :(Window(dim = $(ctx(tns.dim)), target = $(ctx(tns.target))))
 
-virtual_size(arr::VirtualWindow, ctx::LowerJulia, dim = nodim) = (shiftdim(tns.target, call(-, getstart(dim), getstart(tns.target))),)
-virtual_resize!(arr::VirtualWindow, ctx::LowerJulia, idx_dim) = (arr, tns.target)
-virtual_eldim(arr::VirtualWindow, ctx::LowerJulia, idx_dim) = tns.target
+virtual_size(arr::VirtualWindow, ctx::LowerJulia, dim = nodim) = (shiftdim(arr.target, call(-, getstart(dim), getstart(arr.target))),)
+virtual_resize!(arr::VirtualWindow, ctx::LowerJulia, idx_dim) = (arr, arr.target)
+virtual_eldim(arr::VirtualWindow, ctx::LowerJulia, idx_dim) = arr.target
 
 function get_reader(arr::VirtualWindow, ctx, proto_idx)
     Furlable(
         size = (nodim,),
         body = nothing,
         fuse = (tns, ctx, idx, ext) ->
-            Shift(truncate(tns, ctx, ext, node.target), call(-, getstart(ext), getstart(node.target)))
+            Shift(truncate(tns, ctx, ext, arr.target), call(-, getstart(ext), getstart(arr.target)))
     )
 end
+=#
