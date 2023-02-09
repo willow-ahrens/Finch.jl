@@ -24,7 +24,7 @@ begin
         end
     i = i_start
     i_start_2 = i
-    phase_start = (max)(i_start_2, (+)((-)((ex.body.rhs.idxs[1]).tns.tns.start), i_start_2, (-)((+)()), (ex.body.rhs.idxs[1]).tns.tns.start))
+    phase_start = (max)(i_start_2, (+)((-)((ex.body.rhs.idxs[1]).tns.tns.start), i_start_2, (ex.body.rhs.idxs[1]).tns.tns.start))
     phase_stop = (min)(i_stop, (+)((-)((ex.body.rhs.idxs[1]).tns.tns.start), 1, A_lvl_i1))
     if phase_stop >= phase_start
         i = i
@@ -35,7 +35,7 @@ begin
         while i <= phase_stop
             i_start_3 = i
             A_lvl_i = A_lvl.idx[A_lvl_q]
-            phase_start_2 = (max)(i_start_3, (+)((-)((ex.body.rhs.idxs[1]).tns.tns.start), (-)((+)()), (ex.body.rhs.idxs[1]).tns.tns.start, i_start_3))
+            phase_start_2 = (max)(i_start_3, (+)((-)((ex.body.rhs.idxs[1]).tns.tns.start), (ex.body.rhs.idxs[1]).tns.tns.start, i_start_3))
             phase_stop_2 = (min)(phase_stop, (+)((-)((ex.body.rhs.idxs[1]).tns.tns.start), 1, A_lvl_i))
             if phase_stop_2 >= phase_start_2
                 i_2 = i
@@ -67,8 +67,8 @@ begin
         i = phase_stop + 1
     end
     i_start_2 = i
-    phase_start_3 = (max)(i_start_2, (+)((-)((ex.body.rhs.idxs[1]).tns.tns.start), i_start_2, (-)((+)()), (ex.body.rhs.idxs[1]).tns.tns.start))
-    phase_stop_3 = (min)(i_stop, (+)((-)((ex.body.rhs.idxs[1]).tns.tns.start), (-)((+)()), (ex.body.rhs.idxs[1]).tns.tns.start, i_stop))
+    phase_start_3 = (max)(i_start_2, (+)((-)((ex.body.rhs.idxs[1]).tns.tns.start), i_start_2, (ex.body.rhs.idxs[1]).tns.tns.start))
+    phase_stop_3 = (min)(i_stop, (+)((-)((ex.body.rhs.idxs[1]).tns.tns.start), (ex.body.rhs.idxs[1]).tns.tns.start, i_stop))
     if phase_stop_3 >= phase_start_3
         i_4 = i
         i = phase_stop_3 + 1
