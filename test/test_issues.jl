@@ -1,6 +1,3 @@
-using Finch
-using Test
-
 @testset "issues" begin
     #https://github.com/willow-ahrens/Finch.jl/issues/51
     let
@@ -60,7 +57,7 @@ using Test
     A = copyto!(@fiber(d{Int64}(d{Int64}(e(0)))), A)
     B = @fiber(d{Int64}(e(0)))
     
-    @test diff("fiber_as_idx.jl", @finch_code @loop i B[i] = A[i, I[i]])
+    @test check_output("fiber_as_idx.jl", @finch_code @loop i B[i] = A[i, I[i]])
     @finch @loop i B[i] = A[i, I[i]]
 
     B_ref = Fiber(Dense{Int64}(9, Element(0, [11, 21, 31, 43, 53, 61, 75, 85, 95])))

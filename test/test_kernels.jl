@@ -1,4 +1,6 @@
 @testset "kernels" begin
+    using SparseArrays
+
     for (mtx, A_ref) in matrices
         A_ref = SparseMatrixCSC(A_ref)
         m, n = size(A_ref)
@@ -82,11 +84,6 @@
             w = Fiber!(
                 SparseBytemap(m, #TODO
                 Element{0.0}()))
-
-            ex = @finch_program_instance @loop i ((@loop j B[i, j] = w[j]) where (@loop k j w[j] = A[i, k] * A[k, j]))
-            #println(typeof(ex))
-            #display(execute_code(:ex, typeof(ex)))
-            #println()
 
             @finch @loop i ((@loop j B[i, j] = w[j]) where (@loop k j w[j] = A[i, k] * A[k, j]))
         end

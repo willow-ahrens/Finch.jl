@@ -1,38 +1,81 @@
-using Finch
 using Test
-using SyntaxInterface
-using Base.Iterators
-using Finch: SubFiber
+using ArgParse
+
+s = ArgParseSettings("Example 3 for argparse.jl: " *
+                        "version info, default values, " *
+                        "options with types, variable " *
+                        "number of arguments.",
+                        version = "Version 1.0", # version info
+                        add_version = true)      # audo-add version option
+s = ArgParseSettings("Run Finch.jl tests. All tests are run by default. Specific
+test suites may be specified as positional arguments. Finch compares to
+reference output which depends on the system word size (currently
+$(Sys.WORD_SIZE)-bit). To overwrite $(Sys.WORD_SIZE==32 ? 64 : 32)-bit output,
+run this with a $(Sys.WORD_SIZE==32 ? 64 : 32)-bit julia executable.")
+
+@add_arg_table! s begin
+    "--overwrite", "-w"
+        action = :store_true
+        help = "overwrite reference output for $(Sys.WORD_SIZE)-bit systems"
+    "suites"
+        nargs = '*'
+        default = ["all"]
+        help = "names of test suites to run"
+end
+parsed_args = parse_args(ARGS, s)
+
+"""
+    check_output(fname, arg)
+
+Compare the output of `println(arg)` with standard reference output, stored
+in a file named `fname`. Call `julia runtests.jl --help` for more information on
+how to overwrite the reference output.
+"""
+function check_output(fname, arg)
+    global parsed_args
+    ref_dir = joinpath(@__DIR__, "reference$(Sys.WORD_SIZE)")
+    ref_file = joinpath(ref_dir, fname)
+    if parsed_args["overwrite"]
+        mkpath(ref_dir)
+        open(ref_file, "w") do f
+            println(f, arg)
+        end
+        true
+    else
+        reference = read(ref_file, String)
+        result = sprint(println, arg)
+        if reference == result
+            return true
+        else
+            @debug "disagreement with reference output" reference result
+            return false
+        end
+    end
+end
+
+function should_run(name)
+    global parsed_args
+    return ("all" in parsed_args["suites"] || name in parsed_args["suites"])
+end
+
+using Finch
 
 include("data_matrices.jl")
 
 include("utils.jl")
 
-
-using Finch: VirtualAbstractArray, Run, Spike, Extent, Scalar, Switch, Stepper, Jumper, Step, Jump, AcceptRun, AcceptSpike, Thunk, Phase, Pipeline, Lookup, Simplify, Shift
-using Finch: @f, @finch_program_instance, execute, execute_code, getstart, getstop
-using Finch: getname, value
-using Finch.IndexNotation
-using Finch.IndexNotation: call_instance, assign_instance, access_instance, value_instance, index_instance, loop_instance, with_instance, variable_instance, protocol_instance
-
-
-
-verbose = "verbose" in ARGS
-
 @testset "Finch.jl" begin
-    include("test_print.jl")
-
-    include("test_fiber_representation.jl")
-    include("test_fiber_constructors.jl")
-
-    include("test_conversions.jl")
-    include("test_merges.jl")
-    include("test_algebra.jl")
-    include("test_repeat.jl")
-    include("test_permit.jl")
-    include("test_skips.jl")
-    include("test_fibers.jl")
-    include("test_kernels.jl")
-    include("test_issues.jl")
-    include("test_meta.jl")
+    if should_run("print") include("test_print.jl") end
+    if should_run("representation") include("test_representation.jl") end
+    if should_run("constructors") include("test_constructors.jl") end
+    if should_run("conversions") include("test_conversions.jl") end
+    if should_run("merges") include("test_merges.jl") end
+    if should_run("algebra") include("test_algebra.jl") end
+    if should_run("repeat") include("test_repeat.jl") end
+    if should_run("permit") include("test_permit.jl") end
+    if should_run("skips") include("test_skips.jl") end
+    if should_run("fibers") include("test_fibers.jl") end
+    if should_run("kernels") include("test_kernels.jl") end
+    if should_run("issues") include("test_issues.jl") end
+    if should_run("meta") include("test_meta.jl") end
 end

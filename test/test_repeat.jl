@@ -2,27 +2,27 @@
     A = Fiber(
         RepeatRLE{0.0, Int64, Int64, Float64}(10, [1, 7], [1, 3, 5, 7, 9, 10], [2.0, 3.0, 4.0, 5.0, 6.0, 7.0]))
 
-    @test diff("repeat_display.txt", sprint(show, MIME"text/plain"(), A))
-    @test diff("repeat_print.txt", sprint(show, A))
+    @test check_output("repeat_display.txt", sprint(show, MIME"text/plain"(), A))
+    @test check_output("repeat_print.txt", sprint(show, A))
 
     @test reference_isequal(A, [2.0, 3.0, 3.0, 4.0, 4.0, 5.0, 5.0, 6.0, 6.0, 7.0])
 
     B = @fiber(d{Int64}(e(0.0)))
 
-    @test diff("r_to_d.jl", @finch_code @loop i B[i] = A[i])
+    @test check_output("r_to_d.jl", @finch_code @loop i B[i] = A[i])
     @finch @loop i B[i] = A[i]
     @test reference_isequal(B, [2.0, 3.0, 3.0, 4.0, 4.0, 5.0, 5.0, 6.0, 6.0, 7.0])
 
     C = [1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3]
 
-    @test diff("d_to_r.jl", @finch_code @loop i A[i] = C[i])
+    @test check_output("d_to_r.jl", @finch_code @loop i A[i] = C[i])
     @finch @loop i A[i] = C[i]
 
     @test A.lvl.idx[1:3] == [3, 7, 11]
     @test A.lvl.val[1:3] == [1.0, 2.0, 3.0]
 
     D = fiber(sparse([0, 0, 1, 0, 0, 0, 3, 0, 0]))
-    @test diff("sl_to_r.jl", @finch_code @loop i A[i] = D[i])
+    @test check_output("sl_to_r.jl", @finch_code @loop i A[i] = D[i])
 
     @finch @loop i A[i] = D[i]
 
