@@ -1,14 +1,13 @@
 struct ElementLevel{D, Tv}
     val::Vector{Tv}
 end
-ElementLevel(D, args...) = ElementLevel{D}(args...)
-
-ElementLevel{D}() where {D} = ElementLevel{D, typeof(D)}()
-ElementLevel{D}(val::Vector{Tv}) where {D, Tv} = ElementLevel{D, Tv}(val)
-ElementLevel{D, Tv}() where {D, Tv} = ElementLevel{D, Tv}(Tv[])
 const Element = ElementLevel
 
-pattern!(lvl::ElementLevel) = Pattern()
+ElementLevel(d, args...) = ElementLevel{d}(args...)
+ElementLevel{D}() where {D} = ElementLevel{D, typeof(D)}()
+ElementLevel{D}(val::Vector{Tv}) where {D, Tv} = ElementLevel{D, Tv}(val)
+
+ElementLevel{D, Tv}() where {D, Tv} = ElementLevel{D, Tv}(Tv[])
 
 """
 `f_code(e)` = [ElementLevel](@ref).
@@ -16,6 +15,8 @@ pattern!(lvl::ElementLevel) = Pattern()
 f_code(::Val{:e}) = Element
 summary_f_code(::Element{D}) where {D} = "e($(D))"
 similar_level(::ElementLevel{D}) where {D} = ElementLevel{D}()
+
+pattern!(lvl::ElementLevel) = Pattern()
 
 function Base.show(io::IO, lvl::ElementLevel{D, Tv}) where {D, Tv}
     print(io, "Element{")

@@ -1,10 +1,13 @@
 struct DenseLevel{Ti, Lvl}
-    I::Ti
     lvl::Lvl
+    I::Ti
 end
-DenseLevel{Ti}(I, lvl::Lvl) where {Ti, Lvl} = DenseLevel{Ti, Lvl}(I, lvl)
-DenseLevel{Ti}(lvl::Lvl) where {Ti, Lvl} = DenseLevel{Ti, Lvl}(zero(Ti), lvl)
-DenseLevel(lvl) = DenseLevel(0, lvl)
+DenseLevel(lvl) = DenseLevel{Int}(lvl)
+DenseLevel(lvl, I::Ti, args...) where {Ti} = DenseLevel{Ti}(lvl, I, args...)
+DenseLevel{Ti}(lvl, args...) where {Ti} = DenseLevel{Ti, typeof(lvl)}(lvl, args...)
+
+DenseLevel{Ti, Lvl}(lvl) where {Ti, Lvl} = DenseLevel{Ti, Lvl}(lvl, zero(Ti))
+
 const Dense = DenseLevel
 
 """
@@ -13,10 +16,10 @@ const Dense = DenseLevel
 f_code(::Val{:d}) = Dense
 summary_f_code(lvl::Dense) = "d($(summary_f_code(lvl.lvl)))"
 similar_level(lvl::DenseLevel) = Dense(similar_level(lvl.lvl))
-similar_level(lvl::DenseLevel, dim, tail...) = Dense(dim, similar_level(lvl.lvl, tail...))
+similar_level(lvl::DenseLevel, dim, tail...) = Dense(similar_level(lvl.lvl, tail...), dim)
 
 pattern!(lvl::DenseLevel{Ti}) where {Ti} = 
-    DenseLevel{Ti}(lvl.I, pattern!(lvl.lvl))
+    DenseLevel{Ti}(pattern!(lvl.lvl), lvl.I)
 
 @inline level_ndims(::Type{<:DenseLevel{Ti, Lvl}}) where {Ti, Lvl} = 1 + level_ndims(Lvl)
 @inline level_size(lvl::DenseLevel) = (lvl.I, level_size(lvl.lvl)...)
@@ -40,9 +43,9 @@ function Base.show(io::IO, lvl::DenseLevel{Ti}) where {Ti}
     else
         print(io, "Dense{$Ti}(")
     end
-    show(io, lvl.I)
-    print(io, ", ")
     show(io, lvl.lvl)
+    print(io, ", ")
+    show(io, lvl.I)
     print(io, ")")
 end 
 
@@ -56,10 +59,10 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:DenseLeve
 end
 
 mutable struct VirtualDenseLevel
+    lvl
     ex
     Ti
     I
-    lvl
 end
 function virtualize(ex, ::Type{DenseLevel{Ti, Lvl}}, ctx, tag=:lvl) where {Ti, Lvl}
     sym = ctx.freshen(tag)
@@ -68,13 +71,13 @@ function virtualize(ex, ::Type{DenseLevel{Ti, Lvl}}, ctx, tag=:lvl) where {Ti, L
         $sym = $ex
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualDenseLevel(sym, Ti, I, lvl_2)
+    VirtualDenseLevel(lvl_2, sym, Ti, I)
 end
 function (ctx::Finch.LowerJulia)(lvl::VirtualDenseLevel)
     quote
         $DenseLevel{$(lvl.Ti)}(
-            $(ctx(lvl.I)),
             $(ctx(lvl.lvl)),
+            $(ctx(lvl.I)),
         )
     end
 end

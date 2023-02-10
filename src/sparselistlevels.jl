@@ -1,21 +1,18 @@
 struct SparseListLevel{Ti, Tp, Lvl}
+    lvl::Lvl
     I::Ti
     pos::Vector{Tp}
     idx::Vector{Ti}
-    lvl::Lvl
 end
 const SparseList = SparseListLevel
-SparseListLevel(lvl) = SparseListLevel(0, lvl)
-SparseListLevel{Ti}(lvl) where {Ti} = SparseListLevel{Ti}(zero(Ti), lvl)
-SparseListLevel{Ti, Tp}(lvl) where {Ti, Tp} = SparseListLevel{Ti, Tp}(zero(Ti), lvl)
+SparseListLevel(lvl) = SparseListLevel{Int}(lvl)
+SparseListLevel(lvl, I, args...) = SparseListLevel{typeof(I)}(lvl, I, args...)
+SparseListLevel{Ti}(lvl, args...) where {Ti} = SparseListLevel{Ti, Int}(lvl, args...)
+SparseListLevel{Ti, Tp}(lvl, args...) where {Ti, Tp} = SparseListLevel{Ti, Tp, typeof(lvl)}(lvl, args...)
 
-SparseListLevel(I::Ti, lvl) where {Ti} = SparseListLevel{Ti}(I, lvl)
-SparseListLevel{Ti}(I, lvl) where {Ti} = SparseListLevel{Ti, Int}(Ti(I), lvl)
-SparseListLevel{Ti, Tp}(I, lvl::Lvl) where {Ti, Tp, Lvl} = SparseListLevel{Ti, Tp, Lvl}(Ti(I), Tp[1], Ti[], lvl)
-
-SparseListLevel(I::Ti, pos::Vector{Tp}, idx, lvl) where {Ti, Tp} = SparseListLevel{Ti}(I, pos, idx, lvl)
-SparseListLevel{Ti}(I, pos::Vector{Tp}, idx, lvl::Lvl) where {Ti, Tp, Lvl} = SparseListLevel{Ti, Tp, Lvl}(Ti(I), pos, idx, lvl)
-SparseListLevel{Ti, Tp}(I, pos, idx, lvl::Lvl) where {Ti, Tp, Lvl} = SparseListLevel{Ti, Tp, Lvl}(Ti(I), pos, idx, lvl)
+SparseListLevel{Ti, Tp, Lvl}(lvl) where {Ti, Tp, Lvl} = SparseListLevel{Ti, Tp, Lvl}(lvl, zero(Ti))
+SparseListLevel{Ti, Tp, Lvl}(lvl, I) where {Ti, Tp, Lvl} = 
+    SparseListLevel{Ti, Tp, Lvl}(lvl, Ti(I), Tp[1], Ti[])
 
 """
 `f_code(l)` = [SparseListLevel](@ref).
@@ -23,10 +20,10 @@ SparseListLevel{Ti, Tp}(I, pos, idx, lvl::Lvl) where {Ti, Tp, Lvl} = SparseListL
 f_code(::Val{:sl}) = SparseList
 summary_f_code(lvl::SparseListLevel) = "sl($(summary_f_code(lvl.lvl)))"
 similar_level(lvl::SparseListLevel) = SparseList(similar_level(lvl.lvl))
-similar_level(lvl::SparseListLevel, dim, tail...) = SparseList(dim, similar_level(lvl.lvl, tail...))
+similar_level(lvl::SparseListLevel, dim, tail...) = SparseList(similar_level(lvl.lvl, tail...), dim)
 
 pattern!(lvl::SparseListLevel{Ti}) where {Ti} = 
-    SparseListLevel{Ti}(lvl.I, lvl.pos, lvl.idx, pattern!(lvl.lvl))
+    SparseListLevel{Ti}(pattern!(lvl.lvl), lvl.I, lvl.pos, lvl.idx)
 
 function Base.show(io::IO, lvl::SparseListLevel{Ti, Tp}) where {Ti, Tp}
     if get(io, :compact, false)
@@ -34,6 +31,8 @@ function Base.show(io::IO, lvl::SparseListLevel{Ti, Tp}) where {Ti, Tp}
     else
         print(io, "SparseList{$Ti, $Tp}(")
     end
+    show(io, lvl.lvl)
+    print(io, ", ")
     show(IOContext(io, :typeinfo=>Ti), lvl.I)
     print(io, ", ")
     if get(io, :compact, false)
@@ -43,8 +42,6 @@ function Base.show(io::IO, lvl::SparseListLevel{Ti, Tp}) where {Ti, Tp}
         print(io, ", ")
         show(IOContext(io, :typeinfo=>Vector{Ti}), lvl.idx)
     end
-    print(io, ", ")
-    show(io, lvl.lvl)
     print(io, ")")
 end
 
@@ -77,6 +74,7 @@ function (fbr::SubFiber{<:SparseListLevel{Ti}})(i, tail...) where {Ti}
 end
 
 mutable struct VirtualSparseListLevel
+    lvl
     ex
     Ti
     Tp
@@ -84,7 +82,6 @@ mutable struct VirtualSparseListLevel
     qos_fill
     qos_stop
     dirty
-    lvl
 end
 function virtualize(ex, ::Type{SparseListLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}
     sym = ctx.freshen(tag)
@@ -96,15 +93,15 @@ function virtualize(ex, ::Type{SparseListLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) whe
     end)
     dirty = ctx.freshen(sym, :_dirty)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualSparseListLevel(sym, Ti, Tp, I, qos_fill, qos_stop, dirty, lvl_2)
+    VirtualSparseListLevel(lvl_2, sym, Ti, Tp, I, qos_fill, qos_stop, dirty)
 end
 function (ctx::Finch.LowerJulia)(lvl::VirtualSparseListLevel)
     quote
         $SparseListLevel{$(lvl.Ti)}(
+            $(ctx(lvl.lvl)),
             $(ctx(lvl.I)),
             $(lvl.ex).pos,
             $(lvl.ex).idx,
-            $(ctx(lvl.lvl)),
         )
     end
 end

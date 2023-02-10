@@ -1,27 +1,26 @@
 @testset "fibers" begin
-    A = fsprand((10, 10), 0.5)
-    B = fsprand((10, 10), 0.5)
-    C = similar(B)
-    @finch @loop i j C[i, j] = A[i, j] + B[i, j]
-
-    println("B(h)[i] = A(s)[i]")
-    A = Finch.Fiber(
-        SparseList{Int64, Int64}(10, [1, 6], [1, 3, 5, 7, 9],
-        Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
-    B = Finch.Fiber(
-        SparseHash{1, Tuple{Int64}, Int64}((10,),
-        Element{0.0}()))
-
+    A_ref = [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0]
+    B_ref = A_ref
+    A = @fiber(sl(e(0.0)), A_ref)
+    B = @fiber(sh{1}(e(0.0)), B_ref)
     @test check_output("sl_to_sh.jl", @finch_code @loop i B[i] += A[i])
-
     @finch @loop i B[i] += A[i]
+    @test B == B_ref
+    @test check_output("sl_to_sh_res.jl", B)
 
-    println(B)
-    @test reference_isequal(A, B)
+    A_ref = [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0]
+    B_ref = A_ref
+    A = @fiber(sl(e(0.0)), A_ref)
+    B = @fiber(sc{1}(e(0.0)), B_ref)
+    @test check_output("sl_to_sh.jl", @finch_code @loop i B[i] += A[i])
+    @finch @loop i B[i] += A[i]
+    @test B == B_ref
+    @test check_output("sl_to_sh_res.jl", B)
 
     println("A(s)[i] = B(h)[i]")
-
     @test check_output("sh_to_sl.jl", @finch_code @loop i A[i] += B[i])
+
+    @test check_output("sl_to_sh_res.jl", B)
 
     @finch @loop i A[i] += B[i]
 
@@ -76,12 +75,10 @@
 
 
     println("B(sc)[i] = A(sl)[i]")
-    A = Finch.Fiber(
-        SparseList{Int64, Int64}(10, [1, 6], [1, 3, 5, 7, 9],
-        Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
-    B = Finch.Fiber(
-        SparseCoo{1, Tuple{Int64}, Int64}((10,),
-        Element{0.0}()))
+    A = @fiber(sl(e(0.0)), fsparse((10,),
+        ([1, 3, 5, 7, 9],)
+        [2.0, 3.0, 4.0, 5.0, 6.0]))
+    B = @fiber(sc{1}(e(0.0)))
 
     @test check_output("sl_to_sc.jl", @finch_code @loop i B[i] += A[i])
 
@@ -104,14 +101,12 @@
 
     println("B(sc2)[i, j] = A(dsl)[i, j]")
 
-    A = Fiber(
-        Dense{Int64}(3, 
-        SparseList{Int64, Int64}(5, [1, 4, 6, 8], [1, 2, 5, 2, 4, 3, 5],
-        Element{0.0}([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]))))
-
-    B = Finch.Fiber(
-        SparseCoo{2, Tuple{Int64, Int64}, Int64}((3,5),
-        Element{0.0}()))
+    A = @fiber(d(sl(e(0.0))), fsparse((3, 5),
+        (
+            [1, 1, 1, 2, 2, 3, 3],
+            [1, 2, 5, 2, 4, 3, 5],
+        ), [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]))
+    B = @fiber(sc{2}(e(0.0)))
     
     @test check_output("d_sl_to_sc2.jl", @finch_code @loop i j B[i, j] += A[i, j])
 
@@ -120,15 +115,11 @@
     println(B)
 
     println("C(s)[i] = B(c)[i] where B(c)[i] = A(s)[i]")
-    A = Finch.Fiber(
-        SparseList{Int64, Int64}(10, [1, 6], [1, 3, 5, 7, 9],
-        Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
-    B = Finch.Fiber(
-        SparseCoo{1, Tuple{Int64}, Int64}((10,),
-        Element{0.0}()))
-    C = Finch.Fiber(
-        SparseList{Int64, Int64}(10, 
-        Element{0.0}()))
+    A = @fiber(sl(e(0.0)), fsparse((10,),
+        ([1, 3, 5, 7, 9],)
+        [2.0, 3.0, 4.0, 5.0, 6.0]))
+    B = @fiber(sc{1}(e(0.0)))
+    C = @fiber(sl(e(0.0)))
 
     @test check_output("sl_to_sc_to_sl.jl", @finch_code (@loop i C[i] += B[i]) where (@loop i B[i] += A[i]))
 
@@ -140,13 +131,13 @@
 
     println("C(s)[i] = A(s)[i] + B(s)[i]")
 
-    A = Finch.Fiber(
-        SparseList{Int64, Int64}(10, [1, 6], [1, 3, 5, 7, 9],
-        Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
-    B = Finch.Fiber(
-        SparseList{Int64, Int64}(10, [1, 4], [2, 5, 8],
-        Element{0.0}([1.0, 1.0, 1.0])))
-    C = Finch.Fiber(SparseList{Int64, Int64}(10, Element{0.0}()))
+    A = @fiber(sl(e(0.0)), fsparse((10,),
+        ([1, 3, 5, 7, 9],)
+        [2.0, 3.0, 4.0, 5.0, 6.0]))
+    B = @fiber(sl(e(0.0)), fsparse((10,),
+        ([2, 5, 8],)
+        [1.0, 1.0, 1.0]))
+    C = @fiber(sl(e(0.0)))
 
     @test check_output("sl_plus_sl_to_sl.jl", @finch_code @loop i C[i] += A[i] + B[i])
 
@@ -161,12 +152,13 @@
 
 
     println("C[i] = A(s)[i] + B(s)[i]")
-    A = Finch.Fiber(
-        SparseList{Int64, Int64}(10, [1, 6], [1, 3, 5, 7, 9],
-        Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
-    B = Finch.Fiber(
-        SparseList{Int64, Int64}(10, [1, 4], [2, 5, 8],
-        Element{0.0}([1.0, 1.0, 1.0])))
+
+    A = @fiber(sl(e(0.0)), fsparse((10,),
+        ([1, 3, 5, 7, 9],)
+        [2.0, 3.0, 4.0, 5.0, 6.0]))
+    B = @fiber(sl(e(0.0)), fsparse((10,),
+        ([2, 5, 8],)
+        [1.0, 1.0, 1.0]))
     C = zeros(10)
 
     @test check_output("sl_plus_sl_to_vec.jl", @finch_code @loop i C[i] += A[i] + B[i])

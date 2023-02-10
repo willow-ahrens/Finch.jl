@@ -1,25 +1,23 @@
 struct SparseCooLevel{N, Ti<:Tuple, Tp, Tbl, Lvl}
+    lvl::Lvl
     I::Ti
     tbl::Tbl
     pos::Vector{Tp}
-    lvl::Lvl
 end
 const SparseCoo = SparseCooLevel
-SparseCooLevel{N}(lvl) where {N} = SparseCooLevel{N}(((0 for _ in 1:N)..., ), lvl)
-SparseCooLevel{N, Ti}(lvl) where {N, Ti} = SparseCooLevel{N, Ti}((map(zero, Ti.parameters)..., ), lvl)
-SparseCooLevel{N, Ti, Tp}(lvl) where {N, Ti, Tp} = SparseCooLevel{N, Ti, Tp}((map(zero, Ti.parameters)..., ), lvl)
 
-SparseCooLevel{N}(I::Ti, lvl) where {N, Ti} = SparseCooLevel{N, Ti}(I, lvl)
-SparseCooLevel{N, Ti}(I, lvl) where {N, Ti} = SparseCooLevel{N, Ti, Int}(Ti(I), lvl)
-SparseCooLevel{N, Ti, Tp}(I, lvl) where {N, Ti, Tp} =
-    SparseCooLevel{N, Ti, Tp}(Ti(I), ((T[] for T in Ti.parameters)...,), Tp[1], lvl)
+SparseCooLevel(lvl, I, args...) = SparseCooLevel{length(I)}(lvl, I, args...)
+SparseCooLevel{N}(lvl) where {N} = SparseCooLevel{N, NTuple{N, Int}}(lvl)
+SparseCooLevel{N}(lvl, I, args...) where {N} = SparseCooLevel{N, typeof(I)}(lvl, I, args...)
 
-SparseCooLevel{N}(I::Ti, tbl::Tbl, pos::Vector{Tp}, lvl::Lvl) where {N, Ti, Tp, Tbl, Lvl} =
-    SparseCooLevel{N, Ti, Tp, Tbl, Lvl}(I, tbl, pos, lvl)
-SparseCooLevel{N, Ti}(I, tbl::Tbl, pos::Vector{Tp}, lvl::Lvl) where {N, Ti, Tp, Tbl, Lvl} =
-    SparseCooLevel{N, Ti, Tp, Tbl, Lvl}(Ti(I), tbl, pos, lvl)
-SparseCooLevel{N, Ti, Tp}(I, tbl::Tbl, pos, lvl::Lvl) where {N, Ti, Tp, Tbl, Lvl} =
-    SparseCooLevel{N, Ti, Tp, Tbl, Lvl}(Ti(I), tbl, pos, lvl)
+SparseCooLevel{N, Ti}(lvl, args...) where {N, Ti} = SparseCooLevel{N, Ti, Int}(lvl, args...)
+SparseCooLevel{N, Ti, Tp}(lvl::Lvl, args...) where {N, Ti, Tp, Lvl} =
+    SparseCooLevel{N, Ti, Tp, Tuple{(Vector{ti} for ti in Ti.parameters)...}, Lvl}(lvl, args...)
+
+SparseCooLevel{N, Ti, Tp, Tbl, Lvl}(lvl) where {N, Ti, Tp, Tbl, Lvl} =
+    SparseCooLevel{N, Ti, Tp, Tbl, Lvl}(lvl, ((zero(ti) for ti in Ti.parameters)...,))
+SparseCooLevel{N, Ti, Tp, Tbl, Lvl}(lvl, I) where {N, Ti, Tp, Tbl, Lvl} =
+    SparseCooLevel{N, Ti, Tp, Tbl, Lvl}(lvl, Ti(I), ((Vector{ti}() for ti in Ti.parameters)...,), Tp[1])
 
 """
 `f_code(sc)` = [SparseCooLevel](@ref).
@@ -27,10 +25,10 @@ SparseCooLevel{N, Ti, Tp}(I, tbl::Tbl, pos, lvl::Lvl) where {N, Ti, Tp, Tbl, Lvl
 f_code(::Val{:sc}) = SparseCoo
 summary_f_code(lvl::SparseCooLevel{N}) where {N} = "sc{$N}($(summary_f_code(lvl.lvl)))"
 similar_level(lvl::SparseCooLevel{N}) where {N} = SparseCooLevel{N}(similar_level(lvl.lvl))
-similar_level(lvl::SparseCooLevel{N}, tail...) where {N} = SparseCooLevel{N}(ntuple(n->tail[n], N), similar_level(lvl.lvl, tail[N + 1:end]...))
+similar_level(lvl::SparseCooLevel{N}, tail...) where {N} = SparseCooLevel{N}(similar_level(lvl.lvl, tail[N + 1:end]...), (tail[1:N]...,))
 
 pattern!(lvl::SparseCooLevel{N, Ti, Tp}) where {N, Ti, Tp} = 
-    SparseCooLevel{N, Ti, Tp}(lvl.I, lvl.tbl, lvl.pos, pattern!(lvl.lvl))
+    SparseCooLevel{N, Ti, Tp}(pattern!(lvl.lvl), lvl.I, lvl.tbl, lvl.pos)
 
 function Base.show(io::IO, lvl::SparseCooLevel{N, Ti, Tp}) where {N, Ti, Tp}
     if get(io, :compact, false)
@@ -38,6 +36,8 @@ function Base.show(io::IO, lvl::SparseCooLevel{N, Ti, Tp}) where {N, Ti, Tp}
     else
         print(io, "SparseCoo{$N, $Ti, $Tp}(")
     end
+    show(io, lvl.lvl)
+    print(io, ", ")
     show(IOContext(io, :typeinfo=>Ti), lvl.I)
     print(io, ", ")
     if get(io, :compact, false)
@@ -52,8 +52,6 @@ function Base.show(io::IO, lvl::SparseCooLevel{N, Ti, Tp}) where {N, Ti, Tp}
         print(io, "), ")
         show(IOContext(io, :typeinfo=>Vector{Tp}), lvl.pos)
     end
-    print(io, ", ")
-    show(io, lvl.lvl)
     print(io, ")")
 end
 
@@ -88,6 +86,7 @@ function (fbr::SubFiber{<:SparseCooLevel{N, Ti}})(idxs...) where {N, Ti}
 end
 
 mutable struct VirtualSparseCooLevel
+    lvl
     ex
     N
     Ti
@@ -97,7 +96,6 @@ mutable struct VirtualSparseCooLevel
     qos_fill
     qos_stop
     dirty
-    lvl
 end
 function virtualize(ex, ::Type{SparseCooLevel{N, Ti, Tp, Tbl, Lvl}}, ctx, tag=:lvl) where {N, Ti, Tp, Tbl, Lvl}   
     sym = ctx.freshen(tag)
@@ -109,15 +107,15 @@ function virtualize(ex, ::Type{SparseCooLevel{N, Ti, Tp, Tbl, Lvl}}, ctx, tag=:l
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
     dirty = ctx.freshen(sym, :_dirty)
-    VirtualSparseCooLevel(sym, N, Ti, Tp, Tbl, I, qos_fill, qos_stop, dirty,  lvl_2)
+    VirtualSparseCooLevel(lvl_2, sym, N, Ti, Tp, Tbl, I, qos_fill, qos_stop, dirty)
 end
 function (ctx::Finch.LowerJulia)(lvl::VirtualSparseCooLevel)
     quote
         $SparseCooLevel{$(lvl.N), $(lvl.Ti), $(lvl.Tp)}(
+            $(ctx(lvl.lvl)),
             ($(map(ctx, lvl.I)...),),
             $(lvl.ex).tbl,
             $(lvl.ex).pos,
-            $(ctx(lvl.lvl)),
         )
     end
 end
