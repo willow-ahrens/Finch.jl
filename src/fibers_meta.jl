@@ -167,7 +167,7 @@ Like [`fsparse`](@ref), but the coordinates must be sorted and unique, and memor
 is reused.
 """
 function fsparse!(I::Tuple, V, shape = map(maximum, I))
-    return Fiber(SparseCoo{length(I), Tuple{map(eltype, I)...}, Int}(shape, I, [1, length(V) + 1], Element{zero(eltype(V))}(V)))
+    return Fiber(SparseCoo{length(I), Tuple{map(eltype, I)...}, Int}(Element{zero(eltype(V))}(V), shape, I, [1, length(V) + 1]))
 end
 
 """

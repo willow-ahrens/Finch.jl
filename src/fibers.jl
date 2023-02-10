@@ -252,7 +252,7 @@ macro fiber(ex)
 end
 
 macro fiber(ex, arg)
-    return :($dropdefaults!($Fiber!($(f_decode(ex))), arg))
+    return :($dropdefaults!($Fiber!($(f_decode(ex))), $(esc(arg))))
 end
 
 @inline f_code(@nospecialize ::Any) = nothing

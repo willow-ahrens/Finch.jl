@@ -75,9 +75,10 @@
 
 
     println("B(sc)[i] = A(sl)[i]")
-    A = @fiber(sl(e(0.0)), fsparse((10,),
+    A = @fiber(sl(e(0.0)), fsparse(
         ([1, 3, 5, 7, 9],)
-        [2.0, 3.0, 4.0, 5.0, 6.0]))
+        [2.0, 3.0, 4.0, 5.0, 6.0],
+        (10,)))
     B = @fiber(sc{1}(e(0.0)))
 
     @test check_output("sl_to_sc.jl", @finch_code @loop i B[i] += A[i])
@@ -101,11 +102,12 @@
 
     println("B(sc2)[i, j] = A(dsl)[i, j]")
 
-    A = @fiber(d(sl(e(0.0))), fsparse((3, 5),
+    A = @fiber(d(sl(e(0.0))), fsparse(
         (
             [1, 1, 1, 2, 2, 3, 3],
             [1, 2, 5, 2, 4, 3, 5],
-        ), [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]))
+        ), [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+        (3, 5)))
     B = @fiber(sc{2}(e(0.0)))
     
     @test check_output("d_sl_to_sc2.jl", @finch_code @loop i j B[i, j] += A[i, j])
@@ -115,9 +117,10 @@
     println(B)
 
     println("C(s)[i] = B(c)[i] where B(c)[i] = A(s)[i]")
-    A = @fiber(sl(e(0.0)), fsparse((10,),
+    A = @fiber(sl(e(0.0)), fsparse(
         ([1, 3, 5, 7, 9],)
-        [2.0, 3.0, 4.0, 5.0, 6.0]))
+        [2.0, 3.0, 4.0, 5.0, 6.0],
+        (10,)))
     B = @fiber(sc{1}(e(0.0)))
     C = @fiber(sl(e(0.0)))
 
@@ -131,12 +134,14 @@
 
     println("C(s)[i] = A(s)[i] + B(s)[i]")
 
-    A = @fiber(sl(e(0.0)), fsparse((10,),
+    A = @fiber(sl(e(0.0)), fsparse(
         ([1, 3, 5, 7, 9],)
-        [2.0, 3.0, 4.0, 5.0, 6.0]))
-    B = @fiber(sl(e(0.0)), fsparse((10,),
+        [2.0, 3.0, 4.0, 5.0, 6.0],
+        (10,)))
+    B = @fiber(sl(e(0.0)), fsparse(
         ([2, 5, 8],)
-        [1.0, 1.0, 1.0]))
+        [1.0, 1.0, 1.0],
+        (10,)))
     C = @fiber(sl(e(0.0)))
 
     @test check_output("sl_plus_sl_to_sl.jl", @finch_code @loop i C[i] += A[i] + B[i])

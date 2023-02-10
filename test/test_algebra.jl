@@ -1,28 +1,18 @@
 struct MyAlgebra <: Finch.AbstractAlgebra end
 
+u = @fiber(sl(e(1)), [3, 1, 6, 1, 9, 1, 4, 1, 8, 1])
+v = @fiber(sl(e(1)), [1, 2, 3, 1, 1, 1, 1, 4, 1, 1])
+w = @fiber(sl(e(1)))
+
+@finch @loop i w[i] = gcd(u[i], v[i])
+
+@test pattern!(w) == [1, 1, 1, 0, 1, 0, 1, 1, 1, 0]
+
 Finch.isassociative(::MyAlgebra, ::typeof(gcd)) = true
 Finch.iscommutative(::MyAlgebra, ::typeof(gcd)) = true
 Finch.isannihilator(::MyAlgebra, ::typeof(gcd), x) = x == 1
 Finch.register(MyAlgebra)
 
-u = Finch.Fiber(
-    SparseList(10, [1, 6], [1, 3, 5, 7, 9],
-    Element{1}([3, 6, 9, 4, 8])))
-v = Finch.Fiber(
-    SparseList(10, [1, 4], [2, 5, 8],
-    Element{1}([2, 3, 4])))
-w = Finch.Fiber(SparseList(Element(1)))
-
 @finch MyAlgebra() @loop i w[i] = gcd(u[i], v[i])
 
-@test w.lvl.pos[1:2] == [1, 2]
-@test w.lvl.idx[1:1] == [5]
-@test w.lvl.lvl.val[1:1] == [3]
-
-@finch @loop i w[i] = gcd(u[i], v[i])
-
-@test w.lvl.pos[1:2] == [1, 8]
-@test w.lvl.idx[1:7] == [1, 2, 3, 5, 7, 8, 9]
-@test w.lvl.lvl.val[1:7] == [1, 1, 1, 3, 1, 1, 1]
-
-    
+@test pattern!(w) == [0, 0, 1, 0, 0, 0, 0, 0, 0, 0]
