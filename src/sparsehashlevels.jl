@@ -28,7 +28,7 @@ SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(lvl, I, tbl) where {N, Ti, Tp, Tbl, Lvl} =
 f_code(::Val{:sh}) = SparseHash
 summary_f_code(lvl::SparseHashLevel{N}) where {N} = "sh{$N}($(summary_f_code(lvl.lvl)))"
 similar_level(lvl::SparseHashLevel{N}) where {N} = SparseHashLevel{N}(similar_level(lvl.lvl))
-similar_level(lvl::SparseHashLevel{N}, tail...) where {N} = SparseHashLevel{N}(similar_level(lvl.lvl, tail[N + 1:end]...), (tail[1:N]...,))
+similar_level(lvl::SparseHashLevel{N}, tail...) where {N} = SparseHashLevel{N}(similar_level(lvl.lvl, tail[1:end-N]...), (tail[end-N+1:end]...,))
 
 pattern!(lvl::SparseHashLevel{N, Ti, Tp, Tbl}) where {N, Ti, Tp, Tbl} = 
     SparseHashLevel{N, Ti, Tp, Tbl}(pattern!(lvl.lvl), lvl.I, lvl.tbl, lvl.pos, lvl.srt)
@@ -78,14 +78,16 @@ data_rep_level(::Type{<:SparseHashLevel{N, Ti, Tp, Tbl, Lvl}}) where {N, Ti, Tp,
 (fbr::AbstractFiber{<:SparseHashLevel})() = fbr
 (fbr::SubFiber{<:SparseHashLevel})() = fbr
 function (fbr::SubFiber{<:SparseHashLevel{N, Ti}})(idxs...) where {N, Ti}
+    isempty(idxs) && return fbr
+    idx = idxs[end-N + 1:end]
     lvl = fbr.lvl
-    p = (fbr.pos, (idxs[1:N]...,))
+    p = (fbr.pos, (idx...,))
 
     if !haskey(lvl.tbl, p)
         return default(fbr)
     else
         q = lvl.tbl[p]
-        return SubFiber(lvl.lvl, q)(idxs[N + 1:end]...)
+        return SubFiber(lvl.lvl, q)(idxs[1:end-N]...)
     end
 end
 
@@ -134,12 +136,12 @@ summary_f_code(lvl::VirtualSparseHashLevel) = "sh{$(lvl.N)}($(summary_f_code(lvl
 
 function virtual_level_size(lvl::VirtualSparseHashLevel, ctx::LowerJulia)
     ext = map((ti, stop)->Extent(literal(ti(1)), stop), lvl.Ti.parameters, lvl.I)
-    (ext..., virtual_level_size(lvl.lvl, ctx)...)
+    (virtual_level_size(lvl.lvl, ctx)..., ext...)
 end
 
 function virtual_level_resize!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, dims...)
-    lvl.I = map(getstop, dims[1:lvl.N])
-    lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims[lvl.N+1:end]...)
+    lvl.I = map(getstop, dims[end-lvl.N+1:end])
+    lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims[1:end-lvl.N]...)
     lvl
 end
 

@@ -16,25 +16,26 @@ const Dense = DenseLevel
 f_code(::Val{:d}) = Dense
 summary_f_code(lvl::Dense) = "d($(summary_f_code(lvl.lvl)))"
 similar_level(lvl::DenseLevel) = Dense(similar_level(lvl.lvl))
-similar_level(lvl::DenseLevel, dim, tail...) = Dense(similar_level(lvl.lvl, tail...), dim)
+similar_level(lvl::DenseLevel, dims...) = Dense(similar_level(lvl.lvl, dims[1:end-1]...), dims[end])
 
 pattern!(lvl::DenseLevel{Ti}) where {Ti} = 
     DenseLevel{Ti}(pattern!(lvl.lvl), lvl.I)
 
 @inline level_ndims(::Type{<:DenseLevel{Ti, Lvl}}) where {Ti, Lvl} = 1 + level_ndims(Lvl)
-@inline level_size(lvl::DenseLevel) = (lvl.I, level_size(lvl.lvl)...)
-@inline level_axes(lvl::DenseLevel) = (Base.OneTo(lvl.I), level_axes(lvl.lvl)...)
+@inline level_size(lvl::DenseLevel) = (level_size(lvl.lvl)..., lvl.I)
+@inline level_axes(lvl::DenseLevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.I))
 @inline level_eltype(::Type{<:DenseLevel{Ti, Lvl}}) where {Ti, Lvl} = level_eltype(Lvl)
 @inline level_default(::Type{<:DenseLevel{Ti, Lvl}}) where {Ti, Lvl} = level_default(Lvl)
 data_rep_level(::Type{<:DenseLevel{Ti, Lvl}}) where {Ti, Lvl} = DenseData(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:DenseLevel})() = fbr
-function (fbr::SubFiber{<:DenseLevel{Ti}})(i, tail...) where {Ti}
+function (fbr::SubFiber{<:DenseLevel{Ti}})(idxs...) where {Ti}
+    isempty(idxs) && return fbr
     lvl = fbr.lvl
     p = fbr.pos
-    q = (p - 1) * lvl.I + i
+    q = (p - 1) * lvl.I + idxs[end]
     fbr_2 = SubFiber(lvl.lvl, q)
-    fbr_2(tail...)
+    fbr_2(idxs[1:end-1]...)
 end
 
 function Base.show(io::IO, lvl::DenseLevel{Ti}) where {Ti}
@@ -86,12 +87,12 @@ summary_f_code(lvl::VirtualDenseLevel) = "d($(summary_f_code(lvl.lvl)))"
 
 function virtual_level_size(lvl::VirtualDenseLevel, ctx)
     ext = Extent(literal(lvl.Ti(1)), lvl.I)
-    (ext, virtual_level_size(lvl.lvl, ctx)...)
+    (virtual_level_size(lvl.lvl, ctx)..., ext)
 end
 
-function virtual_level_resize!(lvl::VirtualDenseLevel, ctx, dim, dims...)
-    lvl.I = getstop(dim)
-    lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims...)
+function virtual_level_resize!(lvl::VirtualDenseLevel, ctx, dims...)
+    lvl.I = getstop(dims[end])
+    lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims[1:end-1]...)
     lvl
 end
 

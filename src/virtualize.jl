@@ -9,7 +9,10 @@ function virtualize(ex, ::Type{IndexNotation.PassInstance{Tnss}}, ctx) where {Tn
     end
     pass(tnss)
 end
-virtualize(ex, ::Type{IndexNotation.IndexInstance{name}}, ctx) where {name} = index(name)
+function virtualize(ex, ::Type{IndexNotation.IndexInstance{name}}, ctx) where {name}
+    ctx.freshen(name)
+    index(name)
+end
 virtualize(ex, ::Type{IndexNotation.ProtocolInstance{Idx, Mode}}, ctx) where {Idx, Mode} = protocol(virtualize(:($ex.idx), Idx, ctx), virtualize(:($ex.mode), Mode, ctx))
 virtualize(ex, ::Type{IndexNotation.WithInstance{Cons, Prod}}, ctx) where {Cons, Prod} = with(virtualize(:($ex.cons), Cons, ctx), virtualize(:($ex.prod), Prod, ctx))
 function virtualize(ex, ::Type{IndexNotation.MultiInstance{Bodies}}, ctx) where {Bodies}
@@ -57,6 +60,7 @@ function virtualize(ex, ::Type{IndexNotation.VariableInstance{tag, Tns}}, ctx) w
     if index_leaf(x).kind !== virtual
         return x
     else
+        ctx.freshen(tag)
         get!(ctx.bindings, tag, x)
         return variable(tag)
     end

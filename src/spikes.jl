@@ -107,7 +107,7 @@ function (ctx::SpikeTailVisitor)(node::IndexNode)
         if tns_2 === nothing
             access(node.tns, node.mode, map(ctx, node.idxs)...)
         else
-            access(tns_2, node.mode, map(ctx, node.idxs[2:end])...)
+            access(tns_2, node.mode, map(ctx, node.idxs[1:end - 1])...)
         end
     elseif node.kind === virtual
         ctx(node.val)

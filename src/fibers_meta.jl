@@ -36,7 +36,7 @@ end
         size(A) == size(B) || return false
         check = Scalar(true)
         if check[]
-            @finch @loop($(idxs...), check[] &= (A[$(idxs...)] == B[$(idxs...)]))
+            @finch @loop($(reverse(idxs)...), check[] &= (A[$(idxs...)] == B[$(idxs...)]))
         end
         return check[]
     end
@@ -60,7 +60,7 @@ end
         size(A) == size(B) || return false
         check = Scalar(true)
         if check[]
-            @finch @loop($(idxs...), check[] &= isequal(A[$(idxs...)], B[$(idxs...)]))
+            @finch @loop($(reverse(idxs)...), check[] &= isequal(A[$(idxs...)], B[$(idxs...)]))
         end
         return check[]
     end
@@ -81,7 +81,7 @@ end
 @generated function copyto_helper!(dst, src)
     idxs = [Symbol(:i_, n) for n = 1:ndims(dst)]
     return quote
-        @finch @loop($(idxs...), dst[$(idxs...)] = src[$(idxs...)])
+        @finch @loop($(reverse(idxs)...), dst[$(idxs...)] = src[$(idxs...)])
         return dst
     end
 end
@@ -102,7 +102,7 @@ dropdefaults(src) = dropdefaults!(similar(src), src)
     d = default(dst)
     return quote
         tmp = Scalar{$d, $T}()
-        @finch @loop($(idxs...), (@sieve (tmp[] != $d) dst[$(idxs...)] = tmp[]) where (tmp[] = src[$(idxs...)]))
+        @finch @loop($(reverse(idxs)...), (@sieve (tmp[] != $d) dst[$(idxs...)] = tmp[]) where (tmp[] = src[$(idxs...)]))
         return dst
     end
 end
@@ -204,8 +204,8 @@ fsprand(r::SparseArrays.AbstractRNG, T::Type, n::Tuple, args...) = _fsprand_impl
 function _fsprand_impl(shape::Tuple, vec::SparseVector{Tv, Ti}) where {Tv, Ti}
     I = ((Vector{Ti}(undef, length(vec.nzind)) for _ in shape)...,)
     for (p, ind) in enumerate(vec.nzind)
-        c = CartesianIndices(reverse(shape))[ind]
-        ntuple(n->I[n][p] = c[length(shape) - n + 1], length(shape))
+        c = CartesianIndices(shape)[ind]
+        ntuple(n->I[n][p] = c[n], length(shape))
     end
     return fsparse!(I, vec.nzval, shape)
 end

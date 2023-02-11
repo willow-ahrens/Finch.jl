@@ -57,20 +57,21 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseLis
 end
 
 @inline level_ndims(::Type{<:SparseListLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = 1 + level_ndims(Lvl)
-@inline level_size(lvl::SparseListLevel) = (lvl.I, level_size(lvl.lvl)...)
-@inline level_axes(lvl::SparseListLevel) = (Base.OneTo(lvl.I), level_axes(lvl.lvl)...)
+@inline level_size(lvl::SparseListLevel) = (level_size(lvl.lvl)..., lvl.I)
+@inline level_axes(lvl::SparseListLevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.I))
 @inline level_eltype(::Type{<:SparseListLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = level_eltype(Lvl)
 @inline level_default(::Type{<:SparseListLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = level_default(Lvl)
 data_rep_level(::Type{<:SparseListLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = SparseData(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:SparseListLevel})() = fbr
-function (fbr::SubFiber{<:SparseListLevel{Ti}})(i, tail...) where {Ti}
+function (fbr::SubFiber{<:SparseListLevel{Ti}})(idxs...) where {Ti}
+    isempty(idxs) && return fbr
     lvl = fbr.lvl
     p = fbr.pos
-    r = searchsorted(@view(lvl.idx[lvl.pos[p]:lvl.pos[p + 1] - 1]), i)
+    r = searchsorted(@view(lvl.idx[lvl.pos[p]:lvl.pos[p + 1] - 1]), idxs[end])
     q = lvl.pos[p] + first(r) - 1
     fbr_2 = SubFiber(lvl.lvl, q)
-    length(r) == 0 ? default(fbr_2) : fbr_2(tail...)
+    length(r) == 0 ? default(fbr_2) : fbr_2(idxs[1:end-1]...)
 end
 
 mutable struct VirtualSparseListLevel
@@ -110,12 +111,12 @@ summary_f_code(lvl::VirtualSparseListLevel) = "sl($(summary_f_code(lvl.lvl)))"
 
 function virtual_level_size(lvl::VirtualSparseListLevel, ctx)
     ext = Extent(literal(lvl.Ti(1)), lvl.I)
-    (ext, virtual_level_size(lvl.lvl, ctx)...)
+    (virtual_level_size(lvl.lvl, ctx)..., ext)
 end
 
-function virtual_level_resize!(lvl::VirtualSparseListLevel, ctx, dim, dims...)
-    lvl.I = getstop(dim)
-    lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims...)
+function virtual_level_resize!(lvl::VirtualSparseListLevel, ctx, dims...)
+    lvl.I = getstop(dims[end])
+    lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims[1:end-1]...)
     lvl
 end
 
@@ -196,9 +197,9 @@ function get_level_reader(lvl::VirtualSparseListLevel, ctx, pos, ::Union{Nothing
                             end
                         end,
                         body = Thunk(
-                            preamble = :(
+                            preamble = quote
                                 $my_i = $(lvl.ex).idx[$my_q]
-                            ),
+                            end,
                             body = Step(
                                 stride = (ctx, idx, ext) -> value(my_i),
                                 chunk = Spike(

@@ -25,7 +25,7 @@ SparseCooLevel{N, Ti, Tp, Tbl, Lvl}(lvl, I) where {N, Ti, Tp, Tbl, Lvl} =
 f_code(::Val{:sc}) = SparseCoo
 summary_f_code(lvl::SparseCooLevel{N}) where {N} = "sc{$N}($(summary_f_code(lvl.lvl)))"
 similar_level(lvl::SparseCooLevel{N}) where {N} = SparseCooLevel{N}(similar_level(lvl.lvl))
-similar_level(lvl::SparseCooLevel{N}, tail...) where {N} = SparseCooLevel{N}(similar_level(lvl.lvl, tail[N + 1:end]...), (tail[1:N]...,))
+similar_level(lvl::SparseCooLevel{N}, tail...) where {N} = SparseCooLevel{N}(similar_level(lvl.lvl, tail[1:end-N]...), (tail[end-N+1:end]...,))
 
 pattern!(lvl::SparseCooLevel{N, Ti, Tp}) where {N, Ti, Tp} = 
     SparseCooLevel{N, Ti, Tp}(pattern!(lvl.lvl), lvl.I, lvl.tbl, lvl.pos)
@@ -68,8 +68,8 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseCoo
 end
 
 @inline level_ndims(::Type{<:SparseCooLevel{N, Ti, Tp, Tbl, Lvl}}) where {N, Ti, Tp, Tbl, Lvl} = N + level_ndims(Lvl)
-@inline level_size(lvl::SparseCooLevel) = (lvl.I..., level_size(lvl.lvl)...)
-@inline level_axes(lvl::SparseCooLevel) = (map(Base.OneTo, lvl.I)..., level_axes(lvl.lvl)...)
+@inline level_size(lvl::SparseCooLevel) = (level_size(lvl.lvl)..., lvl.I...)
+@inline level_axes(lvl::SparseCooLevel) = (level_axes(lvl.lvl)..., map(Base.OneTo, lvl.I)...)
 @inline level_eltype(::Type{<:SparseCooLevel{N, Ti, Tp, Tbl, Lvl}}) where {N, Ti, Tp, Tbl, Lvl} = level_eltype(Lvl)
 @inline level_default(::Type{<:SparseCooLevel{N, Ti, Tp, Tbl, Lvl}}) where {N, Ti, Tp, Tbl, Lvl} = level_default(Lvl)
 data_rep_level(::Type{<:SparseCooLevel{N, Ti, Tp, Tbl, Lvl}}) where {N, Ti, Tp, Tbl, Lvl} = (SparseData^N)(data_rep_level(Lvl))
@@ -77,12 +77,14 @@ data_rep_level(::Type{<:SparseCooLevel{N, Ti, Tp, Tbl, Lvl}}) where {N, Ti, Tp, 
 (fbr::AbstractFiber{<:SparseCooLevel})() = fbr
 (fbr::SubFiber{<:SparseCooLevel})() = fbr
 function (fbr::SubFiber{<:SparseCooLevel{N, Ti}})(idxs...) where {N, Ti}
+    isempty(idxs) && return fbr
+    idx = idxs[end-N + 1:end]
     lvl = fbr.lvl
     target = lvl.pos[fbr.pos]:lvl.pos[fbr.pos + 1] - 1
     for n = 1:N
-        target = searchsorted(view(lvl.tbl[n], target), idxs[n]) .+ (first(target) - 1)
+        target = searchsorted(view(lvl.tbl[n], target), idx[n]) .+ (first(target) - 1)
     end
-    isempty(target) ? default(fbr) : SubFiber(lvl.lvl, first(target))(idxs[N + 1:end]...)
+    isempty(target) ? default(fbr) : SubFiber(lvl.lvl, first(target))(idxs[1:end-N]...)
 end
 
 mutable struct VirtualSparseCooLevel
@@ -124,12 +126,12 @@ summary_f_code(lvl::VirtualSparseCooLevel) = "sc{$(lvl.N)}($(summary_f_code(lvl.
 
 function virtual_level_size(lvl::VirtualSparseCooLevel, ctx::LowerJulia)
     ext = map((ti, stop)->Extent(literal(ti(1)), stop), lvl.Ti.parameters, lvl.I)
-    (ext..., virtual_level_size(lvl.lvl, ctx)...)
+    (virtual_level_size(lvl.lvl, ctx)..., ext...)
 end
 
 function virtual_level_resize!(lvl::VirtualSparseCooLevel, ctx::LowerJulia, dims...)
-    lvl.I = map(getstop, dims[1:lvl.N])
-    lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims[lvl.N + 1:end]...)
+    lvl.I = map(getstop, dims[end - lvl.N + 1:end])
+    lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims[1:end - lvl.N]...)
     lvl
 end
 

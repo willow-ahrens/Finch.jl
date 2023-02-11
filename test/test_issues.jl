@@ -43,7 +43,7 @@
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/61
-    I = copyto!(@fiber(rl(0)), [1, 1, 1, 3, 3, 1, 5, 5, 5])
+    I = copyto!(@fiber(rl(0)), [1, 1, 9, 3, 3])
     A = [
         11 12 13 14 15;
         21 22 23 24 25;
@@ -57,8 +57,8 @@
     A = copyto!(@fiber(d(d(e(0)))), A)
     B = @fiber(d(e(0)))
     
-    @test check_output("fiber_as_idx.jl", @finch_code @loop i B[i] = A[i, I[i]])
-    @finch @loop i B[i] = A[i, I[i]]
+    @test check_output("fiber_as_idx.jl", @finch_code @loop i B[i] = A[I[i], i])
+    @finch @loop i B[i] = A[I[i], i]
 
-    @test B == [11, 21, 31, 43, 53, 61, 75, 85, 95]
+    @test B == [11, 12, 93, 34, 35]
 end

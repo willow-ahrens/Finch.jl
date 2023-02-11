@@ -121,9 +121,9 @@ IndexNotation.isliteral(::Furlable) = false
 
 function stylize_access(node, ctx::Stylize{LowerJulia}, tns::Furlable)
     if !isempty(node.idxs)
-        if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
+        if getunbound(node.idxs[end]) ⊆ keys(ctx.ctx.bindings)
             return SelectStyle()
-        elseif ctx.root isa IndexNode && ctx.root.kind === loop && ctx.root.idx == get_furl_root(node.idxs[1])
+        elseif ctx.root isa IndexNode && ctx.root.kind === loop && ctx.root.idx == get_furl_root(node.idxs[end])
             return ChunkStyle()
         end
     end
@@ -132,14 +132,14 @@ end
 
 function select_access(node, ctx::Finch.SelectVisitor, tns::Furlable)
     if !isempty(node.idxs)
-        if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
+        if getunbound(node.idxs[end]) ⊆ keys(ctx.ctx.bindings)
             var = index(ctx.ctx.freshen(:s))
-            val = cache!(ctx.ctx, :s, node.idxs[1])
+            val = cache!(ctx.ctx, :s, node.idxs[end])
             ctx.idxs[var] = val
             ext = first(virtual_size(tns, ctx.ctx))
             ext_2 = Extent(val, val)
             tns_2 = truncate(tns, ctx.ctx, ext, ext_2)
-            return access(tns_2, node.mode, var, node.idxs[2:end]...)
+            return access(tns_2, node.mode, var, node.idxs[1:end-1]...)
         end
     end
     return similarterm(node, operation(node), map(ctx, arguments(node)))
@@ -147,9 +147,9 @@ end
 
 function chunkify_access(node, ctx, eldim, tns::Furlable)
     if !isempty(node.idxs)
-        if ctx.idx == get_furl_root(node.idxs[1])
-            tns = exfurl(tns.body(ctx.ctx, ctx.idx, virtual_size(tns, ctx.ctx, eldim)[1]), ctx.ctx, node.idxs[1], virtual_size(tns, ctx.ctx, eldim)[1])
-            return access(tns, node.mode, get_furl_root(node.idxs[1]), map(ctx, node.idxs[2:end])...)
+        if ctx.idx == get_furl_root(node.idxs[end])
+            tns = exfurl(tns.body(ctx.ctx, ctx.idx, virtual_size(tns, ctx.ctx, eldim)[end]), ctx.ctx, node.idxs[end], virtual_size(tns, ctx.ctx, eldim)[end])
+            return access(tns, node.mode, map(ctx, node.idxs[1:end-1])..., get_furl_root(node.idxs[end]))
         else
             idxs = map(ctx, node.idxs)
             return access(node.tns, node.mode, idxs...)
@@ -171,7 +171,7 @@ end
 
 function get_furl_root_access(idx, tns::Furlable)
     if tns.fuse !== nothing
-        get_furl_root(idx.idxs[1])
+        get_furl_root(idx.idxs[end])
     else
         nothing
     end

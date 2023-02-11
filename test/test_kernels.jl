@@ -1,17 +1,24 @@
 @testset "kernels" begin
     using SparseArrays
 
+    seen = false
     for (mtx, A_ref) in matrices
         A_ref = SparseMatrixCSC(A_ref)
         m, n = size(A_ref)
         println("B[i, j] += A[i,k] * A[j, k]: $mtx")
-        B_ref = transpose(A_ref) * A_ref
-        A = fiber(permutedims(A_ref))
+        B_ref = transpose(A_ref) * A_ref 
+        A = fiber(A_ref)
         B = @fiber(d(sl(e(0.0),m),m))
-        @finch @loop i j k B[i, j] += A[i, k] * A[j, k]
+
+        if !seen
+            check_output("innerprod.jl", @finch @loop j i k B[i, j] += A[k, i] * A[k, j])
+            seen = true
+        end
+        @finch @loop j i k B[i, j] += A[k, i] * A[k, j]
         @test B == B_ref
     end
 
+    seen = false
     for (mtx, A_ref) in matrices
         A_ref = SparseMatrixCSC(A_ref)
         m, n = size(A_ref)
@@ -19,7 +26,11 @@
             println("B[] += A[i,k] * A[i, j] * A[j, k] : $mtx")
             A = fiber(A_ref)
             B = Finch.Scalar{0.0}()
-            @finch @loop i j k B[] += A[i, k] * A[i, j] * A[j, k]
+            if !seen
+                check_output("triangle.jl", @finch_code @loop i j k B[] += A[k, i] * A[j, i] * A[k, j])
+                seen = true
+            end
+            @finch @loop i j k B[] += A[k, i] * A[j, i] * A[k, j]
             @test B() ≈ sum(A_ref .* (A_ref * transpose(A_ref)))
         end
     end
@@ -28,8 +39,6 @@
         n = 100
         p = q = 0.1
 
-        println("(C[i] = a[] - b[]; d[] += a[] * b[]) where (a[] = A[i]; b[] = B[i]) : n = $n p = $p q = $q")
-        
         A_ref = sprand(n, p)
         B_ref = sprand(n, q)
         A = fiber(A_ref)
@@ -45,16 +54,22 @@
         @test d[] ≈ dot(A_ref, B_ref)
     end
 
+    seen = false
     for (mtx, A_ref) in matrices
         A_ref = SparseMatrixCSC(A_ref)
         m, n = size(A_ref)
         if m == n
-            println("B(ds)[i, j] = w[j] where w[j] += A(ds)[i, k] * A(ds)(k, j)")
-            A = fiber(permutedims(A_ref))
+            A = fiber(A_ref)
             B = @fiber(d(sl(e(0.0))))
             w = @fiber(sm(e(0.0)))
 
-            @finch @loop i ((@loop j B[i, j] = w[j]) where (@loop k j w[j] = A[i, k] * A[k, j]))
+            if !seen
+                check_output("gustavsons.jl", @finch_code @loop i ((@loop j B[j, i] = w[j]) where (@loop k j w[j] += A[k, i] * A[j, k])))
+                seen = true
+            end
+            @finch @loop j ((@loop i B[i, j] = w[i]) where (@loop k i w[i] = A[i, k] * A[k, j]))
+            B_ref = A_ref * A_ref
+            @test B == B_ref
         end
     end
 end

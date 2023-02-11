@@ -73,15 +73,16 @@ end
 data_rep_level(::Type{<:SparseVBLLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = SparseData(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:SparseVBLLevel})() = fbr
-function (fbr::SubFiber{<:SparseVBLLevel})(i, tail...)
+function (fbr::SubFiber{<:SparseVBLLevel})(idxs...)
+    isempty(idxs) && return fbr
     lvl = fbr.lvl
     p = fbr.pos
-    r = lvl.pos[p] + searchsortedfirst(@view(lvl.idx[lvl.pos[p]:lvl.pos[p + 1] - 1]), i) - 1
+    r = lvl.pos[p] + searchsortedfirst(@view(lvl.idx[lvl.pos[p]:lvl.pos[p + 1] - 1]), idxs[end]) - 1
     r < lvl.pos[p + 1] || return default(fbr)
-    q = lvl.ofs[r + 1] - 1 - lvl.idx[r] + i
+    q = lvl.ofs[r + 1] - 1 - lvl.idx[r] + idxs[end]
     q >= lvl.ofs[r] || return default(fbr)
     fbr_2 = SubFiber(lvl.lvl, q)
-    return fbr_2(tail...)
+    return fbr_2(idxs[1:end-1]...)
 end
 
 mutable struct VirtualSparseVBLLevel
@@ -126,12 +127,12 @@ summary_f_code(lvl::VirtualSparseVBLLevel) = "sv($(summary_f_code(lvl.lvl)))"
 
 function virtual_level_size(lvl::VirtualSparseVBLLevel, ctx)
     ext = Extent(literal(lvl.Ti(1)), lvl.I)
-    (ext, virtual_level_size(lvl.lvl, ctx)...)
+    (virtual_level_size(lvl.lvl, ctx)..., ext)
 end
 
-function virtual_level_resize!(lvl::VirtualSparseVBLLevel, ctx, dim, dims...)
-    lvl.I = getstop(dim)
-    lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims...)
+function virtual_level_resize!(lvl::VirtualSparseVBLLevel, ctx, dims...)
+    lvl.I = getstop(dims[end])
+    lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims[1:end-1]...)
     lvl
 end
 
