@@ -20,7 +20,7 @@ begin
     j_start = j
     phase_stop = (min)(A_lvl.I, A_lvl_i1)
     if phase_stop >= j_start
-        j = j
+        j_4 = j
         j = j_start
         while A_lvl_q + 1 < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < j_start
             A_lvl_q += 1
@@ -29,23 +29,23 @@ begin
             j_start_2 = j
             A_lvl_i = A_lvl.idx[A_lvl_q]
             phase_stop_2 = (min)(A_lvl_i, phase_stop)
-            j_2 = j
+            j_5 = j
             if A_lvl_i == phase_stop_2
-                for j_3 = j_start_2:phase_stop_2 - 1
-                    cond = (==)(j_3, 1)
+                for j_6 = j_start_2:phase_stop_2 - 1
+                    cond = (==)(j_6, 1)
                     if cond
                     end
                 end
                 A_lvl_2_val_2 = A_lvl_2.val[A_lvl_q]
-                j_4 = phase_stop_2
-                cond_2 = (==)(j_4, 1)
+                j_7 = phase_stop_2
+                cond_2 = (==)(j_7, 1)
                 if cond_2
                     B_val = (+)(A_lvl_2_val_2, B_val)
                 end
                 A_lvl_q += 1
             else
-                for j_5 = j_start_2:phase_stop_2
-                    cond_3 = (==)(j_5, 1)
+                for j_8 = j_start_2:phase_stop_2
+                    cond_3 = (==)(j_8, 1)
                     if cond_3
                     end
                 end
@@ -56,9 +56,9 @@ begin
     end
     j_start = j
     if A_lvl.I >= j_start
-        j_6 = j
-        for j_7 = j_start:A_lvl.I
-            cond_4 = (==)(j_7, 1)
+        j_9 = j
+        for j_10 = j_start:A_lvl.I
+            cond_4 = (==)(j_10, 1)
             if cond_4
             end
         end
