@@ -8,6 +8,8 @@ f_code(::Val{:p}) = Pattern
 summary_f_code(::Pattern) = "p()"
 similar_level(::PatternLevel) = PatternLevel()
 
+pattern!(::PatternLevel) = Pattern()
+
 function Base.show(io::IO, lvl::PatternLevel)
     print(io, "Pattern()")
 end 

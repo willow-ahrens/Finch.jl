@@ -172,7 +172,9 @@ function (ctx::OpenScope)(node::IndexNode)
                 if node.mode.kind === reader
                     return access(get_reader(tns, ctx.ctx, protos...), node.mode, idxs...)
                 else
-                    tns = initialize!(tns, ctx.ctx)
+                    if node.mode.mode.kind === create #TODO this is not great, we should call thaw instead.
+                        tns = initialize!(tns, ctx.ctx)
+                    end
                     return access(get_updater(tns, ctx.ctx, protos...), node.mode, idxs...)
                 end
             else

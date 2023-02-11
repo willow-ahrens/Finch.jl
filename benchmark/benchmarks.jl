@@ -16,34 +16,11 @@ SUITE["compile"] = BenchmarkGroup()
 
 code = """
 using Finch
-y = @fiber d(e(0.0))
-A = @fiber d(sl(e(0.0)))
-x = @fiber sl(e(0.0))
-
-@finch @loop i j y[i] += A[i, j] * x[i]
-"""
-cmd = pipeline(`$(Base.julia_cmd()) --project=$(Base.active_project()) --eval $code`, stdout = IOBuffer())
-
-SUITE["compile"]["time_to_first_SpMV"] = @benchmarkable run($cmd)
-
-let
-    y = @fiber d(e(0.0))
-    A = @fiber d(sl(e(0.0)))
-    x = @fiber sl(e(0.0))
-
-    SUITE["compile"]["compile_SpMV"] = @benchmarkable begin
-        y, A, x = ($y, $A, $x)
-        Finch.execute_code(:ex, typeof(Finch.@finch_program_instance @loop i j y[i] += A[i, j] * x[i]))
-    end
-end
-
-code = """
-using Finch
 A = @fiber d(sl(e(0.0)))
 B = @fiber d(sl(e(0.0)))
 C = @fiber d(sl(e(0.0)))
 
-@finch @loop i j k C[i, j] += A[i, k] * B[j, k]
+@finch @loop i j k C[j, i] += A[k, i] * B[k, i]
 """
 cmd = pipeline(`$(Base.julia_cmd()) --project=$(Base.active_project()) --eval $code`, stdout = IOBuffer())
 
@@ -56,7 +33,7 @@ let
 
     SUITE["compile"]["compile_SpGeMM"] = @benchmarkable begin   
         A, B, C = ($A, $B, $C)
-        Finch.execute_code(:ex, typeof(Finch.@finch_program_instance @loop i j k C[i, j] += A[i, k] * B[j, k]))
+        Finch.execute_code(:ex, typeof(Finch.@finch_program_instance @loop i j k C[j, i] += A[k, i] * B[k, j]))
     end
 end
 
@@ -88,16 +65,16 @@ function pagerank(edges; nsteps=20, damp = 0.85)
     (n, m) = size(edges)
     @assert n == m
     out_degree = @fiber d(e(0))
-    @finch @loop i j out_degree[j] += edges[i, j]
+    @finch @loop j i out_degree[j] += edges[i, j]
     scaled_edges = @fiber d(sl(e(0.0)))
-    @finch @loop i j scaled_edges[i, j] = ifelse(out_degree[i] != 0, edges[i, j] / out_degree[j], 0)
-    r = @fiber d(n, e(0.0))
+    @finch @loop j i scaled_edges[i, j] = ifelse(out_degree[i] != 0, edges[i, j] / out_degree[j], 0)
+    r = @fiber d(e(0.0), n)
     @finch @loop j r[j] = 1.0/n
-    rank = @fiber d(n, e(0.0))
+    rank = @fiber d(e(0.0), n)
     beta_score = (1 - damp)/n
 
     for step = 1:nsteps
-        @finch @loop i j rank[i] += scaled_edges[i, j] * r[j]
+        @finch @loop j i rank[i] += scaled_edges[i, j] * r[j]
         @finch @loop i r[i] = beta_score + damp * rank[i]
     end
     return r
@@ -113,14 +90,14 @@ function bfs(edges, source=5)
     edges = pattern!(edges)
 
     @assert n == m
-    F = @fiber sm(n,p())
-    _F = @fiber sm(n,p())
+    F = @fiber sm(p(), n)
+    _F = @fiber sm(p(), n)
     @finch F[source] = true
 
-    V = @fiber d(n, e(false))
+    V = @fiber d(e(false), n)
     @finch V[source] = true
 
-    P = @fiber d(n, e(0))
+    P = @fiber d(e(0), n)
     @finch P[source] = source
 
     v = Scalar(false)
@@ -132,7 +109,7 @@ function bfs(edges, source=5)
                 !P[k] <<choose(0)>>= j #Only set the parent for this vertex
             end
         end) where (
-            v[] = F[j] && edges[j, k] && !(V[k])
+            v[] = F[j] && edges[k, j] && !(V[k])
         )
         @finch @loop k !V[k] |= _F[k]
         (F, _F) = (_F, F)
@@ -145,86 +122,31 @@ for mtx in ["SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
     SUITE["graphs"]["bfs"][mtx] = @benchmarkable bfs($(fiber(SparseMatrixCSC(matrixdepot(mtx))))) 
 end
 
-#=
-TODO
-# For sssp we should probably compress priorityQ on both dimensions, since many entires in rowptr will be equal
-# ( due to many rows being zero )
-function sssp(weights, source=1)
-    (n, m) = size(weights)
-    @assert n == m
-    P = n
-    val = typemax(Int64)
-    
-    priorityQ_in = @fiber d(P, sl(n, e(0)))
-    priorityQ_out = @fiber d(P, sl(n, e(0)))
-    tmp_priorityQ = @fiber d(P, sl(n, e(0)))
-    @finch @loop p (@loop j priorityQ_in[p, j] = (p == 1 && j == $source) + (p == $P && j != $source))
-
-    dist_in = @fiber d(n, e($val))
-    dist_out = @fiber d(n, e($val))
-    tmp_dist = @fiber d(n, e($val))
-    @finch @loop j dist_in[j] = ifelse(j == $source, 0, $val)
-
-    B = @fiber d(n, e($val))
-    slice = @fiber d(n, e(0))
-    priority = 1
-
-    while !iszero(priorityQ_in.lvl.lvl.lvl.val) && priority <= P
-
-        @finch @loop j slice[j] = priorityQ_in[$priority, j]
-
-        while !iszero(slice.lvl.lvl.val) 
-            @finch @loop j (@loop k B[j] <<min>>= ifelse(weights[j, k] * priorityQ_in[$priority, k] != 0, weights[j, k] + dist_in[k], $val))
-            @finch @loop j dist_out[j] = min(B[j], dist_in[j])
-            @finch @loop j (@loop k priorityQ_out[j, k] = (dist_in[k] > dist_out[k]) * (dist_out[k] == j-1) + (dist_in[k] == dist_out[k] && j != $priority) * priorityQ_in[j, k])
-            @finch @loop j slice[j] = priorityQ_out[$priority, j]
-            
-            tmp_dist = dist_in
-            dist_in = dist_out
-            dist_out = tmp_dist
-
-            tmp_priorityQ = priorityQ_in
-            priorityQ_in = priorityQ_out
-            priorityQ_out = tmp_priorityQ
-        end
-
-        priority += 1
-    end 
-    
-    return dist_in
-end
-
-SUITE["graphs"]["sssp"] = BenchmarkGroup()
-for mtx in ["SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
-    SUITE["graphs"]["sssp"][mtx] = @benchmarkable sssp($(fiber(SparseMatrixCSC(matrixdepot(mtx))))) 
-end
-=#
-
 SUITE["matrices"] = BenchmarkGroup()
 
 function spgemm_inner(A, B)
     C = @fiber d(sl(e(0.0)))
     w = @fiber sh{2}(e(0.0))
-    BT = @fiber d(sl(e(0.0)))
-    @finch @loop k j w[j, k] = B[k, j]
-    @finch @loop j k BT[j, k] = w[j, k]
-    @finch @loop i j k C[i, j] += A[i, k] * BT[j, k]
+    AT = @fiber d(sl(e(0.0)))
+    @finch @loop k i w[k, i] = A[i, k]
+    @finch @loop i k AT[k, i] = w[k, i]
+    @finch @loop j i k C[i, j] += AT[k, i] * B[k, j]
     return C
 end
 
 SUITE["matrices"]["ATA_spgemm_inner"] = BenchmarkGroup()
-for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
-    A = fiber(SparseMatrixCSC(matrixdepot(mtx)))
+for mtx in []#"SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
+    A = fiber(permutedims(SparseMatrixCSC(matrixdepot(mtx))))
     SUITE["matrices"]["ATA_spgemm_inner"][mtx] = @benchmarkable spgemm_inner($A, $A) 
 end
 
 function spgemm_gustavsons(A, B)
     C = @fiber d(sl(e(0.0)))
     w = @fiber sm(e(0.0))
-    @finch @loop i (
-        @loop j C[i, j] = w[j]
+    @finch @loop j (
+        @loop i C[i, j] = w[i]
     ) where (
-        @loop k j w[j] += A[i, k] * B[k, j]
+        @loop k i w[i] += A[i, k] * B[k, j]
     )
     return C
 end
@@ -238,11 +160,11 @@ end
 function spgemm_outer(A, B)
     C = @fiber d(sl(e(0.0)))
     w = @fiber sh{2}(e(0.0))
-    AT = @fiber d(sl(e(0.0)))
-    @finch @loop i k w[k, i] = A[i, k]
-    @finch @loop k i AT[k, i] = w[k, i]
-    @finch @loop k i j w[i, j] += AT[k, i] * B[k, j]
-    @finch @loop i j C[i, j] = w[i, j]
+    BT = @fiber d(sl(e(0.0)))
+    @finch @loop j k w[j, k] = B[k, j]
+    @finch @loop k j BT[j, k] = w[j, k]
+    @finch @loop k i j w[i, j] += A[i, k] * BT[j, k]
+    @finch @loop j i C[i, j] = w[i, j]
     return C
 end
 
@@ -256,7 +178,7 @@ SUITE["indices"] = BenchmarkGroup()
 
 function spmv32(A, x)
     y = @fiber d{Int32}(e(0.0))
-    @finch @loop i j y[i] += A[i, j] * x[j]
+    @finch @loop i j y[i] += A[j, i] * x[j]
     return y
 end
 
@@ -270,7 +192,7 @@ end
 
 function spmv64(A, x)
     y = @fiber d{Int64}(e(0.0))
-    @finch @loop i j y[i] += A[i, j] * x[j]
+    @finch @loop i j y[i] += A[j, i] * x[j]
     return y
 end
 
@@ -281,60 +203,5 @@ for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
     x = copyto!(@fiber(d{Int64}(e(0.0))), rand(size(A)[2]))
     SUITE["indices"]["SpMV_64"][mtx] = @benchmarkable spmv64($A, $x) 
 end
-
-global dummySize=5000000
-global dummyA=[]
-global dummyB=[]
-
-@noinline
-function clear_cache()
-    global dummySize
-    global dummyA
-    global dummyB
-
-    ret = 0.0
-    if length(dummyA) == 0
-        dummyA = Array{Float64}(undef, dummySize)
-        dummyB = Array{Float64}(undef, dummySize)
-    end
-    for i in 1:100 
-        dummyA[rand(1:dummySize)] = rand(Int64)/typemax(Int64)
-        dummyB[rand(1:dummySize)] = rand(Int64)/typemax(Int64)
-    end
-    for i in 1:dummySize
-        ret += dummyA[i] * dummyB[i];
-    end
-    return ret
-end
-
-function rleadd_32!(C, A, B)
-    @finch @loop i j C[i, j] = A[i, j] + B[i, j]
-end
-
-SUITE["indices"]["rleadd_32"] = BenchmarkGroup()
-for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
-    A = fiber(SparseMatrixCSC(matrixdepot(mtx)))
-    A = copyto!(@fiber(d{Int32}(rl{0.0, Int32, Int32}())), A)
-    B = similar(A)
-    @finch @loop i j B[i, j] = A[i, j]
-    C = similar(A)
-    SUITE["indices"]["rleadd_32"][mtx] = @benchmarkable rleadd_32!($C, $A, $B) evals=1 setup=clear_cache()
-end
-
-function rleadd_64!(C, A, B)
-    @finch @loop i j C[i, j] = A[i, j] + B[i, j]
-end
-
-SUITE["indices"]["rleadd_64"] = BenchmarkGroup()
-for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
-    A = fiber(SparseMatrixCSC(matrixdepot(mtx)))
-    A = copyto!(@fiber(d{Int64}(rl{0.0, Int64, Int64}())), A)
-    B = similar(A)
-    @finch @loop i j B[i, j] = A[i, j]
-    C = similar(A)
-    SUITE["indices"]["rleadd_64"][mtx] = @benchmarkable rleadd_64!($C, $A, $B) evals=1 setup=clear_cache()
-end
-
-SUITE = SUITE["indices"]
 
 foreach(((k, v),) -> BenchmarkTools.warmup(v), SUITE)
