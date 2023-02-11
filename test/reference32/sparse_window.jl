@@ -27,7 +27,7 @@ begin
     phase_start = (max)(i_start_2, (+)((-)((ex.body.rhs.idxs[1]).tns.tns.start), i_start_2, (ex.body.rhs.idxs[1]).tns.tns.start))
     phase_stop = (min)(i_stop, (+)((-)((ex.body.rhs.idxs[1]).tns.tns.start), 1, A_lvl_i1))
     if phase_stop >= phase_start
-        i = i
+        i_4 = i
         i = phase_start
         while A_lvl_q + 1 < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < (+)(phase_start, (-)((-)(1, (ex.body.rhs.idxs[1]).tns.tns.start)))
             A_lvl_q += 1
@@ -38,10 +38,10 @@ begin
             phase_start_2 = (max)(i_start_3, (+)((-)((ex.body.rhs.idxs[1]).tns.tns.start), (ex.body.rhs.idxs[1]).tns.tns.start, i_start_3))
             phase_stop_2 = (min)(phase_stop, (+)((-)((ex.body.rhs.idxs[1]).tns.tns.start), 1, A_lvl_i))
             if phase_stop_2 >= phase_start_2
-                i_2 = i
+                i_5 = i
                 if A_lvl_i == (+)(phase_stop_2, (-)((-)(1, (ex.body.rhs.idxs[1]).tns.tns.start)))
                     A_lvl_2_val_2 = A_lvl_2.val[A_lvl_q]
-                    i_3 = phase_stop_2
+                    i_6 = phase_stop_2
                     if C_lvl_qos > C_lvl_qos_stop
                         C_lvl_qos_stop = max(C_lvl_qos_stop << 1, 1)
                         (Finch.resize_if_smaller!)(C_lvl.idx, C_lvl_qos_stop)
@@ -55,7 +55,7 @@ begin
                     C_lvl_2.val[C_lvl_qos] = C_lvl_2_val_2
                     if C_lvl_2_dirty
                         C_lvl_dirty = true
-                        C_lvl.idx[C_lvl_qos] = i_3
+                        C_lvl.idx[C_lvl_qos] = i_6
                         C_lvl_qos += 1
                     end
                     A_lvl_q += 1
@@ -70,7 +70,7 @@ begin
     phase_start_3 = (max)(i_start_2, (+)((-)((ex.body.rhs.idxs[1]).tns.tns.start), i_start_2, (ex.body.rhs.idxs[1]).tns.tns.start))
     phase_stop_3 = (min)(i_stop, (+)((-)((ex.body.rhs.idxs[1]).tns.tns.start), (ex.body.rhs.idxs[1]).tns.tns.start, i_stop))
     if phase_stop_3 >= phase_start_3
-        i_4 = i
+        i_7 = i
         i = phase_stop_3 + 1
     end
     C_lvl.pos[1 + 1] = (C_lvl_qos - C_lvl_qos_fill) - 1
@@ -83,5 +83,5 @@ begin
     qos = C_lvl.pos[end] - 1
     resize!(C_lvl.idx, qos)
     resize!(C_lvl_2.val, qos)
-    (C = Fiber((Finch.SparseListLevel){Int64}((+)((ex.body.rhs.idxs[1]).tns.tns.stop, (-)(1, (ex.body.rhs.idxs[1]).tns.tns.start)), C_lvl.pos, C_lvl.idx, C_lvl_2)),)
+    (C = Fiber((Finch.SparseListLevel){Int64}(C_lvl_2, (+)((ex.body.rhs.idxs[1]).tns.tns.stop, (-)(1, (ex.body.rhs.idxs[1]).tns.tns.start)), C_lvl.pos, C_lvl.idx)),)
 end
