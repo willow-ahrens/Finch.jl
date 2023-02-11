@@ -67,7 +67,7 @@
                 check_output("gustavsons.jl", @finch_code @loop i ((@loop j B[j, i] = w[j]) where (@loop k j w[j] += A[k, i] * A[j, k])))
                 seen = true
             end
-            @finch @loop j ((@loop i B[i, j] = w[i]) where (@loop k i w[i] = A[i, k] * A[k, j]))
+            @finch @loop j ((@loop i B[i, j] = w[i]) where (@loop k i w[i] += A[i, k] * A[k, j]))
             B_ref = A_ref * A_ref
             @test B == B_ref
         end

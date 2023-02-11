@@ -139,7 +139,7 @@ function select_access(node, ctx::Finch.SelectVisitor, tns::Furlable)
             ext = first(virtual_size(tns, ctx.ctx))
             ext_2 = Extent(val, val)
             tns_2 = truncate(tns, ctx.ctx, ext, ext_2)
-            return access(tns_2, node.mode, var, node.idxs[1:end-1]...)
+            return access(tns_2, node.mode, node.idxs[1:end-1]..., var)
         end
     end
     return similarterm(node, operation(node), map(ctx, arguments(node)))

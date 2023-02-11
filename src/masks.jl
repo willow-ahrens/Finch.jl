@@ -34,20 +34,20 @@ function get_reader(::DiagMask, ctx, protos...)
     )
 end
 
-struct LoTriMask end
+struct UpTriMask end
 
-const lotrimask = LoTriMask()
+const uptrimask = UpTriMask()
 
-Base.show(io::IO, ex::LoTriMask) = Base.show(io, MIME"text/plain"(), ex)
-function Base.show(io::IO, mime::MIME"text/plain", ex::LoTriMask)
-    print(io, "lotrimask")
+Base.show(io::IO, ex::UpTriMask) = Base.show(io, MIME"text/plain"(), ex)
+function Base.show(io::IO, mime::MIME"text/plain", ex::UpTriMask)
+    print(io, "uptrimask")
 end
 
-virtualize(ex, ::Type{LoTriMask}, ctx) = lotrimask
-IndexNotation.isliteral(::LoTriMask) = false
-Finch.virtual_size(::LoTriMask, ctx) = (nodim, nodim)
+virtualize(ex, ::Type{UpTriMask}, ctx) = uptrimask
+IndexNotation.isliteral(::UpTriMask) = false
+Finch.virtual_size(::UpTriMask, ctx) = (nodim, nodim)
 
-function get_reader(::LoTriMask, ctx, protos...)
+function get_reader(::UpTriMask, ctx, protos...)
     tns = Furlable(
         size = (nodim, nodim),
         body = (ctx, idx, ext) -> Lookup(
@@ -67,20 +67,20 @@ function get_reader(::LoTriMask, ctx, protos...)
     )
 end
 
-struct UpTriMask end
+struct LoTriMask end
 
-const uptrimask = UpTriMask()
+const lotrimask = LoTriMask()
 
-Base.show(io::IO, ex::UpTriMask) = Base.show(io, MIME"text/plain"(), ex)
-function Base.show(io::IO, mime::MIME"text/plain", ex::UpTriMask)
-    print(io, "uptrimask")
+Base.show(io::IO, ex::LoTriMask) = Base.show(io, MIME"text/plain"(), ex)
+function Base.show(io::IO, mime::MIME"text/plain", ex::LoTriMask)
+    print(io, "lotrimask")
 end
 
-virtualize(ex, ::Type{UpTriMask}, ctx) = uptrimask
-IndexNotation.isliteral(::UpTriMask) = false
-Finch.virtual_size(::UpTriMask, ctx) = (nodim, nodim)
+virtualize(ex, ::Type{LoTriMask}, ctx) = lotrimask
+IndexNotation.isliteral(::LoTriMask) = false
+Finch.virtual_size(::LoTriMask, ctx) = (nodim, nodim)
 
-function get_reader(::UpTriMask, ctx, protos...)
+function get_reader(::LoTriMask, ctx, protos...)
     tns = Furlable(
         size = (nodim, nodim),
         body = (ctx, idx, ext) -> Lookup(
@@ -117,18 +117,18 @@ function get_reader(::BandMask, ctx, mode, protos...)
     tns = Furlable(
         size = (nodim, nodim, nodim),
         body = (ctx, idx, ext) -> Lookup(
-            body = (i) -> Furlable(
+            body = (k) -> Furlable(
                 size = (nodim, nodim),
                 body = (ctx, idx, ext) -> Lookup(
                     body = (j) -> Furlable(
                         size = (nodim,),
                         body = (ctx, idx, ext) -> Pipeline([
                             Phase(
-                                stride = (ctx, idx, ext) -> value(:($(ctx(i)) - 1)),
+                                stride = (ctx, idx, ext) -> value(:($(ctx(j)) - 1)),
                                 body = (start, step) -> Run(body=Simplify(Fill(false)))
                             ),
                             Phase(
-                                stride = (ctx, idx, ext) -> j,
+                                stride = (ctx, idx, ext) -> k,
                                 body = (start, step) -> Run(body=Simplify(Fill(true)))
                             ),
                             Phase(

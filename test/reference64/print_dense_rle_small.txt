@@ -1,1 +1,1 @@
-Fiber(Dense(RepeatRLE{0.0}(10, …), 5))
+Fiber(Dense(RepeatRLE{0.0}(5, …), 10))
