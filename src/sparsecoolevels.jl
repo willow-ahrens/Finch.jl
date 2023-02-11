@@ -59,7 +59,7 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseCoo
     p = fbr.pos
     crds = fbr.lvl.pos[p]:fbr.lvl.pos[p + 1] - 1
 
-    print_coord(io, q) = (print(io, "["); foreach(n -> (show(io, fbr.lvl.tbl[n][q]); print(io, ", ")), 1:N-1); show(io, fbr.lvl.tbl[N][q]); print(io, "]"))
+    print_coord(io, q) = (print(io, "["); join(io, map(n -> fbr.lvl.tbl[n][q], 1:N), ", "); print(io, "]"))
     get_fbr(q) = fbr(map(n -> fbr.lvl.tbl[n][q], 1:N)...)
 
     dims = size(fbr)
@@ -81,7 +81,7 @@ function (fbr::SubFiber{<:SparseCooLevel{N, Ti}})(idxs...) where {N, Ti}
     idx = idxs[end-N + 1:end]
     lvl = fbr.lvl
     target = lvl.pos[fbr.pos]:lvl.pos[fbr.pos + 1] - 1
-    for n = 1:N
+    for n = N:-1:1
         target = searchsorted(view(lvl.tbl[n], target), idx[n]) .+ (first(target) - 1)
     end
     isempty(target) ? default(fbr) : SubFiber(lvl.lvl, first(target))(idxs[1:end-N]...)
@@ -193,7 +193,7 @@ function get_level_reader(lvl::VirtualSparseCooLevel, ctx, pos, protos...)
     start = value(:($(lvl.ex).pos[$(ctx(pos))]), lvl.Tp)
     stop = value(:($(lvl.ex).pos[$(ctx(pos)) + 1]), lvl.Tp)
 
-    get_multilevel_range_reader(lvl::VirtualSparseCooLevel, ctx, 1, start, stop, protos...)
+    get_multilevel_range_reader(lvl::VirtualSparseCooLevel, ctx, lvl.N, start, stop, protos...)
 end
 
 function get_multilevel_range_reader(lvl::VirtualSparseCooLevel, ctx, R, start, stop, ::Union{Nothing, Walk}, protos...)
@@ -230,7 +230,7 @@ function get_multilevel_range_reader(lvl::VirtualSparseCooLevel, ctx, R, start, 
                                 $my_q += $(Tp(1))
                             end
                         end,
-                        body = if R == lvl.N
+                        body = if R == 1
                             Thunk(
                                 preamble = quote
                                     $my_i = $(lvl.ex).tbl[$R][$my_q]
@@ -259,7 +259,7 @@ function get_multilevel_range_reader(lvl::VirtualSparseCooLevel, ctx, R, start, 
                                     stride = (ctx, idx, ext) -> value(my_i),
                                     chunk = Spike(
                                         body = Simplify(Fill(virtual_level_default(lvl))),
-                                        tail = get_multilevel_range_reader(lvl, ctx, R + 1, value(my_q, lvl.Ti), value(my_q_step, lvl.Ti), protos...),
+                                        tail = get_multilevel_range_reader(lvl, ctx, R - 1, value(my_q, lvl.Ti), value(my_q_step, lvl.Ti), protos...),
                                     ),
                                     next = (ctx, idx, ext) -> quote
                                         $my_q = $my_q_step
@@ -312,7 +312,7 @@ function get_multilevel_append_updater(lvl::VirtualSparseCooLevel, ctx, qos, coo
             if length(coords) + 1 < lvl.N
                 Lookup(
                     val = virtual_level_default(lvl),
-                    body = (i) -> get_multilevel_append_updater(lvl, ctx, qos, (coords..., i), protos...)
+                    body = (i) -> get_multilevel_append_updater(lvl, ctx, qos, (i, coords...), protos...)
                 )
             else
                 AcceptSpike(
@@ -332,7 +332,7 @@ function get_multilevel_append_updater(lvl::VirtualSparseCooLevel, ctx, qos, coo
                         epilogue = quote
                             if $(ctx(get_dirty(lvl.lvl, ctx)))
                                 $(lvl.dirty) = true
-                                $(Expr(:block, map(enumerate((coords..., idx))) do (n, i)
+                                $(Expr(:block, map(enumerate((idx, coords...))) do (n, i)
                                     :($(lvl.ex).tbl[$n][$qos] = $(ctx(i)))
                                 end...))
                                 $qos += $(Tp(1))

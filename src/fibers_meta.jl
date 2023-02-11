@@ -187,13 +187,13 @@ See also: (`sprand`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#Spars
 julia> fsprand(Bool, (3, 3), 0.5)
 SparseCoo (false) [1:3×1:3]
 │ │
-└─└─[1, 1] [1, 3] [2, 2] [2, 3] [3, 3]
+└─└─[1, 1] [3, 1] [2, 2] [3, 2] [3, 3]
     true   true   true   true   true  
 
 julia> fsprand(Float64, (2, 2, 2), 0.5)
 SparseCoo (0.0) [1:2×1:2×1:2]
 │ │ │
-└─└─└─[1, 2, 2] [2, 1, 1] [2, 1, 2]
+└─└─└─[2, 2, 1] [1, 1, 2] [2, 1, 2]
       0.647855  0.996665  0.749194 
 ```
 """

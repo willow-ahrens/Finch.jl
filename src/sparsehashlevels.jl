@@ -61,7 +61,7 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseHas
     p = fbr.pos
     crds = fbr.lvl.srt[fbr.lvl.pos[p]:fbr.lvl.pos[p + 1] - 1]
 
-    print_coord(io, crd) = (print(io, "["); foreach(n -> (show(io, crd[1][2][n]); print(io, ", ")), 1:N-1); show(io, crd[1][2][N]); print(io, "]"))
+    print_coord(io, crd) = (print(io, "["); join(io, map(n -> crd[1][2][n], 1:N), ", "); print(io, "]"))
     get_fbr(crd) = fbr(crd[1][2]...)
 
     dims = size(fbr)
@@ -185,6 +185,8 @@ function assemble_level!(lvl::VirtualSparseHashLevel, ctx, pos_start, pos_stop)
     end
 end
 
+hashkeycmp(((pos, idx), qos),) = (pos, reverse(idx)...)
+
 function freeze_level!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, pos_stop)
     p = ctx.freshen(:p)
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
@@ -192,7 +194,7 @@ function freeze_level!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, pos_stop)
     push!(ctx.preamble, quote
         resize!($(lvl.ex).srt, length($(lvl.ex).tbl))
         copyto!($(lvl.ex).srt, pairs($(lvl.ex).tbl))
-        sort!($(lvl.ex).srt)
+        sort!($(lvl.ex).srt, by=hashkeycmp)
         for $p = 2:($pos_stop + 1)
             $(lvl.ex).pos[$p] += $(lvl.ex).pos[$p - 1]
         end
@@ -206,7 +208,7 @@ function get_level_reader(lvl::VirtualSparseHashLevel, ctx, pos, proto::Union{No
     start = value(:($(lvl.ex).pos[$(ctx(pos))]), lvl.Tp)
     stop = value(:($(lvl.ex).pos[$(ctx(pos)) + 1]), lvl.Tp)
 
-    get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, 1, start, stop, proto, protos...)
+    get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, lvl.N, start, stop, proto, protos...)
 end
 
 function get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, R, start, stop, ::Union{Nothing, Walk}, protos...)
@@ -243,7 +245,7 @@ function get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, R, start,
                                 $my_q += $(Tp(1))
                             end
                         end,
-                        body = if R == lvl.N
+                        body = if R == 1
                             Thunk(
                                 preamble = quote
                                     $my_i = $(lvl.ex).srt[$my_q][1][2][$R]
@@ -272,7 +274,7 @@ function get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, R, start,
                                     stride = (ctx, idx, ext) -> value(my_i),
                                     chunk = Spike(
                                         body = Simplify(Fill(virtual_level_default(lvl))),
-                                        tail = get_multilevel_range_reader(lvl, ctx, R + 1, value(my_q, lvl.Ti), value(my_q_step, lvl.Ti), protos...),
+                                        tail = get_multilevel_range_reader(lvl, ctx, R - 1, value(my_q, lvl.Ti), value(my_q_step, lvl.Ti), protos...),
                                     ),
                                     next = (ctx, idx, ext) -> quote
                                         $my_q = $my_q_step
@@ -313,14 +315,14 @@ function get_multilevel_group_reader(lvl::VirtualSparseHashLevel, ctx, pos, coor
             if length(coords)  + 1 < lvl.N
                 Lookup(
                     val = virtual_level_default(lvl),
-                    body = (i) -> get_multilevel_group_reader(lvl, ctx, pos, qos, (coords..., i), protos...)
+                    body = (i) -> get_multilevel_group_reader(lvl, ctx, pos, qos, (i, coords...), protos...)
                 )
             else
                 Lookup(
                     val = virtual_level_default(lvl),
                     body = (i) -> Thunk(
                         preamble = quote
-                            $my_key = ($(ctx(pos)), ($(map(ctx, coords)...), $(ctx(i))))
+                            $my_key = ($(ctx(pos)), ($(map(ctx, (i, coords...,))...)))
                             $qos = get($(lvl.ex).tbl, $my_key, 0)
                         end,
                         body = Switch([
@@ -360,14 +362,14 @@ function get_multilevel_group_updater(lvl::VirtualSparseHashLevel, ctx, pos, coo
             if length(coords) + 1 < lvl.N
                 body = Lookup(
                     val = virtual_level_default(lvl),
-                    body = (i) -> get_multilevel_group_updater(lvl, ctx, pos, (coords..., i), protos...)
+                    body = (i) -> get_multilevel_group_updater(lvl, ctx, pos, (i, coords...), protos...)
                 )
             else
                 body = AcceptSpike(
                     val = virtual_level_default(lvl),
                     tail = (ctx, idx) -> Thunk(
                         preamble = quote
-                            $my_key = ($(ctx(pos)), ($(map(ctx, coords)...), $(ctx(idx))))
+                            $my_key = ($(ctx(pos)), ($(map(ctx, (idx, coords...,))...),))
                             $qos = get($(lvl.ex).tbl, $my_key, $(qos_fill) + $(Tp(1)))
                             if $qos > $qos_stop
                                 $qos_stop = max($qos_stop << 1, 1)
