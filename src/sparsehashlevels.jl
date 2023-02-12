@@ -1,40 +1,26 @@
 struct SparseHashLevel{N, Ti<:Tuple, Tp, Tbl, Lvl}
+    lvl::Lvl
     I::Ti
     tbl::Tbl
     pos::Vector{Tp}
     srt::Vector{Pair{Tuple{Tp, Ti}, Tp}}
-    lvl::Lvl
 end
 const SparseHash = SparseHashLevel
-SparseHashLevel{N}(lvl) where {N} = SparseHashLevel{N}(((0 for _ in 1:N)...,), lvl)
-SparseHashLevel{N, Ti}(lvl) where {N, Ti} = SparseHashLevel{N, Ti}((map(zero, Ti.parameters)..., ), lvl)
-SparseHashLevel{N, Ti, Tp}(lvl) where {N, Ti, Tp} = SparseHashLevel{N, Ti, Tp}((map(zero, Ti.parameters)..., ), lvl)
-SparseHashLevel{N, Ti, Tp, Tbl}(lvl) where {N, Ti, Tp, Tbl} = SparseHashLevel{N, Ti, Tp, Tbl}((map(zero, Ti.parameters)..., ), lvl)
 
-SparseHashLevel{N}(I::Ti, lvl) where {N, Ti} = SparseHashLevel{N, Ti}(I, lvl)
-SparseHashLevel{N, Ti}(I, lvl) where {N, Ti} = SparseHashLevel{N, Ti, Int}(Ti(I), lvl)
-SparseHashLevel{N, Ti, Tp}(I, lvl) where {N, Ti, Tp} =
-    SparseHashLevel{N, Ti, Tp}(Ti(I), Dict{Tuple{Tp, Ti}, Tp}(), lvl)
-SparseHashLevel{N, Ti, Tp, Tbl}(I, lvl) where {N, Ti, Tp, Tbl} =
-    SparseHashLevel{N, Ti, Tp, Tbl}(Ti(I), Tbl(), lvl)
+SparseHashLevel(lvl, I, args...) = SparseHashLevel{length(I)}(lvl, I, args...)
+SparseHashLevel{N}(lvl) where {N} = SparseHashLevel{N, NTuple{N, Int}}(lvl)
+SparseHashLevel{N}(lvl, I, args...) where {N} = SparseHashLevel{N, typeof(I)}(lvl, I, args...)
 
-SparseHashLevel{N}(I::Ti, tbl::Tbl, lvl) where {N, Ti, Tp, Tbl<:AbstractDict{Tuple{Tp, Ti}}} =
-    SparseHashLevel{N, Ti, Tp, Tbl}(I, tbl, lvl)
-SparseHashLevel{N, Ti}(I, tbl::Tbl, lvl) where {N, Ti, Tp, Tbl<:AbstractDict{Tuple{Tp, Ti}}} =
-    SparseHashLevel{N, Ti, Tp, Tbl}(Ti(I), tbl, lvl)
-SparseHashLevel{N, Ti, Tp}(I, tbl::Tbl, lvl) where {N, Ti, Tp, Tbl} =
-    SparseHashLevel{N, Ti, Tp, Tbl}(Ti(I), tbl, lvl)
-SparseHashLevel{N, Ti, Tp, Tbl}(I, tbl, lvl::Lvl) where {N, Ti, Tp, Tbl, Lvl} =
-    SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(Ti(I), tbl, Tp[1], Pair{Tuple{Tp, Ti}, Tp}[], lvl)
+SparseHashLevel{N, Ti}(lvl, args...) where {N, Ti} = SparseHashLevel{N, Ti, Int}(lvl, args...)
+SparseHashLevel{N, Ti, Tp}(lvl, args...) where {N, Ti, Tp} = SparseHashLevel{N, Ti, Tp, Dict{Tuple{Tp, Ti}, Tp}}(lvl, args...)
+SparseHashLevel{N, Ti, Tp, Tbl}(lvl::Lvl, args...) where {N, Ti, Tp, Tbl, Lvl} = SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(lvl, args...)
 
-SparseHashLevel{N}(I::Ti, tbl::Tbl, pos::Vector{Tp}, srt, lvl::Lvl) where {N, Ti, Tp, Tbl, Lvl} =
-    SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(I, tbl, pos, srt, lvl) 
-SparseHashLevel{N, Ti}(I, tbl::Tbl, pos::Vector{Tp}, srt, lvl::Lvl) where {N, Ti, Tp, Tbl, Lvl} =
-    SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(Ti(I), tbl, pos, srt, lvl) 
-SparseHashLevel{N, Ti, Tp}(I, tbl::Tbl, pos, srt, lvl::Lvl) where {N, Ti, Tp, Tbl, Lvl} =
-    SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(Ti(I), tbl, pos, srt, lvl) 
-SparseHashLevel{N, Ti, Tp, Tbl}(I, tbl, pos, srt, lvl::Lvl) where {N, Ti, Tp, Tbl, Lvl} =
-    SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(Ti(I), tbl, pos, srt, lvl) 
+SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(lvl) where {N, Ti, Tp, Tbl, Lvl} =
+    SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(lvl, ((zero(ti) for ti in Ti.parameters)..., ))
+SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(lvl, I) where {N, Ti, Tp, Tbl, Lvl} =
+    SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(lvl, I, Tbl())
+SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(lvl, I, tbl) where {N, Ti, Tp, Tbl, Lvl} =
+    SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(lvl, Ti(I), tbl, Tp[1], Pair{Tuple{Tp, Ti}, Tp}[])
 
 """
 `f_code(sh)` = [SparseHashLevel](@ref).
@@ -42,10 +28,10 @@ SparseHashLevel{N, Ti, Tp, Tbl}(I, tbl, pos, srt, lvl::Lvl) where {N, Ti, Tp, Tb
 f_code(::Val{:sh}) = SparseHash
 summary_f_code(lvl::SparseHashLevel{N}) where {N} = "sh{$N}($(summary_f_code(lvl.lvl)))"
 similar_level(lvl::SparseHashLevel{N}) where {N} = SparseHashLevel{N}(similar_level(lvl.lvl))
-similar_level(lvl::SparseHashLevel{N}, tail...) where {N} = SparseHashLevel{N}(ntuple(n->tail[n], N), similar_level(lvl.lvl, tail[N + 1:end]...))
+similar_level(lvl::SparseHashLevel{N}, tail...) where {N} = SparseHashLevel{N}(similar_level(lvl.lvl, tail[1:end-N]...), (tail[end-N+1:end]...,))
 
 pattern!(lvl::SparseHashLevel{N, Ti, Tp, Tbl}) where {N, Ti, Tp, Tbl} = 
-    SparseHashLevel{N, Ti, Tp, Tbl}(lvl.I, lvl.tbl, lvl.pos, lvl.srt, pattern!(lvl.lvl))
+    SparseHashLevel{N, Ti, Tp, Tbl}(pattern!(lvl.lvl), lvl.I, lvl.tbl, lvl.pos, lvl.srt)
 
 function Base.show(io::IO, lvl::SparseHashLevel{N, Ti, Tp}) where {N, Ti, Tp}
     if get(io, :compact, false)
@@ -53,6 +39,8 @@ function Base.show(io::IO, lvl::SparseHashLevel{N, Ti, Tp}) where {N, Ti, Tp}
     else
         print(io, "SparseHash{$N, $Ti, $Tp}(")
     end
+    show(io, lvl.lvl)
+    print(io, ", ")
     show(IOContext(io, :typeinfo=>Ti), lvl.I)
     print(io, ", ")
     if get(io, :compact, false)
@@ -66,8 +54,6 @@ function Base.show(io::IO, lvl::SparseHashLevel{N, Ti, Tp}) where {N, Ti, Tp}
         print(io, ", ")
         show(IOContext(io, :typeinfo=>Vector{Pair{Tuple{Tp, Ti}, Tp}}), lvl.srt)
     end
-    print(io, ", ")
-    show(io, lvl.lvl)
     print(io, ")")
 end
 
@@ -75,7 +61,7 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseHas
     p = fbr.pos
     crds = fbr.lvl.srt[fbr.lvl.pos[p]:fbr.lvl.pos[p + 1] - 1]
 
-    print_coord(io, crd) = (print(io, "["); foreach(n -> (show(io, crd[1][2][n]); print(io, ", ")), 1:N-1); show(io, crd[1][2][N]); print(io, "]"))
+    print_coord(io, crd) = (print(io, "["); join(io, map(n -> crd[1][2][n], 1:N), ", "); print(io, "]"))
     get_fbr(crd) = fbr(crd[1][2]...)
 
     dims = size(fbr)
@@ -92,20 +78,23 @@ data_rep_level(::Type{<:SparseHashLevel{N, Ti, Tp, Tbl, Lvl}}) where {N, Ti, Tp,
 (fbr::AbstractFiber{<:SparseHashLevel})() = fbr
 (fbr::SubFiber{<:SparseHashLevel})() = fbr
 function (fbr::SubFiber{<:SparseHashLevel{N, Ti}})(idxs...) where {N, Ti}
+    isempty(idxs) && return fbr
+    idx = idxs[end-N + 1:end]
     lvl = fbr.lvl
-    p = (fbr.pos, (idxs[1:N]...,))
+    p = (fbr.pos, (idx...,))
 
     if !haskey(lvl.tbl, p)
         return default(fbr)
     else
         q = lvl.tbl[p]
-        return SubFiber(lvl.lvl, q)(idxs[N + 1:end]...)
+        return SubFiber(lvl.lvl, q)(idxs[1:end-N]...)
     end
 end
 
 
 
 mutable struct VirtualSparseHashLevel
+    lvl
     ex
     N
     Ti
@@ -115,7 +104,6 @@ mutable struct VirtualSparseHashLevel
     qos_fill
     qos_stop
     dirty
-    lvl
 end
 function virtualize(ex, ::Type{SparseHashLevel{N, Ti, Tp, Tbl, Lvl}}, ctx, tag=:lvl) where {N, Ti, Tp, Tbl, Lvl}   
     sym = ctx.freshen(tag)
@@ -130,16 +118,16 @@ function virtualize(ex, ::Type{SparseHashLevel{N, Ti, Tp, Tbl, Lvl}}, ctx, tag=:
     end)
     dirty = ctx.freshen(sym, :_dirty)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualSparseHashLevel(sym, N, Ti, Tp, Tbl, I, qos_fill, qos_stop, dirty, lvl_2)
+    VirtualSparseHashLevel(lvl_2, sym, N, Ti, Tp, Tbl, I, qos_fill, qos_stop, dirty)
 end
 function (ctx::Finch.LowerJulia)(lvl::VirtualSparseHashLevel)
     quote
         $SparseHashLevel{$(lvl.N), $(lvl.Ti), $(lvl.Tp), $(lvl.Tbl)}(
+            $(ctx(lvl.lvl)),
             ($(map(ctx, lvl.I)...),),
             $(lvl.ex).tbl,
             $(lvl.ex).pos,
             $(lvl.ex).srt,
-            $(ctx(lvl.lvl)),
         )
     end
 end
@@ -148,12 +136,12 @@ summary_f_code(lvl::VirtualSparseHashLevel) = "sh{$(lvl.N)}($(summary_f_code(lvl
 
 function virtual_level_size(lvl::VirtualSparseHashLevel, ctx::LowerJulia)
     ext = map((ti, stop)->Extent(literal(ti(1)), stop), lvl.Ti.parameters, lvl.I)
-    (ext..., virtual_level_size(lvl.lvl, ctx)...)
+    (virtual_level_size(lvl.lvl, ctx)..., ext...)
 end
 
 function virtual_level_resize!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, dims...)
-    lvl.I = map(getstop, dims[1:lvl.N])
-    lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims[lvl.N+1:end]...)
+    lvl.I = map(getstop, dims[end-lvl.N+1:end])
+    lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims[1:end-lvl.N]...)
     lvl
 end
 
@@ -197,6 +185,8 @@ function assemble_level!(lvl::VirtualSparseHashLevel, ctx, pos_start, pos_stop)
     end
 end
 
+hashkeycmp(((pos, idx), qos),) = (pos, reverse(idx)...)
+
 function freeze_level!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, pos_stop)
     p = ctx.freshen(:p)
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
@@ -204,7 +194,7 @@ function freeze_level!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, pos_stop)
     push!(ctx.preamble, quote
         resize!($(lvl.ex).srt, length($(lvl.ex).tbl))
         copyto!($(lvl.ex).srt, pairs($(lvl.ex).tbl))
-        sort!($(lvl.ex).srt)
+        sort!($(lvl.ex).srt, by=hashkeycmp)
         for $p = 2:($pos_stop + 1)
             $(lvl.ex).pos[$p] += $(lvl.ex).pos[$p - 1]
         end
@@ -218,7 +208,7 @@ function get_level_reader(lvl::VirtualSparseHashLevel, ctx, pos, proto::Union{No
     start = value(:($(lvl.ex).pos[$(ctx(pos))]), lvl.Tp)
     stop = value(:($(lvl.ex).pos[$(ctx(pos)) + 1]), lvl.Tp)
 
-    get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, 1, start, stop, proto, protos...)
+    get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, lvl.N, start, stop, proto, protos...)
 end
 
 function get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, R, start, stop, ::Union{Nothing, Walk}, protos...)
@@ -255,7 +245,7 @@ function get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, R, start,
                                 $my_q += $(Tp(1))
                             end
                         end,
-                        body = if R == lvl.N
+                        body = if R == 1
                             Thunk(
                                 preamble = quote
                                     $my_i = $(lvl.ex).srt[$my_q][1][2][$R]
@@ -284,7 +274,7 @@ function get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, R, start,
                                     stride = (ctx, idx, ext) -> value(my_i),
                                     chunk = Spike(
                                         body = Simplify(Fill(virtual_level_default(lvl))),
-                                        tail = get_multilevel_range_reader(lvl, ctx, R + 1, value(my_q, lvl.Ti), value(my_q_step, lvl.Ti), protos...),
+                                        tail = get_multilevel_range_reader(lvl, ctx, R - 1, value(my_q, lvl.Ti), value(my_q_step, lvl.Ti), protos...),
                                     ),
                                     next = (ctx, idx, ext) -> quote
                                         $my_q = $my_q_step
@@ -325,14 +315,14 @@ function get_multilevel_group_reader(lvl::VirtualSparseHashLevel, ctx, pos, coor
             if length(coords)  + 1 < lvl.N
                 Lookup(
                     val = virtual_level_default(lvl),
-                    body = (i) -> get_multilevel_group_reader(lvl, ctx, pos, qos, (coords..., i), protos...)
+                    body = (i) -> get_multilevel_group_reader(lvl, ctx, pos, qos, (i, coords...), protos...)
                 )
             else
                 Lookup(
                     val = virtual_level_default(lvl),
                     body = (i) -> Thunk(
                         preamble = quote
-                            $my_key = ($(ctx(pos)), ($(map(ctx, coords)...), $(ctx(i))))
+                            $my_key = ($(ctx(pos)), ($(map(ctx, (i, coords...,))...)))
                             $qos = get($(lvl.ex).tbl, $my_key, 0)
                         end,
                         body = Switch([
@@ -372,14 +362,14 @@ function get_multilevel_group_updater(lvl::VirtualSparseHashLevel, ctx, pos, coo
             if length(coords) + 1 < lvl.N
                 body = Lookup(
                     val = virtual_level_default(lvl),
-                    body = (i) -> get_multilevel_group_updater(lvl, ctx, pos, (coords..., i), protos...)
+                    body = (i) -> get_multilevel_group_updater(lvl, ctx, pos, (i, coords...), protos...)
                 )
             else
                 body = AcceptSpike(
                     val = virtual_level_default(lvl),
                     tail = (ctx, idx) -> Thunk(
                         preamble = quote
-                            $my_key = ($(ctx(pos)), ($(map(ctx, coords)...), $(ctx(idx))))
+                            $my_key = ($(ctx(pos)), ($(map(ctx, (idx, coords...,))...),))
                             $qos = get($(lvl.ex).tbl, $my_key, $(qos_fill) + $(Tp(1)))
                             if $qos > $qos_stop
                                 $qos_stop = max($qos_stop << 1, 1)

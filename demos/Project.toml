@@ -1,8 +1,0 @@
-[deps]
-BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
-Cthulhu = "f68482b8-f384-11e8-15f7-abe071a5a75f"
-Finch = "9177782c-1635-4eb9-9bfb-d9dfa25e6bce"
-LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-MatrixDepot = "b51810bb-c9f3-55da-ae3c-350fc1fbce05"
-Profile = "9abbd945-dff8-562f-b5e8-e1ebf5ef1b79"
-SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"

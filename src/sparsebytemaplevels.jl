@@ -1,30 +1,19 @@
 struct SparseBytemapLevel{Ti, Tp, Lvl}
+    lvl::Lvl
     I::Ti
     pos::Vector{Tp}
     tbl::Vector{Bool}
     srt::Vector{Tuple{Tp, Ti}}
-    lvl::Lvl
 end
 const SparseBytemap = SparseBytemapLevel
+SparseBytemapLevel(lvl) = SparseBytemapLevel{Int}(lvl)
+SparseBytemapLevel(lvl, I, args...) = SparseBytemapLevel{typeof(I)}(lvl, I, args...)
+SparseBytemapLevel{Ti}(lvl, args...) where {Ti} = SparseBytemapLevel{Ti, Int}(lvl, args...)
+SparseBytemapLevel{Ti, Tp}(lvl, args...) where {Ti, Tp} = SparseBytemapLevel{Ti, Tp, typeof(lvl)}(lvl, args...)
 
-SparseBytemapLevel(lvl) = SparseBytemapLevel(0, lvl)
-SparseBytemapLevel{Ti}(lvl) where {Ti} = SparseBytemapLevel{Ti}(zero(Ti), lvl)
-SparseBytemapLevel{Ti, Tp}(lvl) where {Ti, Tp} = SparseBytemapLevel{Ti, Tp}(zero(Ti), lvl)
-
-SparseBytemapLevel(I::Ti, lvl) where {Ti} = SparseBytemapLevel{Ti}(I, lvl)
-SparseBytemapLevel{Ti}(I, lvl) where {Ti} = SparseBytemapLevel{Ti, Int}(Ti(I), lvl)
-SparseBytemapLevel{Ti, Tp}(I, lvl) where {Ti, Tp} =
-    SparseBytemapLevel{Ti, Tp}(Ti(I), Tp[1], Bool[], Tuple{Tp, Ti}[], lvl)
-
-SparseBytemapLevel(I::Ti, pos::Vector{Tp}, tbl, srt, lvl::Lvl) where {Ti, Tp, Lvl} =
-    SparseBytemapLevel{Ti, Tp, Lvl}(I, pos, tbl, srt, lvl)
-SparseBytemapLevel{Ti}(I, pos::Vector{Tp}, tbl, srt, lvl::Lvl) where {Ti, Tp, Lvl} =
-    SparseBytemapLevel{Ti, Tp, Lvl}(Ti(I), pos, tbl, srt, lvl)
-SparseBytemapLevel{Ti, Tp}(I, pos, tbl, srt, lvl::Lvl) where {Ti, Tp, Lvl} =
-    SparseBytemapLevel{Ti, Tp, Lvl}(Ti(I), pos, tbl, srt, lvl)
-
-pattern!(lvl::SparseBytemapLevel{Ti, Tp}) where {Ti, Tp} = 
-    SparseBytemapLevel{Ti, Tp}(lvl.I, lvl.pos, lvl.tbl, lvl.srt, lvl.srt_stop, pattern!(lvl.lvl))
+SparseBytemapLevel{Ti, Tp, Lvl}(lvl) where {Ti, Tp, Lvl} = SparseBytemapLevel{Ti, Tp, Lvl}(lvl, zero(Ti))
+SparseBytemapLevel{Ti, Tp, Lvl}(lvl, I) where {Ti, Tp, Lvl} = 
+    SparseBytemapLevel{Ti, Tp, Lvl}(lvl, Ti(I), Tp[1], Bool[], Tuple{Tp, Ti}[])
 
 """
 `f_code(sm)` = [SparseBytemapLevel](@ref).
@@ -32,7 +21,10 @@ pattern!(lvl::SparseBytemapLevel{Ti, Tp}) where {Ti, Tp} =
 f_code(::Val{:sm}) = SparseBytemap
 summary_f_code(lvl::SparseBytemapLevel) = "sm($(summary_f_code(lvl.lvl)))"
 similar_level(lvl::SparseBytemapLevel) = SparseBytemap(similar_level(lvl.lvl))
-similar_level(lvl::SparseBytemapLevel, dim, tail...) = SparseBytemap(dim, similar_level(lvl.lvl, tail...))
+similar_level(lvl::SparseBytemapLevel, dims...) = SparseBytemap(similar_level(lvl.lvl, dims[1:end-1]...), dims[end])
+
+pattern!(lvl::SparseBytemapLevel{Ti, Tp}) where {Ti, Tp} = 
+    SparseBytemapLevel{Ti, Tp}(pattern!(lvl.lvl), lvl.I, lvl.pos, lvl.tbl, lvl.srt)
 
 function Base.show(io::IO, lvl::SparseBytemapLevel{Ti, Tp}) where {Ti, Tp}
     if get(io, :compact, false)
@@ -40,6 +32,8 @@ function Base.show(io::IO, lvl::SparseBytemapLevel{Ti, Tp}) where {Ti, Tp}
     else
         print(io, "SparseBytemap{$Ti, $Tp}(")
     end
+    show(io, lvl.lvl)
+    print(io, ", ")
     show(IOContext(io, :typeinfo=>Ti), lvl.I)
     print(io, ", ")
     if get(io, :compact, false)
@@ -51,8 +45,6 @@ function Base.show(io::IO, lvl::SparseBytemapLevel{Ti, Tp}) where {Ti, Tp}
         print(io, ", ")
         show(IOContext(io, :typeinfo=>Vector{Tuple{Tp, Ti}}), lvl.srt)
     end
-    print(io, ", ")
-    show(io, lvl.lvl)
     print(io, ")")
 end
 
@@ -68,26 +60,28 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseByt
 end
 
 @inline level_ndims(::Type{<:SparseBytemapLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = 1 + level_ndims(Lvl)
-@inline level_size(lvl::SparseBytemapLevel) = (lvl.I, level_size(lvl.lvl)...)
-@inline level_axes(lvl::SparseBytemapLevel) = (Base.OneTo(lvl.I), level_axes(lvl.lvl)...)
+@inline level_size(lvl::SparseBytemapLevel) = (level_size(lvl.lvl)..., lvl.I)
+@inline level_axes(lvl::SparseBytemapLevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.I))
 @inline level_eltype(::Type{<:SparseBytemapLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = level_eltype(Lvl)
 @inline level_default(::Type{<:SparseBytemapLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = level_default(Lvl)
 data_rep_level(::Type{<:SparseBytemapLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = SparseData(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:SparseBytemapLevel})() = fbr
-function (fbr::SubFiber{<:SparseBytemapLevel{Ti}})(i, tail...) where {Ti}
+function (fbr::SubFiber{<:SparseBytemapLevel{Ti}})(idxs...) where {Ti}
+    isempty(idxs) && return fbr
     lvl = fbr.lvl
     p = fbr.pos
-    q = (p - 1) * lvl.I + i
+    q = (p - 1) * lvl.I + idxs[end]
     if lvl.tbl[q]
         fbr_2 = SubFiber(lvl.lvl, q)
-        fbr_2(tail...)
+        fbr_2(idxs[1:end-1]...)
     else
         default(fbr)
     end
 end
 
 mutable struct VirtualSparseBytemapLevel
+    lvl
     ex
     Ti
     Tp
@@ -95,7 +89,6 @@ mutable struct VirtualSparseBytemapLevel
     qos_fill
     qos_stop
     dirty
-    lvl
 end
 function virtualize(ex, ::Type{SparseBytemapLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}   
     sym = ctx.freshen(tag)
@@ -109,16 +102,16 @@ function virtualize(ex, ::Type{SparseBytemapLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) 
     end)
     dirty = ctx.freshen(sym, :_dirty)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualSparseBytemapLevel(sym, Ti, Tp, I, qos_fill, qos_stop, dirty, lvl_2)
+    VirtualSparseBytemapLevel(lvl_2, sym, Ti, Tp, I, qos_fill, qos_stop, dirty)
 end
 function (ctx::Finch.LowerJulia)(lvl::VirtualSparseBytemapLevel)
     quote
         $SparseBytemapLevel{$(lvl.Ti), $(lvl.Tp)}(
+            $(ctx(lvl.lvl)),
             $(ctx(lvl.I)),
             $(lvl.ex).pos,
             $(lvl.ex).tbl,
             $(lvl.ex).srt,
-            $(ctx(lvl.lvl)),
         )
     end
 end
@@ -127,12 +120,12 @@ summary_f_code(lvl::VirtualSparseBytemapLevel) = "sm($(summary_f_code(lvl.lvl)))
 
 function virtual_level_size(lvl::VirtualSparseBytemapLevel, ctx)
     ext = Extent(literal(lvl.Ti(1)), lvl.I)
-    (ext, virtual_level_size(lvl.lvl, ctx)...)
+    (virtual_level_size(lvl.lvl, ctx)..., ext)
 end
 
-function virtual_level_resize!(lvl::VirtualSparseBytemapLevel, ctx, dim, dims...)
-    lvl.I = getstop(dim)
-    lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims...)
+function virtual_level_resize!(lvl::VirtualSparseBytemapLevel, ctx, dims...)
+    lvl.I = getstop(dims[end])
+    lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims[1:end-1]...)
     lvl
 end
 

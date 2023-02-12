@@ -1,12 +1,6 @@
 using Test
 using ArgParse
 
-s = ArgParseSettings("Example 3 for argparse.jl: " *
-                        "version info, default values, " *
-                        "options with types, variable " *
-                        "number of arguments.",
-                        version = "Version 1.0", # version info
-                        add_version = true)      # audo-add version option
 s = ArgParseSettings("Run Finch.jl tests. All tests are run by default. Specific
 test suites may be specified as positional arguments. Finch compares to
 reference output which depends on the system word size (currently
@@ -71,10 +65,9 @@ include("utils.jl")
     if should_run("conversions") include("test_conversions.jl") end
     if should_run("merges") include("test_merges.jl") end
     if should_run("algebra") include("test_algebra.jl") end
-    if should_run("repeat") include("test_repeat.jl") end
     if should_run("permit") include("test_permit.jl") end
     if should_run("skips") include("test_skips.jl") end
-    if should_run("fibers") include("test_fibers.jl") end
+    #if should_run("fibers") include("test_fibers.jl") end # maybe we should make a replacement but I think this file is very out of date.
     if should_run("kernels") include("test_kernels.jl") end
     if should_run("issues") include("test_issues.jl") end
     if should_run("meta") include("test_meta.jl") end

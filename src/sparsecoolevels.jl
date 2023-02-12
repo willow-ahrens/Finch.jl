@@ -1,25 +1,23 @@
 struct SparseCooLevel{N, Ti<:Tuple, Tp, Tbl, Lvl}
+    lvl::Lvl
     I::Ti
     tbl::Tbl
     pos::Vector{Tp}
-    lvl::Lvl
 end
 const SparseCoo = SparseCooLevel
-SparseCooLevel{N}(lvl) where {N} = SparseCooLevel{N}(((0 for _ in 1:N)..., ), lvl)
-SparseCooLevel{N, Ti}(lvl) where {N, Ti} = SparseCooLevel{N, Ti}((map(zero, Ti.parameters)..., ), lvl)
-SparseCooLevel{N, Ti, Tp}(lvl) where {N, Ti, Tp} = SparseCooLevel{N, Ti, Tp}((map(zero, Ti.parameters)..., ), lvl)
 
-SparseCooLevel{N}(I::Ti, lvl) where {N, Ti} = SparseCooLevel{N, Ti}(I, lvl)
-SparseCooLevel{N, Ti}(I, lvl) where {N, Ti} = SparseCooLevel{N, Ti, Int}(Ti(I), lvl)
-SparseCooLevel{N, Ti, Tp}(I, lvl) where {N, Ti, Tp} =
-    SparseCooLevel{N, Ti, Tp}(Ti(I), ((T[] for T in Ti.parameters)...,), Tp[1], lvl)
+SparseCooLevel(lvl, I, args...) = SparseCooLevel{length(I)}(lvl, I, args...)
+SparseCooLevel{N}(lvl) where {N} = SparseCooLevel{N, NTuple{N, Int}}(lvl)
+SparseCooLevel{N}(lvl, I, args...) where {N} = SparseCooLevel{N, typeof(I)}(lvl, I, args...)
 
-SparseCooLevel{N}(I::Ti, tbl::Tbl, pos::Vector{Tp}, lvl::Lvl) where {N, Ti, Tp, Tbl, Lvl} =
-    SparseCooLevel{N, Ti, Tp, Tbl, Lvl}(I, tbl, pos, lvl)
-SparseCooLevel{N, Ti}(I, tbl::Tbl, pos::Vector{Tp}, lvl::Lvl) where {N, Ti, Tp, Tbl, Lvl} =
-    SparseCooLevel{N, Ti, Tp, Tbl, Lvl}(Ti(I), tbl, pos, lvl)
-SparseCooLevel{N, Ti, Tp}(I, tbl::Tbl, pos, lvl::Lvl) where {N, Ti, Tp, Tbl, Lvl} =
-    SparseCooLevel{N, Ti, Tp, Tbl, Lvl}(Ti(I), tbl, pos, lvl)
+SparseCooLevel{N, Ti}(lvl, args...) where {N, Ti} = SparseCooLevel{N, Ti, Int}(lvl, args...)
+SparseCooLevel{N, Ti, Tp}(lvl::Lvl, args...) where {N, Ti, Tp, Lvl} =
+    SparseCooLevel{N, Ti, Tp, Tuple{(Vector{ti} for ti in Ti.parameters)...}, Lvl}(lvl, args...)
+
+SparseCooLevel{N, Ti, Tp, Tbl, Lvl}(lvl) where {N, Ti, Tp, Tbl, Lvl} =
+    SparseCooLevel{N, Ti, Tp, Tbl, Lvl}(lvl, ((zero(ti) for ti in Ti.parameters)...,))
+SparseCooLevel{N, Ti, Tp, Tbl, Lvl}(lvl, I) where {N, Ti, Tp, Tbl, Lvl} =
+    SparseCooLevel{N, Ti, Tp, Tbl, Lvl}(lvl, Ti(I), ((Vector{ti}() for ti in Ti.parameters)...,), Tp[1])
 
 """
 `f_code(sc)` = [SparseCooLevel](@ref).
@@ -27,10 +25,10 @@ SparseCooLevel{N, Ti, Tp}(I, tbl::Tbl, pos, lvl::Lvl) where {N, Ti, Tp, Tbl, Lvl
 f_code(::Val{:sc}) = SparseCoo
 summary_f_code(lvl::SparseCooLevel{N}) where {N} = "sc{$N}($(summary_f_code(lvl.lvl)))"
 similar_level(lvl::SparseCooLevel{N}) where {N} = SparseCooLevel{N}(similar_level(lvl.lvl))
-similar_level(lvl::SparseCooLevel{N}, tail...) where {N} = SparseCooLevel{N}(ntuple(n->tail[n], N), similar_level(lvl.lvl, tail[N + 1:end]...))
+similar_level(lvl::SparseCooLevel{N}, tail...) where {N} = SparseCooLevel{N}(similar_level(lvl.lvl, tail[1:end-N]...), (tail[end-N+1:end]...,))
 
 pattern!(lvl::SparseCooLevel{N, Ti, Tp}) where {N, Ti, Tp} = 
-    SparseCooLevel{N, Ti, Tp}(lvl.I, lvl.tbl, lvl.pos, pattern!(lvl.lvl))
+    SparseCooLevel{N, Ti, Tp}(pattern!(lvl.lvl), lvl.I, lvl.tbl, lvl.pos)
 
 function Base.show(io::IO, lvl::SparseCooLevel{N, Ti, Tp}) where {N, Ti, Tp}
     if get(io, :compact, false)
@@ -38,6 +36,8 @@ function Base.show(io::IO, lvl::SparseCooLevel{N, Ti, Tp}) where {N, Ti, Tp}
     else
         print(io, "SparseCoo{$N, $Ti, $Tp}(")
     end
+    show(io, lvl.lvl)
+    print(io, ", ")
     show(IOContext(io, :typeinfo=>Ti), lvl.I)
     print(io, ", ")
     if get(io, :compact, false)
@@ -52,8 +52,6 @@ function Base.show(io::IO, lvl::SparseCooLevel{N, Ti, Tp}) where {N, Ti, Tp}
         print(io, "), ")
         show(IOContext(io, :typeinfo=>Vector{Tp}), lvl.pos)
     end
-    print(io, ", ")
-    show(io, lvl.lvl)
     print(io, ")")
 end
 
@@ -61,7 +59,7 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseCoo
     p = fbr.pos
     crds = fbr.lvl.pos[p]:fbr.lvl.pos[p + 1] - 1
 
-    print_coord(io, q) = (print(io, "["); foreach(n -> (show(io, fbr.lvl.tbl[n][q]); print(io, ", ")), 1:N-1); show(io, fbr.lvl.tbl[N][q]); print(io, "]"))
+    print_coord(io, q) = (print(io, "["); join(io, map(n -> fbr.lvl.tbl[n][q], 1:N), ", "); print(io, "]"))
     get_fbr(q) = fbr(map(n -> fbr.lvl.tbl[n][q], 1:N)...)
 
     dims = size(fbr)
@@ -70,8 +68,8 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseCoo
 end
 
 @inline level_ndims(::Type{<:SparseCooLevel{N, Ti, Tp, Tbl, Lvl}}) where {N, Ti, Tp, Tbl, Lvl} = N + level_ndims(Lvl)
-@inline level_size(lvl::SparseCooLevel) = (lvl.I..., level_size(lvl.lvl)...)
-@inline level_axes(lvl::SparseCooLevel) = (map(Base.OneTo, lvl.I)..., level_axes(lvl.lvl)...)
+@inline level_size(lvl::SparseCooLevel) = (level_size(lvl.lvl)..., lvl.I...)
+@inline level_axes(lvl::SparseCooLevel) = (level_axes(lvl.lvl)..., map(Base.OneTo, lvl.I)...)
 @inline level_eltype(::Type{<:SparseCooLevel{N, Ti, Tp, Tbl, Lvl}}) where {N, Ti, Tp, Tbl, Lvl} = level_eltype(Lvl)
 @inline level_default(::Type{<:SparseCooLevel{N, Ti, Tp, Tbl, Lvl}}) where {N, Ti, Tp, Tbl, Lvl} = level_default(Lvl)
 data_rep_level(::Type{<:SparseCooLevel{N, Ti, Tp, Tbl, Lvl}}) where {N, Ti, Tp, Tbl, Lvl} = (SparseData^N)(data_rep_level(Lvl))
@@ -79,15 +77,18 @@ data_rep_level(::Type{<:SparseCooLevel{N, Ti, Tp, Tbl, Lvl}}) where {N, Ti, Tp, 
 (fbr::AbstractFiber{<:SparseCooLevel})() = fbr
 (fbr::SubFiber{<:SparseCooLevel})() = fbr
 function (fbr::SubFiber{<:SparseCooLevel{N, Ti}})(idxs...) where {N, Ti}
+    isempty(idxs) && return fbr
+    idx = idxs[end-N + 1:end]
     lvl = fbr.lvl
     target = lvl.pos[fbr.pos]:lvl.pos[fbr.pos + 1] - 1
-    for n = 1:N
-        target = searchsorted(view(lvl.tbl[n], target), idxs[n]) .+ (first(target) - 1)
+    for n = N:-1:1
+        target = searchsorted(view(lvl.tbl[n], target), idx[n]) .+ (first(target) - 1)
     end
-    isempty(target) ? default(fbr) : SubFiber(lvl.lvl, first(target))(idxs[N + 1:end]...)
+    isempty(target) ? default(fbr) : SubFiber(lvl.lvl, first(target))(idxs[1:end-N]...)
 end
 
 mutable struct VirtualSparseCooLevel
+    lvl
     ex
     N
     Ti
@@ -97,7 +98,6 @@ mutable struct VirtualSparseCooLevel
     qos_fill
     qos_stop
     dirty
-    lvl
 end
 function virtualize(ex, ::Type{SparseCooLevel{N, Ti, Tp, Tbl, Lvl}}, ctx, tag=:lvl) where {N, Ti, Tp, Tbl, Lvl}   
     sym = ctx.freshen(tag)
@@ -109,15 +109,15 @@ function virtualize(ex, ::Type{SparseCooLevel{N, Ti, Tp, Tbl, Lvl}}, ctx, tag=:l
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
     dirty = ctx.freshen(sym, :_dirty)
-    VirtualSparseCooLevel(sym, N, Ti, Tp, Tbl, I, qos_fill, qos_stop, dirty,  lvl_2)
+    VirtualSparseCooLevel(lvl_2, sym, N, Ti, Tp, Tbl, I, qos_fill, qos_stop, dirty)
 end
 function (ctx::Finch.LowerJulia)(lvl::VirtualSparseCooLevel)
     quote
         $SparseCooLevel{$(lvl.N), $(lvl.Ti), $(lvl.Tp)}(
+            $(ctx(lvl.lvl)),
             ($(map(ctx, lvl.I)...),),
             $(lvl.ex).tbl,
             $(lvl.ex).pos,
-            $(ctx(lvl.lvl)),
         )
     end
 end
@@ -126,12 +126,12 @@ summary_f_code(lvl::VirtualSparseCooLevel) = "sc{$(lvl.N)}($(summary_f_code(lvl.
 
 function virtual_level_size(lvl::VirtualSparseCooLevel, ctx::LowerJulia)
     ext = map((ti, stop)->Extent(literal(ti(1)), stop), lvl.Ti.parameters, lvl.I)
-    (ext..., virtual_level_size(lvl.lvl, ctx)...)
+    (virtual_level_size(lvl.lvl, ctx)..., ext...)
 end
 
 function virtual_level_resize!(lvl::VirtualSparseCooLevel, ctx::LowerJulia, dims...)
-    lvl.I = map(getstop, dims[1:lvl.N])
-    lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims[lvl.N + 1:end]...)
+    lvl.I = map(getstop, dims[end - lvl.N + 1:end])
+    lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims[1:end - lvl.N]...)
     lvl
 end
 
@@ -193,7 +193,7 @@ function get_level_reader(lvl::VirtualSparseCooLevel, ctx, pos, protos...)
     start = value(:($(lvl.ex).pos[$(ctx(pos))]), lvl.Tp)
     stop = value(:($(lvl.ex).pos[$(ctx(pos)) + 1]), lvl.Tp)
 
-    get_multilevel_range_reader(lvl::VirtualSparseCooLevel, ctx, 1, start, stop, protos...)
+    get_multilevel_range_reader(lvl::VirtualSparseCooLevel, ctx, lvl.N, start, stop, protos...)
 end
 
 function get_multilevel_range_reader(lvl::VirtualSparseCooLevel, ctx, R, start, stop, ::Union{Nothing, Walk}, protos...)
@@ -230,7 +230,7 @@ function get_multilevel_range_reader(lvl::VirtualSparseCooLevel, ctx, R, start, 
                                 $my_q += $(Tp(1))
                             end
                         end,
-                        body = if R == lvl.N
+                        body = if R == 1
                             Thunk(
                                 preamble = quote
                                     $my_i = $(lvl.ex).tbl[$R][$my_q]
@@ -259,7 +259,7 @@ function get_multilevel_range_reader(lvl::VirtualSparseCooLevel, ctx, R, start, 
                                     stride = (ctx, idx, ext) -> value(my_i),
                                     chunk = Spike(
                                         body = Simplify(Fill(virtual_level_default(lvl))),
-                                        tail = get_multilevel_range_reader(lvl, ctx, R + 1, value(my_q, lvl.Ti), value(my_q_step, lvl.Ti), protos...),
+                                        tail = get_multilevel_range_reader(lvl, ctx, R - 1, value(my_q, lvl.Ti), value(my_q_step, lvl.Ti), protos...),
                                     ),
                                     next = (ctx, idx, ext) -> quote
                                         $my_q = $my_q_step
@@ -312,7 +312,7 @@ function get_multilevel_append_updater(lvl::VirtualSparseCooLevel, ctx, qos, coo
             if length(coords) + 1 < lvl.N
                 Lookup(
                     val = virtual_level_default(lvl),
-                    body = (i) -> get_multilevel_append_updater(lvl, ctx, qos, (coords..., i), protos...)
+                    body = (i) -> get_multilevel_append_updater(lvl, ctx, qos, (i, coords...), protos...)
                 )
             else
                 AcceptSpike(
@@ -332,7 +332,7 @@ function get_multilevel_append_updater(lvl::VirtualSparseCooLevel, ctx, qos, coo
                         epilogue = quote
                             if $(ctx(get_dirty(lvl.lvl, ctx)))
                                 $(lvl.dirty) = true
-                                $(Expr(:block, map(enumerate((coords..., idx))) do (n, i)
+                                $(Expr(:block, map(enumerate((idx, coords...))) do (n, i)
                                     :($(lvl.ex).tbl[$n][$qos] = $(ctx(i)))
                                 end...))
                                 $qos += $(Tp(1))

@@ -1,7 +1,7 @@
 @testset "issues" begin
     #https://github.com/willow-ahrens/Finch.jl/issues/51
     let
-        x = Fiber(Dense(3, Element(0.0, [1, 2, 3])))
+        x = @fiber(d(e(0.0)), [1, 2, 3])
         y = Scalar{0.0}()
         @finch @loop i j y[] += min(x[i], x[j])
         @test y[] == 14
@@ -9,7 +9,7 @@
 
     #https://github.com/willow-ahrens/Finch.jl/issues/53
     let
-        x = Fiber(SparseList(10, [1, 5], [1, 3, 7, 8], Pattern()))
+        x = @fiber(sl(p()), fsparse(([1, 3, 7, 8],), [true, true, true, true], (10,)))
         y = Scalar{0.0}()
         @finch @loop i y[] += ifelse(x[i], 3, -1)
         @test y[] == 6
@@ -19,8 +19,8 @@
 
     #https://github.com/willow-ahrens/Finch.jl/issues/59
     let
-        B = Fiber(Dense(3, Element(0, [2, 4, 5])))
-        A = @fiber d(6, e(0))
+        B = @fiber(d(e(0)), [2, 4, 5])
+        A = @fiber(d(e(0), 6))
         @finch @loop i A[B[i]] = i
         @test reference_isequal(A, [0, 1, 0, 2, 3, 0])
     end
@@ -43,7 +43,7 @@
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/61
-    I = copyto!(@fiber(rl{0, Int64, Int64}()), [1, 1, 1, 3, 3, 1, 5, 5, 5])
+    I = copyto!(@fiber(rl(0)), [1, 1, 9, 3, 3])
     A = [
         11 12 13 14 15;
         21 22 23 24 25;
@@ -54,15 +54,11 @@
         71 72 73 74 75;
         81 82 83 84 85;
         91 92 93 94 95]
-    A = copyto!(@fiber(d{Int64}(d{Int64}(e(0)))), A)
-    B = @fiber(d{Int64}(e(0)))
+    A = copyto!(@fiber(d(d(e(0)))), A)
+    B = @fiber(d(e(0)))
     
-    @test check_output("fiber_as_idx.jl", @finch_code @loop i B[i] = A[i, I[i]])
-    @finch @loop i B[i] = A[i, I[i]]
+    @test check_output("fiber_as_idx.jl", @finch_code @loop i B[i] = A[I[i], i])
+    @finch @loop i B[i] = A[I[i], i]
 
-    B_ref = Fiber(Dense{Int64}(9, Element(0, [11, 21, 31, 43, 53, 61, 75, 85, 95])))
-
-    @test isstructequal(B, B_ref)
-    
-    
+    @test B == [11, 12, 93, 34, 35]
 end

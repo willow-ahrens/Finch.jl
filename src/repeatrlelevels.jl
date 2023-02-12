@@ -4,22 +4,16 @@ struct RepeatRLELevel{D, Ti, Tp, Tv}
     idx::Vector{Ti}
     val::Vector{Tv}
 end
+
 const RepeatRLE = RepeatRLELevel
-RepeatRLELevel(D, args...) = RepeatRLELevel{D}(args...)
+RepeatRLELevel(d, args...) = RepeatRLELevel{d}(args...)
+RepeatRLELevel{D}() where {D} = RepeatRLELevel{D, Int}()
+RepeatRLELevel{D}(I, args...) where {D} = RepeatRLELevel{D, typeof(I)}(I, args...)
+RepeatRLELevel{D, Ti}(args...) where {D, Ti} = RepeatRLELevel{D, Ti, Int}(args...)
+RepeatRLELevel{D, Ti, Tp}(args...) where {D, Ti, Tp} = RepeatRLELevel{D, Ti, Tp, typeof(D)}(args...)
 
-RepeatRLELevel{D}() where {D} = RepeatRLELevel{D}(0)
-RepeatRLELevel{D, Ti}() where {D, Ti} = RepeatRLELevel{D, Ti}(zero(Ti))
-RepeatRLELevel{D, Ti, Tp}() where {D, Ti, Tp} = RepeatRLELevel{D, Ti, Tp}(zero(Ti))
 RepeatRLELevel{D, Ti, Tp, Tv}() where {D, Ti, Tp, Tv} = RepeatRLELevel{D, Ti, Tp, Tv}(zero(Ti))
-
-RepeatRLELevel{D}(I::Ti) where {D, Ti} = RepeatRLELevel{D, Ti}(I)
-RepeatRLELevel{D, Ti}(I) where {D, Ti} = RepeatRLELevel{D, Ti, Int}(Ti(I))
-RepeatRLELevel{D, Ti, Tp}(I) where {D, Ti, Tp} = RepeatRLELevel{D, Ti, Tp, typeof(D)}(Ti(I))
 RepeatRLELevel{D, Ti, Tp, Tv}(I) where {D, Ti, Tp, Tv} = RepeatRLELevel{D, Ti, Tp, Tv}(Ti(I), Tp[1], Ti[], Tv[])
-
-RepeatRLELevel{D}(I::Ti, pos::Vector{Tp}, idx, val::Vector{Tv}) where {D, Ti, Tp, Tv} = RepeatRLELevel{D, Ti, Tp, Tv}(I, pos, idx, val)
-RepeatRLELevel{D, Ti}(I, pos::Vector{Tp}, idx, val::Vector{Tv}) where {D, Ti, Tp, Tv} = RepeatRLELevel{D, Ti, Tp, Tv}(Ti(I), pos, idx, val)
-RepeatRLELevel{D, Ti, Tp}(I, pos, idx, val::Vector{Tv}) where {D, Ti, Tp, Tv} = RepeatRLELevel{D, Ti, Tp, Tv}(Ti(I), pos, idx, val)
 
 """
 `f_code(rl)` = [RepeatRLELevel](@ref).
@@ -31,7 +25,7 @@ similar_level(::RepeatRLELevel{D}, dim, tail...) where {D} = RepeatRLE{D}(dim)
 data_rep_level(::Type{<:RepeatRLELevel{D, Ti, Tp, Tv}}) where {D, Ti, Tp, Tv} = RepeatData(D, Tv)
 
 pattern!(lvl::RepeatRLELevel{D, Ti}) where {D, Ti} = 
-    DenseLevel{Ti}(lvl.I, Pattern())
+    DenseLevel{Ti}(Pattern(), lvl.I)
 
 function Base.show(io::IO, lvl::RepeatRLELevel{D, Ti, Tp, Tv}) where {D, Ti, Tp, Tv}
     print(io, "RepeatRLE{")

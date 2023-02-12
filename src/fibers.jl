@@ -72,11 +72,11 @@ function initialize!(fbr::VirtualFiber, ctx::LowerJulia)
 end
 
 function get_reader(fbr::VirtualFiber, ctx::LowerJulia, protos...)
-    return get_level_reader(fbr.lvl, ctx, literal(1), protos...)
+    return get_level_reader(fbr.lvl, ctx, literal(1), reverse(protos)...)
 end
 
 function get_updater(fbr::VirtualFiber, ctx::LowerJulia, protos...)
-    return get_level_updater(fbr.lvl, ctx, literal(1), protos...)
+    return get_level_updater(fbr.lvl, ctx, literal(1), reverse(protos)...)
 end
 
 """
@@ -223,28 +223,36 @@ function display_fiber_data(io::IO, mime::MIME"text/plain", fbr, depth, N, crds,
     end
 end
 
+function f_decode(ex)
+    if ex isa Expr && ex.head == :$
+        return esc(ex.args[1])
+    elseif ex isa Expr
+        return Expr(ex.head, map(f_decode, ex.args)...)
+    elseif ex isa Symbol
+        return :(@something($f_code($(Val(ex))), $(esc(ex))))
+    else
+        return esc(ex)
+    end
+end
+
 """
-    @fiber ctr
+    @fiber ctr [arg]
 
 Construct a fiber using abbreviated level constructor names. To override
 abbreviations, expressions may be interpolated with `\$`. For example,
 `Fiber(DenseLevel(SparseListLevel(Element(0.0))))` can also be constructed as
 `@fiber(sl(d(e(0.0))))`. Consult the documentation for the helper function
 [f_code](@ref) for a full listing of level format codes.
+
+Optionally, an argument may be specified to copy into the fiber. This expression
+allocates. Use `fiber(arg)` for a zero-cost copy, if available.
 """
 macro fiber(ex)
-    function walk(ex)
-        if ex isa Expr && ex.head == :$
-            return esc(ex.args[1])
-        elseif ex isa Expr
-            return Expr(ex.head, map(walk, ex.args)...)
-        elseif ex isa Symbol
-            return :(@something($f_code($(Val(ex))), $(esc(ex))))
-        else
-            return esc(ex)
-        end
-    end
-    return :($Fiber!($(walk(ex))))
+    return :($Fiber!($(f_decode(ex))))
+end
+
+macro fiber(ex, arg)
+    return :($dropdefaults!($Fiber!($(f_decode(ex))), $(esc(arg))))
 end
 
 @inline f_code(@nospecialize ::Any) = nothing

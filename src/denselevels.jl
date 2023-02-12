@@ -1,10 +1,13 @@
 struct DenseLevel{Ti, Lvl}
-    I::Ti
     lvl::Lvl
+    I::Ti
 end
-DenseLevel{Ti}(I, lvl::Lvl) where {Ti, Lvl} = DenseLevel{Ti, Lvl}(I, lvl)
-DenseLevel{Ti}(lvl::Lvl) where {Ti, Lvl} = DenseLevel{Ti, Lvl}(zero(Ti), lvl)
-DenseLevel(lvl) = DenseLevel(0, lvl)
+DenseLevel(lvl) = DenseLevel{Int}(lvl)
+DenseLevel(lvl, I::Ti, args...) where {Ti} = DenseLevel{Ti}(lvl, I, args...)
+DenseLevel{Ti}(lvl, args...) where {Ti} = DenseLevel{Ti, typeof(lvl)}(lvl, args...)
+
+DenseLevel{Ti, Lvl}(lvl) where {Ti, Lvl} = DenseLevel{Ti, Lvl}(lvl, zero(Ti))
+
 const Dense = DenseLevel
 
 """
@@ -13,25 +16,26 @@ const Dense = DenseLevel
 f_code(::Val{:d}) = Dense
 summary_f_code(lvl::Dense) = "d($(summary_f_code(lvl.lvl)))"
 similar_level(lvl::DenseLevel) = Dense(similar_level(lvl.lvl))
-similar_level(lvl::DenseLevel, dim, tail...) = Dense(dim, similar_level(lvl.lvl, tail...))
+similar_level(lvl::DenseLevel, dims...) = Dense(similar_level(lvl.lvl, dims[1:end-1]...), dims[end])
 
 pattern!(lvl::DenseLevel{Ti}) where {Ti} = 
-    DenseLevel{Ti}(lvl.I, pattern!(lvl.lvl))
+    DenseLevel{Ti}(pattern!(lvl.lvl), lvl.I)
 
 @inline level_ndims(::Type{<:DenseLevel{Ti, Lvl}}) where {Ti, Lvl} = 1 + level_ndims(Lvl)
-@inline level_size(lvl::DenseLevel) = (lvl.I, level_size(lvl.lvl)...)
-@inline level_axes(lvl::DenseLevel) = (Base.OneTo(lvl.I), level_axes(lvl.lvl)...)
+@inline level_size(lvl::DenseLevel) = (level_size(lvl.lvl)..., lvl.I)
+@inline level_axes(lvl::DenseLevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.I))
 @inline level_eltype(::Type{<:DenseLevel{Ti, Lvl}}) where {Ti, Lvl} = level_eltype(Lvl)
 @inline level_default(::Type{<:DenseLevel{Ti, Lvl}}) where {Ti, Lvl} = level_default(Lvl)
 data_rep_level(::Type{<:DenseLevel{Ti, Lvl}}) where {Ti, Lvl} = DenseData(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:DenseLevel})() = fbr
-function (fbr::SubFiber{<:DenseLevel{Ti}})(i, tail...) where {Ti}
+function (fbr::SubFiber{<:DenseLevel{Ti}})(idxs...) where {Ti}
+    isempty(idxs) && return fbr
     lvl = fbr.lvl
     p = fbr.pos
-    q = (p - 1) * lvl.I + i
+    q = (p - 1) * lvl.I + idxs[end]
     fbr_2 = SubFiber(lvl.lvl, q)
-    fbr_2(tail...)
+    fbr_2(idxs[1:end-1]...)
 end
 
 function Base.show(io::IO, lvl::DenseLevel{Ti}) where {Ti}
@@ -40,9 +44,9 @@ function Base.show(io::IO, lvl::DenseLevel{Ti}) where {Ti}
     else
         print(io, "Dense{$Ti}(")
     end
-    show(io, lvl.I)
-    print(io, ", ")
     show(io, lvl.lvl)
+    print(io, ", ")
+    show(io, lvl.I)
     print(io, ")")
 end 
 
@@ -56,10 +60,10 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:DenseLeve
 end
 
 mutable struct VirtualDenseLevel
+    lvl
     ex
     Ti
     I
-    lvl
 end
 function virtualize(ex, ::Type{DenseLevel{Ti, Lvl}}, ctx, tag=:lvl) where {Ti, Lvl}
     sym = ctx.freshen(tag)
@@ -68,13 +72,13 @@ function virtualize(ex, ::Type{DenseLevel{Ti, Lvl}}, ctx, tag=:lvl) where {Ti, L
         $sym = $ex
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualDenseLevel(sym, Ti, I, lvl_2)
+    VirtualDenseLevel(lvl_2, sym, Ti, I)
 end
 function (ctx::Finch.LowerJulia)(lvl::VirtualDenseLevel)
     quote
         $DenseLevel{$(lvl.Ti)}(
-            $(ctx(lvl.I)),
             $(ctx(lvl.lvl)),
+            $(ctx(lvl.I)),
         )
     end
 end
@@ -83,12 +87,12 @@ summary_f_code(lvl::VirtualDenseLevel) = "d($(summary_f_code(lvl.lvl)))"
 
 function virtual_level_size(lvl::VirtualDenseLevel, ctx)
     ext = Extent(literal(lvl.Ti(1)), lvl.I)
-    (ext, virtual_level_size(lvl.lvl, ctx)...)
+    (virtual_level_size(lvl.lvl, ctx)..., ext)
 end
 
-function virtual_level_resize!(lvl::VirtualDenseLevel, ctx, dim, dims...)
-    lvl.I = getstop(dim)
-    lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims...)
+function virtual_level_resize!(lvl::VirtualDenseLevel, ctx, dims...)
+    lvl.I = getstop(dims[end])
+    lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims[1:end-1]...)
     lvl
 end
 

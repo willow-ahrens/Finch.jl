@@ -50,7 +50,7 @@ function (ctx::AccessRunVisitor)(node::IndexNode)
         if tns_2 === nothing
             access(node.tns, node.mode, map(ctx, node.idxs)...)
         else
-            access(tns_2, node.mode, map(ctx, node.idxs[2:end])...)
+            access(tns_2, node.mode, map(ctx, node.idxs[1:end - 1])...)
         end
     elseif istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))
@@ -136,7 +136,7 @@ function (ctx::AcceptRunVisitor)(node::IndexNode)
         if tns_2 === nothing
             access(node.tns, node.mode, map(ctx, node.idxs)...)
         else
-            access(tns_2, node.mode, map(ctx, node.idxs[2:end])...)
+            access(tns_2, node.mode, map(ctx, node.idxs[1:end-1])...)
         end
     elseif istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))

@@ -8,6 +8,8 @@ f_code(::Val{:p}) = Pattern
 summary_f_code(::Pattern) = "p()"
 similar_level(::PatternLevel) = PatternLevel()
 
+pattern!(::PatternLevel) = Pattern()
+
 function Base.show(io::IO, lvl::PatternLevel)
     print(io, "Pattern()")
 end 
@@ -27,16 +29,16 @@ Return the pattern of `fbr`. That is, return a fiber which is true wherever
 original fiber unusable when modified.
 
 ```jldoctest
-julia> A = Finch.Fiber(SparseList(10, [1, 6], [1, 3, 5, 7, 9], Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
+julia> A = @fiber(sl(e(0.0), 10), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
 SparseList (0.0) [1:10]
-│ 
+│
 └─[1] [3] [5] [7] [9]
   2.0 3.0 4.0 5.0 6.0
 
 julia> pattern!(A)
 SparseList (false) [1:10]
-│ 
-└─[1]  [3]  [5]  [7]  [9] 
+│
+└─[1]  [3]  [5]  [7]  [9]
   true true true true true
 ```
 """

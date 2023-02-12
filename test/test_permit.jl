@@ -1,17 +1,6 @@
 @testset "permit" begin
     using SparseArrays
 
-
-    #=
-    v = Array{Any}(zeros(5, 10))
-    a = Fiber(Dense(5, Element(0, [1, 2, 3, 4, 5])))
-    println(@finch_code @loop i j v[i, j] = a[offset[i, j]])
-    @finch @loop i j v[i, j] = a[offset[i, j]]
-    display(v)
-    =#
-
-    #TODO all these tests need to be overhauled
-
     A_ref = sprand(10, 0.5); B_ref = sprand(10, 0.5); C_ref = vcat(A_ref, B_ref)
     A = fiber(SparseVector{Float64, Int64}(A_ref)); B = fiber(SparseVector{Float64, Int64}(B_ref)); C = @fiber(sl{Int64}(e(0.0)))
     off = staticoffset(10)
@@ -21,8 +10,8 @@
 
     F = fiber(Int64[1,1,1,1,1])
 
-    @test check_output("sparse_conv.jl", @finch_code @loop i j C[i] += (A[i] != 0) * coalesce(A[offset[i - 3, j]], 0) * F[j])
-    @finch @loop i j C[i] += (A[i] != 0) * coalesce(A[offset[i - 3, j]], 0) * F[j]
+    @test check_output("sparse_conv.jl", @finch_code @loop i j C[i] += (A[i] != 0) * coalesce(A[offset[j, i - 3]], 0) * F[j])
+    @finch @loop i j C[i] += (A[i] != 0) * coalesce(A[offset[j, i - 3]], 0) * F[j]
     C_ref = zeros(10)
     for i = 1:10
         if A_ref[i] != 0
@@ -35,8 +24,8 @@
         end
     end
     @test reference_isequal(C, C_ref)
-    @test check_output("sparse_conv_guarded.jl", @finch_code @loop i j C[i] += (A[i] != 0) * coalesce(A[offset[i - 3, j]], 0) * coalesce(F[permit[j]], 0))
-    @finch @loop i j C[i] += (A[i] != 0) * coalesce(A[offset[i - 3, j]], 0) * coalesce(F[permit[j]], 0)
+    @test check_output("sparse_conv_guarded.jl", @finch_code @loop i j C[i] += (A[i] != 0) * coalesce(A[offset[j, i - 3]], 0) * coalesce(F[permit[j]], 0))
+    @finch @loop i j C[i] += (A[i] != 0) * coalesce(A[offset[j, i - 3]], 0) * coalesce(F[permit[j]], 0)
     @test reference_isequal(C, C_ref)
 
     win = window(2, 4)

@@ -77,8 +77,8 @@ virtualize(ex, ::Type{Offset}, ctx) = VirtualOffset()
 (ctx::LowerJulia)(tns::VirtualOffset) = :(Offset())
 
 virtual_size(arr::VirtualOffset, ctx::LowerJulia, dim) = (nodim, nodim)
-virtual_resize!(arr::VirtualOffset, ctx::LowerJulia, delta_dim, idx_dim) = (arr, virtual_eldim(arr, ctx, delta_dim, idx_dim))
-virtual_eldim(arr::VirtualOffset, ctx::LowerJulia, delta_dim, idx_dim) = combinedim(ctx, widendim(shiftdim(idx_dim, call(-, getstop(delta_dim)))), widendim(idx_dim))
+virtual_resize!(arr::VirtualOffset, ctx::LowerJulia, idx_dim, delta_dim) = (arr, virtual_eldim(arr, ctx, delta_dim, idx_dim))
+virtual_eldim(arr::VirtualOffset, ctx::LowerJulia, idx_dim, delta_dim) = combinedim(ctx, widendim(shiftdim(idx_dim, call(-, getstop(delta_dim)))), widendim(idx_dim))
 
 function get_reader(::VirtualOffset, ctx, proto_delta, proto_idx)
     tns = Furlable(

@@ -1,8 +1,6 @@
 @testset "skips" begin
 
-    A = Fiber(
-        SparseList{Int64}(10, [1, 6], [1, 3, 5, 7, 9],
-        Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
+    A = @fiber(sl(e(0.0)), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
     B = Scalar{0.0}()
 
     @test check_output("sieve_hl_cond.jl", @finch_code (@loop j @sieve j == 1 B[] += A[j]))

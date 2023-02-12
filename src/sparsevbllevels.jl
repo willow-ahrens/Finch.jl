@@ -1,22 +1,20 @@
 struct SparseVBLLevel{Ti, Tp, Lvl}
+    lvl::Lvl
     I::Ti
     pos::Vector{Tp}
     idx::Vector{Ti}
     ofs::Vector{Tp}
-    lvl::Lvl
 end
+
 const SparseVBL = SparseVBLLevel
-SparseVBLLevel(lvl) = SparseVBLLevel(0, lvl)
-SparseVBLLevel{Ti}(lvl) where {Ti} = SparseVBLLevel{Ti}(zero(Ti), lvl)
-SparseVBLLevel{Ti, Tp}(lvl) where {Ti, Tp} = SparseVBLLevel{Ti, Tp}(zero(Ti), lvl)
+SparseVBLLevel(lvl, ) = SparseVBLLevel{Int}(lvl)
+SparseVBLLevel(lvl, I, args...) = SparseVBLLevel{typeof(I)}(lvl, I, args...)
+SparseVBLLevel{Ti}(lvl, args...) where {Ti} = SparseVBLLevel{Ti, Int}(lvl, args...)
+SparseVBLLevel{Ti, Tp}(lvl, args...) where {Ti, Tp} = SparseVBLLevel{Ti, Tp, typeof(lvl)}(lvl, args...)
 
-SparseVBLLevel(I::Ti, lvl) where {Ti} = SparseVBLLevel{Ti}(I, lvl)
-SparseVBLLevel{Ti}(I, lvl) where {Ti} = SparseVBLLevel{Ti, Int}(Ti(I), lvl)
-SparseVBLLevel{Ti, Tp}(I, lvl::Lvl) where {Ti, Tp, Lvl} = SparseVBLLevel{Ti, Tp, Lvl}(Ti(I), Tp[1], Ti[], Ti[], lvl)
-
-SparseVBLLevel(I::Ti, pos::Vector{Tp}, idx, ofs, lvl::Lvl) where {Ti, Tp, Lvl} = SparseVBLLevel{Ti, Tp, Lvl}(I, pos, idx, ofs, lvl)
-SparseVBLLevel{Ti}(I, pos::Vector{Tp}, idx, ofs, lvl::Lvl) where {Ti, Tp, Lvl} = SparseVBLLevel{Ti, Tp, Lvl}(Ti(I), pos, idx, ofs, lvl)
-SparseVBLLevel{Ti, Tp}(I, pos, idx, ofs, lvl::Lvl) where {Ti, Tp, Lvl} = SparseVBLLevel{Ti, Tp, Lvl}(Ti(I), pos, idx, ofs, lvl)
+SparseVBLLevel{Ti, Tp, Lvl}(lvl) where {Ti, Tp, Lvl} = SparseVBLLevel{Ti, Tp, Lvl}(lvl, zero(Ti))
+SparseVBLLevel{Ti, Tp, Lvl}(lvl, I) where {Ti, Tp, Lvl} = 
+    SparseVBLLevel{Ti, Tp, Lvl}(lvl, I, Tp[1], Ti[], Ti[])
 
 """
 `f_code(sv)` = [SparseVBLLevel](@ref).
@@ -24,10 +22,10 @@ SparseVBLLevel{Ti, Tp}(I, pos, idx, ofs, lvl::Lvl) where {Ti, Tp, Lvl} = SparseV
 f_code(::Val{:sv}) = SparseVBL
 summary_f_code(lvl::SparseVBLLevel) = "sv($(summary_f_code(lvl.lvl)))"
 similar_level(lvl::SparseVBLLevel) = SparseVBL(similar_level(lvl.lvl))
-similar_level(lvl::SparseVBLLevel, dim, tail...) = SparseVBL(dim, similar_level(lvl.lvl, tail...))
+similar_level(lvl::SparseVBLLevel, dim, tail...) = SparseVBL(similar_level(lvl.lvl, tail...), dim)
 
 pattern!(lvl::SparseVBLLevel{Ti}) where {Ti} = 
-    SparseVBLLevel{Ti}(lvl.I, lvl.pos, lvl.idx, lvl.ofs, pattern!(lvl.lvl))
+    SparseVBLLevel{Ti}(pattern!(lvl.lvl), lvl.I, lvl.pos, lvl.idx, lvl.ofs)
 
 function Base.show(io::IO, lvl::SparseVBLLevel{Ti, Tp}) where {Ti, Tp}
     if get(io, :compact, false)
@@ -35,6 +33,8 @@ function Base.show(io::IO, lvl::SparseVBLLevel{Ti, Tp}) where {Ti, Tp}
     else
         print(io, "SparseVBL{$Ti, $Tp}(")
     end
+    show(io, lvl.lvl)
+    print(io, ", ")
     show(IOContext(io, :typeinfo=>Ti), lvl.I)
     print(io, ", ")
     if get(io, :compact, false)
@@ -46,8 +46,6 @@ function Base.show(io::IO, lvl::SparseVBLLevel{Ti, Tp}) where {Ti, Tp}
         print(io, ", ")
         show(IOContext(io, :typeinfo=>Vector{Tp}), lvl.ofs)
     end
-    print(io, ", ")
-    show(io, lvl.lvl)
     print(io, ")")
 end
 
@@ -75,18 +73,20 @@ end
 data_rep_level(::Type{<:SparseVBLLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = SparseData(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:SparseVBLLevel})() = fbr
-function (fbr::SubFiber{<:SparseVBLLevel})(i, tail...)
+function (fbr::SubFiber{<:SparseVBLLevel})(idxs...)
+    isempty(idxs) && return fbr
     lvl = fbr.lvl
     p = fbr.pos
-    r = lvl.pos[p] + searchsortedfirst(@view(lvl.idx[lvl.pos[p]:lvl.pos[p + 1] - 1]), i) - 1
+    r = lvl.pos[p] + searchsortedfirst(@view(lvl.idx[lvl.pos[p]:lvl.pos[p + 1] - 1]), idxs[end]) - 1
     r < lvl.pos[p + 1] || return default(fbr)
-    q = lvl.ofs[r + 1] - 1 - lvl.idx[r] + i
+    q = lvl.ofs[r + 1] - 1 - lvl.idx[r] + idxs[end]
     q >= lvl.ofs[r] || return default(fbr)
     fbr_2 = SubFiber(lvl.lvl, q)
-    return fbr_2(tail...)
+    return fbr_2(idxs[1:end-1]...)
 end
 
 mutable struct VirtualSparseVBLLevel
+    lvl
     ex
     Ti
     Tp
@@ -96,7 +96,6 @@ mutable struct VirtualSparseVBLLevel
     ros_fill
     ros_stop
     dirty
-    lvl
 end
 function virtualize(ex, ::Type{SparseVBLLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}
     sym = ctx.freshen(tag)
@@ -110,16 +109,16 @@ function virtualize(ex, ::Type{SparseVBLLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) wher
         $sym = $ex
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualSparseVBLLevel(sym, Ti, Tp, I, qos_fill, qos_stop, ros_fill, ros_stop, dirty, lvl_2)
+    VirtualSparseVBLLevel(lvl_2, sym, Ti, Tp, I, qos_fill, qos_stop, ros_fill, ros_stop, dirty)
 end
 function (ctx::Finch.LowerJulia)(lvl::VirtualSparseVBLLevel)
     quote
         $SparseVBLLevel{$(lvl.Ti)}(
+            $(ctx(lvl.lvl)),
             $(ctx(lvl.I)),
             $(lvl.ex).pos,
             $(lvl.ex).idx,
             $(lvl.ex).ofs,
-            $(ctx(lvl.lvl)),
         )
     end
 end
@@ -128,12 +127,12 @@ summary_f_code(lvl::VirtualSparseVBLLevel) = "sv($(summary_f_code(lvl.lvl)))"
 
 function virtual_level_size(lvl::VirtualSparseVBLLevel, ctx)
     ext = Extent(literal(lvl.Ti(1)), lvl.I)
-    (ext, virtual_level_size(lvl.lvl, ctx)...)
+    (virtual_level_size(lvl.lvl, ctx)..., ext)
 end
 
-function virtual_level_resize!(lvl::VirtualSparseVBLLevel, ctx, dim, dims...)
-    lvl.I = getstop(dim)
-    lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims...)
+function virtual_level_resize!(lvl::VirtualSparseVBLLevel, ctx, dims...)
+    lvl.I = getstop(dims[end])
+    lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims[1:end-1]...)
     lvl
 end
 

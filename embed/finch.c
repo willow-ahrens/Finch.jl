@@ -313,33 +313,3 @@ jl_value_t* finch_Vector_Float64(double *ptr, int len){
 jl_value_t* finch_Vector_Int64(int64_t *ptr, int len){
     return finch_mirror_vector(jl_int64_type, (void*)ptr, len);
 }
-
-jl_value_t* finch_Fiber(jl_value_t* lvl){
-    jl_value_t *res = finch_call(Fiber, lvl);
-    return res;
-}
-
-jl_value_t* finch_SparseList(jl_value_t *n, jl_value_t* lvl){
-    jl_value_t *res = finch_call(SparseList, n, lvl);
-    return res;
-}
-
-jl_value_t* finch_SparseListLevel(jl_value_t *n, jl_value_t *pos, jl_value_t *idx, jl_value_t* lvl){
-    jl_value_t *res = finch_call(SparseListLevel, n, pos, idx, lvl);
-    return res;
-}
-
-jl_value_t* finch_Dense(jl_value_t *n, jl_value_t* lvl){
-    jl_value_t *res = finch_call(Dense, n, lvl);
-    return res;
-}
-
-jl_value_t* finch_Element(jl_value_t *fill){
-    jl_value_t *res = finch_call(Element, fill);
-    return res;
-}
-
-jl_value_t* finch_ElementLevel(jl_value_t *fill, jl_value_t *val){
-    jl_value_t *res = finch_call(ElementLevel, fill, val);
-    return res;
-}
