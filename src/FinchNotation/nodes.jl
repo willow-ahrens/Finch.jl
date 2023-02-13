@@ -6,12 +6,12 @@ const IS_CONST = 4
 const ID = 8
 
 """
-    IndexHead
+    FinchNodeKind
 
-An IndexNode type represents many different Finch IR nodes, and an IndexHead
+An FinchNode type represents many different Finch IR nodes, and an FinchNodeKind
 enum is used to differentiate which kind of node is represented.
 """
-@enum IndexHead begin
+@enum FinchNodeKind begin
     variable =  0ID
     value    =  1ID | IS_CONST
     virtual  =  2ID
@@ -192,20 +192,20 @@ finch programs are wrapped by an outer `lifetime`.
 lifetime
 
 """
-    IndexNode
+    FinchNode
 
 A Finch IR node. Finch uses a variant of Concrete Index Notation as an
 intermediate representation. Consult the documentation of each node kind
 for more information.
 """
-struct IndexNode
-    kind::IndexHead
+struct FinchNode
+    kind::FinchNodeKind
     val::Any
     type::Any
-    children::Vector{IndexNode}
+    children::Vector{FinchNode}
 end
 
-isvalue(node::IndexNode) = node.kind === value
+isvalue(node::FinchNode) = node.kind === value
 #TODO Delete this one when you can
 isvalue(node) = false
 
@@ -216,126 +216,126 @@ Returns true if the node is an index statement, and false if the node is an
 index expression. Typically, index statements specify control flow and 
 index expressions describe values.
 """
-isstateful(node::IndexNode) = Int(node.kind) & IS_STATEFUL != 0
+isstateful(node::FinchNode) = Int(node.kind) & IS_STATEFUL != 0
 
-is_constant(node::IndexNode) = Int(node.kind) & IS_CONST != 0
+is_constant(node::FinchNode) = Int(node.kind) & IS_CONST != 0
 
-SyntaxInterface.istree(node::IndexNode) = Int(node.kind) & IS_TREE != 0
-SyntaxInterface.arguments(node::IndexNode) = node.children
-SyntaxInterface.operation(node::IndexNode) = node.kind
+SyntaxInterface.istree(node::FinchNode) = Int(node.kind) & IS_TREE != 0
+SyntaxInterface.arguments(node::FinchNode) = node.children
+SyntaxInterface.operation(node::FinchNode) = node.kind
 
 #TODO clean this up eventually
-function SyntaxInterface.similarterm(::Type{IndexNode}, op::IndexHead, args)
-    @assert istree(IndexNode(op, nothing, nothing, []))
-    IndexNode(op, nothing, nothing, args)
+function SyntaxInterface.similarterm(::Type{FinchNode}, op::FinchNodeKind, args)
+    @assert istree(FinchNode(op, nothing, nothing, []))
+    FinchNode(op, nothing, nothing, args)
 end
 
-function IndexNode(kind::IndexHead, args::Vector)
+function FinchNode(kind::FinchNodeKind, args::Vector)
     if kind === value
         if length(args) == 1
-            return IndexNode(value, args[1], Any, IndexNode[])
+            return FinchNode(value, args[1], Any, FinchNode[])
         elseif length(args) == 2
-            return IndexNode(value, args[1], args[2], IndexNode[])
+            return FinchNode(value, args[1], args[2], FinchNode[])
         else
             error("wrong number of arguments to value(...)")
         end
     elseif kind === literal
         if length(args) == 1
-            return IndexNode(kind, args[1], nothing, IndexNode[])
+            return FinchNode(kind, args[1], nothing, FinchNode[])
         else
             error("wrong number of arguments to $kind(...)")
         end
     elseif kind === index
         if length(args) == 1
-            return IndexNode(kind, args[1], nothing, IndexNode[])
+            return FinchNode(kind, args[1], nothing, FinchNode[])
         else
             error("wrong number of arguments to $kind(...)")
         end
     elseif kind === variable
         if length(args) == 1
-            return IndexNode(kind, args[1], nothing, IndexNode[])
+            return FinchNode(kind, args[1], nothing, FinchNode[])
         else
             error("wrong number of arguments to $kind(...)")
         end
     elseif kind === virtual
         if length(args) == 1
-            return IndexNode(kind, args[1], nothing, IndexNode[])
+            return FinchNode(kind, args[1], nothing, FinchNode[])
         else
             error("wrong number of arguments to $kind(...)")
         end
     elseif kind === with
         if length(args) == 2
-            return IndexNode(with, nothing, nothing, args)
+            return FinchNode(with, nothing, nothing, args)
         else
             error("wrong number of arguments to with(...)")
         end
     elseif kind === multi
-        return IndexNode(multi, nothing, nothing, args)
+        return FinchNode(multi, nothing, nothing, args)
     elseif kind === access
         if length(args) >= 2
-            return IndexNode(access, nothing, nothing, args)
+            return FinchNode(access, nothing, nothing, args)
         else
             error("wrong number of arguments to access(...)")
         end
     elseif kind === protocol
         if length(args) == 2
-            return IndexNode(protocol, nothing, nothing, args)
+            return FinchNode(protocol, nothing, nothing, args)
         else
             error("wrong number of arguments to protocol(...)")
         end
     elseif kind === call
         if length(args) >= 1
-            return IndexNode(call, nothing, nothing, args)
+            return FinchNode(call, nothing, nothing, args)
         else
             error("wrong number of arguments to call(...)")
         end
     elseif kind === loop
         if length(args) == 2
-            return IndexNode(loop, nothing, nothing, args)
+            return FinchNode(loop, nothing, nothing, args)
         else
             error("wrong number of arguments to loop(...)")
         end
     elseif kind === chunk
         if length(args) == 3
-            return IndexNode(chunk, nothing, nothing, args)
+            return FinchNode(chunk, nothing, nothing, args)
         else
             error("wrong number of arguments to chunk(...)")
         end
     elseif kind === sieve
         if length(args) == 2
-            return IndexNode(sieve, nothing, nothing, args)
+            return FinchNode(sieve, nothing, nothing, args)
         else
             error("wrong number of arguments to sieve(...)")
         end
     elseif kind === assign
         if length(args) == 3
-            return IndexNode(assign, nothing, nothing, args)
+            return FinchNode(assign, nothing, nothing, args)
         else
             error("wrong number of arguments to assign(...)")
         end
     elseif kind === pass
-        return IndexNode(pass, nothing, nothing, args)
+        return FinchNode(pass, nothing, nothing, args)
     elseif kind === reader
         if length(args) == 0
-            return IndexNode(kind, nothing, nothing, IndexNode[])
+            return FinchNode(kind, nothing, nothing, FinchNode[])
         else
             error("wrong number of arguments to reader()")
         end
     elseif kind === updater
         if length(args) == 1
-            return IndexNode(updater, nothing, nothing, args)
+            return FinchNode(updater, nothing, nothing, args)
         else
             error("wrong number of arguments to updater(...)")
         end
     elseif kind === modify
         if length(args) == 0
-            return IndexNode(kind, nothing, nothing, IndexNode[])
+            return FinchNode(kind, nothing, nothing, FinchNode[])
         else
             error("wrong number of arguments to modify()")
         end
     elseif kind === create
         if length(args) == 0
-            return IndexNode(kind, nothing, nothing, IndexNode[])
+            return FinchNode(kind, nothing, nothing, FinchNode[])
         else
             error("wrong number of arguments to create()")
         end
@@ -344,36 +344,36 @@ function IndexNode(kind::IndexHead, args::Vector)
     end
 end
 
-function (kind::IndexHead)(args...)
-    IndexNode(kind, Any[args...,])
+function (kind::FinchNodeKind)(args...)
+    FinchNode(kind, Any[args...,])
 end
 
-function Base.getproperty(node::IndexNode, sym::Symbol)
+function Base.getproperty(node::FinchNode, sym::Symbol)
     if sym === :kind || sym === :val || sym === :type || sym === :children
         return Base.getfield(node, sym)
     elseif node.kind === value ||
             node.kind === literal || 
             node.kind === virtual
-        error("type IndexNode($(node.kind), ...) has no property $sym")
+        error("type FinchNode($(node.kind), ...) has no property $sym")
     elseif node.kind === index
         if sym === :name
             return node.val::Symbol
         else
-            error("type IndexNode(index, ...) has no property $sym")
+            error("type FinchNode(index, ...) has no property $sym")
         end
     elseif node.kind === variable
         if sym === :name
             return node.val::Symbol
         else
-            error("type IndexNode(variable, ...) has no property $sym")
+            error("type FinchNode(variable, ...) has no property $sym")
         end
     elseif node.kind === reader
-        error("type IndexNode(reader, ...) has no property $sym")
+        error("type FinchNode(reader, ...) has no property $sym")
     elseif node.kind === updater
         if sym === :mode
             return node.children[1]
         else
-            error("type IndexNode(updater, ...) has no property $sym")
+            error("type FinchNode(updater, ...) has no property $sym")
         end
     elseif node.kind === with
         if sym === :cons
@@ -381,13 +381,13 @@ function Base.getproperty(node::IndexNode, sym::Symbol)
         elseif sym === :prod
             return node.children[2]
         else
-            error("type IndexNode(with, ...) has no property $sym")
+            error("type FinchNode(with, ...) has no property $sym")
         end
     elseif node.kind === multi
         if sym === :bodies
             return node.children
         else
-            error("type IndexNode(multi, ...) has no property $sym")
+            error("type FinchNode(multi, ...) has no property $sym")
         end
     elseif node.kind === access
         if sym === :tns
@@ -397,7 +397,7 @@ function Base.getproperty(node::IndexNode, sym::Symbol)
         elseif sym === :idxs
             return @view node.children[3:end]
         else
-            error("type IndexNode(access, ...) has no property $sym")
+            error("type FinchNode(access, ...) has no property $sym")
         end
     elseif node.kind === call
         if sym === :op
@@ -405,7 +405,7 @@ function Base.getproperty(node::IndexNode, sym::Symbol)
         elseif sym === :args
             return @view node.children[2:end]
         else
-            error("type IndexNode(call, ...) has no property $sym")
+            error("type FinchNode(call, ...) has no property $sym")
         end
     elseif node.kind === protocol
         if sym === :idx
@@ -413,7 +413,7 @@ function Base.getproperty(node::IndexNode, sym::Symbol)
         elseif sym === :mode
             return node.children[2]
         else
-            error("type IndexNode(protocol, ...) has no property $sym")
+            error("type FinchNode(protocol, ...) has no property $sym")
         end
     elseif node.kind === loop
         if sym === :idx
@@ -421,7 +421,7 @@ function Base.getproperty(node::IndexNode, sym::Symbol)
         elseif sym === :body
             return node.children[2]
         else
-            error("type IndexNode(loop, ...) has no property $sym")
+            error("type FinchNode(loop, ...) has no property $sym")
         end
     elseif node.kind === chunk
         if sym === :idx
@@ -431,7 +431,7 @@ function Base.getproperty(node::IndexNode, sym::Symbol)
         elseif sym === :body
             return node.children[3]
         else
-            error("type IndexNode(chunk, ...) has no property $sym")
+            error("type FinchNode(chunk, ...) has no property $sym")
         end
     elseif node.kind === sieve
         if sym === :cond
@@ -439,7 +439,7 @@ function Base.getproperty(node::IndexNode, sym::Symbol)
         elseif sym === :body
             return node.children[2]
         else
-            error("type IndexNode(sieve, ...) has no property $sym")
+            error("type FinchNode(sieve, ...) has no property $sym")
         end
     elseif node.kind === assign
         if sym === :lhs
@@ -449,21 +449,21 @@ function Base.getproperty(node::IndexNode, sym::Symbol)
         elseif sym === :rhs
             return node.children[3]
         else
-            error("type IndexNode(assign, ...) has no property $sym")
+            error("type FinchNode(assign, ...) has no property $sym")
         end
     elseif node.kind === pass
         #TODO move op into updater
         if sym === :tnss
             return node.children
         else
-            error("type IndexNode(pass, ...) has no property $sym")
+            error("type FinchNode(pass, ...) has no property $sym")
         end
     else
-        error("type IndexNode has no property $sym")
+        error("type FinchNode has no property $sym")
     end
 end
 
-function Finch.getunbound(ex::IndexNode)
+function Finch.getunbound(ex::FinchNode)
     if ex.kind === index
         return [ex.name]
     elseif ex.kind === loop
@@ -477,7 +477,7 @@ function Finch.getunbound(ex::IndexNode)
     end
 end
 
-function Base.show(io::IO, node::IndexNode) 
+function Base.show(io::IO, node::FinchNode) 
     if node.kind === literal || node.kind == index || node.kind === virtual
         print(io, node.kind, "(", node.val, ")")
     elseif node.kind === value
@@ -487,7 +487,7 @@ function Base.show(io::IO, node::IndexNode)
     end
 end
 
-function Base.show(io::IO, mime::MIME"text/plain", node::IndexNode) 
+function Base.show(io::IO, mime::MIME"text/plain", node::FinchNode) 
     if isstateful(node)
         display_statement(io, mime, node, 0)
     else
@@ -495,7 +495,7 @@ function Base.show(io::IO, mime::MIME"text/plain", node::IndexNode)
     end
 end
 
-function display_expression(io, mime, node::IndexNode)
+function display_expression(io, mime, node::FinchNode)
     if get(io, :compact, false)
         print(io, "@finch(…)")
     elseif node.kind === value
@@ -555,7 +555,7 @@ function display_expression(io, mime, node::IndexNode)
     end
 end
 
-function display_statement(io, mime, node::IndexNode, level)
+function display_statement(io, mime, node::FinchNode, level)
     if node.kind === with
         print(io, tab^level * "(\n")
         display_statement(io, mime, node.cons, level + 1)
@@ -628,7 +628,7 @@ function display_statement(io, mime, node::IndexNode, level)
     end
 end
 
-function Base.:(==)(a::IndexNode, b::IndexNode)
+function Base.:(==)(a::FinchNode, b::FinchNode)
     if !istree(a)
         if a.kind === value
             return b.kind === value && a.val == b.val && a.type === b.type
@@ -652,7 +652,7 @@ function Base.:(==)(a::IndexNode, b::IndexNode)
     end
 end
 
-function Base.hash(a::IndexNode, h::UInt)
+function Base.hash(a::FinchNode, h::UInt)
     if !istree(a)
         if a.kind === value
             return hash(value, hash(a.val, hash(a.type, h)))
@@ -674,14 +674,14 @@ function Base.hash(a::IndexNode, h::UInt)
     end
 end
 
-IndexNotation.isliteral(node::IndexNode) = node.kind === literal
+FinchNotation.isliteral(node::FinchNode) = node.kind === literal
 
-function Finch.getvalue(ex::IndexNode)
+function Finch.getvalue(ex::FinchNode)
     ex.kind === literal || error("expected literal")
     ex.val
 end
 
-function Finch.getresults(node::IndexNode)
+function Finch.getresults(node::FinchNode)
     if node.kind === with
         Finch.getresults(node.cons)
     elseif node.kind === multi
@@ -704,7 +704,7 @@ function Finch.getresults(node::IndexNode)
     end
 end
 
-function Finch.getname(x::IndexNode)
+function Finch.getname(x::FinchNode)
     if x.kind === index
         return x.val
     else
@@ -712,7 +712,7 @@ function Finch.getname(x::IndexNode)
     end
 end
 
-function Finch.setname(x::IndexNode, sym)
+function Finch.setname(x::FinchNode, sym)
     if x.kind === index
         return index(sym)
     elseif x.kind === variable

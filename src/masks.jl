@@ -9,7 +9,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::DiagMask)
 end
 
 virtualize(ex, ::Type{DiagMask}, ctx) = diagmask
-IndexNotation.isliteral(::DiagMask) = false
+FinchNotation.isliteral(::DiagMask) = false
 Finch.virtual_size(::DiagMask, ctx) = (nodim, nodim)
 
 function get_reader(::DiagMask, ctx, protos...)
@@ -44,7 +44,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::UpTriMask)
 end
 
 virtualize(ex, ::Type{UpTriMask}, ctx) = uptrimask
-IndexNotation.isliteral(::UpTriMask) = false
+FinchNotation.isliteral(::UpTriMask) = false
 Finch.virtual_size(::UpTriMask, ctx) = (nodim, nodim)
 
 function get_reader(::UpTriMask, ctx, protos...)
@@ -77,7 +77,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::LoTriMask)
 end
 
 virtualize(ex, ::Type{LoTriMask}, ctx) = lotrimask
-IndexNotation.isliteral(::LoTriMask) = false
+FinchNotation.isliteral(::LoTriMask) = false
 Finch.virtual_size(::LoTriMask, ctx) = (nodim, nodim)
 
 function get_reader(::LoTriMask, ctx, protos...)
@@ -110,7 +110,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::BandMask)
 end
 
 virtualize(ex, ::Type{BandMask}, ctx) = bandmask
-IndexNotation.isliteral(::BandMask) = false
+FinchNotation.isliteral(::BandMask) = false
 Finch.virtual_size(::BandMask, ctx) = (nodim, nodim, nodim)
 
 function get_reader(::BandMask, ctx, mode, protos...)

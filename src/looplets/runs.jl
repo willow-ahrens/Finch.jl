@@ -9,7 +9,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Run)
     print(io, ")")
 end
 
-IndexNotation.isliteral(::Run) =  false
+FinchNotation.isliteral(::Run) =  false
 
 #A minor revelation: There's no reason to store extents in chunks, they just modify the extents of the context.
 
@@ -21,7 +21,7 @@ combine_style(a::ThunkStyle, b::RunStyle) = ThunkStyle()
 combine_style(a::SimplifyStyle, b::RunStyle) = SimplifyStyle()
 combine_style(a::RunStyle, b::RunStyle) = RunStyle()
 
-function (ctx::LowerJulia)(root::IndexNode, ::RunStyle)
+function (ctx::LowerJulia)(root::FinchNode, ::RunStyle)
     if root.kind === chunk
         root = (AccessRunVisitor(root))(root)
         if Stylize(root, ctx)(root) isa RunStyle #TODO do we need this always? Can we do this generically?
@@ -44,7 +44,7 @@ function (ctx::AccessRunVisitor)(node)
     end
 end
 
-function (ctx::AccessRunVisitor)(node::IndexNode)
+function (ctx::AccessRunVisitor)(node::FinchNode)
     if node.kind === access && node.tns.kind === virtual
         tns_2 = unchunk(node.tns.val, ctx)
         if tns_2 === nothing
@@ -69,12 +69,12 @@ unchunk(node::Shift, ctx::AccessRunVisitor) = unchunk(node.body, ctx)
     val = nothing
 end
 
-IndexNotation.isliteral(::AcceptRun) = false
+FinchNotation.isliteral(::AcceptRun) = false
 
 virtual_default(node::AcceptRun) = node.val
 
 #TODO this should go somewhere else
-function Finch.virtual_default(x::IndexNode)
+function Finch.virtual_default(x::FinchNode)
     if x.kind === virtual
         Finch.virtual_default(x.val)
     else
@@ -96,7 +96,7 @@ combine_style(a::SimplifyStyle, b::AcceptRunStyle) = SimplifyStyle()
 combine_style(a::AcceptRunStyle, b::AcceptRunStyle) = AcceptRunStyle()
 combine_style(a::RunStyle, b::AcceptRunStyle) = RunStyle()
 
-function (ctx::LowerJulia)(root::IndexNode, ::AcceptRunStyle)
+function (ctx::LowerJulia)(root::FinchNode, ::AcceptRunStyle)
     if root.kind === chunk
         body = (AcceptRunVisitor(root, root.idx, root.ext, ctx))(root.body)
         if getname(root.idx) in getunbound(body)
@@ -127,7 +127,7 @@ function (ctx::AcceptRunVisitor)(node)
     end
 end
 
-function (ctx::AcceptRunVisitor)(node::IndexNode)
+function (ctx::AcceptRunVisitor)(node::FinchNode)
     if node.kind === virtual
         ctx(node.val)
     elseif node.kind === access && node.tns.kind === virtual

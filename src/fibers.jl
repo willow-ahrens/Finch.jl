@@ -13,7 +13,7 @@ function virtualize(ex, ::Type{<:Fiber{Lvl}}, ctx, tag=ctx.freshen(:tns)) where 
     VirtualFiber(lvl)
 end
 (ctx::Finch.LowerJulia)(fbr::VirtualFiber) = :(Fiber($(ctx(fbr.lvl))))
-IndexNotation.isliteral(::VirtualFiber) = false
+FinchNotation.isliteral(::VirtualFiber) = false
 
 struct SubFiber{Lvl, Pos} <: AbstractFiber{Lvl}
     lvl::Lvl
@@ -30,7 +30,7 @@ function virtualize(ex, ::Type{<:SubFiber{Lvl, Pos}}, ctx, tag=ctx.freshen(:tns)
     VirtualFiber(lvl, pos)
 end
 (ctx::Finch.LowerJulia)(fbr::VirtualSubFiber) = :(SubFiber($(ctx(fbr.lvl)), $(ctx(fbr.pos))))
-IndexNotation.isliteral(::VirtualSubFiber) =  false
+FinchNotation.isliteral(::VirtualSubFiber) =  false
 
 @inline Base.ndims(::AbstractFiber{Lvl}) where {Lvl} = level_ndims(Lvl)
 @inline Base.ndims(::Type{<:AbstractFiber{Lvl}}) where {Lvl} = level_ndims(Lvl)
@@ -123,7 +123,7 @@ set_clean!(lvl, ctx) = quote end
 get_dirty(lvl, ctx) = true
 
 get_furl_root(idx) = nothing
-function get_furl_root(idx::IndexNode)
+function get_furl_root(idx::FinchNode)
     if idx.kind === index
         return idx
     elseif idx.kind === access && idx.tns.kind === virtual

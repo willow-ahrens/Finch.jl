@@ -5,7 +5,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Permit)
 	print(io, "Permit()")
 end
 
-IndexNotation.value_instance(arg::Permit) = arg
+FinchNotation.value_instance(arg::Permit) = arg
 
 const permit = Permit()
 
@@ -18,7 +18,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualPermit)
 	print(io, "VirtualPermit()")
 end
 
-IndexNotation.isliteral(::VirtualPermit) =  false
+FinchNotation.isliteral(::VirtualPermit) =  false
 
 virtualize(ex, ::Type{Permit}, ctx) = VirtualPermit()
 
@@ -55,7 +55,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Offset)
 	print(io, "Offset()")
 end
 
-IndexNotation.value_instance(arg::Offset) = arg
+FinchNotation.value_instance(arg::Offset) = arg
 
 const offset = Offset()
 
@@ -70,7 +70,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualOffset)
 	print(io, "VirtualOffset()")
 end
 
-IndexNotation.isliteral(::VirtualOffset) =  false
+FinchNotation.isliteral(::VirtualOffset) =  false
 
 virtualize(ex, ::Type{Offset}, ctx) = VirtualOffset()
 
@@ -114,7 +114,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::StaticOffset)
 	print(io, "StaticOffset($(ex.delta))")
 end
 
-IndexNotation.value_instance(arg::StaticOffset) = arg
+FinchNotation.value_instance(arg::StaticOffset) = arg
 
 const staticoffset = StaticOffset
 
@@ -129,7 +129,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualStaticOffset)
 	print(io, "VirtualStaticOffset($(ex.delta))")
 end
 
-IndexNotation.isliteral(::VirtualStaticOffset) =  false
+FinchNotation.isliteral(::VirtualStaticOffset) =  false
 
 function virtualize(ex, ::Type{StaticOffset{Delta}}, ctx) where {Delta}
     VirtualStaticOffset(virtualize(:($ex.delta), Delta, ctx))
@@ -173,7 +173,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Window)
 	print(io, "Window(", start, ", ", stop, ")")
 end
 
-IndexNotation.value_instance(arg::Window) = arg
+FinchNotation.value_instance(arg::Window) = arg
 
 Base.size(vec::Window) = (vec.stop - vec.start + 1,)
 
@@ -192,7 +192,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualWindow)
 	print(io, ")")
 end
 
-IndexNotation.isliteral(::VirtualWindow) =  false
+FinchNotation.isliteral(::VirtualWindow) =  false
 
 function virtualize(ex, ::Type{Window{Start, Stop}}, ctx) where {Start, Stop}
     start = virtualize(:($ex.start), Start, ctx)

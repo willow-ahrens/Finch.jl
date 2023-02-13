@@ -7,7 +7,7 @@ function register(algebra)
     end)
 end
 
-#struct Lifetime <: IndexNode
+#struct Lifetime <: FinchNode
 #    body
 #end
 #
@@ -16,9 +16,9 @@ end
 #SyntaxInterface.istree(::Lifetime) = true
 #SyntaxInterface.arguments(ex::Lifetime) = [ex.body]
 #SyntaxInterface.operation(::Lifetime) = lifetime
-#SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(lifetime), args) = Lifetime(args...)
+#SyntaxInterface.similarterm(::Type{<:FinchNode}, ::typeof(lifetime), args) = Lifetime(args...)
 #
-#IndexNotation.isliteral(::Lifetime) =  false
+#FinchNotation.isliteral(::Lifetime) =  false
 #
 #struct LifetimeStyle end
 #
@@ -102,7 +102,7 @@ macro finch(args_ex...)
     @assert length(args_ex) >= 1
     (args, ex) = (args_ex[1:end-1], args_ex[end])
     results = Set()
-    prgm = IndexNotation.finch_parse_instance(ex, results)
+    prgm = FinchNotation.finch_parse_instance(ex, results)
     thunk = quote
         res = $execute($prgm, $(map(esc, args)...))
     end
@@ -120,7 +120,7 @@ end
 macro finch_code(args_ex...)
     @assert length(args_ex) >= 1
     (args, ex) = (args_ex[1:end-1], args_ex[end])
-    prgm = IndexNotation.finch_parse_instance(ex)
+    prgm = FinchNotation.finch_parse_instance(ex)
     return quote
         $execute_code(:ex, typeof($prgm), $(map(esc, args)...)) |>
         striplines |>
@@ -157,7 +157,7 @@ function gettns(acc)
     return acc.tns
 end
 
-function (ctx::OpenScope)(node::IndexNode)
+function (ctx::OpenScope)(node::FinchNode)
     if node.kind === access
         tns = node.tns
         if tns.kind === variable
@@ -214,7 +214,7 @@ function (ctx::CloseScope)(node)
     end
 end
 
-function (ctx::CloseScope)(node::IndexNode)
+function (ctx::CloseScope)(node::FinchNode)
     if node.kind === access
         if node.tns.kind === variable
             if (ctx.target === nothing || (node.tns in ctx.target)) && !(node.tns in ctx.escape)

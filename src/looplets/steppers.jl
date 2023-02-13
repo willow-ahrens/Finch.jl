@@ -10,7 +10,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Stepper)
     print(io, "Stepper()")
 end
 
-IndexNotation.isliteral(::Stepper) =  false
+FinchNotation.isliteral(::Stepper) =  false
 
 (ctx::Stylize{LowerJulia})(node::Stepper) = ctx.root.kind === chunk ? StepperStyle() : DefaultStyle()
 
@@ -26,7 +26,7 @@ combine_style(a::ThunkStyle, b::StepperStyle) = ThunkStyle()
 combine_style(a::StepperStyle, b::JumperStyle) = JumperStyle()
 combine_style(a::StepperStyle, b::PhaseStyle) = PhaseStyle()
 
-function (ctx::LowerJulia)(root::IndexNode, style::StepperStyle)
+function (ctx::LowerJulia)(root::FinchNode, style::StepperStyle)
     if root.kind === chunk
         return lower_cycle(root, ctx, root.idx, root.ext, style)
     else
@@ -53,7 +53,7 @@ end
         ])
 end
 
-IndexNotation.isliteral(::Step) =  false
+FinchNotation.isliteral(::Step) =  false
 
 (ctx::Stylize{LowerJulia})(node::Step) = ctx.root.kind === chunk ? PhaseStyle() : DefaultStyle()
 

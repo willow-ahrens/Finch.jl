@@ -20,7 +20,7 @@ function (ctx::ChunkifyVisitor)(node)
     end
 end
 
-function (ctx::ChunkifyVisitor)(node::IndexNode, eldim = nodim)
+function (ctx::ChunkifyVisitor)(node::FinchNode, eldim = nodim)
     if node.kind === access && node.tns.kind === virtual
         chunkify_access(node, ctx, eldim, node.tns.val)
     elseif node.kind === access && node.tns.kind === variable
@@ -36,7 +36,7 @@ end
         #TODO propagate eldim here
 chunkify_access(node, ctx, eldim, tns) = similarterm(node, operation(node), map(ctx, arguments(node)))
 
-function (ctx::LowerJulia)(root::IndexNode, ::ChunkStyle)
+function (ctx::LowerJulia)(root::FinchNode, ::ChunkStyle)
     if root.kind === loop
         idx = root.idx
         #TODO is every read of dims gonna be like this? When do we lock it in?
@@ -71,7 +71,7 @@ function (ctx::SelectVisitor)(node)
     end
 end
 
-function (ctx::SelectVisitor)(node::IndexNode)
+function (ctx::SelectVisitor)(node::FinchNode)
     if node.kind === access && node.tns.kind === virtual
         select_access(node, ctx, node.tns.val)
     elseif node.kind === access && node.tns.kind === variable
@@ -112,7 +112,7 @@ end
 virtual_default(tns::Furlable) = something(tns.val)
 virtual_size(tns::Furlable, ::LowerJulia, dim=nothing) = tns.size
 
-IndexNotation.isliteral(::Furlable) = false
+FinchNotation.isliteral(::Furlable) = false
 
 #Base.show(io::IO, ex::Furlable) = Base.show(io, MIME"text/plain"(), ex)
 #function Base.show(io::IO, mime::MIME"text/plain", ex::Furlable)
@@ -123,7 +123,7 @@ function stylize_access(node, ctx::Stylize{LowerJulia}, tns::Furlable)
     if !isempty(node.idxs)
         if getunbound(node.idxs[end]) ⊆ keys(ctx.ctx.bindings)
             return SelectStyle()
-        elseif ctx.root isa IndexNode && ctx.root.kind === loop && ctx.root.idx == get_furl_root(node.idxs[end])
+        elseif ctx.root isa FinchNode && ctx.root.kind === loop && ctx.root.idx == get_furl_root(node.idxs[end])
             return ChunkStyle()
         end
     end
@@ -159,7 +159,7 @@ function chunkify_access(node, ctx, eldim, tns::Furlable)
 end
 
 refurl(tns, ctx, mode) = tns
-function exfurl(tns, ctx, idx::IndexNode, ext)
+function exfurl(tns, ctx, idx::FinchNode, ext)
     if idx.kind === index
         return tns
     elseif idx.kind === access && idx.tns.kind === virtual

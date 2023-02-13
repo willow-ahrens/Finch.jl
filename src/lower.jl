@@ -59,7 +59,7 @@ function cache!(ctx, var, val)
     if isliteral(val)
         return val
     end
-    if val isa IndexNode
+    if val isa FinchNode
         val.kind == literal && return val
         val.kind == value && return val
     end
@@ -95,7 +95,7 @@ function bind(f, ctx::LowerJulia, (var, val′), tail...)
 end
 
 function resolve(var, ctx::LowerJulia)
-    if var isa IndexNode && (var.kind === variable || var.kind === index)
+    if var isa FinchNode && (var.kind === variable || var.kind === index)
         return ctx.bindings[var.name]
     end
     return var
@@ -125,7 +125,7 @@ struct ThunkStyle end
     epilogue = quote end
     binds = ()
 end
-IndexNotation.isliteral(::Thunk) =  false
+FinchNotation.isliteral(::Thunk) =  false
 
 Base.show(io::IO, ex::Thunk) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::Thunk)
@@ -157,7 +157,7 @@ function (ctx::LowerJulia)(node, ::ThunkStyle)
     end
 end
 
-function (ctx::ThunkVisitor)(node::IndexNode)
+function (ctx::ThunkVisitor)(node::FinchNode)
     if node.kind === virtual
         ctx(node.val)
     elseif node.kind === access && node.tns.kind === virtual
@@ -181,7 +181,7 @@ function (ctx::ThunkVisitor)(node::Thunk)
     node.body
 end
 
-IndexNotation.isliteral(::Union{Symbol, Expr, Missing}) =  false
+FinchNotation.isliteral(::Union{Symbol, Expr, Missing}) =  false
 (ctx::LowerJulia)(root::Union{Symbol, Expr}, ::DefaultStyle) = root
 
 function (ctx::LowerJulia)(root, ::DefaultStyle)
@@ -191,7 +191,7 @@ function (ctx::LowerJulia)(root, ::DefaultStyle)
     error("Don't know how to lower $root")
 end
 
-function (ctx::LowerJulia)(root::IndexNode, ::DefaultStyle)
+function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
     if root.kind === value
         return root.val
     elseif root.kind === index
@@ -348,7 +348,7 @@ function (ctx::ForLoopVisitor)(node)
     end
 end
 
-function (ctx::ForLoopVisitor)(node::IndexNode)
+function (ctx::ForLoopVisitor)(node::FinchNode)
     if node.kind === access && node.tns.kind === virtual
         tns_2 = unchunk(node.tns.val, ctx)
         if tns_2 === nothing
@@ -375,7 +375,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Lookup)
     print(io, "Lookup()")
 end
 
-IndexNotation.isliteral(node::Lookup) =  false
+FinchNotation.isliteral(node::Lookup) =  false
 
 function (ctx::ForLoopVisitor)(node::Lookup)
     node.body(ctx.val)

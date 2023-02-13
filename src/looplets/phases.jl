@@ -4,7 +4,7 @@
     stride = (ctx, idx, ext) -> nothing
     range = (ctx, idx, ext) -> Extent(start = getstart(ext), stop = something(stride(ctx, idx, ext), getstop(ext)))
 end
-IndexNotation.isliteral(::Phase) =  false
+FinchNotation.isliteral(::Phase) =  false
 
 Base.show(io::IO, ex::Phase) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::Phase)
@@ -25,7 +25,7 @@ function (ctx::PhaseStride)(node)
     end
 end
 
-function (ctx::PhaseStride)(node::IndexNode)
+function (ctx::PhaseStride)(node::FinchNode)
     if node.kind === virtual
         ctx(node.val)
     elseif istree(node)
@@ -52,7 +52,7 @@ function (ctx::PhaseBodyVisitor)(node)
         return node
     end
 end
-function (ctx::PhaseBodyVisitor)(node::IndexNode)
+function (ctx::PhaseBodyVisitor)(node::FinchNode)
     if node.kind === virtual
         ctx(node.val)
     elseif istree(node)
@@ -71,7 +71,7 @@ struct PhaseStyle end
 
 supports_shift(::PhaseStyle) = true
 
-#IndexNotation.isliteral(::Step) =  false
+#FinchNotation.isliteral(::Step) =  false
 
 (ctx::Stylize{LowerJulia})(node::Phase) = ctx.root.kind === chunk ? PhaseStyle() : DefaultStyle()
 
@@ -84,7 +84,7 @@ combine_style(a::AcceptRunStyle, b::PhaseStyle) = PhaseStyle()
 combine_style(a::SwitchStyle, b::PhaseStyle) = SwitchStyle()
 combine_style(a::ThunkStyle, b::PhaseStyle) = ThunkStyle()
 
-function (ctx::LowerJulia)(root::IndexNode, ::PhaseStyle)
+function (ctx::LowerJulia)(root::FinchNode, ::PhaseStyle)
     if root.kind === chunk
         i = getname(root.idx)
         i0=ctx.freshen(i)

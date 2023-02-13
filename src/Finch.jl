@@ -24,9 +24,9 @@ export permit, offset, staticoffset, window
 include("util.jl")
 
 include("semantics.jl")
-include("IndexNotation/IndexNotation.jl")
-using .IndexNotation
-using .IndexNotation: and, or, right
+include("FinchNotation/FinchNotation.jl")
+using .FinchNotation
+using .FinchNotation: and, or, right
 include("virtualize.jl")
 include("style.jl")
 include("transform_ssa.jl")
