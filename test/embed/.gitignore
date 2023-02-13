@@ -1,0 +1,6 @@
+Manifest.toml
+*.json
+*.o
+test_embed_simple
+test_embed_not_rooted
+test_embed_not_initialized

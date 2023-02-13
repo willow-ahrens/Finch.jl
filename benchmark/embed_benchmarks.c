@@ -39,7 +39,7 @@ void benchmarks_initialize(){
         finch_Vector_Int64(A_pos, 5),
         finch_Vector_Int64(A_idx, 9),
         finch_Int64(m));
-    x = finch_exec("@fiber d(e(0.0), %s)", finch_Int64(n));
+    x = finch_exec("Fiber(Dense(Element(0.0, %s), %s))", finch_Vector_Float64(x_val, n), finch_Int64(n));
 }
 
 long benchmark_spmv_tiny(int evals){
