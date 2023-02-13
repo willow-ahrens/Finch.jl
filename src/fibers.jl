@@ -29,7 +29,7 @@ function virtualize(ex, ::Type{<:SubFiber{Lvl, Pos}}, ctx, tag=ctx.freshen(:tns)
     pos = virtualize(:($ex.pos), Pos, ctx)
     VirtualFiber(lvl, pos)
 end
-(ctx::Finch.LowerJulia)(fbr::VirtualSubFiber) = :(Fiber($(ctx(fbr.lvl)), $(ctx(fbr.pos))))
+(ctx::Finch.LowerJulia)(fbr::VirtualSubFiber) = :(SubFiber($(ctx(fbr.lvl)), $(ctx(fbr.pos))))
 IndexNotation.isliteral(::VirtualSubFiber) =  false
 
 @inline Base.ndims(::AbstractFiber{Lvl}) where {Lvl} = level_ndims(Lvl)
