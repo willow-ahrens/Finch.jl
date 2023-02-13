@@ -1,6 +1,6 @@
 struct RepeatRLELevel{D, Ti, Tp, Tv}
     I::Ti
-    pos::Vector{Tp}
+    ptr::Vector{Tp}
     idx::Vector{Ti}
     val::Vector{Tv}
 end
@@ -41,7 +41,7 @@ function Base.show(io::IO, lvl::RepeatRLELevel{D, Ti, Tp, Tv}) where {D, Ti, Tp,
     if get(io, :compact, false)
         print(io, "…")
     else
-        show(IOContext(io, :typeinfo=>Vector{Tp}), lvl.pos)
+        show(IOContext(io, :typeinfo=>Vector{Tp}), lvl.ptr)
         print(io, ", ")
         show(IOContext(io, :typeinfo=>Vector{Ti}), lvl.idx)
         print(io, ", ")
@@ -52,9 +52,9 @@ end
 
 function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:RepeatRLELevel}, depth)
     p = fbr.pos
-    crds = fbr.lvl.pos[p]:fbr.lvl.pos[p + 1] - 1
+    crds = fbr.lvl.ptr[p]:fbr.lvl.ptr[p + 1] - 1
 
-    print_coord(io, crd) = (print(io, "["); show(io, crd == fbr.lvl.pos[p] ? 1 : fbr.lvl.idx[crd - 1] + 1); print(io, ":"); show(io, fbr.lvl.idx[crd]); print(io, "]"))
+    print_coord(io, crd) = (print(io, "["); show(io, crd == fbr.lvl.ptr[p] ? 1 : fbr.lvl.idx[crd - 1] + 1); print(io, ":"); show(io, fbr.lvl.idx[crd]); print(io, "]"))
     get_fbr(crd) = fbr.lvl.val[crd]
 
     print(io, "│ " ^ depth); print(io, "RepeatRLE ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); show(io, 1); print(io, ":"); show(io, fbr.lvl.I); println(io, "]")
@@ -71,8 +71,8 @@ end
 function (fbr::SubFiber{<:RepeatRLELevel})(i, tail...)
     lvl = fbr.lvl
     p = fbr.pos
-    r = searchsortedfirst(@view(lvl.idx[lvl.pos[p]:lvl.pos[p + 1] - 1]), i)
-    q = lvl.pos[p] + r - 1
+    r = searchsortedfirst(@view(lvl.idx[lvl.ptr[p]:lvl.ptr[p + 1] - 1]), i)
+    q = lvl.ptr[p] + r - 1
     return lvl.val[q]
 end
 
@@ -102,7 +102,7 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualRepeatRLELevel)
     quote
         $RepeatRLELevel{$(lvl.D), $(lvl.Ti), $(lvl.Tp), $(lvl.Tv)}(
             $(ctx(lvl.I)),
-            $(lvl.ex).pos,
+            $(lvl.ex).ptr,
             $(lvl.ex).idx,
             $(lvl.ex).val
         )
@@ -128,7 +128,7 @@ function initialize_level!(lvl::VirtualRepeatRLELevel, ctx::LowerJulia, mode)
     Tp = lvl.Tp
     Ti = lvl.Ti
     push!(ctx.preamble, quote
-        $(lvl.ex).pos[1] = $(Tp(1))
+        $(lvl.ex).ptr[1] = $(Tp(1))
         $(lvl.ros_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
     end)
@@ -138,8 +138,8 @@ end
 function trim_level!(lvl::VirtualRepeatRLELevel, ctx::LowerJulia, pos)
     qos = ctx.freshen(:qos)
     push!(ctx.preamble, quote
-        resize!($(lvl.ex).pos, $(ctx(pos)) + 1)
-        $qos = $(lvl.ex).pos[end] - $(lvl.Tp(1))
+        resize!($(lvl.ex).ptr, $(ctx(pos)) + 1)
+        $qos = $(lvl.ex).ptr[end] - $(lvl.Tp(1))
         resize!($(lvl.ex).idx, $qos)
         resize!($(lvl.ex).val, $qos)
     end)
@@ -150,8 +150,8 @@ function assemble_level!(lvl::VirtualRepeatRLELevel, ctx, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_stop, pos_stop))
     quote
-        $resize_if_smaller!($(lvl.ex).pos, $pos_stop + 1)
-        $fill_range!($(lvl.ex).pos, 1, $pos_start + 1, $pos_stop + 1)
+        $resize_if_smaller!($(lvl.ex).ptr, $pos_stop + 1)
+        $fill_range!($(lvl.ex).ptr, 1, $pos_start + 1, $pos_stop + 1)
     end
 end
 
@@ -165,9 +165,9 @@ function freeze_level!(lvl::VirtualRepeatRLELevel, ctx::LowerJulia, pos_stop)
     qos_fill = ctx.freshen(:qos_stop)
     push!(ctx.preamble, quote
         for $p = 2:($pos_stop + 1)
-            $(lvl.ex).pos[$p] += $(lvl.ex).pos[$p - 1]
+            $(lvl.ex).ptr[$p] += $(lvl.ex).ptr[$p - 1]
         end
-        $qos_fill = $(lvl.ex).pos[$pos_stop + 1] - 1
+        $qos_fill = $(lvl.ex).ptr[$pos_stop + 1] - 1
         $resize_if_smaller!($(lvl.ex).idx, $qos_fill)
         $fill_range!($(lvl.ex).idx, $(ctx(lvl.I)), $qos_stop + 1, $qos_fill)
         $resize_if_smaller!($(lvl.ex).val, $qos_fill)
@@ -190,8 +190,8 @@ function get_reader(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, ::Union{No
         size = virtual_level_size(lvl, ctx),
         body = (ctx, idx, ext) -> Thunk(
             preamble = (quote
-                $my_q = $(lvl.ex).pos[$(ctx(pos))]
-                $my_q_stop = $(lvl.ex).pos[$(ctx(pos)) + $(Tp(1))]
+                $my_q = $(lvl.ex).ptr[$(ctx(pos))]
+                $my_q_stop = $(lvl.ex).ptr[$(ctx(pos)) + $(Tp(1))]
                 #TODO I think this if is only ever true
                 if $my_q < $my_q_stop
                     $my_i = $(lvl.ex).idx[$my_q]
@@ -301,7 +301,7 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualRepeatRLELevel}, ctx, ::
                         $(record_run(ctx, lvl.I, my_v_prev))
                     end
                 end
-                $(lvl.ex).pos[$(ctx(pos)) + $(Tp(1))] += ($my_q - ($(lvl.ros_fill) + $(ctx(pos))))
+                $(lvl.ex).ptr[$(ctx(pos)) + $(Tp(1))] += ($my_q - ($(lvl.ros_fill) + $(ctx(pos))))
                 $(lvl.ros_fill) += $my_q - ($(lvl.ros_fill) + $(ctx(pos)))
             end
         )

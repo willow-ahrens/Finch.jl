@@ -1,7 +1,7 @@
 struct SparseVBLLevel{Ti, Tp, Lvl}
     lvl::Lvl
     I::Ti
-    pos::Vector{Tp}
+    ptr::Vector{Tp}
     idx::Vector{Ti}
     ofs::Vector{Tp}
 end
@@ -25,7 +25,7 @@ similar_level(lvl::SparseVBLLevel) = SparseVBL(similar_level(lvl.lvl))
 similar_level(lvl::SparseVBLLevel, dim, tail...) = SparseVBL(similar_level(lvl.lvl, tail...), dim)
 
 pattern!(lvl::SparseVBLLevel{Ti}) where {Ti} = 
-    SparseVBLLevel{Ti}(pattern!(lvl.lvl), lvl.I, lvl.pos, lvl.idx, lvl.ofs)
+    SparseVBLLevel{Ti}(pattern!(lvl.lvl), lvl.I, lvl.ptr, lvl.idx, lvl.ofs)
 
 function Base.show(io::IO, lvl::SparseVBLLevel{Ti, Tp}) where {Ti, Tp}
     if get(io, :compact, false)
@@ -40,7 +40,7 @@ function Base.show(io::IO, lvl::SparseVBLLevel{Ti, Tp}) where {Ti, Tp}
     if get(io, :compact, false)
         print(io, "…")
     else
-        show(IOContext(io, :typeinfo=>Vector{Tp}), lvl.pos)
+        show(IOContext(io, :typeinfo=>Vector{Tp}), lvl.ptr)
         print(io, ", ")
         show(IOContext(io, :typeinfo=>Vector{Ti}), lvl.idx)
         print(io, ", ")
@@ -52,7 +52,7 @@ end
 function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseVBLLevel}, depth)
     p = fbr.pos
     crds = []
-    for r in fbr.lvl.pos[p]:fbr.lvl.pos[p + 1] - 1
+    for r in fbr.lvl.ptr[p]:fbr.lvl.ptr[p + 1] - 1
         i = fbr.lvl.idx[r]
         l = fbr.lvl.ofs[r + 1] - fbr.lvl.ofs[r]
         append!(crds, (i - l + 1):i)
@@ -77,8 +77,8 @@ function (fbr::SubFiber{<:SparseVBLLevel})(idxs...)
     isempty(idxs) && return fbr
     lvl = fbr.lvl
     p = fbr.pos
-    r = lvl.pos[p] + searchsortedfirst(@view(lvl.idx[lvl.pos[p]:lvl.pos[p + 1] - 1]), idxs[end]) - 1
-    r < lvl.pos[p + 1] || return default(fbr)
+    r = lvl.ptr[p] + searchsortedfirst(@view(lvl.idx[lvl.ptr[p]:lvl.ptr[p + 1] - 1]), idxs[end]) - 1
+    r < lvl.ptr[p + 1] || return default(fbr)
     q = lvl.ofs[r + 1] - 1 - lvl.idx[r] + idxs[end]
     q >= lvl.ofs[r] || return default(fbr)
     fbr_2 = SubFiber(lvl.lvl, q)
@@ -116,7 +116,7 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualSparseVBLLevel)
         $SparseVBLLevel{$(lvl.Ti)}(
             $(ctx(lvl.lvl)),
             $(ctx(lvl.I)),
-            $(lvl.ex).pos,
+            $(lvl.ex).ptr,
             $(lvl.ex).idx,
             $(lvl.ex).ofs,
         )
@@ -142,7 +142,7 @@ virtual_level_default(lvl::VirtualSparseVBLLevel) = virtual_level_default(lvl.lv
 function initialize_level!(lvl::VirtualSparseVBLLevel, ctx::LowerJulia, pos)
     Tp = lvl.Tp
     Ti = lvl.Ti
-    ros = call(-, call(getindex, :($(lvl.ex).pos), call(+, pos, 1)), 1)
+    ros = call(-, call(getindex, :($(lvl.ex).ptr), call(+, pos, 1)), 1)
     qos = call(-, call(getindex, :($(lvl.ex).ofs), call(+, ros, 1)), 1)
     push!(ctx.preamble, quote
         $(lvl.qos_fill) = $(Tp(0))
@@ -162,8 +162,8 @@ function trim_level!(lvl::VirtualSparseVBLLevel, ctx::LowerJulia, pos)
     ros = ctx.freshen(:ros)
     qos = ctx.freshen(:qos)
     push!(ctx.preamble, quote
-        resize!($(lvl.ex).pos, $(ctx(pos)) + 1)
-        $ros = $(lvl.ex).pos[end] - $(lvl.Tp(1))
+        resize!($(lvl.ex).ptr, $(ctx(pos)) + 1)
+        $ros = $(lvl.ex).ptr[end] - $(lvl.Tp(1))
         resize!($(lvl.ex).idx, $ros)
         resize!($(lvl.ex).ofs, $ros + 1)
         $qos = $(lvl.ex).ofs[end] - $(lvl.Tp(1))
@@ -176,8 +176,8 @@ function assemble_level!(lvl::VirtualSparseVBLLevel, ctx, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_start, pos_stop))
     return quote
-        $resize_if_smaller!($(lvl.ex).pos, $pos_stop + 1)
-        $fill_range!($(lvl.ex).pos, 0, $pos_start + 1, $pos_stop + 1)
+        $resize_if_smaller!($(lvl.ex).ptr, $pos_stop + 1)
+        $fill_range!($(lvl.ex).ptr, 0, $pos_start + 1, $pos_stop + 1)
     end
 end
 
@@ -187,9 +187,9 @@ function freeze_level!(lvl::VirtualSparseVBLLevel, ctx::LowerJulia, pos_stop)
     qos_stop = ctx.freshen(:qos_stop)
     push!(ctx.preamble, quote
         for $p = 2:($pos_stop + 1)
-            $(lvl.ex).pos[$p] += $(lvl.ex).pos[$p - 1]
+            $(lvl.ex).ptr[$p] += $(lvl.ex).ptr[$p - 1]
         end
-        $qos_stop = $(lvl.ex).pos[$pos_stop + 1] - 1
+        $qos_stop = $(lvl.ex).ptr[$pos_stop + 1] - 1
     end)
     lvl.lvl = freeze_level!(lvl.lvl, ctx, value(qos_stop))
     return lvl
@@ -213,8 +213,8 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Union{No
         size = virtual_level_size(lvl, ctx),
         body = (ctx, idx, ext) -> Thunk(
             preamble = quote
-                $my_r = $(lvl.ex).pos[$(ctx(pos))]
-                $my_r_stop = $(lvl.ex).pos[$(ctx(pos)) + $(Tp(1))]
+                $my_r = $(lvl.ex).ptr[$(ctx(pos))]
+                $my_r_stop = $(lvl.ex).ptr[$(ctx(pos)) + $(Tp(1))]
                 if $my_r < $my_r_stop
                     $my_i = $(lvl.ex).idx[$my_r]
                     $my_i1 = $(lvl.ex).idx[$my_r_stop - $(Tp(1))]
@@ -292,8 +292,8 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Gallop, 
         size = virtual_level_size(lvl, ctx),
         body = (ctx, idx, ext) -> Thunk(
             preamble = quote
-                $my_r = $(lvl.ex).pos[$(ctx(pos))]
-                $my_r_stop = $(lvl.ex).pos[$(ctx(pos)) + $(Tp(1))]
+                $my_r = $(lvl.ex).ptr[$(ctx(pos))]
+                $my_r_stop = $(lvl.ex).ptr[$(ctx(pos)) + $(Tp(1))]
                 if $my_r < $my_r_stop
                     $my_i = $(lvl.ex).idx[$my_r]
                     $my_i1 = $(lvl.ex).idx[$my_r_stop - $(Tp(1))]
@@ -455,7 +455,7 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseVBLLevel}, ctx, ::
                 )
             ),
             epilogue = quote
-                $(lvl.ex).pos[$(ctx(pos)) + 1] = $ros - $ros_fill
+                $(lvl.ex).ptr[$(ctx(pos)) + 1] = $ros - $ros_fill
                 $ros_fill = $ros
                 $qos_fill = $qos - 1
             end

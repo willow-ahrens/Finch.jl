@@ -2,7 +2,7 @@ struct SparseCooLevel{N, Ti<:Tuple, Tp, Tbl, Lvl}
     lvl::Lvl
     I::Ti
     tbl::Tbl
-    pos::Vector{Tp}
+    ptr::Vector{Tp}
 end
 const SparseCoo = SparseCooLevel
 
@@ -28,7 +28,7 @@ similar_level(lvl::SparseCooLevel{N}) where {N} = SparseCooLevel{N}(similar_leve
 similar_level(lvl::SparseCooLevel{N}, tail...) where {N} = SparseCooLevel{N}(similar_level(lvl.lvl, tail[1:end-N]...), (tail[end-N+1:end]...,))
 
 pattern!(lvl::SparseCooLevel{N, Ti, Tp}) where {N, Ti, Tp} = 
-    SparseCooLevel{N, Ti, Tp}(pattern!(lvl.lvl), lvl.I, lvl.tbl, lvl.pos)
+    SparseCooLevel{N, Ti, Tp}(pattern!(lvl.lvl), lvl.I, lvl.tbl, lvl.ptr)
 
 function Base.show(io::IO, lvl::SparseCooLevel{N, Ti, Tp}) where {N, Ti, Tp}
     if get(io, :compact, false)
@@ -50,14 +50,14 @@ function Base.show(io::IO, lvl::SparseCooLevel{N, Ti, Tp}) where {N, Ti, Tp}
             print(io, ", ")
         end
         print(io, "), ")
-        show(IOContext(io, :typeinfo=>Vector{Tp}), lvl.pos)
+        show(IOContext(io, :typeinfo=>Vector{Tp}), lvl.ptr)
     end
     print(io, ")")
 end
 
 function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseCooLevel{N}}, depth) where {N}
     p = fbr.pos
-    crds = fbr.lvl.pos[p]:fbr.lvl.pos[p + 1] - 1
+    crds = fbr.lvl.ptr[p]:fbr.lvl.ptr[p + 1] - 1
 
     print_coord(io, q) = (print(io, "["); join(io, map(n -> fbr.lvl.tbl[n][q], 1:N), ", "); print(io, "]"))
     get_fbr(q) = fbr(map(n -> fbr.lvl.tbl[n][q], 1:N)...)
@@ -80,7 +80,7 @@ function (fbr::SubFiber{<:SparseCooLevel{N, Ti}})(idxs...) where {N, Ti}
     isempty(idxs) && return fbr
     idx = idxs[end-N + 1:end]
     lvl = fbr.lvl
-    target = lvl.pos[fbr.pos]:lvl.pos[fbr.pos + 1] - 1
+    target = lvl.ptr[fbr.pos]:lvl.ptr[fbr.pos + 1] - 1
     for n = N:-1:1
         target = searchsorted(view(lvl.tbl[n], target), idx[n]) .+ (first(target) - 1)
     end
@@ -115,7 +115,7 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualSparseCooLevel)
             $(ctx(lvl.lvl)),
             ($(map(ctx, lvl.I)...),),
             $(lvl.ex).tbl,
-            $(lvl.ex).pos,
+            $(lvl.ex).ptr,
         )
     end
 end
@@ -140,7 +140,7 @@ function initialize_level!(lvl::VirtualSparseCooLevel, ctx::LowerJulia, pos)
     Ti = lvl.Ti
     Tp = lvl.Tp
 
-    qos = call(-, call(getindex, :($(lvl.ex).pos), call(+, pos, 1)), 1)
+    qos = call(-, call(getindex, :($(lvl.ex).ptr), call(+, pos, 1)), 1)
     push!(ctx.preamble, quote
         $(lvl.qos_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
@@ -154,8 +154,8 @@ function trim_level!(lvl::VirtualSparseCooLevel, ctx::LowerJulia, pos)
     qos = ctx.freshen(:qos)
 
     push!(ctx.preamble, quote
-        resize!($(lvl.ex).pos, $(ctx(pos)) + 1)
-        $qos = $(lvl.ex).pos[end] - $(Tp(1))
+        resize!($(lvl.ex).ptr, $(ctx(pos)) + 1)
+        $qos = $(lvl.ex).ptr[end] - $(Tp(1))
         $(Expr(:block, map(1:lvl.N) do n
             :(resize!($(lvl.ex).tbl[$n], $qos))
         end...))
@@ -168,8 +168,8 @@ function assemble_level!(lvl::VirtualSparseCooLevel, ctx, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_start, pos_stop))
     return quote
-        $resize_if_smaller!($(lvl.ex).pos, $pos_stop + 1)
-        $fill_range!($(lvl.ex).pos, 0, $pos_start + 1, $pos_stop + 1)
+        $resize_if_smaller!($(lvl.ex).ptr, $pos_stop + 1)
+        $fill_range!($(lvl.ex).ptr, 0, $pos_start + 1, $pos_stop + 1)
     end
 end
 
@@ -179,9 +179,9 @@ function freeze_level!(lvl::VirtualSparseCooLevel, ctx::LowerJulia, pos_stop)
     qos_stop = ctx.freshen(:qos_stop)
     push!(ctx.preamble, quote
         for $p = 2:($pos_stop + 1)
-            $(lvl.ex).pos[$p] += $(lvl.ex).pos[$p - 1]
+            $(lvl.ex).ptr[$p] += $(lvl.ex).ptr[$p - 1]
         end
-        $qos_stop = $(lvl.ex).pos[$pos_stop + 1] - 1
+        $qos_stop = $(lvl.ex).ptr[$pos_stop + 1] - 1
     end)
     lvl.lvl = freeze_level!(lvl.lvl, ctx, value(qos_stop))
     return lvl
@@ -189,8 +189,8 @@ end
 
 function get_reader(fbr::VirtualSubFiber{VirtualSparseCooLevel}, ctx, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
-    start = value(:($(lvl.ex).pos[$(ctx(pos))]), lvl.Tp)
-    stop = value(:($(lvl.ex).pos[$(ctx(pos)) + 1]), lvl.Tp)
+    start = value(:($(lvl.ex).ptr[$(ctx(pos))]), lvl.Tp)
+    stop = value(:($(lvl.ex).ptr[$(ctx(pos)) + 1]), lvl.Tp)
 
     get_reader_coo_helper(lvl::VirtualSparseCooLevel, ctx, lvl.N, start, stop, protos...)
 end
@@ -293,7 +293,7 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseCooLevel}, ctx, pr
         end,
         body = get_updater_coo_helper(lvl, ctx, qos, fbr.dirty, (), protos...),
         epilogue = quote
-            $(lvl.ex).pos[$(ctx(pos)) + 1] = $qos - $qos_fill - 1
+            $(lvl.ex).ptr[$(ctx(pos)) + 1] = $qos - $qos_fill - 1
             $qos_fill = $qos - 1
         end
     )
