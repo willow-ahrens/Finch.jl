@@ -141,9 +141,35 @@ See also: [`initialize!`](@ref)
     target=nothing
     escape=[]
 end
+
+"""
+    initialize!(tns, ctx)
+
+Melt and initialize the read-only virtual tensor `tns` in the context `ctx` and return it.
+After melting, the tensor is update-only.
+"""
 initialize!(tns, ctx) = tns
+
+"""
+    get_reader(tns, ctx, protos...)
+    
+Return an object (usually a looplet nest) capable of reading the read-only
+virtual tensor `tns`.  As soon as a read-only tensor enters scope, each
+subsequent read access will be initialized with a separate call to
+`get_reader`. `protos` is the list of protocols in each case.
+"""
 get_reader(tns, ctx, protos...) = tns
+
+"""
+    get_updater(tns, ctx, protos...)
+    
+Return an object (usually a looplet nest) capable of updating the update-only
+virtual tensor `tns`.  As soon as an update only tensor enters scope, each
+subsequent update access will be initialized with a separate call to
+`get_updater`.  `protos` is the list of protocols in each case.
+"""
 get_updater(tns, ctx, protos...) = tns
+
 function (ctx::OpenScope)(node)
     if istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))
@@ -195,8 +221,8 @@ end
 """
     CloseScope(ctx)
 
-A transformation to freeze output tensors before they leave scope and are
-returned to the caller.
+A transformation to freeze output virtual tensors before they leave scope and
+are returned to the caller.
 
 See also: [`freeze!`](@ref)
 """
@@ -205,7 +231,22 @@ See also: [`freeze!`](@ref)
     target=nothing
     escape=[]
 end
+
+"""
+    freeze!(tns, ctx)
+
+Freeze the update-only virtual tensor `tns` in the context `ctx` and return it. After
+freezing, the tensor is read-only.
+"""
 freeze!(tns, ctx, mode, idxs...) = tns
+
+"""
+    trim!(tns, ctx)
+
+Before returning a tensor from the finch program, trim any excess overallocated memory.
+"""
+trim!(tns, ctx) = tns
+
 function (ctx::CloseScope)(node)
     if istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))

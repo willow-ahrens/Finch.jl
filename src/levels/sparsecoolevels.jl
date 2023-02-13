@@ -97,7 +97,6 @@ mutable struct VirtualSparseCooLevel
     I
     qos_fill
     qos_stop
-    dirty
 end
 function virtualize(ex, ::Type{SparseCooLevel{N, Ti, Tp, Tbl, Lvl}}, ctx, tag=:lvl) where {N, Ti, Tp, Tbl, Lvl}   
     sym = ctx.freshen(tag)
@@ -108,8 +107,7 @@ function virtualize(ex, ::Type{SparseCooLevel{N, Ti, Tp, Tbl, Lvl}}, ctx, tag=:l
         $sym = $ex
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    dirty = ctx.freshen(sym, :_dirty)
-    VirtualSparseCooLevel(lvl_2, sym, N, Ti, Tp, Tbl, I, qos_fill, qos_stop, dirty)
+    VirtualSparseCooLevel(lvl_2, sym, N, Ti, Tp, Tbl, I, qos_fill, qos_stop)
 end
 function (ctx::Finch.LowerJulia)(lvl::VirtualSparseCooLevel)
     quote
@@ -194,10 +192,10 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseCooLevel}, ctx, protos...)
     start = value(:($(lvl.ex).pos[$(ctx(pos))]), lvl.Tp)
     stop = value(:($(lvl.ex).pos[$(ctx(pos)) + 1]), lvl.Tp)
 
-    get_multilevel_range_reader(lvl::VirtualSparseCooLevel, ctx, lvl.N, start, stop, protos...)
+    get_reader_coo_helper(lvl::VirtualSparseCooLevel, ctx, lvl.N, start, stop, protos...)
 end
 
-function get_multilevel_range_reader(lvl::VirtualSparseCooLevel, ctx, R, start, stop, ::Union{Nothing, Walk}, protos...)
+function get_reader_coo_helper(lvl::VirtualSparseCooLevel, ctx, R, start, stop, ::Union{Nothing, Walk}, protos...)
     tag = lvl.ex
     Ti = lvl.Ti
     Tp = lvl.Tp
@@ -260,7 +258,7 @@ function get_multilevel_range_reader(lvl::VirtualSparseCooLevel, ctx, R, start, 
                                     stride = (ctx, idx, ext) -> value(my_i),
                                     chunk = Spike(
                                         body = Simplify(Fill(virtual_level_default(lvl))),
-                                        tail = get_multilevel_range_reader(lvl, ctx, R - 1, value(my_q, lvl.Ti), value(my_q_step, lvl.Ti), protos...),
+                                        tail = get_reader_coo_helper(lvl, ctx, R - 1, value(my_q, lvl.Ti), value(my_q_step, lvl.Ti), protos...),
                                     ),
                                     next = (ctx, idx, ext) -> quote
                                         $my_q = $my_q_step
@@ -278,10 +276,9 @@ function get_multilevel_range_reader(lvl::VirtualSparseCooLevel, ctx, R, start, 
     )
 end
 
-set_clean!(lvl::VirtualSparseCooLevel, ctx) = :($(lvl.dirty) = false)
-get_dirty(lvl::VirtualSparseCooLevel, ctx) = value(lvl.dirty, Bool)
-
-function get_updater(fbr::VirtualSubFiber{VirtualSparseCooLevel}, ctx, protos...)
+get_updater(fbr::VirtualSubFiber{VirtualSparseCooLevel}, ctx, protos...) =
+    get_updater(VirtualDirtySubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
+function get_updater(fbr::VirtualDirtySubFiber{VirtualSparseCooLevel}, ctx, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
@@ -294,7 +291,7 @@ function get_updater(fbr::VirtualSubFiber{VirtualSparseCooLevel}, ctx, protos...
         preamble = quote
             $qos = $qos_fill + 1
         end,
-        body = get_multilevel_append_updater(lvl, ctx, qos, (), protos...),
+        body = get_updater_coo_helper(lvl, ctx, qos, fbr.dirty, (), protos...),
         epilogue = quote
             $(lvl.ex).pos[$(ctx(pos)) + 1] = $qos - $qos_fill - 1
             $qos_fill = $qos - 1
@@ -302,7 +299,7 @@ function get_updater(fbr::VirtualSubFiber{VirtualSparseCooLevel}, ctx, protos...
     )
 end
 
-function get_multilevel_append_updater(lvl::VirtualSparseCooLevel, ctx, qos, coords, ::Union{Nothing, Extrude}, protos...)
+function get_updater_coo_helper(lvl::VirtualSparseCooLevel, ctx, qos, fbr_dirty, coords, ::Union{Nothing, Extrude}, protos...)
     Ti = lvl.Ti
     Tp = lvl.Tp
     qos_fill = lvl.qos_fill
@@ -314,9 +311,10 @@ function get_multilevel_append_updater(lvl::VirtualSparseCooLevel, ctx, qos, coo
             if length(coords) + 1 < lvl.N
                 Lookup(
                     val = virtual_level_default(lvl),
-                    body = (i) -> get_multilevel_append_updater(lvl, ctx, qos, (i, coords...), protos...)
+                    body = (i) -> get_updater_coo_helper(lvl, ctx, qos, fbr_dirty, (i, coords...), protos...)
                 )
             else
+                dirty = ctx.freshen(:dirty)
                 AcceptSpike(
                     val = virtual_level_default(lvl),
                     tail = (ctx, idx) -> Thunk(
@@ -328,12 +326,12 @@ function get_multilevel_append_updater(lvl::VirtualSparseCooLevel, ctx, qos, coo
                                 end...))
                                 $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(qos, lvl.Tp), value(qos_stop, lvl.Tp)), ctx))
                             end
-                            $(set_clean!(lvl.lvl, ctx))
+                            $dirty = false
                         end,
-                        body = get_updater(VirtualSubFiber(lvl.lvl, qos), ctx, protos...),
+                        body = get_updater(VirtualDirtySubFiber(lvl.lvl, qos, dirty), ctx, protos...),
                         epilogue = quote
-                            if $(ctx(get_dirty(lvl.lvl, ctx)))
-                                $(lvl.dirty) = true
+                            if $dirty
+                                $(fbr_dirty) = true
                                 $(Expr(:block, map(enumerate((idx, coords...))) do (n, i)
                                     :($(lvl.ex).tbl[$n][$qos] = $(ctx(i)))
                                 end...))

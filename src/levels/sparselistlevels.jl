@@ -82,7 +82,6 @@ mutable struct VirtualSparseListLevel
     I
     qos_fill
     qos_stop
-    dirty
 end
 function virtualize(ex, ::Type{SparseListLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}
     sym = ctx.freshen(tag)
@@ -92,9 +91,8 @@ function virtualize(ex, ::Type{SparseListLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) whe
     push!(ctx.preamble, quote
         $sym = $ex
     end)
-    dirty = ctx.freshen(sym, :_dirty)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualSparseListLevel(lvl_2, sym, Ti, Tp, I, qos_fill, qos_stop, dirty)
+    VirtualSparseListLevel(lvl_2, sym, Ti, Tp, I, qos_fill, qos_stop)
 end
 function (ctx::Finch.LowerJulia)(lvl::VirtualSparseListLevel)
     quote
@@ -350,16 +348,16 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::Gallop,
     )
 end
 
-set_clean!(lvl::VirtualSparseListLevel, ctx) = :($(lvl.dirty) = false)
-get_dirty(lvl::VirtualSparseListLevel, ctx) = value(lvl.dirty, Bool)
-
-function get_updater(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::Union{Nothing, Extrude}, protos...)
+get_updater(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, protos...) =
+    get_updater(VirtualDirtySubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
+function get_updater(fbr::VirtualDirtySubFiber{VirtualSparseListLevel}, ctx, ::Union{Nothing, Extrude}, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp
     qos = ctx.freshen(tag, :_qos)
     qos_fill = lvl.qos_fill
     qos_stop = lvl.qos_stop
+    dirty = ctx.freshen(tag, :dirty)
 
     Furlable(
         val = virtual_level_default(lvl),
@@ -377,12 +375,12 @@ function get_updater(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::Union{
                             $resize_if_smaller!($(lvl.ex).idx, $qos_stop)
                             $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(qos, lvl.Tp), value(qos_stop, lvl.Tp)), ctx))
                         end
-                        $(set_clean!(lvl.lvl, ctx))
+                        $dirty = false
                     end,
-                    body = get_updater(VirtualSubFiber(lvl.lvl, value(qos, lvl.Tp)), ctx, protos...),
+                    body = get_updater(VirtualDirtySubFiber(lvl.lvl, value(qos, lvl.Tp), dirty), ctx, protos...),
                     epilogue = quote
-                        if $(ctx(get_dirty(lvl.lvl, ctx)))
-                            $(lvl.dirty) = true
+                        if $dirty
+                            $(fbr.dirty) = true
                             $(lvl.ex).idx[$qos] = $(ctx(idx))
                             $qos += $(Tp(1))
                         end

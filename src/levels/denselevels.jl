@@ -121,23 +121,21 @@ end
 
 supports_reassembly(::VirtualDenseLevel) = true
 function reassemble_level!(lvl::VirtualDenseLevel, ctx, pos_start, pos_stop)
-qos_start = call(+, call(*, call(-, pos_start, lvl.Ti(1)), lvl.I), 1)
-qos_stop = call(*, pos_stop, lvl.I)
-reassemble_level!(lvl.lvl, ctx, qos_start, qos_stop)
-lvl
+    qos_start = call(+, call(*, call(-, pos_start, lvl.Ti(1)), lvl.I), 1)
+    qos_stop = call(*, pos_stop, lvl.I)
+    reassemble_level!(lvl.lvl, ctx, qos_start, qos_stop)
+    lvl
 end
 
 function freeze_level!(lvl::VirtualDenseLevel, ctx::LowerJulia, pos)
     lvl.lvl = freeze_level!(lvl.lvl, ctx, call(*, pos, lvl.I))
     return lvl
 end
-set_clean!(lvl::VirtualDenseLevel, ctx) = set_clean!(lvl.lvl, ctx)
-get_dirty(lvl::VirtualDenseLevel, ctx) = get_dirty(lvl.lvl, ctx)
 
-
-get_reader(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, ::Union{Nothing, Follow}, protos...) = get_dense_level_nest(fbr, ctx, get_reader, protos...)
-get_updater(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, ::Union{Nothing, Laminate, Extrude}, protos...) = get_dense_level_nest(fbr, ctx, get_updater, protos...)
-function get_dense_level_nest(fbr, ctx, get_nest, protos...)
+get_reader(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, ::Union{Nothing, Follow}, protos...) = get_readerupdater_dense_helper(fbr, ctx, get_reader, VirtualSubFiber, protos...)
+get_updater(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, ::Union{Nothing, Laminate, Extrude}, protos...) = get_readerupdater_dense_helper(fbr, ctx, get_updater, VirtualSubFiber, protos...)
+get_updater(fbr::VirtualDirtySubFiber{VirtualDenseLevel}, ctx, ::Union{Nothing, Laminate, Extrude}, protos...) = get_readerupdater_dense_helper(fbr, ctx, get_updater, (lvl, pos) -> VirtualDirtySubFiber(lvl, pos, fbr.dirty), protos...)
+function get_readerupdater_dense_helper(fbr, ctx, get_readerupdater, subfiber_ctr, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
@@ -153,7 +151,7 @@ function get_dense_level_nest(fbr, ctx, get_nest, protos...)
                 preamble = quote
                     $q = ($(ctx(pos)) - $(Ti(1))) * $(ctx(lvl.I)) + $(ctx(i))
                 end,
-                body = get_nest(VirtualSubFiber(lvl.lvl, value(q, lvl.Ti)), ctx, protos...)
+                body = get_readerupdater(subfiber_ctr(lvl.lvl, value(q, lvl.Ti)), ctx, protos...)
             )
         )
     )

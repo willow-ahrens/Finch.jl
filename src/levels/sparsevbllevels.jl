@@ -398,10 +398,9 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Gallop, 
     )
 end
 
-set_clean!(lvl::VirtualSparseVBLLevel, ctx) = :($(lvl.dirty) = false)
-get_dirty(lvl::VirtualSparseVBLLevel, ctx) = value(lvl.dirty, Bool)
-
-function get_updater(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Union{Nothing, Extrude}, protos...)
+get_updater(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, protos...) =
+    get_updater(VirtualDirtySubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
+function get_updater(fbr::VirtualDirtySubFiber{VirtualSparseVBLLevel}, ctx, ::Union{Nothing, Extrude}, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp
@@ -415,6 +414,7 @@ function get_updater(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Union{N
     qos_stop = lvl.qos_stop
     ros_fill = lvl.ros_fill
     ros_stop = lvl.ros_stop
+    dirty = ctx.freshen(tag, :dirty)
 
     Furlable(
         val = virtual_level_default(lvl),
@@ -433,12 +433,12 @@ function get_updater(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Union{N
                             $qos_stop = max($qos_stop << 1, 1)
                             $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(qos, lvl.Tp), value(qos_stop, lvl.Tp)), ctx))
                         end
-                        $(set_clean!(lvl.lvl, ctx))
+                        $dirty = false
                     end,
-                    body = get_updater(VirtualSubFiber(lvl.lvl, value(qos, lvl.Tp)), ctx, protos...),
+                    body = get_updater(VirtualDirtySubFiber(lvl.lvl, value(qos, lvl.Tp), dirty), ctx, protos...),
                     epilogue = quote
-                        if $(ctx(get_dirty(lvl.lvl, ctx)))
-                            $(lvl.dirty) = true
+                        if $dirty
+                            $(fbr.dirty) = true
                             if $(ctx(idx)) > $my_i_prev + $(Ti(1))
                                 $ros += $(Tp(1))
                                 if $ros > $ros_stop

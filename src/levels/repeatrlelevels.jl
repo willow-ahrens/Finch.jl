@@ -226,10 +226,9 @@ function get_reader(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, ::Union{No
     )
 end
 
-set_clean!(lvl::VirtualRepeatRLELevel, ctx) = :($(lvl.dirty) = false)
-get_dirty(lvl::VirtualRepeatRLELevel, ctx) = value(lvl.dirty, Bool)
-
-function get_updater(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, ::Union{Nothing, Extrude})
+get_updater(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, protos...) = 
+    get_updater(VirtualDirtySubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
+function get_updater(fbr::VirtualDirtySubFiber{VirtualRepeatRLELevel}, ctx, ::Union{Nothing, Extrude})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp
@@ -256,7 +255,7 @@ function get_updater(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, ::Union{N
                 $resize_if_smaller!($(lvl.ex).val, $qos_stop)
                 $fill_range!($(lvl.ex).val, $(lvl.D), $qos_fill + 1, $qos_stop)
             end
-            $(lvl.dirty) = true
+            $(fbr.dirty) = true
             $(lvl.ex).idx[$my_q] = $(ctx(stop))
             $(lvl.ex).val[$my_q] = $v
             $my_q += $(Tp(1))

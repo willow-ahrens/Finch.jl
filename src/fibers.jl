@@ -1,6 +1,17 @@
 abstract type AbstractFiber{Lvl} end
 abstract type AbstractVirtualFiber{Lvl} end
 
+"""
+    Fiber(lvl)
+
+`Fiber` represents the root of a level-tree tensor. To easily construct a valid
+fiber, use [`@fiber`](@ref) or [`fiber`](@ref). Users should avoid calling
+this constructor directly.
+
+In particular, `Fiber` represents the tensor at position 1 of `lvl`.  It is
+required that position 1 is valid. `Fiber(lvl)` wraps a valid level without
+copying.  `Fiber!(lvl)` initializes `lvl` when no positions are valid.
+"""
 struct Fiber{Lvl} <: AbstractFiber{Lvl}
     lvl::Lvl
 end
@@ -20,14 +31,14 @@ struct SubFiber{Lvl, Pos} <: AbstractFiber{Lvl}
     pos::Pos
 end
 
-mutable struct VirtualSubFiber{Lvl}
+mutable struct VirtualSubFiber{Lvl} <: AbstractVirtualFiber{Lvl}
     lvl::Lvl
     pos
 end
 function virtualize(ex, ::Type{<:SubFiber{Lvl, Pos}}, ctx, tag=ctx.freshen(:tns)) where {Lvl, Pos}
     lvl = virtualize(:($ex.lvl), Lvl, ctx, Symbol(tag, :_lvl))
     pos = virtualize(:($ex.pos), Pos, ctx)
-    VirtualFiber(lvl, pos)
+    VirtualSubFiber(lvl, pos)
 end
 (ctx::Finch.LowerJulia)(fbr::VirtualSubFiber) = :(SubFiber($(ctx(fbr.lvl)), $(ctx(fbr.pos))))
 FinchNotation.isliteral(::VirtualSubFiber) =  false
@@ -61,10 +72,36 @@ See also: [`initialize!`](@ref)
 function default end
 
 """
-    initialize!(fbr, ctx)
+    initialize_level!(lvl, ctx, pos)
 
-Initialize the virtual fiber to it's default value in the context `ctx`. Return the new fiber object.
+Initialize and thaw all fibers within `lvl`, assuming positions `1:pos` were
+previously assembled and frozen. The resulting level has no assembled positions.
 """
+function initialize_level! end
+
+"""
+    assemble_level!(lvl, ctx, pos, new_pos)
+
+Assemble and positions `pos+1:new_pos` in `lvl`, assuming positions `1:pos` were
+previously assembled.
+"""
+function assemble_level! end
+
+"""
+    reassemble_level!(lvl, ctx, pos_start, pos_end) 
+
+Set the previously assempled positions from `pos_start` to `pos_end` to
+`level_default(lvl)`.
+"""
+function reassemble_level! end
+
+"""
+    freeze_level!(lvl, ctx, pos) 
+
+Freeze all fibers in `lvl`. Positions `1:pos` need freezing.
+"""
+function reassemble_level! end
+
 function initialize!(fbr::VirtualFiber, ctx::LowerJulia)
     lvl = initialize_level!(fbr.lvl, ctx, literal(1))
     push!(ctx.preamble, assemble_level!(lvl, ctx, literal(1), literal(1))) #TODO this feels unnecessary?
@@ -79,23 +116,41 @@ function get_updater(fbr::VirtualFiber, ctx::LowerJulia, protos...)
     return get_updater(VirtualSubFiber(fbr.lvl, literal(1)), ctx, reverse(protos)...)
 end
 
-"""
-    initialize_level!(fbr, ctx, pos)
+struct DirtySubFiber{Lvl, Pos, Dirty} <: AbstractFiber{Lvl}
+    lvl::Lvl
+    pos::Pos
+    dirty::Dirty
+end
 
-Initialize the level within the virtual fiber to it's default value in the
-context `ctx` with access mode `mode`. Return the new level.
-"""
-function initialize_level! end
+mutable struct VirtualDirtySubFiber{Lvl}
+    lvl::Lvl
+    pos
+    dirty
+end
+function virtualize(ex, ::Type{<:DirtySubFiber{Lvl, Pos, Dirty}}, ctx, tag=ctx.freshen(:tns)) where {Lvl, Pos, Dirty}
+    lvl = virtualize(:($ex.lvl), Lvl, ctx, Symbol(tag, :_lvl))
+    pos = virtualize(:($ex.pos), Pos, ctx)
+    dirty = virtualize(:($ex.dirty), Dirty, ctx)
+    VirtualDirtySubFiber(lvl, pos, dirty)
+end
+(ctx::Finch.LowerJulia)(fbr::VirtualDirtySubFiber) = :(DirtySubFiber($(ctx(fbr.lvl)), $(ctx(fbr.pos))))
+FinchNotation.isliteral(::VirtualDirtySubFiber) = false
+
+function get_updater(fbr::VirtualDirtySubFiber, ctx, protos...)
+    Thunk(
+        preamble = quote
+            $(fbr.dirty) = true
+        end,
+        body = get_updater(VirtualSubFiber(fbr.lvl, fbr.pos))
+    )
+end
+
+
 
 data_rep(fbr::Fiber) = data_rep(typeof(fbr))
 data_rep(::Type{<:AbstractFiber{Lvl}}) where {Lvl} = SolidData(data_rep_level(Lvl))
 
-"""
-    freeze!(fbr, ctx, mode, idxs...)
 
-Freeze the virtual fiber in the context `ctx` with access mode `mode`. Return
-the new fiber object.
-"""
 function freeze!(fbr::VirtualFiber, ctx::LowerJulia, mode, idxs...)
     if mode.kind === updater
         return VirtualFiber(freeze_level!(fbr.lvl, ctx, literal(1)))
@@ -116,11 +171,7 @@ freeze_level!(fbr, ctx, mode) = fbr.lvl
 function trim!(fbr::VirtualFiber, ctx)
     VirtualFiber(trim_level!(fbr.lvl, ctx, literal(1)))
 end
-trim!(fbr, ctx) = fbr
 
-#TODO get rid of these when we redo unfurling
-set_clean!(lvl, ctx) = quote end
-get_dirty(lvl, ctx) = true
 
 get_furl_root(idx) = nothing
 function get_furl_root(idx::FinchNode)

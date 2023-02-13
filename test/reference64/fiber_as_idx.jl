@@ -33,7 +33,6 @@ begin
                 for s_2 = I_lvl.val[I_lvl_q]:I_lvl.val[I_lvl_q]
                     A_lvl_2_q = (A_lvl_q - 1) * A_lvl_2.I + s_2
                     A_lvl_3_val_2 = A_lvl_3.val[A_lvl_2_q]
-                    B_lvl_2_dirty = true
                     B_lvl_2_val_2 = A_lvl_3_val_2
                 end
                 B_lvl_2.val[B_lvl_q] = B_lvl_2_val_2
@@ -47,7 +46,6 @@ begin
                 for s_4 = I_lvl.val[I_lvl_q]:I_lvl.val[I_lvl_q]
                     A_lvl_2_q_2 = (A_lvl_q - 1) * A_lvl_2.I + s_4
                     A_lvl_3_val_3 = A_lvl_3.val[A_lvl_2_q_2]
-                    B_lvl_2_dirty = true
                     B_lvl_2_val_3 = A_lvl_3_val_3
                 end
                 B_lvl_2.val[B_lvl_q] = B_lvl_2_val_3
