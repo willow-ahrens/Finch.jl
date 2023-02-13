@@ -398,8 +398,8 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseBytemapLevel}, ctx, ::Foll
 end
 
 get_updater(fbr::VirtualSubFiber{VirtualSparseBytemapLevel}, ctx, protos...) = 
-    get_updater(VirtualDirtySubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
-function get_updater(fbr::VirtualDirtySubFiber{VirtualSparseBytemapLevel}, ctx, ::Union{Nothing, Extrude, Laminate}, protos...)
+    get_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
+function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseBytemapLevel}, ctx, ::Union{Nothing, Extrude, Laminate}, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp
@@ -416,7 +416,7 @@ function get_updater(fbr::VirtualDirtySubFiber{VirtualSparseBytemapLevel}, ctx, 
                     $my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.I)) + $(ctx(idx))
                     $dirty = false
                 end,
-                body = get_updater(VirtualDirtySubFiber(lvl.lvl, value(my_q, lvl.Ti), dirty), ctx, protos...),
+                body = get_updater(VirtualTrackedSubFiber(lvl.lvl, value(my_q, lvl.Ti), dirty), ctx, protos...),
                 epilogue = quote
                     if $dirty
                         $(fbr.dirty) = true

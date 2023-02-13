@@ -122,27 +122,27 @@ function get_updater(fbr::VirtualFiber, ctx::LowerJulia, protos...)
     return get_updater(VirtualSubFiber(fbr.lvl, literal(1)), ctx, reverse(protos)...)
 end
 
-struct DirtySubFiber{Lvl, Pos, Dirty} <: AbstractFiber{Lvl}
+struct TrackedSubFiber{Lvl, Pos, Dirty} <: AbstractFiber{Lvl}
     lvl::Lvl
     pos::Pos
     dirty::Dirty
 end
 
-mutable struct VirtualDirtySubFiber{Lvl}
+mutable struct VirtualTrackedSubFiber{Lvl}
     lvl::Lvl
     pos
     dirty
 end
-function virtualize(ex, ::Type{<:DirtySubFiber{Lvl, Pos, Dirty}}, ctx, tag=ctx.freshen(:tns)) where {Lvl, Pos, Dirty}
+function virtualize(ex, ::Type{<:TrackedSubFiber{Lvl, Pos, Dirty}}, ctx, tag=ctx.freshen(:tns)) where {Lvl, Pos, Dirty}
     lvl = virtualize(:($ex.lvl), Lvl, ctx, Symbol(tag, :_lvl))
     pos = virtualize(:($ex.pos), Pos, ctx)
     dirty = virtualize(:($ex.dirty), Dirty, ctx)
-    VirtualDirtySubFiber(lvl, pos, dirty)
+    VirtualTrackedSubFiber(lvl, pos, dirty)
 end
-(ctx::Finch.LowerJulia)(fbr::VirtualDirtySubFiber) = :(DirtySubFiber($(ctx(fbr.lvl)), $(ctx(fbr.pos))))
-FinchNotation.isliteral(::VirtualDirtySubFiber) = false
+(ctx::Finch.LowerJulia)(fbr::VirtualTrackedSubFiber) = :(TrackedSubFiber($(ctx(fbr.lvl)), $(ctx(fbr.pos))))
+FinchNotation.isliteral(::VirtualTrackedSubFiber) = false
 
-function get_updater(fbr::VirtualDirtySubFiber, ctx, protos...)
+function get_updater(fbr::VirtualTrackedSubFiber, ctx, protos...)
     Thunk(
         preamble = quote
             $(fbr.dirty) = true

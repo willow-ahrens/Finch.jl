@@ -277,8 +277,8 @@ function get_reader_coo_helper(lvl::VirtualSparseCooLevel, ctx, R, start, stop, 
 end
 
 get_updater(fbr::VirtualSubFiber{VirtualSparseCooLevel}, ctx, protos...) =
-    get_updater(VirtualDirtySubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
-function get_updater(fbr::VirtualDirtySubFiber{VirtualSparseCooLevel}, ctx, protos...)
+    get_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
+function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseCooLevel}, ctx, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
@@ -328,7 +328,7 @@ function get_updater_coo_helper(lvl::VirtualSparseCooLevel, ctx, qos, fbr_dirty,
                             end
                             $dirty = false
                         end,
-                        body = get_updater(VirtualDirtySubFiber(lvl.lvl, qos, dirty), ctx, protos...),
+                        body = get_updater(VirtualTrackedSubFiber(lvl.lvl, qos, dirty), ctx, protos...),
                         epilogue = quote
                             if $dirty
                                 $(fbr_dirty) = true

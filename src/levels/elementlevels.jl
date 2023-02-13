@@ -124,7 +124,7 @@ function get_updater(fbr::VirtualSubFiber{VirtualElementLevel}, ctx)
     )
 end
 
-function get_updater(fbr::VirtualDirtySubFiber{VirtualElementLevel}, ctx)
+function get_updater(fbr::VirtualTrackedSubFiber{VirtualElementLevel}, ctx)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     val = ctx.freshen(lvl.ex, :_val)
     return Thunk(

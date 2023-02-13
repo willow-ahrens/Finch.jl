@@ -227,8 +227,8 @@ function get_reader(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, ::Union{No
 end
 
 get_updater(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, protos...) = 
-    get_updater(VirtualDirtySubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
-function get_updater(fbr::VirtualDirtySubFiber{VirtualRepeatRLELevel}, ctx, ::Union{Nothing, Extrude})
+    get_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
+function get_updater(fbr::VirtualTrackedSubFiber{VirtualRepeatRLELevel}, ctx, ::Union{Nothing, Extrude})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp

@@ -333,8 +333,8 @@ function get_reader_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, coords, :
 end
 
 get_updater(fbr::VirtualSubFiber{VirtualSparseHashLevel}, ctx, protos...) =
-    get_updater(VirtualDirtySubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
-function get_updater(fbr::VirtualDirtySubFiber{VirtualSparseHashLevel}, ctx, protos...)
+    get_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
+function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseHashLevel}, ctx, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     return Thunk(
         preamble = quote
@@ -375,7 +375,7 @@ function get_updater_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, fbr_dirt
                             end
                             $dirty = false
                         end,
-                        body = get_updater(VirtualDirtySubFiber(lvl.lvl, qos, dirty), ctx, protos...),
+                        body = get_updater(VirtualTrackedSubFiber(lvl.lvl, qos, dirty), ctx, protos...),
                         epilogue = quote
                             if $dirty
                                 $(fbr_dirty) = true
