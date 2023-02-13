@@ -183,8 +183,13 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::Union{N
             preamble = quote
                 $my_q = $(lvl.ex).ptr[$(ctx(pos))]
                 $my_q_stop = $(lvl.ex).ptr[$(ctx(pos)) + $(Tp(1))]
-                $my_i = $my_q < $my_q_stop ? $(lvl.ex).idx[$my_q] : $(Ti(1))
-                $my_i1 = $my_q < $my_q_stop ? $(lvl.ex).idx[$my_q_stop - $(Tp(1))] : $(Ti(0))
+                if $my_q < $my_q_stop
+                    $my_i = $(lvl.ex).idx[$my_q]
+                    $my_i1 = $(lvl.ex).idx[$my_q_stop - $(Tp(1))]
+                else
+                    $my_i = $(Ti(1))
+                    $my_i1 = $(Ti(0))
+                end
             end,
             body = Pipeline([
                 Phase(
@@ -236,8 +241,13 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::FastWal
             preamble = quote
                 $my_q = $(lvl.ex).ptr[$(ctx(pos))]
                 $my_q_stop = $(lvl.ex).ptr[$(ctx(pos)) + $(Tp(1))]
-                $my_i = $my_q < $my_q_stop ? $(lvl.ex).idx[$my_q] : $(Ti(1))
-                $my_i1 = $my_q < $my_q_stop ? $(lvl.ex).idx[$my_q_stop - $(Tp(1))] : $(Ti(0))
+                if $my_q < $my_q_stop
+                    $my_i = $(lvl.ex).idx[$my_q]
+                    $my_i1 = $(lvl.ex).idx[$my_q_stop - $(Tp(1))]
+                else
+                    $my_i = $(Ti(1))
+                    $my_i1 = $(Ti(0))
+                end
             end,
             body = Pipeline([
                 Phase(
@@ -287,8 +297,13 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::Gallop,
             preamble = quote
                 $my_q = $(lvl.ex).ptr[$(ctx(pos))]
                 $my_q_stop = $(lvl.ex).ptr[$(ctx(pos)) + 1]
-                $my_i = $my_q < $my_q_stop ? $(lvl.ex).idx[$my_q] : $(Ti(1))
-                $my_i1 = $my_q < $my_q_stop ? $(lvl.ex).idx[$my_q_stop - $(Tp(1))] : $(Ti(0))
+                if $my_q < $my_q_stop
+                    $my_i = $(lvl.ex).idx[$my_q]
+                    $my_i1 = $(lvl.ex).idx[$my_q_stop - $(Tp(1))]
+                else
+                    $my_i = $(Ti(1))
+                    $my_i1 = $(Ti(0))
+                end
             end,
             body = Pipeline([
                 Phase(

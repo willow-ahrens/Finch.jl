@@ -9,8 +9,8 @@ begin
     i_stop = (max)(A_lvl.I, (+)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl.I))
     C_lvl_qos_fill = 0
     C_lvl_qos_stop = 0
-    (Finch.resize_if_smaller!)(C_lvl.pos, 1 + 1)
-    (Finch.fill_range!)(C_lvl.pos, 0, 1 + 1, 1 + 1)
+    (Finch.resize_if_smaller!)(C_lvl.ptr, 1 + 1)
+    (Finch.fill_range!)(C_lvl.ptr, 0, 1 + 1, 1 + 1)
     C_lvl_qos = C_lvl_qos_fill + 1
     i = i_start
     i_start_2 = i
@@ -41,18 +41,15 @@ begin
     phase_stop_2 = (min)((+)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl.I), 0, i_stop)
     if phase_stop_2 >= i_start_2
         i_7 = i
-        B_lvl_q = B_lvl.pos[1]
-        B_lvl_q_stop = B_lvl.pos[1 + 1]
-        B_lvl_i = if B_lvl_q < B_lvl_q_stop
-                B_lvl.idx[B_lvl_q]
-            else
-                1
-            end
-        B_lvl_i1 = if B_lvl_q < B_lvl_q_stop
-                B_lvl.idx[B_lvl_q_stop - 1]
-            else
-                0
-            end
+        B_lvl_q = B_lvl.ptr[1]
+        B_lvl_q_stop = B_lvl.ptr[1 + 1]
+        if B_lvl_q < B_lvl_q_stop
+            B_lvl_i = B_lvl.idx[B_lvl_q]
+            B_lvl_i1 = B_lvl.idx[B_lvl_q_stop - 1]
+        else
+            B_lvl_i = 1
+            B_lvl_i1 = 0
+        end
         i = i_start_2
         i_start_3 = i
         phase_start = (max)(i_start_3, (+)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta, i_start_3, (-)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta)))
@@ -134,18 +131,15 @@ begin
     phase_stop_7 = (min)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta, A_lvl.I, i_stop)
     if phase_stop_7 >= i_start_2
         i_14 = i
-        A_lvl_q = A_lvl.pos[1]
-        A_lvl_q_stop = A_lvl.pos[1 + 1]
-        A_lvl_i = if A_lvl_q < A_lvl_q_stop
-                A_lvl.idx[A_lvl_q]
-            else
-                1
-            end
-        A_lvl_i1 = if A_lvl_q < A_lvl_q_stop
-                A_lvl.idx[A_lvl_q_stop - 1]
-            else
-                0
-            end
+        A_lvl_q = A_lvl.ptr[1]
+        A_lvl_q_stop = A_lvl.ptr[1 + 1]
+        if A_lvl_q < A_lvl_q_stop
+            A_lvl_i = A_lvl.idx[A_lvl_q]
+            A_lvl_i1 = A_lvl.idx[A_lvl_q_stop - 1]
+        else
+            A_lvl_i = 1
+            A_lvl_i1 = 0
+        end
         i = i_start_2
         i_start_5 = i
         phase_stop_8 = (min)(A_lvl_i1, phase_stop_7)
@@ -197,30 +191,24 @@ begin
     phase_stop_10 = (min)(A_lvl.I, (+)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl.I), i_stop)
     if phase_stop_10 >= i_start_2
         i_19 = i
-        A_lvl_q = A_lvl.pos[1]
-        A_lvl_q_stop = A_lvl.pos[1 + 1]
-        A_lvl_i = if A_lvl_q < A_lvl_q_stop
-                A_lvl.idx[A_lvl_q]
-            else
-                1
-            end
-        A_lvl_i1 = if A_lvl_q < A_lvl_q_stop
-                A_lvl.idx[A_lvl_q_stop - 1]
-            else
-                0
-            end
-        B_lvl_q = B_lvl.pos[1]
-        B_lvl_q_stop = B_lvl.pos[1 + 1]
-        B_lvl_i = if B_lvl_q < B_lvl_q_stop
-                B_lvl.idx[B_lvl_q]
-            else
-                1
-            end
-        B_lvl_i1 = if B_lvl_q < B_lvl_q_stop
-                B_lvl.idx[B_lvl_q_stop - 1]
-            else
-                0
-            end
+        A_lvl_q = A_lvl.ptr[1]
+        A_lvl_q_stop = A_lvl.ptr[1 + 1]
+        if A_lvl_q < A_lvl_q_stop
+            A_lvl_i = A_lvl.idx[A_lvl_q]
+            A_lvl_i1 = A_lvl.idx[A_lvl_q_stop - 1]
+        else
+            A_lvl_i = 1
+            A_lvl_i1 = 0
+        end
+        B_lvl_q = B_lvl.ptr[1]
+        B_lvl_q_stop = B_lvl.ptr[1 + 1]
+        if B_lvl_q < B_lvl_q_stop
+            B_lvl_i = B_lvl.idx[B_lvl_q]
+            B_lvl_i1 = B_lvl.idx[B_lvl_q_stop - 1]
+        else
+            B_lvl_i = 1
+            B_lvl_i1 = 0
+        end
         i = i_start_2
         i_start_7 = i
         phase_start_4 = (max)(i_start_7, (+)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta, (-)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta), i_start_7))
@@ -354,18 +342,15 @@ begin
     phase_stop_17 = (min)(A_lvl.I, i_stop)
     if phase_stop_17 >= i_start_2
         i_29 = i
-        A_lvl_q = A_lvl.pos[1]
-        A_lvl_q_stop = A_lvl.pos[1 + 1]
-        A_lvl_i = if A_lvl_q < A_lvl_q_stop
-                A_lvl.idx[A_lvl_q]
-            else
-                1
-            end
-        A_lvl_i1 = if A_lvl_q < A_lvl_q_stop
-                A_lvl.idx[A_lvl_q_stop - 1]
-            else
-                0
-            end
+        A_lvl_q = A_lvl.ptr[1]
+        A_lvl_q_stop = A_lvl.ptr[1 + 1]
+        if A_lvl_q < A_lvl_q_stop
+            A_lvl_i = A_lvl.idx[A_lvl_q]
+            A_lvl_i1 = A_lvl.idx[A_lvl_q_stop - 1]
+        else
+            A_lvl_i = 1
+            A_lvl_i1 = 0
+        end
         i = i_start_2
         i_start_10 = i
         phase_stop_18 = (min)(A_lvl_i1, phase_stop_17)
@@ -441,18 +426,15 @@ begin
     phase_stop_21 = (min)((+)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl.I), i_stop)
     if phase_stop_21 >= i_start_2
         i_36 = i
-        B_lvl_q = B_lvl.pos[1]
-        B_lvl_q_stop = B_lvl.pos[1 + 1]
-        B_lvl_i = if B_lvl_q < B_lvl_q_stop
-                B_lvl.idx[B_lvl_q]
-            else
-                1
-            end
-        B_lvl_i1 = if B_lvl_q < B_lvl_q_stop
-                B_lvl.idx[B_lvl_q_stop - 1]
-            else
-                0
-            end
+        B_lvl_q = B_lvl.ptr[1]
+        B_lvl_q_stop = B_lvl.ptr[1 + 1]
+        if B_lvl_q < B_lvl_q_stop
+            B_lvl_i = B_lvl.idx[B_lvl_q]
+            B_lvl_i1 = B_lvl.idx[B_lvl_q_stop - 1]
+        else
+            B_lvl_i = 1
+            B_lvl_i1 = 0
+        end
         i = i_start_2
         i_start_12 = i
         phase_start_9 = (max)(i_start_12, (+)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta, (-)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta), i_start_12))
@@ -529,15 +511,15 @@ begin
         end
         i = i_stop + 1
     end
-    C_lvl.pos[1 + 1] = (C_lvl_qos - C_lvl_qos_fill) - 1
+    C_lvl.ptr[1 + 1] = (C_lvl_qos - C_lvl_qos_fill) - 1
     C_lvl_qos_fill = C_lvl_qos - 1
     for p = 2:1 + 1
-        C_lvl.pos[p] += C_lvl.pos[p - 1]
+        C_lvl.ptr[p] += C_lvl.ptr[p - 1]
     end
-    qos_stop = C_lvl.pos[1 + 1] - 1
-    resize!(C_lvl.pos, 1 + 1)
-    qos = C_lvl.pos[end] - 1
+    qos_stop = C_lvl.ptr[1 + 1] - 1
+    resize!(C_lvl.ptr, 1 + 1)
+    qos = C_lvl.ptr[end] - 1
     resize!(C_lvl.idx, qos)
     resize!(C_lvl_2.val, qos)
-    (C = Fiber((Finch.SparseListLevel){Int64}(C_lvl_2, (max)(A_lvl.I, (+)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl.I)), C_lvl.pos, C_lvl.idx)),)
+    (C = Fiber((Finch.SparseListLevel){Int64}(C_lvl_2, (max)(A_lvl.I, (+)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl.I)), C_lvl.ptr, C_lvl.idx)),)
 end
