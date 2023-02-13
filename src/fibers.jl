@@ -8,9 +8,10 @@ abstract type AbstractVirtualFiber{Lvl} end
 fiber, use [`@fiber`](@ref) or [`fiber`](@ref). Users should avoid calling
 this constructor directly.
 
-In particular, `Fiber` represents the tensor at position 1 of `lvl`.  It is
-required that position 1 is valid. `Fiber(lvl)` wraps a valid level without
-copying.  `Fiber!(lvl)` initializes `lvl` when no positions are valid.
+In particular, `Fiber` represents the tensor at position 1 of `lvl`. The
+constructor `Fiber(lvl)` wraps a level assuming it is already in a valid state.
+The constructor `Fiber!(lvl)` first initializes `lvl` assuming no positions are
+valid.
 """
 struct Fiber{Lvl} <: AbstractFiber{Lvl}
     lvl::Lvl
@@ -26,6 +27,11 @@ end
 (ctx::Finch.LowerJulia)(fbr::VirtualFiber) = :(Fiber($(ctx(fbr.lvl))))
 FinchNotation.isliteral(::VirtualFiber) = false
 
+"""
+    SubFiber(lvl, pos)
+
+`SubFiber` represents a fiber at position `pos` within `lvl`.
+"""
 struct SubFiber{Lvl, Pos} <: AbstractFiber{Lvl}
     lvl::Lvl
     pos::Pos
