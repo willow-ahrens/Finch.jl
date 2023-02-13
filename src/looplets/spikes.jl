@@ -10,7 +10,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Spike)
     print(io, ")")
 end
 
-IndexNotation.isliteral(::Spike) =  false
+FinchNotation.isliteral(::Spike) =  false
 
 struct SpikeStyle end
 
@@ -22,7 +22,7 @@ combine_style(a::SimplifyStyle, b::SpikeStyle) = SimplifyStyle()
 combine_style(a::AcceptRunStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::SpikeStyle, b::SpikeStyle) = SpikeStyle()
 
-function (ctx::LowerJulia)(root::IndexNode, ::SpikeStyle)
+function (ctx::LowerJulia)(root::FinchNode, ::SpikeStyle)
     if root.kind === chunk
         root_body = SpikeBodyVisitor(ctx, root.idx, root.ext, Extent(spike_body_getstop(getstop(root.ext), ctx), getstop(root.ext)))(root.body)
         if extent(root.ext) == 1
@@ -66,7 +66,7 @@ function (ctx::SpikeBodyVisitor)(node)
     end
 end
 
-function (ctx::SpikeBodyVisitor)(node::IndexNode)
+function (ctx::SpikeBodyVisitor)(node::FinchNode)
     if node.kind === virtual
         return ctx(node.val)
     elseif istree(node)
@@ -101,7 +101,7 @@ function (ctx::SpikeTailVisitor)(node)
     end
 end
 
-function (ctx::SpikeTailVisitor)(node::IndexNode)
+function (ctx::SpikeTailVisitor)(node::FinchNode)
     if node.kind === access && node.tns.kind === virtual
         tns_2 = unchunk(node.tns.val, ctx)
         if tns_2 === nothing
@@ -130,7 +130,7 @@ supports_shift(::SpikeStyle) = true
     tail
 end
 
-IndexNotation.isliteral(::AcceptSpike) = false
+FinchNotation.isliteral(::AcceptSpike) = false
 
 Base.show(io::IO, ex::AcceptSpike) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::AcceptSpike)

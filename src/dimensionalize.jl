@@ -1,11 +1,11 @@
 struct NoDimension end
 const nodim = NoDimension()
-IndexNotation.isliteral(::NoDimension) = false
+FinchNotation.isliteral(::NoDimension) = false
 virtualize(ex, ::Type{NoDimension}, ctx) = nodim
 
 struct DeferDimension end
 const deferdim = DeferDimension()
-IndexNotation.isliteral(::DeferDimension) = false
+FinchNotation.isliteral(::DeferDimension) = false
 virtualize(ex, ::Type{DeferDimension}, ctx) = deferdim
 
 cache_dim!(ctx, tag, ext::DeferDimension) = ext
@@ -45,7 +45,7 @@ end
     body
 end
 
-IndexNotation.isliteral(::Dimensionalize) =  false
+FinchNotation.isliteral(::Dimensionalize) =  false
 
 struct DimensionalizeStyle end
 
@@ -98,7 +98,7 @@ end
 function (ctx::DeclareDimensions)(node::Dimensionalize, dim)
     ctx(node.body, dim)
 end
-function (ctx::DeclareDimensions)(node::IndexNode, dim)
+function (ctx::DeclareDimensions)(node::FinchNode, dim)
     if node.kind === index
         ctx.dims[getname(node)] = resultdim(ctx.ctx, get(ctx.dims, getname(node), nodim), dim)
         return node
@@ -119,7 +119,7 @@ function (ctx::DeclareDimensions)(node::IndexNode, dim)
         return node
     end
 end
-function (ctx::InferDimensions)(node::IndexNode)
+function (ctx::InferDimensions)(node::FinchNode)
     if node.kind === index
         return (node, ctx.dims[getname(node)])
     elseif node.kind === access && node.tns.kind === virtual
@@ -216,7 +216,7 @@ combinedim(ctx, ::DeferDimension, b) = deferdim
     upper = @f $stop - $start + 1
 end
 
-IndexNotation.isliteral(::Extent) = false
+FinchNotation.isliteral(::Extent) = false
 
 Base.:(==)(a::Extent, b::Extent) =
     a.start == b.start &&
@@ -239,28 +239,28 @@ getlower(ext::Extent) = ext.lower
 getupper(ext::Extent) = ext.upper
 extent(ext::Extent) = @f $(ext.stop) - $(ext.start) + 1
 
-function getstop(ext::IndexNode)
+function getstop(ext::FinchNode)
     if ext.kind === virtual
         getstop(ext.val)
     else
         ext
     end
 end
-function getstart(ext::IndexNode)
+function getstart(ext::FinchNode)
     if ext.kind === virtual
         getstart(ext.val)
     else
         ext
     end
 end
-function getlower(ext::IndexNode)
+function getlower(ext::FinchNode)
     if ext.kind === virtual
         getlower(ext.val)
     else
         1
     end
 end
-function getupper(ext::IndexNode)
+function getupper(ext::FinchNode)
     if ext.kind === virtual
         getupper(ext.val)
     else
@@ -268,7 +268,7 @@ function getupper(ext::IndexNode)
     end
 end
 #TODO I don't like this def
-function extent(ext::IndexNode)
+function extent(ext::FinchNode)
     if ext.kind === virtual
         extent(ext.val)
     elseif ext.kind === value
@@ -295,7 +295,7 @@ struct SuggestedExtent{Ext}
     ext::Ext
 end
 
-IndexNotation.isliteral(::SuggestedExtent) = false
+FinchNotation.isliteral(::SuggestedExtent) = false
 
 Base.:(==)(a::SuggestedExtent, b::SuggestedExtent) = a.ext == b.ext
 
@@ -319,7 +319,7 @@ combinedim(ctx, a::SuggestedExtent, b::NoDimension) = a
 
 combinedim(ctx, a::SuggestedExtent, b::SuggestedExtent) = SuggestedExtent(combinedim(ctx, a.ext, b.ext))
 
-function combinedim(ctx, a::IndexNode, b::IndexNode)
+function combinedim(ctx, a::FinchNode, b::FinchNode)
     if isliteral(a) && isliteral(b)
         a == b || throw(DimensionMismatch("mismatched dimension limits ($a != $b)"))
     end
@@ -335,7 +335,7 @@ mode `mode`. This is a function similar in spirit to `Base.axes`.
 function getsize end
 
 virtual_size(tns, ctx, eldim) = virtual_size(tns, ctx)
-function virtual_size(tns::IndexNode, ctx, eldim = nodim)
+function virtual_size(tns::FinchNode, ctx, eldim = nodim)
     if tns.kind === variable
         return virtual_size(ctx.bindings[tns.name], ctx, eldim)
     else
@@ -343,7 +343,7 @@ function virtual_size(tns::IndexNode, ctx, eldim = nodim)
     end
 end
 
-function virtual_elaxis(tns::IndexNode, ctx, dims...)
+function virtual_elaxis(tns::FinchNode, ctx, dims...)
     if tns.kind === variable
         return virtual_elaxis(ctx.bindings[tns.name], ctx, dims...)
     else
@@ -351,7 +351,7 @@ function virtual_elaxis(tns::IndexNode, ctx, dims...)
     end
 end
 
-function virtual_resize!(tns::IndexNode, ctx, dims...)
+function virtual_resize!(tns::FinchNode, ctx, dims...)
     if tns.kind === variable
         return (ctx.bindings[tns.name], eldim) = virtual_resize!(ctx.bindings[tns.name], ctx, dims...)
     else
@@ -366,7 +366,7 @@ struct Narrow{Ext}
     ext::Ext
 end
 
-function Narrow(ext::IndexNode)
+function Narrow(ext::FinchNode)
     if ext.kind === virtual
         Narrow(ext.val)
     else
@@ -374,7 +374,7 @@ function Narrow(ext::IndexNode)
     end
 end
 
-IndexNotation.isliteral(::Narrow) = false
+FinchNotation.isliteral(::Narrow) = false
 
 narrowdim(dim) = Narrow(dim)
 narrowdim(::NoDimension) = nodim
@@ -389,7 +389,7 @@ struct Widen{Ext}
     ext::Ext
 end
 
-function Widen(ext::IndexNode)
+function Widen(ext::FinchNode)
     if ext.kind === virtual
         Widen(ext.val)
     else
@@ -397,7 +397,7 @@ function Widen(ext::IndexNode)
     end
 end
 
-IndexNotation.isliteral(::Widen) = false
+FinchNotation.isliteral(::Widen) = false
 
 widendim(dim) = Widen(dim)
 widendim(::NoDimension) = nodim

@@ -13,7 +13,7 @@ function (ctx::Stylize)(node)
     return DefaultStyle()
 end
 
-function (ctx::Stylize)(node::IndexNode)
+function (ctx::Stylize)(node::FinchNode)
     if node.kind === virtual
         return ctx(node.val)
     elseif node.kind === access && node.tns.kind === virtual

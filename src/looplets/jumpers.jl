@@ -4,7 +4,7 @@ struct JumperStyle end
     body
 end
 
-IndexNotation.isliteral(::Jumper) =  false
+FinchNotation.isliteral(::Jumper) =  false
 
 (ctx::Stylize{LowerJulia})(node::Jumper) = ctx.root.kind === chunk ? JumperStyle() : DefaultStyle()
 
@@ -18,7 +18,7 @@ combine_style(a::JumperStyle, b::SwitchStyle) = SwitchStyle()
 combine_style(a::JumperStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::ThunkStyle, b::JumperStyle) = ThunkStyle()
 
-function (ctx::LowerJulia)(root::IndexNode, style::JumperStyle)
+function (ctx::LowerJulia)(root::FinchNode, style::JumperStyle)
     if root.kind === chunk
         return lower_cycle(root, ctx, root.idx, root.ext, style)
     else
@@ -35,7 +35,7 @@ end
     next = nothing
 end
 
-IndexNotation.isliteral(::Jump) =  false
+FinchNotation.isliteral(::Jump) =  false
 
 (ctx::Stylize{LowerJulia})(node::Jump) = ctx.root.kind === chunk ? PhaseStyle() : DefaultStyle()
 

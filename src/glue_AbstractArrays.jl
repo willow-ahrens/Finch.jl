@@ -32,7 +32,7 @@ end
 get_reader(arr::VirtualAbstractArray, ctx::LowerJulia, protos...) = arr
 get_updater(arr::VirtualAbstractArray, ctx::LowerJulia, protos...) = arr
 
-IndexNotation.isliteral(::VirtualAbstractArray) =  false
+FinchNotation.isliteral(::VirtualAbstractArray) =  false
 
 virtual_default(::VirtualAbstractArray) = 0
 virtual_eltype(tns::VirtualAbstractArray) = tns.eltype

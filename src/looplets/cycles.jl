@@ -39,7 +39,7 @@ function (ctx::CycleVisitor)(node)
     end
 end
 
-function (ctx::CycleVisitor)(node::IndexNode)
+function (ctx::CycleVisitor)(node::FinchNode)
     if node.kind === virtual
         ctx(node.val)
     elseif istree(node)

@@ -10,7 +10,7 @@ end
 Base.first(arg::Case) = arg.cond
 Base.last(arg::Case) = arg.body
 
-IndexNotation.isliteral(::Switch) =  false
+FinchNotation.isliteral(::Switch) =  false
 
 struct SwitchStyle end
 
@@ -40,7 +40,7 @@ function (ctx::SwitchVisitor)(node)
     end
 end
 
-function (ctx::SwitchVisitor)(node::IndexNode)
+function (ctx::SwitchVisitor)(node::FinchNode)
     if node.kind === virtual
         ctx(node.val)
     elseif istree(node)

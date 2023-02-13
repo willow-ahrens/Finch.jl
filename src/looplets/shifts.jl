@@ -18,7 +18,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Shift)
     print(io, ")")
 end
 
-IndexNotation.isliteral(::Shift) =  false
+FinchNotation.isliteral(::Shift) =  false
 
 #TODO can't we do this more pretty?
 supports_shift(style) = false
@@ -44,7 +44,7 @@ shiftdim(ext::Narrow, delta) = Narrow(shiftdim(ext.ext, delta))
 shiftdim(ext::NoDimension, delta) = nodim
 shiftdim(ext::DeferDimension, delta) = deferdim
 
-function shiftdim(ext::IndexNode, body)
+function shiftdim(ext::FinchNode, body)
     if ext.kind === virtual
         shiftdim(ext.val, body)
     else

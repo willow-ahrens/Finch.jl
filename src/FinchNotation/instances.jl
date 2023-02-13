@@ -1,29 +1,29 @@
-abstract type IndexNodeInstance end
+abstract type FinchNodeInstance end
 
-struct literalInstance{val} <: IndexNodeInstance
+struct literalInstance{val} <: FinchNodeInstance
 end
 
 @inline literal_instance(tns) = literalInstance{tns}()
 
-struct PassInstance{Tnss<:Tuple} <: IndexNodeInstance
+struct PassInstance{Tnss<:Tuple} <: FinchNodeInstance
     tnss::Tnss
 end
 Base.:(==)(a::PassInstance, b::PassInstance) = Set([a.tnss...]) == Set([b.tnss...])
 
 @inline pass_instance(tnss...) = PassInstance(tnss)
 
-struct IndexInstance{name} <: IndexNodeInstance end
+struct IndexInstance{name} <: FinchNodeInstance end
 
 @inline index_instance(name) = IndexInstance{name}()
 
-struct ProtocolInstance{Idx, Mode} <: IndexNodeInstance
+struct ProtocolInstance{Idx, Mode} <: FinchNodeInstance
 	idx::Idx
 	mode::Mode
 end
 Base.:(==)(a::ProtocolInstance, b::ProtocolInstance) = a.idx == b.idx && a.mode == b.mode
 @inline protocol_instance(idx, mode) = ProtocolInstance(idx, mode)
 
-struct WithInstance{Cons, Prod} <: IndexNodeInstance
+struct WithInstance{Cons, Prod} <: FinchNodeInstance
 	cons::Cons
 	prod::Prod
 end
@@ -31,14 +31,14 @@ Base.:(==)(a::WithInstance, b::WithInstance) = a.cons == b.cons && a.prod == b.p
 
 @inline with_instance(cons, prod) = WithInstance(cons, prod)
 
-struct MultiInstance{Bodies} <: IndexNodeInstance
+struct MultiInstance{Bodies} <: FinchNodeInstance
     bodies::Bodies
 end
 Base.:(==)(a::MultiInstance, b::MultiInstance) = all(a.bodies .== b.bodies)
 
 multi_instance(bodies...) = MultiInstance(bodies)
 
-struct LoopInstance{Idx, Body} <: IndexNodeInstance
+struct LoopInstance{Idx, Body} <: FinchNodeInstance
 	idx::Idx
 	body::Body
 end
@@ -48,7 +48,7 @@ Base.:(==)(a::LoopInstance, b::LoopInstance) = a.idx == b.idx && a.body == b.bod
 @inline loop_instance(body) = body
 @inline loop_instance(idx, args...) = LoopInstance(idx, loop_instance(args...))
 
-struct SieveInstance{Cond, Body} <: IndexNodeInstance
+struct SieveInstance{Cond, Body} <: FinchNodeInstance
 	cond::Cond
 	body::Body
 end
@@ -58,7 +58,7 @@ Base.:(==)(a::SieveInstance, b::SieveInstance) = a.cond == b.cond && a.body == b
 @inline sieve_instance(body) = body
 @inline sieve_instance(cond, args...) = SieveInstance(cond, sieve_instance(args...))
 
-struct AssignInstance{Lhs, Op, Rhs} <: IndexNodeInstance
+struct AssignInstance{Lhs, Op, Rhs} <: FinchNodeInstance
 	lhs::Lhs
 	op::Op
 	rhs::Rhs
@@ -67,7 +67,7 @@ Base.:(==)(a::AssignInstance, b::AssignInstance) = a.lhs == b.lhs && a.op == b.o
 
 @inline assign_instance(lhs, op, rhs) = AssignInstance(lhs, op, rhs)
 
-struct CallInstance{Op, Args<:Tuple} <: IndexNodeInstance
+struct CallInstance{Op, Args<:Tuple} <: FinchNodeInstance
     op::Op
     args::Args
 end
@@ -75,7 +75,7 @@ Base.:(==)(a::CallInstance, b::CallInstance) = a.op == b.op && a.args == b.args
 
 @inline call_instance(op, args...) = CallInstance(op, args)
 
-struct AccessInstance{Tns, Mode, Idxs} <: IndexNodeInstance
+struct AccessInstance{Tns, Mode, Idxs} <: FinchNodeInstance
     tns::Tns
     mode::Mode
     idxs::Idxs
@@ -84,7 +84,7 @@ Base.:(==)(a::AccessInstance, b::AccessInstance) = a.tns == b.tns && a.mode == b
 
 @inline access_instance(tns, mode, idxs...) = AccessInstance(tns, mode, idxs)
 
-struct VariableInstance{tag, Tns} <: IndexNodeInstance
+struct VariableInstance{tag, Tns} <: FinchNodeInstance
     tns::Tns
 end
 Base.:(==)(a::VariableInstance, b::VariableInstance) = false
@@ -115,14 +115,14 @@ struct ValueInstance{arg} end
 @inline value_instance(arg) = index_leaf_instance(arg)
 @inline index_leaf_instance(arg::Type) = literal_instance(arg)
 @inline index_leaf_instance(arg::Function) = literal_instance(arg)
-@inline index_leaf_instance(arg::IndexNodeInstance) = arg
+@inline index_leaf_instance(arg::FinchNodeInstance) = arg
 @inline index_leaf_instance(arg) = arg #TODO ValueInstance
 
 @inline index_leaf(arg::Type) = literal(arg)
 @inline index_leaf(arg::Function) = literal(arg)
-@inline index_leaf(arg::IndexNode) = arg
+@inline index_leaf(arg::FinchNode) = arg
 @inline index_leaf(arg) = isliteral(arg) ? literal(arg) : virtual(arg)
 
-Base.convert(::Type{IndexNode}, x) = index_leaf(x)
-Base.convert(::Type{IndexNode}, x::IndexNode) = x
-Base.convert(::Type{IndexNode}, x::Symbol) = error()
+Base.convert(::Type{FinchNode}, x) = index_leaf(x)
+Base.convert(::Type{FinchNode}, x::FinchNode) = x
+Base.convert(::Type{FinchNode}, x::Symbol) = error()

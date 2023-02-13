@@ -15,7 +15,7 @@ end
 choose(d) = Chooser{d}()
 
 isassociative(alg) = (f) -> isassociative(alg, f)
-isassociative(alg, f::IndexNode) = f.kind === literal && isassociative(alg, f.val)
+isassociative(alg, f::FinchNode) = f.kind === literal && isassociative(alg, f.val)
 """
     isassociative(algebra, f)
 
@@ -33,7 +33,7 @@ isassociative(::AbstractAlgebra, ::typeof(max)) = true
 isassociative(::AbstractAlgebra, ::Chooser) = true
 
 iscommutative(alg) = (f) -> iscommutative(alg, f)
-iscommutative(alg, f::IndexNode) = f.kind === literal && iscommutative(alg, f.val)
+iscommutative(alg, f::FinchNode) = f.kind === literal && iscommutative(alg, f.val)
 """
     iscommutative(algebra, f)
 
@@ -51,7 +51,7 @@ isabelian(alg) = (f) -> isabelian(alg, f)
 isabelian(alg, f) = isassociative(alg, f) && iscommutative(alg, f)
 
 isdistributive(alg) = (f, g) -> isdistributive(alg, f, g)
-isdistributive(alg, f::IndexNode, x::IndexNode) = isliteral(f) && isliteral(x) && isdistributive(alg, f.val, x.val)
+isdistributive(alg, f::FinchNode, x::FinchNode) = isliteral(f) && isliteral(x) && isdistributive(alg, f.val, x.val)
 """
     isidempotent(algebra, f)
 
@@ -61,7 +61,7 @@ isdistributive(::Any, f, g) = false
 isdistributive(::AbstractAlgebra, ::typeof(+), ::typeof(*)) = true
 
 isidempotent(alg) = (f) -> isidempotent(alg, f)
-isidempotent(alg, f::IndexNode) = f.kind === literal && isidempotent(alg, f.val)
+isidempotent(alg, f::FinchNode) = f.kind === literal && isidempotent(alg, f.val)
 """
     isidempotent(algebra, f)
 
@@ -79,7 +79,7 @@ isidempotent(::AbstractAlgebra, ::Chooser) = true
 Return true when `f(a..., x, b...) = f(a..., b...)` in `algebra`.
 """
 isidentity(alg) = (f, x) -> isidentity(alg, f, x)
-isidentity(alg, f::IndexNode, x::IndexNode) = isliteral(f) && isliteral(x) && isidentity(alg, f.val, x.val)
+isidentity(alg, f::FinchNode, x::FinchNode) = isliteral(f) && isliteral(x) && isidentity(alg, f.val, x.val)
 isidentity(::Any, f, x) = false
 isidentity(::AbstractAlgebra, ::typeof(or), x) = x == false
 isidentity(::AbstractAlgebra, ::typeof(and), x) = x == true
@@ -91,7 +91,7 @@ isidentity(::AbstractAlgebra, ::typeof(max), x) = isinf(x) && x < 0
 isidentity(::AbstractAlgebra, ::Chooser{D}, x) where {D} = x == D
 
 isannihilator(alg) = (f, x) -> isannihilator(alg, f, x)
-isannihilator(alg, f::IndexNode, x::IndexNode) = isliteral(f) && isliteral(x) && isannihilator(alg, f.val, x.val)
+isannihilator(alg, f::FinchNode, x::FinchNode) = isliteral(f) && isliteral(x) && isannihilator(alg, f.val, x.val)
 """
     isannihilator(algebra, f, x)
 
@@ -106,7 +106,7 @@ isannihilator(::AbstractAlgebra, ::typeof(or), x) = x == true
 isannihilator(::AbstractAlgebra, ::typeof(and), x) = x == false
 
 isinverse(alg) = (f, g) -> isinverse(alg, f, g)
-isinverse(alg, f::IndexNode, g::IndexNode) = isliteral(f) && isliteral(g) && isinverse(alg, f.val, g.val)
+isinverse(alg, f::FinchNode, g::FinchNode) = isliteral(f) && isliteral(g) && isinverse(alg, f.val, g.val)
 """
     isinverse(algebra, f, g)
 
@@ -117,7 +117,7 @@ isinverse(::AbstractAlgebra, ::typeof(-), ::typeof(+)) = true
 isinverse(::AbstractAlgebra, ::typeof(inv), ::typeof(*)) = true
 
 isinvolution(alg) = (f) -> isinvolution(alg, f)
-isinvolution(alg, f::IndexNode) = isliteral(f) && isinvolution(alg, f.val)
+isinvolution(alg, f::FinchNode) = isliteral(f) && isinvolution(alg, f.val)
 """
     isinvolution(algebra, f)
 
@@ -128,17 +128,17 @@ isinvolution(::AbstractAlgebra, ::typeof(-)) = true
 isinvolution(::AbstractAlgebra, ::typeof(inv)) = true
 
 struct Fill
-    body::IndexNode
+    body::FinchNode
     default
     Fill(x, d=nothing) = new(index_leaf(x), d)
 end
 
-IndexNotation.isliteral(::Fill) = false
+FinchNotation.isliteral(::Fill) = false
 virtual_default(f::Fill) = something(f.default)
 
 isfill(tns) = false
-isfill(tns::IndexNode) = tns.kind == virtual && tns.val isa Fill
-isvar(tns::IndexNode) = tns.kind == variable
+isfill(tns::FinchNode) = tns.kind == virtual && tns.val isa Fill
+isvar(tns::FinchNode) = tns.kind == variable
 
 """
     base_rules(alg, ctx)
@@ -301,9 +301,9 @@ function (ctx::SimplifyVisitor)(node)
     end
 end
 
-function (ctx::SimplifyVisitor)(node::IndexNode)
+function (ctx::SimplifyVisitor)(node::FinchNode)
     if node.kind === virtual
-        convert(IndexNode, ctx(node.val))
+        convert(FinchNode, ctx(node.val))
     elseif istree(node)
         similarterm(node, operation(node), map(ctx, arguments(node)))
     else
@@ -335,4 +335,4 @@ function (ctx::LowerJulia)(root, ::SimplifyStyle)
     ctx(root)
 end
 
-IndexNotation.isliteral(::Simplify) = false
+FinchNotation.isliteral(::Simplify) = false

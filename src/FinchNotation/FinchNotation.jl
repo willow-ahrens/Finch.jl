@@ -1,4 +1,4 @@
-module IndexNotation
+module FinchNotation
     using RewriteTools, SyntaxInterface, Finch
 
     export index_leaf
@@ -17,7 +17,7 @@ module IndexNotation
     export reader, updater, create, modify, access
     export protocol
     export sieve
-    export IndexNode, value, isvalue
+    export FinchNode, value, isvalue
 
     export Follow, follow
     export Walk, walk
