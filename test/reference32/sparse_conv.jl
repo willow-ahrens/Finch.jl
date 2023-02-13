@@ -47,7 +47,7 @@ begin
                     resize_if_smaller!(C_lvl_2.val, C_lvl_qos_stop)
                     fill_range!(C_lvl_2.val, 0.0, C_lvl_qos, C_lvl_qos_stop)
                 end
-                C_lvl_2_dirty = false
+                C_lvldirty = false
                 C_lvl_2_val_2 = C_lvl_2.val[C_lvl_qos]
                 s_2 = (+)(-3, i_7)
                 for s_3 = s_2:s_2
@@ -96,8 +96,8 @@ begin
                                         j_8 = phase_stop_6
                                         F_lvl_q = (1 - 1) * F_lvl.I + j_8
                                         F_lvl_2_val_2 = F_lvl_2.val[F_lvl_q]
-                                        C_lvl_2_dirty = true
-                                        C_lvl_2_dirty = true
+                                        C_lvldirty = true
+                                        C_lvldirty = true
                                         C_lvl_2_val_2 = (+)((*)((!=)(A_lvl_2_val_2, 0), F_lvl_2_val_2, (coalesce)(A_lvl_2_val_3, 0)), C_lvl_2_val_2)
                                         A_lvl_q_2 += 1
                                     else
@@ -123,8 +123,8 @@ begin
                     end
                 end
                 C_lvl_2.val[C_lvl_qos] = C_lvl_2_val_2
-                if C_lvl_2_dirty
-                    C_lvl_dirty = true
+                if C_lvldirty
+                    null = true
                     C_lvl.idx[C_lvl_qos] = i_7
                     C_lvl_qos += 1
                 end
