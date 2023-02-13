@@ -7,8 +7,8 @@ begin
     I_lvl = (ex.body.rhs.idxs[1]).tns.tns.lvl
     resize_if_smaller!(B_lvl_2.val, I_lvl.I)
     fill_range!(B_lvl_2.val, 0, 1, I_lvl.I)
-    I_lvl_q = I_lvl.pos[1]
-    I_lvl_q_stop = I_lvl.pos[1 + 1]
+    I_lvl_q = I_lvl.ptr[1]
+    I_lvl_q_stop = I_lvl.ptr[1 + 1]
     if I_lvl_q < I_lvl_q_stop
         I_lvl_i = I_lvl.idx[I_lvl_q]
         I_lvl_i1 = I_lvl.idx[I_lvl_q_stop - 1]
