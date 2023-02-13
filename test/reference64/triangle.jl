@@ -14,18 +14,15 @@ begin
     for i_4 = 1:A_lvl.I
         A_lvl_q_2 = (1 - 1) * A_lvl.I + i_4
         A_lvl_q = (1 - 1) * A_lvl.I + i_4
-        A_lvl_2_q = A_lvl_2.pos[A_lvl_q_2]
-        A_lvl_2_q_stop = A_lvl_2.pos[A_lvl_q_2 + 1]
-        A_lvl_2_i = if A_lvl_2_q < A_lvl_2_q_stop
-                A_lvl_2.idx[A_lvl_2_q]
-            else
-                1
-            end
-        A_lvl_2_i1 = if A_lvl_2_q < A_lvl_2_q_stop
-                A_lvl_2.idx[A_lvl_2_q_stop - 1]
-            else
-                0
-            end
+        A_lvl_2_q = A_lvl_2.ptr[A_lvl_q_2]
+        A_lvl_2_q_stop = A_lvl_2.ptr[A_lvl_q_2 + 1]
+        if A_lvl_2_q < A_lvl_2_q_stop
+            A_lvl_2_i = A_lvl_2.idx[A_lvl_2_q]
+            A_lvl_2_i1 = A_lvl_2.idx[A_lvl_2_q_stop - 1]
+        else
+            A_lvl_2_i = 1
+            A_lvl_2_i1 = 0
+        end
         j = 1
         j_start = j
         phase_stop = (min)(A_lvl.I, A_lvl_2_i1)
@@ -44,30 +41,24 @@ begin
                     A_lvl_3_val_2 = A_lvl_3.val[A_lvl_2_q]
                     j_6 = phase_stop_2
                     A_lvl_q_3 = (1 - 1) * A_lvl.I + j_6
-                    A_lvl_2_q_2 = A_lvl_2.pos[A_lvl_q]
-                    A_lvl_2_q_stop_2 = A_lvl_2.pos[A_lvl_q + 1]
-                    A_lvl_2_i_2 = if A_lvl_2_q_2 < A_lvl_2_q_stop_2
-                            A_lvl_2.idx[A_lvl_2_q_2]
-                        else
-                            1
-                        end
-                    A_lvl_2_i1_2 = if A_lvl_2_q_2 < A_lvl_2_q_stop_2
-                            A_lvl_2.idx[A_lvl_2_q_stop_2 - 1]
-                        else
-                            0
-                        end
-                    A_lvl_2_q_3 = A_lvl_2.pos[A_lvl_q_3]
-                    A_lvl_2_q_stop_3 = A_lvl_2.pos[A_lvl_q_3 + 1]
-                    A_lvl_2_i_3 = if A_lvl_2_q_3 < A_lvl_2_q_stop_3
-                            A_lvl_2.idx[A_lvl_2_q_3]
-                        else
-                            1
-                        end
-                    A_lvl_2_i1_3 = if A_lvl_2_q_3 < A_lvl_2_q_stop_3
-                            A_lvl_2.idx[A_lvl_2_q_stop_3 - 1]
-                        else
-                            0
-                        end
+                    A_lvl_2_q_2 = A_lvl_2.ptr[A_lvl_q]
+                    A_lvl_2_q_stop_2 = A_lvl_2.ptr[A_lvl_q + 1]
+                    if A_lvl_2_q_2 < A_lvl_2_q_stop_2
+                        A_lvl_2_i_2 = A_lvl_2.idx[A_lvl_2_q_2]
+                        A_lvl_2_i1_2 = A_lvl_2.idx[A_lvl_2_q_stop_2 - 1]
+                    else
+                        A_lvl_2_i_2 = 1
+                        A_lvl_2_i1_2 = 0
+                    end
+                    A_lvl_2_q_3 = A_lvl_2.ptr[A_lvl_q_3]
+                    A_lvl_2_q_stop_3 = A_lvl_2.ptr[A_lvl_q_3 + 1]
+                    if A_lvl_2_q_3 < A_lvl_2_q_stop_3
+                        A_lvl_2_i_3 = A_lvl_2.idx[A_lvl_2_q_3]
+                        A_lvl_2_i1_3 = A_lvl_2.idx[A_lvl_2_q_stop_3 - 1]
+                    else
+                        A_lvl_2_i_3 = 1
+                        A_lvl_2_i1_3 = 0
+                    end
                     k = 1
                     k_start = k
                     phase_stop_3 = (min)(A_lvl_2.I, A_lvl_2_i1_3, A_lvl_2_i1_2)

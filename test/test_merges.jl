@@ -5,14 +5,15 @@
         (;fmt = (z) -> @fiber(d(sl(e(z)))), proto = [walk, follow]),
         (;fmt = (z) -> @fiber(d(sl(e(z)))), proto = [gallop, follow]),
         (;fmt = (z) -> @fiber(d(sl(e(z)))), proto = [fastwalk, follow]),
-        #(;fmt = (z) -> @fiber(d(sv(e(z)))), proto = [walk, follow]),
-        #(;fmt = (z) -> @fiber(d(sv(e(z)))), proto = [gallop, follow]),
-        #(;fmt = (z) -> @fiber(d(sm(e(z)))), proto = [walk, follow]),
-        #(;fmt = (z) -> @fiber(d(sm(e(z)))), proto = [gallop, follow]),
-        #(;fmt = (z) -> @fiber(d(sc{1}(e(z)))), proto = [walk, follow]),
-        #(;fmt = (z) -> @fiber(sc{2}(e(z))), proto = [walk, walk]),
-        #(;fmt = (z) -> @fiber(d(sh{1}(e(z)))), proto = [walk,follow]),
-        #(;fmt = (z) -> @fiber(sh{2}(e(z))), proto = [walk, walk]),
+        (;fmt = (z) -> @fiber(d(sv(e(z)))), proto = [walk, follow]),
+        (;fmt = (z) -> @fiber(d(sv(e(z)))), proto = [gallop, follow]),
+        (;fmt = (z) -> @fiber(d(sm(e(z)))), proto = [walk, follow]),
+        (;fmt = (z) -> @fiber(d(sm(e(z)))), proto = [gallop, follow]),
+        (;fmt = (z) -> @fiber(d(sc{1}(e(z)))), proto = [walk, follow]),
+        (;fmt = (z) -> @fiber(sc{2}(e(z))), proto = [walk, walk]),
+        (;fmt = (z) -> @fiber(d(sh{1}(e(z)))), proto = [walk,follow]),
+        (;fmt = (z) -> @fiber(sh{2}(e(z))), proto = [walk, walk]),
+        #(;fmt = (z) -> @fiber(d(rl(z))), proto = [walk, follow]),
     ]
 
     dtss = [

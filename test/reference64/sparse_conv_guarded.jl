@@ -9,21 +9,18 @@ begin
     F_lvl_2 = F_lvl.lvl
     C_lvl_qos_fill = 0
     C_lvl_qos_stop = 0
-    (Finch.resize_if_smaller!)(C_lvl.pos, 1 + 1)
-    (Finch.fill_range!)(C_lvl.pos, 0, 1 + 1, 1 + 1)
+    (Finch.resize_if_smaller!)(C_lvl.ptr, 1 + 1)
+    (Finch.fill_range!)(C_lvl.ptr, 0, 1 + 1, 1 + 1)
     C_lvl_qos = C_lvl_qos_fill + 1
-    A_lvl_q = A_lvl.pos[1]
-    A_lvl_q_stop = A_lvl.pos[1 + 1]
-    A_lvl_i = if A_lvl_q < A_lvl_q_stop
-            A_lvl.idx[A_lvl_q]
-        else
-            1
-        end
-    A_lvl_i1 = if A_lvl_q < A_lvl_q_stop
-            A_lvl.idx[A_lvl_q_stop - 1]
-        else
-            0
-        end
+    A_lvl_q = A_lvl.ptr[1]
+    A_lvl_q_stop = A_lvl.ptr[1 + 1]
+    if A_lvl_q < A_lvl_q_stop
+        A_lvl_i = A_lvl.idx[A_lvl_q]
+        A_lvl_i1 = A_lvl.idx[A_lvl_q_stop - 1]
+    else
+        A_lvl_i = 1
+        A_lvl_i1 = 0
+    end
     i = 1
     i_start = i
     phase_stop = (min)(A_lvl.I, A_lvl_i1)
@@ -62,18 +59,15 @@ begin
                     phase_stop_4 = (min)(0, F_lvl.I, (+)(A_lvl.I, s_3))
                     if phase_stop_4 >= j_start
                         j_5 = j
-                        A_lvl_q_2 = A_lvl.pos[1]
-                        A_lvl_q_stop_2 = A_lvl.pos[1 + 1]
-                        A_lvl_i_2 = if A_lvl_q_2 < A_lvl_q_stop_2
-                                A_lvl.idx[A_lvl_q_2]
-                            else
-                                1
-                            end
-                        A_lvl_i1_2 = if A_lvl_q_2 < A_lvl_q_stop_2
-                                A_lvl.idx[A_lvl_q_stop_2 - 1]
-                            else
-                                0
-                            end
+                        A_lvl_q_2 = A_lvl.ptr[1]
+                        A_lvl_q_stop_2 = A_lvl.ptr[1 + 1]
+                        if A_lvl_q_2 < A_lvl_q_stop_2
+                            A_lvl_i_2 = A_lvl.idx[A_lvl_q_2]
+                            A_lvl_i1_2 = A_lvl.idx[A_lvl_q_stop_2 - 1]
+                        else
+                            A_lvl_i_2 = 1
+                            A_lvl_i1_2 = 0
+                        end
                         j = j_start
                         j_start_2 = j
                         phase_start = (max)(j_start_2, (+)(s_3, j_start_2, (-)(s_3)))
@@ -107,18 +101,15 @@ begin
                     phase_stop_9 = (min)(F_lvl.I, (+)(A_lvl.I, s_3))
                     if phase_stop_9 >= j_start
                         j_10 = j
-                        A_lvl_q_2 = A_lvl.pos[1]
-                        A_lvl_q_stop_2 = A_lvl.pos[1 + 1]
-                        A_lvl_i_2 = if A_lvl_q_2 < A_lvl_q_stop_2
-                                A_lvl.idx[A_lvl_q_2]
-                            else
-                                1
-                            end
-                        A_lvl_i1_2 = if A_lvl_q_2 < A_lvl_q_stop_2
-                                A_lvl.idx[A_lvl_q_stop_2 - 1]
-                            else
-                                0
-                            end
+                        A_lvl_q_2 = A_lvl.ptr[1]
+                        A_lvl_q_stop_2 = A_lvl.ptr[1 + 1]
+                        if A_lvl_q_2 < A_lvl_q_stop_2
+                            A_lvl_i_2 = A_lvl.idx[A_lvl_q_2]
+                            A_lvl_i1_2 = A_lvl.idx[A_lvl_q_stop_2 - 1]
+                        else
+                            A_lvl_i_2 = 1
+                            A_lvl_i1_2 = 0
+                        end
                         j = j_start
                         j_start_3 = j
                         phase_start_3 = (max)(j_start_3, (+)(s_3, (-)(s_3), j_start_3))
@@ -176,18 +167,15 @@ begin
                     phase_stop_14 = (min)(F_lvl.I, (+)(A_lvl.I, s_3))
                     if phase_stop_14 >= j_start
                         j_17 = j
-                        A_lvl_q_2 = A_lvl.pos[1]
-                        A_lvl_q_stop_2 = A_lvl.pos[1 + 1]
-                        A_lvl_i_2 = if A_lvl_q_2 < A_lvl_q_stop_2
-                                A_lvl.idx[A_lvl_q_2]
-                            else
-                                1
-                            end
-                        A_lvl_i1_2 = if A_lvl_q_2 < A_lvl_q_stop_2
-                                A_lvl.idx[A_lvl_q_stop_2 - 1]
-                            else
-                                0
-                            end
+                        A_lvl_q_2 = A_lvl.ptr[1]
+                        A_lvl_q_stop_2 = A_lvl.ptr[1 + 1]
+                        if A_lvl_q_2 < A_lvl_q_stop_2
+                            A_lvl_i_2 = A_lvl.idx[A_lvl_q_2]
+                            A_lvl_i1_2 = A_lvl.idx[A_lvl_q_stop_2 - 1]
+                        else
+                            A_lvl_i_2 = 1
+                            A_lvl_i1_2 = 0
+                        end
                         j = j_start
                         j_start_5 = j
                         phase_start_6 = (max)(j_start_5, (+)(s_3, (-)(s_3), j_start_5))
@@ -229,15 +217,15 @@ begin
         i_8 = i
         i = A_lvl.I + 1
     end
-    C_lvl.pos[1 + 1] = (C_lvl_qos - C_lvl_qos_fill) - 1
+    C_lvl.ptr[1 + 1] = (C_lvl_qos - C_lvl_qos_fill) - 1
     C_lvl_qos_fill = C_lvl_qos - 1
     for p = 2:1 + 1
-        C_lvl.pos[p] += C_lvl.pos[p - 1]
+        C_lvl.ptr[p] += C_lvl.ptr[p - 1]
     end
-    qos_stop = C_lvl.pos[1 + 1] - 1
-    resize!(C_lvl.pos, 1 + 1)
-    qos = C_lvl.pos[end] - 1
+    qos_stop = C_lvl.ptr[1 + 1] - 1
+    resize!(C_lvl.ptr, 1 + 1)
+    qos = C_lvl.ptr[end] - 1
     resize!(C_lvl.idx, qos)
     resize!(C_lvl_2.val, qos)
-    (C = Fiber((Finch.SparseListLevel){Int64}(C_lvl_2, A_lvl.I, C_lvl.pos, C_lvl.idx)),)
+    (C = Fiber((Finch.SparseListLevel){Int64}(C_lvl_2, A_lvl.I, C_lvl.ptr, C_lvl.idx)),)
 end

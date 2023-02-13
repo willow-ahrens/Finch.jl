@@ -7,21 +7,18 @@ begin
     i_stop = (+)((ex.body.rhs.idxs[1]).tns.tns.stop, (-)(1, (ex.body.rhs.idxs[1]).tns.tns.start))
     C_lvl_qos_fill = 0
     C_lvl_qos_stop = 0
-    (Finch.resize_if_smaller!)(C_lvl.pos, 1 + 1)
-    (Finch.fill_range!)(C_lvl.pos, 0, 1 + 1, 1 + 1)
+    (Finch.resize_if_smaller!)(C_lvl.ptr, 1 + 1)
+    (Finch.fill_range!)(C_lvl.ptr, 0, 1 + 1, 1 + 1)
     C_lvl_qos = C_lvl_qos_fill + 1
-    A_lvl_q = A_lvl.pos[1]
-    A_lvl_q_stop = A_lvl.pos[1 + 1]
-    A_lvl_i = if A_lvl_q < A_lvl_q_stop
-            A_lvl.idx[A_lvl_q]
-        else
-            1
-        end
-    A_lvl_i1 = if A_lvl_q < A_lvl_q_stop
-            A_lvl.idx[A_lvl_q_stop - 1]
-        else
-            0
-        end
+    A_lvl_q = A_lvl.ptr[1]
+    A_lvl_q_stop = A_lvl.ptr[1 + 1]
+    if A_lvl_q < A_lvl_q_stop
+        A_lvl_i = A_lvl.idx[A_lvl_q]
+        A_lvl_i1 = A_lvl.idx[A_lvl_q_stop - 1]
+    else
+        A_lvl_i = 1
+        A_lvl_i1 = 0
+    end
     i = i_start
     i_start_2 = i
     phase_start = (max)(i_start_2, (+)((-)((ex.body.rhs.idxs[1]).tns.tns.start), i_start_2, (ex.body.rhs.idxs[1]).tns.tns.start))
@@ -73,15 +70,15 @@ begin
         i_7 = i
         i = phase_stop_3 + 1
     end
-    C_lvl.pos[1 + 1] = (C_lvl_qos - C_lvl_qos_fill) - 1
+    C_lvl.ptr[1 + 1] = (C_lvl_qos - C_lvl_qos_fill) - 1
     C_lvl_qos_fill = C_lvl_qos - 1
     for p = 2:1 + 1
-        C_lvl.pos[p] += C_lvl.pos[p - 1]
+        C_lvl.ptr[p] += C_lvl.ptr[p - 1]
     end
-    qos_stop = C_lvl.pos[1 + 1] - 1
-    resize!(C_lvl.pos, 1 + 1)
-    qos = C_lvl.pos[end] - 1
+    qos_stop = C_lvl.ptr[1 + 1] - 1
+    resize!(C_lvl.ptr, 1 + 1)
+    qos = C_lvl.ptr[end] - 1
     resize!(C_lvl.idx, qos)
     resize!(C_lvl_2.val, qos)
-    (C = Fiber((Finch.SparseListLevel){Int64}(C_lvl_2, (+)((ex.body.rhs.idxs[1]).tns.tns.stop, (-)(1, (ex.body.rhs.idxs[1]).tns.tns.start)), C_lvl.pos, C_lvl.idx)),)
+    (C = Fiber((Finch.SparseListLevel){Int64}(C_lvl_2, (+)((ex.body.rhs.idxs[1]).tns.tns.stop, (-)(1, (ex.body.rhs.idxs[1]).tns.tns.start)), C_lvl.ptr, C_lvl.idx)),)
 end

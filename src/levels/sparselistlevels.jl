@@ -1,7 +1,7 @@
 struct SparseListLevel{Ti, Tp, Lvl}
     lvl::Lvl
     I::Ti
-    pos::Vector{Tp}
+    ptr::Vector{Tp}
     idx::Vector{Ti}
 end
 const SparseList = SparseListLevel
@@ -23,7 +23,7 @@ similar_level(lvl::SparseListLevel) = SparseList(similar_level(lvl.lvl))
 similar_level(lvl::SparseListLevel, dim, tail...) = SparseList(similar_level(lvl.lvl, tail...), dim)
 
 pattern!(lvl::SparseListLevel{Ti}) where {Ti} = 
-    SparseListLevel{Ti}(pattern!(lvl.lvl), lvl.I, lvl.pos, lvl.idx)
+    SparseListLevel{Ti}(pattern!(lvl.lvl), lvl.I, lvl.ptr, lvl.idx)
 
 function Base.show(io::IO, lvl::SparseListLevel{Ti, Tp}) where {Ti, Tp}
     if get(io, :compact, false)
@@ -38,7 +38,7 @@ function Base.show(io::IO, lvl::SparseListLevel{Ti, Tp}) where {Ti, Tp}
     if get(io, :compact, false)
         print(io, "…")
     else
-        show(IOContext(io, :typeinfo=>Vector{Tp}), lvl.pos)
+        show(IOContext(io, :typeinfo=>Vector{Tp}), lvl.ptr)
         print(io, ", ")
         show(IOContext(io, :typeinfo=>Vector{Ti}), lvl.idx)
     end
@@ -47,7 +47,7 @@ end
 
 function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseListLevel}, depth)
     p = fbr.pos
-    crds = @view(fbr.lvl.idx[fbr.lvl.pos[p]:fbr.lvl.pos[p + 1] - 1])
+    crds = @view(fbr.lvl.idx[fbr.lvl.ptr[p]:fbr.lvl.ptr[p + 1] - 1])
 
     print_coord(io, crd) = (print(io, "["); show(io, crd); print(io, "]"))
     get_fbr(crd) = fbr(crd)
@@ -68,8 +68,8 @@ function (fbr::SubFiber{<:SparseListLevel{Ti}})(idxs...) where {Ti}
     isempty(idxs) && return fbr
     lvl = fbr.lvl
     p = fbr.pos
-    r = searchsorted(@view(lvl.idx[lvl.pos[p]:lvl.pos[p + 1] - 1]), idxs[end])
-    q = lvl.pos[p] + first(r) - 1
+    r = searchsorted(@view(lvl.idx[lvl.ptr[p]:lvl.ptr[p + 1] - 1]), idxs[end])
+    q = lvl.ptr[p] + first(r) - 1
     fbr_2 = SubFiber(lvl.lvl, q)
     length(r) == 0 ? default(fbr_2) : fbr_2(idxs[1:end-1]...)
 end
@@ -99,7 +99,7 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualSparseListLevel)
         $SparseListLevel{$(lvl.Ti)}(
             $(ctx(lvl.lvl)),
             $(ctx(lvl.I)),
-            $(lvl.ex).pos,
+            $(lvl.ex).ptr,
             $(lvl.ex).idx,
         )
     end
@@ -124,7 +124,7 @@ virtual_level_default(lvl::VirtualSparseListLevel) = virtual_level_default(lvl.l
 function initialize_level!(lvl::VirtualSparseListLevel, ctx::LowerJulia, pos)
     Ti = lvl.Ti
     Tp = lvl.Tp
-    qos = call(-, call(getindex, :($(lvl.ex).pos), call(+, pos, 1)),  1)
+    qos = call(-, call(getindex, :($(lvl.ex).ptr), call(+, pos, 1)),  1)
     push!(ctx.preamble, quote
         $(lvl.qos_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
@@ -136,8 +136,8 @@ end
 function trim_level!(lvl::VirtualSparseListLevel, ctx::LowerJulia, pos)
     qos = ctx.freshen(:qos)
     push!(ctx.preamble, quote
-        resize!($(lvl.ex).pos, $(ctx(pos)) + 1)
-        $qos = $(lvl.ex).pos[end] - $(lvl.Tp(1))
+        resize!($(lvl.ex).ptr, $(ctx(pos)) + 1)
+        $qos = $(lvl.ex).ptr[end] - $(lvl.Tp(1))
         resize!($(lvl.ex).idx, $qos)
     end)
     lvl.lvl = trim_level!(lvl.lvl, ctx, value(qos, lvl.Tp))
@@ -148,8 +148,8 @@ function assemble_level!(lvl::VirtualSparseListLevel, ctx, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_start, pos_stop))
     return quote
-        $resize_if_smaller!($(lvl.ex).pos, $pos_stop + 1)
-        $fill_range!($(lvl.ex).pos, 0, $pos_start + 1, $pos_stop + 1)
+        $resize_if_smaller!($(lvl.ex).ptr, $pos_stop + 1)
+        $fill_range!($(lvl.ex).ptr, 0, $pos_start + 1, $pos_stop + 1)
     end
 end
 
@@ -159,9 +159,9 @@ function freeze_level!(lvl::VirtualSparseListLevel, ctx::LowerJulia, pos_stop)
     qos_stop = ctx.freshen(:qos_stop)
     push!(ctx.preamble, quote
         for $p = 2:($pos_stop + 1)
-            $(lvl.ex).pos[$p] += $(lvl.ex).pos[$p - 1]
+            $(lvl.ex).ptr[$p] += $(lvl.ex).ptr[$p - 1]
         end
-        $qos_stop = $(lvl.ex).pos[$pos_stop + 1] - 1
+        $qos_stop = $(lvl.ex).ptr[$pos_stop + 1] - 1
     end)
     lvl.lvl = freeze_level!(lvl.lvl, ctx, value(qos_stop))
     return lvl
@@ -181,10 +181,15 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::Union{N
         size = virtual_level_size(lvl, ctx),
         body = (ctx, idx, ext) -> Thunk(
             preamble = quote
-                $my_q = $(lvl.ex).pos[$(ctx(pos))]
-                $my_q_stop = $(lvl.ex).pos[$(ctx(pos)) + $(Tp(1))]
-                $my_i = $my_q < $my_q_stop ? $(lvl.ex).idx[$my_q] : $(Ti(1))
-                $my_i1 = $my_q < $my_q_stop ? $(lvl.ex).idx[$my_q_stop - $(Tp(1))] : $(Ti(0))
+                $my_q = $(lvl.ex).ptr[$(ctx(pos))]
+                $my_q_stop = $(lvl.ex).ptr[$(ctx(pos)) + $(Tp(1))]
+                if $my_q < $my_q_stop
+                    $my_i = $(lvl.ex).idx[$my_q]
+                    $my_i1 = $(lvl.ex).idx[$my_q_stop - $(Tp(1))]
+                else
+                    $my_i = $(Ti(1))
+                    $my_i1 = $(Ti(0))
+                end
             end,
             body = Pipeline([
                 Phase(
@@ -234,10 +239,15 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::FastWal
         size = virtual_level_size(lvl, ctx),
         body = (ctx, idx, ext) -> Thunk(
             preamble = quote
-                $my_q = $(lvl.ex).pos[$(ctx(pos))]
-                $my_q_stop = $(lvl.ex).pos[$(ctx(pos)) + $(Tp(1))]
-                $my_i = $my_q < $my_q_stop ? $(lvl.ex).idx[$my_q] : $(Ti(1))
-                $my_i1 = $my_q < $my_q_stop ? $(lvl.ex).idx[$my_q_stop - $(Tp(1))] : $(Ti(0))
+                $my_q = $(lvl.ex).ptr[$(ctx(pos))]
+                $my_q_stop = $(lvl.ex).ptr[$(ctx(pos)) + $(Tp(1))]
+                if $my_q < $my_q_stop
+                    $my_i = $(lvl.ex).idx[$my_q]
+                    $my_i1 = $(lvl.ex).idx[$my_q_stop - $(Tp(1))]
+                else
+                    $my_i = $(Ti(1))
+                    $my_i1 = $(Ti(0))
+                end
             end,
             body = Pipeline([
                 Phase(
@@ -285,10 +295,15 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::Gallop,
         size = virtual_level_size(lvl, ctx),
         body = (ctx, idx, ext) -> Thunk(
             preamble = quote
-                $my_q = $(lvl.ex).pos[$(ctx(pos))]
-                $my_q_stop = $(lvl.ex).pos[$(ctx(pos)) + 1]
-                $my_i = $my_q < $my_q_stop ? $(lvl.ex).idx[$my_q] : $(Ti(1))
-                $my_i1 = $my_q < $my_q_stop ? $(lvl.ex).idx[$my_q_stop - $(Tp(1))] : $(Ti(0))
+                $my_q = $(lvl.ex).ptr[$(ctx(pos))]
+                $my_q_stop = $(lvl.ex).ptr[$(ctx(pos)) + 1]
+                if $my_q < $my_q_stop
+                    $my_i = $(lvl.ex).idx[$my_q]
+                    $my_i1 = $(lvl.ex).idx[$my_q_stop - $(Tp(1))]
+                else
+                    $my_i = $(Ti(1))
+                    $my_i1 = $(Ti(0))
+                end
             end,
             body = Pipeline([
                 Phase(
@@ -388,7 +403,7 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseListLevel}, ctx, :
                 )
             ),
             epilogue = quote
-                $(lvl.ex).pos[$(ctx(pos)) + 1] = $qos - $qos_fill - 1
+                $(lvl.ex).ptr[$(ctx(pos)) + 1] = $qos - $qos_fill - 1
                 $qos_fill = $qos - 1
             end
         )

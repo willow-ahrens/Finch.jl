@@ -4,18 +4,15 @@ begin
     A_lvl = ex.rhs.tns.tns.lvl
     A_lvl_2 = A_lvl.lvl
     B_val = 0.0
-    A_lvl_q = A_lvl.pos[1]
-    A_lvl_q_stop = A_lvl.pos[1 + 1]
-    A_lvl_i = if A_lvl_q < A_lvl_q_stop
-            A_lvl.idx[A_lvl_q]
-        else
-            1
-        end
-    A_lvl_i1 = if A_lvl_q < A_lvl_q_stop
-            A_lvl.idx[A_lvl_q_stop - 1]
-        else
-            0
-        end
+    A_lvl_q = A_lvl.ptr[1]
+    A_lvl_q_stop = A_lvl.ptr[1 + 1]
+    if A_lvl_q < A_lvl_q_stop
+        A_lvl_i = A_lvl.idx[A_lvl_q]
+        A_lvl_i1 = A_lvl.idx[A_lvl_q_stop - 1]
+    else
+        A_lvl_i = 1
+        A_lvl_i1 = 0
+    end
     s = 5
     s_start = s
     phase_stop = (min)(A_lvl_i1, 5)

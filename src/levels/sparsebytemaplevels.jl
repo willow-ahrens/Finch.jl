@@ -1,7 +1,7 @@
 struct SparseBytemapLevel{Ti, Tp, Lvl}
     lvl::Lvl
     I::Ti
-    pos::Vector{Tp}
+    ptr::Vector{Tp}
     tbl::Vector{Bool}
     srt::Vector{Tuple{Tp, Ti}}
 end
@@ -24,7 +24,7 @@ similar_level(lvl::SparseBytemapLevel) = SparseBytemap(similar_level(lvl.lvl))
 similar_level(lvl::SparseBytemapLevel, dims...) = SparseBytemap(similar_level(lvl.lvl, dims[1:end-1]...), dims[end])
 
 pattern!(lvl::SparseBytemapLevel{Ti, Tp}) where {Ti, Tp} = 
-    SparseBytemapLevel{Ti, Tp}(pattern!(lvl.lvl), lvl.I, lvl.pos, lvl.tbl, lvl.srt)
+    SparseBytemapLevel{Ti, Tp}(pattern!(lvl.lvl), lvl.I, lvl.ptr, lvl.tbl, lvl.srt)
 
 function Base.show(io::IO, lvl::SparseBytemapLevel{Ti, Tp}) where {Ti, Tp}
     if get(io, :compact, false)
@@ -39,7 +39,7 @@ function Base.show(io::IO, lvl::SparseBytemapLevel{Ti, Tp}) where {Ti, Tp}
     if get(io, :compact, false)
         print(io, "…")
     else
-        show(IOContext(io, :typeinfo=>Vector{Tp}), lvl.pos)
+        show(IOContext(io, :typeinfo=>Vector{Tp}), lvl.ptr)
         print(io, ", ")
         show(IOContext(io, :typeinfo=>Vector{Bool}), lvl.tbl)
         print(io, ", ")
@@ -50,7 +50,7 @@ end
 
 function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseBytemapLevel}, depth)
     p = fbr.pos
-    crds = @view(fbr.lvl.srt[fbr.lvl.pos[p]:fbr.lvl.pos[p + 1] - 1])
+    crds = @view(fbr.lvl.srt[fbr.lvl.ptr[p]:fbr.lvl.ptr[p + 1] - 1])
 
     print_coord(io, (p, i)) = (print(io, "["); show(io, i); print(io, "]"))
     get_fbr((p, i),) = fbr(i)
@@ -107,7 +107,7 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualSparseBytemapLevel)
         $SparseBytemapLevel{$(lvl.Ti), $(lvl.Tp)}(
             $(ctx(lvl.lvl)),
             $(ctx(lvl.I)),
-            $(lvl.ex).pos,
+            $(lvl.ex).ptr,
             $(lvl.ex).tbl,
             $(lvl.ex).srt,
         )
@@ -140,8 +140,8 @@ function initialize_level!(lvl::VirtualSparseBytemapLevel, ctx::LowerJulia, pos)
     push!(ctx.preamble, quote
         for $r = 1:$(lvl.qos_fill)
             $p = first($(lvl.ex).srt[$r])
-            $(lvl.ex).pos[$p] = $(Tp(0))
-            $(lvl.ex).pos[$p + 1] = $(Tp(0))
+            $(lvl.ex).ptr[$p] = $(Tp(0))
+            $(lvl.ex).ptr[$p + 1] = $(Tp(0))
             $i = last($(lvl.ex).srt[$r])
             $q = ($p - $(Tp(1))) * $(ctx(lvl.I)) + $i
             $(lvl.ex).tbl[$q] = false
@@ -153,7 +153,7 @@ function initialize_level!(lvl::VirtualSparseBytemapLevel, ctx::LowerJulia, pos)
         if $(!supports_reassembly(lvl.lvl))
             $(lvl.qos_stop) = $(Tp(0))
         end
-        $(lvl.ex).pos[1] = 1
+        $(lvl.ex).ptr[1] = 1
     end)
     if !supports_reassembly(lvl.lvl)
         lvl.lvl = initialize_level!(lvl.lvl, ctx, call(*, pos, lvl.I))
@@ -164,7 +164,7 @@ end
 function trim_level!(lvl::VirtualSparseBytemapLevel, ctx::LowerJulia, pos)
     ros = ctx.freshen(:ros)
     push!(ctx.preamble, quote
-        resize!($(lvl.ex).pos, $(ctx(pos)) + 1)
+        resize!($(lvl.ex).ptr, $(ctx(pos)) + 1)
         resize!($(lvl.ex).tbl, $(ctx(pos)) * $(ctx(lvl.I)))
         resize!($(lvl.ex).srt, $(lvl.qos_fill))
     end)
@@ -184,8 +184,8 @@ function assemble_level!(lvl::VirtualSparseBytemapLevel, ctx, pos_start, pos_sto
     quote
         $q_start = ($(ctx(pos_start)) - $(Tp(1))) * $(ctx(lvl.I)) + $(Tp(1))
         $q_stop = $(ctx(pos_stop)) * $(ctx(lvl.I))
-        $resize_if_smaller!($(lvl.ex).pos, $pos_stop + 1)
-        $fill_range!($(lvl.ex).pos, 0, $pos_start + 1, $pos_stop + 1)
+        $resize_if_smaller!($(lvl.ex).ptr, $pos_stop + 1)
+        $fill_range!($(lvl.ex).ptr, 0, $pos_start + 1, $pos_stop + 1)
         $resize_if_smaller!($(lvl.ex).tbl, $q_stop)
         $fill_range!($(lvl.ex).tbl, false, $q_start, $q_stop)
         $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(q_start, lvl.Tp), value(q_stop, lvl.Tp)), ctx))
@@ -205,12 +205,12 @@ function freeze_level!(lvl::VirtualSparseBytemapLevel, ctx::LowerJulia, pos_stop
         for $r = 1:$(lvl.qos_fill)
             $p = first($(lvl.ex).srt[$r])
             if $p != $p_prev
-                $(lvl.ex).pos[$p_prev + 1] = $r
-                $(lvl.ex).pos[$p] = $r
+                $(lvl.ex).ptr[$p_prev + 1] = $r
+                $(lvl.ex).ptr[$p] = $r
             end
             $p_prev = $p
         end
-        $(lvl.ex).pos[$p_prev + 1] = $(lvl.qos_fill) + 1
+        $(lvl.ex).ptr[$p_prev + 1] = $(lvl.qos_fill) + 1
     end)
     lvl.lvl = freeze_level!(lvl.lvl, ctx, call(*, pos_stop, lvl.I))
     return lvl
@@ -231,8 +231,8 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseBytemapLevel}, ctx, ::Unio
         size = virtual_level_size(lvl, ctx),
         body = (ctx, idx, ext) -> Thunk(
             preamble = quote
-                $my_r = $(lvl.ex).pos[$(ctx(pos))]
-                $my_r_stop = $(lvl.ex).pos[$(ctx(pos)) + 1]
+                $my_r = $(lvl.ex).ptr[$(ctx(pos))]
+                $my_r_stop = $(lvl.ex).ptr[$(ctx(pos)) + 1]
                 if $my_r != 0 && $my_r < $my_r_stop
                     $my_i = last($(lvl.ex).srt[$my_r])
                     $my_i_stop = last($(lvl.ex).srt[$my_r_stop - 1])
@@ -295,8 +295,8 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseBytemapLevel}, ctx, ::Gall
         size = virtual_level_size(lvl, ctx),
         body = (ctx, idx, ext) -> Thunk(
             preamble = quote
-                $my_r = $(lvl.ex).pos[$(ctx(pos))]
-                $my_r_stop = $(lvl.ex).pos[$(ctx(pos)) + 1]
+                $my_r = $(lvl.ex).ptr[$(ctx(pos))]
+                $my_r_stop = $(lvl.ex).ptr[$(ctx(pos)) + 1]
                 if $my_r != 0 && $my_r < $my_r_stop
                     $my_i = last($(lvl.ex).srt[$my_r])
                     $my_i_stop = last($(lvl.ex).srt[$my_r_stop - 1])

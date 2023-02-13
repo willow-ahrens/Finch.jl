@@ -17,7 +17,7 @@ isstructequal(a::T, b::T) where {T <: Fiber} =
 
 isstructequal(a::T, b::T) where {T <: Finch.SubFiber} = 
     isstructequal(a.lvl, b.lvl) &&
-    isstructequal(a.pos, b.pos)
+    isstructequal(a.ptr, b.ptr)
 
 isstructequal(a::T, b::T)  where {T <: Pattern} = true
 
@@ -26,7 +26,7 @@ isstructequal(a::T, b::T) where {T <: Element} =
 
 isstructequal(a::T, b::T) where {T <: RepeatRLE} =
     a.I == b.I &&
-    a.pos == b.pos &&
+    a.ptr == b.ptr &&
     a.idx == b.idx &&
     a.val == b.val
 
@@ -36,33 +36,33 @@ isstructequal(a::T, b::T) where {T <: Dense} =
 
 isstructequal(a::T, b::T) where {T <: SparseList} =
     a.I == b.I &&
-    a.pos == b.pos &&
+    a.ptr == b.ptr &&
     a.idx == b.idx &&
     isstructequal(a.lvl, b.lvl)
 
 isstructequal(a::T, b::T) where {T <: SparseCoo} =
     a.I == b.I &&
-    a.pos == b.pos &&
+    a.ptr == b.ptr &&
     a.tbl == b.tbl &&
     isstructequal(a.lvl, b.lvl)
 
 isstructequal(a::T, b::T) where {T <: SparseHash} =
     a.I == b.I &&
-    a.pos == b.pos &&
+    a.ptr == b.ptr &&
     a.tbl == b.tbl &&
     a.srt == b.srt &&
     isstructequal(a.lvl, b.lvl)
 
 isstructequal(a::T, b::T) where {T <: SparseVBL} =
     a.I == b.I &&
-    a.pos == b.pos &&
+    a.ptr == b.ptr &&
     a.idx == b.idx &&
     a.ofs == b.ofs &&
     isstructequal(a.lvl, b.lvl)
 
 isstructequal(a::T, b::T) where {T <: SparseBytemap} =
     a.I == b.I &&
-    a.pos == b.pos &&
+    a.ptr == b.ptr &&
     a.tbl == b.tbl &&
     a.srt == b.srt &&
     isstructequal(a.lvl, b.lvl)
