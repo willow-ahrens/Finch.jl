@@ -45,8 +45,6 @@ include("looplets/cycles.jl")
 include("looplets/jumpers.jl")
 include("looplets/steppers.jl")
 
-include("traits.jl")
-
 include("execute.jl")
 include("masks.jl")
 include("scalars.jl")
@@ -61,6 +59,8 @@ include("levels/denselevels.jl")
 include("levels/repeatrlelevels.jl")
 include("levels/elementlevels.jl")
 include("levels/patternlevels.jl")
+
+include("traits.jl")
 
 include("modifiers.jl")
 
