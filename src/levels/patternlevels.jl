@@ -66,8 +66,8 @@ reassemble_level!(lvl::VirtualPatternLevel, ctx, pos_start, pos_stop) = quote en
 
 trim_level!(lvl::VirtualPatternLevel, ctx::LowerJulia, pos) = lvl
 
-get_level_reader(::VirtualPatternLevel, ctx, pos) = Simplify(Fill(true))
-get_level_updater(lvl::VirtualPatternLevel, ctx, pos) = VirtualFiber(lvl)
+get_reader(::VirtualSubFiber{VirtualPatternLevel}, ctx, pos) = Simplify(Fill(true))
+get_updater(lvl::VirtualSubFiber{VirtualPatternLevel}, ctx, pos) = VirtualFiber(lvl)
 
 set_clean!(lvl::VirtualPatternLevel, ctx) = :($(lvl.dirty) = false)
 get_dirty(lvl::VirtualPatternLevel, ctx) = value(lvl.dirty, Bool)

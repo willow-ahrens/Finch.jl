@@ -104,7 +104,8 @@ end
 set_clean!(lvl::VirtualElementLevel, ctx) = :($(lvl.dirty) = false)
 get_dirty(lvl::VirtualElementLevel, ctx) = value(lvl.dirty, Bool)
 
-function get_level_reader(lvl::VirtualElementLevel, ctx, pos)
+function get_reader(fbr::VirtualSubFiber{VirtualElementLevel}, ctx)
+    (lvl, pos) = (fbr.lvl, fbr.pos)
     val = ctx.freshen(lvl.ex, :_val)
     return Thunk(
         preamble = quote
@@ -114,7 +115,8 @@ function get_level_reader(lvl::VirtualElementLevel, ctx, pos)
     )
 end
 
-function get_level_updater(lvl::VirtualElementLevel, ctx, pos)
+function get_updater(fbr::VirtualSubFiber{VirtualElementLevel}, ctx)
+    (lvl, pos) = (fbr.lvl, fbr.pos)
     val = ctx.freshen(lvl.ex, :_val)
     return Thunk(
         preamble = quote

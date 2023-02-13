@@ -176,7 +176,8 @@ function freeze_level!(lvl::VirtualRepeatRLELevel, ctx::LowerJulia, pos_stop)
     return lvl
 end
 
-function get_level_reader(lvl::VirtualRepeatRLELevel, ctx, pos, ::Union{Nothing, Walk})
+function get_reader(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, ::Union{Nothing, Walk})
+    (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp
     Ti = lvl.Ti
@@ -228,7 +229,8 @@ end
 set_clean!(lvl::VirtualRepeatRLELevel, ctx) = :($(lvl.dirty) = false)
 get_dirty(lvl::VirtualRepeatRLELevel, ctx) = value(lvl.dirty, Bool)
 
-function get_level_updater(lvl::VirtualRepeatRLELevel, ctx, pos, ::Union{Nothing, Extrude})
+function get_updater(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, ::Union{Nothing, Extrude})
+    (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp
     Ti = lvl.Ti

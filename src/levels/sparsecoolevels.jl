@@ -189,7 +189,8 @@ function freeze_level!(lvl::VirtualSparseCooLevel, ctx::LowerJulia, pos_stop)
     return lvl
 end
 
-function get_level_reader(lvl::VirtualSparseCooLevel, ctx, pos, protos...)
+function get_reader(fbr::VirtualSubFiber{VirtualSparseCooLevel}, ctx, protos...)
+    (lvl, pos) = (fbr.lvl, fbr.pos)
     start = value(:($(lvl.ex).pos[$(ctx(pos))]), lvl.Tp)
     stop = value(:($(lvl.ex).pos[$(ctx(pos)) + 1]), lvl.Tp)
 
@@ -239,7 +240,7 @@ function get_multilevel_range_reader(lvl::VirtualSparseCooLevel, ctx, R, start, 
                                     stride =  (ctx, idx, ext) -> value(my_i),
                                     chunk = Spike(
                                         body = Simplify(Fill(virtual_level_default(lvl))),
-                                        tail = get_level_reader(lvl.lvl, ctx, my_q, protos...),
+                                        tail = get_reader(VirtualSubFiber(lvl.lvl, my_q), ctx, protos...),
                                     ),
                                     next = (ctx, idx, ext) -> quote
                                         $my_q += $(Tp(1))
@@ -280,7 +281,8 @@ end
 set_clean!(lvl::VirtualSparseCooLevel, ctx) = :($(lvl.dirty) = false)
 get_dirty(lvl::VirtualSparseCooLevel, ctx) = value(lvl.dirty, Bool)
 
-function get_level_updater(lvl::VirtualSparseCooLevel, ctx, pos, protos...)
+function get_updater(fbr::VirtualSubFiber{VirtualSparseCooLevel}, ctx, protos...)
+    (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
     Tp = lvl.Tp
@@ -328,7 +330,7 @@ function get_multilevel_append_updater(lvl::VirtualSparseCooLevel, ctx, qos, coo
                             end
                             $(set_clean!(lvl.lvl, ctx))
                         end,
-                        body = get_level_updater(lvl.lvl, ctx, qos, protos...),
+                        body = get_updater(VirtualSubFiber(lvl.lvl, qos), ctx, protos...),
                         epilogue = quote
                             if $(ctx(get_dirty(lvl.lvl, ctx)))
                                 $(lvl.dirty) = true

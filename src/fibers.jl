@@ -72,11 +72,11 @@ function initialize!(fbr::VirtualFiber, ctx::LowerJulia)
 end
 
 function get_reader(fbr::VirtualFiber, ctx::LowerJulia, protos...)
-    return get_level_reader(fbr.lvl, ctx, literal(1), reverse(protos)...)
+    return get_reader(VirtualSubFiber(fbr.lvl, literal(1)), ctx, reverse(protos)...)
 end
 
 function get_updater(fbr::VirtualFiber, ctx::LowerJulia, protos...)
-    return get_level_updater(fbr.lvl, ctx, literal(1), reverse(protos)...)
+    return get_updater(VirtualSubFiber(fbr.lvl, literal(1)), ctx, reverse(protos)...)
 end
 
 """

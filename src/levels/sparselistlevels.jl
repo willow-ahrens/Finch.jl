@@ -169,7 +169,8 @@ function freeze_level!(lvl::VirtualSparseListLevel, ctx::LowerJulia, pos_stop)
     return lvl
 end
 
-function get_level_reader(lvl::VirtualSparseListLevel, ctx, pos, ::Union{Nothing, Walk}, protos...)
+function get_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::Union{Nothing, Walk}, protos...)
+    (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp
     Ti = lvl.Ti
@@ -204,7 +205,7 @@ function get_level_reader(lvl::VirtualSparseListLevel, ctx, pos, ::Union{Nothing
                                 stride = (ctx, idx, ext) -> value(my_i),
                                 chunk = Spike(
                                     body = Simplify(Fill(virtual_level_default(lvl))),
-                                    tail = get_level_reader(lvl.lvl, ctx, value(my_q, Ti), protos...)
+                                    tail = get_reader(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, protos...)
                                 ),
                                 next = (ctx, idx, ext) -> quote
                                     $my_q += $(Tp(1))
@@ -221,7 +222,8 @@ function get_level_reader(lvl::VirtualSparseListLevel, ctx, pos, ::Union{Nothing
     )
 end
 
-function get_level_reader(lvl::VirtualSparseListLevel, ctx, pos, ::FastWalk, protos...)
+function get_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::FastWalk, protos...)
+    (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp
     Ti = lvl.Ti
@@ -254,7 +256,7 @@ function get_level_reader(lvl::VirtualSparseListLevel, ctx, pos, ::FastWalk, pro
                                 stride = (ctx, idx, ext) -> value(my_i),
                                 chunk = Spike(
                                     body = Simplify(Fill(virtual_level_default(lvl))),
-                                    tail = get_level_reader(lvl.lvl, ctx, value(my_q, Ti), protos...),
+                                    tail = get_reader(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, protos...),
                                 ),
                                 next = (ctx, idx, ext) -> quote
                                     $my_q += $(Tp(1))
@@ -271,7 +273,8 @@ function get_level_reader(lvl::VirtualSparseListLevel, ctx, pos, ::FastWalk, pro
     )
 end
 
-function get_level_reader(lvl::VirtualSparseListLevel, ctx, pos, ::Gallop, protos...)
+function get_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::Gallop, protos...)
+    (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp
     Ti = lvl.Ti
@@ -306,7 +309,7 @@ function get_level_reader(lvl::VirtualSparseListLevel, ctx, pos, ::Gallop, proto
                                     value(:($(ctx(getstop(ext_2))) == $my_i)) => Thunk(
                                         body = Spike(
                                             body = Simplify(Fill(virtual_level_default(lvl))),
-                                            tail = get_level_reader(lvl.lvl, ctx, value(my_q, Ti), protos...),
+                                            tail = get_reader(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, protos...),
                                         ),
                                         epilogue = quote
                                             $my_q += $(Tp(1))
@@ -326,7 +329,7 @@ function get_level_reader(lvl::VirtualSparseListLevel, ctx, pos, ::Gallop, proto
                                                 stride = (ctx, idx, ext) -> value(my_i),
                                                 chunk = Spike(
                                                     body = Simplify(Fill(virtual_level_default(lvl))),
-                                                    tail =  get_level_reader(lvl.lvl, ctx, value(my_q, Ti), protos...),
+                                                    tail =  get_reader(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, protos...),
                                                 ),
                                                 next = (ctx, idx, ext) -> quote
                                                     $my_q += $(Tp(1))
@@ -350,7 +353,8 @@ end
 set_clean!(lvl::VirtualSparseListLevel, ctx) = :($(lvl.dirty) = false)
 get_dirty(lvl::VirtualSparseListLevel, ctx) = value(lvl.dirty, Bool)
 
-function get_level_updater(lvl::VirtualSparseListLevel, ctx, pos, ::Union{Nothing, Extrude}, protos...)
+function get_updater(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::Union{Nothing, Extrude}, protos...)
+    (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp
     qos = ctx.freshen(tag, :_qos)
@@ -375,7 +379,7 @@ function get_level_updater(lvl::VirtualSparseListLevel, ctx, pos, ::Union{Nothin
                         end
                         $(set_clean!(lvl.lvl, ctx))
                     end,
-                    body = get_level_updater(lvl.lvl, ctx, value(qos, lvl.Tp), protos...),
+                    body = get_updater(VirtualSubFiber(lvl.lvl, value(qos, lvl.Tp)), ctx, protos...),
                     epilogue = quote
                         if $(ctx(get_dirty(lvl.lvl, ctx)))
                             $(lvl.dirty) = true

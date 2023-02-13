@@ -204,7 +204,8 @@ function freeze_level!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, pos_stop)
     return lvl
 end
 
-function get_level_reader(lvl::VirtualSparseHashLevel, ctx, pos, proto::Union{Nothing, Walk}, protos...)
+function get_reader(fbr::VirtualSubFiber{VirtualSparseHashLevel}, ctx, proto::Union{Nothing, Walk}, protos...)
+    (lvl, pos) = (fbr.lvl, fbr.pos)
     start = value(:($(lvl.ex).pos[$(ctx(pos))]), lvl.Tp)
     stop = value(:($(lvl.ex).pos[$(ctx(pos)) + 1]), lvl.Tp)
 
@@ -254,7 +255,7 @@ function get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, R, start,
                                     stride =  (ctx, idx, ext) -> value(my_i),
                                     chunk = Spike(
                                         body = Simplify(Fill(virtual_level_default(lvl))),
-                                        tail = get_level_reader(lvl.lvl, ctx, value(:($(lvl.ex).srt[$my_q][2])), protos...),
+                                        tail = get_reader(VirtualSubFiber(lvl.lvl, value(:($(lvl.ex).srt[$my_q][2]))), ctx, protos...),
                                     ),
                                     next = (ctx, idx, ext) -> quote
                                         $my_q += $(Tp(1))
@@ -292,13 +293,11 @@ function get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, R, start,
     )
 end
 
-function get_level_reader(lvl::VirtualSparseHashLevel, ctx, pos, proto::Follow, protos...)
+function get_reader(fbr::VirtualSubFiber{VirtualSparseHashLevel}, ctx, protos...)
+    (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
     Tp = lvl.Tp
-
-
-
     return get_multilevel_group_reader(lvl, ctx, pos, qos, (), proto, protos...)
 end
 
@@ -326,7 +325,7 @@ function get_multilevel_group_reader(lvl::VirtualSparseHashLevel, ctx, pos, coor
                             $qos = get($(lvl.ex).tbl, $my_key, 0)
                         end,
                         body = Switch([
-                            value(:($qos != 0)) => get_level_reader(lvl.lvl, ctx, value(qos, lvl.Tp)),
+                            value(:($qos != 0)) => get_reader(VirtualSubFiber(lvl.lvl, value(qos, lvl.Tp)), ctx, protos...),
                             literal(true) => Simplify(Fill(virtual_level_default(lvl)))
                         ])
                     )
@@ -338,7 +337,8 @@ end
 set_clean!(lvl::VirtualSparseHashLevel, ctx) = :($(lvl.dirty) = false)
 get_dirty(lvl::VirtualSparseHashLevel, ctx) = value(lvl.dirty, Bool)
 
-function get_level_updater(lvl::VirtualSparseHashLevel, ctx, pos, protos...)
+function get_updater(fbr::VirtualSubFiber{VirtualSparseHashLevel}, ctx, protos...)
+    (lvl, pos) = (fbr.lvl, fbr.pos)
     return Thunk(
         preamble = quote
             $(lvl.qos_fill) = length($(lvl.ex).tbl)
@@ -377,7 +377,7 @@ function get_multilevel_group_updater(lvl::VirtualSparseHashLevel, ctx, pos, coo
                             end
                             $(set_clean!(lvl.lvl, ctx))
                         end,
-                        body = get_level_updater(lvl.lvl, ctx, qos, protos...),
+                        body = get_updater(VirtualSubFiber(lvl.lvl, qos), ctx, protos...),
                         epilogue = quote
                             if $(ctx(get_dirty(lvl.lvl, ctx)))
                                 $(lvl.dirty) = true
