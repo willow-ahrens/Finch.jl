@@ -103,7 +103,6 @@ mutable struct VirtualSparseHashLevel
     I
     qos_fill
     qos_stop
-    dirty
 end
 function virtualize(ex, ::Type{SparseHashLevel{N, Ti, Tp, Tbl, Lvl}}, ctx, tag=:lvl) where {N, Ti, Tp, Tbl, Lvl}   
     sym = ctx.freshen(tag)
@@ -116,9 +115,8 @@ function virtualize(ex, ::Type{SparseHashLevel{N, Ti, Tp, Tbl, Lvl}}, ctx, tag=:
         $(qos_fill) = length($sym.tbl)
         $(qos_stop) = $(qos_fill)
     end)
-    dirty = ctx.freshen(sym, :_dirty)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualSparseHashLevel(lvl_2, sym, N, Ti, Tp, Tbl, I, qos_fill, qos_stop, dirty)
+    VirtualSparseHashLevel(lvl_2, sym, N, Ti, Tp, Tbl, I, qos_fill, qos_stop)
 end
 function (ctx::Finch.LowerJulia)(lvl::VirtualSparseHashLevel)
     quote
@@ -204,7 +202,8 @@ function freeze_level!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, pos_stop)
     return lvl
 end
 
-function get_level_reader(lvl::VirtualSparseHashLevel, ctx, pos, proto::Union{Nothing, Walk}, protos...)
+function get_reader(fbr::VirtualSubFiber{VirtualSparseHashLevel}, ctx, proto::Union{Nothing, Walk}, protos...)
+    (lvl, pos) = (fbr.lvl, fbr.pos)
     start = value(:($(lvl.ex).pos[$(ctx(pos))]), lvl.Tp)
     stop = value(:($(lvl.ex).pos[$(ctx(pos)) + 1]), lvl.Tp)
 
@@ -254,7 +253,7 @@ function get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, R, start,
                                     stride =  (ctx, idx, ext) -> value(my_i),
                                     chunk = Spike(
                                         body = Simplify(Fill(virtual_level_default(lvl))),
-                                        tail = get_level_reader(lvl.lvl, ctx, value(:($(lvl.ex).srt[$my_q][2])), protos...),
+                                        tail = get_reader(VirtualSubFiber(lvl.lvl, value(:($(lvl.ex).srt[$my_q][2]))), ctx, protos...),
                                     ),
                                     next = (ctx, idx, ext) -> quote
                                         $my_q += $(Tp(1))
@@ -292,17 +291,15 @@ function get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, R, start,
     )
 end
 
-function get_level_reader(lvl::VirtualSparseHashLevel, ctx, pos, proto::Follow, protos...)
+function get_reader(fbr::VirtualSubFiber{VirtualSparseHashLevel}, ctx, protos...)
+    (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
     Tp = lvl.Tp
-
-
-
-    return get_multilevel_group_reader(lvl, ctx, pos, qos, (), proto, protos...)
+    return get_reader_hash_helper(lvl, ctx, pos, qos, (), proto, protos...)
 end
 
-function get_multilevel_group_reader(lvl::VirtualSparseHashLevel, ctx, pos, coords, ::Follow, protos...)
+function get_reader_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, coords, ::Follow, protos...)
     Ti = lvl.Ti
     Tp = lvl.Tp
     qos_fill = lvl.qos_fill
@@ -315,7 +312,7 @@ function get_multilevel_group_reader(lvl::VirtualSparseHashLevel, ctx, pos, coor
             if length(coords)  + 1 < lvl.N
                 Lookup(
                     val = virtual_level_default(lvl),
-                    body = (i) -> get_multilevel_group_reader(lvl, ctx, pos, qos, (i, coords...), protos...)
+                    body = (i) -> get_reader_hash_helper(lvl, ctx, pos, qos, (i, coords...), protos...)
                 )
             else
                 Lookup(
@@ -326,7 +323,7 @@ function get_multilevel_group_reader(lvl::VirtualSparseHashLevel, ctx, pos, coor
                             $qos = get($(lvl.ex).tbl, $my_key, 0)
                         end,
                         body = Switch([
-                            value(:($qos != 0)) => get_level_reader(lvl.lvl, ctx, value(qos, lvl.Tp)),
+                            value(:($qos != 0)) => get_reader(VirtualSubFiber(lvl.lvl, value(qos, lvl.Tp)), ctx, protos...),
                             literal(true) => Simplify(Fill(virtual_level_default(lvl)))
                         ])
                     )
@@ -335,19 +332,19 @@ function get_multilevel_group_reader(lvl::VirtualSparseHashLevel, ctx, pos, coor
     )
 end
 
-set_clean!(lvl::VirtualSparseHashLevel, ctx) = :($(lvl.dirty) = false)
-get_dirty(lvl::VirtualSparseHashLevel, ctx) = value(lvl.dirty, Bool)
-
-function get_level_updater(lvl::VirtualSparseHashLevel, ctx, pos, protos...)
+get_updater(fbr::VirtualSubFiber{VirtualSparseHashLevel}, ctx, protos...) =
+    get_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
+function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseHashLevel}, ctx, protos...)
+    (lvl, pos) = (fbr.lvl, fbr.pos)
     return Thunk(
         preamble = quote
             $(lvl.qos_fill) = length($(lvl.ex).tbl)
         end,
-        body = get_multilevel_group_updater(lvl, ctx, pos, (), protos...)
+        body = get_updater_hash_helper(lvl, ctx, pos, fbr.dirty, (), protos...)
     )
 end
 
-function get_multilevel_group_updater(lvl::VirtualSparseHashLevel, ctx, pos, coords, ::Union{Nothing, Extrude}, protos...)
+function get_updater_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, fbr_dirty, coords, ::Union{Nothing, Extrude}, protos...)
     tag = lvl.ex
     Ti = lvl.Ti
     Tp = lvl.Tp
@@ -355,6 +352,7 @@ function get_multilevel_group_updater(lvl::VirtualSparseHashLevel, ctx, pos, coo
     qos_stop = lvl.qos_stop
     my_key = ctx.freshen(tag, :_key)
     qos = ctx.freshen(tag, :_q)
+    dirty = ctx.freshen(tag, :dirty)
     Furlable(
         val = virtual_level_default(lvl),
         size = virtual_level_size(lvl, ctx)[1 + length(coords):end],
@@ -362,7 +360,7 @@ function get_multilevel_group_updater(lvl::VirtualSparseHashLevel, ctx, pos, coo
             if length(coords) + 1 < lvl.N
                 body = Lookup(
                     val = virtual_level_default(lvl),
-                    body = (i) -> get_multilevel_group_updater(lvl, ctx, pos, (i, coords...), protos...)
+                    body = (i) -> get_updater_hash_helper(lvl, ctx, pos, fbr_dirty, (i, coords...), protos...)
                 )
             else
                 body = AcceptSpike(
@@ -375,12 +373,12 @@ function get_multilevel_group_updater(lvl::VirtualSparseHashLevel, ctx, pos, coo
                                 $qos_stop = max($qos_stop << 1, 1)
                                 $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(qos, lvl.Tp), value(qos_stop, lvl.Tp)), ctx))
                             end
-                            $(set_clean!(lvl.lvl, ctx))
+                            $dirty = false
                         end,
-                        body = get_level_updater(lvl.lvl, ctx, qos, protos...),
+                        body = get_updater(VirtualTrackedSubFiber(lvl.lvl, qos, dirty), ctx, protos...),
                         epilogue = quote
-                            if $(ctx(get_dirty(lvl.lvl, ctx)))
-                                $(lvl.dirty) = true
+                            if $dirty
+                                $(fbr_dirty) = true
                                 if $qos > $qos_fill
                                     $(lvl.qos_fill) = $qos
                                     $(lvl.ex).tbl[$my_key] = $qos

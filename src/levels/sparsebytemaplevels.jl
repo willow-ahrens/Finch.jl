@@ -88,7 +88,6 @@ mutable struct VirtualSparseBytemapLevel
     I
     qos_fill
     qos_stop
-    dirty
 end
 function virtualize(ex, ::Type{SparseBytemapLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}   
     sym = ctx.freshen(tag)
@@ -100,9 +99,8 @@ function virtualize(ex, ::Type{SparseBytemapLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) 
         #TODO this line is not strictly correct unless the tensor is trimmed.
         $qos_stop = $qos_fill = length($sym.srt)
     end)
-    dirty = ctx.freshen(sym, :_dirty)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualSparseBytemapLevel(lvl_2, sym, Ti, Tp, I, qos_fill, qos_stop, dirty)
+    VirtualSparseBytemapLevel(lvl_2, sym, Ti, Tp, I, qos_fill, qos_stop)
 end
 function (ctx::Finch.LowerJulia)(lvl::VirtualSparseBytemapLevel)
     quote
@@ -218,7 +216,8 @@ function freeze_level!(lvl::VirtualSparseBytemapLevel, ctx::LowerJulia, pos_stop
     return lvl
 end
 
-function get_level_reader(lvl::VirtualSparseBytemapLevel, ctx, pos, ::Union{Nothing, Walk}, protos...)
+function get_reader(fbr::VirtualSubFiber{VirtualSparseBytemapLevel}, ctx, ::Union{Nothing, Walk}, protos...)
+    (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
     Tp = lvl.Tp
@@ -263,7 +262,7 @@ function get_level_reader(lvl::VirtualSparseBytemapLevel, ctx, pos, ::Union{Noth
                                         preamble = quote
                                             $my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.I)) + $my_i
                                         end,
-                                        body = get_level_reader(lvl.lvl, ctx, value(my_q, lvl.Ti), protos...),
+                                        body = get_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, protos...),
                                     ),
                                 ),
                                 next = (ctx, idx, ext) -> quote
@@ -281,8 +280,8 @@ function get_level_reader(lvl::VirtualSparseBytemapLevel, ctx, pos, ::Union{Noth
     )
 end
 
-function get_level_reader(lvl::VirtualSparseBytemapLevel, ctx, pos, ::Gallop, protos...)
-    lvl = fbr.lvl
+function get_reader(fbr::VirtualSubFiber{VirtualSparseBytemapLevel}, ctx, ::Gallop, protos...)
+    (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
     Tp = lvl.Tp
@@ -327,7 +326,7 @@ function get_level_reader(lvl::VirtualSparseBytemapLevel, ctx, pos, ::Gallop, pr
                                                 preamble = quote
                                                     $my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.I)) + $my_i
                                                 end,
-                                                body = get_level_reader(lvl.lvl, ctx, value(my_q, lvl.Ti), protos...),
+                                                body = get_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, protos...),
                                             ),
                                         ),
                                         epilogue = quote
@@ -352,7 +351,7 @@ function get_level_reader(lvl::VirtualSparseBytemapLevel, ctx, pos, ::Gallop, pr
                                                         preamble = quote
                                                             $my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.I)) + $my_i
                                                         end,
-                                                        body = get_level_reader(lvl.lvl, ctx, value(my_q, lvl.Ti), protos...),
+                                                        body = get_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, protos...),
                                                     ),
                                                 ),
                                                 next = (ctx, idx, ext) -> quote
@@ -375,8 +374,8 @@ function get_level_reader(lvl::VirtualSparseBytemapLevel, ctx, pos, ::Gallop, pr
 end
 
 
-function get_level_reader(::VirtualSparseBytemapLevel, ctx, pos, ::Follow, protos...)
-    lvl = fbr.lvl
+function get_reader(fbr::VirtualSubFiber{VirtualSparseBytemapLevel}, ctx, ::Follow, protos...)
+    (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     my_q = cgx.freshen(tag, :_q)
     q = pos
@@ -390,7 +389,7 @@ function get_level_reader(::VirtualSparseBytemapLevel, ctx, pos, ::Follow, proto
                     $my_q = $(ctx(q)) * $(ctx(lvl.I)) + $(ctx(i))
                 end,
                 body = Switch([
-                    value(:($tbl[$my_q])) => get_level_reader(lvl.lvl, ctx, pos, protos...),
+                    value(:($tbl[$my_q])) => get_reader(VirtualSubFiber(lvl.lvl, pos), ctx, protos...),
                     literal(true) => Simplify(Fill(virtual_level_default(lvl)))
                 ])
             )
@@ -398,13 +397,14 @@ function get_level_reader(::VirtualSparseBytemapLevel, ctx, pos, ::Follow, proto
     )
 end
 
-set_clean!(lvl::VirtualSparseBytemapLevel, ctx) = :($(lvl.dirty) = false)
-get_dirty(lvl::VirtualSparseBytemapLevel, ctx) = value(lvl.dirty, Bool)
-
-function get_level_updater(lvl::VirtualSparseBytemapLevel, ctx, pos, ::Union{Nothing, Extrude, Laminate}, protos...)
+get_updater(fbr::VirtualSubFiber{VirtualSparseBytemapLevel}, ctx, protos...) = 
+    get_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
+function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseBytemapLevel}, ctx, ::Union{Nothing, Extrude, Laminate}, protos...)
+    (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp
     my_q = ctx.freshen(tag, :_q)
+    dirty = ctx.freshen(:dirty)
 
     Furlable(
         val = virtual_level_default(lvl),
@@ -413,13 +413,13 @@ function get_level_updater(lvl::VirtualSparseBytemapLevel, ctx, pos, ::Union{Not
             val = virtual_level_default(lvl),
             tail = (ctx, idx) -> Thunk(
                 preamble = quote
-                    $(set_clean!(lvl.lvl, ctx))
                     $my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.I)) + $(ctx(idx))
+                    $dirty = false
                 end,
-                body = get_level_updater(lvl.lvl, ctx, value(my_q, lvl.Ti), protos...),
+                body = get_updater(VirtualTrackedSubFiber(lvl.lvl, value(my_q, lvl.Ti), dirty), ctx, protos...),
                 epilogue = quote
-                    if $(ctx(get_dirty(lvl.lvl, ctx)))
-                        $(lvl.dirty) = true
+                    if $dirty
+                        $(fbr.dirty) = true
                         if !$(lvl.ex).tbl[$my_q]
                             $(lvl.ex).tbl[$my_q] = true
                             $(lvl.qos_fill) += 1

@@ -49,7 +49,6 @@ struct VirtualElementLevel
     ex
     Tv
     D
-    dirty
 end
 
 (ctx::Finch.LowerJulia)(lvl::VirtualElementLevel) = lvl.ex
@@ -60,8 +59,7 @@ function virtualize(ex, ::Type{ElementLevel{D, Tv}}, ctx, tag=:lvl) where {D, Tv
     push!(ctx.preamble, quote
         $sym = $ex
     end)
-    dirty = ctx.freshen(sym, :_dirty)
-    VirtualElementLevel(sym, Tv, D, dirty)
+    VirtualElementLevel(sym, Tv, D)
 end
 
 summary_f_code(lvl::VirtualElementLevel) = "e($(lvl.D))"
@@ -101,10 +99,8 @@ function reassemble_level!(lvl::VirtualElementLevel, ctx, pos_start, pos_stop)
     lvl
 end
 
-set_clean!(lvl::VirtualElementLevel, ctx) = :($(lvl.dirty) = false)
-get_dirty(lvl::VirtualElementLevel, ctx) = value(lvl.dirty, Bool)
-
-function get_level_reader(lvl::VirtualElementLevel, ctx, pos)
+function get_reader(fbr::VirtualSubFiber{VirtualElementLevel}, ctx)
+    (lvl, pos) = (fbr.lvl, fbr.pos)
     val = ctx.freshen(lvl.ex, :_val)
     return Thunk(
         preamble = quote
@@ -114,13 +110,28 @@ function get_level_reader(lvl::VirtualElementLevel, ctx, pos)
     )
 end
 
-function get_level_updater(lvl::VirtualElementLevel, ctx, pos)
+function get_updater(fbr::VirtualSubFiber{VirtualElementLevel}, ctx)
+    (lvl, pos) = (fbr.lvl, fbr.pos)
     val = ctx.freshen(lvl.ex, :_val)
     return Thunk(
         preamble = quote
             $val = $(lvl.ex).val[$(ctx(pos))]
         end,
-        body = VirtualDirtyScalar(nothing, lvl.Tv, lvl.D, gensym(), val, lvl.dirty),
+        body = VirtualScalar(nothing, lvl.Tv, lvl.D, gensym(), val),
+        epilogue = quote
+            $(lvl.ex).val[$(ctx(pos))] = $val
+        end
+    )
+end
+
+function get_updater(fbr::VirtualTrackedSubFiber{VirtualElementLevel}, ctx)
+    (lvl, pos) = (fbr.lvl, fbr.pos)
+    val = ctx.freshen(lvl.ex, :_val)
+    return Thunk(
+        preamble = quote
+            $val = $(lvl.ex).val[$(ctx(pos))]
+        end,
+        body = VirtualDirtyScalar(nothing, lvl.Tv, lvl.D, gensym(), val, fbr.dirty),
         epilogue = quote
             $(lvl.ex).val[$(ctx(pos))] = $val
         end
