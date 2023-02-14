@@ -28,6 +28,8 @@ Return the name of the index expression `ex`. The name serves as a unique
 identifier and often corresponds to the variable name which holds a tensor.
 Tensors can have the same name only if they are `===` to each other. The names
 of indices are used to distinguish the loops they reference.
+
+#TODO this function shouldn't exist
 """
 function getname end
 
@@ -37,17 +39,6 @@ function getname end
 Return a new expression, identical to `ex`, with the name `name`.
 """
 function setname end
-
-"""
-    isliteral(ex)
-
-Return a boolean indicating whether the expression is a literal. If an
-expression is a literal, `getvalue(ex)` should return the literal value it
-corresponds to. `getvalue` defaults to the identity.
-
-See also: [`getvalue`](@ref)
-"""
-isliteral(ex) = true
 
 """
     getvalue(ex)

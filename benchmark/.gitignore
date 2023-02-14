@@ -1,0 +1,4 @@
+Manifest.toml
+*.json
+*.o
+libembedbenchmarks.so

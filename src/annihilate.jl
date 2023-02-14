@@ -1,119 +1,282 @@
-@slots a b c d e i j f g rules = [
-    (@rule @f(f(a...)) => if isliteral(f) && all(isliteral, a) && length(a) >= 1 Literal(getvalue(f)(getvalue.(a)...)) end),
+abstract type AbstractAlgebra end
+struct DefaultAlgebra<:AbstractAlgebra end
 
-    ((a) -> if a isa Literal && isliteral(getvalue(a)) getvalue(a) end), #only quote when necessary
+struct Chooser{D} end
 
-    (@rule @f(a[i...] = $b) => if b == default(a) pass(a) end), #TODO either default needs to get defined on all chunks, or we need to guard this
+(f::Chooser{D})(x) where {D} = x
+function (f::Chooser{D})(x, y, tail...) where {D}
+    if x == D
+        return f(y, tail...)
+    else
+        return x
+    end
+end
 
-    (@rule @f(@loop $i @pass(a...)) => pass(a...)),
-    (@rule @f(@chunk $i a @pass(b...)) => pass(b...)),
-    (@rule @f(@pass(a...) where $b) => pass(a...)),
-    (@rule @f($a where @pass()) => a),
-    (@rule @f(@multi(a..., @pass(b...), @pass(c...), d...)) => @f(@multi(a..., @pass(b..., c...), d...))),
-    (@rule @f(@multi(@pass(a...))) => @f(@pass(a...))),
-    (@rule @f(@multi()) => @f(@pass())),
-    (@rule @f((@pass(a...);)) => pass(a...)),
-    (@rule @f($a where $b) => begin
-        @slots c d i j f g begin
-            props = Dict()
-            b_2 = Postwalk(Chain([
-                (@rule @f(c[i...] = $d) => if isliteral(d)
-                    props[getname(c)] = d
-                    pass()
-                end),
-                (@rule @f(@pass(c...)) => begin
-                    for d in c
-                        props[getname(d)] = default(d) #TODO is this okay?
-                    end
-                    pass()
-                end),
-            ]))(b)
-            if b_2 != nothing
-                a_2 = Rewrite(Postwalk(@rule @f($c[i...]) => get(props, getname(c), nothing)))(a)
-                @f $a_2 where $b_2
+choose(d) = Chooser{d}()
+
+isassociative(alg) = (f) -> isassociative(alg, f)
+isassociative(alg, f::FinchNode) = f.kind === literal && isassociative(alg, f.val)
+"""
+    isassociative(algebra, f)
+
+Return true when `f(a..., f(b...), c...) = f(a..., b..., c...)` in `algebra`.
+"""
+isassociative(::Any, f) = false
+isassociative(::AbstractAlgebra, ::typeof(right)) = true
+isassociative(::AbstractAlgebra, ::typeof(or)) = true
+isassociative(::AbstractAlgebra, ::typeof(and)) = true
+isassociative(::AbstractAlgebra, ::typeof(coalesce)) = true
+isassociative(::AbstractAlgebra, ::typeof(+)) = true
+isassociative(::AbstractAlgebra, ::typeof(*)) = true
+isassociative(::AbstractAlgebra, ::typeof(min)) = true
+isassociative(::AbstractAlgebra, ::typeof(max)) = true
+isassociative(::AbstractAlgebra, ::Chooser) = true
+
+iscommutative(alg) = (f) -> iscommutative(alg, f)
+iscommutative(alg, f::FinchNode) = f.kind === literal && iscommutative(alg, f.val)
+"""
+    iscommutative(algebra, f)
+
+Return true when for all permutations p, `f(a...) = f(a[p]...)` in `algebra`.
+"""
+iscommutative(::Any, f) = false
+iscommutative(::AbstractAlgebra, ::typeof(or)) = true
+iscommutative(::AbstractAlgebra, ::typeof(and)) = true
+iscommutative(::AbstractAlgebra, ::typeof(+)) = true
+iscommutative(::AbstractAlgebra, ::typeof(*)) = true
+iscommutative(::AbstractAlgebra, ::typeof(min)) = true
+iscommutative(::AbstractAlgebra, ::typeof(max)) = true
+
+isabelian(alg) = (f) -> isabelian(alg, f)
+isabelian(alg, f) = isassociative(alg, f) && iscommutative(alg, f)
+
+isdistributive(alg) = (f, g) -> isdistributive(alg, f, g)
+isdistributive(alg, f::FinchNode, x::FinchNode) = isliteral(f) && isliteral(x) && isdistributive(alg, f.val, x.val)
+"""
+    isidempotent(algebra, f)
+
+Return true when `f(a, b) = f(f(a, b), b)` in `algebra`.
+"""
+isdistributive(::Any, f, g) = false
+isdistributive(::AbstractAlgebra, ::typeof(+), ::typeof(*)) = true
+
+isidempotent(alg) = (f) -> isidempotent(alg, f)
+isidempotent(alg, f::FinchNode) = f.kind === literal && isidempotent(alg, f.val)
+"""
+    isidempotent(algebra, f)
+
+Return true when `f(a, b) = f(f(a, b), b)` in `algebra`.
+"""
+isidempotent(::Any, f) = false
+isidempotent(::AbstractAlgebra, ::typeof(right)) = true
+isidempotent(::AbstractAlgebra, ::typeof(min)) = true
+isidempotent(::AbstractAlgebra, ::typeof(max)) = true
+isidempotent(::AbstractAlgebra, ::Chooser) = true
+
+"""
+    isidentity(algebra, f, x)
+
+Return true when `f(a..., x, b...) = f(a..., b...)` in `algebra`.
+"""
+isidentity(alg) = (f, x) -> isidentity(alg, f, x)
+isidentity(alg, f::FinchNode, x::FinchNode) = isliteral(f) && isliteral(x) && isidentity(alg, f.val, x.val)
+isidentity(::Any, f, x) = false
+isidentity(::AbstractAlgebra, ::typeof(or), x) = x == false
+isidentity(::AbstractAlgebra, ::typeof(and), x) = x == true
+isidentity(::AbstractAlgebra, ::typeof(coalesce), x) = ismissing(x)
+isidentity(::AbstractAlgebra, ::typeof(+), x) = iszero(x)
+isidentity(::AbstractAlgebra, ::typeof(*), x) = isone(x)
+isidentity(::AbstractAlgebra, ::typeof(min), x) = isinf(x) && x > 0
+isidentity(::AbstractAlgebra, ::typeof(max), x) = isinf(x) && x < 0
+isidentity(::AbstractAlgebra, ::Chooser{D}, x) where {D} = x == D
+
+isannihilator(alg) = (f, x) -> isannihilator(alg, f, x)
+isannihilator(alg, f::FinchNode, x::FinchNode) = isliteral(f) && isliteral(x) && isannihilator(alg, f.val, x.val)
+"""
+    isannihilator(algebra, f, x)
+
+Return true when `f(a..., x, b...) = x` in `algebra`.
+"""
+isannihilator(::Any, f, x) = false
+isannihilator(::AbstractAlgebra, ::typeof(+), x) = isinf(x)
+isannihilator(::AbstractAlgebra, ::typeof(*), x) = iszero(x)
+isannihilator(::AbstractAlgebra, ::typeof(min), x) = isinf(x) && x < 0
+isannihilator(::AbstractAlgebra, ::typeof(max), x) = isinf(x) && x > 0
+isannihilator(::AbstractAlgebra, ::typeof(or), x) = x == true
+isannihilator(::AbstractAlgebra, ::typeof(and), x) = x == false
+
+isinverse(alg) = (f, g) -> isinverse(alg, f, g)
+isinverse(alg, f::FinchNode, g::FinchNode) = isliteral(f) && isliteral(g) && isinverse(alg, f.val, g.val)
+"""
+    isinverse(algebra, f, g)
+
+Return true when `f(a, g(a))` is the identity under `f` in `algebra`.
+"""
+isinverse(::Any, f, g) = false
+isinverse(::AbstractAlgebra, ::typeof(-), ::typeof(+)) = true
+isinverse(::AbstractAlgebra, ::typeof(inv), ::typeof(*)) = true
+
+isinvolution(alg) = (f) -> isinvolution(alg, f)
+isinvolution(alg, f::FinchNode) = isliteral(f) && isinvolution(alg, f.val)
+"""
+    isinvolution(algebra, f)
+
+Return true when `f(f(a)) = a` in `algebra`.
+"""
+isinvolution(::Any, f) = false
+isinvolution(::AbstractAlgebra, ::typeof(-)) = true
+isinvolution(::AbstractAlgebra, ::typeof(inv)) = true
+
+struct Fill
+    body::FinchNode
+    default
+    Fill(x, d=nothing) = new(index_leaf(x), d)
+end
+
+FinchNotation.isliteral(::Fill) = false
+virtual_default(f::Fill) = something(f.default)
+
+isfill(tns) = false
+isfill(tns::FinchNode) = tns.kind == virtual && tns.val isa Fill
+isvar(tns::FinchNode) = tns.kind == variable
+
+"""
+    base_rules(alg, ctx)
+
+The basic rule set for Finch, uses the algebra to check properties of functions
+like associativity, commutativity, etc. Also assumes the context has a static
+hash names `shash`. This rule set simplifies, normalizes, and propagates
+constants, and is the basis for how Finch understands sparsity.
+"""
+function base_rules(alg, ctx)
+    shash = ctx.shash
+    return [
+        (@rule access(~a::isfill, ~m, ~i...) => a.val.body), #TODO flesh this out
+
+        (@rule call(~f, ~a...) => if isliteral(f) && all(isliteral, a) && length(a) >= 1 literal(getvalue(f)(getvalue.(a)...)) end),
+
+        #TODO default needs to get defined on all writable chunks
+        #TODO Does it really though
+        #TODO I don't think this is safe to assume if we allow arbitrary updates
+        (@rule assign(access(~a, ~m, ~i...), $(literal(right)), ~b) => if virtual_default(resolve(a, ctx)) != nothing && b == literal(something(virtual_default(resolve(a, ctx)))) pass(access(a, m)) end),
+
+        #TODO we probably can just drop modes from pass
+        (@rule pass(~a..., access(~b, updater(modify())), ~c...) => pass(a..., c...)),
+
+
+        (@rule loop(~i, pass(~a...)) => pass(a...)),
+        (@rule chunk(~i, ~a, pass(~b...)) => pass(b...)),
+        (@rule with(pass(~a...), ~b) => pass(a...)),
+        (@rule with(~a, pass()) => a),
+        (@rule multi(~a..., pass(~b...), pass(~c...)) => multi(a..., pass(b..., c...))),
+        (@rule multi(pass(~a...)) => pass(a...)),
+        (@rule multi() => pass()),
+
+        (@rule loop(~i, assign(access(~a, updater(~m), ~j...), ~f::isidempotent(alg), ~b)) => begin
+            if i ∉ j && getname(i) ∉ getunbound(b) #=TODO this doesn't work because chunkify temporarily drops indicies so we add =# && isliteral(b)
+                assign(access(a, updater(m), j...), f, b)
             end
-        end
-    end),
-    #(@rule @f(a where @pass(b...)) => a),#can't do this bc produced tensors won't get initialized ?
+        end),
+        (@rule loop(~i, multi(~a..., assign(access(~b, updater(~m), ~j...), ~c), ~f::isidempotent(alg), ~d...)) => begin
+            if i ∉ j && getname(i) ∉ getunbound(c) #=TODO this doesn't work because chunkify temporarily drops indicies so we add =# && isliteral(c)
+                multi(assign(access(b, updater(m), j...), c), f, loop(i, multi(a..., d...)))
+            end
+        end),
 
-    (@rule @f(max(a...) >= $b) => @f or($(map(x -> @f($x >= $b), a)...))),
-    (@rule @f(max(a...) > $b) => @f or($(map(x -> @f($x > $b), a)...))),
-    (@rule @f(max(a...) <= $b) => @f and($(map(x -> @f($x <= $b), a)...))),
-    (@rule @f(max(a...) < $b) => @f and($(map(x -> @f($x < $b), a)...))),
-    (@rule @f(min(a...) <= $b) => @f or($(map(x -> @f($x <= $b), a)...))),
-    (@rule @f(min(a...) < $b) => @f or($(map(x -> @f($x < $b), a)...))),
-    (@rule @f(min(a...) >= $b) => @f and($(map(x -> @f($x >= $b), a)...))),
-    (@rule @f(min(a...) > $b) => @f and($(map(x -> @f($x > $b), a)...))),
-    (@rule @f(min(a..., min(b...), c...)) => @f min(a..., b..., c...)),
-    (@rule @f(max(a..., max(b...), c...)) => @f max(a..., b..., c...)),
-    (@rule @f(min(a...)) => if !(issorted(a, by = Lexicography)) @f min($(sort(a, by = Lexicography)...)) end),
-    (@rule @f(max(a...)) => if !(issorted(a, by = Lexicography)) @f max($(sort(a, by = Lexicography)...)) end),
-    (@rule @f(min(a...)) => if !(allunique(a)) @f min($(unique(a)...)) end),
-    (@rule @f(max(a...)) => if !(allunique(a)) @f max($(unique(a)...)) end),
-    (@rule @f(+(a..., +(b...), c...)) => @f +(a..., b..., c...)),
-    (@rule @f(+(a...)) => if count(isliteral, a) >= 2 @f +($(filter(!isliteral, a)...), $(Literal(+(getvalue.(filter(isliteral, a))...)))) end),
-    (@rule @f(+(a..., 0, b...)) => @f +(a..., b...)),
-    (@rule @f(or(a..., false, b...)) => @f or(a..., b...)),
-    (@rule @f(or(a..., true, b...)) => true),
-    (@rule @f(or()) => false),
-    (@rule @f(and(a..., true, b...)) => @f and(a..., b...)),
-    (@rule @f(and(a..., false, b...)) => false),
-    (@rule @f(and()) => true),
-    (@rule @f(ifelse(true, $a, $b)) => a),
-    (@rule @f(ifelse(false, $a, $b)) => b),
-    (@rule @f((+)($a)) => a),
-    (@rule @f(- +($a, b...)) => @f +(- $a, - +(b...))),
-    (@rule @f(a[i...] += 0) => pass(a)),
+        (@rule with(~a, assign(access(~b::isvar, updater(create())), ~f, ~c::isliteral)) => begin
+            Rewrite(Postwalk(@rule access(~x::isvar, reader()) => if x == b call(f, virtual_default(resolve(b, ctx)), c) end))(a)
+        end),
+        (@rule with(~a, multi(~b..., assign(access(~c::isvar, updater(create())), ~f, ~d::isliteral), ~e...)) => begin
+            with(Rewrite(Postwalk(@rule access(~x::isvar, reader()) => if x == c call(f, virtual_default(resolve(c, ctx)), d) end))(a), multi(b..., e...))
+        end),
+        (@rule with(~a, pass(~b..., access(~c::isvar, updater(create())), ~d...)) => begin
+            with(Rewrite(Postwalk(@rule access(~x::isvar, reader(), ~i...) => if x == c virtual_default(resolve(c, ctx)) end))(a), pass(b..., d...))
+        end),
+        (@rule with(~a, multi(~b..., pass(~c..., access(~d::isvar, updater(create())), ~e...), ~f...)) => begin
+            with(Rewrite(Postwalk(@rule access(~x::isvar, reader(), ~i...) => if x == d virtual_default(resolve(d, ctx)) end))(a), multi(b..., pass(c..., e...), f...))
+        end),
 
-    (@rule @f(a[i...] <<f>>= $($(Literal(missing)))) => pass(a)),
-    (@rule @f(a[i..., $($(Literal(missing))), j...] <<f>>= $b) => pass(a)),
-    (@rule @f(a[i..., $($(Literal(missing))), j...]) => Literal(missing)),
-    (@rule @f(coalesce(a..., $($(Literal(missing))), b...)) => @f coalesce(a..., b...)),
-    (@rule @f(coalesce(a..., $b, c...)) => if b isa Virtual && !(Virtual{missing} <: typeof(b)); @f(coalesce(a..., $b)) end),
-    (@rule @f(coalesce(a..., $b, c...)) => if b isa Literal && b != Literal(missing); @f(coalesce(a..., $b)) end),
-    (@rule @f(coalesce($a)) => a),
+        (@rule call($(literal(>=)), call($(literal(max)), ~a...), ~b) => call(or, map(x -> call(x >= b), a)...)),
+        (@rule call($(literal(>)), call($(literal(max)), ~a...), ~b) => call(or, map(x -> call(x > b), a)...)),
+        (@rule call($(literal(<=)), call($(literal(max)), ~a...), ~b) => call(and, map(x -> call(x <= b), a)...)),
+        (@rule call($(literal(<)), call($(literal(max)), ~a...), ~b) => call(and, map(x -> call(x < b), a)...)),
+        (@rule call($(literal(>=)), call($(literal(min)), ~a...), ~b) => call(and, map(x -> call(x >= b), a)...)),
+        (@rule call($(literal(>)), call($(literal(min)), ~a...), ~b) => call(and, map(x -> call(x > b), a)...)),
+        (@rule call($(literal(<=)), call($(literal(min)), ~a...), ~b) => call(or, map(x -> call(x <= b), a)...)),
+        (@rule call($(literal(<)), call($(literal(min)), ~a...), ~b) => call(or, map(x -> call(x < b), a)...)),
+        (@rule call(~f::isassociative(alg), ~a..., call(~f, ~b...), ~c...) => call(f, a..., b..., c...)),
+        (@rule call(~f::iscommutative(alg), ~a...) => if !(issorted(a, by = shash))
+            call(f, sort(a, by = shash)...)
+        end),
+        (@rule call(~f::isidempotent(alg), ~a...) => if !allunique(a)
+            call(f, unique(a)...)
+        end),
+        (@rule call(~f::isassociative(alg), ~a..., ~b::isliteral, ~c::isliteral, ~d...) => call(f, a..., f.val(b.val, c.val), d...)),
+        (@rule call(~f::isabelian(alg), ~a..., ~b::isliteral, ~c..., ~d::isliteral, ~e...) => call(f, a..., f.val(b.val, d.val), c..., e...)),
+        (@rule call(~f, ~a..., ~b, ~c...) => if isannihilator(alg, f, b) b end),
+        (@rule call(~f, ~a..., ~b, ~c, ~d...) => if isidentity(alg, f, b)
+            call(f, a..., c, d...)
+        end),
+        (@rule call(~f, ~a..., ~b, ~c, ~d...) => if isidentity(alg, f, c)
+            call(f, a..., b, d...)
+        end),
+        (@rule call(~f, ~a) => if isassociative(alg, f) a end), #TODO
 
-    (@rule @f($a - $b) => @f $a + - $b),
-    (@rule @f(- (- $a)) => a),
+        (@rule assign(access(~a, updater(~m), ~i...), ~f, ~b) => if isidentity(alg, f, b) pass(access(a, updater(m))) end),
+        (@rule assign(access(~a, ~m, ~i...), $(literal(missing))) => pass(access(a, m))),
+        (@rule assign(access(~a, ~m, ~i..., $(literal(missing)), ~j...), ~b) => pass(access(a, m))),
+        (@rule call($(literal(coalesce)), ~a..., ~b, ~c...) => if isvalue(b) && !(Missing <: b.type) || isliteral(b) && !ismissing(b.val)
+            call(coalesce, a..., b)
+        end),
 
-    (@rule @f(*(a..., *(b...), c...)) => @f *(a..., b..., c...)),
-    (@rule @f(*(a...)) => if count(isliteral, a) >= 2 @f(*($(filter(!isliteral, a)...), $(Literal(*(getvalue.(filter(isliteral, a))...))))) end),
-    (@rule @f(*(a..., 1, b...)) => @f *(a..., b...)),
-    (@rule @f(*(a..., 0, b...)) => 0),
-    (@rule @f((*)($a)) => a),
-    (@rule @f((*)(a..., - $b, c...)) => @f -(*(a..., $b, c...))),
-    (@rule @f(a[i...] *= 1) => pass(a)),
-    (@rule @f(@sieve true $a) => a),
-    (@rule @f(@sieve false $a) => pass(getresults(a)...)),
+        (@rule call($(literal(right)), ~a..., ~b, ~c) => c),
+        (@rule call($(literal(ifelse)), $(literal(true)), ~a, ~b) => a),
+        (@rule call($(literal(ifelse)), $(literal(false)), ~a, ~b) => b),
+        (@rule call($(literal(ifelse)), ~a, ~b, ~b) => b),
+        (@rule $(literal(-0.0)) => literal(0.0)),
 
-    (@rule @f(@chunk $i a (b[j...] <<min>>= $d)) => if Finch.isliteral(d) && i ∉ j
-        @f (b[j...] <<min>>= $d)
-    end),
-    (@rule @f(@chunk $i a @multi b... (c[j...] <<min>>= $d) e...) => begin
-        if Finch.isliteral(d) && i ∉ j
-            @f @multi (c[j...] <<min>>= $d) @chunk $i a @f(@multi b... e...)
-        end
-    end),
-    (@rule @f(@chunk $i a (b[j...] <<max>>= $d)) => if Finch.isliteral(d) && i ∉ j
-        @f (b[j...] <<max>>= $d)
-    end),
-    (@rule @f(@chunk $i a @multi b... (c[j...] <<max>>= $d) e...) => begin
-        if Finch.isliteral(d) && i ∉ j
-            println(@f @multi (c[j...] <<max>>= $d) @chunk $i a @f(@multi b... e...))
-            @f @multi (c[j...] <<max>>= $d) @chunk $i a @f(@multi b... e...)
-        end
-    end),
-    (@rule @f(@chunk $i $a (b[j...] += $d)) => begin
-        if getname(i) ∉ getunbound(d) && i ∉ j
-            @f (b[j...] += $(extent(a)) * $d)
-        end
-    end),
-    (@rule @f(@chunk $i a @multi b... (c[j...] += $d) e...) => begin
-        if getname(i) ∉ getunbound(d) && i ∉ j
-            @f @multi (c[j...] += $(extent(a)) * $d) @chunk $i a @f(@multi b... e...)
-        end
-    end),
-]
+
+        (@rule call(~f, call(~g, ~a, ~b...)) => if isinverse(alg, f, g) && isassociative(alg, g)
+            call(g, call(f, a), map(c -> call(f, call(g, c)), b)...)
+        end),
+
+        (@rule call($(literal(-)), ~a, ~b) => call(+, a, call(-, b))),
+        (@rule call($(literal(/)), ~a, ~b) => call(*, a, call(inv, b))),
+
+        (@rule call(~f::isinvolution(alg), call(~f, ~a)) => a),
+        (@rule call(~f, ~a..., call(~g, ~b), ~c...) => if isdistributive(alg, g, f)
+            call(g, call(f, a..., b, c...))
+        end),
+
+        (@rule call($(literal(/)), ~a) => call(inv, a)),
+
+        (@rule sieve($(literal(true)), ~a) => a),
+        (@rule sieve($(literal(false)), ~a) => pass(getresults(a)...)),
+
+        (@rule chunk(~i, ~a, assign(access(~b, updater(~m), ~j...), ~f::isidempotent(alg), ~c)) => begin
+            if i ∉ j && getname(i) ∉ getunbound(c)
+                assign(access(b, updater(m), j...), f, c)
+            end
+        end),
+        (@rule chunk(~i, ~a, multi(~b..., assign(access(~c, updater(~m), ~j...), ~d), ~f::isidempotent(alg), ~e...)) => begin
+            if i ∉ j && getname(i) ∉ getunbound(d)
+                multi(assign(access(b, updater(m), j...), f, d), chunk(i, a, multi(b..., e...)))
+            end
+        end),
+
+        (@rule chunk(~i, ~a, assign(access(~b, updater(~m), ~j...), $(literal(+)), ~d)) => begin
+            if i ∉ j && getname(i) ∉ getunbound(d)
+                assign(access(b, updater(m), j...), +, call(*, extent(a), d))
+            end
+        end),
+        (@rule chunk(~i, ~a, multi(~b..., assign(access(~c, updater(~m), ~j...), $(literal(+)), ~d), ~e...)) => begin
+            if i ∉ j && getname(i) ∉ getunbound(d)
+                multi(assign(access(c, updater(m), j...), +, call(*, extent(a), d)),
+                    chunk(i, a, multi(b..., e...)))
+            end
+        end),
+    ]
+end
 
 @kwdef mutable struct Simplify
     body
@@ -126,94 +289,50 @@ combine_style(a::DefaultStyle, b::SimplifyStyle) = SimplifyStyle()
 combine_style(a::ThunkStyle, b::SimplifyStyle) = ThunkStyle()
 combine_style(a::SimplifyStyle, b::SimplifyStyle) = SimplifyStyle()
 
-@kwdef struct SimplifyContext{Ctx} <: AbstractTransformVisitor
-    ctx::Ctx
+@kwdef struct SimplifyVisitor
+    ctx
 end
 
-function postvisit!(node::Simplify, ctx::SimplifyContext)
-    node.body
+function (ctx::SimplifyVisitor)(node)
+    if istree(node)
+        similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        node
+    end
 end
 
-function simplify(node)
-    global rules
-    Rewrite(Fixpoint(Prewalk(Chain(rules))))(node)
+function (ctx::SimplifyVisitor)(node::FinchNode)
+    if node.kind === virtual
+        convert(FinchNode, ctx(node.val))
+    elseif istree(node)
+        similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        node
+    end
+end
+
+(ctx::SimplifyVisitor)(node::Simplify) = node.body
+
+"""
+    getrules(alg, ctx)
+
+Return an array of rules to use for annihilation/simplification during 
+compilation. One can dispatch on the `alg` trait to specialize the rule set for
+different algebras.
+"""
+getrules(alg, ctx) = base_rules(alg, ctx)
+
+getrules(ctx::LowerJulia) = getrules(ctx.algebra, ctx)
+
+function simplify(node, ctx)
+    Rewrite(Fixpoint(Prewalk(Chain(getrules(ctx)))))(node)
 end
 
 function (ctx::LowerJulia)(root, ::SimplifyStyle)
     global rules
-    root = SimplifyContext(ctx)(root)
-    root = simplify(root)
+    root = SimplifyVisitor(ctx)(root)
+    root = simplify(root, ctx)
     ctx(root)
 end
 
-add_rules!(new_rules) = union!(rules, new_rules)
-
-isliteral(::Simplify) = false
-
-
-struct Lexicography{T}
-    arg::T
-end
-
-function Base.isless(a::Lexicography, b::Lexicography)
-    (a, b) = a.arg, b.arg
-    #@assert which(priority, Tuple{typeof(a)}) == which(priority, Tuple{typeof(b)}) || priority(a) != priority(b)
-    if a != b
-        a_key = (priority(a), comparators(a)...)
-        b_key = (priority(b), comparators(b)...)
-        @assert a_key < b_key || b_key < a_key "a = $a b = $b a_key = $a_key b_key = $b_key"
-        return a_key < b_key
-    end
-    return false
-end
-
-function Base.:(==)(a::Lexicography, b::Lexicography)
-    (a, b) = a.arg, b.arg
-    #@assert which(priority, Tuple{typeof(a)}) == which(priority, Tuple{typeof(b)}) || priority(a) != priority(b)
-    a_key = (priority(a), comparators(a)...)
-    b_key = (priority(b), comparators(b)...)
-    return a_key == b_key
-end
-
-priority(::Missing) = (0, 4)
-comparators(::Missing) = (1,)
-
-priority(::Number) = (1, 1)
-comparators(x::Number) = (x, sizeof(x), typeof(x))
-
-priority(::Function) = (1, 2)
-comparators(x::Function) = (string(x),)
-
-priority(::Symbol) = (2, 0)
-comparators(x::Symbol) = (x,)
-
-priority(::Expr) = (2, 1)
-comparators(x::Expr) = (x.head, map(Lexicography, x.args)...)
-
-priority(::Name) = (3,0)
-comparators(x::Name) = (x.name,)
-
-priority(::Literal) = (3,1)
-comparators(x::Literal) = (Lexicography(x.val),)
-
-priority(::Read) = (3,2,1)
-comparators(x::Read) = ()
-
-priority(::Write) = (3,2,2)
-comparators(x::Write) = ()
-
-priority(::Update) = (3,2,3)
-comparators(x::Update) = ()
-
-priority(::Workspace) = (3,3)
-comparators(x::Workspace) = (x.n,)
-
-priority(::Virtual) = (3,4)
-comparators(x::Virtual) = (string(typeof(x)), Lexicography(x.ex))
-
-priority(::IndexNode) = (3,Inf)
-comparators(x::IndexNode) = (@assert istree(x); (string(operation(x)), map(Lexicography, arguments(x))...))
-
-#TODO these are nice defaults if we want to allow nondeterminism
-#priority(::Any) = (Inf,)
-#comparators(x::Any) = hash(x)
+FinchNotation.isliteral(::Simplify) = false

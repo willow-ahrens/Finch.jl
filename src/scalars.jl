@@ -34,32 +34,49 @@ function virtualize(ex, ::Type{Scalar{D, Tv}}, ctx, tag) where {D, Tv}
     VirtualScalar(sym, Tv, D, tag, val)
 end
 
-getsize(::VirtualScalar, ctx, mode) = ()
-getsites(::VirtualScalar) = []
+virtual_size(::VirtualScalar, ctx) = ()
 
-@inline default(tns::VirtualScalar) = tns.D
+virtual_default(tns::VirtualScalar) = tns.D
+virtual_eltype(tns::VirtualScalar) = tns.Tv
 
-isliteral(::VirtualScalar) = false
+FinchNotation.isliteral(::VirtualScalar) = false
 
-getname(tns::VirtualScalar) = tns.name
-setname(tns::VirtualScalar, name) = VirtualScalar(tns.ex, tns.Tv, tns.D, name, tns.val)
-
-priority(::VirtualScalar) = (3,5)
-comparators(x::VirtualScalar) = (Lexicography(getname(x)),) #TODO this is probably good enough, but let's think about it later.
-
-function initialize!(tns::VirtualScalar, ctx, mode::Union{Write, Update}, idxs...)
+function initialize!(tns::VirtualScalar, ctx)
     push!(ctx.preamble, quote
         $(tns.val) = $(tns.D)
     end)
-    access(tns, mode, idxs...)
+    tns
 end
 
-function finalize!(tns::VirtualScalar, ctx, mode)
+function freeze!(tns::VirtualScalar, ctx, mode)
     return tns
 end
 
-function (ctx::LowerJulia)(root::Access{<:VirtualScalar}, ::DefaultStyle)
-    @assert isempty(root.idxs)
-    tns = root.tns
+function lowerjulia_access(ctx::LowerJulia, node, tns::VirtualScalar)
+    @assert isempty(node.idxs)
+    return tns.val
+end
+
+struct VirtualDirtyScalar
+    ex
+    Tv
+    D
+    name
+    val
+    dirty
+end
+
+virtual_size(::VirtualDirtyScalar, ctx) = ()
+
+virtual_default(tns::VirtualDirtyScalar) = tns.D
+virtual_eltype(tns::VirtualDirtyScalar) = tns.Tv
+
+FinchNotation.isliteral(::VirtualDirtyScalar) = false
+
+function lowerjulia_access(ctx::LowerJulia, node, tns::VirtualDirtyScalar)
+    @assert isempty(node.idxs)
+    push!(ctx.preamble, quote
+        $(tns.dirty) = true
+    end)
     return tns.val
 end

@@ -1,55 +1,71 @@
-include("environments.jl")
+abstract type AbstractFiber{Lvl} end
+abstract type AbstractVirtualFiber{Lvl} end
 
 """
-    Fiber(lvl, env=Environment())
+    Fiber(lvl)
 
-A fiber is a combination of a (possibly nested) level `lvl` and an environment
-`env`. The environment is often used to refer to a particular fiber within the
-level. Fibers are arrays, of sorts. The function `refindex(fbr, i...)` is used
-as a reference implementation of getindex for the fiber. Accessing an
-`N`-dimensional fiber with less than `N` indices will return another fiber.
+`Fiber` represents the root of a level-tree tensor. To easily construct a valid
+fiber, use [`@fiber`](@ref) or [`fiber`](@ref). Users should avoid calling
+this constructor directly.
+
+In particular, `Fiber` represents the tensor at position 1 of `lvl`. The
+constructor `Fiber(lvl)` wraps a level assuming it is already in a valid state.
+The constructor `Fiber!(lvl)` first initializes `lvl` assuming no positions are
+valid.
 """
-struct Fiber{Lvl, Env}
+struct Fiber{Lvl} <: AbstractFiber{Lvl}
     lvl::Lvl
-    env::Env
 end
-Fiber(lvl::Lvl) where {Lvl} = Fiber{Lvl}(lvl)
-Fiber{Lvl}(lvl::Lvl, env::Env=Environment()) where {Lvl, Env} = Fiber{Lvl, Env}(lvl, env)
 
-"""
-    VirtualFiber(lvl, env)
-
-A virtual fiber is the avatar of a fiber for the purposes of compilation. Two
-fibers should share a `name` only if they hold the same data. `lvl` is a virtual
-object representing the level nest and `env` is a virtual object representing
-the environment.
-"""
-mutable struct VirtualFiber{Lvl}
+mutable struct VirtualFiber{Lvl} <: AbstractVirtualFiber{Lvl}
     lvl::Lvl
-    env
-    function VirtualFiber{Lvl}(lvl::Lvl, env) where {Lvl}
-        @assert !(lvl isa Vector)
-        @assert env != nothing
-        new{Lvl}(lvl, env)
-    end
 end
-VirtualFiber(lvl::Lvl, env) where {Lvl} = VirtualFiber{Lvl}(lvl, env)
-
-function virtualize(ex, ::Type{<:Fiber{Lvl, Env}}, ctx, tag=ctx.freshen(:tns)) where {Lvl, Env}
+function virtualize(ex, ::Type{<:Fiber{Lvl}}, ctx, tag=ctx.freshen(:tns)) where {Lvl}
     lvl = virtualize(:($ex.lvl), Lvl, ctx, Symbol(tag, :_lvl))
-    env = virtualize(:($ex.env), Env, ctx)
-    env.name = tag
-    VirtualFiber(lvl, env)
+    VirtualFiber(lvl)
 end
-(ctx::Finch.LowerJulia)(fbr::VirtualFiber) = :(Fiber($(ctx(fbr.lvl)), $(ctx(fbr.env))))
-isliteral(::VirtualFiber) = false
+(ctx::Finch.LowerJulia)(fbr::VirtualFiber) = :(Fiber($(ctx(fbr.lvl))))
+FinchNotation.isliteral(::VirtualFiber) = false
 
-getname(fbr::VirtualFiber) = envname(fbr.env)
-setname(fbr::VirtualFiber, name) = VirtualFiber(fbr.lvl, envrename!(fbr.env, name))
-#setname(fbr::VirtualFiber, name) = (fbr.env.name = name; fbr)
+"""
+    SubFiber(lvl, pos)
 
-priority(::VirtualFiber) = (3,6)
-comparators(x::VirtualFiber) = (Lexicography(getname(x)),) #TODO this is probably good enough, but let's think about it later.
+`SubFiber` represents a fiber at position `pos` within `lvl`.
+"""
+struct SubFiber{Lvl, Pos} <: AbstractFiber{Lvl}
+    lvl::Lvl
+    pos::Pos
+end
+
+mutable struct VirtualSubFiber{Lvl} <: AbstractVirtualFiber{Lvl}
+    lvl::Lvl
+    pos
+end
+function virtualize(ex, ::Type{<:SubFiber{Lvl, Pos}}, ctx, tag=ctx.freshen(:tns)) where {Lvl, Pos}
+    lvl = virtualize(:($ex.lvl), Lvl, ctx, Symbol(tag, :_lvl))
+    pos = virtualize(:($ex.pos), Pos, ctx)
+    VirtualSubFiber(lvl, pos)
+end
+(ctx::Finch.LowerJulia)(fbr::VirtualSubFiber) = :(SubFiber($(ctx(fbr.lvl)), $(ctx(fbr.pos))))
+FinchNotation.isliteral(::VirtualSubFiber) =  false
+
+@inline Base.ndims(::AbstractFiber{Lvl}) where {Lvl} = level_ndims(Lvl)
+@inline Base.ndims(::Type{<:AbstractFiber{Lvl}}) where {Lvl} = level_ndims(Lvl)
+@inline Base.size(fbr::AbstractFiber) = level_size(fbr.lvl)
+@inline Base.axes(fbr::AbstractFiber) = level_axes(fbr.lvl)
+@inline Base.eltype(::AbstractFiber{Lvl}) where {Lvl} = level_eltype(Lvl)
+@inline Base.eltype(::Type{<:AbstractFiber{Lvl}}) where {Lvl} = level_eltype(Lvl)
+@inline default(::AbstractFiber{Lvl}) where {Lvl} = level_default(Lvl)
+@inline default(::Type{<:AbstractFiber{Lvl}}) where {Lvl} = level_default(Lvl)
+
+virtual_size(tns::AbstractVirtualFiber, ctx) = virtual_level_size(tns.lvl, ctx)
+function virtual_resize!(tns::AbstractVirtualFiber, ctx, dims...)
+    tns.lvl = virtual_level_resize!(tns.lvl, ctx, dims...)
+    (tns, nodim)
+end
+virtual_eltype(tns::AbstractVirtualFiber) = virtual_level_eltype(tns.lvl)
+virtual_elaxis(tns::AbstractVirtualFiber) = nodim
+virtual_default(tns::AbstractVirtualFiber) = virtual_level_default(tns.lvl)
 
 """
     default(fbr)
@@ -62,203 +78,215 @@ See also: [`initialize!`](@ref)
 function default end
 
 """
-    initialize!(fbr, ctx, mode)
+    initialize_level!(lvl, ctx, pos)
 
-Initialize the virtual fiber to it's default value in the context `ctx` with
-access mode `mode`. Return the new fiber object.
-"""
-function initialize!(fbr::VirtualFiber, ctx::LowerJulia, mode, idxs...)
-    fbr = VirtualFiber(initialize_level!(fbr, ctx, mode), fbr.env)
-    if mode isa Union{Write, Update}
-        assemble!(fbr, ctx, mode)
-    end
-    return refurl(fbr, ctx, mode, idxs...)
-end
-
-"""
-    initialize_level!(fbr, ctx, mode)
-
-Initialize the level within the virtual fiber to it's default value in the
-context `ctx` with access mode `mode`. Return the new level.
+Initialize and thaw all fibers within `lvl`, assuming positions `1:pos` were
+previously assembled and frozen. The resulting level has no assembled positions.
 """
 function initialize_level! end
 
-initialize_level!(fbr, ctx, mode) = fbr.lvl
+"""
+    assemble_level!(lvl, ctx, pos, new_pos)
 
-
+Assemble and positions `pos+1:new_pos` in `lvl`, assuming positions `1:pos` were
+previously assembled.
+"""
+function assemble_level! end
 
 """
-    finalize!(fbr, ctx, mode, idxs...)
+    reassemble_level!(lvl, ctx, pos_start, pos_end) 
 
-Finalize the virtual fiber in the context `ctx` with access mode `mode`. Return
-the new fiber object.
+Set the previously assempled positions from `pos_start` to `pos_end` to
+`level_default(lvl)`.
 """
-function finalize!(fbr::VirtualFiber, ctx::LowerJulia, mode, idxs...)
-    VirtualFiber(finalize_level!(fbr, ctx, mode), fbr.env)
+function reassemble_level! end
+
+"""
+    freeze_level!(lvl, ctx, pos) 
+
+Freeze all fibers in `lvl`. Positions `1:pos` need freezing.
+"""
+freeze_level!(fbr, ctx, mode) = fbr.lvl
+
+function initialize!(fbr::VirtualFiber, ctx::LowerJulia)
+    lvl = initialize_level!(fbr.lvl, ctx, literal(1))
+    push!(ctx.preamble, assemble_level!(lvl, ctx, literal(1), literal(1))) #TODO this feels unnecessary?
+    fbr = VirtualFiber(lvl)
 end
 
-"""
-    finalize_level!(fbr, ctx, mode)
+function get_reader(fbr::VirtualFiber, ctx::LowerJulia, protos...)
+    return get_reader(VirtualSubFiber(fbr.lvl, literal(1)), ctx, reverse(protos)...)
+end
 
-Finalize the level within the virtual fiber. These are the bulk cleanup steps.
-"""
-function finalize_level! end
+function get_updater(fbr::VirtualFiber, ctx::LowerJulia, protos...)
+    return get_updater(VirtualSubFiber(fbr.lvl, literal(1)), ctx, reverse(protos)...)
+end
 
-finalize_level!(fbr, ctx, mode) = fbr.lvl
+struct TrackedSubFiber{Lvl, Pos, Dirty} <: AbstractFiber{Lvl}
+    lvl::Lvl
+    pos::Pos
+    dirty::Dirty
+end
 
-function (ctx::Stylize{LowerJulia})(node::Access{<:VirtualFiber})
-    if !isempty(node.idxs)
-        if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
-            return SelectStyle()
-        elseif ctx.root isa Loop && ctx.root.idx == get_furl_root(node.idxs[1])
-            return ChunkStyle()
-        end
+mutable struct VirtualTrackedSubFiber{Lvl}
+    lvl::Lvl
+    pos
+    dirty
+end
+function virtualize(ex, ::Type{<:TrackedSubFiber{Lvl, Pos, Dirty}}, ctx, tag=ctx.freshen(:tns)) where {Lvl, Pos, Dirty}
+    lvl = virtualize(:($ex.lvl), Lvl, ctx, Symbol(tag, :_lvl))
+    pos = virtualize(:($ex.pos), Pos, ctx)
+    dirty = virtualize(:($ex.dirty), Dirty, ctx)
+    VirtualTrackedSubFiber(lvl, pos, dirty)
+end
+(ctx::Finch.LowerJulia)(fbr::VirtualTrackedSubFiber) = :(TrackedSubFiber($(ctx(fbr.lvl)), $(ctx(fbr.pos))))
+FinchNotation.isliteral(::VirtualTrackedSubFiber) = false
+
+function get_updater(fbr::VirtualTrackedSubFiber, ctx, protos...)
+    Thunk(
+        preamble = quote
+            $(fbr.dirty) = true
+        end,
+        body = get_updater(VirtualSubFiber(fbr.lvl, fbr.pos))
+    )
+end
+
+
+
+data_rep(fbr::Fiber) = data_rep(typeof(fbr))
+data_rep(::Type{<:AbstractFiber{Lvl}}) where {Lvl} = SolidData(data_rep_level(Lvl))
+
+
+function freeze!(fbr::VirtualFiber, ctx::LowerJulia, mode, idxs...)
+    if mode.kind === updater
+        return VirtualFiber(freeze_level!(fbr.lvl, ctx, literal(1)))
+    else
+        return fbr
     end
-    return mapreduce(ctx, result_style, arguments(node))
 end
 
-function (ctx::Finch.SelectVisitor)(node::Access{<:VirtualFiber}, ::DefaultStyle) where {Tv, Ti}
-    if !isempty(node.idxs)
-        if getunbound(node.idxs[1]) ⊆ keys(ctx.ctx.bindings)
-            var = Name(ctx.ctx.freshen(:s))
-            ctx.idxs[var] = node.idxs[1]
-            return access(node.tns, node.mode, var, node.idxs[2:end]...)
-        end
-    end
-    return similarterm(node, operation(node), map(ctx, arguments(node)))
+
+function trim!(fbr::VirtualFiber, ctx)
+    VirtualFiber(trim_level!(fbr.lvl, ctx, literal(1)))
 end
 
-function (ctx::Finch.ChunkifyVisitor)(node::Access{<:VirtualFiber}, ::DefaultStyle) where {Tv, Ti}
-    if !isempty(node.idxs)
-        idxs = map(ctx, node.idxs)
-        if ctx.idx == get_furl_root(node.idxs[1])
-            return access(unfurl(node.tns, ctx.ctx, node.mode, idxs...), node.mode, get_furl_root(node.idxs[1]))
-        else
-            return access(node.tns, node.mode, idxs...)
-        end
-    end
-    return node
-end
 
 get_furl_root(idx) = nothing
-get_furl_root(idx::Name) = idx
-get_furl_root(idx::Protocol) = get_furl_root(idx.idx)
+function get_furl_root(idx::FinchNode)
+    if idx.kind === index
+        return idx
+    elseif idx.kind === access && idx.tns.kind === virtual
+        get_furl_root_access(idx, idx.tns.val)
+    elseif idx.kind === protocol
+        return get_furl_root(idx.idx)
+    else
+        return nothing
+    end
+end
+get_furl_root_access(idx, tns) = nothing
+#These are also good examples of where modifiers might be great.
 
-refurl(tns, ctx, mode, idxs...) = access(tns, mode, idxs...)
-exfurl(tns, ctx, mode, idx::Name) = tns
+supports_reassembly(lvl) = false
 
 function Base.show(io::IO, fbr::Fiber)
-    print(io, "Fiber(")
-    print(io, fbr.lvl)
-    if fbr.env != Environment()
-        print(io, ", ")
-        print(io, fbr.env)
-    end
-    print(io, ")")
-end
-
-function show_region(io::IO, vec::Vector) 
-    print(io, "[")
-    if length(vec) > 3
-        for i = 1:3
-            print(io, vec[i])
-            print(io, ", ")
-        end
-        print(io, "…")
-    else
-        for i = 1:length(vec)
-            print(io, vec[i])
-            i != length(vec) && print(io, ", ")
-        end
-    end
-    print(io, "]")
+    print(io, "Fiber(", fbr.lvl, ")")
 end
 
 function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber)
     if get(io, :compact, false)
-        print(io, "f\"$(summary_f_str(fbr.lvl))\"($(summary_f_str_args(fbr.lvl)...))")
+        print(io, "@fiber($(summary_f_code(fbr.lvl)))")
     else
-        display_fiber(io, mime, fbr)
+        display_fiber(io, mime, fbr, 0)
     end
 end
 
 function Base.show(io::IO, mime::MIME"text/plain", fbr::VirtualFiber)
     if get(io, :compact, false)
-        print(io, "v\"$(summary_f_str(fbr.lvl))\"($(summary_f_str_args(fbr.lvl)...))")
+        print(io, "VirtualFiber($(summary_f_code(fbr.lvl)))")
     else
         show(io, fbr)
     end
 end
 
-function display_fiber_data(io::IO, mime::MIME"text/plain", fbr, N, crds, print_coord, get_coord)
-    (height, width) = displaysize(io)
-    depth = envdepth(fbr.env)
+function Base.show(io::IO, fbr::SubFiber)
+    print(io, "SubFiber(", fbr.lvl, ", ", fbr.pos, ")")
+end
 
-    println(io, "│ "^(depth + N))
-    if ndims(fbr) == N
-        print_elem(io, crd) = show(IOContext(io, :compact=>true), fbr(get_coord(crd)...))
-        calc_pad(crd) = max(textwidth(sprint(print_coord, crd)), textwidth(sprint(print_elem, crd)))
-        print_coord_pad(io, crd) = (print_coord(io, crd); print(io, " "^(calc_pad(crd) - textwidth(sprint(print_coord, crd)))))
-        print_elem_pad(io, crd) = (print_elem(io, crd); print(io, " "^(calc_pad(crd) - textwidth(sprint(print_elem, crd)))))
-        print_coords(io, crds) = (foreach(crd -> (print_coord_pad(io, crd); print(io, " ")), crds[1:end-1]); if !isempty(crds) print_coord_pad(io, crds[end]) end)
-        print_elems(io, crds) = (foreach(crd -> (print_elem_pad(io, crd); print(io, " ")), crds[1:end-1]); if !isempty(crds) print_elem_pad(io, crds[end]) end)
-        width -= depth * 2 + 2
-        if length(crds) < width && textwidth(sprint(print_coords, crds)) < width
-            print(io, "│ "^depth, "└─"^N); print_coords(io, crds); println(io)
-            print(io, "│ "^depth, "  "^N); print_elems(io, crds); println(io)
-        else
-            leftwidth = cld(width - 1, 2)
-            leftsize = searchsortedlast(cumsum(map(calc_pad, crds[1:min(end, leftwidth)]) .+ 1), leftwidth)
-            leftpad = " " ^ (leftwidth - textwidth(sprint(print_coords, crds[1:leftsize])))
-            rightwidth = width - leftwidth - 1
-            rightsize = searchsortedlast(cumsum(map(calc_pad, reverse(crds[max(end - rightwidth, 1):end])) .+ 1), rightwidth)
-            rightpad = " " ^ (rightwidth - textwidth(sprint(print_coords, crds[end-rightsize + 1:end])))
-            print(io, "│ "^depth, "└─"^N); print_coords(io, crds[1:leftsize]); print(io, leftpad, " ", rightpad); print_coords(io, crds[end-rightsize + 1:end]); println(io)
-            print(io, "│ "^depth, "  "^N); print_elems(io, crds[1:leftsize]); print(io, leftpad, "…", rightpad); print_elems(io, crds[end-rightsize + 1:end]); println(io)
-        end
+function Base.show(io::IO, mime::MIME"text/plain", fbr::SubFiber)
+    if get(io, :compact, false)
+        print(io, "SubFiber($(summary_f_code(fbr.lvl)), $(fbr.pos))")
     else
-        cap = 2
-        if length(crds) > 2cap + 1
-            foreach((crd -> (print(io, "│ " ^ depth, "├─"^N); print_coord(io, crd); println(io, ":"); show(io, mime, fbr(get_coord(crd)...)); println(io, "│ "^(depth + N)))), crds[1:cap])
-            
-            println(io, "│ " ^ depth, "│ ⋮")
-            println(io, "│ " ^ depth, "│")
-            foreach((crd -> (print(io, "│ " ^ depth, "├─"^N); print_coord(io, crd); println(io, ":"); show(io, mime, fbr(get_coord(crd)...)); println(io, "│ "^(depth + N)))), crds[end - cap + 1:end - 1])
-            !isempty(crds) && (print(io, "│ " ^ depth, "├─"^N); print_coord(io, crds[end]); println(io, ":"); show(io, mime, fbr(get_coord(crds[end])...)))
-        else
-            foreach((crd -> (print(io, "│ " ^ depth, "├─"^N); print_coord(io, crd); println(io, ":"); show(io, mime, fbr(get_coord(crd)...)); println(io, "│ "^(depth + N)))), crds[1:end - 1])
-            !isempty(crds) && (print(io, "│ " ^ depth, "├─"^N); print_coord(io, crds[end]); println(io, ":"); show(io, mime, fbr(get_coord(crds[end])...)))
-        end
+        display_fiber(io, mime, fbr, 0)
+    end
+end
+
+function Base.show(io::IO, mime::MIME"text/plain", fbr::VirtualSubFiber)
+    if get(io, :compact, false)
+        print(io, "VirtualSubFiber($(summary_f_code(fbr.lvl)))")
+    else
+        show(io, fbr)
+    end
+end
+
+(fbr::Fiber)(idx...) = SubFiber(fbr.lvl, 1)(idx...)
+
+display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber, depth) = display_fiber(io, mime, SubFiber(fbr.lvl, 1), depth)
+function display_fiber_data(io::IO, mime::MIME"text/plain", fbr, depth, N, crds, print_coord, get_fbr)
+    function helper(crd)
+        println(io)
+        print(io, "│ " ^ depth, "├─"^N, "[", ":,"^(ndims(fbr) - N))
+        print_coord(io, crd)
+        print(io, "]: ")
+        display_fiber(io, mime, get_fbr(crd), depth + N)
+    end
+    cap = 2
+    if length(crds) > 2cap + 1
+        foreach(helper, crds[1:cap])
+        println(io)
+        print(io, "│ " ^ depth, "│ ⋮")
+        foreach(helper, crds[end - cap + 1:end])
+    else
+        foreach(helper, crds)
+    end
+end
+display_fiber(io::IO, mime::MIME"text/plain", fbr, depth) = show(io, mime, fbr)
+
+function f_decode(ex)
+    if ex isa Expr && ex.head == :$
+        return esc(ex.args[1])
+    elseif ex isa Expr
+        return Expr(ex.head, map(f_decode, ex.args)...)
+    elseif ex isa Symbol
+        return :(@something($f_code($(Val(ex))), $(esc(ex))))
+    else
+        return esc(ex)
     end
 end
 
 """
-    @fiber ctr
+    @fiber ctr [arg]
 
 Construct a fiber using abbreviated level constructor names. To override
 abbreviations, expressions may be interpolated with `\$`. For example,
 `Fiber(DenseLevel(SparseListLevel(Element(0.0))))` can also be constructed as
 `@fiber(sl(d(e(0.0))))`. Consult the documentation for the helper function
 [f_code](@ref) for a full listing of level format codes.
+
+Optionally, an argument may be specified to copy into the fiber. This expression
+allocates. Use `fiber(arg)` for a zero-cost copy, if available.
 """
 macro fiber(ex)
-    function walk(ex)
-        if ex isa Expr && ex.head == :$
-            return ex.args[1] #TODO ?
-        elseif ex isa Expr
-            return Expr(ex.head, map(walk, ex.args)...)
-        elseif ex isa Symbol
-            return :(@something($f_code($(Val(ex))), $ex))
-        else
-            return esc(ex)
-        end
-    end
-    return :($Fiber($(walk(ex))))
+    return :($Fiber!($(f_decode(ex))))
+end
+
+macro fiber(ex, arg)
+    return :($dropdefaults!($Fiber!($(f_decode(ex))), $(esc(arg))))
 end
 
 @inline f_code(@nospecialize ::Any) = nothing
 
 Base.summary(fbr::Fiber) = "$(join(size(fbr), "×")) @fiber($(summary_f_code(fbr.lvl)))"
+Base.summary(fbr::SubFiber) = "$(join(size(fbr), "×")) SubFiber($(summary_f_code(fbr.lvl)))"
 
-Base.similar(fbr::Fiber) = Fiber(similar_level(fbr.lvl))
-Base.similar(fbr::Fiber, dims::Tuple) = Fiber(similar_level(fbr.lvl, dims...))
+Base.similar(fbr::AbstractFiber) = Fiber(similar_level(fbr.lvl))
+Base.similar(fbr::AbstractFiber, dims::Tuple) = Fiber(similar_level(fbr.lvl, dims...))

@@ -1,22 +1,16 @@
 @kwdef mutable struct VirtualAbstractArray
-    ndims
-    name
     ex
+    eltype
+    ndims
 end
 
-function getsize(arr::VirtualAbstractArray, ctx::LowerJulia, mode) where {T <: AbstractArray}
-    dims = map(i -> Symbol(arr.name, :_mode, i, :_stop), 1:arr.ndims)
+function virtual_size(arr::VirtualAbstractArray, ctx::LowerJulia)
+    dims = map(i -> Symbol(arr.ex, :_mode, i, :_stop), 1:arr.ndims)
     push!(ctx.preamble, quote
         ($(dims...),) = size($(arr.ex))
     end)
-    return map(i->Extent(1, Virtual{Int}(dims[i])), 1:arr.ndims)
+    return map(i->Extent(literal(1), value(dims[i], Int)), 1:arr.ndims)
 end
-
-getname(arr::VirtualAbstractArray) = arr.name
-setname(arr::VirtualAbstractArray, name) = (arr_2 = deepcopy(arr); arr_2.name = name; arr_2)
-
-priority(::VirtualAbstractArray) = (3,7)
-comparators(x::VirtualAbstractArray) = (Lexicography(getname(x)),) #TODO this is probably good enough, but let's think about it later.
 
 function (ctx::LowerJulia)(arr::VirtualAbstractArray, ::DefaultStyle)
     return arr.ex
@@ -25,16 +19,20 @@ end
 function virtualize(ex, ::Type{<:AbstractArray{T, N}}, ctx, tag=:tns) where {T, N}
     sym = ctx.freshen(tag)
     push!(ctx.preamble, :($sym = $ex))
-    VirtualAbstractArray(N, tag, sym)
+    VirtualAbstractArray(sym, T, N)
 end
 
-function initialize!(arr::VirtualAbstractArray, ctx::LowerJulia, mode::Union{Write, Update}, idxs...)
+function initialize!(arr::VirtualAbstractArray, ctx::LowerJulia)
     push!(ctx.preamble, quote
         fill!($(arr.ex), 0) #TODO
     end)
-    access(arr, mode, idxs...)
+    arr
 end
 
-isliteral(::VirtualAbstractArray) = false
+get_reader(arr::VirtualAbstractArray, ctx::LowerJulia, protos...) = arr
+get_updater(arr::VirtualAbstractArray, ctx::LowerJulia, protos...) = arr
 
-default(::VirtualAbstractArray) = 0
+FinchNotation.isliteral(::VirtualAbstractArray) =  false
+
+virtual_default(::VirtualAbstractArray) = 0
+virtual_eltype(tns::VirtualAbstractArray) = tns.eltype

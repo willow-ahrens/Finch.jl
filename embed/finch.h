@@ -137,11 +137,4 @@ jl_value_t* finch_Float64(double x);
 jl_value_t* finch_Vector_Float64(double *ptr, int len);
 jl_value_t* finch_Vector_Int64(int64_t *ptr, int len);
 
-jl_value_t* finch_Fiber(jl_value_t* lvl);
-jl_value_t* finch_SparseList(jl_value_t* n, jl_value_t* lvl);
-jl_value_t* finch_SparseListLevel(jl_value_t* n, jl_value_t* pos, jl_value_t* idx, jl_value_t* lvl);
-jl_value_t* finch_Dense(jl_value_t* n, jl_value_t* lvl);
-jl_value_t* finch_Element(jl_value_t *fill);
-jl_value_t* finch_ElementLevel(jl_value_t *fill, jl_value_t *val);
-
 #endif

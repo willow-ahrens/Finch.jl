@@ -3,20 +3,17 @@ shallowcopy(x::T) where T = T([getfield(x, k) for k ∈ fieldnames(T)]...)
 
 kwfields(x::T) where T = Dict((k=>getfield(x, k) for k ∈ fieldnames(T))...)
 
-function refill!(arr, val, p, q)
-    p_2 = regrow!(arr, p, q)
-    @simd for p_3 = p + 1:p_2
-        arr[p_3] = val
+function fill_range!(arr, v, i, j)
+    @simd for k = i:j
+        arr[k] = v
     end
-    p_2
+    arr
 end
 
-function regrow!(arr, p, q::T) where {T <: Integer}
-    p_2 = 2 << (sizeof(T) * 8 - leading_zeros(q)) #round to next power of two, multiply by two
-    if p_2 > length(arr)
-        resize!(arr, p_2)
+function resize_if_smaller!(arr, i)
+    if length(arr) < i
+        resize!(arr, i)
     end
-    p_2
 end
 
 function lower_caches(ex)
@@ -102,6 +99,31 @@ unquote_literals(ex::QuoteNode) = unquote_quoted(ex.value)
 
 unquote_quoted(::Missing) = missing
 unquote_quoted(ex) = QuoteNode(ex)
+
+"""
+    unblock(ex)
+Flatten any redundant blocks into a single block, over the whole expression.
+"""
+function unblock(ex::Expr)
+    Rewrite(Postwalk(Fixpoint(Chain([
+        (@rule :block(~a..., :block(~b...), ~c...) => Expr(:block, a..., b..., c...)),
+        (@rule :block(~a) => a),
+    ]))))(ex)
+end
+unblock(ex) = ex
+
+"""
+    striplines(ex)
+Remove line numbers
+"""
+function striplines(ex::Expr)
+    islinenum(x) = x isa LineNumberNode
+    Rewrite(Postwalk(Fixpoint(Chain([
+        (@rule :block(~a..., ~b::islinenum, ~c...) => Expr(:block, a..., c...)),
+        (@rule :macrocall(~a, ~b, ~c...) => Expr(:macrocall, a, nothing, c...)),
+    ]))))(ex)
+end
+striplines(ex) = ex
 
 (Base.:^)(T::Type, i::Int) = ∘(repeated(T, i)..., identity)
 (Base.:^)(f::Function, i::Int) = ∘(repeated(f, i)..., identity)

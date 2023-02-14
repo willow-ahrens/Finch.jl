@@ -8,13 +8,16 @@
 
 #define FINCH_ASSERT(check, message, ...) {\
     if(!check){\
-        fprintf(stderr, "Error in %s: " message "\n", __func__, ##__VA_ARGS__);\
+        fprintf(stderr, "Error in %s at line %d: " message "\n", __func__, __LINE__, ##__VA_ARGS__);\
         exit(1);\
     }\
 }
 
+int finch_is_initialized = 0;
+
 jl_function_t* Finch;
 jl_function_t* root_object;
+jl_function_t* is_rooted_pointer;
 jl_function_t* free_object;
 jl_function_t* escape_object;
 jl_function_t* open_scope;
@@ -36,18 +39,22 @@ int finch_call_end_ = 0;
 
 /* required: setup the Julia context */
 extern void finch_initialize(){
+    if(finch_is_initialized){
+        return;
+    }
     jl_init();
     FINCH_ASSERT(!jl_exception_occurred(), "Could not initialize Julia");
     
     jl_eval_string("\
-        scopes = [Set()];\n\
+        scopes = [IdDict()];\n\
         refs = IdDict();\n\
     ");
     FINCH_ASSERT(!jl_exception_occurred(), "Could not eval Julia string");
 
     Finch = jl_eval_string("\
-        using Pkg;\n\
-        Pkg.activate(joinpath(dirname(\""__FILE__"\"), \"..\"), io=devnull)\n\
+        using Pkg\n\
+        Pkg.activate(\""FINCH_EMBED_PATH"\", io=devnull)\n\
+        Pkg.develop(path=\""FINCH_EMBED_PATH"/..\", io=devnull)\n\
         Pkg.instantiate()\n\
         using Finch;\n\
         using Printf;\n\
@@ -56,21 +63,28 @@ extern void finch_initialize(){
     FINCH_ASSERT(!jl_exception_occurred(), "Could not find Finch module");
 
     root_object = jl_eval_string("\
-        function root_object(rvar)\n\
-            if !haskey(refs, rvar)\n\
-                push!(last(scopes), rvar)\n\
-                refs[rvar] = length(scopes)\n\
+        function root_object(ptr, rvar)\n\
+            if !haskey(refs, ptr)\n\
+                last(scopes)[ptr] = rvar\n\
+                refs[ptr] = length(scopes)\n\
             end\n\
             nothing\n\
         end\n\
     ");
     FINCH_ASSERT(!jl_exception_occurred(), "Could not eval root_object");
 
+    is_rooted_pointer = jl_eval_string("\
+        function is_rooted_pointer(ptr)\n\
+            return haskey(refs, ptr)\n\
+        end\n\
+    ");
+    FINCH_ASSERT(!jl_exception_occurred(), "Could not eval is_rooted_pointer");
+
     free_object = jl_eval_string("\
-        function free_object(rvar)\n\
-            if haskey(refs, rvar)\n\
-                d = pop!(refs, rvar)\n\
-                pop!(scopes[d], rvar)\n\
+        function free_object(ptr)\n\
+            if haskey(refs, ptr)\n\
+                d = pop!(refs, ptr)\n\
+                delete!(scopes[d], ptr)\n\
             end\n\
             nothing\n\
         end\n\
@@ -78,12 +92,12 @@ extern void finch_initialize(){
     FINCH_ASSERT(!jl_exception_occurred(), "Could not eval free_object");
 
     escape_object = jl_eval_string("\
-        function escape_object(rvar)\n\
+        function escape_object(ptr)\n\
             if length(scopes) > 1\n\
-                if rvar in last(scopes)\n\
-                    refs[rvar] -= 1\n\
-                    pop!(scopes[end], rvar)\n\
-                    push!(scopes[end - 1], rvar)\n\
+                if ptr in last(scopes)\n\
+                    refs[ptr] -= 1\n\
+                    rvar = delete!(scopes[end], ptr)\n\
+                    scopes[end - 1][ptr] = rvar\n\
                 end\n\
             end\n\
             nothing\n\
@@ -101,8 +115,8 @@ extern void finch_initialize(){
 
     close_scope = jl_eval_string("\
         function close_scope()\n\
-            for rvar in pop!(scopes)\n\
-                pop!(refs, rvar)\n\
+            for (ptr, rvar) in pairs(pop!(scopes))\n\
+                pop!(refs, ptr)\n\
             end\n\
             nothing\n\
         end\n\
@@ -116,7 +130,7 @@ extern void finch_initialize(){
                 fmt = Printf.Format(proc)\n\
                 args = [gensym(Symbol(:arg, n)) for n in 1:length(fmt.formats)]\n\
                 proc = Printf.format(fmt, (\"var$(repr(string(arg)))\" for arg in args)...)\n\
-                body = Meta.parse(proc)\n\
+                body = Meta.parse(\"begin $proc end\")\n\
                 eval(quote\n\
                     function $(gensym(:exec))($(args...))\n\
                         $body\n\
@@ -134,63 +148,83 @@ extern void finch_initialize(){
     reft = (jl_datatype_t*)jl_eval_string("Base.RefValue{Any}");
     FINCH_ASSERT(!jl_exception_occurred(), "Could not find RefValue{Any}");
 
-    Fiber = (jl_function_t*)jl_eval_string("(lvl) -> Finch.Fiber(lvl)");
-    FINCH_ASSERT(!jl_exception_occurred(), "Could not find Fiber");
-    SparseList = (jl_function_t*)jl_eval_string("(m, lvl) -> Finch.SparseList(m, lvl)");
-    FINCH_ASSERT(!jl_exception_occurred(), "Could not find SparseList");
-    SparseListLevel = (jl_function_t*)jl_eval_string("(m, pos, idx, lvl) -> Finch.SparseList(m, pos, idx, lvl)");
-    FINCH_ASSERT(!jl_exception_occurred(), "Could not find SparseListLevel");
-    Dense = (jl_function_t*)jl_eval_string("(m, lvl) -> Finch.Dense(m, lvl)");
-    FINCH_ASSERT(!jl_exception_occurred(), "Could not find Dense");
-    Element = (jl_function_t*)jl_eval_string("(default) -> Finch.Element{default}()");
-    FINCH_ASSERT(!jl_exception_occurred(), "Could not find Element");
-    ElementLevel = (jl_function_t*)jl_eval_string("(default, val) -> Finch.Element{default}(val)");
-    FINCH_ASSERT(!jl_exception_occurred(), "Could not find ElementLevel");
+    finch_is_initialized = 1;
 }
 
 jl_value_t* finch_root(jl_value_t* var){
+    FINCH_ASSERT(finch_is_initialized, "finch uninitialized before use");
     // Protect `var` until we add its reference to `refs`.
     JL_GC_PUSH1(&var);
     // Wrap `var` in `RefValue{Any}` and push to `refs` to protect it.
     jl_value_t* rvar = jl_new_struct(reft, var);
     FINCH_ASSERT(!jl_exception_occurred(), "Could not construct RefValue{Any}(*var)");
+    jl_value_t* ptr;
+    {
+        ptr = jl_box_voidpointer((void*)var);
+        JL_GC_PUSH1(&ptr);
+        jl_call2(root_object, ptr, rvar);
+        JL_GC_POP();
+    }
     JL_GC_POP();
-    jl_call1(root_object, rvar);
     FINCH_ASSERT(!jl_exception_occurred(), "Could not root variable");
     return var;
 }
 
+int is_rooted(jl_value_t* var){
+    FINCH_ASSERT(finch_is_initialized, "finch uninitialized before use");
+    int8_t res;
+    jl_value_t* ptr = jl_box_voidpointer((void*)var);
+    JL_GC_PUSH1(&ptr);
+    jl_value_t* ret = jl_call1(is_rooted_pointer, ptr);
+    {
+        JL_GC_PUSH1(&ret);
+        res = jl_unbox_bool(ret);
+        JL_GC_POP();
+    }
+    JL_GC_POP();
+    FINCH_ASSERT(!jl_exception_occurred(), "Could not check if variable is rooted");
+    return (int)res;
+}
+
 void finch_free(jl_value_t* var){
-    jl_value_t* rvar = jl_new_struct(reft, var);
+    FINCH_ASSERT(finch_is_initialized, "finch uninitialized before use");
+    jl_value_t* ptr = jl_box_voidpointer((void*)var);
+    JL_GC_PUSH1(&ptr);
     FINCH_ASSERT(!jl_exception_occurred(), "Could not construct RefValue{Any}(*var)");
-    jl_call1(free_object, rvar);
+    jl_call1(free_object, ptr);
+    JL_GC_POP();
     FINCH_ASSERT(!jl_exception_occurred(), "Could not free variable");
 }
 
 jl_value_t* finch_escape(jl_value_t* var){
-    jl_value_t* rvar = jl_new_struct(reft, var);
+    jl_value_t* ptr = jl_box_voidpointer((void*)var);
+    JL_GC_PUSH1(&ptr);
     FINCH_ASSERT(!jl_exception_occurred(), "Could not construct RefValue{Any}(*var)");
-    jl_call1(escape_object, rvar);
+    jl_call1(escape_object, ptr);
     FINCH_ASSERT(!jl_exception_occurred(), "Could not escape variable");
+    JL_GC_POP();
     return var;
 }
 
 void finch_scope_open(){
+    FINCH_ASSERT(finch_is_initialized, "finch uninitialized before use");
     jl_call0(open_scope);
     FINCH_ASSERT(!jl_exception_occurred(), "Could not open scope");
 }
 
 void finch_scope_close(){
+    FINCH_ASSERT(finch_is_initialized, "finch uninitialized before use");
     jl_call0(close_scope);
     FINCH_ASSERT(!jl_exception_occurred(), "Could not close scope");
 }
 
 jl_value_t* finch_eval(const char* prg){
+    FINCH_ASSERT(finch_is_initialized, "finch uninitialized before use");
     jl_value_t *res = NULL;
     JL_TRY {
         const char filename[] = "none";
         jl_value_t *ast = jl_parse_all(prg, strlen(prg),
-                filename, strlen(filename));
+                filename, strlen(filename), 1);
         JL_GC_PUSH1(&ast);
         res = jl_toplevel_eval_in(jl_main_module, ast);
         JL_GC_POP();
@@ -213,10 +247,16 @@ jl_value_t* finch_eval(const char* prg){
 }
 
 jl_function_t* finch_exec_function(const char* proc){
-    return finch_call(exec_function, jl_cstr_to_string(proc));
+    FINCH_ASSERT(finch_is_initialized, "finch uninitialized before use");
+    jl_value_t* proc_arg = finch_root(jl_cstr_to_string(proc));
+    jl_value_t* res = finch_call(exec_function, proc_arg);
+    finch_free(proc_arg);
+    return res;
 }
 
+
 jl_value_t *finch_call_(jl_function_t *f, jl_value_t **args) {
+    FINCH_ASSERT(finch_is_initialized, "finch uninitialized before use");
     jl_value_t *v;
     jl_task_t *ct = jl_current_task;
     FINCH_ASSERT((args[0] == finch_call_begin), "pointer error")
@@ -229,8 +269,9 @@ jl_value_t *finch_call_(jl_function_t *f, jl_value_t **args) {
         JL_GC_PUSHARGS(argv, nargs);
         argv[0] = (jl_value_t*)f;
         for (int i = 1; i < nargs; i++){
-            FINCH_ASSERT((args[i] != NULL), "Argument %d is NULL", i)
             argv[i] = args[i];
+            FINCH_ASSERT((argv[i] != NULL), "Argument %d is NULL", i);
+            FINCH_ASSERT(is_rooted(argv[i]), "Argument %d is not rooted", i);
         }
         size_t last_age = ct->world_age;
         ct->world_age = jl_get_world_counter();
@@ -256,6 +297,7 @@ jl_value_t *finch_call_(jl_function_t *f, jl_value_t **args) {
 }
 
 jl_value_t* finch_consume_vector(jl_datatype_t* type, void* ptr, int len){
+    FINCH_ASSERT(finch_is_initialized, "finch uninitialized before use");
     jl_value_t* arr_type = jl_apply_array_type((jl_value_t*)type, 1);
     FINCH_ASSERT(!jl_exception_occurred(), "Could not construct vector type");
     jl_value_t* res = (jl_value_t*) jl_ptr_to_array_1d(arr_type, ptr, len, 1);
@@ -263,6 +305,7 @@ jl_value_t* finch_consume_vector(jl_datatype_t* type, void* ptr, int len){
     return finch_root(res);
 }
 jl_value_t* finch_mirror_vector(jl_datatype_t* type, void* ptr, int len){
+    FINCH_ASSERT(finch_is_initialized, "finch uninitialized before use");
     jl_value_t* arr_type = jl_apply_array_type((jl_value_t*)type, 1);
     FINCH_ASSERT(!jl_exception_occurred(), "Could not construct vector type");
     jl_value_t* res = (jl_value_t*) jl_ptr_to_array_1d(arr_type, ptr, len, 0);
@@ -272,6 +315,7 @@ jl_value_t* finch_mirror_vector(jl_datatype_t* type, void* ptr, int len){
 
 
 void finch_finalize(){
+    FINCH_ASSERT(finch_is_initialized, "finch uninitialized before use");
     /* strongly recommended: notify Julia that the
          program is about to terminate. this allows
          Julia time to cleanup pending write requests
@@ -282,14 +326,17 @@ void finch_finalize(){
 }
 
 jl_value_t* finch_Int64(int64_t x){
+    FINCH_ASSERT(finch_is_initialized, "finch uninitialized before use");
     return finch_root(jl_box_int64(x));
 }
 
 jl_value_t* finch_Int32(int32_t x){
+    FINCH_ASSERT(finch_is_initialized, "finch uninitialized before use");
     return finch_root(jl_box_int32(x));
 }
 
 jl_value_t* finch_Cint(int x){
+    FINCH_ASSERT(finch_is_initialized, "finch uninitialized before use");
     if(sizeof(int) == sizeof(uint32_t)){
         return finch_Int32(x);
     } else if (sizeof(int) == sizeof(uint64_t)){
@@ -300,46 +347,20 @@ jl_value_t* finch_Cint(int x){
 }
 
 jl_value_t* finch_Float32(float x){
+    FINCH_ASSERT(finch_is_initialized, "finch uninitialized before use");
     return finch_root(jl_box_float32(x));
 }
 jl_value_t* finch_Float64(double x){
+    FINCH_ASSERT(finch_is_initialized, "finch uninitialized before use");
     return finch_root(jl_box_float64(x));
 }
 
 jl_value_t* finch_Vector_Float64(double *ptr, int len){
+    FINCH_ASSERT(finch_is_initialized, "finch uninitialized before use");
     return finch_mirror_vector(jl_float64_type, (void*)ptr, len);
 }
 
 jl_value_t* finch_Vector_Int64(int64_t *ptr, int len){
+    FINCH_ASSERT(finch_is_initialized, "finch uninitialized before use");
     return finch_mirror_vector(jl_int64_type, (void*)ptr, len);
-}
-
-jl_value_t* finch_Fiber(jl_value_t* lvl){
-    jl_value_t *res = finch_call(Fiber, lvl);
-    return res;
-}
-
-jl_value_t* finch_SparseList(jl_value_t *n, jl_value_t* lvl){
-    jl_value_t *res = finch_call(SparseList, n, lvl);
-    return res;
-}
-
-jl_value_t* finch_SparseListLevel(jl_value_t *n, jl_value_t *pos, jl_value_t *idx, jl_value_t* lvl){
-    jl_value_t *res = finch_call(SparseListLevel, n, pos, idx, lvl);
-    return res;
-}
-
-jl_value_t* finch_Dense(jl_value_t *n, jl_value_t* lvl){
-    jl_value_t *res = finch_call(Dense, n, lvl);
-    return res;
-}
-
-jl_value_t* finch_Element(jl_value_t *fill){
-    jl_value_t *res = finch_call(Element, fill);
-    return res;
-}
-
-jl_value_t* finch_ElementLevel(jl_value_t *fill, jl_value_t *val){
-    jl_value_t *res = finch_call(ElementLevel, fill, val);
-    return res;
 }

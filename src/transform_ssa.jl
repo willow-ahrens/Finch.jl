@@ -4,10 +4,18 @@
 A transformation of a program to SSA form. Fresh names will be generated with
 `freshen(name)`.
 """
-@kwdef mutable struct TransformSSA <: AbstractTransformVisitor
+@kwdef mutable struct TransformSSA
     renames
     binds
     freshen
+end
+
+function (ctx::TransformSSA)(node)
+    if istree(node)
+        similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        node
+    end
 end
 
 TransformSSA(freshen) = TransformSSA(Dict(), [], freshen)
@@ -59,31 +67,24 @@ function getglobals(prgm)
 end
 =#
 
-function (ctx::TransformSSA)(root::Name)
-    resolvename!(root, ctx)
-end
-
-function (ctx::TransformSSA)(root::Loop)
-    contain(ctx) do ctx_2
-        idx = definename!(root.idx, ctx_2)
-        body = ctx(root.body)
-        return loop(idx, body)
-    end
-end
-
-function (ctx::TransformSSA)(root::With)
-    contain(ctx) do ctx_2
-        prod = ctx_2(root.prod)
-        cons = ctx(root.cons)
-        return with(cons, prod)
-    end
-end
-
-function (ctx::TransformSSA)(root::Access)
-    if root.mode != Read()
-        tns = definename!(root.tns, ctx)
+function (ctx::TransformSSA)(node::FinchNode)
+    if node.kind === index
+        resolvename!(node, ctx)
+    elseif node.kind === with
+        contain(ctx) do ctx_2
+            prod = ctx_2(node.prod)
+            cons = ctx(node.cons)
+            return with(cons, prod)
+        end
+    elseif node.kind === loop
+        contain(ctx) do ctx_2
+            idx = definename!(node.idx, ctx_2)
+            body = ctx(node.body)
+            return loop(idx, body)
+        end
+    elseif istree(node)
+        similarterm(node, operation(node), map(ctx, arguments(node)))
     else
-        tns = resolvename!(root.tns, ctx)
+        node
     end
-    return Access(tns, root.mode, map(ctx, root.idxs))
 end

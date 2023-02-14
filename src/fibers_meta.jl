@@ -30,25 +30,79 @@ function fiber(arr, default=zero(eltype(arr)))
     Base.copyto!(Fiber((DenseLevel^(ndims(arr)))(Element{default}())), arr)
 end
 
-@generated function Base.copyto!(dst::Fiber, src::Union{Fiber, AbstractArray})
-    dst = virtualize(:dst, dst, LowerJulia())
-    idxs = [Symbol(:i_, n) for n = getsites(dst)]
+@generated function helper_equal(A, B)
+    idxs = [Symbol(:i_, n) for n = 1:ndims(A)]
     return quote
-        @finch @loop($(idxs...), dst[$(idxs...)] = src[$(idxs...)])
+        size(A) == size(B) || return false
+        check = Scalar(true)
+        if check[]
+            @finch @loop($(reverse(idxs)...), check[] &= (A[$(idxs...)] == B[$(idxs...)]))
+        end
+        return check[]
+    end
+end
+
+function Base.:(==)(A::Fiber, B::Fiber)
+    return helper_equal(A, B)
+end
+
+function Base.:(==)(A::Fiber, B::AbstractArray)
+    return helper_equal(A, B)
+end
+
+function Base.:(==)(A::AbstractArray, B::Fiber)
+    return helper_equal(A, B)
+end
+
+@generated function helper_isequal(A, B)
+    idxs = [Symbol(:i_, n) for n = 1:ndims(A)]
+    return quote
+        size(A) == size(B) || return false
+        check = Scalar(true)
+        if check[]
+            @finch @loop($(reverse(idxs)...), check[] &= isequal(A[$(idxs...)], B[$(idxs...)]))
+        end
+        return check[]
+    end
+end
+
+function Base.isequal(A:: Fiber, B::Fiber)
+    return helper_isequal(A, B)
+end
+
+function Base.isequal(A:: Fiber, B::AbstractArray)
+    return helper_isequal(A, B)
+end
+
+function Base.isequal(A:: AbstractArray, B::Fiber)
+    return helper_isequal(A, B)
+end
+
+@generated function copyto_helper!(dst, src)
+    idxs = [Symbol(:i_, n) for n = 1:ndims(dst)]
+    return quote
+        @finch @loop($(reverse(idxs)...), dst[$(idxs...)] = src[$(idxs...)])
         return dst
     end
+end
+
+function Base.copyto!(dst::Fiber, src::Union{Fiber, AbstractArray})
+    return copyto_helper!(dst, src)
+end
+
+function Base.copyto!(dst::Array, src::Fiber)
+    return copyto_helper!(dst, src)
 end
 
 dropdefaults(src) = dropdefaults!(similar(src), src)
 
 @generated function dropdefaults!(dst::Fiber, src)
-    dst = virtualize(:dst, dst, LowerJulia())
-    idxs = [Symbol(:i_, n) for n = getsites(dst)]
+    idxs = [Symbol(:i_, n) for n = 1:ndims(dst)]
     T = eltype(dst)
     d = default(dst)
     return quote
         tmp = Scalar{$d, $T}()
-        @finch @loop($(idxs...), (@sieve (tmp[] != $d) dst[$(idxs...)] = tmp[]) where (tmp[] = src[$(idxs...)]))
+        @finch @loop($(reverse(idxs)...), (@sieve (tmp[] != $d) dst[$(idxs...)] = tmp[]) where (tmp[] = src[$(idxs...)]))
         return dst
     end
 end
@@ -83,21 +137,21 @@ SparseCoo (0.0) [1:3×1:3×1:3]
 """
 function fsparse(I::Tuple, V::Vector, shape = map(maximum, I), combine = eltype(V) isa Bool ? (|) : (+))
     C = map(tuple, I...)
-    update = false
+    updater = false
     if !issorted(C)
         P = sortperm(C)
         C = C[P]
         V = V[P]
-        update = true
+        updater = true
     end
     if !allunique(C)
         P = unique(p -> C[p], 1:length(C))
         C = C[P]
         push!(P, length(I[1]) + 1)
         V = map((start, stop) -> foldl(combine, @view V[start:stop - 1]), P[1:end - 1], P[2:end])
-        update = true
+        updater = true
     end
-    if update
+    if updater
         I = map(i -> similar(i, length(C)), I)
         foreach(((p, c),) -> ntuple(n->I[n][p] = c[n], length(I)), enumerate(C))
     else
@@ -113,7 +167,7 @@ Like [`fsparse`](@ref), but the coordinates must be sorted and unique, and memor
 is reused.
 """
 function fsparse!(I::Tuple, V, shape = map(maximum, I))
-    return Fiber(SparseCoo{length(I), Tuple{map(eltype, I)...}, Int}(shape, I, [1, length(V) + 1], Element{zero(eltype(V))}(V)))
+    return Fiber(SparseCoo{length(I), Tuple{map(eltype, I)...}, Int}(Element{zero(eltype(V))}(V), shape, I, [1, length(V) + 1]))
 end
 
 """
@@ -131,27 +185,29 @@ See also: (`sprand`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#Spars
 # Examples
 ```jldoctest; setup = :(using Random; Random.seed!(1234))
 julia> fsprand(Bool, (3, 3), 0.5)
-SparseCoo (false) [1:3×1:3]
-│ │
-└─└─[1, 1] [1, 3] [2, 2] [2, 3] [3, 3]
-    true   true   true   true   true  
+SparseCoo (false) [1:3,1:3]
+├─├─[1, 1]: true
+├─├─[3, 1]: true
+├─├─[2, 2]: true
+├─├─[3, 2]: true
+├─├─[3, 3]: true  
 
 julia> fsprand(Float64, (2, 2, 2), 0.5)
-SparseCoo (0.0) [1:2×1:2×1:2]
-│ │ │
-└─└─└─[1, 2, 2] [2, 1, 1] [2, 1, 2]
-      0.647855  0.996665  0.749194 
+SparseCoo (0.0) [1:2,1:2,1:2]
+├─├─├─[2, 2, 1]: 0.6478553157718558
+├─├─├─[1, 1, 2]: 0.996665291437684
+├─├─├─[2, 1, 2]: 0.7491940599574348 
 ```
 """
 fsprand(n::Tuple, args...) = _fsprand_impl(n, sprand(mapfoldl(BigInt, *, n), args...))
 fsprand(T::Type, n::Tuple, args...) = _fsprand_impl(n, sprand(T, mapfoldl(BigInt, *, n), args...))
 fsprand(r::SparseArrays.AbstractRNG, n::Tuple, args...) = _fsprand_impl(n, sprand(r, mapfoldl(BigInt, *, n), args...))
 fsprand(r::SparseArrays.AbstractRNG, T::Type, n::Tuple, args...) = _fsprand_impl(n, sprand(r, T, mapfoldl(BigInt, *, n), args...))
-function _fsprand_impl(shape::Tuple, vec::SparseVector{Ti, Tv}) where {Ti, Tv}
-    I = ((Vector(undef, length(vec.nzind)) for _ in shape)...,)
+function _fsprand_impl(shape::Tuple, vec::SparseVector{Tv, Ti}) where {Tv, Ti}
+    I = ((Vector{Ti}(undef, length(vec.nzind)) for _ in shape)...,)
     for (p, ind) in enumerate(vec.nzind)
-        c = CartesianIndices(reverse(shape))[ind]
-        ntuple(n->I[n][p] = c[length(shape) - n + 1], length(shape))
+        c = CartesianIndices(shape)[ind]
+        ntuple(n->I[n][p] = c[n], length(shape))
     end
     return fsparse!(I, vec.nzval, shape)
 end
@@ -167,14 +223,10 @@ See also: (`spzeros`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#Spar
 # Examples
 ```jldoctest
 julia> fspzeros(Bool, (3, 3))
-SparseCoo (false) [1:3×1:3]
-│ │
-└─└─
+SparseCoo (false) [1:3,1:3]
     
 julia> fspzeros(Float64, (2, 2, 2))
-SparseCoo (0.0) [1:2×1:2×1:2]
-│ │ │
-└─└─└─
+SparseCoo (0.0) [1:2,1:2,1:2]
 ```
 """
 fspzeros(shape) = fspzeros(Float64, shape)

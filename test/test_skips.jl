@@ -1,11 +1,9 @@
 @testset "skips" begin
 
-    A = Finch.Fiber(
-        SparseList(10, [1, 6], [1, 3, 5, 7, 9],
-        Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0])))
+    A = @fiber(sl(e(0.0)), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
     B = Scalar{0.0}()
 
-    @test diff("sieve_hl_cond.jl", @finch_code (@loop j @sieve j == 1 B[] += A[j]))
+    @test check_output("sieve_hl_cond.jl", @finch_code (@loop j @sieve j == 1 B[] += A[j]))
 
     @finch (@loop j @sieve j == 1 B[] += A[j])
 
@@ -15,17 +13,17 @@
 
     @test B() == 0.0
 
-    @test diff("sieve_hl_select.jl", @finch_code (@loop j @sieve select[3, j] B[] += A[j]))
+    @test check_output("sieve_hl_select.jl", @finch_code (@loop j @sieve diagmask[3, j] B[] += A[j]))
 
-    @finch (@loop j @sieve select[3, j] B[] += A[j])
+    @finch (@loop j @sieve diagmask[3, j] B[] += A[j])
 
     @test B() == 3.0
 
-    @finch (@loop j @sieve select[4, j] B[] += A[j])
+    @finch (@loop j @sieve diagmask[4, j] B[] += A[j])
 
     @test B() == 0.0
 
-    @test diff("gather_hl.jl", @finch_code (B[] += A[5]))
+    @test check_output("gather_hl.jl", @finch_code (B[] += A[5]))
 
     @finch (B[] += A[5])
 
