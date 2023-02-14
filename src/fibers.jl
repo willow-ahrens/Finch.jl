@@ -232,8 +232,6 @@ end
 
 display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber, depth) = display_fiber(io, mime, SubFiber(fbr.lvl, 1), depth)
 function display_fiber_data(io::IO, mime::MIME"text/plain", fbr, depth, N, crds, print_coord, get_fbr)
-    (height, width) = displaysize(io)
-
     function helper(crd)
         println(io)
         print(io, "│ " ^ depth, "├─"^N, "[", ":,"^(ndims(fbr) - N))
