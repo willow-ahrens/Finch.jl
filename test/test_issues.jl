@@ -1,3 +1,5 @@
+using SparseArrays
+
 @testset "issues" begin
     #https://github.com/willow-ahrens/Finch.jl/issues/51
     let
@@ -29,16 +31,16 @@
     let
         N = 3
         edges = dropdefaults!(@fiber(d(sl(e(false)))), [0 1 1; 1 0 1; 1 0 0])
-        frontier_list = dropdefaults!(@fiber(sl(e(false))), [0 1 1])
+        frontier_list = dropdefaults!(@fiber(sl(e(false))), [0, 1, 1])
         old_num_paths = copyto!(@fiber(d(e(0))), [3, 3, 3])
         old_visited = copyto!(@fiber(d(e(false))), [1, 0, 0])
         new_frontier = @fiber(d(e(false)))
         new_visited = @fiber(d(e(false)))
         B = @fiber(d(e(0)))
-        @finch @loop j k begin
+        @finch @loop k j begin
             new_frontier[j] <<$(Finch.or)>>= edges[j,k] && frontier_list[k] && !(old_visited[j])
             new_visited[j] <<$(Finch.and)>>= old_visited[j] || edges[j,k] && frontier_list[k] && !(old_visited[j])
-            B[j] += edges[j,k] && frontier_list[k] && old_num_paths[k] && !(old_visited[j])
+            B[j] += edges[j,k] && frontier_list[k] && (old_num_paths[k]!=1) && !(old_visited[j])
        end
     end
 
@@ -61,4 +63,15 @@
     @finch @loop i B[i] = A[I[i], i]
 
     @test B == [11, 12, 93, 34, 35]
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/101
+    let
+        t = @fiber(sl(sl(e(0.0))))
+        X = @fiber(sl(sl(e(0.0))))
+        A = @fiber(sl(sl(e(0.0))), SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3]))
+        @test_throws DimensionMismatch @finch @loop j i t[i, j] = min(X[i, j],  A[i, j])
+        X = @fiber(sl(sl(e(0.0), 4), 4))
+        @finch @loop j i t[i, j] = min(X[i, j],  A[i, j])
+        @test t == A
+    end
 end

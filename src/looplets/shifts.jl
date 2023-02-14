@@ -42,7 +42,6 @@ end
 shiftdim(ext::Widen, delta) = Widen(shiftdim(ext.ext, delta))
 shiftdim(ext::Narrow, delta) = Narrow(shiftdim(ext.ext, delta))
 shiftdim(ext::NoDimension, delta) = nodim
-shiftdim(ext::DeferDimension, delta) = deferdim
 
 function shiftdim(ext::FinchNode, body)
     if ext.kind === virtual

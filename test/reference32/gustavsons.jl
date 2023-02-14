@@ -14,6 +14,7 @@ begin
     A_lvl_4 = (ex.body.prod.body.body.rhs.args[2]).tns.tns.lvl
     A_lvl_5 = A_lvl_4.lvl
     A_lvl_6 = A_lvl_5.lvl
+    A_lvl_2.I == A_lvl.I || throw(DimensionMismatch("mismatched dimension limits ($(A_lvl_2.I) != $(A_lvl.I))"))
     B_lvl_2_qos_fill = 0
     B_lvl_2_qos_stop = 0
     p_start = (+)((*)((-)(1, 1), A_lvl.I), 1)

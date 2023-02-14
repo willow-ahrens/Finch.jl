@@ -170,7 +170,7 @@ const window = Window
 
 Base.show(io::IO, ex::Window) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::Window)
-	print(io, "Window(", start, ", ", stop, ")")
+	print(io, "Window(", ex.start, ", ", ex.stop, ")")
 end
 
 FinchNotation.value_instance(arg::Window) = arg
