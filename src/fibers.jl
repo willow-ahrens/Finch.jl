@@ -106,7 +106,7 @@ function reassemble_level! end
 
 Freeze all fibers in `lvl`. Positions `1:pos` need freezing.
 """
-function reassemble_level! end
+freeze_level!(fbr, ctx, mode) = fbr.lvl
 
 function initialize!(fbr::VirtualFiber, ctx::LowerJulia)
     lvl = initialize_level!(fbr.lvl, ctx, literal(1))
@@ -165,14 +165,6 @@ function freeze!(fbr::VirtualFiber, ctx::LowerJulia, mode, idxs...)
     end
 end
 
-"""
-    freeze_level!(fbr, ctx, mode)
-
-Freeze the level within the virtual fiber. These are the bulk cleanup steps.
-"""
-function freeze_level! end
-
-freeze_level!(fbr, ctx, mode) = fbr.lvl
 
 function trim!(fbr::VirtualFiber, ctx)
     VirtualFiber(trim_level!(fbr.lvl, ctx, literal(1)))
@@ -240,45 +232,24 @@ end
 
 display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber, depth) = display_fiber(io, mime, SubFiber(fbr.lvl, 1), depth)
 function display_fiber_data(io::IO, mime::MIME"text/plain", fbr, depth, N, crds, print_coord, get_fbr)
-    (height, width) = displaysize(io)
-
-    println(io, "│ "^(depth + N))
-    if ndims(fbr) == N
-        print_elem(io, crd) = show(IOContext(io, :compact=>true), get_fbr(crd))
-        calc_pad(crd) = max(textwidth(sprint(print_coord, crd)), textwidth(sprint(print_elem, crd)))
-        print_coord_pad(io, crd) = (print_coord(io, crd); print(io, " "^(calc_pad(crd) - textwidth(sprint(print_coord, crd)))))
-        print_elem_pad(io, crd) = (print_elem(io, crd); print(io, " "^(calc_pad(crd) - textwidth(sprint(print_elem, crd)))))
-        print_coords(io, crds) = (foreach(crd -> (print_coord_pad(io, crd); print(io, " ")), crds[1:end-1]); if !isempty(crds) print_coord_pad(io, crds[end]) end)
-        print_elems(io, crds) = (foreach(crd -> (print_elem_pad(io, crd); print(io, " ")), crds[1:end-1]); if !isempty(crds) print_elem_pad(io, crds[end]) end)
-        width -= depth * 2 + 2
-        if length(crds) < width && textwidth(sprint(print_coords, crds)) < width
-            print(io, "│ "^depth, "└─"^N); print_coords(io, crds); println(io)
-            print(io, "│ "^depth, "  "^N); print_elems(io, crds); println(io)
-        else
-            leftwidth = cld(width - 1, 2)
-            leftsize = searchsortedlast(cumsum(map(calc_pad, crds[1:min(end, leftwidth)]) .+ 1), leftwidth)
-            leftpad = " " ^ (leftwidth - textwidth(sprint(print_coords, crds[1:leftsize])))
-            rightwidth = width - leftwidth - 1
-            rightsize = searchsortedlast(cumsum(map(calc_pad, reverse(crds[max(end - rightwidth, 1):end])) .+ 1), rightwidth)
-            rightpad = " " ^ (rightwidth - textwidth(sprint(print_coords, crds[end-rightsize + 1:end])))
-            print(io, "│ "^depth, "└─"^N); print_coords(io, crds[1:leftsize]); print(io, leftpad, " ", rightpad); print_coords(io, crds[end-rightsize + 1:end]); println(io)
-            print(io, "│ "^depth, "  "^N); print_elems(io, crds[1:leftsize]); print(io, leftpad, "…", rightpad); print_elems(io, crds[end-rightsize + 1:end]); println(io)
-        end
+    function helper(crd)
+        println(io)
+        print(io, "│ " ^ depth, "├─"^N, "[", ":,"^(ndims(fbr) - N))
+        print_coord(io, crd)
+        print(io, "]: ")
+        display_fiber(io, mime, get_fbr(crd), depth + N)
+    end
+    cap = 2
+    if length(crds) > 2cap + 1
+        foreach(helper, crds[1:cap])
+        println(io)
+        print(io, "│ " ^ depth, "│ ⋮")
+        foreach(helper, crds[end - cap + 1:end])
     else
-        cap = 2
-        if length(crds) > 2cap + 1
-            foreach((crd -> (print(io, "│ " ^ depth, "├─"^N); print_coord(io, crd); println(io, ":"); display_fiber(io, mime, get_fbr(crd), depth + N); println(io, "│ "^(depth + N)))), crds[1:cap])
-            
-            println(io, "│ " ^ depth, "│ ⋮")
-            println(io, "│ " ^ depth, "│")
-            foreach((crd -> (print(io, "│ " ^ depth, "├─"^N); print_coord(io, crd); println(io, ":"); display_fiber(io, mime, get_fbr(crd), depth + N); println(io, "│ "^(depth + N)))), crds[end - cap + 1:end - 1])
-            !isempty(crds) && (print(io, "│ " ^ depth, "├─"^N); print_coord(io, crds[end]); println(io, ":"); display_fiber(io, mime, get_fbr(crds[end]), depth + N))
-        else
-            foreach((crd -> (print(io, "│ " ^ depth, "├─"^N); print_coord(io, crd); println(io, ":"); display_fiber(io, mime, get_fbr(crd), depth + N); println(io, "│ "^(depth + N)))), crds[1:end - 1])
-            !isempty(crds) && (print(io, "│ " ^ depth, "├─"^N); print_coord(io, crds[end]); println(io, ":"); display_fiber(io, mime, get_fbr(crds[end]), depth + N))
-        end
+        foreach(helper, crds)
     end
 end
+display_fiber(io::IO, mime::MIME"text/plain", fbr, depth) = show(io, mime, fbr)
 
 function f_decode(ex)
     if ex isa Expr && ex.head == :$

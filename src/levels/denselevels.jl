@@ -53,10 +53,9 @@ end
 function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:DenseLevel}, depth)
     crds = 1:fbr.lvl.I
 
-    print_coord(io, crd) = (print(io, "["); show(io, crd); print(io, "]"))
     get_fbr(crd) = fbr(crd)
-    print(io, "│ " ^ depth); print(io, "Dense ["); show(io, 1); print(io, ":"); show(io, fbr.lvl.I); println(io, "]")
-    display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
+    print(io, "Dense [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.I, "]")
+    display_fiber_data(io, mime, fbr, depth, 1, crds, show, get_fbr)
 end
 
 mutable struct VirtualDenseLevel
