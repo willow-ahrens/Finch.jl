@@ -185,16 +185,18 @@ See also: (`sprand`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#Spars
 # Examples
 ```jldoctest; setup = :(using Random; Random.seed!(1234))
 julia> fsprand(Bool, (3, 3), 0.5)
-SparseCoo (false) [1:3×1:3]
-│ │
-└─└─[1, 1] [3, 1] [2, 2] [3, 2] [3, 3]
-    true   true   true   true   true  
+SparseCoo (false) [1:3,1:3]
+├─├─[1, 1]: true
+├─├─[3, 1]: true
+├─├─[2, 2]: true
+├─├─[3, 2]: true
+├─├─[3, 3]: true  
 
 julia> fsprand(Float64, (2, 2, 2), 0.5)
-SparseCoo (0.0) [1:2×1:2×1:2]
-│ │ │
-└─└─└─[2, 2, 1] [1, 1, 2] [2, 1, 2]
-      0.647855  0.996665  0.749194 
+SparseCoo (0.0) [1:2,1:2,1:2]
+├─├─├─[2, 2, 1]: 0.6478553157718558
+├─├─├─[1, 1, 2]: 0.996665291437684
+├─├─├─[2, 1, 2]: 0.7491940599574348 
 ```
 """
 fsprand(n::Tuple, args...) = _fsprand_impl(n, sprand(mapfoldl(BigInt, *, n), args...))
@@ -221,14 +223,10 @@ See also: (`spzeros`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#Spar
 # Examples
 ```jldoctest
 julia> fspzeros(Bool, (3, 3))
-SparseCoo (false) [1:3×1:3]
-│ │
-└─└─
+SparseCoo (false) [1:3,1:3]
     
 julia> fspzeros(Float64, (2, 2, 2))
-SparseCoo (0.0) [1:2×1:2×1:2]
-│ │ │
-└─└─└─
+SparseCoo (0.0) [1:2,1:2,1:2]
 ```
 """
 fspzeros(shape) = fspzeros(Float64, shape)
