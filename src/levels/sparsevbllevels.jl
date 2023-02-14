@@ -58,10 +58,10 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseVBL
         append!(crds, (i - l + 1):i)
     end
 
-    print_coord(io, crd) = (print(io, "["); show(io, crd); print(io, "]"))
+    print_coord(io, crd) = show(io, crd)
     get_fbr(crd) = fbr(crd)
 
-    print(io, "│ " ^ depth); print(io, "SparseVBL ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); show(io, 1); print(io, ":"); show(io, fbr.lvl.I); println(io, "]")
+    print(io, "SparseVBL (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.I, "]")
     display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
 end
 

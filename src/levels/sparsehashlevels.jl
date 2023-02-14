@@ -61,11 +61,12 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseHas
     p = fbr.pos
     crds = fbr.lvl.srt[fbr.lvl.ptr[p]:fbr.lvl.ptr[p + 1] - 1]
 
-    print_coord(io, crd) = (print(io, "["); join(io, map(n -> crd[1][2][n], 1:N), ", "); print(io, "]"))
+    print_coord(io, crd) = join(io, map(n -> crd[1][2][n], 1:N), ", ")
     get_fbr(crd) = fbr(crd[1][2]...)
 
-    dims = size(fbr)
-    print(io, "│ " ^ depth); print(io, "SparseHash ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); foreach(dim -> (print(io, "1:"); show(io, dim); print(io, "×")), dims[1:N-1]); print(io, "1:"); show(io, dims[end]); println(io, "]")
+    print(io, "SparseHash (", default(fbr), ") [", ":,"^(ndims(fbr) - N), "1:")
+    join(io, fbr.lvl.I, ",1:") 
+    print(io, "]")
     display_fiber_data(io, mime, fbr, depth, N, crds, print_coord, get_fbr)
 end
 @inline level_ndims(::Type{<:SparseHashLevel{N, Ti, Tp, Tbl, Lvl}}) where {N, Ti, Tp, Tbl, Lvl} = N + level_ndims(Lvl)

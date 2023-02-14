@@ -59,11 +59,12 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseCoo
     p = fbr.pos
     crds = fbr.lvl.ptr[p]:fbr.lvl.ptr[p + 1] - 1
 
-    print_coord(io, q) = (print(io, "["); join(io, map(n -> fbr.lvl.tbl[n][q], 1:N), ", "); print(io, "]"))
+    print_coord(io, q) = join(io, map(n -> fbr.lvl.tbl[n][q], 1:N), ", ")
     get_fbr(q) = fbr(map(n -> fbr.lvl.tbl[n][q], 1:N)...)
 
-    dims = size(fbr)
-    print(io, "│ " ^ depth); print(io, "SparseCoo ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); foreach(dim -> (print(io, "1:"); show(io, dim); print(io, "×")), dims[1:N-1]); print(io, "1:"); show(io, dims[end]); println(io, "]")
+    print(io, "SparseCoo (", default(fbr), ") [", ":,"^(ndims(fbr) - N), "1:")
+    join(io, fbr.lvl.I, ",1:") 
+    print(io, "]")
     display_fiber_data(io, mime, fbr, depth, N, crds, print_coord, get_fbr)
 end
 

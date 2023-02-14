@@ -52,10 +52,10 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseByt
     p = fbr.pos
     crds = @view(fbr.lvl.srt[fbr.lvl.ptr[p]:fbr.lvl.ptr[p + 1] - 1])
 
-    print_coord(io, (p, i)) = (print(io, "["); show(io, i); print(io, "]"))
+    print_coord(io, (p, i)) = show(io, i)
     get_fbr((p, i),) = fbr(i)
 
-    print(io, "│ " ^ depth); print(io, "SparseBytemap ("); show(IOContext(io, :compact=>true), default(fbr)); print(io, ") ["); show(io, 1); print(io, ":"); show(io, fbr.lvl.I); println(io, "]")
+    print(io, "SparseBytemap (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.I, "]")
     display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
 end
 
