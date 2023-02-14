@@ -3,16 +3,8 @@ const nodim = NoDimension()
 FinchNotation.isliteral(::NoDimension) = false
 virtualize(ex, ::Type{NoDimension}, ctx) = nodim
 
-struct DeferDimension end
-const deferdim = DeferDimension()
-FinchNotation.isliteral(::DeferDimension) = false
-virtualize(ex, ::Type{DeferDimension}, ctx) = deferdim
-
-cache_dim!(ctx, tag, ext::DeferDimension) = ext
-cache_dim!(ctx, tag, ext::NoDimension) = ext
-
-getstart(::DeferDimension) = error()
-getstop(::DeferDimension) = error()
+getstart(::NoDimension) = error("asked for start of dimensionless range")
+getstop(::NoDimension) = error("asked for stop of dimensionless range")
 
 @kwdef mutable struct DeclareDimensions
     ctx
@@ -85,7 +77,7 @@ end
 
 function dimensionalize!(prgm, ctx) 
     prgm = Rewrite(Postwalk(x -> if x isa Dimensionalize x.body end))(prgm)
-    dims = filter(((idx, dim),) -> dim !== deferdim, ctx.dims)
+    dims = ctx.dims
     prgm = DeclareDimensions(ctx=ctx, dims = dims)(prgm, nodim)
     (prgm, _) = InferDimensions(ctx=ctx, dims = dims)(prgm)
     for k in keys(dims)
@@ -122,9 +114,9 @@ end
 function (ctx::InferDimensions)(node::FinchNode)
     if node.kind === index
         return (node, ctx.dims[getname(node)])
-    elseif node.kind === access && node.tns.kind === virtual
+    elseif node.kind === access && node.mode.kind === updater && node.tns.kind === virtual
         return infer_dimensions_access(node, ctx, node.tns.val)
-    elseif node.kind === access && node.tns.kind === variable #TODO perhaps we can get rid of this
+    elseif node.kind === access && node.mode.kind === updater && node.tns.kind === variable #TODO perhaps we can get rid of this
         return infer_dimensions_access(node, ctx, node.tns)
     elseif node.kind === with
         (cons, _) = ctx(node.cons)
@@ -153,9 +145,9 @@ end
 function infer_dimensions_access(node, ctx, tns)
     res = map(ctx, node.idxs)
     idxs = map(first, res)
-    shape = virtual_size(tns, ctx.ctx) #TODO can we eventually add an eldim here?
+    shape = virtual_size(tns, ctx.ctx) #This is an assignment access, so we don't need to add an eldim here
     if node.mode.kind === updater
-        shape = map(suggest, shape) #TODO can we eventually add an eldim here?
+        shape = map(suggest, shape)
     end
     shape = map(resolvedim, map((a, b) -> resultdim(ctx.ctx, a, b), shape, map(last, res)))
     if node.mode.kind === updater
@@ -207,7 +199,6 @@ combinedim(ctx, ::B, ::A)
 combinedim(ctx, a, b) = UnknownDimension()
 
 combinedim(ctx, a::NoDimension, b) = b
-combinedim(ctx, ::DeferDimension, b) = deferdim
 
 @kwdef struct Extent
     start
@@ -283,8 +274,8 @@ extent(ext::Integer) = 1
 
 combinedim(ctx, a::Extent, b::Extent) =
     Extent(
-        start = resultdim(ctx, a.start, b.start),
-        stop = resultdim(ctx, a.stop, b.stop),
+        start = checklim(ctx, a.start, b.start),
+        stop = checklim(ctx, a.stop, b.stop),
         lower = simplify(@f(min($(a.lower), $(b.lower))), ctx),
         upper = simplify(@f(min($(a.upper), $(b.upper))), ctx)
     )
@@ -302,7 +293,6 @@ Base.:(==)(a::SuggestedExtent, b::SuggestedExtent) = a.ext == b.ext
 suggest(ext) = SuggestedExtent(ext)
 suggest(ext::SuggestedExtent) = ext
 suggest(ext::NoDimension) = nodim
-suggest(ext::DeferDimension) = deferdim
 
 resolvedim(ext::Symbol) = error()
 resolvedim(ext::SuggestedExtent) = ext.ext
@@ -319,11 +309,18 @@ combinedim(ctx, a::SuggestedExtent, b::NoDimension) = a
 
 combinedim(ctx, a::SuggestedExtent, b::SuggestedExtent) = SuggestedExtent(combinedim(ctx, a.ext, b.ext))
 
-function combinedim(ctx, a::FinchNode, b::FinchNode)
+function checklim(ctx, a::FinchNode, b::FinchNode)
     if isliteral(a) && isliteral(b)
         a == b || throw(DimensionMismatch("mismatched dimension limits ($a != $b)"))
     end
-    ctx.shash(a) < ctx.shash(b) ? a : b #TODO instead of this, we should introduce a lazy operator to assert equality and use simplification rules or similar to choose types
+    if ctx.shash(a) < ctx.shash(b) #TODO instead of this, we should introduce a lazy operator to assert equality
+        push!(ctx.preamble, quote
+            $(ctx(a)) == $(ctx(b)) || throw(DimensionMismatch("mismatched dimension limits ($($(ctx(a))) != $($(ctx(b))))"))
+        end)
+        a
+    else
+        b
+    end
 end
 
 """
@@ -378,7 +375,6 @@ FinchNotation.isliteral(::Narrow) = false
 
 narrowdim(dim) = Narrow(dim)
 narrowdim(::NoDimension) = nodim
-narrowdim(::DeferDimension) = deferdim
 
 Base.:(==)(a::Narrow, b::Narrow) = a.ext == b.ext
 
@@ -401,7 +397,6 @@ FinchNotation.isliteral(::Widen) = false
 
 widendim(dim) = Widen(dim)
 widendim(::NoDimension) = nodim
-widendim(::DeferDimension) = deferdim
 
 Base.:(==)(a::Widen, b::Widen) = a.ext == b.ext
 
@@ -412,7 +407,6 @@ getstop(ext::Widen) = getstop(ext.ext)
 combinedim(ctx, a::Narrow, b::Extent) = resultdim(ctx, a, Narrow(b))
 combinedim(ctx, a::Narrow, b::SuggestedExtent) = a
 combinedim(ctx, a::Narrow, b::NoDimension) = a
-combinedim(ctx, a::Narrow, ::DeferDimension) = deferdim
 
 function combinedim(ctx, a::Narrow{<:Extent}, b::Narrow{<:Extent})
     Narrow(Extent(
@@ -430,7 +424,6 @@ end
 combinedim(ctx, a::Widen, b::Extent) = b
 combinedim(ctx, a::Widen, b::NoDimension) = a
 combinedim(ctx, a::Widen, b::SuggestedExtent) = a
-combinedim(ctx, a::Widen, ::DeferDimension) = deferdim
 
 function combinedim(ctx, a::Widen{<:Extent}, b::Widen{<:Extent})
     Widen(Extent(
