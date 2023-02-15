@@ -15,7 +15,7 @@ begin
     end
     j = 1
     j_start = j
-    phase_stop = (min)(A_lvl.I, A_lvl_i1)
+    phase_stop = (min)(A_lvl_i1, A_lvl.I)
     if phase_stop >= j_start
         j_4 = j
         j = j_start
