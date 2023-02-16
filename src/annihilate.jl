@@ -303,30 +303,6 @@ combine_style(a::DefaultStyle, b::SimplifyStyle) = SimplifyStyle()
 combine_style(a::ThunkStyle, b::SimplifyStyle) = ThunkStyle()
 combine_style(a::SimplifyStyle, b::SimplifyStyle) = SimplifyStyle()
 
-@kwdef struct SimplifyVisitor
-    ctx
-end
-
-function (ctx::SimplifyVisitor)(node)
-    if istree(node)
-        similarterm(node, operation(node), map(ctx, arguments(node)))
-    else
-        node
-    end
-end
-
-function (ctx::SimplifyVisitor)(node::FinchNode)
-    if node.kind === virtual
-        convert(FinchNode, ctx(node.val))
-    elseif istree(node)
-        similarterm(node, operation(node), map(ctx, arguments(node)))
-    else
-        node
-    end
-end
-
-(ctx::SimplifyVisitor)(node::Simplify) = node.body
-
 """
     getrules(alg, ctx)
 
@@ -344,7 +320,6 @@ end
 
 function (ctx::LowerJulia)(root, ::SimplifyStyle)
     global rules
-    root = SimplifyVisitor(ctx)(root)
     root = simplify(root, ctx)
     ctx(root)
 end
