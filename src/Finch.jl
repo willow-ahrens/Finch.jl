@@ -109,6 +109,7 @@ function __init__()
     #@require SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf" include("glue_SparseArrays.jl")
 end
 
+#=
 @precompile_setup begin
     # Putting some things in `setup` can reduce the size of the
     # precompile file and potentially make loading faster.
@@ -122,5 +123,6 @@ end
 
     end
 end
+=#
 
 end

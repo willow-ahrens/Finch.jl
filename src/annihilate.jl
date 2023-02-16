@@ -140,6 +140,17 @@ isfill(tns) = false
 isfill(tns::FinchNode) = tns.kind == virtual && tns.val isa Fill
 isvar(tns::FinchNode) = tns.kind == variable
 
+getvars(arr::AbstractArray) = mapreduce(getvars, vcat, arr, init=[])
+function getvars(node::FinchNode) 
+    if node.kind == variable
+        return [node]
+    elseif istree(node)
+        return mapreduce(getvars, vcat, arguments(node), init=[])
+    else
+        return []
+    end
+end
+
 """
     base_rules(alg, ctx)
 
@@ -163,38 +174,41 @@ function base_rules(alg, ctx)
         #TODO we probably can just drop modes from pass
         (@rule pass(~a..., access(~b, updater(modify())), ~c...) => pass(a..., c...)),
 
-
         (@rule loop(~i, pass(~a...)) => pass(a...)),
         (@rule chunk(~i, ~a, pass(~b...)) => pass(b...)),
-        (@rule with(pass(~a...), ~b) => pass(a...)),
-        (@rule with(~a, pass()) => a),
-        (@rule multi(~a..., pass(~b...), pass(~c...)) => multi(a..., pass(b..., c...))),
-        (@rule multi(pass(~a...)) => pass(a...)),
-        (@rule multi() => pass()),
+        (@rule sequence(~a..., sequence(~b...), ~c...) => sequence(a..., b..., c...)),
+        (@rule sequence(~a..., pass(), ~b...) => sequence(a..., b...)),
+        (@rule sequence(pass()) => pass()),
+        (@rule sequence() => pass()),
 
         (@rule loop(~i, assign(access(~a, updater(~m), ~j...), ~f::isidempotent(alg), ~b)) => begin
             if i ∉ j && getname(i) ∉ getunbound(b) #=TODO this doesn't work because chunkify temporarily drops indicies so we add =# && isliteral(b)
                 assign(access(a, updater(m), j...), f, b)
             end
         end),
-        (@rule loop(~i, multi(~a..., assign(access(~b, updater(~m), ~j...), ~c), ~f::isidempotent(alg), ~d...)) => begin
-            if i ∉ j && getname(i) ∉ getunbound(c) #=TODO this doesn't work because chunkify temporarily drops indicies so we add =# && isliteral(c)
-                multi(assign(access(b, updater(m), j...), c), f, loop(i, multi(a..., d...)))
-            end
-        end),
 
-        (@rule with(~a, assign(access(~b::isvar, updater(create())), ~f, ~c::isliteral)) => begin
-            Rewrite(Postwalk(@rule access(~x::isvar, reader()) => if x == b call(f, virtual_default(resolve(b, ctx)), c) end))(a)
-        end),
-        (@rule with(~a, multi(~b..., assign(access(~c::isvar, updater(create())), ~f, ~d::isliteral), ~e...)) => begin
-            with(Rewrite(Postwalk(@rule access(~x::isvar, reader()) => if x == c call(f, virtual_default(resolve(c, ctx)), d) end))(a), multi(b..., e...))
-        end),
-        (@rule with(~a, pass(~b..., access(~c::isvar, updater(create())), ~d...)) => begin
-            with(Rewrite(Postwalk(@rule access(~x::isvar, reader(), ~i...) => if x == c virtual_default(resolve(c, ctx)) end))(a), pass(b..., d...))
-        end),
-        (@rule with(~a, multi(~b..., pass(~c..., access(~d::isvar, updater(create())), ~e...), ~f...)) => begin
-            with(Rewrite(Postwalk(@rule access(~x::isvar, reader(), ~i...) => if x == d virtual_default(resolve(d, ctx)) end))(a), multi(b..., pass(c..., e...), f...))
-        end),
+        (@rule sequence(~a..., declare(~b), ~c..., assign(access(~b::isvar, ~m), ~f, ~c::isliteral), ~d...) =>
+            if !(b in getvars(c))
+                sequence(~a..., ~c..., declare(~b), assign(access(~b::isvar, ~m), right, call(f, virtual_default(resolve(b, ctx)), c)), ~d...)
+            end
+        ),
+        (@rule sequence(~a..., assign(access(~b::isvar, ~m), $(literal(right)), ~c::isliteral), ~d...,
+            assign(access(~b::isvar, ~m), ~f, ~e::isliteral), ~g...) =>
+            if !(b in getvars(d))
+                sequence(a..., d..., assign(access(b, m), right, call(f, c, e)), g...)
+            end
+        ),
+        (@rule sequence(~a..., declare(~b), ~c..., assign(access(~b::isvar, ~m), $(literal(right)), ~d::isliteral),
+            ~e..., freeze(~b), ~g...) =>
+            if !(b in getvars(e))
+                sequence(a...,  c..., map(Postwalk(@rule access(b, reader()) => d), g)...)
+            end
+        ),
+        (@rule sequence(~a..., declare(~b::isvar), ~c..., freeze(~b), ~d...) =>
+            if !(b in getvars(c))
+                sequence(a..., c..., map(Postwalk(@rule access(b, reader(), ~i...) => virtual_default(resolve(b, ctx))), g)...)
+            end
+        ),
 
         (@rule call($(literal(>=)), call($(literal(max)), ~a...), ~b) => call(or, map(x -> call(x >= b), a)...)),
         (@rule call($(literal(>)), call($(literal(max)), ~a...), ~b) => call(or, map(x -> call(x > b), a)...)),
@@ -258,21 +272,9 @@ function base_rules(alg, ctx)
                 assign(access(b, updater(m), j...), f, c)
             end
         end),
-        (@rule chunk(~i, ~a, multi(~b..., assign(access(~c, updater(~m), ~j...), ~d), ~f::isidempotent(alg), ~e...)) => begin
-            if i ∉ j && getname(i) ∉ getunbound(d)
-                multi(assign(access(b, updater(m), j...), f, d), chunk(i, a, multi(b..., e...)))
-            end
-        end),
-
         (@rule chunk(~i, ~a, assign(access(~b, updater(~m), ~j...), $(literal(+)), ~d)) => begin
             if i ∉ j && getname(i) ∉ getunbound(d)
                 assign(access(b, updater(m), j...), +, call(*, extent(a), d))
-            end
-        end),
-        (@rule chunk(~i, ~a, multi(~b..., assign(access(~c, updater(~m), ~j...), $(literal(+)), ~d), ~e...)) => begin
-            if i ∉ j && getname(i) ∉ getunbound(d)
-                multi(assign(access(c, updater(m), j...), +, call(*, extent(a), d)),
-                    chunk(i, a, multi(b..., e...)))
             end
         end),
     ]

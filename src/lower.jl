@@ -29,6 +29,7 @@ end
     algebra = DefaultAlgebra()
     preamble::Vector{Any} = []
     bindings::Dict{Any, Any} = Dict()
+    modes::Dict{Any, Any} = Dict()
     epilogue::Vector{Any} = []
     dims::Dict = Dict()
     freshen::Freshen = Freshen()
@@ -96,7 +97,7 @@ end
 
 function resolve(var, ctx::LowerJulia)
     if var isa FinchNode && (var.kind === variable || var.kind === index)
-        return ctx.bindings[var.name]
+        return ctx.bindings[var]
     end
     return var
 end
@@ -191,6 +192,51 @@ function (ctx::LowerJulia)(root, ::DefaultStyle)
     error("Don't know how to lower $root")
 end
 
+"""
+    InstantiateTensors(ctx)
+
+A transformation to instantiate readers and updaters before executing an
+expression
+
+See also: [`initialize!`](@ref)
+"""
+@kwdef struct InstantiateTensors{Ctx}
+    ctx::Ctx
+    escape = Set()
+end
+
+function (ctx::InstantiateTensors)(node)
+    if istree(node)
+        return similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        return node
+    end
+end
+
+function (ctx::InstantiateTensors)(node::FinchNode)
+    if node.kind === sequence
+        sequence(map(ctx, node.bodies)...)
+    elseif node.kind === declare
+        push!(ctx.escape, node.tns)
+        node
+    elseif node.kind === access && node.kind === variable && !(node in ctx.escape)
+        tns = ctx.ctx.bindings[tns]
+        protos = map(idx -> idx.kind === protocol ? idx.mode.val : nothing, node.idxs)
+        idxs = map(idx -> idx.kind === protocol ? ctx(idx.idx) : ctx(idx), node.idxs)
+        if node.mode.kind === reader
+            @assert ctx.modes[tns.name].kind === reader "Cannot read an update-only tensor (perhaps same tensor on both lhs and rhs?)"
+            return access(get_reader(tns, ctx.ctx, protos...), node.mode, idxs...)
+        else
+            @assert ctx.modes[tns.name].kind === updater "Cannot update a read-only tensor (perhaps same tensor on both lhs and rhs?)"
+            return access(get_updater(tns, ctx.ctx, protos...), node.mode, idxs...)
+        end
+    elseif istree(node)
+        return similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        return node
+    end
+end
+
 function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
     if root.kind === value
         return root.val
@@ -205,34 +251,32 @@ function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
         else
             return root.val
         end
-    elseif root.kind === with
-        target = map(gettns, getresults(root.prod))
-        return quote
-            $(contain(ctx) do ctx_2
-                prod = OpenScope(ctx = ctx_2, target=target)(root.prod)
-                (ctx_2)(prod)
-            end)
-            $(contain(ctx) do ctx_2
-                CloseScope(ctx = ctx_2, target=target)(root.prod)
-                cons = OpenScope(ctx = ctx_2, target=target)(root.cons)
-                (ctx_2)(cons)
-            end)
-            $(contain(ctx) do ctx_2
-                CloseScope(ctx = ctx_2, target=target)(root.cons)
-                quote
+    elseif root.kind === sequence
+        if isempty(root.bodies)
+            return quote end
+        else
+            contain(ctx) do ctx_2
+                body = root.bodies[1]
+                if body.kind !== sequence
+                    body = InstantiateTensors(ctx=ctx_2)(body)
                 end
-            end)
+                quote
+                    $((ctx_2)(body))
+                    $((ctx_2)(sequence(root.bodies[2:end]...)))
+                end
+            end
         end
-    elseif root.kind === multi
-        thunk = Expr(:block)
-        for body in root.bodies
-            push!(thunk.args, quote
-                $(contain(ctx) do ctx_2
-                    (ctx_2)(body)
-                end)
-            end)
-        end
-        thunk
+    elseif root.kind === declare
+        @assert root.tns.kind === variable
+        @assert ctx.modes[root.tns].kind === reader
+        ctx.bindings[root.tns] = initialize!(ctx.bindings[root.tns], ctx)
+        ctx.modes[root.tns] = updater(create())
+        quote end
+    elseif root.kind === freeze
+        @assert ctx.modes[root.tns].kind === updater
+        freeze!(ctx.bindings[root.tns], ctx)
+        ctx.modes[root.tns] = reader()
+        quote end
     elseif root.kind === access
         if root.tns.kind === virtual
             return lowerjulia_access(ctx, root, root.tns.val)
@@ -317,7 +361,7 @@ function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
         return quote end
     elseif root.kind === variable
         error()
-        return ctx(ctx.bindings[root.name])
+        return ctx(ctx.bindings[root])
     else
         error("unimplemented ($root)")
     end

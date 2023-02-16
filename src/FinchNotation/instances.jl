@@ -23,20 +23,26 @@ end
 Base.:(==)(a::ProtocolInstance, b::ProtocolInstance) = a.idx == b.idx && a.mode == b.mode
 @inline protocol_instance(idx, mode) = ProtocolInstance(idx, mode)
 
-struct WithInstance{Cons, Prod} <: FinchNodeInstance
-	cons::Cons
-	prod::Prod
+struct DeclareInstance{Tns} <: FinchNodeInstance
+	tns::Tns
 end
-Base.:(==)(a::WithInstance, b::WithInstance) = a.cons == b.cons && a.prod == b.prod
+Base.:(==)(a::DeclareInstance, b::DeclareInstance) = a.tns == b.tns
 
-@inline with_instance(cons, prod) = WithInstance(cons, prod)
+@inline declare_instance(tns) = DeclareInstance(tns)
 
-struct MultiInstance{Bodies} <: FinchNodeInstance
+struct FreezeInstance{Tns} <: FinchNodeInstance
+	tns::Tns
+end
+Base.:(==)(a::FreezeInstance, b::FreezeInstance) = a.tns == b.tns
+
+@inline freeze_instance(tns) = FreezeInstance(tns)
+
+struct SequenceInstance{Bodies} <: FinchNodeInstance
     bodies::Bodies
 end
-Base.:(==)(a::MultiInstance, b::MultiInstance) = all(a.bodies .== b.bodies)
+Base.:(==)(a::SequenceInstance, b::SequenceInstance) = all(a.bodies .== b.bodies)
 
-multi_instance(bodies...) = MultiInstance(bodies)
+sequence_instance(bodies...) = SequenceInstance(bodies)
 
 struct LoopInstance{Idx, Body} <: FinchNodeInstance
 	idx::Idx

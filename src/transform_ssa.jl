@@ -70,11 +70,13 @@ end
 function (ctx::TransformSSA)(node::FinchNode)
     if node.kind === index
         resolvename!(node, ctx)
-    elseif node.kind === with
-        contain(ctx) do ctx_2
-            prod = ctx_2(node.prod)
-            cons = ctx(node.cons)
-            return with(cons, prod)
+    elseif node.kind === sequence
+        if isempty(node.bodies)
+            return node
+        else
+            contain(ctx) do ctx_2
+                return sequence(ctx_2(node.bodies[1]), ctx(sequence(node.bodies[2:end]...)))
+            end
         end
     elseif node.kind === loop
         contain(ctx) do ctx_2

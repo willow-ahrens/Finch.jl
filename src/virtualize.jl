@@ -14,12 +14,13 @@ function virtualize(ex, ::Type{FinchNotation.IndexInstance{name}}, ctx) where {n
     index(name)
 end
 virtualize(ex, ::Type{FinchNotation.ProtocolInstance{Idx, Mode}}, ctx) where {Idx, Mode} = protocol(virtualize(:($ex.idx), Idx, ctx), virtualize(:($ex.mode), Mode, ctx))
-virtualize(ex, ::Type{FinchNotation.WithInstance{Cons, Prod}}, ctx) where {Cons, Prod} = with(virtualize(:($ex.cons), Cons, ctx), virtualize(:($ex.prod), Prod, ctx))
-function virtualize(ex, ::Type{FinchNotation.MultiInstance{Bodies}}, ctx) where {Bodies}
+virtualize(ex, ::Type{FinchNotation.DeclareInstance{Tns}}, ctx) where {Tns} = declare(virtualize(:($ex.tns), Tns, ctx))
+virtualize(ex, ::Type{FinchNotation.FreezeInstance{Tns}}, ctx) where {Tns} = freeze(virtualize(:($ex.tns), Tns, ctx))
+function virtualize(ex, ::Type{FinchNotation.SequenceInstance{Bodies}}, ctx) where {Bodies}
     bodies = map(enumerate(Bodies.parameters)) do (n, Body)
         virtualize(:($ex.bodies[$n]), Body, ctx)
     end
-    multi(bodies...)
+    sequence(bodies...)
 end
 function virtualize(ex, ::Type{FinchNotation.SieveInstance{Cond, Body}}, ctx) where {Cond, Body}
     cond = virtualize(:($ex.cond), Cond, ctx)
@@ -61,7 +62,8 @@ function virtualize(ex, ::Type{FinchNotation.VariableInstance{tag, Tns}}, ctx) w
         return x
     else
         ctx.freshen(tag)
-        get!(ctx.bindings, tag, x)
+        get!(ctx.bindings, variable(tag), x)
+        ctx.modes[variable(tag)] = reader()
         return variable(tag)
     end
 end

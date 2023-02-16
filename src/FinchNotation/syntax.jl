@@ -5,9 +5,10 @@ const program_nodes = (
     pass = pass,
     loop = loop,
     chunk = chunk,
-    with = with,
     sieve = sieve,
-    multi = multi,
+    sequence = sequence,
+    declare = declare,
+    freeze = freeze,
     assign = assign,
     call = call,
     access = access,
@@ -26,9 +27,10 @@ const instance_nodes = (
     pass = pass_instance,
     loop = loop_instance,
     chunk = :(throw(NotImplementedError("TODO"))),
-    with = with_instance,
     sieve = sieve_instance,
-    multi = multi_instance,
+    sequence = sequence_instance,
+    declare = declare_instance,
+    freeze = freeze_instance,
     assign = assign_instance,
     call = call_instance,
     access = access_instance,
@@ -66,6 +68,10 @@ function (ctx::FinchParserVisitor)(ex::Expr)
         return :($(ctx.nodes.pass)($(map(ctx, args)...)))
     elseif @capture ex :macrocall($(Symbol("@sieve")), ~ln::islinenum, ~cond, ~body)
         return :($(ctx.nodes.sieve)($(ctx(cond)), $(ctx(body))))
+    elseif @capture ex :macrocall($(Symbol("@declare")), ~ln::islinenum, ~tns)
+        return :($(ctx.nodes.declare)($(ctx(tns))))
+    elseif @capture ex :macrocall($(Symbol("@freeze")), ~ln::islinenum, ~tns)
+        return :($(ctx.nodes.freeze)($(ctx(tns))))
     elseif @capture ex :macrocall($(Symbol("@∀")), ~ln::islinenum, ~idxs..., ~body)
         return ctx(:(@loop($(idxs...), $body)))
     elseif @capture ex :macrocall($(Symbol("@loop")), ~ln::islinenum, ~idxs..., ~body)
@@ -88,10 +94,10 @@ function (ctx::FinchParserVisitor)(ex::Expr)
         if length(bodies) == 1
             return ctx(:($(bodies[1])))
         else
-            return ctx(:(@multi($(bodies...),)))
+            return ctx(:(@sequence($(bodies...),)))
         end
-    elseif @capture ex :macrocall($(Symbol("@multi")), ~ln::islinenum, ~bodies...)
-        return :($(ctx.nodes.multi)($(map(ctx, bodies)...)))
+    elseif @capture ex :macrocall($(Symbol("@sequence")), ~ln::islinenum, ~bodies...)
+        return :($(ctx.nodes.sequence)($(map(ctx, bodies)...)))
     elseif @capture ex :ref(~tns, ~idxs...)
         mode = :($(ctx.nodes.reader)())
         return :($(ctx.nodes.access)($(ctx(tns)), $mode, $(map(ctx, idxs)...)))
@@ -99,16 +105,9 @@ function (ctx::FinchParserVisitor)(ex::Expr)
         return ctx(:($lhs << $(incs[op]) >>= $rhs))
     elseif @capture ex :(=)(:ref(~tns, ~idxs...), ~rhs)
         return ctx(:($tns[$(idxs...)] << $right >>= $rhs))
-    elseif @capture ex :(=)(:ref(:call(:!, ~tns), ~idxs...), ~rhs)
-        return ctx(:(!$tns[$(idxs...)] << $right >>= $rhs))
     elseif @capture ex :>>=(:call(:<<, :ref(~tns, ~idxs...), ~op), ~rhs)
         tns isa Symbol && push!(ctx.results, tns)
         mode = :($(ctx.nodes.updater)($(ctx.nodes.create)()))
-        lhs = :($(ctx.nodes.access)($(ctx(tns)), $mode, $(map(ctx, idxs)...)))
-        return :($(ctx.nodes.assign)($lhs, $(ctx(op)), $(ctx(rhs))))
-    elseif @capture ex :>>=(:call(:<<, :call(:!, :ref(~tns, ~idxs...)), ~op), ~rhs)
-        tns isa Symbol && push!(ctx.results, tns)
-        mode = :($(ctx.nodes.updater)($(ctx.nodes.modify)()))
         lhs = :($(ctx.nodes.access)($(ctx(tns)), $mode, $(map(ctx, idxs)...)))
         return :($(ctx.nodes.assign)($lhs, $(ctx(op)), $(ctx(rhs))))
     elseif @capture ex :comparison(~a, ~cmp, ~b)
