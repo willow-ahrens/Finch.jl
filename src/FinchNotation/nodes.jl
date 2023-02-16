@@ -545,7 +545,7 @@ function Finch.getunbound(ex::FinchNode)
 end
 
 function Base.show(io::IO, node::FinchNode) 
-    if node.kind === literal || node.kind == index || node.kind === virtual
+    if node.kind === literal || node.kind === index || node.kind === variable || node.kind === virtual
         print(io, node.kind, "(", node.val, ")")
     elseif node.kind === value
         print(io, node.kind, "(", node.val, ", ", node.type, ")")

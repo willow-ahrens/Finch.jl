@@ -187,6 +187,7 @@ function base_rules(alg, ctx)
             end
         end),
 
+        #=
         (@rule sequence(~a..., declare(~b), ~c..., assign(access(~b::isvar, ~m), ~f, ~c::isliteral), ~d...) =>
             if !(b in getvars(c))
                 sequence(~a..., ~c..., declare(~b), assign(access(~b::isvar, ~m), right, call(f, virtual_default(resolve(b, ctx)), c)), ~d...)
@@ -209,6 +210,8 @@ function base_rules(alg, ctx)
                 sequence(a..., c..., map(Postwalk(@rule access(b, reader(), ~i...) => virtual_default(resolve(b, ctx))), g)...)
             end
         ),
+        =#
+
 
         (@rule call($(literal(>=)), call($(literal(max)), ~a...), ~b) => call(or, map(x -> call(x >= b), a)...)),
         (@rule call($(literal(>)), call($(literal(max)), ~a...), ~b) => call(or, map(x -> call(x > b), a)...)),
