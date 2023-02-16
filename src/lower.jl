@@ -281,7 +281,7 @@ function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
         if root.tns.kind === virtual
             return lowerjulia_access(ctx, root, root.tns.val)
         elseif root.tns.kind === variable
-            return lowerjulia_access(ctx, root, resolve(root.tns.name, ctx))
+            return lowerjulia_access(ctx, root, resolve(root.tns, ctx))
         else
             tns = ctx(root.tns)
             idxs = map(ctx, root.idxs)

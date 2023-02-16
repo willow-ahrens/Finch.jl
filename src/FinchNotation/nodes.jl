@@ -645,7 +645,7 @@ function display_statement(io, mime, node::FinchNode, level)
         end
         print(io,"(\n")
         display_statement(io, mime, node, level + 1)
-        print(io, tab^level * ")\n")
+        print(io, tab^level * ")")
     elseif node.kind === chunk
         print(io, tab^level * "@∀ ")
         display_expression(io, mime, node.idx)
@@ -653,7 +653,7 @@ function display_statement(io, mime, node::FinchNode, level)
         display_expression(io, mime, node.ext)
         print(io," (\n")
         display_statement(io, mime, node.body, level + 1)
-        print(io, tab^level * ")\n")
+        print(io, tab^level * ")")
     elseif node.kind === sieve
         print(io, tab^level * "@sieve ")
         while node.body.kind === sieve
@@ -665,7 +665,7 @@ function display_statement(io, mime, node::FinchNode, level)
         node = node.body
         print(io," (\n")
         display_statement(io, mime, node, level + 1)
-        print(io, tab^level * ")\n")
+        print(io, tab^level * ")")
     elseif node.kind === assign
         print(io, tab^level)
         display_expression(io, mime, node.lhs)
@@ -676,7 +676,6 @@ function display_statement(io, mime, node::FinchNode, level)
         end
         print(io, "= ")
         display_expression(io, mime, node.rhs)
-        print(io, "\n")
     elseif node.kind === protocol
         display_expression(io, mime, ex.idx)
         print(io, "::")
@@ -707,8 +706,9 @@ function display_statement(io, mime, node::FinchNode, level)
         print(io, tab^level * "begin\n")
         for body in node.bodies
             display_statement(io, mime, body, level + 1)
+            println()
         end
-        print(io, tab^level * "end\n")
+        print(io, tab^level * "end")
     else
         error("unimplemented")
     end
