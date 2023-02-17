@@ -73,17 +73,17 @@ virtual_default(tns::AbstractVirtualFiber) = virtual_level_default(tns.lvl)
 The default for a fiber is the value that each element of the fiber will have
 after initialization. This value is most often zero, and defaults to nothing.
 
-See also: [`initialize!`](@ref)
+See also: [`declare!`](@ref)
 """
 function default end
 
 """
-    initialize_level!(lvl, ctx, pos)
+    declare_level!(lvl, ctx, pos, init)
 
 Initialize and thaw all fibers within `lvl`, assuming positions `1:pos` were
 previously assembled and frozen. The resulting level has no assembled positions.
 """
-function initialize_level! end
+function declare_level! end
 
 """
     assemble_level!(lvl, ctx, pos, new_pos)
@@ -108,8 +108,8 @@ Freeze all fibers in `lvl`. Positions `1:pos` need freezing.
 """
 freeze_level!(fbr, ctx, mode) = fbr.lvl
 
-function initialize!(fbr::VirtualFiber, ctx::LowerJulia)
-    lvl = initialize_level!(fbr.lvl, ctx, literal(1))
+function declare!(fbr::VirtualFiber, ctx::LowerJulia, init)
+    lvl = declare_level!(fbr.lvl, ctx, literal(1), init)
     push!(ctx.preamble, assemble_level!(lvl, ctx, literal(1), literal(1))) #TODO this feels unnecessary?
     fbr = VirtualFiber(lvl)
 end
