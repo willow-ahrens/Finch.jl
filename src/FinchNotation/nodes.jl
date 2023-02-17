@@ -170,21 +170,21 @@ Finch AST statement that initializes, freezes, and returns each tensor in `tnss.
 pass
 
 """
-    declare(tnss...)
+    declare(tns)
 
 Finch AST statement that declares `tns` in the current scope.
 """
 declare
 
 """
-    freeze(tnss...)
+    freeze(tns)
 
 Finch AST statement that freezes `tns` in the current scope.
 """
 freeze
 
 """
-    thaw(tnss...)
+    thaw(tns)
 
 Finch AST statement that thaws `tns` in the current scope.
 """
