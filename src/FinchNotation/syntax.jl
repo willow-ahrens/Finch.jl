@@ -86,9 +86,6 @@ function (ctx::FinchParserVisitor)(ex::Expr)
                 $(ctx.nodes.chunk)($(idx isa Symbol ? esc(idx) : ctx(idx)), $(ctx(ext)), $(ctx(body)))
             end
         end
-    elseif @capture ex :where(~cons, ~prod)
-        ctx2 = FinchParserVisitor(ctx.nodes, Set())
-        return :($(ctx.nodes.with)($(ctx(cons)), $(ctx2(prod))))
     elseif @capture ex :block(~bodies...)
         bodies = filter(!islinenum, bodies)
         if length(bodies) == 1

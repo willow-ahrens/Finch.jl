@@ -25,8 +25,6 @@ enum is used to differentiate which kind of node is represented.
     create   = 10ID | IS_TREE
     call     = 11ID | IS_TREE
     assign   = 12ID | IS_TREE | IS_STATEFUL
-    with     = 13ID | IS_TREE | IS_STATEFUL
-    multi    = 14ID | IS_TREE | IS_STATEFUL
     loop     = 15ID | IS_TREE | IS_STATEFUL
     chunk    = 16ID | IS_TREE | IS_STATEFUL
     sieve    = 17ID | IS_TREE | IS_STATEFUL
@@ -131,20 +129,6 @@ modify
 Finch AST expression for the result of calling the function `op` on `args...`.
 """
 call
-
-"""
-    with(cons, prod)
-
-Finch AST statement that runs `cons` with the tensors produced by `prod`.
-"""
-with
-
-"""
-    multi(bodies...)
-
-Finch AST statement that runs `bodies...` independently and returns all their results.
-"""
-multi
 
 """
     loop(idxs..., body) 
@@ -287,14 +271,6 @@ function FinchNode(kind::FinchNodeKind, args::Vector)
         else
             error("wrong number of arguments to $kind(...)")
         end
-    elseif kind === with
-        if length(args) == 2
-            return FinchNode(with, nothing, nothing, args)
-        else
-            error("wrong number of arguments to with(...)")
-        end
-    elseif kind === multi
-        return FinchNode(multi, nothing, nothing, args)
     elseif kind === access
         if length(args) >= 2
             return FinchNode(access, nothing, nothing, args)
@@ -418,20 +394,6 @@ function Base.getproperty(node::FinchNode, sym::Symbol)
             return node.children[1]
         else
             error("type FinchNode(updater, ...) has no property $sym")
-        end
-    elseif node.kind === with
-        if sym === :cons
-            return node.children[1]
-        elseif sym === :prod
-            return node.children[2]
-        else
-            error("type FinchNode(with, ...) has no property $sym")
-        end
-    elseif node.kind === multi
-        if sym === :bodies
-            return node.children
-        else
-            error("type FinchNode(multi, ...) has no property $sym")
         end
     elseif node.kind === access
         if sym === :tns
@@ -623,20 +585,7 @@ function display_expression(io, mime, node::FinchNode)
 end
 
 function display_statement(io, mime, node::FinchNode, level)
-    if node.kind === with
-        print(io, tab^level * "(\n")
-        display_statement(io, mime, node.cons, level + 1)
-        print(io, tab^level * ") where (\n")
-        display_statement(io, mime, node.prod, level + 1)
-        print(io, tab^level * ")\n")
-    elseif node.kind === multi
-        print(io, tab^level * "@multi(\n")
-        for body in node.bodies
-            display_statement(io, mime, body, level + 1)
-            println(",")
-        end
-        print(io, tab^level * ")\n")
-    elseif node.kind === loop
+    if node.kind === loop
         print(io, tab^level * "@∀ ")
         while node.kind === loop
             display_expression(io, mime, node.idx)
@@ -768,9 +717,7 @@ function Finch.getvalue(ex::FinchNode)
 end
 
 function Finch.getresults(node::FinchNode)
-    if node.kind === with
-        Finch.getresults(node.cons)
-    elseif node.kind === sequence
+    if node.kind === sequence
         return mapreduce(Finch.getresults, vcat, node.bodies, init=[])
     elseif node.kind === access
         [access(node.tns, node.mode)]
