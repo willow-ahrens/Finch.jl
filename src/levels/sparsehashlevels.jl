@@ -147,7 +147,7 @@ end
 virtual_level_eltype(lvl::VirtualSparseHashLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSparseHashLevel) = virtual_level_default(lvl.lvl)
 
-function initialize_level!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, pos)
+function declare_level!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, pos, init)
     Ti = lvl.Ti
     Tp = lvl.Tp
 
@@ -158,7 +158,7 @@ function initialize_level!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, pos)
         empty!($(lvl.ex).tbl)
         empty!($(lvl.ex).srt)
     end)
-    lvl.lvl = initialize_level!(lvl.lvl, ctx, qos)
+    lvl.lvl = declare_level!(lvl.lvl, ctx, qos, init)
     return lvl
 end
 

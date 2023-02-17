@@ -187,9 +187,9 @@ function base_rules(alg, ctx)
             end
         end),
 
-        (@rule sequence(~s1..., declare(~a), ~s2..., assign(access(~a, ~m), ~f, ~b::isliteral), ~s3...) =>
+        (@rule sequence(~s1..., declare(~a, ~z), ~s2..., assign(access(~a, ~m), ~f, ~b::isliteral), ~s3...) =>
             if !(a in getvars(s2)) && f != literal(right)
-                sequence(s1..., s2..., declare(a), assign(access(a, m), right, call(f, virtual_default(resolve(a, ctx)), b)), s3...)
+                sequence(s1..., s2..., declare(a, ~z), assign(access(a, m), right, call(f, z, b)), s3...)
             end
         ),
         
@@ -199,23 +199,23 @@ function base_rules(alg, ctx)
                 sequence(s1..., s2..., assign(access(a, m), right, call(f, b, c)), s3...)
             end
         ),
-        (@rule sequence(~s1..., declare(~a), ~s2..., assign(access(~a, ~m), $(literal(right)), ~b::isliteral), ~s3..., freeze(~a), ~s4...) =>
+        (@rule sequence(~s1..., declare(~a, ~z), ~s2..., assign(access(~a, ~m), $(literal(right)), ~b::isliteral), ~s3..., freeze(~a), ~s4...) =>
             if !(a in getvars([s2, s3]))
                 s4 = Postwalk(@rule access(a, reader()) => b)(sequence(s4...))
                 if s4 !== nothing
-                    sequence(s1..., declare(a), s2..., assign(access(a, m), right, b), s3..., freeze(a), s4)
+                    sequence(s1..., declare(a, z), s2..., assign(access(a, m), right, b), s3..., freeze(a), s4)
                 end
             end
         ),
-        (@rule sequence(~s1..., declare(~a), ~s2..., freeze(~a), ~s3...) =>
+        (@rule sequence(~s1..., declare(~a, ~z), ~s2..., freeze(~a), ~s3...) =>
             if !(a in getvars(s2))
-                s3 = Postwalk(@rule access(a, reader(), i...) => virtual_default(resolve(a, ctx)))(sequence(s3...))
+                s3 = Postwalk(@rule access(a, reader(), i...) => z)(sequence(s3...))
                 if s3 !== nothing
-                    sequence(s1..., declare(a), s2..., freeze(a), s3)
+                    sequence(s1..., declare(a, z), s2..., freeze(a), s3)
                 end
             end
         ),
-        (@rule loop(~i..., sequence(~s1..., declare(~a), ~s2..., freeze(~a), ~s3...)) =>
+        (@rule loop(~i..., sequence(~s1..., declare(~a, ~z), ~s2..., freeze(~a), ~s3...)) =>
             if !(a in getvars(s3))
                 s2 = Rewrite(Postwalk(@rule assign(access(a, updater(~a), ~j...), ~f, ~b) => sequence()))(sequence(s2...))
                 loop(i..., sequence(s1..., s2, s3...))

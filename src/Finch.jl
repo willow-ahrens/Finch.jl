@@ -96,7 +96,7 @@ register(DefaultAlgebra)
     contain(LowerJulia()) do ctx
         lvl = virtualize(:lvl, lvl, ctx)
         lvl = resolve(lvl, ctx)
-        lvl = initialize_level!(lvl, ctx, literal(0))
+        lvl = declare_level!(lvl, ctx, literal(0), virtual_default(lvl))
         push!(ctx.preamble, assemble_level!(lvl, ctx, literal(1), literal(1)))
         lvl = freeze_level!(lvl, ctx, literal(1))
         :(Fiber($(ctx(lvl))))

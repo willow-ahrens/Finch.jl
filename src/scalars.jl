@@ -41,9 +41,9 @@ virtual_eltype(tns::VirtualScalar) = tns.Tv
 
 FinchNotation.isliteral(::VirtualScalar) = false
 
-function initialize!(tns::VirtualScalar, ctx)
+function declare!(tns::VirtualScalar, ctx, init)
     push!(ctx.preamble, quote
-        $(tns.val) = $(tns.D)
+        $(tns.val) = $(ctx(init))
     end)
     tns
 end

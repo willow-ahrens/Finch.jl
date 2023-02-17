@@ -59,7 +59,7 @@ virtual_level_size(::VirtualPatternLevel, ctx) = ()
 virtual_level_default(::VirtualPatternLevel) = false
 virtual_level_eltype(::VirtualPatternLevel) = Bool
 
-initialize_level!(lvl::VirtualPatternLevel, ctx, pos) = lvl
+declare_level!(lvl::VirtualPatternLevel, ctx, pos, init) = (@assert init == literal(false); lvl)
 
 freeze_level!(lvl::VirtualPatternLevel, ctx, pos) = lvl
 

@@ -137,7 +137,7 @@ end
 virtual_level_eltype(lvl::VirtualSparseCooLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSparseCooLevel) = virtual_level_default(lvl.lvl)
 
-function initialize_level!(lvl::VirtualSparseCooLevel, ctx::LowerJulia, pos)
+function declare_level!(lvl::VirtualSparseCooLevel, ctx::LowerJulia, pos, init)
     Ti = lvl.Ti
     Tp = lvl.Tp
 
@@ -146,7 +146,7 @@ function initialize_level!(lvl::VirtualSparseCooLevel, ctx::LowerJulia, pos)
         $(lvl.qos_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
     end)
-    lvl.lvl = initialize_level!(lvl.lvl, ctx, qos)
+    lvl.lvl = declare_level!(lvl.lvl, ctx, qos, init)
     return lvl
 end
 

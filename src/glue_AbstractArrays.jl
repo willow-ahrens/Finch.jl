@@ -22,9 +22,9 @@ function virtualize(ex, ::Type{<:AbstractArray{T, N}}, ctx, tag=:tns) where {T, 
     VirtualAbstractArray(sym, T, N)
 end
 
-function initialize!(arr::VirtualAbstractArray, ctx::LowerJulia)
+function declare!(arr::VirtualAbstractArray, ctx::LowerJulia, init)
     push!(ctx.preamble, quote
-        fill!($(arr.ex), 0) #TODO
+        fill!($(arr.ex), $(ctx(init)))
     end)
     arr
 end

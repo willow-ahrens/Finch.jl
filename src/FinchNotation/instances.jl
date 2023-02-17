@@ -23,12 +23,13 @@ end
 Base.:(==)(a::ProtocolInstance, b::ProtocolInstance) = a.idx == b.idx && a.mode == b.mode
 @inline protocol_instance(idx, mode) = ProtocolInstance(idx, mode)
 
-struct DeclareInstance{Tns} <: FinchNodeInstance
+struct DeclareInstance{Tns, Init} <: FinchNodeInstance
 	tns::Tns
+	init::Init
 end
-Base.:(==)(a::DeclareInstance, b::DeclareInstance) = a.tns == b.tns
+Base.:(==)(a::DeclareInstance, b::DeclareInstance) = a.tns == b.tns && a.init == b.init
 
-@inline declare_instance(tns) = DeclareInstance(tns)
+@inline declare_instance(tns, init) = DeclareInstance(tns, init)
 
 struct FreezeInstance{Tns} <: FinchNodeInstance
 	tns::Tns

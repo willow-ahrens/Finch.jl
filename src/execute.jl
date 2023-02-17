@@ -86,12 +86,12 @@ macro finch_code(args_ex...)
 end
 
 """
-    initialize!(tns, ctx)
+    declare!(tns, ctx, init)
 
-Melt and initialize the read-only virtual tensor `tns` in the context `ctx` and return it.
-After melting, the tensor is update-only.
+Declare the read-only virtual tensor `tns` in the context `ctx` with a starting value of `init` and return it.
+Afterwards the tensor is update-only.
 """
-initialize!(tns, ctx) = tns
+declare!(tns, ctx, init) = @assert virtual_default(tns) == init
 
 """
     get_reader(tns, ctx, protos...)

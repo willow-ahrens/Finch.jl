@@ -130,7 +130,7 @@ end
 virtual_level_eltype(lvl::VirtualSparseBytemapLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSparseBytemapLevel) = virtual_level_default(lvl.lvl)
 
-function initialize_level!(lvl::VirtualSparseBytemapLevel, ctx::LowerJulia, pos)
+function declare_level!(lvl::VirtualSparseBytemapLevel, ctx::LowerJulia, pos, init)
     Ti = lvl.Ti
     Tp = lvl.Tp
     r = ctx.freshen(lvl.ex, :_r)
@@ -156,7 +156,7 @@ function initialize_level!(lvl::VirtualSparseBytemapLevel, ctx::LowerJulia, pos)
         $(lvl.ex).ptr[1] = 1
     end)
     if !supports_reassembly(lvl.lvl)
-        lvl.lvl = initialize_level!(lvl.lvl, ctx, call(*, pos, lvl.I))
+        lvl.lvl = declare_level!(lvl.lvl, ctx, call(*, pos, lvl.I), init)
     end
     return lvl
 end

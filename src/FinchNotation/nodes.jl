@@ -171,9 +171,9 @@ Finch AST statement that initializes, freezes, and returns each tensor in `tnss.
 pass
 
 """
-    declare(tns)
+    declare(tns, init)
 
-Finch AST statement that declares `tns` in the current scope.
+Finch AST statement that declares `tns` with an initial value `init` in the current scope.
 """
 declare
 
@@ -194,7 +194,7 @@ thaw
 """
     destroy(tns)
 
-Finch AST statement that marks the end of the lifetime of `tns`.
+Finch AST statement that marks the end of the lifetime of `tns`, at least until it is declared again.
 """
 destroy
 
@@ -324,7 +324,7 @@ function FinchNode(kind::FinchNodeKind, args::Vector)
     elseif kind === pass
         return FinchNode(pass, nothing, nothing, args)
     elseif kind === declare
-        if length(args) == 1
+        if length(args) == 2
             return FinchNode(declare, nothing, nothing, args)
         else
             error("wrong number of arguments to declare(...)")
@@ -480,6 +480,8 @@ function Base.getproperty(node::FinchNode, sym::Symbol)
     elseif node.kind === declare
         if sym === :tns
             return node.children[1]
+        elseif sym === :init
+            return node.children[2]
         else
             error("type FinchNode(declare, ...) has no property $sym")
         end
@@ -662,6 +664,8 @@ function display_statement(io, mime, node::FinchNode, level)
     elseif node.kind === declare
         print(io, tab^level * "@declare(")
         display_expression(io, mime, node.tns)
+        print(io, ", ")
+        display_expression(io, mime, node.init)
         print(io, ")")
     elseif node.kind === freeze
         print(io, tab^level * "@freeze(")

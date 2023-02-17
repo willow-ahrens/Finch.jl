@@ -198,7 +198,7 @@ end
 A transformation to instantiate readers and updaters before executing an
 expression
 
-See also: [`initialize!`](@ref)
+See also: [`declare!`](@ref)
 """
 @kwdef struct InstantiateTensors{Ctx}
     ctx::Ctx
@@ -269,7 +269,7 @@ function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
     elseif root.kind === declare
         @assert root.tns.kind === variable
         @assert ctx.modes[root.tns].kind === reader
-        ctx.bindings[root.tns] = initialize!(ctx.bindings[root.tns], ctx)
+        ctx.bindings[root.tns] = declare!(ctx.bindings[root.tns], ctx, root.init)
         ctx.modes[root.tns] = updater(create())
         quote end
     elseif root.kind === freeze
