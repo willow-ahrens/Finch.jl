@@ -9,6 +9,8 @@ const program_nodes = (
     sequence = sequence,
     declare = declare,
     freeze = freeze,
+    thaw = thaw,
+    destroy = destroy,
     assign = assign,
     call = call,
     access = access,
@@ -31,6 +33,8 @@ const instance_nodes = (
     sequence = sequence_instance,
     declare = declare_instance,
     freeze = freeze_instance,
+    thaw = thaw_instance,
+    destroy = destroy_instance,
     assign = assign_instance,
     call = call_instance,
     access = access_instance,
@@ -72,6 +76,10 @@ function (ctx::FinchParserVisitor)(ex::Expr)
         return :($(ctx.nodes.declare)($(ctx(tns))))
     elseif @capture ex :macrocall($(Symbol("@freeze")), ~ln::islinenum, ~tns)
         return :($(ctx.nodes.freeze)($(ctx(tns))))
+    elseif @capture ex :macrocall($(Symbol("@thaw")), ~ln::islinenum, ~tns)
+        return :($(ctx.nodes.thaw)($(ctx(tns))))
+    elseif @capture ex :macrocall($(Symbol("@destroy")), ~ln::islinenum, ~tns)
+        return :($(ctx.nodes.destroy)($(ctx(tns))))
     elseif @capture ex :macrocall($(Symbol("@∀")), ~ln::islinenum, ~idxs..., ~body)
         return ctx(:(@loop($(idxs...), $body)))
     elseif @capture ex :macrocall($(Symbol("@loop")), ~ln::islinenum, ~idxs..., ~body)

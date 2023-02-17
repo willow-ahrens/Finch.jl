@@ -37,6 +37,20 @@ Base.:(==)(a::FreezeInstance, b::FreezeInstance) = a.tns == b.tns
 
 @inline freeze_instance(tns) = FreezeInstance(tns)
 
+struct ThawInstance{Tns} <: FinchNodeInstance
+	tns::Tns
+end
+Base.:(==)(a::ThawInstance, b::ThawInstance) = a.tns == b.tns
+
+@inline thaw_instance(tns) = thawInstance(tns)
+
+struct DestroyInstance{Tns} <: FinchNodeInstance
+	tns::Tns
+end
+Base.:(==)(a::DestroyInstance, b::DestroyInstance) = a.tns == b.tns
+
+@inline destroy_instance(tns) = destroyInstance(tns)
+
 struct SequenceInstance{Bodies} <: FinchNodeInstance
     bodies::Bodies
 end

@@ -48,7 +48,7 @@ function initialize!(tns::VirtualScalar, ctx)
     tns
 end
 
-function freeze!(tns::VirtualScalar, ctx, mode)
+function freeze!(tns::VirtualScalar, ctx)
     return tns
 end
 

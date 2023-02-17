@@ -16,6 +16,8 @@ end
 virtualize(ex, ::Type{FinchNotation.ProtocolInstance{Idx, Mode}}, ctx) where {Idx, Mode} = protocol(virtualize(:($ex.idx), Idx, ctx), virtualize(:($ex.mode), Mode, ctx))
 virtualize(ex, ::Type{FinchNotation.DeclareInstance{Tns}}, ctx) where {Tns} = declare(virtualize(:($ex.tns), Tns, ctx))
 virtualize(ex, ::Type{FinchNotation.FreezeInstance{Tns}}, ctx) where {Tns} = freeze(virtualize(:($ex.tns), Tns, ctx))
+virtualize(ex, ::Type{FinchNotation.ThawInstance{Tns}}, ctx) where {Tns} = thaw(virtualize(:($ex.tns), Tns, ctx))
+virtualize(ex, ::Type{FinchNotation.DestroyInstance{Tns}}, ctx) where {Tns} = destroy(virtualize(:($ex.tns), Tns, ctx))
 function virtualize(ex, ::Type{FinchNotation.SequenceInstance{Bodies}}, ctx) where {Bodies}
     bodies = map(enumerate(Bodies.parameters)) do (n, Body)
         virtualize(:($ex.bodies[$n]), Body, ctx)

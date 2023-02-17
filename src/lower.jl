@@ -277,6 +277,15 @@ function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
         freeze!(ctx.bindings[root.tns], ctx)
         ctx.modes[root.tns] = reader()
         quote end
+    elseif root.kind === thaw
+        @assert ctx.modes[root.tns].kind === updater
+        thaw!(ctx.bindings[root.tns], ctx)
+        ctx.modes[root.tns] = updater(create())
+        quote end
+    elseif root.kind === destroy
+        @assert ctx.modes[root.tns].kind === reader
+        delete!(ctx.modes, root.tns)
+        quote end
     elseif root.kind === access
         if root.tns.kind === virtual
             return lowerjulia_access(ctx, root, root.tns.val)

@@ -104,7 +104,7 @@ function (ctx::DeclareDimensions)(node::FinchNode, dim)
     elseif node.kind === declare
         empty!(get!(ctx.hints, node.tns, Any[]))
         node
-    elseif node.kind === freeze
+    elseif node.kind === destroy
         map(InferDimensions(ctx.ctx, ctx.dims), ctx.hints[node.tns])
         node
     elseif node.kind === protocol

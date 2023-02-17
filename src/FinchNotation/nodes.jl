@@ -32,7 +32,8 @@ enum is used to differentiate which kind of node is represented.
     declare  = 20ID | IS_TREE | IS_STATEFUL
     thaw     = 21ID | IS_TREE | IS_STATEFUL
     freeze   = 22ID | IS_TREE | IS_STATEFUL
-    sequence = 23ID | IS_TREE | IS_STATEFUL
+    destroy  = 23ID | IS_TREE | IS_STATEFUL
+    sequence = 24ID | IS_TREE | IS_STATEFUL
 end
 
 
@@ -161,7 +162,7 @@ tensors of `lhs` are returned.  Overwriting is accomplished with the function
 """
 assign
 
-#TODO get rid of access expressions in pass
+#TODO get rid of pass
 """
     pass(tnss...)
 
@@ -189,6 +190,13 @@ freeze
 Finch AST statement that thaws `tns` in the current scope.
 """
 thaw
+
+"""
+    destroy(tns)
+
+Finch AST statement that marks the end of the lifetime of `tns`.
+"""
+destroy
 
 """
     sequence(bodies...)
@@ -332,6 +340,12 @@ function FinchNode(kind::FinchNodeKind, args::Vector)
             return FinchNode(thaw, nothing, nothing, args)
         else
             error("wrong number of arguments to thaw(...)")
+        end
+    elseif kind === destroy
+        if length(args) == 1
+            return FinchNode(destroy, nothing, nothing, args)
+        else
+            error("wrong number of arguments to destroy(...)")
         end
     elseif kind === sequence
         return FinchNode(sequence, nothing, nothing, args)
@@ -480,6 +494,12 @@ function Base.getproperty(node::FinchNode, sym::Symbol)
             return node.children[1]
         else
             error("type FinchNode(thaw, ...) has no property $sym")
+        end
+    elseif node.kind === destroy
+        if sym === :tns
+            return node.children[1]
+        else
+            error("type FinchNode(destroy, ...) has no property $sym")
         end
     elseif node.kind === sequence
         if sym === :bodies
@@ -645,6 +665,10 @@ function display_statement(io, mime, node::FinchNode, level)
         print(io, ")")
     elseif node.kind === freeze
         print(io, tab^level * "@freeze(")
+        display_expression(io, mime, node.tns)
+        print(io, ")")
+    elseif node.kind === destroy
+        print(io, tab^level * "@destroy(")
         display_expression(io, mime, node.tns)
         print(io, ")")
     elseif node.kind === thaw
