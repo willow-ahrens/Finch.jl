@@ -204,25 +204,34 @@ function base_rules(alg, ctx)
             sequence(s1..., s2, thaw(a), s3...)
         end),
         #propagate constants from declare
-        (@rule sequence(~s1..., declare(~a, ~z), assign(access(~a, ~m), ~f, ~b::isliteral), ~s2, ~s3...) => if f != literal(right)
-            sequence(s1..., s2, declare(~a, ~z), assign(access(a, m), right, call(f, z, b)), s3...)
+        (@rule sequence(~s1..., declare(~a, ~z), assign(access(~a, ~m), ~f, ~b::isliteral), ~s2...) => if f != literal(right)
+            sequence(s1..., declare(~a, ~z), assign(access(a, m), right, call(f, z, b)), s2...)
         end),
+
         #propagate constants from assign
         (@rule sequence(~s1..., assign(access(~a::isvar, ~m), $(literal(right)), ~b::isliteral), assign(access(~a, ~m), ~f, ~c), ~s2...) => 
             sequence(s1..., s2, assign(access(a, m), right, call(f, b, c)), s3...)
         end),
 
         #propagate constant to meet forget or first use
-        (@rule sequence(~s1..., assign(access(~a::isvar, ~m), $(literal(right)), ~b::isliteral), freeze(~a), ~s2, ~s3...) =>
+        (@rule sequence(~s1..., declare(~a, ~z), assign(access(~a, ~m), $(literal(right)), ~b::isliteral), freeze(~a), ~s2, ~s3...) =>
             if s2.kind !== statement && !(@capture s2 forget(a))
                 s2 = Rewrite(Postwalk(@rule access(a, reader()) => b)(s2))
-                sequence(s1..., s2, assign(access(a, m), right, b), freeze(a), s3...)
+                sequence(s1..., s2, declare(a, z), assign(access(a, m), right, b), freeze(a), s3...)
+            end
+        ),
+
+        #propagate constant to meet forget or first use
+        (@rule sequence(~s1..., thaw(~a), assign(access(~a, ~m), $(literal(right)), ~b::isliteral), freeze(~a), ~s2, ~s3...) =>
+            if s2.kind !== statement && !(@capture s2 forget(a))
+                s2 = Rewrite(Postwalk(@rule access(a, reader()) => b)(s2))
+                sequence(s1..., s2, thaw(a), assign(access(a, m), right, b), freeze(a), s3...)
             end
         ),
 
         #propagate constant to meet forget or first use
         (@rule sequence(~s1..., declare(~a, ~z), freeze(~a), ~s2, ~s3...) =>
-            if s2.kind !== statement && !(@capture s2 forget(a))
+            if s2.kind !== statement && !(@capture s2 forget(a)) && !(@capture s2 thaw(a))
                 s2 = Rewrite(Postwalk(@rule access(a, reader()) => z)(s2))
                 sequence(s1..., s2, declare(a, z), freeze(a), s3...)
             end
@@ -250,8 +259,10 @@ function base_rules(alg, ctx)
         ),
 
         #dce 
-        (@rule sequence(~s1..., thaw(~a, ~z), freeze(~a), forget(~a), ~s2...) =>
-            sequence(s1..., s2...)
+        (@rule sequence(~s1..., freeze(~a), ~s2..., thaw(~a), ~s3...) =>
+            if !(a in getvars(s2))
+                sequence(s1..., s2..., s3...)
+            end
         ),
 
         (@rule call($(literal(>=)), call($(literal(max)), ~a...), ~b) => call(or, map(x -> call(x >= b), a)...)),
