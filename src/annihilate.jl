@@ -192,7 +192,6 @@ function base_rules(alg, ctx)
                 sequence(s1..., s2..., declare(a, ~z), assign(access(a, m), right, call(f, z, b)), s3...)
             end
         ),
-        
         (@rule sequence(~s1..., assign(access(~a::isvar, ~m), $(literal(right)), ~b::isliteral), ~s2...,
             assign(access(~a, ~m), ~f, ~c), ~s3...) =>
             if !(a in getvars(s2))
@@ -261,7 +260,6 @@ function base_rules(alg, ctx)
         (@rule call($(literal(ifelse)), ~a, ~b, ~b) => b),
         (@rule $(literal(-0.0)) => literal(0.0)),
 
-
         (@rule call(~f, call(~g, ~a, ~b...)) => if isinverse(alg, f, g) && isassociative(alg, g)
             call(g, call(f, a), map(c -> call(f, call(g, c)), b)...)
         end),
@@ -320,6 +318,7 @@ end
 
 function (ctx::LowerJulia)(root, ::SimplifyStyle)
     global rules
+    root = Rewrite(Prewalk((x) -> if x.kind === virtual && x.val isa Simplify x.val.body end))(root)
     root = simplify(root, ctx)
     ctx(root)
 end

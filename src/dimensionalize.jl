@@ -137,7 +137,7 @@ declare_dimensions_access(node, ctx, tns::Dimensionalize, dim) = declare_dimensi
 function declare_dimensions_access(node, ctx, tns, eldim)
     if node.mode.kind !== reader
         shape = map(suggest, virtual_size(tns, ctx.ctx, eldim))
-        if node.tns.kind === variable
+        if node.tns.kind === variable && haskey(ctx.hints, node.tns)
             push!(ctx.hints[node.tns], node)
         end
     else

@@ -43,14 +43,14 @@ struct ThawInstance{Tns} <: FinchNodeInstance
 end
 Base.:(==)(a::ThawInstance, b::ThawInstance) = a.tns == b.tns
 
-@inline thaw_instance(tns) = thawInstance(tns)
+@inline thaw_instance(tns) = ThawInstance(tns)
 
 struct DestroyInstance{Tns} <: FinchNodeInstance
 	tns::Tns
 end
 Base.:(==)(a::DestroyInstance, b::DestroyInstance) = a.tns == b.tns
 
-@inline destroy_instance(tns) = destroyInstance(tns)
+@inline destroy_instance(tns) = DestroyInstance(tns)
 
 struct SequenceInstance{Bodies} <: FinchNodeInstance
     bodies::Bodies

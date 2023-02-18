@@ -219,15 +219,15 @@ function (ctx::InstantiateTensors)(node::FinchNode)
     elseif node.kind === declare
         push!(ctx.escape, node.tns)
         node
-    elseif node.kind === access && node.kind === variable && !(node in ctx.escape)
-        tns = ctx.ctx.bindings[tns]
+    elseif node.kind === access && node.tns.kind === variable && !(node in ctx.escape)
+        tns = ctx.ctx.bindings[node.tns]
         protos = map(idx -> idx.kind === protocol ? idx.mode.val : nothing, node.idxs)
         idxs = map(idx -> idx.kind === protocol ? ctx(idx.idx) : ctx(idx), node.idxs)
         if node.mode.kind === reader
-            @assert ctx.modes[tns.name].kind === reader "Cannot read an update-only tensor (perhaps same tensor on both lhs and rhs?)"
+            @assert ctx.ctx.modes[node.tns].kind === reader "Cannot read an update-only tensor (perhaps same tensor on both lhs and rhs?)"
             return access(get_reader(tns, ctx.ctx, protos...), node.mode, idxs...)
         else
-            @assert ctx.modes[tns.name].kind === updater "Cannot update a read-only tensor (perhaps same tensor on both lhs and rhs?)"
+            @assert ctx.ctx.modes[node.tns].kind === updater "Cannot update a read-only tensor (perhaps same tensor on both lhs and rhs?)"
             return access(get_updater(tns, ctx.ctx, protos...), node.mode, idxs...)
         end
     elseif istree(node)
@@ -274,13 +274,13 @@ function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
         quote end
     elseif root.kind === freeze
         @assert ctx.modes[root.tns].kind === updater
-        freeze!(ctx.bindings[root.tns], ctx)
+        ctx.bindings[root.tns] = freeze!(ctx.bindings[root.tns], ctx)
         ctx.modes[root.tns] = reader()
         quote end
     elseif root.kind === thaw
-        @assert ctx.modes[root.tns].kind === updater
-        thaw!(ctx.bindings[root.tns], ctx)
-        ctx.modes[root.tns] = updater(create())
+        @assert ctx.modes[root.tns].kind === reader
+        ctx.bindings[root.tns] = thaw!(ctx.bindings[root.tns], ctx)
+        ctx.modes[root.tns] = updater(modify())
         quote end
     elseif root.kind === destroy
         @assert ctx.modes[root.tns].kind === reader

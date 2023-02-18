@@ -20,7 +20,10 @@ function execute_code(ex, T, algebra = DefaultAlgebra())
                 #TODO we might want to keep the namespace around, and/or further stratify index
                 #names from tensor names
                 contain(ctx) do ctx_2
-                    prgm2 = InstantiateTensors(ctx = ctx_2)(prgm)
+                    prgm2 = prgm
+                    if prgm.kind !== sequence
+                        prgm2 = InstantiateTensors(ctx = ctx_2)(prgm2)
+                    end
                     prgm2 = ThunkVisitor(ctx_2)(prgm2) #TODO this is a bit of a hack.
                     prgm2 = simplify(prgm2, ctx_2)
                     ctx_2(prgm2)
@@ -116,10 +119,18 @@ get_updater(tns, ctx, protos...) = tns
 """
     freeze!(tns, ctx)
 
-Freeze the update-only virtual tensor `tns` in the context `ctx` and return it. After
-freezing, the tensor is read-only.
+Freeze the update-only virtual tensor `tns` in the context `ctx` and return it.
+Afterwards, the tensor is read-only.
 """
 freeze!(tns, ctx) = tns
+
+"""
+    thaw!(tns, ctx)
+
+Thaw the read-only virtual tensor `tns` in the context `ctx` and return it. Afterwards,
+the tensor is update-only.
+"""
+thaw!(tns, ctx) = tns
 
 """
     trim!(tns, ctx)

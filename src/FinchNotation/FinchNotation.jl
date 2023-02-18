@@ -13,9 +13,7 @@ module FinchNotation
     export assign
     export call
     export reader, updater, create, modify, access
-    export declare
-    export thaw
-    export freeze
+    export declare, thaw, freeze, destroy
     export sequence
     export protocol
     export sieve

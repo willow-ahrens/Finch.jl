@@ -96,7 +96,7 @@ register(DefaultAlgebra)
     contain(LowerJulia()) do ctx
         lvl = virtualize(:lvl, lvl, ctx)
         lvl = resolve(lvl, ctx)
-        lvl = declare_level!(lvl, ctx, literal(0), virtual_default(lvl))
+        lvl = declare_level!(lvl, ctx, literal(0), virtual_level_default(lvl))
         push!(ctx.preamble, assemble_level!(lvl, ctx, literal(1), literal(1)))
         lvl = freeze_level!(lvl, ctx, literal(1))
         :(Fiber($(ctx(lvl))))
@@ -109,7 +109,6 @@ function __init__()
     #@require SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf" include("glue_SparseArrays.jl")
 end
 
-#=
 @precompile_setup begin
     # Putting some things in `setup` can reduce the size of the
     # precompile file and potentially make loading faster.
@@ -119,10 +118,14 @@ end
         y = @fiber d(e(0.0))
         A = @fiber d(sl(e(0.0)))
         x = @fiber sl(e(0.0))
-        Finch.execute_code(:ex, typeof(Finch.@finch_program_instance @loop i j y[i] += A[i, j] * x[i]))
+        Finch.execute_code(:ex, typeof(Finch.@finch_program_instance begin
+                @thaw(y)
+                @loop i j y[i] += A[i, j] * x[i]
+                @freeze(y)
+            end
+        ))
 
     end
 end
-=#
 
 end
