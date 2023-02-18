@@ -45,12 +45,12 @@ Base.:(==)(a::ThawInstance, b::ThawInstance) = a.tns == b.tns
 
 @inline thaw_instance(tns) = ThawInstance(tns)
 
-struct DestroyInstance{Tns} <: FinchNodeInstance
+struct ForgetInstance{Tns} <: FinchNodeInstance
 	tns::Tns
 end
-Base.:(==)(a::DestroyInstance, b::DestroyInstance) = a.tns == b.tns
+Base.:(==)(a::ForgetInstance, b::ForgetInstance) = a.tns == b.tns
 
-@inline destroy_instance(tns) = DestroyInstance(tns)
+@inline forget_instance(tns) = ForgetInstance(tns)
 
 struct SequenceInstance{Bodies} <: FinchNodeInstance
     bodies::Bodies

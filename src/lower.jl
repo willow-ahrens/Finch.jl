@@ -282,7 +282,7 @@ function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
         ctx.bindings[root.tns] = thaw!(ctx.bindings[root.tns], ctx)
         ctx.modes[root.tns] = updater(modify())
         quote end
-    elseif root.kind === destroy
+    elseif root.kind === forget
         @assert ctx.modes[root.tns].kind === reader
         delete!(ctx.modes, root.tns)
         quote end
