@@ -1,0 +1,5 @@
+\begin{juliacode}
+getnnz(A::SpList) = length(A.idx)
+getidx(A::SpList, p) = A.idx[p]
+getval(A::SpList, p) = A.val[p]
+\end{juliacode}

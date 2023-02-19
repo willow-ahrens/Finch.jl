@@ -1,0 +1,122 @@
+\begin{figure*}
+\begin{minipage}[t]{0.25\linewidth - 3pt}
+
+\begin{subfigure}[t]{\linewidth}
+\begin{minipage}[t]{\matrixscale\linewidth}
+\input{figure-lotri-matrix.tex}
+\aftermatrix
+\end{minipage}
+\input{figure-lotri-lotri-format.tex}
+\afterformat
+\input{figure-lotri-lotri-protocol.tex}
+\input{figure-lotri-lotri-nest.tex}
+\caption{Lower Triangular}\label{fig:structure:lotri}
+\end{subfigure}
+\beforematrix
+
+\begin{subfigure}{\linewidth}
+\begin{minipage}{\matrixscale\linewidth}
+\input{figure-cluster-matrix.tex}
+\aftermatrix
+\end{minipage}
+\input{figure-cluster-vbl-format.tex}
+\afterformat
+\input{figure-cluster-vbl-protocol.tex}
+\input{figure-cluster-vbl-nest.tex}
+\caption{Clustered Matrix, VBL Format}\label{fig:structure:cluster-vbl}
+\end{subfigure}
+
+\end{minipage}\hspace{4pt}%
+\begin{minipage}[t]{0.25\linewidth - 3pt}
+
+\begin{subfigure}[t]{\linewidth}
+\begin{minipage}[t]{\matrixscale\linewidth}
+\input{figure-sym-matrix.tex}
+\aftermatrix
+\end{minipage}
+\input{figure-sym-sym-format.tex}
+\afterformat
+\input{figure-sym-sym-protocol.tex}
+\input{figure-sym-sym-nest.tex}
+\caption{Symmetric}\label{fig:structure:sym}
+\end{subfigure}
+\beforematrix
+
+
+\begin{subfigure}{\linewidth}
+\begin{minipage}{\matrixscale\linewidth}
+\input{figure-uniform-matrix.tex}
+\aftermatrix
+\end{minipage}
+\input{figure-uniform-list-format.tex}
+\afterformat
+\input{figure-uniform-list-walk-protocol.tex}
+\input{figure-uniform-list-walk-nest.tex}
+\caption{Uniform Sparsity, List Format}\label{fig:structure:uniform-list-walk}
+\end{subfigure}
+
+\end{minipage}\hspace{4pt}%
+\begin{minipage}[t]{0.25\linewidth - 3pt}
+
+\begin{subfigure}[t]{\linewidth}
+\begin{minipage}[t]{\matrixscale\linewidth}
+\input{figure-ragged-matrix.tex}
+\aftermatrix
+\end{minipage}
+\input{figure-ragged-ragged-format.tex}
+\afterformat
+\input{figure-ragged-ragged-protocol.tex}
+\input{figure-ragged-ragged-nest.tex}
+\caption{Ragged}\label{fig:structure:ragged}
+\end{subfigure}
+\beforematrix
+
+
+\begin{subfigure}{\linewidth}
+\begin{minipage}{\matrixscale\linewidth}
+\input{figure-banded-matrix.tex}
+\aftermatrix
+\end{minipage}
+\input{figure-banded-banded-format.tex}
+\afterformat
+\input{figure-banded-banded-protocol.tex}
+\input{figure-banded-banded-nest.tex}
+\caption{Banded Matrix, Band Format}\label{fig:structure:band}
+\end{subfigure}
+
+
+\end{minipage}\hspace{4pt}%
+\begin{minipage}[t]{0.25\linewidth - 3pt}
+
+\begin{subfigure}[t]{\linewidth}
+\begin{minipage}[t]{\matrixscale\linewidth}
+\input{figure-birb-matrix.tex}
+\aftermatrix
+\end{minipage}
+\input{figure-birb-rle-format.tex}
+\afterformat
+\input{figure-birb-rle-protocol.tex}
+\input{figure-birb-rle-nest.tex}
+\caption{Image with repeated values. Run-Length Format.}\label{fig:structure:birb-rle}
+\end{subfigure}
+\beforematrix
+
+\begin{subfigure}{\linewidth}
+\begin{minipage}{\matrixscale\linewidth}
+\input{figure-birb-matrix.tex}
+\aftermatrix
+\end{minipage}
+\input{figure-birb-rlep-format.tex}
+\afterformat
+\input{figure-birb-rlep-protocol.tex}
+\input{figure-birb-rlep-nest.tex}
+\caption{Image with repeated values. PackBITS Format.}\label{fig:structure:birb-rlep}
+\end{subfigure}
+
+\end{minipage}
+
+\caption{A variety of example structures, corresponding level formats, and
+protocols, followed by their corresponding looplet nest unfurling code. Matrices
+are row major, and outer levels are dense. The row under consideration is
+highlighted in red.}\label{fig:structure}
+\end{figure*}

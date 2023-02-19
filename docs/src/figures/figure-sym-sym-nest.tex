@@ -1,0 +1,11 @@
+\begin{juliacode}
+offset = i*(i-1)/2
+Pipeline(
+  Phase(
+    stride = i,
+    body = Lookup(
+      body(j) = val[offset+j])),
+  Phase(
+    body = Lookup(
+      body(j) = val[j*(j-1)/2+i])))
+\end{juliacode}

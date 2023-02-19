@@ -1,0 +1,19 @@
+\begin{minipage}{\linewidth}
+\flushright
+  \scalebox{\loopletscale}{%
+  \begin{tikzpicture}[>=latex]
+    \matrix (looplet) [matrix of nodes,
+                nodes = {indexsty},
+                ampersand replacement=\&,
+                anchor=north west
+                ] at (0,0)
+    {
+  |[scalarsty]|\juliainline{x} \& ... \& |[scalarsty]|\juliainline{x}\\
+    };
+    \draw (looplet-1-1.south west) -- ([yshift=-1*\myunit] looplet-1-1.south west);
+    \draw[<->] ([yshift=-0.5*\myunit] looplet-1-1.south west) -- ([yshift=-0.5*\myunit] looplet-1-3.south east) node[midway, fill=white]{\juliainline{i:j}};
+    \draw (looplet-1-3.south east) -- ([yshift=-1*\myunit] looplet-1-3.south east);
+  
+  \end{tikzpicture}%
+  }
+\end{minipage}

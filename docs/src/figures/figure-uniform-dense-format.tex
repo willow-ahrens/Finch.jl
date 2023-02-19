@@ -1,0 +1,13 @@
+\scalebox{\formatscale}{%
+\begin{tikzpicture}[>=latex]
+  \matrix (vals) [matrix of math nodes,
+              nodes = {whclsty},
+              ampersand replacement=\&,
+              anchor=north west] at (0,0)
+  {
+  ... \& |[nzsty]|0.0 \& |[nzsty]|1.9 \& |[nzsty]|0.0 \& |[nzsty]|3.0 \& |[nzsty]|2.7 \& |[nzsty]|0.0 \& |[nzsty]|0.0 \& |[nzsty]|0.0 \& |[nzsty]|5.5 \& |[nzsty]|0.0 \& |[nzsty]|0.0 \& ...\\
+  };
+
+  \node [draw, whclsty, anchor=north west] at (0, 1.5*\myunit) {\juliainline{.val}};
+\end{tikzpicture}%
+}

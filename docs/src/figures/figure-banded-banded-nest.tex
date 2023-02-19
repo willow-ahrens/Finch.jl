@@ -1,0 +1,14 @@
+\begin{juliacode}
+band = pos[i + 1] - pos[i]
+offset = pos[i] - start[i]
+Pipeline(
+  Phase(
+    stride = start[i] - 1
+    body = Run(0)),
+  Phase(
+    stride = start[i] + band - 1,
+    body = Lookup(
+      body(j) = vals[offset + j])),
+  Phase(
+    body = Run(0)))
+\end{juliacode}

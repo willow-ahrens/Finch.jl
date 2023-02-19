@@ -1,0 +1,37 @@
+\scalebox{\formatscale}{%
+\begin{tikzpicture}[>=latex]
+  \matrix (vals) [matrix of math nodes,
+              nodes = {whclsty},
+              ampersand replacement=\&,
+              anchor=north west] at (0,0)
+  {
+  ... \& |[nzsty]|3.7 \& |[nzsty]|4.7 \& |[nzsty]|9.2 \& |[nzsty]|1.5 \& |[nzsty]|8.7 \& ... \\
+  };
+  \node [draw, whclsty, left=of vals] {\juliainline{.val}};
+
+  \matrix (start) [matrix of math nodes,
+              nodes = {whclsty},
+              ampersand replacement=\&,
+              anchor=north west] at (0,1.5 * \myunit)
+  {
+  ... \& |[nzsty]|4 \& ... \\
+  };
+  \node [draw, whclsty, left=of start] {\juliainline{.start}};
+
+  \matrix (pos) [matrix of math nodes,
+              nodes = {whclsty},
+              ampersand replacement=\&,
+              anchor=north west] at (0,3 * \myunit)
+  {
+  ... \& |[nzsty]|18 \& |[nzsty]| 23 \& ... \\
+  };
+  \node [draw, whclsty, left=of pos] {\juliainline{.pos}};
+
+\end{tikzpicture}%
+}
+
+\begin{document}
+\begin{tikzpicture}
+% your picture code
+\end{tikzpicture}
+\end{document}

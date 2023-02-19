@@ -1,0 +1,18 @@
+\documentclass{standalone}
+\input{common.tex}
+\begin{document}
+\begin{tikzpicture}[>=latex]
+  \matrix (A) [matrix of math nodes,
+              nodes = {whclsty},
+              left delimiter  = (,
+              right delimiter = ),
+              ampersand replacement=\&] at (0,0)
+  {
+  |[nzsty]|5.2 \& |[nzsty]|4.6 \& |[nzsty]|4.3 \& |[nzsty]|5.0 \& |[nzsty]|9.8 \& |[nzsty]|3.6 \& |[nzsty]|2.7 \& |[nzsty]|0.4 \& \zecl \& \zecl \& \zecl \\
+  };
+
+  \draw[lpltsty] ([yshift=-0*\myunit]A-1-1.south west) -- ([yshift=-0*\myunit]A-1-8.south east) node[namesty]{Lookup};
+  \draw[lpltsty] ([yshift=-0*\myunit]A-1-9.south west) -- ([yshift=-0*\myunit]A-1-11.south east) node[namesty]{Run};
+  \draw[lpltsty] ([yshift=-1*\myunit]A-1-1.south west) -- ([yshift=-1*\myunit]A-1-11.south east) node[namesty]{Pipeline};
+\end{tikzpicture}%
+\end{document}
