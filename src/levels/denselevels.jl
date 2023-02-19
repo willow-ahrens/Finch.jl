@@ -1,3 +1,30 @@
+"""
+    DenseLevel{[Ti=Int]}(lvl, [dim])
+
+A subfiber of a dense level is an array which stores every slice `A[:, ..., :,
+i]` as a distinct subfiber in `lvl`. Optionally, `dim` is the size of the last
+dimension. `Ti` is the type of the indices used to index the level.
+
+In the [@fiber](@ref) constructor, `d` is an alias for `DenseLevel`.
+
+```jldoctest
+julia> ndims(@fiber(d(e(0.0))))
+1
+
+julia> ndims(@fiber(d(d(e(0.0)))))
+2
+
+julia> @fiber(d(d(e(0.0))), [1 2; 3 4])
+Dense [:,1:2]
+├─[:,1]: Dense [1:2]
+│ ├─[1]: 1.0
+│ ├─[2]: 3.0
+├─[:,2]: Dense [1:2]
+│ ├─[1]: 2.0
+│ ├─[2]: 4.0
+```
+"""
+
 struct DenseLevel{Ti, Lvl}
     lvl::Lvl
     I::Ti

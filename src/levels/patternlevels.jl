@@ -1,3 +1,20 @@
+"""
+    PatternLevel{D, [Tv]}()
+
+A subfiber of a pattern level is the Boolean value true, but it's `default` is
+false. PatternLevels are used to create tensors that represent which values
+are stored by other fibers. See [`pattern`](@ref) for usage examples.
+
+In the [@fiber](@ref) constructor, `p` is an alias for `ElementLevel`.
+
+```jldoctest
+julia> @fiber(d(p(), 3))
+Dense [1:3]
+├─[1]: true
+├─[2]: true
+├─[3]: true
+```
+"""
 struct PatternLevel end
 const Pattern = PatternLevel
 

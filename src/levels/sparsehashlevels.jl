@@ -1,3 +1,37 @@
+"""
+    SparseHashLevel{[N], [Ti=Tuple{Int...}], [Tp=Int]}(lvl, [dims])
+
+A subfiber of a sparse level does not need to represent slices which are
+entirely [`default`](@ref). Instead, only potentially non-default slices are
+stored as subfibers in `lvl`. The sparse hash level corresponds to `N` indices
+in the subfiber, so fibers in the sublevel are the slices `A[:, ..., :, i_1,
+..., i_n]`.  A hash table is used to record which slices are stored. Optionally,
+`dims` are the sizes of the last dimensions.
+
+`Ti` is the type of the last `N` fiber indices, and `Tp` is the type used for
+positions in the level.
+
+In the [@fiber](@ref) constructor, `sh` is an alias for `SparseHashLevel`.
+
+```jldoctest
+julia> @fiber(d(sh{1}(e(0.0))), [10 0 20; 30 0 0; 0 0 40])
+Dense [:,1:3]
+├─[:,1]: SparseHash (0.0) [1:3]
+│ ├─[1]: 10.0
+│ ├─[2]: 30.0
+├─[:,2]: SparseHash (0.0) [1:3]
+├─[:,3]: SparseHash (0.0) [1:3]
+│ ├─[1]: 20.0
+│ ├─[3]: 40.0
+
+julia> @fiber(sh{2}(e(0.0)), [10 0 20; 30 0 0; 0 0 40])
+SparseHash (0.0) [1:3,1:3]
+├─├─[1, 1]: 10.0
+├─├─[2, 1]: 30.0
+├─├─[1, 3]: 20.0
+├─├─[3, 3]: 40.0
+```
+"""
 struct SparseHashLevel{N, Ti<:Tuple, Tp, Tbl, Lvl}
     lvl::Lvl
     I::Ti
