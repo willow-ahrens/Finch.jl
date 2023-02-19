@@ -1,3 +1,7 @@
+\documentclass{standalone}
+\input{common.tex}
+\begin{document}
+
 \resizebox{\linewidth}{!}{%
 \begin{tikzpicture}[>=latex]
 \matrix (A) [matrix of math nodes,
@@ -19,6 +23,37 @@
 \zecl \& |[nzsty]|1.8 \& \zecl \& |[nzsty]|4.8 \& |[nzsty]|3.1 \& \zecl \& \zecl \& |[nzsty]|1.5 \& |[nzsty]|7.4 \& \zecl \& \zecl \\
 };
 
-\draw[hlsty] (A-6-1.south west) rectangle (A-6-11.north east);
+
+\draw[hlsty] (A-1-6.north west) rectangle (A-11-6.south east);
+
+\matrix (vals) [matrix of math nodes,
+nodes = {whclsty},
+ampersand replacement=\&,
+anchor=north west, below right=2*\myunit and 5*\myunit of A.north east]
+{
+... \& |[nzsty]|1.9 \& |[nzsty]|3.0 \& |[nzsty]|2.7 \& |[nzsty]|5.5 \& ... \\
+};
+\node [draw, whclsty, left=of vals] {.val};
+
+\matrix (idx) [matrix of math nodes,
+nodes = {whclsty},
+ampersand replacement=\&,
+anchor=north west, below right=\myraise and 0 of vals.south west]
+{
+... \& 2 \& 4 \& 5 \& 9 \& ... \\
+};
+\node [draw, whclsty, left=of idx] {.idx};
+
+\matrix (pos) [matrix of math nodes,
+nodes = {whclsty},
+ampersand replacement=\&,
+anchor=north west, below right=\myraise and 0 of idx.south west]
+{
+... \& |[nzsty]|18 \& |[nzsty]| 23 \& ... \\
+};
+\node [draw, whclsty, left=of pos] {.ptr};
+
+
 \end{tikzpicture}%
 }
+\end{document}
