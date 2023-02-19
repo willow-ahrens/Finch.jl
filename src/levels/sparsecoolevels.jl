@@ -17,16 +17,16 @@ In the [@fiber](@ref) constructor, `sh` is an alias for `SparseCooLevel`.
 ```jldoctest
 julia> @fiber(d(sc{1}(e(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Dense [:,1:3]
-├─[:,1]: SparseHash (0.0) [1:3]
+├─[:,1]: SparseCoo (0.0) [1:3]
 │ ├─[1]: 10.0
 │ ├─[2]: 30.0
-├─[:,2]: SparseHash (0.0) [1:3]
-├─[:,3]: SparseHash (0.0) [1:3]
+├─[:,2]: SparseCoo (0.0) [1:3]
+├─[:,3]: SparseCoo (0.0) [1:3]
 │ ├─[1]: 20.0
 │ ├─[3]: 40.0
 
 julia> @fiber(sc{2}(e(0.0)), [10 0 20; 30 0 0; 0 0 40])
-SparseHash (0.0) [1:3,1:3]
+SparseCoo (0.0) [1:3,1:3]
 ├─├─[1, 1]: 10.0
 ├─├─[2, 1]: 30.0
 ├─├─[1, 3]: 20.0

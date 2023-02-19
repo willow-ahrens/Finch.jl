@@ -12,12 +12,6 @@ Dense [1:3]
 ├─[1]: 1.0
 ├─[2]: 2.0
 ├─[3]: 3.0
-
-@fiber(d(e{1, Number}()), Number[1, 1.1, 0xff])
-Dense [1:3]
-├─[1]: 1
-├─[2]: 1.1
-├─[3]: 0xff
 ```
 """
 struct ElementLevel{D, Tv}
