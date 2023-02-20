@@ -306,6 +306,7 @@ function get_updater_coo_helper(lvl::VirtualSparseCooLevel, ctx, qos, fbr_dirty,
     qos_fill = lvl.qos_fill
     qos_stop = lvl.qos_stop
     Furlable(
+        tight = "SparseCoo in lhs",
         val = virtual_level_default(lvl),
         size = virtual_level_size(lvl, ctx)[length(coords) + 1:end],
         body = (ctx, idx, ext) -> 

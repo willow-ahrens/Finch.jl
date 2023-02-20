@@ -263,6 +263,7 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualRepeatRLELevel}, ctx, ::
     end
     
     Furlable(
+        tight = "RepeatRLE in lhs",
         val = D,
         size = virtual_level_size(lvl, ctx),
         body = (ctx, idx, ext) -> Thunk(

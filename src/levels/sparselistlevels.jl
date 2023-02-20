@@ -375,6 +375,7 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseListLevel}, ctx, :
     dirty = ctx.freshen(tag, :dirty)
 
     Furlable(
+        tight = "SparseList in lhs",
         val = virtual_level_default(lvl),
         size = virtual_level_size(lvl, ctx),
         body = (ctx, idx, ext) -> Thunk(

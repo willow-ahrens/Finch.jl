@@ -417,6 +417,7 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseVBLLevel}, ctx, ::
     dirty = ctx.freshen(tag, :dirty)
 
     Furlable(
+        tight = "SparseVBL in lhs",
         val = virtual_level_default(lvl),
         size = virtual_level_size(lvl, ctx),
         body = (ctx, idx, ext) -> Thunk(
