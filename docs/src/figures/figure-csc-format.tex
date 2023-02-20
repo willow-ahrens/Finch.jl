@@ -20,67 +20,63 @@
 \resizebox{2.0\linewidth}{!}{%
 \begin{tikzpicture}[>=latex]
 
-\node (Aif) at (0, 0) {SubFiber(... position=1)};
-
-\matrix (A) [matrix of math nodes,
-  nodes = {whclsty},
-  left delimiter  = (,
-  right delimiter = ),
-  ampersand replacement=\&,
-  anchor=north,
-  below=\myraise of Aif]
+  \matrix (Af) [matrix of math nodes,
+    nodes = {whclsty},
+    left delimiter  = (,
+    right delimiter = ),
+    ampersand replacement=\&,
+    anchor=north west] at (10.0*\myunit, 0*\myunit)
 {
-|[fullsty]| \& |[fullsty]| \& |[fullsty]| \\
+|[fullsty]|\&|[fullsty]|\&|[fullsty]|\\
 };
-
-\node (Ai1f) [anchor=north, below left = 2*\myunit and 2*\myunit of A.south west] {SubFiber(=1)};
-\draw (A-1-1.center) -- (Ai1f.north) node [midway, fill=white] {$i=1$};
-\matrix (Ai1) [matrix of math nodes,
-  nodes = {whclsty},
-  left delimiter  = (,
-  right delimiter = ),
-  ampersand replacement=\&,
-  anchor=north,
-  below=\myraise of Ai1f.south]
+\matrix (Af-1-1f) [matrix of math nodes,
+    nodes = {whclsty},
+    left delimiter  = (,
+    right delimiter = ),
+    ampersand replacement=\&,
+    anchor=north west] at (6.0*\myunit, 2*\myunit)
 {
-\zecl \& |[fullsty]| \& \zecl \& |[fullsty]|\\
+|[fullsty]|\&|[fullsty]|\&|[fullsty]|\\
 };
-
-\node (Ai2f) [right = \myunit of Ai1f.east] {SubFiber(lvl2, pos=2)};
-\draw (A-1-2.center) -- (Ai2f.north) node [midway, fill=white] {$i=2$};
-\matrix (Ai2) [matrix of math nodes,
-  nodes = {whclsty},
-  left delimiter  = (,
-  right delimiter = ),
-  ampersand replacement=\&,
-  anchor = north,
-  below = \myraise of Ai2f.south]
+\node (Af-1-1f-1-1f) [nzsty] at (0*\myunit, 4*\myunit) {11};
+\draw (Af-1-1f-1-1.center) -- (Af-1-1f-1-1f.north) node [midway, fill=white] {$i$=1};
+\node (Af-1-1f-1-2f) [nzsty] at (1*\myunit, 4*\myunit) {22};
+\draw (Af-1-1f-1-2.center) -- (Af-1-1f-1-2f.north) node [midway, fill=white] {$i$=2};
+\node (Af-1-1f-1-3f) [nzsty] at (2*\myunit, 4*\myunit) {33};
+\draw (Af-1-1f-1-3.center) -- (Af-1-1f-1-3f.north) node [midway, fill=white] {$i$=3};
+\draw (Af-1-1.center) -- (Af-1-1f.north) node [midway, fill=white] {$i$=1};
+\matrix (Af-1-2f) [matrix of math nodes,
+    nodes = {whclsty},
+    left delimiter  = (,
+    right delimiter = ),
+    ampersand replacement=\&,
+    anchor=north west] at (12.0*\myunit, 2*\myunit)
 {
-\zecl \& \zecl \& \zecl \&  \zecl \\
+|[fullsty]|\&|[fullsty]|\&|[fullsty]|\\
 };
-
-\node (Ai3f) [right = \myunit of Ai2f.east] {SubFiber(lvl2, pos=3)};
-\draw (A-1-3.center) -- (Ai3f.north) node [midway, fill=white] {$i=3$};
-\matrix (Ai3) [matrix of math nodes,
-  nodes = {whclsty},
-  left delimiter  = (,
-  right delimiter = ),
-  ampersand replacement=\&,
-  anchor = north,
-  below = \myraise of Ai3f.south]
+\node (Af-1-2f-1-1f) [nzsty] at (12*\myunit, 4*\myunit) {44};
+\draw (Af-1-2f-1-1.center) -- (Af-1-2f-1-1f.north) node [midway, fill=white] {$i$=1};
+\node (Af-1-2f-1-2f) [nzsty] at (13*\myunit, 4*\myunit) {55};
+\draw (Af-1-2f-1-2.center) -- (Af-1-2f-1-2f.north) node [midway, fill=white] {$i$=2};
+\node (Af-1-2f-1-3f) [nzsty] at (14*\myunit, 4*\myunit) {66};
+\draw (Af-1-2f-1-3.center) -- (Af-1-2f-1-3f.north) node [midway, fill=white] {$i$=3};
+\draw (Af-1-2.center) -- (Af-1-2f.north) node [midway, fill=white] {$i$=2};
+\matrix (Af-1-3f) [matrix of math nodes,
+    nodes = {whclsty},
+    left delimiter  = (,
+    right delimiter = ),
+    ampersand replacement=\&,
+    anchor=north west] at (12.0*\myunit, 2*\myunit)
 {
-\zecl \& |[fullsty]| \& |[fullsty]| \&  \zecl \\
+|[fullsty]|\&|[fullsty]|\&|[fullsty]|\\
 };
-
-\node (A21f) [anchor=north, below = 2*\myunit of Ai1-1-2, nzsty] {1.1};
-\draw (Ai1-1-2.center) -- (A21f.north) node [midway, fill=white] {$i =2$};
-\node (A41f) [anchor=north, below = 2*\myunit of Ai1-1-4, nzsty] {2.2};
-\draw (Ai1-1-4.center) -- (A41f.north) node [midway, fill=white] {$i=4$};
-
-\node (A23f) [anchor=north, below = 2*\myunit of Ai3-1-2, nzsty] {3.3};
-\draw (Ai3-1-2.center) -- (A23f.north) node [midway, fill=white] {$i=2$};
-\node (A33f) [anchor=north, below = 2*\myunit of Ai3-1-3, nzsty] {4.4};
-\draw (Ai3-1-3.center) -- (A33f.north) node [midway, fill=white] {$i=3$};
+\node (Af-1-3f-1-1f) [nzsty] at (12*\myunit, 4*\myunit) {77};
+\draw (Af-1-3f-1-1.center) -- (Af-1-3f-1-1f.north) node [midway, fill=white] {$i$=1};
+\node (Af-1-3f-1-2f) [nzsty] at (13*\myunit, 4*\myunit) {88};
+\draw (Af-1-3f-1-2.center) -- (Af-1-3f-1-2f.north) node [midway, fill=white] {$i$=2};
+\node (Af-1-3f-1-3f) [nzsty] at (14*\myunit, 4*\myunit) {99};
+\draw (Af-1-3f-1-3.center) -- (Af-1-3f-1-3f.north) node [midway, fill=white] {$i$=3};
+\draw (Af-1-3.center) -- (Af-1-3f.north) node [midway, fill=white] {$i$=3};
 
 \end{tikzpicture}%
 }
