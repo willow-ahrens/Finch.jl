@@ -2,6 +2,14 @@
 CurrentModule = Finch
 ```
 
+Finch implements a flexible array datastructure called a Fiber. Fibers represent
+arrays as rooted trees where the child of each node is selected using the
+indices (from right to left as we decend in the tree). The tree thus has
+multiple levels, each corresponding to an index in the array.
+
+In Finch, each level is represented with a different format. Because the level
+is responsible for representing all the nodes in a subfiber
+
 % Analogy to row/column majorness
 % Represent a tensor as a vector of vectors
 % This forms a trie
