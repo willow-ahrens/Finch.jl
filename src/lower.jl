@@ -262,10 +262,11 @@ function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
             :($(ctx(root.op))($(map(ctx, root.args)...)))
         end
     elseif root.kind === loop
+        ext = resolvedim(ctx.dims[getname(root.idx)])
         return ctx(simplify(chunk(
             root.idx,
-            resolvedim(ctx.dims[getname(root.idx)]),
-            root.body),
+            ext,
+            ChunkifyVisitor(ctx, root.idx, ext)(root.body)),
             ctx))
     elseif root.kind === chunk
         idx_sym = ctx.freshen(getname(root.idx))

@@ -33,7 +33,7 @@ function (ctx::ChunkifyVisitor)(node::FinchNode, eldim = nodim)
     end
 end
 
-        #TODO propagate eldim here
+#TODO propagate eldim here
 chunkify_access(node, ctx, eldim, tns) = similarterm(node, operation(node), map(ctx, arguments(node)))
 
 function (ctx::LowerJulia)(root::FinchNode, ::ChunkStyle)
@@ -107,6 +107,7 @@ end
     fuse = nothing
     size
     body
+    tight = nothing
 end
 
 virtual_default(tns::Furlable) = something(tns.val)
@@ -121,7 +122,7 @@ FinchNotation.isliteral(::Furlable) = false
 
 function stylize_access(node, ctx::Stylize{LowerJulia}, tns::Furlable)
     if !isempty(node.idxs)
-        if getunbound(node.idxs[end]) ⊆ keys(ctx.ctx.bindings)
+        if getunbound(node.idxs[end]) ⊆ keys(ctx.ctx.bindings) && ctx.root.kind !== chunk
             return SelectStyle()
         elseif ctx.root isa FinchNode && ctx.root.kind === loop && ctx.root.idx == get_furl_root(node.idxs[end])
             return ChunkStyle()
@@ -145,12 +146,20 @@ function select_access(node, ctx::Finch.SelectVisitor, tns::Furlable)
     return similarterm(node, operation(node), map(ctx, arguments(node)))
 end
 
+struct FormatLimitation <: Exception
+    msg::String
+end
+FormatLimitation() = FormatLimitation("")
+
 function chunkify_access(node, ctx, eldim, tns::Furlable)
     if !isempty(node.idxs)
         if ctx.idx == get_furl_root(node.idxs[end])
             tns = exfurl(tns.body(ctx.ctx, ctx.idx, virtual_size(tns, ctx.ctx, eldim)[end]), ctx.ctx, node.idxs[end], virtual_size(tns, ctx.ctx, eldim)[end])
             return access(tns, node.mode, map(ctx, node.idxs[1:end-1])..., get_furl_root(node.idxs[end]))
         else
+            if tns.tight !== nothing && simplify(extent(ctx.ext), ctx.ctx) != literal(1)
+                throw(FormatLimitation("$(something(tns.tight)) does not support random access, must loop column major over output indices first."))
+            end
             idxs = map(ctx, node.idxs)
             return access(node.tns, node.mode, idxs...)
         end
