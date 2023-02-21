@@ -226,6 +226,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, ::Union{No
     )
 end
 
+is_laminable_updater(lvl::VirtualRepeatRLELevel, ctx, ::Union{Nothing, Extrude}) = false
 get_updater(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, protos...) = 
     get_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
 function get_updater(fbr::VirtualTrackedSubFiber{VirtualRepeatRLELevel}, ctx, ::Union{Nothing, Extrude})
@@ -263,7 +264,7 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualRepeatRLELevel}, ctx, ::
     end
     
     Furlable(
-        tight = "RepeatRLE in lhs",
+        tight = lvl,
         val = D,
         size = virtual_level_size(lvl, ctx),
         body = (ctx, idx, ext) -> Thunk(

@@ -98,4 +98,12 @@ using SparseArrays
         A = dropdefaults(copyto!(@fiber(sl(sl(e(0.0)))), B))
         @test_throws Finch.FormatLimitation @finch MyAlgebra() @loop i j t[i, j] = A[i, j]
     end
+
+    let
+        t = @fiber(d(sl(e(0.0))))
+        B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
+        A = dropdefaults(copyto!(@fiber(d(sl(e(0.0)))), B))
+        @test_throws Finch.FormatLimitation @finch MyAlgebra() @loop i j t[i, j] = A[i, j]
+    end
+
 end
