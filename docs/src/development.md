@@ -47,25 +47,21 @@ SparseList (0) [1:5]
 The
 [`@macroexpand`](https://docs.julialang.org/en/v1/base/base/#Base.macroexpand)
 macro allows us to see the result of applying a macro. Let's examine what
-happens when we use the `@finch` macro:
+happens when we use the `@finch` macro (we've stripped line numbers from the
+result to clean it up):
 
 ```jldoctest example1
-julia> @macroexpand @finch @loop i C[i] = A[i] * B[i]
+julia> (@macroexpand @finch @loop i C[i] = A[i] * B[i]) |> Finch.striplines
 quote
-    #= /Users/willow/Projects/Finch.jl/src/execute.jl:107 =#
     var"#18#res" = (Finch.execute)(begin
-                #= /Users/willow/Projects/Finch.jl/src/FinchNotation/syntax.jl:73 =#
                 let i = index_instance(:i)
-                    #= /Users/willow/Projects/Finch.jl/src/FinchNotation/syntax.jl:74 =#
                     (Finch.FinchNotation.loop_instance)(i, (Finch.FinchNotation.assign_instance)((Finch.FinchNotation.access_instance)((Finch.FinchNotation.variable_instance)(:C, (Finch.FinchNotation.index_leaf_instance)(C)), (Finch.FinchNotation.updater_instance)((Finch.FinchNotation.create_instance)()), (Finch.FinchNotation.variable_instance)(:i, (Finch.FinchNotation.index_leaf_instance)(i))), literal_instance(right), (Finch.FinchNotation.call_instance)((Finch.FinchNotation.variable_instance)(:*, (Finch.FinchNotation.index_leaf_instance)(*)), (Finch.FinchNotation.access_instance)((Finch.FinchNotation.variable_instance)(:A, (Finch.FinchNotation.index_leaf_instance)(A)), (Finch.FinchNotation.reader_instance)(), (Finch.FinchNotation.variable_instance)(:i, (Finch.FinchNotation.index_leaf_instance)(i))), (Finch.FinchNotation.access_instance)((Finch.FinchNotation.variable_instance)(:B, (Finch.FinchNotation.index_leaf_instance)(B)), (Finch.FinchNotation.reader_instance)(), (Finch.FinchNotation.variable_instance)(:i, (Finch.FinchNotation.index_leaf_instance)(i))))))
                 end
             end)
     begin
-        #= /Users/willow/Projects/Finch.jl/src/execute.jl:111 =#
         C = (var"#18#res").C
     end
     begin
-        #= /Users/willow/Projects/Finch.jl/src/execute.jl:115 =#
         var"#18#res"
     end
 end
