@@ -10,22 +10,17 @@ julia&gt; @finch @loop i C[i] = A[i] * B[i];
 julia&gt; C
 SparseList (0) [1:5]
 ├─[2]: 24
-├─[5]: 45</code></pre><p>The <a href="https://docs.julialang.org/en/v1/base/base/#Base.macroexpand"><code>@macroexpand</code></a> macro allows us to see the result of applying a macro. Let&#39;s examine what happens when we use the <code>@finch</code> macro:</p><pre><code class="language-julia-repl hljs">julia&gt; @macroexpand @finch @loop i C[i] = A[i] * B[i]
+├─[5]: 45</code></pre><p>The <a href="https://docs.julialang.org/en/v1/base/base/#Base.macroexpand"><code>@macroexpand</code></a> macro allows us to see the result of applying a macro. Let&#39;s examine what happens when we use the <code>@finch</code> macro (we&#39;ve stripped line numbers from the result to clean it up):</p><pre><code class="language-julia-repl hljs">julia&gt; (@macroexpand @finch @loop i C[i] = A[i] * B[i]) |&gt; Finch.striplines
 quote
-    #= /Users/willow/Projects/Finch.jl/src/execute.jl:107 =#
     var&quot;#18#res&quot; = (Finch.execute)(begin
-                #= /Users/willow/Projects/Finch.jl/src/FinchNotation/syntax.jl:73 =#
                 let i = index_instance(:i)
-                    #= /Users/willow/Projects/Finch.jl/src/FinchNotation/syntax.jl:74 =#
                     (Finch.FinchNotation.loop_instance)(i, (Finch.FinchNotation.assign_instance)((Finch.FinchNotation.access_instance)((Finch.FinchNotation.variable_instance)(:C, (Finch.FinchNotation.index_leaf_instance)(C)), (Finch.FinchNotation.updater_instance)((Finch.FinchNotation.create_instance)()), (Finch.FinchNotation.variable_instance)(:i, (Finch.FinchNotation.index_leaf_instance)(i))), literal_instance(right), (Finch.FinchNotation.call_instance)((Finch.FinchNotation.variable_instance)(:*, (Finch.FinchNotation.index_leaf_instance)(*)), (Finch.FinchNotation.access_instance)((Finch.FinchNotation.variable_instance)(:A, (Finch.FinchNotation.index_leaf_instance)(A)), (Finch.FinchNotation.reader_instance)(), (Finch.FinchNotation.variable_instance)(:i, (Finch.FinchNotation.index_leaf_instance)(i))), (Finch.FinchNotation.access_instance)((Finch.FinchNotation.variable_instance)(:B, (Finch.FinchNotation.index_leaf_instance)(B)), (Finch.FinchNotation.reader_instance)(), (Finch.FinchNotation.variable_instance)(:i, (Finch.FinchNotation.index_leaf_instance)(i))))))
                 end
             end)
     begin
-        #= /Users/willow/Projects/Finch.jl/src/execute.jl:111 =#
         C = (var&quot;#18#res&quot;).C
     end
     begin
-        #= /Users/willow/Projects/Finch.jl/src/execute.jl:115 =#
         var&quot;#18#res&quot;
     end
 end
@@ -57,4 +52,4 @@ julia&gt; pointwise_sum([1, 2], [3, 4])
 Dense [1:2]
 ├─[1]: 4
 ├─[2]: 6
-</code></pre><h3 id="Compilation"><a class="docs-heading-anchor" href="#Compilation">Compilation</a><a id="Compilation-1"></a><a class="docs-heading-anchor-permalink" href="#Compilation" title="Permalink"></a></h3></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../algebra/">« Custom User Functions</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Wednesday 22 February 2023 00:11">Wednesday 22 February 2023</span>. Using Julia version 1.8.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+</code></pre><h3 id="Compilation"><a class="docs-heading-anchor" href="#Compilation">Compilation</a><a id="Compilation-1"></a><a class="docs-heading-anchor-permalink" href="#Compilation" title="Permalink"></a></h3></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../algebra/">« Custom User Functions</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Wednesday 22 February 2023 00:28">Wednesday 22 February 2023</span>. Using Julia version 1.8.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
