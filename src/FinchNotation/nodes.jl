@@ -614,7 +614,7 @@ function display_statement(io, mime, node::FinchNode, level)
         print(io, "::")
         display_expression(io, mime, ex.mode)
     elseif node.kind === pass
-        print(io, tab^level * "(")
+        print(io, tab^level * "@pass(")
         for tns in arguments(node)[1:end-1]
             display_expression(io, mime, tns)
             print(io, ", ")

@@ -5,8 +5,6 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Permit)
 	print(io, "Permit()")
 end
 
-FinchNotation.value_instance(arg::Permit) = arg
-
 const permit = Permit()
 
 Base.getindex(arr::Permit, i) = i
@@ -54,8 +52,6 @@ Base.show(io::IO, ex::Offset) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::Offset)
 	print(io, "Offset()")
 end
-
-FinchNotation.value_instance(arg::Offset) = arg
 
 const offset = Offset()
 
@@ -114,8 +110,6 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::StaticOffset)
 	print(io, "StaticOffset($(ex.delta))")
 end
 
-FinchNotation.value_instance(arg::StaticOffset) = arg
-
 const staticoffset = StaticOffset
 
 Base.getindex(arr::StaticOffset, i) = i - arr.delta
@@ -172,8 +166,6 @@ Base.show(io::IO, ex::Window) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::Window)
 	print(io, "Window(", ex.start, ", ", ex.stop, ")")
 end
-
-FinchNotation.value_instance(arg::Window) = arg
 
 Base.size(vec::Window) = (vec.stop - vec.start + 1,)
 
