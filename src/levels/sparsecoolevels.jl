@@ -277,6 +277,7 @@ function get_reader_coo_helper(lvl::VirtualSparseCooLevel, ctx, R, start, stop, 
     )
 end
 
+is_laminable_updater(lvl::VirtualSparseCooLevel, ctx, protos...) = false
 get_updater(fbr::VirtualSubFiber{VirtualSparseCooLevel}, ctx, protos...) =
     get_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
 function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseCooLevel}, ctx, protos...)
@@ -306,6 +307,7 @@ function get_updater_coo_helper(lvl::VirtualSparseCooLevel, ctx, qos, fbr_dirty,
     qos_fill = lvl.qos_fill
     qos_stop = lvl.qos_stop
     Furlable(
+        tight = lvl,
         val = virtual_level_default(lvl),
         size = virtual_level_size(lvl, ctx)[length(coords) + 1:end],
         body = (ctx, idx, ext) -> 

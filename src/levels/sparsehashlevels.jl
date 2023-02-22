@@ -333,6 +333,9 @@ function get_reader_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, coords, :
     )
 end
 
+
+is_laminable_updater(lvl::VirtualSparseHashLevel, ctx, protos...) =
+    is_laminable_updater(lvl.lvl, ctx, protos[lvl.N + 1:end]...)
 get_updater(fbr::VirtualSubFiber{VirtualSparseHashLevel}, ctx, protos...) =
     get_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
 function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseHashLevel}, ctx, protos...)
@@ -345,7 +348,7 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseHashLevel}, ctx, p
     )
 end
 
-function get_updater_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, fbr_dirty, coords, ::Union{Nothing, Extrude}, protos...)
+function get_updater_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, fbr_dirty, coords, p::Union{Nothing, Extrude}, protos...)
     tag = lvl.ex
     Ti = lvl.Ti
     Tp = lvl.Tp
@@ -355,6 +358,7 @@ function get_updater_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, fbr_dirt
     qos = ctx.freshen(tag, :_q)
     dirty = ctx.freshen(tag, :dirty)
     Furlable(
+        tight = is_laminable_updater(lvl.lvl, ctx, protos[lvl.N - length(coords): end]...) ? nothing : lvl.lvl,
         val = virtual_level_default(lvl),
         size = virtual_level_size(lvl, ctx)[1 + length(coords):end],
         body = (ctx, idx, ext) ->
