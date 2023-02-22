@@ -1,6 +1,6 @@
 TEXFLAGS= -shell-escape -synctex=1 -interaction=nonstopmode -file-line-error -pdf
 
-all: figure-csc-format.png logo.png favicon.ico
+all: test.png figure-csc-format.png logo.png favicon.ico
 
 %.png: %.pdf # requires ImageMagick
 	convert -density 600x600 $^ -quality 90 -resize 600x600 $@

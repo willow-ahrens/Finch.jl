@@ -10,50 +10,75 @@
   right delimiter = ),
   ampersand replacement=\&] at (0,0)
 {
-\zecl \& \zecl \& |[nzsty]|1.1 \& \zecl \& |[nzsty]|8.1 \& \zecl \& |[nzsty]|2.2 \& |[nzsty]|8.4 \& |[nzsty]|9.1 \& \zecl \& \zecl \\
-\zecl \& \zecl \& |[nzsty]|3.4 \& \zecl \& |[nzsty]|6.8 \& |[nzsty]|5.1 \& \zecl \& \zecl \& \zecl \& \zecl \& \zecl \\
-\zecl \& |[nzsty]|7.0 \& \zecl \& \zecl \& \zecl \& \zecl \& |[nzsty]|1.2 \& \zecl \& \zecl \& \zecl \& \zecl \\
-\zecl \& |[nzsty]|5.3 \& |[nzsty]|6.6 \& \zecl \& \zecl \& \zecl \& \zecl \& \zecl \& \zecl \& \zecl \& |[nzsty]|5.3 \\
-\zecl \& \zecl \& |[nzsty]|2.1 \& \zecl \& \zecl \& |[nzsty]|1.9 \& |[nzsty]|7.5 \& \zecl \& \zecl \& \zecl \& |[nzsty]|0.9 \\
-\zecl \& |[nzsty]|1.9 \& \zecl \& |[nzsty]|3.0 \& |[nzsty]|2.7 \& \zecl \& \zecl \& \zecl \& |[nzsty]|5.5 \& \zecl \& \zecl \\
-|[nzsty]|1.4 \& \zecl \& |[nzsty]|3.3 \& \zecl \& \zecl \& \zecl \& \zecl \& \zecl \& |[nzsty]|2.3 \& |[nzsty]|5.3 \& \zecl \\
-\zecl \& \zecl \& |[nzsty]|2.1 \& \zecl \& \zecl \& \zecl \& \zecl \& \zecl \& \zecl \& \zecl \& |[nzsty]|5.0 \\
-|[nzsty]|1.5 \& \zecl \& \zecl \& \zecl \& \zecl \& \zecl \& |[nzsty]|4.8 \& \zecl \& \zecl \& \zecl \& \zecl \\
-\zecl \& \zecl \& |[nzsty]|5.8 \& |[nzsty]|5.3 \& \zecl \& \zecl \& \zecl \& \zecl \& |[nzsty]|8.3 \& \zecl \& \zecl \\
-\zecl \& |[nzsty]|1.8 \& \zecl \& |[nzsty]|4.8 \& |[nzsty]|3.1 \& \zecl \& \zecl \& |[nzsty]|1.5 \& |[nzsty]|7.4 \& \zecl \& \zecl \\
+\zecl \& \zecl \& \zecl\\
+|[nzsty]|1.1 \& \zecl \& |[nzsty]|3.3 \\
+\zecl \& \zecl \& |[nzsty]|4.4\\
+|[nzsty]|2.2 \& \zecl \& \zecl\\
 };
+\end{tikzpicture}%
+}
+\resizebox{2.0\linewidth}{!}{%
+\begin{tikzpicture}[>=latex]
 
-
-\draw[hlsty] (A-1-6.north west) rectangle (A-11-6.south east);
-
-\matrix (vals) [matrix of math nodes,
-nodes = {whclsty},
-ampersand replacement=\&,
-anchor=north west, below right=2*\myunit and 5*\myunit of A.north east]
+  \matrix (Af) [matrix of math nodes,
+    nodes = {whclsty},
+    left delimiter  = (,
+    right delimiter = ),
+    ampersand replacement=\&,
+    anchor=north west] at (10.0*\myunit, 0*\myunit)
 {
-... \& |[nzsty]|1.9 \& |[nzsty]|3.0 \& |[nzsty]|2.7 \& |[nzsty]|5.5 \& ... \\
+|[fullsty]|\&|[fullsty]|\&|[fullsty]|\\
 };
-\node [draw, whclsty, left=of vals] {.val};
-
-\matrix (idx) [matrix of math nodes,
-nodes = {whclsty},
-ampersand replacement=\&,
-anchor=north west, below right=\myraise and 0 of vals.south west]
+\matrix (Af-1-1f) [matrix of math nodes,
+    nodes = {whclsty},
+    left delimiter  = (,
+    right delimiter = ),
+    ampersand replacement=\&,
+    anchor=north west] at (6.0*\myunit, 2*\myunit)
 {
-... \& 2 \& 4 \& 5 \& 9 \& ... \\
+|[fullsty]|\&|[fullsty]|\&|[fullsty]|\\
 };
-\node [draw, whclsty, left=of idx] {.idx};
-
-\matrix (pos) [matrix of math nodes,
-nodes = {whclsty},
-ampersand replacement=\&,
-anchor=north west, below right=\myraise and 0 of idx.south west]
+\node (Af-1-1f-1-1f) [nzsty] at (0*\myunit, 4*\myunit) {11};
+\draw (Af-1-1f-1-1.center) -- (Af-1-1f-1-1f.north) node [midway, fill=white] {$i$=1};
+\node (Af-1-1f-1-2f) [nzsty] at (1*\myunit, 4*\myunit) {22};
+\draw (Af-1-1f-1-2.center) -- (Af-1-1f-1-2f.north) node [midway, fill=white] {$i$=2};
+\node (Af-1-1f-1-3f) [nzsty] at (2*\myunit, 4*\myunit) {33};
+\draw (Af-1-1f-1-3.center) -- (Af-1-1f-1-3f.north) node [midway, fill=white] {$i$=3};
+\draw (Af-1-1.center) -- (Af-1-1f.north) node [midway, fill=white] {$i$=1};
+\matrix (Af-1-2f) [matrix of math nodes,
+    nodes = {whclsty},
+    left delimiter  = (,
+    right delimiter = ),
+    ampersand replacement=\&,
+    anchor=north west] at (12.0*\myunit, 2*\myunit)
 {
-... \& |[nzsty]|18 \& |[nzsty]| 23 \& ... \\
+|[fullsty]|\&|[fullsty]|\&|[fullsty]|\\
 };
-\node [draw, whclsty, left=of pos] {.ptr};
-
+\node (Af-1-2f-1-1f) [nzsty] at (12*\myunit, 4*\myunit) {44};
+\draw (Af-1-2f-1-1.center) -- (Af-1-2f-1-1f.north) node [midway, fill=white] {$i$=1};
+\node (Af-1-2f-1-2f) [nzsty] at (13*\myunit, 4*\myunit) {55};
+\draw (Af-1-2f-1-2.center) -- (Af-1-2f-1-2f.north) node [midway, fill=white] {$i$=2};
+\node (Af-1-2f-1-3f) [nzsty] at (14*\myunit, 4*\myunit) {66};
+\draw (Af-1-2f-1-3.center) -- (Af-1-2f-1-3f.north) node [midway, fill=white] {$i$=3};
+\draw (Af-1-2.center) -- (Af-1-2f.north) node [midway, fill=white] {$i$=2};
+\matrix (Af-1-3f) [matrix of math nodes,
+    nodes = {whclsty},
+    left delimiter  = (,
+    right delimiter = ),
+    ampersand replacement=\&,
+    anchor=north west] at (12.0*\myunit, 2*\myunit)
+{
+|[fullsty]|\&|[fullsty]|\&|[fullsty]|\\
+};
+\node (Af-1-3f-1-1f) [nzsty] at (12*\myunit, 4*\myunit) {77};
+\draw (Af-1-3f-1-1.center) -- (Af-1-3f-1-1f.north) node [midway, fill=white] {$i$=1};
+\node (Af-1-3f-1-2f) [nzsty] at (13*\myunit, 4*\myunit) {88};
+\draw (Af-1-3f-1-2.center) -- (Af-1-3f-1-2f.north) node [midway, fill=white] {$i$=2};
+\node (Af-1-3f-1-3f) [nzsty] at (14*\myunit, 4*\myunit) {99};
+\draw (Af-1-3f-1-3.center) -- (Af-1-3f-1-3f.north) node [midway, fill=white] {$i$=3};
+\draw (Af-1-3.center) -- (Af-1-3f.north) node [midway, fill=white] {$i$=3};
 
 \end{tikzpicture}%
 }
+
 \end{document}
