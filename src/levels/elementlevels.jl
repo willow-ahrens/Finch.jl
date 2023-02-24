@@ -126,6 +126,8 @@ function get_reader(fbr::VirtualSubFiber{VirtualElementLevel}, ctx)
     )
 end
 
+is_laminable_updater(lvl::VirtualElementLevel, ctx) = true
+
 function get_updater(fbr::VirtualSubFiber{VirtualElementLevel}, ctx)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     val = ctx.freshen(lvl.ex, :_val)

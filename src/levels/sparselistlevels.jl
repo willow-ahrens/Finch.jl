@@ -398,6 +398,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::Gallop,
     )
 end
 
+is_laminable_updater(lvl::VirtualSparseListLevel, ctx, protos...) = false
 get_updater(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, protos...) =
     get_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
 function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseListLevel}, ctx, ::Union{Nothing, Extrude}, protos...)
@@ -410,6 +411,7 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseListLevel}, ctx, :
     dirty = ctx.freshen(tag, :dirty)
 
     Furlable(
+        tight = lvl,
         val = virtual_level_default(lvl),
         size = virtual_level_size(lvl, ctx),
         body = (ctx, idx, ext) -> Thunk(
