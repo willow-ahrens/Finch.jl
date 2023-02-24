@@ -3,48 +3,128 @@ CurrentModule = Finch
 ```
 
 Finch implements a flexible array datastructure called a fiber. Fibers represent
-arrays as rooted trees, where the child of each node is selected by array
-indices. Finch is column major, so the rightmost index corresponds to the top
-level of the tree. The tree has multiple levels, each corresponding to an index
-in the array. We refer to a node in the tree as a subfiber. All of the nodes at
-the same level are stored in the same datastructure, and disambiguated by an
-integer `position` which describes the . There are several different
-level formats:
+arrays as rooted trees, where the child of each node is selected by an array
+index. Finch is column major, so the rightmost index corresponds to the root
+level of the tree, and the leftmost index corresponds to the leaf level. We can
+convert the matrix `A` to a fiber with the `@fiber` constructor.
 
+```jldoctest example1; setup=:(using Finch)
+julia> A = [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0]
+4×3 Matrix{Float64}:
+ 0.0  0.0  4.4
+ 1.1  0.0  0.0
+ 2.2  0.0  5.5
+ 3.3  0.0  0.0
+julia> A_fbr = @fiber(d(d(e(0.0))), A)
+Dense [:,1:3]
+├─[:,1]: Dense [1:4]
+│ ├─[1]: 0.0
+│ ├─[2]: 1.1
+│ ├─[3]: 2.2
+│ ├─[4]: 3.3
+├─[:,2]: Dense [1:4]
+│ ├─[1]: 0.0
+│ ├─[2]: 0.0
+│ ├─[3]: 0.0
+│ ├─[4]: 0.0
+├─[:,3]: Dense [1:4]
+│ ├─[1]: 4.4
+│ ├─[2]: 0.0
+│ ├─[3]: 5.5
+│ ├─[4]: 0.0
+```
 
-We can represent a vector u
+We refer to a node in the tree as a subfiber. All of the nodes at the same level
+are stored in the same datastructure, and disambiguated by an integer
+`position`.  In the above example, there are three levels: The rootmost level
+contains only one fiber, the root. The middle level has 3 subfibers, one for
+each column. The leafmost level has 12 subfibers, one for each element of the array.
 
-In Finch, each level is represented with a different format. Because the level
-is responsible for representing all the nodes in a subfiber,
+Because our array is sparse, (mostly zero, or another fill value), it would be
+more efficient to store only the nonzero values. In Finch, each level is
+represented with a different format. A sparse level only stores non-fill values.
+This time, we'll use a fiber constructor with `sl` (for "`SparseList` of
+nonzeros") instead of `d` (for "`Dense`"):
 
-% Analogy to row/column majorness
-% Represent a tensor as a vector of vectors
-% This forms a trie
-% Each level is a mode,
-% Each node is a slice, etc.
-% everything is a fiber.
-% When nonzeros are sparse, don't store them.
-% when entire rows are sparse, don't store those
-% Dense, CSR, DCSR (dd, ds, ss)
-% Different sparse formats can be understood as using different vector types at each level
-% The levels are more efficiently stored contiguously, this is where pos and idx come from? <- maybe skip? not sure.
-% Tensors are best access in the same order they are stored. concordant iteration
-% Fibers are ROW MAJOR! 
+```jldoctest example1
+julia> A_fbr = @fiber(d(sl(e(0.0))), A)
+Dense [:,1:3]
+├─[:,1]: SparseList (0.0) [1:4]
+│ ├─[2]: 1.1
+│ ├─[3]: 2.2
+│ ├─[4]: 3.3
+├─[:,2]: SparseList (0.0) [1:4]
+├─[:,3]: SparseList (0.0) [1:4]
+│ ├─[1]: 4.4
+│ ├─[3]: 5.5
+```
 
-%give examples of level formats
-%give examples of how the formats can be expressed as levels
+Our `d(sl(e(0.0)))` format is also known as
+["CSC"](https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_column_.28CSC_or_CCS.29)
+and is equivalent to
+[`SparseMatrixCSC`](https://sparsearrays.juliasparse.org/dev/#man-csc). The
+[`fiber!`](@ref) function will perform a zero-cost copy between Finch fibers and
+sparse matrices, when available.  CSC is an excellent general-purpose
+representation when we expect most of the columns to have a few nonzeros.
+However, when most of the columns are entirely fill (a situation known as
+hypersparsity), it is better to compress the root level as well:
 
-Give some examples of why we like COO or Hash, etc.
+```jldoctest example1
+julia> A_fbr = @fiber(sl(sl(e(0.0))), A)
+SparseList (0.0) [:,1:3]
+├─[:,1]: SparseList (0.0) [1:4]
+│ ├─[2]: 1.1
+│ ├─[3]: 2.2
+│ ├─[4]: 3.3
+├─[:,3]: SparseList (0.0) [1:4]
+│ ├─[1]: 4.4
+│ ├─[3]: 5.5
+```
 
-Give a list of the supported formats.
+Here we see that the entirely zero column has also been compressed. The
+`sl(sl(e(0.0)))` format is also known as
+("DCSC")[https://ieeexplore.ieee.org/document/4536313].
 
-Give some examples of the formats and the things they support.
+The
+["COO"](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.coo_matrix.html)
+(or "Coordinate") format is often used in practice for ease of interchange
+between libraries. In an `N`-dimensional array `A`, COO stores `N` lists of
+indices `I_1, ..., I_N` where `A[I_1[p], ..., I_N[p]]` is the `p`^th stored
+value in column-major numbering. In Finch, `COO` is represented as a multi-index
+level, which can handle more than one index at once. We use curly brackets to
+declare the number of indices handled by the level:
+
+```jldoctest example1
+julia> A_fbr = @fiber(sc{2}(e(0.0)), A)
+SparseCoo (0.0) [1:4,1:3]
+├─├─[2, 1]: 1.1
+├─├─[3, 1]: 2.2
+├─├─[4, 1]: 3.3
+├─├─[1, 3]: 4.4
+├─├─[3, 3]: 5.5
+```
+
+The COO format is compact and straightforward, but doesn't support random
+access. For random access, one should use the `SparseHash` format. A full listing
+of supported formats is described below:
 
 # Public Functions
 
+### Fiber Constructors
+
 ```@docs
+@fiber
 fiber
 fiber!
-sparse
-sparse!
+```
+
+### Level Constructors
+
+```@docs
+DenseLevel
+ElementLevel
+SparseListLevel
+SparseCOOLevel
+SparseHashLevel
+SparseVBLLevel
 ```
