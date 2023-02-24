@@ -23,43 +23,13 @@ arrays.
 
 Finch is very experimental, the interfaces are subject to change.
 
-We're always trying to make Finch easier to use! Here's pagerank:
+We're always trying to make Finch easier to use! Here's a column-major SpMV:
 
 ```julia
-#submitted by Alexandra Dima
-using Finch
-function pagerank(edges; nsteps=20, damp = 0.85)
-    (n, m) = size(edges)
-    @assert n == m
-    out_degree = @fiber d(e(0))
-    @finch @loop i j out_degree[j] += edges[i, j]
-    scaled_edges = @fiber d(sl(e(0.0)))
-    @finch @loop i j scaled_edges[i, j] = ifelse(out_degree[i] != 0, edges[i, j] / out_degree[j], 0)
-    r = @fiber d(n, e(0.0))
-    @finch @loop j r[j] = 1.0/n
-    rank = @fiber d(n, e(0.0))
-    beta_score = (1 - damp)/n
-
-    for step = 1:nsteps
-        @finch @loop i j rank[i] += scaled_edges[i, j] * r[j]
-        @finch @loop i r[i] = beta_score + damp * rank[i]
-    end
-    return r
-end
-```
-
-Here's a sparse-input convolution:
-
-```julia
-using Finch
-using SparseArrays
-A = copyto!(@fiber(sl(e(0.0))), sprand(42, 0.1));
-B = copyto!(@fiber(sl(e(0.0))), sprand(42, 0.1));
-C = similar(A);
-F = copyto!(@fiber(d(e(0.0))), [1, 1, 1, 1, 1]);
-
-#Sparse Convolution
-@finch @∀ i j C[i] += (A[i] != 0) * coalesce(A[permit[offset[3-i, j]]], 0) * coalesce(F[permit[j]], 0)
+x = @fiber(d(e(0.0)), rand(42));
+A = @fiber(d(sl(e(0.0))), sprand(42, 42, 0.1));
+y = @fiber(d(e(0.0)));
+@finch @loop j i y[i] += A[i, j] * x[j];
 ```
 
 Array formats in Finch are described recursively mode by mode, using a
