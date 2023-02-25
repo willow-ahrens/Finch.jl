@@ -53,16 +53,16 @@ result to clean it up):
 ```jldoctest example1
 julia> (@macroexpand @finch @loop i C[i] = A[i] * B[i]) |> Finch.striplines
 quote
-    var"#26#res" = (Finch.execute)(begin
+    var"#18#res" = (Finch.execute)(begin
                 let i = index_instance(:i)
                     (Finch.FinchNotation.loop_instance)(i, (Finch.FinchNotation.assign_instance)((Finch.FinchNotation.access_instance)((Finch.FinchNotation.variable_instance)(:C, (Finch.FinchNotation.index_leaf_instance)(C)), (Finch.FinchNotation.updater_instance)((Finch.FinchNotation.create_instance)()), (Finch.FinchNotation.variable_instance)(:i, (Finch.FinchNotation.index_leaf_instance)(i))), literal_instance(right), (Finch.FinchNotation.call_instance)((Finch.FinchNotation.variable_instance)(:*, (Finch.FinchNotation.index_leaf_instance)(*)), (Finch.FinchNotation.access_instance)((Finch.FinchNotation.variable_instance)(:A, (Finch.FinchNotation.index_leaf_instance)(A)), (Finch.FinchNotation.reader_instance)(), (Finch.FinchNotation.variable_instance)(:i, (Finch.FinchNotation.index_leaf_instance)(i))), (Finch.FinchNotation.access_instance)((Finch.FinchNotation.variable_instance)(:B, (Finch.FinchNotation.index_leaf_instance)(B)), (Finch.FinchNotation.reader_instance)(), (Finch.FinchNotation.variable_instance)(:i, (Finch.FinchNotation.index_leaf_instance)(i))))))
                 end
             end)
     begin
-        C = (var"#26#res").C
+        C = (var"#18#res").C
     end
     begin
-        var"#26#res"
+        var"#18#res"
     end
 end
 
@@ -125,4 +125,30 @@ Dense [1:2]
 
 ```
 
-### Compilation
+## Virtualization
+
+TODO more on the way...
+
+## Tensor Life Cycle
+
+Every virtual tensor must be in one of two modes: read-only mode or update-only mode. The following functions may be called on virtual tensors throughout their life cycle.
+
+```@docs
+initialize!
+get_reader
+get_updater
+freeze!
+trim!
+```
+
+## Fiber Life Cycle
+
+Fiber levels implement the tensor life cycle using the following methods:
+
+```@docs
+default
+initialize_level!
+assemble_level!
+reassemble_level!
+freeze_level!
+```
