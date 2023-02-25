@@ -1,3 +1,29 @@
+"""
+    DenseLevel{[Ti=Int]}(lvl, [dim])
+
+A subfiber of a dense level is an array which stores every slice `A[:, ..., :,
+i]` as a distinct subfiber in `lvl`. Optionally, `dim` is the size of the last
+dimension. `Ti` is the type of the indices used to index the level.
+
+In the [@fiber](@ref) constructor, `d` is an alias for `DenseLevel`.
+
+```jldoctest
+julia> ndims(@fiber(d(e(0.0))))
+1
+
+julia> ndims(@fiber(d(d(e(0.0)))))
+2
+
+julia> @fiber(d(d(e(0.0))), [1 2; 3 4])
+Dense [:,1:2]
+├─[:,1]: Dense [1:2]
+│ ├─[1]: 1.0
+│ ├─[2]: 3.0
+├─[:,2]: Dense [1:2]
+│ ├─[1]: 2.0
+│ ├─[2]: 4.0
+```
+"""
 struct DenseLevel{Ti, Lvl}
     lvl::Lvl
     I::Ti
@@ -131,6 +157,8 @@ function freeze_level!(lvl::VirtualDenseLevel, ctx::LowerJulia, pos)
     return lvl
 end
 
+is_laminable_updater(lvl::VirtualDenseLevel, ctx, ::Union{Nothing, Laminate, Extrude}, protos...) =
+    is_laminable_updater(lvl.lvl, ctx, protos...)
 get_reader(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, ::Union{Nothing, Follow}, protos...) = get_readerupdater_dense_helper(fbr, ctx, get_reader, VirtualSubFiber, protos...)
 get_updater(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, ::Union{Nothing, Laminate, Extrude}, protos...) = get_readerupdater_dense_helper(fbr, ctx, get_updater, VirtualSubFiber, protos...)
 get_updater(fbr::VirtualTrackedSubFiber{VirtualDenseLevel}, ctx, ::Union{Nothing, Laminate, Extrude}, protos...) = get_readerupdater_dense_helper(fbr, ctx, get_updater, (lvl, pos) -> VirtualTrackedSubFiber(lvl, pos, fbr.dirty), protos...)
@@ -142,6 +170,7 @@ function get_readerupdater_dense_helper(fbr, ctx, get_readerupdater, subfiber_ct
     q = ctx.freshen(tag, :_q)
 
     Furlable(
+        tight = (get_readerupdater == get_updater && !is_laminable_updater(lvl.lvl, ctx, protos...)) ? lvl : nothing,
         val = virtual_level_default(lvl),
         size = virtual_level_size(lvl, ctx),
         body = (ctx, idx, ext) -> Lookup(

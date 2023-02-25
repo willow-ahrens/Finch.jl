@@ -10,6 +10,7 @@ begin
     A_lvl_7 = (ex.body.body.body.rhs.args[3]).tns.tns.lvl
     A_lvl_8 = A_lvl_7.lvl
     A_lvl_9 = A_lvl_8.lvl
+    A_lvl.I == A_lvl_2.I || throw(DimensionMismatch("mismatched dimension limits ($(A_lvl.I) != $(A_lvl_2.I))"))
     B_val = 0.0
     for i_4 = 1:A_lvl.I
         A_lvl_q_2 = (1 - 1) * A_lvl.I + i_4

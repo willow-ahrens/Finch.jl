@@ -2,7 +2,7 @@ virtualize(ex, T, ctx, tag) = virtualize(ex, T, ctx)
 
 virtualize(ex, (@nospecialize T), ctx) = value(ex, T)
 
-virtualize(ex, ::Type{FinchNotation.literalInstance{val}}, ctx) where {val} = literal(val)
+virtualize(ex, ::Type{FinchNotation.LiteralInstance{val}}, ctx) where {val} = literal(val)
 function virtualize(ex, ::Type{FinchNotation.PassInstance{Tnss}}, ctx) where {Tnss}
     tnss = map(enumerate(Tnss.parameters)) do (n, Tns)
         virtualize(:($ex.tnss[$n]), Tns, ctx)
@@ -69,7 +69,6 @@ function virtualize(ex, ::Type{FinchNotation.VariableInstance{tag, Tns}}, ctx) w
         return variable(tag)
     end
 end
-virtualize(ex, ::Type{FinchNotation.ValueInstance{arg}}, ctx) where {arg} = isliteral(arg) ? arg : literal(arg)
 virtualize(ex, ::Type{Walk}, ctx) = walk
 virtualize(ex, ::Type{FastWalk}, ctx) = fastwalk
 virtualize(ex, ::Type{Gallop}, ctx) = gallop

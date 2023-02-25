@@ -80,7 +80,7 @@
             () -> SparseVBL(base()),
             () -> SparseBytemap(base()),
             () -> SparseHash{1}(base()),
-            () -> SparseCoo{1}(base()),
+            () -> SparseCOO{1}(base()),
         ]
             for arr in [
                 fill(false, 5),
@@ -125,7 +125,7 @@
         end
 
         for outer in [
-            () -> SparseCoo{2}(base()),
+            () -> SparseCOO{2}(base()),
             () -> SparseHash{2}(base())
         ]
 

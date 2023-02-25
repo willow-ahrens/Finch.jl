@@ -1,3 +1,19 @@
+"""
+    ElementLevel{D, [Tv]}()
+
+A subfiber of an element level is a scalar of type `Tv`, initialized to `D`. `D`
+may optionally be given as the first argument.
+
+In the [@fiber](@ref) constructor, `e` is an alias for `ElementLevel`.
+
+```jldoctest
+julia> @fiber(d(e(0.0)), [1, 2, 3])
+Dense [1:3]
+├─[1]: 1.0
+├─[2]: 2.0
+├─[3]: 3.0
+```
+"""
 struct ElementLevel{D, Tv}
     val::Vector{Tv}
 end
@@ -109,6 +125,8 @@ function get_reader(fbr::VirtualSubFiber{VirtualElementLevel}, ctx)
         body = VirtualScalar(nothing, lvl.Tv, lvl.D, gensym(), val)
     )
 end
+
+is_laminable_updater(lvl::VirtualElementLevel, ctx) = true
 
 function get_updater(fbr::VirtualSubFiber{VirtualElementLevel}, ctx)
     (lvl, pos) = (fbr.lvl, fbr.pos)

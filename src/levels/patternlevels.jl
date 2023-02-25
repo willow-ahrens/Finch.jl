@@ -1,3 +1,20 @@
+"""
+    PatternLevel{D, [Tv]}()
+
+A subfiber of a pattern level is the Boolean value true, but it's `default` is
+false. PatternLevels are used to create tensors that represent which values
+are stored by other fibers. See [`pattern`](@ref) for usage examples.
+
+In the [@fiber](@ref) constructor, `p` is an alias for `ElementLevel`.
+
+```jldoctest
+julia> @fiber(d(p(), 3))
+Dense [1:3]
+├─[1]: true
+├─[2]: true
+├─[3]: true
+```
+"""
 struct PatternLevel end
 const Pattern = PatternLevel
 
@@ -69,6 +86,7 @@ reassemble_level!(lvl::VirtualPatternLevel, ctx, pos_start, pos_stop) = quote en
 trim_level!(lvl::VirtualPatternLevel, ctx::LowerJulia, pos) = lvl
 
 get_reader(::VirtualSubFiber{VirtualPatternLevel}, ctx) = Simplify(Fill(true))
+is_laminable_updater(lvl::VirtualPatternLevel, ctx) = true
 get_updater(fbr::VirtualSubFiber{VirtualPatternLevel}, ctx) = VirtualScalar(nothing, Bool, false, gensym(), ctx.freshen(:null))
 get_updater(fbr::VirtualTrackedSubFiber{VirtualPatternLevel}, ctx) = VirtualDirtyScalar(nothing, Bool, false, gensym(), ctx.freshen(:null), fbr.dirty)
 

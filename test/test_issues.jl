@@ -74,4 +74,36 @@ using SparseArrays
         @finch @loop j i t[i, j] = min(X[i, j],  A[i, j])
         @test t == A
     end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/115
+
+    let
+        function f(a::Float64, b::Float64, c::Float64)
+            return a+b+c
+        end 
+        struct MyAlgebra <: Finch.AbstractAlgebra end
+        Finch.register(MyAlgebra)
+        t = @fiber(sl(sl(e(0.0))))
+        B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
+        A = dropdefaults(copyto!(@fiber(sl(sl(e(0.0)))), B))
+        @finch MyAlgebra() @loop j i t[i, j] = f(A[i,j], A[i,j], A[i,j])
+        @test t == B .* 3
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/115
+
+    let
+        t = @fiber(sl(sl(e(0.0))))
+        B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
+        A = dropdefaults(copyto!(@fiber(sl(sl(e(0.0)))), B))
+        @test_throws Finch.FormatLimitation @finch MyAlgebra() @loop i j t[i, j] = A[i, j]
+    end
+
+    let
+        t = @fiber(d(sl(e(0.0))))
+        B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
+        A = dropdefaults(copyto!(@fiber(d(sl(e(0.0)))), B))
+        @test_throws Finch.FormatLimitation @finch MyAlgebra() @loop i j t[i, j] = A[i, j]
+    end
+
 end

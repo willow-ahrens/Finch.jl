@@ -1,3 +1,27 @@
+"""
+    RepeatRLELevel{[D], [Ti=Int], [Tp=Int], [Tv=typeof(D)]}([dim])
+
+A subfiber of a repeat level is a vector that only stores contiguous repeated
+values once. The RepeatRLELevel records locations of repeats using a sorted
+list. Optionally, `dim` is the size of the vectors.
+
+The fibers have type `Tv`, initialized to `D`. `D` may optionally be given as
+the first argument.  `Ti` is the type of the last fiber index, and `Tp` is the
+type used for positions in the level.
+
+In the [@fiber](@ref) constructor, `rl` is an alias for `RepeatRLELevel`.
+
+```jldoctest
+julia> @fiber(rl(0.0), [11, 11, 22, 22, 00, 00, 00, 33, 33])
+RepeatRLE (0.0) [1:9]
+├─[1:2]: 11.0
+├─[3:4]: 22.0
+├─[5:7]: 0.0
+├─[8:9]: 33.0
+├─[10:9]: 0.0
+
+```
+"""
 struct RepeatRLELevel{D, Ti, Tp, Tv}
     I::Ti
     ptr::Vector{Tp}
@@ -227,6 +251,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, ::Union{No
     )
 end
 
+is_laminable_updater(lvl::VirtualRepeatRLELevel, ctx, ::Union{Nothing, Extrude}) = false
 get_updater(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, protos...) = 
     get_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
 function get_updater(fbr::VirtualTrackedSubFiber{VirtualRepeatRLELevel}, ctx, ::Union{Nothing, Extrude})
@@ -264,6 +289,7 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualRepeatRLELevel}, ctx, ::
     end
     
     Furlable(
+        tight = lvl,
         val = D,
         size = virtual_level_size(lvl, ctx),
         body = (ctx, idx, ext) -> Thunk(

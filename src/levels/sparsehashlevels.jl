@@ -1,3 +1,37 @@
+"""
+    SparseHashLevel{[N], [Ti=Tuple{Int...}], [Tp=Int]}(lvl, [dims])
+
+A subfiber of a sparse level does not need to represent slices which are
+entirely [`default`](@ref). Instead, only potentially non-default slices are
+stored as subfibers in `lvl`. The sparse hash level corresponds to `N` indices
+in the subfiber, so fibers in the sublevel are the slices `A[:, ..., :, i_1,
+..., i_n]`.  A hash table is used to record which slices are stored. Optionally,
+`dims` are the sizes of the last dimensions.
+
+`Ti` is the type of the last `N` fiber indices, and `Tp` is the type used for
+positions in the level.
+
+In the [@fiber](@ref) constructor, `sh` is an alias for `SparseHashLevel`.
+
+```jldoctest
+julia> @fiber(d(sh{1}(e(0.0))), [10 0 20; 30 0 0; 0 0 40])
+Dense [:,1:3]
+├─[:,1]: SparseHash (0.0) [1:3]
+│ ├─[1]: 10.0
+│ ├─[2]: 30.0
+├─[:,2]: SparseHash (0.0) [1:3]
+├─[:,3]: SparseHash (0.0) [1:3]
+│ ├─[1]: 20.0
+│ ├─[3]: 40.0
+
+julia> @fiber(sh{2}(e(0.0)), [10 0 20; 30 0 0; 0 0 40])
+SparseHash (0.0) [1:3,1:3]
+├─├─[1, 1]: 10.0
+├─├─[2, 1]: 30.0
+├─├─[1, 3]: 20.0
+├─├─[3, 3]: 40.0
+```
+"""
 struct SparseHashLevel{N, Ti<:Tuple, Tp, Tbl, Lvl}
     lvl::Lvl
     I::Ti
@@ -333,6 +367,9 @@ function get_reader_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, coords, :
     )
 end
 
+
+is_laminable_updater(lvl::VirtualSparseHashLevel, ctx, protos...) =
+    is_laminable_updater(lvl.lvl, ctx, protos[lvl.N + 1:end]...)
 get_updater(fbr::VirtualSubFiber{VirtualSparseHashLevel}, ctx, protos...) =
     get_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
 function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseHashLevel}, ctx, protos...)
@@ -345,7 +382,7 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseHashLevel}, ctx, p
     )
 end
 
-function get_updater_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, fbr_dirty, coords, ::Union{Nothing, Extrude}, protos...)
+function get_updater_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, fbr_dirty, coords, p::Union{Nothing, Extrude}, protos...)
     tag = lvl.ex
     Ti = lvl.Ti
     Tp = lvl.Tp
@@ -355,6 +392,7 @@ function get_updater_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, fbr_dirt
     qos = ctx.freshen(tag, :_q)
     dirty = ctx.freshen(tag, :dirty)
     Furlable(
+        tight = is_laminable_updater(lvl.lvl, ctx, protos[lvl.N - length(coords): end]...) ? nothing : lvl.lvl,
         val = virtual_level_default(lvl),
         size = virtual_level_size(lvl, ctx)[1 + length(coords):end],
         body = (ctx, idx, ext) ->

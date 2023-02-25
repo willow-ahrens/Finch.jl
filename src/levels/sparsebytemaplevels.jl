@@ -397,6 +397,8 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseBytemapLevel}, ctx, ::Foll
     )
 end
 
+is_laminable_updater(lvl::VirtualSparseBytemapLevel, ctx, ::Union{Nothing, Laminate, Extrude}, protos...) =
+    is_laminable_updater(lvl.lvl, ctx, protos...)
 get_updater(fbr::VirtualSubFiber{VirtualSparseBytemapLevel}, ctx, protos...) = 
     get_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
 function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseBytemapLevel}, ctx, ::Union{Nothing, Extrude, Laminate}, protos...)
@@ -407,6 +409,7 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseBytemapLevel}, ctx
     dirty = ctx.freshen(:dirty)
 
     Furlable(
+        tight = is_laminable_updater(lvl.lvl, ctx, protos...) ? nothing : lvl.lvl,
         val = virtual_level_default(lvl),
         size = virtual_level_size(lvl, ctx),
         body = (ctx, idx, ext) -> AcceptSpike(

@@ -40,7 +40,7 @@ isstructequal(a::T, b::T) where {T <: SparseList} =
     a.idx == b.idx &&
     isstructequal(a.lvl, b.lvl)
 
-isstructequal(a::T, b::T) where {T <: SparseCoo} =
+isstructequal(a::T, b::T) where {T <: SparseCOO} =
     a.I == b.I &&
     a.ptr == b.ptr &&
     a.tbl == b.tbl &&
