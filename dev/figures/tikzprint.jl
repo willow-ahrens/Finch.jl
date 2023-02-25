@@ -1,0 +1,133 @@
+using Finch
+using Finch: Fiber, SubFiber, ElementLevel, DenseLevel, SparseListLevel
+
+tikzshow(io, fbr::Fiber) = tikzshow(io, SubFiber(fbr.lvl, 1), "A", "A", 0, 0)
+tikzshow(io, fbr) = tikzshow(io, fbr, 0)
+tikzwidth(fbr::SubFiber{<:ElementLevel}) = 1
+tikzwidth(fbr::SubFiber{<:DenseLevel}) =
+    sum(p->max(tikzwidth(SubFiber(fbr.lvl.lvl, p)), 1), ((fbr.pos - 1) * fbr.lvl.I) .+ (1:fbr.lvl.I), init=1.5)
+function tikzshow(io, fbr::SubFiber{<:DenseLevel}, tag, anchor, y0, x0)
+    lvl = fbr.lvl
+    node = "$(tag)d$(ndims(fbr))p$(fbr.pos)"
+
+    println(io, """
+    \\matrix ($node) [matrix of math nodes,
+        nodes = {whclsty},
+        left delimiter  = (,
+        right delimiter = ),
+        ampersand replacement=\\&,
+        anchor=north] at ($(x0 + tikzwidth(fbr)/2)*\\myunit, $y0*\\myunit)
+    {""")
+    join(io, ["|[fullsty]|" for i=1:lvl.I], "\\&"); println(io, "\\\\")
+    println(io, "};")
+    p = (fbr.pos - 1) * fbr.lvl.I
+    x = x0
+    for i = 1:lvl.I
+        p += 1
+        subfbr = SubFiber(lvl.lvl, p)
+        subanchor = "$node-1-$i"
+        subnode = tikzshow(io, subfbr, tag, subanchor, y0 - 3, x)
+        println(io, "\\draw ($subanchor.center) -- ($subnode.north) node [midway, fill=white] {$(":,"^(ndims(fbr)-1))$i};")
+        x += tikzwidth(subfbr)
+    end
+    node
+end
+function tikzwidth(fbr::SubFiber{<:SparseListLevel})
+    lvl = fbr.lvl
+    qoss = lvl.ptr[fbr.pos]:lvl.ptr[fbr.pos + 1]-1
+    w = sum(p->max(tikzwidth(SubFiber(lvl.lvl, p)), 1), qoss, init=1.5)
+    w += lvl.I - length(qoss)
+end
+function tikzshow(io, fbr::SubFiber{<:SparseListLevel}, tag, anchor, y0, x0)
+    lvl = fbr.lvl
+    node = "$(tag)d$(ndims(fbr))p$(fbr.pos)"
+    qoss = lvl.ptr[fbr.pos]:lvl.ptr[fbr.pos + 1]-1
+
+    println(io, """
+    \\matrix ($node) [matrix of math nodes,
+        nodes = {whclsty},
+        left delimiter  = (,
+        right delimiter = ),
+        ampersand replacement=\\&,
+        anchor=north] at ($(x0 + tikzwidth(fbr)/2)*\\myunit, $y0*\\myunit)
+    {""")
+    join(io, [i in lvl.idx[qoss] ? "|[fullsty]|" : "|[zcsty]|" for i=1:lvl.I], "\\&"); println(io, "\\\\")
+    println(io, "};")
+    #println(io, "\\node ($(node)l) [whclsty, anchor=south] at ($(x0 + tikzwidth(fbr)/2)*\\myunit, $y0*\\myunit) {};")
+    #println(io, "\\node[whclsty, anchor=south] at ($(x0)*\\myunit, $y0*\\myunit) {$(lvl.ptr[fbr.pos])};")
+    #println(io, "\\node[whclsty, anchor=south] at ($(x0 + tikzwidth(fbr))*\\myunit, $y0*\\myunit) {$(lvl.ptr[fbr.pos+1])};")
+    x = x0
+    for q in qoss
+        i = lvl.idx[q]
+        subfbr = SubFiber(lvl.lvl, q)
+        subanchor = "$node-1-$i"
+        subnode = tikzshow(io, subfbr, tag, subanchor, y0 - 3, x)
+        println(io, "\\draw ($subanchor.center) -- ($subnode.north) node [midway, fill=white] {$(":,"^(ndims(fbr)-1))$i};")
+        x += tikzwidth(subfbr)
+    end
+    #"$(node)l"
+    node
+end
+
+function tikzshow(io, fbr::SubFiber{<:ElementLevel}, tag, anchor, y0, x0)
+    lvl = fbr.lvl
+    node = "$(tag)d$(ndims(fbr))p$(fbr.pos)"
+    println(io, "\\node ($node) [below=of $anchor, nzsty] {$(lvl.val[fbr.pos])};")
+    return node
+end
+
+function tikzdisplay(f, name)
+    open(name, "w") do io
+        println(io, """
+        \\documentclass{standalone}
+        \\input{common.tex}
+        \\begin{document}
+        \\resizebox{\\linewidth}{!}{%
+        \\begin{tikzpicture}[>=latex]
+        """)
+        f(io)
+        println(io, """
+        \\end{tikzpicture}%
+        }
+        \\end{document}
+        """)
+    end
+end
+
+highlight(io, fbr::Fiber) = highlight_level(io, fbr.lvl, "A", -1, tikzwidth(SubFiber(fbr.lvl, 1)), 0)
+
+function highlight_level(io, lvl::DenseLevel, tag, x0, x1, y0)
+    lbl = "$(tag)d$(Finch.level_ndims(typeof(lvl)))p1-1-1"
+    println(io, """
+    \\draw [whclsty, anchor=north east] let \\p1 = ($(lbl).north) in ($x0, \\y1) node {DenseLevel};
+    """)
+    highlight_level(io, lvl.lvl, tag, x0, x1, y0)
+end
+
+function highlight_level(io, lvl::SparseListLevel, tag, x0, x1, y0)
+    lbl = "$(tag)d$(Finch.level_ndims(typeof(lvl)))p1-1-1"
+    #lbl_2 = "$(tag)d$(Finch.level_ndims(typeof(lvl)))p1l"
+    println(io, """
+    \\draw [whclsty, anchor=north east] let \\p1 = ($(lbl).north) in ($x0, \\y1) node {SparseListLevel};
+    """)
+    #\\draw [hlsty] let \\p1 = ($lbl.south), \\p2 = ($lbl.north) in ($x0*\\myunit, \\y1 - 1*\\myunit) rectangle ($x1*\\myunit, \\y2 - 1*\\myunit);
+    #\\draw [hlsty] let \\p1 = ($lbl_2.south), \\p2 = ($lbl_2.north) in ($x0*\\myunit, \\y1) rectangle ($x1*\\myunit, \\y2);
+    highlight_level(io, lvl.lvl, tag, x0, x1, y0)
+end
+function highlight_level(io, lvl::ElementLevel, tag, x0, x1, y0)
+    lbl = "$(tag)d$(Finch.level_ndims(typeof(lvl)))p1"
+    println(io, """
+    \\draw [whclsty, anchor=north east] let \\p1 = ($(lbl).north) in ($x0, \\y1) node {ElementLevel};
+    """)
+    #\\draw [hlsty] let \\p1 = ($(lbl).south), \\p2 = ($lbl.north) in ($x0*\\myunit, \\y1) rectangle ($x1*\\myunit, \\y2);
+end
+
+tikzdisplay("test.tex") do io
+    A = [0 0 44;
+        11 0 0;
+        22 0 55;
+        33 0 0]
+    fbr = @fiber(d(sl(e(0))), A)
+    tikzshow(io, fbr)
+    highlight(io, fbr)
+end
