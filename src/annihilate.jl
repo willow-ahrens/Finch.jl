@@ -211,7 +211,7 @@ function base_rules(alg, ctx)
         #propagate constants from assign
         (@rule sequence(~s1..., assign(access(~a::isvar, ~m), $(literal(right)), ~b::isliteral), assign(access(~a, ~m), ~f, ~c), ~s2...) => 
             sequence(s1..., s2, assign(access(a, m), right, call(f, b, c)), s3...)
-        end),
+        ),
 
         #propagate constant to meet forget or first use
         (@rule sequence(~s1..., declare(~a, ~z), assign(access(~a, ~m), $(literal(right)), ~b::isliteral), freeze(~a), ~s2, ~s3...) =>

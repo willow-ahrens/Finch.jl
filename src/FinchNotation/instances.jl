@@ -40,7 +40,7 @@ Base.:(==)(a::DeclareInstance, b::DeclareInstance) = a.tns == b.tns && a.init ==
 
 @inline declare_instance(tns, init) = DeclareInstance(tns, init)
 
-Base.show(io::IO, node::FreezeInstance) = (print(io, "declare_instance(", node.tns, node.init, ")");
+Base.show(io::IO, node::DeclareInstance) = print(io, "declare_instance(", node.tns, node.init, ")")
 
 struct FreezeInstance{Tns} <: FinchNodeInstance
 	tns::Tns
@@ -49,7 +49,7 @@ Base.:(==)(a::FreezeInstance, b::FreezeInstance) = a.tns == b.tns
 
 @inline freeze_instance(tns) = FreezeInstance(tns)
 
-Base.show(io::IO, node::FreezeInstance) = (print(io, "freeze_instance(", node.tns, ")");
+Base.show(io::IO, node::FreezeInstance) = print(io, "freeze_instance(", node.tns, ")")
 
 struct ThawInstance{Tns} <: FinchNodeInstance
 	tns::Tns
@@ -58,7 +58,7 @@ Base.:(==)(a::ThawInstance, b::ThawInstance) = a.tns == b.tns
 
 @inline thaw_instance(tns) = ThawInstance(tns)
 
-Base.show(io::IO, node::ThawInstance) = (print(io, "thaw_instance(", node.tns, ")");
+Base.show(io::IO, node::ThawInstance) = print(io, "thaw_instance(", node.tns, ")")
 
 struct ForgetInstance{Tns} <: FinchNodeInstance
 	tns::Tns
@@ -67,7 +67,7 @@ Base.:(==)(a::ForgetInstance, b::ForgetInstance) = a.tns == b.tns
 
 @inline forget_instance(tns) = ForgetInstance(tns)
 
-Base.show(io::IO, node::ForgetInstance) = (print(io, "forget_instance(", node.tns, ")");
+Base.show(io::IO, node::ForgetInstance) = print(io, "forget_instance(", node.tns, ")")
 
 struct SequenceInstance{Bodies} <: FinchNodeInstance
     bodies::Bodies
