@@ -24,7 +24,6 @@ Dense [:,1:2]
 │ ├─[2]: 4.0
 ```
 """
-
 struct DenseLevel{Ti, Lvl}
     lvl::Lvl
     I::Ti

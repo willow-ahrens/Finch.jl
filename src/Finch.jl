@@ -12,7 +12,7 @@ using Compat
 
 export @finch, @finch_program, @finch_code, value
 
-export Fiber, Fiber!, SparseList, SparseHash, SparseCoo, SparseBytemap, SparseVBL, Dense, RepeatRLE, Element, Pattern, Scalar
+export Fiber, Fiber!, SparseList, SparseHash, SparseCOO, SparseBytemap, SparseVBL, Dense, RepeatRLE, Element, Pattern, Scalar
 export walk, fastwalk, gallop, follow, extrude, laminate
 export fiber, @fiber, pattern!, dropdefaults, dropdefaults!
 export diagmask, lotrimask, uptrimask, bandmask

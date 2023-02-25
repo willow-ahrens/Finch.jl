@@ -83,7 +83,7 @@ SparseList (0.0) [:,1:3]
 
 Here we see that the entirely zero column has also been compressed. The
 `sl(sl(e(0.0)))` format is also known as
-("DCSC")[https://ieeexplore.ieee.org/document/4536313].
+["DCSC"](https://ieeexplore.ieee.org/document/4536313).
 
 The
 ["COO"](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.coo_matrix.html)
@@ -96,7 +96,7 @@ declare the number of indices handled by the level:
 
 ```jldoctest example1
 julia> A_fbr = @fiber(sc{2}(e(0.0)), A)
-SparseCoo (0.0) [1:4,1:3]
+SparseCOO (0.0) [1:4,1:3]
 ├─├─[2, 1]: 1.1
 ├─├─[3, 1]: 2.2
 ├─├─[4, 1]: 3.3
@@ -126,5 +126,4 @@ ElementLevel
 SparseListLevel
 SparseCOOLevel
 SparseHashLevel
-SparseVBLLevel
 ```

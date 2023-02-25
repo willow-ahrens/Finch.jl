@@ -55,7 +55,7 @@ using Base.Meta
         dropdefaults!(Fiber!(SparseHash{1}(Element(zero(eltype(arr))))), arr)
     end
     test_format(vecs, name = "@fiber(sc{1}(e(zero))", key = "sc1_e") do arr
-        dropdefaults!(Fiber!(SparseCoo{1}(Element(zero(eltype(arr))))), arr)
+        dropdefaults!(Fiber!(SparseCOO{1}(Element(zero(eltype(arr))))), arr)
     end
 
     mats = [
@@ -86,7 +86,7 @@ using Base.Meta
         dropdefaults!(Fiber!(Dense(SparseHash{1}(Element(zero(eltype(arr)))))), arr)
     end
     test_format(mats, name = "@fiber(d(sc{1}(e(zero)))", key = "d_sc1_e") do arr
-        dropdefaults!(Fiber!(Dense(SparseCoo{1}(Element(zero(eltype(arr)))))), arr)
+        dropdefaults!(Fiber!(Dense(SparseCOO{1}(Element(zero(eltype(arr)))))), arr)
     end
 
     test_format(mats, name = "@fiber(sl(d(e(zero)))", key = "sl_d_e") do arr
@@ -108,6 +108,6 @@ using Base.Meta
         dropdefaults!(Fiber!(SparseList(SparseHash{1}(Element(zero(eltype(arr)))))), arr)
     end
     test_format(mats, name = "@fiber(sl(sc{1}(e(zero)))", key = "sl_sc1_e") do arr
-        dropdefaults!(Fiber!(SparseList(SparseCoo{1}(Element(zero(eltype(arr)))))), arr)
+        dropdefaults!(Fiber!(SparseList(SparseCOO{1}(Element(zero(eltype(arr)))))), arr)
     end
 end
