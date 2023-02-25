@@ -1,3 +1,7 @@
+```@meta
+CurrentModule = Finch
+```
+
 # Development Guide
 
 We welcome contributions to Finch! Before you start, please double-check in a
@@ -11,7 +15,7 @@ For more information about running tests (including filtering test suites or
 updating the reference output), run the test script directly:
 
 ```
-    julia tests/runtests.jl --help
+julia tests/runtests.jl --help
 ```
 
 ## Finch Compilation Pipeline
@@ -125,4 +129,30 @@ Dense [1:2]
 
 ```
 
-### Compilation
+## Virtualization
+
+TODO more on the way...
+
+## Tensor Life Cycle
+
+Every virtual tensor must be in one of two modes: read-only mode or update-only mode. The following functions may be called on virtual tensors throughout their life cycle.
+
+```@docs
+initialize!
+get_reader
+get_updater
+freeze!
+trim!
+```
+
+## Fiber Life Cycle
+
+Fiber levels implement the tensor life cycle using the following methods:
+
+```@docs
+default
+initialize_level!
+assemble_level!
+reassemble_level!
+freeze_level!
+```

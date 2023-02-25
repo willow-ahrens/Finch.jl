@@ -1,3 +1,38 @@
+"""
+    SparseListLevel{[Ti=Int], [Tp=Int]}(lvl, [dim])
+
+A subfiber of a sparse level does not need to represent slices `A[:, ..., :, i]`
+which are entirely [`default`](@ref). Instead, only potentially non-default
+slices are stored as subfibers in `lvl`.  A sorted list is used to record which
+slices are stored. Optionally, `dim` is the size of the last dimension.
+
+`Ti` is the type of the last fiber index, and `Tp` is the type used for
+positions in the level.
+
+In the [@fiber](@ref) constructor, `sl` is an alias for `SparseListLevel`.
+
+```jldoctest
+julia> @fiber(d(sl(e(0.0))), [10 0 20; 30 0 0; 0 0 40])
+Dense [:,1:3]
+├─[:,1]: SparseList (0.0) [1:3]
+│ ├─[1]: 10.0
+│ ├─[2]: 30.0
+├─[:,2]: SparseList (0.0) [1:3]
+├─[:,3]: SparseList (0.0) [1:3]
+│ ├─[1]: 20.0
+│ ├─[3]: 40.0
+
+julia> @fiber(sl(sl(e(0.0))), [10 0 20; 30 0 0; 0 0 40])
+SparseList (0.0) [:,1:3]
+├─[:,1]: SparseList (0.0) [1:3]
+│ ├─[1]: 10.0
+│ ├─[2]: 30.0
+├─[:,3]: SparseList (0.0) [1:3]
+│ ├─[1]: 20.0
+│ ├─[3]: 40.0
+
+```
+"""
 struct SparseListLevel{Ti, Tp, Lvl}
     lvl::Lvl
     I::Ti

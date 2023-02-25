@@ -130,7 +130,7 @@ julia> I = (
 julia> V = [1.0; 2.0; 3.0];
 
 julia> fsparse(I, V)
-SparseCoo (0.0) [1:3×1:3×1:3]
+SparseCOO (0.0) [1:3×1:3×1:3]
 │ │ │ 
 └─└─└─[1, 1, 1] [2, 2, 2] [3, 3, 3]
       1.0       2.0       3.0    
@@ -167,7 +167,7 @@ Like [`fsparse`](@ref), but the coordinates must be sorted and unique, and memor
 is reused.
 """
 function fsparse!(I::Tuple, V, shape = map(maximum, I))
-    return Fiber(SparseCoo{length(I), Tuple{map(eltype, I)...}, Int}(Element{zero(eltype(V))}(V), shape, I, [1, length(V) + 1]))
+    return Fiber(SparseCOO{length(I), Tuple{map(eltype, I)...}, Int}(Element{zero(eltype(V))}(V), shape, I, [1, length(V) + 1]))
 end
 
 """
@@ -185,7 +185,7 @@ See also: (`sprand`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#Spars
 # Examples
 ```jldoctest; setup = :(using Random; Random.seed!(1234))
 julia> fsprand(Bool, (3, 3), 0.5)
-SparseCoo (false) [1:3,1:3]
+SparseCOO (false) [1:3,1:3]
 ├─├─[1, 1]: true
 ├─├─[3, 1]: true
 ├─├─[2, 2]: true
@@ -193,7 +193,7 @@ SparseCoo (false) [1:3,1:3]
 ├─├─[3, 3]: true  
 
 julia> fsprand(Float64, (2, 2, 2), 0.5)
-SparseCoo (0.0) [1:2,1:2,1:2]
+SparseCOO (0.0) [1:2,1:2,1:2]
 ├─├─├─[2, 2, 1]: 0.6478553157718558
 ├─├─├─[1, 1, 2]: 0.996665291437684
 ├─├─├─[2, 1, 2]: 0.7491940599574348 
@@ -223,10 +223,10 @@ See also: (`spzeros`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#Spar
 # Examples
 ```jldoctest
 julia> fspzeros(Bool, (3, 3))
-SparseCoo (false) [1:3,1:3]
+SparseCOO (false) [1:3,1:3]
     
 julia> fspzeros(Float64, (2, 2, 2))
-SparseCoo (0.0) [1:2,1:2,1:2]
+SparseCOO (0.0) [1:2,1:2,1:2]
 ```
 """
 fspzeros(shape) = fspzeros(Float64, shape)
@@ -246,7 +246,7 @@ See also: (`findnz`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#Spars
 """
 function ffindnz(src)
     tmp = Fiber(
-        SparseCooLevel{ndims(src)}(
+        SparseCOOLevel{ndims(src)}(
         ElementLevel{zero(eltype(src)), eltype(src)}()))
     tmp = copyto!(tmp, src)
     nnz = tmp.lvl.pos[2] - 1
