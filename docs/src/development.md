@@ -1,3 +1,7 @@
+```@meta
+CurrentModule = Finch
+```
+
 # Development Guide
 
 We welcome contributions to Finch! Before you start, please double-check in a
@@ -11,7 +15,7 @@ For more information about running tests (including filtering test suites or
 updating the reference output), run the test script directly:
 
 ```
-    julia tests/runtests.jl --help
+julia tests/runtests.jl --help
 ```
 
 ## Finch Compilation Pipeline

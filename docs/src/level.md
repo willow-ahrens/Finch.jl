@@ -1,6 +1,7 @@
 ```@meta
 CurrentModule = Finch
 ```
+# Level Formats
 
 Finch implements a flexible array datastructure called a fiber. Fibers represent
 arrays as rooted trees, where the child of each node is selected by an array
