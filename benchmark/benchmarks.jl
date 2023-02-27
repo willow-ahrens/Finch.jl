@@ -122,6 +122,37 @@ for mtx in ["SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
     SUITE["graphs"]["bfs"][mtx] = @benchmarkable bfs($(fiber(SparseMatrixCSC(matrixdepot(mtx))))) 
 end
 
+function bellmanford(e, s=1)
+    (n, m) = size(e)
+    @assert n == m
+
+    init_d = [Inf for i=1:n]
+    init_d[s] = 0.0
+    d = @fiber(d(e(Inf)), init_d)
+    d2 = @fiber(d(e(Inf)))
+    d3 = @fiber(d(e(Inf)))
+    b = Scalar(false)
+
+    for iter = 1:n  
+        @finch @loop j i d2[j] <<min>>= d[i] + e[i, j]
+        @finch @loop j d3[j] = min(d2[j], d[j])
+
+        b = Scalar(false)
+        @finch @loop i b[] |= d3[i] != d[i]
+        if !b[]
+            break
+        end
+        d, d3 = d3, d
+    end
+
+    return b[] ? -1 : d
+end
+
+SUITE["graphs"]["bellmanford"] = BenchmarkGroup()
+for mtx in ["SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
+    SUITE["graphs"]["bellmanford"][mtx] = @benchmarkable bellmanford($(fiber(SparseMatrixCSC(matrixdepot(mtx))))) 
+end
+
 SUITE["matrices"] = BenchmarkGroup()
 
 function spgemm_inner(A, B)
