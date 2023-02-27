@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Data Formats · Finch.jl</title><script data-outdated-warner src="../assets/warner.js"></script><link rel="canonical" href="https://willow-ahrens.github.io/Finch.jl/level/"/><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script><link href="../assets/favicon.ico" rel="icon" type="image/x-icon"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../"><img src="../assets/logo.png" alt="Finch.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../">Finch.jl</a></span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li class="is-active"><a class="tocitem" href>Data Formats</a><ul class="internal"><li class="toplevel"><a class="tocitem" href="#Public-Functions"><span>Public Functions</span></a></li></ul></li><li><a class="tocitem" href="../listing/">The Deets</a></li><li><a class="tocitem" href="../embed/">Embedding</a></li><li><a class="tocitem" href="../algebra/">Custom User Functions</a></li><li><a class="tocitem" href="../development/">Development Guide</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Data Formats</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Data Formats</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/willow-ahrens/Finch.jl/blob/main/docs/src/level.md#" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Level-Formats"><a class="docs-heading-anchor" href="#Level-Formats">Level Formats</a><a id="Level-Formats-1"></a><a class="docs-heading-anchor-permalink" href="#Level-Formats" title="Permalink"></a></h1><p>Finch implements a flexible array datastructure called a fiber. Fibers represent arrays as rooted trees, where the child of each node is selected by an array index. Finch is column major, so the rightmost index corresponds to the root level of the tree, and the leftmost index corresponds to the leaf level. We can convert the matrix <code>A</code> to a fiber with the <code>@fiber</code> constructor.</p><pre><code class="language-julia-repl hljs">julia&gt; A = [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0]
+4×3 Matrix{Float64}:
+ 0.0  0.0  4.4
+ 1.1  0.0  0.0
+ 2.2  0.0  5.5
+ 3.3  0.0  0.0
+julia&gt; A_fbr = @fiber(d(d(e(0.0))), A)
+Dense [:,1:3]
+├─[:,1]: Dense [1:4]
+│ ├─[1]: 0.0
+│ ├─[2]: 1.1
+│ ├─[3]: 2.2
+│ ├─[4]: 3.3
+├─[:,2]: Dense [1:4]
+│ ├─[1]: 0.0
+│ ├─[2]: 0.0
+│ ├─[3]: 0.0
+│ ├─[4]: 0.0
+├─[:,3]: Dense [1:4]
+│ ├─[1]: 4.4
+│ ├─[2]: 0.0
+│ ├─[3]: 5.5
+│ ├─[4]: 0.0</code></pre><p>We refer to a node in the tree as a subfiber. All of the nodes at the same level are stored in the same datastructure, and disambiguated by an integer <code>position</code>.  In the above example, there are three levels: The rootmost level contains only one fiber, the root. The middle level has 3 subfibers, one for each column. The leafmost level has 12 subfibers, one for each element of the array.</p><p>Because our array is sparse, (mostly zero, or another fill value), it would be more efficient to store only the nonzero values. In Finch, each level is represented with a different format. A sparse level only stores non-fill values. This time, we&#39;ll use a fiber constructor with <code>sl</code> (for &quot;<code>SparseList</code> of nonzeros&quot;) instead of <code>d</code> (for &quot;<code>Dense</code>&quot;):</p><pre><code class="language-julia-repl hljs">julia&gt; A_fbr = @fiber(d(sl(e(0.0))), A)
+Dense [:,1:3]
+├─[:,1]: SparseList (0.0) [1:4]
+│ ├─[2]: 1.1
+│ ├─[3]: 2.2
+│ ├─[4]: 3.3
+├─[:,2]: SparseList (0.0) [1:4]
+├─[:,3]: SparseList (0.0) [1:4]
+│ ├─[1]: 4.4
+│ ├─[3]: 5.5</code></pre><p>Our <code>d(sl(e(0.0)))</code> format is also known as <a href="https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_column_.28CSC_or_CCS.29">&quot;CSC&quot;</a> and is equivalent to <a href="https://sparsearrays.juliasparse.org/dev/#man-csc"><code>SparseMatrixCSC</code></a>. The <a href="#Finch.fiber!"><code>fiber!</code></a> function will perform a zero-cost copy between Finch fibers and sparse matrices, when available.  CSC is an excellent general-purpose representation when we expect most of the columns to have a few nonzeros. However, when most of the columns are entirely fill (a situation known as hypersparsity), it is better to compress the root level as well:</p><pre><code class="language-julia-repl hljs">julia&gt; A_fbr = @fiber(sl(sl(e(0.0))), A)
+SparseList (0.0) [:,1:3]
+├─[:,1]: SparseList (0.0) [1:4]
+│ ├─[2]: 1.1
+│ ├─[3]: 2.2
+│ ├─[4]: 3.3
+├─[:,3]: SparseList (0.0) [1:4]
+│ ├─[1]: 4.4
+│ ├─[3]: 5.5</code></pre><p>Here we see that the entirely zero column has also been compressed. The <code>sl(sl(e(0.0)))</code> format is also known as <a href="https://ieeexplore.ieee.org/document/4536313">&quot;DCSC&quot;</a>.</p><p>The <a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.coo_matrix.html">&quot;COO&quot;</a> (or &quot;Coordinate&quot;) format is often used in practice for ease of interchange between libraries. In an <code>N</code>-dimensional array <code>A</code>, COO stores <code>N</code> lists of indices <code>I_1, ..., I_N</code> where <code>A[I_1[p], ..., I_N[p]]</code> is the <code>p</code>^th stored value in column-major numbering. In Finch, <code>COO</code> is represented as a multi-index level, which can handle more than one index at once. We use curly brackets to declare the number of indices handled by the level:</p><pre><code class="language-julia-repl hljs">julia&gt; A_fbr = @fiber(sc{2}(e(0.0)), A)
+SparseCOO (0.0) [1:4,1:3]
+├─├─[2, 1]: 1.1
+├─├─[3, 1]: 2.2
+├─├─[4, 1]: 3.3
+├─├─[1, 3]: 4.4
+├─├─[3, 3]: 5.5</code></pre><p>The COO format is compact and straightforward, but doesn&#39;t support random access. For random access, one should use the <code>SparseHash</code> format. A full listing of supported formats is described below:</p><h1 id="Public-Functions"><a class="docs-heading-anchor" href="#Public-Functions">Public Functions</a><a id="Public-Functions-1"></a><a class="docs-heading-anchor-permalink" href="#Public-Functions" title="Permalink"></a></h1><h3 id="Fiber-Constructors"><a class="docs-heading-anchor" href="#Fiber-Constructors">Fiber Constructors</a><a id="Fiber-Constructors-1"></a><a class="docs-heading-anchor-permalink" href="#Fiber-Constructors" title="Permalink"></a></h3><article class="docstring"><header><a class="docstring-binding" id="Finch.@fiber" href="#Finch.@fiber"><code>Finch.@fiber</code></a> — <span class="docstring-category">Macro</span></header><section><div><pre><code class="language-julia hljs">@fiber ctr [arg]</code></pre><p>Construct a fiber using abbreviated level constructor names. To override abbreviations, expressions may be interpolated with <code>$</code>. For example, <code>Fiber(DenseLevel(SparseListLevel(Element(0.0))))</code> can also be constructed as <code>@fiber(sl(d(e(0.0))))</code>. Consult the documentation for the helper function <a href="@ref">f_code</a> for a full listing of level format codes.</p><p>Optionally, an argument may be specified to copy into the fiber. This expression allocates. Use <code>fiber(arg)</code> for a zero-cost copy, if available.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/willow-ahrens/Finch.jl/blob/45e8f07886cdda6ce3522b82448afd1117421ac0/src/fibers.jl#L266-L277">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Finch.fiber" href="#Finch.fiber"><code>Finch.fiber</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">fiber(arr, default = zero(eltype(arr)))</code></pre><p>Copies an array-like object <code>arr</code> into a corresponding, similar <code>Fiber</code> datastructure. <code>default</code> is the default value to use for initialization and sparse compression.</p><p>See also: <a href="../level/#Finch.fiber!"><code>fiber!</code></a></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; println(summary(fiber(sparse([1 0; 0 1]))))
+2×2 @fiber(d(sl(e(0))))
+
+julia&gt; println(summary(fiber(ones(3, 2, 4))))
+3×2×4 @fiber(d(d(d(e(0.0)))))</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/willow-ahrens/Finch.jl/blob/45e8f07886cdda6ce3522b82448afd1117421ac0/src/fibers_meta.jl#L10-L28">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Finch.fiber!" href="#Finch.fiber!"><code>Finch.fiber!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">fiber!(arr, default = zero(eltype(arr)))</code></pre><p>Like <a href="../level/#Finch.fiber"><code>fiber</code></a>, copies an array-like object <code>arr</code> into a corresponding, similar <code>Fiber</code> datastructure. However, <code>fiber!</code> reuses memory whenever possible, meaning <code>arr</code> may be rendered unusable.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/willow-ahrens/Finch.jl/blob/45e8f07886cdda6ce3522b82448afd1117421ac0/src/fibers_meta.jl#L1-L7">source</a></section></article><h3 id="Level-Constructors"><a class="docs-heading-anchor" href="#Level-Constructors">Level Constructors</a><a id="Level-Constructors-1"></a><a class="docs-heading-anchor-permalink" href="#Level-Constructors" title="Permalink"></a></h3><article class="docstring"><header><a class="docstring-binding" id="Finch.DenseLevel" href="#Finch.DenseLevel"><code>Finch.DenseLevel</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">DenseLevel{[Ti=Int]}(lvl, [dim])</code></pre><p>A subfiber of a dense level is an array which stores every slice <code>A[:, ..., :, i]</code> as a distinct subfiber in <code>lvl</code>. Optionally, <code>dim</code> is the size of the last dimension. <code>Ti</code> is the type of the indices used to index the level.</p><p>In the <a href="@ref">@fiber</a> constructor, <code>d</code> is an alias for <code>DenseLevel</code>.</p><pre><code class="language-julia-repl hljs">julia&gt; ndims(@fiber(d(e(0.0))))
+1
+
+julia&gt; ndims(@fiber(d(d(e(0.0)))))
+2
+
+julia&gt; @fiber(d(d(e(0.0))), [1 2; 3 4])
+Dense [:,1:2]
+├─[:,1]: Dense [1:2]
+│ ├─[1]: 1.0
+│ ├─[2]: 3.0
+├─[:,2]: Dense [1:2]
+│ ├─[1]: 2.0
+│ ├─[2]: 4.0</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/willow-ahrens/Finch.jl/blob/45e8f07886cdda6ce3522b82448afd1117421ac0/src/levels/denselevels.jl#L1-L26">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Finch.ElementLevel" href="#Finch.ElementLevel"><code>Finch.ElementLevel</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">ElementLevel{D, [Tv]}()</code></pre><p>A subfiber of an element level is a scalar of type <code>Tv</code>, initialized to <code>D</code>. <code>D</code> may optionally be given as the first argument.</p><p>In the <a href="@ref">@fiber</a> constructor, <code>e</code> is an alias for <code>ElementLevel</code>.</p><pre><code class="language-julia-repl hljs">julia&gt; @fiber(d(e(0.0)), [1, 2, 3])
+Dense [1:3]
+├─[1]: 1.0
+├─[2]: 2.0
+├─[3]: 3.0</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/willow-ahrens/Finch.jl/blob/45e8f07886cdda6ce3522b82448afd1117421ac0/src/levels/elementlevels.jl#L1-L16">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Finch.SparseListLevel" href="#Finch.SparseListLevel"><code>Finch.SparseListLevel</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">SparseListLevel{[Ti=Int], [Tp=Int]}(lvl, [dim])</code></pre><p>A subfiber of a sparse level does not need to represent slices <code>A[:, ..., :, i]</code> which are entirely <a href="../development/#Finch.default"><code>default</code></a>. Instead, only potentially non-default slices are stored as subfibers in <code>lvl</code>.  A sorted list is used to record which slices are stored. Optionally, <code>dim</code> is the size of the last dimension.</p><p><code>Ti</code> is the type of the last fiber index, and <code>Tp</code> is the type used for positions in the level.</p><p>In the <a href="@ref">@fiber</a> constructor, <code>sl</code> is an alias for <code>SparseListLevel</code>.</p><pre><code class="language-julia-repl hljs">julia&gt; @fiber(d(sl(e(0.0))), [10 0 20; 30 0 0; 0 0 40])
+Dense [:,1:3]
+├─[:,1]: SparseList (0.0) [1:3]
+│ ├─[1]: 10.0
+│ ├─[2]: 30.0
+├─[:,2]: SparseList (0.0) [1:3]
+├─[:,3]: SparseList (0.0) [1:3]
+│ ├─[1]: 20.0
+│ ├─[3]: 40.0
+
+julia&gt; @fiber(sl(sl(e(0.0))), [10 0 20; 30 0 0; 0 0 40])
+SparseList (0.0) [:,1:3]
+├─[:,1]: SparseList (0.0) [1:3]
+│ ├─[1]: 10.0
+│ ├─[2]: 30.0
+├─[:,3]: SparseList (0.0) [1:3]
+│ ├─[1]: 20.0
+│ ├─[3]: 40.0
+</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/willow-ahrens/Finch.jl/blob/45e8f07886cdda6ce3522b82448afd1117421ac0/src/levels/sparselistlevels.jl#L1-L35">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Finch.SparseCOOLevel" href="#Finch.SparseCOOLevel"><code>Finch.SparseCOOLevel</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">SparseCOOLevel{[N], [Ti=Tuple{Int...}], [Tp=Int]}(lvl, [dims])</code></pre><p>A subfiber of a sparse level does not need to represent slices which are entirely <a href="../development/#Finch.default"><code>default</code></a>. Instead, only potentially non-default slices are stored as subfibers in <code>lvl</code>. The sparse coo level corresponds to <code>N</code> indices in the subfiber, so fibers in the sublevel are the slices <code>A[:, ..., :, i_1, ..., i_n]</code>.  A set of <code>N</code> lists (one for each index) are used to record which slices are stored. The coordinates (sets of <code>N</code> indices) are sorted in column major order.  Optionally, <code>dims</code> are the sizes of the last dimensions.</p><p><code>Ti</code> is the type of the last <code>N</code> fiber indices, and <code>Tp</code> is the type used for positions in the level.</p><p>In the <a href="@ref">@fiber</a> constructor, <code>sh</code> is an alias for <code>SparseCOOLevel</code>.</p><pre><code class="language-julia-repl hljs">julia&gt; @fiber(d(sc{1}(e(0.0))), [10 0 20; 30 0 0; 0 0 40])
+Dense [:,1:3]
+├─[:,1]: SparseCOO (0.0) [1:3]
+│ ├─[1]: 10.0
+│ ├─[2]: 30.0
+├─[:,2]: SparseCOO (0.0) [1:3]
+├─[:,3]: SparseCOO (0.0) [1:3]
+│ ├─[1]: 20.0
+│ ├─[3]: 40.0
+
+julia&gt; @fiber(sc{2}(e(0.0)), [10 0 20; 30 0 0; 0 0 40])
+SparseCOO (0.0) [1:3,1:3]
+├─├─[1, 1]: 10.0
+├─├─[2, 1]: 30.0
+├─├─[1, 3]: 20.0
+├─├─[3, 3]: 40.0</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/willow-ahrens/Finch.jl/blob/45e8f07886cdda6ce3522b82448afd1117421ac0/src/levels/sparsecoolevels.jl#L1-L35">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Finch.SparseHashLevel" href="#Finch.SparseHashLevel"><code>Finch.SparseHashLevel</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">SparseHashLevel{[N], [Ti=Tuple{Int...}], [Tp=Int]}(lvl, [dims])</code></pre><p>A subfiber of a sparse level does not need to represent slices which are entirely <a href="../development/#Finch.default"><code>default</code></a>. Instead, only potentially non-default slices are stored as subfibers in <code>lvl</code>. The sparse hash level corresponds to <code>N</code> indices in the subfiber, so fibers in the sublevel are the slices <code>A[:, ..., :, i_1, ..., i_n]</code>.  A hash table is used to record which slices are stored. Optionally, <code>dims</code> are the sizes of the last dimensions.</p><p><code>Ti</code> is the type of the last <code>N</code> fiber indices, and <code>Tp</code> is the type used for positions in the level.</p><p>In the <a href="@ref">@fiber</a> constructor, <code>sh</code> is an alias for <code>SparseHashLevel</code>.</p><pre><code class="language-julia-repl hljs">julia&gt; @fiber(d(sh{1}(e(0.0))), [10 0 20; 30 0 0; 0 0 40])
+Dense [:,1:3]
+├─[:,1]: SparseHash (0.0) [1:3]
+│ ├─[1]: 10.0
+│ ├─[2]: 30.0
+├─[:,2]: SparseHash (0.0) [1:3]
+├─[:,3]: SparseHash (0.0) [1:3]
+│ ├─[1]: 20.0
+│ ├─[3]: 40.0
+
+julia&gt; @fiber(sh{2}(e(0.0)), [10 0 20; 30 0 0; 0 0 40])
+SparseHash (0.0) [1:3,1:3]
+├─├─[1, 1]: 10.0
+├─├─[2, 1]: 30.0
+├─├─[1, 3]: 20.0
+├─├─[3, 3]: 40.0</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/willow-ahrens/Finch.jl/blob/45e8f07886cdda6ce3522b82448afd1117421ac0/src/levels/sparsehashlevels.jl#L1-L34">source</a></section></article></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Home</a><a class="docs-footer-nextpage" href="../listing/">The Deets »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Monday 27 February 2023 05:07">Monday 27 February 2023</span>. Using Julia version 1.8.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
