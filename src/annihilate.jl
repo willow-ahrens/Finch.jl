@@ -151,6 +151,52 @@ function getvars(node::FinchNode)
     end
 end
 
+@kwdef struct ConstPropVisitor
+    ctx
+    bodies
+end
+
+function (ctx::ConstPropVisitor)(node::FinchNode)
+    if node.kind === loop
+        bodies_2 = Dict()
+        ConstPropVisitor(ctx.ctx, bodies_2)(node.body)
+        for (var, body) in pairs(bodies_2)
+            ctx.bodies[var] = sequence(get!(ctx.bodies, var, sequence()), loop(node.idx, body))
+        end
+    elseif node.kind === sieve
+        bodies_2 = Dict()
+        for (var, body) in pairs(bodies_2)
+            ctx.bodies[var] = sequence(get!(ctx.bodies, var, sequence()), sieve(node.cond, body))
+        end
+    elseif node.kind === declare
+        ctx.bodies[node.tns] = declare
+    if node.kind === freeze!
+        ctx.values[node.tns] = simplify(ctx.ctx, node.bodies())
+    elseif node.kind === access && node.mode.kind === reader && node.lhs.kind === variable
+        idxs = map(ctx, node.idxs)
+        constprop_read(ctx, node.tns, idxs)
+    elseif node.kind === assign && node.lhs.tns.kind === variable
+        idxs = map(ctx, node.lhs.idxs)
+        rhs = map(ctx, node.rhs)
+        ctx.bodies[node.tns] = sequence(get!(ctx.bodies, var, sequence()), node)
+    end
+end
+
+function constprop_declare(ctx::ConstPropVisitor, tns::VirtualScalar, var, init)
+    ctx.state[var] = init
+end
+
+function constprop_update(ctx::ConstPropVisitor, tns::VirtualScalar, var, op, rhs)
+    ctx.op[var] = call(apply, op, ctx.op[var])
+    for (idx, ext) in space
+        state = call(rhss, op, idx, ext)
+    end
+end
+
+function constprop_read(ctx::ConstPropVisitor, tns::VirtualScalar, var, init)
+    ctx.state[var] = init
+end
+
 """
     base_rules(alg, ctx)
 
@@ -187,75 +233,11 @@ function base_rules(alg, ctx)
             end
         end),
 
-        #freeze moves left
-        (@rule sequence(~s1..., ~s2, freeze(~a), ~s3...) => if !(a in getvars(s2))
-            sequence(s1..., freeze(a), s2, s3...)
-        end),
-        #forget moves left
-        (@rule sequence(~s1..., ~s2, forget(~a), ~s3...) => if !(a in getvars(s2))
-            sequence(s1..., forget(a), s2, s3...)
-        end),
-        #declare moves right
-        (@rule sequence(~s1..., declare(~a, ~z), ~s2, ~s3...) => if !(a in getvars(s2))
-            sequence(s1..., s2, declare(a, z), s3...)
-        end),
-        #thaw moves right
-        (@rule sequence(~s1..., thaw(~a), ~s2, ~s3...) => if !(a in getvars(s2))
-            sequence(s1..., s2, thaw(a), s3...)
-        end),
-        #propagate constants from declare
-        (@rule sequence(~s1..., declare(~a, ~z), assign(access(~a, ~m), ~f, ~b::isliteral), ~s2...) => if f != literal(right)
-            sequence(s1..., declare(~a, ~z), assign(access(a, m), right, call(f, z, b)), s2...)
-        end),
-
-        #propagate constants from assign
-        (@rule sequence(~s1..., assign(access(~a::isvar, ~m), $(literal(right)), ~b::isliteral), assign(access(~a, ~m), ~f, ~c), ~s2...) => 
-            sequence(s1..., s2, assign(access(a, m), right, call(f, b, c)), s3...)
-        ),
-
-        #propagate constant to meet forget or first use
-        (@rule sequence(~s1..., declare(~a, ~z), assign(access(~a, ~m), $(literal(right)), ~b::isliteral), freeze(~a), ~s2, ~s3...) =>
-            if s2.kind !== statement && !(@capture s2 forget(a))
-                s2 = Rewrite(Postwalk(@rule access(a, reader()) => b)(s2))
-                sequence(s1..., s2, declare(a, z), assign(access(a, m), right, b), freeze(a), s3...)
-            end
-        ),
-
-        #propagate constant to meet forget or first use
-        (@rule sequence(~s1..., thaw(~a), assign(access(~a, ~m), $(literal(right)), ~b::isliteral), freeze(~a), ~s2, ~s3...) =>
-            if s2.kind !== statement && !(@capture s2 forget(a))
-                s2 = Rewrite(Postwalk(@rule access(a, reader()) => b)(s2))
-                sequence(s1..., s2, thaw(a), assign(access(a, m), right, b), freeze(a), s3...)
-            end
-        ),
-
-        #propagate constant to meet forget or first use
-        (@rule sequence(~s1..., declare(~a, ~z), freeze(~a), ~s2, ~s3...) =>
-            if s2.kind !== statement && !(@capture s2 forget(a)) && !(@capture s2 thaw(a))
-                s2 = Rewrite(Postwalk(@rule access(a, reader()) => z)(s2))
-                sequence(s1..., s2, declare(a, z), freeze(a), s3...)
-            end
-        ),
-
-        #dce constant to meet declare or thaw
-        (@rule sequence(~s1..., s2, assign(access(~a::isvar, ~m), $(literal(right)), ~b::isliteral), ~s3...) =>
-            if s2.kind !== statement && !(@capture s2 declare(a, ~z)) && !(@capture s2 thaw(a))
-                s2 = Rewrite(Postwalk(@rule assign(access(a, ~n), ~f, ~rhs) => sequence())(s2))
-                sequence(s1..., assign(access(a, m), right, b), s2, s3...)
-            end
-        ),
-
-        #dce ignore to meet declare or thaw
-        (@rule sequence(~s1..., s2, freeze(~a), forget(~a), ~s3...) =>
-            if s2.kind !== statement && !(@capture s2 declare(a, ~z)) && !(@capture s2 thaw(a))
-                s2 = Rewrite(Postwalk(@rule assign(access(a, ~n, ~i...), ~f, ~rhs) => sequence())(s2))
-                sequence(s1..., freeze(a), forget(a), s2, s3...)
-            end
-        ),
-
         #dce
-        (@rule sequence(~s1..., declare(~a, ~z), freeze(~a), forget(~a), ~s2...) =>
-            sequence(s1..., s2...)
+        (@rule sequence(~s1..., declare(~a, ~z), ~s2..., freeze(~a), ~s3..., forget(~a), ~s4...) =>
+            if !(a in getvars(s2, s3))
+                sequence(s1..., s2..., s3..., s4...)
+            end
         ),
 
         #dce 
