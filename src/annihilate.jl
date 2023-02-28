@@ -192,13 +192,6 @@ end
 
 constprop_read(tns, ctx, stmt, node) = node
 
-function constprop_read(tns::VirtualScalar, ctx, stmt, node)
-    if @capture stmt sequence(declare(~a, ~z))
-        return z
-    else
-        return node
-    end
-end
 
 """
     base_rules(alg, ctx)
@@ -228,11 +221,7 @@ function base_rules(alg, ctx)
             sequence(s1..., declare(~a, op(z, b)), s2...)
         ),
 
-        (@rule sequence(~s1..., assign(access(~a, updater(~m), ~j...), ~op, ~b::isliteral), assign(access(~a, updater(~m), ~j...), ~op, ~c::isliteral), ~s2...) => if isassociative(op)
-            sequence(s1..., assign(access(~a, updater(~m), ~j...), op, op(b, c), s2...))
-        end),
-
-        (@rule sequence(~s1..., loop(i, assign(access(~a, updater(~m), ~j...), ~op, ~b::isliteral)), ~s2...) =>
+        (@rule sequence(~s1..., loop(~i, assign(access(~a, updater(~m), ~j...), ~op, ~b::isliteral)), ~s2...) =>
             if i ∉ j && getname(i) ∉ getunbound(b) #=TODO this doesn't work because chunkify temporarily drops indicies so we add =# && isliteral(b)
                 assign(access(a, updater(m), j...), f, b)
             end

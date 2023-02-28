@@ -128,4 +128,26 @@ end
     end
 end
 
+
+function constprop_read(tns::VirtualScalar, ctx, stmt, node)
+    if @capture stmt sequence(declare(~a, ~z))
+        return z
+    else
+        return node
+    end
+end
+
+A = VirtualScalar(:A, Float64, 0.0, :A, gensym())
+B = VirtualScalar(:B, Float64, 0.0, :B, gensym())
+
+prgm = sequence(
+    declare(variable(:A), 0),
+    assign(access(A, updater(create())), +, 10),
+    freeze(variable(:A)),
+    declare(B, 0),
+    assign(access(variable(:B), updater(create())), +, access(variable(:A), reader()))
+)
+
+display(simplify(prgm, LowerJulia()))
+
 end
