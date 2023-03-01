@@ -17,7 +17,7 @@ function execute_code(ex, T, algebra = DefaultAlgebra())
                 prgm = ThunkVisitor(ctx)(prgm) #TODO this is a bit of a hack.
                 (prgm, dims) = dimensionalize!(prgm, ctx)
                 prgm = close_scope(prgm, LifecycleVisitor())
-                display(prgm)
+                prgm = simplify(prgm, ctx)
                 #The following call separates tensor and index names from environment symbols.
                 #TODO we might want to keep the namespace around, and/or further stratify index
                 #names from tensor names
@@ -160,8 +160,6 @@ end
 function close_scope(prgm, ctx::LifecycleVisitor)
     prgm = ctx(prgm)
     for tns in getresults(prgm)
-        println(ctx.modes)
-        display(prgm)
         if ctx.modes[tns].kind !== reader
             prgm = sequence(prgm, freeze(tns))
         end
