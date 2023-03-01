@@ -16,7 +16,7 @@ function execute_code(ex, T, algebra = DefaultAlgebra())
                 prgm = ScopeVisitor()(prgm)
                 prgm = ThunkVisitor(ctx)(prgm) #TODO this is a bit of a hack.
                 (prgm, dims) = dimensionalize!(prgm, ctx)
-                prgm = LifecycleVisitor()(prgm)
+                prgm = close_scope(prgm, LifecycleVisitor())
                 display(prgm)
                 #The following call separates tensor and index names from environment symbols.
                 #TODO we might want to keep the namespace around, and/or further stratify index
@@ -153,7 +153,20 @@ struct LifecycleError
 end
 
 function open_scope(prgm, ctx::LifecycleVisitor)
-    prgm = LifecycleVisitor(;kwfields(ctx)..., uses=Dict())(prgm)
+    ctx_2 = LifecycleVisitor(;kwfields(ctx)..., uses=Dict())
+    close_scope(prgm, ctx_2)
+end
+
+function close_scope(prgm, ctx::LifecycleVisitor)
+    prgm = ctx(prgm)
+    for tns in getresults(prgm)
+        println(ctx.modes)
+        display(prgm)
+        if ctx.modes[tns].kind !== reader
+            prgm = sequence(prgm, freeze(tns))
+        end
+    end
+    prgm
 end
 
 function open_stmt(prgm, ctx::LifecycleVisitor)
@@ -164,6 +177,7 @@ function open_stmt(prgm, ctx::LifecycleVisitor)
         elseif mode.kind === updater && cur_mode.kind === reader
             prgm = sequence(thaw(tns), prgm)
         end
+        ctx.modes[tns] = mode
     end
     empty!(ctx.uses)
     prgm
@@ -175,11 +189,11 @@ function (ctx::LifecycleVisitor)(node::FinchNode)
     elseif node.kind === sieve
         open_stmt(sieve(ctx(node.cond), open_scope(node.body, ctx)), ctx)
     elseif node.kind === declare
-        ctx.scoped_uses[tns] = ctx.uses
-        if get(ctx.modes, tns, reader()) === updater 
-            node = sequence(freeze(tns), node)
+        ctx.scoped_uses[node.tns] = ctx.uses
+        if get(ctx.modes, node.tns, reader()) === updater 
+            node = sequence(freeze(node.tns), node)
         end
-        ctx.modes[tns] = updater(create())
+        ctx.modes[node.tns] = updater(create())
         node
     elseif node.kind === freeze
         haskey(ctx.modes, node.tns) || throw(LifecycleError("cannot freeze undefined $(node.tns)"))
