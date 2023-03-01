@@ -16,6 +16,9 @@ function execute_code(ex, T, algebra = DefaultAlgebra())
                 prgm = TransformSSA(Freshen())(prgm)
                 prgm = ThunkVisitor(ctx)(prgm) #TODO this is a bit of a hack.
                 (prgm, dims) = dimensionalize!(prgm, ctx)
+                lctx = LifecycleVisitor()
+                prgm = enscope(ctx_2->ctx_2(prgm), lctx)
+                display(prgm)
                 #The following call separates tensor and index names from environment symbols.
                 #TODO we might want to keep the namespace around, and/or further stratify index
                 #names from tensor names
@@ -30,7 +33,7 @@ function execute_code(ex, T, algebra = DefaultAlgebra())
                 end
             end)
             $(contain(ctx) do ctx_2
-                :(($(map(getresults(prgm)) do acc
+                :(($(map(sort(collect(lctx.scope))) do tns
                     @assert acc.tns.kind === variable
                     name = acc.tns.name
                     tns = trim!(ctx.bindings[acc.tns], ctx_2)
@@ -138,3 +141,79 @@ thaw!(tns, ctx) = tns
 Before returning a tensor from the finch program, trim any excess overallocated memory.
 """
 trim!(tns, ctx) = tns
+
+@kwdef mutable struct LifecycleVisitor
+    modes = Dict()
+end
+
+struct LifecycleError
+    msg
+end
+
+function enscope(prgm, ctx::LifecycleVisitor)
+    ctx.modes = ScopeDict(ctx.modes)
+    ctx.reqs = ScopeDict(ctx.reqs)
+    prgm = ctx(prgm)
+    prgm = process_reqs(prgm, ctx)
+    ctx.reqs = ctx.reqs.parent
+    ctx.modes = ctx.modes.parent
+end
+
+function (prgm, ctx::LifecycleVisitor)
+    for (tns, mode) in ctx.reqs.data
+        if mode.kind == reader && get(ctx.modes, tns, reader()) == updater
+            prgm = sequence(freeze(tns), prgm)
+            ctx.modes[end][tns] = reader()
+        elseif mode.kind == updater && ctx_mode.kind == reader
+            prgm = sequence(thaw(tns), prgm)
+            ctx.modes[end][tns] = updater(create())
+        end
+    end
+    empty!(ctx.reqs[end])
+end
+
+function (ctx::LifecycleVisitor)(node::FinchNode)
+    if node.kind === loop
+        enscope(ctx) do ctx_2
+            loop(node.idx, ctx_2(node.body))
+        end
+    elseif node.kind === sieve
+        enscope(ctx) do ctx_2
+            sieve(ctx(node.cond), ctx_2(body))
+        end
+    elseif node.kind === declare
+        tns = node.tns
+        ctx.stack[tns] = length(ctx.modes)
+        !haskey(ctx.stack, tns) || ctx.modes[ctx.stack[tns]][tns] == reader() || (node = sequence(freeze(tns), node))
+        ctx.modes[end] = updater(create())
+        push!(ctx.scope, node.tns)
+        node
+    elseif node.kind === freeze
+        haskey(ctx.modes, node.tns) && ctx.modes[node.tns] == reader() && return sequence()
+        ctx.modes[node.tns] = reader()
+        node
+    elseif node.kind === thaw
+        haskey(ctx.modes, node.tns) && ctx.modes[node.tns].kind == updater && return sequence()
+        ctx.modes[node.tns] = updater(create())
+        node
+    elseif node.kind === sequence
+        res = sequence()
+        for body in node.bodies
+            body_2 = ctx(body)
+            empty!(ctx.reqs)
+        end
+        res
+    if node.kind === assign && node.tns.kind === variable
+    elseif node.kind === access && node.tns.kind === variable
+        idxs = map(ctx, node.idxs)
+        haskey(ctx.reqs, node.tns) && ctx.reqs[node.tns].kind !== node.mode.kind &&
+            throw(LifecycleError("combined read and update $(node.tns) used on lhs and rhs"))
+        ctx.reqs[node.tns] = node.mode
+        println(ctx.reqs)
+        access(node.tns, node.mode, idxs...)
+    elseif istree(node)
+        return similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        return node
+    end
+end

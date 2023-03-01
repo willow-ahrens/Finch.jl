@@ -687,6 +687,8 @@ function display_statement(io, mime, node::FinchNode, level)
         end
         print(io, tab^level * "end")
     else
+        println("oh no")
+        println(node)
         error("unimplemented")
     end
 end

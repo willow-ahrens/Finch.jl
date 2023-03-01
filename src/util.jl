@@ -127,3 +127,28 @@ striplines(ex) = ex
 
 (Base.:^)(T::Type, i::Int) = ∘(repeated(T, i)..., identity)
 (Base.:^)(f::Function, i::Int) = ∘(repeated(f, i)..., identity)
+
+
+struct ScopeDict{K, V} <: AbstractDict{K, V}
+    parent::AbstractDict{K, V}
+    data::Dict{K, V}
+end
+
+ScopeDict(parent::AbstractDict{K, V}) where {K, V} = ScopeDict{K, V}(parent, Dict{K, V}())
+
+Base.haskey(d::ScopeDict) = haskey(d.data) || haskey(d.parent)
+
+Base.keys(d::ScopeDict) = union(keys(d.data), keys(d.parent))
+
+Base.get(d::ScopeDict, key, default) = get(d.data, key, get(d.parent, key, default))
+
+function Base.setindex!(d::ScopedDict, key, val)
+    if key in d.data
+        d.data[key] = val
+    else
+        d.parent[key] = val
+    end
+end
+
+localset!(d, k, v) = d[k] = v
+localset!(d::ScopedDict, k, v) = d.data[k] = v
