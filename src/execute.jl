@@ -13,11 +13,10 @@ function execute_code(ex, T, algebra = DefaultAlgebra())
         quote
             $(begin
                 prgm = virtualize(ex, T, ctx)
-                prgm = TransformSSA(Freshen())(prgm)
+                prgm = ScopeVisitor()(prgm)
                 prgm = ThunkVisitor(ctx)(prgm) #TODO this is a bit of a hack.
                 (prgm, dims) = dimensionalize!(prgm, ctx)
-                lctx = LifecycleVisitor()
-                prgm = enscope(ctx_2->ctx_2(prgm), lctx)
+                prgm = LifecycleVisitor()(prgm)
                 display(prgm)
                 #The following call separates tensor and index names from environment symbols.
                 #TODO we might want to keep the namespace around, and/or further stratify index
@@ -33,10 +32,10 @@ function execute_code(ex, T, algebra = DefaultAlgebra())
                 end
             end)
             $(contain(ctx) do ctx_2
-                :(($(map(sort(collect(lctx.scope))) do tns
-                    @assert acc.tns.kind === variable
-                    name = acc.tns.name
-                    tns = trim!(ctx.bindings[acc.tns], ctx_2)
+                :(($(map(getresults(prgm)) do tns
+                    @assert tns.kind === variable
+                    name = tns.name
+                    tns = trim!(ctx.bindings[tns], ctx_2)
                     :($name = $(ctx_2(tns)))
                 end...), ))
             end)
@@ -142,7 +141,10 @@ Before returning a tensor from the finch program, trim any excess overallocated 
 """
 trim!(tns, ctx) = tns
 
-@kwdef mutable struct LifecycleVisitor
+@kwdef struct LifecycleVisitor
+    uses = Dict()
+    scoped_uses = Dict()
+    global_uses = uses
     modes = Dict()
 end
 
@@ -150,70 +152,120 @@ struct LifecycleError
     msg
 end
 
-function enscope(prgm, ctx::LifecycleVisitor)
-    ctx.modes = ScopeDict(ctx.modes)
-    ctx.reqs = ScopeDict(ctx.reqs)
-    prgm = ctx(prgm)
-    prgm = process_reqs(prgm, ctx)
-    ctx.reqs = ctx.reqs.parent
-    ctx.modes = ctx.modes.parent
+function open_scope(prgm, ctx::LifecycleVisitor)
+    prgm = LifecycleVisitor(;kwfields(ctx)..., uses=Dict())(prgm)
 end
 
-function (prgm, ctx::LifecycleVisitor)
-    for (tns, mode) in ctx.reqs.data
-        if mode.kind == reader && get(ctx.modes, tns, reader()) == updater
+function open_stmt(prgm, ctx::LifecycleVisitor)
+    for (tns, mode) in ctx.uses
+        cur_mode = get(ctx.modes, tns, reader())
+        if mode.kind === reader && cur_mode.kind === updater
             prgm = sequence(freeze(tns), prgm)
-            ctx.modes[end][tns] = reader()
-        elseif mode.kind == updater && ctx_mode.kind == reader
+        elseif mode.kind === updater && cur_mode.kind === reader
             prgm = sequence(thaw(tns), prgm)
-            ctx.modes[end][tns] = updater(create())
         end
     end
-    empty!(ctx.reqs[end])
+    empty!(ctx.uses)
+    prgm
 end
 
 function (ctx::LifecycleVisitor)(node::FinchNode)
     if node.kind === loop
-        enscope(ctx) do ctx_2
-            loop(node.idx, ctx_2(node.body))
-        end
+        open_stmt(loop(node.idx, open_scope(node.body, ctx)), ctx)
     elseif node.kind === sieve
-        enscope(ctx) do ctx_2
-            sieve(ctx(node.cond), ctx_2(body))
-        end
+        open_stmt(sieve(ctx(node.cond), open_scope(node.body, ctx)), ctx)
     elseif node.kind === declare
-        tns = node.tns
-        ctx.stack[tns] = length(ctx.modes)
-        !haskey(ctx.stack, tns) || ctx.modes[ctx.stack[tns]][tns] == reader() || (node = sequence(freeze(tns), node))
-        ctx.modes[end] = updater(create())
-        push!(ctx.scope, node.tns)
+        ctx.scoped_uses[tns] = ctx.uses
+        if get(ctx.modes, tns, reader()) === updater 
+            node = sequence(freeze(tns), node)
+        end
+        ctx.modes[tns] = updater(create())
         node
     elseif node.kind === freeze
-        haskey(ctx.modes, node.tns) && ctx.modes[node.tns] == reader() && return sequence()
+        haskey(ctx.modes, node.tns) || throw(LifecycleError("cannot freeze undefined $(node.tns)"))
+        ctx.modes[node.tns].kind === reader && return sequence()
         ctx.modes[node.tns] = reader()
         node
     elseif node.kind === thaw
-        haskey(ctx.modes, node.tns) && ctx.modes[node.tns].kind == updater && return sequence()
+        get(ctx.modes, node.tns, reader()).kind === updater && return sequence()
         ctx.modes[node.tns] = updater(create())
         node
-    elseif node.kind === sequence
-        res = sequence()
-        for body in node.bodies
-            body_2 = ctx(body)
-            empty!(ctx.reqs)
-        end
-        res
-    if node.kind === assign && node.tns.kind === variable
+    elseif node.kind === assign
+        return open_stmt(assign(ctx(node.lhs), ctx(node.op), ctx(node.rhs)), ctx)
     elseif node.kind === access && node.tns.kind === variable
         idxs = map(ctx, node.idxs)
-        haskey(ctx.reqs, node.tns) && ctx.reqs[node.tns].kind !== node.mode.kind &&
+        uses = get(ctx.scoped_uses, node.tns, ctx.global_uses)
+        get(uses, node.tns, node.mode).kind !== node.mode.kind &&
             throw(LifecycleError("combined read and update $(node.tns) used on lhs and rhs"))
-        ctx.reqs[node.tns] = node.mode
-        println(ctx.reqs)
+        uses[node.tns] = node.mode
         access(node.tns, node.mode, idxs...)
     elseif istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))
     else
         return node
+    end
+end
+
+@kwdef struct ScopeVisitor
+    freshen = Freshen()
+    vars = Dict()
+    scope = Set()
+    global_scope = scope
+end
+
+struct ScopeError
+    msg
+end
+
+function open_scope(prgm, ctx::ScopeVisitor)
+    prgm = ScopeVisitor(;kwfields(ctx)..., vars=copy(ctx.vars), scope = Set())(prgm)
+end
+
+function (ctx::ScopeVisitor)(node::FinchNode)
+    if @capture node loop(~idx, ~body)
+        ctx.vars[idx] = index(ctx.freshen(idx.name))
+        loop(ctx(idx), open_scope(body, ctx))
+    elseif @capture node sieve(~cond, ~body)
+        sieve(ctx(cond), open_scope(body, ctx))
+    elseif @capture node declare(~tns, ~init)
+        if !(tns in ctx.scope)
+            tns = ctx.vars[tns] = variable(ctx.freshen(tns.name))
+        end
+        push!(ctx.scope, tns)
+        declare(ctx(tns), init)
+    elseif @capture node freeze(~tns)
+        node.tns in ctx.scope || ctx.scope === ctx.global_scope || throw(ScopeError("cannot freeze $tns not defined in this scope"))
+        freeze(ctx(tns))
+    elseif @capture node thaw(~tns)
+        node.tns in ctx.scope || ctx.scope === ctx.global_scope || throw(ScopeError("cannot thaw $tns not defined in this scope"))
+        thaw(ctx(tns))
+    elseif node.kind === variable
+        get!(ctx.vars, node) do
+            node = variable(ctx.freshen(node.name))
+            push!(ctx.global_scope, node)
+            node
+        end
+    elseif node.kind === index
+        haskey(ctx.vars, node) || throw(ScopeError("unbound index $node"))
+        ctx.vars[node]
+    elseif istree(node)
+        return similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        return node
+    end
+end
+
+"""
+    getresults(prgm)
+
+Return an iterator over the properly modified tensors in a finch program
+"""
+function getresults(node::FinchNode)
+    if node.kind === sequence
+        return mapreduce(getresults, vcat, node.bodies, init=[])
+    elseif node.kind === declare || node.kind === thaw
+        return [node.tns]
+    else
+        return []
     end
 end

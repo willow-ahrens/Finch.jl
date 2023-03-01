@@ -29,7 +29,6 @@ using .FinchNotation
 using .FinchNotation: and, or, right
 include("virtualize.jl")
 include("style.jl")
-include("transform_ssa.jl")
 include("lower.jl")
 include("dimensionalize.jl")
 include("annihilate.jl")

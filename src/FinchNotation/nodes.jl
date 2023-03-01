@@ -746,27 +746,6 @@ function Finch.getvalue(ex::FinchNode)
     ex.val
 end
 
-function Finch.getresults(node::FinchNode)
-    if node.kind === sequence
-        return mapreduce(Finch.getresults, vcat, node.bodies, init=[])
-    elseif node.kind === access
-        [access(node.tns, node.mode)]
-    elseif node.kind === loop
-        Finch.getresults(node.body)
-    elseif node.kind === chunk
-        Finch.getresults(node.body)
-    elseif node.kind === sieve
-        Finch.getresults(node.body)
-    elseif node.kind === assign
-        Finch.getresults(node.lhs)
-    elseif node.kind === pass
-        return node.tnss
-    else
-        return []
-        error("unimplemented")
-    end
-end
-
 function Finch.getname(x::FinchNode)
     if x.kind === index
         return x.val
