@@ -40,7 +40,7 @@ julia> A = @fiber(sl(e(0)), [0, 2, 0, 0, 3]);
 
 julia> B = @fiber(d(e(0)), [11, 12, 13, 14, 15]);
 
-julia> @finch @loop i C[i] = A[i] * B[i];
+julia> @finch (C .= 0; @loop i C[i] = A[i] * B[i]);
 
 julia> C
 SparseList (0) [1:5]
@@ -55,7 +55,7 @@ happens when we use the `@finch` macro (we've stripped line numbers from the
 result to clean it up):
 
 ```jldoctest example1
-julia> (@macroexpand @finch @loop i C[i] = A[i] * B[i]) |> Finch.striplines
+julia> (@macroexpand @finch (C .= 0; @loop i C[i] = A[i] * B[i])) |> Finch.striplines
 quote
     var"#18#res" = (Finch.execute)(begin
                 let i = index_instance(:i)
@@ -81,7 +81,7 @@ convenient to use the unexported macro `Finch.finch_program_instance`:
 ```jldoctest example1
 julia> using Finch: @finch_program_instance
 
-julia> prgm = Finch.@finch_program_instance @loop i C[i] = A[i] * B[i]
+julia> prgm = Finch.@finch_program_instance (C .= 0; @loop i C[i] = A[i] * B[i])
 loop_instance(index_instance(:i), assign_instance(access_instance(variable_instance(:C, C), updater_instance(create_instance()), (index_instance(:i),)), literal_instance(right), call_instance(variable_instance(:*, *), (access_instance(variable_instance(:A, A), reader_instance(), (index_instance(:i),)), access_instance(variable_instance(:B, B), reader_instance(), (index_instance(:i),))))))
 ```
 

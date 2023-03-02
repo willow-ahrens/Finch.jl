@@ -74,8 +74,8 @@ function pagerank(edges; nsteps=20, damp = 0.85)
     beta_score = (1 - damp)/n
 
     for step = 1:nsteps
-        @finch @loop j i rank[i] += scaled_edges[i, j] * r[j]
-        @finch @loop i r[i] = beta_score + damp * rank[i]
+        @finch (rank .= 0; @loop j i rank[i] += scaled_edges[i, j] * r[j])
+        @finch (r .= 0; @loop i r[i] = beta_score + damp * rank[i])
     end
     return r
 end
@@ -103,14 +103,13 @@ function bfs(edges, source=5)
     v = Scalar(false)
 
     while F.lvl.pos[2] > 1 #TODO this could be cleaner if we could get early exit working.
-        @finch @loop j k (begin
+        @finch @loop j k begin
+            v[] = F[j] && edges[k, j] && !(V[k])
             @sieve v[] begin
                 _F[k] |= true
                 !P[k] <<choose(0)>>= j #Only set the parent for this vertex
             end
-        end) where (
-            v[] = F[j] && edges[k, j] && !(V[k])
-        )
+        end
         @finch @loop k !V[k] |= _F[k]
         (F, _F) = (_F, F)
     end
@@ -129,8 +128,8 @@ function spgemm_inner(A, B)
     w = @fiber sh{2}(e(0.0))
     AT = @fiber d(sl(e(0.0)))
     @finch @loop k i w[k, i] = A[i, k]
-    @finch @loop i k AT[k, i] = w[k, i]
-    @finch @loop j i k C[i, j] += AT[k, i] * B[k, j]
+    @finch (AT .= 0; @loop i k AT[k, i] = w[k, i])
+    @finch (C .= 0; @loop j i k C[i, j] += AT[k, i] * B[k, j])
     return C
 end
 
@@ -143,11 +142,13 @@ end
 function spgemm_gustavsons(A, B)
     C = @fiber d(sl(e(0.0)))
     w = @fiber sm(e(0.0))
-    @finch @loop j (
-        @loop i C[i, j] = w[i]
-    ) where (
-        @loop k i w[i] += A[i, k] * B[k, j]
-    )
+    @finch begin
+        C .= 0
+        @loop j begin
+            @loop k i w[i] += A[i, k] * B[k, j]
+            @loop i C[i, j] = w[i]
+        end
+    end
     return C
 end
 
@@ -162,9 +163,9 @@ function spgemm_outer(A, B)
     w = @fiber sh{2}(e(0.0))
     BT = @fiber d(sl(e(0.0)))
     @finch @loop j k w[j, k] = B[k, j]
-    @finch @loop k j BT[j, k] = w[j, k]
+    @finch (BT .= 0; @loop k j BT[j, k] = w[j, k])
     @finch @loop k i j w[i, j] += A[i, k] * BT[j, k]
-    @finch @loop j i C[i, j] = w[i, j]
+    @finch (C .= 0; @loop j i C[i, j] = w[i, j])
     return C
 end
 

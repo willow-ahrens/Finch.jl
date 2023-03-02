@@ -45,7 +45,7 @@ u = @fiber sl(e(1)) #TODO add some data
 v = @fiber sl(e(1)) #TODO add some data
 w = @fiber sl(e(1))
 
-@finch MyAlgebra() @loop i w[i] = gcd(u[i], v[i])
+@finch MyAlgebra() (w .= 1; @loop i w[i] = gcd(u[i], v[i]))
 ```
 
 ## Properties
