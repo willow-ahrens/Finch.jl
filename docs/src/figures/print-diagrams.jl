@@ -8,15 +8,17 @@ tikzwidth(fbr::SubFiber{<:DenseLevel}) =
     sum(p->max(tikzwidth(SubFiber(fbr.lvl.lvl, p)), 1), ((fbr.pos - 1) * fbr.lvl.I) .+ (1:fbr.lvl.I), init=1.5)
 function tikzshow(io, fbr::SubFiber{<:DenseLevel}, tag, anchor, y0, x0)
     lvl = fbr.lvl
-    node = "$(tag)d$(ndims(fbr))p$(fbr.pos)"
+    mtx = "$(tag)d$(ndims(fbr))p$(fbr.pos)"
+    lbl = "$(mtx)l"
 
     println(io, """
-    \\matrix ($node) [matrix of math nodes,
+    \\node ($lbl) [anchor=north] at ($(x0 + tikzwidth(fbr)/2)*\\myunit, $y0*\\myunit) {pos=$(fbr.pos)};
+    \\matrix ($mtx) [matrix of math nodes,
         nodes = {whclsty},
         left delimiter  = (,
         right delimiter = ),
         ampersand replacement=\\&,
-        anchor=north] at ($(x0 + tikzwidth(fbr)/2)*\\myunit, $y0*\\myunit)
+        anchor=north] at ($(x0 + tikzwidth(fbr)/2)*\\myunit, $(y0-1)*\\myunit)
     {""")
     join(io, ["|[fullsty]|" for i=1:lvl.I], "\\&"); println(io, "\\\\")
     println(io, "};")
@@ -25,12 +27,12 @@ function tikzshow(io, fbr::SubFiber{<:DenseLevel}, tag, anchor, y0, x0)
     for i = 1:lvl.I
         p += 1
         subfbr = SubFiber(lvl.lvl, p)
-        subanchor = "$node-1-$i"
-        subnode = tikzshow(io, subfbr, tag, subanchor, y0 - 3, x)
-        println(io, "\\draw ($subanchor.center) -- ($subnode.north) node [midway, fill=white] {$(":,"^(ndims(fbr)-1))$i};")
+        subanchor = "$mtx-1-$i"
+        subnode = tikzshow(io, subfbr, tag, subanchor, y0 - 4, x)
+        println(io, "\\draw ($subanchor.center) -- ($subnode.north) node [midway, fill=white] {[$(":,"^(ndims(fbr)-1))$i]};")
         x += tikzwidth(subfbr)
     end
-    node
+    lbl
 end
 function tikzwidth(fbr::SubFiber{<:SparseListLevel})
     lvl = fbr.lvl
@@ -40,16 +42,18 @@ function tikzwidth(fbr::SubFiber{<:SparseListLevel})
 end
 function tikzshow(io, fbr::SubFiber{<:SparseListLevel}, tag, anchor, y0, x0)
     lvl = fbr.lvl
-    node = "$(tag)d$(ndims(fbr))p$(fbr.pos)"
+    mtx = "$(tag)d$(ndims(fbr))p$(fbr.pos)"
+    lbl = "$(mtx)l"
     qoss = lvl.ptr[fbr.pos]:lvl.ptr[fbr.pos + 1]-1
 
     println(io, """
-    \\matrix ($node) [matrix of math nodes,
+    \\node ($lbl) [anchor=north] at ($(x0 + tikzwidth(fbr)/2)*\\myunit, $y0*\\myunit) {pos=$(fbr.pos)};
+    \\matrix ($mtx) [matrix of math nodes,
         nodes = {whclsty},
         left delimiter  = (,
         right delimiter = ),
         ampersand replacement=\\&,
-        anchor=north] at ($(x0 + tikzwidth(fbr)/2)*\\myunit, $y0*\\myunit)
+        anchor=north] at ($(x0 + tikzwidth(fbr)/2)*\\myunit, $(y0 - 1)*\\myunit)
     {""")
     join(io, [i in lvl.idx[qoss] ? "|[fullsty]|" : "|[zcsty]|" for i=1:lvl.I], "\\&"); println(io, "\\\\")
     println(io, "};")
@@ -60,20 +64,22 @@ function tikzshow(io, fbr::SubFiber{<:SparseListLevel}, tag, anchor, y0, x0)
     for q in qoss
         i = lvl.idx[q]
         subfbr = SubFiber(lvl.lvl, q)
-        subanchor = "$node-1-$i"
-        subnode = tikzshow(io, subfbr, tag, subanchor, y0 - 3, x)
-        println(io, "\\draw ($subanchor.center) -- ($subnode.north) node [midway, fill=white] {$(":,"^(ndims(fbr)-1))$i};")
+        subanchor = "$mtx-1-$i"
+        subnode = tikzshow(io, subfbr, tag, subanchor, y0 - 4, x)
+        println(io, "\\draw ($subanchor.center) -- ($subnode.north) node [midway, fill=white] {[$(":,"^(ndims(fbr)-1))$i]};")
         x += tikzwidth(subfbr)
     end
     #"$(node)l"
-    node
+    lbl
 end
 
 function tikzshow(io, fbr::SubFiber{<:ElementLevel}, tag, anchor, y0, x0)
     lvl = fbr.lvl
     node = "$(tag)d$(ndims(fbr))p$(fbr.pos)"
-    println(io, "\\node ($node) [below=of $anchor, nzsty] {$(lvl.val[fbr.pos])};")
-    return node
+    lbl = "$(node)l"
+    println(io, "\\node ($lbl) [below=of $anchor] {\\\\$(fbr.pos)};")
+    println(io, "\\node ($node) [below=0 of $(lbl).south, nzsty] {$(lvl.val[fbr.pos])};")
+    return lbl
 end
 
 function tikzdisplay(f, name)
@@ -97,18 +103,22 @@ end
 highlight(io, fbr::Fiber) = highlight_level(io, fbr.lvl, "A", -1, tikzwidth(SubFiber(fbr.lvl, 1)), 0)
 
 function highlight_level(io, lvl::DenseLevel, tag, x0, x1, y0)
-    lbl = "$(tag)d$(Finch.level_ndims(typeof(lvl)))p1-1-1"
+    mtx = "$(tag)d$(Finch.level_ndims(typeof(lvl)))p1"
+    lbl = "$(mtx)l"
     println(io, """
-    \\draw [whclsty, anchor=north east] let \\p1 = ($(lbl).north) in ($x0, \\y1) node {DenseLevel};
+    \\draw [whclsty, anchor=north east] let \\p1 = ($(mtx)-1-1.north) in ($x0, \\y1) node {fibers:};
+    \\draw [whclsty, anchor=north east] let \\p1 = ($(lbl).north) in ($x0, \\y1) node {DenseLevel positions:};
     """)
     highlight_level(io, lvl.lvl, tag, x0, x1, y0)
 end
 
 function highlight_level(io, lvl::SparseListLevel, tag, x0, x1, y0)
-    lbl = "$(tag)d$(Finch.level_ndims(typeof(lvl)))p1-1-1"
+    mtx = "$(tag)d$(Finch.level_ndims(typeof(lvl)))p1"
+    lbl = "$(mtx)l"
     #lbl_2 = "$(tag)d$(Finch.level_ndims(typeof(lvl)))p1l"
     println(io, """
-    \\draw [whclsty, anchor=north east] let \\p1 = ($(lbl).north) in ($x0, \\y1) node {SparseListLevel};
+    \\draw [whclsty, anchor=north east] let \\p1 = ($(mtx)-1-1.north) in ($x0, \\y1) node {fibers:};
+    \\draw [whclsty, anchor=north east] let \\p1 = ($(lbl).north) in ($x0, \\y1) node {SparseLevel positions:};
     """)
     #\\draw [hlsty] let \\p1 = ($lbl.south), \\p2 = ($lbl.north) in ($x0*\\myunit, \\y1 - 1*\\myunit) rectangle ($x1*\\myunit, \\y2 - 1*\\myunit);
     #\\draw [hlsty] let \\p1 = ($lbl_2.south), \\p2 = ($lbl_2.north) in ($x0*\\myunit, \\y1) rectangle ($x1*\\myunit, \\y2);
@@ -117,17 +127,31 @@ end
 function highlight_level(io, lvl::ElementLevel, tag, x0, x1, y0)
     lbl = "$(tag)d$(Finch.level_ndims(typeof(lvl)))p1"
     println(io, """
-    \\draw [whclsty, anchor=north east] let \\p1 = ($(lbl).north) in ($x0, \\y1) node {ElementLevel};
+    \\draw [whclsty, anchor=north east] let \\p1 = ($(lbl).north) in ($x0, \\y1) node {values:};
+    \\draw [whclsty, anchor=north east] let \\p1 = ($(lbl)l.north) in ($x0, \\y1) node {ElementLevel positions:};
     """)
     #\\draw [hlsty] let \\p1 = ($(lbl).south), \\p2 = ($lbl.north) in ($x0*\\myunit, \\y1) rectangle ($x1*\\myunit, \\y2);
 end
 
-tikzdisplay("test.tex") do io
-    A = [0 0 44;
-        11 0 0;
-        22 0 55;
-        33 0 0]
-    fbr = @fiber(d(sl(e(0))), A)
+A = [0 0 4.4;
+    1.1 0 0;
+    2.2 0 5.5;
+    3.3 0 0]
+
+tikzdisplay("levels-A-d-d-e.tex") do io
+    fbr = @fiber(d(d(e(0.0))), A)
+    tikzshow(io, fbr)
+    highlight(io, fbr)
+end
+
+tikzdisplay("levels-A-d-sl-e.tex") do io
+    fbr = @fiber(d(sl(e(0.0))), A)
+    tikzshow(io, fbr)
+    highlight(io, fbr)
+end
+
+tikzdisplay("levels-A-sl-sl-e.tex") do io
+    fbr = @fiber(sl(sl(e(0.0))), A)
     tikzshow(io, fbr)
     highlight(io, fbr)
 end
