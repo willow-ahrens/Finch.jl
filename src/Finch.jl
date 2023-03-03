@@ -127,12 +127,9 @@ end
     end
 end
 
-function constprop_read(tns::VirtualScalar, ctx, stmt, node)
-    if @capture stmt sequence(declare(~a, ~z))
-        return z
-    else
-        return node
-    end
-end
+include("fileio/fbr.jl")
+include("fileio/binsparse.jl")
+
+export fbrread, fbrwrite, bsread, bswrite
 
 end

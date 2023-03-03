@@ -83,6 +83,8 @@ include("utils.jl")
     if should_run("issues") include("test_issues.jl") end
     if should_run("base") include("test_base.jl") end
     if should_run("apps") include("test_apps.jl") end
+    if should_run("meta") include("test_meta.jl") end
+    if should_run("fileio") include("test_fileio.jl") end
     if should_run("embed") include("embed/test_embed.jl") end
     #algebra goes at the end since it calls refresh()
     if should_run("algebra") include("test_algebra.jl") end
