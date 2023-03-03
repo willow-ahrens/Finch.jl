@@ -53,7 +53,7 @@ FinchNotation.isliteral(::VirtualSubFiber) =  false
     level_ndims(::Type{Lvl})
 
 The result of `level_ndims(Lvl)` defines [ndims](@ref) for all subfibers
-of a level of type `Lvl`.
+in a level of type `Lvl`.
 """
 function level_ndims end
 @inline Base.ndims(::AbstractFiber{Lvl}) where {Lvl} = level_ndims(Lvl)
@@ -62,7 +62,7 @@ function level_ndims end
 """
     level_size(lvl)
 
-The result of `level_size(lvl)` defines the [size](@ref) of all subfibers of the
+The result of `level_size(lvl)` defines the [size](@ref) of all subfibers in the
 level `lvl`.
 """
 function level_size end
@@ -71,7 +71,7 @@ function level_size end
 """
     level_axes(lvl)
 
-The result of `level_axes(lvl)` defines the [axes](@ref) of all subfibers of the
+The result of `level_axes(lvl)` defines the [axes](@ref) of all subfibers in the
 level `lvl`.
 """
 function level_axes end
@@ -80,7 +80,7 @@ function level_axes end
 """
     level_eltype(::Type{Lvl})
 
-The result of `level_eltype(Lvl)` defines [eltype](@ref) for all subfibers of a
+The result of `level_eltype(Lvl)` defines [eltype](@ref) for all subfibers in a
 level of type `Lvl`.
 """
 function level_eltype end
@@ -90,7 +90,7 @@ function level_eltype end
 """
     level_default(::Type{Lvl})
 
-The result of `level_default(Lvl)` defines [default](@ref) for all subfibers of a
+The result of `level_default(Lvl)` defines [default](@ref) for all subfibers in a
 level of type `Lvl`.
 """
 function level_default end
