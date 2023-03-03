@@ -41,6 +41,12 @@ are stored in the same datastructure, and disambiguated by an integer
 contains only one fiber, the root. The middle level has 3 subfibers, one for
 each column. The leafmost level has 12 subfibers, one for each element of the array.
 
+When we print the tree in text, positions are numbered from top to bottom.
+However, if we visualize our tree with the root at the top, positions range from
+left to right:
+
+![Dense Format Index Tree](assets/levels-A-d-d-e.png)
+
 Because our array is sparse, (mostly zero, or another fill value), it would be
 more efficient to store only the nonzero values. In Finch, each level is
 represented with a different format. A sparse level only stores non-fill values.
@@ -59,6 +65,8 @@ Dense [:,1:3]
 │ ├─[1]: 4.4
 │ ├─[3]: 5.5
 ```
+
+![CSC Format Index Tree](assets/levels-A-d-sl-e.png)
 
 Our `d(sl(e(0.0)))` format is also known as
 ["CSC"](https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_column_.28CSC_or_CCS.29)
@@ -81,6 +89,8 @@ SparseList (0.0) [:,1:3]
 │ ├─[1]: 4.4
 │ ├─[3]: 5.5
 ```
+
+![DCSC Format Index Tree](assets/levels-A-sl-sl-e.png)
 
 Here we see that the entirely zero column has also been compressed. The
 `sl(sl(e(0.0)))` format is also known as

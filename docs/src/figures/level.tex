@@ -4,12 +4,13 @@
 \resizebox{\linewidth}{!}{%
 \begin{tikzpicture}[>=latex]
 
+\node (Ad2p1p) [anchor=north] {Fiber(lvl, pos=1)} at (9.0*\myunit, 0*\myunit):
 \matrix (Ad2p1) [matrix of math nodes,
     nodes = {whclsty},
     left delimiter  = (,
     right delimiter = ),
     ampersand replacement=\&,
-    anchor=north] at (9.0*\myunit, 0*\myunit)
+    anchor=north] at (9.0*\myunit, -2*\myunit)
 {
 |[fullsty]|\&|[fullsty]|\&|[fullsty]|\\
 };
@@ -18,7 +19,7 @@
     left delimiter  = (,
     right delimiter = ),
     ampersand replacement=\&,
-    anchor=north] at (2.75*\myunit, -3*\myunit)
+    anchor=north] at (2.75*\myunit, -5*\myunit)
 {
 |[zcsty]|\&|[fullsty]|\&|[fullsty]|\&|[fullsty]|\\
 };
@@ -34,7 +35,7 @@
     left delimiter  = (,
     right delimiter = ),
     ampersand replacement=\&,
-    anchor=north] at (8.25*\myunit, -3*\myunit)
+    anchor=north] at (8.25*\myunit, -5*\myunit)
 {
 |[zcsty]|\&|[zcsty]|\&|[zcsty]|\&|[zcsty]|\\
 };
@@ -44,7 +45,7 @@
     left delimiter  = (,
     right delimiter = ),
     ampersand replacement=\&,
-    anchor=north] at (13.75*\myunit, -3*\myunit)
+    anchor=north] at (13.75*\myunit, -5*\myunit)
 {
 |[fullsty]|\&|[zcsty]|\&|[fullsty]|\&|[zcsty]|\\
 };
@@ -55,7 +56,7 @@
 \draw (Ad2p1-1-3.center) -- (Ad1p3.north) node [midway, fill=white] {:,3};
 \draw [whclsty, anchor=north east] let \p1 = (Ad2p1-1-1.north) in (-1, \y1) node {DenseLevel};
 
-\draw [whclsty, anchor=north east] let \p1 = (Ad1p1-1-1.north) in (-1, \y1) node {SparseLevel};
+\draw [whclsty, anchor=north east] let \p1 = (Ad1p1-1-1.north) in (-1, \y1) node {SparseListLevel};
 
 \draw [whclsty, anchor=north east] let \p1 = (Ad0p1.north) in (-1, \y1) node {ElementLevel};
 
