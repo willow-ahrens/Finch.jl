@@ -95,17 +95,18 @@ function (ctx::DeclareDimensions)(node::FinchNode, dim)
     if node.kind === index
         ctx.dims[getname(node)] = resultdim(ctx.ctx, get(ctx.dims, getname(node), nodim), dim)
         return node
-    elseif node.kind === access && node.tns.kind === virtual
-        return declare_dimensions_access(node, ctx, node.tns.val, dim)
-    elseif node.kind === access && node.tns.kind === variable #TODO perhaps we can get rid of this
+    elseif node.kind === access && node.tns.kind === variable
         return declare_dimensions_access(node, ctx, node.tns, dim)
     elseif node.kind === sequence
         sequence(map(ctx, node.bodies)...)
     elseif node.kind === declare
-        empty!(get!(ctx.hints, node.tns, Any[]))
+        ctx.hints[node.tns] = []
         node
-    elseif node.kind === forget
-        map(InferDimensions(ctx.ctx, ctx.dims), ctx.hints[node.tns])
+    elseif node.kind === freeze
+        if haskey(ctx.hints, node.tns)
+            map(InferDimensions(ctx.ctx, ctx.dims), ctx.hints[node.tns])
+            delete!(ctx.hints, node.tns)
+        end
         node
     elseif node.kind === protocol
         return protocol(ctx(node.idx, dim), node.mode)

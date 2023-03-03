@@ -101,6 +101,7 @@ dropdefaults(src) = dropdefaults!(similar(src), src)
         @finch begin
             dst .= $(default(dst))
             @loop $(reverse(idxs)...) begin
+                tmp .= $(default(dst))
                 tmp[] = src[$(idxs...)]
                 @sieve (tmp[] != $d) begin
                     dst[$(idxs...)] = tmp[]

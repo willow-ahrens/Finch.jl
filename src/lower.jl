@@ -30,6 +30,7 @@ end
     preamble::Vector{Any} = []
     bindings::Dict{Any, Any} = Dict()
     modes::Dict{Any, Any} = Dict()
+    scope = Set()
     epilogue::Vector{Any} = []
     dims::Dict = Dict()
     freshen::Freshen = Freshen()
@@ -55,6 +56,16 @@ end
 #    @info :lower root style
 #    ctx(root, style)
 #end
+
+function open_scope(prgm, ctx::LowerJulia)
+    ctx_2 = shallowcopy(ctx)
+    ctx_2.scope = Set()
+    res = ctx_2(prgm)
+    for tns in ctx_2.scope
+        pop!(ctx_2.modes, tns, nothing)
+    end
+    res
+end
 
 function cache!(ctx, var, val)
     if isliteral(val)
@@ -219,15 +230,15 @@ function (ctx::InstantiateTensors)(node::FinchNode)
     elseif node.kind === declare
         push!(ctx.escape, node.tns)
         node
-    elseif node.kind === access && node.tns.kind === variable && !(node in ctx.escape)
+    elseif node.kind === access && node.tns.kind === variable && !(node.tns in ctx.escape)
         tns = ctx.ctx.bindings[node.tns]
         protos = map(idx -> idx.kind === protocol ? idx.mode.val : nothing, node.idxs)
         idxs = map(idx -> idx.kind === protocol ? ctx(idx.idx) : ctx(idx), node.idxs)
         if node.mode.kind === reader
-            @assert ctx.ctx.modes[node.tns].kind === reader "Cannot read an update-only tensor (perhaps same tensor on both lhs and rhs?)"
+            get(ctx.ctx.modes, node.tns, reader()).kind === reader || throw(LifecycleError("Cannot read update-only $(node.tns) (perhaps same tensor on both lhs and rhs?)"))
             return access(get_reader(tns, ctx.ctx, protos...), node.mode, idxs...)
         else
-            @assert ctx.ctx.modes[node.tns].kind === updater "Cannot update a read-only tensor (perhaps same tensor on both lhs and rhs?)"
+            ctx.ctx.modes[node.tns].kind === updater || throw(LifecycleError("Cannot update read-only $(node.tns) (perhaps same tensor on both lhs and rhs?)"))
             return access(get_updater(tns, ctx.ctx, protos...), node.mode, idxs...)
         end
     elseif istree(node)
@@ -268,8 +279,9 @@ function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
         end
     elseif root.kind === declare
         @assert root.tns.kind === variable
-        @assert ctx.modes[root.tns].kind === reader
-        ctx.bindings[root.tns] = declare!(ctx.bindings[root.tns], ctx, root.init)
+        @assert get(ctx.modes, root.tns, reader()).kind === reader
+        ctx.bindings[root.tns] = declare!(ctx.bindings[root.tns], ctx, root.init) #TODO should ctx.bindings be scoped?
+        push!(ctx.scope, root.tns)
         ctx.modes[root.tns] = updater(create())
         quote end
     elseif root.kind === freeze
@@ -278,12 +290,12 @@ function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
         ctx.modes[root.tns] = reader()
         quote end
     elseif root.kind === thaw
-        @assert ctx.modes[root.tns].kind === reader
+        @assert get(ctx.modes, root.tns, reader()).kind === reader
         ctx.bindings[root.tns] = thaw!(ctx.bindings[root.tns], ctx)
         ctx.modes[root.tns] = updater(modify())
         quote end
     elseif root.kind === forget
-        @assert ctx.modes[root.tns].kind === reader
+        @assert get(ctx.modes, root.tns, reader()).kind === reader
         delete!(ctx.modes, root.tns)
         quote end
     elseif root.kind === access
@@ -329,7 +341,7 @@ function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
                 $(bind(ctx, getname(root.idx) => idx_sym) do 
                     contain(ctx) do ctx_2
                         body_3 = ForLoopVisitor(ctx_2, root.idx, value(idx_sym))(root.body)
-                        (ctx_2)(body_3)
+                        open_scope(body_3, ctx_2)
                     end
                 end)
             end
@@ -339,7 +351,7 @@ function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
                     $(bind(ctx, getname(root.idx) => idx_sym) do 
                         contain(ctx) do ctx_2
                             body_3 = ForLoopVisitor(ctx_2, root.idx, value(idx_sym))(root.body)
-                            (ctx_2)(body_3)
+                            open_scope(body_3, ctx_2)
                         end
                     end)
                 end
@@ -352,7 +364,7 @@ function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
         return quote
             if $cond
                 $(contain(ctx) do ctx_2
-                    ctx_2(root.body)
+                    open_scope(root.body, ctx_2)
                 end)
             end
         end

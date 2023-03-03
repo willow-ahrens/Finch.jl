@@ -15,8 +15,9 @@ function execute_code(ex, T, algebra = DefaultAlgebra())
                 prgm = virtualize(ex, T, ctx)
                 prgm = ScopeVisitor()(prgm)
                 prgm = ThunkVisitor(ctx)(prgm) #TODO this is a bit of a hack.
-                (prgm, dims) = dimensionalize!(prgm, ctx)
                 prgm = close_scope(prgm, LifecycleVisitor())
+                (prgm, dims) = dimensionalize!(prgm, ctx)
+                ctx.dims = dims
                 prgm = simplify(prgm, ctx)
                 #The following call separates tensor and index names from environment symbols.
                 #TODO we might want to keep the namespace around, and/or further stratify index
@@ -208,7 +209,7 @@ function (ctx::LifecycleVisitor)(node::FinchNode)
         idxs = map(ctx, node.idxs)
         uses = get(ctx.scoped_uses, node.tns, ctx.global_uses)
         get(uses, node.tns, node.mode).kind !== node.mode.kind &&
-            throw(LifecycleError("combined read and update $(node.tns) used on lhs and rhs"))
+            throw(LifecycleError("cannot mix reads and writes to $(node.tns) outside of defining scope (perhaps missing definition)"))
         uses[node.tns] = node.mode
         access(node.tns, node.mode, idxs...)
     elseif istree(node)

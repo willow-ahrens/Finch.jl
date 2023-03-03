@@ -65,7 +65,6 @@ function virtualize(ex, ::Type{FinchNotation.VariableInstance{tag, Tns}}, ctx) w
     else
         ctx.freshen(tag)
         get!(ctx.bindings, variable(tag), x)
-        ctx.modes[variable(tag)] = reader()
         return variable(tag)
     end
 end
