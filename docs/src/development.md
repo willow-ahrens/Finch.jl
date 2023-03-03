@@ -145,9 +145,9 @@ freeze!
 trim!
 ```
 
-## Fiber Life Cycle
+## Fiber internals
 
-Fiber levels implement the tensor life cycle using the following methods:
+Fiber levels are implemented using the following methods:
 
 ```@docs
 default
@@ -155,4 +155,9 @@ initialize_level!
 assemble_level!
 reassemble_level!
 freeze_level!
+level_ndims
+level_size
+level_axes
+level_eltype
+level_default
 ```
