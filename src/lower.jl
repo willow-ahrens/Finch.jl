@@ -266,15 +266,11 @@ function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
         if isempty(root.bodies)
             return quote end
         else
-            contain(ctx) do ctx_2
-                body = root.bodies[1]
-                if body.kind !== sequence
-                    body = InstantiateTensors(ctx=ctx_2)(body)
-                end
-                quote
-                    $((ctx_2)(body))
-                    $((ctx_2)(sequence(root.bodies[2:end]...)))
-                end
+            quote
+                $(ctx(InstantiateTensors(ctx=ctx)(root.bodies[1])))
+                $(contain(ctx) do ctx_2
+                    (ctx_2)(sequence(root.bodies[2:end]...))
+                end)
             end
         end
     elseif root.kind === declare

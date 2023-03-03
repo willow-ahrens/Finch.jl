@@ -65,6 +65,7 @@ end
 (ctx::FinchParserVisitor)(ex::Symbol) = ctx.nodes.variable(ex)
 (ctx::FinchParserVisitor)(ex::QuoteNode) = ctx.nodes.literal(ex.value)
 (ctx::FinchParserVisitor)(ex) = ctx.nodes.literal(ex)
+
 function (ctx::FinchParserVisitor)(ex::Expr)
     islinenum(x) = x isa LineNumberNode
 

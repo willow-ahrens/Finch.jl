@@ -70,7 +70,7 @@ macro finch(args_ex...)
     end
     for tns in results
         push!(thunk.args, quote
-            $(esc(tns)) = res.$tns
+            $(esc(tns)) = get(res, $(QuoteNode(tns)), $(esc(tns))) #TODO can we do this better?
         end)
     end
     push!(thunk.args, quote

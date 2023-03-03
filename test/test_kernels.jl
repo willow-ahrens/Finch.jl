@@ -11,7 +11,7 @@
         B = @fiber(d(sl(e(0.0),m),m))
 
         if !seen
-            check_output("innerprod.jl", @finch @loop j i k B[i, j] += A[k, i] * A[k, j])
+            check_output("innerprod.jl", @finch_code @loop j i k B[i, j] += A[k, i] * A[k, j])
             seen = true
         end
         @finch @loop j i k B[i, j] += A[k, i] * A[k, j]
@@ -67,7 +67,10 @@
                 check_output("gustavsons.jl", @finch_code @loop i ((@loop j B[j, i] = w[j]) where (@loop k j w[j] += A[k, i] * A[j, k])))
                 seen = true
             end
-            @finch @loop j ((@loop i B[i, j] = w[i]) where (@loop k i w[i] += A[i, k] * A[k, j]))
+            @finch @loop j begin
+                @loop k i w[i] += A[i, k] * A[k, j]
+                @loop i B[i, j] = w[i]
+            end
             B_ref = A_ref * A_ref
             @test B == B_ref
         end
