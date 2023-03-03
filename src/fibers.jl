@@ -49,12 +49,51 @@ end
 (ctx::Finch.LowerJulia)(fbr::VirtualSubFiber) = :(SubFiber($(ctx(fbr.lvl)), $(ctx(fbr.pos))))
 FinchNotation.isliteral(::VirtualSubFiber) =  false
 
+"""
+    level_ndims(::Type{Lvl})
+
+The result of `level_ndims(Lvl)` defines [ndims](@ref) for all subfibers
+of a level of type `Lvl`.
+"""
+function level_ndims end
 @inline Base.ndims(::AbstractFiber{Lvl}) where {Lvl} = level_ndims(Lvl)
 @inline Base.ndims(::Type{<:AbstractFiber{Lvl}}) where {Lvl} = level_ndims(Lvl)
+
+"""
+    level_size(lvl)
+
+The result of `level_size(lvl)` defines the [size](@ref) of all subfibers of the
+level `lvl`.
+"""
+function level_size end
 @inline Base.size(fbr::AbstractFiber) = level_size(fbr.lvl)
+
+"""
+    level_axes(lvl)
+
+The result of `level_axes(lvl)` defines the [axes](@ref) of all subfibers of the
+level `lvl`.
+"""
+function level_axes end
 @inline Base.axes(fbr::AbstractFiber) = level_axes(fbr.lvl)
+
+"""
+    level_eltype(::Type{Lvl})
+
+The result of `level_eltype(Lvl)` defines [eltype](@ref) for all subfibers of a
+level of type `Lvl`.
+"""
+function level_eltype end
 @inline Base.eltype(::AbstractFiber{Lvl}) where {Lvl} = level_eltype(Lvl)
 @inline Base.eltype(::Type{<:AbstractFiber{Lvl}}) where {Lvl} = level_eltype(Lvl)
+
+"""
+    level_default(::Type{Lvl})
+
+The result of `level_default(Lvl)` defines [default](@ref) for all subfibers of a
+level of type `Lvl`.
+"""
+function level_default end
 @inline default(::AbstractFiber{Lvl}) where {Lvl} = level_default(Lvl)
 @inline default(::Type{<:AbstractFiber{Lvl}}) where {Lvl} = level_default(Lvl)
 
