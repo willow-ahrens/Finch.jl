@@ -32,9 +32,7 @@ y = @fiber(d(e(0.0)));
 @finch @loop j i y[i] += A[i, j] * x[j];
 ```
 
-Array formats in Finch are described recursively mode by mode, using a
-relaxation of TACO's [level format
-abstraction](https://dl.acm.org/doi/pdf/10.1145/3276493).  Semantically, an
+Array formats in Finch are described recursively mode by mode.  Semantically, an
 array in Finch can be understood as a tree, where each level in the tree
 corresponds to a dimension and each edge corresponds to an index. In addition
 to choosing a data storage format, Finch allows users to choose an access **protocol**,
