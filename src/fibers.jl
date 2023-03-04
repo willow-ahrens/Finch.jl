@@ -157,12 +157,8 @@ data_rep(fbr::Fiber) = data_rep(typeof(fbr))
 data_rep(::Type{<:AbstractFiber{Lvl}}) where {Lvl} = SolidData(data_rep_level(Lvl))
 
 
-function freeze!(fbr::VirtualFiber, ctx::LowerJulia, mode, idxs...)
-    if mode.kind === updater
-        return VirtualFiber(freeze_level!(fbr.lvl, ctx, literal(1)))
-    else
-        return fbr
-    end
+function freeze!(fbr::VirtualFiber, ctx::LowerJulia, idxs...)
+    return VirtualFiber(freeze_level!(fbr.lvl, ctx, literal(1)))
 end
 
 
