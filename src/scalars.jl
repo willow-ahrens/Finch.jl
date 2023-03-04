@@ -48,6 +48,10 @@ function declare!(tns::VirtualScalar, ctx, init)
     tns
 end
 
+function thaw!(tns::VirtualScalar, ctx)
+    return tns
+end
+
 function freeze!(tns::VirtualScalar, ctx)
     return tns
 end
