@@ -161,6 +161,23 @@ function declare_level!(lvl::VirtualSparseBytemapLevel, ctx::LowerJulia, pos, in
     return lvl
 end
 
+function thaw_level!(lvl::VirtualSparseBytemapLevel, ctx::LowerJulia, pos)
+    Ti = lvl.Ti
+    Tp = lvl.Tp
+    r = ctx.freshen(lvl.ex, :_r)
+    p = ctx.freshen(lvl.ex, :_p)
+    q = ctx.freshen(lvl.ex, :_q)
+    i = ctx.freshen(lvl.ex, :_i)
+    push!(ctx.preamble, quote
+        for $r = 1:$(ctx(pos))
+            $(lvl.ex).ptr[$p] -= $(lvl.ex).ptr[$p + 1]
+        end
+        $(lvl.ex).ptr[1] = 1
+    end)
+    lvl.lvl = thaw_level!(lvl.lvl, ctx, call(*, pos, lvl.I))
+    return lvl
+end
+
 function trim_level!(lvl::VirtualSparseBytemapLevel, ctx::LowerJulia, pos)
     ros = ctx.freshen(:ros)
     push!(ctx.preamble, quote

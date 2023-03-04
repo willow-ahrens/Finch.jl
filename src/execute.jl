@@ -125,7 +125,7 @@ get_updater(tns, ctx, protos...) = tns
 Freeze the update-only virtual tensor `tns` in the context `ctx` and return it.
 Afterwards, the tensor is read-only.
 """
-freeze!(tns, ctx) = tns
+function freeze! end
 
 """
     thaw!(tns, ctx)
@@ -133,7 +133,7 @@ freeze!(tns, ctx) = tns
 Thaw the read-only virtual tensor `tns` in the context `ctx` and return it. Afterwards,
 the tensor is update-only.
 """
-thaw!(tns, ctx) = tns
+thaw!(tns, ctx) = throw(FormatLimitation("cannot modify $(typeof(tns)) in place"))
 
 """
     trim!(tns, ctx)

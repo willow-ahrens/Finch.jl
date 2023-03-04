@@ -80,6 +80,8 @@ declare_level!(lvl::VirtualPatternLevel, ctx, pos, init) = (@assert init == lite
 
 freeze_level!(lvl::VirtualPatternLevel, ctx, pos) = lvl
 
+thaw_level!(lvl::VirtualPatternLevel, ctx, pos) = lvl
+
 assemble_level!(lvl::VirtualPatternLevel, ctx, pos_start, pos_stop) = quote end
 reassemble_level!(lvl::VirtualPatternLevel, ctx, pos_start, pos_stop) = quote end
 

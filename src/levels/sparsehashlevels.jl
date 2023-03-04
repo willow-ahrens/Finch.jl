@@ -209,6 +209,23 @@ function trim_level!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, pos)
     return lvl
 end
 
+function thaw_level!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, pos)
+    Ti = lvl.Ti
+    Tp = lvl.Tp
+    r = ctx.freshen(lvl.ex, :_r)
+    p = ctx.freshen(lvl.ex, :_p)
+    q = ctx.freshen(lvl.ex, :_q)
+    i = ctx.freshen(lvl.ex, :_i)
+    push!(ctx.preamble, quote
+        for $r = 1:$(ctx(pos))
+            $(lvl.ex).ptr[$p] -= $(lvl.ex).ptr[$p + 1]
+        end
+        $(lvl.ex).ptr[1] = 1
+    end)
+    lvl.lvl = thaw_level!(lvl.lvl, ctx, call(*, pos, lvl.I))
+    return lvl
+end
+
 function assemble_level!(lvl::VirtualSparseHashLevel, ctx, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_start, pos_stop))

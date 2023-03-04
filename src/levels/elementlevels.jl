@@ -89,6 +89,8 @@ declare_level!(lvl::VirtualElementLevel, ctx, pos, init) = (@assert init == lite
 
 freeze_level!(lvl::VirtualElementLevel, ctx, pos) = lvl
 
+thaw_level!(lvl::VirtualElementLevel, ctx::LowerJulia, pos) = lvl
+
 function trim_level!(lvl::VirtualElementLevel, ctx::LowerJulia, pos)
     push!(ctx.preamble, quote
         resize!($(lvl.ex).val, $(ctx(pos)))

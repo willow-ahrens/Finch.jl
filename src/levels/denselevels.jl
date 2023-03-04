@@ -152,6 +152,11 @@ function reassemble_level!(lvl::VirtualDenseLevel, ctx, pos_start, pos_stop)
     lvl
 end
 
+function thaw_level!(lvl::VirtualDenseLevel, ctx::LowerJulia, pos)
+    lvl.lvl = thaw_level!(lvl.lvl, ctx, call(*, pos, lvl.I))
+    return lvl
+end
+
 function freeze_level!(lvl::VirtualDenseLevel, ctx::LowerJulia, pos)
     lvl.lvl = freeze_level!(lvl.lvl, ctx, call(*, pos, lvl.I))
     return lvl

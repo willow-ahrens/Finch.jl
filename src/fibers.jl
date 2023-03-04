@@ -157,10 +157,14 @@ data_rep(fbr::Fiber) = data_rep(typeof(fbr))
 data_rep(::Type{<:AbstractFiber{Lvl}}) where {Lvl} = SolidData(data_rep_level(Lvl))
 
 
-function freeze!(fbr::VirtualFiber, ctx::LowerJulia, idxs...)
+function freeze!(fbr::VirtualFiber, ctx::LowerJulia)
     return VirtualFiber(freeze_level!(fbr.lvl, ctx, literal(1)))
 end
 
+thaw_level!(lvl, ctx, pos) = throw(FormatLimitation("cannot modify $(typeof(lvl)) in place"))
+function thaw!(fbr::VirtualFiber, ctx::LowerJulia)
+    return VirtualFiber(thaw_level!(fbr.lvl, ctx, literal(1)))
+end
 
 function trim!(fbr::VirtualFiber, ctx)
     VirtualFiber(trim_level!(fbr.lvl, ctx, literal(1)))
