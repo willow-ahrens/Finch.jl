@@ -37,18 +37,21 @@
     @test !isequal(A, D)
     @test A != B
 
-    @test Finch.data_rep(@fiber(d(d(sl(e(0.0)))))) ==
-        Finch.SolidData(Finch.DenseData(Finch.DenseData(Finch.SparseData(Finch.ElementData(0.0, Float64)))))
 
-    @test Finch.getindex_rep(Finch.data_rep(@fiber(d(d(sl(e(0.0)))))), Int, Int, Int) ==
-        Finch.HollowData(Finch.ElementData(0.0, Float64))
+    io = IOBuffer()
+    println(io, "getindex tests")
 
-    @test Finch.fiber_ctr(Finch.getindex_rep(Finch.data_rep(@fiber(d(d(sl(e(0.0)))))), Int, Int, Int)) ==
-        :(Fiber!(Element{$Float64, $0.0}()))
+    A = Fiber(SparseList(Dense(SparseList(Element{0.0, Float64}([0.42964847422015195, 0.2031714500596491, 0.15465920941339906, 0.7687749158979389, 0.7341385030927726, 0.24323897961505359, 0.6396769413452026, 0.3155879025843188, 0.9861228587523698, 0.3368597276563293, 0.7453901638237799, 0.3490376859294666, 0.6561601277204799, 0.32494812689888863, 0.8013385593156314, 0.5791333682715981, 0.2327141702137452, 0.0670060505589255, 0.9099846919632137, 0.5770116734780164, 0.20099348394031835, 0.3960969730220265, 0.9141572970982442, 0.579353005205582, 0.010579392993321113, 0.26595745832859163, 0.9155119673442403, 0.3015204766311739, 0.09694825410946628, 0.03454012053008504]), 5, [1, 3, 6, 8, 12, 14, 17, 20, 24, 27, 27, 28, 31], [2, 3, 3, 4, 5, 2, 3, 1, 3, 4, 5, 2, 4, 2, 4, 5, 2, 3, 5, 1, 3, 4, 5, 2, 3, 4, 2, 1, 2, 3]), 3), 4, [1, 5], [1, 2, 3, 4]))
 
-    @test Finch.fiber_ctr(Finch.getindex_rep(Finch.data_rep(@fiber(d(d(sl(e(0.0)))))), Int, Int, typeof(Base.Slice(1:10)))) ==
-        :(Fiber!(SparseList(Element{$Float64, $0.0}())))
+    print(io, "A = ")
+    show(io, MIME("text/plain"), A)
+    println(io)
 
-    @test Finch.fiber_ctr(Finch.getindex_rep(Finch.data_rep(@fiber(d(d(sl(e(0.0)))))), Int, typeof(1:2), typeof(Base.Slice(1:10)))) ==
-        :(Fiber!(Dense(SparseList(Element{$Float64, $0.0}()))))
+    for inds in [(1, 2, 3), (1, 1, 1), (1, :, 3), (:, 1, 3), (:, :, 3), (:, :, :)]
+        print(io, "A["); join(io, inds, ","); print(io, "] = ")
+        show(io, MIME("text/plain"), A[inds...])
+        println(io)
+    end
+    
+    @test check_output("getindex.txt", String(take!(io)))
 end
