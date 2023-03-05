@@ -1,141 +1,75 @@
-using Finch
 using Test
-using SyntaxInterface
-using Base.Iterators
+using ArgParse
 
-include("data_matrices.jl")
+s = ArgParseSettings("Run Finch.jl tests. All tests are run by default. Specific
+test suites may be specified as positional arguments. Finch compares to
+reference output which depends on the system word size (currently
+$(Sys.WORD_SIZE)-bit). To overwrite $(Sys.WORD_SIZE==32 ? 64 : 32)-bit output,
+run this with a $(Sys.WORD_SIZE==32 ? 64 : 32)-bit julia executable.")
 
-function diff(name, res)
-    global ARGS
-    "nodiff" in ARGS && return true
-    ref_dir = joinpath(@__DIR__, "reference")
-    ref_file = joinpath(ref_dir, name)
-    if "overwrite" in ARGS
+@add_arg_table! s begin
+    "--overwrite", "-w"
+        action = :store_true
+        help = "overwrite reference output for $(Sys.WORD_SIZE)-bit systems"
+    "suites"
+        nargs = '*'
+        default = ["all"]
+        help = "names of test suites to run"
+end
+parsed_args = parse_args(ARGS, s)
+
+"""
+    check_output(fname, arg)
+
+Compare the output of `println(arg)` with standard reference output, stored
+in a file named `fname`. Call `julia runtests.jl --help` for more information on
+how to overwrite the reference output.
+"""
+function check_output(fname, arg)
+    global parsed_args
+    ref_dir = joinpath(@__DIR__, "reference$(Sys.WORD_SIZE)")
+    ref_file = joinpath(ref_dir, fname)
+    if parsed_args["overwrite"]
         mkpath(ref_dir)
         open(ref_file, "w") do f
-            println(f, res)
+            println(f, arg)
         end
         true
     else
-        ref = read(ref_file, String)
-        res = sprint(println, res)
-        if ref == res
+        reference = read(ref_file, String)
+        result = sprint(println, arg)
+        if reference == result
             return true
         else
-            if "verbose" in ARGS
-                println("=== reference ===")
-                println(ref)
-                println("=== test ===")
-                println(res)
-            end
+            @debug "disagreement with reference output" reference result
             return false
         end
     end
 end
 
-reference_getindex(arr, inds...) = getindex(arr, inds...)
-reference_getindex(arr::Fiber, inds...) = arr(inds...)
-
-function reference_isequal(a,b)
-    size(a) == size(b) || return false
-    axes(a) == axes(b) || return false
-    for i in Base.product(axes(a)...)
-        reference_getindex(a, i...) == reference_getindex(b, i...) || return false
-    end
-    return true
+function should_run(name)
+    global parsed_args
+    return ("all" in parsed_args["suites"] || name in parsed_args["suites"])
 end
 
-using Finch: VirtualAbstractArray, Run, Spike, Extent, Scalar, Switch, Stepper, Jumper, Step, Jump, AcceptRun, AcceptSpike, Thunk, Phase, Pipeline, Lookup, Simplify, Shift
-using Finch: @f, @finch_program_instance, execute, execute_code, getstart, getstop
-using Finch: getname, value
-using Finch.IndexNotation
-using Finch.IndexNotation: call_instance, assign_instance, access_instance, value_instance, index_instance, loop_instance, with_instance, label_instance, protocol_instance
+using Finch
 
-isstructequal(a, b) = a === b
+include("data_matrices.jl")
 
-isstructequal(a::T, b::T) where {T <: Fiber} = 
-    isstructequal(a.lvl, b.lvl) &&
-    isstructequal(a.env, b.env)
-
-isstructequal(a::T, b::T)  where {T <: Pattern} = true
-
-isstructequal(a::T, b::T) where {T <: Element} =
-    a.val == b.val
-
-isstructequal(a::T, b::T) where {T <: RepeatRLE} =
-    a.I == b.I &&
-    a.pos == b.pos &&
-    a.idx == b.idx &&
-    a.val == b.val
-
-isstructequal(a::T, b::T) where {T <: RepeatRLEDiff} =
-    a.I == b.I &&
-    a.pos == b.pos &&
-    a.idx == b.idx &&
-    a.val == b.val
-
-isstructequal(a::T, b::T) where {T <: Dense} =
-    a.I == b.I &&
-    isstructequal(a.lvl, b.lvl)
-
-isstructequal(a::T, b::T) where {T <: SparseList} =
-    a.I == b.I &&
-    a.pos == b.pos &&
-    a.idx == b.idx &&
-    isstructequal(a.lvl, b.lvl)
-
-isstructequal(a::T, b::T) where {T <: SparseListDiff} =
-    a.I == b.I &&
-    a.pos == b.pos &&
-    a.idx == b.idx &&
-    a.jdx == b.jdx &&
-    isstructequal(a.lvl, b.lvl)
-
-isstructequal(a::T, b::T) where {T <: SparseHash} =
-    a.I == b.I &&
-    a.pos == b.pos &&
-    a.tbl == b.tbl &&
-    a.srt == b.srt &&
-    isstructequal(a.lvl, b.lvl)
-
-isstructequal(a::T, b::T) where {T <: SparseCoo} =
-    a.I == b.I &&
-    a.pos == b.pos &&
-    a.tbl == b.tbl &&
-    isstructequal(a.lvl, b.lvl)
-
-isstructequal(a::T, b::T) where {T <: SparseVBL} =
-    a.I == b.I &&
-    a.pos == b.pos &&
-    a.idx == b.idx &&
-    a.ofs == b.ofs &&
-    isstructequal(a.lvl, b.lvl)
-
-isstructequal(a::T, b::T) where {T <: SparseBytemap} =
-    a.I == b.I &&
-    a.pos == b.pos &&
-    a.tbl == b.tbl &&
-    a.srt == b.srt &&
-    a.srt_stop[] == b.srt_stop[] &&
-    isstructequal(a.lvl, b.lvl)
-
-verbose = "verbose" in ARGS
+include("utils.jl")
 
 @testset "Finch.jl" begin
-    include("test_util.jl")
-    include("test_ssa.jl")
-    include("test_print.jl")
-    #include("test_parse.jl")
-    include("test_formats.jl")
-    include("test_constructors.jl")
-    include("test_conversions.jl")
-    include("test_merges.jl")
-    include("test_algebra.jl")
-    include("test_repeat.jl")
-    include("test_permit.jl")
-    include("test_skips.jl")
-    include("test_fibers.jl")
-    include("test_kernels.jl")
-    include("test_issues.jl")
-    include("test_meta.jl")
+    if should_run("print") include("test_print.jl") end
+    if should_run("representation") include("test_representation.jl") end
+    if should_run("constructors") include("test_constructors.jl") end
+    if should_run("conversions") include("test_conversions.jl") end
+    if should_run("merges") include("test_merges.jl") end
+    if should_run("algebra") include("test_algebra.jl") end
+    if should_run("permit") include("test_permit.jl") end
+    if should_run("skips") include("test_skips.jl") end
+    #if should_run("fibers") include("test_fibers.jl") end # maybe we should make a replacement but I think this file is very out of date.
+    if should_run("kernels") include("test_kernels.jl") end
+    if should_run("issues") include("test_issues.jl") end
+    if should_run("meta") include("test_meta.jl") end
+    if should_run("embed") include("embed/test_embed.jl") end
 end

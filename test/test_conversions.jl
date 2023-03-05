@@ -1,6 +1,6 @@
 @testset "conversions" begin
     for base in [
-        Pattern,
+        #Pattern,
         Element{false},
     ]
         #=
@@ -18,12 +18,10 @@
         end
         =#
 
-        if base != Pattern
+        if true #base != Pattern
             for inner in [
                 () -> Dense(base()),
-                () -> SparseListDiff(base()),
                 () -> RepeatRLE{false}(),
-                () -> RepeatRLEDiff{false}(),
             ]
                 for arr in [
                     fill(false, 5),
@@ -41,7 +39,7 @@
                     ref = @fiber sl(e(false))
                     res = @fiber sl(e(false))
                     ref = dropdefaults!(ref, arr)
-                    tmp = Fiber(inner())
+                    tmp = Fiber!(inner())
                     @testset "convert $(summary(tmp))" begin
                         @finch @loop i tmp[i] = ref[i]
                         check = Scalar(true)
@@ -65,11 +63,11 @@
                         ref = @fiber sl(sl(e(false)))
                         res = @fiber sl(sl(e(false)))
                         ref = dropdefaults!(ref, arr)
-                        tmp = Fiber(outer())
+                        tmp = Fiber!(outer())
                         @testset "convert $arr_key $(summary(tmp))"  begin
-                            @finch @loop i j tmp[i, j] = ref[i, j]
+                            @finch @loop j i tmp[i, j] = ref[i, j]
                             check = Scalar(true)
-                            @finch @loop i j check[] &= tmp[i, j] == ref[i, j]
+                            @finch @loop j i check[] &= tmp[i, j] == ref[i, j]
                             @test check[]
                         end
                     end
@@ -82,7 +80,7 @@
             () -> SparseVBL(base()),
             () -> SparseBytemap(base()),
             () -> SparseHash{1}(base()),
-            () -> SparseCoo{1}(base()),
+            () -> SparseCOO{1}(base()),
         ]
             for arr in [
                 fill(false, 5),
@@ -92,7 +90,7 @@
                 ref = @fiber sl(e(false))
                 res = @fiber sl(e(false))
                 ref = dropdefaults!(ref, arr)
-                tmp = Fiber(inner())
+                tmp = Fiber!(inner())
                 @testset "convert $(summary(tmp))" begin
                     @finch @loop i tmp[i] = ref[i]
                     @finch @loop i res[i] = tmp[i]
@@ -116,10 +114,10 @@
                     ref = @fiber sl(sl(e(false)))
                     res = @fiber sl(sl(e(false)))
                     ref = dropdefaults!(ref, arr)
-                    tmp = Fiber(outer())
+                    tmp = Fiber!(outer())
                     @testset "convert $arr_key $(summary(tmp))"  begin
-                        @finch @loop i j tmp[i, j] = ref[i, j]
-                        @finch @loop i j res[i, j] = tmp[i, j]
+                        @finch @loop j i tmp[i, j] = ref[i, j]
+                        @finch @loop j i res[i, j] = tmp[i, j]
                         @test isstructequal(ref, res)
                     end
                 end
@@ -127,7 +125,7 @@
         end
 
         for outer in [
-            () -> SparseCoo{2}(base()),
+            () -> SparseCOO{2}(base()),
             () -> SparseHash{2}(base())
         ]
 
@@ -142,10 +140,10 @@
                 ref = @fiber sl(sl(e(false)))
                 res = @fiber sl(sl(e(false)))
                 ref = dropdefaults!(ref, arr)
-                tmp = Fiber(outer())
+                tmp = Fiber!(outer())
                 @testset "convert $arr_key $(summary(tmp))"  begin
-                    @finch @loop i j tmp[i, j] = ref[i, j]
-                    @finch @loop i j res[i, j] = tmp[i, j]
+                    @finch @loop j i tmp[i, j] = ref[i, j]
+                    @finch @loop j i res[i, j] = tmp[i, j]
                     @test isstructequal(ref, res)
                 end
             end

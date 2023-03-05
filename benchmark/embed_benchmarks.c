@@ -29,21 +29,17 @@ void benchmarks_initialize(){
     finch_initialize();
 
     spmv = finch_eval("function spmv(y, A, x)\n\
-        @finch @loop i j y[i] += A[i, j] * x[j]\n\
+        @finch @loop i j y[i] += A[j, i] * x[j]\n\
     end");
 
-    y = finch_Fiber(
-        finch_Dense(finch_Int64(m),
-        finch_Element(finch_Float64(0.0))));
-
-    A = finch_Fiber(
-        finch_Dense(finch_Int64(m),
-        finch_SparseListLevel(finch_Int64(n), finch_Vector_Int64(A_pos, 5), finch_Vector_Int64(A_idx, 9),
-        finch_ElementLevel(finch_Float64(0.0), finch_Vector_Float64(A_val, 9)))));
-
-    x = finch_Fiber(
-        finch_Dense(finch_Int64(n),
-        finch_ElementLevel(finch_Float64(0.0), finch_Vector_Float64(x_val, n))));
+    y = finch_exec("@fiber d(e(0.0))");
+    A = finch_exec("Fiber(Dense(SparseList(Element(0.0, %s), %s, %s, %s), %s))",
+        finch_Vector_Float64(A_val, 9),
+        finch_Int64(n),
+        finch_Vector_Int64(A_pos, 5),
+        finch_Vector_Int64(A_idx, 9),
+        finch_Int64(m));
+    x = finch_exec("Fiber(Dense(Element(0.0, %s), %s))", finch_Vector_Float64(x_val, n), finch_Int64(n));
 }
 
 long benchmark_spmv_tiny(int evals){

@@ -1,23 +1,14 @@
 struct NoDimension end
 const nodim = NoDimension()
-IndexNotation.isliteral(::NoDimension) = false
+FinchNotation.isliteral(::NoDimension) = false
 virtualize(ex, ::Type{NoDimension}, ctx) = nodim
 
-struct DeferDimension end
-const deferdim = DeferDimension()
-IndexNotation.isliteral(::DeferDimension) = false
-virtualize(ex, ::Type{DeferDimension}, ctx) = deferdim
-
-cache_dim!(ctx, tag, ext::DeferDimension) = ext
-cache_dim!(ctx, tag, ext::NoDimension) = ext
-
-getstart(::DeferDimension) = error()
-getstop(::DeferDimension) = error()
+getstart(::NoDimension) = error("asked for start of dimensionless range")
+getstop(::NoDimension) = error("asked for stop of dimensionless range")
 
 @kwdef mutable struct DeclareDimensions
     ctx
     dims = Dict()
-    shapes = Dict()
 end
 function (ctx::DeclareDimensions)(node, dim)
     if istree(node)
@@ -30,7 +21,6 @@ end
 @kwdef mutable struct InferDimensions
     ctx
     dims = Dict()
-    shapes = Dict()
 end
 function (ctx::InferDimensions)(node)
     if istree(node)
@@ -47,7 +37,7 @@ end
     body
 end
 
-IndexNotation.isliteral(::Dimensionalize) =  false
+FinchNotation.isliteral(::Dimensionalize) =  false
 
 struct DimensionalizeStyle end
 
@@ -75,7 +65,7 @@ index name or a `(tensor_name, mode_name)` tuple.
 
 The program is assumed to be in SSA form.
 
-See also: [`getsize`](@ref), [`getsites`](@ref), [`combinedim`](@ref),
+See also: [`virtual_size`](@ref), [`virtual_resize`](@ref), [`combinedim`](@ref),
 [`TransformSSA`](@ref)
 """
 function (ctx::LowerJulia)(prgm, ::DimensionalizeStyle) 
@@ -87,10 +77,9 @@ end
 
 function dimensionalize!(prgm, ctx) 
     prgm = Rewrite(Postwalk(x -> if x isa Dimensionalize x.body end))(prgm)
-    dims = filter(((idx, dim),) -> dim !== deferdim, ctx.dims)
-    shapes = Dict()
-    prgm = DeclareDimensions(ctx=ctx, dims = dims, shapes = shapes)(prgm, nodim)
-    (prgm, _) = InferDimensions(ctx=ctx, dims = dims, shapes = shapes)(prgm)
+    dims = ctx.dims
+    prgm = DeclareDimensions(ctx=ctx, dims = dims)(prgm, nodim)
+    (prgm, _) = InferDimensions(ctx=ctx, dims = dims)(prgm)
     for k in keys(dims)
         dims[k] = cache_dim!(ctx, k, dims[k])
     end
@@ -101,12 +90,14 @@ end
 function (ctx::DeclareDimensions)(node::Dimensionalize, dim)
     ctx(node.body, dim)
 end
-function (ctx::DeclareDimensions)(node::IndexNode, dim)
+function (ctx::DeclareDimensions)(node::FinchNode, dim)
     if node.kind === index
         ctx.dims[getname(node)] = resultdim(ctx.ctx, get(ctx.dims, getname(node), nodim), dim)
         return node
-    elseif node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
+    elseif node.kind === access && node.tns.kind === virtual
         return declare_dimensions_access(node, ctx, node.tns.val, dim)
+    elseif node.kind === access && node.tns.kind === variable #TODO perhaps we can get rid of this
+        return declare_dimensions_access(node, ctx, node.tns, dim)
     elseif node.kind === with
         prod = ctx(node.prod, nodim)
         (prod, _) = InferDimensions(;kwfields(ctx)...)(prod)
@@ -120,11 +111,13 @@ function (ctx::DeclareDimensions)(node::IndexNode, dim)
         return node
     end
 end
-function (ctx::InferDimensions)(node::IndexNode)
+function (ctx::InferDimensions)(node::FinchNode)
     if node.kind === index
         return (node, ctx.dims[getname(node)])
-    elseif node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
+    elseif node.kind === access && node.mode.kind === updater && node.tns.kind === virtual
         return infer_dimensions_access(node, ctx, node.tns.val)
+    elseif node.kind === access && node.mode.kind === updater && node.tns.kind === variable #TODO perhaps we can get rid of this
+        return infer_dimensions_access(node, ctx, node.tns)
     elseif node.kind === with
         (cons, _) = ctx(node.cons)
         return (with(cons, node.prod), nodim)
@@ -139,31 +132,36 @@ function (ctx::InferDimensions)(node::IndexNode)
 end
 
 declare_dimensions_access(node, ctx, tns::Dimensionalize, dim) = declare_dimensions_access(node, ctx, tns.body, dim)
-function declare_dimensions_access(node, ctx, tns, dim)
-    if haskey(ctx.shapes, getname(tns))
-        dims = ctx.shapes[getname(tns)][getsites(tns)]
-        tns = setsize!(tns, ctx.ctx, node.mode, dims...)
+function declare_dimensions_access(node, ctx, tns, eldim)
+    if node.mode.kind !== reader
+        shape = map(suggest, virtual_size(tns, ctx.ctx, eldim))
     else
-        dims = getsize(tns, ctx.ctx, node.mode)
+        shape = virtual_size(tns, ctx.ctx, eldim)
     end
-    idxs = map(ctx, node.idxs, dims)
+    idxs = map(ctx, node.idxs, shape)
     access(tns, node.mode, idxs...)
 end
 
 function infer_dimensions_access(node, ctx, tns)
     res = map(ctx, node.idxs)
     idxs = map(first, res)
-    if node.mode.kind !== reader
-        prev_dims = getsize(tns, ctx.ctx, node.mode)
-        dims = map(resolvedim, map((a, b) -> resultdim(ctx.ctx, a, b), map(last, res), prev_dims))
-        ctx.shapes[getname(tns)] = dims
-        tns = setsize!(tns, ctx.ctx, node.mode, dims...)
+    shape = virtual_size(tns, ctx.ctx) #This is an assignment access, so we don't need to add an eldim here
+    if node.mode.kind === updater
+        shape = map(suggest, shape)
     end
-    (access(tns, node.mode, idxs...), nodim)
+    shape = map(resolvedim, map((a, b) -> resultdim(ctx.ctx, a, b), shape, map(last, res)))
+    if node.mode.kind === updater
+        eldim = virtual_resize!(tns, ctx.ctx, shape...)
+        (access(tns, node.mode, idxs...), eldim)
+    else
+        (access(tns, node.mode, idxs...), virtual_elaxis(tns, ctx.ctx, shape...))
+    end
 end
 
-function setsize!(tns, ctx, mode, dims...)
-    for (dim, ref) in zip(dims, getsize(tns, ctx, mode))
+virtual_elaxis(tns, ctx, dims...) = nodim
+
+function virtual_resize!(tns, ctx, dims...)
+    for (dim, ref) in zip(dims, virtual_size(tns, ctx))
         if dim !== nodim && ref !== nodim #TODO this should be a function like checkdim or something haha
             push!(ctx.preamble, quote
                 $(ctx(getstart(dim))) == $(ctx(getstart(ref))) || throw(DimensionMismatch("mismatched dimension start"))
@@ -171,7 +169,7 @@ function setsize!(tns, ctx, mode, dims...)
             end)
         end
     end
-    tns
+    (tns, nodim)
 end
 
 struct UnknownDimension end
@@ -201,7 +199,6 @@ combinedim(ctx, ::B, ::A)
 combinedim(ctx, a, b) = UnknownDimension()
 
 combinedim(ctx, a::NoDimension, b) = b
-combinedim(ctx, ::DeferDimension, b) = deferdim
 
 @kwdef struct Extent
     start
@@ -210,7 +207,7 @@ combinedim(ctx, ::DeferDimension, b) = deferdim
     upper = @f $stop - $start + 1
 end
 
-IndexNotation.isliteral(::Extent) = false
+FinchNotation.isliteral(::Extent) = false
 
 Base.:(==)(a::Extent, b::Extent) =
     a.start == b.start &&
@@ -233,28 +230,28 @@ getlower(ext::Extent) = ext.lower
 getupper(ext::Extent) = ext.upper
 extent(ext::Extent) = @f $(ext.stop) - $(ext.start) + 1
 
-function getstop(ext::IndexNode)
+function getstop(ext::FinchNode)
     if ext.kind === virtual
         getstop(ext.val)
     else
         ext
     end
 end
-function getstart(ext::IndexNode)
+function getstart(ext::FinchNode)
     if ext.kind === virtual
         getstart(ext.val)
     else
         ext
     end
 end
-function getlower(ext::IndexNode)
+function getlower(ext::FinchNode)
     if ext.kind === virtual
         getlower(ext.val)
     else
         1
     end
 end
-function getupper(ext::IndexNode)
+function getupper(ext::FinchNode)
     if ext.kind === virtual
         getupper(ext.val)
     else
@@ -262,7 +259,7 @@ function getupper(ext::IndexNode)
     end
 end
 #TODO I don't like this def
-function extent(ext::IndexNode)
+function extent(ext::FinchNode)
     if ext.kind === virtual
         extent(ext.val)
     elseif ext.kind === value
@@ -277,8 +274,8 @@ extent(ext::Integer) = 1
 
 combinedim(ctx, a::Extent, b::Extent) =
     Extent(
-        start = resultdim(ctx, a.start, b.start),
-        stop = resultdim(ctx, a.stop, b.stop),
+        start = checklim(ctx, a.start, b.start),
+        stop = checklim(ctx, a.stop, b.stop),
         lower = simplify(@f(min($(a.lower), $(b.lower))), ctx),
         upper = simplify(@f(min($(a.upper), $(b.upper))), ctx)
     )
@@ -289,14 +286,13 @@ struct SuggestedExtent{Ext}
     ext::Ext
 end
 
-IndexNotation.isliteral(::SuggestedExtent) = false
+FinchNotation.isliteral(::SuggestedExtent) = false
 
 Base.:(==)(a::SuggestedExtent, b::SuggestedExtent) = a.ext == b.ext
 
 suggest(ext) = SuggestedExtent(ext)
 suggest(ext::SuggestedExtent) = ext
 suggest(ext::NoDimension) = nodim
-suggest(ext::DeferDimension) = deferdim
 
 resolvedim(ext::Symbol) = error()
 resolvedim(ext::SuggestedExtent) = ext.ext
@@ -313,30 +309,52 @@ combinedim(ctx, a::SuggestedExtent, b::NoDimension) = a
 
 combinedim(ctx, a::SuggestedExtent, b::SuggestedExtent) = SuggestedExtent(combinedim(ctx, a.ext, b.ext))
 
-function combinedim(ctx, a::IndexNode, b::IndexNode)
+function checklim(ctx, a::FinchNode, b::FinchNode)
     if isliteral(a) && isliteral(b)
         a == b || throw(DimensionMismatch("mismatched dimension limits ($a != $b)"))
     end
-    ctx.shash(a) < ctx.shash(b) ? a : b #TODO instead of this, we should introduce a lazy operator to assert equality and use simplification rules or similar to choose types
+    if ctx.shash(a) < ctx.shash(b) #TODO instead of this, we should introduce a lazy operator to assert equality
+        push!(ctx.preamble, quote
+            $(ctx(a)) == $(ctx(b)) || throw(DimensionMismatch("mismatched dimension limits ($($(ctx(a))) != $($(ctx(b))))"))
+        end)
+        a
+    else
+        b
+    end
 end
 
 """
-    getsize(tns, ctx, mode)
+    virtual_size(tns, ctx)
 
-Return an iterable over the dimensions of `tns` in the context `ctx` with access
+Return a tuple of the dimensions of `tns` in the context `ctx` with access
 mode `mode`. This is a function similar in spirit to `Base.axes`.
 """
 function getsize end
 
-"""
-    getsites(tns)
+virtual_size(tns, ctx, eldim) = virtual_size(tns, ctx)
+function virtual_size(tns::FinchNode, ctx, eldim = nodim)
+    if tns.kind === variable
+        return virtual_size(ctx.bindings[tns.name], ctx, eldim)
+    else
+        return error("unimplemented")
+    end
+end
 
-Return an iterable over the identities of the modes of `tns`. If `tns_2` is a
-transpose of `tns`, then `getsites(tns_2)` should be a permutation of
-`getsites(tns)` corresponding to the order in which modes have been permuted.
-"""
-function getsites end
+function virtual_elaxis(tns::FinchNode, ctx, dims...)
+    if tns.kind === variable
+        return virtual_elaxis(ctx.bindings[tns.name], ctx, dims...)
+    else
+        return error("unimplemented")
+    end
+end
 
+function virtual_resize!(tns::FinchNode, ctx, dims...)
+    if tns.kind === variable
+        return (ctx.bindings[tns.name], eldim) = virtual_resize!(ctx.bindings[tns.name], ctx, dims...)
+    else
+        error("unimplemented")
+    end
+end
 
 getstart(val) = val #TODO avoid generic definition here
 getstop(val) = val #TODO avoid generic herer
@@ -345,7 +363,7 @@ struct Narrow{Ext}
     ext::Ext
 end
 
-function Narrow(ext::IndexNode)
+function Narrow(ext::FinchNode)
     if ext.kind === virtual
         Narrow(ext.val)
     else
@@ -353,11 +371,10 @@ function Narrow(ext::IndexNode)
     end
 end
 
-IndexNotation.isliteral(::Narrow) = false
+FinchNotation.isliteral(::Narrow) = false
 
 narrowdim(dim) = Narrow(dim)
 narrowdim(::NoDimension) = nodim
-narrowdim(::DeferDimension) = deferdim
 
 Base.:(==)(a::Narrow, b::Narrow) = a.ext == b.ext
 
@@ -368,7 +385,7 @@ struct Widen{Ext}
     ext::Ext
 end
 
-function Widen(ext::IndexNode)
+function Widen(ext::FinchNode)
     if ext.kind === virtual
         Widen(ext.val)
     else
@@ -376,11 +393,10 @@ function Widen(ext::IndexNode)
     end
 end
 
-IndexNotation.isliteral(::Widen) = false
+FinchNotation.isliteral(::Widen) = false
 
 widendim(dim) = Widen(dim)
 widendim(::NoDimension) = nodim
-widendim(::DeferDimension) = deferdim
 
 Base.:(==)(a::Widen, b::Widen) = a.ext == b.ext
 
@@ -391,7 +407,6 @@ getstop(ext::Widen) = getstop(ext.ext)
 combinedim(ctx, a::Narrow, b::Extent) = resultdim(ctx, a, Narrow(b))
 combinedim(ctx, a::Narrow, b::SuggestedExtent) = a
 combinedim(ctx, a::Narrow, b::NoDimension) = a
-combinedim(ctx, a::Narrow, ::DeferDimension) = deferdim
 
 function combinedim(ctx, a::Narrow{<:Extent}, b::Narrow{<:Extent})
     Narrow(Extent(
@@ -409,7 +424,6 @@ end
 combinedim(ctx, a::Widen, b::Extent) = b
 combinedim(ctx, a::Widen, b::NoDimension) = a
 combinedim(ctx, a::Widen, b::SuggestedExtent) = a
-combinedim(ctx, a::Widen, ::DeferDimension) = deferdim
 
 function combinedim(ctx, a::Widen{<:Extent}, b::Widen{<:Extent})
     Widen(Extent(

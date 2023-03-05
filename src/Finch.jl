@@ -12,21 +12,21 @@ using Compat
 
 export @finch, @finch_program, @finch_code, value
 
-export Fiber, SparseList, SparseListDiff, SparseHash, SparseCoo, SparseBytemap, SparseVBL, Dense, RepeatRLE, RepeatRLEDiff, Element, Pattern, Scalar
+export Fiber, Fiber!, SparseList, SparseHash, SparseCOO, SparseBytemap, SparseVBL, Dense, RepeatRLE, Element, Pattern, Scalar
 export walk, fastwalk, gallop, follow, extrude, laminate
 export fiber, @fiber, pattern!, dropdefaults, dropdefaults!
 export diagmask, lotrimask, uptrimask, bandmask
 
 export choose
 
-export permit, offset, window
+export permit, offset, staticoffset, window
 
 include("util.jl")
 
 include("semantics.jl")
-include("IndexNotation/IndexNotation.jl")
-using .IndexNotation
-using .IndexNotation: and, or, right
+include("FinchNotation/FinchNotation.jl")
+using .FinchNotation
+using .FinchNotation: and, or, right
 include("virtualize.jl")
 include("style.jl")
 include("transform_ssa.jl")
@@ -34,39 +34,35 @@ include("lower.jl")
 include("dimensionalize.jl")
 include("annihilate.jl")
 
-include("shifts.jl")
-include("chunks.jl")
-include("runs.jl")
-include("spikes.jl")
-include("switches.jl")
+include("looplets/shifts.jl")
+include("looplets/chunks.jl")
+include("looplets/runs.jl")
+include("looplets/spikes.jl")
+include("looplets/switches.jl")
+include("looplets/phases.jl")
+include("looplets/pipelines.jl")
+include("looplets/cycles.jl")
+include("looplets/jumpers.jl")
+include("looplets/steppers.jl")
 
-include("phases.jl")
-include("pipelines.jl")
-include("cycles.jl")
-include("jumpers.jl")
-include("steppers.jl")
+include("execute.jl")
+include("masks.jl")
+include("scalars.jl")
+
+include("fibers.jl")
+include("levels/sparselistlevels.jl")
+include("levels/sparsehashlevels.jl")
+include("levels/sparsecoolevels.jl")
+include("levels/sparsebytemaplevels.jl")
+include("levels/sparsevbllevels.jl")
+include("levels/denselevels.jl")
+include("levels/repeatrlelevels.jl")
+include("levels/elementlevels.jl")
+include("levels/patternlevels.jl")
 
 include("traits.jl")
 
-include("execute.jl")
-include("select.jl")
-include("fibers.jl")
-include("scalars.jl")
-include("sparselistlevels.jl")
-include("sparselistdifflevels.jl")
-include("sparsehashlevels.jl")
-include("sparsecoolevels.jl")
-include("sparsebytemaplevels.jl")
-include("sparsevbllevels.jl")
-include("denselevels.jl")
-include("repeatrlelevels.jl")
-include("repeatrledifflevels.jl")
-include("elementlevels.jl")
-include("patternlevels.jl")
-
-include("permit.jl")
-include("offset.jl")
-include("window.jl")
+include("modifiers.jl")
 
 include("fibers_meta.jl")
 export fsparse, fsparse!, fsprand, fspzeros, ffindnz
@@ -94,6 +90,18 @@ module h
 end
 
 register(DefaultAlgebra)
+#TODO add an uninitialized_fiber type so that we can perhaps do this through executing pass(fbr),
+#obviating the need to have a separate generated function registration mechanism for fibers.
+@generated function Fiber!(lvl)
+    contain(LowerJulia()) do ctx
+        lvl = virtualize(:lvl, lvl, ctx)
+        lvl = resolve(lvl, ctx)
+        lvl = initialize_level!(lvl, ctx, literal(0))
+        push!(ctx.preamble, assemble_level!(lvl, ctx, literal(1), literal(1)))
+        lvl = freeze_level!(lvl, ctx, literal(1))
+        :(Fiber($(ctx(lvl))))
+    end |> lower_caches |> lower_cleanup
+end
 
 include("glue_AbstractArrays.jl")
 include("glue_SparseArrays.jl")
@@ -111,6 +119,7 @@ end
         A = @fiber d(sl(e(0.0)))
         x = @fiber sl(e(0.0))
         Finch.execute_code(:ex, typeof(Finch.@finch_program_instance @loop i j y[i] += A[i, j] * x[i]))
+
     end
 end
 

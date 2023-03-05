@@ -7,7 +7,7 @@ function register(algebra)
     end)
 end
 
-#struct Lifetime <: IndexNode
+#struct Lifetime <: FinchNode
 #    body
 #end
 #
@@ -16,9 +16,9 @@ end
 #SyntaxInterface.istree(::Lifetime) = true
 #SyntaxInterface.arguments(ex::Lifetime) = [ex.body]
 #SyntaxInterface.operation(::Lifetime) = lifetime
-#SyntaxInterface.similarterm(::Type{<:IndexNode}, ::typeof(lifetime), args) = Lifetime(args...)
+#SyntaxInterface.similarterm(::Type{<:FinchNode}, ::typeof(lifetime), args) = Lifetime(args...)
 #
-#IndexNotation.isliteral(::Lifetime) =  false
+#FinchNotation.isliteral(::Lifetime) =  false
 #
 #struct LifetimeStyle end
 #
@@ -38,11 +38,11 @@ end
 #    prgm = prgm.body
 #    quote
 #        $(contain(ctx) do ctx_3
-#            prgm = Initialize(ctx = ctx_3)(prgm)
+#            prgm = OpenScope(ctx = ctx_3)(prgm)
 #            ctx_3(prgm)
 #        end)
 #        $(contain(ctx) do ctx_3
-#            prgm = Finalize(ctx = ctx_3)(prgm)
+#            prgm = freeze(ctx = ctx_3)(prgm)
 #            :(($(map(getresults(prgm)) do tns
 #                :($(getname(tns)) = $(ctx_3(tns)))
 #            end...), ))
@@ -56,45 +56,53 @@ function execute_code(ex, T, algebra = DefaultAlgebra())
         quote
             $(begin
                 prgm = virtualize(ex, T, ctx)
+                prgm = TransformSSA(Freshen())(prgm)
+                prgm = ThunkVisitor(ctx)(prgm) #TODO this is a bit of a hack.
+                (prgm, dims) = dimensionalize!(prgm, ctx)
                 #The following call separates tensor and index names from environment symbols.
                 #TODO we might want to keep the namespace around, and/or further stratify index
                 #names from tensor names
                 contain(ctx) do ctx_2
-                    prgm = TransformSSA(Freshen())(prgm)
-                    prgm = ThunkVisitor(ctx_2)(prgm) #TODO this is a bit of a hack.
-                    (prgm, dims) = dimensionalize!(prgm, ctx_2)
-                    prgm = Initialize(ctx = ctx_2)(prgm)
-                    prgm = ThunkVisitor(ctx_2)(prgm) #TODO this is a bit of a hack.
-                    prgm = simplify(prgm, ctx_2)
-                    ctx_2(prgm)
+                    prgm2 = OpenScope(ctx = ctx_2)(prgm)
+                    prgm2 = ThunkVisitor(ctx_2)(prgm2) #TODO this is a bit of a hack.
+                    prgm2 = simplify(prgm2, ctx_2)
+                    ctx_2(prgm2)
                 end
             end)
             $(contain(ctx) do ctx_2
-                prgm = Finalize(ctx = ctx_2)(prgm)
+                prgm = CloseScope(ctx = ctx_2)(prgm)
                 :(($(map(getresults(prgm)) do acc
-                    @assert acc.tns.kind === virtual
-                    name = getname(acc)
-                    tns = trim!(acc.tns.val, ctx_2)
+                    @assert acc.tns.kind === variable
+                    name = acc.tns.name
+                    tns = trim!(ctx.bindings[name], ctx_2)
                     :($name = $(ctx_2(tns)))
                 end...), ))
             end)
         end
     end
+    #=
     code = quote
         @inbounds begin
             $code
         end
     end
-    code |>
+    =#
+    code = code |>
         lower_caches |>
         lower_cleanup
+    #quote
+    #    println($(QuoteNode(code |>         striplines |>
+    #    unblock |>
+    #    unquote_literals)))
+    #    $code
+    #end
 end
 
 macro finch(args_ex...)
     @assert length(args_ex) >= 1
     (args, ex) = (args_ex[1:end-1], args_ex[end])
     results = Set()
-    prgm = IndexNotation.finch_parse_instance(ex, results)
+    prgm = FinchNotation.finch_parse_instance(ex, results)
     thunk = quote
         res = $execute($prgm, $(map(esc, args)...))
     end
@@ -112,7 +120,7 @@ end
 macro finch_code(args_ex...)
     @assert length(args_ex) >= 1
     (args, ex) = (args_ex[1:end-1], args_ex[end])
-    prgm = IndexNotation.finch_parse_instance(ex)
+    prgm = FinchNotation.finch_parse_instance(ex)
     return quote
         $execute_code(:ex, typeof($prgm), $(map(esc, args)...)) |>
         striplines |>
@@ -122,19 +130,47 @@ macro finch_code(args_ex...)
 end
 
 """
-    Initialize(ctx)
+    OpenScope(ctx)
 
 A transformation to initialize tensors that have just entered into scope.
 
 See also: [`initialize!`](@ref)
 """
-@kwdef struct Initialize{Ctx}
+@kwdef struct OpenScope{Ctx}
     ctx::Ctx
     target=nothing
     escape=[]
 end
-initialize!(tns, ctx, mode, idxs...) = access(tns, mode, idxs...)
-function (ctx::Initialize)(node)
+
+"""
+    initialize!(tns, ctx)
+
+Melt and initialize the read-only virtual tensor `tns` in the context `ctx` and return it.
+After melting, the tensor is update-only.
+"""
+initialize!(tns, ctx) = tns
+
+"""
+    get_reader(tns, ctx, protos...)
+    
+Return an object (usually a looplet nest) capable of reading the read-only
+virtual tensor `tns`.  As soon as a read-only tensor enters scope, each
+subsequent read access will be initialized with a separate call to
+`get_reader`. `protos` is the list of protocols in each case.
+"""
+get_reader(tns, ctx, protos...) = tns
+
+"""
+    get_updater(tns, ctx, protos...)
+    
+Return an object (usually a looplet nest) capable of updating the update-only
+virtual tensor `tns`.  As soon as an update only tensor enters scope, each
+subsequent update access will be initialized with a separate call to
+`get_updater`.  `protos` is the list of protocols in each case.
+"""
+get_updater(tns, ctx, protos...) = tns
+
+function (ctx::OpenScope)(node)
     if istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))
     else
@@ -142,15 +178,38 @@ function (ctx::Initialize)(node)
     end
 end
 
-function (ctx::Initialize)(node::IndexNode)
-    if node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
-        if (ctx.target === nothing || (getname(node.tns) in ctx.target)) && !(getname(node.tns) in ctx.escape)
-            initialize!(node.tns.val, ctx.ctx, node.mode, map(ctx, node.idxs)...)
-        else
-            return access(node.tns, node.mode, map(ctx, node.idxs)...)
+function gettns(acc)
+    @assert acc.kind === access
+    return acc.tns
+end
+
+function (ctx::OpenScope)(node::FinchNode)
+    if node.kind === access
+        tns = node.tns
+        if tns.kind === variable
+            tns = ctx.ctx.bindings[tns.name]
+        elseif tns.kind === virtual
+            tns = tns.val
         end
+        if node.tns.kind === variable
+            if (ctx.target === nothing || (node.tns in ctx.target)) && !(node.tns in ctx.escape)
+                protos = map(idx -> idx.kind === protocol ? idx.mode.val : nothing, node.idxs)
+                idxs = map(idx -> idx.kind === protocol ? ctx(idx.idx) : ctx(idx), node.idxs)
+                if node.mode.kind === reader
+                    return access(get_reader(tns, ctx.ctx, protos...), node.mode, idxs...)
+                else
+                    if node.mode.mode.kind === create #TODO this is not great, we should call thaw instead.
+                        tns = initialize!(tns, ctx.ctx)
+                    end
+                    return access(get_updater(tns, ctx.ctx, protos...), node.mode, idxs...)
+                end
+            else
+                return access(ctx(node.tns), node.mode, map(ctx, node.idxs)...)
+            end
+        end
+        return access(ctx(node.tns), node.mode, map(ctx, node.idxs)...)
     elseif node.kind === with
-        ctx_2 = Initialize(ctx.ctx, ctx.target, union(ctx.escape, map(getname, getresults(node.prod))))
+        ctx_2 = OpenScope(ctx.ctx, ctx.target, union(ctx.escape, map(gettns, getresults(node.prod))))
         with(ctx_2(node.cons), ctx_2(node.prod))
     elseif istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))
@@ -160,20 +219,35 @@ function (ctx::Initialize)(node::IndexNode)
 end
 
 """
-    Finalize(ctx)
+    CloseScope(ctx)
 
-A transformation to finalize output tensors before they leave scope and are
-returned to the caller.
+A transformation to freeze output virtual tensors before they leave scope and
+are returned to the caller.
 
-See also: [`finalize!`](@ref)
+See also: [`freeze!`](@ref)
 """
-@kwdef struct Finalize{Ctx}
+@kwdef struct CloseScope{Ctx}
     ctx::Ctx
     target=nothing
     escape=[]
 end
-finalize!(tns, ctx, mode, idxs...) = tns
-function (ctx::Finalize)(node)
+
+"""
+    freeze!(tns, ctx)
+
+Freeze the update-only virtual tensor `tns` in the context `ctx` and return it. After
+freezing, the tensor is read-only.
+"""
+freeze!(tns, ctx, mode, idxs...) = tns
+
+"""
+    trim!(tns, ctx)
+
+Before returning a tensor from the finch program, trim any excess overallocated memory.
+"""
+trim!(tns, ctx) = tns
+
+function (ctx::CloseScope)(node)
     if istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))
     else
@@ -181,15 +255,18 @@ function (ctx::Finalize)(node)
     end
 end
 
-function (ctx::Finalize)(node::IndexNode)
-    if node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
-        if (ctx.target === nothing || (getname(node.tns) in ctx.target)) && !(getname(node.tns) in ctx.escape)
-            access(finalize!(node.tns.val, ctx.ctx, node.mode, node.idxs...), node.mode, node.idxs...)
-        else
-            access(node.tns, node.mode, map(ctx, node.idxs)...)
+function (ctx::CloseScope)(node::FinchNode)
+    if node.kind === access
+        if node.tns.kind === variable
+            if (ctx.target === nothing || (node.tns in ctx.target)) && !(node.tns in ctx.escape)
+                if node.mode.kind !== reader
+                    freeze!(ctx.ctx.bindings[node.tns.name], ctx.ctx, node.mode, node.idxs...)
+                end
+            end
         end
+        return similarterm(node, operation(node), map(ctx, arguments(node)))
     elseif node.kind === with
-        ctx_2 = Finalize(ctx.ctx, ctx.target, union(ctx.escape, map(getname, getresults(node.prod))))
+        ctx_2 = CloseScope(ctx.ctx, ctx.target, union(ctx.escape, map(gettns, getresults(node.prod))))
         with(ctx_2(node.cons), ctx_2(node.prod))
     elseif istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))

@@ -59,6 +59,10 @@ function cache!(ctx, var, val)
     if isliteral(val)
         return val
     end
+    if val isa FinchNode
+        val.kind == literal && return val
+        val.kind == value && return val
+    end
     body = contain(ctx) do ctx_2
         ctx(val)
     end
@@ -90,6 +94,13 @@ function bind(f, ctx::LowerJulia, (var, val′), tail...)
     end
 end
 
+function resolve(var, ctx::LowerJulia)
+    if var isa FinchNode && (var.kind === variable || var.kind === index)
+        return ctx.bindings[var.name]
+    end
+    return var
+end
+
 function contain(f, ctx::LowerJulia)
     ctx_2 = shallowcopy(ctx)
     ctx_2.preamble = []
@@ -114,7 +125,7 @@ struct ThunkStyle end
     epilogue = quote end
     binds = ()
 end
-IndexNotation.isliteral(::Thunk) =  false
+FinchNotation.isliteral(::Thunk) =  false
 
 Base.show(io::IO, ex::Thunk) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::Thunk)
@@ -146,10 +157,10 @@ function (ctx::LowerJulia)(node, ::ThunkStyle)
     end
 end
 
-function (ctx::ThunkVisitor)(node::IndexNode)
+function (ctx::ThunkVisitor)(node::FinchNode)
     if node.kind === virtual
         ctx(node.val)
-    elseif node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
+    elseif node.kind === access && node.tns.kind === virtual
         #TODO this case morally shouldn't exist
         thunk_access(node, ctx, node.tns.val)
     elseif istree(node)
@@ -170,7 +181,7 @@ function (ctx::ThunkVisitor)(node::Thunk)
     node.body
 end
 
-IndexNotation.isliteral(::Union{Symbol, Expr, Missing}) =  false
+FinchNotation.isliteral(::Union{Symbol, Expr, Missing}) =  false
 (ctx::LowerJulia)(root::Union{Symbol, Expr}, ::DefaultStyle) = root
 
 function (ctx::LowerJulia)(root, ::DefaultStyle)
@@ -180,7 +191,7 @@ function (ctx::LowerJulia)(root, ::DefaultStyle)
     error("Don't know how to lower $root")
 end
 
-function (ctx::LowerJulia)(root::IndexNode, ::DefaultStyle)
+function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
     if root.kind === value
         return root.val
     elseif root.kind === index
@@ -195,19 +206,21 @@ function (ctx::LowerJulia)(root::IndexNode, ::DefaultStyle)
             return root.val
         end
     elseif root.kind === with
-        prod = nothing
-        target = map(getname, getresults(root.prod))
+        target = map(gettns, getresults(root.prod))
         return quote
             $(contain(ctx) do ctx_2
-                prod = Initialize(ctx = ctx_2, target=target)(root.prod)
+                prod = OpenScope(ctx = ctx_2, target=target)(root.prod)
                 (ctx_2)(prod)
             end)
             $(contain(ctx) do ctx_2
-                Finalize(ctx = ctx_2, target=target)(prod)
-                cons = Initialize(ctx = ctx_2, target=target)(root.cons)
-                res = (ctx_2)(cons)
-                Finalize(ctx = ctx_2, target=target)(cons)
-                res
+                CloseScope(ctx = ctx_2, target=target)(root.prod)
+                cons = OpenScope(ctx = ctx_2, target=target)(root.cons)
+                (ctx_2)(cons)
+            end)
+            $(contain(ctx) do ctx_2
+                CloseScope(ctx = ctx_2, target=target)(root.cons)
+                quote
+                end
             end)
         end
     elseif root.kind === multi
@@ -221,8 +234,10 @@ function (ctx::LowerJulia)(root::IndexNode, ::DefaultStyle)
         end
         thunk
     elseif root.kind === access
-        if root.tns isa IndexNode && root.tns.kind === virtual
+        if root.tns.kind === virtual
             return lowerjulia_access(ctx, root, root.tns.val)
+        elseif root.tns.kind === variable
+            return lowerjulia_access(ctx, root, resolve(root.tns.name, ctx))
         else
             tns = ctx(root.tns)
             idxs = map(ctx, root.idxs)
@@ -247,14 +262,15 @@ function (ctx::LowerJulia)(root::IndexNode, ::DefaultStyle)
             :($(ctx(root.op))($(map(ctx, root.args)...)))
         end
     elseif root.kind === loop
+        ext = resolvedim(ctx.dims[getname(root.idx)])
         return ctx(simplify(chunk(
             root.idx,
-            resolvedim(ctx.dims[getname(root.idx)]),
-            root.body),
+            ext,
+            ChunkifyVisitor(ctx, root.idx, ext)(root.body)),
             ctx))
     elseif root.kind === chunk
         idx_sym = ctx.freshen(getname(root.idx))
-        if simplify((@f $(getlower(root.ext)) >= 1), ctx) == (@f true)  && simplify((@f $(getupper(root.ext)) <= 1), ctx) == (@f true)
+        if simplify((@f $(getlower(root.ext)) >= 1), ctx) == (@f true) && simplify((@f $(getupper(root.ext)) <= 1), ctx) == (@f true)
             return quote
                 $idx_sym = $(ctx(getstart(root.ext)))
                 $(bind(ctx, getname(root.idx) => idx_sym) do 
@@ -300,8 +316,11 @@ function (ctx::LowerJulia)(root::IndexNode, ::DefaultStyle)
         return :($lhs = $rhs)
     elseif root.kind === pass
         return quote end
+    elseif root.kind === variable
+        error()
+        return ctx(ctx.bindings[root.name])
     else
-        error("unimplemented")
+        error("unimplemented ($root)")
     end
 end
 
@@ -330,13 +349,13 @@ function (ctx::ForLoopVisitor)(node)
     end
 end
 
-function (ctx::ForLoopVisitor)(node::IndexNode)
-    if node.kind === access && node.tns isa IndexNode && node.tns.kind === virtual
+function (ctx::ForLoopVisitor)(node::FinchNode)
+    if node.kind === access && node.tns.kind === virtual
         tns_2 = unchunk(node.tns.val, ctx)
         if tns_2 === nothing
             access(node.tns, node.mode, map(ctx, node.idxs)...)
         else
-            access(tns_2, node.mode, map(ctx, node.idxs[2:end])...)
+            access(tns_2, node.mode, map(ctx, node.idxs[1:end-1])...)
         end
     elseif istree(node)
         similarterm(node, operation(node), map(ctx, arguments(node)))
@@ -350,14 +369,14 @@ end
     body
 end
 
-default(ex::Lookup) = something(ex.val)
+virtual_default(ex::Lookup) = something(ex.val)
 
 Base.show(io::IO, ex::Lookup) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::Lookup)
     print(io, "Lookup()")
 end
 
-IndexNotation.isliteral(node::Lookup) =  false
+FinchNotation.isliteral(node::Lookup) =  false
 
 function (ctx::ForLoopVisitor)(node::Lookup)
     node.body(ctx.val)

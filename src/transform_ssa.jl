@@ -67,7 +67,7 @@ function getglobals(prgm)
 end
 =#
 
-function (ctx::TransformSSA)(node::IndexNode)
+function (ctx::TransformSSA)(node::FinchNode)
     if node.kind === index
         resolvename!(node, ctx)
     elseif node.kind === with
@@ -82,13 +82,6 @@ function (ctx::TransformSSA)(node::IndexNode)
             body = ctx(node.body)
             return loop(idx, body)
         end
-    elseif node.kind === access
-        if node.mode.kind !== reader
-            tns = definename!(node.tns, ctx)
-        else
-            tns = resolvename!(node.tns, ctx)
-        end
-        return access(tns, node.mode, map(ctx, node.idxs)...)
     elseif istree(node)
         similarterm(node, operation(node), map(ctx, arguments(node)))
     else

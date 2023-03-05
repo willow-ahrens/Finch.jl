@@ -22,12 +22,8 @@ intermediate expressions.
 julia> using Pkg; Pkg.add("Finch")
 ```
 
+## Usage:
 
-
-
-
-
-Here's a few examples
-
-```@finch
-```
+We're working on adding more documentation, for now take a look at the
+[benchmarks](https://github.com/willow-ahrens/Finch.jl/blob/main/benchmark/benchmarks.jl)
+for a few example algorithms.

@@ -15,7 +15,7 @@ end
 choose(d) = Chooser{d}()
 
 isassociative(alg) = (f) -> isassociative(alg, f)
-isassociative(alg, f::IndexNode) = f.kind === literal && isassociative(alg, f.val)
+isassociative(alg, f::FinchNode) = f.kind === literal && isassociative(alg, f.val)
 """
     isassociative(algebra, f)
 
@@ -33,7 +33,7 @@ isassociative(::AbstractAlgebra, ::typeof(max)) = true
 isassociative(::AbstractAlgebra, ::Chooser) = true
 
 iscommutative(alg) = (f) -> iscommutative(alg, f)
-iscommutative(alg, f::IndexNode) = f.kind === literal && iscommutative(alg, f.val)
+iscommutative(alg, f::FinchNode) = f.kind === literal && iscommutative(alg, f.val)
 """
     iscommutative(algebra, f)
 
@@ -51,7 +51,7 @@ isabelian(alg) = (f) -> isabelian(alg, f)
 isabelian(alg, f) = isassociative(alg, f) && iscommutative(alg, f)
 
 isdistributive(alg) = (f, g) -> isdistributive(alg, f, g)
-isdistributive(alg, f::IndexNode, x::IndexNode) = isliteral(f) && isliteral(x) && isdistributive(alg, f.val, x.val)
+isdistributive(alg, f::FinchNode, x::FinchNode) = isliteral(f) && isliteral(x) && isdistributive(alg, f.val, x.val)
 """
     isidempotent(algebra, f)
 
@@ -61,7 +61,7 @@ isdistributive(::Any, f, g) = false
 isdistributive(::AbstractAlgebra, ::typeof(+), ::typeof(*)) = true
 
 isidempotent(alg) = (f) -> isidempotent(alg, f)
-isidempotent(alg, f::IndexNode) = f.kind === literal && isidempotent(alg, f.val)
+isidempotent(alg, f::FinchNode) = f.kind === literal && isidempotent(alg, f.val)
 """
     isidempotent(algebra, f)
 
@@ -79,7 +79,7 @@ isidempotent(::AbstractAlgebra, ::Chooser) = true
 Return true when `f(a..., x, b...) = f(a..., b...)` in `algebra`.
 """
 isidentity(alg) = (f, x) -> isidentity(alg, f, x)
-isidentity(alg, f::IndexNode, x::IndexNode) = isliteral(f) && isliteral(x) && isidentity(alg, f.val, x.val)
+isidentity(alg, f::FinchNode, x::FinchNode) = isliteral(f) && isliteral(x) && isidentity(alg, f.val, x.val)
 isidentity(::Any, f, x) = false
 isidentity(::AbstractAlgebra, ::typeof(or), x) = x == false
 isidentity(::AbstractAlgebra, ::typeof(and), x) = x == true
@@ -91,7 +91,7 @@ isidentity(::AbstractAlgebra, ::typeof(max), x) = isinf(x) && x < 0
 isidentity(::AbstractAlgebra, ::Chooser{D}, x) where {D} = x == D
 
 isannihilator(alg) = (f, x) -> isannihilator(alg, f, x)
-isannihilator(alg, f::IndexNode, x::IndexNode) = isliteral(f) && isliteral(x) && isannihilator(alg, f.val, x.val)
+isannihilator(alg, f::FinchNode, x::FinchNode) = isliteral(f) && isliteral(x) && isannihilator(alg, f.val, x.val)
 """
     isannihilator(algebra, f, x)
 
@@ -106,7 +106,7 @@ isannihilator(::AbstractAlgebra, ::typeof(or), x) = x == true
 isannihilator(::AbstractAlgebra, ::typeof(and), x) = x == false
 
 isinverse(alg) = (f, g) -> isinverse(alg, f, g)
-isinverse(alg, f::IndexNode, g::IndexNode) = isliteral(f) && isliteral(g) && isinverse(alg, f.val, g.val)
+isinverse(alg, f::FinchNode, g::FinchNode) = isliteral(f) && isliteral(g) && isinverse(alg, f.val, g.val)
 """
     isinverse(algebra, f, g)
 
@@ -117,7 +117,7 @@ isinverse(::AbstractAlgebra, ::typeof(-), ::typeof(+)) = true
 isinverse(::AbstractAlgebra, ::typeof(inv), ::typeof(*)) = true
 
 isinvolution(alg) = (f) -> isinvolution(alg, f)
-isinvolution(alg, f::IndexNode) = isliteral(f) && isinvolution(alg, f.val)
+isinvolution(alg, f::FinchNode) = isliteral(f) && isinvolution(alg, f.val)
 """
     isinvolution(algebra, f)
 
@@ -128,16 +128,17 @@ isinvolution(::AbstractAlgebra, ::typeof(-)) = true
 isinvolution(::AbstractAlgebra, ::typeof(inv)) = true
 
 struct Fill
-    body::IndexNode
+    body::FinchNode
     default
     Fill(x, d=nothing) = new(index_leaf(x), d)
 end
 
-IndexNotation.isliteral(::Fill) = false
-default(f::Fill) = something(f.default)
+FinchNotation.isliteral(::Fill) = false
+virtual_default(f::Fill) = something(f.default)
 
 isfill(tns) = false
-isfill(tns::IndexNode) = tns.kind == virtual && tns.val isa Fill
+isfill(tns::FinchNode) = tns.kind == virtual && tns.val isa Fill
+isvar(tns::FinchNode) = tns.kind == variable
 
 """
     base_rules(alg, ctx)
@@ -155,7 +156,9 @@ function base_rules(alg, ctx)
         (@rule call(~f, ~a...) => if isliteral(f) && all(isliteral, a) && length(a) >= 1 literal(getvalue(f)(getvalue.(a)...)) end),
 
         #TODO default needs to get defined on all writable chunks
-        (@rule assign(access(~a, ~m, ~i...), $(literal(right)), ~b) => if b == literal(default(a)) pass(access(a, m)) end),
+        #TODO Does it really though
+        #TODO I don't think this is safe to assume if we allow arbitrary updates
+        (@rule assign(access(~a, ~m, ~i...), $(literal(right)), ~b) => if virtual_default(resolve(a, ctx)) != nothing && b == literal(something(virtual_default(resolve(a, ctx)))) pass(access(a, m)) end),
 
         #TODO we probably can just drop modes from pass
         (@rule pass(~a..., access(~b, updater(modify())), ~c...) => pass(a..., c...)),
@@ -180,17 +183,17 @@ function base_rules(alg, ctx)
             end
         end),
 
-        (@rule with(~a, assign(access(~b, updater(create())), ~f, ~c::isliteral)) => begin
-            Rewrite(Postwalk(@rule access(~x, reader()) => if getname(x) === getname(b) call(f, default(b), c) end))(a)
+        (@rule with(~a, assign(access(~b::isvar, updater(create())), ~f, ~c::isliteral)) => begin
+            Rewrite(Postwalk(@rule access(~x::isvar, reader()) => if x == b call(f, virtual_default(resolve(b, ctx)), c) end))(a)
         end),
-        (@rule with(~a, multi(~b..., assign(access(~c, updater(create())), ~f, ~d::isliteral), ~e...)) => begin
-            with(Rewrite(Postwalk(@rule access(~x, reader()) => if getname(x) === getname(c) call(f, default(c), d) end))(a), multi(b..., e...))
+        (@rule with(~a, multi(~b..., assign(access(~c::isvar, updater(create())), ~f, ~d::isliteral), ~e...)) => begin
+            with(Rewrite(Postwalk(@rule access(~x::isvar, reader()) => if x == c call(f, virtual_default(resolve(c, ctx)), d) end))(a), multi(b..., e...))
         end),
-        (@rule with(~a, pass(~b..., access(~c, updater(create())), ~d...)) => begin
-            with(Rewrite(Postwalk(@rule access(~x, reader(), ~i...) => if getname(x) === getname(c) default(c) end))(a), pass(b..., d...))
+        (@rule with(~a, pass(~b..., access(~c::isvar, updater(create())), ~d...)) => begin
+            with(Rewrite(Postwalk(@rule access(~x::isvar, reader(), ~i...) => if x == c virtual_default(resolve(c, ctx)) end))(a), pass(b..., d...))
         end),
-        (@rule with(~a, multi(~b..., pass(~c..., access(~d, updater(create())), ~e...), ~f...)) => begin
-            with(Rewrite(Postwalk(@rule access(~x, reader(), ~i...) => if getname(x) === getname(d) default(d) end))(a), multi(b..., pass(c..., e...), f...))
+        (@rule with(~a, multi(~b..., pass(~c..., access(~d::isvar, updater(create())), ~e...), ~f...)) => begin
+            with(Rewrite(Postwalk(@rule access(~x::isvar, reader(), ~i...) => if x == d virtual_default(resolve(d, ctx)) end))(a), multi(b..., pass(c..., e...), f...))
         end),
 
         (@rule call($(literal(>=)), call($(literal(max)), ~a...), ~b) => call(or, map(x -> call(x >= b), a)...)),
@@ -234,7 +237,11 @@ function base_rules(alg, ctx)
 
 
         (@rule call(~f, call(~g, ~a, ~b...)) => if isinverse(alg, f, g) && isassociative(alg, g)
-            call(g, call(f, a), call(f, call(g, b...)))
+            call(g, call(f, a), map(c -> call(f, call(g, c)), b)...)
+        end),
+
+        (@rule call(~g, ~a..., ~b, ~c..., call(~f, ~b), ~d...) => if isinverse(alg, f, g) && isassociative(alg, g)
+            call(g, a..., c..., d...)
         end),
 
         (@rule call($(literal(-)), ~a, ~b) => call(+, a, call(-, b))),
@@ -298,9 +305,9 @@ function (ctx::SimplifyVisitor)(node)
     end
 end
 
-function (ctx::SimplifyVisitor)(node::IndexNode)
+function (ctx::SimplifyVisitor)(node::FinchNode)
     if node.kind === virtual
-        convert(IndexNode, ctx(node.val))
+        convert(FinchNode, ctx(node.val))
     elseif istree(node)
         similarterm(node, operation(node), map(ctx, arguments(node)))
     else
@@ -332,4 +339,4 @@ function (ctx::LowerJulia)(root, ::SimplifyStyle)
     ctx(root)
 end
 
-IndexNotation.isliteral(::Simplify) = false
+FinchNotation.isliteral(::Simplify) = false
