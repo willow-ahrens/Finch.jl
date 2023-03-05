@@ -75,6 +75,7 @@ end
 @inline Base.axes(fbr::Fiber{<:SparseCooLevel{N}}) where {N} = (map(Base.OneTo, fbr.lvl.I)..., axes(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))...)
 @inline Base.eltype(fbr::Fiber{<:SparseCooLevel{N}}) where {N} = eltype(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))
 @inline default(fbr::Fiber{<:SparseCooLevel{N}}) where {N} = default(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))
+data_rep_level(::Type{<:SparseCooLevel{N, Ti, Tp, Tbl, Lvl}}) where {N, Ti, Tp, Tbl, Lvl} = (SparseData^N)(data_rep_level(Lvl))
 
 (fbr::Fiber{<:SparseCooLevel})() = fbr
 function (fbr::Fiber{<:SparseCooLevel{N, Ti}})(i, tail...) where {N, Ti}

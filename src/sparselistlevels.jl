@@ -66,6 +66,7 @@ end
 @inline Base.axes(fbr::Fiber{<:SparseListLevel}) = (1:fbr.lvl.I, axes(Fiber(fbr.lvl.lvl, Environment(fbr.env)))...)
 @inline Base.eltype(fbr::Fiber{<:SparseListLevel}) = eltype(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
 @inline default(fbr::Fiber{<:SparseListLevel}) = default(Fiber(fbr.lvl.lvl, Environment(fbr.env)))
+data_rep_level(::Type{<:SparseListLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = SparseData(data_rep_level(Lvl))
 
 (fbr::Fiber{<:SparseListLevel})() = fbr
 function (fbr::Fiber{<:SparseListLevel{Ti}})(i, tail...) where {Ti}

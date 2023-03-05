@@ -89,6 +89,7 @@ end
 @inline Base.axes(fbr::Fiber{<:SparseHashLevel{N}}) where {N} = (map(Base.OneTo, fbr.lvl.I)..., axes(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))...)
 @inline Base.eltype(fbr::Fiber{<:SparseHashLevel{N}}) where {N} = eltype(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))
 @inline default(fbr::Fiber{<:SparseHashLevel{N}}) where {N} = default(Fiber(fbr.lvl.lvl, (Environment^N)(fbr.env)))
+data_rep_level(::Type{<:SparseHashLevel{N, Ti, Tp, Tbl, Lvl}}) where {N, Ti, Tp, Tbl, Lvl} = (SparseData^N)(data_rep_level(Lvl))
 
 (fbr::Fiber{<:SparseHashLevel})() = fbr
 function (fbr::Fiber{<:SparseHashLevel{N, Ti}})(i, tail...) where {N, Ti}
