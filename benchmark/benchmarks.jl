@@ -1,9 +1,9 @@
 using Pkg
-#tempdir = mktempdir()
-#Pkg.activate(tempdir)
-#Pkg.develop(PackageSpec(path = joinpath(@__DIR__, "..")))
-#Pkg.add(["BenchmarkTools", "PkgBenchmark", "MatrixDepot"])
-#Pkg.resolve()
+# tempdir = mktempdir()
+# Pkg.activate(tempdir)
+# Pkg.develop(PackageSpec(path = joinpath(@__DIR__, "..")))
+# Pkg.add(["BenchmarkTools", "PkgBenchmark", "MatrixDepot"])
+# Pkg.resolve()
 
 using Finch
 using BenchmarkTools
@@ -122,35 +122,44 @@ for mtx in ["SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
     SUITE["graphs"]["bfs"][mtx] = @benchmarkable bfs($(fiber(SparseMatrixCSC(matrixdepot(mtx))))) 
 end
 
-function bellmanford(e, s=1)
-    (n, m) = size(e)
+function bellmanford(edges, source=1)
+    (n, m) = size(edges)
     @assert n == m
 
-    init_d = [Inf for i=1:n]
-    init_d[s] = 0.0
-    d = @fiber(d(e(Inf)), init_d)
-    d2 = @fiber(d(e(Inf)))
-    d3 = @fiber(d(e(Inf)))
-    b = Scalar(false)
+    init_dists = [Inf for i=1:n]
+    init_dists[source] = 0.0
+    dists_prev = @fiber(d(e(Inf)), init_dists)
+    dists_buffer = @fiber(d(e(Inf)))
+    dists_next = @fiber(d(e(Inf)))
+    modified = Scalar(false)
 
     for iter = 1:n  
-        @finch @loop j i d2[j] <<min>>= d[i] + e[i, j]
-        @finch @loop j d3[j] = min(d2[j], d[j])
+        @finch @loop j i dists_buffer[j] <<min>>= dists_prev[i] + edges[i, j]
+        @finch @loop j dists_next[j] = min(dists_buffer[j], dists_prev[j])
 
-        b = Scalar(false)
-        @finch @loop i b[] |= d3[i] != d[i]
-        if !b[]
+        modified = Scalar(false)
+        @finch @loop i modified[] |= dists_next[i] != dists_prev[i]
+        if !modified[]
             break
         end
-        d, d3 = d3, d
+        dists_prev, dists_next = dists_next, dists_prev
     end
 
-    return b[] ? -1 : d
+    return modified[] ? -1 : dists_prev
 end
 
+#ERROR IN BFS BENCHMARK:
+#ERROR: LoadError: type SparseBytemapLevel has no field pos
+
 SUITE["graphs"]["bellmanford"] = BenchmarkGroup()
-for mtx in ["SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
-    SUITE["graphs"]["bellmanford"][mtx] = @benchmarkable bellmanford($(fiber(SparseMatrixCSC(matrixdepot(mtx))))) 
+for mtx in ["Newman/netscience"] #"Williams/pdb1HYS", "GAP/GAP-road"
+    A = fiber(SparseMatrixCSC(matrixdepot(mtx)))
+    (m, n) = size(A)
+    test = @fiber(d(sl(e(Inf))))
+    @finch @loop j i test[i, j] = ifelse(A[i, j] == 0, Inf, A[i, j])
+    compress = @fiber(d(sl(e(Inf))), test)
+    #test = @fiber(d(sl(e(Inf, A.lvl.lvl.lvl.val), A.lvl.lvl.ptr, A.lvl.lvl.idx, m), n))
+    SUITE["graphs"]["bellmanford"][mtx] = @benchmarkable bellmanford($compress) #$test) 
 end
 
 SUITE["matrices"] = BenchmarkGroup()
@@ -166,7 +175,7 @@ function spgemm_inner(A, B)
 end
 
 SUITE["matrices"]["ATA_spgemm_inner"] = BenchmarkGroup()
-for mtx in []#"SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
+for mtx in ["SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
     A = fiber(permutedims(SparseMatrixCSC(matrixdepot(mtx))))
     SUITE["matrices"]["ATA_spgemm_inner"][mtx] = @benchmarkable spgemm_inner($A, $A) 
 end
