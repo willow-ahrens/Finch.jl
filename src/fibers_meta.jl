@@ -78,39 +78,42 @@ function Base.isequal(A:: AbstractArray, B::Fiber)
     return helper_isequal(A, B)
 end
 
-@generated function Base.getindex(arr::Fiber, inds...)
-    arr = virtualize(:arr, arr, LowerJulia())
-    irange = getsites(arr)
-    @assert length(irange) == length(inds)
+Base.getindex(arr::Fiber, inds...) = getindex_helper(arr, to_indices(arr, inds)...)
+@generated function getindex_helper(arr::Fiber, inds...)
+    @assert ndims(arr) == length(inds)
+    @assert ndims(arr) == length(inds)
+    N = ndims(arr)
 
     inds_ndims = ndims.(inds)
     if sum(inds_ndims) == 0
         return quote
-            val = Scalar(0.0)
-            @finch val[] = arr[inds...]
-            return val[]
+            scl = Scalar($(default(arr)))
+            @finch scl[] = arr[inds...]
+            return scl[]
         end
     end
 
     T = eltype(arr)
-    idxs = [Symbol(:i_, n) for n = irange]
-    indvars = [Symbol(:indvar_, n) for n = irange]
-    cache_indvars = Expr(:block,
-        (:($(indvars[i]) = inds[$i])
-        for i = irange)...
-    )
-    coords = Union{Expr, Symbol}[inds[i] == Int ?
-        indvars[i] : :($(indvars[i])[$(idxs[i])])
-        for i = irange]
+    syms = [Symbol(:inds_, n) for n = 1:N]
+    modes = [Symbol(:mode_, n) for n = 1:N]
+    coords = map(1:N) do n
+        if ndims(inds[n]) == 0
+            syms[n]
+        elseif inds[n] <: Base.Slice
+            modes[n]
+        else
+            :($(syms[n])[$(modes[n])])
+        end
+    end
+    dst_modes = modes[filter(n->ndims(inds[n]) != 0, 1:N)]
+    
+    dst = fiber_ctr(getindex_rep(data_rep(arr), inds...))
 
-    output_dims = [:(length(inds[$i])) for i = irange if inds_ndims[i] > 0]
-    vec_idxs = [idxs[i] for i = irange if inds_ndims[i] > 0]
-
-    return quote
-        vals = zeros($T, $(output_dims...))
-        $cache_indvars
-        @finch @loop($(vec_idxs...), vals[$(vec_idxs...)] = arr[$(coords...)])
-        return vals
+    quote
+        win = $dst
+        ($(syms...), ) = (inds...,)
+        @finch @loop($(reverse(dst_modes)...), win[$(dst_modes...)] = arr[$(coords...)])
+        return win
     end
 end
 
