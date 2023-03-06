@@ -89,7 +89,7 @@ module h
 end
 
 register(DefaultAlgebra)
-#TODO add an uninitialized_fiber type so that we can perhaps do this through executing pass(fbr),
+#TODO add an uninitialized_fiber type so that we can perhaps do this through executing declare(fbr),
 #obviating the need to have a separate generated function registration mechanism for fibers.
 @generated function Fiber!(lvl)
     contain(LowerJulia()) do ctx

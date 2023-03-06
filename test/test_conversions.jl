@@ -41,7 +41,7 @@
                     ref = dropdefaults!(ref, arr)
                     tmp = Fiber!(inner())
                     @testset "convert $(summary(tmp))" begin
-                        @finch @loop i tmp[i] = ref[i]
+                        @finch (tmp .= 0; @loop i tmp[i] = ref[i])
                         check = Scalar(true)
                         @finch @loop i check[] &= tmp[i] == ref[i]
                         @test check[]
@@ -65,7 +65,7 @@
                         ref = dropdefaults!(ref, arr)
                         tmp = Fiber!(outer())
                         @testset "convert $arr_key $(summary(tmp))"  begin
-                            @finch @loop j i tmp[i, j] = ref[i, j]
+                            @finch (tmp .= 0; @loop j i tmp[i, j] = ref[i, j])
                             check = Scalar(true)
                             @finch @loop j i check[] &= tmp[i, j] == ref[i, j]
                             @test check[]
@@ -92,8 +92,8 @@
                 ref = dropdefaults!(ref, arr)
                 tmp = Fiber!(inner())
                 @testset "convert $(summary(tmp))" begin
-                    @finch @loop i tmp[i] = ref[i]
-                    @finch @loop i res[i] = tmp[i]
+                    @finch (tmp .= 0; @loop i tmp[i] = ref[i])
+                    @finch (res .= 0; @loop i res[i] = tmp[i])
                     @test isstructequal(ref, res)
                 end
             end
@@ -116,8 +116,8 @@
                     ref = dropdefaults!(ref, arr)
                     tmp = Fiber!(outer())
                     @testset "convert $arr_key $(summary(tmp))"  begin
-                        @finch @loop j i tmp[i, j] = ref[i, j]
-                        @finch @loop j i res[i, j] = tmp[i, j]
+                        @finch (tmp .= 0; @loop j i tmp[i, j] = ref[i, j])
+                        @finch (res .= 0; @loop j i res[i, j] = tmp[i, j])
                         @test isstructequal(ref, res)
                     end
                 end
@@ -142,8 +142,8 @@
                 ref = dropdefaults!(ref, arr)
                 tmp = Fiber!(outer())
                 @testset "convert $arr_key $(summary(tmp))"  begin
-                    @finch @loop j i tmp[i, j] = ref[i, j]
-                    @finch @loop j i res[i, j] = tmp[i, j]
+                    @finch (tmp .= 0; @loop j i tmp[i, j] = ref[i, j])
+                    @finch (res .= 0; @loop j i res[i, j] = tmp[i, j])
                     @test isstructequal(ref, res)
                 end
             end

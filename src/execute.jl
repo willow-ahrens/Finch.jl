@@ -133,7 +133,7 @@ function freeze! end
 Thaw the read-only virtual tensor `tns` in the context `ctx` and return it. Afterwards,
 the tensor is update-only.
 """
-thaw!(tns, ctx) = throw(FormatLimitation("cannot modify $(typeof(tns)) in place"))
+thaw!(tns, ctx) = throw(FormatLimitation("cannot modify $(typeof(tns)) in place (forgot to declare with .= ?)"))
 
 """
     trim!(tns, ctx)

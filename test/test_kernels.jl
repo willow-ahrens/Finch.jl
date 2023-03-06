@@ -11,10 +11,10 @@
         B = @fiber(d(sl(e(0.0),m),m))
 
         if !seen
-            check_output("innerprod.jl", @finch_code @loop j i k B[i, j] += A[k, i] * A[k, j])
+            check_output("innerprod.jl", @finch_code (B .= 0; @loop j i k B[i, j] += A[k, i] * A[k, j]))
             seen = true
         end
-        @finch @loop j i k B[i, j] += A[k, i] * A[k, j]
+        @finch (B .= 0; @loop j i k B[i, j] += A[k, i] * A[k, j])
         @test B == B_ref
     end
 
@@ -27,10 +27,10 @@
             A = fiber(A_ref)
             B = Finch.Scalar{0.0}()
             if !seen
-                check_output("triangle.jl", @finch_code @loop i j k B[] += A[k, i] * A[j, i] * A[k, j])
+                check_output("triangle.jl", @finch_code (B .= 0; @loop i j k B[] += A[k, i] * A[j, i] * A[k, j]))
                 seen = true
             end
-            @finch @loop i j k B[] += A[k, i] * A[j, i] * A[k, j]
+            @finch (B .= 0; @loop i j k B[] += A[k, i] * A[j, i] * A[k, j])
             @test B() ≈ sum(A_ref .* (A_ref * transpose(A_ref)))
         end
     end
@@ -48,7 +48,18 @@
         a = Scalar{0.0}()
         b = Scalar{0.0}()
 
-        @finch @loop i (C[i] = a[] - b[]; d[] += a[] * b[]) where (a[] = A[i]; b[] = B[i])
+        @finch begin
+            C .= 0
+            d .= 0
+            @loop i begin
+                a .= 0
+                b .= 0
+                a[] = A[i]
+                b[] = B[i]
+                C[i] = a[] - b[]
+                d[] += a[] * b[]
+            end
+        end
 
         @test C == A_ref .- B_ref
         @test d[] ≈ dot(A_ref, B_ref)
@@ -64,12 +75,24 @@
             w = @fiber(sm(e(0.0)))
 
             if !seen
-                check_output("gustavsons.jl", @finch_code @loop i ((@loop j B[j, i] = w[j]) where (@loop k j w[j] += A[k, i] * A[j, k])))
+                code = @finch_code begin
+                    B .= 0
+                    @loop j begin
+                        w .= 0
+                        @loop k i w[i] += A[i, k] * A[k, j]
+                        @loop i B[i, j] = w[i]
+                    end
+                end
+                check_output("gustavsons.jl", code)
                 seen = true
             end
-            @finch @loop j begin
-                @loop k i w[i] += A[i, k] * A[k, j]
-                @loop i B[i, j] = w[i]
+            @finch begin
+                B .= 0
+                @loop j begin
+                    w .= 0
+                    @loop k i w[i] += A[i, k] * A[k, j]
+                    @loop i B[i, j] = w[i]
+                end
             end
             B_ref = A_ref * A_ref
             @test B == B_ref

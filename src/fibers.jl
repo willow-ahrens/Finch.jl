@@ -161,7 +161,7 @@ function freeze!(fbr::VirtualFiber, ctx::LowerJulia)
     return VirtualFiber(freeze_level!(fbr.lvl, ctx, literal(1)))
 end
 
-thaw_level!(lvl, ctx, pos) = throw(FormatLimitation("cannot modify $(typeof(lvl)) in place"))
+thaw_level!(lvl, ctx, pos) = throw(FormatLimitation("cannot modify $(typeof(lvl)) in place (forgot to declare with .= ?)"))
 function thaw!(fbr::VirtualFiber, ctx::LowerJulia)
     return VirtualFiber(thaw_level!(fbr.lvl, ctx, literal(1)))
 end

@@ -211,12 +211,13 @@ function base_rules(alg, ctx)
         #TODO default needs to get defined on all writable chunks
         #TODO Does it really though
         #TODO I don't think this is safe to assume if we allow arbitrary updates
-        (@rule assign(access(~a, ~m, ~i...), $(literal(right)), ~b) => if virtual_default(resolve(a, ctx)) != nothing && b == literal(something(virtual_default(resolve(a, ctx)))) pass(access(a, m)) end),
+        (@rule assign(access(~a, ~m, ~i...), $(literal(right)), ~b) => if virtual_default(resolve(a, ctx)) != nothing && b == literal(something(virtual_default(resolve(a, ctx)))) sequence() end),
 
-        (@rule loop(~i, pass(~a...)) => sequence()),
+        (@rule loop(~i, sequence()) => sequence()),
         (@rule chunk(~i, ~a, sequence()) => sequence()),
         (@rule sequence(~a..., sequence(~b...), ~c...) => sequence(a..., b..., c...)),
 
+        #=
         (@rule sequence(~s1..., declare(~a, ~z), assign(access(~a, updater(~m), ~j...), ~op, ~b::isliteral), ~s2...) =>
             sequence(s1..., declare(~a, op(z, b)), s2...)
         ),
@@ -252,6 +253,7 @@ function base_rules(alg, ctx)
                 sequence(s1..., s2..., s3...)
             end
         ),
+        =#
 
         (@rule call($(literal(>=)), call($(literal(max)), ~a...), ~b) => call(or, map(x -> call(x >= b), a)...)),
         (@rule call($(literal(>)), call($(literal(max)), ~a...), ~b) => call(or, map(x -> call(x > b), a)...)),

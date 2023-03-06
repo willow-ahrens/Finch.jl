@@ -1,22 +1,24 @@
 begin
-    B = ex.body.body.body.lhs.tns.tns
+    B = (ex.bodies[1]).tns.tns
     B_val = B.val
-    A_lvl = (ex.body.body.body.rhs.args[1]).tns.tns.lvl
+    B_3 = (ex.bodies[2]).body.body.body.lhs.tns.tns
+    B_val = B_3.val
+    A_lvl = ((ex.bodies[2]).body.body.body.rhs.args[1]).tns.tns.lvl
     A_lvl_2 = A_lvl.lvl
     A_lvl_3 = A_lvl_2.lvl
-    A_lvl_4 = (ex.body.body.body.rhs.args[2]).tns.tns.lvl
+    A_lvl_4 = ((ex.bodies[2]).body.body.body.rhs.args[2]).tns.tns.lvl
     A_lvl_5 = A_lvl_4.lvl
     A_lvl_6 = A_lvl_5.lvl
-    A_lvl_7 = (ex.body.body.body.rhs.args[3]).tns.tns.lvl
+    A_lvl_7 = ((ex.bodies[2]).body.body.body.rhs.args[3]).tns.tns.lvl
     A_lvl_8 = A_lvl_7.lvl
     A_lvl_9 = A_lvl_8.lvl
     A_lvl.I == A_lvl_2.I || throw(DimensionMismatch("mismatched dimension limits ($(A_lvl.I) != $(A_lvl_2.I))"))
-    B_val = 0.0
+    B_val = 0
     for i_4 = 1:A_lvl.I
-        A_lvl_q_2 = (1 - 1) * A_lvl.I + i_4
         A_lvl_q = (1 - 1) * A_lvl.I + i_4
-        A_lvl_2_q = A_lvl_2.ptr[A_lvl_q_2]
-        A_lvl_2_q_stop = A_lvl_2.ptr[A_lvl_q_2 + 1]
+        A_lvl_q_2 = (1 - 1) * A_lvl.I + i_4
+        A_lvl_2_q = A_lvl_2.ptr[A_lvl_q]
+        A_lvl_2_q_stop = A_lvl_2.ptr[A_lvl_q + 1]
         if A_lvl_2_q < A_lvl_2_q_stop
             A_lvl_2_i = A_lvl_2.idx[A_lvl_2_q]
             A_lvl_2_i1 = A_lvl_2.idx[A_lvl_2_q_stop - 1]
@@ -42,8 +44,8 @@ begin
                     A_lvl_3_val_2 = A_lvl_3.val[A_lvl_2_q]
                     j_6 = phase_stop_2
                     A_lvl_q_3 = (1 - 1) * A_lvl.I + j_6
-                    A_lvl_2_q_2 = A_lvl_2.ptr[A_lvl_q]
-                    A_lvl_2_q_stop_2 = A_lvl_2.ptr[A_lvl_q + 1]
+                    A_lvl_2_q_2 = A_lvl_2.ptr[A_lvl_q_2]
+                    A_lvl_2_q_stop_2 = A_lvl_2.ptr[A_lvl_q_2 + 1]
                     if A_lvl_2_q_2 < A_lvl_2_q_stop_2
                         A_lvl_2_i_2 = A_lvl_2.idx[A_lvl_2_q_2]
                         A_lvl_2_i1_2 = A_lvl_2.idx[A_lvl_2_q_stop_2 - 1]
