@@ -212,12 +212,9 @@ end
 function thaw_level!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, pos)
     Ti = lvl.Ti
     Tp = lvl.Tp
-    r = ctx.freshen(lvl.ex, :_r)
     p = ctx.freshen(lvl.ex, :_p)
-    q = ctx.freshen(lvl.ex, :_q)
-    i = ctx.freshen(lvl.ex, :_i)
     push!(ctx.preamble, quote
-        for $r = 1:$(ctx(pos))
+        for $p = 1:$(ctx(pos))
             $(lvl.ex).ptr[$p] -= $(lvl.ex).ptr[$p + 1]
         end
         $(lvl.ex).ptr[1] = 1
