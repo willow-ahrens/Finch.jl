@@ -36,24 +36,24 @@ struct SolidData
 end
 
 """
-    ElementData(eltype, default)
+    ElementData(default, eltype)
     
 Represents a scalar element of type `eltype` and default `default`.
 """
 struct ElementData
-    eltype
     default
+    eltype
 end
 
 """
-    RepeatData(eltype, default)
+    RepeatData(default, eltype)
     
 Represents an array A[i] with many repeated runs of elements of type `eltype`
 and default `default`.
 """
 struct RepeatData
-    eltype
     default
+    eltype
 end
 
 #const SolidData = Union{DenseData, SparseData, RepeatData, ElementData}
@@ -64,7 +64,7 @@ end
 Return a trait object representing everything that can be learned about the data
 based on the storage format (type) of the tensor
 """
-data_rep(tns) = SolidData(foldl([DenseData for _ in 1:ndims(tns)], init = ElementData(eltype(tns), default(tns))))
+data_rep(tns) = SolidData(foldl([DenseData for _ in 1:ndims(tns)], init = ElementData(default(tns), eltype(tns))))
 
 struct Drop{Idx}
     idx::Idx
@@ -99,10 +99,9 @@ getindex_rep_def_dense(subfbr::SolidData, idx) = SolidData(DenseData(subfbr.lvl)
 
 getindex_rep_def(lvl::ElementData) = SolidData(lvl)
 
-getindex_rep_def(lvl::RepeatData, idx::Drop) = SolidData(ElementLevel(lvl.eltype, lvl.default))
-getindex_rep_def(lvl::RepeatData, idx) = SolidData(DenseLevel(ElementLevel(lvl.eltype, lvl.default)))
-getindex_rep_def(lvl::RepeatData, idx::Type{<:AbstractUnitRange}) = SolidData(lvl)
-
+getindex_rep_def(lvl::RepeatData, idx::Drop) = SolidData(ElementData(lvl.default, lvl.eltype))
+getindex_rep_def(lvl::RepeatData, idx) = SolidData(ElementData(lvl.default, lvl.eltype))
+getindex_rep_def(lvl::RepeatData, idx::Type{<:AbstractUnitRange}) = SolidData(ElementData(lvl.default, lvl.eltype))
 
 """
     fiber_ctr(tns)

@@ -74,6 +74,45 @@ function Base.isequal(A:: AbstractArray, B::Fiber)
     return helper_isequal(A, B)
 end
 
+Base.getindex(arr::Fiber, inds...) = getindex_helper(arr, to_indices(arr, inds)...)
+@generated function getindex_helper(arr::Fiber, inds...)
+    @assert ndims(arr) == length(inds)
+    @assert ndims(arr) == length(inds)
+    N = ndims(arr)
+
+    inds_ndims = ndims.(inds)
+    if sum(inds_ndims) == 0
+        return quote
+            scl = Scalar($(default(arr)))
+            @finch scl[] = arr[inds...]
+            return scl[]
+        end
+    end
+
+    T = eltype(arr)
+    syms = [Symbol(:inds_, n) for n = 1:N]
+    modes = [Symbol(:mode_, n) for n = 1:N]
+    coords = map(1:N) do n
+        if ndims(inds[n]) == 0
+            syms[n]
+        elseif inds[n] <: Base.Slice
+            modes[n]
+        else
+            :($(syms[n])[$(modes[n])])
+        end
+    end
+    dst_modes = modes[filter(n->ndims(inds[n]) != 0, 1:N)]
+    
+    dst = fiber_ctr(getindex_rep(data_rep(arr), inds...))
+
+    quote
+        win = $dst
+        ($(syms...), ) = (inds...,)
+        @finch @loop($(reverse(dst_modes)...), win[$(dst_modes...)] = arr[$(coords...)])
+        return win
+    end
+end
+
 @generated function copyto_helper!(dst, src)
     idxs = [Symbol(:i_, n) for n = 1:ndims(dst)]
     return quote
