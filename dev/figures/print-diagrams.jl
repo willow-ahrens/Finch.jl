@@ -137,6 +137,7 @@ A = [0 0 4.4;
     1.1 0 0;
     2.2 0 5.5;
     3.3 0 0]
+(m, n) = size(A)
 
 tikzdisplay("levels-A-d-d-e.tex") do io
     fbr = @fiber(d(d(e(0.0))), A)
@@ -154,4 +155,21 @@ tikzdisplay("levels-A-sl-sl-e.tex") do io
     fbr = @fiber(sl(sl(e(0.0))), A)
     tikzshow(io, fbr)
     highlight(io, fbr)
+end
+
+tikzdisplay("levels-A-matrix.tex") do io
+    print(io, """
+\\matrix (A) [matrix of math nodes,
+  nodes = {whclsty},
+  left delimiter  = (,
+  right delimiter = ),
+  ampersand replacement=\\&] at (0,0)
+{
+""")
+    for i = 1:m
+        print(io, "")
+        join(io, (a == 0 ? "\\zecl" : "|[nzsty]|$a" for a in A[i, :]), " \\& ")
+        println(io, "\\\\")
+    end
+    println(io, "};")
 end
