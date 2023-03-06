@@ -23,7 +23,7 @@ using SparseArrays
     let
         B = @fiber(d(e(0)), [2, 4, 5])
         A = @fiber(d(e(0), 6))
-        @finch @loop i A[B[i]] = i
+        @finch (A .= 0; @loop i A[B[i]] = i)
         @test reference_isequal(A, [0, 1, 0, 2, 3, 0])
     end
 
@@ -37,11 +37,16 @@ using SparseArrays
         new_frontier = @fiber(d(e(false)))
         new_visited = @fiber(d(e(false)))
         B = @fiber(d(e(0)))
-        @finch @loop k j begin
-            new_frontier[j] <<$(Finch.or)>>= edges[j,k] && frontier_list[k] && !(old_visited[j])
-            new_visited[j] <<$(Finch.and)>>= old_visited[j] || edges[j,k] && frontier_list[k] && !(old_visited[j])
-            B[j] += edges[j,k] && frontier_list[k] && (old_num_paths[k]!=1) && !(old_visited[j])
-       end
+        @finch begin
+            new_frontier .= 0
+            new_visited .= 0
+            B .= 0
+            @loop k j begin
+                new_frontier[j] <<$(Finch.or)>>= edges[j,k] && frontier_list[k] && !(old_visited[j])
+                new_visited[j] <<$(Finch.and)>>= old_visited[j] || edges[j,k] && frontier_list[k] && !(old_visited[j])
+                B[j] += edges[j,k] && frontier_list[k] && (old_num_paths[k]!=1) && !(old_visited[j])
+            end
+        end
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/61
@@ -59,8 +64,8 @@ using SparseArrays
     A = copyto!(@fiber(d(d(e(0)))), A)
     B = @fiber(d(e(0)))
     
-    @test check_output("fiber_as_idx.jl", @finch_code @loop i B[i] = A[I[i], i])
-    @finch @loop i B[i] = A[I[i], i]
+    @test check_output("fiber_as_idx.jl", @finch_code (B .= 0; @loop i B[i] = A[I[i], i]))
+    @finch (B .= 0; @loop i B[i] = A[I[i], i])
 
     @test B == [11, 12, 93, 34, 35]
 
@@ -69,9 +74,9 @@ using SparseArrays
         t = @fiber(sl(sl(e(0.0))))
         X = @fiber(sl(sl(e(0.0))))
         A = @fiber(sl(sl(e(0.0))), SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3]))
-        @test_throws DimensionMismatch @finch @loop j i t[i, j] = min(X[i, j],  A[i, j])
+        @test_throws DimensionMismatch @finch (t .= 0; @loop j i t[i, j] = min(X[i, j],  A[i, j]))
         X = @fiber(sl(sl(e(0.0), 4), 4))
-        @finch @loop j i t[i, j] = min(X[i, j],  A[i, j])
+        @finch (t .= 0; @loop j i t[i, j] = min(X[i, j],  A[i, j]))
         @test t == A
     end
 
@@ -86,7 +91,7 @@ using SparseArrays
         t = @fiber(sl(sl(e(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
         A = dropdefaults(copyto!(@fiber(sl(sl(e(0.0)))), B))
-        @finch MyAlgebra() @loop j i t[i, j] = f(A[i,j], A[i,j], A[i,j])
+        @finch MyAlgebra() (t .= 0; @loop j i t[i, j] = f(A[i,j], A[i,j], A[i,j]))
         @test t == B .* 3
     end
 
@@ -96,14 +101,14 @@ using SparseArrays
         t = @fiber(sl(sl(e(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
         A = dropdefaults(copyto!(@fiber(sl(sl(e(0.0)))), B))
-        @test_throws Finch.FormatLimitation @finch MyAlgebra() @loop i j t[i, j] = A[i, j]
+        @test_throws Finch.FormatLimitation @finch MyAlgebra() (t .= 0; @loop i j t[i, j] = A[i, j])
     end
 
     let
         t = @fiber(d(sl(e(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
         A = dropdefaults(copyto!(@fiber(d(sl(e(0.0)))), B))
-        @test_throws Finch.FormatLimitation @finch MyAlgebra() @loop i j t[i, j] = A[i, j]
+        @test_throws Finch.FormatLimitation @finch MyAlgebra() (t .= 0; @loop i j t[i, j] = A[i, j])
     end
 
 end
