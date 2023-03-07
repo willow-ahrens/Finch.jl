@@ -93,11 +93,11 @@ function base_rules(alg, ctx::LowerJulia, a, tns::Union{VirtualScalar, VirtualDi
             sequence(s1..., s2..., declare(a, literal(f.val(z.val, b.val))), s3...)
         ),
         (@rule loop(~i, assign(access(~a, ~m), $(literal(+)), ~b::isliteral)) =>
-            assign(access(a, m), f, call(*, b, extent(ctx.dims[i])))
+            assign(access(a, m), +, call(*, b, extent(ctx.dims[getname(i)])))
         ),
 
         (@rule loop(~i, sequence(~s1::ortho(a)..., assign(access(~a, ~m), $(literal(+)), ~b::isliteral), ~s2::ortho(a)...)) =>
-            sequence(assign(access(a, m), f, call(*, b, extent(ctx.dims[i]))), loop(i, sequence(s1..., s2...)))
+            sequence(assign(access(a, m), +, call(*, b, extent(ctx.dims[getname(i)]))), loop(i, sequence(s1..., s2...)))
         ),
         (@rule loop(~i, assign(access(~a, ~m), ~f::isidempotent(alg), ~b::isliteral)) =>
             assign(access(a, m), f, b)
