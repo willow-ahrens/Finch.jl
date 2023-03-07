@@ -1,9 +1,11 @@
 begin
-    B = ex.body.body.lhs.tns.tns
+    B = (ex.bodies[1]).tns.tns
     B_val = B.val
-    A_lvl = ex.body.body.rhs.tns.tns.lvl
+    B_3 = (ex.bodies[2]).body.body.lhs.tns.tns
+    B_val = B_3.val
+    A_lvl = (ex.bodies[2]).body.body.rhs.tns.tns.lvl
     A_lvl_2 = A_lvl.lvl
-    B_val = 0.0
+    B_val = 0
     A_lvl_q = A_lvl.ptr[1]
     A_lvl_q_stop = A_lvl.ptr[1 + 1]
     if A_lvl_q < A_lvl_q_stop

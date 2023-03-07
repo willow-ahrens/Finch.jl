@@ -1,11 +1,13 @@
 begin
-    C_lvl = ex.body.body.lhs.tns.tns.lvl
+    C_lvl = (ex.bodies[1]).tns.tns.lvl
     C_lvl_2 = C_lvl.lvl
-    A_lvl = ((ex.body.body.rhs.args[1]).args[1]).tns.tns.lvl
+    C_lvl_3 = (ex.bodies[2]).body.body.lhs.tns.tns.lvl
+    C_lvl_4 = C_lvl_3.lvl
+    A_lvl = (((ex.bodies[2]).body.body.rhs.args[1]).args[1]).tns.tns.lvl
     A_lvl_2 = A_lvl.lvl
-    A_lvl_3 = ((ex.body.body.rhs.args[2]).args[1]).tns.tns.lvl
+    A_lvl_3 = (((ex.bodies[2]).body.body.rhs.args[2]).args[1]).tns.tns.lvl
     A_lvl_4 = A_lvl_3.lvl
-    F_lvl = (ex.body.body.rhs.args[3]).tns.tns.lvl
+    F_lvl = ((ex.bodies[2]).body.body.rhs.args[3]).tns.tns.lvl
     F_lvl_2 = F_lvl.lvl
     C_lvl_qos_fill = 0
     C_lvl_qos_stop = 0
