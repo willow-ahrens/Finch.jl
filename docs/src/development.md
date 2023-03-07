@@ -117,26 +117,15 @@ julia> function pointwise_sum(As...)
            for A_var in A_vars
                ex = @finch_program_instance $A_var[i] + $ex
            end
-           prgm = @finch_program_instance @loop i B[i] = $ex
+           prgm = @finch_program_instance (B .= 0; @loop i B[i] = $ex)
            return Finch.execute(prgm).B
        end
 pointwise_sum (generic function with 1 method)
 
 julia> pointwise_sum([1, 2], [3, 4])
-ERROR: DimensionMismatch: mismatched dimension limits (0 != 2)
-Stacktrace:
- [1] macro expansion
-   @ ~/Projects/Finch.jl/src/dimensionalize.jl:319 [inlined]
- [2] macro expansion
-   @ ~/Projects/Finch.jl/src/execute.jl:4 [inlined]
- [3] execute(ex::Finch.FinchNotation.LoopInstance{Finch.FinchNotation.IndexInstance{:i}, Finch.FinchNotation.AssignInstance{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.VariableInstance{:B, Fiber{Finch.DenseLevel{Int64, Finch.ElementLevel{0, Int64}}}}, Finch.FinchNotation.UpdaterInstance{Finch.FinchNotation.CreateInstance}, Tuple{Finch.FinchNotation.IndexInstance{:i}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.right}, Finch.FinchNotation.CallInstance{Finch.FinchNotation.VariableInstance{:+, Finch.FinchNotation.LiteralInstance{+}}, Tuple{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.VariableInstance{:A2, Vector{Int64}}, Finch.FinchNotation.ReaderInstance, Tuple{Finch.FinchNotation.IndexInstance{:i}}}, Finch.FinchNotation.CallInstance{Finch.FinchNotation.VariableInstance{:+, Finch.FinchNotation.LiteralInstance{+}}, Tuple{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.VariableInstance{:A1, Vector{Int64}}, Finch.FinchNotation.ReaderInstance, Tuple{Finch.FinchNotation.IndexInstance{:i}}}, Finch.FinchNotation.LiteralInstance{0}}}}}}}, a::Finch.DefaultAlgebra)
-   @ Finch ~/Projects/Finch.jl/src/execute.jl:4
- [4] execute(ex::Finch.FinchNotation.LoopInstance{Finch.FinchNotation.IndexInstance{:i}, Finch.FinchNotation.AssignInstance{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.VariableInstance{:B, Fiber{Finch.DenseLevel{Int64, Finch.ElementLevel{0, Int64}}}}, Finch.FinchNotation.UpdaterInstance{Finch.FinchNotation.CreateInstance}, Tuple{Finch.FinchNotation.IndexInstance{:i}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.right}, Finch.FinchNotation.CallInstance{Finch.FinchNotation.VariableInstance{:+, Finch.FinchNotation.LiteralInstance{+}}, Tuple{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.VariableInstance{:A2, Vector{Int64}}, Finch.FinchNotation.ReaderInstance, Tuple{Finch.FinchNotation.IndexInstance{:i}}}, Finch.FinchNotation.CallInstance{Finch.FinchNotation.VariableInstance{:+, Finch.FinchNotation.LiteralInstance{+}}, Tuple{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.VariableInstance{:A1, Vector{Int64}}, Finch.FinchNotation.ReaderInstance, Tuple{Finch.FinchNotation.IndexInstance{:i}}}, Finch.FinchNotation.LiteralInstance{0}}}}}}})
-   @ Finch ~/Projects/Finch.jl/src/execute.jl:1
- [5] pointwise_sum(::Vector{Int64}, ::Vararg{Vector{Int64}})
-   @ Main ./none:12
- [6] top-level scope
-   @ none:1
+Dense [1:2]
+├─[1]: 4
+├─[2]: 6
 
 ```
 
