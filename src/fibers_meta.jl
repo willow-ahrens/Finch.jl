@@ -148,7 +148,7 @@ dropdefaults(src) = dropdefaults!(similar(src), src)
             @loop $(reverse(idxs)...) begin
                 tmp .= $(default(dst))
                 tmp[] = src[$(idxs...)]
-                @sieve (tmp[] != $d) begin
+                if tmp[] != $d
                     dst[$(idxs...)] = tmp[]
                 end
             end

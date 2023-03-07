@@ -108,7 +108,7 @@ function bfs(edges, source=5)
             @loop j k begin
                 v .= false
                 v[] = F[j] && edges[k, j] && !(V[k])
-                @sieve v[] begin
+                if v[]
                     _F[k] |= true
                     P[k] <<choose(0)>>= j #Only set the parent for this vertex
                 end

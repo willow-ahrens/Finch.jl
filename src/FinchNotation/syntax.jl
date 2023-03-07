@@ -64,11 +64,17 @@ end
 (ctx::FinchParserVisitor)(ex::QuoteNode) = ctx.nodes.literal(ex.value)
 (ctx::FinchParserVisitor)(ex) = ctx.nodes.literal(ex)
 
+struct FinchSyntaxError msg end
+
 function (ctx::FinchParserVisitor)(ex::Expr)
     islinenum(x) = x isa LineNumberNode
 
-    if @capture ex :macrocall($(Symbol("@sieve")), ~ln::islinenum, ~cond, ~body)
+    if @capture ex :if(~cond, ~body)
         return :($(ctx.nodes.sieve)($(ctx(cond)), $(ctx(body))))
+    elseif @capture ex :elseif(~args...)
+        throw(FinchSyntaxError("Finch doesn't support elseif currently"))
+    elseif @capture ex :else(~args...)
+        throw(FinchSyntaxError("Finch doesn't support else currently"))
     elseif @capture ex :(.=)(~tns, ~init)
         return :($(ctx.nodes.declare)($(ctx(tns)), $(ctx(init))))
     elseif @capture ex :macrocall($(Symbol("@declare")), ~ln::islinenum, ~tns, ~init)

@@ -609,7 +609,7 @@ function display_statement(io, mime, node::FinchNode, level)
         display_statement(io, mime, node.body, level + 1)
         print(io, tab^level * ")")
     elseif node.kind === sieve
-        print(io, tab^level * "@sieve ")
+        print(io, tab^level * "if ")
         while node.body.kind === sieve
             display_expression(io, mime, node.cond)
             print(io," && ")
@@ -617,9 +617,8 @@ function display_statement(io, mime, node::FinchNode, level)
         end
         display_expression(io, mime, node.cond)
         node = node.body
-        print(io," (\n")
         display_statement(io, mime, node, level + 1)
-        print(io, tab^level * ")")
+        print(io, tab^level * "end")
     elseif node.kind === assign
         print(io, tab^level)
         display_expression(io, mime, node.lhs)
