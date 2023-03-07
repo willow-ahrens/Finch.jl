@@ -329,3 +329,43 @@ Base.summary(fbr::SubFiber) = "$(join(size(fbr), "×")) SubFiber($(summary_f_cod
 
 Base.similar(fbr::AbstractFiber) = Fiber(similar_level(fbr.lvl))
 Base.similar(fbr::AbstractFiber, dims::Tuple) = Fiber(similar_level(fbr.lvl, dims...))
+
+function base_rules(alg, ctx::LowerJulia, a, tns::VirtualFiber)
+    return [
+        #=
+        (@rule loop(~i, assign(access(~a, ~m), $(literal(+)), ~b::isliteral)) =>
+            assign(access(a, m), f, call(*, b, extent(ctx.dims[i])))
+        ),
+
+        (@rule loop(~i, sequence(~s1::ortho(a)..., assign(access(~a, ~m), $(literal(+)), ~b::isliteral), ~s2::ortho(a)...)) =>
+            sequence(assign(access(a, m), f, call(*, b, extent(ctx.dims[i]))), loop(i, sequence(s1..., s2...)))
+        ),
+        (@rule loop(~i, assign(access(~a, ~m), ~f::isidempotent(alg), ~b::isliteral)) =>
+            assign(access(a, m), f, b)
+        ),
+        (@rule loop(~i, sequence(~s1::ortho(a)..., assign(access(~a, ~m), ~f::isidempotent(alg), ~b::isliteral), ~s2::ortho(a)...)) =>
+            sequence(assign(access(a, m), f, b), loop(i, sequence(s1..., s2...)))
+        ),
+        (@rule sequence(~s1..., assign(access(a, ~m), ~f::isabelian(alg), ~b), ~s2::ortho(a)..., assign(access(a, ~m), ~f, ~c), ~s3...) =>
+            sequence(s1..., assign(access(a, m), f, call(f, b, c)))
+        ),
+        =#
+
+        (@rule sequence(~s1..., declare(a, ~z), ~s2::ortho(a)..., freeze(a), ~s3...) =>
+            sequence(s1..., s2..., declare(a, z), freeze(a), s3...)
+        ),
+        (@rule sequence(~s1..., declare(a, ~z), freeze(a), ~s2::ortho(a)..., ~s3, ~s4...) =>
+            if (s3 = Postwalk(@rule access(a, reader(), ~i...) => z)(s3)) !== nothing
+                sequence(s1..., declare(a, ~z), freeze(a), s2..., s3, s4...)
+            end
+        ),
+        (@rule sequence(~s1..., thaw(a, ~z), ~s2::ortho(a)..., freeze(a), ~s3...) =>
+            sequence(s1..., s2..., s3...)
+        ),
+        #=
+        (@rule sequence(~s1..., declare(a, ~z), ~s2..., freeze(a), ~s3::ortho(a)...) =>
+            sequence(s1..., s2..., s3...)
+        ),
+        =#
+    ]
+end
