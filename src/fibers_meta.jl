@@ -108,7 +108,10 @@ Base.getindex(arr::Fiber, inds...) = getindex_helper(arr, to_indices(arr, inds).
     quote
         win = $dst
         ($(syms...), ) = (inds...,)
-        @finch @loop($(reverse(dst_modes)...), win[$(dst_modes...)] = arr[$(coords...)])
+        @finch begin
+            win .= $(default(arr))
+            @loop($(reverse(dst_modes)...), win[$(dst_modes...)] = arr[$(coords...)])
+        end
         return win
     end
 end
@@ -116,7 +119,10 @@ end
 @generated function copyto_helper!(dst, src)
     idxs = [Symbol(:i_, n) for n = 1:ndims(dst)]
     return quote
-        @finch (dst .= $(default(dst)); @loop($(reverse(idxs)...), dst[$(idxs...)] = src[$(idxs...)]))
+        @finch begin
+            dst .= $(default(dst))
+            @loop($(reverse(idxs)...), dst[$(idxs...)] = src[$(idxs...)])
+        end
         return dst
     end
 end
