@@ -2,7 +2,6 @@ const incs = Dict(:+= => :+, :*= => :*, :&= => :&, :|= => :|)
 
 const program_nodes = (
     index = index,
-    pass = pass,
     loop = loop,
     chunk = chunk,
     sieve = sieve,
@@ -26,7 +25,6 @@ const program_nodes = (
 
 const instance_nodes = (
     index = index_instance,
-    pass = pass_instance,
     loop = loop_instance,
     chunk = :(throw(NotImplementedError("TODO"))),
     sieve = sieve_instance,
@@ -69,9 +67,7 @@ end
 function (ctx::FinchParserVisitor)(ex::Expr)
     islinenum(x) = x isa LineNumberNode
 
-    if @capture ex :macrocall($(Symbol("@pass")), ~ln::islinenum, ~args...)
-        return :($(ctx.nodes.pass)($(map(ctx, args)...)))
-    elseif @capture ex :macrocall($(Symbol("@sieve")), ~ln::islinenum, ~cond, ~body)
+    if @capture ex :macrocall($(Symbol("@sieve")), ~ln::islinenum, ~cond, ~body)
         return :($(ctx.nodes.sieve)($(ctx(cond)), $(ctx(body))))
     elseif @capture ex :(.=)(~tns, ~init)
         return :($(ctx.nodes.declare)($(ctx(tns)), $(ctx(init))))

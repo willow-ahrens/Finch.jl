@@ -375,8 +375,6 @@ function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
         end
         lhs = ctx(root.lhs)
         return :($lhs = $rhs)
-    elseif root.kind === pass
-        return quote end
     elseif root.kind === variable
         error()
         return ctx(ctx.bindings[root])

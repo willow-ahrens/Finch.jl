@@ -31,9 +31,6 @@ function (ctx::InferDimensions)(node)
     end
 end
 
-#NOTE TO SELF
-#ITS A BIG DEAL THAT WHERE STATEMENTS FORBID TEMP TENSORS WITH INDICES OUTSIDE OF SCOPE
-
 @kwdef struct Dimensionalize
     body
 end

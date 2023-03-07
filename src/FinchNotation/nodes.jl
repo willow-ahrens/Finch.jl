@@ -28,7 +28,6 @@ enum is used to differentiate which kind of node is represented.
     loop     = 15ID | IS_TREE | IS_STATEFUL
     chunk    = 16ID | IS_TREE | IS_STATEFUL
     sieve    = 17ID | IS_TREE | IS_STATEFUL
-    pass     = 18ID | IS_TREE | IS_STATEFUL
     declare  = 20ID | IS_TREE | IS_STATEFUL
     thaw     = 21ID | IS_TREE | IS_STATEFUL
     freeze   = 22ID | IS_TREE | IS_STATEFUL
@@ -161,14 +160,6 @@ tensors of `lhs` are returned.  Overwriting is accomplished with the function
 `right(lhs, rhs) = rhs`.
 """
 assign
-
-#TODO get rid of pass
-"""
-    pass(tnss...)
-
-Finch AST statement that initializes, freezes, and returns each tensor in `tnss...`.
-"""
-pass
 
 """
     declare(tns, init)
@@ -321,8 +312,6 @@ function FinchNode(kind::FinchNodeKind, args::Vector)
         else
             error("wrong number of arguments to assign(...)")
         end
-    elseif kind === pass
-        return FinchNode(pass, nothing, nothing, args)
     elseif kind === declare
         if length(args) == 2
             return FinchNode(declare, nothing, nothing, args)
@@ -470,12 +459,6 @@ function Base.getproperty(node::FinchNode, sym::Symbol)
             return node.children[3]
         else
             error("type FinchNode(assign, ...) has no property $sym")
-        end
-    elseif node.kind === pass
-        if sym === :tnss
-            return node.children
-        else
-            error("type FinchNode(pass, ...) has no property $sym")
         end
     elseif node.kind === declare
         if sym === :tns
@@ -651,16 +634,6 @@ function display_statement(io, mime, node::FinchNode, level)
         display_expression(io, mime, ex.idx)
         print(io, "::")
         display_expression(io, mime, ex.mode)
-    elseif node.kind === pass
-        print(io, tab^level * "@pass(")
-        for tns in arguments(node)[1:end-1]
-            display_expression(io, mime, tns)
-            print(io, ", ")
-        end
-        if length(arguments(node)) >= 1
-            display_expression(io, mime, last(arguments(node)))
-        end
-        print(io, ")")
     elseif node.kind === declare
         print(io, tab^level * "@declare(")
         display_expression(io, mime, node.tns)
@@ -708,8 +681,6 @@ function Base.:(==)(a::FinchNode, b::FinchNode)
         else
             error("unimplemented")
         end
-    elseif a.kind === pass
-        return b.kind === pass && Set(a.tnss) == Set(b.tnss) #TODO This feels... not quite right
     elseif istree(a)
         return a.kind === b.kind && a.children == b.children
     else

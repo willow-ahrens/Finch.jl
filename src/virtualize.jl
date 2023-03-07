@@ -3,12 +3,6 @@ virtualize(ex, T, ctx, tag) = virtualize(ex, T, ctx)
 virtualize(ex, (@nospecialize T), ctx) = value(ex, T)
 
 virtualize(ex, ::Type{FinchNotation.LiteralInstance{val}}, ctx) where {val} = literal(val)
-function virtualize(ex, ::Type{FinchNotation.PassInstance{Tnss}}, ctx) where {Tnss}
-    tnss = map(enumerate(Tnss.parameters)) do (n, Tns)
-        virtualize(:($ex.tnss[$n]), Tns, ctx)
-    end
-    pass(tnss)
-end
 function virtualize(ex, ::Type{FinchNotation.IndexInstance{name}}, ctx) where {name}
     ctx.freshen(name)
     index(name)

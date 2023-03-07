@@ -6,8 +6,6 @@ module FinchNotation
     export index
     export variable
     export value
-#    export Workspace
-    export pass
     export loop
     export Chunk, chunk
     export assign

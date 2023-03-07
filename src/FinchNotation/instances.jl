@@ -7,16 +7,6 @@ end
 
 Base.show(io::IO, node::LiteralInstance{val}) where {val} = print(io, "literal_instance(", val, ")")
 
-struct PassInstance{Tnss<:Tuple} <: FinchNodeInstance
-    tnss::Tnss
-end
-
-Base.:(==)(a::PassInstance, b::PassInstance) = Set([a.tnss...]) == Set([b.tnss...])
-
-@inline pass_instance(tnss...) = PassInstance(tnss)
-
-Base.show(io::IO, node::PassInstance) = (print(io, "pass_instance("); join(node.tnss, ","); print(io, ")"))
-
 struct IndexInstance{name} <: FinchNodeInstance end
 
 @inline index_instance(name) = IndexInstance{name}()
