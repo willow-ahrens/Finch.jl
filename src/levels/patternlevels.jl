@@ -89,8 +89,16 @@ trim_level!(lvl::VirtualPatternLevel, ctx::LowerJulia, pos) = lvl
 
 get_reader(::VirtualSubFiber{VirtualPatternLevel}, ctx) = Simplify(Fill(true))
 is_laminable_updater(lvl::VirtualPatternLevel, ctx) = true
-get_updater(fbr::VirtualSubFiber{VirtualPatternLevel}, ctx) = VirtualScalar(nothing, Bool, false, gensym(), ctx.freshen(:null))
-get_updater(fbr::VirtualTrackedSubFiber{VirtualPatternLevel}, ctx) = VirtualDirtyScalar(nothing, Bool, false, gensym(), ctx.freshen(:null), fbr.dirty)
+
+function get_updater(fbr::VirtualSubFiber{VirtualPatternLevel}, ctx)
+    val = ctx.freshen(:null)
+    push!(ctx.preamble, :($val = false))
+    VirtualScalar(nothing, Bool, false, gensym(), val)
+end
+
+function get_updater(fbr::VirtualTrackedSubFiber{VirtualPatternLevel}, ctx)
+    VirtualScalar(nothing, Bool, false, gensym(), fbr.dirty)
+end
 
 function lowerjulia_access(ctx::LowerJulia, node, tns::VirtualFiber{VirtualPatternLevel})
     val = ctx.freshen(:null)

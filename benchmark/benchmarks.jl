@@ -65,11 +65,11 @@ function pagerank(edges; nsteps=20, damp = 0.85)
     (n, m) = size(edges)
     @assert n == m
     out_degree = @fiber d(e(0))
-    @finch @loop j i out_degree[j] += edges[i, j]
+    @finch (out_degree .= 0; @loop j i out_degree[j] += edges[i, j])
     scaled_edges = @fiber d(sl(e(0.0)))
-    @finch @loop j i scaled_edges[i, j] = ifelse(out_degree[i] != 0, edges[i, j] / out_degree[j], 0)
+    @finch (scaled_edges .= 0; @loop j i scaled_edges[i, j] = ifelse(out_degree[i] != 0, edges[i, j] / out_degree[j], 0))
     r = @fiber d(e(0.0), n)
-    @finch @loop j r[j] = 1.0/n
+    @finch (r .= 0; @loop j r[j] = 1.0/n)
     rank = @fiber d(e(0.0), n)
     beta_score = (1 - damp)/n
 
@@ -102,15 +102,16 @@ function bfs(edges, source=5)
 
     v = Scalar(false)
 
-    while F.lvl.pos[2] > 1 #TODO this could be cleaner if we could get early exit working.
+    while F.lvl.ptr[2] > 1 #TODO this could be cleaner if we could get early exit working.
         @finch @loop j k begin
+            v .= false
             v[] = F[j] && edges[k, j] && !(V[k])
             @sieve v[] begin
                 _F[k] |= true
-                !P[k] <<choose(0)>>= j #Only set the parent for this vertex
+                P[k] <<choose(0)>>= j #Only set the parent for this vertex
             end
         end
-        @finch @loop k !V[k] |= _F[k]
+        @finch @loop k V[k] |= _F[k]
         (F, _F) = (_F, F)
     end
     return F
@@ -145,6 +146,7 @@ function spgemm_gustavsons(A, B)
     @finch begin
         C .= 0
         @loop j begin
+            w .= 0
             @loop k i w[i] += A[i, k] * B[k, j]
             @loop i C[i, j] = w[i]
         end
@@ -162,9 +164,9 @@ function spgemm_outer(A, B)
     C = @fiber d(sl(e(0.0)))
     w = @fiber sh{2}(e(0.0))
     BT = @fiber d(sl(e(0.0)))
-    @finch @loop j k w[j, k] = B[k, j]
+    @finch (w .= 0; @loop j k w[j, k] = B[k, j])
     @finch (BT .= 0; @loop k j BT[j, k] = w[j, k])
-    @finch @loop k i j w[i, j] += A[i, k] * BT[j, k]
+    @finch (w .= 0; @loop k i j w[i, j] += A[i, k] * BT[j, k])
     @finch (C .= 0; @loop j i C[i, j] = w[i, j])
     return C
 end
@@ -179,7 +181,7 @@ SUITE["indices"] = BenchmarkGroup()
 
 function spmv32(A, x)
     y = @fiber d{Int32}(e(0.0))
-    @finch @loop i j y[i] += A[j, i] * x[j]
+    @finch (d .= 0; @loop i j y[i] += A[j, i] * x[j])
     return y
 end
 
@@ -193,7 +195,7 @@ end
 
 function spmv64(A, x)
     y = @fiber d{Int64}(e(0.0))
-    @finch @loop i j y[i] += A[j, i] * x[j]
+    @finch (d .= 0; @loop i j y[i] += A[j, i] * x[j])
     return y
 end
 
