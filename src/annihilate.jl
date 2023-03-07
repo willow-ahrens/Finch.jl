@@ -151,48 +151,6 @@ function getvars(node::FinchNode)
     end
 end
 
-@kwdef struct ConstPropVisitor
-    ctx
-    stmts
-end
-
-function (ctx::ConstPropVisitor)(node::FinchNode)
-    if node.kind === loop
-        stmts_2 = Dict()
-        body = ConstPropVisitor(ctx.ctx, stmts_2)(node.body)
-        for (var, body) in pairs(stmts_2)
-            ctx.stmts[var] = sequence(get!(ctx.stmts, var, sequence()), loop(node.idx, body))
-        end
-        node
-    elseif node.kind === sieve
-        stmts_2 = Dict()
-        body = ConstPropVisitor(ctx.ctx, stmts_2)(node.body)
-        for (var, body) in pairs(stmts_2)
-            ctx.stmts[var] = sequence(get!(ctx.stmts, var, sequence()), sieve(node.cond, body))
-        end
-        node
-    elseif node.kind === declare
-        ctx.stmts[node.tns] = node.init
-        node
-    elseif node.kind === assign && node.lhs.tns.kind === variable
-        ctx.stmts[node.tns] = sequence(get!(ctx.stmts, var, sequence()), node)
-        node
-    elseif node.kind === freeze!
-        ctx.stmts[node.tns] = simplify(ctx.ctx, node.stmts())
-        node
-    elseif node.kind === access && node.mode.kind === reader && node.lhs.kind === variable
-        idxs = map(ctx, node.idxs)
-        constprop_read(ctx.ctx.bindings[node.tns], ctx.ctx, ctx.stmts[node.tns], access(node.tns, reader(), idxs...))
-    elseif istree(node)
-        return similarterm(node, operation(node), map(arg->ctx(arg, nodim), arguments(node)))
-    else
-        return node
-    end
-end
-
-constprop_read(tns, ctx, stmt, node) = node
-
-
 """
     base_rules(alg, ctx)
 
@@ -216,44 +174,6 @@ function base_rules(alg, ctx)
         (@rule loop(~i, sequence()) => sequence()),
         (@rule chunk(~i, ~a, sequence()) => sequence()),
         (@rule sequence(~a..., sequence(~b...), ~c...) => sequence(a..., b..., c...)),
-
-        #=
-        (@rule sequence(~s1..., declare(~a, ~z), assign(access(~a, updater(~m), ~j...), ~op, ~b::isliteral), ~s2...) =>
-            sequence(s1..., declare(~a, op(z, b)), s2...)
-        ),
-
-        (@rule sequence(~s1..., loop(~i, assign(access(~a, updater(~m), ~j...), ~op, ~b::isliteral)), ~s2...) =>
-            if i ∉ j && getname(i) ∉ getunbound(b) #=TODO this doesn't work because chunkify temporarily drops indicies so we add =# && isliteral(b)
-                assign(access(a, updater(m), j...), f, b)
-            end
-        ),
-
-        (@rule loop(~i, assign(access(~a, updater(~m), ~j...), ~f::isidempotent(alg), ~b)) => begin
-            if i ∉ j && getname(i) ∉ getunbound(b) #=TODO this doesn't work because chunkify temporarily drops indicies so we add =# && isliteral(b)
-                assign(access(a, updater(m), j...), f, b)
-            end
-        end),
-
-        (@rule loop(~i, ~a, assign(access(~b, updater(~m), ~j...), $(literal(+)), ~d)) => begin
-            if i ∉ j && getname(i) ∉ getunbound(d)
-                assign(access(b, updater(m), j...), +, call(*, extent(a), d))
-            end
-        end),
-
-        #dce
-        (@rule sequence(~s1..., declare(~a, ~z), freeze(~a), forget(~a), ~s2...) =>
-            if !(a in getvars(s2, s3))
-                sequence(s1..., s2...)
-            end
-        ),
-
-        #dce 
-        (@rule sequence(~s1..., freeze(~a), ~s2..., thaw(~a), ~s3...) =>
-            if !(a in getvars(s2))
-                sequence(s1..., s2..., s3...)
-            end
-        ),
-        =#
 
         (@rule call($(literal(>=)), call($(literal(max)), ~a...), ~b) => call(or, map(x -> call(x >= b), a)...)),
         (@rule call($(literal(>)), call($(literal(max)), ~a...), ~b) => call(or, map(x -> call(x > b), a)...)),
@@ -348,10 +268,23 @@ different algebras.
 """
 getrules(alg, ctx) = base_rules(alg, ctx)
 
+"""
+    getrules(alg, ctx::LowerJulia, var, tns)
+
+Return a list of constant propagation rules for a tensor stored in variable var.
+"""
+getrules(alg, ctx, var, val) = base_rules(alg, ctx, var, val)
+
+base_rules(alg, ctx::LowerJulia, var, tns) = []
+
 getrules(ctx::LowerJulia) = getrules(ctx.algebra, ctx)
 
 function simplify(node, ctx)
-    Rewrite(Fixpoint(Prewalk(Chain(getrules(ctx)))))(node)
+    rules = getrules(ctx.algebra, ctx)
+    for (var, val) in ctx.bindings
+        append!(rules, getrules(ctx.algebra, ctx, var, val))
+    end
+    Rewrite(Fixpoint(Prewalk(Chain(rules))))(node)
 end
 
 function (ctx::LowerJulia)(root, ::SimplifyStyle)

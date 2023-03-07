@@ -20,7 +20,7 @@ A = @fiber d(sl(e(0.0)))
 B = @fiber d(sl(e(0.0)))
 C = @fiber d(sl(e(0.0)))
 
-@finch @loop i j k C[j, i] += A[k, i] * B[k, i]
+@finch (C .= 0; @loop i j k C[j, i] += A[k, i] * B[k, i])
 """
 cmd = pipeline(`$(Base.julia_cmd()) --project=$(Base.active_project()) --eval $code`, stdout = IOBuffer())
 
@@ -33,7 +33,7 @@ let
 
     SUITE["compile"]["compile_SpGeMM"] = @benchmarkable begin   
         A, B, C = ($A, $B, $C)
-        Finch.execute_code(:ex, typeof(Finch.@finch_program_instance @loop i j k C[j, i] += A[k, i] * B[k, j]))
+        Finch.execute_code(:ex, typeof(Finch.@finch_program_instance (C .= 0; @loop i j k C[j, i] += A[k, i] * B[k, j])))
     end
 end
 
@@ -103,12 +103,15 @@ function bfs(edges, source=5)
     v = Scalar(false)
 
     while F.lvl.ptr[2] > 1 #TODO this could be cleaner if we could get early exit working.
-        @finch @loop j k begin
-            v .= false
-            v[] = F[j] && edges[k, j] && !(V[k])
-            @sieve v[] begin
-                _F[k] |= true
-                P[k] <<choose(0)>>= j #Only set the parent for this vertex
+        @finch begin
+            _F .= false
+            @loop j k begin
+                v .= false
+                v[] = F[j] && edges[k, j] && !(V[k])
+                @sieve v[] begin
+                    _F[k] |= true
+                    P[k] <<choose(0)>>= j #Only set the parent for this vertex
+                end
             end
         end
         @finch @loop k V[k] |= _F[k]
@@ -181,7 +184,7 @@ SUITE["indices"] = BenchmarkGroup()
 
 function spmv32(A, x)
     y = @fiber d{Int32}(e(0.0))
-    @finch (d .= 0; @loop i j y[i] += A[j, i] * x[j])
+    @finch (y .= 0; @loop i j y[i] += A[j, i] * x[j])
     return y
 end
 
@@ -195,7 +198,7 @@ end
 
 function spmv64(A, x)
     y = @fiber d{Int64}(e(0.0))
-    @finch (d .= 0; @loop i j y[i] += A[j, i] * x[j])
+    @finch (y .= 0; @loop i j y[i] += A[j, i] * x[j])
     return y
 end
 
