@@ -291,8 +291,8 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::Gallop,
                         body = Thunk(
                             body = Jump(
                                 seek = (ctx, ext) -> quote
-                                    while $my_q + $(Tp(1)) < $my_q_stop && $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
-                                        $my_q += $(Tp(1))
+                                    if $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
+                                        $my_q = scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                                     end
                                     $my_i = $(lvl.ex).idx[$my_q]
                                 end,
@@ -309,8 +309,8 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::Gallop,
                                     ),
                                     literal(true) => Stepper(
                                         seek = (ctx, ext) -> quote
-                                            while $my_q + $(Tp(1)) < $my_q_stop && $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
-                                                $my_q += $(Tp(1))
+                                            if $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
+                                                $my_q = scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                                             end
                                         end,
                                         body = Thunk(
