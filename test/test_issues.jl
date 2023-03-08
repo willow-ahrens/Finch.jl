@@ -115,7 +115,7 @@ using SparseArrays
         @finch @loop i x[] <<maxby>>= (a[i], i)
         @test x[][2] == 3
 
-        y = Scalar(Inf => 0)
+        y = Scalar(0 => 0)
         @finch @loop i y[] <<maxby>>= a[i] => i
         @test y[][2] == 3
     end
