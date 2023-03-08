@@ -104,6 +104,7 @@ register(DefaultAlgebra)
 end
 
 include("glue_AbstractArrays.jl")
+include("glue_AbstractUnitRanges.jl")
 include("glue_SparseArrays.jl")
 function __init__()
     #@require SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf" include("glue_SparseArrays.jl")

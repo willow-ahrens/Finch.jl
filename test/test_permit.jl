@@ -32,4 +32,12 @@
     @test check_output("sparse_window.jl", @finch_code @loop i C[i] = A[win[i]])
     @finch @loop i C[i] = A[win[i]]
     @test reference_isequal(C, [A(2), A(3), A(4)])
+
+    win = 2:4
+    @test check_output("sparse_range.jl", @finch_code @loop i C[i] = A[win[i]])
+    @finch @loop i C[i] = A[win[i]]
+    @test reference_isequal(C, [A(2), A(3), A(4)])
+
+    @finch @loop i C[i] = win[i]
+    @test reference_isequal(C, [2, 3, 4])
 end
