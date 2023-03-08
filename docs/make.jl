@@ -15,10 +15,10 @@ makedocs(;
     ),
     pages=[
         "Home" => "index.md",
-        "Data Formats" => "level.md",
+        "Array Formats" => "fibers.md",
         "The Deets" => "listing.md",
         "Embedding" => "embed.md",
-        "Custom User Functions" => "algebra.md",
+        "Custom Functions" => "algebra.md",
         "Development Guide" => "development.md",
     ],
 )

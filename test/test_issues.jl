@@ -106,4 +106,17 @@ using SparseArrays
         @test_throws Finch.FormatLimitation @finch MyAlgebra() @loop i j t[i, j] = A[i, j]
     end
 
+    #https://github.com/willow-ahrens/Finch.jl/issues/129
+
+    let
+        a = @fiber(d(e(0)), [1, 3, 7, 2])
+
+        x = Scalar((0, 0))
+        @finch @loop i x[] <<maxby>>= (a[i], i)
+        @test x[][2] == 3
+
+        y = Scalar(Inf => 0)
+        @finch @loop i y[] <<maxby>>= a[i] => i
+        @test y[][2] == 3
+    end
 end
