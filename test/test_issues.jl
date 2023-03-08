@@ -119,4 +119,16 @@ using SparseArrays
         @finch @loop i y[] <<maxby>>= a[i] => i
         @test y[][2] == 3
     end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/124
+
+    let
+        A = sparse([3, 4, 3, 4], [1, 2, 3, 3], [1.1, 2.2, 3.3, 4.4], 4, 3)
+
+        B = @fiber(d(sl(e(0.0))))
+
+        @finch @loop j i B[i, j] = A[i, j]
+
+        @test isstructequal(B, fiber(A))
+    end
 end
