@@ -231,8 +231,8 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::Union{N
                     stride = (ctx, idx, ext) -> value(my_i1),
                     body = (start, step) -> Stepper(
                         seek = (ctx, ext) -> quote
-                            while $my_q + $(Tp(1)) < $my_q_stop && $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
-                                $my_q += $(Tp(1))
+                            if $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
+                                $my_q = scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                             end
                         end,
                         body = Thunk(
@@ -244,62 +244,6 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::Union{N
                                 chunk = Spike(
                                     body = Simplify(Fill(virtual_level_default(lvl))),
                                     tail = get_reader(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, protos...)
-                                ),
-                                next = (ctx, idx, ext) -> quote
-                                    $my_q += $(Tp(1))
-                                end
-                            )
-                        )
-                    )
-                ),
-                Phase(
-                    body = (start, step) -> Run(Simplify(Fill(virtual_level_default(lvl))))
-                )
-            ])
-        )
-    )
-end
-
-function get_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::FastWalk, protos...)
-    (lvl, pos) = (fbr.lvl, fbr.pos)
-    tag = lvl.ex
-    Tp = lvl.Tp
-    Ti = lvl.Ti
-    my_i = ctx.freshen(tag, :_i)
-    my_q = ctx.freshen(tag, :_q)
-    my_q_stop = ctx.freshen(tag, :_q_stop)
-    my_i1 = ctx.freshen(tag, :_i1)
-
-    Furlable(
-        size = virtual_level_size(lvl, ctx),
-        body = (ctx, idx, ext) -> Thunk(
-            preamble = quote
-                $my_q = $(lvl.ex).ptr[$(ctx(pos))]
-                $my_q_stop = $(lvl.ex).ptr[$(ctx(pos)) + $(Tp(1))]
-                if $my_q < $my_q_stop
-                    $my_i = $(lvl.ex).idx[$my_q]
-                    $my_i1 = $(lvl.ex).idx[$my_q_stop - $(Tp(1))]
-                else
-                    $my_i = $(Ti(1))
-                    $my_i1 = $(Ti(0))
-                end
-            end,
-            body = Pipeline([
-                Phase(
-                    stride = (ctx, idx, ext) -> value(my_i1),
-                    body = (start, step) -> Stepper(
-                        seek = (ctx, ext) -> quote
-                            $my_q = $Tp(searchsortedfirst($(lvl.ex).idx, Int($(ctx(getstart(ext)))), Int($my_q), Int($my_q_stop - 1), Base.Forward))
-                        end,
-                        body = Thunk(
-                            preamble = :(
-                                $my_i = $(lvl.ex).idx[$my_q]
-                            ),
-                            body = Step(
-                                stride = (ctx, idx, ext) -> value(my_i),
-                                chunk = Spike(
-                                    body = Simplify(Fill(virtual_level_default(lvl))),
-                                    tail = get_reader(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, protos...),
                                 ),
                                 next = (ctx, idx, ext) -> quote
                                     $my_q += $(Tp(1))
