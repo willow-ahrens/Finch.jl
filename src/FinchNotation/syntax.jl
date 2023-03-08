@@ -85,8 +85,16 @@ function (ctx::FinchParserVisitor)(ex::Expr)
         return :($(ctx.nodes.thaw)($(ctx(tns))))
     elseif @capture ex :macrocall($(Symbol("@forget")), ~ln::islinenum, ~tns)
         return :($(ctx.nodes.forget)($(ctx(tns))))
-    elseif @capture ex :macrocall($(Symbol("@∀")), ~ln::islinenum, ~idxs..., ~body)
-        return ctx(:(@loop($(idxs...), $body)))
+    elseif @capture ex :for(:(=)(~idx, ~ext), ~body)
+        ext == :(:) || throw(FinchSyntaxError("Finch doesn't support non-automatic loop bounds currently"))
+        return ctx(:(@loop($idx, $body)))
+    elseif @capture ex :for(:block(:(=)(~idx, ~ext), ~tail...), ~body)
+        ext == :(:) || throw(FinchSyntaxError("Finch doesn't support non-automatic loop bounds currently"))
+        if isempty(tail)
+            return ctx(:(@loop($idx, $body)))
+        else
+            return ctx(:(@loop($idx, $(Expr(:for, Expr(:block, tail...), body)))))
+        end
     elseif @capture ex :macrocall($(Symbol("@loop")), ~ln::islinenum, ~idxs..., ~body)
         return quote
             let $((:($(esc(idx)) = $(ctx.nodes.index(idx))) for idx in idxs if idx isa Symbol)...)
