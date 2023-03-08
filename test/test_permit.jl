@@ -34,7 +34,7 @@
     @test reference_isequal(C, [A(2), A(3), A(4)])
 
     win = 2:4
-    @test check_output("sparse_range.jl", @finch_code @loop i C[i] = A[win[i]])
+    @test check_output("sparse_range.jl", @finch_code (C .= 0; @loop i C[i] = A[win[i]]))
     @finch (C .= 0; @loop i C[i] = A[win[i]])
     @test reference_isequal(C, [A(2), A(3), A(4)])
 

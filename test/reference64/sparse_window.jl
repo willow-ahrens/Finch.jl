@@ -28,8 +28,8 @@ begin
     if phase_stop >= phase_start
         i_4 = i
         i = phase_start
-        while A_lvl_q + 1 < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < (+)(phase_start, (-)((-)(1, ((ex.bodies[2]).body.rhs.idxs[1]).tns.tns.start)))
-            A_lvl_q += 1
+        if A_lvl.idx[A_lvl_q] < (+)(phase_start, (-)((-)(1, ((ex.bodies[2]).body.rhs.idxs[1]).tns.tns.start)))
+            A_lvl_q = scansearch(A_lvl.idx, (+)(phase_start, (-)((-)(1, ((ex.bodies[2]).body.rhs.idxs[1]).tns.tns.start))), A_lvl_q, A_lvl_q_stop - 1)
         end
         while i <= phase_stop
             i_start_3 = i
