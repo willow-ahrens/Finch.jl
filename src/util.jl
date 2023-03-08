@@ -127,3 +127,28 @@ striplines(ex) = ex
 
 (Base.:^)(T::Type, i::Int) = ∘(repeated(T, i)..., identity)
 (Base.:^)(f::Function, i::Int) = ∘(repeated(f, i)..., identity)
+
+"""
+    scansearch(v, x, lo, hi)
+
+return the first value of `v` greater than or equal to `x`, within the range
+`lo:hi`. Return `hi+1` if all values are less than `x`.
+"""
+Base.@propagate_inbounds function scansearch(v, x, lo::T, hi::T)::T where T<:Integer
+    u = T(1)
+    stop = min(hi, lo + T(32))
+    while lo + u < stop && v[lo] < x
+        lo += u
+    end
+    lo = lo - u
+    hi = hi + u
+    while lo < hi - u
+        m = lo + ((hi - lo) >>> 0x01)
+        if v[m] < x
+            lo = m
+        else
+            hi = m
+        end
+    end
+    return hi
+end

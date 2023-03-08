@@ -27,28 +27,6 @@ using SparseArrays
         @test reference_isequal(A, [0, 1, 0, 2, 3, 0])
     end
 
-    #https://github.com/willow-ahrens/Finch.jl/issues/68
-    let
-        N = 3
-        edges = dropdefaults!(@fiber(d(sl(e(false)))), [0 1 1; 1 0 1; 1 0 0])
-        frontier_list = dropdefaults!(@fiber(sl(e(false))), [0, 1, 1])
-        old_num_paths = copyto!(@fiber(d(e(0))), [3, 3, 3])
-        old_visited = copyto!(@fiber(d(e(false))), [1, 0, 0])
-        new_frontier = @fiber(d(e(false)))
-        new_visited = @fiber(d(e(false)))
-        B = @fiber(d(e(0)))
-        @finch begin
-            new_frontier .= 0
-            new_visited .= 0
-            B .= 0
-            @loop k j begin
-                new_frontier[j] <<$(Finch.or)>>= edges[j,k] && frontier_list[k] && !(old_visited[j])
-                new_visited[j] <<$(Finch.and)>>= old_visited[j] || edges[j,k] && frontier_list[k] && !(old_visited[j])
-                B[j] += edges[j,k] && frontier_list[k] && (old_num_paths[k]!=1) && !(old_visited[j])
-            end
-        end
-    end
-
     #https://github.com/willow-ahrens/Finch.jl/issues/61
     I = copyto!(@fiber(rl(0)), [1, 1, 9, 3, 3])
     A = [
@@ -123,5 +101,25 @@ using SparseArrays
         y = Scalar(0 => 0)
         @finch @loop i y[] <<maxby>>= a[i] => i
         @test y[][2] == 3
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/124
+
+    let
+        A = sparse([3, 4, 3, 4], [1, 2, 3, 3], [1.1, 2.2, 3.3, 4.4], 4, 3)
+
+        B = @fiber(d(sl(e(0.0))))
+
+        @finch (B .= 0; @loop j i B[i, j] = A[i, j])
+
+        @test isstructequal(B, fiber(A))
+
+        v = SparseVector(10, [1, 6, 7, 9], [1.1, 2.2, 3.3, 4.4])
+
+        w = @fiber(sl(e(0.0)))
+
+        @finch (w .= 0; @loop i w[i] = v[i])
+
+        @test isstructequal(w, fiber(v))
     end
 end

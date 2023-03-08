@@ -63,7 +63,6 @@ function virtualize(ex, ::Type{FinchNotation.VariableInstance{tag, Tns}}, ctx) w
     end
 end
 virtualize(ex, ::Type{Walk}, ctx) = walk
-virtualize(ex, ::Type{FastWalk}, ctx) = fastwalk
 virtualize(ex, ::Type{Gallop}, ctx) = gallop
 virtualize(ex, ::Type{Follow}, ctx) = follow
 virtualize(ex, ::Type{Laminate}, ctx) = laminate

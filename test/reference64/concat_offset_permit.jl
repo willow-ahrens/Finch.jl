@@ -58,8 +58,8 @@ begin
         if phase_stop_3 >= i_start_3
             i_8 = i
             i = i_start_3
-            while B_lvl_q + 1 < B_lvl_q_stop && B_lvl.idx[B_lvl_q] < (+)(i_start_3, (-)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta))
-                B_lvl_q += 1
+            if B_lvl.idx[B_lvl_q] < (+)(i_start_3, (-)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta))
+                B_lvl_q = scansearch(B_lvl.idx, (+)(i_start_3, (-)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta)), B_lvl_q, B_lvl_q_stop - 1)
             end
             while i <= phase_stop_3
                 i_start_4 = i
@@ -144,8 +144,8 @@ begin
         if phase_stop_7 >= i_start_5
             i_15 = i
             i = i_start_5
-            while A_lvl_q + 1 < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < i_start_5
-                A_lvl_q += 1
+            if A_lvl.idx[A_lvl_q] < i_start_5
+                A_lvl_q = scansearch(A_lvl.idx, i_start_5, A_lvl_q, A_lvl_q_stop - 1)
             end
             while i <= phase_stop_7
                 i_start_6 = i
@@ -213,11 +213,11 @@ begin
         if phase_stop_10 >= i_start_7
             i_20 = i
             i = i_start_7
-            while A_lvl_q + 1 < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < i_start_7
-                A_lvl_q += 1
+            if A_lvl.idx[A_lvl_q] < i_start_7
+                A_lvl_q = scansearch(A_lvl.idx, i_start_7, A_lvl_q, A_lvl_q_stop - 1)
             end
-            while B_lvl_q + 1 < B_lvl_q_stop && B_lvl.idx[B_lvl_q] < (+)(i_start_7, (-)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta))
-                B_lvl_q += 1
+            if B_lvl.idx[B_lvl_q] < (+)(i_start_7, (-)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta))
+                B_lvl_q = scansearch(B_lvl.idx, (+)(i_start_7, (-)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta)), B_lvl_q, B_lvl_q_stop - 1)
             end
             while i <= phase_stop_10
                 i_start_8 = i
@@ -283,8 +283,8 @@ begin
         if phase_stop_12 >= i_start_7
             i_24 = i
             i = i_start_7
-            while A_lvl_q + 1 < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < i_start_7
-                A_lvl_q += 1
+            if A_lvl.idx[A_lvl_q] < i_start_7
+                A_lvl_q = scansearch(A_lvl.idx, i_start_7, A_lvl_q, A_lvl_q_stop - 1)
             end
             while i <= phase_stop_12
                 i_start_9 = i
@@ -349,8 +349,8 @@ begin
         if phase_stop_16 >= i_start_10
             i_30 = i
             i = i_start_10
-            while A_lvl_q + 1 < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < i_start_10
-                A_lvl_q += 1
+            if A_lvl.idx[A_lvl_q] < i_start_10
+                A_lvl_q = scansearch(A_lvl.idx, i_start_10, A_lvl_q, A_lvl_q_stop - 1)
             end
             while i <= phase_stop_16
                 i_start_11 = i
@@ -433,8 +433,8 @@ begin
         if phase_stop_20 >= i_start_12
             i_37 = i
             i = i_start_12
-            while B_lvl_q + 1 < B_lvl_q_stop && B_lvl.idx[B_lvl_q] < (+)(i_start_12, (-)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta))
-                B_lvl_q += 1
+            if B_lvl.idx[B_lvl_q] < (+)(i_start_12, (-)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta))
+                B_lvl_q = scansearch(B_lvl.idx, (+)(i_start_12, (-)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta)), B_lvl_q, B_lvl_q_stop - 1)
             end
             while i <= phase_stop_20
                 i_start_13 = i

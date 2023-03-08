@@ -4,7 +4,6 @@
     fmts = [
         (;fmt = (z) -> @fiber(d(sl(e(z)))), proto = [walk, follow]),
         (;fmt = (z) -> @fiber(d(sl(e(z)))), proto = [gallop, follow]),
-        (;fmt = (z) -> @fiber(d(sl(e(z)))), proto = [fastwalk, follow]),
         (;fmt = (z) -> @fiber(d(sv(e(z)))), proto = [walk, follow]),
         (;fmt = (z) -> @fiber(d(sv(e(z)))), proto = [gallop, follow]),
         (;fmt = (z) -> @fiber(d(sm(e(z)))), proto = [walk, follow]),
