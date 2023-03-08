@@ -17,7 +17,7 @@ export walk, fastwalk, gallop, follow, extrude, laminate
 export fiber, @fiber, pattern!, dropdefaults, dropdefaults!
 export diagmask, lotrimask, uptrimask, bandmask
 
-export choose
+export choose, minby, maxby
 
 export permit, offset, staticoffset, window
 

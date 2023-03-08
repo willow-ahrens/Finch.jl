@@ -5,14 +5,63 @@ struct Chooser{D} end
 
 (f::Chooser{D})(x) where {D} = x
 function (f::Chooser{D})(x, y, tail...) where {D}
-    if x == D
+    if isequal(x, D)
         return f(y, tail...)
     else
         return x
     end
 end
+"""
+    choose(z)(a, b)
 
+`choose(z)` is a function which returns whichever of `a` or `b` is not
+[isequal](@ref) to `z`. If neither are `z`, then return `a`. Useful for getting
+the first nonfill value in a sparse array.
+```jldoctest setup=:(using Finch)
+julia> a = @fiber(sl(e(0.0)), [0, 1.1, 0, 4.4, 0])
+SparseList (0.0) [1:5]
+├─[2]: 1.1
+├─[4]: 4.4
+
+julia> x = Scalar(0.0); @finch @loop i x[] <<choose(0.0)>>= a[i];
+
+julia> x[]
+1.1
+```
+"""
 choose(d) = Chooser{d}()
+
+"""
+    minby(a, b)
+
+Return the min of `a` or `b`, comparing them by `a[1]` and `b[1]`, and breaking
+ties to the left. Useful for implementing argmin operations:
+```jldoctest setup=:(using Finch)
+julia> a = [7.7, 3.3, 9.9, 3.3, 9.9]; x = Scalar(Inf => 0);
+
+julia> @finch @loop i x[] <<minby>>= a[i] => i;
+
+julia> x[]
+3.3 => 2
+```
+"""
+minby(a, b) = a[1] > b[1] ? b : a
+
+"""
+    maxby(a, b)
+
+Return the max of `a` or `b`, comparing them by `a[1]` and `b[1]`, and breaking
+ties to the left. Useful for implementing argmax operations:
+```jldoctest setup=:(using Finch)
+julia> a = [7.7, 3.3, 9.9, 3.3, 9.9]; x = Scalar(-Inf => 0);
+
+julia> @finch @loop i x[] <<maxby>>= a[i] => i;
+
+julia> x[]
+9.9 => 3
+```
+"""
+maxby(a, b) = a[1] < b[1] ? b : a
 
 isassociative(alg) = (f) -> isassociative(alg, f)
 isassociative(alg, f::FinchNode) = f.kind === literal && isassociative(alg, f.val)
@@ -30,6 +79,8 @@ isassociative(::AbstractAlgebra, ::typeof(+)) = true
 isassociative(::AbstractAlgebra, ::typeof(*)) = true
 isassociative(::AbstractAlgebra, ::typeof(min)) = true
 isassociative(::AbstractAlgebra, ::typeof(max)) = true
+isassociative(::AbstractAlgebra, ::typeof(minby)) = true
+isassociative(::AbstractAlgebra, ::typeof(maxby)) = true
 isassociative(::AbstractAlgebra, ::Chooser) = true
 
 iscommutative(alg) = (f) -> iscommutative(alg, f)
@@ -71,6 +122,8 @@ isidempotent(::Any, f) = false
 isidempotent(::AbstractAlgebra, ::typeof(right)) = true
 isidempotent(::AbstractAlgebra, ::typeof(min)) = true
 isidempotent(::AbstractAlgebra, ::typeof(max)) = true
+isidempotent(::AbstractAlgebra, ::typeof(minby)) = true
+isidempotent(::AbstractAlgebra, ::typeof(maxby)) = true
 isidempotent(::AbstractAlgebra, ::Chooser) = true
 
 """
@@ -88,6 +141,8 @@ isidentity(::AbstractAlgebra, ::typeof(+), x) = iszero(x)
 isidentity(::AbstractAlgebra, ::typeof(*), x) = isone(x)
 isidentity(::AbstractAlgebra, ::typeof(min), x) = isinf(x) && x > 0
 isidentity(::AbstractAlgebra, ::typeof(max), x) = isinf(x) && x < 0
+isidentity(::AbstractAlgebra, ::typeof(minby), x) = isinf(x[1]) && x > 0
+isidentity(::AbstractAlgebra, ::typeof(maxby), x) = isinf(x[1]) && x < 0
 isidentity(::AbstractAlgebra, ::Chooser{D}, x) where {D} = x == D
 
 isannihilator(alg) = (f, x) -> isannihilator(alg, f, x)
@@ -102,6 +157,8 @@ isannihilator(::AbstractAlgebra, ::typeof(+), x) = isinf(x)
 isannihilator(::AbstractAlgebra, ::typeof(*), x) = iszero(x)
 isannihilator(::AbstractAlgebra, ::typeof(min), x) = isinf(x) && x < 0
 isannihilator(::AbstractAlgebra, ::typeof(max), x) = isinf(x) && x > 0
+isannihilator(::AbstractAlgebra, ::typeof(minby), x) = isinf(x[1]) && x < 0
+isannihilator(::AbstractAlgebra, ::typeof(maxby), x) = isinf(x[1]) && x > 0
 isannihilator(::AbstractAlgebra, ::typeof(or), x) = x == true
 isannihilator(::AbstractAlgebra, ::typeof(and), x) = x == false
 

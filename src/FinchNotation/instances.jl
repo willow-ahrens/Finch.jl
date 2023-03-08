@@ -66,7 +66,7 @@ Base.:(==)(a::SequenceInstance, b::SequenceInstance) = all(a.bodies .== b.bodies
 
 sequence_instance(bodies...) = SequenceInstance(bodies)
 
-Base.show(io::IO, node::SequenceInstance) = (print(io, "sequence_instance("); join(node.bodies, ", "); println(")"))
+Base.show(io::IO, node::SequenceInstance) = (print(io, "sequence_instance("); join(io, node.bodies, ", "); println(io, ")"))
 
 struct LoopInstance{Idx, Body} <: FinchNodeInstance
 	idx::Idx
