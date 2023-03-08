@@ -35,4 +35,17 @@
 
     @test B() == 0.0
 
+    @testset "scansearch" begin
+        for v in [
+            [2, 3, 5, 7, 8, 10, 13, 14, 15, 17, 19, 21, 25, 26, 32, 35, 36, 38, 39, 40, 41, 42, 45, 47, 48, 51, 52, 54, 57, 58, 59, 60, 64, 68, 72, 78, 79, 82, 83, 87, 89, 95, 97, 98, 100],
+            collect(-200:3:500)
+        ]
+            hi = length(v)
+            for lo = 1:hi, i = lo:hi
+                @test Finch.scansearch(v, v[i], lo, hi) == i
+                @test Finch.scansearch(v, v[i] - 1, lo, hi) == ((i > lo && v[i-1] == v[i]-1) ? i-1 : i)
+                @test Finch.scansearch(v, v[i] + 1, lo, hi) == i + 1
+            end
+        end
+    end
 end
