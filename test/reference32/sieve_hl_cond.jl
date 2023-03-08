@@ -19,8 +19,8 @@ begin
     if phase_stop >= j_start
         j_4 = j
         j = j_start
-        while A_lvl_q + 1 < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < j_start
-            A_lvl_q += 1
+        if A_lvl.idx[A_lvl_q] < j_start
+            A_lvl_q = scansearch(A_lvl.idx, j_start, A_lvl_q, A_lvl_q_stop - 1)
         end
         while j <= phase_stop
             j_start_2 = j

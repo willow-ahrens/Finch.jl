@@ -261,8 +261,8 @@ function get_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, R, start, stop, 
                     stride = (ctx, idx, ext) -> value(my_i_stop),
                     body = (start, stop) -> Stepper(
                         seek = (ctx, ext) -> quote
-                            while $my_q + $(Tp(1)) < $my_q_stop && $(lvl.ex).tbl[$R][$my_q] < $(ctx(getstart(ext)))
-                                $my_q += $(Tp(1))
+                            if $(lvl.ex).tbl[$R][$my_q] < $(ctx(getstart(ext)))
+                                $my_q = scansearch($(lvl.ex).tbl[$R], $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                             end
                         end,
                         body = if R == 1
@@ -286,8 +286,8 @@ function get_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, R, start, stop, 
                                 preamble = quote
                                     $my_i = $(lvl.ex).tbl[$R][$my_q]
                                     $my_q_step = $my_q
-                                    while $my_q_step < $my_q_stop && $(lvl.ex).tbl[$R][$my_q_step] == $my_i
-                                        $my_q_step += $(Tp(1))
+                                    if $(lvl.ex).tbl[$R][$my_q_step] == $my_i
+                                        $my_q_step = scansearch($(lvl.ex).tbl[$R], $my_i + 1, $my_q_step, $my_q_stop - 1)
                                     end
                                 end,
                                 body = Step(
