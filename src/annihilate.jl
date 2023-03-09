@@ -134,16 +134,16 @@ Return true when `f(a..., x, b...) = f(a..., b...)` in `algebra`.
 isidentity(alg) = (f, x) -> isidentity(alg, f, x)
 isidentity(alg, f::FinchNode, x::FinchNode) = isliteral(f) && isliteral(x) && isidentity(alg, f.val, x.val)
 isidentity(::Any, f, x) = false
-isidentity(::AbstractAlgebra, ::typeof(or), x) = x == false
-isidentity(::AbstractAlgebra, ::typeof(and), x) = x == true
+isidentity(::AbstractAlgebra, ::typeof(or), x) = x === false
+isidentity(::AbstractAlgebra, ::typeof(and), x) = x === true
 isidentity(::AbstractAlgebra, ::typeof(coalesce), x) = ismissing(x)
-isidentity(::AbstractAlgebra, ::typeof(+), x) = iszero(x)
-isidentity(::AbstractAlgebra, ::typeof(*), x) = isone(x)
-isidentity(::AbstractAlgebra, ::typeof(min), x) = isinf(x) && x > 0
-isidentity(::AbstractAlgebra, ::typeof(max), x) = isinf(x) && x < 0
-isidentity(::AbstractAlgebra, ::typeof(minby), x) = isinf(x[1]) && x > 0
-isidentity(::AbstractAlgebra, ::typeof(maxby), x) = isinf(x[1]) && x < 0
-isidentity(::AbstractAlgebra, ::Chooser{D}, x) where {D} = x == D
+isidentity(::AbstractAlgebra, ::typeof(+), x) = !ismissing(x) && iszero(x)
+isidentity(::AbstractAlgebra, ::typeof(*), x) = !ismissing(x) && isone(x)
+isidentity(::AbstractAlgebra, ::typeof(min), x) = !ismissing(x) && isinf(x) && x > 0
+isidentity(::AbstractAlgebra, ::typeof(max), x) = !ismissing(x) && isinf(x) && x < 0
+isidentity(::AbstractAlgebra, ::typeof(minby), x) = !ismissing(x) && isinf(x[1]) && x > 0
+isidentity(::AbstractAlgebra, ::typeof(maxby), x) = !ismissing(x) && isinf(x[1]) && x < 0
+isidentity(::AbstractAlgebra, ::Chooser{D}, x) where {D} = isequal(x, D)
 
 isannihilator(alg) = (f, x) -> isannihilator(alg, f, x)
 isannihilator(alg, f::FinchNode, x::FinchNode) = isliteral(f) && isliteral(x) && isannihilator(alg, f.val, x.val)
@@ -153,14 +153,14 @@ isannihilator(alg, f::FinchNode, x::FinchNode) = isliteral(f) && isliteral(x) &&
 Return true when `f(a..., x, b...) = x` in `algebra`.
 """
 isannihilator(::Any, f, x) = false
-isannihilator(::AbstractAlgebra, ::typeof(+), x) = isinf(x)
-isannihilator(::AbstractAlgebra, ::typeof(*), x) = iszero(x)
-isannihilator(::AbstractAlgebra, ::typeof(min), x) = isinf(x) && x < 0
-isannihilator(::AbstractAlgebra, ::typeof(max), x) = isinf(x) && x > 0
-isannihilator(::AbstractAlgebra, ::typeof(minby), x) = isinf(x[1]) && x < 0
-isannihilator(::AbstractAlgebra, ::typeof(maxby), x) = isinf(x[1]) && x > 0
-isannihilator(::AbstractAlgebra, ::typeof(or), x) = x == true
-isannihilator(::AbstractAlgebra, ::typeof(and), x) = x == false
+isannihilator(::AbstractAlgebra, ::typeof(+), x) = ismissing(x) || isinf(x)
+isannihilator(::AbstractAlgebra, ::typeof(*), x) = ismissing(x) || iszero(x)
+isannihilator(::AbstractAlgebra, ::typeof(min), x) = ismissing(x) || isinf(x) && x < 0
+isannihilator(::AbstractAlgebra, ::typeof(max), x) = ismissing(x) || isinf(x) && x > 0
+isannihilator(::AbstractAlgebra, ::typeof(minby), x) = ismissing(x) || isinf(x[1]) && x < 0
+isannihilator(::AbstractAlgebra, ::typeof(maxby), x) = ismissing(x) || isinf(x[1]) && x > 0
+isannihilator(::AbstractAlgebra, ::typeof(or), x) = ismissing(x) || x === true
+isannihilator(::AbstractAlgebra, ::typeof(and), x) = ismissing(x) || x === false
 
 isinverse(alg) = (f, g) -> isinverse(alg, f, g)
 isinverse(alg, f::FinchNode, g::FinchNode) = isliteral(f) && isliteral(g) && isinverse(alg, f.val, g.val)
@@ -226,7 +226,7 @@ function base_rules(alg, ctx)
         #TODO default needs to get defined on all writable chunks
         #TODO Does it really though
         #TODO I don't think this is safe to assume if we allow arbitrary updates
-        (@rule assign(access(~a, ~m, ~i...), $(literal(right)), ~b) => if virtual_default(resolve(a, ctx)) != nothing && b == literal(something(virtual_default(resolve(a, ctx)))) sequence() end),
+        (@rule assign(access(~a, ~m, ~i...), $(literal(right)), ~b) => if virtual_default(resolve(a, ctx)) !== nothing && b == literal(something(virtual_default(resolve(a, ctx)))) sequence() end),
 
         (@rule loop(~i, sequence()) => sequence()),
         (@rule chunk(~i, ~a, sequence()) => sequence()),

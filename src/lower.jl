@@ -193,7 +193,7 @@ function (ctx::ThunkVisitor)(node::Thunk)
     node.body
 end
 
-FinchNotation.isliteral(::Union{Symbol, Expr, Missing}) =  false
+FinchNotation.isliteral(::Union{Symbol, Expr}) =  false
 (ctx::LowerJulia)(root::Union{Symbol, Expr}, ::DefaultStyle) = root
 
 function (ctx::LowerJulia)(root, ::DefaultStyle)

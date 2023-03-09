@@ -134,11 +134,11 @@ using SparseArrays
 
         x = Scalar(Inf)
 
-        @test check_output("inf_minimum.jl", @finch_code (for i=_; x[] <<min>>= yf[i] end))
+        @test check_output("specialvals_minimum_inf.jl", @finch_code (for i=_; x[] <<min>>= yf[i] end))
         @finch for i=_; x[] <<min>>= yf[i] end
         @test x[] == 1.0
 
-        @test check_output("inf_repr.txt", String(take!(io)))
+        @test check_output("specialvals_repr_inf.txt", String(take!(io)))
 
         io = IOBuffer()
         y = [2.0, NaN, NaN, 1.0, 3.0, NaN]
@@ -148,11 +148,24 @@ using SparseArrays
 
         x = Scalar(Inf)
 
-        @test check_output("nan_minimum.jl", @finch_code (for i=_; x[] <<min>>= yf[i] end))
+        @test check_output("specialvals_minimum_nan.jl", @finch_code (for i=_; x[] <<min>>= yf[i] end))
         @finch for i=_; x[] <<min>>= yf[i] end
         @test isequal(x[], NaN)
 
-        @test check_output("nan_repr.txt", String(take!(io)))
+        @test check_output("specialvals_repr_nan.txt", String(take!(io)))
+
+        y = [2.0, missing, missing, 1.0, 3.0, missing]
+        yf = @fiber(sl(e{missing, Union{Float64,Missing}}()), y)
+        println(io, "@fiber(sl(e(missing)), $y):")
+        println(io, yf)
+
+        x = Scalar(Inf)
+
+        @test check_output("specialvals_minimum_missing.jl", @finch_code (for i=_; x[] <<min>>= yf[i] end))
+        @finch for i=_; x[] <<min>>= coalesce(yf[i], missing, Inf) end
+        @test x[] == 1.0
+
+        @test check_output("specialvals_repr_missing.txt", String(take!(io)))
     end
 
 end
