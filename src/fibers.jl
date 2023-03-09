@@ -296,7 +296,7 @@ function f_decode(ex)
     elseif ex isa Expr
         return Expr(ex.head, map(f_decode, ex.args)...)
     elseif ex isa Symbol
-        return :(@something($f_code($(Val(ex))), $(esc(ex))))
+        return :(@something($f_code($(Val(ex))), Some($(esc(ex)))))
     else
         return esc(ex)
     end

@@ -428,7 +428,7 @@ end
     body
 end
 
-virtual_default(ex::Lookup) = something(ex.val)
+virtual_default(ex::Lookup) = Some(ex.val)
 
 Base.show(io::IO, ex::Lookup) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::Lookup)

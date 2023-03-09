@@ -75,6 +75,7 @@ isassociative(::AbstractAlgebra, ::typeof(right)) = true
 isassociative(::AbstractAlgebra, ::typeof(or)) = true
 isassociative(::AbstractAlgebra, ::typeof(and)) = true
 isassociative(::AbstractAlgebra, ::typeof(coalesce)) = true
+isassociative(::AbstractAlgebra, ::typeof(something)) = true
 isassociative(::AbstractAlgebra, ::typeof(+)) = true
 isassociative(::AbstractAlgebra, ::typeof(*)) = true
 isassociative(::AbstractAlgebra, ::typeof(min)) = true
@@ -137,6 +138,7 @@ isidentity(::Any, f, x) = false
 isidentity(::AbstractAlgebra, ::typeof(or), x) = x === false
 isidentity(::AbstractAlgebra, ::typeof(and), x) = x === true
 isidentity(::AbstractAlgebra, ::typeof(coalesce), x) = ismissing(x)
+isidentity(::AbstractAlgebra, ::typeof(something), x) = !ismissing(x) && isnothing(x)
 isidentity(::AbstractAlgebra, ::typeof(+), x) = !ismissing(x) && iszero(x)
 isidentity(::AbstractAlgebra, ::typeof(*), x) = !ismissing(x) && isone(x)
 isidentity(::AbstractAlgebra, ::typeof(min), x) = !ismissing(x) && isinf(x) && x > 0
@@ -191,7 +193,7 @@ struct Fill
 end
 
 FinchNotation.isliteral(::Fill) = false
-virtual_default(f::Fill) = something(f.default)
+virtual_default(f::Fill) = Some(f.default)
 
 isfill(tns) = false
 isfill(tns::FinchNode) = tns.kind == virtual && tns.val isa Fill
@@ -226,7 +228,7 @@ function base_rules(alg, ctx)
         #TODO default needs to get defined on all writable chunks
         #TODO Does it really though
         #TODO I don't think this is safe to assume if we allow arbitrary updates
-        (@rule assign(access(~a, ~m, ~i...), $(literal(right)), ~b) => if virtual_default(resolve(a, ctx)) !== nothing && b == literal(something(virtual_default(resolve(a, ctx)))) sequence() end),
+        (@rule assign(access(~a, ~m, ~i...), $(literal(right)), ~b) => if virtual_default(resolve(a, ctx)) !== nothing && b == literal(virtual_default(resolve(a, ctx))) sequence() end),
 
         (@rule loop(~i, sequence()) => sequence()),
         (@rule chunk(~i, ~a, sequence()) => sequence()),
@@ -263,6 +265,9 @@ function base_rules(alg, ctx)
         (@rule assign(access(~a, ~m, ~i..., $(literal(missing)), ~j...), ~b) => sequence()),
         (@rule call($(literal(coalesce)), ~a..., ~b, ~c...) => if isvalue(b) && !(Missing <: b.type) || isliteral(b) && !ismissing(b.val)
             call(coalesce, a..., b)
+        end),
+        (@rule call($(literal(something)), ~a..., ~b, ~c...) => if isvalue(b) && !(Nothing <: b.type) || isliteral(b) && b != literal(nothing)
+            call(something, a..., b)
         end),
 
         (@rule call($(literal(right)), ~a..., ~b, ~c) => c),

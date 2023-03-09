@@ -154,6 +154,7 @@ using SparseArrays
 
         @test check_output("specialvals_repr_nan.txt", String(take!(io)))
 
+        io = IOBuffer()
         y = [2.0, missing, missing, 1.0, 3.0, missing]
         yf = @fiber(sl(e{missing, Union{Float64,Missing}}()), y)
         println(io, "@fiber(sl(e(missing)), $y):")
@@ -166,6 +167,20 @@ using SparseArrays
         @test x[] == 1.0
 
         @test check_output("specialvals_repr_missing.txt", String(take!(io)))
+
+        io = IOBuffer()
+        y = [2.0, nothing, nothing, 1.0, 3.0, Some(1.0), nothing]
+        yf = @fiber(sl(e{nothing, Union{Float64,Nothing,Some{Float64}}}()), y)
+        println(io, "@fiber(sl(e(nothing)), $y):")
+        println(io, yf)
+
+        x = Scalar(Inf)
+
+        @test check_output("specialvals_minimum_nothing.jl", @finch_code (for i=_; x[] <<min>>= something(yf[i], nothing, Inf) end))
+        @finch for i=_; x[] <<min>>= something(yf[i], nothing, Inf) end
+        @test x[] == 1.0
+
+        @test check_output("specialvals_repr_nothing.txt", String(take!(io)))
     end
 
 end
