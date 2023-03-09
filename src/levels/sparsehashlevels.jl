@@ -181,7 +181,7 @@ end
 virtual_level_eltype(lvl::VirtualSparseHashLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSparseHashLevel) = virtual_level_default(lvl.lvl)
 
-function initialize_level!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, pos)
+function declare_level!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, pos, init)
     Ti = lvl.Ti
     Tp = lvl.Tp
 
@@ -192,7 +192,7 @@ function initialize_level!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, pos)
         empty!($(lvl.ex).tbl)
         empty!($(lvl.ex).srt)
     end)
-    lvl.lvl = initialize_level!(lvl.lvl, ctx, qos)
+    lvl.lvl = declare_level!(lvl.lvl, ctx, qos, init)
     return lvl
 end
 
@@ -206,6 +206,20 @@ function trim_level!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, pos)
         resize!($(lvl.ex).srt, $qos)
     end)
     lvl.lvl = trim_level!(lvl.lvl, ctx, value(qos, Tp))
+    return lvl
+end
+
+function thaw_level!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, pos)
+    Ti = lvl.Ti
+    Tp = lvl.Tp
+    p = ctx.freshen(lvl.ex, :_p)
+    push!(ctx.preamble, quote
+        for $p = 1:$(ctx(pos))
+            $(lvl.ex).ptr[$p] -= $(lvl.ex).ptr[$p + 1]
+        end
+        $(lvl.ex).ptr[1] = 1
+    end)
+    lvl.lvl = thaw_level!(lvl.lvl, ctx, call(*, pos, lvl.I))
     return lvl
 end
 

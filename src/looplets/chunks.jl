@@ -24,7 +24,7 @@ function (ctx::ChunkifyVisitor)(node::FinchNode, eldim = nodim)
     if node.kind === access && node.tns.kind === virtual
         chunkify_access(node, ctx, eldim, node.tns.val)
     elseif node.kind === access && node.tns.kind === variable
-        chunkify_access(node, ctx, eldim, ctx.ctx.bindings[node.tns.name])
+        chunkify_access(node, ctx, eldim, ctx.ctx.bindings[node.tns])
     elseif istree(node)
         #TODO propagate eldim here
         similarterm(node, operation(node), map(ctx, arguments(node)))
@@ -75,7 +75,7 @@ function (ctx::SelectVisitor)(node::FinchNode)
     if node.kind === access && node.tns.kind === virtual
         select_access(node, ctx, node.tns.val)
     elseif node.kind === access && node.tns.kind === variable
-        select_access(node, ctx, ctx.ctx.bindings[node.tns.name])
+        select_access(node, ctx, ctx.ctx.bindings[node.tns])
     elseif istree(node)
         similarterm(node, operation(node), map(ctx, arguments(node)))
     else

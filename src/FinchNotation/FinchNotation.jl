@@ -6,15 +6,13 @@ module FinchNotation
     export index
     export variable
     export value
-#    export Workspace
-    export pass
-    export with
-    export multi
     export loop
     export Chunk, chunk
     export assign
     export call
     export reader, updater, create, modify, access
+    export declare, thaw, freeze, forget
+    export sequence
     export protocol
     export sieve
     export FinchNode, value, isvalue

@@ -29,7 +29,12 @@ We're always trying to make Finch easier to use! Here's a column-major SpMV:
 x = @fiber(d(e(0.0)), rand(42));
 A = @fiber(d(sl(e(0.0))), sprand(42, 42, 0.1));
 y = @fiber(d(e(0.0)));
-@finch @loop j i y[i] += A[i, j] * x[j];
+@finch begin
+    y .= 0
+    for j=(:), i=(:)
+        y[i] += A[i, j] * x[j]
+    end
+end
 ```
 
 Array formats in Finch are described recursively mode by mode.  Semantically, an

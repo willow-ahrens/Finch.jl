@@ -29,6 +29,8 @@ end
     algebra = DefaultAlgebra()
     preamble::Vector{Any} = []
     bindings::Dict{Any, Any} = Dict()
+    modes::Dict{Any, Any} = Dict()
+    scope = Set()
     epilogue::Vector{Any} = []
     dims::Dict = Dict()
     freshen::Freshen = Freshen()
@@ -54,6 +56,16 @@ end
 #    @info :lower root style
 #    ctx(root, style)
 #end
+
+function open_scope(prgm, ctx::LowerJulia)
+    ctx_2 = shallowcopy(ctx)
+    ctx_2.scope = Set()
+    res = ctx_2(prgm)
+    for tns in ctx_2.scope
+        pop!(ctx_2.modes, tns, nothing)
+    end
+    res
+end
 
 function cache!(ctx, var, val)
     if isliteral(val)
@@ -96,7 +108,7 @@ end
 
 function resolve(var, ctx::LowerJulia)
     if var isa FinchNode && (var.kind === variable || var.kind === index)
-        return ctx.bindings[var.name]
+        return ctx.bindings[var]
     end
     return var
 end
@@ -191,6 +203,51 @@ function (ctx::LowerJulia)(root, ::DefaultStyle)
     error("Don't know how to lower $root")
 end
 
+"""
+    InstantiateTensors(ctx)
+
+A transformation to instantiate readers and updaters before executing an
+expression
+
+See also: [`declare!`](@ref)
+"""
+@kwdef struct InstantiateTensors{Ctx}
+    ctx::Ctx
+    escape = Set()
+end
+
+function (ctx::InstantiateTensors)(node)
+    if istree(node)
+        return similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        return node
+    end
+end
+
+function (ctx::InstantiateTensors)(node::FinchNode)
+    if node.kind === sequence
+        sequence(map(ctx, node.bodies)...)
+    elseif node.kind === declare
+        push!(ctx.escape, node.tns)
+        node
+    elseif node.kind === access && node.tns.kind === variable && !(node.tns in ctx.escape)
+        tns = ctx.ctx.bindings[node.tns]
+        protos = map(idx -> idx.kind === protocol ? idx.mode.val : nothing, node.idxs)
+        idxs = map(idx -> idx.kind === protocol ? ctx(idx.idx) : ctx(idx), node.idxs)
+        if node.mode.kind === reader
+            get(ctx.ctx.modes, node.tns, reader()).kind === reader || throw(LifecycleError("Cannot read update-only $(node.tns) (perhaps same tensor on both lhs and rhs?)"))
+            return access(get_reader(tns, ctx.ctx, protos...), node.mode, idxs...)
+        else
+            ctx.ctx.modes[node.tns].kind === updater || throw(LifecycleError("Cannot update read-only $(node.tns) (perhaps same tensor on both lhs and rhs?)"))
+            return access(get_updater(tns, ctx.ctx, protos...), node.mode, idxs...)
+        end
+    elseif istree(node)
+        return similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        return node
+    end
+end
+
 function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
     if root.kind === value
         return root.val
@@ -205,39 +262,43 @@ function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
         else
             return root.val
         end
-    elseif root.kind === with
-        target = map(gettns, getresults(root.prod))
-        return quote
-            $(contain(ctx) do ctx_2
-                prod = OpenScope(ctx = ctx_2, target=target)(root.prod)
-                (ctx_2)(prod)
-            end)
-            $(contain(ctx) do ctx_2
-                CloseScope(ctx = ctx_2, target=target)(root.prod)
-                cons = OpenScope(ctx = ctx_2, target=target)(root.cons)
-                (ctx_2)(cons)
-            end)
-            $(contain(ctx) do ctx_2
-                CloseScope(ctx = ctx_2, target=target)(root.cons)
-                quote
-                end
-            end)
-        end
-    elseif root.kind === multi
-        thunk = Expr(:block)
-        for body in root.bodies
-            push!(thunk.args, quote
+    elseif root.kind === sequence
+        if isempty(root.bodies)
+            return quote end
+        else
+            quote
+                $(ctx(InstantiateTensors(ctx=ctx)(root.bodies[1])))
                 $(contain(ctx) do ctx_2
-                    (ctx_2)(body)
+                    (ctx_2)(sequence(root.bodies[2:end]...))
                 end)
-            end)
+            end
         end
-        thunk
+    elseif root.kind === declare
+        @assert root.tns.kind === variable
+        @assert get(ctx.modes, root.tns, reader()).kind === reader
+        ctx.bindings[root.tns] = declare!(ctx.bindings[root.tns], ctx, root.init) #TODO should ctx.bindings be scoped?
+        push!(ctx.scope, root.tns)
+        ctx.modes[root.tns] = updater(create())
+        quote end
+    elseif root.kind === freeze
+        @assert ctx.modes[root.tns].kind === updater
+        ctx.bindings[root.tns] = freeze!(ctx.bindings[root.tns], ctx)
+        ctx.modes[root.tns] = reader()
+        quote end
+    elseif root.kind === thaw
+        @assert get(ctx.modes, root.tns, reader()).kind === reader
+        ctx.bindings[root.tns] = thaw!(ctx.bindings[root.tns], ctx)
+        ctx.modes[root.tns] = updater(modify())
+        quote end
+    elseif root.kind === forget
+        @assert get(ctx.modes, root.tns, reader()).kind === reader
+        delete!(ctx.modes, root.tns)
+        quote end
     elseif root.kind === access
         if root.tns.kind === virtual
             return lowerjulia_access(ctx, root, root.tns.val)
         elseif root.tns.kind === variable
-            return lowerjulia_access(ctx, root, resolve(root.tns.name, ctx))
+            return lowerjulia_access(ctx, root, resolve(root.tns, ctx))
         else
             tns = ctx(root.tns)
             idxs = map(ctx, root.idxs)
@@ -276,7 +337,7 @@ function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
                 $(bind(ctx, getname(root.idx) => idx_sym) do 
                     contain(ctx) do ctx_2
                         body_3 = ForLoopVisitor(ctx_2, root.idx, value(idx_sym))(root.body)
-                        (ctx_2)(body_3)
+                        open_scope(body_3, ctx_2)
                     end
                 end)
             end
@@ -286,7 +347,7 @@ function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
                     $(bind(ctx, getname(root.idx) => idx_sym) do 
                         contain(ctx) do ctx_2
                             body_3 = ForLoopVisitor(ctx_2, root.idx, value(idx_sym))(root.body)
-                            (ctx_2)(body_3)
+                            open_scope(body_3, ctx_2)
                         end
                     end)
                 end
@@ -299,7 +360,7 @@ function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
         return quote
             if $cond
                 $(contain(ctx) do ctx_2
-                    ctx_2(root.body)
+                    open_scope(root.body, ctx_2)
                 end)
             end
         end
@@ -314,11 +375,9 @@ function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
         end
         lhs = ctx(root.lhs)
         return :($lhs = $rhs)
-    elseif root.kind === pass
-        return quote end
     elseif root.kind === variable
         error()
-        return ctx(ctx.bindings[root.name])
+        return ctx(ctx.bindings[root])
     else
         error("unimplemented ($root)")
     end

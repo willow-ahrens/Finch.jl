@@ -35,7 +35,7 @@ function get_reader(arr::VirtualAbstractUnitRange, ctx, proto_idx)
     )
 end
 
-function initialize!(arr::VirtualAbstractUnitRange, ctx::LowerJulia)
+function declare!(arr::VirtualAbstractUnitRange, ctx::LowerJulia, init)
     throw(FormatLimitation("$(arr.arrtype) is not writeable"))
 end
 

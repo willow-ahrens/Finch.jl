@@ -3,23 +3,20 @@ virtualize(ex, T, ctx, tag) = virtualize(ex, T, ctx)
 virtualize(ex, (@nospecialize T), ctx) = value(ex, T)
 
 virtualize(ex, ::Type{FinchNotation.LiteralInstance{val}}, ctx) where {val} = literal(val)
-function virtualize(ex, ::Type{FinchNotation.PassInstance{Tnss}}, ctx) where {Tnss}
-    tnss = map(enumerate(Tnss.parameters)) do (n, Tns)
-        virtualize(:($ex.tnss[$n]), Tns, ctx)
-    end
-    pass(tnss)
-end
 function virtualize(ex, ::Type{FinchNotation.IndexInstance{name}}, ctx) where {name}
     ctx.freshen(name)
     index(name)
 end
 virtualize(ex, ::Type{FinchNotation.ProtocolInstance{Idx, Mode}}, ctx) where {Idx, Mode} = protocol(virtualize(:($ex.idx), Idx, ctx), virtualize(:($ex.mode), Mode, ctx))
-virtualize(ex, ::Type{FinchNotation.WithInstance{Cons, Prod}}, ctx) where {Cons, Prod} = with(virtualize(:($ex.cons), Cons, ctx), virtualize(:($ex.prod), Prod, ctx))
-function virtualize(ex, ::Type{FinchNotation.MultiInstance{Bodies}}, ctx) where {Bodies}
+virtualize(ex, ::Type{FinchNotation.DeclareInstance{Tns, Init}}, ctx) where {Tns, Init} = declare(virtualize(:($ex.tns), Tns, ctx), virtualize(:($ex.init), Init, ctx))
+virtualize(ex, ::Type{FinchNotation.FreezeInstance{Tns}}, ctx) where {Tns} = freeze(virtualize(:($ex.tns), Tns, ctx))
+virtualize(ex, ::Type{FinchNotation.ThawInstance{Tns}}, ctx) where {Tns} = thaw(virtualize(:($ex.tns), Tns, ctx))
+virtualize(ex, ::Type{FinchNotation.ForgetInstance{Tns}}, ctx) where {Tns} = forget(virtualize(:($ex.tns), Tns, ctx))
+function virtualize(ex, ::Type{FinchNotation.SequenceInstance{Bodies}}, ctx) where {Bodies}
     bodies = map(enumerate(Bodies.parameters)) do (n, Body)
         virtualize(:($ex.bodies[$n]), Body, ctx)
     end
-    multi(bodies...)
+    sequence(bodies...)
 end
 function virtualize(ex, ::Type{FinchNotation.SieveInstance{Cond, Body}}, ctx) where {Cond, Body}
     cond = virtualize(:($ex.cond), Cond, ctx)
@@ -61,7 +58,7 @@ function virtualize(ex, ::Type{FinchNotation.VariableInstance{tag, Tns}}, ctx) w
         return x
     else
         ctx.freshen(tag)
-        get!(ctx.bindings, tag, x)
+        get!(ctx.bindings, variable(tag), x)
         return variable(tag)
     end
 end

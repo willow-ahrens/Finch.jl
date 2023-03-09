@@ -1,11 +1,4 @@
-"""
-    getresults(stmt)
 
-Return an iterator over the result tensors of an index expression. For example,
-`where` statements return the results of the consumer, not the producer, and
-assignments return their left hand sides.
-"""
-function getresults end
 
 """
     getunbound(stmt)

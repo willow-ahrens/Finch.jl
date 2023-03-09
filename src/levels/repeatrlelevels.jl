@@ -148,7 +148,8 @@ end
 virtual_level_default(lvl::VirtualRepeatRLELevel) = lvl.D
 virtual_level_eltype(lvl::VirtualRepeatRLELevel) = lvl.Tv
 
-function initialize_level!(lvl::VirtualRepeatRLELevel, ctx::LowerJulia, mode)
+function declare_level!(lvl::VirtualRepeatRLELevel, ctx::LowerJulia, mode, init)
+    @assert init == literal(lvl.D)
     Tp = lvl.Tp
     Ti = lvl.Ti
     push!(ctx.preamble, quote

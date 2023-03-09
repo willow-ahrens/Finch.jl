@@ -9,6 +9,7 @@ getstop(::NoDimension) = error("asked for stop of dimensionless range")
 @kwdef mutable struct DeclareDimensions
     ctx
     dims = Dict()
+    hints = Dict()
 end
 function (ctx::DeclareDimensions)(node, dim)
     if istree(node)
@@ -29,9 +30,6 @@ function (ctx::InferDimensions)(node)
         (node, nodim)
     end
 end
-
-#NOTE TO SELF
-#ITS A BIG DEAL THAT WHERE STATEMENTS FORBID TEMP TENSORS WITH INDICES OUTSIDE OF SCOPE
 
 @kwdef struct Dimensionalize
     body
@@ -79,7 +77,6 @@ function dimensionalize!(prgm, ctx)
     prgm = Rewrite(Postwalk(x -> if x isa Dimensionalize x.body end))(prgm)
     dims = ctx.dims
     prgm = DeclareDimensions(ctx=ctx, dims = dims)(prgm, nodim)
-    (prgm, _) = InferDimensions(ctx=ctx, dims = dims)(prgm)
     for k in keys(dims)
         dims[k] = cache_dim!(ctx, k, dims[k])
     end
@@ -90,19 +87,24 @@ end
 function (ctx::DeclareDimensions)(node::Dimensionalize, dim)
     ctx(node.body, dim)
 end
+(ctx::DeclareDimensions)(node) = ctx(node, nodim)
 function (ctx::DeclareDimensions)(node::FinchNode, dim)
     if node.kind === index
         ctx.dims[getname(node)] = resultdim(ctx.ctx, get(ctx.dims, getname(node), nodim), dim)
         return node
-    elseif node.kind === access && node.tns.kind === virtual
-        return declare_dimensions_access(node, ctx, node.tns.val, dim)
-    elseif node.kind === access && node.tns.kind === variable #TODO perhaps we can get rid of this
+    elseif node.kind === access && node.tns.kind === variable
         return declare_dimensions_access(node, ctx, node.tns, dim)
-    elseif node.kind === with
-        prod = ctx(node.prod, nodim)
-        (prod, _) = InferDimensions(;kwfields(ctx)...)(prod)
-        cons = ctx(node.cons, nodim)
-        return with(cons, prod)
+    elseif node.kind === sequence
+        sequence(map(ctx, node.bodies)...)
+    elseif node.kind === declare
+        ctx.hints[node.tns] = []
+        node
+    elseif node.kind === freeze
+        if haskey(ctx.hints, node.tns)
+            map(InferDimensions(ctx.ctx, ctx.dims), ctx.hints[node.tns])
+            delete!(ctx.hints, node.tns)
+        end
+        node
     elseif node.kind === protocol
         return protocol(ctx(node.idx, dim), node.mode)
     elseif istree(node)
@@ -118,13 +120,11 @@ function (ctx::InferDimensions)(node::FinchNode)
         return infer_dimensions_access(node, ctx, node.tns.val)
     elseif node.kind === access && node.mode.kind === updater && node.tns.kind === variable #TODO perhaps we can get rid of this
         return infer_dimensions_access(node, ctx, node.tns)
-    elseif node.kind === with
-        (cons, _) = ctx(node.cons)
-        return (with(cons, node.prod), nodim)
     elseif node.kind === protocol
         (idx, dim) = ctx(node.idx)
         (protocol(idx, node.mode), dim)
     elseif istree(node)
+        FinchNotation.isstateful(node) && @assert false
         return (similarterm(node, operation(node), map(first, map(ctx, arguments(node)))), nodim)
     else
         return (node, nodim)
@@ -133,8 +133,9 @@ end
 
 declare_dimensions_access(node, ctx, tns::Dimensionalize, dim) = declare_dimensions_access(node, ctx, tns.body, dim)
 function declare_dimensions_access(node, ctx, tns, eldim)
-    if node.mode.kind !== reader
+    if node.mode.kind !== reader && node.tns.kind === variable && haskey(ctx.hints, node.tns)
         shape = map(suggest, virtual_size(tns, ctx.ctx, eldim))
+        push!(ctx.hints[node.tns], node)
     else
         shape = virtual_size(tns, ctx.ctx, eldim)
     end
@@ -334,7 +335,7 @@ function getsize end
 virtual_size(tns, ctx, eldim) = virtual_size(tns, ctx)
 function virtual_size(tns::FinchNode, ctx, eldim = nodim)
     if tns.kind === variable
-        return virtual_size(ctx.bindings[tns.name], ctx, eldim)
+        return virtual_size(ctx.bindings[tns], ctx, eldim)
     else
         return error("unimplemented")
     end
@@ -342,7 +343,7 @@ end
 
 function virtual_elaxis(tns::FinchNode, ctx, dims...)
     if tns.kind === variable
-        return virtual_elaxis(ctx.bindings[tns.name], ctx, dims...)
+        return virtual_elaxis(ctx.bindings[tns], ctx, dims...)
     else
         return error("unimplemented")
     end
@@ -350,7 +351,7 @@ end
 
 function virtual_resize!(tns::FinchNode, ctx, dims...)
     if tns.kind === variable
-        return (ctx.bindings[tns.name], eldim) = virtual_resize!(ctx.bindings[tns.name], ctx, dims...)
+        return (ctx.bindings[tns], eldim) = virtual_resize!(ctx.bindings[tns], ctx, dims...)
     else
         error("unimplemented")
     end

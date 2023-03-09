@@ -14,7 +14,7 @@ int main(int argc, char** argv){
     finch_free(q);
 
     jl_function_t* spmv = finch_eval("function spmv(y, A, x)\n\
-        @finch @loop i j y[i] += A[i, j] * x[j]\n\
+        @finch (y .= 0; @loop i j y[i] += A[i, j] * x[j])\n\
     end");
 
     int m = 4;

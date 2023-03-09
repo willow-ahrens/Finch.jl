@@ -197,6 +197,17 @@ isfill(tns) = false
 isfill(tns::FinchNode) = tns.kind == virtual && tns.val isa Fill
 isvar(tns::FinchNode) = tns.kind == variable
 
+getvars(arr::AbstractArray) = mapreduce(getvars, vcat, arr, init=[])
+function getvars(node::FinchNode) 
+    if node.kind == variable
+        return [node]
+    elseif istree(node)
+        return mapreduce(getvars, vcat, arguments(node), init=[])
+    else
+        return []
+    end
+end
+
 """
     base_rules(alg, ctx)
 
@@ -215,43 +226,11 @@ function base_rules(alg, ctx)
         #TODO default needs to get defined on all writable chunks
         #TODO Does it really though
         #TODO I don't think this is safe to assume if we allow arbitrary updates
-        (@rule assign(access(~a, ~m, ~i...), $(literal(right)), ~b) => if virtual_default(resolve(a, ctx)) != nothing && b == literal(something(virtual_default(resolve(a, ctx)))) pass(access(a, m)) end),
+        (@rule assign(access(~a, ~m, ~i...), $(literal(right)), ~b) => if virtual_default(resolve(a, ctx)) != nothing && b == literal(something(virtual_default(resolve(a, ctx)))) sequence() end),
 
-        #TODO we probably can just drop modes from pass
-        (@rule pass(~a..., access(~b, updater(modify())), ~c...) => pass(a..., c...)),
-
-
-        (@rule loop(~i, pass(~a...)) => pass(a...)),
-        (@rule chunk(~i, ~a, pass(~b...)) => pass(b...)),
-        (@rule with(pass(~a...), ~b) => pass(a...)),
-        (@rule with(~a, pass()) => a),
-        (@rule multi(~a..., pass(~b...), pass(~c...)) => multi(a..., pass(b..., c...))),
-        (@rule multi(pass(~a...)) => pass(a...)),
-        (@rule multi() => pass()),
-
-        (@rule loop(~i, assign(access(~a, updater(~m), ~j...), ~f::isidempotent(alg), ~b)) => begin
-            if i ∉ j && getname(i) ∉ getunbound(b) #=TODO this doesn't work because chunkify temporarily drops indicies so we add =# && isliteral(b)
-                assign(access(a, updater(m), j...), f, b)
-            end
-        end),
-        (@rule loop(~i, multi(~a..., assign(access(~b, updater(~m), ~j...), ~c), ~f::isidempotent(alg), ~d...)) => begin
-            if i ∉ j && getname(i) ∉ getunbound(c) #=TODO this doesn't work because chunkify temporarily drops indicies so we add =# && isliteral(c)
-                multi(assign(access(b, updater(m), j...), c), f, loop(i, multi(a..., d...)))
-            end
-        end),
-
-        (@rule with(~a, assign(access(~b::isvar, updater(create())), ~f, ~c::isliteral)) => begin
-            Rewrite(Postwalk(@rule access(~x::isvar, reader()) => if x == b call(f, virtual_default(resolve(b, ctx)), c) end))(a)
-        end),
-        (@rule with(~a, multi(~b..., assign(access(~c::isvar, updater(create())), ~f, ~d::isliteral), ~e...)) => begin
-            with(Rewrite(Postwalk(@rule access(~x::isvar, reader()) => if x == c call(f, virtual_default(resolve(c, ctx)), d) end))(a), multi(b..., e...))
-        end),
-        (@rule with(~a, pass(~b..., access(~c::isvar, updater(create())), ~d...)) => begin
-            with(Rewrite(Postwalk(@rule access(~x::isvar, reader(), ~i...) => if x == c virtual_default(resolve(c, ctx)) end))(a), pass(b..., d...))
-        end),
-        (@rule with(~a, multi(~b..., pass(~c..., access(~d::isvar, updater(create())), ~e...), ~f...)) => begin
-            with(Rewrite(Postwalk(@rule access(~x::isvar, reader(), ~i...) => if x == d virtual_default(resolve(d, ctx)) end))(a), multi(b..., pass(c..., e...), f...))
-        end),
+        (@rule loop(~i, sequence()) => sequence()),
+        (@rule chunk(~i, ~a, sequence()) => sequence()),
+        (@rule sequence(~a..., sequence(~b...), ~c...) => sequence(a..., b..., c...)),
 
         (@rule call($(literal(>=)), call($(literal(max)), ~a...), ~b) => call(or, map(x -> call(x >= b), a)...)),
         (@rule call($(literal(>)), call($(literal(max)), ~a...), ~b) => call(or, map(x -> call(x > b), a)...)),
@@ -279,9 +258,9 @@ function base_rules(alg, ctx)
         end),
         (@rule call(~f, ~a) => if isassociative(alg, f) a end), #TODO
 
-        (@rule assign(access(~a, updater(~m), ~i...), ~f, ~b) => if isidentity(alg, f, b) pass(access(a, updater(m))) end),
-        (@rule assign(access(~a, ~m, ~i...), $(literal(missing))) => pass(access(a, m))),
-        (@rule assign(access(~a, ~m, ~i..., $(literal(missing)), ~j...), ~b) => pass(access(a, m))),
+        (@rule assign(access(~a, updater(~m), ~i...), ~f, ~b) => if isidentity(alg, f, b) sequence() end),
+        (@rule assign(access(~a, ~m, ~i...), $(literal(missing))) => sequence()),
+        (@rule assign(access(~a, ~m, ~i..., $(literal(missing)), ~j...), ~b) => sequence()),
         (@rule call($(literal(coalesce)), ~a..., ~b, ~c...) => if isvalue(b) && !(Missing <: b.type) || isliteral(b) && !ismissing(b.val)
             call(coalesce, a..., b)
         end),
@@ -291,7 +270,6 @@ function base_rules(alg, ctx)
         (@rule call($(literal(ifelse)), $(literal(false)), ~a, ~b) => b),
         (@rule call($(literal(ifelse)), ~a, ~b, ~b) => b),
         (@rule $(literal(-0.0)) => literal(0.0)),
-
 
         (@rule call(~f, call(~g, ~a, ~b...)) => if isinverse(alg, f, g) && isassociative(alg, g)
             call(g, call(f, a), map(c -> call(f, call(g, c)), b)...)
@@ -312,28 +290,16 @@ function base_rules(alg, ctx)
         (@rule call($(literal(/)), ~a) => call(inv, a)),
 
         (@rule sieve($(literal(true)), ~a) => a),
-        (@rule sieve($(literal(false)), ~a) => pass(getresults(a)...)),
+        (@rule sieve($(literal(false)), ~a) => sequence()), #TODO should add back skipvisitor
 
         (@rule chunk(~i, ~a, assign(access(~b, updater(~m), ~j...), ~f::isidempotent(alg), ~c)) => begin
             if i ∉ j && getname(i) ∉ getunbound(c)
                 assign(access(b, updater(m), j...), f, c)
             end
         end),
-        (@rule chunk(~i, ~a, multi(~b..., assign(access(~c, updater(~m), ~j...), ~d), ~f::isidempotent(alg), ~e...)) => begin
-            if i ∉ j && getname(i) ∉ getunbound(d)
-                multi(assign(access(b, updater(m), j...), f, d), chunk(i, a, multi(b..., e...)))
-            end
-        end),
-
         (@rule chunk(~i, ~a, assign(access(~b, updater(~m), ~j...), $(literal(+)), ~d)) => begin
             if i ∉ j && getname(i) ∉ getunbound(d)
                 assign(access(b, updater(m), j...), +, call(*, extent(a), d))
-            end
-        end),
-        (@rule chunk(~i, ~a, multi(~b..., assign(access(~c, updater(~m), ~j...), $(literal(+)), ~d), ~e...)) => begin
-            if i ∉ j && getname(i) ∉ getunbound(d)
-                multi(assign(access(c, updater(m), j...), +, call(*, extent(a), d)),
-                    chunk(i, a, multi(b..., e...)))
             end
         end),
     ]
@@ -350,30 +316,6 @@ combine_style(a::DefaultStyle, b::SimplifyStyle) = SimplifyStyle()
 combine_style(a::ThunkStyle, b::SimplifyStyle) = ThunkStyle()
 combine_style(a::SimplifyStyle, b::SimplifyStyle) = SimplifyStyle()
 
-@kwdef struct SimplifyVisitor
-    ctx
-end
-
-function (ctx::SimplifyVisitor)(node)
-    if istree(node)
-        similarterm(node, operation(node), map(ctx, arguments(node)))
-    else
-        node
-    end
-end
-
-function (ctx::SimplifyVisitor)(node::FinchNode)
-    if node.kind === virtual
-        convert(FinchNode, ctx(node.val))
-    elseif istree(node)
-        similarterm(node, operation(node), map(ctx, arguments(node)))
-    else
-        node
-    end
-end
-
-(ctx::SimplifyVisitor)(node::Simplify) = node.body
-
 """
     getrules(alg, ctx)
 
@@ -383,15 +325,28 @@ different algebras.
 """
 getrules(alg, ctx) = base_rules(alg, ctx)
 
+"""
+    getrules(alg, ctx::LowerJulia, var, tns)
+
+Return a list of constant propagation rules for a tensor stored in variable var.
+"""
+getrules(alg, ctx, var, val) = base_rules(alg, ctx, var, val)
+
+base_rules(alg, ctx::LowerJulia, var, tns) = []
+
 getrules(ctx::LowerJulia) = getrules(ctx.algebra, ctx)
 
 function simplify(node, ctx)
-    Rewrite(Fixpoint(Prewalk(Chain(getrules(ctx)))))(node)
+    rules = getrules(ctx.algebra, ctx)
+    for (var, val) in ctx.bindings
+        append!(rules, getrules(ctx.algebra, ctx, var, val))
+    end
+    Rewrite(Fixpoint(Prewalk(Chain(rules))))(node)
 end
 
 function (ctx::LowerJulia)(root, ::SimplifyStyle)
     global rules
-    root = SimplifyVisitor(ctx)(root)
+    root = Rewrite(Prewalk((x) -> if x.kind === virtual && x.val isa Simplify x.val.body end))(root)
     root = simplify(root, ctx)
     ctx(root)
 end
