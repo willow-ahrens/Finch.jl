@@ -5,7 +5,7 @@
 [![Build Status](https://github.com/willow-ahrens/Finch.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/willow-ahrens/Finch.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![Coverage](https://codecov.io/gh/willow-ahrens/Finch.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/willow-ahrens/Finch.jl)
 
-Finch is an adaptable Julia-to-Julia compiler for loop nests over sparse or structured
+Finch is a adaptable Julia-to-Julia compiler for loop nests over sparse or structured
 multidimensional arrays. In addition to supporting [sparse
 arrays](https://en.wikipedia.org/wiki/Sparse_matrix), Finch can also handle
 [custom operators and fill values other than zero](https://en.wikipedia.org/wiki/GraphBLAS),
@@ -31,7 +31,7 @@ A = @fiber(d(sl(e(0.0))), sprand(42, 42, 0.1));
 y = @fiber(d(e(0.0)));
 @finch begin
     y .= 0
-    for j=(:), i=(:)
+    for j=_, i=_
         y[i] += A[i, j] * x[j]
     end
 end
