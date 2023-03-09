@@ -2,6 +2,22 @@
 CurrentModule = Finch
 ```
 
+# Custom Functions
+
+Finch supports arbitrary Julia Base functions over [`isbits`](@ref) types. For your convenience,
+Finch defines a few useful functions that help express common array operations inside Finch:
+
+```@docs
+choose
+minby
+maxby
+```
+
+# User Functions
+
+Users can also define their own functions, and declare their properties to the
+Finch compiler as follows:
+
 ## Register User Functions
 
 Finch uses generated functions to compile kernels. If any functions have been

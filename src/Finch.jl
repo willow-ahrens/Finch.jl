@@ -13,11 +13,11 @@ using Compat
 export @finch, @finch_program, @finch_code, value
 
 export Fiber, Fiber!, SparseList, SparseHash, SparseCOO, SparseBytemap, SparseVBL, Dense, RepeatRLE, Element, Pattern, Scalar
-export walk, fastwalk, gallop, follow, extrude, laminate
+export walk, gallop, follow, extrude, laminate
 export fiber, @fiber, pattern!, dropdefaults, dropdefaults!
 export diagmask, lotrimask, uptrimask, bandmask
 
-export choose
+export choose, minby, maxby
 
 export permit, offset, staticoffset, window
 
@@ -104,6 +104,7 @@ register(DefaultAlgebra)
 end
 
 include("glue_AbstractArrays.jl")
+include("glue_AbstractUnitRanges.jl")
 include("glue_SparseArrays.jl")
 function __init__()
     #@require SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf" include("glue_SparseArrays.jl")

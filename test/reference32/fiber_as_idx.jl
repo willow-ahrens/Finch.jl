@@ -18,8 +18,8 @@ begin
         I_lvl_i1 = 0
     end
     i = 1
-    while I_lvl_q + 1 < I_lvl_q_stop && I_lvl.idx[I_lvl_q] < 1
-        I_lvl_q += 1
+    if I_lvl.idx[I_lvl_q] < 1
+        I_lvl_q = scansearch(I_lvl.idx, 1, I_lvl_q, I_lvl_q_stop - 1)
     end
     while i <= I_lvl.I
         i_start = i
