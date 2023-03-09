@@ -122,4 +122,37 @@ using SparseArrays
 
         @test isstructequal(w, fiber(v))
     end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/121
+
+    let
+        io = IOBuffer()
+        y = [2.0, Inf, Inf, 1.0, 3.0, Inf]
+        yf = @fiber(sl(e(Inf)), y)
+        println(io, "@fiber(sl(e(Inf)), $y):")
+        println(io, yf)
+
+        x = Scalar(Inf)
+
+        @test check_output("inf_minimum.jl", @finch_code (for i=_; x[] <<min>>= yf[i] end))
+        @finch for i=_; x[] <<min>>= yf[i] end
+        @test x[] == 1.0
+
+        @test check_output("inf_repr.txt", String(take!(io)))
+
+        io = IOBuffer()
+        y = [2.0, NaN, NaN, 1.0, 3.0, NaN]
+        yf = @fiber(sl(e(NaN)), y)
+        println(io, "@fiber(sl(e(NaN)), $y):")
+        println(io, yf)
+
+        x = Scalar(Inf)
+
+        @test check_output("nan_minimum.jl", @finch_code (for i=_; x[] <<min>>= yf[i] end))
+        @finch for i=_; x[] <<min>>= yf[i] end
+        @test isequal(x[], NaN)
+
+        @test check_output("nan_repr.txt", String(take!(io)))
+    end
+
 end
