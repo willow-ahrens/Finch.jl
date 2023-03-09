@@ -152,3 +152,24 @@ Base.@propagate_inbounds function scansearch(v, x, lo::T, hi::T)::T where T<:Int
     end
     return hi
 end
+
+struct CIndex{T} <: Integer
+    val::T
+end
+
+cindex_types = [Bool, Int8, Int16, Int32, Int64, Int128, UInt8, UInt16, UInt32, UInt64, UInt128, BigInt]
+for S in cindex_types
+    @eval begin
+        @inline Base.promote_rule(::Type{CIndex{T}}, ::Type{$S}) where {T} = CIndex{promote_type(T, $S)}
+        Base.convert(::Type{CIndex{T}}, i::$S) where {T} = CIndex(convert(T, i - true))
+    end
+end
+Base.promote_rule(::Type{CIndex{T}}, ::Type{CIndex{S}}) where {T, S} = CIndex{promote_type(T, S)}
+
+cindex_binops = [:*, :+]
+
+for Ti in cindex_types, op in cindex_binops
+    @eval @inline Base.$op(a::CIndex{T}, b::CIndex{T}) where {T} = CIndex($op(a.val + true, b.val + true)-true)
+end
+
+Base.to_index(i::CIndex) = Base.to_index(i.val + true)
