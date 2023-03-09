@@ -55,11 +55,11 @@ begin
             if phase_stop >= k_start
                 k_4 = k
                 k = k_start
-                while A_lvl_2_q + 1 < A_lvl_2_q_stop && A_lvl_2.idx[A_lvl_2_q] < k_start
-                    A_lvl_2_q += 1
+                if A_lvl_2.idx[A_lvl_2_q] < k_start
+                    A_lvl_2_q = scansearch(A_lvl_2.idx, k_start, A_lvl_2_q, A_lvl_2_q_stop - 1)
                 end
-                while A_lvl_2_q_2 + 1 < A_lvl_2_q_stop_2 && A_lvl_2.idx[A_lvl_2_q_2] < k_start
-                    A_lvl_2_q_2 += 1
+                if A_lvl_2.idx[A_lvl_2_q_2] < k_start
+                    A_lvl_2_q_2 = scansearch(A_lvl_2.idx, k_start, A_lvl_2_q_2, A_lvl_2_q_stop_2 - 1)
                 end
                 while k <= phase_stop
                     k_start_2 = k

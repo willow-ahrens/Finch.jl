@@ -58,8 +58,8 @@ begin
         if phase_stop_3 >= i_start_3
             i_8 = i
             i = i_start_3
-            if B_lvl.idx[B_lvl_q] < (+)(i_start_3, (-)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta))
-                B_lvl_q = scansearch(B_lvl.idx, (+)(i_start_3, (-)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta)), B_lvl_q, B_lvl_q_stop - 1)
+            if B_lvl.idx[B_lvl_q] < (+)(i_start_3, (-)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta))
+                B_lvl_q = scansearch(B_lvl.idx, (+)(i_start_3, (-)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta)), B_lvl_q, B_lvl_q_stop - 1)
             end
             while i <= phase_stop_3
                 i_start_4 = i
@@ -216,8 +216,8 @@ begin
             if A_lvl.idx[A_lvl_q] < i_start_7
                 A_lvl_q = scansearch(A_lvl.idx, i_start_7, A_lvl_q, A_lvl_q_stop - 1)
             end
-            if B_lvl.idx[B_lvl_q] < (+)(i_start_7, (-)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta))
-                B_lvl_q = scansearch(B_lvl.idx, (+)(i_start_7, (-)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta)), B_lvl_q, B_lvl_q_stop - 1)
+            if B_lvl.idx[B_lvl_q] < (+)(i_start_7, (-)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta))
+                B_lvl_q = scansearch(B_lvl.idx, (+)(i_start_7, (-)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta)), B_lvl_q, B_lvl_q_stop - 1)
             end
             while i <= phase_stop_10
                 i_start_8 = i
@@ -433,8 +433,8 @@ begin
         if phase_stop_20 >= i_start_12
             i_37 = i
             i = i_start_12
-            if B_lvl.idx[B_lvl_q] < (+)(i_start_12, (-)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta))
-                B_lvl_q = scansearch(B_lvl.idx, (+)(i_start_12, (-)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta)), B_lvl_q, B_lvl_q_stop - 1)
+            if B_lvl.idx[B_lvl_q] < (+)(i_start_12, (-)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta))
+                B_lvl_q = scansearch(B_lvl.idx, (+)(i_start_12, (-)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta)), B_lvl_q, B_lvl_q_stop - 1)
             end
             while i <= phase_stop_20
                 i_start_13 = i

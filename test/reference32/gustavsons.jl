@@ -94,11 +94,11 @@ begin
                     i = 1
                     i_start = i
                     phase_stop_3 = (min)(A_lvl_2.I, A_lvl_2_i1_2)
-                    if phase_stop_3 >= j_start
-                        j_7 = j
-                        j = j_start
-                        if A_lvl_2.idx[A_lvl_2_q_2] < j_start
-                            A_lvl_2_q_2 = scansearch(A_lvl_2.idx, j_start, A_lvl_2_q_2, A_lvl_2_q_stop_2 - 1)
+                    if phase_stop_3 >= i_start
+                        i_7 = i
+                        i = i_start
+                        if A_lvl_2.idx[A_lvl_2_q_2] < i_start
+                            A_lvl_2_q_2 = scansearch(A_lvl_2.idx, i_start, A_lvl_2_q_2, A_lvl_2_q_stop_2 - 1)
                         end
                         while i <= phase_stop_3
                             i_start_2 = i
