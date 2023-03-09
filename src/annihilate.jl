@@ -228,7 +228,7 @@ function base_rules(alg, ctx)
         #TODO default needs to get defined on all writable chunks
         #TODO Does it really though
         #TODO I don't think this is safe to assume if we allow arbitrary updates
-        (@rule assign(access(~a, ~m, ~i...), $(literal(right)), ~b) => if virtual_default(resolve(a, ctx)) !== nothing && b == literal(virtual_default(resolve(a, ctx))) sequence() end),
+        (@rule assign(access(~a, ~m, ~i...), $(literal(right)), ~b) => if virtual_default(resolve(a, ctx)) !== nothing && b == literal(something(virtual_default(resolve(a, ctx)))) sequence() end),
 
         (@rule loop(~i, sequence()) => sequence()),
         (@rule chunk(~i, ~a, sequence()) => sequence()),

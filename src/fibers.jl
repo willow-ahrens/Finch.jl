@@ -104,7 +104,7 @@ function virtual_resize!(tns::AbstractVirtualFiber, ctx, dims...)
 end
 virtual_eltype(tns::AbstractVirtualFiber) = virtual_level_eltype(tns.lvl)
 virtual_elaxis(tns::AbstractVirtualFiber) = nodim
-virtual_default(tns::AbstractVirtualFiber) = virtual_level_default(tns.lvl)
+virtual_default(tns::AbstractVirtualFiber) = Some(virtual_level_default(tns.lvl))
 
 """
     default(fbr)
