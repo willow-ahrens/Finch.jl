@@ -122,4 +122,65 @@ using SparseArrays
 
         @test isstructequal(w, fiber(v))
     end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/121
+
+    let
+        io = IOBuffer()
+        y = [2.0, Inf, Inf, 1.0, 3.0, Inf]
+        yf = @fiber(sl(e(Inf)), y)
+        println(io, "@fiber(sl(e(Inf)), $y):")
+        println(io, yf)
+
+        x = Scalar(Inf)
+
+        @test check_output("specialvals_minimum_inf.jl", @finch_code (for i=_; x[] <<min>>= yf[i] end))
+        @finch for i=_; x[] <<min>>= yf[i] end
+        @test x[] == 1.0
+
+        @test check_output("specialvals_repr_inf.txt", String(take!(io)))
+
+        io = IOBuffer()
+        y = [2.0, NaN, NaN, 1.0, 3.0, NaN]
+        yf = @fiber(sl(e(NaN)), y)
+        println(io, "@fiber(sl(e(NaN)), $y):")
+        println(io, yf)
+
+        x = Scalar(Inf)
+
+        @test check_output("specialvals_minimum_nan.jl", @finch_code (for i=_; x[] <<min>>= yf[i] end))
+        @finch for i=_; x[] <<min>>= yf[i] end
+        @test isequal(x[], NaN)
+
+        @test check_output("specialvals_repr_nan.txt", String(take!(io)))
+
+        io = IOBuffer()
+        y = [2.0, missing, missing, 1.0, 3.0, missing]
+        yf = @fiber(sl(e{missing, Union{Float64,Missing}}()), y)
+        println(io, "@fiber(sl(e(missing)), $y):")
+        println(io, yf)
+
+        x = Scalar(Inf)
+
+        @test check_output("specialvals_minimum_missing.jl", @finch_code (for i=_; x[] <<min>>= yf[i] end))
+        @finch for i=_; x[] <<min>>= coalesce(yf[i], missing, Inf) end
+        @test x[] == 1.0
+
+        @test check_output("specialvals_repr_missing.txt", String(take!(io)))
+
+        io = IOBuffer()
+        y = [2.0, nothing, nothing, 1.0, 3.0, Some(1.0), nothing]
+        yf = @fiber(sl(e{nothing, Union{Float64,Nothing,Some{Float64}}}()), y)
+        println(io, "@fiber(sl(e(nothing)), $y):")
+        println(io, yf)
+
+        x = Scalar(Inf)
+
+        @test check_output("specialvals_minimum_nothing.jl", @finch_code (for i=_; x[] <<min>>= something(yf[i], nothing, Inf) end))
+        @finch for i=_; x[] <<min>>= something(yf[i], nothing, Inf) end
+        @test x[] == 1.0
+
+        @test check_output("specialvals_repr_nothing.txt", String(take!(io)))
+    end
+
 end
