@@ -54,7 +54,7 @@ end
 
 macro repl(io, ex)
     quote
-        println($(esc(io)), "julia> ", $(QuoteNode(ex)))
+        println($(esc(io)), "julia> ", Finch.striplines($(QuoteNode(ex))))
         show($(esc(io)), MIME("text/plain"), $(esc(ex)))
         println($(esc(io)))
     end
