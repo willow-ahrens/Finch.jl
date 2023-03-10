@@ -57,8 +57,8 @@ summary_f_code(lvl::SparseListLevel) = "sl($(summary_f_code(lvl.lvl)))"
 similar_level(lvl::SparseListLevel) = SparseList(similar_level(lvl.lvl))
 similar_level(lvl::SparseListLevel, dim, tail...) = SparseList(similar_level(lvl.lvl, tail...), dim)
 
-pattern!(lvl::SparseListLevel{Ti}) where {Ti} = 
-    SparseListLevel{Ti}(pattern!(lvl.lvl), lvl.I, lvl.ptr, lvl.idx)
+pattern!(lvl::SparseListLevel{Ti, Tp}) where {Ti, Tp} = 
+    SparseListLevel{Ti, Tp}(pattern!(lvl.lvl), lvl.I, lvl.ptr, lvl.idx)
 
 function Base.show(io::IO, lvl::SparseListLevel{Ti, Tp}) where {Ti, Tp}
     if get(io, :compact, false)
@@ -131,7 +131,7 @@ function virtualize(ex, ::Type{SparseListLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) whe
 end
 function (ctx::Finch.LowerJulia)(lvl::VirtualSparseListLevel)
     quote
-        $SparseListLevel{$(lvl.Ti)}(
+        $SparseListLevel{$(lvl.Ti), $(lvl.Tp)}(
             $(ctx(lvl.lvl)),
             $(ctx(lvl.I)),
             $(lvl.ex).ptr,

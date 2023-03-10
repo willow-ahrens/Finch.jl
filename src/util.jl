@@ -166,13 +166,14 @@ for S in cindex_types
         CIndex(i::$S) = CIndex{$S}(i)
         (::Type{$S})(i::CIndex{T}) where {T} = convert($S, i.val + true)
         Base.convert(::Type{$S}, i::CIndex) = convert($S, i.val + true)
+        @inline Base.:(<<)(a::CIndex{T}, b::$S) where {T} = T(a) << b
     end
 end
 Base.promote_rule(::Type{CIndex{T}}, ::Type{CIndex{S}}) where {T, S} = CIndex{promote_type(T, S)}
 Base.convert(::Type{CIndex{T}}, i::CIndex) where {T} = CIndex{T}(convert(T, i.val), false)
 Base.hash(x::CIndex, h::UInt) = hash(typeof(x), hash(x.val, h))
 
-cindex_binops = [:*, :+]
+cindex_binops = [:*, :+, :-]
 
 for op in cindex_binops
     @eval @inline Base.$op(a::CIndex{T}, b::CIndex{T}) where {T} = CIndex($op(T(a), T(b)))
