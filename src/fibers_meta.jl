@@ -117,6 +117,8 @@ Base.getindex(arr::Fiber, inds...) = getindex_helper(arr, to_indices(arr, inds).
 end
 
 @generated function copyto_helper!(dst, src)
+    ndims(dst) > ndims(src) && throw(DimensionMismatch("more dimensions in destination than source"))
+    ndims(dst) < ndims(src) && throw(DimensionMismatch("less dimensions in destination than source"))
     idxs = [Symbol(:i_, n) for n = 1:ndims(dst)]
     return quote
         @finch begin
@@ -138,6 +140,8 @@ end
 dropdefaults(src) = dropdefaults!(similar(src), src)
 
 @generated function dropdefaults!(dst::Fiber, src)
+    ndims(dst) > ndims(src) && throw(DimensionMismatch("more dimensions in destination than source"))
+    ndims(dst) < ndims(src) && throw(DimensionMismatch("less dimensions in destination than source"))
     idxs = [Symbol(:i_, n) for n = 1:ndims(dst)]
     T = eltype(dst)
     d = default(dst)

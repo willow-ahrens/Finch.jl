@@ -41,6 +41,7 @@ struct SparseCOOLevel{N, Ti<:Tuple, Tp, Tbl, Lvl}
 end
 const SparseCOO = SparseCOOLevel
 
+SparseCOOLevel(lvl) = throw(ArgumentError("You must specify the number of dimensions in a SparseCOOLevel, e.g. @fiber(sc{2}(e(0.0)))"))
 SparseCOOLevel(lvl, I, args...) = SparseCOOLevel{length(I)}(lvl, I, args...)
 SparseCOOLevel{N}(lvl) where {N} = SparseCOOLevel{N, NTuple{N, Int}}(lvl)
 SparseCOOLevel{N}(lvl, I, args...) where {N} = SparseCOOLevel{N, typeof(I)}(lvl, I, args...)

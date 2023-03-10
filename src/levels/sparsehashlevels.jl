@@ -41,6 +41,7 @@ struct SparseHashLevel{N, Ti<:Tuple, Tp, Tbl, Lvl}
 end
 const SparseHash = SparseHashLevel
 
+SparseHashLevel(lvl) = throw(ArgumentError("You must specify the number of dimensions in a SparseHashLevel, e.g. @fiber(sh{2}(e(0.0)))"))
 SparseHashLevel(lvl, I, args...) = SparseHashLevel{length(I)}(lvl, I, args...)
 SparseHashLevel{N}(lvl) where {N} = SparseHashLevel{N, NTuple{N, Int}}(lvl)
 SparseHashLevel{N}(lvl, I, args...) where {N} = SparseHashLevel{N, typeof(I)}(lvl, I, args...)

@@ -212,4 +212,26 @@ using Finch: Cindex
         @test check_output("issue118.txt", String(take!(io)))
     end
 
+    #https://github.com/willow-ahrens/Finch.jl/issues/97
+
+    let
+        @test_throws DimensionMismatch A = @fiber(d(sl(e(0.0))), [0, 1])
+        A = fsprand((10, 11), 0.5)
+        B = @fiber d(sl(e(0.0)))
+        C = fsprand((10, 10), 0.5)
+        @test_throws DimensionMismatch @finch (A .= 0; @loop j i A[i, j] = B[i])
+        @test_throws DimensionMismatch @finch (A .= 0; @loop j i A[i] = B[i, j])
+        @test_throws DimensionMismatch @finch (A .= 0; @loop j i A[i, j] = B[i, j] + C[i, j])
+        @test_throws DimensionMismatch copyto!(@fiber(sl(e(0.0))), A)
+        @test_throws DimensionMismatch dropdefaults!(@fiber(sl(e(0.0))), A)
+
+        A = fsprand((10, 11), 0.5)
+        B = fsprand((10, 10), 0.5)
+        @test_throws Finch.FormatLimitation @finch @loop j i A[i, j] = B[i, j::follow]
+        @test_throws Finch.FormatLimitation @finch @loop j i A[j, i] = B[i, j]
+        @test_throws ArgumentError @fiber(sc(e(0.0)))
+        @test_throws ArgumentError @fiber(sh(e(0.0)))
+        @test_throws ArgumentError @fiber(sl(e("hello")))
+    end
+
 end
