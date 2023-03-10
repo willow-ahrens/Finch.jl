@@ -153,30 +153,30 @@ Base.@propagate_inbounds function scansearch(v, x, lo::T, hi::T)::T where T<:Int
     return hi
 end
 
-struct CIndex{T} <: Integer
+struct Cindex{T} <: Integer
     val::T
-    CIndex{T}(i::T, b::Bool=true) where {T} = new{T}(i - b)
+    Cindex{T}(i, b::Bool=true) where {T} = new{T}(T(i) - b)
 end
 
 cindex_types = [Int8, Int16, Int32, Int64, Int128, UInt8, UInt16, UInt32, UInt64, UInt128, BigInt]
 for S in cindex_types
     @eval begin
-        @inline Base.promote_rule(::Type{CIndex{T}}, ::Type{$S}) where {T} = promote_type(T, $S)
-        Base.convert(::Type{CIndex{T}}, i::$S) where {T} = CIndex(convert(T, i))
-        CIndex(i::$S) = CIndex{$S}(i)
-        (::Type{$S})(i::CIndex{T}) where {T} = convert($S, i.val + true)
-        Base.convert(::Type{$S}, i::CIndex) = convert($S, i.val + true)
-        @inline Base.:(<<)(a::CIndex{T}, b::$S) where {T} = T(a) << b
+        @inline Base.promote_rule(::Type{Cindex{T}}, ::Type{$S}) where {T} = promote_type(T, $S)
+        Base.convert(::Type{Cindex{T}}, i::$S) where {T} = Cindex(convert(T, i))
+        Cindex(i::$S) = Cindex{$S}(i)
+        (::Type{$S})(i::Cindex{T}) where {T} = convert($S, i.val + true)
+        Base.convert(::Type{$S}, i::Cindex) = convert($S, i.val + true)
+        @inline Base.:(<<)(a::Cindex{T}, b::$S) where {T} = T(a) << b
     end
 end
-Base.promote_rule(::Type{CIndex{T}}, ::Type{CIndex{S}}) where {T, S} = CIndex{promote_type(T, S)}
-Base.convert(::Type{CIndex{T}}, i::CIndex) where {T} = CIndex{T}(convert(T, i.val), false)
-Base.hash(x::CIndex, h::UInt) = hash(typeof(x), hash(x.val, h))
+Base.promote_rule(::Type{Cindex{T}}, ::Type{Cindex{S}}) where {T, S} = Cindex{promote_type(T, S)}
+Base.convert(::Type{Cindex{T}}, i::Cindex) where {T} = Cindex{T}(convert(T, i.val), false)
+Base.hash(x::Cindex, h::UInt) = hash(typeof(x), hash(x.val, h))
 
 cindex_binops = [:*, :+, :-]
 
 for op in cindex_binops
-    @eval @inline Base.$op(a::CIndex{T}, b::CIndex{T}) where {T} = CIndex($op(T(a), T(b)))
+    @eval @inline Base.$op(a::Cindex{T}, b::Cindex{T}) where {T} = Cindex($op(T(a), T(b)))
 end
 
-@inline Base.isless(a::CIndex{T}, b::CIndex{T}) where {T} = isless(T(a), T(b))
+@inline Base.isless(a::Cindex{T}, b::Cindex{T}) where {T} = isless(T(a), T(b))
