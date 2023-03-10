@@ -207,12 +207,12 @@ SparseList (0.0) [1:10]
 ├─[9]: 6.0
 
 julia> redefault!(A, Inf)
-SparseList (false) [1:10]
-├─[1]: true
-├─[3]: true
-├─[5]: true
-├─[7]: true
-├─[9]: true
+SparseList (Inf) [1:10]
+├─[1]: 2.0
+├─[3]: 3.0
+├─[5]: 4.0
+├─[7]: 5.0
+├─[9]: 6.0
 ```
 """
 redefault!(fbr::Fiber, init) = Fiber(redefault!(fbr.lvl, init))
