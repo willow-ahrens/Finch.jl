@@ -72,7 +72,7 @@
         if m == n
             A = fiber(A_ref)
             B = @fiber(d(sl(e(0.0))))
-            w = @fiber(sm(e(0.0)))
+            w = @fiber(sbm(e(0.0)))
 
             if !seen
                 code = @finch_code begin

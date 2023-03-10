@@ -3,7 +3,7 @@
 
     formats = [
         "list" => SparseList{Int64, Int64},
-        "byte" => SparseBytemap{Int64, Int64},
+        "byte" => SparseByteMap{Int64, Int64},
         "hash1" => SparseHash{1, Tuple{Int64}, Int64},
         "coo1" => SparseCOO{1, Tuple{Int64}, Int64},
         "dense" => Dense{Int64},

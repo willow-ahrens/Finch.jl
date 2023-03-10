@@ -1,4 +1,4 @@
-@fiber(d(sv(e(zero))) representation:
+@fiber(d(svb(e(zero))) representation:
 
 array: [0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0]
 fiber: Fiber(Dense{Int64}(SparseVBL{Int64, Int64}(Element{0.0, Float64}([]), 5, [1, 1, 1, 1, 1, 1], [], [1]), 5))

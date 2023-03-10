@@ -5,7 +5,7 @@ tikzshow(io, fbr::Fiber) = tikzshow(io, SubFiber(fbr.lvl, 1), "A", "A", 0, 0)
 tikzshow(io, fbr) = tikzshow(io, fbr, 0)
 tikzwidth(fbr::SubFiber{<:ElementLevel}) = 1
 tikzwidth(fbr::SubFiber{<:DenseLevel}) =
-    sum(p->max(tikzwidth(SubFiber(fbr.lvl.lvl, p)), 1), ((fbr.pos - 1) * fbr.lvl.I) .+ (1:fbr.lvl.I), init=1.5)
+    sum(p->max(tikzwidth(SubFiber(fbr.lvl.lvl, p)), 1), ((fbr.pos - 1) * fbr.lvl.shape) .+ (1:fbr.lvl.shape), init=1.5)
 function tikzshow(io, fbr::SubFiber{<:DenseLevel}, tag, anchor, y0, x0)
     lvl = fbr.lvl
     mtx = "$(tag)d$(ndims(fbr))p$(fbr.pos)"
@@ -20,11 +20,11 @@ function tikzshow(io, fbr::SubFiber{<:DenseLevel}, tag, anchor, y0, x0)
         ampersand replacement=\\&,
         anchor=north] at ($(x0 + tikzwidth(fbr)/2)*\\myunit, $(y0-1)*\\myunit)
     {""")
-    join(io, ["|[fullsty]|" for i=1:lvl.I], "\\&"); println(io, "\\\\")
+    join(io, ["|[fullsty]|" for i=1:lvl.shape], "\\&"); println(io, "\\\\")
     println(io, "};")
-    p = (fbr.pos - 1) * fbr.lvl.I
+    p = (fbr.pos - 1) * fbr.lvl.shape
     x = x0
-    for i = 1:lvl.I
+    for i = 1:lvl.shape
         p += 1
         subfbr = SubFiber(lvl.lvl, p)
         subanchor = "$mtx-1-$i"
@@ -38,14 +38,14 @@ function tikzwidth(fbr::SubFiber{<:SparseListLevel})
     lvl = fbr.lvl
     qoss = lvl.ptr[fbr.pos]:lvl.ptr[fbr.pos + 1]-1
     w = sum(p->max(tikzwidth(SubFiber(lvl.lvl, p)), 1), qoss, init=1.5)
-    w += lvl.I - length(qoss)
+    w += lvl.shape - length(qoss)
 end
 
 function tikzwidth(fbr::SubFiber{<:SparseCOOLevel})
     lvl = fbr.lvl
     qoss = lvl.ptr[fbr.pos]:lvl.ptr[fbr.pos + 1]-1
     w = sum(p->max(tikzwidth(SubFiber(lvl.lvl, p)), 1), qoss, init=1.5)
-    w += *(lvl.I...,) - length(qoss)
+    w += *(lvl.shape...,) - length(qoss)
 end
 
 function tikzshow(io, fbr::SubFiber{<:SparseListLevel}, tag, anchor, y0, x0)
@@ -63,7 +63,7 @@ function tikzshow(io, fbr::SubFiber{<:SparseListLevel}, tag, anchor, y0, x0)
         ampersand replacement=\\&,
         anchor=north] at ($(x0 + tikzwidth(fbr)/2)*\\myunit, $(y0 - 1)*\\myunit)
     {""")
-    join(io, [i in lvl.idx[qoss] ? "|[fullsty]|" : "|[zcsty]|" for i=1:lvl.I], "\\&"); println(io, "\\\\")
+    join(io, [i in lvl.idx[qoss] ? "|[fullsty]|" : "|[zcsty]|" for i=1:lvl.shape], "\\&"); println(io, "\\\\")
     println(io, "};")
     #println(io, "\\node ($(node)l) [whclsty, anchor=south] at ($(x0 + tikzwidth(fbr)/2)*\\myunit, $y0*\\myunit) {};")
     #println(io, "\\node[whclsty, anchor=south] at ($(x0)*\\myunit, $y0*\\myunit) {$(lvl.ptr[fbr.pos])};")
@@ -97,7 +97,7 @@ function tikzshow(io, fbr::SubFiber{<:SparseCOOLevel{N}}, tag, anchor, y0, x0) w
         anchor=north] at ($(x0 + tikzwidth(fbr)/2)*\\myunit, $(y0 - 1)*\\myunit)
     {""")
     idxs = collect(zip(lvl.tbl...))
-    join(io, [Tuple(i) in idxs[qoss] ? "|[fullsty]|" : "|[zcsty]|" for i=CartesianIndices(lvl.I)], "\\&"); println(io, "\\\\")
+    join(io, [Tuple(i) in idxs[qoss] ? "|[fullsty]|" : "|[zcsty]|" for i=CartesianIndices(lvl.shape)], "\\&"); println(io, "\\\\")
     println(io, "};")
     #println(io, "\\node ($(node)l) [whclsty, anchor=south] at ($(x0 + tikzwidth(fbr)/2)*\\myunit, $y0*\\myunit) {};")
     #println(io, "\\node[whclsty, anchor=south] at ($(x0)*\\myunit, $y0*\\myunit) {$(lvl.ptr[fbr.pos])};")
@@ -106,7 +106,7 @@ function tikzshow(io, fbr::SubFiber{<:SparseCOOLevel{N}}, tag, anchor, y0, x0) w
     for q in qoss
         i = idxs[q]
         subfbr = SubFiber(lvl.lvl, q)
-        subanchor = "$mtx-1-$(LinearIndices(fbr.lvl.I)[i...])"
+        subanchor = "$mtx-1-$(LinearIndices(fbr.lvl.shape)[i...])"
         subnode = tikzshow(io, subfbr, tag, subanchor, y0 - 4, x)
         println(io, "\\draw ($subanchor.center) -- ($subnode.north) node [midway, fill=white] {[$(":,"^(ndims(fbr)-N))$(join(i,","))]};")
         x += tikzwidth(subfbr)

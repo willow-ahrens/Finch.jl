@@ -42,14 +42,14 @@ using Base.Meta
     test_format(vecs, name = "@fiber(sl(e(zero))", key = "sl_e") do arr
         dropdefaults!(Fiber!(SparseList(Element(zero(eltype(arr))))), arr)
     end
-    test_format(vecs, name = "@fiber(sv(e(zero))", key = "sv_e") do arr
+    test_format(vecs, name = "@fiber(svb(e(zero))", key = "sv_e") do arr
         dropdefaults!(Fiber!(SparseVBL(Element(zero(eltype(arr))))), arr)
     end
     test_format(vecs, name = "@fiber(rl(zero)", key = "rl") do arr
         dropdefaults!(Fiber!(RepeatRLE(zero(eltype(arr)))), arr)
     end
-    test_format(vecs, name = "@fiber(sm(e(zero))", key = "sm_e") do arr
-        dropdefaults!(Fiber!(SparseBytemap(Element(zero(eltype(arr))))), arr)
+    test_format(vecs, name = "@fiber(sbm(e(zero))", key = "sm_e") do arr
+        dropdefaults!(Fiber!(SparseByteMap(Element(zero(eltype(arr))))), arr)
     end
     test_format(vecs, name = "@fiber(sh{1}(e(zero))", key = "sh1_e") do arr
         dropdefaults!(Fiber!(SparseHash{1}(Element(zero(eltype(arr))))), arr)
@@ -73,14 +73,14 @@ using Base.Meta
     test_format(mats, name = "@fiber(d(sl(e(zero)))", key = "d_sl_e") do arr
         dropdefaults!(Fiber!(Dense(SparseList(Element(zero(eltype(arr)))))), arr)
     end
-    test_format(mats, name = "@fiber(d(sv(e(zero)))", key = "d_sv_e") do arr
+    test_format(mats, name = "@fiber(d(svb(e(zero)))", key = "d_sv_e") do arr
         dropdefaults!(Fiber!(Dense(SparseVBL(Element(zero(eltype(arr)))))), arr)
     end
     test_format(mats, name = "@fiber(d(rl(zero))", key = "d_rl") do arr
         dropdefaults!(Fiber!(Dense(RepeatRLE(zero(eltype(arr))))), arr)
     end
-    test_format(mats, name = "@fiber(d(sm(e(zero)))", key = "d_sm_e") do arr
-        dropdefaults!(Fiber!(Dense(SparseBytemap(Element(zero(eltype(arr)))))), arr)
+    test_format(mats, name = "@fiber(d(sbm(e(zero)))", key = "d_sm_e") do arr
+        dropdefaults!(Fiber!(Dense(SparseByteMap(Element(zero(eltype(arr)))))), arr)
     end
     test_format(mats, name = "@fiber(d(sh{1}(e(zero)))", key = "d_sh1_e") do arr
         dropdefaults!(Fiber!(Dense(SparseHash{1}(Element(zero(eltype(arr)))))), arr)
@@ -95,14 +95,14 @@ using Base.Meta
     test_format(mats, name = "@fiber(sl(sl(e(zero)))", key = "sl_sl_e") do arr
         dropdefaults!(Fiber!(SparseList(SparseList(Element(zero(eltype(arr)))))), arr)
     end
-    test_format(mats, name = "@fiber(sl(sv(e(zero)))", key = "sl_sv_e") do arr
+    test_format(mats, name = "@fiber(sl(svb(e(zero)))", key = "sl_sv_e") do arr
         dropdefaults!(Fiber!(SparseList(SparseVBL(Element(zero(eltype(arr)))))), arr)
     end
     test_format(mats, name = "@fiber(sl(rl(zero))", key = "sl_rl") do arr
         dropdefaults!(Fiber!(SparseList(RepeatRLE(zero(eltype(arr))))), arr)
     end
-    test_format(mats, name = "@fiber(sl(sm(e(zero)))", key = "sl_sm_e") do arr
-        dropdefaults!(Fiber!(SparseList(SparseBytemap(Element(zero(eltype(arr)))))), arr)
+    test_format(mats, name = "@fiber(sl(sbm(e(zero)))", key = "sl_sm_e") do arr
+        dropdefaults!(Fiber!(SparseList(SparseByteMap(Element(zero(eltype(arr)))))), arr)
     end
     test_format(mats, name = "@fiber(sl(sh{1}(e(zero)))", key = "sl_sh1_e") do arr
         dropdefaults!(Fiber!(SparseList(SparseHash{1}(Element(zero(eltype(arr)))))), arr)

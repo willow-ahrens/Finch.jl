@@ -13,6 +13,10 @@ minby
 maxby
 ```
 
+Finch only supports incrementing assignments to arrays such as `+=` or `*=`. If
+you would like to increment `A[i...]` by the value of `ex` with a custom
+reduction operator `op`, you may use the following syntax: `A[i...] <<op>>= ex`.
+
 # User Functions
 
 Users can also define their own functions, and declare their properties to the

@@ -14,7 +14,7 @@ begin
     end
     i = 1
     i_start = i
-    phase_stop = (min)(yf_lvl_i1, yf_lvl.I)
+    phase_stop = (min)(yf_lvl_i1, yf_lvl.shape)
     if phase_stop >= i_start
         i_3 = i
         i = i_start
@@ -38,9 +38,9 @@ begin
         i = phase_stop + 1
     end
     i_start = i
-    if yf_lvl.I >= i_start
+    if yf_lvl.shape >= i_start
         i_6 = i
-        i = yf_lvl.I + 1
+        i = yf_lvl.shape + 1
     end
     (x = (Scalar){Inf, Float64}(x_val),)
 end

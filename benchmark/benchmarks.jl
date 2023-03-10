@@ -90,8 +90,8 @@ function bfs(edges, source=5)
     edges = pattern!(edges)
 
     @assert n == m
-    F = @fiber sm(p(), n)
-    _F = @fiber sm(p(), n)
+    F = @fiber sbm(p(), n)
+    _F = @fiber sbm(p(), n)
     @finch F[source] = true
 
     V = @fiber d(e(false), n)
@@ -145,7 +145,7 @@ end
 
 function spgemm_gustavsons(A, B)
     C = @fiber d(sl(e(0.0)))
-    w = @fiber sm(e(0.0))
+    w = @fiber sbm(e(0.0))
     @finch begin
         C .= 0
         @loop j begin
