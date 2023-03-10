@@ -1,3 +1,5 @@
+const AbstractArrayOrBroadcasted = Union{AbstractArray,Broadcast.Broadcasted}
+
 """
     fiber!(arr, default = zero(eltype(arr)))
 
@@ -143,6 +145,24 @@ Base.setindex!(arr::Fiber, src, inds...) = setindex_helper(arr, src, to_indices(
         return src
     end
 end
+
+function Base.mapreduce(f, op, A::Fiber, As::AbstractArrayOrBroadcasted...; dims=:, init=nothing)=
+    _mapreduce(f, op, A, As..., dims, init)
+function _mapreduce(f, op, As..., dims, init)
+    init === nothing && throw(ArgumentError("Finch requires an initial value for reductions."))
+    init = something(init)
+    allequal(ndims.(As)) || throw(ArgumentError("Finch cannot currently mapreduce arguments with differing numbers of dimensions"))
+    allequal(axes.(As)) || throw(DimensionMismatchError("Finch cannot currently mapreduce arguments with differing size"))
+    reduce(op, Broadcast.broadcasted(f, As...), dims, init)
+end
+
+struct FinchStyle{N} end
+BroadcastStyle(F::Type{<:Fiber}) = FinchStyle{ndims(F)}()
+
+function reduce(op, bc::Broadcasted{FinchStyle{N}}, dims, init) where {N}
+    T = Base.combine_eltypes(bc.f, bc.args::Tuple)
+end
+
 
 @generated function copyto_helper!(dst, src)
     ndims(dst) > ndims(src) && throw(DimensionMismatch("more dimensions in destination than source"))
