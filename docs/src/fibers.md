@@ -167,27 +167,29 @@ end
 ```jldoctest example2
 julia> m = 4; n = 3; ptr_c = [0, 3, 3, 5]; idx_c = [1, 2, 3, 0, 2]; val_c = [1.1, 2.2, 3.3, 4.4, 5.5];
 
-julia> ptr_jl = unsafe_wrap(Array, reinterpret(Ptr{Cindex{Cint}}, pointer(ptr_c)), length(ptr_c); own = false)
-4-element Vector{Cindex{Int32}}:
- Cindex{Int32}(0)
- Cindex{Int32}(0)
- Cindex{Int32}(3)
- Cindex{Int32}(0)
-julia> idx_jl = unsafe_wrap(Array, reinterpret(Ptr{Cindex{Cint}}, pointer(idx_c)), length(idx_c); own = false)
-5-element Vector{Cindex{Int32}}:
- Cindex{Int32}(1)
- Cindex{Int32}(0)
- Cindex{Int32}(2)
- Cindex{Int32}(0)
- Cindex{Int32}(3)
-julia> A = Fiber(Dense(SparseList{Cindex{Cint}, Cindex{Cint}}(Element{0.0, Float64}(val_c), m, ptr_jl, idx_jl), n))
+julia> ptr_jl = unsafe_wrap(Array, reinterpret(Ptr{Cindex{Int}}, pointer(ptr_c)), length(ptr_c); own = false)
+4-element Vector{Cindex{Int64}}:
+ Cindex{Int64}(0)
+ Cindex{Int64}(3)
+ Cindex{Int64}(3)
+ Cindex{Int64}(5)
+julia> idx_jl = unsafe_wrap(Array, reinterpret(Ptr{Cindex{Int}}, pointer(idx_c)), length(idx_c); own = false)
+5-element Vector{Cindex{Int64}}:
+ Cindex{Int64}(1)
+ Cindex{Int64}(2)
+ Cindex{Int64}(3)
+ Cindex{Int64}(0)
+ Cindex{Int64}(2)
+julia> A = Fiber(Dense(SparseList{Cindex{Int}, Cindex{Int}}(Element{0.0, Float64}(val_c), m, ptr_jl, idx_jl), n))
 Dense [:,1:3]
-├─[:,1]: SparseList (0.0) [1:Cindex{Int32}(3)]
-├─[:,2]: SparseList (0.0) [1:Cindex{Int32}(3)]
-│ ├─[Cindex{Int32}(1)]: 0.0
-│ ├─[Cindex{Int32}(0)]: 1.1
-│ ├─[Cindex{Int32}(2)]: 3.3
-├─[:,3]: SparseList (0.0) [1:Cindex{Int32}(3)]
+├─[:,1]: SparseList (0.0) [1:Cindex{Int64}(3)]
+│ ├─[Cindex{Int64}(1)]: 1.1
+│ ├─[Cindex{Int64}(2)]: 2.2
+│ ├─[Cindex{Int64}(3)]: 3.3
+├─[:,2]: SparseList (0.0) [1:Cindex{Int64}(3)]
+├─[:,3]: SparseList (0.0) [1:Cindex{Int64}(3)]
+│ ├─[Cindex{Int64}(0)]: 4.4
+│ ├─[Cindex{Int64}(2)]: 5.5
 ```
 
 We can also convert between representations by by copying to or from `Cindex` fibers.
