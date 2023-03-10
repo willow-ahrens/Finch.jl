@@ -60,6 +60,7 @@ include("levels/elementlevels.jl")
 include("levels/patternlevels.jl")
 
 include("traits.jl")
+include("asarray.jl")
 
 include("modifiers.jl")
 

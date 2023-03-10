@@ -52,6 +52,14 @@ function should_run(name)
     return ("all" in parsed_args["suites"] || name in parsed_args["suites"])
 end
 
+macro repl(io, ex)
+    quote
+        println($(esc(io)), "julia> ", $(QuoteNode(ex)))
+        show($(esc(io)), MIME("text/plain"), $(esc(ex)))
+        println($(esc(io)))
+    end
+end
+
 using Finch
 
 include("data_matrices.jl")

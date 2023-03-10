@@ -241,9 +241,6 @@ function (ctx::ScopeVisitor)(node::FinchNode)
     elseif @capture node sieve(~cond, ~body)
         sieve(ctx(cond), open_scope(body, ctx))
     elseif @capture node declare(~tns, ~init)
-        if !(tns in ctx.scope)
-            tns = ctx.vars[tns] = variable(ctx.freshen(tns.name))
-        end
         push!(ctx.scope, tns)
         declare(ctx(tns), init)
     elseif @capture node freeze(~tns)
@@ -253,11 +250,10 @@ function (ctx::ScopeVisitor)(node::FinchNode)
         node.tns in ctx.scope || ctx.scope === ctx.global_scope || throw(ScopeError("cannot thaw $tns not defined in this scope"))
         thaw(ctx(tns))
     elseif node.kind === variable
-        get!(ctx.vars, node) do
-            node = variable(ctx.freshen(node.name))
+        if !(node in ctx.scope)
             push!(ctx.global_scope, node)
-            node
         end
+        node
     elseif node.kind === index
         haskey(ctx.vars, node) || throw(ScopeError("unbound index $node"))
         ctx.vars[node]
