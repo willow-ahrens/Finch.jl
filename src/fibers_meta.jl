@@ -77,7 +77,6 @@ end
 Base.getindex(arr::Fiber, inds...) = getindex_helper(arr, to_indices(arr, inds)...)
 @generated function getindex_helper(arr::Fiber, inds...)
     @assert ndims(arr) == length(inds)
-    @assert ndims(arr) == length(inds)
     N = ndims(arr)
 
     inds_ndims = ndims.(inds)
@@ -113,6 +112,35 @@ Base.getindex(arr::Fiber, inds...) = getindex_helper(arr, to_indices(arr, inds).
             @loop($(reverse(dst_modes)...), win[$(dst_modes...)] = arr[$(coords...)])
         end
         return win
+    end
+end
+
+Base.setindex!(arr::Fiber, src, inds...) = setindex_helper(arr, src, to_indices(arr, inds)...)
+@generated function setindex_helper(arr::Fiber, src, inds...)
+    @assert ndims(arr) == length(inds)
+    @assert ndims(src) == sum(ndims.(inds))
+    N = ndims(arr)
+
+    T = eltype(arr)
+    syms = [Symbol(:inds_, n) for n = 1:N]
+    modes = [Symbol(:mode_, n) for n = 1:N]
+    coords = map(1:N) do n
+        if ndims(inds[n]) == 0
+            syms[n]
+        elseif inds[n] <: Base.Slice
+            modes[n]
+        else
+            :($(syms[n])[$(modes[n])])
+        end
+    end
+    src_modes = modes[filter(n->ndims(inds[n]) != 0, 1:N)]
+    
+    quote
+        ($(syms...), ) = (inds...,)
+        @finch begin
+            @loop($(reverse(src_modes)...), arr[$(coords...)] = src[$(src_modes...)])
+        end
+        return src
     end
 end
 
