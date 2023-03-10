@@ -17,10 +17,10 @@ SparseVBLLevel{Ti, Tp, Lvl}(lvl, I) where {Ti, Tp, Lvl} =
     SparseVBLLevel{Ti, Tp, Lvl}(lvl, I, Tp[1], Ti[], Ti[])
 
 """
-`f_code(sv)` = [SparseVBLLevel](@ref).
+`f_code(svb)` = [SparseVBLLevel](@ref).
 """
-f_code(::Val{:sv}) = SparseVBL
-summary_f_code(lvl::SparseVBLLevel) = "sv($(summary_f_code(lvl.lvl)))"
+f_code(::Val{:svb}) = SparseVBL
+summary_f_code(lvl::SparseVBLLevel) = "svb($(summary_f_code(lvl.lvl)))"
 similar_level(lvl::SparseVBLLevel) = SparseVBL(similar_level(lvl.lvl))
 similar_level(lvl::SparseVBLLevel, dim, tail...) = SparseVBL(similar_level(lvl.lvl, tail...), dim)
 
@@ -126,7 +126,7 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualSparseVBLLevel)
     end
 end
 
-summary_f_code(lvl::VirtualSparseVBLLevel) = "sv($(summary_f_code(lvl.lvl)))"
+summary_f_code(lvl::VirtualSparseVBLLevel) = "svb($(summary_f_code(lvl.lvl)))"
 
 function virtual_level_size(lvl::VirtualSparseVBLLevel, ctx)
     ext = Extent(literal(lvl.Ti(1)), lvl.I)

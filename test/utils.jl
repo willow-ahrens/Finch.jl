@@ -60,7 +60,7 @@ isstructequal(a::T, b::T) where {T <: SparseVBL} =
     a.ofs == b.ofs &&
     isstructequal(a.lvl, b.lvl)
 
-isstructequal(a::T, b::T) where {T <: SparseBytemap} =
+isstructequal(a::T, b::T) where {T <: SparseByteMap} =
     a.I == b.I &&
     a.ptr == b.ptr &&
     a.tbl == b.tbl &&

@@ -78,7 +78,7 @@
         for inner in [
             () -> SparseList(base()),
             () -> SparseVBL(base()),
-            () -> SparseBytemap(base()),
+            () -> SparseByteMap(base()),
             () -> SparseHash{1}(base()),
             () -> SparseCOO{1}(base()),
         ]
