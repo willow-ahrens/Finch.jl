@@ -8,7 +8,7 @@ begin
     B_lvl = ((ex.bodies[2]).body.rhs.args[2]).tns.tns.lvl
     B_lvl_2 = B_lvl.lvl
     i_start = (min)((+)(1, (((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta), 1)
-    i_stop = (max)(A_lvl.I, (+)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl.I))
+    i_stop = (max)(A_lvl.shape, (+)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl.shape))
     C_lvl_qos_fill = 0
     C_lvl_qos_stop = 0
     (Finch.resize_if_smaller!)(C_lvl.ptr, 1 + 1)
@@ -40,7 +40,7 @@ begin
         i = phase_stop + 1
     end
     i_start_2 = i
-    phase_stop_2 = (min)((+)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl.I), 0, i_stop)
+    phase_stop_2 = (min)((+)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl.shape), 0, i_stop)
     if phase_stop_2 >= i_start_2
         i_7 = i
         B_lvl_q = B_lvl.ptr[1]
@@ -126,7 +126,7 @@ begin
         i = phase_stop_5 + 1
     end
     i_start_2 = i
-    phase_stop_6 = (min)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta, A_lvl.I, i_stop)
+    phase_stop_6 = (min)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta, A_lvl.shape, i_stop)
     if phase_stop_6 >= i_start_2
         i_14 = i
         A_lvl_q = A_lvl.ptr[1]
@@ -186,7 +186,7 @@ begin
         i = phase_stop_6 + 1
     end
     i_start_2 = i
-    phase_stop_9 = (min)(A_lvl.I, (+)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl.I), i_stop)
+    phase_stop_9 = (min)(A_lvl.shape, (+)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl.shape), i_stop)
     if phase_stop_9 >= i_start_2
         i_19 = i
         A_lvl_q = A_lvl.ptr[1]
@@ -331,7 +331,7 @@ begin
         i = phase_stop_9 + 1
     end
     i_start_2 = i
-    phase_stop_15 = (min)(A_lvl.I, i_stop)
+    phase_stop_15 = (min)(A_lvl.shape, i_stop)
     if phase_stop_15 >= i_start_2
         i_29 = i
         A_lvl_q = A_lvl.ptr[1]
@@ -415,7 +415,7 @@ begin
         i = phase_stop_18 + 1
     end
     i_start_2 = i
-    phase_stop_19 = (min)((+)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl.I), i_stop)
+    phase_stop_19 = (min)((+)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl.shape), i_stop)
     if phase_stop_19 >= i_start_2
         i_36 = i
         B_lvl_q = B_lvl.ptr[1]
@@ -509,5 +509,5 @@ begin
     qos = C_lvl.ptr[end] - 1
     resize!(C_lvl.idx, qos)
     resize!(C_lvl_2.val, qos)
-    (C = Fiber((Finch.SparseListLevel){Int64, Int32}(C_lvl_2, (max)(A_lvl.I, (+)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl.I)), C_lvl.ptr, C_lvl.idx)),)
+    (C = Fiber((Finch.SparseListLevel){Int64, Int32}(C_lvl_2, (max)(A_lvl.shape, (+)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl.shape)), C_lvl.ptr, C_lvl.idx)),)
 end

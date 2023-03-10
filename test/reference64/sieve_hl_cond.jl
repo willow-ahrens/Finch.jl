@@ -17,7 +17,7 @@ begin
     end
     j = 1
     j_start = j
-    phase_stop = (min)(A_lvl_i1, A_lvl.I)
+    phase_stop = (min)(A_lvl_i1, A_lvl.shape)
     if phase_stop >= j_start
         j_4 = j
         j = j_start
@@ -54,14 +54,14 @@ begin
         j = phase_stop + 1
     end
     j_start = j
-    if A_lvl.I >= j_start
+    if A_lvl.shape >= j_start
         j_9 = j
-        for j_10 = j_start:A_lvl.I
+        for j_10 = j_start:A_lvl.shape
             cond_4 = (==)(j_10, 1)
             if cond_4
             end
         end
-        j = A_lvl.I + 1
+        j = A_lvl.shape + 1
     end
     (B = (Scalar){0.0, Float64}(B_val),)
 end

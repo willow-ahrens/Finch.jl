@@ -25,7 +25,7 @@ begin
     end
     i = 1
     i_start = i
-    phase_stop = (min)(A_lvl_i1, A_lvl.I)
+    phase_stop = (min)(A_lvl_i1, A_lvl.shape)
     if phase_stop >= i_start
         i_5 = i
         i = i_start
@@ -52,13 +52,13 @@ begin
                 s_3 = s_2
                 j = 1
                 j_start = j
-                phase_stop_3 = (min)(0, s_3, F_lvl.I)
+                phase_stop_3 = (min)(0, s_3, F_lvl.shape)
                 if phase_stop_3 >= j_start
                     j_4 = j
                     j = phase_stop_3 + 1
                 end
                 j_start = j
-                phase_stop_4 = (min)(0, F_lvl.I, (+)(A_lvl.I, s_3))
+                phase_stop_4 = (min)(0, F_lvl.shape, (+)(A_lvl.shape, s_3))
                 if phase_stop_4 >= j_start
                     j_5 = j
                     A_lvl_q_2 = A_lvl.ptr[1]
@@ -85,19 +85,19 @@ begin
                     j = phase_stop_4 + 1
                 end
                 j_start = j
-                phase_stop_6 = (min)(0, F_lvl.I)
+                phase_stop_6 = (min)(0, F_lvl.shape)
                 if phase_stop_6 >= j_start
                     j_8 = j
                     j = phase_stop_6 + 1
                 end
                 j_start = j
-                phase_stop_7 = (min)(s_3, F_lvl.I)
+                phase_stop_7 = (min)(s_3, F_lvl.shape)
                 if phase_stop_7 >= j_start
                     j_9 = j
                     j = phase_stop_7 + 1
                 end
                 j_start = j
-                phase_stop_8 = (min)(F_lvl.I, (+)(A_lvl.I, s_3))
+                phase_stop_8 = (min)(F_lvl.shape, (+)(A_lvl.shape, s_3))
                 if phase_stop_8 >= j_start
                     j_10 = j
                     A_lvl_q_2 = A_lvl.ptr[1]
@@ -127,7 +127,7 @@ begin
                                 if A_lvl_i_2 == (+)(phase_stop_10, (-)(s_3))
                                     A_lvl_2_val_4 = A_lvl_2.val[A_lvl_q_2]
                                     j_13 = phase_stop_10
-                                    F_lvl_q = (1 - 1) * F_lvl.I + j_13
+                                    F_lvl_q = (1 - 1) * F_lvl.shape + j_13
                                     F_lvl_2_val_2 = F_lvl_2.val[F_lvl_q]
                                     C_lvldirty = true
                                     C_lvldirty = true
@@ -148,18 +148,18 @@ begin
                     j = phase_stop_8 + 1
                 end
                 j_start = j
-                if F_lvl.I >= j_start
+                if F_lvl.shape >= j_start
                     j_15 = j
-                    j = F_lvl.I + 1
+                    j = F_lvl.shape + 1
                 end
                 j_start = j
-                phase_stop_11 = (min)(s_3, F_lvl.I)
+                phase_stop_11 = (min)(s_3, F_lvl.shape)
                 if phase_stop_11 >= j_start
                     j_16 = j
                     j = phase_stop_11 + 1
                 end
                 j_start = j
-                phase_stop_12 = (min)(F_lvl.I, (+)(A_lvl.I, s_3))
+                phase_stop_12 = (min)(F_lvl.shape, (+)(A_lvl.shape, s_3))
                 if phase_stop_12 >= j_start
                     j_17 = j
                     A_lvl_q_2 = A_lvl.ptr[1]
@@ -186,9 +186,9 @@ begin
                     j = phase_stop_12 + 1
                 end
                 j_start = j
-                if F_lvl.I >= j_start
+                if F_lvl.shape >= j_start
                     j_20 = j
-                    j = F_lvl.I + 1
+                    j = F_lvl.shape + 1
                 end
                 C_lvl_2.val[C_lvl_qos] = C_lvl_2_val_2
                 if C_lvldirty
@@ -204,9 +204,9 @@ begin
         i = phase_stop + 1
     end
     i_start = i
-    if A_lvl.I >= i_start
+    if A_lvl.shape >= i_start
         i_8 = i
-        i = A_lvl.I + 1
+        i = A_lvl.shape + 1
     end
     C_lvl.ptr[1 + 1] = (C_lvl_qos - C_lvl_qos_fill) - 1
     C_lvl_qos_fill = C_lvl_qos - 1
@@ -218,5 +218,5 @@ begin
     qos = C_lvl.ptr[end] - 1
     resize!(C_lvl.idx, qos)
     resize!(C_lvl_2.val, qos)
-    (C = Fiber((Finch.SparseListLevel){Int64, Int64}(C_lvl_2, A_lvl.I, C_lvl.ptr, C_lvl.idx)),)
+    (C = Fiber((Finch.SparseListLevel){Int64, Int64}(C_lvl_2, A_lvl.shape, C_lvl.ptr, C_lvl.idx)),)
 end

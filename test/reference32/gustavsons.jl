@@ -20,22 +20,22 @@ begin
     w_lvl_5 = ((ex.bodies[2]).body.bodies[3]).body.rhs.tns.tns.lvl
     w_lvl_5_qos_stop = (w_lvl_5_qos_fill = length(w_lvl_5.srt))
     w_lvl_6 = w_lvl_5.lvl
-    A_lvl.I == A_lvl_2.I || throw(DimensionMismatch("mismatched dimension limits ($(A_lvl.I) != $(A_lvl_2.I))"))
+    A_lvl.shape == A_lvl_2.shape || throw(DimensionMismatch("mismatched dimension limits ($(A_lvl.shape) != $(A_lvl_2.shape))"))
     B_lvl_2_qos_fill = 0
     B_lvl_2_qos_stop = 0
-    p_start = (+)((*)((-)(1, 1), A_lvl.I), 1)
-    p_start_2 = (*)(1, A_lvl.I)
+    p_start = (+)((*)((-)(1, 1), A_lvl.shape), 1)
+    p_start_2 = (*)(1, A_lvl.shape)
     (Finch.resize_if_smaller!)(B_lvl_2.ptr, p_start_2 + 1)
     (Finch.fill_range!)(B_lvl_2.ptr, 0, p_start + 1, p_start_2 + 1)
-    for j_4 = 1:A_lvl.I
-        A_lvl_q = (1 - 1) * A_lvl.I + j_4
-        B_lvl_q = (1 - 1) * A_lvl.I + j_4
+    for j_4 = 1:A_lvl.shape
+        A_lvl_q = (1 - 1) * A_lvl.shape + j_4
+        B_lvl_q = (1 - 1) * A_lvl.shape + j_4
         for w_lvl_r = 1:w_lvl_qos_fill
             w_lvl_p = first(w_lvl.srt[w_lvl_r])
             w_lvl.ptr[w_lvl_p] = 0
             w_lvl.ptr[w_lvl_p + 1] = 0
             w_lvl_i = last(w_lvl.srt[w_lvl_r])
-            w_lvl_q = (w_lvl_p - 1) * A_lvl_2.I + w_lvl_i
+            w_lvl_q = (w_lvl_p - 1) * A_lvl_2.shape + w_lvl_i
             w_lvl.tbl[w_lvl_q] = false
             if true
                 resize_if_smaller!(w_lvl_2.val, w_lvl_q)
@@ -47,8 +47,8 @@ begin
             w_lvl_qos_stop = 0
         end
         w_lvl.ptr[1] = 1
-        w_lvlq_start = (1 - 1) * A_lvl_2.I + 1
-        w_lvlq_stop = 1 * A_lvl_2.I
+        w_lvlq_start = (1 - 1) * A_lvl_2.shape + 1
+        w_lvlq_stop = 1 * A_lvl_2.shape
         (Finch.resize_if_smaller!)(w_lvl.ptr, 1 + 1)
         (Finch.fill_range!)(w_lvl.ptr, 0, 1 + 1, 1 + 1)
         (Finch.resize_if_smaller!)(w_lvl.tbl, w_lvlq_stop)
@@ -66,7 +66,7 @@ begin
         end
         k = 1
         k_start = k
-        phase_stop = (min)(A_lvl.I, A_lvl_2_i1)
+        phase_stop = (min)(A_lvl.shape, A_lvl_2_i1)
         if phase_stop >= k_start
             k_4 = k
             k = k_start
@@ -81,7 +81,7 @@ begin
                 if A_lvl_2_i == phase_stop_2
                     A_lvl_3_val_2 = A_lvl_3.val[A_lvl_2_q]
                     k_6 = phase_stop_2
-                    A_lvl_q_2 = (1 - 1) * A_lvl.I + k_6
+                    A_lvl_q_2 = (1 - 1) * A_lvl.shape + k_6
                     A_lvl_2_q_2 = A_lvl_2.ptr[A_lvl_q_2]
                     A_lvl_2_q_stop_2 = A_lvl_2.ptr[A_lvl_q_2 + 1]
                     if A_lvl_2_q_2 < A_lvl_2_q_stop_2
@@ -93,7 +93,7 @@ begin
                     end
                     i = 1
                     i_start = i
-                    phase_stop_3 = (min)(A_lvl_2.I, A_lvl_2_i1_2)
+                    phase_stop_3 = (min)(A_lvl_2.shape, A_lvl_2_i1_2)
                     if phase_stop_3 >= i_start
                         i_7 = i
                         i = i_start
@@ -108,7 +108,7 @@ begin
                             if A_lvl_2_i_2 == phase_stop_4
                                 A_lvl_3_val_3 = A_lvl_3.val[A_lvl_2_q_2]
                                 i_9 = phase_stop_4
-                                w_lvl_q_2 = (1 - 1) * A_lvl_2.I + i_9
+                                w_lvl_q_2 = (1 - 1) * A_lvl_2.shape + i_9
                                 dirty = false
                                 w_lvl_2_val_2 = w_lvl_2.val[w_lvl_q_2]
                                 dirty = true
@@ -135,9 +135,9 @@ begin
                         i = phase_stop_3 + 1
                     end
                     i_start = i
-                    if A_lvl_2.I >= i_start
+                    if A_lvl_2.shape >= i_start
                         i_10 = i
-                        i = A_lvl_2.I + 1
+                        i = A_lvl_2.shape + 1
                     end
                     A_lvl_2_q += 1
                 else
@@ -147,9 +147,9 @@ begin
             k = phase_stop + 1
         end
         k_start = k
-        if A_lvl.I >= k_start
+        if A_lvl.shape >= k_start
             k_7 = k
-            k = A_lvl.I + 1
+            k = A_lvl.shape + 1
         end
         sort!(@view(w_lvl.srt[1:w_lvl_qos_fill]))
         w_lvl_p_prev = 0
@@ -174,7 +174,7 @@ begin
         end
         i_2 = 1
         i_2_start = i_2
-        phase_stop_5 = (min)(A_lvl_2.I, w_lvl_i_stop)
+        phase_stop_5 = (min)(A_lvl_2.shape, w_lvl_i_stop)
         if phase_stop_5 >= i_2_start
             i_11 = i_2
             i_2 = i_2_start
@@ -187,7 +187,7 @@ begin
                 phase_stop_6 = (min)(w_lvl_i_2, phase_stop_5)
                 i_12 = i_2
                 if w_lvl_i_2 == phase_stop_6
-                    w_lvl_q_3 = (1 - 1) * A_lvl_2.I + w_lvl_i_2
+                    w_lvl_q_3 = (1 - 1) * A_lvl_2.shape + w_lvl_i_2
                     w_lvl_2_val_3 = w_lvl_2.val[w_lvl_q_3]
                     i_13 = phase_stop_6
                     if B_lvl_2_qos > B_lvl_2_qos_stop
@@ -214,21 +214,21 @@ begin
             i_2 = phase_stop_5 + 1
         end
         i_2_start = i_2
-        if A_lvl_2.I >= i_2_start
+        if A_lvl_2.shape >= i_2_start
             i_14 = i_2
-            i_2 = A_lvl_2.I + 1
+            i_2 = A_lvl_2.shape + 1
         end
         B_lvl_2.ptr[B_lvl_q + 1] = (B_lvl_2_qos - B_lvl_2_qos_fill) - 1
         B_lvl_2_qos_fill = B_lvl_2_qos - 1
     end
-    for p = 2:A_lvl.I + 1
+    for p = 2:A_lvl.shape + 1
         B_lvl_2.ptr[p] += B_lvl_2.ptr[p - 1]
     end
-    qos_stop = B_lvl_2.ptr[A_lvl.I + 1] - 1
-    qos = 1 * A_lvl.I
+    qos_stop = B_lvl_2.ptr[A_lvl.shape + 1] - 1
+    qos = 1 * A_lvl.shape
     resize!(B_lvl_2.ptr, qos + 1)
     qos_2 = B_lvl_2.ptr[end] - 1
     resize!(B_lvl_2.idx, qos_2)
     resize!(B_lvl_3.val, qos_2)
-    (B = Fiber((Finch.DenseLevel){Int32}((Finch.SparseListLevel){Int32}(B_lvl_3, A_lvl_2.I, B_lvl_2.ptr, B_lvl_2.idx), A_lvl.I)),)
+    (B = Fiber((Finch.DenseLevel){Int32}((Finch.SparseListLevel){Int32}(B_lvl_3, A_lvl_2.shape, B_lvl_2.ptr, B_lvl_2.idx), A_lvl.shape)),)
 end

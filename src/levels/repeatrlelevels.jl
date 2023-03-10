@@ -23,7 +23,7 @@ RepeatRLE (0.0) [1:9]
 ```
 """
 struct RepeatRLELevel{D, Ti, Tp, Tv}
-    I::Ti
+    shape::Ti
     ptr::Vector{Tp}
     idx::Vector{Ti}
     val::Vector{Tv}
@@ -35,12 +35,12 @@ function RepeatRLELevel(d, args...)
     RepeatRLELevel{d}(args...)
 end
 RepeatRLELevel{D}() where {D} = RepeatRLELevel{D, Int}()
-RepeatRLELevel{D}(I, args...) where {D} = RepeatRLELevel{D, typeof(I)}(I, args...)
+RepeatRLELevel{D}(shape, args...) where {D} = RepeatRLELevel{D, typeof(shape)}(shape, args...)
 RepeatRLELevel{D, Ti}(args...) where {D, Ti} = RepeatRLELevel{D, Ti, Int}(args...)
 RepeatRLELevel{D, Ti, Tp}(args...) where {D, Ti, Tp} = RepeatRLELevel{D, Ti, Tp, typeof(D)}(args...)
 
 RepeatRLELevel{D, Ti, Tp, Tv}() where {D, Ti, Tp, Tv} = RepeatRLELevel{D, Ti, Tp, Tv}(zero(Ti))
-RepeatRLELevel{D, Ti, Tp, Tv}(I) where {D, Ti, Tp, Tv} = RepeatRLELevel{D, Ti, Tp, Tv}(Ti(I), Tp[1], Ti[], Tv[])
+RepeatRLELevel{D, Ti, Tp, Tv}(shape) where {D, Ti, Tp, Tv} = RepeatRLELevel{D, Ti, Tp, Tv}(Ti(shape), Tp[1], Ti[], Tv[])
 
 """
 `f_code(rl)` = [RepeatRLELevel](@ref).
@@ -52,7 +52,7 @@ similar_level(::RepeatRLELevel{D}, dim, tail...) where {D} = RepeatRLE{D}(dim)
 data_rep_level(::Type{<:RepeatRLELevel{D, Ti, Tp, Tv}}) where {D, Ti, Tp, Tv} = RepeatData(D, Tv)
 
 pattern!(lvl::RepeatRLELevel{D, Ti}) where {D, Ti} = 
-    DenseLevel{Ti}(Pattern(), lvl.I)
+    DenseLevel{Ti}(Pattern(), lvl.shape)
 
 redefault!(lvl::RepeatRLELevel{D, Ti, Tp, Tv}, init) where {D, Ti, Tp, Tv} = 
     RepeatRLELevel{init, Ti, Tp, Tv}(lvl.val)
@@ -66,7 +66,7 @@ function Base.show(io::IO, lvl::RepeatRLELevel{D, Ti, Tp, Tv}) where {D, Ti, Tp,
         print(io, ", $Ti, $Tp, $Tv}(")
     end
 
-    show(io, lvl.I)
+    show(io, lvl.shape)
     print(io, ", ")
     if get(io, :compact, false)
         print(io, "…")
@@ -87,13 +87,13 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:RepeatRLE
     print_coord(io, crd) = print(io, crd == fbr.lvl.ptr[p] ? 1 : fbr.lvl.idx[crd - 1] + 1, ":", fbr.lvl.idx[crd])
     get_fbr(crd) = fbr.lvl.val[crd]
 
-    print(io, "RepeatRLE (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.I, "]")
+    print(io, "RepeatRLE (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.shape, "]")
     display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
 end
 
 @inline level_ndims(::Type{<:RepeatRLELevel}) = 1
-@inline level_size(lvl::RepeatRLELevel) = (lvl.I,)
-@inline level_axes(lvl::RepeatRLELevel) = (Base.OneTo(lvl.I),)
+@inline level_size(lvl::RepeatRLELevel) = (lvl.shape,)
+@inline level_axes(lvl::RepeatRLELevel) = (Base.OneTo(lvl.shape),)
 @inline level_eltype(::Type{RepeatRLELevel{D, Ti, Tp, Tv}}) where {D, Ti, Tp, Tv} = Tv
 @inline level_default(::Type{<:RepeatRLELevel{D}}) where {D} = D
 (fbr::AbstractFiber{<:RepeatRLELevel})() = fbr
@@ -112,26 +112,26 @@ mutable struct VirtualRepeatRLELevel
     Ti
     Tp
     Tv
-    I
+    shape
     ros_fill
     qos_stop
     dirty
 end
 function virtualize(ex, ::Type{RepeatRLELevel{D, Ti, Tp, Tv}}, ctx, tag=:lvl) where {D, Ti, Tp, Tv}
     sym = ctx.freshen(tag)
-    I = value(:($sym.I), Int)
+    shape = value(:($sym.shape), Int)
     ros_fill = ctx.freshen(sym, :_ros_fill)
     qos_stop = ctx.freshen(sym, :_qos_stop)
     push!(ctx.preamble, quote
         $sym = $ex
     end)
     dirty = ctx.freshen(sym, :_dirty)
-    VirtualRepeatRLELevel(sym, D, Ti, Tp, Tv, I, ros_fill, qos_stop, dirty)
+    VirtualRepeatRLELevel(sym, D, Ti, Tp, Tv, shape, ros_fill, qos_stop, dirty)
 end
 function (ctx::Finch.LowerJulia)(lvl::VirtualRepeatRLELevel)
     quote
         $RepeatRLELevel{$(lvl.D), $(lvl.Ti), $(lvl.Tp), $(lvl.Tv)}(
-            $(ctx(lvl.I)),
+            $(ctx(lvl.shape)),
             $(lvl.ex).ptr,
             $(lvl.ex).idx,
             $(lvl.ex).val
@@ -142,12 +142,12 @@ end
 summary_f_code(lvl::VirtualRepeatRLELevel) = "rl($(lvl.D))"
 
 function virtual_level_size(lvl::VirtualRepeatRLELevel, ctx)
-    ext = Extent(literal(lvl.Ti(1)), lvl.I)
+    ext = Extent(literal(lvl.Ti(1)), lvl.shape)
     (ext,)
 end
 
 function virtual_level_resize!(lvl::VirtualRepeatRLELevel, ctx, dim)
-    lvl.I = getstop(dim)
+    lvl.shape = getstop(dim)
     lvl
 end
 
@@ -200,7 +200,7 @@ function freeze_level!(lvl::VirtualRepeatRLELevel, ctx::LowerJulia, pos_stop)
         end
         $qos_fill = $(lvl.ex).ptr[$pos_stop + 1] - 1
         $resize_if_smaller!($(lvl.ex).idx, $qos_fill)
-        $fill_range!($(lvl.ex).idx, $(ctx(lvl.I)), $qos_stop + 1, $qos_fill)
+        $fill_range!($(lvl.ex).idx, $(ctx(lvl.shape)), $qos_stop + 1, $qos_fill)
         $resize_if_smaller!($(lvl.ex).val, $qos_fill)
         $fill_range!($(lvl.ex).val, $(lvl.D), $qos_stop + 1, $qos_fill)
     end)
@@ -283,7 +283,7 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualRepeatRLELevel}, ctx, ::
                 $qos_fill = $qos_stop
                 $qos_stop = max($qos_stop << 1, $my_q)
                 $resize_if_smaller!($(lvl.ex).idx, $qos_stop)
-                $fill_range!($(lvl.ex).idx, $(ctx(lvl.I)), $qos_fill + 1, $qos_stop)
+                $fill_range!($(lvl.ex).idx, $(ctx(lvl.shape)), $qos_fill + 1, $qos_stop)
                 $resize_if_smaller!($(lvl.ex).val, $qos_stop)
                 $fill_range!($(lvl.ex).val, $(lvl.D), $qos_fill + 1, $qos_stop)
             end
@@ -328,10 +328,10 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualRepeatRLELevel}, ctx, ::
             ),
             epilogue = quote
                 if $my_v_prev != $D
-                    if $my_i_prev < $(ctx(lvl.I))
+                    if $my_i_prev < $(ctx(lvl.shape))
                         $(record_run(ctx, my_i_prev, my_v_prev))
                     else
-                        $(record_run(ctx, lvl.I, my_v_prev))
+                        $(record_run(ctx, lvl.shape, my_v_prev))
                     end
                 end
                 $(lvl.ex).ptr[$(ctx(pos)) + $(Tp(1))] += ($my_q - ($(lvl.ros_fill) + $(ctx(pos))))
