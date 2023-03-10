@@ -24,8 +24,8 @@ summary_f_code(lvl::SparseVBLLevel) = "sv($(summary_f_code(lvl.lvl)))"
 similar_level(lvl::SparseVBLLevel) = SparseVBL(similar_level(lvl.lvl))
 similar_level(lvl::SparseVBLLevel, dim, tail...) = SparseVBL(similar_level(lvl.lvl, tail...), dim)
 
-pattern!(lvl::SparseVBLLevel{Ti}) where {Ti} = 
-    SparseVBLLevel{Ti}(pattern!(lvl.lvl), lvl.I, lvl.ptr, lvl.idx, lvl.ofs)
+pattern!(lvl::SparseVBLLevel{Ti, Tp}) where {Ti, Tp} = 
+    SparseVBLLevel{Ti, Tp}(pattern!(lvl.lvl), lvl.I, lvl.ptr, lvl.idx, lvl.ofs)
 
 function Base.show(io::IO, lvl::SparseVBLLevel{Ti, Tp}) where {Ti, Tp}
     if get(io, :compact, false)
@@ -113,7 +113,7 @@ function virtualize(ex, ::Type{SparseVBLLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) wher
 end
 function (ctx::Finch.LowerJulia)(lvl::VirtualSparseVBLLevel)
     quote
-        $SparseVBLLevel{$(lvl.Ti)}(
+        $SparseVBLLevel{$(lvl.Ti), $(lvl.Tp)}(
             $(ctx(lvl.lvl)),
             $(ctx(lvl.I)),
             $(lvl.ex).ptr,

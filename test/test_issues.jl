@@ -1,4 +1,5 @@
 using SparseArrays
+using Finch: Cindex
 
 @testset "issues" begin
     #https://github.com/willow-ahrens/Finch.jl/issues/51
@@ -123,8 +124,19 @@ using SparseArrays
         @test isstructequal(w, fiber(v))
     end
 
-    #https://github.com/willow-ahrens/Finch.jl/issues/121
+    #https://github.com/willow-ahrens/Finch.jl/issues/99
+    let 
+        m = 4; n = 3; ptr_c = [0, 3, 3, 5]; idx_c = [1, 2, 3, 0, 2]; val_c = [1.1, 2.2, 3.3, 4.4, 5.5];
 
+        ptr_jl = unsafe_wrap(Array, reinterpret(Ptr{Cindex{Int}}, pointer(ptr_c)), length(ptr_c); own = false)
+        idx_jl = unsafe_wrap(Array, reinterpret(Ptr{Cindex{Int}}, pointer(idx_c)), length(idx_c); own = false)
+        A = Fiber(Dense(SparseList{Cindex{Int}, Cindex{Int}}(Element{0.0, Float64}(val_c), m, ptr_jl, idx_jl), n))
+
+        @test A == [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0]
+        display(A)
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/121
     let
         io = IOBuffer()
         y = [2.0, Inf, Inf, 1.0, 3.0, Inf]
