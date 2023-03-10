@@ -27,6 +27,9 @@ similar_level(lvl::SparseVBLLevel, dim, tail...) = SparseVBL(similar_level(lvl.l
 pattern!(lvl::SparseVBLLevel{Ti, Tp}) where {Ti, Tp} = 
     SparseVBLLevel{Ti, Tp}(pattern!(lvl.lvl), lvl.I, lvl.ptr, lvl.idx, lvl.ofs)
 
+redefault!(lvl::SparseVBLLevel{Ti, Tp}, init) where {Ti, Tp} = 
+    SparseVBLLevel{Ti, Tp}(redefault!(lvl.lvl, init), lvl.I, lvl.ptr, lvl.idx, lvl.ofs)
+
 function Base.show(io::IO, lvl::SparseVBLLevel{Ti, Tp}) where {Ti, Tp}
     if get(io, :compact, false)
         print(io, "SparseVBL(")

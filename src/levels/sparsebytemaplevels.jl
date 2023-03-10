@@ -26,6 +26,9 @@ similar_level(lvl::SparseBytemapLevel, dims...) = SparseBytemap(similar_level(lv
 pattern!(lvl::SparseBytemapLevel{Ti, Tp}) where {Ti, Tp} = 
     SparseBytemapLevel{Ti, Tp}(pattern!(lvl.lvl), lvl.I, lvl.ptr, lvl.tbl, lvl.srt)
 
+redefault!(lvl::SparseBytemapLevel{Ti, Tp}, init) where {Ti, Tp} = 
+    SparseBytemapLevel{Ti, Tp}(redefault!(lvl.lvl, init), lvl.I, lvl.ptr, lvl.tbl, lvl.srt)
+
 function Base.show(io::IO, lvl::SparseBytemapLevel{Ti, Tp}) where {Ti, Tp}
     if get(io, :compact, false)
         print(io, "SparseBytemap(")

@@ -27,13 +27,11 @@ begin
             phase_stop_2 = (min)(yf_lvl_i, phase_stop)
             i_4 = i
             if yf_lvl_i == phase_stop_2
-                x_val = (min)((something)((ex.body.rhs.args[2]).tns, (ex.body.rhs.args[3]).tns), x_val)
                 yf_lvl_2_val_2 = yf_lvl_2.val[yf_lvl_q]
                 i_5 = phase_stop_2
-                x_val = (min)(x_val, (something)(yf_lvl_2_val_2, (ex.body.rhs.args[2]).tns, (ex.body.rhs.args[3]).tns))
+                x_val = (min)((something)(yf_lvl_2_val_2, Inf), x_val)
                 yf_lvl_q += 1
             else
-                x_val = (min)((something)((ex.body.rhs.args[2]).tns, (ex.body.rhs.args[3]).tns), x_val)
             end
             i = phase_stop_2 + 1
         end
@@ -42,7 +40,6 @@ begin
     i_start = i
     if yf_lvl.I >= i_start
         i_6 = i
-        x_val = (min)((something)((ex.body.rhs.args[2]).tns, (ex.body.rhs.args[3]).tns), x_val)
         i = yf_lvl.I + 1
     end
     (x = (Scalar){Inf, Float64}(x_val),)

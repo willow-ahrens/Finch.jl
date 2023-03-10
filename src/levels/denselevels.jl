@@ -47,6 +47,9 @@ similar_level(lvl::DenseLevel, dims...) = Dense(similar_level(lvl.lvl, dims[1:en
 pattern!(lvl::DenseLevel{Ti}) where {Ti} = 
     DenseLevel{Ti}(pattern!(lvl.lvl), lvl.I)
 
+redefault!(lvl::DenseLevel{Ti}, init) where {Ti} = 
+    DenseLevel{Ti}(redefault!(lvl.lvl, init), lvl.I)
+
 @inline level_ndims(::Type{<:DenseLevel{Ti, Lvl}}) where {Ti, Lvl} = 1 + level_ndims(Lvl)
 @inline level_size(lvl::DenseLevel) = (level_size(lvl.lvl)..., lvl.I)
 @inline level_axes(lvl::DenseLevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.I))

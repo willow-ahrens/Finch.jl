@@ -65,6 +65,9 @@ similar_level(lvl::SparseCOOLevel{N}, tail...) where {N} = SparseCOOLevel{N}(sim
 pattern!(lvl::SparseCOOLevel{N, Ti, Tp}) where {N, Ti, Tp} = 
     SparseCOOLevel{N, Ti, Tp}(pattern!(lvl.lvl), lvl.I, lvl.tbl, lvl.ptr)
 
+redefault!(lvl::SparseCOOLevel{N, Ti, Tp}, init) where {N, Ti, Tp} = 
+    SparseCOOLevel{N, Ti, Tp}(redefault!(lvl.lvl, init), lvl.I, lvl.tbl, lvl.ptr)
+
 function Base.show(io::IO, lvl::SparseCOOLevel{N, Ti, Tp}) where {N, Ti, Tp}
     if get(io, :compact, false)
         print(io, "SparseCOO{$N}(")
