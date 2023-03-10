@@ -155,21 +155,27 @@ end
 
 struct CIndex{T} <: Integer
     val::T
+    CIndex{T}(i::T, b::Bool=true) where {T} = new{T}(i - b)
 end
 
-cindex_types = [Bool, Int8, Int16, Int32, Int64, Int128, UInt8, UInt16, UInt32, UInt64, UInt128, BigInt]
+cindex_types = [Int8, Int16, Int32, Int64, Int128, UInt8, UInt16, UInt32, UInt64, UInt128, BigInt]
 for S in cindex_types
     @eval begin
-        @inline Base.promote_rule(::Type{CIndex{T}}, ::Type{$S}) where {T} = CIndex{promote_type(T, $S)}
-        Base.convert(::Type{CIndex{T}}, i::$S) where {T} = CIndex(convert(T, i - true))
+        @inline Base.promote_rule(::Type{CIndex{T}}, ::Type{$S}) where {T} = promote_type(T, $S)
+        Base.convert(::Type{CIndex{T}}, i::$S) where {T} = CIndex(convert(T, i))
+        CIndex(i::$S) = CIndex{$S}(i)
+        (::Type{$S})(i::CIndex{T}) where {T} = convert($S, i.val + true)
+        Base.convert(::Type{$S}, i::CIndex) = convert($S, i.val + true)
     end
 end
 Base.promote_rule(::Type{CIndex{T}}, ::Type{CIndex{S}}) where {T, S} = CIndex{promote_type(T, S)}
+Base.convert(::Type{CIndex{T}}, i::CIndex) where {T} = CIndex{T}(convert(T, i.val), false)
+Base.hash(x::CIndex, h::UInt) = hash(typeof(x), hash(x.val, h))
 
 cindex_binops = [:*, :+]
 
-for Ti in cindex_types, op in cindex_binops
-    @eval @inline Base.$op(a::CIndex{T}, b::CIndex{T}) where {T} = CIndex($op(a.val + true, b.val + true)-true)
+for op in cindex_binops
+    @eval @inline Base.$op(a::CIndex{T}, b::CIndex{T}) where {T} = CIndex($op(T(a), T(b)))
 end
 
-Base.to_index(i::CIndex) = Base.to_index(i.val + true)
+@inline Base.isless(a::CIndex{T}, b::CIndex{T}) where {T} = isless(T(a), T(b))
