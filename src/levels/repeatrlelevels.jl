@@ -30,7 +30,10 @@ struct RepeatRLELevel{D, Ti, Tp, Tv}
 end
 
 const RepeatRLE = RepeatRLELevel
-RepeatRLELevel(d, args...) = RepeatRLELevel{d}(args...)
+function RepeatRLELevel(d, args...)
+    isbits(d) || throw(ArgumentError("Finch currently only supports isbits defaults"))
+    RepeatRLELevel{d}(args...)
+end
 RepeatRLELevel{D}() where {D} = RepeatRLELevel{D, Int}()
 RepeatRLELevel{D}(I, args...) where {D} = RepeatRLELevel{D, typeof(I)}(I, args...)
 RepeatRLELevel{D, Ti}(args...) where {D, Ti} = RepeatRLELevel{D, Ti, Int}(args...)

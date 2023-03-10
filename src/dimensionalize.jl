@@ -139,6 +139,8 @@ function declare_dimensions_access(node, ctx, tns, eldim)
     else
         shape = virtual_size(tns, ctx.ctx, eldim)
     end
+    length(node.idxs) > length(shape) && throw(DimensionMismatch("more indices than dimensions in $(sprint(show, MIME("text/plain"), node))"))
+    length(node.idxs) < length(shape) && throw(DimensionMismatch("less indices than dimensions in $(sprint(show, MIME("text/plain"), node))"))
     idxs = map(ctx, node.idxs, shape)
     access(tns, node.mode, idxs...)
 end
@@ -330,7 +332,7 @@ end
 Return a tuple of the dimensions of `tns` in the context `ctx` with access
 mode `mode`. This is a function similar in spirit to `Base.axes`.
 """
-function getsize end
+function virtual_size end
 
 virtual_size(tns, ctx, eldim) = virtual_size(tns, ctx)
 function virtual_size(tns::FinchNode, ctx, eldim = nodim)

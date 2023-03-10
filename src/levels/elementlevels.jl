@@ -19,7 +19,10 @@ struct ElementLevel{D, Tv}
 end
 const Element = ElementLevel
 
-ElementLevel(d, args...) = ElementLevel{d}(args...)
+function ElementLevel(d, args...)
+    isbits(d) || throw(ArgumentError("Finch currently only supports isbits defaults"))
+    ElementLevel{d}(args...)
+end
 ElementLevel{D}() where {D} = ElementLevel{D, typeof(D)}()
 ElementLevel{D}(val::Vector{Tv}) where {D, Tv} = ElementLevel{D, Tv}(val)
 
