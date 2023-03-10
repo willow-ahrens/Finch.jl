@@ -71,7 +71,7 @@ end
 
 FinchNotation.isliteral(::AcceptRun) = false
 
-virtual_default(node::AcceptRun) = node.val
+virtual_default(node::AcceptRun) = Some(node.val)
 
 #TODO this should go somewhere else
 function Finch.virtual_default(x::FinchNode)

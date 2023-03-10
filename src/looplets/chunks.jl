@@ -110,7 +110,7 @@ end
     tight = nothing
 end
 
-virtual_default(tns::Furlable) = something(tns.val)
+virtual_default(tns::Furlable) = Some(tns.val)
 virtual_size(tns::Furlable, ::LowerJulia, dim=nothing) = tns.size
 
 FinchNotation.isliteral(::Furlable) = false

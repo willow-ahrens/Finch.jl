@@ -104,7 +104,7 @@ function virtual_resize!(tns::AbstractVirtualFiber, ctx, dims...)
 end
 virtual_eltype(tns::AbstractVirtualFiber) = virtual_level_eltype(tns.lvl)
 virtual_elaxis(tns::AbstractVirtualFiber) = nodim
-virtual_default(tns::AbstractVirtualFiber) = virtual_level_default(tns.lvl)
+virtual_default(tns::AbstractVirtualFiber) = Some(virtual_level_default(tns.lvl))
 
 """
     default(fbr)
@@ -296,7 +296,7 @@ function f_decode(ex)
     elseif ex isa Expr
         return Expr(ex.head, map(f_decode, ex.args)...)
     elseif ex isa Symbol
-        return :(@something($f_code($(Val(ex))), $(esc(ex))))
+        return :(@something($f_code($(Val(ex))), Some($(esc(ex)))))
     else
         return esc(ex)
     end

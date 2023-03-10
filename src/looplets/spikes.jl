@@ -139,7 +139,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::AcceptSpike)
     print(io, ")")
 end
 
-virtual_default(node::AcceptSpike) = node.val
+virtual_default(node::AcceptSpike) = Some(node.val)
 
 unchunk(node::AcceptSpike, ctx::ForLoopVisitor) = node.tail(ctx.ctx, ctx.val)
 

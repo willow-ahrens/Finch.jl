@@ -36,7 +36,7 @@ end
 
 virtual_size(::VirtualScalar, ctx) = ()
 
-virtual_default(tns::VirtualScalar) = tns.D
+virtual_default(tns::VirtualScalar) = Some(tns.D)
 virtual_eltype(tns::VirtualScalar) = tns.Tv
 
 FinchNotation.isliteral(::VirtualScalar) = false
@@ -72,7 +72,7 @@ end
 
 virtual_size(::VirtualDirtyScalar, ctx) = ()
 
-virtual_default(tns::VirtualDirtyScalar) = tns.D
+virtual_default(tns::VirtualDirtyScalar) = Some(tns.D)
 virtual_eltype(tns::VirtualDirtyScalar) = tns.Tv
 
 FinchNotation.isliteral(::VirtualDirtyScalar) = false

@@ -193,7 +193,7 @@ function (ctx::ThunkVisitor)(node::Thunk)
     node.body
 end
 
-FinchNotation.isliteral(::Union{Symbol, Expr, Missing}) =  false
+FinchNotation.isliteral(::Union{Symbol, Expr}) =  false
 (ctx::LowerJulia)(root::Union{Symbol, Expr}, ::DefaultStyle) = root
 
 function (ctx::LowerJulia)(root, ::DefaultStyle)
@@ -428,7 +428,7 @@ end
     body
 end
 
-virtual_default(ex::Lookup) = something(ex.val)
+virtual_default(ex::Lookup) = Some(ex.val)
 
 Base.show(io::IO, ex::Lookup) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::Lookup)
