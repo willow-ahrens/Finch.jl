@@ -133,7 +133,6 @@ using Finch: Cindex
         A = Fiber(Dense(SparseList{Cindex{Int}, Cindex{Int}}(Element{0.0, Float64}(val_c), m, ptr_jl, idx_jl), n))
 
         @test A == [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0]
-        display(A)
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/121
@@ -193,6 +192,24 @@ using Finch: Cindex
         @test x[] == 1.0
 
         @test check_output("specialvals_repr_nothing.txt", String(take!(io)))
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/118
+
+    let
+        io = IOBuffer()
+        A = [0.0 1.0 0.0 2.0; 0.0 1.0 0.0 3.0; 0.0 0.0 2.0 0.0]
+        B = @fiber(d(sl(e(0.0))), A)
+        C = @fiber(d(sl(e(Inf))))
+        @finch (C .= Inf; for j = _, i = _ C[i, j] = ifelse(B[i, j] == 0, Inf, B[i, j]) end)
+
+        println(io, "A :", A)
+        println(io, "C :", C)
+        println(io, "redefault!(B, Inf) :", redefault!(B, Inf))
+        println(redefault!(B, Inf))
+        println(C)
+        @test isstructequal(redefault!(B, Inf), C)
+        @test check_output("issue118.txt", String(take!(io)))
     end
 
 end

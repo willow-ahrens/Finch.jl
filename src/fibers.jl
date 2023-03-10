@@ -190,6 +190,33 @@ function get_updater(fbr::VirtualTrackedSubFiber, ctx, protos...)
     )
 end
 
+"""
+    redefault!(fbr, init)
+
+Return a fiber which is equal to `fbr`, but with the default (implicit) value
+set to `init`.  May reuse memory and render the original fiber unusable when
+modified.
+
+```jldoctest
+julia> A = @fiber(sl(e(0.0), 10), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
+SparseList (0.0) [1:10]
+├─[1]: 2.0
+├─[3]: 3.0
+├─[5]: 4.0
+├─[7]: 5.0
+├─[9]: 6.0
+
+julia> redefault!(A, Inf)
+SparseList (Inf) [1:10]
+├─[1]: 2.0
+├─[3]: 3.0
+├─[5]: 4.0
+├─[7]: 5.0
+├─[9]: 6.0
+```
+"""
+redefault!(fbr::Fiber, init) = Fiber(redefault!(fbr.lvl, init))
+redefault!(fbr::SubFiber, init) = SubFiber(redefault!(fbr.lvl, init), fbr.pos)
 
 
 data_rep(fbr::Fiber) = data_rep(typeof(fbr))

@@ -14,7 +14,7 @@ export @finch, @finch_program, @finch_code, value
 
 export Fiber, Fiber!, SparseList, SparseHash, SparseCOO, SparseBytemap, SparseVBL, Dense, RepeatRLE, Element, Pattern, Scalar
 export walk, gallop, follow, extrude, laminate
-export fiber, @fiber, pattern!, dropdefaults, dropdefaults!
+export fiber, @fiber, pattern!, dropdefaults, dropdefaults!, redefault!
 export diagmask, lotrimask, uptrimask, bandmask
 
 export choose, minby, maxby

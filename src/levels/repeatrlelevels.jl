@@ -51,6 +51,9 @@ data_rep_level(::Type{<:RepeatRLELevel{D, Ti, Tp, Tv}}) where {D, Ti, Tp, Tv} = 
 pattern!(lvl::RepeatRLELevel{D, Ti}) where {D, Ti} = 
     DenseLevel{Ti}(Pattern(), lvl.I)
 
+redefault!(lvl::RepeatRLELevel{D, Ti, Tp, Tv}, init) where {D, Ti, Tp, Tv} = 
+    RepeatRLELevel{init, Ti, Tp, Tv}(lvl.val)
+
 function Base.show(io::IO, lvl::RepeatRLELevel{D, Ti, Tp, Tv}) where {D, Ti, Tp, Tv}
     print(io, "RepeatRLE{")
     print(io, D)
@@ -149,7 +152,7 @@ virtual_level_default(lvl::VirtualRepeatRLELevel) = lvl.D
 virtual_level_eltype(lvl::VirtualRepeatRLELevel) = lvl.Tv
 
 function declare_level!(lvl::VirtualRepeatRLELevel, ctx::LowerJulia, mode, init)
-    @assert init == literal(lvl.D)
+    init == literal(lvl.D) || throw(FormatLimitation("Cannot initialize RepeatRLE Levels to non-default values"))
     Tp = lvl.Tp
     Ti = lvl.Ti
     push!(ctx.preamble, quote

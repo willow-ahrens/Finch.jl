@@ -60,6 +60,9 @@ similar_level(lvl::SparseListLevel, dim, tail...) = SparseList(similar_level(lvl
 pattern!(lvl::SparseListLevel{Ti, Tp}) where {Ti, Tp} = 
     SparseListLevel{Ti, Tp}(pattern!(lvl.lvl), lvl.I, lvl.ptr, lvl.idx)
 
+redefault!(lvl::SparseListLevel{Ti, Tp}, init) where {Ti, Tp} = 
+    SparseListLevel{Ti, Tp}(redefault!(lvl.lvl, init), lvl.I, lvl.ptr, lvl.idx)
+
 function Base.show(io::IO, lvl::SparseListLevel{Ti, Tp}) where {Ti, Tp}
     if get(io, :compact, false)
         print(io, "SparseList(")

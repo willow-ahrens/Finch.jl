@@ -34,6 +34,9 @@ similar_level(::ElementLevel{D}) where {D} = ElementLevel{D}()
 
 pattern!(lvl::ElementLevel) = Pattern()
 
+redefault!(lvl::ElementLevel{D, Tv}, init) where {D, Tv} = 
+    ElementLevel{init, Tv}(lvl.val)
+
 function Base.show(io::IO, lvl::ElementLevel{D, Tv}) where {D, Tv}
     print(io, "Element{")
     show(io, D)
@@ -85,7 +88,10 @@ virtual_level_size(::VirtualElementLevel, ctx) = ()
 virtual_level_eltype(lvl::VirtualElementLevel) = lvl.Tv
 virtual_level_default(lvl::VirtualElementLevel) = lvl.D
 
-declare_level!(lvl::VirtualElementLevel, ctx, pos, init) = (@assert init == literal(lvl.D); lvl)
+function declare_level!(lvl::VirtualElementLevel, ctx, pos, init)
+    init == literal(lvl.D) || throw(FormatLimitation("Cannot initialize Element Levels to non-default values(have $init expected $(lvl.D))"))
+    lvl
+end
 
 freeze_level!(lvl::VirtualElementLevel, ctx, pos) = lvl
 

@@ -1,4 +1,5 @@
 const incs = Dict(:+= => :+, :*= => :*, :&= => :&, :|= => :|)
+const evaluable_exprs = [:Inf, :Inf16, :Inf32, :Inf64, :(-Inf), :(-Inf16), :(-Inf32), :(-Inf64), :NaN, :NaN16, :NaN32, :NaN64, :nothing, :missing]
 
 const program_nodes = (
     index = index,
@@ -60,7 +61,13 @@ struct FinchParserVisitor
     results
 end
 
-(ctx::FinchParserVisitor)(ex::Symbol) = ctx.nodes.variable(ex)
+function (ctx::FinchParserVisitor)(ex::Symbol)
+    if ex in evaluable_exprs
+        return ctx.nodes.literal(@eval($ex))
+    else
+        ctx.nodes.variable(ex)
+    end
+end
 (ctx::FinchParserVisitor)(ex::QuoteNode) = ctx.nodes.literal(ex.value)
 (ctx::FinchParserVisitor)(ex) = ctx.nodes.literal(ex)
 
@@ -146,6 +153,8 @@ function (ctx::FinchParserVisitor)(ex::Expr)
         return esc(ex)
     elseif @capture ex :$(~arg)
         return esc(arg)
+    elseif ex in evaluable_exprs
+        return ctx.nodes.literal(@eval(ex))
     else
         return ctx.nodes.value(ex)
     end
