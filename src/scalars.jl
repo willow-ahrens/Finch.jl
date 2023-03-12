@@ -36,21 +36,27 @@ end
 
 virtual_size(::VirtualScalar, ctx) = ()
 
-virtual_default(tns::VirtualScalar) = tns.D
+virtual_default(tns::VirtualScalar) = Some(tns.D)
 virtual_eltype(tns::VirtualScalar) = tns.Tv
 
 FinchNotation.isliteral(::VirtualScalar) = false
 
-function initialize!(tns::VirtualScalar, ctx)
+function declare!(tns::VirtualScalar, ctx, init)
     push!(ctx.preamble, quote
-        $(tns.val) = $(tns.D)
+        $(tns.val) = $(ctx(init))
     end)
     tns
 end
 
-function freeze!(tns::VirtualScalar, ctx, mode)
+function thaw!(tns::VirtualScalar, ctx)
     return tns
 end
+
+function freeze!(tns::VirtualScalar, ctx)
+    return tns
+end
+get_reader(tns::VirtualScalar, ctx) = tns
+get_updater(tns::VirtualScalar, ctx) = tns
 
 function lowerjulia_access(ctx::LowerJulia, node, tns::VirtualScalar)
     @assert isempty(node.idxs)
@@ -68,8 +74,11 @@ end
 
 virtual_size(::VirtualDirtyScalar, ctx) = ()
 
-virtual_default(tns::VirtualDirtyScalar) = tns.D
+virtual_default(tns::VirtualDirtyScalar) = Some(tns.D)
 virtual_eltype(tns::VirtualDirtyScalar) = tns.Tv
+
+get_reader(tns::VirtualDirtyScalar, ctx) = tns
+get_updater(tns::VirtualDirtyScalar, ctx) = tns
 
 FinchNotation.isliteral(::VirtualDirtyScalar) = false
 
@@ -79,4 +88,47 @@ function lowerjulia_access(ctx::LowerJulia, node, tns::VirtualDirtyScalar)
         $(tns.dirty) = true
     end)
     return tns.val
+end
+
+ortho(var) = (stmt) -> !(var in getvars(stmt))
+
+function base_rules(alg, ctx::LowerJulia, a, tns::Union{VirtualScalar, VirtualDirtyScalar}) 
+    return [
+        (@rule sequence(~s1..., declare(a, ~z::isliteral), ~s2::ortho(a)..., assign(access(a, ~m), ~f::isliteral, ~b::isliteral), ~s3...) =>
+            sequence(s1..., s2..., declare(a, literal(f.val(z.val, b.val))), s3...)
+        ),
+        (@rule loop(~i, assign(access(~a, ~m), $(literal(+)), ~b::isliteral)) =>
+            assign(access(a, m), +, call(*, b, extent(ctx.dims[getname(i)])))
+        ),
+
+        (@rule loop(~i, sequence(~s1::ortho(a)..., assign(access(~a, ~m), $(literal(+)), ~b::isliteral), ~s2::ortho(a)...)) =>
+            sequence(assign(access(a, m), +, call(*, b, extent(ctx.dims[getname(i)]))), loop(i, sequence(s1..., s2...)))
+        ),
+        (@rule loop(~i, assign(access(~a, ~m), ~f::isidempotent(alg), ~b::isliteral)) =>
+            assign(access(a, m), f, b)
+        ),
+        (@rule loop(~i, sequence(~s1::ortho(a)..., assign(access(~a, ~m), ~f::isidempotent(alg), ~b::isliteral), ~s2::ortho(a)...)) =>
+            sequence(assign(access(a, m), f, b), loop(i, sequence(s1..., s2...)))
+        ),
+        (@rule sequence(~s1..., assign(access(a, ~m), ~f::isabelian(alg), ~b), ~s2::ortho(a)..., assign(access(a, ~m), ~f, ~c), ~s3...) =>
+            sequence(s1..., assign(access(a, m), f, call(f, b, c)))
+        ),
+
+        (@rule sequence(~s1..., declare(a, ~z), ~s2::ortho(a)..., freeze(a), ~s3...) =>
+            sequence(s1..., s2..., declare(a, z), freeze(a), s3...)
+        ),
+        (@rule sequence(~s1..., declare(a, ~z), freeze(a), ~s2::ortho(a)..., ~s3, ~s4...) =>
+            if (s3 = Postwalk(@rule access(a, reader()) => z)(s3)) !== nothing
+                sequence(s1..., declare(a, ~z), freeze(a), s2..., s3, s4...)
+            end
+        ),
+        (@rule sequence(~s1..., thaw(a, ~z), ~s2::ortho(a)..., freeze(a), ~s3...) =>
+            sequence(s1..., s2..., s3...)
+        ),
+        #=
+        (@rule sequence(~s1..., declare(a, ~z), ~s2..., freeze(a), ~s3::ortho(a)...) =>
+            sequence(s1..., s2..., s3...)
+        ),
+        =#
+    ]
 end

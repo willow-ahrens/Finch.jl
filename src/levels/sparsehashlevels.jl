@@ -34,16 +34,17 @@ SparseHash (0.0) [1:3,1:3]
 """
 struct SparseHashLevel{N, Ti<:Tuple, Tp, Tbl, Lvl}
     lvl::Lvl
-    I::Ti
+    shape::Ti
     tbl::Tbl
     ptr::Vector{Tp}
     srt::Vector{Pair{Tuple{Tp, Ti}, Tp}}
 end
 const SparseHash = SparseHashLevel
 
-SparseHashLevel(lvl, I, args...) = SparseHashLevel{length(I)}(lvl, I, args...)
+SparseHashLevel(lvl) = throw(ArgumentError("You must specify the number of dimensions in a SparseHashLevel, e.g. @fiber(sh{2}(e(0.0)))"))
+SparseHashLevel(lvl, shape, args...) = SparseHashLevel{length(shape)}(lvl, shape, args...)
 SparseHashLevel{N}(lvl) where {N} = SparseHashLevel{N, NTuple{N, Int}}(lvl)
-SparseHashLevel{N}(lvl, I, args...) where {N} = SparseHashLevel{N, typeof(I)}(lvl, I, args...)
+SparseHashLevel{N}(lvl, shape, args...) where {N} = SparseHashLevel{N, typeof(shape)}(lvl, shape, args...)
 
 SparseHashLevel{N, Ti}(lvl, args...) where {N, Ti} = SparseHashLevel{N, Ti, Int}(lvl, args...)
 SparseHashLevel{N, Ti, Tp}(lvl, args...) where {N, Ti, Tp} = SparseHashLevel{N, Ti, Tp, Dict{Tuple{Tp, Ti}, Tp}}(lvl, args...)
@@ -51,10 +52,10 @@ SparseHashLevel{N, Ti, Tp, Tbl}(lvl::Lvl, args...) where {N, Ti, Tp, Tbl, Lvl} =
 
 SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(lvl) where {N, Ti, Tp, Tbl, Lvl} =
     SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(lvl, ((zero(ti) for ti in Ti.parameters)..., ))
-SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(lvl, I) where {N, Ti, Tp, Tbl, Lvl} =
-    SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(lvl, I, Tbl())
-SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(lvl, I, tbl) where {N, Ti, Tp, Tbl, Lvl} =
-    SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(lvl, Ti(I), tbl, Tp[1], Pair{Tuple{Tp, Ti}, Tp}[])
+SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(lvl, shape) where {N, Ti, Tp, Tbl, Lvl} =
+    SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(lvl, shape, Tbl())
+SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(lvl, shape, tbl) where {N, Ti, Tp, Tbl, Lvl} =
+    SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(lvl, Ti(shape), tbl, Tp[1], Pair{Tuple{Tp, Ti}, Tp}[])
 
 """
 `f_code(sh)` = [SparseHashLevel](@ref).
@@ -65,7 +66,10 @@ similar_level(lvl::SparseHashLevel{N}) where {N} = SparseHashLevel{N}(similar_le
 similar_level(lvl::SparseHashLevel{N}, tail...) where {N} = SparseHashLevel{N}(similar_level(lvl.lvl, tail[1:end-N]...), (tail[end-N+1:end]...,))
 
 pattern!(lvl::SparseHashLevel{N, Ti, Tp, Tbl}) where {N, Ti, Tp, Tbl} = 
-    SparseHashLevel{N, Ti, Tp, Tbl}(pattern!(lvl.lvl), lvl.I, lvl.tbl, lvl.ptr, lvl.srt)
+    SparseHashLevel{N, Ti, Tp, Tbl}(pattern!(lvl.lvl), lvl.shape, lvl.tbl, lvl.ptr, lvl.srt)
+
+redefault!(lvl::SparseHashLevel{N, Ti, Tp, Tbl}, init) where {N, Ti, Tp, Tbl} = 
+    SparseHashLevel{N, Ti, Tp, Tbl}(redefault!(lvl.lvl, init), lvl.shape, lvl.tbl, lvl.ptr, lvl.srt)
 
 function Base.show(io::IO, lvl::SparseHashLevel{N, Ti, Tp}) where {N, Ti, Tp}
     if get(io, :compact, false)
@@ -75,7 +79,7 @@ function Base.show(io::IO, lvl::SparseHashLevel{N, Ti, Tp}) where {N, Ti, Tp}
     end
     show(io, lvl.lvl)
     print(io, ", ")
-    show(IOContext(io, :typeinfo=>Ti), lvl.I)
+    show(IOContext(io, :typeinfo=>Ti), lvl.shape)
     print(io, ", ")
     if get(io, :compact, false)
         print(io, "…")
@@ -99,13 +103,13 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseHas
     get_fbr(crd) = fbr(crd[1][2]...)
 
     print(io, "SparseHash (", default(fbr), ") [", ":,"^(ndims(fbr) - N), "1:")
-    join(io, fbr.lvl.I, ",1:") 
+    join(io, fbr.lvl.shape, ",1:") 
     print(io, "]")
     display_fiber_data(io, mime, fbr, depth, N, crds, print_coord, get_fbr)
 end
 @inline level_ndims(::Type{<:SparseHashLevel{N, Ti, Tp, Tbl, Lvl}}) where {N, Ti, Tp, Tbl, Lvl} = N + level_ndims(Lvl)
-@inline level_size(lvl::SparseHashLevel) = (lvl.I..., level_size(lvl.lvl)...)
-@inline level_axes(lvl::SparseHashLevel) = (map(Base.OneTo, lvl.I)..., level_axes(lvl.lvl)...)
+@inline level_size(lvl::SparseHashLevel) = (lvl.shape..., level_size(lvl.lvl)...)
+@inline level_axes(lvl::SparseHashLevel) = (map(Base.OneTo, lvl.shape)..., level_axes(lvl.lvl)...)
 @inline level_eltype(::Type{<:SparseHashLevel{N, Ti, Tp, Tbl, Lvl}}) where {N, Ti, Tp, Tbl, Lvl} = level_eltype(Lvl)
 @inline level_default(::Type{<:SparseHashLevel{N, Ti, Tp, Tbl, Lvl}}) where {N, Ti, Tp, Tbl, Lvl} = level_default(Lvl)
 data_rep_level(::Type{<:SparseHashLevel{N, Ti, Tp, Tbl, Lvl}}) where {N, Ti, Tp, Tbl, Lvl} = (SparseData^N)(data_rep_level(Lvl))
@@ -135,13 +139,13 @@ mutable struct VirtualSparseHashLevel
     Ti
     Tp
     Tbl
-    I
+    shape
     qos_fill
     qos_stop
 end
 function virtualize(ex, ::Type{SparseHashLevel{N, Ti, Tp, Tbl, Lvl}}, ctx, tag=:lvl) where {N, Ti, Tp, Tbl, Lvl}   
     sym = ctx.freshen(tag)
-    I = map(n->value(:($sym.I[$n]), Int), 1:N)
+    shape = map(n->value(:($sym.shape[$n]), Int), 1:N)
     P = ctx.freshen(sym, :_P)
     qos_fill = ctx.freshen(sym, :_qos_fill)
     qos_stop = ctx.freshen(sym, :_qos_stop)
@@ -151,13 +155,13 @@ function virtualize(ex, ::Type{SparseHashLevel{N, Ti, Tp, Tbl, Lvl}}, ctx, tag=:
         $(qos_stop) = $(qos_fill)
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualSparseHashLevel(lvl_2, sym, N, Ti, Tp, Tbl, I, qos_fill, qos_stop)
+    VirtualSparseHashLevel(lvl_2, sym, N, Ti, Tp, Tbl, shape, qos_fill, qos_stop)
 end
 function (ctx::Finch.LowerJulia)(lvl::VirtualSparseHashLevel)
     quote
         $SparseHashLevel{$(lvl.N), $(lvl.Ti), $(lvl.Tp), $(lvl.Tbl)}(
             $(ctx(lvl.lvl)),
-            ($(map(ctx, lvl.I)...),),
+            ($(map(ctx, lvl.shape)...),),
             $(lvl.ex).tbl,
             $(lvl.ex).ptr,
             $(lvl.ex).srt,
@@ -168,12 +172,12 @@ end
 summary_f_code(lvl::VirtualSparseHashLevel) = "sh{$(lvl.N)}($(summary_f_code(lvl.lvl)))"
 
 function virtual_level_size(lvl::VirtualSparseHashLevel, ctx::LowerJulia)
-    ext = map((ti, stop)->Extent(literal(ti(1)), stop), lvl.Ti.parameters, lvl.I)
+    ext = map((ti, stop)->Extent(literal(ti(1)), stop), lvl.Ti.parameters, lvl.shape)
     (virtual_level_size(lvl.lvl, ctx)..., ext...)
 end
 
 function virtual_level_resize!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, dims...)
-    lvl.I = map(getstop, dims[end-lvl.N+1:end])
+    lvl.shape = map(getstop, dims[end-lvl.N+1:end])
     lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims[1:end-lvl.N]...)
     lvl
 end
@@ -181,7 +185,7 @@ end
 virtual_level_eltype(lvl::VirtualSparseHashLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSparseHashLevel) = virtual_level_default(lvl.lvl)
 
-function initialize_level!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, pos)
+function declare_level!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, pos, init)
     Ti = lvl.Ti
     Tp = lvl.Tp
 
@@ -192,7 +196,7 @@ function initialize_level!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, pos)
         empty!($(lvl.ex).tbl)
         empty!($(lvl.ex).srt)
     end)
-    lvl.lvl = initialize_level!(lvl.lvl, ctx, qos)
+    lvl.lvl = declare_level!(lvl.lvl, ctx, qos, init)
     return lvl
 end
 
@@ -206,6 +210,20 @@ function trim_level!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, pos)
         resize!($(lvl.ex).srt, $qos)
     end)
     lvl.lvl = trim_level!(lvl.lvl, ctx, value(qos, Tp))
+    return lvl
+end
+
+function thaw_level!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, pos)
+    Ti = lvl.Ti
+    Tp = lvl.Tp
+    p = ctx.freshen(lvl.ex, :_p)
+    push!(ctx.preamble, quote
+        for $p = 1:$(ctx(pos))
+            $(lvl.ex).ptr[$p] -= $(lvl.ex).ptr[$p + 1]
+        end
+        $(lvl.ex).ptr[1] = 1
+    end)
+    lvl.lvl = thaw_level!(lvl.lvl, ctx, call(*, pos, lvl.shape))
     return lvl
 end
 

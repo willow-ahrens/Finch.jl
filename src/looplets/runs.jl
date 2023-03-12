@@ -71,7 +71,7 @@ end
 
 FinchNotation.isliteral(::AcceptRun) = false
 
-virtual_default(node::AcceptRun) = node.val
+virtual_default(node::AcceptRun) = Some(node.val)
 
 #TODO this should go somewhere else
 function Finch.virtual_default(x::FinchNode)
@@ -105,8 +105,8 @@ function (ctx::LowerJulia)(root::FinchNode, ::AcceptRunStyle)
         else
             return ctx(body)
         end
-    elseif root.kind === pass
-        quote end#TODO this shouldn't need to be specified, I think that Pass needs not to declare a style
+    elseif root.kind === sequence 
+        quote end#TODO this shouldn't need to be specified
     else
         error("unimplemented")
     end

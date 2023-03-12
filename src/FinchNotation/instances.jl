@@ -7,16 +7,6 @@ end
 
 Base.show(io::IO, node::LiteralInstance{val}) where {val} = print(io, "literal_instance(", val, ")")
 
-struct PassInstance{Tnss<:Tuple} <: FinchNodeInstance
-    tnss::Tnss
-end
-
-Base.:(==)(a::PassInstance, b::PassInstance) = Set([a.tnss...]) == Set([b.tnss...])
-
-@inline pass_instance(tnss...) = PassInstance(tnss)
-
-Base.show(io::IO, node::PassInstance) = (print(io, "pass_instance("); join(node.tnss, ","); print(io, ")"))
-
 struct IndexInstance{name} <: FinchNodeInstance end
 
 @inline index_instance(name) = IndexInstance{name}()
@@ -32,28 +22,51 @@ Base.:(==)(a::ProtocolInstance, b::ProtocolInstance) = a.idx == b.idx && a.mode 
 
 @inline protocol_instance(idx, mode) = ProtocolInstance(idx, mode)
 
-Base.show(io::IO, node::ProtocolInstance) = print(io, "protocol_instance(", node.name, ")")
-
-struct WithInstance{Cons, Prod} <: FinchNodeInstance
-	cons::Cons
-	prod::Prod
+struct DeclareInstance{Tns, Init} <: FinchNodeInstance
+	tns::Tns
+	init::Init
 end
+Base.:(==)(a::DeclareInstance, b::DeclareInstance) = a.tns == b.tns && a.init == b.init
 
-Base.:(==)(a::WithInstance, b::WithInstance) = a.cons == b.cons && a.prod == b.prod
+@inline declare_instance(tns, init) = DeclareInstance(tns, init)
 
-@inline with_instance(cons, prod) = WithInstance(cons, prod)
+Base.show(io::IO, node::DeclareInstance) = print(io, "declare_instance(", node.tns, node.init, ")")
 
-Base.show(io::IO, node::WithInstance) = print(io, "with_instance(", node.cons, ", ", node.prod, ")")
+struct FreezeInstance{Tns} <: FinchNodeInstance
+	tns::Tns
+end
+Base.:(==)(a::FreezeInstance, b::FreezeInstance) = a.tns == b.tns
 
-struct MultiInstance{Bodies} <: FinchNodeInstance
+@inline freeze_instance(tns) = FreezeInstance(tns)
+
+Base.show(io::IO, node::FreezeInstance) = print(io, "freeze_instance(", node.tns, ")")
+
+struct ThawInstance{Tns} <: FinchNodeInstance
+	tns::Tns
+end
+Base.:(==)(a::ThawInstance, b::ThawInstance) = a.tns == b.tns
+
+@inline thaw_instance(tns) = ThawInstance(tns)
+
+Base.show(io::IO, node::ThawInstance) = print(io, "thaw_instance(", node.tns, ")")
+
+struct ForgetInstance{Tns} <: FinchNodeInstance
+	tns::Tns
+end
+Base.:(==)(a::ForgetInstance, b::ForgetInstance) = a.tns == b.tns
+
+@inline forget_instance(tns) = ForgetInstance(tns)
+
+Base.show(io::IO, node::ForgetInstance) = print(io, "forget_instance(", node.tns, ")")
+
+struct SequenceInstance{Bodies} <: FinchNodeInstance
     bodies::Bodies
 end
+Base.:(==)(a::SequenceInstance, b::SequenceInstance) = all(a.bodies .== b.bodies)
 
-Base.:(==)(a::MultiInstance, b::MultiInstance) = all(a.bodies .== b.bodies)
+sequence_instance(bodies...) = SequenceInstance(bodies)
 
-multi_instance(bodies...) = MultiInstance(bodies)
-
-Base.show(io::IO, node::MultiInstance) = (print(io, "multi_instance("); join(node.bodies, ", "); println(")"))
+Base.show(io::IO, node::SequenceInstance) = (print(io, "sequence_instance("); join(io, node.bodies, ", "); println(io, ")"))
 
 struct LoopInstance{Idx, Body} <: FinchNodeInstance
 	idx::Idx

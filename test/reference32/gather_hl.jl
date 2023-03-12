@@ -3,7 +3,6 @@ begin
     B_val = B.val
     A_lvl = ex.rhs.tns.tns.lvl
     A_lvl_2 = A_lvl.lvl
-    B_val = 0.0
     A_lvl_q = A_lvl.ptr[1]
     A_lvl_q_stop = A_lvl.ptr[1 + 1]
     if A_lvl_q < A_lvl_q_stop

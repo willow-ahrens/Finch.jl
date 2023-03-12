@@ -104,7 +104,7 @@ function virtual_resize!(tns::AbstractVirtualFiber, ctx, dims...)
 end
 virtual_eltype(tns::AbstractVirtualFiber) = virtual_level_eltype(tns.lvl)
 virtual_elaxis(tns::AbstractVirtualFiber) = nodim
-virtual_default(tns::AbstractVirtualFiber) = virtual_level_default(tns.lvl)
+virtual_default(tns::AbstractVirtualFiber) = Some(virtual_level_default(tns.lvl))
 
 """
     default(fbr)
@@ -112,17 +112,17 @@ virtual_default(tns::AbstractVirtualFiber) = virtual_level_default(tns.lvl)
 The default for a fiber is the value that each element of the fiber will have
 after initialization. This value is most often zero, and defaults to nothing.
 
-See also: [`initialize!`](@ref)
+See also: [`declare!`](@ref)
 """
 function default end
 
 """
-    initialize_level!(lvl, ctx, pos)
+    declare_level!(lvl, ctx, pos, init)
 
 Initialize and thaw all fibers within `lvl`, assuming positions `1:pos` were
 previously assembled and frozen. The resulting level has no assembled positions.
 """
-function initialize_level! end
+function declare_level! end
 
 """
     assemble_level!(lvl, ctx, pos, new_pos)
@@ -147,8 +147,8 @@ Freeze all fibers in `lvl`. Positions `1:pos` need freezing.
 """
 freeze_level!(fbr, ctx, mode) = fbr.lvl
 
-function initialize!(fbr::VirtualFiber, ctx::LowerJulia)
-    lvl = initialize_level!(fbr.lvl, ctx, literal(1))
+function declare!(fbr::VirtualFiber, ctx::LowerJulia, init)
+    lvl = declare_level!(fbr.lvl, ctx, literal(1), init)
     push!(ctx.preamble, assemble_level!(lvl, ctx, literal(1), literal(1))) #TODO this feels unnecessary?
     fbr = VirtualFiber(lvl)
 end
@@ -190,20 +190,47 @@ function get_updater(fbr::VirtualTrackedSubFiber, ctx, protos...)
     )
 end
 
+"""
+    redefault!(fbr, init)
+
+Return a fiber which is equal to `fbr`, but with the default (implicit) value
+set to `init`.  May reuse memory and render the original fiber unusable when
+modified.
+
+```jldoctest
+julia> A = @fiber(sl(e(0.0), 10), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
+SparseList (0.0) [1:10]
+├─[1]: 2.0
+├─[3]: 3.0
+├─[5]: 4.0
+├─[7]: 5.0
+├─[9]: 6.0
+
+julia> redefault!(A, Inf)
+SparseList (Inf) [1:10]
+├─[1]: 2.0
+├─[3]: 3.0
+├─[5]: 4.0
+├─[7]: 5.0
+├─[9]: 6.0
+```
+"""
+redefault!(fbr::Fiber, init) = Fiber(redefault!(fbr.lvl, init))
+redefault!(fbr::SubFiber, init) = SubFiber(redefault!(fbr.lvl, init), fbr.pos)
 
 
 data_rep(fbr::Fiber) = data_rep(typeof(fbr))
 data_rep(::Type{<:AbstractFiber{Lvl}}) where {Lvl} = SolidData(data_rep_level(Lvl))
 
 
-function freeze!(fbr::VirtualFiber, ctx::LowerJulia, mode, idxs...)
-    if mode.kind === updater
-        return VirtualFiber(freeze_level!(fbr.lvl, ctx, literal(1)))
-    else
-        return fbr
-    end
+function freeze!(fbr::VirtualFiber, ctx::LowerJulia)
+    return VirtualFiber(freeze_level!(fbr.lvl, ctx, literal(1)))
 end
 
+thaw_level!(lvl, ctx, pos) = throw(FormatLimitation("cannot modify $(typeof(lvl)) in place (forgot to declare with .= ?)"))
+function thaw!(fbr::VirtualFiber, ctx::LowerJulia)
+    return VirtualFiber(thaw_level!(fbr.lvl, ctx, literal(1)))
+end
 
 function trim!(fbr::VirtualFiber, ctx)
     VirtualFiber(trim_level!(fbr.lvl, ctx, literal(1)))
@@ -296,7 +323,7 @@ function f_decode(ex)
     elseif ex isa Expr
         return Expr(ex.head, map(f_decode, ex.args)...)
     elseif ex isa Symbol
-        return :(@something($f_code($(Val(ex))), $(esc(ex))))
+        return :(@something($f_code($(Val(ex))), Some($(esc(ex)))))
     else
         return esc(ex)
     end
@@ -329,3 +356,43 @@ Base.summary(fbr::SubFiber) = "$(join(size(fbr), "×")) SubFiber($(summary_f_cod
 
 Base.similar(fbr::AbstractFiber) = Fiber(similar_level(fbr.lvl))
 Base.similar(fbr::AbstractFiber, dims::Tuple) = Fiber(similar_level(fbr.lvl, dims...))
+
+function base_rules(alg, ctx::LowerJulia, a, tns::VirtualFiber)
+    return [
+        #=
+        (@rule loop(~i, assign(access(~a, ~m), $(literal(+)), ~b::isliteral)) =>
+            assign(access(a, m), +, call(*, b, extent(ctx.dims[i])))
+        ),
+
+        (@rule loop(~i, sequence(~s1::ortho(a)..., assign(access(~a, ~m), $(literal(+)), ~b::isliteral), ~s2::ortho(a)...)) =>
+            sequence(assign(access(a, m), +, call(*, b, extent(ctx.dims[i]))), loop(i, sequence(s1..., s2...)))
+        ),
+        (@rule loop(~i, assign(access(~a, ~m), ~f::isidempotent(alg), ~b::isliteral)) =>
+            assign(access(a, m), f, b)
+        ),
+        (@rule loop(~i, sequence(~s1::ortho(a)..., assign(access(~a, ~m), ~f::isidempotent(alg), ~b::isliteral), ~s2::ortho(a)...)) =>
+            sequence(assign(access(a, m), f, b), loop(i, sequence(s1..., s2...)))
+        ),
+        (@rule sequence(~s1..., assign(access(a, ~m), ~f::isabelian(alg), ~b), ~s2::ortho(a)..., assign(access(a, ~m), ~f, ~c), ~s3...) =>
+            sequence(s1..., assign(access(a, m), f, call(f, b, c)))
+        ),
+        =#
+
+        (@rule sequence(~s1..., declare(a, ~z), ~s2::ortho(a)..., freeze(a), ~s3...) =>
+            sequence(s1..., s2..., declare(a, z), freeze(a), s3...)
+        ),
+        (@rule sequence(~s1..., declare(a, ~z), freeze(a), ~s2::ortho(a)..., ~s3, ~s4...) =>
+            if (s3 = Postwalk(@rule access(a, reader(), ~i...) => z)(s3)) !== nothing
+                sequence(s1..., declare(a, ~z), freeze(a), s2..., s3, s4...)
+            end
+        ),
+        (@rule sequence(~s1..., thaw(a, ~z), ~s2::ortho(a)..., freeze(a), ~s3...) =>
+            sequence(s1..., s2..., s3...)
+        ),
+        #=
+        (@rule sequence(~s1..., declare(a, ~z), ~s2..., freeze(a), ~s3::ortho(a)...) =>
+            sequence(s1..., s2..., s3...)
+        ),
+        =#
+    ]
+end

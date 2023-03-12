@@ -19,7 +19,10 @@ struct ElementLevel{D, Tv}
 end
 const Element = ElementLevel
 
-ElementLevel(d, args...) = ElementLevel{d}(args...)
+function ElementLevel(d, args...)
+    isbits(d) || throw(ArgumentError("Finch currently only supports isbits defaults"))
+    ElementLevel{d}(args...)
+end
 ElementLevel{D}() where {D} = ElementLevel{D, typeof(D)}()
 ElementLevel{D}(val::Vector{Tv}) where {D, Tv} = ElementLevel{D, Tv}(val)
 
@@ -33,6 +36,9 @@ summary_f_code(::Element{D}) where {D} = "e($(D))"
 similar_level(::ElementLevel{D}) where {D} = ElementLevel{D}()
 
 pattern!(lvl::ElementLevel) = Pattern()
+
+redefault!(lvl::ElementLevel{D, Tv}, init) where {D, Tv} = 
+    ElementLevel{init, Tv}(lvl.val)
 
 function Base.show(io::IO, lvl::ElementLevel{D, Tv}) where {D, Tv}
     print(io, "Element{")
@@ -85,9 +91,14 @@ virtual_level_size(::VirtualElementLevel, ctx) = ()
 virtual_level_eltype(lvl::VirtualElementLevel) = lvl.Tv
 virtual_level_default(lvl::VirtualElementLevel) = lvl.D
 
-initialize_level!(lvl::VirtualElementLevel, ctx, pos) = lvl
+function declare_level!(lvl::VirtualElementLevel, ctx, pos, init)
+    init == literal(lvl.D) || throw(FormatLimitation("Cannot initialize Element Levels to non-default values(have $init expected $(lvl.D))"))
+    lvl
+end
 
 freeze_level!(lvl::VirtualElementLevel, ctx, pos) = lvl
+
+thaw_level!(lvl::VirtualElementLevel, ctx::LowerJulia, pos) = lvl
 
 function trim_level!(lvl::VirtualElementLevel, ctx::LowerJulia, pos)
     push!(ctx.preamble, quote

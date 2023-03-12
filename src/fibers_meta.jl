@@ -35,9 +35,7 @@ end
     return quote
         size(A) == size(B) || return false
         check = Scalar(true)
-        if check[]
-            @finch @loop($(reverse(idxs)...), check[] &= (A[$(idxs...)] == B[$(idxs...)]))
-        end
+        @finch @loop($(reverse(idxs)...), check[] &= (A[$(idxs...)] == B[$(idxs...)]))
         return check[]
     end
 end
@@ -59,9 +57,7 @@ end
     return quote
         size(A) == size(B) || return false
         check = Scalar(true)
-        if check[]
-            @finch @loop($(reverse(idxs)...), check[] &= isequal(A[$(idxs...)], B[$(idxs...)]))
-        end
+        @finch @loop($(reverse(idxs)...), check[] &= isequal(A[$(idxs...)], B[$(idxs...)]))
         return check[]
     end
 end
@@ -80,7 +76,6 @@ end
 
 Base.getindex(arr::Fiber, inds...) = getindex_helper(arr, to_indices(arr, inds)...)
 @generated function getindex_helper(arr::Fiber, inds...)
-    @assert ndims(arr) == length(inds)
     @assert ndims(arr) == length(inds)
     N = ndims(arr)
 
@@ -112,15 +107,52 @@ Base.getindex(arr::Fiber, inds...) = getindex_helper(arr, to_indices(arr, inds).
     quote
         win = $dst
         ($(syms...), ) = (inds...,)
-        @finch @loop($(reverse(dst_modes)...), win[$(dst_modes...)] = arr[$(coords...)])
+        @finch begin
+            win .= $(default(arr))
+            @loop($(reverse(dst_modes)...), win[$(dst_modes...)] = arr[$(coords...)])
+        end
         return win
     end
 end
 
+Base.setindex!(arr::Fiber, src, inds...) = setindex_helper(arr, src, to_indices(arr, inds)...)
+@generated function setindex_helper(arr::Fiber, src, inds...)
+    @assert ndims(arr) == length(inds)
+    @assert ndims(src) == sum(ndims.(inds))
+    N = ndims(arr)
+
+    T = eltype(arr)
+    syms = [Symbol(:inds_, n) for n = 1:N]
+    modes = [Symbol(:mode_, n) for n = 1:N]
+    coords = map(1:N) do n
+        if ndims(inds[n]) == 0
+            syms[n]
+        elseif inds[n] <: Base.Slice
+            modes[n]
+        else
+            :($(syms[n])[$(modes[n])])
+        end
+    end
+    src_modes = modes[filter(n->ndims(inds[n]) != 0, 1:N)]
+    
+    quote
+        ($(syms...), ) = (inds...,)
+        @finch begin
+            @loop($(reverse(src_modes)...), arr[$(coords...)] = src[$(src_modes...)])
+        end
+        return src
+    end
+end
+
 @generated function copyto_helper!(dst, src)
+    ndims(dst) > ndims(src) && throw(DimensionMismatch("more dimensions in destination than source"))
+    ndims(dst) < ndims(src) && throw(DimensionMismatch("less dimensions in destination than source"))
     idxs = [Symbol(:i_, n) for n = 1:ndims(dst)]
     return quote
-        @finch @loop($(reverse(idxs)...), dst[$(idxs...)] = src[$(idxs...)])
+        @finch begin
+            dst .= $(default(dst))
+            @loop($(reverse(idxs)...), dst[$(idxs...)] = src[$(idxs...)])
+        end
         return dst
     end
 end
@@ -136,12 +168,23 @@ end
 dropdefaults(src) = dropdefaults!(similar(src), src)
 
 @generated function dropdefaults!(dst::Fiber, src)
+    ndims(dst) > ndims(src) && throw(DimensionMismatch("more dimensions in destination than source"))
+    ndims(dst) < ndims(src) && throw(DimensionMismatch("less dimensions in destination than source"))
     idxs = [Symbol(:i_, n) for n = 1:ndims(dst)]
     T = eltype(dst)
     d = default(dst)
     return quote
         tmp = Scalar{$d, $T}()
-        @finch @loop($(reverse(idxs)...), (@sieve (tmp[] != $d) dst[$(idxs...)] = tmp[]) where (tmp[] = src[$(idxs...)]))
+        @finch begin
+            dst .= $(default(dst))
+            @loop $(reverse(idxs)...) begin
+                tmp .= $(default(dst))
+                tmp[] = src[$(idxs...)]
+                if !isequal(tmp[], $d)
+                    dst[$(idxs...)] = tmp[]
+                end
+            end
+        end
         return dst
     end
 end

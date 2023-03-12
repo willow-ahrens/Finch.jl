@@ -40,7 +40,7 @@ function virtualize(ex, ::Type{<:SparseMatrixCSC{Tv, Ti}}, ctx, tag=:tns) where 
     VirtualSparseMatrixCSC(sym, Tv, Ti)
 end
 
-function initialize!(arr::VirtualSparseMatrixCSC, ctx::LowerJulia)
+function declare!(arr::VirtualSparseMatrixCSC, ctx::LowerJulia, init)
     throw(FormatLimitation("Finch does not support writes to SparseMatrixCSC"))
 end
 
@@ -142,7 +142,7 @@ function virtualize(ex, ::Type{<:SparseVector{Tv, Ti}}, ctx, tag=:tns) where {Tv
     VirtualSparseVector(sym, Tv, Ti)
 end
 
-function initialize!(arr::VirtualSparseVector, ctx::LowerJulia)
+function declare!(arr::VirtualSparseVector, ctx::LowerJulia, init)
     throw(FormatLimitation("Finch does not support writes to SparseVector"))
 end
 

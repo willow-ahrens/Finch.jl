@@ -35,19 +35,19 @@ SparseList (0.0) [:,1:3]
 """
 struct SparseListLevel{Ti, Tp, Lvl}
     lvl::Lvl
-    I::Ti
+    shape::Ti
     ptr::Vector{Tp}
     idx::Vector{Ti}
 end
 const SparseList = SparseListLevel
 SparseListLevel(lvl) = SparseListLevel{Int}(lvl)
-SparseListLevel(lvl, I, args...) = SparseListLevel{typeof(I)}(lvl, I, args...)
+SparseListLevel(lvl, shape, args...) = SparseListLevel{typeof(shape)}(lvl, shape, args...)
 SparseListLevel{Ti}(lvl, args...) where {Ti} = SparseListLevel{Ti, Int}(lvl, args...)
 SparseListLevel{Ti, Tp}(lvl, args...) where {Ti, Tp} = SparseListLevel{Ti, Tp, typeof(lvl)}(lvl, args...)
 
 SparseListLevel{Ti, Tp, Lvl}(lvl) where {Ti, Tp, Lvl} = SparseListLevel{Ti, Tp, Lvl}(lvl, zero(Ti))
-SparseListLevel{Ti, Tp, Lvl}(lvl, I) where {Ti, Tp, Lvl} = 
-    SparseListLevel{Ti, Tp, Lvl}(lvl, Ti(I), Tp[1], Ti[])
+SparseListLevel{Ti, Tp, Lvl}(lvl, shape) where {Ti, Tp, Lvl} = 
+    SparseListLevel{Ti, Tp, Lvl}(lvl, Ti(shape), Tp[1], Ti[])
 
 """
 `f_code(l)` = [SparseListLevel](@ref).
@@ -57,8 +57,11 @@ summary_f_code(lvl::SparseListLevel) = "sl($(summary_f_code(lvl.lvl)))"
 similar_level(lvl::SparseListLevel) = SparseList(similar_level(lvl.lvl))
 similar_level(lvl::SparseListLevel, dim, tail...) = SparseList(similar_level(lvl.lvl, tail...), dim)
 
-pattern!(lvl::SparseListLevel{Ti}) where {Ti} = 
-    SparseListLevel{Ti}(pattern!(lvl.lvl), lvl.I, lvl.ptr, lvl.idx)
+pattern!(lvl::SparseListLevel{Ti, Tp}) where {Ti, Tp} = 
+    SparseListLevel{Ti, Tp}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.idx)
+
+redefault!(lvl::SparseListLevel{Ti, Tp}, init) where {Ti, Tp} = 
+    SparseListLevel{Ti, Tp}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.idx)
 
 function Base.show(io::IO, lvl::SparseListLevel{Ti, Tp}) where {Ti, Tp}
     if get(io, :compact, false)
@@ -68,7 +71,7 @@ function Base.show(io::IO, lvl::SparseListLevel{Ti, Tp}) where {Ti, Tp}
     end
     show(io, lvl.lvl)
     print(io, ", ")
-    show(IOContext(io, :typeinfo=>Ti), lvl.I)
+    show(IOContext(io, :typeinfo=>Ti), lvl.shape)
     print(io, ", ")
     if get(io, :compact, false)
         print(io, "…")
@@ -87,13 +90,13 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseLis
     print_coord(io, crd) = show(io, crd)
     get_fbr(crd) = fbr(crd)
 
-    print(io, "SparseList (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.I, "]")
+    print(io, "SparseList (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.shape, "]")
     display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
 end
 
 @inline level_ndims(::Type{<:SparseListLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = 1 + level_ndims(Lvl)
-@inline level_size(lvl::SparseListLevel) = (level_size(lvl.lvl)..., lvl.I)
-@inline level_axes(lvl::SparseListLevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.I))
+@inline level_size(lvl::SparseListLevel) = (level_size(lvl.lvl)..., lvl.shape)
+@inline level_axes(lvl::SparseListLevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.shape))
 @inline level_eltype(::Type{<:SparseListLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = level_eltype(Lvl)
 @inline level_default(::Type{<:SparseListLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = level_default(Lvl)
 data_rep_level(::Type{<:SparseListLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = SparseData(data_rep_level(Lvl))
@@ -114,26 +117,26 @@ mutable struct VirtualSparseListLevel
     ex
     Ti
     Tp
-    I
+    shape
     qos_fill
     qos_stop
 end
 function virtualize(ex, ::Type{SparseListLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}
     sym = ctx.freshen(tag)
-    I = value(:($sym.I), Int)
+    shape = value(:($sym.shape), Int)
     qos_fill = ctx.freshen(sym, :_qos_fill)
     qos_stop = ctx.freshen(sym, :_qos_stop)
     push!(ctx.preamble, quote
         $sym = $ex
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualSparseListLevel(lvl_2, sym, Ti, Tp, I, qos_fill, qos_stop)
+    VirtualSparseListLevel(lvl_2, sym, Ti, Tp, shape, qos_fill, qos_stop)
 end
 function (ctx::Finch.LowerJulia)(lvl::VirtualSparseListLevel)
     quote
-        $SparseListLevel{$(lvl.Ti)}(
+        $SparseListLevel{$(lvl.Ti), $(lvl.Tp)}(
             $(ctx(lvl.lvl)),
-            $(ctx(lvl.I)),
+            $(ctx(lvl.shape)),
             $(lvl.ex).ptr,
             $(lvl.ex).idx,
         )
@@ -143,12 +146,12 @@ end
 summary_f_code(lvl::VirtualSparseListLevel) = "sl($(summary_f_code(lvl.lvl)))"
 
 function virtual_level_size(lvl::VirtualSparseListLevel, ctx)
-    ext = Extent(literal(lvl.Ti(1)), lvl.I)
+    ext = Extent(literal(lvl.Ti(1)), lvl.shape)
     (virtual_level_size(lvl.lvl, ctx)..., ext)
 end
 
 function virtual_level_resize!(lvl::VirtualSparseListLevel, ctx, dims...)
-    lvl.I = getstop(dims[end])
+    lvl.shape = getstop(dims[end])
     lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims[1:end-1]...)
     lvl
 end
@@ -156,7 +159,7 @@ end
 virtual_level_eltype(lvl::VirtualSparseListLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSparseListLevel) = virtual_level_default(lvl.lvl)
 
-function initialize_level!(lvl::VirtualSparseListLevel, ctx::LowerJulia, pos)
+function declare_level!(lvl::VirtualSparseListLevel, ctx::LowerJulia, pos, init)
     Ti = lvl.Ti
     Tp = lvl.Tp
     qos = call(-, call(getindex, :($(lvl.ex).ptr), call(+, pos, 1)),  1)
@@ -164,7 +167,7 @@ function initialize_level!(lvl::VirtualSparseListLevel, ctx::LowerJulia, pos)
         $(lvl.qos_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
     end)
-    lvl.lvl = initialize_level!(lvl.lvl, ctx, qos)
+    lvl.lvl = declare_level!(lvl.lvl, ctx, qos, init)
     return lvl
 end
 

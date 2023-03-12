@@ -12,9 +12,9 @@ using Compat
 
 export @finch, @finch_program, @finch_code, value
 
-export Fiber, Fiber!, SparseList, SparseHash, SparseCOO, SparseBytemap, SparseVBL, Dense, RepeatRLE, Element, Pattern, Scalar
+export Fiber, Fiber!, SparseList, SparseHash, SparseCOO, SparseByteMap, SparseVBL, Dense, RepeatRLE, Element, Pattern, Scalar
 export walk, gallop, follow, extrude, laminate
-export fiber, @fiber, pattern!, dropdefaults, dropdefaults!
+export fiber, @fiber, pattern!, dropdefaults, dropdefaults!, redefault!
 export diagmask, lotrimask, uptrimask, bandmask
 
 export choose, minby, maxby
@@ -29,7 +29,6 @@ using .FinchNotation
 using .FinchNotation: and, or, right
 include("virtualize.jl")
 include("style.jl")
-include("transform_ssa.jl")
 include("lower.jl")
 include("dimensionalize.jl")
 include("annihilate.jl")
@@ -61,6 +60,7 @@ include("levels/elementlevels.jl")
 include("levels/patternlevels.jl")
 
 include("traits.jl")
+include("asarray.jl")
 
 include("modifiers.jl")
 
@@ -90,13 +90,13 @@ module h
 end
 
 register(DefaultAlgebra)
-#TODO add an uninitialized_fiber type so that we can perhaps do this through executing pass(fbr),
+#TODO add an uninitialized_fiber type so that we can perhaps do this through executing declare(fbr),
 #obviating the need to have a separate generated function registration mechanism for fibers.
 @generated function Fiber!(lvl)
     contain(LowerJulia()) do ctx
         lvl = virtualize(:lvl, lvl, ctx)
         lvl = resolve(lvl, ctx)
-        lvl = initialize_level!(lvl, ctx, literal(0))
+        lvl = declare_level!(lvl, ctx, literal(0), literal(virtual_level_default(lvl)))
         push!(ctx.preamble, assemble_level!(lvl, ctx, literal(1), literal(1)))
         lvl = freeze_level!(lvl, ctx, literal(1))
         :(Fiber($(ctx(lvl))))
@@ -119,8 +119,19 @@ end
         y = @fiber d(e(0.0))
         A = @fiber d(sl(e(0.0)))
         x = @fiber sl(e(0.0))
-        Finch.execute_code(:ex, typeof(Finch.@finch_program_instance @loop i j y[i] += A[i, j] * x[i]))
+        Finch.execute_code(:ex, typeof(Finch.@finch_program_instance begin
+                @loop j i y[i] += A[i, j] * x[i]
+            end
+        ))
 
+    end
+end
+
+function constprop_read(tns::VirtualScalar, ctx, stmt, node)
+    if @capture stmt sequence(declare(~a, ~z))
+        return z
+    else
+        return node
     end
 end
 

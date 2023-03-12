@@ -1,4 +1,5 @@
 using SparseArrays
+using Finch: Cindex
 
 @testset "issues" begin
     #https://github.com/willow-ahrens/Finch.jl/issues/51
@@ -23,7 +24,7 @@ using SparseArrays
     let
         B = @fiber(d(e(0)), [2, 4, 5])
         A = @fiber(d(e(0), 6))
-        @finch @loop i A[B[i]] = i
+        @finch (A .= 0; @loop i A[B[i]] = i)
         @test reference_isequal(A, [0, 1, 0, 2, 3, 0])
     end
 
@@ -42,8 +43,8 @@ using SparseArrays
     A = copyto!(@fiber(d(d(e(0)))), A)
     B = @fiber(d(e(0)))
     
-    @test check_output("fiber_as_idx.jl", @finch_code @loop i B[i] = A[I[i], i])
-    @finch @loop i B[i] = A[I[i], i]
+    @test check_output("fiber_as_idx.jl", @finch_code (B .= 0; @loop i B[i] = A[I[i], i]))
+    @finch (B .= 0; @loop i B[i] = A[I[i], i])
 
     @test B == [11, 12, 93, 34, 35]
 
@@ -52,9 +53,9 @@ using SparseArrays
         t = @fiber(sl(sl(e(0.0))))
         X = @fiber(sl(sl(e(0.0))))
         A = @fiber(sl(sl(e(0.0))), SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3]))
-        @test_throws DimensionMismatch @finch @loop j i t[i, j] = min(X[i, j],  A[i, j])
+        @test_throws DimensionMismatch @finch (t .= 0; @loop j i t[i, j] = min(X[i, j],  A[i, j]))
         X = @fiber(sl(sl(e(0.0), 4), 4))
-        @finch @loop j i t[i, j] = min(X[i, j],  A[i, j])
+        @finch (t .= 0; @loop j i t[i, j] = min(X[i, j],  A[i, j]))
         @test t == A
     end
 
@@ -69,7 +70,7 @@ using SparseArrays
         t = @fiber(sl(sl(e(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
         A = dropdefaults(copyto!(@fiber(sl(sl(e(0.0)))), B))
-        @finch MyAlgebra() @loop j i t[i, j] = f(A[i,j], A[i,j], A[i,j])
+        @finch MyAlgebra() (t .= 0; @loop j i t[i, j] = f(A[i,j], A[i,j], A[i,j]))
         @test t == B .* 3
     end
 
@@ -79,14 +80,14 @@ using SparseArrays
         t = @fiber(sl(sl(e(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
         A = dropdefaults(copyto!(@fiber(sl(sl(e(0.0)))), B))
-        @test_throws Finch.FormatLimitation @finch MyAlgebra() @loop i j t[i, j] = A[i, j]
+        @test_throws Finch.FormatLimitation @finch MyAlgebra() (t .= 0; @loop i j t[i, j] = A[i, j])
     end
 
     let
         t = @fiber(d(sl(e(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
         A = dropdefaults(copyto!(@fiber(d(sl(e(0.0)))), B))
-        @test_throws Finch.FormatLimitation @finch MyAlgebra() @loop i j t[i, j] = A[i, j]
+        @test_throws Finch.FormatLimitation @finch MyAlgebra() (t .= 0; @loop i j t[i, j] = A[i, j])
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/129
@@ -110,7 +111,7 @@ using SparseArrays
 
         B = @fiber(d(sl(e(0.0))))
 
-        @finch @loop j i B[i, j] = A[i, j]
+        @finch (B .= 0; @loop j i B[i, j] = A[i, j])
 
         @test isstructequal(B, fiber(A))
 
@@ -118,8 +119,119 @@ using SparseArrays
 
         w = @fiber(sl(e(0.0)))
 
-        @finch @loop i w[i] = v[i]
+        @finch (w .= 0; @loop i w[i] = v[i])
 
         @test isstructequal(w, fiber(v))
     end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/99
+    let 
+        m = 4; n = 3; ptr_c = [0, 3, 3, 5]; idx_c = [1, 2, 3, 0, 2]; val_c = [1.1, 2.2, 3.3, 4.4, 5.5];
+
+        ptr_jl = unsafe_wrap(Array, reinterpret(Ptr{Cindex{Int}}, pointer(ptr_c)), length(ptr_c); own = false)
+        idx_jl = unsafe_wrap(Array, reinterpret(Ptr{Cindex{Int}}, pointer(idx_c)), length(idx_c); own = false)
+        A = Fiber(Dense(SparseList{Cindex{Int}, Cindex{Int}}(Element{0.0, Float64}(val_c), m, ptr_jl, idx_jl), n))
+
+        @test A == [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0]
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/121
+    let
+        io = IOBuffer()
+        y = [2.0, Inf, Inf, 1.0, 3.0, Inf]
+        yf = @fiber(sl(e(Inf)), y)
+        println(io, "@fiber(sl(e(Inf)), $y):")
+        println(io, yf)
+
+        x = Scalar(Inf)
+
+        @test check_output("specialvals_minimum_inf.jl", @finch_code (for i=_; x[] <<min>>= yf[i] end))
+        @finch for i=_; x[] <<min>>= yf[i] end
+        @test x[] == 1.0
+
+        @test check_output("specialvals_repr_inf.txt", String(take!(io)))
+
+        io = IOBuffer()
+        y = [2.0, NaN, NaN, 1.0, 3.0, NaN]
+        yf = @fiber(sl(e(NaN)), y)
+        println(io, "@fiber(sl(e(NaN)), $y):")
+        println(io, yf)
+
+        x = Scalar(Inf)
+
+        @test check_output("specialvals_minimum_nan.jl", @finch_code (for i=_; x[] <<min>>= yf[i] end))
+        @finch for i=_; x[] <<min>>= yf[i] end
+        @test isequal(x[], NaN)
+
+        @test check_output("specialvals_repr_nan.txt", String(take!(io)))
+
+        io = IOBuffer()
+        y = [2.0, missing, missing, 1.0, 3.0, missing]
+        yf = @fiber(sl(e{missing, Union{Float64,Missing}}()), y)
+        println(io, "@fiber(sl(e(missing)), $y):")
+        println(io, yf)
+
+        x = Scalar(Inf)
+
+        @test check_output("specialvals_minimum_missing.jl", @finch_code (for i=_; x[] <<min>>= yf[i] end))
+        @finch for i=_; x[] <<min>>= coalesce(yf[i], missing, Inf) end
+        @test x[] == 1.0
+
+        @test check_output("specialvals_repr_missing.txt", String(take!(io)))
+
+        io = IOBuffer()
+        y = [2.0, nothing, nothing, 1.0, 3.0, Some(1.0), nothing]
+        yf = @fiber(sl(e{nothing, Union{Float64,Nothing,Some{Float64}}}()), y)
+        println(io, "@fiber(sl(e(nothing)), $y):")
+        println(io, yf)
+
+        x = Scalar(Inf)
+
+        @test check_output("specialvals_minimum_nothing.jl", @finch_code (for i=_; x[] <<min>>= something(yf[i], nothing, Inf) end))
+        @finch for i=_; x[] <<min>>= something(yf[i], nothing, Inf) end
+        @test x[] == 1.0
+
+        @test check_output("specialvals_repr_nothing.txt", String(take!(io)))
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/118
+
+    let
+        io = IOBuffer()
+        A = [0.0 1.0 0.0 2.0; 0.0 1.0 0.0 3.0; 0.0 0.0 2.0 0.0]
+        B = @fiber(d(sl(e(0.0))), A)
+        C = @fiber(d(sl(e(Inf))))
+        @finch (C .= Inf; for j = _, i = _ C[i, j] = ifelse(B[i, j] == 0, Inf, B[i, j]) end)
+
+        println(io, "A :", A)
+        println(io, "C :", C)
+        println(io, "redefault!(B, Inf) :", redefault!(B, Inf))
+        println(redefault!(B, Inf))
+        println(C)
+        @test isstructequal(redefault!(B, Inf), C)
+        @test check_output("issue118.txt", String(take!(io)))
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/97
+
+    let
+        @test_throws DimensionMismatch A = @fiber(d(sl(e(0.0))), [0, 1])
+        A = fsprand((10, 11), 0.5)
+        B = @fiber d(sl(e(0.0)))
+        C = fsprand((10, 10), 0.5)
+        @test_throws DimensionMismatch @finch (A .= 0; @loop j i A[i, j] = B[i])
+        @test_throws DimensionMismatch @finch (A .= 0; @loop j i A[i] = B[i, j])
+        @test_throws DimensionMismatch @finch (A .= 0; @loop j i A[i, j] = B[i, j] + C[i, j])
+        @test_throws DimensionMismatch copyto!(@fiber(sl(e(0.0))), A)
+        @test_throws DimensionMismatch dropdefaults!(@fiber(sl(e(0.0))), A)
+
+        A = fsprand((10, 11), 0.5)
+        B = fsprand((10, 10), 0.5)
+        @test_throws Finch.FormatLimitation @finch @loop j i A[i, j] = B[i, j::follow]
+        @test_throws Finch.FormatLimitation @finch @loop j i A[j, i] = B[i, j]
+        @test_throws ArgumentError @fiber(sc(e(0.0)))
+        @test_throws ArgumentError @fiber(sh(e(0.0)))
+        @test_throws ArgumentError @fiber(sl(e("hello")))
+    end
+
 end
