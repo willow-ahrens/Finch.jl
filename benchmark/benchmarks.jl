@@ -102,7 +102,7 @@ function bfs(edges, source=5)
 
     v = Scalar(false)
 
-    while F.lvl.pos[2] > 1 #TODO this could be cleaner if we could get early exit working.
+    while F.lvl.ptr[2] > 1 #TODO this could be cleaner if we could get early exit working.
         @finch @loop j k (begin
             @sieve v[] begin
                 _F[k] |= true
@@ -148,18 +148,16 @@ function bellmanford(edges, source=1)
     return modified[] ? -1 : dists_prev
 end
 
-#ERROR IN BFS BENCHMARK:
-#ERROR: LoadError: type SparseBytemapLevel has no field pos
 
 SUITE["graphs"]["bellmanford"] = BenchmarkGroup()
-for mtx in ["Newman/netscience"] #"Williams/pdb1HYS", "GAP/GAP-road"
+for mtx in ["Newman/netscience"] #", Williams/pdb1HYS", "GAP/GAP-road"]
     A = fiber(SparseMatrixCSC(matrixdepot(mtx)))
     (m, n) = size(A)
     test = @fiber(d(sl(e(Inf))))
     @finch @loop j i test[i, j] = ifelse(A[i, j] == 0, Inf, A[i, j])
-    compress = @fiber(d(sl(e(Inf))), test)
-    #test = @fiber(d(sl(e(Inf, A.lvl.lvl.lvl.val), A.lvl.lvl.ptr, A.lvl.lvl.idx, m), n))
-    SUITE["graphs"]["bellmanford"][mtx] = @benchmarkable bellmanford($compress) #$test) 
+    test = @fiber(d(sl(e(Inf))), test)
+    # test = @fiber(d(sl(e(Inf, A.lvl.lvl.lvl.val), m, A.lvl.lvl.ptr, A.lvl.lvl.idx), n))
+    SUITE["graphs"]["bellmanford"][mtx] = @benchmarkable bellmanford($test)
 end
 
 SUITE["matrices"] = BenchmarkGroup()
@@ -175,7 +173,7 @@ function spgemm_inner(A, B)
 end
 
 SUITE["matrices"]["ATA_spgemm_inner"] = BenchmarkGroup()
-for mtx in ["SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
+for mtx in []#"SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
     A = fiber(permutedims(SparseMatrixCSC(matrixdepot(mtx))))
     SUITE["matrices"]["ATA_spgemm_inner"][mtx] = @benchmarkable spgemm_inner($A, $A) 
 end
