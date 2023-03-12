@@ -72,4 +72,16 @@ using Finch: AsArray
         
         @test check_output("setindex.txt", String(take!(io)))
     end
+
+    let
+        io = IOBuffer()
+        println(io, "broadcast tests")
+
+        @repl io A = @fiber(d(sl(e(0.0), 10), 12))
+        @repl io B = rand(10)
+        @repl io C = A .+ B
+        
+        @test check_output("broadcast.txt", String(take!(io)))
+    end
+    
 end

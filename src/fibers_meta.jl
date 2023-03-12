@@ -1,4 +1,6 @@
-const AbstractArrayOrBroadcasted = Union{AbstractArray,Broadcast.Broadcasted}
+using Base: Broadcast
+using Base.Broadcast: Broadcasted, BroadcastStyle, AbstractArrayStyle
+const AbstractArrayOrBroadcasted = Union{AbstractArray,Broadcasted}
 
 """
     fiber!(arr, default = zero(eltype(arr)))
@@ -146,6 +148,7 @@ Base.setindex!(arr::Fiber, src, inds...) = setindex_helper(arr, src, to_indices(
     end
 end
 
+#=
 function Base.mapreduce(f, op, A::Fiber, As::AbstractArrayOrBroadcasted...; dims=:, init=nothing)=
     _mapreduce(f, op, A, As..., dims, init)
 function _mapreduce(f, op, As..., dims, init)
@@ -155,13 +158,59 @@ function _mapreduce(f, op, As..., dims, init)
     allequal(axes.(As)) || throw(DimensionMismatchError("Finch cannot currently mapreduce arguments with differing size"))
     reduce(op, Broadcast.broadcasted(f, As...), dims, init)
 end
+=#
 
-struct FinchStyle{N} end
-BroadcastStyle(F::Type{<:Fiber}) = FinchStyle{ndims(F)}()
+struct FinchStyle{N} <: BroadcastStyle
+end
+Base.Broadcast.BroadcastStyle(F::Type{<:Fiber}) = FinchStyle{ndims(F)}()
+Base.Broadcast.broadcastable(fbr::Fiber) = fbr
+Base.Broadcast.BroadcastStyle(a::FinchStyle{N}, b::FinchStyle{M}) where {M, N} = FinchStyle{max(M, N)}()
+Base.Broadcast.BroadcastStyle(a::FinchStyle{N}, b::AbstractArrayStyle{M}) where {M, N} = FinchStyle{max(M, N)}()
 
+@generated function Base.similar(bc::Broadcasted{FinchStyle{N}}, ::Type{T}, dims) where {N, T}
+    #TODO this ignores T and dims haha.
+    return fiber_ctr(broadcast_rep(bc))
+end
+
+function finch_broadcast_expr(ex, ::Type{Broadcasted{Style, Axes, F, Args}}, ctx::LowerJulia, idxs) where {Style, Axes, F, Args}
+    sym = ctx.freshen(:arg)
+    push!(ctx.preamble, :($sym = $ex.f))
+    args = map(enumerate(Args.parameters)) do (n, Arg)
+        finch_broadcast_expr(:($ex.args[$n]), Arg, ctx, idxs)
+    end
+    return :($sym($(args...)))
+end
+function finch_broadcast_expr(ex, ::Type{T}, ctx::LowerJulia, idxs) where T
+    sym = ctx.freshen(:arg)
+    push!(ctx.preamble, :($sym = $ex))
+    return :($sym[$(idxs[end - ndims(T) + 1:end]...)])
+end
+
+@generated function Base.copyto!(out, bc::Broadcasted{FinchStyle{N}}) where {N}
+    ctx = LowerJulia()
+    res = contain(ctx) do ctx_2
+        idxs = [ctx_2.freshen(:idx, n) for n = 1:N]
+        ex = finch_broadcast_expr(:bc, bc, ctx_2, idxs)
+        quote
+            @finch begin
+                out .= $(default(out))
+                @loop($(reverse(idxs)...), out[$(idxs...)] = $ex)
+            end
+        end
+    end
+    quote
+        println($(QuoteNode(res)))
+        $res
+        out
+    end
+
+end
+
+#=
 function reduce(op, bc::Broadcasted{FinchStyle{N}}, dims, init) where {N}
     T = Base.combine_eltypes(bc.f, bc.args::Tuple)
 end
+=#
 
 
 @generated function copyto_helper!(dst, src)

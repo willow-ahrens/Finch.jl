@@ -1,21 +1,38 @@
+using Base.Broadcast: Broadcasted
+
 """
     SparseData(lvl)
     
-Represents a tensor `A` where `A[i, :, ..., :]` is sometimes entirely default(lvl)
+Represents a tensor `A` where `A[:, ..., :, i]` is sometimes entirely default(lvl)
 and is sometimes represented by `lvl`.
 """
 struct SparseData
     lvl
 end
 
+Base.ndims(fbr::SparseData) = 1 + ndims(fbr.lvl)
+
 """
     DenseData(lvl)
     
-Represents a tensor `A` where each `A[i, :, ..., :]` is represented by `lvl`.
+Represents a tensor `A` where each `A[:, ..., :, i]` is represented by `lvl`.
 """
 struct DenseData
     lvl
 end
+
+Base.ndims(fbr::DenseData) = 1 + ndims(fbr.lvl)
+
+"""
+    ExtrudeData(lvl)
+    
+Represents a tensor `A` where `A[:, ..., :, 1]` is the only slice, and is represented by `lvl`.
+"""
+struct ExtrudeData
+    lvl
+end
+
+Base.ndims(fbr::ExtrudeData) = 1 + ndims(fbr.lvl)
 
 """
     HollowData(lvl)
@@ -26,6 +43,8 @@ struct HollowData
     lvl
 end
 
+Base.ndims(fbr::HollowData) = ndims(fbr.lvl)
+
 """
     SolidData(lvl)
     
@@ -34,6 +53,8 @@ Represents a tensor which is represented by `lvl`
 struct SolidData
     lvl
 end
+
+Base.ndims(fbr::SolidData) = ndims(fbr.lvl)
 
 """
     ElementData(default, eltype)
@@ -44,6 +65,8 @@ struct ElementData
     default
     eltype
 end
+
+Base.ndims(fbr::ElementData) = 0
 
 """
     RepeatData(default, eltype)
@@ -56,6 +79,8 @@ struct RepeatData
     eltype
 end
 
+Base.ndims(fbr::RepeatData) = 1
+
 #const SolidData = Union{DenseData, SparseData, RepeatData, ElementData}
 
 """
@@ -64,7 +89,7 @@ end
 Return a trait object representing everything that can be learned about the data
 based on the storage format (type) of the tensor
 """
-data_rep(tns) = SolidData(foldl([DenseData for _ in 1:ndims(tns)], init = ElementData(default(tns), eltype(tns))))
+data_rep(tns) = SolidData((DenseData^(ndims(tns)))(ElementData(default(tns), eltype(tns))))
 
 struct Drop{Idx}
     idx::Idx
@@ -102,6 +127,57 @@ getindex_rep_def(lvl::ElementData) = SolidData(lvl)
 getindex_rep_def(lvl::RepeatData, idx::Drop) = SolidData(ElementData(lvl.default, lvl.eltype))
 getindex_rep_def(lvl::RepeatData, idx) = SolidData(ElementData(lvl.default, lvl.eltype))
 getindex_rep_def(lvl::RepeatData, idx::Type{<:AbstractUnitRange}) = SolidData(ElementData(lvl.default, lvl.eltype))
+
+result_bcrep(a, b) = _result_bcrep(a, b, combine_bcrep(a, b), combine_bcrep(b, a))
+_result_bcrep(a, b, c::Nothing, d::Nothing) = throw(MethodError(combine_bcrep, (a, b)))
+_result_bcrep(a, b, c, d::Nothing) = c
+_result_bcrep(a, b, c::Nothing, d) = d
+_result_bcrep(a, b, c::T, d::T) where {T} = (c == d) ? c : @assert false "TODO lower_bcrep_ambiguity_error"
+_result_bcrep(a, b, c, d) = (c == d) ? c : @assert false "TODO lower_bcrep_ambiguity_error"
+combine_bcrep(a, b) = nothing
+
+"""
+    broadcast_rep(bc)
+
+Return a trait object representing the result of the broadcast bc on the tensor
+represented by `tns`.
+"""
+function broadcast_rep(bc::Type{Broadcasted{Style, Axes, F, Args}}) where {Style, Axes, F, Args}
+    args = map(broadcast_rep, Args.parameters)
+    N = maximum(ndims.(args))
+    args = map(arg -> (ExtrudeData^(N-ndims(arg)))(arg), args)
+    broadcast_rep_def(bc, reduce(result_bcrep, args))
+end
+broadcast_rep(arr) = data_rep(arr)
+
+combine_bcrep(a::SolidData, b) = result_bcrep(a.lvl, b)
+combine_bcrep(a::HollowData, b::SolidData) = result_bcrep(a.lvl, b.lvl)
+combine_bcrep(a::HollowData, b::DenseData) = result_bcrep(a.lvl, b)
+combine_bcrep(a::HollowData, b::SparseData) = result_bcrep(a.lvl, b)
+combine_bcrep(a::HollowData, b::RepeatData) = result_bcrep(a.lvl, b)
+combine_bcrep(a::HollowData, b::HollowData) = HollowData(result_bcrep(a.lvl, b.lvl))
+
+combine_bcrep(a::DenseData, b::ExtrudeData) = DenseData(result_bcrep(a.lvl, b.lvl))
+combine_bcrep(a::DenseData, b::DenseData) = DenseData(result_bcrep(a.lvl, b.lvl))
+combine_bcrep(a::DenseData, b::RepeatData) = DenseData(ElementData(nothing, b.lvl.eltype))
+
+combine_bcrep(a::SparseData, b::ExtrudeData) = SparseData(result_bcrep(a.lvl, b.lvl))
+combine_bcrep(a::SparseData, b::SparseData) = SparseData(result_bcrep(a.lvl, b.lvl))
+combine_bcrep(a::SparseData, b::DenseData) = SparseData(result_bcrep(a.lvl, b.lvl))
+combine_bcrep(a::SparseData, b::RepeatData) = SparseData(ElementData(nothing, b.lvl.eltype))
+
+combine_bcrep(a::RepeatData, b::RepeatData) = RepeatData(nothing, b.lvl.eltype)
+combine_bcrep(a::RepeatData, b::ExtrudeData) = RepeatData(nothing, b.lvl.eltype)
+
+combine_bcrep(a::ElementData, b::ElementData) = ElementData(nothing, nothing)
+
+broadcast_rep_def(bc, rep::SolidData) = SolidData(broadcast_rep_def(bc, rep.lvl))
+broadcast_rep_def(bc, rep::HollowData) = HollowData(broadcast_rep_def(bc, rep.lvl))
+broadcast_rep_def(bc, rep::SparseData) = SparseData(broadcast_rep_def(bc, rep.lvl))
+broadcast_rep_def(bc, rep::ExtrudeData) = DenseData(broadcast_rep_def(bc, rep.lvl))
+broadcast_rep_def(bc, rep::DenseData) = DenseData(broadcast_rep_def(bc, rep.lvl))
+broadcast_rep_def(bc::Type{<:Broadcasted{Style, Axes, F, Args}}, rep::RepeatData) where {Style, Axes, F<:Function, Args} = RepeatData(F.instance(map(default, Args.parameters)...), Broadcast.combine_eltypes(F.instance, (Args.parameters...,)))
+broadcast_rep_def(bc::Type{<:Broadcasted{Style, Axes, F, Args}}, rep::ElementData) where {Style, Axes, F<:Function, Args} = ElementData(F.instance(map(default, Args.parameters)...), Broadcast.combine_eltypes(F.instance, (Args.parameters...,)))
 
 """
     fiber_ctr(tns)

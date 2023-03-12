@@ -38,3 +38,5 @@ FinchNotation.isliteral(::VirtualAbstractArray) =  false
 
 virtual_default(::VirtualAbstractArray) = 0
 virtual_eltype(tns::VirtualAbstractArray) = tns.eltype
+
+default(T::Type{<:AbstractArray}) = zero(eltype(T))
