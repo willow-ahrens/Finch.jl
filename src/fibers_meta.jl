@@ -200,11 +200,11 @@ function Base.similar(bc::Broadcast.Broadcasted{FinchStyle{N}}, ::Type{T}, dims)
     similar_broadcast_helper(lift_broadcast(bc))
 end
 
-function similar_broadcast_helper(bc::Broadcast.Broadcasted{FinchStyle{N}}) where {N}
+@generated function similar_broadcast_helper(bc::Broadcast.Broadcasted{FinchStyle{N}}) where {N}
     idxs = [index(Symbol(:i, n)) for n = 1:N]
     ctx = LowerJulia()
-    rep = pointwise_finch_traits(:bc, typeof(bc), idxs)
-    PointwiseRep(ctx)(rep, reverse(idxs))
+    rep = pointwise_finch_traits(:bc, bc, idxs)
+    fiber_ctr(SolidData(PointwiseRep(ctx)(rep, reverse(idxs))))
 end
 
 struct PointwiseSparseStyle end
@@ -286,9 +286,15 @@ pointwise_rep_sparse(ex::SparseData) = Fill(default(ex))
 pointwise_rep_sparse(ex) = ex
 
 #=
-@generated function Base.similar(bc::Broadcasted{FinchStyle{N}}, ::Type{T}, dims) where {N, T}
-    #TODO this ignores T and dims haha.
-    return fiber_ctr(broadcast_rep(bc))
+function pointwise_finch_expr(ex, ::Type{<:Broadcast.Broadcasted{Style, Axes, F, Args}}, idxs) where {Style, F, Axes, Args}
+    args = map(enumerate(Args.parameters)) do (n, Arg)
+        pointwise_finch_expr(:($ex.args[$n]), Arg, idxs)
+    end
+    :($ex.f($(args...)))
+end
+
+function pointwise_finch_expr(ex, T, idxs)
+    :($ex[(idxs[end-ndims(T)+1:end]...)])
 end
 
 function finch_broadcast_expr(ex, ::Type{Broadcasted{Style, Axes, F, Args}}, ctx::LowerJulia, idxs) where {Style, Axes, F, Args}
