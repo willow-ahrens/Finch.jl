@@ -160,6 +160,17 @@ function _mapreduce(f, op, As..., dims, init)
 end
 =#
 
+struct Callable{F} end
+@inline (::Callable{F})(args...) where {F} = F(args...)
+"""
+    lift_broadcast(bc)
+
+Attempt to lift broadcast fields to the type domain for Finch analysis
+"""
+lift_broadcast(bc::Broadcasted{Style, Axes, F}) where {Style, Axes, F<:Function} = Broadcasted{Style}(Callable{bc.f}(), map(lift_broadcast, bc.args), bc.axes)
+lift_broadcast(bc::Broadcasted{Style}) where {Style} = Broadcasted{Style}(bc.f, map(lift_broadcast, bc.args), bc.axes)
+lift_broadcast(x) = x
+
 struct FinchStyle{N} <: BroadcastStyle
 end
 Base.Broadcast.BroadcastStyle(F::Type{<:Fiber}) = FinchStyle{ndims(F)}()
@@ -167,32 +178,33 @@ Base.Broadcast.broadcastable(fbr::Fiber) = fbr
 Base.Broadcast.BroadcastStyle(a::FinchStyle{N}, b::FinchStyle{M}) where {M, N} = FinchStyle{max(M, N)}()
 Base.Broadcast.BroadcastStyle(a::FinchStyle{N}, b::Broadcast.AbstractArrayStyle{M}) where {M, N} = FinchStyle{max(M, N)}()
 
-pointwise_finch_instance(bc::Broadcast.Broadcasted, idxs) = FinchNotation.call_instance(FinchNotation.index_leaf_instance(bc.f), map((arg) -> pointwise_finch_instance(arg, idxs), bc.args)...)
-pointwise_finch_instance(arg, idxs) = (FinchNotation.access_instance(arg, FinchNotation.reader_instance(), idxs[end - ndims(arg) + 1:end]...))
+function pointwise_finch_traits(ex, ::Type{<:Broadcast.Broadcasted{Style, Axes, Callable{F}, Args}}, idxs) where {Style, F, Axes, Args}
+    f = literal(F)
+    args = map(enumerate(Args.parameters)) do (n, Arg)
+        pointwise_finch_traits(:($ex.args[$n]), Arg, idxs)
+    end
+    call(f, args...)
+end
+function pointwise_finch_traits(ex, ::Type{<:Broadcast.Broadcasted{Style, Axes, F, Args}}, idxs) where {Style, F, Axes, Args}
+    f = value(:($ex.f), F)
+    args = map(enumerate(Args.parameters)) do (n, Arg)
+        pointwise_finch_traits(:($ex.args[$n]), Arg, idxs)
+    end
+    call(f, args...)
+end
+function pointwise_finch_traits(ex, T, idxs)
+    access(data_rep(T), reader(), idxs[end-ndims(T)+1:end]...)
+end
 
 function Base.similar(bc::Broadcast.Broadcasted{FinchStyle{N}}, ::Type{T}, dims) where {N, T}
-    idxs = [index_instance(Symbol(:i, n)) for n = 1:N]
-    ex = pointwise_finch_instance(bc, idxs)
-    similar_broadcast_helper(ex, idxs...)
+    similar_broadcast_helper(lift_broadcast(bc))
 end
 
-function similar_broadcast_helper(ex, idxs...)
-    N = length(idxs)
-    contain(LowerJulia()) do ctx
-        ex = virtualize(:ex, ex, ctx)
-        idxs = [virtualize(:(idxs[$n]), idxs[n], ctx) for n = 1:N]
-        pointwise_rep(data_rep(ex), idxs)
-    end
-end
-
-function data_rep(ex::FinchNode)
-    if ex.kind === access && ex.tns.kind === virtual
-        return access(data_rep(ex.val), ex.mode, ex.idxs...)
-    elseif istree(ex)
-        similarterm(FinchNode, ex.kind, map(data_rep, arguments(ex)))
-    else
-        ex
-    end
+function similar_broadcast_helper(bc::Broadcast.Broadcasted{FinchStyle{N}}) where {N}
+    idxs = [index(Symbol(:i, n)) for n = 1:N]
+    ctx = LowerJulia()
+    rep = pointwise_finch_traits(:bc, typeof(bc), idxs)
+    PointwiseRep(ctx)(rep, reverse(idxs))
 end
 
 struct PointwiseSparseStyle end
@@ -200,49 +212,71 @@ struct PointwiseDenseStyle end
 struct PointwiseRepeatStyle end
 struct PointwiseElementStyle end
 
+result_style(a::PointwiseSparseStyle, ::PointwiseSparseStyle) = a
+result_style(a::PointwiseSparseStyle, ::PointwiseDenseStyle) = a
+result_style(a::PointwiseSparseStyle, ::PointwiseRepeatStyle) = a
+result_style(a::PointwiseSparseStyle, ::PointwiseElementStyle) = a
+result_style(a::PointwiseDenseStyle, ::PointwiseDenseStyle) = a
+result_style(a::PointwiseDenseStyle, ::PointwiseRepeatStyle) = a
+result_style(a::PointwiseDenseStyle, ::PointwiseElementStyle) = a
+result_style(a::PointwiseRepeatStyle, ::PointwiseRepeatStyle) = a
+result_style(a::PointwiseRepeatStyle, ::PointwiseElementStyle) = a
+result_style(a::PointwiseElementStyle, ::PointwiseElementStyle) = a
+
 struct PointwiseRep
-    idxs
+    ctx
 end
 
-stylize_access(node, ex::PointwiseRep, tns::SolidData) = stylize_access(node, ex, tns.lvl)
-stylize_access(node, ex::PointwiseRep, tns::HollowData) = stylize_access(node, ex, tns.lvl)
-stylize_access(node, ex::PointwiseRep, tns::SparseData) = PointwiseSparseStyle()
-stylize_access(node, ex::PointwiseRep, tns::DenseData) = PointwiseDenseStyle()
-stylize_access(node, ex::PointwiseRep, tns::RepeatData) = PointwiseRepeatStyle()
+stylize_access(node, ctx::Stylize{PointwiseRep}, tns::SolidData) = stylize_access(node, ctx, tns.lvl)
+stylize_access(node, ctx::Stylize{PointwiseRep}, tns::HollowData) = stylize_access(node, ctx, tns.lvl)
+function stylize_access(node, ctx::Stylize{PointwiseRep}, ::SparseData)
+    if !isempty(ctx.root) && first(ctx.root) == last(node.idxs) PointwiseSparseStyle() end
+end
+stylize_access(node, ctx::Stylize{PointwiseRep}, ::DenseData) = if !isempty(ctx.root) && first(ctx.root) == last(node.idxs) PointwiseDenseStyle() end
+stylize_access(node, ctx::Stylize{PointwiseRep}, ::RepeatData) = if !isempty(ctx.root) && first(ctx.root) == last(node.idxs) PointwiseRepeatStyle() end
+stylize_access(node, ctx::Stylize{PointwiseRep}, ::ElementData) = isempty(ctx.root) ? PointwiseElementStyle() : PointwiseDenseStyle()
 
-(ctx::PointwiseRep)(rep, idxs) = pointwise_rep(rep, idxs, Stylize(ctx)(expr_rep))
+pointwise_rep_body(tns::SolidData) = pointwise_rep_body(tns.lvl)
+pointwise_rep_body(tns::HollowData) = pointwise_rep_body(tns.lvl)
+pointwise_rep_body(tns::SparseData) = tns.lvl
+pointwise_rep_body(tns::DenseData) = tns.lvl
+pointwise_rep_body(tns::RepeatData) = tns.lvl
+pointwise_rep_body(tns::ElementData) = tns.lvl
+
+(ctx::PointwiseRep)(rep, idxs) = ctx(rep, idxs, Stylize(idxs, ctx)(rep))
 function (ctx::PointwiseRep)(rep, idxs, ::PointwiseSparseStyle)
-    background = simplify(PostWalk(Chain([
-        (@rule access(~ex::isvirtual, ~m, $(idxs[1]), i...) => access(pointwise_rep_sparse(ex.val), m, idxs[1], i...)),
+    background = simplify(Postwalk(Chain([
+        (@rule access(~ex::isvirtual, ~m, ~i..., $(idxs[1])) => access(pointwise_rep_sparse(ex.val), m, i..., idxs[1])),
     ]))(rep), LowerJulia())
     if isliteral(background)
-        body = simplify(PostWalk(Chain([
-            (@rule access(~ex::isvirtual, ~m, $(idxs[1]), i...) => access(pointwise_rep_body(ex.val), m, i...)),
+        body = simplify(Postwalk(Chain([
+            (@rule access(~ex::isvirtual, ~m, ~i..., $(idxs[1])) => access(pointwise_rep_body(ex.val), m, i...)),
         ]))(rep), LowerJulia())
-        return SparseData(ctx(body))
+        return SparseData(ctx(body, idxs[2:end]))
     else
-        ctx(rep, Stylize(background, ctx)(background))
+        ctx(rep, idxs, Stylize(idxs, ctx)(background))
     end
 end
 
-function (ctx::PointwiseRep)(expr_rep, idxs, ::PointwiseDenseStyle)
-    body = simplify(PostWalk(Chain([
-        (@rule access(~ex::isvirtual, ~m, $(idxs[1]), i...) => access(ex.lvl, m, i...)),
+function (ctx::PointwiseRep)(rep, idxs, ::PointwiseDenseStyle)
+    body = simplify(Postwalk(Chain([
+        (@rule access(~ex::isvirtual, ~m, ~i..., $(idxs[1])) => access(pointwise_rep_body(ex.val), m, i...)),
     ]))(rep), LowerJulia())
-    return DenseData(ctx(body))
+    return DenseData(ctx(body, idxs[2:end]))
 end
 
-function (ctx::PointwiseRep)(expr_rep, idxs, ::PointwiseRepeatStyle)
+function (ctx::PointwiseRep)(rep, idxs, ::PointwiseRepeatStyle)
     background = simplify(PostWalk(Chain([
-        (@rule access(~ex::isvirtual, ~m, $(idxs[1]), i...) => default(ex.val)),
+        (@rule access(~ex::isvirtual, ~m, ~i) => default(ex.val)),
+        (@rule access(~ex::isvirtual, ~m) => default(ex.val)),
     ]))(rep), LowerJulia())
     @assert isliteral(background)
     return RepeatData(background.val, typeof(background.val))
 end
 
-function (ctx::PointwiseRep)(expr_rep, idxs, ::PointwiseElementStyle)
-    background = simplify(PostWalk(Chain([
-        (@rule access(~ex::isvirtual, ~m, $(idxs[1]), i...) => default(ex.val)),
+function (ctx::PointwiseRep)(rep, idxs, ::PointwiseElementStyle)
+    background = simplify(Postwalk(Chain([
+        (@rule access(~ex::isvirtual, ~m) => default(ex.val)),
     ]))(rep), LowerJulia())
     @assert isliteral(background)
     return ElementData(background.val, typeof(background.val))

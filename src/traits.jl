@@ -9,8 +9,10 @@ and is sometimes represented by `lvl`.
 struct SparseData
     lvl
 end
+Finch.isliteral(::SparseData) = false
 
 Base.ndims(fbr::SparseData) = 1 + ndims(fbr.lvl)
+default(fbr::SparseData) = default(fbr.lvl)
 
 """
     DenseData(lvl)
@@ -20,6 +22,8 @@ Represents a tensor `A` where each `A[:, ..., :, i]` is represented by `lvl`.
 struct DenseData
     lvl
 end
+Finch.isliteral(::DenseData) = false
+default(fbr::DenseData) = default(fbr.lvl)
 
 Base.ndims(fbr::DenseData) = 1 + ndims(fbr.lvl)
 
@@ -31,6 +35,8 @@ Represents a tensor `A` where `A[:, ..., :, 1]` is the only slice, and is repres
 struct ExtrudeData
     lvl
 end
+Finch.isliteral(::ExtrudeData) = false
+default(fbr::ExtrudeData) = default(fbr.lvl)
 
 Base.ndims(fbr::ExtrudeData) = 1 + ndims(fbr.lvl)
 
@@ -42,6 +48,8 @@ Represents a tensor which is represented by `lvl` but is sometimes entirely `def
 struct HollowData
     lvl
 end
+Finch.isliteral(::HollowData) = false
+default(fbr::HollowData) = default(fbr.lvl)
 
 Base.ndims(fbr::HollowData) = ndims(fbr.lvl)
 
@@ -53,6 +61,8 @@ Represents a tensor which is represented by `lvl`
 struct SolidData
     lvl
 end
+Finch.isliteral(::SolidData) = false
+default(fbr::SolidData) = default(fbr.lvl)
 
 Base.ndims(fbr::SolidData) = ndims(fbr.lvl)
 
@@ -65,6 +75,8 @@ struct ElementData
     default
     eltype
 end
+Finch.isliteral(::ElementData) = false
+default(fbr::ElementData) = fbr.default
 
 Base.ndims(fbr::ElementData) = 0
 
@@ -78,6 +90,8 @@ struct RepeatData
     default
     eltype
 end
+Finch.isliteral(::RepeatData) = false
+default(fbr::RepeatData) = fbr.default
 
 Base.ndims(fbr::RepeatData) = 1
 
@@ -90,6 +104,8 @@ Return a trait object representing everything that can be learned about the data
 based on the storage format (type) of the tensor
 """
 data_rep(tns) = SolidData((DenseData^(ndims(tns)))(ElementData(default(tns), eltype(tns))))
+
+data_rep(T::Type{<:Number}) = ElementData(zero(T), T)
 
 struct Drop{Idx}
     idx::Idx
