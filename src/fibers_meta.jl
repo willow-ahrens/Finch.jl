@@ -165,8 +165,93 @@ end
 Base.Broadcast.BroadcastStyle(F::Type{<:Fiber}) = FinchStyle{ndims(F)}()
 Base.Broadcast.broadcastable(fbr::Fiber) = fbr
 Base.Broadcast.BroadcastStyle(a::FinchStyle{N}, b::FinchStyle{M}) where {M, N} = FinchStyle{max(M, N)}()
-Base.Broadcast.BroadcastStyle(a::FinchStyle{N}, b::AbstractArrayStyle{M}) where {M, N} = FinchStyle{max(M, N)}()
+Base.Broadcast.BroadcastStyle(a::FinchStyle{N}, b::Broadcast.AbstractArrayStyle{M}) where {M, N} = FinchStyle{max(M, N)}()
 
+pointwise_finch_instance(bc::Broadcast.Broadcasted, idxs) = FinchNotation.call_instance(FinchNotation.index_leaf_instance(bc.f), map((arg) -> pointwise_finch_instance(arg, idxs), bc.args)...)
+pointwise_finch_instance(arg, idxs) = (FinchNotation.access_instance(arg, FinchNotation.reader_instance(), idxs[end - ndims(arg) + 1:end]...))
+
+function Base.similar(bc::Broadcast.Broadcasted{FinchStyle{N}}, ::Type{T}, dims) where {N, T}
+    idxs = [index_instance(Symbol(:i, n)) for n = 1:N]
+    ex = pointwise_finch_instance(bc, idxs)
+    similar_broadcast_helper(ex, idxs...)
+end
+
+function similar_broadcast_helper(ex, idxs...)
+    N = length(idxs)
+    contain(LowerJulia()) do ctx
+        ex = virtualize(:ex, ex, ctx)
+        idxs = [virtualize(:(idxs[$n]), idxs[n], ctx) for n = 1:N]
+        pointwise_rep(data_rep(ex), idxs)
+    end
+end
+
+function data_rep(ex::FinchNode)
+    if ex.kind === access && ex.tns.kind === virtual
+        return access(data_rep(ex.val), ex.mode, ex.idxs...)
+    elseif istree(ex)
+        similarterm(FinchNode, ex.kind, map(data_rep, arguments(ex)))
+    else
+        ex
+    end
+end
+
+struct PointwiseSparseStyle end
+struct PointwiseDenseStyle end
+struct PointwiseRepeatStyle end
+struct PointwiseElementStyle end
+
+struct PointwiseRep
+    idxs
+end
+
+stylize_access(node, ex::PointwiseRep, tns::SolidData) = stylize_access(node, ex, tns.lvl)
+stylize_access(node, ex::PointwiseRep, tns::HollowData) = stylize_access(node, ex, tns.lvl)
+stylize_access(node, ex::PointwiseRep, tns::SparseData) = PointwiseSparseStyle()
+stylize_access(node, ex::PointwiseRep, tns::DenseData) = PointwiseDenseStyle()
+stylize_access(node, ex::PointwiseRep, tns::RepeatData) = PointwiseRepeatStyle()
+
+(ctx::PointwiseRep)(rep, idxs) = pointwise_rep(rep, idxs, Stylize(ctx)(expr_rep))
+function (ctx::PointwiseRep)(rep, idxs, ::PointwiseSparseStyle)
+    background = simplify(PostWalk(Chain([
+        (@rule access(~ex::isvirtual, ~m, $(idxs[1]), i...) => access(pointwise_rep_sparse(ex.val), m, idxs[1], i...)),
+    ]))(rep), LowerJulia())
+    if isliteral(background)
+        body = simplify(PostWalk(Chain([
+            (@rule access(~ex::isvirtual, ~m, $(idxs[1]), i...) => access(pointwise_rep_body(ex.val), m, i...)),
+        ]))(rep), LowerJulia())
+        return SparseData(ctx(body))
+    else
+        ctx(rep, Stylize(background, ctx)(background))
+    end
+end
+
+function (ctx::PointwiseRep)(expr_rep, idxs, ::PointwiseDenseStyle)
+    body = simplify(PostWalk(Chain([
+        (@rule access(~ex::isvirtual, ~m, $(idxs[1]), i...) => access(ex.lvl, m, i...)),
+    ]))(rep), LowerJulia())
+    return DenseData(ctx(body))
+end
+
+function (ctx::PointwiseRep)(expr_rep, idxs, ::PointwiseRepeatStyle)
+    background = simplify(PostWalk(Chain([
+        (@rule access(~ex::isvirtual, ~m, $(idxs[1]), i...) => default(ex.val)),
+    ]))(rep), LowerJulia())
+    @assert isliteral(background)
+    return RepeatData(background.val, typeof(background.val))
+end
+
+function (ctx::PointwiseRep)(expr_rep, idxs, ::PointwiseElementStyle)
+    background = simplify(PostWalk(Chain([
+        (@rule access(~ex::isvirtual, ~m, $(idxs[1]), i...) => default(ex.val)),
+    ]))(rep), LowerJulia())
+    @assert isliteral(background)
+    return ElementData(background.val, typeof(background.val))
+end
+
+pointwise_rep_sparse(ex::SparseData) = Fill(default(ex))
+pointwise_rep_sparse(ex) = ex
+
+#=
 @generated function Base.similar(bc::Broadcasted{FinchStyle{N}}, ::Type{T}, dims) where {N, T}
     #TODO this ignores T and dims haha.
     return fiber_ctr(broadcast_rep(bc))
@@ -185,6 +270,7 @@ function finch_broadcast_expr(ex, ::Type{T}, ctx::LowerJulia, idxs) where T
     push!(ctx.preamble, :($sym = $ex))
     return :($sym[$(idxs[end - ndims(T) + 1:end]...)])
 end
+
 
 @generated function Base.copyto!(out, bc::Broadcasted{FinchStyle{N}}) where {N}
     ctx = LowerJulia()
@@ -206,7 +292,6 @@ end
 
 end
 
-#=
 function reduce(op, bc::Broadcasted{FinchStyle{N}}, dims, init) where {N}
     T = Base.combine_eltypes(bc.f, bc.args::Tuple)
 end

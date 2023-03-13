@@ -115,7 +115,7 @@ Base.:(==)(a::CallInstance, b::CallInstance) = a.op == b.op && a.args == b.args
 
 @inline call_instance(op, args...) = CallInstance(op, args)
 
-Base.show(io::IO, node::CallInstance) = print(io, "call_instance(", node.op, ", ", node.args, ")")
+Base.show(io::IO, node::CallInstance) = print(io, "call_instance(", node.op, ", ", join(node.args, ", "), ")")
 
 struct AccessInstance{Tns, Mode, Idxs} <: FinchNodeInstance
     tns::Tns
@@ -125,7 +125,7 @@ end
 
 Base.:(==)(a::AccessInstance, b::AccessInstance) = a.tns == b.tns && a.mode == b.mode && a.idxs == b.idxs
 
-Base.show(io::IO, node::AccessInstance) = print(io, "access_instance(", node.tns, ", ", node.mode, ", ", node.idxs, ")")
+Base.show(io::IO, node::AccessInstance) = print(io, "access_instance(", node.tns, ", ", node.mode, ", ", join(node.idxs, ", "), ")")
 
 @inline access_instance(tns, mode, idxs...) = AccessInstance(tns, mode, idxs)
 

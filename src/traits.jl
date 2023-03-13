@@ -128,14 +128,6 @@ getindex_rep_def(lvl::RepeatData, idx::Drop) = SolidData(ElementData(lvl.default
 getindex_rep_def(lvl::RepeatData, idx) = SolidData(ElementData(lvl.default, lvl.eltype))
 getindex_rep_def(lvl::RepeatData, idx::Type{<:AbstractUnitRange}) = SolidData(ElementData(lvl.default, lvl.eltype))
 
-result_bcrep(a, b) = _result_bcrep(a, b, combine_bcrep(a, b), combine_bcrep(b, a))
-_result_bcrep(a, b, c::Nothing, d::Nothing) = throw(MethodError(combine_bcrep, (a, b)))
-_result_bcrep(a, b, c, d::Nothing) = c
-_result_bcrep(a, b, c::Nothing, d) = d
-_result_bcrep(a, b, c::T, d::T) where {T} = (c == d) ? c : @assert false "TODO lower_bcrep_ambiguity_error"
-_result_bcrep(a, b, c, d) = (c == d) ? c : @assert false "TODO lower_bcrep_ambiguity_error"
-combine_bcrep(a, b) = nothing
-
 """
     broadcast_rep(bc)
 
