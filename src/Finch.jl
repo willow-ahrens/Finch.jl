@@ -1,12 +1,15 @@
 module Finch
 
-using Requires
+@static if !isdefined(Base, :get_extension)
+    using Requires
+end
+
 using SyntaxInterface
 using RewriteTools
 using RewriteTools.Rewriters
 using Base.Iterators
 using Base: @kwdef
-using SparseArrays
+using Random: randsubseq, AbstractRNG, default_rng
 using SnoopPrecompile
 using Compat
 
@@ -60,11 +63,9 @@ include("levels/elementlevels.jl")
 include("levels/patternlevels.jl")
 
 include("traits.jl")
-include("asarray.jl")
 
 include("modifiers.jl")
 
-include("fibers_meta.jl")
 export fsparse, fsparse!, fsprand, fspzeros, ffindnz
 
 module h
@@ -103,11 +104,18 @@ register(DefaultAlgebra)
     end |> lower_caches |> lower_cleanup
 end
 
-include("glue_AbstractArrays.jl")
-include("glue_AbstractUnitRanges.jl")
-include("glue_SparseArrays.jl")
-function __init__()
-    #@require SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf" include("glue_SparseArrays.jl")
+include("base/abstractarrays.jl")
+include("base/abstractunitranges.jl")
+include("base/broadcast.jl")
+include("base/compare.jl")
+include("base/copy.jl")
+include("base/fsparse.jl")
+include("base/index.jl")
+
+@static if !isdefined(Base, :get_extension)
+    function __init__()
+        @require SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf" include("../ext/SparseArraysExt.jl")
+    end
 end
 
 @precompile_setup begin
