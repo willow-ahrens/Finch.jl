@@ -1,11 +1,12 @@
 module SparseArraysExt 
 
 using Finch
-using Finch: LowerJulia, DefaultStyle
+using Finch: LowerJulia, DefaultStyle, Extent
 using Finch: Walk, Follow
 using Finch: Furlable, Stepper, Jumper, Run, Fill, Simplify, Thunk
+using Finch.FinchNotation
 
-isdefined(Base, :get_extension) ? (using SparseArrays) : (using ..SparseArrays) #Why does https://pkgdocs.julialang.org/dev/creating-packages/#Conditional-loading-of-code-in-packages-(Extensions) tell us we need this line? It breaks?
+isdefined(Base, :get_extension) ? (using SparseArrays) : (using ..SparseArrays)
 
 function Finch.fiber(arr::SparseMatrixCSC{Tv, Ti}, default=zero(Tv)) where {Tv, Ti}
     @assert iszero(default)
@@ -223,5 +224,9 @@ Finch.FinchNotation.isliteral(::VirtualSparseVector) =  false
 
 Finch.virtual_default(arr::VirtualSparseVector) = zero(arr.Tv)
 Finch.virtual_eltype(tns::VirtualSparseVector) = tns.Tv
+
+function __init__()
+    Finch.register(Finch.DefaultAlgebra)
+end
 
 end

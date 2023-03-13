@@ -349,6 +349,19 @@ macro fiber(ex, arg)
     return :($dropdefaults!($Fiber!($(f_decode(ex))), $(esc(arg))))
 end
 
+push!(registry, (algebra) -> quote
+    @generated function Fiber!(lvl)
+        contain(LowerJulia()) do ctx
+            lvl = virtualize(:lvl, lvl, ctx)
+            lvl = resolve(lvl, ctx)
+            lvl = declare_level!(lvl, ctx, literal(0), literal(virtual_level_default(lvl)))
+            push!(ctx.preamble, assemble_level!(lvl, ctx, literal(1), literal(1)))
+            lvl = freeze_level!(lvl, ctx, literal(1))
+            :(Fiber($(ctx(lvl))))
+        end |> lower_caches |> lower_cleanup
+    end
+end)
+
 @inline f_code(@nospecialize ::Any) = nothing
 
 Base.summary(fbr::Fiber) = "$(join(size(fbr), "×")) @fiber($(summary_f_code(fbr.lvl)))"

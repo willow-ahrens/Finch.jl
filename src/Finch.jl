@@ -26,6 +26,8 @@ export permit, offset, staticoffset, window
 
 include("util.jl")
 
+registry = []
+
 include("semantics.jl")
 include("FinchNotation/FinchNotation.jl")
 using .FinchNotation
@@ -90,19 +92,13 @@ module h
     generate_embed_docs()
 end
 
-register(DefaultAlgebra)
-#TODO add an uninitialized_fiber type so that we can perhaps do this through executing declare(fbr),
-#obviating the need to have a separate generated function registration mechanism for fibers.
-@generated function Fiber!(lvl)
-    contain(LowerJulia()) do ctx
-        lvl = virtualize(:lvl, lvl, ctx)
-        lvl = resolve(lvl, ctx)
-        lvl = declare_level!(lvl, ctx, literal(0), literal(virtual_level_default(lvl)))
-        push!(ctx.preamble, assemble_level!(lvl, ctx, literal(1), literal(1)))
-        lvl = freeze_level!(lvl, ctx, literal(1))
-        :(Fiber($(ctx(lvl))))
-    end |> lower_caches |> lower_cleanup
+function register(algebra)
+    for r in registry
+        @eval Finch $(r(algebra))
+    end
 end
+
+register(DefaultAlgebra)
 
 include("base/abstractarrays.jl")
 include("base/abstractunitranges.jl")
