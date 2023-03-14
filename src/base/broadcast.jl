@@ -168,6 +168,7 @@ function copyto_helper!(out_ex, out, bc_ex, bc::Type{<:Broadcasted{FinchStyle{N}
                 $out_ex .= $(default(out))
                 @loop($(reverse(idxs)...), $out_ex[$(idxs...)] = $pw_ex)
             end
+            $out_ex
         end
     end |> lower_caches |> lower_cleanup |> unblock
 end

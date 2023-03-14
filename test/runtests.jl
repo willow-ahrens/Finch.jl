@@ -52,10 +52,14 @@ function should_run(name)
     return ("all" in parsed_args["suites"] || name in parsed_args["suites"])
 end
 
-macro repl(io, ex)
+macro repl(io, ex, quiet = false)
     quote
         println($(esc(io)), "julia> ", Finch.striplines($(QuoteNode(ex))))
-        show($(esc(io)), MIME("text/plain"), $(esc(ex)))
+        if $(esc(quiet))
+            $(esc(ex))
+        else
+            show($(esc(io)), MIME("text/plain"), $(esc(ex)))
+        end
         println($(esc(io)))
     end
 end

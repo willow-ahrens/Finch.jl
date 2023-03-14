@@ -79,9 +79,9 @@ using Finch: AsArray
 
         @repl io A = @fiber(d(sl(e(0.0))), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
         @repl io B = [1, 2, 3, 4]
-        @repl io (C = A .+ B;)
+        @repl io C = A .+ B true
         @repl io AsArray(C)
-        @repl io (D = A .* B;)
+        @repl io D = A .* B true
         @repl io AsArray(D)
         
         @test check_output("broadcast.txt", String(take!(io)))
