@@ -126,7 +126,7 @@ function (ctx::PointwiseRep)(rep, idxs, ::PointwiseRepeatStyle)
         (@rule access(~ex::isvirtual, ~m, ~i...) => default(ex.val)),
     ]))(rep), LowerJulia())
     @assert isliteral(background)
-    return RepeatData(background.val, typeof(background.val))
+    return RepeatData(index_leaf(background).val, typeof(index_leaf(background).val))
 end
 
 function (ctx::PointwiseRep)(rep, idxs, ::PointwiseElementStyle)
