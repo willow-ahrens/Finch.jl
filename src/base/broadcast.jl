@@ -134,7 +134,7 @@ function (ctx::PointwiseRep)(rep, idxs, ::PointwiseElementStyle)
         (@rule access(~ex::isvirtual, ~m) => default(ex.val)),
     ]))(rep), LowerJulia())
     @assert isliteral(background)
-    return ElementData(background.val, typeof(background.val))
+    return ElementData(literal(background).val, typeof(background.val))
 end
 
 pointwise_rep_sparse(ex::SparseData) = Fill(default(ex))
@@ -172,9 +172,3 @@ function copyto_helper!(out_ex, out, bc_ex, bc::Type{<:Broadcasted{FinchStyle{N}
         end
     end |> lower_caches |> lower_cleanup |> unblock
 end
-
-#=
-function reduce(op, bc::Broadcasted{FinchStyle{N}}, dims, init) where {N}
-    T = Base.combine_eltypes(bc.f, bc.args::Tuple)
-end
-=#
