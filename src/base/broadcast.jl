@@ -121,8 +121,7 @@ end
 
 function (ctx::PointwiseRep)(rep, idxs, ::PointwiseRepeatStyle)
     background = simplify(PostWalk(Chain([
-        (@rule access(~ex::isvirtual, ~m, ~i) => default(ex.val)),
-        (@rule access(~ex::isvirtual, ~m) => default(ex.val)),
+        (@rule access(~ex::isvirtual, ~m, ~i...) => default(ex.val)),
     ]))(rep), LowerJulia())
     @assert isliteral(background)
     return RepeatData(background.val, typeof(background.val))
@@ -139,7 +138,6 @@ end
 pointwise_rep_sparse(ex::SparseData) = Fill(default(ex))
 pointwise_rep_sparse(ex) = ex
 
-#=
 function pointwise_finch_expr(ex, ::Type{<:Broadcast.Broadcasted{Style, Axes, F, Args}}, idxs) where {Style, F, Axes, Args}
     args = map(enumerate(Args.parameters)) do (n, Arg)
         pointwise_finch_expr(:($ex.args[$n]), Arg, idxs)
@@ -151,26 +149,16 @@ function pointwise_finch_expr(ex, T, idxs)
     :($ex[(idxs[end-ndims(T)+1:end]...)])
 end
 
-function finch_broadcast_expr(ex, ::Type{Broadcasted{Style, Axes, F, Args}}, ctx::LowerJulia, idxs) where {Style, Axes, F, Args}
-    sym = ctx.freshen(:arg)
-    push!(ctx.preamble, :($sym = $ex.f))
-    args = map(enumerate(Args.parameters)) do (n, Arg)
-        finch_broadcast_expr(:($ex.args[$n]), Arg, ctx, idxs)
-    end
-    return :($sym($(args...)))
-end
-function finch_broadcast_expr(ex, ::Type{T}, ctx::LowerJulia, idxs) where T
-    sym = ctx.freshen(:arg)
-    push!(ctx.preamble, :($sym = $ex))
-    return :($sym[$(idxs[end - ndims(T) + 1:end]...)])
-end
-
-
 @generated function Base.copyto!(out, bc::Broadcasted{FinchStyle{N}}) where {N}
+    copyto_helper!(ex, bc, idxs)
+end
+
+#=
+function copyto_helper!(ex, out, bc)
     ctx = LowerJulia()
     res = contain(ctx) do ctx_2
         idxs = [ctx_2.freshen(:idx, n) for n = 1:N]
-        ex = finch_broadcast_expr(:bc, bc, ctx_2, idxs)
+        ex = pointwise_finch_expr(ex, bc, idxs)
         quote
             @finch begin
                 out .= $(default(out))
@@ -183,7 +171,6 @@ end
         $res
         out
     end
-
 end
 
 function reduce(op, bc::Broadcasted{FinchStyle{N}}, dims, init) where {N}
