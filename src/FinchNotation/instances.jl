@@ -175,16 +175,16 @@ Base.:(==)(a::CreateInstance, b::CreateInstance) = true
 
 Base.show(io::IO, node::CreateInstance) = print(io, "create_instance()")
 
-@inline index_leaf_instance(arg::Type) = literal_instance(arg)
-@inline index_leaf_instance(arg::Function) = literal_instance(arg)
-@inline index_leaf_instance(arg::FinchNodeInstance) = arg
-@inline index_leaf_instance(arg) = arg #TODO ValueInstance
+@inline finch_leaf_instance(arg::Type) = literal_instance(arg)
+@inline finch_leaf_instance(arg::Function) = literal_instance(arg)
+@inline finch_leaf_instance(arg::FinchNodeInstance) = arg
+@inline finch_leaf_instance(arg) = arg #TODO ValueInstance
 
-@inline index_leaf(arg::Type) = literal(arg)
-@inline index_leaf(arg::Function) = literal(arg)
-@inline index_leaf(arg::FinchNode) = arg
-@inline index_leaf(arg) = isliteral(arg) ? literal(arg) : virtual(arg)
+@inline finch_leaf(arg::Type) = literal(arg)
+@inline finch_leaf(arg::Function) = literal(arg)
+@inline finch_leaf(arg::FinchNode) = arg
+@inline finch_leaf(arg) = isliteral(arg) ? literal(arg) : virtual(arg)
 
-Base.convert(::Type{FinchNode}, x) = index_leaf(x)
+Base.convert(::Type{FinchNode}, x) = finch_leaf(x)
 Base.convert(::Type{FinchNode}, x::FinchNode) = x
 Base.convert(::Type{FinchNode}, x::Symbol) = error()

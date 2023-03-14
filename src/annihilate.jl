@@ -189,7 +189,7 @@ isinvolution(::AbstractAlgebra, ::typeof(inv)) = true
 struct Fill
     body::FinchNode
     default
-    Fill(x, d=nothing) = new(index_leaf(x), d)
+    Fill(x, d=nothing) = new(finch_leaf(x), d)
 end
 
 FinchNotation.isliteral(::Fill) = false

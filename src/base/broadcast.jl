@@ -84,13 +84,13 @@ end
 stylize_access(node, ctx::Stylize{PointwiseRep}, tns::SolidData) = stylize_access(node, ctx, tns.lvl)
 stylize_access(node, ctx::Stylize{PointwiseRep}, tns::HollowData) = stylize_access(node, ctx, tns.lvl)
 stylize_access(node, ctx::Stylize{PointwiseRep}, ::SparseData) =
-    !isempty(ctx.root) && first(ctx.root) == last(node.idxs) ? PointwiseSparseStyle() : DefaultStyle()
+    !isempty(ctx.root) && first(ctx.root) == last(node.idxs) ? PointwiseSparseStyle() : PointwiseDenseStyle()
 stylize_access(node, ctx::Stylize{PointwiseRep}, ::DenseData) =
-    !isempty(ctx.root) && first(ctx.root) == last(node.idxs) ? PointwiseDenseStyle() : DefaultStyle()
+    !isempty(ctx.root) && first(ctx.root) == last(node.idxs) ? PointwiseDenseStyle() : PointwiseDenseStyle()
 stylize_access(node, ctx::Stylize{PointwiseRep}, ::RepeatData) =
-    !isempty(ctx.root) && first(ctx.root) == last(node.idxs) ? PointwiseRepeatStyle() : DefaultStyle()
+    !isempty(ctx.root) && first(ctx.root) == last(node.idxs) ? PointwiseRepeatStyle() : PointwiseDenseStyle()
 stylize_access(node, ctx::Stylize{PointwiseRep}, ::ElementData) =
-    isempty(ctx.root) ? PointwiseElementStyle() : DefaultStyle()
+    isempty(ctx.root) ? PointwiseElementStyle() : PointwiseDenseStyle()
 
 pointwise_rep_body(tns::SolidData) = pointwise_rep_body(tns.lvl)
 pointwise_rep_body(tns::HollowData) = pointwise_rep_body(tns.lvl)
@@ -110,14 +110,16 @@ function (ctx::PointwiseRep)(rep, idxs, ::PointwiseSparseStyle)
         ]))(rep), LowerJulia())
         return SparseData(ctx(body, idxs[2:end]))
     else
-        ctx(rep, idxs, Stylize(idxs, ctx)(background))
+        background_style = Stylize(idxs, ctx)(background)
+        @assert background_style != PointwiseSparseStyle()
+        ctx(rep, idxs, background_style)
     end
 end
 
 function (ctx::PointwiseRep)(rep, idxs, ::PointwiseDenseStyle)
-    body = simplify(Postwalk(Chain([
+    body = simplify(Rewrite(Postwalk(Chain([
         (@rule access(~ex::isvirtual, ~m, ~i..., $(idxs[1])) => access(pointwise_rep_body(ex.val), m, i...)),
-    ]))(rep), LowerJulia())
+    ])))(rep), LowerJulia())
     return DenseData(ctx(body, idxs[2:end]))
 end
 
@@ -126,7 +128,7 @@ function (ctx::PointwiseRep)(rep, idxs, ::PointwiseRepeatStyle)
         (@rule access(~ex::isvirtual, ~m, ~i...) => default(ex.val)),
     ]))(rep), LowerJulia())
     @assert isliteral(background)
-    return RepeatData(index_leaf(background).val, typeof(index_leaf(background).val))
+    return RepeatData(finch_leaf(background).val, typeof(finch_leaf(background).val))
 end
 
 function (ctx::PointwiseRep)(rep, idxs, ::PointwiseElementStyle)
@@ -134,7 +136,7 @@ function (ctx::PointwiseRep)(rep, idxs, ::PointwiseElementStyle)
         (@rule access(~ex::isvirtual, ~m) => default(ex.val)),
     ]))(rep), LowerJulia())
     @assert isliteral(background)
-    return ElementData(literal(background).val, typeof(background.val))
+    return ElementData(finch_leaf(background).val, typeof(finch_leaf(background).val))
 end
 
 pointwise_rep_sparse(ex::SparseData) = Fill(default(ex))

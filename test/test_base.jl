@@ -83,6 +83,8 @@ using Finch: AsArray
         @repl io AsArray(C)
         @repl io D = A .* B true
         @repl io AsArray(D)
+        @repl io E = ifelse.(A .== 0, 1, 2)
+        @repl io AsArray(E)
         
         @test check_output("broadcast.txt", String(take!(io)))
     end

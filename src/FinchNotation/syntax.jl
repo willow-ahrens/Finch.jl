@@ -19,9 +19,9 @@ const program_nodes = (
     updater = updater,
     modify = modify,
     create = create,
-    variable = (ex) -> :(index_leaf($(esc(ex)))),
+    variable = (ex) -> :(finch_leaf($(esc(ex)))),
     literal = literal,
-    value = (ex) -> :(index_leaf($(esc(ex)))),
+    value = (ex) -> :(finch_leaf($(esc(ex)))),
 )
 
 const instance_nodes = (
@@ -42,9 +42,9 @@ const instance_nodes = (
     updater = updater_instance,
     modify = modify_instance,
     create = create_instance,
-    variable = (ex) -> :($variable_instance($(QuoteNode(ex)), $index_leaf_instance($(esc(ex))))),
+    variable = (ex) -> :($variable_instance($(QuoteNode(ex)), $finch_leaf_instance($(esc(ex))))),
     literal = literal_instance,
-    value = (ex) -> :($index_leaf_instance($(esc(ex))))
+    value = (ex) -> :($finch_leaf_instance($(esc(ex))))
 )
 
 and() = true
