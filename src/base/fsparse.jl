@@ -124,19 +124,19 @@ SparseCOO (0.0) [1:2,1:2,1:2]
 """
 fsprand(shape::Tuple, p::AbstractFloat, rfn::Function, ::Type{T}) where {T} = fsprand(default_rng(), shape, p, rfn, T)
 function fsprand(r::AbstractRNG, shape::Tuple, p::AbstractFloat, rfn::Function, ::Type{T}) where T
-    I = fsprand_helper(r, shape, P)
+    I = fsprand_helper(r, shape, p)
     V = rfn(r, T, length(I))
     return fsparse!(I, V, shape)
 end
 
 fsprand(shape::Tuple, p::AbstractFloat, rfn::Function) = fsprand(default_rng(), shape, p, rfn)
 function fsprand(r::AbstractRNG, shape::Tuple, p::AbstractFloat, rfn::Function)
-    I = fsprand_helper(r, shape, P)
+    I = fsprand_helper(r, shape, p)
     V = rfn(r, length(I))
     return fsparse!(I, V, shape)
 end
 
-function fsprand_helper(r::AbstractRNG, shape::Tuple, P::AbstractFloat)
+function fsprand_helper(r::AbstractRNG, shape::Tuple, p::AbstractFloat)
     I = map(shape -> Vector{typeof(shape)}(), shape)
     for i in randsubseq(r, CartesianIndices(shape), p)
         for r = 1:length(shape)

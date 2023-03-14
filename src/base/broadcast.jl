@@ -150,19 +150,18 @@ function pointwise_finch_expr(ex, T, idxs)
 end
 
 @generated function Base.copyto!(out, bc::Broadcasted{FinchStyle{N}}) where {N}
-    copyto_helper!(ex, bc, idxs)
+    copyto_helper!(:out, out, :bc, bc)
 end
 
-#=
-function copyto_helper!(ex, out, bc)
+function copyto_helper!(out_ex, out, bc_ex, bc)
     ctx = LowerJulia()
     res = contain(ctx) do ctx_2
         idxs = [ctx_2.freshen(:idx, n) for n = 1:N]
-        ex = pointwise_finch_expr(ex, bc, idxs)
+        pw_ex = pointwise_finch_expr(bc_ex, bc, idxs)
         quote
             @finch begin
-                out .= $(default(out))
-                @loop($(reverse(idxs)...), out[$(idxs...)] = $ex)
+                $out_ex .= $(default(out))
+                @loop($(reverse(idxs)...), $out_ex[$(idxs...)] = $pw_ex)
             end
         end
     end
@@ -173,6 +172,7 @@ function copyto_helper!(ex, out, bc)
     end
 end
 
+#=
 function reduce(op, bc::Broadcasted{FinchStyle{N}}, dims, init) where {N}
     T = Base.combine_eltypes(bc.f, bc.args::Tuple)
 end

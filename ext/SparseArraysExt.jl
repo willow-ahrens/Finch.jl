@@ -3,7 +3,8 @@ module SparseArraysExt
 using Finch
 using Finch: LowerJulia, DefaultStyle, Extent
 using Finch: Walk, Follow
-using Finch: Furlable, Stepper, Jumper, Run, Fill, Simplify, Thunk
+using Finch: Furlable, Stepper, Jumper, Run, Fill, Lookup, Simplify, Pipeline, Phase, Thunk, Spike, Step
+using Finch: virtual_size, virtual_default, getstart, getstop
 using Finch.FinchNotation
 
 isdefined(Base, :get_extension) ? (using SparseArrays) : (using ..SparseArrays)
@@ -84,7 +85,7 @@ function Finch.get_reader(arr::VirtualSparseMatrixCSC, ctx::LowerJulia, ::Union{
                             body = (start, step) -> Stepper(
                                 seek = (ctx, ext) -> quote
                                     if $(arr.ex).rowval[$my_q] < $(ctx(getstart(ext)))
-                                        $my_q = scansearch($(arr.ex).rowval, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
+                                        $my_q = Finch.scansearch($(arr.ex).rowval, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                                     end
                                 end,
                                 body = Thunk(
