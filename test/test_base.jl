@@ -1,6 +1,6 @@
 using Finch: AsArray
 
-@testset "meta" begin
+@testset "Base Functions" begin
     A = @fiber(sl(e(0.0)), fsparse(([1, 3, 5, 7, 9],), [2.0, 3.0, 4.0, 5.0, 6.0], (10,)))
     B = @fiber(sl(e(0.0)), A)
     @test A == B
@@ -77,9 +77,12 @@ using Finch: AsArray
         io = IOBuffer()
         println(io, "broadcast tests")
 
-        @repl io A = @fiber(d(sl(e(0.0), 10), 12))
-        @repl io B = rand(10)
-        @repl io C = A .+ B
+        @repl io A = @fiber(d(sl(e(0.0))), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
+        @repl io B = [1, 2, 3, 4]
+        @repl io (C = A .+ B;)
+        @repl io AsArray(C)
+        @repl io (D = A .* B;)
+        @repl io AsArray(D)
         
         @test check_output("broadcast.txt", String(take!(io)))
     end

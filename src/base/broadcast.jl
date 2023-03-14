@@ -47,7 +47,7 @@ function pointwise_finch_traits(ex, ::Type{<:Broadcast.Broadcasted{Style, Axes, 
     call(f, args...)
 end
 function pointwise_finch_traits(ex, T, idxs)
-    access(data_rep(T), reader(), idxs[end-ndims(T)+1:end]...)
+    access(data_rep(T), reader(), idxs[1:ndims(T)]...)
 end
 
 function Base.similar(bc::Broadcast.Broadcasted{FinchStyle{N}}, ::Type{T}, dims) where {N, T}
@@ -66,16 +66,16 @@ struct PointwiseDenseStyle end
 struct PointwiseRepeatStyle end
 struct PointwiseElementStyle end
 
-result_style(a::PointwiseSparseStyle, ::PointwiseSparseStyle) = a
-result_style(a::PointwiseSparseStyle, ::PointwiseDenseStyle) = a
-result_style(a::PointwiseSparseStyle, ::PointwiseRepeatStyle) = a
-result_style(a::PointwiseSparseStyle, ::PointwiseElementStyle) = a
-result_style(a::PointwiseDenseStyle, ::PointwiseDenseStyle) = a
-result_style(a::PointwiseDenseStyle, ::PointwiseRepeatStyle) = a
-result_style(a::PointwiseDenseStyle, ::PointwiseElementStyle) = a
-result_style(a::PointwiseRepeatStyle, ::PointwiseRepeatStyle) = a
-result_style(a::PointwiseRepeatStyle, ::PointwiseElementStyle) = a
-result_style(a::PointwiseElementStyle, ::PointwiseElementStyle) = a
+combine_style(a::PointwiseSparseStyle, ::PointwiseSparseStyle) = a
+combine_style(a::PointwiseSparseStyle, ::PointwiseDenseStyle) = a
+combine_style(a::PointwiseSparseStyle, ::PointwiseRepeatStyle) = a
+combine_style(a::PointwiseSparseStyle, ::PointwiseElementStyle) = a
+combine_style(a::PointwiseDenseStyle, ::PointwiseDenseStyle) = a
+combine_style(a::PointwiseDenseStyle, ::PointwiseRepeatStyle) = a
+combine_style(a::PointwiseDenseStyle, ::PointwiseElementStyle) = a
+combine_style(a::PointwiseRepeatStyle, ::PointwiseRepeatStyle) = a
+combine_style(a::PointwiseRepeatStyle, ::PointwiseElementStyle) = a
+combine_style(a::PointwiseElementStyle, ::PointwiseElementStyle) = a
 
 struct PointwiseRep
     ctx
@@ -83,12 +83,14 @@ end
 
 stylize_access(node, ctx::Stylize{PointwiseRep}, tns::SolidData) = stylize_access(node, ctx, tns.lvl)
 stylize_access(node, ctx::Stylize{PointwiseRep}, tns::HollowData) = stylize_access(node, ctx, tns.lvl)
-function stylize_access(node, ctx::Stylize{PointwiseRep}, ::SparseData)
-    if !isempty(ctx.root) && first(ctx.root) == last(node.idxs) PointwiseSparseStyle() end
-end
-stylize_access(node, ctx::Stylize{PointwiseRep}, ::DenseData) = if !isempty(ctx.root) && first(ctx.root) == last(node.idxs) PointwiseDenseStyle() end
-stylize_access(node, ctx::Stylize{PointwiseRep}, ::RepeatData) = if !isempty(ctx.root) && first(ctx.root) == last(node.idxs) PointwiseRepeatStyle() end
-stylize_access(node, ctx::Stylize{PointwiseRep}, ::ElementData) = isempty(ctx.root) ? PointwiseElementStyle() : PointwiseDenseStyle()
+stylize_access(node, ctx::Stylize{PointwiseRep}, ::SparseData) =
+    !isempty(ctx.root) && first(ctx.root) == last(node.idxs) ? PointwiseSparseStyle() : DefaultStyle()
+stylize_access(node, ctx::Stylize{PointwiseRep}, ::DenseData) =
+    !isempty(ctx.root) && first(ctx.root) == last(node.idxs) ? PointwiseDenseStyle() : DefaultStyle()
+stylize_access(node, ctx::Stylize{PointwiseRep}, ::RepeatData) =
+    !isempty(ctx.root) && first(ctx.root) == last(node.idxs) ? PointwiseRepeatStyle() : DefaultStyle()
+stylize_access(node, ctx::Stylize{PointwiseRep}, ::ElementData) =
+    isempty(ctx.root) ? PointwiseElementStyle() : DefaultStyle()
 
 pointwise_rep_body(tns::SolidData) = pointwise_rep_body(tns.lvl)
 pointwise_rep_body(tns::HollowData) = pointwise_rep_body(tns.lvl)
@@ -138,38 +140,36 @@ end
 pointwise_rep_sparse(ex::SparseData) = Fill(default(ex))
 pointwise_rep_sparse(ex) = ex
 
-function pointwise_finch_expr(ex, ::Type{<:Broadcast.Broadcasted{Style, Axes, F, Args}}, idxs) where {Style, F, Axes, Args}
+function pointwise_finch_expr(ex, ::Type{<:Broadcast.Broadcasted{Style, Axes, F, Args}}, ctx, idxs) where {Style, F, Axes, Args}
+    f = ctx.freshen(:f)
+    push!(ctx.preamble, :($f = $ex.f))
     args = map(enumerate(Args.parameters)) do (n, Arg)
-        pointwise_finch_expr(:($ex.args[$n]), Arg, idxs)
+        pointwise_finch_expr(:($ex.args[$n]), Arg, ctx, idxs)
     end
-    :($ex.f($(args...)))
+    :($f($(args...)))
 end
 
-function pointwise_finch_expr(ex, T, idxs)
-    :($ex[(idxs[end-ndims(T)+1:end]...)])
+function pointwise_finch_expr(ex, T, ctx, idxs)
+    src = ctx.freshen(:src)
+    push!(ctx.preamble, :($src = $ex))
+    :($src[$(idxs[1:ndims(T)]...)])
 end
 
 @generated function Base.copyto!(out, bc::Broadcasted{FinchStyle{N}}) where {N}
     copyto_helper!(:out, out, :bc, bc)
 end
 
-function copyto_helper!(out_ex, out, bc_ex, bc)
-    ctx = LowerJulia()
-    res = contain(ctx) do ctx_2
-        idxs = [ctx_2.freshen(:idx, n) for n = 1:N]
-        pw_ex = pointwise_finch_expr(bc_ex, bc, idxs)
+function copyto_helper!(out_ex, out, bc_ex, bc::Type{<:Broadcasted{FinchStyle{N}}}) where {N}
+    contain(LowerJulia()) do ctx
+        idxs = [ctx.freshen(:idx, n) for n = 1:N]
+        pw_ex = pointwise_finch_expr(bc_ex, bc, ctx, idxs)
         quote
             @finch begin
                 $out_ex .= $(default(out))
                 @loop($(reverse(idxs)...), $out_ex[$(idxs...)] = $pw_ex)
             end
         end
-    end
-    quote
-        println($(QuoteNode(res)))
-        $res
-        out
-    end
+    end |> lower_caches |> lower_cleanup |> unblock
 end
 
 #=
