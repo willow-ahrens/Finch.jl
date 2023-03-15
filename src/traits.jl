@@ -54,19 +54,6 @@ default(fbr::HollowData) = default(fbr.lvl)
 Base.ndims(fbr::HollowData) = ndims(fbr.lvl)
 
 """
-    SolidData(lvl)
-    
-Represents a tensor which is represented by `lvl`
-"""
-struct SolidData
-    lvl
-end
-Finch.isliteral(::SolidData) = false
-default(fbr::SolidData) = default(fbr.lvl)
-
-Base.ndims(fbr::SolidData) = ndims(fbr.lvl)
-
-"""
     ElementData(default, eltype)
     
 Represents a scalar element of type `eltype` and default `default`.
@@ -95,31 +82,52 @@ default(fbr::RepeatData) = fbr.default
 
 Base.ndims(fbr::RepeatData) = 1
 
-#const SolidData = Union{DenseData, SparseData, RepeatData, ElementData}
-
 """
     data_rep(tns)
 
 Return a trait object representing everything that can be learned about the data
 based on the storage format (type) of the tensor
 """
-data_rep(tns) = SolidData((DenseData^(ndims(tns)))(ElementData(default(tns), eltype(tns))))
+data_rep(tns) = (DenseData^(ndims(tns)))(ElementData(default(tns), eltype(tns)))
 
 data_rep(T::Type{<:Number}) = ElementData(zero(T), T)
+
+"""
+    data_rep(tns)
+
+Normalize a trait object to collapse subfiber information into the parent fiber.
+"""
+collapse_rep(fbr) = fbr
+
+collapse_rep(fbr::HollowData) = collapse_rep(fbr, fbr.lvl)
+collapse_rep(::HollowData, lvl::HollowData) = collapse_rep(lvl)
+collapse_rep(::HollowData, lvl) = HollowData(collapse_rep(lvl))
+
+collapse_rep(fbr::DenseData) = collapse_rep(fbr, fbr.lvl)
+collapse_rep(::DenseData, lvl::HollowData) = collapse_rep(SparseData(lvl.lvl))
+collapse_rep(::DenseData, lvl) = DenseData(collapse_rep(lvl))
+
+collapse_rep(fbr::SparseData) = collapse_rep(fbr, fbr.lvl)
+collapse_rep(::SparseData, lvl::HollowData) = collapse_rep(SparseData(lvl.lvl))
+collapse_rep(::SparseData, lvl) = SparseData(collapse_rep(lvl))
+
+collapse_rep(::RepeatData, lvl::HollowData) = collapse_rep(SparseData(lvl.lvl))
+collapse_rep(::RepeatData, lvl) = DenseData(collapse_rep(lvl))
 
 """
     fiber_ctr(tns)
 
 Return an expression that would construct a fiber suitable to hold data with a
-representation described by `tns`
+representation described by `tns`. Assumes representation is collapsed.
 """
-fiber_ctr(fbr::SolidData) = :(Fiber!($(fiber_ctr_solid(fbr.lvl))))
-fiber_ctr_solid(lvl::DenseData) = :(Dense($(fiber_ctr_solid(lvl.lvl))))
-fiber_ctr_solid(lvl::SparseData) = :(SparseList($(fiber_ctr_solid(lvl.lvl))))
-fiber_ctr_solid(lvl::ElementData) = :(Element{$(lvl.default), $(lvl.eltype)}())
-fiber_ctr_solid(lvl::RepeatData) = :(Repeat{$(lvl.default), $(lvl.eltype)}())
-fiber_ctr(fbr::HollowData) = :(Fiber!($(fiber_ctr_hollow(fbr.lvl))))
-fiber_ctr_hollow(lvl::DenseData) = :(SparseList($(fiber_ctr_solid(lvl.lvl))))
-fiber_ctr_hollow(lvl::SparseData) = :(SparseList($(fiber_ctr_solid(lvl.lvl))))
-fiber_ctr_hollow(lvl::ElementData) = :(Element{$(lvl.default), $(lvl.eltype)}())
-fiber_ctr_hollow(lvl::RepeatData) = :(Repeat{$(lvl.default), $(lvl.eltype)}())
+function fiber_ctr end
+fiber_ctr(fbr::HollowData) = fiber_ctr_hollow(fbr.lvl)
+fiber_ctr_hollow(fbr::DenseData) = :(Fiber!($(level_ctr(SparseData(fbr.lvl)))))
+fiber_ctr_hollow(fbr::RepeatData) = :(Fiber!($(level_ctr(SparseData(ElementData(fbr.default, fbr.eltype)))))) #This is the best format we have for this case right now
+fiber_ctr_hollow(fbr::SparseData) = :(Fiber!($(level_ctr(fbr))))
+fiber_ctr(fbr) = :(Fiber!($(level_ctr(fbr))))
+
+level_ctr(fbr::SparseData) = :(SparseList($(level_ctr(fbr.lvl))))
+level_ctr(fbr::DenseData) = :(Dense($(level_ctr(fbr.lvl))))
+level_ctr(fbr::RepeatData) = :(Repeat{$(fbr.default), $(fbr.eltype)}())
+level_ctr(fbr::ElementData) = :(Element{$(fbr.default), $(fbr.eltype)}())

@@ -7,6 +7,8 @@ using Finch: Furlable, Stepper, Jumper, Run, Fill, Lookup, Simplify, Pipeline, P
 using Finch: virtual_size, virtual_default, getstart, getstop
 using Finch.FinchNotation
 
+using Base: @kwdef
+
 isdefined(Base, :get_extension) ? (using SparseArrays) : (using ..SparseArrays)
 
 function Finch.fiber(arr::SparseMatrixCSC{Tv, Ti}, default=zero(Tv)) where {Tv, Ti}

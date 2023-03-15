@@ -220,7 +220,7 @@ redefault!(fbr::SubFiber, init) = SubFiber(redefault!(fbr.lvl, init), fbr.pos)
 
 
 data_rep(fbr::Fiber) = data_rep(typeof(fbr))
-data_rep(::Type{<:AbstractFiber{Lvl}}) where {Lvl} = SolidData(data_rep_level(Lvl))
+data_rep(::Type{<:AbstractFiber{Lvl}}) where {Lvl} = data_rep_level(Lvl)
 
 
 function freeze!(fbr::VirtualFiber, ctx::LowerJulia)

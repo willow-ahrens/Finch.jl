@@ -58,18 +58,19 @@ end
     idxs = [index(Symbol(:i, n)) for n = 1:N]
     ctx = LowerJulia()
     rep = pointwise_finch_traits(:bc, bc, idxs)
-    fiber_ctr(SolidData(PointwiseRep(ctx)(rep, reverse(idxs))))
+    rep = PointwiseRep(ctx)(rep, reverse(idxs))
+    fiber_ctr(collapse_rep(rep))
 end
 
-struct PointwiseSparseStyle end
+struct PointwiseHollowStyle end
 struct PointwiseDenseStyle end
 struct PointwiseRepeatStyle end
 struct PointwiseElementStyle end
 
-combine_style(a::PointwiseSparseStyle, ::PointwiseSparseStyle) = a
-combine_style(a::PointwiseSparseStyle, ::PointwiseDenseStyle) = a
-combine_style(a::PointwiseSparseStyle, ::PointwiseRepeatStyle) = a
-combine_style(a::PointwiseSparseStyle, ::PointwiseElementStyle) = a
+combine_style(a::PointwiseHollowStyle, ::PointwiseHollowStyle) = a
+combine_style(a::PointwiseHollowStyle, ::PointwiseDenseStyle) = a
+combine_style(a::PointwiseHollowStyle, ::PointwiseRepeatStyle) = a
+combine_style(a::PointwiseHollowStyle, ::PointwiseElementStyle) = a
 combine_style(a::PointwiseDenseStyle, ::PointwiseDenseStyle) = a
 combine_style(a::PointwiseDenseStyle, ::PointwiseRepeatStyle) = a
 combine_style(a::PointwiseDenseStyle, ::PointwiseElementStyle) = a
@@ -81,38 +82,31 @@ struct PointwiseRep
     ctx
 end
 
-stylize_access(node, ctx::Stylize{PointwiseRep}, tns::SolidData) = stylize_access(node, ctx, tns.lvl)
-stylize_access(node, ctx::Stylize{PointwiseRep}, tns::HollowData) = stylize_access(node, ctx, tns.lvl)
-stylize_access(node, ctx::Stylize{PointwiseRep}, ::SparseData) =
-    !isempty(ctx.root) && first(ctx.root) == last(node.idxs) ? PointwiseSparseStyle() : PointwiseDenseStyle()
-stylize_access(node, ctx::Stylize{PointwiseRep}, ::DenseData) =
-    !isempty(ctx.root) && first(ctx.root) == last(node.idxs) ? PointwiseDenseStyle() : PointwiseDenseStyle()
+stylize_access(node, ctx::Stylize{PointwiseRep}, ::HollowData) = PointwiseHollowStyle()
+stylize_access(node, ctx::Stylize{PointwiseRep}, ::SparseData) = PointwiseDenseStyle()
+stylize_access(node, ctx::Stylize{PointwiseRep}, ::DenseData) = PointwiseDenseStyle()
 stylize_access(node, ctx::Stylize{PointwiseRep}, ::RepeatData) =
     !isempty(ctx.root) && first(ctx.root) == last(node.idxs) ? PointwiseRepeatStyle() : PointwiseDenseStyle()
 stylize_access(node, ctx::Stylize{PointwiseRep}, ::ElementData) =
     isempty(ctx.root) ? PointwiseElementStyle() : PointwiseDenseStyle()
 
-pointwise_rep_body(tns::SolidData) = pointwise_rep_body(tns.lvl)
-pointwise_rep_body(tns::HollowData) = pointwise_rep_body(tns.lvl)
-pointwise_rep_body(tns::SparseData) = tns.lvl
+pointwise_rep_body(tns::SparseData) = HollowData(tns.lvl)
 pointwise_rep_body(tns::DenseData) = tns.lvl
 pointwise_rep_body(tns::RepeatData) = tns.lvl
 pointwise_rep_body(tns::ElementData) = tns.lvl
 
 (ctx::PointwiseRep)(rep, idxs) = ctx(rep, idxs, Stylize(idxs, ctx)(rep))
-function (ctx::PointwiseRep)(rep, idxs, ::PointwiseSparseStyle)
+function (ctx::PointwiseRep)(rep, idxs, ::PointwiseHollowStyle)
     background = simplify(Postwalk(Chain([
-        (@rule access(~ex::isvirtual, ~m, ~i..., $(idxs[1])) => access(pointwise_rep_sparse(ex.val), m, i..., idxs[1])),
+        (@rule access(~ex::isvirtual, ~m, ~i...) => access(pointwise_rep_hollow(ex.val), m, i...)),
+    ]))(rep), LowerJulia())
+    body = simplify(Postwalk(Chain([
+        (@rule access(~ex::isvirtual, ~m, ~i...) => access(pointwise_rep_solid(ex.val), m, i...)),
     ]))(rep), LowerJulia())
     if isliteral(background)
-        body = simplify(Postwalk(Chain([
-            (@rule access(~ex::isvirtual, ~m, ~i..., $(idxs[1])) => access(pointwise_rep_body(ex.val), m, i...)),
-        ]))(rep), LowerJulia())
-        return SparseData(ctx(body, idxs[2:end]))
+        return HollowData(ctx(body, idxs))
     else
-        background_style = Stylize(idxs, ctx)(background)
-        @assert background_style != PointwiseSparseStyle()
-        ctx(rep, idxs, background_style)
+        return ctx(body, idxs)
     end
 end
 
@@ -139,8 +133,10 @@ function (ctx::PointwiseRep)(rep, idxs, ::PointwiseElementStyle)
     return ElementData(finch_leaf(background).val, typeof(finch_leaf(background).val))
 end
 
-pointwise_rep_sparse(ex::SparseData) = Fill(default(ex))
-pointwise_rep_sparse(ex) = ex
+pointwise_rep_hollow(ex::HollowData) = Fill(default(ex))
+pointwise_rep_hollow(ex) = ex
+pointwise_rep_solid(tns::HollowData) = pointwise_rep_solid(tns.lvl)
+pointwise_rep_solid(ex) = ex
 
 function pointwise_finch_expr(ex, ::Type{<:Broadcast.Broadcasted{Style, Axes, F, Args}}, ctx, idxs) where {Style, F, Axes, Args}
     f = ctx.freshen(:f)

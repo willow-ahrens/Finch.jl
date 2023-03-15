@@ -6,30 +6,20 @@ end
     getindex_rep(tns, idxs...)
 
 Return a trait object representing the result of calling getindex(tns, idxs...)
-on the tensor represented by `tns`.
+on the tensor represented by `tns`. Assumes traits are in collapsed form.
 """
-getindex_rep(tns, idxs...) = getindex_rep_def(tns, map(idx -> ndims(idx) == 0 ? Drop(idx) : idx, idxs)...)
+getindex_rep(tns, idxs...) = collapse_rep(getindex_rep_def(tns, map(idx -> ndims(idx) == 0 ? Drop(idx) : idx, idxs)...))
 
-getindex_rep_def(fbr::SolidData, idxs...) = getindex_rep_def(fbr.lvl, idxs...)
-getindex_rep_def(fbr::HollowData, idxs...) = getindex_rep_def_hollow(getindex_rep_def(fbr.lvl, idxs...))
-getindex_rep_def_hollow(subfbr::SolidData, idxs...) = HollowData(subfbr.lvl)
-getindex_rep_def_hollow(subfbr::HollowData, idxs...) = subfbr
+getindex_rep_def(fbr::HollowData, idxs...) = HollowData(getindex_rep_def(fbr.lvl, idxs...))
 
-getindex_rep_def(lvl::SparseData, idx, idxs...) = getindex_rep_def_sparse(getindex_rep_def(lvl.lvl, idxs...), idx)
-getindex_rep_def_sparse(subfbr::HollowData, idx::Drop) = HollowData(subfbr.lvl)
-getindex_rep_def_sparse(subfbr::HollowData, idx) = HollowData(SparseData(subfbr.lvl))
-getindex_rep_def_sparse(subfbr::HollowData, idx::Type{<:Base.Slice}) = HollowData(SparseData(subfbr.lvl))
-getindex_rep_def_sparse(subfbr::SolidData, idx::Drop) = HollowData(subfbr.lvl)
-getindex_rep_def_sparse(subfbr::SolidData, idx) = HollowData(SparseData(subfbr.lvl))
-getindex_rep_def_sparse(subfbr::SolidData, idx::Type{<:Base.Slice}) = SolidData(SparseData(subfbr.lvl))
+getindex_rep_def(lvl::SparseData, idx::Drop, idxs...) = HollowData(getindex_rep_def(lvl.lvl, idxs...))
+getindex_rep_def(lvl::SparseData, idx, idxs...) = HollowData(SparseData(getindex_rep_def(lvl.lvl, idxs...)))
+getindex_rep_def(lvl::SparseData, idx::Type{<:Base.Slice}, idxs...) = SparseData(getindex_rep_def(lvl.lvl, idxs...))
 
-getindex_rep_def(lvl::DenseData, idx, idxs...) = getindex_rep_def_dense(getindex_rep_def(lvl.lvl, idxs...), idx)
-getindex_rep_def_dense(subfbr::HollowData, idx::Drop) = HollowData(subfbr.lvl)
-getindex_rep_def_dense(subfbr::HollowData, idx) = HollowData(DenseData(subfbr.lvl))
-getindex_rep_def_dense(subfbr::SolidData, idx::Drop) = SolidData(subfbr.lvl)
-getindex_rep_def_dense(subfbr::SolidData, idx) = SolidData(DenseData(subfbr.lvl))
+getindex_rep_def(lvl::DenseData, idx::Drop, idxs...) = getindex_rep_def(lvl.lvl, idxs...)
+getindex_rep_def(lvl::DenseData, idx, idxs...) = DenseData(getindex_rep_def(lvl.lvl, idxs...))
 
-getindex_rep_def(lvl::ElementData) = SolidData(lvl)
+getindex_rep_def(lvl::ElementData) = lvl
 
 getindex_rep_def(lvl::RepeatData, idx::Drop) = SolidData(ElementData(lvl.default, lvl.eltype))
 getindex_rep_def(lvl::RepeatData, idx) = SolidData(ElementData(lvl.default, lvl.eltype))
