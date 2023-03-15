@@ -47,6 +47,21 @@ reduce_rep_def(op, z, lvl::ElementData) = ElementData(op, z, fixpoint_type(op, z
 reduce_rep_def(op, z, lvl::RepeatData, idx::Drop) = reduce_rep_def(op, ElementData(lvl.default, lvl.eltype))
 reduce_rep_def(op, z, lvl::RepeatData, idx) = RepeatData(op, z, fixpoint_type(op, z))
 
-function reduce!(op, bc::Broadcasted{FinchStyle{N}}, dims) where {N}
+function Base.reduce(op, src::Fiber; kw...)
+    reduce(op, broadcasted(identity, src); kw...)
+end
+function Base.mapreduce(f, op, src::Fiber, args::Union{Fiber, Base.AbstractArrayOrBroadcasted}...; kw...)
+    reduce(op, broadcasted(f, src, args...); kw...)
+end
+function Base.map(f, src::Fiber, args::Union{Fiber, Base.AbstractArrayOrBroadcasted}...)
+    f.(src, args...)
+end
+function Base.map!(dst, f, src::Fiber, args::Union{Fiber, Base.AbstractArrayOrBroadcasted}...)
+    copyto!(dst, Base.broadcasted(f, src, args...))
+end
+function Base.reduce(op, bc::Broadcasted{FinchStyle{N}}; dims=:, init = reduce(op, Vector{eltype(bc)}())) where {N}
+    reduce_helper(op, bc, Val(init))
+end
 
+@generated function reduce_helper(op, bc, ::Val{init}) where {init}
 end
