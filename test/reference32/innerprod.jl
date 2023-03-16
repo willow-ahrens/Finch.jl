@@ -124,5 +124,5 @@ begin
     qos_2 = B_lvl_2.ptr[end] - 1
     resize!(B_lvl_2.idx, qos_2)
     resize!(B_lvl_3.val, qos_2)
-    (B = Fiber((Finch.DenseLevel){Int32}((Finch.SparseListLevel){Int32}(B_lvl_3, A_lvl.shape, B_lvl_2.ptr, B_lvl_2.idx), A_lvl.shape)),)
+    (B = Fiber((Finch.DenseLevel){Int32}((Finch.SparseListLevel){Int32, Int32}(B_lvl_3, A_lvl.shape, B_lvl_2.ptr, B_lvl_2.idx), A_lvl.shape)),)
 end

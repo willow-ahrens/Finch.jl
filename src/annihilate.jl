@@ -189,7 +189,7 @@ isinvolution(::AbstractAlgebra, ::typeof(inv)) = true
 struct Fill
     body::FinchNode
     default
-    Fill(x, d=nothing) = new(index_leaf(x), d)
+    Fill(x, d=nothing) = new(finch_leaf(x), d)
 end
 
 FinchNotation.isliteral(::Fill) = false
@@ -270,6 +270,7 @@ function base_rules(alg, ctx)
             call(something, a..., b)
         end),
 
+        (@rule call($(literal(identity)), ~a) => a),
         (@rule call($(literal(right)), ~a..., ~b, ~c) => c),
         (@rule call($(literal(ifelse)), $(literal(true)), ~a, ~b) => a),
         (@rule call($(literal(ifelse)), $(literal(false)), ~a, ~b) => b),

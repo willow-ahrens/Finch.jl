@@ -95,7 +95,7 @@ mutable struct VirtualDenseLevel
 end
 function virtualize(ex, ::Type{DenseLevel{Ti, Lvl}}, ctx, tag=:lvl) where {Ti, Lvl}
     sym = ctx.freshen(tag)
-    shape = value(:($sym.shape), Int)
+    shape = value(:($sym.shape), Ti)
     push!(ctx.preamble, quote
         $sym = $ex
     end)
