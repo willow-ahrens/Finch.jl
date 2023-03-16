@@ -34,6 +34,7 @@ jl_function_t* Dense;
 jl_function_t* Element;
 jl_function_t* ElementLevel;
 jl_function_t* Ragged;
+jl_function_t *SparseTriangle;
 
 int finch_call_begin_ = 0;
 int finch_call_end_ = 0;

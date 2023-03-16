@@ -115,6 +115,7 @@ function initialize!(fbr::VirtualFiber, ctx::LowerJulia)
 end
 
 function get_reader(fbr::VirtualFiber, ctx::LowerJulia, protos...)
+    print("in fibers.jl: get_reader\n")
     return get_reader(VirtualSubFiber(fbr.lvl, literal(1)), ctx, reverse(protos)...)
 end
 

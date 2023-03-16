@@ -163,6 +163,8 @@ get_reader(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, ::Union{Nothing, Follow
 get_updater(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, ::Union{Nothing, Laminate, Extrude}, protos...) = get_readerupdater_dense_helper(fbr, ctx, get_updater, VirtualSubFiber, protos...)
 get_updater(fbr::VirtualTrackedSubFiber{VirtualDenseLevel}, ctx, ::Union{Nothing, Laminate, Extrude}, protos...) = get_readerupdater_dense_helper(fbr, ctx, get_updater, (lvl, pos) -> VirtualTrackedSubFiber(lvl, pos, fbr.dirty), protos...)
 function get_readerupdater_dense_helper(fbr, ctx, get_readerupdater, subfiber_ctr, protos...)
+    println("in denselevels.jl: get_readerupdater_dense_helper")
+    println(summary_f_code(fbr.lvl))
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
@@ -180,61 +182,6 @@ function get_readerupdater_dense_helper(fbr, ctx, get_readerupdater, subfiber_ct
                     $q = ($(ctx(pos)) - $(Ti(1))) * $(ctx(lvl.I)) + $(ctx(i))
                 end,
                 body = get_readerupdater(subfiber_ctr(lvl.lvl, value(q, lvl.Ti)), ctx, protos...)
-            )
-        )
-    )
-end
-
-struct RaggedLevel{Ti, Tp, Lvl}
-    lvl::Lvl
-    I::Ti
-    ptr::Vector{Tp}
-end
-const Ragged = RaggedLevel
-RaggedLevel(lvl) = RaggedLevel{Int}(lvl)
-RaggedLevel(lvl, I::Ti, args...) where {Ti} = RaggedLevel{Ti}(lvl, I, args...)
-RaggedLevel{Ti}(lvl, args...) where {Ti} = RaggedLevel{Ti, typeof(lvl)}(lvl, args...)
-RaggedLevel{Ti, Tp}(lvl, args...) where {Ti, Tp} = RaggedLevel{Ti, Tp, typeof(lvl)}(lvl, args...)
-
-
-RaggedLevel{Ti, Tp, Lvl}(lvl) where {Ti, Tp, Lvl} = RaggedLevel{Ti, Tp, Lvl}(lvl, zero(Ti))
-RaggedLevel{Ti, Tp, Lvl}(lvl, I) where {Ti, Tp, Lvl} =
-RaggedLevel{Ti, Tp, Lvl}(lvl, Ti(I), Tp[1])
-
-function get_readerupdater_triangular_dense_helper(fbr, ctx, get_readerupdater, subfiber_ctr, protos...)
-    (lvl, pos) = (fbr.lvl, fbr.pos)
-    tag = lvl.ex
-    Ti = lvl.Ti
-
-
-    q = ctx.freshen(tag, :_q)
-
-
-    Furlable(
-        val = virtual_level_default(lvl),
-        size = virtual_level_size(lvl, ctx),
-        body = (ctx, idx, ext) -> Lookup(
-            val = virtual_level_default(lvl),
-            body = (j) -> Thunk(
-                preamble = quote
-                    $q = val($(ctx(j)) * ($(ctx(j)) - $(Ti(1))) / $(Ti(2)))
-                end,
-                body = Furlable(
-                    val = virtual_level_default(lvl),
-                    size = virtual_level_size(lvl, ctx),
-                    body = (ctx, idx, ext) -> Pipeline(
-                        Phase(
-                            stride = j,
-                            body = Lookup(
-                                val = virtual_level_default(lvl),
-                                body = (i) -> get_readerupdater(subfiber_ctr(lvl.lvl), call(+, value(q, lvl.Ti), i), ctx, protos...)
-                            )
-                        ),
-                        Phase(
-                            body = Run(0)
-                        )
-                    )
-                )
             )
         )
     )

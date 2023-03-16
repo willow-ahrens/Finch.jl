@@ -12,7 +12,7 @@ using Compat
 
 export @finch, @finch_program, @finch_code, value
 
-export Fiber, Fiber!, SparseList, SparseHash, SparseCOO, SparseBytemap, SparseVBL, Dense, Ragged, RepeatRLE, Element, Pattern, Scalar
+export Fiber, Fiber!, SparseList, SparseHash, SparseCOO, SparseBytemap, SparseTriangle, SparseVBL, Dense, Ragged, RepeatRLE, Element, Pattern, Scalar
 export walk, fastwalk, gallop, follow, extrude, laminate
 export fiber, @fiber, pattern!, dropdefaults, dropdefaults!
 export diagmask, lotrimask, uptrimask, bandmask
@@ -59,6 +59,8 @@ include("levels/denselevels.jl")
 include("levels/repeatrlelevels.jl")
 include("levels/elementlevels.jl")
 include("levels/patternlevels.jl")
+include("levels/raggedlevels.jl")
+include("levels/sparsetrianglelevels.jl")
 
 include("traits.jl")
 
