@@ -315,7 +315,7 @@ function display_fiber_data(io::IO, mime::MIME"text/plain", fbr, depth, N, crds,
         foreach(helper, crds)
     end
 end
-display_fiber(io::IO, mime::MIME"text/plain", fbr, depth) = show(io, mime, fbr)
+display_fiber(io::IO, mime::MIME"text/plain", fbr, depth) = show(io, mime, fbr) #TODO get rid of this eventually
 
 function f_decode(ex)
     if ex isa Expr && ex.head == :$
