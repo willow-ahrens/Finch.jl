@@ -115,19 +115,22 @@ collapse_rep(::RepeatData, lvl::HollowData) = collapse_rep(SparseData(lvl.lvl))
 collapse_rep(::RepeatData, lvl) = DenseData(collapse_rep(lvl))
 
 """
-    fiber_ctr(tns)
+    fiber_ctr(tns, protos...)
 
 Return an expression that would construct a fiber suitable to hold data with a
 representation described by `tns`. Assumes representation is collapsed.
 """
 function fiber_ctr end
-fiber_ctr(fbr::HollowData) = fiber_ctr_hollow(fbr.lvl)
-fiber_ctr_hollow(fbr::DenseData) = :(Fiber!($(level_ctr(SparseData(fbr.lvl)))))
-fiber_ctr_hollow(fbr::RepeatData) = :(Fiber!($(level_ctr(SparseData(ElementData(fbr.default, fbr.eltype)))))) #This is the best format we have for this case right now
-fiber_ctr_hollow(fbr::SparseData) = :(Fiber!($(level_ctr(fbr))))
-fiber_ctr(fbr) = :(Fiber!($(level_ctr(fbr))))
+fiber_ctr(fbr) = fiber_ctr(fbr, [nothing for _ in 1:ndims(fbr)])
+fiber_ctr(fbr::HollowData, protos) = fiber_ctr_hollow(fbr.lvl, protos)
+fiber_ctr_hollow(fbr::DenseData, protos) = :(Fiber!($(level_ctr(SparseData(fbr.lvl), protos...))))
+fiber_ctr_hollow(fbr::RepeatData, protos) = :(Fiber!($(level_ctr(SparseData(ElementData(fbr.default, fbr.eltype)), protos...)))) #This is the best format we have for this case right now
+fiber_ctr_hollow(fbr::SparseData, protos) = :(Fiber!($(level_ctr(fbr, protos...))))
+fiber_ctr(fbr, protos) = :(Fiber!($(level_ctr(fbr, protos...))))
 
-level_ctr(fbr::SparseData) = :(SparseList($(level_ctr(fbr.lvl))))
-level_ctr(fbr::DenseData) = :(Dense($(level_ctr(fbr.lvl))))
-level_ctr(fbr::RepeatData) = :(Repeat{$(fbr.default), $(fbr.eltype)}())
+level_ctr(fbr::SparseData, proto::Union{Nothing, Walk, Extrude}, protos...) = :(SparseList($(level_ctr(fbr.lvl, protos...))))
+level_ctr(fbr::SparseData, proto::Union{Laminate}, protos...) = :(SparseHash{1}($(level_ctr(fbr.lvl, protos...))))
+level_ctr(fbr::DenseData, proto, protos...) = :(Dense($(level_ctr(fbr.lvl, protos...))))
+level_ctr(fbr::RepeatData, proto::Union{Nothing, Walk, Extrude}) = :(Repeat{$(fbr.default), $(fbr.eltype)}())
+level_ctr(fbr::RepeatData, proto::Union{Laminate}) = level_ctr(DenseData(ElementData(fbr.default, fbr.eltype)), proto)
 level_ctr(fbr::ElementData) = :(Element{$(fbr.default), $(fbr.eltype)}())
