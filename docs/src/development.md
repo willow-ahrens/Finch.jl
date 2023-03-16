@@ -57,16 +57,16 @@ result to clean it up):
 ```jldoctest example1
 julia> (@macroexpand @finch (C .= 0; @loop i C[i] = A[i] * B[i])) |> Finch.striplines
 quote
-    var"#45#res" = (Finch.execute)((Finch.FinchNotation.sequence_instance)((Finch.FinchNotation.declare_instance)((Finch.FinchNotation.variable_instance)(:C, (Finch.FinchNotation.index_leaf_instance)(C)), literal_instance(0)), begin
+    var"#55#res" = (Finch.execute)((Finch.FinchNotation.sequence_instance)((Finch.FinchNotation.declare_instance)((Finch.FinchNotation.variable_instance)(:C, (Finch.FinchNotation.finch_leaf_instance)(C)), literal_instance(0)), begin
                     let i = index_instance(:i)
                         (Finch.FinchNotation.loop_instance)(i, (Finch.FinchNotation.assign_instance)((Finch.FinchNotation.access_instance)((Finch.FinchNotation.variable_instance)(:C, (Finch.FinchNotation.finch_leaf_instance)(C)), (Finch.FinchNotation.updater_instance)((Finch.FinchNotation.create_instance)()), (Finch.FinchNotation.variable_instance)(:i, (Finch.FinchNotation.finch_leaf_instance)(i))), literal_instance(right), (Finch.FinchNotation.call_instance)((Finch.FinchNotation.variable_instance)(:*, (Finch.FinchNotation.finch_leaf_instance)(*)), (Finch.FinchNotation.access_instance)((Finch.FinchNotation.variable_instance)(:A, (Finch.FinchNotation.finch_leaf_instance)(A)), (Finch.FinchNotation.reader_instance)(), (Finch.FinchNotation.variable_instance)(:i, (Finch.FinchNotation.finch_leaf_instance)(i))), (Finch.FinchNotation.access_instance)((Finch.FinchNotation.variable_instance)(:B, (Finch.FinchNotation.finch_leaf_instance)(B)), (Finch.FinchNotation.reader_instance)(), (Finch.FinchNotation.variable_instance)(:i, (Finch.FinchNotation.finch_leaf_instance)(i))))))
                     end
                 end))
     begin
-        C = Finch.get(var"#45#res", :C, C)
+        C = Finch.get(var"#55#res", :C, C)
     end
     begin
-        var"#45#res"
+        var"#55#res"
     end
 end
 
