@@ -1,7 +1,6 @@
 using Finch: AsArray
 
 @testset "Base Functions" begin
-    #=
     A = @fiber(sl(e(0.0)), fsparse(([1, 3, 5, 7, 9],), [2.0, 3.0, 4.0, 5.0, 6.0], (10,)))
     B = @fiber(sl(e(0.0)), A)
     @test A == B
@@ -89,7 +88,6 @@ using Finch: AsArray
         
         @test check_output("broadcast.txt", String(take!(io)))
     end
-    =#
 
     let
         io = IOBuffer()

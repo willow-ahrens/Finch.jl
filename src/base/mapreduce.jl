@@ -12,7 +12,7 @@ by `tns` on `dims` by `op`.
 function reduce_rep end
 
 reduce_rep(op, z, tns, dims) =
-    reduce_rep_def(op, z, tns, map(n -> n in dims ? Drop(n) : n, 1:ndims(tns))...)
+    reduce_rep_def(op, z, tns, reverse(map(n -> n in dims ? Drop(n) : n, 1:ndims(tns)))...)
 
 function fixpoint_type(op, z, tns)
     S = Union{}
@@ -68,20 +68,23 @@ function Base.reduce(op::Function, bc::Broadcasted{FinchStyle{N}}; dims=:, init 
 end
 
 @generated function reduce_helper(::Callable{op}, bc::Broadcasted{FinchStyle{N}}, ::Val{dims}, ::Val{init}) where {op, dims, init, N}
-    res = contain(LowerJulia()) do ctx
+    contain(LowerJulia()) do ctx
         idxs = [ctx.freshen(:idx, n) for n = 1:N]
         rep = pointwise_finch_traits(:bc, bc, index.(idxs))
-        rep = PointwiseRep(ctx)(rep, index.(reverse(idxs)))
+        rep = collapse_rep(PointwiseRep(ctx)(rep, index.(reverse(idxs))))
         dst = ctx.freshen(:dst)
         if dims == Colon()
             dst_protos = []
-            dst_ctr = :(Scalar($init, $(eltype(bc))))
+            dst_rep = collapse_rep(reduce_rep(op, init, rep, 1:N))
+            dst_ctr = :(Scalar{$(default(dst_rep)), $(eltype(dst_rep))}())
             dst_idxs = []
+            res_ex = :($dst[])
         else
-            dst_protos = [n > maximum(dims) ? laminate : extrude for n = 1:N]
             dst_rep = collapse_rep(reduce_rep(op, init, rep, dims))
+            dst_protos = [n <= maximum(dims) ? laminate : extrude for n = 1:N]
             dst_ctr = fiber_ctr(dst_rep, dst_protos)
             dst_idxs = [n in dims ? 1 : idxs[n] for n in 1:N]
+            res_ex = dst
         end
         pw_ex = pointwise_finch_expr(:bc, bc, ctx, idxs)
         quote
@@ -90,13 +93,9 @@ end
                 $dst .= $(init)
                 @loop($(reverse(idxs)...), $dst[$(dst_idxs...)] = $pw_ex)
             end
-            $dst
+            $res_ex
         end
     end |> lower_caches |> lower_cleanup |> unblock
-    quote
-        println($(QuoteNode(res)))
-        $res
-    end
 end
 
 const FiberOrBroadcast = Union{<:Fiber, <:Broadcasted{FinchStyle{N}} where N}
