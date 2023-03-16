@@ -110,15 +110,15 @@ See also: (`sprand`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#Spars
 julia> fsprand(Bool, (3, 3), 0.5)
 SparseCOO (false) [1:3,1:3]
 ├─├─[1, 1]: true
-├─├─[3, 1]: true
+├─├─[1, 3]: false
 ├─├─[2, 2]: true
-├─├─[3, 2]: true
+├─├─[2, 3]: true
 ├─├─[3, 3]: true  
 
 julia> fsprand(Float64, (2, 2, 2), 0.5)
 SparseCOO (0.0) [1:2,1:2,1:2]
-├─├─├─[2, 2, 1]: 0.6478553157718558
-├─├─├─[1, 1, 2]: 0.996665291437684
+├─├─├─[1, 2, 2]: 0.0
+├─├─├─[2, 1, 1]: 0.0
 ├─├─├─[2, 1, 2]: 0.7491940599574348 
 ```
 """
@@ -150,7 +150,7 @@ fsprand(shape::Tuple, p::AbstractFloat) = fsprand(default_rng(), shape, p, rand)
 
 fsprand(r::AbstractRNG, shape::Tuple, p::AbstractFloat) = fsprand(r, shape, p, rand)
 fsprand(r::AbstractRNG, ::Type{T}, shape::Tuple, p::AbstractFloat) where {T} = fsprand(r, shape, p, (r, i) -> rand(r, T, i))
-fsprand(r::AbstractRNG, ::Type{Bool}, shape::Tuple, p::AbstractFloat) = fsprand(r, shape, p, truebools)
+fsprand(r::AbstractRNG, ::Type{Bool}, shape::Tuple, p::AbstractFloat) = fsprand(r, shape, p, (r, i) -> fill(true, i))
 fsprand(::Type{T}, shape::Tuple, p::AbstractFloat) where {T} = fsprand(default_rng(), T, shape, p)
 
 fsprandn(shape::Tuple, p::AbstractFloat) = fsprand(default_rng(), shape, p, randn)

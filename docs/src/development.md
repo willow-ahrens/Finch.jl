@@ -57,16 +57,16 @@ result to clean it up):
 ```jldoctest example1
 julia> (@macroexpand @finch (C .= 0; @loop i C[i] = A[i] * B[i])) |> Finch.striplines
 quote
-    var"#42#res" = (Finch.execute)((Finch.FinchNotation.sequence_instance)((Finch.FinchNotation.declare_instance)((Finch.FinchNotation.variable_instance)(:C, (Finch.FinchNotation.finch_leaf_instance)(C)), literal_instance(0)), begin
+    var"#51#res" = (Finch.execute)((Finch.FinchNotation.sequence_instance)((Finch.FinchNotation.declare_instance)((Finch.FinchNotation.variable_instance)(:C, (Finch.FinchNotation.finch_leaf_instance)(C)), literal_instance(0)), begin
                     let i = index_instance(:i)
                         (Finch.FinchNotation.loop_instance)(i, (Finch.FinchNotation.assign_instance)((Finch.FinchNotation.access_instance)((Finch.FinchNotation.variable_instance)(:C, (Finch.FinchNotation.finch_leaf_instance)(C)), (Finch.FinchNotation.updater_instance)((Finch.FinchNotation.create_instance)()), (Finch.FinchNotation.variable_instance)(:i, (Finch.FinchNotation.finch_leaf_instance)(i))), literal_instance(right), (Finch.FinchNotation.call_instance)((Finch.FinchNotation.variable_instance)(:*, (Finch.FinchNotation.finch_leaf_instance)(*)), (Finch.FinchNotation.access_instance)((Finch.FinchNotation.variable_instance)(:A, (Finch.FinchNotation.finch_leaf_instance)(A)), (Finch.FinchNotation.reader_instance)(), (Finch.FinchNotation.variable_instance)(:i, (Finch.FinchNotation.finch_leaf_instance)(i))), (Finch.FinchNotation.access_instance)((Finch.FinchNotation.variable_instance)(:B, (Finch.FinchNotation.finch_leaf_instance)(B)), (Finch.FinchNotation.reader_instance)(), (Finch.FinchNotation.variable_instance)(:i, (Finch.FinchNotation.finch_leaf_instance)(i))))))
                     end
                 end))
     begin
-        C = Finch.get(var"#42#res", :C, C)
+        C = Finch.get(var"#51#res", :C, C)
     end
     begin
-        var"#42#res"
+        var"#51#res"
     end
 end
 
@@ -82,7 +82,7 @@ convenient to use the unexported macro `Finch.finch_program_instance`:
 julia> using Finch: @finch_program_instance
 
 julia> prgm = Finch.@finch_program_instance (C .= 0; @loop i C[i] = A[i] * B[i])
-sequence_instance(declare_instance(variable_instance(:C, C)literal_instance(0)), loop_instance(index_instance(:i), assign_instance(access_instance(variable_instance(:C, C), updater_instance(create_instance()), (index_instance(:i),)), literal_instance(right), call_instance(variable_instance(:*, *), (access_instance(variable_instance(:A, A), reader_instance(), (index_instance(:i),)), access_instance(variable_instance(:B, B), reader_instance(), (index_instance(:i),)))))))
+sequence_instance(declare_instance(variable_instance(:C, C)literal_instance(0)), loop_instance(index_instance(:i), assign_instance(access_instance(variable_instance(:C, C), updater_instance(create_instance()), index_instance(:i)), literal_instance(right), call_instance(variable_instance(:*, *), access_instance(variable_instance(:A, A), reader_instance(), index_instance(:i)), access_instance(variable_instance(:B, B), reader_instance(), index_instance(:i))))))
 ```
 
 As we can see, our program instance contains not only the AST to be executed,
