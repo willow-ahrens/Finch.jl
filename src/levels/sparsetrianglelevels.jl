@@ -142,21 +142,10 @@ end
 is_laminable_updater(lvl::VirtualSparseTriangleLevel, ctx, ::Union{Nothing, Laminate, Extrude}, protos...) =
     is_laminable_updater(lvl.lvl, ctx, protos...)
 
-function get_reader(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, ::Union{Nothing, Follow}, protos...)
-    println("in sparsetrianglelevels.jl: get_reader")
-    println(summary_f_code(fbr.lvl))
-    get_readerupdater_triangular_dense_helper(fbr, ctx, get_reader, VirtualSubFiber, protos...)
-end
-
-function get_updater(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, ::Union{Nothing, Laminate, Extrude}, protos...)
-    println("in sparsetrianglelevels.jl: get_updater")
-    println(summary_f_code(fbr.lvl))
-    get_readerupdater_triangular_dense_helper(fbr, ctx, get_updater, VirtualSubFiber, protos...)
-end
-
+get_reader(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, ::Union{Nothing, Follow}, protos...) = get_readerupdater_triangular_dense_helper(fbr, ctx, get_reader, VirtualSubFiber, protos...)
+get_updater(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, ::Union{Nothing, Laminate, Extrude}, protos...) = get_readerupdater_triangular_dense_helper(fbr, ctx, get_updater, VirtualSubFiber, protos...)
 get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseTriangleLevel}, ctx, ::Union{Nothing, Laminate, Extrude}, protos...) = get_readerupdater_triangular_dense_helper(fbr, ctx, get_updater, (lvl, pos) -> VirtualTrackedSubFiber(lvl, pos, fbr.dirty), protos...)
 function get_readerupdater_triangular_dense_helper(fbr, ctx, get_readerupdater, subfiber_ctr, protos...)
-    println("in sparsetrianglelevels.jl: get_readerupdater_triangular_dense_helper")
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
@@ -172,7 +161,7 @@ function get_readerupdater_triangular_dense_helper(fbr, ctx, get_readerupdater, 
             val = virtual_level_default(lvl),
             body = (j) -> Thunk(
                 preamble = quote
-                    $q = val($(ctx(j)) * ($(ctx(j)) - $(Ti(1))) >>> 0x01)
+                    $q = ($(ctx(j)) * ($(ctx(j)) - $(Ti(1))) >>> 0x01)
                 end,
                 body = Furlable(
                     val = virtual_level_default(lvl),
