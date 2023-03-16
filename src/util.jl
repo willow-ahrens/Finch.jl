@@ -100,6 +100,25 @@ unquote_literals(ex::QuoteNode) = unquote_quoted(ex.value)
 unquote_quoted(::Missing) = missing
 unquote_quoted(ex) = QuoteNode(ex)
 
+isgensym(s::Symbol) = occursin("#", string(s))
+isgensym(s) = false
+
+function gensymname(x::Symbol)
+    m = Base.match(r"##(.+)#\d+", String(x))
+    m === nothing || return m.captures[1]
+    m = Base.match(r"#\d+#(.+)", String(x))
+    m === nothing || return m.captures[1]
+    return "x"
+end
+
+function regensym(ex)
+    counter = 0
+    syms = Dict{Symbol, Symbol}()
+    Rewrite(Postwalk((x) -> if isgensym(x) 
+        get!(()->Symbol("_", gensymname(x), "_", counter+=1), syms, x)
+    end))(ex)
+end
+
 """
     unblock(ex)
 Flatten any redundant blocks into a single block, over the whole expression.
