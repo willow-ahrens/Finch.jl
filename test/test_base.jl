@@ -1,6 +1,6 @@
 using Finch: AsArray
 
-@testset "meta" begin
+@testset "Base Functions" begin
     A = @fiber(sl(e(0.0)), fsparse(([1, 3, 5, 7, 9],), [2.0, 3.0, 4.0, 5.0, 6.0], (10,)))
     B = @fiber(sl(e(0.0)), A)
     @test A == B
@@ -43,7 +43,7 @@ using Finch: AsArray
         io = IOBuffer()
         println(io, "getindex tests")
 
-        A = Fiber(SparseList(Dense(SparseList(Element{0.0, Float64}([0.42964847422015195, 0.2031714500596491, 0.15465920941339906, 0.7687749158979389, 0.7341385030927726, 0.24323897961505359, 0.6396769413452026, 0.3155879025843188, 0.9861228587523698, 0.3368597276563293, 0.7453901638237799, 0.3490376859294666, 0.6561601277204799, 0.32494812689888863, 0.8013385593156314, 0.5791333682715981, 0.2327141702137452, 0.0670060505589255, 0.9099846919632137, 0.5770116734780164, 0.20099348394031835, 0.3960969730220265, 0.9141572970982442, 0.579353005205582, 0.010579392993321113, 0.26595745832859163, 0.9155119673442403, 0.3015204766311739, 0.09694825410946628, 0.03454012053008504]), 5, [1, 3, 6, 8, 12, 14, 17, 20, 24, 27, 27, 28, 31], [2, 3, 3, 4, 5, 2, 3, 1, 3, 4, 5, 2, 4, 2, 4, 5, 2, 3, 5, 1, 3, 4, 5, 2, 3, 4, 2, 1, 2, 3]), 3), 4, [1, 5], [1, 2, 3, 4]))
+        A = Fiber(SparseList(Dense(SparseList(Element{0.0, Float64}(collect(1:30).* 1.01), 5, [1, 3, 6, 8, 12, 14, 17, 20, 24, 27, 27, 28, 31], [2, 3, 3, 4, 5, 2, 3, 1, 3, 4, 5, 2, 4, 2, 4, 5, 2, 3, 5, 1, 3, 4, 5, 2, 3, 4, 2, 1, 2, 3]), 3), 4, [1, 5], [1, 2, 3, 4]))
 
         print(io, "A = ")
         show(io, MIME("text/plain"), A)
@@ -72,4 +72,36 @@ using Finch: AsArray
         
         @test check_output("setindex.txt", String(take!(io)))
     end
+
+    let
+        io = IOBuffer()
+        println(io, "broadcast tests")
+
+        @repl io A = @fiber(d(sl(e(0.0))), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
+        @repl io B = [1, 2, 3, 4]
+        @repl io C = A .+ B true
+        @repl io AsArray(C)
+        @repl io D = A .* B true
+        @repl io AsArray(D)
+        @repl io E = ifelse.(A .== 0, 1, 2)
+        @repl io AsArray(E)
+        
+        @test check_output("broadcast.txt", String(take!(io)))
+    end
+
+    let
+        io = IOBuffer()
+        println(io, "reduce tests")
+
+        @repl io A = @fiber(d(sl(e(0.0))), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
+        @repl io reduce(+, A, dims=(1,))
+        @repl io reduce(+, A, dims=1)
+        @repl io reduce(+, A, dims=(2,))
+        @repl io reduce(+, A, dims=2)
+        @repl io reduce(+, A, dims=(1,2))
+        @repl io reduce(+, A, dims=:)
+        
+        @test check_output("reduce.txt", String(take!(io)))
+    end
+    
 end

@@ -1,7 +1,7 @@
 module FinchNotation
     using RewriteTools, SyntaxInterface, Finch
 
-    export index_leaf
+    export finch_leaf
     export literal
     export index
     export variable
@@ -26,6 +26,7 @@ module FinchNotation
     export @f, @finch_program, @finch_program_instance
 
     export isliteral, is_constant, virtual
+    export isvirtual
 
     """
         isliteral(ex)
@@ -44,4 +45,6 @@ module FinchNotation
     include("instances.jl")
     include("protocols.jl")
     include("syntax.jl")
+
+    isvirtual(ex::FinchNode) = ex.kind === virtual
 end

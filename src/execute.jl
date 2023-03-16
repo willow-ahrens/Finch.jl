@@ -1,11 +1,10 @@
 execute(ex) = execute(ex, DefaultAlgebra())
-function register(algebra)
-    Base.eval(Finch, quote
-        @generated function execute(ex, a::$algebra)
-            execute_code(:ex, ex, a())
-        end
-    end)
-end
+
+push!(registry, (algebra)-> quote
+    @generated function execute(ex, a::$algebra)
+        execute_code(:ex, ex, a())
+    end
+end)
 
 function execute_code(ex, T, algebra = DefaultAlgebra())
     prgm = nothing
