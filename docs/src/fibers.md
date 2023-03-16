@@ -5,9 +5,13 @@ CurrentModule = Finch
 
 Finch implements a flexible array datastructure called a fiber. Fibers represent
 arrays as rooted trees, where the child of each node is selected by an array
-index. Finch is column major, so the rightmost index corresponds to the root
-level of the tree, and the leftmost index corresponds to the leaf level. We can
-convert the matrix `A` to a fiber with the `@fiber` constructor.
+index. Finch is column major, so in an expression `A[i_1, ..., i_N]`, the
+rightmost dimension `i_N` corresponds to the root level of the tree, and the
+leftmost dimension `i_1` corresponds to the leaf level. When the array is dense,
+the leftmost dimension has stride 1. We can convert the matrix `A` to a fiber
+with the `@fiber` constructor:
+
+![Example Matrix](assets/levels-A-matrix.png)
 
 ```jldoctest example1; setup=:(using Finch)
 julia> A = [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0]
@@ -39,7 +43,45 @@ We refer to a node in the tree as a subfiber. All of the nodes at the same level
 are stored in the same datastructure, and disambiguated by an integer
 `position`.  In the above example, there are three levels: The rootmost level
 contains only one fiber, the root. The middle level has 3 subfibers, one for
-each column. The leafmost level has 12 subfibers, one for each element of the array.
+each column. The leafmost level has 12 subfibers, one for each element of the
+array.  For example, the first level is `A_fbr.lvl`, and we can represent it's
+third position as `SubFiber(A_fbr.lvl.lvl, 3)`. The second level is `A_fbr.lvl.lvl`,
+and we can access it's 9th position as `SubFiber(A_fbr.lvl.lvl.lvl, 9)`. For
+instructional purposes, you can use parentheses to call a fiber on an index to
+select among children of a fiber.
+
+```jldoctest example1
+julia> Finch.SubFiber(A_fbr.lvl.lvl, 3)
+Dense [1:4]
+├─[1]: 4.4
+├─[2]: 0.0
+├─[3]: 5.5
+├─[4]: 0.0
+
+julia> A_fbr[:, 3]
+Dense [1:4]
+├─[1]: 4.4
+├─[2]: 0.0
+├─[3]: 5.5
+├─[4]: 0.0
+
+julia> A_fbr(3)
+Dense [1:4]
+├─[1]: 4.4
+├─[2]: 0.0
+├─[3]: 5.5
+├─[4]: 0.0
+
+julia> Finch.SubFiber(A_fbr.lvl.lvl.lvl, 9)
+4.4
+
+julia> A_fbr[1, 3]
+4.4
+
+julia> A_fbr(3)(1)
+4.4
+
+```
 
 When we print the tree in text, positions are numbered from top to bottom.
 However, if we visualize our tree with the root at the top, positions range from
@@ -114,6 +156,8 @@ SparseCOO (0.0) [1:4,1:3]
 ├─├─[1, 3]: 4.4
 ├─├─[3, 3]: 5.5
 ```
+
+![COO Format Index Tree](assets/levels-A-sc2-e.png)
 
 The COO format is compact and straightforward, but doesn't support random
 access. For random access, one should use the `SparseHash` format. A full listing

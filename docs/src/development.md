@@ -55,18 +55,18 @@ happens when we use the `@finch` macro (we've stripped line numbers from the
 result to clean it up):
 
 ```jldoctest example1
-julia> (@macroexpand @finch (C .= 0; @loop i C[i] = A[i] * B[i])) |> Finch.striplines
+julia> (@macroexpand @finch (C .= 0; @loop i C[i] = A[i] * B[i])) |> Finch.striplines |> Finch.regensym
 quote
-    var"#51#res" = (Finch.execute)((Finch.FinchNotation.sequence_instance)((Finch.FinchNotation.declare_instance)((Finch.FinchNotation.variable_instance)(:C, (Finch.FinchNotation.finch_leaf_instance)(C)), literal_instance(0)), begin
+    _res_1 = (Finch.execute)((Finch.FinchNotation.sequence_instance)((Finch.FinchNotation.declare_instance)((Finch.FinchNotation.variable_instance)(:C, (Finch.FinchNotation.finch_leaf_instance)(C)), literal_instance(0)), begin
                     let i = index_instance(:i)
                         (Finch.FinchNotation.loop_instance)(i, (Finch.FinchNotation.assign_instance)((Finch.FinchNotation.access_instance)((Finch.FinchNotation.variable_instance)(:C, (Finch.FinchNotation.finch_leaf_instance)(C)), (Finch.FinchNotation.updater_instance)((Finch.FinchNotation.create_instance)()), (Finch.FinchNotation.variable_instance)(:i, (Finch.FinchNotation.finch_leaf_instance)(i))), literal_instance(right), (Finch.FinchNotation.call_instance)((Finch.FinchNotation.variable_instance)(:*, (Finch.FinchNotation.finch_leaf_instance)(*)), (Finch.FinchNotation.access_instance)((Finch.FinchNotation.variable_instance)(:A, (Finch.FinchNotation.finch_leaf_instance)(A)), (Finch.FinchNotation.reader_instance)(), (Finch.FinchNotation.variable_instance)(:i, (Finch.FinchNotation.finch_leaf_instance)(i))), (Finch.FinchNotation.access_instance)((Finch.FinchNotation.variable_instance)(:B, (Finch.FinchNotation.finch_leaf_instance)(B)), (Finch.FinchNotation.reader_instance)(), (Finch.FinchNotation.variable_instance)(:i, (Finch.FinchNotation.finch_leaf_instance)(i))))))
                     end
                 end))
     begin
-        C = Finch.get(var"#51#res", :C, C)
+        C = Finch.get(_res_1, :C, C)
     end
     begin
-        var"#51#res"
+        _res_1
     end
 end
 
