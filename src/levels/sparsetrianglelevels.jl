@@ -179,14 +179,14 @@ function get_readerupdater_triangular_dense_helper(fbr, ctx, get_readerupdater, 
                     size = virtual_level_size(lvl, ctx)[1:end-1],
                     body = (ctx, idx, ext) -> Pipeline([
                         Phase(
-                            stride = j,
-                            body = Lookup(
+                            stride = (ctx, idx, ext) -> j,
+                            body = (start, step) -> Lookup(
                                 val = virtual_level_default(lvl),
-                                body = (i) -> get_readerupdater(subfiber_ctr(lvl.lvl), call(+, value(q, lvl.Ti), i), ctx, protos...)
+                                body = (i) -> get_readerupdater(subfiber_ctr(lvl.lvl, call(+, value(q, lvl.Ti), i)), ctx, protos...)
                             )
                         ),
                         Phase(
-                            body = Run(0)
+                            body = (start, step) -> Run(0)
                         )
                     ])
                 )
