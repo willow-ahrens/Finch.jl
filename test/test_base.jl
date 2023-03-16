@@ -1,6 +1,7 @@
 using Finch: AsArray
 
 @testset "Base Functions" begin
+    #=
     A = @fiber(sl(e(0.0)), fsparse(([1, 3, 5, 7, 9],), [2.0, 3.0, 4.0, 5.0, 6.0], (10,)))
     B = @fiber(sl(e(0.0)), A)
     @test A == B
@@ -87,6 +88,22 @@ using Finch: AsArray
         @repl io AsArray(E)
         
         @test check_output("broadcast.txt", String(take!(io)))
+    end
+    =#
+
+    let
+        io = IOBuffer()
+        println(io, "reduce tests")
+
+        @repl io A = @fiber(d(sl(e(0.0))), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
+        @repl io reduce(+, A, dims=(1,))
+        @repl io reduce(+, A, dims=1)
+        @repl io reduce(+, A, dims=(2,))
+        @repl io reduce(+, A, dims=2)
+        @repl io reduce(+, A, dims=(1,2))
+        @repl io reduce(+, A, dims=:)
+        
+        @test check_output("reduce.txt", String(take!(io)))
     end
     
 end

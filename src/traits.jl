@@ -99,15 +99,19 @@ Normalize a trait object to collapse subfiber information into the parent fiber.
 """
 collapse_rep(fbr) = fbr
 
-collapse_rep(fbr::HollowData) = collapse_rep(fbr, fbr.lvl)
+collapse_rep(fbr::HollowData) = collapse_rep(fbr, collapse_rep(fbr.lvl))
 collapse_rep(::HollowData, lvl::HollowData) = collapse_rep(lvl)
 collapse_rep(::HollowData, lvl) = HollowData(collapse_rep(lvl))
 
-collapse_rep(fbr::DenseData) = collapse_rep(fbr, fbr.lvl)
+collapse_rep(fbr::DenseData) = collapse_rep(fbr, collapse_rep(fbr.lvl))
 collapse_rep(::DenseData, lvl::HollowData) = collapse_rep(SparseData(lvl.lvl))
 collapse_rep(::DenseData, lvl) = DenseData(collapse_rep(lvl))
 
-collapse_rep(fbr::SparseData) = collapse_rep(fbr, fbr.lvl)
+collapse_rep(fbr::ExtrudeData) = collapse_rep(fbr, collapse_rep(fbr.lvl))
+collapse_rep(::ExtrudeData, lvl::HollowData) = HollowData(collapse_rep(ExtrudeData(lvl.lvl)))
+collapse_rep(::ExtrudeData, lvl) = ExtrudeData(collapse_rep(lvl))
+
+collapse_rep(fbr::SparseData) = collapse_rep(fbr, collapse_rep(fbr.lvl))
 collapse_rep(::SparseData, lvl::HollowData) = collapse_rep(SparseData(lvl.lvl))
 collapse_rep(::SparseData, lvl) = SparseData(collapse_rep(lvl))
 
@@ -124,6 +128,7 @@ function fiber_ctr end
 fiber_ctr(fbr) = fiber_ctr(fbr, [nothing for _ in 1:ndims(fbr)])
 fiber_ctr(fbr::HollowData, protos) = fiber_ctr_hollow(fbr.lvl, protos)
 fiber_ctr_hollow(fbr::DenseData, protos) = :(Fiber!($(level_ctr(SparseData(fbr.lvl), protos...))))
+fiber_ctr_hollow(fbr::ExtrudeData, protos) = :(Fiber!($(level_ctr(SparseData(fbr.lvl), protos...))))
 fiber_ctr_hollow(fbr::RepeatData, protos) = :(Fiber!($(level_ctr(SparseData(ElementData(fbr.default, fbr.eltype)), protos...)))) #This is the best format we have for this case right now
 fiber_ctr_hollow(fbr::SparseData, protos) = :(Fiber!($(level_ctr(fbr, protos...))))
 fiber_ctr(fbr, protos) = :(Fiber!($(level_ctr(fbr, protos...))))
@@ -131,6 +136,7 @@ fiber_ctr(fbr, protos) = :(Fiber!($(level_ctr(fbr, protos...))))
 level_ctr(fbr::SparseData, proto::Union{Nothing, Walk, Extrude}, protos...) = :(SparseList($(level_ctr(fbr.lvl, protos...))))
 level_ctr(fbr::SparseData, proto::Union{Laminate}, protos...) = :(SparseHash{1}($(level_ctr(fbr.lvl, protos...))))
 level_ctr(fbr::DenseData, proto, protos...) = :(Dense($(level_ctr(fbr.lvl, protos...))))
+level_ctr(fbr::ExtrudeData, proto, protos...) = :(Dense($(level_ctr(fbr.lvl, protos...)), 1))
 level_ctr(fbr::RepeatData, proto::Union{Nothing, Walk, Extrude}) = :(Repeat{$(fbr.default), $(fbr.eltype)}())
 level_ctr(fbr::RepeatData, proto::Union{Laminate}) = level_ctr(DenseData(ElementData(fbr.default, fbr.eltype)), proto)
 level_ctr(fbr::ElementData) = :(Element{$(fbr.default), $(fbr.eltype)}())

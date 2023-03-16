@@ -270,6 +270,7 @@ function base_rules(alg, ctx)
             call(something, a..., b)
         end),
 
+        (@rule call($(literal(identity)), ~a) => a),
         (@rule call($(literal(right)), ~a..., ~b, ~c) => c),
         (@rule call($(literal(ifelse)), $(literal(true)), ~a, ~b) => a),
         (@rule call($(literal(ifelse)), $(literal(false)), ~a, ~b) => b),

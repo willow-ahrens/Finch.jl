@@ -1,5 +1,6 @@
 using Base: Broadcast
 using Base.Broadcast: Broadcasted, BroadcastStyle, AbstractArrayStyle
+using Base: broadcasted
 const AbstractArrayOrBroadcasted = Union{AbstractArray,Broadcasted}
 
 #=
@@ -141,6 +142,13 @@ pointwise_rep_solid(ex) = ex
 function pointwise_finch_expr(ex, ::Type{<:Broadcast.Broadcasted{Style, Axes, F, Args}}, ctx, idxs) where {Style, F, Axes, Args}
     f = ctx.freshen(:f)
     push!(ctx.preamble, :($f = $ex.f))
+    args = map(enumerate(Args.parameters)) do (n, Arg)
+        pointwise_finch_expr(:($ex.args[$n]), Arg, ctx, idxs)
+    end
+    :($f($(args...)))
+end
+
+function pointwise_finch_expr(ex, ::Type{<:Broadcast.Broadcasted{Style, Axes, Callable{f}, Args}}, ctx, idxs) where {Style, f, Axes, Args}
     args = map(enumerate(Args.parameters)) do (n, Arg)
         pointwise_finch_expr(:($ex.args[$n]), Arg, ctx, idxs)
     end
