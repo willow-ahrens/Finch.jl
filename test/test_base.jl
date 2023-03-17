@@ -103,5 +103,20 @@ using Finch: AsArray
         
         @test check_output("reduce.txt", String(take!(io)))
     end
-    
+
+    let
+        io = IOBuffer()
+        println(io, "countstored tests")
+
+        @repl io A = @fiber(d(sl(e(0.0))), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
+        @repl io countstored(A)
+        @repl io A = @fiber(sc{2}(e(0.0)), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
+        @repl io countstored(A)
+        @repl io A = @fiber(d(d(e(0.0))), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
+        @repl io countstored(A)
+        @repl io A = @fiber(sl(d(e(0.0))), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
+        @repl io countstored(A)
+        
+        @test check_output("countstored.txt", String(take!(io)))
+    end
 end

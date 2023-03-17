@@ -70,7 +70,7 @@ function (fbr::SubFiber{<:ElementLevel})()
     return fbr.lvl.val[q]
 end
 
-
+countstored_level(lvl::ElementLevel, pos) = pos
 
 struct VirtualElementLevel
     ex

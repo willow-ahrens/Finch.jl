@@ -68,7 +68,7 @@ include("traits.jl")
 
 include("modifiers.jl")
 
-export fsparse, fsparse!, fsprand, fspzeros, ffindnz
+export fsparse, fsparse!, fsprand, fspzeros, ffindnz, countstored
 
 module h
     using Finch

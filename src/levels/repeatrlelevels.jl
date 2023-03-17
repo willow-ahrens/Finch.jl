@@ -51,6 +51,8 @@ similar_level(::RepeatRLELevel{D}) where {D} = RepeatRLE{D}()
 similar_level(::RepeatRLELevel{D}, dim, tail...) where {D} = RepeatRLE{D}(dim)
 data_rep_level(::Type{<:RepeatRLELevel{D, Ti, Tp, Tv}}) where {D, Ti, Tp, Tv} = RepeatData(D, Tv)
 
+countstored_level(lvl::RepeatRLELevel, pos) = lvl.ptr[pos + 1] - 1
+
 pattern!(lvl::RepeatRLELevel{D, Ti}) where {D, Ti} = 
     DenseLevel{Ti}(Pattern(), lvl.shape)
 

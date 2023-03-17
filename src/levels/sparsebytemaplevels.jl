@@ -29,6 +29,10 @@ pattern!(lvl::SparseByteMapLevel{Ti, Tp}) where {Ti, Tp} =
 redefault!(lvl::SparseByteMapLevel{Ti, Tp}, init) where {Ti, Tp} = 
     SparseByteMapLevel{Ti, Tp}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)
 
+function countstored_level(lvl::SparseByteMapLevel, pos)
+    countstored_level(lvl.lvl, lvl.ptr[pos + 1] - 1)
+end
+
 function Base.show(io::IO, lvl::SparseByteMapLevel{Ti, Tp}) where {Ti, Tp}
     if get(io, :compact, false)
         print(io, "SparseByteMap(")

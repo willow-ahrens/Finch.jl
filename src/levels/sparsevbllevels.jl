@@ -27,6 +27,10 @@ similar_level(lvl::SparseVBLLevel, dim, tail...) = SparseVBL(similar_level(lvl.l
 pattern!(lvl::SparseVBLLevel{Ti, Tp}) where {Ti, Tp} = 
     SparseVBLLevel{Ti, Tp}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.idx, lvl.ofs)
 
+function countstored_level(lvl::SparseVBLLevel, pos)
+    countstored_level(lvl.lvl, lvl.ofs[lvl.ptr[pos + 1]]-1)
+end
+
 redefault!(lvl::SparseVBLLevel{Ti, Tp}, init) where {Ti, Tp} = 
     SparseVBLLevel{Ti, Tp}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.idx, lvl.ofs)
 
