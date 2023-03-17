@@ -67,6 +67,10 @@ function (fbr::SubFiber{<:DenseLevel{Ti}})(idxs...) where {Ti}
     fbr_2(idxs[1:end-1]...)
 end
 
+function countstored_level(lvl::DenseLevel, pos)
+    countstored_level(lvl.lvl, pos * lvl.shape)
+end
+
 function Base.show(io::IO, lvl::DenseLevel{Ti}) where {Ti}
     if get(io, :compact, false)
         print(io, "Dense(")

@@ -317,6 +317,18 @@ function display_fiber_data(io::IO, mime::MIME"text/plain", fbr, depth, N, crds,
 end
 display_fiber(io::IO, mime::MIME"text/plain", fbr, depth) = show(io, mime, fbr) #TODO get rid of this eventually
 
+"""
+    countstored(arr)
+
+Return the number of stored elements in `arr`. If there are explicitly stored
+default elements, they are counted too.
+
+See also: (`nnz`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#SparseArrays.nnz)
+"""
+countstored(fbr::Fiber) = countstored_level(fbr.lvl, 1)
+
+countstored(arr::Array) = length(arr)
+
 function f_decode(ex)
     if ex isa Expr && ex.head == :$
         return esc(ex.args[1])

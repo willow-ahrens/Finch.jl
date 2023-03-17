@@ -68,6 +68,10 @@ similar_level(lvl::SparseHashLevel{N}, tail...) where {N} = SparseHashLevel{N}(s
 pattern!(lvl::SparseHashLevel{N, Ti, Tp, Tbl}) where {N, Ti, Tp, Tbl} = 
     SparseHashLevel{N, Ti, Tp, Tbl}(pattern!(lvl.lvl), lvl.shape, lvl.tbl, lvl.ptr, lvl.srt)
 
+function countstored_level(lvl::SparseHashLevel, pos)
+    countstored_level(lvl.lvl, lvl.ptr[pos + 1] - 1)
+end
+
 redefault!(lvl::SparseHashLevel{N, Ti, Tp, Tbl}, init) where {N, Ti, Tp, Tbl} = 
     SparseHashLevel{N, Ti, Tp, Tbl}(redefault!(lvl.lvl, init), lvl.shape, lvl.tbl, lvl.ptr, lvl.srt)
 

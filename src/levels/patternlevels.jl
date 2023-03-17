@@ -25,6 +25,8 @@ f_code(::Val{:p}) = Pattern
 summary_f_code(::Pattern) = "p()"
 similar_level(::PatternLevel) = PatternLevel()
 
+countstored_level(lvl::PatternLevel, pos) = pos
+
 function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:PatternLevel}, depth)
     show(io, mime, true)
 end
