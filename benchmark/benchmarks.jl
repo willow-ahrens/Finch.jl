@@ -125,20 +125,26 @@ for mtx in ["SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
     SUITE["graphs"]["bfs"][mtx] = @benchmarkable bfs($(fiber(SparseMatrixCSC(matrixdepot(mtx))))) 
 end
 
+# Inputs:
+#   edges: 2D matrix of edge weights with Inf for unconnected edges
+#   source: vertex to start
+# Output:
+#   dists: an array of tuples (d, n) where d is the shortest distance and n the parent node in the path
+#          or -1 if a negative weight cycle is found
 function bellmanford(edges, source=1)
     (n, m) = size(edges)
     @assert n == m
 
-    init_dists = [Inf for i=1:n]
-    init_dists[source] = 0.0
-    dists_prev = @fiber(d(e(Inf)), init_dists)
-    dists_buffer = @fiber(d(e(Inf)))
-    dists_next = @fiber(d(e(Inf)))
+    init_dists = [(Inf, -1) for i=1:n]
+    init_dists[source] = (0.0, -1)
+    dists_prev = @fiber(d(e((Inf, -1))), init_dists)
+    dists_buffer = @fiber(d(e((Inf, -1)), n))
+    dists_next = @fiber(d(e((Inf, -1)), n))
     modified = Scalar(false)
 
     for iter = 1:n  
-        @finch @loop j i dists_buffer[j] <<min>>= dists_prev[i] + edges[i, j]
-        @finch @loop j dists_next[j] = min(dists_buffer[j], dists_prev[j])
+        @finch @loop j i dists_buffer[j] <<min>>= (first(dists_prev[i]) + edges[i, j], i)
+        @finch @loop j dists_next[j] = min(dists_prev[j], dists_buffer[j])
 
         modified = Scalar(false)
         @finch @loop i modified[] |= dists_next[i] != dists_prev[i]
