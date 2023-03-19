@@ -28,7 +28,11 @@ nonzero values:
 
 ```julia
 X = @fiber(sl(e(0.0)), sprand(10, 1))
-x = Scalar(0.0); x_min = Scalar(Inf); x_max = Scalar(-Inf), x_sum = Scalar(0.0), x_var = Scalar(0.0)
+x = Scalar(0.0)
+x_min = Scalar(Inf)
+x_max = Scalar(-Inf)
+x_sum = Scalar(0.0)
+x_var = Scalar(0.0)
 @finch begin
     for i = _
         x .= 0
