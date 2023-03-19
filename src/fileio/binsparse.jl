@@ -2,6 +2,7 @@ using HDF5
 using JSON
 
 bswrite_type_lookup = Dict(
+    Bool => "bool",
     UInt8 => "uint8",
     UInt16 => "uint16",
     UInt32 => "uint32",
@@ -27,6 +28,7 @@ bsread_type_lookup = Dict(
     "float" => Float32,
     "float64" => Float64,
     "double" => Float64,
+    "bool" => Bool,
 )
 
 function bswrite_data(f, desc, key, data)
