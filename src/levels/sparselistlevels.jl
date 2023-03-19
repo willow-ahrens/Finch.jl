@@ -57,6 +57,10 @@ summary_f_code(lvl::SparseListLevel) = "sl($(summary_f_code(lvl.lvl)))"
 similar_level(lvl::SparseListLevel) = SparseList(similar_level(lvl.lvl))
 similar_level(lvl::SparseListLevel, dim, tail...) = SparseList(similar_level(lvl.lvl, tail...), dim)
 
+function countstored_level(lvl::SparseListLevel, pos)
+    countstored_level(lvl.lvl, lvl.ptr[pos + 1] - 1)
+end
+
 pattern!(lvl::SparseListLevel{Ti, Tp}) where {Ti, Tp} = 
     SparseListLevel{Ti, Tp}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.idx)
 
@@ -160,6 +164,7 @@ virtual_level_eltype(lvl::VirtualSparseListLevel) = virtual_level_eltype(lvl.lvl
 virtual_level_default(lvl::VirtualSparseListLevel) = virtual_level_default(lvl.lvl)
 
 function declare_level!(lvl::VirtualSparseListLevel, ctx::LowerJulia, pos, init)
+    #TODO check that init == default
     Ti = lvl.Ti
     Tp = lvl.Tp
     qos = call(-, call(getindex, :($(lvl.ex).ptr), call(+, pos, 1)),  1)

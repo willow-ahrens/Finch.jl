@@ -1,18 +1,29 @@
-using SparseArrays
+module SparseArraysExt 
 
-function fiber(arr::SparseMatrixCSC{Tv, Ti}, default=zero(Tv)) where {Tv, Ti}
+using Finch
+using Finch: LowerJulia, DefaultStyle, Extent
+using Finch: Walk, Follow
+using Finch: Furlable, Stepper, Jumper, Run, Fill, Lookup, Simplify, Pipeline, Phase, Thunk, Spike, Step
+using Finch: virtual_size, virtual_default, getstart, getstop
+using Finch.FinchNotation
+
+using Base: @kwdef
+
+isdefined(Base, :get_extension) ? (using SparseArrays) : (using ..SparseArrays)
+
+function Finch.fiber(arr::SparseMatrixCSC{Tv, Ti}, default=zero(Tv)) where {Tv, Ti}
     @assert iszero(default)
     (m, n) = size(arr)
     return Fiber(Dense(SparseList{Ti}(Element{zero(Tv)}(arr.nzval), m, arr.colptr, arr.rowval), n))
 end
 
-function fiber(arr::SparseVector{Tv, Ti}, default=zero(Tv)) where {Tv, Ti}
+function Finch.fiber(arr::SparseVector{Tv, Ti}, default=zero(Tv)) where {Tv, Ti}
     @assert iszero(default)
     (n,) = size(arr)
     return Fiber(SparseList{Ti}(Element{zero(Tv)}(arr.nzval), n, [1, length(arr.nzind) + 1], copy(arr.nzind)))
 end
 
-function fiber!(arr::SparseVector{Tv, Ti}, default=zero(Tv)) where {Tv, Ti}
+function Finch.fiber!(arr::SparseVector{Tv, Ti}, default=zero(Tv)) where {Tv, Ti}
     @assert iszero(default)
     (n,) = size(arr)
     return Fiber(SparseList{Ti}(Element{zero(Tv)}(arr.nzval), n, [1, length(arr.nzind) + 1], arr.nzind))
@@ -24,7 +35,7 @@ end
     Ti
 end
 
-function virtual_size(arr::VirtualSparseMatrixCSC, ctx::LowerJulia)
+function Finch.virtual_size(arr::VirtualSparseMatrixCSC, ctx::LowerJulia)
     return [Extent(literal(1),value(:($(arr.ex).m), arr.Ti)), Extent(literal(1),value(:($(arr.ex).n), arr.Ti))]
 end
 
@@ -32,7 +43,7 @@ function (ctx::LowerJulia)(arr::VirtualSparseMatrixCSC, ::DefaultStyle)
     return arr.ex
 end
 
-function virtualize(ex, ::Type{<:SparseMatrixCSC{Tv, Ti}}, ctx, tag=:tns) where {Tv, Ti}
+function Finch.virtualize(ex, ::Type{<:SparseMatrixCSC{Tv, Ti}}, ctx, tag=:tns) where {Tv, Ti}
     sym = ctx.freshen(tag)
     push!(ctx.preamble, quote
         $sym = $ex
@@ -40,11 +51,11 @@ function virtualize(ex, ::Type{<:SparseMatrixCSC{Tv, Ti}}, ctx, tag=:tns) where 
     VirtualSparseMatrixCSC(sym, Tv, Ti)
 end
 
-function declare!(arr::VirtualSparseMatrixCSC, ctx::LowerJulia, init)
+function Finch.declare!(arr::VirtualSparseMatrixCSC, ctx::LowerJulia, init)
     throw(FormatLimitation("Finch does not support writes to SparseMatrixCSC"))
 end
 
-function get_reader(arr::VirtualSparseMatrixCSC, ctx::LowerJulia, ::Union{Nothing, Walk, Follow}, ::Union{Nothing, Walk})
+function Finch.get_reader(arr::VirtualSparseMatrixCSC, ctx::LowerJulia, ::Union{Nothing, Walk, Follow}, ::Union{Nothing, Walk})
     tag = arr.ex
     Ti = arr.Ti
     my_i = ctx.freshen(tag, :_i)
@@ -76,7 +87,7 @@ function get_reader(arr::VirtualSparseMatrixCSC, ctx::LowerJulia, ::Union{Nothin
                             body = (start, step) -> Stepper(
                                 seek = (ctx, ext) -> quote
                                     if $(arr.ex).rowval[$my_q] < $(ctx(getstart(ext)))
-                                        $my_q = scansearch($(arr.ex).rowval, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
+                                        $my_q = Finch.scansearch($(arr.ex).rowval, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                                     end
                                 end,
                                 body = Thunk(
@@ -111,14 +122,14 @@ function get_reader(arr::VirtualSparseMatrixCSC, ctx::LowerJulia, ::Union{Nothin
     )
 end
 
-function get_updater(arr::VirtualSparseMatrixCSC, ctx::LowerJulia, protos...)
+function Finch.get_updater(arr::VirtualSparseMatrixCSC, ctx::LowerJulia, protos...)
     throw(FormatLimitation("Finch does not support writes to SparseMatrixCSC"))
 end
 
-FinchNotation.isliteral(::VirtualSparseMatrixCSC) =  false
+Finch.FinchNotation.isliteral(::VirtualSparseMatrixCSC) =  false
 
-virtual_default(arr::VirtualSparseMatrixCSC) = zero(arr.Tv)
-virtual_eltype(tns::VirtualSparseMatrixCSC) = tns.Tv
+Finch.virtual_default(arr::VirtualSparseMatrixCSC) = zero(arr.Tv)
+Finch.virtual_eltype(tns::VirtualSparseMatrixCSC) = tns.Tv
 
 @kwdef mutable struct VirtualSparseVector
     ex
@@ -126,7 +137,7 @@ virtual_eltype(tns::VirtualSparseMatrixCSC) = tns.Tv
     Ti
 end
 
-function virtual_size(arr::VirtualSparseVector, ctx::LowerJulia)
+function Finch.virtual_size(arr::VirtualSparseVector, ctx::LowerJulia)
     return Any[Extent(literal(1),value(:($(arr.ex).n), arr.Ti))]
 end
 
@@ -134,7 +145,7 @@ function (ctx::LowerJulia)(arr::VirtualSparseVector, ::DefaultStyle)
     return arr.ex
 end
 
-function virtualize(ex, ::Type{<:SparseVector{Tv, Ti}}, ctx, tag=:tns) where {Tv, Ti}
+function Finch.virtualize(ex, ::Type{<:SparseVector{Tv, Ti}}, ctx, tag=:tns) where {Tv, Ti}
     sym = ctx.freshen(tag)
     push!(ctx.preamble, quote
         $sym = $ex
@@ -142,11 +153,11 @@ function virtualize(ex, ::Type{<:SparseVector{Tv, Ti}}, ctx, tag=:tns) where {Tv
     VirtualSparseVector(sym, Tv, Ti)
 end
 
-function declare!(arr::VirtualSparseVector, ctx::LowerJulia, init)
+function Finch.declare!(arr::VirtualSparseVector, ctx::LowerJulia, init)
     throw(FormatLimitation("Finch does not support writes to SparseVector"))
 end
 
-function get_reader(arr::VirtualSparseVector, ctx::LowerJulia, ::Union{Nothing, Walk})
+function Finch.get_reader(arr::VirtualSparseVector, ctx::LowerJulia, ::Union{Nothing, Walk})
     tag = arr.ex
     Ti = arr.Ti
     my_i = ctx.freshen(tag, :_i)
@@ -208,11 +219,19 @@ function get_reader(arr::VirtualSparseVector, ctx::LowerJulia, ::Union{Nothing, 
     )
 end
 
-function get_updater(arr::VirtualSparseVector, ctx::LowerJulia, protos...)
+function Finch.get_updater(arr::VirtualSparseVector, ctx::LowerJulia, protos...)
     throw(FormatLimitation("Finch does not support writes to SparseVector"))
 end
 
-FinchNotation.isliteral(::VirtualSparseVector) =  false
+Finch.FinchNotation.isliteral(::VirtualSparseVector) =  false
 
-virtual_default(arr::VirtualSparseVector) = zero(arr.Tv)
-virtual_eltype(tns::VirtualSparseVector) = tns.Tv
+Finch.virtual_default(arr::VirtualSparseVector) = zero(arr.Tv)
+Finch.virtual_eltype(tns::VirtualSparseVector) = tns.Tv
+
+SparseArrays.nnz(fbr::Fiber) = countstored(fbr)
+
+function __init__()
+    Finch.register(Finch.DefaultAlgebra)
+end
+
+end

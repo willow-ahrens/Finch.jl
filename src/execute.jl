@@ -1,11 +1,10 @@
 execute(ex) = execute(ex, DefaultAlgebra())
-function register(algebra)
-    Base.eval(Finch, quote
-        @generated function execute(ex, a::$algebra)
-            execute_code(:ex, ex, a())
-        end
-    end)
-end
+
+push!(registry, (algebra)-> quote
+    @generated function execute(ex, a::$algebra)
+        execute_code(:ex, ex, a())
+    end
+end)
 
 function execute_code(ex, T, algebra = DefaultAlgebra())
     prgm = nothing
@@ -65,6 +64,7 @@ macro finch(args_ex...)
     (args, ex) = (args_ex[1:end-1], args_ex[end])
     results = Set()
     prgm = FinchNotation.finch_parse_instance(ex, results)
+    res = esc(:res)
     thunk = quote
         res = $execute($prgm, $(map(esc, args)...))
     end

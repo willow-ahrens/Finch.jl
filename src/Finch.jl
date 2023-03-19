@@ -1,12 +1,15 @@
 module Finch
 
-using Requires
+@static if !isdefined(Base, :get_extension)
+    using Requires
+end
+
 using SyntaxInterface
 using RewriteTools
 using RewriteTools.Rewriters
 using Base.Iterators
 using Base: @kwdef
-using SparseArrays
+using Random: randsubseq, AbstractRNG, default_rng
 using SnoopPrecompile
 using Compat
 
@@ -22,6 +25,8 @@ export choose, minby, maxby
 export permit, offset, staticoffset, window
 
 include("util.jl")
+
+registry = []
 
 include("semantics.jl")
 include("FinchNotation/FinchNotation.jl")
@@ -60,12 +65,10 @@ include("levels/elementlevels.jl")
 include("levels/patternlevels.jl")
 
 include("traits.jl")
-include("asarray.jl")
 
 include("modifiers.jl")
 
-include("fibers_meta.jl")
-export fsparse, fsparse!, fsprand, fspzeros, ffindnz
+export fsparse, fsparse!, fsprand, fspzeros, ffindnz, countstored
 
 module h
     using Finch
@@ -89,25 +92,27 @@ module h
     generate_embed_docs()
 end
 
-register(DefaultAlgebra)
-#TODO add an uninitialized_fiber type so that we can perhaps do this through executing declare(fbr),
-#obviating the need to have a separate generated function registration mechanism for fibers.
-@generated function Fiber!(lvl)
-    contain(LowerJulia()) do ctx
-        lvl = virtualize(:lvl, lvl, ctx)
-        lvl = resolve(lvl, ctx)
-        lvl = declare_level!(lvl, ctx, literal(0), literal(virtual_level_default(lvl)))
-        push!(ctx.preamble, assemble_level!(lvl, ctx, literal(1), literal(1)))
-        lvl = freeze_level!(lvl, ctx, literal(1))
-        :(Fiber($(ctx(lvl))))
-    end |> lower_caches |> lower_cleanup
+function register(algebra)
+    for r in registry
+        @eval Finch $(r(algebra))
+    end
 end
 
-include("glue_AbstractArrays.jl")
-include("glue_AbstractUnitRanges.jl")
-include("glue_SparseArrays.jl")
-function __init__()
-    #@require SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf" include("glue_SparseArrays.jl")
+register(DefaultAlgebra)
+
+include("base/abstractarrays.jl")
+include("base/abstractunitranges.jl")
+include("base/broadcast.jl")
+include("base/index.jl")
+include("base/mapreduce.jl")
+include("base/compare.jl")
+include("base/copy.jl")
+include("base/fsparse.jl")
+
+@static if !isdefined(Base, :get_extension)
+    function __init__()
+        @require SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf" include("../ext/SparseArraysExt.jl")
+    end
 end
 
 @precompile_setup begin

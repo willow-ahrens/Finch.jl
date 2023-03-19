@@ -52,10 +52,14 @@ function should_run(name)
     return ("all" in parsed_args["suites"] || name in parsed_args["suites"])
 end
 
-macro repl(io, ex)
+macro repl(io, ex, quiet = false)
     quote
         println($(esc(io)), "julia> ", Finch.striplines($(QuoteNode(ex))))
-        show($(esc(io)), MIME("text/plain"), $(esc(ex)))
+        if $(esc(quiet))
+            $(esc(ex))
+        else
+            show($(esc(io)), MIME("text/plain"), $(esc(ex)))
+        end
         println($(esc(io)))
     end
 end
@@ -78,6 +82,6 @@ include("utils.jl")
     #if should_run("fibers") include("test_fibers.jl") end # maybe we should make a replacement but I think this file is very out of date.
     if should_run("kernels") include("test_kernels.jl") end
     if should_run("issues") include("test_issues.jl") end
-    if should_run("meta") include("test_meta.jl") end
+    if should_run("base") include("test_base.jl") end
     if should_run("embed") include("embed/test_embed.jl") end
 end

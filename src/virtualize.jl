@@ -54,7 +54,7 @@ virtualize(ex, ::Type{FinchNotation.ModifyInstance}, ctx) = modify()
 virtualize(ex, ::Type{FinchNotation.CreateInstance}, ctx) = create()
 function virtualize(ex, ::Type{FinchNotation.VariableInstance{tag, Tns}}, ctx) where {tag, Tns}
     x = virtualize(:($ex.tns), Tns, ctx, tag)
-    if index_leaf(x).kind !== virtual
+    if finch_leaf(x).kind !== virtual
         return x
     else
         ctx.freshen(tag)

@@ -52,6 +52,11 @@ function Base.show(io::IO, lvl::ElementLevel{D, Tv}) where {D, Tv}
     print(io, ")")
 end 
 
+function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:ElementLevel}, depth)
+    p = fbr.pos
+    show(io, mime, fbr.lvl.val[p])
+end
+
 @inline level_ndims(::Type{<:ElementLevel}) = 0
 @inline level_size(::ElementLevel) = ()
 @inline level_axes(::ElementLevel) = ()
@@ -65,7 +70,7 @@ function (fbr::SubFiber{<:ElementLevel})()
     return fbr.lvl.val[q]
 end
 
-
+countstored_level(lvl::ElementLevel, pos) = pos
 
 struct VirtualElementLevel
     ex

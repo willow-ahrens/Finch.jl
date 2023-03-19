@@ -66,6 +66,10 @@ similar_level(lvl::SparseCOOLevel{N}, tail...) where {N} = SparseCOOLevel{N}(sim
 pattern!(lvl::SparseCOOLevel{N, Ti, Tp}) where {N, Ti, Tp} = 
     SparseCOOLevel{N, Ti, Tp}(pattern!(lvl.lvl), lvl.shape, lvl.tbl, lvl.ptr)
 
+function countstored_level(lvl::SparseCOOLevel, pos)
+    countstored_level(lvl.lvl, lvl.ptr[pos + 1] - 1)
+end
+
 redefault!(lvl::SparseCOOLevel{N, Ti, Tp}, init) where {N, Ti, Tp} = 
     SparseCOOLevel{N, Ti, Tp}(redefault!(lvl.lvl, init), lvl.shape, lvl.tbl, lvl.ptr)
 

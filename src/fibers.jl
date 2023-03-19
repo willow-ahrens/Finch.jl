@@ -220,7 +220,7 @@ redefault!(fbr::SubFiber, init) = SubFiber(redefault!(fbr.lvl, init), fbr.pos)
 
 
 data_rep(fbr::Fiber) = data_rep(typeof(fbr))
-data_rep(::Type{<:AbstractFiber{Lvl}}) where {Lvl} = SolidData(data_rep_level(Lvl))
+data_rep(::Type{<:AbstractFiber{Lvl}}) where {Lvl} = data_rep_level(Lvl)
 
 
 function freeze!(fbr::VirtualFiber, ctx::LowerJulia)
@@ -315,7 +315,19 @@ function display_fiber_data(io::IO, mime::MIME"text/plain", fbr, depth, N, crds,
         foreach(helper, crds)
     end
 end
-display_fiber(io::IO, mime::MIME"text/plain", fbr, depth) = show(io, mime, fbr)
+display_fiber(io::IO, mime::MIME"text/plain", fbr, depth) = show(io, mime, fbr) #TODO get rid of this eventually
+
+"""
+    countstored(arr)
+
+Return the number of stored elements in `arr`. If there are explicitly stored
+default elements, they are counted too.
+
+See also: (`nnz`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#SparseArrays.nnz)
+"""
+countstored(fbr::Fiber) = countstored_level(fbr.lvl, 1)
+
+countstored(arr::Array) = length(arr)
 
 function f_decode(ex)
     if ex isa Expr && ex.head == :$
@@ -348,6 +360,19 @@ end
 macro fiber(ex, arg)
     return :($dropdefaults!($Fiber!($(f_decode(ex))), $(esc(arg))))
 end
+
+push!(registry, (algebra) -> quote
+    @generated function Fiber!(lvl)
+        contain(LowerJulia()) do ctx
+            lvl = virtualize(:lvl, lvl, ctx)
+            lvl = resolve(lvl, ctx)
+            lvl = declare_level!(lvl, ctx, literal(0), literal(virtual_level_default(lvl)))
+            push!(ctx.preamble, assemble_level!(lvl, ctx, literal(1), literal(1)))
+            lvl = freeze_level!(lvl, ctx, literal(1))
+            :(Fiber($(ctx(lvl))))
+        end |> lower_caches |> lower_cleanup
+    end
+end)
 
 @inline f_code(@nospecialize ::Any) = nothing
 

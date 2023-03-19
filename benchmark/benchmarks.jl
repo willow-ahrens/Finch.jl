@@ -102,7 +102,7 @@ function bfs(edges, source=5)
 
     v = Scalar(false)
 
-    while F.lvl.ptr[2] > 1 #TODO this could be cleaner if we could get early exit working.
+    while countstored(F) > 0
         @finch begin
             _F .= false
             @loop j k begin
