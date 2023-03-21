@@ -100,6 +100,25 @@ unquote_literals(ex::QuoteNode) = unquote_quoted(ex.value)
 unquote_quoted(::Missing) = missing
 unquote_quoted(ex) = QuoteNode(ex)
 
+isgensym(s::Symbol) = occursin("#", string(s))
+isgensym(s) = false
+
+function gensymname(x::Symbol)
+    m = Base.match(r"##(.+)#\d+", String(x))
+    m === nothing || return m.captures[1]
+    m = Base.match(r"#\d+#(.+)", String(x))
+    m === nothing || return m.captures[1]
+    return "x"
+end
+
+function regensym(ex)
+    counter = 0
+    syms = Dict{Symbol, Symbol}()
+    Rewrite(Postwalk((x) -> if isgensym(x) 
+        get!(()->Symbol("_", gensymname(x), "_", counter+=1), syms, x)
+    end))(ex)
+end
+
 """
     unblock(ex)
 Flatten any redundant blocks into a single block, over the whole expression.
@@ -127,3 +146,67 @@ striplines(ex) = ex
 
 (Base.:^)(T::Type, i::Int) = ∘(repeated(T, i)..., identity)
 (Base.:^)(f::Function, i::Int) = ∘(repeated(f, i)..., identity)
+
+"""
+    scansearch(v, x, lo, hi)
+
+return the first value of `v` greater than or equal to `x`, within the range
+`lo:hi`. Return `hi+1` if all values are less than `x`.
+"""
+Base.@propagate_inbounds function scansearch(v, x, lo::T, hi::T)::T where T<:Integer
+    u = T(1)
+    stop = min(hi, lo + T(32))
+    while lo + u < stop && v[lo] < x
+        lo += u
+    end
+    lo = lo - u
+    hi = hi + u
+    while lo < hi - u
+        m = lo + ((hi - lo) >>> 0x01)
+        if v[m] < x
+            lo = m
+        else
+            hi = m
+        end
+    end
+    return hi
+end
+
+struct Cindex{T} <: Integer
+    val::T
+    Cindex{T}(i, b::Bool=true) where {T} = new{T}(T(i) - b)
+    Cindex{T}(i::Cindex{T}) where {T} = i
+end
+
+cindex_types = [Int8, Int16, Int32, Int64, Int128, UInt8, UInt16, UInt32, UInt64, UInt128, BigInt]
+for S in cindex_types
+    @eval begin
+        @inline Base.promote_rule(::Type{Cindex{T}}, ::Type{$S}) where {T} = promote_type(T, $S)
+        Base.convert(::Type{Cindex{T}}, i::$S) where {T} = Cindex(convert(T, i))
+        Cindex(i::$S) = Cindex{$S}(i)
+        (::Type{$S})(i::Cindex{T}) where {T} = convert($S, i.val + true)
+        Base.convert(::Type{$S}, i::Cindex) = convert($S, i.val + true)
+        @inline Base.:(<<)(a::Cindex{T}, b::$S) where {T} = T(a) << b
+    end
+end
+for S in [Float32, Float64]
+    @eval begin
+        @inline Base.promote_rule(::Type{Cindex{T}}, ::Type{$S}) where {T} = Cindex{promote_type(T, $S)}
+        (::Type{$S})(i::Cindex{T}) where {T} = convert($S, i.val + true)
+    end
+end
+Base.promote_rule(::Type{Cindex{T}}, ::Type{Cindex{S}}) where {T, S} = promote_type(T, S)
+Base.convert(::Type{Cindex{T}}, i::Cindex) where {T} = Cindex{T}(convert(T, i.val), false)
+Base.hash(x::Cindex, h::UInt) = hash(typeof(x), hash(x.val, h))
+
+for op in [:*, :+, :-, :min, :max]
+    @eval @inline Base.$op(a::Cindex{T}, b::Cindex{T}) where {T} = Cindex($op(T(a), T(b)))
+end
+
+for op in [:*, :+, :-, :min, :max]
+    @eval @inline Base.$op(a::Cindex{T}) where {T} = Cindex($op(T(a)))
+end
+
+for op in [:<, :<=, :isless]
+    @eval @inline Base.$op(a::Cindex{T}, b::Cindex{T}) where {T} = $op(T(a), T(b))
+end

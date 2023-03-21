@@ -24,7 +24,7 @@ function (ctx::ChunkifyVisitor)(node::FinchNode, eldim = nodim)
     if node.kind === access && node.tns.kind === virtual
         chunkify_access(node, ctx, eldim, node.tns.val)
     elseif node.kind === access && node.tns.kind === variable
-        chunkify_access(node, ctx, eldim, ctx.ctx.bindings[node.tns.name])
+        chunkify_access(node, ctx, eldim, ctx.ctx.bindings[node.tns])
     elseif istree(node)
         #TODO propagate eldim here
         similarterm(node, operation(node), map(ctx, arguments(node)))
@@ -75,7 +75,7 @@ function (ctx::SelectVisitor)(node::FinchNode)
     if node.kind === access && node.tns.kind === virtual
         select_access(node, ctx, node.tns.val)
     elseif node.kind === access && node.tns.kind === variable
-        select_access(node, ctx, ctx.ctx.bindings[node.tns.name])
+        select_access(node, ctx, ctx.ctx.bindings[node.tns])
     elseif istree(node)
         similarterm(node, operation(node), map(ctx, arguments(node)))
     else
@@ -110,7 +110,7 @@ end
     tight = nothing
 end
 
-virtual_default(tns::Furlable) = something(tns.val)
+virtual_default(tns::Furlable) = Some(tns.val)
 virtual_size(tns::Furlable, ::LowerJulia, dim=nothing) = tns.size
 
 FinchNotation.isliteral(::Furlable) = false
@@ -158,7 +158,7 @@ function chunkify_access(node, ctx, eldim, tns::Furlable)
             return access(tns, node.mode, map(ctx, node.idxs[1:end-1])..., get_furl_root(node.idxs[end]))
         else
             if tns.tight !== nothing && simplify(extent(ctx.ext), ctx.ctx) != literal(1)
-                throw(FormatLimitation("$(something(tns.tight)) does not support random access, must loop column major over output indices first."))
+                throw(FormatLimitation("$(typeof(something(tns.tight))) does not support random access, must loop column major over output indices first."))
             end
             idxs = map(ctx, node.idxs)
             return access(node.tns, node.mode, idxs...)

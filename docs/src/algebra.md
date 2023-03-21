@@ -2,6 +2,26 @@
 CurrentModule = Finch
 ```
 
+# Custom Functions
+
+Finch supports arbitrary Julia Base functions over [`isbits`](@ref) types. For your convenience,
+Finch defines a few useful functions that help express common array operations inside Finch:
+
+```@docs
+choose
+minby
+maxby
+```
+
+Finch only supports incrementing assignments to arrays such as `+=` or `*=`. If
+you would like to increment `A[i...]` by the value of `ex` with a custom
+reduction operator `op`, you may use the following syntax: `A[i...] <<op>>= ex`.
+
+# User Functions
+
+Users can also define their own functions, and declare their properties to the
+Finch compiler as follows:
+
 ## Register User Functions
 
 Finch uses generated functions to compile kernels. If any functions have been
@@ -45,7 +65,7 @@ u = @fiber sl(e(1)) #TODO add some data
 v = @fiber sl(e(1)) #TODO add some data
 w = @fiber sl(e(1))
 
-@finch MyAlgebra() @loop i w[i] = gcd(u[i], v[i])
+@finch MyAlgebra() (w .= 1; @loop i w[i] = gcd(u[i], v[i]))
 ```
 
 ## Properties

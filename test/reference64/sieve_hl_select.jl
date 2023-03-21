@@ -3,7 +3,6 @@ begin
     B_val = B.val
     A_lvl = ex.body.body.rhs.tns.tns.lvl
     A_lvl_2 = A_lvl.lvl
-    B_val = 0.0
     A_lvl_q = A_lvl.ptr[1]
     A_lvl_q_stop = A_lvl.ptr[1 + 1]
     if A_lvl_q < A_lvl_q_stop
@@ -15,12 +14,12 @@ begin
     end
     j = 1
     j_start = j
-    phase_stop = (min)(A_lvl_i1, A_lvl.I)
+    phase_stop = (min)(A_lvl_i1, A_lvl.shape)
     if phase_stop >= j_start
         j_4 = j
         j = j_start
-        while A_lvl_q + 1 < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < j_start
-            A_lvl_q += 1
+        if A_lvl.idx[A_lvl_q] < j_start
+            A_lvl_q = scansearch(A_lvl.idx, j_start, A_lvl_q, A_lvl_q_stop - 1)
         end
         while j <= phase_stop
             j_start_2 = j
@@ -97,9 +96,9 @@ begin
         j = phase_stop + 1
     end
     j_start = j
-    if A_lvl.I >= j_start
+    if A_lvl.shape >= j_start
         j_9 = j
-        for j_10 = j_start:A_lvl.I
+        for j_10 = j_start:A_lvl.shape
             s_13 = 3
             s_13_start = s_13
             phase_stop_9 = (min)(3, j_10 - 1)
@@ -119,7 +118,7 @@ begin
                 s_13 = 3 + 1
             end
         end
-        j = A_lvl.I + 1
+        j = A_lvl.shape + 1
     end
     (B = (Scalar){0.0, Float64}(B_val),)
 end

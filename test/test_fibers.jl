@@ -257,7 +257,7 @@
         SparseList{Int64, Int64}(10, [1, 6, 9, 9, 10], [1, 3, 5, 7, 9, 3, 5, 8, 3],
         Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0, 1.0, 1.0, 1.0, 7.0]))))
     B = Fiber(
-        SparseBytemap{Int64, Int64}(4,
+        SparseByteMap{Int64, Int64}(4,
         Element{0.0}()))
 
     @test check_output("d_sl_sum_2_to_sb.jl", @finch_code @loop i j B[j] += A[i, j])

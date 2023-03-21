@@ -30,83 +30,6 @@ function fiber(arr, default=zero(eltype(arr)))
     Base.copyto!(Fiber((DenseLevel^(ndims(arr)))(Element{default}())), arr)
 end
 
-@generated function helper_equal(A, B)
-    idxs = [Symbol(:i_, n) for n = 1:ndims(A)]
-    return quote
-        size(A) == size(B) || return false
-        check = Scalar(true)
-        if check[]
-            @finch @loop($(reverse(idxs)...), check[] &= (A[$(idxs...)] == B[$(idxs...)]))
-        end
-        return check[]
-    end
-end
-
-function Base.:(==)(A::Fiber, B::Fiber)
-    return helper_equal(A, B)
-end
-
-function Base.:(==)(A::Fiber, B::AbstractArray)
-    return helper_equal(A, B)
-end
-
-function Base.:(==)(A::AbstractArray, B::Fiber)
-    return helper_equal(A, B)
-end
-
-@generated function helper_isequal(A, B)
-    idxs = [Symbol(:i_, n) for n = 1:ndims(A)]
-    return quote
-        size(A) == size(B) || return false
-        check = Scalar(true)
-        if check[]
-            @finch @loop($(reverse(idxs)...), check[] &= isequal(A[$(idxs...)], B[$(idxs...)]))
-        end
-        return check[]
-    end
-end
-
-function Base.isequal(A:: Fiber, B::Fiber)
-    return helper_isequal(A, B)
-end
-
-function Base.isequal(A:: Fiber, B::AbstractArray)
-    return helper_isequal(A, B)
-end
-
-function Base.isequal(A:: AbstractArray, B::Fiber)
-    return helper_isequal(A, B)
-end
-
-@generated function copyto_helper!(dst, src)
-    idxs = [Symbol(:i_, n) for n = 1:ndims(dst)]
-    return quote
-        @finch @loop($(reverse(idxs)...), dst[$(idxs...)] = src[$(idxs...)])
-        return dst
-    end
-end
-
-function Base.copyto!(dst::Fiber, src::Union{Fiber, AbstractArray})
-    return copyto_helper!(dst, src)
-end
-
-function Base.copyto!(dst::Array, src::Fiber)
-    return copyto_helper!(dst, src)
-end
-
-dropdefaults(src) = dropdefaults!(similar(src), src)
-
-@generated function dropdefaults!(dst::Fiber, src)
-    idxs = [Symbol(:i_, n) for n = 1:ndims(dst)]
-    T = eltype(dst)
-    d = default(dst)
-    return quote
-        tmp = Scalar{$d, $T}()
-        @finch @loop($(reverse(idxs)...), (@sieve (tmp[] != $d) dst[$(idxs...)] = tmp[]) where (tmp[] = src[$(idxs...)]))
-        return dst
-    end
-end
-
 """
     fsparse(I::Tuple, V,[ M::Tuple, combine])
 
@@ -187,30 +110,53 @@ See also: (`sprand`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#Spars
 julia> fsprand(Bool, (3, 3), 0.5)
 SparseCOO (false) [1:3,1:3]
 ├─├─[1, 1]: true
-├─├─[3, 1]: true
+├─├─[1, 3]: false
 ├─├─[2, 2]: true
-├─├─[3, 2]: true
+├─├─[2, 3]: true
 ├─├─[3, 3]: true  
 
 julia> fsprand(Float64, (2, 2, 2), 0.5)
 SparseCOO (0.0) [1:2,1:2,1:2]
-├─├─├─[2, 2, 1]: 0.6478553157718558
-├─├─├─[1, 1, 2]: 0.996665291437684
+├─├─├─[1, 2, 2]: 0.0
+├─├─├─[2, 1, 1]: 0.0
 ├─├─├─[2, 1, 2]: 0.7491940599574348 
 ```
 """
-fsprand(n::Tuple, args...) = _fsprand_impl(n, sprand(mapfoldl(BigInt, *, n), args...))
-fsprand(T::Type, n::Tuple, args...) = _fsprand_impl(n, sprand(T, mapfoldl(BigInt, *, n), args...))
-fsprand(r::SparseArrays.AbstractRNG, n::Tuple, args...) = _fsprand_impl(n, sprand(r, mapfoldl(BigInt, *, n), args...))
-fsprand(r::SparseArrays.AbstractRNG, T::Type, n::Tuple, args...) = _fsprand_impl(n, sprand(r, T, mapfoldl(BigInt, *, n), args...))
-function _fsprand_impl(shape::Tuple, vec::SparseVector{Tv, Ti}) where {Tv, Ti}
-    I = ((Vector{Ti}(undef, length(vec.nzind)) for _ in shape)...,)
-    for (p, ind) in enumerate(vec.nzind)
-        c = CartesianIndices(shape)[ind]
-        ntuple(n->I[n][p] = c[n], length(shape))
-    end
-    return fsparse!(I, vec.nzval, shape)
+fsprand(shape::Tuple, p::AbstractFloat, rfn::Function, ::Type{T}) where {T} = fsprand(default_rng(), shape, p, rfn, T)
+function fsprand(r::AbstractRNG, shape::Tuple, p::AbstractFloat, rfn::Function, ::Type{T}) where T
+    I = fsprand_helper(r, shape, p)
+    V = rfn(r, T, length(I[1]))
+    return fsparse!(I, V, shape)
 end
+
+fsprand(shape::Tuple, p::AbstractFloat, rfn::Function) = fsprand(default_rng(), shape, p, rfn)
+function fsprand(r::AbstractRNG, shape::Tuple, p::AbstractFloat, rfn::Function)
+    I = fsprand_helper(r, shape, p)
+    V = rfn(r, length(I[1]))
+    return fsparse!(I, V, shape)
+end
+
+function fsprand_helper(r::AbstractRNG, shape::Tuple, p::AbstractFloat)
+    I = map(shape -> Vector{typeof(shape)}(), shape)
+    for i in randsubseq(r, CartesianIndices(shape), p)
+        for r = 1:length(shape)
+            push!(I[end- r + 1], i[r])
+        end
+    end
+    I
+end
+
+fsprand(shape::Tuple, p::AbstractFloat) = fsprand(default_rng(), shape, p, rand)
+
+fsprand(r::AbstractRNG, shape::Tuple, p::AbstractFloat) = fsprand(r, shape, p, rand)
+fsprand(r::AbstractRNG, ::Type{T}, shape::Tuple, p::AbstractFloat) where {T} = fsprand(r, shape, p, (r, i) -> rand(r, T, i))
+fsprand(r::AbstractRNG, ::Type{Bool}, shape::Tuple, p::AbstractFloat) = fsprand(r, shape, p, (r, i) -> fill(true, i))
+fsprand(::Type{T}, shape::Tuple, p::AbstractFloat) where {T} = fsprand(default_rng(), T, shape, p)
+
+fsprandn(shape::Tuple, p::AbstractFloat) = fsprand(default_rng(), shape, p, randn)
+fsprandn(r::AbstractRNG, shape::Tuple, p::AbstractFloat) = fsprand(r, shape, p, randn)
+fsprandn(::Type{T}, shape::Tuple, p::AbstractFloat) where T = fsprand(default_rng(), shape, p, (r, i) -> randn(r, T, i))
+fsprandn(r::AbstractRNG, ::Type{T}, shape::Tuple, p::AbstractFloat) where T = fsprand(r, shape, p, (r, i) -> randn(r, T, i))
 
 """
     fspzeros([type], shape::Tuple)

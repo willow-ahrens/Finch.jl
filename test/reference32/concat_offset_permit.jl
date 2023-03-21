@@ -1,12 +1,14 @@
 begin
-    C_lvl = ex.body.lhs.tns.tns.lvl
+    C_lvl = (ex.bodies[1]).tns.tns.lvl
     C_lvl_2 = C_lvl.lvl
-    A_lvl = (ex.body.rhs.args[1]).tns.tns.lvl
+    C_lvl_3 = (ex.bodies[2]).body.lhs.tns.tns.lvl
+    C_lvl_4 = C_lvl_3.lvl
+    A_lvl = ((ex.bodies[2]).body.rhs.args[1]).tns.tns.lvl
     A_lvl_2 = A_lvl.lvl
-    B_lvl = (ex.body.rhs.args[2]).tns.tns.lvl
+    B_lvl = ((ex.bodies[2]).body.rhs.args[2]).tns.tns.lvl
     B_lvl_2 = B_lvl.lvl
-    i_start = (min)((+)(1, ((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta), 1)
-    i_stop = (max)(A_lvl.I, (+)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl.I))
+    i_start = (min)((+)(1, (((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta), 1)
+    i_stop = (max)(A_lvl.shape, (+)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl.shape))
     C_lvl_qos_fill = 0
     C_lvl_qos_stop = 0
     (Finch.resize_if_smaller!)(C_lvl.ptr, 1 + 1)
@@ -14,7 +16,7 @@ begin
     C_lvl_qos = C_lvl_qos_fill + 1
     i = i_start
     i_start_2 = i
-    phase_stop = (min)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta, 0, i_stop)
+    phase_stop = (min)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta, 0, i_stop)
     if phase_stop >= i_start_2
         i_5 = i
         for i_6 = i_start_2:phase_stop
@@ -38,7 +40,7 @@ begin
         i = phase_stop + 1
     end
     i_start_2 = i
-    phase_stop_2 = (min)((+)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl.I), 0, i_stop)
+    phase_stop_2 = (min)((+)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl.shape), 0, i_stop)
     if phase_stop_2 >= i_start_2
         i_7 = i
         B_lvl_q = B_lvl.ptr[1]
@@ -52,20 +54,20 @@ begin
         end
         i = i_start_2
         i_start_3 = i
-        phase_stop_3 = (min)(phase_stop_2, (+)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl_i1))
+        phase_stop_3 = (min)(phase_stop_2, (+)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl_i1))
         if phase_stop_3 >= i_start_3
             i_8 = i
             i = i_start_3
-            while B_lvl_q + 1 < B_lvl_q_stop && B_lvl.idx[B_lvl_q] < (+)(i_start_3, (-)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta))
-                B_lvl_q += 1
+            if B_lvl.idx[B_lvl_q] < (+)(i_start_3, (-)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta))
+                B_lvl_q = scansearch(B_lvl.idx, (+)(i_start_3, (-)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta)), B_lvl_q, B_lvl_q_stop - 1)
             end
             while i <= phase_stop_3
                 i_start_4 = i
                 B_lvl_i = B_lvl.idx[B_lvl_q]
-                phase_stop_4 = (min)(phase_stop_3, (+)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl_i))
+                phase_stop_4 = (min)(phase_stop_3, (+)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl_i))
                 if phase_stop_4 >= i_start_4
                     i_9 = i
-                    if B_lvl_i == (+)(phase_stop_4, (-)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta))
+                    if B_lvl_i == (+)(phase_stop_4, (-)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta))
                         B_lvl_2_val_2 = B_lvl_2.val[B_lvl_q]
                         i_10 = phase_stop_4
                         if C_lvl_qos > C_lvl_qos_stop
@@ -124,7 +126,7 @@ begin
         i = phase_stop_5 + 1
     end
     i_start_2 = i
-    phase_stop_6 = (min)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta, A_lvl.I, i_stop)
+    phase_stop_6 = (min)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta, A_lvl.shape, i_stop)
     if phase_stop_6 >= i_start_2
         i_14 = i
         A_lvl_q = A_lvl.ptr[1]
@@ -142,8 +144,8 @@ begin
         if phase_stop_7 >= i_start_5
             i_15 = i
             i = i_start_5
-            while A_lvl_q + 1 < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < i_start_5
-                A_lvl_q += 1
+            if A_lvl.idx[A_lvl_q] < i_start_5
+                A_lvl_q = scansearch(A_lvl.idx, i_start_5, A_lvl_q, A_lvl_q_stop - 1)
             end
             while i <= phase_stop_7
                 i_start_6 = i
@@ -184,7 +186,7 @@ begin
         i = phase_stop_6 + 1
     end
     i_start_2 = i
-    phase_stop_9 = (min)(A_lvl.I, (+)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl.I), i_stop)
+    phase_stop_9 = (min)(A_lvl.shape, (+)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl.shape), i_stop)
     if phase_stop_9 >= i_start_2
         i_19 = i
         A_lvl_q = A_lvl.ptr[1]
@@ -207,24 +209,24 @@ begin
         end
         i = i_start_2
         i_start_7 = i
-        phase_stop_10 = (min)((+)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl_i1), A_lvl_i1, phase_stop_9)
+        phase_stop_10 = (min)((+)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl_i1), A_lvl_i1, phase_stop_9)
         if phase_stop_10 >= i_start_7
             i_20 = i
             i = i_start_7
-            while A_lvl_q + 1 < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < i_start_7
-                A_lvl_q += 1
+            if A_lvl.idx[A_lvl_q] < i_start_7
+                A_lvl_q = scansearch(A_lvl.idx, i_start_7, A_lvl_q, A_lvl_q_stop - 1)
             end
-            while B_lvl_q + 1 < B_lvl_q_stop && B_lvl.idx[B_lvl_q] < (+)(i_start_7, (-)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta))
-                B_lvl_q += 1
+            if B_lvl.idx[B_lvl_q] < (+)(i_start_7, (-)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta))
+                B_lvl_q = scansearch(B_lvl.idx, (+)(i_start_7, (-)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta)), B_lvl_q, B_lvl_q_stop - 1)
             end
             while i <= phase_stop_10
                 i_start_8 = i
                 A_lvl_i = A_lvl.idx[A_lvl_q]
                 B_lvl_i = B_lvl.idx[B_lvl_q]
-                phase_stop_11 = (min)((+)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl_i), A_lvl_i, phase_stop_10)
+                phase_stop_11 = (min)((+)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl_i), A_lvl_i, phase_stop_10)
                 if phase_stop_11 >= i_start_8
                     i_21 = i
-                    if A_lvl_i == phase_stop_11 && B_lvl_i == (+)(phase_stop_11, (-)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta))
+                    if A_lvl_i == phase_stop_11 && B_lvl_i == (+)(phase_stop_11, (-)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta))
                         A_lvl_2_val_3 = A_lvl_2.val[A_lvl_q]
                         B_lvl_2_val_3 = B_lvl_2.val[B_lvl_q]
                         i_22 = phase_stop_11
@@ -246,7 +248,7 @@ begin
                         end
                         A_lvl_q += 1
                         B_lvl_q += 1
-                    elseif B_lvl_i == (+)(phase_stop_11, (-)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta))
+                    elseif B_lvl_i == (+)(phase_stop_11, (-)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta))
                         B_lvl_2_val_3 = B_lvl_2.val[B_lvl_q]
                         B_lvl_q += 1
                     elseif A_lvl_i == phase_stop_11
@@ -281,8 +283,8 @@ begin
         if phase_stop_12 >= i_start_7
             i_24 = i
             i = i_start_7
-            while A_lvl_q + 1 < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < i_start_7
-                A_lvl_q += 1
+            if A_lvl.idx[A_lvl_q] < i_start_7
+                A_lvl_q = scansearch(A_lvl.idx, i_start_7, A_lvl_q, A_lvl_q_stop - 1)
             end
             while i <= phase_stop_12
                 i_start_9 = i
@@ -316,7 +318,7 @@ begin
             i = phase_stop_12 + 1
         end
         i_start_7 = i
-        phase_stop_14 = (min)((+)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl_i1), phase_stop_9)
+        phase_stop_14 = (min)((+)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl_i1), phase_stop_9)
         if phase_stop_14 >= i_start_7
             i_27 = i
             i = phase_stop_14 + 1
@@ -329,7 +331,7 @@ begin
         i = phase_stop_9 + 1
     end
     i_start_2 = i
-    phase_stop_15 = (min)(A_lvl.I, i_stop)
+    phase_stop_15 = (min)(A_lvl.shape, i_stop)
     if phase_stop_15 >= i_start_2
         i_29 = i
         A_lvl_q = A_lvl.ptr[1]
@@ -347,8 +349,8 @@ begin
         if phase_stop_16 >= i_start_10
             i_30 = i
             i = i_start_10
-            while A_lvl_q + 1 < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < i_start_10
-                A_lvl_q += 1
+            if A_lvl.idx[A_lvl_q] < i_start_10
+                A_lvl_q = scansearch(A_lvl.idx, i_start_10, A_lvl_q, A_lvl_q_stop - 1)
             end
             while i <= phase_stop_16
                 i_start_11 = i
@@ -389,7 +391,7 @@ begin
         i = phase_stop_15 + 1
     end
     i_start_2 = i
-    phase_stop_18 = (min)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta, i_stop)
+    phase_stop_18 = (min)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta, i_stop)
     if phase_stop_18 >= i_start_2
         i_34 = i
         for i_35 = i_start_2:phase_stop_18
@@ -413,7 +415,7 @@ begin
         i = phase_stop_18 + 1
     end
     i_start_2 = i
-    phase_stop_19 = (min)((+)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl.I), i_stop)
+    phase_stop_19 = (min)((+)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl.shape), i_stop)
     if phase_stop_19 >= i_start_2
         i_36 = i
         B_lvl_q = B_lvl.ptr[1]
@@ -427,20 +429,20 @@ begin
         end
         i = i_start_2
         i_start_12 = i
-        phase_stop_20 = (min)((+)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl_i1), phase_stop_19)
+        phase_stop_20 = (min)((+)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl_i1), phase_stop_19)
         if phase_stop_20 >= i_start_12
             i_37 = i
             i = i_start_12
-            while B_lvl_q + 1 < B_lvl_q_stop && B_lvl.idx[B_lvl_q] < (+)(i_start_12, (-)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta))
-                B_lvl_q += 1
+            if B_lvl.idx[B_lvl_q] < (+)(i_start_12, (-)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta))
+                B_lvl_q = scansearch(B_lvl.idx, (+)(i_start_12, (-)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta)), B_lvl_q, B_lvl_q_stop - 1)
             end
             while i <= phase_stop_20
                 i_start_13 = i
                 B_lvl_i = B_lvl.idx[B_lvl_q]
-                phase_stop_21 = (min)((+)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl_i), phase_stop_20)
+                phase_stop_21 = (min)((+)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl_i), phase_stop_20)
                 if phase_stop_21 >= i_start_13
                     i_38 = i
-                    if B_lvl_i == (+)(phase_stop_21, (-)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta))
+                    if B_lvl_i == (+)(phase_stop_21, (-)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta))
                         B_lvl_2_val_5 = B_lvl_2.val[B_lvl_q]
                         i_39 = phase_stop_21
                         if C_lvl_qos > C_lvl_qos_stop
@@ -507,5 +509,5 @@ begin
     qos = C_lvl.ptr[end] - 1
     resize!(C_lvl.idx, qos)
     resize!(C_lvl_2.val, qos)
-    (C = Fiber((Finch.SparseListLevel){Int64}(C_lvl_2, (max)(A_lvl.I, (+)(((ex.body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl.I)), C_lvl.ptr, C_lvl.idx)),)
+    (C = Fiber((Finch.SparseListLevel){Int64, Int32}(C_lvl_2, (max)(A_lvl.shape, (+)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl.shape)), C_lvl.ptr, C_lvl.idx)),)
 end

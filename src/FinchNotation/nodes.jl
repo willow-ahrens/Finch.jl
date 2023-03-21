@@ -25,13 +25,14 @@ enum is used to differentiate which kind of node is represented.
     create   = 10ID | IS_TREE
     call     = 11ID | IS_TREE
     assign   = 12ID | IS_TREE | IS_STATEFUL
-    with     = 13ID | IS_TREE | IS_STATEFUL
-    multi    = 14ID | IS_TREE | IS_STATEFUL
     loop     = 15ID | IS_TREE | IS_STATEFUL
     chunk    = 16ID | IS_TREE | IS_STATEFUL
     sieve    = 17ID | IS_TREE | IS_STATEFUL
-    pass     = 18ID | IS_TREE | IS_STATEFUL
-    lifetime = 19ID | IS_TREE | IS_STATEFUL
+    declare  = 20ID | IS_TREE | IS_STATEFUL
+    thaw     = 21ID | IS_TREE | IS_STATEFUL
+    freeze   = 22ID | IS_TREE | IS_STATEFUL
+    forget  = 23ID | IS_TREE | IS_STATEFUL
+    sequence = 24ID | IS_TREE | IS_STATEFUL
 end
 
 
@@ -130,20 +131,6 @@ Finch AST expression for the result of calling the function `op` on `args...`.
 call
 
 """
-    with(cons, prod)
-
-Finch AST statement that runs `cons` with the tensors produced by `prod`.
-"""
-with
-
-"""
-    multi(bodies...)
-
-Finch AST statement that runs `bodies...` independently and returns all their results.
-"""
-multi
-
-"""
     loop(idxs..., body) 
 
 Finch AST statement that runs `body` for each value of `idxs...`.
@@ -174,22 +161,42 @@ tensors of `lhs` are returned.  Overwriting is accomplished with the function
 """
 assign
 
-#TODO get rid of access expressions in pass
 """
-    pass(tnss...)
+    declare(tns, init)
 
-Finch AST statement that initializes, freezes, and returns each tensor in `tnss...`.
+Finch AST statement that declares `tns` with an initial value `init` in the current scope.
 """
-pass
+declare
 
-#TODO figure this one out already
 """
-    lifetime(body)
+    freeze(tns)
 
-Finch AST statement that initializes and freezes all results in `body`. Most
-finch programs are wrapped by an outer `lifetime`.
+Finch AST statement that freezes `tns` in the current scope.
 """
-lifetime
+freeze
+
+"""
+    thaw(tns)
+
+Finch AST statement that thaws `tns` in the current scope.
+"""
+thaw
+
+"""
+    forget(tns)
+
+Finch AST statement that marks the end of the lifetime of `tns`, at least until it is declared again.
+"""
+forget
+
+"""
+    sequence(bodies...)
+
+Finch AST statement that executes each of it's arguments in turn. If the body is
+not a sequence, replaces accesses to read-only tensors in the body with
+get_reader and accesses to update-only tensors in the body with get_updater.
+"""
+sequence
 
 """
     FinchNode
@@ -263,14 +270,6 @@ function FinchNode(kind::FinchNodeKind, args::Vector)
         else
             error("wrong number of arguments to $kind(...)")
         end
-    elseif kind === with
-        if length(args) == 2
-            return FinchNode(with, nothing, nothing, args)
-        else
-            error("wrong number of arguments to with(...)")
-        end
-    elseif kind === multi
-        return FinchNode(multi, nothing, nothing, args)
     elseif kind === access
         if length(args) >= 2
             return FinchNode(access, nothing, nothing, args)
@@ -313,8 +312,32 @@ function FinchNode(kind::FinchNodeKind, args::Vector)
         else
             error("wrong number of arguments to assign(...)")
         end
-    elseif kind === pass
-        return FinchNode(pass, nothing, nothing, args)
+    elseif kind === declare
+        if length(args) == 2
+            return FinchNode(declare, nothing, nothing, args)
+        else
+            error("wrong number of arguments to declare(...)")
+        end
+    elseif kind === freeze
+        if length(args) == 1
+            return FinchNode(freeze, nothing, nothing, args)
+        else
+            error("wrong number of arguments to freeze(...)")
+        end
+    elseif kind === thaw
+        if length(args) == 1
+            return FinchNode(thaw, nothing, nothing, args)
+        else
+            error("wrong number of arguments to thaw(...)")
+        end
+    elseif kind === forget
+        if length(args) == 1
+            return FinchNode(forget, nothing, nothing, args)
+        else
+            error("wrong number of arguments to forget(...)")
+        end
+    elseif kind === sequence
+        return FinchNode(sequence, nothing, nothing, args)
     elseif kind === reader
         if length(args) == 0
             return FinchNode(kind, nothing, nothing, FinchNode[])
@@ -374,20 +397,6 @@ function Base.getproperty(node::FinchNode, sym::Symbol)
             return node.children[1]
         else
             error("type FinchNode(updater, ...) has no property $sym")
-        end
-    elseif node.kind === with
-        if sym === :cons
-            return node.children[1]
-        elseif sym === :prod
-            return node.children[2]
-        else
-            error("type FinchNode(with, ...) has no property $sym")
-        end
-    elseif node.kind === multi
-        if sym === :bodies
-            return node.children
-        else
-            error("type FinchNode(multi, ...) has no property $sym")
         end
     elseif node.kind === access
         if sym === :tns
@@ -451,12 +460,37 @@ function Base.getproperty(node::FinchNode, sym::Symbol)
         else
             error("type FinchNode(assign, ...) has no property $sym")
         end
-    elseif node.kind === pass
-        #TODO move op into updater
-        if sym === :tnss
+    elseif node.kind === declare
+        if sym === :tns
+            return node.children[1]
+        elseif sym === :init
+            return node.children[2]
+        else
+            error("type FinchNode(declare, ...) has no property $sym")
+        end
+    elseif node.kind === freeze
+        if sym === :tns
+            return node.children[1]
+        else
+            error("type FinchNode(freeze, ...) has no property $sym")
+        end
+    elseif node.kind === thaw
+        if sym === :tns
+            return node.children[1]
+        else
+            error("type FinchNode(thaw, ...) has no property $sym")
+        end
+    elseif node.kind === forget
+        if sym === :tns
+            return node.children[1]
+        else
+            error("type FinchNode(forget, ...) has no property $sym")
+        end
+    elseif node.kind === sequence
+        if sym === :bodies
             return node.children
         else
-            error("type FinchNode(pass, ...) has no property $sym")
+            error("type FinchNode(sequence, ...) has no property $sym")
         end
     else
         error("type FinchNode has no property $sym")
@@ -478,7 +512,7 @@ function Finch.getunbound(ex::FinchNode)
 end
 
 function Base.show(io::IO, node::FinchNode) 
-    if node.kind === literal || node.kind == index || node.kind === virtual
+    if node.kind === literal || node.kind === index || node.kind === variable || node.kind === virtual
         print(io, node.kind, "(", node.val, ")")
     elseif node.kind === value
         print(io, node.kind, "(", node.val, ", ", node.type, ")")
@@ -556,19 +590,7 @@ function display_expression(io, mime, node::FinchNode)
 end
 
 function display_statement(io, mime, node::FinchNode, level)
-    if node.kind === with
-        print(io, tab^level * "(\n")
-        display_statement(io, mime, node.cons, level + 1)
-        print(io, tab^level * ") where (\n")
-        display_statement(io, mime, node.prod, level + 1)
-        print(io, tab^level * ")\n")
-    elseif node.kind === multi
-        print(io, tab^level * "begin\n")
-        for body in node.bodies
-            display_statement(io, mime, body, level + 1)
-        end
-        print(io, tab^level * "end\n")
-    elseif node.kind === loop
+    if node.kind === loop
         print(io, tab^level * "@∀ ")
         while node.kind === loop
             display_expression(io, mime, node.idx)
@@ -577,7 +599,7 @@ function display_statement(io, mime, node::FinchNode, level)
         end
         print(io,"(\n")
         display_statement(io, mime, node, level + 1)
-        print(io, tab^level * ")\n")
+        print(io, tab^level * ")")
     elseif node.kind === chunk
         print(io, tab^level * "@∀ ")
         display_expression(io, mime, node.idx)
@@ -585,9 +607,9 @@ function display_statement(io, mime, node::FinchNode, level)
         display_expression(io, mime, node.ext)
         print(io," (\n")
         display_statement(io, mime, node.body, level + 1)
-        print(io, tab^level * ")\n")
+        print(io, tab^level * ")")
     elseif node.kind === sieve
-        print(io, tab^level * "@sieve ")
+        print(io, tab^level * "if ")
         while node.body.kind === sieve
             display_expression(io, mime, node.cond)
             print(io," && ")
@@ -595,9 +617,8 @@ function display_statement(io, mime, node::FinchNode, level)
         end
         display_expression(io, mime, node.cond)
         node = node.body
-        print(io," (\n")
         display_statement(io, mime, node, level + 1)
-        print(io, tab^level * ")\n")
+        print(io, tab^level * "end")
     elseif node.kind === assign
         print(io, tab^level)
         display_expression(io, mime, node.lhs)
@@ -608,22 +629,38 @@ function display_statement(io, mime, node::FinchNode, level)
         end
         print(io, "= ")
         display_expression(io, mime, node.rhs)
-        print(io, "\n")
     elseif node.kind === protocol
         display_expression(io, mime, ex.idx)
         print(io, "::")
         display_expression(io, mime, ex.mode)
-    elseif node.kind === pass
-        print(io, tab^level * "@pass(")
-        for tns in arguments(node)[1:end-1]
-            display_expression(io, mime, tns)
-            print(io, ", ")
-        end
-        if length(arguments(node)) >= 1
-            display_expression(io, mime, last(arguments(node)))
-        end
+    elseif node.kind === declare
+        print(io, tab^level * "@declare(")
+        display_expression(io, mime, node.tns)
+        print(io, ", ")
+        display_expression(io, mime, node.init)
         print(io, ")")
+    elseif node.kind === freeze
+        print(io, tab^level * "@freeze(")
+        display_expression(io, mime, node.tns)
+        print(io, ")")
+    elseif node.kind === forget
+        print(io, tab^level * "@forget(")
+        display_expression(io, mime, node.tns)
+        print(io, ")")
+    elseif node.kind === thaw
+        print(io, tab^level * "@thaw(")
+        display_expression(io, mime, node.tns)
+        print(io, ")")
+    elseif node.kind === sequence
+        print(io, tab^level * "begin\n")
+        for body in node.bodies
+            display_statement(io, mime, body, level + 1)
+            println()
+        end
+        print(io, tab^level * "end")
     else
+        println("oh no")
+        println(node)
         error("unimplemented")
     end
 end
@@ -643,8 +680,6 @@ function Base.:(==)(a::FinchNode, b::FinchNode)
         else
             error("unimplemented")
         end
-    elseif a.kind === pass
-        return b.kind === pass && Set(a.tnss) == Set(b.tnss) #TODO This feels... not quite right
     elseif istree(a)
         return a.kind === b.kind && a.children == b.children
     else
@@ -679,29 +714,6 @@ FinchNotation.isliteral(node::FinchNode) = node.kind === literal
 function Finch.getvalue(ex::FinchNode)
     ex.kind === literal || error("expected literal")
     ex.val
-end
-
-function Finch.getresults(node::FinchNode)
-    if node.kind === with
-        Finch.getresults(node.cons)
-    elseif node.kind === multi
-        return mapreduce(Finch.getresults, vcat, node.bodies)
-    elseif node.kind === access
-        [access(node.tns, node.mode)]
-    elseif node.kind === loop
-        Finch.getresults(node.body)
-    elseif node.kind === chunk
-        Finch.getresults(node.body)
-    elseif node.kind === sieve
-        Finch.getresults(node.body)
-    elseif node.kind === assign
-        Finch.getresults(node.lhs)
-    elseif node.kind === pass
-        return node.tnss
-    else
-        return []
-        error("unimplemented")
-    end
 end
 
 function Finch.getname(x::FinchNode)

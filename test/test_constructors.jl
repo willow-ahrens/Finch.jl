@@ -10,13 +10,13 @@
         fbr = dropdefaults!(Fiber!(SparseList(Element(zero(eltype(arr))))), arr)
         println(io, "initialized fiber: ", fbr)
         lvl = fbr.lvl
-        @test isstructequal(fbr, Fiber(SparseList(lvl.lvl, lvl.I, lvl.ptr, lvl.idx)))
-        @test isstructequal(fbr, Fiber(SparseList{Int}(lvl.lvl, lvl.I, lvl.ptr, lvl.idx)))
+        @test isstructequal(fbr, Fiber(SparseList(lvl.lvl, lvl.shape, lvl.ptr, lvl.idx)))
+        @test isstructequal(fbr, Fiber(SparseList{Int}(lvl.lvl, lvl.shape, lvl.ptr, lvl.idx)))
 
         fbr = dropdefaults!(Fiber!(SparseList{Int16}(Element(zero(eltype(arr))))), arr)
         println(io, "initialized fiber: ", fbr)
         lvl = fbr.lvl
-        @test isstructequal(fbr, Fiber(SparseList{Int16}(lvl.lvl, lvl.I, lvl.ptr, lvl.idx)))
+        @test isstructequal(fbr, Fiber(SparseList{Int16}(lvl.lvl, lvl.shape, lvl.ptr, lvl.idx)))
 
         fbr = Fiber!(SparseList(Element(0.0), 7))
         println(io, "sized fiber: ", fbr)
@@ -59,38 +59,38 @@
         @test check_output("format_constructors_sl_e.txt", String(take!(io)))
     end
 
-    @testset "@fiber(sv(e(0))" begin
+    @testset "@fiber(svb(e(0))" begin
         io = IOBuffer()
         arr = [0.0, 2.0, 2.0, 0.0, 3.0, 3.0]
 
-        println(io, "@fiber(sv(e(0)) constructors:")
+        println(io, "@fiber(svb(e(0)) constructors:")
 
         fbr = dropdefaults!(Fiber!(SparseVBL(Element(zero(eltype(arr))))), arr)
         println(io, "initialized fiber: ", fbr)
         lvl = fbr.lvl
-        @test isstructequal(fbr, Fiber(SparseVBL(lvl.lvl, lvl.I, lvl.ptr, lvl.idx, lvl.ofs)))
-        @test isstructequal(fbr, Fiber(SparseVBL{Int}(lvl.lvl, lvl.I, lvl.ptr, lvl.idx, lvl.ofs)))
+        @test isstructequal(fbr, Fiber(SparseVBL(lvl.lvl, lvl.shape, lvl.ptr, lvl.idx, lvl.ofs)))
+        @test isstructequal(fbr, Fiber(SparseVBL{Int}(lvl.lvl, lvl.shape, lvl.ptr, lvl.idx, lvl.ofs)))
 
         fbr = dropdefaults!(Fiber!(SparseVBL{Int16}(Element(zero(eltype(arr))))), arr)
         println(io, "initialized fiber: ", fbr)
         lvl = fbr.lvl
-        @test isstructequal(fbr, Fiber(SparseVBL{Int16}(lvl.lvl, lvl.I, lvl.ptr, lvl.idx, lvl.ofs)))
+        @test isstructequal(fbr, Fiber(SparseVBL{Int16}(lvl.lvl, lvl.shape, lvl.ptr, lvl.idx, lvl.ofs)))
 
         fbr = Fiber!(SparseVBL(Element(0.0), 7))
         println(io, "sized fiber: ", fbr)
         lvl = fbr.lvl
         @test isstructequal(fbr, Fiber!(SparseVBL(Element(0.0), 7)))
         @test isstructequal(fbr, Fiber!(SparseVBL{Int}(Element(0.0), 7)))
-        @test isstructequal(fbr, @fiber(sv(e(0.0), 7)))
-        @test isstructequal(fbr, @fiber(sv{Int}(e(0.0), 7)))
+        @test isstructequal(fbr, @fiber(svb(e(0.0), 7)))
+        @test isstructequal(fbr, @fiber(svb{Int}(e(0.0), 7)))
 
         fbr = Fiber!(SparseVBL{Int16}(Element(0.0), 7))
         println(io, "sized fiber: ", fbr)
         lvl = fbr.lvl
         @test isstructequal(fbr, Fiber!(SparseVBL(Element(0.0), Int16(7))))
         @test isstructequal(fbr, Fiber!(SparseVBL{Int16}(Element(0.0), 7)))
-        @test isstructequal(fbr, @fiber(sv(e(0.0), Int16(7))))
-        @test isstructequal(fbr, @fiber(sv{Int16}(e(0.0), 7)))
+        @test isstructequal(fbr, @fiber(svb(e(0.0), Int16(7))))
+        @test isstructequal(fbr, @fiber(svb{Int16}(e(0.0), 7)))
 
         fbr = Fiber!(SparseVBL(Element(0.0)))
         println(io, "empty fiber: ", fbr)
@@ -99,10 +99,10 @@
         @test isstructequal(fbr, Fiber!(SparseVBL{Int}(Element(0.0))))
         @test isstructequal(fbr, Fiber!(SparseVBL(Element(0.0), 0)))
         @test isstructequal(fbr, Fiber!(SparseVBL{Int}(Element(0.0), 0)))
-        @test isstructequal(fbr, @fiber(sv(e(0.0))))
-        @test isstructequal(fbr, @fiber(sv{Int}(e(0.0))))
-        @test isstructequal(fbr, @fiber(sv(e(0.0), 0)))
-        @test isstructequal(fbr, @fiber(sv{Int}(e(0.0), 0)))
+        @test isstructequal(fbr, @fiber(svb(e(0.0))))
+        @test isstructequal(fbr, @fiber(svb{Int}(e(0.0))))
+        @test isstructequal(fbr, @fiber(svb(e(0.0), 0)))
+        @test isstructequal(fbr, @fiber(svb{Int}(e(0.0), 0)))
 
         fbr = Fiber!(SparseVBL{Int16}(Element(0.0)))
         println(io, "empty fiber: ", fbr)
@@ -110,67 +110,67 @@
         @test isstructequal(fbr, Fiber!(SparseVBL{Int16}(Element(0.0))))
         @test isstructequal(fbr, Fiber!(SparseVBL(Element(0.0), Int16(0))))
         @test isstructequal(fbr, Fiber!(SparseVBL{Int16}(Element(0.0), 0)))
-        @test isstructequal(fbr, @fiber(sv{Int16}(e(0.0))))
-        @test isstructequal(fbr, @fiber(sv(e(0.0), Int16(0))))
-        @test isstructequal(fbr, @fiber(sv{Int16}(e(0.0), 0)))
+        @test isstructequal(fbr, @fiber(svb{Int16}(e(0.0))))
+        @test isstructequal(fbr, @fiber(svb(e(0.0), Int16(0))))
+        @test isstructequal(fbr, @fiber(svb{Int16}(e(0.0), 0)))
 
         @test check_output("format_constructors_sv_e.txt", String(take!(io)))
     end
 
-    @testset "@fiber(sm(e(0))" begin
+    @testset "@fiber(sbm(e(0))" begin
         io = IOBuffer()
         arr = [0.0, 2.0, 2.0, 0.0, 3.0, 3.0]
 
-        println(io, "@fiber(sm(e(0)) constructors:")
+        println(io, "@fiber(sbm(e(0)) constructors:")
 
-        fbr = dropdefaults!(Fiber!(SparseBytemap(Element(zero(eltype(arr))))), arr)
+        fbr = dropdefaults!(Fiber!(SparseByteMap(Element(zero(eltype(arr))))), arr)
         println(io, "initialized fiber: ", fbr)
         lvl = fbr.lvl
-        @test isstructequal(fbr, Fiber(SparseBytemap(lvl.lvl, lvl.I, lvl.ptr, lvl.tbl, lvl.srt)))
-        @test isstructequal(fbr, Fiber(SparseBytemap{Int}(lvl.lvl, lvl.I, lvl.ptr, lvl.tbl, lvl.srt)))
+        @test isstructequal(fbr, Fiber(SparseByteMap(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)))
+        @test isstructequal(fbr, Fiber(SparseByteMap{Int}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)))
 
-        fbr = dropdefaults!(Fiber!(SparseBytemap{Int16}(Element(zero(eltype(arr))))), arr)
+        fbr = dropdefaults!(Fiber!(SparseByteMap{Int16}(Element(zero(eltype(arr))))), arr)
         println(io, "initialized fiber: ", fbr)
         lvl = fbr.lvl
-        @test isstructequal(fbr, Fiber(SparseBytemap{Int16}(lvl.lvl, lvl.I, lvl.ptr, lvl.tbl, lvl.srt)))
+        @test isstructequal(fbr, Fiber(SparseByteMap{Int16}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)))
 
-        fbr = Fiber!(SparseBytemap(Element(0.0), 7))
+        fbr = Fiber!(SparseByteMap(Element(0.0), 7))
         println(io, "sized fiber: ", fbr)
         lvl = fbr.lvl
-        @test isstructequal(fbr, Fiber!(SparseBytemap(Element(0.0), 7)))
-        @test isstructequal(fbr, Fiber!(SparseBytemap{Int}(Element(0.0), 7)))
-        @test isstructequal(fbr, @fiber(sm(e(0.0), 7)))
-        @test isstructequal(fbr, @fiber(sm{Int}(e(0.0), 7)))
+        @test isstructequal(fbr, Fiber!(SparseByteMap(Element(0.0), 7)))
+        @test isstructequal(fbr, Fiber!(SparseByteMap{Int}(Element(0.0), 7)))
+        @test isstructequal(fbr, @fiber(sbm(e(0.0), 7)))
+        @test isstructequal(fbr, @fiber(sbm{Int}(e(0.0), 7)))
 
-        fbr = Fiber!(SparseBytemap{Int16}(Element(0.0), 7))
+        fbr = Fiber!(SparseByteMap{Int16}(Element(0.0), 7))
         println(io, "sized fiber: ", fbr)
         lvl = fbr.lvl
-        @test isstructequal(fbr, Fiber!(SparseBytemap(Element(0.0), Int16(7))))
-        @test isstructequal(fbr, Fiber!(SparseBytemap{Int16}(Element(0.0), 7)))
-        @test isstructequal(fbr, @fiber(sm(e(0.0), Int16(7))))
-        @test isstructequal(fbr, @fiber(sm{Int16}(e(0.0), 7)))
+        @test isstructequal(fbr, Fiber!(SparseByteMap(Element(0.0), Int16(7))))
+        @test isstructequal(fbr, Fiber!(SparseByteMap{Int16}(Element(0.0), 7)))
+        @test isstructequal(fbr, @fiber(sbm(e(0.0), Int16(7))))
+        @test isstructequal(fbr, @fiber(sbm{Int16}(e(0.0), 7)))
 
-        fbr = Fiber!(SparseBytemap(Element(0.0)))
+        fbr = Fiber!(SparseByteMap(Element(0.0)))
         println(io, "empty fiber: ", fbr)
         lvl = fbr.lvl
-        @test isstructequal(fbr, Fiber!(SparseBytemap(Element(0.0))))
-        @test isstructequal(fbr, Fiber!(SparseBytemap{Int}(Element(0.0))))
-        @test isstructequal(fbr, Fiber!(SparseBytemap(Element(0.0), 0)))
-        @test isstructequal(fbr, Fiber!(SparseBytemap{Int}(Element(0.0), 0)))
-        @test isstructequal(fbr, @fiber(sm(e(0.0))))
-        @test isstructequal(fbr, @fiber(sm{Int}(e(0.0))))
-        @test isstructequal(fbr, @fiber(sm(e(0.0), 0)))
-        @test isstructequal(fbr, @fiber(sm{Int}(e(0.0), 0)))
+        @test isstructequal(fbr, Fiber!(SparseByteMap(Element(0.0))))
+        @test isstructequal(fbr, Fiber!(SparseByteMap{Int}(Element(0.0))))
+        @test isstructequal(fbr, Fiber!(SparseByteMap(Element(0.0), 0)))
+        @test isstructequal(fbr, Fiber!(SparseByteMap{Int}(Element(0.0), 0)))
+        @test isstructequal(fbr, @fiber(sbm(e(0.0))))
+        @test isstructequal(fbr, @fiber(sbm{Int}(e(0.0))))
+        @test isstructequal(fbr, @fiber(sbm(e(0.0), 0)))
+        @test isstructequal(fbr, @fiber(sbm{Int}(e(0.0), 0)))
 
-        fbr = Fiber!(SparseBytemap{Int16}(Element(0.0)))
+        fbr = Fiber!(SparseByteMap{Int16}(Element(0.0)))
         println(io, "empty fiber: ", fbr)
         lvl = fbr.lvl
-        @test isstructequal(fbr, Fiber!(SparseBytemap{Int16}(Element(0.0))))
-        @test isstructequal(fbr, Fiber!(SparseBytemap(Element(0.0), Int16(0))))
-        @test isstructequal(fbr, Fiber!(SparseBytemap{Int16}(Element(0.0), 0)))
-        @test isstructequal(fbr, @fiber(sm{Int16}(e(0.0))))
-        @test isstructequal(fbr, @fiber(sm(e(0.0), Int16(0))))
-        @test isstructequal(fbr, @fiber(sm{Int16}(e(0.0), 0)))
+        @test isstructequal(fbr, Fiber!(SparseByteMap{Int16}(Element(0.0))))
+        @test isstructequal(fbr, Fiber!(SparseByteMap(Element(0.0), Int16(0))))
+        @test isstructequal(fbr, Fiber!(SparseByteMap{Int16}(Element(0.0), 0)))
+        @test isstructequal(fbr, @fiber(sbm{Int16}(e(0.0))))
+        @test isstructequal(fbr, @fiber(sbm(e(0.0), Int16(0))))
+        @test isstructequal(fbr, @fiber(sbm{Int16}(e(0.0), 0)))
 
         @test check_output("format_constructors_sm_e.txt", String(take!(io)))
     end
@@ -184,13 +184,13 @@
         fbr = dropdefaults!(Fiber!(SparseCOO{1}(Element(zero(eltype(arr))))), arr)
         println(io, "initialized fiber: ", fbr)
         lvl = fbr.lvl
-        @test isstructequal(fbr, Fiber(SparseCOO{1}(lvl.lvl, lvl.I, lvl.tbl, lvl.ptr)))
-        @test isstructequal(fbr, Fiber(SparseCOO{1, Tuple{Int}}(lvl.lvl, lvl.I, lvl.tbl, lvl.ptr)))
+        @test isstructequal(fbr, Fiber(SparseCOO{1}(lvl.lvl, lvl.shape, lvl.tbl, lvl.ptr)))
+        @test isstructequal(fbr, Fiber(SparseCOO{1, Tuple{Int}}(lvl.lvl, lvl.shape, lvl.tbl, lvl.ptr)))
 
         fbr = dropdefaults!(Fiber!(SparseCOO{1, Tuple{Int16}}(Element(zero(eltype(arr))))), arr)
         println(io, "initialized fiber: ", fbr)
         lvl = fbr.lvl
-        @test isstructequal(fbr, Fiber(SparseCOO{1, Tuple{Int16}}(lvl.lvl, lvl.I, lvl.tbl, lvl.ptr)))
+        @test isstructequal(fbr, Fiber(SparseCOO{1, Tuple{Int16}}(lvl.lvl, lvl.shape, lvl.tbl, lvl.ptr)))
 
         fbr = Fiber!(SparseCOO{1}(Element(0.0), (7,)))
         println(io, "sized fiber: ", fbr)
@@ -244,13 +244,13 @@
         fbr = dropdefaults!(Fiber!(SparseCOO{2}(Element(zero(eltype(arr))))), arr)
         println(io, "initialized fiber: ", fbr)
         lvl = fbr.lvl
-        @test isstructequal(fbr, Fiber(SparseCOO{2}(lvl.lvl, lvl.I, lvl.tbl, lvl.ptr)))
-        @test isstructequal(fbr, Fiber(SparseCOO{2, Tuple{Int, Int}}(lvl.lvl, lvl.I, lvl.tbl, lvl.ptr)))
+        @test isstructequal(fbr, Fiber(SparseCOO{2}(lvl.lvl, lvl.shape, lvl.tbl, lvl.ptr)))
+        @test isstructequal(fbr, Fiber(SparseCOO{2, Tuple{Int, Int}}(lvl.lvl, lvl.shape, lvl.tbl, lvl.ptr)))
 
         fbr = dropdefaults!(Fiber!(SparseCOO{2, Tuple{Int16, Int16}}(Element(zero(eltype(arr))))), arr)
         println(io, "initialized fiber: ", fbr)
         lvl = fbr.lvl
-        @test isstructequal(fbr, Fiber(SparseCOO{2, Tuple{Int16, Int16}}(lvl.lvl, lvl.I, lvl.tbl, lvl.ptr)))
+        @test isstructequal(fbr, Fiber(SparseCOO{2, Tuple{Int16, Int16}}(lvl.lvl, lvl.shape, lvl.tbl, lvl.ptr)))
 
         fbr = Fiber!(SparseCOO{2}(Element(0.0), (3, 7)))
         println(io, "sized fiber: ", fbr)
@@ -302,13 +302,13 @@
         fbr = dropdefaults!(Fiber!(SparseHash{1}(Element(zero(eltype(arr))))), arr)
         println(io, "initialized fiber: ", fbr)
         lvl = fbr.lvl
-        @test isstructequal(fbr, Fiber(SparseHash{1}(lvl.lvl, lvl.I, lvl.tbl, lvl.ptr, lvl.srt)))
-        @test isstructequal(fbr, Fiber(SparseHash{1, Tuple{Int}}(lvl.lvl, lvl.I, lvl.tbl, lvl.ptr, lvl.srt)))
+        @test isstructequal(fbr, Fiber(SparseHash{1}(lvl.lvl, lvl.shape, lvl.tbl, lvl.ptr, lvl.srt)))
+        @test isstructequal(fbr, Fiber(SparseHash{1, Tuple{Int}}(lvl.lvl, lvl.shape, lvl.tbl, lvl.ptr, lvl.srt)))
 
         fbr = dropdefaults!(Fiber!(SparseHash{1, Tuple{Int16}}(Element(zero(eltype(arr))))), arr)
         println(io, "initialized fiber: ", fbr)
         lvl = fbr.lvl
-        @test isstructequal(fbr, Fiber(SparseHash{1, Tuple{Int16}}(lvl.lvl, lvl.I, lvl.tbl, lvl.ptr, lvl.srt)))
+        @test isstructequal(fbr, Fiber(SparseHash{1, Tuple{Int16}}(lvl.lvl, lvl.shape, lvl.tbl, lvl.ptr, lvl.srt)))
 
         fbr = Fiber!(SparseHash{1}(Element(0.0), (7,)))
         println(io, "sized fiber: ", fbr)
@@ -362,13 +362,13 @@
         fbr = dropdefaults!(Fiber!(SparseHash{2}(Element(zero(eltype(arr))))), arr)
         println(io, "initialized fiber: ", fbr)
         lvl = fbr.lvl
-        @test isstructequal(fbr, Fiber(SparseHash{2}(lvl.lvl, lvl.I, lvl.tbl, lvl.ptr, lvl.srt)))
-        @test isstructequal(fbr, Fiber(SparseHash{2, Tuple{Int, Int}}(lvl.lvl, lvl.I, lvl.tbl, lvl.ptr, lvl.srt)))
+        @test isstructequal(fbr, Fiber(SparseHash{2}(lvl.lvl, lvl.shape, lvl.tbl, lvl.ptr, lvl.srt)))
+        @test isstructequal(fbr, Fiber(SparseHash{2, Tuple{Int, Int}}(lvl.lvl, lvl.shape, lvl.tbl, lvl.ptr, lvl.srt)))
 
         fbr = dropdefaults!(Fiber!(SparseHash{2, Tuple{Int16, Int16}}(Element(zero(eltype(arr))))), arr)
         println(io, "initialized fiber: ", fbr)
         lvl = fbr.lvl
-        @test isstructequal(fbr, Fiber(SparseHash{2, Tuple{Int16, Int16}}(lvl.lvl, lvl.I, lvl.tbl, lvl.ptr, lvl.srt)))
+        @test isstructequal(fbr, Fiber(SparseHash{2, Tuple{Int16, Int16}}(lvl.lvl, lvl.shape, lvl.tbl, lvl.ptr, lvl.srt)))
 
         fbr = Fiber!(SparseHash{2}(Element(0.0), (3, 7)))
         println(io, "sized fiber: ", fbr)

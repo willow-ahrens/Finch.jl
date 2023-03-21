@@ -7,16 +7,6 @@ end
 
 Base.show(io::IO, node::LiteralInstance{val}) where {val} = print(io, "literal_instance(", val, ")")
 
-struct PassInstance{Tnss<:Tuple} <: FinchNodeInstance
-    tnss::Tnss
-end
-
-Base.:(==)(a::PassInstance, b::PassInstance) = Set([a.tnss...]) == Set([b.tnss...])
-
-@inline pass_instance(tnss...) = PassInstance(tnss)
-
-Base.show(io::IO, node::PassInstance) = (print(io, "pass_instance("); join(node.tnss, ","); print(io, ")"))
-
 struct IndexInstance{name} <: FinchNodeInstance end
 
 @inline index_instance(name) = IndexInstance{name}()
@@ -32,28 +22,51 @@ Base.:(==)(a::ProtocolInstance, b::ProtocolInstance) = a.idx == b.idx && a.mode 
 
 @inline protocol_instance(idx, mode) = ProtocolInstance(idx, mode)
 
-Base.show(io::IO, node::ProtocolInstance) = print(io, "protocol_instance(", node.name, ")")
-
-struct WithInstance{Cons, Prod} <: FinchNodeInstance
-	cons::Cons
-	prod::Prod
+struct DeclareInstance{Tns, Init} <: FinchNodeInstance
+	tns::Tns
+	init::Init
 end
+Base.:(==)(a::DeclareInstance, b::DeclareInstance) = a.tns == b.tns && a.init == b.init
 
-Base.:(==)(a::WithInstance, b::WithInstance) = a.cons == b.cons && a.prod == b.prod
+@inline declare_instance(tns, init) = DeclareInstance(tns, init)
 
-@inline with_instance(cons, prod) = WithInstance(cons, prod)
+Base.show(io::IO, node::DeclareInstance) = print(io, "declare_instance(", node.tns, node.init, ")")
 
-Base.show(io::IO, node::WithInstance) = print(io, "with_instance(", node.cons, ", ", node.prod, ")")
+struct FreezeInstance{Tns} <: FinchNodeInstance
+	tns::Tns
+end
+Base.:(==)(a::FreezeInstance, b::FreezeInstance) = a.tns == b.tns
 
-struct MultiInstance{Bodies} <: FinchNodeInstance
+@inline freeze_instance(tns) = FreezeInstance(tns)
+
+Base.show(io::IO, node::FreezeInstance) = print(io, "freeze_instance(", node.tns, ")")
+
+struct ThawInstance{Tns} <: FinchNodeInstance
+	tns::Tns
+end
+Base.:(==)(a::ThawInstance, b::ThawInstance) = a.tns == b.tns
+
+@inline thaw_instance(tns) = ThawInstance(tns)
+
+Base.show(io::IO, node::ThawInstance) = print(io, "thaw_instance(", node.tns, ")")
+
+struct ForgetInstance{Tns} <: FinchNodeInstance
+	tns::Tns
+end
+Base.:(==)(a::ForgetInstance, b::ForgetInstance) = a.tns == b.tns
+
+@inline forget_instance(tns) = ForgetInstance(tns)
+
+Base.show(io::IO, node::ForgetInstance) = print(io, "forget_instance(", node.tns, ")")
+
+struct SequenceInstance{Bodies} <: FinchNodeInstance
     bodies::Bodies
 end
+Base.:(==)(a::SequenceInstance, b::SequenceInstance) = all(a.bodies .== b.bodies)
 
-Base.:(==)(a::MultiInstance, b::MultiInstance) = all(a.bodies .== b.bodies)
+sequence_instance(bodies...) = SequenceInstance(bodies)
 
-multi_instance(bodies...) = MultiInstance(bodies)
-
-Base.show(io::IO, node::MultiInstance) = (print(io, "multi_instance("); join(node.bodies, ", "); println(")"))
+Base.show(io::IO, node::SequenceInstance) = (print(io, "sequence_instance("); join(io, node.bodies, ", "); println(io, ")"))
 
 struct LoopInstance{Idx, Body} <: FinchNodeInstance
 	idx::Idx
@@ -102,7 +115,7 @@ Base.:(==)(a::CallInstance, b::CallInstance) = a.op == b.op && a.args == b.args
 
 @inline call_instance(op, args...) = CallInstance(op, args)
 
-Base.show(io::IO, node::CallInstance) = print(io, "call_instance(", node.op, ", ", node.args, ")")
+Base.show(io::IO, node::CallInstance) = print(io, "call_instance(", node.op, ", ", join(node.args, ", "), ")")
 
 struct AccessInstance{Tns, Mode, Idxs} <: FinchNodeInstance
     tns::Tns
@@ -112,7 +125,7 @@ end
 
 Base.:(==)(a::AccessInstance, b::AccessInstance) = a.tns == b.tns && a.mode == b.mode && a.idxs == b.idxs
 
-Base.show(io::IO, node::AccessInstance) = print(io, "access_instance(", node.tns, ", ", node.mode, ", ", node.idxs, ")")
+Base.show(io::IO, node::AccessInstance) = print(io, "access_instance(", node.tns, ", ", node.mode, ", ", join(node.idxs, ", "), ")")
 
 @inline access_instance(tns, mode, idxs...) = AccessInstance(tns, mode, idxs)
 
@@ -162,16 +175,16 @@ Base.:(==)(a::CreateInstance, b::CreateInstance) = true
 
 Base.show(io::IO, node::CreateInstance) = print(io, "create_instance()")
 
-@inline index_leaf_instance(arg::Type) = literal_instance(arg)
-@inline index_leaf_instance(arg::Function) = literal_instance(arg)
-@inline index_leaf_instance(arg::FinchNodeInstance) = arg
-@inline index_leaf_instance(arg) = arg #TODO ValueInstance
+@inline finch_leaf_instance(arg::Type) = literal_instance(arg)
+@inline finch_leaf_instance(arg::Function) = literal_instance(arg)
+@inline finch_leaf_instance(arg::FinchNodeInstance) = arg
+@inline finch_leaf_instance(arg) = arg #TODO ValueInstance
 
-@inline index_leaf(arg::Type) = literal(arg)
-@inline index_leaf(arg::Function) = literal(arg)
-@inline index_leaf(arg::FinchNode) = arg
-@inline index_leaf(arg) = isliteral(arg) ? literal(arg) : virtual(arg)
+@inline finch_leaf(arg::Type) = literal(arg)
+@inline finch_leaf(arg::Function) = literal(arg)
+@inline finch_leaf(arg::FinchNode) = arg
+@inline finch_leaf(arg) = isliteral(arg) ? literal(arg) : virtual(arg)
 
-Base.convert(::Type{FinchNode}, x) = index_leaf(x)
+Base.convert(::Type{FinchNode}, x) = finch_leaf(x)
 Base.convert(::Type{FinchNode}, x::FinchNode) = x
 Base.convert(::Type{FinchNode}, x::Symbol) = error()

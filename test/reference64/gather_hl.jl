@@ -3,7 +3,6 @@ begin
     B_val = B.val
     A_lvl = ex.rhs.tns.tns.lvl
     A_lvl_2 = A_lvl.lvl
-    B_val = 0.0
     A_lvl_q = A_lvl.ptr[1]
     A_lvl_q_stop = A_lvl.ptr[1 + 1]
     if A_lvl_q < A_lvl_q_stop
@@ -19,8 +18,8 @@ begin
     if phase_stop >= s_start
         s_2 = s
         s = s_start
-        while A_lvl_q + 1 < A_lvl_q_stop && A_lvl.idx[A_lvl_q] < s_start
-            A_lvl_q += 1
+        if A_lvl.idx[A_lvl_q] < s_start
+            A_lvl_q = scansearch(A_lvl.idx, s_start, A_lvl_q, A_lvl_q_stop - 1)
         end
         while s <= phase_stop
             s_start_2 = s
