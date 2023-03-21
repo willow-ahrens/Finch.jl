@@ -140,7 +140,7 @@ function fsprand_helper(r::AbstractRNG, shape::Tuple, p::AbstractFloat)
     I = map(shape -> Vector{typeof(shape)}(), shape)
     for i in randsubseq(r, CartesianIndices(shape), p)
         for r = 1:length(shape)
-            push!(I[end- r + 1], i[r])
+            push!(I[r], i[r])
         end
     end
     I
