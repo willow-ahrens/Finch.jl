@@ -142,7 +142,7 @@ end
 is_laminable_updater(lvl::VirtualSparseTriangleLevel, ctx, ::Union{Nothing, Laminate, Extrude}, protos...) =
     is_laminable_updater(lvl.lvl, ctx, protos...)
 
-get_reader(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, ::Union{Nothing, Follow}, protos...) = get_readerupdater_triangular_dense_helper(fbr, ctx, get_reader, VirtualSubFiber, protos...)
+get_reader(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, ::Union{Nothing, Follow}, ::Union{Nothing, Follow}, protos...) = get_readerupdater_triangular_dense_helper(fbr, ctx, get_reader, VirtualSubFiber, protos...)
 get_updater(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, ::Union{Nothing, Laminate, Extrude}, protos...) = get_readerupdater_triangular_dense_helper(fbr, ctx, get_updater, VirtualSubFiber, protos...)
 get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseTriangleLevel}, ctx, ::Union{Nothing, Laminate, Extrude}, protos...) = get_readerupdater_triangular_dense_helper(fbr, ctx, get_updater, (lvl, pos) -> VirtualTrackedSubFiber(lvl, pos, fbr.dirty), protos...)
 function get_readerupdater_triangular_dense_helper(fbr, ctx, get_readerupdater, subfiber_ctr, protos...)
@@ -161,7 +161,7 @@ function get_readerupdater_triangular_dense_helper(fbr, ctx, get_readerupdater, 
             val = virtual_level_default(lvl),
             body = (j) -> Thunk(
                 preamble = quote
-                    $q = ($(ctx(j)) * ($(ctx(j)) - $(Ti(1))) >>> 0x01)
+                    $q = (($(ctx(j)) * ($(ctx(j)) - $(Ti(1)))) >>> 0x01)
                 end,
                 body = Furlable(
                     val = virtual_level_default(lvl),
