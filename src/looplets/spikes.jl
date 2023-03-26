@@ -24,7 +24,8 @@ combine_style(a::SpikeStyle, b::SpikeStyle) = SpikeStyle()
 
 function (ctx::LowerJulia)(root::FinchNode, ::SpikeStyle)
     if root.kind === chunk
-        root_body = SpikeBodyVisitor(ctx, root.idx, root.ext, Extent(spike_body_getstop(getstop(root.ext), ctx), getstop(root.ext)))(root.body)
+        body_ext = Extent(getstart(root.ext), call(-, getstop(root.ext), 1))
+        root_body = SpikeBodyVisitor(ctx, root.idx, root.ext, body_ext)(root.body)
         if extent(root.ext) == 1
             body_expr = quote end
         else
@@ -32,16 +33,17 @@ function (ctx::LowerJulia)(root::FinchNode, ::SpikeStyle)
             body_expr = contain(ctx) do ctx_2
                 (ctx_2)(chunk(
                     root.idx,
-                    spike_body_range(root.ext, ctx),
+                    body_ext,
                     root_body,
                 ))
             end
         end
         root_tail = SpikeTailVisitor(ctx, root.idx, getstop(root.ext))(root.body)
+        tail_ext = Extent(getstop(root.ext), getstop(root.ext))
         tail_expr = contain(ctx) do ctx_2
             (ctx_2)(chunk(
                 root.idx,
-                Extent(start = getstop(root.ext), stop = getstop(root.ext), lower = 1, upper = 1),
+                tail_ext,
                 root_tail,
             ))
         end
@@ -82,10 +84,6 @@ end
 
 (ctx::SpikeBodyVisitor)(node::Shift) = Shift(SpikeBodyVisitor(;kwfields(ctx)..., ext = shiftdim(ctx.ext, call(-, node.delta)), ext_2 = shiftdim(ctx.ext_2, call(-, node.delta)))(node.body), node.delta)
 
-spike_body_getstop(stop, ctx) = :($(ctx(stop)) - 1)
-spike_body_getstop(stop::Integer, ctx) = stop - 1
-
-spike_body_range(ext, ctx) = Extent(getstart(ext), spike_body_getstop(getstop(ext), ctx))
 
 @kwdef struct SpikeTailVisitor
     ctx
