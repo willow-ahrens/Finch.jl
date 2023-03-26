@@ -308,14 +308,14 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualRepeatRLELevel}, ctx, ::
             end,
             body = AcceptRun(
                 val = D,
-                body = (ctx, start, stop) -> Thunk(
+                body = (ctx, ext) -> Thunk(
                     preamble = quote
-                        if $my_v_prev != $D && ($my_i_prev + 1) < $(ctx(start))
+                        if $my_v_prev != $D && ($my_i_prev + 1) < $(ctx(getstart(ext)))
                             $(lvl.dirty) = true
                             $(record_run(ctx, my_i_prev, my_v_prev))
                             $my_v_prev = $D
                         end
-                        $my_i_prev = $(ctx(start)) - $(Ti(1))
+                        $my_i_prev = $(ctx(getstart(ext))) - $(Ti(1))
                         $my_v = $D
                     end,
                     body = Simplify(Fill(value(my_v, lvl.Tv), D)),
@@ -324,7 +324,7 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualRepeatRLELevel}, ctx, ::
                             $(record_run(ctx, my_i_prev, my_v_prev))
                         end
                         $my_v_prev = $my_v
-                        $my_i_prev = $(ctx(stop))
+                        $my_i_prev = $(ctx(getstop(ext)))
                     end
                 )
             ),

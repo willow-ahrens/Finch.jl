@@ -145,10 +145,10 @@ function (ctx::AcceptRunVisitor)(node::FinchNode)
     end
 end
 
-unchunk(node::AcceptRun, ctx::AcceptRunVisitor) = node.body(ctx.ctx, getstart(ctx.ext), getstop(ctx.ext))
+unchunk(node::AcceptRun, ctx::AcceptRunVisitor) = node.body(ctx.ctx, ctx.ext)
 unchunk(node::Shift, ctx::AcceptRunVisitor) = unchunk(node.body, AcceptRunVisitor(;kwfields(ctx)..., ext = shiftdim(ctx.ext, call(-, node.delta))))
 
-unchunk(node::AcceptRun, ctx::ForLoopVisitor) = node.body(ctx.ctx, ctx.val, ctx.val)
+unchunk(node::AcceptRun, ctx::ForLoopVisitor) = node.body(ctx.ctx, Extent(ctx.val, ctx.val))
 
 supports_shift(::RunStyle) = true
 supports_shift(::AcceptRunStyle) = true

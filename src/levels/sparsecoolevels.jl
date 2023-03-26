@@ -267,7 +267,7 @@ function get_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, R, start, stop, 
             body = Pipeline([
                 Phase(
                     stride = (ctx, idx, ext) -> value(my_i_stop),
-                    body = (start, stop) -> Stepper(
+                    body = (ctx, ext) -> Stepper(
                         seek = (ctx, ext) -> quote
                             if $(lvl.ex).tbl[$R][$my_q] < $(ctx(getstart(ext)))
                                 $my_q = scansearch($(lvl.ex).tbl[$R], $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
