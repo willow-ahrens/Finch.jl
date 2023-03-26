@@ -233,7 +233,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Union{No
             body = Pipeline([
                 Phase(
                     stride = (ctx, idx, ext) -> value(my_i1),
-                    body = (start, step) -> Stepper(
+                    body = (ctx, ext) -> Stepper(
                         seek = (ctx, ext) -> quote
                             if $(lvl.ex).idx[$my_r] < $(ctx(getstart(ext)))
                                 $my_r = scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_r, $my_r_stop - 1)
@@ -252,10 +252,10 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Union{No
                                     body = Pipeline([
                                         Phase(
                                             stride = (ctx, idx, ext) -> value(my_i_start),
-                                            body = (start, step) -> Run(Simplify(Fill(virtual_level_default(lvl)))),
+                                            body = (ctx, ext) -> Run(Simplify(Fill(virtual_level_default(lvl)))),
                                         ),
                                         Phase(
-                                            body = (start, step) -> Lookup(
+                                            body = (ctx, ext) -> Lookup(
                                                 body = (i) -> Thunk(
                                                     preamble = quote
                                                         $my_q = $my_q_ofs + $(ctx(i))
@@ -274,7 +274,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Union{No
                     )
                 ),
                 Phase(
-                    body = (start, step) -> Run(Simplify(Fill(virtual_level_default(lvl))))
+                    body = (ctx, ext) -> Run(Simplify(Fill(virtual_level_default(lvl))))
                 )
             ])
         )
@@ -313,7 +313,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Gallop, 
             body = Pipeline([
                 Phase(
                     stride = (ctx, idx, ext) -> value(my_i1),
-                    body = (start, step) -> Jumper(
+                    body = (ctx, ext) -> Jumper(
                         body = Thunk(
                             preamble = quote
                                 $my_i = $(lvl.ex).idx[$my_r]
@@ -336,10 +336,10 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Gallop, 
                                         body = Pipeline([
                                             Phase(
                                                 stride = (ctx, idx, ext) -> value(my_i_start),
-                                                body = (start, step) -> Run(Simplify(Fill(virtual_level_default(lvl)))),
+                                                body = (ctx, ext) -> Run(Simplify(Fill(virtual_level_default(lvl)))),
                                             ),
                                             Phase(
-                                                body = (start, step) -> Lookup(
+                                                body = (ctx, ext) -> Lookup(
                                                     body = (i) -> Thunk(
                                                         preamble = quote
                                                             $my_q = $my_q_ofs + $(ctx(i))
@@ -372,10 +372,10 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Gallop, 
                                                     body = Pipeline([
                                                         Phase(
                                                             stride = (ctx, idx, ext) -> value(my_i_start),
-                                                            body = (start, step) -> Run(Simplify(Fill(virtual_level_default(lvl)))),
+                                                            body = (ctx, ext) -> Run(Simplify(Fill(virtual_level_default(lvl)))),
                                                         ),
                                                         Phase(
-                                                            body = (start, step) -> Lookup(
+                                                            body = (ctx, ext) -> Lookup(
                                                                 body = (i) -> Thunk(
                                                                     preamble = quote
                                                                         $my_q = $my_q_ofs + $(ctx(i))
@@ -398,7 +398,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Gallop, 
                     )
                 ),
                 Phase(
-                    body = (start, step) -> Run(Simplify(Fill(virtual_level_default(lvl))))
+                    body = (ctx, ext) -> Run(Simplify(Fill(virtual_level_default(lvl))))
                 )
             ])
         )

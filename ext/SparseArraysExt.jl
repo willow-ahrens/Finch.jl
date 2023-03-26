@@ -84,7 +84,7 @@ function Finch.get_reader(arr::VirtualSparseMatrixCSC, ctx::LowerJulia, ::Union{
                     body = Pipeline([
                         Phase(
                             stride = (ctx, idx, ext) -> value(my_i1),
-                            body = (start, step) -> Stepper(
+                            body = (ctx, ext) -> Stepper(
                                 seek = (ctx, ext) -> quote
                                     if $(arr.ex).rowval[$my_q] < $(ctx(getstart(ext)))
                                         $my_q = Finch.scansearch($(arr.ex).rowval, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
@@ -113,7 +113,7 @@ function Finch.get_reader(arr::VirtualSparseMatrixCSC, ctx::LowerJulia, ::Union{
                             )
                         ),
                         Phase(
-                            body = (start, step) -> Run(Simplify(Fill(zero(arr.Tv))))
+                            body = (ctx, ext) -> Run(Simplify(Fill(zero(arr.Tv))))
                         )
                     ])
                 )
@@ -183,7 +183,7 @@ function Finch.get_reader(arr::VirtualSparseVector, ctx::LowerJulia, ::Union{Not
             body = Pipeline([
                 Phase(
                     stride = (ctx, idx, ext) -> value(my_i1),
-                    body = (start, step) -> Stepper(
+                    body = (ctx, ext) -> Stepper(
                         seek = (ctx, ext) -> quote
                             if $(arr.ex).nzind[$my_q] < $(ctx(getstart(ext)))
                                 $my_q = scansearch($(arr.ex).nzind, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
@@ -212,7 +212,7 @@ function Finch.get_reader(arr::VirtualSparseVector, ctx::LowerJulia, ::Union{Not
                     )
                 ),
                 Phase(
-                    body = (start, step) -> Run(Simplify(Fill(zero(arr.Tv))))
+                    body = (ctx, ext) -> Run(Simplify(Fill(zero(arr.Tv))))
                 )
             ])
         )

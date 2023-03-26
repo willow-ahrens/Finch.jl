@@ -237,7 +237,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::Union{N
             body = Pipeline([
                 Phase(
                     stride = (ctx, idx, ext) -> value(my_i1),
-                    body = (start, step) -> Stepper(
+                    body = (ctx, ext) -> Stepper(
                         seek = (ctx, ext) -> quote
                             if $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
                                 $my_q = scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
@@ -261,7 +261,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::Union{N
                     )
                 ),
                 Phase(
-                    body = (start, step) -> Run(Simplify(Fill(virtual_level_default(lvl))))
+                    body = (ctx, ext) -> Run(Simplify(Fill(virtual_level_default(lvl))))
                 )
             ])
         )
@@ -295,7 +295,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::Gallop,
             body = Pipeline([
                 Phase(
                     stride = (ctx, idx, ext) -> value(my_i1),
-                    body = (start, step) -> Jumper(
+                    body = (ctx, ext) -> Jumper(
                         body = Thunk(
                             body = Jump(
                                 seek = (ctx, ext) -> quote
@@ -343,7 +343,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::Gallop,
                     )
                 ),
                 Phase(
-                    body = (start, step) -> Run(Simplify(Fill(virtual_level_default(lvl))))
+                    body = (ctx, ext) -> Run(Simplify(Fill(virtual_level_default(lvl))))
                 )
             ])
         )

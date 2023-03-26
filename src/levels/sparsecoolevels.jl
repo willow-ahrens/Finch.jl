@@ -313,7 +313,7 @@ function get_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, R, start, stop, 
                     )
                 ),
                 Phase(
-                    body = (start, step) -> Run(Simplify(Fill(virtual_level_default(lvl))))
+                    body = (ctx, ext) -> Run(Simplify(Fill(virtual_level_default(lvl))))
                 )
             ])
         )

@@ -33,14 +33,14 @@ function get_reader(::VirtualPermit, ctx, proto_idx)
         fuse = (tns, ctx, idx, ext) -> Pipeline([
             Phase(
                 stride = (ctx, idx, ext_2) -> call(-, getstart(ext), 1),
-                body = (start, step) -> Run(Simplify(Fill(literal(missing)))),
+                body = (ctx, ext) -> Run(Simplify(Fill(literal(missing)))),
             ),
             Phase(
                 stride = (ctx, idx, ext_2) -> getstop(ext),
-                body = (start, step) -> truncate(tns, ctx, ext, Extent(start, step))
+                body = (ctx, ext_2) -> truncate(tns, ctx, ext, ext_2)
             ),
             Phase(
-                body = (start, step) -> Run(Simplify(Fill(literal(missing)))),
+                body = (ctx, ext_2) -> Run(Simplify(Fill(literal(missing)))),
             )
         ])
     )
@@ -86,14 +86,14 @@ function get_reader(::VirtualOffset, ctx, proto_delta, proto_idx)
                 fuse = (tns, ctx, idx, ext) -> Pipeline([
                     Phase(
                         stride = (ctx, idx, ext_2) -> call(+, getstart(ext), delta, -1),
-                        body = (start, step) -> Run(Simplify(Fill(literal(missing)))),
+                        body = (ctx, ext_2) -> Run(Simplify(Fill(literal(missing)))),
                     ),
                     Phase(
                         stride = (ctx, idx, ext_2) -> call(+, getstop(ext), delta),
-                        body = (start, step) -> truncate(Shift(tns, delta), ctx, ext, Extent(start, step))
+                        body = (ctx, ext_2) -> truncate(Shift(tns, delta), ctx, ext, ext_2)
                     ),
                     Phase(
-                        body = (start, step) -> Run(Simplify(Fill(literal(missing)))),
+                        body = (ctx, ext_2) -> Run(Simplify(Fill(literal(missing)))),
                     )
                 ])
             )
@@ -142,14 +142,14 @@ function get_reader(arr::VirtualStaticOffset, ctx, proto_idx)
         fuse = (tns, ctx, idx, ext) -> Pipeline([
             Phase(
                 stride = (ctx, idx, ext_2) -> call(+, getstart(ext), arr.delta, -1),
-                body = (start, step) -> Run(Simplify(Fill(literal(missing)))),
+                body = (ctx, ext_2) -> Run(Simplify(Fill(literal(missing)))),
             ),
             Phase(
                 stride = (ctx, idx, ext_2) -> call(+, getstop(ext), arr.delta),
-                body = (start, step) -> truncate(Shift(tns, arr.delta), ctx, ext, Extent(start, step))
+                body = (ctx, ext_2) -> truncate(Shift(tns, arr.delta), ctx, ext, ext_2)
             ),
             Phase(
-                body = (start, step) -> Run(Simplify(Fill(literal(missing)))),
+                body = (ctx, ext_2) -> Run(Simplify(Fill(literal(missing)))),
             )
         ])
     )

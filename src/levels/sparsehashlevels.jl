@@ -341,7 +341,7 @@ function get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, R, start,
                     )
                 ),
                 Phase(
-                    body = (start, step) -> Run(Simplify(Fill(virtual_level_default(lvl))))
+                    body = (ctx, ext) -> Run(Simplify(Fill(virtual_level_default(lvl))))
                 )
             ])
         )

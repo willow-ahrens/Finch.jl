@@ -265,7 +265,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Unio
             body = Pipeline([
                 Phase(
                     stride = (ctx, idx, ext) -> value(my_i_stop),
-                    body = (start, step) -> Stepper(
+                    body = (ctx, ext) -> Stepper(
                         seek = (ctx, ext) -> quote
                             while $my_r + $(Tp(1)) < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext)))
                                 $my_r += $(Tp(1))
@@ -294,7 +294,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Unio
                     )
                 ),
                 Phase(
-                    body = (start, step) -> Run(Simplify(Fill(virtual_level_default(lvl))))
+                    body = (ctx, ext) -> Run(Simplify(Fill(virtual_level_default(lvl))))
                 )
             ])
         )
@@ -329,7 +329,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Gall
             body = Pipeline([
                 Phase(
                     stride = (ctx, idx, ext) -> value(my_i_stop),
-                    body = (start, step) -> Jumper(
+                    body = (ctx, ext) -> Jumper(
                         body = Thunk(
                             body = Jump(
                                 seek = (ctx, ext) -> quote
@@ -387,7 +387,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Gall
                     )
                 ),
                 Phase(
-                    body = (start, step) -> Run(Simplify(Fill(virtual_level_default(lvl))))
+                    body = (ctx, ext) -> Run(Simplify(Fill(virtual_level_default(lvl))))
                 )
             ])
         )

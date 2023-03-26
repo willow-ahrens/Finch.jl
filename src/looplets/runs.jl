@@ -106,7 +106,7 @@ function (ctx::LowerJulia)(root::FinchNode, ::AcceptRunStyle)
             return ctx(body)
         end
     elseif root.kind === sequence 
-        quote end#TODO this shouldn't need to be specified
+        quote end #TODO this shouldn't need to be specified
     else
         error("unimplemented")
     end

@@ -62,7 +62,7 @@ function (ctx::PhaseBodyVisitor)(node::FinchNode)
     end
 end
 
-(ctx::PhaseBodyVisitor)(node::Phase) = node.body(getstart(ctx.ext_2), getstop(ctx.ext_2))
+(ctx::PhaseBodyVisitor)(node::Phase) = node.body(ctx.ctx, ctx.ext_2)
 (ctx::PhaseBodyVisitor)(node::Spike) = truncate(node, ctx.ctx, ctx.ext, ctx.ext_2) #TODO This should be called on everything
 
 (ctx::PhaseBodyVisitor)(node::Shift) = Shift(PhaseBodyVisitor(ctx.ctx, ctx.idx, shiftdim(ctx.ext, call(-, node.delta)), shiftdim(ctx.ext_2, call(-, node.delta)))(node.body), node.delta)
