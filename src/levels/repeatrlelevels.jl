@@ -221,7 +221,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, ::Union{No
 
     Furlable(
         size = virtual_level_size(lvl, ctx),
-        body = (ctx, idx, ext) -> Thunk(
+        body = (ctx, ext) -> Thunk(
             preamble = (quote
                 $my_q = $(lvl.ex).ptr[$(ctx(pos))]
                 $my_q_stop = $(lvl.ex).ptr[$(ctx(pos)) + $(Tp(1))]
@@ -245,11 +245,11 @@ function get_reader(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, ::Union{No
                         $my_i = $(lvl.ex).idx[$my_q]
                     ),
                     body = Step(
-                        stride = (ctx, idx, ext) -> value(my_i),
+                        stride = (ctx, ext) -> value(my_i),
                         chunk = Run(
                             body = Simplify(Fill(value(:($(lvl.ex).val[$my_q]), lvl.Tv))) #TODO Flesh out fill to assert ndims and handle writes
                         ),
-                        next = (ctx, idx, ext) -> quote
+                        next = (ctx, ext) -> quote
                             $my_q += $(Tp(1))
                         end
                     )
@@ -300,7 +300,7 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualRepeatRLELevel}, ctx, ::
         tight = lvl,
         val = D,
         size = virtual_level_size(lvl, ctx),
-        body = (ctx, idx, ext) -> Thunk(
+        body = (ctx, ext) -> Thunk(
             preamble = quote
                 $my_q = $(lvl.ros_fill) + $(ctx(pos))
                 $my_i_prev = $(Ti(0))

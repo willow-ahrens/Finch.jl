@@ -252,7 +252,7 @@ function get_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, R, start, stop, 
     Furlable(
         val = virtual_level_default(lvl),
         size = virtual_level_size(lvl, ctx)[R:end],
-        body = (ctx, idx, ext) -> Thunk(
+        body = (ctx, ext) -> Thunk(
             preamble = quote
                 $my_q = $(ctx(start))
                 $my_q_stop = $(ctx(stop))
@@ -266,7 +266,7 @@ function get_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, R, start, stop, 
             end,
             body = Pipeline([
                 Phase(
-                    stride = (ctx, idx, ext) -> value(my_i_stop),
+                    stride = (ctx, ext) -> value(my_i_stop),
                     body = (ctx, ext) -> Stepper(
                         seek = (ctx, ext) -> quote
                             if $(lvl.ex).tbl[$R][$my_q] < $(ctx(getstart(ext)))
@@ -279,12 +279,12 @@ function get_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, R, start, stop, 
                                     $my_i = $(lvl.ex).tbl[$R][$my_q]
                                 end,
                                 body = Step(
-                                    stride =  (ctx, idx, ext) -> value(my_i),
+                                    stride =  (ctx, ext) -> value(my_i),
                                     chunk = Spike(
                                         body = Simplify(Fill(virtual_level_default(lvl))),
                                         tail = get_reader(VirtualSubFiber(lvl.lvl, my_q), ctx, protos...),
                                     ),
-                                    next = (ctx, idx, ext) -> quote
+                                    next = (ctx, ext) -> quote
                                         $my_q += $(Tp(1))
                                     end
                                 )
@@ -299,12 +299,12 @@ function get_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, R, start, stop, 
                                     end
                                 end,
                                 body = Step(
-                                    stride = (ctx, idx, ext) -> value(my_i),
+                                    stride = (ctx, ext) -> value(my_i),
                                     chunk = Spike(
                                         body = Simplify(Fill(virtual_level_default(lvl))),
                                         tail = get_reader_coo_helper(lvl, ctx, R - 1, value(my_q, lvl.Ti), value(my_q_step, lvl.Ti), protos...),
                                     ),
-                                    next = (ctx, idx, ext) -> quote
+                                    next = (ctx, ext) -> quote
                                         $my_q = $my_q_step
                                     end
                                 )
@@ -353,7 +353,7 @@ function get_updater_coo_helper(lvl::VirtualSparseCOOLevel, ctx, qos, fbr_dirty,
         tight = lvl,
         val = virtual_level_default(lvl),
         size = virtual_level_size(lvl, ctx)[length(coords) + 1:end],
-        body = (ctx, idx, ext) -> 
+        body = (ctx, ext) -> 
             if length(coords) + 1 < lvl.N
                 Lookup(
                     val = virtual_level_default(lvl),

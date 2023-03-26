@@ -280,7 +280,7 @@ function get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, R, start,
     Furlable(
         val = virtual_level_default(lvl),
         size = virtual_level_size(lvl, ctx)[R:end],
-        body = (ctx, idx, ext) -> Thunk(
+        body = (ctx, ext) -> Thunk(
             preamble = quote
                 $my_q = $(ctx(start))
                 $my_q_stop = $(ctx(stop))
@@ -294,7 +294,7 @@ function get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, R, start,
             end,
             body = Pipeline([
                 Phase(
-                    stride = (ctx, idx, ext) -> value(my_i_stop),
+                    stride = (ctx, ext) -> value(my_i_stop),
                     body = (start, stop) -> Stepper(
                         seek = (ctx, ext) -> quote
                             while $my_q + $(Tp(1)) < $my_q_stop && $(lvl.ex).srt[$my_q][1][2][$R] < $(ctx(getstart(ext)))
@@ -307,12 +307,12 @@ function get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, R, start,
                                     $my_i = $(lvl.ex).srt[$my_q][1][2][$R]
                                 end,
                                 body = Step(
-                                    stride =  (ctx, idx, ext) -> value(my_i),
+                                    stride =  (ctx, ext) -> value(my_i),
                                     chunk = Spike(
                                         body = Simplify(Fill(virtual_level_default(lvl))),
                                         tail = get_reader(VirtualSubFiber(lvl.lvl, value(:($(lvl.ex).srt[$my_q][2]))), ctx, protos...),
                                     ),
-                                    next = (ctx, idx, ext) -> quote
+                                    next = (ctx, ext) -> quote
                                         $my_q += $(Tp(1))
                                     end
                                 )
@@ -327,12 +327,12 @@ function get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, R, start,
                                     end
                                 end,
                                 body = Step(
-                                    stride = (ctx, idx, ext) -> value(my_i),
+                                    stride = (ctx, ext) -> value(my_i),
                                     chunk = Spike(
                                         body = Simplify(Fill(virtual_level_default(lvl))),
                                         tail = get_multilevel_range_reader(lvl, ctx, R - 1, value(my_q, lvl.Ti), value(my_q_step, lvl.Ti), protos...),
                                     ),
-                                    next = (ctx, idx, ext) -> quote
+                                    next = (ctx, ext) -> quote
                                         $my_q = $my_q_step
                                     end
                                 )
@@ -365,7 +365,7 @@ function get_reader_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, coords, :
     Furlable(
         val = virtual_level_default(lvl),
         size = virtual_level_size(lvl, ctx)[1 + length(coords):end],
-        body = (ctx, idx, ext) ->
+        body = (ctx, ext) ->
             if length(coords)  + 1 < lvl.N
                 Lookup(
                     val = virtual_level_default(lvl),
@@ -417,7 +417,7 @@ function get_updater_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, fbr_dirt
         tight = is_laminable_updater(lvl.lvl, ctx, protos[lvl.N - length(coords): end]...) ? nothing : lvl.lvl,
         val = virtual_level_default(lvl),
         size = virtual_level_size(lvl, ctx)[1 + length(coords):end],
-        body = (ctx, idx, ext) ->
+        body = (ctx, ext) ->
             if length(coords) + 1 < lvl.N
                 body = Lookup(
                     val = virtual_level_default(lvl),

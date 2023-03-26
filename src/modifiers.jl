@@ -30,13 +30,13 @@ function get_reader(::VirtualPermit, ctx, proto_idx)
     Furlable(
         size = (nodim,),
         body = nothing,
-        fuse = (tns, ctx, idx, ext) -> Pipeline([
+        fuse = (tns, ctx, ext) -> Pipeline([
             Phase(
-                stride = (ctx, idx, ext_2) -> call(-, getstart(ext), 1),
+                stride = (ctx, ext_2) -> call(-, getstart(ext), 1),
                 body = (ctx, ext) -> Run(Simplify(Fill(literal(missing)))),
             ),
             Phase(
-                stride = (ctx, idx, ext_2) -> getstop(ext),
+                stride = (ctx, ext_2) -> getstop(ext),
                 body = (ctx, ext_2) -> truncate(tns, ctx, ext, ext_2)
             ),
             Phase(
@@ -79,17 +79,17 @@ virtual_eldim(arr::VirtualOffset, ctx::LowerJulia, idx_dim, delta_dim) = combine
 function get_reader(::VirtualOffset, ctx, proto_delta, proto_idx)
     tns = Furlable(
         size = (nodim, nodim),
-        body = (ctx, idx, ext) -> Lookup(
+        body = (ctx, ext) -> Lookup(
             body = (delta) -> Furlable(
                 size = (nodim,),
                 body = nothing,
-                fuse = (tns, ctx, idx, ext) -> Pipeline([
+                fuse = (tns, ctx, ext) -> Pipeline([
                     Phase(
-                        stride = (ctx, idx, ext_2) -> call(+, getstart(ext), delta, -1),
+                        stride = (ctx, ext_2) -> call(+, getstart(ext), delta, -1),
                         body = (ctx, ext_2) -> Run(Simplify(Fill(literal(missing)))),
                     ),
                     Phase(
-                        stride = (ctx, idx, ext_2) -> call(+, getstop(ext), delta),
+                        stride = (ctx, ext_2) -> call(+, getstop(ext), delta),
                         body = (ctx, ext_2) -> truncate(Shift(tns, delta), ctx, ext, ext_2)
                     ),
                     Phase(
@@ -139,13 +139,13 @@ function get_reader(arr::VirtualStaticOffset, ctx, proto_idx)
     Furlable(
         size = (nodim,),
         body = nothing,
-        fuse = (tns, ctx, idx, ext) -> Pipeline([
+        fuse = (tns, ctx, ext) -> Pipeline([
             Phase(
-                stride = (ctx, idx, ext_2) -> call(+, getstart(ext), arr.delta, -1),
+                stride = (ctx, ext_2) -> call(+, getstart(ext), arr.delta, -1),
                 body = (ctx, ext_2) -> Run(Simplify(Fill(literal(missing)))),
             ),
             Phase(
-                stride = (ctx, idx, ext_2) -> call(+, getstop(ext), arr.delta),
+                stride = (ctx, ext_2) -> call(+, getstop(ext), arr.delta),
                 body = (ctx, ext_2) -> truncate(Shift(tns, arr.delta), ctx, ext, ext_2)
             ),
             Phase(
@@ -202,7 +202,7 @@ function get_reader(arr::VirtualWindow, ctx, proto_idx)
     Furlable(
         size = (nodim,),
         body = nothing,
-        fuse = (tns, ctx, idx, ext) ->
+        fuse = (tns, ctx, ext) ->
             Shift(truncate(tns, ctx, ext, arr.target), call(-, getstart(ext), getstart(arr.target)))
     )
 end

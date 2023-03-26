@@ -154,7 +154,7 @@ FormatLimitation() = FormatLimitation("")
 function chunkify_access(node, ctx, eldim, tns::Furlable)
     if !isempty(node.idxs)
         if ctx.idx == get_furl_root(node.idxs[end])
-            tns = exfurl(tns.body(ctx.ctx, ctx.idx, virtual_size(tns, ctx.ctx, eldim)[end]), ctx.ctx, node.idxs[end], virtual_size(tns, ctx.ctx, eldim)[end])
+            tns = exfurl(tns.body(ctx.ctx, virtual_size(tns, ctx.ctx, eldim)[end]), ctx.ctx, node.idxs[end], virtual_size(tns, ctx.ctx, eldim)[end])
             return access(tns, node.mode, map(ctx, node.idxs[1:end-1])..., get_furl_root(node.idxs[end]))
         else
             if tns.tight !== nothing && simplify(extent(ctx.ext), ctx.ctx) != literal(1)
@@ -172,7 +172,7 @@ function exfurl(tns, ctx, idx::FinchNode, ext)
     if idx.kind === index
         return tns
     elseif idx.kind === access && idx.tns.kind === virtual
-        exfurl_access(tns, ctx, idx, ext, idx.tns.val)
+        exfurl_access(tns, ctx, ext, idx.tns.val)
     else
         error("unimplemented")
     end
@@ -186,7 +186,7 @@ function get_furl_root_access(idx, tns::Furlable)
     end
 end
 
-function exfurl_access(tns, ctx, idx, ext, node::Furlable)
+function exfurl_access(tns, ctx, ext, node::Furlable)
     @assert node.fuse !== nothing
-    node.fuse(tns, ctx, idx, ext)
+    node.fuse(tns, ctx, ext)
 end

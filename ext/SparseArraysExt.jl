@@ -66,10 +66,10 @@ function Finch.get_reader(arr::VirtualSparseMatrixCSC, ctx::LowerJulia, ::Union{
 
     Furlable(
         size = virtual_size(arr, ctx),
-        body = (ctx, idx, ext) -> Lookup(
+        body = (ctx, ext) -> Lookup(
             body = (j) -> Furlable(
                 size = virtual_size(arr, ctx)[2:2],
-                body = (ctx, idx, ext) -> Thunk(
+                body = (ctx, ext) -> Thunk(
                     preamble = quote
                         $my_q = $(arr.ex).colptr[$(ctx(j))]
                         $my_q_stop = $(arr.ex).colptr[$(ctx(j)) + $(Ti(1))]
@@ -83,7 +83,7 @@ function Finch.get_reader(arr::VirtualSparseMatrixCSC, ctx::LowerJulia, ::Union{
                     end,
                     body = Pipeline([
                         Phase(
-                            stride = (ctx, idx, ext) -> value(my_i1),
+                            stride = (ctx, ext) -> value(my_i1),
                             body = (ctx, ext) -> Stepper(
                                 seek = (ctx, ext) -> quote
                                     if $(arr.ex).rowval[$my_q] < $(ctx(getstart(ext)))
@@ -95,7 +95,7 @@ function Finch.get_reader(arr::VirtualSparseMatrixCSC, ctx::LowerJulia, ::Union{
                                         $my_i = $(arr.ex).rowval[$my_q]
                                     end,
                                     body = Step(
-                                        stride = (ctx, idx, ext) -> value(my_i),
+                                        stride = (ctx, ext) -> value(my_i),
                                         chunk = Spike(
                                             body = Simplify(Fill(zero(arr.Tv))),
                                             tail = Thunk(
@@ -105,7 +105,7 @@ function Finch.get_reader(arr::VirtualSparseMatrixCSC, ctx::LowerJulia, ::Union{
                                                 body = Fill(value(my_val, arr.Tv))
                                             )
                                         ),
-                                        next = (ctx, idx, ext) -> quote
+                                        next = (ctx, ext) -> quote
                                             $my_q += $(Ti(1))
                                         end
                                     )
@@ -168,7 +168,7 @@ function Finch.get_reader(arr::VirtualSparseVector, ctx::LowerJulia, ::Union{Not
 
     body = Furlable(
         size = virtual_size(arr, ctx),
-        body = (ctx, idx, ext) -> Thunk(
+        body = (ctx, ext) -> Thunk(
             preamble = quote
                 $my_q = 1
                 $my_q_stop = length($(arr.ex).nzind) + 1
@@ -182,7 +182,7 @@ function Finch.get_reader(arr::VirtualSparseVector, ctx::LowerJulia, ::Union{Not
             end,
             body = Pipeline([
                 Phase(
-                    stride = (ctx, idx, ext) -> value(my_i1),
+                    stride = (ctx, ext) -> value(my_i1),
                     body = (ctx, ext) -> Stepper(
                         seek = (ctx, ext) -> quote
                             if $(arr.ex).nzind[$my_q] < $(ctx(getstart(ext)))
@@ -194,7 +194,7 @@ function Finch.get_reader(arr::VirtualSparseVector, ctx::LowerJulia, ::Union{Not
                                 $my_i = $(arr.ex).nzind[$my_q]
                             end,
                             body = Step(
-                                stride = (ctx, idx, ext) -> value(my_i),
+                                stride = (ctx, ext) -> value(my_i),
                                 chunk = Spike(
                                     body = Simplify(Fill(zero(arr.Tv))),
                                     tail = Thunk(
@@ -204,7 +204,7 @@ function Finch.get_reader(arr::VirtualSparseVector, ctx::LowerJulia, ::Union{Not
                                         body = Fill(value(my_val, arr.Tv))
                                     )
                                 ),
-                                next = (ctx, idx, ext) -> quote
+                                next = (ctx, ext) -> quote
                                     $my_q += $(Ti(1))
                                 end
                             )
