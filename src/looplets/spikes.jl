@@ -25,7 +25,9 @@ combine_style(a::SpikeStyle, b::SpikeStyle) = SpikeStyle()
 function (ctx::LowerJulia)(root::FinchNode, ::SpikeStyle)
     if root.kind === chunk
         body_ext = Extent(getstart(root.ext), call(-, getstop(root.ext), 1))
-        root_body = SpikeBodyVisitor(ctx, root.idx, root.ext, body_ext)(root.body)
+        root_body = Rewrite(Postwalk(
+            @rule access(~a::isvirtual, ~i...) => access(get_spike_body(a.val, ctx, root.ext, body_ext), ~i...)
+        ))(root.body)
         if extent(root.ext) == 1
             body_expr = quote end
         else
@@ -38,8 +40,10 @@ function (ctx::LowerJulia)(root::FinchNode, ::SpikeStyle)
                 ))
             end
         end
-        root_tail = SpikeTailVisitor(ctx, root.idx, getstop(root.ext))(root.body)
         tail_ext = Extent(getstop(root.ext), getstop(root.ext))
+        root_tail = Rewrite(Postwalk(
+            @rule access(~a::isvirtual, ~i...) => access(get_spike_tail(a.val, ctx, root.ext, tail_ext), ~i...)
+        ))(root.body)
         tail_expr = contain(ctx) do ctx_2
             (ctx_2)(chunk(
                 root.idx,
@@ -53,73 +57,24 @@ function (ctx::LowerJulia)(root::FinchNode, ::SpikeStyle)
     end
 end
 
-@kwdef struct SpikeBodyVisitor
-    ctx
-    idx
-    ext
-    ext_2
-end
+get_spike_body(node, ctx, ext, ext_2) = node
+get_spike_body(node::Spike, ctx, ext, ext_2) = Run(node.body)
+get_spike_body(node::Shift, ctx, ext, ext_2) = Shift(
+    body = get_spike_body(node.body, ctx,
+        shiftdim(ext, call(-, node.delta)),
+        shiftdim(ext_2, call(-, node.delta))),
+    delta = node.delta)
 
-function (ctx::SpikeBodyVisitor)(node)
-    if istree(node)
-        similarterm(node, operation(node), map(ctx, arguments(node)))
-    else
-        truncate(node, ctx.ctx, ctx.ext, ctx.ext_2)
-    end
-end
-
-function (ctx::SpikeBodyVisitor)(node::FinchNode)
-    if node.kind === virtual
-        return ctx(node.val)
-    elseif istree(node)
-        similarterm(node, operation(node), map(ctx, arguments(node)))
-    else
-        truncate(node, ctx.ctx, ctx.ext, ctx.ext_2)
-    end
-end
-
-function (ctx::SpikeBodyVisitor)(node::Spike)
-    return Run(node.body)
-end
-
-(ctx::SpikeBodyVisitor)(node::Shift) = Shift(SpikeBodyVisitor(;kwfields(ctx)..., ext = shiftdim(ctx.ext, call(-, node.delta)), ext_2 = shiftdim(ctx.ext_2, call(-, node.delta)))(node.body), node.delta)
-
-
-@kwdef struct SpikeTailVisitor
-    ctx
-    idx
-    val
-end
-
-function (ctx::SpikeTailVisitor)(node)
-    if istree(node)
-        similarterm(node, operation(node), map(ctx, arguments(node)))
-    else
-        node
-    end
-end
-
-function (ctx::SpikeTailVisitor)(node::FinchNode)
-    if node.kind === access && node.tns.kind === virtual
-        tns_2 = unchunk(node.tns.val, ctx)
-        if tns_2 === nothing
-            access(node.tns, node.mode, map(ctx, node.idxs)...)
-        else
-            access(tns_2, node.mode, map(ctx, node.idxs[1:end - 1])...)
-        end
-    elseif node.kind === virtual
-        ctx(node.val)
-    elseif istree(node)
-        similarterm(node, operation(node), map(ctx, arguments(node)))
-    else
-        node
-    end
-end
-unchunk(node::Spike, ctx::SpikeTailVisitor) = node.tail
-unchunk(node::Shift, ctx::SpikeTailVisitor) = unchunk(node.body, SpikeTailVisitor(;kwfields(ctx)..., val = call(-, ctx.val, node.delta)))
+get_spike_tail(node, ctx, ext, ext_2) = node
+get_spike_tail(node::Spike, ctx, ext, ext_2) = Run(node.tail)
+get_spike_tail(node::Shift, ctx, ext, ext_2) = Shift(
+    body = get_spike_tail(node.body, ctx,
+        shiftdim(ext, call(-, node.delta)),
+        shiftdim(ext_2, call(-, node.delta))),
+    delta = node.delta)
 
 #TODO this is sus
-unchunk(node::Spike, ctx::ForLoopVisitor) = node.tail
+#unchunk(node::Spike, ctx::ForLoopVisitor) = node.tail
 
 supports_shift(::SpikeStyle) = true
 
