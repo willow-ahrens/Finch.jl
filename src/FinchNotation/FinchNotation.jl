@@ -1,6 +1,8 @@
 module FinchNotation
     using RewriteTools, SyntaxInterface, Finch
 
+    using Finch: default
+
     export finch_leaf
     export literal
     export index
@@ -27,6 +29,8 @@ module FinchNotation
 
     export isliteral, is_constant, virtual
     export isvirtual
+
+    export overwrite, initwrite
 
     """
         isliteral(ex)
