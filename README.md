@@ -1,9 +1,8 @@
 # Finch.jl
 
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://willow-ahrens.github.io/Finch.jl/stable)
-[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://willow-ahrens.github.io/Finch.jl/dev)
-[![Build Status](https://github.com/willow-ahrens/Finch.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/willow-ahrens/Finch.jl/actions/workflows/CI.yml?query=branch%3Amain)
-[![Coverage](https://codecov.io/gh/willow-ahrens/Finch.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/willow-ahrens/Finch.jl)
+| **Documentation**                                                               | **Build Status**                                                                                |
+|:-------------------------------------------------------------------------------:|:-----------------------------------------------------------------------------------------------:|
+| [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://willow-ahrens.github.io/Finch.jl/stable) [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://willow-ahrens.github.io/Finch.jl/dev) | [![Build Status](https://github.com/willow-ahrens/Finch.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/willow-ahrens/Finch.jl/actions/workflows/CI.yml?query=branch%3Amain) [![Coverage](https://codecov.io/gh/willow-ahrens/Finch.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/willow-ahrens/Finch.jl) |
 
 Finch is a adaptable Julia-to-Julia compiler for loop nests over sparse or structured
 multidimensional arrays. In addition to supporting [sparse
@@ -28,7 +27,11 @@ nonzero values:
 
 ```julia
 X = @fiber(sl(e(0.0)), sprand(10, 1))
-x = Scalar(0.0); x_min = Scalar(Inf); x_max = Scalar(-Inf), x_sum = Scalar(0.0), x_var = Scalar(0.0)
+x = Scalar(0.0)
+x_min = Scalar(Inf)
+x_max = Scalar(-Inf)
+x_sum = Scalar(0.0)
+x_var = Scalar(0.0)
 @finch begin
     for i = _
         x .= 0

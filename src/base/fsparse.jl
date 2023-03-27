@@ -110,15 +110,15 @@ See also: (`sprand`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#Spars
 julia> fsprand(Bool, (3, 3), 0.5)
 SparseCOO (false) [1:3,1:3]
 ├─├─[1, 1]: true
-├─├─[1, 3]: false
+├─├─[3, 1]: true
 ├─├─[2, 2]: true
-├─├─[2, 3]: true
+├─├─[3, 2]: true
 ├─├─[3, 3]: true  
 
 julia> fsprand(Float64, (2, 2, 2), 0.5)
 SparseCOO (0.0) [1:2,1:2,1:2]
-├─├─├─[1, 2, 2]: 0.0
-├─├─├─[2, 1, 1]: 0.0
+├─├─├─[2, 2, 1]: 0.6478553157718558
+├─├─├─[1, 1, 2]: 0.996665291437684
 ├─├─├─[2, 1, 2]: 0.7491940599574348 
 ```
 """
@@ -140,7 +140,7 @@ function fsprand_helper(r::AbstractRNG, shape::Tuple, p::AbstractFloat)
     I = map(shape -> Vector{typeof(shape)}(), shape)
     for i in randsubseq(r, CartesianIndices(shape), p)
         for r = 1:length(shape)
-            push!(I[end- r + 1], i[r])
+            push!(I[r], i[r])
         end
     end
     I
