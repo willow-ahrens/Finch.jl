@@ -22,12 +22,12 @@ combine_style(a::RunStyle, b::RunStyle) = RunStyle()
 function (ctx::LowerJulia)(root::FinchNode, ::RunStyle)
     if root.kind === chunk
         root = Rewrite(Postwalk(
-            @rule access(~a::isvirtual, ~i..., ~j) => begin
+            @rule access(~a::isvirtual, ~m, ~i..., ~j) => begin
                 a_2 = get_run_body(a.val, ctx, root.ext)
                 if a_2 != nothing
-                    access(a_2, i...)
+                    access(a_2, m, i...)
                 else
-                    access(a, i..., j)
+                    access(a, m, i..., j)
                 end
             end
         ))(root)
@@ -81,7 +81,16 @@ combine_style(a::RunStyle, b::AcceptRunStyle) = RunStyle()
 
 function (ctx::LowerJulia)(root::FinchNode, ::AcceptRunStyle)
     if root.kind === chunk
-        body = (AcceptRunVisitor(root, root.idx, root.ext, ctx))(root.body)
+        body = Rewrite(Postwalk(
+            @rule access(~a::isvirtual, ~m, ~i..., ~j) => begin
+                a_2 = get_acceptrun_body(a.val, ctx, root.ext)
+                if a_2 != nothing
+                    access(a_2, m, i...)
+                else
+                    access(a, m, i..., j)
+                end
+            end
+        ))(root.body)
         if getname(root.idx) in getunbound(body)
             #call DefaultStyle, the only style that AcceptRunStyle promotes with
             return ctx(root, DefaultStyle())
@@ -95,41 +104,10 @@ function (ctx::LowerJulia)(root::FinchNode, ::AcceptRunStyle)
     end
 end
 
-@kwdef struct AcceptRunVisitor
-    root
-    idx
-    ext
-    ctx
-end
-
-function (ctx::AcceptRunVisitor)(node)
-    if istree(node)
-        return similarterm(node, operation(node), map(ctx, arguments(node)))
-    else
-        return node
-    end
-end
-
-function (ctx::AcceptRunVisitor)(node::FinchNode)
-    if node.kind === virtual
-        ctx(node.val)
-    elseif node.kind === access && node.tns.kind === virtual
-        node.mode.kind === reader && return node
-        tns_2 = unchunk(node.tns.val, ctx)
-        if tns_2 === nothing
-            access(node.tns, node.mode, map(ctx, node.idxs)...)
-        else
-            access(tns_2, node.mode, map(ctx, node.idxs[1:end-1])...)
-        end
-    elseif istree(node)
-        return similarterm(node, operation(node), map(ctx, arguments(node)))
-    else
-        return node
-    end
-end
-
-unchunk(node::AcceptRun, ctx::AcceptRunVisitor) = node.body(ctx.ctx, ctx.ext)
-unchunk(node::Shift, ctx::AcceptRunVisitor) = unchunk(node.body, AcceptRunVisitor(;kwfields(ctx)..., ext = shiftdim(ctx.ext, call(-, node.delta))))
+get_acceptrun_body(node, ctx, ext) = nothing
+get_acceptrun_body(node::AcceptRun, ctx, ext) = node.body(ctx, ext)
+get_acceptrun_body(node::Shift, ctx, ext) = get_acceptrun_body(node.body, ctx,
+        shiftdim(ext, call(-, node.delta)))
 
 unchunk(node::AcceptRun, ctx::ForLoopVisitor) = node.body(ctx.ctx, Extent(ctx.val, ctx.val))
 
