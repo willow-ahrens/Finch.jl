@@ -92,9 +92,10 @@ function (ctx::LowerJulia)(root::FinchNode, ::AcceptRunStyle)
             end
         ))(root.body)
         if getname(root.idx) in getunbound(body)
-            #call DefaultStyle, the only style that AcceptRunStyle promotes with
+            #The loop body isn't constant after removing AcceptRuns, lower with a for-loop
             return ctx(root, DefaultStyle())
         else
+            #The loop body is constant after removing AcceptRuns, lower only the body once
             return ctx(body)
         end
     elseif root.kind === sequence 
