@@ -405,7 +405,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Foll
     Furlable(
         size = virtual_level_size(lvl, ctx),
         body = (ctx, ext) -> Lookup(
-            body = (i) -> Thunk(
+            body = (ctx, i) -> Thunk(
                 preamble = quote
                     $my_q = $(ctx(q)) * $(ctx(lvl.shape)) + $(ctx(i))
                 end,

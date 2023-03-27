@@ -354,7 +354,7 @@ function get_updater_coo_helper(lvl::VirtualSparseCOOLevel, ctx, qos, fbr_dirty,
         body = (ctx, ext) -> 
             if length(coords) + 1 < lvl.N
                 Lookup(
-                    body = (i) -> get_updater_coo_helper(lvl, ctx, qos, fbr_dirty, (i, coords...), protos...)
+                    body = (ctx, i) -> get_updater_coo_helper(lvl, ctx, qos, fbr_dirty, (i, coords...), protos...)
                 )
             else
                 dirty = ctx.freshen(:dirty)

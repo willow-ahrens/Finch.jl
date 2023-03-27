@@ -256,7 +256,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Union{No
                                         ),
                                         Phase(
                                             body = (ctx, ext) -> Lookup(
-                                                body = (i) -> Thunk(
+                                                body = (ctx, i) -> Thunk(
                                                     preamble = quote
                                                         $my_q = $my_q_ofs + $(ctx(i))
                                                     end,
@@ -340,7 +340,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Gallop, 
                                             ),
                                             Phase(
                                                 body = (ctx, ext) -> Lookup(
-                                                    body = (i) -> Thunk(
+                                                    body = (ctx, i) -> Thunk(
                                                         preamble = quote
                                                             $my_q = $my_q_ofs + $(ctx(i))
                                                         end,
@@ -376,7 +376,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Gallop, 
                                                         ),
                                                         Phase(
                                                             body = (ctx, ext) -> Lookup(
-                                                                body = (i) -> Thunk(
+                                                                body = (ctx, i) -> Thunk(
                                                                     preamble = quote
                                                                         $my_q = $my_q_ofs + $(ctx(i))
                                                                     end,

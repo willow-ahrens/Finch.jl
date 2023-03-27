@@ -67,7 +67,7 @@ function Finch.get_reader(arr::VirtualSparseMatrixCSC, ctx::LowerJulia, ::Union{
     Furlable(
         size = virtual_size(arr, ctx),
         body = (ctx, ext) -> Lookup(
-            body = (j) -> Furlable(
+            body = (ctx, j) -> Furlable(
                 size = virtual_size(arr, ctx)[2:2],
                 body = (ctx, ext) -> Thunk(
                     preamble = quote

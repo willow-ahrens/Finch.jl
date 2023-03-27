@@ -28,7 +28,7 @@ function get_reader(arr::VirtualAbstractUnitRange, ctx, proto_idx)
     Furlable(
         size = (nodim,),
         body = (ctx, ext) -> Lookup(
-            body = (i) -> Fill(value(:($(arr.ex)[$(ctx(i))])))
+            body = (ctx, i) -> Fill(value(:($(arr.ex)[$(ctx(i))])))
         ),
         fuse = (tns, ctx, ext) ->
             Shift(truncate(tns, ctx, ext, arr.target), call(-, getstart(ext), getstart(arr.target)))

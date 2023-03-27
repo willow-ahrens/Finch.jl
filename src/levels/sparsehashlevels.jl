@@ -366,11 +366,11 @@ function get_reader_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, coords, :
         body = (ctx, ext) ->
             if length(coords)  + 1 < lvl.N
                 Lookup(
-                    body = (i) -> get_reader_hash_helper(lvl, ctx, pos, qos, (i, coords...), protos...)
+                    body = (ctx, i) -> get_reader_hash_helper(lvl, ctx, pos, qos, (i, coords...), protos...)
                 )
             else
                 Lookup(
-                    body = (i) -> Thunk(
+                    body = (ctx, i) -> Thunk(
                         preamble = quote
                             $my_key = ($(ctx(pos)), ($(map(ctx, (i, coords...,))...)))
                             $qos = get($(lvl.ex).tbl, $my_key, 0)
@@ -414,11 +414,11 @@ function get_updater_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, fbr_dirt
         size = virtual_level_size(lvl, ctx)[1 + length(coords):end],
         body = (ctx, ext) ->
             if length(coords) + 1 < lvl.N
-                body = Lookup(
-                    body = (i) -> get_updater_hash_helper(lvl, ctx, pos, fbr_dirty, (i, coords...), protos...)
+                Lookup(
+                    body = (ctx, i) -> get_updater_hash_helper(lvl, ctx, pos, fbr_dirty, (i, coords...), protos...)
                 )
             else
-                body = AcceptSpike(
+                AcceptSpike(
                     tail = (ctx, idx) -> Thunk(
                         preamble = quote
                             $my_key = ($(ctx(pos)), ($(map(ctx, (idx, coords...,))...),))

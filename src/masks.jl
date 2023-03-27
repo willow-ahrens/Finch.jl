@@ -16,7 +16,7 @@ function get_reader(::DiagMask, ctx, protos...)
     tns = Furlable(
         size = (nodim, nodim),
         body = (ctx, ext) -> Lookup(
-            body = (i) -> Furlable(
+            body = (ctx, i) -> Furlable(
                 size = (nodim,),
                 body = (ctx, ext) -> Pipeline([
                     Phase(
@@ -51,7 +51,7 @@ function get_reader(::UpTriMask, ctx, protos...)
     tns = Furlable(
         size = (nodim, nodim),
         body = (ctx, ext) -> Lookup(
-            body = (i) -> Furlable(
+            body = (ctx, i) -> Furlable(
                 size = (nodim,),
                 body = (ctx, ext) -> Pipeline([
                     Phase(
@@ -84,7 +84,7 @@ function get_reader(::LoTriMask, ctx, protos...)
     tns = Furlable(
         size = (nodim, nodim),
         body = (ctx, ext) -> Lookup(
-            body = (i) -> Furlable(
+            body = (ctx, i) -> Furlable(
                 size = (nodim,),
                 body = (ctx, ext) -> Pipeline([
                     Phase(
@@ -117,10 +117,10 @@ function get_reader(::BandMask, ctx, mode, protos...)
     tns = Furlable(
         size = (nodim, nodim, nodim),
         body = (ctx, ext) -> Lookup(
-            body = (k) -> Furlable(
+            body = (ctx, k) -> Furlable(
                 size = (nodim, nodim),
                 body = (ctx, ext) -> Lookup(
-                    body = (j) -> Furlable(
+                    body = (ctx, j) -> Furlable(
                         size = (nodim,),
                         body = (ctx, ext) -> Pipeline([
                             Phase(

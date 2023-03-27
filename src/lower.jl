@@ -435,8 +435,8 @@ end
 FinchNotation.isliteral(node::Lookup) =  false
 
 function (ctx::ForLoopVisitor)(node::Lookup)
-    node.body(ctx.val)
+    node.body(ctx.ctx, ctx.val)
 end
 
 unchunk(node, ctx) = nothing
-unchunk(node::Lookup, ctx::ForLoopVisitor) = node.body(ctx.val)
+unchunk(node::Lookup, ctx::ForLoopVisitor) = node.body(ctx.ctx, ctx.val)

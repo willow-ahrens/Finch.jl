@@ -80,7 +80,7 @@ function get_reader(::VirtualOffset, ctx, proto_delta, proto_idx)
     tns = Furlable(
         size = (nodim, nodim),
         body = (ctx, ext) -> Lookup(
-            body = (delta) -> Furlable(
+            body = (ctx, delta) -> Furlable(
                 size = (nodim,),
                 body = nothing,
                 fuse = (tns, ctx, ext) -> Pipeline([
