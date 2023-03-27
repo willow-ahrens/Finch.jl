@@ -73,9 +73,6 @@ get_spike_tail(node::Shift, ctx, ext, ext_2) = Shift(
         shiftdim(ext_2, call(-, node.delta))),
     delta = node.delta)
 
-#TODO this is sus
-#unchunk(node::Spike, ctx::ForLoopVisitor) = node.tail
-
 supports_shift(::SpikeStyle) = true
 
 @kwdef mutable struct AcceptSpike
