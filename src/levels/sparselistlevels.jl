@@ -369,8 +369,8 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseListLevel}, ctx, :
             preamble = quote
                 $qos = $qos_fill + 1
             end,
-            body = AcceptSpike(
-                tail = (ctx, idx) -> Thunk(
+            body = Lookup(
+                body = (ctx, idx) -> Thunk(
                     preamble = quote
                         if $qos > $qos_stop
                             $qos_stop = max($qos_stop << 1, 1)

@@ -75,21 +75,6 @@ get_spike_tail(node::Shift, ctx, ext, ext_2) = Shift(
 
 supports_shift(::SpikeStyle) = true
 
-@kwdef mutable struct AcceptSpike
-    tail
-end
-
-FinchNotation.isliteral(::AcceptSpike) = false
-
-Base.show(io::IO, ex::AcceptSpike) = Base.show(io, MIME"text/plain"(), ex)
-function Base.show(io::IO, mime::MIME"text/plain", ex::AcceptSpike)
-    print(io, "AcceptSpike(val = ")
-    print(io, ex.val)
-    print(io, ")")
-end
-
-get_point_body(node::AcceptSpike, ctx, idx) = node.tail(ctx, idx)
-
 function truncate(node::Spike, ctx, ext, ext_2)
     return Switch([
         value(:($(ctx(getstop(ext_2))) < $(ctx(getstop(ext))))) => Run(node.body),

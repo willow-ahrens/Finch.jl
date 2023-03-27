@@ -418,8 +418,8 @@ function get_updater_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, fbr_dirt
                     body = (ctx, i) -> get_updater_hash_helper(lvl, ctx, pos, fbr_dirty, (i, coords...), protos...)
                 )
             else
-                AcceptSpike(
-                    tail = (ctx, idx) -> Thunk(
+                Lookup(
+                    body = (ctx, idx) -> Thunk(
                         preamble = quote
                             $my_key = ($(ctx(pos)), ($(map(ctx, (idx, coords...,))...),))
                             $qos = get($(lvl.ex).tbl, $my_key, $(qos_fill) + $(Tp(1)))
