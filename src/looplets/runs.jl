@@ -49,12 +49,9 @@ get_run_body(node::Shift, ctx, ext) = get_run_body(node.body, ctx,
 
 @kwdef mutable struct AcceptRun
     body
-    val = nothing
 end
 
 FinchNotation.isliteral(::AcceptRun) = false
-
-virtual_default(node::AcceptRun) = Some(node.val)
 
 #TODO this should go somewhere else
 function Finch.virtual_default(x::FinchNode)

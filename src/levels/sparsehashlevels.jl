@@ -278,7 +278,6 @@ function get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, R, start,
     my_i_stop = ctx.freshen(tag, :_i_stop)
 
     Furlable(
-        val = virtual_level_default(lvl),
         size = virtual_level_size(lvl, ctx)[R:end],
         body = (ctx, ext) -> Thunk(
             preamble = quote
@@ -363,17 +362,14 @@ function get_reader_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, coords, :
     qos_stop = lvl.qos_stop
     qos = ctx.freshen(tag, :_q)
     Furlable(
-        val = virtual_level_default(lvl),
         size = virtual_level_size(lvl, ctx)[1 + length(coords):end],
         body = (ctx, ext) ->
             if length(coords)  + 1 < lvl.N
                 Lookup(
-                    val = virtual_level_default(lvl),
                     body = (i) -> get_reader_hash_helper(lvl, ctx, pos, qos, (i, coords...), protos...)
                 )
             else
                 Lookup(
-                    val = virtual_level_default(lvl),
                     body = (i) -> Thunk(
                         preamble = quote
                             $my_key = ($(ctx(pos)), ($(map(ctx, (i, coords...,))...)))
@@ -415,17 +411,14 @@ function get_updater_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, fbr_dirt
     dirty = ctx.freshen(tag, :dirty)
     Furlable(
         tight = is_laminable_updater(lvl.lvl, ctx, protos[lvl.N - length(coords): end]...) ? nothing : lvl.lvl,
-        val = virtual_level_default(lvl),
         size = virtual_level_size(lvl, ctx)[1 + length(coords):end],
         body = (ctx, ext) ->
             if length(coords) + 1 < lvl.N
                 body = Lookup(
-                    val = virtual_level_default(lvl),
                     body = (i) -> get_updater_hash_helper(lvl, ctx, pos, fbr_dirty, (i, coords...), protos...)
                 )
             else
                 body = AcceptSpike(
-                    val = virtual_level_default(lvl),
                     tail = (ctx, idx) -> Thunk(
                         preamble = quote
                             $my_key = ($(ctx(pos)), ($(map(ctx, (idx, coords...,))...),))

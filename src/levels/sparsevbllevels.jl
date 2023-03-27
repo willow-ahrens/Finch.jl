@@ -426,7 +426,6 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseVBLLevel}, ctx, ::
 
     Furlable(
         tight = lvl,
-        val = virtual_level_default(lvl),
         size = virtual_level_size(lvl, ctx),
         body = (ctx, ext) -> Thunk(
             preamble = quote
@@ -435,7 +434,6 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseVBLLevel}, ctx, ::
                 $my_i_prev = $(Ti(-1))
             end,
             body = AcceptSpike(
-                val = virtual_level_default(lvl),
                 tail = (ctx, idx) -> Thunk(
                     preamble = quote
                         if $qos > $qos_stop

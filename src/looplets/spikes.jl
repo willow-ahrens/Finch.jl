@@ -76,7 +76,6 @@ get_spike_tail(node::Shift, ctx, ext, ext_2) = Shift(
 supports_shift(::SpikeStyle) = true
 
 @kwdef mutable struct AcceptSpike
-    val
     tail
 end
 
@@ -88,8 +87,6 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::AcceptSpike)
     print(io, ex.val)
     print(io, ")")
 end
-
-virtual_default(node::AcceptSpike) = Some(node.val)
 
 unchunk(node::AcceptSpike, ctx::ForLoopVisitor) = node.tail(ctx.ctx, ctx.val)
 

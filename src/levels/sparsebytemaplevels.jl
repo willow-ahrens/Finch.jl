@@ -431,10 +431,8 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseByteMapLevel}, ctx
 
     Furlable(
         tight = is_laminable_updater(lvl.lvl, ctx, protos...) ? nothing : lvl.lvl,
-        val = virtual_level_default(lvl),
         size = virtual_level_size(lvl, ctx),
         body = (ctx, ext) -> AcceptSpike(
-            val = virtual_level_default(lvl),
             tail = (ctx, idx) -> Thunk(
                 preamble = quote
                     $my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $(ctx(idx))

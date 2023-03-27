@@ -250,7 +250,6 @@ function get_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, R, start, stop, 
     my_i_stop = ctx.freshen(tag, :_i_stop)
 
     Furlable(
-        val = virtual_level_default(lvl),
         size = virtual_level_size(lvl, ctx)[R:end],
         body = (ctx, ext) -> Thunk(
             preamble = quote
@@ -351,18 +350,15 @@ function get_updater_coo_helper(lvl::VirtualSparseCOOLevel, ctx, qos, fbr_dirty,
     qos_stop = lvl.qos_stop
     Furlable(
         tight = lvl,
-        val = virtual_level_default(lvl),
         size = virtual_level_size(lvl, ctx)[length(coords) + 1:end],
         body = (ctx, ext) -> 
             if length(coords) + 1 < lvl.N
                 Lookup(
-                    val = virtual_level_default(lvl),
                     body = (i) -> get_updater_coo_helper(lvl, ctx, qos, fbr_dirty, (i, coords...), protos...)
                 )
             else
                 dirty = ctx.freshen(:dirty)
                 AcceptSpike(
-                    val = virtual_level_default(lvl),
                     tail = (ctx, idx) -> Thunk(
                         preamble = quote
                             if $qos > $qos_stop

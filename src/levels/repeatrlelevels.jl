@@ -307,7 +307,6 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualRepeatRLELevel}, ctx, ::
                 $my_v_prev = $D
             end,
             body = AcceptRun(
-                val = D,
                 body = (ctx, ext) -> Thunk(
                     preamble = quote
                         if $my_v_prev != $D && ($my_i_prev + 1) < $(ctx(getstart(ext)))
