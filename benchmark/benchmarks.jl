@@ -147,7 +147,7 @@ function bellmanford(edges, source=1)
         @finch @loop j dists_next[j] = min(dists_prev[j], dists_buffer[j])
 
         modified = Scalar(false)
-        @finch @loop i modified[] |= dists_next[i] != dists_prev[i]
+        @finch @loop i modified[] |= dists_next[i][1] != dists_prev[i][1]
         if !modified[]
             break
         end
@@ -159,14 +159,9 @@ end
 
 
 SUITE["graphs"]["bellmanford"] = BenchmarkGroup()
-for mtx in ["Newman/netscience"] #", Williams/pdb1HYS", "GAP/GAP-road"]
-    A = fiber(SparseMatrixCSC(matrixdepot(mtx)))
-    (m, n) = size(A)
-    test = @fiber(d(sl(e(Inf))))
-    @finch @loop j i test[i, j] = ifelse(A[i, j] == 0, Inf, A[i, j])
-    test = @fiber(d(sl(e(Inf))), test)
-    # test = @fiber(d(sl(e(Inf, A.lvl.lvl.lvl.val), m, A.lvl.lvl.ptr, A.lvl.lvl.idx), n))
-    SUITE["graphs"]["bellmanford"][mtx] = @benchmarkable bellmanford($test)
+for mtx in ["Newman/netscience"] #, "Williams/pdb1HYS"]#, "GAP/GAP-road"]
+    A = redefault!(fiber(SparseMatrixCSC(matrixdepot(mtx))), 0.0)
+    SUITE["graphs"]["bellmanford"][mtx] = @benchmarkable bellmanford($A)
 end
 
 SUITE["matrices"] = BenchmarkGroup()
