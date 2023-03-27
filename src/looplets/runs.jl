@@ -107,7 +107,7 @@ get_acceptrun_body(node::AcceptRun, ctx, ext) = node.body(ctx, ext)
 get_acceptrun_body(node::Shift, ctx, ext) = get_acceptrun_body(node.body, ctx,
         shiftdim(ext, call(-, node.delta)))
 
-unchunk(node::AcceptRun, ctx::ForLoopVisitor) = node.body(ctx.ctx, Extent(ctx.val, ctx.val))
+get_point_body(node::AcceptRun, ctx, idx) = node.body(ctx, Extent(idx, idx))
 
 supports_shift(::RunStyle) = true
 supports_shift(::AcceptRunStyle) = true

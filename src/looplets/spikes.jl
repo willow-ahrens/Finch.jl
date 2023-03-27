@@ -88,7 +88,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::AcceptSpike)
     print(io, ")")
 end
 
-unchunk(node::AcceptSpike, ctx::ForLoopVisitor) = node.tail(ctx.ctx, ctx.val)
+get_point_body(node::AcceptSpike, ctx, idx) = node.tail(ctx, idx)
 
 function truncate(node::Spike, ctx, ext, ext_2)
     return Switch([
