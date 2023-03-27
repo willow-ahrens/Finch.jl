@@ -110,11 +110,9 @@ begin
                                 i_9 = phase_stop_4
                                 w_lvl_q_2 = (1 - 1) * A_lvl_2.shape + i_9
                                 dirty = false
-                                w_lvl_2_val_2 = w_lvl_2.val[w_lvl_q_2]
                                 dirty = true
                                 dirty = true
-                                w_lvl_2_val_2 = (+)((*)(A_lvl_3_val_2, A_lvl_3_val_3), w_lvl_2_val_2)
-                                w_lvl_2.val[w_lvl_q_2] = w_lvl_2_val_2
+                                w_lvl_2.val[w_lvl_q_2] = (+)((*)(A_lvl_3_val_2, A_lvl_3_val_3), w_lvl_2.val[w_lvl_q_2])
                                 if dirty
                                     null_2 = true
                                     if !(w_lvl.tbl[w_lvl_q_2])
@@ -188,7 +186,7 @@ begin
                 i_12 = i_2
                 if w_lvl_i_2 == phase_stop_6
                     w_lvl_q_3 = (1 - 1) * A_lvl_2.shape + w_lvl_i_2
-                    w_lvl_2_val_3 = w_lvl_2.val[w_lvl_q_3]
+                    w_lvl_2_val_2 = w_lvl_2.val[w_lvl_q_3]
                     i_13 = phase_stop_6
                     if B_lvl_2_qos > B_lvl_2_qos_stop
                         B_lvl_2_qos_stop = max(B_lvl_2_qos_stop << 1, 1)
@@ -197,10 +195,8 @@ begin
                         fill_range!(B_lvl_3.val, 0.0, B_lvl_2_qos, B_lvl_2_qos_stop)
                     end
                     B_lvl_2dirty = false
-                    B_lvl_3_val_2 = B_lvl_3.val[B_lvl_2_qos]
                     B_lvl_2dirty = true
-                    B_lvl_3_val_2 = w_lvl_2_val_3
-                    B_lvl_3.val[B_lvl_2_qos] = B_lvl_3_val_2
+                    B_lvl_3.val[B_lvl_2_qos] = w_lvl_2_val_2
                     if B_lvl_2dirty
                         null = true
                         B_lvl_2.idx[B_lvl_2_qos] = i_13
