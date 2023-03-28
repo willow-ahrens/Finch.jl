@@ -32,24 +32,20 @@ begin
             for i_6 = i_start:phase_stop
                 B_lvl_q = (1 - 1) * I_lvl.shape + i_6
                 A_lvl_q = (1 - 1) * A_lvl.shape + i_6
-                B_lvl_2_val_2 = B_lvl_2.val[B_lvl_q]
                 s_2 = I_lvl.val[I_lvl_q]
                 A_lvl_2_q = (A_lvl_q - 1) * A_lvl_2.shape + s_2
                 A_lvl_3_val_2 = A_lvl_3.val[A_lvl_2_q]
-                B_lvl_2_val_2 = A_lvl_3_val_2
-                B_lvl_2.val[B_lvl_q] = B_lvl_2_val_2
+                B_lvl_2.val[B_lvl_q] = A_lvl_3_val_2
             end
             I_lvl_q += 1
         else
             for i_7 = i_start:phase_stop
                 B_lvl_q = (1 - 1) * I_lvl.shape + i_7
                 A_lvl_q = (1 - 1) * A_lvl.shape + i_7
-                B_lvl_2_val_3 = B_lvl_2.val[B_lvl_q]
                 s_4 = I_lvl.val[I_lvl_q]
                 A_lvl_2_q_2 = (A_lvl_q - 1) * A_lvl_2.shape + s_4
                 A_lvl_3_val_3 = A_lvl_3.val[A_lvl_2_q_2]
-                B_lvl_2_val_3 = A_lvl_3_val_3
-                B_lvl_2.val[B_lvl_q] = B_lvl_2_val_3
+                B_lvl_2.val[B_lvl_q] = A_lvl_3_val_3
             end
         end
         i = phase_stop + 1
