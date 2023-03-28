@@ -89,6 +89,7 @@ struct SelectStyle end
 combine_style(a::SelectStyle, b::ThunkStyle) = b
 combine_style(a::SelectStyle, b::ChunkStyle) = a
 combine_style(a::SelectStyle, b::SelectStyle) = a
+combine_style(a::SelectStyle, b::SimplifyStyle) = b
 
 function (ctx::LowerJulia)(root, ::SelectStyle)
     idxs = Dict()
