@@ -216,7 +216,7 @@ function cache_dim!(ctx, var, ext::Extent)
     start_val = cache!(ctx, Symbol(var, :_start), ext.start)
     stop_val = cache!(ctx, Symbol(var, :_stop), ext.stop)
     Extent(
-        start = simplify(call(equiv, start_val, ext.start), ctx)
+        start = simplify(call(equiv, start_val, ext.start), ctx),
         stop = simplify(call(equiv, stop_val, ext.stop), ctx)
     )
 end
@@ -372,7 +372,7 @@ combinedim(ctx, a::Narrow, b::NoDimension) = a
 
 function combinedim(ctx, a::Narrow{<:Extent}, b::Narrow{<:Extent})
     Narrow(Extent(
-        start = call(max(getstart(a), getstart(b)))
+        start = call(max(getstart(a), getstart(b))),
         stop = call(min(getstop(a), getstop(b)))
     ))
 end
@@ -383,7 +383,7 @@ combinedim(ctx, a::Widen, b::SuggestedExtent) = a
 
 function combinedim(ctx, a::Widen{<:Extent}, b::Widen{<:Extent})
     Widen(Extent(
-        start = call(min(getstart(a), getstart(b)))
+        start = call(min(getstart(a), getstart(b))),
         stop = call(max(getstop(a), getstop(b)))
     ))
 end
