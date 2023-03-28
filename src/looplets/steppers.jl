@@ -57,7 +57,7 @@ FinchNotation.isliteral(::Step) =  false
 
 (ctx::Stylize{LowerJulia})(node::Step) = ctx.root.kind === chunk ? PhaseStyle() : DefaultStyle()
 
-(ctx::PhaseStride)(node::Step) = Narrow(Extent(start = getstart(ctx.ext), stop = node.stride(ctx.ctx, ctx.ext), lower = literal(1)))
+(ctx::PhaseStride)(node::Step) = Narrow(Extent(start = getstart(ctx.ext), stop = call(max, node.stride(ctx.ctx, ctx.ext), call(+, getstart(ctx.ext), 1))))
 
 (ctx::PhaseBodyVisitor)(node::Step) = node.body(ctx.ctx, ctx.ext, ctx.ext_2)
 

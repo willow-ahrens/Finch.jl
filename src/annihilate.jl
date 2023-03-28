@@ -301,7 +301,7 @@ function base_rules(alg, ctx)
         end),
         (@rule chunk(~i, ~a, assign(access(~b, updater(~m), ~j...), $(literal(+)), ~d)) => begin
             if i ∉ j && getname(i) ∉ getunbound(d)
-                assign(access(b, updater(m), j...), +, call(*, extent(a), d))
+                assign(access(b, updater(m), j...), +, call(*, measure(a), d))
             end
         end),
     ]

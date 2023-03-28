@@ -157,7 +157,7 @@ function chunkify_access(node, ctx, eldim, tns::Furlable)
             tns = exfurl(tns.body(ctx.ctx, virtual_size(tns, ctx.ctx, eldim)[end]), ctx.ctx, node.idxs[end], virtual_size(tns, ctx.ctx, eldim)[end])
             return access(tns, node.mode, map(ctx, node.idxs[1:end-1])..., get_furl_root(node.idxs[end]))
         else
-            if tns.tight !== nothing && simplify(extent(ctx.ext), ctx.ctx) != literal(1)
+            if tns.tight !== nothing && simplify(measure(ctx.ext), ctx.ctx) != literal(1)
                 throw(FormatLimitation("$(typeof(something(tns.tight))) does not support random access, must loop column major over output indices first."))
             end
             idxs = map(ctx, node.idxs)

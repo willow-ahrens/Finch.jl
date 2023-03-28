@@ -180,14 +180,14 @@ struct UnknownDimension end
 resultdim(ctx, a, b, c, tail...) = resultdim(ctx, a, resultdim(ctx, b, c, tail...))
 function resultdim(ctx, a, b)
     c = combinedim(ctx, a, b)
-    d = combinedim(ctx, b, a)
-    return _resultdim(ctx, a, b, c, d)
+    if c isa UnknownDimension
+        c = combinedim(ctx, b, a)
+    end
+    if c isa UnknownDimension
+        throw(MethodError(combinedim, (ctx, a, b)))
+    end
+    return c
 end
-_resultdim(ctx, a, b, c::UnknownDimension, d::UnknownDimension) = throw(MethodError(combinedim, (ctx, a, b)))
-_resultdim(ctx, a, b, c, d::UnknownDimension) = c
-_resultdim(ctx, a, b, c::UnknownDimension, d) = d
-_resultdim(ctx, a, b, c, d) = c #TODO assert same lattice type here.
-#_resultdim(a, b, c::T, d::T) where {T} = (c == d) ? c : @assert false "TODO combinedim_ambiguity_error"
 
 """
     combinedim(ctx, a, b)
@@ -206,32 +206,24 @@ combinedim(ctx, a::NoDimension, b) = b
 @kwdef struct Extent
     start
     stop
-    lower = @f $stop - $start + 1
-    upper = @f $stop - $start + 1
 end
 
 FinchNotation.isliteral(::Extent) = false
 
-Base.:(==)(a::Extent, b::Extent) =
-    a.start == b.start &&
-    a.stop == b.stop &&
-    a.lower == b.lower &&
-    a.upper == b.upper
+Base.:(==)(a::Extent, b::Extent) = a.start == b.start && a.stop == b.stop
 
-Extent(start, stop) = Extent(start, stop, (@f $stop - $start + 1), (@f $stop - $start + 1))
-
-cache_dim!(ctx, var, ext::Extent) = Extent(
-    start = cache!(ctx, Symbol(var, :_start), ext.start),
-    stop = cache!(ctx, Symbol(var, :_stop), ext.stop),
-    lower = cache!(ctx, Symbol(var, :_lower), ext.lower),
-    upper = cache!(ctx, Symbol(var, :_upper), ext.upper),
-)
+function cache_dim!(ctx, var, ext::Extent)
+    start_val = cache!(ctx, Symbol(var, :_start), ext.start)
+    stop_val = cache!(ctx, Symbol(var, :_stop), ext.stop)
+    Extent(
+        start = simplify(call(equiv, start_val, ext.start), ctx)
+        stop = simplify(call(equiv, stop_val, ext.stop), ctx)
+    )
+end
 
 getstart(ext::Extent) = ext.start
 getstop(ext::Extent) = ext.stop
-getlower(ext::Extent) = ext.lower
-getupper(ext::Extent) = ext.upper
-extent(ext::Extent) = @f $(ext.stop) - $(ext.start) + 1
+measure(ext::Extent) = call(-, ext.start, call(-, ext.stop, 1))
 
 function getstop(ext::FinchNode)
     if ext.kind === virtual
@@ -247,40 +239,11 @@ function getstart(ext::FinchNode)
         ext
     end
 end
-function getlower(ext::FinchNode)
-    if ext.kind === virtual
-        getlower(ext.val)
-    else
-        1
-    end
-end
-function getupper(ext::FinchNode)
-    if ext.kind === virtual
-        getupper(ext.val)
-    else
-        1
-    end
-end
-#TODO I don't like this def
-function extent(ext::FinchNode)
-    if ext.kind === virtual
-        extent(ext.val)
-    elseif ext.kind === value
-        return 1
-    elseif ext.kind === literal
-        return 1
-    else
-        error("unimplemented")
-    end
-end
-extent(ext::Integer) = 1
 
 combinedim(ctx, a::Extent, b::Extent) =
     Extent(
         start = checklim(ctx, a.start, b.start),
         stop = checklim(ctx, a.stop, b.stop),
-        lower = simplify(@f(min($(a.lower), $(b.lower))), ctx),
-        upper = simplify(@f(min($(a.upper), $(b.upper))), ctx)
     )
 
 combinedim(ctx, a::NoDimension, b::Extent) = b
@@ -301,10 +264,10 @@ resolvedim(ext::Symbol) = error()
 resolvedim(ext::SuggestedExtent) = ext.ext
 cache_dim!(ctx, tag, ext::SuggestedExtent) = SuggestedExtent(cache_dim!(ctx, tag, ext.ext))
 
-#TODO maybe just call something like resolve_extent to unwrap?
+#TODO maybe just call something like resolve_measure to unwrap?
 getstart(ext::SuggestedExtent) = getstart(ext.ext)
 getstop(ext::SuggestedExtent) = getstop(ext.ext)
-extent(ext::SuggestedExtent) = extent(ext.ext)
+measure(ext::SuggestedExtent) = measure(ext.ext)
 
 combinedim(ctx, a::SuggestedExtent, b::Extent) = b
 
@@ -316,14 +279,10 @@ function checklim(ctx, a::FinchNode, b::FinchNode)
     if isliteral(a) && isliteral(b)
         a == b || throw(DimensionMismatch("mismatched dimension limits ($a != $b)"))
     end
-    if ctx.shash(a) < ctx.shash(b) #TODO instead of this, we should introduce a lazy operator to assert equality
-        push!(ctx.preamble, quote
-            $(ctx(a)) == $(ctx(b)) || throw(DimensionMismatch("mismatched dimension limits ($($(ctx(a))) != $($(ctx(b))))"))
-        end)
-        a
-    else
-        b
-    end
+    push!(ctx.preamble, quote
+        $(ctx(a)) == $(ctx(b)) || throw(DimensionMismatch("mismatched dimension limits ($($(ctx(a))) != $($(ctx(b))))"))
+    end)
+    call(equiv, a, b)
 end
 
 """
@@ -413,14 +372,8 @@ combinedim(ctx, a::Narrow, b::NoDimension) = a
 
 function combinedim(ctx, a::Narrow{<:Extent}, b::Narrow{<:Extent})
     Narrow(Extent(
-        start = simplify(@f(max($(getstart(a)), $(getstart(b)))), ctx),
-        stop = simplify(@f(min($(getstop(a)), $(getstop(b)))), ctx),
-        lower = if getstart(a) == getstart(b) || getstop(a) == getstop(b)
-            simplify(@f(min($(a.ext.lower), $(b.ext.lower))), ctx)
-        else
-            literal(0)
-        end,
-        upper = simplify(@f(min($(a.ext.upper), $(b.ext.upper))), ctx)
+        start = call(max(getstart(a), getstart(b)))
+        stop = call(min(getstop(a), getstop(b)))
     ))
 end
 
@@ -430,14 +383,8 @@ combinedim(ctx, a::Widen, b::SuggestedExtent) = a
 
 function combinedim(ctx, a::Widen{<:Extent}, b::Widen{<:Extent})
     Widen(Extent(
-        start = simplify(@f(min($(getstart(a)), $(getstart(b)))), ctx),
-        stop = simplify(@f(max($(getstop(a)), $(getstop(b)))), ctx),
-        lower = simplify(@f(max($(a.ext.lower), $(b.ext.lower))), ctx),
-        upper = if getstart(a) == getstart(b) || getstop(a) == getstop(b)
-            simplify(@f(max($(a.ext.upper), $(b.ext.upper))), ctx)
-        else
-            simplify(@f($(a.ext.upper) + $(b.ext.upper)), ctx)
-        end,
+        start = call(min(getstart(a), getstart(b)))
+        stop = call(max(getstop(a), getstop(b)))
     ))
 end
 
