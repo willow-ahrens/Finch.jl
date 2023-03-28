@@ -186,18 +186,6 @@ isinvolution(::Any, f) = false
 isinvolution(::AbstractAlgebra, ::typeof(-)) = true
 isinvolution(::AbstractAlgebra, ::typeof(inv)) = true
 
-struct Fill
-    body::FinchNode
-    default
-    Fill(x, d=nothing) = new(finch_leaf(x), d)
-end
-
-FinchNotation.isliteral(::Fill) = false
-virtual_default(f::Fill) = Some(f.default)
-
-isfill(tns) = false
-isfill(tns::FinchNode) = tns.kind == virtual && tns.val isa Fill
-isvar(tns::FinchNode) = tns.kind == variable
 
 getvars(arr::AbstractArray) = mapreduce(getvars, vcat, arr, init=[])
 function getvars(node::FinchNode) 
@@ -210,6 +198,8 @@ function getvars(node::FinchNode)
     end
 end
 
+isvar(tns::FinchNode) = tns.kind == variable
+
 """
     base_rules(alg, ctx)
 
@@ -221,8 +211,6 @@ constants, and is the basis for how Finch understands sparsity.
 function base_rules(alg, ctx)
     shash = ctx.shash
     return [
-        (@rule access(~a::isfill, ~m, ~i...) => a.val.body), #TODO flesh this out
-
         (@rule call(~f, ~a...) => if isliteral(f) && all(isliteral, a) && length(a) >= 1 literal(getvalue(f)(getvalue.(a)...)) end),
 
         (@rule loop(~i, sequence()) => sequence()),
@@ -334,15 +322,25 @@ Return a list of constant propagation rules for a tensor stored in variable var.
 """
 getrules(alg, ctx, var, val) = base_rules(alg, ctx, var, val)
 
+getrules(alg, ctx, var) = base_rules(alg, ctx, var)
+
 base_rules(alg, ctx::LowerJulia, var, tns) = []
+
+base_rules(alg, ctx::LowerJulia, tns) = []
 
 getrules(ctx::LowerJulia) = getrules(ctx.algebra, ctx)
 
-function simplify(node, ctx)
+simplify(node, ctx) = node
+function simplify(node::FinchNode, ctx)
     rules = getrules(ctx.algebra, ctx)
-    for (var, val) in ctx.bindings
-        append!(rules, getrules(ctx.algebra, ctx, var, val))
-    end
+    Prewalk((node) -> begin
+        if isvar(node)
+            append!(rules, getrules(ctx.algebra, ctx, node, resolve(node, ctx)))
+        elseif isvirtual(node)
+            append!(rules, getrules(ctx.algebra, ctx, node.val))
+        end
+        nothing
+    end)(node)
     Rewrite(Fixpoint(Prewalk(Chain(rules))))(node)
 end
 

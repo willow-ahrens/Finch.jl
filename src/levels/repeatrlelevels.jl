@@ -317,7 +317,7 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualRepeatRLELevel}, ctx, ::
                         $my_i_prev = $(ctx(getstart(ext))) - $(Ti(1))
                         $my_v = $D
                     end,
-                    body = Simplify(Fill(value(my_v, lvl.Tv), D)),
+                    body = Simplify(Fill(value(my_v, lvl.Tv))),
                     epilogue = quote
                         if $my_v_prev != $my_v && $my_i_prev > 0
                             $(record_run(ctx, my_i_prev, my_v_prev))

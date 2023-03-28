@@ -572,7 +572,9 @@ function display_expression(io, mime, node::FinchNode)
             display_expression(io, mime, arg)
             print(io, ", ")
         end
-        display_expression(io, mime, node.args[end])
+        if !isempty(node.args)
+            display_expression(io, mime, node.args[end])
+        end
         print(io, ")")
     elseif istree(node)
         print(io, operation(node))
@@ -622,12 +624,9 @@ function display_statement(io, mime, node::FinchNode, level)
     elseif node.kind === assign
         print(io, tab^level)
         display_expression(io, mime, node.lhs)
-        print(io, " ")
-        if node.lhs.mode.kind === updater
-            #TODO add << >>
-            display_expression(io, mime, node.op)
-        end
-        print(io, "= ")
+        print(io, " <<")
+        display_expression(io, mime, node.op)
+        print(io, ">>= ")
         display_expression(io, mime, node.rhs)
     elseif node.kind === protocol
         display_expression(io, mime, ex.idx)

@@ -38,6 +38,8 @@ include("lower.jl")
 include("dimensionalize.jl")
 include("annihilate.jl")
 
+include("looplets/fills.jl")
+include("looplets/nulls.jl")
 include("looplets/shifts.jl")
 include("looplets/chunks.jl")
 include("looplets/runs.jl")
