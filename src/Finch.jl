@@ -20,7 +20,7 @@ export walk, gallop, follow, extrude, laminate
 export fiber, @fiber, pattern!, dropdefaults, dropdefaults!, redefault!
 export diagmask, lotrimask, uptrimask, bandmask
 
-export choose, minby, maxby
+export choose, minby, maxby, overwrite, initwrite
 
 export permit, offset, staticoffset, window
 
@@ -31,7 +31,7 @@ registry = []
 include("semantics.jl")
 include("FinchNotation/FinchNotation.jl")
 using .FinchNotation
-using .FinchNotation: and, or, right
+using .FinchNotation: and, or, InitWriter
 include("virtualize.jl")
 include("style.jl")
 include("lower.jl")

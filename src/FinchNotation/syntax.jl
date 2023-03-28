@@ -1,4 +1,4 @@
-const incs = Dict(:+= => :+, :*= => :*, :&= => :&, :|= => :|)
+const incs = Dict(:+= => :+, :*= => :*, :&= => :&, :|= => :|, :(:=) => :overwrite)
 const evaluable_exprs = [:Inf, :Inf16, :Inf32, :Inf64, :(-Inf), :(-Inf16), :(-Inf32), :(-Inf64), :NaN, :NaN16, :NaN32, :NaN64, :nothing, :missing]
 
 const program_nodes = (
@@ -53,8 +53,46 @@ and(x, y, tail...) = x && and(y, tail...)
 or() = false
 or(x) = x
 or(x, y, tail...) = x || or(y, tail...)
-right(l, m, r...) = right(m, r)
-right(l, r) = r
+
+struct InitWriter{D} end
+
+(f::InitWriter{D})(x) where {D} = x
+@inline function (f::InitWriter{D})(x, y) where {D}
+    @debug begin
+        @assert isequal(x, D)
+    end
+    y
+end
+    
+
+"""
+    initwrite(z)(a, b)
+
+`initwrite(z)` is a function which may assert that `a` [isequal](@ref) to `z`, and
+`returns `b`.  By default, `lhs[] = rhs` is equivalent to `lhs[]
+<<initwrite(default(lhs))>>= rhs`.
+"""
+initwrite(z) = InitWriter{z}()
+
+"""
+    overwrite(z)(a, b)
+
+`overwrite(z)` is a function which returns `b` always. `lhs[] := rhs` is equivalent to
+`lhs[] <<overwrite>>= rhs`.
+
+```jldoctest setup=:(using Finch)
+julia> a = @fiber(sl(e(0.0)), [0, 1.1, 0, 4.4, 0])
+SparseList (0.0) [1:5]
+├─[2]: 1.1
+├─[4]: 4.4
+
+julia> x = Scalar(0.0); @finch @loop i x[] <<overwrite>>= a[i];
+
+julia> x[]
+0.0
+```
+"""
+overwrite(l, r) = r
 
 struct FinchParserVisitor
     nodes
@@ -129,7 +167,11 @@ function (ctx::FinchParserVisitor)(ex::Expr)
     elseif (@capture ex (~op)(~lhs, ~rhs)) && haskey(incs, op)
         return ctx(:($lhs << $(incs[op]) >>= $rhs))
     elseif @capture ex :(=)(:ref(~tns, ~idxs...), ~rhs)
-        return ctx(:($tns[$(idxs...)] << $right >>= $rhs))
+        tns isa Symbol && push!(ctx.results, tns)
+        mode = :($(ctx.nodes.updater)($(ctx.nodes.create)()))
+        lhs = :($(ctx.nodes.access)($(ctx(tns)), $mode, $(map(ctx, idxs)...)))
+        op = :($(ctx.nodes.literal)($initwrite($default($(esc(tns))))))
+        return :($(ctx.nodes.assign)($lhs, $op, $(ctx(rhs))))
     elseif @capture ex :>>=(:call(:<<, :ref(~tns, ~idxs...), ~op), ~rhs)
         tns isa Symbol && push!(ctx.results, tns)
         mode = :($(ctx.nodes.updater)($(ctx.nodes.create)()))

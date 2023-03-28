@@ -71,7 +71,6 @@ isassociative(alg, f::FinchNode) = f.kind === literal && isassociative(alg, f.va
 Return true when `f(a..., f(b...), c...) = f(a..., b..., c...)` in `algebra`.
 """
 isassociative(::Any, f) = false
-isassociative(::AbstractAlgebra, ::typeof(right)) = true
 isassociative(::AbstractAlgebra, ::typeof(or)) = true
 isassociative(::AbstractAlgebra, ::typeof(and)) = true
 isassociative(::AbstractAlgebra, ::typeof(coalesce)) = true
@@ -120,7 +119,7 @@ isidempotent(alg, f::FinchNode) = f.kind === literal && isidempotent(alg, f.val)
 Return true when `f(a, b) = f(f(a, b), b)` in `algebra`.
 """
 isidempotent(::Any, f) = false
-isidempotent(::AbstractAlgebra, ::typeof(right)) = true
+isidempotent(::AbstractAlgebra, ::typeof(overwrite)) = true
 isidempotent(::AbstractAlgebra, ::typeof(min)) = true
 isidempotent(::AbstractAlgebra, ::typeof(max)) = true
 isidempotent(::AbstractAlgebra, ::typeof(minby)) = true
@@ -146,6 +145,7 @@ isidentity(::AbstractAlgebra, ::typeof(max), x) = !ismissing(x) && isinf(x) && x
 isidentity(::AbstractAlgebra, ::typeof(minby), x) = !ismissing(x) && isinf(x[1]) && x > 0
 isidentity(::AbstractAlgebra, ::typeof(maxby), x) = !ismissing(x) && isinf(x[1]) && x < 0
 isidentity(::AbstractAlgebra, ::Chooser{D}, x) where {D} = isequal(x, D)
+isidentity(::AbstractAlgebra, ::InitWriter{D}, x) where {D} = isequal(x, D)
 
 isannihilator(alg) = (f, x) -> isannihilator(alg, f, x)
 isannihilator(alg, f::FinchNode, x::FinchNode) = isliteral(f) && isliteral(x) && isannihilator(alg, f.val, x.val)
@@ -225,11 +225,6 @@ function base_rules(alg, ctx)
 
         (@rule call(~f, ~a...) => if isliteral(f) && all(isliteral, a) && length(a) >= 1 literal(getvalue(f)(getvalue.(a)...)) end),
 
-        #TODO default needs to get defined on all writable chunks
-        #TODO Does it really though
-        #TODO I don't think this is safe to assume if we allow arbitrary updates
-        (@rule assign(access(~a, ~m, ~i...), $(literal(right)), ~b) => if virtual_default(resolve(a, ctx)) !== nothing && b == literal(something(virtual_default(resolve(a, ctx)))) sequence() end),
-
         (@rule loop(~i, sequence()) => sequence()),
         (@rule chunk(~i, ~a, sequence()) => sequence()),
         (@rule sequence(~a..., sequence(~b...), ~c...) => sequence(a..., b..., c...)),
@@ -271,7 +266,8 @@ function base_rules(alg, ctx)
         end),
 
         (@rule call($(literal(identity)), ~a) => a),
-        (@rule call($(literal(right)), ~a..., ~b, ~c) => c),
+        (@rule call($(literal(overwrite)), ~a, ~b) => b),
+        (@rule call(~f::isliteral, ~a, ~b) => if f.val isa InitWriter b end),
         (@rule call($(literal(ifelse)), $(literal(true)), ~a, ~b) => a),
         (@rule call($(literal(ifelse)), $(literal(false)), ~a, ~b) => b),
         (@rule call($(literal(ifelse)), ~a, ~b, ~b) => b),

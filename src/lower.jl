@@ -331,25 +331,30 @@ function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
             ctx))
     elseif root.kind === chunk
         idx_sym = ctx.freshen(getname(root.idx))
+        body = bind(ctx, getname(root.idx) => idx_sym) do 
+            contain(ctx) do ctx_2
+                body_3 = Rewrite(Postwalk(
+                    @rule access(~a::isvirtual, ~m, ~i..., ~j) => begin
+                        a_2 = get_point_body(a.val, ctx_2, value(idx_sym))
+                        if a_2 != nothing
+                            access(a_2, m, i...)
+                        else
+                            access(a, m, i..., j)
+                        end
+                    end
+                ))(root.body)
+                open_scope(body_3, ctx_2)
+            end
+        end
         if simplify((@f $(getlower(root.ext)) >= 1), ctx) == (@f true) && simplify((@f $(getupper(root.ext)) <= 1), ctx) == (@f true)
             return quote
                 $idx_sym = $(ctx(getstart(root.ext)))
-                $(bind(ctx, getname(root.idx) => idx_sym) do 
-                    contain(ctx) do ctx_2
-                        body_3 = ForLoopVisitor(ctx_2, root.idx, value(idx_sym))(root.body)
-                        open_scope(body_3, ctx_2)
-                    end
-                end)
+                $body
             end
         else
             return quote
                 for $idx_sym = $(ctx(getstart(root.ext))):$(ctx(getstop(root.ext)))
-                    $(bind(ctx, getname(root.idx) => idx_sym) do 
-                        contain(ctx) do ctx_2
-                            body_3 = ForLoopVisitor(ctx_2, root.idx, value(idx_sym))(root.body)
-                            open_scope(body_3, ctx_2)
-                        end
-                    end)
+                    $body
                 end
             end
         end
@@ -394,41 +399,9 @@ function lowerjulia_access(ctx, node, tns::Number)
     tns
 end
 
-@kwdef struct ForLoopVisitor
-    ctx
-    idx
-    val
-end
-
-function (ctx::ForLoopVisitor)(node)
-    if istree(node)
-        similarterm(node, operation(node), map(ctx, arguments(node)))
-    else
-        node
-    end
-end
-
-function (ctx::ForLoopVisitor)(node::FinchNode)
-    if node.kind === access && node.tns.kind === virtual
-        tns_2 = unchunk(node.tns.val, ctx)
-        if tns_2 === nothing
-            access(node.tns, node.mode, map(ctx, node.idxs)...)
-        else
-            access(tns_2, node.mode, map(ctx, node.idxs[1:end-1])...)
-        end
-    elseif istree(node)
-        similarterm(node, operation(node), map(ctx, arguments(node)))
-    else
-        node
-    end
-end
-
 @kwdef struct Lookup
-    val = nothing
     body
 end
-
-virtual_default(ex::Lookup) = Some(ex.val)
 
 Base.show(io::IO, ex::Lookup) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::Lookup)
@@ -437,9 +410,5 @@ end
 
 FinchNotation.isliteral(node::Lookup) =  false
 
-function (ctx::ForLoopVisitor)(node::Lookup)
-    node.body(ctx.val)
-end
-
-unchunk(node, ctx) = nothing
-unchunk(node::Lookup, ctx::ForLoopVisitor) = node.body(ctx.val)
+get_point_body(node, ctx, idx) = nothing
+get_point_body(node::Lookup, ctx, idx) = node.body(ctx, idx)
