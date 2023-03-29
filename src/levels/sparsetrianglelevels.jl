@@ -155,27 +155,23 @@ function get_readerupdater_triangular_dense_helper(fbr, ctx, get_readerupdater, 
 
 
     Furlable(
-        val = virtual_level_default(lvl),
         size = virtual_level_size(lvl, ctx),
-        body = (ctx, idx, ext) -> Lookup(
-            val = virtual_level_default(lvl),
-            body = (j) -> Thunk(
+        body = (ctx, ext) -> Lookup(
+            body = (ctx, j) -> Thunk(
                 preamble = quote
                     $q = (($(ctx(j)) * ($(ctx(j)) - $(Ti(1)))) >>> 0x01)
                 end,
                 body = Furlable(
-                    val = virtual_level_default(lvl),
                     size = virtual_level_size(lvl, ctx)[1:end-1],
-                    body = (ctx, idx, ext) -> Pipeline([
+                    body = (ctx, ext) -> Pipeline([
                         Phase(
-                            stride = (ctx, idx, ext) -> j,
-                            body = (start, step) -> Lookup(
-                                val = virtual_level_default(lvl),
-                                body = (i) -> get_readerupdater(subfiber_ctr(lvl.lvl, call(+, value(q, lvl.Ti), i)), ctx, protos...)
+                            stride = (ctx, ext) -> j,
+                            body = (ctx, ext) -> Lookup(
+                                body = (ctx, i) -> get_readerupdater(subfiber_ctr(lvl.lvl, call(+, value(q, lvl.Ti), i)), ctx, protos...)
                             )
                         ),
                         Phase(
-                            body = (start, step) -> Run(0)
+                            body = (ctx, ext) -> Run(0)
                         )
                     ])
                 )
