@@ -46,7 +46,7 @@ function (ctx::LowerJulia)(root::FinchNode, ::PipelineStyle)
 
             push!(thunk.args, contain(ctx) do ctx_2
                 push!(ctx_2.preamble, :($i0 = $i))
-                ctx_2(chunk(root.idx, Extent(start = value(i0), stop = call(max, getstop(root.ext), call(+, value(i0), 1))), body))
+                ctx_2(chunk(root.idx, Extent(start = value(i0), stop = equiv(getstop(root.ext), call(max, getstop(root.ext), value(i0)))), body))
             end)
 
             push!(visited, key)
