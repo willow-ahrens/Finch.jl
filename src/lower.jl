@@ -320,7 +320,8 @@ function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
                 reduce((x, y) -> :($x || $y), map(ctx, root.args))
             end
         elseif root.op == literal(equiv)
-            return ctx(first(root.args))
+            arg = root.args[something(findfirst(isvalue, root.args), 1)]
+            return ctx(arg)
         else
             :($(ctx(root.op))($(map(ctx, root.args)...)))
         end

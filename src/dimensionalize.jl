@@ -223,7 +223,7 @@ end
 
 getstart(ext::Extent) = ext.start
 getstop(ext::Extent) = ext.stop
-measure(ext::Extent) = call(-, ext.start, call(-, ext.stop, 1))
+measure(ext::Extent) = call(+, call(-, ext.stop, ext.start), 1)
 
 function getstop(ext::FinchNode)
     if ext.kind === virtual
