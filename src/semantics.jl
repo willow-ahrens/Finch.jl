@@ -42,3 +42,13 @@ the identity.
 See also: [`isliteral`](@ref)
 """
 getvalue(ex) = ex
+
+"""
+    default(fbr)
+
+The default for a fiber is the value that each element of the fiber will have
+after initialization. This value is most often zero, and defaults to nothing.
+
+See also: [`declare!`](@ref)
+"""
+function default end

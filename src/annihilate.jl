@@ -71,7 +71,6 @@ isassociative(alg, f::FinchNode) = f.kind === literal && isassociative(alg, f.va
 Return true when `f(a..., f(b...), c...) = f(a..., b..., c...)` in `algebra`.
 """
 isassociative(::Any, f) = false
-isassociative(::AbstractAlgebra, ::typeof(right)) = true
 isassociative(::AbstractAlgebra, ::typeof(or)) = true
 isassociative(::AbstractAlgebra, ::typeof(and)) = true
 isassociative(::AbstractAlgebra, ::typeof(coalesce)) = true
@@ -120,7 +119,7 @@ isidempotent(alg, f::FinchNode) = f.kind === literal && isidempotent(alg, f.val)
 Return true when `f(a, b) = f(f(a, b), b)` in `algebra`.
 """
 isidempotent(::Any, f) = false
-isidempotent(::AbstractAlgebra, ::typeof(right)) = true
+isidempotent(::AbstractAlgebra, ::typeof(overwrite)) = true
 isidempotent(::AbstractAlgebra, ::typeof(min)) = true
 isidempotent(::AbstractAlgebra, ::typeof(max)) = true
 isidempotent(::AbstractAlgebra, ::typeof(minby)) = true
@@ -146,6 +145,7 @@ isidentity(::AbstractAlgebra, ::typeof(max), x) = !ismissing(x) && isinf(x) && x
 isidentity(::AbstractAlgebra, ::typeof(minby), x) = !ismissing(x) && isinf(x[1]) && x > 0
 isidentity(::AbstractAlgebra, ::typeof(maxby), x) = !ismissing(x) && isinf(x[1]) && x < 0
 isidentity(::AbstractAlgebra, ::Chooser{D}, x) where {D} = isequal(x, D)
+isidentity(::AbstractAlgebra, ::InitWriter{D}, x) where {D} = isequal(x, D)
 
 isannihilator(alg) = (f, x) -> isannihilator(alg, f, x)
 isannihilator(alg, f::FinchNode, x::FinchNode) = isliteral(f) && isliteral(x) && isannihilator(alg, f.val, x.val)
@@ -186,18 +186,6 @@ isinvolution(::Any, f) = false
 isinvolution(::AbstractAlgebra, ::typeof(-)) = true
 isinvolution(::AbstractAlgebra, ::typeof(inv)) = true
 
-struct Fill
-    body::FinchNode
-    default
-    Fill(x, d=nothing) = new(finch_leaf(x), d)
-end
-
-FinchNotation.isliteral(::Fill) = false
-virtual_default(f::Fill) = Some(f.default)
-
-isfill(tns) = false
-isfill(tns::FinchNode) = tns.kind == virtual && tns.val isa Fill
-isvar(tns::FinchNode) = tns.kind == variable
 
 getvars(arr::AbstractArray) = mapreduce(getvars, vcat, arr, init=[])
 function getvars(node::FinchNode) 
@@ -210,6 +198,8 @@ function getvars(node::FinchNode)
     end
 end
 
+isvar(tns::FinchNode) = tns.kind == variable
+
 """
     base_rules(alg, ctx)
 
@@ -221,14 +211,7 @@ constants, and is the basis for how Finch understands sparsity.
 function base_rules(alg, ctx)
     shash = ctx.shash
     return [
-        (@rule access(~a::isfill, ~m, ~i...) => a.val.body), #TODO flesh this out
-
         (@rule call(~f, ~a...) => if isliteral(f) && all(isliteral, a) && length(a) >= 1 literal(getvalue(f)(getvalue.(a)...)) end),
-
-        #TODO default needs to get defined on all writable chunks
-        #TODO Does it really though
-        #TODO I don't think this is safe to assume if we allow arbitrary updates
-        (@rule assign(access(~a, ~m, ~i...), $(literal(right)), ~b) => if virtual_default(resolve(a, ctx)) !== nothing && b == literal(something(virtual_default(resolve(a, ctx)))) sequence() end),
 
         (@rule loop(~i, sequence()) => sequence()),
         (@rule chunk(~i, ~a, sequence()) => sequence()),
@@ -271,7 +254,8 @@ function base_rules(alg, ctx)
         end),
 
         (@rule call($(literal(identity)), ~a) => a),
-        (@rule call($(literal(right)), ~a..., ~b, ~c) => c),
+        (@rule call($(literal(overwrite)), ~a, ~b) => b),
+        (@rule call(~f::isliteral, ~a, ~b) => if f.val isa InitWriter b end),
         (@rule call($(literal(ifelse)), $(literal(true)), ~a, ~b) => a),
         (@rule call($(literal(ifelse)), $(literal(false)), ~a, ~b) => b),
         (@rule call($(literal(ifelse)), ~a, ~b, ~b) => b),
@@ -338,15 +322,25 @@ Return a list of constant propagation rules for a tensor stored in variable var.
 """
 getrules(alg, ctx, var, val) = base_rules(alg, ctx, var, val)
 
+getrules(alg, ctx, var) = base_rules(alg, ctx, var)
+
 base_rules(alg, ctx::LowerJulia, var, tns) = []
+
+base_rules(alg, ctx::LowerJulia, tns) = []
 
 getrules(ctx::LowerJulia) = getrules(ctx.algebra, ctx)
 
-function simplify(node, ctx)
+simplify(node, ctx) = node
+function simplify(node::FinchNode, ctx)
     rules = getrules(ctx.algebra, ctx)
-    for (var, val) in ctx.bindings
-        append!(rules, getrules(ctx.algebra, ctx, var, val))
-    end
+    Prewalk((node) -> begin
+        if isvar(node)
+            append!(rules, getrules(ctx.algebra, ctx, node, resolve(node, ctx)))
+        elseif isvirtual(node)
+            append!(rules, getrules(ctx.algebra, ctx, node.val))
+        end
+        nothing
+    end)(node)
     Rewrite(Fixpoint(Prewalk(Chain(rules))))(node)
 end
 

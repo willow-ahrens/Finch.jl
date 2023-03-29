@@ -15,19 +15,19 @@ Finch.virtual_size(::DiagMask, ctx) = (nodim, nodim)
 function get_reader(::DiagMask, ctx, protos...)
     tns = Furlable(
         size = (nodim, nodim),
-        body = (ctx, idx, ext) -> Lookup(
-            body = (i) -> Furlable(
+        body = (ctx, ext) -> Lookup(
+            body = (ctx, i) -> Furlable(
                 size = (nodim,),
-                body = (ctx, idx, ext) -> Pipeline([
+                body = (ctx, ext) -> Pipeline([
                     Phase(
-                        stride = (ctx, idx, ext) -> value(:($(ctx(i)) - 1)),
-                        body = (start, step) -> Run(body=Simplify(Fill(false)))
+                        stride = (ctx, ext) -> value(:($(ctx(i)) - 1)),
+                        body = (ctx, ext) -> Run(body=Simplify(Fill(false)))
                     ),
                     Phase(
-                        stride = (ctx, idx, ext) -> i,
-                        body = (start, step) -> Run(body=Simplify(Fill(true))),
+                        stride = (ctx, ext) -> i,
+                        body = (ctx, ext) -> Run(body=Simplify(Fill(true))),
                     ),
-                    Phase(body = (start, step) -> Run(body=Simplify(Fill(false))))
+                    Phase(body = (ctx, ext) -> Run(body=Simplify(Fill(false))))
                 ])
             )
         )
@@ -50,16 +50,16 @@ Finch.virtual_size(::UpTriMask, ctx) = (nodim, nodim)
 function get_reader(::UpTriMask, ctx, protos...)
     tns = Furlable(
         size = (nodim, nodim),
-        body = (ctx, idx, ext) -> Lookup(
-            body = (i) -> Furlable(
+        body = (ctx, ext) -> Lookup(
+            body = (ctx, i) -> Furlable(
                 size = (nodim,),
-                body = (ctx, idx, ext) -> Pipeline([
+                body = (ctx, ext) -> Pipeline([
                     Phase(
-                        stride = (ctx, idx, ext) -> value(:($(ctx(i)))),
-                        body = (start, step) -> Run(body=Simplify(Fill(true)))
+                        stride = (ctx, ext) -> value(:($(ctx(i)))),
+                        body = (ctx, ext) -> Run(body=Simplify(Fill(true)))
                     ),
                     Phase(
-                        body = (start, step) -> Run(body=Simplify(Fill(false))),
+                        body = (ctx, ext) -> Run(body=Simplify(Fill(false))),
                     )
                 ])
             )
@@ -83,16 +83,16 @@ Finch.virtual_size(::LoTriMask, ctx) = (nodim, nodim)
 function get_reader(::LoTriMask, ctx, protos...)
     tns = Furlable(
         size = (nodim, nodim),
-        body = (ctx, idx, ext) -> Lookup(
-            body = (i) -> Furlable(
+        body = (ctx, ext) -> Lookup(
+            body = (ctx, i) -> Furlable(
                 size = (nodim,),
-                body = (ctx, idx, ext) -> Pipeline([
+                body = (ctx, ext) -> Pipeline([
                     Phase(
-                        stride = (ctx, idx, ext) -> value(:($(ctx(i)) - 1)),
-                        body = (start, step) -> Run(body=Simplify(Fill(false)))
+                        stride = (ctx, ext) -> value(:($(ctx(i)) - 1)),
+                        body = (ctx, ext) -> Run(body=Simplify(Fill(false)))
                     ),
                     Phase(
-                        body = (start, step) -> Run(body=Simplify(Fill(true))),
+                        body = (ctx, ext) -> Run(body=Simplify(Fill(true))),
                     )
                 ])
             )
@@ -116,23 +116,23 @@ Finch.virtual_size(::BandMask, ctx) = (nodim, nodim, nodim)
 function get_reader(::BandMask, ctx, mode, protos...)
     tns = Furlable(
         size = (nodim, nodim, nodim),
-        body = (ctx, idx, ext) -> Lookup(
-            body = (k) -> Furlable(
+        body = (ctx, ext) -> Lookup(
+            body = (ctx, k) -> Furlable(
                 size = (nodim, nodim),
-                body = (ctx, idx, ext) -> Lookup(
-                    body = (j) -> Furlable(
+                body = (ctx, ext) -> Lookup(
+                    body = (ctx, j) -> Furlable(
                         size = (nodim,),
-                        body = (ctx, idx, ext) -> Pipeline([
+                        body = (ctx, ext) -> Pipeline([
                             Phase(
-                                stride = (ctx, idx, ext) -> value(:($(ctx(j)) - 1)),
-                                body = (start, step) -> Run(body=Simplify(Fill(false)))
+                                stride = (ctx, ext) -> value(:($(ctx(j)) - 1)),
+                                body = (ctx, ext) -> Run(body=Simplify(Fill(false)))
                             ),
                             Phase(
-                                stride = (ctx, idx, ext) -> k,
-                                body = (start, step) -> Run(body=Simplify(Fill(true)))
+                                stride = (ctx, ext) -> k,
+                                body = (ctx, ext) -> Run(body=Simplify(Fill(true)))
                             ),
                             Phase(
-                                body = (start, step) -> Run(body=Simplify(Fill(false))),
+                                body = (ctx, ext) -> Run(body=Simplify(Fill(false))),
                             )
                         ])
                     )

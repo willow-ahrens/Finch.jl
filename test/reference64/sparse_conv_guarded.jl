@@ -47,7 +47,6 @@ begin
                     fill_range!(C_lvl_2.val, 0.0, C_lvl_qos, C_lvl_qos_stop)
                 end
                 C_lvldirty = false
-                C_lvl_2_val_2 = C_lvl_2.val[C_lvl_qos]
                 s_2 = (+)(-3, i_7)
                 s_3 = s_2
                 j = 1
@@ -131,7 +130,7 @@ begin
                                     F_lvl_2_val_2 = F_lvl_2.val[F_lvl_q]
                                     C_lvldirty = true
                                     C_lvldirty = true
-                                    C_lvl_2_val_2 = (+)((*)((!=)(A_lvl_2_val_2, 0), (coalesce)(F_lvl_2_val_2, 0), (coalesce)(A_lvl_2_val_4, 0)), C_lvl_2_val_2)
+                                    C_lvl_2.val[C_lvl_qos] = (+)((*)((!=)(A_lvl_2_val_2, 0), (coalesce)(F_lvl_2_val_2, 0), (coalesce)(A_lvl_2_val_4, 0)), C_lvl_2.val[C_lvl_qos])
                                     A_lvl_q_2 += 1
                                 else
                                 end
@@ -190,7 +189,6 @@ begin
                     j_20 = j
                     j = F_lvl.shape + 1
                 end
-                C_lvl_2.val[C_lvl_qos] = C_lvl_2_val_2
                 if C_lvldirty
                     null = true
                     C_lvl.idx[C_lvl_qos] = i_7

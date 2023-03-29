@@ -30,7 +30,7 @@ Base.:(==)(a::DeclareInstance, b::DeclareInstance) = a.tns == b.tns && a.init ==
 
 @inline declare_instance(tns, init) = DeclareInstance(tns, init)
 
-Base.show(io::IO, node::DeclareInstance) = print(io, "declare_instance(", node.tns, node.init, ")")
+Base.show(io::IO, node::DeclareInstance) = print(io, "declare_instance(", node.tns, ", ", node.init, ")")
 
 struct FreezeInstance{Tns} <: FinchNodeInstance
 	tns::Tns
