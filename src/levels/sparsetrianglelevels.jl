@@ -106,15 +106,16 @@ end
 virtual_level_eltype(lvl::VirtualSparseTriangleLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSparseTriangleLevel) = virtual_level_default(lvl.lvl)
 
-function initialize_level!(lvl::VirtualSparseTriangleLevel, ctx::LowerJulia, pos)
-    lvl.lvl = initialize_level!(lvl.lvl, ctx, call(*, pos, lvl.I))
+function declare_level!(lvl::VirtualSparseTriangleLevel, ctx::LowerJulia, pos, init)
+    qos = call(literal(>>>), call(*, call(*, pos, lvl.J), call(+, lvl.J, lvl.Ti(1))), lvl.Ti(1))
+    lvl.lvl = declare_level!(lvl.lvl, ctx, qos, init)
     return lvl
 end
 
 function trim_level!(lvl::VirtualSparseTriangleLevel, ctx::LowerJulia, pos)
     qos = ctx.freshen(:qos)
     push!(ctx.preamble, quote
-        $qos = $(ctx(pos)) * $(ctx(lvl.I))
+        $qos = (($(ctx(lvl.J)) * ($(ctx(lvl.J)) + $(lvl.Ti(1)))) >>> 0x01)
     end)
     lvl.lvl = trim_level!(lvl.lvl, ctx, value(qos))
     return lvl
@@ -122,7 +123,7 @@ end
 
 function assemble_level!(lvl::VirtualSparseTriangleLevel, ctx, pos_start, pos_stop)
     qos_start = call(+, call(*, call(-, pos_start, lvl.Ti(1)), lvl.I), 1)
-    qos_stop = call(*, pos_stop, lvl.I)
+    qos_stop = call(literal(>>>), call(*, call(*, pos_stop, lvl.J), call(+, lvl.J, lvl.Ti(1))), lvl.Ti(1))
     assemble_level!(lvl.lvl, ctx, qos_start, qos_stop)
 end
 
@@ -142,17 +143,15 @@ end
 is_laminable_updater(lvl::VirtualSparseTriangleLevel, ctx, ::Union{Nothing, Laminate, Extrude}, protos...) =
     is_laminable_updater(lvl.lvl, ctx, protos...)
 
-get_reader(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, ::Union{Nothing, Follow}, ::Union{Nothing, Follow}, protos...) = get_readerupdater_triangular_dense_helper(fbr, ctx, get_reader, VirtualSubFiber, protos...)
-get_updater(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, ::Union{Nothing, Laminate, Extrude}, protos...) = get_readerupdater_triangular_dense_helper(fbr, ctx, get_updater, VirtualSubFiber, protos...)
-get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseTriangleLevel}, ctx, ::Union{Nothing, Laminate, Extrude}, protos...) = get_readerupdater_triangular_dense_helper(fbr, ctx, get_updater, (lvl, pos) -> VirtualTrackedSubFiber(lvl, pos, fbr.dirty), protos...)
-function get_readerupdater_triangular_dense_helper(fbr, ctx, get_readerupdater, subfiber_ctr, protos...)
+get_reader(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, ::Union{Nothing, Follow}, ::Union{Nothing, Follow}, protos...) = get_reader_triangular_dense_helper(fbr, ctx, get_reader, VirtualSubFiber, protos...)
+get_updater(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, ::Union{Nothing, Laminate, Extrude}, ::Union{Nothing, Laminate, Extrude}, protos...) = get_updater_triangular_dense_helper(fbr, ctx, get_updater, VirtualSubFiber, protos...)
+get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseTriangleLevel}, ctx, ::Union{Nothing, Laminate, Extrude}, ::Union{Nothing, Laminate, Extrude}, protos...) = get_updater_triangular_dense_helper(fbr, ctx, get_updater, (lvl, pos) -> VirtualTrackedSubFiber(lvl, pos, fbr.dirty), protos...)
+function get_reader_triangular_dense_helper(fbr, ctx, get_readerupdater, subfiber_ctr, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
 
-
     q = ctx.freshen(tag, :_q)
-
 
     Furlable(
         size = virtual_level_size(lvl, ctx),
@@ -171,7 +170,40 @@ function get_readerupdater_triangular_dense_helper(fbr, ctx, get_readerupdater, 
                             )
                         ),
                         Phase(
-                            body = (ctx, ext) -> Run(0)
+                            body = (ctx, ext) -> Run(0.0)
+                        )
+                    ])
+                )
+            )
+        )
+    )
+end
+
+function get_updater_triangular_dense_helper(fbr, ctx, get_readerupdater, subfiber_ctr, protos...)
+    (lvl, pos) = (fbr.lvl, fbr.pos)
+    tag = lvl.ex
+    Ti = lvl.Ti
+
+    q = ctx.freshen(tag, :_q)
+
+    Furlable(
+        size = virtual_level_size(lvl, ctx),
+        body = (ctx, ext) -> Lookup(
+            body = (ctx, j) -> Thunk(
+                preamble = quote
+                    $q = (($(ctx(j)) * ($(ctx(j)) - $(Ti(1)))) >>> 0x01)
+                end,
+                body = Furlable(
+                    size = virtual_level_size(lvl, ctx)[1:end-1],
+                    body = (ctx, ext) -> Pipeline([
+                        Phase(
+                            stride = (ctx, ext) -> j,
+                            body = (ctx, ext) -> Lookup(
+                                body = (ctx, i) -> get_readerupdater(subfiber_ctr(lvl.lvl, call(+, value(q, lvl.Ti), i)), ctx, protos...)
+                            )
+                        ),
+                        Phase(
+                            body = (ctx, ext) -> Null()
                         )
                     ])
                 )
