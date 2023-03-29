@@ -234,7 +234,7 @@ function base_rules(alg, ctx)
         (@rule call($(literal(<)), call($(literal(min)), ~a...), ~b) => call(or, map(x -> call(x < b), a)...)),
 
         #expand equivs
-        (@rule call($(literal(equiv)), ~a..., call($(literal(equiv)), ~b...), ~c...) => call(equiv, ~a..., ~b..., ~c...)),
+        Fixpoint(@rule call($(literal(equiv)), ~a..., call($(literal(equiv)), ~b...), ~c...) => call(equiv, ~a..., ~b..., ~c...)),
         (@rule call(~f, ~a..., call($(literal(equiv)), ~b...), ~c...) => call(equiv, map(x -> call(f, a..., x, c...), b)...)),
         (@rule call($(literal(equiv)), ~a..., ~b::isliteral, ~c...) => b),
 
@@ -305,6 +305,7 @@ function base_rules(alg, ctx)
                 assign(access(b, updater(m), j...), +, call(*, measure(a), d))
             end
         end),
+        #((x) -> println(x)),
     ]
 end
 

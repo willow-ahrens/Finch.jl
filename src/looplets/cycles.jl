@@ -13,7 +13,8 @@ function lower_cycle(root, ctx, idx, ext, style)
         ctx_2(chunk(root.idx, Extent(start = value(i0), stop = call(max, getstop(root.ext), call(+, value(i0), 1))), body))
     end
 
-    if simplify(call(==, measure(ext), 1), LowerJulia())
+    @assert isvirtual(ext)
+    if simplify(call(==, measure(ext.val), 1), LowerJulia()) == literal(true)
         body_2
     else
         return quote

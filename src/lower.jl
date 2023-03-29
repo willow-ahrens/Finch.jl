@@ -348,7 +348,8 @@ function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
                 open_scope(body_3, ctx_2)
             end
         end
-        if simplify((@f $(getlower(root.ext)) >= 1), ctx) == (@f true) && simplify((@f $(getupper(root.ext)) <= 1), ctx) == (@f true)
+        @assert isvirtual(root.ext)
+        if simplify(measure(root.ext.val), ctx) == literal(1)
             return quote
                 $idx_sym = $(ctx(getstart(root.ext)))
                 $body

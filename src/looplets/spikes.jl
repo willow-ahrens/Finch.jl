@@ -28,7 +28,8 @@ function (ctx::LowerJulia)(root::FinchNode, ::SpikeStyle)
         root_body = Rewrite(Postwalk(
             @rule access(~a::isvirtual, ~i...) => access(get_spike_body(a.val, ctx, root.ext, body_ext), ~i...)
         ))(root.body)
-        if measure(root.ext) == 1
+        @assert isvirtual(root.ext)
+        if measure(root.ext.val) == 1
             body_expr = quote end
         else
             #TODO check body nonempty
