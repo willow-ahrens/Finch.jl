@@ -34,7 +34,7 @@ freeze!(arr::VirtualAbstractArray, ctx::LowerJulia) = arr
 get_reader(arr::VirtualAbstractArray, ctx::LowerJulia, protos...) = arr
 get_updater(arr::VirtualAbstractArray, ctx::LowerJulia, protos...) = arr
 
-FinchNotation.isliteral(::VirtualAbstractArray) =  false
+FinchNotation.finch_leaf(x::VirtualAbstractArray) = virtual(x)
 
 virtual_default(::VirtualAbstractArray) = 0
 virtual_eltype(tns::VirtualAbstractArray) = tns.eltype

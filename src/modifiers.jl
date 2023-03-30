@@ -16,7 +16,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualPermit)
 	print(io, "VirtualPermit()")
 end
 
-FinchNotation.isliteral(::VirtualPermit) =  false
+FinchNotation.finch_leaf(x::VirtualPermit) = virtual(x)
 
 virtualize(ex, ::Type{Permit}, ctx) = VirtualPermit()
 
@@ -66,7 +66,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualOffset)
 	print(io, "VirtualOffset()")
 end
 
-FinchNotation.isliteral(::VirtualOffset) =  false
+FinchNotation.finch_leaf(x::VirtualOffset) = virtual(x)
 
 virtualize(ex, ::Type{Offset}, ctx) = VirtualOffset()
 
@@ -123,7 +123,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualStaticOffset)
 	print(io, "VirtualStaticOffset($(ex.delta))")
 end
 
-FinchNotation.isliteral(::VirtualStaticOffset) =  false
+FinchNotation.finch_leaf(x::VirtualStaticOffset) = virtual(x)
 
 function virtualize(ex, ::Type{StaticOffset{Delta}}, ctx) where {Delta}
     VirtualStaticOffset(virtualize(:($ex.delta), Delta, ctx))
@@ -184,7 +184,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualWindow)
 	print(io, ")")
 end
 
-FinchNotation.isliteral(::VirtualWindow) =  false
+FinchNotation.finch_leaf(x::VirtualWindow) = virtual(x)
 
 function virtualize(ex, ::Type{Window{Start, Stop}}, ctx) where {Start, Stop}
     start = virtualize(:($ex.start), Start, ctx)

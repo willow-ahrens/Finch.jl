@@ -34,16 +34,6 @@ Return a new expression, identical to `ex`, with the name `name`.
 function setname end
 
 """
-    getvalue(ex)
-
-If `isliteral(ex)` is `true`, return the value of `ex`. Defaults to
-the identity.
-
-See also: [`isliteral`](@ref)
-"""
-getvalue(ex) = ex
-
-"""
     default(fbr)
 
 The default for a fiber is the value that each element of the fiber will have

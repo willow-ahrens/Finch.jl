@@ -3,7 +3,7 @@ struct Fill
     Fill(x) = new(finch_leaf(x))
 end
 
-FinchNotation.isliteral(::Fill) = false
+FinchNotation.finch_leaf(x::Fill) = virtual(x)
 virtual_default(f::Fill) = Some(f.body)
 
 (ctx::Stylize{LowerJulia})(::Fill) = SimplifyStyle()

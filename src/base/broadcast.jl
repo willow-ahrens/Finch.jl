@@ -120,18 +120,18 @@ end
 
 function (ctx::PointwiseRep)(rep, idxs, ::PointwiseRepeatStyle)
     background = simplify(PostWalk(Chain([
-        (@rule access(~ex::isvirtual, ~m, ~i...) => default(ex.val)),
+        (@rule access(~ex::isvirtual, ~m, ~i...) => finch_leaf(default(ex.val))),
     ]))(rep), LowerJulia())
     @assert isliteral(background)
-    return RepeatData(finch_leaf(background).val, typeof(finch_leaf(background).val))
+    return RepeatData(background.val, typeof(background.val))
 end
 
 function (ctx::PointwiseRep)(rep, idxs, ::PointwiseElementStyle)
     background = simplify(Postwalk(Chain([
-        (@rule access(~ex::isvirtual, ~m) => default(ex.val)),
+        (@rule access(~ex::isvirtual, ~m) => finch_leaf(default(ex.val))),
     ]))(rep), LowerJulia())
     @assert isliteral(background)
-    return ElementData(finch_leaf(background).val, typeof(finch_leaf(background).val))
+    return ElementData(background.val, typeof(background.val))
 end
 
 pointwise_rep_hollow(ex::HollowData) = Fill(default(ex))
