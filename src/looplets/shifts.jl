@@ -25,7 +25,7 @@ supports_shift(style) = false
 supports_shift(::DefaultStyle) = true
 (ctx::Stylize{LowerJulia})(node::Shift) = (@assert supports_shift(ctx(node.body)) "$(ctx(node.body))"; ctx(node.body))
 
-unchunk(node::Shift, ctx::ForLoopVisitor) = unchunk(node.body, ForLoopVisitor(;kwfields(ctx)..., val = call(-, ctx.val, node.delta)))
+get_point_body(node::Shift, ctx, idx) = get_point_body(node.body, ctx, call(-, idx, node.delta))
 
 supports_shift(::ThunkStyle) = true
 (ctx::ThunkVisitor)(node::Shift) = Shift(;kwfields(node)..., body = ctx(node.body))

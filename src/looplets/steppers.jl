@@ -41,12 +41,12 @@ end
 
 @kwdef struct Step
     stride
-    next = (ctx, idx, ext) -> quote end
+    next = (ctx, ext) -> quote end
     chunk = nothing
-    body = (ctx, idx, ext, ext_2) -> Switch([
-        value(:($(ctx(stride(ctx, idx, ext))) == $(ctx(getstop(ext_2))))) => Thunk(
+    body = (ctx, ext, ext_2) -> Switch([
+        value(:($(ctx(stride(ctx, ext))) == $(ctx(getstop(ext_2))))) => Thunk(
             body = truncate_weak(chunk, ctx, ext, ext_2),
-            epilogue = next(ctx, idx, ext_2)
+            epilogue = next(ctx, ext_2)
         ),
         literal(true) => 
             truncate_strong(chunk, ctx, ext, ext_2),
@@ -57,8 +57,8 @@ FinchNotation.isliteral(::Step) =  false
 
 (ctx::Stylize{LowerJulia})(node::Step) = ctx.root.kind === chunk ? PhaseStyle() : DefaultStyle()
 
-(ctx::PhaseStride)(node::Step) = Narrow(Extent(start = getstart(ctx.ext), stop = node.stride(ctx.ctx, ctx.idx, ctx.ext), lower = literal(1)))
+(ctx::PhaseStride)(node::Step) = Narrow(Extent(start = getstart(ctx.ext), stop = node.stride(ctx.ctx, ctx.ext), lower = literal(1)))
 
-(ctx::PhaseBodyVisitor)(node::Step) = node.body(ctx.ctx, ctx.idx, ctx.ext, ctx.ext_2)
+(ctx::PhaseBodyVisitor)(node::Step) = node.body(ctx.ctx, ctx.ext, ctx.ext_2)
 
 supports_shift(::StepperStyle) = true

@@ -30,7 +30,7 @@ begin
             phase_stop_2 = (min)(A_lvl_i, phase_stop)
             j_5 = j
             if A_lvl_i == phase_stop_2
-                for j_6 = j_start_2:phase_stop_2 - 1
+                for j_6 = j_start_2:(-)(phase_stop_2, 1)
                     cond = (==)(j_6, 1)
                     if cond
                     end

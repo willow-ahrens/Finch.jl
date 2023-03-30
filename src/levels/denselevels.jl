@@ -183,11 +183,9 @@ function get_readerupdater_dense_helper(fbr, ctx, get_readerupdater, subfiber_ct
 
     Furlable(
         tight = (get_readerupdater == get_updater && !is_laminable_updater(lvl.lvl, ctx, protos...)) ? lvl : nothing,
-        val = virtual_level_default(lvl),
         size = virtual_level_size(lvl, ctx),
-        body = (ctx, idx, ext) -> Lookup(
-            val = virtual_level_default(lvl),
-            body = (i) -> Thunk(
+        body = (ctx, ext) -> Lookup(
+            body = (ctx, i) -> Thunk(
                 preamble = quote
                     $q = ($(ctx(pos)) - $(Ti(1))) * $(ctx(lvl.shape)) + $(ctx(i))
                 end,

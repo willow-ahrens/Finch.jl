@@ -146,28 +146,10 @@ is_laminable_updater(lvl::VirtualElementLevel, ctx) = true
 
 function get_updater(fbr::VirtualSubFiber{VirtualElementLevel}, ctx)
     (lvl, pos) = (fbr.lvl, fbr.pos)
-    val = ctx.freshen(lvl.ex, :_val)
-    return Thunk(
-        preamble = quote
-            $val = $(lvl.ex).val[$(ctx(pos))]
-        end,
-        body = VirtualScalar(nothing, lvl.Tv, lvl.D, gensym(), val),
-        epilogue = quote
-            $(lvl.ex).val[$(ctx(pos))] = $val
-        end
-    )
+    VirtualScalar(nothing, lvl.Tv, lvl.D, gensym(), :($(lvl.ex).val[$(ctx(pos))]))
 end
 
 function get_updater(fbr::VirtualTrackedSubFiber{VirtualElementLevel}, ctx)
     (lvl, pos) = (fbr.lvl, fbr.pos)
-    val = ctx.freshen(lvl.ex, :_val)
-    return Thunk(
-        preamble = quote
-            $val = $(lvl.ex).val[$(ctx(pos))]
-        end,
-        body = VirtualDirtyScalar(nothing, lvl.Tv, lvl.D, gensym(), val, fbr.dirty),
-        epilogue = quote
-            $(lvl.ex).val[$(ctx(pos))] = $val
-        end
-    )
+    VirtualDirtyScalar(nothing, lvl.Tv, lvl.D, gensym(), :($(lvl.ex).val[$(ctx(pos))]), fbr.dirty)
 end

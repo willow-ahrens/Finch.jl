@@ -27,10 +27,10 @@ virtual_eldim(arr::VirtualAbstractUnitRange, ctx::LowerJulia, idx_dim) = arr.tar
 function get_reader(arr::VirtualAbstractUnitRange, ctx, proto_idx)
     Furlable(
         size = (nodim,),
-        body = (ctx, idx, ext) -> Lookup(
-            body = (i) -> Fill(value(:($(arr.ex)[$(ctx(i))])))
+        body = (ctx, ext) -> Lookup(
+            body = (ctx, i) -> Fill(value(:($(arr.ex)[$(ctx(i))])))
         ),
-        fuse = (tns, ctx, idx, ext) ->
+        fuse = (tns, ctx, ext) ->
             Shift(truncate(tns, ctx, ext, arr.target), call(-, getstart(ext), getstart(arr.target)))
     )
 end

@@ -91,7 +91,7 @@ end
             $dst = $dst_ctr
             @finch begin
                 $dst .= $(init)
-                @loop($(reverse(idxs)...), $dst[$(dst_idxs...)] = $pw_ex)
+                @loop($(reverse(idxs)...), $dst[$(dst_idxs...)] <<$op>>= $pw_ex)
             end
             $res_ex
         end

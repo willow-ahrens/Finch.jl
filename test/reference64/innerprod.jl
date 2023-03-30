@@ -30,7 +30,6 @@ begin
             end
             B_lvl_2dirty = false
             A_lvl_q_2 = (1 - 1) * A_lvl.shape + i_4
-            B_lvl_3_val_2 = B_lvl_3.val[B_lvl_2_qos]
             A_lvl_2_q = A_lvl_2.ptr[A_lvl_q]
             A_lvl_2_q_stop = A_lvl_2.ptr[A_lvl_q + 1]
             if A_lvl_2_q < A_lvl_2_q_stop
@@ -73,7 +72,7 @@ begin
                         k_6 = phase_stop_2
                         B_lvl_2dirty = true
                         B_lvl_2dirty = true
-                        B_lvl_3_val_2 = (+)(B_lvl_3_val_2, (*)(A_lvl_3_val_3, A_lvl_3_val_2))
+                        B_lvl_3.val[B_lvl_2_qos] = (+)(B_lvl_3.val[B_lvl_2_qos], (*)(A_lvl_3_val_3, A_lvl_3_val_2))
                         A_lvl_2_q += 1
                         A_lvl_2_q_2 += 1
                     elseif A_lvl_2_i_2 == phase_stop_2
@@ -105,7 +104,6 @@ begin
                 k_9 = k
                 k = A_lvl_2.shape + 1
             end
-            B_lvl_3.val[B_lvl_2_qos] = B_lvl_3_val_2
             if B_lvl_2dirty
                 null = true
                 B_lvl_2.idx[B_lvl_2_qos] = i_4
@@ -124,5 +122,5 @@ begin
     qos_2 = B_lvl_2.ptr[end] - 1
     resize!(B_lvl_2.idx, qos_2)
     resize!(B_lvl_3.val, qos_2)
-    (B = Fiber((Finch.DenseLevel){Int64}((Finch.SparseListLevel){Int64}(B_lvl_3, A_lvl.shape, B_lvl_2.ptr, B_lvl_2.idx), A_lvl.shape)),)
+    (B = Fiber((Finch.DenseLevel){Int64}((Finch.SparseListLevel){Int64, Int64}(B_lvl_3, A_lvl.shape, B_lvl_2.ptr, B_lvl_2.idx), A_lvl.shape)),)
 end

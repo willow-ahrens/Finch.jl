@@ -106,15 +106,7 @@ virtual_eltype(tns::AbstractVirtualFiber) = virtual_level_eltype(tns.lvl)
 virtual_elaxis(tns::AbstractVirtualFiber) = nodim
 virtual_default(tns::AbstractVirtualFiber) = Some(virtual_level_default(tns.lvl))
 
-"""
-    default(fbr)
 
-The default for a fiber is the value that each element of the fiber will have
-after initialization. This value is most often zero, and defaults to nothing.
-
-See also: [`declare!`](@ref)
-"""
-function default end
 
 """
     declare_level!(lvl, ctx, pos, init)

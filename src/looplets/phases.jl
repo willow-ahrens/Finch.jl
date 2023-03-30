@@ -1,8 +1,8 @@
 @kwdef struct Phase
     head = nothing
     body
-    stride = (ctx, idx, ext) -> nothing
-    range = (ctx, idx, ext) -> Extent(start = getstart(ext), stop = something(stride(ctx, idx, ext), getstop(ext)))
+    stride = (ctx, ext) -> nothing
+    range = (ctx, ext) -> Extent(start = getstart(ext), stop = something(stride(ctx, ext), getstop(ext)))
 end
 FinchNotation.isliteral(::Phase) =  false
 
@@ -13,7 +13,6 @@ end
 
 @kwdef struct PhaseStride
     ctx
-    idx
     ext
 end
 
@@ -35,12 +34,11 @@ function (ctx::PhaseStride)(node::FinchNode)
     end
 end
 
-(ctx::PhaseStride)(node::Phase) = Narrow(node.range(ctx.ctx, ctx.idx, ctx.ext))
+(ctx::PhaseStride)(node::Phase) = Narrow(node.range(ctx.ctx, ctx.ext))
 (ctx::PhaseStride)(node::Shift) = shiftdim(PhaseStride(;kwfields(ctx)..., ext = shiftdim(ctx.ext, call(-, node.delta)))(node.body), node.delta)
 
 @kwdef struct PhaseBodyVisitor
     ctx
-    idx
     ext
     ext_2
 end
@@ -62,10 +60,10 @@ function (ctx::PhaseBodyVisitor)(node::FinchNode)
     end
 end
 
-(ctx::PhaseBodyVisitor)(node::Phase) = node.body(getstart(ctx.ext_2), getstop(ctx.ext_2))
+(ctx::PhaseBodyVisitor)(node::Phase) = node.body(ctx.ctx, ctx.ext_2)
 (ctx::PhaseBodyVisitor)(node::Spike) = truncate(node, ctx.ctx, ctx.ext, ctx.ext_2) #TODO This should be called on everything
 
-(ctx::PhaseBodyVisitor)(node::Shift) = Shift(PhaseBodyVisitor(ctx.ctx, ctx.idx, shiftdim(ctx.ext, call(-, node.delta)), shiftdim(ctx.ext_2, call(-, node.delta)))(node.body), node.delta)
+(ctx::PhaseBodyVisitor)(node::Shift) = Shift(PhaseBodyVisitor(ctx.ctx, shiftdim(ctx.ext, call(-, node.delta)), shiftdim(ctx.ext_2, call(-, node.delta)))(node.body), node.delta)
 
 struct PhaseStyle end
 
@@ -91,10 +89,10 @@ function (ctx::LowerJulia)(root::FinchNode, ::PhaseStyle)
 
         body = root.body
 
-        ext_2 = resolvedim(PhaseStride(ctx, root.idx, root.ext)(body))
+        ext_2 = resolvedim(PhaseStride(ctx, root.ext)(body))
         ext_2 = cache_dim!(ctx, :phase, resolvedim(resultdim(ctx, Narrow(root.ext), ext_2)))
 
-        body = PhaseBodyVisitor(ctx, root.idx, root.ext, ext_2)(body)
+        body = PhaseBodyVisitor(ctx, root.ext, ext_2)(body)
         body = quote
             $i0 = $i
             $(contain(ctx) do ctx_4
