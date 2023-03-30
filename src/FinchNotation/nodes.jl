@@ -760,3 +760,19 @@ function Finch.setname(x::FinchNode, sym)
 end
 
 display_expression(io, mime, ex) = show(IOContext(io, :compact=>true), mime, ex)
+
+"""
+    finch_leaf(x)
+
+Return a terminal finch node wrapper around `x`. A convenience function to
+determine whether `x` should be understood by default as a literal, value, or
+virtual.
+"""
+finch_leaf(arg) = literal(arg)
+finch_leaf(arg::Type) = literal(arg)
+finch_leaf(arg::Function) = literal(arg)
+finch_leaf(arg::FinchNode) = arg
+
+Base.convert(::Type{FinchNode}, x) = finch_leaf(x)
+Base.convert(::Type{FinchNode}, x::FinchNode) = x
+Base.convert(::Type{FinchNode}, x::Symbol) = error()
