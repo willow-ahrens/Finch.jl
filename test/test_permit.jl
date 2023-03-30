@@ -1,4 +1,5 @@
 @testset "permit" begin
+    @info "Testing Shifted Looplets"
     using SparseArrays
 
     A_ref = sprand(10, 0.5); B_ref = sprand(10, 0.5); C_ref = vcat(A_ref, B_ref)

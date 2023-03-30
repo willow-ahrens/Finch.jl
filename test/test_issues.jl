@@ -2,6 +2,7 @@ using SparseArrays
 using Finch: Cindex
 
 @testset "issues" begin
+    @info "Testing Github Issues"
     #https://github.com/willow-ahrens/Finch.jl/issues/51
     let
         x = @fiber(d(e(0.0)), [1, 2, 3])
@@ -206,8 +207,8 @@ using Finch: Cindex
         println(io, "A :", A)
         println(io, "C :", C)
         println(io, "redefault!(B, Inf) :", redefault!(B, Inf))
-        println(redefault!(B, Inf))
-        println(C)
+        println(io, redefault!(B, Inf))
+        println(io, C)
         @test isstructequal(redefault!(B, Inf), C)
         @test check_output("issue118.txt", String(take!(io)))
     end

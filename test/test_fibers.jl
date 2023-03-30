@@ -1,4 +1,5 @@
 @testset "fibers" begin
+    @info "Testing standard use cases"
     A_ref = [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0]
     B_ref = A_ref
     A = @fiber(sl(e(0.0)), A_ref)
