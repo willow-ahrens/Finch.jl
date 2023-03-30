@@ -39,9 +39,8 @@ FinchNotation.finch_leaf(x::VirtualAbstractArray) = virtual(x)
 virtual_default(::VirtualAbstractArray) = 0
 virtual_eltype(tns::VirtualAbstractArray) = tns.eltype
 
+default(a::AbstractArray) = default(typeof(a))
 default(T::Type{<:AbstractArray}) = zero(eltype(T))
-
-
 
 struct AsArray{T, N, Fbr} <: AbstractArray{T, N}
     fbr::Fbr

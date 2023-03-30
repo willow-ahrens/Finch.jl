@@ -5,7 +5,7 @@ Like [`fiber`](@ref), copies an array-like object `arr` into a corresponding,
 similar `Fiber` datastructure. However, `fiber!` reuses memory whenever
 possible, meaning `arr` may be rendered unusable.
 """
-fiber!(arr, default=zero(eltype(arr))) = fiber(arr, default=default)
+fiber!(arr; default=zero(eltype(arr))) = fiber(arr, default=default)
 
 """
     fiber(arr, default = zero(eltype(arr)))
@@ -26,7 +26,7 @@ julia> println(summary(fiber(ones(3, 2, 4))))
 3×2×4 @fiber(d(d(d(e(0.0)))))
 ```
 """
-function fiber(arr, default=zero(eltype(arr)))
+function fiber(arr; default=zero(eltype(arr)))
     Base.copyto!(Fiber((DenseLevel^(ndims(arr)))(Element{default}())), arr)
 end
 
