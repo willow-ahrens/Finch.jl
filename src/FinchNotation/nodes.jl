@@ -776,3 +776,13 @@ finch_leaf(arg::FinchNode) = arg
 Base.convert(::Type{FinchNode}, x) = finch_leaf(x)
 Base.convert(::Type{FinchNode}, x::FinchNode) = x
 Base.convert(::Type{FinchNode}, x::Symbol) = error()
+
+#overload RewriteTools pattern constructor so we don't need
+#to wrap leaf nodes.
+finch_pattern(arg) = finch_leaf(arg)
+finch_pattern(arg::RewriteTools.Slot) = arg
+finch_pattern(arg::RewriteTools.Segment) = arg
+finch_pattern(arg::RewriteTools.Term) = arg
+function RewriteTools.term(f::FinchNodeKind, args...; type = nothing)
+    RewriteTools.Term(f, [finch_pattern.(args)...])
+end

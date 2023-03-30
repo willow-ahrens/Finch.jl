@@ -221,14 +221,14 @@ function base_rules(alg, ctx)
         (@rule chunk(~i, ~a, sequence()) => sequence()),
         (@rule sequence(~a..., sequence(~b...), ~c...) => sequence(a..., b..., c...)),
 
-        (@rule call($(literal(>=)), call($(literal(max)), ~a...), ~b) => call(or, map(x -> call(x >= b), a)...)),
-        (@rule call($(literal(>)), call($(literal(max)), ~a...), ~b) => call(or, map(x -> call(x > b), a)...)),
-        (@rule call($(literal(<=)), call($(literal(max)), ~a...), ~b) => call(and, map(x -> call(x <= b), a)...)),
-        (@rule call($(literal(<)), call($(literal(max)), ~a...), ~b) => call(and, map(x -> call(x < b), a)...)),
-        (@rule call($(literal(>=)), call($(literal(min)), ~a...), ~b) => call(and, map(x -> call(x >= b), a)...)),
-        (@rule call($(literal(>)), call($(literal(min)), ~a...), ~b) => call(and, map(x -> call(x > b), a)...)),
-        (@rule call($(literal(<=)), call($(literal(min)), ~a...), ~b) => call(or, map(x -> call(x <= b), a)...)),
-        (@rule call($(literal(<)), call($(literal(min)), ~a...), ~b) => call(or, map(x -> call(x < b), a)...)),
+        (@rule call(>=, call(max, ~a...), ~b) => call(or, map(x -> call(x >= b), a)...)),
+        (@rule call(>, call(max, ~a...), ~b) => call(or, map(x -> call(x > b), a)...)),
+        (@rule call(<=, call(max, ~a...), ~b) => call(and, map(x -> call(x <= b), a)...)),
+        (@rule call(<, call(max, ~a...), ~b) => call(and, map(x -> call(x < b), a)...)),
+        (@rule call(>=, call(min, ~a...), ~b) => call(and, map(x -> call(x >= b), a)...)),
+        (@rule call(>, call(min, ~a...), ~b) => call(and, map(x -> call(x > b), a)...)),
+        (@rule call(<=, call(min, ~a...), ~b) => call(or, map(x -> call(x <= b), a)...)),
+        (@rule call(<, call(min, ~a...), ~b) => call(or, map(x -> call(x < b), a)...)),
         (@rule call(~f::isassociative(alg), ~a..., call(~f, ~b...), ~c...) => call(f, a..., b..., c...)),
         (@rule call(~f::iscommutative(alg), ~a...) => if !(issorted(a, by = shash))
             call(f, sort(a, by = shash)...)
@@ -250,19 +250,19 @@ function base_rules(alg, ctx)
         (@rule assign(access(~a, updater(~m), ~i...), ~f, ~b) => if isidentity(alg, f, b) sequence() end),
         (@rule assign(access(~a, ~m, ~i...), $(literal(missing))) => sequence()),
         (@rule assign(access(~a, ~m, ~i..., $(literal(missing)), ~j...), ~b) => sequence()),
-        (@rule call($(literal(coalesce)), ~a..., ~b, ~c...) => if isvalue(b) && !(Missing <: b.type) || isliteral(b) && !ismissing(b.val)
+        (@rule call(coalesce, ~a..., ~b, ~c...) => if isvalue(b) && !(Missing <: b.type) || isliteral(b) && !ismissing(b.val)
             call(coalesce, a..., b)
         end),
-        (@rule call($(literal(something)), ~a..., ~b, ~c...) => if isvalue(b) && !(Nothing <: b.type) || isliteral(b) && b != literal(nothing)
+        (@rule call(something, ~a..., ~b, ~c...) => if isvalue(b) && !(Nothing <: b.type) || isliteral(b) && b != literal(nothing)
             call(something, a..., b)
         end),
 
-        (@rule call($(literal(identity)), ~a) => a),
-        (@rule call($(literal(overwrite)), ~a, ~b) => b),
+        (@rule call(identity, ~a) => a),
+        (@rule call(overwrite, ~a, ~b) => b),
         (@rule call(~f::isliteral, ~a, ~b) => if f.val isa InitWriter b end),
-        (@rule call($(literal(ifelse)), $(literal(true)), ~a, ~b) => a),
-        (@rule call($(literal(ifelse)), $(literal(false)), ~a, ~b) => b),
-        (@rule call($(literal(ifelse)), ~a, ~b, ~b) => b),
+        (@rule call(ifelse, true, ~a, ~b) => a),
+        (@rule call(ifelse, false, ~a, ~b) => b),
+        (@rule call(ifelse, ~a, ~b, ~b) => b),
         (@rule $(literal(-0.0)) => literal(0.0)),
 
         (@rule call(~f, call(~g, ~a, ~b...)) => if isinverse(alg, f, g) && isassociative(alg, g)
@@ -273,25 +273,25 @@ function base_rules(alg, ctx)
             call(g, a..., c..., d...)
         end),
 
-        (@rule call($(literal(-)), ~a, ~b) => call(+, a, call(-, b))),
-        (@rule call($(literal(/)), ~a, ~b) => call(*, a, call(inv, b))),
+        (@rule call(-, ~a, ~b) => call(+, a, call(-, b))),
+        (@rule call(/, ~a, ~b) => call(*, a, call(inv, b))),
 
         (@rule call(~f::isinvolution(alg), call(~f, ~a)) => a),
         (@rule call(~f, ~a..., call(~g, ~b), ~c...) => if isdistributive(alg, g, f)
             call(g, call(f, a..., b, c...))
         end),
 
-        (@rule call($(literal(/)), ~a) => call(inv, a)),
+        (@rule call(/, ~a) => call(inv, a)),
 
-        (@rule sieve($(literal(true)), ~a) => a),
-        (@rule sieve($(literal(false)), ~a) => sequence()), #TODO should add back skipvisitor
+        (@rule sieve(true, ~a) => a),
+        (@rule sieve(false, ~a) => sequence()), #TODO should add back skipvisitor
 
         (@rule chunk(~i, ~a, assign(access(~b, updater(~m), ~j...), ~f::isidempotent(alg), ~c)) => begin
             if i ∉ j && getname(i) ∉ getunbound(c)
                 assign(access(b, updater(m), j...), f, c)
             end
         end),
-        (@rule chunk(~i, ~a, assign(access(~b, updater(~m), ~j...), $(literal(+)), ~d)) => begin
+        (@rule chunk(~i, ~a, assign(access(~b, updater(~m), ~j...), +, ~d)) => begin
             if i ∉ j && getname(i) ∉ getunbound(d)
                 assign(access(b, updater(m), j...), +, call(*, extent(a), d))
             end
