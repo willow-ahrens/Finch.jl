@@ -198,6 +198,12 @@ function getvars(node::FinchNode)
     end
 end
 
+struct All{F}
+    f::F
+end
+
+@inline (f::All{F})(args) where {F} = all(f.f, args)
+
 """
     base_rules(alg, ctx)
 
@@ -209,7 +215,7 @@ constants, and is the basis for how Finch understands sparsity.
 function base_rules(alg, ctx)
     shash = ctx.shash
     return [
-        (@rule call(~f, ~a...) => if isliteral(f) && all(isliteral, a) && length(a) >= 1 literal(getvalue(f)(getvalue.(a)...)) end),
+        (@rule call(~f::isliteral, ~a::(All(isliteral))...) => literal(getval(f)(getval.(a)...))),
 
         (@rule loop(~i, sequence()) => sequence()),
         (@rule chunk(~i, ~a, sequence()) => sequence()),

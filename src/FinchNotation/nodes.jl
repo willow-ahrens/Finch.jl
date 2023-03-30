@@ -215,13 +215,48 @@ end
 """
     isstateful(node)
 
-Returns true if the node is an index statement, and false if the node is an
-index expression. Typically, index statements specify control flow and 
-index expressions describe values.
+Returns true if the node is a finch statement, and false if the node is an
+index expression. Typically, statements specify control flow and 
+expressions describe values.
 """
 isstateful(node::FinchNode) = Int(node.kind) & IS_STATEFUL != 0
 
-is_constant(node::FinchNode) = Int(node.kind) & IS_CONST != 0
+"""
+    isliteral(node)
+
+Returns true if the node is a finch literal
+"""
+isliteral(ex::FinchNode) = ex.kind === literal
+
+"""
+    isvalue(node)
+
+Returns true if the node is a finch value
+"""
+isvalue(ex::FinchNode) = ex.kind === value
+
+"""
+    isconstant(node)
+
+Returns true if the node can be expected to be constant within the current finch context
+"""
+isconstant(node::FinchNode) = Int(node.kind) & IS_CONST != 0
+
+"""
+    isvirtual(node)
+
+Returns true if the node is a finch virtual
+"""
+isvirtual(ex::FinchNode) = ex.kind === virtual
+
+"""
+    isvariable(node)
+
+Returns true if the node is a finch variable
+"""
+isvariable(ex::FinchNode) = ex.kind === variable
+
+getval(ex::FinchNode) = ex.val
 
 SyntaxInterface.istree(node::FinchNode) = Int(node.kind) & IS_TREE != 0
 SyntaxInterface.arguments(node::FinchNode) = node.children
@@ -702,11 +737,6 @@ function Base.hash(a::FinchNode, h::UInt)
     else
         return false
     end
-end
-
-function Finch.getvalue(ex::FinchNode)
-    ex.kind === literal || error("expected literal")
-    ex.val
 end
 
 function Finch.getname(x::FinchNode)

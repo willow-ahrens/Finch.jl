@@ -18,7 +18,7 @@ module FinchNotation
     export sequence
     export protocol
     export sieve
-    export FinchNode, value, isvalue
+    export FinchNode
 
     export Follow, follow
     export Walk, walk
@@ -30,16 +30,12 @@ module FinchNotation
 
     export isliteral, isvalue, isconstant, isvirtual, isvariable
 
+    export getval
+
     export overwrite, initwrite
 
     include("nodes.jl")
     include("instances.jl")
     include("protocols.jl")
     include("syntax.jl")
-
-    isliteral(ex::FinchNode) = ex.kind === literal
-    isvalue(ex::FinchNode) = ex.kind === value
-    isconstant(ex::FinchNode) = isliteral(ex) || isvalue(ex)
-    isvirtual(ex::FinchNode) = ex.kind === virtual
-    isvariable(ex::FinchNode) = ex.kind === variable
 end
