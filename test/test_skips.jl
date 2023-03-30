@@ -1,4 +1,5 @@
 @testset "skips" begin
+    @info "Testing Seek Kernels"
 
     A = @fiber(sl(e(0.0)), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
     B = Scalar{0.0}()
@@ -28,8 +29,6 @@
     @finch (B .= 0; B[] += A[5])
 
     @test B() == 4.0
-
-    println(B)
 
     @finch (B .= 0; B[] += A[6])
 
