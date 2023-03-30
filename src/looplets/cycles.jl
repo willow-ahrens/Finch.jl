@@ -10,7 +10,7 @@ function lower_cycle(root, ctx, idx, ext, style)
 
     body_2 = contain(ctx) do ctx_2
         push!(ctx_2.preamble, :($i0 = $i))
-        ctx_2(chunk(root.idx, Extent(start = value(i0), stop = call(max, getstop(root.ext), call(+, value(i0), 1))), body))
+        ctx_2(chunk(root.idx, Extent(start = value(i0), stop = getstop(root.ext)), body))
     end
 
     @assert isvirtual(ext)
