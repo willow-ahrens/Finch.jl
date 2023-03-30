@@ -68,6 +68,7 @@ function open_scope(prgm, ctx::LowerJulia)
 end
 
 function cache!(ctx, var, val)
+    val = finch_leaf(val)
     if isliteral(val)
         return val
     end

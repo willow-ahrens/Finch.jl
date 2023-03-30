@@ -198,8 +198,6 @@ function getvars(node::FinchNode)
     end
 end
 
-isvar(tns::FinchNode) = tns.kind == variable
-
 """
     base_rules(alg, ctx)
 
@@ -334,7 +332,7 @@ simplify(node, ctx) = node
 function simplify(node::FinchNode, ctx)
     rules = getrules(ctx.algebra, ctx)
     Prewalk((node) -> begin
-        if isvar(node)
+        if isvariable(node)
             append!(rules, getrules(ctx.algebra, ctx, node, resolve(node, ctx)))
         elseif isvirtual(node)
             append!(rules, getrules(ctx.algebra, ctx, node.val))

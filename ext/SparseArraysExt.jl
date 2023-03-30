@@ -126,7 +126,7 @@ function Finch.get_updater(arr::VirtualSparseMatrixCSC, ctx::LowerJulia, protos.
     throw(FormatLimitation("Finch does not support writes to SparseMatrixCSC"))
 end
 
-Finch.FinchNotation.isliteral(::VirtualSparseMatrixCSC) =  false
+Finch.FinchNotation.finch_leaf(x::VirtualSparseMatrixCSC) = virtual(x)
 
 Finch.virtual_default(arr::VirtualSparseMatrixCSC) = zero(arr.Tv)
 Finch.virtual_eltype(tns::VirtualSparseMatrixCSC) = tns.Tv
@@ -223,7 +223,7 @@ function Finch.get_updater(arr::VirtualSparseVector, ctx::LowerJulia, protos...)
     throw(FormatLimitation("Finch does not support writes to SparseVector"))
 end
 
-Finch.FinchNotation.isliteral(::VirtualSparseVector) =  false
+Finch.FinchNotation.finch_leaf(x::VirtualSparseVector) = virtual(x)
 
 Finch.virtual_default(arr::VirtualSparseVector) = zero(arr.Tv)
 Finch.virtual_eltype(tns::VirtualSparseVector) = tns.Tv

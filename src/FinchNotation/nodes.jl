@@ -212,10 +212,6 @@ struct FinchNode
     children::Vector{FinchNode}
 end
 
-isvalue(node::FinchNode) = node.kind === value
-#TODO Delete this one when you can
-isvalue(node) = false
-
 """
     isstateful(node)
 
@@ -707,8 +703,6 @@ function Base.hash(a::FinchNode, h::UInt)
         return false
     end
 end
-
-FinchNotation.isliteral(node::FinchNode) = node.kind === literal
 
 function Finch.getvalue(ex::FinchNode)
     ex.kind === literal || error("expected literal")

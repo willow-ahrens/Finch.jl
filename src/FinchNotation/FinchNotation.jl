@@ -7,6 +7,7 @@ module FinchNotation
     export literal
     export index
     export variable
+    export virtual
     export value
     export loop
     export Chunk, chunk
@@ -27,28 +28,18 @@ module FinchNotation
 
     export @f, @finch_program, @finch_program_instance
 
-    export isliteral, is_constant, virtual
-    export isvirtual
+    export isliteral, isvalue, isconstant, isvirtual, isvariable
 
     export overwrite, initwrite
-
-    """
-        isliteral(ex)
-
-    Return a boolean indicating whether the expression is a literal. If an
-    expression is a literal, `getvalue(ex)` should return the literal value it
-    corresponds to. `getvalue` defaults to the identity.
-    TODO this is out of date
-
-    See also: [`getvalue`](@ref)
-    """
-    isliteral(ex) = true
-
 
     include("nodes.jl")
     include("instances.jl")
     include("protocols.jl")
     include("syntax.jl")
 
+    isliteral(ex::FinchNode) = ex.kind === literal
+    isvalue(ex::FinchNode) = ex.kind === value
+    isconstant(ex::FinchNode) = isliteral(ex) || isvalue(ex)
     isvirtual(ex::FinchNode) = ex.kind === virtual
+    isvariable(ex::FinchNode) = ex.kind === variable
 end
