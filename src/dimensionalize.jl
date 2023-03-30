@@ -213,11 +213,9 @@ FinchNotation.isliteral(::Extent) = false
 Base.:(==)(a::Extent, b::Extent) = a.start == b.start && a.stop == b.stop
 
 function cache_dim!(ctx, var, ext::Extent)
-    start_val = cache!(ctx, Symbol(var, :_start), ext.start)
-    stop_val = cache!(ctx, Symbol(var, :_stop), ext.stop)
     Extent(
-        start = simplify(call(equiv, start_val, ext.start), ctx),
-        stop = simplify(call(equiv, stop_val, ext.stop), ctx)
+        start = cache!(ctx, Symbol(var, :_start), ext.start),
+        stop = cache!(ctx, Symbol(var, :_stop), ext.stop)
     )
 end
 

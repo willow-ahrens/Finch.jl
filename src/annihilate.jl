@@ -233,11 +233,6 @@ function base_rules(alg, ctx)
         (@rule call($(literal(<=)), call($(literal(min)), ~a...), ~b) => call(or, map(x -> call(x <= b), a)...)),
         (@rule call($(literal(<)), call($(literal(min)), ~a...), ~b) => call(or, map(x -> call(x < b), a)...)),
 
-        #expand equivs
-        Fixpoint(@rule call($(literal(equiv)), ~a..., call($(literal(equiv)), ~b...), ~c...) => call(equiv, ~a..., ~b..., ~c...)),
-        (@rule call(~f, ~a..., call($(literal(equiv)), ~b...), ~c...) => call(equiv, map(x -> call(f, a..., x, c...), b)...)),
-        (@rule call($(literal(equiv)), ~a..., ~b::isliteral, ~c...) => b),
-
         (@rule call(~f::isassociative(alg), ~a..., call(~f, ~b...), ~c...) => call(f, a..., b..., c...)),
         (@rule call(~f::iscommutative(alg), ~a...) => if !(issorted(a, by = shash))
             call(f, sort(a, by = shash)...)
