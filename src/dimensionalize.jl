@@ -1,6 +1,6 @@
 struct NoDimension end
 const nodim = NoDimension()
-FinchNotation.isliteral(::NoDimension) = false
+FinchNotation.finch_leaf(x::NoDimension) = virtual(x)
 virtualize(ex, ::Type{NoDimension}, ctx) = nodim
 
 getstart(::NoDimension) = error("asked for start of dimensionless range")
@@ -35,7 +35,7 @@ end
     body
 end
 
-FinchNotation.isliteral(::Dimensionalize) =  false
+FinchNotation.finch_leaf(x::Dimensionalize) = virtual(x)
 
 struct DimensionalizeStyle end
 
@@ -208,7 +208,7 @@ combinedim(ctx, a::NoDimension, b) = b
     stop
 end
 
-FinchNotation.isliteral(::Extent) = false
+FinchNotation.finch_leaf(x::Extent) = virtual(x)
 
 Base.:(==)(a::Extent, b::Extent) = a.start == b.start && a.stop == b.stop
 
@@ -250,7 +250,7 @@ struct SuggestedExtent{Ext}
     ext::Ext
 end
 
-FinchNotation.isliteral(::SuggestedExtent) = false
+FinchNotation.finch_leaf(x::SuggestedExtent) = virtual(x)
 
 Base.:(==)(a::SuggestedExtent, b::SuggestedExtent) = a.ext == b.ext
 
@@ -331,7 +331,7 @@ function Narrow(ext::FinchNode)
     end
 end
 
-FinchNotation.isliteral(::Narrow) = false
+FinchNotation.finch_leaf(x::Narrow) = virtual(x)
 
 narrowdim(dim) = Narrow(dim)
 narrowdim(::NoDimension) = nodim
@@ -353,7 +353,7 @@ function Widen(ext::FinchNode)
     end
 end
 
-FinchNotation.isliteral(::Widen) = false
+FinchNotation.finch_leaf(x::Widen) = virtual(x)
 
 widendim(dim) = Widen(dim)
 widendim(::NoDimension) = nodim

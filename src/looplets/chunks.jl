@@ -114,7 +114,7 @@ end
 virtual_default(tns::Furlable) = Some(tns.val)
 virtual_size(tns::Furlable, ::LowerJulia, dim=nothing) = tns.size
 
-FinchNotation.isliteral(::Furlable) = false
+FinchNotation.finch_leaf(x::Furlable) = virtual(x)
 
 #Base.show(io::IO, ex::Furlable) = Base.show(io, MIME"text/plain"(), ex)
 #function Base.show(io::IO, mime::MIME"text/plain", ex::Furlable)

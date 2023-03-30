@@ -10,7 +10,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Spike)
     print(io, ")")
 end
 
-FinchNotation.isliteral(::Spike) =  false
+FinchNotation.finch_leaf(x::Spike) = virtual(x)
 
 struct SpikeStyle end
 

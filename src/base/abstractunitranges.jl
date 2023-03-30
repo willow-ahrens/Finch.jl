@@ -42,7 +42,7 @@ end
 get_updater(arr::VirtualAbstractUnitRange, ctx::LowerJulia, protos...) = 
     throw(FormatLimitation("$(arr.arrtype) is not writeable"))
 
-FinchNotation.isliteral(::VirtualAbstractUnitRange) =  false
+FinchNotation.finch_leaf(x::VirtualAbstractUnitRange) = virtual(x)
 
 virtual_default(::VirtualAbstractUnitRange) = 0
 virtual_eltype(tns::VirtualAbstractUnitRange) = tns.eltype

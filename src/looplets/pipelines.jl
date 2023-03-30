@@ -7,7 +7,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Pipeline)
     print(io, "Pipeline()")
 end
 
-FinchNotation.isliteral(::Pipeline) =  false
+FinchNotation.finch_leaf(x::Pipeline) = virtual(x)
 
 struct PipelineStyle end
 

@@ -68,6 +68,7 @@ function open_scope(prgm, ctx::LowerJulia)
 end
 
 function cache!(ctx, var, val)
+    val = finch_leaf(val)
     if isliteral(val)
         return val
     end
@@ -137,7 +138,7 @@ struct ThunkStyle end
     epilogue = quote end
     binds = ()
 end
-FinchNotation.isliteral(::Thunk) =  false
+FinchNotation.finch_leaf(x::Thunk) = virtual(x)
 
 Base.show(io::IO, ex::Thunk) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::Thunk)
@@ -193,15 +194,9 @@ function (ctx::ThunkVisitor)(node::Thunk)
     node.body
 end
 
-FinchNotation.isliteral(::Union{Symbol, Expr}) =  false
 (ctx::LowerJulia)(root::Union{Symbol, Expr}, ::DefaultStyle) = root
 
-function (ctx::LowerJulia)(root, ::DefaultStyle)
-    if isliteral(root)
-        return getvalue(root)
-    end
-    error("Don't know how to lower $root")
-end
+(ctx::LowerJulia)(root, ::DefaultStyle) = ctx(finch_leaf(root))
 
 """
     InstantiateTensors(ctx)
@@ -409,7 +404,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Lookup)
     print(io, "Lookup()")
 end
 
-FinchNotation.isliteral(node::Lookup) =  false
+FinchNotation.finch_leaf(x::Lookup) = virtual(x)
 
 get_point_body(node, ctx, idx) = nothing
 get_point_body(node::Lookup, ctx, idx) = node.body(ctx, idx)

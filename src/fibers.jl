@@ -25,7 +25,7 @@ function virtualize(ex, ::Type{<:Fiber{Lvl}}, ctx, tag=ctx.freshen(:tns)) where 
     VirtualFiber(lvl)
 end
 (ctx::Finch.LowerJulia)(fbr::VirtualFiber) = :(Fiber($(ctx(fbr.lvl))))
-FinchNotation.isliteral(::VirtualFiber) = false
+FinchNotation.finch_leaf(x::VirtualFiber) = virtual(x)
 
 """
     SubFiber(lvl, pos)
@@ -47,7 +47,7 @@ function virtualize(ex, ::Type{<:SubFiber{Lvl, Pos}}, ctx, tag=ctx.freshen(:tns)
     VirtualSubFiber(lvl, pos)
 end
 (ctx::Finch.LowerJulia)(fbr::VirtualSubFiber) = :(SubFiber($(ctx(fbr.lvl)), $(ctx(fbr.pos))))
-FinchNotation.isliteral(::VirtualSubFiber) =  false
+FinchNotation.finch_leaf(x::VirtualSubFiber) = virtual(x)
 
 """
     level_ndims(::Type{Lvl})
@@ -171,7 +171,7 @@ function virtualize(ex, ::Type{<:TrackedSubFiber{Lvl, Pos, Dirty}}, ctx, tag=ctx
     VirtualTrackedSubFiber(lvl, pos, dirty)
 end
 (ctx::Finch.LowerJulia)(fbr::VirtualTrackedSubFiber) = :(TrackedSubFiber($(ctx(fbr.lvl)), $(ctx(fbr.pos))))
-FinchNotation.isliteral(::VirtualTrackedSubFiber) = false
+FinchNotation.finch_leaf(x::VirtualTrackedSubFiber) = virtual(x)
 
 function get_updater(fbr::VirtualTrackedSubFiber, ctx, protos...)
     Thunk(

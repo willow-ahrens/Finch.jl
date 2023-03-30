@@ -10,7 +10,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Stepper)
     print(io, "Stepper()")
 end
 
-FinchNotation.isliteral(::Stepper) =  false
+FinchNotation.finch_leaf(x::Stepper) = virtual(x)
 
 (ctx::Stylize{LowerJulia})(node::Stepper) = ctx.root.kind === chunk ? StepperStyle() : DefaultStyle()
 
@@ -53,7 +53,7 @@ end
         ])
 end
 
-FinchNotation.isliteral(::Step) =  false
+FinchNotation.finch_leaf(x::Step) = virtual(x)
 
 (ctx::Stylize{LowerJulia})(node::Step) = ctx.root.kind === chunk ? PhaseStyle() : DefaultStyle()
 
