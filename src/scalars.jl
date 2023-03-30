@@ -39,7 +39,7 @@ virtual_size(::VirtualScalar, ctx) = ()
 virtual_default(tns::VirtualScalar) = Some(tns.D)
 virtual_eltype(tns::VirtualScalar) = tns.Tv
 
-FinchNotation.isliteral(::VirtualScalar) = false
+FinchNotation.finch_leaf(x::VirtualScalar) = virtual(x)
 
 function declare!(tns::VirtualScalar, ctx, init)
     push!(ctx.preamble, quote
@@ -80,7 +80,7 @@ virtual_eltype(tns::VirtualDirtyScalar) = tns.Tv
 get_reader(tns::VirtualDirtyScalar, ctx) = tns
 get_updater(tns::VirtualDirtyScalar, ctx) = tns
 
-FinchNotation.isliteral(::VirtualDirtyScalar) = false
+FinchNotation.finch_leaf(x::VirtualDirtyScalar) = virtual(x)
 
 function lowerjulia_access(ctx::LowerJulia, node, tns::VirtualDirtyScalar)
     @assert isempty(node.idxs)

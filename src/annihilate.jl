@@ -351,4 +351,4 @@ function (ctx::LowerJulia)(root, ::SimplifyStyle)
     ctx(root)
 end
 
-FinchNotation.isliteral(::Simplify) = false
+FinchNotation.finch_leaf(x::Simplify) = virtual(x)

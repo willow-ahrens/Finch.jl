@@ -10,7 +10,7 @@ end
 Base.first(arg::Case) = arg.cond
 Base.last(arg::Case) = arg.body
 
-FinchNotation.isliteral(::Switch) =  false
+FinchNotation.finch_leaf(x::Switch) = virtual(x)
 
 struct SwitchStyle end
 
