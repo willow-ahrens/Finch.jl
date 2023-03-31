@@ -49,7 +49,7 @@ end
             epilogue = next(ctx, ext_2)
         ),
         literal(true) => 
-            truncate(chunk, ctx, ext, Extent(getstart(ext_2), call(cached, getstop(ext_2), call(min, call(-, getstop(ext), 1), getstop(ext_2))))),
+            truncate(chunk, ctx, ext, ext_2), #Extent(getstart(ext_2), call(cached, getstop(ext_2), call(min, call(-, stride(ctx, ext), 1), getstop(ext_2))))),
         ])
 end
 
