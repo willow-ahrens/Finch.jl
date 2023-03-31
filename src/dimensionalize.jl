@@ -214,8 +214,8 @@ Base.:(==)(a::Extent, b::Extent) = a.start == b.start && a.stop == b.stop
 
 function cache_dim!(ctx, var, ext::Extent)
     Extent(
-        start = cache!(ctx, Symbol(var, :_start), ext.start),
-        stop = cache!(ctx, Symbol(var, :_stop), ext.stop)
+        start = cache!(ctx, Symbol(var, :_start), simplify(ext.start, ctx)),
+        stop = cache!(ctx, Symbol(var, :_stop), simplify(ext.stop, ctx))
     )
 end
 
@@ -274,12 +274,17 @@ combinedim(ctx, a::SuggestedExtent, b::NoDimension) = a
 combinedim(ctx, a::SuggestedExtent, b::SuggestedExtent) = SuggestedExtent(combinedim(ctx, a.ext, b.ext))
 
 function checklim(ctx, a::FinchNode, b::FinchNode)
-    if isliteral(a) && isliteral(b)
-        a == b || throw(DimensionMismatch("mismatched dimension limits ($a != $b)"))
+    cmp = simplify(call(==, a, b), ctx)
+    if b == value(:(x_lvl.shape), Int)
+        error()
     end
-    push!(ctx.preamble, quote
-        $(ctx(a)) == $(ctx(b)) || throw(DimensionMismatch("mismatched dimension limits ($($(ctx(a))) != $($(ctx(b))))"))
-    end)
+    if isliteral(cmp)
+        cmp.val || throw(DimensionMismatch("mismatched dimension limits ($a != $b)"))
+    else
+        push!(ctx.preamble, quote
+            $(ctx(a)) == $(ctx(b)) || throw(DimensionMismatch("mismatched dimension limits ($($(ctx(a))) != $($(ctx(b))))"))
+        end)
+    end
     call(equiv, a, b)
 end
 

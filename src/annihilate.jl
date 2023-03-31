@@ -80,6 +80,7 @@ Return true when `f(a..., f(b...), c...) = f(a..., b..., c...)` in `algebra`.
 isassociative(::Any, f) = false
 isassociative(::AbstractAlgebra, ::typeof(or)) = true
 isassociative(::AbstractAlgebra, ::typeof(and)) = true
+isassociative(::AbstractAlgebra, ::typeof(equiv)) = true
 isassociative(::AbstractAlgebra, ::typeof(coalesce)) = true
 isassociative(::AbstractAlgebra, ::typeof(something)) = true
 isassociative(::AbstractAlgebra, ::typeof(+)) = true
@@ -100,6 +101,7 @@ Return true when for all permutations p, `f(a...) = f(a[p]...)` in `algebra`.
 iscommutative(::Any, f) = false
 iscommutative(::AbstractAlgebra, ::typeof(or)) = true
 iscommutative(::AbstractAlgebra, ::typeof(and)) = true
+iscommutative(::AbstractAlgebra, ::typeof(equiv)) = true
 iscommutative(::AbstractAlgebra, ::typeof(+)) = true
 iscommutative(::AbstractAlgebra, ::typeof(*)) = true
 iscommutative(::AbstractAlgebra, ::typeof(min)) = true
@@ -126,6 +128,7 @@ isidempotent(alg, f::FinchNode) = f.kind === literal && isidempotent(alg, f.val)
 Return true when `f(a, b) = f(f(a, b), b)` in `algebra`.
 """
 isidempotent(::Any, f) = false
+isidempotent(::AbstractAlgebra, ::typeof(equiv)) = true
 isidempotent(::AbstractAlgebra, ::typeof(overwrite)) = true
 isidempotent(::AbstractAlgebra, ::typeof(min)) = true
 isidempotent(::AbstractAlgebra, ::typeof(max)) = true
@@ -263,6 +266,8 @@ function base_rules(alg, ctx)
         (@rule call(something, ~a..., ~b, ~c...) => if isvalue(b) && !(Nothing <: b.type) || isliteral(b) && b != literal(nothing)
             call(something, a..., b)
         end),
+
+        (@rule call(~f, ~a::All(isliteral)..., call(equiv, ~b...), ~c::All(isliteral)...) => call(equiv, map(x -> call(f, a..., x, c...), b)...)),
 
         (@rule call(identity, ~a) => a),
         (@rule call(overwrite, ~a, ~b) => b),
