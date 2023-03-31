@@ -69,16 +69,16 @@ end
 
 function cache!(ctx, var, val)
     val = finch_leaf(val)
-    isliteral(val) && return val
-    isvalue(val) && return val
-    body = contain(ctx_2 -> ctx_2(val), ctx) 
-    body isa Expr || return val
+    isconstant(val) && return val
+    if @capture val call(cached, ~a::isconstant, ~b)
+        return val 
+    end
     var = ctx.freshen(var)
     push!(ctx.preamble, Expr(:cache, var,
     quote
-        $var = $body
+        $var = $(contain(ctx_2 -> ctx_2(val), ctx))
     end))
-    return call(equiv, value(var, Any), val) #TODO could we do better here?
+    return simplify(call(cached, value(var, Any), val), ctx)
 end
 
 bind(f, ctx::LowerJulia) = f()
@@ -304,9 +304,8 @@ function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
             else
                 reduce((x, y) -> :($x || $y), map(ctx, root.args))
             end
-        elseif root.op == literal(equiv)
-            @assert !isempty(root.args)
-            return ctx(root.args[something(findfirst(isliteral, root.args), findfirst(isvalue, root.args), 1)])
+        #elseif root.op == literal(cached)
+        #    return ctx(root.args[1])
         else
             :($(ctx(root.op))($(map(ctx, root.args)...)))
         end
@@ -335,7 +334,7 @@ function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
             end
         end
         @assert isvirtual(root.ext)
-        if simplify(measure(root.ext.val), ctx) == literal(1)
+        if query(call(==, measure(root.ext.val), 1), ctx)
             return quote
                 $idx_sym = $(ctx(getstart(root.ext)))
                 $body

@@ -274,14 +274,9 @@ combinedim(ctx, a::SuggestedExtent, b::NoDimension) = a
 combinedim(ctx, a::SuggestedExtent, b::SuggestedExtent) = SuggestedExtent(combinedim(ctx, a.ext, b.ext))
 
 function checklim(ctx, a::FinchNode, b::FinchNode)
-    cmp = simplify(call(==, a, b), ctx)
-    if isliteral(cmp)
-        cmp.val || throw(DimensionMismatch("mismatched dimension limits ($a != $b)"))
-    else
-        push!(ctx.preamble, quote
-            $(ctx(a)) == $(ctx(b)) || throw(DimensionMismatch("mismatched dimension limits ($($(ctx(a))) != $($(ctx(b))))"))
-        end)
-    end
+    push!(ctx.preamble, quote
+        $(ctx(simplify(call(==, a, b), ctx))) || throw(DimensionMismatch("mismatched dimension limits ($($(ctx(a))) != $($(ctx(b))))"))
+    end)
     call(equiv, a, b)
 end
 

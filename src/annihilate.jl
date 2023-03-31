@@ -70,6 +70,25 @@ function equiv(args...)
     first(args)
 end
 
+function cached(a, b)
+    @assert isequal(a, b)
+    return a
+end
+
+function atleast(a, b...)
+    @debug begin
+        @assert all(a .>= b)
+    end
+    a
+end
+
+function atmost(a, b...)
+    @debug begin
+        @assert all(a .<= b)
+    end
+    a
+end
+
 isassociative(alg) = (f) -> isassociative(alg, f)
 isassociative(alg, f::FinchNode) = f.kind === literal && isassociative(alg, f.val)
 """
@@ -224,20 +243,12 @@ constants, and is the basis for how Finch understands sparsity.
 function base_rules(alg, ctx)
     shash = ctx.shash
     return [
-        (@rule call(~f::isliteral, ~a::(All(isliteral))...) => literal(getval(f)(getval.(a)...))),
+        (@rule call(~f::isliteral, ~a1::isliteral, ~a2::(All(isliteral))...) => literal(getval(f)(getval(a1), getval.(a2)...))),
 
         (@rule loop(~i, sequence()) => sequence()),
         (@rule chunk(~i, ~a, sequence()) => sequence()),
         (@rule sequence(~a..., sequence(~b...), ~c...) => sequence(a..., b..., c...)),
 
-        (@rule call(>=, call(max, ~a...), ~b) => call(or, map(x -> call(x >= b), a)...)),
-        (@rule call(>, call(max, ~a...), ~b) => call(or, map(x -> call(x > b), a)...)),
-        (@rule call(<=, call(max, ~a...), ~b) => call(and, map(x -> call(x <= b), a)...)),
-        (@rule call(<, call(max, ~a...), ~b) => call(and, map(x -> call(x < b), a)...)),
-        (@rule call(>=, call(min, ~a...), ~b) => call(and, map(x -> call(x >= b), a)...)),
-        (@rule call(>, call(min, ~a...), ~b) => call(and, map(x -> call(x > b), a)...)),
-        (@rule call(<=, call(min, ~a...), ~b) => call(or, map(x -> call(x <= b), a)...)),
-        (@rule call(<, call(min, ~a...), ~b) => call(or, map(x -> call(x < b), a)...)),
         (@rule call(~f::isassociative(alg), ~a..., call(~f, ~b...), ~c...) => call(f, a..., b..., c...)),
         (@rule call(~f::iscommutative(alg), ~a...) => if !(issorted(a, by = shash))
             call(f, sort(a, by = shash)...)
@@ -256,6 +267,36 @@ function base_rules(alg, ctx)
         end),
         (@rule call(~f, ~a) => if isassociative(alg, f) a end), #TODO
 
+        (@rule call(>=, ~a, ~b) => call(<=, b, a)),
+        (@rule call(>, ~a, ~b) => call(<, b, a)),
+        (@rule call(!=, ~a, ~b) => call(!, call(==, a, b))),
+
+        (@rule call(<=, ~a, call(max, ~b...)) => call(or, map(x -> call(<=, a, x), b)...)),
+        (@rule call(<, ~a, call(max, ~b...)) => call(or, map(x -> call(<, a, x), b)...)),
+        (@rule call(<=, call(max, ~a...), ~b) => call(and, map(x -> call(<=, x, b), a)...)),
+        (@rule call(<, call(max, ~a...), ~b) => call(and, map(x -> call(<, x, b), a)...)),
+        (@rule call(<=, ~a, call(min, ~b...)) => call(and, map(x -> call(<=, a, x), b)...)),
+        (@rule call(<, ~a, call(min, ~b...)) => call(and, map(x -> call(<, a, x), b)...)),
+        (@rule call(<=, call(min, ~a...), ~b) => call(or, map(x -> call(<=, x, b), a)...)),
+        (@rule call(<, call(min, ~a...), ~b) => call(or, map(x -> call(<, x, b), a)...)),
+
+        (@rule call(==, ~a, ~a) => literal(true)),
+        (@rule call(<=, ~a, ~a) => literal(true)),
+        (@rule call(<, ~a, ~a) => literal(false)),
+
+        #=
+        (@rule call(==, call(+, ~a1..., ~b::isliteral, ~a2...), ~c) => call(==, call(+, a1..., a2...), call(-, c, b))),
+        (@rule call(<=, call(+, ~a1..., ~b::isliteral, ~a2...), ~c) => call(<=, call(+, a1..., a2...), call(-, c, b))),
+        (@rule call(<, call(+, ~a1..., ~b::isliteral, ~a2...), ~c) => call(<, call(+, a1..., a2...), call(-, c, b))),
+
+        (@rule call(==, ~a, call(+, ~a, ~b::isliteral)) => b.val == 0),
+        (@rule call(<=, ~a, call(+, ~a, ~b::isliteral)) => b.val >= 0),
+        (@rule call(<, ~a, call(+, ~a, ~b::isliteral)) => b.val > 0),
+
+        (@rule call(+, ~a1..., call(max, ~b...), ~a2...) => call(max, map(x -> call(+, a1..., x, a2...), b)...)),
+        (@rule call(+, ~a1..., call(min, ~b...), ~a2...) => call(min, map(x -> call(+, a1..., x, a2...), b)...)),
+        =#
+
         (@rule assign(access(~a, updater(~m), ~i...), ~f, ~b) => if isidentity(alg, f, b) sequence() end),
         (@rule assign(access(~a, ~m, ~i...), $(literal(missing))) => sequence()),
         (@rule assign(access(~a, ~m, ~i..., $(literal(missing)), ~j...), ~b) => sequence()),
@@ -266,8 +307,12 @@ function base_rules(alg, ctx)
             call(something, a..., b)
         end),
 
-        (@rule call(~f::isliteral, ~a..., call(equiv, ~b...), ~c...) => if f != literal(equiv) call(equiv, map(x -> call(f, a..., x, c...), b)...) end),
-        (@rule call(equiv, ~a..., ~b::isliteral, ~c...) => b),
+        (@rule call(~f, ~a..., call(cached, ~b, ~c), ~d...) => if f != literal(cached) call(cached, call(f, a..., b, d...), call(f, a..., c, d...)) end),
+        (@rule call(cached, call(cached, ~a, ~b), ~c) => call(cached, a, c)),
+        (@rule call(cached, ~a, call(cached, ~b, ~c)) => call(cached, a, c)),
+        (@rule call(~f::isliteral, ~a..., call(equiv, ~b...), ~c...) => if (f != literal(equiv) && f != literal(cached)) call(equiv, map(x -> call(f, a..., x, c...), b)...) end),
+        (@rule call(cached, ~a, call(equiv, ~b..., ~c::isliteral, ~d...)) => if !isliteral(a) call(cached, c, call(equiv, b..., c, d...)) end),
+        (@rule call(cached, ~a, ~b::isliteral) => b),
 
         (@rule call(identity, ~a) => a),
         (@rule call(overwrite, ~a, ~b) => b),
@@ -281,7 +326,11 @@ function base_rules(alg, ctx)
             call(g, call(f, a), map(c -> call(f, call(g, c)), b)...)
         end),
 
+        #TODO should put a zero here, but we need types
         (@rule call(~g, ~a..., ~b, ~c..., call(~f, ~b), ~d...) => if isinverse(alg, f, g) && isassociative(alg, g)
+            call(g, a..., c..., d...)
+        end),
+        (@rule call(~g, ~a..., call(~f, ~b), ~c..., ~b, ~d...) => if isinverse(alg, f, g) && isassociative(alg, g)
             call(g, a..., c..., d...)
         end),
 
@@ -359,6 +408,11 @@ function simplify(node::FinchNode, ctx)
         nothing
     end)(node)
     Rewrite(Fixpoint(Prewalk(Chain(rules))))(node)
+end
+
+function query(node::FinchNode, ctx)
+    res = simplify(node, ctx)
+    return res == literal(true) || @capture(res, call(cached, true, ~a))
 end
 
 function (ctx::LowerJulia)(root, ::SimplifyStyle)
