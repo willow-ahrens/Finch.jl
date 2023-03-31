@@ -101,7 +101,6 @@ Return true when for all permutations p, `f(a...) = f(a[p]...)` in `algebra`.
 iscommutative(::Any, f) = false
 iscommutative(::AbstractAlgebra, ::typeof(or)) = true
 iscommutative(::AbstractAlgebra, ::typeof(and)) = true
-iscommutative(::AbstractAlgebra, ::typeof(equiv)) = true
 iscommutative(::AbstractAlgebra, ::typeof(+)) = true
 iscommutative(::AbstractAlgebra, ::typeof(*)) = true
 iscommutative(::AbstractAlgebra, ::typeof(min)) = true
@@ -306,7 +305,7 @@ function base_rules(alg, ctx)
         end),
         (@rule chunk(~i, ~a, assign(access(~b, updater(~m), ~j...), +, ~d)) => begin
             if i ∉ j && getname(i) ∉ getunbound(d)
-                assign(access(b, updater(m), j...), +, call(*, measure(a), d))
+                assign(access(b, updater(m), j...), +, call(*, measure(a.val), d))
             end
         end),
         #((x) -> println(x)),
