@@ -14,7 +14,7 @@ function lower_cycle(root, ctx, idx, ext, style)
     end
 
     @assert isvirtual(ext)
-    if simplify(call(==, measure(ext.val), 1), LowerJulia()) == literal(true)
+    if query(call(==, measure(ext.val), 1), ctx)
         body_2
     else
         return quote

@@ -44,7 +44,7 @@ end
     next = (ctx, ext) -> quote end
     chunk = nothing
     body = (ctx, ext, ext_2) -> Switch([
-        value(:($(ctx(stride(ctx, ext))) == $(ctx(getstop(ext_2))))) => Thunk(
+        simplify(call(==, stride(ctx, ext), getstop(ext_2)), ctx) => Thunk(
             body = truncate(chunk, ctx, ext, Extent(getstart(ext_2), getstop(ext))),
             epilogue = next(ctx, ext_2)
         ),

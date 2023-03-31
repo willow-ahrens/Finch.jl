@@ -288,14 +288,18 @@ function base_rules(alg, ctx)
         (@rule call(==, call(+, ~a1..., ~b::isliteral, ~a2...), ~c) => call(==, call(+, a1..., a2...), call(-, c, b))),
         (@rule call(<=, call(+, ~a1..., ~b::isliteral, ~a2...), ~c) => call(<=, call(+, a1..., a2...), call(-, c, b))),
         (@rule call(<, call(+, ~a1..., ~b::isliteral, ~a2...), ~c) => call(<, call(+, a1..., a2...), call(-, c, b))),
+        =#
+
+        (@rule call(+, ~a1..., call(max, ~b...), ~a2...) => call(max, map(x -> call(+, a1..., x, a2...), b)...)),
+        (@rule call(+, ~a1..., call(min, ~b...), ~a2...) => call(min, map(x -> call(+, a1..., x, a2...), b)...)),
 
         (@rule call(==, ~a, call(+, ~a, ~b::isliteral)) => b.val == 0),
         (@rule call(<=, ~a, call(+, ~a, ~b::isliteral)) => b.val >= 0),
         (@rule call(<, ~a, call(+, ~a, ~b::isliteral)) => b.val > 0),
 
-        (@rule call(+, ~a1..., call(max, ~b...), ~a2...) => call(max, map(x -> call(+, a1..., x, a2...), b)...)),
-        (@rule call(+, ~a1..., call(min, ~b...), ~a2...) => call(min, map(x -> call(+, a1..., x, a2...), b)...)),
-        =#
+        (@rule call(==, call(+, ~a, ~b::isliteral), ~a) => b.val == 0),
+        (@rule call(<=, call(+, ~a, ~b::isliteral), ~a) => b.val <= 0),
+        (@rule call(<, call(+, ~a, ~b::isliteral), ~a) => b.val < 0),
 
         (@rule assign(access(~a, updater(~m), ~i...), ~f, ~b) => if isidentity(alg, f, b) sequence() end),
         (@rule assign(access(~a, ~m, ~i...), $(literal(missing))) => sequence()),
