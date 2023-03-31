@@ -271,6 +271,7 @@ function base_rules(alg, ctx)
         (@rule call(>, ~a, ~b) => call(<, b, a)),
         (@rule call(!=, ~a, ~b) => call(!, call(==, a, b))),
 
+        #=
         (@rule call(<=, ~a, call(max, ~b...)) => call(or, map(x -> call(<=, a, x), b)...)),
         (@rule call(<, ~a, call(max, ~b...)) => call(or, map(x -> call(<, a, x), b)...)),
         (@rule call(<=, call(max, ~a...), ~b) => call(and, map(x -> call(<=, x, b), a)...)),
@@ -280,18 +281,16 @@ function base_rules(alg, ctx)
         (@rule call(<=, call(min, ~a...), ~b) => call(or, map(x -> call(<=, x, b), a)...)),
         (@rule call(<, call(min, ~a...), ~b) => call(or, map(x -> call(<, x, b), a)...)),
 
-        (@rule call(==, ~a, ~a) => literal(true)),
-        (@rule call(<=, ~a, ~a) => literal(true)),
-        (@rule call(<, ~a, ~a) => literal(false)),
-
-        #=
         (@rule call(==, call(+, ~a1..., ~b::isliteral, ~a2...), ~c) => call(==, call(+, a1..., a2...), call(-, c, b))),
         (@rule call(<=, call(+, ~a1..., ~b::isliteral, ~a2...), ~c) => call(<=, call(+, a1..., a2...), call(-, c, b))),
         (@rule call(<, call(+, ~a1..., ~b::isliteral, ~a2...), ~c) => call(<, call(+, a1..., a2...), call(-, c, b))),
-        =#
-
         (@rule call(+, ~a1..., call(max, ~b...), ~a2...) => call(max, map(x -> call(+, a1..., x, a2...), b)...)),
         (@rule call(+, ~a1..., call(min, ~b...), ~a2...) => call(min, map(x -> call(+, a1..., x, a2...), b)...)),
+        =#
+
+        (@rule call(==, ~a, ~a) => literal(true)),
+        (@rule call(<=, ~a, ~a) => literal(true)),
+        (@rule call(<, ~a, ~a) => literal(false)),
 
         (@rule call(==, ~a, call(+, ~a, ~b::isliteral)) => b.val == 0),
         (@rule call(<=, ~a, call(+, ~a, ~b::isliteral)) => b.val >= 0),
