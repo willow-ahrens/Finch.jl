@@ -275,9 +275,6 @@ combinedim(ctx, a::SuggestedExtent, b::SuggestedExtent) = SuggestedExtent(combin
 
 function checklim(ctx, a::FinchNode, b::FinchNode)
     cmp = simplify(call(==, a, b), ctx)
-    if b == value(:(x_lvl.shape), Int)
-        error()
-    end
     if isliteral(cmp)
         cmp.val || throw(DimensionMismatch("mismatched dimension limits ($a != $b)"))
     else

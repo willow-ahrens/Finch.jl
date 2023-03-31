@@ -267,7 +267,8 @@ function base_rules(alg, ctx)
             call(something, a..., b)
         end),
 
-        (@rule call(~f, ~a::All(isliteral)..., call(equiv, ~b...), ~c::All(isliteral)...) => call(equiv, map(x -> call(f, a..., x, c...), b)...)),
+        (@rule call(~f::isliteral, ~a..., call(equiv, ~b...), ~c...) => if f != literal(equiv) call(equiv, map(x -> call(f, a..., x, c...), b)...) end),
+        (@rule call(equiv, ~a..., ~b::isliteral, ~c...) => b),
 
         (@rule call(identity, ~a) => a),
         (@rule call(overwrite, ~a, ~b) => b),
