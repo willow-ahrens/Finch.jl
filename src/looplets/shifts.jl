@@ -18,7 +18,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Shift)
     print(io, ")")
 end
 
-FinchNotation.isliteral(::Shift) =  false
+FinchNotation.finch_leaf(x::Shift) = virtual(x)
 
 #TODO can't we do this more pretty?
 supports_shift(style) = false

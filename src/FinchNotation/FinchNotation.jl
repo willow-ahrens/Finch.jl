@@ -7,6 +7,7 @@ module FinchNotation
     export literal
     export index
     export variable
+    export virtual
     export value
     export loop
     export Chunk, chunk
@@ -17,7 +18,7 @@ module FinchNotation
     export sequence
     export protocol
     export sieve
-    export FinchNode, value, isvalue
+    export FinchNode
 
     export Follow, follow
     export Walk, walk
@@ -27,28 +28,14 @@ module FinchNotation
 
     export @f, @finch_program, @finch_program_instance
 
-    export isliteral, is_constant, virtual
-    export isvirtual
+    export isliteral, isvalue, isconstant, isvirtual, isvariable
+
+    export getval
 
     export overwrite, initwrite
-
-    """
-        isliteral(ex)
-
-    Return a boolean indicating whether the expression is a literal. If an
-    expression is a literal, `getvalue(ex)` should return the literal value it
-    corresponds to. `getvalue` defaults to the identity.
-    TODO this is out of date
-
-    See also: [`getvalue`](@ref)
-    """
-    isliteral(ex) = true
-
 
     include("nodes.jl")
     include("instances.jl")
     include("protocols.jl")
     include("syntax.jl")
-
-    isvirtual(ex::FinchNode) = ex.kind === virtual
 end

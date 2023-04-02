@@ -4,7 +4,7 @@
     stride = (ctx, ext) -> nothing
     range = (ctx, ext) -> Extent(start = getstart(ext), stop = something(stride(ctx, ext), getstop(ext)))
 end
-FinchNotation.isliteral(::Phase) =  false
+FinchNotation.finch_leaf(x::Phase) = virtual(x)
 
 Base.show(io::IO, ex::Phase) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::Phase)
@@ -68,8 +68,6 @@ end
 struct PhaseStyle end
 
 supports_shift(::PhaseStyle) = true
-
-#FinchNotation.isliteral(::Step) =  false
 
 (ctx::Stylize{LowerJulia})(node::Phase) = ctx.root.kind === chunk ? PhaseStyle() : DefaultStyle()
 

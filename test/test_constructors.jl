@@ -1,4 +1,6 @@
-@testset "fiber constructors" begin
+@testset "constructors" begin
+    @info "Testing Fiber Constructors"
+
     using Base.Meta
 
     @testset "@fiber(sl(e(0))" begin

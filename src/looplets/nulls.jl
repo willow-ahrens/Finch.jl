@@ -1,7 +1,7 @@
 struct Null
 end
 
-FinchNotation.isliteral(::Null) = false
+FinchNotation.finch_leaf(x::Null) = virtual(x)
 virtual_default(f::Null) = Some(f.default)
 
 (ctx::Stylize{LowerJulia})(::Null) = SimplifyStyle()

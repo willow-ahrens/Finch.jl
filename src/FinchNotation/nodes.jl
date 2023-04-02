@@ -212,20 +212,51 @@ struct FinchNode
     children::Vector{FinchNode}
 end
 
-isvalue(node::FinchNode) = node.kind === value
-#TODO Delete this one when you can
-isvalue(node) = false
-
 """
     isstateful(node)
 
-Returns true if the node is an index statement, and false if the node is an
-index expression. Typically, index statements specify control flow and 
-index expressions describe values.
+Returns true if the node is a finch statement, and false if the node is an
+index expression. Typically, statements specify control flow and 
+expressions describe values.
 """
 isstateful(node::FinchNode) = Int(node.kind) & IS_STATEFUL != 0
 
-is_constant(node::FinchNode) = Int(node.kind) & IS_CONST != 0
+"""
+    isliteral(node)
+
+Returns true if the node is a finch literal
+"""
+isliteral(ex::FinchNode) = ex.kind === literal
+
+"""
+    isvalue(node)
+
+Returns true if the node is a finch value
+"""
+isvalue(ex::FinchNode) = ex.kind === value
+
+"""
+    isconstant(node)
+
+Returns true if the node can be expected to be constant within the current finch context
+"""
+isconstant(node::FinchNode) = Int(node.kind) & IS_CONST != 0
+
+"""
+    isvirtual(node)
+
+Returns true if the node is a finch virtual
+"""
+isvirtual(ex::FinchNode) = ex.kind === virtual
+
+"""
+    isvariable(node)
+
+Returns true if the node is a finch variable
+"""
+isvariable(ex::FinchNode) = ex.kind === variable
+
+getval(ex::FinchNode) = ex.val
 
 SyntaxInterface.istree(node::FinchNode) = Int(node.kind) & IS_TREE != 0
 SyntaxInterface.arguments(node::FinchNode) = node.children
@@ -708,13 +739,6 @@ function Base.hash(a::FinchNode, h::UInt)
     end
 end
 
-FinchNotation.isliteral(node::FinchNode) = node.kind === literal
-
-function Finch.getvalue(ex::FinchNode)
-    ex.kind === literal || error("expected literal")
-    ex.val
-end
-
 function Finch.getname(x::FinchNode)
     if x.kind === index
         return x.val
@@ -736,3 +760,29 @@ function Finch.setname(x::FinchNode, sym)
 end
 
 display_expression(io, mime, ex) = show(IOContext(io, :compact=>true), mime, ex)
+
+"""
+    finch_leaf(x)
+
+Return a terminal finch node wrapper around `x`. A convenience function to
+determine whether `x` should be understood by default as a literal, value, or
+virtual.
+"""
+finch_leaf(arg) = literal(arg)
+finch_leaf(arg::Type) = literal(arg)
+finch_leaf(arg::Function) = literal(arg)
+finch_leaf(arg::FinchNode) = arg
+
+Base.convert(::Type{FinchNode}, x) = finch_leaf(x)
+Base.convert(::Type{FinchNode}, x::FinchNode) = x
+Base.convert(::Type{FinchNode}, x::Symbol) = error()
+
+#overload RewriteTools pattern constructor so we don't need
+#to wrap leaf nodes.
+finch_pattern(arg) = finch_leaf(arg)
+finch_pattern(arg::RewriteTools.Slot) = arg
+finch_pattern(arg::RewriteTools.Segment) = arg
+finch_pattern(arg::RewriteTools.Term) = arg
+function RewriteTools.term(f::FinchNodeKind, args...; type = nothing)
+    RewriteTools.Term(f, [finch_pattern.(args)...])
+end

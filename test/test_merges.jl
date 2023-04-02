@@ -1,4 +1,5 @@
 @testset "merges" begin
+    @info "Testing Merge Kernels"
     using Base.Iterators
 
     fmts = [
