@@ -1,10 +1,14 @@
 function pagerank(edges; nsteps=20, damp = 0.85)
     (n, m) = size(edges)
     @assert n == m
-    out_degree = @fiber d(e(0))
-    @finch (out_degree .= 0; @loop j i out_degree[j] += edges[i, j])
-    scaled_edges = @fiber d(sl(e(0.0)))
-    @finch (scaled_edges .= 0; @loop j i scaled_edges[i, j] = ifelse(out_degree[i] != 0, edges[i, j] / out_degree[j], 0))
+    @finch begin
+        scaled_edges .= 0
+        for j = _, i = _
+            if out_degree[i] != 0
+                scaled_edges[i, j] = edges[i, j] / out_degree[j]
+            end
+        end
+    end
     r = @fiber d(e(0.0), n)
     @finch (r .= 0; @loop j r[j] = 1.0/n)
     rank = @fiber d(e(0.0), n)
