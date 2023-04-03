@@ -24,7 +24,7 @@ similar_level(lvl::SparseTriangle, dims...) = SparseTriangle(similar_level(lvl.l
 pattern!(lvl::SparseTriangleLevel{Ti}) where {Ti} = 
     SparseTriangleLevel{Ti}(pattern!(lvl.lvl), lvl.I, lvl.J)
 
-@inline level_ndims(::Type{<:SparseTriangleLevel{Ti, Lvl}}) where {Ti, Lvl} = 1 + level_ndims(Lvl)
+@inline level_ndims(::Type{<:SparseTriangleLevel{Ti, Lvl}}) where {Ti, Lvl} = 2 + level_ndims(Lvl)
 @inline level_size(lvl::SparseTriangleLevel) = (level_size(lvl.lvl)..., lvl.J * (lvl.J + 1)/2) 
 @inline level_axes(lvl::SparseTriangleLevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.I))
 @inline level_eltype(::Type{<:SparseTriangleLevel{Ti, Lvl}}) where {Ti, Lvl} = level_eltype(Lvl)
@@ -54,11 +54,18 @@ function Base.show(io::IO, lvl::SparseTriangleLevel{Ti}) where {Ti}
 end 
 
 function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseTriangleLevel}, depth)
-    crds = 1:fbr.lvl.I
+    qos = (fbr.lvl.J * (fbr.lvl.J + 1)) >>> 1
+    crds = 1:qos
+
+    function print_coord(io, q)
+        j = ceil(sqrt(2 * q + 0.25) - 0.5)
+        i = q - (j-1) * j / 2
+        print(io, i, ", ", j)
+    end 
 
     get_fbr(crd) = fbr(crd)
-    print(io, "SparseTriangle [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.I, "]")
-    display_fiber_data(io, mime, fbr, depth, 1, crds, show, get_fbr)
+    print(io, "SparseTriangle [", ":,"^(ndims(fbr) - 1), "1:", qos, "]")
+    display_fiber_data(io, mime, fbr, depth, 2, crds, print_coord, get_fbr)
 end
 
 mutable struct VirtualSparseTriangleLevel
@@ -107,7 +114,7 @@ virtual_level_eltype(lvl::VirtualSparseTriangleLevel) = virtual_level_eltype(lvl
 virtual_level_default(lvl::VirtualSparseTriangleLevel) = virtual_level_default(lvl.lvl)
 
 function declare_level!(lvl::VirtualSparseTriangleLevel, ctx::LowerJulia, pos, init)
-    qos = call(literal(>>>), call(*, call(*, pos, lvl.J), call(+, lvl.J, lvl.Ti(1))), lvl.Ti(1))
+    qos = call(>>>, call(*, call(*, pos, lvl.J), call(+, lvl.J, lvl.Ti(1))), lvl.Ti(1))
     lvl.lvl = declare_level!(lvl.lvl, ctx, qos, init)
     return lvl
 end
@@ -123,7 +130,7 @@ end
 
 function assemble_level!(lvl::VirtualSparseTriangleLevel, ctx, pos_start, pos_stop)
     qos_start = call(+, call(*, call(-, pos_start, lvl.Ti(1)), lvl.I), 1)
-    qos_stop = call(literal(>>>), call(*, call(*, pos_stop, lvl.J), call(+, lvl.J, lvl.Ti(1))), lvl.Ti(1))
+    qos_stop = call(>>>, call(*, call(*, pos_stop, lvl.J), call(+, lvl.J, lvl.Ti(1))), lvl.Ti(1))
     assemble_level!(lvl.lvl, ctx, qos_start, qos_stop)
 end
 
