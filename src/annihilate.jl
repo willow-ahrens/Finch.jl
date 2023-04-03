@@ -71,7 +71,7 @@ function equiv(args...)
 end
 
 function cached(a, b)
-    @assert isequal(a, b)
+    @assert isequal(a, b) "!isequal($a, $b)"
     return a
 end
 
