@@ -11,19 +11,25 @@ using Base: @kwdef
 
 isdefined(Base, :get_extension) ? (using SparseArrays) : (using ..SparseArrays)
 
-function Finch.fiber(arr::SparseMatrixCSC{Tv, Ti}, default=zero(Tv)) where {Tv, Ti}
+function Finch.fiber(arr::SparseMatrixCSC{Tv, Ti}; default=zero(Tv)) where {Tv, Ti}
+    @assert iszero(default)
+    (m, n) = size(arr)
+    return Fiber(Dense(SparseList{Ti}(Element{zero(Tv)}(copy(arr.nzval)), m, copy(arr.colptr), copy(arr.rowval)), n))
+end
+
+function Finch.fiber!(arr::SparseMatrixCSC{Tv, Ti}; default=zero(Tv)) where {Tv, Ti}
     @assert iszero(default)
     (m, n) = size(arr)
     return Fiber(Dense(SparseList{Ti}(Element{zero(Tv)}(arr.nzval), m, arr.colptr, arr.rowval), n))
 end
 
-function Finch.fiber(arr::SparseVector{Tv, Ti}, default=zero(Tv)) where {Tv, Ti}
+function Finch.fiber(arr::SparseVector{Tv, Ti}; default=zero(Tv)) where {Tv, Ti}
     @assert iszero(default)
     (n,) = size(arr)
     return Fiber(SparseList{Ti}(Element{zero(Tv)}(arr.nzval), n, [1, length(arr.nzind) + 1], copy(arr.nzind)))
 end
 
-function Finch.fiber!(arr::SparseVector{Tv, Ti}, default=zero(Tv)) where {Tv, Ti}
+function Finch.fiber!(arr::SparseVector{Tv, Ti}; default=zero(Tv)) where {Tv, Ti}
     @assert iszero(default)
     (n,) = size(arr)
     return Fiber(SparseList{Ti}(Element{zero(Tv)}(arr.nzval), n, [1, length(arr.nzind) + 1], arr.nzind))
@@ -126,7 +132,7 @@ function Finch.get_updater(arr::VirtualSparseMatrixCSC, ctx::LowerJulia, protos.
     throw(FormatLimitation("Finch does not support writes to SparseMatrixCSC"))
 end
 
-Finch.FinchNotation.isliteral(::VirtualSparseMatrixCSC) =  false
+Finch.FinchNotation.finch_leaf(x::VirtualSparseMatrixCSC) = virtual(x)
 
 Finch.virtual_default(arr::VirtualSparseMatrixCSC) = zero(arr.Tv)
 Finch.virtual_eltype(tns::VirtualSparseMatrixCSC) = tns.Tv
@@ -223,7 +229,7 @@ function Finch.get_updater(arr::VirtualSparseVector, ctx::LowerJulia, protos...)
     throw(FormatLimitation("Finch does not support writes to SparseVector"))
 end
 
-Finch.FinchNotation.isliteral(::VirtualSparseVector) =  false
+Finch.FinchNotation.finch_leaf(x::VirtualSparseVector) = virtual(x)
 
 Finch.virtual_default(arr::VirtualSparseVector) = zero(arr.Tv)
 Finch.virtual_eltype(tns::VirtualSparseVector) = tns.Tv

@@ -55,8 +55,6 @@ end
 
 #TODO one day this might be nothing?
 truncate(node, ctx, ext, ext_2) = node
-truncate_weak(node, ctx, ext, ext_2) = truncate(node, ctx, ext, ext_2)
-truncate_strong(node, ctx, ext, ext_2) = truncate(node, ctx, ext, ext_2)
 
 struct SelectVisitor
     ctx
@@ -114,7 +112,7 @@ end
 virtual_default(tns::Furlable) = Some(tns.val)
 virtual_size(tns::Furlable, ::LowerJulia, dim=nothing) = tns.size
 
-FinchNotation.isliteral(::Furlable) = false
+FinchNotation.finch_leaf(x::Furlable) = virtual(x)
 
 #Base.show(io::IO, ex::Furlable) = Base.show(io, MIME"text/plain"(), ex)
 #function Base.show(io::IO, mime::MIME"text/plain", ex::Furlable)
@@ -158,7 +156,7 @@ function chunkify_access(node, ctx, eldim, tns::Furlable)
             tns = exfurl(tns.body(ctx.ctx, virtual_size(tns, ctx.ctx, eldim)[end]), ctx.ctx, node.idxs[end], virtual_size(tns, ctx.ctx, eldim)[end])
             return access(tns, node.mode, map(ctx, node.idxs[1:end-1])..., get_furl_root(node.idxs[end]))
         else
-            if tns.tight !== nothing && simplify(measure(ctx.ext), ctx.ctx) != literal(1)
+            if tns.tight !== nothing && !query(call(==, measure(ctx.ext), 1), ctx.ctx)
                 throw(FormatLimitation("$(typeof(something(tns.tight))) does not support random access, must loop column major over output indices first."))
             end
             idxs = map(ctx, node.idxs)

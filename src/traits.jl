@@ -9,7 +9,7 @@ and is sometimes represented by `lvl`.
 struct SparseData
     lvl
 end
-Finch.isliteral(::SparseData) = false
+Finch.finch_leaf(x::SparseData) = virtual(x)
 
 Base.ndims(fbr::SparseData) = 1 + ndims(fbr.lvl)
 default(fbr::SparseData) = default(fbr.lvl)
@@ -22,7 +22,7 @@ Represents a tensor `A` where each `A[:, ..., :, i]` is represented by `lvl`.
 struct DenseData
     lvl
 end
-Finch.isliteral(::DenseData) = false
+Finch.finch_leaf(x::DenseData) = virtual(x)
 default(fbr::DenseData) = default(fbr.lvl)
 
 Base.ndims(fbr::DenseData) = 1 + ndims(fbr.lvl)
@@ -35,7 +35,7 @@ Represents a tensor `A` where `A[:, ..., :, 1]` is the only slice, and is repres
 struct ExtrudeData
     lvl
 end
-Finch.isliteral(::ExtrudeData) = false
+Finch.finch_leaf(x::ExtrudeData) = virtual(x)
 default(fbr::ExtrudeData) = default(fbr.lvl)
 
 Base.ndims(fbr::ExtrudeData) = 1 + ndims(fbr.lvl)
@@ -48,7 +48,7 @@ Represents a tensor which is represented by `lvl` but is sometimes entirely `def
 struct HollowData
     lvl
 end
-Finch.isliteral(::HollowData) = false
+Finch.finch_leaf(x::HollowData) = virtual(x)
 default(fbr::HollowData) = default(fbr.lvl)
 
 Base.ndims(fbr::HollowData) = ndims(fbr.lvl)
@@ -62,7 +62,7 @@ struct ElementData
     default
     eltype
 end
-Finch.isliteral(::ElementData) = false
+Finch.finch_leaf(x::ElementData) = virtual(x)
 default(fbr::ElementData) = fbr.default
 
 Base.ndims(fbr::ElementData) = 0
@@ -77,7 +77,7 @@ struct RepeatData
     default
     eltype
 end
-Finch.isliteral(::RepeatData) = false
+Finch.finch_leaf(x::RepeatData) = virtual(x)
 default(fbr::RepeatData) = fbr.default
 
 Base.ndims(fbr::RepeatData) = 1

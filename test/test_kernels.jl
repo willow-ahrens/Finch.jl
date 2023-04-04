@@ -1,11 +1,12 @@
 @testset "kernels" begin
+    @info "Testing Standard Kernels"
+
     using SparseArrays
 
     seen = false
     for (mtx, A_ref) in matrices
         A_ref = SparseMatrixCSC(A_ref)
         m, n = size(A_ref)
-        println("B[i, j] += A[i,k] * A[j, k]: $mtx")
         B_ref = transpose(A_ref) * A_ref 
         A = fiber(A_ref)
         B = @fiber(d(sl(e(0.0),m),m))
@@ -23,7 +24,6 @@
         A_ref = SparseMatrixCSC(A_ref)
         m, n = size(A_ref)
         if m == n
-            println("B[] += A[i,k] * A[i, j] * A[j, k] : $mtx")
             A = fiber(A_ref)
             B = Finch.Scalar{0.0}()
             if !seen

@@ -1,6 +1,6 @@
 struct NoDimension end
 const nodim = NoDimension()
-FinchNotation.isliteral(::NoDimension) = false
+FinchNotation.finch_leaf(x::NoDimension) = virtual(x)
 virtualize(ex, ::Type{NoDimension}, ctx) = nodim
 
 getstart(::NoDimension) = error("asked for start of dimensionless range")
@@ -35,7 +35,7 @@ end
     body
 end
 
-FinchNotation.isliteral(::Dimensionalize) =  false
+FinchNotation.finch_leaf(x::Dimensionalize) = virtual(x)
 
 struct DimensionalizeStyle end
 
@@ -208,16 +208,14 @@ combinedim(ctx, a::NoDimension, b) = b
     stop
 end
 
-FinchNotation.isliteral(::Extent) = false
+FinchNotation.finch_leaf(x::Extent) = virtual(x)
 
 Base.:(==)(a::Extent, b::Extent) = a.start == b.start && a.stop == b.stop
 
 function cache_dim!(ctx, var, ext::Extent)
-    start_val = cache!(ctx, Symbol(var, :_start), ext.start)
-    stop_val = cache!(ctx, Symbol(var, :_stop), ext.stop)
     Extent(
-        start = simplify(call(equiv, start_val, ext.start), ctx),
-        stop = simplify(call(equiv, stop_val, ext.stop), ctx)
+        start = cache!(ctx, Symbol(var, :_start), simplify(ext.start, ctx)),
+        stop = cache!(ctx, Symbol(var, :_stop), simplify(ext.stop, ctx))
     )
 end
 
@@ -252,7 +250,7 @@ struct SuggestedExtent{Ext}
     ext::Ext
 end
 
-FinchNotation.isliteral(::SuggestedExtent) = false
+FinchNotation.finch_leaf(x::SuggestedExtent) = virtual(x)
 
 Base.:(==)(a::SuggestedExtent, b::SuggestedExtent) = a.ext == b.ext
 
@@ -276,11 +274,8 @@ combinedim(ctx, a::SuggestedExtent, b::NoDimension) = a
 combinedim(ctx, a::SuggestedExtent, b::SuggestedExtent) = SuggestedExtent(combinedim(ctx, a.ext, b.ext))
 
 function checklim(ctx, a::FinchNode, b::FinchNode)
-    if isliteral(a) && isliteral(b)
-        a == b || throw(DimensionMismatch("mismatched dimension limits ($a != $b)"))
-    end
     push!(ctx.preamble, quote
-        $(ctx(a)) == $(ctx(b)) || throw(DimensionMismatch("mismatched dimension limits ($($(ctx(a))) != $($(ctx(b))))"))
+        $(ctx(simplify(call(==, a, b), ctx))) || throw(DimensionMismatch("mismatched dimension limits ($($(ctx(a))) != $($(ctx(b))))"))
     end)
     call(equiv, a, b)
 end
@@ -333,7 +328,7 @@ function Narrow(ext::FinchNode)
     end
 end
 
-FinchNotation.isliteral(::Narrow) = false
+FinchNotation.finch_leaf(x::Narrow) = virtual(x)
 
 narrowdim(dim) = Narrow(dim)
 narrowdim(::NoDimension) = nodim
@@ -355,7 +350,7 @@ function Widen(ext::FinchNode)
     end
 end
 
-FinchNotation.isliteral(::Widen) = false
+FinchNotation.finch_leaf(x::Widen) = virtual(x)
 
 widendim(dim) = Widen(dim)
 widendim(::NoDimension) = nodim

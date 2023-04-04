@@ -68,26 +68,17 @@ function open_scope(prgm, ctx::LowerJulia)
 end
 
 function cache!(ctx, var, val)
-    if isliteral(val)
-        return val
+    val = finch_leaf(val)
+    isconstant(val) && return val
+    if @capture val call(cached, ~a::isconstant, ~b)
+        return val 
     end
-    if val isa FinchNode
-        val.kind == literal && return val
-        val.kind == value && return val
-    end
-    body = contain(ctx) do ctx_2
-        ctx(val)
-    end
-    if body isa Symbol
-        return body
-    else
-        var = ctx.freshen(var)
-        push!(ctx.preamble, Expr(:cache, var,
-        quote
-            $var = $body
-        end))
-        return value(var, Any) #TODO could we do better here?
-    end
+    var = ctx.freshen(var)
+    push!(ctx.preamble, Expr(:cache, var,
+    quote
+        $var = $(contain(ctx_2 -> ctx_2(val), ctx))
+    end))
+    return simplify(call(cached, value(var, Any), val), ctx)
 end
 
 bind(f, ctx::LowerJulia) = f()
@@ -137,7 +128,7 @@ struct ThunkStyle end
     epilogue = quote end
     binds = ()
 end
-FinchNotation.isliteral(::Thunk) =  false
+FinchNotation.finch_leaf(x::Thunk) = virtual(x)
 
 Base.show(io::IO, ex::Thunk) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::Thunk)
@@ -193,15 +184,9 @@ function (ctx::ThunkVisitor)(node::Thunk)
     node.body
 end
 
-FinchNotation.isliteral(::Union{Symbol, Expr}) =  false
 (ctx::LowerJulia)(root::Union{Symbol, Expr}, ::DefaultStyle) = root
 
-function (ctx::LowerJulia)(root, ::DefaultStyle)
-    if isliteral(root)
-        return getvalue(root)
-    end
-    error("Don't know how to lower $root")
-end
+(ctx::LowerJulia)(root, ::DefaultStyle) = ctx(finch_leaf(root))
 
 """
     InstantiateTensors(ctx)
@@ -319,9 +304,8 @@ function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
             else
                 reduce((x, y) -> :($x || $y), map(ctx, root.args))
             end
-        elseif root.op == literal(equiv)
-            arg = root.args[something(findfirst(isvalue, root.args), 1)]
-            return ctx(arg)
+        #elseif root.op == literal(cached)
+        #    return ctx(root.args[1])
         else
             :($(ctx(root.op))($(map(ctx, root.args)...)))
         end
@@ -350,7 +334,7 @@ function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
             end
         end
         @assert isvirtual(root.ext)
-        if simplify(measure(root.ext.val), ctx) == literal(1)
+        if query(call(==, measure(root.ext.val), 1), ctx)
             return quote
                 $idx_sym = $(ctx(getstart(root.ext)))
                 $body
@@ -412,7 +396,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Lookup)
     print(io, "Lookup()")
 end
 
-FinchNotation.isliteral(node::Lookup) =  false
+FinchNotation.finch_leaf(x::Lookup) = virtual(x)
 
 get_point_body(node, ctx, idx) = nothing
 get_point_body(node::Lookup, ctx, idx) = node.body(ctx, idx)

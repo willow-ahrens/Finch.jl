@@ -7,7 +7,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Pipeline)
     print(io, "Pipeline()")
 end
 
-FinchNotation.isliteral(::Pipeline) =  false
+FinchNotation.finch_leaf(x::Pipeline) = virtual(x)
 
 struct PipelineStyle end
 
@@ -38,7 +38,7 @@ function (ctx::LowerJulia)(root::FinchNode, ::PipelineStyle)
         end
 
         visited = Set()
-        frontier = [minimum(keys(phases))]
+        frontier = [minimum(keys(phases))
 
         while !isempty(frontier)
             key = pop!(frontier)
@@ -46,7 +46,7 @@ function (ctx::LowerJulia)(root::FinchNode, ::PipelineStyle)
 
             push!(thunk.args, contain(ctx) do ctx_2
                 push!(ctx_2.preamble, :($i0 = $i))
-                ctx_2(chunk(root.idx, Extent(start = value(i0), stop = equiv(getstop(root.ext), call(max, getstop(root.ext), value(i0)))), body))
+                ctx_2(chunk(root.idx, Extent(start = value(i0), stop = getstop(root.ext)), body))
             end)
 
             push!(visited, key)

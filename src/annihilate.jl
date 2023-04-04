@@ -70,6 +70,25 @@ function equiv(args...)
     first(args)
 end
 
+function cached(a, b)
+    @assert isequal(a, b) "!isequal($a, $b)"
+    return a
+end
+
+function atleast(a, b...)
+    @debug begin
+        @assert all(a .>= b)
+    end
+    a
+end
+
+function atmost(a, b...)
+    @debug begin
+        @assert all(a .<= b)
+    end
+    a
+end
+
 isassociative(alg) = (f) -> isassociative(alg, f)
 isassociative(alg, f::FinchNode) = f.kind === literal && isassociative(alg, f.val)
 """
@@ -80,6 +99,7 @@ Return true when `f(a..., f(b...), c...) = f(a..., b..., c...)` in `algebra`.
 isassociative(::Any, f) = false
 isassociative(::AbstractAlgebra, ::typeof(or)) = true
 isassociative(::AbstractAlgebra, ::typeof(and)) = true
+isassociative(::AbstractAlgebra, ::typeof(equiv)) = true
 isassociative(::AbstractAlgebra, ::typeof(coalesce)) = true
 isassociative(::AbstractAlgebra, ::typeof(something)) = true
 isassociative(::AbstractAlgebra, ::typeof(+)) = true
@@ -126,6 +146,7 @@ isidempotent(alg, f::FinchNode) = f.kind === literal && isidempotent(alg, f.val)
 Return true when `f(a, b) = f(f(a, b), b)` in `algebra`.
 """
 isidempotent(::Any, f) = false
+isidempotent(::AbstractAlgebra, ::typeof(equiv)) = true
 isidempotent(::AbstractAlgebra, ::typeof(overwrite)) = true
 isidempotent(::AbstractAlgebra, ::typeof(min)) = true
 isidempotent(::AbstractAlgebra, ::typeof(max)) = true
@@ -205,7 +226,11 @@ function getvars(node::FinchNode)
     end
 end
 
-isvar(tns::FinchNode) = tns.kind == variable
+struct All{F}
+    f::F
+end
+
+@inline (f::All{F})(args) where {F} = all(f.f, args)
 
 """
     base_rules(alg, ctx)
@@ -218,25 +243,11 @@ constants, and is the basis for how Finch understands sparsity.
 function base_rules(alg, ctx)
     shash = ctx.shash
     return [
-        (@rule call(~f, ~a...) => if isliteral(f) && all(isliteral, a) && length(a) >= 1 literal(getvalue(f)(getvalue.(a)...)) end),
+        (@rule call(~f::isliteral, ~a1::isliteral, ~a2::(All(isliteral))...) => literal(getval(f)(getval(a1), getval.(a2)...))),
 
         (@rule loop(~i, sequence()) => sequence()),
         (@rule chunk(~i, ~a, sequence()) => sequence()),
         (@rule sequence(~a..., sequence(~b...), ~c...) => sequence(a..., b..., c...)),
-
-        (@rule call($(literal(>=)), call($(literal(max)), ~a...), ~b) => call(or, map(x -> call(x >= b), a)...)),
-        (@rule call($(literal(>)), call($(literal(max)), ~a...), ~b) => call(or, map(x -> call(x > b), a)...)),
-        (@rule call($(literal(<=)), call($(literal(max)), ~a...), ~b) => call(and, map(x -> call(x <= b), a)...)),
-        (@rule call($(literal(<)), call($(literal(max)), ~a...), ~b) => call(and, map(x -> call(x < b), a)...)),
-        (@rule call($(literal(>=)), call($(literal(min)), ~a...), ~b) => call(and, map(x -> call(x >= b), a)...)),
-        (@rule call($(literal(>)), call($(literal(min)), ~a...), ~b) => call(and, map(x -> call(x > b), a)...)),
-        (@rule call($(literal(<=)), call($(literal(min)), ~a...), ~b) => call(or, map(x -> call(x <= b), a)...)),
-        (@rule call($(literal(<)), call($(literal(min)), ~a...), ~b) => call(or, map(x -> call(x < b), a)...)),
-
-        #expand equivs
-        Fixpoint(@rule call($(literal(equiv)), ~a..., call($(literal(equiv)), ~b...), ~c...) => call(equiv, ~a..., ~b..., ~c...)),
-        (@rule call(~f, ~a..., call($(literal(equiv)), ~b...), ~c...) => call(equiv, map(x -> call(f, a..., x, c...), b)...)),
-        (@rule call($(literal(equiv)), ~a..., ~b::isliteral, ~c...) => b),
 
         (@rule call(~f::isassociative(alg), ~a..., call(~f, ~b...), ~c...) => call(f, a..., b..., c...)),
         (@rule call(~f::iscommutative(alg), ~a...) => if !(issorted(a, by = shash))
@@ -256,53 +267,97 @@ function base_rules(alg, ctx)
         end),
         (@rule call(~f, ~a) => if isassociative(alg, f) a end), #TODO
 
+        (@rule call(>=, ~a, ~b) => call(<=, b, a)),
+        (@rule call(>, ~a, ~b) => call(<, b, a)),
+        (@rule call(!=, ~a, ~b) => call(!, call(==, a, b))),
+
+        #=
+        (@rule call(<=, ~a, call(max, ~b...)) => call(or, map(x -> call(<=, a, x), b)...)),
+        (@rule call(<, ~a, call(max, ~b...)) => call(or, map(x -> call(<, a, x), b)...)),
+        (@rule call(<=, call(max, ~a...), ~b) => call(and, map(x -> call(<=, x, b), a)...)),
+        (@rule call(<, call(max, ~a...), ~b) => call(and, map(x -> call(<, x, b), a)...)),
+        (@rule call(<=, ~a, call(min, ~b...)) => call(and, map(x -> call(<=, a, x), b)...)),
+        (@rule call(<, ~a, call(min, ~b...)) => call(and, map(x -> call(<, a, x), b)...)),
+        (@rule call(<=, call(min, ~a...), ~b) => call(or, map(x -> call(<=, x, b), a)...)),
+        (@rule call(<, call(min, ~a...), ~b) => call(or, map(x -> call(<, x, b), a)...)),
+
+        (@rule call(==, call(+, ~a1..., ~b::isliteral, ~a2...), ~c) => call(==, call(+, a1..., a2...), call(-, c, b))),
+        (@rule call(<=, call(+, ~a1..., ~b::isliteral, ~a2...), ~c) => call(<=, call(+, a1..., a2...), call(-, c, b))),
+        (@rule call(<, call(+, ~a1..., ~b::isliteral, ~a2...), ~c) => call(<, call(+, a1..., a2...), call(-, c, b))),
+        (@rule call(+, ~a1..., call(max, ~b...), ~a2...) => call(max, map(x -> call(+, a1..., x, a2...), b)...)),
+        (@rule call(+, ~a1..., call(min, ~b...), ~a2...) => call(min, map(x -> call(+, a1..., x, a2...), b)...)),
+        =#
+
+        (@rule call(==, ~a, ~a) => literal(true)),
+        (@rule call(<=, ~a, ~a) => literal(true)),
+        (@rule call(<, ~a, ~a) => literal(false)),
+
+        (@rule call(==, ~a, call(+, ~a, ~b::isliteral)) => b.val == 0),
+        (@rule call(<=, ~a, call(+, ~a, ~b::isliteral)) => b.val >= 0),
+        (@rule call(<, ~a, call(+, ~a, ~b::isliteral)) => b.val > 0),
+
+        (@rule call(==, call(+, ~a, ~b::isliteral), ~a) => b.val == 0),
+        (@rule call(<=, call(+, ~a, ~b::isliteral), ~a) => b.val <= 0),
+        (@rule call(<, call(+, ~a, ~b::isliteral), ~a) => b.val < 0),
+
         (@rule assign(access(~a, updater(~m), ~i...), ~f, ~b) => if isidentity(alg, f, b) sequence() end),
         (@rule assign(access(~a, ~m, ~i...), $(literal(missing))) => sequence()),
         (@rule assign(access(~a, ~m, ~i..., $(literal(missing)), ~j...), ~b) => sequence()),
-        (@rule call($(literal(coalesce)), ~a..., ~b, ~c...) => if isvalue(b) && !(Missing <: b.type) || isliteral(b) && !ismissing(b.val)
+        (@rule call(coalesce, ~a..., ~b, ~c...) => if isvalue(b) && !(Missing <: b.type) || isliteral(b) && !ismissing(b.val)
             call(coalesce, a..., b)
         end),
-        (@rule call($(literal(something)), ~a..., ~b, ~c...) => if isvalue(b) && !(Nothing <: b.type) || isliteral(b) && b != literal(nothing)
+        (@rule call(something, ~a..., ~b, ~c...) => if isvalue(b) && !(Nothing <: b.type) || isliteral(b) && b != literal(nothing)
             call(something, a..., b)
         end),
 
-        (@rule call($(literal(identity)), ~a) => a),
-        (@rule call($(literal(overwrite)), ~a, ~b) => b),
+        (@rule call(~f, ~a..., call(cached, ~b, ~c), ~d...) => if f != literal(cached) call(cached, call(f, a..., b, d...), call(f, a..., c, d...)) end),
+        (@rule call(cached, call(cached, ~a, ~b), ~c) => call(cached, a, c)),
+        (@rule call(cached, ~a, call(cached, ~b, ~c)) => call(cached, a, c)),
+        (@rule call(~f::isliteral, ~a..., call(equiv, ~b...), ~c...) => if (f != literal(equiv) && f != literal(cached)) call(equiv, map(x -> call(f, a..., x, c...), b)...) end),
+        (@rule call(cached, ~a, call(equiv, ~b..., ~c::isliteral, ~d...)) => if !isliteral(a) call(cached, c, call(equiv, b..., c, d...)) end),
+        (@rule call(cached, ~a, ~b::isliteral) => b),
+
+        (@rule call(identity, ~a) => a),
+        (@rule call(overwrite, ~a, ~b) => b),
         (@rule call(~f::isliteral, ~a, ~b) => if f.val isa InitWriter b end),
-        (@rule call($(literal(ifelse)), $(literal(true)), ~a, ~b) => a),
-        (@rule call($(literal(ifelse)), $(literal(false)), ~a, ~b) => b),
-        (@rule call($(literal(ifelse)), ~a, ~b, ~b) => b),
+        (@rule call(ifelse, true, ~a, ~b) => a),
+        (@rule call(ifelse, false, ~a, ~b) => b),
+        (@rule call(ifelse, ~a, ~b, ~b) => b),
         (@rule $(literal(-0.0)) => literal(0.0)),
 
         (@rule call(~f, call(~g, ~a, ~b...)) => if isinverse(alg, f, g) && isassociative(alg, g)
             call(g, call(f, a), map(c -> call(f, call(g, c)), b)...)
         end),
 
+        #TODO should put a zero here, but we need types
         (@rule call(~g, ~a..., ~b, ~c..., call(~f, ~b), ~d...) => if isinverse(alg, f, g) && isassociative(alg, g)
             call(g, a..., c..., d...)
         end),
+        (@rule call(~g, ~a..., call(~f, ~b), ~c..., ~b, ~d...) => if isinverse(alg, f, g) && isassociative(alg, g)
+            call(g, a..., c..., d...)
+        end),
 
-        (@rule call($(literal(-)), ~a, ~b) => call(+, a, call(-, b))),
-        (@rule call($(literal(/)), ~a, ~b) => call(*, a, call(inv, b))),
+        (@rule call(-, ~a, ~b) => call(+, a, call(-, b))),
+        (@rule call(/, ~a, ~b) => call(*, a, call(inv, b))),
 
         (@rule call(~f::isinvolution(alg), call(~f, ~a)) => a),
         (@rule call(~f, ~a..., call(~g, ~b), ~c...) => if isdistributive(alg, g, f)
             call(g, call(f, a..., b, c...))
         end),
 
-        (@rule call($(literal(/)), ~a) => call(inv, a)),
+        (@rule call(/, ~a) => call(inv, a)),
 
-        (@rule sieve($(literal(true)), ~a) => a),
-        (@rule sieve($(literal(false)), ~a) => sequence()), #TODO should add back skipvisitor
+        (@rule sieve(true, ~a) => a),
+        (@rule sieve(false, ~a) => sequence()), #TODO should add back skipvisitor
 
         (@rule chunk(~i, ~a, assign(access(~b, updater(~m), ~j...), ~f::isidempotent(alg), ~c)) => begin
             if i ∉ j && getname(i) ∉ getunbound(c)
                 assign(access(b, updater(m), j...), f, c)
             end
         end),
-        (@rule chunk(~i, ~a, assign(access(~b, updater(~m), ~j...), $(literal(+)), ~d)) => begin
+        (@rule chunk(~i, ~a, assign(access(~b, updater(~m), ~j...), +, ~d)) => begin
             if i ∉ j && getname(i) ∉ getunbound(d)
-                assign(access(b, updater(m), j...), +, call(*, measure(a), d))
+                assign(access(b, updater(m), j...), +, call(*, measure(a.val), d))
             end
         end),
         #((x) -> println(x)),
@@ -348,7 +403,7 @@ simplify(node, ctx) = node
 function simplify(node::FinchNode, ctx)
     rules = getrules(ctx.algebra, ctx)
     Prewalk((node) -> begin
-        if isvar(node)
+        if isvariable(node)
             append!(rules, getrules(ctx.algebra, ctx, node, resolve(node, ctx)))
         elseif isvirtual(node)
             append!(rules, getrules(ctx.algebra, ctx, node.val))
@@ -358,6 +413,11 @@ function simplify(node::FinchNode, ctx)
     Rewrite(Fixpoint(Prewalk(Chain(rules))))(node)
 end
 
+function query(node::FinchNode, ctx)
+    res = simplify(node, ctx)
+    return res == literal(true) || @capture(res, call(cached, true, ~a))
+end
+
 function (ctx::LowerJulia)(root, ::SimplifyStyle)
     global rules
     root = Rewrite(Prewalk((x) -> if x.kind === virtual && x.val isa Simplify x.val.body end))(root)
@@ -365,4 +425,4 @@ function (ctx::LowerJulia)(root, ::SimplifyStyle)
     ctx(root)
 end
 
-FinchNotation.isliteral(::Simplify) = false
+FinchNotation.finch_leaf(x::Simplify) = virtual(x)

@@ -10,7 +10,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Stepper)
     print(io, "Stepper()")
 end
 
-FinchNotation.isliteral(::Stepper) =  false
+FinchNotation.finch_leaf(x::Stepper) = virtual(x)
 
 (ctx::Stylize{LowerJulia})(node::Stepper) = ctx.root.kind === chunk ? StepperStyle() : DefaultStyle()
 
@@ -44,23 +44,20 @@ end
     next = (ctx, ext) -> quote end
     chunk = nothing
     body = (ctx, ext, ext_2) -> Switch([
-        value(:($(ctx(stride(ctx, ext))) == $(ctx(getstop(ext_2))))) => Thunk(
-            body = truncate_weak(chunk, ctx, ext, ext_2),
+        simplify(call(==, stride(ctx, ext), getstop(ext_2)), ctx) => Thunk(
+            body = truncate(chunk, ctx, ext, Extent(getstart(ext_2), getstop(ext))),
             epilogue = next(ctx, ext_2)
         ),
         literal(true) => 
-            truncate_strong(chunk, ctx, ext, ext_2),
+            truncate(chunk, ctx, ext, ext_2), #Extent(getstart(ext_2), call(cached, getstop(ext_2), call(min, call(-, stride(ctx, ext), 1), getstop(ext_2))))),
         ])
 end
 
-FinchNotation.isliteral(::Step) =  false
+FinchNotation.finch_leaf(x::Step) = virtual(x)
 
 (ctx::Stylize{LowerJulia})(node::Step) = ctx.root.kind === chunk ? PhaseStyle() : DefaultStyle()
 
-function (ctx::PhaseStride)(node::Step)
-    s = node.stride(ctx.ctx, ctx.ext)
-    Narrow(Extent(start = getstart(ctx.ext), stop = call(equiv, s, call(max, s, getstart(ctx.ext)))))
-end
+(ctx::PhaseStride)(node::Step) = Narrow(Extent(start = getstart(ctx.ext), stop = node.stride(ctx.ctx, ctx.ext)))
 
 (ctx::PhaseBodyVisitor)(node::Step) = node.body(ctx.ctx, ctx.ext, ctx.ext_2)
 

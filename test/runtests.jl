@@ -79,7 +79,7 @@ include("utils.jl")
     if should_run("algebra") include("test_algebra.jl") end
     if should_run("permit") include("test_permit.jl") end
     if should_run("skips") include("test_skips.jl") end
-    #if should_run("fibers") include("test_fibers.jl") end # maybe we should make a replacement but I think this file is very out of date.
+    if should_run("typical") include("test_typical.jl") end
     if should_run("kernels") include("test_kernels.jl") end
     if should_run("issues") include("test_issues.jl") end
     if should_run("base") include("test_base.jl") end

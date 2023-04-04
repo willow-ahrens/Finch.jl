@@ -9,7 +9,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Run)
     print(io, ")")
 end
 
-FinchNotation.isliteral(::Run) =  false
+FinchNotation.finch_leaf(x::Run) = virtual(x)
 
 struct RunStyle end
 
@@ -51,7 +51,7 @@ get_run_body(node::Shift, ctx, ext) = get_run_body(node.body, ctx,
     body
 end
 
-FinchNotation.isliteral(::AcceptRun) = false
+FinchNotation.finch_leaf(x::AcceptRun) = virtual(x)
 
 #TODO this should go somewhere else
 function Finch.virtual_default(x::FinchNode)

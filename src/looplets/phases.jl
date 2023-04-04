@@ -4,7 +4,7 @@
     stride = (ctx, ext) -> nothing
     range = (ctx, ext) -> Extent(start = getstart(ext), stop = something(stride(ctx, ext), getstop(ext)))
 end
-FinchNotation.isliteral(::Phase) =  false
+FinchNotation.finch_leaf(x::Phase) = virtual(x)
 
 Base.show(io::IO, ex::Phase) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::Phase)
@@ -69,8 +69,6 @@ struct PhaseStyle end
 
 supports_shift(::PhaseStyle) = true
 
-#FinchNotation.isliteral(::Step) =  false
-
 (ctx::Stylize{LowerJulia})(node::Phase) = ctx.root.kind === chunk ? PhaseStyle() : DefaultStyle()
 
 combine_style(a::DefaultStyle, b::PhaseStyle) = PhaseStyle()
@@ -90,7 +88,10 @@ function (ctx::LowerJulia)(root::FinchNode, ::PhaseStyle)
         body = root.body
 
         ext_2 = resolvedim(PhaseStride(ctx, root.ext)(body))
-        ext_2 = cache_dim!(ctx, :phase, resolvedim(resultdim(ctx, Narrow(root.ext), ext_2)))
+        ext_3 = cache_dim!(ctx, :phase, resolvedim(resultdim(ctx, Narrow(root.ext), ext_2)))
+        start = query(call(==, getstart(ext_3), getstart(ext_2)), ctx) ? getstart(ext_2) : getstart(ext_3)
+        stop = query(call(==, getstop(ext_3), getstop(ext_2)), ctx) ? getstop(ext_2) : getstop(ext_3)
+        ext_2 = Extent(start, stop)
 
         body = PhaseBodyVisitor(ctx, root.ext, ext_2)(body)
         body = quote
@@ -105,7 +106,7 @@ function (ctx::LowerJulia)(root::FinchNode, ::PhaseStyle)
             $i = $(ctx(getstop(ext_2))) + $(Int8(1))
         end
 
-        if simplify(call(>, measure(ext_2), 0), ctx) == literal(true)
+        if query(call(>, measure(ext_2), 0), ctx) == true
             return body
         else
             return quote

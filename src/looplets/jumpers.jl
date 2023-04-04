@@ -4,7 +4,7 @@ struct JumperStyle end
     body
 end
 
-FinchNotation.isliteral(::Jumper) =  false
+FinchNotation.finch_leaf(x::Jumper) = virtual(x)
 
 (ctx::Stylize{LowerJulia})(node::Jumper) = ctx.root.kind === chunk ? JumperStyle() : DefaultStyle()
 
@@ -35,7 +35,7 @@ end
     next = nothing
 end
 
-FinchNotation.isliteral(::Jump) =  false
+FinchNotation.finch_leaf(x::Jump) = virtual(x)
 
 (ctx::Stylize{LowerJulia})(node::Jump) = ctx.root.kind === chunk ? PhaseStyle() : DefaultStyle()
 

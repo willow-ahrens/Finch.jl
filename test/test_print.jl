@@ -1,4 +1,6 @@
-@testset "Print" begin
+@testset "print" begin
+    @info "Testing Fiber Printing"
+
     A = fiber([(i + j) % 3 for i = 1:5, j = 1:10])
 
     formats = [

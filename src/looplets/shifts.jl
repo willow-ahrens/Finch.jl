@@ -18,7 +18,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Shift)
     print(io, ")")
 end
 
-FinchNotation.isliteral(::Shift) =  false
+FinchNotation.finch_leaf(x::Shift) = virtual(x)
 
 #TODO can't we do this more pretty?
 supports_shift(style) = false
@@ -51,5 +51,3 @@ end
 
 
 truncate(node::Shift, ctx, ext, ext_2) = Shift(truncate(node.body, ctx, shiftdim(ext, node.delta), shiftdim(ext_2, node.delta)), node.delta)
-truncate_weak(node::Shift, ctx, ext, ext_2) = Shift(truncate_weak(node.body, ctx, shiftdim(ext, node.delta), shiftdim(ext_2, node.delta)), node.delta)
-truncate_strong(node::Shift, ctx, ext, ext_2) = Shift(truncate_strong(node.body, ctx, shiftdim(ext, node.delta), shiftdim(ext_2, node.delta)), node.delta)

@@ -10,11 +10,11 @@ function lower_cycle(root, ctx, idx, ext, style)
 
     body_2 = contain(ctx) do ctx_2
         push!(ctx_2.preamble, :($i0 = $i))
-        ctx_2(chunk(root.idx, Extent(start = value(i0), stop = call(equiv, getstop(root.ext), call(max, getstop(root.ext), value(i0)))), body))
+        ctx_2(chunk(root.idx, Extent(start = value(i0), stop = getstop(root.ext)), body))
     end
 
     @assert isvirtual(ext)
-    if simplify(call(==, measure(ext.val), 1), LowerJulia()) == literal(true)
+    if query(call(==, measure(ext.val), 1), ctx)
         body_2
     else
         return quote

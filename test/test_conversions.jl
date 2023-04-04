@@ -1,4 +1,5 @@
 @testset "conversions" begin
+    @info "Testing Fiber Conversions"
     for base in [
         #Pattern,
         Element{false},
