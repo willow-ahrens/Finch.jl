@@ -13,10 +13,9 @@ begin
     A_lvl_6 = A_lvl_5.lvl
     B_lvl_2_qos_fill = 0
     B_lvl_2_qos_stop = 0
-    p_start = (+)((*)((-)(1, 1), A_lvl.shape), 1)
     p_start_2 = (*)(1, A_lvl.shape)
     (Finch.resize_if_smaller!)(B_lvl_2.ptr, p_start_2 + 1)
-    (Finch.fill_range!)(B_lvl_2.ptr, 0, p_start + 1, p_start_2 + 1)
+    (Finch.fill_range!)(B_lvl_2.ptr, 0, 1 + 1, p_start_2 + 1)
     for j_4 = 1:A_lvl.shape
         B_lvl_q = (1 - 1) * A_lvl.shape + j_4
         A_lvl_q = (1 - 1) * A_lvl.shape + j_4

@@ -60,7 +60,7 @@ begin
                 phase_stop_6 = (min)(3, j_7)
                 if phase_stop_6 >= s_5_start
                     s_7 = s_5
-                    B_val = (+)((*)(A_lvl_2_val_2, (+)(1, (-)(s_5_start), phase_stop_6)), B_val)
+                    B_val = (+)(B_val, (*)(A_lvl_2_val_2, (+)(1, (-)(s_5_start), phase_stop_6)))
                     s_5 = phase_stop_6 + 1
                 end
                 s_5_start = s_5

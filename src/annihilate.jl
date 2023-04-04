@@ -63,6 +63,11 @@ julia> x[]
 """
 maxby(a, b) = a[1] < b[1] ? b : a
 
+function cached(a, b)
+    @assert isequal(a, b) "!isequal($a, $b)"
+    return a
+end
+
 isassociative(alg) = (f) -> isassociative(alg, f)
 isassociative(alg, f::FinchNode) = f.kind === literal && isassociative(alg, f.val)
 """
@@ -250,7 +255,10 @@ function base_rules(alg, ctx)
         (@rule call(<, ~a, call(min, ~b...)) => call(and, map(x -> call(<, a, x), b)...)),
         (@rule call(<=, call(min, ~a...), ~b) => call(or, map(x -> call(<=, x, b), a)...)),
         (@rule call(<, call(min, ~a...), ~b) => call(or, map(x -> call(<, x, b), a)...)),
-        
+
+        (@rule call(==, ~a, ~a) => literal(true)),
+        (@rule call(<=, ~a, ~a) => literal(true)),
+        (@rule call(<, ~a, ~a) => literal(false)), 
         (@rule assign(access(~a, updater(~m), ~i...), ~f, ~b) => if isidentity(alg, f, b) sequence() end),
         (@rule assign(access(~a, ~m, ~i...), $(literal(missing))) => sequence()),
         (@rule assign(access(~a, ~m, ~i..., $(literal(missing)), ~j...), ~b) => sequence()),
@@ -260,6 +268,11 @@ function base_rules(alg, ctx)
         (@rule call(something, ~a..., ~b, ~c...) => if isvalue(b) && !(Nothing <: b.type) || isliteral(b) && b != literal(nothing)
             call(something, a..., b)
         end),
+
+        (@rule call(~f, ~a..., call(cached, ~b, ~c), ~d...) => if f != literal(cached) call(cached, call(f, a..., b, d...), call(f, a..., c, d...)) end),
+        (@rule call(cached, call(cached, ~a, ~b), ~c) => call(cached, a, c)),
+        (@rule call(cached, ~a, call(cached, ~b, ~c)) => call(cached, a, c)),
+        (@rule call(cached, ~a, ~b::isliteral) => b),
 
         (@rule call(identity, ~a) => a),
         (@rule call(overwrite, ~a, ~b) => b),
@@ -274,11 +287,19 @@ function base_rules(alg, ctx)
         end),
 
         #TODO should put a zero here, but we need types
+        #=
         (@rule call(~g, ~a..., ~b, ~c..., call(~f, ~b), ~d...) => if isinverse(alg, f, g) && isassociative(alg, g)
             call(g, a..., c..., d...)
         end),
         (@rule call(~g, ~a..., call(~f, ~b), ~c..., ~b, ~d...) => if isinverse(alg, f, g) && isassociative(alg, g)
             call(g, a..., c..., d...)
+        end),
+        =#
+        (@rule call(+, ~a..., ~b, ~c..., call(-, ~b), ~d...) => if isinverse(alg, -, +) && isassociative(alg, +)
+            call(+, false, a..., c..., d...)
+        end),
+        (@rule call(+, ~a..., call(-, ~b), ~c..., ~b, ~d...) => if isinverse(alg, -, +) && isassociative(alg, +)
+            call(+, false, a..., c..., d...)
         end),
 
         (@rule call(-, ~a, ~b) => call(+, a, call(-, b))),
@@ -358,7 +379,7 @@ end
 
 function query(node::FinchNode, ctx)
     res = simplify(node, ctx)
-    return res == literal(true)
+    return res == literal(true) || @capture(res, call(cached, true, ~a))
 end
 
 function (ctx::LowerJulia)(root, ::SimplifyStyle)

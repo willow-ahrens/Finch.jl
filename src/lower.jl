@@ -69,26 +69,16 @@ end
 
 function cache!(ctx, var, val)
     val = finch_leaf(val)
-    if isliteral(val)
+    isconstant(val) && return val
+    if @capture val call(cached, ~a::isconstant, ~b)
         return val
     end
-    if val isa FinchNode
-        val.kind == literal && return val
-        val.kind == value && return val
-    end
-    body = contain(ctx) do ctx_2
-        ctx(val)
-    end
-    if body isa Symbol
-        return body
-    else
-        var = ctx.freshen(var)
-        push!(ctx.preamble, Expr(:cache, var,
-        quote
-            $var = $body
-        end))
-        return value(var, Any) #TODO could we do better here?
-    end
+    var = ctx.freshen(var)
+    push!(ctx.preamble, Expr(:cache, var,
+    quote
+    $var = $(contain(ctx_2 -> ctx_2(val), ctx))
+    end))
+    return simplify(call(cached, value(var, Any), val), ctx)
 end
 
 bind(f, ctx::LowerJulia) = f()
@@ -314,6 +304,8 @@ function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
             else
                 reduce((x, y) -> :($x || $y), map(ctx, root.args))
             end
+        elseif root.op == literal(cached)
+            return ctx(root.args[1])
         else
             :($(ctx(root.op))($(map(ctx, root.args)...)))
         end

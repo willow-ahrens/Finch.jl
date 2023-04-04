@@ -231,7 +231,10 @@ getstart(ext::Extent) = ext.start
 getstop(ext::Extent) = ext.stop
 getlower(ext::Extent) = ext.lower
 getupper(ext::Extent) = ext.upper
-measure(ext::Extent) = call(min, call(max, call(+, call(-, ext.stop, ext.start), 1), ext.lower), ext.upper)
+measure(ext::Extent) = call(cached,
+    call(+, call(-, ext.stop, ext.start), 1),
+    call(min, call(max, call(+, call(-, ext.stop, ext.start), 1), ext.lower), ext.upper)
+)
 
 function getstop(ext::FinchNode)
     if ext.kind === virtual
@@ -417,7 +420,7 @@ function combinedim(ctx, a::Narrow{<:Extent}, b::Narrow{<:Extent})
     Narrow(Extent(
         start = simplify(@f(max($(getstart(a)), $(getstart(b)))), ctx),
         stop = simplify(@f(min($(getstop(a)), $(getstop(b)))), ctx),
-        lower = if getstart(a) == getstart(b) || getstop(a) == getstop(b)
+        lower = if query(call(==, getstart(a), getstart(b)), ctx) || query(call(==, getstop(a), getstop(b)), ctx)
             simplify(@f(min($(a.ext.lower), $(b.ext.lower))), ctx)
         else
             literal(0)
@@ -435,7 +438,7 @@ function combinedim(ctx, a::Widen{<:Extent}, b::Widen{<:Extent})
         start = simplify(@f(min($(getstart(a)), $(getstart(b)))), ctx),
         stop = simplify(@f(max($(getstop(a)), $(getstop(b)))), ctx),
         lower = simplify(@f(max($(a.ext.lower), $(b.ext.lower))), ctx),
-        upper = if getstart(a) == getstart(b) || getstop(a) == getstop(b)
+        upper = if query(call(==, getstart(a), getstart(b)), ctx) || query(call(==, getstop(a), getstop(b)), ctx)
             simplify(@f(max($(a.ext.upper), $(b.ext.upper))), ctx)
         else
             simplify(@f($(a.ext.upper) + $(b.ext.upper)), ctx)

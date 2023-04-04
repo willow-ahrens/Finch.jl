@@ -121,21 +121,19 @@ begin
                             j_start_4 = j
                             A_lvl_i_2 = A_lvl.idx[A_lvl_q_2]
                             phase_stop_10 = (min)(phase_stop_9, (+)(s_3, A_lvl_i_2))
-                            if phase_stop_10 >= j_start_4
-                                j_12 = j
-                                if A_lvl_i_2 == (+)(phase_stop_10, (-)(s_3))
-                                    A_lvl_2_val_4 = A_lvl_2.val[A_lvl_q_2]
-                                    j_13 = phase_stop_10
-                                    F_lvl_q = (1 - 1) * F_lvl.shape + j_13
-                                    F_lvl_2_val_2 = F_lvl_2.val[F_lvl_q]
-                                    C_lvldirty = true
-                                    C_lvldirty = true
-                                    C_lvl_2.val[C_lvl_qos] = (+)((*)((!=)(A_lvl_2_val_2, 0), (coalesce)(F_lvl_2_val_2, 0), (coalesce)(A_lvl_2_val_4, 0)), C_lvl_2.val[C_lvl_qos])
-                                    A_lvl_q_2 += 1
-                                else
-                                end
-                                j = phase_stop_10 + 1
+                            j_12 = j
+                            if A_lvl_i_2 == (+)(phase_stop_10, (-)(s_3))
+                                A_lvl_2_val_4 = A_lvl_2.val[A_lvl_q_2]
+                                j_13 = phase_stop_10
+                                F_lvl_q = (1 - 1) * F_lvl.shape + j_13
+                                F_lvl_2_val_2 = F_lvl_2.val[F_lvl_q]
+                                C_lvldirty = true
+                                C_lvldirty = true
+                                C_lvl_2.val[C_lvl_qos] = (+)((*)((!=)(A_lvl_2_val_2, 0), (coalesce)(F_lvl_2_val_2, 0), (coalesce)(A_lvl_2_val_4, 0)), C_lvl_2.val[C_lvl_qos])
+                                A_lvl_q_2 += 1
+                            else
                             end
+                            j = phase_stop_10 + 1
                         end
                         j = phase_stop_9 + 1
                     end

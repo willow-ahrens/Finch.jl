@@ -82,21 +82,19 @@ begin
                             j_start_3 = j
                             A_lvl_i_2 = A_lvl.idx[A_lvl_q_2]
                             phase_stop_6 = (min)(phase_stop_5, (+)(s_3, A_lvl_i_2))
-                            if phase_stop_6 >= j_start_3
-                                j_7 = j
-                                if A_lvl_i_2 == (+)(phase_stop_6, (-)(s_3))
-                                    A_lvl_2_val_3 = A_lvl_2.val[A_lvl_q_2]
-                                    j_8 = phase_stop_6
-                                    F_lvl_q = (1 - 1) * F_lvl.shape + j_8
-                                    F_lvl_2_val_2 = F_lvl_2.val[F_lvl_q]
-                                    C_lvldirty = true
-                                    C_lvldirty = true
-                                    C_lvl_2.val[C_lvl_qos] = (+)((*)((!=)(A_lvl_2_val_2, 0), F_lvl_2_val_2, (coalesce)(A_lvl_2_val_3, 0)), C_lvl_2.val[C_lvl_qos])
-                                    A_lvl_q_2 += 1
-                                else
-                                end
-                                j = phase_stop_6 + 1
+                            j_7 = j
+                            if A_lvl_i_2 == (+)(phase_stop_6, (-)(s_3))
+                                A_lvl_2_val_3 = A_lvl_2.val[A_lvl_q_2]
+                                j_8 = phase_stop_6
+                                F_lvl_q = (1 - 1) * F_lvl.shape + j_8
+                                F_lvl_2_val_2 = F_lvl_2.val[F_lvl_q]
+                                C_lvldirty = true
+                                C_lvldirty = true
+                                C_lvl_2.val[C_lvl_qos] = (+)((*)((!=)(A_lvl_2_val_2, 0), F_lvl_2_val_2, (coalesce)(A_lvl_2_val_3, 0)), C_lvl_2.val[C_lvl_qos])
+                                A_lvl_q_2 += 1
+                            else
                             end
+                            j = phase_stop_6 + 1
                         end
                         j = phase_stop_5 + 1
                     end
