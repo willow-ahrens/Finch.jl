@@ -206,8 +206,8 @@ combinedim(ctx, a::NoDimension, b) = b
 @kwdef struct Extent
     start
     stop
-    lower = @f $stop - $start + 1
-    upper = @f $stop - $start + 1
+    lower = literal(-Inf)
+    upper = literal(Inf)
 end
 
 FinchNotation.finch_leaf(x::Extent) = virtual(x)
@@ -218,7 +218,7 @@ Base.:(==)(a::Extent, b::Extent) =
     a.lower == b.lower &&
     a.upper == b.upper
 
-Extent(start, stop) = Extent(start, stop, (@f $stop - $start + 1), (@f $stop - $start + 1))
+Extent(start, stop) = Extent(start, stop, literal(-Inf), literal(Inf))
 
 cache_dim!(ctx, var, ext::Extent) = Extent(
     start = cache!(ctx, Symbol(var, :_start), ext.start),
@@ -231,7 +231,7 @@ getstart(ext::Extent) = ext.start
 getstop(ext::Extent) = ext.stop
 getlower(ext::Extent) = ext.lower
 getupper(ext::Extent) = ext.upper
-extent(ext::Extent) = @f $(ext.stop) - $(ext.start) + 1
+measure(ext::Extent) = call(min, call(max, call(+, call(-, ext.stop, ext.start), 1), ext.lower), ext.upper)
 
 function getstop(ext::FinchNode)
     if ext.kind === virtual
@@ -261,8 +261,9 @@ function getupper(ext::FinchNode)
         1
     end
 end
+#=
 #TODO I don't like this def
-function extent(ext::FinchNode)
+function measure(ext::FinchNode)
     if ext.kind === virtual
         extent(ext.val)
     elseif ext.kind === value
@@ -274,6 +275,7 @@ function extent(ext::FinchNode)
     end
 end
 extent(ext::Integer) = 1
+=#
 
 combinedim(ctx, a::Extent, b::Extent) =
     Extent(
@@ -304,7 +306,7 @@ cache_dim!(ctx, tag, ext::SuggestedExtent) = SuggestedExtent(cache_dim!(ctx, tag
 #TODO maybe just call something like resolve_extent to unwrap?
 getstart(ext::SuggestedExtent) = getstart(ext.ext)
 getstop(ext::SuggestedExtent) = getstop(ext.ext)
-extent(ext::SuggestedExtent) = extent(ext.ext)
+measure(ext::SuggestedExtent) = measure(ext.ext)
 
 combinedim(ctx, a::SuggestedExtent, b::Extent) = b
 

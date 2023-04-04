@@ -127,7 +127,7 @@ end
         A = @fiber d(sl(e(0.0)))
         x = @fiber sl(e(0.0))
         Finch.execute_code(:ex, typeof(Finch.@finch_program_instance begin
-                @loop j i y[i] += A[i, j] * x[i]
+                @loop j i y[i] += A[i, j] * x[j]
             end
         ))
 

@@ -221,14 +221,6 @@ function base_rules(alg, ctx)
         (@rule chunk(~i, ~a, sequence()) => sequence()),
         (@rule sequence(~a..., sequence(~b...), ~c...) => sequence(a..., b..., c...)),
 
-        (@rule call(>=, call(max, ~a...), ~b) => call(or, map(x -> call(x >= b), a)...)),
-        (@rule call(>, call(max, ~a...), ~b) => call(or, map(x -> call(x > b), a)...)),
-        (@rule call(<=, call(max, ~a...), ~b) => call(and, map(x -> call(x <= b), a)...)),
-        (@rule call(<, call(max, ~a...), ~b) => call(and, map(x -> call(x < b), a)...)),
-        (@rule call(>=, call(min, ~a...), ~b) => call(and, map(x -> call(x >= b), a)...)),
-        (@rule call(>, call(min, ~a...), ~b) => call(and, map(x -> call(x > b), a)...)),
-        (@rule call(<=, call(min, ~a...), ~b) => call(or, map(x -> call(x <= b), a)...)),
-        (@rule call(<, call(min, ~a...), ~b) => call(or, map(x -> call(x < b), a)...)),
         (@rule call(~f::isassociative(alg), ~a..., call(~f, ~b...), ~c...) => call(f, a..., b..., c...)),
         (@rule call(~f::iscommutative(alg), ~a...) => if !(issorted(a, by = shash))
             call(f, sort(a, by = shash)...)
@@ -247,6 +239,18 @@ function base_rules(alg, ctx)
         end),
         (@rule call(~f, ~a) => if isassociative(alg, f) a end), #TODO
 
+        (@rule call(>=, ~a, ~b) => call(<=, b, a)),
+        (@rule call(>, ~a, ~b) => call(<, b, a)),
+
+        (@rule call(<=, ~a, call(max, ~b...)) => call(or, map(x -> call(<=, a, x), b)...)),
+        (@rule call(<, ~a, call(max, ~b...)) => call(or, map(x -> call(<, a, x), b)...)),
+        (@rule call(<=, call(max, ~a...), ~b) => call(and, map(x -> call(<=, x, b), a)...)),
+        (@rule call(<, call(max, ~a...), ~b) => call(and, map(x -> call(<, x, b), a)...)),
+        (@rule call(<=, ~a, call(min, ~b...)) => call(and, map(x -> call(<=, a, x), b)...)),
+        (@rule call(<, ~a, call(min, ~b...)) => call(and, map(x -> call(<, a, x), b)...)),
+        (@rule call(<=, call(min, ~a...), ~b) => call(or, map(x -> call(<=, x, b), a)...)),
+        (@rule call(<, call(min, ~a...), ~b) => call(or, map(x -> call(<, x, b), a)...)),
+        
         (@rule assign(access(~a, updater(~m), ~i...), ~f, ~b) => if isidentity(alg, f, b) sequence() end),
         (@rule assign(access(~a, ~m, ~i...), $(literal(missing))) => sequence()),
         (@rule assign(access(~a, ~m, ~i..., $(literal(missing)), ~j...), ~b) => sequence()),
@@ -269,7 +273,11 @@ function base_rules(alg, ctx)
             call(g, call(f, a), map(c -> call(f, call(g, c)), b)...)
         end),
 
+        #TODO should put a zero here, but we need types
         (@rule call(~g, ~a..., ~b, ~c..., call(~f, ~b), ~d...) => if isinverse(alg, f, g) && isassociative(alg, g)
+            call(g, a..., c..., d...)
+        end),
+        (@rule call(~g, ~a..., call(~f, ~b), ~c..., ~b, ~d...) => if isinverse(alg, f, g) && isassociative(alg, g)
             call(g, a..., c..., d...)
         end),
 
@@ -293,7 +301,7 @@ function base_rules(alg, ctx)
         end),
         (@rule chunk(~i, ~a, assign(access(~b, updater(~m), ~j...), +, ~d)) => begin
             if i ∉ j && getname(i) ∉ getunbound(d)
-                assign(access(b, updater(m), j...), +, call(*, extent(a), d))
+                assign(access(b, updater(m), j...), +, call(*, measure(a.val), d))
             end
         end),
     ]
@@ -346,6 +354,11 @@ function simplify(node::FinchNode, ctx)
         nothing
     end)(node)
     Rewrite(Fixpoint(Prewalk(Chain(rules))))(node)
+end
+
+function query(node::FinchNode, ctx)
+    res = simplify(node, ctx)
+    return res == literal(true)
 end
 
 function (ctx::LowerJulia)(root, ::SimplifyStyle)
