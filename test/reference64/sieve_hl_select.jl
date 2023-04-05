@@ -24,7 +24,7 @@ begin
         while j <= phase_stop
             j_start_2 = j
             A_lvl_i = A_lvl.idx[A_lvl_q]
-            phase_stop_2 = (min)(A_lvl_i, phase_stop)
+            phase_stop_2 = (min)(phase_stop, A_lvl_i)
             j_5 = j
             if A_lvl_i == phase_stop_2
                 for j_6 = j_start_2:(-)(phase_stop_2, 1)

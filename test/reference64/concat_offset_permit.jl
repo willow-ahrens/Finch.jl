@@ -142,7 +142,7 @@ begin
             while i <= phase_stop_7
                 i_start_6 = i
                 A_lvl_i = A_lvl.idx[A_lvl_q]
-                phase_stop_8 = (min)(A_lvl_i, phase_stop_7)
+                phase_stop_8 = (min)(phase_stop_7, A_lvl_i)
                 i_16 = i
                 if A_lvl_i == phase_stop_8
                     A_lvl_2_val_2 = A_lvl_2.val[A_lvl_q]

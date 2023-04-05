@@ -38,7 +38,7 @@ begin
             while j <= phase_stop
                 j_start_2 = j
                 A_lvl_2_i = A_lvl_2.idx[A_lvl_2_q]
-                phase_stop_2 = (min)(A_lvl_2_i, phase_stop)
+                phase_stop_2 = (min)(phase_stop, A_lvl_2_i)
                 j_5 = j
                 if A_lvl_2_i == phase_stop_2
                     A_lvl_3_val_2 = A_lvl_3.val[A_lvl_2_q]
@@ -78,7 +78,7 @@ begin
                             k_start_2 = k
                             A_lvl_2_i_2 = A_lvl_2.idx[A_lvl_2_q_2]
                             A_lvl_2_i_3 = A_lvl_2.idx[A_lvl_2_q_3]
-                            phase_stop_4 = (min)(A_lvl_2_i_3, A_lvl_2_i_2, phase_stop_3)
+                            phase_stop_4 = (min)(A_lvl_2_i_2, A_lvl_2_i_3, phase_stop_3)
                             k_5 = k
                             if A_lvl_2_i_2 == phase_stop_4 && A_lvl_2_i_3 == phase_stop_4
                                 A_lvl_3_val_3 = A_lvl_3.val[A_lvl_2_q_2]
