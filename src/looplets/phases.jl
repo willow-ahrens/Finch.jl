@@ -75,7 +75,7 @@ combine_style(a::DefaultStyle, b::PhaseStyle) = PhaseStyle()
 combine_style(a::PhaseStyle, b::PhaseStyle) = PhaseStyle()
 combine_style(a::PhaseStyle, b::RunStyle) = PhaseStyle()
 combine_style(a::PhaseStyle, b::SpikeStyle) = PhaseStyle()
-combine_style(a::SimplifyStyle, b::PhaseStyle) = PhaseStyle()
+combine_style(a::SimplifyStyle, b::PhaseStyle) = a
 combine_style(a::AcceptRunStyle, b::PhaseStyle) = PhaseStyle()
 combine_style(a::SwitchStyle, b::PhaseStyle) = SwitchStyle()
 combine_style(a::ThunkStyle, b::PhaseStyle) = ThunkStyle()
@@ -103,7 +103,7 @@ function (ctx::LowerJulia)(root::FinchNode, ::PhaseStyle)
             $i = $(ctx(getstop(ext_2))) + $(Int8(1))
         end
 
-        if simplify(@f($(getlower(ext_2)) >= 1), ctx) == literal(true)
+        if query(call(>, measure(ext_2), 0), ctx)
             return body
         else
             return quote

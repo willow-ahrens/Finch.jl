@@ -252,7 +252,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Union{No
                                     body = Pipeline([
                                         Phase(
                                             stride = (ctx, ext) -> value(my_i_start),
-                                            body = (ctx, ext) -> Run(Simplify(Fill(virtual_level_default(lvl)))),
+                                            body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
                                         ),
                                         Phase(
                                             body = (ctx, ext) -> Lookup(
@@ -274,7 +274,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Union{No
                     )
                 ),
                 Phase(
-                    body = (ctx, ext) -> Run(Simplify(Fill(virtual_level_default(lvl))))
+                    body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))
                 )
             ])
         )
@@ -336,7 +336,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Gallop, 
                                         body = Pipeline([
                                             Phase(
                                                 stride = (ctx, ext) -> value(my_i_start),
-                                                body = (ctx, ext) -> Run(Simplify(Fill(virtual_level_default(lvl)))),
+                                                body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
                                             ),
                                             Phase(
                                                 body = (ctx, ext) -> Lookup(
@@ -372,7 +372,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Gallop, 
                                                     body = Pipeline([
                                                         Phase(
                                                             stride = (ctx, ext) -> value(my_i_start),
-                                                            body = (ctx, ext) -> Run(Simplify(Fill(virtual_level_default(lvl)))),
+                                                            body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
                                                         ),
                                                         Phase(
                                                             body = (ctx, ext) -> Lookup(
@@ -398,7 +398,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Gallop, 
                     )
                 ),
                 Phase(
-                    body = (ctx, ext) -> Run(Simplify(Fill(virtual_level_default(lvl))))
+                    body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))
                 )
             ])
         )

@@ -103,7 +103,7 @@ function Finch.get_reader(arr::VirtualSparseMatrixCSC, ctx::LowerJulia, ::Union{
                                     body = Step(
                                         stride = (ctx, ext) -> value(my_i),
                                         chunk = Spike(
-                                            body = Simplify(Fill(zero(arr.Tv))),
+                                            body = Fill(zero(arr.Tv)),
                                             tail = Thunk(
                                                 preamble = quote
                                                     $my_val = $(arr.ex).nzval[$my_q]
@@ -119,7 +119,7 @@ function Finch.get_reader(arr::VirtualSparseMatrixCSC, ctx::LowerJulia, ::Union{
                             )
                         ),
                         Phase(
-                            body = (ctx, ext) -> Run(Simplify(Fill(zero(arr.Tv))))
+                            body = (ctx, ext) -> Run(Fill(zero(arr.Tv)))
                         )
                     ])
                 )
@@ -202,7 +202,7 @@ function Finch.get_reader(arr::VirtualSparseVector, ctx::LowerJulia, ::Union{Not
                             body = Step(
                                 stride = (ctx, ext) -> value(my_i),
                                 chunk = Spike(
-                                    body = Simplify(Fill(zero(arr.Tv))),
+                                    body = Fill(zero(arr.Tv)),
                                     tail = Thunk(
                                         preamble = quote
                                             $my_val = $(arr.ex).nzval[$my_q]
@@ -218,7 +218,7 @@ function Finch.get_reader(arr::VirtualSparseVector, ctx::LowerJulia, ::Union{Not
                     )
                 ),
                 Phase(
-                    body = (ctx, ext) -> Run(Simplify(Fill(zero(arr.Tv))))
+                    body = (ctx, ext) -> Run(Fill(zero(arr.Tv)))
                 )
             ])
         )

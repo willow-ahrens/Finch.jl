@@ -13,10 +13,9 @@ begin
     A_lvl_6 = A_lvl_5.lvl
     B_lvl_2_qos_fill = 0
     B_lvl_2_qos_stop = 0
-    p_start = (+)((*)((-)(1, 1), A_lvl.shape), 1)
     p_start_2 = (*)(1, A_lvl.shape)
     (Finch.resize_if_smaller!)(B_lvl_2.ptr, p_start_2 + 1)
-    (Finch.fill_range!)(B_lvl_2.ptr, 0, p_start + 1, p_start_2 + 1)
+    (Finch.fill_range!)(B_lvl_2.ptr, 0, 1 + 1, p_start_2 + 1)
     for j_4 = 1:A_lvl.shape
         B_lvl_q = (1 - 1) * A_lvl.shape + j_4
         A_lvl_q = (1 - 1) * A_lvl.shape + j_4
@@ -64,7 +63,7 @@ begin
                     k_start_2 = k
                     A_lvl_2_i = A_lvl_2.idx[A_lvl_2_q]
                     A_lvl_2_i_2 = A_lvl_2.idx[A_lvl_2_q_2]
-                    phase_stop_2 = (min)(A_lvl_2_i_2, A_lvl_2_i, phase_stop)
+                    phase_stop_2 = (min)(A_lvl_2_i, A_lvl_2_i_2, phase_stop)
                     k_5 = k
                     if A_lvl_2_i == phase_stop_2 && A_lvl_2_i_2 == phase_stop_2
                         A_lvl_3_val_2 = A_lvl_3.val[A_lvl_2_q]
