@@ -25,7 +25,9 @@ function (spc::Freshen)(tags...)
     end
 end
 
-@kwdef mutable struct LowerJulia
+abstract type AbstractCompiler end
+
+@kwdef mutable struct LowerJulia <: AbstractCompiler
     algebra = DefaultAlgebra()
     preamble::Vector{Any} = []
     bindings::Dict{Any, Any} = Dict()
@@ -35,6 +37,7 @@ end
     dims::Dict = Dict()
     freshen::Freshen = Freshen()
     shash = StaticHash()
+    rules = getrules(algebra, shash)
 end
 
 struct StaticHash

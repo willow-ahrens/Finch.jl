@@ -79,7 +79,7 @@ combine_style(a::PointwiseRepeatStyle, ::PointwiseRepeatStyle) = a
 combine_style(a::PointwiseRepeatStyle, ::PointwiseElementStyle) = a
 combine_style(a::PointwiseElementStyle, ::PointwiseElementStyle) = a
 
-struct PointwiseRep
+struct PointwiseRep <: AbstractCompiler
     ctx
 end
 

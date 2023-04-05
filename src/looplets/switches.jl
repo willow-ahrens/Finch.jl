@@ -17,7 +17,7 @@ struct SwitchStyle end
 (ctx::Stylize{LowerJulia})(node::Switch) = SwitchStyle()
 combine_style(a::DefaultStyle, b::SwitchStyle) = SwitchStyle()
 combine_style(a::ThunkStyle, b::SwitchStyle) = ThunkStyle()
-combine_style(a::SimplifyStyle, b::SwitchStyle) = SimplifyStyle()
+combine_style(a::AbstractSimplifyStyle, b::SwitchStyle) = a
 combine_style(a::RunStyle, b::SwitchStyle) = SwitchStyle()
 combine_style(a::AcceptRunStyle, b::SwitchStyle) = SwitchStyle()
 combine_style(a::SpikeStyle, b::SwitchStyle) = SwitchStyle()

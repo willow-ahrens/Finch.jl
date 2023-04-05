@@ -15,7 +15,7 @@ struct PipelineStyle end
 combine_style(a::DefaultStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::ThunkStyle, b::PipelineStyle) = ThunkStyle()
 combine_style(a::RunStyle, b::PipelineStyle) = PipelineStyle()
-combine_style(a::SimplifyStyle, b::PipelineStyle) = SimplifyStyle()
+combine_style(a::AbstractSimplifyStyle, b::PipelineStyle) = a
 combine_style(a::AcceptRunStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::PipelineStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::PipelineStyle, b::SwitchStyle) = SwitchStyle()
