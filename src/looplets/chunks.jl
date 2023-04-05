@@ -4,7 +4,7 @@ combine_style(a::DefaultStyle, b::ChunkStyle) = ChunkStyle()
 combine_style(a::ThunkStyle, b::ChunkStyle) = ThunkStyle()
 combine_style(a::ChunkStyle, b::ChunkStyle) = ChunkStyle()
 combine_style(a::ChunkStyle, b::DimensionalizeStyle) = DimensionalizeStyle()
-combine_style(a::ChunkStyle, b::SimplifyStyle) = SimplifyStyle()
+combine_style(a::ChunkStyle, b::SimplifyStyle) = b
 
 struct ChunkifyVisitor
     ctx

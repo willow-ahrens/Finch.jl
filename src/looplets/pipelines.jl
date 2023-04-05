@@ -15,7 +15,7 @@ struct PipelineStyle end
 combine_style(a::DefaultStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::ThunkStyle, b::PipelineStyle) = ThunkStyle()
 combine_style(a::RunStyle, b::PipelineStyle) = PipelineStyle()
-combine_style(a::SimplifyStyle, b::PipelineStyle) = SimplifyStyle()
+combine_style(a::SimplifyStyle, b::PipelineStyle) = a
 combine_style(a::AcceptRunStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::PipelineStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::PipelineStyle, b::SwitchStyle) = SwitchStyle()
@@ -38,7 +38,7 @@ function (ctx::LowerJulia)(root::FinchNode, ::PipelineStyle)
         end
 
         visited = Set()
-        frontier = [minimum(keys(phases))
+        frontier = [minimum(keys(phases))]
 
         while !isempty(frontier)
             key = pop!(frontier)

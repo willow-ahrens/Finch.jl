@@ -21,13 +21,13 @@ function get_reader(::DiagMask, ctx, protos...)
                 body = (ctx, ext) -> Pipeline([
                     Phase(
                         stride = (ctx, ext) -> value(:($(ctx(i)) - 1)),
-                        body = (ctx, ext) -> Run(body=Simplify(Fill(false)))
+                        body = (ctx, ext) -> Run(body=Fill(false))
                     ),
                     Phase(
                         stride = (ctx, ext) -> i,
-                        body = (ctx, ext) -> Run(body=Simplify(Fill(true))),
+                        body = (ctx, ext) -> Run(body=Fill(true)),
                     ),
-                    Phase(body = (ctx, ext) -> Run(body=Simplify(Fill(false))))
+                    Phase(body = (ctx, ext) -> Run(body=Fill(false)))
                 ])
             )
         )
@@ -56,10 +56,10 @@ function get_reader(::UpTriMask, ctx, protos...)
                 body = (ctx, ext) -> Pipeline([
                     Phase(
                         stride = (ctx, ext) -> value(:($(ctx(i)))),
-                        body = (ctx, ext) -> Run(body=Simplify(Fill(true)))
+                        body = (ctx, ext) -> Run(body=Fill(true))
                     ),
                     Phase(
-                        body = (ctx, ext) -> Run(body=Simplify(Fill(false))),
+                        body = (ctx, ext) -> Run(body=Fill(false)),
                     )
                 ])
             )
@@ -89,10 +89,10 @@ function get_reader(::LoTriMask, ctx, protos...)
                 body = (ctx, ext) -> Pipeline([
                     Phase(
                         stride = (ctx, ext) -> value(:($(ctx(i)) - 1)),
-                        body = (ctx, ext) -> Run(body=Simplify(Fill(false)))
+                        body = (ctx, ext) -> Run(body=Fill(false))
                     ),
                     Phase(
-                        body = (ctx, ext) -> Run(body=Simplify(Fill(true))),
+                        body = (ctx, ext) -> Run(body=Fill(true)),
                     )
                 ])
             )
@@ -125,14 +125,14 @@ function get_reader(::BandMask, ctx, mode, protos...)
                         body = (ctx, ext) -> Pipeline([
                             Phase(
                                 stride = (ctx, ext) -> value(:($(ctx(j)) - 1)),
-                                body = (ctx, ext) -> Run(body=Simplify(Fill(false)))
+                                body = (ctx, ext) -> Run(body=Fill(false))
                             ),
                             Phase(
                                 stride = (ctx, ext) -> k,
-                                body = (ctx, ext) -> Run(body=Simplify(Fill(true)))
+                                body = (ctx, ext) -> Run(body=Fill(true))
                             ),
                             Phase(
-                                body = (ctx, ext) -> Run(body=Simplify(Fill(false))),
+                                body = (ctx, ext) -> Run(body=Fill(false)),
                             )
                         ])
                     )

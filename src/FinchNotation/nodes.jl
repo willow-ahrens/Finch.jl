@@ -205,7 +205,7 @@ A Finch IR node. Finch uses a variant of Concrete Index Notation as an
 intermediate representation. Consult the documentation of each node kind
 for more information.
 """
-struct FinchNode
+mutable struct FinchNode
     kind::FinchNodeKind
     val::Any
     type::Any
