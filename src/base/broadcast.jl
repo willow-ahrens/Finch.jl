@@ -100,10 +100,10 @@ pointwise_rep_body(tns::ElementData) = tns.lvl
 function (ctx::PointwiseRep)(rep, idxs, ::PointwiseHollowStyle)
     background = simplify(Postwalk(Chain([
         (@rule access(~ex::isvirtual, ~m, ~i...) => access(pointwise_rep_hollow(ex.val), m, i...)),
-    ]))(rep), LowerJulia())
+    ]))(rep), ctx.ctx)
     body = simplify(Postwalk(Chain([
         (@rule access(~ex::isvirtual, ~m, ~i...) => access(pointwise_rep_solid(ex.val), m, i...)),
-    ]))(rep), LowerJulia())
+    ]))(rep), ctx.ctx)
     if isliteral(background)
         return HollowData(ctx(body, idxs))
     else
@@ -114,14 +114,14 @@ end
 function (ctx::PointwiseRep)(rep, idxs, ::PointwiseDenseStyle)
     body = simplify(Rewrite(Postwalk(Chain([
         (@rule access(~ex::isvirtual, ~m, ~i..., $(idxs[1])) => access(pointwise_rep_body(ex.val), m, i...)),
-    ])))(rep), LowerJulia())
+    ])))(rep), ctx.ctx)
     return DenseData(ctx(body, idxs[2:end]))
 end
 
 function (ctx::PointwiseRep)(rep, idxs, ::PointwiseRepeatStyle)
     background = simplify(PostWalk(Chain([
         (@rule access(~ex::isvirtual, ~m, ~i...) => finch_leaf(default(ex.val))),
-    ]))(rep), LowerJulia())
+    ]))(rep), ctx.ctx)
     @assert isliteral(background)
     return RepeatData(background.val, typeof(background.val))
 end
@@ -129,7 +129,7 @@ end
 function (ctx::PointwiseRep)(rep, idxs, ::PointwiseElementStyle)
     background = simplify(Postwalk(Chain([
         (@rule access(~ex::isvirtual, ~m) => finch_leaf(default(ex.val))),
-    ]))(rep), LowerJulia())
+    ]))(rep), ctx.ctx)
     @assert isliteral(background)
     return ElementData(background.val, typeof(background.val))
 end

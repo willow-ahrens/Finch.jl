@@ -18,7 +18,7 @@ struct SpikeStyle end
 combine_style(a::DefaultStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::RunStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::ThunkStyle, b::SpikeStyle) = ThunkStyle()
-combine_style(a::AbstractSimplifyStyle, b::SpikeStyle) = a
+combine_style(a::SimplifyStyle, b::SpikeStyle) = a
 combine_style(a::AcceptRunStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::SpikeStyle, b::SpikeStyle) = SpikeStyle()
 

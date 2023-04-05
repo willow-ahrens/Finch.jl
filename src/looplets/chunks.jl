@@ -4,7 +4,7 @@ combine_style(a::DefaultStyle, b::ChunkStyle) = ChunkStyle()
 combine_style(a::ThunkStyle, b::ChunkStyle) = ThunkStyle()
 combine_style(a::ChunkStyle, b::ChunkStyle) = ChunkStyle()
 combine_style(a::ChunkStyle, b::DimensionalizeStyle) = DimensionalizeStyle()
-combine_style(a::ChunkStyle, b::AbstractSimplifyStyle) = b
+combine_style(a::ChunkStyle, b::SimplifyStyle) = b
 
 struct ChunkifyVisitor
     ctx
@@ -89,7 +89,7 @@ struct SelectStyle end
 combine_style(a::SelectStyle, b::ThunkStyle) = b
 combine_style(a::SelectStyle, b::ChunkStyle) = a
 combine_style(a::SelectStyle, b::SelectStyle) = a
-combine_style(a::SelectStyle, b::AbstractSimplifyStyle) = b
+combine_style(a::SelectStyle, b::SimplifyStyle) = b
 
 function (ctx::LowerJulia)(root, ::SelectStyle)
     idxs = Dict()

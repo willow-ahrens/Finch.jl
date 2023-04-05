@@ -376,15 +376,13 @@ end
     body
 end
 
-abstract type AbstractSimplifyStyle end
-struct SimplifyStyle <: AbstractSimplifyStyle end
-abstract type AbstractPreSimplifyStyle <: AbstractSimplifyStyle end
+struct SimplifyStyle end
+abstract type AbstractPreSimplifyStyle end
 
 (ctx::Stylize{LowerJulia})(::Simplify) = SimplifyStyle()
-combine_style(a::DefaultStyle, b::AbstractSimplifyStyle) = b
-combine_style(a::ThunkStyle, b::AbstractSimplifyStyle) = ThunkStyle()
+combine_style(a::DefaultStyle, b::AbstractPreSimplifyStyle) = b
+combine_style(a::ThunkStyle, b::SimplifyStyle) = ThunkStyle()
 combine_style(a::AbstractPreSimplifyStyle, b::AbstractPreSimplifyStyle) = a
-combine_style(a::SimplifyStyle, b::AbstractPreSimplifyStyle) = a
 combine_style(a::SimplifyStyle, b::SimplifyStyle) = a
 
 """
@@ -395,12 +393,6 @@ compilation. One can dispatch on the `alg` trait to specialize the rule set for
 different algebras.
 """
 getrules(alg, shash) = base_rules(alg, shash)
-
-simplify(node, shash) = ctx
-
-function simplify(node::FinchNode, ctx)
-    Rewrite(Fixpoint(Prewalk(Chain(ctx.rules))))(node)
-end
 
 function query(node::FinchNode, ctx)
     res = simplify(node, ctx)
@@ -415,3 +407,19 @@ function (ctx::LowerJulia)(root, ::SimplifyStyle)
 end
 
 FinchNotation.finch_leaf(x::Simplify) = virtual(x)
+
+@kwdef mutable struct Simplifier{Ctx}
+    ctx::Ctx
+    bindings = ctx.bindings #TODO I don't like that this is required
+end
+
+(ctx::Simplifier)(root) = ctx(root, Stylize(root, ctx)(root))
+
+function (ctx::Simplifier)(root, ::DefaultStyle)
+    global rules
+    Rewrite(Fixpoint(Prewalk(Chain(ctx.ctx.rules))))(root)
+end
+
+function simplify(node::FinchNode, ctx)
+    return Simplifier(ctx=ctx)(node)
+end

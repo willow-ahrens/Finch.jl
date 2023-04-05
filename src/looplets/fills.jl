@@ -8,8 +8,9 @@ virtual_default(f::Fill) = Some(f.body)
 
 struct FillStyle <: AbstractPreSimplifyStyle end
 
-(ctx::Stylize)(::Fill) = FillStyle()
+(ctx::Stylize{LowerJulia})(::Fill) = SimplifyStyle()
+(ctx::Stylize{<:Simplifier})(::Fill) = FillStyle()
 
-function (ctx::LowerJulia)(root::FinchNode, ::FillStyle)
-    ctx(Postwalk(@rule access(~a::isvirtual, ~m, ~i...) => if a.val isa Fill Simplify(a.val.body) end)(root))
+function (ctx::Simplifier)(root::FinchNode, ::FillStyle)
+    ctx(Postwalk(@rule access(~a::isvirtual, ~m, ~i...) => if a.val isa Fill a.val.body end)(root))
 end
