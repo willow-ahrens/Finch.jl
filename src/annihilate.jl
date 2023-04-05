@@ -416,8 +416,10 @@ end
 (ctx::Simplifier)(root) = ctx(root, Stylize(root, ctx)(root))
 
 function (ctx::Simplifier)(root, ::DefaultStyle)
-    global rules
-    Rewrite(Fixpoint(Prewalk(Chain(ctx.ctx.rules))))(root)
+    Rewrite(Fixpoint(Chain([
+        Prewalk(Fixpoint(Chain(ctx.ctx.rules))),
+        Postwalk(Fixpoint(Chain(ctx.ctx.rules)))
+    ])))(root)
 end
 
 function simplify(node::FinchNode, ctx)
