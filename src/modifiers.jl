@@ -33,14 +33,14 @@ function get_reader(::VirtualPermit, ctx, proto_idx)
         fuse = (tns, ctx, ext) -> Pipeline([
             Phase(
                 stride = (ctx, ext_2) -> call(-, getstart(ext), 1),
-                body = (ctx, ext) -> Run(Simplify(Fill(literal(missing)))),
+                body = (ctx, ext) -> Run(Fill(literal(missing))),
             ),
             Phase(
                 stride = (ctx, ext_2) -> getstop(ext),
                 body = (ctx, ext_2) -> truncate(tns, ctx, ext, ext_2)
             ),
             Phase(
-                body = (ctx, ext_2) -> Run(Simplify(Fill(literal(missing)))),
+                body = (ctx, ext_2) -> Run(Fill(literal(missing))),
             )
         ])
     )
@@ -86,14 +86,14 @@ function get_reader(::VirtualOffset, ctx, proto_delta, proto_idx)
                 fuse = (tns, ctx, ext) -> Pipeline([
                     Phase(
                         stride = (ctx, ext_2) -> call(+, getstart(ext), delta, -1),
-                        body = (ctx, ext_2) -> Run(Simplify(Fill(literal(missing)))),
+                        body = (ctx, ext_2) -> Run(Fill(literal(missing))),
                     ),
                     Phase(
                         stride = (ctx, ext_2) -> call(+, getstop(ext), delta),
                         body = (ctx, ext_2) -> truncate(Shift(tns, delta), ctx, ext, ext_2)
                     ),
                     Phase(
-                        body = (ctx, ext_2) -> Run(Simplify(Fill(literal(missing)))),
+                        body = (ctx, ext_2) -> Run(Fill(literal(missing))),
                     )
                 ])
             )
@@ -142,14 +142,14 @@ function get_reader(arr::VirtualStaticOffset, ctx, proto_idx)
         fuse = (tns, ctx, ext) -> Pipeline([
             Phase(
                 stride = (ctx, ext_2) -> call(+, getstart(ext), arr.delta, -1),
-                body = (ctx, ext_2) -> Run(Simplify(Fill(literal(missing)))),
+                body = (ctx, ext_2) -> Run(Fill(literal(missing))),
             ),
             Phase(
                 stride = (ctx, ext_2) -> call(+, getstop(ext), arr.delta),
                 body = (ctx, ext_2) -> truncate(Shift(tns, arr.delta), ctx, ext, ext_2)
             ),
             Phase(
-                body = (ctx, ext_2) -> Run(Simplify(Fill(literal(missing)))),
+                body = (ctx, ext_2) -> Run(Fill(literal(missing))),
             )
         ])
     )

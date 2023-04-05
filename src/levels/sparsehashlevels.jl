@@ -308,7 +308,7 @@ function get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, R, start,
                                 body = Step(
                                     stride =  (ctx, ext) -> value(my_i),
                                     chunk = Spike(
-                                        body = Simplify(Fill(virtual_level_default(lvl))),
+                                        body = Fill(virtual_level_default(lvl)),
                                         tail = get_reader(VirtualSubFiber(lvl.lvl, value(:($(lvl.ex).srt[$my_q][2]))), ctx, protos...),
                                     ),
                                     next = (ctx, ext) -> quote
@@ -328,7 +328,7 @@ function get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, R, start,
                                 body = Step(
                                     stride = (ctx, ext) -> value(my_i),
                                     chunk = Spike(
-                                        body = Simplify(Fill(virtual_level_default(lvl))),
+                                        body = Fill(virtual_level_default(lvl)),
                                         tail = get_multilevel_range_reader(lvl, ctx, R - 1, value(my_q, lvl.Ti), value(my_q_step, lvl.Ti), protos...),
                                     ),
                                     next = (ctx, ext) -> quote
@@ -340,7 +340,7 @@ function get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, R, start,
                     )
                 ),
                 Phase(
-                    body = (ctx, ext) -> Run(Simplify(Fill(virtual_level_default(lvl))))
+                    body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))
                 )
             ])
         )
@@ -377,7 +377,7 @@ function get_reader_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, coords, :
                         end,
                         body = Switch([
                             value(:($qos != 0)) => get_reader(VirtualSubFiber(lvl.lvl, value(qos, lvl.Tp)), ctx, protos...),
-                            literal(true) => Simplify(Fill(virtual_level_default(lvl)))
+                            literal(true) => Fill(virtual_level_default(lvl))
                         ])
                     )
                 )
