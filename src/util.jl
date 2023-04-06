@@ -119,6 +119,127 @@ function regensym(ex)
     end))(ex)
 end
 
+const mods = Set([:+=, :*=, :&=, :|=, :(=)])
+
+issymbol(x) = x isa Symbol
+
+mark_dead(ex, refs, res) = ex, refs
+function mark_dead(ex::Symbol, refs, res)
+    return ex, union(refs, [ex])
+end
+function mark_dead(ex::Expr, refs, res)
+    if @capture ex :block(~args...)
+        args_2 = []
+        for arg in args[end:-1:1]
+            (arg, refs) = mark_dead(arg, refs, res)
+            res = false
+            push!(args_2, arg)
+        end
+        return Expr(:block, reverse(args_2)...), refs
+    elseif @capture(ex, (~f)(~args...)) && f in (:ref, :call, :., :curly, :string)
+        args_2 = []
+        for arg in args[end:-1:1]
+            (arg, refs) = mark_dead(arg, refs, res)
+            push!(args_2, arg)
+        end
+        return Expr(f, reverse(args_2)...), refs
+    elseif @capture(ex, :tuple(~args...))
+        args_2 = []
+        for arg in args[end:-1:1]
+            if @capture(arg, :(=)(~lhs, ~rhs))
+                (lhs, refs) = mark_dead(lhs, refs, res)
+                (rhs, refs) = mark_dead(rhs, refs, res)
+                arg = :($lhs = $rhs)
+            else
+                (arg, refs) = mark_dead(arg, refs, res)
+            end
+            push!(args_2, arg)
+        end
+        return Expr(f, reverse(args_2)...), refs
+    elseif (@capture ex (~f)(~cond, ~body)) && f in [:&&, :||]
+        (body, body_refs) = mark_dead(body, refs, res)
+        refs = union(body_refs, refs)
+        (cond, refs) = mark_dead(cond, refs, res)
+        return Expr(f, cond, body), refs
+    elseif @capture ex :if(~cond, ~body)
+        body, body_refs = mark_dead(body, refs, res)
+        cond, refs = mark_dead(cond, union(refs, body_refs), true)
+        return Expr(:if, cond, body), refs
+    elseif @capture ex :if(~cond, ~body, ~tail)
+        body, body_refs = mark_dead(body, refs, res)
+        tail, tail_refs = mark_dead(tail, refs, res)
+        cond, refs = mark_dead(cond, union(tail_refs, body_refs), true)
+        return Expr(:if, cond, body, tail), refs
+    elseif @capture ex :elseif(~cond, ~body)
+        body, body_refs = mark_dead(body, refs, res)
+        cond, refs = mark_dead(cond, union(refs, body_refs), true)
+        return Expr(:elseif, cond, body), refs
+    elseif @capture ex :elseif(~cond, ~body, ~tail)
+        body, body_refs = mark_dead(body, refs, res)
+        tail, tail_refs = mark_dead(tail, refs, res)
+        cond, refs = mark_dead(cond, union(tail_refs, body_refs), true)
+        return Expr(:elseif, cond, body, tail), refs
+    elseif @capture(ex, :(=)(~lhs::issymbol, ~rhs)) || @capture(ex, :(=)(:dead(~lhs::issymbol), ~rhs))
+        if !(lhs in refs)
+            lhs = Expr(:dead, lhs)
+        else
+            res = true
+        end
+        refs = setdiff(refs, [lhs])
+        rhs, refs = mark_dead(rhs, refs, res)
+        return Expr(:(=), lhs, rhs), refs
+    elseif (@capture(ex, (~f)(~lhs::issymbol, ~rhs)) || @capture(ex, (~f)(:dead(~lhs::issymbol), ~rhs))) && f in mods
+        if !(lhs in refs)
+            lhs = Expr(:dead, lhs)
+        else
+            res = true
+        end
+        rhs, refs = mark_dead(rhs, refs, res)
+        return Expr(f, lhs, rhs), refs
+    elseif @capture(ex, (~f)(:ref(~args...), ~rhs)) && f in mods
+        lhs, refs = mark_dead(Expr(:ref, args...), refs, true)
+        rhs, refs = mark_dead(rhs, refs, true)
+        return Expr(f, lhs, rhs), refs
+    elseif @capture(ex, (~f)(:.(~args...), ~rhs)) && f in mods
+        lhs, refs = mark_dead(Expr(:., args...), refs, true)
+        rhs, refs = mark_dead(rhs, refs, true)
+        return Expr(f, lhs, rhs), refs
+    elseif @capture ex :for(:(=)(~i, ~ext), ~body)
+        while true
+            body, new_refs = mark_dead(body, refs, true)
+            if new_refs == refs
+                refs
+                break
+            else
+                refs = new_refs
+            end
+        end
+        ext, refs = mark_dead(ext, refs, true)
+        return Expr(:for, Expr(:(=), i, ext), body), refs
+    elseif @capture ex :while(~cond, ~body)
+        while true
+            body, new_refs = mark_dead(body, refs, true)
+            cond, new_refs = mark_dead(cond, new_refs, true)
+            if new_refs == refs
+                refs
+                break
+            else
+                refs = new_refs
+            end
+        end
+        return Expr(:while, cond, body), refs
+    else
+        error("unimplemented for $ex")
+    end
+end
+
+function dce(ex)
+    ex, refs = mark_dead(ex, Set(), true)
+    Rewrite(Postwalk(Chain([
+        (@rule (~f)(:dead(~lhs), ~rhs) => if f in mods Expr(:block) end),
+    ])))(ex)
+end
+
 """
     unblock(ex)
 Flatten any redundant blocks into a single block, over the whole expression.

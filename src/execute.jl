@@ -86,6 +86,7 @@ macro finch_code(args_ex...)
     return quote
         $execute_code(:ex, typeof($prgm), $(map(esc, args)...)) |>
         striplines |>
+        dce |>
         unblock |>
         unquote_literals
     end
