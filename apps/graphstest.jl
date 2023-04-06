@@ -10,7 +10,7 @@ function testpagerank()
 
     tol = 1e-6
     for i = 1:size
-        @assert(abs(output[i] - expected[i]) < tol, "Error in pagerank") 
+        @test abs(output[i] - expected[i]) < tol 
     end
 end
 
@@ -26,12 +26,12 @@ function testbfs()
     output = bfs(finch_input, source)
 
     for i = 1:size
-        @assert(output[i] == expected[i], "Error in bfs")
+        @test output[i] == expected[i]
     end
 end
 
 function testbellmanford() 
-    size, sparsity = 50, 0.5
+    size, sparsity = 100, 0.5
     source = rand(1:size)
     input = sprand(size, size, sparsity)
     
@@ -47,21 +47,22 @@ function testbellmanford()
         expected_dist = expected.dists[i]
         expected_parent = expected.parents[i]
 
+        #Match different output formats
         output_no_parent = (output_parent == -1)
         expected_no_parent = (expected_parent == 0)
         output_unconnected = (isinf(output_dist))
         expected_unconnected = (isinf(expected_dist))
 
         if expected_no_parent
-            @assert(output_no_parent, "Error in BellmanFord")
+            @test output_no_parent 
         else
-            @assert(output_parent == expected_parent, "Error in BellmanFord")
+            @test output_parent == expected_parent 
         end
 
         if expected_unconnected
-            @assert(output_unconnected, "Error in BellmanFord")
+            @test output_unconnected 
         else
-            @assert(output_dist == expected_dist, "Error in BellmanFord")
+            @test output_dist == expected_dist 
         end
     end
 end

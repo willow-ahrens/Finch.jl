@@ -23,16 +23,18 @@ function testapps()
 
     for test in tests
         failures = 0
-        for i=1:trials
-            try
-                test[2]()
-            catch
-                failures += 1
-                println("Failed test on $(test[1])")
+        @testset "$(test[1])" begin
+            for i=1:trials
+                try
+                    test[2]()
+                catch
+                    failures += 1
+                    println("Failed test on $(test[1])")
+                end
             end
-        end
-        if failures == 0
-            println("Passed all tests on $(test[1])")
+            if failures == 0
+                println("Passed all tests on $(test[1])")
+            end
         end
     end
 end
