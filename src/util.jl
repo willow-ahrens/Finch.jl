@@ -228,6 +228,7 @@ function mark_dead_assign(lhs::Symbol, refs)
         refs = setdiff(refs, [lhs])
         return (Expr(:dead, lhs), refs, false)
     else
+        refs = setdiff(refs, [lhs])
         return (lhs, refs, true)
     end
 end
