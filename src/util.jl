@@ -123,6 +123,7 @@ isassign(x) = x in Set([:+=, :*=, :&=, :|=, :(=)])
 ispure(x) = string(x)[end] != '!'
 
 issymbol(x) = x isa Symbol
+isexpr(x) = x isa Expr
 
 mark_dead(ex, refs, res) = ex, refs
 function mark_dead(ex::Symbol, refs, res)
@@ -254,13 +255,48 @@ end
 
 function dce(ex)
     ex, refs = mark_dead(ex, Set(), true)
-    Rewrite(Postwalk(Chain([
-        (@rule :dead(~lhs) => :_),
-        (@rule (~f::isassign)(:_, ~rhs) => Expr(:block)),
-        (@rule :block(~a..., :block(~b...), ~c...) => Expr(:block, a..., b..., c...)),
-        (@rule :block(~a..., :call(~f::ispure, ~b...), ~c..., ~d) => Expr(:block, a..., b..., c..., d)),
-        (@rule :block(~a) => a),
+
+    ex = Rewrite(Prewalk(Chain([
+        Fixpoint(@rule :block(~a..., :block(~b...), ~c...) => Expr(:block, a..., b..., c...)),
+        (@rule :block(~a1..., :if(~cond, ~b), ~a2..., ~c) =>
+            Expr(:block, a1..., Expr(:if, cond, Expr(:block, b, nothing)), a2..., c)),
+        (@rule :block(~a1..., :if(~cond, ~b, ~c), ~a2..., ~d) =>
+            Expr(:block, a1..., Expr(:if, cond, Expr(:block, b, nothing), Expr(:block, c, nothing)), a2..., d)),
+        (@rule :block(~a1..., :elseif(~cond, ~b), ~a2..., ~c) =>
+            Expr(:block, a1..., Expr(:elseif, cond, Expr(:block, b, nothing)), a2..., c)),
+        (@rule :block(~a1..., :elseif(~cond, ~b, ~c), ~a2..., ~d) =>
+            Expr(:block, a1..., Expr(:elseif, cond, Expr(:block, b, nothing), Expr(:block, c, nothing)), a2..., d)),
+        (@rule :for(~itr, ~body) => Expr(:for, itr, Expr(:block, body, nothing))),
+        (@rule :while(~cond, ~body) => Expr(:while, cond, Expr(:block, body, nothing))),
     ])))(ex)
+
+    ex = Rewrite(Fixpoint(Postwalk(Chain([
+        (@rule :dead(~lhs) => :_),
+        Fixpoint(@rule :block(~a..., :block(~b...), ~c...) => Expr(:block, a..., b..., c...)),
+        (@rule (~f::isassign)(:_, ~rhs) => rhs),
+        (@rule :block(~a..., :call(~f::ispure, ~b...), ~c..., ~d) => Expr(:block, a..., b..., c..., d)),
+        (@rule :block(~a..., :.(~b...), ~c..., ~d) => Expr(:block, a..., b..., c..., d)),
+        (@rule :block(~a..., :ref(~b...), ~c..., ~d) => Expr(:block, a..., b..., c..., d)),
+        (@rule :block(~a..., ~b::(!isexpr), ~c..., ~d) => Expr(:block, a..., c..., d)),
+        (@rule :if(~cond, :block(nothing)) => Expr(:block, cond, nothing)),
+        (@rule :if(~cond, ~a, ~a) => Expr(:block, cond, a)),
+        (@rule :elseif(~cond, :block(nothing)) => Expr(:block, cond, nothing)),
+        (@rule :elseif(~cond, ~a, ~a) => Expr(:block, cond, a)),
+        (@rule :for(:(=)(~i, ~itr), :block(nothing)) => Expr(:block, itr, nothing)),
+        (@rule :while(~cond, :block(nothing)) => Expr(:block, cond, nothing)),
+    ]))))(ex)
+
+    ex = Rewrite(Postwalk(Fixpoint(Chain([
+        (@rule :block(~a..., :block(~b...), ~c...) => Expr(:block, a..., b..., c...)),
+        (@rule :block(~a1..., :if(~cond, ~b1..., :block(~c..., nothing), ~b2...), ~a2..., ~d) =>
+            Expr(:block, a1..., Expr(:if, cond, b1..., Expr(:block, c...), b2...), a2..., d)),
+        (@rule :block(~a1..., :elseif(~cond, ~b1..., :block(~c..., nothing), ~b2...), ~a2..., ~d) =>
+            Expr(:block, a1..., Expr(:elseif, cond, b1..., Expr(:block, c...), b2...), a2..., d)),
+        (@rule :for(~itr, :block(~body..., nothing)) => Expr(:for, itr, Expr(:block, body...))),
+        (@rule :while(~cond, :block(~body..., nothing)) => Expr(:while, cond, Expr(:block, body...))),
+    ]))))(ex)
+
+    ex
 end
 
 """
