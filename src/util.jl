@@ -16,52 +16,6 @@ function resize_if_smaller!(arr, i)
     end
 end
 
-function lower_caches(ex)
-    consumers = Dict()
-    function collect_consumers(ex, parent)
-        if ex isa Symbol
-            push!(get!(consumers, parent, Set()), ex)
-        elseif ex isa Expr
-            if ex.head == :cache
-                (var, body) = ex.args
-                push!(get!(consumers, var, Set()), parent)
-                collect_consumers(body, var)
-            else
-                args = map(ex.args) do arg
-                    collect_consumers(arg, parent)
-                end
-            end
-        end
-    end
-    collect_consumers(ex, nothing)
-    used = Set()
-    function mark_used(var)
-        if !(var in used)
-            push!(used, var)
-            for var_2 in get(consumers, var, [])
-                mark_used(var_2)
-            end
-        end
-    end
-    mark_used(nothing)
-    function prune_caches(ex)
-        if ex isa Expr
-            if ex.head == :cache
-                (var, body) = ex.args
-                if var in used 
-                    return prune_caches(body)
-                else
-                    quote end
-                end
-            else
-                Expr(ex.head, map(prune_caches, ex.args)...)
-            end
-        else
-            return ex
-        end
-    end
-    return prune_caches(ex)
-end
 
 function lower_cleanup(ex, ignore=false)
     if ex isa Expr && ex.head == :cleanup
@@ -91,6 +45,10 @@ function lower_cleanup(ex, ignore=false)
     else
         ex
     end
+end
+
+function lower_caches(ex)
+    Rewrite(Postwalk(@rule :cache(~var, ~val) => Expr(:(=), var, val)))(ex)
 end
 
 unquote_literals(ex) = ex
@@ -142,7 +100,6 @@ function mark_dead(ex::Expr, refs, res)
         return Expr(:block, reverse(args_2)...), refs
     elseif @capture(ex, (~f)(~args...)) && f in (:ref, :call, :., :curly, :string, :kw)
         if f == :call && !ispure(args[1])
-            println(args[1])
             res = true
         end
         args_2 = []
