@@ -25,7 +25,6 @@ julia> @finch_code begin
     end
 quote
     y = (ex.bodies[1]).tns.tns
-    y_3 = (ex.bodies[2]).body.body.lhs.tns.tns
     A = ((ex.bodies[2]).body.body.rhs.args[1]).tns.tns
     x = ((ex.bodies[2]).body.body.rhs.args[2]).tns.tns
     (y_mode1_stop,) = size(y)
@@ -40,26 +39,21 @@ quote
         A_q = A.colptr[j_4]
         A_q_stop = A.colptr[j_4 + 1]
         if A_q < A_q_stop
-            A_i = A.rowval[A_q]
             A_i1 = A.rowval[A_q_stop - 1]
         else
-            A_i = 1
             A_i1 = 0
         end
         i = 1
         i_start = i
         phase_stop = (min)(A_i1, A.m)
         if phase_stop >= i_start
-            i_4 = i
             i = i_start
             if A.rowval[A_q] < i_start
                 A_q = Finch.scansearch(A.rowval, i_start, A_q, A_q_stop - 1)
             end
             while i <= phase_stop
-                i_start_2 = i
                 A_i = A.rowval[A_q]
                 phase_stop_2 = (min)(phase_stop, A_i)
-                i_5 = i
                 if A_i == phase_stop_2
                     A_val = A.nzval[A_q]
                     i_6 = phase_stop_2
@@ -69,12 +63,6 @@ quote
                 end
                 i = phase_stop_2 + 1
             end
-            i = phase_stop + 1
-        end
-        i_start = i
-        if A.m >= i_start
-            i_7 = i
-            i = A.m + 1
         end
     end
     (y = y,)

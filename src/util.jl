@@ -213,6 +213,9 @@ function mark_dead_assign(lhs::Expr, refs)
 end
 
 function dce(ex)
+    _dce(_dce(_dce(ex)))
+end
+function _dce(ex)
     ex, refs = mark_dead(ex, Set(), true)
 
     ex = Rewrite(Prewalk(Chain([

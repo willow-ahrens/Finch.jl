@@ -5,8 +5,6 @@ julia> @finch_code begin
 quote
     z_lvl = (ex.bodies[1]).tns.tns.lvl
     z_lvl_2 = z_lvl.lvl
-    z_lvl_3 = (ex.bodies[2]).body.lhs.tns.tns.lvl
-    z_lvl_4 = z_lvl_3.lvl
     x_lvl = ((ex.bodies[2]).body.rhs.args[1]).tns.tns.lvl
     x_lvl_2 = x_lvl.lvl
     y_lvl = ((ex.bodies[2]).body.rhs.args[2]).tns.tns.lvl
@@ -20,26 +18,21 @@ quote
     y_lvl_q = y_lvl.ptr[1]
     y_lvl_q_stop = y_lvl.ptr[1 + 1]
     if y_lvl_q < y_lvl_q_stop
-        y_lvl_i = y_lvl.idx[y_lvl_q]
         y_lvl_i1 = y_lvl.idx[y_lvl_q_stop - 1]
     else
-        y_lvl_i = 1
         y_lvl_i1 = 0
     end
     x_lvl_q = x_lvl.ptr[1]
     x_lvl_q_stop = x_lvl.ptr[1 + 1]
     if x_lvl_q < x_lvl_q_stop
-        x_lvl_i = x_lvl.idx[x_lvl_q]
         x_lvl_i1 = x_lvl.idx[x_lvl_q_stop - 1]
     else
-        x_lvl_i = 1
         x_lvl_i1 = 0
     end
     i = 1
     i_start = i
     phase_stop = (min)(x_lvl.shape, x_lvl_i1, y_lvl_i1)
     if phase_stop >= i_start
-        i_5 = i
         i = i_start
         if y_lvl.idx[y_lvl_q] < i_start
             y_lvl_q = scansearch(y_lvl.idx, i_start, y_lvl_q, y_lvl_q_stop - 1)
@@ -48,11 +41,9 @@ quote
             x_lvl_q = scansearch(x_lvl.idx, i_start, x_lvl_q, x_lvl_q_stop - 1)
         end
         while i <= phase_stop
-            i_start_2 = i
             y_lvl_i = y_lvl.idx[y_lvl_q]
             x_lvl_i = x_lvl.idx[x_lvl_q]
             phase_stop_2 = (min)(y_lvl_i, x_lvl_i, phase_stop)
-            i_6 = i
             if y_lvl_i == phase_stop_2 && x_lvl_i == phase_stop_2
                 y_lvl_2_val_2 = y_lvl_2.val[y_lvl_q]
                 x_lvl_2_val_2 = x_lvl_2.val[x_lvl_q]
@@ -63,11 +54,9 @@ quote
                     resize_if_smaller!(z_lvl_2.val, z_lvl_qos_stop)
                     fill_range!(z_lvl_2.val, 0.0, z_lvl_qos, z_lvl_qos_stop)
                 end
-                z_lvldirty = false
                 z_lvldirty = true
                 z_lvl_2.val[z_lvl_qos] = (+)(x_lvl_2_val_2, y_lvl_2_val_2)
                 if z_lvldirty
-                    null = true
                     z_lvl.idx[z_lvl_qos] = i_7
                     z_lvl_qos += 1
                 end
@@ -82,11 +71,9 @@ quote
                     resize_if_smaller!(z_lvl_2.val, z_lvl_qos_stop)
                     fill_range!(z_lvl_2.val, 0.0, z_lvl_qos, z_lvl_qos_stop)
                 end
-                z_lvldirty = false
                 z_lvldirty = true
                 z_lvl_2.val[z_lvl_qos] = x_lvl_2_val_2
                 if z_lvldirty
-                    null = true
                     z_lvl.idx[z_lvl_qos] = i_8
                     z_lvl_qos += 1
                 end
@@ -100,11 +87,9 @@ quote
                     resize_if_smaller!(z_lvl_2.val, z_lvl_qos_stop)
                     fill_range!(z_lvl_2.val, 0.0, z_lvl_qos, z_lvl_qos_stop)
                 end
-                z_lvldirty = false
                 z_lvldirty = true
                 z_lvl_2.val[z_lvl_qos] = y_lvl_2_val_2
                 if z_lvldirty
-                    null = true
                     z_lvl.idx[z_lvl_qos] = i_9
                     z_lvl_qos += 1
                 end
@@ -118,16 +103,13 @@ quote
     i_start = i
     phase_stop_3 = (min)(x_lvl.shape, y_lvl_i1)
     if phase_stop_3 >= i_start
-        i_10 = i
         i = i_start
         if y_lvl.idx[y_lvl_q] < i_start
             y_lvl_q = scansearch(y_lvl.idx, i_start, y_lvl_q, y_lvl_q_stop - 1)
         end
         while i <= phase_stop_3
-            i_start_3 = i
             y_lvl_i = y_lvl.idx[y_lvl_q]
             phase_stop_4 = (min)(y_lvl_i, phase_stop_3)
-            i_11 = i
             if y_lvl_i == phase_stop_4
                 y_lvl_2_val_3 = y_lvl_2.val[y_lvl_q]
                 i_12 = phase_stop_4
@@ -137,11 +119,9 @@ quote
                     resize_if_smaller!(z_lvl_2.val, z_lvl_qos_stop)
                     fill_range!(z_lvl_2.val, 0.0, z_lvl_qos, z_lvl_qos_stop)
                 end
-                z_lvldirty = false
                 z_lvldirty = true
                 z_lvl_2.val[z_lvl_qos] = y_lvl_2_val_3
                 if z_lvldirty
-                    null = true
                     z_lvl.idx[z_lvl_qos] = i_12
                     z_lvl_qos += 1
                 end
@@ -155,16 +135,13 @@ quote
     i_start = i
     phase_stop_5 = (min)(x_lvl.shape, x_lvl_i1)
     if phase_stop_5 >= i_start
-        i_13 = i
         i = i_start
         if x_lvl.idx[x_lvl_q] < i_start
             x_lvl_q = scansearch(x_lvl.idx, i_start, x_lvl_q, x_lvl_q_stop - 1)
         end
         while i <= phase_stop_5
-            i_start_4 = i
             x_lvl_i = x_lvl.idx[x_lvl_q]
             phase_stop_6 = (min)(x_lvl_i, phase_stop_5)
-            i_14 = i
             if x_lvl_i == phase_stop_6
                 x_lvl_2_val_3 = x_lvl_2.val[x_lvl_q]
                 i_15 = phase_stop_6
@@ -174,11 +151,9 @@ quote
                     resize_if_smaller!(z_lvl_2.val, z_lvl_qos_stop)
                     fill_range!(z_lvl_2.val, 0.0, z_lvl_qos, z_lvl_qos_stop)
                 end
-                z_lvldirty = false
                 z_lvldirty = true
                 z_lvl_2.val[z_lvl_qos] = x_lvl_2_val_3
                 if z_lvldirty
-                    null = true
                     z_lvl.idx[z_lvl_qos] = i_15
                     z_lvl_qos += 1
                 end
@@ -187,19 +162,11 @@ quote
             end
             i = phase_stop_6 + 1
         end
-        i = phase_stop_5 + 1
-    end
-    i_start = i
-    if x_lvl.shape >= i_start
-        i_16 = i
-        i = x_lvl.shape + 1
     end
     z_lvl.ptr[1 + 1] = (z_lvl_qos - z_lvl_qos_fill) - 1
-    z_lvl_qos_fill = z_lvl_qos - 1
     for p = 2:1 + 1
         z_lvl.ptr[p] += z_lvl.ptr[p - 1]
     end
-    qos_stop = z_lvl.ptr[1 + 1] - 1
     resize!(z_lvl.ptr, 1 + 1)
     qos = z_lvl.ptr[end] - 1
     resize!(z_lvl.idx, qos)
