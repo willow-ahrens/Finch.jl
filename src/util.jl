@@ -141,7 +141,8 @@ function mark_dead(ex::Expr, refs, res)
         end
         return Expr(:block, reverse(args_2)...), refs
     elseif @capture(ex, (~f)(~args...)) && f in (:ref, :call, :., :curly, :string, :kw)
-        if f == call && !ispure(args[1])
+        if f == :call && !ispure(args[1])
+            println(args[1])
             res = true
         end
         args_2 = []
