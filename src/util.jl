@@ -48,7 +48,7 @@ function lower_cleanup(ex, ignore=false)
 end
 
 function lower_caches(ex)
-    Rewrite(Postwalk(@rule :cache(~var, ~val) => Expr(:(=), var, val)))(ex)
+    Rewrite(Postwalk(@rule :cache(~var, ~def) => def))(ex)
 end
 
 unquote_literals(ex) = ex
@@ -86,15 +86,14 @@ issymbol(x) = x isa Symbol
 isexpr(x) = x isa Expr
 
 function desugar(ex)
+    sugar = 0
     Rewrite(Prewalk(Fixpoint(Chain([
-        #=
         (@rule :(=)(:tuple(~lhss...), ~rhs) => begin
-            var = gensym(:sugar)
+            var = Symbol(:sugar_, sugar += 1)
             Expr(:block, Expr(:(=), var, rhs), map(enumerate(lhss)) do (n, lhs)
                 Expr(:(=), lhs, Expr(:ref, var, n))
             end..., var)
         end),
-        =#
         (@rule :elseif(~args...) => Expr(:if, args...)),
         (@rule :if(~cond, ~a) => Expr(:if, cond, a, Expr(:block, nothing))),
         (@rule :(=)(:.(~x, ~p), ~rhs) => Expr(:call, :setproperty!, x, p, rhs)),
@@ -124,6 +123,94 @@ function resugar(ex)
         (@rule :if(~cond, ~a, :if(~b...)) => Expr(:if, cond, a, Expr(:elseif, b...))),
         (@rule :block(~a) => a),
     ]))))(ex)
+end
+
+@kwdef struct Propagate
+    ids = Dict()
+    vals = Dict()
+end
+
+Base.:(==)(a::Propagate, b::Propagate) = a.ids == b.ids
+Base.copy(ctx::Propagate) = Propagate(copy(ctx.ids), copy(ctx.vals))
+function Base.merge!(ctx::Propagate, ctx_2::Propagate) 
+    merge!(union, ctx.ids, ctx_2.ids)
+    merge!(union, ctx.vals, ctx_2.vals)
+end
+
+function propagate(ex)
+    id = 0
+    ex = Postwalk(@rule(:(=)(~lhs::issymbol, ~rhs) => 
+        Expr(:def, Expr(:(=), lhs, rhs), id += 1)))(ex)
+
+    ex = Propagate()(ex)
+
+    ex = Postwalk(@rule(:def(:(=)(~lhs::issymbol, ~rhs), ~id) => 
+        Expr(:(=), lhs, rhs)))(ex)
+end
+
+function (ctx::Propagate)(ex)
+    if issymbol(ex)
+        if haskey(ctx.ids, ex) && length(ctx.ids[ex]) == 1
+            val = first(ctx.vals[ex])
+            if isexpr(val)
+                return ex
+            elseif issymbol(val)
+                if haskey(ctx.ids, val) && ctx.ids[val] == ctx.ids[ex]
+                    return val
+                end
+            else
+                return val
+            end
+        end
+        return ex
+    elseif @capture ex :block(~args...)
+        return Expr(:block, map(ctx, args)...)
+    elseif @capture(ex, (~f)(~args...)) && f in (:ref, :call, :., :curly, :string, :kw, :parameters, :tuple)
+        return Expr(f, map(ctx, args)...)
+    elseif (@capture ex (~f)(~cond, ~body)) && f in [:&&, :||]
+        cond = ctx(cond)
+        ctx_2 = copy(ctx)
+        body = ctx_2(body)
+        merge!(ctx, ctx_2)
+        return Expr(f, cond, body)
+    elseif (@capture ex :if(~cond, ~body, ~tail))
+        cond = ctx(cond)
+        ctx_2 = copy(ctx)
+        body = ctx_2(body)
+        tail = ctx(tail)
+        merge!(ctx, ctx_2)
+        return Expr(:if, cond, body, tail)
+    elseif @capture(ex, :def(:(=)(~lhs::issymbol, ~rhs), ~id))
+        rhs = ctx(rhs)
+        ctx.ids[lhs] = Set([id])
+        ctx.vals[lhs] = Set([rhs])
+        return Expr(:def, Expr(:(=), lhs, rhs), id)
+    elseif @capture ex :for(:def(:(=)(~i, ~ext), ~id), ~body)
+        ext = ctx(ext)
+        body_2 = body
+        while true
+            ctx_2 = copy(ctx)
+            body_2 = ctx(body)
+            ctx_2 == ctx && break
+        end
+        return Expr(:for, Expr(:def, Expr(:(=), i, ext), id), body_2)
+    elseif @capture ex :while(~cond, ~body)
+        cond_2 = cond
+        body_2 = body
+        while true
+            ctx_2 = copy(ctx)
+            cond_2 = ctx(cond)
+            ctx_3 = copy(ctx)
+            body_2 = ctx_3(body)
+            merge!(ctx, ctx_3)
+            ctx_2 == ctx && break
+        end
+        return Expr(:while, cond_2, body_2)
+    elseif !isexpr(ex)
+        ex
+    else
+        error("propagate reached unrecognized expression $ex")
+    end
 end
 
 mark_dead(ex, refs, res) = ex, refs
@@ -230,7 +317,10 @@ function mark_dead_assign(lhs::Expr, refs)
 end
 
 function dce(ex)
-    _dce(_dce(_dce(ex)))
+    ex = desugar(ex)
+    ex = propagate(ex)
+    ex = _dce(_dce(_dce(ex)))
+    ex = resugar(ex)
 end
 function _dce(ex)
     ex = desugar(ex)
