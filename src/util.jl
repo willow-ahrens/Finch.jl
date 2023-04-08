@@ -78,10 +78,53 @@ function regensym(ex)
 end
 
 isassign(x) = x in Set([:+=, :*=, :&=, :|=, :(=)])
-ispure(x) = string(x)[end] != '!'
+incs = Dict(:+= => :+, :*= => :*, :&= => :&, :|= => :|)
+deincs = Dict(:+ => :+=, :* => :*=, :& => :&=, :| => :|=)
+ispure(x) = string(x)[end] != '!' && string(x) != "throw" && string(x) != "error"
 
 issymbol(x) = x isa Symbol
 isexpr(x) = x isa Expr
+
+function desugar(ex)
+    Rewrite(Prewalk(Fixpoint(Chain([
+        #=
+        (@rule :(=)(:tuple(~lhss...), ~rhs) => begin
+            var = gensym(:sugar)
+            Expr(:block, Expr(:(=), var, rhs), map(enumerate(lhss)) do (n, lhs)
+                Expr(:(=), lhs, Expr(:ref, var, n))
+            end..., var)
+        end),
+        =#
+        (@rule :elseif(~args...) => Expr(:if, args...)),
+        (@rule :if(~cond, ~a) => Expr(:if, cond, a, Expr(:block, nothing))),
+        (@rule :(=)(:.(~x, ~p), ~rhs) => Expr(:call, :setproperty!, x, p, rhs)),
+        (@rule :(=)(:ref(~a, ~i...), ~rhs) => Expr(:call, :setindex!, a, rhs, i...)),
+        (@rule (~f)(~lhs, ~rhs) => if haskey(incs, f)
+            Expr(:(=), lhs, Expr(:call, incs[f], lhs, rhs))
+        end),
+        (@rule :tuple(~a..., :(=)(~b, ~c)) =>
+            Expr(:tuple, ~a..., Expr(:parameters, Expr(:kw, ~b, ~c)))),
+        Fixpoint(@rule :tuple(~a..., :(=)(~b, ~c), :parameters(~d...)) =>
+            Expr(:tuple, ~a..., Expr(:parameters, Expr(:kw, ~b, ~c), ~d...))),
+    ]))))(ex)
+end
+
+function resugar(ex)
+    Rewrite(Fixpoint(Postwalk(Chain([
+        (@rule :call(:setproperty!, ~x, ~p, ~v) => Expr(:(=), Expr(:., x, p), v)),
+        (@rule :call(:setindex!, ~x, ~v, ~i...) => Expr(:(=), Expr(:ref, x, i...), v)),
+        (@rule :(=)(~lhs, :call(~f, ~lhs, ~rhs)) => if haskey(deincs, f)
+            Expr(deincs[f], lhs, rhs)
+        end),
+        Fixpoint(@rule :tuple(~a..., :parameters(:kw(~b, ~c), ~d...)) =>
+            Expr(:tuple, ~a..., Expr(:(=), ~b, ~c), Expr(:parameters, ~d...))),
+        (@rule :tuple(~a..., :parameters()) => Expr(:tuple, ~a...)),
+        (@rule :if(~cond, ~a, :block(nothing)) => Expr(:if, cond, a)),
+        (@rule :if(~cond, ~a, :block()) => Expr(:if, cond, a)),
+        (@rule :if(~cond, ~a, :if(~b...)) => Expr(:if, cond, a, Expr(:elseif, b...))),
+        (@rule :block(~a) => a),
+    ]))))(ex)
+end
 
 mark_dead(ex, refs, res) = ex, refs
 function mark_dead(ex::Symbol, refs, res)
@@ -98,7 +141,7 @@ function mark_dead(ex::Expr, refs, res)
             push!(args_2, arg)
         end
         return Expr(:block, reverse(args_2)...), refs
-    elseif @capture(ex, (~f)(~args...)) && f in (:ref, :call, :., :curly, :string, :kw)
+    elseif @capture(ex, (~f)(~args...)) && f in (:ref, :call, :., :curly, :string, :kw, :parameters, :tuple)
         if f == :call && !ispure(args[1])
             res = true
         end
@@ -108,29 +151,12 @@ function mark_dead(ex::Expr, refs, res)
             push!(args_2, arg)
         end
         return Expr(f, reverse(args_2)...), refs
-    elseif @capture(ex, :tuple(~args...))
-        args_2 = []
-        for arg in args[end:-1:1]
-            if @capture(arg, :(=)(~lhs, ~rhs))
-                (lhs, refs) = mark_dead(lhs, refs, res)
-                (rhs, refs) = mark_dead(rhs, refs, res)
-                arg = :($lhs = $rhs)
-            else
-                (arg, refs) = mark_dead(arg, refs, res)
-            end
-            push!(args_2, arg)
-        end
-        return Expr(f, reverse(args_2)...), refs
     elseif (@capture ex (~f)(~cond, ~body)) && f in [:&&, :||]
         (body, body_refs) = mark_dead(body, refs, res)
         refs = union(body_refs, refs)
-        (cond, refs) = mark_dead(cond, refs, res)
+        (cond, refs) = mark_dead(cond, refs, true)
         return Expr(f, cond, body), refs
-    elseif (@capture ex (~f)(~cond, ~body)) && f in [:if, :elseif]
-        body, body_refs = mark_dead(body, refs, res)
-        cond, refs = mark_dead(cond, union(refs, body_refs), true)
-        return Expr(f, cond, body), refs
-    elseif (@capture ex (~f)(~cond, ~body, ~tail)) && f in [:if, :elseif]
+    elseif (@capture ex :if(~cond, ~body, ~tail))
         body, body_refs = mark_dead(body, refs, res)
         tail, tail_refs = mark_dead(tail, refs, res)
         cond, refs = mark_dead(cond, union(tail_refs, body_refs), true)
@@ -138,12 +164,6 @@ function mark_dead(ex::Expr, refs, res)
     elseif @capture(ex, :(=)(~lhs, ~rhs))
         lhs, refs, lhs_res = mark_dead_assign(lhs, refs)
         res |= lhs_res
-        rhs, refs = mark_dead(rhs, refs, res)
-        return Expr(f, lhs, rhs), refs
-    elseif @capture(ex, (~f::isassign)(~lhs, ~rhs))
-        lhs, refs, lhs_res = mark_dead_assign(lhs, refs)
-        res |= lhs_res
-        lhs, refs = mark_dead(lhs, refs, res)
         rhs, refs = mark_dead(rhs, refs, res)
         return Expr(f, lhs, rhs), refs
     elseif @capture ex :for(:(=)(~i, ~ext), ~body)
@@ -204,11 +224,8 @@ function mark_dead_assign(lhs::Expr, refs)
         lhs = Expr(:tuple, args...)
         lhs = res ? Expr(:dead, lhs) : lhs
         return (lhs, refs, res)
-    elseif @capture(lhs, (~f)(~args...)) && f in [:ref, :.]
-        lhs, refs = mark_dead(Expr(f, args...), refs, true)
-        return (lhs, refs, true)
     else
-        error("dead code elimination reached unrecognized assignment $ex")
+        error("dead code elimination reached unrecognized assignment $lhs")
     end
 end
 
@@ -216,18 +233,13 @@ function dce(ex)
     _dce(_dce(_dce(ex)))
 end
 function _dce(ex)
+    ex = desugar(ex)
     ex, refs = mark_dead(ex, Set(), true)
 
     ex = Rewrite(Prewalk(Chain([
         Fixpoint(@rule :block(~a..., :block(~b...), ~c...) => Expr(:block, a..., b..., c...)),
-        (@rule :block(~a1..., :if(~cond, ~b), ~a2..., ~c) =>
-            Expr(:block, a1..., Expr(:if, cond, Expr(:block, b, nothing)), a2..., c)),
         (@rule :block(~a1..., :if(~cond, ~b, ~c), ~a2..., ~d) =>
             Expr(:block, a1..., Expr(:if, cond, Expr(:block, b, nothing), Expr(:block, c, nothing)), a2..., d)),
-        (@rule :block(~a1..., :elseif(~cond, ~b), ~a2..., ~c) =>
-            Expr(:block, a1..., Expr(:elseif, cond, Expr(:block, b, nothing)), a2..., c)),
-        (@rule :block(~a1..., :elseif(~cond, ~b, ~c), ~a2..., ~d) =>
-            Expr(:block, a1..., Expr(:elseif, cond, Expr(:block, b, nothing), Expr(:block, c, nothing)), a2..., d)),
         (@rule :for(~itr, ~body) => Expr(:for, itr, Expr(:block, body, nothing))),
         (@rule :while(~cond, ~body) => Expr(:while, cond, Expr(:block, body, nothing))),
     ])))(ex)
@@ -237,10 +249,10 @@ function _dce(ex)
         Fixpoint(@rule :block(~a..., :block(~b...), ~c...) => Expr(:block, a..., b..., c...)),
         (@rule (~f::isassign)(:_, ~rhs) => rhs),
         (@rule :block(~a..., :call(~f::ispure, ~b...), ~c..., ~d) => Expr(:block, a..., b..., c..., d)),
-        (@rule :block(~a..., :.(~b...), ~c..., ~d) => Expr(:block, a..., b..., c..., d)),
-        (@rule :block(~a..., :ref(~b...), ~c..., ~d) => Expr(:block, a..., b..., c..., d)),
+        (@rule :block(~a..., (~f)(~b...), ~c..., ~d) => if f in (:ref, :., :curly, :string, :kw, :parameters, :tuple) 
+            Expr(:block, a..., b..., c..., d)
+        end),
         (@rule :block(~a..., ~b::(!isexpr), ~c..., ~d) => Expr(:block, a..., c..., d)),
-        (@rule :if(~cond, :block(nothing)) => Expr(:block, cond, nothing)),
         (@rule :if(~cond, ~a, ~a) => Expr(:block, cond, a)),
         (@rule :elseif(~cond, :block(nothing)) => Expr(:block, cond, nothing)),
         (@rule :elseif(~cond, ~a, ~a) => Expr(:block, cond, a)),
@@ -252,13 +264,11 @@ function _dce(ex)
         (@rule :block(~a..., :block(~b...), ~c...) => Expr(:block, a..., b..., c...)),
         (@rule :block(~a1..., :if(~cond, ~b1..., :block(~c..., nothing), ~b2...), ~a2..., ~d) =>
             Expr(:block, a1..., Expr(:if, cond, b1..., Expr(:block, c...), b2...), a2..., d)),
-        (@rule :block(~a1..., :elseif(~cond, ~b1..., :block(~c..., nothing), ~b2...), ~a2..., ~d) =>
-            Expr(:block, a1..., Expr(:elseif, cond, b1..., Expr(:block, c...), b2...), a2..., d)),
         (@rule :for(~itr, :block(~body..., nothing)) => Expr(:for, itr, Expr(:block, body...))),
         (@rule :while(~cond, :block(~body..., nothing)) => Expr(:while, cond, Expr(:block, body...))),
     ]))))(ex)
 
-    ex
+    resugar(ex)
 end
 
 """
