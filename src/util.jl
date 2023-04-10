@@ -182,6 +182,7 @@ iseffectful(ex) = false
 function iseffectful(ex::Expr)
     @capture(ex, :call(~f::issymbol, ~args...)) && !ispure(f) && return true
     @capture(ex, :(=)(~lhs::issymbol, ~rhs)) && lhs != :_ && return true
+    @capture(ex, :for(~lhs, ~rhs)) && return iseffectful(rhs) #TODO this could be handled better if we desugared :for
     return any(iseffectful, ex.args)
 end
 
@@ -234,9 +235,9 @@ function (ctx::MarkDead)(ex, res)
         else
             lhs = :_
         end
-            delete!(ctx.refs, lhs)
-            rhs = ctx(rhs, res)
-            return Expr(f, lhs, rhs)
+        delete!(ctx.refs, lhs)
+        rhs = ctx(rhs, res)
+        return Expr(f, lhs, rhs)
     elseif @capture ex :for(:(=)(~i, ~ext), ~body)
         body_2 = body
         while true
@@ -313,7 +314,7 @@ Flatten any redundant blocks into a single block, over the whole expression.
 function unblock(ex::Expr)
     Rewrite(Postwalk(Fixpoint(Chain([
         (@rule :block(~a..., :block(~b...), ~c...) => Expr(:block, a..., b..., c...)),
-        (@rule :block(~a..., :(=)(~b, ~c), ~b) => Expr(:block, a, :(=)(~b, ~c))),
+        (@rule :block(~a..., :(=)(~b, ~c), ~b) => Expr(:block, a..., Expr(:(=), ~b, ~c))),
         (@rule :block(~a) => a),
     ]))))(ex)
 end
