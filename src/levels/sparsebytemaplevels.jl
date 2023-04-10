@@ -221,7 +221,7 @@ function freeze_level!(lvl::VirtualSparseByteMapLevel, ctx::LowerJulia, pos_stop
     Ti = lvl.Ti
     Tp = lvl.Tp
     push!(ctx.preamble, quote
-        sort!(@view $(lvl.ex).srt[1:$(lvl.qos_fill)])
+        sort!(view($(lvl.ex).srt, 1:$(lvl.qos_fill)))
         $p_prev = $(Tp(0))
         for $r = 1:$(lvl.qos_fill)
             $p = first($(lvl.ex).srt[$r])
