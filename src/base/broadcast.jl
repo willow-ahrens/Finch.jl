@@ -176,5 +176,5 @@ function copyto_helper!(out_ex, out, bc_ex, bc::Type{<:Broadcasted{FinchStyle{N}
             end
             $out_ex
         end
-    end |> lower_caches |> lower_cleanup |> unblock
+    end
 end
