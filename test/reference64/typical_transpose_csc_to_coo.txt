@@ -19,72 +19,70 @@ julia> @finch_code begin
         end
     end
 quote
-    @inbounds begin
-            B_lvl = (ex.bodies[1]).tns.tns.lvl
-            B_lvl_2 = B_lvl.lvl
-            A_lvl = (ex.bodies[2]).body.body.rhs.tns.tns.lvl
-            A_lvl_2 = A_lvl.lvl
-            A_lvl_3 = A_lvl_2.lvl
-            B_lvl_qos_stop = 0
-            empty!(B_lvl.tbl)
-            empty!(B_lvl.srt)
-            (Finch.resize_if_smaller!)(B_lvl.ptr, 1 + 1)
-            (Finch.fill_range!)(B_lvl.ptr, 0, 1 + 1, 1 + 1)
-            B_lvl_qos_fill = length(B_lvl.tbl)
-            for j_4 = 1:A_lvl.shape
-                A_lvl_q = (1 - 1) * A_lvl.shape + j_4
-                A_lvl_2_q = A_lvl_2.ptr[A_lvl_q]
-                A_lvl_2_q_stop = A_lvl_2.ptr[A_lvl_q + 1]
-                if A_lvl_2_q < A_lvl_2_q_stop
-                    A_lvl_2_i1 = A_lvl_2.idx[A_lvl_2_q_stop - 1]
-                else
-                    A_lvl_2_i1 = 0
-                end
-                phase_stop = (min)(A_lvl_2_i1, A_lvl_2.shape)
-                if phase_stop >= 1
-                    i = 1
-                    if A_lvl_2.idx[A_lvl_2_q] < 1
-                        A_lvl_2_q = scansearch(A_lvl_2.idx, 1, A_lvl_2_q, A_lvl_2_q_stop - 1)
-                    end
-                    while i <= phase_stop
-                        A_lvl_2_i = A_lvl_2.idx[A_lvl_2_q]
-                        phase_stop_2 = (min)(phase_stop, A_lvl_2_i)
-                        if A_lvl_2_i == phase_stop_2
-                            A_lvl_3_val_2 = A_lvl_3.val[A_lvl_2_q]
-                            i_6 = phase_stop_2
-                            s_2 = j_4
-                            s_3 = s_2
-                            B_lvl_key_2 = (1, (s_3, i_6))
-                            B_lvl_q_2 = get(B_lvl.tbl, B_lvl_key_2, B_lvl_qos_fill + 1)
-                            if B_lvl_q_2 > B_lvl_qos_stop
-                                B_lvl_qos_stop = max(B_lvl_qos_stop << 1, 1)
-                                resize_if_smaller!(B_lvl_2.val, B_lvl_qos_stop)
-                                fill_range!(B_lvl_2.val, 0.0, B_lvl_q_2, B_lvl_qos_stop)
-                            end
-                            B_lvl_2.val[B_lvl_q_2] = A_lvl_3_val_2
-                            if B_lvl_q_2 > B_lvl_qos_fill
-                                B_lvl_qos_fill = B_lvl_q_2
-                                B_lvl.tbl[B_lvl_key_2] = B_lvl_q_2
-                                B_lvl.ptr[1 + 1] += 1
-                            end
-                            A_lvl_2_q += 1
-                        end
-                        i = phase_stop_2 + 1
-                    end
-                end
-            end
-            resize!(B_lvl.srt, length(B_lvl.tbl))
-            copyto!(B_lvl.srt, pairs(B_lvl.tbl))
-            sort!(B_lvl.srt, by = hashkeycmp)
-            for p = 2:1 + 1
-                B_lvl.ptr[p] += B_lvl.ptr[p - 1]
-            end
-            resize!(B_lvl.ptr, 1 + 1)
-            qos = B_lvl.ptr[end] - 1
-            resize!(B_lvl.srt, qos)
-            resize!(B_lvl_2.val, qos)
-            (B = Fiber((Finch.SparseHashLevel){2, Tuple{Int64, Int64}, Int64, Dict{Tuple{Int64, Tuple{Int64, Int64}}, Int64}}(B_lvl_2, (A_lvl.shape, A_lvl_2.shape), B_lvl.tbl, B_lvl.ptr, B_lvl.srt)),)
+    B_lvl = (ex.bodies[1]).tns.tns.lvl
+    B_lvl_2 = B_lvl.lvl
+    A_lvl = (ex.bodies[2]).body.body.rhs.tns.tns.lvl
+    A_lvl_2 = A_lvl.lvl
+    A_lvl_3 = A_lvl_2.lvl
+    B_lvl_qos_stop = 0
+    empty!(B_lvl.tbl)
+    empty!(B_lvl.srt)
+    (Finch.resize_if_smaller!)(B_lvl.ptr, 1 + 1)
+    (Finch.fill_range!)(B_lvl.ptr, 0, 1 + 1, 1 + 1)
+    B_lvl_qos_fill = length(B_lvl.tbl)
+    for j_4 = 1:A_lvl.shape
+        A_lvl_q = (1 - 1) * A_lvl.shape + j_4
+        A_lvl_2_q = A_lvl_2.ptr[A_lvl_q]
+        A_lvl_2_q_stop = A_lvl_2.ptr[A_lvl_q + 1]
+        if A_lvl_2_q < A_lvl_2_q_stop
+            A_lvl_2_i1 = A_lvl_2.idx[A_lvl_2_q_stop - 1]
+        else
+            A_lvl_2_i1 = 0
         end
+        phase_stop = (min)(A_lvl_2_i1, A_lvl_2.shape)
+        if phase_stop >= 1
+            i = 1
+            if A_lvl_2.idx[A_lvl_2_q] < 1
+                A_lvl_2_q = scansearch(A_lvl_2.idx, 1, A_lvl_2_q, A_lvl_2_q_stop - 1)
+            end
+            while i <= phase_stop
+                A_lvl_2_i = A_lvl_2.idx[A_lvl_2_q]
+                phase_stop_2 = (min)(phase_stop, A_lvl_2_i)
+                if A_lvl_2_i == phase_stop_2
+                    A_lvl_3_val_2 = A_lvl_3.val[A_lvl_2_q]
+                    i_6 = phase_stop_2
+                    s_2 = j_4
+                    s_3 = s_2
+                    B_lvl_key_2 = (1, (s_3, i_6))
+                    B_lvl_q_2 = get(B_lvl.tbl, B_lvl_key_2, B_lvl_qos_fill + 1)
+                    if B_lvl_q_2 > B_lvl_qos_stop
+                        B_lvl_qos_stop = max(B_lvl_qos_stop << 1, 1)
+                        resize_if_smaller!(B_lvl_2.val, B_lvl_qos_stop)
+                        fill_range!(B_lvl_2.val, 0.0, B_lvl_q_2, B_lvl_qos_stop)
+                    end
+                    B_lvl_2.val[B_lvl_q_2] = A_lvl_3_val_2
+                    if B_lvl_q_2 > B_lvl_qos_fill
+                        B_lvl_qos_fill = B_lvl_q_2
+                        B_lvl.tbl[B_lvl_key_2] = B_lvl_q_2
+                        B_lvl.ptr[1 + 1] += 1
+                    end
+                    A_lvl_2_q += 1
+                end
+                i = phase_stop_2 + 1
+            end
+        end
+    end
+    resize!(B_lvl.srt, length(B_lvl.tbl))
+    copyto!(B_lvl.srt, pairs(B_lvl.tbl))
+    sort!(B_lvl.srt, by = hashkeycmp)
+    for p = 2:1 + 1
+        B_lvl.ptr[p] += B_lvl.ptr[p - 1]
+    end
+    resize!(B_lvl.ptr, 1 + 1)
+    qos = B_lvl.ptr[end] - 1
+    resize!(B_lvl.srt, qos)
+    resize!(B_lvl_2.val, qos)
+    (B = Fiber((Finch.SparseHashLevel){2, Tuple{Int64, Int64}, Int64, Dict{Tuple{Int64, Tuple{Int64, Int64}}, Int64}}(B_lvl_2, (A_lvl.shape, A_lvl_2.shape), B_lvl.tbl, B_lvl.ptr, B_lvl.srt)),)
 end
 julia> @finch begin
         B .= 0
