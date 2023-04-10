@@ -269,9 +269,9 @@ function (ctx::MarkDead)(ex, res)
         else
             lhs = :_
         end
-        delete!(ctx.refs, lhs)
-        rhs = ctx(rhs, res)
-        return Expr(f, lhs, rhs)
+            delete!(ctx.refs, lhs)
+            rhs = ctx(rhs, res)
+            return Expr(f, lhs, rhs)
     elseif @capture ex :for(:(=)(~i, ~ext), ~body)
         body_2 = body
         while true
@@ -310,12 +310,15 @@ function _dce(ex)
     ex = MarkDead()(ex, true)
 
     ex = Rewrite(Prewalk(Chain([
-        Fixpoint(@rule :block(~a..., :block(~b...), ~c...) => Expr(:block, a..., b..., c...)),
-        (@rule :block(~a1..., :if(~cond, ~b, ~c), ~a2..., ~d) =>
-            Expr(:block, a1..., Expr(:if, cond, Expr(:block, b, nothing), Expr(:block, c, nothing)), a2..., d)),
+        Fixpoint(@rule :block(:block(~a...), ~b...) => Expr(:block, a..., b...)),
+        (@rule :block(~a, ~b, ~c...) => Expr(:block, a, Expr(:block, b, c...))),
+        (@rule :block(:if(~cond, ~a, ~b), ~c) =>
+            Expr(:block, Expr(:if, cond, Expr(:block, a, nothing), Expr(:block, b, nothing)), c)),
         (@rule :for(~itr, ~body) => Expr(:for, itr, Expr(:block, body, nothing))),
         (@rule :while(~cond, ~body) => Expr(:while, cond, Expr(:block, body, nothing))),
     ])))(ex)
+
+    println(ex)
 
     ex = Rewrite(Fixpoint(Postwalk(Chain([
         Fixpoint(@rule :block(~a..., :block(~b...), ~c...) => Expr(:block, a..., b..., c...)),
@@ -326,8 +329,10 @@ function _dce(ex)
         end),
         (@rule :block(~a..., ~b::(!isexpr), ~c..., ~d) => Expr(:block, a..., c..., d)),
         (@rule :if(~cond, ~a, ~a) => Expr(:block, cond, a)),
-        (@rule :elseif(~cond, :block(nothing)) => Expr(:block, cond, nothing)),
-        (@rule :elseif(~cond, ~a, ~a) => Expr(:block, cond, a)),
+        (@rule :if(true, ~a, ~b) => a), #TODO should probably go with a propagation pass
+        (@rule :if(false, ~a, ~b) => b), #TODO should probably go with a propagation pass
+        (@rule :for(:(=)(~i, ~itr), ~body::(!iseffectful)) => Expr(:block, itr, nothing)),
+        (@rule :while(~cond, ~body::(!iseffectful)) => Expr(:block, cond, nothing)),
         (@rule :for(:(=)(~i, ~itr), :block(nothing)) => Expr(:block, itr, nothing)),
         (@rule :while(~cond, :block(nothing)) => Expr(:block, cond, nothing)),
     ]))))(ex)
