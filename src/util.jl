@@ -16,41 +16,6 @@ function resize_if_smaller!(arr, i)
     end
 end
 
-
-function lower_cleanup(ex, ignore=false)
-    if ex isa Expr && ex.head == :cleanup
-        (sym::Symbol, result, cleanup) = ex.args
-        result = lower_cleanup(result, ignore)
-        cleanup = lower_cleanup(cleanup, true)
-        if ignore
-            return quote
-                $result
-                $cleanup
-            end
-        else
-            return quote
-                $sym = $result
-                $cleanup
-                $sym
-            end
-        end
-    elseif ex isa Expr && ex.head == :block
-        Expr(:block, map(ex.args[1:end - 1]) do arg
-            lower_cleanup(arg, true)
-        end..., lower_cleanup(ex.args[end], ignore))
-    elseif ex isa Expr && ex.head in [:if, :elseif, :for, :while]
-        Expr(ex.head, lower_cleanup(ex.args[1]), map(arg->lower_cleanup(arg, ignore), ex.args[2:end])...)
-    elseif ex isa Expr
-        Expr(ex.head, map(lower_cleanup, ex.args)...)
-    else
-        ex
-    end
-end
-
-function lower_caches(ex)
-    Rewrite(Postwalk(@rule :cache(~var, ~def) => def))(ex)
-end
-
 unquote_literals(ex) = ex
 unquote_literals(ex::Expr) = Expr(ex.head, map(unquote_literals, ex.args)...)
 unquote_literals(ex::QuoteNode) = unquote_quoted(ex.value)
@@ -298,42 +263,39 @@ function (ctx::MarkDead)(ex, res)
     end
 end
 
+mark_dead(ex) = MarkDead()(ex, true)
 
-function dce(ex)
+function prune_dead(ex)
     ex = desugar(ex)
-    ex = propagate(ex)
-    ex = _dce(ex)
-    ex = resugar(ex)
-end
-function _dce(ex)
-    ex = desugar(ex)
-    ex = MarkDead()(ex, true)
+    
+    #TODO optimize this (consider how to handle _ = begin ... end in one pass)
 
-    ex = Rewrite(Prewalk(Chain([
-        Fixpoint(@rule :block(:block(~a...), ~b...) => Expr(:block, a..., b...)),
-        (@rule :block(~a, ~b, ~c...) => Expr(:block, a, Expr(:block, b, c...))),
-        (@rule :block(:if(~cond, ~a, ~b), ~c) =>
-            Expr(:block, Expr(:if, cond, Expr(:block, a, nothing), Expr(:block, b, nothing)), c)),
-        (@rule :for(~itr, ~body) => Expr(:for, itr, Expr(:block, body, nothing))),
-        (@rule :while(~cond, ~body) => Expr(:while, cond, Expr(:block, body, nothing))),
+    ex = Rewrite(Fixpoint(Chain([
+        Prewalk(Chain([
+            Fixpoint(@rule :block(:block(~a...), ~b...) => Expr(:block, a..., b...)),
+            (@rule :block(~a, ~b, ~c...) => Expr(:block, a, Expr(:block, b, c...))),
+            (@rule :block(:if(~cond, ~a, ~b), ~c) =>
+                Expr(:block, Expr(:if, cond, Expr(:block, a, nothing), Expr(:block, b, nothing)), c)),
+            (@rule :for(~itr, ~body) => Expr(:for, itr, Expr(:block, body, nothing))),
+            (@rule :while(~cond, ~body) => Expr(:while, cond, Expr(:block, body, nothing))),
+        ])),
+        Fixpoint(Postwalk(Chain([
+            Fixpoint(@rule :block(~a..., :block(~b...), ~c...) => Expr(:block, a..., b..., c...)),
+            (@rule (~f::isassign)(:_, ~rhs) => rhs),
+            (@rule :block(~a..., :call(~f::ispure, ~b...), ~c..., ~d) => Expr(:block, a..., b..., c..., d)),
+            (@rule :block(~a..., (~f)(~b...), ~c..., ~d) => if f in (:ref, :., :curly, :string, :kw, :parameters, :tuple) 
+                Expr(:block, a..., b..., c..., d)
+            end),
+            (@rule :block(~a..., ~b::(!isexpr), ~c..., ~d) => Expr(:block, a..., c..., d)),
+            (@rule :if(~cond, ~a, ~a) => Expr(:block, cond, a)),
+            (@rule :if(true, ~a, ~b) => a), #TODO should probably go with a propagation pass
+            (@rule :if(false, ~a, ~b) => b), #TODO should probably go with a propagation pass
+            (@rule :for(:(=)(~i, ~itr), ~body::(!iseffectful)) => Expr(:block, itr, nothing)),
+            (@rule :while(~cond, ~body::(!iseffectful)) => Expr(:block, cond, nothing)),
+            (@rule :for(:(=)(~i, ~itr), :block(nothing)) => Expr(:block, itr, nothing)),
+            (@rule :while(~cond, :block(nothing)) => Expr(:block, cond, nothing)),
+        ])))
     ])))(ex)
-
-    ex = Rewrite(Fixpoint(Postwalk(Chain([
-        Fixpoint(@rule :block(~a..., :block(~b...), ~c...) => Expr(:block, a..., b..., c...)),
-        (@rule (~f::isassign)(:_, ~rhs) => rhs),
-        (@rule :block(~a..., :call(~f::ispure, ~b...), ~c..., ~d) => Expr(:block, a..., b..., c..., d)),
-        (@rule :block(~a..., (~f)(~b...), ~c..., ~d) => if f in (:ref, :., :curly, :string, :kw, :parameters, :tuple) 
-            Expr(:block, a..., b..., c..., d)
-        end),
-        (@rule :block(~a..., ~b::(!isexpr), ~c..., ~d) => Expr(:block, a..., c..., d)),
-        (@rule :if(~cond, ~a, ~a) => Expr(:block, cond, a)),
-        (@rule :if(true, ~a, ~b) => a), #TODO should probably go with a propagation pass
-        (@rule :if(false, ~a, ~b) => b), #TODO should probably go with a propagation pass
-        (@rule :for(:(=)(~i, ~itr), ~body::(!iseffectful)) => Expr(:block, itr, nothing)),
-        (@rule :while(~cond, ~body::(!iseffectful)) => Expr(:block, cond, nothing)),
-        (@rule :for(:(=)(~i, ~itr), :block(nothing)) => Expr(:block, itr, nothing)),
-        (@rule :while(~cond, :block(nothing)) => Expr(:block, cond, nothing)),
-    ]))))(ex)
 
     ex = Rewrite(Postwalk(Fixpoint(Chain([
         (@rule :block(~a..., :block(~b...), ~c...) => Expr(:block, a..., b..., c...)),
@@ -342,8 +304,6 @@ function _dce(ex)
         (@rule :for(~itr, :block(~body..., nothing)) => Expr(:for, itr, Expr(:block, body...))),
         (@rule :while(~cond, :block(~body..., nothing)) => Expr(:while, cond, Expr(:block, body...))),
     ]))))(ex)
-
-    resugar(ex)
 end
 
 """
@@ -353,6 +313,7 @@ Flatten any redundant blocks into a single block, over the whole expression.
 function unblock(ex::Expr)
     Rewrite(Postwalk(Fixpoint(Chain([
         (@rule :block(~a..., :block(~b...), ~c...) => Expr(:block, a..., b..., c...)),
+        (@rule :block(~a..., :(=)(~b, ~c), ~b) => Expr(:block, a, :(=)(~b, ~c))),
         (@rule :block(~a) => a),
     ]))))(ex)
 end

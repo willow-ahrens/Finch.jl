@@ -41,21 +41,10 @@ function execute_code(ex, T, algebra = DefaultAlgebra())
             end)
         end
     end
-    #=
-    code = quote
-        @inbounds begin
-            $code
-        end
-    end
-    =#
-    code = code |>
-        lower_caches |>
-        lower_cleanup |> dce
-    #quote
-    #    println($(QuoteNode(code |>         striplines |>
-    #    unblock |>
-    #    unquote_literals)))
-    #    $code
+    #code = quote
+    #    @inbounds begin
+    #        $code
+    #    end
     #end
 end
 
@@ -86,7 +75,11 @@ macro finch_code(args_ex...)
     return quote
         $execute_code(:ex, typeof($prgm), $(map(esc, args)...)) |>
         striplines |>
-        dce |>
+        desugar |>
+        propagate |>
+        mark_dead |>
+        prune_dead |>
+        resugar |>
         unblock |>
         unquote_literals
     end
