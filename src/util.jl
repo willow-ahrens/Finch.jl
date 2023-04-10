@@ -213,118 +213,101 @@ function (ctx::Propagate)(ex)
     end
 end
 
-mark_dead(ex, refs, res) = ex, refs
-function mark_dead(ex::Symbol, refs, res)
-    return ex, (res ? union(refs, [ex]) : refs)
+iseffectful(ex) = false
+function iseffectful(ex::Expr)
+    @capture(ex, :call(~f::issymbol, ~args...)) && !ispure(f) && return true
+    @capture(ex, :(=)(~lhs::issymbol, ~rhs)) && lhs != :_ && return true
+    return any(iseffectful, ex.args)
 end
-function mark_dead(ex::Expr, refs, res)
-    if @capture ex :dead(~arg)
-        return mark_dead(arg, refs, res)
+
+@kwdef struct MarkDead
+    refs = Set()
+end
+
+Base.:(==)(a::MarkDead, b::MarkDead) = a.refs == b.refs
+
+branch(ctx::MarkDead) = MarkDead(copy(ctx.refs))
+Base.copy(ctx::MarkDead) = MarkDead(copy(ctx.refs))
+function meet!(ctx::MarkDead, ctx_2::MarkDead) 
+    union!(ctx.refs, ctx_2.refs)
+end
+
+function (ctx::MarkDead)(ex, res)
+    if issymbol(ex)
+        if res
+            push!(ctx.refs, ex)
+        end
+        ex
+    elseif !isexpr(ex)
+        ex
     elseif @capture ex :block(~args...)
         args_2 = []
         for arg in args[end:-1:1]
-            (arg, refs) = mark_dead(arg, refs, res)
+            push!(args_2, ctx(arg, res))
             res = false
-            push!(args_2, arg)
         end
-        return Expr(:block, reverse(args_2)...), refs
+        return Expr(:block, reverse(args_2)...)
     elseif @capture(ex, (~f)(~args...)) && f in (:ref, :call, :., :curly, :string, :kw, :parameters, :tuple)
-        if f == :call && !ispure(args[1])
-            res = true
-        end
-        args_2 = []
-        for arg in args[end:-1:1]
-            (arg, refs) = mark_dead(arg, refs, res)
-            push!(args_2, arg)
-        end
-        return Expr(f, reverse(args_2)...), refs
+        res |= f == :call && !ispure(args[1])
+        return Expr(f, reverse(map((arg)->ctx(arg, res), reverse(args)))...)
     elseif (@capture ex (~f)(~cond, ~body)) && f in [:&&, :||]
-        (body, body_refs) = mark_dead(body, refs, res)
-        refs = union(body_refs, refs)
-        (cond, refs) = mark_dead(cond, refs, true)
-        return Expr(f, cond, body), refs
+        ctx_2 = branch(ctx)
+        body = ctx_2(body, res)
+        meet!(ctx, ctx_2)
+        cond = ctx(cond, res || iseffectful(body))
+        return Expr(f, cond, body)
     elseif (@capture ex :if(~cond, ~body, ~tail))
-        body, body_refs = mark_dead(body, refs, res)
-        tail, tail_refs = mark_dead(tail, refs, res)
-        cond, refs = mark_dead(cond, union(tail_refs, body_refs), true)
-        return Expr(f, cond, body, tail), refs
-    elseif @capture(ex, :(=)(~lhs, ~rhs))
-        lhs, refs, lhs_res = mark_dead_assign(lhs, refs)
-        res |= lhs_res
-        rhs, refs = mark_dead(rhs, refs, res)
-        return Expr(f, lhs, rhs), refs
+        ctx_2 = branch(ctx)
+        tail = ctx_2(tail, res)
+        body = ctx(body, res)
+        meet!(ctx, ctx_2)
+        cond = ctx(cond, res || iseffectful(tail) || iseffectful(body))
+        return Expr(:if, cond, body, tail)
+    elseif @capture(ex, :(=)(~lhs::issymbol, ~rhs))
+        if lhs in ctx.refs
+            res = true
+        else
+            lhs = :_
+        end
+        delete!(ctx.refs, lhs)
+        rhs = ctx(rhs, res)
+        return Expr(f, lhs, rhs)
     elseif @capture ex :for(:(=)(~i, ~ext), ~body)
+        body_2 = body
         while true
-            body, new_refs = mark_dead(body, refs, true)
-            if new_refs == refs
-                refs
-                break
-            else
-                refs = new_refs
-            end
+            ctx_2 = copy(ctx)
+            body_2 = ctx(body, false)
+            ctx == ctx_2 && break
         end
-        ext, refs = mark_dead(ext, refs, true)
-        return Expr(:for, Expr(:(=), i, ext), body), refs
+        ext = ctx(ext, iseffectful(body_2))
+        return Expr(:for, Expr(:(=), i, ext), body_2)
     elseif @capture ex :while(~cond, ~body)
+        body_2 = body
+        cond_2 = cond
         while true
-            body, new_refs = mark_dead(body, refs, true)
-            cond, new_refs = mark_dead(cond, new_refs, true)
-            if new_refs == refs
-                refs
-                break
-            else
-                refs = new_refs
-            end
+            ctx_2 = copy(ctx)
+            ctx_3 = branch(ctx)
+            body_2 = ctx_3(body, false)
+            meet!(ctx, ctx_3)
+            cond_2 = ctx(cond, iseffectful(body_2))
+            ctx == ctx_2 && break
         end
-        return Expr(:while, cond, body), refs
+        return Expr(:while, cond_2, body_2)
     else
         error("dead code elimination reached unrecognized expression $ex")
     end
 end
 
-function mark_dead_assign(lhs, refs)
-    return (lhs, refs, true)
-end
-
-
-function mark_dead_assign(lhs::Symbol, refs)
-    if !(lhs in refs)
-        refs = setdiff(refs, [lhs])
-        return (Expr(:dead, lhs), refs, false)
-    else
-        refs = setdiff(refs, [lhs])
-        return (lhs, refs, true)
-    end
-end
-
-function mark_dead_assign(lhs::Expr, refs)
-    if @capture lhs :dead(~arg)
-        return mark_dead_assign(arg, refs)
-    elseif @capture lhs :tuple(~args...)
-        new_args = []
-        res = false
-        for arg in args
-            (arg, refs, arg_res) = mark_dead_assign(arg, refs)
-            push!(new_args, arg)
-            res |= arg_res
-        end
-        lhs = Expr(:tuple, args...)
-        lhs = res ? Expr(:dead, lhs) : lhs
-        return (lhs, refs, res)
-    else
-        error("dead code elimination reached unrecognized assignment $lhs")
-    end
-end
 
 function dce(ex)
     ex = desugar(ex)
     ex = propagate(ex)
-    ex = _dce(_dce(_dce(ex)))
+    ex = _dce(ex)
     ex = resugar(ex)
 end
 function _dce(ex)
     ex = desugar(ex)
-    ex, refs = mark_dead(ex, Set(), true)
+    ex = MarkDead()(ex, true)
 
     ex = Rewrite(Prewalk(Chain([
         Fixpoint(@rule :block(~a..., :block(~b...), ~c...) => Expr(:block, a..., b..., c...)),
@@ -335,7 +318,6 @@ function _dce(ex)
     ])))(ex)
 
     ex = Rewrite(Fixpoint(Postwalk(Chain([
-        (@rule :dead(~lhs) => :_),
         Fixpoint(@rule :block(~a..., :block(~b...), ~c...) => Expr(:block, a..., b..., c...)),
         (@rule (~f::isassign)(:_, ~rhs) => rhs),
         (@rule :block(~a..., :call(~f::ispure, ~b...), ~c..., ~d) => Expr(:block, a..., b..., c..., d)),
