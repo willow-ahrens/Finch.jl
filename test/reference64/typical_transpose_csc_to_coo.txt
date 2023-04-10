@@ -39,13 +39,11 @@ quote
         else
             A_lvl_2_i1 = 0
         end
-        i = 1
-        i_start = i
         phase_stop = (min)(A_lvl_2_i1, A_lvl_2.shape)
-        if phase_stop >= i_start
-            i = i_start
-            if A_lvl_2.idx[A_lvl_2_q] < i_start
-                A_lvl_2_q = scansearch(A_lvl_2.idx, i_start, A_lvl_2_q, A_lvl_2_q_stop - 1)
+        if phase_stop >= 1
+            i = 1
+            if A_lvl_2.idx[A_lvl_2_q] < 1
+                A_lvl_2_q = scansearch(A_lvl_2.idx, 1, A_lvl_2_q, A_lvl_2_q_stop - 1)
             end
             while i <= phase_stop
                 A_lvl_2_i = A_lvl_2.idx[A_lvl_2_q]
@@ -62,17 +60,13 @@ quote
                         resize_if_smaller!(B_lvl_2.val, B_lvl_qos_stop)
                         fill_range!(B_lvl_2.val, 0.0, B_lvl_q_2, B_lvl_qos_stop)
                     end
-                    B_lvldirty_2 = true
                     B_lvl_2.val[B_lvl_q_2] = A_lvl_3_val_2
-                    if B_lvldirty_2
-                        if B_lvl_q_2 > B_lvl_qos_fill
-                            B_lvl_qos_fill = B_lvl_q_2
-                            B_lvl.tbl[B_lvl_key_2] = B_lvl_q_2
-                            B_lvl.ptr[1 + 1] += 1
-                        end
+                    if B_lvl_q_2 > B_lvl_qos_fill
+                        B_lvl_qos_fill = B_lvl_q_2
+                        B_lvl.tbl[B_lvl_key_2] = B_lvl_q_2
+                        B_lvl.ptr[1 + 1] += 1
                     end
                     A_lvl_2_q += 1
-                else
                 end
                 i = phase_stop_2 + 1
             end

@@ -10,13 +10,11 @@ begin
     else
         A_lvl_i1 = 0
     end
-    s = 5
-    s_start = s
     phase_stop = (min)(A_lvl_i1, 5)
-    if phase_stop >= s_start
-        s = s_start
-        if A_lvl.idx[A_lvl_q] < s_start
-            A_lvl_q = scansearch(A_lvl.idx, s_start, A_lvl_q, A_lvl_q_stop - 1)
+    if phase_stop >= 5
+        s = 5
+        if A_lvl.idx[A_lvl_q] < 5
+            A_lvl_q = scansearch(A_lvl.idx, 5, A_lvl_q, A_lvl_q_stop - 1)
         end
         while s <= phase_stop
             A_lvl_i = A_lvl.idx[A_lvl_q]
@@ -25,7 +23,6 @@ begin
                 A_lvl_2_val_2 = A_lvl_2.val[A_lvl_q]
                 B_val = (+)(A_lvl_2_val_2, B_val)
                 A_lvl_q += 1
-            else
             end
             s = phase_stop_2 + 1
         end

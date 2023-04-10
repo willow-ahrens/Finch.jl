@@ -10,11 +10,10 @@ quote
     y_lvl = ((ex.bodies[2]).body.rhs.args[2]).tns.tns.lvl
     y_lvl_2 = y_lvl.lvl
     x_lvl.shape == y_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(x_lvl.shape) != $(y_lvl.shape))"))
-    z_lvl_qos_fill = 0
     z_lvl_qos_stop = 0
     (Finch.resize_if_smaller!)(z_lvl.ptr, 1 + 1)
     (Finch.fill_range!)(z_lvl.ptr, 0, 1 + 1, 1 + 1)
-    z_lvl_qos = z_lvl_qos_fill + 1
+    z_lvl_qos = 0 + 1
     y_lvl_q = y_lvl.ptr[1]
     y_lvl_q_stop = y_lvl.ptr[1 + 1]
     if y_lvl_q < y_lvl_q_stop
@@ -30,15 +29,14 @@ quote
         x_lvl_i1 = 0
     end
     i = 1
-    i_start = i
     phase_stop = (min)(x_lvl.shape, x_lvl_i1, y_lvl_i1)
-    if phase_stop >= i_start
-        i = i_start
-        if y_lvl.idx[y_lvl_q] < i_start
-            y_lvl_q = scansearch(y_lvl.idx, i_start, y_lvl_q, y_lvl_q_stop - 1)
+    if phase_stop >= 1
+        i = 1
+        if y_lvl.idx[y_lvl_q] < 1
+            y_lvl_q = scansearch(y_lvl.idx, 1, y_lvl_q, y_lvl_q_stop - 1)
         end
-        if x_lvl.idx[x_lvl_q] < i_start
-            x_lvl_q = scansearch(x_lvl.idx, i_start, x_lvl_q, x_lvl_q_stop - 1)
+        if x_lvl.idx[x_lvl_q] < 1
+            x_lvl_q = scansearch(x_lvl.idx, 1, x_lvl_q, x_lvl_q_stop - 1)
         end
         while i <= phase_stop
             y_lvl_i = y_lvl.idx[y_lvl_q]
@@ -54,12 +52,9 @@ quote
                     resize_if_smaller!(z_lvl_2.val, z_lvl_qos_stop)
                     fill_range!(z_lvl_2.val, 0.0, z_lvl_qos, z_lvl_qos_stop)
                 end
-                z_lvldirty = true
                 z_lvl_2.val[z_lvl_qos] = (+)(x_lvl_2_val_2, y_lvl_2_val_2)
-                if z_lvldirty
-                    z_lvl.idx[z_lvl_qos] = i_7
-                    z_lvl_qos += 1
-                end
+                z_lvl.idx[z_lvl_qos] = i_7
+                z_lvl_qos += 1
                 y_lvl_q += 1
                 x_lvl_q += 1
             elseif x_lvl_i == phase_stop_2
@@ -71,12 +66,9 @@ quote
                     resize_if_smaller!(z_lvl_2.val, z_lvl_qos_stop)
                     fill_range!(z_lvl_2.val, 0.0, z_lvl_qos, z_lvl_qos_stop)
                 end
-                z_lvldirty = true
                 z_lvl_2.val[z_lvl_qos] = x_lvl_2_val_2
-                if z_lvldirty
-                    z_lvl.idx[z_lvl_qos] = i_8
-                    z_lvl_qos += 1
-                end
+                z_lvl.idx[z_lvl_qos] = i_8
+                z_lvl_qos += 1
                 x_lvl_q += 1
             elseif y_lvl_i == phase_stop_2
                 y_lvl_2_val_2 = y_lvl_2.val[y_lvl_q]
@@ -87,14 +79,10 @@ quote
                     resize_if_smaller!(z_lvl_2.val, z_lvl_qos_stop)
                     fill_range!(z_lvl_2.val, 0.0, z_lvl_qos, z_lvl_qos_stop)
                 end
-                z_lvldirty = true
                 z_lvl_2.val[z_lvl_qos] = y_lvl_2_val_2
-                if z_lvldirty
-                    z_lvl.idx[z_lvl_qos] = i_9
-                    z_lvl_qos += 1
-                end
+                z_lvl.idx[z_lvl_qos] = i_9
+                z_lvl_qos += 1
                 y_lvl_q += 1
-            else
             end
             i = phase_stop_2 + 1
         end
@@ -119,14 +107,10 @@ quote
                     resize_if_smaller!(z_lvl_2.val, z_lvl_qos_stop)
                     fill_range!(z_lvl_2.val, 0.0, z_lvl_qos, z_lvl_qos_stop)
                 end
-                z_lvldirty = true
                 z_lvl_2.val[z_lvl_qos] = y_lvl_2_val_3
-                if z_lvldirty
-                    z_lvl.idx[z_lvl_qos] = i_12
-                    z_lvl_qos += 1
-                end
+                z_lvl.idx[z_lvl_qos] = i_12
+                z_lvl_qos += 1
                 y_lvl_q += 1
-            else
             end
             i = phase_stop_4 + 1
         end
@@ -151,19 +135,15 @@ quote
                     resize_if_smaller!(z_lvl_2.val, z_lvl_qos_stop)
                     fill_range!(z_lvl_2.val, 0.0, z_lvl_qos, z_lvl_qos_stop)
                 end
-                z_lvldirty = true
                 z_lvl_2.val[z_lvl_qos] = x_lvl_2_val_3
-                if z_lvldirty
-                    z_lvl.idx[z_lvl_qos] = i_15
-                    z_lvl_qos += 1
-                end
+                z_lvl.idx[z_lvl_qos] = i_15
+                z_lvl_qos += 1
                 x_lvl_q += 1
-            else
             end
             i = phase_stop_6 + 1
         end
     end
-    z_lvl.ptr[1 + 1] = (z_lvl_qos - z_lvl_qos_fill) - 1
+    z_lvl.ptr[1 + 1] = (z_lvl_qos - 0) - 1
     for p = 2:1 + 1
         z_lvl.ptr[p] += z_lvl.ptr[p - 1]
     end

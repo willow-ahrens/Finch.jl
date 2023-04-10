@@ -27,11 +27,11 @@ quote
     y = (ex.bodies[1]).tns.tns
     A = ((ex.bodies[2]).body.body.rhs.args[1]).tns.tns
     x = ((ex.bodies[2]).body.body.rhs.args[2]).tns.tns
-    (y_mode1_stop,) = size(y)
-    (x_mode1_stop,) = size(x)
+    sugar_2 = size(x)
+    x_mode1_stop = sugar_2[1]
     A.n == x_mode1_stop || throw(DimensionMismatch("mismatched dimension limits ($(A.n) != $(x_mode1_stop))"))
-    (y_mode1_stop,) = size(y)
-    (y_mode1_stop,) = size(y)
+    sugar_4 = size(y)
+    y_mode1_stop = sugar_4[1]
     1 == 1 || throw(DimensionMismatch("mismatched dimension start"))
     A.m == y_mode1_stop || throw(DimensionMismatch("mismatched dimension stop"))
     fill!(y, 0)
@@ -43,13 +43,11 @@ quote
         else
             A_i1 = 0
         end
-        i = 1
-        i_start = i
         phase_stop = (min)(A_i1, A.m)
-        if phase_stop >= i_start
-            i = i_start
-            if A.rowval[A_q] < i_start
-                A_q = Finch.scansearch(A.rowval, i_start, A_q, A_q_stop - 1)
+        if phase_stop >= 1
+            i = 1
+            if A.rowval[A_q] < 1
+                A_q = Finch.scansearch(A.rowval, 1, A_q, A_q_stop - 1)
             end
             while i <= phase_stop
                 A_i = A.rowval[A_q]
@@ -59,7 +57,6 @@ quote
                     i_6 = phase_stop_2
                     y[i_6] = (+)((*)(x[j_4], A_val), y[i_6])
                     A_q += 1
-                else
                 end
                 i = phase_stop_2 + 1
             end

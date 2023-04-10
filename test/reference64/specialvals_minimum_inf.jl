@@ -10,13 +10,11 @@ begin
     else
         yf_lvl_i1 = 0
     end
-    i = 1
-    i_start = i
     phase_stop = (min)(yf_lvl_i1, yf_lvl.shape)
-    if phase_stop >= i_start
-        i = i_start
-        if yf_lvl.idx[yf_lvl_q] < i_start
-            yf_lvl_q = scansearch(yf_lvl.idx, i_start, yf_lvl_q, yf_lvl_q_stop - 1)
+    if phase_stop >= 1
+        i = 1
+        if yf_lvl.idx[yf_lvl_q] < 1
+            yf_lvl_q = scansearch(yf_lvl.idx, 1, yf_lvl_q, yf_lvl_q_stop - 1)
         end
         while i <= phase_stop
             yf_lvl_i = yf_lvl.idx[yf_lvl_q]
@@ -25,7 +23,6 @@ begin
                 yf_lvl_2_val_2 = yf_lvl_2.val[yf_lvl_q]
                 x_val = (min)(yf_lvl_2_val_2, x_val)
                 yf_lvl_q += 1
-            else
             end
             i = phase_stop_2 + 1
         end

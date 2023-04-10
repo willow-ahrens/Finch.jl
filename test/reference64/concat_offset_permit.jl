@@ -7,11 +7,10 @@ begin
     B_lvl_2 = B_lvl.lvl
     i_start = (min)((+)(1, (((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta), 1)
     i_stop = (max)(A_lvl.shape, (+)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta, B_lvl.shape))
-    C_lvl_qos_fill = 0
     C_lvl_qos_stop = 0
     (Finch.resize_if_smaller!)(C_lvl.ptr, 1 + 1)
     (Finch.fill_range!)(C_lvl.ptr, 0, 1 + 1, 1 + 1)
-    C_lvl_qos = C_lvl_qos_fill + 1
+    C_lvl_qos = 0 + 1
     i = i_start
     i_start_2 = i
     phase_stop = (min)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta, 0, i_stop)
@@ -23,12 +22,9 @@ begin
                 resize_if_smaller!(C_lvl_2.val, C_lvl_qos_stop)
                 fill_range!(C_lvl_2.val, 0.0, C_lvl_qos, C_lvl_qos_stop)
             end
-            C_lvldirty = true
             C_lvl_2.val[C_lvl_qos] = missing
-            if C_lvldirty
-                C_lvl.idx[C_lvl_qos] = i_6
-                C_lvl_qos += 1
-            end
+            C_lvl.idx[C_lvl_qos] = i_6
+            C_lvl_qos += 1
         end
         i = phase_stop + 1
     end
@@ -62,14 +58,10 @@ begin
                         resize_if_smaller!(C_lvl_2.val, C_lvl_qos_stop)
                         fill_range!(C_lvl_2.val, 0.0, C_lvl_qos, C_lvl_qos_stop)
                     end
-                    C_lvldirty = true
                     C_lvl_2.val[C_lvl_qos] = B_lvl_2_val_2
-                    if C_lvldirty
-                        C_lvl.idx[C_lvl_qos] = i_10
-                        C_lvl_qos += 1
-                    end
+                    C_lvl.idx[C_lvl_qos] = i_10
+                    C_lvl_qos += 1
                     B_lvl_q += 1
-                else
                 end
                 i = phase_stop_4 + 1
             end
@@ -86,12 +78,9 @@ begin
                 resize_if_smaller!(C_lvl_2.val, C_lvl_qos_stop)
                 fill_range!(C_lvl_2.val, 0.0, C_lvl_qos, C_lvl_qos_stop)
             end
-            C_lvldirty = true
             C_lvl_2.val[C_lvl_qos] = missing
-            if C_lvldirty
-                C_lvl.idx[C_lvl_qos] = i_13
-                C_lvl_qos += 1
-            end
+            C_lvl.idx[C_lvl_qos] = i_13
+            C_lvl_qos += 1
         end
         i = phase_stop_5 + 1
     end
@@ -125,14 +114,10 @@ begin
                         resize_if_smaller!(C_lvl_2.val, C_lvl_qos_stop)
                         fill_range!(C_lvl_2.val, 0.0, C_lvl_qos, C_lvl_qos_stop)
                     end
-                    C_lvldirty = true
                     C_lvl_2.val[C_lvl_qos] = A_lvl_2_val_2
-                    if C_lvldirty
-                        C_lvl.idx[C_lvl_qos] = i_17
-                        C_lvl_qos += 1
-                    end
+                    C_lvl.idx[C_lvl_qos] = i_17
+                    C_lvl_qos += 1
                     A_lvl_q += 1
-                else
                 end
                 i = phase_stop_8 + 1
             end
@@ -181,12 +166,9 @@ begin
                         resize_if_smaller!(C_lvl_2.val, C_lvl_qos_stop)
                         fill_range!(C_lvl_2.val, 0.0, C_lvl_qos, C_lvl_qos_stop)
                     end
-                    C_lvldirty = true
                     C_lvl_2.val[C_lvl_qos] = (coalesce)(A_lvl_2_val_3, B_lvl_2_val_3)
-                    if C_lvldirty
-                        C_lvl.idx[C_lvl_qos] = i_22
-                        C_lvl_qos += 1
-                    end
+                    C_lvl.idx[C_lvl_qos] = i_22
+                    C_lvl_qos += 1
                     A_lvl_q += 1
                     B_lvl_q += 1
                 elseif B_lvl_i == (+)(phase_stop_11, (-)((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta))
@@ -200,14 +182,10 @@ begin
                         resize_if_smaller!(C_lvl_2.val, C_lvl_qos_stop)
                         fill_range!(C_lvl_2.val, 0.0, C_lvl_qos, C_lvl_qos_stop)
                     end
-                    C_lvldirty = true
                     C_lvl_2.val[C_lvl_qos] = (coalesce)(A_lvl_2_val_3, 0.0)
-                    if C_lvldirty
-                        C_lvl.idx[C_lvl_qos] = i_23
-                        C_lvl_qos += 1
-                    end
+                    C_lvl.idx[C_lvl_qos] = i_23
+                    C_lvl_qos += 1
                     A_lvl_q += 1
-                else
                 end
                 i = phase_stop_11 + 1
             end
@@ -232,14 +210,10 @@ begin
                         resize_if_smaller!(C_lvl_2.val, C_lvl_qos_stop)
                         fill_range!(C_lvl_2.val, 0.0, C_lvl_qos, C_lvl_qos_stop)
                     end
-                    C_lvldirty = true
                     C_lvl_2.val[C_lvl_qos] = (coalesce)(A_lvl_2_val_4, 0.0)
-                    if C_lvldirty
-                        C_lvl.idx[C_lvl_qos] = i_26
-                        C_lvl_qos += 1
-                    end
+                    C_lvl.idx[C_lvl_qos] = i_26
+                    C_lvl_qos += 1
                     A_lvl_q += 1
-                else
                 end
                 i = phase_stop_13 + 1
             end
@@ -276,14 +250,10 @@ begin
                         resize_if_smaller!(C_lvl_2.val, C_lvl_qos_stop)
                         fill_range!(C_lvl_2.val, 0.0, C_lvl_qos, C_lvl_qos_stop)
                     end
-                    C_lvldirty = true
                     C_lvl_2.val[C_lvl_qos] = A_lvl_2_val_5
-                    if C_lvldirty
-                        C_lvl.idx[C_lvl_qos] = i_32
-                        C_lvl_qos += 1
-                    end
+                    C_lvl.idx[C_lvl_qos] = i_32
+                    C_lvl_qos += 1
                     A_lvl_q += 1
-                else
                 end
                 i = phase_stop_17 + 1
             end
@@ -300,12 +270,9 @@ begin
                 resize_if_smaller!(C_lvl_2.val, C_lvl_qos_stop)
                 fill_range!(C_lvl_2.val, 0.0, C_lvl_qos, C_lvl_qos_stop)
             end
-            C_lvldirty = true
             C_lvl_2.val[C_lvl_qos] = missing
-            if C_lvldirty
-                C_lvl.idx[C_lvl_qos] = i_35
-                C_lvl_qos += 1
-            end
+            C_lvl.idx[C_lvl_qos] = i_35
+            C_lvl_qos += 1
         end
         i = phase_stop_18 + 1
     end
@@ -339,14 +306,10 @@ begin
                         resize_if_smaller!(C_lvl_2.val, C_lvl_qos_stop)
                         fill_range!(C_lvl_2.val, 0.0, C_lvl_qos, C_lvl_qos_stop)
                     end
-                    C_lvldirty = true
                     C_lvl_2.val[C_lvl_qos] = B_lvl_2_val_5
-                    if C_lvldirty
-                        C_lvl.idx[C_lvl_qos] = i_39
-                        C_lvl_qos += 1
-                    end
+                    C_lvl.idx[C_lvl_qos] = i_39
+                    C_lvl_qos += 1
                     B_lvl_q += 1
-                else
                 end
                 i = phase_stop_21 + 1
             end
@@ -362,15 +325,12 @@ begin
                 resize_if_smaller!(C_lvl_2.val, C_lvl_qos_stop)
                 fill_range!(C_lvl_2.val, 0.0, C_lvl_qos, C_lvl_qos_stop)
             end
-            C_lvldirty = true
             C_lvl_2.val[C_lvl_qos] = missing
-            if C_lvldirty
-                C_lvl.idx[C_lvl_qos] = i_42
-                C_lvl_qos += 1
-            end
+            C_lvl.idx[C_lvl_qos] = i_42
+            C_lvl_qos += 1
         end
     end
-    C_lvl.ptr[1 + 1] = (C_lvl_qos - C_lvl_qos_fill) - 1
+    C_lvl.ptr[1 + 1] = (C_lvl_qos - 0) - 1
     for p = 2:1 + 1
         C_lvl.ptr[p] += C_lvl.ptr[p - 1]
     end

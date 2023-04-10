@@ -5,11 +5,10 @@ begin
     A_lvl_2 = A_lvl.lvl
     F_lvl = ((ex.bodies[2]).body.body.rhs.args[3]).tns.tns.lvl
     F_lvl_2 = F_lvl.lvl
-    C_lvl_qos_fill = 0
     C_lvl_qos_stop = 0
     (Finch.resize_if_smaller!)(C_lvl.ptr, 1 + 1)
     (Finch.fill_range!)(C_lvl.ptr, 0, 1 + 1, 1 + 1)
-    C_lvl_qos = C_lvl_qos_fill + 1
+    C_lvl_qos = 0 + 1
     A_lvl_q = A_lvl.ptr[1]
     A_lvl_q_stop = A_lvl.ptr[1 + 1]
     if A_lvl_q < A_lvl_q_stop
@@ -17,13 +16,11 @@ begin
     else
         A_lvl_i1 = 0
     end
-    i = 1
-    i_start = i
     phase_stop = (min)(A_lvl_i1, A_lvl.shape)
-    if phase_stop >= i_start
-        i = i_start
-        if A_lvl.idx[A_lvl_q] < i_start
-            A_lvl_q = scansearch(A_lvl.idx, i_start, A_lvl_q, A_lvl_q_stop - 1)
+    if phase_stop >= 1
+        i = 1
+        if A_lvl.idx[A_lvl_q] < 1
+            A_lvl_q = scansearch(A_lvl.idx, 1, A_lvl_q, A_lvl_q_stop - 1)
         end
         while i <= phase_stop
             A_lvl_i = A_lvl.idx[A_lvl_q]
@@ -41,9 +38,8 @@ begin
                 s_2 = (+)(i_7, -3)
                 s_3 = s_2
                 j = 1
-                j_start = j
                 phase_stop_3 = (min)(F_lvl.shape, s_3)
-                if phase_stop_3 >= j_start
+                if phase_stop_3 >= 1
                     j = phase_stop_3 + 1
                 end
                 j_start = j
@@ -75,28 +71,21 @@ begin
                                 C_lvldirty = true
                                 C_lvl_2.val[C_lvl_qos] = (+)((*)((!=)(A_lvl_2_val_2, 0), F_lvl_2_val_2, (coalesce)(A_lvl_2_val_3, 0)), C_lvl_2.val[C_lvl_qos])
                                 A_lvl_q_2 += 1
-                            else
                             end
                             j = phase_stop_6 + 1
                         end
                     end
-                    j = phase_stop_4 + 1
-                end
-                j_start = j
-                if F_lvl.shape >= j_start
-                    F_lvl.shape + 1
                 end
                 if C_lvldirty
                     C_lvl.idx[C_lvl_qos] = i_7
                     C_lvl_qos += 1
                 end
                 A_lvl_q += 1
-            else
             end
             i = phase_stop_2 + 1
         end
     end
-    C_lvl.ptr[1 + 1] = (C_lvl_qos - C_lvl_qos_fill) - 1
+    C_lvl.ptr[1 + 1] = (C_lvl_qos - 0) - 1
     for p = 2:1 + 1
         C_lvl.ptr[p] += C_lvl.ptr[p - 1]
     end

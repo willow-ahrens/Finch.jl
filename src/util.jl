@@ -318,8 +318,6 @@ function _dce(ex)
         (@rule :while(~cond, ~body) => Expr(:while, cond, Expr(:block, body, nothing))),
     ])))(ex)
 
-    println(ex)
-
     ex = Rewrite(Fixpoint(Postwalk(Chain([
         Fixpoint(@rule :block(~a..., :block(~b...), ~c...) => Expr(:block, a..., b..., c...)),
         (@rule (~f::isassign)(:_, ~rhs) => rhs),

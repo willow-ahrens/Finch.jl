@@ -24,15 +24,10 @@ begin
             w_lvl_i = last(w_lvl.srt[w_lvl_r])
             w_lvl_q = (w_lvl_p - 1) * A_lvl_2.shape + w_lvl_i
             w_lvl.tbl[w_lvl_q] = false
-            if true
-                resize_if_smaller!(w_lvl_2.val, w_lvl_q)
-                fill_range!(w_lvl_2.val, 0.0, w_lvl_q, w_lvl_q)
-            end
+            resize_if_smaller!(w_lvl_2.val, w_lvl_q)
+            fill_range!(w_lvl_2.val, 0.0, w_lvl_q, w_lvl_q)
         end
         w_lvl_qos_fill = 0
-        if false
-            w_lvl_qos_stop = 0
-        end
         w_lvl.ptr[1] = 1
         w_lvlq_start = (1 - 1) * A_lvl_2.shape + 1
         w_lvlq_stop = 1 * A_lvl_2.shape
@@ -49,13 +44,11 @@ begin
         else
             A_lvl_2_i1 = 0
         end
-        k = 1
-        k_start = k
         phase_stop = (min)(A_lvl.shape, A_lvl_2_i1)
-        if phase_stop >= k_start
-            k = k_start
-            if A_lvl_2.idx[A_lvl_2_q] < k_start
-                A_lvl_2_q = scansearch(A_lvl_2.idx, k_start, A_lvl_2_q, A_lvl_2_q_stop - 1)
+        if phase_stop >= 1
+            k = 1
+            if A_lvl_2.idx[A_lvl_2_q] < 1
+                A_lvl_2_q = scansearch(A_lvl_2.idx, 1, A_lvl_2_q, A_lvl_2_q_stop - 1)
             end
             while k <= phase_stop
                 A_lvl_2_i = A_lvl_2.idx[A_lvl_2_q]
@@ -71,13 +64,11 @@ begin
                     else
                         A_lvl_2_i1_2 = 0
                     end
-                    i = 1
-                    i_start = i
                     phase_stop_3 = (min)(A_lvl_2.shape, A_lvl_2_i1_2)
-                    if phase_stop_3 >= i_start
-                        i = i_start
-                        if A_lvl_2.idx[A_lvl_2_q_2] < i_start
-                            A_lvl_2_q_2 = scansearch(A_lvl_2.idx, i_start, A_lvl_2_q_2, A_lvl_2_q_stop_2 - 1)
+                    if phase_stop_3 >= 1
+                        i = 1
+                        if A_lvl_2.idx[A_lvl_2_q_2] < 1
+                            A_lvl_2_q_2 = scansearch(A_lvl_2.idx, 1, A_lvl_2_q_2, A_lvl_2_q_stop_2 - 1)
                         end
                         while i <= phase_stop_3
                             A_lvl_2_i_2 = A_lvl_2.idx[A_lvl_2_q_2]
@@ -86,35 +77,25 @@ begin
                                 A_lvl_3_val_3 = A_lvl_3.val[A_lvl_2_q_2]
                                 i_9 = phase_stop_4
                                 w_lvl_q_2 = (1 - 1) * A_lvl_2.shape + i_9
-                                dirty = true
                                 w_lvl_2.val[w_lvl_q_2] = (+)((*)(A_lvl_3_val_2, A_lvl_3_val_3), w_lvl_2.val[w_lvl_q_2])
-                                if dirty
-                                    if !(w_lvl.tbl[w_lvl_q_2])
-                                        w_lvl.tbl[w_lvl_q_2] = true
-                                        w_lvl_qos_fill += 1
-                                        if w_lvl_qos_fill > w_lvl_qos_stop
-                                            w_lvl_qos_stop = max(w_lvl_qos_stop << 1, 1)
-                                            (Finch.resize_if_smaller!)(w_lvl.srt, w_lvl_qos_stop)
-                                        end
-                                        w_lvl.srt[w_lvl_qos_fill] = (1, i_9)
+                                if !(w_lvl.tbl[w_lvl_q_2])
+                                    w_lvl.tbl[w_lvl_q_2] = true
+                                    w_lvl_qos_fill += 1
+                                    if w_lvl_qos_fill > w_lvl_qos_stop
+                                        w_lvl_qos_stop = max(w_lvl_qos_stop << 1, 1)
+                                        (Finch.resize_if_smaller!)(w_lvl.srt, w_lvl_qos_stop)
                                     end
+                                    w_lvl.srt[w_lvl_qos_fill] = (1, i_9)
                                 end
                                 A_lvl_2_q_2 += 1
-                            else
                             end
                             i = phase_stop_4 + 1
                         end
                     end
                     A_lvl_2_q += 1
-                else
                 end
                 k = phase_stop_2 + 1
             end
-            k = phase_stop + 1
-        end
-        k_start = k
-        if A_lvl.shape >= k_start
-            A_lvl.shape + 1
         end
         sort!(view(w_lvl.srt, 1:w_lvl_qos_fill))
         w_lvl_p_prev = 0
@@ -135,12 +116,10 @@ begin
         else
             w_lvl_i_stop = 0
         end
-        i_2 = 1
-        i_2_start = i_2
         phase_stop_5 = (min)(A_lvl_2.shape, w_lvl_i_stop)
-        if phase_stop_5 >= i_2_start
-            i_2 = i_2_start
-            while w_lvl_r_3 + 1 < w_lvl_r_stop && last(w_lvl.srt[w_lvl_r_3]) < i_2_start
+        if phase_stop_5 >= 1
+            i_2 = 1
+            while w_lvl_r_3 + 1 < w_lvl_r_stop && last(w_lvl.srt[w_lvl_r_3]) < 1
                 w_lvl_r_3 += 1
             end
             while i_2 <= phase_stop_5
@@ -156,14 +135,10 @@ begin
                         resize_if_smaller!(B_lvl_3.val, B_lvl_2_qos_stop)
                         fill_range!(B_lvl_3.val, 0.0, B_lvl_2_qos, B_lvl_2_qos_stop)
                     end
-                    B_lvl_2dirty = true
                     B_lvl_3.val[B_lvl_2_qos] = w_lvl_2_val_2
-                    if B_lvl_2dirty
-                        B_lvl_2.idx[B_lvl_2_qos] = i_13
-                        B_lvl_2_qos += 1
-                    end
+                    B_lvl_2.idx[B_lvl_2_qos] = i_13
+                    B_lvl_2_qos += 1
                     w_lvl_r_3 += 1
-                else
                 end
                 i_2 = phase_stop_6 + 1
             end

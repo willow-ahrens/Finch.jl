@@ -50,7 +50,7 @@ function execute_code(ex, T, algebra = DefaultAlgebra())
     =#
     code = code |>
         lower_caches |>
-        lower_cleanup
+        lower_cleanup |> dce
     #quote
     #    println($(QuoteNode(code |>         striplines |>
     #    unblock |>

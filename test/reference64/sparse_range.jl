@@ -5,11 +5,10 @@ begin
     A_lvl_2 = A_lvl.lvl
     win = ((ex.bodies[2]).body.rhs.idxs[1]).tns.tns
     i_stop = (+)(last(win), (-)(1, first(win)))
-    C_lvl_qos_fill = 0
     C_lvl_qos_stop = 0
     (Finch.resize_if_smaller!)(C_lvl.ptr, 1 + 1)
     (Finch.fill_range!)(C_lvl.ptr, 0, 1 + 1, 1 + 1)
-    C_lvl_qos = C_lvl_qos_fill + 1
+    C_lvl_qos = 0 + 1
     A_lvl_q = A_lvl.ptr[1]
     A_lvl_q_stop = A_lvl.ptr[1 + 1]
     if A_lvl_q < A_lvl_q_stop
@@ -17,13 +16,11 @@ begin
     else
         A_lvl_i1 = 0
     end
-    i = 1
-    i_start_2 = i
     phase_stop = (min)(i_stop, (+)((-)(first(win)), 1, A_lvl_i1))
-    if phase_stop >= i_start_2
-        i = i_start_2
-        if A_lvl.idx[A_lvl_q] < (+)(i_start_2, (-)((-)(1, first(win))))
-            A_lvl_q = scansearch(A_lvl.idx, (+)(i_start_2, (-)((-)(1, first(win)))), A_lvl_q, A_lvl_q_stop - 1)
+    if phase_stop >= 1
+        i = 1
+        if A_lvl.idx[A_lvl_q] < (+)(1, (-)((-)(1, first(win))))
+            A_lvl_q = scansearch(A_lvl.idx, (+)(1, (-)((-)(1, first(win)))), A_lvl_q, A_lvl_q_stop - 1)
         end
         while i <= phase_stop
             A_lvl_i = A_lvl.idx[A_lvl_q]
@@ -37,19 +34,15 @@ begin
                     resize_if_smaller!(C_lvl_2.val, C_lvl_qos_stop)
                     fill_range!(C_lvl_2.val, 0.0, C_lvl_qos, C_lvl_qos_stop)
                 end
-                C_lvldirty = true
                 C_lvl_2.val[C_lvl_qos] = A_lvl_2_val_2
-                if C_lvldirty
-                    C_lvl.idx[C_lvl_qos] = i_6
-                    C_lvl_qos += 1
-                end
+                C_lvl.idx[C_lvl_qos] = i_6
+                C_lvl_qos += 1
                 A_lvl_q += 1
-            else
             end
             i = phase_stop_2 + 1
         end
     end
-    C_lvl.ptr[1 + 1] = (C_lvl_qos - C_lvl_qos_fill) - 1
+    C_lvl.ptr[1 + 1] = (C_lvl_qos - 0) - 1
     for p = 2:1 + 1
         C_lvl.ptr[p] += C_lvl.ptr[p - 1]
     end
