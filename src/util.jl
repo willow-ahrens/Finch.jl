@@ -269,8 +269,6 @@ mark_dead(ex) = MarkDead()(ex, true)
 function prune_dead(ex)
     ex = desugar(ex)
     
-    #TODO optimize this (consider how to handle _ = begin ... end in one pass)
-
     ex = Rewrite(Fixpoint(Chain([
         Prewalk(Chain([
             Fixpoint(@rule :block(:block(~a...), ~b...) => Expr(:block, a..., b...)),
