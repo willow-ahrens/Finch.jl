@@ -41,11 +41,11 @@ function execute_code(ex, T, algebra = DefaultAlgebra())
             end)
         end
     end
-    #code = quote
-    #    @inbounds begin
-    #        $code
-    #    end
-    #end
+    code = quote
+        @inbounds begin
+            $code
+        end
+    end
 end
 
 macro finch(args_ex...)

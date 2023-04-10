@@ -128,6 +128,8 @@ function (ctx::Propagate)(ex)
             end
         end
         return ex
+    elseif @capture ex :macrocall(~f, ~ln, ~args...)
+        return Expr(:macrocall, f, ln, map(ctx, args)...)
     elseif @capture ex :block(~args...)
         return Expr(:block, map(ctx, args)...)
     elseif @capture(ex, (~f)(~args...)) && f in (:ref, :call, :., :curly, :string, :kw, :parameters, :tuple)
@@ -206,6 +208,8 @@ function (ctx::MarkDead)(ex, res)
         ex
     elseif !isexpr(ex)
         ex
+    elseif @capture ex :macrocall(~f, ~ln, ~args...)
+        return Expr(:macrocall, f, ln, reverse(map((arg)->ctx(arg, res), reverse(args)))...)
     elseif @capture ex :block(~args...)
         args_2 = []
         for arg in args[end:-1:1]
@@ -310,11 +314,15 @@ end
 Flatten any redundant blocks into a single block, over the whole expression.
 """
 function unblock(ex::Expr)
-    Rewrite(Postwalk(Fixpoint(Chain([
+    ex = Rewrite(Postwalk(Fixpoint(Chain([
         (@rule :block(~a..., :block(~b...), ~c...) => Expr(:block, a..., b..., c...)),
         (@rule :block(~a..., :(=)(~b, ~c), ~b) => Expr(:block, a..., Expr(:(=), ~b, ~c))),
         (@rule :block(~a) => a),
     ]))))(ex)
+    if ex isa Expr && !@capture ex :block(~args...)
+        ex = Expr(:block, ex)
+    end
+    ex
 end
 unblock(ex) = ex
 
