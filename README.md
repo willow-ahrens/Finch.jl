@@ -26,7 +26,7 @@ variance of a sparse vector, reading the vector only once, and only reading
 nonzero values:
 
 ```julia
-X = @fiber(sl(e(0.0)), sprand(10, 1))
+X = @fiber(sl(e(0.0)), fsprand(10, 0.5))
 x = Scalar(0.0)
 x_min = Scalar(Inf)
 x_max = Scalar(-Inf)
