@@ -41,6 +41,7 @@ x_var = Scalar(0.0)
         x_sum[] += x[]
         x_var[] += x[] * x[]
     end
+end
 ```
 
 Array formats in Finch are described recursively mode by mode.  Semantically, an
