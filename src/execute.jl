@@ -80,7 +80,8 @@ macro finch_code(args_ex...)
         prune_dead |>
         resugar |>
         unblock |>
-        unquote_literals
+        unquote_literals |>
+        unresolve
     end
 end
 

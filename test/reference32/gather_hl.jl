@@ -10,7 +10,7 @@ begin
     else
         A_lvl_i1 = 0
     end
-    phase_stop = (min)(A_lvl_i1, 5)
+    phase_stop = min(A_lvl_i1, 5)
     if phase_stop >= 5
         s = 5
         if A_lvl.idx[A_lvl_q] < 5
@@ -18,10 +18,10 @@ begin
         end
         while s <= phase_stop
             A_lvl_i = A_lvl.idx[A_lvl_q]
-            phase_stop_2 = (min)(phase_stop, A_lvl_i)
+            phase_stop_2 = min(phase_stop, A_lvl_i)
             if A_lvl_i == phase_stop_2
                 A_lvl_2_val_2 = A_lvl_2.val[A_lvl_q]
-                B_val = (+)(A_lvl_2_val_2, B_val)
+                B_val = A_lvl_2_val_2 + B_val
                 A_lvl_q += 1
             end
             s = phase_stop_2 + 1

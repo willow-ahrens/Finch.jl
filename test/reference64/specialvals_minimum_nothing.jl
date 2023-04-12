@@ -10,7 +10,7 @@ begin
     else
         yf_lvl_i1 = 0
     end
-    phase_stop = (min)(yf_lvl_i1, yf_lvl.shape)
+    phase_stop = min(yf_lvl_i1, yf_lvl.shape)
     if phase_stop >= 1
         i = 1
         if yf_lvl.idx[yf_lvl_q] < 1
@@ -18,10 +18,10 @@ begin
         end
         while i <= phase_stop
             yf_lvl_i = yf_lvl.idx[yf_lvl_q]
-            phase_stop_2 = (min)(phase_stop, yf_lvl_i)
+            phase_stop_2 = min(phase_stop, yf_lvl_i)
             if yf_lvl_i == phase_stop_2
                 yf_lvl_2_val_2 = yf_lvl_2.val[yf_lvl_q]
-                x_val = (min)((something)(yf_lvl_2_val_2, Inf), x_val)
+                x_val = min(something(yf_lvl_2_val_2, Inf), x_val)
                 yf_lvl_q += 1
             end
             i = phase_stop_2 + 1

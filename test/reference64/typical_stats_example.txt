@@ -42,43 +42,40 @@ quote
         X_lvl_i1 = 0
     end
     i = 1
-    phase_stop = (min)(X_lvl_i1, X_lvl.shape)
+    phase_stop = min(X_lvl_i1, X_lvl.shape)
     if phase_stop >= 1
         i = 1
         if X_lvl.idx[X_lvl_q] < 1
             X_lvl_q = scansearch(X_lvl.idx, 1, X_lvl_q, X_lvl_q_stop - 1)
         end
         while i <= phase_stop
-            i_start_2 = i
             X_lvl_i = X_lvl.idx[X_lvl_q]
-            phase_stop_2 = (min)(phase_stop, X_lvl_i)
+            phase_stop_2 = min(phase_stop, X_lvl_i)
             if X_lvl_i == phase_stop_2
-                cond = (<)(0, (+)((-)(i_start_2), phase_stop_2))
+                cond = 0 < -i + phase_stop_2
                 if cond
-                    x_max_val = (max)(0.0, x_max_val)
-                    x_min_val = (min)(0.0, x_min_val)
+                    x_max_val = max(0.0, x_max_val)
+                    x_min_val = min(0.0, x_min_val)
                 end
                 X_lvl_2_val_2 = X_lvl_2.val[X_lvl_q]
-                x_val = X_lvl_2_val_2
-                x_min_val = (min)(x_min_val, x_val)
-                x_max_val = (max)(x_max_val, x_val)
-                x_sum_val = (+)(x_val, x_sum_val)
-                x_var_val = (+)((*)(x_val, x_val), x_var_val)
+                x_min_val = min(x_min_val, X_lvl_2_val_2)
+                x_max_val = max(x_max_val, X_lvl_2_val_2)
+                x_sum_val = X_lvl_2_val_2 + x_sum_val
+                x_var_val = X_lvl_2_val_2 * X_lvl_2_val_2 + x_var_val
                 X_lvl_q += 1
             else
-                x_max_val = (max)(0.0, x_max_val)
-                x_min_val = (min)(0.0, x_min_val)
+                x_max_val = max(0.0, x_max_val)
+                x_min_val = min(0.0, x_min_val)
             end
             i = phase_stop_2 + 1
         end
         i = phase_stop + 1
     end
-    i_start = i
-    if X_lvl.shape >= i_start
-        cond_2 = (<)(0, (+)(X_lvl.shape, 1, (-)(i_start)))
+    if X_lvl.shape >= i
+        cond_2 = 0 < X_lvl.shape + 1 + -i
         if cond_2
-            x_max_val = (max)(0.0, x_max_val)
-            x_min_val = (min)(0.0, x_min_val)
+            x_max_val = max(0.0, x_max_val)
+            x_min_val = min(0.0, x_min_val)
         end
     end
     (x_var = (Scalar){0.0, Float64}(x_var_val), x_sum = (Scalar){0.0, Float64}(x_sum_val), x_max = (Scalar){-Inf, Float64}(x_max_val), x_min = (Scalar){Inf, Float64}(x_min_val))
