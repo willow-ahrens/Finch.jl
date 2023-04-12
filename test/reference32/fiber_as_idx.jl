@@ -1,8 +1,6 @@
 begin
     B_lvl = (ex.bodies[1]).tns.tns.lvl
     B_lvl_2 = B_lvl.lvl
-    B_lvl_3 = (ex.bodies[2]).body.lhs.tns.tns.lvl
-    B_lvl_4 = B_lvl_3.lvl
     A_lvl = (ex.bodies[2]).body.rhs.tns.tns.lvl
     A_lvl_2 = A_lvl.lvl
     A_lvl_3 = A_lvl_2.lvl
@@ -12,13 +10,6 @@ begin
     fill_range!(B_lvl_2.val, 0, 1, I_lvl.shape)
     I_lvl_q = I_lvl.ptr[1]
     I_lvl_q_stop = I_lvl.ptr[1 + 1]
-    if I_lvl_q < I_lvl_q_stop
-        I_lvl_i = I_lvl.idx[I_lvl_q]
-        I_lvl_i1 = I_lvl.idx[I_lvl_q_stop - 1]
-    else
-        I_lvl_i = 1
-        I_lvl_i1 = 0
-    end
     i = 1
     if I_lvl.idx[I_lvl_q] < 1
         I_lvl_q = scansearch(I_lvl.idx, 1, I_lvl_q, I_lvl_q_stop - 1)
@@ -27,7 +18,6 @@ begin
         i_start = i
         I_lvl_i = I_lvl.idx[I_lvl_q]
         phase_stop = (min)(I_lvl.shape, I_lvl_i)
-        i_5 = i
         if I_lvl_i == phase_stop
             for i_6 = i_start:phase_stop
                 B_lvl_q = (1 - 1) * I_lvl.shape + i_6

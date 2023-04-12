@@ -2,7 +2,11 @@ execute(ex) = execute(ex, DefaultAlgebra())
 
 push!(registry, (algebra)-> quote
     @generated function execute(ex, a::$algebra)
-        execute_code(:ex, ex, a())
+        quote
+            @inbounds begin
+                $(execute_code(:ex, ex, a()))
+            end
+        end
     end
 end)
 
@@ -41,11 +45,6 @@ function execute_code(ex, T, algebra = DefaultAlgebra())
             end)
         end
     end
-    #code = quote
-    #    @inbounds begin
-    #        $code
-    #    end
-    #end
 end
 
 macro finch(args_ex...)
