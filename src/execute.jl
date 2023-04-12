@@ -75,7 +75,9 @@ macro finch_code(args_ex...)
         $execute_code(:ex, typeof($prgm), $(map(esc, args)...)) |>
         striplines |>
         desugar |>
-        Rewrite(Fixpoint(Chain([propagate, mark_dead, prune_dead]))) |>
+        propagate |>
+        mark_dead |>
+        prune_dead |>
         resugar |>
         unblock |>
         unquote_literals |>
