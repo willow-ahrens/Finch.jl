@@ -43,7 +43,7 @@ quote
         else
             A_i1 = 0
         end
-        phase_stop = (min)(A_i1, A.m)
+        phase_stop = min(A_i1, A.m)
         if phase_stop >= 1
             i = 1
             if A.rowval[A_q] < 1
@@ -51,11 +51,10 @@ quote
             end
             while i <= phase_stop
                 A_i = A.rowval[A_q]
-                phase_stop_2 = (min)(phase_stop, A_i)
+                phase_stop_2 = min(phase_stop, A_i)
                 if A_i == phase_stop_2
                     A_val = A.nzval[A_q]
-                    i_6 = phase_stop_2
-                    y[i_6] = (+)((*)(x[j_4], A_val), y[i_6])
+                    y[phase_stop_2] = x[j_4] * A_val + y[phase_stop_2]
                     A_q += 1
                 end
                 i = phase_stop_2 + 1
