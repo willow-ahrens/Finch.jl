@@ -41,7 +41,7 @@ function check_output(fname, arg)
         if reference == result
             return true
         else
-            @debug "disagreement with reference output" reference result
+            @info "disagreement with reference output" reference result
             return false
         end
     end
