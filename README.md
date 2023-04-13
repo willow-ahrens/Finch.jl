@@ -53,7 +53,7 @@ example, here's a column-major sparse matrix-vector multiply:
 
 ```julia
 x = @fiber(d(e(0.0)), rand(42));
-A = @fiber(d(sl(e(0.0))), sprand(42, 42, 0.1));
+A = @fiber(d(sl(e(0.0))), fsprand((42, 42), 0.1));
 y = @fiber(d(e(0.0)));
 @finch begin
     y .= 0
