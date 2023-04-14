@@ -30,4 +30,4 @@ deploydocs(;
 
 using Literate
 
-Literate.notebook(joinpath(@__DIR__, "src/usage.jl"), "build")
+Literate.notebook(joinpath(@__DIR__, "src/usage.jl"), joinpath(@__DIR__, "build"))
