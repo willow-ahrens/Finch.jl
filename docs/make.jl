@@ -1,5 +1,6 @@
 using Finch
 using Documenter
+using Literate
 
 DocMeta.setdocmeta!(Finch, :DocTestSetup, :(using Finch; using SparseArrays); recursive=true)
 
@@ -23,11 +24,9 @@ makedocs(;
     ],
 )
 
+Literate.notebook(joinpath(@__DIR__, "src/usage.jl"), joinpath(@__DIR__, "src/generated"))
+
 deploydocs(;
     repo="github.com/willow-ahrens/Finch.jl",
     devbranch="main",
 )
-
-using Literate
-
-Literate.notebook(joinpath(@__DIR__, "src/usage.jl"), joinpath(@__DIR__, "src/generated"))
