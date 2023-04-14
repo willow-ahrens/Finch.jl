@@ -27,3 +27,7 @@ deploydocs(;
     repo="github.com/willow-ahrens/Finch.jl",
     devbranch="main",
 )
+
+using Literate
+
+Literate.notebook("src/usage.jl", "build")
