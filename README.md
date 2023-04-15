@@ -1,10 +1,20 @@
 # Finch.jl
 
-| **Documentation**                                                               | **Build Status**                                                                                |
-|:-------------------------------------------------------------------------------:|:-----------------------------------------------------------------------------------------------:|
-| [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://willow-ahrens.github.io/Finch.jl/stable) [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://willow-ahrens.github.io/Finch.jl/dev) | [![Build Status](https://github.com/willow-ahrens/Finch.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/willow-ahrens/Finch.jl/actions/workflows/CI.yml?query=branch%3Amain) [![Coverage](https://codecov.io/gh/willow-ahrens/Finch.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/willow-ahrens/Finch.jl) |
+[docs_ico]:https://img.shields.io/badge/docs-stable-blue.svg
+[docs]:https://willow-ahrens.github.io/Finch.jl/stable
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/willow-ahrens/Finch.jl/gh-pages?labpath=stable%2Fgenerated%2Finteractive.jl)
+[ci_ico]:https://github.com/willow-ahrens/Finch.jl/actions/workflows/CI.yml/badge.svg?branch=main
+[ci]:https://github.com/willow-ahrens/Finch.jl/actions/workflows/CI.yml?query=branch%3Amain
+
+[cov_ico]:https://codecov.io/gh/willow-ahrens/Finch.jl/branch/main/graph/badge.svg
+[cov]:https://codecov.io/gh/willow-ahrens/Finch.jl
+
+[tool_ico]:https://mybinder.org/badge_logo.svg
+[tool]:https://mybinder.org/v2/gh/willow-ahrens/Finch.jl/gh-pages?labpath=stable%2Fgenerated%2Finteractive.jl
+
+| **Documentation**     | **Build Status**                      | **Try It Online!**       |
+|:---------------------:|:-------------------------------------:|:---------------------:|
+| [![][docs_ico]][docs] | [![][ci_ico]][ci] [![][cov_ico]][cov] | [![][tool_ico]][tool] |
 
 Finch is a adaptable Julia-to-Julia compiler for loop nests over sparse or structured
 multidimensional arrays. In addition to supporting [sparse
@@ -70,4 +80,4 @@ coiteration, breaking structured iterators into control flow units we call
 **Looplets**. Looplets are lowered progressively with
 several stages for rewriting and simplification.
 
-The technologies enabling Finch are described in our [manuscript](https://arxiv.org/abs/2209.05250).
+The technologies enabling Finch are described in our [manuscript](doi.org/10.1145/3579990.3580020).
