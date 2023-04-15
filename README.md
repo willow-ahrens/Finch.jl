@@ -10,7 +10,7 @@
 [cov]:https://codecov.io/gh/willow-ahrens/Finch.jl
 
 [tool_ico]:https://mybinder.org/badge_logo.svg
-[tool]:https://mybinder.org/v2/gh/willow-ahrens/Finch.jl/gh-pages?labpath=stable%2Fgenerated%2Finteractive.jl
+[tool]:https://mybinder.org/v2/gh/willow-ahrens/Finch.jl/v0.5.0?labpath=examples%2Finteractive.jl
 
 | **Documentation**     | **Build Status**                      | **Try It Online!**       |
 |:---------------------:|:-------------------------------------:|:---------------------:|
@@ -37,7 +37,7 @@ As an example, here's a program which calculates the minimum, maximum, sum, and
 variance of a sparse vector, reading the vector only once, and only reading
 nonzero values:
 
-```julia
+````julia
 X = @fiber(sl(e(0.0)), fsprand((10,), 0.5))
 x = Scalar(0.0)
 x_min = Scalar(Inf)
@@ -54,16 +54,16 @@ x_var = Scalar(0.0)
         x_var[] += x[] * x[]
     end
 end
-```
+````
 
 Array formats in Finch are described recursively mode by mode.  Semantically, an
 array in Finch can be understood as a tree, where each level in the tree
 corresponds to a dimension and each edge corresponds to an index. For example,
-`@fiber(d(sl(e(0.0))))` constructs a `Float64` CSC-format sparse matrix, and 
+`@fiber(d(sl(e(0.0))))` constructs a `Float64` CSC-format sparse matrix, and
 `@fiber(sl(sl(e(0.0))))` constructs a DCSC-format hypersparse matrix. As another
 example, here's a column-major sparse matrix-vector multiply:
 
-```julia
+````julia
 x = @fiber(d(e(0.0)), rand(42));
 A = @fiber(d(sl(e(0.0))), fsprand((42, 42), 0.1));
 y = @fiber(d(e(0.0)));
@@ -73,7 +73,7 @@ y = @fiber(d(e(0.0)));
         y[i] += A[i, j] * x[j]
     end
 end
-```
+````
 
 At it's heart, Finch is powered by a new domain specific language for
 coiteration, breaking structured iterators into control flow units we call
@@ -81,3 +81,4 @@ coiteration, breaking structured iterators into control flow units we call
 several stages for rewriting and simplification.
 
 The technologies enabling Finch are described in our [manuscript](doi.org/10.1145/3579990.3580020).
+

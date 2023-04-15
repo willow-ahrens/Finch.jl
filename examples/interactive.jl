@@ -13,7 +13,6 @@ x = rand(10)
 y = rand(10)
 
 @finch_code begin
-    y .= 0
     for i = _, j = _
         y[i] += A[i, j] * x[j]
     end

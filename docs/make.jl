@@ -4,8 +4,6 @@ using Literate
 
 DocMeta.setdocmeta!(Finch, :DocTestSetup, :(using Finch; using SparseArrays); recursive=true)
 
-Literate.notebook(joinpath(@__DIR__, "src/interactive.jl"), joinpath(@__DIR__, "src/generated"), credit = false)
-
 makedocs(;
     modules=[Finch],
     authors="Willow Ahrens",
