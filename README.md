@@ -10,7 +10,7 @@
 [cov]:https://codecov.io/gh/willow-ahrens/Finch.jl
 
 [tool_ico]:https://mybinder.org/badge_logo.svg
-[tool]:https://mybinder.org/v2/gh/willow-ahrens/Finch.jl/v0.5.1?labpath=examples%2Finteractive.jl
+[tool]:https://mybinder.org/v2/gh/willow-ahrens/Finch.jl/main?labpath=examples%2Finteractive.ipynb
 
 | **Documentation**     | **Build Status**                      | **Try It Online!**       |
 |:---------------------:|:-------------------------------------:|:---------------------:|
