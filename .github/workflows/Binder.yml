@@ -2,7 +2,7 @@ name: Binder
 on:
   push:
     branches:
-      - main
+      - binder-env
 
 jobs:
   binder:

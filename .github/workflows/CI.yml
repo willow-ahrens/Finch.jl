@@ -67,7 +67,7 @@ jobs:
             DocMeta.setdocmeta!(Finch, :DocTestSetup, :(using Finch, SparseArrays); recursive=true)
             doctest(Finch)'
   binder:
-    name: Setup Binder Environment
+    name: Update Binder Environment
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
