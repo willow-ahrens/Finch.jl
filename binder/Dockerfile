@@ -1,1 +1,1 @@
-from willowahrens/finch.jl:b074e8ccbeeb
+from willowahrens/finch.jl:latest
