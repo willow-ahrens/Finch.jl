@@ -66,12 +66,18 @@ jobs:
             using Finch
             DocMeta.setdocmeta!(Finch, :DocTestSetup, :(using Finch, SparseArrays); recursive=true)
             doctest(Finch)'
-  Create-MyBinderOrg-Cache:
-    runs-on: ubuntu-20.04 #set back to ubuntu-latest if https://github.com/jupyterhub/repo2docker/issues/1266 gets fixed
+  binder:
+    runs-on: ubuntu-latest
     steps:
-    - name: cache binder build on mybinder.org
-      uses: jupyterhub/repo2docker-action@master
-      continue-on-error: true
+    - name: Checkout Code
+      uses: actions/checkout@v2
       with:
-        NO_PUSH: true
-        MYBINDERORG_TAG: ${{ github.event.ref }} # This builds the container on mybinder.org with the branch that was pushed on.
+        ref: ${{ github.event.pull_request.head.sha }}
+
+    - name: update jupyter dependencies with repo2docker
+      uses: jupyterhub/repo2docker-action@master
+      with:
+        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        BINDER_CACHE: true
+        PUBLIC_REGISTRY_CHECK: true
