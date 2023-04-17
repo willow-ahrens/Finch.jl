@@ -15,7 +15,7 @@ jobs:
 
     - name: update jupyter dependencies with repo2docker
       uses: jupyterhub/repo2docker-action@master
-      allow_failures: true
+      continue-on-error: true
       with:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
