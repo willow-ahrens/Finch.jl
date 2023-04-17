@@ -67,7 +67,7 @@ jobs:
             DocMeta.setdocmeta!(Finch, :DocTestSetup, :(using Finch, SparseArrays); recursive=true)
             doctest(Finch)'
   Create-MyBinderOrg-Cache:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
     - name: cache binder build on mybinder.org
       uses: jupyterhub/repo2docker-action@master
