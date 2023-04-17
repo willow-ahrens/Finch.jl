@@ -1,6 +1,8 @@
 name: Binder
 on:
   push:
+    branches:
+      - main
 
 jobs:
   binder:
@@ -18,3 +20,4 @@ jobs:
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         BINDER_CACHE: true
         PUBLIC_REGISTRY_CHECK: true
+        allow_failures: true
