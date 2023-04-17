@@ -1,0 +1,1 @@
+FROM willowahrens/finch:latest
