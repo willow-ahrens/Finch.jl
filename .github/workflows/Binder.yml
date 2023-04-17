@@ -21,7 +21,3 @@ jobs:
         BINDER_CACHE: true
         PUBLIC_REGISTRY_CHECK: true
         NO_GIT_PUSH: true
-
-    - name: Create Pull Request
-      uses: peter-evans/create-pull-request@v5
-        
