@@ -17,6 +17,6 @@ mdkwargs = (flavor = Literate.CommonMarkFlavor(),
 
 Literate.markdown(joinpath(root, "README.jl"), root; mdkwargs...)
 
-Literate.notebook(joinpath(root, "examples/interactive.jl"), joinpath(root, "examples/"), credit = false)
+Literate.notebook(joinpath(root, "src/interactive.jl"), joinpath(root, "src"), credit = false)
 
 doctest(Finch, fix=true)
