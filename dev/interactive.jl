@@ -8,15 +8,15 @@
 using Finch
 
 ## Construct a CSR sparse input matrix (20% random nonzeros)
-A = @fiber(d(sl(e(0.0))), fsprand((10, 10), 0.2))
+A = @fiber(d(sl(e(0.0))), fsprand((5, 7), 0.2))
 
 ## Construct a dense vector input and output (all random values)
-x = rand(10)
-y = rand(10)
+x = rand(7)
+y = rand(5)
 
 ## Emit code for matrix-vector multiply y = A * x
 @finch_code begin
-    for i = _, j = _
+    for j = _, i = _
         y[i] += A[i, j] * x[j]
     end
 end
