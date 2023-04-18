@@ -12,6 +12,7 @@ using Base: @kwdef
 using Random: randsubseq, AbstractRNG, default_rng
 using SnoopPrecompile
 using Compat
+using DataStructures
 
 export @finch, @finch_program, @finch_code, value
 

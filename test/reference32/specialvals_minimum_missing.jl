@@ -11,7 +11,7 @@ begin
         yf_lvl_i1 = 0
     end
     i = 1
-    phase_stop = (min)(yf_lvl_i1, yf_lvl.shape)
+    phase_stop = min(yf_lvl_i1, yf_lvl.shape)
     if phase_stop >= 1
         i = 1
         if yf_lvl.idx[yf_lvl_q] < 1
@@ -19,10 +19,10 @@ begin
         end
         while i <= phase_stop
             yf_lvl_i = yf_lvl.idx[yf_lvl_q]
-            phase_stop_2 = (min)(phase_stop, yf_lvl_i)
+            phase_stop_2 = min(phase_stop, yf_lvl_i)
             if yf_lvl_i == phase_stop_2
                 yf_lvl_2_val_2 = yf_lvl_2.val[yf_lvl_q]
-                x_val = (min)(missing, yf_lvl_2_val_2)
+                x_val = min(missing, yf_lvl_2_val_2)
                 yf_lvl_q += 1
             else
                 x_val = missing
@@ -31,8 +31,7 @@ begin
         end
         i = phase_stop + 1
     end
-    i_start = i
-    if yf_lvl.shape >= i_start
+    if yf_lvl.shape >= i
         x_val = missing
     end
     (x = (Scalar){Inf, Float64}(x_val),)

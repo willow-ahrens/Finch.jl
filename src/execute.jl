@@ -80,7 +80,8 @@ macro finch_code(args_ex...)
         prune_dead |>
         resugar |>
         unblock |>
-        unquote_literals
+        unquote_literals |>
+        unresolve
     end
 end
 
@@ -136,7 +137,7 @@ Before returning a tensor from the finch program, trim any excess overallocated 
 trim!(tns, ctx) = tns
 
 @kwdef struct LifecycleVisitor
-    uses = Dict()
+    uses = OrderedDict()
     scoped_uses = Dict()
     global_uses = uses
     modes = Dict()

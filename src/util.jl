@@ -91,13 +91,15 @@ function resugar(ex)
 end
 
 @kwdef struct Propagate
+    refs = Dict()
     ids = Dict()
     vals = Dict()
 end
 
-Base.:(==)(a::Propagate, b::Propagate) = a.ids == b.ids
-Base.copy(ctx::Propagate) = Propagate(copy(ctx.ids), copy(ctx.vals))
+Base.:(==)(a::Propagate, b::Propagate) = (a.ids == b.ids) && (a.refs == b.refs)
+Base.copy(ctx::Propagate) = Propagate(copy(ctx.refs), copy(ctx.ids), copy(ctx.vals))
 function Base.merge!(ctx::Propagate, ctx_2::Propagate) 
+    merge!(intersect, ctx.refs, ctx_2.refs)
     merge!(union, ctx.ids, ctx_2.ids)
     merge!(union, ctx.vals, ctx_2.vals)
 end
@@ -107,6 +109,8 @@ function propagate(ex)
     ex = Postwalk(@rule(:(=)(~lhs::issymbol, ~rhs) => 
         Expr(:def, Expr(:(=), lhs, rhs), id += 1)))(ex)
 
+    ex = unblock(ex)
+
     ex = Propagate()(ex)
 
     ex = Postwalk(@rule(:def(:(=)(~lhs::issymbol, ~rhs), ~id) => 
@@ -115,12 +119,12 @@ end
 
 function (ctx::Propagate)(ex)
     if issymbol(ex)
-        if haskey(ctx.ids, ex) && length(ctx.ids[ex]) == 1
+        if haskey(ctx.ids, ex) && length(ctx.vals[ex]) == 1
             val = first(ctx.vals[ex])
             if isexpr(val)
                 return ex
             elseif issymbol(val)
-                if haskey(ctx.ids, val) && ctx.ids[val] == ctx.ids[ex]
+                if issubset(ctx.ids[ex], get(ctx.refs, val, Set([])))
                     return val
                 end
             else
@@ -149,8 +153,16 @@ function (ctx::Propagate)(ex)
         return Expr(:if, cond, body, tail)
     elseif @capture(ex, :def(:(=)(~lhs::issymbol, ~rhs), ~id))
         rhs = ctx(rhs)
-        ctx.ids[lhs] = Set([id])
-        ctx.vals[lhs] = Set([rhs])
+        rhs == lhs && return rhs
+        ctx.refs[lhs] = Set([])
+        if issymbol(rhs)
+            ctx.refs[rhs] = union(get(ctx.refs, rhs, Set([])), [id])
+            ctx.ids[lhs] = Set([id])
+            ctx.vals[lhs] = Set([rhs])
+        else
+            ctx.ids[lhs] = Set([id])
+            ctx.vals[lhs] = Set([rhs])
+        end
         return Expr(:def, Expr(:(=), lhs, rhs), id)
     elseif @capture ex :for(:def(:(=)(~i, ~ext), ~id), ~body)
         ext = ctx(ext)
@@ -325,6 +337,16 @@ function unblock(ex::Expr)
     ex
 end
 unblock(ex) = ex
+
+"""
+    unresolve(ex)
+Unresolve function literals into function symbols
+"""
+function unresolve(ex)
+    ex = Rewrite(Postwalk(unresolve1))(ex)
+end
+unresolve1(x) = x
+unresolve1(f::Function) = methods(f).mt.name
 
 """
     striplines(ex)

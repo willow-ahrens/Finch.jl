@@ -120,5 +120,26 @@
         @repl io @finch (z .= 0; @loop i z[i] = x[i] + y[i])
 
         @test check_output("typical_merge_twofinger.txt", String(take!(io)))
+
+        io = IOBuffer()
+
+        @repl io X = @fiber(sl(e(0.0)), [1.0, 0.0, 0.0, 3.0, 0.0, 2.0, 0.0])
+        @repl io x = Scalar(0.0)
+        @repl io x_min = Scalar(Inf)
+        @repl io x_max = Scalar(-Inf)
+        @repl io x_sum = Scalar(0.0)
+        @repl io x_var = Scalar(0.0)
+        @repl io @finch_code begin
+            for i = _
+                x .= 0
+                x[] = X[i]
+                x_min[] <<min>>= x[]
+                x_max[] <<max>>= x[]
+                x_sum[] += x[]
+                x_var[] += x[] * x[]
+            end
+        end
+
+        @test check_output("typical_stats_example.txt", String(take!(io)))
     end
 end

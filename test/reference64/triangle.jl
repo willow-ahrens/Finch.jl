@@ -15,7 +15,7 @@ begin
         else
             A_lvl_2_i1 = 0
         end
-        phase_stop = (min)(A_lvl.shape, A_lvl_2_i1)
+        phase_stop = min(A_lvl.shape, A_lvl_2_i1)
         if phase_stop >= 1
             j = 1
             if A_lvl_2.idx[A_lvl_2_q] < 1
@@ -23,11 +23,10 @@ begin
             end
             while j <= phase_stop
                 A_lvl_2_i = A_lvl_2.idx[A_lvl_2_q]
-                phase_stop_2 = (min)(phase_stop, A_lvl_2_i)
+                phase_stop_2 = min(phase_stop, A_lvl_2_i)
                 if A_lvl_2_i == phase_stop_2
                     A_lvl_3_val_2 = A_lvl_3.val[A_lvl_2_q]
-                    j_6 = phase_stop_2
-                    A_lvl_q_3 = (1 - 1) * A_lvl.shape + j_6
+                    A_lvl_q_3 = (1 - 1) * A_lvl.shape + phase_stop_2
                     A_lvl_2_q_2 = A_lvl_2.ptr[A_lvl_q_2]
                     A_lvl_2_q_stop_2 = A_lvl_2.ptr[A_lvl_q_2 + 1]
                     if A_lvl_2_q_2 < A_lvl_2_q_stop_2
@@ -42,7 +41,7 @@ begin
                     else
                         A_lvl_2_i1_3 = 0
                     end
-                    phase_stop_3 = (min)(A_lvl_2.shape, A_lvl_2_i1_3, A_lvl_2_i1_2)
+                    phase_stop_3 = min(A_lvl_2.shape, A_lvl_2_i1_3, A_lvl_2_i1_2)
                     if phase_stop_3 >= 1
                         k = 1
                         if A_lvl_2.idx[A_lvl_2_q_2] < 1
@@ -54,11 +53,11 @@ begin
                         while k <= phase_stop_3
                             A_lvl_2_i_2 = A_lvl_2.idx[A_lvl_2_q_2]
                             A_lvl_2_i_3 = A_lvl_2.idx[A_lvl_2_q_3]
-                            phase_stop_4 = (min)(A_lvl_2_i_2, A_lvl_2_i_3, phase_stop_3)
+                            phase_stop_4 = min(A_lvl_2_i_2, A_lvl_2_i_3, phase_stop_3)
                             if A_lvl_2_i_2 == phase_stop_4 && A_lvl_2_i_3 == phase_stop_4
                                 A_lvl_3_val_3 = A_lvl_3.val[A_lvl_2_q_2]
                                 A_lvl_3_val_4 = A_lvl_3.val[A_lvl_2_q_3]
-                                B_val = (+)((*)(A_lvl_3_val_2, A_lvl_3_val_3, A_lvl_3_val_4), B_val)
+                                B_val = A_lvl_3_val_2 * A_lvl_3_val_3 * A_lvl_3_val_4 + B_val
                                 A_lvl_2_q_2 += 1
                                 A_lvl_2_q_3 += 1
                             elseif A_lvl_2_i_3 == phase_stop_4
