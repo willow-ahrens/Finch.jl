@@ -24,12 +24,24 @@ similar_level(lvl::SparseTriangle{N}, dims...) where {N} = SparseTriangle(simila
 pattern!(lvl::SparseTriangleLevel{N, Ti}) where {N, Ti} = 
     SparseTriangleLevel{N, Ti}(pattern!(lvl.lvl), lvl.shape)
 
-@inline level_ndims(::Type{<:SparseTriangleLevel{N, Ti, Lvl}}) where {N, Ti, Lvl} = 2 + level_ndims(Lvl)
-@inline level_size(lvl::SparseTriangleLevel{N}) where {N} = (level_size(lvl.lvl)..., lvl.shape * (lvl.shape + 1)/2) 
-@inline level_axes(lvl::SparseTriangleLevel{N}) where {N} = (level_axes(lvl.lvl)..., Base.OneTo(lvl.shape))
+@inline level_ndims(::Type{<:SparseTriangleLevel{N, Ti, Lvl}}) where {N, Ti, Lvl} = N + level_ndims(Lvl)
+@inline level_size(lvl::SparseTriangleLevel{N}) where {N} = (level_size(lvl.lvl)..., repeat([lvl.shape], N)...) 
+@inline level_axes(lvl::SparseTriangleLevel{N}) where {N} = (level_axes(lvl.lvl)..., repeat([Base.OneTo(lvl.shape)], N)...)
 @inline level_eltype(::Type{<:SparseTriangleLevel{N, Ti, Lvl}}) where {N, Ti, Lvl} = level_eltype(Lvl)
 @inline level_default(::Type{<:SparseTriangleLevel{N, Ti, Lvl}}) where {N, Ti, Lvl} = level_default(Lvl)
 data_rep_level(::Type{<:SparseTriangleLevel{N, Ti, Lvl}}) where {N, Ti, Lvl} = DenseData(data_rep_level(Lvl))
+
+function sparsetrianglesize(shape, n)
+    size = 0
+    for dim in 1:n
+        levelsize = 1 
+        for i in 1:dim
+            levelsize *= shape + dim - i - 1
+        end
+        size += fld(levelsize, factorial(dim))
+    end
+    return size + 1
+end
 
 (fbr::AbstractFiber{<:SparseTriangleLevel})() = fbr
 function (fbr::SubFiber{<:SparseTriangleLevel{N, Ti}})(idxs...) where {N, Ti}
@@ -96,37 +108,69 @@ end
 summary_f_code(lvl::VirtualSparseTriangleLevel) = "st{$(lvl.N)}($(summary_f_code(lvl.lvl)))"
 
 function virtual_level_size(lvl::VirtualSparseTriangleLevel, ctx)
-    ext = Extent(literal(lvl.Ti(1)), lvl.shape)
-    (virtual_level_size(lvl.lvl, ctx)..., ext, ext)
+    ext = map((i) -> Extent(literal(lvl.Ti(1)), lvl.shape), 1:lvl.N)
+    (virtual_level_size(lvl.lvl, ctx)..., ext...)
 end
 
 function virtual_level_resize!(lvl::VirtualSparseTriangleLevel, ctx, dims...)
     lvl.shape = getstop(dims[end])
-    lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims[1:end-2]...)
+    lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims[1:end-lvl.N]...)
     lvl
 end
 
 virtual_level_eltype(lvl::VirtualSparseTriangleLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSparseTriangleLevel) = virtual_level_default(lvl.lvl)
 
+function sparsetrianglesize2(shape, n)
+    size = 0
+    for dim in 1:n
+        levelsize = 1 
+        for i in 1:dim
+            levelsize = call(*, levelsize, call(+, shape, dim - i - 1))
+        end
+        # size += fld(levelsize, factorial(dim))
+        size = call(+, size, call(fld, levelsize, factorial(dim)))
+    end
+    return call(+, size, 1)
+end
+
 function declare_level!(lvl::VirtualSparseTriangleLevel, ctx::LowerJulia, pos, init)
-    qos = call(>>>, call(*, call(*, pos, lvl.shape), call(+, lvl.shape, lvl.Ti(1))), lvl.Ti(1))
+    # qos = call(>>>, call(*, call(*, pos, lvl.shape), call(+, lvl.shape, lvl.Ti(1))), lvl.Ti(1))
+    qos = sparsetrianglesize2(lvl.shape, lvl.N)
     lvl.lvl = declare_level!(lvl.lvl, ctx, qos, init)
     return lvl
 end
 
 function trim_level!(lvl::VirtualSparseTriangleLevel, ctx::LowerJulia, pos)
     qos = ctx.freshen(:qos)
+    size = ctx.freshen(:size)
+    dim = ctx.freshen(:dim)
+    levelsize = ctx.freshen(:levelsize)
+    i = ctx.freshen(:i)
+
     push!(ctx.preamble, quote
-        $qos = (($(ctx(lvl.shape)) * ($(ctx(lvl.shape)) + $(lvl.Ti(1)))) >>> 0x01)
+        # $qos = (($(ctx(lvl.shape)) * ($(ctx(lvl.shape)) + $(lvl.Ti(1)))) >>> 0x01)
+        # $qos = sparsetrianglesize2($(ctx(lvl.shape)), $(ctx(lvl.N)))
+        $size = 0
+        for $dim in 1:$(ctx(lvl.N))
+            $levelsize = 1 
+            for $i in 1:$dim
+                $levelsize *= $(ctx(lvl.shape)) + $dim - $i - 1
+            end
+            $size += fld($levelsize, factorial($dim))
+        end
+        $qos = $size + 1
     end)
     lvl.lvl = trim_level!(lvl.lvl, ctx, value(qos))
     return lvl
 end
 
 function assemble_level!(lvl::VirtualSparseTriangleLevel, ctx, pos_start, pos_stop)
-    qos_start = call(+, call(*, call(-, pos_start, lvl.Ti(1)), lvl.shape), 1)
-    qos_stop = call(>>>, call(*, call(*, pos_stop, lvl.shape), call(+, lvl.shape, lvl.Ti(1))), lvl.Ti(1))
+    # qos_start = call(+, call(*, call(-, pos_start, lvl.Ti(1)), lvl.shape), 1)
+    # qos_stop = call(>>>, call(*, call(*, pos_stop, lvl.shape), call(+, lvl.shape, lvl.Ti(1))), lvl.Ti(1))
+    lvl_size = sparsetrianglesize2(lvl.shape, lvl.N)
+    qos_start = call(+, call(*, call(-, pos_start, lvl.Ti(1)), lvl_size), 1)
+    qos_stop = call(>>>, call(*, call(*, pos_stop, lvl_size), call(+, lvl_size, lvl.Ti(1))), lvl.Ti(1))
     assemble_level!(lvl.lvl, ctx, qos_start, qos_stop)
 end
 
@@ -156,30 +200,77 @@ function get_reader_triangular_dense_helper(fbr, ctx, get_readerupdater, subfibe
 
     q = ctx.freshen(tag, :_q)
 
-    Furlable(
-        size = virtual_level_size(lvl, ctx),
-        body = (ctx, ext) -> Lookup(
-            body = (ctx, j) -> Thunk(
-                preamble = quote
-                    $q = (($(ctx(j)) * ($(ctx(j)) - $(Ti(1)))) >>> 0x01)
-                end,
-                body = Furlable(
-                    size = virtual_level_size(lvl, ctx)[1:end-1],
-                    body = (ctx, ext) -> Pipeline([
-                        Phase(
-                            stride = (ctx, ext) -> j,
-                            body = (ctx, ext) -> Lookup(
-                                body = (ctx, i) -> get_readerupdater(subfiber_ctr(lvl.lvl, call(+, value(q, lvl.Ti), i)), ctx, protos...)
-                            )
-                        ),
-                        Phase(
-                            body = (ctx, ext) -> Run(0.0)
+    function get_simplex(n, d)
+        res = 1 
+        for i in 1:d
+            res = call(*, call(+, call(-, n, 1), d - i), res)
+            # res = call(*, call(+, n, d - i - 1), res)
+        end
+        return call(fld, res, factorial(d))
+    end
+    # d is the dimension we are on 
+    # j is coordinate of previous dimension
+    # n is the total number of dimension
+    # q is index value from previous recursive call
+    function simplex_helper(d, j, n, q)
+        if d == 1
+            Furlable(
+                size = virtual_level_size(lvl, ctx)[end - n + 1:end - (n - d)],
+                body = (ctx, ext) -> Pipeline([
+                    Phase(
+                        stride = (ctx, ext) -> j,
+                        body = (ctx, ext) -> Lookup(
+                            body = (ctx, i) -> get_readerupdater(subfiber_ctr(lvl.lvl, call(+, q, i)), ctx, protos[n-1:end]...) # hack -> fix later
                         )
-                    ])
-                )
+                    ),
+                    Phase(
+                        body = (ctx, ext) -> Run(0.0)
+                    )
+                ])
             )
-        )
-    )
+        else
+            Furlable(
+                size = virtual_level_size(lvl, ctx)[end - n + 1:end - (n - d)],
+                body = (ctx, ext) -> Pipeline([
+                    Phase(
+                        stride = (ctx, ext) -> j,
+                        body = (ctx, ext) -> Lookup(
+                            body = (ctx, i) -> simplex_helper(d - 1, i, n, call(+, q, get_simplex(i, d)))
+                        )
+                    ),
+                    Phase(
+                        body = (ctx, ext) -> Run(0.0)
+                    )
+                ])
+            )
+        end
+    end
+    simplex_helper(lvl.N, lvl.shape, lvl.N, 0)
+
+    # Furlable(
+    #     size = virtual_level_size(lvl, ctx),
+    #     body = (ctx, ext) -> Lookup(
+    #         body = (ctx, j) -> Thunk(
+    #             preamble = quote
+    #                 $q = (($(ctx(j)) * ($(ctx(j)) - $(Ti(1)))) >>> 0x01)
+    #             end,
+    #             body = Furlable(
+    #                 size = virtual_level_size(lvl, ctx)[1:end-1],
+    #                 body = (ctx, ext) -> Pipeline([
+    #                     Phase(
+    #                         stride = (ctx, ext) -> j,
+    #                         body = (ctx, ext) -> Lookup(
+    #                             body = (ctx, i) -> get_readerupdater(subfiber_ctr(lvl.lvl, call(+, value(q, lvl.Ti), i)), ctx, protos...)
+    #                         )
+    #                     ),
+    #                     Phase(
+    #                         body = (ctx, ext) -> Run(0.0)
+    #                     )
+    #                 ])
+    #             )
+    #         )
+    #     )
+    # )
 end
 
 function get_updater_triangular_dense_helper(fbr, ctx, get_readerupdater, subfiber_ctr, protos...)
@@ -189,28 +280,76 @@ function get_updater_triangular_dense_helper(fbr, ctx, get_readerupdater, subfib
 
     q = ctx.freshen(tag, :_q)
 
-    Furlable(
-        size = virtual_level_size(lvl, ctx),
-        body = (ctx, ext) -> Lookup(
-            body = (ctx, j) -> Thunk(
-                preamble = quote
-                    $q = (($(ctx(j)) * ($(ctx(j)) - $(Ti(1)))) >>> 0x01)
-                end,
-                body = Furlable(
-                    size = virtual_level_size(lvl, ctx)[1:end-1],
-                    body = (ctx, ext) -> Pipeline([
-                        Phase(
-                            stride = (ctx, ext) -> j,
-                            body = (ctx, ext) -> Lookup(
-                                body = (ctx, i) -> get_readerupdater(subfiber_ctr(lvl.lvl, call(+, value(q, lvl.Ti), i)), ctx, protos...)
-                            )
-                        ),
-                        Phase(
-                            body = (ctx, ext) -> Null()
+    function get_simplex(n, d)
+        res = 1 
+        for i in 1:d
+            res = call(*, call(+, call(-, n, 1), d - i), res)
+            # res = call(*, call(+, n, d - i - 1), res)
+        end
+        return call(fld, res, factorial(d))
+    end
+
+    # d is the dimension we are on 
+    # j is coordinate of previous dimension
+    # n is the total number of dimension
+    # q is index value from previous recursive call
+    function simplex_helper(d, j, n, q)
+        if d == 1
+            Furlable(
+                size = virtual_level_size(lvl, ctx)[end - n + 1:end - (n - d)],
+                body = (ctx, ext) -> Pipeline([
+                    Phase(
+                        stride = (ctx, ext) -> j,
+                        body = (ctx, ext) -> Lookup(
+                            body = (ctx, i) -> get_readerupdater(subfiber_ctr(lvl.lvl, call(+, q, i)), ctx, protos[n-1:end]...) # hack -> fix later
                         )
-                    ])
-                )
+                    ),
+                    Phase(
+                        body = (ctx, ext) -> Null()
+                    )
+                ])
             )
-        )
-    )
+        else
+            Furlable(
+                size = virtual_level_size(lvl, ctx)[end - n + 1:end - (n - d)],
+                body = (ctx, ext) -> Pipeline([
+                    Phase(
+                        stride = (ctx, ext) -> j,
+                        body = (ctx, ext) -> Lookup(
+                            body = (ctx, i) -> simplex_helper(d - 1, i, n, call(+, q, get_simplex(i, d)))
+                        )
+                    ),
+                    Phase(
+                        body = (ctx, ext) -> Null()
+                    )
+                ])
+            )
+        end
+    end
+    simplex_helper(lvl.N, lvl.shape, lvl.N, 0)
+
+    # Furlable(
+    #     size = virtual_level_size(lvl, ctx),
+    #     body = (ctx, ext) -> Lookup(
+    #         body = (ctx, j) -> Thunk(
+    #             preamble = quote
+    #                 $q = (($(ctx(j)) * ($(ctx(j)) - $(Ti(1)))) >>> 0x01)
+    #             end,
+    #             body = Furlable(
+    #                 size = virtual_level_size(lvl, ctx)[1:end-1],
+    #                 body = (ctx, ext) -> Pipeline([
+    #                     Phase(
+    #                         stride = (ctx, ext) -> j,
+    #                         body = (ctx, ext) -> Lookup(
+    #                             body = (ctx, i) -> get_readerupdater(subfiber_ctr(lvl.lvl, call(+, value(q, lvl.Ti), i)), ctx, protos...)
+    #                         )
+    #                     ),
+    #                     Phase(
+    #                         body = (ctx, ext) -> Null()
+    #                     )
+    #                 ])
+    #             )
+    #         )
+    #     )
+    # )
 end
