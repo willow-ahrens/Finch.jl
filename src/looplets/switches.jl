@@ -10,14 +10,14 @@ end
 Base.first(arg::Case) = arg.cond
 Base.last(arg::Case) = arg.body
 
-FinchNotation.isliteral(::Switch) =  false
+FinchNotation.finch_leaf(x::Switch) = virtual(x)
 
 struct SwitchStyle end
 
 (ctx::Stylize{LowerJulia})(node::Switch) = SwitchStyle()
 combine_style(a::DefaultStyle, b::SwitchStyle) = SwitchStyle()
 combine_style(a::ThunkStyle, b::SwitchStyle) = ThunkStyle()
-combine_style(a::SimplifyStyle, b::SwitchStyle) = SimplifyStyle()
+combine_style(a::SimplifyStyle, b::SwitchStyle) = a
 combine_style(a::RunStyle, b::SwitchStyle) = SwitchStyle()
 combine_style(a::AcceptRunStyle, b::SwitchStyle) = SwitchStyle()
 combine_style(a::SpikeStyle, b::SwitchStyle) = SwitchStyle()

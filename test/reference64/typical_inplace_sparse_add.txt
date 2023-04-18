@@ -1,0 +1,53 @@
+julia> A = @fiber(sl(e(0.0)), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
+SparseList (0.0) [1:10]
+├─[1]: 2.0
+├─[3]: 3.0
+├─[5]: 4.0
+├─[7]: 5.0
+├─[9]: 6.0
+julia> B = @fiber(d(e(0.0)), fill(1.1, 10))
+Dense [1:10]
+├─[1]: 1.1
+├─[2]: 1.1
+│ ⋮
+├─[9]: 1.1
+├─[10]: 1.1
+julia> @finch_code @loop(i, B[i] += A[i])
+quote
+    B_lvl = ex.body.lhs.tns.tns.lvl
+    B_lvl_2 = B_lvl.lvl
+    A_lvl = ex.body.rhs.tns.tns.lvl
+    A_lvl_2 = A_lvl.lvl
+    B_lvl.shape == A_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(B_lvl.shape) != $(A_lvl.shape))"))
+    A_lvl_q = A_lvl.ptr[1]
+    A_lvl_q_stop = A_lvl.ptr[1 + 1]
+    if A_lvl_q < A_lvl_q_stop
+        A_lvl_i1 = A_lvl.idx[A_lvl_q_stop - 1]
+    else
+        A_lvl_i1 = 0
+    end
+    phase_stop = min(B_lvl.shape, A_lvl_i1)
+    if phase_stop >= 1
+        i = 1
+        if A_lvl.idx[A_lvl_q] < 1
+            A_lvl_q = scansearch(A_lvl.idx, 1, A_lvl_q, A_lvl_q_stop - 1)
+        end
+        while i <= phase_stop
+            A_lvl_i = A_lvl.idx[A_lvl_q]
+            phase_stop_2 = min(phase_stop, A_lvl_i)
+            if A_lvl_i == phase_stop_2
+                A_lvl_2_val_2 = A_lvl_2.val[A_lvl_q]
+                B_lvl_q = (1 - 1) * B_lvl.shape + phase_stop_2
+                B_lvl_2.val[B_lvl_q] = A_lvl_2_val_2 + B_lvl_2.val[B_lvl_q]
+                A_lvl_q += 1
+            end
+            i = phase_stop_2 + 1
+        end
+    end
+    qos = 1 * B_lvl.shape
+    resize!(B_lvl_2.val, qos)
+    (B = Fiber((Finch.DenseLevel){Int64}(B_lvl_2, B_lvl.shape)),)
+end
+julia> @finch @loop(i, B[i] += A[i])
+(B = Fiber(Dense{Int64}(Element{0.0, Float64}([3.1, 1.1, 4.1, 1.1, 5.1, 1.1, 6.1, 1.1, 7.1, 1.1]), 10)),)
+

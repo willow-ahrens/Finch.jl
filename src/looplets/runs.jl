@@ -9,14 +9,14 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Run)
     print(io, ")")
 end
 
-FinchNotation.isliteral(::Run) =  false
+FinchNotation.finch_leaf(x::Run) = virtual(x)
 
 struct RunStyle end
 
 (ctx::Stylize{LowerJulia})(node::Run) = ctx.root.kind === chunk ? RunStyle() : DefaultStyle()
 combine_style(a::DefaultStyle, b::RunStyle) = RunStyle()
 combine_style(a::ThunkStyle, b::RunStyle) = ThunkStyle()
-combine_style(a::SimplifyStyle, b::RunStyle) = SimplifyStyle()
+combine_style(a::SimplifyStyle, b::RunStyle) = a
 combine_style(a::RunStyle, b::RunStyle) = RunStyle()
 
 function (ctx::LowerJulia)(root::FinchNode, ::RunStyle)
@@ -51,7 +51,7 @@ get_run_body(node::Shift, ctx, ext) = get_run_body(node.body, ctx,
     body
 end
 
-FinchNotation.isliteral(::AcceptRun) = false
+FinchNotation.finch_leaf(x::AcceptRun) = virtual(x)
 
 #TODO this should go somewhere else
 function Finch.virtual_default(x::FinchNode)
@@ -72,7 +72,7 @@ struct AcceptRunStyle end
 (ctx::Stylize{LowerJulia})(node::AcceptRun) = ctx.root.kind === chunk ? AcceptRunStyle() : DefaultStyle()
 combine_style(a::DefaultStyle, b::AcceptRunStyle) = AcceptRunStyle()
 combine_style(a::ThunkStyle, b::AcceptRunStyle) = ThunkStyle()
-combine_style(a::SimplifyStyle, b::AcceptRunStyle) = SimplifyStyle()
+combine_style(a::SimplifyStyle, b::AcceptRunStyle) = a
 combine_style(a::AcceptRunStyle, b::AcceptRunStyle) = AcceptRunStyle()
 combine_style(a::RunStyle, b::AcceptRunStyle) = RunStyle()
 

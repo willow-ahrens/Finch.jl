@@ -1,14 +1,15 @@
 using Pkg
-#tempdir = mktempdir()
-#Pkg.activate(tempdir)
-#Pkg.develop(PackageSpec(path = joinpath(@__DIR__, "..")))
-#Pkg.add(["BenchmarkTools", "PkgBenchmark", "MatrixDepot"])
-#Pkg.resolve()
+# tempdir = mktempdir()
+# Pkg.activate(tempdir)
+# Pkg.develop(PackageSpec(path = joinpath(@__DIR__, "..")))
+# Pkg.add(["BenchmarkTools", "PkgBenchmark", "MatrixDepot"])
+# Pkg.resolve()
 
 using Finch
 using BenchmarkTools
 using MatrixDepot
 using SparseArrays
+include("../Apps/apps.jl")
 
 SUITE = BenchmarkGroup()
 
@@ -61,68 +62,20 @@ end
 
 SUITE["graphs"] = BenchmarkGroup()
 
-function pagerank(edges; nsteps=20, damp = 0.85)
-    (n, m) = size(edges)
-    @assert n == m
-    out_degree = @fiber d(e(0))
-    @finch (out_degree .= 0; @loop j i out_degree[j] += edges[i, j])
-    scaled_edges = @fiber d(sl(e(0.0)))
-    @finch (scaled_edges .= 0; @loop j i scaled_edges[i, j] = ifelse(out_degree[i] != 0, edges[i, j] / out_degree[j], 0))
-    r = @fiber d(e(0.0), n)
-    @finch (r .= 0; @loop j r[j] = 1.0/n)
-    rank = @fiber d(e(0.0), n)
-    beta_score = (1 - damp)/n
-
-    for step = 1:nsteps
-        @finch (rank .= 0; @loop j i rank[i] += scaled_edges[i, j] * r[j])
-        @finch (r .= 0; @loop i r[i] = beta_score + damp * rank[i])
-    end
-    return r
-end
-
 SUITE["graphs"]["pagerank"] = BenchmarkGroup()
 for mtx in ["SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
-    SUITE["graphs"]["pagerank"][mtx] = @benchmarkable pagerank($(fiber(SparseMatrixCSC(matrixdepot(mtx))))) 
-end
-
-function bfs(edges, source=5)
-    (n, m) = size(edges)
-    edges = pattern!(edges)
-
-    @assert n == m
-    F = @fiber sbm(p(), n)
-    _F = @fiber sbm(p(), n)
-    @finch F[source] = true
-
-    V = @fiber d(e(false), n)
-    @finch V[source] = true
-
-    P = @fiber d(e(0), n)
-    @finch P[source] = source
-
-    v = Scalar(false)
-
-    while countstored(F) > 0
-        @finch begin
-            _F .= false
-            @loop j k begin
-                v .= false
-                v[] = F[j] && edges[k, j] && !(V[k])
-                if v[]
-                    _F[k] |= true
-                    P[k] <<choose(0)>>= j #Only set the parent for this vertex
-                end
-            end
-        end
-        @finch @loop k V[k] |= _F[k]
-        (F, _F) = (_F, F)
-    end
-    return F
+    SUITE["graphs"]["pagerank"][mtx] = @benchmarkable Apps.pagerank($(fiber(SparseMatrixCSC(matrixdepot(mtx))))) 
 end
 
 SUITE["graphs"]["bfs"] = BenchmarkGroup()
 for mtx in ["SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
-    SUITE["graphs"]["bfs"][mtx] = @benchmarkable bfs($(fiber(SparseMatrixCSC(matrixdepot(mtx))))) 
+    SUITE["graphs"]["bfs"][mtx] = @benchmarkable Apps.bfs($(fiber(SparseMatrixCSC(matrixdepot(mtx))))) 
+end
+
+SUITE["graphs"]["bellmanford"] = BenchmarkGroup()
+for mtx in ["Newman/netscience", "Williams/pdb1HYS"]#, "GAP/GAP-road"]
+    A = redefault!(fiber(SparseMatrixCSC(matrixdepot(mtx))), Inf)
+    SUITE["graphs"]["bellmanford"][mtx] = @benchmarkable Apps.bellmanford($A)
 end
 
 SUITE["matrices"] = BenchmarkGroup()

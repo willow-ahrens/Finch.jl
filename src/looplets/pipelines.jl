@@ -7,7 +7,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Pipeline)
     print(io, "Pipeline()")
 end
 
-FinchNotation.isliteral(::Pipeline) =  false
+FinchNotation.finch_leaf(x::Pipeline) = virtual(x)
 
 struct PipelineStyle end
 
@@ -15,7 +15,7 @@ struct PipelineStyle end
 combine_style(a::DefaultStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::ThunkStyle, b::PipelineStyle) = ThunkStyle()
 combine_style(a::RunStyle, b::PipelineStyle) = PipelineStyle()
-combine_style(a::SimplifyStyle, b::PipelineStyle) = SimplifyStyle()
+combine_style(a::SimplifyStyle, b::PipelineStyle) = a
 combine_style(a::AcceptRunStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::PipelineStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::PipelineStyle, b::SwitchStyle) = SwitchStyle()

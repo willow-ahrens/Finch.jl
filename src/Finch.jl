@@ -12,12 +12,13 @@ using Base: @kwdef
 using Random: randsubseq, AbstractRNG, default_rng
 using SnoopPrecompile
 using Compat
+using DataStructures
 
 export @finch, @finch_program, @finch_code, value
 
 export Fiber, Fiber!, SparseList, SparseHash, SparseCOO, SparseByteMap, SparseTriangle, SparseVBL, Dense, Ragged, RepeatRLE, Element, Pattern, Scalar
 export walk, gallop, follow, extrude, laminate
-export fiber, @fiber, pattern!, dropdefaults, dropdefaults!, redefault!
+export fiber, fiber!, @fiber, pattern!, dropdefaults, dropdefaults!, redefault!
 export diagmask, lotrimask, uptrimask, bandmask
 
 export choose, minby, maxby, overwrite, initwrite
@@ -129,7 +130,7 @@ end
         A = @fiber d(sl(e(0.0)))
         x = @fiber sl(e(0.0))
         Finch.execute_code(:ex, typeof(Finch.@finch_program_instance begin
-                @loop j i y[i] += A[i, j] * x[i]
+                @loop j i y[i] += A[i, j] * x[j]
             end
         ))
 

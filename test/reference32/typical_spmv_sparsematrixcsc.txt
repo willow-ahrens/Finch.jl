@@ -1,0 +1,75 @@
+julia> A = sparse([0 0 3.3; 1.1 0 0; 2.2 0 4.4; 0 0 5.5])
+4×3 SparseMatrixCSC{Float64, Int32} with 5 stored entries:
+  ⋅    ⋅   3.3
+ 1.1   ⋅    ⋅ 
+ 2.2   ⋅   4.4
+  ⋅    ⋅   5.5
+julia> y = [1.0, 2.0, 3.0, 4.0]
+4-element Vector{Float64}:
+ 1.0
+ 2.0
+ 3.0
+ 4.0
+julia> x = [1, 2, 3]
+3-element Vector{Int32}:
+ 1
+ 2
+ 3
+julia> @finch_code begin
+        y .= 0
+        for j = _
+            for i = _
+                y[i] += A[i, j] * x[j]
+            end
+        end
+    end
+quote
+    y = (ex.bodies[1]).tns.tns
+    A = ((ex.bodies[2]).body.body.rhs.args[1]).tns.tns
+    x = ((ex.bodies[2]).body.body.rhs.args[2]).tns.tns
+    sugar_2 = size(x)
+    x_mode1_stop = sugar_2[1]
+    A.n == x_mode1_stop || throw(DimensionMismatch("mismatched dimension limits ($(A.n) != $(x_mode1_stop))"))
+    sugar_4 = size(y)
+    y_mode1_stop = sugar_4[1]
+    1 == 1 || throw(DimensionMismatch("mismatched dimension start"))
+    A.m == y_mode1_stop || throw(DimensionMismatch("mismatched dimension stop"))
+    fill!(y, 0)
+    for j_4 = 1:A.n
+        A_q = A.colptr[j_4]
+        A_q_stop = A.colptr[j_4 + 1]
+        if A_q < A_q_stop
+            A_i1 = A.rowval[A_q_stop - 1]
+        else
+            A_i1 = 0
+        end
+        phase_stop = min(A_i1, A.m)
+        if phase_stop >= 1
+            i = 1
+            if A.rowval[A_q] < 1
+                A_q = Finch.scansearch(A.rowval, 1, A_q, A_q_stop - 1)
+            end
+            while i <= phase_stop
+                A_i = A.rowval[A_q]
+                phase_stop_2 = min(phase_stop, A_i)
+                if A_i == phase_stop_2
+                    A_val = A.nzval[A_q]
+                    y[phase_stop_2] = x[j_4] * A_val + y[phase_stop_2]
+                    A_q += 1
+                end
+                i = phase_stop_2 + 1
+            end
+        end
+    end
+    (y = y,)
+end
+julia> @finch begin
+        y .= 0
+        for j = _
+            for i = _
+                y[i] += A[i, j] * x[j]
+            end
+        end
+    end
+(y = [9.899999999999999, 1.1, 15.400000000000002, 16.5],)
+

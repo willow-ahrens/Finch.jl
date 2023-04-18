@@ -1,6 +1,6 @@
 struct NoDimension end
 const nodim = NoDimension()
-FinchNotation.isliteral(::NoDimension) = false
+FinchNotation.finch_leaf(x::NoDimension) = virtual(x)
 virtualize(ex, ::Type{NoDimension}, ctx) = nodim
 
 getstart(::NoDimension) = error("asked for start of dimensionless range")
@@ -35,7 +35,7 @@ end
     body
 end
 
-FinchNotation.isliteral(::Dimensionalize) =  false
+FinchNotation.finch_leaf(x::Dimensionalize) = virtual(x)
 
 struct DimensionalizeStyle end
 
@@ -206,11 +206,11 @@ combinedim(ctx, a::NoDimension, b) = b
 @kwdef struct Extent
     start
     stop
-    lower = @f $stop - $start + 1
-    upper = @f $stop - $start + 1
+    lower = literal(-Inf)
+    upper = literal(Inf)
 end
 
-FinchNotation.isliteral(::Extent) = false
+FinchNotation.finch_leaf(x::Extent) = virtual(x)
 
 Base.:(==)(a::Extent, b::Extent) =
     a.start == b.start &&
@@ -218,7 +218,7 @@ Base.:(==)(a::Extent, b::Extent) =
     a.lower == b.lower &&
     a.upper == b.upper
 
-Extent(start, stop) = Extent(start, stop, (@f $stop - $start + 1), (@f $stop - $start + 1))
+Extent(start, stop) = Extent(start, stop, literal(-Inf), literal(Inf))
 
 cache_dim!(ctx, var, ext::Extent) = Extent(
     start = cache!(ctx, Symbol(var, :_start), ext.start),
@@ -231,7 +231,10 @@ getstart(ext::Extent) = ext.start
 getstop(ext::Extent) = ext.stop
 getlower(ext::Extent) = ext.lower
 getupper(ext::Extent) = ext.upper
-extent(ext::Extent) = @f $(ext.stop) - $(ext.start) + 1
+measure(ext::Extent) = call(cached,
+    call(+, call(-, ext.stop, ext.start), 1),
+    call(min, call(max, call(+, call(-, ext.stop, ext.start), 1), ext.lower), ext.upper)
+)
 
 function getstop(ext::FinchNode)
     if ext.kind === virtual
@@ -261,8 +264,9 @@ function getupper(ext::FinchNode)
         1
     end
 end
+#=
 #TODO I don't like this def
-function extent(ext::FinchNode)
+function measure(ext::FinchNode)
     if ext.kind === virtual
         extent(ext.val)
     elseif ext.kind === value
@@ -274,6 +278,7 @@ function extent(ext::FinchNode)
     end
 end
 extent(ext::Integer) = 1
+=#
 
 combinedim(ctx, a::Extent, b::Extent) =
     Extent(
@@ -289,7 +294,7 @@ struct SuggestedExtent{Ext}
     ext::Ext
 end
 
-FinchNotation.isliteral(::SuggestedExtent) = false
+FinchNotation.finch_leaf(x::SuggestedExtent) = virtual(x)
 
 Base.:(==)(a::SuggestedExtent, b::SuggestedExtent) = a.ext == b.ext
 
@@ -304,7 +309,7 @@ cache_dim!(ctx, tag, ext::SuggestedExtent) = SuggestedExtent(cache_dim!(ctx, tag
 #TODO maybe just call something like resolve_extent to unwrap?
 getstart(ext::SuggestedExtent) = getstart(ext.ext)
 getstop(ext::SuggestedExtent) = getstop(ext.ext)
-extent(ext::SuggestedExtent) = extent(ext.ext)
+measure(ext::SuggestedExtent) = measure(ext.ext)
 
 combinedim(ctx, a::SuggestedExtent, b::Extent) = b
 
@@ -374,7 +379,7 @@ function Narrow(ext::FinchNode)
     end
 end
 
-FinchNotation.isliteral(::Narrow) = false
+FinchNotation.finch_leaf(x::Narrow) = virtual(x)
 
 narrowdim(dim) = Narrow(dim)
 narrowdim(::NoDimension) = nodim
@@ -396,7 +401,7 @@ function Widen(ext::FinchNode)
     end
 end
 
-FinchNotation.isliteral(::Widen) = false
+FinchNotation.finch_leaf(x::Widen) = virtual(x)
 
 widendim(dim) = Widen(dim)
 widendim(::NoDimension) = nodim
@@ -415,7 +420,7 @@ function combinedim(ctx, a::Narrow{<:Extent}, b::Narrow{<:Extent})
     Narrow(Extent(
         start = simplify(@f(max($(getstart(a)), $(getstart(b)))), ctx),
         stop = simplify(@f(min($(getstop(a)), $(getstop(b)))), ctx),
-        lower = if getstart(a) == getstart(b) || getstop(a) == getstop(b)
+        lower = if query(call(==, getstart(a), getstart(b)), ctx) || query(call(==, getstop(a), getstop(b)), ctx)
             simplify(@f(min($(a.ext.lower), $(b.ext.lower))), ctx)
         else
             literal(0)
@@ -433,7 +438,7 @@ function combinedim(ctx, a::Widen{<:Extent}, b::Widen{<:Extent})
         start = simplify(@f(min($(getstart(a)), $(getstart(b)))), ctx),
         stop = simplify(@f(max($(getstop(a)), $(getstop(b)))), ctx),
         lower = simplify(@f(max($(a.ext.lower), $(b.ext.lower))), ctx),
-        upper = if getstart(a) == getstart(b) || getstop(a) == getstop(b)
+        upper = if query(call(==, getstart(a), getstart(b)), ctx) || query(call(==, getstop(a), getstop(b)), ctx)
             simplify(@f(max($(a.ext.upper), $(b.ext.upper))), ctx)
         else
             simplify(@f($(a.ext.upper) + $(b.ext.upper)), ctx)

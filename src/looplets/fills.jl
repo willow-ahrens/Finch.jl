@@ -3,13 +3,14 @@ struct Fill
     Fill(x) = new(finch_leaf(x))
 end
 
-FinchNotation.isliteral(::Fill) = false
+FinchNotation.finch_leaf(x::Fill) = virtual(x)
 virtual_default(f::Fill) = Some(f.body)
 
-(ctx::Stylize{LowerJulia})(::Fill) = SimplifyStyle()
+struct FillStyle <: AbstractPreSimplifyStyle end
 
-function base_rules(alg, ctx::LowerJulia, ::Fill) 
-    return [
-        (@rule access(~a::isvirtual, ~m, ~i...) => if a.val isa Fill a.val.body end),
-    ]
+(ctx::Stylize{LowerJulia})(::Fill) = SimplifyStyle()
+(ctx::Stylize{<:Simplifier})(::Fill) = FillStyle()
+
+function (ctx::Simplifier)(root::FinchNode, ::FillStyle)
+    ctx(Postwalk(@rule access(~a::isvirtual, ~m, ~i...) => if a.val isa Fill a.val.body end)(root))
 end

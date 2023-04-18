@@ -16,7 +16,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualPermit)
 	print(io, "VirtualPermit()")
 end
 
-FinchNotation.isliteral(::VirtualPermit) =  false
+FinchNotation.finch_leaf(x::VirtualPermit) = virtual(x)
 
 virtualize(ex, ::Type{Permit}, ctx) = VirtualPermit()
 
@@ -33,14 +33,14 @@ function get_reader(::VirtualPermit, ctx, proto_idx)
         fuse = (tns, ctx, ext) -> Pipeline([
             Phase(
                 stride = (ctx, ext_2) -> call(-, getstart(ext), 1),
-                body = (ctx, ext) -> Run(Simplify(Fill(literal(missing)))),
+                body = (ctx, ext) -> Run(Fill(literal(missing))),
             ),
             Phase(
                 stride = (ctx, ext_2) -> getstop(ext),
                 body = (ctx, ext_2) -> truncate(tns, ctx, ext, ext_2)
             ),
             Phase(
-                body = (ctx, ext_2) -> Run(Simplify(Fill(literal(missing)))),
+                body = (ctx, ext_2) -> Run(Fill(literal(missing))),
             )
         ])
     )
@@ -66,7 +66,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualOffset)
 	print(io, "VirtualOffset()")
 end
 
-FinchNotation.isliteral(::VirtualOffset) =  false
+FinchNotation.finch_leaf(x::VirtualOffset) = virtual(x)
 
 virtualize(ex, ::Type{Offset}, ctx) = VirtualOffset()
 
@@ -86,14 +86,14 @@ function get_reader(::VirtualOffset, ctx, proto_delta, proto_idx)
                 fuse = (tns, ctx, ext) -> Pipeline([
                     Phase(
                         stride = (ctx, ext_2) -> call(+, getstart(ext), delta, -1),
-                        body = (ctx, ext_2) -> Run(Simplify(Fill(literal(missing)))),
+                        body = (ctx, ext_2) -> Run(Fill(literal(missing))),
                     ),
                     Phase(
                         stride = (ctx, ext_2) -> call(+, getstop(ext), delta),
                         body = (ctx, ext_2) -> truncate(Shift(tns, delta), ctx, ext, ext_2)
                     ),
                     Phase(
-                        body = (ctx, ext_2) -> Run(Simplify(Fill(literal(missing)))),
+                        body = (ctx, ext_2) -> Run(Fill(literal(missing))),
                     )
                 ])
             )
@@ -123,7 +123,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualStaticOffset)
 	print(io, "VirtualStaticOffset($(ex.delta))")
 end
 
-FinchNotation.isliteral(::VirtualStaticOffset) =  false
+FinchNotation.finch_leaf(x::VirtualStaticOffset) = virtual(x)
 
 function virtualize(ex, ::Type{StaticOffset{Delta}}, ctx) where {Delta}
     VirtualStaticOffset(virtualize(:($ex.delta), Delta, ctx))
@@ -142,14 +142,14 @@ function get_reader(arr::VirtualStaticOffset, ctx, proto_idx)
         fuse = (tns, ctx, ext) -> Pipeline([
             Phase(
                 stride = (ctx, ext_2) -> call(+, getstart(ext), arr.delta, -1),
-                body = (ctx, ext_2) -> Run(Simplify(Fill(literal(missing)))),
+                body = (ctx, ext_2) -> Run(Fill(literal(missing))),
             ),
             Phase(
                 stride = (ctx, ext_2) -> call(+, getstop(ext), arr.delta),
                 body = (ctx, ext_2) -> truncate(Shift(tns, arr.delta), ctx, ext, ext_2)
             ),
             Phase(
-                body = (ctx, ext_2) -> Run(Simplify(Fill(literal(missing)))),
+                body = (ctx, ext_2) -> Run(Fill(literal(missing))),
             )
         ])
     )
@@ -184,7 +184,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualWindow)
 	print(io, ")")
 end
 
-FinchNotation.isliteral(::VirtualWindow) =  false
+FinchNotation.finch_leaf(x::VirtualWindow) = virtual(x)
 
 function virtualize(ex, ::Type{Window{Start, Stop}}, ctx) where {Start, Stop}
     start = virtualize(:($ex.start), Start, ctx)

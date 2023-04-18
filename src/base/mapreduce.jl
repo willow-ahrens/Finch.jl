@@ -95,7 +95,7 @@ end
             end
             $res_ex
         end
-    end |> lower_caches |> lower_cleanup |> unblock
+    end
 end
 
 const FiberOrBroadcast = Union{<:Fiber, <:Broadcasted{FinchStyle{N}} where N}

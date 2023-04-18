@@ -1,6 +1,8 @@
 using Base.Meta
 
-@testset "fiber representation" begin
+@testset "representation" begin
+    @info "Testing Fiber Representation"
+
     function test_format(f, arrs; name, key)
         @testset "$name" begin
             io = IOBuffer()

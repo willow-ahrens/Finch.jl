@@ -30,18 +30,18 @@ function declare!(arr::VirtualAbstractArray, ctx::LowerJulia, init)
 end
 
 freeze!(arr::VirtualAbstractArray, ctx::LowerJulia) = arr
+thaw!(arr::VirtualAbstractArray, ctx::LowerJulia) = arr
 
 get_reader(arr::VirtualAbstractArray, ctx::LowerJulia, protos...) = arr
 get_updater(arr::VirtualAbstractArray, ctx::LowerJulia, protos...) = arr
 
-FinchNotation.isliteral(::VirtualAbstractArray) =  false
+FinchNotation.finch_leaf(x::VirtualAbstractArray) = virtual(x)
 
 virtual_default(::VirtualAbstractArray) = 0
 virtual_eltype(tns::VirtualAbstractArray) = tns.eltype
 
+default(a::AbstractArray) = default(typeof(a))
 default(T::Type{<:AbstractArray}) = zero(eltype(T))
-
-
 
 struct AsArray{T, N, Fbr} <: AbstractArray{T, N}
     fbr::Fbr

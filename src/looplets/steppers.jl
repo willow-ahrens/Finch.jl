@@ -10,7 +10,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Stepper)
     print(io, "Stepper()")
 end
 
-FinchNotation.isliteral(::Stepper) =  false
+FinchNotation.finch_leaf(x::Stepper) = virtual(x)
 
 (ctx::Stylize{LowerJulia})(node::Stepper) = ctx.root.kind === chunk ? StepperStyle() : DefaultStyle()
 
@@ -18,7 +18,7 @@ combine_style(a::DefaultStyle, b::StepperStyle) = StepperStyle()
 combine_style(a::StepperStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::StepperStyle, b::StepperStyle) = StepperStyle()
 combine_style(a::StepperStyle, b::RunStyle) = RunStyle()
-combine_style(a::SimplifyStyle, b::StepperStyle) = SimplifyStyle()
+combine_style(a::SimplifyStyle, b::StepperStyle) = a
 combine_style(a::StepperStyle, b::AcceptRunStyle) = StepperStyle()
 combine_style(a::StepperStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::StepperStyle, b::SwitchStyle) = SwitchStyle()
@@ -53,11 +53,14 @@ end
         ])
 end
 
-FinchNotation.isliteral(::Step) =  false
+FinchNotation.finch_leaf(x::Step) = virtual(x)
 
 (ctx::Stylize{LowerJulia})(node::Step) = ctx.root.kind === chunk ? PhaseStyle() : DefaultStyle()
 
-(ctx::PhaseStride)(node::Step) = Narrow(Extent(start = getstart(ctx.ext), stop = node.stride(ctx.ctx, ctx.ext), lower = literal(1)))
+(ctx::PhaseStride)(node::Step) = begin
+    s = node.stride(ctx.ctx, ctx.ext)
+    Narrow(Extent(start = getstart(ctx.ext), stop = call(cached, s, call(max, s, call(+, getstart(ctx.ext), 1))), lower = literal(1)))
+end
 
 (ctx::PhaseBodyVisitor)(node::Step) = node.body(ctx.ctx, ctx.ext, ctx.ext_2)
 

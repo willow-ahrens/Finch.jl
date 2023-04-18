@@ -25,7 +25,7 @@ function virtualize(ex, ::Type{<:Fiber{Lvl}}, ctx, tag=ctx.freshen(:tns)) where 
     VirtualFiber(lvl)
 end
 (ctx::Finch.LowerJulia)(fbr::VirtualFiber) = :(Fiber($(ctx(fbr.lvl))))
-FinchNotation.isliteral(::VirtualFiber) = false
+FinchNotation.finch_leaf(x::VirtualFiber) = virtual(x)
 
 """
     SubFiber(lvl, pos)
@@ -47,7 +47,7 @@ function virtualize(ex, ::Type{<:SubFiber{Lvl, Pos}}, ctx, tag=ctx.freshen(:tns)
     VirtualSubFiber(lvl, pos)
 end
 (ctx::Finch.LowerJulia)(fbr::VirtualSubFiber) = :(SubFiber($(ctx(fbr.lvl)), $(ctx(fbr.pos))))
-FinchNotation.isliteral(::VirtualSubFiber) =  false
+FinchNotation.finch_leaf(x::VirtualSubFiber) = virtual(x)
 
 """
     level_ndims(::Type{Lvl})
@@ -171,7 +171,7 @@ function virtualize(ex, ::Type{<:TrackedSubFiber{Lvl, Pos, Dirty}}, ctx, tag=ctx
     VirtualTrackedSubFiber(lvl, pos, dirty)
 end
 (ctx::Finch.LowerJulia)(fbr::VirtualTrackedSubFiber) = :(TrackedSubFiber($(ctx(fbr.lvl)), $(ctx(fbr.pos))))
-FinchNotation.isliteral(::VirtualTrackedSubFiber) = false
+FinchNotation.finch_leaf(x::VirtualTrackedSubFiber) = virtual(x)
 
 function get_updater(fbr::VirtualTrackedSubFiber, ctx, protos...)
     Thunk(
@@ -362,7 +362,7 @@ push!(registry, (algebra) -> quote
             push!(ctx.preamble, assemble_level!(lvl, ctx, literal(1), literal(1)))
             lvl = freeze_level!(lvl, ctx, literal(1))
             :(Fiber($(ctx(lvl))))
-        end |> lower_caches |> lower_cleanup
+        end
     end
 end)
 
@@ -373,43 +373,3 @@ Base.summary(fbr::SubFiber) = "$(join(size(fbr), "×")) SubFiber($(summary_f_cod
 
 Base.similar(fbr::AbstractFiber) = Fiber(similar_level(fbr.lvl))
 Base.similar(fbr::AbstractFiber, dims::Tuple) = Fiber(similar_level(fbr.lvl, dims...))
-
-function base_rules(alg, ctx::LowerJulia, a, tns::VirtualFiber)
-    return [
-        #=
-        (@rule loop(~i, assign(access(~a, ~m), $(literal(+)), ~b::isliteral)) =>
-            assign(access(a, m), +, call(*, b, extent(ctx.dims[i])))
-        ),
-
-        (@rule loop(~i, sequence(~s1::ortho(a)..., assign(access(~a, ~m), $(literal(+)), ~b::isliteral), ~s2::ortho(a)...)) =>
-            sequence(assign(access(a, m), +, call(*, b, extent(ctx.dims[i]))), loop(i, sequence(s1..., s2...)))
-        ),
-        (@rule loop(~i, assign(access(~a, ~m), ~f::isidempotent(alg), ~b::isliteral)) =>
-            assign(access(a, m), f, b)
-        ),
-        (@rule loop(~i, sequence(~s1::ortho(a)..., assign(access(~a, ~m), ~f::isidempotent(alg), ~b::isliteral), ~s2::ortho(a)...)) =>
-            sequence(assign(access(a, m), f, b), loop(i, sequence(s1..., s2...)))
-        ),
-        (@rule sequence(~s1..., assign(access(a, ~m), ~f::isabelian(alg), ~b), ~s2::ortho(a)..., assign(access(a, ~m), ~f, ~c), ~s3...) =>
-            sequence(s1..., assign(access(a, m), f, call(f, b, c)))
-        ),
-        =#
-
-        (@rule sequence(~s1..., declare(a, ~z), ~s2::ortho(a)..., freeze(a), ~s3...) =>
-            sequence(s1..., s2..., declare(a, z), freeze(a), s3...)
-        ),
-        (@rule sequence(~s1..., declare(a, ~z), freeze(a), ~s2::ortho(a)..., ~s3, ~s4...) =>
-            if (s3 = Postwalk(@rule access(a, reader(), ~i...) => z)(s3)) !== nothing
-                sequence(s1..., declare(a, ~z), freeze(a), s2..., s3, s4...)
-            end
-        ),
-        (@rule sequence(~s1..., thaw(a, ~z), ~s2::ortho(a)..., freeze(a), ~s3...) =>
-            sequence(s1..., s2..., s3...)
-        ),
-        #=
-        (@rule sequence(~s1..., declare(a, ~z), ~s2..., freeze(a), ~s3::ortho(a)...) =>
-            sequence(s1..., s2..., s3...)
-        ),
-        =#
-    ]
-end

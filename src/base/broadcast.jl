@@ -79,7 +79,7 @@ combine_style(a::PointwiseRepeatStyle, ::PointwiseRepeatStyle) = a
 combine_style(a::PointwiseRepeatStyle, ::PointwiseElementStyle) = a
 combine_style(a::PointwiseElementStyle, ::PointwiseElementStyle) = a
 
-struct PointwiseRep
+struct PointwiseRep <: AbstractCompiler
     ctx
 end
 
@@ -100,10 +100,10 @@ pointwise_rep_body(tns::ElementData) = tns.lvl
 function (ctx::PointwiseRep)(rep, idxs, ::PointwiseHollowStyle)
     background = simplify(Postwalk(Chain([
         (@rule access(~ex::isvirtual, ~m, ~i...) => access(pointwise_rep_hollow(ex.val), m, i...)),
-    ]))(rep), LowerJulia())
+    ]))(rep), ctx.ctx)
     body = simplify(Postwalk(Chain([
         (@rule access(~ex::isvirtual, ~m, ~i...) => access(pointwise_rep_solid(ex.val), m, i...)),
-    ]))(rep), LowerJulia())
+    ]))(rep), ctx.ctx)
     if isliteral(background)
         return HollowData(ctx(body, idxs))
     else
@@ -114,24 +114,24 @@ end
 function (ctx::PointwiseRep)(rep, idxs, ::PointwiseDenseStyle)
     body = simplify(Rewrite(Postwalk(Chain([
         (@rule access(~ex::isvirtual, ~m, ~i..., $(idxs[1])) => access(pointwise_rep_body(ex.val), m, i...)),
-    ])))(rep), LowerJulia())
+    ])))(rep), ctx.ctx)
     return DenseData(ctx(body, idxs[2:end]))
 end
 
 function (ctx::PointwiseRep)(rep, idxs, ::PointwiseRepeatStyle)
     background = simplify(PostWalk(Chain([
-        (@rule access(~ex::isvirtual, ~m, ~i...) => default(ex.val)),
-    ]))(rep), LowerJulia())
+        (@rule access(~ex::isvirtual, ~m, ~i...) => finch_leaf(default(ex.val))),
+    ]))(rep), ctx.ctx)
     @assert isliteral(background)
-    return RepeatData(finch_leaf(background).val, typeof(finch_leaf(background).val))
+    return RepeatData(background.val, typeof(background.val))
 end
 
 function (ctx::PointwiseRep)(rep, idxs, ::PointwiseElementStyle)
     background = simplify(Postwalk(Chain([
-        (@rule access(~ex::isvirtual, ~m) => default(ex.val)),
-    ]))(rep), LowerJulia())
+        (@rule access(~ex::isvirtual, ~m) => finch_leaf(default(ex.val))),
+    ]))(rep), ctx.ctx)
     @assert isliteral(background)
-    return ElementData(finch_leaf(background).val, typeof(finch_leaf(background).val))
+    return ElementData(background.val, typeof(background.val))
 end
 
 pointwise_rep_hollow(ex::HollowData) = Fill(default(ex))
@@ -176,5 +176,5 @@ function copyto_helper!(out_ex, out, bc_ex, bc::Type{<:Broadcasted{FinchStyle{N}
             end
             $out_ex
         end
-    end |> lower_caches |> lower_cleanup |> unblock
+    end
 end

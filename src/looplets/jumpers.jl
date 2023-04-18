@@ -4,14 +4,14 @@ struct JumperStyle end
     body
 end
 
-FinchNotation.isliteral(::Jumper) =  false
+FinchNotation.finch_leaf(x::Jumper) = virtual(x)
 
 (ctx::Stylize{LowerJulia})(node::Jumper) = ctx.root.kind === chunk ? JumperStyle() : DefaultStyle()
 
 combine_style(a::DefaultStyle, b::JumperStyle) = JumperStyle()
 combine_style(a::JumperStyle, b::JumperStyle) = JumperStyle()
 combine_style(a::JumperStyle, b::RunStyle) = RunStyle()
-combine_style(a::SimplifyStyle, b::JumperStyle) = SimplifyStyle()
+combine_style(a::SimplifyStyle, b::JumperStyle) = a
 combine_style(a::JumperStyle, b::AcceptRunStyle) = JumperStyle()
 combine_style(a::JumperStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::JumperStyle, b::SwitchStyle) = SwitchStyle()
@@ -35,7 +35,7 @@ end
     next = nothing
 end
 
-FinchNotation.isliteral(::Jump) =  false
+FinchNotation.finch_leaf(x::Jump) = virtual(x)
 
 (ctx::Stylize{LowerJulia})(node::Jump) = ctx.root.kind === chunk ? PhaseStyle() : DefaultStyle()
 

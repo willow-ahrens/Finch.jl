@@ -250,7 +250,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::Union{N
                             body = Step(
                                 stride = (ctx, ext) -> value(my_i),
                                 chunk = Spike(
-                                    body = Simplify(Fill(virtual_level_default(lvl))),
+                                    body = Fill(virtual_level_default(lvl)),
                                     tail = get_reader(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, protos...)
                                 ),
                                 next = (ctx, ext) -> quote
@@ -261,7 +261,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::Union{N
                     )
                 ),
                 Phase(
-                    body = (ctx, ext) -> Run(Simplify(Fill(virtual_level_default(lvl))))
+                    body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))
                 )
             ])
         )
@@ -277,6 +277,9 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::Gallop,
     my_q = ctx.freshen(tag, :_q)
     my_q_stop = ctx.freshen(tag, :_q_stop)
     my_i1 = ctx.freshen(tag, :_i1)
+    my_i2 = ctx.freshen(tag, :_i2)
+    my_i3 = ctx.freshen(tag, :_i3)
+    my_i4 = ctx.freshen(tag, :_i4)
 
     Furlable(
         size = virtual_level_size(lvl, ctx),
@@ -302,13 +305,13 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::Gallop,
                                     if $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
                                         $my_q = scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                                     end
-                                    $my_i = $(lvl.ex).idx[$my_q]
+                                    $my_i2 = $(lvl.ex).idx[$my_q]
                                 end,
-                                stride = (ctx, ext) -> value(my_i),
+                                stride = (ctx, ext) -> value(my_i2),
                                 body = (ctx, ext, ext_2) -> Switch([
-                                    value(:($(ctx(getstop(ext_2))) == $my_i)) => Thunk(
+                                    value(:($(ctx(getstop(ext_2))) == $my_i2)) => Thunk(
                                         body = Spike(
-                                            body = Simplify(Fill(virtual_level_default(lvl))),
+                                            body = Fill(virtual_level_default(lvl)),
                                             tail = get_reader(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, protos...),
                                         ),
                                         epilogue = quote
@@ -323,12 +326,12 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::Gallop,
                                         end,
                                         body = Thunk(
                                             preamble = :(
-                                                $my_i = $(lvl.ex).idx[$my_q]
+                                                $my_i3 = $(lvl.ex).idx[$my_q]
                                             ),
                                             body = Step(
-                                                stride = (ctx, ext) -> value(my_i),
+                                                stride = (ctx, ext) -> value(my_i3),
                                                 chunk = Spike(
-                                                    body = Simplify(Fill(virtual_level_default(lvl))),
+                                                    body = Fill(virtual_level_default(lvl)),
                                                     tail =  get_reader(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, protos...),
                                                 ),
                                                 next = (ctx, ext) -> quote
@@ -343,7 +346,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::Gallop,
                     )
                 ),
                 Phase(
-                    body = (ctx, ext) -> Run(Simplify(Fill(virtual_level_default(lvl))))
+                    body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))
                 )
             ])
         )

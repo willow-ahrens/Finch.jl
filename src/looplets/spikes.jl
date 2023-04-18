@@ -10,7 +10,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Spike)
     print(io, ")")
 end
 
-FinchNotation.isliteral(::Spike) =  false
+FinchNotation.finch_leaf(x::Spike) = virtual(x)
 
 struct SpikeStyle end
 
@@ -18,7 +18,7 @@ struct SpikeStyle end
 combine_style(a::DefaultStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::RunStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::ThunkStyle, b::SpikeStyle) = ThunkStyle()
-combine_style(a::SimplifyStyle, b::SpikeStyle) = SimplifyStyle()
+combine_style(a::SimplifyStyle, b::SpikeStyle) = a
 combine_style(a::AcceptRunStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::SpikeStyle, b::SpikeStyle) = SpikeStyle()
 
@@ -28,7 +28,8 @@ function (ctx::LowerJulia)(root::FinchNode, ::SpikeStyle)
         root_body = Rewrite(Postwalk(
             @rule access(~a::isvirtual, ~i...) => access(get_spike_body(a.val, ctx, root.ext, body_ext), ~i...)
         ))(root.body)
-        if extent(root.ext) == 1
+        @assert isvirtual(root.ext)
+        if query(call(==, measure(root.ext.val), 1), ctx)
             body_expr = quote end
         else
             #TODO check body nonempty

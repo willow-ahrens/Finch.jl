@@ -1,13 +1,14 @@
 struct Null
 end
 
-FinchNotation.isliteral(::Null) = false
+FinchNotation.finch_leaf(x::Null) = virtual(x)
 virtual_default(f::Null) = Some(f.default)
 
-(ctx::Stylize{LowerJulia})(::Null) = SimplifyStyle()
+struct NullStyle <: AbstractPreSimplifyStyle end
 
-function base_rules(alg, ctx::LowerJulia, ::Null) 
-    return [
-        (@rule assign(access(~a::isvirtual, ~m, ~i...), ~op, ~rhs) => if a.val isa Null sequence() end),
-    ]
+(ctx::Stylize{LowerJulia})(::Null) = SimplifyStyle()
+(ctx::Stylize{<:Simplifier})(::Null) = NullStyle()
+
+function (ctx::Simplifier)(root::FinchNode, ::NullStyle)
+    ctx(Postwalk(@rule assign(access(~a::isvirtual, ~m, ~i...), ~op, ~rhs) => if a.val isa Null sequence() end)(root))
 end
