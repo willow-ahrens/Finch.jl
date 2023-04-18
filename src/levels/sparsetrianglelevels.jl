@@ -206,7 +206,7 @@ function get_reader_triangular_dense_helper(fbr, ctx, get_readerupdater, subfibe
             res = call(*, call(+, call(-, n, 1), d - i), res)
             # res = call(*, call(+, n, d - i - 1), res)
         end
-        return call(fld, res, factorial(d))
+        return simplify(call(+, call(fld, res, factorial(d)), 1), ctx)
     end
     # d is the dimension we are on 
     # j is coordinate of previous dimension
@@ -286,7 +286,7 @@ function get_updater_triangular_dense_helper(fbr, ctx, get_readerupdater, subfib
             res = call(*, call(+, call(-, n, 1), d - i), res)
             # res = call(*, call(+, n, d - i - 1), res)
         end
-        return call(fld, res, factorial(d))
+        return simplify(call(+, call(fld, res, factorial(d)), 1), ctx)
     end
 
     # d is the dimension we are on 
