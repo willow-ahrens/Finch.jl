@@ -66,17 +66,23 @@ jobs:
             using Finch
             DocMeta.setdocmeta!(Finch, :DocTestSetup, :(using Finch, SparseArrays); recursive=true)
             doctest(Finch)'
-
+  binder:
+    name: Binder
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs: docs
+    steps:
       - name: Checkout built code
         uses: actions/checkout@v2
         with:
           ref: gh-pages
-
       - name: update jupyter dependencies with repo2docker
-        uses: jupyterhub/repo2docker-action@master
+        #uses: jupyterhub/repo2docker-action@master TODO use official  if https://github.com/jupyterhub/repo2docker-action/issues/99 gets fixed
+        uses: tschm/repo2docker-action@master
         continue-on-error: true
         with:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           BINDER_CACHE: true
           PUBLIC_REGISTRY_CHECK: true
+          MYBINDERORG_TAG: ${{ github.event.ref }}
