@@ -77,8 +77,10 @@ jobs:
         with:
           ref: gh-pages
       - name: update jupyter dependencies with repo2docker
-        #uses: jupyterhub/repo2docker-action@master TODO use official  if https://github.com/jupyterhub/repo2docker-action/issues/99 gets fixed
-        uses: tschm/repo2docker-action@master
+        uses: jupyterhub/repo2docker-action@master
         continue-on-error: true
         with:
-          MYBINDERORG_TAG: refs/heads/gh-pages
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          BINDER_CACHE: true
+          PUBLIC_REGISTRY_CHECK: true
