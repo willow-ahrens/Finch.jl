@@ -171,6 +171,7 @@ function get_reader_triangular_dense_helper(fbr, ctx, get_readerupdater, subfibe
     Ti = lvl.Ti
 
     q = ctx.freshen(tag, :_q)
+    s = ctx.freshen(tag, :_s)
 
     # d is the dimension we are on 
     # j is coordinate of previous dimension
@@ -199,7 +200,12 @@ function get_reader_triangular_dense_helper(fbr, ctx, get_readerupdater, subfibe
                     Phase(
                         stride = (ctx, ext) -> j,
                         body = (ctx, ext) -> Lookup(
-                            body = (ctx, i) -> simplex_helper(d - 1, i, n, call(+, q, virtual_simplex(d, ctx, call(-, i, 1))))
+                            body = (ctx, i) -> Thunk(
+                                preamble = :(
+                                    $s = $(ctx(call(+, q, virtual_simplex(d, ctx, call(-, i, 1)))))
+                                ),
+                                body = simplex_helper(d - 1, i, n, value(s))
+                            )
                         )
                     ),
                     Phase(
@@ -218,6 +224,7 @@ function get_updater_triangular_dense_helper(fbr, ctx, get_readerupdater, subfib
     Ti = lvl.Ti
 
     q = ctx.freshen(tag, :_q)
+    s = ctx.freshen(tag, :_s)
 
     # d is the dimension we are on 
     # j is coordinate of previous dimension
@@ -231,7 +238,7 @@ function get_updater_triangular_dense_helper(fbr, ctx, get_readerupdater, subfib
                     Phase(
                         stride = (ctx, ext) -> j,
                         body = (ctx, ext) -> Lookup(
-                            body = (ctx, i) -> get_readerupdater(subfiber_ctr(lvl.lvl, call(+, q, i, -1)), ctx, protos[n-1:end]...) # hack -> fix later
+                            body = (ctx, i) -> get_readerupdater(subfiber_ctr(lvl.lvl, call(+, q, -1, i)), ctx, protos[n-1:end]...) # hack -> fix later
                         )
                     ),
                     Phase(
@@ -246,7 +253,12 @@ function get_updater_triangular_dense_helper(fbr, ctx, get_readerupdater, subfib
                     Phase(
                         stride = (ctx, ext) -> j,
                         body = (ctx, ext) -> Lookup(
-                            body = (ctx, i) -> simplex_helper(d - 1, i, n, call(+, q, virtual_simplex(d, ctx, call(-, i, 1))))
+                            body = (ctx, i) -> Thunk(
+                                preamble = :(
+                                    $s = $(ctx(call(+, q, virtual_simplex(d, ctx, call(-, i, 1)))))
+                                ),
+                                body = simplex_helper(d - 1, i, n, value(s))
+                            )
                         )
                     ),
                     Phase(
