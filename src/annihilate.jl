@@ -313,6 +313,10 @@ function base_rules(alg, shash)
         (@rule call(ifelse, ~a, ~b, ~b) => b),
         (@rule $(literal(-0.0)) => literal(0.0)),
 
+        (@rule sequence(~a1..., sieve(~c, ~b1), sieve(~c, ~b2), ~a2...) =>
+            sequence(a1..., sieve(~c, sequence(b1, b2)), a2...)
+        ),
+
         (@rule call(~f, call(~g, ~a, ~b...)) => if isinverse(alg, f, g) && isassociative(alg, g)
             call(g, call(f, a), map(c -> call(f, call(g, c)), b)...)
         end),
@@ -363,21 +367,23 @@ function base_rules(alg, shash)
         end),
 
         #TODO if we don't give loops extents, this rule is less general
-        (@rule chunk(~i, ~ext, assign(access(~a::isvariable, ~m), $(literal(+)), ~b::isliteral)) =>
-            assign(access(a, m), +, call(*, b, measure(ext)))
+        (@rule chunk(~i, ~ext::isvirtual, assign(access(~a, ~m), $(literal(+)), ~b::isliteral)) =>
+            assign(access(a, m), +, call(*, b, measure(ext.val)))
         ),
 
         #TODO if we don't give loops extents, this rule is less general
-        (@rule chunk(~i, ~ext, sequence(~s1..., assign(access(~a::isvariable, ~m), $(literal(+)), ~b::isliteral), ~s2...)) => if ortho(a, s1) && ortho(a, s2)
-            sequence(assign(access(a, m), +, call(*, b, measure(ext))), loop(i, sequence(s1..., s2...)))
+        (@rule chunk(~i, ~ext::isvirtual, sequence(~s1..., assign(access(~a, ~m), $(literal(+)), ~b::isliteral), ~s2...)) => if ortho(a, s1) && ortho(a, s2)
+            sequence(assign(access(a, m), +, call(*, b, measure(ext.val))), loop(i, sequence(s1..., s2...)))
         end),
 
-        (@rule loop(~i, assign(access(~a::isvariable, ~m), ~f::isidempotent(alg), ~b::isliteral)) =>
-            assign(access(a, m), f, b)
+        #TODO if we don't give loops extents, this rule is less general
+        (@rule chunk(~i, ~ext, assign(access(~a, ~m), ~f::isidempotent(alg), ~b::isliteral)) =>
+            sieve(call(>, measure(ext.val), 0), assign(access(a, m), f, b))
         ),
 
-        (@rule loop(~i, sequence(~s1..., assign(access(~a::isvariable, ~m), ~f::isidempotent(alg), ~b::isliteral), ~s2...)) => if ortho(a, s1) && ortho(a, s2)
-            sequence(assign(access(a, m), f, b), loop(i, sequence(s1..., s2...)))
+        #TODO if we don't give loops extents, this rule is less general
+        (@rule chunk(~i, ~ext, sequence(~s1..., assign(access(~a, ~m), ~f::isidempotent(alg), ~b::isliteral), ~s2...)) => if ortho(a, s1) && ortho(a, s2)
+            sequence(sieve(call(>, measure(ext.val), 0), assign(access(a, m), f, b)), chunk(i, ext, sequence(s1..., s2...)))
         end),
 
         (@rule sequence(~s1..., assign(access(~a::isvariable, ~m), ~f::isabelian(alg), ~b), ~s2..., assign(access(~a, ~m), ~f, ~c), ~s3...) => if ortho(a, s2)

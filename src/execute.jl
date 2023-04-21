@@ -2,7 +2,11 @@ execute(ex) = execute(ex, DefaultAlgebra())
 
 push!(registry, (algebra)-> quote
     @generated function execute(ex, a::$algebra)
-        execute_code(:ex, ex, a())
+        quote
+            @inbounds begin
+                $(execute_code(:ex, ex, a()))
+            end
+        end
     end
 end)
 
@@ -41,22 +45,6 @@ function execute_code(ex, T, algebra = DefaultAlgebra())
             end)
         end
     end
-    #=
-    code = quote
-        @inbounds begin
-            $code
-        end
-    end
-    =#
-    code = code |>
-        lower_caches |>
-        lower_cleanup
-    #quote
-    #    println($(QuoteNode(code |>         striplines |>
-    #    unblock |>
-    #    unquote_literals)))
-    #    $code
-    #end
 end
 
 macro finch(args_ex...)
@@ -86,8 +74,14 @@ macro finch_code(args_ex...)
     return quote
         $execute_code(:ex, typeof($prgm), $(map(esc, args)...)) |>
         striplines |>
+        desugar |>
+        propagate |>
+        mark_dead |>
+        prune_dead |>
+        resugar |>
         unblock |>
-        unquote_literals
+        unquote_literals |>
+        unresolve
     end
 end
 
@@ -143,7 +137,7 @@ Before returning a tensor from the finch program, trim any excess overallocated 
 trim!(tns, ctx) = tns
 
 @kwdef struct LifecycleVisitor
-    uses = Dict()
+    uses = OrderedDict()
     scoped_uses = Dict()
     global_uses = uses
     modes = Dict()

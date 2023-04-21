@@ -77,10 +77,9 @@ function cache!(ctx, var, val)
         return val
     end
     var = ctx.freshen(var)
-    push!(ctx.preamble, Expr(:cache, var,
-    quote
+    push!(ctx.preamble, quote
         $var = $(contain(ctx_2 -> ctx_2(val), ctx))
-    end))
+    end)
     return simplify(call(cached, value(var, Any), val), ctx)
 end
 
@@ -109,18 +108,26 @@ end
 
 function contain(f, ctx::LowerJulia)
     ctx_2 = shallowcopy(ctx)
-    ctx_2.preamble = []
-    ctx_2.epilogue = []
+    preamble = Expr(:block)
+    ctx_2.preamble = preamble.args
+    epilogue = Expr(:block)
+    ctx_2.epilogue = epilogue.args
     body = f(ctx_2)
-    thunk = Expr(:block)
-    append!(thunk.args, ctx_2.preamble)
-    if isempty(ctx_2.epilogue)
-        push!(thunk.args, body)
+    if epilogue == Expr(:block)
+        return quote
+            $preamble
+            $body
+        end
     else
         res = ctx_2.freshen(:res)
-        push!(thunk.args, Expr(:cleanup, res, body, Expr(:block, ctx_2.epilogue...)))
+        return quote
+            $preamble
+            $res = $body
+            $epilogue
+            $res
+        end
     end
-    return thunk
+
 end
 
 struct ThunkStyle end

@@ -362,7 +362,7 @@ push!(registry, (algebra) -> quote
             push!(ctx.preamble, assemble_level!(lvl, ctx, literal(1), literal(1)))
             lvl = freeze_level!(lvl, ctx, literal(1))
             :(Fiber($(ctx(lvl))))
-        end |> lower_caches |> lower_cleanup
+        end
     end
 end)
 

@@ -30,6 +30,7 @@ function declare!(arr::VirtualAbstractArray, ctx::LowerJulia, init)
 end
 
 freeze!(arr::VirtualAbstractArray, ctx::LowerJulia) = arr
+thaw!(arr::VirtualAbstractArray, ctx::LowerJulia) = arr
 
 get_reader(arr::VirtualAbstractArray, ctx::LowerJulia, protos...) = arr
 get_updater(arr::VirtualAbstractArray, ctx::LowerJulia, protos...) = arr
