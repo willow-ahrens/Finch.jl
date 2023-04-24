@@ -59,6 +59,7 @@ function bfs(edges, source=5)
     return P
 end
 
+
 # Inputs:
 #   edges: 2D matrix of edge weights with Inf for unconnected edges
 #   source: vertex to start
@@ -72,13 +73,12 @@ function bellmanford(edges, source=1)
     init_dists = [(Inf, -1) for i=1:n]
     init_dists[source] = (0.0, -1)
     dists_prev = @fiber(d(e((Inf, -1))), init_dists)
-    dists_buffer = @fiber(d(e((Inf, -1)), n))
     dists_next = @fiber(d(e((Inf, -1)), n))
     modified = Scalar(false)
 
-    for iter = 1:n  
-        @finch @loop j i dists_buffer[j] <<min>>= (first(dists_prev[i]) + edges[i, j], i)
-        @finch @loop j dists_next[j] = min(dists_prev[j], dists_buffer[j])
+    for iter = 1:n
+        @finch @loop j dists_next[j] = dists_prev[j]  # can be omitted if diagonals are 0, but we require diagonals = inf to aoivd self-loops
+        @finch @loop j i dists_next[j] <<min>>= (first(dists_prev[i]) + edges[i, j], i)
 
         modified = Scalar(false)
         @finch @loop i modified[] |= dists_next[i][1] != dists_prev[i][1]
@@ -89,4 +89,40 @@ function bellmanford(edges, source=1)
     end
 
     return modified[] ? -1 : dists_prev
+end
+
+# Inputs:
+#   edges: undirected adjacency matrix. Requires edges to be 1 and non-edges 0.
+# Output:
+#   number of triangles in graph
+function tricount(edges)
+    (n, m) = size(edges)
+    @assert n == m
+
+    #store lower triangles
+    L = @fiber d(sl(e(0), n), n)
+    buffer = @fiber sbm(e(0))
+    @finch begin
+        L .= 0
+        @loop j begin
+            buffer .= 0
+            @loop i buffer[i] = lotrimask[i,j+1] * edges[i,j]
+            @loop i L[i,j] = buffer[i]
+        end
+    end
+
+    wedges = @fiber d(sl(e(0), n), n)
+    buffer = @fiber sbm(e(0))
+    @finch begin #inner product vs gustavson
+        wedges .= 0
+        @loop j begin
+            buffer .= 0
+            @loop k i buffer[i] +=  L[i, k] * L[k, j] * edges[i, j]
+            @loop i wedges[i,j] = buffer[i]
+        end
+    end
+    
+    triangles = Scalar(0)
+    @finch @loop j i triangles[] += wedges[i, j]
+    return triangles[]
 end

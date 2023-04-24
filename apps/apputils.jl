@@ -1,6 +1,16 @@
 function getRandomAdj(m,n,sparsity)
-    nnz = convert(Int64, round(m*n*sparsity))
-    return sparse(rand(1:m, nnz), rand(1:n, nnz), ones(Int64, (nnz,)), m, n, max)
+    rows = []
+    cols = []
+    for i=1:m
+        for j = 1:n
+            if rand() < sparsity
+                push!(rows, i)
+                push!(cols, j)
+            end
+        end
+    end
+    nnz = size(rows)[1]
+    return sparse(rows, cols, ones(Int64, (nnz,)), m, n, max)
 end
 
 function convertAdjToGraph(adj)
@@ -15,3 +25,21 @@ function convertAdjToGraph(adj)
     weights = adj.nzval
     return SimpleWeightedDiGraph(sources, destinations, weights)
 end
+
+function randomLower(n, sparsity)
+    rows = []
+    cols = []
+    for i=1:n
+        for j = 1:i
+            if rand() < sparsity
+                push!(rows, i)
+                push!(cols, j)
+            end
+        end
+    end
+    nnz = size(rows)[1]
+    return sparse(rows, cols, ones(Int64, (nnz,)), n, n, max)
+end
+
+using SparseArrays
+randomLower(5, 0.5)

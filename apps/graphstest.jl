@@ -1,3 +1,5 @@
+using LinearAlgebra 
+
 function testpagerank()
     size, sparsity = 30, 0.5
     input = getRandomAdj(size, size, sparsity)
@@ -9,9 +11,11 @@ function testpagerank()
     output = pagerank(finch_input)
 
     tol = 1e-6
+    correct = true
     for i = 1:size
-        @test abs(output[i] - expected[i]) < tol 
+        correct &= abs(output[i] - expected[i]) < tol 
     end
+    @test correct
 end
 
 function testbfs()
@@ -25,9 +29,11 @@ function testbfs()
     expected = Graphs.bfs_parents(graphs_input, source)
     output = bfs(finch_input, source)
 
+    correct = true
     for i = 1:size
-        @test output[i] == expected[i]
+        correct &= output[i] == expected[i]
     end
+    @test correct
 end
 
 function testbellmanford() 
@@ -42,6 +48,7 @@ function testbellmanford()
     output = bellmanford(finch_input, source)
 
     #Check that outputs match
+    correct = true
     for i = 1:size
         output_dist, output_parent = output[i]
         expected_dist = expected.dists[i]
@@ -54,15 +61,29 @@ function testbellmanford()
         expected_unconnected = (isinf(expected_dist))
 
         if expected_no_parent
-            @test output_no_parent 
+            correct &= output_no_parent 
         else
-            @test output_parent == expected_parent 
+            correct &= output_parent == expected_parent 
         end
 
         if expected_unconnected
-            @test output_unconnected 
+            correct &= output_unconnected 
         else
-            @test output_dist == expected_dist 
+            correct &= output_dist == expected_dist 
         end
     end
+    @test correct
+end
+
+function testtricount()
+    size, sparsity = 100, 0.5
+    input = randomLower(size, sparsity)
+    
+    graphs_input = convertAdjToGraph(input)
+    finch_input = @fiber(d(sl(e(0.0))), input)
+
+    expected = sum(Graphs.triangles(graphs_input))
+    output = tricount(finch_input)
+    
+    @test expected == output
 end

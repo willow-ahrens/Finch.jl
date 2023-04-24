@@ -20,6 +20,7 @@ makedocs(;
         "Embedding" => "embed.md",
         "Custom Functions" => "algebra.md",
         "Development Guide" => "development.md",
+        "Graphs" => "graphs.md",
     ],
 )
 

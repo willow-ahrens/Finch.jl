@@ -19,6 +19,7 @@ function testapps()
         ("pagerank", testpagerank),
         ("bfs", testbfs),
         ("bellmanford", testbellmanford),
+        ("trianglecount", testtricount),
     ]
 
     for test in tests
