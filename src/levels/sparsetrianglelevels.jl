@@ -5,9 +5,8 @@ struct SparseTriangleLevel{N, Ti, Lvl}
     # shift/delta
 end
 SparseTriangleLevel(lvl) = throw(ArgumentError("You must specify the number of dimensions in a SparseTriangleLevel, e.g. @fiber(st{2}(e(0.0)))"))
-# SparseTriangleLevel(lvl, shape::Ti, args...) where {Ti} = SparseTriangleLevel{Ti}(lvl, shape, args...)
-SparseTriangleLevel{N}(lvl) where {N} = SparseTriangleLevel{N, Int}(lvl)
-# SparseTriangleLevel{Ti}(lvl, args...) where {Ti} = SparseTriangleLevel{N, Ti, typeof(lvl)}(lvl, args...)
+SparseTriangleLevel{N}(lvl, args...) where {N} = SparseTriangleLevel{N, Int}(lvl, args...)
+SparseTriangleLevel{N}(lvl, shape, args...) where {N} = SparseTriangleLevel{N, typeof(shape)}(lvl, shape, args...)
 SparseTriangleLevel{N, Ti}(lvl, args...) where {N, Ti} = SparseTriangleLevel{N, Ti, typeof(lvl)}(lvl, args...)
 SparseTriangleLevel{N, Ti, Lvl}(lvl) where {N, Ti, Lvl} = SparseTriangleLevel{N, Ti, Lvl}(lvl, zero(Ti))
 
@@ -175,7 +174,7 @@ function get_reader_triangular_dense_helper(fbr, ctx, get_readerupdater, subfibe
 
     # d is the dimension we are on 
     # j is coordinate of previous dimension
-    # n is the total number of dimension
+    # n is the total number of dimensions
     # q is index value from previous recursive call
     function simplex_helper(d, j, n, q)
         if d == 1
@@ -228,7 +227,7 @@ function get_updater_triangular_dense_helper(fbr, ctx, get_readerupdater, subfib
 
     # d is the dimension we are on 
     # j is coordinate of previous dimension
-    # n is the total number of dimension
+    # n is the total number of dimensions
     # q is index value from previous recursive call
     function simplex_helper(d, j, n, q)
         if d == 1
