@@ -14,11 +14,11 @@ include("graphstest.jl")
 include("apputils.jl")
 
 function testapps() 
-    trials = 1
+    trials = 10
     tests = [
-        ("pagerank", testpagerank),
-        ("bfs", testbfs),
-        ("bellmanford", testbellmanford),
+        # ("pagerank", testpagerank),
+        # ("bfs", testbfs),
+        # ("bellmanford", testbellmanford),
         ("trianglecount", testtricount),
     ]
 

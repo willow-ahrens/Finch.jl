@@ -101,28 +101,15 @@ function tricount(edges)
 
     #store lower triangles
     L = @fiber d(sl(e(0), n), n)
-    buffer = @fiber sbm(e(0))
     @finch begin
         L .= 0
         @loop j begin
-            buffer .= 0
-            @loop i buffer[i] = lotrimask[i,j+1] * edges[i,j]
-            @loop i L[i,j] = buffer[i]
+            @loop i L[i,j] = lotrimask[i,j+1] * edges[i,j]
         end
     end
 
-    wedges = @fiber d(sl(e(0), n), n)
-    buffer = @fiber sbm(e(0))
-    @finch begin #inner product vs gustavson
-        wedges .= 0
-        @loop j begin
-            buffer .= 0
-            @loop k i buffer[i] +=  L[i, k] * L[k, j] * edges[i, j]
-            @loop i wedges[i,j] = buffer[i]
-        end
-    end
-    
     triangles = Scalar(0)
-    @finch @loop j i triangles[] += wedges[i, j]
+    @finch @loop j k i triangles[] +=  L[i, k] * L[k, j] * edges[i, j]
+
     return triangles[]
 end

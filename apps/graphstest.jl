@@ -76,7 +76,7 @@ function testbellmanford()
 end
 
 function testtricount()
-    size, sparsity = 100, 0.5
+    size, sparsity = 1000, 0.5
     input = randomLower(size, sparsity)
     
     graphs_input = convertAdjToGraph(input)
