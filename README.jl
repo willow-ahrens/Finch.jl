@@ -95,6 +95,6 @@ end;
 #
 # At the [Julia](https://julialang.org/downloads/) REPL, install the latest stable version by running:
 #
-# ```julia-repl
+# ````julia
 # julia> using Pkg; Pkg.add("Finch")
-# ```
+# ````
