@@ -77,3 +77,13 @@ end
 # several stages for rewriting and simplification.
 # 
 # The technologies enabling Finch are described in our [manuscript](doi.org/10.1145/3579990.3580020).
+#
+# # Installation
+#
+# 1. Install Julia. You can download [here](https://julialang.org/downloads/).
+#
+# 2. Install the latest stable version of Finch at the REPL by running:
+#
+# ```
+# julia> using Pkg; Pkg.add("Finch")
+# ```
