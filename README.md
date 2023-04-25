@@ -161,7 +161,7 @@ The technologies enabling Finch are described in our [manuscript](doi.org/10.114
 
 At the [Julia](https://julialang.org/downloads/) REPL, install the latest stable version by running:
 
-```julia-repl
+````julia
 julia> using Pkg; Pkg.add("Finch")
-```
+````
 
