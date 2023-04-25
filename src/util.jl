@@ -45,7 +45,7 @@ end
 isassign(x) = x in Set([:+=, :*=, :&=, :|=, :(=)])
 incs = Dict(:+= => :+, :*= => :*, :&= => :&, :|= => :|)
 deincs = Dict(:+ => :+=, :* => :*=, :& => :&=, :| => :|=)
-ispure(x) = string(x)[end] != '!' && string(x) != "throw" && string(x) != "error"
+ispure(x) = string(x) == "!" || (string(x)[end] != '!' && string(x) != "throw" && string(x) != "error")
 
 issymbol(x) = x isa Symbol
 isexpr(x) = x isa Expr
