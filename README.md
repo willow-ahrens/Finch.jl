@@ -1,16 +1,14 @@
 # Finch.jl
 
-[docs_ico]:https://img.shields.io/badge/docs-stable-blue.svg
 [docs]:https://willow-ahrens.github.io/Finch.jl/stable
-
-[ci_ico]:https://github.com/willow-ahrens/Finch.jl/actions/workflows/CI.yml/badge.svg?branch=main
 [ci]:https://github.com/willow-ahrens/Finch.jl/actions/workflows/CI.yml?query=branch%3Amain
-
-[cov_ico]:https://codecov.io/gh/willow-ahrens/Finch.jl/branch/main/graph/badge.svg
 [cov]:https://codecov.io/gh/willow-ahrens/Finch.jl
-
-[tool_ico]:https://mybinder.org/badge_logo.svg
 [tool]:https://mybinder.org/v2/gh/willow-ahrens/Finch.jl/gh-pages?labpath=dev%2Finteractive.ipynb
+
+[docs_ico]:https://img.shields.io/badge/docs-stable-blue.svg
+[ci_ico]:https://github.com/willow-ahrens/Finch.jl/actions/workflows/CI.yml/badge.svg?branch=main
+[cov_ico]:https://codecov.io/gh/willow-ahrens/Finch.jl/branch/main/graph/badge.svg
+[tool_ico]:https://mybinder.org/badge_logo.svg
 
 | **Documentation**     | **Build Status**                      | **Try It Online!**       |
 |:---------------------:|:-------------------------------------:|:---------------------:|
@@ -38,6 +36,8 @@ variance of a sparse vector, reading the vector only once, and only reading
 nonzero values:
 
 ````julia
+using Finch
+
 X = @fiber(sl(e(0.0)), fsprand((10,), 0.5))
 x = Scalar(0.0)
 x_min = Scalar(Inf)
@@ -53,6 +53,81 @@ x_var = Scalar(0.0)
         x_sum[] += x[]
         x_var[] += x[] * x[]
     end
+end;
+````
+
+You can see what kind of code Finch generates using `@finch_code`
+
+````julia
+@finch_code begin
+    for i = _
+        x .= 0
+        x[] = X[i]
+        x_min[] <<min>>= x[]
+        x_max[] <<max>>= x[]
+        x_sum[] += x[]
+        x_var[] += x[] * x[]
+    end
+end
+````
+
+````
+quote
+    X_lvl = (ex.body.bodies[2]).rhs.tns.tns.lvl
+    X_lvl_2 = X_lvl.lvl
+    x_min = (ex.body.bodies[3]).lhs.tns.tns
+    x_min_val = x_min.val
+    x_max = (ex.body.bodies[4]).lhs.tns.tns
+    x_max_val = x_max.val
+    x_sum = (ex.body.bodies[5]).lhs.tns.tns
+    x_sum_val = x_sum.val
+    x_var = (ex.body.bodies[6]).lhs.tns.tns
+    x_var_val = x_var.val
+    X_lvl_q = X_lvl.ptr[1]
+    X_lvl_q_stop = X_lvl.ptr[1 + 1]
+    if X_lvl_q < X_lvl_q_stop
+        X_lvl_i1 = X_lvl.idx[X_lvl_q_stop - 1]
+    else
+        X_lvl_i1 = 0
+    end
+    i = 1
+    phase_stop = min(X_lvl_i1, X_lvl.shape)
+    if phase_stop >= 1
+        i = 1
+        if X_lvl.idx[X_lvl_q] < 1
+            X_lvl_q = scansearch(X_lvl.idx, 1, X_lvl_q, X_lvl_q_stop - 1)
+        end
+        while i <= phase_stop
+            X_lvl_i = X_lvl.idx[X_lvl_q]
+            phase_stop_2 = min(phase_stop, X_lvl_i)
+            if X_lvl_i == phase_stop_2
+                cond = 0 < -i + phase_stop_2
+                if cond
+                    x_max_val = max(0.0, x_max_val)
+                    x_min_val = min(0.0, x_min_val)
+                end
+                X_lvl_2_val_2 = X_lvl_2.val[X_lvl_q]
+                x_min_val = min(x_min_val, X_lvl_2_val_2)
+                x_max_val = max(x_max_val, X_lvl_2_val_2)
+                x_sum_val = X_lvl_2_val_2 + x_sum_val
+                x_var_val = X_lvl_2_val_2 * X_lvl_2_val_2 + x_var_val
+                X_lvl_q += 1
+            else
+                x_max_val = max(0.0, x_max_val)
+                x_min_val = min(0.0, x_min_val)
+            end
+            i = phase_stop_2 + 1
+        end
+        i = phase_stop + 1
+    end
+    if X_lvl.shape >= i
+        cond_2 = 0 < X_lvl.shape + 1 + -i
+        if cond_2
+            x_max_val = max(0.0, x_max_val)
+            x_min_val = min(0.0, x_min_val)
+        end
+    end
+    (x_var = (Scalar){0.0, Float64}(x_var_val), x_sum = (Scalar){0.0, Float64}(x_sum_val), x_max = (Scalar){-Inf, Float64}(x_max_val), x_min = (Scalar){Inf, Float64}(x_min_val))
 end
 ````
 
@@ -72,7 +147,7 @@ y = @fiber(d(e(0.0)));
     for j=_, i=_
         y[i] += A[i, j] * x[j]
     end
-end
+end;
 ````
 
 At it's heart, Finch is powered by a new domain specific language for
@@ -81,4 +156,12 @@ coiteration, breaking structured iterators into control flow units we call
 several stages for rewriting and simplification.
 
 The technologies enabling Finch are described in our [manuscript](doi.org/10.1145/3579990.3580020).
+
+# Installation
+
+At the [Julia](https://julialang.org/downloads/) REPL, install the latest stable version by running:
+
+```julia-repl
+julia> using Pkg; Pkg.add("Finch")
+```
 

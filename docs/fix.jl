@@ -13,6 +13,7 @@ DocMeta.setdocmeta!(Finch, :DocTestSetup, :(using Finch; using SparseArrays); re
 
 mdkwargs = (flavor = Literate.CommonMarkFlavor(),
     postprocess = update_FINCHVERSION,
+    execute = true,
     credit = false)
 
 Literate.markdown(joinpath(root, "README.jl"), root; mdkwargs...)

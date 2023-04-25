@@ -1,16 +1,14 @@
 # # Finch.jl
 # 
-# [docs_ico]:https://img.shields.io/badge/docs-stable-blue.svg
 # [docs]:https://willow-ahrens.github.io/Finch.jl/stable
-# 
-# [ci_ico]:https://github.com/willow-ahrens/Finch.jl/actions/workflows/CI.yml/badge.svg?branch=main
 # [ci]:https://github.com/willow-ahrens/Finch.jl/actions/workflows/CI.yml?query=branch%3Amain
-# 
-# [cov_ico]:https://codecov.io/gh/willow-ahrens/Finch.jl/branch/main/graph/badge.svg
 # [cov]:https://codecov.io/gh/willow-ahrens/Finch.jl
-# 
-# [tool_ico]:https://mybinder.org/badge_logo.svg
 # [tool]:https://mybinder.org/v2/gh/willow-ahrens/Finch.jl/gh-pages?labpath=dev%2Finteractive.ipynb
+# 
+# [docs_ico]:https://img.shields.io/badge/docs-stable-blue.svg
+# [ci_ico]:https://github.com/willow-ahrens/Finch.jl/actions/workflows/CI.yml/badge.svg?branch=main
+# [cov_ico]:https://codecov.io/gh/willow-ahrens/Finch.jl/branch/main/graph/badge.svg
+# [tool_ico]:https://mybinder.org/badge_logo.svg
 # 
 # | **Documentation**     | **Build Status**                      | **Try It Online!**       |
 # |:---------------------:|:-------------------------------------:|:---------------------:|
@@ -37,6 +35,8 @@
 # variance of a sparse vector, reading the vector only once, and only reading
 # nonzero values:
 
+using Finch
+
 X = @fiber(sl(e(0.0)), fsprand((10,), 0.5))
 x = Scalar(0.0)
 x_min = Scalar(Inf)
@@ -44,6 +44,19 @@ x_max = Scalar(-Inf)
 x_sum = Scalar(0.0)
 x_var = Scalar(0.0)
 @finch begin
+    for i = _
+        x .= 0
+        x[] = X[i]
+        x_min[] <<min>>= x[]
+        x_max[] <<max>>= x[]
+        x_sum[] += x[]
+        x_var[] += x[] * x[]
+    end
+end;
+ 
+# You can see what kind of code Finch generates using `@finch_code`
+
+@finch_code begin
     for i = _
         x .= 0
         x[] = X[i]
@@ -69,7 +82,7 @@ y = @fiber(d(e(0.0)));
     for j=_, i=_
         y[i] += A[i, j] * x[j]
     end
-end
+end;
 
 # At it's heart, Finch is powered by a new domain specific language for
 # coiteration, breaking structured iterators into control flow units we call
@@ -80,10 +93,8 @@ end
 #
 # # Installation
 #
-# 1. Install Julia. You can download [here](https://julialang.org/downloads/).
+# At the [Julia](https://julialang.org/downloads/) REPL, install the latest stable version by running:
 #
-# 2. Install the latest stable version of Finch at the REPL by running:
-#
-# ```
+# ```julia-repl
 # julia> using Pkg; Pkg.add("Finch")
 # ```
