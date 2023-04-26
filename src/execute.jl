@@ -2,8 +2,8 @@ const kernels = Dict()
 const codes = Dict()
 
 function execute(ex::T, a::A=DefaultAlgebra()) where {T, A}
-    kernel = get(kernels, (T, A)) do
-        code = get(codes, (T, A)) do
+    kernel = get!(kernels, (T, A)) do
+        code = get!(codes, (T, A)) do
             :(function Finch.execute(ex::$T, a::$A)
                 @inbounds begin
                     $(execute_code(:ex, T, a) |> unblock)
