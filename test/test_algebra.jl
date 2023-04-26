@@ -13,7 +13,6 @@ struct MyAlgebra <: Finch.AbstractAlgebra end
     Finch.isassociative(::MyAlgebra, ::typeof(gcd)) = true
     Finch.iscommutative(::MyAlgebra, ::typeof(gcd)) = true
     Finch.isannihilator(::MyAlgebra, ::typeof(gcd), x) = x == 1
-    Finch.register(MyAlgebra)
 
     @finch MyAlgebra() (w .= 1; @loop i w[i] = gcd(u[i], v[i]))
 
