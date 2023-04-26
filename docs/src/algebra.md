@@ -19,12 +19,34 @@ reduction operator `op`, you may use the following syntax: `A[i...] <<op>>= ex`.
 
 # User Functions
 
-Users can also define their own functions, and declare their properties to the
-Finch compiler as follows:
+You can also define your own functions to use in Finch! You can even define the
+algebraic properties of those functions so that Finch can optimize them even
+better. Just remember to declare the properties of your functions before you
+call any Finch functions on them.
 
-## Register User Functions
+As an example, suppose we want to declare some properties for the greatest
+common divisor function `gcd`. This function is associative and commutative, and
+the greatest common divisor of 1 and anything else is 1, so 1 is an annihilator.
 
-Finch uses generated functions to compile kernels. If any functions have been
+We can express these properties by overloading the following Finch functions on
+Finch's default algebra.
+
+```
+Finch.isassociative(::Finch.DefaultAlgebra, ::typeof(gcd)) = true
+Finch.iscommutative(::Finch.DefaultAlgebra, ::typeof(gcd)) = true
+Finch.isannihilator(::Finch.DefaultAlgebra, ::typeof(gcd), x) = x == 1
+```
+
+```
+u = @fiber sl(e(1)) #TODO add some data
+v = @fiber sl(e(1)) #TODO add some data
+w = @fiber sl(e(1))
+
+@finch MyAlgebra() (w .= 1; @loop i w[i] = gcd(u[i], v[i]))
+```
+
+
+If any functions have been
 defined after Finch was loaded, Finch needs to be notified about them. The most
 correct approach is to create a trait datatype that subtypes
 `Finch.AbstractAlgebra` and call `Finch.register` on that type. After you call
@@ -32,15 +54,6 @@ correct approach is to create a trait datatype that subtypes
 at that world age. You can pass your algebra to Finch to run Finch in that world
 age.
 
-## Declare Algebraic Properties
-
-Users can help Finch optimize expressions over new functions by declaring key
-function properties in the algebra. Finch kernels can then be executed using the
-algebra.
-
-As an example, suppose we wanted to declare some properties for the greatest
-common divisor function `gcd`. This function is associative and commutative, and
-the greatest common divisor of 1 and anything else is 1, so 1 is an annihilator.
 
 We can express this by subtyping `AbstractAlgebra` and defining properties as
 follows:
@@ -60,13 +73,8 @@ Finch.register(MyAlgebra)
 
 Then, we can call a kernel that uses our algebra!
 
-```
-u = @fiber sl(e(1)) #TODO add some data
-v = @fiber sl(e(1)) #TODO add some data
-w = @fiber sl(e(1))
+## Declare Algebraic Properties
 
-@finch MyAlgebra() (w .= 1; @loop i w[i] = gcd(u[i], v[i]))
-```
 
 ## Properties
 

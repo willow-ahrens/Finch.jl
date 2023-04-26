@@ -1,14 +1,31 @@
-execute(ex) = execute(ex, DefaultAlgebra())
+const kernels = Dict()
+const codes = Dict()
 
-push!(registry, (algebra)-> quote
-    @generated function execute(ex, a::$algebra)
-        quote
-            @inbounds begin
-                $(execute_code(:ex, ex, a()))
+function execute(ex::T, a::A=DefaultAlgebra()) where {T, A}
+    kernel = get(kernels, (T, A)) do
+        code = get(codes, (T, A)) do
+            :(function Finch.execute(ex::$T, a::$A)
+                @inbounds begin
+                    $(execute_code(:ex, T, a) |> unblock)
+                end
+            end)
+        end
+        @RuntimeGeneratedFunction(code)
+    end
+    kernel(ex, a)
+end
+
+macro compile_finch_workload(body)
+    esc(quote
+        empty!(Finch.codes)
+        $body
+        for (sig, code) in Finch.codes
+            if !Base.hasmethod(Finch.execute, Tuple{sig...})
+                @eval(__module__, code)
             end
         end
-    end
-end)
+    end)
+end
 
 function execute_code(ex, T, algebra = DefaultAlgebra())
     prgm = nothing

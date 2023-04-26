@@ -1,5 +1,8 @@
 module Finch
 
+using RuntimeGeneratedFunctions
+RuntimeGeneratedFunctions.init(@__MODULE__)
+
 @static if !isdefined(Base, :get_extension)
     using Requires
 end
@@ -26,8 +29,6 @@ export choose, minby, maxby, overwrite, initwrite
 export permit, offset, staticoffset, window
 
 include("util.jl")
-
-registry = []
 
 include("semantics.jl")
 include("FinchNotation/FinchNotation.jl")
@@ -95,14 +96,6 @@ module h
     generate_embed_docs()
 end
 
-function register(algebra)
-    for r in registry
-        @eval Finch $(r(algebra))
-    end
-end
-
-register(DefaultAlgebra)
-
 include("base/abstractarrays.jl")
 include("base/abstractunitranges.jl")
 include("base/broadcast.jl")
@@ -111,6 +104,18 @@ include("base/mapreduce.jl")
 include("base/compare.jl")
 include("base/copy.jl")
 include("base/fsparse.jl")
+
+#TODO fix this before merging
+@generated function Fiber!(lvl)
+    contain(LowerJulia()) do ctx
+        lvl = virtualize(:lvl, lvl, ctx)
+        lvl = resolve(lvl, ctx)
+        lvl = declare_level!(lvl, ctx, literal(0), literal(virtual_level_default(lvl)))
+        push!(ctx.preamble, assemble_level!(lvl, ctx, literal(1), literal(1)))
+        lvl = freeze_level!(lvl, ctx, literal(1))
+        :(Fiber($(ctx(lvl))))
+    end
+end
 
 @static if !isdefined(Base, :get_extension)
     function __init__()
@@ -132,6 +137,18 @@ end
             end
         ))
 
+    end
+end
+
+#TODO fix this in next commit
+@generated function Fiber!(lvl)
+    contain(LowerJulia()) do ctx
+        lvl = virtualize(:lvl, lvl, ctx)
+        lvl = resolve(lvl, ctx)
+        lvl = declare_level!(lvl, ctx, literal(0), literal(virtual_level_default(lvl)))
+        push!(ctx.preamble, assemble_level!(lvl, ctx, literal(1), literal(1)))
+        lvl = freeze_level!(lvl, ctx, literal(1))
+        :(Fiber($(ctx(lvl))))
     end
 end
 
