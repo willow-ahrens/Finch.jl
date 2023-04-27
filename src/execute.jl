@@ -1,13 +1,11 @@
 const kernels = Dict()
 const codes = Dict()
 
-function execute(ex::T, a::A=DefaultAlgebra()) where {T, A}
-    eval_and_call(execute, ex, a) do
-        :(function Finch.execute(ex::$T, a::$A)
-            @inbounds begin
-                $(execute_code(:ex, T, a) |> unblock)
-            end
-        end)
+execute(ex) = execute(ex, DefaultAlgebra())
+
+@compiled_function execute ex a quote
+    @inbounds begin
+        $(execute_code(:ex, typeof(ex), a) |> unblock)
     end
 end
 

@@ -1,12 +1,21 @@
-using ExprTools
-
-function eval_and_call(f, name, args...)
-    Ts = typeof(args)
-    kernel = get!(kernels, (name, Ts)) do
-        code = get!(f, codes, (name, Ts))
-        @RuntimeGeneratedFunction(code)
-    end
-    kernel(args...)
+macro compiled_function(name, args...)
+    body = args[end]
+    args = args[1:end-1]
+    sig = map(arg -> :(:($($(QuoteNode(arg)))::$(typeof($arg)))), args)
+    esc(quote
+        function Finch.$name($(args...))
+            kernel = get!(kernels, (Finch.$name, typeof(($(args...),)))) do
+                code = get!(codes, (Finch.$name, typeof(($(args...),)))) do
+                    :(function $(Finch.$name)($($(sig...)))
+                            $($body)
+                        end
+                    )
+                end
+                @RuntimeGeneratedFunction(code)
+            end
+            kernel($(args...))
+        end
+    end)
 end
 
 macro compile_finch_workload(body)
