@@ -1,49 +1,25 @@
 using ExprTools
 
-macro regenerated(ex)
-    def = splitdef(ex)
-    name = def[:name]
-    args = def[:args]
-    @assert all(arg->(arg isa Symbol), args)
-    sig = :(($(name), ($(def[:args])...,)))
-    typeof_args = map(arg->:(typeof($(arg))), def[:args])
-    typed_args = map(arg->:(arg::$arg), def[:args])
-    quote
-        function (Finch.$(def[:name]))($(def[:args])...)
-            kernel = let ($args...,) = ($typeof_args...,)
-                get!(kernels, $sig) do
-                    code = get!(codes, $sig) do
-                        :(function Finch.$($(name))($typed_args...)
-                            $(def[:body])
-                        end)
-                    end
-                    @RuntimeGeneratedFunction(code)
-                end
-            end
-            kernel($args...)
-        end
+function eval_and_call(f, name, args...)
+    Ts = typeof(args)
+    kernel = get!(kernels, (name, Ts)) do
+        code = get!(f, codes, (name, Ts))
+        @RuntimeGeneratedFunction(code)
     end
+    kernel(args...)
 end
-
-println()
 
 macro compile_finch_workload(body)
     esc(quote
         empty!(Finch.codes)
         $body
-        for ((name, types), code) in Finch.codes
-            if !Base.hasmethod(Finch.execute, Tuple{types...})
+        for ((name, Ts), code) in Finch.codes
+            if !Base.hasmethod(name, Ts)
                 @eval(__module__, code)
             end
         end
     end)
 end
-
-println(@macroexpand @regenerated function execute(ex, a)
-    @inbounds begin
-        $(execute_code(:ex, T, a) |> unblock)
-    end
-end)
 
 #TODO should we just have another IR? Ugh idk
 shallowcopy(x::T) where T = T([getfield(x, k) for k ∈ fieldnames(T)]...)
