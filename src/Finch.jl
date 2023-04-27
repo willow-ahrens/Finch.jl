@@ -106,7 +106,8 @@ include("base/copy.jl")
 include("base/fsparse.jl")
 
 #TODO fix this before merging
-@generated function Fiber!(lvl)
+@compiled_function Fiber! lvl begin
+    lvl = typeof(lvl)
     contain(LowerJulia()) do ctx
         lvl = virtualize(:lvl, lvl, ctx)
         lvl = resolve(lvl, ctx)

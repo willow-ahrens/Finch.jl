@@ -55,8 +55,9 @@ function Base.similar(bc::Broadcast.Broadcasted{FinchStyle{N}}, ::Type{T}, dims)
     similar_broadcast_helper(lift_broadcast(bc))
 end
 
-@generated function similar_broadcast_helper(bc::Broadcast.Broadcasted{FinchStyle{N}}) where {N}
-    idxs = [index(Symbol(:i, n)) for n = 1:N]
+@compiled_function similar_broadcast_helper bc begin
+    bc = typeof(bc)
+    idxs = [index(Symbol(:i, n)) for n = 1:ndims(bc)]
     ctx = LowerJulia()
     rep = pointwise_finch_traits(:bc, bc, idxs)
     rep = PointwiseRep(ctx)(rep, reverse(idxs))
@@ -161,20 +162,21 @@ function pointwise_finch_expr(ex, T, ctx, idxs)
     :($src[$(idxs[1:ndims(T)]...)])
 end
 
-@generated function Base.copyto!(out, bc::Broadcasted{FinchStyle{N}}) where {N}
-    copyto_helper!(:out, out, :bc, bc)
+function Base.copyto!(out, bc::Broadcasted{<:FinchStyle})
+    copyto_broadcast_helper!(out, bc)
 end
 
-function copyto_helper!(out_ex, out, bc_ex, bc::Type{<:Broadcasted{FinchStyle{N}}}) where {N}
+@compiled_function copyto_broadcast_helper! out bc begin
+    (out, bc) = typeof.((out, bc))
     contain(LowerJulia()) do ctx
-        idxs = [ctx.freshen(:idx, n) for n = 1:N]
-        pw_ex = pointwise_finch_expr(bc_ex, bc, ctx, idxs)
+        idxs = [ctx.freshen(:idx, n) for n = 1:ndims(bc)]
+        pw_ex = pointwise_finch_expr(:bc, bc, ctx, idxs)
         quote
             @finch begin
-                $out_ex .= $(default(out))
-                @loop($(reverse(idxs)...), $out_ex[$(idxs...)] = $pw_ex)
+                out .= $(default(out))
+                @loop($(reverse(idxs)...), out[$(idxs...)] = $pw_ex)
             end
-            $out_ex
+            out
         end
     end
 end

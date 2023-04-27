@@ -2,12 +2,15 @@ macro compiled_function(name, args...)
     body = args[end]
     args = args[1:end-1]
     sig = map(arg -> :(:($($(QuoteNode(arg)))::$(typeof($arg)))), args)
+    hygiene = map(arg -> :($arg = $arg), args)
     esc(quote
-        function Finch.$name($(args...))
-            kernel = get!(kernels, (Finch.$name, typeof(($(args...),)))) do
-                code = get!(codes, (Finch.$name, typeof(($(args...),)))) do
-                    :(function $(Finch.$name)($($(sig...)))
-                            $($body)
+        function $name($(args...))
+            kernel = get!(Finch.kernels, ($(QuoteNode(name)), typeof(($(args...),)))) do
+                code = get!(Finch.codes, ($(QuoteNode(name)), typeof(($(args...),)))) do
+                    :(function Finch.$($(name))($($(sig...)))
+                            $(let $(hygiene...)
+                                $body
+                            end)
                         end
                     )
                 end
