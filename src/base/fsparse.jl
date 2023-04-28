@@ -195,7 +195,7 @@ function ffindnz(src)
         SparseCOOLevel{ndims(src)}(
         ElementLevel{zero(eltype(src)), eltype(src)}()))
     tmp = copyto!(tmp, src)
-    nnz = tmp.lvl.pos[2] - 1
+    nnz = tmp.lvl.ptr[2] - 1
     tbl = tmp.lvl.tbl
     val = tmp.lvl.lvl.val
     (ntuple(n->tbl[n][1:nnz], ndims(src)), val[1:nnz])
