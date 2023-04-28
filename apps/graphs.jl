@@ -74,11 +74,11 @@ function bellmanford(edges, source=1)
     modified = Scalar(false)
 
     for iter = 1:n  
-        @finch @loop j i dists_buffer[j] <<min>>= (first(dists_prev[i]) + edges[i, j], i)
-        @finch @loop j dists_next[j] = min(dists_prev[j], dists_buffer[j])
+        @finch @loop j i dists_buffer[j] <<minby>>= (first(dists_prev[i]) + edges[i, j], i)
+        @finch @loop j dists_next[j] = minby(dists_prev[j], dists_buffer[j])
 
         modified = Scalar(false)
-        @finch @loop i modified[] |= dists_next[i][1] != dists_prev[i][1]
+        @finch @loop i modified[] |= first(dists_next[i]) != first(dists_prev[i])
         if !modified[]
             break
         end

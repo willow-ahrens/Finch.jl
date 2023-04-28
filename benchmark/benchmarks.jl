@@ -73,9 +73,10 @@ for mtx in ["SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
 end
 
 SUITE["graphs"]["bellmanford"] = BenchmarkGroup()
-for mtx in ["Newman/netscience", "Williams/pdb1HYS"]#, "GAP/GAP-road"]
+for mtx in ["Newman/netscience", "SNAP/roadNet-CA"]#, "GAP/GAP-road"]
     A = redefault!(fiber(SparseMatrixCSC(matrixdepot(mtx))), Inf)
-    SUITE["graphs"]["bellmanford"][mtx] = @benchmarkable Apps.bellmanford($A)
+    #SUITE["graphs"]["bellmanford"][mtx] = @benchmarkable Apps.bellmanford($A)
+    SUITE["graphs"]["bellmanford"]["$(mtx)_Graphs"] = @benchmarkable Apps.Graphs.bellman_ford_shortest_paths($(Apps.convertAdjToGraph(SparseMatrixCSC(matrixdepot(mtx)))), 1)
 end
 
 SUITE["matrices"] = BenchmarkGroup()
