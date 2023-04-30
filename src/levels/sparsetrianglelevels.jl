@@ -73,7 +73,7 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseTri
     print(io, "SparseTriangle (", default(fbr), ") [", ":,"^(ndims(fbr) - N), "1:")
     join(io, fbr.lvl.shape, ",1:") 
     print(io, "]")
-    display_fiber_data(io, mime, fbr, depth, 2, crds, print_coord, get_fbr)
+    display_fiber_data(io, mime, fbr, depth, N, crds, print_coord, get_fbr)
 end
 
 mutable struct VirtualSparseTriangleLevel
@@ -161,22 +161,26 @@ end
 is_laminable_updater(lvl::VirtualSparseTriangleLevel, ctx, ::Union{Nothing, Laminate, Extrude}, protos...) =
     is_laminable_updater(lvl.lvl, ctx, protos...)
 
-get_reader(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, ::Union{Nothing, Follow}, ::Union{Nothing, Follow}, protos...) = get_reader_triangular_dense_helper(fbr, ctx, get_reader, VirtualSubFiber, protos...)
-get_updater(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, ::Union{Nothing, Laminate, Extrude}, ::Union{Nothing, Laminate, Extrude}, protos...) = get_updater_triangular_dense_helper(fbr, ctx, get_updater, VirtualSubFiber, protos...)
-get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseTriangleLevel}, ctx, ::Union{Nothing, Laminate, Extrude}, ::Union{Nothing, Laminate, Extrude}, protos...) = get_updater_triangular_dense_helper(fbr, ctx, get_updater, (lvl, pos) -> VirtualTrackedSubFiber(lvl, pos, fbr.dirty), protos...)
+# get_reader(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, ::Union{Nothing, Follow}, ::Union{Nothing, Follow}, protos...) = get_reader_triangular_dense_helper(fbr, ctx, get_reader, VirtualSubFiber, protos...)
+# get_updater(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, ::Union{Nothing, Laminate, Extrude}, ::Union{Nothing, Laminate, Extrude}, protos...) = get_updater_triangular_dense_helper(fbr, ctx, get_updater, VirtualSubFiber, protos...)
+# get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseTriangleLevel}, ctx, ::Union{Nothing, Laminate, Extrude}, ::Union{Nothing, Laminate, Extrude}, protos...) = get_updater_triangular_dense_helper(fbr, ctx, get_updater, (lvl, pos) -> VirtualTrackedSubFiber(lvl, pos, fbr.dirty), protos...)
+get_reader(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, protos...) = get_reader_triangular_dense_helper(fbr, ctx, get_reader, VirtualSubFiber, protos...)
+get_updater(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, protos...) = get_updater_triangular_dense_helper(fbr, ctx, get_updater, VirtualSubFiber, protos...)
+get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseTriangleLevel}, ctx, protos...) = get_updater_triangular_dense_helper(fbr, ctx, get_updater, (lvl, pos) -> VirtualTrackedSubFiber(lvl, pos, fbr.dirty), protos...)
 function get_reader_triangular_dense_helper(fbr, ctx, get_readerupdater, subfiber_ctr, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
 
     q = ctx.freshen(tag, :_q)
-    s = ctx.freshen(tag, :_s)
+    # s = ctx.freshen(tag, :_s)
 
     # d is the dimension we are on 
     # j is coordinate of previous dimension
     # n is the total number of dimensions
     # q is index value from previous recursive call
-    function simplex_helper(d, j, n, q)
+    function simplex_helper(d, j, n, q, ::Union{Nothing, Follow}, protos...)
+        s = ctx.freshen(tag, :_s)
         if d == 1
             Furlable(
                 size = virtual_level_size(lvl, ctx)[end - n + 1:end - (n - d)],
@@ -184,7 +188,8 @@ function get_reader_triangular_dense_helper(fbr, ctx, get_readerupdater, subfibe
                     Phase(
                         stride = (ctx, ext) -> j,
                         body = (ctx, ext) -> Lookup(
-                            body = (ctx, i) -> get_readerupdater(subfiber_ctr(lvl.lvl, call(+, q, -1, i)), ctx, protos[n-1:end]...) # hack -> fix later
+                            # body = (ctx, i) -> get_readerupdater(subfiber_ctr(lvl.lvl, call(+, q, -1, i)), ctx, protos[n-1:end]...) # hack -> fix later
+                            body = (ctx, i) -> get_readerupdater(subfiber_ctr(lvl.lvl, call(+, q, -1, i)), ctx, protos...)
                         )
                     ),
                     Phase(
@@ -203,7 +208,7 @@ function get_reader_triangular_dense_helper(fbr, ctx, get_readerupdater, subfibe
                                 preamble = :(
                                     $s = $(ctx(call(+, q, virtual_simplex(d, ctx, call(-, i, 1)))))
                                 ),
-                                body = simplex_helper(d - 1, i, n, value(s))
+                                body = simplex_helper(d - 1, i, n, value(s), protos...)
                             )
                         )
                     ),
@@ -214,7 +219,7 @@ function get_reader_triangular_dense_helper(fbr, ctx, get_readerupdater, subfibe
             )
         end
     end
-    simplex_helper(lvl.N, lvl.shape, lvl.N, 1)
+    simplex_helper(lvl.N, lvl.shape, lvl.N, 1, protos...)
 end
 
 function get_updater_triangular_dense_helper(fbr, ctx, get_readerupdater, subfiber_ctr, protos...)
@@ -223,13 +228,14 @@ function get_updater_triangular_dense_helper(fbr, ctx, get_readerupdater, subfib
     Ti = lvl.Ti
 
     q = ctx.freshen(tag, :_q)
-    s = ctx.freshen(tag, :_s)
+    # s = ctx.freshen(tag, :_s)
 
     # d is the dimension we are on 
     # j is coordinate of previous dimension
     # n is the total number of dimensions
     # q is index value from previous recursive call
-    function simplex_helper(d, j, n, q)
+    function simplex_helper(d, j, n, q, ::Union{Nothing, Laminate, Extrude}, protos...)
+        s = ctx.freshen(tag, :_s)
         if d == 1
             Furlable(
                 size = virtual_level_size(lvl, ctx)[end - n + 1:end - (n - d)],
@@ -237,7 +243,8 @@ function get_updater_triangular_dense_helper(fbr, ctx, get_readerupdater, subfib
                     Phase(
                         stride = (ctx, ext) -> j,
                         body = (ctx, ext) -> Lookup(
-                            body = (ctx, i) -> get_readerupdater(subfiber_ctr(lvl.lvl, call(+, q, -1, i)), ctx, protos[n-1:end]...) # hack -> fix later
+                            # body = (ctx, i) -> get_readerupdater(subfiber_ctr(lvl.lvl, call(+, q, -1, i)), ctx, protos[n-1:end]...) # hack -> fix later
+                            body = (ctx, i) -> get_readerupdater(subfiber_ctr(lvl.lvl, call(+, q, -1, i)), ctx, protos...) # hack -> fix later
                         )
                     ),
                     Phase(
@@ -256,7 +263,7 @@ function get_updater_triangular_dense_helper(fbr, ctx, get_readerupdater, subfib
                                 preamble = :(
                                     $s = $(ctx(call(+, q, virtual_simplex(d, ctx, call(-, i, 1)))))
                                 ),
-                                body = simplex_helper(d - 1, i, n, value(s))
+                                body = simplex_helper(d - 1, i, n, value(s), protos...)
                             )
                         )
                     ),
@@ -267,5 +274,5 @@ function get_updater_triangular_dense_helper(fbr, ctx, get_readerupdater, subfib
             )
         end
     end
-    simplex_helper(lvl.N, lvl.shape, lvl.N, 1)
+    simplex_helper(lvl.N, lvl.shape, lvl.N, 1, protos...)
 end

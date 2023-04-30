@@ -540,6 +540,6 @@
         @test isstructequal(fbr, @fiber(st{3}(e(0.0), Int16(0))))
         @test isstructequal(fbr, @fiber(st{3, Int16}(e(0.0), 0)))
 
-        # @test check_output("format_constructors_st3_e.txt", String(take!(io))) # TODO: fix off-by-one error
+        @test check_output("format_constructors_st3_e.txt", String(take!(io))) 
     end
 end
