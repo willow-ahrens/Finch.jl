@@ -69,7 +69,7 @@ end
 Base.setindex!(arr::Fiber, src, inds...) = setindex_helper(arr, src, to_indices(arr, inds)...)
 @generated function setindex_helper(arr::Fiber, src, inds...)
     @assert ndims(arr) == length(inds)
-    @assert ndims(src) == sum(ndims.(inds))
+    @assert sum(ndims.(inds)) == 0 || (ndims(src) == sum(ndims.(inds)))
     N = ndims(arr)
 
     T = eltype(arr)
@@ -86,11 +86,21 @@ Base.setindex!(arr::Fiber, src, inds...) = setindex_helper(arr, src, to_indices(
     end
     src_modes = modes[filter(n->ndims(inds[n]) != 0, 1:N)]
     
-    quote
-        ($(syms...), ) = (inds...,)
-        @finch begin
-            @loop($(reverse(src_modes)...), arr[$(coords...)] = src[$(src_modes...)])
+    if sum(ndims.(inds)) == 0
+        quote
+            ($(syms...), ) = (inds...,)
+            @finch begin
+                @loop($(reverse(src_modes)...), arr[$(coords...)] = src)
+            end
+            return src
         end
-        return src
+    else
+        quote
+            ($(syms...), ) = (inds...,)
+            @finch begin
+                @loop($(reverse(src_modes)...), arr[$(coords...)] = src[$(src_modes...)])
+            end
+            return src
+        end
     end
 end
