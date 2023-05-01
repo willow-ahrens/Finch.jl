@@ -7,6 +7,7 @@ using Pkg
 
 using Finch
 using BenchmarkTools
+using SimpleWeightedGraphs
 using MatrixDepot
 using SparseArrays
 include("../Apps/apps.jl")
