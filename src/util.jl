@@ -1,4 +1,4 @@
-macro compiled_function(name, args...)
+macro staged_function(name, args...)
     body = args[end]
     args = args[1:end-1]
     sig = map(arg -> :(:($($(QuoteNode(arg)))::$(typeof($arg)))), args)

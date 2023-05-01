@@ -3,7 +3,7 @@ const codes = Dict()
 
 execute(ex) = execute(ex, DefaultAlgebra())
 
-@compiled_function execute ex a quote
+@staged_function execute ex a quote
     @inbounds begin
         $(execute_code(:ex, ex, a()) |> unblock)
     end
