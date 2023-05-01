@@ -2,7 +2,7 @@ macro compiled_function(name, args...)
     body = args[end]
     args = args[1:end-1]
     sig = map(arg -> :(:($($(QuoteNode(arg)))::$(typeof($arg)))), args)
-    hygiene = map(arg -> :($arg = $arg), args)
+    hygiene = map(arg -> :($arg = typeof($arg)), args)
     esc(quote
         function $name($(args...))
             kernel = get!(Finch.kernels, ($(QuoteNode(name)), typeof(($(args...),)))) do

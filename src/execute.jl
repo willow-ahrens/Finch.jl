@@ -5,7 +5,7 @@ execute(ex) = execute(ex, DefaultAlgebra())
 
 @compiled_function execute ex a quote
     @inbounds begin
-        $(execute_code(:ex, typeof(ex), a) |> unblock)
+        $(execute_code(:ex, ex, a()) |> unblock)
     end
 end
 

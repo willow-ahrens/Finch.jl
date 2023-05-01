@@ -56,7 +56,6 @@ function Base.similar(bc::Broadcast.Broadcasted{FinchStyle{N}}, ::Type{T}, dims)
 end
 
 @compiled_function similar_broadcast_helper bc begin
-    bc = typeof(bc)
     idxs = [index(Symbol(:i, n)) for n = 1:ndims(bc)]
     ctx = LowerJulia()
     rep = pointwise_finch_traits(:bc, bc, idxs)
@@ -167,7 +166,6 @@ function Base.copyto!(out, bc::Broadcasted{<:FinchStyle})
 end
 
 @compiled_function copyto_broadcast_helper! out bc begin
-    (out, bc) = typeof.((out, bc))
     contain(LowerJulia()) do ctx
         idxs = [ctx.freshen(:idx, n) for n = 1:ndims(bc)]
         pw_ex = pointwise_finch_expr(:bc, bc, ctx, idxs)
