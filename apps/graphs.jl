@@ -72,25 +72,29 @@ function bellmanford(edges, source=1)
     dists_prev = @fiber(d(e((Inf, -1)), n))
     dists_prev[source] = (0.0, -1)
     dists = @fiber(d(e((Inf, -1)), n))
-    active_prev = @fiber(sbm(p(), n))
+    active_prev = @fiber(d(e(false), n))
     active_prev[source] = true
-    active = @fiber(sbm(p(), n))
+    active = @fiber(d(e(false), n))
     d = Scalar(0.0)
 
     for iter = 1:n  
-        @finch @loop j dists[j] = minby(dists_prev[j], dists[j])
-        @finch for j = _
-            if active_prev[j]
-                for i = _
-                    d .= 0
-                    d[] = first(dists_prev[j]) + edges[i, j]
-                    dists[i] <<minby>>= (d[], j)
-                    active[i] |= d[] < first(dists_prev[i])
+        @finch @loop j dists[j] <<minby>>= dists_prev[j]
+
+        @finch begin
+            active .= false
+            for j = _
+                if active_prev[j]
+                    for i = _
+                        d .= 0
+                        d[] = first(dists_prev[j]) + edges[i, j]
+                        dists[i] <<minby>>= (d[], j)
+                        active[i] |= d[] < first(dists_prev[i])
+                    end
                 end
             end
         end
 
-        if countstored(active) == 0
+        if !any(active)
             return -1
         end
         dists_prev, dists = dists, dists_prev
