@@ -7,10 +7,10 @@ using Pkg
 
 using Finch
 using BenchmarkTools
-using SimpleWeightedGraphs
 using MatrixDepot
 using SparseArrays
-include("../Apps/apps.jl")
+
+include(joinpath(@__DIR__, "../apps/apps.jl"))
 
 SUITE = BenchmarkGroup()
 
@@ -65,19 +65,18 @@ SUITE["graphs"] = BenchmarkGroup()
 
 SUITE["graphs"]["pagerank"] = BenchmarkGroup()
 for mtx in ["SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
-    SUITE["graphs"]["pagerank"][mtx] = @benchmarkable Apps.pagerank($(fiber(SparseMatrixCSC(matrixdepot(mtx))))) 
+    SUITE["graphs"]["pagerank"][mtx] = @benchmarkable FinchApps.pagerank($(fiber(SparseMatrixCSC(matrixdepot(mtx))))) 
 end
 
 SUITE["graphs"]["bfs"] = BenchmarkGroup()
 for mtx in ["SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
-    SUITE["graphs"]["bfs"][mtx] = @benchmarkable Apps.bfs($(fiber(SparseMatrixCSC(matrixdepot(mtx))))) 
+    SUITE["graphs"]["bfs"][mtx] = @benchmarkable FinchApps.bfs($(fiber(SparseMatrixCSC(matrixdepot(mtx))))) 
 end
 
 SUITE["graphs"]["bellmanford"] = BenchmarkGroup()
-for mtx in ["Newman/netscience", "SNAP/roadNet-CA"]#, "GAP/GAP-road"]
+for mtx in ["Newman/netscience", "SNAP/roadNet-CA"]
     A = redefault!(fiber(SparseMatrixCSC(matrixdepot(mtx))), Inf)
-    SUITE["graphs"]["bellmanford"][mtx] = @benchmarkable Apps.bellmanford($A)
-    SUITE["graphs"]["bellmanford"]["$(mtx)_Graphs"] = @benchmarkable Apps.Graphs.bellman_ford_shortest_paths($(SimpleWeightedDiGraph(SparseMatrixCSC{Float64}(matrixdepot(mtx)))), 1)
+    SUITE["graphs"]["bellmanford"][mtx] = @benchmarkable FinchApps.bellmanford($A)
 end
 
 SUITE["matrices"] = BenchmarkGroup()
