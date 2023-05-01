@@ -3,24 +3,15 @@ macro staged_function(name, args...)
     args = args[1:end-1]
     sig = map(arg -> :(:($($(QuoteNode(arg)))::$(typeof($arg)))), args)
     hygiene = map(arg -> :($arg = typeof($arg)), args)
-    esc(quote
-        function $name($(args...))
-            kernel = get!(Finch.kernels, ($(QuoteNode(name)), typeof(($(args...),)))) do
-                code = get!(Finch.codes, ($(QuoteNode(name)), typeof(($(args...),)))) do
-                    :(function Finch.$($(QuoteNode(name)))($($(sig...)))
-                            $(let $(hygiene...)
-                                $body
-                            end)
-                        end
-                    )
-                end
-                #if !Base.hasmethod(Finch.$name, typeof(($(args...),)))
-                    eval(code)
-                #end
-                @RuntimeGeneratedFunction(code)
-            end
-            kernel($(args...))
+    def = quote
+        @generated function $name($(args...))
+            body = () -> $body
+            Core._apply_pure(body, ())
         end
+    end
+
+    return esc(quote
+        $(def)
     end)
 end
 
