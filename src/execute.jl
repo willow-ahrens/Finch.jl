@@ -1,6 +1,3 @@
-const kernels = Dict()
-const codes = Dict()
-
 execute(ex) = execute(ex, DefaultAlgebra())
 
 @staged_function execute ex a quote

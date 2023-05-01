@@ -1,8 +1,8 @@
+staged_defs = []
+
 macro staged_function(name, args...)
     body = args[end]
     args = args[1:end-1]
-    sig = map(arg -> :(:($($(QuoteNode(arg)))::$(typeof($arg)))), args)
-    hygiene = map(arg -> :($arg = typeof($arg)), args)
     def = quote
         @generated function $name($(args...))
             # Taken from https://github.com/NHDaly/StagedFunctions.jl/blob/6fafbc560421f70b05e3df330b872877db0bf3ff/src/StagedFunctions.jl#L116
@@ -12,20 +12,15 @@ macro staged_function(name, args...)
     end
 
     return esc(quote
+        push!(staged_defs, $(QuoteNode(def)))
         $(def)
     end)
 end
 
-macro compile_finch_workload(body)
-    esc(quote
-        empty!(Finch.codes)
-        $body
-        for ((name, Ts), code) in Finch.codes
-            if !Base.hasmethod(name, Ts)
-                @eval(__module__, code)
-            end
-        end
-    end)
+function refresh()
+    for def in staged_defs
+        @eval $def
+    end
 end
 
 #TODO should we just have another IR? Ugh idk
