@@ -137,7 +137,8 @@ isidempotent(::AbstractAlgebra, ::Chooser) = true
 Return true when `f(a..., x, b...) = f(a..., b...)` in `algebra`.
 """
 isidentity(alg) = (f, x) -> isidentity(alg, f, x)
-isidentity(alg, f::FinchNode, x::FinchNode) = isliteral(f) && isliteral(x) && isidentity(alg, f.val, x.val)
+isidentity(alg, f::FinchNode, x::FinchNode) = isliteral(f) && isidentity_by_fn(alg, f.val, x)
+isidentity_by_fn(alg, f, x::FinchNode) = isliteral(x) && isidentity(alg, f, x.val)
 isidentity(::Any, f, x) = false
 isidentity(::AbstractAlgebra, ::typeof(or), x) = x === false
 isidentity(::AbstractAlgebra, ::typeof(and), x) = x === true
@@ -147,13 +148,28 @@ isidentity(::AbstractAlgebra, ::typeof(+), x) = !ismissing(x) && iszero(x)
 isidentity(::AbstractAlgebra, ::typeof(*), x) = !ismissing(x) && isone(x)
 isidentity(::AbstractAlgebra, ::typeof(min), x) = !ismissing(x) && isinf(x) && x > 0
 isidentity(::AbstractAlgebra, ::typeof(max), x) = !ismissing(x) && isinf(x) && x < 0
-isidentity(::AbstractAlgebra, ::typeof(minby), x) = !ismissing(x) && isinf(x[1]) && x > 0
-isidentity(::AbstractAlgebra, ::typeof(maxby), x) = !ismissing(x) && isinf(x[1]) && x < 0
+function isidentity_by_fn(alg::AbstractAlgebra, ::typeof(minby), x::FinchNode)
+    if @capture x call(tuple, ~a::isliteral, ~b)
+        return isidentity(alg, min, a.val)
+    elseif isliteral(x)
+        return isidentity(alg, min, first(x.val))
+    end
+    return false
+end
+function isidentity_by_fn(alg::AbstractAlgebra, ::typeof(maxby), x::FinchNode)
+    if @capture x call(tuple, ~a::isliteral, ~b)
+        return isidentity(alg, max, a.val)
+    elseif isliteral(x)
+        return isidentity(alg, max, first(x.val))
+    end
+    return false
+end
 isidentity(::AbstractAlgebra, ::Chooser{D}, x) where {D} = isequal(x, D)
 isidentity(::AbstractAlgebra, ::InitWriter{D}, x) where {D} = isequal(x, D)
 
 isannihilator(alg) = (f, x) -> isannihilator(alg, f, x)
-isannihilator(alg, f::FinchNode, x::FinchNode) = isliteral(f) && isliteral(x) && isannihilator(alg, f.val, x.val)
+isannihilator(alg, f::FinchNode, x::FinchNode) = isliteral(f) && isannihilator_by_fn(alg, f.val, x)
+isannihilator_by_fn(alg, f, x::FinchNode) = isliteral(x) && isannihilator(alg, f, x.val)
 """
     isannihilator(algebra, f, x)
 
@@ -164,10 +180,24 @@ isannihilator(::AbstractAlgebra, ::typeof(+), x) = ismissing(x) || isinf(x)
 isannihilator(::AbstractAlgebra, ::typeof(*), x) = ismissing(x) || iszero(x)
 isannihilator(::AbstractAlgebra, ::typeof(min), x) = ismissing(x) || isinf(x) && x < 0
 isannihilator(::AbstractAlgebra, ::typeof(max), x) = ismissing(x) || isinf(x) && x > 0
-isannihilator(::AbstractAlgebra, ::typeof(minby), x) = ismissing(x) || isinf(x[1]) && x < 0
-isannihilator(::AbstractAlgebra, ::typeof(maxby), x) = ismissing(x) || isinf(x[1]) && x > 0
 isannihilator(::AbstractAlgebra, ::typeof(or), x) = ismissing(x) || x === true
 isannihilator(::AbstractAlgebra, ::typeof(and), x) = ismissing(x) || x === false
+function isannihilator_by_fn(alg::AbstractAlgebra, ::typeof(minby), x::FinchNode)
+    if @capture x call(tuple, ~a::isliteral, ~b)
+        return isannihilator(alg, min, a.val)
+    elseif isliteral(x)
+        return isannihilator(alg, min, first(x.val))
+    end
+    return false
+end
+function isannihilator_by_fn(alg::AbstractAlgebra, ::typeof(maxby), x::FinchNode)
+    if @capture x call(tuple, ~a::isliteral, ~b)
+        isannihilator(alg, max, a.val)
+    elseif isliteral(x)
+        isannihilator(alg, max, first(x.val))
+    end
+    return false
+end
 
 isinverse(alg) = (f, g) -> isinverse(alg, f, g)
 isinverse(alg, f::FinchNode, g::FinchNode) = isliteral(f) && isliteral(g) && isinverse(alg, f.val, g.val)
