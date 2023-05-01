@@ -5,6 +5,7 @@ macro staged_function(name, args...)
     hygiene = map(arg -> :($arg = typeof($arg)), args)
     def = quote
         @generated function $name($(args...))
+            # Taken from https://github.com/NHDaly/StagedFunctions.jl/blob/6fafbc560421f70b05e3df330b872877db0bf3ff/src/StagedFunctions.jl#L116
             body = () -> $body
             Core._apply_pure(body, ())
         end
