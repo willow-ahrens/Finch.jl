@@ -118,7 +118,8 @@ virtual_level_eltype(lvl::VirtualSparseTriangleLevel) = virtual_level_eltype(lvl
 virtual_level_default(lvl::VirtualSparseTriangleLevel) = virtual_level_default(lvl.lvl)
 
 function declare_level!(lvl::VirtualSparseTriangleLevel, ctx::LowerJulia, pos, init)
-    qos = virtual_simplex(lvl.N, ctx, lvl.shape)
+    # qos = virtual_simplex(lvl.N, ctx, lvl.shape)
+    qos = call(*, pos, virtual_simplex(lvl.N, ctx, lvl.shape))
     lvl.lvl = declare_level!(lvl.lvl, ctx, qos, init)
     return lvl
 end
@@ -140,13 +141,14 @@ supports_reassembly(::VirtualSparseTriangleLevel) = true
 function reassemble_level!(lvl::VirtualSparseTriangleLevel, ctx, pos_start, pos_stop)
     fbr_count = virtual_simplex(lvl.N, ctx, lvl.shape)
     qos_start = call(+, call(*, call(-, pos_start, lvl.Ti(1)), fbr_count), 1)
-    qos_stop = call(*, pos_start, fbr_count)
+    qos_stop = call(*, pos_stop, fbr_count)
     reassemble_level!(lvl.lvl, ctx, qos_start, qos_stop)
     lvl
 end
 
 function freeze_level!(lvl::VirtualSparseTriangleLevel, ctx::LowerJulia, pos)
-    lvl.lvl = freeze_level!(lvl.lvl, ctx, call(*, pos, lvl.shape))
+    qos = call(*, pos, virtual_simplex(lvl.N, ctx, lvl.shape))
+    lvl.lvl = freeze_level!(lvl.lvl, ctx, qos)
     return lvl
 end
 
