@@ -63,7 +63,16 @@ end
 function Base.map!(dst, f, src::Fiber, args::Union{Fiber, Base.AbstractArrayOrBroadcasted}...)
     copyto!(dst, Base.broadcasted(f, src, args...))
 end
-function Base.reduce(op::Function, bc::Broadcasted{FinchStyle{N}}; dims=:, init = reduce(op, Vector{combine_eltypes(bc.f, bc.args)}())) where {N}
+
+function initial_value(op, T)
+    try
+        reduce(op, Vector{T}())
+    catch
+        throw(ArgumentError("Please supply initial value for reduction of $T with $op."))
+    end
+end
+
+function Base.reduce(op::Function, bc::Broadcasted{FinchStyle{N}}; dims=:, init = initial_value(op, combine_eltypes(bc.f, bc.args))) where {N}
     reduce_helper(Callable{op}(), lift_broadcast(bc), Val(dims), Val(init))
 end
 
@@ -102,6 +111,8 @@ const FiberOrBroadcast = Union{<:Fiber, <:Broadcasted{FinchStyle{N}} where N}
 
 Base.sum(arr::FiberOrBroadcast; kwargs...) = reduce(+, arr; kwargs...)
 Base.prod(arr::FiberOrBroadcast; kwargs...) = reduce(*, arr; kwargs...)
+Base.any(arr::FiberOrBroadcast; kwargs...) = reduce(or, arr; init = false, kwargs...)
+Base.all(arr::FiberOrBroadcast; kwargs...) = reduce(and, arr; init = true, kwargs...)
 Base.minimum(arr::FiberOrBroadcast; kwargs...) = reduce(min, arr; kwargs...)
 Base.maximum(arr::FiberOrBroadcast; kwargs...) = reduce(max, arr; kwargs...)
 #Base.extrema(arr::FiberOrBroadcast; kwargs...) #TODO 
