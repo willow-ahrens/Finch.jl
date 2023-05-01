@@ -43,6 +43,7 @@ end
 @inline level_eltype(::Type{PatternLevel}) = Bool
 @inline level_default(::Type{PatternLevel}) = false
 (fbr::AbstractFiber{<:PatternLevel})() = true
+data_rep_level(::Type{<:PatternLevel}) = ElementData(false, Bool)
 
 """
     pattern!(fbr)
