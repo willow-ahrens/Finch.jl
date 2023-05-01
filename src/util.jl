@@ -7,13 +7,16 @@ macro compiled_function(name, args...)
         function $name($(args...))
             kernel = get!(Finch.kernels, ($(QuoteNode(name)), typeof(($(args...),)))) do
                 code = get!(Finch.codes, ($(QuoteNode(name)), typeof(($(args...),)))) do
-                    :(function Finch.$($(name))($($(sig...)))
+                    :(function Finch.$($(QuoteNode(name)))($($(sig...)))
                             $(let $(hygiene...)
                                 $body
                             end)
                         end
                     )
                 end
+                #if !Base.hasmethod(Finch.$name, typeof(($(args...),)))
+                    eval(code)
+                #end
                 @RuntimeGeneratedFunction(code)
             end
             kernel($(args...))
