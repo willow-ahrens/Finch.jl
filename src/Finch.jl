@@ -1,8 +1,5 @@
 module Finch
 
-using RuntimeGeneratedFunctions
-RuntimeGeneratedFunctions.init(@__MODULE__)
-
 @static if !isdefined(Base, :get_extension)
     using Requires
 end
