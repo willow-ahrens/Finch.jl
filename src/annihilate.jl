@@ -364,12 +364,12 @@ function base_rules(alg, shash)
         (@rule sieve(true, ~a) => a),
         (@rule sieve(false, ~a) => sequence()), #TODO should add back skipvisitor
 
-        (@rule chunk(~i, ~a, assign(access(~b, updater(~m), ~j...), ~f::isidempotent(alg), ~c)) => begin
+        (@rule chunk(~i, ~a::isvirtual, assign(access(~b, updater(~m), ~j...), ~f::isidempotent(alg), ~c)) => begin
             if i ∉ j && getname(i) ∉ getunbound(c)
-                assign(access(b, updater(m), j...), f, c)
+                sieve(call(>, measure(a.val), 0), assign(access(b, updater(m), j...), f, c))
             end
         end),
-        (@rule chunk(~i, ~a, assign(access(~b, updater(~m), ~j...), +, ~d)) => begin
+        (@rule chunk(~i, ~a::isvirtual, assign(access(~b, updater(~m), ~j...), +, ~d)) => begin
             if i ∉ j && getname(i) ∉ getunbound(d)
                 assign(access(b, updater(m), j...), +, call(*, measure(a.val), d))
             end
