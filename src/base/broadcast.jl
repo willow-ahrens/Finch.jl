@@ -126,10 +126,10 @@ function (ctx::PointwiseRep)(rep, idxs, ::PointwiseRepeatStyle)
     return RepeatData(background.val, typeof(background.val))
 end
 
-function (ctx::PointwiseRep)(rep, idxs, ::PointwiseElementStyle)
-    background = simplify(Postwalk(Chain([
+function (ctx::PointwiseRep)(rep, idxs, ::Union{DefaultStyle, PointwiseElementStyle})
+    background = simplify(Rewrite(Postwalk(Chain([
         (@rule access(~ex::isvirtual, ~m) => finch_leaf(default(ex.val))),
-    ]))(rep), ctx.ctx)
+    ])))(rep), ctx.ctx)
     @assert isliteral(background)
     return ElementData(background.val, typeof(background.val))
 end

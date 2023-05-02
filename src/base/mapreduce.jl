@@ -117,6 +117,6 @@ Base.sum(arr::FiberOrBroadcast; kwargs...) = reduce(+, arr; kwargs...)
 Base.prod(arr::FiberOrBroadcast; kwargs...) = reduce(*, arr; kwargs...)
 Base.any(arr::FiberOrBroadcast; kwargs...) = reduce(or, arr; init = false, kwargs...)
 Base.all(arr::FiberOrBroadcast; kwargs...) = reduce(and, arr; init = true, kwargs...)
-Base.minimum(arr::FiberOrBroadcast; kwargs...) = reduce(min, arr; kwargs...)
-Base.maximum(arr::FiberOrBroadcast; kwargs...) = reduce(max, arr; kwargs...)
+Base.minimum(arr::FiberOrBroadcast; kwargs...) = reduce(min, arr; init = Inf, kwargs...)
+Base.maximum(arr::FiberOrBroadcast; kwargs...) = reduce(max, arr; init = -Inf, kwargs...)
 #Base.extrema(arr::FiberOrBroadcast; kwargs...) #TODO 

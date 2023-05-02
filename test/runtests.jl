@@ -83,5 +83,6 @@ include("utils.jl")
     if should_run("kernels") include("test_kernels.jl") end
     if should_run("issues") include("test_issues.jl") end
     if should_run("base") include("test_base.jl") end
+    if should_run("apps") include("test_apps.jl") end
     if should_run("embed") include("embed/test_embed.jl") end
 end
