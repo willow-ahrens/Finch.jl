@@ -104,18 +104,6 @@ include("base/compare.jl")
 include("base/copy.jl")
 include("base/fsparse.jl")
 
-#TODO fix this before merging
-@staged_function Fiber! lvl begin
-    contain(LowerJulia()) do ctx
-        lvl = virtualize(:lvl, lvl, ctx)
-        lvl = resolve(lvl, ctx)
-        lvl = declare_level!(lvl, ctx, literal(0), literal(virtual_level_default(lvl)))
-        push!(ctx.preamble, assemble_level!(lvl, ctx, literal(1), literal(1)))
-        lvl = freeze_level!(lvl, ctx, literal(1))
-        :(Fiber($(ctx(lvl))))
-    end
-end
-
 function __init__()
     @static if !isdefined(Base, :get_extension)
         @require SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf" include("../ext/SparseArraysExt.jl")
