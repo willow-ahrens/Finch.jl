@@ -78,6 +78,8 @@ Return true when `f(a..., f(b...), c...) = f(a..., b..., c...)` in `algebra`.
 isassociative(::Any, f) = false
 isassociative(::AbstractAlgebra, ::typeof(or)) = true
 isassociative(::AbstractAlgebra, ::typeof(and)) = true
+isassociative(::AbstractAlgebra, ::typeof(|)) = true
+isassociative(::AbstractAlgebra, ::typeof(&)) = true
 isassociative(::AbstractAlgebra, ::typeof(coalesce)) = true
 isassociative(::AbstractAlgebra, ::typeof(something)) = true
 isassociative(::AbstractAlgebra, ::typeof(+)) = true
@@ -98,6 +100,8 @@ Return true when for all permutations p, `f(a...) = f(a[p]...)` in `algebra`.
 iscommutative(::Any, f) = false
 iscommutative(::AbstractAlgebra, ::typeof(or)) = true
 iscommutative(::AbstractAlgebra, ::typeof(and)) = true
+iscommutative(::AbstractAlgebra, ::typeof(|)) = true
+iscommutative(::AbstractAlgebra, ::typeof(&)) = true
 iscommutative(::AbstractAlgebra, ::typeof(+)) = true
 iscommutative(::AbstractAlgebra, ::typeof(*)) = true
 iscommutative(::AbstractAlgebra, ::typeof(min)) = true
@@ -125,6 +129,8 @@ Return true when `f(a, b) = f(f(a, b), b)` in `algebra`.
 """
 isidempotent(::Any, f) = false
 isidempotent(::AbstractAlgebra, ::typeof(overwrite)) = true
+isidempotent(::AbstractAlgebra, ::typeof(|)) = true
+isidempotent(::AbstractAlgebra, ::typeof(&)) = true
 isidempotent(::AbstractAlgebra, ::typeof(min)) = true
 isidempotent(::AbstractAlgebra, ::typeof(max)) = true
 isidempotent(::AbstractAlgebra, ::typeof(minby)) = true
@@ -137,7 +143,8 @@ isidempotent(::AbstractAlgebra, ::Chooser) = true
 Return true when `f(a..., x, b...) = f(a..., b...)` in `algebra`.
 """
 isidentity(alg) = (f, x) -> isidentity(alg, f, x)
-isidentity(alg, f::FinchNode, x::FinchNode) = isliteral(f) && isliteral(x) && isidentity(alg, f.val, x.val)
+isidentity(alg, f::FinchNode, x::FinchNode) = isliteral(f) && isidentity_by_fn(alg, f.val, x)
+isidentity_by_fn(alg, f, x::FinchNode) = isliteral(x) && isidentity(alg, f, x.val)
 isidentity(::Any, f, x) = false
 isidentity(::AbstractAlgebra, ::typeof(or), x) = x === false
 isidentity(::AbstractAlgebra, ::typeof(and), x) = x === true
@@ -145,15 +152,32 @@ isidentity(::AbstractAlgebra, ::typeof(coalesce), x) = ismissing(x)
 isidentity(::AbstractAlgebra, ::typeof(something), x) = !ismissing(x) && isnothing(x)
 isidentity(::AbstractAlgebra, ::typeof(+), x) = !ismissing(x) && iszero(x)
 isidentity(::AbstractAlgebra, ::typeof(*), x) = !ismissing(x) && isone(x)
+isidentity(::AbstractAlgebra, ::typeof(|), x) = !ismissing(x) && iszero(x)
+isidentity(::AbstractAlgebra, ::typeof(&), x) = !ismissing(x) && x == ~(zero(x))
 isidentity(::AbstractAlgebra, ::typeof(min), x) = !ismissing(x) && isinf(x) && x > 0
 isidentity(::AbstractAlgebra, ::typeof(max), x) = !ismissing(x) && isinf(x) && x < 0
-isidentity(::AbstractAlgebra, ::typeof(minby), x) = !ismissing(x) && isinf(x[1]) && x > 0
-isidentity(::AbstractAlgebra, ::typeof(maxby), x) = !ismissing(x) && isinf(x[1]) && x < 0
+function isidentity_by_fn(alg::AbstractAlgebra, ::typeof(minby), x::FinchNode)
+    if @capture x call(tuple, ~a::isliteral, ~b)
+        return isidentity(alg, min, a.val)
+    elseif isliteral(x)
+        return isidentity(alg, min, first(x.val))
+    end
+    return false
+end
+function isidentity_by_fn(alg::AbstractAlgebra, ::typeof(maxby), x::FinchNode)
+    if @capture x call(tuple, ~a::isliteral, ~b)
+        return isidentity(alg, max, a.val)
+    elseif isliteral(x)
+        return isidentity(alg, max, first(x.val))
+    end
+    return false
+end
 isidentity(::AbstractAlgebra, ::Chooser{D}, x) where {D} = isequal(x, D)
 isidentity(::AbstractAlgebra, ::InitWriter{D}, x) where {D} = isequal(x, D)
 
 isannihilator(alg) = (f, x) -> isannihilator(alg, f, x)
-isannihilator(alg, f::FinchNode, x::FinchNode) = isliteral(f) && isliteral(x) && isannihilator(alg, f.val, x.val)
+isannihilator(alg, f::FinchNode, x::FinchNode) = isliteral(f) && isannihilator_by_fn(alg, f.val, x)
+isannihilator_by_fn(alg, f, x::FinchNode) = isliteral(x) && isannihilator(alg, f, x.val)
 """
     isannihilator(algebra, f, x)
 
@@ -164,10 +188,26 @@ isannihilator(::AbstractAlgebra, ::typeof(+), x) = ismissing(x) || isinf(x)
 isannihilator(::AbstractAlgebra, ::typeof(*), x) = ismissing(x) || iszero(x)
 isannihilator(::AbstractAlgebra, ::typeof(min), x) = ismissing(x) || isinf(x) && x < 0
 isannihilator(::AbstractAlgebra, ::typeof(max), x) = ismissing(x) || isinf(x) && x > 0
-isannihilator(::AbstractAlgebra, ::typeof(minby), x) = ismissing(x) || isinf(x[1]) && x < 0
-isannihilator(::AbstractAlgebra, ::typeof(maxby), x) = ismissing(x) || isinf(x[1]) && x > 0
 isannihilator(::AbstractAlgebra, ::typeof(or), x) = ismissing(x) || x === true
 isannihilator(::AbstractAlgebra, ::typeof(and), x) = ismissing(x) || x === false
+isannihilator(::AbstractAlgebra, ::typeof(|), x) = !ismissing(x) && x == ~(zero(x))
+isannihilator(::AbstractAlgebra, ::typeof(&), x) = !ismissing(x) && iszero(x)
+function isannihilator_by_fn(alg::AbstractAlgebra, ::typeof(minby), x::FinchNode)
+    if @capture x call(tuple, ~a::isliteral, ~b)
+        return isannihilator(alg, min, a.val)
+    elseif isliteral(x)
+        return isannihilator(alg, min, first(x.val))
+    end
+    return false
+end
+function isannihilator_by_fn(alg::AbstractAlgebra, ::typeof(maxby), x::FinchNode)
+    if @capture x call(tuple, ~a::isliteral, ~b)
+        isannihilator(alg, max, a.val)
+    elseif isliteral(x)
+        isannihilator(alg, max, first(x.val))
+    end
+    return false
+end
 
 isinverse(alg) = (f, g) -> isinverse(alg, f, g)
 isinverse(alg, f::FinchNode, g::FinchNode) = isliteral(f) && isliteral(g) && isinverse(alg, f.val, g.val)
@@ -247,6 +287,10 @@ function base_rules(alg, shash)
 
         (@rule call(>=, ~a, ~b) => call(<=, b, a)),
         (@rule call(>, ~a, ~b) => call(<, b, a)),
+        (@rule call(<, Inf, ~a) => literal(false)),
+        (@rule call(<, ~a, -Inf) => literal(false)),
+        (@rule call(>, ~a, Inf) => literal(false)),
+        (@rule call(>, -Inf, ~a) => literal(false)),
 
         (@rule call(<=, ~a, call(max, ~b...)) => call(or, map(x -> call(<=, a, x), b)...)),
         (@rule call(<, ~a, call(max, ~b...)) => call(or, map(x -> call(<, a, x), b)...)),
@@ -320,12 +364,12 @@ function base_rules(alg, shash)
         (@rule sieve(true, ~a) => a),
         (@rule sieve(false, ~a) => sequence()), #TODO should add back skipvisitor
 
-        (@rule chunk(~i, ~a, assign(access(~b, updater(~m), ~j...), ~f::isidempotent(alg), ~c)) => begin
+        (@rule chunk(~i, ~a::isvirtual, assign(access(~b, updater(~m), ~j...), ~f::isidempotent(alg), ~c)) => begin
             if i ∉ j && getname(i) ∉ getunbound(c)
-                assign(access(b, updater(m), j...), f, c)
+                sieve(call(>, measure(a.val), 0), assign(access(b, updater(m), j...), f, c))
             end
         end),
-        (@rule chunk(~i, ~a, assign(access(~b, updater(~m), ~j...), +, ~d)) => begin
+        (@rule chunk(~i, ~a::isvirtual, assign(access(~b, updater(~m), ~j...), +, ~d)) => begin
             if i ∉ j && getname(i) ∉ getunbound(d)
                 assign(access(b, updater(m), j...), +, call(*, measure(a.val), d))
             end
