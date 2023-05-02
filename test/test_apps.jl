@@ -51,4 +51,24 @@ include(joinpath(@__DIR__, "../apps/apps.jl"))
             @test output == collect(zip(expected.dists, expected.parents))
         end
     end
+    @testset "linalg" begin
+        @testset "spgemm" begin
+            m, n, k = (32, 32, 32)
+            p = 0.1
+            A_ref = sprand(Int, m, k, p)
+            B_ref = sprand(Int, k, n, p)
+            C_ref = A_ref * B_ref
+            A = @fiber(d(sl(e(0))), A_ref)
+            B = @fiber(d(sl(e(0))), B_ref)
+
+            for (key, fn) in [
+                (:spgemm_inner, FinchApps.spgemm_inner),
+                (:spgemm_gustavson, FinchApps.spgemm_gustavson),
+                (:spgemm_outer, FinchApps.spgemm_outer),
+            ]
+                C = fn(A, B)
+                @test C == C_ref
+            end
+        end
+    end
 end
