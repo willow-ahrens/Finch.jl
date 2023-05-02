@@ -133,7 +133,7 @@ end
 function assemble_level!(lvl::VirtualSparseTriangleLevel, ctx, pos_start, pos_stop)
     fbr_count = virtual_simplex(lvl.N, ctx, lvl.shape)
     qos_start = call(+, call(*, call(-, pos_start, lvl.Ti(1)), fbr_count), 1)
-    qos_stop = call(*, pos_start, fbr_count)
+    qos_stop = call(*, pos_stop, fbr_count)
     assemble_level!(lvl.lvl, ctx, qos_start, qos_stop)
 end
 
@@ -221,7 +221,13 @@ function get_reader_triangular_dense_helper(fbr, ctx, get_readerupdater, subfibe
             )
         end
     end
-    simplex_helper(lvl.N, lvl.shape, lvl.N, 1, protos...)
+    fbr_count = virtual_simplex(lvl.N, ctx, lvl.shape)
+    Thunk(
+        preamble = quote
+            $q = $(ctx(call(+, call(*, call(-, pos, lvl.Ti(1)), fbr_count), 1)))
+        end,
+        body = simplex_helper(lvl.N, lvl.shape, lvl.N, value(q), protos...)
+    )
 end
 
 function get_updater_triangular_dense_helper(fbr, ctx, get_readerupdater, subfiber_ctr, protos...)
@@ -276,5 +282,11 @@ function get_updater_triangular_dense_helper(fbr, ctx, get_readerupdater, subfib
             )
         end
     end
-    simplex_helper(lvl.N, lvl.shape, lvl.N, 1, protos...)
+    fbr_count = virtual_simplex(lvl.N, ctx, lvl.shape)
+    Thunk(
+        preamble = quote
+            $q = $(ctx(call(+, call(*, call(-, pos, lvl.Ti(1)), fbr_count), 1)))
+        end,
+        body = simplex_helper(lvl.N, lvl.shape, lvl.N, value(q), protos...)
+    )
 end
