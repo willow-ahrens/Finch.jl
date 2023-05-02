@@ -65,7 +65,7 @@ SUITE["graphs"] = BenchmarkGroup()
 
 SUITE["graphs"]["pagerank"] = BenchmarkGroup()
 for mtx in ["SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
-    SUITE["graphs"]["pagerank"][mtx] = @benchmarkable FinchApps.pagerank($(fiber(SparseMatrixCSC(matrixdepot(mtx))))) 
+    SUITE["graphs"]["pagerank"][mtx] = @benchmarkable FinchApps.pagerank($(pattern!(fiber(SparseMatrixCSC(matrixdepot(mtx)))))) 
 end
 
 SUITE["graphs"]["bfs"] = BenchmarkGroup()
