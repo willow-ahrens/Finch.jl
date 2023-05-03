@@ -67,7 +67,6 @@ using Finch: Cindex
             return a+b+c
         end 
         struct MyAlgebra <: Finch.AbstractAlgebra end
-        Finch.register(MyAlgebra)
         t = @fiber(sl(sl(e(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
         A = dropdefaults(copyto!(@fiber(sl(sl(e(0.0)))), B))

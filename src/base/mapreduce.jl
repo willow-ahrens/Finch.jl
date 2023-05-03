@@ -76,7 +76,11 @@ function Base.reduce(op::Function, bc::Broadcasted{FinchStyle{N}}; dims=:, init 
     reduce_helper(Callable{op}(), lift_broadcast(bc), Val(dims), Val(init))
 end
 
-@generated function reduce_helper(::Callable{op}, bc::Broadcasted{FinchStyle{N}}, ::Val{dims}, ::Val{init}) where {op, dims, init, N}
+@staged_function reduce_helper op bc dims init begin
+    reduce_helper_code(op, bc, dims, init)
+end
+
+function reduce_helper_code(::Type{Callable{op}}, bc::Type{<:Broadcasted{FinchStyle{N}}}, ::Type{Val{dims}}, ::Type{Val{init}}) where {op, dims, init, N}
     contain(LowerJulia()) do ctx
         idxs = [ctx.freshen(:idx, n) for n = 1:N]
         rep = pointwise_finch_traits(:bc, bc, index.(idxs))

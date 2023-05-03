@@ -236,8 +236,4 @@ Finch.virtual_eltype(tns::VirtualSparseVector) = tns.Tv
 
 SparseArrays.nnz(fbr::Fiber) = countstored(fbr)
 
-function __init__()
-    Finch.register(Finch.DefaultAlgebra)
-end
-
 end

@@ -1,4 +1,4 @@
-@generated function helper_equal(A, B)
+@staged_function helper_equal A B begin
     idxs = [Symbol(:i_, n) for n = 1:ndims(A)]
     return quote
         size(A) == size(B) || return false
@@ -20,7 +20,7 @@ function Base.:(==)(A::AbstractArray, B::Fiber)
     return helper_equal(A, B)
 end
 
-@generated function helper_isequal(A, B)
+@staged_function helper_isequal A B begin
     idxs = [Symbol(:i_, n) for n = 1:ndims(A)]
     return quote
         size(A) == size(B) || return false

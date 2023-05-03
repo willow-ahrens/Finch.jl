@@ -76,7 +76,6 @@ include("utils.jl")
     if should_run("constructors") include("test_constructors.jl") end
     if should_run("conversions") include("test_conversions.jl") end
     if should_run("merges") include("test_merges.jl") end
-    if should_run("algebra") include("test_algebra.jl") end
     if should_run("permit") include("test_permit.jl") end
     if should_run("skips") include("test_skips.jl") end
     if should_run("typical") include("test_typical.jl") end
@@ -85,4 +84,6 @@ include("utils.jl")
     if should_run("base") include("test_base.jl") end
     if should_run("apps") include("test_apps.jl") end
     if should_run("embed") include("embed/test_embed.jl") end
+    #algebra goes at the end since it calls refresh()
+    if should_run("algebra") include("test_algebra.jl") end
 end

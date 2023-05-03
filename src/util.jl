@@ -1,3 +1,36 @@
+staged_defs = []
+
+macro staged_function(name, args...)
+    body = args[end]
+    args = args[1:end-1]
+    def = quote
+        @generated function $name($(args...))
+            # Taken from https://github.com/NHDaly/StagedFunctions.jl/blob/6fafbc560421f70b05e3df330b872877db0bf3ff/src/StagedFunctions.jl#L116
+            body = () -> $body
+            Core._apply_pure(body, ())
+        end
+    end
+
+    return esc(quote
+        push!(staged_defs, $(QuoteNode(def)))
+        $(def)
+    end)
+end
+
+"""
+    Finch.refresh()
+
+Finch caches the code for kernels as soon as they are run. If you modify the
+Finch compiler after running a kernel, you'll need to invalidate the Finch
+caches to reflect these changes by calling `Finch.refresh()`. This function
+should only be called at global scope, and never during precompilation.
+"""
+function refresh()
+    for def in staged_defs
+        @eval $def
+    end
+end
+
 #TODO should we just have another IR? Ugh idk
 shallowcopy(x::T) where T = T([getfield(x, k) for k ∈ fieldnames(T)]...)
 

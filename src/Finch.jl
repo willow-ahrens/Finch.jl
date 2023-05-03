@@ -29,8 +29,6 @@ export default, AsArray
 
 include("util.jl")
 
-registry = []
-
 include("semantics.jl")
 include("FinchNotation/FinchNotation.jl")
 using .FinchNotation
@@ -97,14 +95,6 @@ module h
     generate_embed_docs()
 end
 
-function register(algebra)
-    for r in registry
-        @eval Finch $(r(algebra))
-    end
-end
-
-register(DefaultAlgebra)
-
 include("base/abstractarrays.jl")
 include("base/abstractunitranges.jl")
 include("base/broadcast.jl")
@@ -114,8 +104,8 @@ include("base/compare.jl")
 include("base/copy.jl")
 include("base/fsparse.jl")
 
-@static if !isdefined(Base, :get_extension)
-    function __init__()
+function __init__()
+    @static if !isdefined(Base, :get_extension)
         @require SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf" include("../ext/SparseArraysExt.jl")
     end
 end
