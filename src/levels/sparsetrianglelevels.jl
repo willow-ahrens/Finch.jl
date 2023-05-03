@@ -134,6 +134,7 @@ function assemble_level!(lvl::VirtualSparseTriangleLevel, ctx, pos_start, pos_st
     fbr_count = virtual_simplex(lvl.N, ctx, lvl.shape)
     qos_start = call(+, call(*, call(-, pos_start, lvl.Ti(1)), fbr_count), 1)
     qos_stop = call(*, pos_stop, fbr_count)
+    qos_stop = call(*, pos_stop, fbr_count)
     assemble_level!(lvl.lvl, ctx, qos_start, qos_stop)
 end
 
