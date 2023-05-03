@@ -1,28 +1,20 @@
 ```@meta
 CurrentModule = Finch
 ```
-
 # Custom Functions
 
-Finch supports arbitrary Julia Base functions over [`isbits`](@ref) types. For your convenience,
-Finch defines a few useful functions that help express common array operations inside Finch:
 
-```@docs
-choose
-minby
-maxby
-```
+## User Functions
+
+Finch supports arbitrary Julia Base functions over [`isbits`](@ref) types.  You
+can also use your own functions and use them in Finch! Just remember to define
+any special algebraic properties of your functions so that Finch can optimize
+them better. You must declare the properties of your functions before you call
+any Finch functions on them.
 
 Finch only supports incrementing assignments to arrays such as `+=` or `*=`. If
 you would like to increment `A[i...]` by the value of `ex` with a custom
 reduction operator `op`, you may use the following syntax: `A[i...] <<op>>= ex`.
-
-# User Functions
-
-You can also use your own functions in Finch! Just remember to define any
-special algebraic properties of your functions so that Finch can optimize them
-better. You must declare the properties of your functions before you call any
-Finch functions on them.
 
 Consider the greatest common divisor function `gcd`. This function is
 associative and commutative, and the greatest common divisor of 1 and anything
@@ -44,9 +36,19 @@ w = @fiber sl(e(1))
 @finch MyAlgebra() (w .= 1; @loop i w[i] = gcd(u[i], v[i]))
 ```
 
+## A Few Convenient Functions
+
+For your convenience, Finch defines a few useful functions that help express common array operations inside Finch:
+
+```@docs
+choose
+minby
+maxby
+```
+
 ## Properties
 
-The full list of properties recognized by Finch is as follows:
+The full list of properties recognized by Finch is as follows (use these to declare the properties of your own functions):
 
 ```@docs
 isassociative
