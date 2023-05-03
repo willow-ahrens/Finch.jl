@@ -74,11 +74,13 @@ code cache.
 refresh
 ```
 
-### (Advanced) On world-age and generated functions
-Finch generators run in the current world age, but do not update with subsequent
-compiler function invalidations. If two packages modify the behavior of Finch in
-different ways, and call those Finch functions during precompilation, the
-resulting behavior is undefined.
+### (Advanced) On World-Age and Generated Functions
+Julia uses a "world age" to describe the set of defined functions at a point in time. Generated functions run in the same world age in which they were defined, so they can't call functions defined after the generated function. This means that if Finch used normal generated functions, users can't define their own functions without first redefining all of Finch's generated functions.
+
+Finch uses special generators that run in the current world age, but do not
+update with subsequent compiler function invalidations. If two packages modify
+the behavior of Finch in different ways, and call those Finch functions during
+precompilation, the resulting behavior is undefined.
 
 There are several packages that take similar, but different, approaches to
 allow user participation in staged Julia programming (not to mention Base `eval` or `@generated`): [StagedFunctions.jl](https://github.com/NHDaly/StagedFunctions.jl),
