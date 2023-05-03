@@ -59,6 +59,37 @@ isinverse
 isinvolution
 ```
 
+## Finch Kernel Caching
+
+Finch code is cached when you first run it. Thus, if you run a Finch
+function once, then make changes to the Finch compiler (like defining new
+properties), the cached code will be used and the changes will not be reflected.
+
+It's best to design your code so that modifications to the Finch compiler occur
+before any Finch functions are called. However, if you really need to modify a
+precompiled Finch kernel, you can call `Finch.refresh()` to invalidate the
+code cache.
+
+```@docs
+refresh
+```
+
+### (Advanced) On world-age and generated functions
+Finch generators run in the current world age, but do not update with subsequent
+compiler function invalidations. If two packages modify the behavior of Finch in
+different ways, and call those Finch functions during precompilation, the
+resulting behavior is undefined.
+
+There are several packages that take similar, but different, approaches to
+allow user participation in staged Julia programming (not to mention Base `eval` or `@generated`): [StagedFunctions.jl](https://github.com/NHDaly/StagedFunctions.jl),
+[GeneralizedGenerated.jl](https://github.com/JuliaStaging/GeneralizedGenerated.jl),
+[RuntimeGeneratedFunctions.jl](https://github.com/SciML/RuntimeGeneratedFunctions.jl),
+or [Zygote.jl](https://github.com/FluxML/Zygote.jl).
+
+Our approach is most similar to that of StagedFunctions.jl or Zygote.jl. We
+chose our approach to be the simple and flexible while keeping the kernel call
+overhead low.
+
 ## (Advanced) Separate Algebras
 If you want to define non-standard properties or custom rewrite rules for some
 functions in a separate context, you can represent these changes with your own

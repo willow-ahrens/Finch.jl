@@ -17,6 +17,14 @@ macro staged_function(name, args...)
     end)
 end
 
+"""
+    Finch.refresh()
+
+Finch caches the code for kernels as soon as they are run. If you modify the
+Finch compiler after running a kernel, you'll need to invalidate the Finch
+caches to reflect these changes by calling `Finch.refresh()`. This function
+should only be called at global scope, and never during precompilation.
+"""
 function refresh()
     for def in staged_defs
         @eval $def
