@@ -25,6 +25,8 @@ export choose, minby, maxby, overwrite, initwrite
 
 export permit, offset, staticoffset, window
 
+export default, AsArray
+
 include("util.jl")
 
 registry = []
