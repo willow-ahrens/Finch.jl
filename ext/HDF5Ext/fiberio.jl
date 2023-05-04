@@ -1,12 +1,11 @@
-using HDF5
-function fbrwrite(fname, fbr::Fiber)
+function Finch.fbrwrite(fname, fbr::Fiber)
     h5open(fname, "w") do f
         fbrwrite_level(f, fbr.lvl)
     end
     fname
 end
 
-function fbrread(fname)
+function Finch.fbrread(fname)
     h5open(fname, "r") do f
         Fiber(fbrread_level(f))
     end

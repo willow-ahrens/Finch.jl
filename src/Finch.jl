@@ -13,10 +13,20 @@ using Random: randsubseq, AbstractRNG, default_rng
 using PrecompileTools
 using Compat
 using DataStructures
+using JSON
 
 export @finch, @finch_program, @finch_code, value
 
-export Fiber, Fiber!, SparseList, SparseHash, SparseCOO, SparseByteMap, SparseVBL, Dense, RepeatRLE, Element, Pattern, Scalar
+export Fiber, Fiber!, Scalar
+export SparseList, SparseListLevel
+export SparseHash, SparseHashLevel
+export SparseCOO, SparseCOOLevel
+export SparseByteMap, SparseByteMapLevel
+export SparseVBL, SparseVBLLevel
+export Dense, DenseLevel
+export RepeatRLE, RepeatRLELevel
+export Element, ElementLevel
+export Pattern, PatternLevel
 export walk, gallop, follow, extrude, laminate
 export fiber, fiber!, @fiber, pattern!, dropdefaults, dropdefaults!, redefault!
 export diagmask, lotrimask, uptrimask, bandmask
@@ -104,9 +114,10 @@ include("base/compare.jl")
 include("base/copy.jl")
 include("base/fsparse.jl")
 
-function __init__()
-    @static if !isdefined(Base, :get_extension)
+@static if !isdefined(Base, :get_extension)
+    function __init__()
         @require SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf" include("../ext/SparseArraysExt.jl")
+        @require HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f" include("../ext/HDF5Ext/HDF5Ext.jl")
     end
 end
 
@@ -127,7 +138,7 @@ end
     end
 end
 
-include("fileio/fbr.jl")
+include("fileio/fiberio.jl")
 include("fileio/binsparse.jl")
 
 export fbrread, fbrwrite, bsread, bswrite
