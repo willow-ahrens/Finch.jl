@@ -41,5 +41,5 @@ begin
     end
     qos = 1 * I_lvl.shape
     resize!(B_lvl_2.val, qos)
-    (B = Fiber((Finch.DenseLevel){Int32}(B_lvl_2, I_lvl.shape)),)
+    (B = Fiber((DenseLevel){Int32}(B_lvl_2, I_lvl.shape)),)
 end

@@ -1,3 +1,5 @@
+using Finch: level_ndims
+
 bswrite_type_lookup = Dict(
     UInt8 => "uint8",
     UInt16 => "uint16",
