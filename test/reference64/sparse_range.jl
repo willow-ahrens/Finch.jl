@@ -49,5 +49,5 @@ begin
     qos = C_lvl.ptr[end] - 1
     resize!(C_lvl.idx, qos)
     resize!(C_lvl_2.val, qos)
-    (C = Fiber((Finch.SparseListLevel){Int64, Int64}(C_lvl_2, last(win) + (1 - first(win)), C_lvl.ptr, C_lvl.idx)),)
+    (C = Fiber((SparseListLevel){Int64, Int64}(C_lvl_2, last(win) + (1 - first(win)), C_lvl.ptr, C_lvl.idx)),)
 end

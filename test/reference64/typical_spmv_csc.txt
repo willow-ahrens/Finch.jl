@@ -70,7 +70,7 @@ quote
     end
     qos = 1 * A_lvl_2.shape
     resize!(y_lvl_2.val, qos)
-    (y = Fiber((Finch.DenseLevel){Int64}(y_lvl_2, A_lvl_2.shape)),)
+    (y = Fiber((DenseLevel){Int64}(y_lvl_2, A_lvl_2.shape)),)
 end
 julia> @finch begin
         y .= 0

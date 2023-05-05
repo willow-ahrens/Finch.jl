@@ -142,7 +142,7 @@ quote
     qos = z_lvl.ptr[end] - 1
     resize!(z_lvl.idx, qos)
     resize!(z_lvl_2.val, qos)
-    (z = Fiber((Finch.SparseListLevel){Int64, Int64}(z_lvl_2, x_lvl.shape, z_lvl.ptr, z_lvl.idx)),)
+    (z = Fiber((SparseListLevel){Int64, Int64}(z_lvl_2, x_lvl.shape, z_lvl.ptr, z_lvl.idx)),)
 end
 julia> @finch begin
         z .= 0
