@@ -36,12 +36,12 @@ function check_output(fname, arg)
         end
         true
     else
-        reference = read(ref_file, String)
-        result = sprint(println, arg)
+        reference = replace(read(ref_file, String), "\r"=>"")
+        result = replace(sprint(println, arg), "\r"=>)
         if reference == result
             return true
         else
-            @info "disagreement with reference output" reference result
+            @debug "disagreement with reference output" reference result
             return false
         end
     end
