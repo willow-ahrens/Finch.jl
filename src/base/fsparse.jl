@@ -59,7 +59,7 @@ SparseCOO (0.0) [1:3×1:3×1:3]
       1.0       2.0       3.0    
 """
 function fsparse(I::Tuple, V::Vector, shape = map(maximum, I), combine = eltype(V) isa Bool ? (|) : (+))
-    C = map(tuple, I...)
+    C = map(tuple, reverse(I)...)
     updater = false
     if !issorted(C)
         P = sortperm(C)

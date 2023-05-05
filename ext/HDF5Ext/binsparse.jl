@@ -90,7 +90,7 @@ function bsread_level(f, desc, fmt, ::Val{:dense})
     R = fmt["rank"]
     for r = 1:R
         n = level_ndims(typeof(lvl))
-        shape = desc["shape"][end - n]
+        shape = Int(desc["shape"][end - n])
         lvl = DenseLevel(lvl, shape)
     end
     lvl
@@ -123,14 +123,14 @@ function bsread_level(f, desc, fmt, ::Val{:sparse})
     lvl = bsread_level(f, desc, fmt["subformat"])
     n = level_ndims(typeof(lvl)) + R
     N = length(desc["shape"])
-    shape = (desc["shape"][n - R + 1: n]...,)
     ptr = bsread_data(f, desc, "pointers_$(N - n - 1)")
     tbl = (map(1:R) do r
         bsread_data(f, desc, "indices_$(N - n + r - 1)")
     end...,)
+    shape = ntuple(r->eltype(tbl[r])(desc["shape"][N - n + r]), R)
     if R == 1
         SparseListLevel(lvl, shape[1], ptr, tbl[1])
     else
-        SparseCOOLevel{R}(lvl, shape, tbl, ptr)
+        SparseCOOLevel{Int(R)}(lvl, shape, tbl, ptr)
     end
 end

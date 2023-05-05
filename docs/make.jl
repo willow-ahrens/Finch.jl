@@ -20,6 +20,7 @@ makedocs(;
         "The Deets" => "listing.md",
         "Embedding" => "embed.md",
         "Custom Functions" => "algebra.md",
+        "Tensor File I/O" => "fileio.md",
         "Development Guide" => "development.md",
     ],
 )

@@ -37,7 +37,7 @@ function check_output(fname, arg)
         true
     else
         reference = replace(read(ref_file, String), "\r"=>"")
-        result = replace(sprint(println, arg), "\r"=>)
+        result = replace(sprint(println, arg), "\r"=>"")
         if reference == result
             return true
         else
