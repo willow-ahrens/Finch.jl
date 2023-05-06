@@ -365,12 +365,12 @@ function base_rules(alg, shash)
         (@rule sieve(false, ~a) => sequence()), #TODO should add back skipvisitor
 
         (@rule chunk(~i, ~a::isvirtual, assign(access(~b, updater(~m), ~j...), ~f::isidempotent(alg), ~c)) => begin
-            if i ∉ j && getname(i) ∉ getunbound(c)
+            if i ∉ j && i ∉ getunbound(c)
                 sieve(call(>, measure(a.val), 0), assign(access(b, updater(m), j...), f, c))
             end
         end),
         (@rule chunk(~i, ~a::isvirtual, assign(access(~b, updater(~m), ~j...), +, ~d)) => begin
-            if i ∉ j && getname(i) ∉ getunbound(d)
+            if i ∉ j && i ∉ getunbound(d)
                 assign(access(b, updater(m), j...), +, call(*, measure(a.val), d))
             end
         end),
@@ -445,8 +445,10 @@ different algebras.
 getrules(alg, shash) = base_rules(alg, shash)
 
 function query(node::FinchNode, ctx)
+    expand(node) = isvalue(node) ? get(ctx.bindings, node, nothing) : node
+    node = Rewrite(Prewalk(expand))(node)
     res = simplify(node, ctx)
-    return res == literal(true) || @capture(res, call(cached, true, ~a))
+    return res == literal(true)
 end
 
 function (ctx::LowerJulia)(root, ::SimplifyStyle)

@@ -3,7 +3,7 @@ begin
     C_lvl_2 = C_lvl.lvl
     A_lvl = (ex.bodies[2]).body.rhs.tns.tns.lvl
     A_lvl_2 = A_lvl.lvl
-    i_stop = ((ex.bodies[2]).body.rhs.idxs[1]).tns.tns.stop + (1 - ((ex.bodies[2]).body.rhs.idxs[1]).tns.tns.start)
+    i_stop = -(((ex.bodies[2]).body.rhs.idxs[1]).tns.tns.start) + 1 + ((ex.bodies[2]).body.rhs.idxs[1]).tns.tns.stop
     C_lvl_qos_stop = 0
     resize_if_smaller!(C_lvl.ptr, 1 + 1)
     fill_range!(C_lvl.ptr, 0, 1 + 1, 1 + 1)

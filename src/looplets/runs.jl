@@ -88,7 +88,7 @@ function (ctx::LowerJulia)(root::FinchNode, ::AcceptRunStyle)
                 end
             end
         ))(root.body)
-        if getname(root.idx) in getunbound(body)
+        if root.idx in getunbound(body)
             #The loop body isn't constant after removing AcceptRuns, lower with a for-loop
             return ctx(root, DefaultStyle())
         else
