@@ -30,7 +30,6 @@ abstract type AbstractCompiler end
 @kwdef mutable struct LowerJulia <: AbstractCompiler
     algebra = DefaultAlgebra()
     preamble::Vector{Any} = []
-    caches::Dict{Any, Any} = Dict()
     bindings::Dict{Any, Any} = Dict()
     modes::Dict{Any, Any} = Dict()
     scope = Set()
@@ -79,24 +78,8 @@ function cache!(ctx, var, val)
     push!(ctx.preamble, quote
         $var = $(contain(ctx_2 -> ctx_2(val), ctx))
     end)
-    ctx.caches[var] = val
+    ctx.bindings[var] = val
     return value(var, Any)
-end
-
-bind(f, ctx::LowerJulia) = f()
-function bind(f, ctx::LowerJulia, (var, val′), tail...)
-    if haskey(ctx.bindings, var)
-        val = ctx.bindings[var]
-        ctx.bindings[var] = val′
-        res = bind(f, ctx, tail...)
-        ctx.bindings[var] = val
-        return res
-    else
-        ctx.bindings[var] = val′
-        res = bind(f, ctx, tail...)
-        pop!(ctx.bindings, var)
-        return res
-    end
 end
 
 function resolve(var, ctx::LowerJulia)
@@ -106,13 +89,20 @@ function resolve(var, ctx::LowerJulia)
     return var
 end
 
+"""
+    contain(f, ctx)
+
+Call f on a subcontext of `ctx` and return the result. Variable bindings,
+preambles, and epilogues defined in the subcontext will not escape the call to
+contain.
+"""
 function contain(f, ctx::LowerJulia)
     ctx_2 = shallowcopy(ctx)
     preamble = Expr(:block)
     ctx_2.preamble = preamble.args
     epilogue = Expr(:block)
     ctx_2.epilogue = epilogue.args
-    ctx_2.caches = copy(ctx.caches)
+    ctx_2.bindings = copy(ctx.bindings)
     body = f(ctx_2)
     if epilogue == Expr(:block)
         return quote
@@ -137,7 +127,6 @@ struct ThunkStyle end
     preamble = quote end
     body
     epilogue = quote end
-    binds = ()
 end
 FinchNotation.finch_leaf(x::Thunk) = virtual(x)
 
@@ -189,15 +178,8 @@ thunk_access(node, ctx, tns) = similarterm(node, operation(node), map(ctx, argum
 function (ctx::ThunkVisitor)(node::Thunk)
     push!(ctx.ctx.preamble, node.preamble)
     push!(ctx.ctx.epilogue, node.epilogue)
-    for (var, val) in node.binds
-        define!(ctx.ctx, var, val)
-    end
     node.body
 end
-
-(ctx::LowerJulia)(root::Union{Symbol, Expr}, ::DefaultStyle) = root
-
-(ctx::LowerJulia)(root, ::DefaultStyle) = ctx(finch_leaf(root))
 
 """
     InstantiateTensors(ctx)
@@ -244,12 +226,22 @@ function (ctx::InstantiateTensors)(node::FinchNode)
     end
 end
 
+(ctx::LowerJulia)(root::Union{Symbol, Expr}, ::DefaultStyle) = root
+
+function (ctx::LowerJulia)(root, ::DefaultStyle)
+    node = finch_leaf(root)
+    if node.kind === virtual
+        error("don't know how to lower $root")
+    end
+    ctx(node)
+end
+
 function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
     if root.kind === value
         return root.val
     elseif root.kind === index
-        @assert haskey(ctx.bindings, getname(root)) "variable $(getname(root)) unbound"
-        return ctx(ctx.bindings[getname(root)]) #This unwraps indices that are virtuals. Arguably these virtuals should be precomputed, but whatevs.
+        @assert haskey(ctx.bindings, root) "index $(root) unbound"
+        return ctx(ctx.bindings[root]) #This unwraps indices that are virtuals. Arguably these virtuals should be precomputed, but whatevs.
     elseif root.kind === literal
         if typeof(root.val) === Symbol ||
           typeof(root.val) === Expr ||
@@ -329,20 +321,19 @@ function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
             ctx))
     elseif root.kind === chunk
         idx_sym = ctx.freshen(getname(root.idx))
-        body = bind(ctx, getname(root.idx) => idx_sym) do 
-            contain(ctx) do ctx_2
-                body_3 = Rewrite(Postwalk(
-                    @rule access(~a::isvirtual, ~m, ~i..., ~j) => begin
-                        a_2 = get_point_body(a.val, ctx_2, value(idx_sym))
-                        if a_2 != nothing
-                            access(a_2, m, i...)
-                        else
-                            access(a, m, i..., j)
-                        end
+        body = contain(ctx) do ctx_2
+            ctx_2.bindings[root.idx] = value(idx_sym)
+            body_3 = Rewrite(Postwalk(
+                @rule access(~a::isvirtual, ~m, ~i..., ~j) => begin
+                    a_2 = get_point_body(a.val, ctx_2, value(idx_sym))
+                    if a_2 != nothing
+                        access(a_2, m, i...)
+                    else
+                        access(a, m, i..., j)
                     end
-                ))(root.body)
-                open_scope(body_3, ctx_2)
-            end
+                end
+            ))(root.body)
+            open_scope(body_3, ctx_2)
         end
         @assert isvirtual(root.ext)
         if query(call(==, measure(root.ext.val), 1), ctx)
@@ -388,7 +379,6 @@ function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
 end
 
 function lowerjulia_access(ctx, node, tns)
-    tns = ctx(tns)
     idxs = map(ctx, node.idxs)
     :($(ctx(tns))[$(idxs...)])
 end
