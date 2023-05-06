@@ -445,8 +445,9 @@ different algebras.
 getrules(alg, shash) = base_rules(alg, shash)
 
 function query(node::FinchNode, ctx)
+    node = Rewrite(Prewalk(node->get(ctx.caches, node, nothing)))(node)
     res = simplify(node, ctx)
-    return res == literal(true) || @capture(res, call(cached, true, ~a))
+    return res == literal(true)
 end
 
 function (ctx::LowerJulia)(root, ::SimplifyStyle)

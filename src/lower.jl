@@ -30,6 +30,7 @@ abstract type AbstractCompiler end
 @kwdef mutable struct LowerJulia <: AbstractCompiler
     algebra = DefaultAlgebra()
     preamble::Vector{Any} = []
+    caches::Dict{Any, Any} = Dict()
     bindings::Dict{Any, Any} = Dict()
     modes::Dict{Any, Any} = Dict()
     scope = Set()
@@ -73,14 +74,13 @@ end
 function cache!(ctx, var, val)
     val = finch_leaf(val)
     isconstant(val) && return val
-    if @capture val call(cached, ~a::isconstant, ~b)
-        return val
-    end
     var = ctx.freshen(var)
+    val = simplify(val, ctx)
     push!(ctx.preamble, quote
         $var = $(contain(ctx_2 -> ctx_2(val), ctx))
     end)
-    return simplify(call(cached, value(var, Any), val), ctx)
+    ctx.caches[var] = val
+    return value(var, Any)
 end
 
 bind(f, ctx::LowerJulia) = f()
@@ -112,6 +112,7 @@ function contain(f, ctx::LowerJulia)
     ctx_2.preamble = preamble.args
     epilogue = Expr(:block)
     ctx_2.epilogue = epilogue.args
+    ctx_2.caches = copy(ctx.caches)
     body = f(ctx_2)
     if epilogue == Expr(:block)
         return quote
