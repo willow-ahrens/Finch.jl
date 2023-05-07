@@ -460,3 +460,7 @@ end
 for op in [:<, :<=, :isless]
     @eval @inline Base.$op(a::Cindex{T}, b::Cindex{T}) where {T} = $op(T(a), T(b))
 end
+
+for op in [:typemin, :typemax]
+    @eval @inline Base.$op(::Type{Cindex{T}}) where {T} = Base.$op(T)
+end
