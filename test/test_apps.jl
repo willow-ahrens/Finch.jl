@@ -50,6 +50,19 @@ include(joinpath(@__DIR__, "../apps/apps.jl"))
 
             @test output == collect(zip(expected.dists, expected.parents))
         end
+
+        @testset "tricount" begin
+            size, sparsity = 1000, 0.5
+            input = sprand(size, sparsity)
+            
+            graphs_input = SimpleDiGraph(input)
+            finch_input = @fiber(d(sl(e(0.0))), input)
+        
+            expected = sum(Graphs.triangles(graphs_input))
+            output = tricount(finch_input)
+            
+            @test expected == output
+        end
     end
     @testset "linalg" begin
         @testset "spgemm" begin
