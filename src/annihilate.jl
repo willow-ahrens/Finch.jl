@@ -444,12 +444,6 @@ different algebras.
 """
 getrules(alg, shash) = base_rules(alg, shash)
 
-function query(node::FinchNode, ctx)
-    expand(node) = isvalue(node) ? get(ctx.bindings, node, nothing) : node
-    node = Rewrite(Prewalk(expand))(node)
-    res = simplify(node, ctx)
-    return res == literal(true)
-end
 
 function (ctx::LowerJulia)(root, ::SimplifyStyle)
     global rules
