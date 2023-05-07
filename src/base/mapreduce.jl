@@ -63,11 +63,24 @@ end
 function Base.map!(dst, f, src::Fiber, args::Union{Fiber, Base.AbstractArrayOrBroadcasted}...)
     copyto!(dst, Base.broadcasted(f, src, args...))
 end
-function Base.reduce(op::Function, bc::Broadcasted{FinchStyle{N}}; dims=:, init = reduce(op, Vector{combine_eltypes(bc.f, bc.args)}())) where {N}
+
+function initial_value(op, T)
+    try
+        reduce(op, Vector{T}())
+    catch
+        throw(ArgumentError("Please supply initial value for reduction of $T with $op."))
+    end
+end
+
+function Base.reduce(op::Function, bc::Broadcasted{FinchStyle{N}}; dims=:, init = initial_value(op, combine_eltypes(bc.f, bc.args))) where {N}
     reduce_helper(Callable{op}(), lift_broadcast(bc), Val(dims), Val(init))
 end
 
-@generated function reduce_helper(::Callable{op}, bc::Broadcasted{FinchStyle{N}}, ::Val{dims}, ::Val{init}) where {op, dims, init, N}
+@staged_function reduce_helper op bc dims init begin
+    reduce_helper_code(op, bc, dims, init)
+end
+
+function reduce_helper_code(::Type{Callable{op}}, bc::Type{<:Broadcasted{FinchStyle{N}}}, ::Type{Val{dims}}, ::Type{Val{init}}) where {op, dims, init, N}
     contain(LowerJulia()) do ctx
         idxs = [ctx.freshen(:idx, n) for n = 1:N]
         rep = pointwise_finch_traits(:bc, bc, index.(idxs))
@@ -95,13 +108,15 @@ end
             end
             $res_ex
         end
-    end |> lower_caches |> lower_cleanup |> unblock
+    end
 end
 
 const FiberOrBroadcast = Union{<:Fiber, <:Broadcasted{FinchStyle{N}} where N}
 
 Base.sum(arr::FiberOrBroadcast; kwargs...) = reduce(+, arr; kwargs...)
 Base.prod(arr::FiberOrBroadcast; kwargs...) = reduce(*, arr; kwargs...)
-Base.minimum(arr::FiberOrBroadcast; kwargs...) = reduce(min, arr; kwargs...)
-Base.maximum(arr::FiberOrBroadcast; kwargs...) = reduce(max, arr; kwargs...)
+Base.any(arr::FiberOrBroadcast; kwargs...) = reduce(or, arr; init = false, kwargs...)
+Base.all(arr::FiberOrBroadcast; kwargs...) = reduce(and, arr; init = true, kwargs...)
+Base.minimum(arr::FiberOrBroadcast; kwargs...) = reduce(min, arr; init = Inf, kwargs...)
+Base.maximum(arr::FiberOrBroadcast; kwargs...) = reduce(max, arr; init = -Inf, kwargs...)
 #Base.extrema(arr::FiberOrBroadcast; kwargs...) #TODO 

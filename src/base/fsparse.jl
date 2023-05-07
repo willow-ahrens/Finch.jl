@@ -59,7 +59,7 @@ SparseCOO (0.0) [1:3×1:3×1:3]
       1.0       2.0       3.0    
 """
 function fsparse(I::Tuple, V::Vector, shape = map(maximum, I), combine = eltype(V) isa Bool ? (|) : (+))
-    C = map(tuple, I...)
+    C = map(tuple, reverse(I)...)
     updater = false
     if !issorted(C)
         P = sortperm(C)
@@ -195,7 +195,7 @@ function ffindnz(src)
         SparseCOOLevel{ndims(src)}(
         ElementLevel{zero(eltype(src)), eltype(src)}()))
     tmp = copyto!(tmp, src)
-    nnz = tmp.lvl.pos[2] - 1
+    nnz = tmp.lvl.ptr[2] - 1
     tbl = tmp.lvl.tbl
     val = tmp.lvl.lvl.val
     (ntuple(n->tbl[n][1:nnz], ndims(src)), val[1:nnz])
