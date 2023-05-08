@@ -1,7 +1,7 @@
 name = "Finch"
 uuid = "9177782c-1635-4eb9-9bfb-d9dfa25e6bce"
 authors = ["Willow Ahrens"]
-version = "0.5.3"
+version = "0.5.4"
 
 [deps]
 Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
