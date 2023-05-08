@@ -19,10 +19,10 @@ struct PatternLevel end
 const Pattern = PatternLevel
 
 """
-`f_code(p)` = [PatternLevel](@ref).
+`fiber_abbrev(p)` = [PatternLevel](@ref).
 """
-f_code(::Val{:p}) = Pattern
-summary_f_code(::Pattern) = "p()"
+fiber_abbrev(::Val{:p}) = Pattern
+summary_fiber_abbrev(::Pattern) = "p()"
 similar_level(::PatternLevel) = PatternLevel()
 
 countstored_level(lvl::PatternLevel, pos) = pos

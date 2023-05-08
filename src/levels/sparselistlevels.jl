@@ -50,10 +50,10 @@ SparseListLevel{Ti, Tp, Lvl}(lvl, shape) where {Ti, Tp, Lvl} =
     SparseListLevel{Ti, Tp, Lvl}(lvl, Ti(shape), Tp[1], Ti[])
 
 """
-`f_code(l)` = [SparseListLevel](@ref).
+`fiber_abbrev(l)` = [SparseListLevel](@ref).
 """
-f_code(::Val{:sl}) = SparseList
-summary_f_code(lvl::SparseListLevel) = "sl($(summary_f_code(lvl.lvl)))"
+fiber_abbrev(::Val{:sl}) = SparseList
+summary_fiber_abbrev(lvl::SparseListLevel) = "sl($(summary_fiber_abbrev(lvl.lvl)))"
 similar_level(lvl::SparseListLevel) = SparseList(similar_level(lvl.lvl))
 similar_level(lvl::SparseListLevel, dim, tail...) = SparseList(similar_level(lvl.lvl, tail...), dim)
 
@@ -147,7 +147,7 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualSparseListLevel)
     end
 end
 
-summary_f_code(lvl::VirtualSparseListLevel) = "sl($(summary_f_code(lvl.lvl)))"
+summary_fiber_abbrev(lvl::VirtualSparseListLevel) = "sl($(summary_fiber_abbrev(lvl.lvl)))"
 
 function virtual_level_size(lvl::VirtualSparseListLevel, ctx)
     ext = Extent(literal(lvl.Ti(1)), lvl.shape)

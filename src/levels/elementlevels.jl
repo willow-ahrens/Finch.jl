@@ -29,10 +29,10 @@ ElementLevel{D}(val::Vector{Tv}) where {D, Tv} = ElementLevel{D, Tv}(val)
 ElementLevel{D, Tv}() where {D, Tv} = ElementLevel{D, Tv}(Tv[])
 
 """
-`f_code(e)` = [ElementLevel](@ref).
+`fiber_abbrev(e)` = [ElementLevel](@ref).
 """
-f_code(::Val{:e}) = Element
-summary_f_code(::Element{D}) where {D} = "e($(D))"
+fiber_abbrev(::Val{:e}) = Element
+summary_fiber_abbrev(::Element{D}) where {D} = "e($(D))"
 similar_level(::ElementLevel{D}) where {D} = ElementLevel{D}()
 
 pattern!(lvl::ElementLevel) = Pattern()
@@ -89,7 +89,7 @@ function virtualize(ex, ::Type{ElementLevel{D, Tv}}, ctx, tag=:lvl) where {D, Tv
     VirtualElementLevel(sym, Tv, D)
 end
 
-summary_f_code(lvl::VirtualElementLevel) = "e($(lvl.D))"
+summary_fiber_abbrev(lvl::VirtualElementLevel) = "e($(lvl.D))"
 
 virtual_level_resize!(lvl::VirtualElementLevel, ctx) = lvl
 virtual_level_size(::VirtualElementLevel, ctx) = ()

@@ -15,8 +15,9 @@ end
     choose(z)(a, b)
 
 `choose(z)` is a function which returns whichever of `a` or `b` is not
-[isequal](@ref) to `z`. If neither are `z`, then return `a`. Useful for getting
-the first nonfill value in a sparse array.
+[isequal](https://docs.julialang.org/en/v1/base/base/#Base.isequal) to `z`. If
+neither are `z`, then return `a`. Useful for getting the first nonfill value in
+a sparse array.
 ```jldoctest setup=:(using Finch)
 julia> a = @fiber(sl(e(0.0)), [0, 1.1, 0, 4.4, 0])
 SparseList (0.0) [1:5]

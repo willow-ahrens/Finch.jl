@@ -252,7 +252,7 @@ end
 
 function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber)
     if get(io, :compact, false)
-        print(io, "@fiber($(summary_f_code(fbr.lvl)))")
+        print(io, "@fiber($(summary_fiber_abbrev(fbr.lvl)))")
     else
         display_fiber(io, mime, fbr, 0)
     end
@@ -260,7 +260,7 @@ end
 
 function Base.show(io::IO, mime::MIME"text/plain", fbr::VirtualFiber)
     if get(io, :compact, false)
-        print(io, "VirtualFiber($(summary_f_code(fbr.lvl)))")
+        print(io, "VirtualFiber($(summary_fiber_abbrev(fbr.lvl)))")
     else
         show(io, fbr)
     end
@@ -272,7 +272,7 @@ end
 
 function Base.show(io::IO, mime::MIME"text/plain", fbr::SubFiber)
     if get(io, :compact, false)
-        print(io, "SubFiber($(summary_f_code(fbr.lvl)), $(fbr.pos))")
+        print(io, "SubFiber($(summary_fiber_abbrev(fbr.lvl)), $(fbr.pos))")
     else
         display_fiber(io, mime, fbr, 0)
     end
@@ -280,7 +280,7 @@ end
 
 function Base.show(io::IO, mime::MIME"text/plain", fbr::VirtualSubFiber)
     if get(io, :compact, false)
-        print(io, "VirtualSubFiber($(summary_f_code(fbr.lvl)))")
+        print(io, "VirtualSubFiber($(summary_fiber_abbrev(fbr.lvl)))")
     else
         show(io, fbr)
     end
@@ -327,7 +327,7 @@ function f_decode(ex)
     elseif ex isa Expr
         return Expr(ex.head, map(f_decode, ex.args)...)
     elseif ex isa Symbol
-        return :(@something($f_code($(Val(ex))), Some($(esc(ex)))))
+        return :(@something($fiber_abbrev($(Val(ex))), Some($(esc(ex)))))
     else
         return esc(ex)
     end
@@ -340,7 +340,7 @@ Construct a fiber using abbreviated level constructor names. To override
 abbreviations, expressions may be interpolated with `\$`. For example,
 `Fiber(DenseLevel(SparseListLevel(Element(0.0))))` can also be constructed as
 `@fiber(sl(d(e(0.0))))`. Consult the documentation for the helper function
-[f_code](@ref) for a full listing of level format codes.
+[fiber_abbrev](@ref) for a full listing of level format codes.
 
 Optionally, an argument may be specified to copy into the fiber. This expression
 allocates. Use `fiber(arg)` for a zero-cost copy, if available.
@@ -364,10 +364,10 @@ end
     end
 end
 
-@inline f_code(@nospecialize ::Any) = nothing
+@inline fiber_abbrev(@nospecialize ::Any) = nothing
 
-Base.summary(fbr::Fiber) = "$(join(size(fbr), "×")) @fiber($(summary_f_code(fbr.lvl)))"
-Base.summary(fbr::SubFiber) = "$(join(size(fbr), "×")) SubFiber($(summary_f_code(fbr.lvl)))"
+Base.summary(fbr::Fiber) = "$(join(size(fbr), "×")) @fiber($(summary_fiber_abbrev(fbr.lvl)))"
+Base.summary(fbr::SubFiber) = "$(join(size(fbr), "×")) SubFiber($(summary_fiber_abbrev(fbr.lvl)))"
 
 Base.similar(fbr::AbstractFiber) = Fiber(similar_level(fbr.lvl))
 Base.similar(fbr::AbstractFiber, dims::Tuple) = Fiber(similar_level(fbr.lvl, dims...))
