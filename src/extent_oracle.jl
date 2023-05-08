@@ -3,15 +3,12 @@ module ExtentOracle
 using Metatheory
 using RewriteTools.Rewriters
 
-#=
 using Finch
 using Finch.FinchNotation
 
 export query
 
 t = @theory a b c d e f x y z begin
-    min(a, b, c, d...) --> min(min(a, b), c, d...)
-    max(a, b, c, d...) --> max(max(a, b), c, d...)
     min(x, min(y, z)) == min(min(x, y), z)
     max(x, max(y, z)) == max(max(x, y), z)
     max(x, y) == max(y, x)
@@ -27,11 +24,11 @@ t = @theory a b c d e f x y z begin
     (a == a) --> true
     +(x, +(y, z)) == +(+(x, y), z)
     +(x, y) == +(y, x)
-    +(x, -(x)) => (println("hi $x"); 0)
+    +(x, -(x)) => 0
     -(x, y) --> +(x, -y)
-    +(x, 0) => (println("bye $x"); x)
+    +(x, 0) => x
     a::Number + b::Number => a + b
-    #-(a::Number) => -a
+    -(a::Number) => -a
 end
 
 function query(root::FinchNode, ctx)
@@ -39,6 +36,12 @@ function query(root::FinchNode, ctx)
         get(ctx.bindings, node, nothing)
     end
     root = Rewrite(Prewalk(expand))(root)
+    root = Rewrite(Prewalk(Chain([
+        @rule(call(+, ~a, ~b, ~c, ~d...) => call(+, a, call(+, b, c, d...))),
+        @rule(call(min, ~a, ~b, ~c, ~d...) => call(min, a, call(min, b, c, d...))),
+        @rule(call(max, ~a, ~b, ~c, ~d...) => call(max, a, call(min, b, c, d...))),
+        @rule(call(Finch.cached, ~a, ~b) => b)
+    ])))(root)
     names = Dict()
     function rename(node::FinchNode)
         if node.kind == virtual
@@ -51,47 +54,11 @@ function query(root::FinchNode, ctx)
     end
     root = Rewrite(Postwalk(rename))(root)
     root = ctx(root)
+    Metatheory.resetbuffers!(Metatheory.DEFAULT_BUFFER_SIZE)
     println(root)
-    res = areequal(t, root, true; params = SaturationParams(printiter=true, timeout=100))
+    res = areequal(t, root, true)
     println(res)
-    return res
+    return coalesce(res, false)
 end
-=#
-
-#println(@rule x y +(x, y) --> +(x, -y))
-#println(areequal(t, :((==)((+)((-)(src_mode1_stop, 1), 1), 1)), true; params = SaturationParams(printiter=true, timeout=100)))
-#exit()
-
-t = @theory a b c d e f x y z begin
-    +(x, +(y, z)) == +(+(x, y), z)
-    +(x, y) == +(y, x)
-    +(1, -1) => 0
-    x + 0 --> x
-end
-
-println(areequal(t, :(a + (b + -b)), true; params = SaturationParams(printiter=true, timeout=100)))
-
-t = @theory a b c begin
-    a + 0 --> a
-    a + b --> b + a
-    a + inv(a) --> 0 # inverse
-    a + (b + c) --> (a + b) + c
-	a * (b + c) --> (a * b) + (a * c)
-	(a * b) + (a * c) --> a * (b + c)
-	a * a --> a^2
-	a --> a^1
-	a^b * a^c --> a^(b+c)
-	log(a^b) --> b * log(a)
-	log(a * b) --> log(a) + log(b)
-	log(1) --> 0
-	log(:e) --> 1
-	:e^(log(a)) --> a
-	a::Number + b::Number => a + b
-	a::Number * b::Number => a * b
-end
-
-println(areequal(t, :(a + (b + -b)), true; params = SaturationParams(printiter=true, timeout=100)))
-
-
 
 end
