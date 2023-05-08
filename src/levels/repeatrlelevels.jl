@@ -9,7 +9,7 @@ The fibers have type `Tv`, initialized to `D`. `D` may optionally be given as
 the first argument.  `Ti` is the type of the last fiber index, and `Tp` is the
 type used for positions in the level.
 
-In the [@fiber](@ref) constructor, `rl` is an alias for `RepeatRLELevel`.
+In the [`@fiber`](@ref) constructor, `rl` is an alias for `RepeatRLELevel`.
 
 ```jldoctest
 julia> @fiber(rl(0.0), [11, 11, 22, 22, 00, 00, 00, 33, 33])
@@ -43,7 +43,7 @@ RepeatRLELevel{D, Ti, Tp, Tv}() where {D, Ti, Tp, Tv} = RepeatRLELevel{D, Ti, Tp
 RepeatRLELevel{D, Ti, Tp, Tv}(shape) where {D, Ti, Tp, Tv} = RepeatRLELevel{D, Ti, Tp, Tv}(Ti(shape), Tp[1], Ti[], Tv[])
 
 """
-`fiber_abbrev(rl)` = [RepeatRLELevel](@ref).
+`fiber_abbrev(rl)` = [`RepeatRLELevel`](@ref).
 """
 fiber_abbrev(::Val{:rl}) = RepeatRLE
 summary_fiber_abbrev(::RepeatRLE{D}) where {D} = "rl($(D))"

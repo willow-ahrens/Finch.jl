@@ -4,7 +4,7 @@
 A subfiber of an element level is a scalar of type `Tv`, initialized to `D`. `D`
 may optionally be given as the first argument.
 
-In the [@fiber](@ref) constructor, `e` is an alias for `ElementLevel`.
+In the [`@fiber`](@ref) constructor, `e` is an alias for `ElementLevel`.
 
 ```jldoctest
 julia> @fiber(d(e(0.0)), [1, 2, 3])
@@ -29,7 +29,7 @@ ElementLevel{D}(val::Vector{Tv}) where {D, Tv} = ElementLevel{D, Tv}(val)
 ElementLevel{D, Tv}() where {D, Tv} = ElementLevel{D, Tv}(Tv[])
 
 """
-`fiber_abbrev(e)` = [ElementLevel](@ref).
+`fiber_abbrev(e)` = [`ElementLevel`](@ref).
 """
 fiber_abbrev(::Val{:e}) = Element
 summary_fiber_abbrev(::Element{D}) where {D} = "e($(D))"

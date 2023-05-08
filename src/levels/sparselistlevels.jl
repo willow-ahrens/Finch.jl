@@ -9,7 +9,7 @@ slices are stored. Optionally, `dim` is the size of the last dimension.
 `Ti` is the type of the last fiber index, and `Tp` is the type used for
 positions in the level.
 
-In the [@fiber](@ref) constructor, `sl` is an alias for `SparseListLevel`.
+In the [`@fiber`](@ref) constructor, `sl` is an alias for `SparseListLevel`.
 
 ```jldoctest
 julia> @fiber(d(sl(e(0.0))), [10 0 20; 30 0 0; 0 0 40])
@@ -50,7 +50,7 @@ SparseListLevel{Ti, Tp, Lvl}(lvl, shape) where {Ti, Tp, Lvl} =
     SparseListLevel{Ti, Tp, Lvl}(lvl, Ti(shape), Tp[1], Ti[])
 
 """
-`fiber_abbrev(l)` = [SparseListLevel](@ref).
+`fiber_abbrev(l)` = [`SparseListLevel`](@ref).
 """
 fiber_abbrev(::Val{:sl}) = SparseList
 summary_fiber_abbrev(lvl::SparseListLevel) = "sl($(summary_fiber_abbrev(lvl.lvl)))"

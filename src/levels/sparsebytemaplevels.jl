@@ -16,7 +16,7 @@ SparseByteMapLevel{Ti, Tp, Lvl}(lvl, shape) where {Ti, Tp, Lvl} =
     SparseByteMapLevel{Ti, Tp, Lvl}(lvl, Ti(shape), Tp[1], Bool[], Tuple{Tp, Ti}[])
 
 """
-`fiber_abbrev(sbm)` = [SparseByteMapLevel](@ref).
+`fiber_abbrev(sbm)` = [`SparseByteMapLevel`](@ref).
 """
 fiber_abbrev(::Val{:sbm}) = SparseByteMap
 summary_fiber_abbrev(lvl::SparseByteMapLevel) = "sbm($(summary_fiber_abbrev(lvl.lvl)))"

@@ -17,7 +17,7 @@ SparseVBLLevel{Ti, Tp, Lvl}(lvl, shape) where {Ti, Tp, Lvl} =
     SparseVBLLevel{Ti, Tp, Lvl}(lvl, shape, Tp[1], Ti[], Ti[])
 
 """
-`fiber_abbrev(svb)` = [SparseVBLLevel](@ref).
+`fiber_abbrev(svb)` = [`SparseVBLLevel`](@ref).
 """
 fiber_abbrev(::Val{:svb}) = SparseVBL
 summary_fiber_abbrev(lvl::SparseVBLLevel) = "svb($(summary_fiber_abbrev(lvl.lvl)))"

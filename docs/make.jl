@@ -17,7 +17,6 @@ makedocs(;
     pages=[
         "Home" => "index.md",
         "Array Formats" => "fibers.md",
-        "The Deets" => "listing.md",
         "Custom Functions" => "algebra.md",
         "Tensor File I/O" => "fileio.md",
         "C, C++, ..." => "interop.md",

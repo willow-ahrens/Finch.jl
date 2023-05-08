@@ -11,7 +11,7 @@ in the subfiber, so fibers in the sublevel are the slices `A[:, ..., :, i_1,
 `Ti` is the type of the last `N` fiber indices, and `Tp` is the type used for
 positions in the level.
 
-In the [@fiber](@ref) constructor, `sh` is an alias for `SparseHashLevel`.
+In the [`@fiber`](@ref) constructor, `sh` is an alias for `SparseHashLevel`.
 
 ```jldoctest
 julia> @fiber(d(sh{1}(e(0.0))), [10 0 20; 30 0 0; 0 0 40])
@@ -58,7 +58,7 @@ SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(lvl, shape, tbl) where {N, Ti, Tp, Tbl, Lvl
     SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(lvl, Ti(shape), tbl, Tp[1], Pair{Tuple{Tp, Ti}, Tp}[])
 
 """
-`fiber_abbrev(sh)` = [SparseHashLevel](@ref).
+`fiber_abbrev(sh)` = [`SparseHashLevel`](@ref).
 """
 fiber_abbrev(::Val{:sh}) = SparseHash
 summary_fiber_abbrev(lvl::SparseHashLevel{N}) where {N} = "sh{$N}($(summary_fiber_abbrev(lvl.lvl)))"

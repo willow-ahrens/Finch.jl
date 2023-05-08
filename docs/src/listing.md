@@ -2,7 +2,7 @@
 CurrentModule = Finch
 ```
 
-# Public Functions
+# All Documentation
 
 ```@autodocs
 Modules = [Finch]

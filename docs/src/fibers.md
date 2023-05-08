@@ -171,6 +171,7 @@ of supported formats is described below:
 @fiber
 fiber
 fiber!
+fiber_abbrev
 ```
 
 ### Level Constructors

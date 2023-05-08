@@ -52,7 +52,7 @@ FinchNotation.finch_leaf(x::VirtualSubFiber) = virtual(x)
 """
     level_ndims(::Type{Lvl})
 
-The result of `level_ndims(Lvl)` defines [ndims](@ref) for all subfibers
+The result of `level_ndims(Lvl)` defines [ndims](https://docs.julialang.org/en/v1/base/arrays/#Base.ndims) for all subfibers
 in a level of type `Lvl`.
 """
 function level_ndims end
@@ -62,7 +62,7 @@ function level_ndims end
 """
     level_size(lvl)
 
-The result of `level_size(lvl)` defines the [size](@ref) of all subfibers in the
+The result of `level_size(lvl)` defines the [size](https://docs.julialang.org/en/v1/base/arrays/#Base.size) of all subfibers in the
 level `lvl`.
 """
 function level_size end
@@ -71,7 +71,7 @@ function level_size end
 """
     level_axes(lvl)
 
-The result of `level_axes(lvl)` defines the [axes](@ref) of all subfibers in the
+The result of `level_axes(lvl)` defines the [axes](https://docs.julialang.org/en/v1/base/arrays/#Base.axes-Tuple{Any}) of all subfibers in the
 level `lvl`.
 """
 function level_axes end
@@ -80,8 +80,9 @@ function level_axes end
 """
     level_eltype(::Type{Lvl})
 
-The result of `level_eltype(Lvl)` defines [eltype](@ref) for all subfibers in a
-level of type `Lvl`.
+The result of `level_eltype(Lvl)` defines
+[`eltype`](https://docs.julialang.org/en/v1/base/collections/#Base.eltype) for
+all subfibers in a level of type `Lvl`.
 """
 function level_eltype end
 @inline Base.eltype(::AbstractFiber{Lvl}) where {Lvl} = level_eltype(Lvl)
@@ -90,7 +91,7 @@ function level_eltype end
 """
     level_default(::Type{Lvl})
 
-The result of `level_default(Lvl)` defines [default](@ref) for all subfibers in a
+The result of `level_default(Lvl)` defines [`default`](@ref) for all subfibers in a
 level of type `Lvl`.
 """
 function level_default end
@@ -340,7 +341,7 @@ Construct a fiber using abbreviated level constructor names. To override
 abbreviations, expressions may be interpolated with `\$`. For example,
 `Fiber(DenseLevel(SparseListLevel(Element(0.0))))` can also be constructed as
 `@fiber(sl(d(e(0.0))))`. Consult the documentation for the helper function
-[fiber_abbrev](@ref) for a full listing of level format codes.
+[`fiber_abbrev`](@ref) for a full listing of level format abbreviations.
 
 Optionally, an argument may be specified to copy into the fiber. This expression
 allocates. Use `fiber(arg)` for a zero-cost copy, if available.

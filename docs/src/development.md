@@ -138,7 +138,7 @@ TODO more on the way...
 Every virtual tensor must be in one of two modes: read-only mode or update-only mode. The following functions may be called on virtual tensors throughout their life cycle.
 
 ```@docs
-initialize!
+declare!
 get_reader
 get_updater
 freeze!
@@ -151,7 +151,7 @@ Fiber levels are implemented using the following methods:
 
 ```@docs
 default
-initialize_level!
+declare_level!
 assemble_level!
 reassemble_level!
 freeze_level!
