@@ -16,10 +16,10 @@ SparseByteMapLevel{Ti, Tp, Lvl}(lvl, shape) where {Ti, Tp, Lvl} =
     SparseByteMapLevel{Ti, Tp, Lvl}(lvl, Ti(shape), Tp[1], Bool[], Tuple{Tp, Ti}[])
 
 """
-`f_code(sbm)` = [SparseByteMapLevel](@ref).
+`fiber_abbrev(sbm)` = [`SparseByteMapLevel`](@ref).
 """
-f_code(::Val{:sbm}) = SparseByteMap
-summary_f_code(lvl::SparseByteMapLevel) = "sbm($(summary_f_code(lvl.lvl)))"
+fiber_abbrev(::Val{:sbm}) = SparseByteMap
+summary_fiber_abbrev(lvl::SparseByteMapLevel) = "sbm($(summary_fiber_abbrev(lvl.lvl)))"
 similar_level(lvl::SparseByteMapLevel) = SparseByteMap(similar_level(lvl.lvl))
 similar_level(lvl::SparseByteMapLevel, dims...) = SparseByteMap(similar_level(lvl.lvl, dims[1:end-1]...), dims[end])
 
@@ -121,7 +121,7 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualSparseByteMapLevel)
     end
 end
 
-summary_f_code(lvl::VirtualSparseByteMapLevel) = "sbm($(summary_f_code(lvl.lvl)))"
+summary_fiber_abbrev(lvl::VirtualSparseByteMapLevel) = "sbm($(summary_fiber_abbrev(lvl.lvl)))"
 
 function virtual_level_size(lvl::VirtualSparseByteMapLevel, ctx)
     ext = Extent(literal(lvl.Ti(1)), lvl.shape)

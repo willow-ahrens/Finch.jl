@@ -5,7 +5,7 @@ A subfiber of a dense level is an array which stores every slice `A[:, ..., :,
 i]` as a distinct subfiber in `lvl`. Optionally, `dim` is the size of the last
 dimension. `Ti` is the type of the indices used to index the level.
 
-In the [@fiber](@ref) constructor, `d` is an alias for `DenseLevel`.
+In the [`@fiber`](@ref) constructor, `d` is an alias for `DenseLevel`.
 
 ```jldoctest
 julia> ndims(@fiber(d(e(0.0))))
@@ -37,10 +37,10 @@ DenseLevel{Ti, Lvl}(lvl) where {Ti, Lvl} = DenseLevel{Ti, Lvl}(lvl, zero(Ti))
 const Dense = DenseLevel
 
 """
-`f_code(d)` = [DenseLevel](@ref).
+`fiber_abbrev(d)` = [`DenseLevel`](@ref).
 """
-f_code(::Val{:d}) = Dense
-summary_f_code(lvl::Dense) = "d($(summary_f_code(lvl.lvl)))"
+fiber_abbrev(::Val{:d}) = Dense
+summary_fiber_abbrev(lvl::Dense) = "d($(summary_fiber_abbrev(lvl.lvl)))"
 similar_level(lvl::DenseLevel) = Dense(similar_level(lvl.lvl))
 similar_level(lvl::DenseLevel, dims...) = Dense(similar_level(lvl.lvl, dims[1:end-1]...), dims[end])
 
@@ -115,7 +115,7 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualDenseLevel)
     end
 end
 
-summary_f_code(lvl::VirtualDenseLevel) = "d($(summary_f_code(lvl.lvl)))"
+summary_fiber_abbrev(lvl::VirtualDenseLevel) = "d($(summary_fiber_abbrev(lvl.lvl)))"
 
 function virtual_level_size(lvl::VirtualDenseLevel, ctx)
     ext = Extent(literal(lvl.Ti(1)), lvl.shape)
