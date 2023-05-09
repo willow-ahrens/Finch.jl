@@ -13,10 +13,10 @@ SparseTriangleLevel{N, Ti, Lvl}(lvl) where {N, Ti, Lvl} = SparseTriangleLevel{N,
 const SparseTriangle = SparseTriangleLevel
 
 """
-`f_code(st)` = [SparseTriangleLevel](@ref).
+`fiber_abbrev(st)` = [SparseTriangleLevel](@ref).
 """
-f_code(::Val{:st}) = SparseTriangle
-summary_f_code(lvl::SparseTriangle{N}) where {N} = "st{$N}($(summary_f_code(lvl.lvl)))"
+fiber_abbrev(::Val{:st}) = SparseTriangle
+summary_fiber_abbrev(lvl::SparseTriangle{N}) where {N} = "st{$N}($(summary_fiber_abbrev(lvl.lvl)))"
 similar_level(lvl::SparseTriangle{N}) where {N} = SparseTriangle(similar_level(lvl.lvl))
 similar_level(lvl::SparseTriangle{N}, dims...) where {N} = SparseTriangle(similar_level(lvl.lvl, dims[1:end-1]...), dims[end])
 
@@ -101,7 +101,7 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualSparseTriangleLevel)
     end
 end
 
-summary_f_code(lvl::VirtualSparseTriangleLevel) = "st{$(lvl.N)}($(summary_f_code(lvl.lvl)))"
+summary_fiber_abbrev(lvl::VirtualSparseTriangleLevel) = "st{$(lvl.N)}($(summary_fiber_abbrev(lvl.lvl)))"
 
 function virtual_level_size(lvl::VirtualSparseTriangleLevel, ctx)
     ext = map((i) -> Extent(literal(lvl.Ti(1)), lvl.shape), 1:lvl.N)
