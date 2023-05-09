@@ -21,6 +21,7 @@ export Fiber, Fiber!, Scalar
 export SparseList, SparseListLevel
 export SparseHash, SparseHashLevel
 export SparseCOO, SparseCOOLevel
+export SparseTriangle, SparseTriangleLevel
 export SparseByteMap, SparseByteMapLevel
 export SparseVBL, SparseVBLLevel
 export Dense, DenseLevel
@@ -76,6 +77,8 @@ include("levels/denselevels.jl")
 include("levels/repeatrlelevels.jl")
 include("levels/elementlevels.jl")
 include("levels/patternlevels.jl")
+include("levels/raggedlevels.jl")
+include("levels/sparsetrianglelevels.jl")
 
 include("traits.jl")
 
