@@ -9,7 +9,8 @@ using Finch
 using BenchmarkTools
 using MatrixDepot
 using SparseArrays
-include("../Apps/apps.jl")
+
+include(joinpath(@__DIR__, "../apps/apps.jl"))
 
 SUITE = BenchmarkGroup()
 
@@ -64,73 +65,38 @@ SUITE["graphs"] = BenchmarkGroup()
 
 SUITE["graphs"]["pagerank"] = BenchmarkGroup()
 for mtx in ["SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
-    SUITE["graphs"]["pagerank"][mtx] = @benchmarkable Apps.pagerank($(fiber(SparseMatrixCSC(matrixdepot(mtx))))) 
+    SUITE["graphs"]["pagerank"][mtx] = @benchmarkable FinchApps.pagerank($(pattern!(fiber(SparseMatrixCSC(matrixdepot(mtx)))))) 
 end
 
 SUITE["graphs"]["bfs"] = BenchmarkGroup()
 for mtx in ["SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
-    SUITE["graphs"]["bfs"][mtx] = @benchmarkable Apps.bfs($(fiber(SparseMatrixCSC(matrixdepot(mtx))))) 
+    SUITE["graphs"]["bfs"][mtx] = @benchmarkable FinchApps.bfs($(fiber(SparseMatrixCSC(matrixdepot(mtx))))) 
 end
 
 SUITE["graphs"]["bellmanford"] = BenchmarkGroup()
-for mtx in ["Newman/netscience", "Williams/pdb1HYS"]#, "GAP/GAP-road"]
+for mtx in ["Newman/netscience", "SNAP/roadNet-CA"]
     A = redefault!(fiber(SparseMatrixCSC(matrixdepot(mtx))), Inf)
-    SUITE["graphs"]["bellmanford"][mtx] = @benchmarkable Apps.bellmanford($A)
+    SUITE["graphs"]["bellmanford"][mtx] = @benchmarkable FinchApps.bellmanford($A)
 end
 
 SUITE["matrices"] = BenchmarkGroup()
 
-function spgemm_inner(A, B)
-    C = @fiber d(sl(e(0.0)))
-    w = @fiber sh{2}(e(0.0))
-    AT = @fiber d(sl(e(0.0)))
-    @finch @loop k i w[k, i] = A[i, k]
-    @finch (AT .= 0; @loop i k AT[k, i] = w[k, i])
-    @finch (C .= 0; @loop j i k C[i, j] += AT[k, i] * B[k, j])
-    return C
-end
-
 SUITE["matrices"]["ATA_spgemm_inner"] = BenchmarkGroup()
 for mtx in []#"SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
     A = fiber(permutedims(SparseMatrixCSC(matrixdepot(mtx))))
-    SUITE["matrices"]["ATA_spgemm_inner"][mtx] = @benchmarkable spgemm_inner($A, $A) 
+    SUITE["matrices"]["ATA_spgemm_inner"][mtx] = @benchmarkable FinchApps.spgemm_inner($A, $A) 
 end
 
-function spgemm_gustavsons(A, B)
-    C = @fiber d(sl(e(0.0)))
-    w = @fiber sbm(e(0.0))
-    @finch begin
-        C .= 0
-        @loop j begin
-            w .= 0
-            @loop k i w[i] += A[i, k] * B[k, j]
-            @loop i C[i, j] = w[i]
-        end
-    end
-    return C
-end
-
-SUITE["matrices"]["ATA_spgemm_gustavsons"] = BenchmarkGroup()
+SUITE["matrices"]["ATA_spgemm_gustavson"] = BenchmarkGroup()
 for mtx in ["SNAP/soc-Epinions1"]#], "SNAP/soc-LiveJournal1"]
     A = fiber(SparseMatrixCSC(matrixdepot(mtx)))
-    SUITE["matrices"]["ATA_spgemm_gustavsons"][mtx] = @benchmarkable spgemm_gustavsons($A, $A) 
-end
-
-function spgemm_outer(A, B)
-    C = @fiber d(sl(e(0.0)))
-    w = @fiber sh{2}(e(0.0))
-    BT = @fiber d(sl(e(0.0)))
-    @finch (w .= 0; @loop j k w[j, k] = B[k, j])
-    @finch (BT .= 0; @loop k j BT[j, k] = w[j, k])
-    @finch (w .= 0; @loop k i j w[i, j] += A[i, k] * BT[j, k])
-    @finch (C .= 0; @loop j i C[i, j] = w[i, j])
-    return C
+    SUITE["matrices"]["ATA_spgemm_gustavson"][mtx] = @benchmarkable FinchApps.spgemm_gustavson($A, $A) 
 end
 
 SUITE["matrices"]["ATA_spgemm_outer"] = BenchmarkGroup()
 for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
     A = fiber(SparseMatrixCSC(matrixdepot(mtx)))
-    SUITE["matrices"]["ATA_spgemm_outer"][mtx] = @benchmarkable spgemm_outer($A, $A) 
+    SUITE["matrices"]["ATA_spgemm_outer"][mtx] = @benchmarkable FinchApps.spgemm_outer($A, $A) 
 end
 
 SUITE["indices"] = BenchmarkGroup()

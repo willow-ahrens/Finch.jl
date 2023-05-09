@@ -1,6 +1,7 @@
 TEXFLAGS= -shell-escape -synctex=1 -interaction=nonstopmode -file-line-error -pdf
 
-all:levels-A-matrix.png levels-A-d-d-e.png levels-A-d-sl-e.png levels-A-sl-sl-e.png levels-A-sc2-e.png figure-csc-format.png logo.png favicon.ico
+all:levels-A-matrix.png levels-A-d-d-e.png levels-A-d-sl-e.png levels-A-sl-sl-e.png levels-A-sc2-e.png logo.png favicon.ico figure-birb-matrix.png figure-birb-rle-protocol.png figure-cluster-matrix.png figure-cluster-vbl-protocol.png figure-sym-matrix.png figure-sym-sym-protocol.png figure-uniform-list-walk-protocol.png figure-uniform-matrix.png figure-banded-matrix.png figure-banded-banded-protocol.png
+
 
 %.png: %.pdf # requires ImageMagick
 	convert -density 600x600 $^ -quality 90 -resize 600x600 -background white -alpha remove -alpha off $@

@@ -68,8 +68,9 @@ end
 """
     initwrite(z)(a, b)
 
-`initwrite(z)` is a function which may assert that `a` [isequal](@ref) to `z`, and
-`returns `b`.  By default, `lhs[] = rhs` is equivalent to `lhs[]
+`initwrite(z)` is a function which may assert that `a`
+[`isequal`](https://docs.julialang.org/en/v1/base/base/#Base.isequal) to `z`,
+and `returns `b`.  By default, `lhs[] = rhs` is equivalent to `lhs[]
 <<initwrite(default(lhs))>>= rhs`.
 """
 initwrite(z) = InitWriter{z}()
@@ -116,10 +117,10 @@ function (ctx::FinchParserVisitor)(ex::Expr)
 
     if @capture ex :if(~cond, ~body)
         return :($(ctx.nodes.sieve)($(ctx(cond)), $(ctx(body))))
+    elseif @capture ex :if(~cond, ~body, ~tail)
+        throw(FinchSyntaxError("Finch does not support else, elseif, or the ternary operator. Consider using multiple if blocks, or the ifelse() function instead."))
     elseif @capture ex :elseif(~args...)
-        throw(FinchSyntaxError("Finch doesn't support elseif currently"))
-    elseif @capture ex :else(~args...)
-        throw(FinchSyntaxError("Finch doesn't support else currently"))
+        throw(FinchSyntaxError("Finch does not support elseif."))
     elseif @capture ex :(.=)(~tns, ~init)
         return :($(ctx.nodes.declare)($(ctx(tns)), $(ctx(init))))
     elseif @capture ex :macrocall($(Symbol("@declare")), ~ln::islinenum, ~tns, ~init)

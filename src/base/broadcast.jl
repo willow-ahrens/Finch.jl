@@ -55,8 +55,8 @@ function Base.similar(bc::Broadcast.Broadcasted{FinchStyle{N}}, ::Type{T}, dims)
     similar_broadcast_helper(lift_broadcast(bc))
 end
 
-@generated function similar_broadcast_helper(bc::Broadcast.Broadcasted{FinchStyle{N}}) where {N}
-    idxs = [index(Symbol(:i, n)) for n = 1:N]
+@staged_function similar_broadcast_helper bc begin
+    idxs = [index(Symbol(:i, n)) for n = 1:ndims(bc)]
     ctx = LowerJulia()
     rep = pointwise_finch_traits(:bc, bc, idxs)
     rep = PointwiseRep(ctx)(rep, reverse(idxs))
@@ -126,10 +126,10 @@ function (ctx::PointwiseRep)(rep, idxs, ::PointwiseRepeatStyle)
     return RepeatData(background.val, typeof(background.val))
 end
 
-function (ctx::PointwiseRep)(rep, idxs, ::PointwiseElementStyle)
-    background = simplify(Postwalk(Chain([
+function (ctx::PointwiseRep)(rep, idxs, ::Union{DefaultStyle, PointwiseElementStyle})
+    background = simplify(Rewrite(Postwalk(Chain([
         (@rule access(~ex::isvirtual, ~m) => finch_leaf(default(ex.val))),
-    ]))(rep), ctx.ctx)
+    ])))(rep), ctx.ctx)
     @assert isliteral(background)
     return ElementData(background.val, typeof(background.val))
 end
@@ -161,20 +161,20 @@ function pointwise_finch_expr(ex, T, ctx, idxs)
     :($src[$(idxs[1:ndims(T)]...)])
 end
 
-@generated function Base.copyto!(out, bc::Broadcasted{FinchStyle{N}}) where {N}
-    copyto_helper!(:out, out, :bc, bc)
+function Base.copyto!(out, bc::Broadcasted{<:FinchStyle})
+    copyto_broadcast_helper!(out, bc)
 end
 
-function copyto_helper!(out_ex, out, bc_ex, bc::Type{<:Broadcasted{FinchStyle{N}}}) where {N}
+@staged_function copyto_broadcast_helper! out bc begin
     contain(LowerJulia()) do ctx
-        idxs = [ctx.freshen(:idx, n) for n = 1:N]
-        pw_ex = pointwise_finch_expr(bc_ex, bc, ctx, idxs)
+        idxs = [ctx.freshen(:idx, n) for n = 1:ndims(bc)]
+        pw_ex = pointwise_finch_expr(:bc, bc, ctx, idxs)
         quote
             @finch begin
-                $out_ex .= $(default(out))
-                @loop($(reverse(idxs)...), $out_ex[$(idxs...)] = $pw_ex)
+                out .= $(default(out))
+                @loop($(reverse(idxs)...), out[$(idxs...)] = $pw_ex)
             end
-            $out_ex
+            out
         end
     end
 end

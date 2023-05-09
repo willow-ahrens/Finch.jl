@@ -3,7 +3,7 @@ begin
     C_lvl_2 = C_lvl.lvl
     A_lvl = (ex.bodies[2]).body.rhs.tns.tns.lvl
     A_lvl_2 = A_lvl.lvl
-    i_stop = ((ex.bodies[2]).body.rhs.idxs[1]).tns.tns.stop + (1 - ((ex.bodies[2]).body.rhs.idxs[1]).tns.tns.start)
+    i_stop = -(((ex.bodies[2]).body.rhs.idxs[1]).tns.tns.start) + 1 + ((ex.bodies[2]).body.rhs.idxs[1]).tns.tns.stop
     C_lvl_qos_stop = 0
     resize_if_smaller!(C_lvl.ptr, 1 + 1)
     fill_range!(C_lvl.ptr, 0, 1 + 1, 1 + 1)
@@ -48,5 +48,5 @@ begin
     qos = C_lvl.ptr[end] - 1
     resize!(C_lvl.idx, qos)
     resize!(C_lvl_2.val, qos)
-    (C = Fiber((Finch.SparseListLevel){Int64, Int32}(C_lvl_2, ((ex.bodies[2]).body.rhs.idxs[1]).tns.tns.stop + (1 - ((ex.bodies[2]).body.rhs.idxs[1]).tns.tns.start), C_lvl.ptr, C_lvl.idx)),)
+    (C = Fiber((SparseListLevel){Int64, Int32}(C_lvl_2, ((ex.bodies[2]).body.rhs.idxs[1]).tns.tns.stop + (1 - ((ex.bodies[2]).body.rhs.idxs[1]).tns.tns.start), C_lvl.ptr, C_lvl.idx)),)
 end

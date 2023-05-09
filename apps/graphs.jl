@@ -1,6 +1,9 @@
 function pagerank(edges; nsteps=20, damp = 0.85)
     (n, m) = size(edges)
     @assert n == m
+    out_degree = @fiber d(e(0))
+    @finch (out_degree .= 0; @loop j i out_degree[j] += edges[i, j])
+    scaled_edges = @fiber d(sl(e(0.0)))
     @finch begin
         scaled_edges .= 0
         for j = _, i = _
@@ -10,13 +13,13 @@ function pagerank(edges; nsteps=20, damp = 0.85)
         end
     end
     r = @fiber d(e(0.0), n)
-    @finch (r .= 0; @loop j r[j] = 1.0/n)
+    @finch (r .= 0.0; @loop j r[j] = 1.0/n)
     rank = @fiber d(e(0.0), n)
     beta_score = (1 - damp)/n
 
     for step = 1:nsteps
         @finch (rank .= 0; @loop j i rank[i] += scaled_edges[i, j] * r[j])
-        @finch (r .= 0; @loop i r[i] = beta_score + damp * rank[i])
+        @finch (r .= 0.0; @loop i r[i] = beta_score + damp * rank[i])
     end
     return r
 end
@@ -66,24 +69,37 @@ function bellmanford(edges, source=1)
     (n, m) = size(edges)
     @assert n == m
 
-    init_dists = [(Inf, -1) for i=1:n]
-    init_dists[source] = (0.0, -1)
-    dists_prev = @fiber(d(e((Inf, -1))), init_dists)
-    dists_buffer = @fiber(d(e((Inf, -1)), n))
-    dists_next = @fiber(d(e((Inf, -1)), n))
-    modified = Scalar(false)
+    dists_prev = @fiber(d(e((Inf, 0)), n))
+    dists_prev[source] = (0.0, 0)
+    dists = @fiber(d(e((Inf, 0)), n))
+    active_prev = @fiber(sbm(p(), n))
+    active_prev[source] = true
+    active = @fiber(sbm(p(), n))
+    d = Scalar(0.0)
 
     for iter = 1:n  
-        @finch @loop j i dists_buffer[j] <<min>>= (first(dists_prev[i]) + edges[i, j], i)
-        @finch @loop j dists_next[j] = min(dists_prev[j], dists_buffer[j])
+        @finch @loop j if active_prev[j] dists[j] <<minby>>= dists_prev[j] end
 
-        modified = Scalar(false)
-        @finch @loop i modified[] |= dists_next[i][1] != dists_prev[i][1]
-        if !modified[]
-            break
+        @finch begin
+            active .= false
+            for j = _
+                if active_prev[j]
+                    for i = _
+                        d .= 0
+                        d[] = first(dists_prev[j]) + edges[i, j]
+                        dists[i] <<minby>>= (d[], j)
+                        active[i] |= d[] < first(dists_prev[i])
+                    end
+                end
+            end
         end
-        dists_prev, dists_next = dists_next, dists_prev
+
+        if !any(active)
+            return dists
+        end
+        dists_prev, dists = dists, dists_prev
+        active_prev, active = active, active_prev
     end
 
-    return modified[] ? -1 : dists_prev
+    return dists_prev
 end

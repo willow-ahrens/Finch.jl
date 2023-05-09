@@ -530,7 +530,7 @@ end
 
 function Finch.getunbound(ex::FinchNode)
     if ex.kind === index
-        return [ex.name]
+        return [ex]
     elseif ex.kind === loop
         return setdiff(getunbound(ex.body), getunbound(ex.idx))
     elseif ex.kind === chunk

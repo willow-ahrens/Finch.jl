@@ -11,7 +11,7 @@ begin
     A_lvl.shape == A_lvl_2.shape || throw(DimensionMismatch("mismatched dimension limits ($(A_lvl.shape) != $(A_lvl_2.shape))"))
     B_lvl_2_qos_fill = 0
     B_lvl_2_qos_stop = 0
-    p_start_2 = 1 * A_lvl.shape
+    p_start_2 = A_lvl.shape
     resize_if_smaller!(B_lvl_2.ptr, p_start_2 + 1)
     fill_range!(B_lvl_2.ptr, 0, 1 + 1, p_start_2 + 1)
     for j_4 = 1:A_lvl.shape
@@ -151,5 +151,5 @@ begin
     qos_2 = B_lvl_2.ptr[end] - 1
     resize!(B_lvl_2.idx, qos_2)
     resize!(B_lvl_3.val, qos_2)
-    (B = Fiber((Finch.DenseLevel){Int64}((Finch.SparseListLevel){Int64, Int64}(B_lvl_3, A_lvl_2.shape, B_lvl_2.ptr, B_lvl_2.idx), A_lvl.shape)),)
+    (B = Fiber((DenseLevel){Int64}((SparseListLevel){Int64, Int64}(B_lvl_3, A_lvl_2.shape, B_lvl_2.ptr, B_lvl_2.idx), A_lvl.shape)),)
 end

@@ -11,7 +11,7 @@ in the subfiber, so fibers in the sublevel are the slices `A[:, ..., :, i_1,
 `Ti` is the type of the last `N` fiber indices, and `Tp` is the type used for
 positions in the level.
 
-In the [@fiber](@ref) constructor, `sh` is an alias for `SparseHashLevel`.
+In the [`@fiber`](@ref) constructor, `sh` is an alias for `SparseHashLevel`.
 
 ```jldoctest
 julia> @fiber(d(sh{1}(e(0.0))), [10 0 20; 30 0 0; 0 0 40])
@@ -58,10 +58,10 @@ SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(lvl, shape, tbl) where {N, Ti, Tp, Tbl, Lvl
     SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(lvl, Ti(shape), tbl, Tp[1], Pair{Tuple{Tp, Ti}, Tp}[])
 
 """
-`f_code(sh)` = [SparseHashLevel](@ref).
+`fiber_abbrev(sh)` = [`SparseHashLevel`](@ref).
 """
-f_code(::Val{:sh}) = SparseHash
-summary_f_code(lvl::SparseHashLevel{N}) where {N} = "sh{$N}($(summary_f_code(lvl.lvl)))"
+fiber_abbrev(::Val{:sh}) = SparseHash
+summary_fiber_abbrev(lvl::SparseHashLevel{N}) where {N} = "sh{$N}($(summary_fiber_abbrev(lvl.lvl)))"
 similar_level(lvl::SparseHashLevel{N}) where {N} = SparseHashLevel{N}(similar_level(lvl.lvl))
 similar_level(lvl::SparseHashLevel{N}, tail...) where {N} = SparseHashLevel{N}(similar_level(lvl.lvl, tail[1:end-N]...), (tail[end-N+1:end]...,))
 
@@ -173,7 +173,7 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualSparseHashLevel)
     end
 end
 
-summary_f_code(lvl::VirtualSparseHashLevel) = "sh{$(lvl.N)}($(summary_f_code(lvl.lvl)))"
+summary_fiber_abbrev(lvl::VirtualSparseHashLevel) = "sh{$(lvl.N)}($(summary_fiber_abbrev(lvl.lvl)))"
 
 function virtual_level_size(lvl::VirtualSparseHashLevel, ctx::LowerJulia)
     ext = map((ti, stop)->Extent(literal(ti(1)), stop), lvl.Ti.parameters, lvl.shape)

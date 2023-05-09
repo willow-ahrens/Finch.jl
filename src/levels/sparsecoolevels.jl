@@ -12,7 +12,7 @@ order.  Optionally, `dims` are the sizes of the last dimensions.
 `Ti` is the type of the last `N` fiber indices, and `Tp` is the type used for
 positions in the level.
 
-In the [@fiber](@ref) constructor, `sh` is an alias for `SparseCOOLevel`.
+In the [`@fiber`](@ref) constructor, `sh` is an alias for `SparseCOOLevel`.
 
 ```jldoctest
 julia> @fiber(d(sc{1}(e(0.0))), [10 0 20; 30 0 0; 0 0 40])
@@ -56,10 +56,10 @@ SparseCOOLevel{N, Ti, Tp, Tbl, Lvl}(lvl, shape) where {N, Ti, Tp, Tbl, Lvl} =
     SparseCOOLevel{N, Ti, Tp, Tbl, Lvl}(lvl, Ti(shape), ((Vector{ti}() for ti in Ti.parameters)...,), Tp[1])
 
 """
-`f_code(sc)` = [SparseCOOLevel](@ref).
+`fiber_abbrev(sc)` = [`SparseCOOLevel`](@ref).
 """
-f_code(::Val{:sc}) = SparseCOO
-summary_f_code(lvl::SparseCOOLevel{N}) where {N} = "sc{$N}($(summary_f_code(lvl.lvl)))"
+fiber_abbrev(::Val{:sc}) = SparseCOO
+summary_fiber_abbrev(lvl::SparseCOOLevel{N}) where {N} = "sc{$N}($(summary_fiber_abbrev(lvl.lvl)))"
 similar_level(lvl::SparseCOOLevel{N}) where {N} = SparseCOOLevel{N}(similar_level(lvl.lvl))
 similar_level(lvl::SparseCOOLevel{N}, tail...) where {N} = SparseCOOLevel{N}(similar_level(lvl.lvl, tail[1:end-N]...), (tail[end-N+1:end]...,))
 
@@ -164,7 +164,7 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualSparseCOOLevel)
     end
 end
 
-summary_f_code(lvl::VirtualSparseCOOLevel) = "sc{$(lvl.N)}($(summary_f_code(lvl.lvl)))"
+summary_fiber_abbrev(lvl::VirtualSparseCOOLevel) = "sc{$(lvl.N)}($(summary_fiber_abbrev(lvl.lvl)))"
 
 function virtual_level_size(lvl::VirtualSparseCOOLevel, ctx::LowerJulia)
     ext = map((ti, stop)->Extent(literal(ti(1)), stop), lvl.Ti.parameters, lvl.shape)

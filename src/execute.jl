@@ -1,14 +1,10 @@
 execute(ex) = execute(ex, DefaultAlgebra())
 
-push!(registry, (algebra)-> quote
-    @generated function execute(ex, a::$algebra)
-        quote
-            @inbounds begin
-                $(execute_code(:ex, ex, a()))
-            end
-        end
+@staged_function execute ex a quote
+    @inbounds begin
+        $(execute_code(:ex, ex, a()) |> unblock)
     end
-end)
+end
 
 function execute_code(ex, T, algebra = DefaultAlgebra())
     prgm = nothing

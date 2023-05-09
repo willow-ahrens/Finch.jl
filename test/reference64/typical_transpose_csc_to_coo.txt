@@ -79,7 +79,7 @@ quote
     qos = B_lvl.ptr[end] - 1
     resize!(B_lvl.srt, qos)
     resize!(B_lvl_2.val, qos)
-    (B = Fiber((Finch.SparseHashLevel){2, Tuple{Int64, Int64}, Int64, Dict{Tuple{Int64, Tuple{Int64, Int64}}, Int64}}(B_lvl_2, (A_lvl.shape, A_lvl_2.shape), B_lvl.tbl, B_lvl.ptr, B_lvl.srt)),)
+    (B = Fiber((SparseHashLevel){2, Tuple{Int64, Int64}, Int64, Dict{Tuple{Int64, Tuple{Int64, Int64}}, Int64}}(B_lvl_2, (A_lvl.shape, A_lvl_2.shape), B_lvl.tbl, B_lvl.ptr, B_lvl.srt)),)
 end
 julia> @finch begin
         B .= 0
