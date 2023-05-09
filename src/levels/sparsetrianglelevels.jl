@@ -28,7 +28,7 @@ pattern!(lvl::SparseTriangleLevel{N, Ti}) where {N, Ti} =
 @inline level_axes(lvl::SparseTriangleLevel{N}) where {N} = (level_axes(lvl.lvl)..., repeat([Base.OneTo(lvl.shape)], N)...)
 @inline level_eltype(::Type{<:SparseTriangleLevel{N, Ti, Lvl}}) where {N, Ti, Lvl} = level_eltype(Lvl)
 @inline level_default(::Type{<:SparseTriangleLevel{N, Ti, Lvl}}) where {N, Ti, Lvl} = level_default(Lvl)
-data_rep_level(::Type{<:SparseTriangleLevel{N, Ti, Lvl}}) where {N, Ti, Lvl} = DenseData(data_rep_level(Lvl))
+data_rep_level(::Type{<:SparseTriangleLevel{N, Ti, Lvl}}) where {N, Ti, Lvl} = (SparseData^N)(data_rep_level(Lvl))
 
 simplex(shape, n) = fld(prod(shape .+ n .- (1:n)), factorial(n))
 
@@ -164,9 +164,7 @@ end
 is_laminable_updater(lvl::VirtualSparseTriangleLevel, ctx, ::Union{Nothing, Laminate, Extrude}, protos...) =
     is_laminable_updater(lvl.lvl, ctx, protos...)
 
-# get_reader(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, ::Union{Nothing, Follow}, ::Union{Nothing, Follow}, protos...) = get_reader_triangular_dense_helper(fbr, ctx, get_reader, VirtualSubFiber, protos...)
-# get_updater(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, ::Union{Nothing, Laminate, Extrude}, ::Union{Nothing, Laminate, Extrude}, protos...) = get_updater_triangular_dense_helper(fbr, ctx, get_updater, VirtualSubFiber, protos...)
-# get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseTriangleLevel}, ctx, ::Union{Nothing, Laminate, Extrude}, ::Union{Nothing, Laminate, Extrude}, protos...) = get_updater_triangular_dense_helper(fbr, ctx, get_updater, (lvl, pos) -> VirtualTrackedSubFiber(lvl, pos, fbr.dirty), protos...)
+
 get_reader(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, protos...) = get_reader_triangular_dense_helper(fbr, ctx, get_reader, VirtualSubFiber, protos...)
 get_updater(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, protos...) = get_updater_triangular_dense_helper(fbr, ctx, get_updater, VirtualSubFiber, protos...)
 get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseTriangleLevel}, ctx, protos...) = get_updater_triangular_dense_helper(fbr, ctx, get_updater, (lvl, pos) -> VirtualTrackedSubFiber(lvl, pos, fbr.dirty), protos...)
@@ -176,7 +174,6 @@ function get_reader_triangular_dense_helper(fbr, ctx, get_readerupdater, subfibe
     Ti = lvl.Ti
 
     q = ctx.freshen(tag, :_q)
-    # s = ctx.freshen(tag, :_s)
 
     # d is the dimension we are on 
     # j is coordinate of previous dimension
@@ -191,12 +188,11 @@ function get_reader_triangular_dense_helper(fbr, ctx, get_readerupdater, subfibe
                     Phase(
                         stride = (ctx, ext) -> j,
                         body = (ctx, ext) -> Lookup(
-                            # body = (ctx, i) -> get_readerupdater(subfiber_ctr(lvl.lvl, call(+, q, -1, i)), ctx, protos[n-1:end]...) # hack -> fix later
                             body = (ctx, i) -> get_readerupdater(subfiber_ctr(lvl.lvl, call(+, q, -1, i)), ctx, protos...)
                         )
                     ),
                     Phase(
-                        body = (ctx, ext) -> Run(0.0)
+                        body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))
                     )
                 ])
             )
@@ -216,7 +212,7 @@ function get_reader_triangular_dense_helper(fbr, ctx, get_readerupdater, subfibe
                         )
                     ),
                     Phase(
-                        body = (ctx, ext) -> Run(0.0)
+                        body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))
                     )
                 ])
             )
@@ -237,7 +233,6 @@ function get_updater_triangular_dense_helper(fbr, ctx, get_readerupdater, subfib
     Ti = lvl.Ti
 
     q = ctx.freshen(tag, :_q)
-    # s = ctx.freshen(tag, :_s)
 
     # d is the dimension we are on 
     # j is coordinate of previous dimension
@@ -252,7 +247,6 @@ function get_updater_triangular_dense_helper(fbr, ctx, get_readerupdater, subfib
                     Phase(
                         stride = (ctx, ext) -> j,
                         body = (ctx, ext) -> Lookup(
-                            # body = (ctx, i) -> get_readerupdater(subfiber_ctr(lvl.lvl, call(+, q, -1, i)), ctx, protos[n-1:end]...) # hack -> fix later
                             body = (ctx, i) -> get_readerupdater(subfiber_ctr(lvl.lvl, call(+, q, -1, i)), ctx, protos...) # hack -> fix later
                         )
                     ),
