@@ -207,7 +207,7 @@ function get_reader_triangular_dense_helper(fbr, ctx, get_readerupdater, subfibe
                                 preamble = :(
                                     $s = $(ctx(call(+, q, virtual_simplex(d, ctx, call(-, i, 1)))))
                                 ),
-                                body = simplex_helper(d - 1, i, n, value(s), protos...)
+                                body = (ctx) -> simplex_helper(d - 1, i, n, value(s), protos...)
                             )
                         )
                     ),
@@ -223,7 +223,7 @@ function get_reader_triangular_dense_helper(fbr, ctx, get_readerupdater, subfibe
         preamble = quote
             $q = $(ctx(call(+, call(*, call(-, pos, lvl.Ti(1)), fbr_count), 1)))
         end,
-        body = simplex_helper(lvl.N, lvl.shape, lvl.N, value(q), protos...)
+        body = (ctx) -> simplex_helper(lvl.N, lvl.shape, lvl.N, value(q), protos...)
     )
 end
 
@@ -266,7 +266,7 @@ function get_updater_triangular_dense_helper(fbr, ctx, get_readerupdater, subfib
                                 preamble = :(
                                     $s = $(ctx(call(+, q, virtual_simplex(d, ctx, call(-, i, 1)))))
                                 ),
-                                body = simplex_helper(d - 1, i, n, value(s), protos...)
+                                body = (ctx) -> simplex_helper(d - 1, i, n, value(s), protos...)
                             )
                         )
                     ),
@@ -282,6 +282,6 @@ function get_updater_triangular_dense_helper(fbr, ctx, get_readerupdater, subfib
         preamble = quote
             $q = $(ctx(call(+, call(*, call(-, pos, lvl.Ti(1)), fbr_count), 1)))
         end,
-        body = simplex_helper(lvl.N, lvl.shape, lvl.N, value(q), protos...)
+        body = (ctx) -> simplex_helper(lvl.N, lvl.shape, lvl.N, value(q), protos...)
     )
 end

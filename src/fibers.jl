@@ -179,7 +179,7 @@ function get_updater(fbr::VirtualTrackedSubFiber, ctx, protos...)
         preamble = quote
             $(fbr.dirty) = true
         end,
-        body = get_updater(VirtualSubFiber(fbr.lvl, fbr.pos))
+        body = (ctx) -> get_updater(VirtualSubFiber(fbr.lvl, fbr.pos))
     )
 end
 
