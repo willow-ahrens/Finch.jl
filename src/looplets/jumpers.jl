@@ -44,7 +44,7 @@ function phase_range(node::Jump, ctx, ext)
     Widen(Extent(getstart(ext), node.stop(ctx, ext)))
 end
 
-(ctx::PhaseBodyVisitor)(node::Jump) = node.body(ctx.ctx, ctx.ext, ctx.ext_2)
+phase_body(node::Jump, ctx, ext, ext_2) = node.body(ctx, ext, ext_2)
 
 supports_shift(::JumperStyle) = true
 

@@ -23,33 +23,17 @@ phase_range(node, ctx, ext) = nodim
 phase_range(node::Phase, ctx, ext) = Narrow(node.range(ctx, ext))
 phase_range(node::Shift, ctx, ext) = shiftdim(phase_range(node.body, ctx, shiftdim(ext, call(-, node.delta))), node.delta)
 
-@kwdef struct PhaseBodyVisitor
-    ctx
-    ext
-    ext_2
-end
-
-function (ctx::PhaseBodyVisitor)(node)
-    if istree(node)
-        return similarterm(node, operation(node), map(ctx, arguments(node)))
+function phase_body(node::FinchNode, ctx, ext, ext_2)
+    if @capture node access(~tns::isvirtual, ~i...)
+        access(phase_body(tns.val, ctx, ext, ext_2), i...)
     else
         return node
     end
 end
-function (ctx::PhaseBodyVisitor)(node::FinchNode)
-    if node.kind === virtual
-        ctx(node.val)
-    elseif istree(node)
-        return similarterm(node, operation(node), map(ctx, arguments(node)))
-    else
-        return node
-    end
-end
-
-(ctx::PhaseBodyVisitor)(node::Phase) = node.body(ctx.ctx, ctx.ext_2)
-(ctx::PhaseBodyVisitor)(node::Spike) = truncate(node, ctx.ctx, ctx.ext, ctx.ext_2) #TODO This should be called on everything
-
-(ctx::PhaseBodyVisitor)(node::Shift) = Shift(PhaseBodyVisitor(ctx.ctx, shiftdim(ctx.ext, call(-, node.delta)), shiftdim(ctx.ext_2, call(-, node.delta)))(node.body), node.delta)
+phase_body(node::Phase, ctx, ext, ext_2) = node.body(ctx, ext_2)
+phase_body(node::Spike, ctx, ext, ext_2) = truncate(node, ctx, ext, ext_2) #TODO This should be called on everything
+phase_body(node, ctx, ext, ext_2) = node
+phase_body(node::Shift, ctx, ext, ext_2) = Shift(phase_body(node.body, ctx, shiftdim(ext, call(-, node.delta)), shiftdim(ext_2, call(-, node.delta))), node.delta)
 
 struct PhaseStyle end
 
@@ -76,7 +60,7 @@ function (ctx::LowerJulia)(root::FinchNode, ::PhaseStyle)
         ext_2 = resolvedim(mapreduce((node)->phase_range(node, ctx, root.ext), (a, b) -> resultdim(ctx, a, b), PostOrderDFS(body), init=nodim))
         ext_2 = cache_dim!(ctx, :phase, resolvedim(resultdim(ctx, Narrow(root.ext), ext_2)))
 
-        body = PhaseBodyVisitor(ctx, root.ext, ext_2)(body)
+        body = Rewrite(Postwalk(node->phase_body(node, ctx, root.ext, ext_2)))(body)
         body = quote
             $i0 = $i
             $(contain(ctx) do ctx_4

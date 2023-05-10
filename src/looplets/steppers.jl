@@ -62,6 +62,6 @@ function phase_range(node::Step, ctx, ext)
     Narrow(Extent(start = getstart(ext), stop = call(cached, s, call(max, s, call(+, getstart(ext), 1))), lower = literal(1)))
 end
 
-(ctx::PhaseBodyVisitor)(node::Step) = node.body(ctx.ctx, ctx.ext, ctx.ext_2)
+phase_body(node::Step, ctx, ext, ext_2) = node.body(ctx, ext, ext_2)
 
 supports_shift(::StepperStyle) = true
