@@ -4,6 +4,7 @@ module Finch
     using Requires
 end
 
+using AbstractTrees
 using SyntaxInterface
 using RewriteTools
 using RewriteTools.Rewriters

@@ -30,7 +30,7 @@ end
 
 @kwdef struct Jump
     seek = nothing
-    stride
+    stop
     body
     next = nothing
 end
@@ -39,12 +39,12 @@ FinchNotation.finch_leaf(x::Jump) = virtual(x)
 
 (ctx::Stylize{LowerJulia})(node::Jump) = ctx.root.kind === chunk ? PhaseStyle() : DefaultStyle()
 
-function (ctx::PhaseStride)(node::Jump)
-    push!(ctx.ctx.preamble, node.seek !== nothing ? node.seek(ctx.ctx, ctx.ext) : quote end)
-    Widen(Extent(getstart(ctx.ext), node.stride(ctx.ctx, ctx.ext)))
+function phase_range(node::Jump, ctx, ext)
+    push!(ctx.preamble, node.seek !== nothing ? node.seek(ctx, ext) : quote end)
+    Widen(Extent(getstart(ext), node.stop(ctx, ext)))
 end
 
-(ctx::PhaseBodyVisitor)(node::Jump) = node.body(ctx.ctx, ctx.ext, ctx.ext_2)
+phase_body(node::Jump, ctx, ext, ext_2) = node.body(ctx, ext, ext_2)
 
 supports_shift(::JumperStyle) = true
 

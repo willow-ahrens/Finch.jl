@@ -232,7 +232,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Union{No
             end,
             body = (ctx) -> Pipeline([
                 Phase(
-                    stride = (ctx, ext) -> value(my_i1),
+                    stop = (ctx, ext) -> value(my_i1),
                     body = (ctx, ext) -> Stepper(
                         seek = (ctx, ext) -> quote
                             if $(lvl.ex).idx[$my_r] < $(ctx(getstart(ext)))
@@ -247,11 +247,11 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Union{No
                                 $my_q_ofs = $my_q_stop - $my_i - $(Tp(1))
                             end,
                             body = (ctx) -> Step(
-                                stride = (ctx, ext) -> value(my_i),
+                                stop = (ctx, ext) -> value(my_i),
                                 body = (ctx, ext, ext_2) -> Thunk(
                                     body = (ctx) -> Pipeline([
                                         Phase(
-                                            stride = (ctx, ext) -> value(my_i_start),
+                                            stop = (ctx, ext) -> value(my_i_start),
                                             body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
                                         ),
                                         Phase(
@@ -311,7 +311,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Gallop, 
             end,
             body = (ctx) -> Pipeline([
                 Phase(
-                    stride = (ctx, ext) -> value(my_i1),
+                    stop = (ctx, ext) -> value(my_i1),
                     body = (ctx, ext) -> Jumper(
                         body = Thunk(
                             preamble = quote
@@ -324,7 +324,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Gallop, 
                                     end
                                     $my_i = $(lvl.ex).idx[$my_r]
                                 end,
-                                stride = (ctx, ext) -> value(my_i),
+                                stop = (ctx, ext) -> value(my_i),
                                 body = (ctx, ext, ext_2) -> Switch([
                                     value(:($(ctx(getstop(ext_2))) == $my_i)) => Thunk(
                                         preamble=quote
@@ -334,7 +334,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Gallop, 
                                         end,
                                         body = (ctx) -> Pipeline([
                                             Phase(
-                                                stride = (ctx, ext) -> value(my_i_start),
+                                                stop = (ctx, ext) -> value(my_i_start),
                                                 body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
                                             ),
                                             Phase(
@@ -366,11 +366,11 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Gallop, 
                                                 $my_q_ofs = $my_q_stop - $my_i - $(Tp(1))
                                             end,
                                             body = (ctx) -> Step(
-                                                stride = (ctx, ext) -> value(my_i),
+                                                stop = (ctx, ext) -> value(my_i),
                                                 body = (ctx, ext, ext_2) -> Thunk(
                                                     body = (ctx) -> Pipeline([
                                                         Phase(
-                                                            stride = (ctx, ext) -> value(my_i_start),
+                                                            stop = (ctx, ext) -> value(my_i_start),
                                                             body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
                                                         ),
                                                         Phase(

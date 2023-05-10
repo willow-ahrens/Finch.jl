@@ -245,7 +245,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, ::Union{No
                         $my_i = $(lvl.ex).idx[$my_q]
                     ),
                     body = (ctx) -> Step(
-                        stride = (ctx, ext) -> value(my_i),
+                        stop = (ctx, ext) -> value(my_i),
                         chunk = Run(
                             body = Fill(value(:($(lvl.ex).val[$my_q]), lvl.Tv)) #TODO Flesh out fill to assert ndims and handle writes
                         ),

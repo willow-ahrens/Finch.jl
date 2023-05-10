@@ -186,7 +186,7 @@ function get_reader_triangular_dense_helper(fbr, ctx, get_readerupdater, subfibe
                 size = virtual_level_size(lvl, ctx)[end - n + 1:end - (n - d)],
                 body = (ctx, ext) -> Pipeline([
                     Phase(
-                        stride = (ctx, ext) -> j,
+                        stop = (ctx, ext) -> j,
                         body = (ctx, ext) -> Lookup(
                             body = (ctx, i) -> get_readerupdater(subfiber_ctr(lvl.lvl, call(+, q, -1, i)), ctx, protos...)
                         )
@@ -201,7 +201,7 @@ function get_reader_triangular_dense_helper(fbr, ctx, get_readerupdater, subfibe
                 size = virtual_level_size(lvl, ctx)[end - n + 1:end - (n - d)],
                 body = (ctx, ext) -> Pipeline([
                     Phase(
-                        stride = (ctx, ext) -> j,
+                        stop = (ctx, ext) -> j,
                         body = (ctx, ext) -> Lookup(
                             body = (ctx, i) -> Thunk(
                                 preamble = :(
@@ -245,7 +245,7 @@ function get_updater_triangular_dense_helper(fbr, ctx, get_readerupdater, subfib
                 size = virtual_level_size(lvl, ctx)[end - n + 1:end - (n - d)],
                 body = (ctx, ext) -> Pipeline([
                     Phase(
-                        stride = (ctx, ext) -> j,
+                        stop = (ctx, ext) -> j,
                         body = (ctx, ext) -> Lookup(
                             body = (ctx, i) -> get_readerupdater(subfiber_ctr(lvl.lvl, call(+, q, -1, i)), ctx, protos...) # hack -> fix later
                         )
@@ -260,7 +260,7 @@ function get_updater_triangular_dense_helper(fbr, ctx, get_readerupdater, subfib
                 size = virtual_level_size(lvl, ctx)[end - n + 1:end - (n - d)],
                 body = (ctx, ext) -> Pipeline([
                     Phase(
-                        stride = (ctx, ext) -> j,
+                        stop = (ctx, ext) -> j,
                         body = (ctx, ext) -> Lookup(
                             body = (ctx, i) -> Thunk(
                                 preamble = :(
