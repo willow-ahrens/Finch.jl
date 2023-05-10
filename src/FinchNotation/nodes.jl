@@ -259,6 +259,7 @@ isvariable(ex::FinchNode) = ex.kind === variable
 getval(ex::FinchNode) = ex.val
 
 SyntaxInterface.istree(node::FinchNode) = Int(node.kind) & IS_TREE != 0
+AbstractTrees.children(node::FinchNode) = node.children
 SyntaxInterface.arguments(node::FinchNode) = node.children
 SyntaxInterface.operation(node::FinchNode) = node.kind
 

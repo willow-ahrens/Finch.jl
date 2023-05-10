@@ -8,7 +8,7 @@ arrays as rooted trees, where the child of each node is selected by an array
 index. Finch is column major, so in an expression `A[i_1, ..., i_N]`, the
 rightmost dimension `i_N` corresponds to the root level of the tree, and the
 leftmost dimension `i_1` corresponds to the leaf level. When the array is dense,
-the leftmost dimension has stride 1. We can convert the matrix `A` to a fiber
+the leftmost dimension has stop 1. We can convert the matrix `A` to a fiber
 with the `@fiber` constructor:
 
 ![Example Matrix](assets/levels-A-matrix.png)

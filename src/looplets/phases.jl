@@ -1,8 +1,8 @@
 @kwdef struct Phase
     head = nothing
     body
-    stride = (ctx, ext) -> nothing
-    range = (ctx, ext) -> Extent(start = getstart(ext), stop = something(stride(ctx, ext), getstop(ext)))
+    stop = (ctx, ext) -> nothing
+    range = (ctx, ext) -> Extent(getstart(ext), something(stop(ctx, ext), getstop(ext)))
 end
 FinchNotation.finch_leaf(x::Phase) = virtual(x)
 
@@ -11,31 +11,17 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Phase)
     print(io, "Phase()")
 end
 
-@kwdef struct PhaseStride
-    ctx
-    ext
-end
-
-function (ctx::PhaseStride)(node)
-    if istree(node)
-        return mapreduce(ctx, (a, b) -> resultdim(ctx.ctx, a, b), arguments(node), init = nodim)
+function phase_range(node::FinchNode, ctx, ext)
+    if @capture node access(~tns::isvirtual, ~i...)
+        phase_range(tns.val, ctx, ext)
     else
         return nodim
     end
 end
 
-function (ctx::PhaseStride)(node::FinchNode)
-    if node.kind === virtual
-        ctx(node.val)
-    elseif istree(node)
-        return mapreduce(ctx, (a, b) -> resultdim(ctx.ctx, a, b), arguments(node), init = nodim)
-    else
-        return nodim
-    end
-end
-
-(ctx::PhaseStride)(node::Phase) = Narrow(node.range(ctx.ctx, ctx.ext))
-(ctx::PhaseStride)(node::Shift) = shiftdim(PhaseStride(;kwfields(ctx)..., ext = shiftdim(ctx.ext, call(-, node.delta)))(node.body), node.delta)
+phase_range(node, ctx, ext) = nodim
+phase_range(node::Phase, ctx, ext) = Narrow(node.range(ctx, ext))
+phase_range(node::Shift, ctx, ext) = shiftdim(phase_range(node.body, ctx, shiftdim(ext, call(-, node.delta))), node.delta)
 
 @kwdef struct PhaseBodyVisitor
     ctx
@@ -87,7 +73,7 @@ function (ctx::LowerJulia)(root::FinchNode, ::PhaseStyle)
 
         body = root.body
 
-        ext_2 = resolvedim(PhaseStride(ctx, root.ext)(body))
+        ext_2 = resolvedim(mapreduce((node)->phase_range(node, ctx, root.ext), (a, b) -> resultdim(ctx, a, b), PostOrderDFS(body), init=nodim))
         ext_2 = cache_dim!(ctx, :phase, resolvedim(resultdim(ctx, Narrow(root.ext), ext_2)))
 
         body = PhaseBodyVisitor(ctx, root.ext, ext_2)(body)

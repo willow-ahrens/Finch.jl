@@ -89,7 +89,7 @@ function Finch.get_reader(arr::VirtualSparseMatrixCSC, ctx::LowerJulia, ::Union{
                     end,
                     body = (ctx) -> Pipeline([
                         Phase(
-                            stride = (ctx, ext) -> value(my_i1),
+                            stop = (ctx, ext) -> value(my_i1),
                             body = (ctx, ext) -> Stepper(
                                 seek = (ctx, ext) -> quote
                                     if $(arr.ex).rowval[$my_q] < $(ctx(getstart(ext)))
@@ -101,7 +101,7 @@ function Finch.get_reader(arr::VirtualSparseMatrixCSC, ctx::LowerJulia, ::Union{
                                         $my_i = $(arr.ex).rowval[$my_q]
                                     end,
                                     body = (ctx) -> Step(
-                                        stride = (ctx, ext) -> value(my_i),
+                                        stop = (ctx, ext) -> value(my_i),
                                         chunk = Spike(
                                             body = Fill(zero(arr.Tv)),
                                             tail = Thunk(
@@ -188,7 +188,7 @@ function Finch.get_reader(arr::VirtualSparseVector, ctx::LowerJulia, ::Union{Not
             end,
             body = (ctx) -> Pipeline([
                 Phase(
-                    stride = (ctx, ext) -> value(my_i1),
+                    stop = (ctx, ext) -> value(my_i1),
                     body = (ctx, ext) -> Stepper(
                         seek = (ctx, ext) -> quote
                             if $(arr.ex).nzind[$my_q] < $(ctx(getstart(ext)))
@@ -200,7 +200,7 @@ function Finch.get_reader(arr::VirtualSparseVector, ctx::LowerJulia, ::Union{Not
                                 $my_i = $(arr.ex).nzind[$my_q]
                             end,
                             body = (ctx) -> Step(
-                                stride = (ctx, ext) -> value(my_i),
+                                stop = (ctx, ext) -> value(my_i),
                                 chunk = Spike(
                                     body = Fill(zero(arr.Tv)),
                                     tail = Thunk(

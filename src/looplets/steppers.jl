@@ -40,11 +40,11 @@ function (ctx::CycleVisitor{StepperStyle})(node::Stepper)
 end
 
 @kwdef struct Step
-    stride
+    stop
     next = (ctx, ext) -> quote end
     chunk = nothing
     body = (ctx, ext, ext_2) -> Switch([
-        value(:($(ctx(stride(ctx, ext))) == $(ctx(getstop(ext_2))))) => Thunk(
+        value(:($(ctx(stop(ctx, ext))) == $(ctx(getstop(ext_2))))) => Thunk(
             body = (ctx) -> truncate_weak(chunk, ctx, ext, ext_2),
             epilogue = next(ctx, ext_2)
         ),
@@ -57,9 +57,9 @@ FinchNotation.finch_leaf(x::Step) = virtual(x)
 
 (ctx::Stylize{LowerJulia})(node::Step) = ctx.root.kind === chunk ? PhaseStyle() : DefaultStyle()
 
-(ctx::PhaseStride)(node::Step) = begin
-    s = node.stride(ctx.ctx, ctx.ext)
-    Narrow(Extent(start = getstart(ctx.ext), stop = call(cached, s, call(max, s, call(+, getstart(ctx.ext), 1))), lower = literal(1)))
+function phase_range(node::Step, ctx, ext)
+    s = node.stop(ctx, ctx)
+    Narrow(Extent(start = getstart(ext), stop = call(cached, s, call(max, s, call(+, getstart(ext), 1))), lower = literal(1)))
 end
 
 (ctx::PhaseBodyVisitor)(node::Step) = node.body(ctx.ctx, ctx.ext, ctx.ext_2)
