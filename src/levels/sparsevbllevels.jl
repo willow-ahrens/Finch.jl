@@ -230,7 +230,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Union{No
                     $my_i1 = $(Ti(0))
                 end
             end,
-            body = Pipeline([
+            body = (ctx) -> Pipeline([
                 Phase(
                     stride = (ctx, ext) -> value(my_i1),
                     body = (ctx, ext) -> Stepper(
@@ -246,10 +246,10 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Union{No
                                 $my_i_start = $my_i - ($my_q_stop - $(lvl.ex).ofs[$my_r])
                                 $my_q_ofs = $my_q_stop - $my_i - $(Tp(1))
                             end,
-                            body = Step(
+                            body = (ctx) -> Step(
                                 stride = (ctx, ext) -> value(my_i),
                                 body = (ctx, ext, ext_2) -> Thunk(
-                                    body = Pipeline([
+                                    body = (ctx) -> Pipeline([
                                         Phase(
                                             stride = (ctx, ext) -> value(my_i_start),
                                             body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
@@ -260,7 +260,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Union{No
                                                     preamble = quote
                                                         $my_q = $my_q_ofs + $(ctx(i))
                                                     end,
-                                                    body = get_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Tp)), ctx, protos...),
+                                                    body = (ctx) -> get_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Tp)), ctx, protos...),
                                                 )
                                             )
                                         )
@@ -309,8 +309,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Gallop, 
                     $my_i1 = $(Ti(0))
                 end
             end,
-
-            body = Pipeline([
+            body = (ctx) -> Pipeline([
                 Phase(
                     stride = (ctx, ext) -> value(my_i1),
                     body = (ctx, ext) -> Jumper(
@@ -318,7 +317,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Gallop, 
                             preamble = quote
                                 $my_i = $(lvl.ex).idx[$my_r]
                             end,
-                            body = Jump(
+                            body = (ctx) -> Jump(
                                 seek = (ctx, ext) -> quote
                                     if $(lvl.ex).idx[$my_r] < $(ctx(getstart(ext)))
                                         $my_r = scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_r, $my_r_stop - 1)
@@ -333,7 +332,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Gallop, 
                                             $my_i_start = $my_i - ($my_q_stop - $(lvl.ex).ofs[$my_r])
                                             $my_q_ofs = $my_q_stop - $my_i - $(Tp(1))
                                         end,
-                                        body = Pipeline([
+                                        body = (ctx) -> Pipeline([
                                             Phase(
                                                 stride = (ctx, ext) -> value(my_i_start),
                                                 body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
@@ -344,7 +343,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Gallop, 
                                                         preamble = quote
                                                             $my_q = $my_q_ofs + $(ctx(i))
                                                         end,
-                                                        body = get_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Tp)), ctx, protos...),
+                                                        body = (ctx) -> get_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Tp)), ctx, protos...),
                                                     )
                                                 )
                                             )
@@ -366,10 +365,10 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Gallop, 
                                                 $my_i_start = $my_i - ($my_q_stop - $(lvl.ex).ofs[$my_r])
                                                 $my_q_ofs = $my_q_stop - $my_i - $(Tp(1))
                                             end,
-                                            body = Step(
+                                            body = (ctx) -> Step(
                                                 stride = (ctx, ext) -> value(my_i),
                                                 body = (ctx, ext, ext_2) -> Thunk(
-                                                    body = Pipeline([
+                                                    body = (ctx) -> Pipeline([
                                                         Phase(
                                                             stride = (ctx, ext) -> value(my_i_start),
                                                             body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
@@ -380,7 +379,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Gallop, 
                                                                     preamble = quote
                                                                         $my_q = $my_q_ofs + $(ctx(i))
                                                                     end,
-                                                                    body = get_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Tp)), ctx, protos...),
+                                                                    body = (ctx) -> get_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Tp)), ctx, protos...),
                                                                 )
                                                             )
                                                         )
@@ -433,7 +432,7 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseVBLLevel}, ctx, ::
                 $qos = $qos_fill + 1
                 $my_i_prev = $(Ti(-1))
             end,
-            body = Lookup(
+            body = (ctx) -> Lookup(
                 body = (ctx, idx) -> Thunk(
                     preamble = quote
                         if $qos > $qos_stop
@@ -442,7 +441,7 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseVBLLevel}, ctx, ::
                         end
                         $dirty = false
                     end,
-                    body = get_updater(VirtualTrackedSubFiber(lvl.lvl, value(qos, lvl.Tp), dirty), ctx, protos...),
+                    body = (ctx) -> get_updater(VirtualTrackedSubFiber(lvl.lvl, value(qos, lvl.Tp), dirty), ctx, protos...),
                     epilogue = quote
                         if $dirty
                             $(fbr.dirty) = true

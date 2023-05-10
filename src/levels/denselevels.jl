@@ -189,7 +189,7 @@ function get_readerupdater_dense_helper(fbr, ctx, get_readerupdater, subfiber_ct
                 preamble = quote
                     $q = ($(ctx(pos)) - $(Ti(1))) * $(ctx(lvl.shape)) + $(ctx(i))
                 end,
-                body = get_readerupdater(subfiber_ctr(lvl.lvl, value(q, lvl.Ti)), ctx, protos...)
+                body = (ctx) -> get_readerupdater(subfiber_ctr(lvl.lvl, value(q, lvl.Ti)), ctx, protos...)
             )
         )
     )

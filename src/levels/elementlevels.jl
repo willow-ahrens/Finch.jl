@@ -138,7 +138,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualElementLevel}, ctx)
         preamble = quote
             $val = $(lvl.ex).val[$(ctx(pos))]
         end,
-        body = VirtualScalar(nothing, lvl.Tv, lvl.D, gensym(), val)
+        body = (ctx) -> VirtualScalar(nothing, lvl.Tv, lvl.D, gensym(), val)
     )
 end
 
