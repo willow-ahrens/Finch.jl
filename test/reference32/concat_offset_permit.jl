@@ -267,14 +267,14 @@ begin
                 B_lvl_i = B_lvl.idx[B_lvl_q]
                 phase_stop_21 = min((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta + B_lvl_i, phase_stop_20)
                 if B_lvl_i == phase_stop_21 + -((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta)
-                    B_lvl_2_val_5 = B_lvl_2.val[B_lvl_q]
+                    B_lvl_2_val_4 = B_lvl_2.val[B_lvl_q]
                     if C_lvl_qos > C_lvl_qos_stop
                         C_lvl_qos_stop = max(C_lvl_qos_stop << 1, 1)
                         resize_if_smaller!(C_lvl.idx, C_lvl_qos_stop)
                         resize_if_smaller!(C_lvl_2.val, C_lvl_qos_stop)
                         fill_range!(C_lvl_2.val, 0.0, C_lvl_qos, C_lvl_qos_stop)
                     end
-                    C_lvl_2.val[C_lvl_qos] = B_lvl_2_val_5
+                    C_lvl_2.val[C_lvl_qos] = B_lvl_2_val_4
                     C_lvl.idx[C_lvl_qos] = phase_stop_21
                     C_lvl_qos += 1
                     B_lvl_q += 1
