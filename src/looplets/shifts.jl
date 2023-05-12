@@ -33,9 +33,7 @@ supports_shift(::ThunkStyle) = true
 function shiftdim(ext::Extent, delta)
     Extent(
         start = call(+, ext.start, delta),
-        stop = call(+, ext.stop, delta),
-        lower = ext.lower,
-        upper = ext.upper
+        stop = call(+, ext.stop, delta)
     )
 end
 

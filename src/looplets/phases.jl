@@ -58,6 +58,7 @@ function (ctx::LowerJulia)(root::FinchNode, ::PhaseStyle)
         body = root.body
 
         ext_2 = resolvedim(mapreduce((node)->phase_range(node, ctx, root.ext), (a, b) -> resultdim(ctx, a, b), PostOrderDFS(body), init=nodim))
+
         ext_2 = cache_dim!(ctx, :phase, resolvedim(resultdim(ctx, Narrow(root.ext), ext_2)))
 
         body = Rewrite(Postwalk(node->phase_body(node, ctx, root.ext, ext_2)))(body)

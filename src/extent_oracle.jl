@@ -41,7 +41,7 @@ function query(root::FinchNode, ctx)
         @rule(call(+, ~a, ~b, ~c, ~d...) => call(+, a, call(+, b, c, d...))),
         @rule(call(min, ~a, ~b, ~c, ~d...) => call(min, a, call(min, b, c, d...))),
         @rule(call(max, ~a, ~b, ~c, ~d...) => call(max, a, call(min, b, c, d...))),
-        @rule(call(Finch.cached, ~a, ~b) => b)
+        @rule(cached(~a, ~b::isliteral) => (println("Hello"); b.val)),
     ])))(root)
     names = Dict()
     function rename(node::FinchNode)
@@ -56,8 +56,9 @@ function query(root::FinchNode, ctx)
     root = Rewrite(Postwalk(rename))(root)
     niters = treebreadth(root)
     Metatheory.resetbuffers!(Metatheory.DEFAULT_BUFFER_SIZE)
+    println(root)
     display(ctx(root))
-    res = areequal(t, ctx(root), true, SaturationParams(timeout=treebreadth(root) + length(t)))
+    res = areequal(t, ctx(root), true, params = SaturationParams(timeout=treebreadth(root) + length(t), scheduler=Metatheory.Schedulers.SimpleScheduler))
     println(res)
     return coalesce(res, false)
 end

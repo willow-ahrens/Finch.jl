@@ -58,8 +58,7 @@ FinchNotation.finch_leaf(x::Step) = virtual(x)
 (ctx::Stylize{LowerJulia})(node::Step) = ctx.root.kind === chunk ? PhaseStyle() : DefaultStyle()
 
 function phase_range(node::Step, ctx, ext)
-    s = node.stop(ctx, ctx)
-    Narrow(Extent(start = getstart(ext), stop = call(cached, s, call(max, s, call(+, getstart(ext), 1))), lower = literal(1)))
+    Narrow(bound_measure_below!(Extent(getstart(ext), node.stop(ctx, ext)), literal(1)))
 end
 
 phase_body(node::Step, ctx, ext, ext_2) = node.body(ctx, ext, ext_2)

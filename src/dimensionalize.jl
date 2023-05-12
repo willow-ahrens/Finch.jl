@@ -206,35 +206,33 @@ combinedim(ctx, a::NoDimension, b) = b
 @kwdef struct Extent
     start
     stop
-    lower = literal(-Inf)
-    upper = literal(Inf)
 end
 
 FinchNotation.finch_leaf(x::Extent) = virtual(x)
 
 Base.:(==)(a::Extent, b::Extent) =
     a.start == b.start &&
-    a.stop == b.stop &&
-    a.lower == b.lower &&
-    a.upper == b.upper
+    a.stop == b.stop
 
-Extent(start, stop) = Extent(start, stop, literal(-Inf), literal(Inf))
+
+bound_below!(val, below) = cached(val, literal(call(max, val, below)))
+
+bound_above!(val, above) = cached(val, literal(call(min, val, above)))
+
+bound_equiv!(val, to) = cached(val, literal(call(max, call(min, val, to), to)))
+
+bound_measure_below!(ext::Extent, m) = Extent(ext.start, bound_below!(ext.stop, call(+, ext.stop, m)))
+bound_measure_above!(ext::Extent, m) = Extent(ext.start, bound_above!(ext.stop, call(+, ext.stop, m)))
+bound_measure_equiv!(ext::Extent, m) = Extent(ext.start, bound_equiv!(ext.stop, call(+, ext.stop, m)))
 
 cache_dim!(ctx, var, ext::Extent) = Extent(
     start = cache!(ctx, Symbol(var, :_start), ext.start),
-    stop = cache!(ctx, Symbol(var, :_stop), ext.stop),
-    lower = cache!(ctx, Symbol(var, :_lower), ext.lower),
-    upper = cache!(ctx, Symbol(var, :_upper), ext.upper),
+    stop = cache!(ctx, Symbol(var, :_stop), ext.stop)
 )
 
 getstart(ext::Extent) = ext.start
 getstop(ext::Extent) = ext.stop
-getlower(ext::Extent) = ext.lower
-getupper(ext::Extent) = ext.upper
-measure(ext::Extent) = call(cached,
-    call(+, call(-, ext.stop, ext.start), 1),
-    call(min, call(max, call(+, call(-, ext.stop, ext.start), 1), ext.lower), ext.upper)
-)
+measure(ext::Extent) = call(+, call(-, ext.stop, ext.start), 1)
 
 function getstop(ext::FinchNode)
     if ext.kind === virtual
@@ -250,42 +248,11 @@ function getstart(ext::FinchNode)
         ext
     end
 end
-function getlower(ext::FinchNode)
-    if ext.kind === virtual
-        getlower(ext.val)
-    else
-        1
-    end
-end
-function getupper(ext::FinchNode)
-    if ext.kind === virtual
-        getupper(ext.val)
-    else
-        1
-    end
-end
-#=
-#TODO I don't like this def
-function measure(ext::FinchNode)
-    if ext.kind === virtual
-        extent(ext.val)
-    elseif ext.kind === value
-        return 1
-    elseif ext.kind === literal
-        return 1
-    else
-        error("unimplemented")
-    end
-end
-extent(ext::Integer) = 1
-=#
 
 combinedim(ctx, a::Extent, b::Extent) =
     Extent(
         start = checklim(ctx, a.start, b.start),
-        stop = checklim(ctx, a.stop, b.stop),
-        lower = simplify(@f(min($(a.lower), $(b.lower))), ctx),
-        upper = simplify(@f(min($(a.upper), $(b.upper))), ctx)
+        stop = checklim(ctx, a.stop, b.stop)
     )
 
 combinedim(ctx, a::NoDimension, b::Extent) = b
@@ -419,13 +386,7 @@ combinedim(ctx, a::Narrow, b::NoDimension) = a
 function combinedim(ctx, a::Narrow{<:Extent}, b::Narrow{<:Extent})
     Narrow(Extent(
         start = simplify(@f(max($(getstart(a)), $(getstart(b)))), ctx),
-        stop = simplify(@f(min($(getstop(a)), $(getstop(b)))), ctx),
-        lower = if query(call(==, getstart(a), getstart(b)), ctx) || query(call(==, getstop(a), getstop(b)), ctx)
-            simplify(@f(min($(a.ext.lower), $(b.ext.lower))), ctx)
-        else
-            literal(0)
-        end,
-        upper = simplify(@f(min($(a.ext.upper), $(b.ext.upper))), ctx)
+        stop = simplify(@f(min($(getstop(a)), $(getstop(b)))), ctx)
     ))
 end
 
@@ -436,13 +397,7 @@ combinedim(ctx, a::Widen, b::SuggestedExtent) = a
 function combinedim(ctx, a::Widen{<:Extent}, b::Widen{<:Extent})
     Widen(Extent(
         start = simplify(@f(min($(getstart(a)), $(getstart(b)))), ctx),
-        stop = simplify(@f(max($(getstop(a)), $(getstop(b)))), ctx),
-        lower = simplify(@f(max($(a.ext.lower), $(b.ext.lower))), ctx),
-        upper = if query(call(==, getstart(a), getstart(b)), ctx) || query(call(==, getstop(a), getstop(b)), ctx)
-            simplify(@f(max($(a.ext.upper), $(b.ext.upper))), ctx)
-        else
-            simplify(@f($(a.ext.upper) + $(b.ext.upper)), ctx)
-        end,
+        stop = simplify(@f(max($(getstop(a)), $(getstop(b)))), ctx)
     ))
 end
 

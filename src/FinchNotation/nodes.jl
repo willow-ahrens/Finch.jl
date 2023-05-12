@@ -24,14 +24,15 @@ enum is used to differentiate which kind of node is represented.
     modify   =  9ID | IS_TREE
     create   = 10ID | IS_TREE
     call     = 11ID | IS_TREE
-    assign   = 12ID | IS_TREE | IS_STATEFUL
+    cached   = 12ID | IS_TREE
+    assign   = 13ID | IS_TREE | IS_STATEFUL
     loop     = 15ID | IS_TREE | IS_STATEFUL
     chunk    = 16ID | IS_TREE | IS_STATEFUL
     sieve    = 17ID | IS_TREE | IS_STATEFUL
     declare  = 20ID | IS_TREE | IS_STATEFUL
     thaw     = 21ID | IS_TREE | IS_STATEFUL
     freeze   = 22ID | IS_TREE | IS_STATEFUL
-    forget  = 23ID | IS_TREE | IS_STATEFUL
+    forget   = 23ID | IS_TREE | IS_STATEFUL
     sequence = 24ID | IS_TREE | IS_STATEFUL
 end
 
@@ -57,6 +58,13 @@ virtual
 Finch AST expression for the literal value `val`.
 """
 literal
+
+"""
+    cached(val, ref)
+
+Finch AST expression `val`, equivalent to the quoted expression `ref`
+"""
+cached
 
 """
     index(name)
@@ -302,6 +310,12 @@ function FinchNode(kind::FinchNodeKind, args::Vector)
         else
             error("wrong number of arguments to $kind(...)")
         end
+    elseif kind === cached
+        if length(args) == 2
+            return FinchNode(kind, nothing, nothing, args)
+        else
+            error("wrong number of arguments to $kind(...)")
+        end
     elseif kind === access
         if length(args) >= 2
             return FinchNode(access, nothing, nothing, args)
@@ -464,6 +478,14 @@ function Base.getproperty(node::FinchNode, sym::Symbol)
         else
             error("type FinchNode(loop, ...) has no property $sym")
         end
+    elseif node.kind === cached
+        if sym === :arg
+            return node.children[1]
+        elseif sym === :ref
+            return node.children[2]
+        else
+            error("type FinchNode(cached, ...) has no property $sym")
+        end
     elseif node.kind === chunk
         if sym === :idx
             return node.children[1]
@@ -582,6 +604,8 @@ function display_expression(io, mime, node::FinchNode)
         print(io, "updater(")
         display_expression(io, node.mode)
         print(io, ")")
+    elseif node.kind === cached
+        display_expression(io, node.arg)
     elseif node.kind === virtual
         print(io, "virtual(")
         print(io, node.val)

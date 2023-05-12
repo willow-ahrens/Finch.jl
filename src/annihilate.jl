@@ -64,11 +64,6 @@ julia> x[]
 """
 maxby(a, b) = a[1] < b[1] ? b : a
 
-function cached(a, b)
-    @assert isequal(a, b) "!isequal($a, $b)"
-    return a
-end
-
 isassociative(alg) = (f) -> isassociative(alg, f)
 isassociative(alg, f::FinchNode) = f.kind === literal && isassociative(alg, f.val)
 """
@@ -315,10 +310,8 @@ function base_rules(alg, shash)
             call(something, a..., b)
         end),
 
-        (@rule call(~f, ~a..., call(cached, ~b, ~c), ~d...) => if f != literal(cached) call(cached, call(f, a..., b, d...), call(f, a..., c, d...)) end),
-        (@rule call(cached, call(cached, ~a, ~b), ~c) => call(cached, a, c)),
-        (@rule call(cached, ~a, call(cached, ~b, ~c)) => call(cached, a, c)),
-        (@rule call(cached, ~a, ~b::isliteral) => b),
+        (@rule call(~f, ~a..., cached(~b, ~c::isliteral), ~d...) => cached(call(f, a..., b, d...), literal(call(f, a..., c.val, d...)))),
+        (@rule cached(cached(~a, ~b), ~c) => cached(a, c)),
 
         (@rule call(identity, ~a) => a),
         (@rule call(overwrite, ~a, ~b) => b),

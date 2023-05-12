@@ -78,8 +78,7 @@ function cache!(ctx, var, val)
     push!(ctx.preamble, quote
         $var = $(contain(ctx_2 -> ctx_2(val), ctx))
     end)
-    ctx.bindings[var] = val
-    return value(var, Any)
+    return cached(value(var, Any), literal(val))
 end
 
 function resolve(var, ctx::LowerJulia)
@@ -307,11 +306,11 @@ function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
             else
                 reduce((x, y) -> :($x || $y), map(ctx, root.args))
             end
-        elseif root.op == literal(cached)
-            return ctx(root.args[1])
         else
             :($(ctx(root.op))($(map(ctx, root.args)...)))
         end
+    elseif root.kind === cached
+        return ctx(root.arg)
     elseif root.kind === loop
         ext = resolvedim(ctx.dims[getname(root.idx)])
         return ctx(simplify(chunk(
