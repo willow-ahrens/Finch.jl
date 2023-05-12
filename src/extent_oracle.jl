@@ -2,6 +2,7 @@ module ExtentOracle
 
 using Metatheory
 using RewriteTools.Rewriters
+using AbstractTrees
 
 using Finch
 using Finch.FinchNotation
@@ -53,10 +54,10 @@ function query(root::FinchNode, ctx)
         end
     end
     root = Rewrite(Postwalk(rename))(root)
+    niters = treebreadth(root)
     root = ctx(root)
     Metatheory.resetbuffers!(Metatheory.DEFAULT_BUFFER_SIZE)
-    println(root)
-    res = areequal(t, root, true)
+    res = areequal(t, root, true, SaturationParams(timeout=niters))
     println(res)
     return coalesce(res, false)
 end
