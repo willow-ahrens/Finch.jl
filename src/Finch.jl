@@ -4,6 +4,7 @@ module Finch
     using Requires
 end
 
+using AbstractTrees
 using SyntaxInterface
 using RewriteTools
 using RewriteTools.Rewriters
@@ -21,6 +22,7 @@ export Fiber, Fiber!, Scalar
 export SparseList, SparseListLevel
 export SparseHash, SparseHashLevel
 export SparseCOO, SparseCOOLevel
+export SparseTriangle, SparseTriangleLevel
 export SparseByteMap, SparseByteMapLevel
 export SparseVBL, SparseVBLLevel
 export Dense, DenseLevel
@@ -78,34 +80,14 @@ include("levels/denselevels.jl")
 include("levels/repeatrlelevels.jl")
 include("levels/elementlevels.jl")
 include("levels/patternlevels.jl")
+include("levels/raggedlevels.jl")
+include("levels/sparsetrianglelevels.jl")
 
 include("traits.jl")
 
 include("modifiers.jl")
 
 export fsparse, fsparse!, fsprand, fspzeros, ffindnz, countstored
-
-module h
-    using Finch
-    function generate_embed_docs()
-        finch_h = read(joinpath(dirname(pathof(Finch)), "../embed/finch.h"), String)
-        blocks = map(m -> m.captures[1], eachmatch(r"\/\*\!(((?!\*\/)(.|\n|\r))*)\*\/", finch_h))
-        map(blocks) do block
-            block = strip(block)
-            lines = collect(eachline(IOBuffer(block)))
-            key = Meta.parse(strip(lines[1]))
-            body = strip(join(lines[2:end], "\n"))
-            @eval begin
-                """
-                    $($body)
-                """
-                $key
-            end
-        end
-    end
-
-    generate_embed_docs()
-end
 
 include("base/abstractarrays.jl")
 include("base/abstractunitranges.jl")

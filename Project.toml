@@ -1,9 +1,10 @@
 name = "Finch"
 uuid = "9177782c-1635-4eb9-9bfb-d9dfa25e6bce"
 authors = ["Willow Ahrens"]
-version = "0.5.2"
+version = "0.5.4"
 
 [deps]
+AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
 Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"

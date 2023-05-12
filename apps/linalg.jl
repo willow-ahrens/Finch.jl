@@ -1,5 +1,5 @@
 function spgemm_inner(A, B)
-    z = default(A) * default(B)
+    z = default(A) * default(B) + false
     C = @fiber d(sl(e(z)))
     w = @fiber sh{2}(e(z))
     AT = @fiber d(sl(e(z)))
@@ -10,7 +10,7 @@ function spgemm_inner(A, B)
 end
 
 function spgemm_outer(A, B)
-    z = default(A) * default(B)
+    z = default(A) * default(B) + false
     C = @fiber d(sl(e(z)))
     w = @fiber sh{2}(e(z))
     BT = @fiber d(sl(e(z)))
@@ -22,7 +22,7 @@ function spgemm_outer(A, B)
 end
 
 function spgemm_gustavson(A, B)
-    z = default(A) * default(B)
+    z = default(A) * default(B) + false
     C = @fiber d(sl(e(z)))
     w = @fiber sbm(e(z))
     @finch begin
