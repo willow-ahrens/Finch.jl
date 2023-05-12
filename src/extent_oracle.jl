@@ -55,9 +55,9 @@ function query(root::FinchNode, ctx)
     end
     root = Rewrite(Postwalk(rename))(root)
     niters = treebreadth(root)
-    root = ctx(root)
     Metatheory.resetbuffers!(Metatheory.DEFAULT_BUFFER_SIZE)
-    res = areequal(t, root, true, SaturationParams(timeout=niters))
+    display(ctx(root))
+    res = areequal(t, ctx(root), true, SaturationParams(timeout=treebreadth(root) + length(t)))
     println(res)
     return coalesce(res, false)
 end
