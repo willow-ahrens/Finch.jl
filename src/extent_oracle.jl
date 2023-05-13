@@ -2,6 +2,7 @@ module ExtentOracle
 
 using Metatheory
 using RewriteTools.Rewriters
+import RewriteTools
 using AbstractTrees
 
 using Finch
@@ -37,12 +38,12 @@ function query(root::FinchNode, ctx)
         get(ctx.bindings, node, nothing)
     end
     root = Rewrite(Prewalk(expand))(root)
-    root = Rewrite(Prewalk(Chain([
-        @rule(call(+, ~a, ~b, ~c, ~d...) => call(+, a, call(+, b, c, d...))),
-        @rule(call(min, ~a, ~b, ~c, ~d...) => call(min, a, call(min, b, c, d...))),
-        @rule(call(max, ~a, ~b, ~c, ~d...) => call(max, a, call(min, b, c, d...))),
-        @rule(cached(~a, ~b::isliteral) => (println("Hello"); b.val)),
-    ])))(root)
+    root = Rewrite(Prewalk(Fixpoint(Chain([
+        RewriteTools.@rule(call(+, ~a, ~b, ~c, ~d...) => call(+, a, call(+, b, c, d...))),
+        RewriteTools.@rule(call(min, ~a, ~b, ~c, ~d...) => call(min, a, call(min, b, c, d...))),
+        RewriteTools.@rule(call(max, ~a, ~b, ~c, ~d...) => call(max, a, call(min, b, c, d...))),
+        RewriteTools.@rule(cached(~a, ~b::isliteral) => b.val),
+    ]))))(root)
     names = Dict()
     function rename(node::FinchNode)
         if node.kind == virtual
@@ -56,9 +57,9 @@ function query(root::FinchNode, ctx)
     root = Rewrite(Postwalk(rename))(root)
     niters = treebreadth(root)
     Metatheory.resetbuffers!(Metatheory.DEFAULT_BUFFER_SIZE)
-    println(root)
-    display(ctx(root))
+    display(Finch.unresolve(ctx(root)))
     res = areequal(t, ctx(root), true, params = SaturationParams(timeout=treebreadth(root) + length(t), scheduler=Metatheory.Schedulers.SimpleScheduler))
+    res = areequal(t, ctx(root), true, params = SaturationParams(timeout=treebreadth(root) + length(t)))
     println(res)
     return coalesce(res, false)
 end
