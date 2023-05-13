@@ -7,6 +7,7 @@ using AbstractTrees
 
 using Finch
 using Finch.FinchNotation
+using Finch: equiv
 
 export query
 
@@ -17,8 +18,10 @@ t = @theory a b c d e f x y z begin
     min(x, y) == min(y, x)
     max(a, min(b, max(a, c))) --> max(a, min(b, c))
     min(a, max(b, min(a, c))) --> min(a, max(b, c))
-    max(a, min(b, a)) --> max(a, b)
-    min(a, max(b, a)) --> min(a, b)
+    max(a, min(b, a)) --> a 
+    min(a, max(b, a)) --> a
+    equiv(a, b) --> a
+    equiv(a, b) --> b
     min(a, b) <= a --> true
     a >= min(a, b) --> true
     max(a, b) >= a --> true
@@ -58,7 +61,6 @@ function query(root::FinchNode, ctx)
     niters = treebreadth(root)
     Metatheory.resetbuffers!(Metatheory.DEFAULT_BUFFER_SIZE)
     display(Finch.unresolve(ctx(root)))
-    res = areequal(t, ctx(root), true, params = SaturationParams(timeout=treebreadth(root) + length(t), scheduler=Metatheory.Schedulers.SimpleScheduler))
     res = areequal(t, ctx(root), true, params = SaturationParams(timeout=treebreadth(root) + length(t)))
     println(res)
     return coalesce(res, false)

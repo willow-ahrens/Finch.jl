@@ -214,16 +214,17 @@ Base.:(==)(a::Extent, b::Extent) =
     a.start == b.start &&
     a.stop == b.stop
 
+equiv(a, b) = a
 
 bound_below!(val, below) = cached(val, literal(call(max, val, below)))
 
 bound_above!(val, above) = cached(val, literal(call(min, val, above)))
 
-bound_equiv!(val, to) = cached(val, literal(call(max, call(min, val, to), to)))
+bound_equiv!(val, to) = cached(val, literal(call(equiv, val, to)))
 
-bound_measure_below!(ext::Extent, m) = Extent(ext.start, bound_below!(ext.stop, call(+, ext.stop, m)))
-bound_measure_above!(ext::Extent, m) = Extent(ext.start, bound_above!(ext.stop, call(+, ext.stop, m)))
-bound_measure_equiv!(ext::Extent, m) = Extent(ext.start, bound_equiv!(ext.stop, call(+, ext.stop, m)))
+bound_measure_below!(ext::Extent, m) = Extent(ext.start, bound_below!(ext.stop, call(+, ext.start, m)))
+bound_measure_above!(ext::Extent, m) = Extent(ext.start, bound_above!(ext.stop, call(+, ext.start, m)))
+bound_measure_equiv!(ext::Extent, m) = Extent(ext.start, bound_equiv!(ext.stop, call(+, ext.start, m)))
 
 cache_dim!(ctx, var, ext::Extent) = Extent(
     start = cache!(ctx, Symbol(var, :_start), ext.start),
