@@ -16,18 +16,20 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
-      matrix:
+      matrix: # hello world
         version:
           - '1.6.7'
           - 'nightly'
         os:
           - ubuntu-latest
-          - macOS-latest
+          #- macOS-latest # excluded because expensive
           - windows-latest
         arch:
           - x64
           - x86
         exclude:
+          - os: windows-latest # excluded because kinda redundant
+            arch: x64
           - os: macOS-latest
             arch: x86
           - os: ubuntu-latest # excluded because HDF5_jll v1.12 does not support i686

@@ -1,5 +1,5 @@
 module FinchNotation
-    using RewriteTools, SyntaxInterface, Finch
+    using RewriteTools, SyntaxInterface, AbstractTrees, Finch
 
     using Finch: default
 

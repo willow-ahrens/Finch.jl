@@ -16,10 +16,10 @@ SparseByteMapLevel{Ti, Tp, Lvl}(lvl, shape) where {Ti, Tp, Lvl} =
     SparseByteMapLevel{Ti, Tp, Lvl}(lvl, Ti(shape), Tp[1], Bool[], Tuple{Tp, Ti}[])
 
 """
-`f_code(sbm)` = [SparseByteMapLevel](@ref).
+`fiber_abbrev(sbm)` = [`SparseByteMapLevel`](@ref).
 """
-f_code(::Val{:sbm}) = SparseByteMap
-summary_f_code(lvl::SparseByteMapLevel) = "sbm($(summary_f_code(lvl.lvl)))"
+fiber_abbrev(::Val{:sbm}) = SparseByteMap
+summary_fiber_abbrev(lvl::SparseByteMapLevel) = "sbm($(summary_fiber_abbrev(lvl.lvl)))"
 similar_level(lvl::SparseByteMapLevel) = SparseByteMap(similar_level(lvl.lvl))
 similar_level(lvl::SparseByteMapLevel, dims...) = SparseByteMap(similar_level(lvl.lvl, dims[1:end-1]...), dims[end])
 
@@ -121,7 +121,7 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualSparseByteMapLevel)
     end
 end
 
-summary_f_code(lvl::VirtualSparseByteMapLevel) = "sbm($(summary_f_code(lvl.lvl)))"
+summary_fiber_abbrev(lvl::VirtualSparseByteMapLevel) = "sbm($(summary_fiber_abbrev(lvl.lvl)))"
 
 function virtual_level_size(lvl::VirtualSparseByteMapLevel, ctx)
     ext = Extent(literal(lvl.Ti(1)), lvl.shape)
@@ -262,9 +262,9 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Unio
                     $my_i_stop = $(Ti(0))
                 end
             end,
-            body = Pipeline([
+            body = (ctx) -> Pipeline([
                 Phase(
-                    stride = (ctx, ext) -> value(my_i_stop),
+                    stop = (ctx, ext) -> value(my_i_stop),
                     body = (ctx, ext) -> Stepper(
                         seek = (ctx, ext) -> quote
                             while $my_r + $(Tp(1)) < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext)))
@@ -275,15 +275,15 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Unio
                             preamble = :(
                                 $my_i = last($(lvl.ex).srt[$my_r])
                             ),
-                            body = Step(
-                                stride = (ctx, ext) -> value(my_i),
+                            body = (ctx) -> Step(
+                                stop = (ctx, ext) -> value(my_i),
                                 chunk = Spike(
                                     body = Fill(virtual_level_default(lvl)),
                                     tail = Thunk(
                                         preamble = quote
                                             $my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $my_i
                                         end,
-                                        body = get_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, protos...),
+                                        body = (ctx) -> get_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, protos...),
                                     ),
                                 ),
                                 next = (ctx, ext) -> quote
@@ -326,28 +326,28 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Gall
                     $my_i_stop = $(Tp(0))
                 end
             end,
-            body = Pipeline([
+            body = (ctx) -> Pipeline([
                 Phase(
-                    stride = (ctx, ext) -> value(my_i_stop),
+                    stop = (ctx, ext) -> value(my_i_stop),
                     body = (ctx, ext) -> Jumper(
                         body = Thunk(
-                            body = Jump(
+                            body = (ctx) -> Jump(
                                 seek = (ctx, ext) -> quote
                                     while $my_r + $(Tp(1)) < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext)))
                                         $my_r += $(Tp(1))
                                     end
                                     $my_i = last($(lvl.ex).srt[$my_r])
                                 end,
-                                stride = (ctx, ext) -> value(my_i),
+                                stop = (ctx, ext) -> value(my_i),
                                 body = (ctx, ext, ext_2) -> Switch([
                                     value(:($(ctx(getstop(ext_2))) == $my_i)) => Thunk(
-                                        body = Spike(
+                                        body = (ctx) -> Spike(
                                             body = Fill(virtual_level_default(lvl)),
                                             tail = Thunk(
                                                 preamble = quote
                                                     $my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $my_i
                                                 end,
-                                                body = get_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, protos...),
+                                                body = (ctx) -> get_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, protos...),
                                             ),
                                         ),
                                         epilogue = quote
@@ -364,15 +364,15 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Gall
                                             preamble = :(
                                                 $my_i = last($(lvl.ex).srt[$my_r])
                                             ),
-                                            body = Step(
-                                                stride = (ctx, ext) -> value(my_i),
+                                            body = (ctx) -> Step(
+                                                stop = (ctx, ext) -> value(my_i),
                                                 chunk = Spike(
                                                     body = Fill(virtual_level_default(lvl)),
                                                     tail = Thunk(
                                                         preamble = quote
                                                             $my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $my_i
                                                         end,
-                                                        body = get_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, protos...),
+                                                        body = (ctx) -> get_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, protos...),
                                                     ),
                                                 ),
                                                 next = (ctx, ext) -> quote
@@ -409,7 +409,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Foll
                 preamble = quote
                     $my_q = $(ctx(q)) * $(ctx(lvl.shape)) + $(ctx(i))
                 end,
-                body = Switch([
+                body = (ctx) -> Switch([
                     value(:($tbl[$my_q])) => get_reader(VirtualSubFiber(lvl.lvl, pos), ctx, protos...),
                     literal(true) => Fill(virtual_level_default(lvl))
                 ])
@@ -438,7 +438,7 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseByteMapLevel}, ctx
                     $my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $(ctx(idx))
                     $dirty = false
                 end,
-                body = get_updater(VirtualTrackedSubFiber(lvl.lvl, value(my_q, lvl.Ti), dirty), ctx, protos...),
+                body = (ctx) -> get_updater(VirtualTrackedSubFiber(lvl.lvl, value(my_q, lvl.Ti), dirty), ctx, protos...),
                 epilogue = quote
                     if $dirty
                         $(fbr.dirty) = true
