@@ -26,6 +26,7 @@ SparseArraysExt = "SparseArrays"
 TensorMarketExt = "TensorMarket"
 
 [compat]
+AbstractTrees = ">= 0.3.4"
 Compat = "3.29, 4"
 DataStructures = "0.18"
 JSON = "0.21"
@@ -34,7 +35,6 @@ Requires = "1"
 RewriteTools = "0.1"
 SyntaxInterface = "0.2.1"
 julia = "1.6.7"
-AbstractTrees = "0.4.4"
 
 [extras]
 ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"
