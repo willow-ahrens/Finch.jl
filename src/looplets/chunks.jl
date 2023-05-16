@@ -120,7 +120,7 @@ FinchNotation.finch_leaf(x::Furlable) = virtual(x)
 
 function stylize_access(node, ctx::Stylize{LowerJulia}, tns::Furlable)
     if !isempty(node.idxs)
-        if getunbound(node.idxs[end]) ⊆ keys(ctx.ctx.bindings) && ctx.root.kind !== chunk
+        if getunbound(node.idxs[end]) ⊆ keys(ctx.ctx.bindings)
             return SelectStyle()
         elseif ctx.root isa FinchNode && ctx.root.kind === loop && ctx.root.idx == get_furl_root(node.idxs[end])
             return ChunkStyle()
