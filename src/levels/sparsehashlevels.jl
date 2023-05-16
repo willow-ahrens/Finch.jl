@@ -291,9 +291,9 @@ function get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, R, start,
                     $my_i_stop = $(Ti.parameters[R](0))
                 end
             end,
-            body = Pipeline([
+            body = (ctx) -> Pipeline([
                 Phase(
-                    stride = (ctx, ext) -> value(my_i_stop),
+                    stop = (ctx, ext) -> value(my_i_stop),
                     body = (start, stop) -> Stepper(
                         seek = (ctx, ext) -> quote
                             while $my_q + $(Tp(1)) < $my_q_stop && $(lvl.ex).srt[$my_q][1][2][$R] < $(ctx(getstart(ext)))
@@ -305,8 +305,8 @@ function get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, R, start,
                                 preamble = quote
                                     $my_i = $(lvl.ex).srt[$my_q][1][2][$R]
                                 end,
-                                body = Step(
-                                    stride =  (ctx, ext) -> value(my_i),
+                                body = (ctx) -> Step(
+                                    stop =  (ctx, ext) -> value(my_i),
                                     chunk = Spike(
                                         body = Fill(virtual_level_default(lvl)),
                                         tail = get_reader(VirtualSubFiber(lvl.lvl, value(:($(lvl.ex).srt[$my_q][2]))), ctx, protos...),
@@ -325,8 +325,8 @@ function get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, R, start,
                                         $my_q_step += $(Tp(1))
                                     end
                                 end,
-                                body = Step(
-                                    stride = (ctx, ext) -> value(my_i),
+                                body = (ctx) -> Step(
+                                    stop = (ctx, ext) -> value(my_i),
                                     chunk = Spike(
                                         body = Fill(virtual_level_default(lvl)),
                                         tail = get_multilevel_range_reader(lvl, ctx, R - 1, value(my_q, lvl.Ti), value(my_q_step, lvl.Ti), protos...),
@@ -375,7 +375,7 @@ function get_reader_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, coords, :
                             $my_key = ($(ctx(pos)), ($(map(ctx, (i, coords...,))...)))
                             $qos = get($(lvl.ex).tbl, $my_key, 0)
                         end,
-                        body = Switch([
+                        body = (ctx) -> Switch([
                             value(:($qos != 0)) => get_reader(VirtualSubFiber(lvl.lvl, value(qos, lvl.Tp)), ctx, protos...),
                             literal(true) => Fill(virtual_level_default(lvl))
                         ])
@@ -396,7 +396,7 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseHashLevel}, ctx, p
         preamble = quote
             $(lvl.qos_fill) = length($(lvl.ex).tbl)
         end,
-        body = get_updater_hash_helper(lvl, ctx, pos, fbr.dirty, (), protos...)
+        body = (ctx) -> get_updater_hash_helper(lvl, ctx, pos, fbr.dirty, (), protos...)
     )
 end
 
@@ -429,7 +429,7 @@ function get_updater_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, fbr_dirt
                             end
                             $dirty = false
                         end,
-                        body = get_updater(VirtualTrackedSubFiber(lvl.lvl, qos, dirty), ctx, protos...),
+                        body = (ctx) -> get_updater(VirtualTrackedSubFiber(lvl.lvl, qos, dirty), ctx, protos...),
                         epilogue = quote
                             if $dirty
                                 $(fbr_dirty) = true

@@ -263,9 +263,9 @@ function get_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, R, start, stop, 
                     $my_i_stop = $(Ti.parameters[R](0))
                 end
             end,
-            body = Pipeline([
+            body = (ctx) -> Pipeline([
                 Phase(
-                    stride = (ctx, ext) -> value(my_i_stop),
+                    stop = (ctx, ext) -> value(my_i_stop),
                     body = (ctx, ext) -> Stepper(
                         seek = (ctx, ext) -> quote
                             if $(lvl.ex).tbl[$R][$my_q] < $(ctx(getstart(ext)))
@@ -277,8 +277,8 @@ function get_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, R, start, stop, 
                                 preamble = quote
                                     $my_i = $(lvl.ex).tbl[$R][$my_q]
                                 end,
-                                body = Step(
-                                    stride =  (ctx, ext) -> value(my_i),
+                                body = (ctx) -> Step(
+                                    stop =  (ctx, ext) -> value(my_i),
                                     chunk = Spike(
                                         body = Fill(virtual_level_default(lvl)),
                                         tail = get_reader(VirtualSubFiber(lvl.lvl, my_q), ctx, protos...),
@@ -297,8 +297,8 @@ function get_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, R, start, stop, 
                                         $my_q_step = scansearch($(lvl.ex).tbl[$R], $my_i + 1, $my_q_step, $my_q_stop - 1)
                                     end
                                 end,
-                                body = Step(
-                                    stride = (ctx, ext) -> value(my_i),
+                                body = (ctx) -> Step(
+                                    stop = (ctx, ext) -> value(my_i),
                                     chunk = Spike(
                                         body = Fill(virtual_level_default(lvl)),
                                         tail = get_reader_coo_helper(lvl, ctx, R - 1, value(my_q, lvl.Ti), value(my_q_step, lvl.Ti), protos...),
@@ -335,7 +335,7 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseCOOLevel}, ctx, pr
         preamble = quote
             $qos = $qos_fill + 1
         end,
-        body = get_updater_coo_helper(lvl, ctx, qos, fbr.dirty, (), protos...),
+        body = (ctx) -> get_updater_coo_helper(lvl, ctx, qos, fbr.dirty, (), protos...),
         epilogue = quote
             $(lvl.ex).ptr[$(ctx(pos)) + 1] = $qos - $qos_fill - 1
             $qos_fill = $qos - 1
@@ -370,7 +370,7 @@ function get_updater_coo_helper(lvl::VirtualSparseCOOLevel, ctx, qos, fbr_dirty,
                             end
                             $dirty = false
                         end,
-                        body = get_updater(VirtualTrackedSubFiber(lvl.lvl, qos, dirty), ctx, protos...),
+                        body = (ctx) -> get_updater(VirtualTrackedSubFiber(lvl.lvl, qos, dirty), ctx, protos...),
                         epilogue = quote
                             if $dirty
                                 $(fbr_dirty) = true

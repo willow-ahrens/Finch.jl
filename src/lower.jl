@@ -178,7 +178,7 @@ thunk_access(node, ctx, tns) = similarterm(node, operation(node), map(ctx, argum
 function (ctx::ThunkVisitor)(node::Thunk)
     push!(ctx.ctx.preamble, node.preamble)
     push!(ctx.ctx.epilogue, node.epilogue)
-    node.body
+    node.body(ctx.ctx)
 end
 
 """
