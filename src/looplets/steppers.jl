@@ -45,11 +45,11 @@ end
     chunk = nothing
     body = (ctx, ext, ext_2) -> Switch([
         value(:($(ctx(stop(ctx, ext))) == $(ctx(getstop(ext_2))))) => Thunk(
-            body = (ctx) -> truncate_weak(chunk, ctx, ext, ext_2),
+            body = (ctx) -> truncate(chunk, ctx, ext, Extent(getstart(ext_2), getstop(ext))),
             epilogue = next(ctx, ext_2)
         ),
         literal(true) => 
-            truncate_strong(chunk, ctx, ext, ext_2),
+            truncate(chunk, ctx, ext, Extent(getstart(ext_2), bound_above!(getstop(ext_2), call(-, getstop(ext), 1)))),
         ])
 end
 

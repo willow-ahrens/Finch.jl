@@ -11,7 +11,7 @@ function get_bounds_rules(alg, shash)
         (@rule call(~f::isliteral, ~a::isliteral, ~b::(All(isliteral))...) => literal(getval(f)(getval(a), getval.(b)...))),
 
         (@rule call(~f::isassociative(alg), ~a..., call(~f, ~b...), ~c...) => call(f, a..., b..., c...)),
-        (@rule call(~f::iscommutative(alg), ~a...) => if !(issorted(a, by = shash))
+        (@rule call(~f::iscommutative(alg), ~a...) => if !(issorted(a, by = x->(!isliteral(x), shash(x))))
             call(f, sort(a, by = shash)...)
         end),
         (@rule call(~f::isidempotent(alg), ~a...) => if !allunique(a)
@@ -78,6 +78,28 @@ function get_bounds_rules(alg, shash)
         (@rule call(min, ~a1..., call(max), ~a2...) => call(min, a1..., a2...)),
         (@rule call(max, ~a1..., call(min), ~a2...) => call(min, a1..., a2...)),
 
+        (@rule call(min, ~a1..., call(+, ~b::isliteral, ~a2...), ~a3..., call(+, ~c::isliteral, ~a2...), ~a4...) => 
+            call(min, a1..., call(+, min(b.val, c.val), ~a2...), ~a3..., ~a4...)),
+        (@rule call(min, ~a1..., call(+, ~a2...), ~a3..., call(+, ~c::isliteral, ~a2...), ~a4...) => 
+            call(min, a1..., call(+, min(0, c.val), ~a2...), ~a3..., ~a4...)),
+        (@rule call(min, ~a1..., ~a2, ~a3..., call(+, ~c::isliteral, ~a2), ~a4...) => 
+            call(min, a1..., call(+, min(0, c.val), ~a2), ~a3..., ~a4...)),
+        (@rule call(min, ~a1..., call(+, ~b::isliteral, ~a2...), ~a3..., call(+, ~a2...), ~a4...) => 
+            call(min, a1..., call(+, min(b.val, 0), ~a2...), ~a3..., ~a4...)),
+        (@rule call(min, ~a1..., call(+, ~b::isliteral, ~a2), ~a3..., ~a2, ~a4...) => 
+            call(min, a1..., call(+, min(b.val, 0), ~a2), ~a3..., ~a4...)),
+
+        (@rule call(max, ~a1..., call(+, ~b::isliteral, ~a2...), ~a3..., call(+, ~c::isliteral, ~a2...), ~a4...) => 
+            call(max, a1..., call(+, max(b.val, c.val), ~a2...), ~a3..., ~a4...)),
+        (@rule call(max, ~a1..., call(+, ~a2...), ~a3..., call(+, ~c::isliteral, ~a2...), ~a4...) => 
+            call(max, a1..., call(+, max(0, c.val), ~a2...), ~a3..., ~a4...)),
+        (@rule call(max, ~a1..., ~a2, ~a3..., call(+, ~c::isliteral, ~a2), ~a4...) => 
+            call(max, a1..., call(+, max(0, c.val), ~a2), ~a3..., ~a4...)),
+        (@rule call(max, ~a1..., call(+, ~b::isliteral, ~a2...), ~a3..., call(+, ~a2...), ~a4...) => 
+            call(max, a1..., call(+, max(b.val, 0), ~a2...), ~a3..., ~a4...)),
+        (@rule call(max, ~a1..., call(+, ~b::isliteral, ~a2), ~a3..., ~a2, ~a4...) => 
+            call(max, a1..., call(+, max(b.val, 0), ~a2), ~a3..., ~a4...)),
+
         (@rule call(~f::isinvolution(alg), call(~f, ~a)) => a),
 
         #(@rule call(~f, ~a..., call(~g, ~b), ~c...) => if isdistributive(alg, g, f)
@@ -86,7 +108,7 @@ function get_bounds_rules(alg, shash)
     ]
 end
 
-function query(root::FinchNode, ctx)
+function query(root::FinchNode, ctx; verbose = false)
     root = Rewrite(Prewalk(Fixpoint(Chain([
         @rule(cached(~a, ~b::isliteral) => b.val),
     ]))))(root)
@@ -102,6 +124,9 @@ function query(root::FinchNode, ctx)
     end
     root = Rewrite(Postwalk(rename))(root)
     res = Rewrite(Fixpoint(Prewalk(Fixpoint(Chain(ctx.bounds_rules)))))(root)
+    if verbose
+        @info "bounds query" root res
+    end
     if isliteral(res)
         return res.val
     else

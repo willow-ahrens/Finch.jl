@@ -53,10 +53,7 @@ function (ctx::LowerJulia)(root::FinchNode, ::ChunkStyle)
     end
 end
 
-#TODO one day this might be nothing?
 truncate(node, ctx, ext, ext_2) = node
-truncate_weak(node, ctx, ext, ext_2) = truncate(node, ctx, ext, ext_2)
-truncate_strong(node, ctx, ext, ext_2) = truncate(node, ctx, ext, ext_2)
 
 struct SelectVisitor
     ctx
