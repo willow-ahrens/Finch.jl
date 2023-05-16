@@ -29,17 +29,19 @@ begin
                 x_val = min(x_val, yf_lvl_2_val_2)
                 yf_lvl_q += 1
             else
-                x_val = missing
+                cond_2 = 0 < 1 + -i + phase_stop_2
+                if cond_2
+                    x_val = missing
+                end
             end
             i = phase_stop_2 + 1
         end
         i = phase_stop + 1
     end
-    if yf_lvl.shape >= i
-        cond_2 = 0 < yf_lvl.shape + 1 + -i
-        if cond_2
-            x_val = missing
-        end
+    phase_stop_3 = yf_lvl.shape
+    cond_3 = 0 < 1 + -i + phase_stop_3
+    if cond_3
+        x_val = missing
     end
     (x = (Scalar){Inf, Float64}(x_val),)
 end

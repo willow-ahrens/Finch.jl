@@ -50,7 +50,6 @@ include("style.jl")
 include("lower.jl")
 include("dimensionalize.jl")
 include("extent_oracle.jl")
-using .ExtentOracle
 include("annihilate.jl")
 
 include("looplets/fills.jl")

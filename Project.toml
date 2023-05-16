@@ -9,12 +9,10 @@ Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-Metatheory = "e9d8d322-4543-424a-9be4-0cc815abe26c"
 PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 RewriteTools = "5969e224-3634-4c61-9f66-721b69e98b8a"
-SymbolicUtils = "d1185830-fcd6-423d-90d6-eec64667417b"
 SyntaxInterface = "b33eeca9-aacb-4496-a840-e75f1646a4fb"
 
 [weakdeps]
@@ -37,7 +35,6 @@ RewriteTools = "0.1"
 SyntaxInterface = "0.2.1"
 julia = "1.6.7"
 AbstractTrees = "0.4.4"
-Metatheory = "2.0.1"
 
 [extras]
 ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"
