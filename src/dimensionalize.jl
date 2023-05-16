@@ -386,8 +386,8 @@ combinedim(ctx, a::Narrow, b::NoDimension) = a
 
 function combinedim(ctx, a::Narrow{<:Extent}, b::Narrow{<:Extent})
     Narrow(Extent(
-        start = simplify(@f(max($(getstart(a)), $(getstart(b)))), ctx),
-        stop = simplify(@f(min($(getstop(a)), $(getstop(b)))), ctx)
+        start = @f(max($(getstart(a)), $(getstart(b)))),
+        stop = @f(min($(getstop(a)), $(getstop(b))))
     ))
 end
 
@@ -397,8 +397,8 @@ combinedim(ctx, a::Widen, b::SuggestedExtent) = a
 
 function combinedim(ctx, a::Widen{<:Extent}, b::Widen{<:Extent})
     Widen(Extent(
-        start = simplify(@f(min($(getstart(a)), $(getstart(b)))), ctx),
-        stop = simplify(@f(max($(getstop(a)), $(getstop(b)))), ctx)
+        start = @f(min($(getstart(a)), $(getstart(b)))),
+        stop = @f(max($(getstop(a)), $(getstop(b))))
     ))
 end
 

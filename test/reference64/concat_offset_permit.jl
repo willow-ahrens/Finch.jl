@@ -12,7 +12,7 @@ begin
     fill_range!(C_lvl.ptr, 0, 1 + 1, 1 + 1)
     C_lvl_qos = 0 + 1
     i = i_start
-    phase_stop = min((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta, 0, i_stop)
+    phase_stop = min((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta, i_stop, 0)
     if phase_stop >= i_start
         for i_6 = i_start:phase_stop
             if C_lvl_qos > C_lvl_qos_stop
@@ -27,7 +27,7 @@ begin
         end
         i = phase_stop + 1
     end
-    phase_stop_2 = min((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta + B_lvl.shape, 0, i_stop)
+    phase_stop_2 = min((((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta + B_lvl.shape, i_stop, 0)
     if phase_stop_2 >= i
         B_lvl_q = B_lvl.ptr[1]
         B_lvl_q_stop = B_lvl.ptr[1 + 1]
@@ -62,7 +62,7 @@ begin
         end
         i = phase_stop_2 + 1
     end
-    phase_stop_6 = min(0, i_stop)
+    phase_stop_6 = min(i_stop, 0)
     if phase_stop_6 >= i
         for i_13 = i:phase_stop_6
             if C_lvl_qos > C_lvl_qos_stop
@@ -305,5 +305,5 @@ begin
     qos = C_lvl.ptr[end] - 1
     resize!(C_lvl.idx, qos)
     resize!(C_lvl_2.val, qos)
-    (C = Fiber((SparseListLevel){Int64, Int64}(C_lvl_2, max(A_lvl.shape, (((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta + B_lvl.shape), C_lvl.ptr, C_lvl.idx)),)
+    (C = Fiber((SparseListLevel){Int64, Int64}(C_lvl_2, max(A_lvl.shape, B_lvl.shape + (((ex.bodies[2]).body.rhs.args[2]).idxs[1]).tns.tns.delta), C_lvl.ptr, C_lvl.idx)),)
 end

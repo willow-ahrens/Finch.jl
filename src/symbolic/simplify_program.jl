@@ -126,6 +126,8 @@ function get_program_rules(alg, shash)
             sequence(s1..., s2..., declare(a, literal(f.val(z.val, b.val))), s3...)
         end),
 
+        (@rule assign(~a, ~op, cached(~b, ~c)) => assign(a, op, b)),
+
         #TODO if we don't give loops extents, this rule is less general
         (@rule chunk(~i, ~ext::isvirtual, assign(access(~a, ~m), $(literal(+)), ~b::isliteral)) =>
             assign(access(a, m), +, call(*, b, measure(ext.val)))

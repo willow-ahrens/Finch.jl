@@ -102,7 +102,7 @@ function query(root::FinchNode, ctx)
         end
     end
     root = Rewrite(Postwalk(rename))(root)
-    res = Fixpoint(Prewalk(Fixpoint(Chain(ctx.bounds_rules))))(root)
+    res = Rewrite(Fixpoint(Prewalk(Fixpoint(Chain(ctx.bounds_rules)))))(root)
     if isliteral(res)
         return res.val
     else

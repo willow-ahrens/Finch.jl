@@ -36,7 +36,7 @@ begin
                 C_lvldirty = false
                 s_2 = phase_stop_2 + -3
                 j = 1
-                phase_stop_3 = min(0, s_2, F_lvl.shape)
+                phase_stop_3 = min(0, F_lvl.shape, s_2)
                 if phase_stop_3 >= 1
                     j = phase_stop_3 + 1
                 end
@@ -48,7 +48,7 @@ begin
                 if phase_stop_7 >= j
                     j = phase_stop_7 + 1
                 end
-                phase_stop_8 = min(s_2, F_lvl.shape)
+                phase_stop_8 = min(F_lvl.shape, s_2)
                 if phase_stop_8 >= j
                     j = phase_stop_8 + 1
                 end
