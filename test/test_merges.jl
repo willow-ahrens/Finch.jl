@@ -41,9 +41,9 @@
 
     @testset "diagmask" begin
         for fmt in fmts
-            for dts in dtss
-                a = dropdefaults!(fmt.fmt(dts.default), dts.data)
-                @testset "$(summary(a))[::$(fmt.proto[1]), ::$(fmt.proto[2])]" begin
+            @testset "$(summary(fmt.fmt(0.0)))[::$(fmt.proto[1]), ::$(fmt.proto[2])]" begin
+                for dts in dtss
+                    a = dropdefaults!(fmt.fmt(dts.default), dts.data)
                     b = @fiber(sc{2}(e(dts.default)))
                     @finch (b .= 0; @loop j i b[i, j] = a[i::(fmt.proto[1]), j::(fmt.proto[2])] * diagmask[i, j])
                     refdata = [dts.data[i, j] * (j == i) for (i, j) in product(axes(dts.data)...)]
@@ -56,9 +56,9 @@
 
     @testset "lotrimask" begin
         for fmt in fmts
-            for dts in dtss
-                a = dropdefaults!(fmt.fmt(dts.default), dts.data)
-                @testset "$(summary(a))[::$(fmt.proto[1]), ::$(fmt.proto[2])]" begin
+            @testset "$(summary(fmt.fmt(0.0)))[::$(fmt.proto[1]), ::$(fmt.proto[2])]" begin
+                for dts in dtss
+                    a = dropdefaults!(fmt.fmt(dts.default), dts.data)
                     b = @fiber(sc{2}(e(dts.default)))
                     @finch (b .= 0; @loop j i b[i, j] = a[i::(fmt.proto[1]), j::(fmt.proto[2])] * lotrimask[i, j])
                     refdata = [dts.data[i, j] * (j <= i) for (i, j) in product(axes(dts.data)...)]
@@ -71,9 +71,9 @@
 
     @testset "uptrimask" begin
         for fmt in fmts
-            for dts in dtss
-                a = dropdefaults!(fmt.fmt(dts.default), dts.data)
-                @testset "$(summary(a))[::$(fmt.proto[1]), ::$(fmt.proto[2])]" begin
+            @testset "$(summary(fmt.fmt(0.0)))[::$(fmt.proto[1]), ::$(fmt.proto[2])]" begin
+                for dts in dtss
+                    a = dropdefaults!(fmt.fmt(dts.default), dts.data)
                     b = @fiber(sc{2}(e(dts.default)))
                     @finch (b .= 0; @loop j i b[i, j] = a[i::(fmt.proto[1]), j::(fmt.proto[2])] * uptrimask[i, j])
                     refdata = [dts.data[i, j] * (j >= i) for (i, j) in product(axes(dts.data)...)]
@@ -86,9 +86,9 @@
 
     @testset "bandmask" begin
         for fmt in fmts
-            for dts in dtss
-                a = dropdefaults!(fmt.fmt(dts.default), dts.data)
-                @testset "$(summary(a))[::$(fmt.proto[1]), ::$(fmt.proto[2])]" begin
+            @testset "$(summary(fmt.fmt(0.0)))[::$(fmt.proto[1]), ::$(fmt.proto[2])]" begin
+                for dts in dtss
+                    a = dropdefaults!(fmt.fmt(dts.default), dts.data)
                     b = @fiber(sc{2}(e(dts.default)))
                     @finch (b .= 0; @loop j i b[i, j] = a[i::(fmt.proto[1]), j::(fmt.proto[2])] * bandmask[i, j - 1, j + 1])
                     refdata = [dts.data[i, j] * (j - 1 <= i <= j + 1) for (i, j) in product(axes(dts.data)...)]
@@ -103,13 +103,13 @@
         n = 0
         for a_fmt in fmts
             for b_fmt in fmts[1:2]
-                for a_dts in dtss
-                    for b_dts in dtss
-                        a = dropdefaults!(a_fmt.fmt(a_dts.default), a_dts.data)
-                        b = dropdefaults!(b_fmt.fmt(b_dts.default), b_dts.data)
-                        a_str = "$(summary(a))[::$(a_fmt.proto[1]), ::$(a_fmt.proto[2])]"
-                        b_str = "$(summary(b))[::$(b_fmt.proto[1]), ::$(b_fmt.proto[2])]"
-                        @testset "+* $a_str $b_str" begin
+                a_str = "$(summary(a_fmt.fmt(0.0)))[::$(a_fmt.proto[1]), ::$(a_fmt.proto[2])]"
+                b_str = "$(summary(b_fmt.fmt(0.0)))[::$(b_fmt.proto[1]), ::$(b_fmt.proto[2])]"
+                @testset "+* $a_str $b_str" begin
+                    for a_dts in dtss
+                        for b_dts in dtss
+                            a = dropdefaults!(a_fmt.fmt(a_dts.default), a_dts.data)
+                            b = dropdefaults!(b_fmt.fmt(b_dts.default), b_dts.data)
                             c = @fiber(sc{2}(e(a_dts.default)))
                             d = @fiber(sc{2}(e(a_dts.default)))
                             @finch (c .= 0; @loop j i c[i, j] = a[i::(a_fmt.proto[1]), j::(a_fmt.proto[2])] + b[i::(b_fmt.proto[1]), j::(b_fmt.proto[2])])

@@ -33,9 +33,7 @@ supports_shift(::ThunkStyle) = true
 function shiftdim(ext::Extent, delta)
     Extent(
         start = call(+, ext.start, delta),
-        stop = call(+, ext.stop, delta),
-        lower = ext.lower,
-        upper = ext.upper
+        stop = call(+, ext.stop, delta)
     )
 end
 
@@ -53,5 +51,3 @@ end
 
 
 truncate(node::Shift, ctx, ext, ext_2) = Shift(truncate(node.body, ctx, shiftdim(ext, node.delta), shiftdim(ext_2, node.delta)), node.delta)
-truncate_weak(node::Shift, ctx, ext, ext_2) = Shift(truncate_weak(node.body, ctx, shiftdim(ext, node.delta), shiftdim(ext_2, node.delta)), node.delta)
-truncate_strong(node::Shift, ctx, ext, ext_2) = Shift(truncate_strong(node.body, ctx, shiftdim(ext, node.delta), shiftdim(ext_2, node.delta)), node.delta)

@@ -77,10 +77,14 @@ get_spike_tail(node::Shift, ctx, ext, ext_2) = Shift(
 supports_shift(::SpikeStyle) = true
 
 function truncate(node::Spike, ctx, ext, ext_2)
-    return Switch([
-        value(:($(ctx(getstop(ext_2))) < $(ctx(getstop(ext))))) => Run(node.body),
-        literal(true) => node,
-    ])
+    if query(call(>=, call(-, getstop(ext), 1), getstop(ext_2)), ctx)
+        Run(node.body)
+    elseif query(call(==, getstop(ext), getstop(ext_2)), ctx)
+        node
+    else
+        return Switch([
+            value(:($(ctx(getstop(ext_2))) < $(ctx(getstop(ext))))) => Run(node.body),
+            literal(true) => node,
+        ])
+    end
 end
-truncate_weak(node::Spike, ctx, ext, ext_2) = node
-truncate_strong(node::Spike, ctx, ext, ext_2) = Run(node.body)

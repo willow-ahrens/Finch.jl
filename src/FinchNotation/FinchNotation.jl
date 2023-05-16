@@ -13,6 +13,7 @@ module FinchNotation
     export Chunk, chunk
     export assign
     export call
+    export cached
     export reader, updater, create, modify, access
     export declare, thaw, freeze, forget
     export sequence
