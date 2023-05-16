@@ -602,10 +602,10 @@ function display_expression(io, mime, node::FinchNode)
         print(io, "reader()")
     elseif node.kind === updater
         print(io, "updater(")
-        display_expression(io, node.mode)
+        display_expression(io, mime, node.mode)
         print(io, ")")
     elseif node.kind === cached
-        display_expression(io, node.arg)
+        display_expression(io, mime, node.arg)
     elseif node.kind === virtual
         print(io, "virtual(")
         print(io, node.val)
