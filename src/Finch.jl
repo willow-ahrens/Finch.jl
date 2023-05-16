@@ -49,8 +49,8 @@ include("virtualize.jl")
 include("style.jl")
 include("lower.jl")
 include("dimensionalize.jl")
-include("extent_oracle.jl")
-include("annihilate.jl")
+
+include("symbolic/symbolic.jl")
 
 include("looplets/fills.jl")
 include("looplets/nulls.jl")

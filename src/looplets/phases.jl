@@ -74,7 +74,7 @@ function (ctx::LowerJulia)(root::FinchNode, ::PhaseStyle)
             $i = $(ctx(getstop(ext_2))) + $(Int8(1))
         end
 
-        if query(call(>, measure(ext_2), 0), ctx)
+        if query(call(>=, measure(ext_2), 1), ctx)
             return body
         else
             return quote

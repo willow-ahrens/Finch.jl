@@ -1,94 +1,12 @@
-#using Metatheory
-using RewriteTools.Rewriters
-using RewriteTools
-using AbstractTrees
+"""
+    get_bounds_rules(alg, shash)
 
-using Finch
-
-struct Epsilon{T}
-    val::T
-end
-
-for op in [:+]
-    @eval Base.$op(a::Epsilon, b) = Epsilon($op(a.val, b))
-    @eval Base.$op(a::Epsilon, b::Epsilon) = Epsilon($op(a.val, b.val))
-    @eval Base.$op(a, b::Epsilon) = Epsilon($op(a, b.val))
-end
-
-Base.isless(a::Epsilon, b) = a.val < b
-Base.isless(a::Epsilon, b::Epsilon) = error("undef")
-Base.isless(a, b::Epsilon) = a <= b.val
-
-Base.:<(a::Epsilon, b) = a.val < b
-Base.:<(a::Epsilon, b::Epsilon) = error("undef")
-Base.:<(a, b::Epsilon) = a <= b.val
-
-Base.:<=(a::Epsilon, b) = a.val < b
-Base.:<=(a::Epsilon, b::Epsilon) = error("undef")
-Base.:<=(a, b::Epsilon) = a <= b.val
-
-for op in [:isinf]
-    @eval Base.$op(a::Epsilon) = $op(a.val)
-end
-
-#=
-t = @theory a b c d e f x y z begin
-    min(x, min(y, z)) == min(min(x, y), z)
-    max(x, max(y, z)) == max(max(x, y), z)
-    max(x, y) == max(y, x)
-    min(x, y) == min(y, x)
-    max(a, min(b, max(a, c))) --> max(a, min(b, c))
-    min(a, max(b, min(a, c))) --> min(a, max(b, c))
-    max(a, min(b, a)) --> a 
-    min(a, max(b, a)) --> a
-    equiv(a, b) --> a
-    equiv(a, b) --> b
-    min(a, b) <= a --> true
-    a >= min(a, b) --> true
-    max(a, b) >= a --> true
-    a <= max(a, b) --> true
-    (a == a) --> true
-    +(x, +(y, z)) == +(+(x, y), z)
-    +(x, y) == +(y, x)
-    +(x, -(x)) => 0
-    -(x, y) --> +(x, -y)
-    +(x, 0) => x
-    a::Number + b::Number => a + b
-    -(a::Number) => -a
-end
-
-function query(root::FinchNode, ctx)
-    expand(node) = if isvalue(node)
-        get(ctx.bindings, node, nothing)
-    end
-    root = Rewrite(Prewalk(expand))(root)
-    root = Rewrite(Prewalk(Fixpoint(Chain([
-        RewriteTools.@rule(call(+, ~a, ~b, ~c, ~d...) => call(+, a, call(+, b, c, d...))),
-        RewriteTools.@rule(call(min, ~a, ~b, ~c, ~d...) => call(min, a, call(min, b, c, d...))),
-        RewriteTools.@rule(call(max, ~a, ~b, ~c, ~d...) => call(max, a, call(min, b, c, d...))),
-        RewriteTools.@rule(cached(~a, ~b::isliteral) => b.val),
-    ]))))(root)
-    names = Dict()
-    function rename(node::FinchNode)
-        if node.kind == virtual
-            get!(names, node, value(Symbol(:virtual_, length(names) + 1)))
-        elseif node.kind == index
-            value(node.name)
-        elseif isvalue(node) && !(node.val isa Symbol)
-            get!(names, node, value(Symbol(:value_, length(names) + 1)))
-        end
-    end
-    root = Rewrite(Postwalk(rename))(root)
-    niters = treebreadth(root)
-    Metatheory.resetbuffers!(Metatheory.DEFAULT_BUFFER_SIZE)
-    display(Finch.unresolve(ctx(root)))
-    res = areequal(t, ctx(root), true, params = SaturationParams(timeout=treebreadth(root) + length(t)))
-    println(res)
-    return coalesce(res, false)
-end
-=#
-
-function interval_rules(alg, shash)
+Return the bound rule set for Finch. One can dispatch on the `alg` trait to
+specialize the rule set for different algebras. `shash` is an object that can be
+called to return a static hash value. This rule set is used to analyze loop
+bounds in Finch.
+"""
+function get_bounds_rules(alg, shash)
     return [
         (@rule call(~f::isliteral, ~a::isliteral, ~b::(All(isliteral))...) => literal(getval(f)(getval(a), getval.(b)...))),
 
@@ -115,9 +33,7 @@ function interval_rules(alg, shash)
 
         (@rule call(==, ~a, ~a) => literal(true)),
         (@rule call(>=, ~a, ~b) => call(==, call(max, a, b), a)),
-        (@rule call(>, ~a, ~b) => call(==, call(max, a, call(+, b, Epsilon(0))), a)),
         (@rule call(<=, ~a, ~b) => call(==, a, call(max, a, b))),
-        (@rule call(<, ~a, ~b) => call(==, a, call(max, call(+, a, Epsilon(0)), b))),
 
         (@rule call(identity, ~a) => a),
         (@rule call(overwrite, ~a, ~b) => b),
@@ -171,10 +87,10 @@ function interval_rules(alg, shash)
     ]
 end
 
-function query(root0::FinchNode, ctx)
+function query(root::FinchNode, ctx)
     root = Rewrite(Prewalk(Fixpoint(Chain([
         @rule(cached(~a, ~b::isliteral) => b.val),
-    ]))))(root0)
+    ]))))(root)
     names = Dict()
     function rename(node::FinchNode)
         if node.kind == virtual
@@ -186,12 +102,8 @@ function query(root0::FinchNode, ctx)
         end
     end
     root = Rewrite(Postwalk(rename))(root)
-    res = Fixpoint(Prewalk(Fixpoint(Chain(interval_rules(ctx.algebra, ctx.shash)))))(root)
-    if isliteral(res) && res.val
-        #display(Finch.unresolve(ctx(root0)))
-        #display(Finch.unresolve(ctx(root)))
-        #display(Finch.unresolve(ctx(res)))
-        #println()
+    res = Fixpoint(Prewalk(Fixpoint(Chain(ctx.bounds_rules))))(root)
+    if isliteral(res)
         return res.val
     else
         return false

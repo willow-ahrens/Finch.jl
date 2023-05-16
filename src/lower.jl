@@ -37,7 +37,8 @@ abstract type AbstractCompiler end
     dims::Dict = Dict()
     freshen::Freshen = Freshen()
     shash = StaticHash()
-    rules = getrules(algebra, shash)
+    program_rules = get_program_rules(algebra, shash)
+    bounds_rules = get_bounds_rules(algebra, shash)
 end
 
 struct StaticHash
