@@ -317,7 +317,7 @@ function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
         return ctx(simplify(chunk(
             root.idx,
             ext,
-            ChunkifyVisitor(ctx, root.idx, ext)(root.body)),
+            UnfurlVisitor(ctx, root.idx, ext)(root.body)),
             ctx))
     elseif root.kind === chunk
         idx_sym = ctx.freshen(getname(root.idx))

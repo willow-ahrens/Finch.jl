@@ -1,18 +1,18 @@
-struct ChunkStyle end
+struct UnfurlStyle end
 
-combine_style(a::DefaultStyle, b::ChunkStyle) = ChunkStyle()
-combine_style(a::ThunkStyle, b::ChunkStyle) = ThunkStyle()
-combine_style(a::ChunkStyle, b::ChunkStyle) = ChunkStyle()
-combine_style(a::ChunkStyle, b::DimensionalizeStyle) = DimensionalizeStyle()
-combine_style(a::ChunkStyle, b::SimplifyStyle) = b
+combine_style(a::DefaultStyle, b::UnfurlStyle) = UnfurlStyle()
+combine_style(a::ThunkStyle, b::UnfurlStyle) = ThunkStyle()
+combine_style(a::UnfurlStyle, b::UnfurlStyle) = UnfurlStyle()
+combine_style(a::UnfurlStyle, b::DimensionalizeStyle) = DimensionalizeStyle()
+combine_style(a::UnfurlStyle, b::SimplifyStyle) = b
 
-struct ChunkifyVisitor
+struct UnfurlVisitor
     ctx
     idx
     ext
 end
 
-function (ctx::ChunkifyVisitor)(node)
+function (ctx::UnfurlVisitor)(node)
     if istree(node)
         similarterm(node, operation(node), map(ctx, arguments(node)))
     else
@@ -20,11 +20,11 @@ function (ctx::ChunkifyVisitor)(node)
     end
 end
 
-function (ctx::ChunkifyVisitor)(node::FinchNode, eldim = nodim)
+function (ctx::UnfurlVisitor)(node::FinchNode, eldim = nodim)
     if node.kind === access && node.tns.kind === virtual
-        chunkify_access(node, ctx, eldim, node.tns.val)
+        unfurl_access(node, ctx, eldim, node.tns.val)
     elseif node.kind === access && node.tns.kind === variable
-        chunkify_access(node, ctx, eldim, ctx.ctx.bindings[node.tns])
+        unfurl_access(node, ctx, eldim, ctx.ctx.bindings[node.tns])
     elseif istree(node)
         #TODO propagate eldim here
         similarterm(node, operation(node), map(ctx, arguments(node)))
@@ -34,14 +34,14 @@ function (ctx::ChunkifyVisitor)(node::FinchNode, eldim = nodim)
 end
 
 #TODO propagate eldim here
-chunkify_access(node, ctx, eldim, tns) = similarterm(node, operation(node), map(ctx, arguments(node)))
+unfurl_access(node, ctx, eldim, tns) = similarterm(node, operation(node), map(ctx, arguments(node)))
 
-function (ctx::LowerJulia)(root::FinchNode, ::ChunkStyle)
+function (ctx::LowerJulia)(root::FinchNode, ::UnfurlStyle)
     if root.kind === loop
         idx = root.idx
         #TODO is every read of dims gonna be like this? When do we lock it in?
         ext = resolvedim(ctx.dims[getname(idx)])
-        body = (ChunkifyVisitor(ctx, idx, ext))(root.body)
+        body = (UnfurlVisitor(ctx, idx, ext))(root.body)
         #TODO add a simplify step here perhaps
         ctx(chunk(
             idx,
@@ -84,7 +84,7 @@ select_access(node, ctx, tns) = similarterm(node, operation(node), map(ctx, argu
 struct SelectStyle end
 
 combine_style(a::SelectStyle, b::ThunkStyle) = b
-combine_style(a::SelectStyle, b::ChunkStyle) = a
+combine_style(a::SelectStyle, b::UnfurlStyle) = a
 combine_style(a::SelectStyle, b::SelectStyle) = a
 combine_style(a::SelectStyle, b::SimplifyStyle) = b
 
@@ -123,7 +123,7 @@ function stylize_access(node, ctx::Stylize{LowerJulia}, tns::Furlable)
         if getunbound(node.idxs[end]) ⊆ keys(ctx.ctx.bindings)
             return SelectStyle()
         elseif ctx.root isa FinchNode && ctx.root.kind === loop && ctx.root.idx == get_furl_root(node.idxs[end])
-            return ChunkStyle()
+            return UnfurlStyle()
         end
     end
     return DefaultStyle()
@@ -149,7 +149,7 @@ struct FormatLimitation <: Exception
 end
 FormatLimitation() = FormatLimitation("")
 
-function chunkify_access(node, ctx, eldim, tns::Furlable)
+function unfurl_access(node, ctx, eldim, tns::Furlable)
     if !isempty(node.idxs)
         if ctx.idx == get_furl_root(node.idxs[end])
             tns = exfurl(tns.body(ctx.ctx, virtual_size(tns, ctx.ctx, eldim)[end]), ctx.ctx, node.idxs[end], virtual_size(tns, ctx.ctx, eldim)[end])
