@@ -41,16 +41,8 @@ end
 
 @kwdef struct Step
     stop
+    body
     next = (ctx, ext) -> quote end
-    chunk = nothing
-    body = (ctx, ext, ext_2) -> Switch([
-        value(:($(ctx(stop(ctx, ext))) == $(ctx(getstop(ext_2))))) => Thunk(
-            body = (ctx) -> truncate(chunk, ctx, ext, Extent(getstart(ext_2), getstop(ext))),
-            epilogue = next(ctx, ext_2)
-        ),
-        literal(true) => 
-            truncate(chunk, ctx, ext, Extent(getstart(ext_2), bound_above!(getstop(ext_2), call(-, getstop(ext), 1)))),
-        ])
 end
 
 FinchNotation.finch_leaf(x::Step) = virtual(x)
@@ -61,6 +53,14 @@ function phase_range(node::Step, ctx, ext)
     Narrow(bound_measure_below!(Extent(getstart(ext), node.stop(ctx, ext)), literal(1)))
 end
 
-phase_body(node::Step, ctx, ext, ext_2) = node.body(ctx, ext, ext_2)
+phase_body(node::Step, ctx, ext, ext_2) =
+    Switch([
+        value(:($(ctx(node.stop(ctx, ext))) == $(ctx(getstop(ext_2))))) => Thunk(
+            body = (ctx) -> truncate(node.body, ctx, ext, Extent(getstart(ext_2), getstop(ext))),
+            epilogue = node.next(ctx, ext_2)
+        ),
+        literal(true) => 
+            truncate(node.body, ctx, ext, Extent(getstart(ext_2), bound_above!(getstop(ext_2), call(-, getstop(ext), 1)))),
+        ])
 
 supports_shift(::StepperStyle) = true
