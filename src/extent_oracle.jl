@@ -171,10 +171,10 @@ function interval_rules(alg, shash)
     ]
 end
 
-function query(root::FinchNode, ctx)
+function query(root0::FinchNode, ctx)
     root = Rewrite(Prewalk(Fixpoint(Chain([
         @rule(cached(~a, ~b::isliteral) => b.val),
-    ]))))(root)
+    ]))))(root0)
     names = Dict()
     function rename(node::FinchNode)
         if node.kind == virtual
@@ -186,10 +186,12 @@ function query(root::FinchNode, ctx)
         end
     end
     root = Rewrite(Postwalk(rename))(root)
-    #display(Finch.unresolve(ctx(root)))
     res = Fixpoint(Prewalk(Fixpoint(Chain(interval_rules(ctx.algebra, ctx.shash)))))(root)
-    #display(Finch.unresolve(ctx(res)))
-    if isliteral(res)
+    if isliteral(res) && res.val
+        #display(Finch.unresolve(ctx(root0)))
+        #display(Finch.unresolve(ctx(root)))
+        #display(Finch.unresolve(ctx(res)))
+        #println()
         return res.val
     else
         return false

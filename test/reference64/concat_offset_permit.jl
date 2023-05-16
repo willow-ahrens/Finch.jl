@@ -284,16 +284,18 @@ begin
         end
         i = phase_stop_23 + 1
     end
-    for i_42 = i:i_stop
-        if C_lvl_qos > C_lvl_qos_stop
-            C_lvl_qos_stop = max(C_lvl_qos_stop << 1, 1)
-            resize_if_smaller!(C_lvl.idx, C_lvl_qos_stop)
-            resize_if_smaller!(C_lvl_2.val, C_lvl_qos_stop)
-            fill_range!(C_lvl_2.val, 0.0, C_lvl_qos, C_lvl_qos_stop)
+    if i_stop >= i
+        for i_42 = i:i_stop
+            if C_lvl_qos > C_lvl_qos_stop
+                C_lvl_qos_stop = max(C_lvl_qos_stop << 1, 1)
+                resize_if_smaller!(C_lvl.idx, C_lvl_qos_stop)
+                resize_if_smaller!(C_lvl_2.val, C_lvl_qos_stop)
+                fill_range!(C_lvl_2.val, 0.0, C_lvl_qos, C_lvl_qos_stop)
+            end
+            C_lvl_2.val[C_lvl_qos] = missing
+            C_lvl.idx[C_lvl_qos] = i_42
+            C_lvl_qos += 1
         end
-        C_lvl_2.val[C_lvl_qos] = missing
-        C_lvl.idx[C_lvl_qos] = i_42
-        C_lvl_qos += 1
     end
     C_lvl.ptr[1 + 1] = (C_lvl_qos - 0) - 1
     for p = 2:1 + 1

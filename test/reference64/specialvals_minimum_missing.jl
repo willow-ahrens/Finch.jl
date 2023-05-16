@@ -38,10 +38,11 @@ begin
         end
         i = phase_stop + 1
     end
-    phase_stop_3 = yf_lvl.shape
-    cond_3 = 0 < 1 + -i + phase_stop_3
-    if cond_3
-        x_val = missing
+    if yf_lvl.shape >= i
+        cond_3 = 0 < yf_lvl.shape + 1 + -i
+        if cond_3
+            x_val = missing
+        end
     end
     (x = (Scalar){Inf, Float64}(x_val),)
 end
