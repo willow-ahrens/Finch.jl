@@ -50,7 +50,6 @@ function get_bounds_rules(alg, shash)
         (@rule call(+, ~a..., call(-, ~b), ~c..., ~b, ~d...) =>
             call(+, 0, a..., c..., d...)),
 
-        (@rule call(~f, ~a..., call(equiv, ~b...), ~c...) => call(equiv, map(x -> call(f, a..., x, c...), b)...)),
         (@rule call(+, ~a..., call(min, ~b...), ~c...) => call(min, map(x -> call(+, a..., x, c...), b)...)),
         (@rule call(+, ~a..., call(max, ~b...), ~c...) => call(max, map(x -> call(+, a..., x, c...), b)...)),
 
