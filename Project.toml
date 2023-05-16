@@ -26,6 +26,7 @@ SparseArraysExt = "SparseArrays"
 TensorMarketExt = "TensorMarket"
 
 [compat]
+AbstractTrees = ">= 0.3.4"
 Compat = "3.29, 4"
 DataStructures = "0.18"
 JSON = "0.21"

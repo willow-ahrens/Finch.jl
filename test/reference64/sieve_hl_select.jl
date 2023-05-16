@@ -22,13 +22,13 @@ begin
             if A_lvl_i == phase_stop_2
                 A_lvl_2_val_2 = A_lvl_2.val[A_lvl_q]
                 s_5 = 3
-                phase_stop_5 = min(3, phase_stop_2 - 1)
-                if phase_stop_5 >= 3
-                    s_5 = phase_stop_5 + 1
+                phase_stop_6 = min(3, phase_stop_2 - 1)
+                if phase_stop_6 >= 3
+                    s_5 = phase_stop_6 + 1
                 end
-                phase_stop_6 = min(3, phase_stop_2)
-                if phase_stop_6 >= s_5
-                    B_val = B_val + A_lvl_2_val_2 * (1 + -s_5 + phase_stop_6)
+                phase_stop_7 = min(3, phase_stop_2)
+                if phase_stop_7 >= s_5
+                    B_val = A_lvl_2_val_2 * (1 + -s_5 + phase_stop_7) + B_val
                 end
                 A_lvl_q += 1
             end
