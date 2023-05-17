@@ -80,14 +80,14 @@ using Finch: Cindex
         t = @fiber(sl(sl(e(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
         A = dropdefaults(copyto!(@fiber(sl(sl(e(0.0)))), B))
-        @test_throws Finch.FormatLimitation @finch MyAlgebra() (t .= 0; @loop i j t[i, j] = A[i, j])
+        @test_throws Finch.RewriteTools.RuleRewriteError @finch MyAlgebra() (t .= 0; @loop i j t[i, j] = A[i, j])
     end
 
     let
         t = @fiber(d(sl(e(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
         A = dropdefaults(copyto!(@fiber(d(sl(e(0.0)))), B))
-        @test_throws Finch.FormatLimitation @finch MyAlgebra() (t .= 0; @loop i j t[i, j] = A[i, j])
+        @test_throws Finch.RewriteTools.RuleRewriteError @finch MyAlgebra() (t .= 0; @loop i j t[i, j] = A[i, j])
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/129
