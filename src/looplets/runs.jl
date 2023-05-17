@@ -53,15 +53,6 @@ end
 
 FinchNotation.finch_leaf(x::AcceptRun) = virtual(x)
 
-#TODO this should go somewhere else
-function Finch.virtual_default(x::FinchNode)
-    if x.kind === virtual
-        Finch.virtual_default(x.val)
-    else
-        error("unimplemented")
-    end
-end
-
 Base.show(io::IO, ex::AcceptRun) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::AcceptRun)
     print(io, "AcceptRun(…)")

@@ -80,57 +80,6 @@ macro finch_code(args_ex...)
     end
 end
 
-"""
-    declare!(tns, ctx, init)
-
-Declare the read-only virtual tensor `tns` in the context `ctx` with a starting value of `init` and return it.
-Afterwards the tensor is update-only.
-"""
-declare!(tns, ctx, init) = @assert something(virtual_default(tns)) == init
-
-"""
-    get_reader(tns, ctx, protos...)
-    
-Return an object (usually a looplet nest) capable of reading the read-only
-virtual tensor `tns`.  As soon as a read-only tensor enters scope, each
-subsequent read access will be initialized with a separate call to
-`get_reader`. `protos` is the list of protocols in each case.
-"""
-get_reader(tns, ctx, protos...) = throw(FormatLimitation("$(typeof(tns)) does not support reads with protocol $(protos)"))
-
-"""
-    get_updater(tns, ctx, protos...)
-    
-Return an object (usually a looplet nest) capable of updating the update-only
-virtual tensor `tns`.  As soon as an update only tensor enters scope, each
-subsequent update access will be initialized with a separate call to
-`get_updater`.  `protos` is the list of protocols in each case.
-"""
-get_updater(tns, ctx, protos...) = throw(FormatLimitation("$(typeof(tns)) does not support updates with protocol $(protos)"))
-
-"""
-    freeze!(tns, ctx)
-
-Freeze the update-only virtual tensor `tns` in the context `ctx` and return it.
-Afterwards, the tensor is read-only.
-"""
-function freeze! end
-
-"""
-    thaw!(tns, ctx)
-
-Thaw the read-only virtual tensor `tns` in the context `ctx` and return it. Afterwards,
-the tensor is update-only.
-"""
-thaw!(tns, ctx) = throw(FormatLimitation("cannot modify $(typeof(tns)) in place (forgot to declare with .= ?)"))
-
-"""
-    trim!(tns, ctx)
-
-Before returning a tensor from the finch program, trim any excess overallocated memory.
-"""
-trim!(tns, ctx) = tns
-
 @kwdef struct LifecycleVisitor
     uses = OrderedDict()
     scoped_uses = Dict()
@@ -250,20 +199,5 @@ function (ctx::ScopeVisitor)(node::FinchNode)
         return similarterm(node, operation(node), map(ctx, arguments(node)))
     else
         return node
-    end
-end
-
-"""
-    getresults(prgm)
-
-Return an iterator over the properly modified tensors in a finch program
-"""
-function getresults(node::FinchNode)
-    if node.kind === sequence
-        return mapreduce(getresults, vcat, node.bodies, init=[])
-    elseif node.kind === declare || node.kind === thaw
-        return [node.tns]
-    else
-        return []
     end
 end

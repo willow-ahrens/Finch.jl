@@ -41,10 +41,10 @@ export default, AsArray
 
 include("util.jl")
 
-include("semantics.jl")
 include("FinchNotation/FinchNotation.jl")
 using .FinchNotation
 using .FinchNotation: and, or, InitWriter
+include("semantics.jl")
 include("virtualize.jl")
 include("style.jl")
 include("lower.jl")

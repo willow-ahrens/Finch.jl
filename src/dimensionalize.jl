@@ -158,20 +158,6 @@ function infer_dimensions_access(node, ctx, tns)
     end
 end
 
-virtual_elaxis(tns, ctx, dims...) = nodim
-
-function virtual_resize!(tns, ctx, dims...)
-    for (dim, ref) in zip(dims, virtual_size(tns, ctx))
-        if dim !== nodim && ref !== nodim #TODO this should be a function like checkdim or something haha
-            push!(ctx.preamble, quote
-                $(ctx(getstart(dim))) == $(ctx(getstart(ref))) || throw(DimensionMismatch("mismatched dimension start"))
-                $(ctx(getstop(dim))) == $(ctx(getstop(ref))) || throw(DimensionMismatch("mismatched dimension stop"))
-            end)
-        end
-    end
-    (tns, nodim)
-end
-
 struct UnknownDimension end
 
 resultdim(ctx, a, b, c, tail...) = resultdim(ctx, a, resultdim(ctx, b, c, tail...))
@@ -291,39 +277,6 @@ function checklim(ctx, a::FinchNode, b::FinchNode)
     end
 end
 
-"""
-    virtual_size(tns, ctx)
-
-Return a tuple of the dimensions of `tns` in the context `ctx` with access
-mode `mode`. This is a function similar in spirit to `Base.axes`.
-"""
-function virtual_size end
-
-virtual_size(tns, ctx, eldim) = virtual_size(tns, ctx)
-function virtual_size(tns::FinchNode, ctx, eldim = nodim)
-    if tns.kind === variable
-        return virtual_size(ctx.bindings[tns], ctx, eldim)
-    else
-        return error("unimplemented")
-    end
-end
-
-function virtual_elaxis(tns::FinchNode, ctx, dims...)
-    if tns.kind === variable
-        return virtual_elaxis(ctx.bindings[tns], ctx, dims...)
-    else
-        return error("unimplemented")
-    end
-end
-
-function virtual_resize!(tns::FinchNode, ctx, dims...)
-    if tns.kind === variable
-        return (ctx.bindings[tns], eldim) = virtual_resize!(ctx.bindings[tns], ctx, dims...)
-    else
-        error("unimplemented")
-    end
-end
-
 getstart(val) = val #TODO avoid generic definition here
 getstop(val) = val #TODO avoid generic herer
 
@@ -370,7 +323,6 @@ Base.:(==)(a::Widen, b::Widen) = a.ext == b.ext
 
 getstart(ext::Widen) = getstart(ext.ext)
 getstop(ext::Widen) = getstop(ext.ext)
-
 
 combinedim(ctx, a::Narrow, b::Extent) = resultdim(ctx, a, Narrow(b))
 combinedim(ctx, a::Narrow, b::SuggestedExtent) = a
