@@ -94,6 +94,9 @@ function (ctx::DeclareDimensions)(node::FinchNode, dim)
         return node
     elseif node.kind === access && node.tns.kind === variable
         return declare_dimensions_access(node, ctx, node.tns, dim)
+    elseif node.kind === loop && node.ext == index(:(:))
+        body = ctx(node.body)
+        return loop(node.idx, ctx.dims[getname(node.idx)], body)
     elseif node.kind === sequence
         sequence(map(ctx, node.bodies)...)
     elseif node.kind === declare

@@ -39,11 +39,11 @@ unfurl_access(node, ctx, eldim, tns) = similarterm(node, operation(node), map(ct
 function (ctx::LowerJulia)(root::FinchNode, ::UnfurlStyle)
     if root.kind === loop
         idx = root.idx
-        #TODO is every read of dims gonna be like this? When do we lock it in?
-        ext = resolvedim(ctx.dims[getname(idx)])
+        @assert root.ext.kind === virtual
+        ext = root.ext.val
         body = (UnfurlVisitor(ctx, idx, ext))(root.body)
         #TODO add a simplify step here perhaps
-        ctx(chunk(
+        ctx(loop(
             idx,
             ext,
             body
@@ -92,8 +92,7 @@ function (ctx::LowerJulia)(root, ::SelectStyle)
     idxs = Dict()
     root = SelectVisitor(ctx, idxs)(root)
     for (idx, val) in pairs(idxs)
-        ctx.dims[getname(idx)] = Extent(val, val)
-        root = loop(idx, root)
+        root = loop(idx, Extent(val, val), root)
     end
     contain(ctx) do ctx_2
         ctx_2(root)

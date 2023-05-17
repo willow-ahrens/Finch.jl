@@ -10,7 +10,6 @@ module FinchNotation
     export virtual
     export value
     export loop
-    export Chunk, chunk
     export assign
     export call
     export cached

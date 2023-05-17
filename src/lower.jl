@@ -313,13 +313,6 @@ function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
     elseif root.kind === cached
         return ctx(root.arg)
     elseif root.kind === loop
-        ext = resolvedim(ctx.dims[getname(root.idx)])
-        return ctx(simplify(chunk(
-            root.idx,
-            ext,
-            UnfurlVisitor(ctx, root.idx, ext)(root.body)),
-            ctx))
-    elseif root.kind === chunk
         idx_sym = ctx.freshen(getname(root.idx))
         body = contain(ctx) do ctx_2
             ctx_2.bindings[root.idx] = value(idx_sym)

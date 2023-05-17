@@ -4,7 +4,6 @@ const evaluable_exprs = [:Inf, :Inf16, :Inf32, :Inf64, :(-Inf), :(-Inf16), :(-In
 const program_nodes = (
     index = index,
     loop = loop,
-    chunk = chunk,
     sieve = sieve,
     sequence = sequence,
     declare = declare,
@@ -27,7 +26,6 @@ const program_nodes = (
 const instance_nodes = (
     index = index_instance,
     loop = loop_instance,
-    chunk = :(throw(NotImplementedError("TODO"))),
     sieve = sieve_instance,
     sequence = sequence_instance,
     declare = declare_instance,
@@ -101,7 +99,9 @@ struct FinchParserVisitor
 end
 
 function (ctx::FinchParserVisitor)(ex::Symbol)
-    if ex in evaluable_exprs
+    if ex == :_ || ex == :(:)
+        return ctx.nodes.index(:(:))
+    elseif ex in evaluable_exprs
         return ctx.nodes.literal(@eval($ex))
     else
         ctx.nodes.variable(ex)
@@ -133,24 +133,29 @@ function (ctx::FinchParserVisitor)(ex::Expr)
         return :($(ctx.nodes.forget)($(ctx(tns))))
     elseif @capture ex :for(:(=)(~idx, ~ext), ~body)
         ext == :(:) || ext == :_ || throw(FinchSyntaxError("Finch doesn't support non-automatic loop bounds currently"))
-        return ctx(:(@loop($idx, $body)))
+        return ctx(:(@loop($idx = $ext, $body)))
     elseif @capture ex :for(:block(:(=)(~idx, ~ext), ~tail...), ~body)
         ext == :(:) || ext == :_ || throw(FinchSyntaxError("Finch doesn't support non-automatic loop bounds currently"))
         if isempty(tail)
-            return ctx(:(@loop($idx, $body)))
+            return ctx(:(@loop($idx = $ext, $body)))
         else
-            return ctx(:(@loop($idx, $(Expr(:for, Expr(:block, tail...), body)))))
+            return ctx(:(@loop($idx = $ext, $(Expr(:for, Expr(:block, tail...), body)))))
         end
-    elseif @capture ex :macrocall($(Symbol("@loop")), ~ln::islinenum, ~idxs..., ~body)
-        return quote
-            let $((:($(esc(idx)) = $(ctx.nodes.index(idx))) for idx in idxs if idx isa Symbol)...)
-                $(ctx.nodes.loop)($((idx isa Symbol ? esc(idx) : ctx(idx) for idx in idxs)...), $(ctx(body)))
+    elseif @capture ex :macrocall($(Symbol("@loop")), ~ln::islinenum, ~idx, ~tail..., ~body)
+        if !(@capture idx :(=)(~idx, ~ext))
+            ext = :_
+        end
+        ext = ctx(ext)
+        body = isempty(tail) ? ctx(body) : ctx(:(@loop($(tail...), $body)))
+        if idx isa Symbol
+            return quote
+                let $(esc(idx)) = $(ctx.nodes.index(idx))
+                    $(ctx.nodes.loop)($(esc(idx)), $ext, $body)
+                end
             end
-        end
-    elseif @capture ex :macrocall($(Symbol("@chunk")), ~ln::islinenum, ~idx, ~ext, ~body)
-        return quote
-            let $(idx isa Symbol ? :($(esc(idx)) = $(ctx.nodes.index(idx))) : quote end)
-                $(ctx.nodes.chunk)($(idx isa Symbol ? esc(idx) : ctx(idx)), $(ctx(ext)), $(ctx(body)))
+        else
+            return quote
+                $(ctx.nodes.loop)($(ctx(idx)), $ext, $body)
             end
         end
     elseif @capture ex :block(~bodies...)
