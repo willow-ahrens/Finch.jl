@@ -78,8 +78,8 @@ When the loop order does not correspond to storage order, we call this
 *discordant* iteration. For example, if we swap the loop order in the
 above example, then Finch needs to randomly access each sparse column for each
 row `i`. We end up needing to find each `(i, j)` pair because we don't know
-whether it will be zero until we search for it. In all, this takes time `O(n * m
-* log(nnz))`, much less efficient! We shouldn't randomly access sparse
+whether it will be zero until we search for it. In all, this takes time
+`O(n * m * log(nnz))`, much less efficient! We shouldn't randomly access sparse
 arrays unless we really need to and they support it efficiently!
 
 Note the double for loop in the following code
