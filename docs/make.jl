@@ -20,6 +20,7 @@ makedocs(;
         "Custom Functions" => "algebra.md",
         "Tensor File I/O" => "fileio.md",
         "C, C++, ..." => "interop.md",
+        "Performance Tips" => "performance.md",
         "Development Guide" => "development.md",
     ],
 )
