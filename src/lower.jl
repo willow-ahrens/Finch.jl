@@ -37,7 +37,8 @@ abstract type AbstractCompiler end
     dims::Dict = Dict()
     freshen::Freshen = Freshen()
     shash = StaticHash()
-    rules = getrules(algebra, shash)
+    program_rules = get_program_rules(algebra, shash)
+    bounds_rules = get_bounds_rules(algebra, shash)
 end
 
 struct StaticHash
@@ -78,8 +79,7 @@ function cache!(ctx, var, val)
     push!(ctx.preamble, quote
         $var = $(contain(ctx_2 -> ctx_2(val), ctx))
     end)
-    ctx.bindings[var] = val
-    return value(var, Any)
+    return cached(value(var, Any), literal(val))
 end
 
 function resolve(var, ctx::LowerJulia)
@@ -178,7 +178,7 @@ thunk_access(node, ctx, tns) = similarterm(node, operation(node), map(ctx, argum
 function (ctx::ThunkVisitor)(node::Thunk)
     push!(ctx.ctx.preamble, node.preamble)
     push!(ctx.ctx.epilogue, node.epilogue)
-    node.body
+    node.body(ctx.ctx)
 end
 
 """
@@ -307,25 +307,18 @@ function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
             else
                 reduce((x, y) -> :($x || $y), map(ctx, root.args))
             end
-        elseif root.op == literal(cached)
-            return ctx(root.args[1])
         else
             :($(ctx(root.op))($(map(ctx, root.args)...)))
         end
+    elseif root.kind === cached
+        return ctx(root.arg)
     elseif root.kind === loop
-        ext = resolvedim(ctx.dims[getname(root.idx)])
-        return ctx(simplify(chunk(
-            root.idx,
-            ext,
-            ChunkifyVisitor(ctx, root.idx, ext)(root.body)),
-            ctx))
-    elseif root.kind === chunk
         idx_sym = ctx.freshen(getname(root.idx))
         body = contain(ctx) do ctx_2
             ctx_2.bindings[root.idx] = value(idx_sym)
             body_3 = Rewrite(Postwalk(
                 @rule access(~a::isvirtual, ~m, ~i..., ~j) => begin
-                    a_2 = get_point_body(a.val, ctx_2, value(idx_sym))
+                    a_2 = get_point_body(a.val, ctx_2, root.ext.val, value(idx_sym))
                     if a_2 != nothing
                         access(a_2, m, i...)
                     else
@@ -399,5 +392,5 @@ end
 
 FinchNotation.finch_leaf(x::Lookup) = virtual(x)
 
-get_point_body(node, ctx, idx) = nothing
-get_point_body(node::Lookup, ctx, idx) = node.body(ctx, idx)
+get_point_body(node, ctx, ext, idx) = nothing
+get_point_body(node::Lookup, ctx, ext, idx) = node.body(ctx, idx)

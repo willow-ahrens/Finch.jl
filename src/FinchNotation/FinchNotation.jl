@@ -1,5 +1,5 @@
 module FinchNotation
-    using RewriteTools, SyntaxInterface, Finch
+    using RewriteTools, SyntaxInterface, AbstractTrees, Finch
 
     using Finch: default
 
@@ -10,9 +10,9 @@ module FinchNotation
     export virtual
     export value
     export loop
-    export Chunk, chunk
     export assign
     export call
+    export cached
     export reader, updater, create, modify, access
     export declare, thaw, freeze, forget
     export sequence

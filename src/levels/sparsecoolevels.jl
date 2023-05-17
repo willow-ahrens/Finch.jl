@@ -12,7 +12,7 @@ order.  Optionally, `dims` are the sizes of the last dimensions.
 `Ti` is the type of the last `N` fiber indices, and `Tp` is the type used for
 positions in the level.
 
-In the [@fiber](@ref) constructor, `sh` is an alias for `SparseCOOLevel`.
+In the [`@fiber`](@ref) constructor, `sh` is an alias for `SparseCOOLevel`.
 
 ```jldoctest
 julia> @fiber(d(sc{1}(e(0.0))), [10 0 20; 30 0 0; 0 0 40])
@@ -56,10 +56,10 @@ SparseCOOLevel{N, Ti, Tp, Tbl, Lvl}(lvl, shape) where {N, Ti, Tp, Tbl, Lvl} =
     SparseCOOLevel{N, Ti, Tp, Tbl, Lvl}(lvl, Ti(shape), ((Vector{ti}() for ti in Ti.parameters)...,), Tp[1])
 
 """
-`f_code(sc)` = [SparseCOOLevel](@ref).
+`fiber_abbrev(sc)` = [`SparseCOOLevel`](@ref).
 """
-f_code(::Val{:sc}) = SparseCOO
-summary_f_code(lvl::SparseCOOLevel{N}) where {N} = "sc{$N}($(summary_f_code(lvl.lvl)))"
+fiber_abbrev(::Val{:sc}) = SparseCOO
+summary_fiber_abbrev(lvl::SparseCOOLevel{N}) where {N} = "sc{$N}($(summary_fiber_abbrev(lvl.lvl)))"
 similar_level(lvl::SparseCOOLevel{N}) where {N} = SparseCOOLevel{N}(similar_level(lvl.lvl))
 similar_level(lvl::SparseCOOLevel{N}, tail...) where {N} = SparseCOOLevel{N}(similar_level(lvl.lvl, tail[1:end-N]...), (tail[end-N+1:end]...,))
 
@@ -164,7 +164,7 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualSparseCOOLevel)
     end
 end
 
-summary_f_code(lvl::VirtualSparseCOOLevel) = "sc{$(lvl.N)}($(summary_f_code(lvl.lvl)))"
+summary_fiber_abbrev(lvl::VirtualSparseCOOLevel) = "sc{$(lvl.N)}($(summary_fiber_abbrev(lvl.lvl)))"
 
 function virtual_level_size(lvl::VirtualSparseCOOLevel, ctx::LowerJulia)
     ext = map((ti, stop)->Extent(literal(ti(1)), stop), lvl.Ti.parameters, lvl.shape)
@@ -263,9 +263,9 @@ function get_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, R, start, stop, 
                     $my_i_stop = $(Ti.parameters[R](0))
                 end
             end,
-            body = Pipeline([
+            body = (ctx) -> Pipeline([
                 Phase(
-                    stride = (ctx, ext) -> value(my_i_stop),
+                    stop = (ctx, ext) -> value(my_i_stop),
                     body = (ctx, ext) -> Stepper(
                         seek = (ctx, ext) -> quote
                             if $(lvl.ex).tbl[$R][$my_q] < $(ctx(getstart(ext)))
@@ -277,9 +277,9 @@ function get_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, R, start, stop, 
                                 preamble = quote
                                     $my_i = $(lvl.ex).tbl[$R][$my_q]
                                 end,
-                                body = Step(
-                                    stride =  (ctx, ext) -> value(my_i),
-                                    chunk = Spike(
+                                body = (ctx) -> Step(
+                                    stop =  (ctx, ext) -> value(my_i),
+                                    body = Spike(
                                         body = Fill(virtual_level_default(lvl)),
                                         tail = get_reader(VirtualSubFiber(lvl.lvl, my_q), ctx, protos...),
                                     ),
@@ -297,9 +297,9 @@ function get_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, R, start, stop, 
                                         $my_q_step = scansearch($(lvl.ex).tbl[$R], $my_i + 1, $my_q_step, $my_q_stop - 1)
                                     end
                                 end,
-                                body = Step(
-                                    stride = (ctx, ext) -> value(my_i),
-                                    chunk = Spike(
+                                body = (ctx) -> Step(
+                                    stop = (ctx, ext) -> value(my_i),
+                                    body = Spike(
                                         body = Fill(virtual_level_default(lvl)),
                                         tail = get_reader_coo_helper(lvl, ctx, R - 1, value(my_q, lvl.Ti), value(my_q_step, lvl.Ti), protos...),
                                     ),
@@ -335,7 +335,7 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseCOOLevel}, ctx, pr
         preamble = quote
             $qos = $qos_fill + 1
         end,
-        body = get_updater_coo_helper(lvl, ctx, qos, fbr.dirty, (), protos...),
+        body = (ctx) -> get_updater_coo_helper(lvl, ctx, qos, fbr.dirty, (), protos...),
         epilogue = quote
             $(lvl.ex).ptr[$(ctx(pos)) + 1] = $qos - $qos_fill - 1
             $qos_fill = $qos - 1
@@ -370,7 +370,7 @@ function get_updater_coo_helper(lvl::VirtualSparseCOOLevel, ctx, qos, fbr_dirty,
                             end
                             $dirty = false
                         end,
-                        body = get_updater(VirtualTrackedSubFiber(lvl.lvl, qos, dirty), ctx, protos...),
+                        body = (ctx) -> get_updater(VirtualTrackedSubFiber(lvl.lvl, qos, dirty), ctx, protos...),
                         epilogue = quote
                             if $dirty
                                 $(fbr_dirty) = true

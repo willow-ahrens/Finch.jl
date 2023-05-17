@@ -58,8 +58,8 @@ result to clean it up):
 julia> (@macroexpand @finch (C .= 0; @loop i C[i] = A[i] * B[i])) |> Finch.striplines |> Finch.regensym
 quote
     _res_1 = (Finch.execute)((Finch.FinchNotation.sequence_instance)((Finch.FinchNotation.declare_instance)((Finch.FinchNotation.variable_instance)(:C, (Finch.FinchNotation.finch_leaf_instance)(C)), literal_instance(0)), begin
-                    let i = index_instance(:i)
-                        (Finch.FinchNotation.loop_instance)(i, (Finch.FinchNotation.assign_instance)((Finch.FinchNotation.access_instance)((Finch.FinchNotation.variable_instance)(:C, (Finch.FinchNotation.finch_leaf_instance)(C)), (Finch.FinchNotation.updater_instance)((Finch.FinchNotation.create_instance)()), (Finch.FinchNotation.variable_instance)(:i, (Finch.FinchNotation.finch_leaf_instance)(i))), (Finch.FinchNotation.literal_instance)((Finch.FinchNotation.initwrite)((Finch.default)(C))), (Finch.FinchNotation.call_instance)((Finch.FinchNotation.variable_instance)(:*, (Finch.FinchNotation.finch_leaf_instance)(*)), (Finch.FinchNotation.access_instance)((Finch.FinchNotation.variable_instance)(:A, (Finch.FinchNotation.finch_leaf_instance)(A)), (Finch.FinchNotation.reader_instance)(), (Finch.FinchNotation.variable_instance)(:i, (Finch.FinchNotation.finch_leaf_instance)(i))), (Finch.FinchNotation.access_instance)((Finch.FinchNotation.variable_instance)(:B, (Finch.FinchNotation.finch_leaf_instance)(B)), (Finch.FinchNotation.reader_instance)(), (Finch.FinchNotation.variable_instance)(:i, (Finch.FinchNotation.finch_leaf_instance)(i))))))
+                    let i = index_instance(i)
+                        (Finch.FinchNotation.loop_instance)(i, index_instance(:), (Finch.FinchNotation.assign_instance)((Finch.FinchNotation.access_instance)((Finch.FinchNotation.variable_instance)(:C, (Finch.FinchNotation.finch_leaf_instance)(C)), (Finch.FinchNotation.updater_instance)((Finch.FinchNotation.create_instance)()), (Finch.FinchNotation.variable_instance)(:i, (Finch.FinchNotation.finch_leaf_instance)(i))), (Finch.FinchNotation.literal_instance)((Finch.FinchNotation.initwrite)((Finch.default)(C))), (Finch.FinchNotation.call_instance)((Finch.FinchNotation.variable_instance)(:*, (Finch.FinchNotation.finch_leaf_instance)(*)), (Finch.FinchNotation.access_instance)((Finch.FinchNotation.variable_instance)(:A, (Finch.FinchNotation.finch_leaf_instance)(A)), (Finch.FinchNotation.reader_instance)(), (Finch.FinchNotation.variable_instance)(:i, (Finch.FinchNotation.finch_leaf_instance)(i))), (Finch.FinchNotation.access_instance)((Finch.FinchNotation.variable_instance)(:B, (Finch.FinchNotation.finch_leaf_instance)(B)), (Finch.FinchNotation.reader_instance)(), (Finch.FinchNotation.variable_instance)(:i, (Finch.FinchNotation.finch_leaf_instance)(i))))))
                     end
                 end))
     begin
@@ -82,7 +82,7 @@ convenient to use the unexported macro `Finch.finch_program_instance`:
 julia> using Finch: @finch_program_instance
 
 julia> prgm = Finch.@finch_program_instance (C .= 0; @loop i C[i] = A[i] * B[i])
-sequence_instance(declare_instance(variable_instance(:C, C), literal_instance(0)), loop_instance(index_instance(:i), assign_instance(access_instance(variable_instance(:C, C), updater_instance(create_instance()), index_instance(:i)), literal_instance(Finch.FinchNotation.InitWriter{0}()), call_instance(variable_instance(:*, *), access_instance(variable_instance(:A, A), reader_instance(), index_instance(:i)), access_instance(variable_instance(:B, B), reader_instance(), index_instance(:i))))))
+sequence_instance(declare_instance(variable_instance(:C, C), literal_instance(0)), loop_instance(index_instance(i), index_instance(:), assign_instance(access_instance(variable_instance(:C, C), updater_instance(create_instance()), index_instance(i)), literal_instance(Finch.FinchNotation.InitWriter{0}()), call_instance(variable_instance(:*, *), access_instance(variable_instance(:A, A), reader_instance(), index_instance(i)), access_instance(variable_instance(:B, B), reader_instance(), index_instance(i))))))
 ```
 
 As we can see, our program instance contains not only the AST to be executed,
@@ -93,7 +93,7 @@ different inputs, but the same program type. We can run our program using
 
 ```jldoctest example1
 julia> typeof(prgm)
-Finch.FinchNotation.SequenceInstance{Tuple{Finch.FinchNotation.DeclareInstance{Finch.FinchNotation.VariableInstance{:C, Fiber{SparseListLevel{Int64, Int64, ElementLevel{0, Int64}}}}, Finch.FinchNotation.LiteralInstance{0}}, Finch.FinchNotation.LoopInstance{Finch.FinchNotation.IndexInstance{:i}, Finch.FinchNotation.AssignInstance{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.VariableInstance{:C, Fiber{SparseListLevel{Int64, Int64, ElementLevel{0, Int64}}}}, Finch.FinchNotation.UpdaterInstance{Finch.FinchNotation.CreateInstance}, Tuple{Finch.FinchNotation.IndexInstance{:i}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.InitWriter{0}()}, Finch.FinchNotation.CallInstance{Finch.FinchNotation.VariableInstance{:*, Finch.FinchNotation.LiteralInstance{*}}, Tuple{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.VariableInstance{:A, Fiber{SparseListLevel{Int64, Int64, ElementLevel{0, Int64}}}}, Finch.FinchNotation.ReaderInstance, Tuple{Finch.FinchNotation.IndexInstance{:i}}}, Finch.FinchNotation.AccessInstance{Finch.FinchNotation.VariableInstance{:B, Fiber{DenseLevel{Int64, ElementLevel{0, Int64}}}}, Finch.FinchNotation.ReaderInstance, Tuple{Finch.FinchNotation.IndexInstance{:i}}}}}}}}}
+Finch.FinchNotation.SequenceInstance{Tuple{Finch.FinchNotation.DeclareInstance{Finch.FinchNotation.VariableInstance{:C, Fiber{SparseListLevel{Int64, Int64, ElementLevel{0, Int64}}}}, Finch.FinchNotation.LiteralInstance{0}}, Finch.FinchNotation.LoopInstance{Finch.FinchNotation.IndexInstance{:i}, Finch.FinchNotation.IndexInstance{:(:)}, Finch.FinchNotation.AssignInstance{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.VariableInstance{:C, Fiber{SparseListLevel{Int64, Int64, ElementLevel{0, Int64}}}}, Finch.FinchNotation.UpdaterInstance{Finch.FinchNotation.CreateInstance}, Tuple{Finch.FinchNotation.IndexInstance{:i}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.InitWriter{0}()}, Finch.FinchNotation.CallInstance{Finch.FinchNotation.VariableInstance{:*, Finch.FinchNotation.LiteralInstance{*}}, Tuple{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.VariableInstance{:A, Fiber{SparseListLevel{Int64, Int64, ElementLevel{0, Int64}}}}, Finch.FinchNotation.ReaderInstance, Tuple{Finch.FinchNotation.IndexInstance{:i}}}, Finch.FinchNotation.AccessInstance{Finch.FinchNotation.VariableInstance{:B, Fiber{DenseLevel{Int64, ElementLevel{0, Int64}}}}, Finch.FinchNotation.ReaderInstance, Tuple{Finch.FinchNotation.IndexInstance{:i}}}}}}}}}
 
 julia> C = Finch.execute(prgm).C
 SparseList (0) [1:5]
@@ -138,7 +138,7 @@ TODO more on the way...
 Every virtual tensor must be in one of two modes: read-only mode or update-only mode. The following functions may be called on virtual tensors throughout their life cycle.
 
 ```@docs
-initialize!
+declare!
 get_reader
 get_updater
 freeze!
@@ -151,7 +151,7 @@ Fiber levels are implemented using the following methods:
 
 ```@docs
 default
-initialize_level!
+declare_level!
 assemble_level!
 reassemble_level!
 freeze_level!

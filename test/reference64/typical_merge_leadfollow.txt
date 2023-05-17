@@ -29,7 +29,7 @@ quote
         x_lvl_i1 = 0
     end
     i = 1
-    phase_stop = min(x_lvl.shape, x_lvl_i1, y_lvl_i1)
+    phase_stop = min(x_lvl.shape, y_lvl_i1, x_lvl_i1)
     if phase_stop >= 1
         i = 1
         while i <= phase_stop
@@ -66,7 +66,7 @@ quote
                         y_lvl_q = scansearch(y_lvl.idx, phase_stop_2, y_lvl_q, y_lvl_q_stop - 1)
                     end
                     y_lvl_i = y_lvl.idx[y_lvl_q]
-                    phase_stop_4 = min(phase_stop_2, y_lvl_i)
+                    phase_stop_4 = min(y_lvl_i, phase_stop_2)
                     if y_lvl_i == phase_stop_4
                         for i_10 = phase_stop_2:phase_stop_4 - 1
                             if z_lvl_qos > z_lvl_qos_stop
@@ -79,14 +79,14 @@ quote
                             z_lvl.idx[z_lvl_qos] = i_10
                             z_lvl_qos += 1
                         end
-                        y_lvl_2_val_2 = y_lvl_2.val[y_lvl_q]
+                        y_lvl_2_val_3 = y_lvl_2.val[y_lvl_q]
                         if z_lvl_qos > z_lvl_qos_stop
                             z_lvl_qos_stop = max(z_lvl_qos_stop << 1, 1)
                             resize_if_smaller!(z_lvl.idx, z_lvl_qos_stop)
                             resize_if_smaller!(z_lvl_2.val, z_lvl_qos_stop)
                             fill_range!(z_lvl_2.val, 0.0, z_lvl_qos, z_lvl_qos_stop)
                         end
-                        z_lvl_2.val[z_lvl_qos] = x_lvl_2_val_2 + y_lvl_2_val_2
+                        z_lvl_2.val[z_lvl_qos] = x_lvl_2_val_2 + y_lvl_2_val_3
                         z_lvl.idx[z_lvl_qos] = phase_stop_4
                         z_lvl_qos += 1
                         y_lvl_q += 1
@@ -114,9 +114,9 @@ quote
                     while i <= phase_stop_2
                         y_lvl_i = y_lvl.idx[y_lvl_q]
                         x_lvl_i3 = x_lvl.idx[x_lvl_q]
-                        phase_stop_5 = min(phase_stop_2, y_lvl_i, x_lvl_i3)
+                        phase_stop_5 = min(y_lvl_i, phase_stop_2, x_lvl_i3)
                         if y_lvl_i == phase_stop_5 && x_lvl_i3 == phase_stop_5
-                            y_lvl_2_val_2 = y_lvl_2.val[y_lvl_q]
+                            y_lvl_2_val_4 = y_lvl_2.val[y_lvl_q]
                             x_lvl_2_val_3 = x_lvl_2.val[x_lvl_q]
                             if z_lvl_qos > z_lvl_qos_stop
                                 z_lvl_qos_stop = max(z_lvl_qos_stop << 1, 1)
@@ -124,7 +124,7 @@ quote
                                 resize_if_smaller!(z_lvl_2.val, z_lvl_qos_stop)
                                 fill_range!(z_lvl_2.val, 0.0, z_lvl_qos, z_lvl_qos_stop)
                             end
-                            z_lvl_2.val[z_lvl_qos] = y_lvl_2_val_2 + x_lvl_2_val_3
+                            z_lvl_2.val[z_lvl_qos] = x_lvl_2_val_3 + y_lvl_2_val_4
                             z_lvl.idx[z_lvl_qos] = phase_stop_5
                             z_lvl_qos += 1
                             y_lvl_q += 1
@@ -142,14 +142,14 @@ quote
                             z_lvl_qos += 1
                             x_lvl_q += 1
                         elseif y_lvl_i == phase_stop_5
-                            y_lvl_2_val_2 = y_lvl_2.val[y_lvl_q]
+                            y_lvl_2_val_4 = y_lvl_2.val[y_lvl_q]
                             if z_lvl_qos > z_lvl_qos_stop
                                 z_lvl_qos_stop = max(z_lvl_qos_stop << 1, 1)
                                 resize_if_smaller!(z_lvl.idx, z_lvl_qos_stop)
                                 resize_if_smaller!(z_lvl_2.val, z_lvl_qos_stop)
                                 fill_range!(z_lvl_2.val, 0.0, z_lvl_qos, z_lvl_qos_stop)
                             end
-                            z_lvl_2.val[z_lvl_qos] = y_lvl_2_val_2
+                            z_lvl_2.val[z_lvl_qos] = y_lvl_2_val_4
                             z_lvl.idx[z_lvl_qos] = phase_stop_5
                             z_lvl_qos += 1
                             y_lvl_q += 1
@@ -171,14 +171,14 @@ quote
             y_lvl_i = y_lvl.idx[y_lvl_q]
             phase_stop_7 = min(y_lvl_i, phase_stop_6)
             if y_lvl_i == phase_stop_7
-                y_lvl_2_val_3 = y_lvl_2.val[y_lvl_q]
+                y_lvl_2_val_5 = y_lvl_2.val[y_lvl_q]
                 if z_lvl_qos > z_lvl_qos_stop
                     z_lvl_qos_stop = max(z_lvl_qos_stop << 1, 1)
                     resize_if_smaller!(z_lvl.idx, z_lvl_qos_stop)
                     resize_if_smaller!(z_lvl_2.val, z_lvl_qos_stop)
                     fill_range!(z_lvl_2.val, 0.0, z_lvl_qos, z_lvl_qos_stop)
                 end
-                z_lvl_2.val[z_lvl_qos] = y_lvl_2_val_3
+                z_lvl_2.val[z_lvl_qos] = y_lvl_2_val_5
                 z_lvl.idx[z_lvl_qos] = phase_stop_7
                 z_lvl_qos += 1
                 y_lvl_q += 1

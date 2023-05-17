@@ -9,7 +9,7 @@ The fibers have type `Tv`, initialized to `D`. `D` may optionally be given as
 the first argument.  `Ti` is the type of the last fiber index, and `Tp` is the
 type used for positions in the level.
 
-In the [@fiber](@ref) constructor, `rl` is an alias for `RepeatRLELevel`.
+In the [`@fiber`](@ref) constructor, `rl` is an alias for `RepeatRLELevel`.
 
 ```jldoctest
 julia> @fiber(rl(0.0), [11, 11, 22, 22, 00, 00, 00, 33, 33])
@@ -43,10 +43,10 @@ RepeatRLELevel{D, Ti, Tp, Tv}() where {D, Ti, Tp, Tv} = RepeatRLELevel{D, Ti, Tp
 RepeatRLELevel{D, Ti, Tp, Tv}(shape) where {D, Ti, Tp, Tv} = RepeatRLELevel{D, Ti, Tp, Tv}(Ti(shape), Tp[1], Ti[], Tv[])
 
 """
-`f_code(rl)` = [RepeatRLELevel](@ref).
+`fiber_abbrev(rl)` = [`RepeatRLELevel`](@ref).
 """
-f_code(::Val{:rl}) = RepeatRLE
-summary_f_code(::RepeatRLE{D}) where {D} = "rl($(D))"
+fiber_abbrev(::Val{:rl}) = RepeatRLE
+summary_fiber_abbrev(::RepeatRLE{D}) where {D} = "rl($(D))"
 similar_level(::RepeatRLELevel{D}) where {D} = RepeatRLE{D}()
 similar_level(::RepeatRLELevel{D}, dim, tail...) where {D} = RepeatRLE{D}(dim)
 data_rep_level(::Type{<:RepeatRLELevel{D, Ti, Tp, Tv}}) where {D, Ti, Tp, Tv} = RepeatData(D, Tv)
@@ -141,7 +141,7 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualRepeatRLELevel)
     end
 end
 
-summary_f_code(lvl::VirtualRepeatRLELevel) = "rl($(lvl.D))"
+summary_fiber_abbrev(lvl::VirtualRepeatRLELevel) = "rl($(lvl.D))"
 
 function virtual_level_size(lvl::VirtualRepeatRLELevel, ctx)
     ext = Extent(literal(lvl.Ti(1)), lvl.shape)
@@ -234,7 +234,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, ::Union{No
                     $my_i1 = $(Ti(0))
                 end
             end),
-            body = Stepper(
+            body = (ctx) -> Stepper(
                 seek = (ctx, ext) -> quote
                     if $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
                         $my_q = scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
@@ -244,9 +244,9 @@ function get_reader(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, ::Union{No
                     preamble = :(
                         $my_i = $(lvl.ex).idx[$my_q]
                     ),
-                    body = Step(
-                        stride = (ctx, ext) -> value(my_i),
-                        chunk = Run(
+                    body = (ctx) -> Step(
+                        stop = (ctx, ext) -> value(my_i),
+                        body = Run(
                             body = Fill(value(:($(lvl.ex).val[$my_q]), lvl.Tv)) #TODO Flesh out fill to assert ndims and handle writes
                         ),
                         next = (ctx, ext) -> quote
@@ -306,7 +306,7 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualRepeatRLELevel}, ctx, ::
                 $my_i_prev = $(Ti(0))
                 $my_v_prev = $D
             end,
-            body = AcceptRun(
+            body = (ctx) -> AcceptRun(
                 body = (ctx, ext) -> Thunk(
                     preamble = quote
                         if $my_v_prev != $D && ($my_i_prev + 1) < $(ctx(getstart(ext)))
@@ -317,7 +317,7 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualRepeatRLELevel}, ctx, ::
                         $my_i_prev = $(ctx(getstart(ext))) - $(Ti(1))
                         $my_v = $D
                     end,
-                    body = Fill(value(my_v, lvl.Tv)),
+                    body = (ctx) -> Fill(value(my_v, lvl.Tv)),
                     epilogue = quote
                         if $my_v_prev != $my_v && $my_i_prev > 0
                             $(record_run(ctx, my_i_prev, my_v_prev))

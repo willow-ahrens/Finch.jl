@@ -6,7 +6,8 @@ CurrentModule = Finch
 
 ## User Functions
 
-Finch supports arbitrary Julia Base functions over [`isbits`](@ref) types.  You
+Finch supports arbitrary Julia Base functions over
+[`isbits`](https://docs.julialang.org/en/v1/base/base/#Base.isbits) types.  You
 can also use your own functions and use them in Finch! Just remember to define
 any special algebraic properties of your functions so that Finch can optimize
 them better. You must declare the properties of your functions before you call
@@ -85,7 +86,9 @@ the behavior of Finch in different ways, and call those Finch functions during
 precompilation, the resulting behavior is undefined.
 
 There are several packages that take similar, but different, approaches to
-allow user participation in staged Julia programming (not to mention Base `eval` or `@generated`): [StagedFunctions.jl](https://github.com/NHDaly/StagedFunctions.jl),
+allow user participation in staged Julia programming (not to mention Base `eval`
+or `@generated`):
+[StagedFunctions.jl](https://github.com/NHDaly/StagedFunctions.jl),
 [GeneralizedGenerated.jl](https://github.com/JuliaStaging/GeneralizedGenerated.jl),
 [RuntimeGeneratedFunctions.jl](https://github.com/SciML/RuntimeGeneratedFunctions.jl),
 or [Zygote.jl](https://github.com/FluxML/Zygote.jl).
@@ -116,10 +119,10 @@ We pass the algebra to Finch as an optional first argument:
 
 ### Rewriting
 
-Define custom rewrite rules by overloading the `getrules` function
+Define custom rewrite rules by overloading the `get_program_rules` function
 on your algebra.  Unless you want to write the full rule set from scratch, be
 sure to append your new rules to the old rules, which can be obtained by calling
-`base_rules`. Rules can be specified directly on Finch IR using
+`get_program_rules` with another algebra. Rules can be specified directly on Finch IR using
 [RewriteTools.jl](https://github.com/willow-ahrens/RewriteTools.jl).
 
 ```@docs

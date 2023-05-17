@@ -1,9 +1,10 @@
 name = "Finch"
 uuid = "9177782c-1635-4eb9-9bfb-d9dfa25e6bce"
 authors = ["Willow Ahrens"]
-version = "0.5.2"
+version = "0.5.4"
 
 [deps]
+AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
 Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
@@ -14,7 +15,18 @@ Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 RewriteTools = "5969e224-3634-4c61-9f66-721b69e98b8a"
 SyntaxInterface = "b33eeca9-aacb-4496-a840-e75f1646a4fb"
 
+[weakdeps]
+HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+TensorMarket = "8b7d4fe7-0b45-4d0d-9dd8-5cc9b23b4b77"
+
+[extensions]
+HDF5Ext = "HDF5"
+SparseArraysExt = "SparseArrays"
+TensorMarketExt = "TensorMarket"
+
 [compat]
+AbstractTrees = ">= 0.3.4"
 Compat = "3.29, 4"
 DataStructures = "0.18"
 JSON = "0.21"
@@ -23,11 +35,6 @@ Requires = "1"
 RewriteTools = "0.1"
 SyntaxInterface = "0.2.1"
 julia = "1.6.7"
-
-[extensions]
-HDF5Ext = "HDF5"
-SparseArraysExt = "SparseArrays"
-TensorMarketExt = "TensorMarket"
 
 [extras]
 ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"
@@ -43,8 +50,3 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
 test = ["Test", "ArgParse", "LinearAlgebra", "Random", "SparseArrays", "Graphs", "SimpleWeightedGraphs", "HDF5", "Pkg", "TensorMarket"]
-
-[weakdeps]
-HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
-SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
-TensorMarket = "8b7d4fe7-0b45-4d0d-9dd8-5cc9b23b4b77"

@@ -11,7 +11,7 @@ begin
     A_lvl.shape == A_lvl_2.shape || throw(DimensionMismatch("mismatched dimension limits ($(A_lvl.shape) != $(A_lvl_2.shape))"))
     B_lvl_2_qos_fill = 0
     B_lvl_2_qos_stop = 0
-    p_start_2 = 1 * A_lvl.shape
+    p_start_2 = A_lvl.shape
     resize_if_smaller!(B_lvl_2.ptr, p_start_2 + 1)
     fill_range!(B_lvl_2.ptr, 0, 1 + 1, p_start_2 + 1)
     for j_4 = 1:A_lvl.shape
@@ -114,16 +114,16 @@ begin
         else
             w_lvl_i_stop = 0
         end
-        phase_stop_5 = min(A_lvl_2.shape, w_lvl_i_stop)
-        if phase_stop_5 >= 1
+        phase_stop_7 = min(A_lvl_2.shape, w_lvl_i_stop)
+        if phase_stop_7 >= 1
             i_2 = 1
             while w_lvl_r_3 + 1 < w_lvl_r_stop && last(w_lvl.srt[w_lvl_r_3]) < 1
                 w_lvl_r_3 += 1
             end
-            while i_2 <= phase_stop_5
+            while i_2 <= phase_stop_7
                 w_lvl_i_2 = last(w_lvl.srt[w_lvl_r_3])
-                phase_stop_6 = min(phase_stop_5, w_lvl_i_2)
-                if w_lvl_i_2 == phase_stop_6
+                phase_stop_8 = min(phase_stop_7, w_lvl_i_2)
+                if w_lvl_i_2 == phase_stop_8
                     w_lvl_q_3 = (1 - 1) * A_lvl_2.shape + w_lvl_i_2
                     w_lvl_2_val_2 = w_lvl_2.val[w_lvl_q_3]
                     if B_lvl_2_qos > B_lvl_2_qos_stop
@@ -133,11 +133,11 @@ begin
                         fill_range!(B_lvl_3.val, 0.0, B_lvl_2_qos, B_lvl_2_qos_stop)
                     end
                     B_lvl_3.val[B_lvl_2_qos] = w_lvl_2_val_2
-                    B_lvl_2.idx[B_lvl_2_qos] = phase_stop_6
+                    B_lvl_2.idx[B_lvl_2_qos] = phase_stop_8
                     B_lvl_2_qos += 1
                     w_lvl_r_3 += 1
                 end
-                i_2 = phase_stop_6 + 1
+                i_2 = phase_stop_8 + 1
             end
         end
         B_lvl_2.ptr[B_lvl_q + 1] = (B_lvl_2_qos - B_lvl_2_qos_fill) - 1

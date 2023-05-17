@@ -23,10 +23,11 @@ function virtualize(ex, ::Type{FinchNotation.SieveInstance{Cond, Body}}, ctx) wh
     body = virtualize(:($ex.body), Body, ctx)
     sieve(cond, body)
 end
-function virtualize(ex, ::Type{FinchNotation.LoopInstance{Idx, Body}}, ctx) where {Idx, Body}
+function virtualize(ex, ::Type{FinchNotation.LoopInstance{Idx, Ext, Body}}, ctx) where {Idx, Ext, Body}
     idx = virtualize(:($ex.idx), Idx, ctx)
+    ext = virtualize(:($ex.ext), Ext, ctx)
     body = virtualize(:($ex.body), Body, ctx)
-    loop(idx, body)
+    loop(idx, ext, body)
 end
 function virtualize(ex, ::Type{FinchNotation.AssignInstance{Lhs, Op, Rhs}}, ctx) where {Lhs, Op, Rhs}
     assign(virtualize(:($ex.lhs), Lhs, ctx), virtualize(:($ex.op), Op, ctx), virtualize(:($ex.rhs), Rhs, ctx))

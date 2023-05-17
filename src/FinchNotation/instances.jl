@@ -11,7 +11,7 @@ struct IndexInstance{name} <: FinchNodeInstance end
 
 @inline index_instance(name) = IndexInstance{name}()
 
-Base.show(io::IO, node::IndexInstance{name}) where {name} = print(io, "index_instance(:", name, ")")
+Base.show(io::IO, node::IndexInstance{name}) where {name} = print(io, "index_instance(", Symbol(name), ")")
 
 struct ProtocolInstance{Idx, Mode} <: FinchNodeInstance
 	idx::Idx
@@ -68,18 +68,18 @@ sequence_instance(bodies...) = SequenceInstance(bodies)
 
 Base.show(io::IO, node::SequenceInstance) = (print(io, "sequence_instance("); join(io, node.bodies, ", "); println(io, ")"))
 
-struct LoopInstance{Idx, Body} <: FinchNodeInstance
+struct LoopInstance{Idx, Ext, Body} <: FinchNodeInstance
 	idx::Idx
+	ext::Ext
 	body::Body
 end
 
-Base.:(==)(a::LoopInstance, b::LoopInstance) = a.idx == b.idx && a.body == b.body
+Base.:(==)(a::LoopInstance, b::LoopInstance) = a.idx == b.idx && a.ext == b.ext && a.body == b.body
 
-@inline loop_instance(idx, body) = LoopInstance(idx, body)
+@inline loop_instance(idx, ext, body) = LoopInstance(idx, ext, body)
 @inline loop_instance(body) = body
-@inline loop_instance(idx, args...) = LoopInstance(idx, loop_instance(args...))
 
-Base.show(io::IO, node::LoopInstance) = print(io, "loop_instance(", node.idx, ", ", node.body, ")")
+Base.show(io::IO, node::LoopInstance) = print(io, "loop_instance(", node.idx, ", ", node.ext, ", ", node.body, ")")
 
 struct SieveInstance{Cond, Body} <: FinchNodeInstance
 	cond::Cond

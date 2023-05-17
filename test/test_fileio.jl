@@ -43,8 +43,6 @@ using Pkg
             A_COO_fname = joinpath(f, "A_COO.bs")
             bswrite(A_COO_fname, A_COO)
             A_COO_test = bsread(A_COO_fname)
-            dump(A_COO_test)
-            dump(A_COO)
             @test isstructequal(A_COO_test, A_COO)
         end
     end

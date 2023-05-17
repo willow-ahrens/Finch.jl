@@ -17,6 +17,7 @@ using Base.Meta
             end
 
             @test check_output("format_representation_$key.txt", String(take!(io)))
+            print(String(take!(io)))
         end
     end
 
@@ -59,6 +60,9 @@ using Base.Meta
     test_format(vecs, name = "@fiber(sc{1}(e(zero))", key = "sc1_e") do arr
         dropdefaults!(Fiber!(SparseCOO{1}(Element(zero(eltype(arr))))), arr)
     end
+    test_format(vecs, name = "@fiber(st{1}(e(zero))", key = "st1_e") do arr
+        dropdefaults!(Fiber!(SparseTriangle{1}(Element(zero(eltype(arr))))), arr)
+    end
 
     mats = [
         fill(0.0, 5, 5),
@@ -90,6 +94,9 @@ using Base.Meta
     test_format(mats, name = "@fiber(d(sc{1}(e(zero)))", key = "d_sc1_e") do arr
         dropdefaults!(Fiber!(Dense(SparseCOO{1}(Element(zero(eltype(arr)))))), arr)
     end
+    test_format(mats, name = "@fiber(d(st{1}(e(zero)))", key = "d_st1_e") do arr
+        dropdefaults!(Fiber!(Dense(SparseTriangle{1}(Element(zero(eltype(arr)))))), arr)
+    end
 
     test_format(mats, name = "@fiber(sl(d(e(zero)))", key = "sl_d_e") do arr
         dropdefaults!(Fiber!(SparseList(Dense(Element(zero(eltype(arr)))))), arr)
@@ -111,5 +118,8 @@ using Base.Meta
     end
     test_format(mats, name = "@fiber(sl(sc{1}(e(zero)))", key = "sl_sc1_e") do arr
         dropdefaults!(Fiber!(SparseList(SparseCOO{1}(Element(zero(eltype(arr)))))), arr)
+    end
+    test_format(mats, name = "@fiber(sl(st{1}(e(zero)))", key = "sl_st_e") do arr
+        dropdefaults!(Fiber!(SparseList(SparseTriangle{1}(Element(zero(eltype(arr)))))), arr)
     end
 end

@@ -113,16 +113,20 @@ quote
                 x_var_val = X_lvl_2_val_2 * X_lvl_2_val_2 + x_var_val
                 X_lvl_q += 1
             else
-                x_max_val = max(0.0, x_max_val)
-                x_min_val = min(0.0, x_min_val)
+                cond_2 = 0 < 1 + -i + phase_stop_2
+                if cond_2
+                    x_max_val = max(0.0, x_max_val)
+                    x_min_val = min(0.0, x_min_val)
+                end
             end
             i = phase_stop_2 + 1
         end
         i = phase_stop + 1
     end
-    if X_lvl.shape >= i
-        cond_2 = 0 < X_lvl.shape + 1 + -i
-        if cond_2
+    phase_stop_3 = X_lvl.shape
+    if phase_stop_3 >= i
+        cond_3 = 0 < 1 + -i + phase_stop_3
+        if cond_3
             x_max_val = max(0.0, x_max_val)
             x_min_val = min(0.0, x_min_val)
         end
@@ -155,7 +159,7 @@ coiteration, breaking structured iterators into control flow units we call
 **Looplets**. Looplets are lowered progressively with
 several stages for rewriting and simplification.
 
-The technologies enabling Finch are described in our [manuscript](doi.org/10.1145/3579990.3580020).
+The technologies enabling Finch are described in our [manuscript](https://doi.org/10.1145/3579990.3580020).
 
 # Installation
 

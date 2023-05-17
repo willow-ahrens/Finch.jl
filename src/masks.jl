@@ -20,11 +20,11 @@ function get_reader(::DiagMask, ctx, protos...)
                 size = (nodim,),
                 body = (ctx, ext) -> Pipeline([
                     Phase(
-                        stride = (ctx, ext) -> value(:($(ctx(i)) - 1)),
+                        stop = (ctx, ext) -> value(:($(ctx(i)) - 1)),
                         body = (ctx, ext) -> Run(body=Fill(false))
                     ),
                     Phase(
-                        stride = (ctx, ext) -> i,
+                        stop = (ctx, ext) -> i,
                         body = (ctx, ext) -> Run(body=Fill(true)),
                     ),
                     Phase(body = (ctx, ext) -> Run(body=Fill(false)))
@@ -55,7 +55,7 @@ function get_reader(::UpTriMask, ctx, protos...)
                 size = (nodim,),
                 body = (ctx, ext) -> Pipeline([
                     Phase(
-                        stride = (ctx, ext) -> value(:($(ctx(i)))),
+                        stop = (ctx, ext) -> value(:($(ctx(i)))),
                         body = (ctx, ext) -> Run(body=Fill(true))
                     ),
                     Phase(
@@ -88,7 +88,7 @@ function get_reader(::LoTriMask, ctx, protos...)
                 size = (nodim,),
                 body = (ctx, ext) -> Pipeline([
                     Phase(
-                        stride = (ctx, ext) -> value(:($(ctx(i)) - 1)),
+                        stop = (ctx, ext) -> value(:($(ctx(i)) - 1)),
                         body = (ctx, ext) -> Run(body=Fill(false))
                     ),
                     Phase(
@@ -124,11 +124,11 @@ function get_reader(::BandMask, ctx, mode, protos...)
                         size = (nodim,),
                         body = (ctx, ext) -> Pipeline([
                             Phase(
-                                stride = (ctx, ext) -> value(:($(ctx(j)) - 1)),
+                                stop = (ctx, ext) -> value(:($(ctx(j)) - 1)),
                                 body = (ctx, ext) -> Run(body=Fill(false))
                             ),
                             Phase(
-                                stride = (ctx, ext) -> k,
+                                stop = (ctx, ext) -> k,
                                 body = (ctx, ext) -> Run(body=Fill(true))
                             ),
                             Phase(

@@ -80,14 +80,14 @@ using Finch: Cindex
         t = @fiber(sl(sl(e(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
         A = dropdefaults(copyto!(@fiber(sl(sl(e(0.0)))), B))
-        @test_throws Finch.FormatLimitation @finch MyAlgebra() (t .= 0; @loop i j t[i, j] = A[i, j])
+        @test_throws Finch.RewriteTools.RuleRewriteError @finch MyAlgebra() (t .= 0; @loop i j t[i, j] = A[i, j])
     end
 
     let
         t = @fiber(d(sl(e(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
         A = dropdefaults(copyto!(@fiber(d(sl(e(0.0)))), B))
-        @test_throws Finch.FormatLimitation @finch MyAlgebra() (t .= 0; @loop i j t[i, j] = A[i, j])
+        @test_throws Finch.RewriteTools.RuleRewriteError @finch MyAlgebra() (t .= 0; @loop i j t[i, j] = A[i, j])
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/129
@@ -232,6 +232,18 @@ using Finch: Cindex
         @test_throws ArgumentError @fiber(sc(e(0.0)))
         @test_throws ArgumentError @fiber(sh(e(0.0)))
         @test_throws ArgumentError @fiber(sl(e("hello")))
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/pull/197
+
+    let
+        io = IOBuffer()
+
+        @repl io A = @fiber(d(st{2}(e(0.0))), collect(reshape(1:27, 3, 3, 3)))
+        @repl io C = Scalar(0)
+        @repl io @finch @loop k j i C[] += A[i, j, k]
+
+        check_output("pull197.txt", String(take!(io)))
     end
 
 end

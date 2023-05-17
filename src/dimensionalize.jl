@@ -77,6 +77,8 @@ function dimensionalize!(prgm, ctx)
     prgm = Rewrite(Postwalk(x -> if x isa Dimensionalize x.body end))(prgm)
     dims = ctx.dims
     prgm = DeclareDimensions(ctx=ctx, dims = dims)(prgm, nodim)
+    #TODO after this point, we probably shouldn't read dims from ctx anymore,
+    #since the canonical loop bounds are in the program now.
     for k in keys(dims)
         dims[k] = cache_dim!(ctx, k, dims[k])
     end
@@ -94,6 +96,9 @@ function (ctx::DeclareDimensions)(node::FinchNode, dim)
         return node
     elseif node.kind === access && node.tns.kind === variable
         return declare_dimensions_access(node, ctx, node.tns, dim)
+    elseif node.kind === loop && node.ext == index(:(:))
+        body = ctx(node.body)
+        return loop(node.idx, cache_dim!(ctx.ctx, getname(node.idx), resolvedim(ctx.dims[getname(node.idx)])), body)
     elseif node.kind === sequence
         sequence(map(ctx, node.bodies)...)
     elseif node.kind === declare
@@ -206,35 +211,29 @@ combinedim(ctx, a::NoDimension, b) = b
 @kwdef struct Extent
     start
     stop
-    lower = literal(-Inf)
-    upper = literal(Inf)
 end
 
 FinchNotation.finch_leaf(x::Extent) = virtual(x)
 
 Base.:(==)(a::Extent, b::Extent) =
     a.start == b.start &&
-    a.stop == b.stop &&
-    a.lower == b.lower &&
-    a.upper == b.upper
+    a.stop == b.stop
 
-Extent(start, stop) = Extent(start, stop, literal(-Inf), literal(Inf))
+bound_below!(val, below) = cached(val, literal(call(max, val, below)))
+
+bound_above!(val, above) = cached(val, literal(call(min, val, above)))
+
+bound_measure_below!(ext::Extent, m) = Extent(ext.start, bound_below!(ext.stop, call(+, ext.start, m)))
+bound_measure_above!(ext::Extent, m) = Extent(ext.start, bound_above!(ext.stop, call(+, ext.start, m)))
 
 cache_dim!(ctx, var, ext::Extent) = Extent(
     start = cache!(ctx, Symbol(var, :_start), ext.start),
-    stop = cache!(ctx, Symbol(var, :_stop), ext.stop),
-    lower = cache!(ctx, Symbol(var, :_lower), ext.lower),
-    upper = cache!(ctx, Symbol(var, :_upper), ext.upper),
+    stop = cache!(ctx, Symbol(var, :_stop), ext.stop)
 )
 
 getstart(ext::Extent) = ext.start
 getstop(ext::Extent) = ext.stop
-getlower(ext::Extent) = ext.lower
-getupper(ext::Extent) = ext.upper
-measure(ext::Extent) = call(cached,
-    call(+, call(-, ext.stop, ext.start), 1),
-    call(min, call(max, call(+, call(-, ext.stop, ext.start), 1), ext.lower), ext.upper)
-)
+measure(ext::Extent) = call(+, call(-, ext.stop, ext.start), 1)
 
 function getstop(ext::FinchNode)
     if ext.kind === virtual
@@ -250,42 +249,11 @@ function getstart(ext::FinchNode)
         ext
     end
 end
-function getlower(ext::FinchNode)
-    if ext.kind === virtual
-        getlower(ext.val)
-    else
-        1
-    end
-end
-function getupper(ext::FinchNode)
-    if ext.kind === virtual
-        getupper(ext.val)
-    else
-        1
-    end
-end
-#=
-#TODO I don't like this def
-function measure(ext::FinchNode)
-    if ext.kind === virtual
-        extent(ext.val)
-    elseif ext.kind === value
-        return 1
-    elseif ext.kind === literal
-        return 1
-    else
-        error("unimplemented")
-    end
-end
-extent(ext::Integer) = 1
-=#
 
 combinedim(ctx, a::Extent, b::Extent) =
     Extent(
         start = checklim(ctx, a.start, b.start),
-        stop = checklim(ctx, a.stop, b.stop),
-        lower = simplify(@f(min($(a.lower), $(b.lower))), ctx),
-        upper = simplify(@f(min($(a.upper), $(b.upper))), ctx)
+        stop = checklim(ctx, a.stop, b.stop)
     )
 
 combinedim(ctx, a::NoDimension, b::Extent) = b
@@ -418,14 +386,8 @@ combinedim(ctx, a::Narrow, b::NoDimension) = a
 
 function combinedim(ctx, a::Narrow{<:Extent}, b::Narrow{<:Extent})
     Narrow(Extent(
-        start = simplify(@f(max($(getstart(a)), $(getstart(b)))), ctx),
-        stop = simplify(@f(min($(getstop(a)), $(getstop(b)))), ctx),
-        lower = if query(call(==, getstart(a), getstart(b)), ctx) || query(call(==, getstop(a), getstop(b)), ctx)
-            simplify(@f(min($(a.ext.lower), $(b.ext.lower))), ctx)
-        else
-            literal(0)
-        end,
-        upper = simplify(@f(min($(a.ext.upper), $(b.ext.upper))), ctx)
+        start = @f(max($(getstart(a)), $(getstart(b)))),
+        stop = @f(min($(getstop(a)), $(getstop(b))))
     ))
 end
 
@@ -435,14 +397,8 @@ combinedim(ctx, a::Widen, b::SuggestedExtent) = a
 
 function combinedim(ctx, a::Widen{<:Extent}, b::Widen{<:Extent})
     Widen(Extent(
-        start = simplify(@f(min($(getstart(a)), $(getstart(b)))), ctx),
-        stop = simplify(@f(max($(getstop(a)), $(getstop(b)))), ctx),
-        lower = simplify(@f(max($(a.ext.lower), $(b.ext.lower))), ctx),
-        upper = if query(call(==, getstart(a), getstart(b)), ctx) || query(call(==, getstop(a), getstop(b)), ctx)
-            simplify(@f(max($(a.ext.upper), $(b.ext.upper))), ctx)
-        else
-            simplify(@f($(a.ext.upper) + $(b.ext.upper)), ctx)
-        end,
+        start = @f(min($(getstart(a)), $(getstart(b)))),
+        stop = @f(max($(getstop(a)), $(getstop(b))))
     ))
 end
 

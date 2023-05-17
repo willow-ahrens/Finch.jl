@@ -6,7 +6,7 @@ end
 
 FinchNotation.finch_leaf(x::Jumper) = virtual(x)
 
-(ctx::Stylize{LowerJulia})(node::Jumper) = ctx.root.kind === chunk ? JumperStyle() : DefaultStyle()
+(ctx::Stylize{LowerJulia})(node::Jumper) = ctx.root.kind === loop ? JumperStyle() : DefaultStyle()
 
 combine_style(a::DefaultStyle, b::JumperStyle) = JumperStyle()
 combine_style(a::JumperStyle, b::JumperStyle) = JumperStyle()
@@ -19,7 +19,7 @@ combine_style(a::JumperStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::ThunkStyle, b::JumperStyle) = ThunkStyle()
 
 function (ctx::LowerJulia)(root::FinchNode, style::JumperStyle)
-    if root.kind === chunk
+    if root.kind === loop
         return lower_cycle(root, ctx, root.idx, root.ext, style)
     else
         error("unimplemented")
@@ -30,21 +30,21 @@ end
 
 @kwdef struct Jump
     seek = nothing
-    stride
+    stop
     body
     next = nothing
 end
 
 FinchNotation.finch_leaf(x::Jump) = virtual(x)
 
-(ctx::Stylize{LowerJulia})(node::Jump) = ctx.root.kind === chunk ? PhaseStyle() : DefaultStyle()
+(ctx::Stylize{LowerJulia})(node::Jump) = ctx.root.kind === loop ? PhaseStyle() : DefaultStyle()
 
-function (ctx::PhaseStride)(node::Jump)
-    push!(ctx.ctx.preamble, node.seek !== nothing ? node.seek(ctx.ctx, ctx.ext) : quote end)
-    Widen(Extent(getstart(ctx.ext), node.stride(ctx.ctx, ctx.ext)))
+function phase_range(node::Jump, ctx, ext)
+    push!(ctx.preamble, node.seek !== nothing ? node.seek(ctx, ext) : quote end)
+    Widen(Extent(getstart(ext), node.stop(ctx, ext)))
 end
 
-(ctx::PhaseBodyVisitor)(node::Jump) = node.body(ctx.ctx, ctx.ext, ctx.ext_2)
+phase_body(node::Jump, ctx, ext, ext_2) = node.body(ctx, ext, ext_2)
 
 supports_shift(::JumperStyle) = true
 

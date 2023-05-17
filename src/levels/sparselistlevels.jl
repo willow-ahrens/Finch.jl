@@ -9,7 +9,7 @@ slices are stored. Optionally, `dim` is the size of the last dimension.
 `Ti` is the type of the last fiber index, and `Tp` is the type used for
 positions in the level.
 
-In the [@fiber](@ref) constructor, `sl` is an alias for `SparseListLevel`.
+In the [`@fiber`](@ref) constructor, `sl` is an alias for `SparseListLevel`.
 
 ```jldoctest
 julia> @fiber(d(sl(e(0.0))), [10 0 20; 30 0 0; 0 0 40])
@@ -50,10 +50,10 @@ SparseListLevel{Ti, Tp, Lvl}(lvl, shape) where {Ti, Tp, Lvl} =
     SparseListLevel{Ti, Tp, Lvl}(lvl, Ti(shape), Tp[1], Ti[])
 
 """
-`f_code(l)` = [SparseListLevel](@ref).
+`fiber_abbrev(l)` = [`SparseListLevel`](@ref).
 """
-f_code(::Val{:sl}) = SparseList
-summary_f_code(lvl::SparseListLevel) = "sl($(summary_f_code(lvl.lvl)))"
+fiber_abbrev(::Val{:sl}) = SparseList
+summary_fiber_abbrev(lvl::SparseListLevel) = "sl($(summary_fiber_abbrev(lvl.lvl)))"
 similar_level(lvl::SparseListLevel) = SparseList(similar_level(lvl.lvl))
 similar_level(lvl::SparseListLevel, dim, tail...) = SparseList(similar_level(lvl.lvl, tail...), dim)
 
@@ -147,7 +147,7 @@ function (ctx::Finch.LowerJulia)(lvl::VirtualSparseListLevel)
     end
 end
 
-summary_f_code(lvl::VirtualSparseListLevel) = "sl($(summary_f_code(lvl.lvl)))"
+summary_fiber_abbrev(lvl::VirtualSparseListLevel) = "sl($(summary_fiber_abbrev(lvl.lvl)))"
 
 function virtual_level_size(lvl::VirtualSparseListLevel, ctx)
     ext = Extent(literal(lvl.Ti(1)), lvl.shape)
@@ -234,9 +234,9 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::Union{N
                     $my_i1 = $(Ti(0))
                 end
             end,
-            body = Pipeline([
+            body = (ctx) -> Pipeline([
                 Phase(
-                    stride = (ctx, ext) -> value(my_i1),
+                    stop = (ctx, ext) -> value(my_i1),
                     body = (ctx, ext) -> Stepper(
                         seek = (ctx, ext) -> quote
                             if $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
@@ -247,9 +247,9 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::Union{N
                             preamble = quote
                                 $my_i = $(lvl.ex).idx[$my_q]
                             end,
-                            body = Step(
-                                stride = (ctx, ext) -> value(my_i),
-                                chunk = Spike(
+                            body = (ctx) -> Step(
+                                stop = (ctx, ext) -> value(my_i),
+                                body = Spike(
                                     body = Fill(virtual_level_default(lvl)),
                                     tail = get_reader(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, protos...)
                                 ),
@@ -295,22 +295,22 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::Gallop,
                     $my_i1 = $(Ti(0))
                 end
             end,
-            body = Pipeline([
+            body = (ctx) -> Pipeline([
                 Phase(
-                    stride = (ctx, ext) -> value(my_i1),
+                    stop = (ctx, ext) -> value(my_i1),
                     body = (ctx, ext) -> Jumper(
                         body = Thunk(
-                            body = Jump(
+                            body = (ctx) -> Jump(
                                 seek = (ctx, ext) -> quote
                                     if $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
                                         $my_q = scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                                     end
                                     $my_i2 = $(lvl.ex).idx[$my_q]
                                 end,
-                                stride = (ctx, ext) -> value(my_i2),
+                                stop = (ctx, ext) -> value(my_i2),
                                 body = (ctx, ext, ext_2) -> Switch([
                                     value(:($(ctx(getstop(ext_2))) == $my_i2)) => Thunk(
-                                        body = Spike(
+                                        body = (ctx) -> Spike(
                                             body = Fill(virtual_level_default(lvl)),
                                             tail = get_reader(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, protos...),
                                         ),
@@ -328,9 +328,9 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::Gallop,
                                             preamble = :(
                                                 $my_i3 = $(lvl.ex).idx[$my_q]
                                             ),
-                                            body = Step(
-                                                stride = (ctx, ext) -> value(my_i3),
-                                                chunk = Spike(
+                                            body = (ctx) -> Step(
+                                                stop = (ctx, ext) -> value(my_i3),
+                                                body = Spike(
                                                     body = Fill(virtual_level_default(lvl)),
                                                     tail =  get_reader(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, protos...),
                                                 ),
@@ -372,7 +372,7 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseListLevel}, ctx, :
             preamble = quote
                 $qos = $qos_fill + 1
             end,
-            body = Lookup(
+            body = (ctx) -> Lookup(
                 body = (ctx, idx) -> Thunk(
                     preamble = quote
                         if $qos > $qos_stop
@@ -382,7 +382,7 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseListLevel}, ctx, :
                         end
                         $dirty = false
                     end,
-                    body = get_updater(VirtualTrackedSubFiber(lvl.lvl, value(qos, lvl.Tp), dirty), ctx, protos...),
+                    body = (ctx) -> get_updater(VirtualTrackedSubFiber(lvl.lvl, value(qos, lvl.Tp), dirty), ctx, protos...),
                     epilogue = quote
                         if $dirty
                             $(fbr.dirty) = true
