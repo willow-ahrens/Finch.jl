@@ -1,8 +1,6 @@
 module FinchNotation
     using RewriteTools, SyntaxInterface, AbstractTrees, Finch
 
-    using Finch: default
-
     export finch_leaf
     export literal
     export index
@@ -30,7 +28,7 @@ module FinchNotation
 
     export isliteral, isvalue, isconstant, isvirtual, isvariable
 
-    export getval
+    export getval, getname
 
     export overwrite, initwrite
 

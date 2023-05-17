@@ -179,7 +179,6 @@ abstract type AbstractPreSimplifyStyle end
 
 (ctx::Stylize{LowerJulia})(::Simplify) = SimplifyStyle()
 combine_style(a::DefaultStyle, b::AbstractPreSimplifyStyle) = b
-combine_style(a::ThunkStyle, b::SimplifyStyle) = ThunkStyle()
 combine_style(a::AbstractPreSimplifyStyle, b::AbstractPreSimplifyStyle) = a
 combine_style(a::SimplifyStyle, b::SimplifyStyle) = a
 

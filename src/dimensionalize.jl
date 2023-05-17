@@ -48,7 +48,6 @@ end
 
 (ctx::Stylize{LowerJulia})(node::Dimensionalize) = DimensionalizeStyle()
 combine_style(a::DefaultStyle, b::DimensionalizeStyle) = DimensionalizeStyle()
-combine_style(a::ThunkStyle, b::DimensionalizeStyle) = ThunkStyle()
 combine_style(a::DimensionalizeStyle, b::DimensionalizeStyle) = DimensionalizeStyle()
 
 """
@@ -68,22 +67,15 @@ See also: [`virtual_size`](@ref), [`virtual_resize`](@ref), [`combinedim`](@ref)
 """
 function (ctx::LowerJulia)(prgm, ::DimensionalizeStyle) 
     contain(ctx) do ctx_2
-        (prgm, dims) = dimensionalize!(prgm, ctx_2)
+        prgm = dimensionalize!(prgm, ctx_2)
         ctx_2(prgm)
     end
 end
 
 function dimensionalize!(prgm, ctx) 
     prgm = Rewrite(Postwalk(x -> if x isa Dimensionalize x.body end))(prgm)
-    dims = ctx.dims
-    prgm = DeclareDimensions(ctx=ctx, dims = dims)(prgm, nodim)
-    #TODO after this point, we probably shouldn't read dims from ctx anymore,
-    #since the canonical loop bounds are in the program now.
-    for k in keys(dims)
-        dims[k] = cache_dim!(ctx, k, dims[k])
-    end
-    ctx.dims = dims
-    return (prgm, dims)
+    prgm = DeclareDimensions(ctx=ctx)(prgm, nodim)
+    return prgm
 end
 
 function (ctx::DeclareDimensions)(node::Dimensionalize, dim)
@@ -92,13 +84,13 @@ end
 (ctx::DeclareDimensions)(node) = ctx(node, nodim)
 function (ctx::DeclareDimensions)(node::FinchNode, dim)
     if node.kind === index
-        ctx.dims[getname(node)] = resultdim(ctx.ctx, get(ctx.dims, getname(node), nodim), dim)
+        ctx.dims[node] = resultdim(ctx.ctx, get(ctx.dims, node, nodim), dim)
         return node
     elseif node.kind === access && node.tns.kind === variable
         return declare_dimensions_access(node, ctx, node.tns, dim)
     elseif node.kind === loop && node.ext == index(:(:))
         body = ctx(node.body)
-        return loop(node.idx, cache_dim!(ctx.ctx, getname(node.idx), resolvedim(ctx.dims[getname(node.idx)])), body)
+        return loop(node.idx, cache_dim!(ctx.ctx, getname(node.idx), resolvedim(ctx.dims[node.idx])), body)
     elseif node.kind === sequence
         sequence(map(ctx, node.bodies)...)
     elseif node.kind === declare
@@ -120,7 +112,7 @@ function (ctx::DeclareDimensions)(node::FinchNode, dim)
 end
 function (ctx::InferDimensions)(node::FinchNode)
     if node.kind === index
-        return (node, ctx.dims[getname(node)])
+        return (node, ctx.dims[node])
     elseif node.kind === access && node.mode.kind === updater && node.tns.kind === virtual
         return infer_dimensions_access(node, ctx, node.tns.val)
     elseif node.kind === access && node.mode.kind === updater && node.tns.kind === variable #TODO perhaps we can get rid of this
@@ -164,20 +156,6 @@ function infer_dimensions_access(node, ctx, tns)
     else
         (access(tns, node.mode, idxs...), virtual_elaxis(tns, ctx.ctx, shape...))
     end
-end
-
-virtual_elaxis(tns, ctx, dims...) = nodim
-
-function virtual_resize!(tns, ctx, dims...)
-    for (dim, ref) in zip(dims, virtual_size(tns, ctx))
-        if dim !== nodim && ref !== nodim #TODO this should be a function like checkdim or something haha
-            push!(ctx.preamble, quote
-                $(ctx(getstart(dim))) == $(ctx(getstart(ref))) || throw(DimensionMismatch("mismatched dimension start"))
-                $(ctx(getstop(dim))) == $(ctx(getstop(ref))) || throw(DimensionMismatch("mismatched dimension stop"))
-            end)
-        end
-    end
-    (tns, nodim)
 end
 
 struct UnknownDimension end
@@ -299,39 +277,6 @@ function checklim(ctx, a::FinchNode, b::FinchNode)
     end
 end
 
-"""
-    virtual_size(tns, ctx)
-
-Return a tuple of the dimensions of `tns` in the context `ctx` with access
-mode `mode`. This is a function similar in spirit to `Base.axes`.
-"""
-function virtual_size end
-
-virtual_size(tns, ctx, eldim) = virtual_size(tns, ctx)
-function virtual_size(tns::FinchNode, ctx, eldim = nodim)
-    if tns.kind === variable
-        return virtual_size(ctx.bindings[tns], ctx, eldim)
-    else
-        return error("unimplemented")
-    end
-end
-
-function virtual_elaxis(tns::FinchNode, ctx, dims...)
-    if tns.kind === variable
-        return virtual_elaxis(ctx.bindings[tns], ctx, dims...)
-    else
-        return error("unimplemented")
-    end
-end
-
-function virtual_resize!(tns::FinchNode, ctx, dims...)
-    if tns.kind === variable
-        return (ctx.bindings[tns], eldim) = virtual_resize!(ctx.bindings[tns], ctx, dims...)
-    else
-        error("unimplemented")
-    end
-end
-
 getstart(val) = val #TODO avoid generic definition here
 getstop(val) = val #TODO avoid generic herer
 
@@ -378,7 +323,6 @@ Base.:(==)(a::Widen, b::Widen) = a.ext == b.ext
 
 getstart(ext::Widen) = getstart(ext.ext)
 getstop(ext::Widen) = getstop(ext.ext)
-
 
 combinedim(ctx, a::Narrow, b::Extent) = resultdim(ctx, a, Narrow(b))
 combinedim(ctx, a::Narrow, b::SuggestedExtent) = a

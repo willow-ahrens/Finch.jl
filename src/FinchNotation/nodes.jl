@@ -529,18 +529,6 @@ function Base.getproperty(node::FinchNode, sym::Symbol)
     end
 end
 
-function Finch.getunbound(ex::FinchNode)
-    if ex.kind === index
-        return [ex]
-    elseif ex.kind === loop
-        return setdiff(union(getunbound(ex.body), getunbound(ex.ext)), getunbound(ex.idx))
-    elseif istree(ex)
-        return mapreduce(Finch.getunbound, union, arguments(ex), init=[])
-    else
-        return []
-    end
-end
-
 function Base.show(io::IO, node::FinchNode) 
     if node.kind === literal || node.kind === index || node.kind === variable || node.kind === virtual
         print(io, node.kind, "(", node.val, ")")
@@ -734,21 +722,9 @@ function Base.hash(a::FinchNode, h::UInt)
     end
 end
 
-function Finch.getname(x::FinchNode)
+function getname(x::FinchNode)
     if x.kind === index
         return x.val
-    else
-        error("unimplemented")
-    end
-end
-
-function Finch.setname(x::FinchNode, sym)
-    if x.kind === index
-        return index(sym)
-    elseif x.kind === variable
-        return variable(sym)
-    elseif x.kind === virtual
-        return Finch.setname(x.val, sym)
     else
         error("unimplemented")
     end

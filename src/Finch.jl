@@ -41,10 +41,10 @@ export default, AsArray
 
 include("util.jl")
 
-include("semantics.jl")
 include("FinchNotation/FinchNotation.jl")
 using .FinchNotation
 using .FinchNotation: and, or, InitWriter
+include("semantics.jl")
 include("virtualize.jl")
 include("style.jl")
 include("lower.jl")
@@ -52,6 +52,8 @@ include("dimensionalize.jl")
 
 include("symbolic/symbolic.jl")
 
+include("looplets/thunks.jl")
+include("looplets/lookups.jl")
 include("looplets/fills.jl")
 include("looplets/nulls.jl")
 include("looplets/shifts.jl")
@@ -66,25 +68,24 @@ include("looplets/jumpers.jl")
 include("looplets/steppers.jl")
 
 include("execute.jl")
-include("masks.jl")
-include("scalars.jl")
 
-include("fibers.jl")
-include("levels/sparselistlevels.jl")
-include("levels/sparsehashlevels.jl")
-include("levels/sparsecoolevels.jl")
-include("levels/sparsebytemaplevels.jl")
-include("levels/sparsevbllevels.jl")
-include("levels/denselevels.jl")
-include("levels/repeatrlelevels.jl")
-include("levels/elementlevels.jl")
-include("levels/patternlevels.jl")
-include("levels/raggedlevels.jl")
-include("levels/sparsetrianglelevels.jl")
+include("tensors/scalars.jl")
+include("tensors/fibers.jl")
+include("tensors/levels/sparselistlevels.jl")
+include("tensors/levels/sparsehashlevels.jl")
+include("tensors/levels/sparsecoolevels.jl")
+include("tensors/levels/sparsebytemaplevels.jl")
+include("tensors/levels/sparsevbllevels.jl")
+include("tensors/levels/denselevels.jl")
+include("tensors/levels/repeatrlelevels.jl")
+include("tensors/levels/elementlevels.jl")
+include("tensors/levels/patternlevels.jl")
+include("tensors/levels/raggedlevels.jl")
+include("tensors/levels/sparsetrianglelevels.jl")
+include("tensors/masks.jl")
+include("tensors/modifiers.jl")
 
 include("traits.jl")
-
-include("modifiers.jl")
 
 export fsparse, fsparse!, fsprand, fspzeros, ffindnz, countstored
 
