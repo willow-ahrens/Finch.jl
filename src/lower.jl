@@ -34,7 +34,6 @@ abstract type AbstractCompiler end
     modes::Dict{Any, Any} = Dict()
     scope = Set()
     epilogue::Vector{Any} = []
-    dims::Dict = Dict()
     freshen::Freshen = Freshen()
     shash = StaticHash()
     program_rules = get_program_rules(algebra, shash)

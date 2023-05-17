@@ -67,22 +67,15 @@ See also: [`virtual_size`](@ref), [`virtual_resize`](@ref), [`combinedim`](@ref)
 """
 function (ctx::LowerJulia)(prgm, ::DimensionalizeStyle) 
     contain(ctx) do ctx_2
-        (prgm, dims) = dimensionalize!(prgm, ctx_2)
+        prgm = dimensionalize!(prgm, ctx_2)
         ctx_2(prgm)
     end
 end
 
 function dimensionalize!(prgm, ctx) 
     prgm = Rewrite(Postwalk(x -> if x isa Dimensionalize x.body end))(prgm)
-    dims = ctx.dims
-    prgm = DeclareDimensions(ctx=ctx, dims = dims)(prgm, nodim)
-    #TODO after this point, we probably shouldn't read dims from ctx anymore,
-    #since the canonical loop bounds are in the program now.
-    for k in keys(dims)
-        dims[k] = cache_dim!(ctx, k, dims[k])
-    end
-    ctx.dims = dims
-    return (prgm, dims)
+    prgm = DeclareDimensions(ctx=ctx)(prgm, nodim)
+    return prgm
 end
 
 function (ctx::DeclareDimensions)(node::Dimensionalize, dim)

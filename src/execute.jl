@@ -15,8 +15,7 @@ function execute_code(ex, T, algebra = DefaultAlgebra())
                 prgm = ScopeVisitor()(prgm)
                 prgm = ThunkVisitor(ctx)(prgm) #TODO this is a bit of a hack.
                 prgm = close_scope(prgm, LifecycleVisitor())
-                (prgm, dims) = dimensionalize!(prgm, ctx)
-                ctx.dims = dims
+                prgm = dimensionalize!(prgm, ctx)
                 prgm = simplify(prgm, ctx)
                 #The following call separates tensor and index names from environment symbols.
                 #TODO we might want to keep the namespace around, and/or further stratify index
