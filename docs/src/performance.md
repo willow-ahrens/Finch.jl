@@ -21,10 +21,10 @@ levels of the fiber tree:
 A = @fiber(d(sl(e(0.0))), fsprand((5, 5), 0.5))
 s = Scalar(0.0)
 @finch for j=_, i=_ ; s[] += A[i, j] end
-(s = Scalar{0.0, Float64}(8.871309116994347),)
 
 # output
 
+(s = Scalar{0.0, Float64}(7.029314202520724),)
 ```
 
 We can investigate the generated code with `@finch_code`.  This code iterates
@@ -33,6 +33,9 @@ this takes `O(n + nnz)` time.
 
 ```jldoctest example1
 @finch_code for j=_, i=_ ; s[] += A[i, j] end
+
+# output
+
 quote
     s = ex.body.body.lhs.tns.tns
     s_val = s.val
@@ -68,9 +71,6 @@ quote
     end
     (s = (Scalar){0.0, Float64}(s_val),)
 end
-
-# output
-
 ```
 
 
@@ -86,6 +86,9 @@ Note the double for loop in the following code
 
 ```jldoctest example1
 @finch_code for i=_, j=_ ; s[] += A[i, j] end # DISCORDANT, DO NOT DO THIS
+
+# output
+
 quote
     s = ex.body.body.lhs.tns.tns
     s_val = s.val
@@ -123,9 +126,6 @@ quote
     end
     (s = (Scalar){0.0, Float64}(s_val),)
 end
-
-# output
-
 ```
 
 ### TL;DR
