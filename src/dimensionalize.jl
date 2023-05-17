@@ -48,7 +48,6 @@ end
 
 (ctx::Stylize{LowerJulia})(node::Dimensionalize) = DimensionalizeStyle()
 combine_style(a::DefaultStyle, b::DimensionalizeStyle) = DimensionalizeStyle()
-combine_style(a::ThunkStyle, b::DimensionalizeStyle) = ThunkStyle()
 combine_style(a::DimensionalizeStyle, b::DimensionalizeStyle) = DimensionalizeStyle()
 
 """

@@ -52,6 +52,8 @@ include("dimensionalize.jl")
 
 include("symbolic/symbolic.jl")
 
+include("looplets/thunks.jl")
+include("looplets/lookups.jl")
 include("looplets/fills.jl")
 include("looplets/nulls.jl")
 include("looplets/shifts.jl")
