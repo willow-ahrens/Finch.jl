@@ -18,13 +18,13 @@ concordant traversal of a sparse matrix, as the outer loops access the higher
 levels of the fiber tree:
 
 ```jldoctest example1; setup=:(using Finch)
-A = @fiber(d(sl(e(0.0))), fsprand((5, 5), 0.5))
+A = @fiber(d(sl(e(0.0))), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
 s = Scalar(0.0)
 @finch for j=_, i=_ ; s[] += A[i, j] end
 
 # output
 
-(s = Scalar{0.0, Float64}(7.029314202520724),)
+(s = Scalar{0.0, Float64}(16.5),)
 ```
 
 We can investigate the generated code with `@finch_code`.  This code iterates
