@@ -42,7 +42,6 @@ function (ctx::LowerJulia)(root::FinchNode, ::UnfurlStyle)
         @assert root.ext.kind === virtual
         ext = root.ext.val
         body = (UnfurlVisitor(ctx, idx, ext))(root.body)
-        #TODO add a simplify step here perhaps
         ctx(loop(
             idx,
             ext,
@@ -162,6 +161,17 @@ function unfurl_access(node, ctx, eldim, tns::Furlable)
         end
     end
     return node
+end
+
+#TODO this is a bit of a hack, it would be much better to somehow add a
+#statement like writes[] += 1 corresponding to tensor reads/writes that need to
+#be toplevel, enforcing only writing once by symbolically or at runtime checking
+#number of iterations.
+function get_point_body(tns::Furlable, ctx, ext, idx)
+    if tns.tight !== nothing && !query(call(==, measure(ext), 1), ctx)
+        throw(FormatLimitation("$(typeof(something(tns.tight))) does not support random access, must loop column major over output indices first."))
+    end
+    nothing
 end
 
 refurl(tns, ctx, mode) = tns

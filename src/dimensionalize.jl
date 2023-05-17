@@ -77,6 +77,8 @@ function dimensionalize!(prgm, ctx)
     prgm = Rewrite(Postwalk(x -> if x isa Dimensionalize x.body end))(prgm)
     dims = ctx.dims
     prgm = DeclareDimensions(ctx=ctx, dims = dims)(prgm, nodim)
+    #TODO after this point, we probably shouldn't read dims from ctx anymore,
+    #since the canonical loop bounds are in the program now.
     for k in keys(dims)
         dims[k] = cache_dim!(ctx, k, dims[k])
     end
@@ -96,7 +98,7 @@ function (ctx::DeclareDimensions)(node::FinchNode, dim)
         return declare_dimensions_access(node, ctx, node.tns, dim)
     elseif node.kind === loop && node.ext == index(:(:))
         body = ctx(node.body)
-        return loop(node.idx, ctx.dims[getname(node.idx)], body)
+        return loop(node.idx, cache_dim!(ctx, getname(node.idx), resolvedim(ctx.dims[getname(node.idx)])), body)
     elseif node.kind === sequence
         sequence(map(ctx, node.bodies)...)
     elseif node.kind === declare
