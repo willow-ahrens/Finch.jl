@@ -84,13 +84,13 @@ end
 (ctx::DeclareDimensions)(node) = ctx(node, nodim)
 function (ctx::DeclareDimensions)(node::FinchNode, dim)
     if node.kind === index
-        ctx.dims[getname(node)] = resultdim(ctx.ctx, get(ctx.dims, getname(node), nodim), dim)
+        ctx.dims[node] = resultdim(ctx.ctx, get(ctx.dims, node, nodim), dim)
         return node
     elseif node.kind === access && node.tns.kind === variable
         return declare_dimensions_access(node, ctx, node.tns, dim)
     elseif node.kind === loop && node.ext == index(:(:))
         body = ctx(node.body)
-        return loop(node.idx, cache_dim!(ctx.ctx, getname(node.idx), resolvedim(ctx.dims[getname(node.idx)])), body)
+        return loop(node.idx, cache_dim!(ctx.ctx, getname(node.idx), resolvedim(ctx.dims[node.idx])), body)
     elseif node.kind === sequence
         sequence(map(ctx, node.bodies)...)
     elseif node.kind === declare
@@ -112,7 +112,7 @@ function (ctx::DeclareDimensions)(node::FinchNode, dim)
 end
 function (ctx::InferDimensions)(node::FinchNode)
     if node.kind === index
-        return (node, ctx.dims[getname(node)])
+        return (node, ctx.dims[node])
     elseif node.kind === access && node.mode.kind === updater && node.tns.kind === virtual
         return infer_dimensions_access(node, ctx, node.tns.val)
     elseif node.kind === access && node.mode.kind === updater && node.tns.kind === variable #TODO perhaps we can get rid of this

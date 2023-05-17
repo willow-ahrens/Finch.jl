@@ -742,18 +742,6 @@ function Finch.getname(x::FinchNode)
     end
 end
 
-function Finch.setname(x::FinchNode, sym)
-    if x.kind === index
-        return index(sym)
-    elseif x.kind === variable
-        return variable(sym)
-    elseif x.kind === virtual
-        return Finch.setname(x.val, sym)
-    else
-        error("unimplemented")
-    end
-end
-
 display_expression(io, mime, ex) = show(IOContext(io, :compact=>true), mime, ex)
 
 """

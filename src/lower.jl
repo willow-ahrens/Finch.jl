@@ -252,7 +252,8 @@ function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
     elseif root.kind === cached
         return ctx(root.arg)
     elseif root.kind === loop
-        idx_sym = ctx.freshen(getname(root.idx))
+        @assert root.idx.kind === index
+        idx_sym = ctx.freshen(root.idx.name)
         body = contain(ctx) do ctx_2
             ctx_2.bindings[root.idx] = value(idx_sym)
             body_3 = Rewrite(Postwalk(

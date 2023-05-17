@@ -3,8 +3,7 @@
 """
     getunbound(stmt)
 
-Return an iterator over the names in an index expression that have yet to be
-bound.
+Return an iterator over the indices in a Finch program that have yet to be bound.
 ```julia
 julia> getunbound(@finch_program @loop i :a[i, j] += 2)
 [j]
@@ -25,13 +24,6 @@ of indices are used to distinguish the loops they reference.
 #TODO this function shouldn't exist
 """
 function getname end
-
-"""
-    setname(ex, name)
-
-Return a new expression, identical to `ex`, with the name `name`.
-"""
-function setname end
 
 """
     default(fbr)
