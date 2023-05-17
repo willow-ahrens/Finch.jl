@@ -1,5 +1,3 @@
-using Finch
-
 function pagerank(edges; nsteps=20, damp = 0.85)
     (n, m) = size(edges)
     @assert n == m
@@ -108,8 +106,9 @@ end
 
 # Inputs:
 #   edges: undirected adjacency matrix. Requires edges to be 1 and non-edges 0.
+#   Also requires graph to be symmetric
 # Output:
-#   number of triangles in graph
+#   number of triangles in graph. 
 function tricount(edges)
     (n, m) = size(edges)
     @assert n == m
@@ -124,7 +123,7 @@ function tricount(edges)
     end
 
     triangles = Scalar(0)
-    @finch @loop j k i triangles[] +=  L[i, k] * L[k, j] * edges[j, i]
+    @finch @loop j k i triangles[] += L[i, k] * L[k, j] * edges[j, i]
 
     return triangles[]
 end

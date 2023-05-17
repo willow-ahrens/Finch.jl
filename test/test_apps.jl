@@ -53,17 +53,19 @@ include(joinpath(@__DIR__, "../apps/apps.jl"))
 
         @testset "tricount" begin
             size, sparsity = 1000, 0.5
-            input = sprand(size, sparsity)
+            input = sprand(size, size, sparsity)
+            input = SparseMatrixCSC(Symmetric(input))
             
             graphs_input = SimpleDiGraph(input)
-            finch_input = @fiber(d(sl(e(0.0))), input)
+            finch_input = pattern!(@fiber(d(sl(e(0.0))), input))
         
             expected = sum(Graphs.triangles(graphs_input))
-            output = tricount(finch_input)
+            output = FinchApps.tricount(finch_input) * 6
             
             @test expected == output
         end
     end
+
     @testset "linalg" begin
         @testset "spgemm" begin
             m, n, k = (32, 32, 32)
