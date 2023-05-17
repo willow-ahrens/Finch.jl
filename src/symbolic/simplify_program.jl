@@ -12,8 +12,7 @@ function get_program_rules(alg, shash)
     return [
         (@rule call(~f::isliteral, ~a::(All(isliteral))...) => literal(getval(f)(getval.(a)...))),
 
-        (@rule loop(~i, sequence()) => sequence()),
-        (@rule chunk(~i, ~a, sequence()) => sequence()),
+        (@rule loop(~i, ~a, sequence()) => sequence()),
         (@rule sequence(~a..., sequence(~b...), ~c...) => sequence(a..., b..., c...)),
 
         (@rule call(~f::isassociative(alg), ~a..., call(~f, ~b...), ~c...) => call(f, a..., b..., c...)),
@@ -111,12 +110,12 @@ function get_program_rules(alg, shash)
         (@rule sieve(true, ~a) => a),
         (@rule sieve(false, ~a) => sequence()), #TODO should add back skipvisitor
 
-        (@rule chunk(~i, ~a::isvirtual, assign(access(~b, updater(~m), ~j...), ~f::isidempotent(alg), ~c)) => begin
+        (@rule loop(~i, ~a::isvirtual, assign(access(~b, updater(~m), ~j...), ~f::isidempotent(alg), ~c)) => begin
             if i ∉ j && i ∉ getunbound(c)
                 sieve(call(>, measure(a.val), 0), assign(access(b, updater(m), j...), f, c))
             end
         end),
-        (@rule chunk(~i, ~a::isvirtual, assign(access(~b, updater(~m), ~j...), +, ~d)) => begin
+        (@rule loop(~i, ~a::isvirtual, assign(access(~b, updater(~m), ~j...), +, ~d)) => begin
             if i ∉ j && i ∉ getunbound(d)
                 assign(access(b, updater(m), j...), +, call(*, measure(a.val), d))
             end
@@ -129,23 +128,23 @@ function get_program_rules(alg, shash)
         (@rule assign(~a, ~op, cached(~b, ~c)) => assign(a, op, b)),
 
         #TODO if we don't give loops extents, this rule is less general
-        (@rule chunk(~i, ~ext::isvirtual, assign(access(~a, ~m), $(literal(+)), ~b::isliteral)) =>
+        (@rule loop(~i, ~ext::isvirtual, assign(access(~a, ~m), $(literal(+)), ~b::isliteral)) =>
             assign(access(a, m), +, call(*, b, measure(ext.val)))
         ),
 
         #TODO if we don't give loops extents, this rule is less general
-        (@rule chunk(~i, ~ext::isvirtual, sequence(~s1..., assign(access(~a, ~m), $(literal(+)), ~b::isliteral), ~s2...)) => if ortho(a, s1) && ortho(a, s2)
-            sequence(assign(access(a, m), +, call(*, b, measure(ext.val))), loop(i, sequence(s1..., s2...)))
+        (@rule loop(~i, ~ext::isvirtual, sequence(~s1..., assign(access(~a, ~m), $(literal(+)), ~b::isliteral), ~s2...)) => if ortho(a, s1) && ortho(a, s2)
+            sequence(assign(access(a, m), +, call(*, b, measure(ext.val))), loop(i, ext, sequence(s1..., s2...)))
         end),
 
         #TODO if we don't give loops extents, this rule is less general
-        (@rule chunk(~i, ~ext, assign(access(~a, ~m), ~f::isidempotent(alg), ~b::isliteral)) =>
+        (@rule loop(~i, ~ext, assign(access(~a, ~m), ~f::isidempotent(alg), ~b::isliteral)) =>
             sieve(call(>, measure(ext.val), 0), assign(access(a, m), f, b))
         ),
 
         #TODO if we don't give loops extents, this rule is less general
-        (@rule chunk(~i, ~ext, sequence(~s1..., assign(access(~a, ~m), ~f::isidempotent(alg), ~b::isliteral), ~s2...)) => if ortho(a, s1) && ortho(a, s2)
-            sequence(sieve(call(>, measure(ext.val), 0), assign(access(a, m), f, b)), chunk(i, ext, sequence(s1..., s2...)))
+        (@rule loop(~i, ~ext, sequence(~s1..., assign(access(~a, ~m), ~f::isidempotent(alg), ~b::isliteral), ~s2...)) => if ortho(a, s1) && ortho(a, s2)
+            sequence(sieve(call(>, measure(ext.val), 0), assign(access(a, m), f, b)), loop(i, ext, sequence(s1..., s2...)))
         end),
 
         (@rule sequence(~s1..., assign(access(~a::isvariable, ~m), ~f::isabelian(alg), ~b), ~s2..., assign(access(~a, ~m), ~f, ~c), ~s3...) => if ortho(a, s2)

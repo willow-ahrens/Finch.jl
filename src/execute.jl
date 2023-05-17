@@ -173,8 +173,8 @@ function open_stmt(prgm, ctx::LifecycleVisitor)
 end
 
 function (ctx::LifecycleVisitor)(node::FinchNode)
-    if node.kind === loop
-        open_stmt(loop(node.idx, open_scope(node.body, ctx)), ctx)
+    if node.kind === loop 
+        open_stmt(loop(node.idx, ctx(node.ext), open_scope(node.body, ctx)), ctx)
     elseif node.kind === sieve
         open_stmt(sieve(ctx(node.cond), open_scope(node.body, ctx)), ctx)
     elseif node.kind === declare
@@ -211,7 +211,7 @@ end
 
 @kwdef struct ScopeVisitor
     freshen = Freshen()
-    vars = Dict()
+    vars = Dict(index(:(:)) => index(:(:)))
     scope = Set()
     global_scope = scope
 end
@@ -225,9 +225,9 @@ function open_scope(prgm, ctx::ScopeVisitor)
 end
 
 function (ctx::ScopeVisitor)(node::FinchNode)
-    if @capture node loop(~idx, ~body)
+    if @capture node loop(~idx, ~ext, ~body)
         ctx.vars[idx] = index(ctx.freshen(idx.name))
-        loop(ctx(idx), open_scope(body, ctx))
+        loop(ctx(idx), ctx(ext), open_scope(body, ctx))
     elseif @capture node sieve(~cond, ~body)
         sieve(ctx(cond), open_scope(body, ctx))
     elseif @capture node declare(~tns, ~init)

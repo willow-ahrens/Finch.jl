@@ -6,7 +6,7 @@ end
 
 FinchNotation.finch_leaf(x::Jumper) = virtual(x)
 
-(ctx::Stylize{LowerJulia})(node::Jumper) = ctx.root.kind === chunk ? JumperStyle() : DefaultStyle()
+(ctx::Stylize{LowerJulia})(node::Jumper) = ctx.root.kind === loop ? JumperStyle() : DefaultStyle()
 
 combine_style(a::DefaultStyle, b::JumperStyle) = JumperStyle()
 combine_style(a::JumperStyle, b::JumperStyle) = JumperStyle()
@@ -19,7 +19,7 @@ combine_style(a::JumperStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::ThunkStyle, b::JumperStyle) = ThunkStyle()
 
 function (ctx::LowerJulia)(root::FinchNode, style::JumperStyle)
-    if root.kind === chunk
+    if root.kind === loop
         return lower_cycle(root, ctx, root.idx, root.ext, style)
     else
         error("unimplemented")
@@ -37,7 +37,7 @@ end
 
 FinchNotation.finch_leaf(x::Jump) = virtual(x)
 
-(ctx::Stylize{LowerJulia})(node::Jump) = ctx.root.kind === chunk ? PhaseStyle() : DefaultStyle()
+(ctx::Stylize{LowerJulia})(node::Jump) = ctx.root.kind === loop ? PhaseStyle() : DefaultStyle()
 
 function phase_range(node::Jump, ctx, ext)
     push!(ctx.preamble, node.seek !== nothing ? node.seek(ctx, ext) : quote end)

@@ -277,7 +277,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Unio
                             ),
                             body = (ctx) -> Step(
                                 stop = (ctx, ext) -> value(my_i),
-                                chunk = Spike(
+                                body = Spike(
                                     body = Fill(virtual_level_default(lvl)),
                                     tail = Thunk(
                                         preamble = quote
@@ -367,7 +367,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Gall
                                             ),
                                             body = (ctx) -> Step(
                                                 stop = (ctx, ext) -> value(my_j),
-                                                chunk = Spike(
+                                                body = Spike(
                                                     body = Fill(virtual_level_default(lvl)),
                                                     tail = Thunk(
                                                         preamble = quote

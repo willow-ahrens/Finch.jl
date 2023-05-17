@@ -249,7 +249,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::Union{N
                             end,
                             body = (ctx) -> Step(
                                 stop = (ctx, ext) -> value(my_i),
-                                chunk = Spike(
+                                body = Spike(
                                     body = Fill(virtual_level_default(lvl)),
                                     tail = get_reader(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, protos...)
                                 ),
@@ -330,7 +330,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::Gallop,
                                             ),
                                             body = (ctx) -> Step(
                                                 stop = (ctx, ext) -> value(my_i3),
-                                                chunk = Spike(
+                                                body = Spike(
                                                     body = Fill(virtual_level_default(lvl)),
                                                     tail =  get_reader(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, protos...),
                                                 ),

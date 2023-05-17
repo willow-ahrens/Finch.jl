@@ -313,19 +313,12 @@ function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
     elseif root.kind === cached
         return ctx(root.arg)
     elseif root.kind === loop
-        ext = resolvedim(ctx.dims[getname(root.idx)])
-        return ctx(simplify(chunk(
-            root.idx,
-            ext,
-            ChunkifyVisitor(ctx, root.idx, ext)(root.body)),
-            ctx))
-    elseif root.kind === chunk
         idx_sym = ctx.freshen(getname(root.idx))
         body = contain(ctx) do ctx_2
             ctx_2.bindings[root.idx] = value(idx_sym)
             body_3 = Rewrite(Postwalk(
                 @rule access(~a::isvirtual, ~m, ~i..., ~j) => begin
-                    a_2 = get_point_body(a.val, ctx_2, value(idx_sym))
+                    a_2 = get_point_body(a.val, ctx_2, root.ext.val, value(idx_sym))
                     if a_2 != nothing
                         access(a_2, m, i...)
                     else
@@ -399,5 +392,5 @@ end
 
 FinchNotation.finch_leaf(x::Lookup) = virtual(x)
 
-get_point_body(node, ctx, idx) = nothing
-get_point_body(node::Lookup, ctx, idx) = node.body(ctx, idx)
+get_point_body(node, ctx, ext, idx) = nothing
+get_point_body(node::Lookup, ctx, ext, idx) = node.body(ctx, idx)
