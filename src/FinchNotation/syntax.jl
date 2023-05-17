@@ -141,6 +141,8 @@ function (ctx::FinchParserVisitor)(ex::Expr)
         else
             return ctx(:(@loop($idx = $ext, $(Expr(:for, Expr(:block, tail...), body)))))
         end
+    elseif @capture ex :macrocall($(Symbol("@loop")), ~ln::islinenum, ~body)
+        ctx(body)
     elseif @capture ex :macrocall($(Symbol("@loop")), ~ln::islinenum, ~idx, ~tail..., ~body)
         if !(@capture idx :(=)(~idx, ~ext))
             ext = :_
