@@ -26,6 +26,11 @@ function pagerank(edges; nsteps=20, damp = 0.85)
     return r
 end
 
+# Inputs:
+#   edges: directed, unweighted adjacency matrix
+#   source: index of source node
+# Outputs:
+#   P: list of parents where P[i] is the parent node of i in some shortest path
 function bfs(edges, source=5)
     (n, m) = size(edges)
     edges = pattern!(edges)
@@ -107,7 +112,7 @@ function bellmanford(edges, source=1)
 end
 
 # Inputs:
-#   edges: undirected adjacency matrix. Requires edges to be 1 and non-edges 0.
+#   edges: undirected adjacency matrix.
 # Output:
 #   number of triangles in graph
 function tricount(edges)
@@ -118,13 +123,98 @@ function tricount(edges)
     L = @fiber d(sl(e(0), n), n)
     @finch begin
         L .= 0
-        @loop j begin
-            @loop i L[i,j] = lotrimask[i,j+1] * edges[i,j]
-        end
+        @loop j i L[i,j] = (lotrimask[i,j+1] * edges[i,j] != 0)
     end
 
     triangles = Scalar(0)
-    @finch @loop j k i triangles[] +=  L[i, k] * L[k, j] * edges[j, i]
+    @finch @loop j k i triangles[] += (L[i, k] * L[k, j] * edges[j, i] != 0)
 
     return triangles[]
+end
+
+# Inputs:
+#   edges: directed adjacency matrix.
+# Output:
+#   centrality: list of betweenness centrality scores indexed by node
+function brandes_bc(edges, sources=[])
+    (n, m) = size(edges)
+    @assert n == m
+
+    centrality = @fiber(d(e(0.0), n))
+    if size(sources) == (0,)
+        source = 1:n
+    end
+
+    for source in sources
+        #initializations
+        parents = @fiber(d(sbm(p(), n), n))
+
+        num_paths = @fiber(d(e(0), n))
+        @finch num_paths[source] = 1
+        num_paths_update = @fiber(d(e(0), n))
+
+        visited = @fiber(sbm(p(), n))
+        @finch visited[source] = true
+        active = @fiber(sbm(p(), n))
+
+        queue = @fiber(sbm(p(), n))
+        @finch queue[source] = true
+
+        stack = @fiber(d(sbm(p(), n), n))
+        @finch stack[source, 1] = true
+        iter = 1
+
+        # Run BFS to find parent nodes in all shortest paths
+        while countstored(queue) > 0
+            # Traverse to neighbors of nodes in queue, compute updates, and mark as active
+            iter += 1
+            @finch begin
+                num_paths_update .= 0
+                active .= false
+                @loop j begin #loop neighbors j of i (i is parent of j)
+                    if !visited[j]
+                        @loop i begin
+                            if queue[i] * edges[i, j] != 0
+                                parents[i, j] = true
+                                num_paths_update[j] += num_paths[i]
+                                active[j] = true
+                            end
+                        end
+                    end
+                end
+            end
+            # Apply updates to visited, num_paths, queue, and stack
+            @finch @loop j begin
+                visited[j] |= active[j]
+                stack[j, iter] |= active[j]
+                num_paths[j] += num_paths_update[j]
+            end
+            (queue, active) = (active, queue)
+        end
+        
+        delta = @fiber(d(e(0.0), n))
+        delta_update = @fiber(d(e(0.0), n))
+        if iter-1 < 3
+            continue
+        end
+
+        # Update centrality scores
+        for dist = iter-1:-1:3 #skip parents of source
+            @finch begin
+                delta_update .= 0.0
+                @loop i begin
+                    if stack[i, dist] 
+                        @loop j begin             
+                            if parents[j, i] #i on stack and j is parent of i
+                                delta_update[j] += (num_paths[j]/num_paths[i]) * (1 + delta[i])
+                            end
+                        end
+                    end
+                end
+            end
+            @finch @loop j delta[j] += delta_update[j]
+        end
+        @finch @loop i centrality[i] += delta[i]
+    end
+    return centrality
 end

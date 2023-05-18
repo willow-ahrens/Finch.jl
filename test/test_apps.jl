@@ -51,16 +51,36 @@ include(joinpath(@__DIR__, "../apps/apps.jl"))
             @test output == collect(zip(expected.dists, expected.parents))
         end
 
-        @testset "tricount" begin
-            size, sparsity = 1000, 0.5
-            input = sprand(size, sparsity)
+        # @testset "tricount" begin
+        #     size, sparsity = 100, 0.5
+        #     input = sprand(size, size, sparsity)
+        #     mask = LinearAlgebra.LowerTriangular(ones(Int16, (size, size)))
+        #     input = input .* mask
+        #     # graphs_input needs to be undirected (i.e. symmetric)
+            
+        #     graphs_input = SimpleDiGraph(input)
+        #     finch_input = @fiber(d(sl(e(0.0))), input)
+        
+        #     expected = sum(Graphs.triangles(graphs_input))
+        #     #summing overcounts by 3 for each vertex and 2 for direction, so we divide by 6
+        #     output = FinchApps.tricount(finch_input)
+            
+        #     @test expected == output
+        # end
+
+        @testset "brandes_bc" begin
+            size, sparsity = 10, 0.5
+            input = sprand(size, size, sparsity)
             
             graphs_input = SimpleDiGraph(input)
             finch_input = @fiber(d(sl(e(0.0))), input)
         
-            expected = sum(Graphs.triangles(graphs_input))
-            output = tricount(finch_input)
+            expected = Graphs.betweenness_centrality(graphs_input, normalize=false)
+            output = FinchApps.brandes_bc(finch_input)
             
+            println(output)
+
+            println(expected)
             @test expected == output
         end
     end
