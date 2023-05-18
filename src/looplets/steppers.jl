@@ -12,7 +12,7 @@ end
 
 FinchNotation.finch_leaf(x::Stepper) = virtual(x)
 
-(ctx::Stylize{LowerJulia})(node::Stepper) = ctx.root.kind === chunk ? StepperStyle() : DefaultStyle()
+(ctx::Stylize{LowerJulia})(node::Stepper) = ctx.root.kind === loop ? StepperStyle() : DefaultStyle()
 
 combine_style(a::DefaultStyle, b::StepperStyle) = StepperStyle()
 combine_style(a::StepperStyle, b::PipelineStyle) = PipelineStyle()
@@ -27,7 +27,7 @@ combine_style(a::StepperStyle, b::JumperStyle) = JumperStyle()
 combine_style(a::StepperStyle, b::PhaseStyle) = PhaseStyle()
 
 function (ctx::LowerJulia)(root::FinchNode, style::StepperStyle)
-    if root.kind === chunk
+    if root.kind === loop
         return lower_cycle(root, ctx, root.idx, root.ext, style)
     else
         error("unimplemented")
@@ -41,27 +41,26 @@ end
 
 @kwdef struct Step
     stop
+    body
     next = (ctx, ext) -> quote end
-    chunk = nothing
-    body = (ctx, ext, ext_2) -> Switch([
-        value(:($(ctx(stop(ctx, ext))) == $(ctx(getstop(ext_2))))) => Thunk(
-            body = (ctx) -> truncate_weak(chunk, ctx, ext, ext_2),
-            epilogue = next(ctx, ext_2)
-        ),
-        literal(true) => 
-            truncate_strong(chunk, ctx, ext, ext_2),
-        ])
 end
 
 FinchNotation.finch_leaf(x::Step) = virtual(x)
 
-(ctx::Stylize{LowerJulia})(node::Step) = ctx.root.kind === chunk ? PhaseStyle() : DefaultStyle()
+(ctx::Stylize{LowerJulia})(node::Step) = ctx.root.kind === loop ? PhaseStyle() : DefaultStyle()
 
 function phase_range(node::Step, ctx, ext)
-    s = node.stop(ctx, ctx)
-    Narrow(Extent(start = getstart(ext), stop = call(cached, s, call(max, s, call(+, getstart(ext), 1))), lower = literal(1)))
+    Narrow(bound_measure_below!(Extent(getstart(ext), node.stop(ctx, ext)), literal(1)))
 end
 
-phase_body(node::Step, ctx, ext, ext_2) = node.body(ctx, ext, ext_2)
+phase_body(node::Step, ctx, ext, ext_2) =
+    Switch([
+        value(:($(ctx(node.stop(ctx, ext))) == $(ctx(getstop(ext_2))))) => Thunk(
+            body = (ctx) -> truncate(node.body, ctx, ext, Extent(getstart(ext_2), getstop(ext))),
+            epilogue = node.next(ctx, ext_2)
+        ),
+        literal(true) => 
+            truncate(node.body, ctx, ext, Extent(getstart(ext_2), bound_above!(getstop(ext_2), call(-, getstop(ext), 1)))),
+        ])
 
 supports_shift(::StepperStyle) = true

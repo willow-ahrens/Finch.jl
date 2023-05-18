@@ -39,7 +39,7 @@ struct PhaseStyle end
 
 supports_shift(::PhaseStyle) = true
 
-(ctx::Stylize{LowerJulia})(node::Phase) = ctx.root.kind === chunk ? PhaseStyle() : DefaultStyle()
+(ctx::Stylize{LowerJulia})(node::Phase) = ctx.root.kind === loop ? PhaseStyle() : DefaultStyle()
 
 combine_style(a::DefaultStyle, b::PhaseStyle) = PhaseStyle()
 combine_style(a::PhaseStyle, b::PhaseStyle) = PhaseStyle()
@@ -51,33 +51,40 @@ combine_style(a::SwitchStyle, b::PhaseStyle) = SwitchStyle()
 combine_style(a::ThunkStyle, b::PhaseStyle) = ThunkStyle()
 
 function (ctx::LowerJulia)(root::FinchNode, ::PhaseStyle)
-    if root.kind === chunk
+    if root.kind === loop
         i = getname(root.idx)
         i0=ctx.freshen(i)
 
         body = root.body
 
         ext_2 = resolvedim(mapreduce((node)->phase_range(node, ctx, root.ext), (a, b) -> resultdim(ctx, a, b), PostOrderDFS(body), init=nodim))
-        ext_2 = cache_dim!(ctx, :phase, resolvedim(resultdim(ctx, Narrow(root.ext), ext_2)))
 
-        body = Rewrite(Postwalk(node->phase_body(node, ctx, root.ext, ext_2)))(body)
+        ext_3 = resolvedim(resultdim(ctx, Narrow(root.ext), ext_2))
+
+        #if query(call(==, getstart(ext_3), getstart(ext_2)), ctx) && query(call(==, getstop(ext_3), getstop(ext_2)), ctx)
+        #    ext_3 = ext_2
+        #end
+
+        ext_4 = cache_dim!(ctx, :phase, ext_3)
+
+        body = Rewrite(Postwalk(node->phase_body(node, ctx, root.ext, ext_4)))(body)
         body = quote
             $i0 = $i
             $(contain(ctx) do ctx_4
-                (ctx_4)(chunk(
+                (ctx_4)(loop(
                     root.idx,
-                    ext_2,
+                    ext_4,
                     body
                 ))
             end)
-            $i = $(ctx(getstop(ext_2))) + $(Int8(1))
+            $i = $(ctx(getstop(ext_4))) + $(Int8(1))
         end
 
-        if query(call(>, measure(ext_2), 0), ctx)
+        if query(call(>=, measure(ext_4), 1), ctx)
             return body
         else
             return quote
-                if $(ctx(getstop(ext_2))) >= $(ctx(getstart(ext_2)))
+                if $(ctx(getstop(ext_4))) >= $(ctx(getstart(ext_4)))
                     $body
                 end
             end

@@ -24,14 +24,14 @@ enum is used to differentiate which kind of node is represented.
     modify   =  9ID | IS_TREE
     create   = 10ID | IS_TREE
     call     = 11ID | IS_TREE
-    assign   = 12ID | IS_TREE | IS_STATEFUL
-    loop     = 15ID | IS_TREE | IS_STATEFUL
-    chunk    = 16ID | IS_TREE | IS_STATEFUL
+    cached   = 12ID | IS_TREE
+    assign   = 13ID | IS_TREE | IS_STATEFUL
+    loop     = 16ID | IS_TREE | IS_STATEFUL
     sieve    = 17ID | IS_TREE | IS_STATEFUL
     declare  = 20ID | IS_TREE | IS_STATEFUL
     thaw     = 21ID | IS_TREE | IS_STATEFUL
     freeze   = 22ID | IS_TREE | IS_STATEFUL
-    forget  = 23ID | IS_TREE | IS_STATEFUL
+    forget   = 23ID | IS_TREE | IS_STATEFUL
     sequence = 24ID | IS_TREE | IS_STATEFUL
 end
 
@@ -57,6 +57,13 @@ virtual
 Finch AST expression for the literal value `val`.
 """
 literal
+
+"""
+    cached(val, ref)
+
+Finch AST expression `val`, equivalent to the quoted expression `ref`
+"""
+cached
 
 """
     index(name)
@@ -131,19 +138,12 @@ Finch AST expression for the result of calling the function `op` on `args...`.
 call
 
 """
-    loop(idxs..., body) 
-
-Finch AST statement that runs `body` for each value of `idxs...`.
-"""
-loop
-
-"""
-    chunk(idx, ext, body) 
+    loop(idx, ext, body) 
 
 Finch AST statement that runs `body` for each value of `idx` in `ext`. Tensors
-in `body` must have ranges that agree with `ext`. This is an internal node.
+in `body` must have ranges that agree with `ext`.
 """
-chunk
+loop
 
 """
     sieve(cond, body)
@@ -302,6 +302,12 @@ function FinchNode(kind::FinchNodeKind, args::Vector)
         else
             error("wrong number of arguments to $kind(...)")
         end
+    elseif kind === cached
+        if length(args) == 2
+            return FinchNode(kind, nothing, nothing, args)
+        else
+            error("wrong number of arguments to $kind(...)")
+        end
     elseif kind === access
         if length(args) >= 2
             return FinchNode(access, nothing, nothing, args)
@@ -321,16 +327,10 @@ function FinchNode(kind::FinchNodeKind, args::Vector)
             error("wrong number of arguments to call(...)")
         end
     elseif kind === loop
-        if length(args) == 2
+        if length(args) == 3
             return FinchNode(loop, nothing, nothing, args)
         else
             error("wrong number of arguments to loop(...)")
-        end
-    elseif kind === chunk
-        if length(args) == 3
-            return FinchNode(chunk, nothing, nothing, args)
-        else
-            error("wrong number of arguments to chunk(...)")
         end
     elseif kind === sieve
         if length(args) == 2
@@ -456,15 +456,15 @@ function Base.getproperty(node::FinchNode, sym::Symbol)
         else
             error("type FinchNode(protocol, ...) has no property $sym")
         end
-    elseif node.kind === loop
-        if sym === :idx
+    elseif node.kind === cached
+        if sym === :arg
             return node.children[1]
-        elseif sym === :body
+        elseif sym === :ref
             return node.children[2]
         else
-            error("type FinchNode(loop, ...) has no property $sym")
+            error("type FinchNode(cached, ...) has no property $sym")
         end
-    elseif node.kind === chunk
+    elseif node.kind === loop
         if sym === :idx
             return node.children[1]
         elseif sym === :ext
@@ -472,7 +472,7 @@ function Base.getproperty(node::FinchNode, sym::Symbol)
         elseif sym === :body
             return node.children[3]
         else
-            error("type FinchNode(chunk, ...) has no property $sym")
+            error("type FinchNode(loop, ...) has no property $sym")
         end
     elseif node.kind === sieve
         if sym === :cond
@@ -529,20 +529,6 @@ function Base.getproperty(node::FinchNode, sym::Symbol)
     end
 end
 
-function Finch.getunbound(ex::FinchNode)
-    if ex.kind === index
-        return [ex]
-    elseif ex.kind === loop
-        return setdiff(getunbound(ex.body), getunbound(ex.idx))
-    elseif ex.kind === chunk
-        return setdiff(union(getunbound(ex.body), getunbound(ex.ext)), getunbound(ex.idx))
-    elseif istree(ex)
-        return mapreduce(Finch.getunbound, union, arguments(ex), init=[])
-    else
-        return []
-    end
-end
-
 function Base.show(io::IO, node::FinchNode) 
     if node.kind === literal || node.kind === index || node.kind === variable || node.kind === virtual
         print(io, node.kind, "(", node.val, ")")
@@ -580,8 +566,10 @@ function display_expression(io, mime, node::FinchNode)
         print(io, "reader()")
     elseif node.kind === updater
         print(io, "updater(")
-        display_expression(io, node.mode)
+        display_expression(io, mime, node.mode)
         print(io, ")")
+    elseif node.kind === cached
+        display_expression(io, mime, node.arg)
     elseif node.kind === virtual
         print(io, "virtual(")
         print(io, node.val)
@@ -628,19 +616,13 @@ function display_statement(io, mime, node::FinchNode, level)
         print(io, tab^level * "@∀ ")
         while node.kind === loop
             display_expression(io, mime, node.idx)
+            print(io, " = ")
+            display_expression(io, mime, node.ext)
             print(io," ")
             node = node.body
         end
-        print(io,"(\n")
-        display_statement(io, mime, node, level + 1)
-        print(io, tab^level * ")")
-    elseif node.kind === chunk
-        print(io, tab^level * "@∀ ")
-        display_expression(io, mime, node.idx)
-        print(io, " : ")
-        display_expression(io, mime, node.ext)
         print(io," (\n")
-        display_statement(io, mime, node.body, level + 1)
+        display_statement(io, mime, node, level + 1)
         print(io, tab^level * ")")
     elseif node.kind === sieve
         print(io, tab^level * "if ")
@@ -740,21 +722,9 @@ function Base.hash(a::FinchNode, h::UInt)
     end
 end
 
-function Finch.getname(x::FinchNode)
+function getname(x::FinchNode)
     if x.kind === index
         return x.val
-    else
-        error("unimplemented")
-    end
-end
-
-function Finch.setname(x::FinchNode, sym)
-    if x.kind === index
-        return index(sym)
-    elseif x.kind === variable
-        return variable(sym)
-    elseif x.kind === virtual
-        return Finch.setname(x.val, sym)
     else
         error("unimplemented")
     end

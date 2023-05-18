@@ -34,10 +34,10 @@ abstract type AbstractCompiler end
     modes::Dict{Any, Any} = Dict()
     scope = Set()
     epilogue::Vector{Any} = []
-    dims::Dict = Dict()
     freshen::Freshen = Freshen()
     shash = StaticHash()
-    rules = getrules(algebra, shash)
+    program_rules = get_program_rules(algebra, shash)
+    bounds_rules = get_bounds_rules(algebra, shash)
 end
 
 struct StaticHash
@@ -78,8 +78,7 @@ function cache!(ctx, var, val)
     push!(ctx.preamble, quote
         $var = $(contain(ctx_2 -> ctx_2(val), ctx))
     end)
-    ctx.bindings[var] = val
-    return value(var, Any)
+    return cached(value(var, Any), literal(val))
 end
 
 function resolve(var, ctx::LowerJulia)
@@ -118,68 +117,8 @@ function contain(f, ctx::LowerJulia)
             $res
         end
     end
-
 end
 
-struct ThunkStyle end
-
-@kwdef struct Thunk
-    preamble = quote end
-    body
-    epilogue = quote end
-end
-FinchNotation.finch_leaf(x::Thunk) = virtual(x)
-
-Base.show(io::IO, ex::Thunk) = Base.show(io, MIME"text/plain"(), ex)
-function Base.show(io::IO, mime::MIME"text/plain", ex::Thunk)
-    print(io, "Thunk()")
-end
-
-(ctx::Stylize{LowerJulia})(node::Thunk) = ThunkStyle()
-combine_style(a::DefaultStyle, b::ThunkStyle) = ThunkStyle()
-combine_style(a::ThunkStyle, b::ThunkStyle) = ThunkStyle()
-
-struct ThunkVisitor
-    ctx
-end
-
-function (ctx::ThunkVisitor)(node)
-    if istree(node)
-        similarterm(node, operation(node), map(ctx, arguments(node)))
-    else
-        node
-    end
-end
-
-function (ctx::LowerJulia)(node, ::ThunkStyle)
-    contain(ctx) do ctx2
-        node = (ThunkVisitor(ctx2))(node)
-        contain(ctx2) do ctx3
-            (ctx3)(node)
-        end
-    end
-end
-
-function (ctx::ThunkVisitor)(node::FinchNode)
-    if node.kind === virtual
-        ctx(node.val)
-    elseif node.kind === access && node.tns.kind === virtual
-        #TODO this case morally shouldn't exist
-        thunk_access(node, ctx, node.tns.val)
-    elseif istree(node)
-        similarterm(node, operation(node), map(ctx, arguments(node)))
-    else
-        node
-    end
-end
-
-thunk_access(node, ctx, tns) = similarterm(node, operation(node), map(ctx, arguments(node)))
-
-function (ctx::ThunkVisitor)(node::Thunk)
-    push!(ctx.ctx.preamble, node.preamble)
-    push!(ctx.ctx.epilogue, node.epilogue)
-    node.body(ctx.ctx)
-end
 
 """
     InstantiateTensors(ctx)
@@ -307,25 +246,19 @@ function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
             else
                 reduce((x, y) -> :($x || $y), map(ctx, root.args))
             end
-        elseif root.op == literal(cached)
-            return ctx(root.args[1])
         else
             :($(ctx(root.op))($(map(ctx, root.args)...)))
         end
+    elseif root.kind === cached
+        return ctx(root.arg)
     elseif root.kind === loop
-        ext = resolvedim(ctx.dims[getname(root.idx)])
-        return ctx(simplify(chunk(
-            root.idx,
-            ext,
-            ChunkifyVisitor(ctx, root.idx, ext)(root.body)),
-            ctx))
-    elseif root.kind === chunk
-        idx_sym = ctx.freshen(getname(root.idx))
+        @assert root.idx.kind === index
+        idx_sym = ctx.freshen(root.idx.name)
         body = contain(ctx) do ctx_2
             ctx_2.bindings[root.idx] = value(idx_sym)
             body_3 = Rewrite(Postwalk(
                 @rule access(~a::isvirtual, ~m, ~i..., ~j) => begin
-                    a_2 = get_point_body(a.val, ctx_2, value(idx_sym))
+                    a_2 = get_point_body(a.val, ctx_2, root.ext.val, value(idx_sym))
                     if a_2 != nothing
                         access(a_2, m, i...)
                     else
@@ -388,16 +321,4 @@ function lowerjulia_access(ctx, node, tns::Number)
     tns
 end
 
-@kwdef struct Lookup
-    body
-end
-
-Base.show(io::IO, ex::Lookup) = Base.show(io, MIME"text/plain"(), ex)
-function Base.show(io::IO, mime::MIME"text/plain", ex::Lookup)
-    print(io, "Lookup()")
-end
-
-FinchNotation.finch_leaf(x::Lookup) = virtual(x)
-
-get_point_body(node, ctx, idx) = nothing
-get_point_body(node::Lookup, ctx, idx) = node.body(ctx, idx)
+get_point_body(node, ctx, ext, idx) = nothing

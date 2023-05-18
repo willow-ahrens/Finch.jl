@@ -48,7 +48,6 @@ end
 
 (ctx::Stylize{LowerJulia})(node::Dimensionalize) = DimensionalizeStyle()
 combine_style(a::DefaultStyle, b::DimensionalizeStyle) = DimensionalizeStyle()
-combine_style(a::ThunkStyle, b::DimensionalizeStyle) = ThunkStyle()
 combine_style(a::DimensionalizeStyle, b::DimensionalizeStyle) = DimensionalizeStyle()
 
 """
@@ -68,20 +67,15 @@ See also: [`virtual_size`](@ref), [`virtual_resize`](@ref), [`combinedim`](@ref)
 """
 function (ctx::LowerJulia)(prgm, ::DimensionalizeStyle) 
     contain(ctx) do ctx_2
-        (prgm, dims) = dimensionalize!(prgm, ctx_2)
+        prgm = dimensionalize!(prgm, ctx_2)
         ctx_2(prgm)
     end
 end
 
 function dimensionalize!(prgm, ctx) 
     prgm = Rewrite(Postwalk(x -> if x isa Dimensionalize x.body end))(prgm)
-    dims = ctx.dims
-    prgm = DeclareDimensions(ctx=ctx, dims = dims)(prgm, nodim)
-    for k in keys(dims)
-        dims[k] = cache_dim!(ctx, k, dims[k])
-    end
-    ctx.dims = dims
-    return (prgm, dims)
+    prgm = DeclareDimensions(ctx=ctx)(prgm, nodim)
+    return prgm
 end
 
 function (ctx::DeclareDimensions)(node::Dimensionalize, dim)
@@ -90,10 +84,13 @@ end
 (ctx::DeclareDimensions)(node) = ctx(node, nodim)
 function (ctx::DeclareDimensions)(node::FinchNode, dim)
     if node.kind === index
-        ctx.dims[getname(node)] = resultdim(ctx.ctx, get(ctx.dims, getname(node), nodim), dim)
+        ctx.dims[node] = resultdim(ctx.ctx, get(ctx.dims, node, nodim), dim)
         return node
     elseif node.kind === access && node.tns.kind === variable
         return declare_dimensions_access(node, ctx, node.tns, dim)
+    elseif node.kind === loop && node.ext == index(:(:))
+        body = ctx(node.body)
+        return loop(node.idx, cache_dim!(ctx.ctx, getname(node.idx), resolvedim(ctx.dims[node.idx])), body)
     elseif node.kind === sequence
         sequence(map(ctx, node.bodies)...)
     elseif node.kind === declare
@@ -115,7 +112,7 @@ function (ctx::DeclareDimensions)(node::FinchNode, dim)
 end
 function (ctx::InferDimensions)(node::FinchNode)
     if node.kind === index
-        return (node, ctx.dims[getname(node)])
+        return (node, ctx.dims[node])
     elseif node.kind === access && node.mode.kind === updater && node.tns.kind === virtual
         return infer_dimensions_access(node, ctx, node.tns.val)
     elseif node.kind === access && node.mode.kind === updater && node.tns.kind === variable #TODO perhaps we can get rid of this
@@ -161,20 +158,6 @@ function infer_dimensions_access(node, ctx, tns)
     end
 end
 
-virtual_elaxis(tns, ctx, dims...) = nodim
-
-function virtual_resize!(tns, ctx, dims...)
-    for (dim, ref) in zip(dims, virtual_size(tns, ctx))
-        if dim !== nodim && ref !== nodim #TODO this should be a function like checkdim or something haha
-            push!(ctx.preamble, quote
-                $(ctx(getstart(dim))) == $(ctx(getstart(ref))) || throw(DimensionMismatch("mismatched dimension start"))
-                $(ctx(getstop(dim))) == $(ctx(getstop(ref))) || throw(DimensionMismatch("mismatched dimension stop"))
-            end)
-        end
-    end
-    (tns, nodim)
-end
-
 struct UnknownDimension end
 
 resultdim(ctx, a, b, c, tail...) = resultdim(ctx, a, resultdim(ctx, b, c, tail...))
@@ -206,35 +189,29 @@ combinedim(ctx, a::NoDimension, b) = b
 @kwdef struct Extent
     start
     stop
-    lower = literal(-Inf)
-    upper = literal(Inf)
 end
 
 FinchNotation.finch_leaf(x::Extent) = virtual(x)
 
 Base.:(==)(a::Extent, b::Extent) =
     a.start == b.start &&
-    a.stop == b.stop &&
-    a.lower == b.lower &&
-    a.upper == b.upper
+    a.stop == b.stop
 
-Extent(start, stop) = Extent(start, stop, literal(-Inf), literal(Inf))
+bound_below!(val, below) = cached(val, literal(call(max, val, below)))
+
+bound_above!(val, above) = cached(val, literal(call(min, val, above)))
+
+bound_measure_below!(ext::Extent, m) = Extent(ext.start, bound_below!(ext.stop, call(+, ext.start, m)))
+bound_measure_above!(ext::Extent, m) = Extent(ext.start, bound_above!(ext.stop, call(+, ext.start, m)))
 
 cache_dim!(ctx, var, ext::Extent) = Extent(
     start = cache!(ctx, Symbol(var, :_start), ext.start),
-    stop = cache!(ctx, Symbol(var, :_stop), ext.stop),
-    lower = cache!(ctx, Symbol(var, :_lower), ext.lower),
-    upper = cache!(ctx, Symbol(var, :_upper), ext.upper),
+    stop = cache!(ctx, Symbol(var, :_stop), ext.stop)
 )
 
 getstart(ext::Extent) = ext.start
 getstop(ext::Extent) = ext.stop
-getlower(ext::Extent) = ext.lower
-getupper(ext::Extent) = ext.upper
-measure(ext::Extent) = call(cached,
-    call(+, call(-, ext.stop, ext.start), 1),
-    call(min, call(max, call(+, call(-, ext.stop, ext.start), 1), ext.lower), ext.upper)
-)
+measure(ext::Extent) = call(+, call(-, ext.stop, ext.start), 1)
 
 function getstop(ext::FinchNode)
     if ext.kind === virtual
@@ -250,42 +227,11 @@ function getstart(ext::FinchNode)
         ext
     end
 end
-function getlower(ext::FinchNode)
-    if ext.kind === virtual
-        getlower(ext.val)
-    else
-        1
-    end
-end
-function getupper(ext::FinchNode)
-    if ext.kind === virtual
-        getupper(ext.val)
-    else
-        1
-    end
-end
-#=
-#TODO I don't like this def
-function measure(ext::FinchNode)
-    if ext.kind === virtual
-        extent(ext.val)
-    elseif ext.kind === value
-        return 1
-    elseif ext.kind === literal
-        return 1
-    else
-        error("unimplemented")
-    end
-end
-extent(ext::Integer) = 1
-=#
 
 combinedim(ctx, a::Extent, b::Extent) =
     Extent(
         start = checklim(ctx, a.start, b.start),
-        stop = checklim(ctx, a.stop, b.stop),
-        lower = simplify(@f(min($(a.lower), $(b.lower))), ctx),
-        upper = simplify(@f(min($(a.upper), $(b.upper))), ctx)
+        stop = checklim(ctx, a.stop, b.stop)
     )
 
 combinedim(ctx, a::NoDimension, b::Extent) = b
@@ -328,39 +274,6 @@ function checklim(ctx, a::FinchNode, b::FinchNode)
         a
     else
         b
-    end
-end
-
-"""
-    virtual_size(tns, ctx)
-
-Return a tuple of the dimensions of `tns` in the context `ctx` with access
-mode `mode`. This is a function similar in spirit to `Base.axes`.
-"""
-function virtual_size end
-
-virtual_size(tns, ctx, eldim) = virtual_size(tns, ctx)
-function virtual_size(tns::FinchNode, ctx, eldim = nodim)
-    if tns.kind === variable
-        return virtual_size(ctx.bindings[tns], ctx, eldim)
-    else
-        return error("unimplemented")
-    end
-end
-
-function virtual_elaxis(tns::FinchNode, ctx, dims...)
-    if tns.kind === variable
-        return virtual_elaxis(ctx.bindings[tns], ctx, dims...)
-    else
-        return error("unimplemented")
-    end
-end
-
-function virtual_resize!(tns::FinchNode, ctx, dims...)
-    if tns.kind === variable
-        return (ctx.bindings[tns], eldim) = virtual_resize!(ctx.bindings[tns], ctx, dims...)
-    else
-        error("unimplemented")
     end
 end
 
@@ -411,21 +324,14 @@ Base.:(==)(a::Widen, b::Widen) = a.ext == b.ext
 getstart(ext::Widen) = getstart(ext.ext)
 getstop(ext::Widen) = getstop(ext.ext)
 
-
 combinedim(ctx, a::Narrow, b::Extent) = resultdim(ctx, a, Narrow(b))
 combinedim(ctx, a::Narrow, b::SuggestedExtent) = a
 combinedim(ctx, a::Narrow, b::NoDimension) = a
 
 function combinedim(ctx, a::Narrow{<:Extent}, b::Narrow{<:Extent})
     Narrow(Extent(
-        start = simplify(@f(max($(getstart(a)), $(getstart(b)))), ctx),
-        stop = simplify(@f(min($(getstop(a)), $(getstop(b)))), ctx),
-        lower = if query(call(==, getstart(a), getstart(b)), ctx) || query(call(==, getstop(a), getstop(b)), ctx)
-            simplify(@f(min($(a.ext.lower), $(b.ext.lower))), ctx)
-        else
-            literal(0)
-        end,
-        upper = simplify(@f(min($(a.ext.upper), $(b.ext.upper))), ctx)
+        start = @f(max($(getstart(a)), $(getstart(b)))),
+        stop = @f(min($(getstop(a)), $(getstop(b))))
     ))
 end
 
@@ -435,14 +341,8 @@ combinedim(ctx, a::Widen, b::SuggestedExtent) = a
 
 function combinedim(ctx, a::Widen{<:Extent}, b::Widen{<:Extent})
     Widen(Extent(
-        start = simplify(@f(min($(getstart(a)), $(getstart(b)))), ctx),
-        stop = simplify(@f(max($(getstop(a)), $(getstop(b)))), ctx),
-        lower = simplify(@f(max($(a.ext.lower), $(b.ext.lower))), ctx),
-        upper = if query(call(==, getstart(a), getstart(b)), ctx) || query(call(==, getstop(a), getstop(b)), ctx)
-            simplify(@f(max($(a.ext.upper), $(b.ext.upper))), ctx)
-        else
-            simplify(@f($(a.ext.upper) + $(b.ext.upper)), ctx)
-        end,
+        start = @f(min($(getstart(a)), $(getstart(b)))),
+        stop = @f(max($(getstop(a)), $(getstop(b))))
     ))
 end
 

@@ -1,5 +1,9 @@
-using Finch
+"""
+    pagerank(adj; [nsteps], [damp])
 
+Calculate `nsteps` steps of the page rank algorithm on the graph specified by
+the adjacency matrix `adj`. `damp` is the damping factor.
+"""
 function pagerank(edges; nsteps=20, damp = 0.85)
     (n, m) = size(edges)
     @assert n == m
@@ -26,11 +30,12 @@ function pagerank(edges; nsteps=20, damp = 0.85)
     return r
 end
 
-# Inputs:
-#   edges: directed, unweighted adjacency matrix
-#   source: index of source node
-# Outputs:
-#   P: list of parents where P[i] is the parent node of i in some shortest path
+"""
+    bfs(edges; [source])
+
+Calculate a breadth-first search on the graph specified by the `edges` adjacency
+matrix. Return the node numbering.
+"""
 function bfs(edges, source=5)
     (n, m) = size(edges)
     edges = pattern!(edges)
@@ -67,11 +72,15 @@ function bfs(edges, source=5)
 end
 
 
-# Inputs:
-#   edges: 2D matrix of edge weights with Inf for unconnected edges
-#   source: vertex to start
-# Output:
-#   dists: an array of tuples (d, n) where d is the shortest distance and n the parent node in the path
+"""
+    bellmanford(adj, source=1)
+
+Calculate the shortest paths from the vertex `source` in the graph specified by
+an adjacency matrix `adj`, whose entries are edge weights. Weights should be
+infinite when unconnected.
+
+The output is given as a vector of distance, parent pairs for each node in the graph.
+"""
 function bellmanford(edges, source=1)
     (n, m) = size(edges)
     @assert n == m
@@ -111,10 +120,12 @@ function bellmanford(edges, source=1)
     return dists_prev
 end
 
-# Inputs:
-#   edges: undirected adjacency matrix.
-# Output:
-#   number of triangles in graph
+"""
+    tricount(adj)
+
+Count the number of triangles in the graph specified by `adj`, which is assumed to be
+symmetric. Requires edges to be 1 and non-edges 0.
+"""
 function tricount(edges)
     (n, m) = size(edges)
     @assert n == m

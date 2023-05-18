@@ -246,9 +246,9 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Union{No
                                 $my_i_start = $my_i - ($my_q_stop - $(lvl.ex).ofs[$my_r])
                                 $my_q_ofs = $my_q_stop - $my_i - $(Tp(1))
                             end,
-                            body = (ctx) -> Step(
+                            body = (ctx) -> Phase(
                                 stop = (ctx, ext) -> value(my_i),
-                                body = (ctx, ext, ext_2) -> Thunk(
+                                body = (ctx, ext) -> Thunk(
                                     body = (ctx) -> Pipeline([
                                         Phase(
                                             stop = (ctx, ext) -> value(my_i_start),
@@ -266,7 +266,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Union{No
                                         )
                                     ]),
                                     epilogue = quote
-                                        $my_r += ($(ctx(getstop(ext_2))) == $my_i)
+                                        $my_r += ($(ctx(getstop(ext))) == $my_i)
                                     end
                                 )
                             )
@@ -287,6 +287,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Gallop, 
     Tp = lvl.Tp
     Ti = lvl.Ti
     my_i = ctx.freshen(tag, :_i)
+    my_j = ctx.freshen(tag, :_j)
     my_i_start = ctx.freshen(tag, :_i)
     my_r = ctx.freshen(tag, :_r)
     my_r_stop = ctx.freshen(tag, :_r_stop)
@@ -360,14 +361,14 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Gallop, 
                                         end,
                                         body = Thunk(
                                             preamble = quote
-                                                $my_i = $(lvl.ex).idx[$my_r]
+                                                $my_j = $(lvl.ex).idx[$my_r]
                                                 $my_q_stop = $(lvl.ex).ofs[$my_r + $(Tp(1))]
-                                                $my_i_start = $my_i - ($my_q_stop - $(lvl.ex).ofs[$my_r])
-                                                $my_q_ofs = $my_q_stop - $my_i - $(Tp(1))
+                                                $my_i_start = $my_j - ($my_q_stop - $(lvl.ex).ofs[$my_r])
+                                                $my_q_ofs = $my_q_stop - $my_j - $(Tp(1))
                                             end,
-                                            body = (ctx) -> Step(
-                                                stop = (ctx, ext) -> value(my_i),
-                                                body = (ctx, ext, ext_2) -> Thunk(
+                                            body = (ctx) -> Phase(
+                                                stop = (ctx, ext) -> value(my_j),
+                                                body = (ctx, ext) -> Thunk(
                                                     body = (ctx) -> Pipeline([
                                                         Phase(
                                                             stop = (ctx, ext) -> value(my_i_start),
@@ -385,7 +386,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Gallop, 
                                                         )
                                                     ]),
                                                     epilogue = quote
-                                                        $my_r += ($(ctx(getstop(ext_2))) == $my_i)
+                                                        $my_r += ($(ctx(getstop(ext))) == $my_j)
                                                     end
                                                 )
                                             )

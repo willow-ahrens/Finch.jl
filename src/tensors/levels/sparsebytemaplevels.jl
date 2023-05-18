@@ -277,7 +277,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Unio
                             ),
                             body = (ctx) -> Step(
                                 stop = (ctx, ext) -> value(my_i),
-                                chunk = Spike(
+                                body = Spike(
                                     body = Fill(virtual_level_default(lvl)),
                                     tail = Thunk(
                                         preamble = quote
@@ -311,6 +311,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Gall
     my_r = ctx.freshen(tag, :_r)
     my_r_stop = ctx.freshen(tag, :_r_stop)
     my_i_stop = ctx.freshen(tag, :_i_stop)
+    my_j = ctx.freshen(tag, :_j)
 
     Furlable(
         size = virtual_level_size(lvl, ctx),
@@ -362,15 +363,15 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Gall
                                         end,
                                         body = Thunk(
                                             preamble = :(
-                                                $my_i = last($(lvl.ex).srt[$my_r])
+                                                $my_j = last($(lvl.ex).srt[$my_r])
                                             ),
                                             body = (ctx) -> Step(
-                                                stop = (ctx, ext) -> value(my_i),
-                                                chunk = Spike(
+                                                stop = (ctx, ext) -> value(my_j),
+                                                body = Spike(
                                                     body = Fill(virtual_level_default(lvl)),
                                                     tail = Thunk(
                                                         preamble = quote
-                                                            $my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $my_i
+                                                            $my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $my_j
                                                         end,
                                                         body = (ctx) -> get_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, protos...),
                                                     ),

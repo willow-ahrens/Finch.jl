@@ -25,7 +25,7 @@ supports_shift(style) = false
 supports_shift(::DefaultStyle) = true
 (ctx::Stylize{LowerJulia})(node::Shift) = (@assert supports_shift(ctx(node.body)) "$(ctx(node.body))"; ctx(node.body))
 
-get_point_body(node::Shift, ctx, idx) = get_point_body(node.body, ctx, call(-, idx, node.delta))
+get_point_body(node::Shift, ctx, ext, idx) = get_point_body(node.body, ctx, shiftdim(ext, node.delta), call(-, idx, node.delta))
 
 supports_shift(::ThunkStyle) = true
 (ctx::ThunkVisitor)(node::Shift) = Shift(;kwfields(node)..., body = ctx(node.body))
@@ -33,9 +33,7 @@ supports_shift(::ThunkStyle) = true
 function shiftdim(ext::Extent, delta)
     Extent(
         start = call(+, ext.start, delta),
-        stop = call(+, ext.stop, delta),
-        lower = ext.lower,
-        upper = ext.upper
+        stop = call(+, ext.stop, delta)
     )
 end
 
@@ -53,5 +51,3 @@ end
 
 
 truncate(node::Shift, ctx, ext, ext_2) = Shift(truncate(node.body, ctx, shiftdim(ext, node.delta), shiftdim(ext_2, node.delta)), node.delta)
-truncate_weak(node::Shift, ctx, ext, ext_2) = Shift(truncate_weak(node.body, ctx, shiftdim(ext, node.delta), shiftdim(ext_2, node.delta)), node.delta)
-truncate_strong(node::Shift, ctx, ext, ext_2) = Shift(truncate_strong(node.body, ctx, shiftdim(ext, node.delta), shiftdim(ext_2, node.delta)), node.delta)

@@ -279,7 +279,7 @@ function get_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, R, start, stop, 
                                 end,
                                 body = (ctx) -> Step(
                                     stop =  (ctx, ext) -> value(my_i),
-                                    chunk = Spike(
+                                    body = Spike(
                                         body = Fill(virtual_level_default(lvl)),
                                         tail = get_reader(VirtualSubFiber(lvl.lvl, my_q), ctx, protos...),
                                     ),
@@ -299,7 +299,7 @@ function get_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, R, start, stop, 
                                 end,
                                 body = (ctx) -> Step(
                                     stop = (ctx, ext) -> value(my_i),
-                                    chunk = Spike(
+                                    body = Spike(
                                         body = Fill(virtual_level_default(lvl)),
                                         tail = get_reader_coo_helper(lvl, ctx, R - 1, value(my_q, lvl.Ti), value(my_q_step, lvl.Ti), protos...),
                                     ),

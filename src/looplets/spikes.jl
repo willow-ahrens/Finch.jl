@@ -14,7 +14,7 @@ FinchNotation.finch_leaf(x::Spike) = virtual(x)
 
 struct SpikeStyle end
 
-(ctx::Stylize{LowerJulia})(node::Spike) = ctx.root.kind === chunk ? SpikeStyle() : DefaultStyle()
+(ctx::Stylize{LowerJulia})(node::Spike) = ctx.root.kind === loop ? SpikeStyle() : DefaultStyle()
 combine_style(a::DefaultStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::RunStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::ThunkStyle, b::SpikeStyle) = ThunkStyle()
@@ -23,7 +23,7 @@ combine_style(a::AcceptRunStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::SpikeStyle, b::SpikeStyle) = SpikeStyle()
 
 function (ctx::LowerJulia)(root::FinchNode, ::SpikeStyle)
-    if root.kind === chunk
+    if root.kind === loop
         body_ext = Extent(getstart(root.ext), call(-, getstop(root.ext), 1))
         root_body = Rewrite(Postwalk(
             @rule access(~a::isvirtual, ~i...) => access(get_spike_body(a.val, ctx, root.ext, body_ext), ~i...)
@@ -34,7 +34,7 @@ function (ctx::LowerJulia)(root::FinchNode, ::SpikeStyle)
         else
             #TODO check body nonempty
             body_expr = contain(ctx) do ctx_2
-                (ctx_2)(chunk(
+                (ctx_2)(loop(
                     root.idx,
                     body_ext,
                     root_body,
@@ -46,7 +46,7 @@ function (ctx::LowerJulia)(root::FinchNode, ::SpikeStyle)
             @rule access(~a::isvirtual, ~i...) => access(get_spike_tail(a.val, ctx, root.ext, tail_ext), ~i...)
         ))(root.body)
         tail_expr = contain(ctx) do ctx_2
-            (ctx_2)(chunk(
+            (ctx_2)(loop(
                 root.idx,
                 tail_ext,
                 root_tail,
@@ -77,10 +77,14 @@ get_spike_tail(node::Shift, ctx, ext, ext_2) = Shift(
 supports_shift(::SpikeStyle) = true
 
 function truncate(node::Spike, ctx, ext, ext_2)
-    return Switch([
-        value(:($(ctx(getstop(ext_2))) < $(ctx(getstop(ext))))) => Run(node.body),
-        literal(true) => node,
-    ])
+    if query(call(>=, call(-, getstop(ext), 1), getstop(ext_2)), ctx)
+        Run(node.body)
+    elseif query(call(==, getstop(ext), getstop(ext_2)), ctx)
+        node
+    else
+        return Switch([
+            value(:($(ctx(getstop(ext_2))) < $(ctx(getstop(ext))))) => Run(node.body),
+            literal(true) => node,
+        ])
+    end
 end
-truncate_weak(node::Spike, ctx, ext, ext_2) = node
-truncate_strong(node::Spike, ctx, ext, ext_2) = Run(node.body)

@@ -162,7 +162,7 @@ function virtual_simplex(d, ctx, n)
 end
 
 is_laminable_updater(lvl::VirtualSparseTriangleLevel, ctx, ::Union{Nothing, Laminate, Extrude}, protos...) =
-    is_laminable_updater(lvl.lvl, ctx, protos...)
+    is_laminable_updater(lvl.lvl, ctx, protos[lvl.N + 1:end]...)
 
 
 get_reader(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, protos...) = get_reader_triangular_dense_helper(fbr, ctx, get_reader, VirtualSubFiber, protos...)
