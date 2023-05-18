@@ -134,26 +134,27 @@ function tricount(edges)
     L = @fiber d(sl(e(0), n), n)
     @finch begin
         L .= 0
-        @loop j i L[i,j] = (lotrimask[i,j+1] * edges[i,j] != 0)
+        @loop j i L[i,j] = (lotrimask[i,j+1] * edges[i,j])
     end
 
     triangles = Scalar(0)
-    @finch @loop j k i triangles[] += (L[i, k] * L[k, j] * edges[j, i] != 0)
+    @finch @loop j k i triangles[] += (L[i, k] * L[k, j] * edges[j, i])
 
     return triangles[]
 end
 
-# Inputs:
-#   edges: directed adjacency matrix.
-# Output:
-#   centrality: list of betweenness centrality scores indexed by node
+"""
+    brandes_bc(adj,sources)
+
+Computes the betweenness centrality of all nodes taking paths starting at the given sources
+"""
 function brandes_bc(edges, sources=[])
     (n, m) = size(edges)
     @assert n == m
 
     centrality = @fiber(d(e(0.0), n))
     if size(sources) == (0,)
-        source = 1:n
+        sources = 1:n
     end
 
     for source in sources
