@@ -128,8 +128,7 @@ quote
 end
 ```
 
-### TL;DR
-As a quick heuristic, if your array indices are all in alphabetical order, then
+TL;DR: As a quick heuristic, if your array indices are all in alphabetical order, then
 the loop indices should be reverse alphabetical.
 
 ## Appropriate Fill Values
@@ -201,27 +200,24 @@ the meaning of `*`.
 ```jldoctest example1
 A = @fiber(d(sl(e(0.0))), fsparse(([2, 3, 4, 1, 3], [1, 1, 1, 3, 3]), [1.1, 2.2, 3.3, 4.4, 5.5], (4, 3)))
 B = ones(4, 3)
-C = @fiber(d(sl(e(0.0))))
+C = Scalar(0.0)
 f(x, y) = x * y # DO NOT DO THIS, Obscures *
-@finch (C .= 0; for j=_, i=_; C[i, j] = f(A[i, j], B[i, j]) end)
-countstored(C)
+@finch (C .= 0; for j=_, i=_; C[] += f(A[i, j], B[i, j]) end)
 
 # output
 
-12
+(C = Scalar{0.0, Float64}(16.5),)
 ```
 
 Checking the generated code, we see that this code is indeed densifying (notice the for-loop which repeatedly evaluates `f(B[i, j], 0.0)`).
 
 ```jldoctest example1
-@finch_code (C .= 0; for j=_, i=_; C[i, j] = f(A[i, j], B[i, j]) end)
+@finch_code (C .= 0; for j=_, i=_; C[] += f(A[i, j], B[i, j]) end)
 
 # output
 
 quote
-    C_lvl = (ex.bodies[1]).tns.tns.lvl
-    C_lvl_2 = C_lvl.lvl
-    C_lvl_3 = C_lvl_2.lvl
+    C = (ex.bodies[1]).tns.tns
     A_lvl = ((ex.bodies[2]).body.body.rhs.args[1]).tns.tns.lvl
     A_lvl_2 = A_lvl.lvl
     A_lvl_3 = A_lvl_2.lvl
@@ -231,15 +227,9 @@ quote
     B_mode2_stop = sugar_1[2]
     A_lvl_2.shape == B_mode1_stop || throw(DimensionMismatch("mismatched dimension limits ($(A_lvl_2.shape) != $(B_mode1_stop))"))
     A_lvl.shape == B_mode2_stop || throw(DimensionMismatch("mismatched dimension limits ($(A_lvl.shape) != $(B_mode2_stop))"))
-    C_lvl_2_qos_fill = 0
-    C_lvl_2_qos_stop = 0
-    p_start_2 = A_lvl.shape
-    resize_if_smaller!(C_lvl_2.ptr, p_start_2 + 1)
-    fill_range!(C_lvl_2.ptr, 0, 1 + 1, p_start_2 + 1)
-    for j_5 = 1:A_lvl.shape
-        C_lvl_q = (1 - 1) * A_lvl.shape + j_5
-        A_lvl_q = (1 - 1) * A_lvl.shape + j_5
-        C_lvl_2_qos = C_lvl_2_qos_fill + 1
+    C_val = 0
+    for j_4 = 1:A_lvl.shape
+        A_lvl_q = (1 - 1) * A_lvl.shape + j_4
         A_lvl_2_q = A_lvl_2.ptr[A_lvl_q]
         A_lvl_2_q_stop = A_lvl_2.ptr[A_lvl_q + 1]
         if A_lvl_2_q < A_lvl_2_q_stop
@@ -258,39 +248,15 @@ quote
                 A_lvl_2_i = A_lvl_2.idx[A_lvl_2_q]
                 phase_stop_2 = min(phase_stop, A_lvl_2_i)
                 if A_lvl_2_i == phase_stop_2
-                    for i_7 = i:phase_stop_2 - 1
-                        if C_lvl_2_qos > C_lvl_2_qos_stop
-                            C_lvl_2_qos_stop = max(C_lvl_2_qos_stop << 1, 1)
-                            resize_if_smaller!(C_lvl_2.idx, C_lvl_2_qos_stop)
-                            resize_if_smaller!(C_lvl_3.val, C_lvl_2_qos_stop)
-                            fill_range!(C_lvl_3.val, 0.0, C_lvl_2_qos, C_lvl_2_qos_stop)
-                        end
-                        C_lvl_3.val[C_lvl_2_qos] = f(0.0, B[i_7, j_5])
-                        C_lvl_2.idx[C_lvl_2_qos] = i_7
-                        C_lvl_2_qos += 1
+                    for i_6 = i:phase_stop_2 - 1
+                        C_val = f(0.0, B[i_6, j_4]) + C_val
                     end
                     A_lvl_3_val_2 = A_lvl_3.val[A_lvl_2_q]
-                    if C_lvl_2_qos > C_lvl_2_qos_stop
-                        C_lvl_2_qos_stop = max(C_lvl_2_qos_stop << 1, 1)
-                        resize_if_smaller!(C_lvl_2.idx, C_lvl_2_qos_stop)
-                        resize_if_smaller!(C_lvl_3.val, C_lvl_2_qos_stop)
-                        fill_range!(C_lvl_3.val, 0.0, C_lvl_2_qos, C_lvl_2_qos_stop)
-                    end
-                    C_lvl_3.val[C_lvl_2_qos] = f(A_lvl_3_val_2, B[phase_stop_2, j_5])
-                    C_lvl_2.idx[C_lvl_2_qos] = phase_stop_2
-                    C_lvl_2_qos += 1
+                    C_val = C_val + f(A_lvl_3_val_2, B[phase_stop_2, j_4])
                     A_lvl_2_q += 1
                 else
-                    for i_9 = i:phase_stop_2
-                        if C_lvl_2_qos > C_lvl_2_qos_stop
-                            C_lvl_2_qos_stop = max(C_lvl_2_qos_stop << 1, 1)
-                            resize_if_smaller!(C_lvl_2.idx, C_lvl_2_qos_stop)
-                            resize_if_smaller!(C_lvl_3.val, C_lvl_2_qos_stop)
-                            fill_range!(C_lvl_3.val, 0.0, C_lvl_2_qos, C_lvl_2_qos_stop)
-                        end
-                        C_lvl_3.val[C_lvl_2_qos] = f(0.0, B[i_9, j_5])
-                        C_lvl_2.idx[C_lvl_2_qos] = i_9
-                        C_lvl_2_qos += 1
+                    for i_8 = i:phase_stop_2
+                        C_val = f(0.0, B[i_8, j_4]) + C_val
                     end
                 end
                 i = phase_stop_2 + 1
@@ -299,30 +265,12 @@ quote
         end
         phase_stop_3 = A_lvl_2.shape
         if phase_stop_3 >= i
-            for i_11 = i:phase_stop_3
-                if C_lvl_2_qos > C_lvl_2_qos_stop
-                    C_lvl_2_qos_stop = max(C_lvl_2_qos_stop << 1, 1)
-                    resize_if_smaller!(C_lvl_2.idx, C_lvl_2_qos_stop)
-                    resize_if_smaller!(C_lvl_3.val, C_lvl_2_qos_stop)
-                    fill_range!(C_lvl_3.val, 0.0, C_lvl_2_qos, C_lvl_2_qos_stop)
-                end
-                C_lvl_3.val[C_lvl_2_qos] = f(0.0, B[i_11, j_5])
-                C_lvl_2.idx[C_lvl_2_qos] = i_11
-                C_lvl_2_qos += 1
+            for i_10 = i:phase_stop_3
+                C_val = f(0.0, B[i_10, j_4]) + C_val
             end
         end
-        C_lvl_2.ptr[C_lvl_q + 1] = (C_lvl_2_qos - C_lvl_2_qos_fill) - 1
-        C_lvl_2_qos_fill = C_lvl_2_qos - 1
     end
-    for p = 2:A_lvl.shape + 1
-        C_lvl_2.ptr[p] += C_lvl_2.ptr[p - 1]
-    end
-    qos = 1 * A_lvl.shape
-    resize!(C_lvl_2.ptr, qos + 1)
-    qos_2 = C_lvl_2.ptr[end] - 1
-    resize!(C_lvl_2.idx, qos_2)
-    resize!(C_lvl_3.val, qos_2)
-    (C = Fiber((DenseLevel){Int64}((SparseListLevel){Int64, Int64}(C_lvl_3, A_lvl_2.shape, C_lvl_2.ptr, C_lvl_2.idx), A_lvl.shape)),)
+    (C = (Scalar){0.0, Float64}(C_val),)
 end
 
 ```
