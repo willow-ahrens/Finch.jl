@@ -52,13 +52,13 @@ include(joinpath(@__DIR__, "../apps/apps.jl"))
         end
 
         @testset "tricount" begin
-            size, sparsity = 100, 0.5
+            size, sparsity = 1000, 0.5
             input = sprand(size, size, sparsity)
             input = SparseMatrixCSC(Symmetric(input))
             
             graphs_input = SimpleDiGraph(input)
             finch_input = pattern!(@fiber(d(sl(e(0.0))), input))
-                    
+
             expected = sum(Graphs.triangles(graphs_input))
             output = FinchApps.tricount(finch_input) * 6
             
@@ -66,7 +66,7 @@ include(joinpath(@__DIR__, "../apps/apps.jl"))
         end
 
         @testset "brandes_bc" begin
-            size, sparsity = 10, 0.5
+            size, sparsity = 100, 0.5
             input = sprand(size, size, sparsity)
             
             graphs_input = SimpleDiGraph(input)
@@ -75,7 +75,9 @@ include(joinpath(@__DIR__, "../apps/apps.jl"))
             expected = Graphs.betweenness_centrality(graphs_input, normalize=false)
             output = FinchApps.brandes_bc(finch_input)
             
-            @test expected == output
+            tol = 1.0e-12
+            output = copyto!(zeros(size), output)
+            @test maximum(abs.(output .- expected)) < tol
         end
     end
 
