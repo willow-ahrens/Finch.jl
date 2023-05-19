@@ -124,21 +124,21 @@ end
     tricount(adj)
 
 Count the number of triangles in the graph specified by `adj`, which is assumed to be
-symmetric. Requires edges to be 1 and non-edges 0.
+symmetric.
 """
 function tricount(edges)
     (n, m) = size(edges)
     @assert n == m
 
-    #store lower triangles
+    # store lower triangles
     L = @fiber d(sl(e(0), n), n)
     @finch begin
         L .= 0
-        @loop j i L[i,j] = (lotrimask[i,j+1] * edges[i,j])
+        @loop j i L[i,j] = ((lotrimask[i,j+1] * edges[i,j]) != 0)
     end
 
     triangles = Scalar(0)
-    @finch @loop j k i triangles[] += (L[i, k] * L[k, j] * edges[j, i])
+    @finch @loop j k i triangles[] += ((L[i, k] * L[k, j] * edges[j, i]) != 0)
 
     return triangles[]
 end
@@ -146,13 +146,17 @@ end
 """
     brandes_bc(adj,sources)
 
-Computes the betweenness centrality of all nodes taking paths starting at the given sources
+Computes the betweenness centrality of all nodes taking paths starting at the given sources.
+Let p(s,t) be the number of shortest paths between s and t, and p(s,v,t) be the number of shortest paths
+between s and t passing through v. Then the betweenness centrality of a node v is the sum of p(s,v,t)/p(s,t)
+over all s in sources and all t in the graph.
 """
 function brandes_bc(edges, sources=[])
     (n, m) = size(edges)
     @assert n == m
 
     centrality = @fiber(d(e(0.0), n))
+    # set list of source vertices
     if size(sources) == (0,)
         sources = 1:n
     end
@@ -180,7 +184,7 @@ function brandes_bc(edges, sources=[])
         while countstored(queue) > 0
             # Traverse to neighbors of nodes in queue, compute updates, and mark as active
             iter += 1
-            @finch begin
+            @finch begin`   `
                 num_paths_update .= 0
                 active .= false
                 @loop j begin #loop neighbors j of i (i is parent of j)
