@@ -6,7 +6,7 @@ virtual_default(f::Null) = Some(f.default)
 
 struct NullStyle <: AbstractPreSimplifyStyle end
 
-(ctx::Stylize{LowerJulia})(::Null) = SimplifyStyle()
+(ctx::Stylize{<:AbstractCompiler})(::Null) = SimplifyStyle()
 (ctx::Stylize{<:Simplifier})(::Null) = NullStyle()
 
 function (ctx::Simplifier)(root::FinchNode, ::NullStyle)

@@ -53,14 +53,10 @@ function (h::StaticHash)(x)
     end
 end
 
-(ctx::LowerJulia)(root) = ctx(root, Stylize(root, ctx)(root))
-#function(ctx::LowerJulia)(root)
-#    style = Stylize(root, ctx)(root)
-#    @info :lower root style
-#    ctx(root, style)
-#end
+(ctx::AbstractCompiler)(root) = ctx(root, Stylize(root, ctx)(root))
+(ctx::AbstractCompiler)(root, style) = lower(root, ctx, style)
 
-function open_scope(prgm, ctx::LowerJulia)
+function open_scope(prgm, ctx::AbstractCompiler)
     ctx_2 = shallowcopy(ctx)
     ctx_2.scope = Set()
     res = ctx_2(prgm)
@@ -70,7 +66,7 @@ function open_scope(prgm, ctx::LowerJulia)
     res
 end
 
-function cache!(ctx, var, val)
+function cache!(ctx::AbstractCompiler, var, val)
     val = finch_leaf(val)
     isconstant(val) && return val
     var = ctx.freshen(var)
@@ -81,7 +77,7 @@ function cache!(ctx, var, val)
     return cached(value(var, Any), literal(val))
 end
 
-function resolve(var, ctx::LowerJulia)
+function resolve(var, ctx::AbstractCompiler)
     if var isa FinchNode && (var.kind === variable || var.kind === index)
         return ctx.bindings[var]
     end
@@ -95,7 +91,7 @@ Call f on a subcontext of `ctx` and return the result. Variable bindings,
 preambles, and epilogues defined in the subcontext will not escape the call to
 contain.
 """
-function contain(f, ctx::LowerJulia)
+function contain(f, ctx::AbstractCompiler)
     ctx_2 = shallowcopy(ctx)
     preamble = Expr(:block)
     ctx_2.preamble = preamble.args
@@ -165,9 +161,9 @@ function (ctx::InstantiateTensors)(node::FinchNode)
     end
 end
 
-(ctx::LowerJulia)(root::Union{Symbol, Expr}, ::DefaultStyle) = root
+(ctx::AbstractCompiler)(root::Union{Symbol, Expr}, ::DefaultStyle) = root
 
-function (ctx::LowerJulia)(root, ::DefaultStyle)
+function lower(root, ctx::AbstractCompiler, ::DefaultStyle)
     node = finch_leaf(root)
     if node.kind === virtual
         error("don't know how to lower $root")
@@ -175,7 +171,7 @@ function (ctx::LowerJulia)(root, ::DefaultStyle)
     ctx(node)
 end
 
-function (ctx::LowerJulia)(root::FinchNode, ::DefaultStyle)
+function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
     if root.kind === value
         return root.val
     elseif root.kind === index

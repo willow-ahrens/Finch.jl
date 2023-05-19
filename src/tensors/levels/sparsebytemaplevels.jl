@@ -109,7 +109,7 @@ function virtualize(ex, ::Type{SparseByteMapLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) 
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
     VirtualSparseByteMapLevel(lvl_2, sym, Ti, Tp, shape, qos_fill, qos_stop)
 end
-function (ctx::Finch.LowerJulia)(lvl::VirtualSparseByteMapLevel)
+function lower(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
         $SparseByteMapLevel{$(lvl.Ti), $(lvl.Tp)}(
             $(ctx(lvl.lvl)),
@@ -137,7 +137,7 @@ end
 virtual_level_eltype(lvl::VirtualSparseByteMapLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSparseByteMapLevel) = virtual_level_default(lvl.lvl)
 
-function declare_level!(lvl::VirtualSparseByteMapLevel, ctx::LowerJulia, pos, init)
+function declare_level!(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, pos, init)
     Ti = lvl.Ti
     Tp = lvl.Tp
     r = ctx.freshen(lvl.ex, :_r)
@@ -168,7 +168,7 @@ function declare_level!(lvl::VirtualSparseByteMapLevel, ctx::LowerJulia, pos, in
     return lvl
 end
 
-function thaw_level!(lvl::VirtualSparseByteMapLevel, ctx::LowerJulia, pos)
+function thaw_level!(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, pos)
     Ti = lvl.Ti
     Tp = lvl.Tp
     p = ctx.freshen(lvl.ex, :_p)
@@ -182,7 +182,7 @@ function thaw_level!(lvl::VirtualSparseByteMapLevel, ctx::LowerJulia, pos)
     return lvl
 end
 
-function trim_level!(lvl::VirtualSparseByteMapLevel, ctx::LowerJulia, pos)
+function trim_level!(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, pos)
     ros = ctx.freshen(:ros)
     push!(ctx.preamble, quote
         resize!($(lvl.ex).ptr, $(ctx(pos)) + 1)
@@ -213,7 +213,7 @@ function assemble_level!(lvl::VirtualSparseByteMapLevel, ctx, pos_start, pos_sto
     end
 end
 
-function freeze_level!(lvl::VirtualSparseByteMapLevel, ctx::LowerJulia, pos_stop)
+function freeze_level!(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, pos_stop)
     r = ctx.freshen(lvl.ex, :_r)
     p = ctx.freshen(lvl.ex, :_p)
     p_prev = ctx.freshen(lvl.ex, :_p_prev)

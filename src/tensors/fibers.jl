@@ -24,7 +24,7 @@ function virtualize(ex, ::Type{<:Fiber{Lvl}}, ctx, tag=ctx.freshen(:tns)) where 
     lvl = virtualize(:($ex.lvl), Lvl, ctx, Symbol(tag, :_lvl))
     VirtualFiber(lvl)
 end
-(ctx::Finch.LowerJulia)(fbr::VirtualFiber) = :(Fiber($(ctx(fbr.lvl))))
+lower(fbr::VirtualFiber, ctx::AbstractCompiler, ::DefaultStyle) = :(Fiber($(ctx(fbr.lvl))))
 FinchNotation.finch_leaf(x::VirtualFiber) = virtual(x)
 
 """
@@ -46,7 +46,7 @@ function virtualize(ex, ::Type{<:SubFiber{Lvl, Pos}}, ctx, tag=ctx.freshen(:tns)
     pos = virtualize(:($ex.pos), Pos, ctx)
     VirtualSubFiber(lvl, pos)
 end
-(ctx::Finch.LowerJulia)(fbr::VirtualSubFiber) = :(SubFiber($(ctx(fbr.lvl)), $(ctx(fbr.pos))))
+lower(fbr::VirtualSubFiber, ctx::AbstractCompiler, ::DefaultStyle) = :(SubFiber($(ctx(fbr.lvl)), $(ctx(fbr.pos))))
 FinchNotation.finch_leaf(x::VirtualSubFiber) = virtual(x)
 
 """
@@ -140,17 +140,17 @@ Freeze all fibers in `lvl`. Positions `1:pos` need freezing.
 """
 freeze_level!(fbr, ctx, mode) = fbr.lvl
 
-function declare!(fbr::VirtualFiber, ctx::LowerJulia, init)
+function declare!(fbr::VirtualFiber, ctx::AbstractCompiler, init)
     lvl = declare_level!(fbr.lvl, ctx, literal(1), init)
     push!(ctx.preamble, assemble_level!(lvl, ctx, literal(1), literal(1))) #TODO this feels unnecessary?
     fbr = VirtualFiber(lvl)
 end
 
-function get_reader(fbr::VirtualFiber, ctx::LowerJulia, protos...)
+function get_reader(fbr::VirtualFiber, ctx::AbstractCompiler, protos...)
     return get_reader(VirtualSubFiber(fbr.lvl, literal(1)), ctx, reverse(protos)...)
 end
 
-function get_updater(fbr::VirtualFiber, ctx::LowerJulia, protos...)
+function get_updater(fbr::VirtualFiber, ctx::AbstractCompiler, protos...)
     return get_updater(VirtualSubFiber(fbr.lvl, literal(1)), ctx, reverse(protos)...)
 end
 
@@ -171,7 +171,7 @@ function virtualize(ex, ::Type{<:TrackedSubFiber{Lvl, Pos, Dirty}}, ctx, tag=ctx
     dirty = virtualize(:($ex.dirty), Dirty, ctx)
     VirtualTrackedSubFiber(lvl, pos, dirty)
 end
-(ctx::Finch.LowerJulia)(fbr::VirtualTrackedSubFiber) = :(TrackedSubFiber($(ctx(fbr.lvl)), $(ctx(fbr.pos))))
+lower(fbr::VirtualTrackedSubFiber, ctx::AbstractCompiler, ::DefaultStyle) = :(TrackedSubFiber($(ctx(fbr.lvl)), $(ctx(fbr.pos))))
 FinchNotation.finch_leaf(x::VirtualTrackedSubFiber) = virtual(x)
 
 function get_updater(fbr::VirtualTrackedSubFiber, ctx, protos...)
@@ -216,12 +216,12 @@ data_rep(fbr::Fiber) = data_rep(typeof(fbr))
 data_rep(::Type{<:AbstractFiber{Lvl}}) where {Lvl} = data_rep_level(Lvl)
 
 
-function freeze!(fbr::VirtualFiber, ctx::LowerJulia)
+function freeze!(fbr::VirtualFiber, ctx::AbstractCompiler)
     return VirtualFiber(freeze_level!(fbr.lvl, ctx, literal(1)))
 end
 
 thaw_level!(lvl, ctx, pos) = throw(FormatLimitation("cannot modify $(typeof(lvl)) in place (forgot to declare with .= ?)"))
-function thaw!(fbr::VirtualFiber, ctx::LowerJulia)
+function thaw!(fbr::VirtualFiber, ctx::AbstractCompiler)
     return VirtualFiber(thaw_level!(fbr.lvl, ctx, literal(1)))
 end
 

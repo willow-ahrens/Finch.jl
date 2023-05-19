@@ -20,11 +20,11 @@ FinchNotation.finch_leaf(x::VirtualPermit) = virtual(x)
 
 virtualize(ex, ::Type{Permit}, ctx) = VirtualPermit()
 
-(ctx::LowerJulia)(tns::VirtualPermit) = :(Permit())
+lower(tns::VirtualPermit, ctx::AbstractCompiler, ::DefaultStyle) = :(Permit())
 
-virtual_size(arr::VirtualPermit, ctx::LowerJulia, dim) = (widendim(dim),)
-virtual_resize!(arr::VirtualPermit, ctx::LowerJulia, idx_dim) = widendim(idx_dim)
-virtual_eldim(arr::VirtualPermit, ctx::LowerJulia, idx_dim) = widendim(idx_dim)
+virtual_size(arr::VirtualPermit, ctx::AbstractCompiler, dim) = (widendim(dim),)
+virtual_resize!(arr::VirtualPermit, ctx::AbstractCompiler, idx_dim) = widendim(idx_dim)
+virtual_eldim(arr::VirtualPermit, ctx::AbstractCompiler, idx_dim) = widendim(idx_dim)
 
 function get_reader(::VirtualPermit, ctx, proto_idx)
     Furlable(
@@ -70,11 +70,11 @@ FinchNotation.finch_leaf(x::VirtualOffset) = virtual(x)
 
 virtualize(ex, ::Type{Offset}, ctx) = VirtualOffset()
 
-(ctx::LowerJulia)(tns::VirtualOffset) = :(Offset())
+lower(tns::VirtualOffset, ctx::AbstractCompiler, ::DefaultStyle) = :(Offset())
 
-virtual_size(arr::VirtualOffset, ctx::LowerJulia, dim) = (nodim, nodim)
-virtual_resize!(arr::VirtualOffset, ctx::LowerJulia, idx_dim, delta_dim) = (arr, virtual_eldim(arr, ctx, delta_dim, idx_dim))
-virtual_eldim(arr::VirtualOffset, ctx::LowerJulia, idx_dim, delta_dim) = combinedim(ctx, widendim(shiftdim(idx_dim, call(-, getstop(delta_dim)))), widendim(idx_dim))
+virtual_size(arr::VirtualOffset, ctx::AbstractCompiler, dim) = (nodim, nodim)
+virtual_resize!(arr::VirtualOffset, ctx::AbstractCompiler, idx_dim, delta_dim) = (arr, virtual_eldim(arr, ctx, delta_dim, idx_dim))
+virtual_eldim(arr::VirtualOffset, ctx::AbstractCompiler, idx_dim, delta_dim) = combinedim(ctx, widendim(shiftdim(idx_dim, call(-, getstop(delta_dim)))), widendim(idx_dim))
 
 function get_reader(::VirtualOffset, ctx, proto_delta, proto_idx)
     tns = Furlable(
@@ -129,11 +129,11 @@ function virtualize(ex, ::Type{StaticOffset{Delta}}, ctx) where {Delta}
     VirtualStaticOffset(virtualize(:($ex.delta), Delta, ctx))
 end
 
-(ctx::LowerJulia)(tns::VirtualStaticOffset) = :(StaticOffset($tns.delta))
+lower(tns::VirtualStaticOffset, ctx::AbstractCompiler, ::DefaultStyle) = :(StaticOffset($tns.delta))
 
-virtual_size(arr::VirtualStaticOffset, ctx::LowerJulia, dim = nodim) = (widendim(shiftdim(dim, getstop(arr.delta))),)
-virtual_resize!(arr::VirtualStaticOffset, ctx::LowerJulia, idx_dim) = (arr, virtual_eldim(arr, ctx, idx_dim))
-virtual_eldim(arr::VirtualStaticOffset, ctx::LowerJulia, idx_dim) = widendim(shiftdim(idx_dim, call(-, getstop(arr.delta))))
+virtual_size(arr::VirtualStaticOffset, ctx::AbstractCompiler, dim = nodim) = (widendim(shiftdim(dim, getstop(arr.delta))),)
+virtual_resize!(arr::VirtualStaticOffset, ctx::AbstractCompiler, idx_dim) = (arr, virtual_eldim(arr, ctx, idx_dim))
+virtual_eldim(arr::VirtualStaticOffset, ctx::AbstractCompiler, idx_dim) = widendim(shiftdim(idx_dim, call(-, getstop(arr.delta))))
 
 function get_reader(arr::VirtualStaticOffset, ctx, proto_idx)
     Furlable(
@@ -192,11 +192,11 @@ function virtualize(ex, ::Type{Window{Start, Stop}}, ctx) where {Start, Stop}
     return VirtualWindow(Extent(start, stop))
 end
 
-(ctx::Finch.LowerJulia)(tns::VirtualWindow) = :(Window($(ctx(tns.target))))
+(ctx::Finch.AbstractCompiler)(tns::VirtualWindow) = :(Window($(ctx(tns.target))))
 
-virtual_size(arr::VirtualWindow, ctx::LowerJulia, dim) = (shiftdim(arr.target, call(-, getstart(dim), getstart(arr.target))),)
-virtual_resize!(arr::VirtualWindow, ctx::LowerJulia, idx_dim) = (arr, arr.target)
-virtual_eldim(arr::VirtualWindow, ctx::LowerJulia, idx_dim) = arr.target
+virtual_size(arr::VirtualWindow, ctx::AbstractCompiler, dim) = (shiftdim(arr.target, call(-, getstart(dim), getstart(arr.target))),)
+virtual_resize!(arr::VirtualWindow, ctx::AbstractCompiler, idx_dim) = (arr, arr.target)
+virtual_eldim(arr::VirtualWindow, ctx::AbstractCompiler, idx_dim) = arr.target
 
 function get_reader(arr::VirtualWindow, ctx, proto_idx)
     Furlable(

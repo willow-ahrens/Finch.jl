@@ -11,7 +11,7 @@ FinchNotation.finch_leaf(x::Pipeline) = virtual(x)
 
 struct PipelineStyle end
 
-(ctx::Stylize{LowerJulia})(node::Pipeline) = ctx.root.kind === loop ? PipelineStyle() : DefaultStyle()
+(ctx::Stylize{<:AbstractCompiler})(node::Pipeline) = ctx.root.kind === loop ? PipelineStyle() : DefaultStyle()
 combine_style(a::DefaultStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::ThunkStyle, b::PipelineStyle) = ThunkStyle()
 combine_style(a::RunStyle, b::PipelineStyle) = PipelineStyle()
@@ -23,7 +23,7 @@ combine_style(a::SpikeStyle, b::PipelineStyle) = PipelineStyle()
 
 supports_shift(::PipelineStyle) = true
 
-function (ctx::LowerJulia)(root::FinchNode, ::PipelineStyle)
+function lower(root::FinchNode, ctx::AbstractCompiler,  ::PipelineStyle)
     if root.kind === loop
         phases = Dict(PipelineVisitor(ctx, root.idx, root.ext)(root.body))
         children(key) = intersect(map(i->(key_2 = copy(key); key_2[i] += 1; key_2), 1:length(key)), keys(phases))

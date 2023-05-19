@@ -153,7 +153,7 @@ function virtualize(ex, ::Type{SparseCOOLevel{N, Ti, Tp, Tbl, Lvl}}, ctx, tag=:l
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
     VirtualSparseCOOLevel(lvl_2, sym, N, Ti, Tp, Tbl, shape, qos_fill, qos_stop)
 end
-function (ctx::Finch.LowerJulia)(lvl::VirtualSparseCOOLevel)
+function lower(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
         $SparseCOOLevel{$(lvl.N), $(lvl.Ti), $(lvl.Tp)}(
             $(ctx(lvl.lvl)),
@@ -166,12 +166,12 @@ end
 
 summary_fiber_abbrev(lvl::VirtualSparseCOOLevel) = "sc{$(lvl.N)}($(summary_fiber_abbrev(lvl.lvl)))"
 
-function virtual_level_size(lvl::VirtualSparseCOOLevel, ctx::LowerJulia)
+function virtual_level_size(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler)
     ext = map((ti, stop)->Extent(literal(ti(1)), stop), lvl.Ti.parameters, lvl.shape)
     (virtual_level_size(lvl.lvl, ctx)..., ext...)
 end
 
-function virtual_level_resize!(lvl::VirtualSparseCOOLevel, ctx::LowerJulia, dims...)
+function virtual_level_resize!(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler, dims...)
     lvl.shape = map(getstop, dims[end - lvl.N + 1:end])
     lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims[1:end - lvl.N]...)
     lvl
@@ -180,7 +180,7 @@ end
 virtual_level_eltype(lvl::VirtualSparseCOOLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSparseCOOLevel) = virtual_level_default(lvl.lvl)
 
-function declare_level!(lvl::VirtualSparseCOOLevel, ctx::LowerJulia, pos, init)
+function declare_level!(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler, pos, init)
     Ti = lvl.Ti
     Tp = lvl.Tp
 
@@ -193,7 +193,7 @@ function declare_level!(lvl::VirtualSparseCOOLevel, ctx::LowerJulia, pos, init)
     return lvl
 end
 
-function trim_level!(lvl::VirtualSparseCOOLevel, ctx::LowerJulia, pos)
+function trim_level!(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler, pos)
     Tp = lvl.Tp
     qos = ctx.freshen(:qos)
 
@@ -217,7 +217,7 @@ function assemble_level!(lvl::VirtualSparseCOOLevel, ctx, pos_start, pos_stop)
     end
 end
 
-function freeze_level!(lvl::VirtualSparseCOOLevel, ctx::LowerJulia, pos_stop)
+function freeze_level!(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler, pos_stop)
     p = ctx.freshen(:p)
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
     qos_stop = ctx.freshen(:qos_stop)

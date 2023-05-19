@@ -14,7 +14,7 @@ FinchNotation.finch_leaf(x::Spike) = virtual(x)
 
 struct SpikeStyle end
 
-(ctx::Stylize{LowerJulia})(node::Spike) = ctx.root.kind === loop ? SpikeStyle() : DefaultStyle()
+(ctx::Stylize{<:AbstractCompiler})(node::Spike) = ctx.root.kind === loop ? SpikeStyle() : DefaultStyle()
 combine_style(a::DefaultStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::RunStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::ThunkStyle, b::SpikeStyle) = ThunkStyle()
@@ -22,7 +22,7 @@ combine_style(a::SimplifyStyle, b::SpikeStyle) = a
 combine_style(a::AcceptRunStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::SpikeStyle, b::SpikeStyle) = SpikeStyle()
 
-function (ctx::LowerJulia)(root::FinchNode, ::SpikeStyle)
+function lower(root::FinchNode, ctx::AbstractCompiler,  ::SpikeStyle)
     if root.kind === loop
         body_ext = Extent(getstart(root.ext), call(-, getstop(root.ext), 1))
         root_body = Rewrite(Postwalk(
