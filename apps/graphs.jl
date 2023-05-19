@@ -134,11 +134,11 @@ function tricount(edges)
     L = @fiber d(sl(e(0), n), n)
     @finch begin
         L .= 0
-        @loop j i L[i,j] = ((lotrimask[i,j+1] * edges[i,j]) != 0)
+        @loop j i L[i,j] = (lotrimask[i,j+1] * edges[i,j])
     end
 
     triangles = Scalar(0)
-    @finch @loop j k i triangles[] += ((L[i, k] * L[k, j] * edges[j, i]) != 0)
+    @finch @loop j k i triangles[] += (L[i, k] * L[k, j] * edges[j, i])
 
     return triangles[]
 end

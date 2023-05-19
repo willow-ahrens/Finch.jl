@@ -57,8 +57,8 @@ include(joinpath(@__DIR__, "../apps/apps.jl"))
             input = SparseMatrixCSC(Symmetric(input))
             
             graphs_input = SimpleDiGraph(input)
-            finch_input = @fiber(d(sl(e(0.0))), input)
-        
+            finch_input = pattern!(@fiber(d(sl(e(0.0))), input))
+                    
             expected = sum(Graphs.triangles(graphs_input))
             output = FinchApps.tricount(finch_input) * 6
             

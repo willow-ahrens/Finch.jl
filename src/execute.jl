@@ -1,7 +1,7 @@
 execute(ex) = execute(ex, DefaultAlgebra())
 
 @staged_function execute ex a quote
-    begin #@inbounds begin
+    @inbounds begin
        $(execute_code(:ex, ex, a()) |> unblock)
     end
 end
