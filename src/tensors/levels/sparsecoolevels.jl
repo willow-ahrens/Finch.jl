@@ -153,7 +153,7 @@ function virtualize(ex, ::Type{SparseCOOLevel{N, Ti, Tp, Tbl, Lvl}}, ctx, tag=:l
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
     VirtualSparseCOOLevel(lvl_2, sym, N, Ti, Tp, Tbl, shape, qos_fill, qos_stop)
 end
-function (ctx::AbstractCompiler)(lvl::VirtualSparseCOOLevel)
+function lower(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
         $SparseCOOLevel{$(lvl.N), $(lvl.Ti), $(lvl.Tp)}(
             $(ctx(lvl.lvl)),

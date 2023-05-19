@@ -12,7 +12,7 @@ function virtual_size(arr::VirtualAbstractArray, ctx::AbstractCompiler)
     return map(i->Extent(literal(1), value(dims[i], Int)), 1:arr.ndims)
 end
 
-function (ctx::AbstractCompiler)(arr::VirtualAbstractArray, ::DefaultStyle)
+function lower(arr::VirtualAbstractArray, ctx::AbstractCompiler,  ::DefaultStyle)
     return arr.ex
 end
 

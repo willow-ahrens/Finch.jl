@@ -54,11 +54,7 @@ function (h::StaticHash)(x)
 end
 
 (ctx::AbstractCompiler)(root) = ctx(root, Stylize(root, ctx)(root))
-#function(ctx::AbstractCompiler)(root)
-#    style = Stylize(root, ctx)(root)
-#    @info :lower root style
-#    ctx(root, style)
-#end
+(ctx::AbstractCompiler)(root, style) = lower(root, ctx, style)
 
 function open_scope(prgm, ctx::AbstractCompiler)
     ctx_2 = shallowcopy(ctx)
@@ -167,7 +163,7 @@ end
 
 (ctx::AbstractCompiler)(root::Union{Symbol, Expr}, ::DefaultStyle) = root
 
-function (ctx::AbstractCompiler)(root, ::DefaultStyle)
+function lower(root, ctx::AbstractCompiler, ::DefaultStyle)
     node = finch_leaf(root)
     if node.kind === virtual
         error("don't know how to lower $root")
@@ -175,7 +171,7 @@ function (ctx::AbstractCompiler)(root, ::DefaultStyle)
     ctx(node)
 end
 
-function (ctx::AbstractCompiler)(root::FinchNode, ::DefaultStyle)
+function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
     if root.kind === value
         return root.val
     elseif root.kind === index

@@ -5,7 +5,7 @@
     eltype
 end
 
-function (ctx::AbstractCompiler)(arr::VirtualAbstractUnitRange, ::DefaultStyle)
+function lower(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler,  ::DefaultStyle)
     return arr.ex
 end
 

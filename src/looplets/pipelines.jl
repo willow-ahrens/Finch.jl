@@ -23,7 +23,7 @@ combine_style(a::SpikeStyle, b::PipelineStyle) = PipelineStyle()
 
 supports_shift(::PipelineStyle) = true
 
-function (ctx::AbstractCompiler)(root::FinchNode, ::PipelineStyle)
+function lower(root::FinchNode, ctx::AbstractCompiler,  ::PipelineStyle)
     if root.kind === loop
         phases = Dict(PipelineVisitor(ctx, root.idx, root.ext)(root.body))
         children(key) = intersect(map(i->(key_2 = copy(key); key_2[i] += 1; key_2), 1:length(key)), keys(phases))

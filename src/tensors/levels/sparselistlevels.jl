@@ -136,7 +136,7 @@ function virtualize(ex, ::Type{SparseListLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) whe
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
     VirtualSparseListLevel(lvl_2, sym, Ti, Tp, shape, qos_fill, qos_stop)
 end
-function (ctx::AbstractCompiler)(lvl::VirtualSparseListLevel)
+function lower(lvl::VirtualSparseListLevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
         $SparseListLevel{$(lvl.Ti), $(lvl.Tp)}(
             $(ctx(lvl.lvl)),

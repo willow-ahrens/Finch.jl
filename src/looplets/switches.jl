@@ -55,7 +55,7 @@ function (ctx::SwitchVisitor)(node::FinchNode)
 end
 (ctx::SwitchVisitor)(node::Switch) = node.cases
 
-function (ctx::AbstractCompiler)(stmt, ::SwitchStyle)
+function lower(stmt, ctx::AbstractCompiler,  ::SwitchStyle)
     cases = (SwitchVisitor(ctx=ctx))(stmt)
     function nest(cases, inner=false)
         guard, body = cases[1]

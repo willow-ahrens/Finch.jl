@@ -30,7 +30,7 @@ function (ctx::ThunkVisitor)(node)
     end
 end
 
-function (ctx::AbstractCompiler)(node, ::ThunkStyle)
+function lower(node, ctx::AbstractCompiler,  ::ThunkStyle)
     contain(ctx) do ctx2
         node = (ThunkVisitor(ctx2))(node)
         contain(ctx2) do ctx3

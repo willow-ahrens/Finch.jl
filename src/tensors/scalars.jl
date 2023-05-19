@@ -23,7 +23,7 @@ struct VirtualScalar
     val
 end
 
-(ctx::AbstractCompiler)(tns::VirtualScalar) = :($Scalar{$(tns.D), $(tns.Tv)}($(tns.val)))
+lower(tns::VirtualScalar, ctx::AbstractCompiler, ::DefaultStyle) = :($Scalar{$(tns.D), $(tns.Tv)}($(tns.val)))
 function virtualize(ex, ::Type{Scalar{D, Tv}}, ctx, tag) where {D, Tv}
     sym = ctx.freshen(tag)
     val = Symbol(tag, :_val) #TODO hmm this is risky

@@ -452,7 +452,7 @@ function query(node::FinchNode, ctx)
     return res == literal(true)
 end
 
-function (ctx::AbstractCompiler)(root, ::SimplifyStyle)
+function lower(root, ctx::AbstractCompiler,  ::SimplifyStyle)
     global rules
     root = Rewrite(Prewalk((x) -> if x.kind === virtual && x.val isa Simplify x.val.body end))(root)
     root = simplify(root, ctx)

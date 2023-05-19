@@ -50,7 +50,7 @@ combine_style(a::AcceptRunStyle, b::PhaseStyle) = PhaseStyle()
 combine_style(a::SwitchStyle, b::PhaseStyle) = SwitchStyle()
 combine_style(a::ThunkStyle, b::PhaseStyle) = ThunkStyle()
 
-function (ctx::AbstractCompiler)(root::FinchNode, ::PhaseStyle)
+function lower(root::FinchNode, ctx::AbstractCompiler,  ::PhaseStyle)
     if root.kind === loop
         i = getname(root.idx)
         i0=ctx.freshen(i)

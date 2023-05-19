@@ -130,7 +130,7 @@ function virtualize(ex, ::Type{RepeatRLELevel{D, Ti, Tp, Tv}}, ctx, tag=:lvl) wh
     dirty = ctx.freshen(sym, :_dirty)
     VirtualRepeatRLELevel(sym, D, Ti, Tp, Tv, shape, ros_fill, qos_stop, dirty)
 end
-function (ctx::AbstractCompiler)(lvl::VirtualRepeatRLELevel)
+function lower(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
         $RepeatRLELevel{$(lvl.D), $(lvl.Ti), $(lvl.Tp), $(lvl.Tv)}(
             $(ctx(lvl.shape)),

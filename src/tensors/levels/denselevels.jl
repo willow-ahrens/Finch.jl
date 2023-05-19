@@ -106,7 +106,7 @@ function virtualize(ex, ::Type{DenseLevel{Ti, Lvl}}, ctx, tag=:lvl) where {Ti, L
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
     VirtualDenseLevel(lvl_2, sym, Ti, shape)
 end
-function (ctx::AbstractCompiler)(lvl::VirtualDenseLevel)
+function lower(lvl::VirtualDenseLevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
         $DenseLevel{$(lvl.Ti)}(
             $(ctx(lvl.lvl)),

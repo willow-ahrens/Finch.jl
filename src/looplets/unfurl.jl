@@ -36,7 +36,7 @@ end
 #TODO propagate eldim here
 unfurl_access(node, ctx, eldim, tns) = similarterm(node, operation(node), map(ctx, arguments(node)))
 
-function (ctx::AbstractCompiler)(root::FinchNode, ::UnfurlStyle)
+function lower(root::FinchNode, ctx::AbstractCompiler,  ::UnfurlStyle)
     if root.kind === loop
         idx = root.idx
         @assert root.ext.kind === virtual
@@ -87,7 +87,7 @@ combine_style(a::SelectStyle, b::UnfurlStyle) = a
 combine_style(a::SelectStyle, b::SelectStyle) = a
 combine_style(a::SelectStyle, b::SimplifyStyle) = b
 
-function (ctx::AbstractCompiler)(root, ::SelectStyle)
+function lower(root, ctx::AbstractCompiler,  ::SelectStyle)
     idxs = Dict()
     root = SelectVisitor(ctx, idxs)(root)
     for (idx, val) in pairs(idxs)

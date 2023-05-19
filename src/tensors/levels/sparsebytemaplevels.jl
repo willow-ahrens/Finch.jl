@@ -109,7 +109,7 @@ function virtualize(ex, ::Type{SparseByteMapLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) 
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
     VirtualSparseByteMapLevel(lvl_2, sym, Ti, Tp, shape, qos_fill, qos_stop)
 end
-function (ctx::AbstractCompiler)(lvl::VirtualSparseByteMapLevel)
+function lower(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
         $SparseByteMapLevel{$(lvl.Ti), $(lvl.Tp)}(
             $(ctx(lvl.lvl)),

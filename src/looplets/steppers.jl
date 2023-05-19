@@ -26,7 +26,7 @@ combine_style(a::ThunkStyle, b::StepperStyle) = ThunkStyle()
 combine_style(a::StepperStyle, b::JumperStyle) = JumperStyle()
 combine_style(a::StepperStyle, b::PhaseStyle) = PhaseStyle()
 
-function (ctx::AbstractCompiler)(root::FinchNode, style::StepperStyle)
+function lower(root::FinchNode, ctx::AbstractCompiler,  style::StepperStyle)
     if root.kind === loop
         return lower_cycle(root, ctx, root.idx, root.ext, style)
     else

@@ -75,7 +75,7 @@ pattern!(fbr::SubFiber) = SubFiber(pattern!(fbr.lvl), fbr.pos)
 
 struct VirtualPatternLevel end
 
-(ctx::AbstractCompiler)(lvl::VirtualPatternLevel) = :(PatternLevel())
+lower(lvl::VirtualPatternLevel, ctx::AbstractCompiler, ::DefaultStyle) = :(PatternLevel())
 virtualize(ex, ::Type{<:PatternLevel}, ctx) = VirtualPatternLevel()
 
 virtual_level_resize!(lvl::VirtualPatternLevel, ctx) = lvl

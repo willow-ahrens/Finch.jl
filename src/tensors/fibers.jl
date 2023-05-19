@@ -24,7 +24,7 @@ function virtualize(ex, ::Type{<:Fiber{Lvl}}, ctx, tag=ctx.freshen(:tns)) where 
     lvl = virtualize(:($ex.lvl), Lvl, ctx, Symbol(tag, :_lvl))
     VirtualFiber(lvl)
 end
-(ctx::AbstractCompiler)(fbr::VirtualFiber) = :(Fiber($(ctx(fbr.lvl))))
+lower(fbr::VirtualFiber, ctx::AbstractCompiler, ::DefaultStyle) = :(Fiber($(ctx(fbr.lvl))))
 FinchNotation.finch_leaf(x::VirtualFiber) = virtual(x)
 
 """
@@ -46,7 +46,7 @@ function virtualize(ex, ::Type{<:SubFiber{Lvl, Pos}}, ctx, tag=ctx.freshen(:tns)
     pos = virtualize(:($ex.pos), Pos, ctx)
     VirtualSubFiber(lvl, pos)
 end
-(ctx::AbstractCompiler)(fbr::VirtualSubFiber) = :(SubFiber($(ctx(fbr.lvl)), $(ctx(fbr.pos))))
+lower(fbr::VirtualSubFiber, ctx::AbstractCompiler, ::DefaultStyle) = :(SubFiber($(ctx(fbr.lvl)), $(ctx(fbr.pos))))
 FinchNotation.finch_leaf(x::VirtualSubFiber) = virtual(x)
 
 """
@@ -171,7 +171,7 @@ function virtualize(ex, ::Type{<:TrackedSubFiber{Lvl, Pos, Dirty}}, ctx, tag=ctx
     dirty = virtualize(:($ex.dirty), Dirty, ctx)
     VirtualTrackedSubFiber(lvl, pos, dirty)
 end
-(ctx::AbstractCompiler)(fbr::VirtualTrackedSubFiber) = :(TrackedSubFiber($(ctx(fbr.lvl)), $(ctx(fbr.pos))))
+lower(fbr::VirtualTrackedSubFiber, ctx::AbstractCompiler, ::DefaultStyle) = :(TrackedSubFiber($(ctx(fbr.lvl)), $(ctx(fbr.pos))))
 FinchNotation.finch_leaf(x::VirtualTrackedSubFiber) = virtual(x)
 
 function get_updater(fbr::VirtualTrackedSubFiber, ctx, protos...)

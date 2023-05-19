@@ -118,7 +118,7 @@ function virtualize(ex, ::Type{SparseVBLLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) wher
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
     VirtualSparseVBLLevel(lvl_2, sym, Ti, Tp, shape, qos_fill, qos_stop, ros_fill, ros_stop, dirty)
 end
-function (ctx::AbstractCompiler)(lvl::VirtualSparseVBLLevel)
+function lower(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
         $SparseVBLLevel{$(lvl.Ti), $(lvl.Tp)}(
             $(ctx(lvl.lvl)),

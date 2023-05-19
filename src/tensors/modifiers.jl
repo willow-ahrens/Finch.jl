@@ -20,7 +20,7 @@ FinchNotation.finch_leaf(x::VirtualPermit) = virtual(x)
 
 virtualize(ex, ::Type{Permit}, ctx) = VirtualPermit()
 
-(ctx::AbstractCompiler)(tns::VirtualPermit) = :(Permit())
+lower(tns::VirtualPermit, ctx::AbstractCompiler, ::DefaultStyle) = :(Permit())
 
 virtual_size(arr::VirtualPermit, ctx::AbstractCompiler, dim) = (widendim(dim),)
 virtual_resize!(arr::VirtualPermit, ctx::AbstractCompiler, idx_dim) = widendim(idx_dim)
@@ -70,7 +70,7 @@ FinchNotation.finch_leaf(x::VirtualOffset) = virtual(x)
 
 virtualize(ex, ::Type{Offset}, ctx) = VirtualOffset()
 
-(ctx::AbstractCompiler)(tns::VirtualOffset) = :(Offset())
+lower(tns::VirtualOffset, ctx::AbstractCompiler, ::DefaultStyle) = :(Offset())
 
 virtual_size(arr::VirtualOffset, ctx::AbstractCompiler, dim) = (nodim, nodim)
 virtual_resize!(arr::VirtualOffset, ctx::AbstractCompiler, idx_dim, delta_dim) = (arr, virtual_eldim(arr, ctx, delta_dim, idx_dim))
@@ -129,7 +129,7 @@ function virtualize(ex, ::Type{StaticOffset{Delta}}, ctx) where {Delta}
     VirtualStaticOffset(virtualize(:($ex.delta), Delta, ctx))
 end
 
-(ctx::AbstractCompiler)(tns::VirtualStaticOffset) = :(StaticOffset($tns.delta))
+lower(tns::VirtualStaticOffset, ctx::AbstractCompiler, ::DefaultStyle) = :(StaticOffset($tns.delta))
 
 virtual_size(arr::VirtualStaticOffset, ctx::AbstractCompiler, dim = nodim) = (widendim(shiftdim(dim, getstop(arr.delta))),)
 virtual_resize!(arr::VirtualStaticOffset, ctx::AbstractCompiler, idx_dim) = (arr, virtual_eldim(arr, ctx, idx_dim))

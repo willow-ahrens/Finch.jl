@@ -19,7 +19,7 @@ combine_style(a::ThunkStyle, b::RunStyle) = ThunkStyle()
 combine_style(a::SimplifyStyle, b::RunStyle) = a
 combine_style(a::RunStyle, b::RunStyle) = RunStyle()
 
-function (ctx::AbstractCompiler)(root::FinchNode, ::RunStyle)
+function lower(root::FinchNode, ctx::AbstractCompiler,  ::RunStyle)
     if root.kind === loop
         root = Rewrite(Postwalk(
             @rule access(~a::isvirtual, ~m, ~i..., ~j) => begin
@@ -67,7 +67,7 @@ combine_style(a::SimplifyStyle, b::AcceptRunStyle) = a
 combine_style(a::AcceptRunStyle, b::AcceptRunStyle) = AcceptRunStyle()
 combine_style(a::RunStyle, b::AcceptRunStyle) = RunStyle()
 
-function (ctx::AbstractCompiler)(root::FinchNode, ::AcceptRunStyle)
+function lower(root::FinchNode, ctx::AbstractCompiler,  ::AcceptRunStyle)
     if root.kind === loop
         body = Rewrite(Postwalk(
             @rule access(~a::isvirtual, ~m, ~i..., ~j) => begin

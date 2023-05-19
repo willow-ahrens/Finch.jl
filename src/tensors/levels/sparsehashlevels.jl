@@ -161,7 +161,7 @@ function virtualize(ex, ::Type{SparseHashLevel{N, Ti, Tp, Tbl, Lvl}}, ctx, tag=:
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
     VirtualSparseHashLevel(lvl_2, sym, N, Ti, Tp, Tbl, shape, qos_fill, qos_stop)
 end
-function (ctx::AbstractCompiler)(lvl::VirtualSparseHashLevel)
+function lower(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
         $SparseHashLevel{$(lvl.N), $(lvl.Ti), $(lvl.Tp), $(lvl.Tbl)}(
             $(ctx(lvl.lvl)),

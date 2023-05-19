@@ -45,7 +45,7 @@ function Finch.virtual_size(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler)
     return [Extent(literal(1),value(:($(arr.ex).m), arr.Ti)), Extent(literal(1),value(:($(arr.ex).n), arr.Ti))]
 end
 
-function (ctx::AbstractCompiler)(arr::VirtualSparseMatrixCSC, ::DefaultStyle)
+function lower(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler,  ::DefaultStyle)
     return arr.ex
 end
 
@@ -147,7 +147,7 @@ function Finch.virtual_size(arr::VirtualSparseVector, ctx::AbstractCompiler)
     return Any[Extent(literal(1),value(:($(arr.ex).n), arr.Ti))]
 end
 
-function (ctx::AbstractCompiler)(arr::VirtualSparseVector, ::DefaultStyle)
+function lower(arr::VirtualSparseVector, ctx::AbstractCompiler,  ::DefaultStyle)
     return arr.ex
 end
 

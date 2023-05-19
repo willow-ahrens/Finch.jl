@@ -78,7 +78,7 @@ struct VirtualElementLevel
     D
 end
 
-(ctx::AbstractCompiler)(lvl::VirtualElementLevel) = lvl.ex
+lower(lvl::VirtualElementLevel, ctx::AbstractCompiler, ::DefaultStyle) = lvl.ex
 function virtualize(ex, ::Type{ElementLevel{D, Tv}}, ctx, tag=:lvl) where {D, Tv}
     sym = ctx.freshen(tag)
     val_alloc = ctx.freshen(sym, :_val_alloc)

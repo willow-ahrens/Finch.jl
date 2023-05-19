@@ -183,7 +183,7 @@ combine_style(a::AbstractPreSimplifyStyle, b::AbstractPreSimplifyStyle) = a
 combine_style(a::SimplifyStyle, b::SimplifyStyle) = a
 
 
-function (ctx::AbstractCompiler)(root, ::SimplifyStyle)
+function lower(root, ctx::AbstractCompiler,  ::SimplifyStyle)
     global rules
     root = Rewrite(Prewalk((x) -> if x.kind === virtual && x.val isa Simplify x.val.body end))(root)
     root = simplify(root, ctx)

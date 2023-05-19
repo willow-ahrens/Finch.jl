@@ -92,7 +92,7 @@ function virtualize(ex, ::Type{SparseTriangleLevel{N, Ti, Lvl}}, ctx, tag=:lvl) 
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
     VirtualSparseTriangleLevel(lvl_2, sym, N, Ti, shape)
 end
-function (ctx::AbstractCompiler)(lvl::VirtualSparseTriangleLevel)
+function lower(lvl::VirtualSparseTriangleLevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
         $SparseTriangleLevel{$(lvl.N), $(lvl.Ti)}(
             $(ctx(lvl.lvl)),

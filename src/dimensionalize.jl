@@ -65,7 +65,7 @@ The program is assumed to be in SSA form.
 See also: [`virtual_size`](@ref), [`virtual_resize`](@ref), [`combinedim`](@ref),
 [`TransformSSA`](@ref)
 """
-function (ctx::AbstractCompiler)(prgm, ::DimensionalizeStyle) 
+function lower(prgm, ctx::AbstractCompiler,  ::DimensionalizeStyle) 
     contain(ctx) do ctx_2
         prgm = dimensionalize!(prgm, ctx_2)
         ctx_2(prgm)
