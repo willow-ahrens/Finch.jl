@@ -29,7 +29,8 @@ Julia](https://docs.julialang.org/en/v1/manual/embedding/#Working-with-Arrays).
 
 However, for sparse array formats, it's not just a matter of subtracting one
 from the index, as the internal lists of indices, positions, etc all start from
-zero as well. To remedy the situation, Finch defines a handy zero-indexed integer
+zero as well. To remedy the situation, Finch interoperates with the
+[CIndices](https://github.com/JuliaSparse/CIndices.jl) package, which exports a 
 type called `CIndex`. The internal representation of `CIndex` is one less than the
 value it represents, and we can use `CIndex` as the index or position type of
 a Finch array to represent arrays in other languages.
@@ -40,35 +41,35 @@ Finch array without copying by calling
 ```@meta
 DocTestSetup = quote
     using Finch
-    using Finch: Cindex
+    using CIndices
 end
 ```
 ```jldoctest example2
 julia> m = 4; n = 3; ptr_c = [0, 3, 3, 5]; idx_c = [1, 2, 3, 0, 2]; val_c = [1.1, 2.2, 3.3, 4.4, 5.5];
 
-julia> ptr_jl = unsafe_wrap(Array, reinterpret(Ptr{Cindex{Int}}, pointer(ptr_c)), length(ptr_c); own = false)
-4-element Vector{Cindex{Int64}}:
- Cindex{Int64}(0)
- Cindex{Int64}(3)
- Cindex{Int64}(3)
- Cindex{Int64}(5)
-julia> idx_jl = unsafe_wrap(Array, reinterpret(Ptr{Cindex{Int}}, pointer(idx_c)), length(idx_c); own = false)
-5-element Vector{Cindex{Int64}}:
- Cindex{Int64}(1)
- Cindex{Int64}(2)
- Cindex{Int64}(3)
- Cindex{Int64}(0)
- Cindex{Int64}(2)
-julia> A = Fiber(Dense(SparseList{Cindex{Int}, Cindex{Int}}(Element{0.0, Float64}(val_c), m, ptr_jl, idx_jl), n))
+julia> ptr_jl = unsafe_wrap(Array, reinterpret(Ptr{CIndex{Int}}, pointer(ptr_c)), length(ptr_c); own = false)
+4-element Vector{CIndex{Int64}}:
+ CIndex{Int64}(0)
+ CIndex{Int64}(3)
+ CIndex{Int64}(3)
+ CIndex{Int64}(5)
+julia> idx_jl = unsafe_wrap(Array, reinterpret(Ptr{CIndex{Int}}, pointer(idx_c)), length(idx_c); own = false)
+5-element Vector{CIndex{Int64}}:
+ CIndex{Int64}(1)
+ CIndex{Int64}(2)
+ CIndex{Int64}(3)
+ CIndex{Int64}(0)
+ CIndex{Int64}(2)
+julia> A = Fiber(Dense(SparseList{CIndex{Int}, CIndex{Int}}(Element{0.0, Float64}(val_c), m, ptr_jl, idx_jl), n))
 Dense [:,1:3]
-├─[:,1]: SparseList (0.0) [1:Cindex{Int64}(3)]
-│ ├─[Cindex{Int64}(1)]: 1.1
-│ ├─[Cindex{Int64}(2)]: 2.2
-│ ├─[Cindex{Int64}(3)]: 3.3
-├─[:,2]: SparseList (0.0) [1:Cindex{Int64}(3)]
-├─[:,3]: SparseList (0.0) [1:Cindex{Int64}(3)]
-│ ├─[Cindex{Int64}(0)]: 4.4
-│ ├─[Cindex{Int64}(2)]: 5.5
+├─[:,1]: SparseList (0.0) [1:CIndex{Int64}(3)]
+│ ├─[CIndex{Int64}(1)]: 1.1
+│ ├─[CIndex{Int64}(2)]: 2.2
+│ ├─[CIndex{Int64}(3)]: 3.3
+├─[:,2]: SparseList (0.0) [1:CIndex{Int64}(3)]
+├─[:,3]: SparseList (0.0) [1:CIndex{Int64}(3)]
+│ ├─[CIndex{Int64}(0)]: 4.4
+│ ├─[CIndex{Int64}(2)]: 5.5
 ```
 
-We can also convert between representations by by copying to or from `Cindex` fibers.
+We can also convert between representations by by copying to or from `CIndex` fibers.

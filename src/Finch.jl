@@ -15,6 +15,7 @@ using PrecompileTools
 using Compat
 using DataStructures
 using JSON
+using CIndices
 
 export @finch, @finch_program, @finch_code, value
 
