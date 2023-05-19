@@ -118,7 +118,7 @@ function virtualize(ex, ::Type{SparseVBLLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) wher
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
     VirtualSparseVBLLevel(lvl_2, sym, Ti, Tp, shape, qos_fill, qos_stop, ros_fill, ros_stop, dirty)
 end
-function (ctx::Finch.LowerJulia)(lvl::VirtualSparseVBLLevel)
+function (ctx::AbstractCompiler)(lvl::VirtualSparseVBLLevel)
     quote
         $SparseVBLLevel{$(lvl.Ti), $(lvl.Tp)}(
             $(ctx(lvl.lvl)),
@@ -146,7 +146,7 @@ end
 virtual_level_eltype(lvl::VirtualSparseVBLLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSparseVBLLevel) = virtual_level_default(lvl.lvl)
 
-function declare_level!(lvl::VirtualSparseVBLLevel, ctx::LowerJulia, pos, init)
+function declare_level!(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, pos, init)
     Tp = lvl.Tp
     Ti = lvl.Ti
     ros = call(-, call(getindex, :($(lvl.ex).ptr), call(+, pos, 1)), 1)
@@ -163,7 +163,7 @@ function declare_level!(lvl::VirtualSparseVBLLevel, ctx::LowerJulia, pos, init)
     return lvl
 end
 
-function trim_level!(lvl::VirtualSparseVBLLevel, ctx::LowerJulia, pos)
+function trim_level!(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, pos)
     Tp = lvl.Tp
     Ti = lvl.Ti
     ros = ctx.freshen(:ros)
@@ -188,7 +188,7 @@ function assemble_level!(lvl::VirtualSparseVBLLevel, ctx, pos_start, pos_stop)
     end
 end
 
-function freeze_level!(lvl::VirtualSparseVBLLevel, ctx::LowerJulia, pos_stop)
+function freeze_level!(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, pos_stop)
     p = ctx.freshen(:p)
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
     qos_stop = ctx.freshen(:qos_stop)

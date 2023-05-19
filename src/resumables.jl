@@ -34,13 +34,13 @@ end
 
 Base.getproperty(ctx::WillResumeContext, name) = ctx.ctx.name
 
+#0. now you can add WillResumeContext as a subtype of AbstractFinchContext
 #1. make (ctx::LowerJulia)(node, style) call prehook(ctx, node, style)
 #2. prehook(ctx, node, style) calls lower(ctx, node, style)
 #3. rename every overload of LowerJulia as a callable object to an overload of lower function
 #4. turn LowerJulia overloads into Abstract type overloads
-#5. now you can add WillResumeContext as a subtype of AbstractFinchContext
-#5a. Willow defines a formal interface for what it means to implement AbstractFinchContext
-#6. Fine you can write Resume
+#5a. Fine you can write Resume
+#5b. Willow defines a formal interface for what it means to implement AbstractFinchContext
 
 function (ctx::WillResumeContext)(node, style)
     if style == ctx.triggerstyle

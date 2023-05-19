@@ -14,7 +14,7 @@ FinchNotation.finch_leaf(x::Switch) = virtual(x)
 
 struct SwitchStyle end
 
-(ctx::Stylize{LowerJulia})(node::Switch) = SwitchStyle()
+(ctx::Stylize{<:AbstractCompiler})(node::Switch) = SwitchStyle()
 combine_style(a::DefaultStyle, b::SwitchStyle) = SwitchStyle()
 combine_style(a::ThunkStyle, b::SwitchStyle) = ThunkStyle()
 combine_style(a::SimplifyStyle, b::SwitchStyle) = a
@@ -55,7 +55,7 @@ function (ctx::SwitchVisitor)(node::FinchNode)
 end
 (ctx::SwitchVisitor)(node::Switch) = node.cases
 
-function (ctx::LowerJulia)(stmt, ::SwitchStyle)
+function (ctx::AbstractCompiler)(stmt, ::SwitchStyle)
     cases = (SwitchVisitor(ctx=ctx))(stmt)
     function nest(cases, inner=false)
         guard, body = cases[1]

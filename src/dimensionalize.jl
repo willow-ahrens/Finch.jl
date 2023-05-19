@@ -46,7 +46,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Dimensionalize)
     print(io, ")")
 end
 
-(ctx::Stylize{LowerJulia})(node::Dimensionalize) = DimensionalizeStyle()
+(ctx::Stylize{<:AbstractCompiler})(node::Dimensionalize) = DimensionalizeStyle()
 combine_style(a::DefaultStyle, b::DimensionalizeStyle) = DimensionalizeStyle()
 combine_style(a::DimensionalizeStyle, b::DimensionalizeStyle) = DimensionalizeStyle()
 
@@ -65,7 +65,7 @@ The program is assumed to be in SSA form.
 See also: [`virtual_size`](@ref), [`virtual_resize`](@ref), [`combinedim`](@ref),
 [`TransformSSA`](@ref)
 """
-function (ctx::LowerJulia)(prgm, ::DimensionalizeStyle) 
+function (ctx::AbstractCompiler)(prgm, ::DimensionalizeStyle) 
     contain(ctx) do ctx_2
         prgm = dimensionalize!(prgm, ctx_2)
         ctx_2(prgm)

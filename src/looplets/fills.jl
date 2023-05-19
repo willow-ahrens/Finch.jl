@@ -8,7 +8,7 @@ virtual_default(f::Fill) = Some(f.body)
 
 struct FillStyle <: AbstractPreSimplifyStyle end
 
-(ctx::Stylize{LowerJulia})(::Fill) = SimplifyStyle()
+(ctx::Stylize{<:AbstractCompiler})(::Fill) = SimplifyStyle()
 (ctx::Stylize{<:Simplifier})(::Fill) = FillStyle()
 
 function (ctx::Simplifier)(root::FinchNode, ::FillStyle)

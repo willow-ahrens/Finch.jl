@@ -136,7 +136,7 @@ function virtualize(ex, ::Type{SparseListLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) whe
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
     VirtualSparseListLevel(lvl_2, sym, Ti, Tp, shape, qos_fill, qos_stop)
 end
-function (ctx::Finch.LowerJulia)(lvl::VirtualSparseListLevel)
+function (ctx::AbstractCompiler)(lvl::VirtualSparseListLevel)
     quote
         $SparseListLevel{$(lvl.Ti), $(lvl.Tp)}(
             $(ctx(lvl.lvl)),
@@ -163,7 +163,7 @@ end
 virtual_level_eltype(lvl::VirtualSparseListLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSparseListLevel) = virtual_level_default(lvl.lvl)
 
-function declare_level!(lvl::VirtualSparseListLevel, ctx::LowerJulia, pos, init)
+function declare_level!(lvl::VirtualSparseListLevel, ctx::AbstractCompiler, pos, init)
     #TODO check that init == default
     Ti = lvl.Ti
     Tp = lvl.Tp
@@ -176,7 +176,7 @@ function declare_level!(lvl::VirtualSparseListLevel, ctx::LowerJulia, pos, init)
     return lvl
 end
 
-function trim_level!(lvl::VirtualSparseListLevel, ctx::LowerJulia, pos)
+function trim_level!(lvl::VirtualSparseListLevel, ctx::AbstractCompiler, pos)
     qos = ctx.freshen(:qos)
     push!(ctx.preamble, quote
         resize!($(lvl.ex).ptr, $(ctx(pos)) + 1)
@@ -196,7 +196,7 @@ function assemble_level!(lvl::VirtualSparseListLevel, ctx, pos_start, pos_stop)
     end
 end
 
-function freeze_level!(lvl::VirtualSparseListLevel, ctx::LowerJulia, pos_stop)
+function freeze_level!(lvl::VirtualSparseListLevel, ctx::AbstractCompiler, pos_stop)
     p = ctx.freshen(:p)
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
     qos_stop = ctx.freshen(:qos_stop)

@@ -1,7 +1,7 @@
 module SparseArraysExt 
 
 using Finch
-using Finch: LowerJulia, DefaultStyle, Extent
+using Finch: AbstractCompiler, DefaultStyle, Extent
 using Finch: Walk, Follow
 using Finch: Furlable, Stepper, Jumper, Run, Fill, Lookup, Simplify, Pipeline, Phase, Thunk, Spike, Step
 using Finch: virtual_size, virtual_default, getstart, getstop
@@ -41,11 +41,11 @@ end
     Ti
 end
 
-function Finch.virtual_size(arr::VirtualSparseMatrixCSC, ctx::LowerJulia)
+function Finch.virtual_size(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler)
     return [Extent(literal(1),value(:($(arr.ex).m), arr.Ti)), Extent(literal(1),value(:($(arr.ex).n), arr.Ti))]
 end
 
-function (ctx::LowerJulia)(arr::VirtualSparseMatrixCSC, ::DefaultStyle)
+function (ctx::AbstractCompiler)(arr::VirtualSparseMatrixCSC, ::DefaultStyle)
     return arr.ex
 end
 
@@ -57,11 +57,11 @@ function Finch.virtualize(ex, ::Type{<:SparseMatrixCSC{Tv, Ti}}, ctx, tag=:tns) 
     VirtualSparseMatrixCSC(sym, Tv, Ti)
 end
 
-function Finch.declare!(arr::VirtualSparseMatrixCSC, ctx::LowerJulia, init)
+function Finch.declare!(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler, init)
     throw(FormatLimitation("Finch does not support writes to SparseMatrixCSC"))
 end
 
-function Finch.get_reader(arr::VirtualSparseMatrixCSC, ctx::LowerJulia, ::Union{Nothing, Walk, Follow}, ::Union{Nothing, Walk})
+function Finch.get_reader(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler, ::Union{Nothing, Walk, Follow}, ::Union{Nothing, Walk})
     tag = arr.ex
     Ti = arr.Ti
     my_i = ctx.freshen(tag, :_i)
@@ -128,7 +128,7 @@ function Finch.get_reader(arr::VirtualSparseMatrixCSC, ctx::LowerJulia, ::Union{
     )
 end
 
-function Finch.get_updater(arr::VirtualSparseMatrixCSC, ctx::LowerJulia, protos...)
+function Finch.get_updater(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler, protos...)
     throw(FormatLimitation("Finch does not support writes to SparseMatrixCSC"))
 end
 
@@ -143,11 +143,11 @@ Finch.virtual_eltype(tns::VirtualSparseMatrixCSC) = tns.Tv
     Ti
 end
 
-function Finch.virtual_size(arr::VirtualSparseVector, ctx::LowerJulia)
+function Finch.virtual_size(arr::VirtualSparseVector, ctx::AbstractCompiler)
     return Any[Extent(literal(1),value(:($(arr.ex).n), arr.Ti))]
 end
 
-function (ctx::LowerJulia)(arr::VirtualSparseVector, ::DefaultStyle)
+function (ctx::AbstractCompiler)(arr::VirtualSparseVector, ::DefaultStyle)
     return arr.ex
 end
 
@@ -159,11 +159,11 @@ function Finch.virtualize(ex, ::Type{<:SparseVector{Tv, Ti}}, ctx, tag=:tns) whe
     VirtualSparseVector(sym, Tv, Ti)
 end
 
-function Finch.declare!(arr::VirtualSparseVector, ctx::LowerJulia, init)
+function Finch.declare!(arr::VirtualSparseVector, ctx::AbstractCompiler, init)
     throw(FormatLimitation("Finch does not support writes to SparseVector"))
 end
 
-function Finch.get_reader(arr::VirtualSparseVector, ctx::LowerJulia, ::Union{Nothing, Walk})
+function Finch.get_reader(arr::VirtualSparseVector, ctx::AbstractCompiler, ::Union{Nothing, Walk})
     tag = arr.ex
     Ti = arr.Ti
     my_i = ctx.freshen(tag, :_i)
@@ -225,7 +225,7 @@ function Finch.get_reader(arr::VirtualSparseVector, ctx::LowerJulia, ::Union{Not
     )
 end
 
-function Finch.get_updater(arr::VirtualSparseVector, ctx::LowerJulia, protos...)
+function Finch.get_updater(arr::VirtualSparseVector, ctx::AbstractCompiler, protos...)
     throw(FormatLimitation("Finch does not support writes to SparseVector"))
 end
 

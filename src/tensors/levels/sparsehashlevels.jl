@@ -161,7 +161,7 @@ function virtualize(ex, ::Type{SparseHashLevel{N, Ti, Tp, Tbl, Lvl}}, ctx, tag=:
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
     VirtualSparseHashLevel(lvl_2, sym, N, Ti, Tp, Tbl, shape, qos_fill, qos_stop)
 end
-function (ctx::Finch.LowerJulia)(lvl::VirtualSparseHashLevel)
+function (ctx::AbstractCompiler)(lvl::VirtualSparseHashLevel)
     quote
         $SparseHashLevel{$(lvl.N), $(lvl.Ti), $(lvl.Tp), $(lvl.Tbl)}(
             $(ctx(lvl.lvl)),
@@ -175,12 +175,12 @@ end
 
 summary_fiber_abbrev(lvl::VirtualSparseHashLevel) = "sh{$(lvl.N)}($(summary_fiber_abbrev(lvl.lvl)))"
 
-function virtual_level_size(lvl::VirtualSparseHashLevel, ctx::LowerJulia)
+function virtual_level_size(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler)
     ext = map((ti, stop)->Extent(literal(ti(1)), stop), lvl.Ti.parameters, lvl.shape)
     (virtual_level_size(lvl.lvl, ctx)..., ext...)
 end
 
-function virtual_level_resize!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, dims...)
+function virtual_level_resize!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, dims...)
     lvl.shape = map(getstop, dims[end-lvl.N+1:end])
     lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims[1:end-lvl.N]...)
     lvl
@@ -189,7 +189,7 @@ end
 virtual_level_eltype(lvl::VirtualSparseHashLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSparseHashLevel) = virtual_level_default(lvl.lvl)
 
-function declare_level!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, pos, init)
+function declare_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos, init)
     Ti = lvl.Ti
     Tp = lvl.Tp
 
@@ -204,7 +204,7 @@ function declare_level!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, pos, init)
     return lvl
 end
 
-function trim_level!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, pos)
+function trim_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos)
     Ti = lvl.Ti
     Tp = lvl.Tp
     qos = ctx.freshen(:qos)
@@ -217,7 +217,7 @@ function trim_level!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, pos)
     return lvl
 end
 
-function thaw_level!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, pos)
+function thaw_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos)
     Ti = lvl.Ti
     Tp = lvl.Tp
     p = ctx.freshen(lvl.ex, :_p)
@@ -242,7 +242,7 @@ end
 
 hashkeycmp(((pos, idx), qos),) = (pos, reverse(idx)...)
 
-function freeze_level!(lvl::VirtualSparseHashLevel, ctx::LowerJulia, pos_stop)
+function freeze_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos_stop)
     p = ctx.freshen(:p)
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
     qos_stop = ctx.freshen(:qos_stop)

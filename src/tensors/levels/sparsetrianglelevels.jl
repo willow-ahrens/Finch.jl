@@ -92,7 +92,7 @@ function virtualize(ex, ::Type{SparseTriangleLevel{N, Ti, Lvl}}, ctx, tag=:lvl) 
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
     VirtualSparseTriangleLevel(lvl_2, sym, N, Ti, shape)
 end
-function (ctx::Finch.LowerJulia)(lvl::VirtualSparseTriangleLevel)
+function (ctx::AbstractCompiler)(lvl::VirtualSparseTriangleLevel)
     quote
         $SparseTriangleLevel{$(lvl.N), $(lvl.Ti)}(
             $(ctx(lvl.lvl)),
@@ -117,14 +117,14 @@ end
 virtual_level_eltype(lvl::VirtualSparseTriangleLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSparseTriangleLevel) = virtual_level_default(lvl.lvl)
 
-function declare_level!(lvl::VirtualSparseTriangleLevel, ctx::LowerJulia, pos, init)
+function declare_level!(lvl::VirtualSparseTriangleLevel, ctx::AbstractCompiler, pos, init)
     # qos = virtual_simplex(lvl.N, ctx, lvl.shape)
     qos = call(*, pos, virtual_simplex(lvl.N, ctx, lvl.shape))
     lvl.lvl = declare_level!(lvl.lvl, ctx, qos, init)
     return lvl
 end
 
-function trim_level!(lvl::VirtualSparseTriangleLevel, ctx::LowerJulia, pos)
+function trim_level!(lvl::VirtualSparseTriangleLevel, ctx::AbstractCompiler, pos)
     qos = call(*, pos, virtual_simplex(lvl.N, ctx, lvl.shape))
     lvl.lvl = trim_level!(lvl.lvl, ctx, qos)
     return lvl
@@ -147,7 +147,7 @@ function reassemble_level!(lvl::VirtualSparseTriangleLevel, ctx, pos_start, pos_
     lvl
 end
 
-function freeze_level!(lvl::VirtualSparseTriangleLevel, ctx::LowerJulia, pos)
+function freeze_level!(lvl::VirtualSparseTriangleLevel, ctx::AbstractCompiler, pos)
     qos = call(*, pos, virtual_simplex(lvl.N, ctx, lvl.shape))
     lvl.lvl = freeze_level!(lvl.lvl, ctx, qos)
     return lvl

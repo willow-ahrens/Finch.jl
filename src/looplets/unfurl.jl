@@ -36,7 +36,7 @@ end
 #TODO propagate eldim here
 unfurl_access(node, ctx, eldim, tns) = similarterm(node, operation(node), map(ctx, arguments(node)))
 
-function (ctx::LowerJulia)(root::FinchNode, ::UnfurlStyle)
+function (ctx::AbstractCompiler)(root::FinchNode, ::UnfurlStyle)
     if root.kind === loop
         idx = root.idx
         @assert root.ext.kind === virtual
@@ -87,7 +87,7 @@ combine_style(a::SelectStyle, b::UnfurlStyle) = a
 combine_style(a::SelectStyle, b::SelectStyle) = a
 combine_style(a::SelectStyle, b::SimplifyStyle) = b
 
-function (ctx::LowerJulia)(root, ::SelectStyle)
+function (ctx::AbstractCompiler)(root, ::SelectStyle)
     idxs = Dict()
     root = SelectVisitor(ctx, idxs)(root)
     for (idx, val) in pairs(idxs)
@@ -107,7 +107,7 @@ end
 end
 
 virtual_default(tns::Furlable) = Some(tns.val)
-virtual_size(tns::Furlable, ::LowerJulia, dim=nothing) = tns.size
+virtual_size(tns::Furlable, ::AbstractCompiler, dim=nothing) = tns.size
 
 FinchNotation.finch_leaf(x::Furlable) = virtual(x)
 
@@ -116,7 +116,7 @@ FinchNotation.finch_leaf(x::Furlable) = virtual(x)
 #    print(io, "Furlable()")
 #end
 
-function stylize_access(node, ctx::Stylize{LowerJulia}, tns::Furlable)
+function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::Furlable)
     if !isempty(node.idxs)
         if getunbound(node.idxs[end]) ⊆ keys(ctx.ctx.bindings)
             return SelectStyle()

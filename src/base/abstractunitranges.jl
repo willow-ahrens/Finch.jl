@@ -5,7 +5,7 @@
     eltype
 end
 
-function (ctx::LowerJulia)(arr::VirtualAbstractUnitRange, ::DefaultStyle)
+function (ctx::AbstractCompiler)(arr::VirtualAbstractUnitRange, ::DefaultStyle)
     return arr.ex
 end
 
@@ -16,13 +16,13 @@ function virtualize(ex, arrtype::Type{<:AbstractUnitRange{T}}, ctx, tag=:tns) wh
     VirtualAbstractUnitRange(sym, target, arrtype, T)
 end
 
-function virtual_size(arr::VirtualAbstractUnitRange, ctx::LowerJulia, ::NoDimension) #TODO I'm sure this has unintended consequences
+function virtual_size(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, ::NoDimension) #TODO I'm sure this has unintended consequences
     return [Extent(literal(1), value(:(length($(arr.ex))), Int)),]
 end
 
-virtual_size(arr::VirtualAbstractUnitRange, ctx::LowerJulia, dim) = (shiftdim(arr.target, call(-, getstart(dim), getstart(arr.target))),)
-virtual_resize!(arr::VirtualAbstractUnitRange, ctx::LowerJulia, idx_dim) = (arr, arr.target)
-virtual_eldim(arr::VirtualAbstractUnitRange, ctx::LowerJulia, idx_dim) = arr.target
+virtual_size(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, dim) = (shiftdim(arr.target, call(-, getstart(dim), getstart(arr.target))),)
+virtual_resize!(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, idx_dim) = (arr, arr.target)
+virtual_eldim(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, idx_dim) = arr.target
 
 function get_reader(arr::VirtualAbstractUnitRange, ctx, proto_idx)
     Furlable(
@@ -35,11 +35,11 @@ function get_reader(arr::VirtualAbstractUnitRange, ctx, proto_idx)
     )
 end
 
-function declare!(arr::VirtualAbstractUnitRange, ctx::LowerJulia, init)
+function declare!(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, init)
     throw(FormatLimitation("$(arr.arrtype) is not writeable"))
 end
 
-get_updater(arr::VirtualAbstractUnitRange, ctx::LowerJulia, protos...) = 
+get_updater(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, protos...) = 
     throw(FormatLimitation("$(arr.arrtype) is not writeable"))
 
 FinchNotation.finch_leaf(x::VirtualAbstractUnitRange) = virtual(x)

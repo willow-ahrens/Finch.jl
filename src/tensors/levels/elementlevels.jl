@@ -78,7 +78,7 @@ struct VirtualElementLevel
     D
 end
 
-(ctx::Finch.LowerJulia)(lvl::VirtualElementLevel) = lvl.ex
+(ctx::AbstractCompiler)(lvl::VirtualElementLevel) = lvl.ex
 function virtualize(ex, ::Type{ElementLevel{D, Tv}}, ctx, tag=:lvl) where {D, Tv}
     sym = ctx.freshen(tag)
     val_alloc = ctx.freshen(sym, :_val_alloc)
@@ -103,9 +103,9 @@ end
 
 freeze_level!(lvl::VirtualElementLevel, ctx, pos) = lvl
 
-thaw_level!(lvl::VirtualElementLevel, ctx::LowerJulia, pos) = lvl
+thaw_level!(lvl::VirtualElementLevel, ctx::AbstractCompiler, pos) = lvl
 
-function trim_level!(lvl::VirtualElementLevel, ctx::LowerJulia, pos)
+function trim_level!(lvl::VirtualElementLevel, ctx::AbstractCompiler, pos)
     push!(ctx.preamble, quote
         resize!($(lvl.ex).val, $(ctx(pos)))
     end)

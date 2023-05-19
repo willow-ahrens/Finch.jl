@@ -130,7 +130,7 @@ function virtualize(ex, ::Type{RepeatRLELevel{D, Ti, Tp, Tv}}, ctx, tag=:lvl) wh
     dirty = ctx.freshen(sym, :_dirty)
     VirtualRepeatRLELevel(sym, D, Ti, Tp, Tv, shape, ros_fill, qos_stop, dirty)
 end
-function (ctx::Finch.LowerJulia)(lvl::VirtualRepeatRLELevel)
+function (ctx::AbstractCompiler)(lvl::VirtualRepeatRLELevel)
     quote
         $RepeatRLELevel{$(lvl.D), $(lvl.Ti), $(lvl.Tp), $(lvl.Tv)}(
             $(ctx(lvl.shape)),
@@ -156,7 +156,7 @@ end
 virtual_level_default(lvl::VirtualRepeatRLELevel) = lvl.D
 virtual_level_eltype(lvl::VirtualRepeatRLELevel) = lvl.Tv
 
-function declare_level!(lvl::VirtualRepeatRLELevel, ctx::LowerJulia, mode, init)
+function declare_level!(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, mode, init)
     init == literal(lvl.D) || throw(FormatLimitation("Cannot initialize RepeatRLE Levels to non-default values"))
     Tp = lvl.Tp
     Ti = lvl.Ti
@@ -168,7 +168,7 @@ function declare_level!(lvl::VirtualRepeatRLELevel, ctx::LowerJulia, mode, init)
     return lvl
 end
 
-function trim_level!(lvl::VirtualRepeatRLELevel, ctx::LowerJulia, pos)
+function trim_level!(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, pos)
     qos = ctx.freshen(:qos)
     push!(ctx.preamble, quote
         resize!($(lvl.ex).ptr, $(ctx(pos)) + 1)
@@ -188,7 +188,7 @@ function assemble_level!(lvl::VirtualRepeatRLELevel, ctx, pos_start, pos_stop)
     end
 end
 
-function freeze_level!(lvl::VirtualRepeatRLELevel, ctx::LowerJulia, pos_stop)
+function freeze_level!(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, pos_stop)
     Tp = lvl.Tp
     Ti = lvl.Ti
     p = ctx.freshen(:p)

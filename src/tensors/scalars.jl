@@ -23,7 +23,7 @@ struct VirtualScalar
     val
 end
 
-(ctx::Finch.LowerJulia)(tns::VirtualScalar) = :($Scalar{$(tns.D), $(tns.Tv)}($(tns.val)))
+(ctx::AbstractCompiler)(tns::VirtualScalar) = :($Scalar{$(tns.D), $(tns.Tv)}($(tns.val)))
 function virtualize(ex, ::Type{Scalar{D, Tv}}, ctx, tag) where {D, Tv}
     sym = ctx.freshen(tag)
     val = Symbol(tag, :_val) #TODO hmm this is risky
@@ -58,7 +58,7 @@ end
 get_reader(tns::VirtualScalar, ctx) = tns
 get_updater(tns::VirtualScalar, ctx) = tns
 
-function lowerjulia_access(ctx::LowerJulia, node, tns::VirtualScalar)
+function lowerjulia_access(ctx::AbstractCompiler, node, tns::VirtualScalar)
     @assert isempty(node.idxs)
     return tns.val
 end
@@ -82,7 +82,7 @@ get_updater(tns::VirtualDirtyScalar, ctx) = tns
 
 FinchNotation.finch_leaf(x::VirtualDirtyScalar) = virtual(x)
 
-function lowerjulia_access(ctx::LowerJulia, node, tns::VirtualDirtyScalar)
+function lowerjulia_access(ctx::AbstractCompiler, node, tns::VirtualDirtyScalar)
     @assert isempty(node.idxs)
     push!(ctx.preamble, quote
         $(tns.dirty) = true
