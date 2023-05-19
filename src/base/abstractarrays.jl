@@ -4,7 +4,7 @@
     ndims
 end
 
-function virtual_size(arr::VirtualAbstractArray, ctx::LowerJulia)
+function virtual_size(arr::VirtualAbstractArray, ctx::AbstractCompiler)
     dims = map(i -> Symbol(arr.ex, :_mode, i, :_stop), 1:arr.ndims)
     push!(ctx.preamble, quote
         ($(dims...),) = size($(arr.ex))
@@ -12,7 +12,7 @@ function virtual_size(arr::VirtualAbstractArray, ctx::LowerJulia)
     return map(i->Extent(literal(1), value(dims[i], Int)), 1:arr.ndims)
 end
 
-function (ctx::LowerJulia)(arr::VirtualAbstractArray, ::DefaultStyle)
+function lower(arr::VirtualAbstractArray, ctx::AbstractCompiler,  ::DefaultStyle)
     return arr.ex
 end
 
@@ -22,18 +22,18 @@ function virtualize(ex, ::Type{<:AbstractArray{T, N}}, ctx, tag=:tns) where {T, 
     VirtualAbstractArray(sym, T, N)
 end
 
-function declare!(arr::VirtualAbstractArray, ctx::LowerJulia, init)
+function declare!(arr::VirtualAbstractArray, ctx::AbstractCompiler, init)
     push!(ctx.preamble, quote
         fill!($(arr.ex), $(ctx(init)))
     end)
     arr
 end
 
-freeze!(arr::VirtualAbstractArray, ctx::LowerJulia) = arr
-thaw!(arr::VirtualAbstractArray, ctx::LowerJulia) = arr
+freeze!(arr::VirtualAbstractArray, ctx::AbstractCompiler) = arr
+thaw!(arr::VirtualAbstractArray, ctx::AbstractCompiler) = arr
 
-get_reader(arr::VirtualAbstractArray, ctx::LowerJulia, protos...) = arr
-get_updater(arr::VirtualAbstractArray, ctx::LowerJulia, protos...) = arr
+get_reader(arr::VirtualAbstractArray, ctx::AbstractCompiler, protos...) = arr
+get_updater(arr::VirtualAbstractArray, ctx::AbstractCompiler, protos...) = arr
 
 FinchNotation.finch_leaf(x::VirtualAbstractArray) = virtual(x)
 

@@ -106,7 +106,7 @@ function virtualize(ex, ::Type{DenseLevel{Ti, Lvl}}, ctx, tag=:lvl) where {Ti, L
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
     VirtualDenseLevel(lvl_2, sym, Ti, shape)
 end
-function (ctx::Finch.LowerJulia)(lvl::VirtualDenseLevel)
+function lower(lvl::VirtualDenseLevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
         $DenseLevel{$(lvl.Ti)}(
             $(ctx(lvl.lvl)),
@@ -131,12 +131,12 @@ end
 virtual_level_eltype(lvl::VirtualDenseLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualDenseLevel) = virtual_level_default(lvl.lvl)
 
-function declare_level!(lvl::VirtualDenseLevel, ctx::LowerJulia, pos, init)
+function declare_level!(lvl::VirtualDenseLevel, ctx::AbstractCompiler, pos, init)
     lvl.lvl = declare_level!(lvl.lvl, ctx, call(*, pos, lvl.shape), init)
     return lvl
 end
 
-function trim_level!(lvl::VirtualDenseLevel, ctx::LowerJulia, pos)
+function trim_level!(lvl::VirtualDenseLevel, ctx::AbstractCompiler, pos)
     qos = ctx.freshen(:qos)
     push!(ctx.preamble, quote
         $qos = $(ctx(pos)) * $(ctx(lvl.shape))
@@ -159,12 +159,12 @@ function reassemble_level!(lvl::VirtualDenseLevel, ctx, pos_start, pos_stop)
     lvl
 end
 
-function thaw_level!(lvl::VirtualDenseLevel, ctx::LowerJulia, pos)
+function thaw_level!(lvl::VirtualDenseLevel, ctx::AbstractCompiler, pos)
     lvl.lvl = thaw_level!(lvl.lvl, ctx, call(*, pos, lvl.shape))
     return lvl
 end
 
-function freeze_level!(lvl::VirtualDenseLevel, ctx::LowerJulia, pos)
+function freeze_level!(lvl::VirtualDenseLevel, ctx::AbstractCompiler, pos)
     lvl.lvl = freeze_level!(lvl.lvl, ctx, call(*, pos, lvl.shape))
     return lvl
 end

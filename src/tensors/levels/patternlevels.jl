@@ -75,7 +75,7 @@ pattern!(fbr::SubFiber) = SubFiber(pattern!(fbr.lvl), fbr.pos)
 
 struct VirtualPatternLevel end
 
-(ctx::Finch.LowerJulia)(lvl::VirtualPatternLevel) = :(PatternLevel())
+lower(lvl::VirtualPatternLevel, ctx::AbstractCompiler, ::DefaultStyle) = :(PatternLevel())
 virtualize(ex, ::Type{<:PatternLevel}, ctx) = VirtualPatternLevel()
 
 virtual_level_resize!(lvl::VirtualPatternLevel, ctx) = lvl
@@ -95,7 +95,7 @@ thaw_level!(lvl::VirtualPatternLevel, ctx, pos) = lvl
 assemble_level!(lvl::VirtualPatternLevel, ctx, pos_start, pos_stop) = quote end
 reassemble_level!(lvl::VirtualPatternLevel, ctx, pos_start, pos_stop) = quote end
 
-trim_level!(lvl::VirtualPatternLevel, ctx::LowerJulia, pos) = lvl
+trim_level!(lvl::VirtualPatternLevel, ctx::AbstractCompiler, pos) = lvl
 
 get_reader(::VirtualSubFiber{VirtualPatternLevel}, ctx) = Fill(true)
 is_laminable_updater(lvl::VirtualPatternLevel, ctx) = true
@@ -110,7 +110,7 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualPatternLevel}, ctx)
     VirtualScalar(nothing, Bool, false, gensym(), fbr.dirty)
 end
 
-function lowerjulia_access(ctx::LowerJulia, node, tns::VirtualFiber{VirtualPatternLevel})
+function lowerjulia_access(ctx::AbstractCompiler, node, tns::VirtualFiber{VirtualPatternLevel})
     val = ctx.freshen(:null)
     push!(ctx.preamble, :($val = false))
     val

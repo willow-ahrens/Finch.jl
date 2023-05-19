@@ -12,7 +12,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Thunk)
     print(io, "Thunk()")
 end
 
-(ctx::Stylize{LowerJulia})(node::Thunk) = ThunkStyle()
+(ctx::Stylize{<:AbstractCompiler})(node::Thunk) = ThunkStyle()
 combine_style(a::DefaultStyle, b::ThunkStyle) = ThunkStyle()
 combine_style(a::ThunkStyle, b::ThunkStyle) = ThunkStyle()
 combine_style(a::ThunkStyle, b::DimensionalizeStyle) = ThunkStyle()
@@ -30,7 +30,7 @@ function (ctx::ThunkVisitor)(node)
     end
 end
 
-function (ctx::LowerJulia)(node, ::ThunkStyle)
+function lower(node, ctx::AbstractCompiler,  ::ThunkStyle)
     contain(ctx) do ctx2
         node = (ThunkVisitor(ctx2))(node)
         contain(ctx2) do ctx3

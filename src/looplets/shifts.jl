@@ -23,7 +23,7 @@ FinchNotation.finch_leaf(x::Shift) = virtual(x)
 #TODO can't we do this more pretty?
 supports_shift(style) = false
 supports_shift(::DefaultStyle) = true
-(ctx::Stylize{LowerJulia})(node::Shift) = (@assert supports_shift(ctx(node.body)) "$(ctx(node.body))"; ctx(node.body))
+(ctx::Stylize{<:AbstractCompiler})(node::Shift) = (@assert supports_shift(ctx(node.body)) "$(ctx(node.body))"; ctx(node.body))
 
 get_point_body(node::Shift, ctx, ext, idx) = get_point_body(node.body, ctx, shiftdim(ext, node.delta), call(-, idx, node.delta))
 
