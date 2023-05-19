@@ -572,7 +572,8 @@ function display_expression(io, mime, node::FinchNode)
         display_expression(io, mime, node.arg)
     elseif node.kind === virtual
         print(io, "virtual(")
-        print(io, node.val)
+        #print(io, node.val)
+        summary(io, node.val)
         print(io, ")")
     elseif node.kind === access
         display_expression(io, mime, node.tns)

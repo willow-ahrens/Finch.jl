@@ -3,52 +3,63 @@ struct Resumable
     root
 end
 
-quote
-    for i = 1:10
-        println(i)
-        $(Hole(ctx, root))
-    end
-end
-
-function show(io, node::Hole)
-end
-function show(io, mime::MIME"text/plain", node::Hole)
+function Base.show(io::IO, mime::MIME"text/plain", node::Resumable)
     println("@finch")
     show(io, mime, node.root)
 end
 
-resume = Postwalk(node -> if node isa Hole
-    node.ctx(node.root))
-
-quote
-    for i = 1:10
-        println(i)
-        @finch ctx A[i] += B[i] ...
+show_with_indent(io, node, indent, prec) = (print("@finch("); Base.show_unquoted(io, node, indent, prec); print(")"))
+function show_with_indent(io, node::FinchNode, indent, prec)
+    indent = fld(indent, 2) + 1
+    if Finch.FinchNotation.isstateful(node)
+        println("@finch begin")
+        Finch.FinchNotation.display_statement(io, MIME"text/plain"(), node, indent)
+        println()
+        print("  "^(indent - 1), "end")
+    else
+        print("@finch("); Finch.FinchNotation.display_expression(io, MIME"text/plain"(), node); print(")")
     end
 end
 
-struct WillResumeContext
+function Base.show_unquoted(io::IO, node::Resumable, indent::Int, prec::Int)
+    show_with_indent(io, node.root, indent, prec)
+end
+
+
+function Base.show(io::IO, node::Resumable)
+    println("@finch")
+    show(io, MIME"text/plain"(), node.root)
+end
+
+#resume = Postwalk(node -> if node isa Resumable
+#    node.ctx(node.root))
+
+@kwdef struct WillResumeContext <: AbstractCompiler
     ctx::LowerJulia
     countdown = 5
 end
 
-Base.getproperty(ctx::WillResumeContext, name) = ctx.ctx.name
+#Sad but true
+function Base.getproperty(ctx::WillResumeContext, name::Symbol)
+    if name === :countdown
+        return getfield(ctx, :countdown)
+    elseif name === :ctx
+        return getfield(ctx, :ctx)
+    end
+    getproperty(ctx.ctx, name)
+end
 
-#0. now you can add WillResumeContext as a subtype of AbstractFinchContext
-#1. make (ctx::LowerJulia)(node, style) call prehook(ctx, node, style)
-#2. prehook(ctx, node, style) calls lower(ctx, node, style)
-#3. rename every overload of LowerJulia as a callable object to an overload of lower function
-#4. turn LowerJulia overloads into Abstract type overloads
+function Base.setproperty!(ctx::WillResumeContext, name::Symbol, x)
+    setproperty!(ctx.ctx, name, x)
+end
+
 #5a. Fine you can write Resume
 #5b. Willow defines a formal interface for what it means to implement AbstractFinchContext
 
 function (ctx::WillResumeContext)(node, style)
-    if style == ctx.triggerstyle
-        do something real fancy
-    elseif ctx.countdown == 0
+    if ctx.countdown == 0
         Resumable(ctx.ctx, node)
     else
-        style = get_style(node)
-        WillResumeContext(ctx.ctx, countdown - 1)(node, style)
+        lower(node, WillResumeContext(ctx.ctx, ctx.countdown - 1), style)
     end
 end
