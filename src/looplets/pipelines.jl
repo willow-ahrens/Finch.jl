@@ -51,7 +51,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  ::PipelineStyle)
             phase_extents = resolvedim(mapreduce(x -> Narrow(Extent(start = call(+, x[1], 1), stop = x[2])), 
                                       (a, b) -> resultdim(ctx, a, b),
                                       collect(zip(start_points,stop_points)),
-                                      init = Narrow(Extent(start = getstart(root.ext), stop = getstop(root.ext)))))
+                                      init = Narrow(root.ext)))
             push!(thunk.args, contain(ctx) do ctx_2
                 #push!(ctx_2.preamble, :($i0 = $i))
                 #ctx_2(loop(root.idx, Extent(start = value(i0), stop = getstop(root.ext)), body))
