@@ -82,15 +82,15 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  ::PhaseStyle)
 
 
         #if query(call(>=, measure(ext_4), 1), ctx) # wrong with new pipeline lowering
-        #if query(call(>, measure(ext_4), 0), ctx)
-        #    return body
-        #else
+        if query(call(>, measure(ext_4), 0), ctx)
+            return body
+        else
             return quote
                 if $(ctx(getstop(ext_4))) >= $(ctx(getstart(ext_4)))
                     $body
                 end
             end
-        #end
+        end
     else
         error("unimplemented")
     end
