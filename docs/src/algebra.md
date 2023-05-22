@@ -126,6 +126,6 @@ sure to append your new rules to the old rules, which can be obtained by calling
 [RewriteTools.jl](https://github.com/willow-ahrens/RewriteTools.jl).
 
 ```@docs
-base_rules
-getrules
+get_program_rules
+get_bounds_rules
 ```
