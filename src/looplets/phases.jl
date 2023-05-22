@@ -31,8 +31,7 @@ function phase_body(node::FinchNode, ctx, ext, ext_2)
     end
 end
 phase_body(node::Phase, ctx, ext, ext_2) = node.body(ctx, ext_2)
-phase_body(node::Spike, ctx, ext, ext_2) = truncate(node, ctx, ext, ext_2) #TODO This should be called on everything
-phase_body(node, ctx, ext, ext_2) = node
+phase_body(node, ctx, ext, ext_2) = truncate(node, ctx, ext, ext_2)
 phase_body(node::Shift, ctx, ext, ext_2) = Shift(phase_body(node.body, ctx, shiftdim(ext, call(-, node.delta)), shiftdim(ext_2, call(-, node.delta))), node.delta)
 
 struct PhaseStyle end
