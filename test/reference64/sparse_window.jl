@@ -15,7 +15,7 @@ begin
     else
         A_lvl_i1 = 0
     end
-    phase_stop = min(i_stop, -(((ex.bodies[2]).body.rhs.idxs[1]).tns.tns.start) + 1 + A_lvl_i1)
+    phase_stop = min(A_lvl_i1, i_stop, -(((ex.bodies[2]).body.rhs.idxs[1]).tns.tns.start) + 1 + A_lvl_i1)
     if phase_stop >= 1
         i = 1
         if A_lvl.idx[A_lvl_q] < 1 + -((1 - ((ex.bodies[2]).body.rhs.idxs[1]).tns.tns.start))
@@ -24,20 +24,22 @@ begin
         while i <= phase_stop
             A_lvl_i = A_lvl.idx[A_lvl_q]
             phase_stop_2 = min(phase_stop, -(((ex.bodies[2]).body.rhs.idxs[1]).tns.tns.start) + 1 + A_lvl_i)
-            if A_lvl_i == phase_stop_2 + -((1 - ((ex.bodies[2]).body.rhs.idxs[1]).tns.tns.start))
-                A_lvl_2_val_2 = A_lvl_2.val[A_lvl_q]
-                if C_lvl_qos > C_lvl_qos_stop
-                    C_lvl_qos_stop = max(C_lvl_qos_stop << 1, 1)
-                    resize_if_smaller!(C_lvl.idx, C_lvl_qos_stop)
-                    resize_if_smaller!(C_lvl_2.val, C_lvl_qos_stop)
-                    fill_range!(C_lvl_2.val, 0.0, C_lvl_qos, C_lvl_qos_stop)
+            if phase_stop_2 >= i
+                if A_lvl_i == phase_stop_2 + -((1 - ((ex.bodies[2]).body.rhs.idxs[1]).tns.tns.start))
+                    A_lvl_2_val_2 = A_lvl_2.val[A_lvl_q]
+                    if C_lvl_qos > C_lvl_qos_stop
+                        C_lvl_qos_stop = max(C_lvl_qos_stop << 1, 1)
+                        resize_if_smaller!(C_lvl.idx, C_lvl_qos_stop)
+                        resize_if_smaller!(C_lvl_2.val, C_lvl_qos_stop)
+                        fill_range!(C_lvl_2.val, 0.0, C_lvl_qos, C_lvl_qos_stop)
+                    end
+                    C_lvl_2.val[C_lvl_qos] = A_lvl_2_val_2
+                    C_lvl.idx[C_lvl_qos] = phase_stop_2
+                    C_lvl_qos += 1
+                    A_lvl_q += 1
                 end
-                C_lvl_2.val[C_lvl_qos] = A_lvl_2_val_2
-                C_lvl.idx[C_lvl_qos] = phase_stop_2
-                C_lvl_qos += 1
-                A_lvl_q += 1
+                i = phase_stop_2 + 1
             end
-            i = phase_stop_2 + 1
         end
     end
     C_lvl.ptr[1 + 1] = (C_lvl_qos - 0) - 1

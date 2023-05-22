@@ -52,12 +52,14 @@ quote
             while i <= phase_stop
                 A_i = A.rowval[A_q]
                 phase_stop_2 = min(phase_stop, A_i)
-                if A_i == phase_stop_2
-                    A_val = A.nzval[A_q]
-                    y[phase_stop_2] = x[j_4] * A_val + y[phase_stop_2]
-                    A_q += 1
+                if phase_stop_2 >= i
+                    if A_i == phase_stop_2
+                        A_val = A.nzval[A_q]
+                        y[phase_stop_2] = x[j_4] * A_val + y[phase_stop_2]
+                        A_q += 1
+                    end
+                    i = phase_stop_2 + 1
                 end
-                i = phase_stop_2 + 1
             end
         end
     end

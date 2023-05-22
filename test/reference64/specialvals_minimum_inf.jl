@@ -19,12 +19,14 @@ begin
         while i <= phase_stop
             yf_lvl_i = yf_lvl.idx[yf_lvl_q]
             phase_stop_2 = min(phase_stop, yf_lvl_i)
-            if yf_lvl_i == phase_stop_2
-                yf_lvl_2_val_2 = yf_lvl_2.val[yf_lvl_q]
-                x_val = min(yf_lvl_2_val_2, x_val)
-                yf_lvl_q += 1
+            if phase_stop_2 >= i
+                if yf_lvl_i == phase_stop_2
+                    yf_lvl_2_val_2 = yf_lvl_2.val[yf_lvl_q]
+                    x_val = min(yf_lvl_2_val_2, x_val)
+                    yf_lvl_q += 1
+                end
+                i = phase_stop_2 + 1
             end
-            i = phase_stop_2 + 1
         end
     end
     (x = (Scalar){Inf, Float64}(x_val),)

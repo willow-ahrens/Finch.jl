@@ -19,15 +19,17 @@ begin
         while j <= phase_stop
             A_lvl_i = A_lvl.idx[A_lvl_q]
             phase_stop_2 = min(phase_stop, A_lvl_i)
-            if A_lvl_i == phase_stop_2
-                A_lvl_2_val_2 = A_lvl_2.val[A_lvl_q]
-                cond_2 = phase_stop_2 == 1
-                if cond_2
-                    B_val = A_lvl_2_val_2 + B_val
+            if phase_stop_2 >= j
+                if A_lvl_i == phase_stop_2
+                    A_lvl_2_val_2 = A_lvl_2.val[A_lvl_q]
+                    cond_2 = phase_stop_2 == 1
+                    if cond_2
+                        B_val = A_lvl_2_val_2 + B_val
+                    end
+                    A_lvl_q += 1
                 end
-                A_lvl_q += 1
+                j = phase_stop_2 + 1
             end
-            j = phase_stop_2 + 1
         end
     end
     (B = (Scalar){0.0, Float64}(B_val),)
