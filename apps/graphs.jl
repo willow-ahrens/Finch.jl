@@ -124,21 +124,23 @@ end
     tricount(adj)
 
 Count the number of triangles in the graph specified by `adj`, which is assumed to be
-symmetric.
+symmetric. Requires edges to be 1 and non-edges 0.
 """
 function tricount(edges)
     (n, m) = size(edges)
     @assert n == m
 
-    # store lower triangles
+    #store lower triangles
     L = @fiber d(sl(e(0), n), n)
     @finch begin
         L .= 0
-        @loop j i L[i,j] = (lotrimask[i,j+1] * edges[i,j])
+        @loop j begin
+            @loop i L[i,j] = lotrimask[i,j+1] * edges[i,j]
+        end
     end
 
     triangles = Scalar(0)
-    @finch @loop j k i triangles[] += (L[i, k] * L[k, j] * edges[j, i])
+    @finch @loop j k i triangles[] += L[i, k] * L[k, j] * edges[j, i]
 
     return triangles[]
 end
