@@ -22,6 +22,7 @@ makedocs(;
         "C, C++, ..." => "interop.md",
         "Performance Tips" => "performance.md",
         "Development Guide" => "development.md",
+        "Contributing" => "CONTRIBUTING.md",
     ],
 )
 

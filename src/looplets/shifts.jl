@@ -5,10 +5,6 @@ end
 
 shift(body, delta) = Shift(body, delta)
 
-SyntaxInterface.istree(::Shift) = true
-SyntaxInterface.operation(::Shift) = shift
-SyntaxInterface.arguments(node::Shift) = [node.body, node.delta]
-
 Base.show(io::IO, ex::Shift) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::Shift)
     print(io, "Shift(body = ")
