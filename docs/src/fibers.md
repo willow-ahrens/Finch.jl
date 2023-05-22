@@ -11,8 +11,6 @@ leftmost dimension `i_1` corresponds to the leaf level. When the array is dense,
 the leftmost dimension has stop 1. We can convert the matrix `A` to a fiber
 with the `@fiber` constructor:
 
-![Example Matrix](assets/levels-A-matrix.png)
-
 ```jldoctest example1; setup=:(using Finch)
 julia> A = [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0]
 4×3 Matrix{Float64}:
