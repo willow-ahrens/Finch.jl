@@ -21,7 +21,8 @@ makedocs(;
         "Tensor File I/O" => "fileio.md",
         "C, C++, ..." => "interop.md",
         "Performance Tips" => "performance.md",
-        "Development Guide" => "development.md",
+        "Internals" => "internals.md",
+        "Directory Structure" => "directory_structure.md",
         "Contributing" => "CONTRIBUTING.md",
     ],
 )
