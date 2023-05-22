@@ -25,9 +25,7 @@ supports_shift(::PipelineStyle) = true
 
 function lower(root::FinchNode, ctx::AbstractCompiler,  ::PipelineStyle)
     if root.kind === loop
-        phases = Dict(PipelineVisitor(ctx, root.idx, root.ext)(root.body))
-        children(key) = intersect(map(i->(key_2 = copy(key); key_2[i] += 1; key_2), 1:length(key)), keys(phases))
-        parents(key) = intersect(map(i->(key_2 = copy(key); key_2[i] -= 1; key_2), 1:length(key)), keys(phases))
+        phases = PipelineVisitor(ctx, root.idx, root.ext)(root.body)
 
         i = getname(root.idx)
         i0 = ctx.freshen(i, :_start)
@@ -37,24 +35,11 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  ::PipelineStyle)
             $i = $(ctx(getstart(root.ext)))
         end
 
-        visited = Set()
-        frontier = [minimum(keys(phases))]
-
-        while !isempty(frontier)
-            key = pop!(frontier)
-            body = phases[key]
-
+        for (key, body) in phases
             push!(thunk.args, contain(ctx) do ctx_2
                 push!(ctx_2.preamble, :($i0 = $i))
                 ctx_2(loop(root.idx, Extent(start = value(i0), stop = getstop(root.ext)), body))
             end)
-
-            push!(visited, key)
-            for key_2 in children(key)
-                if parents(key_2) ⊆ visited
-                    push!(frontier, key_2)
-                end
-            end
         end
 
         return thunk

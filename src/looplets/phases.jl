@@ -24,8 +24,8 @@ phase_range(node::Phase, ctx, ext) = Narrow(node.range(ctx, ext))
 phase_range(node::Shift, ctx, ext) = shiftdim(phase_range(node.body, ctx, shiftdim(ext, call(-, node.delta))), node.delta)
 
 function phase_body(node::FinchNode, ctx, ext, ext_2)
-    if @capture node access(~tns::isvirtual, ~i...)
-        access(phase_body(tns.val, ctx, ext, ext_2), i...)
+    if @capture node access(~tns::isvirtual, ~m, ~i...)
+        access(phase_body(tns.val, ctx, ext, ext_2), m, i...)
     else
         return node
     end
