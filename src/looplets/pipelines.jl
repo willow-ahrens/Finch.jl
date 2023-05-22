@@ -54,17 +54,7 @@ Base.@kwdef struct PipelineVisitor
     ext
 end
 
-function (ctx::PipelineVisitor)(node)
-    if istree(node)
-        map(flatten((product(map(ctx, arguments(node))...),))) do phases
-            keys = map(first, phases)
-            bodies = map(last, phases)
-            return reduce(vcat, keys, init=[]) => similarterm(node, operation(node), collect(bodies))
-        end
-    else
-        [[] => node]
-    end
-end
+(ctx::PipelineVisitor)(node) = [[] => node]
 function (ctx::PipelineVisitor)(node::FinchNode)
     if node.kind === virtual
         ctx(node.val)
