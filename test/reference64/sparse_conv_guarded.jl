@@ -25,58 +25,69 @@ begin
         while i <= phase_stop
             A_lvl_i = A_lvl.idx[A_lvl_q]
             phase_stop_2 = min(phase_stop, A_lvl_i)
-            if phase_stop_2 >= i
-                if A_lvl_i == phase_stop_2
-                    A_lvl_2_val_2 = A_lvl_2.val[A_lvl_q]
-                    if C_lvl_qos > C_lvl_qos_stop
-                        C_lvl_qos_stop = max(C_lvl_qos_stop << 1, 1)
-                        resize_if_smaller!(C_lvl.idx, C_lvl_qos_stop)
-                        resize_if_smaller!(C_lvl_2.val, C_lvl_qos_stop)
-                        fill_range!(C_lvl_2.val, 0.0, C_lvl_qos, C_lvl_qos_stop)
-                    end
-                    C_lvldirty = false
-                    s_2 = phase_stop_2 + -3
-                    phase_start_9 = max(1, 1 + s_2)
-                    phase_stop_9 = min(F_lvl.shape, A_lvl.shape + s_2)
-                    if phase_stop_9 >= phase_start_9
-                        A_lvl_q_2 = A_lvl.ptr[1]
-                        A_lvl_q_stop_2 = A_lvl.ptr[1 + 1]
-                        if A_lvl_q_2 < A_lvl_q_stop_2
-                            A_lvl_i1_2 = A_lvl.idx[A_lvl_q_stop_2 - 1]
-                        else
-                            A_lvl_i1_2 = 0
-                        end
-                        phase_stop_10 = min(A_lvl_i1_2, s_2 + A_lvl_i1_2, phase_stop_9)
-                        if phase_stop_10 >= phase_start_9
-                            j = phase_start_9
-                            if A_lvl.idx[A_lvl_q_2] < phase_start_9 + -s_2
-                                A_lvl_q_2 = scansearch(A_lvl.idx, phase_start_9 + -s_2, A_lvl_q_2, A_lvl_q_stop_2 - 1)
-                            end
-                            while j <= phase_stop_10
-                                A_lvl_i_2 = A_lvl.idx[A_lvl_q_2]
-                                phase_stop_11 = min(phase_stop_10, s_2 + A_lvl_i_2)
-                                if phase_stop_11 >= j
-                                    if A_lvl_i_2 == phase_stop_11 + -s_2
-                                        A_lvl_2_val_3 = A_lvl_2.val[A_lvl_q_2]
-                                        F_lvl_q = (1 - 1) * F_lvl.shape + phase_stop_11
-                                        F_lvl_2_val_2 = F_lvl_2.val[F_lvl_q]
-                                        C_lvldirty = true
-                                        C_lvl_2.val[C_lvl_qos] = (A_lvl_2_val_2 != 0) * coalesce(F_lvl_2_val_2, 0) * coalesce(A_lvl_2_val_3, 0) + C_lvl_2.val[C_lvl_qos]
-                                        A_lvl_q_2 += 1
-                                    end
-                                    j = phase_stop_11 + 1
-                                end
-                            end
-                        end
-                    end
-                    if C_lvldirty
-                        C_lvl.idx[C_lvl_qos] = phase_stop_2
-                        C_lvl_qos += 1
-                    end
-                    A_lvl_q += 1
+            if A_lvl_i == phase_stop_2
+                A_lvl_2_val_2 = A_lvl_2.val[A_lvl_q]
+                if C_lvl_qos > C_lvl_qos_stop
+                    C_lvl_qos_stop = max(C_lvl_qos_stop << 1, 1)
+                    resize_if_smaller!(C_lvl.idx, C_lvl_qos_stop)
+                    resize_if_smaller!(C_lvl_2.val, C_lvl_qos_stop)
+                    fill_range!(C_lvl_2.val, 0.0, C_lvl_qos, C_lvl_qos_stop)
                 end
-                i = phase_stop_2 + 1
+                C_lvldirty = false
+                s_2 = phase_stop_2 + -3
+                j = 1
+                phase_stop_3 = min(0, F_lvl.shape, s_2)
+                if phase_stop_3 >= 1
+                    j = phase_stop_3 + 1
+                end
+                phase_stop_4 = min(0, F_lvl.shape, A_lvl.shape + s_2)
+                if phase_stop_4 >= j
+                    j = phase_stop_4 + 1
+                end
+                phase_stop_7 = min(0, F_lvl.shape)
+                if phase_stop_7 >= j
+                    j = phase_stop_7 + 1
+                end
+                phase_stop_8 = min(F_lvl.shape, s_2)
+                if phase_stop_8 >= j
+                    j = phase_stop_8 + 1
+                end
+                phase_stop_9 = min(F_lvl.shape, A_lvl.shape + s_2)
+                if phase_stop_9 >= j
+                    A_lvl_q_2 = A_lvl.ptr[1]
+                    A_lvl_q_stop_2 = A_lvl.ptr[1 + 1]
+                    if A_lvl_q_2 < A_lvl_q_stop_2
+                        A_lvl_i1_2 = A_lvl.idx[A_lvl_q_stop_2 - 1]
+                    else
+                        A_lvl_i1_2 = 0
+                    end
+                    phase_stop_10 = min(s_2 + A_lvl_i1_2, phase_stop_9)
+                    if phase_stop_10 >= j
+                        if A_lvl.idx[A_lvl_q_2] < j + -s_2
+                            A_lvl_q_2 = scansearch(A_lvl.idx, j + -s_2, A_lvl_q_2, A_lvl_q_stop_2 - 1)
+                        end
+                        while j <= phase_stop_10
+                            A_lvl_i_2 = A_lvl.idx[A_lvl_q_2]
+                            phase_stop_11 = min(phase_stop_10, s_2 + A_lvl_i_2)
+                            if A_lvl_i_2 == phase_stop_11 + -s_2
+                                A_lvl_2_val_3 = A_lvl_2.val[A_lvl_q_2]
+                                F_lvl_q = (1 - 1) * F_lvl.shape + phase_stop_11
+                                F_lvl_2_val_2 = F_lvl_2.val[F_lvl_q]
+                                C_lvldirty = true
+                                C_lvl_2.val[C_lvl_qos] = (A_lvl_2_val_2 != 0) * coalesce(F_lvl_2_val_2, 0) * coalesce(A_lvl_2_val_3, 0) + C_lvl_2.val[C_lvl_qos]
+                                A_lvl_q_2 += 1
+                            end
+                            j = phase_stop_11 + 1
+                        end
+                    end
+                end
+                if C_lvldirty
+                    C_lvl.idx[C_lvl_qos] = phase_stop_2
+                    C_lvl_qos += 1
+                end
+                A_lvl_q += 1
             end
+            i = phase_stop_2 + 1
         end
     end
     C_lvl.ptr[1 + 1] = (C_lvl_qos - 0) - 1

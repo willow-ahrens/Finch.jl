@@ -35,15 +35,13 @@ quote
         while i <= phase_stop
             A_lvl_i = A_lvl.idx[A_lvl_q]
             phase_stop_2 = min(phase_stop, A_lvl_i)
-            if phase_stop_2 >= i
-                if A_lvl_i == phase_stop_2
-                    A_lvl_2_val_2 = A_lvl_2.val[A_lvl_q]
-                    B_lvl_q = (1 - 1) * B_lvl.shape + phase_stop_2
-                    B_lvl_2.val[B_lvl_q] = A_lvl_2_val_2 + B_lvl_2.val[B_lvl_q]
-                    A_lvl_q += 1
-                end
-                i = phase_stop_2 + 1
+            if A_lvl_i == phase_stop_2
+                A_lvl_2_val_2 = A_lvl_2.val[A_lvl_q]
+                B_lvl_q = (1 - 1) * B_lvl.shape + phase_stop_2
+                B_lvl_2.val[B_lvl_q] = A_lvl_2_val_2 + B_lvl_2.val[B_lvl_q]
+                A_lvl_q += 1
             end
+            i = phase_stop_2 + 1
         end
     end
     qos = 1 * B_lvl.shape

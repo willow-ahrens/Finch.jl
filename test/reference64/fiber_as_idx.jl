@@ -17,29 +17,27 @@ begin
     while i <= I_lvl.shape
         I_lvl_i = I_lvl.idx[I_lvl_q]
         phase_stop = min(I_lvl.shape, I_lvl_i)
-        if phase_stop >= i
-            if I_lvl_i == phase_stop
-                for i_6 = i:phase_stop
-                    B_lvl_q = (1 - 1) * I_lvl.shape + i_6
-                    A_lvl_q = (1 - 1) * A_lvl.shape + i_6
-                    s_2 = I_lvl.val[I_lvl_q]
-                    A_lvl_2_q = (A_lvl_q - 1) * A_lvl_2.shape + s_2
-                    A_lvl_3_val_2 = A_lvl_3.val[A_lvl_2_q]
-                    B_lvl_2.val[B_lvl_q] = A_lvl_3_val_2
-                end
-                I_lvl_q += 1
-            else
-                for i_7 = i:phase_stop
-                    B_lvl_q = (1 - 1) * I_lvl.shape + i_7
-                    A_lvl_q = (1 - 1) * A_lvl.shape + i_7
-                    s_4 = I_lvl.val[I_lvl_q]
-                    A_lvl_2_q_2 = (A_lvl_q - 1) * A_lvl_2.shape + s_4
-                    A_lvl_3_val_3 = A_lvl_3.val[A_lvl_2_q_2]
-                    B_lvl_2.val[B_lvl_q] = A_lvl_3_val_3
-                end
+        if I_lvl_i == phase_stop
+            for i_6 = i:phase_stop
+                B_lvl_q = (1 - 1) * I_lvl.shape + i_6
+                A_lvl_q = (1 - 1) * A_lvl.shape + i_6
+                s_2 = I_lvl.val[I_lvl_q]
+                A_lvl_2_q = (A_lvl_q - 1) * A_lvl_2.shape + s_2
+                A_lvl_3_val_2 = A_lvl_3.val[A_lvl_2_q]
+                B_lvl_2.val[B_lvl_q] = A_lvl_3_val_2
             end
-            i = phase_stop + 1
+            I_lvl_q += 1
+        else
+            for i_7 = i:phase_stop
+                B_lvl_q = (1 - 1) * I_lvl.shape + i_7
+                A_lvl_q = (1 - 1) * A_lvl.shape + i_7
+                s_4 = I_lvl.val[I_lvl_q]
+                A_lvl_2_q_2 = (A_lvl_q - 1) * A_lvl_2.shape + s_4
+                A_lvl_3_val_3 = A_lvl_3.val[A_lvl_2_q_2]
+                B_lvl_2.val[B_lvl_q] = A_lvl_3_val_3
+            end
         end
+        i = phase_stop + 1
     end
     qos = 1 * I_lvl.shape
     resize!(B_lvl_2.val, qos)
