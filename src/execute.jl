@@ -9,12 +9,18 @@ execute(ex) = execute(ex, DefaultAlgebra())
 end
 
 
-function execute_code(ex, T, algebra = DefaultAlgebra(), ctx = LowerJulia(algebra = algebra))
-    prgm = nothing
+function execute_code(ex, T, algebra = DefaultAlgebra(); ctx = LowerJulia(algebra = algebra))
+    code = contain(ctx) do ctx_2
+        prgm = nothing
+        prgm = virtualize(ex, T, ctx_2)
+        lower_global(prgm, ctx_2)
+    end
+end
+
+function lower_global(prgm, ctx)
     code = contain(ctx) do ctx_2
         quote
             $(begin
-                prgm = virtualize(ex, T, ctx_2)
                 prgm = ScopeVisitor()(prgm)
                 prgm = close_scope(prgm, LifecycleVisitor())
                 prgm = dimensionalize!(prgm, ctx_2)
@@ -49,11 +55,11 @@ macro finch(opts_ex...)
         res = $execute($prgm, $(map(esc, opts)...))
     end
     for tns in results
-        push!(thunk.opts, quote
+        push!(thunk.args, quote
             $(esc(tns)) = get(res, $(QuoteNode(tns)), $(esc(tns))) #TODO can we do this better?
         end)
     end
-    push!(thunk.opts, quote
+    push!(thunk.args, quote
         res
     end)
     thunk
@@ -84,13 +90,13 @@ Return a function definition for a Finch function which can execute a program of
 type `prgm`. Here, `name` is the name of the function and `args` is a
 `iterable` of argument name => type pairs.
 """
-function finch_kernel(name, args, prgm, ctx = LowerJulia())
+function finch_kernel(name, args, prgm, algebra = DefaultAlgebra(); ctx = LowerJulia(algebra=algebra))
     maybe_typeof(x) = x isa Type ? x : typeof(x)
     code = contain(ctx) do ctx_2
         foreach(args) do (key, val)
             ctx_2.bindings[variable(key)] = virtualize(key, maybe_typeof(val), ctx_2, key)
         end
-        execute_code(:TODO, maybe_typeof(prgm), DefaultAlgebra(), ctx_2)
+        execute_code(:TODO, maybe_typeof(prgm), ctx = ctx_2)
     end
     quote
         function $name($(keys(args)...))
