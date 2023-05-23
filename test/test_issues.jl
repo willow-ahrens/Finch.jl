@@ -246,4 +246,10 @@ using CIndices
         check_output("pull197.txt", String(take!(io)))
     end
 
+    #https://github.com/willow-ahrens/Finch.jl/issues/70
+
+    let
+        
+    end
+
 end
