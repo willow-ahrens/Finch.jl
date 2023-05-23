@@ -29,12 +29,24 @@ function show_with_indent(io, node::FinchNode, indent, prec)
     end
 end
 
+function show_with_indent(io, node::FinchNode, indent, prec, meta)
+    indent = fld(indent, 2) + 1
+    if Finch.FinchNotation.isstateful(node)
+        print("@finch begin")
+        println(meta)
+        Finch.FinchNotation.display_statement(io, MIME"text/plain"(), node, indent)
+        println()
+        print("  "^(indent - 1), "end")
+    else
+        print("@finch("); print(meta); Finch.FinchNotation.display_expression(io, MIME"text/plain"(), node); print(")")
+    end
+end
+
 function Base.show_unquoted(io::IO, node::Resumable, indent::Int, prec::Int)
     if length(node.meta) == 0
         show_with_indent(io, node.root, indent, prec)
     else
-        show_with_indent(io, node.meta, indent, prec)
-        show_with_indent(io, node.root, indent, prec)
+        show_with_indent(io, node.root, indent, prec, meta)
     end
 end
 
@@ -65,7 +77,7 @@ function record_methods(code)
     Postwalk(node -> 
     if node isa Resumable 
         loc = which(lower, (typeof(node.root), typeof(node.ctx), typeof(node.style)))
-         node.meta[:Which] = (loc.file, loc.line)
+         node.meta[:Which] = (string(loc.file), loc.line)
         node
     end )(code)
 end
