@@ -1,8 +1,10 @@
 execute(ex) = execute(ex, DefaultAlgebra())
 
-@staged_function execute ex a quote
-    @inbounds begin
-        $(execute_code(:ex, ex, a()) |> unblock)
+@staged function execute(ex, a)
+    quote
+        @inbounds begin
+            $(execute_code(:ex, ex, a()) |> unblock)
+        end
     end
 end
 
@@ -74,6 +76,46 @@ macro finch_code(args_ex...)
         unresolve
     end
 end
+
+#=
+macro finch(args_ex...)
+    @assert length(args_ex) >= 1
+    (args, ex) = (args_ex[1:end-1], args_ex[end])
+    results = Set()
+    prgm = FinchNotation.finch_parse_instance(ex, results)
+    res = esc(:res)
+    thunk = quote
+        res = $execute($prgm, $(map(esc, args)...))
+    end
+    for tns in results
+        push!(thunk.args, quote
+            $(esc(tns)) = get(res, $(QuoteNode(tns)), $(esc(tns))) #TODO can we do this better?
+        end)
+    end
+    push!(thunk.args, quote
+        res
+    end)
+    thunk
+end
+
+macro finch_code(args_ex...)
+    @assert length(args_ex) >= 1
+    (args, ex) = (args_ex[1:end-1], args_ex[end])
+    prgm = FinchNotation.finch_parse_instance(ex)
+    return quote
+        $execute_code(:ex, typeof($prgm), $(map(esc, args)...)) |>
+        striplines |>
+        desugar |>
+        propagate |>
+        mark_dead |>
+        prune_dead |>
+        resugar |>
+        unblock |>
+        unquote_literals |>
+        unresolve
+    end
+end
+=#
 
 @kwdef struct LifecycleVisitor
     uses = OrderedDict()

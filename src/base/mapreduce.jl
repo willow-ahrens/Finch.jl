@@ -76,7 +76,7 @@ function Base.reduce(op::Function, bc::Broadcasted{FinchStyle{N}}; dims=:, init 
     reduce_helper(Callable{op}(), lift_broadcast(bc), Val(dims), Val(init))
 end
 
-@staged_function reduce_helper op bc dims init begin
+@staged function reduce_helper(op, bc, dims, init)
     reduce_helper_code(op, bc, dims, init)
 end
 

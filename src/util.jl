@@ -1,8 +1,8 @@
 staged_defs = []
 
-macro staged_function(name, args...)
-    body = args[end]
-    args = args[1:end-1]
+macro staged(def)
+    (@capture def :function(:call(~name, ~args...), ~body)) || throw(FinchSyntaxError("unrecognized function definition in @staged"))
+        
     def = quote
         @generated function $name($(args...))
             # Taken from https://github.com/NHDaly/StagedFunctions.jl/blob/6fafbc560421f70b05e3df330b872877db0bf3ff/src/StagedFunctions.jl#L116
