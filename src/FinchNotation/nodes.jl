@@ -5,12 +5,6 @@ const IS_STATEFUL = 2
 const IS_CONST = 4
 const ID = 8
 
-"""
-    FinchNodeKind
-
-An FinchNode type represents many different Finch IR nodes, and an FinchNodeKind
-enum is used to differentiate which kind of node is represented.
-"""
 @enum FinchNodeKind begin
     variable =  0ID
     value    =  1ID | IS_CONST
@@ -202,8 +196,10 @@ sequence
     FinchNode
 
 A Finch IR node. Finch uses a variant of Concrete Index Notation as an
-intermediate representation. Consult the documentation of each node kind
-for more information.
+intermediate representation. 
+
+The FinchNode struct represents many different Finch IR nodes. The nodes are
+differentiated by a `FinchNotation.FinchNodeKind` enum.
 """
 mutable struct FinchNode
     kind::FinchNodeKind
