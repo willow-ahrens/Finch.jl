@@ -29,7 +29,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  ::SpikeStyle)
             @rule access(~a::isvirtual, ~i...) => access(get_spike_body(a.val, ctx, root.ext, body_ext), ~i...)
         ))(root.body)
         @assert isvirtual(root.ext)
-        if query(call(<, measure(body_ext), 1), ctx)
+        if query(call(<=, measure(body_ext), 0), ctx) 
             body_expr = quote end
         else
             #TODO check body nonempty
