@@ -32,8 +32,8 @@ function get_bounds_rules(alg, shash)
         (@rule cached(cached(~a, ~b), ~c) => cached(a, c)),
 
         (@rule call(==, ~a, ~a) => literal(true)),
-        (@rule call(>=, ~a, ~b) => call(==, call(max, a, b), a)),
-        (@rule call(<=, ~a, ~b) => call(==, a, call(max, a, b))),
+        (@rule call(>=, ~a, ~b) => call(==, a, call(max, a, b))),
+        (@rule call(<=, ~a, ~b) => call(==, call(max, a, b), b)),
 
         (@rule call(identity, ~a) => a),
         (@rule call(overwrite, ~a, ~b) => b),

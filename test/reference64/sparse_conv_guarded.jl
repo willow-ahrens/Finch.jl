@@ -35,25 +35,9 @@ begin
                 end
                 C_lvldirty = false
                 s_2 = phase_stop_2 + -3
-                j = 1
-                phase_stop_3 = min(0, F_lvl.shape, s_2)
-                if phase_stop_3 >= 1
-                    j = phase_stop_3 + 1
-                end
-                phase_stop_4 = min(F_lvl.shape, s_2)
-                if phase_stop_4 >= j
-                    j = phase_stop_4 + 1
-                end
-                phase_stop_5 = min(F_lvl.shape, s_2)
-                if phase_stop_5 >= j
-                    j = phase_stop_5 + 1
-                end
-                phase_stop_6 = min(0, F_lvl.shape, A_lvl.shape + s_2)
-                if phase_stop_6 >= j
-                    j = phase_stop_6 + 1
-                end
+                phase_start_9 = max(1, 1 + s_2)
                 phase_stop_9 = min(F_lvl.shape, A_lvl.shape + s_2)
-                if phase_stop_9 >= j
+                if phase_stop_9 >= phase_start_9
                     A_lvl_q_2 = A_lvl.ptr[1]
                     A_lvl_q_stop_2 = A_lvl.ptr[1 + 1]
                     if A_lvl_q_2 < A_lvl_q_stop_2
@@ -62,9 +46,10 @@ begin
                         A_lvl_i1_2 = 0
                     end
                     phase_stop_10 = min(s_2 + A_lvl_i1_2, phase_stop_9)
-                    if phase_stop_10 >= j
-                        if A_lvl.idx[A_lvl_q_2] < j + -s_2
-                            A_lvl_q_2 = scansearch(A_lvl.idx, j + -s_2, A_lvl_q_2, A_lvl_q_stop_2 - 1)
+                    if phase_stop_10 >= phase_start_9
+                        j = phase_start_9
+                        if A_lvl.idx[A_lvl_q_2] < phase_start_9 + -s_2
+                            A_lvl_q_2 = scansearch(A_lvl.idx, phase_start_9 + -s_2, A_lvl_q_2, A_lvl_q_stop_2 - 1)
                         end
                         while j <= phase_stop_10
                             A_lvl_i_2 = A_lvl.idx[A_lvl_q_2]

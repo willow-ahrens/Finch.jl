@@ -105,7 +105,7 @@ quote
             else
                 A_lvl_2_i1 = 0
             end
-            phase_stop = min(A_lvl_2_i1, i_3)
+            phase_stop = min(i_3, A_lvl_2_i1)
             if phase_stop >= i_3
                 s_3 = i_3
                 if A_lvl_2.idx[A_lvl_2_q] < i_3
@@ -236,7 +236,6 @@ quote
         else
             A_lvl_2_i1 = 0
         end
-        i = 1
         phase_stop = min(A_lvl_2.shape, A_lvl_2_i1)
         if phase_stop >= 1
             i = 1
@@ -260,11 +259,11 @@ quote
                 end
                 i = phase_stop_2 + 1
             end
-            i = phase_stop + 1
         end
+        phase_start_3 = max(1, 1 + A_lvl_2_i1)
         phase_stop_3 = A_lvl_2.shape
-        if phase_stop_3 >= i
-            for i_10 = i:phase_stop_3
+        if phase_stop_3 >= phase_start_3
+            for i_10 = phase_start_3:phase_stop_3
                 C_val = f(0.0, B[i_10, j_4]) + C_val
             end
         end
