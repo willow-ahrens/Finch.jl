@@ -21,10 +21,10 @@ begin
             phase_stop_2 = min(phase_stop, A_lvl_i)
             if A_lvl_i == phase_stop_2
                 A_lvl_2_val_2 = A_lvl_2.val[A_lvl_q]
-                phase_start_7 = max(3, 1 + (phase_stop_2 - 1))
-                phase_stop_7 = min(3, phase_stop_2)
-                if phase_stop_7 >= phase_start_7
-                    B_val = A_lvl_2_val_2 * (1 + -phase_start_7 + phase_stop_7) + B_val
+                phase_start_4 = max(3, 1 + (phase_stop_2 - 1))
+                phase_stop_4 = min(3, phase_stop_2)
+                if phase_stop_4 >= phase_start_4
+                    B_val = A_lvl_2_val_2 * (1 + -phase_start_4 + phase_stop_4) + B_val
                 end
                 A_lvl_q += 1
             end

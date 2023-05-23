@@ -51,20 +51,15 @@ quote
             X_lvl_i = X_lvl.idx[X_lvl_q]
             phase_stop_2 = min(phase_stop, X_lvl_i)
             if X_lvl_i == phase_stop_2
-                cond = 0 < -i + phase_stop_2
-                if cond
-                    x_max_val = max(0.0, x_max_val)
-                    x_min_val = min(0.0, x_min_val)
-                end
                 X_lvl_2_val_2 = X_lvl_2.val[X_lvl_q]
-                x_min_val = min(x_min_val, X_lvl_2_val_2)
-                x_max_val = max(x_max_val, X_lvl_2_val_2)
+                x_min_val = min(X_lvl_2_val_2, x_min_val)
+                x_max_val = max(X_lvl_2_val_2, x_max_val)
                 x_sum_val = X_lvl_2_val_2 + x_sum_val
                 x_var_val = X_lvl_2_val_2 * X_lvl_2_val_2 + x_var_val
                 X_lvl_q += 1
             else
-                cond_2 = 0 < 1 + -i + phase_stop_2
-                if cond_2
+                cond = 0 < 1 + -i + phase_stop_2
+                if cond
                     x_max_val = max(0.0, x_max_val)
                     x_min_val = min(0.0, x_min_val)
                 end
@@ -75,8 +70,8 @@ quote
     phase_start_3 = max(1, 1 + X_lvl_i1)
     phase_stop_3 = X_lvl.shape
     if phase_stop_3 >= phase_start_3
-        cond_3 = 0 < 1 + -phase_start_3 + phase_stop_3
-        if cond_3
+        cond_2 = 0 < 1 + -phase_start_3 + phase_stop_3
+        if cond_2
             x_max_val = max(0.0, x_max_val)
             x_min_val = min(0.0, x_min_val)
         end

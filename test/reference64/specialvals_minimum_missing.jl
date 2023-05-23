@@ -20,16 +20,12 @@ begin
             yf_lvl_i = yf_lvl.idx[yf_lvl_q]
             phase_stop_2 = min(phase_stop, yf_lvl_i)
             if yf_lvl_i == phase_stop_2
-                cond = 0 < -i + phase_stop_2
-                if cond
-                    x_val = missing
-                end
                 yf_lvl_2_val_2 = yf_lvl_2.val[yf_lvl_q]
-                x_val = min(x_val, yf_lvl_2_val_2)
+                x_val = min(yf_lvl_2_val_2, x_val)
                 yf_lvl_q += 1
             else
-                cond_2 = 0 < 1 + -i + phase_stop_2
-                if cond_2
+                cond = 0 < 1 + -i + phase_stop_2
+                if cond
                     x_val = missing
                 end
             end
@@ -39,8 +35,8 @@ begin
     phase_start_3 = max(1, 1 + yf_lvl_i1)
     phase_stop_3 = yf_lvl.shape
     if phase_stop_3 >= phase_start_3
-        cond_3 = 0 < 1 + -phase_start_3 + phase_stop_3
-        if cond_3
+        cond_2 = 0 < 1 + -phase_start_3 + phase_stop_3
+        if cond_2
             x_val = missing
         end
     end
