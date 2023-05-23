@@ -40,17 +40,17 @@ begin
                 if phase_stop_3 >= 1
                     j = phase_stop_3 + 1
                 end
-                phase_stop_4 = min(0, F_lvl.shape, A_lvl.shape + s_2)
+                phase_stop_4 = min(F_lvl.shape, s_2)
                 if phase_stop_4 >= j
                     j = phase_stop_4 + 1
                 end
-                phase_stop_7 = min(0, F_lvl.shape)
-                if phase_stop_7 >= j
-                    j = phase_stop_7 + 1
+                phase_stop_5 = min(F_lvl.shape, s_2)
+                if phase_stop_5 >= j
+                    j = phase_stop_5 + 1
                 end
-                phase_stop_8 = min(F_lvl.shape, s_2)
-                if phase_stop_8 >= j
-                    j = phase_stop_8 + 1
+                phase_stop_6 = min(0, F_lvl.shape, A_lvl.shape + s_2)
+                if phase_stop_6 >= j
+                    j = phase_stop_6 + 1
                 end
                 phase_stop_9 = min(F_lvl.shape, A_lvl.shape + s_2)
                 if phase_stop_9 >= j
