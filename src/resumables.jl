@@ -30,7 +30,12 @@ function show_with_indent(io, node::FinchNode, indent, prec)
 end
 
 function Base.show_unquoted(io::IO, node::Resumable, indent::Int, prec::Int)
-    show_with_indent(io, node.root, indent, prec)
+    if length(node.meta) == 0
+        show_with_indent(io, node.root, indent, prec)
+    else
+        show_with_indent(io, node.meta, indent, prec)
+        show_with_indent(io, node.root, indent, prec)
+    end
 end
 
 
@@ -59,7 +64,8 @@ end
 function record_methods(code)
     Postwalk(node -> 
     if node isa Resumable 
-         node.meta[:Which] = which(node.ctx, (typeof(node.root),))
+        loc = which(lower, (typeof(node.root), typeof(node.ctx), typeof(node.style)))
+         node.meta[:Which] = (loc.file, loc.line)
         node
     end )(code)
 end
@@ -228,6 +234,12 @@ function step_some_code(code::PartialCode; step=1, resumeLocations=nothing, resu
     step_again_code(code, ctx=ctx, sdisplay=sdisplay)
 end
 
+function step_first_code(code::PartialCode; step=1)
+    control = StepOnlyControl(step=step, resumeLocations = [1])
+    ctx = DebugContext(code.lastCtx.ctx, control)
+    step_again_code(code, ctx=ctx, sdisplay=sdisplay)
+end
+
 function iscompiled(code:: Expr)
     found = false
     Postwalk(node -> 
@@ -236,6 +248,9 @@ function iscompiled(code:: Expr)
                         node
                     end )(code)
     !found
+end
+
+function collect_resumables()
 end
 
 function end_debug(code:: PartialCode)
