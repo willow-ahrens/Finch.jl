@@ -39,32 +39,32 @@ function execute_code(ex, T, algebra = DefaultAlgebra(), ctx = LowerJulia(algebr
     end
 end
 
-macro finch(args_ex...)
-    @assert length(args_ex) >= 1
-    (args, ex) = (args_ex[1:end-1], args_ex[end])
+macro finch(opts_ex...)
+    length(opts_ex) >= 1 || throw(ArgumentError("Expected at least one argument to @finch(opts..., ex)"))
+    (opts, ex) = (opts_ex[1:end-1], opts_ex[end])
     results = Set()
     prgm = FinchNotation.finch_parse_instance(ex, results)
     res = esc(:res)
     thunk = quote
-        res = $execute($prgm, $(map(esc, args)...))
+        res = $execute($prgm, $(map(esc, opts)...))
     end
     for tns in results
-        push!(thunk.args, quote
+        push!(thunk.opts, quote
             $(esc(tns)) = get(res, $(QuoteNode(tns)), $(esc(tns))) #TODO can we do this better?
         end)
     end
-    push!(thunk.args, quote
+    push!(thunk.opts, quote
         res
     end)
     thunk
 end
 
-macro finch_code(args_ex...)
-    @assert length(args_ex) >= 1
-    (args, ex) = (args_ex[1:end-1], args_ex[end])
+macro finch_code(opts_ex...)
+    length(opts_ex) >= 1 || throw(ArgumentError("Expected at least one argument to @finch(opts..., ex)"))
+    (opts, ex) = (opts_ex[1:end-1], opts_ex[end])
     prgm = FinchNotation.finch_parse_instance(ex)
     return quote
-        $execute_code(:ex, typeof($prgm), $(map(esc, args)...)) |>
+        $execute_code(:ex, typeof($prgm), $(map(esc, opts)...)) |>
         striplines |>
         desugar |>
         propagate |>
@@ -77,45 +77,27 @@ macro finch_code(args_ex...)
     end
 end
 
-#=
-macro finch(args_ex...)
-    @assert length(args_ex) >= 1
-    (args, ex) = (args_ex[1:end-1], args_ex[end])
-    results = Set()
-    prgm = FinchNotation.finch_parse_instance(ex, results)
-    res = esc(:res)
-    thunk = quote
-        res = $execute($prgm, $(map(esc, args)...))
-    end
-    for tns in results
-        push!(thunk.args, quote
-            $(esc(tns)) = get(res, $(QuoteNode(tns)), $(esc(tns))) #TODO can we do this better?
-        end)
-    end
-    push!(thunk.args, quote
-        res
-    end)
-    thunk
-end
+"""
+    finch_kernel(name, args, prgm, ctx = LowerJulia())
 
-macro finch_code(args_ex...)
-    @assert length(args_ex) >= 1
-    (args, ex) = (args_ex[1:end-1], args_ex[end])
-    prgm = FinchNotation.finch_parse_instance(ex)
-    return quote
-        $execute_code(:ex, typeof($prgm), $(map(esc, args)...)) |>
-        striplines |>
-        desugar |>
-        propagate |>
-        mark_dead |>
-        prune_dead |>
-        resugar |>
-        unblock |>
-        unquote_literals |>
-        unresolve
+Return a function definition for a Finch function which can execute a program of
+type `prgm`. Here, `name` is the name of the function and `args` is a
+`iterable` of argument name => type pairs.
+"""
+function finch_kernel(name, args, prgm, ctx = LowerJulia())
+    maybe_typeof(x) = x isa Type ? x : typeof(x)
+    code = contain(ctx) do ctx_2
+        foreach(args) do (key, val)
+            ctx_2.bindings[variable(key)] = virtualize(key, maybe_typeof(val), ctx_2, key)
+        end
+        execute_code(:TODO, maybe_typeof(prgm), DefaultAlgebra(), ctx_2)
+    end
+    quote
+        function $name($(keys(args)...))
+            $(striplines(unblock(code)))
+        end
     end
 end
-=#
 
 @kwdef struct LifecycleVisitor
     uses = OrderedDict()

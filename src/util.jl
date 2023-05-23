@@ -1,7 +1,15 @@
 staged_defs = []
 
+"""
+    Finch.@staged
+
+This function is used internally in Finch in lieu of @generated functions.  It
+ensures the first Finch invocation runs in the latest world, and leaves hooks so
+that subsequent calls to [`Finch.refresh`](@ref) can update the world and
+invalidate old versions.
+"""
 macro staged(def)
-    (@capture def :function(:call(~name, ~args...), ~body)) || throw(FinchSyntaxError("unrecognized function definition in @staged"))
+    (@capture def :function(:call(~name, ~args...), ~body)) || throw(ArgumentError("unrecognized function definition in @staged"))
         
     def = quote
         @generated function $name($(args...))
