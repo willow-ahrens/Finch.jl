@@ -1,4 +1,15 @@
-using Test, Documenter, Literate, Finch, TOML
+#!/usr/bin/env julia
+if abspath(PROGRAM_FILE) == @__FILE__
+    using Pkg
+    Pkg.activate(@__DIR__)
+    Pkg.instantiate()
+end
+
+using Test
+using Documenter
+using Literate
+using TOML
+using Finch
 
 root = joinpath(@__DIR__, "..")
 

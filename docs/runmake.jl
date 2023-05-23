@@ -1,6 +1,13 @@
-using Finch
+#!/usr/bin/env julia
+if abspath(PROGRAM_FILE) == @__FILE__
+    using Pkg
+    Pkg.activate(@__DIR__)
+    Pkg.instantiate()
+end
+
 using Documenter
 using Literate
+using Finch
 
 DocMeta.setdocmeta!(Finch, :DocTestSetup, :(using Finch; using SparseArrays); recursive=true)
 
