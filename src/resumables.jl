@@ -141,8 +141,8 @@ function should_pause(c:: SimpleStepControl, ctx, node, style)
 end
 
 
-@kwdef struct StepOnlyControl <: AbstractLoweringControl
-    step:: Int = 1
+@kwdef struct StepOnlyControl <: SimpleStepControl
+    step 1
     resumeLocations = nothing
     resumeStyles = nothing
     resumeFilter = nothing
@@ -167,10 +167,6 @@ function should_resume(c :: StepOnlyControl, ctx, node, style, meta)
         should = should || c.resumeFilter(node)
     end
     should
- end
-
- function should_pause(c:: StepOnlyControl, ctx, node, style)
-    return c.step == 0 && 
  end
 
 # step -> analysis
