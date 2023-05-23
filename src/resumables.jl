@@ -122,7 +122,7 @@ function (ctx::DebugContext)(node, style)
     end
 end
 
-function (ctx::DebugContext)(code: Expr)
+function (ctx::DebugContext)(code:: Expr)
     Postwalk(node -> 
     if node isa Resumable 
         (ctx::DebugContext)(node.node, node.style)
@@ -142,7 +142,7 @@ function should_pause(c:: SimpleStepControl, ctx, node, style)
 end
 
 
-@kwdef struct StepOnlyControl <: SimpleStepControl
+@kwdef struct StepOnlyControl <: AbstractLoweringControl
     step= 1
     resumeLocations = nothing
     resumeStyles = nothing
@@ -169,6 +169,11 @@ function should_resume(c :: StepOnlyControl, ctx, node, style, meta)
     end
     should
  end
+
+ function should_pause(c:: StepOnlyControl, ctx, node, style)
+    c.step == 0
+end
+
 
  struct PartialCode
     lastCtx::DebugContext
@@ -209,7 +214,7 @@ function step_code(code::PartialCode, step=1, display=true)
     clean_partial_code(PartialCode(ctx.lastCtx, ctx(code.code), algebra), display=display)
 end
 
-function step_code(code::PartialCode, ctx=nothing, display=true))
+function step_code(code::PartialCode, ctx=nothing, display=true)
     if isnothing(ctx)
         clean_partial_code(PartialCode(code.lastCtx, code.lastCtx(code.code), code.algebra), display=display)
     else
