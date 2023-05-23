@@ -75,7 +75,7 @@ begin
                             if A_lvl_2_i_2 == phase_stop_4
                                 A_lvl_3_val_3 = A_lvl_3.val[A_lvl_2_q_2]
                                 w_lvl_q_2 = (1 - 1) * A_lvl_2.shape + phase_stop_4
-                                w_lvl_2.val[w_lvl_q_2] = w_lvl_2.val[w_lvl_q_2] + A_lvl_3_val_3 * A_lvl_3_val_2
+                                w_lvl_2.val[w_lvl_q_2] = A_lvl_3_val_2 * A_lvl_3_val_3 + w_lvl_2.val[w_lvl_q_2]
                                 if !(w_lvl.tbl[w_lvl_q_2])
                                     w_lvl.tbl[w_lvl_q_2] = true
                                     w_lvl_qos_fill += 1
