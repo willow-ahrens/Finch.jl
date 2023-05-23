@@ -63,7 +63,7 @@ quote
             else
                 A_lvl_2_i1 = 0
             end
-            phase_stop = min(A_lvl_2_i1, i_3)
+            phase_stop = min(i_3, A_lvl_2_i1)
             if phase_stop &gt;= i_3
                 s_3 = i_3
                 if A_lvl_2.idx[A_lvl_2_q] &lt; i_3
@@ -141,7 +141,6 @@ quote
         else
             A_lvl_2_i1 = 0
         end
-        i = 1
         phase_stop = min(A_lvl_2.shape, A_lvl_2_i1)
         if phase_stop &gt;= 1
             i = 1
@@ -165,15 +164,15 @@ quote
                 end
                 i = phase_stop_2 + 1
             end
-            i = phase_stop + 1
         end
+        phase_start_3 = max(1, 1 + A_lvl_2_i1)
         phase_stop_3 = A_lvl_2.shape
-        if phase_stop_3 &gt;= i
-            for i_10 = i:phase_stop_3
+        if phase_stop_3 &gt;= phase_start_3
+            for i_10 = phase_start_3:phase_stop_3
                 C_val = f(0.0, B[i_10, j_4]) + C_val
             end
         end
     end
     (C = (Scalar){0.0, Float64}(C_val),)
 end
-</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../interop/">« C, C++, ...</a><a class="docs-footer-nextpage" href="../internals/">Internals »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Tuesday 23 May 2023 16:38">Tuesday 23 May 2023</span>. Using Julia version 1.9.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../interop/">« C, C++, ...</a><a class="docs-footer-nextpage" href="../internals/">Internals »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Tuesday 23 May 2023 21:09">Tuesday 23 May 2023</span>. Using Julia version 1.9.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
