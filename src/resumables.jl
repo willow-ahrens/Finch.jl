@@ -59,8 +59,7 @@ end
 function record_methods(code)
     Postwalk(node -> 
     if node isa Resumable 
-        node.meta[:Which] = which(node.ctx, node.root)
-        counter+=1 
+         node.meta[:Which] = which(node.ctx, (typeof(node.root),))
         node
     end )(code)
 end
@@ -125,7 +124,7 @@ end
 function (ctx::DebugContext)(code:: Expr)
     Postwalk(node -> 
     if node isa Resumable 
-        (ctx::DebugContext)(node.node, node.style)
+        (ctx::DebugContext)(node.root, node.style)
     end )(code)
 end
 
@@ -191,40 +190,42 @@ function Base.show(io::IO, code::PartialCode)
 end
 
 
- function clean_partial_code(pcode:: PartialCode; display=true)
+ function clean_partial_code(pcode:: PartialCode; sdisplay=true)
     code = striplines(pcode.code)
     code = unblock(code)
     code = number_resumables(code)
     code = record_methods(code)
     ret = PartialCode(pcode.lastCtx, code, pcode.algebra)
-    if display
+    if sdisplay
         display(ret)
     end
     ret
  end
 
-function stage_execute(code; algebra = DefaultAlgebra(),  display=true)
+function stage_execute(code; algebra = DefaultAlgebra(),  sdisplay=true)
     ctx = DebugContext(LowerJulia(), SimpleStepControl(step=0))
     code = execute_code(:ex, typeof(code), algebra, ctx)
-    clean_partial_code(PartialCode(ctx, code, algebra), display=display)
+    clean_partial_code(PartialCode(ctx, code, algebra), sdisplay=sdisplay)
 end
 
-function step_code(code::PartialCode; step=1, display=true)
-    ctx = DebugContext(LowerJulia(), SimpleStepControl(step=step))
-    clean_partial_code(PartialCode(ctx.lastCtx, ctx(code.code), algebra), display=display)
+function step_code(code::PartialCode; step=1, sdisplay=true)
+    ctx = DebugContext(code.lastCtx.ctx, SimpleStepControl(step=step))
+    newcode = ctx(code.code)
+    clean_partial_code(PartialCode(code.lastCtx, newcode, code.algebra), sdisplay=sdisplay)
 end
 
-function step_code(code::PartialCode; ctx=nothing, display=true)
+function step_again_code(code::PartialCode; ctx=nothing, sdisplay=true)
     if isnothing(ctx)
-        clean_partial_code(PartialCode(code.lastCtx, code.lastCtx(code.code), code.algebra), display=display)
+        clean_partial_code(PartialCode(code.lastCtx, code.lastCtx(code.code), code.algebra),sdisplay=sdisplay)
     else
-        clean_partial_code(PartialCode(ctx, ctx(code.code), code.algebra), display=display)
+        clean_partial_code(PartialCode(ctx, ctx(code.code), code.algebra), sdisplay=sdisplay)
     end
 end
 
-function step_code(code::PartialCode; step=1, resumeLocations=nothing, resumeStyles=nothing, resumeFilter=nothing, display=true)
-    ctx = StepOnlyControl(step=step, resumeLocations = resumeLocations, resumeStyles=resumeStyles, resumeFilter=resumeFilter)
-    step_code(code, ctx=ctx, display=true)
+function step_some_code(code::PartialCode; step=1, resumeLocations=nothing, resumeStyles=nothing, resumeFilter=nothing, sdisplay=true)
+    control = StepOnlyControl(step=step, resumeLocations = resumeLocations, resumeStyles=resumeStyles, resumeFilter=resumeFilter)
+    ctx = DebugContext(code.lastCtx.ctx, control)
+    step_again_code(code, ctx=ctx, sdisplay=sdisplay)
 end
 
 function iscompiled(code:: Expr)
@@ -234,7 +235,7 @@ function iscompiled(code:: Expr)
                         found = true
                         node
                     end )(code)
-    found
+    !found
 end
 
 function end_debug(code:: PartialCode)
