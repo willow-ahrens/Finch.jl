@@ -26,7 +26,7 @@ supports_shift(::PipelineStyle) = true
 function lower(root::FinchNode, ctx::AbstractCompiler,  ::PipelineStyle)
     if root.kind === loop
         phases = PipelineVisitor(ctx, root.idx, root.ext)(root.body)
-
+        
         i = getname(root.idx)
         i0 = ctx.freshen(i, :_start)
         step = ctx.freshen(i, :_step)
@@ -37,8 +37,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  ::PipelineStyle)
 
         for (key, body) in phases
             push!(thunk.args, contain(ctx) do ctx_2
-                push!(ctx_2.preamble, :($i0 = $i))
-                ctx_2(loop(root.idx, Extent(start = value(i0), stop = getstop(root.ext)), body))
+                ctx_2(loop(root.idx, root.ext, body))
             end)
         end
 
@@ -68,10 +67,25 @@ function (ctx::PipelineVisitor)(node::FinchNode)
         [[] => node]
     end
 end
-(ctx::PipelineVisitor)(node::Pipeline) = enumerate(node.phases)
+
+function (ctx::PipelineVisitor)(node::Pipeline) 
+  new_phases = []
+  
+  prev_stop = call(-, getstart(ctx.ext), 1)
+  for curr in node.phases
+    curr_start = call(+, prev_stop, 1)
+    curr_stop = getstop(phase_range(curr, ctx.ctx, ctx.ext))
+    push!(new_phases, Phase(body = curr.body, start = (ctx, ext) -> curr_start, stop = curr.stop)) 
+    prev_stop = curr_stop
+  end
+  
+  return enumerate(new_phases)
+end
+
 
 function (ctx::PipelineVisitor)(node::Shift)
     map(PipelineVisitor(; kwfields(ctx)..., ext = shiftdim(ctx.ext, call(-, node.delta)))(node.body)) do (keys, body)
         return keys => Shift(body, node.delta)
     end
 end
+
