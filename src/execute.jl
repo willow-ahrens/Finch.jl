@@ -14,20 +14,14 @@ function execute_code(ex, T, algebra = DefaultAlgebra(), ctx = LowerJulia(algebr
             $(begin
                 prgm = virtualize(ex, T, ctx_2)
                 prgm = ScopeVisitor()(prgm)
-                prgm = ThunkVisitor(ctx_2)(prgm) #TODO this is a bit of a hack.
                 prgm = close_scope(prgm, LifecycleVisitor())
                 prgm = dimensionalize!(prgm, ctx_2)
-                prgm = simplify(prgm, ctx_2)
-                #The following call separates tensor and index names from environment symbols.
-                #TODO we might want to keep the namespace around, and/or further stratify index
-                #names from tensor names
+                prgm = simplify(prgm, ctx_2) #appears necessary
                 contain(ctx_2) do ctx_3
                     prgm2 = prgm
                     if prgm.kind !== sequence
                         prgm2 = InstantiateTensors(ctx_2 = ctx_3)(prgm2)
                     end
-                    prgm2 = ThunkVisitor(ctx_3)(prgm2) #TODO this is a bit of a hack.
-                    prgm2 = simplify(prgm2, ctx_3)
                     ctx_3(prgm2)
                 end
             end)
