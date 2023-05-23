@@ -142,7 +142,7 @@ end
 
 
 @kwdef struct StepOnlyControl <: SimpleStepControl
-    step 1
+    step= 1
     resumeLocations = nothing
     resumeStyles = nothing
     resumeFilter = nothing
