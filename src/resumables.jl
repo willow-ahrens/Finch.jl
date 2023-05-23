@@ -59,7 +59,7 @@ end
 function record_methods(code)
     Postwalk(node -> 
     if node isa Resumable 
-        node.meta[:Which] = @which node.ctx(node.root)
+        node.meta[:Which] = which(node.ctx, node.root)
         counter+=1 
         node
     end )(code)
