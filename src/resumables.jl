@@ -191,7 +191,7 @@ function Base.show(io::IO, code::PartialCode)
 end
 
 
- function clean_partial_code(pcode:: PartialCode, display=true)
+ function clean_partial_code(pcode:: PartialCode; display=true)
     code = striplines(pcode.code)
     code = unblock(code)
     code = number_resumables(code)
@@ -203,18 +203,18 @@ end
     ret
  end
 
-function stage_execute(code, algebra = DefaultAlgebra(),  display=true)
-    ctx = DebugContext(LowerJulia(algebra), SimpleStepControl(step=0))
-    code = execute_code(:ex, typeof(Finch.@finch_program_instance code), algebra, ctx)
+function stage_execute(code; algebra = DefaultAlgebra(),  display=true)
+    ctx = DebugContext(LowerJulia(), SimpleStepControl(step=0))
+    code = execute_code(:ex, typeof(code), algebra, ctx)
     clean_partial_code(PartialCode(ctx, code, algebra), display=display)
 end
 
-function step_code(code::PartialCode, step=1, display=true)
-    ctx = DebugContext(LowerJulia(code.algebra), SimpleStepControl(step=step))
+function step_code(code::PartialCode; step=1, display=true)
+    ctx = DebugContext(LowerJulia(), SimpleStepControl(step=step))
     clean_partial_code(PartialCode(ctx.lastCtx, ctx(code.code), algebra), display=display)
 end
 
-function step_code(code::PartialCode, ctx=nothing, display=true)
+function step_code(code::PartialCode; ctx=nothing, display=true)
     if isnothing(ctx)
         clean_partial_code(PartialCode(code.lastCtx, code.lastCtx(code.code), code.algebra), display=display)
     else
@@ -222,7 +222,7 @@ function step_code(code::PartialCode, ctx=nothing, display=true)
     end
 end
 
-function step_code(code::PartialCode, step=1, resumeLocations=nothing, resumeStyles=nothing, resumeFilter=nothing, display=true)
+function step_code(code::PartialCode; step=1, resumeLocations=nothing, resumeStyles=nothing, resumeFilter=nothing, display=true)
     ctx = StepOnlyControl(step=step, resumeLocations = resumeLocations, resumeStyles=resumeStyles, resumeFilter=resumeFilter)
     step_code(code, ctx=ctx, display=true)
 end
