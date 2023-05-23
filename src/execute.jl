@@ -17,6 +17,11 @@ function execute_code(ex, T, algebra = DefaultAlgebra(); ctx = LowerJulia(algebr
     end
 end
 
+"""
+    lower_global(prgm, ctx)
+
+lower the program `prgm` at global scope in the context `ctx`
+"""
 function lower_global(prgm, ctx)
     code = contain(ctx) do ctx_2
         quote
@@ -99,9 +104,20 @@ function finch_kernel(name, args, prgm, algebra = DefaultAlgebra(); ctx = LowerJ
         execute_code(:TODO, maybe_typeof(prgm), ctx = ctx_2)
     end
     quote
-        function $name($(keys(args)...))
+        function $name($(first.(args)...))
             $(striplines(unblock(code)))
         end
+    end
+end
+
+macro finch_kernel(opts_def...)
+    length(opts_def) >= 1 || throw(ArgumentError("defpected at least one argument to @finch(opts..., def)"))
+    (opts, def) = (opts_def[1:end-1], opts_def[end])
+    (@capture def :function(:call(~name, ~args...), ~ex)) || throw(ArgumentError("unrecognized function definition in @staged"))
+    named_args = map(arg -> :($(QuoteNode(arg)) => $(esc(arg))), args)
+    prgm = FinchNotation.finch_parse_instance(ex)
+    return quote
+        $finch_kernel($(QuoteNode(name)), Any[$(named_args...),], typeof($prgm), $(map(esc, opts)...))
     end
 end
 
