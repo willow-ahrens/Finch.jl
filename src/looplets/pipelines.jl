@@ -70,15 +70,12 @@ end
 
 function (ctx::PipelineVisitor)(node::Pipeline) 
   new_phases = []
-
+  
   prev_stop = call(-, getstart(ctx.ext), 1)
   for curr in node.phases
     curr_start = call(+, prev_stop, 1)
     curr_stop = getstop(phase_range(curr, ctx.ctx, ctx.ext))
-    push!(new_phases, Phase(body = curr.body, 
-                            start=(ctx,ext)->curr_start, 
-                            stop= curr.stop)) 
-    
+    push!(new_phases, Phase(body = curr.body, start = (ctx, ext) -> curr_start, stop = curr.stop)) 
     prev_stop = curr_stop
   end
   
