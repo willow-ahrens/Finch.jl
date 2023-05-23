@@ -10,7 +10,6 @@ begin
     else
         yf_lvl_i1 = 0
     end
-    i = 1
     phase_stop = min(yf_lvl_i1, yf_lvl.shape)
     if phase_stop >= 1
         i = 1
@@ -36,11 +35,11 @@ begin
             end
             i = phase_stop_2 + 1
         end
-        i = phase_stop + 1
     end
+    phase_start_3 = max(1, 1 + yf_lvl_i1)
     phase_stop_3 = yf_lvl.shape
-    if phase_stop_3 >= i
-        cond_3 = 0 < 1 + -i + phase_stop_3
+    if phase_stop_3 >= phase_start_3
+        cond_3 = 0 < 1 + -phase_start_3 + phase_stop_3
         if cond_3
             x_val = min(NaN, x_val)
         end

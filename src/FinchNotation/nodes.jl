@@ -565,7 +565,11 @@ function display_expression(io, mime, node::FinchNode)
         display_expression(io, mime, node.mode)
         print(io, ")")
     elseif node.kind === cached
+        print(io, "cached(")
         display_expression(io, mime, node.arg)
+        print(io, ", ")
+        display_expression(io, mime, node.ref.val)
+        print(io, ")")
     elseif node.kind === virtual
         print(io, "virtual(")
         print(io, node.val)
