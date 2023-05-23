@@ -46,7 +46,7 @@ function Base.show_unquoted(io::IO, node::Resumable, indent::Int, prec::Int)
     if length(node.meta) == 0
         show_with_indent(io, node.root, indent, prec)
     else
-        show_with_indent(io, node.root, indent, prec, meta)
+        show_with_indent(io, node.root, indent, prec, node.meta)
     end
 end
 
