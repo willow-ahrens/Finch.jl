@@ -61,7 +61,7 @@ macro finch(opts_ex...)
     end
     for tns in results
         push!(thunk.args, quote
-            $(esc(tns)) = get(res, $(QuoteNode(tns)), $(esc(tns))) #TODO can we do this better?
+            $(esc(tns)) = get(res, $(QuoteNode(tns)), $(esc(tns)))
         end)
     end
     push!(thunk.args, quote
@@ -89,13 +89,13 @@ macro finch_code(opts_ex...)
 end
 
 """
-    finch_kernel(name, args, prgm, ctx = LowerJulia())
+    finch_kernel(fname, args, prgm, ctx = LowerJulia())
 
-Return a function definition for a Finch function which can execute a program of
-type `prgm`. Here, `name` is the name of the function and `args` is a
+Return a function definition for which can execute a Finch program of
+type `prgm`. Here, `fname` is the name of the function and `args` is a
 `iterable` of argument name => type pairs.
 """
-function finch_kernel(name, args, prgm, algebra = DefaultAlgebra(); ctx = LowerJulia(algebra=algebra))
+function finch_kernel(fname, args, prgm, algebra = DefaultAlgebra(); ctx = LowerJulia(algebra=algebra))
     maybe_typeof(x) = x isa Type ? x : typeof(x)
     code = contain(ctx) do ctx_2
         foreach(args) do (key, val)
@@ -103,17 +103,27 @@ function finch_kernel(name, args, prgm, algebra = DefaultAlgebra(); ctx = LowerJ
         end
         execute_code(:TODO, maybe_typeof(prgm), ctx = ctx_2)
     end
-    quote
-        function $name($(first.(args)...))
-            $(striplines(unblock(code)))
-        end
-    end
+    arg_defs = map(((key, val),) -> :($key::$(maybe_typeof(val))), args)
+    striplines(:(function $fname($(arg_defs...))
+        @inbounds $(striplines(unblock(code)))
+    end))
 end
 
+"""
+    @finch_kernel [options] fname(args...) = prgm
+
+Return a definition for a function named `fname` which executes `@finch prgm` on
+the arguments `args`. `args` should be a list of variables holding
+representative argument instances or types.
+
+See also: [`@finch`](@ref)
+"""
 macro finch_kernel(opts_def...)
-    length(opts_def) >= 1 || throw(ArgumentError("defpected at least one argument to @finch(opts..., def)"))
+    length(opts_def) >= 1 || throw(ArgumentError("expected at least one argument to @finch(opts..., def)"))
     (opts, def) = (opts_def[1:end-1], opts_def[end])
-    (@capture def :function(:call(~name, ~args...), ~ex)) || throw(ArgumentError("unrecognized function definition in @staged"))
+    (@capture def :function(:call(~name, ~args...), ~ex)) ||
+    (@capture def :(=)(:call(~name, ~args...), ~ex)) ||
+    throw(ArgumentError("unrecognized function definition in @finch_kernel"))
     named_args = map(arg -> :($(QuoteNode(arg)) => $(esc(arg))), args)
     prgm = FinchNotation.finch_parse_instance(ex)
     return quote
