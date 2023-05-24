@@ -23,6 +23,12 @@ julia> using Pkg; Pkg.add("Finch")
 
 ## Usage:
 
+Most of the capabilities of Finch are realized through the use of the `@finch` macro.
+
+```@docs
+@finch
+```
+
 We're working on adding more documentation, for now take a look at the examples
 for [linear
 algebra](https://github.com/willow-ahrens/Finch.jl/blob/main/apps/linalg.jl) or

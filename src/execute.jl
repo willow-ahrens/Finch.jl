@@ -66,14 +66,14 @@ end
 
 Finch programs are composed using the following syntax:
 
-`arr .= 0` - an array declaration initializing arr to zero.
-`arr[inds...]` - an array access, the array must be a variable and each index may be another finch expression.
-`x + y`, `f(x, y)` - function calls, where `x` and `y` are finch expressions.
-`arr[inds...] = ex` - an array assignment expression, setting `arr[inds]` to the value of `ex`.
-`arr[inds...] += ex` - an incrementing array expression, adding `ex` to `arr[inds]`. `*, &, |`, are supported.
-`arr[inds...] <<min>>= ex` - a incrementing array expression with a custom operator, e.g. `<<min>>` is the minimum operator.
-`for i = _ body end` - a loop over the index `i`, where `_` is computed from array access with `i` in `body`.
-`if cond body end` - a conditional branch that executes only iterations where `cond` is true.
+ - `arr .= 0`: an array declaration initializing arr to zero.
+ - `arr[inds...]`: an array access, the array must be a variable and each index may be another finch expression.
+ - `x + y`, `f(x, y)`: function calls, where `x` and `y` are finch expressions.
+ - `arr[inds...] = ex`: an array assignment expression, setting `arr[inds]` to the value of `ex`.
+ - `arr[inds...] += ex`: an incrementing array expression, adding `ex` to `arr[inds]`. `*, &, |`, are supported.
+ - `arr[inds...] <<min>>= ex`: a incrementing array expression with a custom operator, e.g. `<<min>>` is the minimum operator.
+ - `for i = _ body end`: a loop over the index `i`, where `_` is computed from array access with `i` in `body`.
+ - `if cond body end`: a conditional branch that executes only iterations where `cond` is true.
 
 Symbols are used to represent variables, and their values are taken from the environment. Loops introduce
 index variables into the scope of their bodies.
