@@ -33,7 +33,7 @@ function lower_global(prgm, ctx)
                 contain(ctx_2) do ctx_3
                     prgm2 = prgm
                     if prgm.kind !== sequence
-                        prgm2 = InstantiateTensors(ctx_2 = ctx_3)(prgm2)
+                        prgm2 = InstantiateTensors(ctx = ctx_3)(prgm2)
                     end
                     ctx_3(prgm2)
                 end
