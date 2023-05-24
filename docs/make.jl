@@ -32,6 +32,9 @@ makedocs(;
         "Internals" => "internals.md",
         "Directory Structure" => "directory_structure.md",
         "Contributing" => "CONTRIBUTING.md",
+        "Tutorials" => [
+            "Benchmarking" => "benchmark.md",
+        ],
     ],
 )
 

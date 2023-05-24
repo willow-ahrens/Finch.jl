@@ -37,3 +37,32 @@ There are several reasons one might want to do this:
 ```@docs
     @finch_kernel
 ```
+
+As an example, the following code generates an spmv kernel definition, evaluates
+the definition, and then calls the kernel several times.
+
+```julia
+let
+    A = @fiber(d(sl(e(0.0))))
+    x = @fiber(d(e(0.0)))
+    y = @fiber(d(e(0.0)))
+    def = @finch_kernel function spmv(y, A, x)
+        y .= 0.0
+        for j = _, i = _
+            y[i] += A[i, j] * x[j]
+        end
+    end
+    eval(def)
+end
+
+function main()
+    for i = 1:10
+        A2 = @fiber(d(sl(e(0.0))), fsprand((10, 10), 0.1))
+        x2 = @fiber(d(e(0.0)), rand(10))
+        y2 = @fiber(d(e(0.0)))
+        spmv(y2, A2, x2)
+    end
+end
+
+main()
+```
