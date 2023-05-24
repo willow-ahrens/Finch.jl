@@ -29,7 +29,7 @@ function show_with_indent(io, node::FinchNode, indent, prec)
     end
 end
 
-function show_with_indent(io, node::FinchNode, indent, prec, meta)
+function show_with_indent_meta(io, node::FinchNode, indent, prec, meta)
     indent = fld(indent, 2) + 1
     if Finch.FinchNotation.isstateful(node)
         print("@finch begin")
@@ -42,13 +42,25 @@ function show_with_indent(io, node::FinchNode, indent, prec, meta)
     end
 end
 
+function show_with_indent_meta(io, node, indent, prec, meta)
+    indent = fld(indent, 2) + 1
+    print("@finch("); print(meta); Finch.FinchNotation.display_expression(io, MIME"text/plain"(), node); print(")")
+end
+
+dictkeys(d::Dict) = (collect(keys(d))...,)
+dictvalues(d::Dict) = (collect(values(d))...,)
+
+namedtuple(d::Dict{Symbol,T}) where {T} =
+    NamedTuple{dictkeys(d)}(dictvalues(d))
+
 function Base.show_unquoted(io::IO, node::Resumable, indent::Int, prec::Int)
     if length(node.meta) == 0
         show_with_indent(io, node.root, indent, prec)
     else
-        show_with_indent(io, node.root, indent, prec, node.meta)
+        show_with_indent_meta(io, node.root, indent, prec, namedtuple(node.meta))
     end
 end
+
 
 
 function Base.show(io::IO, node::Resumable)
@@ -57,7 +69,7 @@ function Base.show(io::IO, node::Resumable)
         show(io, MIME"text/plain"(), node.root)
     else
         println("@finch")
-        show(io, MIME"text/plain"(), node.meta)
+        show(io, MIME"text/plain"(), namedtuple(node.meta))
         show(io, MIME"text/plain"(), node.root)
     end
 end
@@ -167,7 +179,7 @@ end
 end
 
 function evolve_control(c:: StepOnlyControl, ctx, node, style)
-    StepExceptControl(step=c.step - 1, resumeLocations=c.resumeLocations,
+    StepOnlyControl(step=c.step - 1, resumeLocations=c.resumeLocations,
     resumeStyles=c.resumeStyles, resumeFilter=c.resumeFilter)
 end
 
@@ -246,8 +258,8 @@ function step_some_code(code::PartialCode; step=1, resumeLocations=nothing, resu
     step_again_code(code, ctx=ctx, sdisplay=sdisplay)
 end
 
-function step_first_code(code::PartialCode; step=1)
-    control = StepOnlyControl(step=step, resumeLocations = [1])
+function step_first_code(code::PartialCode; step=1, sdisplay=true)
+    control = StepOnlyControl(step=step, resumeLocations = [0])
     ctx = DebugContext(code.lastCtx.ctx, control)
     step_again_code(code, ctx=ctx, sdisplay=sdisplay)
 end
