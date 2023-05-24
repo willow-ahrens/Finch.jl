@@ -17,7 +17,7 @@ using DataStructures
 using JSON
 using CIndices
 
-export @finch, @finch_program, @finch_code, value
+export @finch, @finch_program, @finch_code, @finch_kernel, value
 
 export Fiber, Fiber!, Scalar
 export SparseList, SparseListLevel

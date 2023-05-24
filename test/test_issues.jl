@@ -246,18 +246,20 @@ using CIndices
         check_output("pull197.txt", String(take!(io)))
     end
 
-    #=
     #https://github.com/willow-ahrens/Finch.jl/issues/70
 
     let
         A = @fiber(d(sl(e(0.0))))
         B = typeof(@fiber(d(sl(e(0.0)))))
-        @finch_function(copy_array, A, B, begin
-            for i = _
-                A[i] = B[i]
+        eval(@finch_kernel function copy_array(A, B)
+            A .= 0
+            for j = _, i = _
+                A[i, j] = B[i, j]
             end
         end)
+        C = @fiber(d(sl(e(0.0))))
+        D = @fiber(d(sl(e(0.0))), fsprand((5, 5), 0.5))
+        copy_array(C, D)
+        @test C == D
     end
-    =#
-
 end
