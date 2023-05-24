@@ -1,3 +1,10 @@
+#!/usr/bin/env julia
+if abspath(PROGRAM_FILE) == @__FILE__
+    using Pkg
+    Pkg.activate(@__DIR__)
+    Pkg.instantiate()
+end
+
 using Test
 using ArgParse
 
@@ -84,6 +91,15 @@ include("utils.jl")
     if should_run("base") include("test_base.jl") end
     if should_run("apps") include("test_apps.jl") end
     if should_run("fileio") include("test_fileio.jl") end
+    if should_run("docs") && Sys.WORD_SIZE == 64
+        @testset "Documentation" begin
+            if parsed_args["overwrite"]
+                include("../docs/fix.jl")
+            else
+                include("../docs/test.jl")
+            end
+        end
+    end
     if should_run("embed") include("embed/test_embed.jl") end
     #algebra goes at the end since it calls refresh()
     if should_run("algebra") include("test_algebra.jl") end
