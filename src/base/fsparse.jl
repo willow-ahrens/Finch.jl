@@ -111,8 +111,8 @@ julia> fsprand(Bool, (3, 3), 0.5)
 SparseCOO (false) [1:3,1:3]
 ├─├─[1, 1]: true
 ├─├─[3, 1]: true
-├─├─[2, 2]: true
-├─├─[3, 2]: true
+├─├─[2, 3]: true
+├─├─[3, 7]: true
 ├─├─[3, 3]: true  
 
 julia> fsprand(Float64, (2, 2, 2), 0.5)
