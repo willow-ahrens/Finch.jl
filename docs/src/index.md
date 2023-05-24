@@ -21,9 +21,7 @@ intermediate expressions.
 julia> using Pkg; Pkg.add("Finch")
 ```
 
-## Usage:
-
-### @finch
+## Basics:
 
 To begin, the following program sums the rows of a sparse matrix:
 ```julia
@@ -38,12 +36,12 @@ y = zeros(5)
 end
 ```
 
-The `@finch` macro takes a block of code, and compiles it using the sparsity
+The [`@finch`](@ref) macro takes a block of code, and compiles it using the sparsity
 attributes of the arguments. In this case, `A` is a sparse matrix, so the
 compiler generates a sparse loop nest. The compiler takes care of applying rules
 like `x * 0 => 0` during compilation to make the code more efficient.
 
-You can call `@finch` on any loop program, but it will only generate sparse code
+You can call [`@finch`](@ref) on any loop program, but it will only generate sparse code
 if the arguments are sparse. For example, the following program calculates the
 sum of the elements of a dense matrix:
 ```julia
@@ -58,7 +56,7 @@ s = Scalar(0.0)
 end
 ```
 
-You can call `@finch_code` to see the generated code (since `A` is dense, the
+You can call [`@finch_code`](@ref) to see the generated code (since `A` is dense, the
 code is dense):
 ```jldoctest example1; setup=:(using Finch; A = rand(5, 5); s = 0)
 julia> @finch_code for i=_, j=_ ; s[] += A[i, j] end
@@ -76,10 +74,6 @@ quote
 end
 ```
 
-```@docs
-@finch
-@finch_code
-```
 
 We're working on adding more documentation, for now take a look at the examples
 for [linear

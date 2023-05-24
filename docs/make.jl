@@ -23,6 +23,7 @@ makedocs(;
     ),
     pages=[
         "Home" => "index.md",
+        "Usage" => "usage.md",
         "Array Formats" => "fibers.md",
         "Custom Functions" => "algebra.md",
         "Tensor File I/O" => "fileio.md",
