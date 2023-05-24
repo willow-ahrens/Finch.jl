@@ -2,7 +2,6 @@
 if abspath(PROGRAM_FILE) == @__FILE__
     using Pkg
     Pkg.activate(@__DIR__)
-    Pkg.resolve()
     Pkg.instantiate()
 end
 

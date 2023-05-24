@@ -8,7 +8,7 @@ interest from a contributor in the feature.
 ## Utilities
 
 Finch include several scripts that can be executed directly, e.g. `runtests.jl`.
-These scripts are all named `run*.jl` and they all have local [Pkg
+These scripts are all have local [Pkg
 environments](https://pkgdocs.julialang.org/v1/getting-started/#Getting-Started-with-Environments).
 The scripts include convenience headers to automatically use their respective
 environments, so you won't need to worry about `--project=.` flags, etc.
@@ -16,8 +16,8 @@ environments, so you won't need to worry about `--project=.` flags, etc.
 ## Documentation
 
 The `/docs` directory includes Finch documentation in `/src`, and a built
-website in `/build`. You can build the website with `./docs/runmake.jl`. You can
-run doctests with `./docs/rundoctests.jl`, and fix doctests with `./docs/runfix.jl`.
+website in `/build`. You can build the website with `./docs/make.jl`. You can
+run doctests with `./docs/test.jl`, and fix doctests with `./docs/fix.jl`.
 
 ## Testing
 
