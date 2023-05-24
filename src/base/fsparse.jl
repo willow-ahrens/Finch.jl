@@ -106,7 +106,7 @@ argument specifies a random number generator.
 See also: (`sprand`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#SparseArrays.sprand)
 
 # Examples
-```jldoctest; setup = :(using Random; Random.seed!(1234))
+```jldoctest; setup = :(using Random; Random.seed!(1234)), filter = r"[0-9\\.]+"
 julia> fsprand(Bool, (3, 3), 0.5)
 SparseCOO (false) [1:3,1:3]
 ├─├─[1, 1]: true
