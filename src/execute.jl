@@ -75,16 +75,7 @@ macro finch_code(opts_ex...)
     (opts, ex) = (opts_ex[1:end-1], opts_ex[end])
     prgm = FinchNotation.finch_parse_instance(ex)
     return quote
-        $execute_code(:ex, typeof($prgm), $(map(esc, opts)...)) |>
-        striplines |>
-        desugar |>
-        propagate |>
-        mark_dead |>
-        prune_dead |>
-        resugar |>
-        unblock |>
-        unquote_literals |>
-        unresolve
+        $execute_code(:ex, typeof($prgm), $(map(esc, opts)...)) |> pretty |> dataflow |> unresolve |> unquote_literals
     end
 end
 
@@ -102,7 +93,7 @@ function finch_kernel(fname, args, prgm, algebra = DefaultAlgebra(); ctx = Lower
             ctx_2.bindings[variable(key)] = virtualize(key, maybe_typeof(val), ctx_2, key)
         end
         execute_code(:TODO, maybe_typeof(prgm), ctx = ctx_2)
-    end
+    end |> pretty |> dataflow |> unquote_literals
     arg_defs = map(((key, val),) -> :($key::$(maybe_typeof(val))), args)
     striplines(:(function $fname($(arg_defs...))
         @inbounds $(striplines(unblock(code)))

@@ -39,7 +39,6 @@ function refresh()
     end
 end
 
-#TODO should we just have another IR? Ugh idk
 shallowcopy(x::T) where T = T([getfield(x, k) for k ∈ fieldnames(T)]...)
 
 kwfields(x::T) where T = Dict((k=>getfield(x, k) for k ∈ fieldnames(T))...)
@@ -57,16 +56,39 @@ function resize_if_smaller!(arr, i)
     end
 end
 
+"""
+    pretty(ex) 
+
+Make ex prettier. Shorthand for `ex |> unblock |> striplines |> regensym`.
+"""
+pretty(ex) = ex |> unblock |> striplines |> regensym
+
+"""
+    unquote_literals(ex)
+
+unquote QuoteNodes when this doesn't change the semantic meaning. `ex` is the target Julia expression.
+"""
 unquote_literals(ex) = ex
 unquote_literals(ex::Expr) = Expr(ex.head, map(unquote_literals, ex.args)...)
 unquote_literals(ex::QuoteNode) = unquote_quoted(ex.value)
-
 unquote_quoted(::Missing) = missing
 unquote_quoted(ex) = QuoteNode(ex)
 
 isgensym(s::Symbol) = occursin("#", string(s))
 isgensym(s) = false
 
+"""
+    regensym(ex)
+
+Give gensyms prettier names by renumbering them. `ex` is the target Julia expression.
+"""
+function regensym(ex)
+    counter = 0
+    syms = Dict{Symbol, Symbol}()
+    Rewrite(Postwalk((x) -> if isgensym(x) 
+        get!(()->Symbol("_", gensymname(x), "_", counter+=1), syms, x)
+    end))(ex)
+end
 function gensymname(x::Symbol)
     m = Base.match(r"##(.+)#\d+", String(x))
     m === nothing || return m.captures[1]
@@ -75,13 +97,55 @@ function gensymname(x::Symbol)
     return "x"
 end
 
-function regensym(ex)
-    counter = 0
-    syms = Dict{Symbol, Symbol}()
-    Rewrite(Postwalk((x) -> if isgensym(x) 
-        get!(()->Symbol("_", gensymname(x), "_", counter+=1), syms, x)
-    end))(ex)
+"""
+    unblock(ex)
+
+Flatten any redundant blocks into a single block, over the whole expression. `ex` is the target Julia expression.
+"""
+function unblock(ex::Expr)
+    ex = Rewrite(Postwalk(Fixpoint(Chain([
+        (@rule :block(~a..., :block(~b...), ~c...) => Expr(:block, a..., b..., c...)),
+        (@rule :block(~a..., :(=)(~b, ~c), ~b) => Expr(:block, a..., Expr(:(=), ~b, ~c))),
+        (@rule :block(~a) => a),
+    ]))))(ex)
+    if ex isa Expr && !@capture ex :block(~args...)
+        ex = Expr(:block, ex)
+    end
+    ex
 end
+unblock(ex) = ex
+
+"""
+    unresolve(ex)
+
+Unresolve function literals into function symbols. `ex` is the target Julia expression.
+"""
+function unresolve(ex)
+    ex = Rewrite(Postwalk(unresolve1))(ex)
+end
+unresolve1(x) = x
+unresolve1(f::Function) = methods(f).mt.name
+
+"""
+    striplines(ex)
+
+Remove line numbers. `ex` is the target Julia expression
+"""
+function striplines(ex::Expr)
+    islinenum(x) = x isa LineNumberNode
+    Rewrite(Postwalk(Fixpoint(Chain([
+        (@rule :block(~a..., ~b::islinenum, ~c...) => Expr(:block, a..., c...)),
+        (@rule :macrocall(~a, ~b, ~c...) => Expr(:macrocall, a, nothing, c...)),
+    ]))))(ex)
+end
+striplines(ex) = ex
+
+"""
+    dataflow(ex)
+
+Run dead code elimination and constant propagation. `ex` is the target Julia expression.
+"""
+dataflow(ex) = ex |> striplines |> desugar |> propagate_copies |> mark_dead |> prune_dead |> resugar
 
 isassign(x) = x in Set([:+=, :*=, :&=, :|=, :(=)])
 incs = Dict(:+= => :+, :*= => :*, :&= => :&, :|= => :|)
@@ -131,34 +195,34 @@ function resugar(ex)
     ]))))(ex)
 end
 
-@kwdef struct Propagate
+@kwdef struct PropagateCopies
     refs = Dict()
     ids = Dict()
     vals = Dict()
 end
 
-Base.:(==)(a::Propagate, b::Propagate) = (a.ids == b.ids) && (a.refs == b.refs)
-Base.copy(ctx::Propagate) = Propagate(copy(ctx.refs), copy(ctx.ids), copy(ctx.vals))
-function Base.merge!(ctx::Propagate, ctx_2::Propagate) 
+Base.:(==)(a::PropagateCopies, b::PropagateCopies) = (a.ids == b.ids) && (a.refs == b.refs)
+Base.copy(ctx::PropagateCopies) = PropagateCopies(copy(ctx.refs), copy(ctx.ids), copy(ctx.vals))
+function Base.merge!(ctx::PropagateCopies, ctx_2::PropagateCopies) 
     merge!(intersect, ctx.refs, ctx_2.refs)
     merge!(union, ctx.ids, ctx_2.ids)
     merge!(union, ctx.vals, ctx_2.vals)
 end
 
-function propagate(ex)
+function propagate_copies(ex)
     id = 0
     ex = Postwalk(@rule(:(=)(~lhs::issymbol, ~rhs) => 
         Expr(:def, Expr(:(=), lhs, rhs), id += 1)))(ex)
 
     ex = unblock(ex)
 
-    ex = Propagate()(ex)
+    ex = PropagateCopies()(ex)
 
     ex = Postwalk(@rule(:def(:(=)(~lhs::issymbol, ~rhs), ~id) => 
         Expr(:(=), lhs, rhs)))(ex)
 end
 
-function (ctx::Propagate)(ex)
+function (ctx::PropagateCopies)(ex)
     if issymbol(ex)
         if haskey(ctx.ids, ex) && length(ctx.vals[ex]) == 1
             val = first(ctx.vals[ex])
@@ -229,7 +293,7 @@ function (ctx::Propagate)(ex)
     elseif !isexpr(ex)
         ex
     else
-        error("propagate reached unrecognized expression $ex")
+        error("propagate_copies reached unrecognized expression $ex")
     end
 end
 
@@ -362,45 +426,6 @@ function prune_dead(ex)
     ]))))(ex)
 end
 
-"""
-    unblock(ex)
-Flatten any redundant blocks into a single block, over the whole expression.
-"""
-function unblock(ex::Expr)
-    ex = Rewrite(Postwalk(Fixpoint(Chain([
-        (@rule :block(~a..., :block(~b...), ~c...) => Expr(:block, a..., b..., c...)),
-        (@rule :block(~a..., :(=)(~b, ~c), ~b) => Expr(:block, a..., Expr(:(=), ~b, ~c))),
-        (@rule :block(~a) => a),
-    ]))))(ex)
-    if ex isa Expr && !@capture ex :block(~args...)
-        ex = Expr(:block, ex)
-    end
-    ex
-end
-unblock(ex) = ex
-
-"""
-    unresolve(ex)
-Unresolve function literals into function symbols
-"""
-function unresolve(ex)
-    ex = Rewrite(Postwalk(unresolve1))(ex)
-end
-unresolve1(x) = x
-unresolve1(f::Function) = methods(f).mt.name
-
-"""
-    striplines(ex)
-Remove line numbers
-"""
-function striplines(ex::Expr)
-    islinenum(x) = x isa LineNumberNode
-    Rewrite(Postwalk(Fixpoint(Chain([
-        (@rule :block(~a..., ~b::islinenum, ~c...) => Expr(:block, a..., c...)),
-        (@rule :macrocall(~a, ~b, ~c...) => Expr(:macrocall, a, nothing, c...)),
-    ]))))(ex)
-end
-striplines(ex) = ex
 
 (Base.:^)(T::Type, i::Int) = ∘(repeated(T, i)..., identity)
 (Base.:^)(f::Function, i::Int) = ∘(repeated(f, i)..., identity)
