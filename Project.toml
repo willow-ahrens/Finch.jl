@@ -20,6 +20,7 @@ SyntaxInterface = "b33eeca9-aacb-4496-a840-e75f1646a4fb"
 
 [compat]
 AbstractTrees = ">= 0.3.4"
+ArgParse = "1"
 CIndices = "0.1"
 Compat = "3.29, 4"
 DataStructures = "0.18"
