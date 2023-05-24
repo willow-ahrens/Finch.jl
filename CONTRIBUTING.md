@@ -13,12 +13,6 @@ environments](https://pkgdocs.julialang.org/v1/getting-started/#Getting-Started-
 The scripts include convenience headers to automatically use their respective
 environments, so you won't need to worry about `--project=.` flags, etc.
 
-## Documentation
-
-The `/docs` directory includes Finch documentation in `/src`, and a built
-website in `/build`. You can build the website with `./docs/make.jl`. You can
-run doctests with `./docs/test.jl`, and fix doctests with `./docs/fix.jl`.
-
 ## Testing
 
 All pull requests should pass continuous integration testing before merging.
@@ -48,3 +42,10 @@ test suites by specifying them as positional arguments, e.g.
 ```
 
 This information is summarized with `./tests/runtests.jl --help`
+
+## Documentation
+
+The `/docs` directory includes Finch documentation in `/src`, and a built
+website in `/build`. You can build the website with `./docs/make.jl`. You can
+run doctests with `./docs/test.jl`, and fix doctests with `./docs/fix.jl`,
+though both are included as part of the test suite.
