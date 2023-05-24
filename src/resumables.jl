@@ -82,6 +82,8 @@ function number_resumables(code)
                         node.meta[:Number] = counter
                         counter+=1 
                         node
+                    else
+                        node
                     end )(code)
 end
 
@@ -90,6 +92,8 @@ function record_methods(code)
     if node isa Resumable 
         loc = which(lower, (typeof(node.root), typeof(node.ctx), typeof(node.style)))
          node.meta[:Which] = (string(loc.file), loc.line)
+        node
+    else
         node
     end )(code)
 end
@@ -136,25 +140,50 @@ function Base.setproperty!(ctx::DebugContext, name::Symbol, x)
     setproperty!(ctx.ctx, name, x)
 end
 
+function (ctx::DebugContext)(node)
+    if node isa Resumable
+        root = node.root
+        style = Stylize(root, ctx.ctx)(root)
+        return ctx(node, style)
+    else 
+        println(typeof(node))
+        println(node)
+        style = Stylize(node, ctx.ctx)(node)
+        return ctx(node, style)
+    end
+end
+
 function (ctx::DebugContext)(node, style)
+    println("On:", ctx.control, node, style)
     if node isa Resumable
         if should_resume(ctx.control, ctx, node.root, style, node.meta)
-            node.ctx(node.root)
+            println("res1")
+            control = evolve_control(ctx.control, ctx, node.root, style)
+            lower(node.root, DebugContext(ctx.ctx, control), style)
         else
-            Resumable(ctx.ctx, node.root, style, update_meta(ctx.control, ctx, node.root, style, node.meta))
+            println("no.")
+            return Resumable(ctx.ctx, node.root, style, update_meta(ctx.control, ctx, node.root, style, node.meta))
         end
     elseif should_pause(ctx.control, ctx, node, style)
-        Resumable(ctx.ctx, node, style, init_meta(ctx.control, ctx, node, style))
+        println("pause.")
+        return Resumable(ctx.ctx, node, style, init_meta(ctx.control, ctx, node, style))
     else
+        println("keep going.")
         control = evolve_control(ctx.control, ctx, node, style)
-        lower(node, DebugContext(ctx.ctx, control), style)
+        nxt = lower(node, DebugContext(ctx.ctx, control), style)
+        println(nxt)
+        return nxt
     end
 end
 
 function (ctx::DebugContext)(code:: Expr)
+    if iscompiled(code)
+        return code
+    end
+    println("Through...")
     Postwalk(node -> 
     if node isa Resumable 
-        (ctx::DebugContext)(node.root, node.style)
+        (ctx::DebugContext)(node)
     end )(code)
 end
 
@@ -186,7 +215,7 @@ end
 function should_resume(c :: StepOnlyControl, ctx, node, style, meta)
     should = false
     if !isnothing(c.resumeLocations) && !isnothing(meta)
-        if :Number in meta 
+        if :Number in keys(meta) 
             should = meta[:Number] in c.resumeLocations
         end
     end
@@ -272,9 +301,6 @@ function iscompiled(code:: Expr)
                         node
                     end )(code)
     !found
-end
-
-function collect_resumables()
 end
 
 function end_debug(code:: PartialCode)
