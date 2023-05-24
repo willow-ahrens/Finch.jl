@@ -21,7 +21,59 @@ intermediate expressions.
 julia> using Pkg; Pkg.add("Finch")
 ```
 
-## Usage:
+## Basics:
+
+To begin, the following program sums the rows of a sparse matrix:
+```julia
+using Finch
+A = sprand(5, 5, 0.5)
+y = zeros(5)
+@finch begin
+    y .= 0
+    for i=_, j=_
+        y[i] += A[i, j]
+    end
+end
+```
+
+The [`@finch`](@ref) macro takes a block of code, and compiles it using the sparsity
+attributes of the arguments. In this case, `A` is a sparse matrix, so the
+compiler generates a sparse loop nest. The compiler takes care of applying rules
+like `x * 0 => 0` during compilation to make the code more efficient.
+
+You can call [`@finch`](@ref) on any loop program, but it will only generate sparse code
+if the arguments are sparse. For example, the following program calculates the
+sum of the elements of a dense matrix:
+```julia
+using Finch
+A = rand(5, 5)
+s = Scalar(0.0)
+@finch begin
+    s .= 0
+    for i=_, j=_
+        s[] += A[i, j]
+    end
+end
+```
+
+You can call [`@finch_code`](@ref) to see the generated code (since `A` is dense, the
+code is dense):
+```jldoctest example1; setup=:(using Finch; A = rand(5, 5); s = 0)
+julia> @finch_code for i=_, j=_ ; s[] += A[i, j] end
+quote
+    A = ex.body.body.rhs.tns.tns
+    sugar_1 = size(A)
+    A_mode1_stop = sugar_1[1]
+    A_mode2_stop = sugar_1[2]
+    for i_3 = 1:A_mode1_stop
+        for j_3 = 1:A_mode2_stop
+            ex.body.body.lhs.tns.tns[] = A[i_3, j_3] + ex.body.body.lhs.tns.tns[]
+        end
+    end
+    ()
+end
+```
+
 
 We're working on adding more documentation, for now take a look at the examples
 for [linear

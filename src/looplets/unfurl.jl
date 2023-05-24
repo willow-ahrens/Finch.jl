@@ -26,14 +26,14 @@ function (ctx::UnfurlVisitor)(node::FinchNode, eldim = nodim)
     elseif node.kind === access && node.tns.kind === variable
         unfurl_access(node, ctx, eldim, ctx.ctx.bindings[node.tns])
     elseif istree(node)
-        #TODO propagate eldim here
+        #TODO propagate_copies eldim here
         similarterm(node, operation(node), map(ctx, arguments(node)))
     else
         node
     end
 end
 
-#TODO propagate eldim here
+#TODO propagate_copies eldim here
 unfurl_access(node, ctx, eldim, tns) = similarterm(node, operation(node), map(ctx, arguments(node)))
 
 function lower(root::FinchNode, ctx::AbstractCompiler,  ::UnfurlStyle)

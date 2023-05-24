@@ -1,59 +1,104 @@
 execute(ex) = execute(ex, DefaultAlgebra())
 
-@staged_function execute ex a quote
-    @inbounds begin
-        $(execute_code(:ex, ex, a()) |> unblock)
+@staged function execute(ex, a)
+    quote
+        @inbounds begin
+            $(execute_code(:ex, ex, a()) |> unblock)
+        end
     end
 end
 
-function execute_code(ex, T, algebra = DefaultAlgebra())
-    prgm = nothing
-    code = contain(LowerJulia(algebra = algebra)) do ctx
+
+function execute_code(ex, T, algebra = DefaultAlgebra(); ctx = LowerJulia(algebra = algebra))
+    code = contain(ctx) do ctx_2
+        prgm = nothing
+        prgm = virtualize(ex, T, ctx_2)
+        lower_global(prgm, ctx_2)
+    end
+end
+
+"""
+    lower_global(prgm, ctx)
+
+lower the program `prgm` at global scope in the context `ctx`.
+"""
+function lower_global(prgm, ctx)
+    code = contain(ctx) do ctx_2
         quote
             $(begin
-                prgm = virtualize(ex, T, ctx)
                 prgm = ScopeVisitor()(prgm)
-                prgm = ThunkVisitor(ctx)(prgm) #TODO this is a bit of a hack.
                 prgm = close_scope(prgm, LifecycleVisitor())
-                prgm = dimensionalize!(prgm, ctx)
-                prgm = simplify(prgm, ctx)
-                #The following call separates tensor and index names from environment symbols.
-                #TODO we might want to keep the namespace around, and/or further stratify index
-                #names from tensor names
-                contain(ctx) do ctx_2
+                prgm = dimensionalize!(prgm, ctx_2)
+                prgm = simplify(prgm, ctx_2) #appears necessary
+                contain(ctx_2) do ctx_3
                     prgm2 = prgm
                     if prgm.kind !== sequence
-                        prgm2 = InstantiateTensors(ctx = ctx_2)(prgm2)
+                        prgm2 = InstantiateTensors(ctx = ctx_3)(prgm2)
                     end
-                    prgm2 = ThunkVisitor(ctx_2)(prgm2) #TODO this is a bit of a hack.
-                    prgm2 = simplify(prgm2, ctx_2)
-                    ctx_2(prgm2)
+                    ctx_3(prgm2)
                 end
             end)
-            $(contain(ctx) do ctx_2
+            $(contain(ctx_2) do ctx_3
                 :(($(map(getresults(prgm)) do tns
                     @assert tns.kind === variable
                     name = tns.name
-                    tns = trim!(ctx.bindings[tns], ctx_2)
-                    :($name = $(ctx_2(tns)))
+                    tns = trim!(ctx_2.bindings[tns], ctx_3)
+                    :($name = $(ctx_3(tns)))
                 end...), ))
             end)
         end
     end
 end
 
-macro finch(args_ex...)
-    @assert length(args_ex) >= 1
-    (args, ex) = (args_ex[1:end-1], args_ex[end])
+"""
+    @finch [algebra] prgm
+
+Run a finch program `prgm`. The syntax for a finch program is a set of nested
+loops, statements, and branches over pointwise array assignments. For example,
+the following program computes the sum of two arrays `A = B + C`:
+
+```julia   
+A .= 0
+@finch for i = _
+    A[i] = B[i] + C[i]
+end
+```
+
+Finch programs are composed using the following syntax:
+
+ - `arr .= 0`: an array declaration initializing arr to zero.
+ - `arr[inds...]`: an array access, the array must be a variable and each index may be another finch expression.
+ - `x + y`, `f(x, y)`: function calls, where `x` and `y` are finch expressions.
+ - `arr[inds...] = ex`: an array assignment expression, setting `arr[inds]` to the value of `ex`.
+ - `arr[inds...] += ex`: an incrementing array expression, adding `ex` to `arr[inds]`. `*, &, |`, are supported.
+ - `arr[inds...] <<min>>= ex`: a incrementing array expression with a custom operator, e.g. `<<min>>` is the minimum operator.
+ - `for i = _ body end`: a loop over the index `i`, where `_` is computed from array access with `i` in `body`.
+ - `if cond body end`: a conditional branch that executes only iterations where `cond` is true.
+
+Symbols are used to represent variables, and their values are taken from the environment. Loops introduce
+index variables into the scope of their bodies.
+
+Finch uses the types of the arrays and symbolic analysis to discover program
+optimizations. If `B` and `C` are sparse array types, the program will only run
+over the nonzeros of either. 
+
+Semantically, Finch programs execute every iteration. However, Finch can use
+sparsity information to reliably skip iterations when possible.
+
+See also: [`@finch_code`](@ref)
+"""
+macro finch(opts_ex...)
+    length(opts_ex) >= 1 || throw(ArgumentError("Expected at least one argument to @finch(opts..., ex)"))
+    (opts, ex) = (opts_ex[1:end-1], opts_ex[end])
     results = Set()
     prgm = FinchNotation.finch_parse_instance(ex, results)
     res = esc(:res)
     thunk = quote
-        res = $execute($prgm, $(map(esc, args)...))
+        res = $execute($prgm, $(map(esc, opts)...))
     end
     for tns in results
         push!(thunk.args, quote
-            $(esc(tns)) = get(res, $(QuoteNode(tns)), $(esc(tns))) #TODO can we do this better?
+            $(esc(tns)) = get(res, $(QuoteNode(tns)), $(esc(tns)))
         end)
     end
     push!(thunk.args, quote
@@ -62,21 +107,63 @@ macro finch(args_ex...)
     thunk
 end
 
-macro finch_code(args_ex...)
-    @assert length(args_ex) >= 1
-    (args, ex) = (args_ex[1:end-1], args_ex[end])
+"""
+@finch_code [options...] prgm
+
+Return the code that would be executed in order to run a finch program `prgm`
+with the given options.
+
+See also: [`@finch`](@ref)
+"""
+macro finch_code(opts_ex...)
+    length(opts_ex) >= 1 || throw(ArgumentError("Expected at least one argument to @finch(opts..., ex)"))
+    (opts, ex) = (opts_ex[1:end-1], opts_ex[end])
     prgm = FinchNotation.finch_parse_instance(ex)
     return quote
-        $execute_code(:ex, typeof($prgm), $(map(esc, args)...)) |>
-        striplines |>
-        desugar |>
-        propagate |>
-        mark_dead |>
-        prune_dead |>
-        resugar |>
-        unblock |>
-        unquote_literals |>
-        unresolve
+        $execute_code(:ex, typeof($prgm), $(map(esc, opts)...)) |> pretty |> dataflow |> unresolve |> unquote_literals
+    end
+end
+
+"""
+    finch_kernel(fname, args, prgm, ctx = LowerJulia())
+
+Return a function definition for which can execute a Finch program of
+type `prgm`. Here, `fname` is the name of the function and `args` is a
+`iterable` of argument name => type pairs.
+"""
+function finch_kernel(fname, args, prgm, algebra = DefaultAlgebra(); ctx = LowerJulia(algebra=algebra))
+    maybe_typeof(x) = x isa Type ? x : typeof(x)
+    code = contain(ctx) do ctx_2
+        foreach(args) do (key, val)
+            ctx_2.bindings[variable(key)] = virtualize(key, maybe_typeof(val), ctx_2, key)
+        end
+        execute_code(:TODO, maybe_typeof(prgm), ctx = ctx_2)
+    end |> pretty |> dataflow |> unquote_literals
+    arg_defs = map(((key, val),) -> :($key::$(maybe_typeof(val))), args)
+    striplines(:(function $fname($(arg_defs...))
+        @inbounds $(striplines(unblock(code)))
+    end))
+end
+
+"""
+    @finch_kernel [options] fname(args...) = prgm
+
+Return a definition for a function named `fname` which executes `@finch prgm` on
+the arguments `args`. `args` should be a list of variables holding
+representative argument instances or types.
+
+See also: [`@finch`](@ref)
+"""
+macro finch_kernel(opts_def...)
+    length(opts_def) >= 1 || throw(ArgumentError("expected at least one argument to @finch(opts..., def)"))
+    (opts, def) = (opts_def[1:end-1], opts_def[end])
+    (@capture def :function(:call(~name, ~args...), ~ex)) ||
+    (@capture def :(=)(:call(~name, ~args...), ~ex)) ||
+    throw(ArgumentError("unrecognized function definition in @finch_kernel"))
+    named_args = map(arg -> :($(QuoteNode(arg)) => $(esc(arg))), args)
+    prgm = FinchNotation.finch_parse_instance(ex)
+    return quote
+        $finch_kernel($(QuoteNode(name)), Any[$(named_args...),], typeof($prgm), $(map(esc, opts)...))
     end
 end
 

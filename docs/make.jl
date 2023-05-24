@@ -23,6 +23,7 @@ makedocs(;
     ),
     pages=[
         "Home" => "index.md",
+        "Usage" => "usage.md",
         "Array Formats" => "fibers.md",
         "Custom Functions" => "algebra.md",
         "Tensor File I/O" => "fileio.md",
@@ -31,6 +32,9 @@ makedocs(;
         "Internals" => "internals.md",
         "Directory Structure" => "directory_structure.md",
         "Contributing" => "CONTRIBUTING.md",
+        "Tutorials" => [
+            "Benchmarking" => "benchmark.md",
+        ],
     ],
 )
 
