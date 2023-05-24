@@ -78,6 +78,13 @@ include("data_matrices.jl")
 include("utils.jl")
 
 @testset "Finch.jl" begin
+    if should_run("docs") && Sys.WORD_SIZE == 64
+        if parsed_args["overwrite"]
+            include("../docs/fix.jl")
+        else
+            include("../docs/test.jl")
+        end
+    end
     if should_run("print") include("test_print.jl") end
     if should_run("representation") include("test_representation.jl") end
     if should_run("constructors") include("test_constructors.jl") end
