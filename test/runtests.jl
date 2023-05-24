@@ -91,7 +91,7 @@ include("utils.jl")
     if should_run("base") include("test_base.jl") end
     if should_run("apps") include("test_apps.jl") end
     if should_run("fileio") include("test_fileio.jl") end
-    if should_run("docs") && Sys.WORD_SIZE == 64 && JULIA_VERSION >= v"1.9"
+    if should_run("docs") && Sys.WORD_SIZE == 64
         @testset "Documentation" begin
             if parsed_args["overwrite"]
                 include("../docs/fix.jl")
