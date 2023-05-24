@@ -4,7 +4,7 @@ CurrentModule = Finch
 
 # Usage
 
-## General Purpose (@finch)
+## General Purpose (`@finch`)
 
 Most users will want to use the [`@finch`](@ref) macro, which executes the given
 program immediately in the given scope. The program will be JIT-compiled on the
@@ -22,7 +22,7 @@ executing it.
 @finch_code
 ```
 
-## Ahead Of Time (@finch_kernel)
+## Ahead Of Time (`@finch_kernel`)
 
 While [`@finch`](@ref) is the recommended way to use Finch, it is also possible
 to run finch ahead-of-time. The [`@finch_kernel`](@ref) macro generates a
