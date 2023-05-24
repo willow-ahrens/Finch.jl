@@ -106,9 +106,9 @@ argument specifies a random number generator.
 See also: (`sprand`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#SparseArrays.sprand)
 
 # Examples
-```jldoctest; filter = r"[0-9\\.]+", setup = :(using Random; Random.seed!(1234))
-julia> fsprand(Bool, (3, 3), 0.5)
-SparseCOO (false) [1:3,1:3]
+```julia
+julia> fsprand(Bool, (3, 4), 0.5)
+SparseCOO (false) [1:3,1:4]
 ├─├─[1, 1]: true
 ├─├─[3, 1]: true
 ├─├─[2, 2]: true
@@ -117,9 +117,9 @@ SparseCOO (false) [1:3,1:3]
 
 julia> fsprand(Float64, (2, 2, 2), 0.5)
 SparseCOO (0.0) [1:2,1:2,1:2]
-├─├─├─[2, 2, 1]: 0.6478553157718558
-├─├─├─[1, 1, 2]: 0.996665291437684
-├─├─├─[2, 1, 2]: 0.7491940599574348 
+├─├─├─[1, 1, 1]: 0.11008426115113379
+├─├─├─[2, 1, 1]: 0.4913831957970459
+├─├─├─[1, 2, 1]: 0.5651453592612876 
 ```
 """
 fsprand(shape::Tuple, p::AbstractFloat, rfn::Function, ::Type{T}) where {T} = fsprand(default_rng(), shape, p, rfn, T)
