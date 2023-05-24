@@ -20,7 +20,7 @@ end
 """
     lower_global(prgm, ctx)
 
-lower the program `prgm` at global scope in the context `ctx`
+lower the program `prgm` at global scope in the context `ctx`.
 """
 function lower_global(prgm, ctx)
     code = contain(ctx) do ctx_2
@@ -50,6 +50,43 @@ function lower_global(prgm, ctx)
     end
 end
 
+"""
+    @finch [algebra] prgm
+
+Run a finch program `prgm`. The syntax for a finch program is a set of nested
+loops, statements, and branches over pointwise array assignments. For example,
+the following program computes the sum of two arrays `A = B + C`:
+
+```julia   
+A .= 0
+@finch for i = _
+    A[i] = B[i] + C[i]
+end
+```
+
+Finch programs are composed using the following syntax:
+
+`arr .= 0` - an array declaration initializing arr to zero.
+`arr[inds...]` - an array access, the array must be a variable and each index may be another finch expression.
+`x + y`, `f(x, y)` - function calls, where `x` and `y` are finch expressions.
+`arr[inds...] = ex` - an array assignment expression, setting `arr[inds]` to the value of `ex`.
+`arr[inds...] += ex` - an incrementing array expression, adding `ex` to `arr[inds]`. `*, &, |`, are supported.
+`arr[inds...] <<min>>= ex` - a incrementing array expression with a custom operator, e.g. `<<min>>` is the minimum operator.
+`for i = _ body end` - a loop over the index `i`, where `_` is computed from array access with `i` in `body`.
+`if cond body end` - a conditional branch that executes only iterations where `cond` is true.
+
+Symbols are used to represent variables, and their values are taken from the environment. Loops introduce
+index variables into the scope of their bodies.
+
+Finch uses the types of the arrays and symbolic analysis to discover program
+optimizations. If `B` and `C` are sparse array types, the program will only run
+over the nonzeros of either. 
+
+Semantically, Finch programs execute every iteration. However, Finch can use
+sparsity information to reliably skip iterations when possible.
+
+See also: [`@finch_code`](@ref)
+"""
 macro finch(opts_ex...)
     length(opts_ex) >= 1 || throw(ArgumentError("Expected at least one argument to @finch(opts..., ex)"))
     (opts, ex) = (opts_ex[1:end-1], opts_ex[end])
@@ -70,6 +107,14 @@ macro finch(opts_ex...)
     thunk
 end
 
+"""
+@finch_code [options...] prgm
+
+Return the code that would be executed in order to run a finch program `prgm`
+with the given options.
+
+See also: [`@finch`](@ref)
+"""
 macro finch_code(opts_ex...)
     length(opts_ex) >= 1 || throw(ArgumentError("Expected at least one argument to @finch(opts..., ex)"))
     (opts, ex) = (opts_ex[1:end-1], opts_ex[end])

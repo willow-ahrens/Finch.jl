@@ -259,7 +259,7 @@ using CIndices
         end)
         C = @fiber(d(sl(e(0.0))))
         D = @fiber(d(sl(e(0.0))), fsprand((5, 5), 0.5))
-        C = copy_array(C, D).C
+        C = copy_array(C, D).A
         @test C == D
     end
 end
