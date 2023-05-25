@@ -140,38 +140,35 @@ function Base.setproperty!(ctx::DebugContext, name::Symbol, x)
     setproperty!(ctx.ctx, name, x)
 end
 
-function (ctx::DebugContext)(node)
-    if node isa Resumable
-        root = node.root
-        style = Stylize(root, ctx.ctx)(root)
-        return ctx(node, style)
-    else 
-        println(typeof(node))
-        println(node)
-        style = Stylize(node, ctx.ctx)(node)
-        return ctx(node, style)
-    end
-end
 
 function (ctx::DebugContext)(node, style)
-    println("On:", ctx.control, node, style)
+    println("On:", ctx.control)
+    display(node)
+    println("style:", style)
     if node isa Resumable
         if should_resume(ctx.control, ctx, node.root, style, node.meta)
-            println("res1")
-            control = evolve_control(ctx.control, ctx, node.root, style)
-            lower(node.root, DebugContext(ctx.ctx, control), style)
+            println("resuming...")
+            control = evolve_control(ctx.control, ctx.ctx, node.root, node.style)
+            nxt= lower(node.root, DebugContext(ctx.ctx, control), node.style)
+            println("Resumed...")
+            display(unblock(striplines(nxt)))
+            return nxt
         else
-            println("no.")
-            return Resumable(ctx.ctx, node.root, style, update_meta(ctx.control, ctx, node.root, style, node.meta))
+            println("not resuming...")
+            return Resumable(node.ctx, node.root, node.style, update_meta(ctx.control, ctx, node.root, node.style, node.meta))
         end
     elseif should_pause(ctx.control, ctx, node, style)
         println("pause.")
-        return Resumable(ctx.ctx, node, style, init_meta(ctx.control, ctx, node, style))
+        return Resumable(store_context(ctx.ctx), node, style, init_meta(ctx.control, ctx, node, style))
     else
-        println("keep going.")
+        println("keep going:")
+        display(node)
         control = evolve_control(ctx.control, ctx, node, style)
         nxt = lower(node, DebugContext(ctx.ctx, control), style)
-        println(nxt)
+        println("Finished going....")
+        display(node)
+        println("to....")
+        display(unblock(striplines(nxt)))
         return nxt
     end
 end
@@ -181,9 +178,19 @@ function (ctx::DebugContext)(code:: Expr)
         return code
     end
     println("Through...")
-    Postwalk(node -> 
+    Prewalk(node -> 
     if node isa Resumable 
-        (ctx::DebugContext)(node)
+        println("trying...")
+        display(node)
+        ret = (ctx::DebugContext)(node, node.style)
+        println("Finished:")
+        println("Tried...")
+        display(node)
+        println("to...")
+        display(ret)
+        return ret
+    else
+        node
     end )(code)
 end
 

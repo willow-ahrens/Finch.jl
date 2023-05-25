@@ -40,6 +40,18 @@ abstract type AbstractCompiler end
     bounds_rules = get_bounds_rules(algebra, shash)
 end
 
+
+function store_context(ctx:: LowerJulia)
+    LowerJulia(algebra=ctx.algebra, preamble=deepcopy(ctx.preamble),
+    bindings=deepcopy(ctx.bindings),
+    modes=deepcopy(ctx.modes),
+    scope=deepcopy(ctx.scope),
+    epilogue=deepcopy(ctx.epilogue),
+    freshen=deepcopy(ctx.freshen),
+    shash=deepcopy(ctx.shash)
+    )
+end
+
 struct StaticHash
     counts::Dict{Any, Int}
 end

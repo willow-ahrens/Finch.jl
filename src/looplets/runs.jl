@@ -18,6 +18,7 @@ combine_style(a::DefaultStyle, b::RunStyle) = RunStyle()
 combine_style(a::ThunkStyle, b::RunStyle) = ThunkStyle()
 combine_style(a::SimplifyStyle, b::RunStyle) = a
 combine_style(a::RunStyle, b::RunStyle) = RunStyle()
+combine_style(::SelectStyle, ::RunStyle) = SelectStyle()
 
 function lower(root::FinchNode, ctx::AbstractCompiler,  ::RunStyle)
     if root.kind === loop
