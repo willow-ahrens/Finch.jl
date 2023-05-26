@@ -146,17 +146,7 @@ function (ctx::DebugContext)(node, style)
     display(node)
     println("style:", style)
     if node isa Resumable
-        if should_resume(ctx.control, ctx, node.root, style, node.meta)
-            println("resuming...")
-            control = evolve_control(ctx.control, ctx.ctx, node.root, node.style)
-            nxt= lower(node.root, DebugContext(store_context(node.ctx), control), node.style)
-            println("Resumed...")
-            display(unblock(striplines(nxt)))
-            return nxt
-        else
-            println("not resuming...")
-            return Resumable(node.ctx, node.root, node.style, update_meta(ctx.control, ctx, node.root, node.style, node.meta))
-        end
+        error("This should not occur!")
     elseif should_pause(ctx.control, ctx, node, style)
         println("pause.")
         return Resumable(store_context(ctx.ctx), node, style, init_meta(ctx.control, ctx, node, style))
@@ -173,7 +163,7 @@ function (ctx::DebugContext)(node, style)
     end
 end
 
-function (ctx::DebugContext)(code:: Expr)
+function resume_lowering(control::AbstractLoweringControl, code:: Expr)
     if iscompiled(code)
         return code
     end
@@ -182,7 +172,15 @@ function (ctx::DebugContext)(code:: Expr)
     if node isa Resumable 
         println("trying...")
         display(node)
-        ret = (ctx::DebugContext)(node, node.style)
+        # ret = (ctx::DebugContext)(node, node.style)
+        if should_resume(ctx.control, ctx, node.root, style, node.meta)
+            println("resuming...")
+            control = evolve_control(ctx.control, ctx.ctx, node.root, node.style)
+            ctx = DebugContext(node.ctx, control)
+        else
+            println("not resuming...")
+            return Resumable(node.ctx, node.root, node.style, update_meta(control, node.ctx, node.root, node.style, node.meta))
+        end
         println("Finished:")
         println("Tried...")
         display(node)
@@ -241,7 +239,7 @@ end
 
 
  struct PartialCode
-    lastCtx::DebugContext
+    lastControl: :: AbstractLoweringControl
     code
     algebra
  end
@@ -261,7 +259,7 @@ end
     code = unblock(code)
     code = number_resumables(code)
     code = record_methods(code)
-    ret = PartialCode(pcode.lastCtx, code, pcode.algebra)
+    ret = PartialCode(pcode.lastControl, code, pcode.algebra)
     if sdisplay
         display(ret)
     end
@@ -271,33 +269,32 @@ end
 function stage_execute(code; algebra = DefaultAlgebra(),  sdisplay=true)
     ctx = DebugContext(LowerJulia(), SimpleStepControl(step=0))
     code = execute_code(:ex, typeof(code), algebra, ctx)
-    clean_partial_code(PartialCode(ctx, code, algebra), sdisplay=sdisplay)
+    clean_partial_code(PartialCode(SimpleStepControl(step=1), code, algebra), sdisplay=sdisplay)
 end
 
 function step_code(code::PartialCode; step=1, sdisplay=true)
-    ctx = DebugContext(code.lastCtx.ctx, SimpleStepControl(step=step))
-    newcode = ctx(code.code)
-    clean_partial_code(PartialCode(code.lastCtx, newcode, code.algebra), sdisplay=sdisplay)
+    newcode = resume_lowering(SimpleStepControl(step=step), code.code)
+    clean_partial_code(PartialCode(code.control, newcode, code.algebra), sdisplay=sdisplay)
 end
 
-function step_again_code(code::PartialCode; ctx=nothing, sdisplay=true)
+function step_again_code(code::PartialCode; control=nothing, sdisplay=true)
     if isnothing(ctx)
-        clean_partial_code(PartialCode(code.lastCtx, code.lastCtx(code.code), code.algebra),sdisplay=sdisplay)
+        newcode = resume_lowering(code.lastControl, code.code)
+        clean_partial_code(PartialCode(code.lastControl, ERM, code.algebra),sdisplay=sdisplay)
     else
-        clean_partial_code(PartialCode(ctx, ctx(code.code), code.algebra), sdisplay=sdisplay)
+        newcode = resume_lowering(control, code.code)
+        clean_partial_code(PartialCode(control, newcode, code.algebra), sdisplay=sdisplay)
     end
 end
 
 function step_some_code(code::PartialCode; step=1, resumeLocations=nothing, resumeStyles=nothing, resumeFilter=nothing, sdisplay=true)
     control = StepOnlyControl(step=step, resumeLocations = resumeLocations, resumeStyles=resumeStyles, resumeFilter=resumeFilter)
-    ctx = DebugContext(code.lastCtx.ctx, control)
-    step_again_code(code, ctx=ctx, sdisplay=sdisplay)
+    step_again_code(code, control=control, sdisplay=sdisplay)
 end
 
 function step_first_code(code::PartialCode; step=1, sdisplay=true)
     control = StepOnlyControl(step=step, resumeLocations = [0])
-    ctx = DebugContext(code.lastCtx.ctx, control)
-    step_again_code(code, ctx=ctx, sdisplay=sdisplay)
+    step_again_code(code, control=control, sdisplay=sdisplay)
 end
 
 function iscompiled(code:: Expr)
