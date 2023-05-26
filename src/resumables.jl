@@ -149,7 +149,7 @@ function (ctx::DebugContext)(node, style)
         if should_resume(ctx.control, ctx, node.root, style, node.meta)
             println("resuming...")
             control = evolve_control(ctx.control, ctx.ctx, node.root, node.style)
-            nxt= lower(node.root, DebugContext(ctx.ctx, control), node.style)
+            nxt= lower(node.root, DebugContext(store_context(node.ctx), control), node.style)
             println("Resumed...")
             display(unblock(striplines(nxt)))
             return nxt
