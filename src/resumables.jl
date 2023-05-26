@@ -239,7 +239,7 @@ end
 
 
  struct PartialCode
-    lastControl: :: AbstractLoweringControl
+    lastControl :: AbstractLoweringControl
     code
     algebra
  end
