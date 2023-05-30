@@ -121,6 +121,14 @@ function get_program_rules(alg, shash)
             end
         end),
 
+        # TODO; This breaks on three (or more) nested loop. 
+        (@rule loop(~i, ~exti::isvirtual, loop(~k, ~extk::isvirtual, assign(access(~a, updater(~m), ~j...), +, ~b))) => begin
+            if i ∉ j && i ∉ getunbound(b)
+                loop(k, extk, assign(access(a, updater(m), j...), +, call(*, b, measure(exti.val))))
+            end
+        end),
+
+
         (@rule sequence(~s1..., declare(~a::isvariable, ~z::isliteral), ~s2..., assign(access(~a, ~m), ~f::isliteral, ~b::isliteral), ~s3...) => if ortho(a, s2)
             sequence(s1..., s2..., declare(a, literal(f.val(z.val, b.val))), s3...)
         end),
@@ -185,8 +193,13 @@ combine_style(a::SimplifyStyle, b::SimplifyStyle) = a
 
 function lower(root, ctx::AbstractCompiler,  ::SimplifyStyle)
     global rules
+    println("fooo")
+    display(root)
     root = Rewrite(Prewalk((x) -> if x.kind === virtual && x.val isa Simplify x.val.body end))(root)
     root = simplify(root, ctx)
+    println("-------------->")
+    display(root)
+    println("\n\n\n")
     ctx(root)
 end
 
