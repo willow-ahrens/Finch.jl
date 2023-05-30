@@ -149,16 +149,11 @@ function (ctx::DebugContext)(node, style)
         error("This should not occur!")
     elseif should_pause(ctx.control, ctx, node, style)
         println("pause.")
-        return Resumable(store_context(ctx.ctx), node, style, init_meta(ctx.control, ctx, node, style))
+        return Resumable(ctx.ctx, node, style, init_meta(ctx.control, ctx.ctx, node, style))
     else
         println("keep going:")
-        display(node)
         control = evolve_control(ctx.control, ctx, node, style)
         nxt = lower(node, DebugContext(ctx.ctx, control), style)
-        println("Finished going....")
-        display(node)
-        println("to....")
-        display(unblock(striplines(nxt)))
         return nxt
     end
 end
@@ -168,18 +163,19 @@ function resume_lowering(control::AbstractLoweringControl, code:: Expr)
         return code
     end
     println("Through...")
-    Prewalk(node -> 
+    Postwalk(node -> 
     if node isa Resumable 
         println("trying...")
         display(node)
         # ret = (ctx::DebugContext)(node, node.style)
-        if should_resume(ctx.control, ctx, node.root, style, node.meta)
+        if should_resume(control, node.ctx, node.root, node.style, node.meta)
             println("resuming...")
-            control = evolve_control(ctx.control, ctx.ctx, node.root, node.style)
+            control = evolve_control(control, node.ctx, node.root, node.style)
             ctx = DebugContext(node.ctx, control)
+            ret = ctx(node.root, node.style)
         else
             println("not resuming...")
-            return Resumable(node.ctx, node.root, node.style, update_meta(control, node.ctx, node.root, node.style, node.meta))
+            ret = Resumable(node.ctx, node.root, node.style, update_meta(control, node.ctx, node.root, node.style, node.meta))
         end
         println("Finished:")
         println("Tried...")
