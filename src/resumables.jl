@@ -256,13 +256,13 @@ end
 
 function step_code(code::PartialCode; step=1, sdisplay=true)
     newcode = resume_lowering(SimpleStepControl(step=step), code.code)
-    clean_partial_code(PartialCode(code.lastControl, newcode, code.algebra), sdisplay=sdisplay)
+    clean_partial_code(PartialCode(SimpleStepControl(step=step), newcode, code.algebra), sdisplay=sdisplay)
 end
 
 function step_again_code(code::PartialCode; control=nothing, sdisplay=true)
-    if isnothing(ctx)
+    if isnothing(control)
         newcode = resume_lowering(code.lastControl, code.code)
-        clean_partial_code(PartialCode(code.lastControl, ERM, code.algebra),sdisplay=sdisplay)
+        clean_partial_code(PartialCode(code.lastControl, newcode, code.algebra),sdisplay=sdisplay)
     else
         newcode = resume_lowering(control, code.code)
         clean_partial_code(PartialCode(control, newcode, code.algebra), sdisplay=sdisplay)
