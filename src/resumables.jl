@@ -126,7 +126,7 @@ end
     control::T
 end
 
-shallowcopy(x::DebugContext) = DebugContext(shallowcopy(x.ctx), shallowcopy(x.control))
+shallowcopy(x::DebugContext) = DebugContext(shallowcopy(x.ctx), x.control)
 
 #Sad but true
 function Base.getproperty(ctx::DebugContext, name::Symbol)
@@ -223,7 +223,6 @@ end
  struct PartialCode
     lastControl :: AbstractLoweringControl
     code
-    algebra
  end
 
 
@@ -241,7 +240,7 @@ end
     code = unblock(code)
     code = number_resumables(code)
     code = record_methods(code)
-    ret = PartialCode(pcode.lastControl, code, pcode.algebra)
+    ret = PartialCode(pcode.lastControl, code)
     if sdisplay
         display(ret)
     end
@@ -251,21 +250,21 @@ end
 function stage_execute(code; algebra = DefaultAlgebra(),  sdisplay=true)
     ctx = DebugContext(LowerJulia(), SimpleStepControl(step=1))
     code = execute_code(:ex, typeof(code), algebra, ctx)
-    clean_partial_code(PartialCode(SimpleStepControl(step=1), code, algebra), sdisplay=sdisplay)
+    clean_partial_code(PartialCode(SimpleStepControl(step=1), code), sdisplay=sdisplay)
 end
 
 function step_code(code::PartialCode; step=1, sdisplay=true)
     newcode = resume_lowering(SimpleStepControl(step=step), code.code)
-    clean_partial_code(PartialCode(SimpleStepControl(step=step), newcode, code.algebra), sdisplay=sdisplay)
+    clean_partial_code(PartialCode(SimpleStepControl(step=step), newcode), sdisplay=sdisplay)
 end
 
 function step_again_code(code::PartialCode; control=nothing, sdisplay=true)
     if isnothing(control)
         newcode = resume_lowering(code.lastControl, code.code)
-        clean_partial_code(PartialCode(code.lastControl, newcode, code.algebra),sdisplay=sdisplay)
+        clean_partial_code(PartialCode(code.lastControl, newcode),sdisplay=sdisplay)
     else
         newcode = resume_lowering(control, code.code)
-        clean_partial_code(PartialCode(control, newcode, code.algebra), sdisplay=sdisplay)
+        clean_partial_code(PartialCode(control, newcode), sdisplay=sdisplay)
     end
 end
 
