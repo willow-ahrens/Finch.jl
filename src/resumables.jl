@@ -142,16 +142,11 @@ end
 
 
 function (ctx::DebugContext)(node, style)
-    println("On:", ctx.control)
-    display(node)
-    println("style:", style)
     if node isa Resumable
         error("This should not occur!")
     elseif should_pause(ctx.control, ctx, node, style)
-        println("pause.")
         return Resumable(ctx.ctx, node, style, init_meta(ctx.control, ctx.ctx, node, style))
     else
-        println("keep going:")
         control = evolve_control(ctx.control, ctx, node, style)
         nxt = lower(node, DebugContext(ctx.ctx, control), style)
         return nxt
@@ -162,26 +157,15 @@ function resume_lowering(control::AbstractLoweringControl, code:: Expr)
     if iscompiled(code)
         return code
     end
-    println("Through...")
     Postwalk(node -> 
     if node isa Resumable 
-        println("trying...")
-        display(node)
-        # ret = (ctx::DebugContext)(node, node.style)
         if should_resume(control, node.ctx, node.root, node.style, node.meta)
-            println("resuming...")
             control = evolve_control(control, node.ctx, node.root, node.style)
             ctx = DebugContext(node.ctx, control)
             ret = ctx(node.root, node.style)
         else
-            println("not resuming...")
             ret = Resumable(node.ctx, node.root, node.style, update_meta(control, node.ctx, node.root, node.style, node.meta))
         end
-        println("Finished:")
-        println("Tried...")
-        display(node)
-        println("to...")
-        display(ret)
         return ret
     else
         node
