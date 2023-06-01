@@ -126,6 +126,8 @@ end
     control::T
 end
 
+shallowcopy(x::DebugContext) = DebugContext(shallowcopy(x.ctx), shallowcopy(x.control))
+
 #Sad but true
 function Base.getproperty(ctx::DebugContext, name::Symbol)
     if name === :control
@@ -247,14 +249,14 @@ end
  end
 
 function stage_execute(code; algebra = DefaultAlgebra(),  sdisplay=true)
-    ctx = DebugContext(LowerJulia(), SimpleStepControl(step=0))
+    ctx = DebugContext(LowerJulia(), SimpleStepControl(step=1))
     code = execute_code(:ex, typeof(code), algebra, ctx)
     clean_partial_code(PartialCode(SimpleStepControl(step=1), code, algebra), sdisplay=sdisplay)
 end
 
 function step_code(code::PartialCode; step=1, sdisplay=true)
     newcode = resume_lowering(SimpleStepControl(step=step), code.code)
-    clean_partial_code(PartialCode(code.control, newcode, code.algebra), sdisplay=sdisplay)
+    clean_partial_code(PartialCode(code.lastControl, newcode, code.algebra), sdisplay=sdisplay)
 end
 
 function step_again_code(code::PartialCode; control=nothing, sdisplay=true)
