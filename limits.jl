@@ -1,0 +1,73 @@
+struct Limit{T}
+    val
+    sign::Float32
+end
+
+limit(x::T, s) where {T} = Limit{T}(x, s)
+plus_eps(x) = limit(x, Inf)
+minus_eps(x) = limit(x, -Inf)
+plusminus_eps(x) = limit(x, NaN)
+limit(x) = limit(x, 0.0)
+
+function Base.show(io::IO, x::Limit)
+    if x.sign > 0
+        print(io, "plus_eps(", x.val, ")")
+    elseif x.sign < 0
+        print(io, "minus_eps(", x.val, ")")
+    elseif x.sign == 0
+        print(io, "limit(", x.val, ")")
+    else
+        print(io, "plusminus_eps(", x.val, ")")
+    end
+end
+
+function Base.show(io::IO, mime::MIME"text/plain", x::Limit)
+    if x.sign > 0
+        print(io, x.val, "+ϵ")
+    elseif x.sign < 0
+        print(io, x.val, "-ϵ")
+    elseif x.sign == 0
+        print(io, x.val, "+0")
+    else
+        print(io, x.val, "±ϵ")
+    end
+end
+
+#Core definitions for limit type
+Base.:(+)(x::Limit, y::Limit) = limit(x.val + y.val, x.sign + y.sign)
+Base.:(*)(x::Limit, y::Limit) = limit(x.val * y.val, x.val * y.sign + y.val * x.sign)
+Base.:(-)(x::Limit, y::Limit) = limit(x.val - y.val, x.sign - y.sign)
+Base.:(<)(x::Limit, y::Limit) = x.val < y.val || (x.val == y.val && x.sign < y.sign)
+Base.:(<=)(x::Limit, y::Limit) = x.val < y.val || (x.val == y.val && x.sign <= y.sign)
+Base.:(==)(x::Limit, y::Limit) = x.val == y.val && x.sign == y.sign
+
+#Crazy julia multiple dispatch stuff don't worry about it
+limit_types = [Int8, Int16, Int32, Int64, Int128, UInt8, UInt16, UInt32, UInt64, UInt128, BigInt, Float32, Float64]
+for S in limit_types
+    @eval begin
+        @inline Base.promote_rule(::Type{Limit{T}}, ::Type{$S}) where {T} = Limit{promote_type(T, $S)}
+        Base.convert(::Type{Limit{T}}, i::$S) where {T} = limit(convert(T, i))
+        Limit(i::$S) = Limit{$S}(i, 0.0)
+        (::Type{$S})(i::Limit{T}) where {T} = convert($S, i.val + true)
+        Base.convert(::Type{$S}, i::Limit) = convert($S, i.val + true)
+        Base.:(<)(x::Limit, y::$S) = x < limit(y)
+        Base.:(<)(x::$S, y::Limit) = limit(x) < y
+        #Base.:(>)(x::Limit, y::$S) = x > limit(y)
+        #Base.:(>)(x::$S, y::Limit) = limit(x) > y
+        Base.:(<=)(x::Limit, y::$S) = x <= limit(y)
+        Base.:(<=)(x::$S, y::Limit) = limit(x) <= y
+        #Base.:(>=)(x::Limit, y::$S) = x >= limit(y)
+        #Base.:(>=)(x::$S, y::Limit) = limit(x) >= y
+        Base.:(==)(x::Limit, y::$S) = x == limit(y)
+        Base.:(==)(x::$S, y::Limit) = limit(x) == y
+    end
+end
+for S in [Float32, Float64]
+    @eval begin
+        @inline Base.promote_rule(::Type{Limit{T}}, ::Type{$S}) where {T} = Limit{promote_type(T, $S)}
+        (::Type{$S})(i::Limit{T}) where {T} = convert($S, i.val + true)
+    end
+end
+Base.promote_rule(::Type{Limit{T}}, ::Type{Limit{S}}) where {T, S} = promote_type(T, S)
+Base.convert(::Type{Limit{T}}, i::Limit) where {T} = Limit{T}(convert(T, i.val), false)
+Base.hash(x::Limit, h::UInt) = hash(typeof(x), hash(x.val, hash(x.sign, h)))
