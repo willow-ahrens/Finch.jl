@@ -12,7 +12,7 @@
            if i > imax
               return nothing
            end
-           if Finch.iscompiled(debug)
+           if Finch.iscompiled(debug.code)
               break
            end
         end
