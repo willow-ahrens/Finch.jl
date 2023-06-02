@@ -1,3 +1,8 @@
+"""
+    Resumable(ctx, root, style, meta)
+
+Struct to hold a paused compilation. Holds the compiler state in `ctx`, a FinchNode in root, the compiler style in style, and a dict of meta data in meta.
+"""
 @kwdef struct Resumable
     ctx
     root
@@ -101,22 +106,53 @@ end
 
 abstract type AbstractLoweringControl end
 
+"""
+    should_resume(c :: AbstractLoweringControl, ctx, node, style, meta)
+
+Determines if a control wants to resume lowering a Resumable. 
+Should return true or false. Defaults to true.
+"""
 function should_resume(c :: AbstractLoweringControl, ctx, node, style, meta)
    true
 end
 
+"""
+    update_meta(c :: AbstractLoweringControl, ctx, node, style)
+
+Returns recomputed metadata for a resumable in the event that it is not resumed. 
+    Defaults to the identity.
+"""
 function update_meta(c:: AbstractLoweringControl, ctx, node, style, meta)
    meta
 end
 
+"""
+    should_pause(c :: AbstractLoweringControl, ctx, node, style)
+
+Determines if a control wants to pause on a particular lowering of a particular FinchNode.
+Should return true or false. Defaults to false.
+"""
 function should_pause(c:: AbstractLoweringControl, ctx, node, style)
     false
 end
 
+"""
+    init_meta(c :: AbstractLoweringControl, ctx, node, style)
+
+Returns recomputed metadata for a resumable in the event that it is not resumed. 
+Defaults to the empty dict.
+"""
 function init_meta(c:: AbstractLoweringControl, ctx, node, style)
     Dict{Symbol,Any}()
 end
 
+
+"""
+    evolve_control(c :: AbstractLoweringControl, ctx, node, style)
+
+In the event that control does not pause on a Finch node, we evolve the control,
+resulting in a new `AbstractLoweringControl`.
+"""
 function evolve_control(c:: AbstractLoweringControl, ctx, node, style)
     c
 end
@@ -218,8 +254,12 @@ function should_resume(c :: StepOnlyControl, ctx, node, style, meta)
     c.step == 0
 end
 
+"""
+    PartialCode(lastControl :: AbstractLoweringControl, code)
 
- struct PartialCode
+Essentially a debugging context that holds the code that we are working on and the `AbstractLoweringControl`.
+"""
+struct PartialCode
     lastControl :: AbstractLoweringControl
     code
  end
@@ -252,12 +292,19 @@ function stage_code(code; algebra = DefaultAlgebra(),  sdisplay=true)
     control = StepOnlyControl(step=step, resumeLocations = [0])
     clean_partial_code(PartialCode(control, code), sdisplay=sdisplay)
 end
-"""Experimental feature: Do not use explictly."""
+
+"""
+    step_all_code(code::PartialCode; step=1, sdisplay=true)
+
+Experimental feature: Do not use explictly."""
 function step_all_code(code::PartialCode; step=1, sdisplay=true)
     newcode = resume_lowering(SimpleStepControl(step=step), code.code)
     clean_partial_code(PartialCode(SimpleStepControl(step=step), newcode), sdisplay=sdisplay)
 end
-"""Experimental feature: Do not use explictly."""
+"""
+    repeat_step_code(code::PartialCode; control=nothing, sdisplay=true)
+
+Experimental feature: Do not use explictly."""
 function repeat_step_code(code::PartialCode; control=nothing, sdisplay=true)
     if isnothing(control)
         newcode = resume_lowering(code.lastControl, code.code)
@@ -267,17 +314,32 @@ function repeat_step_code(code::PartialCode; control=nothing, sdisplay=true)
         clean_partial_code(PartialCode(control, newcode), sdisplay=sdisplay)
     end
 end
-"""Experimental feature: Do not use explictly."""
+
+"""
+    step_some_code(code::PartialCode; step=1, resumeLocations=nothing, resumeStyles=nothing, resumeFilter=nothing, sdisplay=true)
+
+Experimental feature: Do not use explictly."""
 function step_some_code(code::PartialCode; step=1, resumeLocations=nothing, resumeStyles=nothing, resumeFilter=nothing, sdisplay=true)
     control = StepOnlyControl(step=step, resumeLocations = resumeLocations, resumeStyles=resumeStyles, resumeFilter=resumeFilter)
     repeat_step_code(code, control=control, sdisplay=sdisplay)
 end
 
+"""
+    step_code(code::PartialCode; step=1, sdisplay=true)
+
+Advance the compiler on `code` for `step`, displaying the code at the end if `sdisplay`.
+"""
 function step_code(code::PartialCode; step=1, sdisplay=true)
     control = StepOnlyControl(step=step, resumeLocations = [0])
     repeat_step_code(code, control=control, sdisplay=sdisplay)
 end
 
+
+"""
+    iscompiled(code:: Expr)
+
+Checks if Julia AST has any Resumables in it.
+"""
 function iscompiled(code:: Expr)
     found = false
     Postwalk(node -> 
@@ -288,6 +350,11 @@ function iscompiled(code:: Expr)
     !found
 end
 
+"""
+    end_debug(code:: PartialCode)
+
+Returns a finished Julia AST from a `PartialCode`` if it has no Resumables in it. Throws an error otherwise.
+"""
 function end_debug(code:: PartialCode)
     if iscompiled(code.code)
         return code.code

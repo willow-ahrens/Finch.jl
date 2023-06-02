@@ -206,7 +206,7 @@ ret = end_debug(debug) # extracts code from debugging context.
 ```
 
 The function `stage_code(code; algebra)` takes a `finch_program_instance` plus an optional algebra
-and creates a debugging context for it. The function `step_code(debug; steps, sdisplay)` takes a debug 
+and creates a debugging context for it, called a `PartialCode`. The function `step_code(debug; steps, sdisplay)` takes a debug 
 context and advances some number of `steps`, displaying the results automatically if `sdisplay`.
 Finally, `iscompiled` checks if the code in a debug context is completely compiled and `end_debug` extracts the code,
 throwing an error if the code is not completely compiled.
@@ -217,6 +217,7 @@ stage_code
 step_code
 iscompiled
 end_debug
+PartialCode
 ```
 
 Partially compiled code will be displayed almost like fully compiled code but with `@finch` nodes that are numbered according to
