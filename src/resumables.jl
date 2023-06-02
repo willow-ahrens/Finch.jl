@@ -252,12 +252,12 @@ function stage_code(code; algebra = DefaultAlgebra(),  sdisplay=true)
     control = StepOnlyControl(step=step, resumeLocations = [0])
     clean_partial_code(PartialCode(control, code), sdisplay=sdisplay)
 end
-
+"""Experimental feature: Do not use explictly."""
 function step_all_code(code::PartialCode; step=1, sdisplay=true)
     newcode = resume_lowering(SimpleStepControl(step=step), code.code)
     clean_partial_code(PartialCode(SimpleStepControl(step=step), newcode), sdisplay=sdisplay)
 end
-
+"""Experimental feature: Do not use explictly."""
 function repeat_step_code(code::PartialCode; control=nothing, sdisplay=true)
     if isnothing(control)
         newcode = resume_lowering(code.lastControl, code.code)
@@ -267,7 +267,7 @@ function repeat_step_code(code::PartialCode; control=nothing, sdisplay=true)
         clean_partial_code(PartialCode(control, newcode), sdisplay=sdisplay)
     end
 end
-
+"""Experimental feature: Do not use explictly."""
 function step_some_code(code::PartialCode; step=1, resumeLocations=nothing, resumeStyles=nothing, resumeFilter=nothing, sdisplay=true)
     control = StepOnlyControl(step=step, resumeLocations = resumeLocations, resumeStyles=resumeStyles, resumeFilter=resumeFilter)
     repeat_step_code(code, control=control, sdisplay=sdisplay)
