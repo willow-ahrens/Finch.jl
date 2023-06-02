@@ -162,7 +162,6 @@ function resume_lowering(control::AbstractLoweringControl, code:: Expr)
     Postwalk(node -> 
     if node isa Resumable 
         if should_resume(control, node.ctx, node.root, node.style, node.meta)
-            control = evolve_control(control, node.ctx, node.root, node.style)
             ctx = DebugContext(node.ctx, control)
             ret = ctx(node.root, node.style)
         else
@@ -247,18 +246,19 @@ end
     ret
  end
 
-function stage_execute(code; algebra = DefaultAlgebra(),  sdisplay=true)
-    ctx = DebugContext(LowerJulia(), SimpleStepControl(step=1))
+function stage_code(code; algebra = DefaultAlgebra(),  sdisplay=true)
+    ctx = DebugContext(LowerJulia(), SimpleStepControl(step=0))
     code = execute_code(:ex, typeof(code), algebra, ctx)
-    clean_partial_code(PartialCode(SimpleStepControl(step=1), code), sdisplay=sdisplay)
+    control = StepOnlyControl(step=step, resumeLocations = [0])
+    clean_partial_code(PartialCode(control, code), sdisplay=sdisplay)
 end
 
-function step_code(code::PartialCode; step=1, sdisplay=true)
+function step_all_code(code::PartialCode; step=1, sdisplay=true)
     newcode = resume_lowering(SimpleStepControl(step=step), code.code)
     clean_partial_code(PartialCode(SimpleStepControl(step=step), newcode), sdisplay=sdisplay)
 end
 
-function step_again_code(code::PartialCode; control=nothing, sdisplay=true)
+function repeat_step_code(code::PartialCode; control=nothing, sdisplay=true)
     if isnothing(control)
         newcode = resume_lowering(code.lastControl, code.code)
         clean_partial_code(PartialCode(code.lastControl, newcode),sdisplay=sdisplay)
@@ -270,12 +270,12 @@ end
 
 function step_some_code(code::PartialCode; step=1, resumeLocations=nothing, resumeStyles=nothing, resumeFilter=nothing, sdisplay=true)
     control = StepOnlyControl(step=step, resumeLocations = resumeLocations, resumeStyles=resumeStyles, resumeFilter=resumeFilter)
-    step_again_code(code, control=control, sdisplay=sdisplay)
+    repeat_step_code(code, control=control, sdisplay=sdisplay)
 end
 
-function step_first_code(code::PartialCode; step=1, sdisplay=true)
+function step_code(code::PartialCode; step=1, sdisplay=true)
     control = StepOnlyControl(step=step, resumeLocations = [0])
-    step_again_code(code, control=control, sdisplay=sdisplay)
+    repeat_step_code(code, control=control, sdisplay=sdisplay)
 end
 
 function iscompiled(code:: Expr)
