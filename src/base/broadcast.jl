@@ -102,7 +102,7 @@ pointwise_rep_body(tns::ElementData) = tns.lvl
 (ctx::PointwiseRep)(rep) = lower(rep, ctx, Stylize(ctx.idxs, ctx)(rep))
 function lower(rep, ctx::PointwiseRep, ::PointwiseHollowStyle)
     background = simplify(Postwalk(Chain([
-        (@rule access(~ex::isvirtual, ~m, ~i...) => access(pointwise_rep_hollow(ex.val), m, i...)),
+        (@rule access(~ex::isvirtual, ~m, ~i...) => pointwise_rep_hollow(ex.val)),
     ]))(rep), ctx.ctx)
     body = simplify(Postwalk(Chain([
         (@rule access(~ex::isvirtual, ~m, ~i...) => access(pointwise_rep_solid(ex.val), m, i...)),
@@ -137,8 +137,8 @@ function lower(rep, ctx::PointwiseRep, ::Union{DefaultStyle, PointwiseElementSty
     return ElementData(background.val, typeof(background.val))
 end
 
-pointwise_rep_hollow(ex::HollowData) = Fill(default(ex))
-pointwise_rep_hollow(ex) = ex
+pointwise_rep_hollow(ex::HollowData) = literal(default(ex))
+pointwise_rep_hollow(ex) = nothing
 pointwise_rep_solid(tns::HollowData) = pointwise_rep_solid(tns.lvl)
 pointwise_rep_solid(ex) = ex
 
