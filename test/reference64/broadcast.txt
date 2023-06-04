@@ -26,7 +26,7 @@ julia> AsArray(C)
 julia> D = A .* B
 
 julia> AsArray(D)
-4×3 AsArray{Float64, 2, Fiber{DenseLevel{Int64, SparseListLevel{Int64, Int64, ElementLevel{0.0, Float64}}}}}:
+4×3 AsArray{Float64, 2, Fiber{DenseLevel{Int64, DenseLevel{Int64, ElementLevel{0.0, Float64}}}}}:
   0.0  0.0   4.4
   2.2  0.0   0.0
   6.6  0.0  16.5

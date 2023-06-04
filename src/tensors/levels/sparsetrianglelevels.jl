@@ -251,7 +251,7 @@ function get_updater_triangular_dense_helper(fbr, ctx, get_readerupdater, subfib
                         )
                     ),
                     Phase(
-                        body = (ctx, ext) -> Null()
+                        body = (ctx, ext) -> Fill(Null())
                     )
                 ])
             )
@@ -271,7 +271,7 @@ function get_updater_triangular_dense_helper(fbr, ctx, get_readerupdater, subfib
                         )
                     ),
                     Phase(
-                        body = (ctx, ext) -> Null()
+                        body = (ctx, ext) -> Fill(Null())
                     )
                 ])
             )
