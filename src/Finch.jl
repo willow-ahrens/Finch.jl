@@ -85,6 +85,7 @@ include("tensors/levels/raggedlevels.jl")
 include("tensors/levels/sparsetrianglelevels.jl")
 include("tensors/masks.jl")
 include("tensors/modifiers.jl")
+include("tensors/combinators/unfurled.jl")
 
 include("traits.jl")
 

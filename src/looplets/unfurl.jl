@@ -126,14 +126,13 @@ unfurl_access(node, ctx, eldim, tns) = node
 function unfurl_access(node, ctx, eldim, tns::Furlable)
     if !isempty(node.idxs)
         if ctx.idx == get_furl_root(node.idxs[end])
-            tns = exfurl(tns.body(ctx.ctx, virtual_size(tns, ctx.ctx, eldim)[end]), ctx.ctx, node.idxs[end], virtual_size(tns, ctx.ctx, eldim)[end])
+            tns = Unfurled(exfurl(tns.body(ctx.ctx, virtual_size(tns, ctx.ctx, eldim)[end]), ctx.ctx, node.idxs[end], virtual_size(tns, ctx.ctx, eldim)[end]), 1, tns)
             return access(tns, node.mode, node.idxs[1:end-1]..., get_furl_root(node.idxs[end]))
         else
             if tns.tight !== nothing && !query(call(==, measure(ctx.ext), 1), ctx.ctx)
                 throw(FormatLimitation("$(typeof(something(tns.tight))) does not support random access, must loop column major over output indices first."))
             end
-            idxs = map(ctx, node.idxs)
-            return access(node.tns, node.mode, idxs...)
+            return access(node.tns, node.mode, node.idxs...)
         end
     end
     return node
