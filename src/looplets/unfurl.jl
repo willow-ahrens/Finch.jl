@@ -5,48 +5,25 @@ combine_style(a::ThunkStyle, b::UnfurlStyle) = ThunkStyle()
 combine_style(a::UnfurlStyle, b::UnfurlStyle) = UnfurlStyle()
 combine_style(a::UnfurlStyle, b::DimensionalizeStyle) = DimensionalizeStyle()
 combine_style(a::UnfurlStyle, b::SimplifyStyle) = b
-
 struct UnfurlVisitor
     ctx
     idx
     ext
 end
 
-function (ctx::UnfurlVisitor)(node)
-    if istree(node)
-        similarterm(node, operation(node), map(ctx, arguments(node)))
-    else
-        node
-    end
-end
-
-function (ctx::UnfurlVisitor)(node::FinchNode, eldim = nodim)
-    if node.kind === access && node.tns.kind === virtual
-        unfurl_access(node, ctx, eldim, node.tns.val)
-    elseif node.kind === access && node.tns.kind === variable
-        unfurl_access(node, ctx, eldim, ctx.ctx.bindings[node.tns])
-    elseif istree(node)
-        #TODO propagate_copies eldim here
-        similarterm(node, operation(node), map(ctx, arguments(node)))
-    else
-        node
-    end
-end
-
-#TODO propagate_copies eldim here
-unfurl_access(node, ctx, eldim, tns) = similarterm(node, operation(node), map(ctx, arguments(node)))
-
 function lower(root::FinchNode, ctx::AbstractCompiler,  ::UnfurlStyle)
     if root.kind === loop
         idx = root.idx
         @assert root.ext.kind === virtual
         ext = root.ext.val
-        body = (UnfurlVisitor(ctx, idx, ext))(root.body)
-        ctx(loop(
-            idx,
-            ext,
-            body
-        ))
+        root_2 = Rewrite(Postwalk(@rule access(~a::isvirtual, ~m, ~i...) => begin
+            if !isempty(i) && root.idx == i[end]
+                acc_2 = unfurl_access(access(a, m, i...), UnfurlVisitor(ctx, root.idx, root.ext.val), root.ext.val, a.val)
+                @assert acc_2.kind === access
+                acc_2
+            end
+        end))(root)
+        ctx(root_2)
     else
         error("unimplemented")
     end
@@ -120,8 +97,6 @@ function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::Furlable)
     if !isempty(node.idxs)
         if getunbound(node.idxs[end]) ⊆ keys(ctx.ctx.bindings)
             return SelectStyle()
-        elseif ctx.root isa FinchNode && ctx.root.kind === loop && ctx.root.idx == get_furl_root(node.idxs[end])
-            return UnfurlStyle()
         end
     end
     return DefaultStyle()
@@ -147,11 +122,12 @@ struct FormatLimitation <: Exception
 end
 FormatLimitation() = FormatLimitation("")
 
+unfurl_access(node, ctx, eldim, tns) = node
 function unfurl_access(node, ctx, eldim, tns::Furlable)
     if !isempty(node.idxs)
         if ctx.idx == get_furl_root(node.idxs[end])
             tns = exfurl(tns.body(ctx.ctx, virtual_size(tns, ctx.ctx, eldim)[end]), ctx.ctx, node.idxs[end], virtual_size(tns, ctx.ctx, eldim)[end])
-            return access(tns, node.mode, map(ctx, node.idxs[1:end-1])..., get_furl_root(node.idxs[end]))
+            return access(tns, node.mode, node.idxs[1:end-1]..., get_furl_root(node.idxs[end]))
         else
             if tns.tight !== nothing && !query(call(==, measure(ctx.ext), 1), ctx.ctx)
                 throw(FormatLimitation("$(typeof(something(tns.tight))) does not support random access, must loop column major over output indices first."))

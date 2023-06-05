@@ -249,33 +249,48 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
         return ctx(root.arg)
     elseif root.kind === loop
         @assert root.idx.kind === index
-        idx_sym = ctx.freshen(root.idx.name)
-        body = contain(ctx) do ctx_2
-            ctx_2.bindings[root.idx] = value(idx_sym)
-            body_3 = Rewrite(Postwalk(
-                @rule access(~a::isvirtual, ~m, ~i..., ~j) => begin
-                    a_2 = get_point_body(a.val, ctx_2, root.ext.val, value(idx_sym))
-                    if a_2 != nothing
-                        access(a_2, m, i...)
-                    else
-                        access(a, m, i..., j)
-                    end
-                end
-            ))(root.body)
-            open_scope(body_3, ctx_2)
-        end
-        @assert isvirtual(root.ext)
-        if query(call(==, measure(root.ext.val), 1), ctx)
-            return quote
-                $idx_sym = $(ctx(getstart(root.ext)))
-                $body
+        #First, unfurl
+        #TODO ideally this would be easy to request at an appropriate time.
+        root_2 = Rewrite(Postwalk(@rule access(~a::isvirtual, ~m, ~i...) => begin
+            if !isempty(i) && root.idx == i[end]
+                acc_2 = unfurl_access(access(a, m, i...), UnfurlVisitor(ctx, root.idx, root.ext.val), root.ext.val, a.val)
+                @assert acc_2.kind === access
+                acc_2
             end
-        else
-            return quote
-                for $idx_sym = $(ctx(getstart(root.ext))):$(ctx(getstop(root.ext)))
+        end))(root)
+        #If unfurling has no effect, lower the body
+        if root_2 == root
+            root = root_2
+            idx_sym = ctx.freshen(root.idx.name)
+            body = contain(ctx) do ctx_2
+                ctx_2.bindings[root.idx] = value(idx_sym)
+                body_3 = Rewrite(Postwalk(
+                    @rule access(~a::isvirtual, ~m, ~i..., ~j) => begin
+                        a_2 = get_point_body(a.val, ctx_2, root.ext.val, value(idx_sym))
+                        if a_2 != nothing
+                            access(a_2, m, i...)
+                        else
+                            access(a, m, i..., j)
+                        end
+                    end
+                ))(root.body)
+                open_scope(body_3, ctx_2)
+            end
+            @assert isvirtual(root.ext)
+            if query(call(==, measure(root.ext.val), 1), ctx)
+                return quote
+                    $idx_sym = $(ctx(getstart(root.ext)))
                     $body
                 end
+            else
+                return quote
+                    for $idx_sym = $(ctx(getstart(root.ext))):$(ctx(getstop(root.ext)))
+                        $body
+                    end
+                end
             end
+        else
+            return ctx(root_2)
         end
     elseif root.kind === sieve
         cond = ctx.freshen(:cond)
