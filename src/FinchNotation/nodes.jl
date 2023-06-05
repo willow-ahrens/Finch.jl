@@ -252,6 +252,13 @@ Returns true if the node is a finch variable
 """
 isvariable(ex::FinchNode) = ex.kind === variable
 
+"""
+    isindex(node)
+
+Returns true if the node is a finch index
+"""
+isindex(ex::FinchNode) = ex.kind === index
+
 getval(ex::FinchNode) = ex.val
 
 SyntaxInterface.istree(node::FinchNode) = Int(node.kind) & IS_TREE != 0
