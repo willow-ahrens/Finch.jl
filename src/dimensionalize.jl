@@ -86,8 +86,8 @@ function (ctx::DeclareDimensions)(node::FinchNode, dim)
     if node.kind === index
         ctx.dims[node] = resultdim(ctx.ctx, get(ctx.dims, node, nodim), dim)
         return node
-    elseif node.kind === access && node.tns.kind === variable
-        return declare_dimensions_access(node, ctx, node.tns, dim)
+    elseif node.kind === access && node.tns.kind === virtual
+        return declare_dimensions_access(node, ctx, node.tns.val, dim)
     elseif node.kind === loop && node.ext == index(:(:))
         body = ctx(node.body)
         return loop(node.idx, cache_dim!(ctx.ctx, getname(node.idx), resolvedim(ctx.dims[node.idx])), body)
@@ -115,8 +115,6 @@ function (ctx::InferDimensions)(node::FinchNode)
         return (node, ctx.dims[node])
     elseif node.kind === access && node.mode.kind === updater && node.tns.kind === virtual
         return infer_dimensions_access(node, ctx, node.tns.val)
-    elseif node.kind === access && node.mode.kind === updater && node.tns.kind === variable #TODO perhaps we can get rid of this
-        return infer_dimensions_access(node, ctx, node.tns)
     elseif node.kind === protocol
         (idx, dim) = ctx(node.idx)
         (protocol(idx, node.mode), dim)
@@ -130,9 +128,9 @@ end
 
 declare_dimensions_access(node, ctx, tns::Dimensionalize, dim) = declare_dimensions_access(node, ctx, tns.body, dim)
 function declare_dimensions_access(node, ctx, tns, eldim)
-    if node.mode.kind !== reader && node.tns.kind === variable && haskey(ctx.hints, node.tns)
+    if node.mode.kind !== reader && node.tns.kind === virtual && haskey(ctx.hints, getroot(node.tns))
         shape = map(suggest, virtual_size(tns, ctx.ctx, eldim))
-        push!(ctx.hints[node.tns], node)
+        push!(ctx.hints[getroot(tns)], node)
     else
         shape = virtual_size(tns, ctx.ctx, eldim)
     end

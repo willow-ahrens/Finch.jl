@@ -27,6 +27,7 @@ function lower_global(prgm, ctx)
         quote
             $(begin
                 prgm = ScopeVisitor()(prgm)
+                prgm = wrapperize(prgm, ctx_2)
                 prgm = close_scope(prgm, LifecycleVisitor())
                 prgm = dimensionalize!(prgm, ctx_2)
                 prgm = simplify(prgm, ctx_2) #appears necessary
@@ -230,12 +231,12 @@ function (ctx::LifecycleVisitor)(node::FinchNode)
         node
     elseif node.kind === assign
         return open_stmt(assign(ctx(node.lhs), ctx(node.op), ctx(node.rhs)), ctx)
-    elseif node.kind === access && node.tns.kind === variable
+    elseif node.kind === access
         idxs = map(ctx, node.idxs)
-        uses = get(ctx.scoped_uses, node.tns, ctx.global_uses)
-        get(uses, node.tns, node.mode).kind !== node.mode.kind &&
+        uses = get(ctx.scoped_uses, getroot(node.tns), ctx.global_uses)
+        get(uses, getroot(node.tns), node.mode).kind !== node.mode.kind &&
             throw(LifecycleError("cannot mix reads and writes to $(node.tns) outside of defining scope (perhaps missing definition)"))
-        uses[node.tns] = node.mode
+        uses[getroot(node.tns)] = node.mode
         access(node.tns, node.mode, idxs...)
     elseif istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))

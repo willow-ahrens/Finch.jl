@@ -229,9 +229,13 @@ isinvolution(::AbstractAlgebra, ::typeof(inv)) = true
 
 
 getvars(arr::AbstractArray) = mapreduce(getvars, vcat, arr, init=[])
+getvars(arr) = getroot(arr) === nothing ? [] : [getroot(arr)]
+getroot(arr) = nothing
 function getvars(node::FinchNode) 
     if node.kind == variable
         return [node]
+    elseif node.kind == virtual
+        return getvars(node.val)
     elseif istree(node)
         return mapreduce(getvars, vcat, arguments(node), init=[])
     else

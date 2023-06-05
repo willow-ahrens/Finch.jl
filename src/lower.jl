@@ -143,15 +143,15 @@ function (ctx::InstantiateTensors)(node::FinchNode)
     elseif node.kind === declare
         push!(ctx.escape, node.tns)
         node
-    elseif node.kind === access && node.tns.kind === variable && !(node.tns in ctx.escape)
-        tns = ctx.ctx.bindings[node.tns]
+    elseif node.kind === access && node.tns.kind === virtual && getroot(node.tns) != nothing && !(getroot(node.tns.val) in ctx.escape)
+        tns = ctx.ctx.bindings[getroot(node.tns)]
         protos = map(idx -> idx.kind === protocol ? idx.mode.val : nothing, node.idxs)
         idxs = map(idx -> idx.kind === protocol ? ctx(idx.idx) : ctx(idx), node.idxs)
         if node.mode.kind === reader
-            get(ctx.ctx.modes, node.tns, reader()).kind === reader || throw(LifecycleError("Cannot read update-only $(node.tns) (perhaps same tensor on both lhs and rhs?)"))
+            get(ctx.ctx.modes, getroot(node.tns), reader()).kind === reader || throw(LifecycleError("Cannot read update-only $(node.tns) (perhaps same tensor on both lhs and rhs?)"))
             return access(get_reader(tns, ctx.ctx, protos...), node.mode, idxs...)
         else
-            ctx.ctx.modes[node.tns].kind === updater || throw(LifecycleError("Cannot update read-only $(node.tns) (perhaps same tensor on both lhs and rhs?)"))
+            ctx.ctx.modes[getroot(node.tns)].kind === updater || throw(LifecycleError("Cannot update read-only $(node.tns) (perhaps same tensor on both lhs and rhs?)"))
             return access(get_updater(tns, ctx.ctx, protos...), node.mode, idxs...)
         end
     elseif istree(node)
