@@ -127,19 +127,21 @@ function get_program_rules(alg, shash)
         (@rule loop(~i, ~ext::isvirtual, assign(access(~a, ~m), $(literal(+)), ~b::isliteral)) =>
             assign(access(a, m), +, call(*, b, measure(ext.val)))
         ),
-        (@rule loop(~i, ~ext::isvirtual, sequence(~s1..., assign(access(~a, ~m), $(literal(+)), ~b::isliteral), ~s2...)) => if ortho(a, s1) && ortho(a, s2)
+        (@rule loop(~i, ~ext::isvirtual, sequence(~s1..., assign(access(~a, ~m), $(literal(+)), ~b::isliteral), ~s2...)) => if ortho(getroot(a), s1) && ortho(getroot(a), s2)
             sequence(assign(access(a, m), +, call(*, b, measure(ext.val))), loop(i, ext, sequence(s1..., s2...)))
         end),
         (@rule loop(~i, ~ext, assign(access(~a, ~m), ~f::isidempotent(alg), ~b::isliteral)) =>
             sieve(call(>, measure(ext.val), 0), assign(access(a, m), f, b))
         ),
-        (@rule loop(~i, ~ext, sequence(~s1..., assign(access(~a, ~m), ~f::isidempotent(alg), ~b::isliteral), ~s2...)) => if ortho(a, s1) && ortho(a, s2)
+        (@rule loop(~i, ~ext, sequence(~s1..., assign(access(~a, ~m), ~f::isidempotent(alg), ~b::isliteral), ~s2...)) => if ortho(getroot(a), s1) && ortho(getroot(a), s2)
             sequence(sieve(call(>, measure(ext.val), 0), assign(access(a, m), f, b)), loop(i, ext, sequence(s1..., s2...)))
         end),
 
-        (@rule sequence(~s1..., declare(~a::isvariable, ~z::isliteral), ~s2..., assign(access(~a, ~m), ~f::isliteral, ~b::isliteral), ~s3...) => if ortho(a, s2)
+        #TODO incorrect
+        (@rule sequence(~s1..., declare(~a::isvariable, ~z::isliteral), ~s2..., assign(access(~c, ~m), ~f::isliteral, ~b::isliteral), ~s3...) => if ortho(a, s2) && getroot(c) == a
             sequence(s1..., s2..., declare(a, literal(f.val(z.val, b.val))), s3...)
         end),
+
         (@rule sequence(~s1..., assign(access(~a::isvariable, ~m), ~f::isabelian(alg), ~b), ~s2..., assign(access(~a, ~m), ~f, ~c), ~s3...) => if ortho(a, s2)
             sequence(s1..., assign(access(a, m), f, call(f, b, c)))
         end),
@@ -147,7 +149,8 @@ function get_program_rules(alg, shash)
             sequence(s1..., s2..., declare(a, z), freeze(a), s3...)
         end),
         (@rule sequence(~s1..., declare(~a::isvariable, ~z), freeze(~a), ~s2..., ~s3, ~s4...) => if ortho(a, s2)
-            if (s3 = Postwalk(@rule access(a, reader()) => z)(s3)) !== nothing
+            #TODO this is also incorrect!
+            if (s3 = Postwalk(@rule access(~b, reader()) => if getroot(b) == a z end)(s3)) !== nothing
                 sequence(s1..., declare(a, z), freeze(a), s2..., s3, s4...)
             end
         end),
