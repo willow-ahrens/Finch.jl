@@ -206,7 +206,7 @@ ret = end_debug(debug) # extracts code from debugging context.
 ```
 
 The function `stage_code(code; algebra)` takes a `finch_program_instance` plus an optional algebra
-and creates a debugging context for it, called a `PartialCode`. The function `step_code(debug; steps, sdisplay)` takes a debug 
+and creates a debugging context for it, called a `PartialCode`. The function `step_code(debug; steps, sdisplay)` takes a debugging 
 context and advances some number of `steps`, displaying the results automatically if `sdisplay`.
 Finally, `iscompiled` checks if the code in a debug context is completely compiled and `end_debug` extracts the code,
 throwing an error if the code is not completely compiled.
@@ -250,19 +250,21 @@ end
 
 ### Dangers
 
-This feature is experiment and could easily break. In particular, this feature assumes that the Finch compiler never produces 
-code that it needs to use to produce the next bit of code without putting this analysis in the output. For example, we cannot
+This feature is experimental and could easily break. In particular, this feature assumes that the Finch compiler never produces 
+code that is needed to produce the next bit of code without putting the required analysis in the program that is being compiled. For example, we cannot currently pause
 ```
-code = ctx(A)
+code = ctx(A1)
 info = analysis(code)
-code1 = ctx(A, info)
+code1 = ctx(A2, info)
 begin
 $code1
 $code2
 end
 ```
-because analysis on code will give the wrong results if we don't finish it, 
-but it would be okay to do something like this if we placed the analysis in the resulting code.
+because analysis on the first bit of code will give the wrong results if we don't finish it, 
+but it would be okay to do something like this if we placed the analysis in the resulting code, 
+as part of the runtime.
+
 
 If in the future, Finch needs to do this, this feature will break. However, there is an internal mechanism to recover. The `AbstractLoweringControl` type
 is supposed to manage when code is allowed to be paused via the `should_pause` function.  Modifying this function on `StepOnlyControl <: AbstractLoweringControl`
