@@ -281,7 +281,7 @@ init_meta
 
 
 
-### Dangers and Advanced Features
+### Advanced Dangers: Non-Serial Compilation
 Furthermore, the Finch compiler is inhernetly serial: statements in a sequence
 rely on information found via compiling earlier statements. Thus, although this feature exports functions that can reorder the compilation,
 we do not expect these to work consistently and we leave them basically undocumented.
