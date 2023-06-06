@@ -1,4 +1,4 @@
-@testset "denig" begin
+@testset "debug" begin
     @info "Testing Compiler Debugging"
     function test_debug_code(code; imax=10000)
         codes:: Vector{Any}
