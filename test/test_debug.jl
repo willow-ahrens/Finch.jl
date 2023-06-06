@@ -1,22 +1,22 @@
 @testset "debug" begin
     @info "Testing Compiler Debugging"
     function test_debug_code(code; imax=10000)
-        codes:: Vector{Any}
+        codes:: Vector{Any} = []
         debug = Finch.stage_code(code)
-        append!(codes, debug)
+        push!(codes, debug)
         i = 0
         while true
-           global debug = Finch.step_code(debug, sdisplay=false)
-           append!(codes, debug)
-           global i+=1
-           if i > imax
-              return nothing
-           end
-           if Finch.iscompiled(debug.code)
-              break
-           end
+            debug = Finch.step_code(debug, sdisplay=false)
+            push!(codes, debug)
+            i+=1
+            if i > imax
+               return nothing
+            end
+            if Finch.iscompiled(debug.code)
+               break
+            end
         end
-        ret = end_debug(debug)
+        ret = Finch.end_debug(debug)
         return codes
      end
      

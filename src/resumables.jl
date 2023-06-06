@@ -52,6 +52,12 @@ function show_with_indent_meta(io, node, indent, prec, meta)
     print("@finch("); print(meta); Finch.FinchNotation.display_expression(io, MIME"text/plain"(), node); print(")")
 end
 
+dictkeys(d::Dict) = (collect(keys(d))...,)
+dictvalues(d::Dict) = (collect(values(d))...,)
+
+namedtuple(d::Dict{Symbol,T}) where {T} =
+    NamedTuple{dictkeys(d)}(dictvalues(d))
+
 function Base.show_unquoted(io::IO, node::Resumable, indent::Int, prec::Int)
     if length(node.meta) == 0
         show_with_indent(io, node.root, indent, prec)
