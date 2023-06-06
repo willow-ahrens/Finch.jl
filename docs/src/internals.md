@@ -269,10 +269,8 @@ is supposed to manage when code is allowed to be paused via the `should_pause` f
 or creating a new control is a potential route to ensure incremental compilation does not occur when it is impossible i.e 
 when dependencies in the compiler mean code cannot be partially compiled.
 
-```
-@docs
+```@docs
 Resumable
-AbstractLoweringControl
 should_resume
 should_pause
 evolve_control
@@ -286,8 +284,7 @@ Furthermore, the Finch compiler is inhernetly serial: statements in a sequence
 rely on information found via compiling earlier statements. Thus, although this feature exports functions that can reorder the compilation,
 we do not expect these to work consistently and we leave them basically undocumented.
 
-```
-@docs
+```@docs
 step_all_code
 repeat_step_code
 step_some_code

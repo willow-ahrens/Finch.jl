@@ -103,7 +103,11 @@ function record_methods(code)
     end )(code)
 end
 
+"""
+    AbstractLoweringControl
 
+An abtract type for managing incremental lowering of Finch code. 
+"""
 abstract type AbstractLoweringControl end
 
 """
@@ -286,6 +290,12 @@ end
     ret
  end
 
+ """
+    stage_code(code; algebra = DefaultAlgebra(), sdisplay=true)
+
+Takes a Finch Program and stages it within a DebugContext, defined within a particualr algebra.
+Displays the initial code if `sdisplay`.
+ """
 function stage_code(code; algebra = DefaultAlgebra(),  sdisplay=true)
     ctx = DebugContext(LowerJulia(), SimpleStepControl(step=0))
     code = execute_code(:ex, typeof(code), algebra, ctx)
