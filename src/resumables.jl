@@ -298,7 +298,7 @@ Displays the initial code if `sdisplay`.
  """
 function stage_code(code; algebra = DefaultAlgebra(),  sdisplay=true)
     ctx = DebugContext(LowerJulia(algebra = algebra), SimpleStepControl(step=0))
-    code = execute_code(:ex, typeof(code), algebra=algebra, ctx=ctx)
+    code = execute_code(:ex, typeof(code), algebra, ctx=ctx)
     control = StepOnlyControl(step=step, resumeLocations = [0])
     clean_partial_code(PartialCode(control, code), sdisplay=sdisplay)
 end
