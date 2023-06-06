@@ -232,9 +232,9 @@ quote
     A_lvl_3 = A_lvl_2.lvl
     x_lvl = (ex.body.body.rhs.args[2]).tns.tns.lvl
     x_lvl_2 = x_lvl.lvl
-    y_lvl.shape == A_lvl_2.shape || throw(DimensionMismatch("mismatched dimension limits ($(y_lvl.shape) != $(@finch((Number = 0, Which = ("/Users/teodorocollin/vsgitcode/Finch.jl/src/lower.jl", 174))A_lvl_2.shape::Int64)))"))
-    @finch((Number = 1, Which = ("/Users/teodorocollin/vsgitcode/Finch.jl/src/lower.jl", 174))A_lvl.shape::Int64) == @finch((Number = 2, Which = ("/Users/teodorocollin/vsgitcode/Finch.jl/src/lower.jl", 174))x_lvl.shape::Int64) || throw(DimensionMismatch("mismatched dimension limits ($(@finch((Number = 3, Which = ("/Users/teodorocollin/vsgitcode/Finch.jl/src/lower.jl", 174))A_lvl.shape::Int64)) != $(@finch((Number = 4, Which = ("/Users/teodorocollin/vsgitcode/Finch.jl/src/lower.jl", 174))x_lvl.shape::Int64)))"))
-    @finch begin(Number = 5, Which = ("/Users/teodorocollin/vsgitcode/Finch.jl/src/lower.jl", 174))
+    y_lvl.shape == A_lvl_2.shape || throw(DimensionMismatch("mismatched dimension limits ($(y_lvl.shape) != $(@finch((Number = 0, Which = ("lower.jl", 174))A_lvl_2.shape::Int64)))"))
+    @finch((Number = 1, Which = ("lower.jl", 174))A_lvl.shape::Int64) == @finch((Number = 2, Which = ("lower.jl", 174))x_lvl.shape::Int64) || throw(DimensionMismatch("mismatched dimension limits ($(@finch((Number = 3, Which = ("lower.jl", 174))A_lvl.shape::Int64)) != $(@finch((Number = 4, Which = ("lower.jl", 174))x_lvl.shape::Int64)))"))
+    @finch begin(Number = 5, Which = ("lower.jl", 174))
       begin
         @thaw(y)
         @∀ j = virtual(Finch.Extent) i = virtual(Finch.Extent)  (
@@ -242,9 +242,9 @@ quote
         @freeze(y)
       end
     end
-    qos = @finch((Number = 6, Which = ("/Users/teodorocollin/vsgitcode/Finch.jl/src/lower.jl", 174))1) * @finch((Number = 7, Which = ("/Users/teodorocollin/vsgitcode/Finch.jl/src/lower.jl", 174))y_lvl.shape::Int64)
-    resize!(y_lvl_2.val, @finch((Number = 8, Which = ("/Users/teodorocollin/vsgitcode/Finch.jl/src/lower.jl", 174))qos))
-    (y = @finch((Number = 9, Which = ("/Users/teodorocollin/vsgitcode/Finch.jl/src/tensors/fibers.jl", 27))VirtualFiber(d(e(0.0)))),)
+    qos = @finch((Number = 6, Which = ("lower.jl", 174))1) * @finch((Number = 7, Which = ("lower.jl", 174))y_lvl.shape::Int64)
+    resize!(y_lvl_2.val, @finch((Number = 8, Which = ("lower.jl", 174))qos))
+    (y = @finch((Number = 9, Which = ("fibers.jl", 27))VirtualFiber(d(e(0.0)))),)
 end
 ```
 
