@@ -13,7 +13,6 @@ const program_nodes = (
     assign = assign,
     call = call,
     access = access,
-    protocol = protocol,
     reader = reader,
     updater = updater,
     modify = modify,
@@ -35,7 +34,6 @@ const instance_nodes = (
     assign = assign_instance,
     call = call_instance,
     access = access_instance,
-    protocol = protocol_instance,
     reader = reader_instance,
     updater = updater_instance,
     modify = modify_instance,
@@ -198,8 +196,6 @@ function (ctx::FinchParserVisitor)(ex::Expr)
         return ctx(:($or($a, $b)))
     elseif @capture ex :call(~op, ~args...)
         return :($(ctx.nodes.call)($(ctx(op)), $(map(ctx, args)...)))
-    elseif @capture ex :(::)(~idx, ~mode)
-        return :($(ctx.nodes.protocol)($(ctx(idx)), $(esc(mode))))
     elseif @capture ex :(...)(~arg)
         return esc(ex)
     elseif @capture ex :$(~arg)

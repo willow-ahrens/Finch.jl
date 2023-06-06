@@ -11,7 +11,6 @@ const ID = 8
     virtual  =  2ID
     literal  =  3ID | IS_CONST
     index    =  4ID
-    protocol =  5ID | IS_TREE
     access   =  6ID | IS_TREE 
     reader   =  7ID | IS_TREE
     updater  =  8ID | IS_TREE
@@ -73,14 +72,6 @@ index
 Finch AST expression for a variable named `name`. The variable can be looked up in the context.
 """
 variable
-
-"""
-    protocol(idx, mode)
-
-Finch AST expression marking an indexing expression `idx` with the protocol `mode`.
-These usually reside at the toplevel of an indexing expression to an access.
-"""
-protocol
 
 """
     access(tns, mode, idx...)
@@ -317,12 +308,6 @@ function FinchNode(kind::FinchNodeKind, args::Vector)
         else
             error("wrong number of arguments to access(...)")
         end
-    elseif kind === protocol
-        if length(args) == 2
-            return FinchNode(protocol, nothing, nothing, args)
-        else
-            error("wrong number of arguments to protocol(...)")
-        end
     elseif kind === call
         if length(args) >= 1
             return FinchNode(call, nothing, nothing, args)
@@ -450,14 +435,6 @@ function Base.getproperty(node::FinchNode, sym::Symbol)
             return @view node.children[2:end]
         else
             error("type FinchNode(call, ...) has no property $sym")
-        end
-    elseif node.kind === protocol
-        if sym === :idx
-            return node.children[1]
-        elseif sym === :mode
-            return node.children[2]
-        else
-            error("type FinchNode(protocol, ...) has no property $sym")
         end
     elseif node.kind === cached
         if sym === :arg
@@ -649,10 +626,6 @@ function display_statement(io, mime, node::FinchNode, level)
         display_expression(io, mime, node.op)
         print(io, ">>= ")
         display_expression(io, mime, node.rhs)
-    elseif node.kind === protocol
-        display_expression(io, mime, ex.idx)
-        print(io, "::")
-        display_expression(io, mime, ex.mode)
     elseif node.kind === declare
         print(io, tab^level * "@declare(")
         display_expression(io, mime, node.tns)

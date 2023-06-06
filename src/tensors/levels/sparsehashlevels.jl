@@ -259,7 +259,7 @@ function freeze_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos_s
     return lvl
 end
 
-function get_reader(fbr::VirtualSubFiber{VirtualSparseHashLevel}, ctx, proto::Union{Nothing, Walk}, protos...)
+function get_reader(fbr::VirtualSubFiber{VirtualSparseHashLevel}, ctx, proto::Union{Nothing, typeof(walk)}, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     start = value(:($(lvl.ex).ptr[$(ctx(pos))]), lvl.Tp)
     stop = value(:($(lvl.ex).ptr[$(ctx(pos)) + 1]), lvl.Tp)
@@ -267,7 +267,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseHashLevel}, ctx, proto::Un
     get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, lvl.N, start, stop, proto, protos...)
 end
 
-function get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, R, start, stop, ::Union{Nothing, Walk}, protos...)
+function get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, R, start, stop, ::Union{Nothing, typeof(walk)}, protos...)
     tag = lvl.ex
     Ti = lvl.Ti
     Tp = lvl.Tp
@@ -355,7 +355,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseHashLevel}, ctx, protos...
     return get_reader_hash_helper(lvl, ctx, pos, qos, (), proto, protos...)
 end
 
-function get_reader_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, coords, ::Follow, protos...)
+function get_reader_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, coords, ::typeof(follow), protos...)
     Ti = lvl.Ti
     Tp = lvl.Tp
     qos_fill = lvl.qos_fill
@@ -400,7 +400,7 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseHashLevel}, ctx, p
     )
 end
 
-function get_updater_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, fbr_dirty, coords, p::Union{Nothing, Extrude}, protos...)
+function get_updater_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, fbr_dirty, coords, p::Union{Nothing, typeof(extrude)}, protos...)
     tag = lvl.ex
     Ti = lvl.Ti
     Tp = lvl.Tp

@@ -237,7 +237,7 @@ function freeze_level!(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, po
     return lvl
 end
 
-function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Union{Nothing, Walk}, protos...)
+function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Union{Nothing, typeof(walk)}, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
@@ -301,7 +301,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Unio
     )
 end
 
-function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Gallop, protos...)
+function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::typeof(gallop), protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
@@ -396,7 +396,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Gall
 end
 
 
-function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Follow, protos...)
+function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::typeof(follow), protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     my_q = cgx.freshen(tag, :_q)
@@ -419,11 +419,11 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Foll
     )
 end
 
-is_laminable_updater(lvl::VirtualSparseByteMapLevel, ctx, ::Union{Nothing, Laminate, Extrude}, protos...) =
+is_laminable_updater(lvl::VirtualSparseByteMapLevel, ctx, ::Union{Nothing, typeof(laminate), typeof(extrude)}, protos...) =
     is_laminable_updater(lvl.lvl, ctx, protos...)
 get_updater(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, protos...) = 
     get_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
-function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseByteMapLevel}, ctx, ::Union{Nothing, Extrude, Laminate}, protos...)
+function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseByteMapLevel}, ctx, ::Union{Nothing, typeof(extrude), typeof(laminate)}, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp

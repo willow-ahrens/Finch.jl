@@ -19,12 +19,17 @@ end
 
 FinchNotation.finch_leaf(x::Unfurled) = virtual(x)
 
+
+
+
+
+get_reader(tns::Unfurled, ctx::LowerJulia, protos...) = tns
+get_updater(tns::Unfurled, ctx::LowerJulia, protos...) = tns
+
 (ctx::Stylize{<:AbstractCompiler})(node::Unfurled) = ctx(node.body)
 function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::Unfurled)
     stylize_access(node, ctx, tns.body)
 end
-
-truncate(node::Unfurled, ctx, ext, ext_2) = Unfurled(truncate(node.body, ctx, ext, ext_2), node.ndims, node.arr)
 
 function popdim(node::Unfurled)
     if node.ndims == 1
@@ -33,6 +38,8 @@ function popdim(node::Unfurled)
         return Unfurled(node.body, node.ndims - 1, node.arr)
     end
 end
+
+truncate(node::Unfurled, ctx, ext, ext_2) = Unfurled(truncate(node.body, ctx, ext, ext_2), node.ndims, node.arr)
 
 function get_point_body(node::Unfurled, ctx, ext, idx)
     body_2 = get_point_body(node.body, ctx, ext, idx)
@@ -43,8 +50,6 @@ function get_point_body(node::Unfurled, ctx, ext, idx)
     end
 end
 
-get_reader(tns::Unfurled, ctx::LowerJulia, protos...) = tns
-get_updater(tns::Unfurled, ctx::LowerJulia, protos...) = tns
 
 (ctx::ThunkVisitor)(node::Unfurled) = Unfurled(ctx(node.body), node.ndims, node.arr)
 

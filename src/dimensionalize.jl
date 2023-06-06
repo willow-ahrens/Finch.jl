@@ -102,8 +102,6 @@ function (ctx::DeclareDimensions)(node::FinchNode, dim)
             delete!(ctx.hints, node.tns)
         end
         node
-    elseif node.kind === protocol
-        return protocol(ctx(node.idx, dim), node.mode)
     elseif istree(node)
         return similarterm(node, operation(node), map(arg->ctx(arg, nodim), arguments(node)))
     else
@@ -115,9 +113,6 @@ function (ctx::InferDimensions)(node::FinchNode)
         return (node, ctx.dims[node])
     elseif node.kind === access && node.mode.kind === updater && node.tns.kind === virtual
         return infer_dimensions_access(node, ctx, node.tns.val)
-    elseif node.kind === protocol
-        (idx, dim) = ctx(node.idx)
-        (protocol(idx, node.mode), dim)
     elseif istree(node)
         FinchNotation.isstateful(node) && @assert false
         return (similarterm(node, operation(node), map(first, map(ctx, arguments(node)))), nodim)

@@ -2,7 +2,6 @@ module SparseArraysExt
 
 using Finch
 using Finch: AbstractCompiler, DefaultStyle, Extent
-using Finch: Walk, Follow
 using Finch: Furlable, Stepper, Jumper, Run, Fill, Lookup, Simplify, Pipeline, Phase, Thunk, Spike, Step
 using Finch: virtual_size, virtual_default, getstart, getstop
 using Finch.FinchNotation
@@ -61,7 +60,7 @@ function Finch.declare!(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler, init
     throw(FormatLimitation("Finch does not support writes to SparseMatrixCSC"))
 end
 
-function Finch.get_reader(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler, ::Union{Nothing, Walk, Follow}, ::Union{Nothing, Walk})
+function Finch.get_reader(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler, ::Union{Nothing, typeof(walk), typeof(follow)}, ::Union{Nothing, typeof(walk)})
     tag = arr.ex
     Ti = arr.Ti
     my_i = ctx.freshen(tag, :_i)
@@ -163,7 +162,7 @@ function Finch.declare!(arr::VirtualSparseVector, ctx::AbstractCompiler, init)
     throw(FormatLimitation("Finch does not support writes to SparseVector"))
 end
 
-function Finch.get_reader(arr::VirtualSparseVector, ctx::AbstractCompiler, ::Union{Nothing, Walk})
+function Finch.get_reader(arr::VirtualSparseVector, ctx::AbstractCompiler, ::Union{Nothing, typeof(walk)})
     tag = arr.ex
     Ti = arr.Ti
     my_i = ctx.freshen(tag, :_i)

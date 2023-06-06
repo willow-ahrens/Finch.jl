@@ -144,15 +144,14 @@ function (ctx::InstantiateTensors)(node::FinchNode)
         push!(ctx.escape, node.tns)
         node
     elseif node.kind === access && node.tns.kind === virtual && getroot(node.tns) != nothing && !(getroot(node.tns.val) in ctx.escape)
-        tns = ctx.ctx.bindings[getroot(node.tns)]
-        protos = map(idx -> idx.kind === protocol ? idx.mode.val : nothing, node.idxs)
-        idxs = map(idx -> idx.kind === protocol ? ctx(idx.idx) : ctx(idx), node.idxs)
+        tns = node.tns.val
+        idxs = node.idxs
         if node.mode.kind === reader
             get(ctx.ctx.modes, getroot(node.tns), reader()).kind === reader || throw(LifecycleError("Cannot read update-only $(node.tns) (perhaps same tensor on both lhs and rhs?)"))
-            return access(get_reader(tns, ctx.ctx, protos...), node.mode, idxs...)
+            return access(get_reader(tns, ctx.ctx, [nothing for _ in idxs]...), node.mode, idxs...)
         else
             ctx.ctx.modes[getroot(node.tns)].kind === updater || throw(LifecycleError("Cannot update read-only $(node.tns) (perhaps same tensor on both lhs and rhs?)"))
-            return access(get_updater(tns, ctx.ctx, protos...), node.mode, idxs...)
+            return access(get_updater(tns, ctx.ctx, [nothing for _ in idxs]...), node.mode, idxs...)
         end
     elseif istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))
@@ -227,8 +226,6 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
             idxs = map(ctx, root.idxs)
             return :($(ctx(tns))[$(idxs...)])
         end
-    elseif root.kind === protocol
-        :($(ctx(root.idx)))
     elseif root.kind === call
         if root.op == literal(and)
             if isempty(root.args)
@@ -253,9 +250,8 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
         #TODO ideally this would be easy to request at an appropriate time.
         root_2 = Rewrite(Postwalk(@rule access(~a::isvirtual, ~m, ~i...) => begin
             if !isempty(i) && root.idx == i[end]
-                acc_2 = unfurl_access(access(a, m, i...), UnfurlVisitor(ctx, root.idx, root.ext.val), root.ext.val, a.val)
-                @assert acc_2.kind === access
-                acc_2
+                tns_2 = unfurl_access(access(a, m, i...), UnfurlVisitor(ctx, root.idx, root.ext.val), root.ext.val, a.val)
+                access(tns_2, m, i[1:end-1]..., get_furl_root(i[end]))
             end
         end))(root)
         #If unfurling has no effect, lower the body

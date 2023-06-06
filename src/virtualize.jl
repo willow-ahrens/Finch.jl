@@ -7,7 +7,6 @@ function virtualize(ex, ::Type{FinchNotation.IndexInstance{name}}, ctx) where {n
     ctx.freshen(name)
     index(name)
 end
-virtualize(ex, ::Type{FinchNotation.ProtocolInstance{Idx, Mode}}, ctx) where {Idx, Mode} = protocol(virtualize(:($ex.idx), Idx, ctx), virtualize(:($ex.mode), Mode, ctx))
 virtualize(ex, ::Type{FinchNotation.DeclareInstance{Tns, Init}}, ctx) where {Tns, Init} = declare(virtualize(:($ex.tns), Tns, ctx), virtualize(:($ex.init), Init, ctx))
 virtualize(ex, ::Type{FinchNotation.FreezeInstance{Tns}}, ctx) where {Tns} = freeze(virtualize(:($ex.tns), Tns, ctx))
 virtualize(ex, ::Type{FinchNotation.ThawInstance{Tns}}, ctx) where {Tns} = thaw(virtualize(:($ex.tns), Tns, ctx))
@@ -63,8 +62,3 @@ function virtualize(ex, ::Type{FinchNotation.VariableInstance{tag, Tns}}, ctx) w
         return variable(tag)
     end
 end
-virtualize(ex, ::Type{Walk}, ctx) = walk
-virtualize(ex, ::Type{Gallop}, ctx) = gallop
-virtualize(ex, ::Type{Follow}, ctx) = follow
-virtualize(ex, ::Type{Laminate}, ctx) = laminate
-virtualize(ex, ::Type{Extrude}, ctx) = extrude

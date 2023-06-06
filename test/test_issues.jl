@@ -227,7 +227,7 @@ using CIndices
 
         A = fsprand((10, 11), 0.5)
         B = fsprand((10, 10), 0.5)
-        @test_throws Finch.FormatLimitation @finch @loop j i A[i, j] = B[i, j::follow]
+        @test_throws Finch.FormatLimitation @finch @loop j i A[i, j] = B[i, follow(j)]
         @test_throws Finch.FormatLimitation @finch @loop j i A[j, i] = B[i, j]
         @test_throws ArgumentError @fiber(sc(e(0.0)))
         @test_throws ArgumentError @fiber(sh(e(0.0)))

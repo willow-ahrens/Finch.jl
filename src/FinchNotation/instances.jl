@@ -13,15 +13,6 @@ struct IndexInstance{name} <: FinchNodeInstance end
 
 Base.show(io::IO, node::IndexInstance{name}) where {name} = print(io, "index_instance(", Symbol(name), ")")
 
-struct ProtocolInstance{Idx, Mode} <: FinchNodeInstance
-	idx::Idx
-	mode::Mode
-end
-
-Base.:(==)(a::ProtocolInstance, b::ProtocolInstance) = a.idx == b.idx && a.mode == b.mode
-
-@inline protocol_instance(idx, mode) = ProtocolInstance(idx, mode)
-
 struct DeclareInstance{Tns, Init} <: FinchNodeInstance
 	tns::Tns
 	init::Init

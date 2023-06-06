@@ -27,7 +27,6 @@ function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::RootArray)
 end
 
 function get_reader(tns::RootArray, ctx::LowerJulia, protos...)
-    println(tns.tag)
     get_reader(tns.body, ctx, protos...)
 end
 get_updater(tns::RootArray, ctx::LowerJulia, protos...) = get_updater(tns.body, ctx, protos...)
@@ -37,8 +36,7 @@ thaw!(tns::RootArray, ctx::LowerJulia) = thaw!(tns.body, ctx)
 freeze!(tns::RootArray, ctx::LowerJulia) = freeze!(tns.body, ctx)
 
 function unfurl_access(node, ctx, eldim, tns::RootArray)
-    res = unfurl_access(node, ctx, eldim, tns.body)
-    res
+    unfurl_access(node, ctx, eldim, tns.body)
 end
 
 function select_access(node, ctx::Finch.SelectVisitor, tns::RootArray)

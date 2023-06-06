@@ -27,7 +27,6 @@ thaw
 forget
 access
 sequence
-protocol
 sieve
 finch_leaf
 ```

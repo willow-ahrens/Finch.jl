@@ -122,7 +122,7 @@ function lower(rep, ctx::PointwiseRep, ::PointwiseDenseStyle)
 end
 
 function lower(rep, ctx::PointwiseRep, ::PointwiseRepeatStyle)
-    background = simplify(PostWalk(Chain([
+    background = simplify(Posttypeof(walk)(Chain([
         (@rule access(~ex::isvirtual, ~m, ~i...) => finch_leaf(default(ex.val))),
     ]))(rep), ctx.ctx)
     @assert isliteral(background)

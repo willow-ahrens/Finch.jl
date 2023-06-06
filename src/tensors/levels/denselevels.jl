@@ -169,11 +169,11 @@ function freeze_level!(lvl::VirtualDenseLevel, ctx::AbstractCompiler, pos)
     return lvl
 end
 
-is_laminable_updater(lvl::VirtualDenseLevel, ctx, ::Union{Nothing, Laminate, Extrude}, protos...) =
+is_laminable_updater(lvl::VirtualDenseLevel, ctx, ::Union{Nothing, typeof(laminate), typeof(extrude)}, protos...) =
     is_laminable_updater(lvl.lvl, ctx, protos...)
-get_reader(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, ::Union{Nothing, Follow}, protos...) = get_readerupdater_dense_helper(fbr, ctx, get_reader, VirtualSubFiber, protos...)
-get_updater(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, ::Union{Nothing, Laminate, Extrude}, protos...) = get_readerupdater_dense_helper(fbr, ctx, get_updater, VirtualSubFiber, protos...)
-get_updater(fbr::VirtualTrackedSubFiber{VirtualDenseLevel}, ctx, ::Union{Nothing, Laminate, Extrude}, protos...) = get_readerupdater_dense_helper(fbr, ctx, get_updater, (lvl, pos) -> VirtualTrackedSubFiber(lvl, pos, fbr.dirty), protos...)
+get_reader(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, ::Union{Nothing, typeof(follow)}, protos...) = get_readerupdater_dense_helper(fbr, ctx, get_reader, VirtualSubFiber, protos...)
+get_updater(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, ::Union{Nothing, typeof(laminate), typeof(extrude)}, protos...) = get_readerupdater_dense_helper(fbr, ctx, get_updater, VirtualSubFiber, protos...)
+get_updater(fbr::VirtualTrackedSubFiber{VirtualDenseLevel}, ctx, ::Union{Nothing, typeof(laminate), typeof(extrude)}, protos...) = get_readerupdater_dense_helper(fbr, ctx, get_updater, (lvl, pos) -> VirtualTrackedSubFiber(lvl, pos, fbr.dirty), protos...)
 function get_readerupdater_dense_helper(fbr, ctx, get_readerupdater, subfiber_ctr, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex

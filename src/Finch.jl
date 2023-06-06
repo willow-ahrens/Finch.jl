@@ -86,6 +86,7 @@ include("tensors/levels/sparsetrianglelevels.jl")
 include("tensors/masks.jl")
 include("tensors/modifiers.jl")
 include("tensors/combinators/unfurled.jl")
+include("tensors/combinators/protocolized.jl")
 include("tensors/combinators/roots.jl")
 include("tensors/wrapperize.jl")
 

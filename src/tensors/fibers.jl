@@ -236,8 +236,6 @@ function get_furl_root(idx::FinchNode)
         return idx
     elseif idx.kind === access && idx.tns.kind === virtual
         get_furl_root_access(idx, idx.tns.val)
-    elseif idx.kind === protocol
-        return get_furl_root(idx.idx)
     else
         return nothing
     end

@@ -161,7 +161,7 @@ function virtual_simplex(d, ctx, n)
     return simplify(call(fld, res, factorial(d)), ctx)
 end
 
-is_laminable_updater(lvl::VirtualSparseTriangleLevel, ctx, ::Union{Nothing, Laminate, Extrude}, protos...) =
+is_laminable_updater(lvl::VirtualSparseTriangleLevel, ctx, ::Union{Nothing, typeof(laminate), typeof(extrude)}, protos...) =
     is_laminable_updater(lvl.lvl, ctx, protos[lvl.N + 1:end]...)
 
 
@@ -179,7 +179,7 @@ function get_reader_triangular_dense_helper(fbr, ctx, get_readerupdater, subfibe
     # j is coordinate of previous dimension
     # n is the total number of dimensions
     # q is index value from previous recursive call
-    function simplex_helper(d, j, n, q, ::Union{Nothing, Follow}, protos...)
+    function simplex_helper(d, j, n, q, ::Union{Nothing, typeof(follow)}, protos...)
         s = ctx.freshen(tag, :_s)
         if d == 1
             Furlable(
@@ -238,7 +238,7 @@ function get_updater_triangular_dense_helper(fbr, ctx, get_readerupdater, subfib
     # j is coordinate of previous dimension
     # n is the total number of dimensions
     # q is index value from previous recursive call
-    function simplex_helper(d, j, n, q, ::Union{Nothing, Laminate, Extrude}, protos...)
+    function simplex_helper(d, j, n, q, ::Union{Nothing, typeof(laminate), typeof(extrude)}, protos...)
         s = ctx.freshen(tag, :_s)
         if d == 1
             Furlable(

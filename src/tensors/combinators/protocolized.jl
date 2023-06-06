@@ -1,0 +1,132 @@
+struct ProtocolizedArray{Protos<:Tuple, Body}
+    body::Body
+    protos::Protos
+end
+
+Base.show(io::IO, ex::ProtocolizedArray) = Base.show(io, MIME"text/plain"(), ex)
+function Base.show(io::IO, mime::MIME"text/plain", ex::ProtocolizedArray)
+	print(io, "ProtocolizedArray($(ex.body), $(ex.protos))")
+end
+
+Base.getindex(arr::ProtocolizedArray, i...) = arr.body[i...]
+
+struct VirtualProtocolizedArray
+    body
+    protos
+end
+Base.:(==)(a::VirtualProtocolizedArray, b::VirtualProtocolizedArray) = a.body == b.body && a.protos == b.protos
+
+Base.show(io::IO, ex::VirtualProtocolizedArray) = Base.show(io, MIME"text/plain"(), ex)
+function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualProtocolizedArray)
+	print(io, "VirtualProtocolizedArray($(ex.body), $(ex.protos))")
+end
+
+FinchNotation.finch_leaf(x::VirtualProtocolizedArray) = virtual(x)
+
+function virtualize(ex, ::Type{ProtocolizedArray{Protos, Body}}, ctx) where {Protos, Body}
+    protos = map(enumerate(Protos.parameters)) do (n, param)
+        virtualize(:($ex.protos[$n]), param, ctx)
+    end
+    VirtualProtocolizedArray(virtualize(:($ex.body), Body, ctx), protos)
+end
+
+function lower(tns::VirtualProtocolizedArray, ctx::AbstractCompiler, ::DefaultStyle)
+    error()
+    :(ProtocolizedArray($(ctx(tns.body)), $(ctx(tns.protos))))
+end
+
+function virtual_size(arr::VirtualProtocolizedArray, ctx::AbstractCompiler, eldim)
+    virtual_size(arr.body, ctx, eldim)
+end
+function virtual_resize!(arr::VirtualProtocolizedArray, ctx::AbstractCompiler, dim)
+    virtual_resize!(arr.body, ctx, dim)
+end
+function virtual_eldim(arr::VirtualProtocolizedArray, ctx::AbstractCompiler, idx_dim)
+    virtual_eldim(arr.body, ctx, idx_dim)
+end
+
+function get_reader(arr::VirtualProtocolizedArray, ctx, proto_idxs...)
+    VirtualProtocolizedArray(get_reader(arr.body, ctx, arr.protos...), arr.protos)
+end
+function get_updater(arr::VirtualProtocolizedArray, ctx, proto_idxs...)
+    VirtualProtocolizedArray(get_updater(arr.body, ctx, arr.protos...), arr.protos)
+end
+
+(ctx::Stylize{<:AbstractCompiler})(node::VirtualProtocolizedArray) = ctx(node.body)
+function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::VirtualProtocolizedArray)
+    stylize_access(node, ctx, tns.body)
+end
+
+function popdim(node::VirtualProtocolizedArray)
+    if length(node.protos) == 1
+        return node.body
+    else
+        return VirtualProtocolizedArray(node.body, node.protos[1:end-1])
+    end
+end
+
+truncate(node::VirtualProtocolizedArray, ctx, ext, ext_2) = VirtualProtocolizedArray(truncate(node.body, ctx, ext, ext_2), node.protos)
+
+function get_point_body(node::VirtualProtocolizedArray, ctx, ext, idx)
+    body_2 = get_point_body(node.body, ctx, ext, idx)
+    if body_2 === nothing
+        return nothing
+    else
+        return popdim(VirtualProtocolizedArray(body_2, node.protos))
+    end
+end
+
+(ctx::ThunkVisitor)(node::VirtualProtocolizedArray) = VirtualProtocolizedArray(ctx(node.body), node.protos)
+
+function get_run_body(node::VirtualProtocolizedArray, ctx, ext)
+    body_2 = get_run_body(node.body, ctx, ext)
+    if body_2 === nothing
+        return nothing
+    else
+        return popdim(VirtualProtocolizedArray(body_2, node.protos))
+    end
+end
+
+function get_acceptrun_body(node::VirtualProtocolizedArray, ctx, ext)
+    body_2 = get_acceptrun_body(node.body, ctx, ext)
+    if body_2 === nothing
+        return nothing
+    else
+        return popdim(VirtualProtocolizedArray(body_2, node.protos))
+    end
+end
+
+function (ctx::PipelineVisitor)(node::VirtualProtocolizedArray)
+    map(ctx(node.body)) do (keys, body)
+        return keys => VirtualProtocolizedArray(body, node.protos)
+    end
+end
+
+phase_body(node::VirtualProtocolizedArray, ctx, ext, ext_2) = VirtualProtocolizedArray(phase_body(node.body, ctx, ext, ext_2), node.protos)
+phase_range(node::VirtualProtocolizedArray, ctx, ext) = phase_range(node.body, ctx, ext)
+
+get_spike_body(node::VirtualProtocolizedArray, ctx, ext, ext_2) = VirtualProtocolizedArray(get_spike_body(node.body, ctx, ext, ext_2), node.protos)
+get_spike_tail(node::VirtualProtocolizedArray, ctx, ext, ext_2) = popdim(VirtualProtocolizedArray(get_spike_tail(node.body, ctx, ext, ext_2), node.protos))
+
+visit_fill(node, tns::VirtualProtocolizedArray) = visit_fill(node, tns.body)
+visit_simplify(node::VirtualProtocolizedArray) = VirtualProtocolizedArray(visit_simplify(node.body), node.protos)
+
+(ctx::SwitchVisitor)(node::VirtualProtocolizedArray) = map(ctx(node.body)) do (guard, body)
+    guard => VirtualProtocolizedArray(body, node.protos)
+end
+
+function unfurl_access(node, ctx, eldim, tns::VirtualProtocolizedArray)
+    VirtualProtocolizedArray(unfurl_access(node, ctx, eldim, tns.body), tns.protos)
+end
+
+function select_access(node, ctx::Finch.SelectVisitor, tns::VirtualProtocolizedArray)
+    select_access(node, ctx, tns.body)
+end
+
+(ctx::CycleVisitor)(node::VirtualProtocolizedArray) = VirtualProtocolizedArray(ctx(node.body), node.protos)
+
+getroot(tns::VirtualProtocolizedArray) = getroot(tns.body)
+
+function get_furl_root_access(idx, tns::VirtualProtocolizedArray)
+    get_furl_root_access(idx, tns.body)
+end

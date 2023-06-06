@@ -239,7 +239,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseCOOLevel}, ctx, protos...)
     get_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, lvl.N, start, stop, protos...)
 end
 
-function get_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, R, start, stop, ::Union{Nothing, Walk}, protos...)
+function get_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, R, start, stop, ::Union{Nothing, typeof(walk)}, protos...)
     tag = lvl.ex
     Ti = lvl.Ti
     Tp = lvl.Tp
@@ -343,7 +343,7 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseCOOLevel}, ctx, pr
     )
 end
 
-function get_updater_coo_helper(lvl::VirtualSparseCOOLevel, ctx, qos, fbr_dirty, coords, ::Union{Nothing, Extrude}, protos...)
+function get_updater_coo_helper(lvl::VirtualSparseCOOLevel, ctx, qos, fbr_dirty, coords, ::Union{Nothing, typeof(extrude)}, protos...)
     Ti = lvl.Ti
     Tp = lvl.Tp
     qos_fill = lvl.qos_fill

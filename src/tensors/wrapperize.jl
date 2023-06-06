@@ -10,9 +10,15 @@ after simplification so one can expect constants to be folded.
 function get_wrapper_rules(alg, depth, ctx)
     return [
         (@rule access(~A::isvariable, ~m, ~i...) => access(RootArray(A, ctx.bindings[A]), m, i...)),
-        #(@rule access(~A::isvirtual, ~m, ~i1..., call(~proto::isliteral, ~j), ~i2...) => if isprotocol(proto.val)
-        #    access(ProtocolizedArray(A.val, ([nothing for _ in i1]..., proto.val, [nothing for _ in i2]...)), m, i1..., j, i2...)
-        #end),
+        (@rule access(~A::isvirtual, ~m, ~i1..., call(~proto::isliteral, ~j), ~i2...) => if isprotocol(proto.val)
+            body = A.val
+            protos = ([nothing for _ in i1]..., proto.val, [nothing for _ in i2]...)
+            if body isa VirtualProtocolizedArray
+                protos = something.(body.protos, protos)
+                body = body.body
+            end
+            access(VirtualProtocolizedArray(body, protos), m, i1..., j, i2...)
+        end),
         #(@rule access(~A::isvirtual, ~m, ~i1..., call(+, ~a::isconstant, ~j::isindex), ~i2...) =>
         #    access(ShiftArray(A.val, ([0 for _ in i1]..., a, [0 for _ in i2]...)), m, i1..., j, i2...)),
         #(@rule access(~A::isvirtual, ~m, ~i1..., call(+, ~j::isindex, ~a::isconstant), ~i2...) =>
