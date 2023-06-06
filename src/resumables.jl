@@ -23,32 +23,29 @@ end
 
 show_with_indent(io, node, indent, prec) = (print("@finch("); Base.show_unquoted(io, node, indent, prec); print(")"))
 function show_with_indent(io, node::FinchNode, indent, prec)
-    indent = fld(indent, 2) + 1
     if Finch.FinchNotation.isstateful(node)
         println("@finch begin")
-        Finch.FinchNotation.display_statement(io, MIME"text/plain"(), node, indent)
+        Finch.FinchNotation.display_statement(io, MIME"text/plain"(), node, indent + 2)
         println()
-        print("  "^(indent - 1), "end")
+        print(" "^indent, "end")
     else
         print("@finch("); Finch.FinchNotation.display_expression(io, MIME"text/plain"(), node); print(")")
     end
 end
 
 function show_with_indent_meta(io, node::FinchNode, indent, prec, meta)
-    indent = fld(indent, 2) + 1
     if Finch.FinchNotation.isstateful(node)
         print("@finch begin")
         println(meta)
-        Finch.FinchNotation.display_statement(io, MIME"text/plain"(), node, indent)
+        Finch.FinchNotation.display_statement(io, MIME"text/plain"(), node, indent + 2)
         println()
-        print("  "^(indent - 1), "end")
+        print(" "^indent, "end")
     else
         print("@finch("); print(meta); Finch.FinchNotation.display_expression(io, MIME"text/plain"(), node); print(")")
     end
 end
 
 function show_with_indent_meta(io, node, indent, prec, meta)
-    indent = fld(indent, 2) + 1
     print("@finch("); print(meta); Finch.FinchNotation.display_expression(io, MIME"text/plain"(), node); print(")")
 end
 
@@ -84,7 +81,7 @@ function number_resumables(code)
     counter = 0
     Postwalk(node -> 
                     if node isa Resumable 
-                        node.meta[:Number] = counter
+                        node.meta[:number] = counter
                         counter+=1 
                         node
                     else
@@ -96,7 +93,7 @@ function record_methods(code)
     Postwalk(node -> 
     if node isa Resumable 
         loc = which(lower, (typeof(node.root), typeof(node.ctx), typeof(node.style)))
-         node.meta[:Which] = (splitpath(string(loc.file))[end], loc.line)
+         node.meta[:which] = (splitpath(string(loc.file))[end], loc.line)
         node
     else
         node
@@ -241,8 +238,8 @@ end
 function should_resume(c :: StepOnlyControl, ctx, node, style, meta)
     should = false
     if !isnothing(c.resumeLocations) && !isnothing(meta)
-        if :Number in keys(meta) 
-            should = meta[:Number] in c.resumeLocations
+        if :number in keys(meta) 
+            should = meta[:number] in c.resumeLocations
         end
     end
     if !isnothing(c.resumeStyles)
@@ -291,12 +288,12 @@ end
  end
 
  """
-    stage_code(code; algebra = DefaultAlgebra(), sdisplay=true)
+    begin_debug(code; algebra = DefaultAlgebra(), sdisplay=true)
 
 Takes a Finch Program and stages it within a DebugContext, defined within a particualr algebra.
 Displays the initial code if `sdisplay`.
  """
-function stage_code(code; algebra = DefaultAlgebra(),  sdisplay=true)
+function begin_debug(code; algebra = DefaultAlgebra(),  sdisplay=true)
     ctx = DebugContext(LowerJulia(algebra = algebra), SimpleStepControl(step=0))
     code = execute_code(:ex, typeof(code), algebra, ctx=ctx)
     control = StepOnlyControl(step=step, resumeLocations = [0])
