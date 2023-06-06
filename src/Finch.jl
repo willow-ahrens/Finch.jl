@@ -17,7 +17,7 @@ using DataStructures
 using JSON
 using CIndices
 
-export @finch, @finch_program, @finch_code, value
+export @finch, @finch_program, @finch_code, @finch_kernel, value
 
 export Fiber, Fiber!, Scalar
 export SparseList, SparseListLevel
@@ -55,7 +55,6 @@ include("symbolic/symbolic.jl")
 
 include("looplets/thunks.jl")
 include("looplets/lookups.jl")
-include("looplets/fills.jl")
 include("looplets/nulls.jl")
 include("looplets/shifts.jl")
 include("looplets/unfurl.jl")
@@ -67,6 +66,7 @@ include("looplets/pipelines.jl")
 include("looplets/cycles.jl")
 include("looplets/jumpers.jl")
 include("looplets/steppers.jl")
+include("looplets/fills.jl")
 
 include("execute.jl")
 

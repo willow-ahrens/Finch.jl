@@ -17,7 +17,7 @@ not up to date.
 │   ├── [build]             # rendered docs website
 │   ├── src                 # docs website source
 │   ├── fix.jl              # fix docstrings
-│   ├── make.jl             # deploys documentation locally
+│   ├── make.jl             # build documentation locally
 │   └── ...                 
 ├── embed                   # wrappers for embedding Finch in C
 ├── ext                     # conditionally-loaded code for interaction with other packages (e.g. SparseArrays)

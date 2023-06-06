@@ -252,6 +252,13 @@ Returns true if the node is a finch variable
 """
 isvariable(ex::FinchNode) = ex.kind === variable
 
+"""
+    isindex(node)
+
+Returns true if the node is a finch index
+"""
+isindex(ex::FinchNode) = ex.kind === index
+
 getval(ex::FinchNode) = ex.val
 
 SyntaxInterface.istree(node::FinchNode) = Int(node.kind) & IS_TREE != 0
@@ -565,7 +572,11 @@ function display_expression(io, mime, node::FinchNode)
         display_expression(io, mime, node.mode)
         print(io, ")")
     elseif node.kind === cached
+        print(io, "cached(")
         display_expression(io, mime, node.arg)
+        print(io, ", ")
+        display_expression(io, mime, node.ref.val)
+        print(io, ")")
     elseif node.kind === virtual
         print(io, "virtual(")
         #print(io, node.val)

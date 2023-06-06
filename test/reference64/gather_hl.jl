@@ -10,7 +10,7 @@ begin
     else
         A_lvl_i1 = 0
     end
-    phase_stop = min(A_lvl_i1, 5)
+    phase_stop = min(5, A_lvl_i1)
     if phase_stop >= 5
         s = 5
         if A_lvl.idx[A_lvl_q] < 5

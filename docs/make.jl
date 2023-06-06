@@ -1,6 +1,13 @@
-using Finch
+#!/usr/bin/env julia
+if abspath(PROGRAM_FILE) == @__FILE__
+    using Pkg
+    Pkg.activate(@__DIR__)
+    Pkg.instantiate()
+end
+
 using Documenter
 using Literate
+using Finch
 
 DocMeta.setdocmeta!(Finch, :DocTestSetup, :(using Finch; using SparseArrays); recursive=true)
 
@@ -16,6 +23,7 @@ makedocs(;
     ),
     pages=[
         "Home" => "index.md",
+        "Usage" => "usage.md",
         "Array Formats" => "fibers.md",
         "Custom Functions" => "algebra.md",
         "Tensor File I/O" => "fileio.md",
@@ -24,6 +32,9 @@ makedocs(;
         "Internals" => "internals.md",
         "Directory Structure" => "directory_structure.md",
         "Contributing" => "CONTRIBUTING.md",
+        "Tutorials" => [
+            "Benchmarking" => "benchmark.md",
+        ],
     ],
 )
 

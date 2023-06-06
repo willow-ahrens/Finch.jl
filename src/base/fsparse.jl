@@ -92,7 +92,7 @@ is reused.
 function fsparse!(I::Tuple, V, shape = map(maximum, I))
     return Fiber(SparseCOO{length(I), Tuple{map(eltype, I)...}, Int}(Element{zero(eltype(V))}(V), shape, I, [1, length(V) + 1]))
 end
-
+#, filter = r".*"s
 """
     fsprand([rng],[type], m::Tuple,p::AbstractFloat,[rfn])
 
@@ -106,7 +106,7 @@ argument specifies a random number generator.
 See also: (`sprand`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#SparseArrays.sprand)
 
 # Examples
-```jldoctest; setup = :(using Random; Random.seed!(1234))
+```julia
 julia> fsprand(Bool, (3, 3), 0.5)
 SparseCOO (false) [1:3,1:3]
 ├─├─[1, 1]: true

@@ -1,4 +1,4 @@
-@staged_function copyto_helper! dst src begin
+@staged function copyto_helper!(dst, src)
     ndims(dst) > ndims(src) && throw(DimensionMismatch("more dimensions in destination than source"))
     ndims(dst) < ndims(src) && throw(DimensionMismatch("less dimensions in destination than source"))
     idxs = [Symbol(:i_, n) for n = 1:ndims(dst)]
@@ -23,7 +23,7 @@ dropdefaults(src) = dropdefaults!(similar(src), src)
 
 dropdefaults!(dst::Fiber, src) = dropdefaults_helper!(dst, src)
 
-@staged_function dropdefaults_helper! dst src begin
+@staged function dropdefaults_helper!(dst, src)
     ndims(dst) > ndims(src) && throw(DimensionMismatch("more dimensions in destination than source"))
     ndims(dst) < ndims(src) && throw(DimensionMismatch("less dimensions in destination than source"))
     idxs = [Symbol(:i_, n) for n = 1:ndims(dst)]

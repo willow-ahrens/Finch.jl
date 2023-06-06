@@ -5,10 +5,6 @@ end
 
 shift(body, delta) = Shift(body, delta)
 
-SyntaxInterface.istree(::Shift) = true
-SyntaxInterface.operation(::Shift) = shift
-SyntaxInterface.arguments(node::Shift) = [node.body, node.delta]
-
 Base.show(io::IO, ex::Shift) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::Shift)
     print(io, "Shift(body = ")
@@ -51,3 +47,5 @@ end
 
 
 truncate(node::Shift, ctx, ext, ext_2) = Shift(truncate(node.body, ctx, shiftdim(ext, node.delta), shiftdim(ext_2, node.delta)), node.delta)
+visit_fill(node, tns::Shift) = visit_fill(node, tns.body)
+visit_simplify(node::Shift) = Shift(visit_simplify(node.body), node.delta)

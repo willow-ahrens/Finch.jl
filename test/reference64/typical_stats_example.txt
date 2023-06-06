@@ -41,7 +41,6 @@ quote
     else
         X_lvl_i1 = 0
     end
-    i = 1
     phase_stop = min(X_lvl_i1, X_lvl.shape)
     if phase_stop >= 1
         i = 1
@@ -72,11 +71,11 @@ quote
             end
             i = phase_stop_2 + 1
         end
-        i = phase_stop + 1
     end
+    phase_start_3 = max(1, 1 + X_lvl_i1)
     phase_stop_3 = X_lvl.shape
-    if phase_stop_3 >= i
-        cond_3 = 0 < 1 + -i + phase_stop_3
+    if phase_stop_3 >= phase_start_3
+        cond_3 = 0 < 1 + -phase_start_3 + phase_stop_3
         if cond_3
             x_max_val = max(0.0, x_max_val)
             x_min_val = min(0.0, x_min_val)

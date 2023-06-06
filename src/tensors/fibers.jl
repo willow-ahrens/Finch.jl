@@ -354,7 +354,7 @@ macro fiber(ex, arg)
     return :($dropdefaults!($Fiber!($(f_decode(ex))), $(esc(arg))))
 end
 
-@staged_function Fiber! lvl begin
+@staged function Fiber!(lvl)
     contain(LowerJulia()) do ctx
         lvl = virtualize(:lvl, lvl, ctx)
         lvl = resolve(lvl, ctx)

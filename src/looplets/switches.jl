@@ -54,6 +54,9 @@ function (ctx::SwitchVisitor)(node::FinchNode)
     end
 end
 (ctx::SwitchVisitor)(node::Switch) = node.cases
+(ctx::SwitchVisitor)(node::Shift) = map(ctx(node.body)) do (guard, body)
+    guard => Shift(body, node.delta)
+end
 
 function lower(stmt, ctx::AbstractCompiler,  ::SwitchStyle)
     cases = (SwitchVisitor(ctx=ctx))(stmt)
