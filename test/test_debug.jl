@@ -2,11 +2,11 @@
     @info "Testing Compiler Debugging"
     function test_debug_code(code; imax=10000)
         codes:: Vector{Any} = []
-        debug = Finch.stage_code(code)
+        debug = Finch.begin_debug(code)
         push!(codes, debug)
         i = 0
         while true
-            debug = Finch.step_code(debug, sdisplay=false)
+            debug = Finch.step_code(debug)
             push!(codes, debug)
             i+=1
             if i > imax

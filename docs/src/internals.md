@@ -182,20 +182,21 @@ level_default
 
 It's easy to ask Finch to advance a few steps in its compiler pipeline. The basic functionality is documented via the following bit of code:
 ```
+using Finch
+using Finch: @finch_program_instance, begin_debug, step_code, iscompiled, end_debug
+
 y = @fiber d(e(0.0))
 A = @fiber d(sl(e(0.0)))
 x = @fiber sl(e(0.0))
-
-
 
 code = Finch.@finch_program_instance begin
    @loop j i y[i] += A[i, j] * x[j]
 end
 
-debug = Finch.stage_code(code)
+debug = begin_debug(code)
 
 while true
-    global debug = step_code(debug, sdisplay=false) # Runs one step of compilation
+    global debug = step_code(debug) # Runs one step of compilation
     if iscompiled(debug.code) # Checks if we are done compiling.
         break
     end
@@ -205,7 +206,7 @@ ret = end_debug(debug) # extracts code from debugging context.
 # Prints compiled code
 ```
 
-The function `stage_code(code; algebra)` takes a `finch_program_instance` plus an optional algebra
+The function `begin_debug(code; algebra)` takes a `finch_program_instance` plus an optional algebra
 and creates a debugging context for it, called a `PartialCode`. The function `step_code(debug; steps, sdisplay)` takes a debugging 
 context and advances some number of `steps`, displaying the results automatically if `sdisplay`.
 Finally, `iscompiled` checks if the code in a debug context is completely compiled and `end_debug` extracts the code,
@@ -213,7 +214,7 @@ throwing an error if the code is not completely compiled.
 
 
 ```@docs
-stage_code
+begin_debug
 step_code
 iscompiled
 end_debug
