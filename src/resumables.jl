@@ -29,7 +29,7 @@ function show_resumable(io, node::Resumable, indent, prec)
         print(io, "}")
     end
     if node.root isa FinchNode && Finch.FinchNotation.isstateful(node.root)
-        println(io, "begin")
+        println(io, " begin")
         Finch.FinchNotation.display_statement(io, MIME"text/plain"(), node.root, indent + 2);
         println(io)
         print(io, " "^indent*"end")
@@ -247,7 +247,7 @@ function Base.show(io::IO, code::PartialCode)
 end
 
 
- function clean_partial_code(pcode:: PartialCode; sdisplay=true)
+ function clean_partial_code(pcode:: PartialCode; sdisplay=false)
     code = striplines(pcode.code)
     code = unblock(code)
     code = number_resumables(code)
@@ -260,11 +260,11 @@ end
  end
 
  """
-    begin_debug(code; algebra = DefaultAlgebra(), sdisplay=true)
+    begin_debug(code; algebra = DefaultAlgebra(), sdisplay=false)
 
 Takes a Finch Program and stages it within a DebugContext, defined within a particualr algebra.
  """
-function begin_debug(code; algebra = DefaultAlgebra(),  sdisplay=true)
+function begin_debug(code; algebra = DefaultAlgebra(),  sdisplay=false)
     ctx = DebugContext(LowerJulia(algebra = algebra), SimpleStepControl(step=0))
     code = execute_code(:ex, typeof(code), algebra, ctx=ctx)
     control = StepOnlyControl(step=step, resumeLocations = [0])
@@ -272,18 +272,18 @@ function begin_debug(code; algebra = DefaultAlgebra(),  sdisplay=true)
 end
 
 """
-    step_all_code(code::PartialCode; step=1, sdisplay=true)
+    step_all_code(code::PartialCode; step=1, sdisplay=false)
 
 Experimental feature: Do not use explictly."""
-function step_all_code(code::PartialCode; step=1, sdisplay=true)
+function step_all_code(code::PartialCode; step=1, sdisplay=false)
     newcode = resume_lowering(SimpleStepControl(step=step), code.code)
     clean_partial_code(PartialCode(SimpleStepControl(step=step), newcode), sdisplay=sdisplay)
 end
 """
-    repeat_step_code(code::PartialCode; control=nothing, sdisplay=true)
+    repeat_step_code(code::PartialCode; control=nothing, sdisplay=false)
 
 Experimental feature: Do not use explictly."""
-function repeat_step_code(code::PartialCode; control=nothing, sdisplay=true)
+function repeat_step_code(code::PartialCode; control=nothing, sdisplay=false)
     if isnothing(control)
         newcode = resume_lowering(code.lastControl, code.code)
         clean_partial_code(PartialCode(code.lastControl, newcode),sdisplay=sdisplay)
@@ -294,20 +294,20 @@ function repeat_step_code(code::PartialCode; control=nothing, sdisplay=true)
 end
 
 """
-    step_some_code(code::PartialCode; step=1, resumeLocations=nothing, resumeStyles=nothing, resumeFilter=nothing, sdisplay=true)
+    step_some_code(code::PartialCode; step=1, resumeLocations=nothing, resumeStyles=nothing, resumeFilter=nothing, sdisplay=false)
 
 Experimental feature: Do not use explictly."""
-function step_some_code(code::PartialCode; step=1, resumeLocations=nothing, resumeStyles=nothing, resumeFilter=nothing, sdisplay=true)
+function step_some_code(code::PartialCode; step=1, resumeLocations=nothing, resumeStyles=nothing, resumeFilter=nothing, sdisplay=false)
     control = StepOnlyControl(step=step, resumeLocations = resumeLocations, resumeStyles=resumeStyles, resumeFilter=resumeFilter)
     repeat_step_code(code, control=control, sdisplay=sdisplay)
 end
 
 """
-    step_code(code::PartialCode; step=1, sdisplay=true)
+    step_code(code::PartialCode; step=1, sdisplay=false)
 
 Advance the compiler on `code` for `step`, displaying the code at the end if `sdisplay`.
 """
-function step_code(code::PartialCode; step=1, sdisplay=true)
+function step_code(code::PartialCode; step=1, sdisplay=false)
     control = StepOnlyControl(step=step, resumeLocations = [0])
     repeat_step_code(code, control=control, sdisplay=sdisplay)
 end

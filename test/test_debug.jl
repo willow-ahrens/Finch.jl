@@ -6,7 +6,7 @@
         push!(codes, debug)
         i = 0
         while true
-            debug = Finch.step_code(debug, sdisplay=false)
+            debug = Finch.step_code(debug)
             push!(codes, debug)
             i+=1
             if i > imax

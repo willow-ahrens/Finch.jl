@@ -674,12 +674,10 @@ function display_statement(io, mime, node::FinchNode, indent)
         print(io, " "^indent * "begin\n")
         for body in node.bodies
             display_statement(io, mime, body, indent + 2)
-            println()
+            println(io)
         end
         print(io, " "^indent * "end")
     else
-        println("oh no")
-        println(node)
         error("unimplemented")
     end
 end
