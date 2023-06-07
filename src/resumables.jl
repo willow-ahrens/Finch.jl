@@ -1,103 +1,75 @@
 """
     Resumable(ctx, root, style, meta)
 
-Struct to hold a paused compilation. Holds the compiler state in `ctx`, a FinchNode in root, the compiler style in style, and a dict of meta data in meta.
+Struct to hold a paused compilation. Holds the compiler state in `ctx`, a
+FinchNode in `root`, and the compiler style in `style`. If the resumable
+is in an expression context. The `meta` field is a Dict
+of metadata about the resumable.
 """
 @kwdef struct Resumable
     ctx
     root
     style
-    meta 
+    meta
+end
+
+
+function show_resumable(io, node::Resumable, indent, prec)
+    print(io, "@finch");
+    if !isempty(node.meta)
+        print(io, "{")
+        meta_tags = []
+        if haskey(node.meta, :number)
+            push!(meta_tags, "#$(node.meta[:number])")
+        end
+        if haskey(node.meta, :which)
+            push!(meta_tags, "$(node.meta[:which][1]):$(node.meta[:which][2])")
+        end
+        join(io, meta_tags, ",")
+        print(io, "}")
+    end
+    if node.root isa FinchNode && Finch.FinchNotation.isstateful(node.root)
+        println(io, "begin")
+        Finch.FinchNotation.display_statement(io, MIME"text/plain"(), node.root, indent + 2);
+        println(io)
+        print(io, " "^indent*"end")
+    else
+        print(io, "("); show(io, MIME"text/plain"(), node.root); print(io, ")")
+    end
+end
+
+
+function Base.show_unquoted(io::IO, node::Resumable, indent::Int, prec::Int)
+    show_resumable(io, node, indent, prec)
 end
 
 function Base.show(io::IO, mime::MIME"text/plain", node::Resumable)
-    if length(node.meta) == 0
-        println("@finch")
-        show(io, mime, node.root)
-    else
-        println("@finch")
-        show(io, mime, node.meta)
-        show(io, mime, node.root)
-    end
+    show_resumable(io, node, 0, 0)
 end
 
-show_with_indent(io, node, indent, prec) = (print("@finch("); Base.show_unquoted(io, node, indent, prec); print(")"))
-function show_with_indent(io, node::FinchNode, indent, prec)
-    if Finch.FinchNotation.isstateful(node)
-        println("@finch begin")
-        Finch.FinchNotation.display_statement(io, MIME"text/plain"(), node, indent + 2)
-        println()
-        print(" "^indent, "end")
-    else
-        print("@finch("); Finch.FinchNotation.display_expression(io, MIME"text/plain"(), node); print(")")
-    end
-end
-
-function show_with_indent_meta(io, node::FinchNode, indent, prec, meta)
-    if Finch.FinchNotation.isstateful(node)
-        print("@finch begin")
-        println(meta)
-        Finch.FinchNotation.display_statement(io, MIME"text/plain"(), node, indent + 2)
-        println()
-        print(" "^indent, "end")
-    else
-        print("@finch("); print(meta); Finch.FinchNotation.display_expression(io, MIME"text/plain"(), node); print(")")
-    end
-end
-
-function show_with_indent_meta(io, node, indent, prec, meta)
-    print("@finch("); print(meta); Finch.FinchNotation.display_expression(io, MIME"text/plain"(), node); print(")")
-end
-
-dictkeys(d::Dict) = (collect(keys(d))...,)
-dictvalues(d::Dict) = (collect(values(d))...,)
-
-namedtuple(d::Dict{Symbol,T}) where {T} =
-    NamedTuple{dictkeys(d)}(dictvalues(d))
-
-function Base.show_unquoted(io::IO, node::Resumable, indent::Int, prec::Int)
-    if length(node.meta) == 0
-        show_with_indent(io, node.root, indent, prec)
-    else
-        show_with_indent_meta(io, node.root, indent, prec, namedtuple(node.meta))
-    end
-end
-
-
-
-function Base.show(io::IO, node::Resumable)
-    if length(node.meta) == 0
-        println("@finch")
-        show(io, MIME"text/plain"(), node.root)
-    else
-        println("@finch")
-        show(io, MIME"text/plain"(), namedtuple(node.meta))
-        show(io, MIME"text/plain"(), node.root)
-    end
-end
 
 
 function number_resumables(code)
     counter = 0
-    Postwalk(node -> 
-                    if node isa Resumable 
-                        node.meta[:number] = counter
-                        counter+=1 
-                        node
-                    else
-                        node
-                    end )(code)
+    Rewrite(Postwalk(node -> 
+        if node isa Resumable 
+            node.meta[:number] = counter
+            counter+=1 
+            node
+        end
+    ))(code)
 end
 
 function record_methods(code)
-    Postwalk(node -> 
-    if node isa Resumable 
-        loc = which(lower, (typeof(node.root), typeof(node.ctx), typeof(node.style)))
-         node.meta[:which] = (splitpath(string(loc.file))[end], loc.line)
-        node
-    else
-        node
-    end )(code)
+    Rewrite(Postwalk(node ->
+        if node isa Resumable 
+            loc = which(lower, (typeof(node.root), typeof(node.ctx), typeof(node.style)))
+            node.meta[:which] = (splitpath(string(loc.file))[end], loc.line)
+            node
+        else
+            node
+        end
+    ))(code)
 end
 
 """
@@ -291,7 +263,6 @@ end
     begin_debug(code; algebra = DefaultAlgebra(), sdisplay=true)
 
 Takes a Finch Program and stages it within a DebugContext, defined within a particualr algebra.
-Displays the initial code if `sdisplay`.
  """
 function begin_debug(code; algebra = DefaultAlgebra(),  sdisplay=true)
     ctx = DebugContext(LowerJulia(algebra = algebra), SimpleStepControl(step=0))
@@ -349,11 +320,12 @@ Checks if Julia AST has any Resumables in it.
 """
 function iscompiled(code:: Expr)
     found = false
-    Postwalk(node -> 
-                    if node isa Resumable 
-                        found = true
-                        node
-                    end )(code)
+    Postwalk(node ->
+        if node isa Resumable 
+            found = true
+            node
+        end
+    )(code)
     !found
 end
 
