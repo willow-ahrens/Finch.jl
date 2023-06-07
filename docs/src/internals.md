@@ -196,7 +196,7 @@ end
 debug = begin_debug(code)
 
 while true
-    global debug = step_code(debug, sdisplay=false) # Runs one step of compilation
+    global debug = step_code(debug) # Runs one step of compilation
     if iscompiled(debug.code) # Checks if we are done compiling.
         break
     end
