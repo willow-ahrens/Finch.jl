@@ -61,6 +61,7 @@ const offset = Offset()
 
 Base.getindex(arr::Offset, d, i) = d - i
 
+#=
 struct VirtualOffset end
 
 Base.show(io::IO, ex::VirtualOffset) = Base.show(io, MIME"text/plain"(), ex)
@@ -102,6 +103,7 @@ function get_reader(::VirtualOffset, ctx, proto_delta::typeof(defaultread), prot
         )
     )
 end
+=#
 
 struct StaticOffset{Delta}
     delta::Delta
@@ -116,6 +118,7 @@ const staticoffset = StaticOffset
 
 Base.getindex(arr::StaticOffset, i) = i - arr.delta
 
+#=
 struct VirtualStaticOffset
     delta
 end
@@ -156,6 +159,7 @@ function get_reader(arr::VirtualStaticOffset, ctx, proto_idx::typeof(defaultread
         ])
     )
 end
+=#
 
 struct Window{Start, Stop}
     start::Start

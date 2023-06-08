@@ -125,7 +125,7 @@ function virtual_resize!(tns, ctx, dims...)
             end)
         end
     end
-    (tns, nodim)
+    tns
 end
 
 """
@@ -155,7 +155,7 @@ end
 
 function virtual_resize!(tns::FinchNode, ctx, dims...)
     if tns.kind === variable
-        return (ctx.bindings[tns], eldim) = virtual_resize!(ctx.bindings[tns], ctx, dims...)
+        return ctx.bindings[tns] = virtual_resize!(ctx.bindings[tns], ctx, dims...)
     else
         error("unimplemented")
     end

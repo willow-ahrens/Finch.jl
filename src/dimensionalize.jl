@@ -144,10 +144,10 @@ function infer_dimensions_access(node, ctx, tns)
     end
     shape = map(resolvedim, map((a, b) -> resultdim(ctx.ctx, a, b), shape, map(last, res)))
     if node.mode.kind === updater
-        eldim = virtual_resize!(tns, ctx.ctx, shape...)
-        (access(tns, node.mode, idxs...), eldim)
+        tns = virtual_resize!(tns, ctx.ctx, shape...)
+        access(tns, node.mode, idxs...)
     else
-        (access(tns, node.mode, idxs...), virtual_elaxis(tns, ctx.ctx, shape...))
+        access(tns, node.mode, idxs...)
     end
 end
 

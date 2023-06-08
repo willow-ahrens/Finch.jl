@@ -101,7 +101,7 @@ function level_default end
 virtual_size(tns::AbstractVirtualFiber, ctx) = virtual_level_size(tns.lvl, ctx)
 function virtual_resize!(tns::AbstractVirtualFiber, ctx, dims...)
     tns.lvl = virtual_level_resize!(tns.lvl, ctx, dims...)
-    (tns, nodim)
+    tns
 end
 virtual_eltype(tns::AbstractVirtualFiber) = virtual_level_eltype(tns.lvl)
 virtual_elaxis(tns::AbstractVirtualFiber) = nodim

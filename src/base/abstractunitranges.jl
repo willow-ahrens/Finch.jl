@@ -20,7 +20,7 @@ function virtual_size(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler)
     return [Extent(literal(1), value(:(length($(arr.ex))), Int)),]
 end
 
-virtual_resize!(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, idx_dim) = (arr, arr.target)
+virtual_resize!(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, idx_dim) = arr
 virtual_eldim(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, idx_dim) = arr.target
 
 function get_reader(arr::VirtualAbstractUnitRange, ctx, proto_idx::typeof(defaultread))
