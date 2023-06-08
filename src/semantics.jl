@@ -114,8 +114,6 @@ function virtual_eltype(x::FinchNode)
     end
 end
 
-virtual_elaxis(tns, ctx, dims...) = nodim
-
 function virtual_resize!(tns, ctx, dims...)
     for (dim, ref) in zip(dims, virtual_size(tns, ctx))
         if dim !== nodim && ref !== nodim #TODO this should be a function like checkdim or something haha
@@ -140,14 +138,6 @@ virtual_size(tns, ctx, eldim) = virtual_size(tns, ctx)
 function virtual_size(tns::FinchNode, ctx)
     if tns.kind === variable
         return virtual_size(ctx.bindings[tns], ctx)
-    else
-        return error("unimplemented")
-    end
-end
-
-function virtual_elaxis(tns::FinchNode, ctx, dims...)
-    if tns.kind === variable
-        return virtual_elaxis(ctx.bindings[tns], ctx, dims...)
     else
         return error("unimplemented")
     end

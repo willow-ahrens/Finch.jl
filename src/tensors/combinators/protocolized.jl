@@ -41,9 +41,6 @@ end
 function virtual_resize!(arr::VirtualProtocolizedArray, ctx::AbstractCompiler, dim)
     virtual_resize!(arr.body, ctx, dim)
 end
-function virtual_eldim(arr::VirtualProtocolizedArray, ctx::AbstractCompiler, idx_dim)
-    virtual_eldim(arr.body, ctx, idx_dim)
-end
 
 function get_reader(arr::VirtualProtocolizedArray, ctx, proto_idxs...)
     println(:hiiii)
