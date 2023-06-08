@@ -24,7 +24,7 @@ virtual_size(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, dim) = (shift
 virtual_resize!(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, idx_dim) = (arr, arr.target)
 virtual_eldim(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, idx_dim) = arr.target
 
-function get_reader(arr::VirtualAbstractUnitRange, ctx, proto_idx)
+function get_reader(arr::VirtualAbstractUnitRange, ctx, proto_idx::typeof(defaultread))
     Furlable(
         size = (nodim,),
         body = (ctx, ext) -> Lookup(

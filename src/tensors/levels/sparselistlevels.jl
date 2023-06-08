@@ -210,7 +210,7 @@ function freeze_level!(lvl::VirtualSparseListLevel, ctx::AbstractCompiler, pos_s
     return lvl
 end
 
-function get_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::Union{Nothing, typeof(walk)}, protos...)
+function get_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::Union{typeof(defaultread), typeof(walk)}, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp
@@ -356,7 +356,7 @@ end
 is_laminable_updater(lvl::VirtualSparseListLevel, ctx, protos...) = false
 get_updater(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, protos...) =
     get_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
-function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseListLevel}, ctx, ::Union{Nothing, typeof(extrude)}, protos...)
+function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseListLevel}, ctx, ::Union{typeof(defaultupdate), typeof(extrude)}, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp

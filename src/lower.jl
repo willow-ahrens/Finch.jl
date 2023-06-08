@@ -250,7 +250,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
         #TODO ideally this would be easy to request at an appropriate time.
         root_2 = Rewrite(Postwalk(@rule access(~a::isvirtual, ~m, ~i...) => begin
             if !isempty(i) && root.idx == i[end]
-                tns_2 = unfurl_access(access(a, m, i...), UnfurlVisitor(ctx, root.idx, root.ext.val), root.ext.val, a.val, [nothing for _ in i]...)
+                tns_2 = unfurl_access(access(a, m, i...), UnfurlVisitor(ctx, root.idx, root.ext.val), root.ext.val, a.val, [(m.kind === reader ? defaultread : defaultupdate) for _ in i]...)
                 access(tns_2, m, i[1:end-1]..., i[end])
             end
         end))(root)

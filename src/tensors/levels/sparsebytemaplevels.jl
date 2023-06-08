@@ -237,7 +237,7 @@ function freeze_level!(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, po
     return lvl
 end
 
-function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Union{Nothing, typeof(walk)}, protos...)
+function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Union{typeof(defaultread), typeof(walk)}, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
@@ -419,11 +419,11 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::type
     )
 end
 
-is_laminable_updater(lvl::VirtualSparseByteMapLevel, ctx, ::Union{Nothing, typeof(laminate), typeof(extrude)}, protos...) =
+is_laminable_updater(lvl::VirtualSparseByteMapLevel, ctx, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...) =
     is_laminable_updater(lvl.lvl, ctx, protos...)
 get_updater(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, protos...) = 
     get_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
-function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseByteMapLevel}, ctx, ::Union{Nothing, typeof(extrude), typeof(laminate)}, protos...)
+function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseByteMapLevel}, ctx, ::Union{typeof(defaultupdate), typeof(extrude), typeof(laminate)}, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp

@@ -12,8 +12,8 @@ isprotocol(::typeof(gallop)) = true
 follow(i) = i
 isprotocol(::typeof(follow)) = true
 
-defaultwrite(i) = i
-isprotocol(::typeof(defaultwrite)) = true
+defaultupdate(i) = i
+isprotocol(::typeof(defaultupdate)) = true
 
 laminate(i) = i
 isprotocol(::typeof(laminate)) = true
