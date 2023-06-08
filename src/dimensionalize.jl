@@ -11,25 +11,6 @@ getstop(::NoDimension) = error("asked for stop of dimensionless range")
     dims = Dict()
     hints = Dict()
 end
-function (ctx::DeclareDimensions)(node, dim)
-    if istree(node)
-        similarterm(node, operation(node), map(arg->ctx(arg, nodim), arguments(node)))
-    else
-        node
-    end
-end
-
-@kwdef mutable struct InferDimensions
-    ctx
-    dims = Dict()
-end
-function (ctx::InferDimensions)(node)
-    if istree(node)
-        (similarterm(node, operation(node), map(first, map(ctx, arguments(node)))), nodim)
-    else
-        (node, nodim)
-    end
-end
 
 @kwdef struct Dimensionalize
     body
@@ -73,21 +54,27 @@ function lower(prgm, ctx::AbstractCompiler,  ::DimensionalizeStyle)
 end
 
 function dimensionalize!(prgm, ctx) 
-    prgm = Rewrite(Postwalk(x -> if x isa Dimensionalize x.body end))(prgm)
-    prgm = DeclareDimensions(ctx=ctx)(prgm, nodim)
+    prgm = Rewrite(Postwalk(x -> if isvirtual(x) && x.val isa Dimensionalize x.val.body end))(prgm)
+    prgm = DeclareDimensions(ctx=ctx)(prgm)
     return prgm
 end
 
-function (ctx::DeclareDimensions)(node::Dimensionalize, dim)
-    ctx(node.body, dim)
-end
-(ctx::DeclareDimensions)(node) = ctx(node, nodim)
-function (ctx::DeclareDimensions)(node::FinchNode, dim)
-    if node.kind === index
-        ctx.dims[node] = resultdim(ctx.ctx, get(ctx.dims, node, nodim), dim)
-        return node
-    elseif node.kind === access && node.tns.kind === virtual
-        return declare_dimensions_access(node, ctx, node.tns.val, dim)
+function (ctx::DeclareDimensions)(node::FinchNode)
+    if node.kind === access
+        @capture node access(~tns::isvirtual, ~mode, ~idxs::All(isindex)...)
+        tns = tns.val
+        if node.mode.kind !== reader && node.tns.kind === virtual && haskey(ctx.hints, getroot(tns))
+            shape = map(suggest, virtual_size(tns, ctx.ctx))
+            push!(ctx.hints[getroot(tns)], node)
+        else
+            shape = virtual_size(tns, ctx.ctx)
+        end
+        length(idxs) > length(shape) && throw(DimensionMismatch("more indices than dimensions in $(sprint(show, MIME("text/plain"), node))"))
+        length(idxs) < length(shape) && throw(DimensionMismatch("less indices than dimensions in $(sprint(show, MIME("text/plain"), node))"))
+        for (dim, idx) in zip(shape, idxs)
+            ctx.dims[idx] = resultdim(ctx.ctx, dim, get(ctx.dims, idx, nodim))
+        end
+        node
     elseif node.kind === loop && node.ext == index(:(:))
         body = ctx(node.body)
         return loop(node.idx, cache_dim!(ctx.ctx, getname(node.idx), resolvedim(ctx.dims[node.idx])), body)
@@ -98,58 +85,26 @@ function (ctx::DeclareDimensions)(node::FinchNode, dim)
         node
     elseif node.kind === freeze
         if haskey(ctx.hints, node.tns)
-            map(InferDimensions(ctx.ctx, ctx.dims), ctx.hints[node.tns])
+            shape = virtual_size(node.tns, ctx.ctx)
+            shape = map(suggest, shape)
+            for hint in ctx.hints[node.tns]
+                @assert @capture hint access(~tns::isvirtual, updater(~mode), ~idxs::All(isindex)...)
+                shape = map(zip(shape, idxs)) do (dim, idx)
+                    resultdim(ctx.ctx, dim, ctx.dims[idx])
+                end
+            end
+            #TODO tns ignored here
+            tns = virtual_resize!(node.tns, ctx.ctx, shape...)
             delete!(ctx.hints, node.tns)
         end
         node
     elseif istree(node)
-        return similarterm(node, operation(node), map(arg->ctx(arg, nodim), arguments(node)))
+        return similarterm(node, operation(node), map(ctx, arguments(node)))
     else
         return node
     end
 end
-function (ctx::InferDimensions)(node::FinchNode)
-    if node.kind === index
-        return (node, ctx.dims[node])
-    elseif node.kind === access && node.mode.kind === updater && node.tns.kind === virtual
-        return infer_dimensions_access(node, ctx, node.tns.val)
-    elseif istree(node)
-        FinchNotation.isstateful(node) && @assert false
-        return (similarterm(node, operation(node), map(first, map(ctx, arguments(node)))), nodim)
-    else
-        return (node, nodim)
-    end
-end
 
-declare_dimensions_access(node, ctx, tns::Dimensionalize, dim) = declare_dimensions_access(node, ctx, tns.body, dim)
-function declare_dimensions_access(node, ctx, tns, eldim)
-    if node.mode.kind !== reader && node.tns.kind === virtual && haskey(ctx.hints, getroot(node.tns))
-        shape = map(suggest, virtual_size(tns, ctx.ctx))
-        push!(ctx.hints[getroot(tns)], node)
-    else
-        shape = virtual_size(tns, ctx.ctx)
-    end
-    length(node.idxs) > length(shape) && throw(DimensionMismatch("more indices than dimensions in $(sprint(show, MIME("text/plain"), node))"))
-    length(node.idxs) < length(shape) && throw(DimensionMismatch("less indices than dimensions in $(sprint(show, MIME("text/plain"), node))"))
-    idxs = map(ctx, node.idxs, shape)
-    access(tns, node.mode, idxs...)
-end
-
-function infer_dimensions_access(node, ctx, tns)
-    res = map(ctx, node.idxs)
-    idxs = map(first, res)
-    shape = virtual_size(tns, ctx.ctx) #This is an assignment access, so we don't need to add an eldim here
-    if node.mode.kind === updater
-        shape = map(suggest, shape)
-    end
-    shape = map(resolvedim, map((a, b) -> resultdim(ctx.ctx, a, b), shape, map(last, res)))
-    if node.mode.kind === updater
-        tns = virtual_resize!(tns, ctx.ctx, shape...)
-        access(tns, node.mode, idxs...)
-    else
-        access(tns, node.mode, idxs...)
-    end
-end
 
 struct UnknownDimension end
 
