@@ -66,7 +66,7 @@ end
 end
 
 virtual_default(tns::Furlable) = Some(tns.val)
-virtual_size(tns::Furlable, ::AbstractCompiler, dim=nothing) = tns.size
+virtual_size(tns::Furlable, ::AbstractCompiler) = tns.size
 
 FinchNotation.finch_leaf(x::Furlable) = virtual(x)
 
@@ -126,7 +126,7 @@ end
 function unfurl_access(node, ctx, eldim, tns::Furlable, protos...)
     if !isempty(node.idxs)
         if ctx.idx == node.idxs[end]
-            tns = Unfurled(exfurl(tns.body(ctx.ctx, virtual_size(tns, ctx.ctx, eldim)[end]), ctx.ctx, node.idxs[end], virtual_size(tns, ctx.ctx, eldim)[end]), 1, tns)
+            tns = Unfurled(exfurl(tns.body(ctx.ctx, virtual_size(tns, ctx.ctx)[end]), ctx.ctx, node.idxs[end], virtual_size(tns, ctx.ctx)[end]), 1, tns)
             return tns
         else
             if tns.tight !== nothing && !query(call(==, measure(ctx.ext), 1), ctx.ctx)

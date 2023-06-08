@@ -131,15 +131,15 @@ end
 """
     virtual_size(tns, ctx)
 
-Return a tuple of the dimensions of `tns` in the context `ctx` with access
-mode `mode`. This is a function similar in spirit to `Base.axes`.
+Return a tuple of the dimensions of `tns` in the context `ctx`. This is a
+function similar in spirit to `Base.axes`.
 """
 function virtual_size end
 
 virtual_size(tns, ctx, eldim) = virtual_size(tns, ctx)
-function virtual_size(tns::FinchNode, ctx, eldim = nodim)
+function virtual_size(tns::FinchNode, ctx)
     if tns.kind === variable
-        return virtual_size(ctx.bindings[tns], ctx, eldim)
+        return virtual_size(ctx.bindings[tns], ctx)
     else
         return error("unimplemented")
     end

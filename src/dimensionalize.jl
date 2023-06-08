@@ -124,10 +124,10 @@ end
 declare_dimensions_access(node, ctx, tns::Dimensionalize, dim) = declare_dimensions_access(node, ctx, tns.body, dim)
 function declare_dimensions_access(node, ctx, tns, eldim)
     if node.mode.kind !== reader && node.tns.kind === virtual && haskey(ctx.hints, getroot(node.tns))
-        shape = map(suggest, virtual_size(tns, ctx.ctx, eldim))
+        shape = map(suggest, virtual_size(tns, ctx.ctx))
         push!(ctx.hints[getroot(tns)], node)
     else
-        shape = virtual_size(tns, ctx.ctx, eldim)
+        shape = virtual_size(tns, ctx.ctx)
     end
     length(node.idxs) > length(shape) && throw(DimensionMismatch("more indices than dimensions in $(sprint(show, MIME("text/plain"), node))"))
     length(node.idxs) < length(shape) && throw(DimensionMismatch("less indices than dimensions in $(sprint(show, MIME("text/plain"), node))"))

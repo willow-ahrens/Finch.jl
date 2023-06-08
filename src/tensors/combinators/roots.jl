@@ -17,7 +17,7 @@ end
 
 FinchNotation.finch_leaf(x::RootArray) = virtual(x)
 
-virtual_size(tns::RootArray, ctx, dim=nothing) = virtual_size(tns.body, ctx, dim)
+virtual_size(tns::RootArray, ctx) = virtual_size(tns.body, ctx)
 virtual_resize!(tns::RootArray, ctx, dims...) = virtual_resize!(tns.body, ctx, dims...)
 virtual_default(tns::RootArray, ctx) = virtual_default(tns.body, ctx)
 

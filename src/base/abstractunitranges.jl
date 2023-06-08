@@ -16,11 +16,10 @@ function virtualize(ex, arrtype::Type{<:AbstractUnitRange{T}}, ctx, tag=:tns) wh
     VirtualAbstractUnitRange(sym, target, arrtype, T)
 end
 
-function virtual_size(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, ::NoDimension) #TODO I'm sure this has unintended consequences
+function virtual_size(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler)
     return [Extent(literal(1), value(:(length($(arr.ex))), Int)),]
 end
 
-virtual_size(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, dim) = (shiftdim(arr.target, call(-, getstart(dim), getstart(arr.target))),)
 virtual_resize!(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, idx_dim) = (arr, arr.target)
 virtual_eldim(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, idx_dim) = arr.target
 

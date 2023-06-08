@@ -9,6 +9,7 @@ const permit = Permit()
 
 Base.getindex(arr::Permit, i) = i
 
+#=
 struct VirtualPermit end
 
 Base.show(io::IO, ex::VirtualPermit) = Base.show(io, MIME"text/plain"(), ex)
@@ -45,6 +46,7 @@ function get_reader(::VirtualPermit, ctx, proto_idx::typeof(defaultread))
         ])
     )
 end
+=#
 
 struct Offset end
 
@@ -72,7 +74,7 @@ virtualize(ex, ::Type{Offset}, ctx) = VirtualOffset()
 
 lower(tns::VirtualOffset, ctx::AbstractCompiler, ::DefaultStyle) = :(Offset())
 
-virtual_size(arr::VirtualOffset, ctx::AbstractCompiler, dim) = (nodim, nodim)
+virtual_size(arr::VirtualOffset, ctx::AbstractCompiler) = (nodim, nodim)
 virtual_resize!(arr::VirtualOffset, ctx::AbstractCompiler, idx_dim, delta_dim) = (arr, virtual_eldim(arr, ctx, delta_dim, idx_dim))
 virtual_eldim(arr::VirtualOffset, ctx::AbstractCompiler, idx_dim, delta_dim) = combinedim(ctx, widendim(shiftdim(idx_dim, call(-, getstop(delta_dim)))), widendim(idx_dim))
 
@@ -131,7 +133,7 @@ end
 
 lower(tns::VirtualStaticOffset, ctx::AbstractCompiler, ::DefaultStyle) = :(StaticOffset($tns.delta))
 
-virtual_size(arr::VirtualStaticOffset, ctx::AbstractCompiler, dim = nodim) = (widendim(shiftdim(dim, getstop(arr.delta))),)
+virtual_size(arr::VirtualStaticOffset, ctx::AbstractCompiler) = (widendim(shiftdim(dim, getstop(arr.delta))),)
 virtual_resize!(arr::VirtualStaticOffset, ctx::AbstractCompiler, idx_dim) = (arr, virtual_eldim(arr, ctx, idx_dim))
 virtual_eldim(arr::VirtualStaticOffset, ctx::AbstractCompiler, idx_dim) = widendim(shiftdim(idx_dim, call(-, getstop(arr.delta))))
 
@@ -173,6 +175,7 @@ function Base.getindex(arr::Window, i)
     vec.start + i - 1
 end
 
+#=
 struct VirtualWindow
     target
 end
@@ -206,3 +209,4 @@ function get_reader(arr::VirtualWindow, ctx, proto_idx::typeof(defaultread))
             Shift(truncate(tns, ctx, ext, arr.target), call(-, getstart(ext), getstart(arr.target)))
     )
 end
+=#
