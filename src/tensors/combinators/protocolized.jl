@@ -46,6 +46,7 @@ function virtual_eldim(arr::VirtualProtocolizedArray, ctx::AbstractCompiler, idx
 end
 
 function get_reader(arr::VirtualProtocolizedArray, ctx, proto_idxs...)
+    println(:hiiii)
     VirtualProtocolizedArray(get_reader(arr.body, ctx, arr.protos...), arr.protos)
 end
 function get_updater(arr::VirtualProtocolizedArray, ctx, proto_idxs...)
@@ -115,8 +116,8 @@ visit_simplify(node::VirtualProtocolizedArray) = VirtualProtocolizedArray(visit_
     guard => VirtualProtocolizedArray(body, node.protos)
 end
 
-function unfurl_access(node, ctx, eldim, tns::VirtualProtocolizedArray)
-    VirtualProtocolizedArray(unfurl_access(node, ctx, eldim, tns.body), tns.protos)
+function unfurl_access(node, ctx, eldim, tns::VirtualProtocolizedArray, protos...)
+    VirtualProtocolizedArray(unfurl_access(node, ctx, eldim, tns.body, tns.protos...), tns.protos)
 end
 
 function select_access(node, ctx::Finch.SelectVisitor, tns::VirtualProtocolizedArray)

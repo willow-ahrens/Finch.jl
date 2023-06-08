@@ -35,8 +35,8 @@ declare!(tns::RootArray, ctx::LowerJulia, init) = declare!(tns.body, ctx, init)
 thaw!(tns::RootArray, ctx::LowerJulia) = thaw!(tns.body, ctx)
 freeze!(tns::RootArray, ctx::LowerJulia) = freeze!(tns.body, ctx)
 
-function unfurl_access(node, ctx, eldim, tns::RootArray)
-    unfurl_access(node, ctx, eldim, tns.body)
+function unfurl_access(node, ctx, eldim, tns::RootArray, protos...)
+    unfurl_access(node, ctx, eldim, tns.body, protos...)
 end
 
 function select_access(node, ctx::Finch.SelectVisitor, tns::RootArray)

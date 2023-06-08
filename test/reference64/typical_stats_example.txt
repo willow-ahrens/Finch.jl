@@ -57,8 +57,8 @@ quote
                     x_min_val = min(0.0, x_min_val)
                 end
                 X_lvl_2_val_2 = X_lvl_2.val[X_lvl_q]
-                x_min_val = min(x_min_val, X_lvl_2_val_2)
-                x_max_val = max(x_max_val, X_lvl_2_val_2)
+                x_min_val = min(X_lvl_2_val_2, x_min_val)
+                x_max_val = max(X_lvl_2_val_2, x_max_val)
                 x_sum_val = X_lvl_2_val_2 + x_sum_val
                 x_var_val = X_lvl_2_val_2 * X_lvl_2_val_2 + x_var_val
                 X_lvl_q += 1

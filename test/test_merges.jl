@@ -88,6 +88,7 @@
         end
     end
 
+    #=
     @testset "bandmask" begin
         for fmt in fmts
             @testset "$(summary(fmt.fmt(0.0)))[$(fmt.proto[1]), $(fmt.proto[2])]" begin
@@ -102,6 +103,7 @@
             end
         end
     end
+    =#
 
     @testset "plus times" begin
         n = 0

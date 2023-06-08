@@ -148,10 +148,10 @@ function (ctx::InstantiateTensors)(node::FinchNode)
         idxs = node.idxs
         if node.mode.kind === reader
             get(ctx.ctx.modes, getroot(node.tns), reader()).kind === reader || throw(LifecycleError("Cannot read update-only $(node.tns) (perhaps same tensor on both lhs and rhs?)"))
-            return access(get_reader(tns, ctx.ctx, [nothing for _ in idxs]...), node.mode, idxs...)
+            return access(tns, node.mode, idxs...)
         else
             ctx.ctx.modes[getroot(node.tns)].kind === updater || throw(LifecycleError("Cannot update read-only $(node.tns) (perhaps same tensor on both lhs and rhs?)"))
-            return access(get_updater(tns, ctx.ctx, [nothing for _ in idxs]...), node.mode, idxs...)
+            return access(tns, node.mode, idxs...)
         end
     elseif istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))
@@ -250,7 +250,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
         #TODO ideally this would be easy to request at an appropriate time.
         root_2 = Rewrite(Postwalk(@rule access(~a::isvirtual, ~m, ~i...) => begin
             if !isempty(i) && root.idx == i[end]
-                tns_2 = unfurl_access(access(a, m, i...), UnfurlVisitor(ctx, root.idx, root.ext.val), root.ext.val, a.val)
+                tns_2 = unfurl_access(access(a, m, i...), UnfurlVisitor(ctx, root.idx, root.ext.val), root.ext.val, a.val, [nothing for _ in i]...)
                 access(tns_2, m, i[1:end-1]..., get_furl_root(i[end]))
             end
         end))(root)

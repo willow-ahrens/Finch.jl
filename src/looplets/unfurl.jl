@@ -104,8 +104,19 @@ struct FormatLimitation <: Exception
 end
 FormatLimitation() = FormatLimitation("")
 
-unfurl_access(node, ctx, eldim, tns) = tns
-function unfurl_access(node, ctx, eldim, tns::Furlable)
+function unfurl_access(node, ctx, eldim, tns, protos...)
+    if node.mode.kind === reader
+        tns_2 = get_reader(tns, ctx.ctx, protos...)
+    else
+        tns_2 = get_updater(tns, ctx.ctx, protos...)
+    end
+    if tns_2 == tns
+        tns
+    else
+        unfurl_access(node, ctx, eldim, tns_2, protos...)
+    end
+end
+function unfurl_access(node, ctx, eldim, tns::Furlable, protos...)
     if !isempty(node.idxs)
         if ctx.idx == get_furl_root(node.idxs[end])
             tns = Unfurled(exfurl(tns.body(ctx.ctx, virtual_size(tns, ctx.ctx, eldim)[end]), ctx.ctx, node.idxs[end], virtual_size(tns, ctx.ctx, eldim)[end]), 1, tns)
@@ -119,6 +130,9 @@ function unfurl_access(node, ctx, eldim, tns::Furlable)
     end
     return node
 end
+
+get_reader(tns::Furlable, ctx::LowerJulia, idxs...) = tns
+get_updater(tns::Furlable, ctx::LowerJulia, idxs...) = tns
 
 #TODO this is a bit of a hack, it would be much better to somehow add a
 #statement like writes[] += 1 corresponding to tensor reads/writes that need to

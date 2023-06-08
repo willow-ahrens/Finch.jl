@@ -226,6 +226,7 @@ function thaw_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos)
             $(lvl.ex).ptr[$p] -= $(lvl.ex).ptr[$p + 1]
         end
         $(lvl.ex).ptr[1] = 1
+        $(lvl.qos_fill) = length($(lvl.ex).tbl)
     end)
     lvl.lvl = thaw_level!(lvl.lvl, ctx, call(*, pos, lvl.shape))
     return lvl
@@ -392,12 +393,7 @@ get_updater(fbr::VirtualSubFiber{VirtualSparseHashLevel}, ctx, protos...) =
     get_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
 function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseHashLevel}, ctx, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
-    return Thunk(
-        preamble = quote
-            $(lvl.qos_fill) = length($(lvl.ex).tbl)
-        end,
-        body = (ctx) -> get_updater_hash_helper(lvl, ctx, pos, fbr.dirty, (), protos...)
-    )
+    get_updater_hash_helper(lvl, ctx, pos, fbr.dirty, (), protos...)
 end
 
 function get_updater_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, fbr_dirty, coords, p::Union{Nothing, typeof(extrude)}, protos...)
