@@ -251,7 +251,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
         root_2 = Rewrite(Postwalk(@rule access(~a::isvirtual, ~m, ~i...) => begin
             if !isempty(i) && root.idx == i[end]
                 tns_2 = unfurl_access(access(a, m, i...), UnfurlVisitor(ctx, root.idx, root.ext.val), root.ext.val, a.val, [nothing for _ in i]...)
-                access(tns_2, m, i[1:end-1]..., get_furl_root(i[end]))
+                access(tns_2, m, i[1:end-1]..., i[end])
             end
         end))(root)
         #If unfurling has no effect, lower the body

@@ -127,7 +127,3 @@ end
 (ctx::CycleVisitor)(node::VirtualProtocolizedArray) = VirtualProtocolizedArray(ctx(node.body), node.protos)
 
 getroot(tns::VirtualProtocolizedArray) = getroot(tns.body)
-
-function get_furl_root_access(idx, tns::VirtualProtocolizedArray)
-    get_furl_root_access(idx, tns.body)
-end

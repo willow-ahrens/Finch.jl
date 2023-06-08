@@ -118,7 +118,7 @@ function unfurl_access(node, ctx, eldim, tns, protos...)
 end
 function unfurl_access(node, ctx, eldim, tns::Furlable, protos...)
     if !isempty(node.idxs)
-        if ctx.idx == get_furl_root(node.idxs[end])
+        if ctx.idx == node.idxs[end]
             tns = Unfurled(exfurl(tns.body(ctx.ctx, virtual_size(tns, ctx.ctx, eldim)[end]), ctx.ctx, node.idxs[end], virtual_size(tns, ctx.ctx, eldim)[end]), 1, tns)
             return tns
         else
@@ -153,14 +153,6 @@ function exfurl(tns, ctx, idx::FinchNode, ext)
         exfurl_access(tns, ctx, ext, idx.tns.val)
     else
         error("unimplemented")
-    end
-end
-
-function get_furl_root_access(idx, tns::Furlable)
-    if tns.fuse !== nothing
-        get_furl_root(idx.idxs[end])
-    else
-        nothing
     end
 end
 

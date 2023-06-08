@@ -106,7 +106,3 @@ function lower(node::Unfurled, ctx::AbstractCompiler, ::DefaultStyle)
 end
 
 getroot(tns::Unfurled) = getroot(tns.arr)
-
-function get_furl_root_access(idx, tns::Unfurled)
-    get_furl_root_access(idx, tns.body)
-end

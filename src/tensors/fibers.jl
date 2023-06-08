@@ -229,20 +229,6 @@ function trim!(fbr::VirtualFiber, ctx)
     VirtualFiber(trim_level!(fbr.lvl, ctx, literal(1)))
 end
 
-
-get_furl_root(idx) = nothing
-function get_furl_root(idx::FinchNode)
-    if idx.kind === index
-        return idx
-    elseif idx.kind === access && idx.tns.kind === virtual
-        get_furl_root_access(idx, idx.tns.val)
-    else
-        return nothing
-    end
-end
-get_furl_root_access(idx, tns) = nothing
-#These are also good examples of where modifiers might be great.
-
 supports_reassembly(lvl) = false
 
 function Base.show(io::IO, fbr::Fiber)

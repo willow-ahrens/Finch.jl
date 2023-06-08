@@ -50,10 +50,6 @@ end
 lowerjulia_access(ctx::AbstractCompiler, node, tns::RootArray) = 
     lowerjulia_access(ctx, node, tns.body)
 
-function get_furl_root_access(idx, tns::RootArray)
-    get_furl_root_access(idx, tns.body)
-end
-
 getdata(tns::RootArray) = tns
 
 function getdata(node::FinchNode)
