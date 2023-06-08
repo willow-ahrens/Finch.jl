@@ -104,6 +104,13 @@ struct FormatLimitation <: Exception
 end
 FormatLimitation() = FormatLimitation("")
 
+"""
+    unfurl_access(node, ctx, eldim, tns, protos...)
+    
+Return an array object (usually a looplet nest) for lowering the virtual tensor
+`tns`.  `protos` is the list of protocols that should be used for each index,
+but one doesn't need to unfurl all the indices at once.
+"""
 function unfurl_access(node, ctx, eldim, tns, protos...)
     if node.mode.kind === reader
         tns_2 = get_reader(tns, ctx.ctx, protos...)
