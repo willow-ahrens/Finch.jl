@@ -28,8 +28,10 @@ function lower_global(prgm, ctx)
             $(begin
                 prgm = ScopeVisitor()(prgm)
                 prgm = wrapperize(prgm, ctx_2)
+                prgm = concordize(prgm, ctx_2)
                 prgm = close_scope(prgm, LifecycleVisitor())
                 prgm = dimensionalize!(prgm, ctx_2)
+                prgm = concordize(prgm, ctx_2, reorder=true)
                 prgm = simplify(prgm, ctx_2) #appears necessary
                 contain(ctx_2) do ctx_3
                     ctx_3(prgm)
