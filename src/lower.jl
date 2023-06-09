@@ -248,10 +248,23 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
         @assert root.idx.kind === index
         #First, unfurl
         #TODO ideally this would be easy to request at an appropriate time.
-        root_2 = Rewrite(Postwalk(@rule access(~a::isvirtual, ~m, ~i...) => begin
-            if !isempty(i) && root.idx == i[end]
-                tns_2 = unfurl_access(access(a, m, i...), UnfurlVisitor(ctx, root.idx, root.ext.val), root.ext.val, a.val, [(m.kind === reader ? defaultread : defaultupdate) for _ in i]...)
-                access(tns_2, m, i[1:end-1]..., i[end])
+        root_2 = Rewrite(Postwalk(@rule access(~tns::isvirtual, ~mode, ~idxs...) => begin
+            if !isempty(idxs) && root.idx == idxs[end]
+                tns = tns.val
+                protos = [(mode.kind === reader ? defaultread : defaultupdate) for _ in idxs]
+                if mode.kind === reader
+                    tns_2 = unfurl_reader(tns, ctx, protos...)
+                else
+                    tns_2 = unfurl_updater(tns, ctx, protos...)
+                end
+                tns_3 = unfurl_access(tns_2, ctx, protos...)
+                access(tns_3, mode, idxs...)
+            #TODO
+            #else
+            #    if tns.tight !== nothing && !query(call(==, measure(ctx.ext), 1), ctx.ctx)
+            #        throw(FormatLimitation("$(typeof(something(tns.tight))) does not support random access, must loop column major over output indices first."))
+            #    end
+            #return node.tns
             end
         end))(root)
         #If unfurling has no effect, lower the body

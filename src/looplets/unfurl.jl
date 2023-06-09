@@ -105,38 +105,17 @@ end
 FormatLimitation() = FormatLimitation("")
 
 """
-    unfurl_access(node, ctx, eldim, tns, protos...)
+    unfurl_access(tns, ctx, protos...)
     
 Return an array object (usually a looplet nest) for lowering the virtual tensor
 `tns`.  `protos` is the list of protocols that should be used for each index,
 but one doesn't need to unfurl all the indices at once.
 """
-function unfurl_access(node, ctx, eldim, tns, protos...)
-    if node.mode.kind === reader
-        tns_2 = unfurl_reader(tns, ctx.ctx, protos...)
-    else
-        tns_2 = unfurl_updater(tns, ctx.ctx, protos...)
-    end
-    if tns_2 == tns
-        tns
-    else
-        unfurl_access(node, ctx, eldim, tns_2, protos...)
-    end
+function unfurl_access(tns::Furlable, ctx, protos...)
+    tns = Unfurled(tns.body(ctx, virtual_size(tns, ctx)[end]), 1, tns)
+    return tns
 end
-function unfurl_access(node, ctx, eldim, tns::Furlable, protos...)
-    if !isempty(node.idxs)
-        if ctx.idx == node.idxs[end]
-            tns = Unfurled(exfurl(tns.body(ctx.ctx, virtual_size(tns, ctx.ctx)[end]), ctx.ctx, node.idxs[end], virtual_size(tns, ctx.ctx)[end]), 1, tns)
-            return tns
-        else
-            if tns.tight !== nothing && !query(call(==, measure(ctx.ext), 1), ctx.ctx)
-                throw(FormatLimitation("$(typeof(something(tns.tight))) does not support random access, must loop column major over output indices first."))
-            end
-            return node.tns
-        end
-    end
-    return node
-end
+unfurl_access(tns, ctx, protos...) = tns
 
 unfurl_reader(tns::Furlable, ctx::LowerJulia, idxs...) = tns
 unfurl_updater(tns::Furlable, ctx::LowerJulia, idxs...) = tns

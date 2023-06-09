@@ -44,12 +44,11 @@ function virtual_resize!(arr::VirtualProtocolizedArray, ctx::AbstractCompiler, d
     virtual_resize!(arr.body, ctx, dim)
 end
 
-function unfurl_reader(arr::VirtualProtocolizedArray, ctx, proto_idxs...)
-    println(:hiiii)
-    VirtualProtocolizedArray(unfurl_reader(arr.body, ctx, arr.protos...), arr.protos)
+function unfurl_reader(arr::VirtualProtocolizedArray, ctx, protos...)
+    VirtualProtocolizedArray(unfurl_reader(arr.body, ctx,  map(something, arr.protos, protos)...), arr.protos)
 end
-function unfurl_updater(arr::VirtualProtocolizedArray, ctx, proto_idxs...)
-    VirtualProtocolizedArray(unfurl_updater(arr.body, ctx, arr.protos...), arr.protos)
+function unfurl_updater(arr::VirtualProtocolizedArray, ctx, protos...)
+    VirtualProtocolizedArray(unfurl_updater(arr.body, ctx,  map(something, arr.protos, protos)...), arr.protos)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualProtocolizedArray) = ctx(node.body)
@@ -115,8 +114,8 @@ visit_simplify(node::VirtualProtocolizedArray) = VirtualProtocolizedArray(visit_
     guard => VirtualProtocolizedArray(body, node.protos)
 end
 
-function unfurl_access(node, ctx, eldim, tns::VirtualProtocolizedArray, protos...)
-    VirtualProtocolizedArray(unfurl_access(node, ctx, eldim, tns.body, map(something, tns.protos, protos)...), tns.protos)
+function unfurl_access(tns::VirtualProtocolizedArray, ctx, protos...)
+    VirtualProtocolizedArray(unfurl_access(tns.body, ctx, map(something, tns.protos, protos)...), tns.protos)
 end
 
 function select_access(node, ctx::Finch.SelectVisitor, tns::VirtualProtocolizedArray)

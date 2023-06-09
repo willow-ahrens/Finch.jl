@@ -26,17 +26,15 @@ function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::RootArray)
     stylize_access(node, ctx, tns.body)
 end
 
-function unfurl_reader(tns::RootArray, ctx::LowerJulia, protos...)
-    unfurl_reader(tns.body, ctx, protos...)
-end
+unfurl_reader(tns::RootArray, ctx::LowerJulia, protos...) = unfurl_reader(tns.body, ctx, protos...)
 unfurl_updater(tns::RootArray, ctx::LowerJulia, protos...) = unfurl_updater(tns.body, ctx, protos...)
 
 declare!(tns::RootArray, ctx::LowerJulia, init) = declare!(tns.body, ctx, init)
 thaw!(tns::RootArray, ctx::LowerJulia) = thaw!(tns.body, ctx)
 freeze!(tns::RootArray, ctx::LowerJulia) = freeze!(tns.body, ctx)
 
-function unfurl_access(node, ctx, eldim, tns::RootArray, protos...)
-    unfurl_access(node, ctx, eldim, tns.body, protos...)
+function unfurl_access(tns::RootArray, ctx, protos...)
+    unfurl_access(tns.body, ctx, protos...)
 end
 
 function select_access(node, ctx::Finch.SelectVisitor, tns::RootArray)

@@ -92,8 +92,8 @@ visit_simplify(node::Unfurled) = Unfurled(visit_simplify(node.body), node.ndims,
     guard => Unfurled(body, node.ndims, node.arr)
 end
 
-function unfurl_access(node, ctx, eldim, tns::Unfurled, protos...)
-    unfurl_access(node, ctx, eldim, tns.body, protos...)
+function unfurl_access(tns::Unfurled, ctx, protos...)
+    unfurl_access(tns.body, ctx, protos...)
 end
 
 function select_access(node, ctx::Finch.SelectVisitor, tns::Unfurled)
