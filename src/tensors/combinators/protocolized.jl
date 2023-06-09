@@ -118,10 +118,6 @@ function unfurl_access(tns::VirtualProtocolizedArray, ctx, protos...)
     VirtualProtocolizedArray(unfurl_access(tns.body, ctx, map(something, tns.protos, protos)...), tns.protos)
 end
 
-function select_access(node, ctx::Finch.SelectVisitor, tns::VirtualProtocolizedArray)
-    select_access(node, ctx, tns.body)
-end
-
 (ctx::CycleVisitor)(node::VirtualProtocolizedArray) = VirtualProtocolizedArray(ctx(node.body), node.protos)
 
 getroot(tns::VirtualProtocolizedArray) = getroot(tns.body)

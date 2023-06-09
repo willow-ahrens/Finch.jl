@@ -96,10 +96,6 @@ function unfurl_access(tns::Unfurled, ctx, protos...)
     unfurl_access(tns.body, ctx, protos...)
 end
 
-function select_access(node, ctx::Finch.SelectVisitor, tns::Unfurled)
-    select_access(node, ctx, tns.body)
-end
-
 (ctx::CycleVisitor)(node::Unfurled) = Unfurled(ctx(node.body), node.ndims, node.arr)
 
 function lower(node::Unfurled, ctx::AbstractCompiler, ::DefaultStyle)
