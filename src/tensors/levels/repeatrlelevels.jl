@@ -209,7 +209,7 @@ function freeze_level!(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, pos_st
     return lvl
 end
 
-function get_reader(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, ::Union{typeof(defaultread), typeof(walk)})
+function unfurl_reader(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, ::Union{typeof(defaultread), typeof(walk)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp
@@ -260,9 +260,9 @@ function get_reader(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, ::Union{ty
 end
 
 is_laminable_updater(lvl::VirtualRepeatRLELevel, ctx, ::Union{typeof(defaultupdate), typeof(extrude)}) = false
-get_updater(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, protos...) = 
-    get_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
-function get_updater(fbr::VirtualTrackedSubFiber{VirtualRepeatRLELevel}, ctx, ::Union{typeof(defaultupdate), typeof(extrude)})
+unfurl_updater(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, protos...) = 
+    unfurl_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
+function unfurl_updater(fbr::VirtualTrackedSubFiber{VirtualRepeatRLELevel}, ctx, ::Union{typeof(defaultupdate), typeof(extrude)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp

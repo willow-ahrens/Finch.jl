@@ -231,15 +231,15 @@ function freeze_level!(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler, pos_st
     return lvl
 end
 
-function get_reader(fbr::VirtualSubFiber{VirtualSparseCOOLevel}, ctx, protos...)
+function unfurl_reader(fbr::VirtualSubFiber{VirtualSparseCOOLevel}, ctx, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     start = value(:($(lvl.ex).ptr[$(ctx(pos))]), lvl.Tp)
     stop = value(:($(lvl.ex).ptr[$(ctx(pos)) + 1]), lvl.Tp)
 
-    get_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, lvl.N, start, stop, protos...)
+    unfurl_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, lvl.N, start, stop, protos...)
 end
 
-function get_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, R, start, stop, ::Union{typeof(defaultread), typeof(walk)}, protos...)
+function unfurl_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, R, start, stop, ::Union{typeof(defaultread), typeof(walk)}, protos...)
     tag = lvl.ex
     Ti = lvl.Ti
     Tp = lvl.Tp
@@ -281,7 +281,7 @@ function get_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, R, start, stop, 
                                     stop =  (ctx, ext) -> value(my_i),
                                     body = Spike(
                                         body = Fill(virtual_level_default(lvl)),
-                                        tail = get_reader(VirtualSubFiber(lvl.lvl, my_q), ctx, protos...),
+                                        tail = unfurl_reader(VirtualSubFiber(lvl.lvl, my_q), ctx, protos...),
                                     ),
                                     next = (ctx, ext) -> quote
                                         $my_q += $(Tp(1))
@@ -301,7 +301,7 @@ function get_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, R, start, stop, 
                                     stop = (ctx, ext) -> value(my_i),
                                     body = Spike(
                                         body = Fill(virtual_level_default(lvl)),
-                                        tail = get_reader_coo_helper(lvl, ctx, R - 1, value(my_q, lvl.Ti), value(my_q_step, lvl.Ti), protos...),
+                                        tail = unfurl_reader_coo_helper(lvl, ctx, R - 1, value(my_q, lvl.Ti), value(my_q_step, lvl.Ti), protos...),
                                     ),
                                     next = (ctx, ext) -> quote
                                         $my_q = $my_q_step
@@ -320,9 +320,9 @@ function get_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, R, start, stop, 
 end
 
 is_laminable_updater(lvl::VirtualSparseCOOLevel, ctx, protos...) = false
-get_updater(fbr::VirtualSubFiber{VirtualSparseCOOLevel}, ctx, protos...) =
-    get_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
-function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseCOOLevel}, ctx, protos...)
+unfurl_updater(fbr::VirtualSubFiber{VirtualSparseCOOLevel}, ctx, protos...) =
+    unfurl_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
+function unfurl_updater(fbr::VirtualTrackedSubFiber{VirtualSparseCOOLevel}, ctx, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
@@ -335,7 +335,7 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseCOOLevel}, ctx, pr
         preamble = quote
             $qos = $qos_fill + 1
         end,
-        body = (ctx) -> get_updater_coo_helper(lvl, ctx, qos, fbr.dirty, (), protos...),
+        body = (ctx) -> unfurl_updater_coo_helper(lvl, ctx, qos, fbr.dirty, (), protos...),
         epilogue = quote
             $(lvl.ex).ptr[$(ctx(pos)) + 1] = $qos - $qos_fill - 1
             $qos_fill = $qos - 1
@@ -343,7 +343,7 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseCOOLevel}, ctx, pr
     )
 end
 
-function get_updater_coo_helper(lvl::VirtualSparseCOOLevel, ctx, qos, fbr_dirty, coords, ::Union{typeof(defaultupdate), typeof(extrude)}, protos...)
+function unfurl_updater_coo_helper(lvl::VirtualSparseCOOLevel, ctx, qos, fbr_dirty, coords, ::Union{typeof(defaultupdate), typeof(extrude)}, protos...)
     Ti = lvl.Ti
     Tp = lvl.Tp
     qos_fill = lvl.qos_fill
@@ -354,7 +354,7 @@ function get_updater_coo_helper(lvl::VirtualSparseCOOLevel, ctx, qos, fbr_dirty,
         body = (ctx, ext) -> 
             if length(coords) + 1 < lvl.N
                 Lookup(
-                    body = (ctx, i) -> get_updater_coo_helper(lvl, ctx, qos, fbr_dirty, (i, coords...), protos...)
+                    body = (ctx, i) -> unfurl_updater_coo_helper(lvl, ctx, qos, fbr_dirty, (i, coords...), protos...)
                 )
             else
                 dirty = ctx.freshen(:dirty)
@@ -370,7 +370,7 @@ function get_updater_coo_helper(lvl::VirtualSparseCOOLevel, ctx, qos, fbr_dirty,
                             end
                             $dirty = false
                         end,
-                        body = (ctx) -> get_updater(VirtualTrackedSubFiber(lvl.lvl, qos, dirty), ctx, protos...),
+                        body = (ctx) -> unfurl_updater(VirtualTrackedSubFiber(lvl.lvl, qos, dirty), ctx, protos...),
                         epilogue = quote
                             if $dirty
                                 $(fbr_dirty) = true

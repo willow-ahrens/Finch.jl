@@ -26,10 +26,10 @@ function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::RootArray)
     stylize_access(node, ctx, tns.body)
 end
 
-function get_reader(tns::RootArray, ctx::LowerJulia, protos...)
-    get_reader(tns.body, ctx, protos...)
+function unfurl_reader(tns::RootArray, ctx::LowerJulia, protos...)
+    unfurl_reader(tns.body, ctx, protos...)
 end
-get_updater(tns::RootArray, ctx::LowerJulia, protos...) = get_updater(tns.body, ctx, protos...)
+unfurl_updater(tns::RootArray, ctx::LowerJulia, protos...) = unfurl_updater(tns.body, ctx, protos...)
 
 declare!(tns::RootArray, ctx::LowerJulia, init) = declare!(tns.body, ctx, init)
 thaw!(tns::RootArray, ctx::LowerJulia) = thaw!(tns.body, ctx)

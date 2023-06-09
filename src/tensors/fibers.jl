@@ -145,12 +145,12 @@ function declare!(fbr::VirtualFiber, ctx::AbstractCompiler, init)
     fbr = VirtualFiber(lvl)
 end
 
-function get_reader(fbr::VirtualFiber, ctx::AbstractCompiler, protos...)
-    return get_reader(VirtualSubFiber(fbr.lvl, literal(1)), ctx, reverse(protos)...)
+function unfurl_reader(fbr::VirtualFiber, ctx::AbstractCompiler, protos...)
+    return unfurl_reader(VirtualSubFiber(fbr.lvl, literal(1)), ctx, reverse(protos)...)
 end
 
-function get_updater(fbr::VirtualFiber, ctx::AbstractCompiler, protos...)
-    return get_updater(VirtualSubFiber(fbr.lvl, literal(1)), ctx, reverse(protos)...)
+function unfurl_updater(fbr::VirtualFiber, ctx::AbstractCompiler, protos...)
+    return unfurl_updater(VirtualSubFiber(fbr.lvl, literal(1)), ctx, reverse(protos)...)
 end
 
 struct TrackedSubFiber{Lvl, Pos, Dirty} <: AbstractFiber{Lvl}
@@ -173,12 +173,12 @@ end
 lower(fbr::VirtualTrackedSubFiber, ctx::AbstractCompiler, ::DefaultStyle) = :(TrackedSubFiber($(ctx(fbr.lvl)), $(ctx(fbr.pos))))
 FinchNotation.finch_leaf(x::VirtualTrackedSubFiber) = virtual(x)
 
-function get_updater(fbr::VirtualTrackedSubFiber, ctx, protos...)
+function unfurl_updater(fbr::VirtualTrackedSubFiber, ctx, protos...)
     Thunk(
         preamble = quote
             $(fbr.dirty) = true
         end,
-        body = (ctx) -> get_updater(VirtualSubFiber(fbr.lvl, fbr.pos))
+        body = (ctx) -> unfurl_updater(VirtualSubFiber(fbr.lvl, fbr.pos))
     )
 end
 

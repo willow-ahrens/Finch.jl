@@ -60,7 +60,7 @@ function Finch.declare!(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler, init
     throw(FormatLimitation("Finch does not support writes to SparseMatrixCSC"))
 end
 
-function Finch.get_reader(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler, ::Union{typeof(defaultread), typeof(walk), typeof(follow)}, ::Union{typeof(defaultread), typeof(walk)})
+function Finch.unfurl_reader(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler, ::Union{typeof(defaultread), typeof(walk), typeof(follow)}, ::Union{typeof(defaultread), typeof(walk)})
     tag = arr.ex
     Ti = arr.Ti
     my_i = ctx.freshen(tag, :_i)
@@ -127,7 +127,7 @@ function Finch.get_reader(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler, ::
     )
 end
 
-function Finch.get_updater(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler, protos...)
+function Finch.unfurl_updater(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler, protos...)
     throw(FormatLimitation("Finch does not support writes to SparseMatrixCSC"))
 end
 
@@ -162,7 +162,7 @@ function Finch.declare!(arr::VirtualSparseVector, ctx::AbstractCompiler, init)
     throw(FormatLimitation("Finch does not support writes to SparseVector"))
 end
 
-function Finch.get_reader(arr::VirtualSparseVector, ctx::AbstractCompiler, ::Union{typeof(defaultread), typeof(walk)})
+function Finch.unfurl_reader(arr::VirtualSparseVector, ctx::AbstractCompiler, ::Union{typeof(defaultread), typeof(walk)})
     tag = arr.ex
     Ti = arr.Ti
     my_i = ctx.freshen(tag, :_i)
@@ -224,7 +224,7 @@ function Finch.get_reader(arr::VirtualSparseVector, ctx::AbstractCompiler, ::Uni
     )
 end
 
-function Finch.get_updater(arr::VirtualSparseVector, ctx::AbstractCompiler, protos...)
+function Finch.unfurl_updater(arr::VirtualSparseVector, ctx::AbstractCompiler, protos...)
     throw(FormatLimitation("Finch does not support writes to SparseVector"))
 end
 

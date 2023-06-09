@@ -171,10 +171,10 @@ end
 
 is_laminable_updater(lvl::VirtualDenseLevel, ctx, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...) =
     is_laminable_updater(lvl.lvl, ctx, protos...)
-get_reader(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, ::Union{typeof(defaultread), typeof(follow)}, protos...) = get_readerupdater_dense_helper(fbr, ctx, get_reader, VirtualSubFiber, protos...)
-get_updater(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...) = get_readerupdater_dense_helper(fbr, ctx, get_updater, VirtualSubFiber, protos...)
-get_updater(fbr::VirtualTrackedSubFiber{VirtualDenseLevel}, ctx, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...) = get_readerupdater_dense_helper(fbr, ctx, get_updater, (lvl, pos) -> VirtualTrackedSubFiber(lvl, pos, fbr.dirty), protos...)
-function get_readerupdater_dense_helper(fbr, ctx, get_readerupdater, subfiber_ctr, protos...)
+unfurl_reader(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, ::Union{typeof(defaultread), typeof(follow)}, protos...) = subunfurl_dense_helper(fbr, ctx, unfurl_reader, VirtualSubFiber, protos...)
+unfurl_updater(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...) = subunfurl_dense_helper(fbr, ctx, unfurl_updater, VirtualSubFiber, protos...)
+unfurl_updater(fbr::VirtualTrackedSubFiber{VirtualDenseLevel}, ctx, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...) = subunfurl_dense_helper(fbr, ctx, unfurl_updater, (lvl, pos) -> VirtualTrackedSubFiber(lvl, pos, fbr.dirty), protos...)
+function subunfurl_dense_helper(fbr, ctx, subunfurl, subfiber_ctr, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
@@ -182,14 +182,14 @@ function get_readerupdater_dense_helper(fbr, ctx, get_readerupdater, subfiber_ct
     q = ctx.freshen(tag, :_q)
 
     Furlable(
-        tight = (get_readerupdater == get_updater && !is_laminable_updater(lvl.lvl, ctx, protos...)) ? lvl : nothing,
+        tight = (subunfurl == unfurl_updater && !is_laminable_updater(lvl.lvl, ctx, protos...)) ? lvl : nothing,
         size = virtual_level_size(lvl, ctx),
         body = (ctx, ext) -> Lookup(
             body = (ctx, i) -> Thunk(
                 preamble = quote
                     $q = ($(ctx(pos)) - $(Ti(1))) * $(ctx(lvl.shape)) + $(ctx(i))
                 end,
-                body = (ctx) -> get_readerupdater(subfiber_ctr(lvl.lvl, value(q, lvl.Ti)), ctx, protos...)
+                body = (ctx) -> subunfurl(subfiber_ctr(lvl.lvl, value(q, lvl.Ti)), ctx, protos...)
             )
         )
     )

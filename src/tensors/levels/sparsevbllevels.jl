@@ -202,7 +202,7 @@ function freeze_level!(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, pos_st
     return lvl
 end
 
-function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Union{typeof(defaultread), typeof(walk)}, protos...)
+function unfurl_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Union{typeof(defaultread), typeof(walk)}, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp
@@ -260,7 +260,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Union{ty
                                                     preamble = quote
                                                         $my_q = $my_q_ofs + $(ctx(i))
                                                     end,
-                                                    body = (ctx) -> get_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Tp)), ctx, protos...),
+                                                    body = (ctx) -> unfurl_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Tp)), ctx, protos...),
                                                 )
                                             )
                                         )
@@ -281,7 +281,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Union{ty
     )
 end
 
-function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::typeof(gallop), protos...)
+function unfurl_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::typeof(gallop), protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp
@@ -344,7 +344,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::typeof(g
                                                         preamble = quote
                                                             $my_q = $my_q_ofs + $(ctx(i))
                                                         end,
-                                                        body = (ctx) -> get_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Tp)), ctx, protos...),
+                                                        body = (ctx) -> unfurl_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Tp)), ctx, protos...),
                                                     )
                                                 )
                                             )
@@ -380,7 +380,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::typeof(g
                                                                     preamble = quote
                                                                         $my_q = $my_q_ofs + $(ctx(i))
                                                                     end,
-                                                                    body = (ctx) -> get_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Tp)), ctx, protos...),
+                                                                    body = (ctx) -> unfurl_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Tp)), ctx, protos...),
                                                                 )
                                                             )
                                                         )
@@ -406,9 +406,9 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::typeof(g
 end
 
 is_laminable_updater(lvl::VirtualSparseVBLLevel, ctx, protos...) = false
-get_updater(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, protos...) =
-    get_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
-function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseVBLLevel}, ctx, ::Union{typeof(defaultupdate), typeof(extrude)}, protos...)
+unfurl_updater(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, protos...) =
+    unfurl_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
+function unfurl_updater(fbr::VirtualTrackedSubFiber{VirtualSparseVBLLevel}, ctx, ::Union{typeof(defaultupdate), typeof(extrude)}, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp
@@ -442,7 +442,7 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseVBLLevel}, ctx, ::
                         end
                         $dirty = false
                     end,
-                    body = (ctx) -> get_updater(VirtualTrackedSubFiber(lvl.lvl, value(qos, lvl.Tp), dirty), ctx, protos...),
+                    body = (ctx) -> unfurl_updater(VirtualTrackedSubFiber(lvl.lvl, value(qos, lvl.Tp), dirty), ctx, protos...),
                     epilogue = quote
                         if $dirty
                             $(fbr.dirty) = true

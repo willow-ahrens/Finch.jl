@@ -113,9 +113,9 @@ but one doesn't need to unfurl all the indices at once.
 """
 function unfurl_access(node, ctx, eldim, tns, protos...)
     if node.mode.kind === reader
-        tns_2 = get_reader(tns, ctx.ctx, protos...)
+        tns_2 = unfurl_reader(tns, ctx.ctx, protos...)
     else
-        tns_2 = get_updater(tns, ctx.ctx, protos...)
+        tns_2 = unfurl_updater(tns, ctx.ctx, protos...)
     end
     if tns_2 == tns
         tns
@@ -138,8 +138,8 @@ function unfurl_access(node, ctx, eldim, tns::Furlable, protos...)
     return node
 end
 
-get_reader(tns::Furlable, ctx::LowerJulia, idxs...) = tns
-get_updater(tns::Furlable, ctx::LowerJulia, idxs...) = tns
+unfurl_reader(tns::Furlable, ctx::LowerJulia, idxs...) = tns
+unfurl_updater(tns::Furlable, ctx::LowerJulia, idxs...) = tns
 
 #TODO this is a bit of a hack, it would be much better to somehow add a
 #statement like writes[] += 1 corresponding to tensor reads/writes that need to

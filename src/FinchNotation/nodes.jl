@@ -177,7 +177,7 @@ forget
 
 Finch AST statement that executes each of it's arguments in turn. If the body is
 not a sequence, replaces accesses to read-only tensors in the body with
-get_reader and accesses to update-only tensors in the body with get_updater.
+unfurl_reader and accesses to update-only tensors in the body with unfurl_updater.
 """
 sequence
 

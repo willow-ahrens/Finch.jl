@@ -25,8 +25,8 @@ FinchNotation.finch_leaf(x::Unfurled) = virtual(x)
 
 
 
-get_reader(tns::Unfurled, ctx::LowerJulia, protos...) = tns
-get_updater(tns::Unfurled, ctx::LowerJulia, protos...) = tns
+unfurl_reader(tns::Unfurled, ctx::LowerJulia, protos...) = tns
+unfurl_updater(tns::Unfurled, ctx::LowerJulia, protos...) = tns
 
 (ctx::Stylize{<:AbstractCompiler})(node::Unfurled) = ctx(node.body)
 function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::Unfurled)

@@ -260,7 +260,7 @@ function freeze_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos_s
     return lvl
 end
 
-function get_reader(fbr::VirtualSubFiber{VirtualSparseHashLevel}, ctx, proto::Union{typeof(defaultread), typeof(walk)}, protos...)
+function unfurl_reader(fbr::VirtualSubFiber{VirtualSparseHashLevel}, ctx, proto::Union{typeof(defaultread), typeof(walk)}, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     start = value(:($(lvl.ex).ptr[$(ctx(pos))]), lvl.Tp)
     stop = value(:($(lvl.ex).ptr[$(ctx(pos)) + 1]), lvl.Tp)
@@ -310,7 +310,7 @@ function get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, R, start,
                                     stop =  (ctx, ext) -> value(my_i),
                                     body = Spike(
                                         body = Fill(virtual_level_default(lvl)),
-                                        tail = get_reader(VirtualSubFiber(lvl.lvl, value(:($(lvl.ex).srt[$my_q][2]))), ctx, protos...),
+                                        tail = unfurl_reader(VirtualSubFiber(lvl.lvl, value(:($(lvl.ex).srt[$my_q][2]))), ctx, protos...),
                                     ),
                                     next = (ctx, ext) -> quote
                                         $my_q += $(Tp(1))
@@ -348,15 +348,15 @@ function get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, R, start,
     )
 end
 
-function get_reader(fbr::VirtualSubFiber{VirtualSparseHashLevel}, ctx, protos...)
+function unfurl_reader(fbr::VirtualSubFiber{VirtualSparseHashLevel}, ctx, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
     Tp = lvl.Tp
-    return get_reader_hash_helper(lvl, ctx, pos, qos, (), proto, protos...)
+    return unfurl_reader_hash_helper(lvl, ctx, pos, qos, (), proto, protos...)
 end
 
-function get_reader_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, coords, ::typeof(follow), protos...)
+function unfurl_reader_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, coords, ::typeof(follow), protos...)
     Ti = lvl.Ti
     Tp = lvl.Tp
     qos_fill = lvl.qos_fill
@@ -367,7 +367,7 @@ function get_reader_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, coords, :
         body = (ctx, ext) ->
             if length(coords)  + 1 < lvl.N
                 Lookup(
-                    body = (ctx, i) -> get_reader_hash_helper(lvl, ctx, pos, qos, (i, coords...), protos...)
+                    body = (ctx, i) -> unfurl_reader_hash_helper(lvl, ctx, pos, qos, (i, coords...), protos...)
                 )
             else
                 Lookup(
@@ -377,7 +377,7 @@ function get_reader_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, coords, :
                             $qos = get($(lvl.ex).tbl, $my_key, 0)
                         end,
                         body = (ctx) -> Switch([
-                            value(:($qos != 0)) => get_reader(VirtualSubFiber(lvl.lvl, value(qos, lvl.Tp)), ctx, protos...),
+                            value(:($qos != 0)) => unfurl_reader(VirtualSubFiber(lvl.lvl, value(qos, lvl.Tp)), ctx, protos...),
                             literal(true) => Fill(virtual_level_default(lvl))
                         ])
                     )
@@ -389,14 +389,14 @@ end
 
 is_laminable_updater(lvl::VirtualSparseHashLevel, ctx, protos...) =
     is_laminable_updater(lvl.lvl, ctx, protos[lvl.N + 1:end]...)
-get_updater(fbr::VirtualSubFiber{VirtualSparseHashLevel}, ctx, protos...) =
-    get_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
-function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseHashLevel}, ctx, protos...)
+unfurl_updater(fbr::VirtualSubFiber{VirtualSparseHashLevel}, ctx, protos...) =
+    unfurl_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
+function unfurl_updater(fbr::VirtualTrackedSubFiber{VirtualSparseHashLevel}, ctx, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
-    get_updater_hash_helper(lvl, ctx, pos, fbr.dirty, (), protos...)
+    unfurl_updater_hash_helper(lvl, ctx, pos, fbr.dirty, (), protos...)
 end
 
-function get_updater_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, fbr_dirty, coords, p::Union{typeof(defaultupdate), typeof(extrude)}, protos...)
+function unfurl_updater_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, fbr_dirty, coords, p::Union{typeof(defaultupdate), typeof(extrude)}, protos...)
     tag = lvl.ex
     Ti = lvl.Ti
     Tp = lvl.Tp
@@ -411,7 +411,7 @@ function get_updater_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, fbr_dirt
         body = (ctx, ext) ->
             if length(coords) + 1 < lvl.N
                 Lookup(
-                    body = (ctx, i) -> get_updater_hash_helper(lvl, ctx, pos, fbr_dirty, (i, coords...), protos...)
+                    body = (ctx, i) -> unfurl_updater_hash_helper(lvl, ctx, pos, fbr_dirty, (i, coords...), protos...)
                 )
             else
                 Lookup(
@@ -425,7 +425,7 @@ function get_updater_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, fbr_dirt
                             end
                             $dirty = false
                         end,
-                        body = (ctx) -> get_updater(VirtualTrackedSubFiber(lvl.lvl, qos, dirty), ctx, protos...),
+                        body = (ctx) -> unfurl_updater(VirtualTrackedSubFiber(lvl.lvl, qos, dirty), ctx, protos...),
                         epilogue = quote
                             if $dirty
                                 $(fbr_dirty) = true

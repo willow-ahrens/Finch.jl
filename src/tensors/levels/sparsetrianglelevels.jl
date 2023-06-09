@@ -165,10 +165,10 @@ is_laminable_updater(lvl::VirtualSparseTriangleLevel, ctx, ::Union{typeof(defaul
     is_laminable_updater(lvl.lvl, ctx, protos[lvl.N + 1:end]...)
 
 
-get_reader(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, protos...) = get_reader_triangular_dense_helper(fbr, ctx, get_reader, VirtualSubFiber, protos...)
-get_updater(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, protos...) = get_updater_triangular_dense_helper(fbr, ctx, get_updater, VirtualSubFiber, protos...)
-get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseTriangleLevel}, ctx, protos...) = get_updater_triangular_dense_helper(fbr, ctx, get_updater, (lvl, pos) -> VirtualTrackedSubFiber(lvl, pos, fbr.dirty), protos...)
-function get_reader_triangular_dense_helper(fbr, ctx, get_readerupdater, subfiber_ctr, protos...)
+unfurl_reader(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, protos...) = unfurl_reader_triangular_dense_helper(fbr, ctx, unfurl_reader, VirtualSubFiber, protos...)
+unfurl_updater(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, protos...) = unfurl_updater_triangular_dense_helper(fbr, ctx, unfurl_updater, VirtualSubFiber, protos...)
+unfurl_updater(fbr::VirtualTrackedSubFiber{VirtualSparseTriangleLevel}, ctx, protos...) = unfurl_updater_triangular_dense_helper(fbr, ctx, unfurl_updater, (lvl, pos) -> VirtualTrackedSubFiber(lvl, pos, fbr.dirty), protos...)
+function unfurl_reader_triangular_dense_helper(fbr, ctx, subunfurl, subfiber_ctr, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
@@ -188,7 +188,7 @@ function get_reader_triangular_dense_helper(fbr, ctx, get_readerupdater, subfibe
                     Phase(
                         stop = (ctx, ext) -> j,
                         body = (ctx, ext) -> Lookup(
-                            body = (ctx, i) -> get_readerupdater(subfiber_ctr(lvl.lvl, call(+, q, -1, i)), ctx, protos...)
+                            body = (ctx, i) -> subunfurl(subfiber_ctr(lvl.lvl, call(+, q, -1, i)), ctx, protos...)
                         )
                     ),
                     Phase(
@@ -227,7 +227,7 @@ function get_reader_triangular_dense_helper(fbr, ctx, get_readerupdater, subfibe
     )
 end
 
-function get_updater_triangular_dense_helper(fbr, ctx, get_readerupdater, subfiber_ctr, protos...)
+function unfurl_updater_triangular_dense_helper(fbr, ctx, subunfurl, subfiber_ctr, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
@@ -247,7 +247,7 @@ function get_updater_triangular_dense_helper(fbr, ctx, get_readerupdater, subfib
                     Phase(
                         stop = (ctx, ext) -> j,
                         body = (ctx, ext) -> Lookup(
-                            body = (ctx, i) -> get_readerupdater(subfiber_ctr(lvl.lvl, call(+, q, -1, i)), ctx, protos...) # hack -> fix later
+                            body = (ctx, i) -> subunfurl(subfiber_ctr(lvl.lvl, call(+, q, -1, i)), ctx, protos...) # hack -> fix later
                         )
                     ),
                     Phase(

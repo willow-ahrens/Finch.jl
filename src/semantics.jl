@@ -7,24 +7,24 @@ Afterwards the tensor is update-only.
 declare!(tns, ctx, init) = @assert something(virtual_default(tns)) == init
 
 """
-    get_reader(tns, ctx, protos...)
+    unfurl_reader(tns, ctx, protos...)
     
 Return an object (usually a looplet nest) capable of reading the read-only
 virtual tensor `tns`.  As soon as a read-only tensor enters scope, each
 subsequent read access will be initialized with a separate call to
-`get_reader`. `protos` is the list of protocols in each case.
+`unfurl_reader`. `protos` is the list of protocols in each case.
 """
-get_reader(tns, ctx, protos...) = tns #throw(FormatLimitation("$(typeof(tns)) does not support reads with protocol $(protos)"))
+unfurl_reader(tns, ctx, protos...) = tns #throw(FormatLimitation("$(typeof(tns)) does not support reads with protocol $(protos)"))
 
 """
-    get_updater(tns, ctx, protos...)
+    unfurl_updater(tns, ctx, protos...)
     
 Return an object (usually a looplet nest) capable of updating the update-only
 virtual tensor `tns`.  As soon as an update only tensor enters scope, each
 subsequent update access will be initialized with a separate call to
-`get_updater`.  `protos` is the list of protocols in each case.
+`unfurl_updater`.  `protos` is the list of protocols in each case.
 """
-get_updater(tns, ctx, protos...) = tns #throw(FormatLimitation("$(typeof(tns)) does not support updates with protocol $(protos)"))
+unfurl_updater(tns, ctx, protos...) = tns #throw(FormatLimitation("$(typeof(tns)) does not support updates with protocol $(protos)"))
 
 """
     freeze!(tns, ctx)
