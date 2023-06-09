@@ -19,6 +19,7 @@ const ID = 8
     assign   = 13ID | IS_TREE | IS_STATEFUL
     loop     = 16ID | IS_TREE | IS_STATEFUL
     sieve    = 17ID | IS_TREE | IS_STATEFUL
+    define   = 19ID | IS_TREE | IS_STATEFUL
     declare  = 20ID | IS_TREE | IS_STATEFUL
     thaw     = 21ID | IS_TREE | IS_STATEFUL
     freeze   = 22ID | IS_TREE | IS_STATEFUL
@@ -143,6 +144,13 @@ tensors of `lhs` are returned.  Overwriting is accomplished with the function
 `right(lhs, rhs) = rhs`.
 """
 assign
+
+"""
+    define(lhs, rhs)
+
+Finch AST statement that defines `lhs` as having the value `rhs` in the current scope.
+"""
+define
 
 """
     declare(tns, init)
@@ -330,6 +338,12 @@ function FinchNode(kind::FinchNodeKind, args::Vector)
         else
             error("wrong number of arguments to assign(...)")
         end
+    elseif kind === define
+        if length(args) == 2
+            return FinchNode(define, nothing, nothing, args)
+        else
+            error("wrong number of arguments to define(...)")
+        end
     elseif kind === declare
         if length(args) == 2
             return FinchNode(declare, nothing, nothing, args)
@@ -469,6 +483,14 @@ function Base.getproperty(node::FinchNode, sym::Symbol)
             return node.children[3]
         else
             error("type FinchNode(assign, ...) has no property $sym")
+        end
+    elseif node.kind === define
+        if sym === :lhs
+            return node.children[1]
+        elseif sym === :rhs
+            return node.children[2]
+        else
+            error("type FinchNode(define, ...) has no property $sym")
         end
     elseif node.kind === declare
         if sym === :tns
@@ -625,6 +647,12 @@ function display_statement(io, mime, node::FinchNode, indent)
         display_expression(io, mime, node.op)
         print(io, ">>= ")
         display_expression(io, mime, node.rhs)
+    elseif node.kind === define
+        print(io, " "^indent * "@define(")
+        display_expression(io, mime, node.lhs)
+        print(io, ", ")
+        display_expression(io, mime, node.rhs)
+        print(io, ")")
     elseif node.kind === declare
         print(io, " "^indent * "@declare(")
         display_expression(io, mime, node.tns)

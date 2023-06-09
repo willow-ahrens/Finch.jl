@@ -13,6 +13,16 @@ struct IndexInstance{name} <: FinchNodeInstance end
 
 Base.show(io::IO, node::IndexInstance{name}) where {name} = print(io, "index_instance(", Symbol(name), ")")
 
+struct DefineInstance{Lhs, Rhs} <: FinchNodeInstance
+	lhs::Lhs
+	rhs::Rhs
+end
+Base.:(==)(a::DefineInstance, b::DefineInstance) = a.lhs == b.lhs && a.rhs == b.rhs
+
+@inline define_instance(lhs, rhs) = DefineInstance(lhs, rhs)
+
+Base.show(io::IO, node::DefineInstance) = print(io, "define_instance(", node.lhs, ", ", node.rhs, ")")
+
 struct DeclareInstance{Tns, Init} <: FinchNodeInstance
 	tns::Tns
 	init::Init
@@ -120,17 +130,29 @@ Base.show(io::IO, node::AccessInstance) = print(io, "access_instance(", node.tns
 
 @inline access_instance(tns, mode, idxs...) = AccessInstance(tns, mode, idxs)
 
-struct VariableInstance{tag, Tns} <: FinchNodeInstance
+
+
+struct TagInstance{tag, Tns} <: FinchNodeInstance
     tns::Tns
 end
 
+Base.:(==)(a::TagInstance, b::TagInstance) = false
+Base.:(==)(a::TagInstance{tag}, b::TagInstance{tag}) where {tag} = a.tns == b.tns
+
+@inline tag_instance(tag, tns) = TagInstance{tag, typeof(tns)}(tns)
+@inline tag_instance(tag, tns::IndexInstance) = tns #TODO this should be syntactic
+
+Base.show(io::IO, node::TagInstance{tag}) where {tag} = print(io, "tag_instance(:", tag, ", ", tag, ")")
+
+struct VariableInstance{tag} <: FinchNodeInstance
+end
+
 Base.:(==)(a::VariableInstance, b::VariableInstance) = false
-Base.:(==)(a::VariableInstance{tag}, b::VariableInstance{tag}) where {tag} = a.tns == b.tns
+Base.:(==)(a::VariableInstance{tag}, b::VariableInstance{tag}) where {tag} = true
 
-@inline variable_instance(tag, tns) = VariableInstance{tag, typeof(tns)}(tns)
-@inline variable_instance(tag, tns::IndexInstance) = tns #TODO this should be syntactic
+@inline variable_instance(tag) = VariableInstance{tag}()
 
-Base.show(io::IO, node::VariableInstance{tag}) where {tag} = print(io, "variable_instance(:", tag, ", ", tag, ")")
+Base.show(io::IO, node::VariableInstance{tag}) where {tag} = print(io, "variable_instance(:", tag, ")")
 
 struct ReaderInstance end
 

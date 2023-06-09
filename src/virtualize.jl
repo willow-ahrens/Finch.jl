@@ -52,7 +52,8 @@ function virtualize(ex, ::Type{FinchNotation.UpdaterInstance{Mode}}, ctx) where 
 end
 virtualize(ex, ::Type{FinchNotation.ModifyInstance}, ctx) = modify()
 virtualize(ex, ::Type{FinchNotation.CreateInstance}, ctx) = create()
-function virtualize(ex, ::Type{FinchNotation.VariableInstance{tag, Tns}}, ctx) where {tag, Tns}
+virtualize(ex, ::Type{FinchNotation.VariableInstance{tag}}, ctx) where {tag} = variable(tag)
+function virtualize(ex, ::Type{FinchNotation.TagInstance{tag, Tns}}, ctx) where {tag, Tns}
     x = get!(ctx.bindings, variable(tag)) do
         virtualize(:($ex.tns), Tns, ctx, tag)
     end

@@ -6,6 +6,7 @@ const program_nodes = (
     loop = loop,
     sieve = sieve,
     sequence = sequence,
+    define = define,
     declare = declare,
     freeze = freeze,
     thaw = thaw,
@@ -17,7 +18,8 @@ const program_nodes = (
     updater = updater,
     modify = modify,
     create = create,
-    variable = (ex) -> :(finch_leaf($(esc(ex)))),
+    variable = variable,
+    tag = (ex) -> :(finch_leaf($(esc(ex)))),
     literal = literal,
     value = (ex) -> :(finch_leaf($(esc(ex)))),
 )
@@ -27,6 +29,7 @@ const instance_nodes = (
     loop = loop_instance,
     sieve = sieve_instance,
     sequence = sequence_instance,
+    define = define_instance,
     declare = declare_instance,
     freeze = freeze_instance,
     thaw = thaw_instance,
@@ -38,7 +41,8 @@ const instance_nodes = (
     updater = updater_instance,
     modify = modify_instance,
     create = create_instance,
-    variable = (ex) -> :($variable_instance($(QuoteNode(ex)), $finch_leaf_instance($(esc(ex))))),
+    variable = variable_instance,
+    tag = (ex) -> :($tag_instance($(QuoteNode(ex)), $finch_leaf_instance($(esc(ex))))),
     literal = literal_instance,
     value = (ex) -> :($finch_leaf_instance($(esc(ex))))
 )
@@ -103,7 +107,7 @@ function (ctx::FinchParserVisitor)(ex::Symbol)
     elseif ex in evaluable_exprs
         return ctx.nodes.literal(@eval($ex))
     else
-        ctx.nodes.variable(ex)
+        ctx.nodes.tag(ex)
     end
 end
 (ctx::FinchParserVisitor)(ex::QuoteNode) = ctx.nodes.literal(ex.value)
@@ -184,6 +188,21 @@ function (ctx::FinchParserVisitor)(ex::Expr)
         mode = :($(ctx.nodes.updater)($(ctx.nodes.create)()))
         lhs = :($(ctx.nodes.access)($(ctx(tns)), $mode, $(map(ctx, idxs)...)))
         return :($(ctx.nodes.assign)($lhs, $(ctx(op)), $(ctx(rhs))))
+    elseif @capture ex :(=)(~lhs, ~rhs)
+        res = :($(ctx.nodes.define)($(esc(lhs)), $(ctx(rhs))))
+        #TODO in the future would be nice if this was a let
+        if lhs isa Symbol
+            push!(ctx.results, lhs)
+            res = quote
+                begin
+                    $(esc(lhs)) = $(ctx.nodes.variable(lhs))
+                    $res
+                end
+            end
+        end
+        return res
+    elseif @capture ex :>>=(:call(:<<, ~lhs, ~op), ~rhs)
+        error("Finch doesn't support incrementing definitions of variables")
     elseif @capture ex :tuple(~args...)
         return ctx(:(tuple($(args...))))
     elseif @capture ex :comparison(~a, ~cmp, ~b)
@@ -219,5 +238,9 @@ macro f(ex)
 end
 
 macro finch_program_instance(ex)
-    return finch_parse_instance(ex)
+    return :(
+        let
+            $(finch_parse_instance(ex))
+        end
+    )
 end

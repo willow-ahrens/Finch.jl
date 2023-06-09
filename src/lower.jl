@@ -150,6 +150,11 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
                 end)
             end
         end
+    elseif root.kind === define
+        @assert root.lhs.kind === variable
+        ctx.bindings[root.lhs] = ctx(root.rhs)
+        push!(ctx.scope, root.lhs)
+        quote end
     elseif root.kind === declare
         @assert root.tns.kind === variable
         @assert get(ctx.modes, root.tns, reader()).kind === reader
@@ -279,7 +284,6 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
         lhs = ctx(root.lhs)
         return :($lhs = $rhs)
     elseif root.kind === variable
-        error()
         return ctx(ctx.bindings[root])
     else
         error("unimplemented ($root)")

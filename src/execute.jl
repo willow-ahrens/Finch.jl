@@ -32,11 +32,7 @@ function lower_global(prgm, ctx)
                 prgm = dimensionalize!(prgm, ctx_2)
                 prgm = simplify(prgm, ctx_2) #appears necessary
                 contain(ctx_2) do ctx_3
-                    prgm2 = prgm
-                    if prgm.kind !== sequence
-                        prgm2 = InstantiateTensors(ctx = ctx_3)(prgm2)
-                    end
-                    ctx_3(prgm2)
+                    ctx_3(prgm)
                 end
             end)
             $(contain(ctx_2) do ctx_3
