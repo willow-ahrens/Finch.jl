@@ -9,7 +9,7 @@ after simplification so one can expect constants to be folded.
 """
 function get_wrapper_rules(alg, depth, ctx)
     return [
-        (@rule access(~A::isvariable, ~m, ~i...) => access(RootArray(A, ctx.bindings[A]), m, i...)),
+        (@rule access(~A::isvariable, ~m, ~i...) => access(RootArray(A), m, i...)),
         (@rule access(~A::isvirtual, ~m, ~i1..., call(~proto::isliteral, ~j), ~i2...) => if isprotocol(proto.val)
             body = A.val
             protos = ([nothing for _ in i1]..., proto.val, [nothing for _ in i2]...)

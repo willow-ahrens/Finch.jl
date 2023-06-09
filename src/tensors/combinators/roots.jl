@@ -1,6 +1,5 @@
 @kwdef struct RootArray
     tag
-    body
 end
 
 Base.:(==)(tns::RootArray, tns_2::RootArray) = tns.tag == tns_2.tag
@@ -10,35 +9,34 @@ Base.show(io::IO, ex::RootArray) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::RootArray)
     print(io, "RootArray(")
     print(io, ex.tag)
-    print(io, ", ")
-    print(io, ex.body)
     print(io, ")")
 end
 
 FinchNotation.finch_leaf(x::RootArray) = virtual(x)
 
-virtual_size(tns::RootArray, ctx) = virtual_size(tns.body, ctx)
-virtual_resize!(tns::RootArray, ctx, dims...) = virtual_resize!(tns.body, ctx, dims...)
-virtual_default(tns::RootArray, ctx) = virtual_default(tns.body, ctx)
+virtual_size(tns::RootArray, ctx) = virtual_size(resolve(tns.tag, ctx), ctx)
+virtual_resize!(tns::RootArray, ctx, dims...) = virtual_resize!(resolve(tns.tag, ctx), ctx, dims...)
+virtual_default(tns::RootArray, ctx) = virtual_default(resolve(tns.tag, ctx), ctx)
 
-(ctx::Stylize{<:AbstractCompiler})(node::RootArray) = ctx(node.body)
+(ctx::Stylize{<:AbstractCompiler})(tns::RootArray) = ctx(resolve(tns.tag, ctx.ctx))
 function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::RootArray)
-    stylize_access(node, ctx, tns.body)
+    stylize_access(node, ctx, resolve(tns.tag, ctx.ctx))
 end
 
-unfurl_reader(tns::RootArray, ctx::LowerJulia, protos...) = unfurl_reader(tns.body, ctx, protos...)
-unfurl_updater(tns::RootArray, ctx::LowerJulia, protos...) = unfurl_updater(tns.body, ctx, protos...)
+unfurl_reader(tns::RootArray, ctx::LowerJulia, protos...) = unfurl_reader(resolve(tns.tag, ctx), ctx, protos...)
+unfurl_updater(tns::RootArray, ctx::LowerJulia, protos...) = unfurl_updater(resolve(tns.tag, ctx), ctx, protos...)
 
-declare!(tns::RootArray, ctx::LowerJulia, init) = declare!(tns.body, ctx, init)
-thaw!(tns::RootArray, ctx::LowerJulia) = thaw!(tns.body, ctx)
-freeze!(tns::RootArray, ctx::LowerJulia) = freeze!(tns.body, ctx)
+#TODO I don't think we should ever need these
+declare!(tns::RootArray, ctx::LowerJulia, init) = declare!(resolve(tns.tag, ctx), ctx, init)
+thaw!(tns::RootArray, ctx::LowerJulia) = thaw!(resolve(tns.tag, ctx), ctx)
+freeze!(tns::RootArray, ctx::LowerJulia) = freeze!(resolve(tns.tag, ctx), ctx)
 
 function unfurl_access(tns::RootArray, ctx, protos...)
-    unfurl_access(tns.body, ctx, protos...)
+    unfurl_access(resolve(tns.tag, ctx), ctx, protos...)
 end
 
 function select_access(node, ctx::Finch.SelectVisitor, tns::RootArray)
-    select_access(node, ctx, tns.body)
+    select_access(node, ctx, resolve(tns.tag, ctx))
 end
 
 function lower(node::RootArray, ctx::AbstractCompiler, ::DefaultStyle)
@@ -46,7 +44,7 @@ function lower(node::RootArray, ctx::AbstractCompiler, ::DefaultStyle)
 end
 
 lowerjulia_access(ctx::AbstractCompiler, node, tns::RootArray) = 
-    lowerjulia_access(ctx, node, tns.body)
+    lowerjulia_access(ctx, node, resolve(tns.tag, ctx))
 
 getdata(tns::RootArray) = tns
 
