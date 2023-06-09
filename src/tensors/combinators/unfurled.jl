@@ -17,6 +17,8 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Unfurled)
     print(io, ")")
 end
 
+Base.summary(io::IO, ex::Unfurled) = print(io, "Unfurled($(summary(ex.body)), $(summary(ex.arr)))")
+
 FinchNotation.finch_leaf(x::Unfurled) = virtual(x)
 
 
@@ -81,7 +83,7 @@ phase_body(node::Unfurled, ctx, ext, ext_2) = Unfurled(phase_body(node.body, ctx
 phase_range(node::Unfurled, ctx, ext) = phase_range(node.body, ctx, ext)
 
 get_spike_body(node::Unfurled, ctx, ext, ext_2) = Unfurled(get_spike_body(node.body, ctx, ext, ext_2), node.ndims, node.arr)
-get_spike_tail(node::Unfurled, ctx, ext, ext_2) = popdim(Unfurled(get_spike_tail(node.body, ctx, ext, ext_2), node.ndims, node.arr))
+get_spike_tail(node::Unfurled, ctx, ext, ext_2) = Unfurled(get_spike_tail(node.body, ctx, ext, ext_2), node.ndims, node.arr)
 
 visit_fill(node, tns::Unfurled) = visit_fill(node, tns.body)
 visit_simplify(node::Unfurled) = Unfurled(visit_simplify(node.body), node.ndims, node.arr)

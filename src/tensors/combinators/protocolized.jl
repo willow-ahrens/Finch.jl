@@ -21,6 +21,8 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualProtocolizedArray)
 	print(io, "VirtualProtocolizedArray($(ex.body), $(ex.protos))")
 end
 
+Base.summary(io::IO, ex::VirtualProtocolizedArray) = print(io, "VProtocolized($(summary(ex.body)), $(summary(ex.protos)))")
+
 FinchNotation.finch_leaf(x::VirtualProtocolizedArray) = virtual(x)
 
 function virtualize(ex, ::Type{ProtocolizedArray{Protos, Body}}, ctx) where {Protos, Body}
@@ -104,7 +106,7 @@ phase_body(node::VirtualProtocolizedArray, ctx, ext, ext_2) = VirtualProtocolize
 phase_range(node::VirtualProtocolizedArray, ctx, ext) = phase_range(node.body, ctx, ext)
 
 get_spike_body(node::VirtualProtocolizedArray, ctx, ext, ext_2) = VirtualProtocolizedArray(get_spike_body(node.body, ctx, ext, ext_2), node.protos)
-get_spike_tail(node::VirtualProtocolizedArray, ctx, ext, ext_2) = popdim(VirtualProtocolizedArray(get_spike_tail(node.body, ctx, ext, ext_2), node.protos))
+get_spike_tail(node::VirtualProtocolizedArray, ctx, ext, ext_2) = VirtualProtocolizedArray(get_spike_tail(node.body, ctx, ext, ext_2), node.protos)
 
 visit_fill(node, tns::VirtualProtocolizedArray) = visit_fill(node, tns.body)
 visit_simplify(node::VirtualProtocolizedArray) = VirtualProtocolizedArray(visit_simplify(node.body), node.protos)
