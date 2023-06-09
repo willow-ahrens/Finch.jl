@@ -115,51 +115,6 @@ function contain(f, ctx::AbstractCompiler)
     end
 end
 
-
-"""
-    InstantiateTensors(ctx)
-
-A transformation to instantiate readers and updaters before executing an
-expression
-
-See also: [`declare!`](@ref)
-"""
-@kwdef struct InstantiateTensors{Ctx}
-    ctx::Ctx
-    escape = Set()
-end
-
-function (ctx::InstantiateTensors)(node)
-    if istree(node)
-        return similarterm(node, operation(node), map(ctx, arguments(node)))
-    else
-        return node
-    end
-end
-
-function (ctx::InstantiateTensors)(node::FinchNode)
-    if node.kind === sequence
-        sequence(map(ctx, node.bodies)...)
-    elseif node.kind === declare
-        push!(ctx.escape, node.tns)
-        node
-    elseif node.kind === access && node.tns.kind === virtual && getroot(node.tns) != nothing && !(getroot(node.tns.val) in ctx.escape)
-        tns = node.tns.val
-        idxs = node.idxs
-        if node.mode.kind === reader
-            get(ctx.ctx.modes, getroot(node.tns), reader()).kind === reader || throw(LifecycleError("Cannot read update-only $(node.tns) (perhaps same tensor on both lhs and rhs?)"))
-            return access(tns, node.mode, idxs...)
-        else
-            ctx.ctx.modes[getroot(node.tns)].kind === updater || throw(LifecycleError("Cannot update read-only $(node.tns) (perhaps same tensor on both lhs and rhs?)"))
-            return access(tns, node.mode, idxs...)
-        end
-    elseif istree(node)
-        return similarterm(node, operation(node), map(ctx, arguments(node)))
-    else
-        return node
-    end
-end
-
 (ctx::AbstractCompiler)(root::Union{Symbol, Expr}, ::DefaultStyle) = root
 
 function lower(root, ctx::AbstractCompiler, ::DefaultStyle)
@@ -189,7 +144,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
             return quote end
         else
             quote
-                $(ctx(InstantiateTensors(ctx=ctx)(root.bodies[1])))
+                $(ctx(root.bodies[1]))
                 $(contain(ctx) do ctx_2
                     (ctx_2)(sequence(root.bodies[2:end]...))
                 end)
