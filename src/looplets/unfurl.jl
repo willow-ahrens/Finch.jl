@@ -13,50 +13,6 @@ end
 
 truncate(node, ctx, ext, ext_2) = node
 
-struct SelectVisitor
-    ctx
-    idxs
-end
-
-function (ctx::SelectVisitor)(node)
-    if istree(node)
-        similarterm(node, operation(node), map(ctx, arguments(node)))
-    else
-        node
-    end
-end
-
-function (ctx::SelectVisitor)(node::FinchNode)
-    if node.kind === access && node.tns.kind === virtual
-        select_access(node, ctx, node.tns.val)
-    elseif node.kind === access && node.tns.kind === variable
-        select_access(node, ctx, ctx.ctx.bindings[node.tns])
-    elseif istree(node)
-        similarterm(node, operation(node), map(ctx, arguments(node)))
-    else
-        node
-    end
-end
-select_access(node, ctx, tns) = similarterm(node, operation(node), map(ctx, arguments(node)))
-
-struct SelectStyle end
-
-combine_style(a::SelectStyle, b::ThunkStyle) = b
-combine_style(a::SelectStyle, b::UnfurlStyle) = a
-combine_style(a::SelectStyle, b::SelectStyle) = a
-combine_style(a::SelectStyle, b::SimplifyStyle) = b
-
-function lower(root, ctx::AbstractCompiler,  ::SelectStyle)
-    idxs = Dict()
-    root = SelectVisitor(ctx, idxs)(root)
-    for (idx, val) in pairs(idxs)
-        root = loop(idx, Extent(val, val), root)
-    end
-    contain(ctx) do ctx_2
-        ctx_2(root)
-    end
-end
-
 @kwdef struct Furlable
     val = nothing
     fuse = nothing
@@ -74,30 +30,6 @@ FinchNotation.finch_leaf(x::Furlable) = virtual(x)
 #function Base.show(io::IO, mime::MIME"text/plain", ex::Furlable)
 #    print(io, "Furlable()")
 #end
-
-function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::Furlable)
-    if !isempty(node.idxs)
-        if getunbound(node.idxs[end]) ⊆ keys(ctx.ctx.bindings)
-            return SelectStyle()
-        end
-    end
-    return DefaultStyle()
-end
-
-function select_access(node, ctx::Finch.SelectVisitor, tns::Furlable)
-    if !isempty(node.idxs)
-        if getunbound(node.idxs[end]) ⊆ keys(ctx.ctx.bindings)
-            var = index(ctx.ctx.freshen(:s))
-            val = cache!(ctx.ctx, :s, node.idxs[end])
-            ctx.idxs[var] = val
-            ext = first(virtual_size(tns, ctx.ctx))
-            ext_2 = Extent(val, val)
-            tns_2 = truncate(tns, ctx.ctx, ext, ext_2)
-            return access(tns_2, node.mode, node.idxs[1:end-1]..., var)
-        end
-    end
-    return similarterm(node, operation(node), map(ctx, arguments(node)))
-end
 
 struct FormatLimitation <: Exception
     msg::String

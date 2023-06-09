@@ -35,10 +35,6 @@ function unfurl_access(tns::RootArray, ctx, protos...)
     unfurl_access(resolve(tns.tag, ctx), ctx, protos...)
 end
 
-function select_access(node, ctx::Finch.SelectVisitor, tns::RootArray)
-    select_access(node, ctx, resolve(tns.tag, ctx))
-end
-
 function lower(node::RootArray, ctx::AbstractCompiler, ::DefaultStyle)
     ctx(node.body)
 end
