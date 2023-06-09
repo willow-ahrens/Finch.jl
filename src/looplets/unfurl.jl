@@ -130,19 +130,3 @@ function get_point_body(tns::Furlable, ctx, ext, idx)
     end
     nothing
 end
-
-refurl(tns, ctx, mode) = tns
-function exfurl(tns, ctx, idx::FinchNode, ext)
-    if idx.kind === index
-        return tns
-    elseif idx.kind === access && idx.tns.kind === virtual
-        exfurl_access(tns, ctx, ext, idx.tns.val)
-    else
-        error("unimplemented")
-    end
-end
-
-function exfurl_access(tns, ctx, ext, node::Furlable)
-    @assert node.fuse !== nothing
-    node.fuse(tns, ctx, ext)
-end
