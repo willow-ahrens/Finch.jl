@@ -84,12 +84,11 @@ function (fbr::SubFiber{<:ContinuousLevel})(idxs...)
     isempty(idxs) && return fbr
     lvl = fbr.lvl
     p = fbr.pos
-    r = lvl.ptr[p] + searchsortedfirst(@view(lvl.right[lvl.ptr[p]:lvl.ptr[p + 1] - 1]), idxs[end]) - 1
-    r < lvl.ptr[p + 1] || return default(fbr)
-    q = lvl.left[r + 1] - 1 - lvl.right[r] + idxs[end]
-    q >= lvl.left[r] || return default(fbr)
+    r1 = searchsortedlast(@view(lvl.left[lvl.ptr[p]:lvl.ptr[p + 1] - 1]), idxs[end])
+    r2 = searchsortedfirst(@view(lvl.right[lvl.ptr[p]:lvl.ptr[p + 1] - 1]), idxs[end])
+    q = lvl.ptr[p] + first(r1) - 1
     fbr_2 = SubFiber(lvl.lvl, q)
-    return fbr_2(idxs[1:end-1]...)
+    r1 != r2 ? default(fbr_2) : fbr_2(idxs[1:end-1]...)
 end
 
 mutable struct VirtualContinuousLevel
@@ -100,23 +99,18 @@ mutable struct VirtualContinuousLevel
     shape
     qos_fill
     qos_stop
-    ros_fill
-    ros_stop
-    dirty
 end
 function virtualize(ex, ::Type{ContinuousLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}
     sym = ctx.freshen(tag)
     shape = value(:($sym.shape), Int)
     qos_fill = ctx.freshen(sym, :_qos_fill)
     qos_stop = ctx.freshen(sym, :_qos_stop)
-    ros_fill = ctx.freshen(sym, :_ros_fill)
-    ros_stop = ctx.freshen(sym, :_ros_stop)
     dirty = ctx.freshen(sym, :_dirty)
     push!(ctx.preamble, quote
         $sym = $ex
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualContinuousLevel(lvl_2, sym, Ti, Tp, shape, qos_fill, qos_stop, ros_fill, ros_stop, dirty)
+    VirtualContinuousLevel(lvl_2, sym, Ti, Tp, shape, qos_fill, qos_stop)
 end
 function lower(lvl::VirtualContinuousLevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
@@ -137,39 +131,37 @@ function virtual_level_size(lvl::VirtualContinuousLevel, ctx)
     (virtual_level_size(lvl.lvl, ctx)..., ext)
 end
 
+function virtual_level_resize!(lvl::VirtualContinuousLevel, ctx, dims...)
+    lvl.shape = getstop(dims[end])
+    lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims[1:end-1]...)
+    lvl
+end
+
+
 virtual_level_eltype(lvl::VirtualContinuousLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualContinuousLevel) = virtual_level_default(lvl.lvl)
 
 function declare_level!(lvl::VirtualContinuousLevel, ctx::AbstractCompiler, pos, init)
     Tp = lvl.Tp
     Ti = lvl.Ti
-    ros = call(-, call(getindex, :($(lvl.ex).ptr), call(+, pos, 1)), 1)
-    qos = call(-, call(getindex, :($(lvl.ex).left), call(+, ros, 1)), 1)
+    qos = call(-, call(getindex, :($(lvl.ex).ptr), call(+, pos, 1)), 1)
     push!(ctx.preamble, quote
         $(lvl.qos_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
-        $(lvl.ros_fill) = $(Tp(0))
-        $(lvl.ros_stop) = $(Tp(0))
-        $resize_if_smaller!($(lvl.ex).left, 1)
-        $(lvl.ex).left[1] = 1
     end)
     lvl.lvl = declare_level!(lvl.lvl, ctx, qos, init)
     return lvl
 end
 
 function trim_level!(lvl::VirtualContinuousLevel, ctx::AbstractCompiler, pos)
-    Tp = lvl.Tp
-    Ti = lvl.Ti
-    ros = ctx.freshen(:ros)
     qos = ctx.freshen(:qos)
     push!(ctx.preamble, quote
         resize!($(lvl.ex).ptr, $(ctx(pos)) + 1)
-        $ros = $(lvl.ex).ptr[end] - $(lvl.Tp(1))
-        resize!($(lvl.ex).right, $ros)
-        resize!($(lvl.ex).left, $ros + 1)
-        $qos = $(lvl.ex).left[end] - $(lvl.Tp(1))
+        $qos = $(lvl.ex).ptr[end] - $(lvl.Tp(1))
+        resize!($(lvl.ex).left, $qos)
+        resize!($(lvl.ex).right, $qos)
     end)
-    lvl.lvl = trim_level!(lvl.lvl, ctx, value(qos, Tp))
+    lvl.lvl = trim_level!(lvl.lvl, ctx, value(qos, lvl.Tp))
     return lvl
 end
 
@@ -199,7 +191,7 @@ end
 
 
 function get_reader(fbr::VirtualSubFiber{VirtualContinuousLevel}, ctx, ::Union{Nothing, Walk}, protos...)
-    (lvl, pos) = (fbr.lvl, fbr.pos)
+    (lvl, pos) = (fbr.lvl, fbr.pos) 
     tag = lvl.ex
     Tp = lvl.Tp
     Ti = lvl.Ti
@@ -243,7 +235,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualContinuousLevel}, ctx, ::Union{N
                                             body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
                                         ),
                                         Phase(
-                                            #stop = (ctx, ext) -> value(my_i_stop),
+                                            stop = (ctx, ext) -> value(my_i_stop),
                                             body = (ctx,ext) -> Run(
                                                                     body = Simplify(get_reader(VirtualSubFiber(lvl.lvl, value(my_r)), ctx, protos...))
                                                                    )
@@ -264,3 +256,59 @@ function get_reader(fbr::VirtualSubFiber{VirtualContinuousLevel}, ctx, ::Union{N
         )
     )
 end
+
+
+# Jaeyeon: IDK what is this function doing
+is_laminable_updater(lvl::VirtualContinuousLevel, ctx, ::Union{Nothing, Extrude}) = false
+get_updater(fbr::VirtualSubFiber{VirtualContinuousLevel}, ctx, protos...) = 
+    get_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
+
+function get_updater(fbr::VirtualTrackedSubFiber{VirtualContinuousLevel}, ctx, ::Union{Nothing, Extrude}, protos...)
+    (lvl, pos) = (fbr.lvl, fbr.pos) # Jaeyeon : Accessing with the position obtained from the parent fiber
+    tag = lvl.ex
+    Tp = lvl.Tp
+    Ti = lvl.Ti
+    my_p = ctx.freshen(tag, :_p)
+    my_q = ctx.freshen(tag, :_q)
+    my_i_prev = ctx.freshen(tag, :_i_prev)
+    qos = ctx.freshen(tag, :_qos)
+    qos_fill = lvl.qos_fill
+    qos_stop = lvl.qos_stop
+    dirty = ctx.freshen(tag, :dirty)
+    
+    Furlable(
+        tight = lvl, # Jaeyeon : Something related to error handling in unfurl.jl
+        size = virtual_level_size(lvl, ctx), # Jaeyeon : list of all extents of subfiber's shape? 
+        body = (ctx, ext) -> Thunk(
+            preamble = quote
+                $qos = $qos_fill + 1
+            end,
+
+            body = (ctx) -> AcceptRun(
+                body = (ctx, ext) -> Thunk(
+                    preamble = quote
+                        if $qos > $qos_stop
+                            $qos_stop = max($qos_stop << 1, 1)
+                            $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(qos, lvl.Tp), value(qos_stop, lvl.Tp)), ctx))
+                        end
+                        $dirty = false
+                    end,
+                    body = (ctx) -> get_updater(VirtualTrackedSubFiber(lvl.lvl, value(qos, lvl.Tp), dirty), ctx, protos...),
+                    epilogue = quote
+                        if $dirty
+                            $(fbr.dirty) = true
+                            $(lvl.ex).left[$qos] = $(ctx(getstart(ext)))
+                            $(lvl.ex).right[$qos] = $(ctx(getstop(ext)))
+                            $(qos) += $(Tp(1))
+                        end
+                    end
+                )
+            ),
+            epilogue = quote
+                $(lvl.ex).ptr[$(ctx(pos)) + 1] = $qos - $qos_fill - 1
+                $qos_fill = $qos - 1
+            end
+        )
+    )
+end
+

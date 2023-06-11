@@ -56,7 +56,6 @@ include("symbolic/symbolic.jl")
 
 include("looplets/thunks.jl")
 include("looplets/lookups.jl")
-include("looplets/fills.jl")
 include("looplets/nulls.jl")
 include("looplets/shifts.jl")
 include("looplets/unfurl.jl")
@@ -68,6 +67,7 @@ include("looplets/pipelines.jl")
 include("looplets/cycles.jl")
 include("looplets/jumpers.jl")
 include("looplets/steppers.jl")
+include("looplets/fills.jl")
 
 include("execute.jl")
 
@@ -132,5 +132,7 @@ include("fileio/tensormarket.jl")
 
 export fbrread, fbrwrite, bsread, bswrite
 export ftnsread, ftnswrite, fttread, fttwrite
+
+include("resumables.jl")
 
 end

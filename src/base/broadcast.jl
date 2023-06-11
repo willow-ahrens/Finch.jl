@@ -59,7 +59,7 @@ end
     idxs = [index(Symbol(:i, n)) for n = 1:ndims(bc)]
     ctx = LowerJulia()
     rep = pointwise_finch_traits(:bc, bc, idxs)
-    rep = PointwiseRep(ctx)(rep, reverse(idxs))
+    rep = PointwiseRep(ctx, reverse(idxs))(rep)
     fiber_ctr(collapse_rep(rep))
 end
 
@@ -81,6 +81,7 @@ combine_style(a::PointwiseElementStyle, ::PointwiseElementStyle) = a
 
 struct PointwiseRep <: AbstractCompiler
     ctx
+    idxs
 end
 
 stylize_access(node, ctx::Stylize{PointwiseRep}, ::HollowData) = PointwiseHollowStyle()
@@ -91,34 +92,36 @@ stylize_access(node, ctx::Stylize{PointwiseRep}, ::RepeatData) =
 stylize_access(node, ctx::Stylize{PointwiseRep}, ::ElementData) =
     isempty(ctx.root) ? PointwiseElementStyle() : PointwiseDenseStyle()
 
+simplify(root, ctx::PointwiseRep) = simplify(root, ctx.ctx)
+
 pointwise_rep_body(tns::SparseData) = HollowData(tns.lvl)
 pointwise_rep_body(tns::DenseData) = tns.lvl
 pointwise_rep_body(tns::RepeatData) = tns.lvl
 pointwise_rep_body(tns::ElementData) = tns.lvl
 
-(ctx::PointwiseRep)(rep, idxs) = ctx(rep, idxs, Stylize(idxs, ctx)(rep))
-function (ctx::PointwiseRep)(rep, idxs, ::PointwiseHollowStyle)
+(ctx::PointwiseRep)(rep) = lower(rep, ctx, Stylize(ctx.idxs, ctx)(rep))
+function lower(rep, ctx::PointwiseRep, ::PointwiseHollowStyle)
     background = simplify(Postwalk(Chain([
-        (@rule access(~ex::isvirtual, ~m, ~i...) => access(pointwise_rep_hollow(ex.val), m, i...)),
+        (@rule access(~ex::isvirtual, ~m, ~i...) => pointwise_rep_hollow(ex.val)),
     ]))(rep), ctx.ctx)
     body = simplify(Postwalk(Chain([
         (@rule access(~ex::isvirtual, ~m, ~i...) => access(pointwise_rep_solid(ex.val), m, i...)),
     ]))(rep), ctx.ctx)
     if isliteral(background)
-        return HollowData(ctx(body, idxs))
+        return HollowData(ctx(body))
     else
-        return ctx(body, idxs)
+        return ctx(body)
     end
 end
 
-function (ctx::PointwiseRep)(rep, idxs, ::PointwiseDenseStyle)
+function lower(rep, ctx::PointwiseRep, ::PointwiseDenseStyle)
     body = simplify(Rewrite(Postwalk(Chain([
-        (@rule access(~ex::isvirtual, ~m, ~i..., $(idxs[1])) => access(pointwise_rep_body(ex.val), m, i...)),
+        (@rule access(~ex::isvirtual, ~m, ~i..., $(ctx.idxs[1])) => access(pointwise_rep_body(ex.val), m, i...)),
     ])))(rep), ctx.ctx)
-    return DenseData(ctx(body, idxs[2:end]))
+    return DenseData(PointwiseRep(ctx, ctx.idxs[2:end])(body))
 end
 
-function (ctx::PointwiseRep)(rep, idxs, ::PointwiseRepeatStyle)
+function lower(rep, ctx::PointwiseRep, ::PointwiseRepeatStyle)
     background = simplify(PostWalk(Chain([
         (@rule access(~ex::isvirtual, ~m, ~i...) => finch_leaf(default(ex.val))),
     ]))(rep), ctx.ctx)
@@ -126,7 +129,7 @@ function (ctx::PointwiseRep)(rep, idxs, ::PointwiseRepeatStyle)
     return RepeatData(background.val, typeof(background.val))
 end
 
-function (ctx::PointwiseRep)(rep, idxs, ::Union{DefaultStyle, PointwiseElementStyle})
+function lower(rep, ctx::PointwiseRep, ::Union{DefaultStyle, PointwiseElementStyle})
     background = simplify(Rewrite(Postwalk(Chain([
         (@rule access(~ex::isvirtual, ~m) => finch_leaf(default(ex.val))),
     ])))(rep), ctx.ctx)
@@ -134,8 +137,8 @@ function (ctx::PointwiseRep)(rep, idxs, ::Union{DefaultStyle, PointwiseElementSt
     return ElementData(background.val, typeof(background.val))
 end
 
-pointwise_rep_hollow(ex::HollowData) = Fill(default(ex))
-pointwise_rep_hollow(ex) = ex
+pointwise_rep_hollow(ex::HollowData) = literal(default(ex))
+pointwise_rep_hollow(ex) = nothing
 pointwise_rep_solid(tns::HollowData) = pointwise_rep_solid(tns.lvl)
 pointwise_rep_solid(ex) = ex
 
