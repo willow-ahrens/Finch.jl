@@ -2,8 +2,8 @@ struct ContinuousLevel{Ti, Tp, Lvl}
     lvl::Lvl
     shape::Ti
     ptr::Vector{Tp}
-    right::Vector{Ti}
     left::Vector{Ti}
+    right::Vector{Ti}
 end
 
 const Continuous = ContinuousLevel
@@ -25,14 +25,14 @@ similar_level(lvl::ContinuousLevel) = Continuous(similar_level(lvl.lvl))
 similar_level(lvl::ContinuousLevel, dim, tail...) = Continuous(similar_level(lvl.lvl, tail...), dim)
 
 pattern!(lvl::ContinuousLevel{Ti, Tp}) where {Ti, Tp} = 
-    ContinuousLevel{Ti, Tp}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.right, lvl.left)
+    ContinuousLevel{Ti, Tp}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.left, lvl.right)
 
 function countstored_level(lvl::ContinuousLevel, pos)
     countstored_level(lvl.lvl, lvl.left[lvl.ptr[pos + 1]]-1)
 end
 
 redefault!(lvl::ContinuousLevel{Ti, Tp}, init) where {Ti, Tp} = 
-    ContinuousLevel{Ti, Tp}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.right, lvl.left)
+    ContinuousLevel{Ti, Tp}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.left, lvl.right)
 
 function Base.show(io::IO, lvl::ContinuousLevel{Ti, Tp}) where {Ti, Tp}
     if get(io, :compact, false)
@@ -118,8 +118,8 @@ function lower(lvl::VirtualContinuousLevel, ctx::AbstractCompiler, ::DefaultStyl
             $(ctx(lvl.lvl)),
             $(ctx(lvl.shape)),
             $(lvl.ex).ptr,
-            $(lvl.ex).right,
             $(lvl.ex).left,
+            $(lvl.ex).right,
         )
     end
 end
@@ -289,6 +289,8 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualContinuousLevel}, ctx, :
                     preamble = quote
                         if $qos > $qos_stop
                             $qos_stop = max($qos_stop << 1, 1)
+                            $resize_if_smaller!($(lvl.ex).left, $qos_stop)
+                            $resize_if_smaller!($(lvl.ex).right, $qos_stop)
                             $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(qos, lvl.Tp), value(qos_stop, lvl.Tp)), ctx))
                         end
                         $dirty = false

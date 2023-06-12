@@ -70,3 +70,12 @@ isstructequal(a::T, b::T) where {T <: SparseByteMap} =
 isstructequal(a::T, b::T) where {T <: SparseTriangle} =
     a.shape == b.shape &&
     isstructequal(a.lvl, b.lvl)
+
+isstructequal(a::T, b::T) where {T <: Continuous} =
+    a.shape == b.shape &&
+    a.ptr == b.ptr &&
+    a.left == b.left &&
+    a.right == b.right &&
+    isstructequal(a.lvl, b.lvl)
+
+
