@@ -49,23 +49,24 @@ function Base.show(io::IO, lvl::ContinuousLevel{Ti, Tp}) where {Ti, Tp}
     else
         show(IOContext(io, :typeinfo=>Vector{Tp}), lvl.ptr)
         print(io, ", ")
-        show(IOContext(io, :typeinfo=>Vector{Ti}), lvl.right)
-        print(io, ", ")
         show(IOContext(io, :typeinfo=>Vector{Ti}), lvl.left)
+        print(io, ", ")
+        show(IOContext(io, :typeinfo=>Vector{Ti}), lvl.right)
     end
     print(io, ")")
 end
 
 function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:ContinuousLevel}, depth)
     p = fbr.pos
+    lvl = fbr.lvl
+    left_endpoints = @view(lvl.left[lvl.ptr[p]:lvl.ptr[p + 1] - 1])
+
     crds = []
-    for r in fbr.lvl.ptr[p]:fbr.lvl.ptr[p + 1] - 1
-        i = fbr.lvl.right[r]
-        l = fbr.lvl.left[r + 1] - fbr.lvl.left[r]
-        append!(crds, (i - l + 1):i)
+    for l in left_endpoints 
+        append!(crds, l)
     end
 
-    print_coord(io, crd) = show(io, crd)
+    print_coord(io, crd) = print(io, crd, ":", lvl.right[searchsortedfirst(left_endpoints, crd)])  
     get_fbr(crd) = fbr(crd)
 
     print(io, "Continuous (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.shape, "]")
@@ -195,54 +196,55 @@ function get_reader(fbr::VirtualSubFiber{VirtualContinuousLevel}, ctx, ::Union{N
     tag = lvl.ex
     Tp = lvl.Tp
     Ti = lvl.Ti
+    my_i_end = ctx.freshen(tag, :_i_end)
     my_i_stop = ctx.freshen(tag, :_i_stop)
     my_i_start = ctx.freshen(tag, :_i_start)
-    my_r = ctx.freshen(tag, :_r)
-    my_r_stop = ctx.freshen(tag, :_r_stop)
     my_q = ctx.freshen(tag, :_q)
     my_q_stop = ctx.freshen(tag, :_q_stop)
-    my_q_left = ctx.freshen(tag, :_q_left)
-    my_i_end = ctx.freshen(tag, :_i_end)
 
     Furlable(
         size = virtual_level_size(lvl, ctx),
         body = (ctx, ext) -> Thunk(
             preamble = quote
-                $my_r = $(lvl.ex).ptr[$(ctx(pos))]
-                $my_r_stop = $(lvl.ex).ptr[$(ctx(pos)) + $(Tp(1))]
-                $my_i_end = $(lvl.ex).right[$my_r_stop - $(Tp(1))]
+                $my_q = $(lvl.ex).ptr[$(ctx(pos))]
+                $my_q_stop = $(lvl.ex).ptr[$(ctx(pos)) + $(Tp(1))]
+                if $my_q < $my_q_stop
+                    $my_i_end = $(lvl.ex).right[$my_q_stop - $(Tp(1))]
+                else
+                    $my_i_end = $(Ti(0))
+                end
+
             end,
             body = (ctx) -> Pipeline([
                 Phase(
                     stop = (ctx, ext) -> value(my_i_end),
                     body = (ctx, ext) -> Stepper(
                         seek = (ctx, ext) -> quote
-                            if $(lvl.ex).right[$my_r] < $(ctx(getstart(ext)))
-                                $my_r = scansearch($(lvl.ex).right, $(ctx(getstart(ext))), $my_r, $my_r_stop - 1)
+                            if $(lvl.ex).right[$my_q] < $(ctx(getstart(ext)))
+                                $my_q = scansearch($(lvl.ex).right, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                             end
                         end,
                         body = Thunk(
                             preamble = quote
-                                $my_i_start = $(lvl.ex).left[$my_r]
-                                $my_i_stop = $(lvl.ex).right[$my_r]
+                                $my_i_start = $(lvl.ex).left[$my_q]
+                                $my_i_stop = $(lvl.ex).right[$my_q]
                             end,
                             body = (ctx) -> Phase(
                                 stop = (ctx, ext) -> value(my_i_stop),
                                 body = (ctx, ext) -> Thunk( 
                                      body = (ctx) -> Pipeline([
                                         Phase(
-                                            stop = (ctx, ext) -> value(my_i_start),
+                                              stop = (ctx, ext) -> call(-, value(my_i_start), 1),
                                             body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
                                         ),
                                         Phase(
-                                            stop = (ctx, ext) -> value(my_i_stop),
                                             body = (ctx,ext) -> Run(
-                                                                    body = Simplify(get_reader(VirtualSubFiber(lvl.lvl, value(my_r)), ctx, protos...))
+                                                                    body = Simplify(get_reader(VirtualSubFiber(lvl.lvl, value(my_q)), ctx, protos...))
                                                                    )
                                         )
                                     ]),
                                     epilogue = quote
-                                        $my_r += ($(ctx(getstop(ext))) == $my_i_stop)
+                                        $my_q += ($(ctx(getstop(ext))) == $my_i_stop)
                                     end
                                 )
                             )
@@ -268,9 +270,6 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualContinuousLevel}, ctx, :
     tag = lvl.ex
     Tp = lvl.Tp
     Ti = lvl.Ti
-    my_p = ctx.freshen(tag, :_p)
-    my_q = ctx.freshen(tag, :_q)
-    my_i_prev = ctx.freshen(tag, :_i_prev)
     qos = ctx.freshen(tag, :_qos)
     qos_fill = lvl.qos_fill
     qos_stop = lvl.qos_stop

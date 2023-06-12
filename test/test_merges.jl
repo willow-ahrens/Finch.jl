@@ -14,6 +14,7 @@
         (;fmt = (z) -> @fiber(d(sh{1}(e(z)))), proto = [walk,follow]),
         (;fmt = (z) -> @fiber(sh{2}(e(z))), proto = [walk, walk]),
         #(;fmt = (z) -> @fiber(d(rl(z))), proto = [walk, follow]),
+        (;fmt = (z) -> @fiber(d(cont(e(z)))), proto = [walk, follow]),
     ]
 
     dtss = [
