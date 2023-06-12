@@ -114,8 +114,8 @@ visit_simplify(node::VirtualProtocolizedArray) = VirtualProtocolizedArray(visit_
     guard => VirtualProtocolizedArray(body, node.protos)
 end
 
-function unfurl_access(tns::VirtualProtocolizedArray, ctx, protos...)
-    VirtualProtocolizedArray(unfurl_access(tns.body, ctx, map(something, tns.protos, protos)...), tns.protos)
+function unfurl_access(tns::VirtualProtocolizedArray, ctx, ext, protos...)
+    VirtualProtocolizedArray(unfurl_access(tns.body, ctx, ext, map(something, tns.protos, protos)...), tns.protos)
 end
 
 (ctx::CycleVisitor)(node::VirtualProtocolizedArray) = VirtualProtocolizedArray(ctx(node.body), node.protos)

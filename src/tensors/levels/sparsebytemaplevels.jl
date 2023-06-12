@@ -249,7 +249,6 @@ function unfurl_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::U
     my_i_stop = ctx.freshen(tag, :_i_stop)
 
     Furlable(
-        size = virtual_level_size(lvl, ctx),
         body = (ctx, ext) -> Thunk(
             preamble = quote
                 $my_r = $(lvl.ex).ptr[$(ctx(pos))]
@@ -314,7 +313,6 @@ function unfurl_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::t
     my_j = ctx.freshen(tag, :_j)
 
     Furlable(
-        size = virtual_level_size(lvl, ctx),
         body = (ctx, ext) -> Thunk(
             preamble = quote
                 $my_r = $(lvl.ex).ptr[$(ctx(pos))]
@@ -404,7 +402,6 @@ function unfurl_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::t
 
 
     Furlable(
-        size = virtual_level_size(lvl, ctx),
         body = (ctx, ext) -> Lookup(
             body = (ctx, i) -> Thunk(
                 preamble = quote
@@ -432,7 +429,6 @@ function unfurl_updater(fbr::VirtualTrackedSubFiber{VirtualSparseByteMapLevel}, 
 
     Furlable(
         tight = is_laminable_updater(lvl.lvl, ctx, protos...) ? nothing : lvl.lvl,
-        size = virtual_level_size(lvl, ctx),
         body = (ctx, ext) -> Lookup(
             body = (ctx, idx) -> Thunk(
                 preamble = quote

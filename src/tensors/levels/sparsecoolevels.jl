@@ -250,7 +250,6 @@ function unfurl_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, R, start, sto
     my_i_stop = ctx.freshen(tag, :_i_stop)
 
     Furlable(
-        size = virtual_level_size(lvl, ctx)[R:end],
         body = (ctx, ext) -> Thunk(
             preamble = quote
                 $my_q = $(ctx(start))
@@ -350,7 +349,6 @@ function unfurl_updater_coo_helper(lvl::VirtualSparseCOOLevel, ctx, qos, fbr_dir
     qos_stop = lvl.qos_stop
     Furlable(
         tight = lvl,
-        size = virtual_level_size(lvl, ctx)[length(coords) + 1:end],
         body = (ctx, ext) -> 
             if length(coords) + 1 < lvl.N
                 Lookup(

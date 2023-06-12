@@ -70,10 +70,8 @@ function Finch.unfurl_reader(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler,
     my_val = ctx.freshen(tag, :_val)
 
     Furlable(
-        size = virtual_size(arr, ctx),
         body = (ctx, ext) -> Lookup(
             body = (ctx, j) -> Furlable(
-                size = virtual_size(arr, ctx)[2:2],
                 body = (ctx, ext) -> Thunk(
                     preamble = quote
                         $my_q = $(arr.ex).colptr[$(ctx(j))]
@@ -172,7 +170,6 @@ function Finch.unfurl_reader(arr::VirtualSparseVector, ctx::AbstractCompiler, ::
     my_val = ctx.freshen(tag, :_val)
 
     body = Furlable(
-        size = virtual_size(arr, ctx),
         body = (ctx, ext) -> Thunk(
             preamble = quote
                 $my_q = 1

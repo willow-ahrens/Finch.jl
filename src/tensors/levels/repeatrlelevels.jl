@@ -220,7 +220,6 @@ function unfurl_reader(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, ::Union
     my_i1 = ctx.freshen(tag, :_i1)
 
     Furlable(
-        size = virtual_level_size(lvl, ctx),
         body = (ctx, ext) -> Thunk(
             preamble = (quote
                 $my_q = $(lvl.ex).ptr[$(ctx(pos))]
@@ -298,8 +297,6 @@ function unfurl_updater(fbr::VirtualTrackedSubFiber{VirtualRepeatRLELevel}, ctx,
     
     Furlable(
         tight = lvl,
-        val = D,
-        size = virtual_level_size(lvl, ctx),
         body = (ctx, ext) -> Thunk(
             preamble = quote
                 $my_q = $(lvl.ros_fill) + $(ctx(pos))

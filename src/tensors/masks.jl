@@ -14,10 +14,8 @@ Finch.virtual_size(::DiagMask, ctx) = (nodim, nodim)
 
 function unfurl_reader(::DiagMask, ctx, protos::typeof(defaultread)...)
     tns = Furlable(
-        size = (nodim, nodim),
         body = (ctx, ext) -> Lookup(
             body = (ctx, i) -> Furlable(
-                size = (nodim,),
                 body = (ctx, ext) -> Pipeline([
                     Phase(
                         stop = (ctx, ext) -> value(:($(ctx(i)) - 1)),
@@ -49,10 +47,8 @@ Finch.virtual_size(::UpTriMask, ctx) = (nodim, nodim)
 
 function unfurl_reader(::UpTriMask, ctx, protos::typeof(defaultread)...)
     tns = Furlable(
-        size = (nodim, nodim),
         body = (ctx, ext) -> Lookup(
             body = (ctx, i) -> Furlable(
-                size = (nodim,),
                 body = (ctx, ext) -> Pipeline([
                     Phase(
                         stop = (ctx, ext) -> value(:($(ctx(i)))),
@@ -82,10 +78,8 @@ Finch.virtual_size(::LoTriMask, ctx) = (nodim, nodim)
 
 function unfurl_reader(::LoTriMask, ctx, protos::typeof(defaultread)...)
     tns = Furlable(
-        size = (nodim, nodim),
         body = (ctx, ext) -> Lookup(
             body = (ctx, i) -> Furlable(
-                size = (nodim,),
                 body = (ctx, ext) -> Pipeline([
                     Phase(
                         stop = (ctx, ext) -> value(:($(ctx(i)) - 1)),
@@ -115,13 +109,10 @@ Finch.virtual_size(::BandMask, ctx) = (nodim, nodim, nodim)
 
 function unfurl_reader(::BandMask, ctx, mode, protos::typeof(defaultread)...)
     tns = Furlable(
-        size = (nodim, nodim, nodim),
         body = (ctx, ext) -> Lookup(
             body = (ctx, k) -> Furlable(
-                size = (nodim, nodim),
                 body = (ctx, ext) -> Lookup(
                     body = (ctx, j) -> Furlable(
-                        size = (nodim,),
                         body = (ctx, ext) -> Pipeline([
                             Phase(
                                 stop = (ctx, ext) -> value(:($(ctx(j)) - 1)),

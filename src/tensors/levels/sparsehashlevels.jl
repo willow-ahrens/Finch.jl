@@ -279,7 +279,6 @@ function get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, R, start,
     my_i_stop = ctx.freshen(tag, :_i_stop)
 
     Furlable(
-        size = virtual_level_size(lvl, ctx)[R:end],
         body = (ctx, ext) -> Thunk(
             preamble = quote
                 $my_q = $(ctx(start))
@@ -363,7 +362,6 @@ function unfurl_reader_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, coords
     qos_stop = lvl.qos_stop
     qos = ctx.freshen(tag, :_q)
     Furlable(
-        size = virtual_level_size(lvl, ctx)[1 + length(coords):end],
         body = (ctx, ext) ->
             if length(coords)  + 1 < lvl.N
                 Lookup(
@@ -407,7 +405,6 @@ function unfurl_updater_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, fbr_d
     dirty = ctx.freshen(tag, :dirty)
     Furlable(
         tight = is_laminable_updater(lvl.lvl, ctx, protos[lvl.N - length(coords): end]...) ? nothing : lvl.lvl,
-        size = virtual_level_size(lvl, ctx)[1 + length(coords):end],
         body = (ctx, ext) ->
             if length(coords) + 1 < lvl.N
                 Lookup(

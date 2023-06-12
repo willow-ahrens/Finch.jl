@@ -29,7 +29,6 @@ virtual_eldim(arr::VirtualPermit, ctx::AbstractCompiler, idx_dim) = widendim(idx
 
 function unfurl_reader(::VirtualPermit, ctx, proto_idx::typeof(defaultread))
     Furlable(
-        size = (nodim,),
         body = nothing,
         fuse = (tns, ctx, ext) -> Pipeline([
             Phase(
@@ -81,10 +80,8 @@ virtual_eldim(arr::VirtualOffset, ctx::AbstractCompiler, idx_dim, delta_dim) = c
 
 function unfurl_reader(::VirtualOffset, ctx, proto_delta::typeof(defaultread), proto_idx::typeof(defaultread))
     tns = Furlable(
-        size = (nodim, nodim),
         body = (ctx, ext) -> Lookup(
             body = (ctx, delta) -> Furlable(
-                size = (nodim,),
                 body = nothing,
                 fuse = (tns, ctx, ext) -> Pipeline([
                     Phase(
@@ -142,7 +139,6 @@ virtual_eldim(arr::VirtualStaticOffset, ctx::AbstractCompiler, idx_dim) = widend
 
 function unfurl_reader(arr::VirtualStaticOffset, ctx, proto_idx::typeof(defaultread))
     Furlable(
-        size = (nodim,),
         body = nothing,
         fuse = (tns, ctx, ext) -> Pipeline([
             Phase(
@@ -207,7 +203,6 @@ virtual_eldim(arr::VirtualWindow, ctx::AbstractCompiler, idx_dim) = arr.target
 
 function unfurl_reader(arr::VirtualWindow, ctx, proto_idx::typeof(defaultread))
     Furlable(
-        size = (nodim,),
         body = nothing,
         fuse = (tns, ctx, ext) ->
             Shift(truncate(tns, ctx, ext, arr.target), call(-, getstart(ext), getstart(arr.target)))

@@ -217,7 +217,6 @@ function unfurl_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::Union
     my_i1 = ctx.freshen(tag, :_i1)
 
     Furlable(
-        size = virtual_level_size(lvl, ctx),
         body = (ctx, ext) -> Thunk(
             preamble = quote
                 $my_r = $(lvl.ex).ptr[$(ctx(pos))]
@@ -297,7 +296,6 @@ function unfurl_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::typeo
     my_i1 = ctx.freshen(tag, :_i1)
 
     Furlable(
-        size = virtual_level_size(lvl, ctx),
         body = (ctx, ext) -> Thunk(
             preamble = quote
                 $my_r = $(lvl.ex).ptr[$(ctx(pos))]
@@ -426,7 +424,6 @@ function unfurl_updater(fbr::VirtualTrackedSubFiber{VirtualSparseVBLLevel}, ctx,
 
     Furlable(
         tight = lvl,
-        size = virtual_level_size(lvl, ctx),
         body = (ctx, ext) -> Thunk(
             preamble = quote
                 $ros = $ros_fill

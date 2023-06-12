@@ -21,9 +21,9 @@ Base.summary(io::IO, ex::Unfurled) = print(io, "Unfurled($(summary(ex.body)), $(
 
 FinchNotation.finch_leaf(x::Unfurled) = virtual(x)
 
-
-
-
+virtual_size(tns::Unfurled, ctx) = virtual_size(tns.arr, ctx)
+virtual_resize!(tns::Unfurled, ctx, dims...) = virtual_resize!(tns.arr, ctx, dims...)
+virtual_default(tns::Unfurled, ctx) = virtual_default(tns.arr, ctx)
 
 unfurl_reader(tns::Unfurled, ctx::LowerJulia, protos...) = tns
 unfurl_updater(tns::Unfurled, ctx::LowerJulia, protos...) = tns
@@ -92,8 +92,8 @@ visit_simplify(node::Unfurled) = Unfurled(visit_simplify(node.body), node.ndims,
     guard => Unfurled(body, node.ndims, node.arr)
 end
 
-function unfurl_access(tns::Unfurled, ctx, protos...)
-    unfurl_access(tns.body, ctx, protos...)
+function unfurl_access(tns::Unfurled, ctx, ext, protos...)
+    unfurl_access(tns.body, ctx, ext, protos...)
 end
 
 (ctx::CycleVisitor)(node::Unfurled) = Unfurled(ctx(node.body), node.ndims, node.arr)

@@ -206,6 +206,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
         return ctx(root.arg)
     elseif root.kind === loop
         @assert root.idx.kind === index
+        @assert root.ext.kind === virtual
         #First, unfurl
         #TODO ideally this would be easy to request at an appropriate time.
         root_2 = Rewrite(Postwalk(@rule access(~tns::isvirtual, ~mode, ~idxs...) => begin
@@ -217,7 +218,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
                 else
                     tns_2 = unfurl_updater(tns, ctx, protos...)
                 end
-                tns_3 = unfurl_access(tns_2, ctx, protos...)
+                tns_3 = unfurl_access(tns_2, ctx, root.ext.val, protos...)
                 access(tns_3, mode, idxs...)
             #TODO
             #else

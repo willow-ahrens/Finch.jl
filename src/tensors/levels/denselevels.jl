@@ -183,7 +183,6 @@ function subunfurl_dense_helper(fbr, ctx, subunfurl, subfiber_ctr, protos...)
 
     Furlable(
         tight = (subunfurl == unfurl_updater && !is_laminable_updater(lvl.lvl, ctx, protos...)) ? lvl : nothing,
-        size = virtual_level_size(lvl, ctx),
         body = (ctx, ext) -> Lookup(
             body = (ctx, i) -> Thunk(
                 preamble = quote

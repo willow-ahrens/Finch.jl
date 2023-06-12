@@ -183,7 +183,6 @@ function unfurl_reader_triangular_dense_helper(fbr, ctx, subunfurl, subfiber_ctr
         s = ctx.freshen(tag, :_s)
         if d == 1
             Furlable(
-                size = virtual_level_size(lvl, ctx)[end - n + 1:end - (n - d)],
                 body = (ctx, ext) -> Pipeline([
                     Phase(
                         stop = (ctx, ext) -> j,
@@ -198,7 +197,6 @@ function unfurl_reader_triangular_dense_helper(fbr, ctx, subunfurl, subfiber_ctr
             )
         else
             Furlable(
-                size = virtual_level_size(lvl, ctx)[end - n + 1:end - (n - d)],
                 body = (ctx, ext) -> Pipeline([
                     Phase(
                         stop = (ctx, ext) -> j,
@@ -242,7 +240,6 @@ function unfurl_updater_triangular_dense_helper(fbr, ctx, subunfurl, subfiber_ct
         s = ctx.freshen(tag, :_s)
         if d == 1
             Furlable(
-                size = virtual_level_size(lvl, ctx)[end - n + 1:end - (n - d)],
                 body = (ctx, ext) -> Pipeline([
                     Phase(
                         stop = (ctx, ext) -> j,
@@ -257,7 +254,6 @@ function unfurl_updater_triangular_dense_helper(fbr, ctx, subunfurl, subfiber_ct
             )
         else
             Furlable(
-                size = virtual_level_size(lvl, ctx)[end - n + 1:end - (n - d)],
                 body = (ctx, ext) -> Pipeline([
                     Phase(
                         stop = (ctx, ext) -> j,

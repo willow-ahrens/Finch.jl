@@ -24,7 +24,6 @@ virtual_resize!(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, idx_dim) =
 
 function unfurl_reader(arr::VirtualAbstractUnitRange, ctx, proto_idx::typeof(defaultread))
     Furlable(
-        size = (nodim,),
         body = (ctx, ext) -> Lookup(
             body = (ctx, i) -> Fill(value(:($(arr.ex)[$(ctx(i))])))
         ),

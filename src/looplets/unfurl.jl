@@ -14,15 +14,10 @@ end
 truncate(node, ctx, ext, ext_2) = node
 
 @kwdef struct Furlable
-    val = nothing
     fuse = nothing
-    size
     body
     tight = nothing
 end
-
-virtual_default(tns::Furlable) = Some(tns.val)
-virtual_size(tns::Furlable, ::AbstractCompiler) = tns.size
 
 FinchNotation.finch_leaf(x::Furlable) = virtual(x)
 
@@ -37,17 +32,18 @@ end
 FormatLimitation() = FormatLimitation("")
 
 """
-    unfurl_access(tns, ctx, protos...)
+    unfurl_access(tns, ctx, ext, protos...)
     
 Return an array object (usually a looplet nest) for lowering the virtual tensor
-`tns`.  `protos` is the list of protocols that should be used for each index,
-but one doesn't need to unfurl all the indices at once.
+`tns`. `ext` is the extent of the looplet. `protos` is the list of protocols
+that should be used for each index, but one doesn't need to unfurl all the
+indices at once.
 """
-function unfurl_access(tns::Furlable, ctx, protos...)
-    tns = Unfurled(tns.body(ctx, virtual_size(tns, ctx)[end]), 1, tns)
+function unfurl_access(tns::Furlable, ctx, ext, protos...)
+    tns = Unfurled(tns.body(ctx, ext), 1, tns)
     return tns
 end
-unfurl_access(tns, ctx, protos...) = tns
+unfurl_access(tns, ctx, ext, protos...) = tns
 
 unfurl_reader(tns::Furlable, ctx::LowerJulia, idxs...) = tns
 unfurl_updater(tns::Furlable, ctx::LowerJulia, idxs...) = tns

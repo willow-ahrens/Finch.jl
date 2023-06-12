@@ -31,8 +31,8 @@ declare!(tns::RootArray, ctx::LowerJulia, init) = declare!(resolve(tns.tag, ctx)
 thaw!(tns::RootArray, ctx::LowerJulia) = thaw!(resolve(tns.tag, ctx), ctx)
 freeze!(tns::RootArray, ctx::LowerJulia) = freeze!(resolve(tns.tag, ctx), ctx)
 
-function unfurl_access(tns::RootArray, ctx, protos...)
-    unfurl_access(resolve(tns.tag, ctx), ctx, protos...)
+function unfurl_access(tns::RootArray, ctx, ext, protos...)
+    unfurl_access(resolve(tns.tag, ctx), ctx, ext, protos...)
 end
 
 function lower(node::RootArray, ctx::AbstractCompiler, ::DefaultStyle)
