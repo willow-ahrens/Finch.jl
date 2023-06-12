@@ -532,14 +532,9 @@ end
 
 function Base.show(io::IO, node::FinchNode) 
     if node.kind === literal || node.kind === index || node.kind === variable || node.kind === virtual
-        #print(io, node.kind, "(", node.val, ")")
-        print(io, node.val)
+        print(io, node.kind, "(", node.val, ")")
     elseif node.kind === value
-        #print(io, node.kind, "(", node.val, ", ", node.type, ")")
-        print(io, node.val)
-    elseif node.kind == cached
-        print(io, "\$")
-        print(io, node.arg)
+        print(io, node.kind, "(", node.val, ", ", node.type, ")")
     else
         print(io, node.kind, "("); join(io, node.children, ", "); print(io, ")")
     end
@@ -558,10 +553,10 @@ function display_expression(io, mime, node::FinchNode)
         print(io, "@finch(…)")
     elseif node.kind === value
         print(io, node.val)
-        #if node.type !== Any
-        #    print(io, "::")
-        #    print(io, node.type)
-        #end
+        if node.type !== Any
+            print(io, "::")
+            print(io, node.type)
+        end
     elseif node.kind === literal
         print(io, node.val)
     elseif node.kind === index
@@ -575,11 +570,11 @@ function display_expression(io, mime, node::FinchNode)
         display_expression(io, mime, node.mode)
         print(io, ")")
     elseif node.kind === cached
-        #print(io, "cached(")
+        print(io, "cached(")
         display_expression(io, mime, node.arg)
-        #print(io, ", ")
-        #display_expression(io, mime, node.ref.val)
-        #print(io, ")")
+        print(io, ", ")
+        display_expression(io, mime, node.ref.val)
+        print(io, ")")
     elseif node.kind === virtual
         print(io, "virtual(")
         #print(io, node.val)
@@ -624,9 +619,8 @@ end
 
 function display_statement(io, mime, node::FinchNode, indent)
     if node.kind === loop
+        print(io, " "^indent * "@∀ ")
         while node.kind === loop
-            #print(io, tab^level * "@∀ ")
-            print(io, " "^indent * "@∀ ")
             display_expression(io, mime, node.idx)
             print(io, " = ")
             display_expression(io, mime, node.ext)
