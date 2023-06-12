@@ -60,7 +60,7 @@ quote
                 x_min_val = min(x_min_val, X_lvl_2_val_2)
                 x_max_val = max(x_max_val, X_lvl_2_val_2)
                 x_sum_val = X_lvl_2_val_2 + x_sum_val
-                x_var_val = X_lvl_2_val_2 * X_lvl_2_val_2 + x_var_val
+                x_var_val = x_var_val + X_lvl_2_val_2 * X_lvl_2_val_2
                 X_lvl_q += 1
             else
                 cond_2 = 0 < 1 + -i + phase_stop_2

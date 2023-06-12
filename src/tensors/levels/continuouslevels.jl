@@ -234,12 +234,12 @@ function get_reader(fbr::VirtualSubFiber{VirtualContinuousLevel}, ctx, ::Union{N
                                 body = (ctx, ext) -> Thunk( 
                                      body = (ctx) -> Pipeline([
                                         Phase(
-                                              stop = (ctx, ext) -> call(-, value(my_i_start), 1),
+                                            stop = (ctx, ext) -> call(-, value(my_i_start), 1),
                                             body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
                                         ),
                                         Phase(
                                             body = (ctx,ext) -> Run(
-                                                                    body = Simplify(get_reader(VirtualSubFiber(lvl.lvl, value(my_q)), ctx, protos...))
+                                                                    body = (get_reader(VirtualSubFiber(lvl.lvl, value(my_q)), ctx, protos...))
                                                                    )
                                         )
                                     ]),
@@ -260,7 +260,6 @@ function get_reader(fbr::VirtualSubFiber{VirtualContinuousLevel}, ctx, ::Union{N
 end
 
 
-# Jaeyeon: IDK what is this function doing
 is_laminable_updater(lvl::VirtualContinuousLevel, ctx, ::Union{Nothing, Extrude}) = false
 get_updater(fbr::VirtualSubFiber{VirtualContinuousLevel}, ctx, protos...) = 
     get_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
