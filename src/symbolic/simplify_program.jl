@@ -122,13 +122,6 @@ function get_program_rules(alg, shash)
             end
         end),
 
-        # TODO; This breaks on three (or more) nested loop. 
-        (@rule loop(~i, ~exti::isvirtual, loop(~k, ~extk::isvirtual, assign(access(~a, updater(~m), ~j...), +, ~b))) => begin
-            if i ∉ j && i ∉ getunbound(b)
-                loop(k, extk, assign(access(a, updater(m), j...), +, call(*, b, measure(exti.val))))
-            end
-        end),
-
         (@rule assign(~a, ~op, cached(~b, ~c)) => assign(a, op, b)),
 
         (@rule loop(~i, ~ext::isvirtual, assign(access(~a, ~m), $(literal(+)), ~b::isliteral)) =>

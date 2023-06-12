@@ -250,6 +250,18 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
     elseif root.kind === loop
         @assert root.idx.kind === index
         idx_sym = ctx.freshen(root.idx.name)
+        
+        # Generalized Strength Reduction
+        reduced_root = Rewrite(Postwalk(
+            @rule assign(access(~out::isvirtual, updater(~m), ~outidx...), +, ~assignbody) => begin
+              if root.idx ∉ outidx && root.idx ∉ getunbound(assignbody) 
+                assign(access(out, updater(m), outidx...), +, call(*, assignbody, measure(root.ext.val)))
+              end
+            end
+        ))(root)
+        is_reduced = root != reduced_root
+        root = reduced_root
+
         body = contain(ctx) do ctx_2
             ctx_2.bindings[root.idx] = value(idx_sym)
             body_3 = Rewrite(Postwalk(
@@ -265,11 +277,11 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
             open_scope(body_3, ctx_2)
         end
         @assert isvirtual(root.ext)
-        if query(call(==, measure(root.ext.val), 1), ctx)
+        if query(call(==, measure(root.ext.val), 1), ctx) || is_reduced
             return quote
                 $idx_sym = $(ctx(getstart(root.ext)))
                 $body
-            end
+            end 
         else
             return quote
                 for $idx_sym = $(ctx(getstart(root.ext))):$(ctx(getstop(root.ext)))
@@ -277,6 +289,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
                 end
             end
         end
+
     elseif root.kind === sieve
         cond = ctx.freshen(:cond)
         push!(ctx.preamble, :($cond = $(ctx(root.cond))))
