@@ -51,15 +51,15 @@ function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::VirtualPerm
     stylize_access(node, ctx, tns.body)
 end
 
-function popdim(node::VirtualProtocolizedArray)
+function popdim(node::VirtualPermissiveArray)
     if length(node.dims) == 1
         return node.body
     else
-        return VirtualProtocolizedArray(node.body, node.dims[1:end-1])
+        return VirtualPermissiveArray(node.body, node.dims[1:end-1])
     end
 end
 
-truncate(node::VirtualProtocolizedArray, ctx, ext, ext_2) = VirtualProtocolizedArray(truncate(node.body, ctx, ext, ext_2), node.dims)
+truncate(node::VirtualPermissiveArray, ctx, ext, ext_2) = VirtualPermissiveArray(truncate(node.body, ctx, ext, ext_2), node.dims)
 
 function get_point_body(node::VirtualPermissiveArray, ctx, ext, idx)
     body_2 = get_point_body(node.body, ctx, ext, idx)

@@ -78,35 +78,48 @@ function wrapperize(root, ctx::AbstractCompiler)
     ])))(root)
 end
 
-function concordize(root, ctx::AbstractCompiler; reorder=false)
-    root_idx = index(ctx.freshen(:root))
-    root = loop(root_idx, nothing, root)
-    depth = depth_calculator(root)
-    expand = variable_expander(root)
-    selects = Dict()
-    root = Rewrite(Postwalk(
-        @rule access(~tns, ~mode, ~idxs...) => begin
-            idxs_2 = map(enumerate(idxs)) do (n, idx)
-                if !isindex(idx) || (reorder && depth(idx) <= maximum(depth, expand.(idxs[n + 1:end]), init=0))
-                    idx_2 = index(ctx.freshen(:s))
-                    trigger = argmax(depth, filter(isindex, collect(PostOrderDFS(sequence(root_idx, idxs[n:end]...)))))
-                    push!(get!(selects, trigger, []), idx_2 => idx)
-                    idx_2
-                else
-                    idx
-                end
+struct ConcordizeVisitor
+    freshen
+    scope
+    idx
+end
+
+function (ctx::ConcordizeVisitor)(node::FinchNode)
+    isbound(x) = isconstant(x) || x in ctx.scope
+    selects = []
+
+    if node.kind === loop || node.kind == sieve || node.kind === assign
+        node = Rewrite(Postwalk(Fixpoint(@rule access(~tns, ~mode, ~i..., ~j, ~k::All(isbound)...) => if !isindex(j) || j != ctx.idx
+            if all(isbound, Leaves(j))
+                j_2 = index(ctx.freshen(:s))
+                push!(ctx.scope, j_2)
+                push!(selects, j_2 => j)
+                access(tns, mode, i..., j_2, k...)
             end
-            access(tns, mode, idxs_2...)
-        end))(root)
-    root = Rewrite(Postwalk(@rule loop(~trigger, ~ext, ~body) => begin
-        for (select_idx, idx_ex) in get(selects, trigger, [])
-            var = variable(ctx.freshen(:v))
-            body = sequence(
-                define(var, idx_ex),
-                loop(select_idx, Extent(var, var), body)
-            )
-        end
-        loop(trigger, ext, body)
-    end))(root)
-    root.body
+        end)))(node)
+    end
+
+    if node.kind === loop
+        ctx_2 = ConcordizeVisitor(ctx.freshen, union(ctx.scope, [node.idx]), ctx.idx)
+        node = loop(node.idx, node.ext, ctx_2(node.body))
+    elseif node.kind === define
+        push!(ctx.scope, node.lhs)
+    elseif istree(node)
+        node = similarterm(node, operation(node), map(ctx, children(node)))
+    end
+
+    for (select_idx, idx_ex) in selects
+        var = variable(ctx.freshen(:v))
+
+        node = sequence(
+            define(var, idx_ex),
+            loop(select_idx, Extent(var, var), node)
+        )
+    end
+
+    node
+end
+
+function concordize(root, ctx::AbstractCompiler; reorder=false)
+    ConcordizeVisitor(ctx.freshen, [], nothing)(root)
 end
