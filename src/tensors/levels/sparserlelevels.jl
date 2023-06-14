@@ -1,4 +1,4 @@
-struct ContinuousLevel{Ti, Tp, Lvl}
+struct SparseRLELevel{Ti, Tp, Lvl}
     lvl::Lvl
     shape::Ti
     ptr::Vector{Tp}
@@ -6,39 +6,39 @@ struct ContinuousLevel{Ti, Tp, Lvl}
     right::Vector{Ti}
 end
 
-const Continuous = ContinuousLevel
-ContinuousLevel(lvl, ) = ContinuousLevel{Int}(lvl)
-ContinuousLevel(lvl, shape, args...) = ContinuousLevel{typeof(shape)}(lvl, shape, args...)
-ContinuousLevel{Ti}(lvl, args...) where {Ti} = ContinuousLevel{Ti, Int}(lvl, args...)
-ContinuousLevel{Ti, Tp}(lvl, args...) where {Ti, Tp} = ContinuousLevel{Ti, Tp, typeof(lvl)}(lvl, args...)
+const SparseRLE = SparseRLELevel
+SparseRLELevel(lvl, ) = SparseRLELevel{Int}(lvl)
+SparseRLELevel(lvl, shape, args...) = SparseRLELevel{typeof(shape)}(lvl, shape, args...)
+SparseRLELevel{Ti}(lvl, args...) where {Ti} = SparseRLELevel{Ti, Int}(lvl, args...)
+SparseRLELevel{Ti, Tp}(lvl, args...) where {Ti, Tp} = SparseRLELevel{Ti, Tp, typeof(lvl)}(lvl, args...)
 
-ContinuousLevel{Ti, Tp, Lvl}(lvl) where {Ti, Tp, Lvl} = ContinuousLevel{Ti, Tp, Lvl}(lvl, zero(Ti))
-ContinuousLevel{Ti, Tp, Lvl}(lvl, shape) where {Ti, Tp, Lvl} = 
-    ContinuousLevel{Ti, Tp, Lvl}(lvl, shape, Tp[1], Ti[], Ti[])
+SparseRLELevel{Ti, Tp, Lvl}(lvl) where {Ti, Tp, Lvl} = SparseRLELevel{Ti, Tp, Lvl}(lvl, zero(Ti))
+SparseRLELevel{Ti, Tp, Lvl}(lvl, shape) where {Ti, Tp, Lvl} = 
+    SparseRLELevel{Ti, Tp, Lvl}(lvl, shape, Tp[1], Ti[], Ti[])
 
 """
-`fiber_abbrev(cont)` = [`ContinuousLevel`](@ref).
+`fiber_abbrev(srle)` = [`SparseRLELevel`](@ref).
 """
-fiber_abbrev(::Val{:cont}) = Continuous
-summary_fiber_abbrev(lvl::ContinuousLevel) = "cont($(summary_fiber_abbrev(lvl.lvl)))"
-similar_level(lvl::ContinuousLevel) = Continuous(similar_level(lvl.lvl))
-similar_level(lvl::ContinuousLevel, dim, tail...) = Continuous(similar_level(lvl.lvl, tail...), dim)
+fiber_abbrev(::Val{:srl}) = SparseRLE
+summary_fiber_abbrev(lvl::SparseRLELevel) = "srl($(summary_fiber_abbrev(lvl.lvl)))"
+similar_level(lvl::SparseRLELevel) = SparseRLE(similar_level(lvl.lvl))
+similar_level(lvl::SparseRLELevel, dim, tail...) = SparseRLE(similar_level(lvl.lvl, tail...), dim)
 
-pattern!(lvl::ContinuousLevel{Ti, Tp}) where {Ti, Tp} = 
-    ContinuousLevel{Ti, Tp}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.left, lvl.right)
+pattern!(lvl::SparseRLELevel{Ti, Tp}) where {Ti, Tp} = 
+    SparseRLELevel{Ti, Tp}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.left, lvl.right)
 
-function countstored_level(lvl::ContinuousLevel, pos)
+function countstored_level(lvl::SparseRLELevel, pos)
     countstored_level(lvl.lvl, lvl.left[lvl.ptr[pos + 1]]-1)
 end
 
-redefault!(lvl::ContinuousLevel{Ti, Tp}, init) where {Ti, Tp} = 
-    ContinuousLevel{Ti, Tp}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.left, lvl.right)
+redefault!(lvl::SparseRLELevel{Ti, Tp}, init) where {Ti, Tp} = 
+    SparseRLELevel{Ti, Tp}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.left, lvl.right)
 
-function Base.show(io::IO, lvl::ContinuousLevel{Ti, Tp}) where {Ti, Tp}
+function Base.show(io::IO, lvl::SparseRLELevel{Ti, Tp}) where {Ti, Tp}
     if get(io, :compact, false)
-        print(io, "Continuous(")
+        print(io, "SparseRLE(")
     else
-        print(io, "Continuous{$Ti, $Tp}(")
+        print(io, "SparseRLE{$Ti, $Tp}(")
     end
     show(io, lvl.lvl)
     print(io, ", ")
@@ -56,7 +56,7 @@ function Base.show(io::IO, lvl::ContinuousLevel{Ti, Tp}) where {Ti, Tp}
     print(io, ")")
 end
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:ContinuousLevel}, depth)
+function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseRLELevel}, depth)
     p = fbr.pos
     lvl = fbr.lvl
     left_endpoints = @view(lvl.left[lvl.ptr[p]:lvl.ptr[p + 1] - 1])
@@ -69,19 +69,19 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:Continuou
     print_coord(io, crd) = print(io, crd, ":", lvl.right[searchsortedfirst(left_endpoints, crd)])  
     get_fbr(crd) = fbr(crd)
 
-    print(io, "Continuous (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.shape, "]")
+    print(io, "SparseRLE (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.shape, "]")
     display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
 end
 
-@inline level_ndims(::Type{<:ContinuousLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = 1 + level_ndims(Lvl)
-@inline level_size(lvl::ContinuousLevel) = (lvl.shape, level_size(lvl.lvl)...)
-@inline level_axes(lvl::ContinuousLevel) = (Base.OneTo(lvl.shape), level_axes(lvl.lvl)...)
-@inline level_eltype(::Type{<:ContinuousLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = level_eltype(Lvl)
-@inline level_default(::Type{<:ContinuousLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = level_default(Lvl)
-data_rep_level(::Type{<:ContinuousLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = SparseData(data_rep_level(Lvl))
+@inline level_ndims(::Type{<:SparseRLELevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = 1 + level_ndims(Lvl)
+@inline level_size(lvl::SparseRLELevel) = (lvl.shape, level_size(lvl.lvl)...)
+@inline level_axes(lvl::SparseRLELevel) = (Base.OneTo(lvl.shape), level_axes(lvl.lvl)...)
+@inline level_eltype(::Type{<:SparseRLELevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = level_eltype(Lvl)
+@inline level_default(::Type{<:SparseRLELevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = level_default(Lvl)
+data_rep_level(::Type{<:SparseRLELevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = SparseData(data_rep_level(Lvl))
 
-(fbr::AbstractFiber{<:ContinuousLevel})() = fbr
-function (fbr::SubFiber{<:ContinuousLevel})(idxs...)
+(fbr::AbstractFiber{<:SparseRLELevel})() = fbr
+function (fbr::SubFiber{<:SparseRLELevel})(idxs...)
     isempty(idxs) && return fbr
     lvl = fbr.lvl
     p = fbr.pos
@@ -92,7 +92,7 @@ function (fbr::SubFiber{<:ContinuousLevel})(idxs...)
     r1 != r2 ? default(fbr_2) : fbr_2(idxs[1:end-1]...)
 end
 
-mutable struct VirtualContinuousLevel
+mutable struct VirtualSparseRLELevel
     lvl
     ex
     Ti
@@ -101,7 +101,7 @@ mutable struct VirtualContinuousLevel
     qos_fill
     qos_stop
 end
-function virtualize(ex, ::Type{ContinuousLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}
+function virtualize(ex, ::Type{SparseRLELevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}
     sym = ctx.freshen(tag)
     shape = value(:($sym.shape), Int)
     qos_fill = ctx.freshen(sym, :_qos_fill)
@@ -111,11 +111,11 @@ function virtualize(ex, ::Type{ContinuousLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) whe
         $sym = $ex
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualContinuousLevel(lvl_2, sym, Ti, Tp, shape, qos_fill, qos_stop)
+    VirtualSparseRLELevel(lvl_2, sym, Ti, Tp, shape, qos_fill, qos_stop)
 end
-function lower(lvl::VirtualContinuousLevel, ctx::AbstractCompiler, ::DefaultStyle)
+function lower(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
-        $ContinuousLevel{$(lvl.Ti), $(lvl.Tp)}(
+        $SparseRLELevel{$(lvl.Ti), $(lvl.Tp)}(
             $(ctx(lvl.lvl)),
             $(ctx(lvl.shape)),
             $(lvl.ex).ptr,
@@ -125,24 +125,24 @@ function lower(lvl::VirtualContinuousLevel, ctx::AbstractCompiler, ::DefaultStyl
     end
 end
 
-summary_fiber_abbrev(lvl::VirtualContinuousLevel) = "cont($(summary_fiber_abbrev(lvl.lvl)))"
+summary_fiber_abbrev(lvl::VirtualSparseRLELevel) = "srl($(summary_fiber_abbrev(lvl.lvl)))"
 
-function virtual_level_size(lvl::VirtualContinuousLevel, ctx)
+function virtual_level_size(lvl::VirtualSparseRLELevel, ctx)
     ext = Extent(literal(lvl.Ti(1)), lvl.shape)
     (virtual_level_size(lvl.lvl, ctx)..., ext)
 end
 
-function virtual_level_resize!(lvl::VirtualContinuousLevel, ctx, dims...)
+function virtual_level_resize!(lvl::VirtualSparseRLELevel, ctx, dims...)
     lvl.shape = getstop(dims[end])
     lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims[1:end-1]...)
     lvl
 end
 
 
-virtual_level_eltype(lvl::VirtualContinuousLevel) = virtual_level_eltype(lvl.lvl)
-virtual_level_default(lvl::VirtualContinuousLevel) = virtual_level_default(lvl.lvl)
+virtual_level_eltype(lvl::VirtualSparseRLELevel) = virtual_level_eltype(lvl.lvl)
+virtual_level_default(lvl::VirtualSparseRLELevel) = virtual_level_default(lvl.lvl)
 
-function declare_level!(lvl::VirtualContinuousLevel, ctx::AbstractCompiler, pos, init)
+function declare_level!(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, pos, init)
     Tp = lvl.Tp
     Ti = lvl.Ti
     qos = call(-, call(getindex, :($(lvl.ex).ptr), call(+, pos, 1)), 1)
@@ -154,7 +154,7 @@ function declare_level!(lvl::VirtualContinuousLevel, ctx::AbstractCompiler, pos,
     return lvl
 end
 
-function trim_level!(lvl::VirtualContinuousLevel, ctx::AbstractCompiler, pos)
+function trim_level!(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, pos)
     qos = ctx.freshen(:qos)
     push!(ctx.preamble, quote
         resize!($(lvl.ex).ptr, $(ctx(pos)) + 1)
@@ -166,7 +166,7 @@ function trim_level!(lvl::VirtualContinuousLevel, ctx::AbstractCompiler, pos)
     return lvl
 end
 
-function assemble_level!(lvl::VirtualContinuousLevel, ctx, pos_start, pos_stop)
+function assemble_level!(lvl::VirtualSparseRLELevel, ctx, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_start, pos_stop))
     return quote
@@ -175,7 +175,7 @@ function assemble_level!(lvl::VirtualContinuousLevel, ctx, pos_start, pos_stop)
     end
 end
 
-function freeze_level!(lvl::VirtualContinuousLevel, ctx::AbstractCompiler, pos_stop)
+function freeze_level!(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, pos_stop)
     p = ctx.freshen(:p)
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
     qos_stop = ctx.freshen(:qos_stop)
@@ -191,7 +191,7 @@ end
 
 
 
-function get_reader(fbr::VirtualSubFiber{VirtualContinuousLevel}, ctx, ::Union{Nothing, Walk}, protos...)
+function get_reader(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, ::Union{Nothing, Walk}, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos) 
     tag = lvl.ex
     Tp = lvl.Tp
@@ -260,12 +260,12 @@ function get_reader(fbr::VirtualSubFiber{VirtualContinuousLevel}, ctx, ::Union{N
 end
 
 
-is_laminable_updater(lvl::VirtualContinuousLevel, ctx, ::Union{Nothing, Extrude}) = false
-get_updater(fbr::VirtualSubFiber{VirtualContinuousLevel}, ctx, protos...) = 
+is_laminable_updater(lvl::VirtualSparseRLELevel, ctx, ::Union{Nothing, Extrude}) = false
+get_updater(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, protos...) = 
     get_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
 
-function get_updater(fbr::VirtualTrackedSubFiber{VirtualContinuousLevel}, ctx, ::Union{Nothing, Extrude}, protos...)
-    (lvl, pos) = (fbr.lvl, fbr.pos) # Jaeyeon : Accessing with the position obtained from the parent fiber
+function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseRLELevel}, ctx, ::Union{Nothing, Extrude}, protos...)
+    (lvl, pos) = (fbr.lvl, fbr.pos) 
     tag = lvl.ex
     Tp = lvl.Tp
     Ti = lvl.Ti
@@ -275,8 +275,8 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualContinuousLevel}, ctx, :
     dirty = ctx.freshen(tag, :dirty)
     
     Furlable(
-        tight = lvl, # Jaeyeon : Something related to error handling in unfurl.jl
-        size = virtual_level_size(lvl, ctx), # Jaeyeon : list of all extents of subfiber's shape? 
+        tight = lvl, 
+        size = virtual_level_size(lvl, ctx),  
         body = (ctx, ext) -> Thunk(
             preamble = quote
                 $qos = $qos_fill + 1

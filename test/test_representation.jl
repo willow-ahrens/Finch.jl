@@ -63,8 +63,8 @@ using Base.Meta
     test_format(vecs, name = "@fiber(st{1}(e(zero))", key = "st1_e") do arr
         dropdefaults!(Fiber!(SparseTriangle{1}(Element(zero(eltype(arr))))), arr)
     end
-    test_format(vecs, name = "@fiber(cont(e(zero))", key = "cont_e") do arr
-        dropdefaults!(Fiber!(Continuous(Element(zero(eltype(arr))))), arr)
+    test_format(vecs, name = "@fiber(srl(e(zero))", key = "srl_e") do arr
+        dropdefaults!(Fiber!(SparseRLE(Element(zero(eltype(arr))))), arr)
     end
 
     mats = [
@@ -125,19 +125,19 @@ using Base.Meta
     test_format(mats, name = "@fiber(sl(st{1}(e(zero)))", key = "sl_st_e") do arr
         dropdefaults!(Fiber!(SparseList(SparseTriangle{1}(Element(zero(eltype(arr)))))), arr)
     end
-    test_format(mats, name = "@fiber(cont(cont(e(zero))))", key = "cont_cont_e") do arr
-        dropdefaults!(Fiber!(Continuous(Continuous(Element(zero(eltype(arr)))))), arr)
+    test_format(mats, name = "@fiber(srl(srl(e(zero))))", key = "srl_srl_e") do arr
+        dropdefaults!(Fiber!(SparseRLE(SparseRLE(Element(zero(eltype(arr)))))), arr)
     end
-    test_format(mats, name = "@fiber(sl(cont(e(zero))))", key = "sl_cont_e") do arr
-        dropdefaults!(Fiber!(SparseList(Continuous(Element(zero(eltype(arr)))))), arr)
+    test_format(mats, name = "@fiber(sl(srl(e(zero))))", key = "sl_srl_e") do arr
+        dropdefaults!(Fiber!(SparseList(SparseRLE(Element(zero(eltype(arr)))))), arr)
     end
-    test_format(mats, name = "@fiber(cont(sl(e(zero))))", key = "cont_sl_e") do arr
-        dropdefaults!(Fiber!(Continuous(SparseList(Element(zero(eltype(arr)))))), arr)
+    test_format(mats, name = "@fiber(srl(sl(e(zero))))", key = "srl_sl_e") do arr
+        dropdefaults!(Fiber!(SparseRLE(SparseList(Element(zero(eltype(arr)))))), arr)
     end
-    test_format(mats, name = "@fiber(d(cont(e(zero))))", key = "d_cont_e") do arr
-        dropdefaults!(Fiber!(Dense(Continuous(Element(zero(eltype(arr)))))), arr)
+    test_format(mats, name = "@fiber(d(srl(e(zero))))", key = "d_srl_e") do arr
+        dropdefaults!(Fiber!(Dense(SparseRLE(Element(zero(eltype(arr)))))), arr)
     end
-    test_format(mats, name = "@fiber(cont(d(e(zero))))", key = "cont_d_e") do arr
-        dropdefaults!(Fiber!(Continuous(Dense(Element(zero(eltype(arr)))))), arr)
+    test_format(mats, name = "@fiber(srl(d(e(zero))))", key = "srl_d_e") do arr
+        dropdefaults!(Fiber!(SparseRLE(Dense(Element(zero(eltype(arr)))))), arr)
     end
 end

@@ -71,7 +71,7 @@ isstructequal(a::T, b::T) where {T <: SparseTriangle} =
     a.shape == b.shape &&
     isstructequal(a.lvl, b.lvl)
 
-isstructequal(a::T, b::T) where {T <: Continuous} =
+isstructequal(a::T, b::T) where {T <: SparseRLE} =
     a.shape == b.shape &&
     a.ptr == b.ptr &&
     a.left == b.left &&

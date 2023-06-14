@@ -21,7 +21,7 @@ begin
             phase_stop_2 = min(phase_stop, A_lvl_i)
             if A_lvl_i == phase_stop_2
                 A_lvl_2_val_2 = A_lvl_2.val[A_lvl_q]
-                B_val = B_val + A_lvl_2_val_2
+                B_val = A_lvl_2_val_2 + B_val
                 A_lvl_q += 1
             end
             s = phase_stop_2 + 1

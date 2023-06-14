@@ -23,7 +23,7 @@
             for inner in [
                 () -> Dense(base()),
                 () -> RepeatRLE{false}(),
-                () -> Continuous(base()),
+                () -> SparseRLE(base()),
             ]
                 for (idx, arr) in enumerate([
                     fill(false, 5),
@@ -82,7 +82,7 @@
             () -> SparseByteMap(base()),
             () -> SparseHash{1}(base()),
             () -> SparseCOO{1}(base()),
-            () -> Continuous(base()),
+            () -> SparseRLE(base()),
         ]
             for arr in [
                 fill(false, 5),
@@ -128,7 +128,7 @@
 
         for inner in [
             () -> SparseTriangle{1}(base()),
-            () -> Continuous(base()),
+            () -> SparseRLE(base()),
         ]
             for arr in [
                 fill(false, 5),
@@ -176,7 +176,7 @@
         for outer in [
             () -> SparseCOO{2}(base()),
             () -> SparseHash{2}(base()),
-            () -> Continuous(Continuous(base())),
+            () -> SparseRLE(SparseRLE(base())),
         ]
 
             for (arr_key, arr) in [
@@ -201,7 +201,7 @@
 
         for outer in [
             () -> SparseTriangle{2}(base()),
-            () -> Continuous(Continuous(base())),
+            () -> SparseRLE(SparseRLE(base())),
         ]
 
             for (arr_key, arr) in [

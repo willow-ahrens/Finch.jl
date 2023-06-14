@@ -78,6 +78,7 @@ include("data_matrices.jl")
 include("utils.jl")
 
 @testset "Finch.jl" begin
+    parsed_args["overwrite"] = true
     if should_run("print") include("test_print.jl") end
     if should_run("representation") include("test_representation.jl") end
     if should_run("constructors") include("test_constructors.jl") end
