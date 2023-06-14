@@ -61,7 +61,7 @@ end
 
 function (ctx::DeclareDimensions)(node::FinchNode)
     if node.kind === access
-        @capture node access(~tns::isvirtual, ~mode, ~idxs::All(isindex)...)
+        @assert @capture node access(~tns::isvirtual, ~mode, ~idxs::All(isindex)...)
         tns = tns.val
         if node.mode.kind !== reader && node.tns.kind === virtual && haskey(ctx.hints, getroot(tns))
             shape = map(suggest, virtual_size(tns, ctx.ctx))

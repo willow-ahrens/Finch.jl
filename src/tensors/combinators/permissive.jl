@@ -109,16 +109,12 @@ visit_simplify(node::VirtualPermissiveArray) = VirtualPermissiveArray(visit_simp
     guard => VirtualPermissiveArray(body, node.dims)
 end
 
-function unfurl_access(tns::VirtualPermissiveArray, ctx, dims...)
-    VirtualPermissiveArray(unfurl_access(tns.body, ctx, map(something, tns.dims, dims)...), tns.dims)
-end
-
 (ctx::CycleVisitor)(node::VirtualPermissiveArray) = VirtualPermissiveArray(ctx(node.body), node.dims)
 
 getroot(tns::VirtualPermissiveArray) = getroot(tns.body)
 
 function unfurl_access(tns::VirtualPermissiveArray, ctx, protos...)
-    tns_2 = unfurl_access(node, ctx, eldim, tns.body)
+    tns_2 = unfurl_access(tns.body, ctx, protos...)
     dims = virtual_size(tns.body, ctx.ctx)
     if tns.dims[end]
         Unfurled(

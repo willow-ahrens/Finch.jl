@@ -81,26 +81,25 @@ end
 struct ConcordizeVisitor
     freshen
     scope
-    idx
 end
 
 function (ctx::ConcordizeVisitor)(node::FinchNode)
-    isbound(x) = isconstant(x) || x in ctx.scope
+    isbound(x) = x in ctx.scope
     selects = []
 
-    if node.kind === loop || node.kind == sieve || node.kind === assign
-        node = Rewrite(Postwalk(Fixpoint(@rule access(~tns, ~mode, ~i..., ~j, ~k::All(isbound)...) => if !isindex(j) || j != ctx.idx
-            if all(isbound, Leaves(j))
+    if node.kind === loop || node.kind === assign || node.kind === define || node.kind === sieve
+        node = Rewrite(Postwalk(Fixpoint(@rule access(~tns, ~mode, ~i..., ~j, ~k::All(isbound)...) => if !isindex(j)
+            if all(x->(isbound(x) || isconstant(x)), Leaves(j))
                 j_2 = index(ctx.freshen(:s))
-                push!(ctx.scope, j_2)
                 push!(selects, j_2 => j)
+                push!(ctx.scope, j_2)
                 access(tns, mode, i..., j_2, k...)
             end
         end)))(node)
     end
 
     if node.kind === loop
-        ctx_2 = ConcordizeVisitor(ctx.freshen, union(ctx.scope, [node.idx]), ctx.idx)
+        ctx_2 = ConcordizeVisitor(ctx.freshen, union(ctx.scope, [node.idx]))
         node = loop(node.idx, node.ext, ctx_2(node.body))
     elseif node.kind === define
         push!(ctx.scope, node.lhs)
@@ -108,7 +107,7 @@ function (ctx::ConcordizeVisitor)(node::FinchNode)
         node = similarterm(node, operation(node), map(ctx, children(node)))
     end
 
-    for (select_idx, idx_ex) in selects
+    for (select_idx, idx_ex) in reverse(selects)
         var = variable(ctx.freshen(:v))
 
         node = sequence(
@@ -120,6 +119,16 @@ function (ctx::ConcordizeVisitor)(node::FinchNode)
     node
 end
 
-function concordize(root, ctx::AbstractCompiler; reorder=false)
-    ConcordizeVisitor(ctx.freshen, [], nothing)(root)
+function concordize(root, ctx::AbstractCompiler; reorder = false)
+    root = ConcordizeVisitor(ctx.freshen, [])(root)
+    if reorder
+        depth = depth_calculator(root)
+        root = Rewrite(Postwalk(Fixpoint(@rule access(~tns, ~mode, ~i..., ~j::isindex, ~k...) => begin
+            if depth(j) < maximum(depth.(k), init=0)
+                access(~tns, ~mode, ~i..., call(identity, j), ~k...)
+            end
+        end)))(root)
+        root = ConcordizeVisitor(ctx.freshen, [])(root)
+    end
+    root
 end
