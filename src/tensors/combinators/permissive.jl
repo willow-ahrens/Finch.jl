@@ -115,24 +115,27 @@ getroot(tns::VirtualPermissiveArray) = getroot(tns.body)
 
 function unfurl_access(tns::VirtualPermissiveArray, ctx, protos...)
     tns_2 = unfurl_access(tns.body, ctx, protos...)
-    dims = virtual_size(tns.body, ctx.ctx)
+    dims = virtual_size(tns.body, ctx)
     if tns.dims[end]
-        Unfurled(
-            Pipeline([
-                Phase(
-                    stop = (ctx, ext_2) -> call(-, getstart(dims[end]), 1),
-                    body = (ctx, ext) -> Run(Fill(literal(missing))),
-                ),
-                Phase(
-                    stop = (ctx, ext_2) -> getstop(dims[end]),
-                    body = (ctx, ext_2) -> truncate(tns_2, ctx, dims[end], ext_2)
-                ),
-                Phase(
-                    body = (ctx, ext_2) -> Run(Fill(literal(missing))),
-                )
-            ]),
-            length(dims),
-            tns.body
+        VirtualPermissiveArray(
+            Unfurled(
+                Pipeline([
+                    Phase(
+                        stop = (ctx, ext_2) -> call(-, getstart(dims[end]), 1),
+                        body = (ctx, ext) -> Run(Fill(literal(missing))),
+                    ),
+                    Phase(
+                        stop = (ctx, ext_2) -> getstop(dims[end]),
+                        body = (ctx, ext_2) -> truncate(tns_2, ctx, dims[end], ext_2)
+                    ),
+                    Phase(
+                        body = (ctx, ext_2) -> Run(Fill(literal(missing))),
+                    )
+                ]),
+                length(dims),
+                tns.body
+            ),
+            tns.dims
         )
     else
         tns

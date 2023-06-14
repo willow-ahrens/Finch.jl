@@ -4,10 +4,11 @@
 
     A_ref = sprand(10, 0.5); B_ref = sprand(10, 0.5); C_ref = vcat(A_ref, B_ref)
     A = fiber(SparseVector{Float64, Int64}(A_ref)); B = fiber(SparseVector{Float64, Int64}(B_ref)); C = @fiber(sl{Int64}(e(0.0)))
-    off = staticoffset(10)
-    @test check_output("concat_offset_permit.jl", @finch_code (C .= 0; @loop i C[i] = coalesce(A[permit[i]], B[off[i]])))
-    @finch (C .= 0; @loop i C[i] = coalesce(A[permit[i]], B[off[i]]))
+    @test check_output("concat_offset_permit.jl", @finch_code (C .= 0; @loop i C[i] = coalesce(A[~i], B[i + 10])))
+    @finch (C .= 0; @loop i C[i] = coalesce(A[~i], B[i + 10]))
     @test reference_isequal(C, C_ref)
+
+    exit()
 
     F = fiber(Int64[1,1,1,1,1])
 

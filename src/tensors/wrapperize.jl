@@ -64,6 +64,15 @@ function get_wrapper_rules(alg, depth, ctx)
             end
             access(VirtualProtocolizedArray(body, protos), m, i1..., j, i2...)
         end),
+        (@rule access(~A::isvirtual, ~m, ~i1..., call($(~), ~j), ~i2...) => begin
+            body = A.val
+            dims = ([false for _ in i1]..., true, [false for _ in i2]...)
+            if body isa VirtualPermissiveArray
+                dims = body.dims .| dims
+                body = body.body
+            end
+            access(VirtualPermissiveArray(body, dims), m, i1..., j, i2...)
+        end),
         #(@rule access(~A::isvirtual, ~m, ~i1..., call(+, ~a::isconstant, ~j::isindex), ~i2...) =>
         #    access(ShiftArray(A.val, ([0 for _ in i1]..., a, [0 for _ in i2]...)), m, i1..., j, i2...)),
         #(@rule access(~A::isvirtual, ~m, ~i1..., call(+, ~j::isindex, ~a::isconstant), ~i2...) =>
