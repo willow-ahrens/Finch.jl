@@ -59,9 +59,11 @@ function dimensionalize!(prgm, ctx)
     return prgm
 end
 
+struct FinchCompileError msg end
+
 function (ctx::DeclareDimensions)(node::FinchNode)
     if node.kind === access
-        @assert @capture node access(~tns::isvirtual, ~mode, ~idxs::All(isindex)...)
+        @capture node access(~tns::isvirtual, ~mode, ~idxs...)
         tns = tns.val
         if node.mode.kind !== reader && node.tns.kind === virtual && haskey(ctx.hints, getroot(tns))
             shape = map(suggest, virtual_size(tns, ctx.ctx))
@@ -72,11 +74,14 @@ function (ctx::DeclareDimensions)(node::FinchNode)
         length(idxs) > length(shape) && throw(DimensionMismatch("more indices than dimensions in $(sprint(show, MIME("text/plain"), node))"))
         length(idxs) < length(shape) && throw(DimensionMismatch("less indices than dimensions in $(sprint(show, MIME("text/plain"), node))"))
         for (dim, idx) in zip(shape, idxs)
-            ctx.dims[idx] = resultdim(ctx.ctx, dim, get(ctx.dims, idx, nodim))
+            if isindex(idx)
+                ctx.dims[idx] = resultdim(ctx.ctx, dim, get(ctx.dims, idx, nodim))
+            end
         end
         node
     elseif node.kind === loop && node.ext == index(:(:))
         body = ctx(node.body)
+        haskey(ctx.dims, node.idx) || throw(FinchCompileError("could not resolve dimension of index $(node.idx)"))
         return loop(node.idx, cache_dim!(ctx.ctx, getname(node.idx), resolvedim(ctx.dims[node.idx])), body)
     elseif node.kind === sequence
         sequence(map(ctx, node.bodies)...)
@@ -88,7 +93,7 @@ function (ctx::DeclareDimensions)(node::FinchNode)
             shape = virtual_size(node.tns, ctx.ctx)
             shape = map(suggest, shape)
             for hint in ctx.hints[node.tns]
-                @assert @capture hint access(~tns::isvirtual, updater(~mode), ~idxs::All(isindex)...)
+                @assert @capture hint access(~tns::isvirtual, updater(~mode), ~idxs...)
                 shape = map(zip(shape, idxs)) do (dim, idx)
                     resultdim(ctx.ctx, dim, ctx.dims[idx])
                 end

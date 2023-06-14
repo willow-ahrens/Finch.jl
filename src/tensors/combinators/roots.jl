@@ -42,22 +42,12 @@ end
 lowerjulia_access(ctx::AbstractCompiler, node, tns::RootArray) = 
     lowerjulia_access(ctx, node, resolve(tns.tag, ctx))
 
-getdata(tns::RootArray) = tns
-
-function getdata(node::FinchNode)
-    if node.kind === virtual
-        return getdata(node.val)
-    else
-        error("getdata: not a virtual node")
-    end
-end
-
 getroot(tns::RootArray) = tns.tag
 
 function getroot(node::FinchNode)
     if node.kind === virtual
         return getroot(node.val)
     else
-        error("getdata: not a virtual node")
+        return node
     end
 end
