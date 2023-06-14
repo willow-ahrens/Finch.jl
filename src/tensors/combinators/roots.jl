@@ -12,6 +12,8 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::RootArray)
     print(io, ")")
 end
 
+Base.summary(io::IO, tns::RootArray) = print(io, tns.tag.name)
+
 FinchNotation.finch_leaf(x::RootArray) = virtual(x)
 
 virtual_size(tns::RootArray, ctx) = virtual_size(resolve(tns.tag, ctx), ctx)

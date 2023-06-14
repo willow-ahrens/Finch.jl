@@ -618,17 +618,22 @@ end
 
 function display_statement(io, mime, node::FinchNode, indent)
     if node.kind === loop
-        print(io, " "^indent * "@∀ ")
-        while node.kind === loop
-            display_expression(io, mime, node.idx)
+        print(io, " "^indent * "for ")
+        display_expression(io, mime, node.idx)
+        print(io, " = ")
+        display_expression(io, mime, node.ext)
+        body = node.body
+        while body.kind === loop
+            print(io, ", ")
+            display_expression(io, mime, body.idx)
             print(io, " = ")
-            display_expression(io, mime, node.ext)
-            print(io," ")
-            node = node.body
+            display_expression(io, mime, body.ext)
+            body = body.body
         end
-        print(io," (\n")
-        display_statement(io, mime, node, indent + 2)
-        print(io, " "^indent * ")")
+        println(io)
+        display_statement(io, mime, body, indent + 2)
+        println(io)
+        print(io, " "^indent * "end")
     elseif node.kind === sieve
         print(io, " "^indent * "if ")
         while node.body.kind === sieve
@@ -648,17 +653,15 @@ function display_statement(io, mime, node::FinchNode, indent)
         print(io, ">>= ")
         display_expression(io, mime, node.rhs)
     elseif node.kind === define
-        print(io, " "^indent * "@define(")
+        print(io, " "^indent)
         display_expression(io, mime, node.lhs)
-        print(io, ", ")
+        print(io, " = ")
         display_expression(io, mime, node.rhs)
-        print(io, ")")
     elseif node.kind === declare
-        print(io, " "^indent * "@declare(")
+        print(io, " "^indent)
         display_expression(io, mime, node.tns)
-        print(io, ", ")
+        print(io, " .= ")
         display_expression(io, mime, node.init)
-        print(io, ")")
     elseif node.kind === freeze
         print(io, " "^indent * "@freeze(")
         display_expression(io, mime, node.tns)

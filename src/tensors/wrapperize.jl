@@ -88,7 +88,17 @@ end
 bind
 
 function (ctx::ConcordizeVisitor)(node::FinchNode)
-    isbound(x) = all(x -> isconstant(x) || getroot(x) in ctx.scope, Leaves(x))
+    function isbound(x::FinchNode)
+        if isconstant(x) || x in ctx.scope
+            return true
+        elseif @capture x access(~tns, ~mode, ~idxs...)
+            return getroot(tns) in ctx.scope && all(isbound, idxs)
+        elseif istree(x)
+            return all(isbound, arguments(x))
+        else
+            return false
+        end
+    end
     isboundindex(x) = isindex(x) && isbound(x)
     isboundnotindex(x) = !isindex(x) && isbound(x)
         
@@ -135,5 +145,5 @@ function concordize(root, ctx::AbstractCompiler; reorder = false)
             access(~tns, ~mode, ~i..., call(identity, j), ~k...)
         end
     end)))(root)
-    ConcordizeVisitor(ctx.freshen, [])(root)
+    ConcordizeVisitor(ctx.freshen, collect(keys(ctx.bindings)))(root)
 end
