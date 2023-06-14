@@ -23,7 +23,7 @@ begin
                 A_lvl_2_val_2 = A_lvl_2.val[A_lvl_q]
                 cond_2 = phase_stop_2 == 1
                 if cond_2
-                    B_val = B_val + A_lvl_2_val_2
+                    B_val = A_lvl_2_val_2 + B_val
                 end
                 A_lvl_q += 1
             end
