@@ -35,7 +35,7 @@ lower(tns::VirtualPermissiveArray, ctx::AbstractCompiler, ::DefaultStyle) = :(Pe
 function virtual_size(arr::VirtualPermissiveArray, ctx::AbstractCompiler)
     ifelse.(arr.dims, (nodim,), virtual_size(arr.body, ctx))
 end
-function virtual_resize!(arr::VirtualPermissiveArray, ctx::AbstractCompiler)
+function virtual_resize!(arr::VirtualPermissiveArray, ctx::AbstractCompiler, dims...)
     virtual_resize!(arr.body, ctx, ifelse.(arr.dims, virtual_size(arr.body, ctx), dim))
 end
 
