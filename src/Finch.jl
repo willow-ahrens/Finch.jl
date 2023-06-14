@@ -87,6 +87,7 @@ include("tensors/modifiers.jl")
 include("tensors/combinators/unfurled.jl")
 include("tensors/combinators/protocolized.jl")
 include("tensors/combinators/roots.jl")
+include("tensors/combinators/permissive.jl")
 include("tensors/wrapperize.jl")
 
 include("traits.jl")
