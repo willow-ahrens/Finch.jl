@@ -89,7 +89,7 @@ function (ctx::ConcordizeVisitor)(node::FinchNode)
 
     if node.kind === loop || node.kind === assign || node.kind === define || node.kind === sieve
         node = Rewrite(Postwalk(Fixpoint(@rule access(~tns, ~mode, ~i..., ~j, ~k::All(isbound)...) => if !isindex(j)
-            if all(x->(isbound(x) || isconstant(x)), Leaves(j))
+            if all(x->(isbound(x) || isconstant(x) || isvirtual(x)), Leaves(j))
                 j_2 = index(ctx.freshen(:s))
                 push!(selects, j_2 => j)
                 push!(ctx.scope, j_2)
@@ -103,6 +103,8 @@ function (ctx::ConcordizeVisitor)(node::FinchNode)
         node = loop(node.idx, node.ext, ctx_2(node.body))
     elseif node.kind === define
         push!(ctx.scope, node.lhs)
+    elseif node.kind === declare
+        push!(ctx.scope, node.tns)
     elseif istree(node)
         node = similarterm(node, operation(node), map(ctx, children(node)))
     end
