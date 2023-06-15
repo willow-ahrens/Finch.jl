@@ -97,16 +97,16 @@ reassemble_level!(lvl::VirtualPatternLevel, ctx, pos_start, pos_stop) = quote en
 
 trim_level!(lvl::VirtualPatternLevel, ctx::AbstractCompiler, pos) = lvl
 
-unfurl_reader(::VirtualSubFiber{VirtualPatternLevel}, ctx) = Fill(true)
+expand_reader(::VirtualSubFiber{VirtualPatternLevel}, ctx) = Fill(true)
 is_laminable_updater(lvl::VirtualPatternLevel, ctx) = true
 
-function unfurl_updater(fbr::VirtualSubFiber{VirtualPatternLevel}, ctx)
+function expand_updater(fbr::VirtualSubFiber{VirtualPatternLevel}, ctx)
     val = ctx.freshen(:null)
     push!(ctx.preamble, :($val = false))
     VirtualScalar(nothing, Bool, false, gensym(), val)
 end
 
-function unfurl_updater(fbr::VirtualTrackedSubFiber{VirtualPatternLevel}, ctx)
+function expand_updater(fbr::VirtualTrackedSubFiber{VirtualPatternLevel}, ctx)
     VirtualScalar(nothing, Bool, false, gensym(), fbr.dirty)
 end
 

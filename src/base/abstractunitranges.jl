@@ -22,7 +22,7 @@ end
 
 virtual_resize!(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, idx_dim) = arr
 
-function unfurl_reader(arr::VirtualAbstractUnitRange, ctx, proto_idx::typeof(defaultread))
+function expand_reader(arr::VirtualAbstractUnitRange, ctx, proto_idx::typeof(defaultread))
     Furlable(
         body = (ctx, ext) -> Lookup(
             body = (ctx, i) -> Fill(value(:($(arr.ex)[$(ctx(i))])))
@@ -36,7 +36,7 @@ function declare!(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, init)
     throw(FormatLimitation("$(arr.arrtype) is not writeable"))
 end
 
-unfurl_updater(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, protos...) = 
+expand_updater(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, protos...) = 
     throw(FormatLimitation("$(arr.arrtype) is not writeable"))
 
 FinchNotation.finch_leaf(x::VirtualAbstractUnitRange) = virtual(x)

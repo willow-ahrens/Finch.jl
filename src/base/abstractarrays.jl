@@ -32,8 +32,8 @@ end
 freeze!(arr::VirtualAbstractArray, ctx::AbstractCompiler) = arr
 thaw!(arr::VirtualAbstractArray, ctx::AbstractCompiler) = arr
 
-unfurl_reader(arr::VirtualAbstractArray, ctx::AbstractCompiler, protos...) = arr
-unfurl_updater(arr::VirtualAbstractArray, ctx::AbstractCompiler, protos...) = arr
+expand_reader(arr::VirtualAbstractArray, ctx::AbstractCompiler, protos...) = arr
+expand_updater(arr::VirtualAbstractArray, ctx::AbstractCompiler, protos...) = arr
 
 FinchNotation.finch_leaf(x::VirtualAbstractArray) = virtual(x)
 

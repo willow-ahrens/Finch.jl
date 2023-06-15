@@ -39,11 +39,11 @@ function virtual_resize!(arr::VirtualPermissiveArray, ctx::AbstractCompiler, dim
     virtual_resize!(arr.body, ctx, ifelse.(arr.dims, virtual_size(arr.body, ctx), dim))
 end
 
-function unfurl_reader(arr::VirtualPermissiveArray, ctx, protos...)
-    VirtualPermissiveArray(unfurl_reader(arr.body, ctx, protos...), arr.dims)
+function expand_reader(arr::VirtualPermissiveArray, ctx, protos...)
+    VirtualPermissiveArray(expand_reader(arr.body, ctx, protos...), arr.dims)
 end
-function unfurl_updater(arr::VirtualPermissiveArray, ctx, protos...)
-    VirtualPermissiveArray(unfurl_updater(arr.body, ctx, protos...), arr.dims)
+function expand_updater(arr::VirtualPermissiveArray, ctx, protos...)
+    VirtualPermissiveArray(expand_updater(arr.body, ctx, protos...), arr.dims)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualPermissiveArray) = ctx(node.body)

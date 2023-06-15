@@ -45,8 +45,8 @@ function unfurl_access(tns::Furlable, ctx, ext, protos...)
 end
 unfurl_access(tns, ctx, ext, protos...) = tns
 
-unfurl_reader(tns::Furlable, ctx::LowerJulia, idxs...) = tns
-unfurl_updater(tns::Furlable, ctx::LowerJulia, idxs...) = tns
+expand_reader(tns::Furlable, ctx::LowerJulia, idxs...) = tns
+expand_updater(tns::Furlable, ctx::LowerJulia, idxs...) = tns
 
 #TODO this is a bit of a hack, it would be much better to somehow add a
 #statement like writes[] += 1 corresponding to tensor reads/writes that need to

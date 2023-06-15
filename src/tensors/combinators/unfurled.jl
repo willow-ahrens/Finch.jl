@@ -25,8 +25,8 @@ virtual_size(tns::Unfurled, ctx) = virtual_size(tns.arr, ctx)
 virtual_resize!(tns::Unfurled, ctx, dims...) = virtual_resize!(tns.arr, ctx, dims...)
 virtual_default(tns::Unfurled, ctx) = virtual_default(tns.arr, ctx)
 
-unfurl_reader(tns::Unfurled, ctx::LowerJulia, protos...) = tns
-unfurl_updater(tns::Unfurled, ctx::LowerJulia, protos...) = tns
+expand_reader(tns::Unfurled, ctx::LowerJulia, protos...) = tns
+expand_updater(tns::Unfurled, ctx::LowerJulia, protos...) = tns
 
 (ctx::Stylize{<:AbstractCompiler})(node::Unfurled) = ctx(node.body)
 function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::Unfurled)

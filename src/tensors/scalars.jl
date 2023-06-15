@@ -55,8 +55,8 @@ end
 function freeze!(tns::VirtualScalar, ctx)
     return tns
 end
-unfurl_reader(tns::VirtualScalar, ctx) = tns
-unfurl_updater(tns::VirtualScalar, ctx) = tns
+expand_reader(tns::VirtualScalar, ctx) = tns
+expand_updater(tns::VirtualScalar, ctx) = tns
 
 function lowerjulia_access(ctx::AbstractCompiler, node, tns::VirtualScalar)
     @assert isempty(node.idxs)
@@ -77,8 +77,8 @@ virtual_size(::VirtualDirtyScalar, ctx) = ()
 virtual_default(tns::VirtualDirtyScalar) = Some(tns.D)
 virtual_eltype(tns::VirtualDirtyScalar) = tns.Tv
 
-unfurl_reader(tns::VirtualDirtyScalar, ctx) = tns
-unfurl_updater(tns::VirtualDirtyScalar, ctx) = tns
+expand_reader(tns::VirtualDirtyScalar, ctx) = tns
+expand_updater(tns::VirtualDirtyScalar, ctx) = tns
 
 FinchNotation.finch_leaf(x::VirtualDirtyScalar) = virtual(x)
 

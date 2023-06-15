@@ -45,11 +45,11 @@ function virtual_resize!(arr::VirtualOffsetArray, ctx::AbstractCompiler, dims...
     virtual_resize!(arr.body, ctx, dims_2...)
 end
 
-function unfurl_reader(arr::VirtualOffsetArray, ctx, protos...)
-    VirtualOffsetArray(unfurl_reader(arr.body, ctx, protos...), arr.delta)
+function expand_reader(arr::VirtualOffsetArray, ctx, protos...)
+    VirtualOffsetArray(expand_reader(arr.body, ctx, protos...), arr.delta)
 end
-function unfurl_updater(arr::VirtualOffsetArray, ctx, protos...)
-    VirtualOffsetArray(unfurl_updater(arr.body, ctx, protos...), arr.delta)
+function expand_updater(arr::VirtualOffsetArray, ctx, protos...)
+    VirtualOffsetArray(expand_updater(arr.body, ctx, protos...), arr.delta)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualOffsetArray) = ctx(node.body)
