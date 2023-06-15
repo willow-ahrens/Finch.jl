@@ -62,7 +62,7 @@ quote
                 phase_stop_2 = min(phase_stop, A_lvl_2_i)
                 if A_lvl_2_i == phase_stop_2
                     A_lvl_3_val_2 = A_lvl_3.val[A_lvl_2_q]
-                    s_val = s_val + A_lvl_3_val_2
+                    s_val = A_lvl_3_val_2 + s_val
                     A_lvl_2_q += 1
                 end
                 i = phase_stop_2 + 1
@@ -116,7 +116,7 @@ quote
                     phase_stop_2 = min(phase_stop, A_lvl_2_i)
                     if A_lvl_2_i == phase_stop_2
                         A_lvl_3_val_2 = A_lvl_3.val[A_lvl_2_q]
-                        s_val = s_val + A_lvl_3_val_2
+                        s_val = A_lvl_3_val_2 + s_val
                         A_lvl_2_q += 1
                     end
                     s_2 = phase_stop_2 + 1
