@@ -40,7 +40,7 @@ that should be used for each index, but one doesn't need to unfurl all the
 indices at once.
 """
 function unfurl_access(tns::Furlable, ctx, ext, protos...)
-    tns = Unfurled(tns.body(ctx, ext), 1, tns)
+    tns = tns.body(ctx, ext)
     return tns
 end
 unfurl_access(tns, ctx, ext, protos...) = tns

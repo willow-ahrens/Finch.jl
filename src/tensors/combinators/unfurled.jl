@@ -2,7 +2,10 @@
     body
     ndims
     arr
-    Unfurled(body, ndims, arr) = new(body, ndims, arr) 
+    Unfurled(body, ndims, arr) = begin
+        @assert !(body isa Unfurled)
+        new(body, ndims, arr) 
+    end
     Unfurled(body::Nothing, ndims, arr) = error()
 end
 
