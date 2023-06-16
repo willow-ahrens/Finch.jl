@@ -219,7 +219,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
                     tns_2 = expand_updater(tns, ctx, protos...)
                 end
                 if tns_2 != tns
-                    tns_2 = Unfurled(tns_2, 1, tns)
+                    tns_2 = Unfurled(tns, 1, tns_2)
                 end
                 tns_3 = unfurl_access(tns_2, ctx, root.ext.val, protos...)
                 access(tns_3, mode, idxs...)
