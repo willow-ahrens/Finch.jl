@@ -146,11 +146,11 @@ function declare!(fbr::VirtualFiber, ctx::AbstractCompiler, init)
 end
 
 function instantiate_reader(fbr::VirtualFiber, ctx::AbstractCompiler, protos...)
-    return instantiate_reader(VirtualSubFiber(fbr.lvl, literal(1)), ctx, reverse(protos)...)
+    return Unfurled(fbr, instantiate_reader(VirtualSubFiber(fbr.lvl, literal(1)), ctx, reverse(protos)...))
 end
 
 function instantiate_updater(fbr::VirtualFiber, ctx::AbstractCompiler, protos...)
-    return instantiate_updater(VirtualSubFiber(fbr.lvl, literal(1)), ctx, reverse(protos)...)
+    return Unfurled(fbr, instantiate_updater(VirtualSubFiber(fbr.lvl, literal(1)), ctx, reverse(protos)...))
 end
 
 struct TrackedSubFiber{Lvl, Pos, Dirty} <: AbstractFiber{Lvl}

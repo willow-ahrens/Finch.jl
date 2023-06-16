@@ -1,12 +1,11 @@
 @kwdef struct Unfurled
     arr
-    ndims
+    ndims = 0
     body
     Unfurled(arr, ndims, body) = begin
-        @assert !(body isa Unfurled)
         new(arr, ndims, body) 
     end
-    Unfurled(arr, ndims, body::Nothing) = error()
+    Unfurled(arr, body) = Unfurled(arr, 0, body)
 end
 
 Base.show(io::IO, ex::Unfurled) = Base.show(io, MIME"text/plain"(), ex)
@@ -37,11 +36,11 @@ function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::Unfurled)
     stylize_access(node, ctx, tns.body)
 end
 
-function popdim(node::Unfurled)
-    if node.ndims == 1
+function popdim(node::Unfurled, ctx)
+    if node.ndims + 1 == virtual_size(node.arr, ctx) || node.body isa Unfurled
         return node.body
     else
-        return Unfurled(node.arr, node.ndims - 1, node.body)
+        return Unfurled(node.arr, node.ndims + 1, node.body)
     end
 end
 
@@ -52,7 +51,7 @@ function get_point_body(node::Unfurled, ctx, ext, idx)
     if body_2 === nothing
         return nothing
     else
-        return popdim(Unfurled(node.arr, node.ndims, body_2))
+        return popdim(Unfurled(node.arr, node.ndims, body_2), ctx)
     end
 end
 
@@ -63,7 +62,7 @@ function get_run_body(node::Unfurled, ctx, ext)
     if body_2 === nothing
         return nothing
     else
-        return popdim(Unfurled(node.arr, node.ndims, body_2))
+        return popdim(Unfurled(node.arr, node.ndims, body_2), ctx)
     end
 end
 
@@ -72,7 +71,7 @@ function get_acceptrun_body(node::Unfurled, ctx, ext)
     if body_2 === nothing
         return nothing
     else
-        return popdim(Unfurled(node.arr, node.ndims, body_2))
+        return popdim(Unfurled(node.arr, node.ndims, body_2), ctx)
     end
 end
 
@@ -105,7 +104,6 @@ end
 (ctx::CycleVisitor)(node::Unfurled) = Unfurled(node.arr, node.ndims, ctx(node.body))
 
 function lower(node::Unfurled, ctx::AbstractCompiler, ::DefaultStyle)
-    error(node)
     ctx(node.body)
 end
 

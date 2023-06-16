@@ -134,7 +134,6 @@ function similar in spirit to `Base.axes`.
 """
 function virtual_size end
 
-virtual_size(tns, ctx, eldim) = virtual_size(tns, ctx)
 function virtual_size(tns::FinchNode, ctx)
     if tns.kind === variable
         return virtual_size(ctx.bindings[tns], ctx)

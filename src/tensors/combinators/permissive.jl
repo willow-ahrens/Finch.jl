@@ -119,6 +119,7 @@ function unfurl_access(tns::VirtualPermissiveArray, ctx, protos...)
     if tns.dims[end]
         VirtualPermissiveArray(
             Unfurled(
+                tns.body,
                 Pipeline([
                     Phase(
                         stop = (ctx, ext_2) -> call(-, getstart(dims[end]), 1),
@@ -132,8 +133,6 @@ function unfurl_access(tns::VirtualPermissiveArray, ctx, protos...)
                         body = (ctx, ext_2) -> Run(Fill(literal(missing))),
                     )
                 ]),
-                length(dims),
-                tns.body
             ),
             tns.dims
         )

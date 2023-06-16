@@ -12,21 +12,24 @@ virtualize(ex, ::Type{DiagMask}, ctx) = diagmask
 FinchNotation.finch_leaf(x::DiagMask) = virtual(x)
 Finch.virtual_size(::DiagMask, ctx) = (nodim, nodim)
 
-function instantiate_reader(::DiagMask, ctx, protos::typeof(defaultread)...)
-    tns = Furlable(
-        body = (ctx, ext) -> Lookup(
-            body = (ctx, i) -> Furlable(
-                body = (ctx, ext) -> Pipeline([
-                    Phase(
-                        stop = (ctx, ext) -> value(:($(ctx(i)) - 1)),
-                        body = (ctx, ext) -> Run(body=Fill(false))
-                    ),
-                    Phase(
-                        stop = (ctx, ext) -> i,
-                        body = (ctx, ext) -> Run(body=Fill(true)),
-                    ),
-                    Phase(body = (ctx, ext) -> Run(body=Fill(false)))
-                ])
+function instantiate_reader(arr::DiagMask, ctx, protos::typeof(defaultread)...)
+    Unfurled(
+        arr = arr,
+        body = Furlable(
+            body = (ctx, ext) -> Lookup(
+                body = (ctx, i) -> Furlable(
+                    body = (ctx, ext) -> Pipeline([
+                        Phase(
+                            stop = (ctx, ext) -> value(:($(ctx(i)) - 1)),
+                            body = (ctx, ext) -> Run(body=Fill(false))
+                        ),
+                        Phase(
+                            stop = (ctx, ext) -> i,
+                            body = (ctx, ext) -> Run(body=Fill(true)),
+                        ),
+                        Phase(body = (ctx, ext) -> Run(body=Fill(false)))
+                    ])
+                )
             )
         )
     )
@@ -45,19 +48,22 @@ virtualize(ex, ::Type{UpTriMask}, ctx) = uptrimask
 FinchNotation.finch_leaf(x::UpTriMask) = virtual(x)
 Finch.virtual_size(::UpTriMask, ctx) = (nodim, nodim)
 
-function instantiate_reader(::UpTriMask, ctx, protos::typeof(defaultread)...)
-    tns = Furlable(
-        body = (ctx, ext) -> Lookup(
-            body = (ctx, i) -> Furlable(
-                body = (ctx, ext) -> Pipeline([
-                    Phase(
-                        stop = (ctx, ext) -> value(:($(ctx(i)))),
-                        body = (ctx, ext) -> Run(body=Fill(true))
-                    ),
-                    Phase(
-                        body = (ctx, ext) -> Run(body=Fill(false)),
-                    )
-                ])
+function instantiate_reader(arr::UpTriMask, ctx, protos::typeof(defaultread)...)
+    Unfurled(
+        arr = arr,
+        body = Furlable(
+            body = (ctx, ext) -> Lookup(
+                body = (ctx, i) -> Furlable(
+                    body = (ctx, ext) -> Pipeline([
+                        Phase(
+                            stop = (ctx, ext) -> value(:($(ctx(i)))),
+                            body = (ctx, ext) -> Run(body=Fill(true))
+                        ),
+                        Phase(
+                            body = (ctx, ext) -> Run(body=Fill(false)),
+                        )
+                    ])
+                )
             )
         )
     )
@@ -76,19 +82,22 @@ virtualize(ex, ::Type{LoTriMask}, ctx) = lotrimask
 FinchNotation.finch_leaf(x::LoTriMask) = virtual(x)
 Finch.virtual_size(::LoTriMask, ctx) = (nodim, nodim)
 
-function instantiate_reader(::LoTriMask, ctx, protos::typeof(defaultread)...)
-    tns = Furlable(
-        body = (ctx, ext) -> Lookup(
-            body = (ctx, i) -> Furlable(
-                body = (ctx, ext) -> Pipeline([
-                    Phase(
-                        stop = (ctx, ext) -> value(:($(ctx(i)) - 1)),
-                        body = (ctx, ext) -> Run(body=Fill(false))
-                    ),
-                    Phase(
-                        body = (ctx, ext) -> Run(body=Fill(true)),
-                    )
-                ])
+function instantiate_reader(arr::LoTriMask, ctx, protos::typeof(defaultread)...)
+    Unfurled(
+        arr = arr,
+        body = Furlable(
+            body = (ctx, ext) -> Lookup(
+                body = (ctx, i) -> Furlable(
+                    body = (ctx, ext) -> Pipeline([
+                        Phase(
+                            stop = (ctx, ext) -> value(:($(ctx(i)) - 1)),
+                            body = (ctx, ext) -> Run(body=Fill(false))
+                        ),
+                        Phase(
+                            body = (ctx, ext) -> Run(body=Fill(true)),
+                        )
+                    ])
+                )
             )
         )
     )
@@ -107,25 +116,28 @@ virtualize(ex, ::Type{BandMask}, ctx) = bandmask
 FinchNotation.finch_leaf(x::BandMask) = virtual(x)
 Finch.virtual_size(::BandMask, ctx) = (nodim, nodim, nodim)
 
-function instantiate_reader(::BandMask, ctx, mode, protos::typeof(defaultread)...)
-    tns = Furlable(
-        body = (ctx, ext) -> Lookup(
-            body = (ctx, k) -> Furlable(
-                body = (ctx, ext) -> Lookup(
-                    body = (ctx, j) -> Furlable(
-                        body = (ctx, ext) -> Pipeline([
-                            Phase(
-                                stop = (ctx, ext) -> value(:($(ctx(j)) - 1)),
-                                body = (ctx, ext) -> Run(body=Fill(false))
-                            ),
-                            Phase(
-                                stop = (ctx, ext) -> k,
-                                body = (ctx, ext) -> Run(body=Fill(true))
-                            ),
-                            Phase(
-                                body = (ctx, ext) -> Run(body=Fill(false)),
-                            )
-                        ])
+function instantiate_reader(arr::BandMask, ctx, mode, protos::typeof(defaultread)...)
+    Unfurled(
+        arr = arr,
+        tns = Furlable(
+            body = (ctx, ext) -> Lookup(
+                body = (ctx, k) -> Furlable(
+                    body = (ctx, ext) -> Lookup(
+                        body = (ctx, j) -> Furlable(
+                            body = (ctx, ext) -> Pipeline([
+                                Phase(
+                                    stop = (ctx, ext) -> value(:($(ctx(j)) - 1)),
+                                    body = (ctx, ext) -> Run(body=Fill(false))
+                                ),
+                                Phase(
+                                    stop = (ctx, ext) -> k,
+                                    body = (ctx, ext) -> Run(body=Fill(true))
+                                ),
+                                Phase(
+                                    body = (ctx, ext) -> Run(body=Fill(false)),
+                                )
+                            ])
+                        )
                     )
                 )
             )

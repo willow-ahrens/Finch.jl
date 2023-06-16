@@ -119,6 +119,6 @@ end
 
 getroot(tns::VirtualOffsetArray) = getroot(tns.data)
 
-function unfurl_access(node, ctx, eldim, tns::VirtualOffsetArray)
-    VirtualOffsetArray(unfurl_access(node, ctx, eldim, tns.body), tns.delta)
+function unfurl_access(node, ctx, ext, tns::VirtualOffsetArray)
+    VirtualOffsetArray(unfurl_access(node, ctx, ext, tns.body), tns.delta)
 end
