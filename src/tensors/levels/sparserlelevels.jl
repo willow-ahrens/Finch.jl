@@ -17,7 +17,7 @@ SparseRLELevel{Ti, Tp, Lvl}(lvl, shape) where {Ti, Tp, Lvl} =
     SparseRLELevel{Ti, Tp, Lvl}(lvl, shape, Tp[1], Ti[], Ti[])
 
 """
-`fiber_abbrev(srle)` = [`SparseRLELevel`](@ref).
+`fiber_abbrev(srl)` = [`SparseRLELevel`](@ref).
 """
 fiber_abbrev(::Val{:srl}) = SparseRLE
 summary_fiber_abbrev(lvl::SparseRLELevel) = "srl($(summary_fiber_abbrev(lvl.lvl)))"
