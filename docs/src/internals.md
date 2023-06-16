@@ -152,8 +152,8 @@ Every virtual tensor must be in one of two modes: read-only mode or update-only 
 
 ```@docs
 declare!
-expand_reader
-expand_updater
+instantiate_reader
+instantiate_updater
 freeze!
 trim!
 thaw!

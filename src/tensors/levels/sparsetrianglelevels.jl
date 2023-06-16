@@ -165,10 +165,10 @@ is_laminable_updater(lvl::VirtualSparseTriangleLevel, ctx, ::Union{typeof(defaul
     is_laminable_updater(lvl.lvl, ctx, protos[lvl.N + 1:end]...)
 
 
-expand_reader(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, protos...) = expand_reader_triangular_dense_helper(fbr, ctx, expand_reader, VirtualSubFiber, protos...)
-expand_updater(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, protos...) = expand_updater_triangular_dense_helper(fbr, ctx, expand_updater, VirtualSubFiber, protos...)
-expand_updater(fbr::VirtualTrackedSubFiber{VirtualSparseTriangleLevel}, ctx, protos...) = expand_updater_triangular_dense_helper(fbr, ctx, expand_updater, (lvl, pos) -> VirtualTrackedSubFiber(lvl, pos, fbr.dirty), protos...)
-function expand_reader_triangular_dense_helper(fbr, ctx, subunfurl, subfiber_ctr, protos...)
+instantiate_reader(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, protos...) = instantiate_reader_triangular_dense_helper(fbr, ctx, instantiate_reader, VirtualSubFiber, protos...)
+instantiate_updater(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, protos...) = instantiate_updater_triangular_dense_helper(fbr, ctx, instantiate_updater, VirtualSubFiber, protos...)
+instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseTriangleLevel}, ctx, protos...) = instantiate_updater_triangular_dense_helper(fbr, ctx, instantiate_updater, (lvl, pos) -> VirtualTrackedSubFiber(lvl, pos, fbr.dirty), protos...)
+function instantiate_reader_triangular_dense_helper(fbr, ctx, subunfurl, subfiber_ctr, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
@@ -225,7 +225,7 @@ function expand_reader_triangular_dense_helper(fbr, ctx, subunfurl, subfiber_ctr
     )
 end
 
-function expand_updater_triangular_dense_helper(fbr, ctx, subunfurl, subfiber_ctr, protos...)
+function instantiate_updater_triangular_dense_helper(fbr, ctx, subunfurl, subfiber_ctr, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti

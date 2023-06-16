@@ -214,9 +214,9 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
                 tns = tns.val
                 protos = [(mode.kind === reader ? defaultread : defaultupdate) for _ in idxs]
                 if mode.kind === reader
-                    tns_2 = expand_reader(tns, ctx, protos...)
+                    tns_2 = instantiate_reader(tns, ctx, protos...)
                 else
-                    tns_2 = expand_updater(tns, ctx, protos...)
+                    tns_2 = instantiate_updater(tns, ctx, protos...)
                 end
                 if tns_2 != tns
                     tns_2 = Unfurled(tns, 1, tns_2)

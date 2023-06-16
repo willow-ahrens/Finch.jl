@@ -171,9 +171,9 @@ end
 
 is_laminable_updater(lvl::VirtualDenseLevel, ctx, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...) =
     is_laminable_updater(lvl.lvl, ctx, protos...)
-expand_reader(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, ::Union{typeof(defaultread), typeof(follow)}, protos...) = subunfurl_dense_helper(fbr, ctx, expand_reader, VirtualSubFiber, protos...)
-expand_updater(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...) = subunfurl_dense_helper(fbr, ctx, expand_updater, VirtualSubFiber, protos...)
-expand_updater(fbr::VirtualTrackedSubFiber{VirtualDenseLevel}, ctx, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...) = subunfurl_dense_helper(fbr, ctx, expand_updater, (lvl, pos) -> VirtualTrackedSubFiber(lvl, pos, fbr.dirty), protos...)
+instantiate_reader(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, ::Union{typeof(defaultread), typeof(follow)}, protos...) = subunfurl_dense_helper(fbr, ctx, instantiate_reader, VirtualSubFiber, protos...)
+instantiate_updater(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...) = subunfurl_dense_helper(fbr, ctx, instantiate_updater, VirtualSubFiber, protos...)
+instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualDenseLevel}, ctx, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...) = subunfurl_dense_helper(fbr, ctx, instantiate_updater, (lvl, pos) -> VirtualTrackedSubFiber(lvl, pos, fbr.dirty), protos...)
 function subunfurl_dense_helper(fbr, ctx, subunfurl, subfiber_ctr, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
@@ -182,7 +182,7 @@ function subunfurl_dense_helper(fbr, ctx, subunfurl, subfiber_ctr, protos...)
     q = ctx.freshen(tag, :_q)
 
     Furlable(
-        tight = (subunfurl == expand_updater && !is_laminable_updater(lvl.lvl, ctx, protos...)) ? lvl : nothing,
+        tight = (subunfurl == instantiate_updater && !is_laminable_updater(lvl.lvl, ctx, protos...)) ? lvl : nothing,
         body = (ctx, ext) -> Lookup(
             body = (ctx, i) -> Thunk(
                 preamble = quote

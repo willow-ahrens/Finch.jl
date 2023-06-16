@@ -44,11 +44,11 @@ function virtual_resize!(arr::VirtualProtocolizedArray, ctx::AbstractCompiler, d
     virtual_resize!(arr.body, ctx, dim)
 end
 
-function expand_reader(arr::VirtualProtocolizedArray, ctx, protos...)
-    VirtualProtocolizedArray(expand_reader(arr.body, ctx,  map(something, arr.protos, protos)...), arr.protos)
+function instantiate_reader(arr::VirtualProtocolizedArray, ctx, protos...)
+    VirtualProtocolizedArray(instantiate_reader(arr.body, ctx,  map(something, arr.protos, protos)...), arr.protos)
 end
-function expand_updater(arr::VirtualProtocolizedArray, ctx, protos...)
-    VirtualProtocolizedArray(expand_updater(arr.body, ctx,  map(something, arr.protos, protos)...), arr.protos)
+function instantiate_updater(arr::VirtualProtocolizedArray, ctx, protos...)
+    VirtualProtocolizedArray(instantiate_updater(arr.body, ctx,  map(something, arr.protos, protos)...), arr.protos)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualProtocolizedArray) = ctx(node.body)

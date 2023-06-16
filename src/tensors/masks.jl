@@ -12,7 +12,7 @@ virtualize(ex, ::Type{DiagMask}, ctx) = diagmask
 FinchNotation.finch_leaf(x::DiagMask) = virtual(x)
 Finch.virtual_size(::DiagMask, ctx) = (nodim, nodim)
 
-function expand_reader(::DiagMask, ctx, protos::typeof(defaultread)...)
+function instantiate_reader(::DiagMask, ctx, protos::typeof(defaultread)...)
     tns = Furlable(
         body = (ctx, ext) -> Lookup(
             body = (ctx, i) -> Furlable(
@@ -45,7 +45,7 @@ virtualize(ex, ::Type{UpTriMask}, ctx) = uptrimask
 FinchNotation.finch_leaf(x::UpTriMask) = virtual(x)
 Finch.virtual_size(::UpTriMask, ctx) = (nodim, nodim)
 
-function expand_reader(::UpTriMask, ctx, protos::typeof(defaultread)...)
+function instantiate_reader(::UpTriMask, ctx, protos::typeof(defaultread)...)
     tns = Furlable(
         body = (ctx, ext) -> Lookup(
             body = (ctx, i) -> Furlable(
@@ -76,7 +76,7 @@ virtualize(ex, ::Type{LoTriMask}, ctx) = lotrimask
 FinchNotation.finch_leaf(x::LoTriMask) = virtual(x)
 Finch.virtual_size(::LoTriMask, ctx) = (nodim, nodim)
 
-function expand_reader(::LoTriMask, ctx, protos::typeof(defaultread)...)
+function instantiate_reader(::LoTriMask, ctx, protos::typeof(defaultread)...)
     tns = Furlable(
         body = (ctx, ext) -> Lookup(
             body = (ctx, i) -> Furlable(
@@ -107,7 +107,7 @@ virtualize(ex, ::Type{BandMask}, ctx) = bandmask
 FinchNotation.finch_leaf(x::BandMask) = virtual(x)
 Finch.virtual_size(::BandMask, ctx) = (nodim, nodim, nodim)
 
-function expand_reader(::BandMask, ctx, mode, protos::typeof(defaultread)...)
+function instantiate_reader(::BandMask, ctx, mode, protos::typeof(defaultread)...)
     tns = Furlable(
         body = (ctx, ext) -> Lookup(
             body = (ctx, k) -> Furlable(
