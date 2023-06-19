@@ -20,6 +20,7 @@ using CIndices
 export @finch, @finch_program, @finch_code, @finch_kernel, value
 
 export Fiber, Fiber!, Scalar
+export SparseRLE, SparseRLELevel 
 export SparseList, SparseListLevel
 export SparseHash, SparseHashLevel
 export SparseCOO, SparseCOOLevel
@@ -72,6 +73,7 @@ include("execute.jl")
 
 include("tensors/scalars.jl")
 include("tensors/fibers.jl")
+include("tensors/levels/sparserlelevels.jl")
 include("tensors/levels/sparselistlevels.jl")
 include("tensors/levels/sparsehashlevels.jl")
 include("tensors/levels/sparsecoolevels.jl")
