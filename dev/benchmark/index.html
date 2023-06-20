@@ -18,24 +18,24 @@ y = @fiber(d(e(0.0)))</code></pre><pre><code class="nohighlight hljs">Dense [1:0
         y[i] += A[i, j] * x[j]
     end
 end)</code></pre><pre><code class="nohighlight hljs">spmv (generic function with 1 method)</code></pre><p>Benchmark the kernel, ignoring allocation costs for y</p><pre><code class="language-julia hljs">@benchmark spmv($y, $A, $x)</code></pre><pre><code class="nohighlight hljs">BenchmarkTools.Trial: 10000 samples with 1 evaluation.
- Range (min … max):  41.208 μs … 964.083 μs  ┊ GC (min … max): 0.00% … 93.05%
- Time  (median):     45.375 μs               ┊ GC (median):    0.00%
- Time  (mean ± σ):   46.132 μs ±  17.338 μs  ┊ GC (mean ± σ):  0.71% ±  1.81%
+ Range (min … max):  73.613 μs …   8.824 ms  ┊ GC (min … max): 0.00% … 98.86%
+ Time  (median):     77.621 μs               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   83.155 μs ± 142.930 μs  ┊ GC (mean ± σ):  2.97% ±  1.71%
 
-  ▁▅▆▅▄▂▂▂ ▂▁  ▁▃███▆▅▃▄▃▁▂▁▁ ▁▃▃▂▂▂▂▃▃▃▂▂▁        ▁           ▂
-  ████████████▇█████████████████████████████▇▇▇▇▇▇███▇▇████▇▇▇ █
-  41.2 μs       Histogram: log(frequency) by time      55.9 μs &lt;
+  ▂ ██▁▁        ▁ ▂                                             
+  ██████▇▄▄▄▃▃▂▃█▅█▅▄▃▃▃▃▃▃▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▁▂▂▂▂▂ ▃
+  73.6 μs         Histogram: frequency by time          118 μs &lt;
 
  Memory estimate: 22.97 KiB, allocs estimate: 1470.</code></pre><p>The <code>@benchmark</code> macro will benchmark a function in local scope, and it will run the function a few times to estimate the runtime. It will also try to avoid first-time compilation costs by running the function once before benchmarking it. Note the use of <code>$</code> to interpolate the arrays into the benchmark, bringing them into the local scope.</p><p>We can also benchmark the memory allocation of the kernel by constructing <code>y</code> in the benchmark kernel</p><pre><code class="language-julia hljs">@benchmark begin
     y = @fiber(d(e(0.0)))
     y = spmv(y, $A, $x).y
 end</code></pre><pre><code class="nohighlight hljs">BenchmarkTools.Trial: 10000 samples with 1 evaluation.
- Range (min … max):  42.583 μs …  1.025 ms  ┊ GC (min … max): 0.00% … 93.24%
- Time  (median):     46.667 μs              ┊ GC (median):    0.00%
- Time  (mean ± σ):   47.711 μs ± 19.655 μs  ┊ GC (mean ± σ):  0.89% ±  2.08%
+ Range (min … max):  70.866 μs …   8.818 ms  ┊ GC (min … max): 0.00% … 98.95%
+ Time  (median):     73.797 μs               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   80.116 μs ± 147.707 μs  ┊ GC (mean ± σ):  3.18% ±  1.71%
 
-  ▃▅▅▄▂ ▁▁▂▁▃▁ ▇█▆▆▄▂▄▂▂▃▃▂▂▂▂▂▃▃▂▁▁                          ▂
-  ████████████▇████████████████████████▇▇▇█████▇▇▇█▇▇▇▅▆▄▄▆▄▆ █
-  42.6 μs      Histogram: log(frequency) by time        59 μs &lt;
+  ▃▃█▆                                                          
+  ████▆▄▂▂▃▂▂▁▄▆▅▇▄▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁ ▂
+  70.9 μs         Histogram: frequency by time          118 μs &lt;
 
- Memory estimate: 23.56 KiB, allocs estimate: 1472.</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../CONTRIBUTING/">« Contributing</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Monday 19 June 2023 20:15">Monday 19 June 2023</span>. Using Julia version 1.9.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+ Memory estimate: 23.56 KiB, allocs estimate: 1472.</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../CONTRIBUTING/">« Contributing</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Tuesday 20 June 2023 23:21">Tuesday 20 June 2023</span>. Using Julia version 1.9.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
