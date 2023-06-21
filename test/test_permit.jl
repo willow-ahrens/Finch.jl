@@ -8,7 +8,7 @@
     @finch (C .= 0; @loop i C[i] = coalesce(A[~i], B[~(i + 10)]))
     @test reference_isequal(C, C_ref)
 
-    exit()
+    #=
 
     F = fiber(Int64[1,1,1,1,1])
 
@@ -42,4 +42,5 @@
 
     @finch (C .= 0; @loop i C[i] = win[i])
     @test reference_isequal(C, [2, 3, 4])
+    =#
 end
