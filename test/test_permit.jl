@@ -3,9 +3,9 @@
     using SparseArrays
 
     A_ref = sprand(10, 0.5); B_ref = sprand(10, 0.5); C_ref = vcat(A_ref, B_ref)
-    A = fiber(SparseVector{Float64, Int64}(A_ref)); B = fiber(SparseVector{Float64, Int64}(B_ref)); C = @fiber(sl{Int64}(e(0.0)))
+    A = fiber(SparseVector{Float64, Int64}(A_ref)); B = fiber(SparseVector{Float64, Int64}(B_ref)); C = @fiber(sl{Int64}(e(0.0), 20))
     @test check_output("concat_offset_permit.jl", @finch_code (C .= 0; @loop i C[i] = coalesce(A[~i], B[i + 10])))
-    @finch (C .= 0; @loop i C[i] = coalesce(A[~i], B[i + 10]))
+    @finch (C .= 0; @loop i C[i] = coalesce(A[~i], B[~(i + 10)]))
     @test reference_isequal(C, C_ref)
 
     exit()

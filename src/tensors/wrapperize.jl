@@ -80,7 +80,6 @@ function get_wrapper_rules(alg, depth, ctx)
                 delta = map((a, b) -> call(+, a, b), body.delta, delta)
                 body = body.body
             end
-            println(VirtualOffsetArray(body, delta))
             access(VirtualOffsetArray(body, delta), m, i1..., k, i2...)
         end),
     ]
