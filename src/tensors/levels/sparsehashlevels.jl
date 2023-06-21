@@ -395,7 +395,7 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseHashLevel}
     instantiate_updater_hash_helper(lvl, ctx, pos, fbr.dirty, (), protos...)
 end
 
-instantiate_updater_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, fbr_dirty, coords, p::Union{typeof(defaultupdate), typeof(extrude)}, protos...) = throw(FormatLimitation("SparseHashLevel does not support protocol $proto"))
+instantiate_updater_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, fbr_dirty, coords, proto, protos...) = throw(FormatLimitation("SparseHashLevel does not support protocol $proto"))
 function instantiate_updater_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, fbr_dirty, coords, p::Union{typeof(defaultupdate), typeof(extrude)}, protos...)
     tag = lvl.ex
     Ti = lvl.Ti
