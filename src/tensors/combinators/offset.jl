@@ -20,7 +20,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualOffsetArray)
 	print(io, "VirtualOffsetArray($(ex.body), $(ex.delta))")
 end
 
-Base.summary(io::IO, ex::VirtualOffsetArray) = print(io, "VOffset($(summary(ex.body)), $(summary(ex.dims)))")
+Base.summary(io::IO, ex::VirtualOffsetArray) = print(io, "VOffset($(summary(ex.body)), $(summary(ex.delta)))")
 
 FinchNotation.finch_leaf(x::VirtualOffsetArray) = virtual(x)
 
@@ -68,7 +68,7 @@ end
 truncate(node::VirtualOffsetArray, ctx, ext, ext_2) = VirtualOffsetArray(truncate(node.body, ctx, shiftdim(ext, call(-, node.delta[end])), shiftdim(ext_2, call(-, node.delta[end]))), node.delta)
 
 function get_point_body(node::VirtualOffsetArray, ctx, ext, idx)
-    body_2 = get_point_body(node.body, ctx, shiftdim(ext, call(-, node.delta[end])), idx)
+    body_2 = get_point_body(node.body, ctx, shiftdim(ext, call(-, node.delta[end])), call(-, idx, node.delta[end]))
     if body_2 === nothing
         return nothing
     else
@@ -117,8 +117,8 @@ end
 
 (ctx::CycleVisitor)(node::VirtualOffsetArray) = VirtualOffsetArray(CycleVisitor(; kwfields(ctx)..., ext=shiftdim(ctx.ext, call(-, node.delta[end])))(node.body), node.delta)
 
-getroot(tns::VirtualOffsetArray) = getroot(tns.data)
+getroot(tns::VirtualOffsetArray) = getroot(tns.body)
 
-function unfurl_access(node, ctx, ext, tns::VirtualOffsetArray)
-    VirtualOffsetArray(unfurl_access(node, ctx, ext, tns.body), tns.delta)
+function unfurl_access(tns::VirtualOffsetArray, ctx, ext, protos...)
+    VirtualOffsetArray(unfurl_access(tns.body, ctx, shiftdim(ext, call(-, tns.delta[end])), protos...), tns.delta)
 end

@@ -73,10 +73,16 @@ function get_wrapper_rules(alg, depth, ctx)
             end
             access(VirtualPermissiveArray(body, dims), m, i1..., j, i2...)
         end),
-        #(@rule access(~A::isvirtual, ~m, ~i1..., call(+, ~a::isconstant, ~j::isindex), ~i2...) =>
-        #    access(ShiftArray(A.val, ([0 for _ in i1]..., a, [0 for _ in i2]...)), m, i1..., j, i2...)),
-        #(@rule access(~A::isvirtual, ~m, ~i1..., call(+, ~j::isindex, ~a::isconstant), ~i2...) =>
-        #    access(ShiftArray(A.val, ([0 for _ in i1]..., a, [0 for _ in i2]...)), m, i1..., j, i2...)),
+        (@rule access(~A::isvirtual, ~m, ~i1..., call($(+), ~j1::All(isconstant)..., ~k, ~j2::All(isconstant)...), ~i2...) => begin
+            body = A.val
+            delta = ([0 for _ in i1]..., call(+, j1..., j2...), [0 for _ in i2]...)
+            if body isa VirtualOffsetArray
+                delta = map((a, b) -> call(+, a, b), body.delta, delta)
+                body = body.body
+            end
+            println(VirtualOffsetArray(body, delta))
+            access(VirtualOffsetArray(body, delta), m, i1..., k, i2...)
+        end),
     ]
 end
 
