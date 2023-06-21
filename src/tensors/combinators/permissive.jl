@@ -22,7 +22,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualPermissiveArray)
 	print(io, "VirtualPermissiveArray($(ex.body), $(ex.dims))")
 end
 
-Base.summary(io::IO, ex::VirtualPermissiveArray) = print(io, "VPermissive($(summary(ex.body)), $(summary(ex.protos)))")
+Base.summary(io::IO, ex::VirtualPermissiveArray) = print(io, "VPermissive($(summary(ex.body)), $(ex.dims))")
 
 FinchNotation.finch_leaf(x::VirtualPermissiveArray) = virtual(x)
 
