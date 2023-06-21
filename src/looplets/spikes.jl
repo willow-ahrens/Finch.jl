@@ -16,6 +16,7 @@ struct SpikeStyle end
 
 (ctx::Stylize{<:AbstractCompiler})(node::Spike) = ctx.root.kind === loop ? SpikeStyle() : DefaultStyle()
 combine_style(a::DefaultStyle, b::SpikeStyle) = SpikeStyle()
+combine_style(a::LookupStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::RunStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::ThunkStyle, b::SpikeStyle) = ThunkStyle()
 combine_style(a::SimplifyStyle, b::SpikeStyle) = a

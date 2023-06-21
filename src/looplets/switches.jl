@@ -16,6 +16,7 @@ struct SwitchStyle end
 
 (ctx::Stylize{<:AbstractCompiler})(node::Switch) = SwitchStyle()
 combine_style(a::DefaultStyle, b::SwitchStyle) = SwitchStyle()
+combine_style(a::LookupStyle, b::SwitchStyle) = SwitchStyle()
 combine_style(a::ThunkStyle, b::SwitchStyle) = ThunkStyle()
 combine_style(a::SimplifyStyle, b::SwitchStyle) = a
 combine_style(a::RunStyle, b::SwitchStyle) = SwitchStyle()

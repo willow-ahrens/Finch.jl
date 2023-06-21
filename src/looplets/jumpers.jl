@@ -9,6 +9,7 @@ FinchNotation.finch_leaf(x::Jumper) = virtual(x)
 (ctx::Stylize{<:AbstractCompiler})(node::Jumper) = ctx.root.kind === loop ? JumperStyle() : DefaultStyle()
 
 combine_style(a::DefaultStyle, b::JumperStyle) = JumperStyle()
+combine_style(a::LookupStyle, b::JumperStyle) = JumperStyle()
 combine_style(a::JumperStyle, b::JumperStyle) = JumperStyle()
 combine_style(a::JumperStyle, b::RunStyle) = RunStyle()
 combine_style(a::SimplifyStyle, b::JumperStyle) = a

@@ -42,6 +42,7 @@ supports_shift(::PhaseStyle) = true
 (ctx::Stylize{<:AbstractCompiler})(node::Phase) = ctx.root.kind === loop ? PhaseStyle() : DefaultStyle()
 
 combine_style(a::DefaultStyle, b::PhaseStyle) = PhaseStyle()
+combine_style(a::LookupStyle, b::PhaseStyle) = PhaseStyle()
 combine_style(a::PhaseStyle, b::PhaseStyle) = PhaseStyle()
 combine_style(a::PhaseStyle, b::RunStyle) = PhaseStyle()
 combine_style(a::PhaseStyle, b::SpikeStyle) = PhaseStyle()

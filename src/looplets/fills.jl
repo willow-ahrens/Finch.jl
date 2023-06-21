@@ -11,6 +11,7 @@ struct FillStyle end
 (ctx::Stylize{<:AbstractCompiler})(::Fill) = FillStyle()
 
 combine_style(a::DefaultStyle, b::FillStyle) = FillStyle()
+combine_style(a::LookupStyle, b::FillStyle) = FillStyle()
 combine_style(a::ThunkStyle, b::FillStyle) = FillStyle()
 combine_style(a::SimplifyStyle, b::FillStyle) = a
 combine_style(a::RunStyle, b::FillStyle) = FillStyle()

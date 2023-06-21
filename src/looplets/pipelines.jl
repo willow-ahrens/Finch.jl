@@ -13,6 +13,7 @@ struct PipelineStyle end
 
 (ctx::Stylize{<:AbstractCompiler})(node::Pipeline) = ctx.root.kind === loop ? PipelineStyle() : DefaultStyle()
 combine_style(a::DefaultStyle, b::PipelineStyle) = PipelineStyle()
+combine_style(a::LookupStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::ThunkStyle, b::PipelineStyle) = ThunkStyle()
 combine_style(a::RunStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::SimplifyStyle, b::PipelineStyle) = a

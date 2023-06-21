@@ -15,6 +15,7 @@ struct RunStyle end
 
 (ctx::Stylize{<:AbstractCompiler})(node::Run) = ctx.root.kind === loop ? RunStyle() : DefaultStyle()
 combine_style(a::DefaultStyle, b::RunStyle) = RunStyle()
+combine_style(a::LookupStyle, b::RunStyle) = RunStyle()
 combine_style(a::ThunkStyle, b::RunStyle) = ThunkStyle()
 combine_style(a::SimplifyStyle, b::RunStyle) = a
 combine_style(a::RunStyle, b::RunStyle) = RunStyle()
@@ -62,6 +63,7 @@ struct AcceptRunStyle end
 
 (ctx::Stylize{<:AbstractCompiler})(node::AcceptRun) = ctx.root.kind === loop ? AcceptRunStyle() : DefaultStyle()
 combine_style(a::DefaultStyle, b::AcceptRunStyle) = AcceptRunStyle()
+combine_style(a::LookupStyle, b::AcceptRunStyle) = AcceptRunStyle()
 combine_style(a::ThunkStyle, b::AcceptRunStyle) = ThunkStyle()
 combine_style(a::SimplifyStyle, b::AcceptRunStyle) = a
 combine_style(a::AcceptRunStyle, b::AcceptRunStyle) = AcceptRunStyle()
