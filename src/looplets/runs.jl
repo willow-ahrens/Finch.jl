@@ -83,7 +83,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  ::AcceptRunStyle)
         ))(root.body)
         if root.idx in getunbound(body)
             #The loop body isn't constant after removing AcceptRuns, lower with a for-loop
-            return ctx(root, DefaultStyle())
+            return ctx(root, LookupStyle())
         else
             #The loop body is constant after removing AcceptRuns, lower only the body once
             return ctx(body)
