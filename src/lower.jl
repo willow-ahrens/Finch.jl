@@ -54,6 +54,7 @@ function (h::StaticHash)(x)
 end
 
 (ctx::AbstractCompiler)(root) = ctx(root, Stylize(root, ctx)(root))
+#(ctx::AbstractCompiler)(root, style) = (display(root); display(style); lower(root, ctx, style))
 (ctx::AbstractCompiler)(root, style) = lower(root, ctx, style)
 
 function open_scope(prgm, ctx::AbstractCompiler)
@@ -143,39 +144,44 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
         if isempty(root.bodies)
             return quote end
         else
+            head = root.bodies[1]
+            body = sequence(root.bodies[2:end]...)
+            preamble = quote end
+
+            if head.kind === define
+                @assert head.lhs.kind === variable
+                ctx.bindings[head.lhs] = ctx(head.rhs)
+                push!(ctx.scope, head.lhs)
+            elseif head.kind === declare
+                @assert head.tns.kind === variable
+                @assert get(ctx.modes, head.tns, reader()).kind === reader
+                ctx.bindings[head.tns] = declare!(ctx.bindings[head.tns], ctx, head.init) #TODO should ctx.bindings be scoped?
+                push!(ctx.scope, head.tns)
+                ctx.modes[head.tns] = updater(create())
+            elseif head.kind === freeze
+                @assert ctx.modes[head.tns].kind === updater
+                ctx.bindings[head.tns] = freeze!(ctx.bindings[head.tns], ctx)
+                ctx.modes[head.tns] = reader()
+            elseif head.kind === thaw
+                @assert get(ctx.modes, head.tns, reader()).kind === reader
+                ctx.bindings[head.tns] = thaw!(ctx.bindings[head.tns], ctx)
+                ctx.modes[head.tns] = updater(modify())
+            elseif head.kind === forget
+                @assert get(ctx.modes, head.tns, reader()).kind === reader
+                delete!(ctx.modes, head.tns)
+            else
+                preamble = contain(ctx) do ctx_2
+                    ctx_2(InstantiateTensors(ctx_2, [])(head))
+                end
+            end
+
             quote
-                $(ctx(root.bodies[1]))
+                $preamble
                 $(contain(ctx) do ctx_2
-                    (ctx_2)(sequence(root.bodies[2:end]...))
+                    (ctx_2)(body)
                 end)
             end
         end
-    elseif root.kind === define
-        @assert root.lhs.kind === variable
-        ctx.bindings[root.lhs] = ctx(root.rhs)
-        push!(ctx.scope, root.lhs)
-        quote end
-    elseif root.kind === declare
-        @assert root.tns.kind === variable
-        @assert get(ctx.modes, root.tns, reader()).kind === reader
-        ctx.bindings[root.tns] = declare!(ctx.bindings[root.tns], ctx, root.init) #TODO should ctx.bindings be scoped?
-        push!(ctx.scope, root.tns)
-        ctx.modes[root.tns] = updater(create())
-        quote end
-    elseif root.kind === freeze
-        @assert ctx.modes[root.tns].kind === updater
-        ctx.bindings[root.tns] = freeze!(ctx.bindings[root.tns], ctx)
-        ctx.modes[root.tns] = reader()
-        quote end
-    elseif root.kind === thaw
-        @assert get(ctx.modes, root.tns, reader()).kind === reader
-        ctx.bindings[root.tns] = thaw!(ctx.bindings[root.tns], ctx)
-        ctx.modes[root.tns] = updater(modify())
-        quote end
-    elseif root.kind === forget
-        @assert get(ctx.modes, root.tns, reader()).kind === reader
-        delete!(ctx.modes, root.tns)
-        quote end
     elseif root.kind === access
         if root.tns.kind === virtual
             return lowerjulia_access(ctx, root, root.tns.val)
@@ -207,25 +213,12 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
     elseif root.kind === loop
         @assert root.idx.kind === index
         @assert root.ext.kind === virtual
-        #First, unfurl
-        #TODO ideally this would be easy to request at an appropriate time.
         root_2 = Rewrite(Postwalk(@rule access(~tns::isvirtual, ~mode, ~idxs...) => begin
             if !isempty(idxs) && root.idx == idxs[end]
                 tns = tns.val
                 protos = [(mode.kind === reader ? defaultread : defaultupdate) for _ in idxs]
-                if mode.kind === reader
-                    tns_2 = instantiate_reader(tns, ctx, protos...)
-                else
-                    tns_2 = instantiate_updater(tns, ctx, protos...)
-                end
-                tns_3 = unfurl_access(tns_2, ctx, root.ext.val, protos...)
-                access(tns_3, mode, idxs...)
-            #TODO
-            #else
-            #    if tns.tight !== nothing && !query(call(==, measure(ctx.ext), 1), ctx.ctx)
-            #        throw(FormatLimitation("$(typeof(something(tns.tight))) does not support random access, must loop column major over output indices first."))
-            #    end
-            #return node.tns
+                tns_2 = unfurl_access(tns, ctx, root.ext.val, protos...)
+                access(tns_2, mode, idxs...)
             end
         end))(root)
         return ctx(root_2, result_style(LookupStyle(), Stylize(root_2, ctx)(root_2)))

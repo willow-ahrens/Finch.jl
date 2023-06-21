@@ -1,3 +1,48 @@
+"""
+    InstantiateTensors(ctx)
+
+A transformation to instantiate readers and updaters before executing an
+expression
+
+See also: [`declare!`](@ref)
+"""
+@kwdef struct InstantiateTensors{Ctx}
+    ctx::Ctx
+    escape = Set()
+end
+
+function (ctx::InstantiateTensors)(node::FinchNode)
+    if node.kind === sequence
+        sequence(map(ctx, node.bodies)...)
+    elseif node.kind === define
+        push!(ctx.escape, node.lhs)
+        define(node.lhs, ctx(node.rhs))
+    elseif node.kind === declare
+        push!(ctx.escape, node.tns)
+        node
+    elseif node.kind === freeze
+        push!(ctx.escape, node.tns)
+        node
+    elseif node.kind === thaw
+        push!(ctx.escape, node.tns)
+        node
+    elseif (@capture node access(~tns, ~mode, ~idxs...)) && !(getroot(tns) in ctx.escape)
+        tns = tns.val
+        #@assert get(ctx.ctx.modes, tns, reader()).kind === node.mode.kind
+        protos = [(mode.kind === reader ? defaultread : defaultupdate) for _ in idxs]
+        if mode.kind === reader
+            tns_2 = instantiate_reader(tns, ctx.ctx, protos...)
+        else
+            tns_2 = instantiate_updater(tns, ctx.ctx, protos...)
+        end
+        access(tns_2, mode, idxs...)
+    elseif istree(node)
+        return similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        return node
+    end
+end
+
 execute(ex) = execute(ex, DefaultAlgebra())
 
 @staged function execute(ex, a)
@@ -32,6 +77,7 @@ function lower_global(prgm, ctx)
                 prgm = dimensionalize!(prgm, ctx_2)
                 prgm = concordize(prgm, ctx_2)
                 prgm = simplify(prgm, ctx_2) #appears necessary
+                prgm = InstantiateTensors(ctx_2, [])(prgm)
                 contain(ctx_2) do ctx_3
                     ctx_3(prgm)
                 end

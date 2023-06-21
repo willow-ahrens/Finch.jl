@@ -25,13 +25,13 @@ function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::RootArray)
     stylize_access(node, ctx, resolve(tns.tag, ctx.ctx))
 end
 
-instantiate_reader(tns::RootArray, ctx::LowerJulia, protos...) = instantiate_reader(resolve(tns.tag, ctx), ctx, protos...)
-instantiate_updater(tns::RootArray, ctx::LowerJulia, protos...) = instantiate_updater(resolve(tns.tag, ctx), ctx, protos...)
+instantiate_reader(tns::RootArray, ctx::AbstractCompiler, protos...) = instantiate_reader(resolve(tns.tag, ctx), ctx, protos...)
+instantiate_updater(tns::RootArray, ctx::AbstractCompiler, protos...) = instantiate_updater(resolve(tns.tag, ctx), ctx, protos...)
 
 #TODO I don't think we should ever need these
-declare!(tns::RootArray, ctx::LowerJulia, init) = declare!(resolve(tns.tag, ctx), ctx, init)
-thaw!(tns::RootArray, ctx::LowerJulia) = thaw!(resolve(tns.tag, ctx), ctx)
-freeze!(tns::RootArray, ctx::LowerJulia) = freeze!(resolve(tns.tag, ctx), ctx)
+declare!(tns::RootArray, ctx::AbstractCompiler, init) = declare!(resolve(tns.tag, ctx), ctx, init)
+thaw!(tns::RootArray, ctx::AbstractCompiler) = thaw!(resolve(tns.tag, ctx), ctx)
+freeze!(tns::RootArray, ctx::AbstractCompiler) = freeze!(resolve(tns.tag, ctx), ctx)
 
 function unfurl_access(tns::RootArray, ctx, ext, protos...)
     unfurl_access(resolve(tns.tag, ctx), ctx, ext, protos...)

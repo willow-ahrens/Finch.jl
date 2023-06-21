@@ -642,8 +642,10 @@ function display_statement(io, mime, node::FinchNode, indent)
             node = node.body
         end
         display_expression(io, mime, node.cond)
+        println(io)
         node = node.body
         display_statement(io, mime, node, indent + 2)
+        println(io)
         print(io, " "^indent * "end")
     elseif node.kind === assign
         print(io, " "^indent)

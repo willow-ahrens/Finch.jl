@@ -368,7 +368,7 @@ function instantiate_updater_coo_helper(lvl::VirtualSparseCOOLevel, ctx, qos, fb
                             end
                             $dirty = false
                         end,
-                        body = (ctx) -> instantiate_updater(VirtualTrackedSubFiber(lvl.lvl, qos, dirty), ctx, protos...),
+                        body = (ctx) -> instantiate_updater(VirtualTrackedSubFiber(lvl.lvl, value(qos, lvl.Tp), dirty), ctx, protos...),
                         epilogue = quote
                             if $dirty
                                 $(fbr_dirty) = true
