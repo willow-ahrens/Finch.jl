@@ -14,7 +14,7 @@ virtual tensor `tns`.  As soon as a read-only tensor enters scope, each
 subsequent read access will be initialized with a separate call to
 `instantiate_reader`. `protos` is the list of protocols in each case.
 """
-instantiate_reader(tns, ctx, protos...) = tns #throw(FormatLimitation("$(typeof(tns)) does not support reads with protocol $(protos)"))
+instantiate_reader(tns, ctx, protos...) = throw(FormatLimitation("$(typeof(tns)) does not support reads with protocol $(protos)"))
 
 """
     instantiate_updater(tns, ctx, protos...)
@@ -24,7 +24,7 @@ virtual tensor `tns`.  As soon as an update only tensor enters scope, each
 subsequent update access will be initialized with a separate call to
 `instantiate_updater`.  `protos` is the list of protocols in each case.
 """
-instantiate_updater(tns, ctx, protos...) = tns #throw(FormatLimitation("$(typeof(tns)) does not support updates with protocol $(protos)"))
+instantiate_updater(tns, ctx, protos...) = throw(FormatLimitation("$(typeof(tns)) does not support updates with protocol $(protos)"))
 
 """
     freeze!(tns, ctx)

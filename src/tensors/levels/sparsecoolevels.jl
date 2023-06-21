@@ -239,6 +239,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseCOOLevel}, ctx, pr
     instantiate_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, lvl.N, start, stop, protos...)
 end
 
+instantiate_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, R, start, stop, proto, protos...) = throw(FormatLimitation("SparseCOOLevel does not support protocol $proto"))
 function instantiate_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, R, start, stop, ::Union{typeof(defaultread), typeof(walk)}, protos...)
     tag = lvl.ex
     Ti = lvl.Ti
@@ -342,6 +343,7 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseCOOLevel},
     )
 end
 
+instantiate_updater_coo_helper(lvl::VirtualSparseCOOLevel, ctx, qos, fbr_dirty, coords, proto, protos...) = throw(FormatLimitation("SparseCOOLevel does not support protocol $proto"))
 function instantiate_updater_coo_helper(lvl::VirtualSparseCOOLevel, ctx, qos, fbr_dirty, coords, ::Union{typeof(defaultupdate), typeof(extrude)}, protos...)
     Ti = lvl.Ti
     Tp = lvl.Tp
