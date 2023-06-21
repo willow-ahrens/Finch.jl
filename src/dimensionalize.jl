@@ -73,12 +73,15 @@ function (ctx::DeclareDimensions)(node::FinchNode)
         end
         length(idxs) > length(shape) && throw(DimensionMismatch("more indices than dimensions in $(sprint(show, MIME("text/plain"), node))"))
         length(idxs) < length(shape) && throw(DimensionMismatch("less indices than dimensions in $(sprint(show, MIME("text/plain"), node))"))
-        for (dim, idx) in zip(shape, idxs)
+        idxs = map(zip(shape, idxs)) do (dim, idx)
             if isindex(idx)
                 ctx.dims[idx] = resultdim(ctx.ctx, dim, get(ctx.dims, idx, nodim))
+                idx
+            else
+                ctx(idx) #Probably not strictly necessary to preserve the result of this, since this expr can't contain a statement and so won't be modified
             end
         end
-        node
+        access(tns, mode, idxs...)
     elseif node.kind === loop && node.ext == index(:(:))
         body = ctx(node.body)
         haskey(ctx.dims, node.idx) || throw(FinchCompileError("could not resolve dimension of index $(node.idx)"))
@@ -95,7 +98,11 @@ function (ctx::DeclareDimensions)(node::FinchNode)
             for hint in ctx.hints[node.tns]
                 @assert @capture hint access(~tns::isvirtual, updater(~mode), ~idxs...)
                 shape = map(zip(shape, idxs)) do (dim, idx)
-                    resultdim(ctx.ctx, dim, ctx.dims[idx])
+                    if isindex(idx)
+                        resultdim(ctx.ctx, dim, ctx.dims[idx])
+                    else
+                        resultdim(ctx.ctx, dim, nodim) #TODO I can't think of a case where this doesn't equal `dim`
+                    end
                 end
             end
             #TODO tns ignored here
