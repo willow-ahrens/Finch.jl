@@ -12,25 +12,6 @@ getstop(::NoDimension) = error("asked for stop of dimensionless range")
     hints = Dict()
 end
 
-@kwdef struct Dimensionalize
-    body
-end
-
-FinchNotation.finch_leaf(x::Dimensionalize) = virtual(x)
-
-struct DimensionalizeStyle end
-
-Base.show(io, ex::Dimensionalize) = Base.show(io, MIME"text/plain", ex)
-function Base.show(io::IO, mime::MIME"text/plain", ex::Dimensionalize)
-    print(io, "Dimensionalize(")
-    print(io, ex.body)
-    print(io, ")")
-end
-
-(ctx::Stylize{<:AbstractCompiler})(node::Dimensionalize) = DimensionalizeStyle()
-combine_style(a::DefaultStyle, b::DimensionalizeStyle) = DimensionalizeStyle()
-combine_style(a::DimensionalizeStyle, b::DimensionalizeStyle) = DimensionalizeStyle()
-
 """
 TODO out of date
     dimensionalize!(prgm, ctx)
@@ -46,13 +27,6 @@ The program is assumed to be in SSA form.
 See also: [`virtual_size`](@ref), [`virtual_resize`](@ref), [`combinedim`](@ref),
 [`TransformSSA`](@ref)
 """
-function lower(prgm, ctx::AbstractCompiler,  ::DimensionalizeStyle) 
-    contain(ctx) do ctx_2
-        prgm = dimensionalize!(prgm, ctx_2)
-        ctx_2(prgm)
-    end
-end
-
 function dimensionalize!(prgm, ctx) 
     prgm = Rewrite(Postwalk(x -> if isvirtual(x) && x.val isa Dimensionalize x.val.body end))(prgm)
     prgm = DeclareDimensions(ctx=ctx)(prgm)
