@@ -143,18 +143,6 @@ Dense [1:2]
 
 TODO more on the way...
 
-## Tensor Life Cycle
-
-Every virtual tensor must be in one of two modes: read-only mode or update-only mode. The following functions may be called on virtual tensors throughout their life cycle.
-
-```@docs
-declare!
-instantiate_reader
-instantiate_updater
-freeze!
-trim!
-thaw!
-```
 
 ## Fiber internals
 
