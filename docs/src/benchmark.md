@@ -85,13 +85,13 @@ Benchmark the kernel, ignoring allocation costs for y
 
 ````
 BenchmarkTools.Trial: 10000 samples with 1 evaluation.
- Range (min … max):  54.375 μs …  5.810 ms  ┊ GC (min … max): 0.00% … 98.54%
- Time  (median):     59.458 μs              ┊ GC (median):    0.00%
- Time  (mean ± σ):   62.256 μs ± 76.614 μs  ┊ GC (mean ± σ):  1.73% ±  1.39%
+ Range (min … max):  45.875 μs …  6.577 ms  ┊ GC (min … max): 0.00% … 98.81%
+ Time  (median):     57.167 μs              ┊ GC (median):    0.00%
+ Time  (mean ± σ):   56.251 μs ± 89.899 μs  ┊ GC (mean ± σ):  2.25% ±  1.40%
 
-         ▁▁▂▂█   ▁                                             
-  ▁▁▁▁▂▂▇███████▅██▄▃▃▃▂▂▂▂▂▂▂▂▂▁▁▂▂▂▂▂▂▂▂▂▂▁▂▂▁▁▂▂▁▁▁▁▁▁▁▁▁▁ ▂
-  54.4 μs         Histogram: frequency by time        78.4 μs <
+  ▂▁█ ▄▄                        ▁▃▇███▆▆▂                      
+  ███▄██▂▂▁▁▁▁▂▁▁▁▁▁▁▁▁▁▁▁▁▂▂▃▄▆██████████▆▄▄▂▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁ ▃
+  45.9 μs         Histogram: frequency by time          66 μs <
 
  Memory estimate: 22.97 KiB, allocs estimate: 1470.
 ````
@@ -114,13 +114,13 @@ end
 
 ````
 BenchmarkTools.Trial: 10000 samples with 1 evaluation.
- Range (min … max):  55.709 μs …  5.205 ms  ┊ GC (min … max): 0.00% … 98.28%
- Time  (median):     60.125 μs              ┊ GC (median):    0.00%
- Time  (mean ± σ):   63.207 μs ± 72.815 μs  ┊ GC (mean ± σ):  1.62% ±  1.39%
+ Range (min … max):  42.834 μs …  6.590 ms  ┊ GC (min … max): 0.00% … 98.70%
+ Time  (median):     54.417 μs              ┊ GC (median):    0.00%
+ Time  (mean ± σ):   54.429 μs ± 89.386 μs  ┊ GC (mean ± σ):  2.31% ±  1.40%
 
-        ▁█▃                                                    
-  ▂▆▃▃▃▅███▇▇█▆▄▄▃▂▂▂▂▁▂▂▂▁▂▁▂▁▂▂▂▂▂▂▂▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁ ▂
-  55.7 μs         Histogram: frequency by time        83.4 μs <
+                                ▂▅▇██▅▆▂                       
+  ▁▃▃▇▆▃▆▄▅▃▃▃▂▂▂▂▁▁▁▁▁▁▂▂▂▂▃▄▅██████████▅▄▃▂▂▂▂▂▂▂▂▂▁▂▁▁▁▁▁▁ ▃
+  42.8 μs         Histogram: frequency by time        63.6 μs <
 
  Memory estimate: 23.56 KiB, allocs estimate: 1472.
 ````

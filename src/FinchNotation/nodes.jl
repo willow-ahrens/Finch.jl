@@ -9,19 +9,19 @@ const ID = 8
     virtual  =  2ID
     literal  =  3ID | IS_CONST
     index    =  4ID
-    access   =  6ID | IS_TREE 
-    reader   =  7ID | IS_TREE
-    updater  =  8ID | IS_TREE
-    call     = 11ID | IS_TREE
-    cached   = 12ID | IS_TREE
-    assign   = 13ID | IS_TREE | IS_STATEFUL
-    loop     = 16ID | IS_TREE | IS_STATEFUL
-    sieve    = 17ID | IS_TREE | IS_STATEFUL
-    define   = 19ID | IS_TREE | IS_STATEFUL
-    declare  = 20ID | IS_TREE | IS_STATEFUL
-    thaw     = 21ID | IS_TREE | IS_STATEFUL
-    freeze   = 22ID | IS_TREE | IS_STATEFUL
-    sequence = 24ID | IS_TREE | IS_STATEFUL
+    access   =  5ID | IS_TREE 
+    reader   =  6ID | IS_TREE
+    updater  =  7ID | IS_TREE
+    call     =  8ID | IS_TREE
+    cached   =  9ID | IS_TREE
+    assign   = 10ID | IS_TREE | IS_STATEFUL
+    loop     = 11ID | IS_TREE | IS_STATEFUL
+    sieve    = 12ID | IS_TREE | IS_STATEFUL
+    define   = 13ID | IS_TREE | IS_STATEFUL
+    declare  = 14ID | IS_TREE | IS_STATEFUL
+    thaw     = 15ID | IS_TREE | IS_STATEFUL
+    freeze   = 16ID | IS_TREE | IS_STATEFUL
+    sequence = 17ID | IS_TREE | IS_STATEFUL
 end
 
 
