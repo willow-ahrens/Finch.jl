@@ -1,11 +1,14 @@
 """
-    InstantiateTensors(ctx)
+    instantiate!(prgm, ctx)
 
 A transformation to instantiate readers and updaters before executing an
-expression
-
-See also: [`declare!`](@ref)
+expression.
 """
+function instantiate!(prgm, ctx) 
+    prgm = InstantiateTensors(ctx=ctx)(prgm)
+    return prgm
+end
+
 @kwdef struct InstantiateTensors{Ctx}
     ctx::Ctx
     escape = Set()
@@ -77,7 +80,7 @@ function lower_global(prgm, ctx)
                 prgm = dimensionalize!(prgm, ctx_2)
                 prgm = concordize(prgm, ctx_2)
                 prgm = simplify(prgm, ctx_2) #appears necessary
-                prgm = InstantiateTensors(ctx_2, [])(prgm)
+                prgm = instantiate!(prgm, ctx_2)
                 contain(ctx_2) do ctx_3
                     ctx_3(prgm)
                 end

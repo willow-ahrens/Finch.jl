@@ -168,7 +168,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
                 ctx.modes[head.tns] = updater()
             else
                 preamble = contain(ctx) do ctx_2
-                    ctx_2(InstantiateTensors(ctx_2, [])(head))
+                    ctx_2(instantiate!(head, ctx_2))
                 end
             end
 

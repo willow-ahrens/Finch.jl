@@ -28,7 +28,6 @@ See also: [`virtual_size`](@ref), [`virtual_resize`](@ref), [`combinedim`](@ref)
 [`TransformSSA`](@ref)
 """
 function dimensionalize!(prgm, ctx) 
-    prgm = Rewrite(Postwalk(x -> if isvirtual(x) && x.val isa Dimensionalize x.val.body end))(prgm)
     prgm = DeclareDimensions(ctx=ctx)(prgm)
     return prgm
 end
