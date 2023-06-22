@@ -24,8 +24,7 @@ index name or a `(tensor_name, mode_name)` tuple.
 
 The program is assumed to be in SSA form.
 
-See also: [`virtual_size`](@ref), [`virtual_resize`](@ref), [`combinedim`](@ref),
-[`TransformSSA`](@ref)
+See also: [`virtual_size`](@ref), [`virtual_resize`](@ref), [`combinedim`](@ref)
 """
 function dimensionalize!(prgm, ctx) 
     prgm = DeclareDimensions(ctx=ctx)(prgm)

@@ -74,9 +74,9 @@ function lower_global(prgm, ctx)
     code = contain(ctx) do ctx_2
         quote
             $(begin
-                prgm = ScopeVisitor()(prgm)
+                prgm = enforce_scopes(prgm)
                 prgm = wrapperize(prgm, ctx_2)
-                prgm = close_scope(prgm, LifecycleVisitor())
+                prgm = enforce_lifecycles(prgm)
                 prgm = dimensionalize!(prgm, ctx_2)
                 prgm = concordize(prgm, ctx_2)
                 prgm = simplify(prgm, ctx_2) #appears necessary
@@ -240,6 +240,10 @@ function close_scope(prgm, ctx::LifecycleVisitor)
     prgm
 end
 
+function enforce_lifecycles(prgm)
+    close_scope(prgm, LifecycleVisitor())
+end
+
 function open_stmt(prgm, ctx::LifecycleVisitor)
     for (tns, mode) in ctx.uses
         cur_mode = get(ctx.modes, tns, reader())
@@ -297,6 +301,8 @@ end
     scope = Set()
     global_scope = scope
 end
+
+enforce_scopes(prgm) = ScopeVisitor()(prgm)
 
 struct ScopeError
     msg
