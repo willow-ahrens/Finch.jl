@@ -24,7 +24,6 @@ modify
 declare
 freeze
 thaw
-forget
 access
 sequence
 sieve

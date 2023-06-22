@@ -51,15 +51,6 @@ Base.:(==)(a::ThawInstance, b::ThawInstance) = a.tns == b.tns
 
 Base.show(io::IO, node::ThawInstance) = print(io, "thaw_instance(", node.tns, ")")
 
-struct ForgetInstance{Tns} <: FinchNodeInstance
-	tns::Tns
-end
-Base.:(==)(a::ForgetInstance, b::ForgetInstance) = a.tns == b.tns
-
-@inline forget_instance(tns) = ForgetInstance(tns)
-
-Base.show(io::IO, node::ForgetInstance) = print(io, "forget_instance(", node.tns, ")")
-
 struct SequenceInstance{Bodies} <: FinchNodeInstance
     bodies::Bodies
 end

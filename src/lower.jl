@@ -166,9 +166,6 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
                 @assert get(ctx.modes, head.tns, reader()).kind === reader
                 ctx.bindings[head.tns] = thaw!(ctx.bindings[head.tns], ctx)
                 ctx.modes[head.tns] = updater(modify())
-            elseif head.kind === forget
-                @assert get(ctx.modes, head.tns, reader()).kind === reader
-                delete!(ctx.modes, head.tns)
             else
                 preamble = contain(ctx) do ctx_2
                     ctx_2(InstantiateTensors(ctx_2, [])(head))

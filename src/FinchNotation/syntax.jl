@@ -10,7 +10,6 @@ const program_nodes = (
     declare = declare,
     freeze = freeze,
     thaw = thaw,
-    forget = forget,
     assign = assign,
     call = call,
     access = access,
@@ -33,7 +32,6 @@ const instance_nodes = (
     declare = declare_instance,
     freeze = freeze_instance,
     thaw = thaw_instance,
-    forget = forget_instance,
     assign = assign_instance,
     call = call_instance,
     access = access_instance,
@@ -132,8 +130,6 @@ function (ctx::FinchParserVisitor)(ex::Expr)
         return :($(ctx.nodes.freeze)($(ctx(tns))))
     elseif @capture ex :macrocall($(Symbol("@thaw")), ~ln::islinenum, ~tns)
         return :($(ctx.nodes.thaw)($(ctx(tns))))
-    elseif @capture ex :macrocall($(Symbol("@forget")), ~ln::islinenum, ~tns)
-        return :($(ctx.nodes.forget)($(ctx(tns))))
     elseif @capture ex :for(:(=)(~idx, ~ext), ~body)
         ext == :(:) || ext == :_ || throw(FinchSyntaxError("Finch doesn't support non-automatic loop bounds currently"))
         return ctx(:(@loop($idx = $ext, $body)))

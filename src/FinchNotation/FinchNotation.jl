@@ -12,7 +12,7 @@ module FinchNotation
     export call
     export cached
     export reader, updater, create, modify, access
-    export define, declare, thaw, freeze, forget
+    export define, declare, thaw, freeze
     export sequence
     export protocol
     export sieve

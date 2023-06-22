@@ -23,7 +23,6 @@ const ID = 8
     declare  = 20ID | IS_TREE | IS_STATEFUL
     thaw     = 21ID | IS_TREE | IS_STATEFUL
     freeze   = 22ID | IS_TREE | IS_STATEFUL
-    forget   = 23ID | IS_TREE | IS_STATEFUL
     sequence = 24ID | IS_TREE | IS_STATEFUL
 end
 
@@ -172,13 +171,6 @@ freeze
 Finch AST statement that thaws `tns` in the current scope.
 """
 thaw
-
-"""
-    forget(tns)
-
-Finch AST statement that marks the end of the lifetime of `tns`, at least until it is declared again.
-"""
-forget
 
 """
     sequence(bodies...)
@@ -362,12 +354,6 @@ function FinchNode(kind::FinchNodeKind, args::Vector)
         else
             error("wrong number of arguments to thaw(...)")
         end
-    elseif kind === forget
-        if length(args) == 1
-            return FinchNode(forget, nothing, nothing, args)
-        else
-            error("wrong number of arguments to forget(...)")
-        end
     elseif kind === sequence
         return FinchNode(sequence, nothing, nothing, args)
     elseif kind === reader
@@ -511,12 +497,6 @@ function Base.getproperty(node::FinchNode, sym::Symbol)
             return node.children[1]
         else
             error("type FinchNode(thaw, ...) has no property $sym")
-        end
-    elseif node.kind === forget
-        if sym === :tns
-            return node.children[1]
-        else
-            error("type FinchNode(forget, ...) has no property $sym")
         end
     elseif node.kind === sequence
         if sym === :bodies
@@ -666,10 +646,6 @@ function display_statement(io, mime, node::FinchNode, indent)
         display_expression(io, mime, node.init)
     elseif node.kind === freeze
         print(io, " "^indent * "@freeze(")
-        display_expression(io, mime, node.tns)
-        print(io, ")")
-    elseif node.kind === forget
-        print(io, " "^indent * "@forget(")
         display_expression(io, mime, node.tns)
         print(io, ")")
     elseif node.kind === thaw
