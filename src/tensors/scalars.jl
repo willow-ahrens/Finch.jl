@@ -6,10 +6,11 @@ Scalar(D, args...) = Scalar{D}(args...)
 Scalar{D}(args...) where {D} = Scalar{D, typeof(D)}(args...)
 Scalar{D, Tv}() where {D, Tv} = Scalar{D, Tv}(D)
 
-@inline Base.ndims(tns::Scalar) = 0
+@inline Base.ndims(::Type{<:Scalar}) = 0
 @inline Base.size(::Scalar) = ()
 @inline Base.axes(::Scalar) = ()
 @inline Base.eltype(::Scalar{D, Tv}) where {D, Tv} = Tv
+@inline default(::Type{<:Scalar{D}}) where {D} = D
 @inline default(::Scalar{D}) where {D} = D
 
 (tns::Scalar)() = tns.val
