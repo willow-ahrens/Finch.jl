@@ -1,16 +1,3 @@
-struct UnfurlStyle end
-
-combine_style(a::DefaultStyle, b::UnfurlStyle) = UnfurlStyle()
-combine_style(a::ThunkStyle, b::UnfurlStyle) = ThunkStyle()
-combine_style(a::UnfurlStyle, b::UnfurlStyle) = UnfurlStyle()
-combine_style(a::UnfurlStyle, b::DimensionalizeStyle) = DimensionalizeStyle()
-combine_style(a::UnfurlStyle, b::SimplifyStyle) = b
-struct UnfurlVisitor
-    ctx
-    idx
-    ext
-end
-
 truncate(node, ctx, ext, ext_2) = node
 
 @kwdef struct Furlable
