@@ -261,7 +261,7 @@ function (ctx::LifecycleVisitor)(node::FinchNode)
         if get(ctx.modes, node.tns, reader()) === updater 
             node = sequence(freeze(node.tns), node)
         end
-        ctx.modes[node.tns] = updater(create())
+        ctx.modes[node.tns] = updater()
         node
     elseif node.kind === freeze
         haskey(ctx.modes, node.tns) || throw(LifecycleError("cannot freeze undefined $(node.tns)"))
@@ -270,7 +270,7 @@ function (ctx::LifecycleVisitor)(node::FinchNode)
         node
     elseif node.kind === thaw
         get(ctx.modes, node.tns, reader()).kind === updater && return sequence()
-        ctx.modes[node.tns] = updater(create())
+        ctx.modes[node.tns] = updater()
         node
     elseif node.kind === assign
         return open_stmt(assign(ctx(node.lhs), ctx(node.op), ctx(node.rhs)), ctx)

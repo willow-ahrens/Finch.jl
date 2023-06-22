@@ -12,8 +12,6 @@ const ID = 8
     access   =  6ID | IS_TREE 
     reader   =  7ID | IS_TREE
     updater  =  8ID | IS_TREE
-    modify   =  9ID | IS_TREE
-    create   = 10ID | IS_TREE
     call     = 11ID | IS_TREE
     cached   = 12ID | IS_TREE
     assign   = 13ID | IS_TREE | IS_STATEFUL
@@ -88,30 +86,11 @@ Finch AST expression for an access mode that is read-only.
 reader
 
 """
-    updater(mode)
+    updater()
 
-Finch AST expression for an access mode that may modify the tensor. The `mode`
-field specifies whether this access returns this tensor (initializing and
-finalizing) or modifies it in place.
+Finch AST expression for an access mode that updates tensor values.
 """
 updater
-
-"""
-    create()
-
-Finch AST expression for an "allocating" update. This access will
-initialize and freeze the tensor, and we can be sure that any values
-the tensor held before have been forgotten.
-"""
-create
-
-"""
-    modify()
-
-Finch AST expression for an "in place" update. The access will not
-initialize or freeze the tensor, but can modify it's existing values.
-"""
-modify
 
 """
     call(op, args...)
@@ -363,22 +342,10 @@ function FinchNode(kind::FinchNodeKind, args::Vector)
             error("wrong number of arguments to reader()")
         end
     elseif kind === updater
-        if length(args) == 1
-            return FinchNode(updater, nothing, nothing, args)
-        else
-            error("wrong number of arguments to updater(...)")
-        end
-    elseif kind === modify
         if length(args) == 0
-            return FinchNode(kind, nothing, nothing, FinchNode[])
+            return FinchNode(updater, nothing, nothing, FinchNode[])
         else
-            error("wrong number of arguments to modify()")
-        end
-    elseif kind === create
-        if length(args) == 0
-            return FinchNode(kind, nothing, nothing, FinchNode[])
-        else
-            error("wrong number of arguments to create()")
+            error("wrong number of arguments to updater()")
         end
     else
         error("unimplemented")
@@ -411,11 +378,7 @@ function Base.getproperty(node::FinchNode, sym::Symbol)
     elseif node.kind === reader
         error("type FinchNode(reader, ...) has no property $sym")
     elseif node.kind === updater
-        if sym === :mode
-            return node.children[1]
-        else
-            error("type FinchNode(updater, ...) has no property $sym")
-        end
+        error("type FinchNode(updater, ...) has no property $sym")
     elseif node.kind === access
         if sym === :tns
             return node.children[1]
@@ -545,9 +508,7 @@ function display_expression(io, mime, node::FinchNode)
     elseif node.kind === reader
         print(io, "reader()")
     elseif node.kind === updater
-        print(io, "updater(")
-        display_expression(io, mime, node.mode)
-        print(io, ")")
+        print(io, "updater()")
     elseif node.kind === cached
         print(io, "cached(")
         display_expression(io, mime, node.arg)

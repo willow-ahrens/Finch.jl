@@ -52,7 +52,7 @@ function get_program_rules(alg, shash)
         (@rule call(==, ~a, ~a) => literal(true)),
         (@rule call(<=, ~a, ~a) => literal(true)),
         (@rule call(<, ~a, ~a) => literal(false)), 
-        (@rule assign(access(~a, updater(~m), ~i...), ~f, ~b) => if isidentity(alg, f, b) sequence() end),
+        (@rule assign(access(~a, updater(), ~i...), ~f, ~b) => if isidentity(alg, f, b) sequence() end),
         (@rule assign(access(~a, ~m, ~i...), $(literal(missing))) => sequence()),
         (@rule assign(access(~a, ~m, ~i..., $(literal(missing)), ~j...), ~b) => sequence()),
         (@rule call(coalesce, ~a..., ~b, ~c...) => if isvalue(b) && !(Missing <: b.type) || isliteral(b) && !ismissing(b.val)
@@ -111,14 +111,14 @@ function get_program_rules(alg, shash)
         (@rule sieve(true, ~a) => a),
         (@rule sieve(false, ~a) => sequence()), #TODO should add back skipvisitor
 
-        (@rule loop(~i, ~a::isvirtual, assign(access(~b, updater(~m), ~j...), ~f::isidempotent(alg), ~c)) => begin
+        (@rule loop(~i, ~a::isvirtual, assign(access(~b, updater(), ~j...), ~f::isidempotent(alg), ~c)) => begin
             if i ∉ j && i ∉ getunbound(c)
-                sieve(call(>, measure(a.val), 0), assign(access(b, updater(m), j...), f, c))
+                sieve(call(>, measure(a.val), 0), assign(access(b, updater(), j...), f, c))
             end
         end),
-        (@rule loop(~i, ~a::isvirtual, assign(access(~b, updater(~m), ~j...), +, ~d)) => begin
+        (@rule loop(~i, ~a::isvirtual, assign(access(~b, updater(), ~j...), +, ~d)) => begin
             if i ∉ j && i ∉ getunbound(d)
-                assign(access(b, updater(m), j...), +, call(*, measure(a.val), d))
+                assign(access(b, updater(), j...), +, call(*, measure(a.val), d))
             end
         end),
 

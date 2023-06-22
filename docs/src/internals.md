@@ -19,8 +19,6 @@ call
 cached
 reader
 updater
-create
-modify
 declare
 freeze
 thaw

@@ -15,8 +15,6 @@ const program_nodes = (
     access = access,
     reader = reader,
     updater = updater,
-    modify = modify,
-    create = create,
     variable = variable,
     tag = (ex) -> :(finch_leaf($(esc(ex)))),
     literal = literal,
@@ -37,8 +35,6 @@ const instance_nodes = (
     access = access_instance,
     reader = reader_instance,
     updater = updater_instance,
-    modify = modify_instance,
-    create = create_instance,
     variable = variable_instance,
     tag = (ex) -> :($tag_instance($(QuoteNode(ex)), $finch_leaf_instance($(esc(ex))))),
     literal = literal_instance,
@@ -175,13 +171,13 @@ function (ctx::FinchParserVisitor)(ex::Expr)
         return ctx(:($lhs << $(incs[op]) >>= $rhs))
     elseif @capture ex :(=)(:ref(~tns, ~idxs...), ~rhs)
         tns isa Symbol && push!(ctx.results, tns)
-        mode = :($(ctx.nodes.updater)($(ctx.nodes.create)()))
+        mode = :($(ctx.nodes.updater)())
         lhs = :($(ctx.nodes.access)($(ctx(tns)), $mode, $(map(ctx, idxs)...)))
         op = :($(ctx.nodes.literal)($initwrite($default($(esc(tns))))))
         return :($(ctx.nodes.assign)($lhs, $op, $(ctx(rhs))))
     elseif @capture ex :>>=(:call(:<<, :ref(~tns, ~idxs...), ~op), ~rhs)
         tns isa Symbol && push!(ctx.results, tns)
-        mode = :($(ctx.nodes.updater)($(ctx.nodes.create)()))
+        mode = :($(ctx.nodes.updater)())
         lhs = :($(ctx.nodes.access)($(ctx(tns)), $mode, $(map(ctx, idxs)...)))
         return :($(ctx.nodes.assign)($lhs, $(ctx(op)), $(ctx(rhs))))
     elseif @capture ex :(=)(~lhs, ~rhs)

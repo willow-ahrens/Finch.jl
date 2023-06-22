@@ -157,7 +157,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
                 @assert get(ctx.modes, head.tns, reader()).kind === reader
                 ctx.bindings[head.tns] = declare!(ctx.bindings[head.tns], ctx, head.init) #TODO should ctx.bindings be scoped?
                 push!(ctx.scope, head.tns)
-                ctx.modes[head.tns] = updater(create())
+                ctx.modes[head.tns] = updater()
             elseif head.kind === freeze
                 @assert ctx.modes[head.tns].kind === updater
                 ctx.bindings[head.tns] = freeze!(ctx.bindings[head.tns], ctx)
@@ -165,7 +165,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
             elseif head.kind === thaw
                 @assert get(ctx.modes, head.tns, reader()).kind === reader
                 ctx.bindings[head.tns] = thaw!(ctx.bindings[head.tns], ctx)
-                ctx.modes[head.tns] = updater(modify())
+                ctx.modes[head.tns] = updater()
             else
                 preamble = contain(ctx) do ctx_2
                     ctx_2(InstantiateTensors(ctx_2, [])(head))
@@ -234,7 +234,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
         ctx(root.val)
     elseif root.kind === assign
         if root.lhs.kind === access
-            @assert root.lhs.mode.kind == updater
+            @assert root.lhs.mode.kind === updater
             rhs = ctx(simplify(call(root.op, root.lhs, root.rhs), ctx))
         else
             rhs = ctx(root.rhs)

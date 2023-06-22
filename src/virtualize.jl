@@ -45,12 +45,7 @@ function virtualize(ex, ::Type{FinchNotation.AccessInstance{Tns, Mode, Idxs}}, c
     access(tns, virtualize(:($ex.mode), Mode, ctx), idxs...)
 end
 virtualize(ex, ::Type{FinchNotation.ReaderInstance}, ctx) = reader()
-function virtualize(ex, ::Type{FinchNotation.UpdaterInstance{Mode}}, ctx) where {Mode}
-    mode = virtualize(:($ex.mode), Mode, ctx)
-    updater(mode)
-end
-virtualize(ex, ::Type{FinchNotation.ModifyInstance}, ctx) = modify()
-virtualize(ex, ::Type{FinchNotation.CreateInstance}, ctx) = create()
+virtualize(ex, ::Type{FinchNotation.UpdaterInstance}, ctx) = updater()
 virtualize(ex, ::Type{FinchNotation.VariableInstance{tag}}, ctx) where {tag} = variable(tag)
 function virtualize(ex, ::Type{FinchNotation.TagInstance{tag, Tns}}, ctx) where {tag, Tns}
     x = get!(ctx.bindings, variable(tag)) do

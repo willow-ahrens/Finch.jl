@@ -153,31 +153,13 @@ Base.:(==)(a::ReaderInstance, b::ReaderInstance) = true
 
 Base.show(io::IO, node::ReaderInstance) = print(io, "reader_instance()")
 
-struct UpdaterInstance{Mode}
-	mode::Mode
-end
+struct UpdaterInstance end
 
-@inline updater_instance(mode) = UpdaterInstance(mode)
+updater_instance() = UpdaterInstance()
 
-Base.:(==)(a::UpdaterInstance, b::UpdaterInstance) = a.mode == b.mode
+Base.:(==)(a::UpdaterInstance, b::UpdaterInstance) = true
 
-Base.show(io::IO, node::UpdaterInstance) = print(io, "updater_instance(", node.mode, ")")
-
-struct ModifyInstance end
-
-modify_instance() = ModifyInstance()
-
-Base.:(==)(a::ModifyInstance, b::ModifyInstance) = true
-
-Base.show(io::IO, node::ModifyInstance) = print(io, "modify_instance()")
-
-struct CreateInstance end
-
-create_instance() = CreateInstance()
-
-Base.:(==)(a::CreateInstance, b::CreateInstance) = true
-
-Base.show(io::IO, node::CreateInstance) = print(io, "create_instance()")
+Base.show(io::IO, node::UpdaterInstance) = print(io, "updater_instance()")
 
 @inline finch_leaf_instance(arg::Type) = literal_instance(arg)
 @inline finch_leaf_instance(arg::Function) = literal_instance(arg)
