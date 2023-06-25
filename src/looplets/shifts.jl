@@ -47,3 +47,5 @@ end
 
 
 truncate(node::Shift, ctx, ext, ext_2) = Shift(truncate(node.body, ctx, shiftdim(ext, node.delta), shiftdim(ext_2, node.delta)), node.delta)
+visit_fill(node, tns::Shift) = visit_fill(node, tns.body)
+visit_simplify(node::Shift) = Shift(visit_simplify(node.body), node.delta)

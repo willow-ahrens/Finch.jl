@@ -4,13 +4,26 @@ struct Fill
 end
 
 FinchNotation.finch_leaf(x::Fill) = virtual(x)
-virtual_default(f::Fill) = Some(f.body)
+virtual_default(f::Fill, ctx) = Some(f.body)
 
-struct FillStyle <: AbstractPreSimplifyStyle end
+struct FillStyle end
 
-(ctx::Stylize{<:AbstractCompiler})(::Fill) = SimplifyStyle()
-(ctx::Stylize{<:Simplifier})(::Fill) = FillStyle()
+(ctx::Stylize{<:AbstractCompiler})(::Fill) = FillStyle()
 
-function (ctx::Simplifier)(root::FinchNode, ::FillStyle)
-    ctx(Postwalk(@rule access(~a::isvirtual, ~m, ~i...) => if a.val isa Fill a.val.body end)(root))
+combine_style(a::DefaultStyle, b::FillStyle) = FillStyle()
+combine_style(a::ThunkStyle, b::FillStyle) = FillStyle()
+combine_style(a::SimplifyStyle, b::FillStyle) = a
+combine_style(a::RunStyle, b::FillStyle) = FillStyle()
+combine_style(a::AcceptRunStyle, b::FillStyle) = FillStyle()
+combine_style(a::SpikeStyle, b::FillStyle) = FillStyle()
+combine_style(a::FillStyle, b::SimplifyStyle) = FillStyle()
+combine_style(a::FillStyle, b::FillStyle) = FillStyle()
+combine_style(a::FillStyle, b::StepperStyle) = FillStyle()
+combine_style(a::FillStyle, b::JumperStyle) = FillStyle()
+
+function lower(root::FinchNode, ctx::AbstractCompiler, ::FillStyle)
+    ctx(Postwalk(@rule access(~a::isvirtual, ~m, ~i...) => visit_fill(access(a, m, i...), a.val))(root))
 end
+
+visit_fill(node, tns) = nothing
+visit_fill(node, tns::Fill) = Simplify(tns.body)

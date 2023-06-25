@@ -26,7 +26,7 @@ module FinchNotation
 
     export @f, @finch_program, @finch_program_instance
 
-    export isliteral, isvalue, isconstant, isvirtual, isvariable
+    export isliteral, isvalue, isconstant, isvirtual, isvariable, isindex
 
     export getval, getname
 

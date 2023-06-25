@@ -1,5 +1,3 @@
-tab = "  "
-
 const IS_TREE = 1
 const IS_STATEFUL = 2
 const IS_CONST = 4
@@ -251,6 +249,13 @@ isvirtual(ex::FinchNode) = ex.kind === virtual
 Returns true if the node is a finch variable
 """
 isvariable(ex::FinchNode) = ex.kind === variable
+
+"""
+    isindex(node)
+
+Returns true if the node is a finch index
+"""
+isindex(ex::FinchNode) = ex.kind === index
 
 getval(ex::FinchNode) = ex.val
 
@@ -572,7 +577,8 @@ function display_expression(io, mime, node::FinchNode)
         print(io, ")")
     elseif node.kind === virtual
         print(io, "virtual(")
-        print(io, node.val)
+        #print(io, node.val)
+        summary(io, node.val)
         print(io, ")")
     elseif node.kind === access
         display_expression(io, mime, node.tns)
@@ -611,9 +617,9 @@ function display_expression(io, mime, node::FinchNode)
     end
 end
 
-function display_statement(io, mime, node::FinchNode, level)
+function display_statement(io, mime, node::FinchNode, indent)
     if node.kind === loop
-        print(io, tab^level * "@∀ ")
+        print(io, " "^indent * "@∀ ")
         while node.kind === loop
             display_expression(io, mime, node.idx)
             print(io, " = ")
@@ -622,10 +628,10 @@ function display_statement(io, mime, node::FinchNode, level)
             node = node.body
         end
         print(io," (\n")
-        display_statement(io, mime, node, level + 1)
-        print(io, tab^level * ")")
+        display_statement(io, mime, node, indent + 2)
+        print(io, " "^indent * ")")
     elseif node.kind === sieve
-        print(io, tab^level * "if ")
+        print(io, " "^indent * "if ")
         while node.body.kind === sieve
             display_expression(io, mime, node.cond)
             print(io," && ")
@@ -633,10 +639,10 @@ function display_statement(io, mime, node::FinchNode, level)
         end
         display_expression(io, mime, node.cond)
         node = node.body
-        display_statement(io, mime, node, level + 1)
-        print(io, tab^level * "end")
+        display_statement(io, mime, node, indent + 2)
+        print(io, " "^indent * "end")
     elseif node.kind === assign
-        print(io, tab^level)
+        print(io, " "^indent)
         display_expression(io, mime, node.lhs)
         print(io, " <<")
         display_expression(io, mime, node.op)
@@ -647,33 +653,31 @@ function display_statement(io, mime, node::FinchNode, level)
         print(io, "::")
         display_expression(io, mime, ex.mode)
     elseif node.kind === declare
-        print(io, tab^level * "@declare(")
+        print(io, " "^indent * "@declare(")
         display_expression(io, mime, node.tns)
         print(io, ", ")
         display_expression(io, mime, node.init)
         print(io, ")")
     elseif node.kind === freeze
-        print(io, tab^level * "@freeze(")
+        print(io, " "^indent * "@freeze(")
         display_expression(io, mime, node.tns)
         print(io, ")")
     elseif node.kind === forget
-        print(io, tab^level * "@forget(")
+        print(io, " "^indent * "@forget(")
         display_expression(io, mime, node.tns)
         print(io, ")")
     elseif node.kind === thaw
-        print(io, tab^level * "@thaw(")
+        print(io, " "^indent * "@thaw(")
         display_expression(io, mime, node.tns)
         print(io, ")")
     elseif node.kind === sequence
-        print(io, tab^level * "begin\n")
+        print(io, " "^indent * "begin\n")
         for body in node.bodies
-            display_statement(io, mime, body, level + 1)
-            println()
+            display_statement(io, mime, body, indent + 2)
+            println(io)
         end
-        print(io, tab^level * "end")
+        print(io, " "^indent * "end")
     else
-        println("oh no")
-        println(node)
         error("unimplemented")
     end
 end

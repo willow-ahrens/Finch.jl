@@ -20,6 +20,7 @@ using CIndices
 export @finch, @finch_program, @finch_code, @finch_kernel, value
 
 export Fiber, Fiber!, Scalar
+export SparseRLE, SparseRLELevel 
 export SparseList, SparseListLevel
 export SparseHash, SparseHashLevel
 export SparseCOO, SparseCOOLevel
@@ -55,7 +56,6 @@ include("symbolic/symbolic.jl")
 
 include("looplets/thunks.jl")
 include("looplets/lookups.jl")
-include("looplets/fills.jl")
 include("looplets/nulls.jl")
 include("looplets/shifts.jl")
 include("looplets/unfurl.jl")
@@ -67,11 +67,13 @@ include("looplets/pipelines.jl")
 include("looplets/cycles.jl")
 include("looplets/jumpers.jl")
 include("looplets/steppers.jl")
+include("looplets/fills.jl")
 
 include("execute.jl")
 
 include("tensors/scalars.jl")
 include("tensors/fibers.jl")
+include("tensors/levels/sparserlelevels.jl")
 include("tensors/levels/sparselistlevels.jl")
 include("tensors/levels/sparsehashlevels.jl")
 include("tensors/levels/sparsecoolevels.jl")
@@ -132,4 +134,5 @@ include("fileio/tensormarket.jl")
 export fbrread, fbrwrite, bsread, bswrite
 export ftnsread, ftnswrite, fttread, fttwrite
 
+include("resumables.jl")
 end

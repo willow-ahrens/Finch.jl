@@ -68,6 +68,7 @@ function get_program_rules(alg, shash)
         (@rule call(identity, ~a) => a),
         (@rule call(overwrite, ~a, ~b) => b),
         (@rule call(~f::isliteral, ~a, ~b) => if f.val isa InitWriter b end),
+        (@rule assign(~a::isliteral, ~op, ~b) => if a.val === Null() sequence() end),
         (@rule call(ifelse, true, ~a, ~b) => a),
         (@rule call(ifelse, false, ~a, ~b) => b),
         (@rule call(ifelse, ~a, ~b, ~b) => b),
@@ -121,36 +122,27 @@ function get_program_rules(alg, shash)
             end
         end),
 
-        (@rule sequence(~s1..., declare(~a::isvariable, ~z::isliteral), ~s2..., assign(access(~a, ~m), ~f::isliteral, ~b::isliteral), ~s3...) => if ortho(a, s2)
-            sequence(s1..., s2..., declare(a, literal(f.val(z.val, b.val))), s3...)
-        end),
-
         (@rule assign(~a, ~op, cached(~b, ~c)) => assign(a, op, b)),
 
-        #TODO if we don't give loops extents, this rule is less general
         (@rule loop(~i, ~ext::isvirtual, assign(access(~a, ~m), $(literal(+)), ~b::isliteral)) =>
             assign(access(a, m), +, call(*, b, measure(ext.val)))
         ),
-
-        #TODO if we don't give loops extents, this rule is less general
         (@rule loop(~i, ~ext::isvirtual, sequence(~s1..., assign(access(~a, ~m), $(literal(+)), ~b::isliteral), ~s2...)) => if ortho(a, s1) && ortho(a, s2)
             sequence(assign(access(a, m), +, call(*, b, measure(ext.val))), loop(i, ext, sequence(s1..., s2...)))
         end),
-
-        #TODO if we don't give loops extents, this rule is less general
         (@rule loop(~i, ~ext, assign(access(~a, ~m), ~f::isidempotent(alg), ~b::isliteral)) =>
             sieve(call(>, measure(ext.val), 0), assign(access(a, m), f, b))
         ),
-
-        #TODO if we don't give loops extents, this rule is less general
         (@rule loop(~i, ~ext, sequence(~s1..., assign(access(~a, ~m), ~f::isidempotent(alg), ~b::isliteral), ~s2...)) => if ortho(a, s1) && ortho(a, s2)
             sequence(sieve(call(>, measure(ext.val), 0), assign(access(a, m), f, b)), loop(i, ext, sequence(s1..., s2...)))
         end),
 
+        (@rule sequence(~s1..., declare(~a::isvariable, ~z::isliteral), ~s2..., assign(access(~a, ~m), ~f::isliteral, ~b::isliteral), ~s3...) => if ortho(a, s2)
+            sequence(s1..., s2..., declare(a, literal(f.val(z.val, b.val))), s3...)
+        end),
         (@rule sequence(~s1..., assign(access(~a::isvariable, ~m), ~f::isabelian(alg), ~b), ~s2..., assign(access(~a, ~m), ~f, ~c), ~s3...) => if ortho(a, s2)
             sequence(s1..., assign(access(a, m), f, call(f, b, c)))
         end),
-
         (@rule sequence(~s1..., declare(~a::isvariable, ~z), ~s2..., freeze(~a), ~s3...) => if ortho(a, s2)
             sequence(s1..., s2..., declare(a, z), freeze(a), s3...)
         end),
@@ -162,11 +154,6 @@ function get_program_rules(alg, shash)
         (@rule sequence(~s1..., thaw(~a::isvariable, ~z), ~s2..., freeze(~a), ~s3...) => if ortho(a, s2)
             sequence(s1..., s2..., s3...)
         end),
-        #=
-        (@rule sequence(~s1..., declare(a::isvariable, ~z), ~s2..., freeze(a), ~s3...) => if ortho(a, s3)
-            sequence(s1..., s2..., s3...)
-        end),
-        =#
     ]
 end
 
@@ -175,37 +162,34 @@ end
 end
 
 struct SimplifyStyle end
-abstract type AbstractPreSimplifyStyle end
 
 (ctx::Stylize{<:AbstractCompiler})(::Simplify) = SimplifyStyle()
-combine_style(a::DefaultStyle, b::AbstractPreSimplifyStyle) = b
-combine_style(a::AbstractPreSimplifyStyle, b::AbstractPreSimplifyStyle) = a
 combine_style(a::SimplifyStyle, b::SimplifyStyle) = a
 
 
 function lower(root, ctx::AbstractCompiler,  ::SimplifyStyle)
-    global rules
-    root = Rewrite(Prewalk((x) -> if x.kind === virtual && x.val isa Simplify x.val.body end))(root)
+    root = Rewrite(Prewalk((x) -> if x.kind === virtual visit_simplify(x.val) end))(root)
     root = simplify(root, ctx)
     ctx(root)
 end
 
 FinchNotation.finch_leaf(x::Simplify) = virtual(x)
 
-@kwdef mutable struct Simplifier{Ctx}
-    ctx::Ctx
-    bindings = ctx.bindings #TODO I don't like that this is required
+visit_simplify(node) = node
+visit_simplify(node::Simplify) = node.body
+function visit_simplify(node::FinchNode)
+    if node.kind === access && node.tns.kind === virtual
+        visit_simplify_access(node, node.tns.val)
+    elseif node.kind === virtual
+        visit_simplify(node.val)
+    else
+        nothing
+    end
 end
 
-(ctx::Simplifier)(root) = ctx(root, Stylize(root, ctx)(root))
-
-function (ctx::Simplifier)(root, ::DefaultStyle)
+function simplify(root, ctx)
     Rewrite(Fixpoint(Chain([
-        Prewalk(Fixpoint(Chain(ctx.ctx.program_rules))),
-        Postwalk(Fixpoint(Chain(ctx.ctx.program_rules)))
+        Prewalk(Fixpoint(Chain(ctx.program_rules))),
+        Postwalk(Fixpoint(Chain(ctx.program_rules)))
     ])))(root)
-end
-
-function simplify(node::FinchNode, ctx)
-    return Simplifier(ctx=ctx)(node)
 end
