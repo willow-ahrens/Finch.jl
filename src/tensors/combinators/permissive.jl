@@ -137,6 +137,6 @@ function unfurl_access(tns::VirtualPermissiveArray, ctx, ext, protos...)
             tns.dims
         )
     else
-        tns
+        tns_2
     end
 end

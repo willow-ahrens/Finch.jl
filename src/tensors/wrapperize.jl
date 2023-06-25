@@ -73,15 +73,31 @@ function get_wrapper_rules(alg, depth, ctx)
             end
             access(VirtualPermissiveArray(body, dims), m, i1..., j, i2...)
         end),
-        (@rule access(~A::isvirtual, ~m, ~i1..., call($(+), ~j1::All(isconstant)..., ~k, ~j2::All(isconstant)...), ~i2...) => begin
-            body = A.val
-            delta = ([0 for _ in i1]..., call(+, j1..., j2...), [0 for _ in i2]...)
-            if body isa VirtualOffsetArray
-                delta = map((a, b) -> call(+, a, b), body.delta, delta)
-                body = body.body
+        (@rule access(~A::isvirtual, ~m, ~i1..., call(+, ~j1..., ~k, ~j2...), ~i2...) => begin
+            if !isempty(j1) || !isempty(j2) 
+                body = A.val
+                k_2 = call(+, ~j1..., ~j2...)
+                if depth(k_2) == 0
+                    delta = ([0 for _ in i1]..., k_2, [0 for _ in i2]...)
+                    if body isa VirtualOffsetArray
+                        delta = map((a, b) -> call(+, a, b), body.delta, delta)
+                        body = body.body
+                    end
+                    access(VirtualOffsetArray(body, delta), m, i1..., k, i2...)
+                end
             end
-            access(VirtualOffsetArray(body, delta), m, i1..., k, i2...)
         end),
+        (@rule access(~A::isvirtual, ~m, ~i1..., call(+, ~j1..., ~k, ~j2...), ~i2...) => begin
+            if (!isempty(j1) || !isempty(j2))
+                k_2 = call(+, ~j1..., ~j2...)
+                if depth(k_2) < depth(k) && depth(k_2) != 0
+                    access(VirtualToeplitzArray(A.val, length(i1) + 1), m, i1..., k, k_2, i2...)
+                end
+            end
+        end),
+        (@rule call(-, ~i, ~j) => call(+, i, call(-, j))),
+        (@rule call(+, ~i1..., call(+, ~j...), ~i2...) => call(+, i1..., j..., i2...)),
+        (@rule call(+, ~i) => i),
     ]
 end
 

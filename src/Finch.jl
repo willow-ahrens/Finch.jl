@@ -89,6 +89,7 @@ include("tensors/combinators/protocolized.jl")
 include("tensors/combinators/roots.jl")
 include("tensors/combinators/permissive.jl")
 include("tensors/combinators/offset.jl")
+include("tensors/combinators/toeplitz.jl")
 include("tensors/wrapperize.jl")
 
 include("traits.jl")
