@@ -82,6 +82,7 @@ Base.:(-)(x::Limit, y::Limit) = limit(x.val - y.val, x.sign - y.sign)
 Base.:(<)(x::Limit, y::Limit) = x.val < y.val || (x.val == y.val && x.sign < y.sign)
 Base.:(<=)(x::Limit, y::Limit) = x.val < y.val || (x.val == y.val && x.sign <= y.sign)
 Base.:(==)(x::Limit, y::Limit) = x.val == y.val && x.sign == y.sign
+Base.isless(x::Limit, y::Limit) = x < y
 
 #Crazy julia multiple dispatch stuff don't worry about it
 limit_types = [Int8, Int16, Int32, Int64, Int128, UInt8, UInt16, UInt32, UInt64, UInt128, BigInt, Float32, Float64]
@@ -90,8 +91,8 @@ for S in limit_types
         @inline Base.promote_rule(::Type{Limit{T}}, ::Type{$S}) where {T} = Limit{promote_type(T, $S)}
         Base.convert(::Type{Limit{T}}, i::$S) where {T} = limit(convert(T, i))
         Limit(i::$S) = Limit{$S}(i, 0.0)
-        (::Type{$S})(i::Limit{T}) where {T} = convert($S, i.val + true)
-        Base.convert(::Type{$S}, i::Limit) = convert($S, i.val + true)
+        (::Type{$S})(i::Limit{T}) where {T} = convert($S, i.val)
+        Base.convert(::Type{$S}, i::Limit) = convert($S, i.val)
         Base.:(<)(x::Limit, y::$S) = x < limit(y)
         Base.:(<)(x::$S, y::Limit) = limit(x) < y
         #Base.:(>)(x::Limit, y::$S) = x > limit(y)
@@ -102,14 +103,12 @@ for S in limit_types
         #Base.:(>=)(x::$S, y::Limit) = limit(x) >= y
         Base.:(==)(x::Limit, y::$S) = x == limit(y)
         Base.:(==)(x::$S, y::Limit) = limit(x) == y
+        Base.isless(x::Limit, y::$S) = x < limit(y)
+        Base.isless(x::$S, y::Limit) = limit(x) < y
     end
 end
-for S in [Float32, Float64]
-    @eval begin
-        @inline Base.promote_rule(::Type{Limit{T}}, ::Type{$S}) where {T} = Limit{promote_type(T, $S)}
-        (::Type{$S})(i::Limit{T}) where {T} = convert($S, i.val + true)
-    end
-end
+
 Base.promote_rule(::Type{Limit{T}}, ::Type{Limit{S}}) where {T, S} = promote_type(T, S)
-Base.convert(::Type{Limit{T}}, i::Limit) where {T} = Limit{T}(convert(T, i.val), false)
+Base.convert(::Type{Limit{T}}, i::Limit) where {T} = Limit{T}(convert(T, i.val), i.sign)
 Base.hash(x::Limit, h::UInt) = hash(typeof(x), hash(x.val, hash(x.sign, h)))
+
