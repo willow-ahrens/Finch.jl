@@ -234,7 +234,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, ::Union{No
                                 body = (ctx, ext) -> Thunk( 
                                      body = (ctx) -> Pipeline([
                                         Phase(
-                                            stop = (ctx, ext) -> call(-, value(my_i_start), 1),
+                                            stop = (ctx, ext) -> call(-, value(my_i_start), Eps),
                                             body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
                                         ),
                                         Phase(

@@ -24,7 +24,8 @@ combine_style(a::SpikeStyle, b::SpikeStyle) = SpikeStyle()
 
 function lower(root::FinchNode, ctx::AbstractCompiler,  ::SpikeStyle)
     if root.kind === loop
-        body_ext = Extent(getstart(root.ext), call(-, getstop(root.ext), 1))
+        #body_ext = Extent(getstart(root.ext), call(-, getstop(root.ext), 1))
+        body_ext = Extent(getstart(root.ext), call(-, getstop(root.ext), Eps))
         root_body = Rewrite(Postwalk(
             @rule access(~a::isvirtual, ~i...) => access(get_spike_body(a.val, ctx, root.ext, body_ext), ~i...)
         ))(root.body)
@@ -77,7 +78,8 @@ get_spike_tail(node::Shift, ctx, ext, ext_2) = Shift(
 supports_shift(::SpikeStyle) = true
 
 function truncate(node::Spike, ctx, ext, ext_2)
-    if query(call(>=, call(-, getstop(ext), 1), getstop(ext_2)), ctx)
+    #if query(call(>=, call(-, getstop(ext), 1), getstop(ext_2)), ctx)
+    if query(call(>=, call(-, getstop(ext), Eps), getstop(ext_2)), ctx)
         Run(node.body)
     elseif query(call(==, getstop(ext), getstop(ext_2)), ctx)
         node

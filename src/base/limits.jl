@@ -77,12 +77,16 @@ end
 
 #Core definitions for limit type
 Base.:(+)(x::Limit, y::Limit) = limit(x.val + y.val, x.sign + y.sign)
+Base.:(+)(x::Limit) = x
 Base.:(*)(x::Limit, y::Limit) = limit(x.val * y.val, x.val * y.sign + y.val * x.sign) 
 Base.:(-)(x::Limit, y::Limit) = limit(x.val - y.val, x.sign - y.sign)
+Base.:(-)(x::Limit) = limit(-x.val, -x.sign)
 Base.:(<)(x::Limit, y::Limit) = x.val < y.val || (x.val == y.val && x.sign < y.sign)
 Base.:(<=)(x::Limit, y::Limit) = x.val < y.val || (x.val == y.val && x.sign <= y.sign)
 Base.:(==)(x::Limit, y::Limit) = x.val == y.val && x.sign == y.sign
 Base.isless(x::Limit, y::Limit) = x < y
+Base.isinf(x::Limit) = isinf(x.val)
+Base.zero(x::Limit{T}) where {T} = limit(convert(T, 0))
 
 #Crazy julia multiple dispatch stuff don't worry about it
 limit_types = [Int8, Int16, Int32, Int64, Int128, UInt8, UInt16, UInt32, UInt64, UInt128, BigInt, Float32, Float64]
