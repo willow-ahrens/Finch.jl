@@ -1,16 +1,16 @@
-# Author: Willow Ahrens
+# Author: Willow Ahrens and Jaeyeon Won
 # Date: 2023
-# Description: A type for representing the endpoints of closed and open intervals
+# Description: A type for representing the infinitesimal number.
 #
 
 """
     Limit{T}(x, s)
 
-The Limit type represents the endpoints of closed and open intervals.  The val
-field is the value of the endpoint.  The sign field is used to represent the
-openness/closedness of the interval endpoint. The sign field is 0 for closed
-intervals, Inf for open intervals, and NaN when undefined (e.g. when
-cancellation has occurred).
+The Limit type represents the infinitestimal number. Limit type can be used to 
+represent endpoints of closed and open intervals.  The val field is the value 
+of the endpoint.  The sign field is used to represent the openness/closedness 
+of the interval endpoint. The sign field is 0 for closed intervals, non-zeros 
+for infinitestimal number (epsilon number).
 
 ```jl-doctest
 julia> limit(1.0)
@@ -23,16 +23,16 @@ julia> minus_eps(1.0)
 1.0-ϵ
 
 julia> plus_eps(1.0) + minus_eps(1.0)
-1.0±ϵ
+2.0+0.0
 
 julia> plus_eps(1.0) * 2
-2.0+ϵ
+2.0+2.0ϵ
 
 julia> plus_eps(1.0) * minus_eps(1.0)
-1.0±ϵ
+1.0-1.0ϵ
 
 julia> plus_eps(-1.0) * minus_eps(1.0)
--1.0+ϵ
+-1.0+2.0ϵ
 
 julia> 1.0 < plus_eps(1.0)
 true
@@ -46,9 +46,9 @@ struct Limit{T}
 end
 
 limit(x::T, s) where {T} = Limit{T}(x, s)
-plus_eps(x) = limit(x, Inf)
-minus_eps(x) = limit(x, -Inf)
-plusminus_eps(x) = limit(x, NaN)
+const Eps = limit(0,1)
+plus_eps(x) = limit(x, 1)   # x+eps()
+minus_eps(x) = limit(x, -1) # x-eps()
 limit(x) = limit(x, 0.0)
 
 function Base.show(io::IO, x::Limit)
@@ -59,25 +59,25 @@ function Base.show(io::IO, x::Limit)
     elseif x.sign == 0
         print(io, "limit(", x.val, ")")
     else
-        print(io, "plusminus_eps(", x.val, ")")
+        error(io, "unimplemented")
     end
 end
 
 function Base.show(io::IO, mime::MIME"text/plain", x::Limit)
     if x.sign > 0
-        print(io, x.val, "+ϵ")
+        print(io, x.val, "+", x.sign, "ϵ")
     elseif x.sign < 0
-        print(io, x.val, "-ϵ")
+        print(io, x.val, "-", abs(x.sign), "ϵ")
     elseif x.sign == 0
-        print(io, x.val, "+0")
+        print(io, x.val, "+0.0")
     else
-        print(io, x.val, "±ϵ")
+        error(io, "unimplemented")
     end
 end
 
 #Core definitions for limit type
 Base.:(+)(x::Limit, y::Limit) = limit(x.val + y.val, x.sign + y.sign)
-Base.:(*)(x::Limit, y::Limit) = limit(x.val * y.val, x.val * y.sign + y.val * x.sign)
+Base.:(*)(x::Limit, y::Limit) = limit(x.val * y.val, x.val * y.sign + y.val * x.sign) 
 Base.:(-)(x::Limit, y::Limit) = limit(x.val - y.val, x.sign - y.sign)
 Base.:(<)(x::Limit, y::Limit) = x.val < y.val || (x.val == y.val && x.sign < y.sign)
 Base.:(<=)(x::Limit, y::Limit) = x.val < y.val || (x.val == y.val && x.sign <= y.sign)
@@ -93,14 +93,16 @@ for S in limit_types
         Limit(i::$S) = Limit{$S}(i, 0.0)
         (::Type{$S})(i::Limit{T}) where {T} = convert($S, i.val)
         Base.convert(::Type{$S}, i::Limit) = convert($S, i.val)
+        Base.:(+)(x::Limit, y::$S) = x + limit(y)
+        Base.:(+)(x::$S, y::Limit) = limit(x) + y
+        Base.:(*)(x::Limit, y::$S) = x * limit(y)
+        Base.:(*)(x::$S, y::Limit) = limit(x) * y
+        Base.:(-)(x::Limit, y::$S) = x - limit(y)
+        Base.:(-)(x::$S, y::Limit) = limit(x) - y
         Base.:(<)(x::Limit, y::$S) = x < limit(y)
         Base.:(<)(x::$S, y::Limit) = limit(x) < y
-        #Base.:(>)(x::Limit, y::$S) = x > limit(y)
-        #Base.:(>)(x::$S, y::Limit) = limit(x) > y
         Base.:(<=)(x::Limit, y::$S) = x <= limit(y)
         Base.:(<=)(x::$S, y::Limit) = limit(x) <= y
-        #Base.:(>=)(x::Limit, y::$S) = x >= limit(y)
-        #Base.:(>=)(x::$S, y::Limit) = limit(x) >= y
         Base.:(==)(x::Limit, y::$S) = x == limit(y)
         Base.:(==)(x::$S, y::Limit) = limit(x) == y
         Base.isless(x::Limit, y::$S) = x < limit(y)
