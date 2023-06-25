@@ -239,7 +239,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, ::Union{No
                                         ),
                                         Phase(
                                             body = (ctx,ext) -> Run(
-                                                                    body = (get_reader(VirtualSubFiber(lvl.lvl, value(my_q)), ctx, protos...))
+                                                                    body = Simplify(get_reader(VirtualSubFiber(lvl.lvl, value(my_q)), ctx, protos...))
                                                                    )
                                         )
                                     ]),
