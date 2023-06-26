@@ -53,9 +53,9 @@ limit(x) = limit(x, 0.0)
 
 function Base.show(io::IO, x::Limit)
     if x.sign > 0
-        print(io, "plus_eps(", x.val, ")")
+        print(io, "limit(", x.val, "+", x.sign, "ϵ)")
     elseif x.sign < 0
-        print(io, "minus_eps(", x.val, ")")
+        print(io, "limit(", x.val, "-", abs(x.sign), "ϵ)")
     elseif x.sign == 0
         print(io, "limit(", x.val, ")")
     else

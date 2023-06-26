@@ -78,7 +78,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  ::PhaseStyle)
                 ))
             end)
             #$i = $(ctx(getstop(ext_4))) + $(Int8(1))
-            $i = $(ctx(getstop(ext_4))) + Eps
+            $i = $(ctx(getstop(ext_4))) + $(Eps)
         end
 
 

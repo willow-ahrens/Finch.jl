@@ -50,7 +50,8 @@ FinchNotation.finch_leaf(x::Step) = virtual(x)
 (ctx::Stylize{<:AbstractCompiler})(node::Step) = ctx.root.kind === loop ? PhaseStyle() : DefaultStyle()
 
 function phase_range(node::Step, ctx, ext)
-    Narrow(bound_measure_below!(Extent(getstart(ext), node.stop(ctx, ext)), literal(1)))
+    #Narrow(bound_measure_below!(Extent(getstart(ext), node.stop(ctx, ext)), literal(1)))
+    Narrow(bound_measure_below!(Extent(getstart(ext), node.stop(ctx, ext)), literal(Eps)))
 end
 
 phase_body(node::Step, ctx, ext, ext_2) =
@@ -60,7 +61,8 @@ phase_body(node::Step, ctx, ext, ext_2) =
             epilogue = node.next(ctx, ext_2)
         ),
         literal(true) => 
-            truncate(node.body, ctx, ext, Extent(getstart(ext_2), bound_above!(getstop(ext_2), call(-, getstop(ext), 1)))),
+            #truncate(node.body, ctx, ext, Extent(getstart(ext_2), bound_above!(getstop(ext_2), call(-, getstop(ext), 1)))),
+            truncate(node.body, ctx, ext, Extent(getstart(ext_2), bound_above!(getstop(ext_2), call(-, getstop(ext), Eps)))),
         ])
 
 supports_shift(::StepperStyle) = true
