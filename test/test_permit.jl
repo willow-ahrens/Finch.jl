@@ -8,12 +8,10 @@
     @finch (C .= 0; @loop i C[i] = coalesce(A[~i], B[~(i + -10)]))
     @test reference_isequal(C, C_ref)
 
-    #=
-
     F = fiber(Int64[1,1,1,1,1])
 
-    @test check_output("sparse_conv.jl", @finch_code (C .= 0; @loop i j C[i] += (A[i] != 0) * coalesce(A[offset[j, i - 3]], 0) * F[j]))
-    @finch (C .= 0; @loop i j C[i] += (A[i] != 0) * coalesce(A[offset[j, i - 3]], 0) * F[j])
+    @test check_output("sparse_conv.jl", @finch_code (C .= 0; @loop i j C[i] += (A[i] != 0) * coalesce(A[~j - i + 3], 0) * F[j]))
+    @finch (C .= 0; @loop i j C[i] += (A[i] != 0) * coalesce(A[~j - i + 3], 0) * F[j])
     C_ref = zeros(10)
     for i = 1:10
         if A_ref[i] != 0
@@ -25,11 +23,14 @@
             end
         end
     end
+    println(AsArray(C))
+    println(C_ref)
     @test reference_isequal(C, C_ref)
-    @test check_output("sparse_conv_guarded.jl", @finch_code (C .= 0; @loop i j C[i] += (A[i] != 0) * coalesce(A[offset[j, i - 3]], 0) * coalesce(F[permit[j]], 0)))
-    @finch (C .= 0; @loop i j C[i] += (A[i] != 0) * coalesce(A[offset[j, i - 3]], 0) * coalesce(F[permit[j]], 0))
+    @test check_output("sparse_conv_guarded.jl", @finch_code (C .= 0; @loop i j C[i] += (A[i] != 0) * coalesce(A[~j - i + 3], 0) * coalesce(F[~j], 0)))
+    @finch (C .= 0; @loop i j C[i] += (A[i] != 0) * coalesce(A[~j - i + 3], 0) * coalesce(F[~j], 0))
     @test reference_isequal(C, C_ref)
 
+    #=
     win = window(2, 4)
     @test check_output("sparse_window.jl", @finch_code (C .= 0; @loop i C[i] = A[win[i]]))
     @finch (C .= 0; @loop i C[i] = A[win[i]])
