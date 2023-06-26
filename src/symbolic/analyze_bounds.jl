@@ -125,7 +125,7 @@ function query(root::FinchNode, ctx; verbose = false)
     root = Rewrite(Postwalk(rename))(root)
     res = Rewrite(Fixpoint(Prewalk(Fixpoint(Chain(ctx.bounds_rules)))))(root)
     if verbose
-        @info "bounds query" root res
+      @info "bounds query" root res 
     end
     if isliteral(res)
         return res.val
