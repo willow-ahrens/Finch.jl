@@ -20,7 +20,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualOffsetArray)
 	print(io, "VirtualOffsetArray($(ex.body), $(ex.delta))")
 end
 
-Base.summary(io::IO, ex::VirtualOffsetArray) = print(io, "VOffset($(summary(ex.body)), $(summary(ex.delta)))")
+Base.summary(io::IO, ex::VirtualOffsetArray) = print(io, "VOffset($(summary(ex.body)), $(ex.delta))")
 
 FinchNotation.finch_leaf(x::VirtualOffsetArray) = virtual(x)
 

@@ -53,10 +53,10 @@ function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::VirtualToep
 end
 
 function popdim(node::VirtualToeplitzArray)
-    if length(node.dim) == 1
+    if length(virtual_size(node)) == node.dim
         return node.body
     else
-        return VirtualToeplitzArray(node.body, node.dim[1:end-1])
+        return node
     end
 end
 
