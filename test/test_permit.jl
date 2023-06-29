@@ -23,11 +23,9 @@
             end
         end
     end
-    println(AsArray(C))
-    println(C_ref)
     @test reference_isequal(C, C_ref)
-    @test check_output("sparse_conv_guarded.jl", @finch_code (C .= 0; @loop i j C[i] += (A[i] != 0) * coalesce(A[~j - i + 3], 0) * coalesce(F[~j], 0)))
-    @finch (C .= 0; @loop i j C[i] += (A[i] != 0) * coalesce(A[~j - i + 3], 0) * coalesce(F[~j], 0))
+    @test check_output("sparse_conv_guarded.jl", @finch_code (C .= 0; @loop i j C[i] += (A[i] != 0) * coalesce(A[j - i + 3], 0) * coalesce(F[~j], 0)))
+    @finch (C .= 0; @loop i j C[i] += (A[i] != 0) * coalesce(A[j - i + 3], 0) * coalesce(F[~j], 0))
     @test reference_isequal(C, C_ref)
 
     #=

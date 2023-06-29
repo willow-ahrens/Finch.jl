@@ -125,7 +125,7 @@ phase_body(node::VirtualOffsetArray, ctx, ext, ext_2) = VirtualOffsetArray(phase
 phase_range(node::VirtualOffsetArray, ctx, ext) = shiftdim(phase_range(node.body, ctx, shiftdim(ext, node.delta[end])), call(-, node.delta[end]))
 
 get_spike_body(node::VirtualOffsetArray, ctx, ext, ext_2) = VirtualOffsetArray(get_spike_body(node.body, ctx, shiftdim(ext, node.delta[end]), shiftdim(ext_2, node.delta[end])), node.delta)
-get_spike_tail(node::VirtualOffsetArray, ctx, ext, ext_2) = popdim(VirtualOffsetArray(get_spike_tail(node.body, ctx, shiftdim(ext, node.delta[end]), shiftdim(ext_2, node.delta[end])), node.delta))
+get_spike_tail(node::VirtualOffsetArray, ctx, ext, ext_2) = VirtualOffsetArray(get_spike_tail(node.body, ctx, shiftdim(ext, node.delta[end]), shiftdim(ext_2, node.delta[end])), node.delta)
 
 visit_fill(node, tns::VirtualOffsetArray) = visit_fill(node, tns.body)
 visit_simplify(node::VirtualOffsetArray) = VirtualOffsetArray(visit_simplify(node.body), node.delta)
