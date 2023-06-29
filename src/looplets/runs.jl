@@ -43,8 +43,6 @@ end
 
 get_run_body(node, ctx, ext) = nothing
 get_run_body(node::Run, ctx, ext) = node.body
-get_run_body(node::Shift, ctx, ext) = get_run_body(node.body, ctx,
-        shiftdim(ext, call(-, node.delta)))
 
 #assume ssa
 
@@ -97,10 +95,5 @@ end
 
 get_acceptrun_body(node, ctx, ext) = nothing
 get_acceptrun_body(node::AcceptRun, ctx, ext) = node.body(ctx, ext)
-get_acceptrun_body(node::Shift, ctx, ext) = get_acceptrun_body(node.body, ctx,
-        shiftdim(ext, call(-, node.delta)))
 
 get_point_body(node::AcceptRun, ctx, ext, idx) = node.body(ctx, Extent(idx, idx))
-
-supports_shift(::RunStyle) = true
-supports_shift(::AcceptRunStyle) = true

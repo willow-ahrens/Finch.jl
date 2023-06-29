@@ -22,8 +22,6 @@ combine_style(a::PipelineStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::PipelineStyle, b::SwitchStyle) = SwitchStyle()
 combine_style(a::SpikeStyle, b::PipelineStyle) = PipelineStyle()
 
-supports_shift(::PipelineStyle) = true
-
 function lower(root::FinchNode, ctx::AbstractCompiler,  ::PipelineStyle)
     if root.kind === loop
         phases = PipelineVisitor(ctx, root.idx, root.ext)(root.body)
@@ -82,11 +80,3 @@ function (ctx::PipelineVisitor)(node::Pipeline)
   
   return enumerate(new_phases)
 end
-
-
-function (ctx::PipelineVisitor)(node::Shift)
-    map(PipelineVisitor(; kwfields(ctx)..., ext = shiftdim(ctx.ext, call(-, node.delta)))(node.body)) do (keys, body)
-        return keys => Shift(body, node.delta)
-    end
-end
-

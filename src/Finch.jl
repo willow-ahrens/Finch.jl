@@ -36,8 +36,6 @@ export diagmask, lotrimask, uptrimask, bandmask
 
 export choose, minby, maxby, overwrite, initwrite
 
-export permit, offset, staticoffset, window
-
 export default, AsArray
 
 include("util.jl")
@@ -56,7 +54,6 @@ include("symbolic/symbolic.jl")
 include("looplets/thunks.jl")
 include("looplets/lookups.jl")
 include("looplets/nulls.jl")
-include("looplets/shifts.jl")
 include("looplets/unfurl.jl")
 include("looplets/runs.jl")
 include("looplets/spikes.jl")
@@ -83,7 +80,6 @@ include("tensors/levels/elementlevels.jl")
 include("tensors/levels/patternlevels.jl")
 include("tensors/levels/sparsetrianglelevels.jl")
 include("tensors/masks.jl")
-include("tensors/modifiers.jl")
 include("tensors/combinators/unfurled.jl")
 include("tensors/combinators/protocolized.jl")
 include("tensors/combinators/roots.jl")
@@ -97,7 +93,6 @@ include("traits.jl")
 export fsparse, fsparse!, fsprand, fspzeros, ffindnz, countstored
 
 include("base/abstractarrays.jl")
-include("base/abstractunitranges.jl")
 include("base/broadcast.jl")
 include("base/index.jl")
 include("base/mapreduce.jl")

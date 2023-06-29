@@ -63,5 +63,3 @@ phase_body(node::Step, ctx, ext, ext_2) =
         literal(true) => 
             truncate(node.body, ctx, ext, Extent(getstart(ext_2), bound_above!(getstop(ext_2), call(-, getstop(ext), 1)))),
         ])
-
-supports_shift(::StepperStyle) = true

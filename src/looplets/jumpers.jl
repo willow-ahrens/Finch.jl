@@ -47,8 +47,6 @@ end
 
 phase_body(node::Jump, ctx, ext, ext_2) = node.body(ctx, ext, ext_2)
 
-supports_shift(::JumperStyle) = true
-
 Base.show(io::IO, ex::Jumper) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::Jumper)
 	print(io, "Jumper(...)")

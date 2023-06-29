@@ -47,7 +47,7 @@ end
     get_wrapper_rules(alg, shash)
 
 Return the wrapperizing rule set for Finch, which converts expressions like `A[i
-+ 1]` to array combinator expressions like `ShiftArray(A, (1,))`. The rules have
++ 1]` to array combinator expressions like `OffsetArray(A, (1,))`. The rules have
 access to the algebra `alg` and the depth lookup `depth`` One can dispatch on
 the `alg` trait to specialize the rule set for different algebras. These rules run
 after simplification so one can expect constants to be folded.
