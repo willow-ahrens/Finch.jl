@@ -37,7 +37,7 @@ function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::Unfurled)
 end
 
 function popdim(node::Unfurled, ctx)
-    if node.ndims + 1 == virtual_size(node.arr, ctx) || node.body isa Unfurled
+    if node.ndims + 1 == length(virtual_size(node.arr, ctx)) || node.body isa Unfurled
         return node.body
     else
         return Unfurled(node.arr, node.ndims + 1, node.body)
@@ -108,3 +108,10 @@ function lower(node::Unfurled, ctx::AbstractCompiler, ::DefaultStyle)
 end
 
 getroot(tns::Unfurled) = getroot(tns.arr)
+
+function lower_access(ctx::AbstractCompiler, node, tns::Unfurled)
+    if !isempty(node.idxs)
+        error("I'm not sure how this has happened")
+    end
+    lower_access(ctx, node, tns.body)
+end

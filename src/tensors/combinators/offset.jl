@@ -141,3 +141,10 @@ getroot(tns::VirtualOffsetArray) = getroot(tns.body)
 function unfurl_access(tns::VirtualOffsetArray, ctx, ext, protos...)
     VirtualOffsetArray(unfurl_access(tns.body, ctx, shiftdim(ext, tns.delta[end]), protos...), tns.delta)
 end
+
+function lower_access(ctx::AbstractCompiler, node, tns::VirtualOffsetArray)
+    if !isempty(node.idxs)
+        error("oh no!")
+    end
+    lower_access(ctx, node, tns.body)
+end

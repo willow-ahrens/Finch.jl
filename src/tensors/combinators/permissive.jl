@@ -35,6 +35,7 @@ lower(tns::VirtualPermissiveArray, ctx::AbstractCompiler, ::DefaultStyle) = :(Pe
 function virtual_size(arr::VirtualPermissiveArray, ctx::AbstractCompiler)
     ifelse.(arr.dims, (nodim,), virtual_size(arr.body, ctx))
 end
+
 function virtual_resize!(arr::VirtualPermissiveArray, ctx::AbstractCompiler, dims...)
     virtual_resize!(arr.body, ctx, ifelse.(arr.dims, virtual_size(arr.body, ctx), dim))
 end
@@ -119,7 +120,7 @@ function unfurl_access(tns::VirtualPermissiveArray, ctx, ext, protos...)
     if tns.dims[end]
         VirtualPermissiveArray(
             Unfurled(
-                tns.body,
+                tns,
                 Pipeline([
                     Phase(
                         stop = (ctx, ext_2) -> call(-, getstart(dims[end]), 1),
@@ -137,6 +138,13 @@ function unfurl_access(tns::VirtualPermissiveArray, ctx, ext, protos...)
             tns.dims
         )
     else
-        tns_2
+        VirtualPermissiveArray(tns_2, tns.dims)
     end
+end
+
+function lower_access(ctx::AbstractCompiler, node, tns::VirtualPermissiveArray)
+    if !isempty(node.idxs)
+        error("oh no!")
+    end
+    lower_access(ctx, node, tns.body)
 end
