@@ -110,7 +110,7 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualPatternLevel}, c
     VirtualScalar(nothing, Bool, false, gensym(), fbr.dirty)
 end
 
-function lowerjulia_access(ctx::AbstractCompiler, node, tns::VirtualFiber{VirtualPatternLevel})
+function lower_access(ctx::AbstractCompiler, node, tns::VirtualFiber{VirtualPatternLevel})
     val = ctx.freshen(:null)
     push!(ctx.preamble, :($val = false))
     val

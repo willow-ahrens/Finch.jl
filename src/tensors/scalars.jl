@@ -59,7 +59,7 @@ end
 instantiate_reader(tns::VirtualScalar, ctx) = tns
 instantiate_updater(tns::VirtualScalar, ctx) = tns
 
-function lowerjulia_access(ctx::AbstractCompiler, node, tns::VirtualScalar)
+function lower_access(ctx::AbstractCompiler, node, tns::VirtualScalar)
     @assert isempty(node.idxs)
     return tns.val
 end
@@ -83,7 +83,7 @@ instantiate_updater(tns::VirtualDirtyScalar, ctx) = tns
 
 FinchNotation.finch_leaf(x::VirtualDirtyScalar) = virtual(x)
 
-function lowerjulia_access(ctx::AbstractCompiler, node, tns::VirtualDirtyScalar)
+function lower_access(ctx::AbstractCompiler, node, tns::VirtualDirtyScalar)
     @assert isempty(node.idxs)
     push!(ctx.preamble, quote
         $(tns.dirty) = true

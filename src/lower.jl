@@ -181,9 +181,9 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
         end
     elseif root.kind === access
         if root.tns.kind === virtual
-            return lowerjulia_access(ctx, root, root.tns.val)
-        elseif root.tns.kind === variable
-            return lowerjulia_access(ctx, root, resolve(root.tns, ctx))
+            return lower_access(ctx, root, root.tns.val)
+        elseif root.tns.kind === variable #TODO should be unnecessary?
+            return lower_access(ctx, root, resolve(root.tns, ctx))
         else
             tns = ctx(root.tns)
             idxs = map(ctx, root.idxs)
@@ -248,12 +248,12 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
     end
 end
 
-function lowerjulia_access(ctx, node, tns)
+function lower_access(ctx, node, tns)
     idxs = map(ctx, node.idxs)
     :($(ctx(tns))[$(idxs...)])
 end
 
-function lowerjulia_access(ctx, node, tns::Number)
+function lower_access(ctx, node, tns::Number)
     @assert node.mode.kind === reader
     tns
 end

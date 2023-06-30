@@ -41,8 +41,8 @@ function lower(node::RootArray, ctx::AbstractCompiler, ::DefaultStyle)
     ctx(node.body)
 end
 
-lowerjulia_access(ctx::AbstractCompiler, node, tns::RootArray) = 
-    lowerjulia_access(ctx, node, resolve(tns.tag, ctx))
+lower_access(ctx::AbstractCompiler, node, tns::RootArray) = 
+    lower_access(ctx, node, resolve(tns.tag, ctx))
 
 getroot(tns::RootArray) = tns.tag
 
