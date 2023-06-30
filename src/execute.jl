@@ -76,7 +76,6 @@ function lower_global(prgm, ctx)
             $(begin
                 prgm = enforce_scopes(prgm)
                 prgm = wrapperize(prgm, ctx_2)
-                #display(prgm)
                 prgm = enforce_lifecycles(prgm)
                 prgm = dimensionalize!(prgm, ctx_2)
                 prgm = concordize(prgm, ctx_2)

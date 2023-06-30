@@ -95,6 +95,14 @@ function get_wrapper_rules(alg, depth, ctx)
                 end
             end
         end),
+        (@rule access(~A::isvirtual, ~m, ~i1..., access(~I::isvirtual, reader(), ~k), ~i2...) => begin
+            I = ctx.bindings[getroot(I.val)]
+            if I isa VirtualAbstractUnitRange
+                A_2 = VirtualOffsetArray(A.val, ([0 for _ in i1]..., call(-, getstart(I.target), 1), [0 for _ in i2]...))
+                A_3 = VirtualWindowedArray(A_2, ([nothing for _ in i1]..., shiftdim(I.target, call(-, getstart(I.target), 1)), [nothing for _ in i2]...))
+                access(A_3, m, i1..., k, i2...)
+            end
+        end),
         (@rule call(-, ~i, ~j) => call(+, i, call(-, j))),
         (@rule call(+, ~i1..., call(+, ~j...), ~i2...) => call(+, i1..., j..., i2...)),
         (@rule call(+, ~i) => i),

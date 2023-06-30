@@ -94,6 +94,7 @@ include("traits.jl")
 export fsparse, fsparse!, fsprand, fspzeros, ffindnz, countstored
 
 include("base/abstractarrays.jl")
+include("base/abstractunitranges.jl")
 include("base/broadcast.jl")
 include("base/index.jl")
 include("base/mapreduce.jl")

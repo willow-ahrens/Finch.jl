@@ -28,18 +28,15 @@
     @finch (C .= 0; @loop i j C[i] += (A[i] != 0) * coalesce(A[j - i + 3], 0) * coalesce(F[~j], 0))
     @test reference_isequal(C, C_ref)
 
-    #=
-    win = window(2, 4)
-    @test check_output("sparse_window.jl", @finch_code (C .= 0; @loop i C[i] = A[win[i]]))
-    @finch (C .= 0; @loop i C[i] = A[win[i]])
+    I = 2:4
+    @test check_output("sparse_window.jl", @finch_code (C .= 0; @loop i C[i] = A[I[i]]))
+    @finch (C .= 0; @loop i C[i] = A[I[i]])
     @test reference_isequal(C, [A(2), A(3), A(4)])
 
-    win = 2:4
-    @test check_output("sparse_range.jl", @finch_code (C .= 0; @loop i C[i] = A[win[i]]))
-    @finch (C .= 0; @loop i C[i] = A[win[i]])
+    @test check_output("sparse_range.jl", @finch_code (C .= 0; @loop i C[i] = A[I[i]]))
+    @finch (C .= 0; @loop i C[i] = A[I[i]])
     @test reference_isequal(C, [A(2), A(3), A(4)])
 
     @finch (C .= 0; @loop i C[i] = win[i])
     @test reference_isequal(C, [2, 3, 4])
-    =#
 end

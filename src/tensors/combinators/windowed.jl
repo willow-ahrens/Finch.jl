@@ -119,11 +119,11 @@ end
 getroot(tns::VirtualWindowedArray) = getroot(tns.body)
 
 function unfurl_access(tns::VirtualWindowedArray, ctx, ext, protos...)
-    tns_2 = unfurl_access(tns.body, ctx, something(dims[end], ext), protos...)
-    dims = virtual_size(tns.body, ctx)
     if tns.dims[end] !== nothing
+        dims = virtual_size(tns.body, ctx)
+        tns_2 = unfurl_access(tns.body, ctx, dims[end], protos...)
         truncate(tns_2, ctx, dims[end], ext)
     else
-        tns_2
+        unfurl_access(tns.body, ctx, ext, protos...)
     end
 end

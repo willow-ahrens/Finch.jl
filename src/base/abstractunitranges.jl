@@ -28,9 +28,7 @@ function instantiate_reader(arr::VirtualAbstractUnitRange, ctx, proto_idx::typeo
         body = Furlable(
             body = (ctx, ext) -> Lookup(
                 body = (ctx, i) -> Fill(value(:($(arr.ex)[$(ctx(i))])))
-            ),
-            fuse = (tns, ctx, ext) ->
-                Shift(truncate(tns, ctx, ext, arr.target), call(-, getstart(ext), getstart(arr.target)))
+            )
         )
     )
 end
