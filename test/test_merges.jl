@@ -16,7 +16,7 @@
         (;fmt = (z) -> @fiber(d(sh{1}(e(z)))), proto = [literal_instance(walk),literal_instance(follow)]),
         (;fmt = (z) -> @fiber(sh{2}(e(z))), proto = [literal_instance(walk), literal_instance(walk)]),
         #(;fmt = (z) -> @fiber(d(rl(z))), proto = [walk, follow]),
-        (;fmt = (z) -> @fiber(d(srl(e(z)))), proto = [walk, follow]),
+        (;fmt = (z) -> @fiber(d(srl(e(z)))), proto = [literal_instance(walk), literal_instance(follow)]),
     ]
 
     dtss = [

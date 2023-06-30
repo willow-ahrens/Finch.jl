@@ -191,7 +191,7 @@ end
 
 
 
-function get_reader(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, ::Union{Nothing, Walk}, protos...)
+function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, ::Union{typeof(defaultread), typeof(walk)}, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos) 
     tag = lvl.ex
     Tp = lvl.Tp
@@ -203,7 +203,6 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, ::Union{No
     my_q_stop = ctx.freshen(tag, :_q_stop)
 
     Furlable(
-        size = virtual_level_size(lvl, ctx),
         body = (ctx, ext) -> Thunk(
             preamble = quote
                 $my_q = $(lvl.ex).ptr[$(ctx(pos))]
@@ -239,7 +238,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, ::Union{No
                                         ),
                                         Phase(
                                             body = (ctx,ext) -> Run(
-                                                                    body = (get_reader(VirtualSubFiber(lvl.lvl, value(my_q)), ctx, protos...))
+                                                                    body = (instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q)), ctx, protos...))
                                                                    )
                                         )
                                     ]),
@@ -260,11 +259,11 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, ::Union{No
 end
 
 
-is_laminable_updater(lvl::VirtualSparseRLELevel, ctx, ::Union{Nothing, Extrude}) = false
-get_updater(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, protos...) = 
-    get_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
+is_laminable_updater(lvl::VirtualSparseRLELevel, ctx, ::Union{typeof(defaultupdate), typeof(extrude)}) = false
+instantiate_updater(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, protos...) = 
+    instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
 
-function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseRLELevel}, ctx, ::Union{Nothing, Extrude}, protos...)
+function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseRLELevel}, ctx, ::Union{typeof(defaultupdate), typeof(extrude)}, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos) 
     tag = lvl.ex
     Tp = lvl.Tp
@@ -275,8 +274,6 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseRLELevel}, ctx, ::
     dirty = ctx.freshen(tag, :dirty)
     
     Furlable(
-        tight = lvl, 
-        size = virtual_level_size(lvl, ctx),  
         body = (ctx, ext) -> Thunk(
             preamble = quote
                 $qos = $qos_fill + 1
@@ -293,7 +290,7 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseRLELevel}, ctx, ::
                         end
                         $dirty = false
                     end,
-                    body = (ctx) -> get_updater(VirtualTrackedSubFiber(lvl.lvl, value(qos, lvl.Tp), dirty), ctx, protos...),
+                    body = (ctx) -> instantiate_updater(VirtualTrackedSubFiber(lvl.lvl, value(qos, lvl.Tp), dirty), ctx, protos...),
                     epilogue = quote
                         if $dirty
                             $(fbr.dirty) = true
@@ -311,4 +308,3 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseRLELevel}, ctx, ::
         )
     )
 end
-
