@@ -96,10 +96,10 @@ function get_wrapper_rules(alg, depth, ctx)
             end
         end),
         (@rule access(~A::isvirtual, ~m, ~i1..., access(~I::isvirtual, reader(), ~k), ~i2...) => begin
-            I = ctx.bindings[getroot(I.val)]
+            I = ctx.bindings[getroot(I.val)] #TODO do we like this pattern?
             if I isa VirtualAbstractUnitRange
-                A_2 = VirtualOffsetArray(A.val, ([0 for _ in i1]..., call(-, getstart(I.target), 1), [0 for _ in i2]...))
-                A_3 = VirtualWindowedArray(A_2, ([nothing for _ in i1]..., shiftdim(I.target, call(-, getstart(I.target), 1)), [nothing for _ in i2]...))
+                A_2 = VirtualWindowedArray(A.val, ([nothing for _ in i1]..., I.target, [nothing for _ in i2]...))
+                A_3 = VirtualOffsetArray(A_2, ([0 for _ in i1]..., call(-, getstart(I.target), 1), [0 for _ in i2]...))
                 access(A_3, m, i1..., k, i2...)
             end
         end),
