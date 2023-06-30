@@ -16,9 +16,19 @@ Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 RewriteTools = "5969e224-3634-4c61-9f66-721b69e98b8a"
 SyntaxInterface = "b33eeca9-aacb-4496-a840-e75f1646a4fb"
 
+[weakdeps]
+HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+TensorMarket = "8b7d4fe7-0b45-4d0d-9dd8-5cc9b23b4b77"
+
+[extensions]
+HDF5Ext = "HDF5"
+SparseArraysExt = "SparseArrays"
+TensorMarketExt = "TensorMarket"
+
 [compat]
 AbstractTrees = ">= 0.3.4"
-CIndices = "0.1, 0.2"
+CIndices = "0.1, 0.2, 0.3"
 Compat = "3.29, 4"
 DataStructures = "0.18"
 JSON = "0.21"
@@ -27,11 +37,6 @@ Requires = "1"
 RewriteTools = "0.1"
 SyntaxInterface = "0.2.1"
 julia = "1.6.7"
-
-[extensions]
-HDF5Ext = "HDF5"
-SparseArraysExt = "SparseArrays"
-TensorMarketExt = "TensorMarket"
 
 [extras]
 ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"
@@ -49,8 +54,3 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
 test = ["Test", "ArgParse", "LinearAlgebra", "Random", "SparseArrays", "Graphs", "SimpleWeightedGraphs", "HDF5", "Pkg", "TensorMarket", "Documenter", "Literate"]
-
-[weakdeps]
-HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
-SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
-TensorMarket = "8b7d4fe7-0b45-4d0d-9dd8-5cc9b23b4b77"
