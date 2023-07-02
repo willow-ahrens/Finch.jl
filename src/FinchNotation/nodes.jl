@@ -4,15 +4,15 @@ const IS_CONST = 4
 const ID = 8
 
 @enum FinchNodeKind begin
-    variable =  0ID
+    literal  =  0ID | IS_CONST
     value    =  1ID | IS_CONST
-    virtual  =  2ID
-    literal  =  3ID | IS_CONST
-    index    =  4ID
-    access   =  5ID | IS_TREE 
-    reader   =  6ID | IS_TREE
-    updater  =  7ID | IS_TREE
-    call     =  8ID | IS_TREE
+    index    =  2ID
+    variable =  3ID
+    virtual  =  4ID
+    call     =  5ID | IS_TREE
+    access   =  6ID | IS_TREE 
+    reader   =  7ID | IS_TREE
+    updater  =  8ID | IS_TREE
     cached   =  9ID | IS_TREE
     assign   = 10ID | IS_TREE | IS_STATEFUL
     loop     = 11ID | IS_TREE | IS_STATEFUL
@@ -24,22 +24,6 @@ const ID = 8
     sequence = 17ID | IS_TREE | IS_STATEFUL
 end
 
-
-"""
-    value(val, type)
-
-Finch AST expression for host code `val` expected to evaluate to a value of type `type`.
-"""
-value
-
-"""
-    virtual(val)
-
-Finch AST expression for an object `val` which has special meaning to the compiler. This
-type allows users to substitute their own ASTs, etc. into Finch expressions.
-"""
-virtual
-
 """
     literal(val)
 
@@ -48,11 +32,11 @@ Finch AST expression for the literal value `val`.
 literal
 
 """
-    cached(val, ref)
+    value(val, type)
 
-Finch AST expression `val`, equivalent to the quoted expression `ref`
+Finch AST expression for host code `val` expected to evaluate to a value of type `type`.
 """
-cached
+value
 
 """
     index(name)
@@ -68,6 +52,21 @@ index
 Finch AST expression for a variable named `name`. The variable can be looked up in the context.
 """
 variable
+
+"""
+    virtual(val)
+
+Finch AST expression for an object `val` which has special meaning to the compiler. This
+type allows users to substitute their own ASTs, etc. into Finch expressions.
+"""
+virtual
+
+"""
+    call(op, args...)
+
+Finch AST expression for the result of calling the function `op` on `args...`.
+"""
+call
 
 """
     access(tns, mode, idx...)
@@ -93,12 +92,11 @@ Finch AST expression for an access mode that updates tensor values.
 updater
 
 """
-    call(op, args...)
+    cached(val, ref)
 
-Finch AST expression for the result of calling the function `op` on `args...`.
+Finch AST expression `val`, equivalent to the quoted expression `ref`
 """
-call
-
+cached
 """
     loop(idx, ext, body) 
 
