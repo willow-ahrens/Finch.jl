@@ -12,6 +12,23 @@ is an imperative language. The AST is separated into statements and expressions,
 where statements can modify the state of the program but expressions cannot.
 
 The core Finch expressions are:
+
+- [literal](@ref) e.g. `1`, `1.0`, `nothing`
+- [value](@ref) e.g. `x`, `y`
+- [index](@ref) e.g. `i`, inside of `for i = _; ... end`
+- [variable](@ref) e.g. `x`, inside of `(x = y; ...)`
+- [call](@ref) e.g. `op(args...)`
+- [access](@ref) e.g. `tns[idxs...]`
+
+And the core Finch statements are:
+
+- [define](@ref) e.g. `var = val`
+- [declare](@ref) e.g. `tns .= init`
+- [assign](@ref) e.g. `lhs[idxs...] <<op>>= rhs`
+- [loop](@ref) e.g. `for i = _; ... end`
+- [sieve](@ref) e.g. `if cond; ... end`
+- [sequence](@ref) e.g. `begin ... end`
+
 ```@docs
 literal
 value
@@ -19,15 +36,11 @@ index
 variable
 call
 access
-```
-
-And the core Finch statements are:
-```@docs
+define
 assign
 loop
 sieve
 sequence
-define
 ```
 
 # Scoping
