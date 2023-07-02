@@ -139,6 +139,17 @@ Dense [1:2]
 
 ```
 
+## Virtual Tensor Methods
+
+```@docs
+declare!
+instantiate_reader
+instantiate_updater
+freeze!
+trim!
+thaw!
+unfurl!
+```
 ## Virtualization
 
 TODO more on the way...

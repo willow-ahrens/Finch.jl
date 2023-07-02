@@ -1,5 +1,5 @@
 ```@meta
-EditURL = "<unknown>/docs/src/benchmark.jl"
+EditURL = "<unknown>/src/benchmark.jl"
 ```
 
 # Benchmarking
@@ -85,13 +85,13 @@ Benchmark the kernel, ignoring allocation costs for y
 
 ````
 BenchmarkTools.Trial: 10000 samples with 1 evaluation.
- Range (min … max):  39.917 μs …  5.535 ms  ┊ GC (min … max): 0.00% … 98.68%
- Time  (median):     43.750 μs              ┊ GC (median):    0.00%
- Time  (mean ± σ):   45.511 μs ± 70.328 μs  ┊ GC (mean ± σ):  2.16% ±  1.39%
+ Range (min … max):  46.833 μs …  1.582 ms  ┊ GC (min … max): 0.00% … 95.52%
+ Time  (median):     51.292 μs              ┊ GC (median):    0.00%
+ Time  (mean ± σ):   53.866 μs ± 30.483 μs  ┊ GC (mean ± σ):  1.11% ±  1.91%
 
-             ▆█▇▇▆▅▆▅▃▂▁▂▁▂▃▃▃▃▃▂▂▂▁      ▁                   ▂
-  █▇▇▇▆▅▄▁▁▁▁█████████████████████████▇▇██████▇█▇▇▇▆▆▆▇▆▅▆▆▆▇ █
-  39.9 μs      Histogram: log(frequency) by time      55.3 μs <
+            ▁▆█▅▄▃▄▂▂▂ ▂▃▃▃▄▃▃▂▁   ▁▁▁▁▁▁▁▁▁                  ▂
+  █▇▃▁▃▅█▆▃▄██████████████████████▇██████████▇▇▇█▇███▇█▇▆▆▇▄▆ █
+  46.8 μs      Histogram: log(frequency) by time      67.1 μs <
 
  Memory estimate: 22.97 KiB, allocs estimate: 1470.
 ````
@@ -114,13 +114,13 @@ end
 
 ````
 BenchmarkTools.Trial: 10000 samples with 1 evaluation.
- Range (min … max):  39.292 μs …  5.486 ms  ┊ GC (min … max): 0.00% … 98.56%
- Time  (median):     43.292 μs              ┊ GC (median):    0.00%
- Time  (mean ± σ):   45.527 μs ± 73.074 μs  ┊ GC (mean ± σ):  2.25% ±  1.40%
+ Range (min … max):  46.458 μs …  1.512 ms  ┊ GC (min … max): 0.00% … 95.44%
+ Time  (median):     48.250 μs              ┊ GC (median):    0.00%
+ Time  (mean ± σ):   49.701 μs ± 31.022 μs  ┊ GC (mean ± σ):  1.38% ±  2.14%
 
-           ▄█▇█▇▆▇▆▄▄▃▂▂▃▃▄▄▄▄▄▃▃▂▁▁▁ ▁▁▂▁▂▁▁▁▁▁▁             ▃
-  █▇▇▇▄▁▆████████████████████████████████████████▇███▇█▇█▇▆▇▇ █
-  39.3 μs      Histogram: log(frequency) by time      56.2 μs <
+      ▁▃▇█▇▄▄▃▃▂▃▂▂▂▁ ▂▂▂▁▁▁▁                                 ▂
+  ▆▄▁▃████████████████████████████▇▆▇▇▆▅▆▆▆▆▆▆▇▆▆▇▇▇▇▆▆▄▇▇▆▅▆ █
+  46.5 μs      Histogram: log(frequency) by time        60 μs <
 
  Memory estimate: 23.56 KiB, allocs estimate: 1472.
 ````
