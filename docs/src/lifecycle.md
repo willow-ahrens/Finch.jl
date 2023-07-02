@@ -1,3 +1,7 @@
+```@meta
+CurrentModule = Finch.FinchNotation
+```
+
 ## Finch Notation
 
 Finch programs are written in Julia, but they are not Julia programs.

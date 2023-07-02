@@ -33,8 +33,8 @@ declare!(tns::RootArray, ctx::AbstractCompiler, init) = declare!(resolve(tns.tag
 thaw!(tns::RootArray, ctx::AbstractCompiler) = thaw!(resolve(tns.tag, ctx), ctx)
 freeze!(tns::RootArray, ctx::AbstractCompiler) = freeze!(resolve(tns.tag, ctx), ctx)
 
-function unfurl_access(tns::RootArray, ctx, ext, protos...)
-    unfurl_access(resolve(tns.tag, ctx), ctx, ext, protos...)
+function unfurl(tns::RootArray, ctx, ext, protos...)
+    unfurl(resolve(tns.tag, ctx), ctx, ext, protos...)
 end
 
 function lower(node::RootArray, ctx::AbstractCompiler, ::DefaultStyle)

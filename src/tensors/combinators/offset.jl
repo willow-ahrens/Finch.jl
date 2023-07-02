@@ -138,8 +138,8 @@ end
 
 getroot(tns::VirtualOffsetArray) = getroot(tns.body)
 
-function unfurl_access(tns::VirtualOffsetArray, ctx, ext, protos...)
-    VirtualOffsetArray(unfurl_access(tns.body, ctx, shiftdim(ext, tns.delta[end]), protos...), tns.delta)
+function unfurl(tns::VirtualOffsetArray, ctx, ext, protos...)
+    VirtualOffsetArray(unfurl(tns.body, ctx, shiftdim(ext, tns.delta[end]), protos...), tns.delta)
 end
 
 function lower_access(ctx::AbstractCompiler, node, tns::VirtualOffsetArray)

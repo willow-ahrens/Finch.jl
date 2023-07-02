@@ -214,7 +214,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
             if !isempty(idxs) && root.idx == idxs[end]
                 tns = tns.val
                 protos = [(mode.kind === reader ? defaultread : defaultupdate) for _ in idxs]
-                tns_2 = unfurl_access(tns, ctx, root.ext.val, protos...)
+                tns_2 = unfurl(tns, ctx, root.ext.val, protos...)
                 access(tns_2, mode, idxs...)
             end
         end))(root)

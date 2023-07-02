@@ -114,8 +114,8 @@ end
 
 getroot(tns::VirtualPermissiveArray) = getroot(tns.body)
 
-function unfurl_access(tns::VirtualPermissiveArray, ctx, ext, protos...)
-    tns_2 = unfurl_access(tns.body, ctx, ext, protos...)
+function unfurl(tns::VirtualPermissiveArray, ctx, ext, protos...)
+    tns_2 = unfurl(tns.body, ctx, ext, protos...)
     dims = virtual_size(tns.body, ctx)
     if tns.dims[end]
         VirtualPermissiveArray(

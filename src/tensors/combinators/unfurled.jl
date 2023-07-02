@@ -97,8 +97,8 @@ visit_simplify(node::Unfurled) = Unfurled(node.arr, node.ndims, visit_simplify(n
     guard => Unfurled(node.arr, node.ndims, body)
 end
 
-function unfurl_access(tns::Unfurled, ctx, ext, protos...)
-    unfurl_access(tns.body, ctx, ext, protos...)
+function unfurl(tns::Unfurled, ctx, ext, protos...)
+    unfurl(tns.body, ctx, ext, protos...)
 end
 
 (ctx::CycleVisitor)(node::Unfurled) = Unfurled(node.arr, node.ndims, ctx(node.body))

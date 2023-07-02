@@ -8,23 +8,7 @@ CurrentModule = Finch
 
 ```@docs
 FinchNode
-literal
-index
-variable
-virtual
-value
-loop
-assign
-call
 cached
-reader
-updater
-declare
-freeze
-thaw
-access
-sequence
-sieve
 finch_leaf
 ```
 
@@ -148,7 +132,7 @@ instantiate_updater
 freeze!
 trim!
 thaw!
-unfurl!
+unfurl
 ```
 ## Virtualization
 

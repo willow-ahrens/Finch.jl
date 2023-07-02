@@ -114,7 +114,7 @@ end
 
 getroot(tns::VirtualToeplitzArray) = getroot(tns.body)
 
-function unfurl_access(tns::VirtualToeplitzArray, ctx, ext, protos...)
+function unfurl(tns::VirtualToeplitzArray, ctx, ext, protos...)
     if length(virtual_size(tns, ctx)) == tns.dim + 1
         Unfurled(tns,
             Lookup(
@@ -122,6 +122,6 @@ function unfurl_access(tns::VirtualToeplitzArray, ctx, ext, protos...)
             )
         )
     else
-        VirtualToeplitzArray(unfurl_access(tns.body, ctx, ext, protos...), tns.dim)
+        VirtualToeplitzArray(unfurl(tns.body, ctx, ext, protos...), tns.dim)
     end
 end
