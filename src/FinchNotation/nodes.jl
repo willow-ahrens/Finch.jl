@@ -34,30 +34,33 @@ literal
 """
     value(val, type)
 
-Finch AST expression for host code `val` expected to evaluate to a value of type `type`.
+Finch AST expression for host code `val` expected to evaluate to a value of type
+`type`.
 """
 value
 
 """
     index(name)
 
-Finch AST expression for an index named `name`. Each index must be quantified by a corresponding `loop`
-which iterates over all values of the index.
+Finch AST expression for an index named `name`. Each index must be quantified by
+a corresponding `loop` which iterates over all values of the index.
 """
 index
 
 """
     variable(name)
 
-Finch AST expression for a variable named `name`. The variable can be looked up in the context.
+Finch AST expression for a variable named `name`. The variable can be looked up
+in the context.
 """
 variable
 
 """
     virtual(val)
 
-Finch AST expression for an object `val` which has special meaning to the compiler. This
-type allows users to substitute their own ASTs, etc. into Finch expressions.
+Finch AST expression for an object `val` which has special meaning to the
+compiler. This type is typically used for tensors, as it allows users to
+specify the tensor's shape and data type.
 """
 virtual
 
@@ -115,9 +118,8 @@ sieve
 """
     assign(lhs, op, rhs)
 
-Finch AST statement that updates the value of `lhs` to `op(lhs, rhs)`. The
-tensors of `lhs` are returned.  Overwriting is accomplished with the function
-`right(lhs, rhs) = rhs`.
+Finch AST statement that updates the value of `lhs` to `op(lhs, rhs)`.
+Overwriting is accomplished with the function `overwrite(lhs, rhs) = rhs`.
 """
 assign
 
