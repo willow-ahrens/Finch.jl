@@ -117,7 +117,7 @@ getroot(tns::VirtualPermissiveArray) = getroot(tns.body)
 function unfurl(tns::VirtualPermissiveArray, ctx, ext, protos...)
     tns_2 = unfurl(tns.body, ctx, ext, protos...)
     dims = virtual_size(tns.body, ctx)
-    if tns.dims[end]
+    if tns.dims[end] && dims[end] != nodim
         VirtualPermissiveArray(
             Unfurled(
                 tns,

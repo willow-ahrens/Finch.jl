@@ -73,6 +73,18 @@ function get_wrapper_rules(alg, depth, ctx)
             end
             access(VirtualPermissiveArray(body, dims), m, i1..., j, i2...)
         end),
+        (@rule access(~A, ~m, ~i1..., call(-, ~j, ~k), ~i2...) =>
+            access(A, m, i1..., call(+, j, call(-, k)), i2...)),
+        (@rule access(~A, ~m, ~i1..., call(+, ~j), ~i2...) =>
+            access(A, m, i1..., j, i2...)),
+        (@rule access(~A::isvirtual, ~m, ~i1..., call(+, ~j1..., ~k, ~j2...), ~i2...) => begin
+            if (!isempty(j1) || !isempty(j2))
+                k_2 = call(+, ~j1..., ~j2...)
+                if depth(k_2) < depth(k) && depth(k_2) != 0
+                    access(VirtualToeplitzArray(A.val, length(i1) + 1), m, i1..., k, k_2, i2...)
+                end
+            end
+        end),
         (@rule access(~A::isvirtual, ~m, ~i1..., call(+, ~j1..., ~k, ~j2...), ~i2...) => begin
             if !isempty(j1) || !isempty(j2) 
                 body = A.val
@@ -87,14 +99,6 @@ function get_wrapper_rules(alg, depth, ctx)
                 end
             end
         end),
-        (@rule access(~A::isvirtual, ~m, ~i1..., call(+, ~j1..., ~k, ~j2...), ~i2...) => begin
-            if (!isempty(j1) || !isempty(j2))
-                k_2 = call(+, ~j1..., ~j2...)
-                if depth(k_2) < depth(k) && depth(k_2) != 0
-                    access(VirtualToeplitzArray(A.val, length(i1) + 1), m, i1..., k, k_2, i2...)
-                end
-            end
-        end),
         (@rule access(~A::isvirtual, ~m, ~i1..., access(~I::isvirtual, reader(), ~k), ~i2...) => begin
             I = ctx.bindings[getroot(I.val)] #TODO do we like this pattern?
             if I isa VirtualAbstractUnitRange
@@ -103,9 +107,6 @@ function get_wrapper_rules(alg, depth, ctx)
                 access(A_3, m, i1..., k, i2...)
             end
         end),
-        (@rule call(-, ~i, ~j) => call(+, i, call(-, j))),
-        (@rule call(+, ~i1..., call(+, ~j...), ~i2...) => call(+, i1..., j..., i2...)),
-        (@rule call(+, ~i) => i),
     ]
 end
 
@@ -113,7 +114,6 @@ end
 function wrapperize(root, ctx::AbstractCompiler)
     depth = depth_calculator(root)
     Rewrite(Fixpoint(Chain([
-        Prewalk(Fixpoint(Chain(get_wrapper_rules(ctx.algebra, depth, ctx)))),
         Postwalk(Fixpoint(Chain(get_wrapper_rules(ctx.algebra, depth, ctx))))
     ])))(root)
 end

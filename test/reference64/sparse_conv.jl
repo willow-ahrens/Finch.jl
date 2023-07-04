@@ -59,7 +59,7 @@ begin
                                 F_lvl_q = (1 - 1) * F_lvl.shape + phase_stop_6
                                 F_lvl_2_val_2 = F_lvl_2.val[F_lvl_q]
                                 C_lvldirty = true
-                                C_lvl_2.val[C_lvl_qos] = C_lvl_2.val[C_lvl_qos] + (A_lvl_2_val_2 != 0) * coalesce(((Scalar){0.0, Float64}(A_lvl_2_val_3))[], 0) * F_lvl_2_val_2
+                                C_lvl_2.val[C_lvl_qos] = C_lvl_2.val[C_lvl_qos] + (A_lvl_2_val_2 != 0) * coalesce(A_lvl_2_val_3, 0) * F_lvl_2_val_2
                                 A_lvl_q += 1
                             end
                             j = phase_stop_6 + 1
