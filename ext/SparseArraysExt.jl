@@ -192,7 +192,7 @@ function Finch.get_reader(arr::VirtualSparseVector, ctx::AbstractCompiler, ::Uni
                     body = (ctx, ext) -> Stepper(
                         seek = (ctx, ext) -> quote
                             if $(arr.ex).nzind[$my_q] < $(ctx(getstart(ext)))
-                                $my_q = scansearch($(arr.ex).nzind, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
+                                $my_q = Finch.scansearch($(arr.ex).nzind, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                             end
                         end,
                         body = Thunk(

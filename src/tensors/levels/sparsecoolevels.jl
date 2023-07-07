@@ -269,7 +269,7 @@ function get_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, R, start, stop, 
                     body = (ctx, ext) -> Stepper(
                         seek = (ctx, ext) -> quote
                             if $(lvl.ex).tbl[$R][$my_q] < $(ctx(getstart(ext)))
-                                $my_q = scansearch($(lvl.ex).tbl[$R], $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
+                                $my_q = Finch.scansearch($(lvl.ex).tbl[$R], $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                             end
                         end,
                         body = if R == 1
@@ -294,7 +294,7 @@ function get_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, R, start, stop, 
                                     $my_i = $(lvl.ex).tbl[$R][$my_q]
                                     $my_q_step = $my_q
                                     if $(lvl.ex).tbl[$R][$my_q_step] == $my_i
-                                        $my_q_step = scansearch($(lvl.ex).tbl[$R], $my_i + 1, $my_q_step, $my_q_stop - 1)
+                                        $my_q_step = Finch.scansearch($(lvl.ex).tbl[$R], $my_i + 1, $my_q_step, $my_q_stop - 1)
                                     end
                                 end,
                                 body = (ctx) -> Step(

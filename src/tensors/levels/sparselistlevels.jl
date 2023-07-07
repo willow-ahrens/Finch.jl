@@ -240,7 +240,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::Union{N
                     body = (ctx, ext) -> Stepper(
                         seek = (ctx, ext) -> quote
                             if $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
-                                $my_q = scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
+                                $my_q = Finch.scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                             end
                         end,
                         body = Thunk(
@@ -303,7 +303,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::Gallop,
                             body = (ctx) -> Jump(
                                 seek = (ctx, ext) -> quote
                                     if $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
-                                        $my_q = scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
+                                        $my_q = Finch.scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                                     end
                                     $my_i2 = $(lvl.ex).idx[$my_q]
                                 end,
@@ -321,7 +321,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, ::Gallop,
                                     literal(true) => Stepper(
                                         seek = (ctx, ext) -> quote
                                             if $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
-                                                $my_q = scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
+                                                $my_q = Finch.scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                                             end
                                         end,
                                         body = Thunk(

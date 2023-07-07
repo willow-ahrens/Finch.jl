@@ -221,7 +221,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, ::Union{No
                     body = (ctx, ext) -> Stepper(
                         seek = (ctx, ext) -> quote
                             if $(lvl.ex).right[$my_q] < $(ctx(getstart(ext)))
-                                $my_q = scansearch($(lvl.ex).right, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
+                                $my_q = Finch.scansearch($(lvl.ex).right, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                             end
                         end,
                         body = Thunk(
