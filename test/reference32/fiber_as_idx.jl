@@ -12,7 +12,7 @@ begin
     I_lvl_q_stop = I_lvl.ptr[1 + 1]
     i = 1
     if I_lvl.idx[I_lvl_q] < 1
-        I_lvl_q = scansearch(I_lvl.idx, 1, I_lvl_q, I_lvl_q_stop - 1)
+        I_lvl_q = Finch.scansearch(I_lvl.idx, 1, I_lvl_q, I_lvl_q_stop - 1)
     end
     while i <= I_lvl.shape
         I_lvl_i = I_lvl.idx[I_lvl_q]
