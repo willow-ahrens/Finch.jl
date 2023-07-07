@@ -7,24 +7,24 @@ Afterwards the tensor is update-only.
 declare!(tns, ctx, init) = @assert something(virtual_default(tns)) == init
 
 """
-    get_reader(tns, ctx, protos...)
+    instantiate_reader(tns, ctx, protos...)
     
 Return an object (usually a looplet nest) capable of reading the read-only
 virtual tensor `tns`.  As soon as a read-only tensor enters scope, each
 subsequent read access will be initialized with a separate call to
-`get_reader`. `protos` is the list of protocols in each case.
+`instantiate_reader`. `protos` is the list of protocols in each case.
 """
-get_reader(tns, ctx, protos...) = throw(FormatLimitation("$(typeof(tns)) does not support reads with protocol $(protos)"))
+instantiate_reader(tns, ctx, protos...) = throw(FormatLimitation("$(typeof(tns)) does not support reads with protocol $(protos)"))
 
 """
-    get_updater(tns, ctx, protos...)
+    instantiate_updater(tns, ctx, protos...)
     
 Return an object (usually a looplet nest) capable of updating the update-only
 virtual tensor `tns`.  As soon as an update only tensor enters scope, each
 subsequent update access will be initialized with a separate call to
-`get_updater`.  `protos` is the list of protocols in each case.
+`instantiate_updater`.  `protos` is the list of protocols in each case.
 """
-get_updater(tns, ctx, protos...) = throw(FormatLimitation("$(typeof(tns)) does not support updates with protocol $(protos)"))
+instantiate_updater(tns, ctx, protos...) = throw(FormatLimitation("$(typeof(tns)) does not support updates with protocol $(protos)"))
 
 """
     freeze!(tns, ctx)
@@ -114,8 +114,6 @@ function virtual_eltype(x::FinchNode)
     end
 end
 
-virtual_elaxis(tns, ctx, dims...) = nodim
-
 function virtual_resize!(tns, ctx, dims...)
     for (dim, ref) in zip(dims, virtual_size(tns, ctx))
         if dim !== nodim && ref !== nodim #TODO this should be a function like checkdim or something haha
@@ -125,29 +123,20 @@ function virtual_resize!(tns, ctx, dims...)
             end)
         end
     end
-    (tns, nodim)
+    tns
 end
 
 """
     virtual_size(tns, ctx)
 
-Return a tuple of the dimensions of `tns` in the context `ctx` with access
-mode `mode`. This is a function similar in spirit to `Base.axes`.
+Return a tuple of the dimensions of `tns` in the context `ctx`. This is a
+function similar in spirit to `Base.axes`.
 """
 function virtual_size end
 
-virtual_size(tns, ctx, eldim) = virtual_size(tns, ctx)
-function virtual_size(tns::FinchNode, ctx, eldim = nodim)
+function virtual_size(tns::FinchNode, ctx)
     if tns.kind === variable
-        return virtual_size(ctx.bindings[tns], ctx, eldim)
-    else
-        return error("unimplemented")
-    end
-end
-
-function virtual_elaxis(tns::FinchNode, ctx, dims...)
-    if tns.kind === variable
-        return virtual_elaxis(ctx.bindings[tns], ctx, dims...)
+        return virtual_size(ctx.bindings[tns], ctx)
     else
         return error("unimplemented")
     end
@@ -155,7 +144,7 @@ end
 
 function virtual_resize!(tns::FinchNode, ctx, dims...)
     if tns.kind === variable
-        return (ctx.bindings[tns], eldim) = virtual_resize!(ctx.bindings[tns], ctx, dims...)
+        return ctx.bindings[tns] = virtual_resize!(ctx.bindings[tns], ctx, dims...)
     else
         error("unimplemented")
     end

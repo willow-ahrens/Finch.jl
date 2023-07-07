@@ -4,44 +4,25 @@ const IS_CONST = 4
 const ID = 8
 
 @enum FinchNodeKind begin
-    variable =  0ID
+    literal  =  0ID | IS_CONST
     value    =  1ID | IS_CONST
-    virtual  =  2ID
-    literal  =  3ID | IS_CONST
-    index    =  4ID
-    protocol =  5ID | IS_TREE
+    index    =  2ID
+    variable =  3ID
+    virtual  =  4ID
+    call     =  5ID | IS_TREE
     access   =  6ID | IS_TREE 
     reader   =  7ID | IS_TREE
     updater  =  8ID | IS_TREE
-    modify   =  9ID | IS_TREE
-    create   = 10ID | IS_TREE
-    call     = 11ID | IS_TREE
-    cached   = 12ID | IS_TREE
-    assign   = 13ID | IS_TREE | IS_STATEFUL
-    loop     = 16ID | IS_TREE | IS_STATEFUL
-    sieve    = 17ID | IS_TREE | IS_STATEFUL
-    declare  = 20ID | IS_TREE | IS_STATEFUL
-    thaw     = 21ID | IS_TREE | IS_STATEFUL
-    freeze   = 22ID | IS_TREE | IS_STATEFUL
-    forget   = 23ID | IS_TREE | IS_STATEFUL
-    sequence = 24ID | IS_TREE | IS_STATEFUL
+    cached   =  9ID | IS_TREE
+    assign   = 10ID | IS_TREE | IS_STATEFUL
+    loop     = 11ID | IS_TREE | IS_STATEFUL
+    sieve    = 12ID | IS_TREE | IS_STATEFUL
+    define   = 13ID | IS_TREE | IS_STATEFUL
+    declare  = 14ID | IS_TREE | IS_STATEFUL
+    thaw     = 15ID | IS_TREE | IS_STATEFUL
+    freeze   = 16ID | IS_TREE | IS_STATEFUL
+    sequence = 17ID | IS_TREE | IS_STATEFUL
 end
-
-
-"""
-    value(val, type)
-
-Finch AST expression for host code `val` expected to evaluate to a value of type `type`.
-"""
-value
-
-"""
-    virtual(val)
-
-Finch AST expression for an object `val` which has special meaning to the compiler. This
-type allows users to substitute their own ASTs, etc. into Finch expressions.
-"""
-virtual
 
 """
     literal(val)
@@ -51,34 +32,44 @@ Finch AST expression for the literal value `val`.
 literal
 
 """
-    cached(val, ref)
+    value(val, type)
 
-Finch AST expression `val`, equivalent to the quoted expression `ref`
+Finch AST expression for host code `val` expected to evaluate to a value of type
+`type`.
 """
-cached
+value
 
 """
     index(name)
 
-Finch AST expression for an index named `name`. Each index must be quantified by a corresponding `loop`
-which iterates over all values of the index.
+Finch AST expression for an index named `name`. Each index must be quantified by
+a corresponding `loop` which iterates over all values of the index.
 """
 index
 
 """
     variable(name)
 
-Finch AST expression for a variable named `name`. The variable can be looked up in the context.
+Finch AST expression for a variable named `name`. The variable can be looked up
+in the context.
 """
 variable
 
 """
-    protocol(idx, mode)
+    virtual(val)
 
-Finch AST expression marking an indexing expression `idx` with the protocol `mode`.
-These usually reside at the toplevel of an indexing expression to an access.
+Finch AST expression for an object `val` which has special meaning to the
+compiler. This type is typically used for tensors, as it allows users to
+specify the tensor's shape and data type.
 """
-protocol
+virtual
+
+"""
+    call(op, args...)
+
+Finch AST expression for the result of calling the function `op` on `args...`.
+"""
+call
 
 """
     access(tns, mode, idx...)
@@ -97,38 +88,18 @@ Finch AST expression for an access mode that is read-only.
 reader
 
 """
-    updater(mode)
+    updater()
 
-Finch AST expression for an access mode that may modify the tensor. The `mode`
-field specifies whether this access returns this tensor (initializing and
-finalizing) or modifies it in place.
+Finch AST expression for an access mode that updates tensor values.
 """
 updater
 
 """
-    create()
+    cached(val, ref)
 
-Finch AST expression for an "allocating" update. This access will
-initialize and freeze the tensor, and we can be sure that any values
-the tensor held before have been forgotten.
+Finch AST expression `val`, equivalent to the quoted expression `ref`
 """
-create
-
-"""
-    modify()
-
-Finch AST expression for an "in place" update. The access will not
-initialize or freeze the tensor, but can modify it's existing values.
-"""
-modify
-
-"""
-    call(op, args...)
-
-Finch AST expression for the result of calling the function `op` on `args...`.
-"""
-call
-
+cached
 """
     loop(idx, ext, body) 
 
@@ -147,11 +118,17 @@ sieve
 """
     assign(lhs, op, rhs)
 
-Finch AST statement that updates the value of `lhs` to `op(lhs, rhs)`. The
-tensors of `lhs` are returned.  Overwriting is accomplished with the function
-`right(lhs, rhs) = rhs`.
+Finch AST statement that updates the value of `lhs` to `op(lhs, rhs)`.
+Overwriting is accomplished with the function `overwrite(lhs, rhs) = rhs`.
 """
 assign
+
+"""
+    define(lhs, rhs)
+
+Finch AST statement that defines `lhs` as having the value `rhs` in the current scope.
+"""
+define
 
 """
     declare(tns, init)
@@ -175,18 +152,11 @@ Finch AST statement that thaws `tns` in the current scope.
 thaw
 
 """
-    forget(tns)
-
-Finch AST statement that marks the end of the lifetime of `tns`, at least until it is declared again.
-"""
-forget
-
-"""
     sequence(bodies...)
 
 Finch AST statement that executes each of it's arguments in turn. If the body is
 not a sequence, replaces accesses to read-only tensors in the body with
-get_reader and accesses to update-only tensors in the body with get_updater.
+instantiate_reader and accesses to update-only tensors in the body with instantiate_updater.
 """
 sequence
 
@@ -315,12 +285,6 @@ function FinchNode(kind::FinchNodeKind, args::Vector)
         else
             error("wrong number of arguments to access(...)")
         end
-    elseif kind === protocol
-        if length(args) == 2
-            return FinchNode(protocol, nothing, nothing, args)
-        else
-            error("wrong number of arguments to protocol(...)")
-        end
     elseif kind === call
         if length(args) >= 1
             return FinchNode(call, nothing, nothing, args)
@@ -345,6 +309,12 @@ function FinchNode(kind::FinchNodeKind, args::Vector)
         else
             error("wrong number of arguments to assign(...)")
         end
+    elseif kind === define
+        if length(args) == 2
+            return FinchNode(define, nothing, nothing, args)
+        else
+            error("wrong number of arguments to define(...)")
+        end
     elseif kind === declare
         if length(args) == 2
             return FinchNode(declare, nothing, nothing, args)
@@ -363,12 +333,6 @@ function FinchNode(kind::FinchNodeKind, args::Vector)
         else
             error("wrong number of arguments to thaw(...)")
         end
-    elseif kind === forget
-        if length(args) == 1
-            return FinchNode(forget, nothing, nothing, args)
-        else
-            error("wrong number of arguments to forget(...)")
-        end
     elseif kind === sequence
         return FinchNode(sequence, nothing, nothing, args)
     elseif kind === reader
@@ -378,22 +342,10 @@ function FinchNode(kind::FinchNodeKind, args::Vector)
             error("wrong number of arguments to reader()")
         end
     elseif kind === updater
-        if length(args) == 1
-            return FinchNode(updater, nothing, nothing, args)
-        else
-            error("wrong number of arguments to updater(...)")
-        end
-    elseif kind === modify
         if length(args) == 0
-            return FinchNode(kind, nothing, nothing, FinchNode[])
+            return FinchNode(updater, nothing, nothing, FinchNode[])
         else
-            error("wrong number of arguments to modify()")
-        end
-    elseif kind === create
-        if length(args) == 0
-            return FinchNode(kind, nothing, nothing, FinchNode[])
-        else
-            error("wrong number of arguments to create()")
+            error("wrong number of arguments to updater()")
         end
     else
         error("unimplemented")
@@ -426,11 +378,7 @@ function Base.getproperty(node::FinchNode, sym::Symbol)
     elseif node.kind === reader
         error("type FinchNode(reader, ...) has no property $sym")
     elseif node.kind === updater
-        if sym === :mode
-            return node.children[1]
-        else
-            error("type FinchNode(updater, ...) has no property $sym")
-        end
+        error("type FinchNode(updater, ...) has no property $sym")
     elseif node.kind === access
         if sym === :tns
             return node.children[1]
@@ -448,14 +396,6 @@ function Base.getproperty(node::FinchNode, sym::Symbol)
             return @view node.children[2:end]
         else
             error("type FinchNode(call, ...) has no property $sym")
-        end
-    elseif node.kind === protocol
-        if sym === :idx
-            return node.children[1]
-        elseif sym === :mode
-            return node.children[2]
-        else
-            error("type FinchNode(protocol, ...) has no property $sym")
         end
     elseif node.kind === cached
         if sym === :arg
@@ -493,6 +433,14 @@ function Base.getproperty(node::FinchNode, sym::Symbol)
         else
             error("type FinchNode(assign, ...) has no property $sym")
         end
+    elseif node.kind === define
+        if sym === :lhs
+            return node.children[1]
+        elseif sym === :rhs
+            return node.children[2]
+        else
+            error("type FinchNode(define, ...) has no property $sym")
+        end
     elseif node.kind === declare
         if sym === :tns
             return node.children[1]
@@ -512,12 +460,6 @@ function Base.getproperty(node::FinchNode, sym::Symbol)
             return node.children[1]
         else
             error("type FinchNode(thaw, ...) has no property $sym")
-        end
-    elseif node.kind === forget
-        if sym === :tns
-            return node.children[1]
-        else
-            error("type FinchNode(forget, ...) has no property $sym")
         end
     elseif node.kind === sequence
         if sym === :bodies
@@ -566,9 +508,7 @@ function display_expression(io, mime, node::FinchNode)
     elseif node.kind === reader
         print(io, "reader()")
     elseif node.kind === updater
-        print(io, "updater(")
-        display_expression(io, mime, node.mode)
-        print(io, ")")
+        print(io, "updater()")
     elseif node.kind === cached
         print(io, "cached(")
         display_expression(io, mime, node.arg)
@@ -619,17 +559,22 @@ end
 
 function display_statement(io, mime, node::FinchNode, indent)
     if node.kind === loop
-        print(io, " "^indent * "@∀ ")
-        while node.kind === loop
-            display_expression(io, mime, node.idx)
+        print(io, " "^indent * "for ")
+        display_expression(io, mime, node.idx)
+        print(io, " = ")
+        display_expression(io, mime, node.ext)
+        body = node.body
+        while body.kind === loop
+            print(io, ", ")
+            display_expression(io, mime, body.idx)
             print(io, " = ")
-            display_expression(io, mime, node.ext)
-            print(io," ")
-            node = node.body
+            display_expression(io, mime, body.ext)
+            body = body.body
         end
-        print(io," (\n")
-        display_statement(io, mime, node, indent + 2)
-        print(io, " "^indent * ")")
+        println(io)
+        display_statement(io, mime, body, indent + 2)
+        println(io)
+        print(io, " "^indent * "end")
     elseif node.kind === sieve
         print(io, " "^indent * "if ")
         while node.body.kind === sieve
@@ -638,8 +583,10 @@ function display_statement(io, mime, node::FinchNode, indent)
             node = node.body
         end
         display_expression(io, mime, node.cond)
+        println(io)
         node = node.body
         display_statement(io, mime, node, indent + 2)
+        println(io)
         print(io, " "^indent * "end")
     elseif node.kind === assign
         print(io, " "^indent)
@@ -648,22 +595,18 @@ function display_statement(io, mime, node::FinchNode, indent)
         display_expression(io, mime, node.op)
         print(io, ">>= ")
         display_expression(io, mime, node.rhs)
-    elseif node.kind === protocol
-        display_expression(io, mime, ex.idx)
-        print(io, "::")
-        display_expression(io, mime, ex.mode)
+    elseif node.kind === define
+        print(io, " "^indent)
+        display_expression(io, mime, node.lhs)
+        print(io, " = ")
+        display_expression(io, mime, node.rhs)
     elseif node.kind === declare
-        print(io, " "^indent * "@declare(")
+        print(io, " "^indent)
         display_expression(io, mime, node.tns)
-        print(io, ", ")
+        print(io, " .= ")
         display_expression(io, mime, node.init)
-        print(io, ")")
     elseif node.kind === freeze
         print(io, " "^indent * "@freeze(")
-        display_expression(io, mime, node.tns)
-        print(io, ")")
-    elseif node.kind === forget
-        print(io, " "^indent * "@forget(")
         display_expression(io, mime, node.tns)
         print(io, ")")
     elseif node.kind === thaw

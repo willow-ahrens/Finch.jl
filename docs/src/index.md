@@ -58,19 +58,21 @@ end
 
 You can call [`@finch_code`](@ref) to see the generated code (since `A` is dense, the
 code is dense):
-```jldoctest example1; setup=:(using Finch; A = rand(5, 5); s = 0)
+```jldoctest example1; setup=:(using Finch; A = rand(5, 5); s = Scalar(0))
 julia> @finch_code for i=_, j=_ ; s[] += A[i, j] end
 quote
+    s = ex.body.body.lhs.tns.tns
+    s_val = s.val
     A = ex.body.body.rhs.tns.tns
     sugar_1 = size(A)
     A_mode1_stop = sugar_1[1]
     A_mode2_stop = sugar_1[2]
     for i_3 = 1:A_mode1_stop
         for j_3 = 1:A_mode2_stop
-            ex.body.body.lhs.tns.tns[] = A[i_3, j_3] + ex.body.body.lhs.tns.tns[]
+            s_val = A[i_3, j_3] + s_val
         end
     end
-    ()
+    (s = (Scalar){0, Int64}(s_val),)
 end
 ```
 

@@ -15,7 +15,6 @@ end
 (ctx::Stylize{<:AbstractCompiler})(node::Thunk) = ThunkStyle()
 combine_style(a::DefaultStyle, b::ThunkStyle) = ThunkStyle()
 combine_style(a::ThunkStyle, b::ThunkStyle) = ThunkStyle()
-combine_style(a::ThunkStyle, b::DimensionalizeStyle) = ThunkStyle()
 combine_style(a::ThunkStyle, b::SimplifyStyle) = ThunkStyle()
 
 struct ThunkVisitor

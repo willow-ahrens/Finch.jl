@@ -237,7 +237,7 @@ function freeze_level!(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, po
     return lvl
 end
 
-function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Union{Nothing, Walk}, protos...)
+function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Union{typeof(defaultread), typeof(walk)}, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
@@ -249,7 +249,6 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Unio
     my_i_stop = ctx.freshen(tag, :_i_stop)
 
     Furlable(
-        size = virtual_level_size(lvl, ctx),
         body = (ctx, ext) -> Thunk(
             preamble = quote
                 $my_r = $(lvl.ex).ptr[$(ctx(pos))]
@@ -283,7 +282,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Unio
                                         preamble = quote
                                             $my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $my_i
                                         end,
-                                        body = (ctx) -> get_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, protos...),
+                                        body = (ctx) -> instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, protos...),
                                     ),
                                 ),
                                 next = (ctx, ext) -> quote
@@ -301,7 +300,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Unio
     )
 end
 
-function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Gallop, protos...)
+function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::typeof(gallop), protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
@@ -314,7 +313,6 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Gall
     my_j = ctx.freshen(tag, :_j)
 
     Furlable(
-        size = virtual_level_size(lvl, ctx),
         body = (ctx, ext) -> Thunk(
             preamble = quote
                 $my_r = $(lvl.ex).ptr[$(ctx(pos))]
@@ -348,7 +346,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Gall
                                                 preamble = quote
                                                     $my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $my_i
                                                 end,
-                                                body = (ctx) -> get_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, protos...),
+                                                body = (ctx) -> instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, protos...),
                                             ),
                                         ),
                                         epilogue = quote
@@ -373,7 +371,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Gall
                                                         preamble = quote
                                                             $my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $my_j
                                                         end,
-                                                        body = (ctx) -> get_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, protos...),
+                                                        body = (ctx) -> instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, protos...),
                                                     ),
                                                 ),
                                                 next = (ctx, ext) -> quote
@@ -396,7 +394,7 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Gall
 end
 
 
-function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Follow, protos...)
+function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::typeof(follow), protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     my_q = cgx.freshen(tag, :_q)
@@ -404,14 +402,13 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Foll
 
 
     Furlable(
-        size = virtual_level_size(lvl, ctx),
         body = (ctx, ext) -> Lookup(
             body = (ctx, i) -> Thunk(
                 preamble = quote
                     $my_q = $(ctx(q)) * $(ctx(lvl.shape)) + $(ctx(i))
                 end,
                 body = (ctx) -> Switch([
-                    value(:($tbl[$my_q])) => get_reader(VirtualSubFiber(lvl.lvl, pos), ctx, protos...),
+                    value(:($tbl[$my_q])) => instantiate_reader(VirtualSubFiber(lvl.lvl, pos), ctx, protos...),
                     literal(true) => Fill(virtual_level_default(lvl))
                 ])
             )
@@ -419,11 +416,11 @@ function get_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Foll
     )
 end
 
-is_laminable_updater(lvl::VirtualSparseByteMapLevel, ctx, ::Union{Nothing, Laminate, Extrude}, protos...) =
+is_laminable_updater(lvl::VirtualSparseByteMapLevel, ctx, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...) =
     is_laminable_updater(lvl.lvl, ctx, protos...)
-get_updater(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, protos...) = 
-    get_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
-function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseByteMapLevel}, ctx, ::Union{Nothing, Extrude, Laminate}, protos...)
+instantiate_updater(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, protos...) = 
+    instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
+function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseByteMapLevel}, ctx, ::Union{typeof(defaultupdate), typeof(extrude), typeof(laminate)}, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp
@@ -432,14 +429,13 @@ function get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseByteMapLevel}, ctx
 
     Furlable(
         tight = is_laminable_updater(lvl.lvl, ctx, protos...) ? nothing : lvl.lvl,
-        size = virtual_level_size(lvl, ctx),
         body = (ctx, ext) -> Lookup(
             body = (ctx, idx) -> Thunk(
                 preamble = quote
                     $my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $(ctx(idx))
                     $dirty = false
                 end,
-                body = (ctx) -> get_updater(VirtualTrackedSubFiber(lvl.lvl, value(my_q, lvl.Ti), dirty), ctx, protos...),
+                body = (ctx) -> instantiate_updater(VirtualTrackedSubFiber(lvl.lvl, value(my_q, lvl.Ti), dirty), ctx, protos...),
                 epilogue = quote
                     if $dirty
                         $(fbr.dirty) = true

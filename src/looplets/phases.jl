@@ -22,7 +22,6 @@ end
 
 phase_range(node, ctx, ext) = nodim
 phase_range(node::Phase, ctx, ext) = Narrow(node.range(ctx, ext))
-phase_range(node::Shift, ctx, ext) = shiftdim(phase_range(node.body, ctx, shiftdim(ext, call(-, node.delta))), node.delta)
 
 function phase_body(node::FinchNode, ctx, ext, ext_2)
     if @capture node access(~tns::isvirtual, ~m, ~i...)
@@ -33,15 +32,13 @@ function phase_body(node::FinchNode, ctx, ext, ext_2)
 end
 phase_body(node::Phase, ctx, ext, ext_2) = node.body(ctx, ext_2)
 phase_body(node, ctx, ext, ext_2) = truncate(node, ctx, ext, ext_2)
-phase_body(node::Shift, ctx, ext, ext_2) = Shift(phase_body(node.body, ctx, shiftdim(ext, call(-, node.delta)), shiftdim(ext_2, call(-, node.delta))), node.delta)
 
 struct PhaseStyle end
-
-supports_shift(::PhaseStyle) = true
 
 (ctx::Stylize{<:AbstractCompiler})(node::Phase) = ctx.root.kind === loop ? PhaseStyle() : DefaultStyle()
 
 combine_style(a::DefaultStyle, b::PhaseStyle) = PhaseStyle()
+combine_style(a::LookupStyle, b::PhaseStyle) = PhaseStyle()
 combine_style(a::PhaseStyle, b::PhaseStyle) = PhaseStyle()
 combine_style(a::PhaseStyle, b::RunStyle) = PhaseStyle()
 combine_style(a::PhaseStyle, b::SpikeStyle) = PhaseStyle()

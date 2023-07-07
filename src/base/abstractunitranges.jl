@@ -16,22 +16,20 @@ function virtualize(ex, arrtype::Type{<:AbstractUnitRange{T}}, ctx, tag=:tns) wh
     VirtualAbstractUnitRange(sym, target, arrtype, T)
 end
 
-function virtual_size(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, ::NoDimension) #TODO I'm sure this has unintended consequences
+function virtual_size(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler)
     return [Extent(literal(1), value(:(length($(arr.ex))), Int)),]
 end
 
-virtual_size(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, dim) = (shiftdim(arr.target, call(-, getstart(dim), getstart(arr.target))),)
-virtual_resize!(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, idx_dim) = (arr, arr.target)
-virtual_eldim(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, idx_dim) = arr.target
+virtual_resize!(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, idx_dim) = arr
 
-function get_reader(arr::VirtualAbstractUnitRange, ctx, proto_idx)
-    Furlable(
-        size = (nodim,),
-        body = (ctx, ext) -> Lookup(
-            body = (ctx, i) -> Fill(value(:($(arr.ex)[$(ctx(i))])))
-        ),
-        fuse = (tns, ctx, ext) ->
-            Shift(truncate(tns, ctx, ext, arr.target), call(-, getstart(ext), getstart(arr.target)))
+function instantiate_reader(arr::VirtualAbstractUnitRange, ctx, proto_idx::typeof(defaultread))
+    Unfurled(
+        arr = arr,
+        body = Furlable(
+            body = (ctx, ext) -> Lookup(
+                body = (ctx, i) -> Fill(value(:($(arr.ex)[$(ctx(i))])))
+            )
+        )
     )
 end
 
@@ -39,7 +37,7 @@ function declare!(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, init)
     throw(FormatLimitation("$(arr.arrtype) is not writeable"))
 end
 
-get_updater(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, protos...) = 
+instantiate_updater(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, protos...) = 
     throw(FormatLimitation("$(arr.arrtype) is not writeable"))
 
 FinchNotation.finch_leaf(x::VirtualAbstractUnitRange) = virtual(x)

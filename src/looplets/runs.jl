@@ -15,6 +15,7 @@ struct RunStyle end
 
 (ctx::Stylize{<:AbstractCompiler})(node::Run) = ctx.root.kind === loop ? RunStyle() : DefaultStyle()
 combine_style(a::DefaultStyle, b::RunStyle) = RunStyle()
+combine_style(a::LookupStyle, b::RunStyle) = RunStyle()
 combine_style(a::ThunkStyle, b::RunStyle) = ThunkStyle()
 combine_style(a::SimplifyStyle, b::RunStyle) = a
 combine_style(a::RunStyle, b::RunStyle) = RunStyle()
@@ -42,8 +43,6 @@ end
 
 get_run_body(node, ctx, ext) = nothing
 get_run_body(node::Run, ctx, ext) = node.body
-get_run_body(node::Shift, ctx, ext) = get_run_body(node.body, ctx,
-        shiftdim(ext, call(-, node.delta)))
 
 #assume ssa
 
@@ -62,6 +61,7 @@ struct AcceptRunStyle end
 
 (ctx::Stylize{<:AbstractCompiler})(node::AcceptRun) = ctx.root.kind === loop ? AcceptRunStyle() : DefaultStyle()
 combine_style(a::DefaultStyle, b::AcceptRunStyle) = AcceptRunStyle()
+combine_style(a::LookupStyle, b::AcceptRunStyle) = AcceptRunStyle()
 combine_style(a::ThunkStyle, b::AcceptRunStyle) = ThunkStyle()
 combine_style(a::SimplifyStyle, b::AcceptRunStyle) = a
 combine_style(a::AcceptRunStyle, b::AcceptRunStyle) = AcceptRunStyle()
@@ -81,7 +81,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  ::AcceptRunStyle)
         ))(root.body)
         if root.idx in getunbound(body)
             #The loop body isn't constant after removing AcceptRuns, lower with a for-loop
-            return ctx(root, DefaultStyle())
+            return ctx(root, LookupStyle())
         else
             #The loop body is constant after removing AcceptRuns, lower only the body once
             return ctx(body)
@@ -95,10 +95,5 @@ end
 
 get_acceptrun_body(node, ctx, ext) = nothing
 get_acceptrun_body(node::AcceptRun, ctx, ext) = node.body(ctx, ext)
-get_acceptrun_body(node::Shift, ctx, ext) = get_acceptrun_body(node.body, ctx,
-        shiftdim(ext, call(-, node.delta)))
 
 get_point_body(node::AcceptRun, ctx, ext, idx) = node.body(ctx, Extent(idx, idx))
-
-supports_shift(::RunStyle) = true
-supports_shift(::AcceptRunStyle) = true
