@@ -51,8 +51,8 @@ include("lower.jl")
 
 include("transforms/concordize.jl")
 include("transforms/wrapperize.jl")
-include("transforms/enforce_scopes.jl")
-include("transforms/enforce_lifecycle.jl")
+include("transforms/scopes.jl")
+include("transforms/lifecycle.jl")
 include("transforms/dimensionalize.jl")
 
 include("execute.jl")
