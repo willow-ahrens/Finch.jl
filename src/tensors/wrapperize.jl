@@ -196,7 +196,48 @@ function (ctx::ConcordizeVisitor)(node::FinchNode)
     node
 end
 
-function concordize(root, ctx::AbstractCompiler; reorder = false)
+"""
+    concordize(root, ctx)
+
+A raw index is an index expression consisting of a single index node (i.e.
+`A[i]` as opposed to `A[i + 1]`). A Finch program is concordant when all indices
+are raw and column major with respect to the program loop ordering.  The
+`concordize` transformation ensures that tensor indices are concordant by
+inserting loops and lifting index expressions or transposed indices into the
+loop bounds.
+
+For example,
+
+```
+@finch for i = :
+    b[] += A[f(i)]
+end
+```
+becomes
+```
+@finch for i = :
+    t = f(i)
+    for s = t:t
+        b[] += A[s]
+    end
+end
+```
+
+and
+
+```
+@finch for i = :, j = :
+    b[] += A[i, j]
+end
+```
+becomes
+```
+@finch for i = :, j = :, s = i:i
+    b[] += A[s, j]
+end
+```
+"""
+function concordize(root, ctx::AbstractCompiler)
     depth = depth_calculator(root)
     root = Rewrite(Postwalk(Fixpoint(@rule access(~tns, ~mode, ~i..., ~j::isindex, ~k...) => begin
         if depth(j) < maximum(depth.(k), init=0)
