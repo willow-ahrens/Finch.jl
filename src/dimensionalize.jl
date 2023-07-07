@@ -13,16 +13,23 @@ getstop(::NoDimension) = error("asked for stop of dimensionless range")
 end
 
 """
-TODO out of date
     dimensionalize!(prgm, ctx)
 
-A program traversal which gathers dimensions of tensors based on shared indices.
-Index sharing is transitive, so `A[i] = B[i]` and `B[j] = C[j]` will induce a
-gathering of the dimensions of `A`, `B`, and `C` into one. The resulting
-dimensions are gathered into a `Dimensions` object, which can be accesed with an
-index name or a `(tensor_name, mode_name)` tuple.
+A program traversal which coordinates dimensions based on shared indices. In
+particular, loops and declaration statements have dimensions. Accessing a tensor
+with a raw index `hints` that the loop should have a dimension corresponding to
+the tensor axis. Accessing a tensor on the left hand side with a raw index also
+`hints` that the tensor declaration should have a dimension corresponding to the
+loop axis.  All hints inside a loop body are
+used to evaluate loop dimensions, and all hints after a declaration until the
+first freeze are used to evaluate declaration dimensions.
+One may refer to the automatically determined dimension using a
+variable named `_` or `:`. Index sharing is transitive, so `A[i] = B[i]` and `B[j]
+= C[j]` will induce a gathering of the dimensions of `A`, `B`, and `C` into one.
 
-The program is assumed to be in SSA form.
+The dimensions are semantically evaluated just before the corresponding loop or
+declaration statement.  The program is assumed to be scoped, so that all loops
+have unique index names.
 
 See also: [`virtual_size`](@ref), [`virtual_resize`](@ref), [`combinedim`](@ref)
 """
