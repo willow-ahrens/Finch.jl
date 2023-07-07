@@ -161,14 +161,14 @@ function virtual_simplex(d, ctx, n)
     return simplify(call(fld, res, factorial(d)), ctx)
 end
 
-is_laminable_updater(lvl::VirtualSparseTriangleLevel, ctx, ::Union{Nothing, Laminate, Extrude}, protos...) =
+is_laminable_updater(lvl::VirtualSparseTriangleLevel, ctx, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...) =
     is_laminable_updater(lvl.lvl, ctx, protos[lvl.N + 1:end]...)
 
 
-get_reader(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, protos...) = get_reader_triangular_dense_helper(fbr, ctx, get_reader, VirtualSubFiber, protos...)
-get_updater(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, protos...) = get_updater_triangular_dense_helper(fbr, ctx, get_updater, VirtualSubFiber, protos...)
-get_updater(fbr::VirtualTrackedSubFiber{VirtualSparseTriangleLevel}, ctx, protos...) = get_updater_triangular_dense_helper(fbr, ctx, get_updater, (lvl, pos) -> VirtualTrackedSubFiber(lvl, pos, fbr.dirty), protos...)
-function get_reader_triangular_dense_helper(fbr, ctx, get_readerupdater, subfiber_ctr, protos...)
+instantiate_reader(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, protos...) = instantiate_reader_triangular_dense_helper(fbr, ctx, instantiate_reader, VirtualSubFiber, protos...)
+instantiate_updater(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, protos...) = instantiate_updater_triangular_dense_helper(fbr, ctx, instantiate_updater, VirtualSubFiber, protos...)
+instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseTriangleLevel}, ctx, protos...) = instantiate_updater_triangular_dense_helper(fbr, ctx, instantiate_updater, (lvl, pos) -> VirtualTrackedSubFiber(lvl, pos, fbr.dirty), protos...)
+function instantiate_reader_triangular_dense_helper(fbr, ctx, subunfurl, subfiber_ctr, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
@@ -179,16 +179,15 @@ function get_reader_triangular_dense_helper(fbr, ctx, get_readerupdater, subfibe
     # j is coordinate of previous dimension
     # n is the total number of dimensions
     # q is index value from previous recursive call
-    function simplex_helper(d, j, n, q, ::Union{Nothing, Follow}, protos...)
+    function simplex_helper(d, j, n, q, ::Union{typeof(defaultread), typeof(defaultupdate), typeof(laminate), typeof(follow)}, protos...)
         s = ctx.freshen(tag, :_s)
         if d == 1
             Furlable(
-                size = virtual_level_size(lvl, ctx)[end - n + 1:end - (n - d)],
                 body = (ctx, ext) -> Pipeline([
                     Phase(
                         stop = (ctx, ext) -> j,
                         body = (ctx, ext) -> Lookup(
-                            body = (ctx, i) -> get_readerupdater(subfiber_ctr(lvl.lvl, call(+, q, -1, i)), ctx, protos...)
+                            body = (ctx, i) -> subunfurl(subfiber_ctr(lvl.lvl, call(+, q, -1, i)), ctx, protos...)
                         )
                     ),
                     Phase(
@@ -198,7 +197,6 @@ function get_reader_triangular_dense_helper(fbr, ctx, get_readerupdater, subfibe
             )
         else
             Furlable(
-                size = virtual_level_size(lvl, ctx)[end - n + 1:end - (n - d)],
                 body = (ctx, ext) -> Pipeline([
                     Phase(
                         stop = (ctx, ext) -> j,
@@ -227,7 +225,7 @@ function get_reader_triangular_dense_helper(fbr, ctx, get_readerupdater, subfibe
     )
 end
 
-function get_updater_triangular_dense_helper(fbr, ctx, get_readerupdater, subfiber_ctr, protos...)
+function instantiate_updater_triangular_dense_helper(fbr, ctx, subunfurl, subfiber_ctr, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
@@ -238,16 +236,15 @@ function get_updater_triangular_dense_helper(fbr, ctx, get_readerupdater, subfib
     # j is coordinate of previous dimension
     # n is the total number of dimensions
     # q is index value from previous recursive call
-    function simplex_helper(d, j, n, q, ::Union{Nothing, Laminate, Extrude}, protos...)
+    function simplex_helper(d, j, n, q, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...)
         s = ctx.freshen(tag, :_s)
         if d == 1
             Furlable(
-                size = virtual_level_size(lvl, ctx)[end - n + 1:end - (n - d)],
                 body = (ctx, ext) -> Pipeline([
                     Phase(
                         stop = (ctx, ext) -> j,
                         body = (ctx, ext) -> Lookup(
-                            body = (ctx, i) -> get_readerupdater(subfiber_ctr(lvl.lvl, call(+, q, -1, i)), ctx, protos...) # hack -> fix later
+                            body = (ctx, i) -> subunfurl(subfiber_ctr(lvl.lvl, call(+, q, -1, i)), ctx, protos...) # hack -> fix later
                         )
                     ),
                     Phase(
@@ -257,7 +254,6 @@ function get_updater_triangular_dense_helper(fbr, ctx, get_readerupdater, subfib
             )
         else
             Furlable(
-                size = virtual_level_size(lvl, ctx)[end - n + 1:end - (n - d)],
                 body = (ctx, ext) -> Pipeline([
                     Phase(
                         stop = (ctx, ext) -> j,

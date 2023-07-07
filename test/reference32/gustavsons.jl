@@ -8,7 +8,7 @@ begin
     A_lvl = (((ex.bodies[2]).body.bodies[2]).body.body.rhs.args[1]).tns.tns.lvl
     A_lvl_2 = A_lvl.lvl
     A_lvl_3 = A_lvl_2.lvl
-    A_lvl.shape == A_lvl_2.shape || throw(DimensionMismatch("mismatched dimension limits ($(A_lvl.shape) != $(A_lvl_2.shape))"))
+    A_lvl_2.shape == A_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(A_lvl_2.shape) != $(A_lvl.shape))"))
     B_lvl_2_qos_fill = 0
     B_lvl_2_qos_stop = 0
     p_start_2 = A_lvl.shape
@@ -44,7 +44,7 @@ begin
         else
             A_lvl_2_i1 = 0
         end
-        phase_stop = min(A_lvl.shape, A_lvl_2_i1)
+        phase_stop = min(A_lvl_2.shape, A_lvl_2_i1)
         if phase_stop >= 1
             k = 1
             if A_lvl_2.idx[A_lvl_2_q] < 1

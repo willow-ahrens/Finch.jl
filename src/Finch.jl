@@ -37,8 +37,6 @@ export diagmask, lotrimask, uptrimask, bandmask
 
 export choose, minby, maxby, overwrite, initwrite
 
-export permit, offset, staticoffset, window
-
 export default, AsArray
 
 include("util.jl")
@@ -57,7 +55,6 @@ include("symbolic/symbolic.jl")
 include("looplets/thunks.jl")
 include("looplets/lookups.jl")
 include("looplets/nulls.jl")
-include("looplets/shifts.jl")
 include("looplets/unfurl.jl")
 include("looplets/runs.jl")
 include("looplets/spikes.jl")
@@ -83,10 +80,16 @@ include("tensors/levels/denselevels.jl")
 include("tensors/levels/repeatrlelevels.jl")
 include("tensors/levels/elementlevels.jl")
 include("tensors/levels/patternlevels.jl")
-include("tensors/levels/raggedlevels.jl")
 include("tensors/levels/sparsetrianglelevels.jl")
 include("tensors/masks.jl")
-include("tensors/modifiers.jl")
+include("tensors/combinators/unfurled.jl")
+include("tensors/combinators/protocolized.jl")
+include("tensors/combinators/roots.jl")
+include("tensors/combinators/permissive.jl")
+include("tensors/combinators/offset.jl")
+include("tensors/combinators/toeplitz.jl")
+include("tensors/combinators/windowed.jl")
+include("tensors/wrapperize.jl")
 
 include("traits.jl")
 
@@ -109,6 +112,7 @@ include("base/fsparse.jl")
     end
 end
 
+#=
 @setup_workload begin
     # Putting some things in `setup` can reduce the size of the
     # precompile file and potentially make loading faster.
@@ -125,6 +129,7 @@ end
 
     end
 end
+=#
 
 include("fileio/fiberio.jl")
 include("fileio/binsparse.jl")

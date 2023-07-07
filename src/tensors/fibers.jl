@@ -101,10 +101,9 @@ function level_default end
 virtual_size(tns::AbstractVirtualFiber, ctx) = virtual_level_size(tns.lvl, ctx)
 function virtual_resize!(tns::AbstractVirtualFiber, ctx, dims...)
     tns.lvl = virtual_level_resize!(tns.lvl, ctx, dims...)
-    (tns, nodim)
+    tns
 end
 virtual_eltype(tns::AbstractVirtualFiber) = virtual_level_eltype(tns.lvl)
-virtual_elaxis(tns::AbstractVirtualFiber) = nodim
 virtual_default(tns::AbstractVirtualFiber) = Some(virtual_level_default(tns.lvl))
 
 
@@ -146,12 +145,12 @@ function declare!(fbr::VirtualFiber, ctx::AbstractCompiler, init)
     fbr = VirtualFiber(lvl)
 end
 
-function get_reader(fbr::VirtualFiber, ctx::AbstractCompiler, protos...)
-    return get_reader(VirtualSubFiber(fbr.lvl, literal(1)), ctx, reverse(protos)...)
+function instantiate_reader(fbr::VirtualFiber, ctx::AbstractCompiler, protos...)
+    return Unfurled(fbr, instantiate_reader(VirtualSubFiber(fbr.lvl, literal(1)), ctx, reverse(protos)...))
 end
 
-function get_updater(fbr::VirtualFiber, ctx::AbstractCompiler, protos...)
-    return get_updater(VirtualSubFiber(fbr.lvl, literal(1)), ctx, reverse(protos)...)
+function instantiate_updater(fbr::VirtualFiber, ctx::AbstractCompiler, protos...)
+    return Unfurled(fbr, instantiate_updater(VirtualSubFiber(fbr.lvl, literal(1)), ctx, reverse(protos)...))
 end
 
 struct TrackedSubFiber{Lvl, Pos, Dirty} <: AbstractFiber{Lvl}
@@ -174,12 +173,12 @@ end
 lower(fbr::VirtualTrackedSubFiber, ctx::AbstractCompiler, ::DefaultStyle) = :(TrackedSubFiber($(ctx(fbr.lvl)), $(ctx(fbr.pos))))
 FinchNotation.finch_leaf(x::VirtualTrackedSubFiber) = virtual(x)
 
-function get_updater(fbr::VirtualTrackedSubFiber, ctx, protos...)
+function instantiate_updater(fbr::VirtualTrackedSubFiber, ctx, protos...)
     Thunk(
         preamble = quote
             $(fbr.dirty) = true
         end,
-        body = (ctx) -> get_updater(VirtualSubFiber(fbr.lvl, fbr.pos))
+        body = (ctx) -> instantiate_updater(VirtualSubFiber(fbr.lvl, fbr.pos))
     )
 end
 
@@ -228,22 +227,6 @@ end
 function trim!(fbr::VirtualFiber, ctx)
     VirtualFiber(trim_level!(fbr.lvl, ctx, literal(1)))
 end
-
-
-get_furl_root(idx) = nothing
-function get_furl_root(idx::FinchNode)
-    if idx.kind === index
-        return idx
-    elseif idx.kind === access && idx.tns.kind === virtual
-        get_furl_root_access(idx, idx.tns.val)
-    elseif idx.kind === protocol
-        return get_furl_root(idx.idx)
-    else
-        return nothing
-    end
-end
-get_furl_root_access(idx, tns) = nothing
-#These are also good examples of where modifiers might be great.
 
 supports_reassembly(lvl) = false
 

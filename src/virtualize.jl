@@ -7,11 +7,9 @@ function virtualize(ex, ::Type{FinchNotation.IndexInstance{name}}, ctx) where {n
     ctx.freshen(name)
     index(name)
 end
-virtualize(ex, ::Type{FinchNotation.ProtocolInstance{Idx, Mode}}, ctx) where {Idx, Mode} = protocol(virtualize(:($ex.idx), Idx, ctx), virtualize(:($ex.mode), Mode, ctx))
 virtualize(ex, ::Type{FinchNotation.DeclareInstance{Tns, Init}}, ctx) where {Tns, Init} = declare(virtualize(:($ex.tns), Tns, ctx), virtualize(:($ex.init), Init, ctx))
 virtualize(ex, ::Type{FinchNotation.FreezeInstance{Tns}}, ctx) where {Tns} = freeze(virtualize(:($ex.tns), Tns, ctx))
 virtualize(ex, ::Type{FinchNotation.ThawInstance{Tns}}, ctx) where {Tns} = thaw(virtualize(:($ex.tns), Tns, ctx))
-virtualize(ex, ::Type{FinchNotation.ForgetInstance{Tns}}, ctx) where {Tns} = forget(virtualize(:($ex.tns), Tns, ctx))
 function virtualize(ex, ::Type{FinchNotation.SequenceInstance{Bodies}}, ctx) where {Bodies}
     bodies = map(enumerate(Bodies.parameters)) do (n, Body)
         virtualize(:($ex.bodies[$n]), Body, ctx)
@@ -47,13 +45,9 @@ function virtualize(ex, ::Type{FinchNotation.AccessInstance{Tns, Mode, Idxs}}, c
     access(tns, virtualize(:($ex.mode), Mode, ctx), idxs...)
 end
 virtualize(ex, ::Type{FinchNotation.ReaderInstance}, ctx) = reader()
-function virtualize(ex, ::Type{FinchNotation.UpdaterInstance{Mode}}, ctx) where {Mode}
-    mode = virtualize(:($ex.mode), Mode, ctx)
-    updater(mode)
-end
-virtualize(ex, ::Type{FinchNotation.ModifyInstance}, ctx) = modify()
-virtualize(ex, ::Type{FinchNotation.CreateInstance}, ctx) = create()
-function virtualize(ex, ::Type{FinchNotation.VariableInstance{tag, Tns}}, ctx) where {tag, Tns}
+virtualize(ex, ::Type{FinchNotation.UpdaterInstance}, ctx) = updater()
+virtualize(ex, ::Type{FinchNotation.VariableInstance{tag}}, ctx) where {tag} = variable(tag)
+function virtualize(ex, ::Type{FinchNotation.TagInstance{tag, Tns}}, ctx) where {tag, Tns}
     x = get!(ctx.bindings, variable(tag)) do
         virtualize(:($ex.tns), Tns, ctx, tag)
     end
@@ -63,8 +57,3 @@ function virtualize(ex, ::Type{FinchNotation.VariableInstance{tag, Tns}}, ctx) w
         return variable(tag)
     end
 end
-virtualize(ex, ::Type{Walk}, ctx) = walk
-virtualize(ex, ::Type{Gallop}, ctx) = gallop
-virtualize(ex, ::Type{Follow}, ctx) = follow
-virtualize(ex, ::Type{Laminate}, ctx) = laminate
-virtualize(ex, ::Type{Extrude}, ctx) = extrude

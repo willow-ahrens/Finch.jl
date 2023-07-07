@@ -25,6 +25,7 @@ Attempt to lift broadcast fields to the type domain for Finch analysis
 lift_broadcast(bc::Broadcasted{Style, Axes, F}) where {Style, Axes, F<:Function} = Broadcasted{Style}(Callable{bc.f}(), map(lift_broadcast, bc.args), bc.axes)
 lift_broadcast(bc::Broadcasted{Style}) where {Style} = Broadcasted{Style}(bc.f, map(lift_broadcast, bc.args), bc.axes)
 lift_broadcast(x) = x
+lift_broadcast(x::Number) = Scalar(x)
 
 struct FinchStyle{N} <: BroadcastStyle
 end
@@ -122,7 +123,7 @@ function lower(rep, ctx::PointwiseRep, ::PointwiseDenseStyle)
 end
 
 function lower(rep, ctx::PointwiseRep, ::PointwiseRepeatStyle)
-    background = simplify(PostWalk(Chain([
+    background = simplify(Postwalk(Chain([
         (@rule access(~ex::isvirtual, ~m, ~i...) => finch_leaf(default(ex.val))),
     ]))(rep), ctx.ctx)
     @assert isliteral(background)
@@ -165,7 +166,7 @@ function pointwise_finch_expr(ex, T, ctx, idxs)
 end
 
 function Base.copyto!(out, bc::Broadcasted{<:FinchStyle})
-    copyto_broadcast_helper!(out, bc)
+    copyto_broadcast_helper!(out, lift_broadcast(bc))
 end
 
 @staged function copyto_broadcast_helper!(out, bc)

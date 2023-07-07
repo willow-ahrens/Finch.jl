@@ -102,15 +102,15 @@
     
         io = IOBuffer()
 
-        @repl io @finch_code (z .= 0; @loop i z[i] = x[i::gallop] + y[i::gallop])
-        @repl io @finch (z .= 0; @loop i z[i] = x[i::gallop] + y[i::gallop])
+        @repl io @finch_code (z .= 0; @loop i z[i] = x[gallop(i)] + y[gallop(i)])
+        @repl io @finch (z .= 0; @loop i z[i] = x[gallop(i)] + y[gallop(i)])
 
         @test check_output("typical_merge_gallop.txt", String(take!(io)))
 
         io = IOBuffer()
 
-        @repl io @finch_code (z .= 0; @loop i z[i] = x[i::gallop] + y[i])
-        @repl io @finch (z .= 0; @loop i z[i] = x[i::gallop] + y[i])
+        @repl io @finch_code (z .= 0; @loop i z[i] = x[gallop(i)] + y[i])
+        @repl io @finch (z .= 0; @loop i z[i] = x[gallop(i)] + y[i])
 
         @test check_output("typical_merge_leadfollow.txt", String(take!(io)))
 

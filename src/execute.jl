@@ -1,3 +1,51 @@
+"""
+    instantiate!(prgm, ctx)
+
+A transformation to instantiate readers and updaters before executing an
+expression.
+"""
+function instantiate!(prgm, ctx) 
+    prgm = InstantiateTensors(ctx=ctx)(prgm)
+    return prgm
+end
+
+@kwdef struct InstantiateTensors{Ctx}
+    ctx::Ctx
+    escape = Set()
+end
+
+function (ctx::InstantiateTensors)(node::FinchNode)
+    if node.kind === sequence
+        sequence(map(ctx, node.bodies)...)
+    elseif node.kind === define
+        push!(ctx.escape, node.lhs)
+        define(node.lhs, ctx(node.rhs))
+    elseif node.kind === declare
+        push!(ctx.escape, node.tns)
+        node
+    elseif node.kind === freeze
+        push!(ctx.escape, node.tns)
+        node
+    elseif node.kind === thaw
+        push!(ctx.escape, node.tns)
+        node
+    elseif (@capture node access(~tns, ~mode, ~idxs...)) && !(getroot(tns) in ctx.escape)
+        tns = tns.val
+        #@assert get(ctx.ctx.modes, tns, reader()).kind === node.mode.kind
+        protos = [(mode.kind === reader ? defaultread : defaultupdate) for _ in idxs]
+        if mode.kind === reader
+            tns_2 = instantiate_reader(tns, ctx.ctx, protos...)
+        else
+            tns_2 = instantiate_updater(tns, ctx.ctx, protos...)
+        end
+        access(tns_2, mode, idxs...)
+    elseif istree(node)
+        return similarterm(node, operation(node), map(ctx, arguments(node)))
+    else
+        return node
+    end
+end
+
 execute(ex) = execute(ex, DefaultAlgebra())
 
 @staged function execute(ex, a)
@@ -26,16 +74,15 @@ function lower_global(prgm, ctx)
     code = contain(ctx) do ctx_2
         quote
             $(begin
-                prgm = ScopeVisitor()(prgm)
-                prgm = close_scope(prgm, LifecycleVisitor())
+                prgm = enforce_scopes(prgm)
+                prgm = wrapperize(prgm, ctx_2)
+                prgm = enforce_lifecycles(prgm)
                 prgm = dimensionalize!(prgm, ctx_2)
+                prgm = concordize(prgm, ctx_2)
                 prgm = simplify(prgm, ctx_2) #appears necessary
+                prgm = instantiate!(prgm, ctx_2)
                 contain(ctx_2) do ctx_3
-                    prgm2 = prgm
-                    if prgm.kind !== sequence
-                        prgm2 = InstantiateTensors(ctx = ctx_3)(prgm2)
-                    end
-                    ctx_3(prgm2)
+                    ctx_3(prgm)
                 end
             end)
             $(contain(ctx_2) do ctx_3
@@ -193,6 +240,16 @@ function close_scope(prgm, ctx::LifecycleVisitor)
     prgm
 end
 
+"""
+    enforce_lifecycles(prgm)
+
+A transformation which adds `freeze` and `thaw` statements automatically to
+tensor roots, depending on whether they appear on the left or right hand side.
+"""
+function enforce_lifecycles(prgm)
+    close_scope(prgm, LifecycleVisitor())
+end
+
 function open_stmt(prgm, ctx::LifecycleVisitor)
     for (tns, mode) in ctx.uses
         cur_mode = get(ctx.modes, tns, reader())
@@ -217,7 +274,7 @@ function (ctx::LifecycleVisitor)(node::FinchNode)
         if get(ctx.modes, node.tns, reader()) === updater 
             node = sequence(freeze(node.tns), node)
         end
-        ctx.modes[node.tns] = updater(create())
+        ctx.modes[node.tns] = updater()
         node
     elseif node.kind === freeze
         haskey(ctx.modes, node.tns) || throw(LifecycleError("cannot freeze undefined $(node.tns)"))
@@ -226,16 +283,16 @@ function (ctx::LifecycleVisitor)(node::FinchNode)
         node
     elseif node.kind === thaw
         get(ctx.modes, node.tns, reader()).kind === updater && return sequence()
-        ctx.modes[node.tns] = updater(create())
+        ctx.modes[node.tns] = updater()
         node
     elseif node.kind === assign
         return open_stmt(assign(ctx(node.lhs), ctx(node.op), ctx(node.rhs)), ctx)
-    elseif node.kind === access && node.tns.kind === variable
+    elseif node.kind === access
         idxs = map(ctx, node.idxs)
-        uses = get(ctx.scoped_uses, node.tns, ctx.global_uses)
-        get(uses, node.tns, node.mode).kind !== node.mode.kind &&
+        uses = get(ctx.scoped_uses, getroot(node.tns), ctx.global_uses)
+        get(uses, getroot(node.tns), node.mode).kind !== node.mode.kind &&
             throw(LifecycleError("cannot mix reads and writes to $(node.tns) outside of defining scope (perhaps missing definition)"))
-        uses[node.tns] = node.mode
+        uses[getroot(node.tns)] = node.mode
         access(node.tns, node.mode, idxs...)
     elseif istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))
@@ -250,6 +307,15 @@ end
     scope = Set()
     global_scope = scope
 end
+
+"""
+    enforce_scopes(prgm)
+
+A transformation which gives all loops unique index names and enforces that
+tensor roots are declared in a containing scope. Note that `loop` and `sieve`
+both introduce new scopes.
+"""
+enforce_scopes(prgm) = ScopeVisitor()(prgm)
 
 struct ScopeError
     msg

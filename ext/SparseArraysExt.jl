@@ -2,8 +2,7 @@ module SparseArraysExt
 
 using Finch
 using Finch: AbstractCompiler, DefaultStyle, Extent
-using Finch: Walk, Follow
-using Finch: Furlable, Stepper, Jumper, Run, Fill, Lookup, Simplify, Pipeline, Phase, Thunk, Spike, Step
+using Finch: Unfurled, Furlable, Stepper, Jumper, Run, Fill, Lookup, Simplify, Pipeline, Phase, Thunk, Spike, Step
 using Finch: virtual_size, virtual_default, getstart, getstop
 using Finch.FinchNotation
 
@@ -61,7 +60,7 @@ function Finch.declare!(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler, init
     throw(FormatLimitation("Finch does not support writes to SparseMatrixCSC"))
 end
 
-function Finch.get_reader(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler, ::Union{Nothing, Walk, Follow}, ::Union{Nothing, Walk})
+function Finch.instantiate_reader(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler, ::Union{typeof(defaultread), typeof(walk), typeof(follow)}, ::Union{typeof(defaultread), typeof(walk)})
     tag = arr.ex
     Ti = arr.Ti
     my_i = ctx.freshen(tag, :_i)
@@ -70,65 +69,66 @@ function Finch.get_reader(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler, ::
     my_i1 = ctx.freshen(tag, :_i1)
     my_val = ctx.freshen(tag, :_val)
 
-    Furlable(
-        size = virtual_size(arr, ctx),
-        body = (ctx, ext) -> Lookup(
-            body = (ctx, j) -> Furlable(
-                size = virtual_size(arr, ctx)[2:2],
-                body = (ctx, ext) -> Thunk(
-                    preamble = quote
-                        $my_q = $(arr.ex).colptr[$(ctx(j))]
-                        $my_q_stop = $(arr.ex).colptr[$(ctx(j)) + $(Ti(1))]
-                        if $my_q < $my_q_stop
-                            $my_i = $(arr.ex).rowval[$my_q]
-                            $my_i1 = $(arr.ex).rowval[$my_q_stop - $(Ti(1))]
-                        else
-                            $my_i = $(Ti(1))
-                            $my_i1 = $(Ti(0))
-                        end
-                    end,
-                    body = (ctx) -> Pipeline([
-                        Phase(
-                            stop = (ctx, ext) -> value(my_i1),
-                            body = (ctx, ext) -> Stepper(
-                                seek = (ctx, ext) -> quote
-                                    if $(arr.ex).rowval[$my_q] < $(ctx(getstart(ext)))
-                                        $my_q = Finch.scansearch($(arr.ex).rowval, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
-                                    end
-                                end,
-                                body = Thunk(
-                                    preamble = quote
-                                        $my_i = $(arr.ex).rowval[$my_q]
-                                    end,
-                                    body = (ctx) -> Step(
-                                        stop = (ctx, ext) -> value(my_i),
-                                        body = Spike(
-                                            body = Fill(zero(arr.Tv)),
-                                            tail = Thunk(
-                                                preamble = quote
-                                                    $my_val = $(arr.ex).nzval[$my_q]
-                                                end,
-                                                body = (ctx) -> Fill(value(my_val, arr.Tv))
-                                            )
-                                        ),
-                                        next = (ctx, ext) -> quote
-                                            $my_q += $(Ti(1))
+    Unfurled(
+        arr = arr,
+        body = Furlable(
+            body = (ctx, ext) -> Lookup(
+                body = (ctx, j) -> Furlable(
+                    body = (ctx, ext) -> Thunk(
+                        preamble = quote
+                            $my_q = $(arr.ex).colptr[$(ctx(j))]
+                            $my_q_stop = $(arr.ex).colptr[$(ctx(j)) + $(Ti(1))]
+                            if $my_q < $my_q_stop
+                                $my_i = $(arr.ex).rowval[$my_q]
+                                $my_i1 = $(arr.ex).rowval[$my_q_stop - $(Ti(1))]
+                            else
+                                $my_i = $(Ti(1))
+                                $my_i1 = $(Ti(0))
+                            end
+                        end,
+                        body = (ctx) -> Pipeline([
+                            Phase(
+                                stop = (ctx, ext) -> value(my_i1),
+                                body = (ctx, ext) -> Stepper(
+                                    seek = (ctx, ext) -> quote
+                                        if $(arr.ex).rowval[$my_q] < $(ctx(getstart(ext)))
+                                            $my_q = Finch.scansearch($(arr.ex).rowval, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                                         end
+                                    end,
+                                    body = Thunk(
+                                        preamble = quote
+                                            $my_i = $(arr.ex).rowval[$my_q]
+                                        end,
+                                        body = (ctx) -> Step(
+                                            stop = (ctx, ext) -> value(my_i),
+                                            body = Spike(
+                                                body = Fill(zero(arr.Tv)),
+                                                tail = Thunk(
+                                                    preamble = quote
+                                                        $my_val = $(arr.ex).nzval[$my_q]
+                                                    end,
+                                                    body = (ctx) -> Fill(value(my_val, arr.Tv))
+                                                )
+                                            ),
+                                            next = (ctx, ext) -> quote
+                                                $my_q += $(Ti(1))
+                                            end
+                                        )
                                     )
                                 )
+                            ),
+                            Phase(
+                                body = (ctx, ext) -> Run(Fill(zero(arr.Tv)))
                             )
-                        ),
-                        Phase(
-                            body = (ctx, ext) -> Run(Fill(zero(arr.Tv)))
-                        )
-                    ])
+                        ])
+                    )
                 )
             )
         )
     )
 end
 
-function Finch.get_updater(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler, protos...)
+function Finch.instantiate_updater(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler, protos...)
     throw(FormatLimitation("Finch does not support writes to SparseMatrixCSC"))
 end
 
@@ -163,7 +163,7 @@ function Finch.declare!(arr::VirtualSparseVector, ctx::AbstractCompiler, init)
     throw(FormatLimitation("Finch does not support writes to SparseVector"))
 end
 
-function Finch.get_reader(arr::VirtualSparseVector, ctx::AbstractCompiler, ::Union{Nothing, Walk})
+function Finch.instantiate_reader(arr::VirtualSparseVector, ctx::AbstractCompiler, ::Union{typeof(defaultread), typeof(walk)})
     tag = arr.ex
     Ti = arr.Ti
     my_i = ctx.freshen(tag, :_i)
@@ -172,60 +172,62 @@ function Finch.get_reader(arr::VirtualSparseVector, ctx::AbstractCompiler, ::Uni
     my_i1 = ctx.freshen(tag, :_i1)
     my_val = ctx.freshen(tag, :_val)
 
-    body = Furlable(
-        size = virtual_size(arr, ctx),
-        body = (ctx, ext) -> Thunk(
-            preamble = quote
-                $my_q = 1
-                $my_q_stop = length($(arr.ex).nzind) + 1
-                if $my_q < $my_q_stop
-                    $my_i = $(arr.ex).nzind[$my_q]
-                    $my_i1 = $(arr.ex).nzind[$my_q_stop - $(Ti(1))]
-                else
-                    $my_i = $(Ti(1))
-                    $my_i1 = $(Ti(0))
-                end
-            end,
-            body = (ctx) -> Pipeline([
-                Phase(
-                    stop = (ctx, ext) -> value(my_i1),
-                    body = (ctx, ext) -> Stepper(
-                        seek = (ctx, ext) -> quote
-                            if $(arr.ex).nzind[$my_q] < $(ctx(getstart(ext)))
-                                $my_q = Finch.scansearch($(arr.ex).nzind, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
-                            end
-                        end,
-                        body = Thunk(
-                            preamble = quote
-                                $my_i = $(arr.ex).nzind[$my_q]
-                            end,
-                            body = (ctx) -> Step(
-                                stop = (ctx, ext) -> value(my_i),
-                                body = Spike(
-                                    body = Fill(zero(arr.Tv)),
-                                    tail = Thunk(
-                                        preamble = quote
-                                            $my_val = $(arr.ex).nzval[$my_q]
-                                        end,
-                                        body = (ctx) -> Fill(value(my_val, arr.Tv))
-                                    )
-                                ),
-                                next = (ctx, ext) -> quote
-                                    $my_q += $(Ti(1))
+    Unfurled(
+        arr = arr,
+        body = Furlable(
+            body = (ctx, ext) -> Thunk(
+                preamble = quote
+                    $my_q = 1
+                    $my_q_stop = length($(arr.ex).nzind) + 1
+                    if $my_q < $my_q_stop
+                        $my_i = $(arr.ex).nzind[$my_q]
+                        $my_i1 = $(arr.ex).nzind[$my_q_stop - $(Ti(1))]
+                    else
+                        $my_i = $(Ti(1))
+                        $my_i1 = $(Ti(0))
+                    end
+                end,
+                body = (ctx) -> Pipeline([
+                    Phase(
+                        stop = (ctx, ext) -> value(my_i1),
+                        body = (ctx, ext) -> Stepper(
+                            seek = (ctx, ext) -> quote
+                                if $(arr.ex).nzind[$my_q] < $(ctx(getstart(ext)))
+                                    $my_q = Finch.scansearch($(arr.ex).nzind, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                                 end
+                            end,
+                            body = Thunk(
+                                preamble = quote
+                                    $my_i = $(arr.ex).nzind[$my_q]
+                                end,
+                                body = (ctx) -> Step(
+                                    stop = (ctx, ext) -> value(my_i),
+                                    body = Spike(
+                                        body = Fill(zero(arr.Tv)),
+                                        tail = Thunk(
+                                            preamble = quote
+                                                $my_val = $(arr.ex).nzval[$my_q]
+                                            end,
+                                            body = (ctx) -> Fill(value(my_val, arr.Tv))
+                                        )
+                                    ),
+                                    next = (ctx, ext) -> quote
+                                        $my_q += $(Ti(1))
+                                    end
+                                )
                             )
                         )
+                    ),
+                    Phase(
+                        body = (ctx, ext) -> Run(Fill(zero(arr.Tv)))
                     )
-                ),
-                Phase(
-                    body = (ctx, ext) -> Run(Fill(zero(arr.Tv)))
-                )
-            ])
+                ])
+            )
         )
     )
 end
 
-function Finch.get_updater(arr::VirtualSparseVector, ctx::AbstractCompiler, protos...)
+function Finch.instantiate_updater(arr::VirtualSparseVector, ctx::AbstractCompiler, protos...)
     throw(FormatLimitation("Finch does not support writes to SparseVector"))
 end
 

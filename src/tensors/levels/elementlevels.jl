@@ -131,7 +131,7 @@ function reassemble_level!(lvl::VirtualElementLevel, ctx, pos_start, pos_stop)
     lvl
 end
 
-function get_reader(fbr::VirtualSubFiber{VirtualElementLevel}, ctx)
+function instantiate_reader(fbr::VirtualSubFiber{VirtualElementLevel}, ctx)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     val = ctx.freshen(lvl.ex, :_val)
     return Thunk(
@@ -144,12 +144,12 @@ end
 
 is_laminable_updater(lvl::VirtualElementLevel, ctx) = true
 
-function get_updater(fbr::VirtualSubFiber{VirtualElementLevel}, ctx)
+function instantiate_updater(fbr::VirtualSubFiber{VirtualElementLevel}, ctx)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     VirtualScalar(nothing, lvl.Tv, lvl.D, gensym(), :($(lvl.ex).val[$(ctx(pos))]))
 end
 
-function get_updater(fbr::VirtualTrackedSubFiber{VirtualElementLevel}, ctx)
+function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualElementLevel}, ctx)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     VirtualDirtyScalar(nothing, lvl.Tv, lvl.D, gensym(), :($(lvl.ex).val[$(ctx(pos))]), fbr.dirty)
 end

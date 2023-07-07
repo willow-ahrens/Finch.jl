@@ -9,24 +9,24 @@ begin
     resize_if_smaller!(C_lvl.ptr, 1 + 1)
     fill_range!(C_lvl.ptr, 0, 1 + 1, 1 + 1)
     C_lvl_qos = 0 + 1
-    A_lvl_q = A_lvl.ptr[1]
-    A_lvl_q_stop = A_lvl.ptr[1 + 1]
-    if A_lvl_q < A_lvl_q_stop
-        A_lvl_i1 = A_lvl.idx[A_lvl_q_stop - 1]
+    A_lvl_q_2 = A_lvl.ptr[1]
+    A_lvl_q_stop_2 = A_lvl.ptr[1 + 1]
+    if A_lvl_q_2 < A_lvl_q_stop_2
+        A_lvl_i1_2 = A_lvl.idx[A_lvl_q_stop_2 - 1]
     else
-        A_lvl_i1 = 0
+        A_lvl_i1_2 = 0
     end
-    phase_stop = min(A_lvl_i1, A_lvl.shape)
+    phase_stop = min(A_lvl_i1_2, A_lvl.shape)
     if phase_stop >= 1
         i = 1
         if A_lvl.idx[A_lvl_q] < 1
             A_lvl_q = Finch.scansearch(A_lvl.idx, 1, A_lvl_q, A_lvl_q_stop - 1)
         end
         while i <= phase_stop
-            A_lvl_i = A_lvl.idx[A_lvl_q]
-            phase_stop_2 = min(phase_stop, A_lvl_i)
-            if A_lvl_i == phase_stop_2
-                A_lvl_2_val_2 = A_lvl_2.val[A_lvl_q]
+            A_lvl_i_2 = A_lvl.idx[A_lvl_q_2]
+            phase_stop_2 = min(phase_stop, A_lvl_i_2)
+            if A_lvl_i_2 == phase_stop_2
+                A_lvl_2_val_2 = A_lvl_2.val[A_lvl_q_2]
                 if C_lvl_qos > C_lvl_qos_stop
                     C_lvl_qos_stop = max(C_lvl_qos_stop << 1, 1)
                     resize_if_smaller!(C_lvl.idx, C_lvl_qos_stop)
@@ -34,33 +34,33 @@ begin
                     fill_range!(C_lvl_2.val, 0.0, C_lvl_qos, C_lvl_qos_stop)
                 end
                 C_lvldirty = false
-                s_2 = phase_stop_2 + -3
-                phase_start_4 = max(1, 1 + s_2)
-                phase_stop_4 = min(F_lvl.shape, A_lvl.shape + s_2)
+                s_2 = -phase_stop_2
+                phase_start_4 = max(1, -s_2 + -2)
+                phase_stop_4 = min(F_lvl.shape, A_lvl.shape + -s_2 + -3)
                 if phase_stop_4 >= phase_start_4
-                    A_lvl_q_2 = A_lvl.ptr[1]
-                    A_lvl_q_stop_2 = A_lvl.ptr[1 + 1]
-                    if A_lvl_q_2 < A_lvl_q_stop_2
-                        A_lvl_i1_2 = A_lvl.idx[A_lvl_q_stop_2 - 1]
+                    A_lvl_q = A_lvl.ptr[1]
+                    A_lvl_q_stop = A_lvl.ptr[1 + 1]
+                    if A_lvl_q < A_lvl_q_stop
+                        A_lvl_i1 = A_lvl.idx[A_lvl_q_stop - 1]
                     else
-                        A_lvl_i1_2 = 0
+                        A_lvl_i1 = 0
                     end
-                    phase_stop_5 = min(phase_stop_4, s_2 + A_lvl_i1_2)
+                    phase_stop_5 = min(phase_stop_4, -s_2 + -3 + A_lvl_i1)
                     if phase_stop_5 >= phase_start_4
                         j = phase_start_4
                         if A_lvl.idx[A_lvl_q_2] < phase_start_4 + -s_2
                             A_lvl_q_2 = Finch.scansearch(A_lvl.idx, phase_start_4 + -s_2, A_lvl_q_2, A_lvl_q_stop_2 - 1)
                         end
                         while j <= phase_stop_5
-                            A_lvl_i_2 = A_lvl.idx[A_lvl_q_2]
-                            phase_stop_6 = min(phase_stop_5, s_2 + A_lvl_i_2)
-                            if A_lvl_i_2 == phase_stop_6 + -s_2
-                                A_lvl_2_val_3 = A_lvl_2.val[A_lvl_q_2]
+                            A_lvl_i = A_lvl.idx[A_lvl_q]
+                            phase_stop_6 = min(phase_stop_5, -s_2 + -3 + A_lvl_i)
+                            if A_lvl_i == (phase_stop_6 + s_2) + +3
+                                A_lvl_2_val_3 = A_lvl_2.val[A_lvl_q]
                                 F_lvl_q = (1 - 1) * F_lvl.shape + phase_stop_6
                                 F_lvl_2_val_2 = F_lvl_2.val[F_lvl_q]
                                 C_lvldirty = true
-                                C_lvl_2.val[C_lvl_qos] = (A_lvl_2_val_2 != 0) * F_lvl_2_val_2 * coalesce(A_lvl_2_val_3, 0) + C_lvl_2.val[C_lvl_qos]
-                                A_lvl_q_2 += 1
+                                C_lvl_2.val[C_lvl_qos] = C_lvl_2.val[C_lvl_qos] + (A_lvl_2_val_2 != 0) * coalesce(A_lvl_2_val_3, 0) * F_lvl_2_val_2
+                                A_lvl_q += 1
                             end
                             j = phase_stop_6 + 1
                         end
@@ -70,7 +70,7 @@ begin
                     C_lvl.idx[C_lvl_qos] = phase_stop_2
                     C_lvl_qos += 1
                 end
-                A_lvl_q += 1
+                A_lvl_q_2 += 1
             end
             i = phase_stop_2 + 1
         end

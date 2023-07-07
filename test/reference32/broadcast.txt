@@ -49,7 +49,7 @@ Dense [:,1:3]
 │ ├─[3]: 2
 │ ├─[4]: 1
 julia> AsArray(E)
-4×3 AsArray{Int32, 2, Fiber{DenseLevel{Int32, DenseLevel{Int32, ElementLevel{0, Int32}}}}}:
+4×3 AsArray{Int32, 2, Fiber{DenseLevel{Int32, DenseLevel{Int32, ElementLevel{1, Int32}}}}}:
  1  1  2
  2  1  1
  2  1  2

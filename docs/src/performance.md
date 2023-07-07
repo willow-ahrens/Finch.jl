@@ -224,10 +224,10 @@ quote
     sugar_1 = size(B)
     B_mode1_stop = sugar_1[1]
     B_mode2_stop = sugar_1[2]
-    A_lvl_2.shape == B_mode1_stop || throw(DimensionMismatch("mismatched dimension limits ($(A_lvl_2.shape) != $(B_mode1_stop))"))
-    A_lvl.shape == B_mode2_stop || throw(DimensionMismatch("mismatched dimension limits ($(A_lvl.shape) != $(B_mode2_stop))"))
+    B_mode1_stop == A_lvl_2.shape || throw(DimensionMismatch("mismatched dimension limits ($(B_mode1_stop) != $(A_lvl_2.shape))"))
+    B_mode2_stop == A_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(B_mode2_stop) != $(A_lvl.shape))"))
     C_val = 0
-    for j_4 = 1:A_lvl.shape
+    for j_4 = 1:B_mode2_stop
         A_lvl_q = (1 - 1) * A_lvl.shape + j_4
         A_lvl_2_q = A_lvl_2.ptr[A_lvl_q]
         A_lvl_2_q_stop = A_lvl_2.ptr[A_lvl_q + 1]
@@ -236,7 +236,7 @@ quote
         else
             A_lvl_2_i1 = 0
         end
-        phase_stop = min(A_lvl_2.shape, A_lvl_2_i1)
+        phase_stop = min(B_mode1_stop, A_lvl_2_i1)
         if phase_stop >= 1
             i = 1
             if A_lvl_2.idx[A_lvl_2_q] < 1
@@ -261,9 +261,8 @@ quote
             end
         end
         phase_start_3 = max(1, 1 + A_lvl_2_i1)
-        phase_stop_3 = A_lvl_2.shape
-        if phase_stop_3 >= phase_start_3
-            for i_10 = phase_start_3:phase_stop_3
+        if B_mode1_stop >= phase_start_3
+            for i_10 = phase_start_3:B_mode1_stop
                 C_val = f(0.0, B[i_10, j_4]) + C_val
             end
         end

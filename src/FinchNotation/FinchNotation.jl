@@ -11,22 +11,26 @@ module FinchNotation
     export assign
     export call
     export cached
-    export reader, updater, create, modify, access
-    export declare, thaw, freeze, forget
+    export reader, updater, access
+    export define, declare, thaw, freeze
     export sequence
     export protocol
     export sieve
     export FinchNode
 
-    export Follow, follow
-    export Walk, walk
-    export Gallop, gallop
-    export Extrude, extrude
-    export Laminate, laminate
+    export follow
+    export walk
+    export gallop
+    export extrude
+    export laminate
+    export defaultread
+    export defaultupdate
 
     export @f, @finch_program, @finch_program_instance
 
     export isliteral, isvalue, isconstant, isvirtual, isvariable, isindex
+
+    export isprotocol
 
     export getval, getname
 
