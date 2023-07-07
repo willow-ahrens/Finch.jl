@@ -153,7 +153,6 @@ Base.max(x::Limit) = x
 Base.:(+)(x::Limit) = x
 Base.:(-)(x::Limit) = limit(-x.val, -x.sign)
 
-Base.convert(::Type{Limit{T}}, i::Limit{S}) where {T, S} = limit(convert(T, i.val), i.sign)
 #Crazy julia multiple dispatch stuff don't worry about it
 limit_types = [Int8, Int16, Int32, Int64, Int128, UInt8, UInt16, UInt32, UInt64, UInt128, BigInt, Float32, Float64]
 for S in limit_types
