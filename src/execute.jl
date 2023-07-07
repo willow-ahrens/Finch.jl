@@ -240,6 +240,12 @@ function close_scope(prgm, ctx::LifecycleVisitor)
     prgm
 end
 
+"""
+    enforce_lifecycles(prgm)
+
+A transformation which adds `freeze` and `thaw` statements automatically to
+tensor roots, depending on whether they appear on the left or right hand side.
+"""
 function enforce_lifecycles(prgm)
     close_scope(prgm, LifecycleVisitor())
 end
@@ -302,6 +308,13 @@ end
     global_scope = scope
 end
 
+"""
+    enforce_scopes(prgm)
+
+A transformation which gives all loops unique index names and enforces that
+tensor roots are declared in a containing scope. Note that `loop` and `sieve`
+both introduce new scopes.
+"""
 enforce_scopes(prgm) = ScopeVisitor()(prgm)
 
 struct ScopeError
