@@ -83,8 +83,7 @@ include("utils.jl")
     if should_run("constructors") include("test_constructors.jl") end
     if should_run("conversions") include("test_conversions.jl") end
     if should_run("merges") include("test_merges.jl") end
-    if should_run("permit") include("test_permit.jl") end
-    if should_run("skips") include("test_skips.jl") end
+    if should_run("index") include("test_index.jl") end
     if should_run("typical") include("test_typical.jl") end
     if should_run("kernels") include("test_kernels.jl") end
     if should_run("issues") include("test_issues.jl") end
