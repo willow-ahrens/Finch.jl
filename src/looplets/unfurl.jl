@@ -1,7 +1,6 @@
 truncate(node, ctx, ext, ext_2) = node
 
 @kwdef struct Furlable
-    fuse = nothing
     body
     tight = nothing
 end
