@@ -1,48 +1,54 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Directory Structure · Finch.jl</title><script data-outdated-warner src="../assets/warner.js"></script><link rel="canonical" href="https://willow-ahrens.github.io/Finch.jl/directory_structure/"/><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script><link href="../assets/favicon.ico" rel="icon" type="image/x-icon"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../"><img src="../assets/logo.png" alt="Finch.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../">Finch.jl</a></span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../usage/">Usage</a></li><li><a class="tocitem" href="../semantics/">Semantics</a></li><li><a class="tocitem" href="../fibers/">Array Formats</a></li><li><a class="tocitem" href="../algebra/">Custom Functions</a></li><li><a class="tocitem" href="../fileio/">Tensor File I/O</a></li><li><a class="tocitem" href="../interop/">C, C++, ...</a></li><li><a class="tocitem" href="../performance/">Performance Tips</a></li><li><a class="tocitem" href="../internals/">Internals</a></li><li class="is-active"><a class="tocitem" href>Directory Structure</a></li><li><a class="tocitem" href="../CONTRIBUTING/">Contributing</a></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="../benchmark/">Benchmarking</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Directory Structure</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Directory Structure</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/willow-ahrens/Finch.jl/blob/main/docs/src/directory_structure.md#" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Directory-Structure"><a class="docs-heading-anchor" href="#Directory-Structure">Directory Structure</a><a id="Directory-Structure-1"></a><a class="docs-heading-anchor-permalink" href="#Directory-Structure" title="Permalink"></a></h1><p>Here&#39;s a little roadmap to the Finch codebase! Please file an issue if this is not up to date.</p><pre><code class="nohighlight hljs">.
-├── apps                    # Example applications implemented in Finch!
-│   ├── graphs.jl           # Graph Algorithms: Pagerank, Bellman-Ford, etc...
-│   ├── linalg.jl           # Linear Algebra: Sparse-Sparse Matmul, etc...
+├── apps                       # Example applications implemented in Finch!
+│   ├── graphs.jl              # Graph Algorithms: Pagerank, Bellman-Ford, etc...
+│   ├── linalg.jl              # Linear Algebra: Sparse-Sparse Matmul, etc...
 │   └── ...
-├── benchmark               # benchmarks for internal use
-│   ├── runbenchmarks.jl    # run benchmarks
-│   ├── runjudge.jl         # run benchmarks on current branch and compare with main
+├── benchmark                  # benchmarks for internal use
+│   ├── runbenchmarks.jl       # run benchmarks
+│   ├── runjudge.jl            # run benchmarks on current branch and compare with main
 │   └── ...                 
-├── docs                    # documentation
-│   ├── [build]             # rendered docs website
-│   ├── src                 # docs website source
-│   ├── fix.jl              # fix docstrings
-│   ├── make.jl             # build documentation locally
+├── docs                       # documentation
+│   ├── [build]                # rendered docs website
+│   ├── src                    # docs website source
+│   ├── fix.jl                 # fix docstrings
+│   ├── make.jl                # build documentation locally
 │   └── ...                 
-├── embed                   # wrappers for embedding Finch in C
-├── ext                     # conditionally-loaded code for interaction with other packages (e.g. SparseArrays)
-├── src                     # Source files
-│   ├── base                # Implementations of base functions (e.g. map, reduce, etc.)
-│   ├── fileio              # File IO function definitions
-│   ├── FinchNotation       # SubModule containing the Finch IR
-│   │   ├── nodes.jl        # defines the Finch IR
-│   │   ├── syntax.jl       # defines the @finch frontend syntax
+├── embed                      # wrappers for embedding Finch in C
+├── ext                        # conditionally-loaded code for interaction with other packages (e.g. SparseArrays)
+├── src                        # Source files
+│   ├── base                   # Implementations of base functions (e.g. map, reduce, etc.)
+│   ├── fileio                 # File IO function definitions
+│   ├── FinchNotation          # SubModule containing the Finch IR
+│   │   ├── nodes.jl           # defines the Finch IR
+│   │   ├── syntax.jl          # defines the @finch frontend syntax
 │   │   └── ...
-│   ├── looplets            # this is where all the Looplets live
-│   ├── symbolic            # term rewriting systems for program and bounds
-│   ├── tensors             # built-in Finch tensor definitions
-│   │   ├── levels          # all of the levels
-│   │   ├── fibers.jl       # fibers combine levels to form tensors
-│   │   ├── scalars.jl      # a nice scalar type
-│   │   ├── masks.jl        # mask tensors (e.g. upper-triangular mask)
-│   │   └── modifiers.jl    # index modifiers (e.g. A[i + j])
-│   ├──  execute.jl         # toplevel compiler calls
-│   ├──  semantics.jl       # finch array interface functions
-│   ├──  traits.jl          # functions and types to reason about appropriate outputs
-│   ├──  util.jl            # shims and julia codegen utils (Dead code elimination, etc...)
+│   ├── looplets               # this is where all the Looplets live
+│   ├── symbolic               # term rewriting systems for program and bounds
+│   ├── tensors                # built-in Finch tensor definitions
+│   │   ├── levels             # all of the levels
+│   │   ├── fibers.jl          # fibers combine levels to form tensors
+│   │   ├── scalars.jl         # a nice scalar type
+│   │   └── masks.jl           # mask tensors (e.g. upper-triangular mask)
+│   ├── transformations        # global program transformations
+│   │   ├── scopes.jl          # gives unique names to indices
+│   │   ├── lifetimes.jl       # adds freeze and thaw
+│   │   ├── dimensionalize.jl  # computes extents for loops and declarations
+│   │   ├── concordize.jl      # adds loops to ensure all accesses are concordant
+│   │   └── wrapperize.jl      # converts index expressions to array wrappers
+│   ├──  execute.jl            # global compiler calls
+│   ├──  lower.jl              # inner compiler definition
+│   ├──  semantics.jl          # finch array interface functions
+│   ├──  traits.jl             # functions and types to reason about appropriate outputs
+│   ├──  util.jl               # shims and julia codegen utils (Dead code elimination, etc...)
 │   └── ...
-├── test                    # tests
-│   ├──  embed              # tests for the C embedding. Optional build before runtests.jl
-│   ├──  reference32        # reference output for 32-bit systems
-│   ├──  reference64        # reference output for 64-bit systems
-│   ├──  runtests.jl        # runs the test suite. (pass -h for options and more info!)
+├── test                       # tests
+│   ├──  embed                 # tests for the C embedding. Optional build before runtests.jl
+│   ├──  reference32           # reference output for 32-bit systems
+│   ├──  reference64           # reference output for 64-bit systems
+│   ├──  runtests.jl           # runs the test suite. (pass -h for options and more info!)
 │   └── ...
-├── Project.toml            # julia-readable listing of project dependencies
-├── [Manifest.toml]         # local listing of installed dependencies (don&#39;t commit this)
+├── Project.toml               # julia-readable listing of project dependencies
+├── [Manifest.toml]            # local listing of installed dependencies (don&#39;t commit this)
 ├── LICENSE
-└── README.md</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../internals/">« Internals</a><a class="docs-footer-nextpage" href="../CONTRIBUTING/">Contributing »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Friday 7 July 2023 18:37">Friday 7 July 2023</span>. Using Julia version 1.9.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+└── README.md</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../internals/">« Internals</a><a class="docs-footer-nextpage" href="../CONTRIBUTING/">Contributing »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Friday 7 July 2023 20:36">Friday 7 July 2023</span>. Using Julia version 1.9.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
