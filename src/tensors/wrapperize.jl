@@ -110,7 +110,27 @@ function get_wrapper_rules(alg, depth, ctx)
     ]
 end
 
+"""
+    wrapperize(root, ctx)
 
+Convert index expressions in the program `root` to wrapper arrays, according to
+the rules in `get_wrapper_rules`. By default, the following transformations are
+performed:
+
+```julia
+A[i - j] => A[i + (-j)]
+A[i + 1] => OffsetArray(A, (1,))[i]
+A[i + j] => ToeplitzArray(A, 1)[i, j]
+A[~i] => PermissiveArray(A, 1)[i, j]
+```
+
+The loop binding order may be used to determine which index comes first in an
+expression like `A[i + j]`. Thus, `for i=:,j=:; ... A[i + j]` will result in
+`ToeplitzArray(A, 1)[j, i]`, but `for j=:,i=:; ... A[i + j]` results in
+`ToeplitzArray(A, 1)[i, j]`. `wrapperize` runs before dimensionalization, so
+resulting raw indices may participate in dimensionalization according to the
+semantics of the wrapper.
+"""
 function wrapperize(root, ctx::AbstractCompiler)
     depth = depth_calculator(root)
     Rewrite(Fixpoint(Chain([
