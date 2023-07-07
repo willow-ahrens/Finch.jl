@@ -99,7 +99,8 @@ Similarly, tensor declarations also set the dimensions of a tensor. Accessing a 
 Finch includes several array combinators that modify the behavior of arrays. For
 example, the `OffsetArray` type wraps an existing array, but shifts its
 indices. The `PermissiveArray` type wraps an existing array, but allows
-out-of-bounds reads and writes.
+out-of-bounds reads and writes. When an array is accessed out of bounds, it
+produces `Missing`.
 
 Array combinators introduce some complexity to the tensor lifecycle, as wrappers
 may contain multiple or different arrays that could potentially be in different
