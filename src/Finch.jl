@@ -48,7 +48,14 @@ include("semantics.jl")
 include("virtualize.jl")
 include("style.jl")
 include("lower.jl")
-include("dimensionalize.jl")
+
+include("transforms/concordize.jl")
+include("transforms/wrapperize.jl")
+include("transforms/scopes.jl")
+include("transforms/lifecycle.jl")
+include("transforms/dimensionalize.jl")
+
+include("execute.jl")
 
 include("symbolic/symbolic.jl")
 
@@ -65,8 +72,6 @@ include("looplets/cycles.jl")
 include("looplets/jumpers.jl")
 include("looplets/steppers.jl")
 include("looplets/fills.jl")
-
-include("execute.jl")
 
 include("tensors/scalars.jl")
 include("tensors/fibers.jl")
@@ -89,7 +94,7 @@ include("tensors/combinators/permissive.jl")
 include("tensors/combinators/offset.jl")
 include("tensors/combinators/toeplitz.jl")
 include("tensors/combinators/windowed.jl")
-include("tensors/wrapperize.jl")
+
 
 include("traits.jl")
 
