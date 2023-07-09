@@ -6,8 +6,8 @@ begin
     F_lvl = ((ex.bodies[2]).body.body.rhs.args[3]).tns.tns.lvl
     F_lvl_2 = F_lvl.lvl
     C_lvl_qos_stop = 0
-    resize_if_smaller!(C_lvl.ptr, 1 + 1)
-    fill_range!(C_lvl.ptr, 0, 1 + 1, 1 + 1)
+    (Finch).resize_if_smaller!(C_lvl.ptr, 1 + 1)
+    (Finch).fill_range!(C_lvl.ptr, 0, 1 + 1, 1 + 1)
     C_lvl_qos = 0 + 1
     A_lvl_q_2 = A_lvl.ptr[1]
     A_lvl_q_stop_2 = A_lvl.ptr[1 + 1]
@@ -29,9 +29,9 @@ begin
                 A_lvl_2_val_2 = A_lvl_2.val[A_lvl_q_2]
                 if C_lvl_qos > C_lvl_qos_stop
                     C_lvl_qos_stop = max(C_lvl_qos_stop << 1, 1)
-                    resize_if_smaller!(C_lvl.idx, C_lvl_qos_stop)
-                    resize_if_smaller!(C_lvl_2.val, C_lvl_qos_stop)
-                    fill_range!(C_lvl_2.val, 0.0, C_lvl_qos, C_lvl_qos_stop)
+                    (Finch).resize_if_smaller!(C_lvl.idx, C_lvl_qos_stop)
+                    (Finch).resize_if_smaller!(C_lvl_2.val, C_lvl_qos_stop)
+                    (Finch).fill_range!(C_lvl_2.val, 0.0, C_lvl_qos, C_lvl_qos_stop)
                 end
                 C_lvldirty = false
                 s_2 = -phase_stop_2

@@ -28,8 +28,8 @@ quote
     B_lvl_qos_stop = 0
     empty!(B_lvl.tbl)
     empty!(B_lvl.srt)
-    resize_if_smaller!(B_lvl.ptr, 1 + 1)
-    fill_range!(B_lvl.ptr, 0, 1 + 1, 1 + 1)
+    (Finch).resize_if_smaller!(B_lvl.ptr, 1 + 1)
+    (Finch).fill_range!(B_lvl.ptr, 0, 1 + 1, 1 + 1)
     for j_4 = 1:A_lvl.shape
         A_lvl_q = (1 - 1) * A_lvl.shape + j_4
         A_lvl_2_q = A_lvl_2.ptr[A_lvl_q]
@@ -54,8 +54,8 @@ quote
                     B_lvl_q_2 = get(B_lvl.tbl, B_lvl_key_2, B_lvl_qos_fill + 1)
                     if B_lvl_q_2 > B_lvl_qos_stop
                         B_lvl_qos_stop = max(B_lvl_qos_stop << 1, 1)
-                        resize_if_smaller!(B_lvl_2.val, B_lvl_qos_stop)
-                        fill_range!(B_lvl_2.val, 0.0, B_lvl_q_2, B_lvl_qos_stop)
+                        (Finch).resize_if_smaller!(B_lvl_2.val, B_lvl_qos_stop)
+                        (Finch).fill_range!(B_lvl_2.val, 0.0, B_lvl_q_2, B_lvl_qos_stop)
                     end
                     B_lvl_2.val[B_lvl_q_2] = A_lvl_3_val_2
                     if B_lvl_q_2 > B_lvl_qos_fill
