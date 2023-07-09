@@ -6,10 +6,11 @@ Scalar(D, args...) = Scalar{D}(args...)
 Scalar{D}(args...) where {D} = Scalar{D, typeof(D)}(args...)
 Scalar{D, Tv}() where {D, Tv} = Scalar{D, Tv}(D)
 
-@inline Base.ndims(tns::Scalar) = 0
+@inline Base.ndims(::Type{<:Scalar}) = 0
 @inline Base.size(::Scalar) = ()
 @inline Base.axes(::Scalar) = ()
 @inline Base.eltype(::Scalar{D, Tv}) where {D, Tv} = Tv
+@inline default(::Type{<:Scalar{D}}) where {D} = D
 @inline default(::Scalar{D}) where {D} = D
 
 (tns::Scalar)() = tns.val
@@ -55,10 +56,10 @@ end
 function freeze!(tns::VirtualScalar, ctx)
     return tns
 end
-get_reader(tns::VirtualScalar, ctx) = tns
-get_updater(tns::VirtualScalar, ctx) = tns
+instantiate_reader(tns::VirtualScalar, ctx) = tns
+instantiate_updater(tns::VirtualScalar, ctx) = tns
 
-function lowerjulia_access(ctx::AbstractCompiler, node, tns::VirtualScalar)
+function lower_access(ctx::AbstractCompiler, node, tns::VirtualScalar)
     @assert isempty(node.idxs)
     return tns.val
 end
@@ -77,12 +78,12 @@ virtual_size(::VirtualDirtyScalar, ctx) = ()
 virtual_default(tns::VirtualDirtyScalar) = Some(tns.D)
 virtual_eltype(tns::VirtualDirtyScalar) = tns.Tv
 
-get_reader(tns::VirtualDirtyScalar, ctx) = tns
-get_updater(tns::VirtualDirtyScalar, ctx) = tns
+instantiate_reader(tns::VirtualDirtyScalar, ctx) = tns
+instantiate_updater(tns::VirtualDirtyScalar, ctx) = tns
 
 FinchNotation.finch_leaf(x::VirtualDirtyScalar) = virtual(x)
 
-function lowerjulia_access(ctx::AbstractCompiler, node, tns::VirtualDirtyScalar)
+function lower_access(ctx::AbstractCompiler, node, tns::VirtualDirtyScalar)
     @assert isempty(node.idxs)
     push!(ctx.preamble, quote
         $(tns.dirty) = true

@@ -16,6 +16,7 @@ struct SpikeStyle end
 
 (ctx::Stylize{<:AbstractCompiler})(node::Spike) = ctx.root.kind === loop ? SpikeStyle() : DefaultStyle()
 combine_style(a::DefaultStyle, b::SpikeStyle) = SpikeStyle()
+combine_style(a::LookupStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::RunStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::ThunkStyle, b::SpikeStyle) = ThunkStyle()
 combine_style(a::SimplifyStyle, b::SpikeStyle) = a
@@ -61,21 +62,9 @@ end
 
 get_spike_body(node, ctx, ext, ext_2) = node
 get_spike_body(node::Spike, ctx, ext, ext_2) = Run(node.body)
-get_spike_body(node::Shift, ctx, ext, ext_2) = Shift(
-    body = get_spike_body(node.body, ctx,
-        shiftdim(ext, call(-, node.delta)),
-        shiftdim(ext_2, call(-, node.delta))),
-    delta = node.delta)
 
 get_spike_tail(node, ctx, ext, ext_2) = node
 get_spike_tail(node::Spike, ctx, ext, ext_2) = Run(node.tail)
-get_spike_tail(node::Shift, ctx, ext, ext_2) = Shift(
-    body = get_spike_tail(node.body, ctx,
-        shiftdim(ext, call(-, node.delta)),
-        shiftdim(ext_2, call(-, node.delta))),
-    delta = node.delta)
-
-supports_shift(::SpikeStyle) = true
 
 function truncate(node::Spike, ctx, ext, ext_2)
     #if query(call(>=, call(-, getstop(ext), 1), getstop(ext_2)), ctx)

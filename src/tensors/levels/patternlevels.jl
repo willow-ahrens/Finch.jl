@@ -97,20 +97,20 @@ reassemble_level!(lvl::VirtualPatternLevel, ctx, pos_start, pos_stop) = quote en
 
 trim_level!(lvl::VirtualPatternLevel, ctx::AbstractCompiler, pos) = lvl
 
-get_reader(::VirtualSubFiber{VirtualPatternLevel}, ctx) = Fill(true)
+instantiate_reader(::VirtualSubFiber{VirtualPatternLevel}, ctx) = Fill(true)
 is_laminable_updater(lvl::VirtualPatternLevel, ctx) = true
 
-function get_updater(fbr::VirtualSubFiber{VirtualPatternLevel}, ctx)
+function instantiate_updater(fbr::VirtualSubFiber{VirtualPatternLevel}, ctx)
     val = ctx.freshen(:null)
     push!(ctx.preamble, :($val = false))
     VirtualScalar(nothing, Bool, false, gensym(), val)
 end
 
-function get_updater(fbr::VirtualTrackedSubFiber{VirtualPatternLevel}, ctx)
+function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualPatternLevel}, ctx)
     VirtualScalar(nothing, Bool, false, gensym(), fbr.dirty)
 end
 
-function lowerjulia_access(ctx::AbstractCompiler, node, tns::VirtualFiber{VirtualPatternLevel})
+function lower_access(ctx::AbstractCompiler, node, tns::VirtualFiber{VirtualPatternLevel})
     val = ctx.freshen(:null)
     push!(ctx.preamble, :($val = false))
     val

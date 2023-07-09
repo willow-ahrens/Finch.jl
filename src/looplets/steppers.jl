@@ -15,6 +15,7 @@ FinchNotation.finch_leaf(x::Stepper) = virtual(x)
 (ctx::Stylize{<:AbstractCompiler})(node::Stepper) = ctx.root.kind === loop ? StepperStyle() : DefaultStyle()
 
 combine_style(a::DefaultStyle, b::StepperStyle) = StepperStyle()
+combine_style(a::LookupStyle, b::StepperStyle) = StepperStyle()
 combine_style(a::StepperStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::StepperStyle, b::StepperStyle) = StepperStyle()
 combine_style(a::StepperStyle, b::RunStyle) = RunStyle()
@@ -61,8 +62,5 @@ phase_body(node::Step, ctx, ext, ext_2) =
             epilogue = node.next(ctx, ext_2)
         ),
         literal(true) => 
-            #truncate(node.body, ctx, ext, Extent(getstart(ext_2), bound_above!(getstop(ext_2), call(-, getstop(ext), 1)))),
-            truncate(node.body, ctx, ext, Extent(getstart(ext_2), bound_above!(getstop(ext_2), call(-, getstop(ext), Eps)))),
+            truncate(node.body, ctx, ext, Extent(getstart(ext_2), bound_above!(getstop(ext_2), call(-, getstop(ext), 1)))),
         ])
-
-supports_shift(::StepperStyle) = true

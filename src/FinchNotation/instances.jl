@@ -13,14 +13,15 @@ struct IndexInstance{name} <: FinchNodeInstance end
 
 Base.show(io::IO, node::IndexInstance{name}) where {name} = print(io, "index_instance(", Symbol(name), ")")
 
-struct ProtocolInstance{Idx, Mode} <: FinchNodeInstance
-	idx::Idx
-	mode::Mode
+struct DefineInstance{Lhs, Rhs} <: FinchNodeInstance
+	lhs::Lhs
+	rhs::Rhs
 end
+Base.:(==)(a::DefineInstance, b::DefineInstance) = a.lhs == b.lhs && a.rhs == b.rhs
 
-Base.:(==)(a::ProtocolInstance, b::ProtocolInstance) = a.idx == b.idx && a.mode == b.mode
+@inline define_instance(lhs, rhs) = DefineInstance(lhs, rhs)
 
-@inline protocol_instance(idx, mode) = ProtocolInstance(idx, mode)
+Base.show(io::IO, node::DefineInstance) = print(io, "define_instance(", node.lhs, ", ", node.rhs, ")")
 
 struct DeclareInstance{Tns, Init} <: FinchNodeInstance
 	tns::Tns
@@ -49,15 +50,6 @@ Base.:(==)(a::ThawInstance, b::ThawInstance) = a.tns == b.tns
 @inline thaw_instance(tns) = ThawInstance(tns)
 
 Base.show(io::IO, node::ThawInstance) = print(io, "thaw_instance(", node.tns, ")")
-
-struct ForgetInstance{Tns} <: FinchNodeInstance
-	tns::Tns
-end
-Base.:(==)(a::ForgetInstance, b::ForgetInstance) = a.tns == b.tns
-
-@inline forget_instance(tns) = ForgetInstance(tns)
-
-Base.show(io::IO, node::ForgetInstance) = print(io, "forget_instance(", node.tns, ")")
 
 struct SequenceInstance{Bodies} <: FinchNodeInstance
     bodies::Bodies
@@ -129,17 +121,36 @@ Base.show(io::IO, node::AccessInstance) = print(io, "access_instance(", node.tns
 
 @inline access_instance(tns, mode, idxs...) = AccessInstance(tns, mode, idxs)
 
-struct VariableInstance{tag, Tns} <: FinchNodeInstance
+
+"""
+	TagInstance{tag, Tns}(tns)
+
+Because the finch compiler cannot pass variable state from the program domain to
+the type domain directly, the `TagInstance` type represents a value `tns`
+referred to by a variable named `tag`. All `TagInstance` in the same program
+must agree on the value of variables, and only one value will be virtualized.
+"""
+struct TagInstance{tag, Tns} <: FinchNodeInstance
     tns::Tns
 end
 
+Base.:(==)(a::TagInstance, b::TagInstance) = false
+Base.:(==)(a::TagInstance{tag}, b::TagInstance{tag}) where {tag} = a.tns == b.tns
+
+@inline tag_instance(tag, tns) = TagInstance{tag, typeof(tns)}(tns)
+@inline tag_instance(tag, tns::IndexInstance) = tns #TODO this should be syntactic
+
+Base.show(io::IO, node::TagInstance{tag}) where {tag} = print(io, "tag_instance(:", tag, ", ", tag, ")")
+
+struct VariableInstance{tag} <: FinchNodeInstance
+end
+
 Base.:(==)(a::VariableInstance, b::VariableInstance) = false
-Base.:(==)(a::VariableInstance{tag}, b::VariableInstance{tag}) where {tag} = a.tns == b.tns
+Base.:(==)(a::VariableInstance{tag}, b::VariableInstance{tag}) where {tag} = true
 
-@inline variable_instance(tag, tns) = VariableInstance{tag, typeof(tns)}(tns)
-@inline variable_instance(tag, tns::IndexInstance) = tns #TODO this should be syntactic
+@inline variable_instance(tag) = VariableInstance{tag}()
 
-Base.show(io::IO, node::VariableInstance{tag}) where {tag} = print(io, "variable_instance(:", tag, ", ", tag, ")")
+Base.show(io::IO, node::VariableInstance{tag}) where {tag} = print(io, "variable_instance(:", tag, ")")
 
 struct ReaderInstance end
 
@@ -149,31 +160,13 @@ Base.:(==)(a::ReaderInstance, b::ReaderInstance) = true
 
 Base.show(io::IO, node::ReaderInstance) = print(io, "reader_instance()")
 
-struct UpdaterInstance{Mode}
-	mode::Mode
-end
+struct UpdaterInstance end
 
-@inline updater_instance(mode) = UpdaterInstance(mode)
+updater_instance() = UpdaterInstance()
 
-Base.:(==)(a::UpdaterInstance, b::UpdaterInstance) = a.mode == b.mode
+Base.:(==)(a::UpdaterInstance, b::UpdaterInstance) = true
 
-Base.show(io::IO, node::UpdaterInstance) = print(io, "updater_instance(", node.mode, ")")
-
-struct ModifyInstance end
-
-modify_instance() = ModifyInstance()
-
-Base.:(==)(a::ModifyInstance, b::ModifyInstance) = true
-
-Base.show(io::IO, node::ModifyInstance) = print(io, "modify_instance()")
-
-struct CreateInstance end
-
-create_instance() = CreateInstance()
-
-Base.:(==)(a::CreateInstance, b::CreateInstance) = true
-
-Base.show(io::IO, node::CreateInstance) = print(io, "create_instance()")
+Base.show(io::IO, node::UpdaterInstance) = print(io, "updater_instance()")
 
 @inline finch_leaf_instance(arg::Type) = literal_instance(arg)
 @inline finch_leaf_instance(arg::Function) = literal_instance(arg)

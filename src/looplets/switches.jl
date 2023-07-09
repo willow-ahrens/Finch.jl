@@ -16,13 +16,13 @@ struct SwitchStyle end
 
 (ctx::Stylize{<:AbstractCompiler})(node::Switch) = SwitchStyle()
 combine_style(a::DefaultStyle, b::SwitchStyle) = SwitchStyle()
+combine_style(a::LookupStyle, b::SwitchStyle) = SwitchStyle()
 combine_style(a::ThunkStyle, b::SwitchStyle) = ThunkStyle()
 combine_style(a::SimplifyStyle, b::SwitchStyle) = a
 combine_style(a::RunStyle, b::SwitchStyle) = SwitchStyle()
 combine_style(a::AcceptRunStyle, b::SwitchStyle) = SwitchStyle()
 combine_style(a::SpikeStyle, b::SwitchStyle) = SwitchStyle()
 combine_style(a::SwitchStyle, b::SwitchStyle) = SwitchStyle()
-supports_shift(::SwitchStyle) = true
 
 @kwdef struct SwitchVisitor
     ctx
@@ -54,9 +54,6 @@ function (ctx::SwitchVisitor)(node::FinchNode)
     end
 end
 (ctx::SwitchVisitor)(node::Switch) = node.cases
-(ctx::SwitchVisitor)(node::Shift) = map(ctx(node.body)) do (guard, body)
-    guard => Shift(body, node.delta)
-end
 
 function lower(stmt, ctx::AbstractCompiler,  ::SwitchStyle)
     cases = (SwitchVisitor(ctx=ctx))(stmt)

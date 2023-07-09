@@ -1,6 +1,6 @@
 julia> @finch_code begin
         z .= 0
-        @loop i z[i] = x[i::gallop] + y[i]
+        @loop i z[i] = x[gallop(i)] + y[i]
     end
 quote
     z_lvl = (ex.bodies[1]).tns.tns.lvl
@@ -9,7 +9,7 @@ quote
     x_lvl_2 = x_lvl.lvl
     y_lvl = ((ex.bodies[2]).body.rhs.args[2]).tns.tns.lvl
     y_lvl_2 = y_lvl.lvl
-    x_lvl.shape == y_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(x_lvl.shape) != $(y_lvl.shape))"))
+    y_lvl.shape == x_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(y_lvl.shape) != $(x_lvl.shape))"))
     z_lvl_qos_stop = 0
     resize_if_smaller!(z_lvl.ptr, 1 + 1)
     fill_range!(z_lvl.ptr, 0, 1 + 1, 1 + 1)
@@ -28,7 +28,7 @@ quote
     else
         x_lvl_i1 = 0
     end
-    phase_stop = min(x_lvl.shape, y_lvl_i1, x_lvl_i1)
+    phase_stop = min(y_lvl.shape, y_lvl_i1, x_lvl_i1)
     if phase_stop >= 1
         i = 1
         while i <= phase_stop
@@ -163,7 +163,7 @@ quote
         end
     end
     phase_start_6 = max(1, 1 + y_lvl_i1)
-    phase_stop_6 = min(x_lvl.shape, x_lvl_i1)
+    phase_stop_6 = min(y_lvl.shape, x_lvl_i1)
     if phase_stop_6 >= phase_start_6
         i = phase_start_6
         while i <= phase_stop_6
@@ -213,7 +213,7 @@ quote
         end
     end
     phase_start_9 = max(1, 1 + x_lvl_i1)
-    phase_stop_9 = min(x_lvl.shape, y_lvl_i1)
+    phase_stop_9 = min(y_lvl.shape, y_lvl_i1)
     if phase_stop_9 >= phase_start_9
         i = phase_start_9
         if y_lvl.idx[y_lvl_q] < phase_start_9
@@ -246,11 +246,11 @@ quote
     qos = z_lvl.ptr[end] - 1
     resize!(z_lvl.idx, qos)
     resize!(z_lvl_2.val, qos)
-    (z = Fiber((SparseListLevel){Int64, Int64}(z_lvl_2, x_lvl.shape, z_lvl.ptr, z_lvl.idx)),)
+    (z = Fiber((SparseListLevel){Int64, Int64}(z_lvl_2, y_lvl.shape, z_lvl.ptr, z_lvl.idx)),)
 end
 julia> @finch begin
         z .= 0
-        @loop i z[i] = x[i::gallop] + y[i]
+        @loop i z[i] = x[gallop(i)] + y[i]
     end
 (z = Fiber(SparseList{Int64, Int64}(Element{0.0, Float64}([2.0, 1.0, 3.0, 5.0, 5.0, 1.0, 6.0]), 10, [1, 8], [1, 2, 3, 5, 7, 8, 9])),)
 

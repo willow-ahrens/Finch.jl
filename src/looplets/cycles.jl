@@ -51,5 +51,3 @@ function (ctx::CycleVisitor)(node::FinchNode)
         return node
     end
 end
-
-(ctx::CycleVisitor)(node::Shift) = Shift(CycleVisitor(; kwfields(ctx)..., ext=shiftdim(ctx.ext, call(-, node.delta)))(node.body), node.delta)

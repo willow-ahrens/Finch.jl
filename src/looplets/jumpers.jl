@@ -9,6 +9,7 @@ FinchNotation.finch_leaf(x::Jumper) = virtual(x)
 (ctx::Stylize{<:AbstractCompiler})(node::Jumper) = ctx.root.kind === loop ? JumperStyle() : DefaultStyle()
 
 combine_style(a::DefaultStyle, b::JumperStyle) = JumperStyle()
+combine_style(a::LookupStyle, b::JumperStyle) = JumperStyle()
 combine_style(a::JumperStyle, b::JumperStyle) = JumperStyle()
 combine_style(a::JumperStyle, b::RunStyle) = RunStyle()
 combine_style(a::SimplifyStyle, b::JumperStyle) = a
@@ -45,8 +46,6 @@ function phase_range(node::Jump, ctx, ext)
 end
 
 phase_body(node::Jump, ctx, ext, ext_2) = node.body(ctx, ext, ext_2)
-
-supports_shift(::JumperStyle) = true
 
 Base.show(io::IO, ex::Jumper) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::Jumper)
