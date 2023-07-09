@@ -6,8 +6,8 @@ begin
     A_lvl_3 = A_lvl_2.lvl
     I_lvl = ((ex.bodies[2]).body.rhs.idxs[1]).tns.tns.lvl
     A_lvl.shape == I_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(A_lvl.shape) != $(I_lvl.shape))"))
-    resize_if_smaller!(B_lvl_2.val, A_lvl.shape)
-    fill_range!(B_lvl_2.val, 0, 1, A_lvl.shape)
+    (Finch).resize_if_smaller!(B_lvl_2.val, A_lvl.shape)
+    (Finch).fill_range!(B_lvl_2.val, 0, 1, A_lvl.shape)
     I_lvl_q = I_lvl.ptr[1]
     I_lvl_q_stop = I_lvl.ptr[1 + 1]
     i = 1
