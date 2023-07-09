@@ -212,8 +212,8 @@ function assemble_level!(lvl::VirtualSparseCOOLevel, ctx, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_start, pos_stop))
     return quote
-        $resize_if_smaller!($(lvl.ex).ptr, $pos_stop + 1)
-        $fill_range!($(lvl.ex).ptr, 0, $pos_start + 1, $pos_stop + 1)
+        $Finch.resize_if_smaller!($(lvl.ex).ptr, $pos_stop + 1)
+        $Finch.fill_range!($(lvl.ex).ptr, 0, $pos_start + 1, $pos_stop + 1)
     end
 end
 
@@ -364,7 +364,7 @@ function instantiate_updater_coo_helper(lvl::VirtualSparseCOOLevel, ctx, qos, fb
                             if $qos > $qos_stop
                                 $qos_stop = max($qos_stop << 1, 1)
                                 $(Expr(:block, map(1:lvl.N) do n
-                                    :(resize_if_smaller!($(lvl.ex).tbl[$n], $qos_stop))
+                                    :(Finch.resize_if_smaller!($(lvl.ex).tbl[$n], $qos_stop))
                                 end...))
                                 $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(qos, lvl.Tp), value(qos_stop, lvl.Tp)), ctx))
                             end

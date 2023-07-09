@@ -191,8 +191,8 @@ function assemble_level!(lvl::VirtualSparseListLevel, ctx, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_start, pos_stop))
     return quote
-        $resize_if_smaller!($(lvl.ex).ptr, $pos_stop + 1)
-        $fill_range!($(lvl.ex).ptr, 0, $pos_start + 1, $pos_stop + 1)
+        $Finch.resize_if_smaller!($(lvl.ex).ptr, $pos_stop + 1)
+        $Finch.fill_range!($(lvl.ex).ptr, 0, $pos_start + 1, $pos_stop + 1)
     end
 end
 
@@ -374,7 +374,7 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseListLevel}
                     preamble = quote
                         if $qos > $qos_stop
                             $qos_stop = max($qos_stop << 1, 1)
-                            $resize_if_smaller!($(lvl.ex).idx, $qos_stop)
+                            $Finch.resize_if_smaller!($(lvl.ex).idx, $qos_stop)
                             $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(qos, lvl.Tp), value(qos_stop, lvl.Tp)), ctx))
                         end
                         $dirty = false

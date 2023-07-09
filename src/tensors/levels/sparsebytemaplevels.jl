@@ -205,10 +205,10 @@ function assemble_level!(lvl::VirtualSparseByteMapLevel, ctx, pos_start, pos_sto
     quote
         $q_start = ($(ctx(pos_start)) - $(Tp(1))) * $(ctx(lvl.shape)) + $(Tp(1))
         $q_stop = $(ctx(pos_stop)) * $(ctx(lvl.shape))
-        $resize_if_smaller!($(lvl.ex).ptr, $pos_stop + 1)
-        $fill_range!($(lvl.ex).ptr, 0, $pos_start + 1, $pos_stop + 1)
-        $resize_if_smaller!($(lvl.ex).tbl, $q_stop)
-        $fill_range!($(lvl.ex).tbl, false, $q_start, $q_stop)
+        $Finch.resize_if_smaller!($(lvl.ex).ptr, $pos_stop + 1)
+        $Finch.fill_range!($(lvl.ex).ptr, 0, $pos_start + 1, $pos_stop + 1)
+        $Finch.resize_if_smaller!($(lvl.ex).tbl, $q_stop)
+        $Finch.fill_range!($(lvl.ex).tbl, false, $q_start, $q_stop)
         $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(q_start, lvl.Tp), value(q_stop, lvl.Tp)), ctx))
     end
 end
@@ -444,7 +444,7 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseByteMapLev
                             $(lvl.qos_fill) += 1
                             if $(lvl.qos_fill) > $(lvl.qos_stop)
                                 $(lvl.qos_stop) = max($(lvl.qos_stop) << 1, 1)
-                                $resize_if_smaller!($(lvl.ex).srt, $(lvl.qos_stop))
+                                $Finch.resize_if_smaller!($(lvl.ex).srt, $(lvl.qos_stop))
                             end
                             $(lvl.ex).srt[$(lvl.qos_fill)] = ($(ctx(pos)), $(ctx(idx)))
                         end
