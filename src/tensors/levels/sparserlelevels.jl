@@ -233,12 +233,13 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, ::
                                 body = (ctx, ext) -> Thunk( 
                                      body = (ctx) -> Pipeline([
                                         Phase(
-                                            stop = (ctx, ext) -> call(-, value(my_i_start), Eps),
+                                            #stop = (ctx, ext) -> call(-, value(my_i_start), Eps),
+                                            stop = (ctx, ext) -> call(-, value(my_i_start), 1),
                                             body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
                                         ),
                                         Phase(
                                             body = (ctx,ext) -> Run(
-                                                                    body = (instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q)), ctx, protos...))
+                                                                    body = Simplify(instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q)), ctx, protos...))
                                                                    )
                                         )
                                     ]),
