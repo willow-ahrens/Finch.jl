@@ -121,28 +121,6 @@ Base.show(io::IO, node::AccessInstance) = print(io, "access_instance(", node.tns
 
 @inline access_instance(tns, mode, idxs...) = AccessInstance(tns, mode, idxs)
 
-
-"""
-	TagInstance{tag, Tns}(tns)
-
-Because the finch compiler cannot pass variable state from the program domain to
-the type domain directly, the `TagInstance` type represents a value `tns`
-referred to by a variable named `tag`. All `TagInstance` in the same program
-must agree on the value of variables, and only one value will be virtualized.
-"""
-struct TagInstance{tag, Tns} <: FinchNodeInstance
-    tns::Tns
-end
-
-Base.:(==)(a::TagInstance, b::TagInstance) = false
-Base.:(==)(a::TagInstance{tag}, b::TagInstance{tag}) where {tag} = a.tns == b.tns
-
-@inline tag_instance(tag, tns) = TagInstance{tag, typeof(tns)}(tns)
-@inline tag_instance(tag, tns::IndexInstance) = tns
-@inline tag_instance(tag, tns::VariableInstance) = tns
-
-Base.show(io::IO, node::TagInstance{tag}) where {tag} = print(io, "tag_instance(:", tag, ", ", tag, ")")
-
 struct VariableInstance{tag} <: FinchNodeInstance
 end
 
@@ -168,6 +146,27 @@ updater_instance() = UpdaterInstance()
 Base.:(==)(a::UpdaterInstance, b::UpdaterInstance) = true
 
 Base.show(io::IO, node::UpdaterInstance) = print(io, "updater_instance()")
+
+"""
+	TagInstance{tag, Tns}(tns)
+
+Because the finch compiler cannot pass variable state from the program domain to
+the type domain directly, the `TagInstance` type represents a value `tns`
+referred to by a variable named `tag`. All `TagInstance` in the same program
+must agree on the value of variables, and only one value will be virtualized.
+"""
+struct TagInstance{tag, Tns} <: FinchNodeInstance
+    tns::Tns
+end
+
+Base.:(==)(a::TagInstance, b::TagInstance) = false
+Base.:(==)(a::TagInstance{tag}, b::TagInstance{tag}) where {tag} = a.tns == b.tns
+
+@inline tag_instance(tag, tns) = TagInstance{tag, typeof(tns)}(tns)
+@inline tag_instance(tag, tns::IndexInstance) = tns
+@inline tag_instance(tag, tns::VariableInstance) = tns
+
+Base.show(io::IO, node::TagInstance{tag}) where {tag} = print(io, "tag_instance(:", tag, ", ", tag, ")")
 
 @inline finch_leaf_instance(arg::Type) = literal_instance(arg)
 @inline finch_leaf_instance(arg::Function) = literal_instance(arg)

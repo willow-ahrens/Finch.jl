@@ -137,24 +137,19 @@ function get_program_rules(alg, shash)
             sequence(sieve(call(>, measure(ext.val), 0), assign(access(a, m), f, b)), loop(i, ext, sequence(s1..., s2...)))
         end),
 
-        #TODO incorrect
-        (@rule sequence(~s1..., declare(~a::isvariable, ~z::isliteral), ~s2..., assign(access(~c, ~m), ~f::isliteral, ~b::isliteral), ~s3...) => if ortho(a, s2) && getroot(c) == a
-            sequence(s1..., s2..., declare(a, literal(f.val(z.val, b.val))), s3...)
-        end),
-
-        (@rule sequence(~s1..., assign(access(~a::isvariable, ~m), ~f::isabelian(alg), ~b), ~s2..., assign(access(~a, ~m), ~f, ~c), ~s3...) => if ortho(a, s2)
-            sequence(s1..., assign(access(a, m), f, call(f, b, c)))
-        end),
-        (@rule sequence(~s1..., declare(~a::isvariable, ~z), ~s2..., freeze(~a), ~s3...) => if ortho(a, s2)
-            sequence(s1..., s2..., declare(a, z), freeze(a), s3...)
-        end),
-        (@rule sequence(~s1..., declare(~a::isvariable, ~z), freeze(~a), ~s2..., ~s3, ~s4...) => if ortho(a, s2)
-            #TODO this is also incorrect!
-            if (s3 = Postwalk(@rule access(~b, reader()) => if getroot(b) == a z end)(s3)) !== nothing
-                sequence(s1..., declare(a, z), freeze(a), s2..., s3, s4...)
+        (@rule sequence(~s1..., define(~a::isvariable, ~v::isconstant), ~s2...) => begin
+            s2_2 = Postwalk(@rule a => v)(sequence(s2...))
+            if s2_2 !== nothing
+                #We cannot remove the definition because we aren't sure if the variable gets referenced from a virtual.
+                sequence(s1..., define(a, v), s2_2.bodies...)
             end
         end),
-        (@rule sequence(~s1..., thaw(~a::isvariable, ~z), ~s2..., freeze(~a), ~s3...) => if ortho(a, s2)
+
+        (@rule sequence(~s1..., thaw(~a::isvariable), ~s2..., freeze(~a), ~s3...) => if ortho(a, s2)
+            sequence(s1..., s2..., s3...)
+        end),
+
+        (@rule sequence(~s1..., freeze(~a::isvariable), ~s2..., thaw(~a), ~s3...) => if ortho(a, s2)
             sequence(s1..., s2..., s3...)
         end),
     ]
