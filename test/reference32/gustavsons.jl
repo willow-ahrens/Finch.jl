@@ -12,8 +12,8 @@ begin
     B_lvl_2_qos_fill = 0
     B_lvl_2_qos_stop = 0
     p_start_2 = A_lvl.shape
-    (Finch).resize_if_smaller!(B_lvl_2.ptr, p_start_2 + 1)
-    (Finch).fill_range!(B_lvl_2.ptr, 0, 1 + 1, p_start_2 + 1)
+    Finch.resize_if_smaller!(B_lvl_2.ptr, p_start_2 + 1)
+    Finch.fill_range!(B_lvl_2.ptr, 0, 1 + 1, p_start_2 + 1)
     for j_4 = 1:A_lvl.shape
         A_lvl_q = (1 - 1) * A_lvl.shape + j_4
         B_lvl_q = (1 - 1) * A_lvl.shape + j_4
@@ -24,19 +24,19 @@ begin
             w_lvl_i = last(w_lvl.srt[w_lvl_r])
             w_lvl_q = (w_lvl_p - 1) * A_lvl_2.shape + w_lvl_i
             w_lvl.tbl[w_lvl_q] = false
-            (Finch).resize_if_smaller!(w_lvl_2.val, w_lvl_q)
-            (Finch).fill_range!(w_lvl_2.val, 0.0, w_lvl_q, w_lvl_q)
+            Finch.resize_if_smaller!(w_lvl_2.val, w_lvl_q)
+            Finch.fill_range!(w_lvl_2.val, 0.0, w_lvl_q, w_lvl_q)
         end
         w_lvl_qos_fill = 0
         w_lvl.ptr[1] = 1
         w_lvlq_start = (1 - 1) * A_lvl_2.shape + 1
         w_lvlq_stop = 1 * A_lvl_2.shape
-        (Finch).resize_if_smaller!(w_lvl.ptr, 1 + 1)
-        (Finch).fill_range!(w_lvl.ptr, 0, 1 + 1, 1 + 1)
-        (Finch).resize_if_smaller!(w_lvl.tbl, w_lvlq_stop)
-        (Finch).fill_range!(w_lvl.tbl, false, w_lvlq_start, w_lvlq_stop)
-        (Finch).resize_if_smaller!(w_lvl_2.val, w_lvlq_stop)
-        (Finch).fill_range!(w_lvl_2.val, 0.0, w_lvlq_start, w_lvlq_stop)
+        Finch.resize_if_smaller!(w_lvl.ptr, 1 + 1)
+        Finch.fill_range!(w_lvl.ptr, 0, 1 + 1, 1 + 1)
+        Finch.resize_if_smaller!(w_lvl.tbl, w_lvlq_stop)
+        Finch.fill_range!(w_lvl.tbl, false, w_lvlq_start, w_lvlq_stop)
+        Finch.resize_if_smaller!(w_lvl_2.val, w_lvlq_stop)
+        Finch.fill_range!(w_lvl_2.val, 0.0, w_lvlq_start, w_lvlq_stop)
         A_lvl_2_q = A_lvl_2.ptr[A_lvl_q]
         A_lvl_2_q_stop = A_lvl_2.ptr[A_lvl_q + 1]
         if A_lvl_2_q < A_lvl_2_q_stop
@@ -81,7 +81,7 @@ begin
                                     w_lvl_qos_fill += 1
                                     if w_lvl_qos_fill > w_lvl_qos_stop
                                         w_lvl_qos_stop = max(w_lvl_qos_stop << 1, 1)
-                                        (Finch).resize_if_smaller!(w_lvl.srt, w_lvl_qos_stop)
+                                        Finch.resize_if_smaller!(w_lvl.srt, w_lvl_qos_stop)
                                     end
                                     w_lvl.srt[w_lvl_qos_fill] = (1, phase_stop_4)
                                 end
@@ -128,9 +128,9 @@ begin
                     w_lvl_2_val_2 = w_lvl_2.val[w_lvl_q_3]
                     if B_lvl_2_qos > B_lvl_2_qos_stop
                         B_lvl_2_qos_stop = max(B_lvl_2_qos_stop << 1, 1)
-                        (Finch).resize_if_smaller!(B_lvl_2.idx, B_lvl_2_qos_stop)
-                        (Finch).resize_if_smaller!(B_lvl_3.val, B_lvl_2_qos_stop)
-                        (Finch).fill_range!(B_lvl_3.val, 0.0, B_lvl_2_qos, B_lvl_2_qos_stop)
+                        Finch.resize_if_smaller!(B_lvl_2.idx, B_lvl_2_qos_stop)
+                        Finch.resize_if_smaller!(B_lvl_3.val, B_lvl_2_qos_stop)
+                        Finch.fill_range!(B_lvl_3.val, 0.0, B_lvl_2_qos, B_lvl_2_qos_stop)
                     end
                     B_lvl_3.val[B_lvl_2_qos] = w_lvl_2_val_2
                     B_lvl_2.idx[B_lvl_2_qos] = phase_stop_8

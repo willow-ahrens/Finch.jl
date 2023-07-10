@@ -156,7 +156,7 @@ function declare_level!(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, pos, 
         $(lvl.qos_stop) = $(Tp(0))
         $(lvl.ros_fill) = $(Tp(0))
         $(lvl.ros_stop) = $(Tp(0))
-        $Finch.resize_if_smaller!($(lvl.ex).ofs, 1)
+        Finch.resize_if_smaller!($(lvl.ex).ofs, 1)
         $(lvl.ex).ofs[1] = 1
     end)
     lvl.lvl = declare_level!(lvl.lvl, ctx, qos, init)
@@ -183,8 +183,8 @@ function assemble_level!(lvl::VirtualSparseVBLLevel, ctx, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_start, pos_stop))
     return quote
-        $Finch.resize_if_smaller!($(lvl.ex).ptr, $pos_stop + 1)
-        $Finch.fill_range!($(lvl.ex).ptr, 0, $pos_start + 1, $pos_stop + 1)
+        Finch.resize_if_smaller!($(lvl.ex).ptr, $pos_stop + 1)
+        Finch.fill_range!($(lvl.ex).ptr, 0, $pos_start + 1, $pos_stop + 1)
     end
 end
 
@@ -447,8 +447,8 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseVBLLevel},
                                 $ros += $(Tp(1))
                                 if $ros > $ros_stop
                                     $ros_stop = max($ros_stop << 1, 1)
-                                    $Finch.resize_if_smaller!($(lvl.ex).idx, $ros_stop)
-                                    $Finch.resize_if_smaller!($(lvl.ex).ofs, $ros_stop + 1)
+                                    Finch.resize_if_smaller!($(lvl.ex).idx, $ros_stop)
+                                    Finch.resize_if_smaller!($(lvl.ex).ofs, $ros_stop + 1)
                                 end
                             end
                             $(lvl.ex).idx[$ros] = $my_i_prev = $(ctx(idx))

@@ -36,8 +36,8 @@ quote
     x_lvl = ((ex.bodies[2]).body.body.rhs.args[2]).tns.tns.lvl
     x_lvl_2 = x_lvl.lvl
     x_lvl.shape == A_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(x_lvl.shape) != $(A_lvl.shape))"))
-    (Finch).resize_if_smaller!(y_lvl_2.val, A_lvl_2.shape)
-    (Finch).fill_range!(y_lvl_2.val, 0.0, 1, A_lvl_2.shape)
+    Finch.resize_if_smaller!(y_lvl_2.val, A_lvl_2.shape)
+    Finch.fill_range!(y_lvl_2.val, 0.0, 1, A_lvl_2.shape)
     for j_4 = 1:x_lvl.shape
         x_lvl_q = (1 - 1) * x_lvl.shape + j_4
         A_lvl_q = (1 - 1) * A_lvl.shape + j_4

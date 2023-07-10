@@ -183,8 +183,8 @@ function assemble_level!(lvl::VirtualRepeatRLELevel, ctx, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_stop, pos_stop))
     quote
-        $Finch.resize_if_smaller!($(lvl.ex).ptr, $pos_stop + 1)
-        $Finch.fill_range!($(lvl.ex).ptr, 1, $pos_start + 1, $pos_stop + 1)
+        Finch.resize_if_smaller!($(lvl.ex).ptr, $pos_stop + 1)
+        Finch.fill_range!($(lvl.ex).ptr, 1, $pos_start + 1, $pos_stop + 1)
     end
 end
 
@@ -201,10 +201,10 @@ function freeze_level!(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, pos_st
             $(lvl.ex).ptr[$p] += $(lvl.ex).ptr[$p - 1]
         end
         $qos_fill = $(lvl.ex).ptr[$pos_stop + 1] - 1
-        $Finch.resize_if_smaller!($(lvl.ex).idx, $qos_fill)
-        $Finch.fill_range!($(lvl.ex).idx, $(ctx(lvl.shape)), $qos_stop + 1, $qos_fill)
-        $Finch.resize_if_smaller!($(lvl.ex).val, $qos_fill)
-        $Finch.fill_range!($(lvl.ex).val, $(lvl.D), $qos_stop + 1, $qos_fill)
+        Finch.resize_if_smaller!($(lvl.ex).idx, $qos_fill)
+        Finch.fill_range!($(lvl.ex).idx, $(ctx(lvl.shape)), $qos_stop + 1, $qos_fill)
+        Finch.resize_if_smaller!($(lvl.ex).val, $qos_fill)
+        Finch.fill_range!($(lvl.ex).val, $(lvl.D), $qos_stop + 1, $qos_fill)
     end)
     return lvl
 end
@@ -283,10 +283,10 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualRepeatRLELevel},
             if $my_q > $qos_stop
                 $qos_fill = $qos_stop
                 $qos_stop = max($qos_stop << 1, $my_q)
-                $Finch.resize_if_smaller!($(lvl.ex).idx, $qos_stop)
-                $Finch.fill_range!($(lvl.ex).idx, $(ctx(lvl.shape)), $qos_fill + 1, $qos_stop)
-                $Finch.resize_if_smaller!($(lvl.ex).val, $qos_stop)
-                $Finch.fill_range!($(lvl.ex).val, $(lvl.D), $qos_fill + 1, $qos_stop)
+                Finch.resize_if_smaller!($(lvl.ex).idx, $qos_stop)
+                Finch.fill_range!($(lvl.ex).idx, $(ctx(lvl.shape)), $qos_fill + 1, $qos_stop)
+                Finch.resize_if_smaller!($(lvl.ex).val, $qos_stop)
+                Finch.fill_range!($(lvl.ex).val, $(lvl.D), $qos_fill + 1, $qos_stop)
             end
             $(fbr.dirty) = true
             $(lvl.ex).idx[$my_q] = $(ctx(stop))
