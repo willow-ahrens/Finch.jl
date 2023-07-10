@@ -20,8 +20,8 @@ begin
     phase_stop = min(A_lvl.shape, A_lvl_i1_2)
     if phase_stop >= 1
         i = 1
-        if A_lvl.idx[A_lvl_q_2] < 1
-            A_lvl_q_2 = scansearch(A_lvl.idx, 1, A_lvl_q_2, A_lvl_q_stop_2 - 1)
+        if A_lvl.idx[A_lvl_q] < 1
+            A_lvl_q = Finch.scansearch(A_lvl.idx, 1, A_lvl_q, A_lvl_q_stop - 1)
         end
         while i <= phase_stop
             A_lvl_i_2 = A_lvl.idx[A_lvl_q_2]
@@ -49,8 +49,8 @@ begin
                     phase_stop_10 = min(-3 + -s_2 + A_lvl_i1, phase_stop_9)
                     if phase_stop_10 >= phase_start_9
                         j = phase_start_9
-                        if A_lvl.idx[A_lvl_q] < (phase_start_9 + s_2) + +3
-                            A_lvl_q = scansearch(A_lvl.idx, (phase_start_9 + s_2) + +3, A_lvl_q, A_lvl_q_stop - 1)
+                        if A_lvl.idx[A_lvl_q_2] < phase_start_9 + -s_2
+                            A_lvl_q_2 = Finch.scansearch(A_lvl.idx, phase_start_9 + -s_2, A_lvl_q_2, A_lvl_q_stop_2 - 1)
                         end
                         while j <= phase_stop_10
                             A_lvl_i = A_lvl.idx[A_lvl_q]

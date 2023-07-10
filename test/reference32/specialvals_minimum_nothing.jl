@@ -14,7 +14,7 @@ begin
     if phase_stop >= 1
         i = 1
         if yf_lvl.idx[yf_lvl_q] < 1
-            yf_lvl_q = scansearch(yf_lvl.idx, 1, yf_lvl_q, yf_lvl_q_stop - 1)
+            yf_lvl_q = Finch.scansearch(yf_lvl.idx, 1, yf_lvl_q, yf_lvl_q_stop - 1)
         end
         while i <= phase_stop
             yf_lvl_i = yf_lvl.idx[yf_lvl_q]

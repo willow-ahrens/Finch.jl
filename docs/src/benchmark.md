@@ -39,6 +39,8 @@ using MatrixDepot
 ````
 
 ````
+[ Info: Precompiling MatrixDepot [b51810bb-c9f3-55da-ae3c-350fc1fbce05]
+[ Info: Precompiling HDF5Ext [827c409d-89e5-52bc-854d-3ee303d0ed7c]
 [ Info: verify download of index files...
 [ Info: reading database
 [ Info: adding metadata...
@@ -84,16 +86,16 @@ Benchmark the kernel, ignoring allocation costs for y
 ````
 
 ````
-BenchmarkTools.Trial: 10000 samples with 1 evaluation.
- Range (min … max):  45.542 μs …  1.382 ms  ┊ GC (min … max): 0.00% … 95.54%
- Time  (median):     50.333 μs              ┊ GC (median):    0.00%
- Time  (mean ± σ):   51.048 μs ± 25.984 μs  ┊ GC (mean ± σ):  1.01% ±  1.91%
+BenchmarkTools.Trial: 10000 samples with 130 evaluations.
+ Range (min … max):  730.446 ns …  1.143 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     733.977 ns              ┊ GC (median):    0.00%
+ Time  (mean ± σ):   746.683 ns ± 33.493 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-  ▁▁                    ▂▄▆▅▆█▇▄▃▄▄▂▃▃▃▁        ▁▂            ▂
-  ███▅▃▃▁▁▁▁▃▁▃▁▃▁▁▁▃▁▃▃████████████████▇▆▅▄▅▆▆▆██▇▆▇▇▇▇▆▆▇▇▇ █
-  45.5 μs      Histogram: log(frequency) by time      55.7 μs <
+  █▆▆▃▁ ▂▁▁ ▃▂▂                                                ▁
+  ██████████████▇▇▇▆▇▇█▇████▇█▇▇▇▆▇▇▇▇▆▆▆▇▇▇▇▄▇▆▆▅▄▆▄▅▅▄▄▄▃▅▄▅ █
+  730 ns        Histogram: log(frequency) by time       896 ns <
 
- Memory estimate: 22.97 KiB, allocs estimate: 1470.
+ Memory estimate: 0 bytes, allocs estimate: 0.
 ````
 
 The `@benchmark` macro will benchmark a function in local scope, and it will run
@@ -113,15 +115,15 @@ end
 ````
 
 ````
-BenchmarkTools.Trial: 10000 samples with 1 evaluation.
- Range (min … max):  42.375 μs …  1.413 ms  ┊ GC (min … max): 0.00% … 95.61%
- Time  (median):     47.417 μs              ┊ GC (median):    0.00%
- Time  (mean ± σ):   48.573 μs ± 29.774 μs  ┊ GC (mean ± σ):  1.36% ±  2.14%
+BenchmarkTools.Trial: 10000 samples with 99 evaluations.
+ Range (min … max):  795.040 ns …  19.548 μs  ┊ GC (min … max): 0.00% … 93.90%
+ Time  (median):     809.343 ns               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   863.538 ns ± 592.963 ns  ┊ GC (mean ± σ):  2.40% ±  3.36%
 
-   ▁           ▂▅▅▃▅█▇▄▄▃▃▃ ▁   ▂▂▁ ▁ ▁▁▁                     ▂
-  ▇██▅▄▃▃▁▁▁▁▁▁███████████████▇▇██████████▇▆▆▆▆▆▆▆▇▇▇▆▇▆▅▆▆▆▅ █
-  42.4 μs      Histogram: log(frequency) by time      58.3 μs <
+  ▄██▆▃▂▂▂▂▂▁▁▁▁▂▂▃▃▃▃▂▁▁▂▁▁▁▁▁   ▁                             ▂
+  ███████████████████████████████████▇▇▇▇▇▆▇▆▇▆▆▇▆▆▆▆▅▅▆▆▆▄▄▅▄▅ █
+  795 ns        Histogram: log(frequency) by time       1.13 μs <
 
- Memory estimate: 23.56 KiB, allocs estimate: 1472.
+ Memory estimate: 608 bytes, allocs estimate: 2.
 ````
 

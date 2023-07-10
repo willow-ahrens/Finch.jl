@@ -6,13 +6,13 @@ begin
     A_lvl_3 = A_lvl_2.lvl
     I_lvl = ((ex.bodies[2]).body.rhs.idxs[1]).tns.tns.lvl
     A_lvl.shape == I_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(A_lvl.shape) != $(I_lvl.shape))"))
-    resize_if_smaller!(B_lvl_2.val, A_lvl.shape)
-    fill_range!(B_lvl_2.val, 0, 1, A_lvl.shape)
+    Finch.resize_if_smaller!(B_lvl_2.val, A_lvl.shape)
+    Finch.fill_range!(B_lvl_2.val, 0, 1, A_lvl.shape)
     I_lvl_q = I_lvl.ptr[1]
     I_lvl_q_stop = I_lvl.ptr[1 + 1]
     i = 1
     if I_lvl.idx[I_lvl_q] < 1
-        I_lvl_q = scansearch(I_lvl.idx, 1, I_lvl_q, I_lvl_q_stop - 1)
+        I_lvl_q = Finch.scansearch(I_lvl.idx, 1, I_lvl_q, I_lvl_q_stop - 1)
     end
     while i <= A_lvl.shape
         I_lvl_i = I_lvl.idx[I_lvl_q]

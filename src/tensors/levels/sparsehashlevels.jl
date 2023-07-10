@@ -236,8 +236,8 @@ function assemble_level!(lvl::VirtualSparseHashLevel, ctx, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_start, pos_stop))
     return quote
-        $resize_if_smaller!($(lvl.ex).ptr, $pos_stop + 1)
-        $fill_range!($(lvl.ex).ptr, 0, $pos_start + 1, $pos_stop + 1)
+        Finch.resize_if_smaller!($(lvl.ex).ptr, $pos_stop + 1)
+        Finch.fill_range!($(lvl.ex).ptr, 0, $pos_start + 1, $pos_stop + 1)
     end
 end
 
