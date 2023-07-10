@@ -148,9 +148,10 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
             body = sequence(root.bodies[2:end]...)
             preamble = quote end
 
+            println(root)
             if head.kind === define
                 @assert head.lhs.kind === variable
-                ctx.bindings[head.lhs] = ctx(head.rhs)
+                ctx.bindings[head.lhs] = cache!(ctx, head.lhs.name, head.rhs)
                 push!(ctx.scope, head.lhs)
             elseif head.kind === declare
                 @assert head.tns.kind === variable
@@ -242,6 +243,8 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
         lhs = ctx(root.lhs)
         return :($lhs = $rhs)
     elseif root.kind === variable
+        println(root)
+        println(ctx.bindings)
         return ctx(ctx.bindings[root])
     else
         error("unimplemented ($root)")

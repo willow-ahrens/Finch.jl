@@ -138,7 +138,8 @@ Base.:(==)(a::TagInstance, b::TagInstance) = false
 Base.:(==)(a::TagInstance{tag}, b::TagInstance{tag}) where {tag} = a.tns == b.tns
 
 @inline tag_instance(tag, tns) = TagInstance{tag, typeof(tns)}(tns)
-@inline tag_instance(tag, tns::IndexInstance) = tns #TODO this should be syntactic
+@inline tag_instance(tag, tns::IndexInstance) = tns
+@inline tag_instance(tag, tns::VariableInstance) = tns
 
 Base.show(io::IO, node::TagInstance{tag}) where {tag} = print(io, "tag_instance(:", tag, ", ", tag, ")")
 
