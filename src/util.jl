@@ -155,6 +155,8 @@ function ispure(x)
         return string(x) == "!" || (string(x)[end] != '!' && string(x) != "throw" && string(x) != "error")
     elseif @capture x :.(~mod, ~fn)
         return ispure(fn)
+    elseif x isa Function
+        return ispure(unresolve1(x))
     else
         return false
     end
