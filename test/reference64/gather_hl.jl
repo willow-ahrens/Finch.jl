@@ -14,7 +14,7 @@ begin
     if phase_stop >= 5
         s = 5
         if A_lvl.idx[A_lvl_q] < 5
-            A_lvl_q = scansearch(A_lvl.idx, 5, A_lvl_q, A_lvl_q_stop - 1)
+            A_lvl_q = Finch.scansearch(A_lvl.idx, 5, A_lvl_q, A_lvl_q_stop - 1)
         end
         while s <= phase_stop
             A_lvl_i = A_lvl.idx[A_lvl_q]

@@ -3,8 +3,6 @@ SparseList (0.0) [1:7]
 ├─[1]: 1.0
 ├─[4]: 3.0
 ├─[6]: 2.0
-julia> x = Scalar(0.0)
-Scalar{0.0, Float64}(0.0)
 julia> x_min = Scalar(Inf)
 Scalar{Inf, Float64}(Inf)
 julia> x_max = Scalar(-Inf)
@@ -15,24 +13,23 @@ julia> x_var = Scalar(0.0)
 Scalar{0.0, Float64}(0.0)
 julia> @finch_code begin
         for i = _
-            x .= 0
-            x[] = X[i]
-            x_min[] << min >>= x[]
-            x_max[] << max >>= x[]
-            x_sum[] += x[]
-            x_var[] += x[] * x[]
+            x = X[i]
+            x_min[] << min >>= x
+            x_max[] << max >>= x
+            x_sum[] += x
+            x_var[] += x * x
         end
     end
 quote
-    X_lvl = (ex.body.bodies[2]).rhs.tns.tns.lvl
+    X_lvl = (ex.body.bodies[1]).rhs.tns.tns.lvl
     X_lvl_2 = X_lvl.lvl
-    x_min = (ex.body.bodies[3]).lhs.tns.tns
+    x_min = (ex.body.bodies[2]).lhs.tns.tns
     x_min_val = x_min.val
-    x_max = (ex.body.bodies[4]).lhs.tns.tns
+    x_max = (ex.body.bodies[3]).lhs.tns.tns
     x_max_val = x_max.val
-    x_sum = (ex.body.bodies[5]).lhs.tns.tns
+    x_sum = (ex.body.bodies[4]).lhs.tns.tns
     x_sum_val = x_sum.val
-    x_var = (ex.body.bodies[6]).lhs.tns.tns
+    x_var = (ex.body.bodies[5]).lhs.tns.tns
     x_var_val = x_var.val
     X_lvl_q = X_lvl.ptr[1]
     X_lvl_q_stop = X_lvl.ptr[1 + 1]
@@ -45,7 +42,7 @@ quote
     if phase_stop >= 1
         i = 1
         if X_lvl.idx[X_lvl_q] < 1
-            X_lvl_q = scansearch(X_lvl.idx, 1, X_lvl_q, X_lvl_q_stop - 1)
+            X_lvl_q = Finch.scansearch(X_lvl.idx, 1, X_lvl_q, X_lvl_q_stop - 1)
         end
         while i <= phase_stop
             X_lvl_i = X_lvl.idx[X_lvl_q]
@@ -57,8 +54,8 @@ quote
                     x_min_val = min(0.0, x_min_val)
                 end
                 X_lvl_2_val_2 = X_lvl_2.val[X_lvl_q]
-                x_min_val = min(x_min_val, X_lvl_2_val_2)
-                x_max_val = max(x_max_val, X_lvl_2_val_2)
+                x_min_val = min(X_lvl_2_val_2, x_min_val)
+                x_max_val = max(X_lvl_2_val_2, x_max_val)
                 x_sum_val = X_lvl_2_val_2 + x_sum_val
                 x_var_val = X_lvl_2_val_2 * X_lvl_2_val_2 + x_var_val
                 X_lvl_q += 1

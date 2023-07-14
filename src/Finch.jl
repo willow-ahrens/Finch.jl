@@ -118,7 +118,6 @@ include("base/limits.jl")
     end
 end
 
-#=
 @setup_workload begin
     # Putting some things in `setup` can reduce the size of the
     # precompile file and potentially make loading faster.
@@ -135,7 +134,6 @@ end
 
     end
 end
-=#
 
 include("fileio/fiberio.jl")
 include("fileio/binsparse.jl")

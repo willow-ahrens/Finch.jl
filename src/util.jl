@@ -150,7 +150,17 @@ dataflow(ex) = ex |> striplines |> desugar |> propagate_copies |> mark_dead |> p
 isassign(x) = x in Set([:+=, :*=, :&=, :|=, :(=)])
 incs = Dict(:+= => :+, :*= => :*, :&= => :&, :|= => :|)
 deincs = Dict(:+ => :+=, :* => :*=, :& => :&=, :| => :|=)
-ispure(x) = string(x) == "!" || (string(x)[end] != '!' && string(x) != "throw" && string(x) != "error")
+function ispure(x)
+    if x isa Symbol
+        return string(x) == "!" || (string(x)[end] != '!' && string(x) != "throw" && string(x) != "error")
+    elseif @capture x :.(~mod, ~fn)
+        return ispure(fn)
+    elseif x isa Function
+        return ispure(unresolve1(x))
+    else
+        return false
+    end
+end
 
 issymbol(x) = x isa Symbol
 isexpr(x) = x isa Expr
@@ -299,7 +309,7 @@ end
 
 iseffectful(ex) = false
 function iseffectful(ex::Expr)
-    @capture(ex, :call(~f::issymbol, ~args...)) && !ispure(f) && return true
+    @capture(ex, :call(~f::(!ispure), ~args...)) && return true
     @capture(ex, :(=)(~lhs::issymbol, ~rhs)) && lhs != :_ && return true
     @capture(ex, :for(~lhs, ~rhs)) && return iseffectful(rhs) #TODO this could be handled better if we desugared :for
     return any(iseffectful, ex.args)
@@ -334,9 +344,9 @@ function (ctx::MarkDead)(ex, res)
             res = false
         end
         return Expr(:block, reverse(args_2)...)
-    elseif @capture(ex, (~f)(~args...)) && f in (:ref, :call, :., :curly, :string, :kw, :parameters, :tuple)
-        res |= f == :call && !ispure(args[1])
-        return Expr(f, reverse(map((arg)->ctx(arg, res), reverse(args)))...)
+    elseif @capture(ex, (~head)(~args...)) && head in (:ref, :call, :., :curly, :string, :kw, :parameters, :tuple)
+        res |= head == :call && !ispure(args[1])
+        return Expr(head, reverse(map((arg)->ctx(arg, res), reverse(args)))...)
     elseif (@capture ex (~f)(~cond, ~body)) && f in [:&&, :||]
         ctx_2 = branch(ctx)
         body = ctx_2(body, res)

@@ -6,8 +6,8 @@ begin
     I = ((ex.bodies[2]).body.rhs.idxs[1]).tns.tns
     i_stop = -(first(I)) + last(I) + 1
     C_lvl_qos_stop = 0
-    resize_if_smaller!(C_lvl.ptr, 1 + 1)
-    fill_range!(C_lvl.ptr, 0, 1 + 1, 1 + 1)
+    Finch.resize_if_smaller!(C_lvl.ptr, 1 + 1)
+    Finch.fill_range!(C_lvl.ptr, 0, 1 + 1, 1 + 1)
     C_lvl_qos = 0 + 1
     A_lvl_q = A_lvl.ptr[1]
     A_lvl_q_stop = A_lvl.ptr[1 + 1]
@@ -20,7 +20,7 @@ begin
     if phase_stop >= 1
         i = 1
         if A_lvl.idx[A_lvl_q] < 1 + (first(I) - 1)
-            A_lvl_q = scansearch(A_lvl.idx, 1 + (first(I) - 1), A_lvl_q, A_lvl_q_stop - 1)
+            A_lvl_q = Finch.scansearch(A_lvl.idx, 1 + (first(I) - 1), A_lvl_q, A_lvl_q_stop - 1)
         end
         while i <= phase_stop
             A_lvl_i = A_lvl.idx[A_lvl_q]
@@ -29,9 +29,9 @@ begin
                 A_lvl_2_val_2 = A_lvl_2.val[A_lvl_q]
                 if C_lvl_qos > C_lvl_qos_stop
                     C_lvl_qos_stop = max(C_lvl_qos_stop << 1, 1)
-                    resize_if_smaller!(C_lvl.idx, C_lvl_qos_stop)
-                    resize_if_smaller!(C_lvl_2.val, C_lvl_qos_stop)
-                    fill_range!(C_lvl_2.val, 0.0, C_lvl_qos, C_lvl_qos_stop)
+                    Finch.resize_if_smaller!(C_lvl.idx, C_lvl_qos_stop)
+                    Finch.resize_if_smaller!(C_lvl_2.val, C_lvl_qos_stop)
+                    Finch.fill_range!(C_lvl_2.val, 0.0, C_lvl_qos, C_lvl_qos_stop)
                 end
                 C_lvl_2.val[C_lvl_qos] = A_lvl_2_val_2
                 C_lvl.idx[C_lvl_qos] = phase_stop_2

@@ -156,7 +156,7 @@ function declare_level!(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, pos, 
         $(lvl.qos_stop) = $(Tp(0))
         $(lvl.ros_fill) = $(Tp(0))
         $(lvl.ros_stop) = $(Tp(0))
-        $resize_if_smaller!($(lvl.ex).ofs, 1)
+        Finch.resize_if_smaller!($(lvl.ex).ofs, 1)
         $(lvl.ex).ofs[1] = 1
     end)
     lvl.lvl = declare_level!(lvl.lvl, ctx, qos, init)
@@ -183,8 +183,8 @@ function assemble_level!(lvl::VirtualSparseVBLLevel, ctx, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_start, pos_stop))
     return quote
-        $resize_if_smaller!($(lvl.ex).ptr, $pos_stop + 1)
-        $fill_range!($(lvl.ex).ptr, 0, $pos_start + 1, $pos_stop + 1)
+        Finch.resize_if_smaller!($(lvl.ex).ptr, $pos_stop + 1)
+        Finch.fill_range!($(lvl.ex).ptr, 0, $pos_start + 1, $pos_stop + 1)
     end
 end
 
@@ -235,7 +235,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::
                     body = (ctx, ext) -> Stepper(
                         seek = (ctx, ext) -> quote
                             if $(lvl.ex).idx[$my_r] < $(ctx(getstart(ext)))
-                                $my_r = scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_r, $my_r_stop - 1)
+                                $my_r = Finch.scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_r, $my_r_stop - 1)
                             end
                         end,
                         body = Thunk(
@@ -319,7 +319,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::
                             body = (ctx) -> Jump(
                                 seek = (ctx, ext) -> quote
                                     if $(lvl.ex).idx[$my_r] < $(ctx(getstart(ext)))
-                                        $my_r = scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_r, $my_r_stop - 1)
+                                        $my_r = Finch.scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_r, $my_r_stop - 1)
                                     end
                                     $my_i = $(lvl.ex).idx[$my_r]
                                 end,
@@ -354,7 +354,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::
                                     literal(true) => Stepper(
                                         seek = (ctx, ext) -> quote
                                             if $(lvl.ex).idx[$my_r] < $(ctx(getstart(ext)))
-                                                $my_r = scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_r, $my_r_stop - 1)
+                                                $my_r = Finch.scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_r, $my_r_stop - 1)
                                             end
                                         end,
                                         body = Thunk(
@@ -447,8 +447,8 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseVBLLevel},
                                 $ros += $(Tp(1))
                                 if $ros > $ros_stop
                                     $ros_stop = max($ros_stop << 1, 1)
-                                    $resize_if_smaller!($(lvl.ex).idx, $ros_stop)
-                                    $resize_if_smaller!($(lvl.ex).ofs, $ros_stop + 1)
+                                    Finch.resize_if_smaller!($(lvl.ex).idx, $ros_stop)
+                                    Finch.resize_if_smaller!($(lvl.ex).ofs, $ros_stop + 1)
                                 end
                             end
                             $(lvl.ex).idx[$ros] = $my_i_prev = $(ctx(idx))

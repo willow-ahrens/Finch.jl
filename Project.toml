@@ -28,7 +28,7 @@ TensorMarketExt = "TensorMarket"
 
 [compat]
 AbstractTrees = ">= 0.3.4"
-CIndices = "0.1, 0.2, 0.3"
+CIndices = "0.3"
 Compat = "3.29, 4"
 DataStructures = "0.18"
 JSON = "0.21"

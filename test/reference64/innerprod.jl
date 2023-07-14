@@ -8,8 +8,8 @@ begin
     B_lvl_2_qos_fill = 0
     B_lvl_2_qos_stop = 0
     p_start_2 = A_lvl.shape
-    resize_if_smaller!(B_lvl_2.ptr, p_start_2 + 1)
-    fill_range!(B_lvl_2.ptr, 0, 1 + 1, p_start_2 + 1)
+    Finch.resize_if_smaller!(B_lvl_2.ptr, p_start_2 + 1)
+    Finch.fill_range!(B_lvl_2.ptr, 0, 1 + 1, p_start_2 + 1)
     for j_4 = 1:A_lvl.shape
         B_lvl_q = (1 - 1) * A_lvl.shape + j_4
         A_lvl_q = (1 - 1) * A_lvl.shape + j_4
@@ -17,9 +17,9 @@ begin
         for i_4 = 1:A_lvl.shape
             if B_lvl_2_qos > B_lvl_2_qos_stop
                 B_lvl_2_qos_stop = max(B_lvl_2_qos_stop << 1, 1)
-                resize_if_smaller!(B_lvl_2.idx, B_lvl_2_qos_stop)
-                resize_if_smaller!(B_lvl_3.val, B_lvl_2_qos_stop)
-                fill_range!(B_lvl_3.val, 0.0, B_lvl_2_qos, B_lvl_2_qos_stop)
+                Finch.resize_if_smaller!(B_lvl_2.idx, B_lvl_2_qos_stop)
+                Finch.resize_if_smaller!(B_lvl_3.val, B_lvl_2_qos_stop)
+                Finch.fill_range!(B_lvl_3.val, 0.0, B_lvl_2_qos, B_lvl_2_qos_stop)
             end
             B_lvl_2dirty = false
             A_lvl_q_2 = (1 - 1) * A_lvl.shape + i_4
@@ -41,10 +41,10 @@ begin
             if phase_stop >= 1
                 k = 1
                 if A_lvl_2.idx[A_lvl_2_q] < 1
-                    A_lvl_2_q = scansearch(A_lvl_2.idx, 1, A_lvl_2_q, A_lvl_2_q_stop - 1)
+                    A_lvl_2_q = Finch.scansearch(A_lvl_2.idx, 1, A_lvl_2_q, A_lvl_2_q_stop - 1)
                 end
                 if A_lvl_2.idx[A_lvl_2_q_2] < 1
-                    A_lvl_2_q_2 = scansearch(A_lvl_2.idx, 1, A_lvl_2_q_2, A_lvl_2_q_stop_2 - 1)
+                    A_lvl_2_q_2 = Finch.scansearch(A_lvl_2.idx, 1, A_lvl_2_q_2, A_lvl_2_q_stop_2 - 1)
                 end
                 while k <= phase_stop
                     A_lvl_2_i = A_lvl_2.idx[A_lvl_2_q]
