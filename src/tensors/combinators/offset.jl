@@ -134,7 +134,9 @@ visit_simplify(node::VirtualOffsetArray) = VirtualOffsetArray(visit_simplify(nod
     guard => VirtualOffsetArray(body, node.delta)
 end
 
-(ctx::CycleVisitor)(node::VirtualOffsetArray) = VirtualOffsetArray(CycleVisitor(; kwfields(ctx)..., ext=shiftdim(ctx.ext, node.delta[end]))(node.body), node.delta)
+jumper_body(node::VirtualOffsetArray, ctx, ext) = VirtualOffsetArray(jumper_body(node.body, ctx, shiftdim(ext, node.delta[end])), node.delta)
+stepper_body(node::VirtualOffsetArray, ctx, ext) = VirtualOffsetArray(stepper_body(node.body, ctx, shiftdim(ext, node.delta[end])), node.delta)
+stepper_seek(node::VirtualOffsetArray, ctx, ext) = stepper_seek(node.body, ctx, shiftdim(ext, node.delta[end]))
 
 getroot(tns::VirtualOffsetArray) = getroot(tns.body)
 

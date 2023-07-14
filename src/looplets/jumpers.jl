@@ -20,14 +20,41 @@ combine_style(a::JumperStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::ThunkStyle, b::JumperStyle) = ThunkStyle()
 
 function lower(root::FinchNode, ctx::AbstractCompiler,  style::JumperStyle)
-    if root.kind === loop
-        return lower_cycle(root, ctx, root.idx, root.ext, style)
+    root.kind === loop || error("unimplemented")
+
+    i = getname(root.idx)
+    i0 = ctx.freshen(i, :_start)
+    push!(ctx.preamble, quote
+        $i = $(ctx(getstart(root.ext)))
+    end)
+
+    guard = :($i <= $(ctx(getstop(root.ext))))
+
+    body_2 = Rewrite(Postwalk(@rule access(~tns::isvirtual, ~mode, ~idxs...) => begin
+        tns_2 = jumper_body(tns.val, ctx, root.ext)
+        access(tns_2, mode, idxs...)
+    end))(root.body)
+
+    body_3 = contain(ctx) do ctx_2
+        push!(ctx_2.preamble, :($i0 = $i))
+        ctx_2(loop(root.idx, bound_measure_below!(Extent(start = value(i0), stop = getstop(root.ext)), literal(1)), body_2))
+    end
+
+    @assert isvirtual(root.ext)
+
+    if query(call(==, measure(root.ext.val), 1), ctx)
+        body_3
     else
-        error("unimplemented")
+        return quote
+            while $guard
+                $body_3
+            end
+        end
     end
 end
 
-(ctx::CycleVisitor{JumperStyle})(node::Jumper) = node.body
+jumper_body(node::Jumper, ctx, ext) = node.body
+jumper_body(node, ctx, ext) = node
 
 @kwdef struct Jump
     seek = nothing
