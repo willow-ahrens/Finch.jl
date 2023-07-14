@@ -210,15 +210,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
     elseif root.kind === loop
         @assert root.idx.kind === index
         @assert root.ext.kind === virtual
-        root_2 = Rewrite(Postwalk(@rule access(~tns::isvirtual, ~mode, ~idxs...) => begin
-            if !isempty(idxs) && root.idx == idxs[end]
-                tns = tns.val
-                protos = [(mode.kind === reader ? defaultread : defaultupdate) for _ in idxs]
-                tns_2 = unfurl(tns, ctx, root.ext.val, protos...)
-                access(tns_2, mode, idxs...)
-            end
-        end))(root)
-        return ctx(root_2, result_style(LookupStyle(), Stylize(root_2, ctx)(root_2)))
+        lower_loop(ctx, root, root.ext.val)
     elseif root.kind === sieve
         cond = ctx.freshen(:cond)
         push!(ctx.preamble, :($cond = $(ctx(root.cond))))
@@ -256,4 +248,31 @@ end
 function lower_access(ctx, node, tns::Number)
     @assert node.mode.kind === reader
     tns
+end
+
+function lower_loop(ctx, root, ext)
+    root_2 = Rewrite(Postwalk(@rule access(~tns::isvirtual, ~mode, ~idxs...) => begin
+        if !isempty(idxs) && root.idx == idxs[end]
+            tns = tns.val
+            protos = [(mode.kind === reader ? defaultread : defaultupdate) for _ in idxs]
+            tns_2 = unfurl(tns, ctx, root.ext.val, protos...)
+            access(tns_2, mode, idxs...)
+        end
+    end))(root)
+    return ctx(root_2, result_style(LookupStyle(), Stylize(root_2, ctx)(root_2)))
+end
+
+function lower_loop(ctx, root, ext::Parallelize)
+    #TODO Safety check that the loop can actually be parallel
+    tid = index(ctx.freshen(:tid))
+    root_2 = loop(root.idx, ext.ext,
+        sieve(access(ext.mask, reader(), tid, root.idx),
+            root.body
+        )
+    )
+    return quote
+        Threads.@threads for i = 1:Threads.nthreads()
+            $(ctx(root_2))
+        end
+    end
 end

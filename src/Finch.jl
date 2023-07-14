@@ -47,6 +47,7 @@ using .FinchNotation: and, or, InitWriter
 include("semantics.jl")
 include("virtualize.jl")
 include("style.jl")
+include("dimensions.jl")
 include("lower.jl")
 
 include("transforms/concordize.jl")
