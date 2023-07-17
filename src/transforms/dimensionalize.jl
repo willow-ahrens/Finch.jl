@@ -53,9 +53,14 @@ function (ctx::DeclareDimensions)(node::FinchNode)
             end
         end
         access(tns, mode, idxs...)
-    elseif node.kind === loop && node.ext == index(:(:))
+    elseif node.kind === loop 
+        if node.ext == index(:(:))
+            ctx.dims[node.idx] = nodim
+        else
+            ctx.dims[node.idx] = node.ext
+        end
         body = ctx(node.body)
-        haskey(ctx.dims, node.idx) || throw(FinchCompileError("could not resolve dimension of index $(node.idx)"))
+        ctx.dims[node.idx] != nodim || throw(FinchCompileError("could not resolve dimension of index $(node.idx)"))
         return loop(node.idx, cache_dim!(ctx.ctx, getname(node.idx), resolvedim(ctx.dims[node.idx])), body)
     elseif node.kind === sequence
         sequence(map(ctx, node.bodies)...)
