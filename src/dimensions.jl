@@ -97,13 +97,8 @@ suggest(ext::SuggestedExtent) = ext
 suggest(ext::NoDimension) = nodim
 
 resolvedim(ext::Symbol) = error()
-resolvedim(ext::SuggestedExtent) = ext.ext
+resolvedim(ext::SuggestedExtent) = resolvedim(ext.ext)
 cache_dim!(ctx, tag, ext::SuggestedExtent) = SuggestedExtent(cache_dim!(ctx, tag, ext.ext))
-
-#TODO maybe just call something like resolve_extent to unwrap?
-getstart(ext::SuggestedExtent) = getstart(ext.ext)
-getstop(ext::SuggestedExtent) = getstop(ext.ext)
-measure(ext::SuggestedExtent) = measure(ext.ext)
 
 combinedim(ctx, a::SuggestedExtent, b::Extent) = b
 
@@ -124,9 +119,6 @@ function checklim(ctx, a::FinchNode, b::FinchNode)
         b
     end
 end
-
-getstart(val) = val #TODO avoid generic definition here
-getstop(val) = val #TODO avoid generic herer
 
 struct Narrow{Ext}
     ext::Ext
