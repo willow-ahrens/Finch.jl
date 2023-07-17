@@ -89,6 +89,8 @@ julia> x[]
 """
 overwrite(l, r) = r
 
+struct MakeDimension end
+const mkdim = MakeDimension()
 
 struct FinchParserVisitor
     nodes
@@ -97,7 +99,7 @@ end
 
 function (ctx::FinchParserVisitor)(ex::Symbol)
     if ex == :_ || ex == :(:)
-        return ctx.nodes.index(:(:))
+        return :($mkdim)
     elseif ex in evaluable_exprs
         return ctx.nodes.literal(@eval($ex))
     else
@@ -127,10 +129,8 @@ function (ctx::FinchParserVisitor)(ex::Expr)
     elseif @capture ex :macrocall($(Symbol("@thaw")), ~ln::islinenum, ~tns)
         return :($(ctx.nodes.thaw)($(ctx(tns))))
     elseif @capture ex :for(:(=)(~idx, ~ext), ~body)
-        ext == :(:) || ext == :_ || throw(FinchSyntaxError("Finch doesn't support non-automatic loop bounds currently"))
         return ctx(:(@loop($idx = $ext, $body)))
     elseif @capture ex :for(:block(:(=)(~idx, ~ext), ~tail...), ~body)
-        ext == :(:) || ext == :_ || throw(FinchSyntaxError("Finch doesn't support non-automatic loop bounds currently"))
         if isempty(tail)
             return ctx(:(@loop($idx = $ext, $body)))
         else
