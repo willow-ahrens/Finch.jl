@@ -1,5 +1,4 @@
 @kwdef struct Phase
-    head = nothing
     body
     start = (ctx, ext) -> nothing
     stop = (ctx, ext) -> nothing
@@ -33,19 +32,22 @@ end
 phase_body(node::Phase, ctx, ext, ext_2) = node.body(ctx, ext_2)
 phase_body(node, ctx, ext, ext_2) = truncate(node, ctx, ext, ext_2)
 
-struct PhaseStyle end
+abstract type PhaseStyle end
+struct PipelinePhaseStyle <: PhaseStyle end
+struct StepperPhaseStyle <: PhaseStyle end
+struct JumperPhaseStyle <: PhaseStyle end
 
-(ctx::Stylize{<:AbstractCompiler})(node::Phase) = ctx.root.kind === loop ? PhaseStyle() : DefaultStyle()
+(ctx::Stylize{<:AbstractCompiler})(node::Phase) = ctx.root.kind === loop ? PipelinePhaseStyle() : DefaultStyle()
 
-combine_style(a::DefaultStyle, b::PhaseStyle) = PhaseStyle()
-combine_style(a::LookupStyle, b::PhaseStyle) = PhaseStyle()
-combine_style(a::PhaseStyle, b::PhaseStyle) = PhaseStyle()
-combine_style(a::PhaseStyle, b::RunStyle) = PhaseStyle()
-combine_style(a::PhaseStyle, b::SpikeStyle) = PhaseStyle()
-combine_style(a::SimplifyStyle, b::PhaseStyle) = a
-combine_style(a::AcceptRunStyle, b::PhaseStyle) = PhaseStyle()
-combine_style(a::SwitchStyle, b::PhaseStyle) = SwitchStyle()
-combine_style(a::ThunkStyle, b::PhaseStyle) = ThunkStyle()
+combine_style(a::DefaultStyle, b::PhaseStyle) = b
+combine_style(a::LookupStyle, b::PhaseStyle) = b
+combine_style(a::T, b::T) where {T<:PhaseStyle} = b
+combine_style(a::PhaseStyle, b::RunStyle) = a
+combine_style(a::PhaseStyle, b::SpikeStyle) = a
+combine_style(a::SimplifyStyle, b::PhaseStyle) = b
+combine_style(a::AcceptRunStyle, b::PhaseStyle) = b
+combine_style(a::SwitchStyle, b::PhaseStyle) = a
+combine_style(a::ThunkStyle, b::PhaseStyle) = a
 
 function lower(root::FinchNode, ctx::AbstractCompiler,  ::PhaseStyle)
     if root.kind === loop

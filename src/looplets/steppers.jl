@@ -25,7 +25,7 @@ combine_style(a::StepperStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::StepperStyle, b::SwitchStyle) = SwitchStyle()
 combine_style(a::ThunkStyle, b::StepperStyle) = ThunkStyle()
 combine_style(a::StepperStyle, b::JumperStyle) = JumperStyle()
-combine_style(a::StepperStyle, b::PhaseStyle) = PhaseStyle()
+combine_style(a::StepperStyle, b::PhaseStyle) = b
 
 function lower(root::FinchNode, ctx::AbstractCompiler,  style::StepperStyle)
     root.kind === loop || error("unimplemented")
@@ -74,12 +74,12 @@ stepper_body(node, ctx, ext) = node
     body
     stop = (ctx, ext) -> nothing
     range = (ctx, ext) -> Extent(something(start(ctx, ext), getstart(ext)), something(stop(ctx, ext), getstop(ext)))
-    next = (ctx, ext) -> quote end
+    next = (ctx, ext) -> nothing
 end
 
 FinchNotation.finch_leaf(x::Step) = virtual(x)
 
-(ctx::Stylize{<:AbstractCompiler})(node::Step) = ctx.root.kind === loop ? PhaseStyle() : DefaultStyle()
+(ctx::Stylize{<:AbstractCompiler})(node::Step) = ctx.root.kind === loop ? StepperPhaseStyle() : DefaultStyle()
 
 function phase_range(node::Step, ctx, ext)
     Narrow(bound_measure_below!(Extent(getstart(ext), node.stop(ctx, ext)), literal(1)))
@@ -91,7 +91,7 @@ function phase_body(node::Step, ctx, ext, ext_2)
         Switch([
             value(:($(ctx(node.stop(ctx, ext))) == $(ctx(getstop(ext_2))))) => Thunk(
                 body = (ctx) -> truncate(node.body, ctx, ext, Extent(getstart(ext_2), getstop(ext))),
-                epilogue = node.next(ctx, ext_2)
+                epilogue = next
             ),
             literal(true) => 
                 truncate(node.body, ctx, ext, Extent(getstart(ext_2), bound_above!(getstop(ext_2), call(-, getstop(ext), 1)))),

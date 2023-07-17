@@ -21,6 +21,7 @@ combine_style(a::AcceptRunStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::PipelineStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::PipelineStyle, b::SwitchStyle) = SwitchStyle()
 combine_style(a::SpikeStyle, b::PipelineStyle) = PipelineStyle()
+combine_style(a::PipelineStyle, b::PhaseStyle) = b
 
 function lower(root::FinchNode, ctx::AbstractCompiler,  ::PipelineStyle)
     if root.kind === loop

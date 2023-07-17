@@ -18,6 +18,7 @@ combine_style(a::JumperStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::JumperStyle, b::SwitchStyle) = SwitchStyle()
 combine_style(a::JumperStyle, b::PipelineStyle) = PipelineStyle()
 combine_style(a::ThunkStyle, b::JumperStyle) = ThunkStyle()
+combine_style(a::JumperStyle, b::PhaseStyle) = b
 
 function lower(root::FinchNode, ctx::AbstractCompiler,  style::JumperStyle)
     root.kind === loop || error("unimplemented")
@@ -65,7 +66,7 @@ end
 
 FinchNotation.finch_leaf(x::Jump) = virtual(x)
 
-(ctx::Stylize{<:AbstractCompiler})(node::Jump) = ctx.root.kind === loop ? PhaseStyle() : DefaultStyle()
+(ctx::Stylize{<:AbstractCompiler})(node::Jump) = ctx.root.kind === loop ? JumperPhaseStyle() : DefaultStyle()
 
 function phase_range(node::Jump, ctx, ext)
     push!(ctx.preamble, node.seek !== nothing ? node.seek(ctx, ext) : quote end)
