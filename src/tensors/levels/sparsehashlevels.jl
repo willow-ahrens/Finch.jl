@@ -307,7 +307,7 @@ function get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, R, start,
                                 end,
                                 body = (ctx) -> Step(
                                     stop =  (ctx, ext) -> value(my_i),
-                                    body = Spike(
+                                    chunk = Spike(
                                         body = Fill(virtual_level_default(lvl)),
                                         tail = instantiate_reader(VirtualSubFiber(lvl.lvl, value(:($(lvl.ex).srt[$my_q][2]))), ctx, protos...),
                                     ),
@@ -327,7 +327,7 @@ function get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, R, start,
                                 end,
                                 body = (ctx) -> Step(
                                     stop = (ctx, ext) -> value(my_i),
-                                    body = Spike(
+                                    chunk = Spike(
                                         body = Fill(virtual_level_default(lvl)),
                                         tail = get_multilevel_range_reader(lvl, ctx, R - 1, value(my_q, lvl.Ti), value(my_q_step, lvl.Ti), protos...),
                                     ),

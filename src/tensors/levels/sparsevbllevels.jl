@@ -366,7 +366,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::
                                             end,
                                             body = (ctx) -> Step(
                                                 stop = (ctx, ext) -> value(my_j),
-                                                body = Thunk(
+                                                body = (ctx, ext) -> Thunk(
                                                     body = (ctx) -> Pipeline([
                                                         Phase(
                                                             stop = (ctx, ext) -> value(my_i_start),

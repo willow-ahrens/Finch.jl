@@ -248,7 +248,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, :
                             end,
                             body = (ctx) -> Step(
                                 stop = (ctx, ext) -> value(my_i),
-                                body = Spike(
+                                chunk = Spike(
                                     body = Fill(virtual_level_default(lvl)),
                                     tail = instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, protos...)
                                 ),
@@ -328,7 +328,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, :
                                             ),
                                             body = (ctx) -> Step(
                                                 stop = (ctx, ext) -> value(my_i3),
-                                                body = Spike(
+                                                chunk = Spike(
                                                     body = Fill(virtual_level_default(lvl)),
                                                     tail =  instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, protos...),
                                                 ),

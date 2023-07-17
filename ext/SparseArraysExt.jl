@@ -101,7 +101,7 @@ function Finch.instantiate_reader(arr::VirtualSparseMatrixCSC, ctx::AbstractComp
                                         end,
                                         body = (ctx) -> Step(
                                             stop = (ctx, ext) -> value(my_i),
-                                            body = Spike(
+                                            chunk = Spike(
                                                 body = Fill(zero(arr.Tv)),
                                                 tail = Thunk(
                                                     preamble = quote
@@ -202,7 +202,7 @@ function Finch.instantiate_reader(arr::VirtualSparseVector, ctx::AbstractCompile
                                 end,
                                 body = (ctx) -> Step(
                                     stop = (ctx, ext) -> value(my_i),
-                                    body = Spike(
+                                    chunk = Spike(
                                         body = Fill(zero(arr.Tv)),
                                         tail = Thunk(
                                             preamble = quote
