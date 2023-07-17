@@ -150,6 +150,7 @@ function shiftdim(ext::Extent, delta)
 end
 
 shiftdim(ext::NoDimension, delta) = nodim
+shiftdim(ext::ParallelDimension, delta) = ParallelDimension(ext, shiftdim(ext.ext, delta))
 
 function shiftdim(ext::FinchNode, body)
     if ext.kind === virtual

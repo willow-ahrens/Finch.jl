@@ -265,13 +265,16 @@ end
 function lower_loop(ctx, root, ext::ParallelDimension)
     #TODO Safety check that the loop can actually be parallel
     tid = index(ctx.freshen(:tid))
-    root_2 = loop(root.idx, ext.ext,
-        sieve(access(ext.mask, reader(), tid, root.idx),
-            root.body
+    i = ctx.freshen(:i)
+    root_2 = loop(tid, Extent(value(i, Int), value(i, Int)),
+        loop(root.idx, ext.ext,
+            sieve(access(ext.mask, reader(), tid, root.idx),
+                root.body
+            )
         )
     )
     return quote
-        Threads.@threads for i = 1:Threads.nthreads()
+        Threads.@threads for $i = 1:Threads.nthreads()
             $(ctx(root_2))
         end
     end
