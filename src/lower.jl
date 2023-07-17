@@ -262,7 +262,7 @@ function lower_loop(ctx, root, ext)
     return ctx(root_2, result_style(LookupStyle(), Stylize(root_2, ctx)(root_2)))
 end
 
-function lower_loop(ctx, root, ext::Parallelize)
+function lower_loop(ctx, root, ext::ParallelDimension)
     #TODO Safety check that the loop can actually be parallel
     tid = index(ctx.freshen(:tid))
     root_2 = loop(root.idx, ext.ext,

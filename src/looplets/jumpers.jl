@@ -70,7 +70,7 @@ FinchNotation.finch_leaf(x::Jump) = virtual(x)
 
 function phase_range(node::Jump, ctx, ext)
     push!(ctx.preamble, node.seek !== nothing ? node.seek(ctx, ext) : quote end)
-    Widen(Extent(getstart(ext), node.stop(ctx, ext)))
+    Extent(getstart(ext), node.stop(ctx, ext))
 end
 
 phase_body(node::Jump, ctx, ext, ext_2) = node.body(ctx, ext, ext_2)

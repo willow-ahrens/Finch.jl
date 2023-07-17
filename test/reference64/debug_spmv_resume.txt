@@ -380,12 +380,12 @@ end, quote
     end
     res = begin
             j = @finch{#0,lower.jl:129}(1)
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -420,12 +420,12 @@ end, quote
     end
     res = begin
             j = 1
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -469,7 +469,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -513,7 +513,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -557,7 +557,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -601,7 +601,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -645,7 +645,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -692,7 +692,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -739,7 +739,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -786,7 +786,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -826,7 +826,7 @@ end, quote
                 while j <= phase_stop
                     j_start_2 = j
                     x_lvl_i = x_lvl.idx[x_lvl_q]
-                    res_2 = @finch{#0,phases.jl:52} begin
+                    res_2 = @finch{#0,phases.jl:56} begin
                           for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                             virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Step)[j], virtual(Finch.Lookup)[i, j])
                           end
@@ -834,7 +834,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -886,7 +886,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -946,7 +946,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -1006,7 +1006,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -1066,7 +1066,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -1126,7 +1126,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -1186,7 +1186,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -1248,7 +1248,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -1317,7 +1317,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -1386,7 +1386,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -1455,7 +1455,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -1523,7 +1523,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -1585,7 +1585,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -1647,7 +1647,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -1712,7 +1712,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -1777,7 +1777,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -1845,7 +1845,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -1913,7 +1913,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -1981,7 +1981,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -2050,7 +2050,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -2119,7 +2119,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -2188,7 +2188,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -2257,7 +2257,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -2326,7 +2326,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -2406,7 +2406,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -2486,7 +2486,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -2566,7 +2566,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -2626,12 +2626,12 @@ end, quote
                                                         end
                                                         res_6 = begin
                                                                 i = @finch{#0,lower.jl:129}(1)
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -2654,7 +2654,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -2714,12 +2714,12 @@ end, quote
                                                         end
                                                         res_6 = begin
                                                                 i = 1
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -2742,7 +2742,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -2811,7 +2811,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -2834,7 +2834,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -2903,7 +2903,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -2926,7 +2926,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -2995,7 +2995,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -3018,7 +3018,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -3087,7 +3087,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -3110,7 +3110,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -3179,7 +3179,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -3202,7 +3202,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -3274,7 +3274,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -3297,7 +3297,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -3369,7 +3369,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -3392,7 +3392,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -3464,7 +3464,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -3487,7 +3487,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -3552,7 +3552,7 @@ end, quote
                                                                     while i <= phase_stop_3
                                                                         i_start_2 = i
                                                                         A_lvl_2_i = A_lvl_2.idx[A_lvl_2_q]
-                                                                        res_7 = @finch{#0,phases.jl:52} begin
+                                                                        res_7 = @finch{#0,phases.jl:56} begin
                                                                               for i = virtual(Finch.Extent)
                                                                                 virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Step)[i])
                                                                               end
@@ -3560,7 +3560,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -3583,7 +3583,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -3660,7 +3660,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -3683,7 +3683,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -3768,7 +3768,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -3791,7 +3791,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -3876,7 +3876,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -3899,7 +3899,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -3984,7 +3984,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -4007,7 +4007,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -4092,7 +4092,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -4115,7 +4115,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -4200,7 +4200,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -4223,7 +4223,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -4310,7 +4310,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -4333,7 +4333,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -4427,7 +4427,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -4450,7 +4450,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -4544,7 +4544,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -4567,7 +4567,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -4661,7 +4661,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -4684,7 +4684,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -4777,7 +4777,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -4800,7 +4800,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -4887,7 +4887,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -4910,7 +4910,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -4997,7 +4997,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -5020,7 +5020,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -5110,7 +5110,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -5133,7 +5133,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -5223,7 +5223,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -5246,7 +5246,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -5337,7 +5337,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -5360,7 +5360,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -5451,7 +5451,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -5474,7 +5474,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -5565,7 +5565,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -5588,7 +5588,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -5680,7 +5680,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -5703,7 +5703,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -5795,7 +5795,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -5818,7 +5818,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -5910,7 +5910,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -5933,7 +5933,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -6025,7 +6025,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -6048,7 +6048,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -6138,7 +6138,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -6161,7 +6161,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -6251,7 +6251,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -6274,7 +6274,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -6364,7 +6364,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -6387,7 +6387,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -6477,7 +6477,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -6500,7 +6500,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -6590,7 +6590,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -6613,7 +6613,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -6703,7 +6703,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -6726,7 +6726,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -6816,7 +6816,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -6839,7 +6839,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -6929,7 +6929,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -6952,7 +6952,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -7042,7 +7042,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -7065,7 +7065,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -7155,7 +7155,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -7178,7 +7178,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -7268,7 +7268,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -7291,7 +7291,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -7381,7 +7381,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -7404,7 +7404,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -7494,7 +7494,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -7517,7 +7517,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -7606,7 +7606,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -7629,7 +7629,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -7714,7 +7714,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -7737,7 +7737,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -7822,7 +7822,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -7845,7 +7845,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -7930,7 +7930,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -7953,7 +7953,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -8038,7 +8038,7 @@ end, quote
                                                                     end
                                                                     i = @finch{#0,lower.jl:129}(phase_stop_3) + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -8061,7 +8061,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -8146,7 +8146,7 @@ end, quote
                                                                     end
                                                                     i = phase_stop_3 + 1
                                                                 end
-                                                                @finch{#0,phases.jl:52} begin
+                                                                @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
                                                                     virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
                                                                   end
@@ -8169,7 +8169,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -8281,7 +8281,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -8393,7 +8393,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -8505,7 +8505,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -8617,7 +8617,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -8729,7 +8729,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -8841,7 +8841,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -8953,7 +8953,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -9064,7 +9064,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -9171,7 +9171,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -9278,7 +9278,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -9385,7 +9385,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -9492,7 +9492,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -9599,7 +9599,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -9705,7 +9705,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -9807,7 +9807,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -9909,7 +9909,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -10011,7 +10011,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -10113,7 +10113,7 @@ end, quote
                 end
                 j = @finch{#0,lower.jl:129}(phase_stop) + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end
@@ -10215,7 +10215,7 @@ end, quote
                 end
                 j = phase_stop + 1
             end
-            @finch{#0,phases.jl:52} begin
+            @finch{#0,phases.jl:56} begin
               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                 virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
               end

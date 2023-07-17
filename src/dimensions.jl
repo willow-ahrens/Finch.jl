@@ -8,6 +8,8 @@ getstop(::NoDimension) = error("asked for stop of dimensionless range")
 
 struct UnknownDimension end
 
+resolvedim(ext) = ext
+
 resultdim(ctx, a, b, c, tail...) = resultdim(ctx, a, resultdim(ctx, b, c, tail...))
 function resultdim(ctx, a, b)
     c = combinedim(ctx, a, b)
@@ -84,8 +86,8 @@ combinedim(ctx, a::Extent, b::Extent) =
 
 combinedim(ctx, a::NoDimension, b::Extent) = b
 
-struct SuggestedExtent{Ext}
-    ext::Ext
+struct SuggestedExtent
+    ext
 end
 
 FinchNotation.finch_leaf(x::SuggestedExtent) = virtual(x)
@@ -120,92 +122,69 @@ function checklim(ctx, a::FinchNode, b::FinchNode)
     end
 end
 
-struct Narrow{Ext}
-    ext::Ext
-end
-
-function Narrow(ext::FinchNode)
-    if ext.kind === virtual
-        Narrow(ext.val)
-    else
-        error("unimplemented")
-    end
-end
-
-FinchNotation.finch_leaf(x::Narrow) = virtual(x)
-
-narrowdim(dim) = Narrow(dim)
-narrowdim(::NoDimension) = nodim
-
-Base.:(==)(a::Narrow, b::Narrow) = a.ext == b.ext
-
-getstart(ext::Narrow) = getstart(ext.ext)
-getstop(ext::Narrow) = getstop(ext.ext)
-
-struct Widen{Ext}
-    ext::Ext
-end
-
-function Widen(ext::FinchNode)
-    if ext.kind === virtual
-        Widen(ext.val)
-    else
-        error("unimplemented")
-    end
-end
-
-FinchNotation.finch_leaf(x::Widen) = virtual(x)
-
-widendim(dim) = Widen(dim)
-widendim(::NoDimension) = nodim
-
-Base.:(==)(a::Widen, b::Widen) = a.ext == b.ext
-
-getstart(ext::Widen) = getstart(ext.ext)
-getstop(ext::Widen) = getstop(ext.ext)
-
-combinedim(ctx, a::Narrow, b::Extent) = resultdim(ctx, a, Narrow(b))
-combinedim(ctx, a::Narrow, b::SuggestedExtent) = a
-combinedim(ctx, a::Narrow, b::NoDimension) = a
-
-function combinedim(ctx, a::Narrow{<:Extent}, b::Narrow{<:Extent})
-    Narrow(Extent(
-        start = @f(max($(getstart(a)), $(getstart(b)))),
-        stop = @f(min($(getstop(a)), $(getstop(b))))
-    ))
-end
-
-combinedim(ctx, a::Widen, b::Extent) = b
-combinedim(ctx, a::Widen, b::NoDimension) = a
-combinedim(ctx, a::Widen, b::SuggestedExtent) = a
-
-function combinedim(ctx, a::Widen{<:Extent}, b::Widen{<:Extent})
-    Widen(Extent(
-        start = @f(min($(getstart(a)), $(getstart(b)))),
-        stop = @f(max($(getstop(a)), $(getstop(b))))
-    ))
-end
-
-resolvedim(ext) = ext
-resolvedim(ext::Narrow) = resolvedim(ext.ext)
-resolvedim(ext::Widen) = resolvedim(ext.ext)
-cache_dim!(ctx, tag, ext::Narrow) = Narrow(cache_dim!(ctx, tag, ext.ext))
-cache_dim!(ctx, tag, ext::Widen) = Widen(cache_dim!(ctx, tag, ext.ext))
-
-struct Parallelize
+struct ParallelDimension
     ext
 end
 
-FinchNotation.finch_leaf(x::Parallelize) = virtual(x)
+FinchNotation.finch_leaf(x::ParallelDimension) = virtual(x)
 
-Base.:(==)(a::Parallelize, b::Parallelize) = a.ext == b.ext
+Base.:(==)(a::ParallelDimension, b::ParallelDimension) = a.ext == b.ext
 
-getstart(ext::Parallelize) = getstart(ext.ext)
-getstop(ext::Parallelize) = getstop(ext.ext)
+getstart(ext::ParallelDimension) = getstart(ext.ext)
+getstop(ext::ParallelDimension) = getstop(ext.ext)
 
-combinedim(ctx, a::Parallelize, b::Extent) = Parallize(resultdim(ctx, a.ext, b))
-combinedim(ctx, a::Parallelize, b::SuggestedExtent) = a
-combinedim(ctx, a::Parallelize, b::Parallelize) = Parallelize(combinedim(ctx, a.ext, b.ext))
+combinedim(ctx, a::ParallelDimension, b::Extent) = Parallize(resultdim(ctx, a.ext, b))
+combinedim(ctx, a::ParallelDimension, b::SuggestedExtent) = a
+combinedim(ctx, a::ParallelDimension, b::ParallelDimension) = ParallelDimension(combinedim(ctx, a.ext, b.ext))
 
-resolvedim(ext::Parallelize) = Parallelize(resolvedim(ext.ext))
-cache_dim!(ctx, tag, ext::Parallelize) = Parallelize(cache_dim!(ctx, tag, ext.ext))
+resolvedim(ext::ParallelDimension) = ParallelDimension(resolvedim(ext.ext))
+cache_dim!(ctx, tag, ext::ParallelDimension) = ParallelDimension(cache_dim!(ctx, tag, ext.ext))
+
+promote_rule(::Type{Extent}, ::Type{Extent}) = Extent
+
+function shiftdim(ext::Extent, delta)
+    Extent(
+        start = call(+, ext.start, delta),
+        stop = call(+, ext.stop, delta)
+    )
+end
+
+shiftdim(ext::NoDimension, delta) = nodim
+
+function shiftdim(ext::FinchNode, body)
+    if ext.kind === virtual
+        shiftdim(ext.val, body)
+    else
+        error("unimplemented")
+    end
+end
+
+#virtual_intersect(ctx, a, b) = virtual_intersect(ctx, promote(a, b)...)
+function virtual_intersect(ctx, a, b)
+    println(a, b)
+    println("problem!")
+    error()
+end
+
+virtual_intersect(ctx, a::NoDimension, b) = b
+virtual_intersect(ctx, a, b::NoDimension) = a
+virtual_intersect(ctx, a::NoDimension, b::NoDimension) = b
+
+function virtual_intersect(ctx, a::Extent, b::Extent)
+    Extent(
+        start = @f(max($(getstart(a)), $(getstart(b)))),
+        stop = @f(min($(getstop(a)), $(getstop(b))))
+    )
+end
+
+virtual_union(ctx, a::NoDimension, b) = b
+virtual_union(ctx, a, b::NoDimension) = a
+virtual_union(ctx, a::NoDimension, b::NoDimension) = b
+
+#virtual_union(ctx, a, b) = virtual_union(ctx, promote(a, b)...)
+function virtual_union(ctx, a::Extent, b::Extent)
+    Extent(
+        start = @f(min($(getstart(a)), $(getstart(b)))),
+        stop = @f(max($(getstop(a)), $(getstop(b))))
+    )
+end

@@ -10,24 +10,6 @@ end
 
 Base.getindex(arr::OffsetArray, i...) = arr.body[(i .+ arr.delta)...]
 
-function shiftdim(ext::Extent, delta)
-    Extent(
-        start = call(+, ext.start, delta),
-        stop = call(+, ext.stop, delta)
-    )
-end
-
-shiftdim(ext::Widen, delta) = Widen(shiftdim(ext.ext, delta))
-shiftdim(ext::Narrow, delta) = Narrow(shiftdim(ext.ext, delta))
-shiftdim(ext::NoDimension, delta) = nodim
-
-function shiftdim(ext::FinchNode, body)
-    if ext.kind === virtual
-        shiftdim(ext.val, body)
-    else
-        error("unimplemented")
-    end
-end
 
 struct VirtualOffsetArray
     body
