@@ -71,8 +71,9 @@ stepper_body(node::Stepper, ctx, ext) = node.body
 stepper_body(node, ctx, ext) = node
 
 @kwdef struct Step
-    stop
     body
+    stop = (ctx, ext) -> nothing
+    range = (ctx, ext) -> Extent(something(start(ctx, ext), getstart(ext)), something(stop(ctx, ext), getstop(ext)))
     next = (ctx, ext) -> quote end
 end
 
@@ -84,12 +85,18 @@ function phase_range(node::Step, ctx, ext)
     Narrow(bound_measure_below!(Extent(getstart(ext), node.stop(ctx, ext)), literal(1)))
 end
 
-phase_body(node::Step, ctx, ext, ext_2) =
-    Switch([
-        value(:($(ctx(node.stop(ctx, ext))) == $(ctx(getstop(ext_2))))) => Thunk(
-            body = (ctx) -> truncate(node.body, ctx, ext, Extent(getstart(ext_2), getstop(ext))),
-            epilogue = node.next(ctx, ext_2)
-        ),
-        literal(true) => 
-            truncate(node.body, ctx, ext, Extent(getstart(ext_2), bound_above!(getstop(ext_2), call(-, getstop(ext), 1)))),
+function phase_body(node::Step, ctx, ext, ext_2)
+    next = node.next(ctx, ext_2)
+    if next !== nothing
+        Switch([
+            value(:($(ctx(node.stop(ctx, ext))) == $(ctx(getstop(ext_2))))) => Thunk(
+                body = (ctx) -> truncate(node.body, ctx, ext, Extent(getstart(ext_2), getstop(ext))),
+                epilogue = node.next(ctx, ext_2)
+            ),
+            literal(true) => 
+                truncate(node.body, ctx, ext, Extent(getstart(ext_2), bound_above!(getstop(ext_2), call(-, getstop(ext), 1)))),
         ])
+    else
+        truncate(node.body, ctx, ext, ext_2)
+    end
+end
