@@ -1,3 +1,6 @@
+is_discrete(t::Type) = t <: Integer
+
+
 """
     Infintesimal(s)
 
@@ -79,7 +82,6 @@ for S in limit_types
 end
 
 Base.hash(x::Infinitesimal, h::UInt) = hash(typeof(x), hash(x.sign, h))
-is_discrete(t::Type) = t <: Integer
 
 """
     Limit{T}(x, s)
