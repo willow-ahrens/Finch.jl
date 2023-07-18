@@ -19,6 +19,7 @@ const program_nodes = (
     tag = (ex) -> :(finch_leaf($(esc(ex)))),
     literal = literal,
     value = (ex) -> :(finch_leaf($(esc(ex)))),
+    mkdim = :(finch_leaf(mkdim))
 )
 
 const instance_nodes = (
@@ -38,7 +39,8 @@ const instance_nodes = (
     variable = variable_instance,
     tag = (ex) -> :($tag_instance($(QuoteNode(ex)), $finch_leaf_instance($(esc(ex))))),
     literal = literal_instance,
-    value = (ex) -> :($finch_leaf_instance($(esc(ex))))
+    value = (ex) -> :($finch_leaf_instance($(esc(ex)))),
+    mkdim = :($finch_leaf_instance(mkdim))
 )
 
 and() = true

@@ -10,7 +10,7 @@ end
 
 virtualize(ex, ::Type{DiagMask}, ctx) = diagmask
 FinchNotation.finch_leaf(x::DiagMask) = virtual(x)
-Finch.virtual_size(::DiagMask, ctx) = (nodim, nodim)
+Finch.virtual_size(::DiagMask, ctx) = (mkdim, mkdim)
 
 function instantiate_reader(arr::DiagMask, ctx, protos::typeof(defaultread)...)
     Unfurled(
@@ -46,7 +46,7 @@ end
 
 virtualize(ex, ::Type{UpTriMask}, ctx) = uptrimask
 FinchNotation.finch_leaf(x::UpTriMask) = virtual(x)
-Finch.virtual_size(::UpTriMask, ctx) = (nodim, nodim)
+Finch.virtual_size(::UpTriMask, ctx) = (mkdim, mkdim)
 
 function instantiate_reader(arr::UpTriMask, ctx, protos::typeof(defaultread)...)
     Unfurled(
@@ -80,7 +80,7 @@ end
 
 virtualize(ex, ::Type{LoTriMask}, ctx) = lotrimask
 FinchNotation.finch_leaf(x::LoTriMask) = virtual(x)
-Finch.virtual_size(::LoTriMask, ctx) = (nodim, nodim)
+Finch.virtual_size(::LoTriMask, ctx) = (mkdim, mkdim)
 
 function instantiate_reader(arr::LoTriMask, ctx, protos::typeof(defaultread)...)
     Unfurled(
@@ -114,7 +114,7 @@ end
 
 virtualize(ex, ::Type{BandMask}, ctx) = bandmask
 FinchNotation.finch_leaf(x::BandMask) = virtual(x)
-Finch.virtual_size(::BandMask, ctx) = (nodim, nodim, nodim)
+Finch.virtual_size(::BandMask, ctx) = (mkdim, mkdim, mkdim)
 
 function instantiate_reader(arr::BandMask, ctx, mode, protos::typeof(defaultread)...)
     Unfurled(
