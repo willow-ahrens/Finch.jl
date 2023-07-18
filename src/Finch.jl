@@ -39,6 +39,8 @@ export choose, minby, maxby, overwrite, initwrite
 
 export default, AsArray
 
+export parallel
+
 include("util.jl")
 
 include("FinchNotation/FinchNotation.jl")

@@ -125,6 +125,8 @@ struct ParallelDimension
     ext
 end
 
+parallel(dim) = ParallelDimension(dim)
+
 FinchNotation.finch_leaf(x::ParallelDimension) = virtual(x)
 
 Base.:(==)(a::ParallelDimension, b::ParallelDimension) = a.ext == b.ext

@@ -6,13 +6,9 @@ y = @fiber(d(e(0.0)))
 
 println(@finch_code begin
     y .= 0
-    for tid = _
-        for j = _
-            if multicoremask(4)[tid, j]
-                for i = _
-                    y[i] += A[walk(i), j] * x[j]
-                end
-            end
+    for j = parallel(_)
+        for i = _
+            y[i] += A[walk(i), j] * x[j]
         end
     end
 end)
