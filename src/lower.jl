@@ -268,14 +268,16 @@ function lower_loop(ctx, root, ext::ParallelDimension)
     i = ctx.freshen(:i)
     root_2 = loop(tid, Extent(value(i, Int), value(i, Int)),
         loop(root.idx, ext.ext,
-            sieve(access(ext.mask, reader(), tid, root.idx),
+            sieve(access(VirtualSplitMask(value(:(Threads.nthreads()))), reader(), root.idx, tid),
                 root.body
             )
         )
     )
     return quote
         Threads.@threads for $i = 1:Threads.nthreads()
-            $(ctx(root_2))
+            $(contain(ctx) do ctx_2
+                ctx_2(instantiate!(root_2, ctx_2))
+            end)
         end
     end
 end
