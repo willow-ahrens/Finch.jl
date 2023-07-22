@@ -127,6 +127,12 @@ end
 
 parallel(dim) = ParallelDimension(dim)
 
+function virtual_call(::typeof(parallel), ctx, arg)
+    if arg.kind === virtual
+        ParallelDimension(arg.val)
+    end
+end
+
 FinchNotation.finch_leaf(x::ParallelDimension) = virtual(x)
 
 Base.:(==)(a::ParallelDimension, b::ParallelDimension) = a.ext == b.ext
@@ -134,7 +140,7 @@ Base.:(==)(a::ParallelDimension, b::ParallelDimension) = a.ext == b.ext
 getstart(ext::ParallelDimension) = getstart(ext.ext)
 getstop(ext::ParallelDimension) = getstop(ext.ext)
 
-combinedim(ctx, a::ParallelDimension, b::Extent) = Parallize(resultdim(ctx, a.ext, b))
+combinedim(ctx, a::ParallelDimension, b::Extent) = ParallelDimension(resultdim(ctx, a.ext, b))
 combinedim(ctx, a::ParallelDimension, b::SuggestedExtent) = a
 combinedim(ctx, a::ParallelDimension, b::ParallelDimension) = ParallelDimension(combinedim(ctx, a.ext, b.ext))
 

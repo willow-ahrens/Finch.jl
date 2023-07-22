@@ -74,11 +74,13 @@ function lower_global(prgm, ctx)
     code = contain(ctx) do ctx_2
         quote
             $(begin
+                prgm = evaluate_partial(prgm, ctx_2)
                 prgm = enforce_scopes(prgm)
                 prgm = wrapperize(prgm, ctx_2)
                 prgm = enforce_lifecycles(prgm)
                 prgm = dimensionalize!(prgm, ctx_2)
                 prgm = concordize(prgm, ctx_2)
+                #prgm = evaluate_partial(prgm, ctx_2)
                 prgm = simplify(prgm, ctx_2) #appears necessary
                 prgm = instantiate!(prgm, ctx_2)
                 contain(ctx_2) do ctx_3

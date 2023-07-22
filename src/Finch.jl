@@ -57,6 +57,7 @@ include("transforms/wrapperize.jl")
 include("transforms/scopes.jl")
 include("transforms/lifecycle.jl")
 include("transforms/dimensionalize.jl")
+include("transforms/evaluate.jl")
 
 include("execute.jl")
 
