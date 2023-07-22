@@ -1,3 +1,25 @@
+struct All{F}
+    f::F
+end
+
+@inline (f::All{F})(args) where {F} = all(f.f, args)
+
+struct Or{Fs}
+    fs::Fs
+end
+
+Or(fs...) = Or{typeof(fs)}(fs)
+
+@inline (f::Or{Fs})(arg) where {Fs} = any(g->g(arg), f.fs)
+
+struct And{Fs}
+    fs::Fs
+end
+
+And(fs...) = And{typeof(fs)}(fs)
+
+@inline (f::And{Fs})(arg) where {Fs} = all(g->g(arg), f.fs)
+
 staged_defs = []
 
 """

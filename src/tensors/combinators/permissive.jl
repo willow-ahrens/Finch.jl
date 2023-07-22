@@ -33,7 +33,7 @@ end
 lower(tns::VirtualPermissiveArray, ctx::AbstractCompiler, ::DefaultStyle) = :(PermissiveArray($(ctx(tns.body)), $(tns.dims)))
 
 function virtual_size(arr::VirtualPermissiveArray, ctx::AbstractCompiler)
-    ifelse.(arr.dims, (nodim,), virtual_size(arr.body, ctx))
+    ifelse.(arr.dims, (mkdim,), virtual_size(arr.body, ctx))
 end
 
 function virtual_resize!(arr::VirtualPermissiveArray, ctx::AbstractCompiler, dims...)
@@ -119,7 +119,7 @@ getroot(tns::VirtualPermissiveArray) = getroot(tns.body)
 function unfurl(tns::VirtualPermissiveArray, ctx, ext, protos...)
     tns_2 = unfurl(tns.body, ctx, ext, protos...)
     dims = virtual_size(tns.body, ctx)
-    if tns.dims[end] && dims[end] != nodim
+    if tns.dims[end] && dims[end] != mkdim
         VirtualPermissiveArray(
             Unfurled(
                 tns,

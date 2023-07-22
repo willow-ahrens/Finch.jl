@@ -34,7 +34,7 @@ module FinchNotation
 
     export getval, getname
 
-    export overwrite, initwrite
+    export overwrite, initwrite, MakeDimension, mkdim
 
     include("nodes.jl")
     include("instances.jl")

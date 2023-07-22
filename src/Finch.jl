@@ -39,6 +39,8 @@ export choose, minby, maxby, overwrite, initwrite
 
 export default, AsArray
 
+export parallel
+
 include("util.jl")
 
 include("FinchNotation/FinchNotation.jl")
@@ -55,6 +57,7 @@ include("transforms/wrapperize.jl")
 include("transforms/scopes.jl")
 include("transforms/lifecycle.jl")
 include("transforms/dimensionalize.jl")
+include("transforms/evaluate.jl")
 
 include("execute.jl")
 
@@ -117,6 +120,7 @@ include("base/fsparse.jl")
     end
 end
 
+#=
 @setup_workload begin
     # Putting some things in `setup` can reduce the size of the
     # precompile file and potentially make loading faster.
@@ -133,6 +137,7 @@ end
 
     end
 end
+=#
 
 include("fileio/fiberio.jl")
 include("fileio/binsparse.jl")
