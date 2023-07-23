@@ -1,6 +1,3 @@
-is_discrete(t::Type) = t <: Integer
-
-
 """
     Infintesimal(s)
 
