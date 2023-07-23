@@ -3,7 +3,11 @@
     body
     start = (ctx, ext) -> nothing
     stop = (ctx, ext) -> nothing
-    range = (ctx, ext) -> Extent(something(start(ctx, ext), getstart(ext)), something(stop(ctx, ext), getstop(ext)))
+    range = (ctx, ext) -> if is_continuous_extent(ext) 
+                            ContinuousExtent(something(start(ctx, ext), getstart(ext)), something(stop(ctx, ext), getstop(ext)))
+                          else 
+                            Extent(something(start(ctx, ext), getstart(ext)), something(stop(ctx, ext), getstop(ext)))
+                          end
 end
 FinchNotation.finch_leaf(x::Phase) = virtual(x)
 
@@ -65,6 +69,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  ::PhaseStyle)
         ext_4 = cache_dim!(ctx, :phase, ext_3)
 
         body = Rewrite(Postwalk(node->phase_body(node, ctx, root.ext, ext_4)))(body)
+        increment = is_continuous_extent(ext_4) ?  Eps : Int8(1)
         body = quote
             $i0 = $i
             $(contain(ctx) do ctx_4
@@ -74,12 +79,12 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  ::PhaseStyle)
                     body
                 ))
             end)
-            $i = $(ctx(getstop(ext_4))) + $(Int8(1))
-            #$i = $(ctx(getstop(ext_4))) + $(Eps)
+            
+            $i = $(ctx(getstop(ext_4))) + $(increment)
         end
 
 
-        if query(call(>=, measure(ext_4), 1), ctx) 
+        if query(call(>=, measure(ext_4), 0), ctx) # TODO : Continuous? 
             return body
         else
             return quote

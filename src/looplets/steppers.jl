@@ -51,16 +51,30 @@ FinchNotation.finch_leaf(x::Step) = virtual(x)
 (ctx::Stylize{<:AbstractCompiler})(node::Step) = ctx.root.kind === loop ? PhaseStyle() : DefaultStyle()
 
 function phase_range(node::Step, ctx, ext)
-    Narrow(bound_measure_below!(Extent(getstart(ext), node.stop(ctx, ext)), literal(1)))
-    #Narrow(bound_measure_below!(Extent(getstart(ext), node.stop(ctx, ext)), literal(Eps)))
+    if is_continuous_extent(ext)
+      Narrow(bound_measure_below!(ContinuousExtent(getstart(ext), node.stop(ctx, ext)), literal(Eps)))
+    else
+      Narrow(bound_measure_below!(Extent(getstart(ext), node.stop(ctx, ext)), literal(1)))
+    end
 end
 
 phase_body(node::Step, ctx, ext, ext_2) =
-    Switch([
-        value(:($(ctx(node.stop(ctx, ext))) == $(ctx(getstop(ext_2))))) => Thunk(
-            body = (ctx) -> truncate(node.body, ctx, ext, Extent(getstart(ext_2), getstop(ext))),
-            epilogue = node.next(ctx, ext_2)
-        ),
-        literal(true) => 
-            truncate(node.body, ctx, ext, Extent(getstart(ext_2), bound_above!(getstop(ext_2), call(-, getstop(ext), 1)))),
-        ])
+    if is_continuous_extent(ext) 
+      Switch([
+          value(:($(ctx(node.stop(ctx, ext))) == $(ctx(getstop(ext_2))))) => Thunk(
+              body = (ctx) -> truncate(node.body, ctx, ext, ContinuousExtent(getstart(ext_2), getstop(ext))),
+              epilogue = node.next(ctx, ext_2)
+          ),
+          literal(true) => 
+              truncate(node.body, ctx, ext, ContinuousExtent(getstart(ext_2), bound_above!(getstop(ext_2), call(-, getstop(ext), Eps)))),
+          ])
+    else
+      Switch([
+          value(:($(ctx(node.stop(ctx, ext))) == $(ctx(getstop(ext_2))))) => Thunk(
+              body = (ctx) -> truncate(node.body, ctx, ext, Extent(getstart(ext_2), getstop(ext))),
+              epilogue = node.next(ctx, ext_2)
+          ),
+          literal(true) => 
+              truncate(node.body, ctx, ext, Extent(getstart(ext_2), bound_above!(getstop(ext_2), call(-, getstop(ext), 1)))),
+          ])
+    end

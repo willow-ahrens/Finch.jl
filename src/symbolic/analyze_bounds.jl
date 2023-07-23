@@ -12,7 +12,7 @@ function get_bounds_rules(alg, shash)
 
         (@rule call(~f::isassociative(alg), ~a..., call(~f, ~b...), ~c...) => call(f, a..., b..., c...)),
         (@rule call(~f::iscommutative(alg), ~a...) => if !(issorted(a, by = x->(!isliteral(x), shash(x))))
-            call(f, sort(a, by = shash)...)
+            call(f, sort(a, by = x->(!isliteral(x), shash(x)))...)
         end),
         (@rule call(~f::isidempotent(alg), ~a...) => if !allunique(a)
             call(f, unique(a)...)
@@ -68,15 +68,15 @@ function get_bounds_rules(alg, shash)
         end),
 
         (@rule call(max, ~a1..., call(min, ~a2...), ~a3..., call(min, ~a4...), ~a5...) => if !(isdisjoint(a2, a4))
-            call(max, a1..., call(min, union(a2, a4)..., call(max, call(min, setdiff(a2, a4)...), call(min, setdiff(a4, a2)...)), a3..., a5...))
+            call(max, a1..., call(min, intersect(a2, a4)..., call(max, call(min, setdiff(a2, a4)...), call(min, setdiff(a4, a2)...)), a3..., a5...))
         end),
 
         (@rule call(min, ~a1..., call(max, ~a2...), ~a3..., call(max, ~a4...), ~a5...) => if !(isdisjoint(a2, a4))
-            call(min, a1..., call(max, union(a2, a4)..., call(min, call(max, setdiff(a2, a4)...), call(max, setdiff(a4, a2)...)), a3..., a5...))
+            call(min, a1..., call(max, intersect(a2, a4)..., call(min, call(max, setdiff(a2, a4)...), call(max, setdiff(a4, a2)...)), a3..., a5...))
         end),
 
-        (@rule call(min, ~a1..., call(max), ~a2...) => call(min, a1..., a2...)),
-        (@rule call(max, ~a1..., call(min), ~a2...) => call(min, a1..., a2...)),
+        (@rule call(min, ~a1..., call(max), ~a2...) => begin call(min, a1..., a2...) end),
+        (@rule call(max, ~a1..., call(min), ~a2...) => begin call(min, a1..., a2...) end),
 
         (@rule call(min, ~a1..., call(+, ~b::isliteral, ~a2...), ~a3..., call(+, ~c::isliteral, ~a2...), ~a4...) => 
             call(min, a1..., call(+, min(b.val, c.val), ~a2...), ~a3..., ~a4...)),
@@ -101,6 +101,15 @@ function get_bounds_rules(alg, shash)
             call(max, a1..., call(+, max(b.val, 0), ~a2), ~a3..., ~a4...)),
 
         (@rule call(~f::isinvolution(alg), call(~f, ~a)) => a),
+
+        # Clamping rules
+        (@rule call(max, ~a, call(min, ~b, ~c)) => begin
+            if query(call(<=, a, b), LowerJulia()) # a = low, b = high
+              call(min, b, call(max, a, c))
+            elseif query(call(<=, a, c), LowerJulia()) # a = low, c = high
+              call(min, c, call(max, b, a))
+            end
+          end), 
 
         #(@rule call(~f, ~a..., call(~g, ~b), ~c...) => if isdistributive(alg, g, f)
         #    call(g, call(f, a..., b, c...))

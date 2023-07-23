@@ -135,6 +135,10 @@ end
     stop
 end
 
+is_continuous_extent(x) = false # generic
+is_continuous_extent(x::ContinuousExtent) = true
+is_continuous_extent(x::FinchNode) = x.kind === virtual ? is_continuous_extent(x.val) : is_continuous_extent(x)
+
 FinchNotation.finch_leaf(x::Extent) = virtual(x)
 FinchNotation.finch_leaf(x::ContinuousExtent) = virtual(x)
 
@@ -182,6 +186,7 @@ struct SuggestedExtent{Ext}
     ext::Ext
 end
 
+is_continuous_extent(x::SuggestedExtent) = is_continuous_extent(x.ext)
 FinchNotation.finch_leaf(x::SuggestedExtent) = virtual(x)
 
 Base.:(==)(a::SuggestedExtent, b::SuggestedExtent) = a.ext == b.ext
@@ -235,6 +240,7 @@ function Narrow(ext::FinchNode)
     end
 end
 
+is_continuous_extent(x::Narrow) = is_continuous_extent(x.ext)
 FinchNotation.finch_leaf(x::Narrow) = virtual(x)
 
 narrowdim(dim) = Narrow(dim)
@@ -257,6 +263,7 @@ function Widen(ext::FinchNode)
     end
 end
 
+is_continuous_extent(x::Widen) = is_continuous_extent(x.ext)
 FinchNotation.finch_leaf(x::Widen) = virtual(x)
 
 widendim(dim) = Widen(dim)
