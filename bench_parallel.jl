@@ -89,6 +89,8 @@ function spmv(y::Fiber{DenseLevel{Int64, ElementLevel{0.0, Float64}}}, A::Fiber{
         end
 end
 
+@btime spmv($y, $A, $x)
+
 @btime begin
     (A, x, y) = $((A, x, y))
     Finch.@finch begin
