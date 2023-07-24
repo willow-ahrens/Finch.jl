@@ -20,7 +20,8 @@ function lower_cycle(root, ctx, idx, ext, style)
 
     @assert isvirtual(ext)
 
-    if query(call(==, measure(ext.val), 1), ctx)
+    target = is_continuous_extent(ext) ? 0 : 1
+    if query(call(==, measure(ext.val), target), ctx)
         body_2
     else
         return quote

@@ -150,11 +150,7 @@ end
 summary_fiber_abbrev(lvl::VirtualSparseListLevel) = "sl($(summary_fiber_abbrev(lvl.lvl)))"
 
 function virtual_level_size(lvl::VirtualSparseListLevel, ctx)
-    if lvl.Ti <: Integer 
-      ext = Extent(literal(lvl.Ti(1)), lvl.shape)
-    else
-      ext = ContinuousExtent(literal(lvl.Ti(1)), lvl.shape)
-    end
+    ext = make_extent(lvl.Ti, literal(lvl.Ti(1)), lvl.shape)
     (virtual_level_size(lvl.lvl, ctx)..., ext)
 end
 

@@ -75,8 +75,8 @@ function get_bounds_rules(alg, shash)
             call(min, a1..., call(max, intersect(a2, a4)..., call(min, call(max, setdiff(a2, a4)...), call(max, setdiff(a4, a2)...)), a3..., a5...))
         end),
 
-        (@rule call(min, ~a1..., call(max), ~a2...) => begin call(min, a1..., a2...) end),
-        (@rule call(max, ~a1..., call(min), ~a2...) => begin call(min, a1..., a2...) end),
+        (@rule call(min, ~a1..., call(max), ~a2...) => call(min, a1..., a2...)),
+        (@rule call(max, ~a1..., call(min), ~a2...) => call(min, a1..., a2...)),
 
         (@rule call(min, ~a1..., call(+, ~b::isliteral, ~a2...), ~a3..., call(+, ~c::isliteral, ~a2...), ~a4...) => 
             call(min, a1..., call(+, min(b.val, c.val), ~a2...), ~a3..., ~a4...)),

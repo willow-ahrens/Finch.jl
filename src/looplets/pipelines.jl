@@ -70,10 +70,9 @@ end
 function (ctx::PipelineVisitor)(node::Pipeline) 
   new_phases = []
   
-  increment = is_continuous_extent(ctx.ext) ?  Eps : Int8(1)
-  prev_stop = call(-, getstart(ctx.ext), increment)
+  prev_stop = call(-, getstart(ctx.ext), getunit(ctx.ext))
   for curr in node.phases
-    curr_start = call(+, prev_stop, increment)
+    curr_start = call(+, prev_stop, getunit(ctx.ext))
     curr_stop = getstop(phase_range(curr, ctx.ctx, ctx.ext))
     push!(new_phases, Phase(body = curr.body, start = (ctx, ext) -> curr_start, stop = curr.stop)) 
     prev_stop = curr_stop

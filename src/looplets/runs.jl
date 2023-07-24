@@ -96,4 +96,4 @@ end
 get_acceptrun_body(node, ctx, ext) = nothing
 get_acceptrun_body(node::AcceptRun, ctx, ext) = node.body(ctx, ext)
 
-get_point_body(node::AcceptRun, ctx, ext, idx) = node.body(ctx, is_continuous_extent(ext) ? ContinuousExtent(idx,idx) : Extent(idx, idx))
+get_point_body(node::AcceptRun, ctx, ext, idx) = node.body(ctx, similar_extent(ext,idx,idx))
