@@ -49,7 +49,6 @@ macro staged(def)
         $called::Bool = false
 
         function $name_2($(args...))
-            println("hi")
             global $called
             if !$called
                 code = let ($(args...),) = ($(map((arg)->:(typeof($arg)), args)...),)
@@ -74,7 +73,6 @@ macro staged(def)
                     :($($(name_2))($($args...)))
                 else 
                     quote
-                        println("bye")
                         $code
                     end
                 end
