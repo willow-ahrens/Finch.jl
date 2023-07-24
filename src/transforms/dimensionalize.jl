@@ -130,55 +130,75 @@ combinedim(ctx, a::NoDimension, b) = b
     stop
 end
 
-FinchNotation.finch_leaf(x::Extent) = virtual(x)
+@kwdef struct ContinuousExtent
+    start
+    stop
+end
 
-Base.:(==)(a::Extent, b::Extent) =
-    a.start == b.start &&
-    a.stop == b.stop
+make_extent(::Type, start, stop) = throw(ArgumentError("Unsupported type"))
+make_extent(::Type{T}, start, stop) where T <: Integer = Extent(start, stop)
+make_extent(::Type{T}, start, stop) where T <: Real = ContinuousExtent(start, stop)
+
+similar_extent(ext::Extent, start, stop) = Extent(start, stop)
+similar_extent(ext::ContinuousExtent, start, stop) = ContinuousExtent(start, stop)
+similar_extent(ext::FinchNode, start, stop) = ext.kind === virtual ? similar_extent(ext.val, start, stop) : similar_extent(ext, start, stop)
+
+is_continuous_extent(x) = false # generic
+is_continuous_extent(x::ContinuousExtent) = true
+is_continuous_extent(x::FinchNode) = x.kind === virtual ? is_continuous_extent(x.val) : is_continuous_extent(x)
+
+FinchNotation.finch_leaf(x::Extent) = virtual(x)
+FinchNotation.finch_leaf(x::ContinuousExtent) = virtual(x)
+
+Base.:(==)(a::Extent, b::Extent) = a.start == b.start && a.stop == b.stop
+Base.:(==)(a::ContinuousExtent, b::ContinuousExtent) = a.start == b.start && a.stop == b.stop
+Base.:(==)(a::Extent, b::ContinuousExtent) = throw(ArgumentError("Extent and ContinuousExtent cannot interact ...yet"))
 
 bound_below!(val, below) = cached(val, literal(call(max, val, below)))
-
 bound_above!(val, above) = cached(val, literal(call(min, val, above)))
-
 bound_measure_below!(ext::Extent, m) = Extent(ext.start, bound_below!(ext.stop, call(+, ext.start, m)))
 bound_measure_above!(ext::Extent, m) = Extent(ext.start, bound_above!(ext.stop, call(+, ext.start, m)))
+bound_measure_below!(ext::ContinuousExtent, m) = ContinuousExtent(ext.start, bound_below!(ext.stop, call(+, ext.start, m)))
+bound_measure_above!(ext::ContinuousExtent, m) = ContinuousExtent(ext.start, bound_above!(ext.stop, call(+, ext.start, m)))
+
 
 cache_dim!(ctx, var, ext::Extent) = Extent(
     start = cache!(ctx, Symbol(var, :_start), ext.start),
     stop = cache!(ctx, Symbol(var, :_stop), ext.stop)
 )
+cache_dim!(ctx, var, ext::ContinuousExtent) = ContinuousExtent(
+    start = cache!(ctx, Symbol(var, :_start), ext.start),
+    stop = cache!(ctx, Symbol(var, :_stop), ext.stop)
+)
+
+getunit(ext::Extent) = 1
+getunit(ext::ContinuousExtent) = Eps
+getunit(ext::FinchNode) = ext.kind === virtual ? getunit(ext.val) : ext
 
 getstart(ext::Extent) = ext.start
+getstart(ext::ContinuousExtent) = ext.start
+getstart(ext::FinchNode) = ext.kind === virtual ? getstart(ext.val) : ext
+
 getstop(ext::Extent) = ext.stop
+getstop(ext::ContinuousExtent) = ext.stop
+getstop(ext::FinchNode) = ext.kind === virtual ? getstop(ext.val) : ext
+
 measure(ext::Extent) = call(+, call(-, ext.stop, ext.start), 1)
+measure(ext::ContinuousExtent) = call(-, ext.stop, ext.start) # TODO: Think carefully, Not quite sure!
 
-function getstop(ext::FinchNode)
-    if ext.kind === virtual
-        getstop(ext.val)
-    else
-        ext
-    end
-end
-function getstart(ext::FinchNode)
-    if ext.kind === virtual
-        getstart(ext.val)
-    else
-        ext
-    end
-end
 
-combinedim(ctx, a::Extent, b::Extent) =
-    Extent(
-        start = checklim(ctx, a.start, b.start),
-        stop = checklim(ctx, a.stop, b.stop)
-    )
 
+combinedim(ctx, a::Extent, b::Extent) = Extent(checklim(ctx, a.start, b.start), checklim(ctx, a.stop, b.stop))
+combinedim(ctx, a::ContinuousExtent, b::ContinuousExtent) = ContinuousExtent(checklim(ctx, a.start, b.start), checklim(ctx, a.stop, b.stop))
 combinedim(ctx, a::NoDimension, b::Extent) = b
+combinedim(ctx, a::NoDimension, b::ContinuousExtent) = b
+combinedim(ctx, a::Extent, b::ContinuousExtent) = throw(ArgumentError("Extent and ContinuousExtent cannot interact ...yet"))
 
 struct SuggestedExtent{Ext}
     ext::Ext
 end
 
+is_continuous_extent(x::SuggestedExtent) = is_continuous_extent(x.ext)
 FinchNotation.finch_leaf(x::SuggestedExtent) = virtual(x)
 
 Base.:(==)(a::SuggestedExtent, b::SuggestedExtent) = a.ext == b.ext
@@ -197,6 +217,7 @@ getstop(ext::SuggestedExtent) = getstop(ext.ext)
 measure(ext::SuggestedExtent) = measure(ext.ext)
 
 combinedim(ctx, a::SuggestedExtent, b::Extent) = b
+combinedim(ctx, a::SuggestedExtent, b::ContinuousExtent) = b
 
 combinedim(ctx, a::SuggestedExtent, b::NoDimension) = a
 
@@ -231,6 +252,7 @@ function Narrow(ext::FinchNode)
     end
 end
 
+is_continuous_extent(x::Narrow) = is_continuous_extent(x.ext)
 FinchNotation.finch_leaf(x::Narrow) = virtual(x)
 
 narrowdim(dim) = Narrow(dim)
@@ -253,6 +275,7 @@ function Widen(ext::FinchNode)
     end
 end
 
+is_continuous_extent(x::Widen) = is_continuous_extent(x.ext)
 FinchNotation.finch_leaf(x::Widen) = virtual(x)
 
 widendim(dim) = Widen(dim)
@@ -264,6 +287,7 @@ getstart(ext::Widen) = getstart(ext.ext)
 getstop(ext::Widen) = getstop(ext.ext)
 
 combinedim(ctx, a::Narrow, b::Extent) = resultdim(ctx, a, Narrow(b))
+combinedim(ctx, a::Narrow, b::ContinuousExtent) = resultdim(ctx, a, Narrow(b))
 combinedim(ctx, a::Narrow, b::SuggestedExtent) = a
 combinedim(ctx, a::Narrow, b::NoDimension) = a
 
@@ -273,8 +297,17 @@ function combinedim(ctx, a::Narrow{<:Extent}, b::Narrow{<:Extent})
         stop = @f(min($(getstop(a)), $(getstop(b))))
     ))
 end
+function combinedim(ctx, a::Narrow{<:ContinuousExtent}, b::Narrow{<:ContinuousExtent})
+    Narrow(ContinuousExtent(
+        start = @f(max($(getstart(a)), $(getstart(b)))),
+        stop = @f(min($(getstop(a)), $(getstop(b))))
+    ))
+end
+combinedim(ctx, a::Narrow{<:Extent}, b::Narrow{<:ContinuousExtent}) = throw(ArgumentError("Extent and ContinuousExtent cannot interact ...yet"))
 
-combinedim(ctx, a::Widen, b::Extent) = b
+
+combinedim(ctx, a::Widen, b::Extent) = resultdim(ctx, a, Widen(b))
+combinedim(ctx, a::Widen, b::ContinuousExtent) = resultdim(ctx, a, Widen(b))
 combinedim(ctx, a::Widen, b::NoDimension) = a
 combinedim(ctx, a::Widen, b::SuggestedExtent) = a
 
@@ -284,6 +317,13 @@ function combinedim(ctx, a::Widen{<:Extent}, b::Widen{<:Extent})
         stop = @f(max($(getstop(a)), $(getstop(b))))
     ))
 end
+function combinedim(ctx, a::Widen{<:ContinuousExtent}, b::Widen{<:ContinuousExtent})
+    Widen(ContinuousExtent(
+        start = @f(min($(getstart(a)), $(getstart(b)))),
+        stop = @f(max($(getstop(a)), $(getstop(b))))
+    ))
+end
+combinedim(ctx, a::Widen{<:Extent}, b::Widen{<:ContinuousExtent}) = throw(ArgumentError("Extent and ContinuousExtent cannot interact ...yet"))
 
 resolvedim(ext) = ext
 resolvedim(ext::Narrow) = resolvedim(ext.ext)

@@ -3,7 +3,7 @@
     body
     start = (ctx, ext) -> nothing
     stop = (ctx, ext) -> nothing
-    range = (ctx, ext) -> Extent(something(start(ctx, ext), getstart(ext)), something(stop(ctx, ext), getstop(ext)))
+    range = (ctx, ext) -> similar_extent(ext, something(start(ctx, ext), getstart(ext)), something(stop(ctx, ext), getstop(ext)))
 end
 FinchNotation.finch_leaf(x::Phase) = virtual(x)
 
@@ -74,11 +74,12 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  ::PhaseStyle)
                     body
                 ))
             end)
-            $i = $(ctx(getstop(ext_4))) + $(Int8(1))
+            
+            $i = $(ctx(getstop(ext_4))) + $(getunit(ext_4))
         end
 
 
-        if query(call(>=, measure(ext_4), 1), ctx) 
+        if query(call(>=, measure(ext_4), 0), ctx)  
             return body
         else
             return quote

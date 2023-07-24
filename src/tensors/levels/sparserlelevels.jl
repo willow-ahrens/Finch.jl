@@ -128,7 +128,7 @@ end
 summary_fiber_abbrev(lvl::VirtualSparseRLELevel) = "srl($(summary_fiber_abbrev(lvl.lvl)))"
 
 function virtual_level_size(lvl::VirtualSparseRLELevel, ctx)
-    ext = Extent(literal(lvl.Ti(1)), lvl.shape)
+    ext = make_extent(lvl.Ti, literal(lvl.Ti(1)), lvl.shape)
     (virtual_level_size(lvl.lvl, ctx)..., ext)
 end
 
@@ -233,12 +233,12 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, ::
                                 body = (ctx, ext) -> Thunk( 
                                      body = (ctx) -> Pipeline([
                                         Phase(
-                                            stop = (ctx, ext) -> call(-, value(my_i_start), 1),
+                                            stop = (ctx, ext) -> call(-, value(my_i_start), getunit(ext)),
                                             body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
                                         ),
                                         Phase(
                                             body = (ctx,ext) -> Run(
-                                                                    body = (instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q)), ctx, protos...))
+                                                                    body = Simplify(instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q)), ctx, protos...))
                                                                    )
                                         )
                                     ]),
