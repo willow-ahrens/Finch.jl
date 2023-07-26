@@ -5,7 +5,6 @@ using BenchmarkTools
 
 #A = @fiber(d(sl(e(0.0))), SparseMatrixCSC(matrixdepot("Boeing/ct20stif")))
 A = fiber(SparseMatrixCSC(matrixdepot("SNAP/soc-Epinions1")))
-println("hi")
 (m, n) = size(A)
 x = @fiber(d(e(0.0)), randn(m))
 y = @fiber(d(e(0.0)))
