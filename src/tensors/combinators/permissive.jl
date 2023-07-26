@@ -6,8 +6,8 @@ PermissiveArray(body, dims) = PermissiveArray{dims}(body)
 PermissiveArray{dims}(body::Body) where {dims, Body} = PermissiveArray{dims, Body}(body)
 
 Base.show(io::IO, ex::PermissiveArray) = Base.show(io, MIME"text/plain"(), ex)
-function Base.show(io::IO, mime::MIME"text/plain", ex::PermissiveArray)
-	print(io, "PermissiveArray($(ex.body), $(ex.dims))")
+function Base.show(io::IO, mime::MIME"text/plain", ex::PermissiveArray{dims}) where {dims}
+	print(io, "PermissiveArray($(ex.body), $dims)")
 end
 
 #Base.getindex(arr::PermissiveArray, i...) = ...
@@ -153,7 +153,7 @@ end
 
 function lower_access(ctx::AbstractCompiler, node, tns::VirtualPermissiveArray)
     if !isempty(node.idxs)
-        error("oh no!")
+        error("oh no! $node")
     end
     lower_access(ctx, node, tns.body)
 end

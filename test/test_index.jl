@@ -80,4 +80,18 @@
 
     @finch (C .= 0; @loop i C[i] = I[i])
     @test reference_isequal(C, [2, 3, 4])
+
+    y = Array{Any}(undef, 4)
+    x = @fiber(d(e(0.0)), zeros(2))
+    X = Finch.permissive(x, true)
+    
+    @finch for i = _; y[i] := X[i] end
+
+    @test isequal(y, [0.0, 0.0, missing, missing])
+
+    y = Array{Any}(undef, 4)
+
+    @finch for i = _; y[i] := Finch.permissive(x, true)[i] end
+
+    @test isequal(y, [0.0, 0.0, missing, missing])
 end
