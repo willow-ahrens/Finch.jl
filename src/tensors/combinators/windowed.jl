@@ -35,6 +35,12 @@ function virtualize(ex, ::Type{WindowedArray{Dims, Body}}, ctx) where {Dims, Bod
     VirtualWindowedArray(virtualize(:($ex.body), Body, ctx), dims)
 end
 
+window(body, delta...) = WindowArray(body, delta)
+function virtual_call(::typeof(window), ctx, body, delta...)
+    @assert isvirtual(body)
+    VirtualWindowArray(body.val, delta)
+end
+
 lower(tns::VirtualWindowedArray, ctx::AbstractCompiler, ::DefaultStyle) = :(WindowedArray($(ctx(tns.body)), $(tns.dims)))
 
 function virtual_size(arr::VirtualWindowedArray, ctx::AbstractCompiler)

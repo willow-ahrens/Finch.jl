@@ -30,6 +30,13 @@ function virtualize(ex, ::Type{PermissiveArray{dims, Body}}, ctx) where {dims, B
     VirtualPermissiveArray(virtualize(:($ex.body), Body, ctx), dims)
 end
 
+permissive(body, dims...) = PermissiveArray(body, dims)
+function virtual_call(::typeof(permissive), ctx, body, dims...)
+    @assert All(isliteral)(dims)
+    @assert isvirtual(body)
+    VirtualPermissiveArray(body.val, map(dim -> dim.val, dims))
+end
+
 lower(tns::VirtualPermissiveArray, ctx::AbstractCompiler, ::DefaultStyle) = :(PermissiveArray($(ctx(tns.body)), $(tns.dims)))
 
 function virtual_size(arr::VirtualPermissiveArray, ctx::AbstractCompiler)

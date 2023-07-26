@@ -32,6 +32,12 @@ function virtualize(ex, ::Type{OffsetArray{Delta, Body}}, ctx) where {Delta, Bod
     VirtualOffsetArray(virtualize(:($ex.body), Body, ctx), delta)
 end
 
+offset(body, delta...) = OffsetArray(body, delta)
+function virtual_call(::typeof(offset), ctx, body, delta...)
+    @assert isvirtual(body)
+    VirtualOffsetArray(body.val, delta)
+end
+
 lower(tns::VirtualOffsetArray, ctx::AbstractCompiler, ::DefaultStyle) = :(OffsetArray($(ctx(tns.body)), $(ctx(tns.delta))))
 
 function virtual_size(arr::VirtualOffsetArray, ctx::AbstractCompiler)

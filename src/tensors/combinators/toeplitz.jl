@@ -30,6 +30,13 @@ function virtualize(ex, ::Type{ToeplitzArray{dim, Body}}, ctx) where {dim, Body}
     VirtualToeplitzArray(virtualize(:($ex.body), Body, ctx), dim)
 end
 
+toeplitz(body, dim) = ToeplitzArray(body, dim)
+function virtual_call(::typeof(toeplitz), ctx, body, dim)
+    @assert isliteral(dim)
+    @assert isvirtual(body)
+    VirtualToeplitzArray(body.val, dim.val)
+end
+
 lower(tns::VirtualToeplitzArray, ctx::AbstractCompiler, ::DefaultStyle) = :(ToeplitzArray($(ctx(tns.body)), $(tns.dim)))
 
 function virtual_size(arr::VirtualToeplitzArray, ctx::AbstractCompiler)

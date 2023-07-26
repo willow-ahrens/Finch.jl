@@ -23,7 +23,6 @@ end
 
 
 println("parallel")
-#prgm = Finch.@finch_program_instance begin
 @btime begin
     (A, x, y) = $(A, x, y)
     Finch.@finch begin

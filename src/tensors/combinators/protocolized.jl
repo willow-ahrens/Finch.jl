@@ -32,6 +32,13 @@ function virtualize(ex, ::Type{ProtocolizedArray{Protos, Body}}, ctx) where {Pro
     VirtualProtocolizedArray(virtualize(:($ex.body), Body, ctx), protos)
 end
 
+protocolize(body, protos...) = ProtocolizedArray(body, protos)
+function virtual_call(::typeof(protocolize), ctx, body, protos...)
+    @assert All(isliteral)(protos)
+    @assert isvirtual(body)
+    VirtualProtocolizedArray(body.val, map(proto -> proto.val, protos))
+end
+
 function lower(tns::VirtualProtocolizedArray, ctx::AbstractCompiler, ::DefaultStyle)
     error()
     :(ProtocolizedArray($(ctx(tns.body)), $(ctx(tns.protos))))
