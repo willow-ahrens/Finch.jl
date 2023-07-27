@@ -104,7 +104,9 @@ produces `Missing`.
 
 Array combinators introduce some complexity to the tensor lifecycle, as wrappers
 may contain multiple or different arrays that could potentially be in different
-modes. To remedy this, each tensor access must define a root array. Any array combinators used in a tensor access must be defined in terms of a single root array. The root array is the single array that gets declared, and changes modes from read to update, or vice versa.
+modes. Any array combinators used in a tensor access must reference a single
+global variable which holds the root array. The root array is the single array
+that gets declared, and changes modes from read to update, or vice versa.
 
 # Fancy Indexing
 

@@ -35,8 +35,7 @@ end
 protocolize(body, protos...) = ProtocolizedArray(body, protos)
 function virtual_call(::typeof(protocolize), ctx, body, protos...)
     @assert All(isliteral)(protos)
-    @assert isvirtual(body)
-    VirtualProtocolizedArray(body.val, map(proto -> proto.val, protos))
+    VirtualProtocolizedArray(body, map(proto -> proto.val, protos))
 end
 
 function lower(tns::VirtualProtocolizedArray, ctx::AbstractCompiler, ::DefaultStyle)

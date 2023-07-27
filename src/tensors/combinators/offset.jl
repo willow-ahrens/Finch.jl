@@ -34,8 +34,7 @@ end
 
 offset(body, delta...) = OffsetArray(body, delta)
 function virtual_call(::typeof(offset), ctx, body, delta...)
-    @assert isvirtual(body)
-    VirtualOffsetArray(body.val, delta)
+    VirtualOffsetArray(body, delta)
 end
 
 lower(tns::VirtualOffsetArray, ctx::AbstractCompiler, ::DefaultStyle) = :(OffsetArray($(ctx(tns.body)), $(ctx(tns.delta))))

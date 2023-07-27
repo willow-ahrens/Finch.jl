@@ -4,7 +4,7 @@
 Declare the read-only virtual tensor `tns` in the context `ctx` with a starting value of `init` and return it.
 Afterwards the tensor is update-only.
 """
-declare!(tns, ctx, init) = @assert something(virtual_default(tns)) == init
+declare!(tns, ctx, init) = @assert something(virtual_default(tns, ctx)) == init
 
 """
     instantiate_reader(tns, ctx, protos...)
@@ -98,21 +98,19 @@ Return the initializer for `arr`. For SparseArrays, this is 0. Often, the
 """
 function default end
 
-function virtual_default(x::FinchNode)
-    if x.kind === virtual
-        virtual_default(x.val)
-    else
-        error("unimplemented")
-    end
-end
+"""
+    virtual default(arr)
 
-function virtual_eltype(x::FinchNode)
-    if x.kind === virtual
-        virtual_eltype(x.val)
-    else
-        error("unimplemented")
-    end
-end
+Return the initializer for virtual array `arr`.
+"""
+function virtual_default end
+
+"""
+    virtual_eltype(arr)
+
+Return the element type of the virtual tensor `arr`.
+"""
+function virtual_eltype end
 
 function virtual_resize!(tns, ctx, dims...)
     for (dim, ref) in zip(dims, virtual_size(tns, ctx))
@@ -133,19 +131,3 @@ Return a tuple of the dimensions of `tns` in the context `ctx`. This is a
 function similar in spirit to `Base.axes`.
 """
 function virtual_size end
-
-function virtual_size(tns::FinchNode, ctx)
-    if tns.kind === variable
-        return virtual_size(ctx.bindings[tns], ctx)
-    else
-        return error("unimplemented")
-    end
-end
-
-function virtual_resize!(tns::FinchNode, ctx, dims...)
-    if tns.kind === variable
-        return ctx.bindings[tns] = virtual_resize!(ctx.bindings[tns], ctx, dims...)
-    else
-        error("unimplemented")
-    end
-end

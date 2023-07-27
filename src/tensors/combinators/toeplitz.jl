@@ -33,8 +33,7 @@ end
 toeplitz(body, dim) = ToeplitzArray(body, dim)
 function virtual_call(::typeof(toeplitz), ctx, body, dim)
     @assert isliteral(dim)
-    @assert isvirtual(body)
-    VirtualToeplitzArray(body.val, dim.val)
+    VirtualToeplitzArray(body, dim.val)
 end
 
 lower(tns::VirtualToeplitzArray, ctx::AbstractCompiler, ::DefaultStyle) = :(ToeplitzArray($(ctx(tns.body)), $(tns.dim)))

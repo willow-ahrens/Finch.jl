@@ -30,7 +30,6 @@ function (ctx::InstantiateTensors)(node::FinchNode)
         push!(ctx.escape, node.tns)
         node
     elseif (@capture node access(~tns, ~mode, ~idxs...)) && !(getroot(tns) in ctx.escape)
-        tns = tns.val
         #@assert get(ctx.ctx.modes, tns, reader()).kind === node.mode.kind
         protos = [(mode.kind === reader ? defaultread : defaultupdate) for _ in idxs]
         if mode.kind === reader

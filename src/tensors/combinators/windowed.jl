@@ -37,8 +37,7 @@ end
 
 window(body, delta...) = WindowArray(body, delta)
 function virtual_call(::typeof(window), ctx, body, delta...)
-    @assert isvirtual(body)
-    VirtualWindowArray(body.val, delta)
+    VirtualWindowArray(body, delta)
 end
 
 lower(tns::VirtualWindowedArray, ctx::AbstractCompiler, ::DefaultStyle) = :(WindowedArray($(ctx(tns.body)), $(tns.dims)))

@@ -34,9 +34,8 @@ struct FinchCompileError msg end
 
 function (ctx::DeclareDimensions)(node::FinchNode)
     if node.kind === access
-        @assert @capture node access(~tns::isvirtual, ~mode, ~idxs...)
-        tns = tns.val
-        if node.mode.kind !== reader && node.tns.kind === virtual && haskey(ctx.hints, getroot(tns))
+        @assert @capture node access(~tns, ~mode, ~idxs...)
+        if node.mode.kind !== reader && haskey(ctx.hints, getroot(tns))
             shape = map(suggest, virtual_size(tns, ctx.ctx))
             push!(ctx.hints[getroot(tns)], node)
         else
@@ -69,7 +68,7 @@ function (ctx::DeclareDimensions)(node::FinchNode)
             shape = virtual_size(node.tns, ctx.ctx)
             shape = map(suggest, shape)
             for hint in ctx.hints[node.tns]
-                @assert @capture hint access(~tns::isvirtual, updater(), ~idxs...)
+                @assert @capture hint access(~tns, updater(), ~idxs...)
                 shape = map(zip(shape, idxs)) do (dim, idx)
                     if isindex(idx)
                         resultdim(ctx.ctx, dim, ctx.dims[idx])

@@ -42,5 +42,5 @@ instantiate_updater(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, protos
 
 FinchNotation.finch_leaf(x::VirtualAbstractUnitRange) = virtual(x)
 
-virtual_default(::VirtualAbstractUnitRange) = 0
-virtual_eltype(tns::VirtualAbstractUnitRange) = tns.eltype
+virtual_default(::VirtualAbstractUnitRange, ctx) = 0
+virtual_eltype(tns::VirtualAbstractUnitRange, ctx) = tns.eltype

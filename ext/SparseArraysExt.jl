@@ -41,7 +41,7 @@ end
 end
 
 function Finch.virtual_size(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler)
-    return [Extent(literal(1),value(:($(arr.ex).m), arr.Ti)), Extent(literal(1),value(:($(arr.ex).n), arr.Ti))]
+    return [Extent(literal(1),value(:($(arr.ex).m), arr.Ti)), Extent(literal(1), value(:($(arr.ex).n), arr.Ti))]
 end
 
 function lower(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler,  ::DefaultStyle)
@@ -134,8 +134,8 @@ end
 
 Finch.FinchNotation.finch_leaf(x::VirtualSparseMatrixCSC) = virtual(x)
 
-Finch.virtual_default(arr::VirtualSparseMatrixCSC) = zero(arr.Tv)
-Finch.virtual_eltype(tns::VirtualSparseMatrixCSC) = tns.Tv
+Finch.virtual_default(arr::VirtualSparseMatrixCSC, ctx) = zero(arr.Tv)
+Finch.virtual_eltype(tns::VirtualSparseMatrixCSC, ctx) = tns.Tv
 
 @kwdef mutable struct VirtualSparseVector
     ex
@@ -233,8 +233,8 @@ end
 
 Finch.FinchNotation.finch_leaf(x::VirtualSparseVector) = virtual(x)
 
-Finch.virtual_default(arr::VirtualSparseVector) = zero(arr.Tv)
-Finch.virtual_eltype(tns::VirtualSparseVector) = tns.Tv
+Finch.virtual_default(arr::VirtualSparseVector, ctx) = zero(arr.Tv)
+Finch.virtual_eltype(tns::VirtualSparseVector, ctx) = tns.Tv
 
 SparseArrays.nnz(fbr::Fiber) = countstored(fbr)
 

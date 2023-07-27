@@ -78,11 +78,17 @@ function cache!(ctx::AbstractCompiler, var, val)
     return cached(value(var, Any), literal(val))
 end
 
-function resolve(var, ctx::AbstractCompiler)
-    if var isa FinchNode && (var.kind === variable || var.kind === index)
-        return ctx.bindings[var]
+resolve(node, ctx) = node
+function resolve(node::FinchNode, ctx::AbstractCompiler)
+    if node.kind === virtual
+        return node.val
+    elseif node.kind === variable
+        return resolve(ctx.bindings[node], ctx)
+    elseif node.kind === index
+        return resolve(ctx.bindings[node], ctx)
+    else
+        error("unimplemented $node")
     end
-    return var
 end
 
 """
@@ -180,15 +186,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
             end
         end
     elseif root.kind === access
-        if root.tns.kind === virtual
-            return lower_access(ctx, root, root.tns.val)
-        elseif root.tns.kind === variable #TODO should be unnecessary?
-            return lower_access(ctx, root, resolve(root.tns, ctx))
-        else
-            tns = ctx(root.tns)
-            idxs = map(ctx, root.idxs)
-            return :($(ctx(tns))[$(idxs...)])
-        end
+        return lower_access(ctx, root, resolve(root.tns, ctx))
     elseif root.kind === call
         if root.op == literal(and)
             if isempty(root.args)
@@ -241,6 +239,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
 end
 
 function lower_access(ctx, node, tns)
+    tns = ctx(tns)
     idxs = map(ctx, node.idxs)
     :($(ctx(tns))[$(idxs...)])
 end
@@ -251,9 +250,8 @@ function lower_access(ctx, node, tns::Number)
 end
 
 function lower_loop(ctx, root, ext)
-    root_2 = Rewrite(Postwalk(@rule access(~tns::isvirtual, ~mode, ~idxs...) => begin
+    root_2 = Rewrite(Postwalk(@rule access(~tns, ~mode, ~idxs...) => begin
         if !isempty(idxs) && root.idx == idxs[end]
-            tns = tns.val
             protos = [(mode.kind === reader ? defaultread : defaultupdate) for _ in idxs]
             tns_2 = unfurl(tns, ctx, root.ext.val, protos...)
             access(tns_2, mode, idxs...)
