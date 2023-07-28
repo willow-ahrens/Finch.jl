@@ -3,7 +3,7 @@
 
 """
 function evaluate_partial(root, ctx)
-    Rewrite(Fixpoint(
+    root_2 = Rewrite(Fixpoint(
         Postwalk(Fixpoint(Chain([
             (@rule call(~f::isliteral, ~a::(All(isliteral))...) => finch_leaf(getval(f)(getval.(a)...))),
             (@rule call(~f::isliteral, ~a::(All(Or(isconstant, isvirtual, isvariable)))...) => virtual_call(f.val, ctx, a...)),
@@ -16,6 +16,12 @@ function evaluate_partial(root, ctx)
             end),
         ])))
     ))(root)
+    Rewrite(Fixpoint(Chain([
+        (@rule sequence(define(~a::isvariable, ~v::Or(isconstant, isvirtual)), ~s...) => begin
+            ctx.bindings[a] = v
+            sequence(s...)
+        end),
+    ])))(root_2)
 end
 
 virtual_call(f, ctx, a...) = nothing

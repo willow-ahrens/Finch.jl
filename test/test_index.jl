@@ -94,4 +94,13 @@
     @finch for i = _; y[i] := Finch.permissive(x, true)[i] end
 
     @test isequal(y, [0.0, 0.0, missing, missing])
+
+    y = Array{Any}(undef, 4)
+
+    @finch begin
+        z = Finch.permissive(x, true)
+        for i = _; y[i] := z[i] end
+    end
+
+    @test isequal(y, [0.0, 0.0, missing, missing])
 end

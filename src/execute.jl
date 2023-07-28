@@ -74,6 +74,7 @@ function lower_global(prgm, ctx)
         quote
             $(begin
                 prgm = evaluate_partial(prgm, ctx_2)
+                println(ctx_2.bindings)
                 prgm = enforce_scopes(prgm)
                 prgm = wrapperize(prgm, ctx_2)
                 prgm = enforce_lifecycles(prgm)
