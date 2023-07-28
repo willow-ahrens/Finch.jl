@@ -40,6 +40,16 @@ combinedim(ctx, a::MakeDimension, b) = b
     stop
 end
 
+#=
+    TODO: a quick note: I think we should just parse function call colon as different from the colon symbol on it's own.
+    so (:) is dimless, and (:)(a, b) is extent(a, b).
+=#
+function virtual_call(::MakeDimension, ctx, start, stop)
+    if isconstant(start) && isconstant(stop)
+        Extent(Start, Stop)
+    end
+end
+
 FinchNotation.finch_leaf(x::Extent) = virtual(x)
 
 Base.:(==)(a::Extent, b::Extent) =
