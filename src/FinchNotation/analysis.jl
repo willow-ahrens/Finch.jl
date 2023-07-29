@@ -58,20 +58,100 @@ struct ParallelAnalysisResults
     nonConCurrentAccss::Vector{FinchNode}
 end
 
-function parallelAnalysis(prog) :: ParallelAnalysisResults
+function parallelAnalysis(prog, index, alg, ctx) :: ParallelAnalysisResults
     accs = gatherAcceses(prog)
     assigns = gatherAssignments(prog)
-    locDefs = gatherLocalDeclerations(prog)
+    locDefs = Set{FinchNode}(gatherLocalDeclerations(prog))
+
+    nonLocAccs:: Set{FinchNode} = Set{FinchNode}()
+    nonLocAssigns:: Set{FinchNode} = Set{FinchNode}()
+    naive = true
+    withAtomics = true
+    withAtomicsAndAssoc = true
+    tensorsNeedingAtomics:: Vector{FinchNode} = []
+    nonAssocAssigns:: Vector{FinchNode} = []
+    nonConCurrentAccss::Vector{FinchNode} = []
+    
 
     # Step 0:Filter out local defs
-    # Run through accs to check properties.
+    for node in accs
+        if node.tns in locDefs
+            continue
+        end
+        push!(nonLocAccs, node)
+    end
+
+    for node in assigns
+        if node.lhs.tns in locDefs
+            continue
+        end
+        push!(nonLocAssigns, node)
+    end
+
 
     # Step 1: Gather all the assigns and group them per root
+    assignByRoot :: Dict{FinchNode, Set{FinchNode}} = {}
+    for node in assigns
+        root = getroot(node.lhs.tns)
+        nodeSet = get!(assignByRoot, root, Set{FinchNode}())
+        push!(nodeSet, node)
+    end
     # Step 2: For each group, ensure they are all accessed via a plain i and using the same part of the tensor - (i.e the virtuals are identical) -  if not, add the root to the group needing atomics.
-    # Step 3: Similarly, for associativity
-    # Step 4: Look through all accesses and make sure they are concurrent. 
+    for (root, nodeSet) in assignByRoot
+        rep = first(nodeSet)
+        tns = rep.lhs.tns
+        if rep.lhs.idx[end] != index
+            naive = false
+            push!(tensorsNeddingAtomics, root)
+        end
 
-    return ParallelAnalysisResults(false, false, false, [], [], [])
+        # FIXME: TRACE.
+        # The access is injective
+        if !is_injective(tns, ctx, (length(rep.lhs,idx),))
+            naie = false
+            push!(tensorsNeddingAtomics, root)
+        end
+
+        # everyone is accessed in the same way i.e the virtuals are the same.
+        for rep' in nodeSet
+            tns' = rep'.lhs.tns
+            if tns != tns'
+                naive = false
+                push!(tensorsNeddingAtomics, root)
+            end
+            if rep'.lhs[end] != index
+                naive = false
+                push!(tensorsNeddingAtomics, root)
+            end
+        end
+        # Step 3: Similarly, for associativity
+        for rep' in nodeSet
+            if !isassociative(alg, rep'.lhs.op)
+                naive = false
+                withAtomics = false
+                push!(nonAssocAssigns, rep')
+            end
+        end
+        
+    end
+
+    # Step 4: Look through all accesses and make sure they are concurrent.
+    for acc in nonLocAccs
+        if length(acc.idx) == 0
+            if !is_concurrent(acc.tns, ctx)
+                naive = false
+                withAtomics = false
+                withAtomicsAndAssoc = false
+                break
+            end
+        else
+            if !is_concurrent(acc.tns, ctx, )
+                #erm, should I have written this with the protocol.
+            end
+        end
+    end
+
+    return ParallelAnalysisResults(naive, withAtomics, withAtomicssAndAssoc, tensorsNeddingAtomics, nonAssocAssigns, nonConCurrentAccs)
 end
 
 

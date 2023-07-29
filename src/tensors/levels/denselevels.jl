@@ -172,7 +172,7 @@ end
 is_laminable_updater(lvl::VirtualDenseLevel, ctx, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...) =
     is_laminable_updater(lvl.lvl, ctx, protos...)
     
-is_concurrent(lvl::VirtualDenseLevel, ctx, ::Union{::typeof(defaultread), ::typeof(walk), ::typeof(gallop), ::typeof(follow), typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...) = true
+is_concurrent(lvl::VirtualDenseLevel, ctx, ::Union{::typeof(defaultread), ::typeof(walk), ::typeof(gallop), ::typeof(follow), typeof(defaultupdate), typeof(laminate)}, protos...) = true
 
 is_injective(lvl::VirtualDenseLevel, ctx, accs::Vararg{UInt}) = true
 

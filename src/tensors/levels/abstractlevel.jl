@@ -13,7 +13,7 @@ is_concurrent(lvl::AbstractVirtualLevel, ctx) = false
 is_injective(lvl::AbstractVirtualLevel, ctx, accs::Vararg{UInt}) = false
 
 
-
+getroot(tns::AbstractVirtualLevel) = nothing
 
 
 # supports_reassembly(lvl::AbstractVirtualLevel) = false
