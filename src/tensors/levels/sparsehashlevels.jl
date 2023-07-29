@@ -389,6 +389,8 @@ end
 is_laminable_updater(lvl::VirtualSparseHashLevel, ctx, protos...) =
     is_laminable_updater(lvl.lvl, ctx, protos[lvl.N + 1:end]...)
 
+is_injective(lvl::VirtualSparseCOOLevel, ctx, accs::Vararg{UInt}) = true    
+
 is_concurrent(lvl::VirtualSparseHashLevel, ctx, ::Union{::typeof(defaultread), ::typeof(walk), ::typeof(gallop), ::typeof(follow)}) = true
     
 instantiate_updater(fbr::VirtualSubFiber{VirtualSparseHashLevel}, ctx, protos...) =

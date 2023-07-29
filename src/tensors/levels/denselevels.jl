@@ -174,6 +174,8 @@ is_laminable_updater(lvl::VirtualDenseLevel, ctx, ::Union{typeof(defaultupdate),
     
 is_concurrent(lvl::VirtualDenseLevel, ctx, ::Union{::typeof(defaultread), ::typeof(walk), ::typeof(gallop), ::typeof(follow), typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...) = true
 
+is_injective(lvl::VirtualDenseLevel, ctx, accs::Vararg{UInt}) = true
+
 instantiate_reader(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, ::Union{typeof(defaultread), typeof(follow)}, protos...) = subunfurl_dense_helper(fbr, ctx, instantiate_reader, VirtualSubFiber, protos...)
 instantiate_updater(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...) = subunfurl_dense_helper(fbr, ctx, instantiate_updater, VirtualSubFiber, protos...)
 instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualDenseLevel}, ctx, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...) = subunfurl_dense_helper(fbr, ctx, instantiate_updater, (lvl, pos) -> VirtualTrackedSubFiber(lvl, pos, fbr.dirty), protos...)

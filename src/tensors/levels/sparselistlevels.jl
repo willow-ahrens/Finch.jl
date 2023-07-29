@@ -352,6 +352,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, :
 end
 
 is_laminable_updater(lvl::VirtualSparseListLevel, ctx, protos...) = false
+is_injective(lvl::VirtualSparseListLevel, ctx, accs::Vararg{UInt}) = true
 
 is_concurrent(lvl::VirtualSparseListLevel, ctx, ::Union{::typeof(defaultread), ::typeof(walk), ::typeof(gallop), ::typeof(follow), typeof(defaultupdate)}) = true
 

@@ -10,5 +10,10 @@ is_concurrent(lvl::AbstractVirtualLevel, ctx, ::Union{::typeof(defaultread), ::t
 
 is_concurrent(lvl::AbstractVirtualLevel, ctx) = false
 
+is_injective(lvl::AbstractVirtualLevel, ctx, accs::Vararg{UInt}) = false
+
+
+
+
 
 # supports_reassembly(lvl::AbstractVirtualLevel) = false

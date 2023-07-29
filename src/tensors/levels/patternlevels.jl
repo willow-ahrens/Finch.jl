@@ -100,6 +100,7 @@ trim_level!(lvl::VirtualPatternLevel, ctx::AbstractCompiler, pos) = lvl
 instantiate_reader(::VirtualSubFiber{VirtualPatternLevel}, ctx) = Fill(true)
 is_laminable_updater(lvl::VirtualPatternLevel, ctx) = true
 is_concurrent(lvl::VirtualPatternLevel, ctx) = true
+is_injective(lvl::VirtualPatternLevel, ctx, accs::Vararg{UInt}) = true
 
 function instantiate_updater(fbr::VirtualSubFiber{VirtualPatternLevel}, ctx)
     val = ctx.freshen(:null)

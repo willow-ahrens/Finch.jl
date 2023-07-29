@@ -144,6 +144,7 @@ end
 
 is_laminable_updater(lvl::VirtualElementLevel, ctx) = true
 is_concurrent(lvl::VirtualElementLevel, ctx) = true
+is_injective(lvl::VirtualElementLevel, ctx, accs::Vararg{UInt}) = true
 
 function instantiate_updater(fbr::VirtualSubFiber{VirtualElementLevel}, ctx)
     (lvl, pos) = (fbr.lvl, fbr.pos)
