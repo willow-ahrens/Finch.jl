@@ -1,4 +1,4 @@
-struct ToeplitzArray{dim, Body}
+struct ToeplitzArray{dim, Body} <: AbstractCombinator
     body::Body
 end
 
@@ -12,7 +12,7 @@ end
 
 #Base.getindex(arr::ToeplitzArray, i...) = ...
 
-struct VirtualToeplitzArray
+struct VirtualToeplitzArray <: AbstractVirtualCombinator
     body
     dim
 end

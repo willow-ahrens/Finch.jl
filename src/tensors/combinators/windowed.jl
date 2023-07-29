@@ -1,4 +1,4 @@
-struct WindowedArray{Dims<:Tuple, Body}
+struct WindowedArray{Dims<:Tuple, Body} <: AbstractCombinator
     body::Body
     dims::Dims
 end
@@ -10,7 +10,7 @@ end
 
 Base.getindex(arr::WindowedArray, i...) = arr.body[i...]
 
-struct VirtualWindowedArray
+struct VirtualWindowedArray <: AbstractVirtualCombinator
     body
     dims
 end

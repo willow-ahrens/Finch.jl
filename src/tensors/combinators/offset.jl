@@ -1,4 +1,4 @@
-struct OffsetArray{Delta<:Tuple, Body}
+struct OffsetArray{Delta<:Tuple, Body} <: AbstractCombinator
     body::Body
     delta::Delta
 end
@@ -11,7 +11,7 @@ end
 Base.getindex(arr::OffsetArray, i...) = arr.body[(i .+ arr.delta)...]
 
 
-struct VirtualOffsetArray
+struct VirtualOffsetArray <: AbstractVirtualCombinator
     body
     delta
 end

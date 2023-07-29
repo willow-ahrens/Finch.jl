@@ -1,4 +1,4 @@
-struct ProtocolizedArray{Protos<:Tuple, Body}
+struct ProtocolizedArray{Protos<:Tuple, Body} <: AbstractCombinator
     body::Body
     protos::Protos
 end
@@ -10,7 +10,7 @@ end
 
 Base.getindex(arr::ProtocolizedArray, i...) = arr.body[i...]
 
-struct VirtualProtocolizedArray
+struct VirtualProtocolizedArray <: AbstractVirtualCombinator
     body
     protos
 end

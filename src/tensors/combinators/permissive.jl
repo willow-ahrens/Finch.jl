@@ -1,4 +1,4 @@
-struct PermissiveArray{dims, Body}
+struct PermissiveArray{dims, Body} <: AbstractCombinator
     body::Body
 end
 
@@ -12,7 +12,7 @@ end
 
 #Base.getindex(arr::PermissiveArray, i...) = ...
 
-struct VirtualPermissiveArray
+struct VirtualPermissiveArray <: AbstractVirtualCombinator
     body
     dims
 end
