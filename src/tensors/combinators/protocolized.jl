@@ -14,6 +14,7 @@ struct VirtualProtocolizedArray <: AbstractVirtualCombinator
     body
     protos
 end
+is_injective(lvl::VirtualProtocolizedArray, ctx, accs::Vararg{UInt}) = is_injective(lvl.body, ctx, accs)
 Base.:(==)(a::VirtualProtocolizedArray, b::VirtualProtocolizedArray) = a.body == b.body && a.protos == b.protos
 
 Base.show(io::IO, ex::VirtualProtocolizedArray) = Base.show(io, MIME"text/plain"(), ex)

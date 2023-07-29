@@ -15,6 +15,8 @@ struct VirtualWindowedArray <: AbstractVirtualCombinator
     dims
 end
 
+is_injective(lvl::VirtualWindowedArray, ctx, accs::Vararg{UInt}) = true
+
 Base.show(io::IO, ex::VirtualWindowedArray) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualWindowedArray)
 	print(io, "VirtualWindowedArray($(ex.body), $(ex.dims))")

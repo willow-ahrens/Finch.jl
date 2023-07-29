@@ -16,6 +16,9 @@ struct VirtualOffsetArray <: AbstractVirtualCombinator
     delta
 end
 
+is_injective(lvl::VirtualOffsetArray, ctx, accs::Vararg{UInt}) = is_injective(lvl.body, ctx, accs)
+
+
 Base.show(io::IO, ex::VirtualOffsetArray) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualOffsetArray)
 	print(io, "VirtualOffsetArray($(ex.body), $(ex.delta))")

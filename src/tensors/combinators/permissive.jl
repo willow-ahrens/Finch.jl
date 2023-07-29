@@ -17,6 +17,8 @@ struct VirtualPermissiveArray <: AbstractVirtualCombinator
     dims
 end
 
+is_injective(lvl::VirtualPermissiveArray, ctx, accs::Vararg{UInt}) = is_injective(lvl.body, ctx, accs)
+
 Base.show(io::IO, ex::VirtualPermissiveArray) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualPermissiveArray)
 	print(io, "VirtualPermissiveArray($(ex.body), $(ex.dims))")
