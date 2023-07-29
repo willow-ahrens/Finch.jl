@@ -404,6 +404,9 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::
 end
 
 is_laminable_updater(lvl::VirtualSparseVBLLevel, ctx, protos...) = false
+
+is_concurrent(lvl::VirtualSparseVBLLevel, ctx, ::Union{::typeof(defaultread), ::typeof(walk), ::typeof(gallop), ::typeof(follow), typeof(defaultupdate)}) = true
+
 instantiate_updater(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, protos...) =
     instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
 function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseVBLLevel}, ctx, ::Union{typeof(defaultupdate), typeof(extrude)}, protos...)

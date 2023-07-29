@@ -418,6 +418,9 @@ end
 
 is_laminable_updater(lvl::VirtualSparseByteMapLevel, ctx, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...) =
     is_laminable_updater(lvl.lvl, ctx, protos...)
+
+is_concurrent(lvl::VirtualSparseByteMapLevel, ctx, ::Union{::typeof(defaultread), ::typeof(walk), ::typeof(gallop), ::typeof(follow), typeof(defaultupdate)}) = true
+
 instantiate_updater(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, protos...) = 
     instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
 function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseByteMapLevel}, ctx, ::Union{typeof(defaultupdate), typeof(extrude), typeof(laminate)}, protos...)

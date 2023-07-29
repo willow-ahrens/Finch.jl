@@ -320,6 +320,9 @@ function instantiate_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, R, start
 end
 
 is_laminable_updater(lvl::VirtualSparseCOOLevel, ctx, protos...) = false
+
+is_concurrent(lvl::VirtualSparseCOOLevel, ctx, ::Union{::typeof(defaultread), ::typeof(walk), ::typeof(gallop), ::typeof(follow), typeof(defaultupdate)}) = true
+
 instantiate_updater(fbr::VirtualSubFiber{VirtualSparseCOOLevel}, ctx, protos...) =
     instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
 function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseCOOLevel}, ctx, protos...)

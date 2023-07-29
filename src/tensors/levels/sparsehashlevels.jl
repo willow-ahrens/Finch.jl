@@ -388,6 +388,9 @@ end
 
 is_laminable_updater(lvl::VirtualSparseHashLevel, ctx, protos...) =
     is_laminable_updater(lvl.lvl, ctx, protos[lvl.N + 1:end]...)
+
+is_concurrent(lvl::VirtualSparseHashLevel, ctx, ::Union{::typeof(defaultread), ::typeof(walk), ::typeof(gallop), ::typeof(follow)}) = true
+    
 instantiate_updater(fbr::VirtualSubFiber{VirtualSparseHashLevel}, ctx, protos...) =
     instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
 function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseHashLevel}, ctx, protos...)

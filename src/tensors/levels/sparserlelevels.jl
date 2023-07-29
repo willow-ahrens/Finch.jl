@@ -260,6 +260,9 @@ end
 
 
 is_laminable_updater(lvl::VirtualSparseRLELevel, ctx, ::Union{typeof(defaultupdate), typeof(extrude)}) = false
+
+is_concurrent(lvl::VirtualSparseByteMapLevel, ctx, ::Union{::typeof(defaultread), ::typeof(walk), ::typeof(gallop), ::typeof(follow), typeof(defaultupdate)}) = true
+
 instantiate_updater(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, protos...) = 
     instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
 

@@ -143,6 +143,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualElementLevel}, ctx)
 end
 
 is_laminable_updater(lvl::VirtualElementLevel, ctx) = true
+is_concurrent(lvl::VirtualElementLevel, ctx) = true
 
 function instantiate_updater(fbr::VirtualSubFiber{VirtualElementLevel}, ctx)
     (lvl, pos) = (fbr.lvl, fbr.pos)
