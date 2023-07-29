@@ -76,7 +76,7 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseTri
     display_fiber_data(io, mime, fbr, depth, N, crds, print_coord, get_fbr)
 end
 
-mutable struct VirtualSparseTriangleLevel
+mutable struct VirtualSparseTriangleLevel <: AbstractVirtualLevel
     lvl
     ex
     N

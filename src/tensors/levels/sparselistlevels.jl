@@ -116,7 +116,7 @@ function (fbr::SubFiber{<:SparseListLevel{Ti}})(idxs...) where {Ti}
     length(r) == 0 ? default(fbr_2) : fbr_2(idxs[1:end-1]...)
 end
 
-mutable struct VirtualSparseListLevel
+mutable struct VirtualSparseListLevel <: AbstractVirtualLevel
     lvl
     ex
     Ti

@@ -108,7 +108,7 @@ function (fbr::SubFiber{<:RepeatRLELevel})(i, tail...)
     return lvl.val[q]
 end
 
-mutable struct VirtualRepeatRLELevel
+mutable struct VirtualRepeatRLELevel <: AbstractVirtualLevel
     ex
     D
     Ti

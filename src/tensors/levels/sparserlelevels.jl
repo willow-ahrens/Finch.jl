@@ -92,7 +92,7 @@ function (fbr::SubFiber{<:SparseRLELevel})(idxs...)
     r1 != r2 ? default(fbr_2) : fbr_2(idxs[1:end-1]...)
 end
 
-mutable struct VirtualSparseRLELevel
+mutable struct VirtualSparseRLELevel <: AbstractVirtualLevel
     lvl
     ex
     Ti

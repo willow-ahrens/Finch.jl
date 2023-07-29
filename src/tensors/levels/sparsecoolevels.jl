@@ -131,7 +131,7 @@ function (fbr::SubFiber{<:SparseCOOLevel{N, Ti}})(idxs...) where {N, Ti}
     isempty(target) ? default(fbr) : SubFiber(lvl.lvl, first(target))(idxs[1:end-N]...)
 end
 
-mutable struct VirtualSparseCOOLevel
+mutable struct VirtualSparseCOOLevel <: AbstractVirtualLevel
     lvl
     ex
     N

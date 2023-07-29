@@ -92,7 +92,7 @@ function (fbr::SubFiber{<:SparseVBLLevel})(idxs...)
     return fbr_2(idxs[1:end-1]...)
 end
 
-mutable struct VirtualSparseVBLLevel
+mutable struct VirtualSparseVBLLevel <: AbstractVirtualLevel
     lvl
     ex
     Ti

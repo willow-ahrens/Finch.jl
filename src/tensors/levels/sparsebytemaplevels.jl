@@ -87,7 +87,7 @@ function (fbr::SubFiber{<:SparseByteMapLevel{Ti}})(idxs...) where {Ti}
     end
 end
 
-mutable struct VirtualSparseByteMapLevel
+mutable struct VirtualSparseByteMapLevel <: AbstractVirtualLevel
     lvl
     ex
     Ti

@@ -136,7 +136,7 @@ end
 
 
 
-mutable struct VirtualSparseHashLevel
+mutable struct VirtualSparseHashLevel <: AbstractVirtualLevel
     lvl
     ex
     N

@@ -91,7 +91,7 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:DenseLeve
     display_fiber_data(io, mime, fbr, depth, 1, crds, show, get_fbr)
 end
 
-mutable struct VirtualDenseLevel
+mutable struct VirtualDenseLevel <: AbstractVirtualLevel
     lvl
     ex
     Ti

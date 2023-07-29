@@ -73,7 +73,7 @@ SparseList (false) [1:10]
 pattern!(fbr::Fiber) = Fiber(pattern!(fbr.lvl))
 pattern!(fbr::SubFiber) = SubFiber(pattern!(fbr.lvl), fbr.pos)
 
-struct VirtualPatternLevel end
+struct VirtualPatternLevel <: AbstractVirtualLevel end
 
 lower(lvl::VirtualPatternLevel, ctx::AbstractCompiler, ::DefaultStyle) = :(PatternLevel())
 virtualize(ex, ::Type{<:PatternLevel}, ctx) = VirtualPatternLevel()

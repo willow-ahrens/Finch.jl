@@ -72,7 +72,7 @@ end
 
 countstored_level(lvl::ElementLevel, pos) = pos
 
-struct VirtualElementLevel
+struct VirtualElementLevel <: AbstractVirtualLevel
     ex
     Tv
     D
