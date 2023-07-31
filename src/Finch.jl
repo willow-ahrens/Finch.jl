@@ -39,6 +39,8 @@ export choose, minby, maxby, overwrite, initwrite
 
 export default, AsArray
 
+export parallel, extent, dimless
+
 include("util.jl")
 
 include("FinchNotation/FinchNotation.jl")
@@ -47,6 +49,7 @@ using .FinchNotation: and, or, InitWriter
 include("semantics.jl")
 include("virtualize.jl")
 include("style.jl")
+include("dimensions.jl")
 include("lower.jl")
 
 include("transforms/concordize.jl")
@@ -54,6 +57,7 @@ include("transforms/wrapperize.jl")
 include("transforms/scopes.jl")
 include("transforms/lifecycle.jl")
 include("transforms/dimensionalize.jl")
+include("transforms/evaluate.jl")
 
 include("execute.jl")
 
@@ -68,7 +72,6 @@ include("looplets/spikes.jl")
 include("looplets/switches.jl")
 include("looplets/phases.jl")
 include("looplets/pipelines.jl")
-include("looplets/cycles.jl")
 include("looplets/jumpers.jl")
 include("looplets/steppers.jl")
 include("looplets/fills.jl")

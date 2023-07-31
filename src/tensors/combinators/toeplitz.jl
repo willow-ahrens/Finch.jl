@@ -30,14 +30,20 @@ function virtualize(ex, ::Type{ToeplitzArray{dim, Body}}, ctx) where {dim, Body}
     VirtualToeplitzArray(virtualize(:($ex.body), Body, ctx), dim)
 end
 
+toeplitz(body, dim) = ToeplitzArray(body, dim)
+function virtual_call(::typeof(toeplitz), ctx, body, dim)
+    @assert isliteral(dim)
+    VirtualToeplitzArray(body, dim.val)
+end
+
 lower(tns::VirtualToeplitzArray, ctx::AbstractCompiler, ::DefaultStyle) = :(ToeplitzArray($(ctx(tns.body)), $(tns.dim)))
 
 function virtual_size(arr::VirtualToeplitzArray, ctx::AbstractCompiler)
     dims = virtual_size(arr.body, ctx)
-    return (dims[1:arr.dim - 1]..., nodim, nodim, dims[arr.dim + 1:end]...)
+    return (dims[1:arr.dim - 1]..., dimless, dimless, dims[arr.dim + 1:end]...)
 end
 function virtual_resize!(arr::VirtualToeplitzArray, ctx::AbstractCompiler, dims...)
-    virtual_resize!(arr.body, ctx, dims[1:arr.dim - 1]..., nodim, dims[arr.dim + 2:end]...)
+    virtual_resize!(arr.body, ctx, dims[1:arr.dim - 1]..., dimless, dims[arr.dim + 2:end]...)
 end
 
 function instantiate_reader(arr::VirtualToeplitzArray, ctx, protos...)
@@ -110,7 +116,9 @@ visit_simplify(node::VirtualToeplitzArray) = VirtualToeplitzArray(visit_simplify
     guard => VirtualToeplitzArray(body, node.dim)
 end
 
-(ctx::CycleVisitor)(node::VirtualToeplitzArray) = VirtualToeplitzArray(ctx(node.body), node.dim)
+jumper_body(node::VirtualToeplitzArray, ctx, ext) = VirtualToeplitzArray(jumper_body(node.body, ctx, ext), node.dim)
+stepper_body(node::VirtualToeplitzArray, ctx, ext) = VirtualToeplitzArray(stepper_body(node.body, ctx, ext), node.dim)
+stepper_seek(node::VirtualToeplitzArray, ctx, ext) = stepper_seek(node.body, ctx, ext)
 
 getroot(tns::VirtualToeplitzArray) = getroot(tns.body)
 

@@ -171,4 +171,4 @@ Base.show(io::IO, node::TagInstance{tag}) where {tag} = print(io, "tag_instance(
 @inline finch_leaf_instance(arg::Type) = literal_instance(arg)
 @inline finch_leaf_instance(arg::Function) = literal_instance(arg)
 @inline finch_leaf_instance(arg::FinchNodeInstance) = arg
-@inline finch_leaf_instance(arg) = arg #TODO ValueInstance
+@inline finch_leaf_instance(arg) = arg

@@ -103,8 +103,8 @@ function virtual_resize!(tns::AbstractVirtualFiber, ctx, dims...)
     tns.lvl = virtual_level_resize!(tns.lvl, ctx, dims...)
     tns
 end
-virtual_eltype(tns::AbstractVirtualFiber) = virtual_level_eltype(tns.lvl)
-virtual_default(tns::AbstractVirtualFiber) = Some(virtual_level_default(tns.lvl))
+virtual_eltype(tns::AbstractVirtualFiber, ctx) = virtual_level_eltype(tns.lvl)
+virtual_default(tns::AbstractVirtualFiber, ctx) = Some(virtual_level_default(tns.lvl))
 
 
 
@@ -340,7 +340,6 @@ end
 @staged function Fiber!(lvl)
     contain(LowerJulia()) do ctx
         lvl = virtualize(:lvl, lvl, ctx)
-        lvl = resolve(lvl, ctx)
         lvl = declare_level!(lvl, ctx, literal(0), literal(virtual_level_default(lvl)))
         push!(ctx.preamble, assemble_level!(lvl, ctx, literal(1), literal(1)))
         lvl = freeze_level!(lvl, ctx, literal(1))

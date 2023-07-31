@@ -243,11 +243,6 @@ function getvars(node::FinchNode)
     end
 end
 
-struct All{F}
-    f::F
-end
-
-@inline (f::All{F})(args) where {F} = all(f.f, args)
 
 ortho(var, stmt) = !(var in getvars(stmt))
 

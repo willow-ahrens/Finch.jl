@@ -1,5 +1,4 @@
 @kwdef struct Phase
-    head = nothing
     body
     start = (ctx, ext) -> nothing
     stop = (ctx, ext) -> nothing
@@ -16,12 +15,12 @@ function phase_range(node::FinchNode, ctx, ext)
     if @capture node access(~tns::isvirtual, ~i...)
         phase_range(tns.val, ctx, ext)
     else
-        return nodim
+        return dimless
     end
 end
 
-phase_range(node, ctx, ext) = nodim
-phase_range(node::Phase, ctx, ext) = Narrow(node.range(ctx, ext))
+phase_range(node, ctx, ext) = dimless
+phase_range(node::Phase, ctx, ext) = node.range(ctx, ext)
 
 function phase_body(node::FinchNode, ctx, ext, ext_2)
     if @capture node access(~tns::isvirtual, ~m, ~i...)
@@ -33,30 +32,37 @@ end
 phase_body(node::Phase, ctx, ext, ext_2) = node.body(ctx, ext_2)
 phase_body(node, ctx, ext, ext_2) = truncate(node, ctx, ext, ext_2)
 
-struct PhaseStyle end
+abstract type PhaseStyle end
+struct PipelinePhaseStyle <: PhaseStyle end
+struct StepperPhaseStyle <: PhaseStyle end
+struct JumperPhaseStyle <: PhaseStyle end
 
-(ctx::Stylize{<:AbstractCompiler})(node::Phase) = ctx.root.kind === loop ? PhaseStyle() : DefaultStyle()
+phase_op(::PipelinePhaseStyle) = virtual_intersect
+phase_op(::StepperPhaseStyle) = virtual_intersect
+phase_op(::JumperPhaseStyle) = virtual_union
 
-combine_style(a::DefaultStyle, b::PhaseStyle) = PhaseStyle()
-combine_style(a::LookupStyle, b::PhaseStyle) = PhaseStyle()
-combine_style(a::PhaseStyle, b::PhaseStyle) = PhaseStyle()
-combine_style(a::PhaseStyle, b::RunStyle) = PhaseStyle()
-combine_style(a::PhaseStyle, b::SpikeStyle) = PhaseStyle()
-combine_style(a::SimplifyStyle, b::PhaseStyle) = a
-combine_style(a::AcceptRunStyle, b::PhaseStyle) = PhaseStyle()
-combine_style(a::SwitchStyle, b::PhaseStyle) = SwitchStyle()
-combine_style(a::ThunkStyle, b::PhaseStyle) = ThunkStyle()
+(ctx::Stylize{<:AbstractCompiler})(node::Phase) = ctx.root.kind === loop ? PipelinePhaseStyle() : DefaultStyle()
 
-function lower(root::FinchNode, ctx::AbstractCompiler,  ::PhaseStyle)
+combine_style(a::DefaultStyle, b::PhaseStyle) = b
+combine_style(a::LookupStyle, b::PhaseStyle) = b
+combine_style(a::T, b::T) where {T<:PhaseStyle} = b
+combine_style(a::PhaseStyle, b::RunStyle) = a
+combine_style(a::PhaseStyle, b::SpikeStyle) = a
+combine_style(a::SimplifyStyle, b::PhaseStyle) = b
+combine_style(a::AcceptRunStyle, b::PhaseStyle) = b
+combine_style(a::SwitchStyle, b::PhaseStyle) = a
+combine_style(a::ThunkStyle, b::PhaseStyle) = a
+
+function lower(root::FinchNode, ctx::AbstractCompiler,  style::PhaseStyle)
     if root.kind === loop
         i = getname(root.idx)
         i0=ctx.freshen(i)
 
         body = root.body
 
-        ext_2 = resolvedim(mapreduce((node)->phase_range(node, ctx, root.ext), (a, b) -> resultdim(ctx, a, b), PostOrderDFS(body), init=nodim))
+        ext_2 = mapreduce((node)->phase_range(node, ctx, root.ext), (a, b) -> phase_op(style)(ctx, a, b), PostOrderDFS(body))
 
-        ext_3 = resolvedim(resultdim(ctx, Narrow(root.ext), ext_2))
+        ext_3 = virtual_intersect(ctx, root.ext.val, ext_2)
 
         #if query(call(==, getstart(ext_3), getstart(ext_2)), ctx) && query(call(==, getstop(ext_3), getstop(ext_2)), ctx)
         #    ext_3 = ext_2
@@ -75,7 +81,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  ::PhaseStyle)
                 ))
             end)
             
-            $i = $(ctx(getstop(ext_4))) + $(getunit(ext_4))
+            $i = $(ctx(getstop(ext_4))) + $(ctx(getunit(ext_4)))
         end
 
 

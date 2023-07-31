@@ -80,4 +80,63 @@
 
     @finch (C .= 0; @loop i C[i] = I[i])
     @test reference_isequal(C, [2, 3, 4])
+
+    y = Array{Any}(undef, 4)
+    x = @fiber(d(e(0.0)), zeros(2))
+    X = Finch.permissive(x, true)
+    
+    @finch for i = _; y[i] := X[i] end
+
+    @test isequal(y, [0.0, 0.0, missing, missing])
+
+    y = Array{Any}(undef, 4)
+
+    @finch for i = _; y[i] := Finch.permissive(x, true)[i] end
+
+    @test isequal(y, [0.0, 0.0, missing, missing])
+
+    y = Array{Any}(undef, 4)
+
+    @finch begin
+        z = Finch.permissive(x, true)
+        for i = _; y[i] := z[i] end
+    end
+
+    @test isequal(y, [0.0, 0.0, missing, missing])
+
+    @finch begin
+        for i = 1:4; y[i] := x[~i] end
+    end
+
+    @test isequal(y, [0.0, 0.0, missing, missing])
+
+    let
+        io = IOBuffer()
+        println(io, "chunkmask tests")
+
+        @repl io A = @fiber(d(d(e(0.0), 15), 3))
+        @repl io @finch begin
+            m = Finch.chunkmask(5, 1:15)
+            for i = _
+                for j = _
+                    A[j, i] = m[j, i]
+                end
+            end
+        end
+        @repl io AsArray(A)
+
+        @repl io A = @fiber(d(d(e(0.0), 14), 3))
+        @repl io @finch begin
+            m = Finch.chunkmask(5, 1:14)
+            for i = _
+                for j = _
+                    A[j, i] = m[j, i]
+                end
+            end
+        end
+        @repl io AsArray(A)
+        
+        @test check_output("chunkmask.txt", String(take!(io)))
+    end
+
 end

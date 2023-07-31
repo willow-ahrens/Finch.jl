@@ -18,7 +18,8 @@ const program_nodes = (
     variable = variable,
     tag = (ex) -> :(finch_leaf($(esc(ex)))),
     literal = literal,
-    value = (ex) -> :(finch_leaf($(esc(ex)))),
+    leaf = (ex) -> :(finch_leaf($(esc(ex)))),
+    dimless = :(finch_leaf(dimless))
 )
 
 const instance_nodes = (
@@ -38,7 +39,8 @@ const instance_nodes = (
     variable = variable_instance,
     tag = (ex) -> :($tag_instance($(QuoteNode(ex)), $finch_leaf_instance($(esc(ex))))),
     literal = literal_instance,
-    value = (ex) -> :($finch_leaf_instance($(esc(ex))))
+    leaf = (ex) -> :($finch_leaf_instance($(esc(ex)))),
+    dimless = :($finch_leaf_instance(dimless))
 )
 
 and() = true
@@ -89,6 +91,9 @@ julia> x[]
 """
 overwrite(l, r) = r
 
+struct Dimensionless end
+const dimless = Dimensionless()
+function extent end
 
 struct FinchParserVisitor
     nodes
@@ -97,7 +102,7 @@ end
 
 function (ctx::FinchParserVisitor)(ex::Symbol)
     if ex == :_ || ex == :(:)
-        return ctx.nodes.index(:(:))
+        return :($dimless)
     elseif ex in evaluable_exprs
         return ctx.nodes.literal(@eval($ex))
     else
@@ -110,7 +115,7 @@ end
 struct FinchSyntaxError msg end
 
 function (ctx::FinchParserVisitor)(ex::Expr)
-    islinenum(x) = x isa LineNumberNode
+    islinenum(ex) = ex isa LineNumberNode
 
     if @capture ex :if(~cond, ~body)
         return :($(ctx.nodes.sieve)($(ctx(cond)), $(ctx(body))))
@@ -127,10 +132,8 @@ function (ctx::FinchParserVisitor)(ex::Expr)
     elseif @capture ex :macrocall($(Symbol("@thaw")), ~ln::islinenum, ~tns)
         return :($(ctx.nodes.thaw)($(ctx(tns))))
     elseif @capture ex :for(:(=)(~idx, ~ext), ~body)
-        ext == :(:) || ext == :_ || throw(FinchSyntaxError("Finch doesn't support non-automatic loop bounds currently"))
         return ctx(:(@loop($idx = $ext, $body)))
     elseif @capture ex :for(:block(:(=)(~idx, ~ext), ~tail...), ~body)
-        ext == :(:) || ext == :_ || throw(FinchSyntaxError("Finch doesn't support non-automatic loop bounds currently"))
         if isempty(tail)
             return ctx(:(@loop($idx = $ext, $body)))
         else
@@ -206,7 +209,11 @@ function (ctx::FinchParserVisitor)(ex::Expr)
     elseif @capture ex :||(~a, ~b)
         return ctx(:($or($a, $b)))
     elseif @capture ex :call(~op, ~args...)
-        return :($(ctx.nodes.call)($(ctx(op)), $(map(ctx, args)...)))
+        if op == :(:)
+            return :($(ctx.nodes.call)($(ctx(:extent)), $(map(ctx, args)...)))
+        else
+            return :($(ctx.nodes.call)($(ctx(op)), $(map(ctx, args)...)))
+        end
     elseif @capture ex :(...)(~arg)
         return esc(ex)
     elseif @capture ex :$(~arg)
@@ -214,7 +221,7 @@ function (ctx::FinchParserVisitor)(ex::Expr)
     elseif ex in evaluable_exprs
         return ctx.nodes.literal(@eval(ex))
     else
-        return ctx.nodes.value(ex)
+        return ctx.nodes.leaf(ex)
     end
 end
 
