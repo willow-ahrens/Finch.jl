@@ -189,3 +189,78 @@ function instantiate_reader(arr::VirtualSplitMask, ctx, protos::typeof(defaultre
         )
     )
 end
+
+struct ChunkMask{Dim}
+    b::Int
+    dim::Dim
+end
+
+Base.show(io::IO, ex::ChunkMask) = Base.show(io, MIME"text/plain"(), ex)
+function Base.show(io::IO, mime::MIME"text/plain", ex::ChunkMask)
+    print(io, "chunkmask(", ex.b, ex.dim, ")")
+end
+
+struct VirtualChunkMask
+    b
+    dim
+end
+
+function virtualize(ex, ::Type{ChunkMask{Dim}}, ctx) where {Dim}
+    return VirtualChunkMask(
+        value(:($ex.b), Int),
+        virtualize(:($ex.dim), Dim, ctx))
+end
+
+function chunkmask end
+
+function Finch.virtual_call(::typeof(chunkmask), ctx, b, dim)
+    if dim.kind === virtual
+        return VirtualChunkMask(b, dim.val)
+    end
+end
+
+FinchNotation.finch_leaf(x::VirtualChunkMask) = virtual(x)
+Finch.virtual_size(arr::VirtualChunkMask, ctx) = (arr.dim, Extent(literal(1), call(cld, measure(arr.dim), arr.b)))
+
+function instantiate_reader(arr::VirtualChunkMask, ctx, protos::typeof(defaultread)...)
+    Unfurled(
+        arr = arr,
+        body = Furlable(
+            body = (ctx, ext) -> Pipeline([
+                Phase(
+                    stop = (ctx, ext) -> call(cld, measure(arr.dim), arr.b),
+                    body = (ctx, ext) -> Lookup(
+                        body = (ctx, i) -> Furlable(
+                            body = (ctx, ext) -> Pipeline([
+                                Phase(
+                                    stop = (ctx, ext) -> call(*, arr.b, call(-, i, 1)),
+                                    body = (ctx, ext) -> Run(body=Fill(false))
+                                ),
+                                Phase(
+                                    stop = (ctx, ext) -> call(*, arr.b, i),
+                                    body = (ctx, ext) -> Run(body=Fill(true)),
+                                ),
+                                Phase(body = (ctx, ext) -> Run(body=Fill(false)))
+                            ])
+                        )
+                    )
+                ),
+                Phase(
+                    body = (ctx, ext) -> Run(
+                        body = Furlable(
+                            body = (ctx, ext) -> Pipeline([
+                                Phase(
+                                    stop = (ctx, ext) -> call(*, call(fld, measure(arr.dim), arr.b), arr.b),
+                                    body = (ctx, ext) -> Run(body=Fill(false))
+                                ),
+                                Phase(
+                                    body = (ctx, ext) -> Run(body=Fill(true)),
+                                )
+                            ])
+                        )
+                    )
+                )
+            ])
+        )
+    )
+end

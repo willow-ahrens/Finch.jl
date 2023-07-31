@@ -109,4 +109,34 @@
     end
 
     @test isequal(y, [0.0, 0.0, missing, missing])
+
+    let
+        io = IOBuffer()
+        println(io, "chunkmask tests")
+
+        @repl io A = @fiber(d(d(e(0.0), 15), 3))
+        @repl io @finch begin
+            m = Finch.chunkmask(5, 1:15)
+            for i = _
+                for j = _
+                    A[j, i] = m[j, i]
+                end
+            end
+        end
+        @repl io AsArray(A)
+
+        @repl io A = @fiber(d(d(e(0.0), 14), 3))
+        @repl io @finch begin
+            m = Finch.chunkmask(5, 1:14)
+            for i = _
+                for j = _
+                    A[j, i] = m[j, i]
+                end
+            end
+        end
+        @repl io AsArray(A)
+        
+        @test check_output("chunkmask.txt", String(take!(io)))
+    end
+
 end
