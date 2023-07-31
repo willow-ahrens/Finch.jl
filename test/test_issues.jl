@@ -181,7 +181,7 @@ using CIndices
 
         io = IOBuffer()
         y = [2.0, nothing, nothing, 1.0, 3.0, Some(1.0), nothing]
-        yf = Fiber!(SparseList(e{nothing, Union{Float64,Nothing,Some{Float64}}}()), y)
+        yf = Fiber!(SparseList(Element{nothing, Union{Float64,Nothing,Some{Float64}}}()), y)
         println(io, "Fiber!(SparseList(Element(nothing)), $y):")
         println(io, yf)
 
