@@ -105,6 +105,7 @@ function parallelAnalysis(prog, index, alg, ctx) :: ParallelAnalysisResults
         if rep.lhs.idx[end] != index
             naive = false
             push!(tensorsNeddingAtomics, root)
+            push!(nonInjectiveAccss, rep.lhs)
         end
 
         # FIXME: TRACE.
@@ -128,11 +129,22 @@ function parallelAnalysis(prog, index, alg, ctx) :: ParallelAnalysisResults
             end
         end
         # Step 3: Similarly, for associativity:
+        # Check the ops
+        # However, it is also not assosciative if there are multiples access with different ops or lhs.
+        firstNode = first(nodeSet)
         for rep' in nodeSet
-            if !isassociative(alg, rep'.lhs.op)
+            if !isassociative(alg, rep'.op)
                 naive = false
                 withAtomics = false
                 push!(nonAssocAssigns, rep')
+            end
+            if firstNode.op != rep'.op
+                for x in nodeSet
+                    naive = false
+                    withAtomics = false
+                    push!(nonAssocAssigns, x)
+                end
+                break
             end
         end
         
