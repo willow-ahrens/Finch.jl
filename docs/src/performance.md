@@ -18,7 +18,7 @@ concordant traversal of a sparse matrix, as the outer loops access the higher
 levels of the fiber tree:
 
 ```jldoctest example1; setup=:(using Finch)
-A = @fiber(d(sl(e(0.0))), fsparse(([2, 3, 4, 1, 3], [1, 1, 1, 3, 3]), [1.1, 2.2, 3.3, 4.4, 5.5], (4, 3)))
+A = Fiber!(Dense(SparseList(Element(0.0))), fsparse(([2, 3, 4, 1, 3], [1, 1, 1, 3, 3]), [1.1, 2.2, 3.3, 4.4, 5.5], (4, 3)))
 s = Scalar(0.0)
 @finch for j=_, i=_ ; s[] += A[i, j] end
 
@@ -141,8 +141,8 @@ For example, if `A` is `m × n` with `nnz` nonzeros, the following Finch kernel 
 densify `B`, filling it with `m * n` stored values:
 
 ```jldoctest example1
-A = @fiber(d(sl(e(0.0))), fsparse(([2, 3, 4, 1, 3], [1, 1, 1, 3, 3]), [1.1, 2.2, 3.3, 4.4, 5.5], (4, 3)))
-B = @fiber(d(sl(e(0.0)))) #DO NOT DO THIS, B has the wrong fill value
+A = Fiber!(Dense(SparseList(Element(0.0))), fsparse(([2, 3, 4, 1, 3], [1, 1, 1, 3, 3]), [1.1, 2.2, 3.3, 4.4, 5.5], (4, 3)))
+B = Fiber!(Dense(SparseList(Element(0.0)))) #DO NOT DO THIS, B has the wrong fill value
 @finch (B .= 0; for j=_, i=_; B[i, j] = A[i, j] + 1 end)
 countstored(B)
 
@@ -154,8 +154,8 @@ countstored(B)
 Since `A` is filled with `0.0`, adding `1` to the fill value produces `1.0`. However, `B` can only represent a fill value of `0.0`. Instead, we should specify `1.0` for the fill.
 
 ```jldoctest example1
-A = @fiber(d(sl(e(0.0))), fsparse(([2, 3, 4, 1, 3], [1, 1, 1, 3, 3]), [1.1, 2.2, 3.3, 4.4, 5.5], (4, 3)))
-B = @fiber(d(sl(e(1.0))))
+A = Fiber!(Dense(SparseList(Element(0.0))), fsparse(([2, 3, 4, 1, 3], [1, 1, 1, 3, 3]), [1.1, 2.2, 3.3, 4.4, 5.5], (4, 3)))
+B = Fiber!(Dense(SparseList(Element(1.0))))
 @finch (B .= 1; for j=_, i=_; B[i, j] = A[i, j] + 1 end)
 countstored(B)
 
@@ -171,8 +171,8 @@ program variables. Continuing our above example, if we obscure the value of `1`
 behind a variable `x`, Finch can only determine that `x` has type `Int`, not that it is `1`.
 
 ```jldoctest example1
-A = @fiber(d(sl(e(0.0))), fsparse(([2, 3, 4, 1, 3], [1, 1, 1, 3, 3]), [1.1, 2.2, 3.3, 4.4, 5.5], (4, 3)))
-B = @fiber(d(sl(e(1.0))))
+A = Fiber!(Dense(SparseList(Element(0.0))), fsparse(([2, 3, 4, 1, 3], [1, 1, 1, 3, 3]), [1.1, 2.2, 3.3, 4.4, 5.5], (4, 3)))
+B = Fiber!(Dense(SparseList(Element(1.0))))
 x = 1 #DO NOT DO THIS, Finch cannot see the value of x anymore
 @finch (B .= 1; for j=_, i=_; B[i, j] = A[i, j] + x end)
 countstored(B)
@@ -186,7 +186,7 @@ However, there are some situations where you may want a value to be dynamic. For
 
 ```julia
 function saxpy(x, a, y)
-    z = @fiber(sl(e(0.0)))
+    z = Fiber!(SparseList(Element(0.0)))
     @finch (z .= 0; for i=_; z[i] = a * x[i] + y[i] end)
 end
 ```
@@ -197,7 +197,7 @@ Unless you declare the properties of your functions using Finch's [Custom Functi
 the meaning of `*`.
 
 ```jldoctest example1
-A = @fiber(d(sl(e(0.0))), fsparse(([2, 3, 4, 1, 3], [1, 1, 1, 3, 3]), [1.1, 2.2, 3.3, 4.4, 5.5], (4, 3)))
+A = Fiber!(Dense(SparseList(Element(0.0))), fsparse(([2, 3, 4, 1, 3], [1, 1, 1, 3, 3]), [1.1, 2.2, 3.3, 4.4, 5.5], (4, 3)))
 B = ones(4, 3)
 C = Scalar(0.0)
 f(x, y) = x * y # DO NOT DO THIS, Obscures *

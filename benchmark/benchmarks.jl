@@ -18,9 +18,9 @@ SUITE["compile"] = BenchmarkGroup()
 
 code = """
 using Finch
-A = @fiber d(sl(e(0.0)))
-B = @fiber d(sl(e(0.0)))
-C = @fiber d(sl(e(0.0)))
+A = Fiber!(Dense(SparseList(Element(0.0))))
+B = Fiber!(Dense(SparseList(Element(0.0))))
+C = Fiber!(Dense(SparseList(Element(0.0))))
 
 @finch (C .= 0; @loop i j k C[j, i] += A[k, i] * B[k, i])
 """
@@ -29,9 +29,9 @@ cmd = sequence(`$(Base.julia_cmd()) --project=$(Base.active_project()) --eval $c
 SUITE["compile"]["time_to_first_SpGeMM"] = @benchmarkable run(cmd)
 
 let
-    A = @fiber d(sl(e(0.0)))
-    B = @fiber d(sl(e(0.0)))
-    C = @fiber d(sl(e(0.0)))
+    A = Fiber!(Dense(SparseList(Element(0.0))))
+    B = Fiber!(Dense(SparseList(Element(0.0))))
+    C = Fiber!(Dense(SparseList(Element(0.0))))
 
     SUITE["compile"]["compile_SpGeMM"] = @benchmarkable begin   
         A, B, C = ($A, $B, $C)
@@ -102,7 +102,7 @@ end
 SUITE["indices"] = BenchmarkGroup()
 
 function spmv32(A, x)
-    y = @fiber d{Int32}(e(0.0))
+    y = Fiber!(Dense{Int32}(Element(0.0)))
     @finch (y .= 0; @loop i j y[i] += A[j, i] * x[j])
     return y
 end
@@ -110,13 +110,13 @@ end
 SUITE["indices"]["SpMV_32"] = BenchmarkGroup()
 for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
     A = fiber(SparseMatrixCSC(matrixdepot(mtx)))
-    A = copyto!(@fiber(d{Int32}(sl{Int32, Int32}(e(0.0)))), A)
-    x = copyto!(@fiber(d{Int32}(e(0.0))), rand(size(A)[2]))
+    A = copyto!(Fiber!(Dense{Int32}(SparseList{Int32, Int32}(Element(0.0)))), A)
+    x = copyto!(Fiber!(Dense{Int32}(Element(0.0))), rand(size(A)[2]))
     SUITE["indices"]["SpMV_32"][mtx] = @benchmarkable spmv32($A, $x) 
 end
 
 function spmv64(A, x)
-    y = @fiber d{Int64}(e(0.0))
+    y = Fiber!(Dense{Int64}(Element(0.0)))
     @finch (y .= 0; @loop i j y[i] += A[j, i] * x[j])
     return y
 end
@@ -124,8 +124,8 @@ end
 SUITE["indices"]["SpMV_64"] = BenchmarkGroup()
 for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
     A = fiber(SparseMatrixCSC(matrixdepot(mtx)))
-    A = copyto!(@fiber(d{Int64}(sl{Int64, Int64}(e(0.0)))), A)
-    x = copyto!(@fiber(d{Int64}(e(0.0))), rand(size(A)[2]))
+    A = copyto!(Fiber!(Dense{Int64}(SparseList{Int64, Int64}(Element(0.0)))), A)
+    x = copyto!(Fiber!(Dense{Int64}(Element(0.0))), rand(size(A)[2]))
     SUITE["indices"]["SpMV_64"][mtx] = @benchmarkable spmv64($A, $x) 
 end
 

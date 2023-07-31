@@ -1,4 +1,4 @@
-@fiber(d(sc{1}(e(zero))) representation:
+Fiber!(Dense(SparseCOO{1}(Element(zero))) representation:
 
 array: [0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0]
 fiber: Fiber(Dense{Int32}(SparseCOO{1, Tuple{Int32}, Int32}(Element{0.0, Float64}([]), (5,), (Int32[], ), [1, 1, 1, 1, 1, 1]), 5))

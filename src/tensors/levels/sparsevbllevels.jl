@@ -16,11 +16,7 @@ SparseVBLLevel{Ti, Tp, Lvl}(lvl) where {Ti, Tp, Lvl} = SparseVBLLevel{Ti, Tp, Lv
 SparseVBLLevel{Ti, Tp, Lvl}(lvl, shape) where {Ti, Tp, Lvl} = 
     SparseVBLLevel{Ti, Tp, Lvl}(lvl, shape, Tp[1], Ti[], Ti[])
 
-"""
-`fiber_abbrev(svb)` = [`SparseVBLLevel`](@ref).
-"""
-fiber_abbrev(::Val{:svb}) = SparseVBL
-summary_fiber_abbrev(lvl::SparseVBLLevel) = "svb($(summary_fiber_abbrev(lvl.lvl)))"
+Base.summary(lvl::SparseVBLLevel) = "SparseVBL($(summary(lvl.lvl)))"
 similar_level(lvl::SparseVBLLevel) = SparseVBL(similar_level(lvl.lvl))
 similar_level(lvl::SparseVBLLevel, dim, tail...) = SparseVBL(similar_level(lvl.lvl, tail...), dim)
 
@@ -130,7 +126,7 @@ function lower(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, ::DefaultStyle
     end
 end
 
-summary_fiber_abbrev(lvl::VirtualSparseVBLLevel) = "svb($(summary_fiber_abbrev(lvl.lvl)))"
+Base.summary(lvl::VirtualSparseVBLLevel) = "SparseVBL($(summary(lvl.lvl)))"
 
 function virtual_level_size(lvl::VirtualSparseVBLLevel, ctx)
     ext = Extent(literal(lvl.Ti(1)), lvl.shape)

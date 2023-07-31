@@ -1,4 +1,4 @@
-@fiber(sc{1}(e(zero)) representation:
+Fiber!(SparseCOO{1}(Element(zero)) representation:
 
 array: [0.0, 2.0, 2.0, 0.0, 3.0, 3.0]
 fiber: Fiber(SparseCOO{1, Tuple{Int32}, Int32}(Element{0.0, Float64}([2.0, 2.0, 3.0, 3.0]), (6,), (Int32[2, 3, 5, 6], ), [1, 5]))

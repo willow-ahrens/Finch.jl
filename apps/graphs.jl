@@ -7,9 +7,9 @@ the adjacency matrix `adj`. `damp` is the damping factor.
 function pagerank(edges; nsteps=20, damp = 0.85)
     (n, m) = size(edges)
     @assert n == m
-    out_degree = @fiber d(e(0))
+    out_degree = Fiber!(Dense(Element(0)))
     @finch (out_degree .= 0; @loop j i out_degree[j] += edges[i, j])
-    scaled_edges = @fiber d(sl(e(0.0)))
+    scaled_edges = Fiber!(Dense(SparseList(Element(0.0))))
     @finch begin
         scaled_edges .= 0
         for j = _, i = _
@@ -18,9 +18,9 @@ function pagerank(edges; nsteps=20, damp = 0.85)
             end
         end
     end
-    r = @fiber d(e(0.0), n)
+    r = Fiber!(Dense(Element(0.0), n))
     @finch (r .= 0.0; @loop j r[j] = 1.0/n)
-    rank = @fiber d(e(0.0), n)
+    rank = Fiber!(Dense(Element(0.0), n))
     beta_score = (1 - damp)/n
 
     for step = 1:nsteps
@@ -41,14 +41,14 @@ function bfs(edges, source=5)
     edges = pattern!(edges)
 
     @assert n == m
-    F = @fiber sbm(p(), n)
-    _F = @fiber sbm(p(), n)
+    F = Fiber!(SparseByteMap(Pattern(), n))
+    _F = Fiber!(SparseByteMap(Pattern(), n))
     @finch F[source] = true
 
-    V = @fiber d(e(false), n)
+    V = Fiber!(Dense(Element(false), n))
     @finch V[source] = true
 
-    P = @fiber d(e(0), n)
+    P = Fiber!(Dense(Element(0), n))
     @finch P[source] = source
 
     v = Scalar(false)
@@ -85,12 +85,12 @@ function bellmanford(edges, source=1)
     (n, m) = size(edges)
     @assert n == m
 
-    dists_prev = @fiber(d(e((Inf, 0)), n))
+    dists_prev = Fiber!(Dense(Element((Inf, 0)), n))
     dists_prev[source] = (0.0, 0)
-    dists = @fiber(d(e((Inf, 0)), n))
-    active_prev = @fiber(sbm(p(), n))
+    dists = Fiber!(Dense(Element((Inf, 0)), n))
+    active_prev = Fiber!(SparseByteMap(Pattern(), n))
     active_prev[source] = true
-    active = @fiber(sbm(p(), n))
+    active = Fiber!(SparseByteMap(Pattern(), n))
     d = Scalar(0.0)
 
     for iter = 1:n  
@@ -131,7 +131,7 @@ function tricount(edges)
     @assert n == m
 
     #store lower triangles
-    L = @fiber d(sl(e(0), n), n)
+    L = Fiber!(Dense(SparseList(Element(0), n), n))
     @finch begin
         L .= 0
         @loop j begin

@@ -29,7 +29,7 @@ include(joinpath(@__DIR__, "../apps/apps.jl"))
             input = sprand(size, size, sparsity)
         
             graphs_input = Graphs.SimpleDiGraph(transpose(input))
-            finch_input = @fiber(d(sl(e(0.0))), input) 
+            finch_input = Fiber!(Dense(SparseList(Element(0.0))), input) 
         
             expected = Graphs.bfs_parents(graphs_input, source)
             output = FinchApps.bfs(finch_input, source)
@@ -43,7 +43,7 @@ include(joinpath(@__DIR__, "../apps/apps.jl"))
             input = sprand(size, size, sparsity)
             
             graphs_input = SimpleWeightedDiGraph(transpose(input))
-            finch_input = redefault!(@fiber(d(sl(e(0.0))), input), Inf)
+            finch_input = redefault!(Fiber!(Dense(SparseList(Element(0.0))), input), Inf)
             
             expected = Graphs.bellman_ford_shortest_paths(graphs_input, source)
             output = FinchApps.bellmanford(finch_input, source)
@@ -57,7 +57,7 @@ include(joinpath(@__DIR__, "../apps/apps.jl"))
             input = SparseMatrixCSC(Symmetric(input))
             
             graphs_input = SimpleDiGraph(input)
-            finch_input = pattern!(@fiber(d(sl(e(0.0))), input))
+            finch_input = pattern!(Fiber!(Dense(SparseList(Element(0.0))), input))
         
             expected = sum(Graphs.triangles(graphs_input))
             output = FinchApps.tricount(finch_input) * 6
@@ -73,8 +73,8 @@ include(joinpath(@__DIR__, "../apps/apps.jl"))
             A_ref = sprand(Int, m, k, p)
             B_ref = sprand(Int, k, n, p)
             C_ref = A_ref * B_ref
-            A = @fiber(d(sl(e(0))), A_ref)
-            B = @fiber(d(sl(e(0))), B_ref)
+            A = Fiber!(Dense(SparseList(Element(0))), A_ref)
+            B = Fiber!(Dense(SparseList(Element(0))), B_ref)
 
             for (key, fn) in [
                 (:spgemm_inner, FinchApps.spgemm_inner),

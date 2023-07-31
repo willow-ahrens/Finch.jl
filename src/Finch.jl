@@ -32,7 +32,7 @@ export RepeatRLE, RepeatRLELevel
 export Element, ElementLevel
 export Pattern, PatternLevel
 export walk, gallop, follow, extrude, laminate
-export fiber, fiber!, @fiber, pattern!, dropdefaults, dropdefaults!, redefault!
+export fiber, fiber!, Fiber!, pattern!, dropdefaults, dropdefaults!, redefault!
 export diagmask, lotrimask, uptrimask, bandmask
 
 export choose, minby, maxby, overwrite, initwrite
@@ -127,9 +127,9 @@ end
     @compile_workload begin
         # all calls in this block will be precompiled, regardless of whether
         # they belong to your package or not (on Julia 1.8 and higher)
-        y = @fiber d(e(0.0))
-        A = @fiber d(sl(e(0.0)))
-        x = @fiber sl(e(0.0))
+        y = Fiber!(Dense(Element(0.0)))
+        A = Fiber!(Dense(SparseList(Element(0.0))))
+        x = Fiber!(SparseList(Element(0.0)))
         Finch.execute_code(:ex, typeof(Finch.@finch_program_instance begin
                 @loop j i y[i] += A[i, j] * x[j]
             end

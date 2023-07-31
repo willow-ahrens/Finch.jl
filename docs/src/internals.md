@@ -28,11 +28,11 @@ code for a function body.
 In normal Finch usage, we might call Finch as follows:
 
 ```jldoctest example1; setup = :(using Finch)
-julia> C = @fiber(sl(e(0)));
+julia> C = Fiber!(SparseList(Element(0)));
 
-julia> A = @fiber(sl(e(0)), [0, 2, 0, 0, 3]);
+julia> A = Fiber!(SparseList(Element(0)), [0, 2, 0, 0, 3]);
 
-julia> B = @fiber(d(e(0)), [11, 12, 13, 14, 15]);
+julia> B = Fiber!(Dense(Element(0)), [11, 12, 13, 14, 15]);
 
 julia> @finch (C .= 0; @loop i C[i] = A[i] * B[i]);
 
@@ -102,7 +102,7 @@ follows:
 
 ```jldoctest example1
 julia> function pointwise_sum(As...)
-           B = @fiber(d(e(0)))
+           B = Fiber!(Dense(Element(0)))
            isempty(As) && return B
            i = Finch.FinchNotation.index_instance(:i)
            A_vars = [Finch.FinchNotation.tag_instance(Symbol(:A, n), As[n]) for n in 1:length(As)]
@@ -164,9 +164,9 @@ It's easy to ask Finch to advance a few steps in its compiler sequence. The basi
 using Finch
 using Finch: @finch_program_instance, begin_debug, step_code, iscompiled, end_debug
 
-y = @fiber d(e(0.0))
-A = @fiber d(sl(e(0.0)))
-x = @fiber sl(e(0.0))
+y = Fiber!(Dense(Element(0.0)))
+A = Fiber!(Dense(SparseList(Element(0.0))))
+x = Fiber!(SparseList(Element(0.0)))
 
 code = Finch.@finch_program_instance begin
    @loop j i y[i] += A[i, j] * x[j]
@@ -224,7 +224,7 @@ quote
     end
     qos = @finch((Number = 6, Which = ("lower.jl", 174))1) * @finch((Number = 7, Which = ("lower.jl", 174))y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch((Number = 8, Which = ("lower.jl", 174))qos))
-    (y = @finch((Number = 9, Which = ("fibers.jl", 27))VirtualFiber(d(e(0.0)))),)
+    (y = @finch((Number = 9, Which = ("fibers.jl", 27))VirtualFiber(Dense(Element(0.0)))),)
 end
 ```
 

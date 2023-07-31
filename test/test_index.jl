@@ -1,7 +1,7 @@
 @testset "index" begin
     @info "Testing Index Expressions"
 
-    A = @fiber(sl(e(0.0)), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
+    A = Fiber!(SparseList(Element(0.0)), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
     B = Scalar{0.0}()
 
     @test check_output("sieve_hl_cond.jl", @finch_code (B .= 0; @loop j if j == 1 B[] += A[j] end))
@@ -51,7 +51,7 @@
     using SparseArrays
 
     A_ref = sprand(10, 0.5); B_ref = sprand(10, 0.5); C_ref = vcat(A_ref, B_ref)
-    A = fiber(SparseVector{Float64, Int64}(A_ref)); B = fiber(SparseVector{Float64, Int64}(B_ref)); C = @fiber(sl{Int64}(e(0.0), 20))
+    A = fiber(SparseVector{Float64, Int64}(A_ref)); B = fiber(SparseVector{Float64, Int64}(B_ref)); C = Fiber!(SparseList{Int64}(Element(0.0), 20))
     @test check_output("concat_offset_permit.jl", @finch_code (C .= 0; @loop i C[i] = coalesce(A[~i], B[~(i - 10)])))
     @finch (C .= 0; @loop i C[i] = coalesce(A[~i], B[~(i - 10)]))
     @test reference_isequal(C, C_ref)
@@ -82,7 +82,7 @@
     @test reference_isequal(C, [2, 3, 4])
 
     y = Array{Any}(undef, 4)
-    x = @fiber(d(e(0.0)), zeros(2))
+    x = Fiber!(Dense(Element(0.0)), zeros(2))
     X = Finch.permissive(x, true)
     
     @finch for i = _; y[i] := X[i] end
@@ -114,7 +114,7 @@
         io = IOBuffer()
         println(io, "chunkmask tests")
 
-        @repl io A = @fiber(d(d(e(0.0), 15), 3))
+        @repl io A = Fiber!(Dense(Dense(Element(0.0), 15), 3))
         @repl io @finch begin
             m = Finch.chunkmask(5, 1:15)
             for i = _
@@ -125,7 +125,7 @@
         end
         @repl io AsArray(A)
 
-        @repl io A = @fiber(d(d(e(0.0), 14), 3))
+        @repl io A = Fiber!(Dense(Dense(Element(0.0), 14), 3))
         @repl io @finch begin
             m = Finch.chunkmask(5, 1:14)
             for i = _

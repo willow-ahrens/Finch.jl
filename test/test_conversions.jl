@@ -38,7 +38,7 @@
                         x
                     end,
                    ])
-                    ref = @fiber sl(e(false))
+                    ref = Fiber!(SparseList(Element(false)))
                     ref = dropdefaults!(ref, arr)
                     tmp = Fiber!(inner())
                     @testset "convert $(summary(tmp)) $(idx)" begin
@@ -61,8 +61,8 @@
                         true  true  true  true
                         false true  false true ])
                     ]
-                        ref = @fiber sl(sl(e(false)))
-                        res = @fiber sl(sl(e(false)))
+                        ref = Fiber!(SparseList(SparseList(Element(false))))
+                        res = Fiber!(SparseList(SparseList(Element(false))))
                         ref = dropdefaults!(ref, arr)
                         tmp = Fiber!(outer())
                         @testset "convert $arr_key $(summary(tmp))"  begin
@@ -89,8 +89,8 @@
                 fill(true, 5),
                 [false, true, true, false, false, true]
             ]
-                ref = @fiber sl(e(false))
-                res = @fiber sl(e(false))
+                ref = Fiber!(SparseList(Element(false)))
+                res = Fiber!(SparseList(Element(false)))
                 ref = dropdefaults!(ref, arr)
                 tmp = Fiber!(inner())
                 @testset "convert $(summary(tmp))" begin
@@ -113,8 +113,8 @@
                     true  true  true  true
                     false true  false true ])
                 ]
-                    ref = @fiber sl(sl(e(false)))
-                    res = @fiber sl(sl(e(false)))
+                    ref = Fiber!(SparseList(SparseList(Element(false))))
+                    res = Fiber!(SparseList(SparseList(Element(false))))
                     ref = dropdefaults!(ref, arr)
                     tmp = Fiber!(outer())
                     @testset "convert $arr_key $(summary(tmp))"  begin
@@ -135,8 +135,8 @@
                 fill(true, 5),
                 [false, true, true, false, false, true]
             ]
-                ref = @fiber sl(e(false))
-                res = @fiber sl(e(false))
+                ref = Fiber!(SparseList(Element(false)))
+                res = Fiber!(SparseList(Element(false)))
                 tmp = Fiber!(inner())
                 @testset "convert $(summary(tmp))" begin
                     @finch (ref .= 0; @loop i ref[i] = arr[i])
@@ -159,8 +159,8 @@
                     true  true  true  true
                     false true  false true ])
                 ]
-                    ref = @fiber sl(sl(e(false)))
-                    res = @fiber sl(sl(e(false)))
+                    ref = Fiber!(SparseList(SparseList(Element(false))))
+                    res = Fiber!(SparseList(SparseList(Element(false))))
                     tmp = Fiber!(outer())
                     @testset "convert $arr_key $(summary(tmp))"  begin
                         @finch (ref .= 0; @loop j i ref[i, j] = arr[i, j])
@@ -187,8 +187,8 @@
                 true  true  true  true
                 false true  false true ])
             ]
-                ref = @fiber sl(sl(e(false)))
-                res = @fiber sl(sl(e(false)))
+                ref = Fiber!(SparseList(SparseList(Element(false))))
+                res = Fiber!(SparseList(SparseList(Element(false))))
                 ref = dropdefaults!(ref, arr)
                 tmp = Fiber!(outer())
                 @testset "convert $arr_key $(summary(tmp))"  begin
@@ -212,8 +212,8 @@
                 true  true  true  true
                 false true  false true ])
             ]
-                ref = @fiber sl(sl(e(false)))
-                res = @fiber sl(sl(e(false)))
+                ref = Fiber!(SparseList(SparseList(Element(false))))
+                res = Fiber!(SparseList(SparseList(Element(false))))
                 ref = dropdefaults!(ref, arr)
                 tmp = Fiber!(outer())
                 @testset "convert $arr_key $(summary(tmp))"  begin

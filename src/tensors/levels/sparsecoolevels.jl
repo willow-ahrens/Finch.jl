@@ -12,10 +12,10 @@ order.  Optionally, `dims` are the sizes of the last dimensions.
 `Ti` is the type of the last `N` fiber indices, and `Tp` is the type used for
 positions in the level.
 
-In the [`@fiber`](@ref) constructor, `sh` is an alias for `SparseCOOLevel`.
+In the [`Fiber!`](@ref) constructor, `sh` is an alias for `SparseCOOLevel`.
 
 ```jldoctest
-julia> @fiber(d(sc{1}(e(0.0))), [10 0 20; 30 0 0; 0 0 40])
+julia> Fiber!(Dense(SparseCOO{1}(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Dense [:,1:3]
 ├─[:,1]: SparseCOO (0.0) [1:3]
 │ ├─[1]: 10.0
@@ -25,7 +25,7 @@ Dense [:,1:3]
 │ ├─[1]: 20.0
 │ ├─[3]: 40.0
 
-julia> @fiber(sc{2}(e(0.0)), [10 0 20; 30 0 0; 0 0 40])
+julia> Fiber!(SparseCOO{2}(Element(0.0)), [10 0 20; 30 0 0; 0 0 40])
 SparseCOO (0.0) [1:3,1:3]
 ├─├─[1, 1]: 10.0
 ├─├─[2, 1]: 30.0
@@ -41,7 +41,7 @@ struct SparseCOOLevel{N, Ti<:Tuple, Tp, Tbl, Lvl}
 end
 const SparseCOO = SparseCOOLevel
 
-SparseCOOLevel(lvl) = throw(ArgumentError("You must specify the number of dimensions in a SparseCOOLevel, e.g. @fiber(sc{2}(e(0.0)))"))
+SparseCOOLevel(lvl) = throw(ArgumentError("You must specify the number of dimensions in a SparseCOOLevel, e.g. Fiber!(SparseCOO{2}(Element(0.0)))"))
 SparseCOOLevel(lvl, shape, args...) = SparseCOOLevel{length(shape)}(lvl, shape, args...)
 SparseCOOLevel{N}(lvl) where {N} = SparseCOOLevel{N, NTuple{N, Int}}(lvl)
 SparseCOOLevel{N}(lvl, shape, args...) where {N} = SparseCOOLevel{N, typeof(shape)}(lvl, shape, args...)
@@ -55,11 +55,7 @@ SparseCOOLevel{N, Ti, Tp, Tbl, Lvl}(lvl) where {N, Ti, Tp, Tbl, Lvl} =
 SparseCOOLevel{N, Ti, Tp, Tbl, Lvl}(lvl, shape) where {N, Ti, Tp, Tbl, Lvl} =
     SparseCOOLevel{N, Ti, Tp, Tbl, Lvl}(lvl, Ti(shape), ((Vector{ti}() for ti in Ti.parameters)...,), Tp[1])
 
-"""
-`fiber_abbrev(sc)` = [`SparseCOOLevel`](@ref).
-"""
-fiber_abbrev(::Val{:sc}) = SparseCOO
-summary_fiber_abbrev(lvl::SparseCOOLevel{N}) where {N} = "sc{$N}($(summary_fiber_abbrev(lvl.lvl)))"
+Base.summary(lvl::SparseCOOLevel{N}) where {N} = "SparseCOO{$N}($(summary(lvl.lvl)))"
 similar_level(lvl::SparseCOOLevel{N}) where {N} = SparseCOOLevel{N}(similar_level(lvl.lvl))
 similar_level(lvl::SparseCOOLevel{N}, tail...) where {N} = SparseCOOLevel{N}(similar_level(lvl.lvl, tail[1:end-N]...), (tail[end-N+1:end]...,))
 
@@ -164,7 +160,7 @@ function lower(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler, ::DefaultStyle
     end
 end
 
-summary_fiber_abbrev(lvl::VirtualSparseCOOLevel) = "sc{$(lvl.N)}($(summary_fiber_abbrev(lvl.lvl)))"
+Base.summary(lvl::VirtualSparseCOOLevel) = "SparseCOO{$(lvl.N)}($(summary(lvl.lvl)))"
 
 function virtual_level_size(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler)
     ext = map((ti, stop)->Extent(literal(ti(1)), stop), lvl.Ti.parameters, lvl.shape)

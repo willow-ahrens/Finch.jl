@@ -3,10 +3,10 @@ using SparseArrays
 using MatrixDepot
 using BenchmarkTools
 
-A = @fiber(d(sl(e(0.0))), SparseMatrixCSC(matrixdepot("Boeing/ct20stif")))
+A = Fiber!(Dense(SparseList(Element(0.0))), SparseMatrixCSC(matrixdepot("Boeing/ct20stif")))
 (m, n) = size(A)
-x = @fiber(d(e(0.0)), randn(m))
-y = @fiber(d(e(0.0)))
+x = Fiber!(Dense(Element(0.0)), randn(m))
+y = Fiber!(Dense(Element(0.0)))
 
 println("serial")
 @btime begin

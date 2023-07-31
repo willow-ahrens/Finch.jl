@@ -5,7 +5,7 @@ abstract type AbstractVirtualFiber{Lvl} end
     Fiber(lvl)
 
 `Fiber` represents the root of a level-tree tensor. To easily construct a valid
-fiber, use [`@fiber`](@ref) or [`fiber`](@ref). Users should avoid calling
+fiber, use [`Fiber!`](@ref) or [`fiber`](@ref). Users should avoid calling
 this constructor directly.
 
 In particular, `Fiber` represents the tensor at position 1 of `lvl`. The
@@ -190,7 +190,7 @@ set to `init`.  May reuse memory and render the original fiber unusable when
 modified.
 
 ```jldoctest
-julia> A = @fiber(sl(e(0.0), 10), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
+julia> A = Fiber!(SparseList(Element(0.0), 10), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
 SparseList (0.0) [1:10]
 ├─[1]: 2.0
 ├─[3]: 3.0
@@ -236,7 +236,7 @@ end
 
 function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber)
     if get(io, :compact, false)
-        print(io, "@fiber($(summary_fiber_abbrev(fbr.lvl)))")
+        print(io, "Fiber!($(summary(fbr.lvl)))")
     else
         display_fiber(io, mime, fbr, 0)
     end
@@ -244,7 +244,7 @@ end
 
 function Base.show(io::IO, mime::MIME"text/plain", fbr::VirtualFiber)
     if get(io, :compact, false)
-        print(io, "VirtualFiber($(summary_fiber_abbrev(fbr.lvl)))")
+        print(io, "VirtualFiber($(summary(fbr.lvl)))")
     else
         show(io, fbr)
     end
@@ -256,7 +256,7 @@ end
 
 function Base.show(io::IO, mime::MIME"text/plain", fbr::SubFiber)
     if get(io, :compact, false)
-        print(io, "SubFiber($(summary_fiber_abbrev(fbr.lvl)), $(fbr.pos))")
+        print(io, "SubFiber($(summary(fbr.lvl)), $(fbr.pos))")
     else
         display_fiber(io, mime, fbr, 0)
     end
@@ -264,7 +264,7 @@ end
 
 function Base.show(io::IO, mime::MIME"text/plain", fbr::VirtualSubFiber)
     if get(io, :compact, false)
-        print(io, "VirtualSubFiber($(summary_fiber_abbrev(fbr.lvl)))")
+        print(io, "VirtualSubFiber($(summary(fbr.lvl)))")
     else
         show(io, fbr)
     end
@@ -305,37 +305,15 @@ countstored(fbr::Fiber) = countstored_level(fbr.lvl, 1)
 
 countstored(arr::Array) = length(arr)
 
-function f_decode(ex)
-    if ex isa Expr && ex.head == :$
-        return esc(ex.args[1])
-    elseif ex isa Expr
-        return Expr(ex.head, map(f_decode, ex.args)...)
-    elseif ex isa Symbol
-        return :(@something($fiber_abbrev($(Val(ex))), Some($(esc(ex)))))
-    else
-        return esc(ex)
-    end
-end
 
 """
-    @fiber ctr [arg]
+    Fiber!(ctr, [arg])
 
-Construct a fiber using abbreviated level constructor names. To override
-abbreviations, expressions may be interpolated with `\$`. For example,
-`Fiber(DenseLevel(SparseListLevel(Element(0.0))))` can also be constructed as
-`@fiber(sl(d(e(0.0))))`. Consult the documentation for the helper function
-[`fiber_abbrev`](@ref) for a full listing of level format abbreviations.
-
+Construct a fiber from a nest of levels. This function may allocate memory.
 Optionally, an argument may be specified to copy into the fiber. This expression
 allocates. Use `fiber(arg)` for a zero-cost copy, if available.
 """
-macro fiber(ex)
-    return :($Fiber!($(f_decode(ex))))
-end
-
-macro fiber(ex, arg)
-    return :($dropdefaults!($Fiber!($(f_decode(ex))), $(esc(arg))))
-end
+function Fiber! end
 
 @staged function Fiber!(lvl)
     contain(LowerJulia()) do ctx
@@ -347,10 +325,12 @@ end
     end
 end
 
-@inline fiber_abbrev(@nospecialize ::Any) = nothing
+function Fiber!(lvl, arg)
+    dropdefaults!(Fiber!(lvl), arg)
+end
 
-Base.summary(fbr::Fiber) = "$(join(size(fbr), "×")) @fiber($(summary_fiber_abbrev(fbr.lvl)))"
-Base.summary(fbr::SubFiber) = "$(join(size(fbr), "×")) SubFiber($(summary_fiber_abbrev(fbr.lvl)))"
+Base.summary(fbr::Fiber) = "$(join(size(fbr), "×")) Fiber!($(summary(fbr.lvl)))"
+Base.summary(fbr::SubFiber) = "$(join(size(fbr), "×")) SubFiber($(summary(fbr.lvl)))"
 
 Base.similar(fbr::AbstractFiber) = Fiber(similar_level(fbr.lvl))
 Base.similar(fbr::AbstractFiber, dims::Tuple) = Fiber(similar_level(fbr.lvl, dims...))

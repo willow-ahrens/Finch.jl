@@ -26,7 +26,7 @@ int main(int argc, char** argv){
 
     double x_val[] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
 
-    jl_value_t* y = finch_exec("@fiber d(e(0.0))");
+    jl_value_t* y = finch_exec("Fiber!(Dense(Element(0.0)))");
 
     jl_value_t* A = finch_exec("Fiber(Dense(SparseList(Element(0.0, %s), %s, %s, %s), %s))",
         finch_Vector_Float64(A_val, 9),

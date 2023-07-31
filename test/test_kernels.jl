@@ -9,7 +9,7 @@
         m, n = size(A_ref)
         B_ref = transpose(A_ref) * A_ref 
         A = fiber(A_ref)
-        B = @fiber(d(sl(e(0.0),m),m))
+        B = Fiber!(Dense(SparseList(Element(0.0),m),m))
 
         if !seen
             check_output("innerprod.jl", @finch_code (B .= 0; @loop j i k B[i, j] += A[k, i] * A[k, j]))
@@ -43,7 +43,7 @@
         B_ref = sprand(n, q)
         A = fiber(A_ref)
         B = fiber(B_ref)
-        C = @fiber(sl(e(0.0)))
+        C = Fiber!(SparseList(Element(0.0)))
         d = Scalar{0.0}()
         a = Scalar{0.0}()
         b = Scalar{0.0}()
@@ -71,8 +71,8 @@
         m, n = size(A_ref)
         if m == n
             A = fiber(A_ref)
-            B = @fiber(d(sl(e(0.0))))
-            w = @fiber(sbm(e(0.0)))
+            B = Fiber!(Dense(SparseList(Element(0.0))))
+            w = Fiber!(SparseByteMap(Element(0.0)))
 
             if !seen
                 code = @finch_code begin
