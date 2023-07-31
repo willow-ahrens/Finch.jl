@@ -1,4 +1,4 @@
-"""
+>"""
 Parallelism analysis plan: We will allow automatic paralleization when the following conditions are meet:
 All non-locally defined tensors that are written, are only written to with the plain index i in a injective and consistent way and with an associative operator.
 
@@ -49,11 +49,12 @@ function gatherLocalDeclerations(prog) :: Vector{FinchNode}
 end
 
 
-struct ParallelAnalysisResults
+struct ParallelAnalysisResults <: Exception
     naive:: bool
     withAtomics:: bool
     withAtomicsAndAssoc:: bool
     tensorsNeedingAtomics:: Vector{FinchNode}
+    nonInjectiveAccss :: Vector{FinchNode}
     nonAssocAssigns:: Vector{FinchNode}
     nonConCurrentAccss::Vector{FinchNode}
 end
@@ -69,6 +70,7 @@ function parallelAnalysis(prog, index, alg, ctx) :: ParallelAnalysisResults
     withAtomics = true
     withAtomicsAndAssoc = true
     tensorsNeedingAtomics:: Vector{FinchNode} = []
+    nonInjectiveAccss:: Vector{FinchNode} = []
     nonAssocAssigns:: Vector{FinchNode} = []
     nonConCurrentAccss::Vector{FinchNode} = []
     
@@ -107,9 +109,10 @@ function parallelAnalysis(prog, index, alg, ctx) :: ParallelAnalysisResults
 
         # FIXME: TRACE.
         # The access is injective
-        if !is_injective(tns, ctx, (length(rep.lhs,idx),))
-            naie = false
+        if !is_injective(tns, ctx)
+            naive = false
             push!(tensorsNeddingAtomics, root)
+            push!(nonInjectiveAccss, rep.lhs)
         end
 
         # everyone is accessed in the same way i.e the virtuals are the same.
@@ -124,7 +127,7 @@ function parallelAnalysis(prog, index, alg, ctx) :: ParallelAnalysisResults
                 push!(tensorsNeddingAtomics, root)
             end
         end
-        # Step 3: Similarly, for associativity
+        # Step 3: Similarly, for associativity:
         for rep' in nodeSet
             if !isassociative(alg, rep'.lhs.op)
                 naive = false
@@ -135,23 +138,17 @@ function parallelAnalysis(prog, index, alg, ctx) :: ParallelAnalysisResults
         
     end
 
-    # Step 4: Look through all accesses and make sure they are concurrent.
+    # Step 4: Look through all accesses and make sure they are concurrent:
     for acc in nonLocAccs
-        if length(acc.idx) == 0
-            if !is_concurrent(acc.tns, ctx)
-                naive = false
-                withAtomics = false
-                withAtomicsAndAssoc = false
-                break
-            end
-        else
-            if !is_concurrent(acc.tns, ctx, )
-                #erm, should I have written this with the protocol.
-            end
+        if !is_concurrent(acc.tns, ctx)
+            naive = false
+            withAtomics = false
+            withAtomicsAndAssoc = false
+            break
         end
     end
 
-    return ParallelAnalysisResults(naive, withAtomics, withAtomicssAndAssoc, tensorsNeddingAtomics, nonAssocAssigns, nonConCurrentAccs)
+    return ParallelAnalysisResults(naive, withAtomics, withAtomicssAndAssoc, tensorsNeddingAtomics, nonInjectiveAccss, nonAssocAssigns, nonConCurrentAccs)
 end
 
 

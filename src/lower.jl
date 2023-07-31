@@ -261,7 +261,12 @@ function lower_loop(ctx, root, ext)
 end
 
 function lower_loop(ctx, root, ext::ParallelDimension)
-    #TODO Safety check that the loop can actually be parallel
+    pal = parallelAnalysis(root, root.idx, ctx.algebra, ctx)
+    if !pal.naive
+        throw(pal)
+    end
+    # FIXME: Later on, we should take advantage of the info to repair with atomics or such.
+    
     tid = index(ctx.freshen(:tid))
     i = ctx.freshen(:i)
     root_2 = loop(tid, Extent(value(i, Int), value(i, Int)),

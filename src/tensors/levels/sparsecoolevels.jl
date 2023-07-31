@@ -323,7 +323,7 @@ is_laminable_updater(lvl::VirtualSparseCOOLevel, ctx, protos...) = false
 
 is_injective(lvl::VirtualSparseCOOLevel, ctx, accs::Vararg{UInt}) = true
 
-is_concurrent(lvl::VirtualSparseCOOLevel, ctx, ::Union{::typeof(defaultread), ::typeof(walk), ::typeof(gallop), ::typeof(follow), typeof(defaultupdate)}) = true
+# is_concurrent(lvl::VirtualSparseCOOLevel, ctx, ::Union{::typeof(defaultread), ::typeof(walk), ::typeof(gallop), ::typeof(follow), typeof(defaultupdate)}) = true
 
 instantiate_updater(fbr::VirtualSubFiber{VirtualSparseCOOLevel}, ctx, protos...) =
     instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)

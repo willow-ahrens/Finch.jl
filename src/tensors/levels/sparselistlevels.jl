@@ -354,7 +354,7 @@ end
 is_laminable_updater(lvl::VirtualSparseListLevel, ctx, protos...) = false
 is_injective(lvl::VirtualSparseListLevel, ctx, accs::Vararg{UInt}) = true
 
-is_concurrent(lvl::VirtualSparseListLevel, ctx, ::Union{::typeof(defaultread), ::typeof(walk), ::typeof(gallop), ::typeof(follow), typeof(defaultupdate)}) = true
+# is_concurrent(lvl::VirtualSparseListLevel, ctx, ::Union{::typeof(defaultread), ::typeof(walk), ::typeof(gallop), ::typeof(follow), typeof(defaultupdate)}) = true
 
 instantiate_updater(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, protos...) =
     instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)

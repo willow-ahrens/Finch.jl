@@ -19,6 +19,7 @@ end
 
 is_injective(lvl::VirtualToeplitzArray, ctx, accs::Vararg{UInt}) = false
 
+
 Base.show(io::IO, ex::VirtualToeplitzArray) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualToeplitzArray)
 	print(io, "VirtualToeplitzArray($(ex.body), $(ex.dim))")

@@ -261,7 +261,7 @@ end
 
 is_laminable_updater(lvl::VirtualSparseRLELevel, ctx, ::Union{typeof(defaultupdate), typeof(extrude)}) = false
 
-is_concurrent(lvl::VirtualSparseByteMapLevel, ctx, ::Union{::typeof(defaultread), ::typeof(walk), ::typeof(gallop), ::typeof(follow), typeof(defaultupdate)}) = true
+# is_concurrent(lvl::VirtualSparseByteMapLevel, ctx, ::Union{::typeof(defaultread), ::typeof(walk), ::typeof(gallop), ::typeof(follow), typeof(defaultupdate)}) = true
 
 is_injective(lvl::VirtualSparseByteMapLevel, ctx, accs::Vararg{UInt}) = false
 

@@ -6,9 +6,8 @@ is_laminable_updater(lvl::AbstractVirtualLevel, ctx, ::Union{::typeof(defaultrea
 is_laminable_updater(lvl::AbstractVirtualLevel, ctx) = false
 
 
-is_concurrent(lvl::AbstractVirtualLevel, ctx, ::Union{::typeof(defaultread), ::typeof(walk), ::typeof(gallop), ::typeof(follow), typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...) = false
 
-is_concurrent(lvl::AbstractVirtualLevel, ctx) = false
+is_concurrent(lvl::AbstractVirtualLevel, ctx) = true
 
 is_injective(lvl::AbstractVirtualLevel, ctx, accs::Vararg{UInt}) = false
 
