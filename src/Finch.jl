@@ -39,7 +39,7 @@ export choose, minby, maxby, overwrite, initwrite
 
 export default, AsArray
 
-export parallel
+export parallel, extent, dimless
 
 include("util.jl")
 

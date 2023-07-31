@@ -42,7 +42,7 @@ end
 
 function virtual_call(::typeof(extent), ctx, start, stop)
     if isconstant(start) && isconstant(stop)
-        Extent(Start, Stop)
+        Extent(start, stop)
     end
 end
 

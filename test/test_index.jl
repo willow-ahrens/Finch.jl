@@ -105,8 +105,8 @@
     @test isequal(y, [0.0, 0.0, missing, missing])
 
     @finch begin
-        for i = 2:3; y[~i] := z[~i] end
+        for i = 1:4; y[i] := x[~i] end
     end
 
-    @test isequal(y, [missing, 0.0, 0.0, missing])
+    @test isequal(y, [0.0, 0.0, missing, missing])
 end

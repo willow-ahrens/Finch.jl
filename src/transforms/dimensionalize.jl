@@ -53,7 +53,9 @@ function (ctx::DeclareDimensions)(node::FinchNode)
         end
         access(tns, mode, idxs...)
     elseif node.kind === loop 
-        @assert node.ext.kind === virtual
+        if node.ext.kind !== virtual
+            error(node.ext)
+        end
         ctx.dims[node.idx] = node.ext.val
         body = ctx(node.body)
         ctx.dims[node.idx] != dimless || throw(FinchCompileError("could not resolve dimension of index $(node.idx)"))
