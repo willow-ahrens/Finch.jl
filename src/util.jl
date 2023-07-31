@@ -46,7 +46,7 @@ macro staged(def)
     name_3 = gensym(Symbol(name, :_evaled))
 
     def = quote
-        $called::Bool = false
+        $called = false
 
         function $name_2($(args...))
             global $called
