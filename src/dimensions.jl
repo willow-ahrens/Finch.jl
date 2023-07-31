@@ -1,9 +1,9 @@
-FinchNotation.finch_leaf(x::MakeDimension) = virtual(x)
-FinchNotation.finch_leaf_instance(x::MakeDimension) = value_instance(x)
-virtualize(ex, ::Type{MakeDimension}, ctx) = mkdim
+FinchNotation.finch_leaf(x::Dimensionless) = virtual(x)
+FinchNotation.finch_leaf_instance(x::Dimensionless) = value_instance(x)
+virtualize(ex, ::Type{Dimensionless}, ctx) = dimless
 
-getstart(::MakeDimension) = error("asked for start of dimensionless range")
-getstop(::MakeDimension) = error("asked for stop of dimensionless range")
+getstart(::Dimensionless) = error("asked for start of dimensionless range")
+getstop(::Dimensionless) = error("asked for stop of dimensionless range")
 
 struct UnknownDimension end
 
@@ -33,18 +33,14 @@ combinedim(ctx, ::B, ::A)
 """
 combinedim(ctx, a, b) = UnknownDimension()
 
-combinedim(ctx, a::MakeDimension, b) = b
+combinedim(ctx, a::Dimensionless, b) = b
 
 @kwdef struct Extent
     start
     stop
 end
 
-#=
-    TODO: a quick note: I think we should just parse function call colon as different from the colon symbol on it's own.
-    so (:) is dimless, and (:)(a, b) is extent(a, b).
-=#
-function virtual_call(::MakeDimension, ctx, start, stop)
+function virtual_call(::typeof(extent), ctx, start, stop)
     if isconstant(start) && isconstant(stop)
         Extent(Start, Stop)
     end
@@ -93,7 +89,7 @@ combinedim(ctx, a::Extent, b::Extent) =
         stop = checklim(ctx, a.stop, b.stop)
     )
 
-combinedim(ctx, a::MakeDimension, b::Extent) = b
+combinedim(ctx, a::Dimensionless, b::Extent) = b
 
 struct SuggestedExtent
     ext
@@ -105,7 +101,7 @@ Base.:(==)(a::SuggestedExtent, b::SuggestedExtent) = a.ext == b.ext
 
 suggest(ext) = SuggestedExtent(ext)
 suggest(ext::SuggestedExtent) = ext
-suggest(ext::MakeDimension) = mkdim
+suggest(ext::Dimensionless) = dimless
 
 resolvedim(ext::Symbol) = error()
 resolvedim(ext::SuggestedExtent) = resolvedim(ext.ext)
@@ -113,7 +109,7 @@ cache_dim!(ctx, tag, ext::SuggestedExtent) = SuggestedExtent(cache_dim!(ctx, tag
 
 combinedim(ctx, a::SuggestedExtent, b::Extent) = b
 
-combinedim(ctx, a::SuggestedExtent, b::MakeDimension) = a
+combinedim(ctx, a::SuggestedExtent, b::Dimensionless) = a
 
 combinedim(ctx, a::SuggestedExtent, b::SuggestedExtent) = SuggestedExtent(combinedim(ctx, a.ext, b.ext))
 
@@ -166,7 +162,7 @@ function shiftdim(ext::Extent, delta)
     )
 end
 
-shiftdim(ext::MakeDimension, delta) = mkdim
+shiftdim(ext::Dimensionless, delta) = dimless
 shiftdim(ext::ParallelDimension, delta) = ParallelDimension(ext, shiftdim(ext.ext, delta))
 
 function shiftdim(ext::FinchNode, body)
@@ -184,9 +180,9 @@ function virtual_intersect(ctx, a, b)
     error()
 end
 
-virtual_intersect(ctx, a::MakeDimension, b) = b
-virtual_intersect(ctx, a, b::MakeDimension) = a
-virtual_intersect(ctx, a::MakeDimension, b::MakeDimension) = b
+virtual_intersect(ctx, a::Dimensionless, b) = b
+virtual_intersect(ctx, a, b::Dimensionless) = a
+virtual_intersect(ctx, a::Dimensionless, b::Dimensionless) = b
 
 function virtual_intersect(ctx, a::Extent, b::Extent)
     Extent(
@@ -195,9 +191,9 @@ function virtual_intersect(ctx, a::Extent, b::Extent)
     )
 end
 
-virtual_union(ctx, a::MakeDimension, b) = b
-virtual_union(ctx, a, b::MakeDimension) = a
-virtual_union(ctx, a::MakeDimension, b::MakeDimension) = b
+virtual_union(ctx, a::Dimensionless, b) = b
+virtual_union(ctx, a, b::Dimensionless) = a
+virtual_union(ctx, a::Dimensionless, b::Dimensionless) = b
 
 #virtual_union(ctx, a, b) = virtual_union(ctx, promote(a, b)...)
 function virtual_union(ctx, a::Extent, b::Extent)

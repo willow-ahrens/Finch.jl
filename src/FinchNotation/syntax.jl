@@ -19,7 +19,7 @@ const program_nodes = (
     tag = (ex) -> :(finch_leaf($(esc(ex)))),
     literal = literal,
     leaf = (ex) -> :(finch_leaf($(esc(ex)))),
-    mkdim = :(finch_leaf(mkdim))
+    dimless = :(finch_leaf(dimless))
 )
 
 const instance_nodes = (
@@ -40,7 +40,7 @@ const instance_nodes = (
     tag = (ex) -> :($tag_instance($(QuoteNode(ex)), $finch_leaf_instance($(esc(ex))))),
     literal = literal_instance,
     leaf = (ex) -> :($finch_leaf_instance($(esc(ex)))),
-    mkdim = :($finch_leaf_instance(mkdim))
+    dimless = :($finch_leaf_instance(dimless))
 )
 
 and() = true
@@ -91,8 +91,9 @@ julia> x[]
 """
 overwrite(l, r) = r
 
-struct MakeDimension end
-const mkdim = MakeDimension()
+struct Dimensionless end
+const dimless = Dimensionless()
+function extent end
 
 struct FinchParserVisitor
     nodes
@@ -101,7 +102,7 @@ end
 
 function (ctx::FinchParserVisitor)(ex::Symbol)
     if ex == :_ || ex == :(:)
-        return :($mkdim)
+        return :($dimless)
     elseif ex in evaluable_exprs
         return ctx.nodes.literal(@eval($ex))
     else
@@ -209,6 +210,8 @@ function (ctx::FinchParserVisitor)(ex::Expr)
         return ctx(:($or($a, $b)))
     elseif @capture ex :call(~op, ~args...)
         return :($(ctx.nodes.call)($(ctx(op)), $(map(ctx, args)...)))
+    elseif @capture ex :call(:(:), ~args...)
+        return :($(ctx.nodes.call)($(ctx(:extent)), $(map(ctx, args)...)))
     elseif @capture ex :(...)(~arg)
         return esc(ex)
     elseif @capture ex :$(~arg)

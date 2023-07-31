@@ -103,4 +103,10 @@
     end
 
     @test isequal(y, [0.0, 0.0, missing, missing])
+
+    @finch begin
+        for i = 2:3; y[~i] := z[~i] end
+    end
+
+    @test isequal(y, [missing, 0.0, 0.0, missing])
 end

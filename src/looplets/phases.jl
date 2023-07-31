@@ -15,11 +15,11 @@ function phase_range(node::FinchNode, ctx, ext)
     if @capture node access(~tns::isvirtual, ~i...)
         phase_range(tns.val, ctx, ext)
     else
-        return mkdim
+        return dimless
     end
 end
 
-phase_range(node, ctx, ext) = mkdim
+phase_range(node, ctx, ext) = dimless
 phase_range(node::Phase, ctx, ext) = node.range(ctx, ext)
 
 function phase_body(node::FinchNode, ctx, ext, ext_2)
