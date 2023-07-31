@@ -2,7 +2,7 @@ module SparseArraysExt
 
 using Finch
 using Finch: AbstractCompiler, DefaultStyle, Extent
-using Finch: Unfurled, Furlable, Stepper, Jumper, Run, Fill, Lookup, Simplify, Pipeline, Phase, Thunk, Spike, Step
+using Finch: Unfurled, Furlable, Stepper, Jumper, Run, Fill, Lookup, Simplify, Sequence, Phase, Thunk, Spike, Step
 using Finch: virtual_size, virtual_default, getstart, getstop
 using Finch.FinchNotation
 
@@ -86,7 +86,7 @@ function Finch.instantiate_reader(arr::VirtualSparseMatrixCSC, ctx::AbstractComp
                                 $my_i1 = $(Ti(0))
                             end
                         end,
-                        body = (ctx) -> Pipeline([
+                        body = (ctx) -> Sequence([
                             Phase(
                                 stop = (ctx, ext) -> value(my_i1),
                                 body = (ctx, ext) -> Stepper(
@@ -187,7 +187,7 @@ function Finch.instantiate_reader(arr::VirtualSparseVector, ctx::AbstractCompile
                         $my_i1 = $(Ti(0))
                     end
                 end,
-                body = (ctx) -> Pipeline([
+                body = (ctx) -> Sequence([
                     Phase(
                         stop = (ctx, ext) -> value(my_i1),
                         body = (ctx, ext) -> Stepper(

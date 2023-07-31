@@ -183,7 +183,7 @@ function instantiate_reader_triangular_dense_helper(fbr, ctx, subunfurl, subfibe
         s = ctx.freshen(tag, :_s)
         if d == 1
             Furlable(
-                body = (ctx, ext) -> Pipeline([
+                body = (ctx, ext) -> Sequence([
                     Phase(
                         stop = (ctx, ext) -> j,
                         body = (ctx, ext) -> Lookup(
@@ -197,7 +197,7 @@ function instantiate_reader_triangular_dense_helper(fbr, ctx, subunfurl, subfibe
             )
         else
             Furlable(
-                body = (ctx, ext) -> Pipeline([
+                body = (ctx, ext) -> Sequence([
                     Phase(
                         stop = (ctx, ext) -> j,
                         body = (ctx, ext) -> Lookup(
@@ -240,7 +240,7 @@ function instantiate_updater_triangular_dense_helper(fbr, ctx, subunfurl, subfib
         s = ctx.freshen(tag, :_s)
         if d == 1
             Furlable(
-                body = (ctx, ext) -> Pipeline([
+                body = (ctx, ext) -> Sequence([
                     Phase(
                         stop = (ctx, ext) -> j,
                         body = (ctx, ext) -> Lookup(
@@ -254,7 +254,7 @@ function instantiate_updater_triangular_dense_helper(fbr, ctx, subunfurl, subfib
             )
         else
             Furlable(
-                body = (ctx, ext) -> Pipeline([
+                body = (ctx, ext) -> Sequence([
                     Phase(
                         stop = (ctx, ext) -> j,
                         body = (ctx, ext) -> Lookup(

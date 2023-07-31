@@ -2,7 +2,7 @@
 CurrentModule = Finch
 ```
 
-## Finch Compilation Pipeline
+## Finch Compilation
 
 ## Finch Notation
 
@@ -159,7 +159,7 @@ level_default
 
 ## Debugging Functionality
 
-It's easy to ask Finch to advance a few steps in its compiler pipeline. The basic functionality is documented via the following bit of code:
+It's easy to ask Finch to advance a few steps in its compiler sequence. The basic functionality is documented via the following bit of code:
 ```
 using Finch
 using Finch: @finch_program_instance, begin_debug, step_code, iscompiled, end_debug
@@ -201,7 +201,7 @@ PartialCode
 ```
 
 Partially compiled code will be displayed almost like fully compiled code but with `@finch` nodes that are numbered according to
-which will be compiled first. They also display where they will renter the compilation pipeline. 
+which will be compiled first. They also display where they will renter the compilation sequence. 
 An early step in the above program might look like:
 ```
 quote

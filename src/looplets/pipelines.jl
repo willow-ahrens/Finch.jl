@@ -1,31 +1,31 @@
-@kwdef struct Pipeline
+@kwdef struct Sequence
     phases
 end
 
-Base.show(io::IO, ex::Pipeline) = Base.show(io, MIME"text/plain"(), ex)
-function Base.show(io::IO, mime::MIME"text/plain", ex::Pipeline)
-    print(io, "Pipeline()")
+Base.show(io::IO, ex::Sequence) = Base.show(io, MIME"text/plain"(), ex)
+function Base.show(io::IO, mime::MIME"text/plain", ex::Sequence)
+    print(io, "Sequence()")
 end
 
-FinchNotation.finch_leaf(x::Pipeline) = virtual(x)
+FinchNotation.finch_leaf(x::Sequence) = virtual(x)
 
-struct PipelineStyle end
+struct SequenceStyle end
 
-(ctx::Stylize{<:AbstractCompiler})(node::Pipeline) = ctx.root.kind === loop ? PipelineStyle() : DefaultStyle()
-combine_style(a::DefaultStyle, b::PipelineStyle) = PipelineStyle()
-combine_style(a::LookupStyle, b::PipelineStyle) = PipelineStyle()
-combine_style(a::ThunkStyle, b::PipelineStyle) = ThunkStyle()
-combine_style(a::RunStyle, b::PipelineStyle) = PipelineStyle()
-combine_style(a::SimplifyStyle, b::PipelineStyle) = a
-combine_style(a::AcceptRunStyle, b::PipelineStyle) = PipelineStyle()
-combine_style(a::PipelineStyle, b::PipelineStyle) = PipelineStyle()
-combine_style(a::PipelineStyle, b::SwitchStyle) = SwitchStyle()
-combine_style(a::SpikeStyle, b::PipelineStyle) = PipelineStyle()
-combine_style(a::PipelineStyle, b::PhaseStyle) = b
+(ctx::Stylize{<:AbstractCompiler})(node::Sequence) = ctx.root.kind === loop ? SequenceStyle() : DefaultStyle()
+combine_style(a::DefaultStyle, b::SequenceStyle) = SequenceStyle()
+combine_style(a::LookupStyle, b::SequenceStyle) = SequenceStyle()
+combine_style(a::ThunkStyle, b::SequenceStyle) = ThunkStyle()
+combine_style(a::RunStyle, b::SequenceStyle) = SequenceStyle()
+combine_style(a::SimplifyStyle, b::SequenceStyle) = a
+combine_style(a::AcceptRunStyle, b::SequenceStyle) = SequenceStyle()
+combine_style(a::SequenceStyle, b::SequenceStyle) = SequenceStyle()
+combine_style(a::SequenceStyle, b::SwitchStyle) = SwitchStyle()
+combine_style(a::SpikeStyle, b::SequenceStyle) = SequenceStyle()
+combine_style(a::SequenceStyle, b::PhaseStyle) = b
 
-function lower(root::FinchNode, ctx::AbstractCompiler,  ::PipelineStyle)
+function lower(root::FinchNode, ctx::AbstractCompiler,  ::SequenceStyle)
     if root.kind === loop
-        phases = PipelineVisitor(ctx, root.idx, root.ext)(root.body)
+        phases = SequenceVisitor(ctx, root.idx, root.ext)(root.body)
         
         i = getname(root.idx)
         i0 = ctx.freshen(i, :_start)
@@ -47,14 +47,14 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  ::PipelineStyle)
     end
 end
 
-Base.@kwdef struct PipelineVisitor
+Base.@kwdef struct SequenceVisitor
     ctx
     idx
     ext
 end
 
-(ctx::PipelineVisitor)(node) = [[] => node]
-function (ctx::PipelineVisitor)(node::FinchNode)
+(ctx::SequenceVisitor)(node) = [[] => node]
+function (ctx::SequenceVisitor)(node::FinchNode)
     if node.kind === virtual
         ctx(node.val)
     elseif istree(node)
@@ -68,7 +68,7 @@ function (ctx::PipelineVisitor)(node::FinchNode)
     end
 end
 
-function (ctx::PipelineVisitor)(node::Pipeline) 
+function (ctx::SequenceVisitor)(node::Sequence) 
   new_phases = []
   
   prev_stop = call(-, getstart(ctx.ext), getunit(ctx.ext))

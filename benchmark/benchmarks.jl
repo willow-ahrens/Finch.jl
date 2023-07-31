@@ -24,7 +24,7 @@ C = @fiber d(sl(e(0.0)))
 
 @finch (C .= 0; @loop i j k C[j, i] += A[k, i] * B[k, i])
 """
-cmd = pipeline(`$(Base.julia_cmd()) --project=$(Base.active_project()) --eval $code`, stdout = IOBuffer())
+cmd = sequence(`$(Base.julia_cmd()) --project=$(Base.active_project()) --eval $code`, stdout = IOBuffer())
 
 SUITE["compile"]["time_to_first_SpGeMM"] = @benchmarkable run(cmd)
 

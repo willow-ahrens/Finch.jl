@@ -261,7 +261,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
                     $my_i_stop = $(Ti(0))
                 end
             end,
-            body = (ctx) -> Pipeline([
+            body = (ctx) -> Sequence([
                 Phase(
                     stop = (ctx, ext) -> value(my_i_stop),
                     body = (ctx, ext) -> Stepper(
@@ -325,7 +325,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
                     $my_i_stop = $(Tp(0))
                 end
             end,
-            body = (ctx) -> Pipeline([
+            body = (ctx) -> Sequence([
                 Phase(
                     stop = (ctx, ext) -> value(my_i_stop),
                     body = (ctx, ext) -> Jumper(

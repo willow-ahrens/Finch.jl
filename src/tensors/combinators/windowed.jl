@@ -100,7 +100,7 @@ function get_acceptrun_body(node::VirtualWindowedArray, ctx, ext)
     end
 end
 
-function (ctx::PipelineVisitor)(node::VirtualWindowedArray)
+function (ctx::SequenceVisitor)(node::VirtualWindowedArray)
     map(ctx(node.body)) do (keys, body)
         return keys => VirtualWindowedArray(body, node.dims)
     end

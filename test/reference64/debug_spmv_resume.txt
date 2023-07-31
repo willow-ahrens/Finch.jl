@@ -282,9 +282,9 @@ end, quote
         x_lvl_i = 1
         x_lvl_i1 = 0
     end
-    res = @finch{#0,pipelines.jl:26} begin
+    res = @finch{#0,sequences.jl:26} begin
           for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
-            virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Pipeline)[j], virtual(Finch.Lookup)[i, j])
+            virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Sequence)[j], virtual(Finch.Lookup)[i, j])
           end
         end
     @finch{#0,lower.jl:135} begin
@@ -314,9 +314,9 @@ end, quote
         x_lvl_i = 1
         x_lvl_i1 = 0
     end
-    res = @finch{#0,pipelines.jl:26} begin
+    res = @finch{#0,sequences.jl:26} begin
           for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
-            virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Pipeline)[j], virtual(Finch.Lookup)[i, j])
+            virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Sequence)[j], virtual(Finch.Lookup)[i, j])
           end
         end
     @finch{#0,lower.jl:135} begin
@@ -346,9 +346,9 @@ end, quote
         x_lvl_i = 1
         x_lvl_i1 = 0
     end
-    res = @finch{#0,pipelines.jl:26} begin
+    res = @finch{#0,sequences.jl:26} begin
           for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
-            virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Pipeline)[j], virtual(Finch.Lookup)[i, j])
+            virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Sequence)[j], virtual(Finch.Lookup)[i, j])
           end
         end
     @finch{#0,lower.jl:135} begin
@@ -2384,9 +2384,9 @@ end, quote
                                                             A_lvl_2_i = 1
                                                             A_lvl_2_i1 = 0
                                                         end
-                                                        res_6 = @finch{#0,pipelines.jl:26} begin
+                                                        res_6 = @finch{#0,sequences.jl:26} begin
                                                               for i = virtual(Finch.Extent)
-                                                                virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Pipeline)[i])
+                                                                virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Sequence)[i])
                                                               end
                                                             end
                                                     end
@@ -2464,9 +2464,9 @@ end, quote
                                                             A_lvl_2_i = 1
                                                             A_lvl_2_i1 = 0
                                                         end
-                                                        res_6 = @finch{#0,pipelines.jl:26} begin
+                                                        res_6 = @finch{#0,sequences.jl:26} begin
                                                               for i = virtual(Finch.Extent)
-                                                                virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Pipeline)[i])
+                                                                virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Sequence)[i])
                                                               end
                                                             end
                                                     end
@@ -2544,9 +2544,9 @@ end, quote
                                                             A_lvl_2_i = 1
                                                             A_lvl_2_i1 = 0
                                                         end
-                                                        res_6 = @finch{#0,pipelines.jl:26} begin
+                                                        res_6 = @finch{#0,sequences.jl:26} begin
                                                               for i = virtual(Finch.Extent)
-                                                                virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Pipeline)[i])
+                                                                virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Sequence)[i])
                                                               end
                                                             end
                                                     end

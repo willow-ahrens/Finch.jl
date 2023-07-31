@@ -97,7 +97,7 @@ function get_acceptrun_body(node::VirtualPermissiveArray, ctx, ext)
     end
 end
 
-function (ctx::PipelineVisitor)(node::VirtualPermissiveArray)
+function (ctx::SequenceVisitor)(node::VirtualPermissiveArray)
     map(ctx(node.body)) do (keys, body)
         return keys => VirtualPermissiveArray(body, node.dims)
     end
@@ -129,7 +129,7 @@ function unfurl(tns::VirtualPermissiveArray, ctx, ext, protos...)
         VirtualPermissiveArray(
             Unfurled(
                 tns,
-                Pipeline([
+                Sequence([
                     Phase(
                         stop = (ctx, ext_2) -> call(-, getstart(dims[end]), 1),
                         body = (ctx, ext) -> Run(Fill(literal(missing))),

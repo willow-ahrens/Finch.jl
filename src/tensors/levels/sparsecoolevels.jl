@@ -263,7 +263,7 @@ function instantiate_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, R, start
                     $my_i_stop = $(Ti.parameters[R](0))
                 end
             end,
-            body = (ctx) -> Pipeline([
+            body = (ctx) -> Sequence([
                 Phase(
                     stop = (ctx, ext) -> value(my_i_stop),
                     body = (ctx, ext) -> Stepper(
