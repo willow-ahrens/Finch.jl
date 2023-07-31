@@ -1,4 +1,4 @@
->"""
+"""
 Parallelism analysis plan: We will allow automatic paralleization when the following conditions are meet:
 All non-locally defined tensors that are written, are only written to with the plain index i in a injective and consistent way and with an associative operator.
 
@@ -50,9 +50,9 @@ end
 
 
 struct ParallelAnalysisResults <: Exception
-    naive:: bool
-    withAtomics:: bool
-    withAtomicsAndAssoc:: bool
+    naive:: Bool
+    withAtomics:: Bool
+    withAtomicsAndAssoc:: Bool
     tensorsNeedingAtomics:: Vector{FinchNode}
     nonInjectiveAccss :: Vector{FinchNode}
     nonAssocAssigns:: Vector{FinchNode}
@@ -92,7 +92,7 @@ function parallelAnalysis(prog, index, alg, ctx) :: ParallelAnalysisResults
 
 
     # Step 1: Gather all the assigns and group them per root
-    assignByRoot :: Dict{FinchNode, Set{FinchNode}} = {}
+    assignByRoot :: Dict{FinchNode, Set{FinchNode}} = Dict{FinchNode, Set{FinchNode}}()
     for node in assigns
         root = getroot(node.lhs.tns)
         nodeSet = get!(assignByRoot, root, Set{FinchNode}())
@@ -117,13 +117,13 @@ function parallelAnalysis(prog, index, alg, ctx) :: ParallelAnalysisResults
         end
 
         # everyone is accessed in the same way i.e the virtuals are the same.
-        for rep' in nodeSet
-            tns' = rep'.lhs.tns
-            if tns != tns'
+        for repp in nodeSet
+            tnsp = repp.lhs.tns
+            if tns != tnsp
                 naive = false
                 push!(tensorsNeddingAtomics, root)
             end
-            if rep'.lhs[end] != index
+            if repp.lhs[end] != index
                 naive = false
                 push!(tensorsNeddingAtomics, root)
             end
@@ -132,13 +132,13 @@ function parallelAnalysis(prog, index, alg, ctx) :: ParallelAnalysisResults
         # Check the ops
         # However, it is also not assosciative if there are multiples access with different ops or lhs.
         firstNode = first(nodeSet)
-        for rep' in nodeSet
-            if !isassociative(alg, rep'.op)
+        for repp in nodeSet
+            if !isassociative(alg, repp.op)
                 naive = false
                 withAtomics = false
-                push!(nonAssocAssigns, rep')
+                push!(nonAssocAssigns, repp)
             end
-            if firstNode.op != rep'.op
+            if firstNode.op != repp.op
                 for x in nodeSet
                     naive = false
                     withAtomics = false

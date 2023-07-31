@@ -30,7 +30,7 @@
     end
 
     let
-        try
+        @test_throws ParallelAnalysisResults try
             @finch_code begin
                 y .= 0
                 for j = parallel(_)
@@ -44,11 +44,12 @@
             @test !e.naive
             @test e.withAtomics
             @test length(e.nonInjectiveAccss) == 1
+            throw(e)
         end
     end
 
     let
-        try
+        @test_throws ParallelAnalysisResults try
             @finch_code begin
                 y .= 0
                 for j = parallel(_)
@@ -63,10 +64,11 @@
             @test !e.naive
             @test e.withAtomics
             @test length(e.nonInjectiveAccss) == 0
+            throw(e)
         end
     end
         let
-        try
+        @test_throws ParallelAnalysisResults try
             @finch_code begin
                 y .= 0
                 for j = parallel(_)
@@ -83,6 +85,7 @@
             @test length(e.nonInjectiveAccss) == 0
             @test e.withAtomicsAndAssoc
             @test length(e.nonAssocAssigns) == 2
+            throw(e)
         end
     end
 
