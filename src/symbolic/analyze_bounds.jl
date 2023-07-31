@@ -103,6 +103,8 @@ function get_bounds_rules(alg, shash)
         (@rule call(~f::isinvolution(alg), call(~f, ~a)) => a),
 
         # Clamping rules
+        #=
+        # this rule is great but too expensive
         (@rule call(max, ~a, call(min, ~b, ~c)) => begin
             if query(call(<=, a, b), LowerJulia()) # a = low, b = high
               call(min, b, call(max, a, c))
@@ -110,6 +112,7 @@ function get_bounds_rules(alg, shash)
               call(min, c, call(max, b, a))
             end
           end), 
+        =#
 
         #(@rule call(~f, ~a..., call(~g, ~b), ~c...) => if isdistributive(alg, g, f)
         #    call(g, call(f, a..., b, c...))
