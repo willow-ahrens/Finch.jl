@@ -38,12 +38,17 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::JumperStyle)
 
     body_3 = contain(ctx) do ctx_2
         push!(ctx_2.preamble, :($i0 = $i))
-        ctx_2(loop(root.idx, bound_measure_below!(Extent(start = value(i0), stop = getstop(root.ext)), literal(1)), body_2))
+        if is_continuous_extent(root.ext) 
+            ctx_2(loop(root.idx, bound_measure_below!(ContinuousExtent(start = value(i0), stop = getstop(root.ext)), literal(0)), body_2))
+        else
+            ctx_2(loop(root.idx, bound_measure_below!(Extent(start = value(i0), stop = getstop(root.ext)), literal(1)), body_2))
+        end
     end
 
     @assert isvirtual(root.ext)
 
-    if query(call(==, measure(root.ext.val), 1), ctx)
+    target = is_continuous_extent(root.ext.val) ? 0 : 1
+    if query(call(==, measure(root.ext.val), target), ctx)
         body_3
     else
         return quote
@@ -70,7 +75,7 @@ FinchNotation.finch_leaf(x::Jump) = virtual(x)
 
 function phase_range(node::Jump, ctx, ext)
     push!(ctx.preamble, node.seek !== nothing ? node.seek(ctx, ext) : quote end)
-    Extent(getstart(ext), node.stop(ctx, ext))
+    similar_extent(ext, getstart(ext), node.stop(ctx, ext))
 end
 
 phase_body(node::Jump, ctx, ext, ext_2) = node.body(ctx, ext, ext_2)

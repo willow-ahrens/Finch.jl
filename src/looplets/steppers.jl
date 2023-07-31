@@ -48,12 +48,17 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::StepperStyle)
 
     body_3 = contain(ctx) do ctx_2
         push!(ctx_2.preamble, :($i0 = $i))
-        ctx_2(loop(root.idx, bound_measure_below!(Extent(start = value(i0), stop = getstop(root.ext)), literal(1)), body_2))
+        if is_continuous_extent(root.ext) 
+            ctx_2(loop(root.idx, bound_measure_below!(ContinuousExtent(start = value(i0), stop = getstop(root.ext)), literal(0)), body_2))
+        else
+            ctx_2(loop(root.idx, bound_measure_below!(Extent(start = value(i0), stop = getstop(root.ext)), literal(1)), body_2))
+        end
     end
 
     @assert isvirtual(root.ext)
 
-    if query(call(==, measure(root.ext.val), 1), ctx)
+    target = is_continuous_extent(root.ext.val) ? 0 : 1
+    if query(call(==, measure(root.ext.val), target), ctx)
         body_3
     else
         return quote
@@ -83,7 +88,8 @@ FinchNotation.finch_leaf(x::Step) = virtual(x)
 (ctx::Stylize{<:AbstractCompiler})(node::Step) = ctx.root.kind === loop ? StepperPhaseStyle() : DefaultStyle()
 
 function phase_range(node::Step, ctx, ext)
-    bound_measure_below!(Extent(getstart(ext), node.stop(ctx, ext)), literal(1))
+    ext_2 = similar_extent(ext, getstart(ext), node.stop(ctx, ext))
+    bound_measure_below!(ext_2, getunit(ext))
 end
 
 function phase_body(node::Step, ctx, ext, ext_2)
@@ -91,11 +97,11 @@ function phase_body(node::Step, ctx, ext, ext_2)
     if next !== nothing
         Switch([
             value(:($(ctx(node.stop(ctx, ext))) == $(ctx(getstop(ext_2))))) => Thunk(
-                body = (ctx) -> truncate(node.chunk, ctx, ext, Extent(getstart(ext_2), getstop(ext))),
+                body = (ctx) -> truncate(node.chunk, ctx, ext, similar_extent(ext, getstart(ext_2), getstop(ext))),
                 epilogue = next
             ),
             literal(true) => 
-                truncate(node.chunk, ctx, ext, Extent(getstart(ext_2), bound_above!(getstop(ext_2), call(-, getstop(ext), 1)))),
+                truncate(node.chunk, ctx, ext, similar_extent(ext, getstart(ext_2), bound_above!(getstop(ext_2), call(-, getstop(ext), 1)))),
         ])
     else
         node.body(ctx, ext_2)

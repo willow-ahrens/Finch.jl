@@ -111,6 +111,7 @@ include("base/mapreduce.jl")
 include("base/compare.jl")
 include("base/copy.jl")
 include("base/fsparse.jl")
+include("base/limits.jl")
 
 @static if !isdefined(Base, :get_extension)
     function __init__()
@@ -145,5 +146,4 @@ export fbrread, fbrwrite, bsread, bswrite
 export ftnsread, ftnswrite, fttread, fttwrite
 
 include("resumables.jl")
-
 end

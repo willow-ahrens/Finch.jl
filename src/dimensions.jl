@@ -68,21 +68,6 @@ getstart(ext::Extent) = ext.start
 getstop(ext::Extent) = ext.stop
 measure(ext::Extent) = call(+, call(-, ext.stop, ext.start), 1)
 
-function getstop(ext::FinchNode)
-    if ext.kind === virtual
-        getstop(ext.val)
-    else
-        ext
-    end
-end
-function getstart(ext::FinchNode)
-    if ext.kind === virtual
-        getstart(ext.val)
-    else
-        ext
-    end
-end
-
 combinedim(ctx, a::Extent, b::Extent) =
     Extent(
         start = checklim(ctx, a.start, b.start),
@@ -198,6 +183,70 @@ virtual_union(ctx, a::Dimensionless, b::Dimensionless) = b
 #virtual_union(ctx, a, b) = virtual_union(ctx, promote(a, b)...)
 function virtual_union(ctx, a::Extent, b::Extent)
     Extent(
+        start = @f(min($(getstart(a)), $(getstart(b)))),
+        stop = @f(max($(getstop(a)), $(getstop(b))))
+    )
+end
+
+@kwdef struct ContinuousExtent
+    start
+    stop
+end
+
+FinchNotation.finch_leaf(x::ContinuousExtent) = virtual(x)
+
+make_extent(::Type, start, stop) = throw(ArgumentError("Unsupported type"))
+make_extent(::Type{T}, start, stop) where T <: Integer = Extent(start, stop)
+make_extent(::Type{T}, start, stop) where T <: Real = ContinuousExtent(start, stop)
+
+similar_extent(ext::Extent, start, stop) = Extent(start, stop)
+similar_extent(ext::ContinuousExtent, start, stop) = ContinuousExtent(start, stop)
+similar_extent(ext::FinchNode, start, stop) = ext.kind === virtual ? similar_extent(ext.val, start, stop) : similar_extent(ext, start, stop)
+
+is_continuous_extent(x) = false # generic
+is_continuous_extent(x::ContinuousExtent) = true
+is_continuous_extent(x::FinchNode) = x.kind === virtual ? is_continuous_extent(x.val) : is_continuous_extent(x)
+
+Base.:(==)(a::ContinuousExtent, b::ContinuousExtent) = a.start == b.start && a.stop == b.stop
+Base.:(==)(a::Extent, b::ContinuousExtent) = throw(ArgumentError("Extent and ContinuousExtent cannot interact ...yet"))
+
+bound_measure_below!(ext::ContinuousExtent, m) = ContinuousExtent(ext.start, bound_below!(ext.stop, call(+, ext.start, m)))
+bound_measure_above!(ext::ContinuousExtent, m) = ContinuousExtent(ext.start, bound_above!(ext.stop, call(+, ext.start, m)))
+
+cache_dim!(ctx, var, ext::ContinuousExtent) = ContinuousExtent(
+    start = cache!(ctx, Symbol(var, :_start), ext.start),
+    stop = cache!(ctx, Symbol(var, :_stop), ext.stop)
+)
+
+getunit(ext::Extent) = literal(1)
+getunit(ext::ContinuousExtent) = Eps
+getunit(ext::FinchNode) = ext.kind === virtual ? getunit(ext.val) : ext
+
+getstart(ext::ContinuousExtent) = ext.start
+getstart(ext::FinchNode) = ext.kind === virtual ? getstart(ext.val) : ext
+
+getstop(ext::ContinuousExtent) = ext.stop
+getstop(ext::FinchNode) = ext.kind === virtual ? getstop(ext.val) : ext
+
+measure(ext::ContinuousExtent) = call(-, ext.stop, ext.start) # TODO: Think carefully, Not quite sure!
+
+combinedim(ctx, a::ContinuousExtent, b::ContinuousExtent) = ContinuousExtent(checklim(ctx, a.start, b.start), checklim(ctx, a.stop, b.stop))
+combinedim(ctx, a::Dimensionless, b::ContinuousExtent) = b
+combinedim(ctx, a::Extent, b::ContinuousExtent) = throw(ArgumentError("Extent and ContinuousExtent cannot interact ...yet"))
+
+combinedim(ctx, a::SuggestedExtent, b::ContinuousExtent) = b
+
+is_continuous_extent(x::ParallelDimension) = is_continuous_extent(x.dim)
+
+function virtual_intersect(ctx, a::ContinuousExtent, b::ContinuousExtent)
+    ContinuousExtent(
+        start = @f(max($(getstart(a)), $(getstart(b)))),
+        stop = @f(min($(getstop(a)), $(getstop(b))))
+    )
+end
+
+function virtual_union(ctx, a::ContinuousExtent, b::ContinuousExtent)
+    ContinuousExtent(
         start = @f(min($(getstart(a)), $(getstart(b)))),
         stop = @f(max($(getstop(a)), $(getstop(b))))
     )
