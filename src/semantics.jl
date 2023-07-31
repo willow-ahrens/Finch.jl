@@ -55,7 +55,7 @@ trim!(tns, ctx) = tns
 Return an iterator over the properly modified tensors in a finch program
 """
 function getresults(node::FinchNode)
-    if node.kind === sequence
+    if node.kind === block
         return mapreduce(getresults, vcat, node.bodies, init=[])
     elseif node.kind === declare || node.kind === thaw
         return [node.tns]

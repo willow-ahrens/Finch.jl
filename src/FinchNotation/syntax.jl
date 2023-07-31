@@ -5,7 +5,7 @@ const program_nodes = (
     index = index,
     loop = loop,
     sieve = sieve,
-    sequence = sequence,
+    block = block,
     define = define,
     declare = declare,
     freeze = freeze,
@@ -26,7 +26,7 @@ const instance_nodes = (
     index = index_instance,
     loop = loop_instance,
     sieve = sieve_instance,
-    sequence = sequence_instance,
+    block = block_instance,
     define = define_instance,
     declare = declare_instance,
     freeze = freeze_instance,
@@ -163,10 +163,10 @@ function (ctx::FinchParserVisitor)(ex::Expr)
         if length(bodies) == 1
             return ctx(:($(bodies[1])))
         else
-            return ctx(:(@sequence($(bodies...),)))
+            return ctx(:(@block($(bodies...),)))
         end
-    elseif @capture ex :macrocall($(Symbol("@sequence")), ~ln::islinenum, ~bodies...)
-        return :($(ctx.nodes.sequence)($(map(ctx, bodies)...)))
+    elseif @capture ex :macrocall($(Symbol("@block")), ~ln::islinenum, ~bodies...)
+        return :($(ctx.nodes.block)($(map(ctx, bodies)...)))
     elseif @capture ex :ref(~tns, ~idxs...)
         mode = :($(ctx.nodes.reader)())
         return :($(ctx.nodes.access)($(ctx(tns)), $mode, $(map(ctx, idxs)...)))

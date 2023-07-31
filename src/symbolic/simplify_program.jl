@@ -12,8 +12,8 @@ function get_program_rules(alg, shash)
     return [
         (@rule call(~f::isliteral, ~a::(All(isliteral))...) => literal(getval(f)(getval.(a)...))),
 
-        (@rule loop(~i, ~a, sequence()) => sequence()),
-        (@rule sequence(~a..., sequence(~b...), ~c...) => sequence(a..., b..., c...)),
+        (@rule loop(~i, ~a, block()) => block()),
+        (@rule block(~a..., block(~b...), ~c...) => block(a..., b..., c...)),
 
         (@rule call(~f::isassociative(alg), ~a..., call(~f, ~b...), ~c...) => call(f, a..., b..., c...)),
         (@rule call(~f::iscommutative(alg), ~a...) => if !(issorted(a, by = shash))
@@ -52,9 +52,9 @@ function get_program_rules(alg, shash)
         (@rule call(==, ~a, ~a) => literal(true)),
         (@rule call(<=, ~a, ~a) => literal(true)),
         (@rule call(<, ~a, ~a) => literal(false)), 
-        (@rule assign(access(~a, updater(), ~i...), ~f, ~b) => if isidentity(alg, f, b) sequence() end),
-        (@rule assign(access(~a, ~m, ~i...), $(literal(missing))) => sequence()),
-        (@rule assign(access(~a, ~m, ~i..., $(literal(missing)), ~j...), ~b) => sequence()),
+        (@rule assign(access(~a, updater(), ~i...), ~f, ~b) => if isidentity(alg, f, b) block() end),
+        (@rule assign(access(~a, ~m, ~i...), $(literal(missing))) => block()),
+        (@rule assign(access(~a, ~m, ~i..., $(literal(missing)), ~j...), ~b) => block()),
         (@rule call(coalesce, ~a..., ~b, ~c...) => if isvalue(b) && !(Missing <: b.type) || isliteral(b) && !ismissing(b.val)
             call(coalesce, a..., b)
         end),
@@ -68,14 +68,14 @@ function get_program_rules(alg, shash)
         (@rule call(identity, ~a) => a),
         (@rule call(overwrite, ~a, ~b) => b),
         (@rule call(~f::isliteral, ~a, ~b) => if f.val isa InitWriter b end),
-        (@rule assign(~a::isliteral, ~op, ~b) => if a.val === Null() sequence() end),
+        (@rule assign(~a::isliteral, ~op, ~b) => if a.val === Null() block() end),
         (@rule call(ifelse, true, ~a, ~b) => a),
         (@rule call(ifelse, false, ~a, ~b) => b),
         (@rule call(ifelse, ~a, ~b, ~b) => b),
         (@rule $(literal(-0.0)) => literal(0.0)),
 
-        (@rule sequence(~a1..., sieve(~c, ~b1), sieve(~c, ~b2), ~a2...) =>
-            sequence(a1..., sieve(~c, sequence(b1, b2)), a2...)
+        (@rule block(~a1..., sieve(~c, ~b1), sieve(~c, ~b2), ~a2...) =>
+            block(a1..., sieve(~c, block(b1, b2)), a2...)
         ),
 
         (@rule call(~f, call(~g, ~a, ~b...)) => if isinverse(alg, f, g) && isassociative(alg, g)
@@ -109,7 +109,7 @@ function get_program_rules(alg, shash)
         (@rule call(/, ~a) => call(inv, a)),
 
         (@rule sieve(true, ~a) => a),
-        (@rule sieve(false, ~a) => sequence()), #TODO should add back skipvisitor
+        (@rule sieve(false, ~a) => block()), #TODO should add back skipvisitor
 
         (@rule loop(~i, ~a::isvirtual, assign(access(~b, updater(), ~j...), ~f::isidempotent(alg), ~c)) => begin
             if i ∉ j && i ∉ getunbound(c)
@@ -127,30 +127,30 @@ function get_program_rules(alg, shash)
         (@rule loop(~i, ~ext::isvirtual, assign(access(~a, ~m), $(literal(+)), ~b::isliteral)) =>
             assign(access(a, m), +, call(*, b, measure(ext.val)))
         ),
-        (@rule loop(~i, ~ext::isvirtual, sequence(~s1..., assign(access(~a, ~m), $(literal(+)), ~b::isliteral), ~s2...)) => if ortho(getroot(a), s1) && ortho(getroot(a), s2)
-            sequence(assign(access(a, m), +, call(*, b, measure(ext.val))), loop(i, ext, sequence(s1..., s2...)))
+        (@rule loop(~i, ~ext::isvirtual, block(~s1..., assign(access(~a, ~m), $(literal(+)), ~b::isliteral), ~s2...)) => if ortho(getroot(a), s1) && ortho(getroot(a), s2)
+            block(assign(access(a, m), +, call(*, b, measure(ext.val))), loop(i, ext, block(s1..., s2...)))
         end),
         (@rule loop(~i, ~ext, assign(access(~a, ~m), ~f::isidempotent(alg), ~b::isliteral)) =>
             sieve(call(>, measure(ext.val), 0), assign(access(a, m), f, b))
         ),
-        (@rule loop(~i, ~ext, sequence(~s1..., assign(access(~a, ~m), ~f::isidempotent(alg), ~b::isliteral), ~s2...)) => if ortho(getroot(a), s1) && ortho(getroot(a), s2)
-            sequence(sieve(call(>, measure(ext.val), 0), assign(access(a, m), f, b)), loop(i, ext, sequence(s1..., s2...)))
+        (@rule loop(~i, ~ext, block(~s1..., assign(access(~a, ~m), ~f::isidempotent(alg), ~b::isliteral), ~s2...)) => if ortho(getroot(a), s1) && ortho(getroot(a), s2)
+            block(sieve(call(>, measure(ext.val), 0), assign(access(a, m), f, b)), loop(i, ext, block(s1..., s2...)))
         end),
 
-        (@rule sequence(~s1..., define(~a::isvariable, ~v::isconstant), ~s2...) => begin
-            s2_2 = Postwalk(@rule a => v)(sequence(s2...))
+        (@rule block(~s1..., define(~a::isvariable, ~v::isconstant), ~s2...) => begin
+            s2_2 = Postwalk(@rule a => v)(block(s2...))
             if s2_2 !== nothing
                 #We cannot remove the definition because we aren't sure if the variable gets referenced from a virtual.
-                sequence(s1..., define(a, v), s2_2.bodies...)
+                block(s1..., define(a, v), s2_2.bodies...)
             end
         end),
 
-        (@rule sequence(~s1..., thaw(~a::isvariable), ~s2..., freeze(~a), ~s3...) => if ortho(a, s2)
-            sequence(s1..., s2..., s3...)
+        (@rule block(~s1..., thaw(~a::isvariable), ~s2..., freeze(~a), ~s3...) => if ortho(a, s2)
+            block(s1..., s2..., s3...)
         end),
 
-        (@rule sequence(~s1..., freeze(~a::isvariable), ~s2..., thaw(~a), ~s3...) => if ortho(a, s2)
-            sequence(s1..., s2..., s3...)
+        (@rule block(~s1..., freeze(~a::isvariable), ~s2..., thaw(~a), ~s3...) => if ortho(a, s2)
+            block(s1..., s2..., s3...)
         end),
     ]
 end
