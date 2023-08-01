@@ -5,7 +5,7 @@ const program_nodes = (
     index = index,
     loop = loop,
     sieve = sieve,
-    sequence = sequence,
+    block = block,
     define = define,
     declare = declare,
     freeze = freeze,
@@ -26,7 +26,7 @@ const instance_nodes = (
     index = index_instance,
     loop = loop_instance,
     sieve = sieve_instance,
-    sequence = sequence_instance,
+    block = block_instance,
     define = define_instance,
     declare = declare_instance,
     freeze = freeze_instance,
@@ -78,12 +78,12 @@ initwrite(z) = InitWriter{z}()
 `lhs[] <<overwrite>>= rhs`.
 
 ```jldoctest setup=:(using Finch)
-julia> a = @fiber(sl(e(0.0)), [0, 1.1, 0, 4.4, 0])
+julia> a = Fiber!(SparseList(Element(0.0)), [0, 1.1, 0, 4.4, 0])
 SparseList (0.0) [1:5]
 ├─[2]: 1.1
 ├─[4]: 4.4
 
-julia> x = Scalar(0.0); @finch @loop i x[] <<overwrite>>= a[i];
+julia> x = Scalar(0.0); @finch for i=_; x[] <<overwrite>>= a[i] end;
 
 julia> x[]
 0.0
@@ -125,28 +125,21 @@ function (ctx::FinchParserVisitor)(ex::Expr)
         throw(FinchSyntaxError("Finch does not support elseif."))
     elseif @capture ex :(.=)(~tns, ~init)
         return :($(ctx.nodes.declare)($(ctx(tns)), $(ctx(init))))
-    elseif @capture ex :macrocall($(Symbol("@declare")), ~ln::islinenum, ~tns, ~init)
-        return :($(ctx.nodes.declare)($(ctx(tns)), $(ctx(init))))
     elseif @capture ex :macrocall($(Symbol("@freeze")), ~ln::islinenum, ~tns)
         return :($(ctx.nodes.freeze)($(ctx(tns))))
     elseif @capture ex :macrocall($(Symbol("@thaw")), ~ln::islinenum, ~tns)
         return :($(ctx.nodes.thaw)($(ctx(tns))))
-    elseif @capture ex :for(:(=)(~idx, ~ext), ~body)
-        return ctx(:(@loop($idx = $ext, $body)))
+    elseif @capture ex :for(:block(), ~body)
+        return ctx(body)
     elseif @capture ex :for(:block(:(=)(~idx, ~ext), ~tail...), ~body)
         if isempty(tail)
-            return ctx(:(@loop($idx = $ext, $body)))
+            return ctx(:(for $idx = $ext; $body end))
         else
-            return ctx(:(@loop($idx = $ext, $(Expr(:for, Expr(:block, tail...), body)))))
+            return ctx(:(for $idx = $ext; $(Expr(:for, Expr(:block, tail...), body)) end))
         end
-    elseif @capture ex :macrocall($(Symbol("@loop")), ~ln::islinenum, ~body)
-        ctx(body)
-    elseif @capture ex :macrocall($(Symbol("@loop")), ~ln::islinenum, ~idx, ~tail..., ~body)
-        if !(@capture idx :(=)(~idx, ~ext))
-            ext = :_
-        end
+    elseif @capture ex :for(:(=)(~idx, ~ext), ~body)
         ext = ctx(ext)
-        body = isempty(tail) ? ctx(body) : ctx(:(@loop($(tail...), $body)))
+        body = ctx(body)
         if idx isa Symbol
             return quote
                 let $(esc(idx)) = $(ctx.nodes.index(idx))
@@ -163,10 +156,8 @@ function (ctx::FinchParserVisitor)(ex::Expr)
         if length(bodies) == 1
             return ctx(:($(bodies[1])))
         else
-            return ctx(:(@sequence($(bodies...),)))
+            return :($(ctx.nodes.block)($(map(ctx, bodies)...)))
         end
-    elseif @capture ex :macrocall($(Symbol("@sequence")), ~ln::islinenum, ~bodies...)
-        return :($(ctx.nodes.sequence)($(map(ctx, bodies)...)))
     elseif @capture ex :ref(~tns, ~idxs...)
         mode = :($(ctx.nodes.reader)())
         return :($(ctx.nodes.access)($(ctx(tns)), $mode, $(map(ctx, idxs)...)))

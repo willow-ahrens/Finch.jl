@@ -16,7 +16,7 @@ FinchNotation.finch_leaf(x::Stepper) = virtual(x)
 
 combine_style(a::DefaultStyle, b::StepperStyle) = StepperStyle()
 combine_style(a::LookupStyle, b::StepperStyle) = StepperStyle()
-combine_style(a::StepperStyle, b::PipelineStyle) = PipelineStyle()
+combine_style(a::StepperStyle, b::SequenceStyle) = SequenceStyle()
 combine_style(a::StepperStyle, b::StepperStyle) = StepperStyle()
 combine_style(a::StepperStyle, b::RunStyle) = RunStyle()
 combine_style(a::SimplifyStyle, b::StepperStyle) = a

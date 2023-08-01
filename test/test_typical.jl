@@ -4,10 +4,10 @@
     let
         io = IOBuffer()
 
-        @repl io A = @fiber(sl(e(0.0)), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
-        @repl io B = @fiber(d(e(0.0)), fill(1.1, 10))
-        @repl io @finch_code @loop i B[i] += A[i]
-        @repl io @finch @loop i B[i] += A[i]
+        @repl io A = Fiber!(SparseList(Element(0.0)), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
+        @repl io B = Fiber!(Dense(Element(0.0)), fill(1.1, 10))
+        @repl io @finch_code for i=_; B[i] += A[i] end
+        @repl io @finch for i=_; B[i] += A[i] end
         
         @test check_output("typical_inplace_sparse_add.txt", String(take!(io)))
     end
@@ -41,7 +41,7 @@
     let
         io = IOBuffer()
 
-        @repl io A = @fiber(d(sl(e(0.0))), [0 0 3.3; 1.1 0 0; 2.2 0 4.4; 0 0 5.5])
+        @repl io A = Fiber!(Dense(SparseList(Element(0.0))), [0 0 3.3; 1.1 0 0; 2.2 0 4.4; 0 0 5.5])
         @repl io y = fiber!([1.0, 2.0, 3.0, 4.0])
         @repl io x = fiber!([1, 2, 3])
         @repl io @finch_code begin
@@ -67,8 +67,8 @@
     let
         io = IOBuffer()
 
-        @repl io A = @fiber(d(sl(e(0.0))), [0 0 3.3; 1.1 0 0; 2.2 0 4.4; 0 0 5.5])
-        @repl io B = @fiber(sh{2}(e(0.0)))
+        @repl io A = Fiber!(Dense(SparseList(Element(0.0))), [0 0 3.3; 1.1 0 0; 2.2 0 4.4; 0 0 5.5])
+        @repl io B = Fiber!(SparseHash{2}(Element(0.0)))
         @repl io @finch_code begin
             B .= 0
             for j = _
@@ -102,28 +102,28 @@
     
         io = IOBuffer()
 
-        @repl io @finch_code (z .= 0; @loop i z[i] = x[gallop(i)] + y[gallop(i)])
-        @repl io @finch (z .= 0; @loop i z[i] = x[gallop(i)] + y[gallop(i)])
+        @repl io @finch_code (z .= 0; for i=_; z[i] = x[gallop(i)] + y[gallop(i)] end)
+        @repl io @finch (z .= 0; for i=_; z[i] = x[gallop(i)] + y[gallop(i)] end)
 
         @test check_output("typical_merge_gallop.txt", String(take!(io)))
 
         io = IOBuffer()
 
-        @repl io @finch_code (z .= 0; @loop i z[i] = x[gallop(i)] + y[i])
-        @repl io @finch (z .= 0; @loop i z[i] = x[gallop(i)] + y[i])
+        @repl io @finch_code (z .= 0; for i=_; z[i] = x[gallop(i)] + y[i] end)
+        @repl io @finch (z .= 0; for i=_; z[i] = x[gallop(i)] + y[i] end)
 
         @test check_output("typical_merge_leadfollow.txt", String(take!(io)))
 
         io = IOBuffer()
 
-        @repl io @finch_code (z .= 0; @loop i z[i] = x[i] + y[i])
-        @repl io @finch (z .= 0; @loop i z[i] = x[i] + y[i])
+        @repl io @finch_code (z .= 0; for i=_; z[i] = x[i] + y[i] end)
+        @repl io @finch (z .= 0; for i=_; z[i] = x[i] + y[i] end)
 
         @test check_output("typical_merge_twofinger.txt", String(take!(io)))
 
         io = IOBuffer()
 
-        @repl io X = @fiber(sl(e(0.0)), [1.0, 0.0, 0.0, 3.0, 0.0, 2.0, 0.0])
+        @repl io X = Fiber!(SparseList(Element(0.0)), [1.0, 0.0, 0.0, 3.0, 0.0, 2.0, 0.0])
         @repl io x_min = Scalar(Inf)
         @repl io x_max = Scalar(-Inf)
         @repl io x_sum = Scalar(0.0)

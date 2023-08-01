@@ -16,7 +16,7 @@ combine_style(a::SimplifyStyle, b::JumperStyle) = a
 combine_style(a::JumperStyle, b::AcceptRunStyle) = JumperStyle()
 combine_style(a::JumperStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::JumperStyle, b::SwitchStyle) = SwitchStyle()
-combine_style(a::JumperStyle, b::PipelineStyle) = PipelineStyle()
+combine_style(a::JumperStyle, b::SequenceStyle) = SequenceStyle()
 combine_style(a::ThunkStyle, b::JumperStyle) = ThunkStyle()
 combine_style(a::JumperStyle, b::PhaseStyle) = b
 

@@ -5,10 +5,10 @@ A subfiber of a pattern level is the Boolean value true, but it's `default` is
 false. PatternLevels are used to create tensors that represent which values
 are stored by other fibers. See [`pattern`](@ref) for usage examples.
 
-In the [`@fiber`](@ref) constructor, `p` is an alias for `ElementLevel`.
+In the [`Fiber!`](@ref) constructor, `p` is an alias for `ElementLevel`.
 
 ```jldoctest
-julia> @fiber(d(p(), 3))
+julia> Fiber!(Dense(Pattern(), 3))
 Dense [1:3]
 ├─[1]: true
 ├─[2]: true
@@ -18,11 +18,7 @@ Dense [1:3]
 struct PatternLevel end
 const Pattern = PatternLevel
 
-"""
-`fiber_abbrev(p)` = [`PatternLevel`](@ref).
-"""
-fiber_abbrev(::Val{:p}) = Pattern
-summary_fiber_abbrev(::Pattern) = "p()"
+Base.summary(::Pattern) = "Pattern()"
 similar_level(::PatternLevel) = PatternLevel()
 
 countstored_level(lvl::PatternLevel, pos) = pos
@@ -53,7 +49,7 @@ Return the pattern of `fbr`. That is, return a fiber which is true wherever
 original fiber unusable when modified.
 
 ```jldoctest
-julia> A = @fiber(sl(e(0.0), 10), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
+julia> A = Fiber!(SparseList(Element(0.0), 10), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
 SparseList (0.0) [1:10]
 ├─[1]: 2.0
 ├─[3]: 3.0

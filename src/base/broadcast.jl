@@ -173,10 +173,13 @@ end
     contain(LowerJulia()) do ctx
         idxs = [ctx.freshen(:idx, n) for n = 1:ndims(bc)]
         pw_ex = pointwise_finch_expr(:bc, bc, ctx, idxs)
+        exts = Expr(:block, (:($idx = _) for idx in reverse(idxs))...)
         quote
             @finch begin
                 out .= $(default(out))
-                @loop($(reverse(idxs)...), out[$(idxs...)] = $pw_ex)
+                $(Expr(:for, exts, quote
+                    out[$(idxs...)] = $pw_ex
+                end))
             end
             out
         end

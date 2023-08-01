@@ -11,10 +11,10 @@ in the subfiber, so fibers in the sublevel are the slices `A[:, ..., :, i_1,
 `Ti` is the type of the last `N` fiber indices, and `Tp` is the type used for
 positions in the level.
 
-In the [`@fiber`](@ref) constructor, `sh` is an alias for `SparseHashLevel`.
+In the [`Fiber!`](@ref) constructor, `sh` is an alias for `SparseHashLevel`.
 
 ```jldoctest
-julia> @fiber(d(sh{1}(e(0.0))), [10 0 20; 30 0 0; 0 0 40])
+julia> Fiber!(Dense(SparseHash{1}(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Dense [:,1:3]
 ├─[:,1]: SparseHash (0.0) [1:3]
 │ ├─[1]: 10.0
@@ -24,7 +24,7 @@ Dense [:,1:3]
 │ ├─[1]: 20.0
 │ ├─[3]: 40.0
 
-julia> @fiber(sh{2}(e(0.0)), [10 0 20; 30 0 0; 0 0 40])
+julia> Fiber!(SparseHash{2}(Element(0.0)), [10 0 20; 30 0 0; 0 0 40])
 SparseHash (0.0) [1:3,1:3]
 ├─├─[1, 1]: 10.0
 ├─├─[2, 1]: 30.0
@@ -41,7 +41,7 @@ struct SparseHashLevel{N, Ti<:Tuple, Tp, Tbl, Lvl}
 end
 const SparseHash = SparseHashLevel
 
-SparseHashLevel(lvl) = throw(ArgumentError("You must specify the number of dimensions in a SparseHashLevel, e.g. @fiber(sh{2}(e(0.0)))"))
+SparseHashLevel(lvl) = throw(ArgumentError("You must specify the number of dimensions in a SparseHashLevel, e.g. Fiber!(SparseHash{2}(Element(0.0)))"))
 SparseHashLevel(lvl, shape, args...) = SparseHashLevel{length(shape)}(lvl, shape, args...)
 SparseHashLevel{N}(lvl) where {N} = SparseHashLevel{N, NTuple{N, Int}}(lvl)
 SparseHashLevel{N}(lvl, shape, args...) where {N} = SparseHashLevel{N, typeof(shape)}(lvl, shape, args...)
@@ -57,11 +57,7 @@ SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(lvl, shape) where {N, Ti, Tp, Tbl, Lvl} =
 SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(lvl, shape, tbl) where {N, Ti, Tp, Tbl, Lvl} =
     SparseHashLevel{N, Ti, Tp, Tbl, Lvl}(lvl, Ti(shape), tbl, Tp[1], Pair{Tuple{Tp, Ti}, Tp}[])
 
-"""
-`fiber_abbrev(sh)` = [`SparseHashLevel`](@ref).
-"""
-fiber_abbrev(::Val{:sh}) = SparseHash
-summary_fiber_abbrev(lvl::SparseHashLevel{N}) where {N} = "sh{$N}($(summary_fiber_abbrev(lvl.lvl)))"
+Base.summary(lvl::SparseHashLevel{N}) where {N} = "SparseHash{$N}($(summary(lvl.lvl)))"
 similar_level(lvl::SparseHashLevel{N}) where {N} = SparseHashLevel{N}(similar_level(lvl.lvl))
 similar_level(lvl::SparseHashLevel{N}, tail...) where {N} = SparseHashLevel{N}(similar_level(lvl.lvl, tail[1:end-N]...), (tail[end-N+1:end]...,))
 
@@ -173,7 +169,7 @@ function lower(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, ::DefaultStyl
     end
 end
 
-summary_fiber_abbrev(lvl::VirtualSparseHashLevel) = "sh{$(lvl.N)}($(summary_fiber_abbrev(lvl.lvl)))"
+Base.summary(lvl::VirtualSparseHashLevel) = "SparseHash$(lvl.N)}($(summary(lvl.lvl)))"
 
 function virtual_level_size(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler)
     ext = map((ti, stop)->Extent(literal(ti(1)), stop), lvl.Ti.parameters, lvl.shape)
@@ -291,7 +287,7 @@ function get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, R, start,
                     $my_i_stop = $(Ti.parameters[R](0))
                 end
             end,
-            body = (ctx) -> Pipeline([
+            body = (ctx) -> Sequence([
                 Phase(
                     stop = (ctx, ext) -> value(my_i_stop),
                     body = (ctx, ext) -> Stepper(

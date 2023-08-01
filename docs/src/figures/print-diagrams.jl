@@ -196,25 +196,25 @@ A = [0 0 4.4;
 (m, n) = size(A)
 
 tikzdisplay("levels-A-d-d-e.tex") do io
-    fbr = @fiber(d(d(e(0.0))), A)
+    fbr = Fiber!(Dense(Dense(Element(0.0))), A)
     tikzshow(io, fbr)
     highlight(io, fbr)
 end
 
 tikzdisplay("levels-A-d-sl-e.tex") do io
-    fbr = @fiber(d(sl(e(0.0))), A)
+    fbr = Fiber!(Dense(SparseList(Element(0.0))), A)
     tikzshow(io, fbr)
     highlight(io, fbr)
 end
 
 tikzdisplay("levels-A-sl-sl-e.tex") do io
-    fbr = @fiber(sl(sl(e(0.0))), A)
+    fbr = Fiber!(SparseList(SparseList(Element(0.0))), A)
     tikzshow(io, fbr)
     highlight(io, fbr)
 end
 
 tikzdisplay("levels-A-sc2-e.tex") do io
-    fbr = @fiber(sc{2}(e(0.0)), A)
+    fbr = Fiber!(SparseCOO{2}(Element(0.0)), A)
     tikzshow(io, fbr)
     highlight(io, fbr)
 end

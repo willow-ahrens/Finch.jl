@@ -18,7 +18,7 @@ function instantiate_reader(arr::DiagMask, ctx, protos::typeof(defaultread)...)
         body = Furlable(
             body = (ctx, ext) -> Lookup(
                 body = (ctx, i) -> Furlable(
-                    body = (ctx, ext) -> Pipeline([
+                    body = (ctx, ext) -> Sequence([
                         Phase(
                             stop = (ctx, ext) -> value(:($(ctx(i)) - 1)),
                             body = (ctx, ext) -> Run(body=Fill(false))
@@ -54,7 +54,7 @@ function instantiate_reader(arr::UpTriMask, ctx, protos::typeof(defaultread)...)
         body = Furlable(
             body = (ctx, ext) -> Lookup(
                 body = (ctx, i) -> Furlable(
-                    body = (ctx, ext) -> Pipeline([
+                    body = (ctx, ext) -> Sequence([
                         Phase(
                             stop = (ctx, ext) -> value(:($(ctx(i)))),
                             body = (ctx, ext) -> Run(body=Fill(true))
@@ -88,7 +88,7 @@ function instantiate_reader(arr::LoTriMask, ctx, protos::typeof(defaultread)...)
         body = Furlable(
             body = (ctx, ext) -> Lookup(
                 body = (ctx, i) -> Furlable(
-                    body = (ctx, ext) -> Pipeline([
+                    body = (ctx, ext) -> Sequence([
                         Phase(
                             stop = (ctx, ext) -> value(:($(ctx(i)) - 1)),
                             body = (ctx, ext) -> Run(body=Fill(false))
@@ -124,7 +124,7 @@ function instantiate_reader(arr::BandMask, ctx, mode, protos::typeof(defaultread
                 body = (ctx, k) -> Furlable(
                     body = (ctx, ext) -> Lookup(
                         body = (ctx, j) -> Furlable(
-                            body = (ctx, ext) -> Pipeline([
+                            body = (ctx, ext) -> Sequence([
                                 Phase(
                                     stop = (ctx, ext) -> value(:($(ctx(j)) - 1)),
                                     body = (ctx, ext) -> Run(body=Fill(false))
@@ -172,7 +172,7 @@ function instantiate_reader(arr::VirtualSplitMask, ctx, protos::typeof(defaultre
             body = (ctx, ext) -> Lookup(
                 body = (ctx, i) -> Furlable(
                     body = (ctx, ext_2) -> begin
-                        Pipeline([
+                        Sequence([
                             Phase(
                                 stop = (ctx, ext) -> call(+, call(-, getstart(ext_2), 1), call(fld, call(*, measure(ext_2), call(-, i, 1)), arr.P)),
                                 body = (ctx, ext) -> Run(body=Fill(false))
@@ -226,12 +226,12 @@ function instantiate_reader(arr::VirtualChunkMask, ctx, protos::typeof(defaultre
     Unfurled(
         arr = arr,
         body = Furlable(
-            body = (ctx, ext) -> Pipeline([
+            body = (ctx, ext) -> Sequence([
                 Phase(
                     stop = (ctx, ext) -> call(cld, measure(arr.dim), arr.b),
                     body = (ctx, ext) -> Lookup(
                         body = (ctx, i) -> Furlable(
-                            body = (ctx, ext) -> Pipeline([
+                            body = (ctx, ext) -> Sequence([
                                 Phase(
                                     stop = (ctx, ext) -> call(*, arr.b, call(-, i, 1)),
                                     body = (ctx, ext) -> Run(body=Fill(false))
@@ -248,7 +248,7 @@ function instantiate_reader(arr::VirtualChunkMask, ctx, protos::typeof(defaultre
                 Phase(
                     body = (ctx, ext) -> Run(
                         body = Furlable(
-                            body = (ctx, ext) -> Pipeline([
+                            body = (ctx, ext) -> Sequence([
                                 Phase(
                                     stop = (ctx, ext) -> call(*, call(fld, measure(arr.dim), arr.b), arr.b),
                                     body = (ctx, ext) -> Run(body=Fill(false))

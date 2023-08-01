@@ -101,7 +101,7 @@ function get_acceptrun_body(node::VirtualProtocolizedArray, ctx, ext)
     end
 end
 
-function (ctx::PipelineVisitor)(node::VirtualProtocolizedArray)
+function (ctx::SequenceVisitor)(node::VirtualProtocolizedArray)
     map(ctx(node.body)) do (keys, body)
         return keys => VirtualProtocolizedArray(body, node.protos)
     end

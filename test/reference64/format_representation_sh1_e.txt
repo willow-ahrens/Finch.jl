@@ -1,4 +1,4 @@
-@fiber(sh{1}(e(zero)) representation:
+Fiber!(SparseHash{1}(Element(zero)) representation:
 
 array: [0.0, 2.0, 2.0, 0.0, 3.0, 3.0]
 fiber: Fiber(SparseHash{1, Tuple{Int64}, Int64}(Element{0.0, Float64}([2.0, 2.0, 3.0, 3.0]), (6,), Dict{Tuple{Int64, Tuple{Int64}}, Int64}((1, (2,)) => 1, (1, (3,)) => 2, (1, (5,)) => 3, (1, (6,)) => 4), [1, 5], [(1, (2,)) => 1, (1, (3,)) => 2, (1, (5,)) => 3, (1, (6,)) => 4]))

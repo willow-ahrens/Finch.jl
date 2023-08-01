@@ -60,8 +60,8 @@ function (ctx::DeclareDimensions)(node::FinchNode)
         body = ctx(node.body)
         ctx.dims[node.idx] != dimless || throw(FinchCompileError("could not resolve dimension of index $(node.idx)"))
         return loop(node.idx, cache_dim!(ctx.ctx, getname(node.idx), resolvedim(ctx.dims[node.idx])), body)
-    elseif node.kind === sequence
-        sequence(map(ctx, node.bodies)...)
+    elseif node.kind === block
+        block(map(ctx, node.bodies)...)
     elseif node.kind === declare
         ctx.hints[node.tns] = []
         node

@@ -97,7 +97,7 @@ function get_acceptrun_body(node::VirtualToeplitzArray, ctx, ext)
     end
 end
 
-function (ctx::PipelineVisitor)(node::VirtualToeplitzArray)
+function (ctx::SequenceVisitor)(node::VirtualToeplitzArray)
     map(ctx(node.body)) do (keys, body)
         return keys => VirtualToeplitzArray(body, node.dim)
     end

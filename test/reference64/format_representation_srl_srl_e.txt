@@ -1,4 +1,4 @@
-@fiber(srl(srl(e(zero)))) representation:
+Fiber!(SparseRLE(SparseRLE(Element(zero)))) representation:
 
 array: [0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0]
 fiber: Fiber(SparseRLE{Int64, Int64}(SparseRLE{Int64, Int64}(Element{0.0, Float64}([]), 5, [1], [], []), 5, [1, 1], [], []))

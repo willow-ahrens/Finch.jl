@@ -21,7 +21,7 @@ const ID = 8
     declare  = 14ID | IS_TREE | IS_STATEFUL
     thaw     = 15ID | IS_TREE | IS_STATEFUL
     freeze   = 16ID | IS_TREE | IS_STATEFUL
-    sequence = 17ID | IS_TREE | IS_STATEFUL
+    block = 17ID | IS_TREE | IS_STATEFUL
 end
 
 """
@@ -152,13 +152,13 @@ Finch AST statement that thaws `tns` in the current scope.
 thaw
 
 """
-    sequence(bodies...)
+    block(bodies...)
 
 Finch AST statement that executes each of it's arguments in turn. If the body is
-not a sequence, replaces accesses to read-only tensors in the body with
+not a block, replaces accesses to read-only tensors in the body with
 instantiate_reader and accesses to update-only tensors in the body with instantiate_updater.
 """
-sequence
+block
 
 """
     FinchNode
@@ -333,8 +333,8 @@ function FinchNode(kind::FinchNodeKind, args::Vector)
         else
             error("wrong number of arguments to thaw(...)")
         end
-    elseif kind === sequence
-        return FinchNode(sequence, nothing, nothing, args)
+    elseif kind === block
+        return FinchNode(block, nothing, nothing, args)
     elseif kind === reader
         if length(args) == 0
             return FinchNode(kind, nothing, nothing, FinchNode[])
@@ -461,11 +461,11 @@ function Base.getproperty(node::FinchNode, sym::Symbol)
         else
             error("type FinchNode(thaw, ...) has no property $sym")
         end
-    elseif node.kind === sequence
+    elseif node.kind === block
         if sym === :bodies
             return node.children
         else
-            error("type FinchNode(sequence, ...) has no property $sym")
+            error("type FinchNode(block, ...) has no property $sym")
         end
     else
         error("type FinchNode has no property $sym")
@@ -613,7 +613,7 @@ function display_statement(io, mime, node::FinchNode, indent)
         print(io, " "^indent * "@thaw(")
         display_expression(io, mime, node.tns)
         print(io, ")")
-    elseif node.kind === sequence
+    elseif node.kind === block
         print(io, " "^indent * "begin\n")
         for body in node.bodies
             display_statement(io, mime, body, indent + 2)

@@ -15,11 +15,7 @@ SparseByteMapLevel{Ti, Tp, Lvl}(lvl) where {Ti, Tp, Lvl} = SparseByteMapLevel{Ti
 SparseByteMapLevel{Ti, Tp, Lvl}(lvl, shape) where {Ti, Tp, Lvl} = 
     SparseByteMapLevel{Ti, Tp, Lvl}(lvl, Ti(shape), Tp[1], Bool[], Tuple{Tp, Ti}[])
 
-"""
-`fiber_abbrev(sbm)` = [`SparseByteMapLevel`](@ref).
-"""
-fiber_abbrev(::Val{:sbm}) = SparseByteMap
-summary_fiber_abbrev(lvl::SparseByteMapLevel) = "sbm($(summary_fiber_abbrev(lvl.lvl)))"
+Base.summary(lvl::SparseByteMapLevel) = "SparseByteMap($(summary(lvl.lvl)))"
 similar_level(lvl::SparseByteMapLevel) = SparseByteMap(similar_level(lvl.lvl))
 similar_level(lvl::SparseByteMapLevel, dims...) = SparseByteMap(similar_level(lvl.lvl, dims[1:end-1]...), dims[end])
 
@@ -121,7 +117,7 @@ function lower(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, ::DefaultS
     end
 end
 
-summary_fiber_abbrev(lvl::VirtualSparseByteMapLevel) = "sbm($(summary_fiber_abbrev(lvl.lvl)))"
+Base.summary(lvl::VirtualSparseByteMapLevel) = "SparseByteMap($(summary(lvl.lvl)))"
 
 function virtual_level_size(lvl::VirtualSparseByteMapLevel, ctx)
     ext = Extent(literal(lvl.Ti(1)), lvl.shape)
@@ -261,7 +257,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
                     $my_i_stop = $(Ti(0))
                 end
             end,
-            body = (ctx) -> Pipeline([
+            body = (ctx) -> Sequence([
                 Phase(
                     stop = (ctx, ext) -> value(my_i_stop),
                     body = (ctx, ext) -> Stepper(
@@ -325,7 +321,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
                     $my_i_stop = $(Tp(0))
                 end
             end,
-            body = (ctx) -> Pipeline([
+            body = (ctx) -> Sequence([
                 Phase(
                     stop = (ctx, ext) -> value(my_i_stop),
                     body = (ctx, ext) -> Jumper(

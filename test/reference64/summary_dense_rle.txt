@@ -1,1 +1,1 @@
-5×10 @fiber(d(rl(0.0)))
+5×10 Fiber!(Dense(RepeatRLE(0.0)))

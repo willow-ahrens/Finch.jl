@@ -74,7 +74,7 @@ function (ctx::ConcordizeVisitor)(node::FinchNode)
     for (select_idx, idx_ex) in reverse(selects)
         var = variable(ctx.freshen(:v))
 
-        node = sequence(
+        node = block(
             define(var, idx_ex),
             loop(select_idx, Extent(var, var), node)
         )

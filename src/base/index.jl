@@ -52,6 +52,7 @@ Base.getindex(arr::Fiber, inds...) = getindex_helper(arr, to_indices(arr, inds).
         end
     end
     dst_modes = modes[filter(n->ndims(inds[n]) != 0, 1:N)]
+    exts = Expr(:block, (:($idx = _) for idx in reverse(dst_modes))...)
     
     dst = fiber_ctr(getindex_rep(data_rep(arr), inds...))
 
@@ -60,7 +61,9 @@ Base.getindex(arr::Fiber, inds...) = getindex_helper(arr, to_indices(arr, inds).
         ($(syms...), ) = (inds...,)
         @finch begin
             win .= $(default(arr))
-            @loop($(reverse(dst_modes)...), win[$(dst_modes...)] = arr[$(coords...)])
+            $(Expr(:for, exts, quote
+                win[$(dst_modes...)] = arr[$(coords...)]
+            end))
         end
         return win
     end
@@ -85,22 +88,16 @@ Base.setindex!(arr::Fiber, src, inds...) = setindex_helper(arr, src, to_indices(
         end
     end
     src_modes = modes[filter(n->ndims(inds[n]) != 0, 1:N)]
-    
-    if sum(ndims.(inds)) == 0
-        quote
-            ($(syms...), ) = (inds...,)
-            @finch begin
-                @loop($(reverse(src_modes)...), arr[$(coords...)] = src)
-            end
-            return src
+    exts = Expr(:block, (:($idx = _) for idx in reverse(src_modes))...)
+    rhs = sum(ndims.(inds)) == 0 ? :src : :(src[$(src_modes...)])
+
+    quote
+        ($(syms...), ) = (inds...,)
+        @finch begin
+            $(Expr(:for, exts, quote
+                arr[$(coords...)] = $rhs
+            end))
         end
-    else
-        quote
-            ($(syms...), ) = (inds...,)
-            @finch begin
-                @loop($(reverse(src_modes)...), arr[$(coords...)] = src[$(src_modes...)])
-            end
-            return src
-        end
+        return src
     end
 end

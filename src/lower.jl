@@ -146,12 +146,12 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
         else
             return root.val
         end
-    elseif root.kind === sequence
+    elseif root.kind === block
         if isempty(root.bodies)
             return quote end
         else
             head = root.bodies[1]
-            body = sequence(root.bodies[2:end]...)
+            body = block(root.bodies[2:end]...)
             preamble = quote end
 
             if head.kind === define

@@ -15,8 +15,8 @@ end
 end
 
 function (ctx::InstantiateTensors)(node::FinchNode)
-    if node.kind === sequence
-        sequence(map(ctx, node.bodies)...)
+    if node.kind === block
+        block(map(ctx, node.bodies)...)
     elseif node.kind === define
         push!(ctx.escape, node.lhs)
         define(node.lhs, ctx(node.rhs))

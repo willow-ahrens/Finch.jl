@@ -1,4 +1,4 @@
-@fiber(d(sh{1}(e(zero))) representation:
+Fiber!(Dense(SparseHash{1}(Element(zero))) representation:
 
 array: [0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0]
 fiber: Fiber(Dense{Int64}(SparseHash{1, Tuple{Int64}, Int64}(Element{0.0, Float64}([]), (5,), Dict{Tuple{Int64, Tuple{Int64}}, Int64}(), [1, 1, 1, 1, 1, 1], []), 5))

@@ -16,11 +16,7 @@ SparseRLELevel{Ti, Tp, Lvl}(lvl) where {Ti, Tp, Lvl} = SparseRLELevel{Ti, Tp, Lv
 SparseRLELevel{Ti, Tp, Lvl}(lvl, shape) where {Ti, Tp, Lvl} = 
     SparseRLELevel{Ti, Tp, Lvl}(lvl, shape, Tp[1], Ti[], Ti[])
 
-"""
-`fiber_abbrev(srl)` = [`SparseRLELevel`](@ref).
-"""
-fiber_abbrev(::Val{:srl}) = SparseRLE
-summary_fiber_abbrev(lvl::SparseRLELevel) = "srl($(summary_fiber_abbrev(lvl.lvl)))"
+Base.summary(lvl::SparseRLELevel) = "SparseRLE($(summary(lvl.lvl)))"
 similar_level(lvl::SparseRLELevel) = SparseRLE(similar_level(lvl.lvl))
 similar_level(lvl::SparseRLELevel, dim, tail...) = SparseRLE(similar_level(lvl.lvl, tail...), dim)
 
@@ -125,7 +121,7 @@ function lower(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, ::DefaultStyle
     end
 end
 
-summary_fiber_abbrev(lvl::VirtualSparseRLELevel) = "srl($(summary_fiber_abbrev(lvl.lvl)))"
+Base.summary(lvl::VirtualSparseRLELevel) = "SparseRLE($(summary(lvl.lvl)))"
 
 function virtual_level_size(lvl::VirtualSparseRLELevel, ctx)
     ext = make_extent(lvl.Ti, literal(lvl.Ti(1)), lvl.shape)
@@ -214,7 +210,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, ::
                 end
 
             end,
-            body = (ctx) -> Pipeline([
+            body = (ctx) -> Sequence([
                 Phase(
                     stop = (ctx, ext) -> value(my_i_end),
                     body = (ctx, ext) -> Stepper(
@@ -231,7 +227,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, ::
                             body = (ctx) -> Step(
                                 stop = (ctx, ext) -> value(my_i_stop),
                                 body = (ctx, ext) -> Thunk( 
-                                    body = (ctx) -> Pipeline([
+                                    body = (ctx) -> Sequence([
                                         Phase(
                                             stop = (ctx, ext) -> call(-, value(my_i_start), getunit(ext)),
                                             body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
