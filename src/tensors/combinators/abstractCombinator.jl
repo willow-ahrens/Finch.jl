@@ -1,5 +1,5 @@
 abstract type AbstractCombinator end
-abstract type AbstractVirtualCombinator end
+abstract type AbstractVirtualCombinator <: AbstractVirtualTensor end
 
 
 is_concurrent(lvl::AbstractVirtualCombinator, ctx) = true

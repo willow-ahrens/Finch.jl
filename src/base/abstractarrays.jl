@@ -1,4 +1,4 @@
-@kwdef mutable struct VirtualAbstractArray
+@kwdef mutable struct VirtualAbstractArray <: AbstractVirtualTensor
     ex
     eltype
     ndims
