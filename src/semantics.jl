@@ -69,7 +69,7 @@ end
 
 Return an iterator over the indices in a Finch program that have yet to be bound.
 ```julia
-julia> getunbound(@finch_program @loop i :a[i, j] += 2)
+julia> getunbound(@finch_program for i=_; :a[i, j] += 2 end)
 [j]
 julia> getunbound(@finch_program i + j * 2 * i)
 [i, j]

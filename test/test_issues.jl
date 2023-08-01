@@ -7,7 +7,7 @@ using CIndices
     let
         x = Fiber!(Dense(Element(0.0)), [1, 2, 3])
         y = Scalar{0.0}()
-        @finch @loop i j y[] += min(x[i], x[j])
+        @finch for i=_, j=_; y[] += min(x[i], x[j]) end
         @test y[] == 14
     end
 
@@ -15,7 +15,7 @@ using CIndices
     let
         x = Fiber!(SparseList(Pattern()), fsparse(([1, 3, 7, 8],), [true, true, true, true], (10,)))
         y = Scalar{0.0}()
-        @finch @loop i y[] += ifelse(x[i], 3, -1)
+        @finch for i=_; y[] += ifelse(x[i], 3, -1) end
         @test y[] == 6
         a = 3
         b = -1
@@ -25,7 +25,7 @@ using CIndices
     let
         B = Fiber!(Dense(Element(0)), [2, 4, 5])
         A = Fiber!(Dense(Element(0), 6))
-        @finch (A .= 0; @loop i A[B[i]] = i)
+        @finch (A .= 0; for i=_; A[B[i]] = i end)
         @test reference_isequal(A, [0, 1, 0, 2, 3, 0])
     end
 
@@ -44,8 +44,8 @@ using CIndices
     A = copyto!(Fiber!(Dense(Dense(Element(0)))), A)
     B = Fiber!(Dense(Element(0)))
     
-    @test check_output("fiber_as_idx.jl", @finch_code (B .= 0; @loop i B[i] = A[I[i], i]))
-    @finch (B .= 0; @loop i B[i] = A[I[i], i])
+    @test check_output("fiber_as_idx.jl", @finch_code (B .= 0; for i=_; B[i] = A[I[i], i] end))
+    @finch (B .= 0; for i=_; B[i] = A[I[i], i] end)
 
     @test B == [11, 12, 93, 34, 35]
 
@@ -54,9 +54,9 @@ using CIndices
         t = Fiber!(SparseList(SparseList(Element(0.0))))
         X = Fiber!(SparseList(SparseList(Element(0.0))))
         A = Fiber!(SparseList(SparseList(Element(0.0))), SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3]))
-        @test_throws DimensionMismatch @finch (t .= 0; @loop j i t[i, j] = min(X[i, j],  A[i, j]))
+        @test_throws DimensionMismatch @finch (t .= 0; for j=_, i=_; t[i, j] = min(X[i, j],  A[i, j]) end)
         X = Fiber!(SparseList(SparseList(Element(0.0), 4), 4))
-        @finch (t .= 0; @loop j i t[i, j] = min(X[i, j],  A[i, j]))
+        @finch (t .= 0; for j=_, i=_; t[i, j] = min(X[i, j],  A[i, j]) end)
         @test t == A
     end
 
@@ -70,7 +70,7 @@ using CIndices
         t = Fiber!(SparseList(SparseList(Element(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
         A = dropdefaults(copyto!(Fiber!(SparseList(SparseList(Element(0.0)))), B))
-        @finch MyAlgebra() (t .= 0; @loop j i t[i, j] = f(A[i,j], A[i,j], A[i,j]))
+        @finch MyAlgebra() (t .= 0; for j=_, i=_; t[i, j] = f(A[i,j], A[i,j], A[i,j]) end)
         @test t == B .* 3
     end
 
@@ -80,14 +80,14 @@ using CIndices
         t = Fiber!(SparseList(SparseList(Element(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
         A = dropdefaults(copyto!(Fiber!(SparseList(SparseList(Element(0.0)))), B))
-        @test_throws Finch.RewriteTools.RuleRewriteError @finch MyAlgebra() (t .= 0; @loop i j t[i, j] = A[i, j])
+        @test_throws Finch.RewriteTools.RuleRewriteError @finch MyAlgebra() (t .= 0; for i=_, j=_; t[i, j] = A[i, j] end)
     end
 
     let
         t = Fiber!(Dense(SparseList(Element(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
         A = dropdefaults(copyto!(Fiber!(Dense(SparseList(Element(0.0)))), B))
-        @test_throws Finch.RewriteTools.RuleRewriteError @finch MyAlgebra() (t .= 0; @loop i j t[i, j] = A[i, j])
+        @test_throws Finch.RewriteTools.RuleRewriteError @finch MyAlgebra() (t .= 0; for i=_, j=_; t[i, j] = A[i, j] end)
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/129
@@ -96,11 +96,11 @@ using CIndices
         a = Fiber!(Dense(Element(0)), [1, 3, 7, 2])
 
         x = Scalar((0, 0))
-        @finch @loop i x[] <<maxby>>= (a[i], i)
+        @finch for i=_; x[] <<maxby>>= (a[i], i) end
         @test x[][2] == 3
 
         y = Scalar(0 => 0)
-        @finch @loop i y[] <<maxby>>= a[i] => i
+        @finch for i=_; y[] <<maxby>>= a[i] => i end
         @test y[][2] == 3
     end
 
@@ -111,7 +111,7 @@ using CIndices
 
         B = Fiber!(Dense(SparseList(Element(0.0))))
 
-        @finch (B .= 0; @loop j i B[i, j] = A[i, j])
+        @finch (B .= 0; for j=_, i=_; B[i, j] = A[i, j] end)
 
         @test isstructequal(B, fiber(A))
 
@@ -119,7 +119,7 @@ using CIndices
 
         w = Fiber!(SparseList(Element(0.0)))
 
-        @finch (w .= 0; @loop i w[i] = v[i])
+        @finch (w .= 0; for i=_; w[i] = v[i] end)
 
         @test isstructequal(w, fiber(v))
     end
@@ -219,16 +219,16 @@ using CIndices
         A = fsprand((10, 11), 0.5)
         B = Fiber!(Dense(SparseList(Element(0.0))))
         C = fsprand((10, 10), 0.5)
-        @test_throws DimensionMismatch @finch (A .= 0; @loop j i A[i, j] = B[i])
-        @test_throws DimensionMismatch @finch (A .= 0; @loop j i A[i] = B[i, j])
-        @test_throws DimensionMismatch @finch (A .= 0; @loop j i A[i, j] = B[i, j] + C[i, j])
+        @test_throws DimensionMismatch @finch (A .= 0; for j=_, i=_; A[i, j] = B[i] end)
+        @test_throws DimensionMismatch @finch (A .= 0; for j=_, i=_; A[i] = B[i, j] end)
+        @test_throws DimensionMismatch @finch (A .= 0; for j=_, i=_; A[i, j] = B[i, j] + C[i, j] end)
         @test_throws DimensionMismatch copyto!(Fiber!(SparseList(Element(0.0))), A)
         @test_throws DimensionMismatch dropdefaults!(Fiber!(SparseList(Element(0.0))), A)
 
         A = fsprand((10, 11), 0.5)
         B = fsprand((10, 10), 0.5)
-        @test_throws Finch.FormatLimitation @finch @loop j i A[i, j] = B[i, follow(j)]
-        @test_throws Finch.FormatLimitation @finch @loop j i A[j, i] = B[i, j]
+        @test_throws Finch.FormatLimitation @finch for j=_, i=_; A[i, j] = B[i, follow(j)] end
+        @test_throws Finch.FormatLimitation @finch for j=_, i=_; A[j, i] = B[i, j] end
         @test_throws ArgumentError Fiber!(SparseCOO(Element(0.0)))
         @test_throws ArgumentError Fiber!(SparseHash(Element(0.0)))
         @test_throws ArgumentError Fiber!(SparseList(Element("hello")))
@@ -241,7 +241,7 @@ using CIndices
 
         @repl io A = Fiber!(Dense(SparseTriangle{2}(Element(0.0))), collect(reshape(1:27, 3, 3, 3)))
         @repl io C = Scalar(0)
-        @repl io @finch @loop k j i C[] += A[i, j, k]
+        @repl io @finch for k=_, j=_, i=_; C[] += A[i, j, k] end
 
         check_output("pull197.txt", String(take!(io)))
     end

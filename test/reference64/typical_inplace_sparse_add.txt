@@ -12,7 +12,9 @@ Dense [1:10]
 │ ⋮
 ├─[9]: 1.1
 ├─[10]: 1.1
-julia> @finch_code @loop(i, B[i] += A[i])
+julia> @finch_code for i = _
+        B[i] += A[i]
+    end
 quote
     B_lvl = ex.body.lhs.tns.tns.lvl
     B_lvl_2 = B_lvl.lvl
@@ -48,6 +50,8 @@ quote
     resize!(B_lvl_2.val, qos)
     (B = Fiber((DenseLevel){Int64}(B_lvl_2, B_lvl.shape)),)
 end
-julia> @finch @loop(i, B[i] += A[i])
+julia> @finch for i = _
+        B[i] += A[i]
+    end
 (B = Fiber(Dense{Int64}(Element{0.0, Float64}([3.1, 1.1, 4.1, 1.1, 5.1, 1.1, 6.1, 1.1, 7.1, 1.1]), 10)),)
 

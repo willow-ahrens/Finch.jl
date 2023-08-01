@@ -8,7 +8,7 @@ function pagerank(edges; nsteps=20, damp = 0.85)
     (n, m) = size(edges)
     @assert n == m
     out_degree = Fiber!(Dense(Element(0)))
-    @finch (out_degree .= 0; @loop j i out_degree[j] += edges[i, j])
+    @finch (out_degree .= 0; for j=_, i=_; out_degree[j] += edges[i, j] end)
     scaled_edges = Fiber!(Dense(SparseList(Element(0.0))))
     @finch begin
         scaled_edges .= 0
@@ -19,13 +19,13 @@ function pagerank(edges; nsteps=20, damp = 0.85)
         end
     end
     r = Fiber!(Dense(Element(0.0), n))
-    @finch (r .= 0.0; @loop j r[j] = 1.0/n)
+    @finch (r .= 0.0; for j=_; r[j] = 1.0/n end)
     rank = Fiber!(Dense(Element(0.0), n))
     beta_score = (1 - damp)/n
 
     for step = 1:nsteps
-        @finch (rank .= 0; @loop j i rank[i] += scaled_edges[i, j] * r[j])
-        @finch (r .= 0.0; @loop i r[i] = beta_score + damp * rank[i])
+        @finch (rank .= 0; for j=_, i=_; rank[i] += scaled_edges[i, j] * r[j] end)
+        @finch (r .= 0.0; for i=_; r[i] = beta_score + damp * rank[i] end)
     end
     return r
 end
@@ -65,7 +65,7 @@ function bfs(edges, source=5)
                 end
             end
         end
-        @finch @loop k V[k] |= _F[k]
+        @finch for k=_; V[k] |= _F[k] end
         (F, _F) = (_F, F)
     end
     return P
@@ -94,7 +94,7 @@ function bellmanford(edges, source=1)
     d = Scalar(0.0)
 
     for iter = 1:n  
-        @finch @loop j if active_prev[j] dists[j] <<minby>>= dists_prev[j] end
+        @finch for j=_; if active_prev[j] dists[j] <<minby>>= dists_prev[j] end end
 
         @finch begin
             active .= false
@@ -140,7 +140,7 @@ function tricount(edges)
     end
 
     triangles = Scalar(0)
-    @finch @loop j k i triangles[] += L[i, k] * L[k, j] * edges[j, i]
+    @finch for j=_, k=_, i=_; triangles[] += L[i, k] * L[k, j] * edges[j, i] end
 
     return triangles[]
 end

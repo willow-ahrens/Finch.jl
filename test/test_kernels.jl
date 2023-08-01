@@ -12,10 +12,10 @@
         B = Fiber!(Dense(SparseList(Element(0.0),m),m))
 
         if !seen
-            check_output("innerprod.jl", @finch_code (B .= 0; @loop j i k B[i, j] += A[k, i] * A[k, j]))
+            check_output("innerprod.jl", @finch_code (B .= 0; for j=_, i=_, k=_; B[i, j] += A[k, i] * A[k, j] end))
             seen = true
         end
-        @finch (B .= 0; @loop j i k B[i, j] += A[k, i] * A[k, j])
+        @finch (B .= 0; for j=_, i=_, k=_; B[i, j] += A[k, i] * A[k, j] end)
         @test B == B_ref
     end
 
@@ -27,10 +27,10 @@
             A = fiber(A_ref)
             B = Finch.Scalar{0.0}()
             if !seen
-                check_output("triangle.jl", @finch_code (B .= 0; @loop i j k B[] += A[k, i] * A[j, i] * A[k, j]))
+                check_output("triangle.jl", @finch_code (B .= 0; for i=_, j=_, k=_; B[] += A[k, i] * A[j, i] * A[k, j] end))
                 seen = true
             end
-            @finch (B .= 0; @loop i j k B[] += A[k, i] * A[j, i] * A[k, j])
+            @finch (B .= 0; for i=_, j=_, k=_; B[] += A[k, i] * A[j, i] * A[k, j] end)
             @test B() ≈ sum(A_ref .* (A_ref * transpose(A_ref)))
         end
     end

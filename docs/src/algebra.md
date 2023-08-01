@@ -34,7 +34,7 @@ u = Fiber!(SparseList(Element(1)), [3, 1, 6, 1, 9, 1, 4, 1, 8, 1])
 v = Fiber!(SparseList(Element(1)), [1, 2, 3, 1, 1, 1, 1, 4, 1, 1])
 w = Fiber!(SparseList(Element(1)))
 
-@finch MyAlgebra() (w .= 1; @loop i w[i] = gcd(u[i], v[i]))
+@finch MyAlgebra() (w .= 1; for i=_; w[i] = gcd(u[i], v[i]) end)
 ```
 
 ## A Few Convenient Functions
@@ -113,7 +113,7 @@ Finch.isannihilator(::MyAlgebra, ::typeof(gcd), x) = x == 1
 We pass the algebra to Finch as an optional first argument:
 
 ```
-@finch MyAlgebra() (w .= 1; @loop i w[i] = gcd(u[i], v[i]))
+@finch MyAlgebra() (w .= 1; for i=_; w[i] = gcd(u[i], v[i]) end)
 ```
 
 

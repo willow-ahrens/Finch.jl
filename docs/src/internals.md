@@ -34,7 +34,7 @@ julia> A = Fiber!(SparseList(Element(0)), [0, 2, 0, 0, 3]);
 
 julia> B = Fiber!(Dense(Element(0)), [11, 12, 13, 14, 15]);
 
-julia> @finch (C .= 0; @loop i C[i] = A[i] * B[i]);
+julia> @finch (C .= 0; for i=_; C[i] = A[i] * B[i] end);
 
 julia> C
 SparseList (0) [1:5]
@@ -49,7 +49,7 @@ happens when we use the `@finch` macro (we've stripped line numbers from the
 result to clean it up):
 
 ```jldoctest example1
-julia> (@macroexpand @finch (C .= 0; @loop i C[i] = A[i] * B[i])) |> Finch.striplines |> Finch.regensym
+julia> (@macroexpand @finch (C .= 0; for i=_; C[i] = A[i] * B[i] end)) |> Finch.striplines |> Finch.regensym
 quote
     _res_1 = (Finch.execute)((Finch.FinchNotation.block_instance)((Finch.FinchNotation.declare_instance)((Finch.FinchNotation.tag_instance)(:C, (Finch.FinchNotation.finch_leaf_instance)(C)), literal_instance(0)), begin
                     let i = index_instance(i)
@@ -75,7 +75,7 @@ convenient to use the unexported macro `Finch.finch_program_instance`:
 ```jldoctest example1
 julia> using Finch: @finch_program_instance
 
-julia> prgm = Finch.@finch_program_instance (C .= 0; @loop i C[i] = A[i] * B[i])
+julia> prgm = Finch.@finch_program_instance (C .= 0; for i=_; C[i] = A[i] * B[i] end)
 block_instance(declare_instance(tag_instance(:C, C), literal_instance(0)), loop_instance(index_instance(i), Finch.FinchNotation.Dimensionless(), assign_instance(access_instance(tag_instance(:C, C), updater_instance(), index_instance(i)), literal_instance(Finch.FinchNotation.InitWriter{0}()), call_instance(tag_instance(:*, *), access_instance(tag_instance(:A, A), reader_instance(), index_instance(i)), access_instance(tag_instance(:B, B), reader_instance(), index_instance(i))))))
 ```
 
@@ -111,7 +111,7 @@ julia> function pointwise_sum(As...)
            for A_var in A_vars
                ex = @finch_program_instance $A_var[i] + $ex
            end
-           prgm = @finch_program_instance (B .= 0; @loop i B[i] = $ex)
+           prgm = @finch_program_instance (B .= 0; for i=_; B[i] = $ex end)
            return Finch.execute(prgm).B
        end
 pointwise_sum (generic function with 1 method)

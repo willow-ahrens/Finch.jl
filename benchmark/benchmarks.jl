@@ -22,7 +22,7 @@ A = Fiber!(Dense(SparseList(Element(0.0))))
 B = Fiber!(Dense(SparseList(Element(0.0))))
 C = Fiber!(Dense(SparseList(Element(0.0))))
 
-@finch (C .= 0; @loop i j k C[j, i] += A[k, i] * B[k, i])
+@finch (C .= 0; for i=_, j=_, k=_; C[j, i] += A[k, i] * B[k, i] end)
 """
 cmd = sequence(`$(Base.julia_cmd()) --project=$(Base.active_project()) --eval $code`, stdout = IOBuffer())
 
@@ -35,7 +35,7 @@ let
 
     SUITE["compile"]["compile_SpGeMM"] = @benchmarkable begin   
         A, B, C = ($A, $B, $C)
-        Finch.execute_code(:ex, typeof(Finch.@finch_program_instance (C .= 0; @loop i j k C[j, i] += A[k, i] * B[k, j])))
+        Finch.execute_code(:ex, typeof(Finch.@finch_program_instance (C .= 0; for i=_, j=_, k=_; C[j, i] += A[k, i] * B[k, j])) end)
     end
 end
 
@@ -103,7 +103,7 @@ SUITE["indices"] = BenchmarkGroup()
 
 function spmv32(A, x)
     y = Fiber!(Dense{Int32}(Element(0.0)))
-    @finch (y .= 0; @loop i j y[i] += A[j, i] * x[j])
+    @finch (y .= 0; for i=_, j=_; y[i] += A[j, i] * x[j] end)
     return y
 end
 
@@ -117,7 +117,7 @@ end
 
 function spmv64(A, x)
     y = Fiber!(Dense{Int64}(Element(0.0)))
-    @finch (y .= 0; @loop i j y[i] += A[j, i] * x[j])
+    @finch (y .= 0; for i=_, j=_; y[i] += A[j, i] * x[j] end)
     return y
 end
 

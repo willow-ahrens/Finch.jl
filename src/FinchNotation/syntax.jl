@@ -83,7 +83,7 @@ SparseList (0.0) [1:5]
 ├─[2]: 1.1
 ├─[4]: 4.4
 
-julia> x = Scalar(0.0); @finch @loop i x[] <<overwrite>>= a[i];
+julia> x = Scalar(0.0); @finch for i=_; x[] <<overwrite>>= a[i] end;
 
 julia> x[]
 0.0
