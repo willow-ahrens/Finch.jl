@@ -1,5 +1,5 @@
 ```@meta
-EditURL = "<unknown>/docs/src/benchmark.jl"
+EditURL = "<unknown>/../docs/src/benchmark.jl"
 ```
 
 # Benchmarking
@@ -51,11 +51,11 @@ using MatrixDepot
 Load a sparse matrix from MatrixDepot.jl and convert it to a Finch fiber
 
 ````julia
-A = @fiber(d(sl(e(0.0))), matrixdepot("HB/west0067"))
+A = Fiber!(Dense(SparseList(Element(0.0))), matrixdepot("HB/west0067"))
 (m, n) = size(A)
 
-x = @fiber(d(e(0.0)), rand(n))
-y = @fiber(d(e(0.0)))
+x = Fiber!(Dense(Element(0.0)), rand(n))
+y = Fiber!(Dense(Element(0.0)))
 ````
 
 ````
@@ -84,14 +84,14 @@ Benchmark the kernel, ignoring allocation costs for y
 ````
 
 ````
-BenchmarkTools.Trial: 10000 samples with 221 evaluations.
- Range (min … max):  337.104 ns … 645.172 ns  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     368.213 ns               ┊ GC (median):    0.00%
- Time  (mean ± σ):   378.817 ns ±  21.355 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+BenchmarkTools.Trial: 10000 samples with 211 evaluations.
+ Range (min … max):  355.450 ns …  1.009 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     358.213 ns              ┊ GC (median):    0.00%
+ Time  (mean ± σ):   364.550 ns ± 20.343 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-  ▁       ▁     ██▄▄▄▁  ▃▄▄▄▃▂▂▂▂▁▂▂▂▂▂▂▁▁ ▁▁▁▁▁▁               ▂
-  ██▁▃▄▁▃▄█▆▆▅▄▄██████████████████████████████████▇████▆▆▇▆▆▇▆▇ █
-  337 ns        Histogram: log(frequency) by time        457 ns <
+  ██▇▁   ▅▃▂ ▁▂▃▁    ▁▁                                        ▂
+  █████▅▆███▆██████████████▇▇▇▇▇▆▇▇▇▇▇▆▆▆▆▆▆▅▅▆▄▄▆▅▄▄▅▄▅▅▅▅▅▄▅ █
+  355 ns        Histogram: log(frequency) by time       441 ns <
 
  Memory estimate: 0 bytes, allocs estimate: 0.
 ````
@@ -107,20 +107,20 @@ benchmark kernel
 
 ````julia
 @benchmark begin
-    y = @fiber(d(e(0.0)))
+    y = Fiber!(Dense(Element(0.0)))
     y = spmv(y, $A, $x).y
 end
 ````
 
 ````
-BenchmarkTools.Trial: 10000 samples with 205 evaluations.
- Range (min … max):  379.878 ns …  18.541 μs  ┊ GC (min … max): 0.00% … 97.48%
- Time  (median):     418.698 ns               ┊ GC (median):    0.00%
- Time  (mean ± σ):   443.477 ns ± 599.134 ns  ┊ GC (mean ± σ):  4.85% ±  3.50%
+BenchmarkTools.Trial: 10000 samples with 202 evaluations.
+ Range (min … max):  387.995 ns …  22.443 μs  ┊ GC (min … max): 0.00% … 97.75%
+ Time  (median):     412.540 ns               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   441.836 ns ± 701.369 ns  ┊ GC (mean ± σ):  5.68% ±  3.51%
 
-           ▃█▇▂     ▄▆▇▆▅▃▃▂▁▂▃▄▄▄▃▃▃▃▂▂▂▂▂▂▂▂▂▂▁▁              ▂
-  ▃▁▁▁▁▁▁▁▁████▆▅▆▆███████████████████████████████████████▇▆▇▇▆ █
-  380 ns        Histogram: log(frequency) by time        496 ns <
+   █    ▆                                                        
+  ██▄▁▁▄█▅▂▃▃▄▄▃▄▄▆▆▅▅▃▃▃▂▃▃▂▂▂▂▂▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁ ▂
+  388 ns           Histogram: frequency by time          513 ns <
 
  Memory estimate: 608 bytes, allocs estimate: 2.
 ````

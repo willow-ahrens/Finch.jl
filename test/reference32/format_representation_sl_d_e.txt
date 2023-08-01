@@ -1,4 +1,4 @@
-@fiber(sl(d(e(zero))) representation:
+Fiber!(SparseList(Dense(Element(zero))) representation:
 
 array: [0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0]
 fiber: Fiber(SparseList{Int32, Int32}(Dense{Int32}(Element{0.0, Float64}([]), 5), 5, [1, 1], []))

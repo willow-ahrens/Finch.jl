@@ -4,7 +4,7 @@ struct SparseTriangleLevel{N, Ti, Lvl}
     # FUTURE: uplo (upper or lower) - trait 
     # shift/delta
 end
-SparseTriangleLevel(lvl) = throw(ArgumentError("You must specify the number of dimensions in a SparseTriangleLevel, e.g. @fiber(st{2}(e(0.0)))"))
+SparseTriangleLevel(lvl) = throw(ArgumentError("You must specify the number of dimensions in a SparseTriangleLevel, e.g. Fiber!(SparseTriangle{2}(Element(0.0)))"))
 SparseTriangleLevel{N}(lvl, args...) where {N} = SparseTriangleLevel{N, Int}(lvl, args...)
 SparseTriangleLevel{N}(lvl, shape, args...) where {N} = SparseTriangleLevel{N, typeof(shape)}(lvl, shape, args...)
 SparseTriangleLevel{N, Ti}(lvl, args...) where {N, Ti} = SparseTriangleLevel{N, Ti, typeof(lvl)}(lvl, args...)
@@ -12,11 +12,7 @@ SparseTriangleLevel{N, Ti, Lvl}(lvl) where {N, Ti, Lvl} = SparseTriangleLevel{N,
 
 const SparseTriangle = SparseTriangleLevel
 
-"""
-`fiber_abbrev(st)` = [SparseTriangleLevel](@ref).
-"""
-fiber_abbrev(::Val{:st}) = SparseTriangle
-summary_fiber_abbrev(lvl::SparseTriangle{N}) where {N} = "st{$N}($(summary_fiber_abbrev(lvl.lvl)))"
+Base.summary(lvl::SparseTriangle{N}) where {N} = "SparseTriangle{$N}($(summary(lvl.lvl)))"
 similar_level(lvl::SparseTriangle{N}) where {N} = SparseTriangle(similar_level(lvl.lvl))
 similar_level(lvl::SparseTriangle{N}, dims...) where {N} = SparseTriangle(similar_level(lvl.lvl, dims[1:end-1]...), dims[end])
 
@@ -101,7 +97,7 @@ function lower(lvl::VirtualSparseTriangleLevel, ctx::AbstractCompiler, ::Default
     end
 end
 
-summary_fiber_abbrev(lvl::VirtualSparseTriangleLevel) = "st{$(lvl.N)}($(summary_fiber_abbrev(lvl.lvl)))"
+Base.summary(lvl::VirtualSparseTriangleLevel) = "SparseTriangle$(lvl.N)}($(summary(lvl.lvl)))"
 
 function virtual_level_size(lvl::VirtualSparseTriangleLevel, ctx)
     ext = map((i) -> Extent(literal(lvl.Ti(1)), lvl.shape), 1:lvl.N)
@@ -185,7 +181,7 @@ function instantiate_reader_triangular_dense_helper(fbr, ctx, subunfurl, subfibe
         s = ctx.freshen(tag, :_s)
         if d == 1
             Furlable(
-                body = (ctx, ext) -> Pipeline([
+                body = (ctx, ext) -> Sequence([
                     Phase(
                         stop = (ctx, ext) -> j,
                         body = (ctx, ext) -> Lookup(
@@ -199,7 +195,7 @@ function instantiate_reader_triangular_dense_helper(fbr, ctx, subunfurl, subfibe
             )
         else
             Furlable(
-                body = (ctx, ext) -> Pipeline([
+                body = (ctx, ext) -> Sequence([
                     Phase(
                         stop = (ctx, ext) -> j,
                         body = (ctx, ext) -> Lookup(
@@ -242,7 +238,7 @@ function instantiate_updater_triangular_dense_helper(fbr, ctx, subunfurl, subfib
         s = ctx.freshen(tag, :_s)
         if d == 1
             Furlable(
-                body = (ctx, ext) -> Pipeline([
+                body = (ctx, ext) -> Sequence([
                     Phase(
                         stop = (ctx, ext) -> j,
                         body = (ctx, ext) -> Lookup(
@@ -256,7 +252,7 @@ function instantiate_updater_triangular_dense_helper(fbr, ctx, subunfurl, subfib
             )
         else
             Furlable(
-                body = (ctx, ext) -> Pipeline([
+                body = (ctx, ext) -> Sequence([
                     Phase(
                         stop = (ctx, ext) -> j,
                         body = (ctx, ext) -> Lookup(

@@ -104,8 +104,8 @@ function get_acceptrun_body(node::VirtualOffsetArray, ctx, ext)
     end
 end
 
-function (ctx::PipelineVisitor)(node::VirtualOffsetArray)
-    map(PipelineVisitor(; kwfields(ctx)..., ext = shiftdim(ctx.ext, node.delta[end]))(node.body)) do (keys, body)
+function (ctx::SequenceVisitor)(node::VirtualOffsetArray)
+    map(SequenceVisitor(; kwfields(ctx)..., ext = shiftdim(ctx.ext, node.delta[end]))(node.body)) do (keys, body)
         return keys => VirtualOffsetArray(body, node.delta)
     end
 end

@@ -13,7 +13,7 @@ module FinchNotation
     export cached
     export reader, updater, access
     export define, declare, thaw, freeze
-    export sequence
+    export block
     export protocol
     export sieve
     export FinchNode
@@ -34,9 +34,7 @@ module FinchNotation
 
     export getval, getname
 
-export overwrite, initwrite, MakeDimension, mkdim
-
-
+    export overwrite, initwrite, Dimensionless, dimless, extent
 
     include("nodes.jl")
     include("instances.jl")

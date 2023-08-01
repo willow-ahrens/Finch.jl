@@ -40,7 +40,7 @@ nonzero values:
 ````julia
 using Finch
 
-X = @fiber(sl(e(0.0)), fsprand((10,), 0.5))
+X = Fiber!(SparseList(Element(0.0)), fsprand((10,), 0.5))
 x_min = Scalar(Inf)
 x_max = Scalar(-Inf)
 x_sum = Scalar(0.0)
@@ -59,14 +59,14 @@ end;
 Array formats in Finch are described recursively mode by mode.  Semantically, an
 array in Finch can be understood as a tree, where each level in the tree
 corresponds to a dimension and each edge corresponds to an index. For example,
-`@fiber(d(sl(e(0.0))))` constructs a `Float64` CSC-format sparse matrix, and
-`@fiber(sl(sl(e(0.0))))` constructs a DCSC-format hypersparse matrix. As another
+`Fiber!(Dense(SparseList(Element(0.0))))` constructs a `Float64` CSC-format sparse matrix, and
+`Fiber!(SparseList(SparseList(Element(0.0))))` constructs a DCSC-format hypersparse matrix. As another
 example, here's a column-major sparse matrix-vector multiply:
 
 ````julia
-x = @fiber(d(e(0.0)), rand(42));
-A = @fiber(d(sl(e(0.0))), fsprand((42, 42), 0.1));
-y = @fiber(d(e(0.0)));
+x = Fiber!(Dense(Element(0.0)), rand(42));
+A = Fiber!(Dense(SparseList(Element(0.0))), fsprand((42, 42), 0.1));
+y = Fiber!(Dense(Element(0.0)));
 @finch begin
     y .= 0
     for j=_, i=_

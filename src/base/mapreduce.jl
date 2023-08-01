@@ -100,11 +100,14 @@ function reduce_helper_code(::Type{Callable{op}}, bc::Type{<:Broadcasted{FinchSt
             res_ex = dst
         end
         pw_ex = pointwise_finch_expr(:bc, bc, ctx, idxs)
+        exts = Expr(:block, (:($idx = _) for idx in reverse(idxs))...)
         quote
             $dst = $dst_ctr
             @finch begin
                 $dst .= $(init)
-                @loop($(reverse(idxs)...), $dst[$(dst_idxs...)] <<$op>>= $pw_ex)
+                $(Expr(:for, exts, quote
+                    $dst[$(dst_idxs...)] <<$op>>= $pw_ex
+                end))
             end
             $res_ex
         end

@@ -54,20 +54,18 @@ begin
                             A_lvl_2_i_2 = A_lvl_2.idx[A_lvl_2_q_2]
                             A_lvl_2_i_3 = A_lvl_2.idx[A_lvl_2_q_3]
                             phase_stop_4 = min(A_lvl_2_i_3, phase_stop_3, A_lvl_2_i_2)
-                            if phase_stop_4 >= k
-                                if A_lvl_2_i_2 == phase_stop_4 && A_lvl_2_i_3 == phase_stop_4
-                                    A_lvl_3_val_3 = A_lvl_3.val[A_lvl_2_q_2]
-                                    A_lvl_3_val_4 = A_lvl_3.val[A_lvl_2_q_3]
-                                    B_val = A_lvl_3_val_2 * A_lvl_3_val_3 * A_lvl_3_val_4 + B_val
-                                    A_lvl_2_q_2 += 1
-                                    A_lvl_2_q_3 += 1
-                                elseif A_lvl_2_i_3 == phase_stop_4
-                                    A_lvl_2_q_3 += 1
-                                elseif A_lvl_2_i_2 == phase_stop_4
-                                    A_lvl_2_q_2 += 1
-                                end
-                                k = phase_stop_4 + 1
+                            if A_lvl_2_i_2 == phase_stop_4 && A_lvl_2_i_3 == phase_stop_4
+                                A_lvl_3_val_3 = A_lvl_3.val[A_lvl_2_q_2]
+                                A_lvl_3_val_4 = A_lvl_3.val[A_lvl_2_q_3]
+                                B_val = A_lvl_3_val_2 * A_lvl_3_val_3 * A_lvl_3_val_4 + B_val
+                                A_lvl_2_q_2 += 1
+                                A_lvl_2_q_3 += 1
+                            elseif A_lvl_2_i_3 == phase_stop_4
+                                A_lvl_2_q_3 += 1
+                            elseif A_lvl_2_i_2 == phase_stop_4
+                                A_lvl_2_q_2 += 1
                             end
+                            k = phase_stop_4 + 1
                         end
                     end
                     A_lvl_2_q += 1

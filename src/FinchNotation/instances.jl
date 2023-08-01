@@ -51,14 +51,14 @@ Base.:(==)(a::ThawInstance, b::ThawInstance) = a.tns == b.tns
 
 Base.show(io::IO, node::ThawInstance) = print(io, "thaw_instance(", node.tns, ")")
 
-struct SequenceInstance{Bodies} <: FinchNodeInstance
+struct BlockInstance{Bodies} <: FinchNodeInstance
     bodies::Bodies
 end
-Base.:(==)(a::SequenceInstance, b::SequenceInstance) = all(a.bodies .== b.bodies)
+Base.:(==)(a::BlockInstance, b::BlockInstance) = all(a.bodies .== b.bodies)
 
-sequence_instance(bodies...) = SequenceInstance(bodies)
+block_instance(bodies...) = BlockInstance(bodies)
 
-Base.show(io::IO, node::SequenceInstance) = (print(io, "sequence_instance("); join(io, node.bodies, ", "); println(io, ")"))
+Base.show(io::IO, node::BlockInstance) = (print(io, "block_instance("); join(io, node.bodies, ", "); println(io, ")"))
 
 struct LoopInstance{Idx, Ext, Body} <: FinchNodeInstance
 	idx::Idx

@@ -32,15 +32,16 @@ export RepeatRLE, RepeatRLELevel
 export Element, ElementLevel
 export Pattern, PatternLevel
 export walk, gallop, follow, extrude, laminate
-export fiber, fiber!, @fiber, pattern!, dropdefaults, dropdefaults!, redefault!
+export fiber, fiber!, Fiber!, pattern!, dropdefaults, dropdefaults!, redefault!
 export diagmask, lotrimask, uptrimask, bandmask
 
 export choose, minby, maxby, overwrite, initwrite
 
 export default, AsArray
 
-export parallel
+
 export parallelAnalysis, ParallelAnalysisResults
+export parallel, extent, dimless
 
 include("util.jl")
 
@@ -73,7 +74,7 @@ include("looplets/runs.jl")
 include("looplets/spikes.jl")
 include("looplets/switches.jl")
 include("looplets/phases.jl")
-include("looplets/pipelines.jl")
+include("looplets/sequences.jl")
 include("looplets/jumpers.jl")
 include("looplets/steppers.jl")
 include("looplets/fills.jl")
@@ -115,6 +116,7 @@ include("base/mapreduce.jl")
 include("base/compare.jl")
 include("base/copy.jl")
 include("base/fsparse.jl")
+include("base/limits.jl")
 
 @static if !isdefined(Base, :get_extension)
     function __init__()
@@ -130,11 +132,11 @@ end
     @compile_workload begin
         # all calls in this block will be precompiled, regardless of whether
         # they belong to your package or not (on Julia 1.8 and higher)
-        y = @fiber d(e(0.0))
-        A = @fiber d(sl(e(0.0)))
-        x = @fiber sl(e(0.0))
+        y = Fiber!(Dense(Element(0.0)))
+        A = Fiber!(Dense(SparseList(Element(0.0))))
+        x = Fiber!(SparseList(Element(0.0)))
         Finch.execute_code(:ex, typeof(Finch.@finch_program_instance begin
-                @loop j i y[i] += A[i, j] * x[j]
+                for j=_, i=_; y[i] += A[i, j] * x[j] end
             end
         ))
 
@@ -149,5 +151,4 @@ export fbrread, fbrwrite, bsread, bswrite
 export ftnsread, ftnswrite, fttread, fttwrite
 
 include("resumables.jl")
-
 end

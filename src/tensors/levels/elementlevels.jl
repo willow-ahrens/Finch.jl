@@ -4,10 +4,10 @@
 A subfiber of an element level is a scalar of type `Tv`, initialized to `D`. `D`
 may optionally be given as the first argument.
 
-In the [`@fiber`](@ref) constructor, `e` is an alias for `ElementLevel`.
+In the [`Fiber!`](@ref) constructor, `e` is an alias for `ElementLevel`.
 
 ```jldoctest
-julia> @fiber(d(e(0.0)), [1, 2, 3])
+julia> Fiber!(Dense(Element(0.0)), [1, 2, 3])
 Dense [1:3]
 ├─[1]: 1.0
 ├─[2]: 2.0
@@ -28,11 +28,7 @@ ElementLevel{D}(val::Vector{Tv}) where {D, Tv} = ElementLevel{D, Tv}(val)
 
 ElementLevel{D, Tv}() where {D, Tv} = ElementLevel{D, Tv}(Tv[])
 
-"""
-`fiber_abbrev(e)` = [`ElementLevel`](@ref).
-"""
-fiber_abbrev(::Val{:e}) = Element
-summary_fiber_abbrev(::Element{D}) where {D} = "e($(D))"
+Base.summary(::Element{D}) where {D} = "Element($(D))"
 similar_level(::ElementLevel{D}) where {D} = ElementLevel{D}()
 
 pattern!(lvl::ElementLevel) = Pattern()
@@ -89,7 +85,7 @@ function virtualize(ex, ::Type{ElementLevel{D, Tv}}, ctx, tag=:lvl) where {D, Tv
     VirtualElementLevel(sym, Tv, D)
 end
 
-summary_fiber_abbrev(lvl::VirtualElementLevel) = "e($(lvl.D))"
+Base.summary(lvl::VirtualElementLevel) = "Element($(lvl.D))"
 
 virtual_level_resize!(lvl::VirtualElementLevel, ctx) = lvl
 virtual_level_size(::VirtualElementLevel, ctx) = ()

@@ -2,7 +2,7 @@
     body
     start = (ctx, ext) -> nothing
     stop = (ctx, ext) -> nothing
-    range = (ctx, ext) -> Extent(something(start(ctx, ext), getstart(ext)), something(stop(ctx, ext), getstop(ext)))
+    range = (ctx, ext) -> similar_extent(ext, something(start(ctx, ext), getstart(ext)), something(stop(ctx, ext), getstop(ext)))
 end
 FinchNotation.finch_leaf(x::Phase) = virtual(x)
 
@@ -15,11 +15,11 @@ function phase_range(node::FinchNode, ctx, ext)
     if @capture node access(~tns::isvirtual, ~i...)
         phase_range(tns.val, ctx, ext)
     else
-        return mkdim
+        return dimless
     end
 end
 
-phase_range(node, ctx, ext) = mkdim
+phase_range(node, ctx, ext) = dimless
 phase_range(node::Phase, ctx, ext) = node.range(ctx, ext)
 
 function phase_body(node::FinchNode, ctx, ext, ext_2)
@@ -33,15 +33,15 @@ phase_body(node::Phase, ctx, ext, ext_2) = node.body(ctx, ext_2)
 phase_body(node, ctx, ext, ext_2) = truncate(node, ctx, ext, ext_2)
 
 abstract type PhaseStyle end
-struct PipelinePhaseStyle <: PhaseStyle end
+struct SequencePhaseStyle <: PhaseStyle end
 struct StepperPhaseStyle <: PhaseStyle end
 struct JumperPhaseStyle <: PhaseStyle end
 
-phase_op(::PipelinePhaseStyle) = virtual_intersect
+phase_op(::SequencePhaseStyle) = virtual_intersect
 phase_op(::StepperPhaseStyle) = virtual_intersect
 phase_op(::JumperPhaseStyle) = virtual_union
 
-(ctx::Stylize{<:AbstractCompiler})(node::Phase) = ctx.root.kind === loop ? PipelinePhaseStyle() : DefaultStyle()
+(ctx::Stylize{<:AbstractCompiler})(node::Phase) = ctx.root.kind === loop ? SequencePhaseStyle() : DefaultStyle()
 
 combine_style(a::DefaultStyle, b::PhaseStyle) = b
 combine_style(a::LookupStyle, b::PhaseStyle) = b
@@ -80,11 +80,12 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::PhaseStyle)
                     body
                 ))
             end)
-            $i = $(ctx(getstop(ext_4))) + $(Int8(1))
+            
+            $i = $(ctx(getstop(ext_4))) + $(ctx(getunit(ext_4)))
         end
 
 
-        if query(call(>=, measure(ext_4), 1), ctx) 
+        if query(call(>=, measure(ext_4), 0), ctx)  
             return body
         else
             return quote

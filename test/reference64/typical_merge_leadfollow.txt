@@ -1,6 +1,8 @@
 julia> @finch_code begin
         z .= 0
-        @loop i z[i] = x[gallop(i)] + y[i]
+        for i = _
+            z[i] = x[gallop(i)] + y[i]
+        end
     end
 quote
     z_lvl = (ex.bodies[1]).tns.tns.lvl
@@ -114,48 +116,46 @@ quote
                         y_lvl_i = y_lvl.idx[y_lvl_q]
                         x_lvl_i3 = x_lvl.idx[x_lvl_q]
                         phase_stop_5 = min(y_lvl_i, phase_stop_2, x_lvl_i3)
-                        if phase_stop_5 >= i
-                            if y_lvl_i == phase_stop_5 && x_lvl_i3 == phase_stop_5
-                                y_lvl_2_val_4 = y_lvl_2.val[y_lvl_q]
-                                x_lvl_2_val_3 = x_lvl_2.val[x_lvl_q]
-                                if z_lvl_qos > z_lvl_qos_stop
-                                    z_lvl_qos_stop = max(z_lvl_qos_stop << 1, 1)
-                                    Finch.resize_if_smaller!(z_lvl.idx, z_lvl_qos_stop)
-                                    Finch.resize_if_smaller!(z_lvl_2.val, z_lvl_qos_stop)
-                                    Finch.fill_range!(z_lvl_2.val, 0.0, z_lvl_qos, z_lvl_qos_stop)
-                                end
-                                z_lvl_2.val[z_lvl_qos] = x_lvl_2_val_3 + y_lvl_2_val_4
-                                z_lvl.idx[z_lvl_qos] = phase_stop_5
-                                z_lvl_qos += 1
-                                y_lvl_q += 1
-                                x_lvl_q += 1
-                            elseif x_lvl_i3 == phase_stop_5
-                                x_lvl_2_val_3 = x_lvl_2.val[x_lvl_q]
-                                if z_lvl_qos > z_lvl_qos_stop
-                                    z_lvl_qos_stop = max(z_lvl_qos_stop << 1, 1)
-                                    Finch.resize_if_smaller!(z_lvl.idx, z_lvl_qos_stop)
-                                    Finch.resize_if_smaller!(z_lvl_2.val, z_lvl_qos_stop)
-                                    Finch.fill_range!(z_lvl_2.val, 0.0, z_lvl_qos, z_lvl_qos_stop)
-                                end
-                                z_lvl_2.val[z_lvl_qos] = x_lvl_2_val_3
-                                z_lvl.idx[z_lvl_qos] = phase_stop_5
-                                z_lvl_qos += 1
-                                x_lvl_q += 1
-                            elseif y_lvl_i == phase_stop_5
-                                y_lvl_2_val_4 = y_lvl_2.val[y_lvl_q]
-                                if z_lvl_qos > z_lvl_qos_stop
-                                    z_lvl_qos_stop = max(z_lvl_qos_stop << 1, 1)
-                                    Finch.resize_if_smaller!(z_lvl.idx, z_lvl_qos_stop)
-                                    Finch.resize_if_smaller!(z_lvl_2.val, z_lvl_qos_stop)
-                                    Finch.fill_range!(z_lvl_2.val, 0.0, z_lvl_qos, z_lvl_qos_stop)
-                                end
-                                z_lvl_2.val[z_lvl_qos] = y_lvl_2_val_4
-                                z_lvl.idx[z_lvl_qos] = phase_stop_5
-                                z_lvl_qos += 1
-                                y_lvl_q += 1
+                        if y_lvl_i == phase_stop_5 && x_lvl_i3 == phase_stop_5
+                            y_lvl_2_val_4 = y_lvl_2.val[y_lvl_q]
+                            x_lvl_2_val_3 = x_lvl_2.val[x_lvl_q]
+                            if z_lvl_qos > z_lvl_qos_stop
+                                z_lvl_qos_stop = max(z_lvl_qos_stop << 1, 1)
+                                Finch.resize_if_smaller!(z_lvl.idx, z_lvl_qos_stop)
+                                Finch.resize_if_smaller!(z_lvl_2.val, z_lvl_qos_stop)
+                                Finch.fill_range!(z_lvl_2.val, 0.0, z_lvl_qos, z_lvl_qos_stop)
                             end
-                            i = phase_stop_5 + 1
+                            z_lvl_2.val[z_lvl_qos] = x_lvl_2_val_3 + y_lvl_2_val_4
+                            z_lvl.idx[z_lvl_qos] = phase_stop_5
+                            z_lvl_qos += 1
+                            y_lvl_q += 1
+                            x_lvl_q += 1
+                        elseif x_lvl_i3 == phase_stop_5
+                            x_lvl_2_val_3 = x_lvl_2.val[x_lvl_q]
+                            if z_lvl_qos > z_lvl_qos_stop
+                                z_lvl_qos_stop = max(z_lvl_qos_stop << 1, 1)
+                                Finch.resize_if_smaller!(z_lvl.idx, z_lvl_qos_stop)
+                                Finch.resize_if_smaller!(z_lvl_2.val, z_lvl_qos_stop)
+                                Finch.fill_range!(z_lvl_2.val, 0.0, z_lvl_qos, z_lvl_qos_stop)
+                            end
+                            z_lvl_2.val[z_lvl_qos] = x_lvl_2_val_3
+                            z_lvl.idx[z_lvl_qos] = phase_stop_5
+                            z_lvl_qos += 1
+                            x_lvl_q += 1
+                        elseif y_lvl_i == phase_stop_5
+                            y_lvl_2_val_4 = y_lvl_2.val[y_lvl_q]
+                            if z_lvl_qos > z_lvl_qos_stop
+                                z_lvl_qos_stop = max(z_lvl_qos_stop << 1, 1)
+                                Finch.resize_if_smaller!(z_lvl.idx, z_lvl_qos_stop)
+                                Finch.resize_if_smaller!(z_lvl_2.val, z_lvl_qos_stop)
+                                Finch.fill_range!(z_lvl_2.val, 0.0, z_lvl_qos, z_lvl_qos_stop)
+                            end
+                            z_lvl_2.val[z_lvl_qos] = y_lvl_2_val_4
+                            z_lvl.idx[z_lvl_qos] = phase_stop_5
+                            z_lvl_qos += 1
+                            y_lvl_q += 1
                         end
+                        i = phase_stop_5 + 1
                     end
                 end
                 i = phase_stop_2 + 1
@@ -250,7 +250,9 @@ quote
 end
 julia> @finch begin
         z .= 0
-        @loop i z[i] = x[gallop(i)] + y[i]
+        for i = _
+            z[i] = x[gallop(i)] + y[i]
+        end
     end
 (z = Fiber(SparseList{Int64, Int64}(Element{0.0, Float64}([2.0, 1.0, 3.0, 5.0, 5.0, 1.0, 6.0]), 10, [1, 8], [1, 2, 3, 5, 7, 8, 9])),)
 

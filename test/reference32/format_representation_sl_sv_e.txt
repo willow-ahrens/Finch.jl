@@ -1,4 +1,4 @@
-@fiber(sl(svb(e(zero))) representation:
+Fiber!(SparseList(SparseVBL(Element(zero))) representation:
 
 array: [0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0]
 fiber: Fiber(SparseList{Int32, Int32}(SparseVBL{Int32, Int32}(Element{0.0, Float64}([]), 5, [1], [], [1]), 5, [1, 1], []))

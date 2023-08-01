@@ -35,11 +35,11 @@ using SparseArrays
 using MatrixDepot
 
 # Load a sparse matrix from MatrixDepot.jl and convert it to a Finch fiber
-A = @fiber(d(sl(e(0.0))), matrixdepot("HB/west0067"))
+A = Fiber!(Dense(SparseList(Element(0.0))), matrixdepot("HB/west0067"))
 (m, n) = size(A)
 
-x = @fiber(d(e(0.0)), rand(n))
-y = @fiber(d(e(0.0)))
+x = Fiber!(Dense(Element(0.0)), rand(n))
+y = Fiber!(Dense(Element(0.0)))
 
 # Construct a Finch kernel for sparse matrix-vector multiply
 eval(@finch_kernel function spmv(y, A, x)
@@ -65,6 +65,6 @@ end)
 # benchmark kernel
 
 @benchmark begin
-    y = @fiber(d(e(0.0)))
+    y = Fiber!(Dense(Element(0.0)))
     y = spmv(y, $A, $x).y
 end

@@ -137,38 +137,36 @@ begin
                 A_lvl_i = A_lvl.idx[A_lvl_q]
                 B_lvl_i = B_lvl.idx[B_lvl_q]
                 phase_stop_13 = min(A_lvl_i, 10 + B_lvl_i, phase_stop_12)
-                if phase_stop_13 >= i
-                    if A_lvl_i == phase_stop_13 && B_lvl_i == phase_stop_13 + +(-10)
-                        A_lvl_2_val_3 = A_lvl_2.val[A_lvl_q]
-                        B_lvl_2_val_3 = B_lvl_2.val[B_lvl_q]
-                        if C_lvl_qos > C_lvl_qos_stop
-                            C_lvl_qos_stop = max(C_lvl_qos_stop << 1, 1)
-                            Finch.resize_if_smaller!(C_lvl.idx, C_lvl_qos_stop)
-                            Finch.resize_if_smaller!(C_lvl_2.val, C_lvl_qos_stop)
-                            Finch.fill_range!(C_lvl_2.val, 0.0, C_lvl_qos, C_lvl_qos_stop)
-                        end
-                        C_lvl_2.val[C_lvl_qos] = coalesce(A_lvl_2_val_3, B_lvl_2_val_3)
-                        C_lvl.idx[C_lvl_qos] = phase_stop_13
-                        C_lvl_qos += 1
-                        A_lvl_q += 1
-                        B_lvl_q += 1
-                    elseif B_lvl_i == phase_stop_13 + +(-10)
-                        B_lvl_q += 1
-                    elseif A_lvl_i == phase_stop_13
-                        A_lvl_2_val_3 = A_lvl_2.val[A_lvl_q]
-                        if C_lvl_qos > C_lvl_qos_stop
-                            C_lvl_qos_stop = max(C_lvl_qos_stop << 1, 1)
-                            Finch.resize_if_smaller!(C_lvl.idx, C_lvl_qos_stop)
-                            Finch.resize_if_smaller!(C_lvl_2.val, C_lvl_qos_stop)
-                            Finch.fill_range!(C_lvl_2.val, 0.0, C_lvl_qos, C_lvl_qos_stop)
-                        end
-                        C_lvl_2.val[C_lvl_qos] = coalesce(A_lvl_2_val_3, 0.0)
-                        C_lvl.idx[C_lvl_qos] = phase_stop_13
-                        C_lvl_qos += 1
-                        A_lvl_q += 1
+                if A_lvl_i == phase_stop_13 && B_lvl_i == phase_stop_13 + +(-10)
+                    A_lvl_2_val_3 = A_lvl_2.val[A_lvl_q]
+                    B_lvl_2_val_3 = B_lvl_2.val[B_lvl_q]
+                    if C_lvl_qos > C_lvl_qos_stop
+                        C_lvl_qos_stop = max(C_lvl_qos_stop << 1, 1)
+                        Finch.resize_if_smaller!(C_lvl.idx, C_lvl_qos_stop)
+                        Finch.resize_if_smaller!(C_lvl_2.val, C_lvl_qos_stop)
+                        Finch.fill_range!(C_lvl_2.val, 0.0, C_lvl_qos, C_lvl_qos_stop)
                     end
-                    i = phase_stop_13 + 1
+                    C_lvl_2.val[C_lvl_qos] = coalesce(A_lvl_2_val_3, B_lvl_2_val_3)
+                    C_lvl.idx[C_lvl_qos] = phase_stop_13
+                    C_lvl_qos += 1
+                    A_lvl_q += 1
+                    B_lvl_q += 1
+                elseif B_lvl_i == phase_stop_13 + +(-10)
+                    B_lvl_q += 1
+                elseif A_lvl_i == phase_stop_13
+                    A_lvl_2_val_3 = A_lvl_2.val[A_lvl_q]
+                    if C_lvl_qos > C_lvl_qos_stop
+                        C_lvl_qos_stop = max(C_lvl_qos_stop << 1, 1)
+                        Finch.resize_if_smaller!(C_lvl.idx, C_lvl_qos_stop)
+                        Finch.resize_if_smaller!(C_lvl_2.val, C_lvl_qos_stop)
+                        Finch.fill_range!(C_lvl_2.val, 0.0, C_lvl_qos, C_lvl_qos_stop)
+                    end
+                    C_lvl_2.val[C_lvl_qos] = coalesce(A_lvl_2_val_3, 0.0)
+                    C_lvl.idx[C_lvl_qos] = phase_stop_13
+                    C_lvl_qos += 1
+                    A_lvl_q += 1
                 end
+                i = phase_stop_13 + 1
             end
         end
         phase_start_15 = max(11 + B_lvl_i1, 11)

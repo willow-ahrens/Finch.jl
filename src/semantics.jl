@@ -55,7 +55,7 @@ trim!(tns, ctx) = tns
 Return an iterator over the properly modified tensors in a finch program
 """
 function getresults(node::FinchNode)
-    if node.kind === sequence
+    if node.kind === block
         return mapreduce(getresults, vcat, node.bodies, init=[])
     elseif node.kind === declare || node.kind === thaw
         return [node.tns]
@@ -69,7 +69,7 @@ end
 
 Return an iterator over the indices in a Finch program that have yet to be bound.
 ```julia
-julia> getunbound(@finch_program @loop i :a[i, j] += 2)
+julia> getunbound(@finch_program for i=_; :a[i, j] += 2 end)
 [j]
 julia> getunbound(@finch_program i + j * 2 * i)
 [i, j]
@@ -114,7 +114,7 @@ function virtual_eltype end
 
 function virtual_resize!(tns, ctx, dims...)
     for (dim, ref) in zip(dims, virtual_size(tns, ctx))
-        if dim !== mkdim && ref !== mkdim #TODO this should be a function like checkdim or something haha
+        if dim !== dimless && ref !== dimless #TODO this should be a function like checkdim or something haha
             push!(ctx.preamble, quote
                 $(ctx(getstart(dim))) == $(ctx(getstart(ref))) || throw(DimensionMismatch("mismatched dimension start"))
                 $(ctx(getstop(dim))) == $(ctx(getstop(ref))) || throw(DimensionMismatch("mismatched dimension stop"))

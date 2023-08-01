@@ -1,4 +1,4 @@
-@fiber(sl(sc{1}(e(zero))) representation:
+Fiber!(SparseList(SparseCOO{1}(Element(zero))) representation:
 
 array: [0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0]
 fiber: Fiber(SparseList{Int64, Int64}(SparseCOO{1, Tuple{Int64}, Int64}(Element{0.0, Float64}([]), (5,), (Int64[], ), [1]), 5, [1, 1], []))

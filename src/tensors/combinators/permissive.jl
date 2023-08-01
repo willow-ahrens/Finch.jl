@@ -41,7 +41,7 @@ end
 lower(tns::VirtualPermissiveArray, ctx::AbstractCompiler, ::DefaultStyle) = :(PermissiveArray($(ctx(tns.body)), $(tns.dims)))
 
 function virtual_size(arr::VirtualPermissiveArray, ctx::AbstractCompiler)
-    ifelse.(arr.dims, (mkdim,), virtual_size(arr.body, ctx))
+    ifelse.(arr.dims, (dimless,), virtual_size(arr.body, ctx))
 end
 
 function virtual_resize!(arr::VirtualPermissiveArray, ctx::AbstractCompiler, dims...)
@@ -99,7 +99,7 @@ function get_acceptrun_body(node::VirtualPermissiveArray, ctx, ext)
     end
 end
 
-function (ctx::PipelineVisitor)(node::VirtualPermissiveArray)
+function (ctx::SequenceVisitor)(node::VirtualPermissiveArray)
     map(ctx(node.body)) do (keys, body)
         return keys => VirtualPermissiveArray(body, node.dims)
     end
@@ -127,11 +127,11 @@ getroot(tns::VirtualPermissiveArray) = getroot(tns.body)
 function unfurl(tns::VirtualPermissiveArray, ctx, ext, protos...)
     tns_2 = unfurl(tns.body, ctx, ext, protos...)
     dims = virtual_size(tns.body, ctx)
-    if tns.dims[end] && dims[end] != mkdim
+    if tns.dims[end] && dims[end] != dimless
         VirtualPermissiveArray(
             Unfurled(
                 tns,
-                Pipeline([
+                Sequence([
                     Phase(
                         stop = (ctx, ext_2) -> call(-, getstart(dims[end]), 1),
                         body = (ctx, ext) -> Run(Fill(literal(missing))),

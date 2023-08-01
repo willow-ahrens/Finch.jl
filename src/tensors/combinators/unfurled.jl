@@ -75,7 +75,7 @@ function get_acceptrun_body(node::Unfurled, ctx, ext)
     end
 end
 
-function (ctx::PipelineVisitor)(node::Unfurled)
+function (ctx::SequenceVisitor)(node::Unfurled)
     map(ctx(node.body)) do (keys, body)
         return keys => Unfurled(node.arr, node.ndims, body)
     end

@@ -29,10 +29,10 @@ void benchmarks_initialize(){
     finch_initialize();
 
     spmv = finch_eval("function spmv(y, A, x)\n\
-        @finch @loop i j y[i] += A[j, i] * x[j]\n\
+        @finch for i=_, j=_; y[i] += A[j, i] * x[j] end\n\
     end");
 
-    y = finch_exec("@fiber d(e(0.0))");
+    y = finch_exec("Fiber!(Dense(Element(0.0)))");
     A = finch_exec("Fiber(Dense(SparseList(Element(0.0, %s), %s, %s, %s), %s))",
         finch_Vector_Float64(A_val, 9),
         finch_Int64(n),

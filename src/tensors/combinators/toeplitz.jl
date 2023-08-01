@@ -43,10 +43,10 @@ lower(tns::VirtualToeplitzArray, ctx::AbstractCompiler, ::DefaultStyle) = :(Toep
 
 function virtual_size(arr::VirtualToeplitzArray, ctx::AbstractCompiler)
     dims = virtual_size(arr.body, ctx)
-    return (dims[1:arr.dim - 1]..., mkdim, mkdim, dims[arr.dim + 1:end]...)
+    return (dims[1:arr.dim - 1]..., dimless, dimless, dims[arr.dim + 1:end]...)
 end
 function virtual_resize!(arr::VirtualToeplitzArray, ctx::AbstractCompiler, dims...)
-    virtual_resize!(arr.body, ctx, dims[1:arr.dim - 1]..., mkdim, dims[arr.dim + 2:end]...)
+    virtual_resize!(arr.body, ctx, dims[1:arr.dim - 1]..., dimless, dims[arr.dim + 2:end]...)
 end
 
 function instantiate_reader(arr::VirtualToeplitzArray, ctx, protos...)
@@ -100,7 +100,7 @@ function get_acceptrun_body(node::VirtualToeplitzArray, ctx, ext)
     end
 end
 
-function (ctx::PipelineVisitor)(node::VirtualToeplitzArray)
+function (ctx::SequenceVisitor)(node::VirtualToeplitzArray)
     map(ctx(node.body)) do (keys, body)
         return keys => VirtualToeplitzArray(body, node.dim)
     end
