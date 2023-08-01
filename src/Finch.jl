@@ -40,6 +40,7 @@ export choose, minby, maxby, overwrite, initwrite
 export default, AsArray
 
 export parallel
+export parallelAnalysis, ParallelAnalysisResults
 
 include("util.jl")
 
@@ -58,6 +59,7 @@ include("transforms/scopes.jl")
 include("transforms/lifecycle.jl")
 include("transforms/dimensionalize.jl")
 include("transforms/evaluate.jl")
+include("transforms/analysis.jl")
 
 include("execute.jl")
 

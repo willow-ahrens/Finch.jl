@@ -36,11 +36,10 @@ module FinchNotation
 
 export overwrite, initwrite, MakeDimension, mkdim
 
-export parallelAnalysis, ParallelAnalysisResults
+
 
     include("nodes.jl")
     include("instances.jl")
     include("protocols.jl")
 include("syntax.jl")
-include("analysis.jl")
 end
