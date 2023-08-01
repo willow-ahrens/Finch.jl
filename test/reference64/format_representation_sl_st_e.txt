@@ -1,4 +1,4 @@
-@fiber(sl(st{1}(e(zero))) representation:
+Fiber!(SparseList(SparseTriangle{1}(Element(zero))) representation:
 
 array: [0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0]
 fiber: Fiber(SparseList{Int64, Int64}(SparseTriangle{1, Int64}(Element{0.0, Float64}([]), 5), 5, [1, 1], []))

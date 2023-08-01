@@ -6,8 +6,8 @@ PermissiveArray(body, dims) = PermissiveArray{dims}(body)
 PermissiveArray{dims}(body::Body) where {dims, Body} = PermissiveArray{dims, Body}(body)
 
 Base.show(io::IO, ex::PermissiveArray) = Base.show(io, MIME"text/plain"(), ex)
-function Base.show(io::IO, mime::MIME"text/plain", ex::PermissiveArray)
-	print(io, "PermissiveArray($(ex.body), $(ex.dims))")
+function Base.show(io::IO, mime::MIME"text/plain", ex::PermissiveArray{dims}) where {dims}
+	print(io, "PermissiveArray($(ex.body), $dims)")
 end
 
 #Base.getindex(arr::PermissiveArray, i...) = ...
@@ -30,10 +30,16 @@ function virtualize(ex, ::Type{PermissiveArray{dims, Body}}, ctx) where {dims, B
     VirtualPermissiveArray(virtualize(:($ex.body), Body, ctx), dims)
 end
 
+permissive(body, dims...) = PermissiveArray(body, dims)
+function virtual_call(::typeof(permissive), ctx, body, dims...)
+    @assert All(isliteral)(dims)
+    VirtualPermissiveArray(body, map(dim -> dim.val, dims))
+end
+
 lower(tns::VirtualPermissiveArray, ctx::AbstractCompiler, ::DefaultStyle) = :(PermissiveArray($(ctx(tns.body)), $(tns.dims)))
 
 function virtual_size(arr::VirtualPermissiveArray, ctx::AbstractCompiler)
-    ifelse.(arr.dims, (nodim,), virtual_size(arr.body, ctx))
+    ifelse.(arr.dims, (dimless,), virtual_size(arr.body, ctx))
 end
 
 function virtual_resize!(arr::VirtualPermissiveArray, ctx::AbstractCompiler, dims...)
@@ -91,7 +97,7 @@ function get_acceptrun_body(node::VirtualPermissiveArray, ctx, ext)
     end
 end
 
-function (ctx::PipelineVisitor)(node::VirtualPermissiveArray)
+function (ctx::SequenceVisitor)(node::VirtualPermissiveArray)
     map(ctx(node.body)) do (keys, body)
         return keys => VirtualPermissiveArray(body, node.dims)
     end
@@ -110,18 +116,20 @@ visit_simplify(node::VirtualPermissiveArray) = VirtualPermissiveArray(visit_simp
     guard => VirtualPermissiveArray(body, node.dims)
 end
 
-(ctx::CycleVisitor)(node::VirtualPermissiveArray) = VirtualPermissiveArray(ctx(node.body), node.dims)
+jumper_body(node::VirtualPermissiveArray, ctx, ext) = VirtualPermissiveArray(jumper_body(node.body, ctx, ext), node.dims)
+stepper_body(node::VirtualPermissiveArray, ctx, ext) = VirtualPermissiveArray(stepper_body(node.body, ctx, ext), node.dims)
+stepper_seek(node::VirtualPermissiveArray, ctx, ext) = stepper_seek(node.body, ctx, ext)
 
 getroot(tns::VirtualPermissiveArray) = getroot(tns.body)
 
 function unfurl(tns::VirtualPermissiveArray, ctx, ext, protos...)
     tns_2 = unfurl(tns.body, ctx, ext, protos...)
     dims = virtual_size(tns.body, ctx)
-    if tns.dims[end] && dims[end] != nodim
+    if tns.dims[end] && dims[end] != dimless
         VirtualPermissiveArray(
             Unfurled(
                 tns,
-                Pipeline([
+                Sequence([
                     Phase(
                         stop = (ctx, ext_2) -> call(-, getstart(dims[end]), 1),
                         body = (ctx, ext) -> Run(Fill(literal(missing))),
@@ -144,7 +152,7 @@ end
 
 function lower_access(ctx::AbstractCompiler, node, tns::VirtualPermissiveArray)
     if !isempty(node.idxs)
-        error("oh no!")
+        error("oh no! $node")
     end
     lower_access(ctx, node, tns.body)
 end

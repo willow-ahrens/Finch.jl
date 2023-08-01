@@ -1,26 +1,25 @@
 @testset "index" begin
     @info "Testing Index Expressions"
 
-    A = @fiber(sl(e(0.0)), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
+    A = Fiber!(SparseList(Element(0.0)), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
     B = Scalar{0.0}()
 
-    @test check_output("sieve_hl_cond.jl", @finch_code (B .= 0; @loop j if j == 1 B[] += A[j] end))
-
-    @finch (B .= 0; @loop j if j == 1 B[] += A[j] end)
+    @test check_output("sieve_hl_cond.jl", @finch_code (B .= 0; for j=_; if j == 1 B[] += A[j] end end))
+    @finch (B .= 0; for j=_; if j == 1 B[] += A[j] end end)
 
     @test B() == 2.0
 
-    @finch (B .= 0; @loop j if j == 2 B[] += A[j] end)
+    @finch (B .= 0; for j=_; if j == 2 B[] += A[j] end end)
 
     @test B() == 0.0
 
-    @test check_output("sieve_hl_select.jl", @finch_code (@loop j if diagmask[3, j] B[] += A[j] end))
+    @test check_output("sieve_hl_select.jl", @finch_code (for j=_; if diagmask[3, j] B[] += A[j] end end))
 
-    @finch (B .= 0; @loop j if diagmask[3, j] B[] += A[j] end)
+    @finch (B .= 0; for j=_; if diagmask[3, j] B[] += A[j] end end)
 
     @test B() == 3.0
 
-    @finch (B .= 0; @loop j if diagmask[4, j] B[] += A[j] end)
+    @finch (B .= 0; for j=_; if diagmask[4, j] B[] += A[j] end end)
 
     @test B() == 0.0
 
@@ -51,15 +50,15 @@
     using SparseArrays
 
     A_ref = sprand(10, 0.5); B_ref = sprand(10, 0.5); C_ref = vcat(A_ref, B_ref)
-    A = fiber(SparseVector{Float64, Int64}(A_ref)); B = fiber(SparseVector{Float64, Int64}(B_ref)); C = @fiber(sl{Int64}(e(0.0), 20))
-    @test check_output("concat_offset_permit.jl", @finch_code (C .= 0; @loop i C[i] = coalesce(A[~i], B[~(i - 10)])))
-    @finch (C .= 0; @loop i C[i] = coalesce(A[~i], B[~(i - 10)]))
+    A = fiber(SparseVector{Float64, Int64}(A_ref)); B = fiber(SparseVector{Float64, Int64}(B_ref)); C = Fiber!(SparseList{Int64}(Element(0.0), 20))
+    @test check_output("concat_offset_permit.jl", @finch_code (C .= 0; for i=_; C[i] = coalesce(A[~i], B[~(i - 10)]) end))
+    @finch (C .= 0; for i=_; C[i] = coalesce(A[~i], B[~(i - 10)]) end)
     @test reference_isequal(C, C_ref)
 
     F = fiber(Int64[1,1,1,1,1])
 
-    @test check_output("sparse_conv.jl", @finch_code (C .= 0; @loop i j C[i] += (A[i] != 0) * coalesce(A[j - i + 3], 0) * F[j]))
-    @finch (C .= 0; @loop i j C[i] += (A[i] != 0) * coalesce(A[j - i + 3], 0) * F[j])
+    @test check_output("sparse_conv.jl", @finch_code (C .= 0; for i=_, j=_; C[i] += (A[i] != 0) * coalesce(A[j - i + 3], 0) * F[j] end))
+    @finch (C .= 0; for i=_, j=_; C[i] += (A[i] != 0) * coalesce(A[j - i + 3], 0) * F[j] end)
     C_ref = zeros(10)
     for i = 1:10
         if A_ref[i] != 0
@@ -74,10 +73,69 @@
     @test reference_isequal(C, C_ref)
 
     I = 2:4
-    @test check_output("sparse_window.jl", @finch_code (C .= 0; @loop i C[i] = A[I[i]]))
-    @finch (C .= 0; @loop i C[i] = A[I[i]])
+    @test check_output("sparse_window.jl", @finch_code (C .= 0; for i=_; C[i] = A[I[i]] end))
+    @finch (C .= 0; for i=_; C[i] = A[I[i]] end)
     @test reference_isequal(C, [A(2), A(3), A(4)])
 
-    @finch (C .= 0; @loop i C[i] = I[i])
+    @finch (C .= 0; for i=_; C[i] = I[i] end)
     @test reference_isequal(C, [2, 3, 4])
+
+    y = Array{Any}(undef, 4)
+    x = Fiber!(Dense(Element(0.0)), zeros(2))
+    X = Finch.permissive(x, true)
+    
+    @finch for i = _; y[i] := X[i] end
+
+    @test isequal(y, [0.0, 0.0, missing, missing])
+
+    y = Array{Any}(undef, 4)
+
+    @finch for i = _; y[i] := Finch.permissive(x, true)[i] end
+
+    @test isequal(y, [0.0, 0.0, missing, missing])
+
+    y = Array{Any}(undef, 4)
+
+    @finch begin
+        z = Finch.permissive(x, true)
+        for i = _; y[i] := z[i] end
+    end
+
+    @test isequal(y, [0.0, 0.0, missing, missing])
+
+    @finch begin
+        for i = 1:4; y[i] := x[~i] end
+    end
+
+    @test isequal(y, [0.0, 0.0, missing, missing])
+
+    let
+        io = IOBuffer()
+        println(io, "chunkmask tests")
+
+        @repl io A = Fiber!(Dense(Dense(Element(0.0), 15), 3))
+        @repl io @finch begin
+            m = Finch.chunkmask(5, 1:15)
+            for i = _
+                for j = _
+                    A[j, i] = m[j, i]
+                end
+            end
+        end
+        @repl io AsArray(A)
+
+        @repl io A = Fiber!(Dense(Dense(Element(0.0), 14), 3))
+        @repl io @finch begin
+            m = Finch.chunkmask(5, 1:14)
+            for i = _
+                for j = _
+                    A[j, i] = m[j, i]
+                end
+            end
+        end
+        @repl io AsArray(A)
+        
+        @test check_output("chunkmask.txt", String(take!(io)))
+    end
+
 end

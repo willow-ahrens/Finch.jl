@@ -1,4 +1,4 @@
-@fiber(d(e(zero)) representation:
+Fiber!(Dense(Element(zero)) representation:
 
 array: [0.0, 2.0, 2.0, 0.0, 3.0, 3.0]
 fiber: Fiber(Dense{Int32}(Element{0.0, Float64}([0.0, 2.0, 2.0, 0.0, 3.0, 3.0]), 6))

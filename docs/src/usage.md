@@ -43,9 +43,9 @@ the definition, and then calls the kernel several times.
 
 ```julia
 let
-    A = @fiber(d(sl(e(0.0))))
-    x = @fiber(d(e(0.0)))
-    y = @fiber(d(e(0.0)))
+    A = Fiber!(Dense(SparseList(Element(0.0))))
+    x = Fiber!(Dense(Element(0.0)))
+    y = Fiber!(Dense(Element(0.0)))
     def = @finch_kernel function spmv(y, A, x)
         y .= 0.0
         for j = _, i = _
@@ -57,9 +57,9 @@ end
 
 function main()
     for i = 1:10
-        A2 = @fiber(d(sl(e(0.0))), fsprand((10, 10), 0.1))
-        x2 = @fiber(d(e(0.0)), rand(10))
-        y2 = @fiber(d(e(0.0)))
+        A2 = Fiber!(Dense(SparseList(Element(0.0))), fsprand((10, 10), 0.1))
+        x2 = Fiber!(Dense(Element(0.0)), rand(10))
+        y2 = Fiber!(Dense(Element(0.0)))
         spmv(y2, A2, x2)
     end
 end

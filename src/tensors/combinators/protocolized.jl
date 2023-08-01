@@ -32,6 +32,12 @@ function virtualize(ex, ::Type{ProtocolizedArray{Protos, Body}}, ctx) where {Pro
     VirtualProtocolizedArray(virtualize(:($ex.body), Body, ctx), protos)
 end
 
+protocolize(body, protos...) = ProtocolizedArray(body, protos)
+function virtual_call(::typeof(protocolize), ctx, body, protos...)
+    @assert All(isliteral)(protos)
+    VirtualProtocolizedArray(body, map(proto -> proto.val, protos))
+end
+
 function lower(tns::VirtualProtocolizedArray, ctx::AbstractCompiler, ::DefaultStyle)
     error()
     :(ProtocolizedArray($(ctx(tns.body)), $(ctx(tns.protos))))
@@ -95,7 +101,7 @@ function get_acceptrun_body(node::VirtualProtocolizedArray, ctx, ext)
     end
 end
 
-function (ctx::PipelineVisitor)(node::VirtualProtocolizedArray)
+function (ctx::SequenceVisitor)(node::VirtualProtocolizedArray)
     map(ctx(node.body)) do (keys, body)
         return keys => VirtualProtocolizedArray(body, node.protos)
     end
@@ -118,6 +124,8 @@ function unfurl(tns::VirtualProtocolizedArray, ctx, ext, protos...)
     VirtualProtocolizedArray(unfurl(tns.body, ctx, ext, map(something, tns.protos, protos)...), tns.protos)
 end
 
-(ctx::CycleVisitor)(node::VirtualProtocolizedArray) = VirtualProtocolizedArray(ctx(node.body), node.protos)
+jumper_body(node::VirtualProtocolizedArray, ctx, ext) = VirtualProtocolizedArray(jumper_body(node.body, ctx, ext), node.protos)
+stepper_body(node::VirtualProtocolizedArray, ctx, ext) = VirtualProtocolizedArray(stepper_body(node.body, ctx, ext), node.protos)
+stepper_seek(node::VirtualProtocolizedArray, ctx, ext) = stepper_seek(node.body, ctx, ext)
 
 getroot(tns::VirtualProtocolizedArray) = getroot(tns.body)

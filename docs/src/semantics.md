@@ -7,7 +7,7 @@ CurrentModule = Finch.FinchNotation
 Finch programs are written in Julia, but they are not Julia programs.
 Instead, they are an abstraction description of a tensor computation.
 
-Finch programs are sequences of tensor operations, joined by control flow. Finch
+Finch programs are blocks of tensor operations, joined by control flow. Finch
 is an imperative language. The AST is separated into statements and expressions,
 where statements can modify the state of the program but expressions cannot.
 
@@ -27,7 +27,7 @@ And the core Finch statements are:
 - [assign](@ref) e.g. `lhs[idxs...] <<op>>= rhs`
 - [loop](@ref) e.g. `for i = _; ... end`
 - [sieve](@ref) e.g. `if cond; ... end`
-- [sequence](@ref) e.g. `begin ... end`
+- [block](@ref) e.g. `begin ... end`
 
 ```@docs
 literal
@@ -40,7 +40,7 @@ define
 assign
 loop
 sieve
-sequence
+block
 ```
 
 # Scoping
@@ -104,7 +104,9 @@ produces `Missing`.
 
 Array combinators introduce some complexity to the tensor lifecycle, as wrappers
 may contain multiple or different arrays that could potentially be in different
-modes. To remedy this, each tensor access must define a root array. Any array combinators used in a tensor access must be defined in terms of a single root array. The root array is the single array that gets declared, and changes modes from read to update, or vice versa.
+modes. Any array combinators used in a tensor access must reference a single
+global variable which holds the root array. The root array is the single array
+that gets declared, and changes modes from read to update, or vice versa.
 
 # Fancy Indexing
 

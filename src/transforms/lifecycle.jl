@@ -18,7 +18,7 @@ function close_scope(prgm, ctx::LifecycleVisitor)
     prgm = ctx(prgm)
     for tns in getresults(prgm)
         if ctx.modes[tns].kind !== reader
-            prgm = sequence(prgm, freeze(tns))
+            prgm = block(prgm, freeze(tns))
         end
     end
     prgm
@@ -38,9 +38,9 @@ function open_stmt(prgm, ctx::LifecycleVisitor)
     for (tns, mode) in ctx.uses
         cur_mode = get(ctx.modes, tns, reader())
         if mode.kind === reader && cur_mode.kind === updater
-            prgm = sequence(freeze(tns), prgm)
+            prgm = block(freeze(tns), prgm)
         elseif mode.kind === updater && cur_mode.kind === reader
-            prgm = sequence(thaw(tns), prgm)
+            prgm = block(thaw(tns), prgm)
         end
         ctx.modes[tns] = mode
     end
@@ -56,17 +56,17 @@ function (ctx::LifecycleVisitor)(node::FinchNode)
     elseif node.kind === declare
         ctx.scoped_uses[node.tns] = ctx.uses
         if get(ctx.modes, node.tns, reader()) === updater 
-            node = sequence(freeze(node.tns), node)
+            node = block(freeze(node.tns), node)
         end
         ctx.modes[node.tns] = updater()
         node
     elseif node.kind === freeze
         haskey(ctx.modes, node.tns) || throw(LifecycleError("cannot freeze undefined $(node.tns)"))
-        ctx.modes[node.tns].kind === reader && return sequence()
+        ctx.modes[node.tns].kind === reader && return block()
         ctx.modes[node.tns] = reader()
         node
     elseif node.kind === thaw
-        get(ctx.modes, node.tns, reader()).kind === updater && return sequence()
+        get(ctx.modes, node.tns, reader()).kind === updater && return block()
         ctx.modes[node.tns] = updater()
         node
     elseif node.kind === assign

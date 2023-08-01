@@ -10,24 +10,6 @@ end
 
 Base.getindex(arr::OffsetArray, i...) = arr.body[(i .+ arr.delta)...]
 
-function shiftdim(ext::Extent, delta)
-    Extent(
-        start = call(+, ext.start, delta),
-        stop = call(+, ext.stop, delta)
-    )
-end
-
-shiftdim(ext::Widen, delta) = Widen(shiftdim(ext.ext, delta))
-shiftdim(ext::Narrow, delta) = Narrow(shiftdim(ext.ext, delta))
-shiftdim(ext::NoDimension, delta) = nodim
-
-function shiftdim(ext::FinchNode, body)
-    if ext.kind === virtual
-        shiftdim(ext.val, body)
-    else
-        error("unimplemented")
-    end
-end
 
 struct VirtualOffsetArray
     body
@@ -48,6 +30,11 @@ function virtualize(ex, ::Type{OffsetArray{Delta, Body}}, ctx) where {Delta, Bod
         virtualize(:($ex.delta[$n]), param, ctx)
     end
     VirtualOffsetArray(virtualize(:($ex.body), Body, ctx), delta)
+end
+
+offset(body, delta...) = OffsetArray(body, delta)
+function virtual_call(::typeof(offset), ctx, body, delta...)
+    VirtualOffsetArray(body, delta)
 end
 
 lower(tns::VirtualOffsetArray, ctx::AbstractCompiler, ::DefaultStyle) = :(OffsetArray($(ctx(tns.body)), $(ctx(tns.delta))))
@@ -115,8 +102,8 @@ function get_acceptrun_body(node::VirtualOffsetArray, ctx, ext)
     end
 end
 
-function (ctx::PipelineVisitor)(node::VirtualOffsetArray)
-    map(PipelineVisitor(; kwfields(ctx)..., ext = shiftdim(ctx.ext, node.delta[end]))(node.body)) do (keys, body)
+function (ctx::SequenceVisitor)(node::VirtualOffsetArray)
+    map(SequenceVisitor(; kwfields(ctx)..., ext = shiftdim(ctx.ext, node.delta[end]))(node.body)) do (keys, body)
         return keys => VirtualOffsetArray(body, node.delta)
     end
 end
@@ -134,7 +121,9 @@ visit_simplify(node::VirtualOffsetArray) = VirtualOffsetArray(visit_simplify(nod
     guard => VirtualOffsetArray(body, node.delta)
 end
 
-(ctx::CycleVisitor)(node::VirtualOffsetArray) = VirtualOffsetArray(CycleVisitor(; kwfields(ctx)..., ext=shiftdim(ctx.ext, node.delta[end]))(node.body), node.delta)
+jumper_body(node::VirtualOffsetArray, ctx, ext) = VirtualOffsetArray(jumper_body(node.body, ctx, shiftdim(ext, node.delta[end])), node.delta)
+stepper_body(node::VirtualOffsetArray, ctx, ext) = VirtualOffsetArray(stepper_body(node.body, ctx, shiftdim(ext, node.delta[end])), node.delta)
+stepper_seek(node::VirtualOffsetArray, ctx, ext) = stepper_seek(node.body, ctx, shiftdim(ext, node.delta[end]))
 
 getroot(tns::VirtualOffsetArray) = getroot(tns.body)
 

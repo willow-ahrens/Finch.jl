@@ -35,6 +35,11 @@ function virtualize(ex, ::Type{WindowedArray{Dims, Body}}, ctx) where {Dims, Bod
     VirtualWindowedArray(virtualize(:($ex.body), Body, ctx), dims)
 end
 
+window(body, delta...) = WindowArray(body, delta)
+function virtual_call(::typeof(window), ctx, body, delta...)
+    VirtualWindowArray(body, delta)
+end
+
 lower(tns::VirtualWindowedArray, ctx::AbstractCompiler, ::DefaultStyle) = :(WindowedArray($(ctx(tns.body)), $(tns.dims)))
 
 function virtual_size(arr::VirtualWindowedArray, ctx::AbstractCompiler)
@@ -95,7 +100,7 @@ function get_acceptrun_body(node::VirtualWindowedArray, ctx, ext)
     end
 end
 
-function (ctx::PipelineVisitor)(node::VirtualWindowedArray)
+function (ctx::SequenceVisitor)(node::VirtualWindowedArray)
     map(ctx(node.body)) do (keys, body)
         return keys => VirtualWindowedArray(body, node.dims)
     end
@@ -114,7 +119,9 @@ visit_simplify(node::VirtualWindowedArray) = VirtualWindowedArray(visit_simplify
     guard => VirtualWindowedArray(body, node.dims)
 end
 
-(ctx::CycleVisitor)(node::VirtualWindowedArray) = VirtualWindowedArray(ctx(node.body), node.dims)
+jumper_body(node::VirtualWindowedArray, ctx, ext) = VirtualWindowedArray(jumper_body(node.body, ctx, ext), node.dims)
+stepper_body(node::VirtualWindowedArray, ctx, ext) = VirtualWindowedArray(stepper_body(node.body, ctx, ext), node.dims)
+stepper_seek(node::VirtualWindowedArray, ctx, ext) = stepper_seek(node.body, ctx, ext)
 
 getroot(tns::VirtualWindowedArray) = getroot(tns.body)
 

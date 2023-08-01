@@ -1,4 +1,4 @@
-@fiber(sl(e(0)) constructors:
+Fiber!(SparseList(Element(0)) constructors:
 initialized fiber: Fiber(SparseList{Int32, Int32}(Element{0.0, Float64}([2.0, 2.0, 3.0, 3.0]), 6, [1, 5], [2, 3, 5, 6]))
 initialized fiber: Fiber(SparseList{Int16, Int32}(Element{0.0, Float64}([2.0, 2.0, 3.0, 3.0]), 6, [1, 5], [2, 3, 5, 6]))
 sized fiber: Fiber(SparseList{Int32, Int32}(Element{0.0, Float64}([]), 7, [1, 1], []))

@@ -2,7 +2,7 @@
 CurrentModule = Finch
 ```
 
-## Finch Compilation Pipeline
+## Finch Compilation
 
 ## Finch Notation
 
@@ -28,13 +28,13 @@ code for a function body.
 In normal Finch usage, we might call Finch as follows:
 
 ```jldoctest example1; setup = :(using Finch)
-julia> C = @fiber(sl(e(0)));
+julia> C = Fiber!(SparseList(Element(0)));
 
-julia> A = @fiber(sl(e(0)), [0, 2, 0, 0, 3]);
+julia> A = Fiber!(SparseList(Element(0)), [0, 2, 0, 0, 3]);
 
-julia> B = @fiber(d(e(0)), [11, 12, 13, 14, 15]);
+julia> B = Fiber!(Dense(Element(0)), [11, 12, 13, 14, 15]);
 
-julia> @finch (C .= 0; @loop i C[i] = A[i] * B[i]);
+julia> @finch (C .= 0; for i=_; C[i] = A[i] * B[i] end);
 
 julia> C
 SparseList (0) [1:5]
@@ -49,11 +49,11 @@ happens when we use the `@finch` macro (we've stripped line numbers from the
 result to clean it up):
 
 ```jldoctest example1
-julia> (@macroexpand @finch (C .= 0; @loop i C[i] = A[i] * B[i])) |> Finch.striplines |> Finch.regensym
+julia> (@macroexpand @finch (C .= 0; for i=_; C[i] = A[i] * B[i] end)) |> Finch.striplines |> Finch.regensym
 quote
-    _res_1 = (Finch.execute)((Finch.FinchNotation.sequence_instance)((Finch.FinchNotation.declare_instance)((Finch.FinchNotation.tag_instance)(:C, (Finch.FinchNotation.finch_leaf_instance)(C)), literal_instance(0)), begin
+    _res_1 = (Finch.execute)((Finch.FinchNotation.block_instance)((Finch.FinchNotation.declare_instance)((Finch.FinchNotation.tag_instance)(:C, (Finch.FinchNotation.finch_leaf_instance)(C)), literal_instance(0)), begin
                     let i = index_instance(i)
-                        (Finch.FinchNotation.loop_instance)(i, index_instance(:), (Finch.FinchNotation.assign_instance)((Finch.FinchNotation.access_instance)((Finch.FinchNotation.tag_instance)(:C, (Finch.FinchNotation.finch_leaf_instance)(C)), (Finch.FinchNotation.updater_instance)(), (Finch.FinchNotation.tag_instance)(:i, (Finch.FinchNotation.finch_leaf_instance)(i))), (Finch.FinchNotation.literal_instance)((Finch.FinchNotation.initwrite)((Finch.default)(C))), (Finch.FinchNotation.call_instance)((Finch.FinchNotation.tag_instance)(:*, (Finch.FinchNotation.finch_leaf_instance)(*)), (Finch.FinchNotation.access_instance)((Finch.FinchNotation.tag_instance)(:A, (Finch.FinchNotation.finch_leaf_instance)(A)), (Finch.FinchNotation.reader_instance)(), (Finch.FinchNotation.tag_instance)(:i, (Finch.FinchNotation.finch_leaf_instance)(i))), (Finch.FinchNotation.access_instance)((Finch.FinchNotation.tag_instance)(:B, (Finch.FinchNotation.finch_leaf_instance)(B)), (Finch.FinchNotation.reader_instance)(), (Finch.FinchNotation.tag_instance)(:i, (Finch.FinchNotation.finch_leaf_instance)(i))))))
+                        (Finch.FinchNotation.loop_instance)(i, Finch.FinchNotation.Dimensionless(), (Finch.FinchNotation.assign_instance)((Finch.FinchNotation.access_instance)((Finch.FinchNotation.tag_instance)(:C, (Finch.FinchNotation.finch_leaf_instance)(C)), (Finch.FinchNotation.updater_instance)(), (Finch.FinchNotation.tag_instance)(:i, (Finch.FinchNotation.finch_leaf_instance)(i))), (Finch.FinchNotation.literal_instance)((Finch.FinchNotation.initwrite)((Finch.default)(C))), (Finch.FinchNotation.call_instance)((Finch.FinchNotation.tag_instance)(:*, (Finch.FinchNotation.finch_leaf_instance)(*)), (Finch.FinchNotation.access_instance)((Finch.FinchNotation.tag_instance)(:A, (Finch.FinchNotation.finch_leaf_instance)(A)), (Finch.FinchNotation.reader_instance)(), (Finch.FinchNotation.tag_instance)(:i, (Finch.FinchNotation.finch_leaf_instance)(i))), (Finch.FinchNotation.access_instance)((Finch.FinchNotation.tag_instance)(:B, (Finch.FinchNotation.finch_leaf_instance)(B)), (Finch.FinchNotation.reader_instance)(), (Finch.FinchNotation.tag_instance)(:i, (Finch.FinchNotation.finch_leaf_instance)(i))))))
                     end
                 end))
     begin
@@ -75,8 +75,8 @@ convenient to use the unexported macro `Finch.finch_program_instance`:
 ```jldoctest example1
 julia> using Finch: @finch_program_instance
 
-julia> prgm = Finch.@finch_program_instance (C .= 0; @loop i C[i] = A[i] * B[i])
-sequence_instance(declare_instance(tag_instance(:C, C), literal_instance(0)), loop_instance(index_instance(i), index_instance(:), assign_instance(access_instance(tag_instance(:C, C), updater_instance(), index_instance(i)), literal_instance(Finch.FinchNotation.InitWriter{0}()), call_instance(tag_instance(:*, *), access_instance(tag_instance(:A, A), reader_instance(), index_instance(i)), access_instance(tag_instance(:B, B), reader_instance(), index_instance(i))))))
+julia> prgm = Finch.@finch_program_instance (C .= 0; for i=_; C[i] = A[i] * B[i] end)
+block_instance(declare_instance(tag_instance(:C, C), literal_instance(0)), loop_instance(index_instance(i), Finch.FinchNotation.Dimensionless(), assign_instance(access_instance(tag_instance(:C, C), updater_instance(), index_instance(i)), literal_instance(Finch.FinchNotation.InitWriter{0}()), call_instance(tag_instance(:*, *), access_instance(tag_instance(:A, A), reader_instance(), index_instance(i)), access_instance(tag_instance(:B, B), reader_instance(), index_instance(i))))))
 ```
 
 As we can see, our program instance contains not only the AST to be executed,
@@ -87,7 +87,7 @@ different inputs, but the same program type. We can run our program using
 
 ```jldoctest example1
 julia> typeof(prgm)
-Finch.FinchNotation.SequenceInstance{Tuple{Finch.FinchNotation.DeclareInstance{Finch.FinchNotation.TagInstance{:C, Fiber{SparseListLevel{Int64, Int64, ElementLevel{0, Int64}}}}, Finch.FinchNotation.LiteralInstance{0}}, Finch.FinchNotation.LoopInstance{Finch.FinchNotation.IndexInstance{:i}, Finch.FinchNotation.IndexInstance{:(:)}, Finch.FinchNotation.AssignInstance{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{:C, Fiber{SparseListLevel{Int64, Int64, ElementLevel{0, Int64}}}}, Finch.FinchNotation.UpdaterInstance, Tuple{Finch.FinchNotation.IndexInstance{:i}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.InitWriter{0}()}, Finch.FinchNotation.CallInstance{Finch.FinchNotation.TagInstance{:*, Finch.FinchNotation.LiteralInstance{*}}, Tuple{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{:A, Fiber{SparseListLevel{Int64, Int64, ElementLevel{0, Int64}}}}, Finch.FinchNotation.ReaderInstance, Tuple{Finch.FinchNotation.IndexInstance{:i}}}, Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{:B, Fiber{DenseLevel{Int64, ElementLevel{0, Int64}}}}, Finch.FinchNotation.ReaderInstance, Tuple{Finch.FinchNotation.IndexInstance{:i}}}}}}}}}
+Finch.FinchNotation.BlockInstance{Tuple{Finch.FinchNotation.DeclareInstance{Finch.FinchNotation.TagInstance{:C, Fiber{SparseListLevel{Int64, Int64, ElementLevel{0, Int64}}}}, Finch.FinchNotation.LiteralInstance{0}}, Finch.FinchNotation.LoopInstance{Finch.FinchNotation.IndexInstance{:i}, Finch.FinchNotation.Dimensionless, Finch.FinchNotation.AssignInstance{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{:C, Fiber{SparseListLevel{Int64, Int64, ElementLevel{0, Int64}}}}, Finch.FinchNotation.UpdaterInstance, Tuple{Finch.FinchNotation.IndexInstance{:i}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.InitWriter{0}()}, Finch.FinchNotation.CallInstance{Finch.FinchNotation.TagInstance{:*, Finch.FinchNotation.LiteralInstance{*}}, Tuple{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{:A, Fiber{SparseListLevel{Int64, Int64, ElementLevel{0, Int64}}}}, Finch.FinchNotation.ReaderInstance, Tuple{Finch.FinchNotation.IndexInstance{:i}}}, Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{:B, Fiber{DenseLevel{Int64, ElementLevel{0, Int64}}}}, Finch.FinchNotation.ReaderInstance, Tuple{Finch.FinchNotation.IndexInstance{:i}}}}}}}}}
 
 julia> C = Finch.execute(prgm).C
 SparseList (0) [1:5]
@@ -102,7 +102,7 @@ follows:
 
 ```jldoctest example1
 julia> function pointwise_sum(As...)
-           B = @fiber(d(e(0)))
+           B = Fiber!(Dense(Element(0)))
            isempty(As) && return B
            i = Finch.FinchNotation.index_instance(:i)
            A_vars = [Finch.FinchNotation.tag_instance(Symbol(:A, n), As[n]) for n in 1:length(As)]
@@ -111,7 +111,7 @@ julia> function pointwise_sum(As...)
            for A_var in A_vars
                ex = @finch_program_instance $A_var[i] + $ex
            end
-           prgm = @finch_program_instance (B .= 0; @loop i B[i] = $ex)
+           prgm = @finch_program_instance (B .= 0; for i=_; B[i] = $ex end)
            return Finch.execute(prgm).B
        end
 pointwise_sum (generic function with 1 method)
@@ -159,17 +159,17 @@ level_default
 
 ## Debugging Functionality
 
-It's easy to ask Finch to advance a few steps in its compiler pipeline. The basic functionality is documented via the following bit of code:
+It's easy to ask Finch to advance a few steps in its compiler sequence. The basic functionality is documented via the following bit of code:
 ```
 using Finch
 using Finch: @finch_program_instance, begin_debug, step_code, iscompiled, end_debug
 
-y = @fiber d(e(0.0))
-A = @fiber d(sl(e(0.0)))
-x = @fiber sl(e(0.0))
+y = Fiber!(Dense(Element(0.0)))
+A = Fiber!(Dense(SparseList(Element(0.0))))
+x = Fiber!(SparseList(Element(0.0)))
 
 code = Finch.@finch_program_instance begin
-   @loop j i y[i] += A[i, j] * x[j]
+   for j=_, i=_; y[i] += A[i, j] * x[j] end
 end
 
 debug = begin_debug(code)
@@ -201,7 +201,7 @@ PartialCode
 ```
 
 Partially compiled code will be displayed almost like fully compiled code but with `@finch` nodes that are numbered according to
-which will be compiled first. They also display where they will renter the compilation pipeline. 
+which will be compiled first. They also display where they will renter the compilation sequence. 
 An early step in the above program might look like:
 ```
 quote
@@ -224,7 +224,7 @@ quote
     end
     qos = @finch((Number = 6, Which = ("lower.jl", 174))1) * @finch((Number = 7, Which = ("lower.jl", 174))y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch((Number = 8, Which = ("lower.jl", 174))qos))
-    (y = @finch((Number = 9, Which = ("fibers.jl", 27))VirtualFiber(d(e(0.0)))),)
+    (y = @finch((Number = 9, Which = ("fibers.jl", 27))VirtualFiber(Dense(Element(0.0)))),)
 end
 ```
 
@@ -262,7 +262,7 @@ init_meta
 
 
 ### Advanced Dangers: Non-Serial Compilation
-Furthermore, the Finch compiler is inhernetly serial: statements in a sequence
+Furthermore, the Finch compiler is inhernetly serial: statements in a block
 rely on information found via compiling earlier statements. Thus, although this feature exports functions that can reorder the compilation,
 we do not expect these to work consistently and we leave them basically undocumented.
 

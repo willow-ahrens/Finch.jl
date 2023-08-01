@@ -1,6 +1,8 @@
 julia> @finch_code begin
         z .= 0
-        @loop i z[i] = x[gallop(i)] + y[i]
+        for i = _
+            z[i] = x[gallop(i)] + y[i]
+        end
     end
 quote
     z_lvl = (ex.bodies[1]).tns.tns.lvl
@@ -248,7 +250,9 @@ quote
 end
 julia> @finch begin
         z .= 0
-        @loop i z[i] = x[gallop(i)] + y[i]
+        for i = _
+            z[i] = x[gallop(i)] + y[i]
+        end
     end
 (z = Fiber(SparseList{Int64, Int64}(Element{0.0, Float64}([2.0, 1.0, 3.0, 5.0, 5.0, 1.0, 6.0]), 10, [1, 8], [1, 2, 3, 5, 7, 8, 9])),)
 

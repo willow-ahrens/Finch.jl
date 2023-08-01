@@ -75,7 +75,7 @@ function get_acceptrun_body(node::Unfurled, ctx, ext)
     end
 end
 
-function (ctx::PipelineVisitor)(node::Unfurled)
+function (ctx::SequenceVisitor)(node::Unfurled)
     map(ctx(node.body)) do (keys, body)
         return keys => Unfurled(node.arr, node.ndims, body)
     end
@@ -101,7 +101,9 @@ function unfurl(tns::Unfurled, ctx, ext, protos...)
     unfurl(tns.body, ctx, ext, protos...)
 end
 
-(ctx::CycleVisitor)(node::Unfurled) = Unfurled(node.arr, node.ndims, ctx(node.body))
+jumper_body(node::Unfurled, ctx, ext) = Unfurled(node.arr, node.ndims, jumper_body(node.body, ctx, ext))
+stepper_body(node::Unfurled, ctx, ext) = Unfurled(node.arr, node.ndims, stepper_body(node.body, ctx, ext))
+stepper_seek(node::Unfurled, ctx, ext) = stepper_seek(node.body, ctx, ext)
 
 function lower(node::Unfurled, ctx::AbstractCompiler, ::DefaultStyle)
     ctx(node.body)

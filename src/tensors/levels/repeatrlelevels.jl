@@ -9,10 +9,10 @@ The fibers have type `Tv`, initialized to `D`. `D` may optionally be given as
 the first argument.  `Ti` is the type of the last fiber index, and `Tp` is the
 type used for positions in the level.
 
-In the [`@fiber`](@ref) constructor, `rl` is an alias for `RepeatRLELevel`.
+In the [`Fiber!`](@ref) constructor, `rl` is an alias for `RepeatRLELevel`.
 
 ```jldoctest
-julia> @fiber(rl(0.0), [11, 11, 22, 22, 00, 00, 00, 33, 33])
+julia> Fiber!(RepeatRLE(0.0), [11, 11, 22, 22, 00, 00, 00, 33, 33])
 RepeatRLE (0.0) [1:9]
 ├─[1:2]: 11.0
 ├─[3:4]: 22.0
@@ -42,11 +42,7 @@ RepeatRLELevel{D, Ti, Tp}(args...) where {D, Ti, Tp} = RepeatRLELevel{D, Ti, Tp,
 RepeatRLELevel{D, Ti, Tp, Tv}() where {D, Ti, Tp, Tv} = RepeatRLELevel{D, Ti, Tp, Tv}(zero(Ti))
 RepeatRLELevel{D, Ti, Tp, Tv}(shape) where {D, Ti, Tp, Tv} = RepeatRLELevel{D, Ti, Tp, Tv}(Ti(shape), Tp[1], Ti[], Tv[])
 
-"""
-`fiber_abbrev(rl)` = [`RepeatRLELevel`](@ref).
-"""
-fiber_abbrev(::Val{:rl}) = RepeatRLE
-summary_fiber_abbrev(::RepeatRLE{D}) where {D} = "rl($(D))"
+Base.summary(::RepeatRLE{D}) where {D} = "RepeatRLE($(D))"
 similar_level(::RepeatRLELevel{D}) where {D} = RepeatRLE{D}()
 similar_level(::RepeatRLELevel{D}, dim, tail...) where {D} = RepeatRLE{D}(dim)
 data_rep_level(::Type{<:RepeatRLELevel{D, Ti, Tp, Tv}}) where {D, Ti, Tp, Tv} = RepeatData(D, Tv)
@@ -141,7 +137,7 @@ function lower(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, ::DefaultStyle
     end
 end
 
-summary_fiber_abbrev(lvl::VirtualRepeatRLELevel) = "rl($(lvl.D))"
+Base.summary(lvl::VirtualRepeatRLELevel) = "RepeatRLE($(lvl.D))"
 
 function virtual_level_size(lvl::VirtualRepeatRLELevel, ctx)
     ext = Extent(literal(lvl.Ti(1)), lvl.shape)
@@ -245,7 +241,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, ::
                     ),
                     body = (ctx) -> Step(
                         stop = (ctx, ext) -> value(my_i),
-                        body = Run(
+                        chunk = Run(
                             body = Fill(value(:($(lvl.ex).val[$my_q]), lvl.Tv)) #TODO Flesh out fill to assert ndims and handle writes
                         ),
                         next = (ctx, ext) -> quote

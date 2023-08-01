@@ -78,11 +78,17 @@ function cache!(ctx::AbstractCompiler, var, val)
     return cached(value(var, Any), literal(val))
 end
 
-function resolve(var, ctx::AbstractCompiler)
-    if var isa FinchNode && (var.kind === variable || var.kind === index)
-        return ctx.bindings[var]
+resolve(node, ctx) = node
+function resolve(node::FinchNode, ctx::AbstractCompiler)
+    if node.kind === virtual
+        return node.val
+    elseif node.kind === variable
+        return resolve(ctx.bindings[node], ctx)
+    elseif node.kind === index
+        return resolve(ctx.bindings[node], ctx)
+    else
+        error("unimplemented $node")
     end
-    return var
 end
 
 """
@@ -140,12 +146,12 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
         else
             return root.val
         end
-    elseif root.kind === sequence
+    elseif root.kind === block
         if isempty(root.bodies)
             return quote end
         else
             head = root.bodies[1]
-            body = sequence(root.bodies[2:end]...)
+            body = block(root.bodies[2:end]...)
             preamble = quote end
 
             if head.kind === define
@@ -180,15 +186,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
             end
         end
     elseif root.kind === access
-        if root.tns.kind === virtual
-            return lower_access(ctx, root, root.tns.val)
-        elseif root.tns.kind === variable #TODO should be unnecessary?
-            return lower_access(ctx, root, resolve(root.tns, ctx))
-        else
-            tns = ctx(root.tns)
-            idxs = map(ctx, root.idxs)
-            return :($(ctx(tns))[$(idxs...)])
-        end
+        return lower_access(ctx, root, resolve(root.tns, ctx))
     elseif root.kind === call
         if root.op == literal(and)
             if isempty(root.args)
@@ -210,15 +208,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
     elseif root.kind === loop
         @assert root.idx.kind === index
         @assert root.ext.kind === virtual
-        root_2 = Rewrite(Postwalk(@rule access(~tns::isvirtual, ~mode, ~idxs...) => begin
-            if !isempty(idxs) && root.idx == idxs[end]
-                tns = tns.val
-                protos = [(mode.kind === reader ? defaultread : defaultupdate) for _ in idxs]
-                tns_2 = unfurl(tns, ctx, root.ext.val, protos...)
-                access(tns_2, mode, idxs...)
-            end
-        end))(root)
-        return ctx(root_2, result_style(LookupStyle(), Stylize(root_2, ctx)(root_2)))
+        lower_loop(ctx, root, root.ext.val)
     elseif root.kind === sieve
         cond = ctx.freshen(:cond)
         push!(ctx.preamble, :($cond = $(ctx(root.cond))))
@@ -249,6 +239,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
 end
 
 function lower_access(ctx, node, tns)
+    tns = ctx(tns)
     idxs = map(ctx, node.idxs)
     :($(ctx(tns))[$(idxs...)])
 end
@@ -256,4 +247,35 @@ end
 function lower_access(ctx, node, tns::Number)
     @assert node.mode.kind === reader
     tns
+end
+
+function lower_loop(ctx, root, ext)
+    root_2 = Rewrite(Postwalk(@rule access(~tns, ~mode, ~idxs...) => begin
+        if !isempty(idxs) && root.idx == idxs[end]
+            protos = [(mode.kind === reader ? defaultread : defaultupdate) for _ in idxs]
+            tns_2 = unfurl(tns, ctx, root.ext.val, protos...)
+            access(tns_2, mode, idxs...)
+        end
+    end))(root)
+    return ctx(root_2, result_style(LookupStyle(), Stylize(root_2, ctx)(root_2)))
+end
+
+function lower_loop(ctx, root, ext::ParallelDimension)
+    #TODO Safety check that the loop can actually be parallel
+    tid = index(ctx.freshen(:tid))
+    i = ctx.freshen(:i)
+    root_2 = loop(tid, Extent(value(i, Int), value(i, Int)),
+        loop(root.idx, ext.ext,
+            sieve(access(VirtualSplitMask(value(:(Threads.nthreads()))), reader(), root.idx, tid),
+                root.body
+            )
+        )
+    )
+    return quote
+        Threads.@threads for $i = 1:Threads.nthreads()
+            $(contain(ctx) do ctx_2
+                ctx_2(instantiate!(root_2, ctx_2))
+            end)
+        end
+    end
 end

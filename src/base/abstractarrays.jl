@@ -37,8 +37,8 @@ instantiate_updater(arr::VirtualAbstractArray, ctx::AbstractCompiler, protos...)
 
 FinchNotation.finch_leaf(x::VirtualAbstractArray) = virtual(x)
 
-virtual_default(::VirtualAbstractArray) = 0
-virtual_eltype(tns::VirtualAbstractArray) = tns.eltype
+virtual_default(::VirtualAbstractArray, ctx) = 0
+virtual_eltype(tns::VirtualAbstractArray, ctx) = tns.eltype
 
 default(a::AbstractArray) = default(typeof(a))
 default(T::Type{<:AbstractArray}) = zero(eltype(T))

@@ -16,11 +16,7 @@ SparseVBLLevel{Ti, Tp, Lvl}(lvl) where {Ti, Tp, Lvl} = SparseVBLLevel{Ti, Tp, Lv
 SparseVBLLevel{Ti, Tp, Lvl}(lvl, shape) where {Ti, Tp, Lvl} = 
     SparseVBLLevel{Ti, Tp, Lvl}(lvl, shape, Tp[1], Ti[], Ti[])
 
-"""
-`fiber_abbrev(svb)` = [`SparseVBLLevel`](@ref).
-"""
-fiber_abbrev(::Val{:svb}) = SparseVBL
-summary_fiber_abbrev(lvl::SparseVBLLevel) = "svb($(summary_fiber_abbrev(lvl.lvl)))"
+Base.summary(lvl::SparseVBLLevel) = "SparseVBL($(summary(lvl.lvl)))"
 similar_level(lvl::SparseVBLLevel) = SparseVBL(similar_level(lvl.lvl))
 similar_level(lvl::SparseVBLLevel, dim, tail...) = SparseVBL(similar_level(lvl.lvl, tail...), dim)
 
@@ -130,7 +126,7 @@ function lower(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, ::DefaultStyle
     end
 end
 
-summary_fiber_abbrev(lvl::VirtualSparseVBLLevel) = "svb($(summary_fiber_abbrev(lvl.lvl)))"
+Base.summary(lvl::VirtualSparseVBLLevel) = "SparseVBL($(summary(lvl.lvl)))"
 
 function virtual_level_size(lvl::VirtualSparseVBLLevel, ctx)
     ext = Extent(literal(lvl.Ti(1)), lvl.shape)
@@ -229,7 +225,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::
                     $my_i1 = $(Ti(0))
                 end
             end,
-            body = (ctx) -> Pipeline([
+            body = (ctx) -> Sequence([
                 Phase(
                     stop = (ctx, ext) -> value(my_i1),
                     body = (ctx, ext) -> Stepper(
@@ -245,10 +241,10 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::
                                 $my_i_start = $my_i - ($my_q_stop - $(lvl.ex).ofs[$my_r])
                                 $my_q_ofs = $my_q_stop - $my_i - $(Tp(1))
                             end,
-                            body = (ctx) -> Phase(
+                            body = (ctx) -> Step(
                                 stop = (ctx, ext) -> value(my_i),
                                 body = (ctx, ext) -> Thunk(
-                                    body = (ctx) -> Pipeline([
+                                    body = (ctx) -> Sequence([
                                         Phase(
                                             stop = (ctx, ext) -> value(my_i_start),
                                             body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
@@ -308,7 +304,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::
                     $my_i1 = $(Ti(0))
                 end
             end,
-            body = (ctx) -> Pipeline([
+            body = (ctx) -> Sequence([
                 Phase(
                     stop = (ctx, ext) -> value(my_i1),
                     body = (ctx, ext) -> Jumper(
@@ -331,7 +327,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::
                                             $my_i_start = $my_i - ($my_q_stop - $(lvl.ex).ofs[$my_r])
                                             $my_q_ofs = $my_q_stop - $my_i - $(Tp(1))
                                         end,
-                                        body = (ctx) -> Pipeline([
+                                        body = (ctx) -> Sequence([
                                             Phase(
                                                 stop = (ctx, ext) -> value(my_i_start),
                                                 body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
@@ -364,10 +360,10 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, ::
                                                 $my_i_start = $my_j - ($my_q_stop - $(lvl.ex).ofs[$my_r])
                                                 $my_q_ofs = $my_q_stop - $my_j - $(Tp(1))
                                             end,
-                                            body = (ctx) -> Phase(
+                                            body = (ctx) -> Step(
                                                 stop = (ctx, ext) -> value(my_j),
                                                 body = (ctx, ext) -> Thunk(
-                                                    body = (ctx) -> Pipeline([
+                                                    body = (ctx) -> Sequence([
                                                         Phase(
                                                             stop = (ctx, ext) -> value(my_i_start),
                                                             body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),

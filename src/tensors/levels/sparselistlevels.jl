@@ -9,10 +9,10 @@ slices are stored. Optionally, `dim` is the size of the last dimension.
 `Ti` is the type of the last fiber index, and `Tp` is the type used for
 positions in the level.
 
-In the [`@fiber`](@ref) constructor, `sl` is an alias for `SparseListLevel`.
+In the [`Fiber!`](@ref) constructor, `sl` is an alias for `SparseListLevel`.
 
 ```jldoctest
-julia> @fiber(d(sl(e(0.0))), [10 0 20; 30 0 0; 0 0 40])
+julia> Fiber!(Dense(SparseList(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Dense [:,1:3]
 ├─[:,1]: SparseList (0.0) [1:3]
 │ ├─[1]: 10.0
@@ -22,7 +22,7 @@ Dense [:,1:3]
 │ ├─[1]: 20.0
 │ ├─[3]: 40.0
 
-julia> @fiber(sl(sl(e(0.0))), [10 0 20; 30 0 0; 0 0 40])
+julia> Fiber!(SparseList(SparseList(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 SparseList (0.0) [:,1:3]
 ├─[:,1]: SparseList (0.0) [1:3]
 │ ├─[1]: 10.0
@@ -49,11 +49,7 @@ SparseListLevel{Ti, Tp, Lvl}(lvl) where {Ti, Tp, Lvl} = SparseListLevel{Ti, Tp, 
 SparseListLevel{Ti, Tp, Lvl}(lvl, shape) where {Ti, Tp, Lvl} = 
     SparseListLevel{Ti, Tp, Lvl}(lvl, Ti(shape), Tp[1], Ti[])
 
-"""
-`fiber_abbrev(l)` = [`SparseListLevel`](@ref).
-"""
-fiber_abbrev(::Val{:sl}) = SparseList
-summary_fiber_abbrev(lvl::SparseListLevel) = "sl($(summary_fiber_abbrev(lvl.lvl)))"
+Base.summary(lvl::SparseListLevel) = "SparseList($(summary(lvl.lvl)))"
 similar_level(lvl::SparseListLevel) = SparseList(similar_level(lvl.lvl))
 similar_level(lvl::SparseListLevel, dim, tail...) = SparseList(similar_level(lvl.lvl, tail...), dim)
 
@@ -147,7 +143,7 @@ function lower(lvl::VirtualSparseListLevel, ctx::AbstractCompiler, ::DefaultStyl
     end
 end
 
-summary_fiber_abbrev(lvl::VirtualSparseListLevel) = "sl($(summary_fiber_abbrev(lvl.lvl)))"
+Base.summary(lvl::VirtualSparseListLevel) = "SparseList($(summary(lvl.lvl)))"
 
 function virtual_level_size(lvl::VirtualSparseListLevel, ctx)
     ext = make_extent(lvl.Ti, literal(lvl.Ti(1)), lvl.shape)
@@ -233,7 +229,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, :
                     $my_i1 = $(Ti(0))
                 end
             end,
-            body = (ctx) -> Pipeline([
+            body = (ctx) -> Sequence([
                 Phase(
                     stop = (ctx, ext) -> value(my_i1),
                     body = (ctx, ext) -> Stepper(
@@ -248,7 +244,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, :
                             end,
                             body = (ctx) -> Step(
                                 stop = (ctx, ext) -> value(my_i),
-                                body = Spike(
+                                chunk = Spike(
                                     body = Fill(virtual_level_default(lvl)),
                                     tail = instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, protos...)
                                 ),
@@ -293,7 +289,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, :
                     $my_i1 = $(Ti(0))
                 end
             end,
-            body = (ctx) -> Pipeline([
+            body = (ctx) -> Sequence([
                 Phase(
                     stop = (ctx, ext) -> value(my_i1),
                     body = (ctx, ext) -> Jumper(
@@ -328,7 +324,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, :
                                             ),
                                             body = (ctx) -> Step(
                                                 stop = (ctx, ext) -> value(my_i3),
-                                                body = Spike(
+                                                chunk = Spike(
                                                     body = Fill(virtual_level_default(lvl)),
                                                     tail =  instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, protos...),
                                                 ),

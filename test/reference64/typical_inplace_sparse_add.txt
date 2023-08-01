@@ -1,18 +1,20 @@
-julia> A = @fiber(sl(e(0.0)), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
+julia> A = Fiber!(SparseList(Element(0.0)), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
 SparseList (0.0) [1:10]
 ├─[1]: 2.0
 ├─[3]: 3.0
 ├─[5]: 4.0
 ├─[7]: 5.0
 ├─[9]: 6.0
-julia> B = @fiber(d(e(0.0)), fill(1.1, 10))
+julia> B = Fiber!(Dense(Element(0.0)), fill(1.1, 10))
 Dense [1:10]
 ├─[1]: 1.1
 ├─[2]: 1.1
 │ ⋮
 ├─[9]: 1.1
 ├─[10]: 1.1
-julia> @finch_code @loop(i, B[i] += A[i])
+julia> @finch_code for i = _
+        B[i] += A[i]
+    end
 quote
     B_lvl = ex.body.lhs.tns.tns.lvl
     B_lvl_2 = B_lvl.lvl
@@ -48,6 +50,8 @@ quote
     resize!(B_lvl_2.val, qos)
     (B = Fiber((DenseLevel){Int64}(B_lvl_2, B_lvl.shape)),)
 end
-julia> @finch @loop(i, B[i] += A[i])
+julia> @finch for i = _
+        B[i] += A[i]
+    end
 (B = Fiber(Dense{Int64}(Element{0.0, Float64}([3.1, 1.1, 4.1, 1.1, 5.1, 1.1, 6.1, 1.1, 7.1, 1.1]), 10)),)
 

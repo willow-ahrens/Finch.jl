@@ -38,13 +38,13 @@
                         x
                     end,
                    ])
-                    ref = @fiber sl(e(false))
+                    ref = Fiber!(SparseList(Element(false)))
                     ref = dropdefaults!(ref, arr)
                     tmp = Fiber!(inner())
                     @testset "convert $(summary(tmp)) $(idx)" begin
-                        @finch (tmp .= 0; @loop i tmp[i] = ref[i])
+                        @finch (tmp .= 0; for i=_; tmp[i] = ref[i] end)
                         check = Scalar(true)
-                        @finch @loop i check[] &= tmp[i] == ref[i]
+                        @finch for i=_; check[] &= tmp[i] == ref[i] end
                         @test check[]
                     end
                 end
@@ -61,14 +61,14 @@
                         true  true  true  true
                         false true  false true ])
                     ]
-                        ref = @fiber sl(sl(e(false)))
-                        res = @fiber sl(sl(e(false)))
+                        ref = Fiber!(SparseList(SparseList(Element(false))))
+                        res = Fiber!(SparseList(SparseList(Element(false))))
                         ref = dropdefaults!(ref, arr)
                         tmp = Fiber!(outer())
                         @testset "convert $arr_key $(summary(tmp))"  begin
-                            @finch (tmp .= 0; @loop j i tmp[i, j] = ref[i, j])
+                            @finch (tmp .= 0; for j=_, i=_; tmp[i, j] = ref[i, j] end)
                             check = Scalar(true)
-                            @finch @loop j i check[] &= tmp[i, j] == ref[i, j]
+                            @finch for j=_, i=_; check[] &= tmp[i, j] == ref[i, j] end
                             @test check[]
                         end
                     end
@@ -89,13 +89,13 @@
                 fill(true, 5),
                 [false, true, true, false, false, true]
             ]
-                ref = @fiber sl(e(false))
-                res = @fiber sl(e(false))
+                ref = Fiber!(SparseList(Element(false)))
+                res = Fiber!(SparseList(Element(false)))
                 ref = dropdefaults!(ref, arr)
                 tmp = Fiber!(inner())
                 @testset "convert $(summary(tmp))" begin
-                    @finch (tmp .= 0; @loop i tmp[i] = ref[i])
-                    @finch (res .= 0; @loop i res[i] = tmp[i])
+                    @finch (tmp .= 0; for i=_; tmp[i] = ref[i] end)
+                    @finch (res .= 0; for i=_; res[i] = tmp[i] end)
                     @test isstructequal(ref, res)
                 end
             end
@@ -113,13 +113,13 @@
                     true  true  true  true
                     false true  false true ])
                 ]
-                    ref = @fiber sl(sl(e(false)))
-                    res = @fiber sl(sl(e(false)))
+                    ref = Fiber!(SparseList(SparseList(Element(false))))
+                    res = Fiber!(SparseList(SparseList(Element(false))))
                     ref = dropdefaults!(ref, arr)
                     tmp = Fiber!(outer())
                     @testset "convert $arr_key $(summary(tmp))"  begin
-                        @finch (tmp .= 0; @loop j i tmp[i, j] = ref[i, j])
-                        @finch (res .= 0; @loop j i res[i, j] = tmp[i, j])
+                        @finch (tmp .= 0; for j=_, i=_; tmp[i, j] = ref[i, j] end)
+                        @finch (res .= 0; for j=_, i=_; res[i, j] = tmp[i, j] end)
                         @test isstructequal(ref, res)
                     end
                 end
@@ -135,13 +135,13 @@
                 fill(true, 5),
                 [false, true, true, false, false, true]
             ]
-                ref = @fiber sl(e(false))
-                res = @fiber sl(e(false))
+                ref = Fiber!(SparseList(Element(false)))
+                res = Fiber!(SparseList(Element(false)))
                 tmp = Fiber!(inner())
                 @testset "convert $(summary(tmp))" begin
-                    @finch (ref .= 0; @loop i ref[i] = arr[i])
-                    @finch (tmp .= 0; @loop i tmp[i] = ref[i])
-                    @finch (res .= 0; @loop i res[i] = tmp[i])
+                    @finch (ref .= 0; for i=_; ref[i] = arr[i] end)
+                    @finch (tmp .= 0; for i=_; tmp[i] = ref[i] end)
+                    @finch (res .= 0; for i=_; res[i] = tmp[i] end)
                     @test isstructequal(ref, res)
                 end
             end
@@ -159,13 +159,13 @@
                     true  true  true  true
                     false true  false true ])
                 ]
-                    ref = @fiber sl(sl(e(false)))
-                    res = @fiber sl(sl(e(false)))
+                    ref = Fiber!(SparseList(SparseList(Element(false))))
+                    res = Fiber!(SparseList(SparseList(Element(false))))
                     tmp = Fiber!(outer())
                     @testset "convert $arr_key $(summary(tmp))"  begin
-                        @finch (ref .= 0; @loop j i ref[i, j] = arr[i, j])
-                        @finch (tmp .= 0; @loop j i tmp[i, j] = ref[i, j])
-                        @finch (res .= 0; @loop j i res[i, j] = tmp[i, j])
+                        @finch (ref .= 0; for j=_, i=_; ref[i, j] = arr[i, j] end)
+                        @finch (tmp .= 0; for j=_, i=_; tmp[i, j] = ref[i, j] end)
+                        @finch (res .= 0; for j=_, i=_; res[i, j] = tmp[i, j] end)
                         @test isstructequal(ref, res)
                     end
                 end
@@ -187,13 +187,13 @@
                 true  true  true  true
                 false true  false true ])
             ]
-                ref = @fiber sl(sl(e(false)))
-                res = @fiber sl(sl(e(false)))
+                ref = Fiber!(SparseList(SparseList(Element(false))))
+                res = Fiber!(SparseList(SparseList(Element(false))))
                 ref = dropdefaults!(ref, arr)
                 tmp = Fiber!(outer())
                 @testset "convert $arr_key $(summary(tmp))"  begin
-                    @finch (tmp .= 0; @loop j i tmp[i, j] = ref[i, j])
-                    @finch (res .= 0; @loop j i res[i, j] = tmp[i, j])
+                    @finch (tmp .= 0; for j=_, i=_; tmp[i, j] = ref[i, j] end)
+                    @finch (res .= 0; for j=_, i=_; res[i, j] = tmp[i, j] end)
                     @test isstructequal(ref, res)
                 end
             end
@@ -212,15 +212,15 @@
                 true  true  true  true
                 false true  false true ])
             ]
-                ref = @fiber sl(sl(e(false)))
-                res = @fiber sl(sl(e(false)))
+                ref = Fiber!(SparseList(SparseList(Element(false))))
+                res = Fiber!(SparseList(SparseList(Element(false))))
                 ref = dropdefaults!(ref, arr)
                 tmp = Fiber!(outer())
                 @testset "convert $arr_key $(summary(tmp))"  begin
-                    @finch (tmp .= 0; @loop j i tmp[i, j] = ref[i, j])
-                    @finch (res .= 0; @loop j i res[i, j] = tmp[i, j])
+                    @finch (tmp .= 0; for j=_, i=_; tmp[i, j] = ref[i, j] end)
+                    @finch (res .= 0; for j=_, i=_; res[i, j] = tmp[i, j] end)
                     check = Scalar(true)
-                    @finch @loop j i if j >= i check[] &= tmp[i, j] == ref[i, j] end
+                    @finch for j=_, i=_; if j >= i check[] &= tmp[i, j] == ref[i, j] end end
                     @test check[]
                 end
             end

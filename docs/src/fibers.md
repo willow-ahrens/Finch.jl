@@ -9,7 +9,7 @@ index. Finch is column major, so in an expression `A[i_1, ..., i_N]`, the
 rightmost dimension `i_N` corresponds to the root level of the tree, and the
 leftmost dimension `i_1` corresponds to the leaf level. When the array is dense,
 the leftmost dimension has stop 1. We can convert the matrix `A` to a fiber
-with the `@fiber` constructor:
+with the `Fiber!` constructor:
 
 ```jldoctest example1; setup=:(using Finch)
 julia> A = [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0]
@@ -18,7 +18,7 @@ julia> A = [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0]
  1.1  0.0  0.0
  2.2  0.0  5.5
  3.3  0.0  0.0
-julia> A_fbr = @fiber(d(d(e(0.0))), A)
+julia> A_fbr = Fiber!(Dense(Dense(Element(0.0))), A)
 Dense [:,1:3]
 ├─[:,1]: Dense [1:4]
 │ ├─[1]: 0.0
@@ -94,7 +94,7 @@ This time, we'll use a fiber constructor with `sl` (for "`SparseList` of
 nonzeros") instead of `d` (for "`Dense`"):
 
 ```jldoctest example1
-julia> A_fbr = @fiber(d(sl(e(0.0))), A)
+julia> A_fbr = Fiber!(Dense(SparseList(Element(0.0))), A)
 Dense [:,1:3]
 ├─[:,1]: SparseList (0.0) [1:4]
 │ ├─[2]: 1.1
@@ -108,7 +108,7 @@ Dense [:,1:3]
 
 ![CSC Format Index Tree](assets/levels-A-d-sl-e.png)
 
-Our `d(sl(e(0.0)))` format is also known as
+Our `Dense(SparseList(Element(0.0)))` format is also known as
 ["CSC"](https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_column_.28CSC_or_CCS.29)
 and is equivalent to
 [`SparseMatrixCSC`](https://sparsearrays.juliasparse.org/dev/#man-csc). The
@@ -119,7 +119,7 @@ However, when most of the columns are entirely fill (a situation known as
 hypersparsity), it is better to compress the root level as well:
 
 ```jldoctest example1
-julia> A_fbr = @fiber(sl(sl(e(0.0))), A)
+julia> A_fbr = Fiber!(SparseList(SparseList(Element(0.0))), A)
 SparseList (0.0) [:,1:3]
 ├─[:,1]: SparseList (0.0) [1:4]
 │ ├─[2]: 1.1
@@ -133,7 +133,7 @@ SparseList (0.0) [:,1:3]
 ![DCSC Format Index Tree](assets/levels-A-sl-sl-e.png)
 
 Here we see that the entirely zero column has also been compressed. The
-`sl(sl(e(0.0)))` format is also known as
+`SparseList(SparseList(Element(0.0)))` format is also known as
 ["DCSC"](https://ieeexplore.ieee.org/document/4536313).
 
 The
@@ -146,7 +146,7 @@ level, which can handle more than one index at once. We use curly brackets to
 declare the number of indices handled by the level:
 
 ```jldoctest example1
-julia> A_fbr = @fiber(sc{2}(e(0.0)), A)
+julia> A_fbr = Fiber!(SparseCOO{2}(Element(0.0)), A)
 SparseCOO (0.0) [1:4,1:3]
 ├─├─[2, 1]: 1.1
 ├─├─[3, 1]: 2.2
@@ -166,7 +166,7 @@ of supported formats is described below:
 ### Fiber Constructors
 
 ```@docs
-@fiber
+Fiber!
 fiber
 fiber!
 fiber_abbrev

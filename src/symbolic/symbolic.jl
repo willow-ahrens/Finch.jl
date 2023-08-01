@@ -19,12 +19,12 @@ end
 neither are `z`, then return `a`. Useful for getting the first nonfill value in
 a sparse array.
 ```jldoctest setup=:(using Finch)
-julia> a = @fiber(sl(e(0.0)), [0, 1.1, 0, 4.4, 0])
+julia> a = Fiber!(SparseList(Element(0.0)), [0, 1.1, 0, 4.4, 0])
 SparseList (0.0) [1:5]
 ├─[2]: 1.1
 ├─[4]: 4.4
 
-julia> x = Scalar(0.0); @finch @loop i x[] <<choose(0.0)>>= a[i];
+julia> x = Scalar(0.0); @finch for i=_; x[] <<choose(0.0)>>= a[i] end;
 
 julia> x[]
 1.1
@@ -40,7 +40,7 @@ ties to the left. Useful for implementing argmin operations:
 ```jldoctest setup=:(using Finch)
 julia> a = [7.7, 3.3, 9.9, 3.3, 9.9]; x = Scalar(Inf => 0);
 
-julia> @finch @loop i x[] <<minby>>= a[i] => i;
+julia> @finch for i=_; x[] <<minby>>= a[i] => i end;
 
 julia> x[]
 3.3 => 2
@@ -56,7 +56,7 @@ ties to the left. Useful for implementing argmax operations:
 ```jldoctest setup=:(using Finch)
 julia> a = [7.7, 3.3, 9.9, 3.3, 9.9]; x = Scalar(-Inf => 0);
 
-julia> @finch @loop i x[] <<maxby>>= a[i] => i;
+julia> @finch for i=_; x[] <<maxby>>= a[i] => i end;
 
 julia> x[]
 9.9 => 3
@@ -270,11 +270,6 @@ function getvars(node::FinchNode)
     end
 end
 
-struct All{F}
-    f::F
-end
-
-@inline (f::All{F})(args) where {F} = all(f.f, args)
 
 ortho(var, stmt) = !(var in getvars(stmt))
 

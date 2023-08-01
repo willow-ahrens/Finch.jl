@@ -2,7 +2,7 @@ module SparseArraysExt
 
 using Finch
 using Finch: AbstractCompiler, DefaultStyle, Extent
-using Finch: Unfurled, Furlable, Stepper, Jumper, Run, Fill, Lookup, Simplify, Pipeline, Phase, Thunk, Spike, Step
+using Finch: Unfurled, Furlable, Stepper, Jumper, Run, Fill, Lookup, Simplify, Sequence, Phase, Thunk, Spike, Step
 using Finch: virtual_size, virtual_default, getstart, getstop
 using Finch.FinchNotation
 
@@ -41,7 +41,7 @@ end
 end
 
 function Finch.virtual_size(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler)
-    return [Extent(literal(1),value(:($(arr.ex).m), arr.Ti)), Extent(literal(1),value(:($(arr.ex).n), arr.Ti))]
+    return [Extent(literal(1),value(:($(arr.ex).m), arr.Ti)), Extent(literal(1), value(:($(arr.ex).n), arr.Ti))]
 end
 
 function lower(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler,  ::DefaultStyle)
@@ -86,7 +86,7 @@ function Finch.instantiate_reader(arr::VirtualSparseMatrixCSC, ctx::AbstractComp
                                 $my_i1 = $(Ti(0))
                             end
                         end,
-                        body = (ctx) -> Pipeline([
+                        body = (ctx) -> Sequence([
                             Phase(
                                 stop = (ctx, ext) -> value(my_i1),
                                 body = (ctx, ext) -> Stepper(
@@ -101,7 +101,7 @@ function Finch.instantiate_reader(arr::VirtualSparseMatrixCSC, ctx::AbstractComp
                                         end,
                                         body = (ctx) -> Step(
                                             stop = (ctx, ext) -> value(my_i),
-                                            body = Spike(
+                                            chunk = Spike(
                                                 body = Fill(zero(arr.Tv)),
                                                 tail = Thunk(
                                                     preamble = quote
@@ -134,8 +134,8 @@ end
 
 Finch.FinchNotation.finch_leaf(x::VirtualSparseMatrixCSC) = virtual(x)
 
-Finch.virtual_default(arr::VirtualSparseMatrixCSC) = zero(arr.Tv)
-Finch.virtual_eltype(tns::VirtualSparseMatrixCSC) = tns.Tv
+Finch.virtual_default(arr::VirtualSparseMatrixCSC, ctx) = zero(arr.Tv)
+Finch.virtual_eltype(tns::VirtualSparseMatrixCSC, ctx) = tns.Tv
 
 @kwdef mutable struct VirtualSparseVector
     ex
@@ -187,7 +187,7 @@ function Finch.instantiate_reader(arr::VirtualSparseVector, ctx::AbstractCompile
                         $my_i1 = $(Ti(0))
                     end
                 end,
-                body = (ctx) -> Pipeline([
+                body = (ctx) -> Sequence([
                     Phase(
                         stop = (ctx, ext) -> value(my_i1),
                         body = (ctx, ext) -> Stepper(
@@ -202,7 +202,7 @@ function Finch.instantiate_reader(arr::VirtualSparseVector, ctx::AbstractCompile
                                 end,
                                 body = (ctx) -> Step(
                                     stop = (ctx, ext) -> value(my_i),
-                                    body = Spike(
+                                    chunk = Spike(
                                         body = Fill(zero(arr.Tv)),
                                         tail = Thunk(
                                             preamble = quote
@@ -233,8 +233,8 @@ end
 
 Finch.FinchNotation.finch_leaf(x::VirtualSparseVector) = virtual(x)
 
-Finch.virtual_default(arr::VirtualSparseVector) = zero(arr.Tv)
-Finch.virtual_eltype(tns::VirtualSparseVector) = tns.Tv
+Finch.virtual_default(arr::VirtualSparseVector, ctx) = zero(arr.Tv)
+Finch.virtual_eltype(tns::VirtualSparseVector, ctx) = tns.Tv
 
 SparseArrays.nnz(fbr::Fiber) = countstored(fbr)
 
