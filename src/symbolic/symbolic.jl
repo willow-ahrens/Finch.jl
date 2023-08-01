@@ -228,6 +228,33 @@ isinvolution(::AbstractAlgebra, ::typeof(-)) = true
 isinvolution(::AbstractAlgebra, ::typeof(inv)) = true
 
 
+
+iscollapsable(alg) = (f) -> iscollapsable(alg, f)
+iscollapsable(alg, f::FinchNode) = f.kind === literal && iscollapsable(alg, f.val)
+"""
+    iscollapsable(algebra, f)
+
+Return true when `f` is collapsable in loop reduction.
+"""
+iscollapsable(::Any, f) = false
+iscollapsable(::AbstractAlgebra, ::typeof(or)) = true
+iscollapsable(::AbstractAlgebra, ::typeof(and)) = true
+iscollapsable(::AbstractAlgebra, ::typeof(|)) = true
+iscollapsable(::AbstractAlgebra, ::typeof(&)) = true
+iscollapsable(::AbstractAlgebra, ::typeof(+)) = true
+iscollapsable(::AbstractAlgebra, ::typeof(*)) = true
+iscollapsable(::AbstractAlgebra, ::typeof(min)) = true
+iscollapsable(::AbstractAlgebra, ::typeof(max)) = true
+
+"""
+    collapsed(rhs, op, ctx, ext)
+
+Return collapsed expression with respect to op and rhs.
+"""
+collapsed(rhs, op, ctx, ext) = call(op, measure(ext), rhs)
+
+
+
 getvars(arr::AbstractArray) = mapreduce(getvars, vcat, arr, init=[])
 getvars(arr) = getroot(arr) === nothing ? [] : [getroot(arr)]
 getroot(arr) = nothing
