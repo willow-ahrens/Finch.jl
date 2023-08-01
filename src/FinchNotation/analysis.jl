@@ -53,10 +53,10 @@ struct ParallelAnalysisResults <: Exception
     naive:: Bool
     withAtomics:: Bool
     withAtomicsAndAssoc:: Bool
-    tensorsNeedingAtomics:: Vector{FinchNode}
-    nonInjectiveAccss :: Vector{FinchNode}
-    nonAssocAssigns:: Vector{FinchNode}
-    nonConCurrentAccss::Vector{FinchNode}
+    tensorsNeedingAtomics:: Set{Any}
+    nonInjectiveAccss :: Set{FinchNode}
+    nonAssocAssigns:: Set{FinchNode}
+    nonConCurrentAccss::Set{FinchNode}
 end
 
 function parallelAnalysis(prog, index, alg, ctx) :: ParallelAnalysisResults
@@ -69,10 +69,10 @@ function parallelAnalysis(prog, index, alg, ctx) :: ParallelAnalysisResults
     naive = true
     withAtomics = true
     withAtomicsAndAssoc = true
-    tensorsNeedingAtomics:: Vector{FinchNode} = []
-    nonInjectiveAccss:: Vector{FinchNode} = []
-    nonAssocAssigns:: Vector{FinchNode} = []
-    nonConCurrentAccss::Vector{FinchNode} = []
+    tensorsNeedingAtomics:: Set{Any} = Set{Any}()
+    nonInjectiveAccss:: Set{FinchNode} = Set{FinchNode}()
+    nonAssocAssigns:: Set{FinchNode} = Set{FinchNode}()
+    nonConCurrentAccs::Set{FinchNode} = Set{FinchNode}()
     
 
     # Step 0:Filter out local defs
@@ -92,9 +92,9 @@ function parallelAnalysis(prog, index, alg, ctx) :: ParallelAnalysisResults
 
 
     # Step 1: Gather all the assigns and group them per root
-    assignByRoot :: Dict{FinchNode, Set{FinchNode}} = Dict{FinchNode, Set{FinchNode}}()
+    assignByRoot :: Dict{Any, Set{FinchNode}} = Dict{FinchNode, Set{FinchNode}}()
     for node in assigns
-        root = getroot(node.lhs.tns)
+        root = Finch.getroot(node.lhs.tns.val)
         nodeSet = get!(assignByRoot, root, Set{FinchNode}())
         push!(nodeSet, node)
     end
@@ -102,17 +102,17 @@ function parallelAnalysis(prog, index, alg, ctx) :: ParallelAnalysisResults
     for (root, nodeSet) in assignByRoot
         rep = first(nodeSet)
         tns = rep.lhs.tns
-        if rep.lhs.idx[end] != index
+        if rep.lhs.idxs[end] != index
             naive = false
-            push!(tensorsNeddingAtomics, root)
+            push!(tensorsNeedingAtomics, root)
             push!(nonInjectiveAccss, rep.lhs)
         end
 
         # FIXME: TRACE.
         # The access is injective
-        if !is_injective(tns, ctx)
+        if !Finch.is_injective(tns.val, ctx, (length(rep.lhs.idxs),))
             naive = false
-            push!(tensorsNeddingAtomics, root)
+            push!(tensorsNeedingAtomics, root)
             push!(nonInjectiveAccss, rep.lhs)
         end
 
@@ -121,11 +121,11 @@ function parallelAnalysis(prog, index, alg, ctx) :: ParallelAnalysisResults
             tnsp = repp.lhs.tns
             if tns != tnsp
                 naive = false
-                push!(tensorsNeddingAtomics, root)
+                push!(tensorsNeedingAtomics, root)
             end
-            if repp.lhs[end] != index
+            if repp.lhs.idxs[end] != index
                 naive = false
-                push!(tensorsNeddingAtomics, root)
+                push!(tensorsNeedingAtomics, root)
             end
         end
         # Step 3: Similarly, for associativity:
@@ -133,7 +133,7 @@ function parallelAnalysis(prog, index, alg, ctx) :: ParallelAnalysisResults
         # However, it is also not assosciative if there are multiples access with different ops or lhs.
         firstNode = first(nodeSet)
         for repp in nodeSet
-            if !isassociative(alg, repp.op)
+            if !Finch.isassociative(alg, repp.op)
                 naive = false
                 withAtomics = false
                 push!(nonAssocAssigns, repp)
@@ -152,15 +152,16 @@ function parallelAnalysis(prog, index, alg, ctx) :: ParallelAnalysisResults
 
     # Step 4: Look through all accesses and make sure they are concurrent:
     for acc in nonLocAccs
-        if !is_concurrent(acc.tns, ctx)
+        if !Finch.is_concurrent(acc.tns.val, ctx)
             naive = false
             withAtomics = false
             withAtomicsAndAssoc = false
+            push!(nonConCurrentAccs, acc)
             break
         end
     end
 
-    return ParallelAnalysisResults(naive, withAtomics, withAtomicssAndAssoc, tensorsNeddingAtomics, nonInjectiveAccss, nonAssocAssigns, nonConCurrentAccs)
+    return ParallelAnalysisResults(naive, withAtomics, withAtomicsAndAssoc, tensorsNeedingAtomics, nonInjectiveAccss, nonAssocAssigns, nonConCurrentAccs)
 end
 
 

@@ -421,7 +421,7 @@ is_laminable_updater(lvl::VirtualSparseByteMapLevel, ctx, ::Union{typeof(default
 
 # is_concurrent(lvl::VirtualSparseByteMapLevel, ctx, ::Union{::typeof(defaultread), ::typeof(walk), ::typeof(gallop), ::typeof(follow), typeof(defaultupdate)}) = true
 
-is_injective(lvl::VirtualSparseByteMapLevel, ctx, accs::Vararg{UInt}) = false
+is_injective(lvl::VirtualSparseByteMapLevel, ctx, accs) = false
 
 instantiate_updater(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, protos...) = 
     instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)

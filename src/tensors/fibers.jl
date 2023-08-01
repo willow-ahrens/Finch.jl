@@ -17,9 +17,16 @@ struct Fiber{Lvl} <: AbstractFiber{Lvl}
     lvl::Lvl
 end
 
+
+
 mutable struct VirtualFiber{Lvl} <: AbstractVirtualFiber{Lvl}
     lvl::Lvl
 end
+
+getroot(fiber:: VirtualFiber) = fiber.lvl
+is_injective(fiber:: VirtualFiber, ctx, accs) = is_injective(fiber.lvl, ctx, accs)
+is_concurrent(fiber:: VirtualFiber, ctx) = is_concurrent(fiber.lvl, ctx)
+
 function virtualize(ex, ::Type{<:Fiber{Lvl}}, ctx, tag=ctx.freshen(:tns)) where {Lvl}
     lvl = virtualize(:($ex.lvl), Lvl, ctx, Symbol(tag, :_lvl))
     VirtualFiber(lvl)

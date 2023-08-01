@@ -1,4 +1,4 @@
-@kwdef struct Unfurled
+@kwdef struct Unfurled <: AbstractVirtualCombinator
     arr
     ndims = 0
     body
@@ -110,6 +110,7 @@ function lower(node::Unfurled, ctx::AbstractCompiler, ::DefaultStyle)
 end
 
 getroot(tns::Unfurled) = getroot(tns.arr)
+is_injective(tns:: Unfurled, ctx, accs) = is_injective(tns.arr, ctx, accs)
 
 function lower_access(ctx::AbstractCompiler, node, tns::Unfurled)
     if !isempty(node.idxs)

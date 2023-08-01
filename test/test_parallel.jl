@@ -4,11 +4,9 @@
 
     let
         io = IOBuffer()
-
-        @repl io A = sparse([0 0 3.3; 1.1 0 0; 2.2 0 4.4; 0 0 5.5])
-        @repl io y = [1.0, 2.0, 3.0, 4.0]
-        @repl io x = [1, 2, 3]
-        
+        A = @fiber(d(sl(e(0.0))))
+        x = @fiber(d(e(0.0)))
+        y = @fiber(d(e(0.0)))
         @repl io @finch_code begin
             y .= 0
             for j = parallel(_)
@@ -18,19 +16,14 @@
             end
         end
 
-        @repl io @finch begin
-            y .= 0
-            for j = parallel(_)
-                for i = _
-                    y[j] += x[i] * A[walk(i), j]
-                end
-            end
-        end
         @test check_output("debug_parallel_spmv.txt", String(take!(io)))
     end
 
     let
-        @test_throws ParallelAnalysisResults try
+        A = @fiber(d(sl(e(0.0))))
+        x = @fiber(d(e(0.0)))
+        y = @fiber(d(e(0.0)))
+        @test_throws Finch.ParallelAnalysisResults try
             @finch_code begin
                 y .= 0
                 for j = parallel(_)
@@ -40,7 +33,7 @@
                 end
             end
         catch e
-            @test e isa ParallelAnalysisResults
+            @test e isa Finch.ParallelAnalysisResults
             @test !e.naive
             @test e.withAtomics
             @test length(e.nonInjectiveAccss) == 1
@@ -49,7 +42,11 @@
     end
 
     let
-        @test_throws ParallelAnalysisResults try
+        A = @fiber(d(sl(e(0.0))))
+        x = @fiber(d(e(0.0)))
+        y = @fiber(d(e(0.0)))
+
+        @test_throws Finch.ParallelAnalysisResults try
             @finch_code begin
                 y .= 0
                 for j = parallel(_)
@@ -60,15 +57,19 @@
                 end
             end
         catch e
-            @test e isa ParallelAnalysisResults
+            @test e isa Finch.ParallelAnalysisResults
             @test !e.naive
             @test e.withAtomics
-            @test length(e.nonInjectiveAccss) == 0
+            @test length(e.nonInjectiveAccss) == 1
             throw(e)
         end
     end
-        let
-        @test_throws ParallelAnalysisResults try
+    let
+        A = @fiber(d(sl(e(0.0))))
+        x = @fiber(d(e(0.0)))
+        y = @fiber(d(e(0.0)))
+
+        @test_throws Finch.ParallelAnalysisResults try
             @finch_code begin
                 y .= 0
                 for j = parallel(_)
@@ -79,10 +80,10 @@
                 end
             end
         catch e
-            @test e isa ParallelAnalysisResults
+            @test e isa Finch.ParallelAnalysisResults
             @test !e.naive
             @test !e.withAtomics
-            @test length(e.nonInjectiveAccss) == 0
+            @test length(e.nonInjectiveAccss) == 1
             @test e.withAtomicsAndAssoc
             @test length(e.nonAssocAssigns) == 2
             throw(e)

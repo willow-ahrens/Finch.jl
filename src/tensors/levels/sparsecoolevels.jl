@@ -321,7 +321,7 @@ end
 
 is_laminable_updater(lvl::VirtualSparseCOOLevel, ctx, protos...) = false
 
-is_injective(lvl::VirtualSparseCOOLevel, ctx, accs::Vararg{UInt}) = true
+is_injective(lvl::VirtualSparseCOOLevel, ctx, accs) = true
 
 # is_concurrent(lvl::VirtualSparseCOOLevel, ctx, ::Union{::typeof(defaultread), ::typeof(walk), ::typeof(gallop), ::typeof(follow), typeof(defaultupdate)}) = true
 

@@ -173,7 +173,7 @@ is_laminable_updater(lvl::VirtualDenseLevel, ctx, ::Union{typeof(defaultupdate),
     is_laminable_updater(lvl.lvl, ctx, protos...)
     
 
-is_injective(lvl::VirtualDenseLevel, ctx, accs::Vararg{UInt}) = true
+is_injective(lvl::VirtualDenseLevel, ctx, accs) = true
 
 instantiate_reader(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, ::Union{typeof(defaultread), typeof(follow)}, protos...) = subunfurl_dense_helper(fbr, ctx, instantiate_reader, VirtualSubFiber, protos...)
 instantiate_updater(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...) = subunfurl_dense_helper(fbr, ctx, instantiate_updater, VirtualSubFiber, protos...)

@@ -164,7 +164,7 @@ end
 is_laminable_updater(lvl::VirtualSparseTriangleLevel, ctx, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...) =
     is_laminable_updater(lvl.lvl, ctx, protos[lvl.N + 1:end]...)
 
-is_injective(lvl::VirtualSparseTriangleLevel, ctx, accs::Vararg{UInt}) = false
+is_injective(lvl::VirtualSparseTriangleLevel, ctx, accs) = false
 
 
 instantiate_reader(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, protos...) = instantiate_reader_triangular_dense_helper(fbr, ctx, instantiate_reader, VirtualSubFiber, protos...)
