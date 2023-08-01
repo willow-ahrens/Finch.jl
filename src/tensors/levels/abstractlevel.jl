@@ -12,7 +12,6 @@ is_concurrent(lvl::AbstractVirtualLevel, ctx) = true
 is_injective(lvl::AbstractVirtualLevel, ctx, accs) = false
 
 
-getroot(tns::AbstractVirtualLevel) = tns
 
 
 # supports_reassembly(lvl::AbstractVirtualLevel) = false

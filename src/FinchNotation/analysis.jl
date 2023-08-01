@@ -108,7 +108,6 @@ function parallelAnalysis(prog, index, alg, ctx) :: ParallelAnalysisResults
             push!(nonInjectiveAccss, rep.lhs)
         end
 
-        # FIXME: TRACE.
         # The access is injective
         if !Finch.is_injective(tns.val, ctx, (length(rep.lhs.idxs),))
             naive = false
@@ -164,11 +163,3 @@ function parallelAnalysis(prog, index, alg, ctx) :: ParallelAnalysisResults
     return ParallelAnalysisResults(naive, withAtomics, withAtomicsAndAssoc, tensorsNeedingAtomics, nonInjectiveAccss, nonAssocAssigns, nonConCurrentAccs)
 end
 
-
-
-#=
-# willow says hello!
-for node in PostOrderDFS(prgm)
-    if @capture node access(~tns, ~mode, ~idxs..., i)
-    if @capture node access(~tns, ~mode, ~idxs...)
-=#
