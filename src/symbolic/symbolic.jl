@@ -229,30 +229,40 @@ isinvolution(::AbstractAlgebra, ::typeof(inv)) = true
 
 
 
-iscollapsable(alg) = (f) -> iscollapsable(alg, f)
-iscollapsable(alg, f::FinchNode) = f.kind === literal && iscollapsable(alg, f.val)
+iscollapsible(alg) = (f) -> iscollapsible(alg, f)
+iscollapsible(alg, f::FinchNode) = f.kind === literal && iscollapsible(alg, f.val)
 """
-    iscollapsable(algebra, f)
+    iscollapsible(algebra, f)
 
-Return true when `f` is collapsable in loop reduction.
+Return true when `f` is collapsible in loop reduction.
 """
-iscollapsable(::Any, f) = false
-iscollapsable(::AbstractAlgebra, ::typeof(or)) = true
-iscollapsable(::AbstractAlgebra, ::typeof(and)) = true
-iscollapsable(::AbstractAlgebra, ::typeof(|)) = true
-iscollapsable(::AbstractAlgebra, ::typeof(&)) = true
-iscollapsable(::AbstractAlgebra, ::typeof(+)) = true
-iscollapsable(::AbstractAlgebra, ::typeof(*)) = true
-iscollapsable(::AbstractAlgebra, ::typeof(min)) = true
-iscollapsable(::AbstractAlgebra, ::typeof(max)) = true
+iscollapsible(::Any, f) = false
+iscollapsible(::AbstractAlgebra, ::typeof(or)) = true
+iscollapsible(::AbstractAlgebra, ::typeof(and)) = true
+iscollapsible(::AbstractAlgebra, ::typeof(|)) = true
+iscollapsible(::AbstractAlgebra, ::typeof(&)) = true
+iscollapsible(::AbstractAlgebra, ::typeof(+)) = true
+iscollapsible(::AbstractAlgebra, ::typeof(*)) = true
+iscollapsible(::AbstractAlgebra, ::typeof(min)) = true
+iscollapsible(::AbstractAlgebra, ::typeof(max)) = true
 
+
+collapsed(alg, f::FinchNode, idx, ext, node) = collapsed(alg, f.val, idx, ext, node)
 """
-    collapsed(rhs, op, ctx, ext)
+    collapsed(algebra, f, idx, ext, node)
 
-Return collapsed expression with respect to op and rhs.
+Return collapsed expression with respect to f.
 """
-collapsed(rhs, op, ctx, ext) = call(op, measure(ext), rhs)
-
+collapsed(alg, f::Any, idx, ext, node) = nothing
+collapsed(alg, f::typeof(or), idx, ext, node) = node
+collapsed(alg, f::typeof(and), idx, ext, node) = node
+collapsed(alg, f::typeof(|), idx, ext, node) = node
+collapsed(alg, f::typeof(&), idx, ext, node) = node
+collapsed(alg, f::typeof(-), idx, ext, node) = call(*, measure(ext), node)
+collapsed(alg, f::typeof(*), idx, ext, node) = call(^, node, measure(ext))
+collapsed(alg, f::typeof(+), idx, ext, node) = call(*, measure(ext), node)
+collapsed(alg, f::typeof(min), idx, ext, node) = node
+collapsed(alg, f::typeof(max), idx, ext, node) = node
 
 
 getvars(arr::AbstractArray) = mapreduce(getvars, vcat, arr, init=[])

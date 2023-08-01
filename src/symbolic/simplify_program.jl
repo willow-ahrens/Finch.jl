@@ -111,52 +111,47 @@ function get_program_rules(alg, shash)
         (@rule sieve(true, ~a) => a),
         (@rule sieve(false, ~a) => block()), #TODO should add back skipvisitor
 
-
+        # Top-down reduction
         (@rule loop(~idx, ~ext::isvirtual, ~body) => begin
-            #body_contain_idx = mapreduce((node) -> node.kind === index && node == idx, 
-            #                             (x, y) -> x || y, PostOrderDFS(body), init=false) 
             body_contain_idx = idx ∈ getunbound(body)
             if !body_contain_idx
-                decl_in_scope = Set()
-                ScopeVisitor(scope=decl_in_scope)(body) 
-                Postwalk(@rule assign(access(~lhs, ~m), +, ~b) => begin  
+                decl_in_scope = filter(!isnothing, map(node-> if @capture(node, declare(~tns, ~init)) tns end, PostOrderDFS(body)))
+                Postwalk(@rule assign(access(~lhs, ~m), ~f::iscollapsible(alg), ~b) => begin  
                              if !(lhs in decl_in_scope)
-                                 assign(access(lhs, m), +, call(*, b, measure(ext.val)))
+                                 assign(access(lhs, m), f, collapsed(alg, f, idx, ext.val, b))
                              end
                          end)(body)
             end
         end),
 
-        (@rule loop(~i, ~a::isvirtual, assign(access(~b, updater(), ~j...), ~f::isidempotent(alg), ~c)) => begin
-            if i ∉ j && i ∉ getunbound(c)
-                sieve(call(>, measure(a.val), 0), assign(access(b, updater(), j...), f, c))
-            end
-        end),
-        (@rule loop(~i, ~a::isvirtual, assign(access(~b, ~m, ~j...), +, ~d)) => begin
+        # Bottom-up reduction1
+        (@rule loop(~i, ~ext::isvirtual, assign(access(~b, ~m, ~j...), ~f::iscollapsible(alg), ~d)) => begin
             if i ∉ j && i ∉ getunbound(d)
-                decl_in_scope = Set()
-                ScopeVisitor(scope=decl_in_scope)(d) 
+                decl_in_scope = filter(!isnothing, map(node-> if @capture(node, declare(~tns, ~init)) tns end, PostOrderDFS(d)))
                 if !(b in decl_in_scope)
-                  assign(access(b, m, j...), +, call(*, measure(a.val), d))
+                    assign(access(b, m, j...), f, collapsed(alg, f, i, ext.val, d))
                 end
             end
         end),
 
-        (@rule assign(~a, ~op, cached(~b, ~c)) => assign(a, op, b)),
-
-        #(@rule loop(~i, ~ext::isvirtual, assign(access(~a, ~m), $(literal(+)), ~b::isliteral)) =>
-        #    assign(access(a, m), +, call(*, b, measure(ext.val)))
-        #),
-        (@rule loop(~i, ~ext::isvirtual, block(~s1..., assign(access(~a, ~m, ~j...), $(literal(+)), ~b), ~s2...)) => begin 
+        # Bottom-up reduction2
+        (@rule loop(~i, ~ext::isvirtual, block(~s1..., assign(access(~a, ~m, ~j...), ~f::iscollapsible(alg), ~b), ~s2...)) => begin 
            if ortho(getroot(a), s1) && ortho(getroot(a), s2)
                if i ∉ j && i ∉ getunbound(b)
-                   decl_in_scope = Set()
-                   ScopeVisitor(scope=decl_in_scope)(b) 
+                   decl_in_scope = filter(!isnothing, map(node-> if @capture(node, declare(~tns, ~init)) tns end, PostOrderDFS(b)))
                    if !(b in decl_in_scope)
-                      block(assign(access(a, m), +, call(*, b, measure(ext.val))), loop(i, ext, sequence(s1..., s2...)))
+                       block(assign(access(a, m), f, collapsed(alg, f, i, ext.val, b)), loop(i, ext, sequence(s1..., s2...)))
                    end
                end
            end
+        end),
+        
+        (@rule assign(~a, ~op, cached(~b, ~c)) => assign(a, op, b)),
+
+        (@rule loop(~i, ~a::isvirtual, assign(access(~b, updater(), ~j...), ~f::isidempotent(alg), ~c)) => begin
+            if i ∉ j && i ∉ getunbound(c)
+                sieve(call(>, measure(a.val), 0), assign(access(b, updater(), j...), f, c))
+            end
         end),
         (@rule loop(~i, ~ext, assign(access(~a, ~m), ~f::isidempotent(alg), ~b::isliteral)) =>
             sieve(call(>, measure(ext.val), 0), assign(access(a, m), f, b))
