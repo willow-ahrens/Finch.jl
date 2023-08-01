@@ -8,7 +8,7 @@
 using Finch
 
 ## Construct a CSR sparse input matrix (20% random nonzeros)
-A = @fiber(d(sl(e(0.0))), fsprand((5, 7), 0.2))
+A = Fiber!(Dense(SparseList(Element(0.0))), fsprand((5, 7), 0.2))
 
 ## Construct a dense vector input and output (all random values)
 x = rand(7)
