@@ -27,10 +27,10 @@ function spgemm_gustavson(A, B)
     w = Fiber!(SparseByteMap(Element(z)))
     @finch begin
         C .= 0
-        @loop j begin
+        for j=_
             w .= 0
-            @loop k i w[i] += A[i, k] * B[k, j]
-            @loop i C[i, j] = w[i]
+            for k=_, i=_; w[i] += A[i, k] * B[k, j] end
+            for i=_; C[i, j] = w[i] end
         end
     end
     return C

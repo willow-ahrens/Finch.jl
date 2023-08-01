@@ -51,7 +51,7 @@
         @finch begin
             C .= 0
             d .= 0
-            @loop i begin
+            for i = _
                 a .= 0
                 b .= 0
                 a[] = A[i]
@@ -77,10 +77,10 @@
             if !seen
                 code = @finch_code begin
                     B .= 0
-                    @loop j begin
+                    for j=_
                         w .= 0
-                        @loop k i w[i] += A[i, k] * A[k, j]
-                        @loop i B[i, j] = w[i]
+                        for k=_, i=_; w[i] += A[i, k] * A[k, j] end
+                        for i=_ B[i, j] = w[i] end
                     end
                 end
                 check_output("gustavsons.jl", code)
@@ -88,10 +88,10 @@
             end
             @finch begin
                 B .= 0
-                @loop j begin
+                for j=_
                     w .= 0
-                    @loop k i w[i] += A[i, k] * A[k, j]
-                    @loop i B[i, j] = w[i]
+                    for k=_, i=_ w[i] += A[i, k] * A[k, j] end
+                    for i=_ B[i, j] = w[i] end
                 end
             end
             B_ref = A_ref * A_ref

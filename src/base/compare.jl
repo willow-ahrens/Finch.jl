@@ -1,9 +1,12 @@
 @staged function helper_equal(A, B)
     idxs = [Symbol(:i_, n) for n = 1:ndims(A)]
+    exts = Expr(:block, (:($idx = _) for idx in reverse(idxs))...)
     return quote
         size(A) == size(B) || return false
         check = Scalar(true)
-        @finch @loop($(reverse(idxs)...), check[] &= (A[$(idxs...)] == B[$(idxs...)]))
+        @finch $(Expr(:for, exts, quote
+            check[] &= (A[$(idxs...)] == B[$(idxs...)])
+        end))
         return check[]
     end
 end
@@ -22,10 +25,13 @@ end
 
 @staged function helper_isequal(A, B)
     idxs = [Symbol(:i_, n) for n = 1:ndims(A)]
+    exts = Expr(:block, (:($idx = _) for idx in reverse(idxs))...)
     return quote
         size(A) == size(B) || return false
         check = Scalar(true)
-        @finch @loop($(reverse(idxs)...), check[] &= isequal(A[$(idxs...)], B[$(idxs...)]))
+        @finch $(Expr(:for, exts, quote
+            check[] &= isequal(A[$(idxs...)], B[$(idxs...)])
+        end))
         return check[]
     end
 end

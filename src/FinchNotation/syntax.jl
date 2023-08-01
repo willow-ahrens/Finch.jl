@@ -125,28 +125,21 @@ function (ctx::FinchParserVisitor)(ex::Expr)
         throw(FinchSyntaxError("Finch does not support elseif."))
     elseif @capture ex :(.=)(~tns, ~init)
         return :($(ctx.nodes.declare)($(ctx(tns)), $(ctx(init))))
-    elseif @capture ex :macrocall($(Symbol("@declare")), ~ln::islinenum, ~tns, ~init)
-        return :($(ctx.nodes.declare)($(ctx(tns)), $(ctx(init))))
     elseif @capture ex :macrocall($(Symbol("@freeze")), ~ln::islinenum, ~tns)
         return :($(ctx.nodes.freeze)($(ctx(tns))))
     elseif @capture ex :macrocall($(Symbol("@thaw")), ~ln::islinenum, ~tns)
         return :($(ctx.nodes.thaw)($(ctx(tns))))
-    elseif @capture ex :for(:(=)(~idx, ~ext), ~body)
-        return ctx(:(@loop($idx = $ext, $body)))
+    elseif @capture ex :for(:block(), ~body)
+        return ctx(body)
     elseif @capture ex :for(:block(:(=)(~idx, ~ext), ~tail...), ~body)
         if isempty(tail)
-            return ctx(:(@loop($idx = $ext, $body)))
+            return ctx(:(for $idx = $ext; $body end))
         else
-            return ctx(:(@loop($idx = $ext, $(Expr(:for, Expr(:block, tail...), body)))))
+            return ctx(:(for $idx = $ext; $(Expr(:for, Expr(:block, tail...), body)) end))
         end
-    elseif @capture ex :macrocall($(Symbol("@loop")), ~ln::islinenum, ~body)
-        ctx(body)
-    elseif @capture ex :macrocall($(Symbol("@loop")), ~ln::islinenum, ~idx, ~tail..., ~body)
-        if !(@capture idx :(=)(~idx, ~ext))
-            ext = :_
-        end
+    elseif @capture ex :for(:(=)(~idx, ~ext), ~body)
         ext = ctx(ext)
-        body = isempty(tail) ? ctx(body) : ctx(:(@loop($(tail...), $body)))
+        body = ctx(body)
         if idx isa Symbol
             return quote
                 let $(esc(idx)) = $(ctx.nodes.index(idx))
@@ -163,10 +156,8 @@ function (ctx::FinchParserVisitor)(ex::Expr)
         if length(bodies) == 1
             return ctx(:($(bodies[1])))
         else
-            return ctx(:(@block($(bodies...),)))
+            return :($(ctx.nodes.block)($(map(ctx, bodies)...)))
         end
-    elseif @capture ex :macrocall($(Symbol("@block")), ~ln::islinenum, ~bodies...)
-        return :($(ctx.nodes.block)($(map(ctx, bodies)...)))
     elseif @capture ex :ref(~tns, ~idxs...)
         mode = :($(ctx.nodes.reader)())
         return :($(ctx.nodes.access)($(ctx(tns)), $mode, $(map(ctx, idxs)...)))

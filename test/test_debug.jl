@@ -26,7 +26,7 @@
     x = Fiber!(SparseList(Element(0.0)))
 
     code1 = Finch.@finch_program_instance begin
-        @loop j i y[i] += A[i, j] * x[j]
+        for j=_, i=_; y[i] += A[i, j] * x[j] end
     end
 
     @test check_output("debug_spmv_resume.txt", test_debug_code(code1))

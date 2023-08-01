@@ -56,7 +56,7 @@ function bfs(edges, source=5)
     while countstored(F) > 0
         @finch begin
             _F .= false
-            @loop j k begin
+            for j=_, k=_
                 v .= false
                 v[] = F[j] && edges[k, j] && !(V[k])
                 if v[]
@@ -134,8 +134,8 @@ function tricount(edges)
     L = Fiber!(Dense(SparseList(Element(0), n), n))
     @finch begin
         L .= 0
-        @loop j begin
-            @loop i L[i,j] = lotrimask[i,j+1] * edges[i,j]
+        for j=_, i=_
+            L[i,j] = lotrimask[i,j+1] * edges[i,j]
         end
     end
 

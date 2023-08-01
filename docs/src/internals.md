@@ -169,7 +169,7 @@ A = Fiber!(Dense(SparseList(Element(0.0))))
 x = Fiber!(SparseList(Element(0.0)))
 
 code = Finch.@finch_program_instance begin
-   @loop j i y[i] += A[i, j] * x[j]
+   for j=_, i=_; y[i] += A[i, j] * x[j] end
 end
 
 debug = begin_debug(code)
