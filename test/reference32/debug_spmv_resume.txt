@@ -12586,7 +12586,7 @@ end, quote
         end
     qos = 1 * y_lvl.shape
     resize!(y_lvl_2.val, qos)
-    (y = Fiber(@finch{#0,denselevels.jl:109}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int32, value(y_lvl.shape, Int32)))),)
+    (y = Fiber(@finch{#0,denselevels.jl:105}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int32, value(y_lvl.shape, Int32)))),)
 end, quote
     y_lvl = ex.body.body.lhs.tns.tns.lvl
     y_lvl_2 = y_lvl.lvl
@@ -12682,7 +12682,7 @@ end, quote
         end
     qos = 1 * y_lvl.shape
     resize!(y_lvl_2.val, qos)
-    (y = Fiber((DenseLevel){Int32}(@finch{#0,elementlevels.jl:81}(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0)), @finch{#0,lower.jl:135}(y_lvl.shape::Int32))),)
+    (y = Fiber((DenseLevel){Int32}(@finch{#0,elementlevels.jl:77}(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0)), @finch{#0,lower.jl:135}(y_lvl.shape::Int32))),)
 end, quote
     y_lvl = ex.body.body.lhs.tns.tns.lvl
     y_lvl_2 = y_lvl.lvl
