@@ -109,9 +109,9 @@ isabelian(alg, f) = isassociative(alg, f) && iscommutative(alg, f)
 isdistributive(alg) = (f, g) -> isdistributive(alg, f, g)
 isdistributive(alg, f::FinchNode, x::FinchNode) = isliteral(f) && isliteral(x) && isdistributive(alg, f.val, x.val)
 """
-    isidempotent(algebra, f)
+    isdistributive(algebra, f, g)
 
-Return true when `f(a, b) = f(f(a, b), b)` in `algebra`.
+Return true when `f(a, g(b, c)) = g(f(a, b), f(a, c))` in `algebra`.
 """
 isdistributive(::Any, f, g) = false
 isdistributive(::AbstractAlgebra, ::typeof(+), ::typeof(*)) = true
@@ -229,35 +229,14 @@ isinvolution(::AbstractAlgebra, ::typeof(inv)) = true
 
 
 
-iscollapsible(alg) = (f) -> iscollapsible(alg, f)
-iscollapsible(alg, f::FinchNode) = f.kind === literal && iscollapsible(alg, f.val)
-"""
-    iscollapsible(algebra, f)
-
-Return true when `f` is collapsible in loop reduction.
-"""
-iscollapsible(::Any, f) = false
-iscollapsible(::AbstractAlgebra, ::typeof(or)) = true
-iscollapsible(::AbstractAlgebra, ::typeof(and)) = true
-iscollapsible(::AbstractAlgebra, ::typeof(|)) = true
-iscollapsible(::AbstractAlgebra, ::typeof(&)) = true
-iscollapsible(::AbstractAlgebra, ::typeof(+)) = true
-iscollapsible(::AbstractAlgebra, ::typeof(*)) = true
-iscollapsible(::AbstractAlgebra, ::typeof(min)) = true
-iscollapsible(::AbstractAlgebra, ::typeof(max)) = true
-
-
 collapsed(alg, idx, ext, lhs, f::FinchNode, rhs) = collapsed(alg, idx, ext, lhs, f.val, rhs)
 """
     collapsed(algebra, f, idx, ext, node)
 
 Return collapsed expression with respect to f.
 """
-collapsed(alg, idx, ext, lhs, f::Any, rhs) = nothing
-collapsed(alg, idx, ext, lhs, f::typeof(or), rhs) = assign(lhs, f, rhs) 
-collapsed(alg, idx, ext, lhs, f::typeof(and), rhs) = assign(lhs, f, rhs)
-collapsed(alg, idx, ext, lhs, f::typeof(|), rhs) = assign(lhs, f, rhs)
-collapsed(alg, idx, ext, lhs, f::typeof(&), rhs) = assign(lhs, f, rhs)
+collapsed(alg, idx, ext, lhs, f::Any, rhs) = isidempotent(alg, f) ? assign(lhs, f, rhs) : nothing # Do we need sieve for idempotent?
+
 collapsed(alg, idx, ext, lhs, f::typeof(-), rhs) = assign(lhs, f, call(*, measure(ext), rhs))
 collapsed(alg, idx, ext, lhs, f::typeof(*), rhs) = assign(lhs, f, call(^, rhs, measure(ext)))
 collapsed(alg, idx, ext, lhs, f::typeof(+), rhs) = begin
@@ -271,9 +250,6 @@ collapsed(alg, idx, ext, lhs, f::typeof(+), rhs) = begin
         assign(lhs, f, call(*, measure(ext), rhs))
     end
 end
-collapsed(alg, idx, ext, lhs, f::typeof(min), rhs) = assign(lhs, f, rhs)
-collapsed(alg, idx, ext, lhs, f::typeof(max), rhs) = assign(lhs, f, rhs)
-
 
 getvars(arr::AbstractArray) = mapreduce(getvars, vcat, arr, init=[])
 getvars(arr) = getroot(arr) === nothing ? [] : [getroot(arr)]
