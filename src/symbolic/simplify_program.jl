@@ -116,9 +116,10 @@ function get_program_rules(alg, shash)
             body_contain_idx = idx ∈ getunbound(body)
             if !body_contain_idx
                 decl_in_scope = filter(!isnothing, map(node-> if @capture(node, declare(~tns, ~init)) tns end, PostOrderDFS(body)))
-                Postwalk(@rule assign(access(~lhs, ~m), ~f::iscollapsible(alg), ~b) => begin  
+                Postwalk(@rule assign(access(~lhs, ~m, ~j...), ~f::iscollapsible(alg), ~b) => begin  
                              if !(lhs in decl_in_scope)
-                                 assign(access(lhs, m), f, collapsed(alg, f, idx, ext.val, b))
+                                 #assign(access(lhs, m, j...), f, collapsed(alg, f, idx, ext.val, b))
+                                 collapsed(alg, f, idx, ext.val, assign(access(lhs, m, j...), f, b))
                              end
                          end)(body)
             end
@@ -129,7 +130,8 @@ function get_program_rules(alg, shash)
             if i ∉ j && i ∉ getunbound(d)
                 decl_in_scope = filter(!isnothing, map(node-> if @capture(node, declare(~tns, ~init)) tns end, PostOrderDFS(d)))
                 if !(b in decl_in_scope)
-                    assign(access(b, m, j...), f, collapsed(alg, f, i, ext.val, d))
+                    #assign(access(b, m, j...), f, collapsed(alg, f, i, ext.val, d))
+                    collapsed(alg, f, i, ext.val, assign(access(b, m, j...), f, d))
                 end
             end
         end),
@@ -140,7 +142,8 @@ function get_program_rules(alg, shash)
                if i ∉ j && i ∉ getunbound(b)
                    decl_in_scope = filter(!isnothing, map(node-> if @capture(node, declare(~tns, ~init)) tns end, PostOrderDFS(b)))
                    if !(b in decl_in_scope)
-                       block(assign(access(a, m), f, collapsed(alg, f, i, ext.val, b)), loop(i, ext, sequence(s1..., s2...)))
+                       #block(assign(access(a, m, j...), f, collapsed(alg, f, i, ext.val, b)), loop(i, ext, sequence(s1..., s2...)))
+                       block(collapsed(alg, f, i, ext.val, assign(access(a, m, j...), f, b)), loop(i, ext, sequence(s1..., s2...)))
                    end
                end
            end

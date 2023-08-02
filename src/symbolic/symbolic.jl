@@ -260,13 +260,20 @@ collapsed(alg, f::typeof(|), idx, ext, node) = node
 collapsed(alg, f::typeof(&), idx, ext, node) = node
 collapsed(alg, f::typeof(-), idx, ext, node) = call(*, measure(ext), node)
 collapsed(alg, f::typeof(*), idx, ext, node) = call(^, node, measure(ext))
-collapsed(alg, f::typeof(+), idx, ext, node) = begin 
-    if (@capture node call(*, ~a1..., call(∂, ~i1..., idx, ~i2...), ~a2...)) && is_continuous_extent(ext) # Lebesgue
-        call(*, measure(ext), a1..., a2..., call(∂, i1..., i2...))
-    elseif is_continuous_extent(ext) # Counting
-        sieve(call(==, measure(ext), 0), node) #Wrong! 
-    else # Discrete Extent
-        call(*, measure(ext), node)
+collapsed(alg, f::typeof(+), idx, ext, node) = begin
+    if (@capture node assign(~lhs, ~f, ~rhs)) 
+        if is_continuous_extent(ext) 
+            if (@capture rhs call(*, ~a1..., call(∂, ~i1..., idx, ~i2...), ~a2...)) # Lebesgue
+                println(assign(lhs, f, call(*, measure(ext), a1..., a2..., call(∂, i1..., i2...))))
+                assign(lhs, f, call(*, measure(ext), a1..., a2..., call(∂, i1..., i2...)))
+            else # Counting
+                println(sieve(call(==, measure(ext), 0), node))
+                sieve(call(==, measure(ext), 0), node) # Should we put whole "assign" as an argument of collapsed because of this counting measure?
+            end
+        else # Discrete Extent
+            println(assign(lhs, f, call(*, measure(ext), node)))
+            assign(lhs, f, call(*, measure(ext), node))
+        end
     end
 end
 collapsed(alg, f::typeof(min), idx, ext, node) = node
