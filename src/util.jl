@@ -223,6 +223,8 @@ function ispure(x)
         return ispure(fn)
     elseif x isa Function
         return ispure(unresolve1(x))
+    elseif x isa QuoteNode
+        return ispure(x.value)
     else
         return false
     end
