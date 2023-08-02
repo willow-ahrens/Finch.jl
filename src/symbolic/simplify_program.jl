@@ -116,34 +116,39 @@ function get_program_rules(alg, shash)
             body_contain_idx = idx ∈ getunbound(body)
             if !body_contain_idx
                 decl_in_scope = filter(!isnothing, map(node-> if @capture(node, declare(~tns, ~init)) tns end, PostOrderDFS(body)))
-                Postwalk(@rule assign(access(~lhs, ~m, ~j...), ~f::iscollapsible(alg), ~b) => begin  
+                Postwalk(@rule assign(access(~lhs, ~m, ~j...), ~f::iscollapsible(alg), ~rhs) => begin  
                              if !(lhs in decl_in_scope)
-                                 #assign(access(lhs, m, j...), f, collapsed(alg, f, idx, ext.val, b))
-                                 collapsed(alg, f, idx, ext.val, assign(access(lhs, m, j...), f, b))
+                                 collapsed(alg, idx, ext.val, access(lhs, m, j...), f, rhs)
                              end
                          end)(body)
             end
         end),
 
+        # Lifting sieve (TODO multiple sieves in the block) 
+        (@rule loop(~idx, ~ext::isvirtual, sieve(~cond, ~body)) => begin
+            if idx ∉ getunbound(cond)
+                sieve(cond, loop(idx, ext, body))
+            end
+        end),
+
         # Bottom-up reduction1
-        (@rule loop(~i, ~ext::isvirtual, assign(access(~b, ~m, ~j...), ~f::iscollapsible(alg), ~d)) => begin
-            if i ∉ j && i ∉ getunbound(d)
-                decl_in_scope = filter(!isnothing, map(node-> if @capture(node, declare(~tns, ~init)) tns end, PostOrderDFS(d)))
-                if !(b in decl_in_scope)
-                    #assign(access(b, m, j...), f, collapsed(alg, f, i, ext.val, d))
-                    collapsed(alg, f, i, ext.val, assign(access(b, m, j...), f, d))
+        (@rule loop(~idx, ~ext::isvirtual, assign(access(~lhs, ~m, ~j...), ~f::iscollapsible(alg), ~rhs)) => begin
+            if idx ∉ j && idx ∉ getunbound(rhs)
+                decl_in_scope = filter(!isnothing, map(node-> if @capture(node, declare(~tns, ~init)) tns end, PostOrderDFS(rhs)))
+                if !(lhs in decl_in_scope)
+                    collapsed(alg, idx, ext.val, access(lhs, m, j...), f, rhs)
                 end
             end
         end),
 
         # Bottom-up reduction2
-        (@rule loop(~i, ~ext::isvirtual, block(~s1..., assign(access(~a, ~m, ~j...), ~f::iscollapsible(alg), ~b), ~s2...)) => begin 
-           if ortho(getroot(a), s1) && ortho(getroot(a), s2)
-               if i ∉ j && i ∉ getunbound(b)
-                   decl_in_scope = filter(!isnothing, map(node-> if @capture(node, declare(~tns, ~init)) tns end, PostOrderDFS(b)))
-                   if !(b in decl_in_scope)
-                       #block(assign(access(a, m, j...), f, collapsed(alg, f, i, ext.val, b)), loop(i, ext, sequence(s1..., s2...)))
-                       block(collapsed(alg, f, i, ext.val, assign(access(a, m, j...), f, b)), loop(i, ext, sequence(s1..., s2...)))
+        (@rule loop(~idx, ~ext::isvirtual, block(~s1..., assign(access(~lhs, ~m, ~j...), ~f::iscollapsible(alg), ~rhs), ~s2...)) => begin 
+           if ortho(getroot(lhs), s1) && ortho(getroot(lhs), s2)
+               if idx ∉ j && idx ∉ getunbound(rhs)
+                   decl_in_scope = filter(!isnothing, map(node-> if @capture(node, declare(~tns, ~init)) tns end, PostOrderDFS(rhs)))
+                   if !(lhs in decl_in_scope)
+                       collapsed_body = collapsed(alg, idx, ext.val, access(lhs, m, j...), f, rhs)
+                       block(collapsed_body, loop(i, ext, sequence(s1..., s2...)))
                    end
                end
            end

@@ -247,37 +247,32 @@ iscollapsible(::AbstractAlgebra, ::typeof(min)) = true
 iscollapsible(::AbstractAlgebra, ::typeof(max)) = true
 
 
-collapsed(alg, f::FinchNode, idx, ext, node) = collapsed(alg, f.val, idx, ext, node)
+collapsed(alg, idx, ext, lhs, f::FinchNode, rhs) = collapsed(alg, idx, ext, lhs, f.val, rhs)
 """
     collapsed(algebra, f, idx, ext, node)
 
 Return collapsed expression with respect to f.
 """
-collapsed(alg, f::Any, idx, ext, node) = nothing
-collapsed(alg, f::typeof(or), idx, ext, node) = node
-collapsed(alg, f::typeof(and), idx, ext, node) = node
-collapsed(alg, f::typeof(|), idx, ext, node) = node
-collapsed(alg, f::typeof(&), idx, ext, node) = node
-collapsed(alg, f::typeof(-), idx, ext, node) = call(*, measure(ext), node)
-collapsed(alg, f::typeof(*), idx, ext, node) = call(^, node, measure(ext))
-collapsed(alg, f::typeof(+), idx, ext, node) = begin
-    if (@capture node assign(~lhs, ~f, ~rhs)) 
-        if is_continuous_extent(ext) 
-            if (@capture rhs call(*, ~a1..., call(∂, ~i1..., idx, ~i2...), ~a2...)) # Lebesgue
-                println(assign(lhs, f, call(*, measure(ext), a1..., a2..., call(∂, i1..., i2...))))
-                assign(lhs, f, call(*, measure(ext), a1..., a2..., call(∂, i1..., i2...)))
-            else # Counting
-                println(sieve(call(==, measure(ext), 0), node))
-                sieve(call(==, measure(ext), 0), node) # Should we put whole "assign" as an argument of collapsed because of this counting measure?
-            end
-        else # Discrete Extent
-            println(assign(lhs, f, call(*, measure(ext), node)))
-            assign(lhs, f, call(*, measure(ext), node))
+collapsed(alg, idx, ext, lhs, f::Any, rhs) = nothing
+collapsed(alg, idx, ext, lhs, f::typeof(or), rhs) = assign(lhs, f, rhs) 
+collapsed(alg, idx, ext, lhs, f::typeof(and), rhs) = assign(lhs, f, rhs)
+collapsed(alg, idx, ext, lhs, f::typeof(|), rhs) = assign(lhs, f, rhs)
+collapsed(alg, idx, ext, lhs, f::typeof(&), rhs) = assign(lhs, f, rhs)
+collapsed(alg, idx, ext, lhs, f::typeof(-), rhs) = assign(lhs, f, call(*, measure(ext), rhs))
+collapsed(alg, idx, ext, lhs, f::typeof(*), rhs) = assign(lhs, f, call(^, rhs, measure(ext)))
+collapsed(alg, idx, ext, lhs, f::typeof(+), rhs) = begin
+    if is_continuous_extent(ext) 
+        if (@capture rhs call(*, ~a1..., call(∂, ~i1..., idx, ~i2...), ~a2...)) # Lebesgue
+            assign(lhs, f, call(*, measure(ext), a1..., a2..., call(∂, i1..., i2...)))
+        else # Counting
+            sieve(call(==, measure(ext), 0), assign(lhs, f, rhs)) # Undefined if measure != 0 
         end
+    else # Discrete Extent
+        assign(lhs, f, call(*, measure(ext), rhs))
     end
 end
-collapsed(alg, f::typeof(min), idx, ext, node) = node
-collapsed(alg, f::typeof(max), idx, ext, node) = node
+collapsed(alg, idx, ext, lhs, f::typeof(min), rhs) = assign(lhs, f, rhs)
+collapsed(alg, idx, ext, lhs, f::typeof(max), rhs) = assign(lhs, f, rhs)
 
 
 getvars(arr::AbstractArray) = mapreduce(getvars, vcat, arr, init=[])
