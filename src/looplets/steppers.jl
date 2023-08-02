@@ -101,7 +101,7 @@ function phase_body(node::Step, ctx, ext, ext_2)
                 epilogue = next
             ),
             literal(true) => 
-                truncate(node.chunk, ctx, ext, similar_extent(ext, getstart(ext_2), bound_above!(getstop(ext_2), call(-, getstop(ext), 1)))),
+                truncate(node.chunk, ctx, ext, similar_extent(ext, getstart(ext_2), bound_above!(getstop(ext_2), call(-, getstop(ext), getunit(ext))))),
         ])
     else
         node.body(ctx, ext_2)

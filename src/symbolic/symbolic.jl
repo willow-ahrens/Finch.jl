@@ -261,15 +261,11 @@ collapsed(alg, idx, ext, lhs, f::typeof(&), rhs) = assign(lhs, f, rhs)
 collapsed(alg, idx, ext, lhs, f::typeof(-), rhs) = assign(lhs, f, call(*, measure(ext), rhs))
 collapsed(alg, idx, ext, lhs, f::typeof(*), rhs) = assign(lhs, f, call(^, rhs, measure(ext)))
 collapsed(alg, idx, ext, lhs, f::typeof(+), rhs) = begin
-    #display(ext) 
-    #display(access(lhs, f, rhs))
     if is_continuous_extent(ext) 
         if (@capture rhs call(*, ~a1..., call(∂, ~i1..., idx, ~i2...), ~a2...)) # Lebesgue
             assign(lhs, f, call(*, measure(ext), a1..., a2..., call(∂, i1..., i2...)))
         else # Counting
-            println(access(lhs, f, rhs))
-            #sieve(call(==, measure(ext), 0), assign(lhs, f, rhs)) # Undefined if measure != 0 
-            assign(lhs, f, rhs) # Undefined if measure != 0 
+            sieve(call(==, measure(ext), 0), assign(lhs, f, rhs)) # Undefined if measure != 0 
         end
     else # Discrete Extent
         assign(lhs, f, call(*, measure(ext), rhs))

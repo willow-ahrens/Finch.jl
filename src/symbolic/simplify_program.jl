@@ -141,7 +141,7 @@ function get_program_rules(alg, shash)
             end
         end),
 
-        # Bottom-up reduction2
+        ## Bottom-up reduction2
         (@rule loop(~idx, ~ext::isvirtual, block(~s1..., assign(access(~lhs, ~m, ~j...), ~f::iscollapsible(alg), ~rhs), ~s2...)) => begin 
            if ortho(getroot(lhs), s1) && ortho(getroot(lhs), s2)
                if idx ∉ j && idx ∉ getunbound(rhs)
