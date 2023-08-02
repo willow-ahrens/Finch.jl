@@ -35,7 +35,7 @@ export walk, gallop, follow, extrude, laminate
 export fiber, fiber!, Fiber!, pattern!, dropdefaults, dropdefaults!, redefault!
 export diagmask, lotrimask, uptrimask, bandmask
 
-export choose, minby, maxby, overwrite, initwrite
+export choose, minby, maxby, overwrite, initwrite, ∂
 
 export default, AsArray
 

@@ -43,6 +43,8 @@ const instance_nodes = (
     dimless = :($finch_leaf_instance(dimless))
 )
 
+∂() = 1
+∂(args...) = 0
 and() = true
 and(x) = x
 and(x, y, tail...) = x && and(y, tail...)

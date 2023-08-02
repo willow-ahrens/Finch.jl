@@ -260,7 +260,15 @@ collapsed(alg, f::typeof(|), idx, ext, node) = node
 collapsed(alg, f::typeof(&), idx, ext, node) = node
 collapsed(alg, f::typeof(-), idx, ext, node) = call(*, measure(ext), node)
 collapsed(alg, f::typeof(*), idx, ext, node) = call(^, node, measure(ext))
-collapsed(alg, f::typeof(+), idx, ext, node) = call(*, measure(ext), node)
+collapsed(alg, f::typeof(+), idx, ext, node) = begin 
+    if (@capture node call(*, ~a1..., call(∂, ~i1..., idx, ~i2...), ~a2...)) && is_continuous_extent(ext) # Lebesgue
+        call(*, measure(ext), a1..., a2..., call(∂, i1..., i2...))
+    elseif is_continuous_extent(ext) # Counting
+        sieve(call(==, measure(ext), 0), node) #Wrong! 
+    else # Discrete Extent
+        call(*, measure(ext), node)
+    end
+end
 collapsed(alg, f::typeof(min), idx, ext, node) = node
 collapsed(alg, f::typeof(max), idx, ext, node) = node
 
