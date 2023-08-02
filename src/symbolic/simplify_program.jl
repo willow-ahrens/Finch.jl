@@ -124,7 +124,7 @@ function get_program_rules(alg, shash)
             end
         end),
 
-        # Lifting sieve (TODO multiple sieves in the block) 
+        # Lifting sieve (TODO Lift multiple sieves in the block) 
         (@rule loop(~idx, ~ext::isvirtual, sieve(~cond, ~body)) => begin
             if idx ∉ getunbound(cond)
                 sieve(cond, loop(idx, ext, body))
