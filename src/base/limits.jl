@@ -126,6 +126,7 @@ limit(x::T, s) where {T} = Limit{T}(x, s)
 plus_eps(x) = limit(x, tiny_positive())
 minus_eps(x) = limit(x, tiny_negative())
 limit(x) = limit(x, tiny_zero())
+drop_eps(x::Limit) = x.val
 
 const Eps = plus_eps(Int8(0))
 
@@ -170,6 +171,10 @@ for S in limit_types
         Base.:(==)(x::$S, y::Limit) = limit(x) == y
         Base.isless(x::Limit, y::$S) = x < limit(y)
         Base.isless(x::$S, y::Limit) = limit(x) < y
+        Base.max(x::$S, y::Limit) = max(limit(x), y)
+        Base.max(x::Limit, y::$S) = max(x, limit(y))
+        Base.min(x::$S, y::Limit) = min(limit(x), y)
+        Base.min(x::Limit, y::$S) = min(x, limit(y))
     end
 end
 

@@ -242,7 +242,7 @@ collapsed(alg, idx, ext, lhs, f::typeof(*), rhs) = assign(lhs, f, call(^, rhs, m
 collapsed(alg, idx, ext, lhs, f::typeof(+), rhs) = begin
     if is_continuous_extent(ext) 
         if (@capture rhs call(*, ~a1..., call(∂, ~i1..., idx, ~i2...), ~a2...)) # Lebesgue
-            assign(lhs, f, call(*, measure(ext), a1..., a2..., call(∂, i1..., i2...)))
+            assign(lhs, f, call(*, call(drop_eps, measure(ext)), a1..., a2..., call(∂, i1..., i2...)))
         else # Counting
             sieve(call(==, measure(ext), 0), assign(lhs, f, rhs)) # Undefined if measure != 0 
         end
