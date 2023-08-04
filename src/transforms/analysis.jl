@@ -1,5 +1,5 @@
 """
-Parallelism analysis plan: We will allow automatic paralleization when the following conditions are meet:
+Parallelism analysis plan: We will allow automatic paralleization when the following conditions are met:
 All non-locally defined tensors that are written, are only written to with the plain index i in a injective and consistent way and with an associative operator.
 
 all reader or updater accesses on i need to be concurrent (safe to iterate multiple instances of at the same time)
