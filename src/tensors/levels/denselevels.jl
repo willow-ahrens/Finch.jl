@@ -171,24 +171,54 @@ is_laminable_updater(lvl::VirtualDenseLevel, ctx, ::Union{typeof(defaultupdate),
 
 is_injective(lvl::VirtualDenseLevel, ctx, accs) = true
 
-instantiate_reader(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, ::Union{typeof(defaultread), typeof(follow)}, protos...) = subunfurl_dense_helper(fbr, ctx, instantiate_reader, VirtualSubFiber, protos...)
-instantiate_updater(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...) = subunfurl_dense_helper(fbr, ctx, instantiate_updater, VirtualSubFiber, protos...)
-instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualDenseLevel}, ctx, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...) = subunfurl_dense_helper(fbr, ctx, instantiate_updater, (lvl, pos) -> VirtualTrackedSubFiber(lvl, pos, fbr.dirty), protos...)
-function subunfurl_dense_helper(fbr, ctx, subunfurl, subfiber_ctr, protos...)
-    (lvl, pos) = (fbr.lvl, fbr.pos)
+struct DenseTraversal
+    fbr
+    subunfurl
+    subfiber_ctr
+end
+
+instantiate_reader(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, proto::Union{typeof(defaultread), typeof(follow)}, protos...) =
+    instantiate_reader(DenseTraversal(fbr, instantiate_reader, VirtualSubFiber), ctx, proto, protos...)
+instantiate_updater(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, proto::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...) =
+    instantiate_updater(DenseTraversal(fbr, instantiate_updater, VirtualSubFiber), ctx, proto, protos...)
+instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualDenseLevel}, ctx, proto::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...) =
+    instantiate_updater(DenseTraversal(fbr, instantiate_updater, (lvl, pos) -> VirtualTrackedSubFiber(lvl, pos, fbr.dirty)), ctx, proto, protos...)
+
+function instantiate_reader(trv::DenseTraversal, ctx, proto, protos...)
+    (lvl, pos) = (trv.fbr.lvl, trv.fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
 
     q = ctx.freshen(tag, :_q)
 
     Furlable(
-        tight = (subunfurl == instantiate_updater && !is_laminable_updater(lvl.lvl, ctx, protos...)) ? lvl : nothing,
+        tight = nothing,
         body = (ctx, ext) -> Lookup(
             body = (ctx, i) -> Thunk(
                 preamble = quote
                     $q = ($(ctx(pos)) - $(Ti(1))) * $(ctx(lvl.shape)) + $(ctx(i))
                 end,
-                body = (ctx) -> subunfurl(subfiber_ctr(lvl.lvl, value(q, lvl.Ti)), ctx, protos...)
+                body = (ctx) -> trv.subunfurl(trv.subfiber_ctr(lvl.lvl, value(q, lvl.Ti)), ctx, protos...)
+            )
+        )
+    )
+end
+
+function instantiate_updater(trv::DenseTraversal, ctx, proto, protos...)
+    (lvl, pos) = (trv.fbr.lvl, trv.fbr.pos)
+    tag = lvl.ex
+    Ti = lvl.Ti
+
+    q = ctx.freshen(tag, :_q)
+
+    Furlable(
+        tight = !is_laminable_updater(lvl.lvl, ctx, protos...) ? lvl : nothing,
+        body = (ctx, ext) -> Lookup(
+            body = (ctx, i) -> Thunk(
+                preamble = quote
+                    $q = ($(ctx(pos)) - $(Ti(1))) * $(ctx(lvl.shape)) + $(ctx(i))
+                end,
+                body = (ctx) -> trv.subunfurl(trv.subfiber_ctr(lvl.lvl, value(q, lvl.Ti)), ctx, protos...)
             )
         )
     )
