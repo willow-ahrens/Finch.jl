@@ -256,15 +256,23 @@ function freeze_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos_s
     return lvl
 end
 
+struct SparseHashWalkTraversal
+    lvl
+    R
+    start
+    stop
+end
+
 function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseHashLevel}, ctx, proto::Union{typeof(defaultread), typeof(walk)}, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     start = value(:($(lvl.ex).ptr[$(ctx(pos))]), lvl.Tp)
     stop = value(:($(lvl.ex).ptr[$(ctx(pos)) + 1]), lvl.Tp)
 
-    get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, lvl.N, start, stop, proto, protos...)
+    instantiate_reader(SparseHashWalkTraversal(lvl, lvl.N, start, stop), ctx, proto, protos...)
 end
 
-function get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, R, start, stop, ::Union{typeof(defaultread), typeof(walk)}, protos...)
+function instantiate_reader(trv::SparseHashWalkTraversal, ctx, ::Union{typeof(defaultread), typeof(walk)}, protos...)
+    (lvl, R, start, stop) = (trv.lvl, trv.R, trv.start, trv.stop)
     tag = lvl.ex
     Ti = lvl.Ti
     Tp = lvl.Tp
@@ -325,7 +333,7 @@ function get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, R, start,
                                     stop = (ctx, ext) -> value(my_i),
                                     chunk = Spike(
                                         body = Fill(virtual_level_default(lvl)),
-                                        tail = get_multilevel_range_reader(lvl, ctx, R - 1, value(my_q, lvl.Ti), value(my_q_step, lvl.Ti), protos...),
+                                        tail = instantiate_reader(SparseHashWalkTraversal(lvl, R - 1, value(my_q, lvl.Ti), value(my_q_step, lvl.Ti)), ctx, protos...),
                                     ),
                                     next = (ctx, ext) -> quote
                                         $my_q = $my_q_step
@@ -343,16 +351,23 @@ function get_multilevel_range_reader(lvl::VirtualSparseHashLevel, ctx, R, start,
     )
 end
 
+struct SparseHashFollowTraversal
+    lvl
+    pos
+    coords
+end
+
+
 function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseHashLevel}, ctx, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
     Tp = lvl.Tp
-    return instantiate_reader_hash_helper(lvl, ctx, pos, qos, (), proto, protos...)
+    return instantiate_reader(SparseHashFollowTraversal(lvl, pos, ()), ctx, protos...)
 end
 
-instantiate_reader_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, coords, proto, protos...) = throw(FormatLimitation("SparseHashLevel does not support protocol $proto"))
-function instantiate_reader_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, coords, ::typeof(follow), protos...)
+function instantiate_reader(trv::SparseHashFollowTraversal, ctx, ::typeof(follow), protos...)
+    (lvl, pos, coords) = (trv.lvl, trv.pos, trv.coords)
     Ti = lvl.Ti
     Tp = lvl.Tp
     qos_fill = lvl.qos_fill
@@ -362,7 +377,7 @@ function instantiate_reader_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, c
         body = (ctx, ext) ->
             if length(coords)  + 1 < lvl.N
                 Lookup(
-                    body = (ctx, i) -> instantiate_reader_hash_helper(lvl, ctx, pos, qos, (i, coords...), protos...)
+                    body = (ctx, i) -> instantiate_reader(SparseHashFollowTraversal(lvl, pos, (i, coords...)), protos...)
                 )
             else
                 Lookup(
@@ -388,16 +403,23 @@ is_laminable_updater(lvl::VirtualSparseHashLevel, ctx, protos...) =
 is_injective(lvl::VirtualSparseHashLevel, ctx, accs) = true    
 is_concurrent(lvl::VirtualSparseHashLevel, ctx) = false
 # is_concurrent(lvl::VirtualSparseHashLevel, ctx, ::Union{::typeof(defaultread), ::typeof(walk), ::typeof(gallop), ::typeof(follow)}) = true
+
+struct SparseHashLaminateTraversal
+    lvl
+    pos
+    dirty
+    coords
+end
     
 instantiate_updater(fbr::VirtualSubFiber{VirtualSparseHashLevel}, ctx, protos...) =
     instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
 function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseHashLevel}, ctx, protos...)
     (lvl, pos) = (fbr.lvl, fbr.pos)
-    instantiate_updater_hash_helper(lvl, ctx, pos, fbr.dirty, (), protos...)
+    instantiate_updater(SparseHashLaminateTraversal(lvl, pos, fbr.dirty, ()), ctx, protos...)
 end
 
-instantiate_updater_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, fbr_dirty, coords, proto, protos...) = throw(FormatLimitation("SparseHashLevel does not support protocol $proto"))
-function instantiate_updater_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, fbr_dirty, coords, p::Union{typeof(defaultupdate), typeof(extrude)}, protos...)
+function instantiate_updater(trv::SparseHashLaminateTraversal, ctx, p::Union{typeof(defaultupdate), typeof(extrude)}, protos...)
+    (lvl, pos, fbr_dirty, coords) = (trv.lvl, trv.pos, trv.dirty, trv.coords)
     tag = lvl.ex
     Ti = lvl.Ti
     Tp = lvl.Tp
@@ -411,7 +433,7 @@ function instantiate_updater_hash_helper(lvl::VirtualSparseHashLevel, ctx, pos, 
         body = (ctx, ext) ->
             if length(coords) + 1 < lvl.N
                 Lookup(
-                    body = (ctx, i) -> instantiate_updater_hash_helper(lvl, ctx, pos, fbr_dirty, (i, coords...), protos...)
+                    body = (ctx, i) -> instantiate_updater(SparseHashLaminateTraversal(lvl, pos, fbr_dirty, (i, coords...)), ctx, protos...)
                 )
             else
                 Lookup(
