@@ -148,7 +148,7 @@ function get_program_rules(alg, shash)
                    decl_in_scope = filter(!isnothing, map(node-> if @capture(node, declare(~tns, ~init)) tns end, PostOrderDFS(rhs)))
                    if !(lhs in decl_in_scope)
                        collapsed_body = collapsed(alg, idx, ext.val, access(lhs, m, j...), f, rhs)
-                       block(collapsed_body, loop(i, ext, sequence(s1..., s2...)))
+                       block(collapsed_body, loop(idx, ext, block(s1..., s2...)))
                    end
                end
            end
