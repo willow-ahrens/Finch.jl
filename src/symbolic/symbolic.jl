@@ -239,15 +239,20 @@ collapsed(alg, idx, ext, lhs, f::Any, rhs) = isidempotent(alg, f) ? sieve(call(>
 
 collapsed(alg, idx, ext, lhs, f::typeof(-), rhs) = assign(lhs, f, call(*, measure(ext), rhs))
 collapsed(alg, idx, ext, lhs, f::typeof(*), rhs) = assign(lhs, f, call(^, rhs, measure(ext)))
-collapsed(alg, idx, ext, lhs, f::typeof(+), rhs) = begin
-    if is_continuous_extent(ext) 
-        if (@capture rhs call(*, ~a1..., call(∂, ~i1..., idx, ~i2...), ~a2...)) # Lebesgue
+collapsed(alg, idx, ext::Extent, lhs, f::typeof(+), rhs) = assign(lhs, f, call(*, measure(ext), rhs))
+collapsed(alg, idx, ext::ContinuousExtent, lhs, f::typeof(+), rhs) = begin 
+    if (@capture rhs call(*, ~a1..., call(∂, ~i1..., idx, ~i2...), ~a2...)) # Lebesgue
+        if query(call(==, measure(ext), 0), LowerJulia())
+            assign(lhs, f, literal(0))
+        else
             assign(lhs, f, call(*, call(drop_eps, measure(ext)), a1..., a2..., call(∂, i1..., i2...)))
-        else # Counting
+        end
+    else # Counting
+        if query(call(==, measure(ext), 0), LowerJulia())
+            assign(lhs, f, rhs)
+        else
             sieve(call(==, measure(ext), 0), assign(lhs, f, rhs)) # Undefined if measure != 0 
         end
-    else # Discrete Extent
-        assign(lhs, f, call(*, measure(ext), rhs))
     end
 end
 

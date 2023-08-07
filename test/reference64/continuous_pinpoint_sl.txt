@@ -1,0 +1,47 @@
+julia> @finch_code begin
+        z1 .= 0
+        for i = _
+            z1[] += pinpoint_sl[i]
+        end
+    end
+quote
+    z1 = (ex.bodies[1]).tns.tns
+    pinpoint_sl_lvl = (ex.bodies[2]).body.rhs.tns.tns.lvl
+    pinpoint_sl_lvl_2 = pinpoint_sl_lvl.lvl
+    z1_val = 0
+    pinpoint_sl_lvl_q = pinpoint_sl_lvl.ptr[1]
+    pinpoint_sl_lvl_q_stop = pinpoint_sl_lvl.ptr[1 + 1]
+    if pinpoint_sl_lvl_q < pinpoint_sl_lvl_q_stop
+        pinpoint_sl_lvl_i1 = pinpoint_sl_lvl.idx[pinpoint_sl_lvl_q_stop - 1]
+    else
+        pinpoint_sl_lvl_i1 = 0.0f0
+    end
+    phase_stop = min(pinpoint_sl_lvl_i1, pinpoint_sl_lvl.shape)
+    if phase_stop >= limit(1.0tiny(0ϵ))
+        i = limit(1.0tiny(0ϵ))
+        if pinpoint_sl_lvl.idx[pinpoint_sl_lvl_q] < limit(1.0tiny(0ϵ))
+            pinpoint_sl_lvl_q = Finch.scansearch(pinpoint_sl_lvl.idx, limit(1.0tiny(0ϵ)), pinpoint_sl_lvl_q, pinpoint_sl_lvl_q_stop - 1)
+        end
+        while i <= phase_stop
+            pinpoint_sl_lvl_i = pinpoint_sl_lvl.idx[pinpoint_sl_lvl_q]
+            phase_stop_2 = min(phase_stop, pinpoint_sl_lvl_i)
+            if phase_stop_2 >= i
+                if pinpoint_sl_lvl_i == phase_stop_2
+                    pinpoint_sl_lvl_2_val_2 = pinpoint_sl_lvl_2.val[pinpoint_sl_lvl_q]
+                    z1_val = pinpoint_sl_lvl_2_val_2 + z1_val
+                    pinpoint_sl_lvl_q += 1
+                end
+                i = phase_stop_2 + limit(0tiny(1ϵ))
+            end
+        end
+    end
+    (z1 = (Scalar){0, Int64}(z1_val),)
+end
+julia> @finch begin
+        z1 .= 0
+        for i = _
+            z1[] += pinpoint_sl[i]
+        end
+    end
+(z1 = Scalar{0, Int64}(100),)
+
