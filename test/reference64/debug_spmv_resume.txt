@@ -1430,7 +1430,7 @@ end, quote
                             j_5 = j
                             if x_lvl_i == phase_stop_2
                                 res_3 = begin
-                                        @finch{#0,simplify_program.jl:168} begin
+                                        @finch{#0,simplify_program.jl:197} begin
                                           for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                                             virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Simplify), virtual(Finch.Lookup)[i, j])
                                           end
@@ -1628,9 +1628,71 @@ end, quote
                     res_2 = begin
                             j_5 = j
                             if x_lvl_i == phase_stop_2
+                                res_3 = @finch{#0,simplify_program.jl:197} begin
+                                      for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
+                                        virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Simplify)[], virtual(Finch.Lookup)[i, j])
+                                      end
+                                    end
+                                x_lvl_q += 1
+                                res_3
+                            else
+                                @finch{#0,runs.jl:23} begin
+                                  for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
+                                    virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Run)[j], virtual(Finch.Lookup)[i, j])
+                                  end
+                                end
+                            end
+                            j = @finch{#0,lower.jl:135}(cached(phase_stop_2, cached(min(phase_stop, x_lvl_i), min(cached(x_lvl_i, max(x_lvl_i, +(j_start_2, 1))), max(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1)), +(j_start_2, 1)))))) + @finch{#0,lower.jl:135}(1)
+                        end
+                end
+                j = @finch{#0,lower.jl:135}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + @finch{#0,lower.jl:135}(1)
+            end
+            @finch{#0,phases.jl:56} begin
+              for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
+                virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
+              end
+            end
+        end
+    @finch{#0,lower.jl:135} begin
+      begin
+        @freeze(y)
+      end
+    end
+    qos = @finch{#0,lower.jl:135}(1) * @finch{#0,lower.jl:135}(y_lvl.shape::Int64)
+    resize!(y_lvl_2.val, @finch{#0,lower.jl:135}(qos))
+    (y = @finch{#0,fibers.jl:27}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+end, quote
+    y_lvl = ex.body.body.lhs.tns.tns.lvl
+    y_lvl_2 = y_lvl.lvl
+    A_lvl = (ex.body.body.rhs.args[1]).tns.tns.lvl
+    A_lvl_2 = A_lvl.lvl
+    A_lvl_3 = A_lvl_2.lvl
+    x_lvl = (ex.body.body.rhs.args[2]).tns.tns.lvl
+    x_lvl_2 = x_lvl.lvl
+    A_lvl_2.shape == y_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(A_lvl_2.shape) != $(y_lvl.shape))"))
+    x_lvl.shape == A_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(x_lvl.shape) != $(A_lvl.shape))"))
+    x_lvl_q = x_lvl.ptr[1]
+    x_lvl_q_stop = x_lvl.ptr[1 + 1]
+    if x_lvl_q < x_lvl_q_stop
+        x_lvl_i = x_lvl.idx[x_lvl_q]
+        x_lvl_i1 = x_lvl.idx[x_lvl_q_stop - 1]
+    else
+        x_lvl_i = 1
+        x_lvl_i1 = 0
+    end
+    res = begin
+            j = 1
+            if phase_stop >= phase_start
+                j_4 = j
+                while j <= phase_stop
+                    j_start_2 = j
+                    x_lvl_i = x_lvl.idx[x_lvl_q]
+                    res_2 = begin
+                            j_5 = j
+                            if x_lvl_i == phase_stop_2
                                 res_3 = @finch{#0,thunks.jl:32} begin
                                       for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
-                                        virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Thunk)[], virtual(Finch.Lookup)[i, j])
+                                        virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Lookup)[i, j], virtual(Finch.Thunk)[])
                                       end
                                     end
                                 x_lvl_q += 1
@@ -1694,7 +1756,7 @@ end, quote
                                         x_lvl_2_val_2 = x_lvl_2.val[@finch{#0,lower.jl:135}(x_lvl_q::Int64)]
                                         res_4 = @finch{#0,lookups.jl:22} begin
                                               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
-                                                virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Lookup)[i, j])
+                                                virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Lookup)[i, j], virtual(Finch.VirtualScalar)[])
                                               end
                                             end
                                     end
@@ -1759,7 +1821,7 @@ end, quote
                                         x_lvl_2_val_2 = x_lvl_2.val[x_lvl_q]
                                         res_4 = @finch{#0,lookups.jl:22} begin
                                               for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
-                                                virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Lookup)[i, j])
+                                                virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Lookup)[i, j], virtual(Finch.VirtualScalar)[])
                                               end
                                             end
                                     end
@@ -1826,7 +1888,7 @@ end, quote
                                                 j_6 = @finch{#0,lower.jl:135}(cached(phase_stop_2, cached(min(phase_stop, x_lvl_i), min(cached(x_lvl_i, max(x_lvl_i, +(j_start_2, 1))), max(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1)), +(j_start_2, 1))))))
                                                 @finch{#0,thunks.jl:32} begin
                                                   for i = virtual(Finch.Extent)
-                                                    virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Thunk)[i])
+                                                    virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Thunk)[i], virtual(Finch.VirtualScalar)[])
                                                   end
                                                 end
                                             end
@@ -1894,7 +1956,7 @@ end, quote
                                                 j_6 = @finch{#0,lower.jl:135}(phase_stop_2)
                                                 @finch{#0,thunks.jl:32} begin
                                                   for i = virtual(Finch.Extent)
-                                                    virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Thunk)[i])
+                                                    virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Thunk)[i], virtual(Finch.VirtualScalar)[])
                                                   end
                                                 end
                                             end
@@ -1962,7 +2024,7 @@ end, quote
                                                 j_6 = phase_stop_2
                                                 @finch{#0,thunks.jl:32} begin
                                                   for i = virtual(Finch.Extent)
-                                                    virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Thunk)[i])
+                                                    virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Thunk)[i], virtual(Finch.VirtualScalar)[])
                                                   end
                                                 end
                                             end
@@ -2031,7 +2093,7 @@ end, quote
                                                 A_lvl_q = (@finch{#0,lower.jl:135}(1) - 1) * @finch{#0,lower.jl:135}(A_lvl.shape::Int64) + @finch{#0,lower.jl:135}(j_6)
                                                 res_5 = @finch{#0,lower.jl:135} begin
                                                       for i = virtual(Finch.Extent)
-                                                        virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Furlable)[i])
+                                                        virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Furlable)[i], virtual(Finch.VirtualScalar)[])
                                                       end
                                                     end
                                             end
@@ -2100,7 +2162,7 @@ end, quote
                                                 A_lvl_q = (1 - 1) * @finch{#0,lower.jl:135}(A_lvl.shape::Int64) + @finch{#0,lower.jl:135}(j_6)
                                                 res_5 = @finch{#0,lower.jl:135} begin
                                                       for i = virtual(Finch.Extent)
-                                                        virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Furlable)[i])
+                                                        virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Furlable)[i], virtual(Finch.VirtualScalar)[])
                                                       end
                                                     end
                                             end
@@ -2169,7 +2231,7 @@ end, quote
                                                 A_lvl_q = (1 - 1) * A_lvl.shape + @finch{#0,lower.jl:135}(j_6)
                                                 res_5 = @finch{#0,lower.jl:135} begin
                                                       for i = virtual(Finch.Extent)
-                                                        virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Furlable)[i])
+                                                        virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Furlable)[i], virtual(Finch.VirtualScalar)[])
                                                       end
                                                     end
                                             end
@@ -2238,7 +2300,7 @@ end, quote
                                                 A_lvl_q = (1 - 1) * A_lvl.shape + j_6
                                                 res_5 = @finch{#0,lower.jl:135} begin
                                                       for i = virtual(Finch.Extent)
-                                                        virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Furlable)[i])
+                                                        virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Furlable)[i], virtual(Finch.VirtualScalar)[])
                                                       end
                                                     end
                                             end
@@ -2307,7 +2369,7 @@ end, quote
                                                 A_lvl_q = (1 - 1) * A_lvl.shape + j_6
                                                 res_5 = @finch{#0,thunks.jl:32} begin
                                                       for i = virtual(Finch.Extent)
-                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Thunk)[i])
+                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Thunk)[i], virtual(Finch.VirtualScalar)[])
                                                       end
                                                     end
                                             end
@@ -2386,7 +2448,7 @@ end, quote
                                                         end
                                                         res_6 = @finch{#0,sequences.jl:26} begin
                                                               for i = virtual(Finch.Extent)
-                                                                virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Sequence)[i])
+                                                                virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Sequence)[i], virtual(Finch.VirtualScalar)[])
                                                               end
                                                             end
                                                     end
@@ -2466,7 +2528,7 @@ end, quote
                                                         end
                                                         res_6 = @finch{#0,sequences.jl:26} begin
                                                               for i = virtual(Finch.Extent)
-                                                                virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Sequence)[i])
+                                                                virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Sequence)[i], virtual(Finch.VirtualScalar)[])
                                                               end
                                                             end
                                                     end
@@ -2546,7 +2608,7 @@ end, quote
                                                         end
                                                         res_6 = @finch{#0,sequences.jl:26} begin
                                                               for i = virtual(Finch.Extent)
-                                                                virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Sequence)[i])
+                                                                virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Sequence)[i], virtual(Finch.VirtualScalar)[])
                                                               end
                                                             end
                                                     end
@@ -2628,12 +2690,12 @@ end, quote
                                                                 i = @finch{#0,lower.jl:135}(1)
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -2716,12 +2778,12 @@ end, quote
                                                                 i = 1
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -2806,14 +2868,14 @@ end, quote
                                                                     i_4 = i
                                                                     @finch{#0,steppers.jl:30} begin
                                                                       for i = virtual(Finch.Extent)
-                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Stepper)[i])
+                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Stepper)[i], virtual(Finch.VirtualScalar)[])
                                                                       end
                                                                     end
                                                                     i = @finch{#0,lower.jl:135}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + @finch{#0,lower.jl:135}(1)
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -2898,14 +2960,14 @@ end, quote
                                                                     i_4 = i
                                                                     @finch{#0,steppers.jl:30} begin
                                                                       for i = virtual(Finch.Extent)
-                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Stepper)[i])
+                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Stepper)[i], virtual(Finch.VirtualScalar)[])
                                                                       end
                                                                     end
                                                                     i = @finch{#0,lower.jl:135}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + @finch{#0,lower.jl:135}(1)
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -2990,14 +3052,14 @@ end, quote
                                                                     i_4 = i
                                                                     @finch{#0,steppers.jl:30} begin
                                                                       for i = virtual(Finch.Extent)
-                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Stepper)[i])
+                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Stepper)[i], virtual(Finch.VirtualScalar)[])
                                                                       end
                                                                     end
                                                                     i = @finch{#0,lower.jl:135}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + @finch{#0,lower.jl:135}(1)
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -3082,14 +3144,14 @@ end, quote
                                                                     i_4 = i
                                                                     @finch{#0,steppers.jl:30} begin
                                                                       for i = virtual(Finch.Extent)
-                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Stepper)[i])
+                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Stepper)[i], virtual(Finch.VirtualScalar)[])
                                                                       end
                                                                     end
                                                                     i = @finch{#0,lower.jl:135}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + @finch{#0,lower.jl:135}(1)
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -3174,14 +3236,14 @@ end, quote
                                                                     i_4 = i
                                                                     @finch{#0,steppers.jl:30} begin
                                                                       for i = virtual(Finch.Extent)
-                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Stepper)[i])
+                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Stepper)[i], virtual(Finch.VirtualScalar)[])
                                                                       end
                                                                     end
                                                                     i = @finch{#0,lower.jl:135}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + @finch{#0,lower.jl:135}(1)
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -3268,7 +3330,7 @@ end, quote
                                                                         i_start_2 = i
                                                                         @finch{#0,thunks.jl:32} begin
                                                                           for i = virtual(Finch.Extent)
-                                                                            virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Thunk)[i])
+                                                                            virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Thunk)[i], virtual(Finch.VirtualScalar)[])
                                                                           end
                                                                         end
                                                                     end
@@ -3276,7 +3338,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -3363,7 +3425,7 @@ end, quote
                                                                         i_start_2 = i
                                                                         @finch{#0,thunks.jl:32} begin
                                                                           for i = virtual(Finch.Extent)
-                                                                            virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Thunk)[i])
+                                                                            virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Thunk)[i], virtual(Finch.VirtualScalar)[])
                                                                           end
                                                                         end
                                                                     end
@@ -3371,7 +3433,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -3458,7 +3520,7 @@ end, quote
                                                                         i_start_2 = i
                                                                         @finch{#0,thunks.jl:32} begin
                                                                           for i = virtual(Finch.Extent)
-                                                                            virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Thunk)[i])
+                                                                            virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Thunk)[i], virtual(Finch.VirtualScalar)[])
                                                                           end
                                                                         end
                                                                     end
@@ -3466,7 +3528,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -3554,7 +3616,7 @@ end, quote
                                                                         A_lvl_2_i = A_lvl_2.idx[A_lvl_2_q]
                                                                         res_7 = @finch{#0,phases.jl:56} begin
                                                                               for i = virtual(Finch.Extent)
-                                                                                virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Step)[i])
+                                                                                virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Step)[i], virtual(Finch.VirtualScalar)[])
                                                                               end
                                                                             end
                                                                     end
@@ -3562,7 +3624,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -3652,7 +3714,7 @@ end, quote
                                                                                 i_5 = i
                                                                                 @finch{#0,switches.jl:58} begin
                                                                                   for i = virtual(Finch.Extent)
-                                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Switch)[i])
+                                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Switch)[i], virtual(Finch.VirtualScalar)[])
                                                                                   end
                                                                                 end
                                                                                 i = @finch{#0,lower.jl:135}(cached(phase_stop_4, cached(min(phase_stop_3, A_lvl_2_i), min(cached(A_lvl_2_i, max(A_lvl_2_i, +(i_start_2, 1))), max(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1)), +(i_start_2, 1)))))) + @finch{#0,lower.jl:135}(1)
@@ -3662,7 +3724,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -3753,13 +3815,13 @@ end, quote
                                                                                 if @finch{#0,lower.jl:135}(@finch{#0,lower.jl:135}(A_lvl_2_i) == @finch{#0,lower.jl:135}(cached(phase_stop_4, cached(min(phase_stop_3, A_lvl_2_i), min(cached(A_lvl_2_i, max(A_lvl_2_i, +(i_start_2, 1))), max(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1)), +(i_start_2, 1)))))))
                                                                                     @finch{#0,thunks.jl:32} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Thunk)[i])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Thunk)[i], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 else
                                                                                     @finch{#0,runs.jl:23} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 end
@@ -3770,7 +3832,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -3861,13 +3923,13 @@ end, quote
                                                                                 if @finch{#0,lower.jl:135}(A_lvl_2_i) == @finch{#0,lower.jl:135}(cached(phase_stop_4, cached(min(phase_stop_3, A_lvl_2_i), min(cached(A_lvl_2_i, max(A_lvl_2_i, +(i_start_2, 1))), max(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1)), +(i_start_2, 1))))))
                                                                                     @finch{#0,thunks.jl:32} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Thunk)[i])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Thunk)[i], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 else
                                                                                     @finch{#0,runs.jl:23} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 end
@@ -3878,7 +3940,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -3969,13 +4031,13 @@ end, quote
                                                                                 if A_lvl_2_i == @finch{#0,lower.jl:135}(cached(phase_stop_4, cached(min(phase_stop_3, A_lvl_2_i), min(cached(A_lvl_2_i, max(A_lvl_2_i, +(i_start_2, 1))), max(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1)), +(i_start_2, 1))))))
                                                                                     @finch{#0,thunks.jl:32} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Thunk)[i])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Thunk)[i], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 else
                                                                                     @finch{#0,runs.jl:23} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 end
@@ -3986,7 +4048,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -4077,13 +4139,13 @@ end, quote
                                                                                 if A_lvl_2_i == @finch{#0,lower.jl:135}(phase_stop_4)
                                                                                     @finch{#0,thunks.jl:32} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Thunk)[i])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Thunk)[i], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 else
                                                                                     @finch{#0,runs.jl:23} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 end
@@ -4094,7 +4156,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -4185,13 +4247,13 @@ end, quote
                                                                                 if A_lvl_2_i == phase_stop_4
                                                                                     @finch{#0,thunks.jl:32} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Thunk)[i])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Thunk)[i], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 else
                                                                                     @finch{#0,runs.jl:23} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 end
@@ -4202,7 +4264,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -4293,7 +4355,7 @@ end, quote
                                                                                 if A_lvl_2_i == phase_stop_4
                                                                                     res_8 = @finch{#0,spikes.jl:26} begin
                                                                                           for i = virtual(Finch.Extent)
-                                                                                            virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Spike)[i])
+                                                                                            virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Spike)[i], virtual(Finch.VirtualScalar)[])
                                                                                           end
                                                                                         end
                                                                                     A_lvl_2_q += 1
@@ -4301,7 +4363,7 @@ end, quote
                                                                                 else
                                                                                     @finch{#0,runs.jl:23} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 end
@@ -4312,7 +4374,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -4404,12 +4466,12 @@ end, quote
                                                                                     res_8 = begin
                                                                                             @finch{#0,runs.jl:23} begin
                                                                                               for i = virtual(Finch.Extent)
-                                                                                                virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                                virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                               end
                                                                                             end
                                                                                             @finch{#0,runs.jl:23} begin
                                                                                               for i = virtual(Finch.Extent)
-                                                                                                virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                                virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                               end
                                                                                             end
                                                                                         end
@@ -4418,7 +4480,7 @@ end, quote
                                                                                 else
                                                                                     @finch{#0,runs.jl:23} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 end
@@ -4429,7 +4491,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -4521,12 +4583,12 @@ end, quote
                                                                                     res_8 = begin
                                                                                             @finch{#0,fills.jl:25} begin
                                                                                               for i = virtual(Finch.Extent)
-                                                                                                virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Fill)[])
+                                                                                                virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Fill)[], virtual(Finch.VirtualScalar)[])
                                                                                               end
                                                                                             end
                                                                                             @finch{#0,runs.jl:23} begin
                                                                                               for i = virtual(Finch.Extent)
-                                                                                                virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                                virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                               end
                                                                                             end
                                                                                         end
@@ -4535,7 +4597,7 @@ end, quote
                                                                                 else
                                                                                     @finch{#0,runs.jl:23} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 end
@@ -4546,7 +4608,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -4636,14 +4698,14 @@ end, quote
                                                                                 i_5 = i
                                                                                 if A_lvl_2_i == phase_stop_4
                                                                                     res_8 = begin
-                                                                                            @finch{#0,simplify_program.jl:168} begin
+                                                                                            @finch{#0,simplify_program.jl:197} begin
                                                                                               for i = virtual(Finch.Extent)
-                                                                                                virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Simplify))
+                                                                                                virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Simplify), virtual(Finch.VirtualScalar)[])
                                                                                               end
                                                                                             end
                                                                                             @finch{#0,runs.jl:23} begin
                                                                                               for i = virtual(Finch.Extent)
-                                                                                                virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                                virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                               end
                                                                                             end
                                                                                         end
@@ -4652,7 +4714,7 @@ end, quote
                                                                                 else
                                                                                     @finch{#0,runs.jl:23} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 end
@@ -4663,7 +4725,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -4759,7 +4821,7 @@ end, quote
                                                                                             end
                                                                                             @finch{#0,runs.jl:23} begin
                                                                                               for i = virtual(Finch.Extent)
-                                                                                                virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                                virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                               end
                                                                                             end
                                                                                         end
@@ -4768,7 +4830,7 @@ end, quote
                                                                                 else
                                                                                     @finch{#0,runs.jl:23} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 end
@@ -4779,7 +4841,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -4870,7 +4932,7 @@ end, quote
                                                                                 if A_lvl_2_i == phase_stop_4
                                                                                     res_8 = @finch{#0,runs.jl:23} begin
                                                                                           for i = virtual(Finch.Extent)
-                                                                                            virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                            virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                           end
                                                                                         end
                                                                                     A_lvl_2_q += 1
@@ -4878,7 +4940,7 @@ end, quote
                                                                                 else
                                                                                     @finch{#0,runs.jl:23} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 end
@@ -4889,7 +4951,117 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
+                                                                  end
+                                                                end
+                                                            end
+                                                    end
+                                            end
+                                    end
+                                x_lvl_q += 1
+                                res_3
+                            else
+                                @finch{#0,runs.jl:23} begin
+                                  for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
+                                    virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Run)[j], virtual(Finch.Lookup)[i, j])
+                                  end
+                                end
+                            end
+                            j = @finch{#0,lower.jl:135}(cached(phase_stop_2, cached(min(phase_stop, x_lvl_i), min(cached(x_lvl_i, max(x_lvl_i, +(j_start_2, 1))), max(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1)), +(j_start_2, 1)))))) + @finch{#0,lower.jl:135}(1)
+                        end
+                end
+                j = @finch{#0,lower.jl:135}(cached(phase_stop, min(x_lvl.shape::Int64, x_lvl_i1))) + @finch{#0,lower.jl:135}(1)
+            end
+            @finch{#0,phases.jl:56} begin
+              for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
+                virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Phase)[j], virtual(Finch.Lookup)[i, j])
+              end
+            end
+        end
+    @finch{#0,lower.jl:135} begin
+      begin
+        @freeze(y)
+      end
+    end
+    qos = @finch{#0,lower.jl:135}(1) * @finch{#0,lower.jl:135}(y_lvl.shape::Int64)
+    resize!(y_lvl_2.val, @finch{#0,lower.jl:135}(qos))
+    (y = @finch{#0,fibers.jl:27}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+end, quote
+    y_lvl = ex.body.body.lhs.tns.tns.lvl
+    y_lvl_2 = y_lvl.lvl
+    A_lvl = (ex.body.body.rhs.args[1]).tns.tns.lvl
+    A_lvl_2 = A_lvl.lvl
+    A_lvl_3 = A_lvl_2.lvl
+    x_lvl = (ex.body.body.rhs.args[2]).tns.tns.lvl
+    x_lvl_2 = x_lvl.lvl
+    A_lvl_2.shape == y_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(A_lvl_2.shape) != $(y_lvl.shape))"))
+    x_lvl.shape == A_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(x_lvl.shape) != $(A_lvl.shape))"))
+    x_lvl_q = x_lvl.ptr[1]
+    x_lvl_q_stop = x_lvl.ptr[1 + 1]
+    if x_lvl_q < x_lvl_q_stop
+        x_lvl_i = x_lvl.idx[x_lvl_q]
+        x_lvl_i1 = x_lvl.idx[x_lvl_q_stop - 1]
+    else
+        x_lvl_i = 1
+        x_lvl_i1 = 0
+    end
+    res = begin
+            j = 1
+            if phase_stop >= phase_start
+                j_4 = j
+                while j <= phase_stop
+                    j_start_2 = j
+                    x_lvl_i = x_lvl.idx[x_lvl_q]
+                    res_2 = begin
+                            j_5 = j
+                            if x_lvl_i == phase_stop_2
+                                res_3 = begin
+                                        x_lvl_2_val_2 = x_lvl_2.val[x_lvl_q]
+                                        res_4 = begin
+                                                j_6 = phase_stop_2
+                                                A_lvl_q = (1 - 1) * A_lvl.shape + j_6
+                                                res_5 = begin
+                                                        A_lvl_2_q = A_lvl_2.ptr[A_lvl_q]
+                                                        A_lvl_2_q_stop = A_lvl_2.ptr[A_lvl_q + 1]
+                                                        if A_lvl_2_q < A_lvl_2_q_stop
+                                                            A_lvl_2_i = A_lvl_2.idx[A_lvl_2_q]
+                                                            A_lvl_2_i1 = A_lvl_2.idx[A_lvl_2_q_stop - 1]
+                                                        else
+                                                            A_lvl_2_i = 1
+                                                            A_lvl_2_i1 = 0
+                                                        end
+                                                        res_6 = begin
+                                                                i = 1
+                                                                if phase_stop_3 >= phase_start_3
+                                                                    i_4 = i
+                                                                    while i <= phase_stop_3
+                                                                        i_start_2 = i
+                                                                        A_lvl_2_i = A_lvl_2.idx[A_lvl_2_q]
+                                                                        res_7 = begin
+                                                                                i_5 = i
+                                                                                if A_lvl_2_i == phase_stop_4
+                                                                                    res_8 = @finch{#0,simplify_program.jl:197} begin
+                                                                                          for i = virtual(Finch.Extent)
+                                                                                            virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Simplify)[], virtual(Finch.VirtualScalar)[])
+                                                                                          end
+                                                                                        end
+                                                                                    A_lvl_2_q += 1
+                                                                                    res_8
+                                                                                else
+                                                                                    @finch{#0,runs.jl:23} begin
+                                                                                      for i = virtual(Finch.Extent)
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
+                                                                                      end
+                                                                                    end
+                                                                                end
+                                                                                i = @finch{#0,lower.jl:135}(cached(phase_stop_4, cached(min(phase_stop_3, A_lvl_2_i), min(cached(A_lvl_2_i, max(A_lvl_2_i, +(i_start_2, 1))), max(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1)), +(i_start_2, 1)))))) + @finch{#0,lower.jl:135}(1)
+                                                                            end
+                                                                    end
+                                                                    i = @finch{#0,lower.jl:135}(cached(phase_stop_3, min(A_lvl_2.shape::Int64, A_lvl_2_i1))) + @finch{#0,lower.jl:135}(1)
+                                                                end
+                                                                @finch{#0,phases.jl:56} begin
+                                                                  for i = virtual(Finch.Extent)
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -4988,7 +5160,7 @@ end, quote
                                                                                 else
                                                                                     @finch{#0,runs.jl:23} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 end
@@ -4999,7 +5171,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -5101,7 +5273,7 @@ end, quote
                                                                                 else
                                                                                     @finch{#0,runs.jl:23} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 end
@@ -5112,7 +5284,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -5214,7 +5386,7 @@ end, quote
                                                                                 else
                                                                                     @finch{#0,runs.jl:23} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 end
@@ -5225,7 +5397,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -5328,7 +5500,7 @@ end, quote
                                                                                 else
                                                                                     @finch{#0,runs.jl:23} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 end
@@ -5339,7 +5511,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -5442,7 +5614,7 @@ end, quote
                                                                                 else
                                                                                     @finch{#0,runs.jl:23} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 end
@@ -5453,7 +5625,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -5556,7 +5728,7 @@ end, quote
                                                                                 else
                                                                                     @finch{#0,runs.jl:23} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 end
@@ -5567,7 +5739,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -5671,7 +5843,7 @@ end, quote
                                                                                 else
                                                                                     @finch{#0,runs.jl:23} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 end
@@ -5682,7 +5854,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -5786,7 +5958,7 @@ end, quote
                                                                                 else
                                                                                     @finch{#0,runs.jl:23} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 end
@@ -5797,7 +5969,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -5901,7 +6073,7 @@ end, quote
                                                                                 else
                                                                                     @finch{#0,runs.jl:23} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 end
@@ -5912,7 +6084,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -6016,7 +6188,7 @@ end, quote
                                                                                 else
                                                                                     @finch{#0,runs.jl:23} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 end
@@ -6027,7 +6199,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -6129,7 +6301,7 @@ end, quote
                                                                                 else
                                                                                     @finch{#0,runs.jl:23} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 end
@@ -6140,7 +6312,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -6242,7 +6414,7 @@ end, quote
                                                                                 else
                                                                                     @finch{#0,runs.jl:23} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 end
@@ -6253,7 +6425,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -6355,7 +6527,7 @@ end, quote
                                                                                 else
                                                                                     @finch{#0,runs.jl:23} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 end
@@ -6366,7 +6538,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -6468,7 +6640,7 @@ end, quote
                                                                                 else
                                                                                     @finch{#0,runs.jl:23} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 end
@@ -6479,7 +6651,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -6581,7 +6753,7 @@ end, quote
                                                                                 else
                                                                                     @finch{#0,runs.jl:23} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 end
@@ -6592,7 +6764,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -6694,7 +6866,7 @@ end, quote
                                                                                 else
                                                                                     @finch{#0,runs.jl:23} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 end
@@ -6705,7 +6877,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -6807,7 +6979,7 @@ end, quote
                                                                                 else
                                                                                     @finch{#0,runs.jl:23} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 end
@@ -6818,7 +6990,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -6920,7 +7092,7 @@ end, quote
                                                                                 else
                                                                                     @finch{#0,runs.jl:23} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 end
@@ -6931,7 +7103,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -7033,7 +7205,7 @@ end, quote
                                                                                 else
                                                                                     @finch{#0,runs.jl:23} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 end
@@ -7044,7 +7216,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -7146,7 +7318,7 @@ end, quote
                                                                                 else
                                                                                     @finch{#0,runs.jl:23} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 end
@@ -7157,7 +7329,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -7259,7 +7431,7 @@ end, quote
                                                                                 else
                                                                                     @finch{#0,runs.jl:23} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 end
@@ -7270,7 +7442,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -7372,7 +7544,7 @@ end, quote
                                                                                 else
                                                                                     @finch{#0,fills.jl:25} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Fill)[])
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Fill)[], virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 end
@@ -7383,7 +7555,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -7483,9 +7655,9 @@ end, quote
                                                                                     A_lvl_2_q += 1
                                                                                     res_8
                                                                                 else
-                                                                                    @finch{#0,simplify_program.jl:168} begin
+                                                                                    @finch{#0,simplify_program.jl:197} begin
                                                                                       for i = virtual(Finch.Extent)
-                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Simplify))
+                                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Simplify), virtual(Finch.VirtualScalar)[])
                                                                                       end
                                                                                     end
                                                                                 end
@@ -7496,7 +7668,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -7608,7 +7780,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -7716,7 +7888,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -7824,7 +7996,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -7932,7 +8104,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -8040,7 +8212,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -8148,7 +8320,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -8256,7 +8428,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -8364,7 +8536,7 @@ end, quote
                                                                 end
                                                                 @finch{#0,phases.jl:56} begin
                                                                   for i = virtual(Finch.Extent)
-                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Phase)[i])
+                                                                    virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Phase)[i], virtual(Finch.VirtualScalar)[])
                                                                   end
                                                                 end
                                                             end
@@ -8474,7 +8646,7 @@ end, quote
                                                                     i_7 = i
                                                                     @finch{#0,runs.jl:23} begin
                                                                       for i = virtual(Finch.Extent)
-                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                       end
                                                                     end
                                                                     i = @finch{#0,lower.jl:135}(cached(phase_stop_5, A_lvl_2.shape::Int64)) + @finch{#0,lower.jl:135}(1)
@@ -8586,7 +8758,7 @@ end, quote
                                                                     i_7 = i
                                                                     @finch{#0,runs.jl:23} begin
                                                                       for i = virtual(Finch.Extent)
-                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                       end
                                                                     end
                                                                     i = @finch{#0,lower.jl:135}(cached(phase_stop_5, A_lvl_2.shape::Int64)) + @finch{#0,lower.jl:135}(1)
@@ -8698,7 +8870,7 @@ end, quote
                                                                     i_7 = i
                                                                     @finch{#0,runs.jl:23} begin
                                                                       for i = virtual(Finch.Extent)
-                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                       end
                                                                     end
                                                                     i = @finch{#0,lower.jl:135}(cached(phase_stop_5, A_lvl_2.shape::Int64)) + @finch{#0,lower.jl:135}(1)
@@ -8810,7 +8982,7 @@ end, quote
                                                                     i_7 = i
                                                                     @finch{#0,runs.jl:23} begin
                                                                       for i = virtual(Finch.Extent)
-                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                       end
                                                                     end
                                                                     i = @finch{#0,lower.jl:135}(cached(phase_stop_5, A_lvl_2.shape::Int64)) + @finch{#0,lower.jl:135}(1)
@@ -8922,7 +9094,7 @@ end, quote
                                                                     i_7 = i
                                                                     @finch{#0,runs.jl:23} begin
                                                                       for i = virtual(Finch.Extent)
-                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Run)[i])
+                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Run)[i], virtual(Finch.VirtualScalar)[])
                                                                       end
                                                                     end
                                                                     i = @finch{#0,lower.jl:135}(cached(phase_stop_5, A_lvl_2.shape::Int64)) + @finch{#0,lower.jl:135}(1)
@@ -9034,7 +9206,7 @@ end, quote
                                                                     i_7 = i
                                                                     @finch{#0,fills.jl:25} begin
                                                                       for i = virtual(Finch.Extent)
-                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Fill)[])
+                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Fill)[], virtual(Finch.VirtualScalar)[])
                                                                       end
                                                                     end
                                                                     i = @finch{#0,lower.jl:135}(cached(phase_stop_5, A_lvl_2.shape::Int64)) + @finch{#0,lower.jl:135}(1)
@@ -9144,9 +9316,9 @@ end, quote
                                                                 end
                                                                 if phase_stop_5 >= phase_start_5
                                                                     i_7 = i
-                                                                    @finch{#0,simplify_program.jl:168} begin
+                                                                    @finch{#0,simplify_program.jl:197} begin
                                                                       for i = virtual(Finch.Extent)
-                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.VirtualScalar)[], virtual(Finch.Simplify))
+                                                                        virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Simplify), virtual(Finch.VirtualScalar)[])
                                                                       end
                                                                     end
                                                                     i = @finch{#0,lower.jl:135}(cached(phase_stop_5, A_lvl_2.shape::Int64)) + @finch{#0,lower.jl:135}(1)
@@ -9911,7 +10083,7 @@ end, quote
                                 x_lvl_q += 1
                                 res_3
                             else
-                                @finch{#0,simplify_program.jl:168} begin
+                                @finch{#0,simplify_program.jl:197} begin
                                   for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                                     virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Simplify), virtual(Finch.Lookup)[i, j])
                                   end
@@ -11482,7 +11654,7 @@ end, quote
             end
             if phase_stop_6 >= phase_start_6
                 j_7 = j
-                @finch{#0,simplify_program.jl:168} begin
+                @finch{#0,simplify_program.jl:197} begin
                   for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                     virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Simplify), virtual(Finch.Lookup)[i, j])
                   end

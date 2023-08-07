@@ -115,10 +115,15 @@ function get_program_rules(alg, shash)
         (@rule loop(~idx, ~ext::isvirtual, ~body) => begin
             body_contain_idx = idx ∈ getunbound(body)
             if !body_contain_idx
-                decl_in_scope = filter(!isnothing, map(node-> if @capture(node, declare(~tns, ~init)) tns end, PostOrderDFS(body)))
-                Postwalk(@rule assign(access(~lhs, ~m, ~j...), ~f, ~rhs) => begin  
-                             if !(lhs in decl_in_scope)
-                                 collapsed(alg, idx, ext.val, access(lhs, m, j...), f, rhs)
+                decl_in_scope = filter(!isnothing, map(node-> if @capture(node, declare(~tns, ~init)) tns 
+                                                              elseif @capture(node, define(~var, ~val)) var
+                                                              end, PostOrderDFS(body)))
+                Postwalk(@rule assign(access(~lhs, updater(), ~j...), ~f, ~rhs) => begin 
+                             access_in_rhs = filter(!isnothing, map(node-> if @capture(node, access(~tns, reader(), ~k...)) tns 
+                                                                           elseif @capture(node, ~var::isvariable) var
+                                                                           end, PostOrderDFS(rhs)))
+                             if !(lhs in decl_in_scope) && isempty(intersect(access_in_rhs, decl_in_scope))
+                                 collapsed(alg, idx, ext.val, access(lhs, updater(), j...), f, rhs)
                              end
                          end)(body)
             end
@@ -132,22 +137,27 @@ function get_program_rules(alg, shash)
         end),
 
         # Bottom-up reduction1
-        (@rule loop(~idx, ~ext::isvirtual, assign(access(~lhs, ~m, ~j...), ~f, ~rhs)) => begin
+        (@rule loop(~idx, ~ext::isvirtual, assign(access(~lhs, updater(), ~j...), ~f, ~rhs)) => begin
             if idx ∉ j && idx ∉ getunbound(rhs)
-                decl_in_scope = filter(!isnothing, map(node-> if @capture(node, declare(~tns, ~init)) tns end, PostOrderDFS(rhs)))
-                if !(lhs in decl_in_scope)
-                    collapsed(alg, idx, ext.val, access(lhs, m, j...), f, rhs)
-                end
+                collapsed(alg, idx, ext.val, access(lhs, updater(), j...), f, rhs)
             end
         end),
 
         ## Bottom-up reduction2
-        (@rule loop(~idx, ~ext::isvirtual, block(~s1..., assign(access(~lhs, ~m, ~j...), ~f, ~rhs), ~s2...)) => begin 
+        (@rule loop(~idx, ~ext::isvirtual, block(~s1..., assign(access(~lhs, updater(), ~j...), ~f, ~rhs), ~s2...)) => begin 
            if ortho(getroot(lhs), s1) && ortho(getroot(lhs), s2)
                if idx ∉ j && idx ∉ getunbound(rhs)
-                   decl_in_scope = filter(!isnothing, map(node-> if @capture(node, declare(~tns, ~init)) tns end, PostOrderDFS(rhs)))
-                   if !(lhs in decl_in_scope)
-                       collapsed_body = collapsed(alg, idx, ext.val, access(lhs, m, j...), f, rhs)
+                   body = block(s1..., assign(access(lhs, updater(), j...), f, rhs), s2...)
+                   decl_in_scope = filter(!isnothing, map(node-> if @capture(node, declare(~tns, ~init)) tns 
+                                                                 elseif @capture(node, define(~var, ~val)) var
+                                                                 end, PostOrderDFS(body)))
+
+                   access_in_rhs = filter(!isnothing, map(node-> if @capture(node, access(~tns, reader(), ~k...)) tns 
+                                                                 elseif @capture(node, ~var::isvariable) var
+                                                                 end, PostOrderDFS(rhs)))
+                    
+                   if !(lhs in decl_in_scope) && isempty(intersect(access_in_rhs, decl_in_scope))
+                       collapsed_body = collapsed(alg, idx, ext.val, access(lhs, updater(), j...), f, rhs)
                        block(collapsed_body, loop(idx, ext, block(s1..., s2...)))
                    end
                end
