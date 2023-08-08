@@ -292,6 +292,7 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseRLELevel},
                             $(fbr.dirty) = true
                             $(lvl.ex).left[$qos] = $(ctx(getstart(ext)))
                             $(lvl.ex).right[$qos] = $(ctx(getstop(ext)))
+                            #println($(ctx(getstart(ext))), $(ctx(getstop(ext))))
                             $(qos) += $(Tp(1))
                         end
                     end
