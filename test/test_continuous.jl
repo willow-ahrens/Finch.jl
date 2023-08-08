@@ -37,7 +37,7 @@
     let
       x = Fiber(SparseRLE{Float32}(Element{0}(fill(1, NumItvl)), Shape, [1, NumItvl+1], s1, e1))
       y = Fiber(SparseRLE{Float32}(Element{0}(fill(1, NumItvl)), Shape, [1, NumItvl+1], s2, e2))
-      z = Fiber(SparseRLE{Float32}(Element{0}(), Shape))
+      z = Fiber(SparseRLE{Limit{Float32}}(Element{0}(), Shape))
       s = Scalar(0)
 
       io = IOBuffer()
@@ -76,7 +76,7 @@
 
       x = Fiber(SparseRLE{Float32}(SparseRLE{Float32}(Element{0}(fill(1, NumItvl*NumItvl)), Shape, colptr, col_s1, col_e1), Shape, [1, NumItvl+1], s1, e1))
       y = Fiber(SparseRLE{Float32}(SparseRLE{Float32}(Element{0}(fill(1, NumItvl*NumItvl)), Shape, colptr, col_s2, col_e2), Shape, [1, NumItvl+1], s2, e2))
-      z = Fiber(SparseRLE{Float32}(SparseRLE{Float32}(Element{0}(), Shape), Shape))
+      z = Fiber(SparseRLE{Limit{Float32}}(SparseRLE{Limit{Float32}}(Element{0}(), Shape), Shape))
       s = Scalar(0)
 
       io = IOBuffer()

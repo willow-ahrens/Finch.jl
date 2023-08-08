@@ -124,7 +124,7 @@ end
 Base.summary(lvl::VirtualSparseRLELevel) = "SparseRLE($(summary(lvl.lvl)))"
 
 function virtual_level_size(lvl::VirtualSparseRLELevel, ctx)
-    ext = make_extent(lvl.Ti, literal(lvl.Ti(1)), lvl.shape)
+    ext = make_extent(lvl.Ti, literal(lvl.Ti(1.0)), lvl.shape)
     (virtual_level_size(lvl.lvl, ctx)..., ext)
 end
 

@@ -34,7 +34,15 @@ tiny_positive() = tiny(Int8(1))
 tiny_negative() = tiny(Int8(-1))
 
 function Base.show(io::IO, x::Infinitesimal)
-    print(io, "tiny(", x.sign, "ϵ)")
+    if x.sign > 0
+        print(io, "+ϵ")
+    elseif x.sign < 0
+        print(io, "-ϵ")
+    elseif x.sign == 0
+        print(io, "")
+    else
+        error(io, "unimplemented")
+    end
 end
 
 function Base.show(io::IO, mime::MIME"text/plain", x::Infinitesimal)
@@ -126,12 +134,13 @@ limit(x::T, s) where {T} = Limit{T}(x, s)
 plus_eps(x) = limit(x, tiny_positive())
 minus_eps(x) = limit(x, tiny_negative())
 limit(x) = limit(x, tiny_zero())
+Limit{T}(x) where {T} = limit(T(x))
 drop_eps(x::Limit) = x.val
 
 const Eps = plus_eps(Int8(0))
 
 function Base.show(io::IO, x::Limit)
-    print(io, "limit(", x.val, x.sign, ")")
+    print(io, ":", x.val, x.sign)
 end
 
 function Base.show(io::IO, mime::MIME"text/plain", x::Limit)

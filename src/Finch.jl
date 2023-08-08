@@ -113,6 +113,8 @@ include("base/copy.jl")
 include("base/fsparse.jl")
 include("base/limits.jl")
 
+export Limit
+
 @static if !isdefined(Base, :get_extension)
     function __init__()
         @require SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf" include("../ext/SparseArraysExt.jl")
