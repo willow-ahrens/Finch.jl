@@ -140,7 +140,7 @@ drop_eps(x::Limit) = x.val
 const Eps = plus_eps(Int8(0))
 
 function Base.show(io::IO, x::Limit)
-    print(io, ":", x.val, x.sign)
+    print(io, "limit(", x.val, x.sign, ")")
 end
 
 function Base.show(io::IO, mime::MIME"text/plain", x::Limit)

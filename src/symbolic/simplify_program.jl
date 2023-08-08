@@ -129,12 +129,13 @@ function get_program_rules(alg, shash)
             end
         end),
 
-        # Lifting sieve (TODO Lift multiple sieves in the block) 
+        # Lifting sieve 
         (@rule loop(~idx, ~ext::isvirtual, sieve(~cond, ~body)) => begin
             if idx ∉ getunbound(cond)
                 sieve(cond, loop(idx, ext, body))
             end
         end),
+
 
         # Bottom-up reduction1
         (@rule loop(~idx, ~ext::isvirtual, assign(access(~lhs, updater(), ~j...), ~f, ~rhs)) => begin

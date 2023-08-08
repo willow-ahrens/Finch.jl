@@ -41,6 +41,9 @@ export default, AsArray
 
 export parallel, extent, dimless
 
+include("base/limits.jl")
+export Limit
+
 include("util.jl")
 
 include("FinchNotation/FinchNotation.jl")
@@ -111,9 +114,6 @@ include("base/mapreduce.jl")
 include("base/compare.jl")
 include("base/copy.jl")
 include("base/fsparse.jl")
-include("base/limits.jl")
-
-export Limit
 
 @static if !isdefined(Base, :get_extension)
     function __init__()

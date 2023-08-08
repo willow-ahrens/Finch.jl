@@ -1,0 +1,90 @@
+julia> @finch_code begin
+        s2 .= 0
+        for i = _, j = _
+            s2[] += x1[j, i] * y[j] * ∂(j)
+        end
+    end
+quote
+    s2 = (ex.bodies[1]).tns.tns
+    x1_lvl = ((ex.bodies[2]).body.body.rhs.args[1]).tns.tns.lvl
+    x1_lvl_2 = x1_lvl.lvl
+    x1_lvl_3 = x1_lvl_2.lvl
+    y_lvl = ((ex.bodies[2]).body.body.rhs.args[2]).tns.tns.lvl
+    y_lvl_2 = y_lvl.lvl
+    y_lvl.shape == x1_lvl_2.shape || throw(DimensionMismatch("mismatched dimension limits ($(y_lvl.shape) != $(x1_lvl_2.shape))"))
+    s2_val = 0
+    x1_lvl_q = x1_lvl.ptr[1]
+    x1_lvl_q_stop = x1_lvl.ptr[1 + 1]
+    if x1_lvl_q < x1_lvl_q_stop
+        x1_lvl_i1 = x1_lvl.idx[x1_lvl_q_stop - 1]
+    else
+        x1_lvl_i1 = 0.0f0
+    end
+    phase_stop = min(x1_lvl_i1, x1_lvl.shape)
+    if phase_stop >= limit(1.0)
+        i = limit(1.0)
+        if x1_lvl.idx[x1_lvl_q] < limit(1.0)
+            x1_lvl_q = Finch.scansearch(x1_lvl.idx, limit(1.0), x1_lvl_q, x1_lvl_q_stop - 1)
+        end
+        while i <= phase_stop
+            x1_lvl_i = x1_lvl.idx[x1_lvl_q]
+            phase_stop_2 = min(phase_stop, x1_lvl_i)
+            if phase_stop_2 >= i
+                if x1_lvl_i == phase_stop_2
+                    y_lvl_q = y_lvl.ptr[1]
+                    y_lvl_q_stop = y_lvl.ptr[1 + 1]
+                    if y_lvl_q < y_lvl_q_stop
+                        y_lvl_i_end = y_lvl.right[y_lvl_q_stop - 1]
+                    else
+                        y_lvl_i_end = 0.0f0
+                    end
+                    x1_lvl_2_q = x1_lvl_2.ptr[x1_lvl_q]
+                    x1_lvl_2_q_stop = x1_lvl_2.ptr[x1_lvl_q + 1]
+                    if x1_lvl_2_q < x1_lvl_2_q_stop
+                        x1_lvl_2_i_end = x1_lvl_2.right[x1_lvl_2_q_stop - 1]
+                    else
+                        x1_lvl_2_i_end = 0.0f0
+                    end
+                    phase_stop_3 = min(y_lvl.shape, y_lvl_i_end, x1_lvl_2_i_end)
+                    if phase_stop_3 >= limit(1.0)
+                        j = limit(1.0)
+                        if y_lvl.right[y_lvl_q] < limit(1.0)
+                            y_lvl_q = Finch.scansearch(y_lvl.right, limit(1.0), y_lvl_q, y_lvl_q_stop - 1)
+                        end
+                        if x1_lvl_2.right[x1_lvl_2_q] < limit(1.0)
+                            x1_lvl_2_q = Finch.scansearch(x1_lvl_2.right, limit(1.0), x1_lvl_2_q, x1_lvl_2_q_stop - 1)
+                        end
+                        while j <= phase_stop_3
+                            y_lvl_i_start = y_lvl.left[y_lvl_q]
+                            y_lvl_i_stop = y_lvl.right[y_lvl_q]
+                            x1_lvl_2_i_start = x1_lvl_2.left[x1_lvl_2_q]
+                            x1_lvl_2_i_stop = x1_lvl_2.right[x1_lvl_2_q]
+                            phase_start_4 = j
+                            phase_stop_4 = min(x1_lvl_2_i_stop, phase_stop_3, y_lvl_i_stop)
+                            phase_start_8 = max(phase_start_4, y_lvl_i_start, x1_lvl_2_i_start)
+                            if phase_stop_4 >= phase_start_8
+                                y_lvl_2_val_3 = y_lvl_2.val[y_lvl_q]
+                                x1_lvl_3_val_3 = x1_lvl_3.val[x1_lvl_2_q]
+                                s2_val = s2_val + drop_eps(-phase_start_8 + phase_stop_4) * x1_lvl_3_val_3 * y_lvl_2_val_3
+                            end
+                            y_lvl_q += phase_stop_4 == y_lvl_i_stop
+                            x1_lvl_2_q += phase_stop_4 == x1_lvl_2_i_stop
+                            j = phase_stop_4 + limit(0+ϵ)
+                        end
+                    end
+                    x1_lvl_q += 1
+                end
+                i = phase_stop_2 + limit(0+ϵ)
+            end
+        end
+    end
+    (s2 = (Scalar){0, Int64}(s2_val),)
+end
+julia> @finch begin
+        s2 .= 0
+        for i = _, j = _
+            s2[] += x1[j, i] * y[j] * ∂(j)
+        end
+    end
+(s2 = Scalar{0, Int64}(253),)
+

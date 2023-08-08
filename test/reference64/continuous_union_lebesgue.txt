@@ -27,13 +27,13 @@ quote
         x_lvl_i_end = 0.0f0
     end
     phase_stop = min(y_lvl.shape, y_lvl_i_end, x_lvl_i_end)
-    if phase_stop >= limit(1.0tiny(0ϵ))
-        i = limit(1.0tiny(0ϵ))
-        if y_lvl.right[y_lvl_q] < limit(1.0tiny(0ϵ))
-            y_lvl_q = Finch.scansearch(y_lvl.right, limit(1.0tiny(0ϵ)), y_lvl_q, y_lvl_q_stop - 1)
+    if phase_stop >= limit(1.0)
+        i = limit(1.0)
+        if y_lvl.right[y_lvl_q] < limit(1.0)
+            y_lvl_q = Finch.scansearch(y_lvl.right, limit(1.0), y_lvl_q, y_lvl_q_stop - 1)
         end
-        if x_lvl.right[x_lvl_q] < limit(1.0tiny(0ϵ))
-            x_lvl_q = Finch.scansearch(x_lvl.right, limit(1.0tiny(0ϵ)), x_lvl_q, x_lvl_q_stop - 1)
+        if x_lvl.right[x_lvl_q] < limit(1.0)
+            x_lvl_q = Finch.scansearch(x_lvl.right, limit(1.0), x_lvl_q, x_lvl_q_stop - 1)
         end
         while i <= phase_stop
             y_lvl_i_start = y_lvl.left[y_lvl_q]
@@ -43,13 +43,13 @@ quote
             phase_start_2 = i
             phase_stop_2 = min(x_lvl_i_stop, phase_stop, y_lvl_i_stop)
             phase_start_4 = max(phase_start_2, y_lvl_i_start)
-            phase_stop_4 = min(phase_stop_2, limit(0tiny(-1ϵ)) + x_lvl_i_start)
+            phase_stop_4 = min(phase_stop_2, limit(0-ϵ) + x_lvl_i_start)
             if phase_stop_4 >= phase_start_4
                 y_lvl_2_val_2 = y_lvl_2.val[y_lvl_q]
                 s_val = drop_eps(-phase_start_4 + phase_stop_4) * y_lvl_2_val_2 + s_val
             end
             phase_start_5 = max(phase_start_2, x_lvl_i_start)
-            phase_stop_5 = min(phase_stop_2, limit(0tiny(-1ϵ)) + y_lvl_i_start)
+            phase_stop_5 = min(phase_stop_2, limit(0-ϵ) + y_lvl_i_start)
             if phase_stop_5 >= phase_start_5
                 x_lvl_2_val_2 = x_lvl_2.val[x_lvl_q]
                 s_val = s_val + drop_eps(-phase_start_5 + phase_stop_5) * x_lvl_2_val_2
@@ -62,10 +62,10 @@ quote
             end
             y_lvl_q += phase_stop_2 == y_lvl_i_stop
             x_lvl_q += phase_stop_2 == x_lvl_i_stop
-            i = phase_stop_2 + limit(0tiny(1ϵ))
+            i = phase_stop_2 + limit(0+ϵ)
         end
     end
-    phase_start_7 = max(limit(1.0tiny(0ϵ)), limit(0tiny(1ϵ)) + y_lvl_i_end)
+    phase_start_7 = max(limit(1.0), limit(0+ϵ) + y_lvl_i_end)
     phase_stop_7 = min(y_lvl.shape, x_lvl_i_end)
     if phase_stop_7 >= phase_start_7
         i = phase_start_7
@@ -84,11 +84,11 @@ quote
                     s_val = s_val + drop_eps(-phase_start_10 + phase_stop_8) * x_lvl_2_val_4
                 end
                 x_lvl_q += phase_stop_8 == x_lvl_i_stop
-                i = phase_stop_8 + limit(0tiny(1ϵ))
+                i = phase_stop_8 + limit(0+ϵ)
             end
         end
     end
-    phase_start_11 = max(limit(1.0tiny(0ϵ)), limit(0tiny(1ϵ)) + x_lvl_i_end)
+    phase_start_11 = max(limit(1.0), limit(0+ϵ) + x_lvl_i_end)
     phase_stop_11 = min(y_lvl.shape, y_lvl_i_end)
     if phase_stop_11 >= phase_start_11
         i = phase_start_11
@@ -107,7 +107,7 @@ quote
                     s_val = s_val + drop_eps(-phase_start_14 + phase_stop_12) * y_lvl_2_val_4
                 end
                 y_lvl_q += phase_stop_12 == y_lvl_i_stop
-                i = phase_stop_12 + limit(0tiny(1ϵ))
+                i = phase_stop_12 + limit(0+ϵ)
             end
         end
     end
@@ -119,5 +119,5 @@ julia> @finch begin
             s[] += (x[i] + y[i]) * ∂(i)
         end
     end
-(s = Scalar{0, Int64}(1050),)
+(s = Scalar{0, Int64}(92),)
 

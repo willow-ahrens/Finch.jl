@@ -62,7 +62,7 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseRLE
         append!(crds, l)
     end
 
-    print_coord(io, crd) = print(io, crd, ":", lvl.right[searchsortedfirst(left_endpoints, crd)])  
+    print_coord(io, crd) = print(io, crd, ":", lvl.right[lvl.ptr[p]-1+searchsortedfirst(left_endpoints, crd)])  
     get_fbr(crd) = fbr(crd)
 
     print(io, "SparseRLE (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.shape, "]")
@@ -292,7 +292,6 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseRLELevel},
                             $(fbr.dirty) = true
                             $(lvl.ex).left[$qos] = $(ctx(getstart(ext)))
                             $(lvl.ex).right[$qos] = $(ctx(getstop(ext)))
-                            #println($(ctx(getstart(ext))), $(ctx(getstop(ext))))
                             $(qos) += $(Tp(1))
                         end
                     end

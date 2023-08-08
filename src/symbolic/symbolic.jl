@@ -252,6 +252,8 @@ collapsed(alg, idx, ext::ContinuousExtent, lhs, f::typeof(+), rhs) = begin
             assign(lhs, f, rhs)
         else
             sieve(call(==, measure(ext), 0), assign(lhs, f, rhs)) # Undefined if measure != 0 
+            #block(sieve(call(==, measure(ext), 0), assign(lhs, f, rhs)),
+            #      sieve(call(!=, measure(ext), 0), assign(lhs, f, Inf))) #TODO : add "else" in sieve
         end
     end
 end

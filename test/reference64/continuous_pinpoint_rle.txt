@@ -17,10 +17,10 @@ quote
         y_lvl_i_end = 0.0f0
     end
     phase_stop = min(y_lvl_i_end, y_lvl.shape)
-    if phase_stop >= limit(1.0tiny(0ϵ))
-        i = limit(1.0tiny(0ϵ))
-        if y_lvl.right[y_lvl_q] < limit(1.0tiny(0ϵ))
-            y_lvl_q = Finch.scansearch(y_lvl.right, limit(1.0tiny(0ϵ)), y_lvl_q, y_lvl_q_stop - 1)
+    if phase_stop >= limit(1.0)
+        i = limit(1.0)
+        if y_lvl.right[y_lvl_q] < limit(1.0)
+            y_lvl_q = Finch.scansearch(y_lvl.right, limit(1.0), y_lvl_q, y_lvl_q_stop - 1)
         end
         while i <= phase_stop
             y_lvl_i_start = y_lvl.left[y_lvl_q]
@@ -37,7 +37,7 @@ quote
                     end
                 end
                 y_lvl_q += phase_stop_2 == y_lvl_i_stop
-                i = phase_stop_2 + limit(0tiny(1ϵ))
+                i = phase_stop_2 + limit(0+ϵ)
             end
         end
     end
@@ -49,5 +49,5 @@ julia> @finch begin
             z2[] += y[i]
         end
     end
-(z2 = Scalar{0, Int64}(100),)
+(z2 = Scalar{0, Int64}(10),)
 
