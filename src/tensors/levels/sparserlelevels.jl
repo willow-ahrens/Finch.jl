@@ -62,7 +62,7 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseRLE
         append!(crds, l)
     end
 
-    print_coord(io, crd) = print(io, crd, ":", lvl.right[searchsortedfirst(left_endpoints, crd)])  
+    print_coord(io, crd) = print(io, crd, ":", lvl.right[lvl.ptr[p]-1+searchsortedfirst(left_endpoints, crd)])  
     get_fbr(crd) = fbr(crd)
 
     print(io, "SparseRLE (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.shape, "]")
@@ -124,7 +124,7 @@ end
 Base.summary(lvl::VirtualSparseRLELevel) = "SparseRLE($(summary(lvl.lvl)))"
 
 function virtual_level_size(lvl::VirtualSparseRLELevel, ctx)
-    ext = make_extent(lvl.Ti, literal(lvl.Ti(1)), lvl.shape)
+    ext = make_extent(lvl.Ti, literal(lvl.Ti(1.0)), lvl.shape)
     (virtual_level_size(lvl.lvl, ctx)..., ext)
 end
 

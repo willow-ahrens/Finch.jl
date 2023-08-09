@@ -111,31 +111,61 @@ function get_program_rules(alg, shash)
         (@rule sieve(true, ~a) => a),
         (@rule sieve(false, ~a) => block()), #TODO should add back skipvisitor
 
-        (@rule loop(~i, ~a::isvirtual, assign(access(~b, updater(), ~j...), ~f::isidempotent(alg), ~c)) => begin
-            if i ∉ j && i ∉ getunbound(c)
-                sieve(call(>, measure(a.val), 0), assign(access(b, updater(), j...), f, c))
-            end
-        end),
-        (@rule loop(~i, ~a::isvirtual, assign(access(~b, updater(), ~j...), +, ~d)) => begin
-            if i ∉ j && i ∉ getunbound(d)
-                assign(access(b, updater(), j...), +, call(*, measure(a.val), d))
+        # Top-down reduction
+        (@rule loop(~idx, ~ext::isvirtual, ~body) => begin
+            body_contain_idx = idx ∈ getunbound(body)
+            if !body_contain_idx
+                decl_in_scope = filter(!isnothing, map(node-> if @capture(node, declare(~tns, ~init)) tns 
+                                                              elseif @capture(node, define(~var, ~val)) var
+                                                              end, PostOrderDFS(body)))
+                Postwalk(@rule assign(access(~lhs, updater(), ~j...), ~f, ~rhs) => begin 
+                             access_in_rhs = filter(!isnothing, map(node-> if @capture(node, access(~tns, reader(), ~k...)) tns 
+                                                                           elseif @capture(node, ~var::isvariable) var
+                                                                           end, PostOrderDFS(rhs)))
+                             if !(lhs in decl_in_scope) && isempty(intersect(access_in_rhs, decl_in_scope))
+                                 collapsed(alg, idx, ext.val, access(lhs, updater(), j...), f, rhs)
+                             end
+                         end)(body)
             end
         end),
 
+        # Lifting sieve 
+        (@rule loop(~idx, ~ext::isvirtual, sieve(~cond, ~body)) => begin
+            if idx ∉ getunbound(cond)
+                sieve(cond, loop(idx, ext, body))
+            end
+        end),
+
+
+        # Bottom-up reduction1
+        (@rule loop(~idx, ~ext::isvirtual, assign(access(~lhs, updater(), ~j...), ~f, ~rhs)) => begin
+            if idx ∉ j && idx ∉ getunbound(rhs)
+                collapsed(alg, idx, ext.val, access(lhs, updater(), j...), f, rhs)
+            end
+        end),
+
+        ## Bottom-up reduction2
+        (@rule loop(~idx, ~ext::isvirtual, block(~s1..., assign(access(~lhs, updater(), ~j...), ~f, ~rhs), ~s2...)) => begin 
+           if ortho(getroot(lhs), s1) && ortho(getroot(lhs), s2)
+               if idx ∉ j && idx ∉ getunbound(rhs)
+                   body = block(s1..., assign(access(lhs, updater(), j...), f, rhs), s2...)
+                   decl_in_scope = filter(!isnothing, map(node-> if @capture(node, declare(~tns, ~init)) tns 
+                                                                 elseif @capture(node, define(~var, ~val)) var
+                                                                 end, PostOrderDFS(body)))
+
+                   access_in_rhs = filter(!isnothing, map(node-> if @capture(node, access(~tns, reader(), ~k...)) tns 
+                                                                 elseif @capture(node, ~var::isvariable) var
+                                                                 end, PostOrderDFS(rhs)))
+                    
+                   if !(lhs in decl_in_scope) && isempty(intersect(access_in_rhs, decl_in_scope))
+                       collapsed_body = collapsed(alg, idx, ext.val, access(lhs, updater(), j...), f, rhs)
+                       block(collapsed_body, loop(idx, ext, block(s1..., s2...)))
+                   end
+               end
+           end
+        end),
+        
         (@rule assign(~a, ~op, cached(~b, ~c)) => assign(a, op, b)),
-
-        (@rule loop(~i, ~ext::isvirtual, assign(access(~a, ~m), $(literal(+)), ~b::isliteral)) =>
-            assign(access(a, m), +, call(*, b, measure(ext.val)))
-        ),
-        (@rule loop(~i, ~ext::isvirtual, block(~s1..., assign(access(~a, ~m), $(literal(+)), ~b::isliteral), ~s2...)) => if ortho(getroot(a), s1) && ortho(getroot(a), s2)
-            block(assign(access(a, m), +, call(*, b, measure(ext.val))), loop(i, ext, block(s1..., s2...)))
-        end),
-        (@rule loop(~i, ~ext, assign(access(~a, ~m), ~f::isidempotent(alg), ~b::isliteral)) =>
-            sieve(call(>, measure(ext.val), 0), assign(access(a, m), f, b))
-        ),
-        (@rule loop(~i, ~ext, block(~s1..., assign(access(~a, ~m), ~f::isidempotent(alg), ~b::isliteral), ~s2...)) => if ortho(getroot(a), s1) && ortho(getroot(a), s2)
-            block(sieve(call(>, measure(ext.val), 0), assign(access(a, m), f, b)), loop(i, ext, block(s1..., s2...)))
-        end),
 
         (@rule block(~s1..., define(~a::isvariable, ~v::isconstant), ~s2...) => begin
             s2_2 = Postwalk(@rule a => v)(block(s2...))

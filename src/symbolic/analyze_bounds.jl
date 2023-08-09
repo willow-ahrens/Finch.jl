@@ -103,7 +103,7 @@ function get_bounds_rules(alg, shash)
         (@rule call(~f::isinvolution(alg), call(~f, ~a)) => a),
 
         # Clamping rules
-        #=
+        #=        
         # this rule is great but too expensive
         (@rule call(max, ~a, call(min, ~b, ~c)) => begin
             if query(call(<=, a, b), LowerJulia()) # a = low, b = high

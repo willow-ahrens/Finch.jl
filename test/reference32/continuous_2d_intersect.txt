@@ -1,0 +1,157 @@
+julia> @finch_code begin
+        z .= 0
+        for i = _, j = _
+            z[j, i] += x[j, i] * y[j, i]
+        end
+    end
+quote
+    z_lvl = (ex.bodies[1]).tns.tns.lvl
+    z_lvl_2 = z_lvl.lvl
+    z_lvl_3 = z_lvl_2.lvl
+    x_lvl = ((ex.bodies[2]).body.body.rhs.args[1]).tns.tns.lvl
+    x_lvl_2 = x_lvl.lvl
+    x_lvl_3 = x_lvl_2.lvl
+    y_lvl = ((ex.bodies[2]).body.body.rhs.args[2]).tns.tns.lvl
+    y_lvl_2 = y_lvl.lvl
+    y_lvl_3 = y_lvl_2.lvl
+    y_lvl_2.shape == x_lvl_2.shape || throw(DimensionMismatch("mismatched dimension limits ($(y_lvl_2.shape) != $(x_lvl_2.shape))"))
+    y_lvl.shape == x_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(y_lvl.shape) != $(x_lvl.shape))"))
+    z_lvl_qos_stop = 0
+    z_lvl_2_qos_fill = 0
+    z_lvl_2_qos_stop = 0
+    Finch.resize_if_smaller!(z_lvl.ptr, 1 + 1)
+    Finch.fill_range!(z_lvl.ptr, 0, 1 + 1, 1 + 1)
+    z_lvl_qos = 0 + 1
+    y_lvl_q = y_lvl.ptr[1]
+    y_lvl_q_stop = y_lvl.ptr[1 + 1]
+    if y_lvl_q < y_lvl_q_stop
+        y_lvl_i_end = y_lvl.right[y_lvl_q_stop - 1]
+    else
+        y_lvl_i_end = 0.0f0
+    end
+    x_lvl_q = x_lvl.ptr[1]
+    x_lvl_q_stop = x_lvl.ptr[1 + 1]
+    if x_lvl_q < x_lvl_q_stop
+        x_lvl_i_end = x_lvl.right[x_lvl_q_stop - 1]
+    else
+        x_lvl_i_end = 0.0f0
+    end
+    phase_stop = min(y_lvl.shape, y_lvl_i_end, x_lvl_i_end)
+    if phase_stop >= limit(1.0)
+        i = limit(1.0)
+        if y_lvl.right[y_lvl_q] < limit(1.0)
+            y_lvl_q = Finch.scansearch(y_lvl.right, limit(1.0), y_lvl_q, y_lvl_q_stop - 1)
+        end
+        if x_lvl.right[x_lvl_q] < limit(1.0)
+            x_lvl_q = Finch.scansearch(x_lvl.right, limit(1.0), x_lvl_q, x_lvl_q_stop - 1)
+        end
+        while i <= phase_stop
+            y_lvl_i_start = y_lvl.left[y_lvl_q]
+            y_lvl_i_stop = y_lvl.right[y_lvl_q]
+            x_lvl_i_start = x_lvl.left[x_lvl_q]
+            x_lvl_i_stop = x_lvl.right[x_lvl_q]
+            phase_start_2 = i
+            phase_stop_2 = min(x_lvl_i_stop, phase_stop, y_lvl_i_stop)
+            phase_start_6 = max(phase_start_2, y_lvl_i_start, x_lvl_i_start)
+            if phase_stop_2 >= phase_start_6
+                if z_lvl_qos > z_lvl_qos_stop
+                    z_lvl_qos_stop = max(z_lvl_qos_stop << 1, 1)
+                    Finch.resize_if_smaller!(z_lvl.left, z_lvl_qos_stop)
+                    Finch.resize_if_smaller!(z_lvl.right, z_lvl_qos_stop)
+                    Finch.resize_if_smaller!(z_lvl_2.ptr, z_lvl_qos_stop + 1)
+                    Finch.fill_range!(z_lvl_2.ptr, 0, z_lvl_qos + 1, z_lvl_qos_stop + 1)
+                end
+                z_lvldirty = false
+                z_lvl_2_qos = z_lvl_2_qos_fill + 1
+                x_lvl_2_q_2 = x_lvl_2.ptr[x_lvl_q]
+                x_lvl_2_q_stop_2 = x_lvl_2.ptr[x_lvl_q + 1]
+                if x_lvl_2_q_2 < x_lvl_2_q_stop_2
+                    x_lvl_2_i_end_2 = x_lvl_2.right[x_lvl_2_q_stop_2 - 1]
+                else
+                    x_lvl_2_i_end_2 = 0.0f0
+                end
+                y_lvl_2_q_2 = y_lvl_2.ptr[y_lvl_q]
+                y_lvl_2_q_stop_2 = y_lvl_2.ptr[y_lvl_q + 1]
+                if y_lvl_2_q_2 < y_lvl_2_q_stop_2
+                    y_lvl_2_i_end_2 = y_lvl_2.right[y_lvl_2_q_stop_2 - 1]
+                else
+                    y_lvl_2_i_end_2 = 0.0f0
+                end
+                phase_stop_7 = min(y_lvl_2.shape, x_lvl_2_i_end_2, y_lvl_2_i_end_2)
+                if phase_stop_7 >= limit(1.0)
+                    j = limit(1.0)
+                    if x_lvl_2.right[x_lvl_2_q_2] < limit(1.0)
+                        x_lvl_2_q_2 = Finch.scansearch(x_lvl_2.right, limit(1.0), x_lvl_2_q_2, x_lvl_2_q_stop_2 - 1)
+                    end
+                    if y_lvl_2.right[y_lvl_2_q_2] < limit(1.0)
+                        y_lvl_2_q_2 = Finch.scansearch(y_lvl_2.right, limit(1.0), y_lvl_2_q_2, y_lvl_2_q_stop_2 - 1)
+                    end
+                    while j <= phase_stop_7
+                        x_lvl_2_i_start_2 = x_lvl_2.left[x_lvl_2_q_2]
+                        x_lvl_2_i_stop_2 = x_lvl_2.right[x_lvl_2_q_2]
+                        y_lvl_2_i_start_2 = y_lvl_2.left[y_lvl_2_q_2]
+                        y_lvl_2_i_stop_2 = y_lvl_2.right[y_lvl_2_q_2]
+                        phase_start_8 = j
+                        phase_stop_8 = min(y_lvl_2_i_stop_2, phase_stop_7, x_lvl_2_i_stop_2)
+                        phase_start_12 = max(phase_start_8, x_lvl_2_i_start_2, y_lvl_2_i_start_2)
+                        if phase_stop_8 >= phase_start_12
+                            y_lvl_3_val_3 = y_lvl_3.val[y_lvl_2_q_2]
+                            x_lvl_3_val_3 = x_lvl_3.val[x_lvl_2_q_2]
+                            if z_lvl_2_qos > z_lvl_2_qos_stop
+                                z_lvl_2_qos_stop = max(z_lvl_2_qos_stop << 1, 1)
+                                Finch.resize_if_smaller!(z_lvl_2.left, z_lvl_2_qos_stop)
+                                Finch.resize_if_smaller!(z_lvl_2.right, z_lvl_2_qos_stop)
+                                Finch.resize_if_smaller!(z_lvl_3.val, z_lvl_2_qos_stop)
+                                Finch.fill_range!(z_lvl_3.val, 0, z_lvl_2_qos, z_lvl_2_qos_stop)
+                            end
+                            z_lvl_3.val[z_lvl_2_qos] = z_lvl_3.val[z_lvl_2_qos] + x_lvl_3_val_3 * y_lvl_3_val_3
+                            z_lvldirty = true
+                            z_lvl_2.left[z_lvl_2_qos] = phase_start_12
+                            z_lvl_2.right[z_lvl_2_qos] = phase_stop_8
+                            z_lvl_2_qos += 1
+                        end
+                        x_lvl_2_q_2 += phase_stop_8 == x_lvl_2_i_stop_2
+                        y_lvl_2_q_2 += phase_stop_8 == y_lvl_2_i_stop_2
+                        j = phase_stop_8 + limit(0+ϵ)
+                    end
+                end
+                z_lvl_2.ptr[z_lvl_qos + 1] = (z_lvl_2_qos - z_lvl_2_qos_fill) - 1
+                z_lvl_2_qos_fill = z_lvl_2_qos - 1
+                if z_lvldirty
+                    z_lvl.left[z_lvl_qos] = phase_start_6
+                    z_lvl.right[z_lvl_qos] = phase_stop_2
+                    z_lvl_qos += 1
+                end
+            end
+            y_lvl_q += phase_stop_2 == y_lvl_i_stop
+            x_lvl_q += phase_stop_2 == x_lvl_i_stop
+            i = phase_stop_2 + limit(0+ϵ)
+        end
+    end
+    z_lvl.ptr[1 + 1] = (z_lvl_qos - 0) - 1
+    for p = 2:1 + 1
+        z_lvl.ptr[p] += z_lvl.ptr[p - 1]
+    end
+    qos_stop = z_lvl.ptr[1 + 1] - 1
+    for p_2 = 2:qos_stop + 1
+        z_lvl_2.ptr[p_2] += z_lvl_2.ptr[p_2 - 1]
+    end
+    resize!(z_lvl.ptr, 1 + 1)
+    qos = z_lvl.ptr[end] - 1
+    resize!(z_lvl.left, qos)
+    resize!(z_lvl.right, qos)
+    resize!(z_lvl_2.ptr, qos + 1)
+    qos_2 = z_lvl_2.ptr[end] - 1
+    resize!(z_lvl_2.left, qos_2)
+    resize!(z_lvl_2.right, qos_2)
+    resize!(z_lvl_3.val, qos_2)
+    (z = Fiber((SparseRLELevel){Limit{Float32}, Int32}((SparseRLELevel){Limit{Float32}, Int32}(z_lvl_3, y_lvl_2.shape, z_lvl_2.ptr, z_lvl_2.left, z_lvl_2.right), y_lvl.shape, z_lvl.ptr, z_lvl.left, z_lvl.right)),)
+end
+julia> @finch begin
+        z .= 0
+        for i = _, j = _
+            z[j, i] += x[j, i] * y[j, i]
+        end
+    end
+(z = Fiber(SparseRLE{Limit{Float32}, Int32}(SparseRLE{Limit{Float32}, Int32}(Element{0, Int32}([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]), limit(100.0), [1, 12, 22, 37, 48, 58, 66, 76, 90, 99, 111], [limit(5.0), limit(11.0), limit(25.0), limit(30.0), limit(33.0), limit(34.0), limit(44.0), limit(49.0), limit(81.0), limit(91.0), limit(94.0), limit(3.0), limit(13.0), limit(20.0), limit(30.0), limit(36.0), limit(44.0), limit(66.0), limit(77.0), limit(83.0), limit(98.0), limit(7.0), limit(13.0), limit(18.0), limit(21.0), limit(28.0), limit(31.0), limit(36.0), limit(48.0), limit(62.0), limit(64.0), limit(77.0), limit(83.0), limit(88.0), limit(92.0), limit(95.0), limit(16.0), limit(22.0), limit(29.0), limit(35.0), limit(55.0), limit(56.0), limit(60.0), limit(62.0), limit(74.0), limit(77.0), limit(83.0), limit(5.0), limit(9.0), limit(18.0), limit(20.0), limit(54.0), limit(66.0), limit(75.0), limit(80.0), limit(90.0), limit(96.0), limit(15.0), limit(20.0), limit(46.0), limit(51.0), limit(58.0), limit(66.0), limit(90.0), limit(97.0), limit(10.0), limit(20.0), limit(23.0), limit(46.0), limit(51.0), limit(56.0), limit(62.0), limit(66.0), limit(85.0), limit(97.0), limit(5.0), limit(6.0), limit(14.0), limit(17.0), limit(19.0), limit(21.0), limit(25.0), limit(53.0), limit(60.0), limit(74.0), limit(79.0), limit(83.0), limit(88.0), limit(92.0), limit(13.0), limit(23.0), limit(33.0), limit(40.0), limit(41.0), limit(53.0), limit(80.0), limit(87.0), limit(91.0), limit(2.0), limit(13.0), limit(23.0), limit(25.0), limit(32.0), limit(55.0), limit(60.0), limit(69.0), limit(70.0), limit(79.0), limit(87.0), limit(91.0)], [limit(8.0), limit(24.0), limit(29.0), limit(31.0), limit(33.0), limit(38.0), limit(46.0), limit(51.0), limit(84.0), limit(92.0), limit(96.0), limit(6.0), limit(16.0), limit(21.0), limit(33.0), limit(36.0), limit(51.0), limit(67.0), limit(82.0), limit(85.0), limit(98.0), limit(7.0), limit(15.0), limit(19.0), limit(24.0), limit(30.0), limit(33.0), limit(38.0), limit(51.0), limit(63.0), limit(68.0), limit(78.0), limit(86.0), limit(91.0), limit(93.0), limit(98.0), limit(16.0), limit(24.0), limit(29.0), limit(37.0), limit(55.0), limit(57.0), limit(61.0), limit(62.0), limit(75.0), limit(78.0), limit(83.0), limit(7.0), limit(10.0), limit(19.0), limit(22.0), limit(55.0), limit(67.0), limit(76.0), limit(81.0), limit(94.0), limit(96.0), limit(17.0), limit(24.0), limit(47.0), limit(57.0), limit(64.0), limit(66.0), limit(94.0), limit(100.0), limit(17.0), limit(22.0), limit(24.0), limit(47.0), limit(52.0), limit(60.0), limit(64.0), limit(66.0), limit(90.0), limit(98.0), limit(5.0), limit(10.0), limit(15.0), limit(18.0), limit(19.0), limit(24.0), limit(35.0), limit(59.0), limit(60.0), limit(74.0), limit(80.0), limit(85.0), limit(90.0), limit(92.0), limit(19.0), limit(30.0), limit(36.0), limit(40.0), limit(44.0), limit(67.0), limit(83.0), limit(88.0), limit(94.0), limit(3.0), limit(18.0), limit(24.0), limit(30.0), limit(36.0), limit(57.0), limit(68.0), limit(69.0), limit(72.0), limit(83.0), limit(89.0), limit(95.0)]), limit(100.0), [1, 11], [limit(9.0), limit(18.0), limit(26.0), limit(47.0), limit(57.0), limit(64.0), limit(67.0), limit(78.0), limit(96.0), limit(97.0)], [limit(12.0), limit(22.0), limit(34.0), limit(50.0), limit(59.0), limit(66.0), limit(70.0), limit(79.0), limit(96.0), limit(98.0)])),)
+
