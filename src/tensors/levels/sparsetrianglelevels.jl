@@ -170,7 +170,7 @@ struct SparseTriangleFollowTraversal
     q
 end
 
-function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, protos...)
+function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
@@ -186,11 +186,11 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ct
         preamble = quote
             $q = $(ctx(call(+, call(*, call(-, pos, lvl.Ti(1)), fbr_count), 1)))
         end,
-        body = (ctx) -> instantiate_reader(SparseTriangleFollowTraversal(lvl, lvl.N, lvl.shape, lvl.N, value(q)), ctx, protos...)
+        body = (ctx) -> instantiate_reader(SparseTriangleFollowTraversal(lvl, lvl.N, lvl.shape, lvl.N, value(q)), ctx, protos)
     )
 end
 
-function instantiate_reader(trv::SparseTriangleFollowTraversal, ctx, ::Union{typeof(defaultread), typeof(follow)}, protos...)
+function instantiate_reader(trv::SparseTriangleFollowTraversal, ctx, subprotos, ::Union{typeof(defaultread), typeof(follow)})
     (lvl, d, j, n, q) = (trv.lvl, trv.d, trv.j, trv.n, trv.q)
     s = ctx.freshen(lvl.ex, :_s)
     if d == 1
@@ -199,7 +199,7 @@ function instantiate_reader(trv::SparseTriangleFollowTraversal, ctx, ::Union{typ
                 Phase(
                     stop = (ctx, ext) -> j,
                     body = (ctx, ext) -> Lookup(
-                        body = (ctx, i) -> instantiate_reader(VirtualSubFiber(lvl.lvl, call(+, q, -1, i)), ctx, protos...)
+                        body = (ctx, i) -> instantiate_reader(VirtualSubFiber(lvl.lvl, call(+, q, -1, i)), ctx, subprotos)
                     )
                 ),
                 Phase(
@@ -217,7 +217,7 @@ function instantiate_reader(trv::SparseTriangleFollowTraversal, ctx, ::Union{typ
                             preamble = :(
                                 $s = $(ctx(call(+, q, virtual_simplex(d, ctx, call(-, i, 1)))))
                             ),
-                            body = (ctx) -> instantiate_reader(SparseTriangleFollowTraversal(lvl, d - 1, i, n, value(s)), ctx, protos...)
+                            body = (ctx) -> instantiate_reader(SparseTriangleFollowTraversal(lvl, d - 1, i, n, value(s)), ctx, subprotos)
                         )
                     )
                 ),
@@ -238,9 +238,9 @@ struct SparseTriangleLaminateTraversal
     dirty
 end
 
-instantiate_updater(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, protos...) =
-    instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
-function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseTriangleLevel}, ctx, protos...)
+instantiate_updater(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, protos) =
+    instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos)
+function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseTriangleLevel}, ctx, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
@@ -256,11 +256,11 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseTriangleLe
         preamble = quote
             $q = $(ctx(call(+, call(*, call(-, pos, lvl.Ti(1)), fbr_count), 1)))
         end,
-        body = (ctx) -> instantiate_updater(SparseTriangleLaminateTraversal(lvl, lvl.N, lvl.shape, lvl.N, value(q), fbr.dirty), ctx, protos...)
+        body = (ctx) -> instantiate_updater(SparseTriangleLaminateTraversal(lvl, lvl.N, lvl.shape, lvl.N, value(q), fbr.dirty), ctx, protos)
     )
 end
 
-function instantiate_updater(trv::SparseTriangleLaminateTraversal, ctx, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...)
+function instantiate_updater(trv::SparseTriangleLaminateTraversal, ctx, subprotos, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)})
     (lvl, d, j, n, q, dirty) = (trv.lvl, trv.d, trv.j, trv.n, trv.q, trv.dirty)
     s = ctx.freshen(lvl.ex, :_s)
     if d == 1
@@ -269,7 +269,7 @@ function instantiate_updater(trv::SparseTriangleLaminateTraversal, ctx, ::Union{
                 Phase(
                     stop = (ctx, ext) -> j,
                     body = (ctx, ext) -> Lookup(
-                        body = (ctx, i) -> instantiate_updater(VirtualTrackedSubFiber(lvl.lvl, call(+, q, -1, i), dirty), ctx, protos...)
+                        body = (ctx, i) -> instantiate_updater(VirtualTrackedSubFiber(lvl.lvl, call(+, q, -1, i), dirty), ctx, subprotos)
                     )
                 ),
                 Phase(
@@ -287,7 +287,7 @@ function instantiate_updater(trv::SparseTriangleLaminateTraversal, ctx, ::Union{
                             preamble = :(
                                 $s = $(ctx(call(+, q, virtual_simplex(d, ctx, call(-, i, 1)))))
                             ),
-                            body = (ctx) -> instantiate_updater(SparseTriangleLaminateTraversal(lvl, d - 1, i, n, value(s), dirty), ctx, protos...)
+                            body = (ctx) -> instantiate_updater(SparseTriangleLaminateTraversal(lvl, d - 1, i, n, value(s), dirty), ctx, subprotos)
                         )
                     )
                 ),

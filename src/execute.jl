@@ -33,9 +33,9 @@ function (ctx::InstantiateTensors)(node::FinchNode)
         #@assert get(ctx.ctx.modes, tns, reader()).kind === node.mode.kind
         protos = [(mode.kind === reader ? defaultread : defaultupdate) for _ in idxs]
         if mode.kind === reader
-            tns_2 = instantiate_reader(tns, ctx.ctx, protos...)
+            tns_2 = instantiate_reader(tns, ctx.ctx, protos)
         else
-            tns_2 = instantiate_updater(tns, ctx.ctx, protos...)
+            tns_2 = instantiate_updater(tns, ctx.ctx, protos)
         end
         access(tns_2, mode, idxs...)
     elseif istree(node)

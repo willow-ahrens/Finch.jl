@@ -187,7 +187,7 @@ end
 
 
 
-function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, ::Union{typeof(defaultread), typeof(walk)}, protos...)
+function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, subprotos, ::Union{typeof(defaultread), typeof(walk)})
     (lvl, pos) = (fbr.lvl, fbr.pos) 
     tag = lvl.ex
     Tp = lvl.Tp
@@ -234,7 +234,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, ::
                                         ),
                                         Phase(
                                             body = (ctx,ext) -> Run(
-                                                body = Simplify(instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q)), ctx, protos...))
+                                                body = Simplify(instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q)), ctx, subprotos))
                                             )
                                         )
                                     ]),
@@ -261,10 +261,10 @@ is_laminable_updater(lvl::VirtualSparseRLELevel, ctx, ::Union{typeof(defaultupda
 
 is_injective(lvl::VirtualSparseRLELevel, ctx, accs) = false
 
-instantiate_updater(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, protos...) = 
-    instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
+instantiate_updater(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, protos) = 
+    instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos)
 
-function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseRLELevel}, ctx, ::Union{typeof(defaultupdate), typeof(extrude)}, protos...)
+function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseRLELevel}, ctx, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
     (lvl, pos) = (fbr.lvl, fbr.pos) 
     tag = lvl.ex
     Tp = lvl.Tp
@@ -291,7 +291,7 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseRLELevel},
                         end
                         $dirty = false
                     end,
-                    body = (ctx) -> instantiate_updater(VirtualTrackedSubFiber(lvl.lvl, value(qos, lvl.Tp), dirty), ctx, protos...),
+                    body = (ctx) -> instantiate_updater(VirtualTrackedSubFiber(lvl.lvl, value(qos, lvl.Tp), dirty), ctx, subprotos),
                     epilogue = quote
                         if $dirty
                             $(fbr.dirty) = true

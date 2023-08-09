@@ -53,11 +53,11 @@ function virtual_resize!(arr::VirtualOffsetArray, ctx::AbstractCompiler, dims...
     virtual_resize!(arr.body, ctx, dims_2...)
 end
 
-function instantiate_reader(arr::VirtualOffsetArray, ctx, protos...)
-    VirtualOffsetArray(instantiate_reader(arr.body, ctx, protos...), arr.delta)
+function instantiate_reader(arr::VirtualOffsetArray, ctx, protos)
+    VirtualOffsetArray(instantiate_reader(arr.body, ctx, protos), arr.delta)
 end
-function instantiate_updater(arr::VirtualOffsetArray, ctx, protos...)
-    VirtualOffsetArray(instantiate_updater(arr.body, ctx, protos...), arr.delta)
+function instantiate_updater(arr::VirtualOffsetArray, ctx, protos)
+    VirtualOffsetArray(instantiate_updater(arr.body, ctx, protos), arr.delta)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualOffsetArray) = ctx(node.body)
