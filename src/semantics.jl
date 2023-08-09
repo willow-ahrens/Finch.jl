@@ -80,7 +80,7 @@ getunbound(ex) = istree(ex) ? mapreduce(getunbound, union, arguments(ex), init=[
 function getunbound(ex::FinchNode)
     if ex.kind === index
         return [ex]
-    elseif @capture ex call(∂, ~idx...)
+    elseif @capture ex call(d, ~idx...)
         return []
     elseif ex.kind === loop
         return setdiff(union(getunbound(ex.body), getunbound(ex.ext)), getunbound(ex.idx))

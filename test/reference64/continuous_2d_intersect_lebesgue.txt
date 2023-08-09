@@ -1,7 +1,7 @@
 julia> @finch_code begin
         s .= 0
         for i = _, j = _
-            s[] += (x[j, i] * y[j, i]) * ∂(i, j)
+            s[] += (x[j, i] * y[j, i]) * d(i, j)
         end
     end
 quote
@@ -99,7 +99,7 @@ end
 julia> @finch begin
         s .= 0
         for i = _, j = _
-            s[] += (x[j, i] * y[j, i]) * ∂(i, j)
+            s[] += (x[j, i] * y[j, i]) * d(i, j)
         end
     end
 (s = Scalar{0, Int64}(343),)

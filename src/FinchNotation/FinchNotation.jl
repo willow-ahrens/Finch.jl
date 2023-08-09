@@ -36,7 +36,7 @@ module FinchNotation
 
     export overwrite, initwrite, Dimensionless, dimless, extent
 
-    export ∂
+    export d
 
     include("nodes.jl")
     include("instances.jl")

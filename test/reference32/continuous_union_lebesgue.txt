@@ -1,7 +1,7 @@
 julia> @finch_code begin
         s .= 0
         for i = _
-            s[] += (x[i] + y[i]) * ∂(i)
+            s[] += (x[i] + y[i]) * d(i)
         end
     end
 quote
@@ -116,7 +116,7 @@ end
 julia> @finch begin
         s .= 0
         for i = _
-            s[] += (x[i] + y[i]) * ∂(i)
+            s[] += (x[i] + y[i]) * d(i)
         end
     end
 (s = Scalar{0, Int32}(103),)
