@@ -28,7 +28,9 @@
         @repl io @finch_code (z2 .= 0; for i=_; z2[] += y[i] end)
         @repl io @finch (z2 .= 0; for i=_; z2[] += y[i] end)
         @test check_output("continuous_pinpoint_rle.txt", String(take!(io)))
-        
+       
+        @test z1.val == z2.val
+
         @finch (z1 .= 0; for i=_; z1[] += x[i] * ∂(i) end)
         @finch (z2 .= 0; for i=_; z2[] += y[i] * ∂(i) end)
         @test z1.val == 0 && z2.val == 0
@@ -96,13 +98,20 @@
         @repl io @finch (s .= 0; for i=_, j=_; s[] += (x[j,i] * y[j,i]) end)
         @test check_output("continuous_2d_intersect_counting.txt", String(take!(io)))  
 
+        @repl io @finch_code (s .= 0; for i=_, j=_; s[] += (x[j,i] + y[j,i]) end)
+        @repl io @finch (s .= 0; for i=_, j=_; s[] += (x[j,i] + y[j,i]) end)
+        @test check_output("continuous_2d_union_counting.txt", String(take!(io))) 
+
         @repl io @finch_code (s .= 0; for i=_, j=_; s[] += (x[j,i] + y[j,i]) * ∂(i,j) end)
         @repl io @finch (s .= 0; for i=_, j=_; s[] += (x[j,i] + y[j,i]) * ∂(i,j) end)
         @test check_output("continuous_2d_union_lebesgue.txt", String(take!(io)))  
 
-        @repl io @finch_code (s .= 0; for i=_, j=_; s[] += (x[j,i] + y[j,i]) end)
-        @repl io @finch (s .= 0; for i=_, j=_; s[] += (x[j,i] + y[j,i]) end)
-        @test check_output("continuous_2d_union_counting.txt", String(take!(io)))  
+        sum1 = Scalar(0)
+        sum2 = Scalar(0)
+        @repl io @finch (sum1 .= 0; for i=_,j=_; sum1[] += x[j,i] * ∂(i,j) end)
+        @repl io @finch (sum2 .= 0; for i=_,j=_; sum2[] += y[j,i] * ∂(i,j) end)
+        @test s.val == sum1.val + sum2.val 
+
     end
 
     let
