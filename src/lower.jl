@@ -156,7 +156,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
 
             if head.kind === define
                 @assert head.lhs.kind === variable
-                @assert head.lhs ∉ key(ctx.bindings)
+                @assert head.lhs ∉ keys(ctx.bindings)
                 ctx.bindings[head.lhs] = cache!(ctx, head.lhs.name, head.rhs)
                 push!(ctx.scope, head.lhs)
             elseif head.kind === declare
