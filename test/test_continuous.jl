@@ -126,7 +126,7 @@
         @repl io @finch (s2 .= 0; for i=_, j=_; s2[] += x1[j,i] * y[j] * ∂(j) end)
         @test check_output("continuous_2d_itvl_sum_rle.txt", String(take!(io)))  
    
-        @test s1==s2
+        @test s1.val==s2.val
     end
 
 end
