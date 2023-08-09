@@ -1430,7 +1430,7 @@ end, quote
                             j_5 = j
                             if x_lvl_i == phase_stop_2
                                 res_3 = begin
-                                        @finch{#0,simplify_program.jl:197} begin
+                                        @finch{#0,simplify_program.jl:198} begin
                                           for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                                             virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Simplify), virtual(Finch.Lookup)[i, j])
                                           end
@@ -1628,7 +1628,7 @@ end, quote
                     res_2 = begin
                             j_5 = j
                             if x_lvl_i == phase_stop_2
-                                res_3 = @finch{#0,simplify_program.jl:197} begin
+                                res_3 = @finch{#0,simplify_program.jl:198} begin
                                       for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                                         virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Simplify)[], virtual(Finch.Lookup)[i, j])
                                       end
@@ -4698,7 +4698,7 @@ end, quote
                                                                                 i_5 = i
                                                                                 if A_lvl_2_i == phase_stop_4
                                                                                     res_8 = begin
-                                                                                            @finch{#0,simplify_program.jl:197} begin
+                                                                                            @finch{#0,simplify_program.jl:198} begin
                                                                                               for i = virtual(Finch.Extent)
                                                                                                 virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Simplify), virtual(Finch.VirtualScalar)[])
                                                                                               end
@@ -5040,7 +5040,7 @@ end, quote
                                                                         res_7 = begin
                                                                                 i_5 = i
                                                                                 if A_lvl_2_i == phase_stop_4
-                                                                                    res_8 = @finch{#0,simplify_program.jl:197} begin
+                                                                                    res_8 = @finch{#0,simplify_program.jl:198} begin
                                                                                           for i = virtual(Finch.Extent)
                                                                                             virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Simplify)[], virtual(Finch.VirtualScalar)[])
                                                                                           end
@@ -7655,7 +7655,7 @@ end, quote
                                                                                     A_lvl_2_q += 1
                                                                                     res_8
                                                                                 else
-                                                                                    @finch{#0,simplify_program.jl:197} begin
+                                                                                    @finch{#0,simplify_program.jl:198} begin
                                                                                       for i = virtual(Finch.Extent)
                                                                                         virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Simplify), virtual(Finch.VirtualScalar)[])
                                                                                       end
@@ -9316,7 +9316,7 @@ end, quote
                                                                 end
                                                                 if phase_stop_5 >= phase_start_5
                                                                     i_7 = i
-                                                                    @finch{#0,simplify_program.jl:197} begin
+                                                                    @finch{#0,simplify_program.jl:198} begin
                                                                       for i = virtual(Finch.Extent)
                                                                         virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Simplify), virtual(Finch.VirtualScalar)[])
                                                                       end
@@ -10083,7 +10083,7 @@ end, quote
                                 x_lvl_q += 1
                                 res_3
                             else
-                                @finch{#0,simplify_program.jl:197} begin
+                                @finch{#0,simplify_program.jl:198} begin
                                   for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                                     virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Simplify), virtual(Finch.Lookup)[i, j])
                                   end
@@ -11654,7 +11654,7 @@ end, quote
             end
             if phase_stop_6 >= phase_start_6
                 j_7 = j
-                @finch{#0,simplify_program.jl:197} begin
+                @finch{#0,simplify_program.jl:198} begin
                   for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                     virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Simplify), virtual(Finch.Lookup)[i, j])
                   end
