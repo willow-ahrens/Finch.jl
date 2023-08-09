@@ -156,13 +156,13 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
 
             if head.kind === define
                 @assert head.lhs.kind === variable
-                @assert head.lhs ∉ ctx.bindings
+                @assert head.lhs ∉ key(ctx.bindings)
                 ctx.bindings[head.lhs] = cache!(ctx, head.lhs.name, head.rhs)
                 push!(ctx.scope, head.lhs)
             elseif head.kind === declare
                 @assert head.tns.kind === variable
                 @assert get(ctx.modes, head.tns, reader()).kind === reader
-                @assert head.tns ∉ ctx.bindings
+                @assert head.tns ∉ keys(ctx.bindings)
                 ctx.bindings[head.tns] = declare!(ctx.bindings[head.tns], ctx, head.init) #TODO should ctx.bindings be scoped?
                 push!(ctx.scope, head.tns)
                 ctx.modes[head.tns] = updater()
