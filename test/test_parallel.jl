@@ -1,12 +1,13 @@
+# FIXME: Add a test for failures of concurrent.
 @testset "parallel" begin
     @info "Testing Julia Threads Parallelism and Analysis"
      
 
     let
         io = IOBuffer()
-        A = @fiber(d(sl(e(0.0))))
-        x = @fiber(d(e(0.0)))
-        y = @fiber(d(e(0.0)))
+        A = Fiber!(Dense(SparseList(Element(0.0))))
+        x = Fiber!(Dense(Element(0.0)))
+        y = Fiber!(Dense(Element(0.0)))
         @repl io @finch_code begin
             y .= 0
             for j = parallel(_)
@@ -20,9 +21,9 @@
     end
 
     let
-        A = @fiber(d(sl(e(0.0))))
-        x = @fiber(d(e(0.0)))
-        y = @fiber(d(e(0.0)))
+        A = Fiber!(Dense(SparseList(Element(0.0))))
+        x = Fiber!(Dense(Element(0.0)))
+        y = Fiber!(Dense(Element(0.0)))
         @test_throws Finch.ParallelAnalysisResults try
             @finch_code begin
                 y .= 0
@@ -42,9 +43,9 @@
     end
 
     let
-        A = @fiber(d(sl(e(0.0))))
-        x = @fiber(d(e(0.0)))
-        y = @fiber(d(e(0.0)))
+        A = Fiber!(Dense(SparseList(Element(0.0))))
+        x = Fiber!(Dense(Element(0.0)))
+        y = Fiber!(Dense(Element(0.0)))
 
         @test_throws Finch.ParallelAnalysisResults try
             @finch_code begin
@@ -65,9 +66,9 @@
         end
     end
     let
-        A = @fiber(d(sl(e(0.0))))
-        x = @fiber(d(e(0.0)))
-        y = @fiber(d(e(0.0)))
+        A = Fiber!(Dense(SparseList(Element(0.0))))
+        x = Fiber!(Dense(Element(0.0)))
+        y = Fiber!(Dense(Element(0.0)))
 
         @test_throws Finch.ParallelAnalysisResults try
             @finch_code begin
@@ -90,10 +91,6 @@
         end
     end
 
-
-    # Should run
-    # Check if it is not injective.
-    # 
 
 
 
