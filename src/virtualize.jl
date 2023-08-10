@@ -11,9 +11,10 @@ virtualize(ex, ::Type{FinchNotation.DefineInstance{Lhs, Rhs}}, ctx) where {Lhs, 
 function virtualize(ex, ::Type{FinchNotation.DeclareInstance{Tns, Init}}, ctx) where {Tns, Init}
     old =  collect(keys(ctx.bindings))
     k = virtualize(:($ex.tns), Tns, ctx)
-    if k in old 
-        error("Tensor $(k) is already bound in $(old)")
-    end
+    # Comment this in if we want Tensors declared only once.
+    # if k in old 
+    #     error("Tensor $(k) is already bound in $(old)")
+    # end
     declare(k, virtualize(:($ex.init), Init, ctx))
 end
 virtualize(ex, ::Type{FinchNotation.FreezeInstance{Tns}}, ctx) where {Tns} = freeze(virtualize(:($ex.tns), Tns, ctx))

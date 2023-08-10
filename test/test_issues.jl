@@ -262,4 +262,14 @@ using CIndices
         C = copy_array(C, D).A
         @test C == D
     end
+
+        #https://github.com/willow-ahrens/Finch.jl/issues/243
+
+    let
+        @test_throws AssertionError (@finch begin
+            x = 0
+            x = 0
+        end)
+
+    end
 end
