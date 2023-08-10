@@ -9,7 +9,7 @@ function virtualize(ex, ::Type{FinchNotation.IndexInstance{name}}, ctx) where {n
 end
 virtualize(ex, ::Type{FinchNotation.DefineInstance{Lhs, Rhs}}, ctx) where {Lhs, Rhs} = define(virtualize(:($ex.lhs), Lhs, ctx), virtualize(:($ex.rhs), Rhs, ctx))
 function virtualize(ex, ::Type{FinchNotation.DeclareInstance{Tns, Init}}, ctx) where {Tns, Init}
-    old =  copy(keys(ctx.bindings))
+    old =  collect(keys(ctx.bindings))
     k = virtualize(:($ex.tns), Tns, ctx)
     if k in old 
         error("Tensor $(k) is already bound in $(old)")
