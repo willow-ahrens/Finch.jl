@@ -64,7 +64,19 @@ function (ctx::DeclareDimensions)(node::FinchNode)
         block(map(ctx, node.bodies)...)
     elseif node.kind === declare
         ctx.hints[node.tns] = []
-        node
+        if node.fiber.kind == literal && isnothing(node.fiber.val)
+            return node
+        else
+            @assert false
+            ctx.hints[node.tns] = [node]
+            shape = []
+            for (idx, dimHint) in enumerate(node.shape)
+                push!(shape, make_extent(Int, 1, dimHint))
+            end
+            shape = map(suggest, shape)
+            tns = virtual_resize!(node.tns, ctx.ctx, shape...)
+            return node
+        end
     elseif node.kind === freeze
         if haskey(ctx.hints, node.tns)
             shape = virtual_size(node.tns, ctx.ctx)

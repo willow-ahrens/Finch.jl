@@ -8,7 +8,24 @@ function virtualize(ex, ::Type{FinchNotation.IndexInstance{name}}, ctx) where {n
     index(name)
 end
 virtualize(ex, ::Type{FinchNotation.DefineInstance{Lhs, Rhs}}, ctx) where {Lhs, Rhs} = define(virtualize(:($ex.lhs), Lhs, ctx), virtualize(:($ex.rhs), Rhs, ctx))
-virtualize(ex, ::Type{FinchNotation.DeclareInstance{Tns, Init}}, ctx) where {Tns, Init} = declare(virtualize(:($ex.tns), Tns, ctx), virtualize(:($ex.init), Init, ctx))
+# virtualize(ex, ::Type{FinchNotation.DeclareInstance{Tns, Init, Fbr, Shape}}, ctx) where {Tns, Init, Fbr, Shape} = declare(virtualize(:($ex.tns), Tns, ctx), virtualize(:($ex.init), Init, ctx), nothing, nothing)
+getTag(::Type{FinchNotation.TagInstance{tag, Tns}}) where {tag, Tns} = tag
+
+function virtualize(ex, ::Type{FinchNotation.DeclareInstance{Tns, Init, Fbr, Shape}}, ctx) where {Tns, Init, Fbr, Shape}
+    init = virtualize(:($ex.init), Init, ctx)
+    if Fbr <: Nothing
+        declare(virtualize(:($ex.tns), Tns, ctx), init, nothing, nothing)
+    else
+        shapeParams = Shape.parameters
+        shape = map(vitualize(:($ex.shape[i]), shapeParams[i], ctx), 1:length(shapeParams))
+        sym = ctx.freshen(getTag(Tns))
+        var = variable(sym)
+        fiber = virtualize(:($sym), Fbr, ctx, tag=sym)
+        ctx.bindings[var] = fiber
+        declare(var, init, Fbr, shape...)
+    end
+end
+
 virtualize(ex, ::Type{FinchNotation.FreezeInstance{Tns}}, ctx) where {Tns} = freeze(virtualize(:($ex.tns), Tns, ctx))
 virtualize(ex, ::Type{FinchNotation.ThawInstance{Tns}}, ctx) where {Tns} = thaw(virtualize(:($ex.tns), Tns, ctx))
 function virtualize(ex, ::Type{FinchNotation.BlockInstance{Bodies}}, ctx) where {Bodies}

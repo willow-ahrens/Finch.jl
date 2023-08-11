@@ -23,15 +23,29 @@ Base.:(==)(a::DefineInstance, b::DefineInstance) = a.lhs == b.lhs && a.rhs == b.
 
 Base.show(io::IO, node::DefineInstance) = print(io, "define_instance(", node.lhs, ", ", node.rhs, ")")
 
-struct DeclareInstance{Tns, Init} <: FinchNodeInstance
+
+struct DeclareInstance{Tns, Init, Fbr, Shape <: Union{Tuple,Nothing}} <: FinchNodeInstance
 	tns::Tns
-	init::Init
+        init::Init
+        fiber::Fbr
+        shape:: Shape
+
 end
-Base.:(==)(a::DeclareInstance, b::DeclareInstance) = a.tns == b.tns && a.init == b.init
+Base.:(==)(a::DeclareInstance, b::DeclareInstance) = a.tns == b.tns && a.init == b.init && a.fiber == b.fiber && a.shape == b.shape
 
-@inline declare_instance(tns, init) = DeclareInstance(tns, init)
+@inline declare_instance(tns, init) = DeclareInstance(tns, init, nothing, nothing)
+@inline declare_instance(tns, init, fiber, shape) = DeclareInstance(tns, init, fiber, tuple(shape...))
 
-Base.show(io::IO, node::DeclareInstance) = print(io, "declare_instance(", node.tns, ", ", node.init, ")")
+function Base.show(io::IO, node::DeclareInstance)
+    if node.fiber == nothing
+        print(io, "declare_instance(", node.tns, ", ", node.init, ")")
+    else
+        @assert false
+        print(io, "declare_instance(", node.tns, ", ", node.init, ")")
+        # print(io, "declare_instance(", node.tns, ",", node.fiber, ",", node.shape, ",", node.init)
+    end
+end
+
 
 struct FreezeInstance{Tns} <: FinchNodeInstance
 	tns::Tns

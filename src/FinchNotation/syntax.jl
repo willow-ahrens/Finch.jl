@@ -126,7 +126,12 @@ function (ctx::FinchParserVisitor)(ex::Expr)
     elseif @capture ex :elseif(~args...)
         throw(FinchSyntaxError("Finch does not support elseif."))
     elseif @capture ex :(.=)(~tns, ~init)
-        return :($(ctx.nodes.declare)($(ctx(tns)), $(ctx(init))))
+        # return :($(ctx.nodes.declare)($(ctx(tns)), $(ctx(init))))
+        if @capture tns :(::)(:call(~fiber, ~shape...))
+            return :($(ctx.nodes.declare)($(ctx(tns)), $(ctx(init)), $(ctx.nodes.leaf(fiber)), $(map(ctx, shape))))
+        else
+            return :($(ctx.nodes.declare)($(ctx(tns)), $(ctx(init))))
+        end
     elseif @capture ex :macrocall($(Symbol("@freeze")), ~ln::islinenum, ~tns)
         return :($(ctx.nodes.freeze)($(ctx(tns))))
     elseif @capture ex :macrocall($(Symbol("@thaw")), ~ln::islinenum, ~tns)

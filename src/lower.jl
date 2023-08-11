@@ -161,9 +161,23 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
             elseif head.kind === declare
                 @assert head.tns.kind === variable
                 @assert get(ctx.modes, head.tns, reader()).kind === reader
-                ctx.bindings[head.tns] = declare!(ctx.bindings[head.tns], ctx, head.init) #TODO should ctx.bindings be scoped?
-                push!(ctx.scope, head.tns)
-                ctx.modes[head.tns] = updater()
+                # ctx.bindings[head.tns] = declare!(ctx.bindings[head.tns], ctx, head.init) #TODO should ctx.bindings be scoped?
+                # push!(ctx.scope, head.tns)
+                # ctx.modes[head.tns] = updater()
+                if head.fiber.kind == literal && isnothing(head.fiber.val)
+                    ctx.bindings[head.tns] = declare!(ctx.bindings[head.tns], ctx, head.init)
+                    # TODO should ctx.bindings be scoped?
+                    push!(ctx.scope, head.tns)
+                    ctx.modes[head.tns] = updater()
+                else
+                    preamble = quote $preamble
+                        $(head.tns.name) = $(head.fiber)($(map(ctx, head.shape)))
+                    end
+                    ctx.bindings[head.tns] = declare!(ctx.bindings[head.tns], ctx, head.init)
+                    push!(ctx.scope, head.tns)
+                    ctx.modes[head.tns] = updater()
+
+                end
             elseif head.kind === freeze
                 @assert ctx.modes[head.tns].kind === updater
                 ctx.bindings[head.tns] = freeze!(ctx.bindings[head.tns], ctx)

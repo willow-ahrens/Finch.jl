@@ -131,9 +131,8 @@ Finch AST statement that defines `lhs` as having the value `rhs` in the current 
 define
 
 """
-    declare(tns, init)
-
-Finch AST statement that declares `tns` with an initial value `init` in the current scope.
+    declare(tns, init, fiber, shape)
+Finch AST statement that declares `tns` with an initial value `init` in the current scope. If tns is not an externally defined fiber, but instead a variable, we must specify a fiber function and a shape expression. 
 """
 declare
 
@@ -316,7 +315,7 @@ function FinchNode(kind::FinchNodeKind, args::Vector)
             error("wrong number of arguments to define(...)")
         end
     elseif kind === declare
-        if length(args) == 2
+        if length(args) >= 2
             return FinchNode(declare, nothing, nothing, args)
         else
             error("wrong number of arguments to declare(...)")
@@ -446,6 +445,10 @@ function Base.getproperty(node::FinchNode, sym::Symbol)
             return node.children[1]
         elseif sym === :init
             return node.children[2]
+        elseif sym == :fiber
+            return node.children[3]
+        elseif sym == :shape
+            return node.children[4:end]
         else
             error("type FinchNode(declare, ...) has no property $sym")
         end
@@ -603,6 +606,15 @@ function display_statement(io, mime, node::FinchNode, indent)
     elseif node.kind === declare
         print(io, " "^indent)
         display_expression(io, mime, node.tns)
+        if false
+            display_expression(io, mime, node.fiber)
+            print(io, "(")
+            for s in node.shape
+                display_expression(io, mime, s)
+                print(io, ",")
+            end
+            print(io, ")")
+        end
         print(io, " .= ")
         display_expression(io, mime, node.init)
     elseif node.kind === freeze
