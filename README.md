@@ -30,7 +30,7 @@ the structure of the data! The compiler takes care of applying rules like `x * 0
 | Arbitrary Operators |  `x[] <<min>>= y[i] + z[i]`|
 | Multiple Outputs |  `x[] <<min>>= y; z[] <<max>>=y`|
 | Multicore Parallelism |  `for i = parallel(1:100)`|
-| `if`! |  `if dist[] < best_dist[]`|
+| Conditionals |  `if dist[] < best_dist[]`|
 | Convolution |  `A[i + j]`|
 | Concatenation |  `coalesce(A[~i], B[~i - size(A, 1)])`|
 
