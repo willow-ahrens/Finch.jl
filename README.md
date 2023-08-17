@@ -24,15 +24,15 @@ the structure of the data! The compiler takes care of applying rules like `x * 0
 
 | **Features**                             | **Syntax (e.g. ...)** |
 |:---------------------------------------------:|:------------------:|
-| Supports Major Sparse Formats (CSC, CSF, COO, Hash, Bytemap, Dense Triangular)! |  `Fiber!(Dense(SparseList(Element(0.0)))`|
-| Supports RLE (Run Length Encoding) and Sparse RLE! |  `Fiber!(Dense(RepeatRLE(0.0)))`|
-| Supports Arbitrary Fill Values Other Than Zero! |  `Fiber!(SparseList(Element(1.0)))`|
-| Supports Arbitrary Operators! |  `x[] <<min>>= y[i] + z[i]`|
-| Supports Multiple Outputs! |  `x[] <<min>>= y; z[] <<max>>=y`|
-| Supports Multicore Parallelism! |  `for i = parallel(1:100)`|
-| Supports `if`! |  `if dist[] < best_dist[]`|
-| Supports Convolution! |  `A[i + j]`|
-| Supports Concatenation! |  `coalesce(A[~i], B[~i - size(A, 1)])`|
+| Major Sparse Formats (CSC, CSF, COO, Hash, Bytemap, Dense Triangular) |  `Fiber!(Dense(SparseList(Element(0.0)))`|
+| RLE (Run Length Encoding) and Sparse RLE |  `Fiber!(Dense(RepeatRLE(0.0)))`|
+| Arbitrary Fill Values Other Than Zero |  `Fiber!(SparseList(Element(1.0)))`|
+| Arbitrary Operators |  `x[] <<min>>= y[i] + z[i]`|
+| Multiple Outputs |  `x[] <<min>>= y; z[] <<max>>=y`|
+| Multicore Parallelism |  `for i = parallel(1:100)`|
+| `if`! |  `if dist[] < best_dist[]`|
+| Convolution |  `A[i + j]`|
+| Concatenation |  `coalesce(A[~i], B[~i - size(A, 1)])`|
 
 In addition to supporting [sparse
 arrays](https://en.wikipedia.org/wiki/Sparse_matrix), Finch can also handle
