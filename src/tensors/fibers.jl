@@ -334,3 +334,33 @@ Base.summary(fbr::SubFiber) = "$(join(size(fbr), "×")) SubFiber($(summary(fbr.l
 
 Base.similar(fbr::AbstractFiber) = Fiber(similar_level(fbr.lvl))
 Base.similar(fbr::AbstractFiber, dims::Tuple) = Fiber(similar_level(fbr.lvl, dims...))
+
+
+
+
+"""
+    memory_type(fbr)
+
+Finds the memory type of a fiber or a level.
+"""
+
+function memory_type(fbr)
+    memory_type(fbr.lvl)
+end
+
+
+
+"""
+    moveto(fbr, memType, sizes)
+
+If the fiber/level is not on the given memType, it creates a new version of this fiber on that memory type
+and copies the data in to it.
+"""
+function moveto(fbr, memType, sizes)
+    if memory_type(fbr) == memType
+        return fbr
+    else
+        moveto(fbr.lvl, memType, sizes)
+    end
+end
+
