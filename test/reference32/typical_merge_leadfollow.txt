@@ -117,8 +117,8 @@ quote
                         x_lvl_i3 = x_lvl.idx[x_lvl_q]
                         phase_stop_5 = min(y_lvl_i, phase_stop_2, x_lvl_i3)
                         if y_lvl_i == phase_stop_5 && x_lvl_i3 == phase_stop_5
-                            y_lvl_2_val_4 = y_lvl_2.val[y_lvl_q]
                             x_lvl_2_val_3 = x_lvl_2.val[x_lvl_q]
+                            y_lvl_2_val_4 = y_lvl_2.val[y_lvl_q]
                             if z_lvl_qos > z_lvl_qos_stop
                                 z_lvl_qos_stop = max(z_lvl_qos_stop << 1, 1)
                                 Finch.resize_if_smaller!(z_lvl.idx, z_lvl_qos_stop)

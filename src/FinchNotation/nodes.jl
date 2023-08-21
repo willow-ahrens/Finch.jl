@@ -621,6 +621,7 @@ function display_statement(io, mime, node::FinchNode, indent)
         end
         print(io, " "^indent * "end")
     else
+        println(node)
         error("unimplemented")
     end
 end

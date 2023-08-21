@@ -35,11 +35,14 @@ export walk, gallop, follow, extrude, laminate
 export fiber, fiber!, Fiber!, pattern!, dropdefaults, dropdefaults!, redefault!
 export diagmask, lotrimask, uptrimask, bandmask
 
-export choose, minby, maxby, overwrite, initwrite
+export choose, minby, maxby, overwrite, initwrite, d
 
 export default, AsArray
 
 export parallel, extent, dimless
+
+include("base/limits.jl")
+export Limit
 
 include("util.jl")
 
@@ -111,7 +114,6 @@ include("base/mapreduce.jl")
 include("base/compare.jl")
 include("base/copy.jl")
 include("base/fsparse.jl")
-include("base/limits.jl")
 
 @static if !isdefined(Base, :get_extension)
     function __init__()
