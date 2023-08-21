@@ -16,22 +16,37 @@
 |:---------------------------------------------:|:-------------------------------------:|:---------------------:|
 | [![][docs_ico]][docs] [![][ddocs_ico]][ddocs] | [![][ci_ico]][ci] [![][cov_ico]][cov] | [![][tool_ico]][tool] |
 
-Finch is a adaptable Julia-to-Julia compiler for loop nests over sparse or structured
-multidimensional arrays. In addition to supporting [sparse
+Finch is a adaptable Julia-to-Julia compiler for loop nests over sparse or
+structured multidimensional arrays.  Finch allows you to write `for`-loops as if
+they are dense, but compile them to be sparse! Finch compiles the loops based on
+the structure of the data! The compiler takes care of applying rules like `x * 0
+=> 0` and the like to avoid redundant computation. 
+
+| **Features**                             | **Syntax (e.g. ...)** |
+|:---------------------------------------------:|:------------------:|
+| Major Sparse Formats (CSC, CSF, COO, Hash, Bytemap, Dense Triangular) |  `Fiber!(Dense(SparseList(Element(0.0)))`|
+| RLE (Run Length Encoding) and Sparse RLE |  `Fiber!(Dense(RepeatRLE(0.0)))`|
+| Arbitrary Fill Values Other Than Zero |  `Fiber!(SparseList(Element(1.0)))`|
+| Arbitrary Operators |  `x[] <<min>>= y[i] + z[i]`|
+| Multiple Outputs |  `x[] <<min>>= y; z[] <<max>>=y`|
+| Multicore Parallelism |  `for i = parallel(1:100)`|
+| Conditionals |  `if dist[] < best_dist[]`|
+| Convolution |  `A[i + j]`|
+| Concatenation |  `coalesce(A[~i], B[~i - size(A, 1)])`|
+
+In addition to supporting [sparse
 arrays](https://en.wikipedia.org/wiki/Sparse_matrix), Finch can also handle
-[custom operators and fill values other than zero](https://en.wikipedia.org/wiki/GraphBLAS),
+[custom operators and fill values other than
+zero](https://en.wikipedia.org/wiki/GraphBLAS),
 [runs](https://en.wikipedia.org/wiki/Run-length_encoding) of repeated values, or
 even [special
 structures](https://en.wikipedia.org/wiki/Sparse_matrix#Special_structure) such
-as clustered nonzeros or triangular patterns.
+as clustered nonzeros or triangular patterns. Finch also supports
+`if`-statements and custom user types and functions.  Users can add rewrite
+rules to inform the compiler about any special user-defined properties or
+optimizations.  You can even modify indexing expressions to express sparse
+convolution, or to describe windows into structured arrays.
 
-Finch allows you to write `for`-loops as if they are dense, but compile them to be
-sparse! The compiler takes care of applying rules like `x * 0 => 0` and the like
-to avoid redundant computation.  Finch also supports `if`-statements and custom
-user types and functions.  Users can add rewrite rules to inform the compiler
-about any special user-defined properties or optimizations.  You can even modify
-indexing expressions to express sparse convolution, or to describe windows into
-structured arrays.
 
 As an example, here's a program which calculates the minimum, maximum, sum, and
 variance of a sparse vector, reading the vector only once, and only reading

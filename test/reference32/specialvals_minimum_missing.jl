@@ -28,8 +28,8 @@ begin
                 x_val = min(x_val, yf_lvl_2_val_2)
                 yf_lvl_q += 1
             else
-                cond_2 = 0 < 1 + -i + phase_stop_2
-                if cond_2
+                cond_3 = 0 < 1 + -i + phase_stop_2
+                if cond_3
                     x_val = missing
                 end
             end
@@ -39,8 +39,8 @@ begin
     phase_start_3 = max(1, 1 + yf_lvl_i1)
     phase_stop_3 = yf_lvl.shape
     if phase_stop_3 >= phase_start_3
-        cond_3 = 0 < 1 + -phase_start_3 + phase_stop_3
-        if cond_3
+        cond_4 = 0 < 1 + -phase_start_3 + phase_stop_3
+        if cond_4
             x_val = missing
         end
     end

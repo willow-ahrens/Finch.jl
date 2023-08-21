@@ -198,6 +198,7 @@ FinchNotation.finch_leaf(x::ContinuousExtent) = virtual(x)
 make_extent(::Type, start, stop) = throw(ArgumentError("Unsupported type"))
 make_extent(::Type{T}, start, stop) where T <: Integer = Extent(start, stop)
 make_extent(::Type{T}, start, stop) where T <: Real = ContinuousExtent(start, stop)
+make_extent(::Type{T}, start, stop) where T <: Limit = ContinuousExtent(start, stop)
 
 similar_extent(ext::Extent, start, stop) = Extent(start, stop)
 similar_extent(ext::ContinuousExtent, start, stop) = ContinuousExtent(start, stop)
