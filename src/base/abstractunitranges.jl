@@ -22,7 +22,7 @@ end
 
 virtual_resize!(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, idx_dim) = arr
 
-function instantiate_reader(arr::VirtualAbstractUnitRange, ctx, proto_idx::typeof(defaultread))
+function instantiate_reader(arr::VirtualAbstractUnitRange, ctx, subprotos, proto::typeof(defaultread))
     Unfurled(
         arr = arr,
         body = Furlable(

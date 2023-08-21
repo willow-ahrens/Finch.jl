@@ -7,14 +7,24 @@ Afterwards the tensor is update-only.
 declare!(tns, ctx, init) = @assert something(virtual_default(tns, ctx)) == init
 
 """
-    instantiate_reader(tns, ctx, protos...)
+    instantiate_reader(tns, ctx, protos)
     
 Return an object (usually a looplet nest) capable of reading the read-only
 virtual tensor `tns`.  As soon as a read-only tensor enters scope, each
 subsequent read access will be initialized with a separate call to
 `instantiate_reader`. `protos` is the list of protocols in each case.
+
+The fallback for `instantiate_reader` will iteratively move the last element of
+`protos` into the arguments of a function. This allows fibers to specialize on
+the last arguments of protos rather than the first, as Finch is column major.
 """
-instantiate_reader(tns, ctx, protos...) = throw(FormatLimitation("$(typeof(tns)) does not support reads with protocol $(protos)"))
+function instantiate_reader(tns, ctx, subprotos, protos...)
+    if isempty(subprotos)
+        throw(FormatLimitation("$(typeof(tns)) does not support reads with protocol $(protos)"))
+    else
+        instantiate_reader(tns, ctx, subprotos[1:end-1], subprotos[end], protos...)
+    end
+end
 
 """
     instantiate_updater(tns, ctx, protos...)
@@ -23,8 +33,18 @@ Return an object (usually a looplet nest) capable of updating the update-only
 virtual tensor `tns`.  As soon as an update only tensor enters scope, each
 subsequent update access will be initialized with a separate call to
 `instantiate_updater`.  `protos` is the list of protocols in each case.
+
+The fallback for `instantiate_updater` will iteratively move the last element of
+`protos` into the arguments of a function. This allows fibers to specialize on
+the last arguments of protos rather than the first, as Finch is column major.
 """
-instantiate_updater(tns, ctx, protos...) = throw(FormatLimitation("$(typeof(tns)) does not support updates with protocol $(protos)"))
+function instantiate_updater(tns, ctx, subprotos, protos...)
+    if isempty(subprotos)
+        throw(FormatLimitation("$(typeof(tns)) does not support reads with protocol $(protos)"))
+    else
+        instantiate_updater(tns, ctx, subprotos[1:end-1], subprotos[end], protos...)
+    end
+end
 
 """
     freeze!(tns, ctx)
