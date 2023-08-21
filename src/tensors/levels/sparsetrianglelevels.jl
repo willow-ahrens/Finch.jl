@@ -161,10 +161,15 @@ is_laminable_updater(lvl::VirtualSparseTriangleLevel, ctx, ::Union{typeof(defaul
     is_laminable_updater(lvl.lvl, ctx, protos[lvl.N + 1:end]...)
 
 
-instantiate_reader(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, protos...) = instantiate_reader_triangular_dense_helper(fbr, ctx, instantiate_reader, VirtualSubFiber, protos...)
-instantiate_updater(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, protos...) = instantiate_updater_triangular_dense_helper(fbr, ctx, instantiate_updater, VirtualSubFiber, protos...)
-instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseTriangleLevel}, ctx, protos...) = instantiate_updater_triangular_dense_helper(fbr, ctx, instantiate_updater, (lvl, pos) -> VirtualTrackedSubFiber(lvl, pos, fbr.dirty), protos...)
-function instantiate_reader_triangular_dense_helper(fbr, ctx, subunfurl, subfiber_ctr, protos...)
+struct SparseTriangleFollowTraversal
+    lvl
+    d
+    j
+    n
+    q
+end
+
+function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
@@ -175,53 +180,66 @@ function instantiate_reader_triangular_dense_helper(fbr, ctx, subunfurl, subfibe
     # j is coordinate of previous dimension
     # n is the total number of dimensions
     # q is index value from previous recursive call
-    function simplex_helper(d, j, n, q, ::Union{typeof(defaultread), typeof(defaultupdate), typeof(laminate), typeof(follow)}, protos...)
-        s = ctx.freshen(tag, :_s)
-        if d == 1
-            Furlable(
-                body = (ctx, ext) -> Sequence([
-                    Phase(
-                        stop = (ctx, ext) -> j,
-                        body = (ctx, ext) -> Lookup(
-                            body = (ctx, i) -> subunfurl(subfiber_ctr(lvl.lvl, call(+, q, -1, i)), ctx, protos...)
-                        )
-                    ),
-                    Phase(
-                        body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))
-                    )
-                ])
-            )
-        else
-            Furlable(
-                body = (ctx, ext) -> Sequence([
-                    Phase(
-                        stop = (ctx, ext) -> j,
-                        body = (ctx, ext) -> Lookup(
-                            body = (ctx, i) -> Thunk(
-                                preamble = :(
-                                    $s = $(ctx(call(+, q, virtual_simplex(d, ctx, call(-, i, 1)))))
-                                ),
-                                body = (ctx) -> simplex_helper(d - 1, i, n, value(s), protos...)
-                            )
-                        )
-                    ),
-                    Phase(
-                        body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))
-                    )
-                ])
-            )
-        end
-    end
     fbr_count = virtual_simplex(lvl.N, ctx, lvl.shape)
     Thunk(
         preamble = quote
             $q = $(ctx(call(+, call(*, call(-, pos, lvl.Ti(1)), fbr_count), 1)))
         end,
-        body = (ctx) -> simplex_helper(lvl.N, lvl.shape, lvl.N, value(q), protos...)
+        body = (ctx) -> instantiate_reader(SparseTriangleFollowTraversal(lvl, lvl.N, lvl.shape, lvl.N, value(q)), ctx, protos)
     )
 end
 
-function instantiate_updater_triangular_dense_helper(fbr, ctx, subunfurl, subfiber_ctr, protos...)
+function instantiate_reader(trv::SparseTriangleFollowTraversal, ctx, subprotos, ::Union{typeof(defaultread), typeof(follow)})
+    (lvl, d, j, n, q) = (trv.lvl, trv.d, trv.j, trv.n, trv.q)
+    s = ctx.freshen(lvl.ex, :_s)
+    if d == 1
+        Furlable(
+            body = (ctx, ext) -> Sequence([
+                Phase(
+                    stop = (ctx, ext) -> j,
+                    body = (ctx, ext) -> Lookup(
+                        body = (ctx, i) -> instantiate_reader(VirtualSubFiber(lvl.lvl, call(+, q, -1, i)), ctx, subprotos)
+                    )
+                ),
+                Phase(
+                    body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))
+                )
+            ])
+        )
+    else
+        Furlable(
+            body = (ctx, ext) -> Sequence([
+                Phase(
+                    stop = (ctx, ext) -> j,
+                    body = (ctx, ext) -> Lookup(
+                        body = (ctx, i) -> Thunk(
+                            preamble = :(
+                                $s = $(ctx(call(+, q, virtual_simplex(d, ctx, call(-, i, 1)))))
+                            ),
+                            body = (ctx) -> instantiate_reader(SparseTriangleFollowTraversal(lvl, d - 1, i, n, value(s)), ctx, subprotos)
+                        )
+                    )
+                ),
+                Phase(
+                    body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))
+                )
+            ])
+        )
+    end
+end
+
+struct SparseTriangleLaminateTraversal
+    lvl
+    d
+    j
+    n
+    q
+    dirty
+end
+
+instantiate_updater(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, protos) =
+    instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos)
+function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseTriangleLevel}, ctx, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
@@ -232,48 +250,50 @@ function instantiate_updater_triangular_dense_helper(fbr, ctx, subunfurl, subfib
     # j is coordinate of previous dimension
     # n is the total number of dimensions
     # q is index value from previous recursive call
-    function simplex_helper(d, j, n, q, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...)
-        s = ctx.freshen(tag, :_s)
-        if d == 1
-            Furlable(
-                body = (ctx, ext) -> Sequence([
-                    Phase(
-                        stop = (ctx, ext) -> j,
-                        body = (ctx, ext) -> Lookup(
-                            body = (ctx, i) -> subunfurl(subfiber_ctr(lvl.lvl, call(+, q, -1, i)), ctx, protos...) # hack -> fix later
-                        )
-                    ),
-                    Phase(
-                        body = (ctx, ext) -> Fill(Null())
-                    )
-                ])
-            )
-        else
-            Furlable(
-                body = (ctx, ext) -> Sequence([
-                    Phase(
-                        stop = (ctx, ext) -> j,
-                        body = (ctx, ext) -> Lookup(
-                            body = (ctx, i) -> Thunk(
-                                preamble = :(
-                                    $s = $(ctx(call(+, q, virtual_simplex(d, ctx, call(-, i, 1)))))
-                                ),
-                                body = (ctx) -> simplex_helper(d - 1, i, n, value(s), protos...)
-                            )
-                        )
-                    ),
-                    Phase(
-                        body = (ctx, ext) -> Fill(Null())
-                    )
-                ])
-            )
-        end
-    end
     fbr_count = virtual_simplex(lvl.N, ctx, lvl.shape)
     Thunk(
         preamble = quote
             $q = $(ctx(call(+, call(*, call(-, pos, lvl.Ti(1)), fbr_count), 1)))
         end,
-        body = (ctx) -> simplex_helper(lvl.N, lvl.shape, lvl.N, value(q), protos...)
+        body = (ctx) -> instantiate_updater(SparseTriangleLaminateTraversal(lvl, lvl.N, lvl.shape, lvl.N, value(q), fbr.dirty), ctx, protos)
     )
+end
+
+function instantiate_updater(trv::SparseTriangleLaminateTraversal, ctx, subprotos, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)})
+    (lvl, d, j, n, q, dirty) = (trv.lvl, trv.d, trv.j, trv.n, trv.q, trv.dirty)
+    s = ctx.freshen(lvl.ex, :_s)
+    if d == 1
+        Furlable(
+            body = (ctx, ext) -> Sequence([
+                Phase(
+                    stop = (ctx, ext) -> j,
+                    body = (ctx, ext) -> Lookup(
+                        body = (ctx, i) -> instantiate_updater(VirtualTrackedSubFiber(lvl.lvl, call(+, q, -1, i), dirty), ctx, subprotos)
+                    )
+                ),
+                Phase(
+                    body = (ctx, ext) -> Fill(Null())
+                )
+            ])
+        )
+    else
+        Furlable(
+            body = (ctx, ext) -> Sequence([
+                Phase(
+                    stop = (ctx, ext) -> j,
+                    body = (ctx, ext) -> Lookup(
+                        body = (ctx, i) -> Thunk(
+                            preamble = :(
+                                $s = $(ctx(call(+, q, virtual_simplex(d, ctx, call(-, i, 1)))))
+                            ),
+                            body = (ctx) -> instantiate_updater(SparseTriangleLaminateTraversal(lvl, d - 1, i, n, value(s), dirty), ctx, subprotos)
+                        )
+                    )
+                ),
+                Phase(
+                    body = (ctx, ext) -> Fill(Null())
+                )
+            ])
+        )
+    end
 end

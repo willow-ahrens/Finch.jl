@@ -7,8 +7,8 @@ function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::FinchNode)
     stylize_access(node, ctx, resolve(tns, ctx.ctx))
 end
 
-instantiate_reader(tns::FinchNode, ctx::AbstractCompiler, protos...) = instantiate_reader(resolve(tns, ctx), ctx, protos...)
-instantiate_updater(tns::FinchNode, ctx::AbstractCompiler, protos...) = instantiate_updater(resolve(tns, ctx), ctx, protos...)
+instantiate_reader(tns::FinchNode, ctx::AbstractCompiler, protos) = instantiate_reader(resolve(tns, ctx), ctx, protos)
+instantiate_updater(tns::FinchNode, ctx::AbstractCompiler, protos) = instantiate_updater(resolve(tns, ctx), ctx, protos)
 
 #TODO I don't think we should ever need these
 declare!(tns::FinchNode, ctx::AbstractCompiler, init) = declare!(resolve(tns, ctx), ctx, init)

@@ -233,7 +233,7 @@ function freeze_level!(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, po
     return lvl
 end
 
-function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::Union{typeof(defaultread), typeof(walk)}, protos...)
+function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, subprotos, ::Union{typeof(defaultread), typeof(walk)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
@@ -278,7 +278,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
                                         preamble = quote
                                             $my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $my_i
                                         end,
-                                        body = (ctx) -> instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, protos...),
+                                        body = (ctx) -> instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, subprotos),
                                     ),
                                 ),
                                 next = (ctx, ext) -> quote
@@ -296,7 +296,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
     )
 end
 
-function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::typeof(gallop), protos...)
+function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, subprotos, ::typeof(gallop))
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
@@ -342,7 +342,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
                                                 preamble = quote
                                                     $my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $my_i
                                                 end,
-                                                body = (ctx) -> instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, protos...),
+                                                body = (ctx) -> instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, subprotos),
                                             ),
                                         ),
                                         epilogue = quote
@@ -367,7 +367,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
                                                         preamble = quote
                                                             $my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $my_j
                                                         end,
-                                                        body = (ctx) -> instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, protos...),
+                                                        body = (ctx) -> instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, subprotos),
                                                     ),
                                                 ),
                                                 next = (ctx, ext) -> quote
@@ -390,7 +390,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
 end
 
 
-function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, ::typeof(follow), protos...)
+function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, subprotos, ::typeof(follow))
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     my_q = cgx.freshen(tag, :_q)
@@ -404,7 +404,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
                     $my_q = $(ctx(q)) * $(ctx(lvl.shape)) + $(ctx(i))
                 end,
                 body = (ctx) -> Switch([
-                    value(:($tbl[$my_q])) => instantiate_reader(VirtualSubFiber(lvl.lvl, pos), ctx, protos...),
+                    value(:($tbl[$my_q])) => instantiate_reader(VirtualSubFiber(lvl.lvl, pos), ctx, subprotos),
                     literal(true) => Fill(virtual_level_default(lvl))
                 ])
             )
@@ -414,9 +414,10 @@ end
 
 is_laminable_updater(lvl::VirtualSparseByteMapLevel, ctx, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...) =
     is_laminable_updater(lvl.lvl, ctx, protos...)
-instantiate_updater(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, protos...) = 
-    instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
-function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseByteMapLevel}, ctx, ::Union{typeof(defaultupdate), typeof(extrude), typeof(laminate)}, protos...)
+
+instantiate_updater(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, protos) = 
+    instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos)
+function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseByteMapLevel}, ctx, subprotos, ::Union{typeof(defaultupdate), typeof(extrude), typeof(laminate)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp
@@ -424,14 +425,14 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseByteMapLev
     dirty = ctx.freshen(:dirty)
 
     Furlable(
-        tight = is_laminable_updater(lvl.lvl, ctx, protos...) ? nothing : lvl.lvl,
+        tight = is_laminable_updater(lvl.lvl, ctx, subprotos...) ? nothing : lvl.lvl,
         body = (ctx, ext) -> Lookup(
             body = (ctx, idx) -> Thunk(
                 preamble = quote
                     $my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $(ctx(idx))
                     $dirty = false
                 end,
-                body = (ctx) -> instantiate_updater(VirtualTrackedSubFiber(lvl.lvl, value(my_q, lvl.Ti), dirty), ctx, protos...),
+                body = (ctx) -> instantiate_updater(VirtualTrackedSubFiber(lvl.lvl, value(my_q, lvl.Ti), dirty), ctx, subprotos),
                 epilogue = quote
                     if $dirty
                         $(fbr.dirty) = true

@@ -49,11 +49,11 @@ function virtual_resize!(arr::VirtualWindowedArray, ctx::AbstractCompiler, dims.
     virtual_resize!(arr.body, ctx, something.(arr.dims, dims)...)
 end
 
-function instantiate_reader(arr::VirtualWindowedArray, ctx, protos...)
-    VirtualWindowedArray(instantiate_reader(arr.body, ctx, protos...), arr.dims)
+function instantiate_reader(arr::VirtualWindowedArray, ctx, protos)
+    VirtualWindowedArray(instantiate_reader(arr.body, ctx, protos), arr.dims)
 end
-function instantiate_updater(arr::VirtualWindowedArray, ctx, protos...)
-    VirtualWindowedArray(instantiate_updater(arr.body, ctx, protos...), arr.dims)
+function instantiate_updater(arr::VirtualWindowedArray, ctx, protos)
+    VirtualWindowedArray(instantiate_updater(arr.body, ctx, protos), arr.dims)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualWindowedArray) = ctx(node.body)

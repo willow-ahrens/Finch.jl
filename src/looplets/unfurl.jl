@@ -31,8 +31,8 @@ function unfurl(tns::Furlable, ctx, ext, protos...)
 end
 unfurl(tns, ctx, ext, protos...) = tns
 
-instantiate_reader(tns::Furlable, ctx, idxs...) = tns
-instantiate_updater(tns::Furlable, ctx, idxs...) = tns
+instantiate_reader(tns::Furlable, ctx, protos) = tns
+instantiate_updater(tns::Furlable, ctx, protos) = tns
 
 #TODO this is a bit of a hack, it would be much better to somehow add a
 #statement like writes[] += 1 corresponding to tensor reads/writes that need to

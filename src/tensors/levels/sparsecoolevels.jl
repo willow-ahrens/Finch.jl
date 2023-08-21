@@ -227,16 +227,23 @@ function freeze_level!(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler, pos_st
     return lvl
 end
 
-function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseCOOLevel}, ctx, protos...)
+struct SparseCOOWalkTraversal
+    lvl
+    R
+    start
+    stop
+end
+
+function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseCOOLevel}, ctx, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     start = value(:($(lvl.ex).ptr[$(ctx(pos))]), lvl.Tp)
     stop = value(:($(lvl.ex).ptr[$(ctx(pos)) + 1]), lvl.Tp)
 
-    instantiate_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, lvl.N, start, stop, protos...)
+    instantiate_reader(SparseCOOWalkTraversal(lvl, lvl.N, start, stop), ctx, protos)
 end
 
-instantiate_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, R, start, stop, proto, protos...) = throw(FormatLimitation("SparseCOOLevel does not support protocol $proto"))
-function instantiate_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, R, start, stop, ::Union{typeof(defaultread), typeof(walk)}, protos...)
+function instantiate_reader(trv::SparseCOOWalkTraversal, ctx, subprotos, ::Union{typeof(defaultread), typeof(walk)})
+    (lvl, R, start, stop) = (trv.lvl, trv.R, trv.start, trv.stop)
     tag = lvl.ex
     Ti = lvl.Ti
     Tp = lvl.Tp
@@ -277,7 +284,7 @@ function instantiate_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, R, start
                                     stop =  (ctx, ext) -> value(my_i),
                                     chunk = Spike(
                                         body = Fill(virtual_level_default(lvl)),
-                                        tail = instantiate_reader(VirtualSubFiber(lvl.lvl, my_q), ctx, protos...),
+                                        tail = instantiate_reader(VirtualSubFiber(lvl.lvl, my_q), ctx, subprotos),
                                     ),
                                     next = (ctx, ext) -> quote
                                         $my_q += $(Tp(1))
@@ -297,7 +304,7 @@ function instantiate_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, R, start
                                     stop = (ctx, ext) -> value(my_i),
                                     chunk = Spike(
                                         body = Fill(virtual_level_default(lvl)),
-                                        tail = instantiate_reader_coo_helper(lvl, ctx, R - 1, value(my_q, lvl.Ti), value(my_q_step, lvl.Ti), protos...),
+                                        tail = instantiate_reader(SparseCOOWalkTraversal(lvl, R - 1, value(my_q, lvl.Ti), value(my_q_step, lvl.Ti)), ctx, subprotos),
                                     ),
                                     next = (ctx, ext) -> quote
                                         $my_q = $my_q_step
@@ -316,9 +323,17 @@ function instantiate_reader_coo_helper(lvl::VirtualSparseCOOLevel, ctx, R, start
 end
 
 is_laminable_updater(lvl::VirtualSparseCOOLevel, ctx, protos...) = false
-instantiate_updater(fbr::VirtualSubFiber{VirtualSparseCOOLevel}, ctx, protos...) =
-    instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos...)
-function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseCOOLevel}, ctx, protos...)
+
+struct SparseCOOExtrudeTraversal
+    lvl
+    qos
+    fbr_dirty
+    coords
+end
+
+instantiate_updater(fbr::VirtualSubFiber{VirtualSparseCOOLevel}, ctx, protos) =
+    instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos)
+function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseCOOLevel}, ctx, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
@@ -331,7 +346,7 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseCOOLevel},
         preamble = quote
             $qos = $qos_fill + 1
         end,
-        body = (ctx) -> instantiate_updater_coo_helper(lvl, ctx, qos, fbr.dirty, (), protos...),
+        body = (ctx) -> instantiate_updater(SparseCOOExtrudeTraversal(lvl, qos, fbr.dirty, []), ctx, protos),
         epilogue = quote
             $(lvl.ex).ptr[$(ctx(pos)) + 1] = $qos - $qos_fill - 1
             $qos_fill = $qos - 1
@@ -339,8 +354,8 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseCOOLevel},
     )
 end
 
-instantiate_updater_coo_helper(lvl::VirtualSparseCOOLevel, ctx, qos, fbr_dirty, coords, proto, protos...) = throw(FormatLimitation("SparseCOOLevel does not support protocol $proto"))
-function instantiate_updater_coo_helper(lvl::VirtualSparseCOOLevel, ctx, qos, fbr_dirty, coords, ::Union{typeof(defaultupdate), typeof(extrude)}, protos...)
+function instantiate_updater(trv::SparseCOOExtrudeTraversal, ctx, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
+    (lvl, qos, fbr_dirty, coords) = (trv.lvl, trv.qos, trv.fbr_dirty, trv.coords)
     Ti = lvl.Ti
     Tp = lvl.Tp
     qos_fill = lvl.qos_fill
@@ -350,7 +365,7 @@ function instantiate_updater_coo_helper(lvl::VirtualSparseCOOLevel, ctx, qos, fb
         body = (ctx, ext) -> 
             if length(coords) + 1 < lvl.N
                 Lookup(
-                    body = (ctx, i) -> instantiate_updater_coo_helper(lvl, ctx, qos, fbr_dirty, (i, coords...), protos...)
+                    body = (ctx, i) -> instantiate_updater(SparseCOOExtrudeTraversal(lvl, qos, fbr_dirty, (i, coords...)), ctx, subprotos),
                 )
             else
                 dirty = ctx.freshen(:dirty)
@@ -366,7 +381,7 @@ function instantiate_updater_coo_helper(lvl::VirtualSparseCOOLevel, ctx, qos, fb
                             end
                             $dirty = false
                         end,
-                        body = (ctx) -> instantiate_updater(VirtualTrackedSubFiber(lvl.lvl, value(qos, lvl.Tp), dirty), ctx, protos...),
+                        body = (ctx) -> instantiate_updater(VirtualTrackedSubFiber(lvl.lvl, value(qos, lvl.Tp), dirty), ctx, subprotos),
                         epilogue = quote
                             if $dirty
                                 $(fbr_dirty) = true
