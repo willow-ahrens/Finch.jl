@@ -156,9 +156,6 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
 
             if head.kind === define
                 @assert head.lhs.kind === variable
-                if head.lhs in keys(ctx.bindings)
-                    error("In node $(head) variable $(head.lhs) is already bound in $(keys(ctx.bindings)).")
-                end
                 ctx.bindings[head.lhs] = cache!(ctx, head.lhs.name, head.rhs)
                 push!(ctx.scope, head.lhs)
             elseif head.kind === declare

@@ -8,15 +8,7 @@ function virtualize(ex, ::Type{FinchNotation.IndexInstance{name}}, ctx) where {n
     index(name)
 end
 virtualize(ex, ::Type{FinchNotation.DefineInstance{Lhs, Rhs}}, ctx) where {Lhs, Rhs} = define(virtualize(:($ex.lhs), Lhs, ctx), virtualize(:($ex.rhs), Rhs, ctx))
-function virtualize(ex, ::Type{FinchNotation.DeclareInstance{Tns, Init}}, ctx) where {Tns, Init}
-    old =  collect(keys(ctx.bindings))
-    k = virtualize(:($ex.tns), Tns, ctx)
-    # Comment this in if we want Tensors declared only once.
-    # if k in old 
-    #     error("Tensor $(k) is already bound in $(old)")
-    # end
-    declare(k, virtualize(:($ex.init), Init, ctx))
-end
+virtualize(ex, ::Type{FinchNotation.DeclareInstance{Tns, Init}}, ctx) where {Tns, Init} = declare(virtualize(:($ex.tns), Tns, ctx), virtualize(:($ex.init), Init, ctx))
 virtualize(ex, ::Type{FinchNotation.FreezeInstance{Tns}}, ctx) where {Tns} = freeze(virtualize(:($ex.tns), Tns, ctx))
 virtualize(ex, ::Type{FinchNotation.ThawInstance{Tns}}, ctx) where {Tns} = thaw(virtualize(:($ex.tns), Tns, ctx))
 function virtualize(ex, ::Type{FinchNotation.BlockInstance{Bodies}}, ctx) where {Bodies}
@@ -57,8 +49,7 @@ virtualize(ex, ::Type{FinchNotation.ReaderInstance}, ctx) = reader()
 virtualize(ex, ::Type{FinchNotation.UpdaterInstance}, ctx) = updater()
 virtualize(ex, ::Type{FinchNotation.VariableInstance{tag}}, ctx) where {tag} = variable(tag)
 function virtualize(ex, ::Type{FinchNotation.TagInstance{tag, Tns}}, ctx) where {tag, Tns}
-    k = variable(tag)
-    x = get!(ctx.bindings, k) do
+    x = get!(ctx.bindings, variable(tag)) do
         virtualize(:($ex.tns), Tns, ctx, tag)
     end
     if finch_leaf(x).kind !== virtual

@@ -1,7 +1,6 @@
 @kwdef struct ScopeVisitor
     freshen = Freshen()
     vars = Dict(index(:(:)) => index(:(:)))
-    regularVars = set()
     scope = Set()
     global_scope = scope
 end
@@ -20,8 +19,7 @@ struct ScopeError
 end
 
 function open_scope(prgm, ctx::ScopeVisitor)
-    prgm = ScopeVisitor(;kwfields(ctx)..., vars = copy(ctx.vars),
-        regularVars = copy(ctx.regularVars), scope = Set())(prgm)
+    prgm = ScopeVisitor(;kwfields(ctx)..., vars = copy(ctx.vars), scope = Set())(prgm)
 end
 
 function (ctx::ScopeVisitor)(node::FinchNode)
@@ -49,11 +47,12 @@ function (ctx::ScopeVisitor)(node::FinchNode)
         ctx.vars[node]
     elseif node.kind == define
         if node.lhs.kind != variable
-            throw(ScopeError("cannot define a non-variable $node.lhs")
+            throw(ScopeError("cannot define a non-variable $node.lhs"))
         end
         var = node.lhs
-        var in ctx.regularVars || throw(ScopeError("In node $(node) variable $(var) is already bound in $(keys(ctx.bindings))."))
-        push!(ctx.regularVars, var)
+        haskey(ctx.vars, var) && throw(ScopeError("In node $(node) variable $(var) is already bound."))
+        ctx.vars[var] = node.rhs
+        return node
     elseif istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))
     else
