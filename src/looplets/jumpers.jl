@@ -24,8 +24,8 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::JumperStyle)
     root.kind === loop || error("unimplemented")
 
     i = getname(root.idx)
-    i0 = ctx.freshen(i, :_start)
-    push!(ctx.preamble, quote
+    i0 = ctx.code.freshen(i, :_start)
+    push!(ctx.code.preamble, quote
         $i = $(ctx(getstart(root.ext)))
     end)
 
@@ -37,7 +37,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::JumperStyle)
     end))(root.body)
 
     body_3 = contain(ctx) do ctx_2
-        push!(ctx_2.preamble, :($i0 = $i))
+        push!(ctx_2.code.preamble, :($i0 = $i))
         if is_continuous_extent(root.ext) 
             ctx_2(loop(root.idx, bound_measure_below!(ContinuousExtent(start = value(i0), stop = getstop(root.ext)), literal(0)), body_2))
         else
@@ -74,7 +74,7 @@ FinchNotation.finch_leaf(x::Jump) = virtual(x)
 (ctx::Stylize{<:AbstractCompiler})(node::Jump) = ctx.root.kind === loop ? JumperPhaseStyle() : DefaultStyle()
 
 function phase_range(node::Jump, ctx, ext)
-    push!(ctx.preamble, node.seek !== nothing ? node.seek(ctx, ext) : quote end)
+    push!(ctx.code.preamble, node.seek !== nothing ? node.seek(ctx, ext) : quote end)
     similar_extent(ext, getstart(ext), node.stop(ctx, ext))
 end
 

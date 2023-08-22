@@ -116,14 +116,14 @@ mutable struct VirtualRepeatRLELevel
     dirty
 end
 function virtualize(ex, ::Type{RepeatRLELevel{D, Ti, Tp, Tv}}, ctx, tag=:lvl) where {D, Ti, Tp, Tv}
-    sym = ctx.freshen(tag)
+    sym = ctx.code.freshen(tag)
     shape = value(:($sym.shape), Int)
-    ros_fill = ctx.freshen(sym, :_ros_fill)
-    qos_stop = ctx.freshen(sym, :_qos_stop)
-    push!(ctx.preamble, quote
+    ros_fill = ctx.code.freshen(sym, :_ros_fill)
+    qos_stop = ctx.code.freshen(sym, :_qos_stop)
+    push!(ctx.code.preamble, quote
         $sym = $ex
     end)
-    dirty = ctx.freshen(sym, :_dirty)
+    dirty = ctx.code.freshen(sym, :_dirty)
     VirtualRepeatRLELevel(sym, D, Ti, Tp, Tv, shape, ros_fill, qos_stop, dirty)
 end
 function lower(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, ::DefaultStyle)
@@ -156,7 +156,7 @@ function declare_level!(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, mode,
     init == literal(lvl.D) || throw(FormatLimitation("Cannot initialize RepeatRLE Levels to non-default values"))
     Tp = lvl.Tp
     Ti = lvl.Ti
-    push!(ctx.preamble, quote
+    push!(ctx.code.preamble, quote
         $(lvl.ex).ptr[1] = $(Tp(1))
         $(lvl.ros_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
@@ -165,8 +165,8 @@ function declare_level!(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, mode,
 end
 
 function trim_level!(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, pos)
-    qos = ctx.freshen(:qos)
-    push!(ctx.preamble, quote
+    qos = ctx.code.freshen(:qos)
+    push!(ctx.code.preamble, quote
         resize!($(lvl.ex).ptr, $(ctx(pos)) + 1)
         $qos = $(lvl.ex).ptr[end] - $(lvl.Tp(1))
         resize!($(lvl.ex).idx, $qos)
@@ -187,12 +187,12 @@ end
 function freeze_level!(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, pos_stop)
     Tp = lvl.Tp
     Ti = lvl.Ti
-    p = ctx.freshen(:p)
+    p = ctx.code.freshen(:p)
     pos_stop = ctx(cache!(ctx, :p_stop, pos_stop))
     qos_stop = lvl.qos_stop
     ros_fill = lvl.ros_fill
-    qos_fill = ctx.freshen(:qos_stop)
-    push!(ctx.preamble, quote
+    qos_fill = ctx.code.freshen(:qos_stop)
+    push!(ctx.code.preamble, quote
         for $p = 2:($pos_stop + 1)
             $(lvl.ex).ptr[$p] += $(lvl.ex).ptr[$p - 1]
         end
@@ -210,10 +210,10 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, su
     tag = lvl.ex
     Tp = lvl.Tp
     Ti = lvl.Ti
-    my_i = ctx.freshen(tag, :_i)
-    my_q = ctx.freshen(tag, :_q)
-    my_q_stop = ctx.freshen(tag, :_q_stop)
-    my_i1 = ctx.freshen(tag, :_i1)
+    my_i = ctx.code.freshen(tag, :_i)
+    my_q = ctx.code.freshen(tag, :_q)
+    my_q_stop = ctx.code.freshen(tag, :_q_stop)
+    my_i1 = ctx.code.freshen(tag, :_i1)
 
     Furlable(
         body = (ctx, ext) -> Thunk(
@@ -257,23 +257,23 @@ end
 is_laminable_updater(lvl::VirtualRepeatRLELevel, ctx, ::Union{typeof(defaultupdate), typeof(extrude)}) = false
 
 instantiate_updater(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, protos) = 
-    instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos)
+    instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.code.freshen(:null)), ctx, protos)
 function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualRepeatRLELevel}, ctx, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp
     Ti = lvl.Ti
-    my_q = ctx.freshen(tag, :_q)
-    my_p = ctx.freshen(tag, :_p)
-    my_v = ctx.freshen(tag, :_v)
+    my_q = ctx.code.freshen(tag, :_q)
+    my_p = ctx.code.freshen(tag, :_p)
+    my_v = ctx.code.freshen(tag, :_v)
     D = lvl.D
 
-    my_i_prev = ctx.freshen(tag, :_i_prev)
-    my_v_prev = ctx.freshen(tag, :_v_prev)
+    my_i_prev = ctx.code.freshen(tag, :_i_prev)
+    my_v_prev = ctx.code.freshen(tag, :_v_prev)
 
     qos_stop = lvl.qos_stop
     ros_fill = lvl.ros_fill
-    qos_fill = ctx.freshen(tag, :qos_fill)
+    qos_fill = ctx.code.freshen(tag, :qos_fill)
 
     function record_run(ctx, stop, v)
         quote

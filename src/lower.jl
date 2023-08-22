@@ -27,14 +27,18 @@ end
 
 abstract type AbstractCompiler end
 
-@kwdef mutable struct LowerJulia <: AbstractCompiler
-    algebra = DefaultAlgebra()
+@kwdef mutable struct JuliaContext <: AbstractCompiler
+    freshen::Freshen = Freshen()
     preamble::Vector{Any} = []
+    epilogue::Vector{Any} = []
+end
+
+@kwdef mutable struct LowerJulia <: AbstractCompiler
+    code = JuliaContext()
+    algebra = DefaultAlgebra()
     bindings::Dict{Any, Any} = Dict()
     modes::Dict{Any, Any} = Dict()
     scope = Set()
-    epilogue::Vector{Any} = []
-    freshen::Freshen = Freshen()
     shash = StaticHash()
     program_rules = get_program_rules(algebra, shash)
     bounds_rules = get_bounds_rules(algebra, shash)
@@ -70,9 +74,9 @@ end
 function cache!(ctx::AbstractCompiler, var, val)
     val = finch_leaf(val)
     isconstant(val) && return val
-    var = ctx.freshen(var)
+    var = ctx.code.freshen(var)
     val = simplify(val, ctx)
-    push!(ctx.preamble, quote
+    push!(ctx.code.preamble, quote
         $var = $(contain(ctx_2 -> ctx_2(val), ctx))
     end)
     return cached(value(var, Any), literal(val))
@@ -100,11 +104,12 @@ contain.
 """
 function contain(f, ctx::AbstractCompiler)
     ctx_2 = shallowcopy(ctx)
+    ctx_2.code = shallowcopy(ctx_2.code)
     preamble = Expr(:block)
-    ctx_2.preamble = preamble.args
+    ctx_2.code.preamble = preamble.args
     epilogue = Expr(:block)
-    ctx_2.epilogue = epilogue.args
-    ctx_2.bindings = copy(ctx.bindings)
+    ctx_2.code.epilogue = epilogue.args
+    ctx.bindings = copy(ctx.bindings)
     body = f(ctx_2)
     if epilogue == Expr(:block)
         return quote
@@ -112,7 +117,7 @@ function contain(f, ctx::AbstractCompiler)
             $body
         end
     else
-        res = ctx_2.freshen(:res)
+        res = ctx_2.code.freshen(:res)
         return quote
             $preamble
             $res = $body
@@ -210,8 +215,8 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
         @assert root.ext.kind === virtual
         lower_loop(ctx, root, root.ext.val)
     elseif root.kind === sieve
-        cond = ctx.freshen(:cond)
-        push!(ctx.preamble, :($cond = $(ctx(root.cond))))
+        cond = ctx.code.freshen(:cond)
+        push!(ctx.code.preamble, :($cond = $(ctx(root.cond))))
     
         return quote
             if $cond
@@ -262,8 +267,8 @@ end
 
 function lower_loop(ctx, root, ext::ParallelDimension)
     #TODO Safety check that the loop can actually be parallel
-    tid = index(ctx.freshen(:tid))
-    i = ctx.freshen(:i)
+    tid = index(ctx.code.freshen(:tid))
+    i = ctx.code.freshen(:i)
     root_2 = loop(tid, Extent(value(i, Int), value(i, Int)),
         loop(root.idx, ext.ext,
             sieve(access(VirtualSplitMask(value(:(Threads.nthreads()))), reader(), root.idx, tid),

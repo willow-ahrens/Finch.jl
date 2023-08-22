@@ -97,8 +97,8 @@ instantiate_reader(::VirtualSubFiber{VirtualPatternLevel}, ctx, protos) = Fill(t
 is_laminable_updater(lvl::VirtualPatternLevel, ctx) = true
 
 function instantiate_updater(fbr::VirtualSubFiber{VirtualPatternLevel}, ctx, protos)
-    val = ctx.freshen(:null)
-    push!(ctx.preamble, :($val = false))
+    val = ctx.code.freshen(:null)
+    push!(ctx.code.preamble, :($val = false))
     VirtualScalar(nothing, Bool, false, gensym(), val)
 end
 
@@ -107,7 +107,7 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualPatternLevel}, c
 end
 
 function lower_access(ctx::AbstractCompiler, node, tns::VirtualFiber{VirtualPatternLevel})
-    val = ctx.freshen(:null)
-    push!(ctx.preamble, :($val = false))
+    val = ctx.code.freshen(:null)
+    push!(ctx.code.preamble, :($val = false))
     val
 end

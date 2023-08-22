@@ -49,8 +49,8 @@ function lower(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler,  ::DefaultSty
 end
 
 function Finch.virtualize(ex, ::Type{<:SparseMatrixCSC{Tv, Ti}}, ctx, tag=:tns) where {Tv, Ti}
-    sym = ctx.freshen(tag)
-    push!(ctx.preamble, quote
+    sym = ctx.code.freshen(tag)
+    push!(ctx.code.preamble, quote
         $sym = $ex
     end)
     VirtualSparseMatrixCSC(sym, Tv, Ti)
@@ -63,11 +63,11 @@ end
 function Finch.instantiate_reader(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler, subprotos, ::Union{typeof(defaultread), typeof(walk), typeof(follow)}, ::Union{typeof(defaultread), typeof(walk)})
     tag = arr.ex
     Ti = arr.Ti
-    my_i = ctx.freshen(tag, :_i)
-    my_q = ctx.freshen(tag, :_q)
-    my_q_stop = ctx.freshen(tag, :_q_stop)
-    my_i1 = ctx.freshen(tag, :_i1)
-    my_val = ctx.freshen(tag, :_val)
+    my_i = ctx.code.freshen(tag, :_i)
+    my_q = ctx.code.freshen(tag, :_q)
+    my_q_stop = ctx.code.freshen(tag, :_q_stop)
+    my_i1 = ctx.code.freshen(tag, :_i1)
+    my_val = ctx.code.freshen(tag, :_val)
 
     Unfurled(
         arr = arr,
@@ -152,8 +152,8 @@ function lower(arr::VirtualSparseVector, ctx::AbstractCompiler,  ::DefaultStyle)
 end
 
 function Finch.virtualize(ex, ::Type{<:SparseVector{Tv, Ti}}, ctx, tag=:tns) where {Tv, Ti}
-    sym = ctx.freshen(tag)
-    push!(ctx.preamble, quote
+    sym = ctx.code.freshen(tag)
+    push!(ctx.code.preamble, quote
         $sym = $ex
     end)
     VirtualSparseVector(sym, Tv, Ti)
@@ -166,11 +166,11 @@ end
 function Finch.instantiate_reader(arr::VirtualSparseVector, ctx::AbstractCompiler, subprotos, ::Union{typeof(defaultread), typeof(walk)})
     tag = arr.ex
     Ti = arr.Ti
-    my_i = ctx.freshen(tag, :_i)
-    my_q = ctx.freshen(tag, :_q)
-    my_q_stop = ctx.freshen(tag, :_q_stop)
-    my_i1 = ctx.freshen(tag, :_i1)
-    my_val = ctx.freshen(tag, :_val)
+    my_i = ctx.code.freshen(tag, :_i)
+    my_q = ctx.code.freshen(tag, :_q)
+    my_q_stop = ctx.code.freshen(tag, :_q_stop)
+    my_i1 = ctx.code.freshen(tag, :_i1)
+    my_val = ctx.code.freshen(tag, :_val)
 
     Unfurled(
         arr = arr,

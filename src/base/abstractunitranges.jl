@@ -10,8 +10,8 @@ function lower(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler,  ::DefaultS
 end
 
 function virtualize(ex, arrtype::Type{<:AbstractUnitRange{T}}, ctx, tag=:tns) where {T}
-    sym = ctx.freshen(tag)
-    push!(ctx.preamble, :($sym = $ex))
+    sym = ctx.code.freshen(tag)
+    push!(ctx.code.preamble, :($sym = $ex))
     target = Extent(value(:(first($sym)), T), value(:(last($sym)), T))
     VirtualAbstractUnitRange(sym, target, arrtype, T)
 end

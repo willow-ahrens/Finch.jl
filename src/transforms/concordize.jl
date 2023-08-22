@@ -131,5 +131,5 @@ function concordize(root, ctx::AbstractCompiler)
             access(~tns, ~mode, ~i..., call(identity, j), ~k...)
         end
     end)))(root)
-    ConcordizeVisitor(ctx.freshen, collect(keys(ctx.bindings)))(root)
+    ConcordizeVisitor(ctx.code.freshen, collect(keys(ctx.bindings)))(root)
 end

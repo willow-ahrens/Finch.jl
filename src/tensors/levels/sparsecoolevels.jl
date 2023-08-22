@@ -139,11 +139,11 @@ mutable struct VirtualSparseCOOLevel
     qos_stop
 end
 function virtualize(ex, ::Type{SparseCOOLevel{N, Ti, Tp, Tbl, Lvl}}, ctx, tag=:lvl) where {N, Ti, Tp, Tbl, Lvl}   
-    sym = ctx.freshen(tag)
+    sym = ctx.code.freshen(tag)
     shape = map(n->value(:($sym.shape[$n]), Int), 1:N)
-    qos_fill = ctx.freshen(sym, :_qos_fill)
-    qos_stop = ctx.freshen(sym, :_qos_stop)
-    push!(ctx.preamble, quote
+    qos_fill = ctx.code.freshen(sym, :_qos_fill)
+    qos_stop = ctx.code.freshen(sym, :_qos_stop)
+    push!(ctx.code.preamble, quote
         $sym = $ex
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
@@ -181,7 +181,7 @@ function declare_level!(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler, pos, 
     Tp = lvl.Tp
 
     qos = call(-, call(getindex, :($(lvl.ex).ptr), call(+, pos, 1)), 1)
-    push!(ctx.preamble, quote
+    push!(ctx.code.preamble, quote
         $(lvl.qos_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
     end)
@@ -191,9 +191,9 @@ end
 
 function trim_level!(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler, pos)
     Tp = lvl.Tp
-    qos = ctx.freshen(:qos)
+    qos = ctx.code.freshen(:qos)
 
-    push!(ctx.preamble, quote
+    push!(ctx.code.preamble, quote
         resize!($(lvl.ex).ptr, $(ctx(pos)) + 1)
         $qos = $(lvl.ex).ptr[end] - $(Tp(1))
         $(Expr(:block, map(1:lvl.N) do n
@@ -214,10 +214,10 @@ function assemble_level!(lvl::VirtualSparseCOOLevel, ctx, pos_start, pos_stop)
 end
 
 function freeze_level!(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler, pos_stop)
-    p = ctx.freshen(:p)
+    p = ctx.code.freshen(:p)
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
-    qos_stop = ctx.freshen(:qos_stop)
-    push!(ctx.preamble, quote
+    qos_stop = ctx.code.freshen(:qos_stop)
+    push!(ctx.code.preamble, quote
         for $p = 2:($pos_stop + 1)
             $(lvl.ex).ptr[$p] += $(lvl.ex).ptr[$p - 1]
         end
@@ -247,11 +247,11 @@ function instantiate_reader(trv::SparseCOOWalkTraversal, ctx, subprotos, ::Union
     tag = lvl.ex
     Ti = lvl.Ti
     Tp = lvl.Tp
-    my_i = ctx.freshen(tag, :_i)
-    my_q = ctx.freshen(tag, :_q)
-    my_q_step = ctx.freshen(tag, :_q_step)
-    my_q_stop = ctx.freshen(tag, :_q_stop)
-    my_i_stop = ctx.freshen(tag, :_i_stop)
+    my_i = ctx.code.freshen(tag, :_i)
+    my_q = ctx.code.freshen(tag, :_q)
+    my_q_step = ctx.code.freshen(tag, :_q_step)
+    my_q_stop = ctx.code.freshen(tag, :_q_stop)
+    my_i_stop = ctx.code.freshen(tag, :_i_stop)
 
     Furlable(
         body = (ctx, ext) -> Thunk(
@@ -332,7 +332,7 @@ struct SparseCOOExtrudeTraversal
 end
 
 instantiate_updater(fbr::VirtualSubFiber{VirtualSparseCOOLevel}, ctx, protos) =
-    instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos)
+    instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.code.freshen(:null)), ctx, protos)
 function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseCOOLevel}, ctx, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
@@ -341,7 +341,7 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseCOOLevel},
     qos_fill = lvl.qos_fill
     qos_stop = lvl.qos_stop
 
-    qos = ctx.freshen(tag, :_q)
+    qos = ctx.code.freshen(tag, :_q)
     Thunk(
         preamble = quote
             $qos = $qos_fill + 1
@@ -368,7 +368,7 @@ function instantiate_updater(trv::SparseCOOExtrudeTraversal, ctx, subprotos, ::U
                     body = (ctx, i) -> instantiate_updater(SparseCOOExtrudeTraversal(lvl, qos, fbr_dirty, (i, coords...)), ctx, subprotos),
                 )
             else
-                dirty = ctx.freshen(:dirty)
+                dirty = ctx.code.freshen(:dirty)
                 Lookup(
                     body = (ctx, idx) -> Thunk(
                         preamble = quote

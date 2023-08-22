@@ -94,9 +94,9 @@ mutable struct VirtualDenseLevel
     shape
 end
 function virtualize(ex, ::Type{DenseLevel{Ti, Lvl}}, ctx, tag=:lvl) where {Ti, Lvl}
-    sym = ctx.freshen(tag)
+    sym = ctx.code.freshen(tag)
     shape = value(:($sym.shape), Ti)
-    push!(ctx.preamble, quote
+    push!(ctx.code.preamble, quote
         $sym = $ex
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
@@ -133,8 +133,8 @@ function declare_level!(lvl::VirtualDenseLevel, ctx::AbstractCompiler, pos, init
 end
 
 function trim_level!(lvl::VirtualDenseLevel, ctx::AbstractCompiler, pos)
-    qos = ctx.freshen(:qos)
-    push!(ctx.preamble, quote
+    qos = ctx.code.freshen(:qos)
+    push!(ctx.code.preamble, quote
         $qos = $(ctx(pos)) * $(ctx(lvl.shape))
     end)
     lvl.lvl = trim_level!(lvl.lvl, ctx, value(qos))
@@ -186,7 +186,7 @@ function instantiate_reader(trv::DenseTraversal, ctx, subprotos, ::Union{typeof(
     tag = lvl.ex
     Ti = lvl.Ti
 
-    q = ctx.freshen(tag, :_q)
+    q = ctx.code.freshen(tag, :_q)
 
     Furlable(
         tight = nothing,
@@ -206,7 +206,7 @@ function instantiate_updater(trv::DenseTraversal, ctx, subprotos, ::Union{typeof
     tag = lvl.ex
     Ti = lvl.Ti
 
-    q = ctx.freshen(tag, :_q)
+    q = ctx.code.freshen(tag, :_q)
 
     Furlable(
         tight = !is_laminable_updater(lvl.lvl, ctx, subprotos...) ? lvl : nothing,

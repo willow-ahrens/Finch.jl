@@ -137,7 +137,7 @@ function virtual_eltype end
 function virtual_resize!(tns, ctx, dims...)
     for (dim, ref) in zip(dims, virtual_size(tns, ctx))
         if dim !== dimless && ref !== dimless #TODO this should be a function like checkdim or something haha
-            push!(ctx.preamble, quote
+            push!(ctx.code.preamble, quote
                 $(ctx(getstart(dim))) == $(ctx(getstart(ref))) || throw(DimensionMismatch("mismatched dimension start"))
                 $(ctx(getstop(dim))) == $(ctx(getstop(ref))) || throw(DimensionMismatch("mismatched dimension stop"))
             end)

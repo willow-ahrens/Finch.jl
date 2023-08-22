@@ -101,14 +101,14 @@ mutable struct VirtualSparseVBLLevel
     dirty
 end
 function virtualize(ex, ::Type{SparseVBLLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}
-    sym = ctx.freshen(tag)
+    sym = ctx.code.freshen(tag)
     shape = value(:($sym.shape), Int)
-    qos_fill = ctx.freshen(sym, :_qos_fill)
-    qos_stop = ctx.freshen(sym, :_qos_stop)
-    ros_fill = ctx.freshen(sym, :_ros_fill)
-    ros_stop = ctx.freshen(sym, :_ros_stop)
-    dirty = ctx.freshen(sym, :_dirty)
-    push!(ctx.preamble, quote
+    qos_fill = ctx.code.freshen(sym, :_qos_fill)
+    qos_stop = ctx.code.freshen(sym, :_qos_stop)
+    ros_fill = ctx.code.freshen(sym, :_ros_fill)
+    ros_stop = ctx.code.freshen(sym, :_ros_stop)
+    dirty = ctx.code.freshen(sym, :_dirty)
+    push!(ctx.code.preamble, quote
         $sym = $ex
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
@@ -147,7 +147,7 @@ function declare_level!(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, pos, 
     Ti = lvl.Ti
     ros = call(-, call(getindex, :($(lvl.ex).ptr), call(+, pos, 1)), 1)
     qos = call(-, call(getindex, :($(lvl.ex).ofs), call(+, ros, 1)), 1)
-    push!(ctx.preamble, quote
+    push!(ctx.code.preamble, quote
         $(lvl.qos_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
         $(lvl.ros_fill) = $(Tp(0))
@@ -162,9 +162,9 @@ end
 function trim_level!(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, pos)
     Tp = lvl.Tp
     Ti = lvl.Ti
-    ros = ctx.freshen(:ros)
-    qos = ctx.freshen(:qos)
-    push!(ctx.preamble, quote
+    ros = ctx.code.freshen(:ros)
+    qos = ctx.code.freshen(:qos)
+    push!(ctx.code.preamble, quote
         resize!($(lvl.ex).ptr, $(ctx(pos)) + 1)
         $ros = $(lvl.ex).ptr[end] - $(lvl.Tp(1))
         resize!($(lvl.ex).idx, $ros)
@@ -185,10 +185,10 @@ function assemble_level!(lvl::VirtualSparseVBLLevel, ctx, pos_start, pos_stop)
 end
 
 function freeze_level!(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, pos_stop)
-    p = ctx.freshen(:p)
+    p = ctx.code.freshen(:p)
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
-    qos_stop = ctx.freshen(:qos_stop)
-    push!(ctx.preamble, quote
+    qos_stop = ctx.code.freshen(:qos_stop)
+    push!(ctx.code.preamble, quote
         for $p = 2:($pos_stop + 1)
             $(lvl.ex).ptr[$p] += $(lvl.ex).ptr[$p - 1]
         end
@@ -203,14 +203,14 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, su
     tag = lvl.ex
     Tp = lvl.Tp
     Ti = lvl.Ti
-    my_i = ctx.freshen(tag, :_i)
-    my_i_start = ctx.freshen(tag, :_i)
-    my_r = ctx.freshen(tag, :_r)
-    my_r_stop = ctx.freshen(tag, :_r_stop)
-    my_q = ctx.freshen(tag, :_q)
-    my_q_stop = ctx.freshen(tag, :_q_stop)
-    my_q_ofs = ctx.freshen(tag, :_q_ofs)
-    my_i1 = ctx.freshen(tag, :_i1)
+    my_i = ctx.code.freshen(tag, :_i)
+    my_i_start = ctx.code.freshen(tag, :_i)
+    my_r = ctx.code.freshen(tag, :_r)
+    my_r_stop = ctx.code.freshen(tag, :_r_stop)
+    my_q = ctx.code.freshen(tag, :_q)
+    my_q_stop = ctx.code.freshen(tag, :_q_stop)
+    my_q_ofs = ctx.code.freshen(tag, :_q_ofs)
+    my_i1 = ctx.code.freshen(tag, :_i1)
 
     Furlable(
         body = (ctx, ext) -> Thunk(
@@ -281,15 +281,15 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, su
     tag = lvl.ex
     Tp = lvl.Tp
     Ti = lvl.Ti
-    my_i = ctx.freshen(tag, :_i)
-    my_j = ctx.freshen(tag, :_j)
-    my_i_start = ctx.freshen(tag, :_i)
-    my_r = ctx.freshen(tag, :_r)
-    my_r_stop = ctx.freshen(tag, :_r_stop)
-    my_q = ctx.freshen(tag, :_q)
-    my_q_stop = ctx.freshen(tag, :_q_stop)
-    my_q_ofs = ctx.freshen(tag, :_q_ofs)
-    my_i1 = ctx.freshen(tag, :_i1)
+    my_i = ctx.code.freshen(tag, :_i)
+    my_j = ctx.code.freshen(tag, :_j)
+    my_i_start = ctx.code.freshen(tag, :_i)
+    my_r = ctx.code.freshen(tag, :_r)
+    my_r_stop = ctx.code.freshen(tag, :_r_stop)
+    my_q = ctx.code.freshen(tag, :_q)
+    my_q_stop = ctx.code.freshen(tag, :_q_stop)
+    my_q_ofs = ctx.code.freshen(tag, :_q_ofs)
+    my_i1 = ctx.code.freshen(tag, :_i1)
 
     Furlable(
         body = (ctx, ext) -> Thunk(
@@ -402,22 +402,22 @@ end
 is_laminable_updater(lvl::VirtualSparseVBLLevel, ctx, protos...) = false
 
 instantiate_updater(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, protos) =
-    instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos)
+    instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.code.freshen(:null)), ctx, protos)
 function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseVBLLevel}, ctx, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp
     Ti = lvl.Ti
-    my_p = ctx.freshen(tag, :_p)
-    my_q = ctx.freshen(tag, :_q)
-    my_i_prev = ctx.freshen(tag, :_i_prev)
-    qos = ctx.freshen(tag, :_qos)
-    ros = ctx.freshen(tag, :_ros)
+    my_p = ctx.code.freshen(tag, :_p)
+    my_q = ctx.code.freshen(tag, :_q)
+    my_i_prev = ctx.code.freshen(tag, :_i_prev)
+    qos = ctx.code.freshen(tag, :_qos)
+    ros = ctx.code.freshen(tag, :_ros)
     qos_fill = lvl.qos_fill
     qos_stop = lvl.qos_stop
     ros_fill = lvl.ros_fill
     ros_stop = lvl.ros_stop
-    dirty = ctx.freshen(tag, :dirty)
+    dirty = ctx.code.freshen(tag, :dirty)
 
     Furlable(
         tight = lvl,

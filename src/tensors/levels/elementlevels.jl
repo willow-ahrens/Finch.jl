@@ -76,10 +76,10 @@ end
 
 lower(lvl::VirtualElementLevel, ctx::AbstractCompiler, ::DefaultStyle) = lvl.ex
 function virtualize(ex, ::Type{ElementLevel{D, Tv}}, ctx, tag=:lvl) where {D, Tv}
-    sym = ctx.freshen(tag)
-    val_alloc = ctx.freshen(sym, :_val_alloc)
-    val = ctx.freshen(sym, :_val)
-    push!(ctx.preamble, quote
+    sym = ctx.code.freshen(tag)
+    val_alloc = ctx.code.freshen(sym, :_val_alloc)
+    val = ctx.code.freshen(sym, :_val)
+    push!(ctx.code.preamble, quote
         $sym = $ex
     end)
     VirtualElementLevel(sym, Tv, D)
@@ -102,7 +102,7 @@ freeze_level!(lvl::VirtualElementLevel, ctx, pos) = lvl
 thaw_level!(lvl::VirtualElementLevel, ctx::AbstractCompiler, pos) = lvl
 
 function trim_level!(lvl::VirtualElementLevel, ctx::AbstractCompiler, pos)
-    push!(ctx.preamble, quote
+    push!(ctx.code.preamble, quote
         resize!($(lvl.ex).val, $(ctx(pos)))
     end)
     return lvl
@@ -121,7 +121,7 @@ supports_reassembly(::VirtualElementLevel) = true
 function reassemble_level!(lvl::VirtualElementLevel, ctx, pos_start, pos_stop)
     pos_start = cache!(ctx, :pos_start, simplify(pos_start, ctx))
     pos_stop = cache!(ctx, :pos_stop, simplify(pos_stop, ctx))
-    push!(ctx.preamble, quote
+    push!(ctx.code.preamble, quote
         Finch.fill_range!($(lvl.ex).val, $(lvl.D), $(ctx(pos_start)), $(ctx(pos_stop)))
     end)
     lvl
@@ -129,7 +129,7 @@ end
 
 function instantiate_reader(fbr::VirtualSubFiber{VirtualElementLevel}, ctx, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
-    val = ctx.freshen(lvl.ex, :_val)
+    val = ctx.code.freshen(lvl.ex, :_val)
     return Thunk(
         preamble = quote
             $val = $(lvl.ex).val[$(ctx(pos))]

@@ -4,7 +4,7 @@ virtualize(ex, (@nospecialize T), ctx) = value(ex, T)
 
 virtualize(ex, ::Type{FinchNotation.LiteralInstance{val}}, ctx) where {val} = literal(val)
 function virtualize(ex, ::Type{FinchNotation.IndexInstance{name}}, ctx) where {name}
-    ctx.freshen(name)
+    ctx.code.freshen(name)
     index(name)
 end
 virtualize(ex, ::Type{FinchNotation.DefineInstance{Lhs, Rhs}}, ctx) where {Lhs, Rhs} = define(virtualize(:($ex.lhs), Lhs, ctx), virtualize(:($ex.rhs), Rhs, ctx))
