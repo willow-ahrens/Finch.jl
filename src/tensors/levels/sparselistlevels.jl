@@ -353,6 +353,7 @@ instantiate_updater(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, protos) =
     instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos)
 end
 function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseListLevel}, ctx, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
+    is_serial(ctx.arch) || throw(FinchArchitectureError("SparseListLevel updater is not concurrent"))
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp

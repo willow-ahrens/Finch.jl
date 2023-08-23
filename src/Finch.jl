@@ -53,6 +53,7 @@ include("semantics.jl")
 include("virtualize.jl")
 include("style.jl")
 include("dimensions.jl")
+include("architecture.jl")
 include("lower.jl")
 
 include("transforms/concordize.jl")

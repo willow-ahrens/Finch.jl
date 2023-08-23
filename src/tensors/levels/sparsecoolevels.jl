@@ -355,6 +355,7 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseCOOLevel},
 end
 
 function instantiate_updater(trv::SparseCOOExtrudeTraversal, ctx, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
+    is_serial(ctx.arch) || throw(FinchArchitectureError("SparseCOOLevel updater is not concurrent"))
     (lvl, qos, fbr_dirty, coords) = (trv.lvl, trv.qos, trv.fbr_dirty, trv.coords)
     Ti = lvl.Ti
     Tp = lvl.Tp

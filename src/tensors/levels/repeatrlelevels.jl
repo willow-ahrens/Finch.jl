@@ -259,6 +259,7 @@ is_laminable_updater(lvl::VirtualRepeatRLELevel, ctx, ::Union{typeof(defaultupda
 instantiate_updater(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, protos) = 
     instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos)
 function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualRepeatRLELevel}, ctx, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
+    is_serial(ctx.arch) || throw(FinchArchitectureError("RepeatRLELevel updater is not concurrent"))
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp

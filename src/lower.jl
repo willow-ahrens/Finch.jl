@@ -36,6 +36,7 @@ abstract type AbstractCompiler end
     epilogue::Vector{Any} = []
     freshen::Freshen = Freshen()
     shash = StaticHash()
+    arch = Serial()
     program_rules = get_program_rules(algebra, shash)
     bounds_rules = get_bounds_rules(algebra, shash)
 end
@@ -98,8 +99,9 @@ Call f on a subcontext of `ctx` and return the result. Variable bindings,
 preambles, and epilogues defined in the subcontext will not escape the call to
 contain.
 """
-function contain(f, ctx::AbstractCompiler)
+function contain(f, ctx::AbstractCompiler, arch=nothing)
     ctx_2 = shallowcopy(ctx)
+    ctx_2.arch = something(arch, ctx.arch)
     preamble = Expr(:block)
     ctx_2.preamble = preamble.args
     epilogue = Expr(:block)
@@ -273,7 +275,7 @@ function lower_loop(ctx, root, ext::ParallelDimension)
     )
     return quote
         Threads.@threads for $i = 1:Threads.nthreads()
-            $(contain(ctx) do ctx_2
+            $(contain(ctx, arch = threaded) do ctx_2
                 ctx_2(instantiate!(root_2, ctx_2))
             end)
         end
