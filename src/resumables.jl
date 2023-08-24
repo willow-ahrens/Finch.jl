@@ -270,9 +270,9 @@ end
 
 Takes a Finch Program and stages it within a DebugContext, defined within a particualr algebra.
  """
-function begin_debug(code; algebra = DefaultAlgebra(),  sdisplay=false)
+function begin_debug(code; algebra = DefaultAlgebra(), sdisplay=false)
     ctx = DebugContext(LowerJulia(algebra = algebra), SimpleStepControl(step=0))
-    code = execute_code(:ex, typeof(code), algebra, ctx=ctx)
+    code = execute_code(:ex, typeof(code), ctx=ctx) #TODO would be nice to pass options through this
     control = StepOnlyControl(step=step, resumeLocations = [0])
     clean_partial_code(PartialCode(control, code), sdisplay=sdisplay)
 end

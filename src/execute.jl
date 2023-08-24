@@ -45,17 +45,19 @@ function (ctx::InstantiateTensors)(node::FinchNode)
     end
 end
 
-execute(ex) = execute(ex, DefaultAlgebra())
+execute(ex) = execute(ex, NamedTuple())
 
-@staged function execute(ex, a)
-    quote
-        @inbounds begin
-            $(execute_code(:ex, ex, a()) |> unblock)
+@staged function execute(ex, opts::NamedTuple)
+    contain(JuliaContext()) do ctx
+        quote
+            @inbounds begin
+                $(execute_code(:ex, ex; virtualize(:opts, opts, ctx)...) |> unblock)
+            end
         end
     end
 end
 
-function execute_code(ex, T, algebra = DefaultAlgebra(); ctx = LowerJulia(algebra = algebra))
+function execute_code(ex, T; algebra = DefaultAlgebra(), ctx = LowerJulia(algebra = algebra))
     code = contain(ctx) do ctx_2
         prgm = nothing
         prgm = virtualize(ex, T, ctx_2.code)
@@ -101,7 +103,7 @@ function lower_global(prgm, ctx)
 end
 
 """
-    @finch [algebra] prgm
+    @finch [options] prgm
 
 Run a finch program `prgm`. The syntax for a finch program is a set of nested
 loops, statements, and branches over pointwise array assignments. For example,
@@ -144,7 +146,7 @@ macro finch(opts_ex...)
     prgm = FinchNotation.finch_parse_instance(ex, results)
     res = esc(:res)
     thunk = quote
-        res = $execute($prgm, $(map(esc, opts)...))
+        res = $execute($prgm, (;$(map(esc, opts)...),))
     end
     for tns in results
         push!(thunk.args, quote
@@ -170,7 +172,7 @@ macro finch_code(opts_ex...)
     (opts, ex) = (opts_ex[1:end-1], opts_ex[end])
     prgm = FinchNotation.finch_parse_instance(ex)
     return quote
-        $execute_code(:ex, typeof($prgm), $(map(esc, opts)...)) |> pretty |> dataflow |> unresolve |> unquote_literals
+        $execute_code(:ex, typeof($prgm); $(map(esc, opts)...)) |> pretty |> dataflow |> unresolve |> unquote_literals
     end
 end
 
@@ -181,13 +183,13 @@ Return a function definition for which can execute a Finch program of
 type `prgm`. Here, `fname` is the name of the function and `args` is a
 `iterable` of argument name => type pairs.
 """
-function finch_kernel(fname, args, prgm, algebra = DefaultAlgebra(); ctx = LowerJulia(algebra=algebra))
+function finch_kernel(fname, args, prgm; algebra = DefaultAlgebra(), ctx = LowerJulia(algebra=algebra))
     maybe_typeof(x) = x isa Type ? x : typeof(x)
     code = contain(ctx) do ctx_2
         foreach(args) do (key, val)
             ctx_2.bindings[variable(key)] = virtualize(key, maybe_typeof(val), ctx_2.code, key)
         end
-        execute_code(:UNREACHABLE, prgm, ctx = ctx_2)
+        execute_code(:UNREACHABLE, prgm, algebra = algebra, ctx = ctx_2)
     end |> pretty |> dataflow |> unquote_literals
     arg_defs = map(((key, val),) -> :($key::$(maybe_typeof(val))), args)
     striplines(:(function $fname($(arg_defs...))
@@ -220,6 +222,6 @@ macro finch_kernel(opts_def...)
         end
     end
     return quote
-        $finch_kernel($(QuoteNode(name)), Any[$(named_args...),], typeof($prgm), $(map(esc, opts)...))
+        $finch_kernel($(QuoteNode(name)), Any[$(named_args...),], typeof($prgm); $(map(esc, opts)...))
     end
 end

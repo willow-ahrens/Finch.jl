@@ -67,10 +67,11 @@ using CIndices
             return a+b+c
         end 
         struct MyAlgebra <: Finch.AbstractAlgebra end
+        Finch.virtualize(ex, ::Type{MyAlgebra}, ::Finch.JuliaContext) = MyAlgebra()
         t = Fiber!(SparseList(SparseList(Element(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
         A = dropdefaults(copyto!(Fiber!(SparseList(SparseList(Element(0.0)))), B))
-        @finch MyAlgebra() (t .= 0; for j=_, i=_; t[i, j] = f(A[i,j], A[i,j], A[i,j]) end)
+        @finch algebra=MyAlgebra() (t .= 0; for j=_, i=_; t[i, j] = f(A[i,j], A[i,j], A[i,j]) end)
         @test t == B .* 3
     end
 
@@ -80,14 +81,14 @@ using CIndices
         t = Fiber!(SparseList(SparseList(Element(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
         A = dropdefaults(copyto!(Fiber!(SparseList(SparseList(Element(0.0)))), B))
-        @test_throws Finch.RewriteTools.RuleRewriteError @finch MyAlgebra() (t .= 0; for i=_, j=_; t[i, j] = A[i, j] end)
+        @test_throws Finch.RewriteTools.RuleRewriteError @finch algebra=MyAlgebra() (t .= 0; for i=_, j=_; t[i, j] = A[i, j] end)
     end
 
     let
         t = Fiber!(Dense(SparseList(Element(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
         A = dropdefaults(copyto!(Fiber!(Dense(SparseList(Element(0.0)))), B))
-        @test_throws Finch.RewriteTools.RuleRewriteError @finch MyAlgebra() (t .= 0; for i=_, j=_; t[i, j] = A[i, j] end)
+        @test_throws Finch.RewriteTools.RuleRewriteError @finch algebra=MyAlgebra() (t .= 0; for i=_, j=_; t[i, j] = A[i, j] end)
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/129

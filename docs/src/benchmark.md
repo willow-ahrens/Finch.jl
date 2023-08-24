@@ -85,13 +85,13 @@ Benchmark the kernel, ignoring allocation costs for y
 
 ````
 BenchmarkTools.Trial: 10000 samples with 211 evaluations.
- Range (min … max):  355.450 ns … 707.346 ns  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     357.820 ns               ┊ GC (median):    0.00%
- Time  (mean ± σ):   361.343 ns ±  15.253 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+ Range (min … max):  355.450 ns …  2.389 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     358.019 ns              ┊ GC (median):    0.00%
+ Time  (mean ± σ):   367.705 ns ± 38.716 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-  █▆▇▂         ▁▃▃▂                                             ▂
-  ████▄▃▁▃▄▄▄▄▅█████▇▇▅▅▅▅▇█▇█▇█▆▇▅▇▆▆▇▆▇▆▆▄▅▅▄▅▅▇▅▇▆▆▆▆▆▁▄▅▅▄▆ █
-  355 ns        Histogram: log(frequency) by time        428 ns <
+  █▇▅      ▂▃▃▂▁▁ ▁▁▁  ▁▁▁▁                                    ▁
+  ███▆▇▆▇▆▆███████████████████▇██▇▇▇█▇▇▇▇█▆▆▆▆▆▆▅▅▆▆▆▅▅▅▅▅▆▄▅▄ █
+  355 ns        Histogram: log(frequency) by time       455 ns <
 
  Memory estimate: 0 bytes, allocs estimate: 0.
 ````
@@ -113,14 +113,14 @@ end
 ````
 
 ````
-BenchmarkTools.Trial: 10000 samples with 202 evaluations.
- Range (min … max):  387.787 ns …   3.469 μs  ┊ GC (min … max): 0.00% … 84.81%
- Time  (median):     391.500 ns               ┊ GC (median):    0.00%
- Time  (mean ± σ):   406.270 ns ± 136.374 ns  ┊ GC (mean ± σ):  1.66% ±  4.33%
+BenchmarkTools.Trial: 10000 samples with 203 evaluations.
+ Range (min … max):  387.724 ns …   4.032 μs  ┊ GC (min … max): 0.00% … 86.76%
+ Time  (median):     392.448 ns               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   412.556 ns ± 154.128 ns  ┊ GC (mean ± σ):  1.84% ±  4.37%
 
-  ▂██▄▁      ▂▄▃▃▂▂▁      ▁▁▁   ▁                               ▁
-  █████▆▂▄▅▃▄████████▇▇▇▇█████▇███▇▇▇▇▇▆▇▆▇▇▇▅▅▆▅▅▅▅▅▆▆▅▄▅▄▄▅▄▄ █
-  388 ns        Histogram: log(frequency) by time        485 ns <
+   ▇█▆▂      ▂▃▃▂▂▂▁▂▂▂▁▂▂▂▂▁▁▁▂▁▁         ▁                    ▂
+  ████████▇██████████████████████████████████▇▇▇▇▆▆▆▆▆▅▆▆▆▅▅▆▅▅ █
+  388 ns        Histogram: log(frequency) by time        486 ns <
 
  Memory estimate: 608 bytes, allocs estimate: 2.
 ````

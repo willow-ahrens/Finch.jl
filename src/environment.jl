@@ -34,6 +34,11 @@ end
 end
 
 virtualize(ex, T, ctx, tag) = virtualize(ex, T, ctx)
+function virtualize(ex, T::Type{NamedTuple{names, args}}, ctx) where {names, args}
+    Dict(map(zip(names, args.parameters)) do (name, arg)
+        name => virtualize(:($ex.$(QuoteNode(name))), arg, ctx, name)
+    end...)
+end
 
 freshen(ctx::JuliaContext, tags...) = freshen(ctx.namespace, tags...)
 
