@@ -1,3 +1,4 @@
+#TODO delete this line and figure this out with finch_leaf_instance
 Finch.virtualize(ex, (@nospecialize T), ctx) = value(ex, T)
 
 Finch.virtualize(ex, ::Type{FinchNotation.LiteralInstance{val}}, ctx) where {val} = literal(val)
