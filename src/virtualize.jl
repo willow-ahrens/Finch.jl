@@ -48,13 +48,8 @@ end
 virtualize(ex, ::Type{FinchNotation.ReaderInstance}, ctx) = reader()
 virtualize(ex, ::Type{FinchNotation.UpdaterInstance}, ctx) = updater()
 virtualize(ex, ::Type{FinchNotation.VariableInstance{tag}}, ctx) where {tag} = variable(tag)
-function virtualize(ex, ::Type{FinchNotation.TagInstance{tag, Tns}}, ctx) where {tag, Tns}
-    x = get!(ctx.bindings, variable(tag)) do
-        virtualize(:($ex.tns), Tns, ctx, tag)
-    end
-    if finch_leaf(x).kind !== virtual
-        return x
-    else
-        return variable(tag)
-    end
+function virtualize(ex, ::Type{FinchNotation.TagInstance{Var, Bind}}, ctx) where {Var, Bind}
+    var = virtualize(:($ex.var), Var, ctx)
+    bind = virtualize(:($ex.bind), Bind, ctx, var.name)
+    tag(var, bind)
 end

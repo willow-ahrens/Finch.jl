@@ -10,7 +10,7 @@ end
 
 A transformation which gives all loops unique index names and enforces that
 tensor roots are declared in a containing scope and enforces that variables are
-decared once within their scope. . Note that `loop` and `sieve` both introduce new scopes.
+declared once within their scope. Note that `loop` and `sieve` both introduce new scopes.
 """
 enforce_scopes(prgm) = ScopeVisitor()(prgm)
 

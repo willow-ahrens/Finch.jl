@@ -9,6 +9,7 @@ module FinchNotation
     export value
     export loop
     export assign
+    export tag
     export call
     export cached
     export reader, updater, access

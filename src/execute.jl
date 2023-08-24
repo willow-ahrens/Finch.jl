@@ -70,10 +70,10 @@ end
 lower the program `prgm` at global scope in the context `ctx`.
 """
 function lower_global(prgm, ctx)
+    prgm = evaluate_partial(prgm, ctx)
     code = contain(ctx) do ctx_2
         quote
             $(begin
-                prgm = evaluate_partial(prgm, ctx_2)
                 prgm = enforce_scopes(prgm)
                 prgm = wrapperize(prgm, ctx_2)
                 prgm = enforce_lifecycles(prgm)
@@ -86,13 +86,16 @@ function lower_global(prgm, ctx)
                     ctx_3(prgm)
                 end
             end)
-            $(contain(ctx_2) do ctx_3
-                :(($(map(getresults(prgm)) do tns
-                    @assert tns.kind === variable
-                    name = tns.name
-                    tns = trim!(ctx_2.bindings[tns], ctx_3)
-                    :($name = $(ctx_3(tns)))
-                end...), ))
+            $(begin
+                res = contain(ctx_2) do ctx_3
+                    :(($(map(getresults(prgm)) do tns
+                        @assert tns.kind === variable
+                        name = tns.name
+                        tns = trim!(ctx_2.bindings[tns].val, ctx_3)
+                        :($name = $(ctx_3(tns)))
+                    end...), ))
+                end
+                res
             end)
         end
     end
