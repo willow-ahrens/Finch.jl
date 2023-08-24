@@ -39,8 +39,6 @@ using MatrixDepot
 ````
 
 ````
-[ Info: Precompiling MatrixDepot [b51810bb-c9f3-55da-ae3c-350fc1fbce05]
-[ Info: Precompiling HDF5Ext [827c409d-89e5-52bc-854d-3ee303d0ed7c]
 [ Info: verify download of index files...
 [ Info: reading database
 [ Info: adding metadata...
@@ -87,13 +85,13 @@ Benchmark the kernel, ignoring allocation costs for y
 
 ````
 BenchmarkTools.Trial: 10000 samples with 211 evaluations.
- Range (min … max):  355.450 ns … 863.152 ns  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     358.213 ns               ┊ GC (median):    0.00%
- Time  (mean ± σ):   370.761 ns ±  25.725 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+ Range (min … max):  355.251 ns … 872.038 ns  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     356.242 ns               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   360.181 ns ±  13.733 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-  ██▄      ▁▃▃▂▃▂▂▂▁▁ ▁▁▂▁▂▂▁▁▁                                 ▂
-  ████▇██▇▇████████████████████████████████▇▇▇▇▇▇▇▇▆▇▅▆▆▆▅▄▅▅▄▆ █
-  355 ns        Histogram: log(frequency) by time        456 ns <
+  █▅▇▃           ▃▁▂                                            ▂
+  ████▆▁▃▅▃▄▄▃▄▄▄████▇▇▆▇▆▇▆▇▇▇▆▇▆▅▇▇▇▆▇▇▆▆▆▆▆▆▆▆▇▆▅▆▆▅▆▅▅▅▅▆▄▆ █
+  355 ns        Histogram: log(frequency) by time        420 ns <
 
  Memory estimate: 0 bytes, allocs estimate: 0.
 ````
@@ -116,13 +114,13 @@ end
 
 ````
 BenchmarkTools.Trial: 10000 samples with 202 evaluations.
- Range (min … max):  386.960 ns …   4.232 μs  ┊ GC (min … max): 0.00% … 85.94%
- Time  (median):     392.535 ns               ┊ GC (median):    0.00%
- Time  (mean ± σ):   416.597 ns ± 162.642 ns  ┊ GC (mean ± σ):  1.89% ±  4.38%
+ Range (min … max):  387.376 ns …  21.042 μs  ┊ GC (min … max): 0.00% … 97.80%
+ Time  (median):     407.797 ns               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   434.074 ns ± 639.488 ns  ┊ GC (mean ± σ):  5.28% ±  3.51%
 
-   ▇█▄▁   ▁▃▄▄▄▃▂▁▁▁▁▂▂▃▂▂▂▁▁  ▁▁▁▁                             ▂
-  ▇███████████████████████████████████▇▇█▇█▇█▇▆▆▇▆▆▆▄▅▅▅▅▅▅▄▅▅▅ █
-  387 ns        Histogram: log(frequency) by time        512 ns <
+  ▅█▆▂     ▂▅▆▆▅▄▃▃▃▃▂▃▃▃▃▃▂▂▂▁▁▁▂▂▁▁   ▁ ▁                     ▂
+  ████▇▅▂▅▇████████████████████████████████████▇█▇▇▇▇▆▇▆▆▆▆▄▆▆▆ █
+  387 ns        Histogram: log(frequency) by time        494 ns <
 
  Memory estimate: 608 bytes, allocs estimate: 2.
 ````

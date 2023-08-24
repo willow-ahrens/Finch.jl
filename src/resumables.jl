@@ -137,6 +137,12 @@ end
 
 shallowcopy(x::DebugContext) = DebugContext(shallowcopy(x.ctx), x.control)
 
+function contain(f, ctx::DebugContext)
+    contain(ctx.ctx) do ctx_2
+        f(DebugContext(ctx_2, ctx.control))
+    end
+end
+
 #Sad but true
 function Base.getproperty(ctx::DebugContext, name::Symbol)
     if name === :control

@@ -164,7 +164,7 @@ Base.:(==)(a::TagInstance, b::TagInstance) = a.var == b.var && a.bind == b.bind
 
 @inline tag_instance(var, bind) = TagInstance(var, bind)
 
-Base.show(io::IO, node::TagInstance) = print(io, "tag_instance(:", var, ", ", bind, ")")
+Base.show(io::IO, node::TagInstance) = print(io, "tag_instance(:", node.var, ", ", node.bind, ")")
 
 @inline finch_leaf_instance(arg::Type) = literal_instance(arg)
 @inline finch_leaf_instance(arg::Function) = literal_instance(arg)

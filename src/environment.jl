@@ -34,3 +34,32 @@ end
 end
 
 virtualize(ex, T, ctx, tag) = virtualize(ex, T, ctx)
+
+
+"""
+    contain(f, ctx)
+
+Call f on a subcontext of `ctx` and return the result. Variable bindings,
+preambles, and epilogues defined in the subcontext will not escape the call to
+contain.
+"""
+function contain(f, ctx::JuliaContext)
+    preamble = Expr(:block)
+    epilogue = Expr(:block)
+    ctx_2 = JuliaContext(ctx.freshen, preamble.args, epilogue.args)
+    body = f(ctx_2)
+    if epilogue == Expr(:block)
+        return quote
+            $preamble
+            $body
+        end
+    else
+        res = ctx.freshen(:res)
+        return quote
+            $preamble
+            $res = $body
+            $epilogue
+            $res
+        end
+    end
+end

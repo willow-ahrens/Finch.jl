@@ -9,6 +9,12 @@
     bounds_rules = get_bounds_rules(algebra, shash)
 end
 
+function contain(f, ctx::LowerJulia)
+    contain(ctx.code) do code_2
+        f(LowerJulia(code_2, ctx.algebra, ctx.bindings, ctx.modes, ctx.scope, ctx.shash, ctx.program_rules, ctx.bounds_rules))
+    end
+end
+
 struct StaticHash
     counts::Dict{Any, Int}
 end
@@ -58,37 +64,6 @@ function resolve(node::FinchNode, ctx::AbstractCompiler)
         return resolve(ctx.bindings[node], ctx)
     else
         error("unimplemented $node")
-    end
-end
-
-"""
-    contain(f, ctx)
-
-Call f on a subcontext of `ctx` and return the result. Variable bindings,
-preambles, and epilogues defined in the subcontext will not escape the call to
-contain.
-"""
-function contain(f, ctx::AbstractCompiler)
-    ctx_2 = shallowcopy(ctx)
-    ctx_2.code = shallowcopy(ctx_2.code)
-    preamble = Expr(:block)
-    ctx_2.code.preamble = preamble.args
-    epilogue = Expr(:block)
-    ctx_2.code.epilogue = epilogue.args
-    body = f(ctx_2)
-    if epilogue == Expr(:block)
-        return quote
-            $preamble
-            $body
-        end
-    else
-        res = ctx_2.code.freshen(:res)
-        return quote
-            $preamble
-            $res = $body
-            $epilogue
-            $res
-        end
     end
 end
 
