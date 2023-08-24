@@ -188,7 +188,7 @@ function finch_kernel(fname, args, prgm, algebra = DefaultAlgebra(); ctx = Lower
         foreach(args) do (key, val)
             ctx_2.bindings[variable(key)] = virtualize(key, maybe_typeof(val), ctx_2, key)
         end
-        execute_code(:TODO, maybe_typeof(prgm), ctx = ctx_2)
+        execute_code(:UNREACHABLE, typeof(prgm), ctx = ctx_2)
     end |> pretty |> dataflow |> unquote_literals
     arg_defs = map(((key, val),) -> :($key::$(maybe_typeof(val))), args)
     striplines(:(function $fname($(arg_defs...))
@@ -213,6 +213,13 @@ macro finch_kernel(opts_def...)
     throw(ArgumentError("unrecognized function definition in @finch_kernel"))
     named_args = map(arg -> :($(QuoteNode(arg)) => $(esc(arg))), args)
     prgm = FinchNotation.finch_parse_instance(ex)
+    for arg in args
+        prgm = quote    
+            let $(esc(arg)) = $(FinchNotation.variable_instance(arg))
+                $prgm
+            end
+        end
+    end
     return quote
         $finch_kernel($(QuoteNode(name)), Any[$(named_args...),], typeof($prgm), $(map(esc, opts)...))
     end
