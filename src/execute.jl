@@ -91,7 +91,7 @@ function lower_global(prgm, ctx)
                     :(($(map(getresults(prgm)) do tns
                         @assert tns.kind === variable
                         name = tns.name
-                        tns = trim!(ctx_2.bindings[tns].val, ctx_3)
+                        tns = trim!(resolve(tns, ctx_2), ctx_3)
                         :($name = $(ctx_3(tns)))
                     end...), ))
                 end

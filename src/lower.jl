@@ -33,6 +33,7 @@ function open_scope(prgm, ctx::AbstractCompiler)
     for tns in ctx_2.scope
         pop!(ctx_2.modes, tns, nothing)
     end
+    ctx.bindings = copy(ctx.bindings)
     res
 end
 
@@ -74,7 +75,6 @@ function contain(f, ctx::AbstractCompiler)
     ctx_2.code.preamble = preamble.args
     epilogue = Expr(:block)
     ctx_2.code.epilogue = epilogue.args
-    ctx.bindings = copy(ctx.bindings)
     body = f(ctx_2)
     if epilogue == Expr(:block)
         return quote
