@@ -149,7 +149,7 @@ function virtualize(ex, ::Type{SparseHashLevel{N, Ti, Tp, Tbl, Lvl}}, ctx, tag=:
     P = freshen(ctx, sym, :_P)
     qos_fill = freshen(ctx, sym, :_qos_fill)
     qos_stop = freshen(ctx, sym, :_qos_stop)
-    push!(ctx.code.preamble, quote
+    push!(ctx.preamble, quote
         $sym = $ex
         $(qos_fill) = length($sym.tbl)
         $(qos_stop) = $(qos_fill)

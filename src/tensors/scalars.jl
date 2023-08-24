@@ -28,7 +28,7 @@ lower(tns::VirtualScalar, ctx::AbstractCompiler, ::DefaultStyle) = :($Scalar{$(t
 function virtualize(ex, ::Type{Scalar{D, Tv}}, ctx, tag) where {D, Tv}
     sym = freshen(ctx, tag)
     val = Symbol(tag, :_val) #TODO hmm this is risky
-    push!(ctx.code.preamble, quote
+    push!(ctx.preamble, quote
         $sym = $ex
         $val = $sym.val
     end)

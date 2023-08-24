@@ -9,8 +9,6 @@
     bounds_rules = get_bounds_rules(algebra, shash)
 end
 
-freshen(ctx::LowerJulia, tags...) = freshen(ctx.code, tags...)
-
 function contain(f, ctx::LowerJulia)
     contain(ctx.code) do code_2
         f(LowerJulia(code_2, ctx.algebra, ctx.bindings, ctx.modes, ctx.scope, ctx.shash, ctx.program_rules, ctx.bounds_rules))

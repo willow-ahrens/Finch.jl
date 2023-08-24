@@ -79,7 +79,7 @@ function virtualize(ex, ::Type{ElementLevel{D, Tv}}, ctx, tag=:lvl) where {D, Tv
     sym = freshen(ctx, tag)
     val_alloc = freshen(ctx, sym, :_val_alloc)
     val = freshen(ctx, sym, :_val)
-    push!(ctx.code.preamble, quote
+    push!(ctx.preamble, quote
         $sym = $ex
     end)
     VirtualElementLevel(sym, Tv, D)

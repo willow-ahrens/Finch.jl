@@ -51,6 +51,8 @@ function virtual_resize!(arr::VirtualOffsetArray, ctx::AbstractCompiler, dims...
     virtual_resize!(arr.body, ctx, dims_2...)
 end
 
+virtual_default(arr::VirtualOffsetArray, ctx::AbstractCompiler) = virtual_default(arr.body, ctx)
+
 function instantiate_reader(arr::VirtualOffsetArray, ctx, protos)
     VirtualOffsetArray(instantiate_reader(arr.body, ctx, protos), arr.delta)
 end

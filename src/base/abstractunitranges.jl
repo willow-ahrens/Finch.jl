@@ -11,7 +11,7 @@ end
 
 function virtualize(ex, arrtype::Type{<:AbstractUnitRange{T}}, ctx, tag=:tns) where {T}
     sym = freshen(ctx, tag)
-    push!(ctx.code.preamble, :($sym = $ex))
+    push!(ctx.preamble, :($sym = $ex))
     target = Extent(value(:(first($sym)), T), value(:(last($sym)), T))
     VirtualAbstractUnitRange(sym, target, arrtype, T)
 end

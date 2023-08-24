@@ -97,7 +97,7 @@ function virtualize(ex, ::Type{SparseByteMapLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) 
     shape = value(:($sym.shape), Int)
     qos_fill = freshen(ctx, sym, :_qos_fill)
     qos_stop = freshen(ctx, sym, :_qos_stop)
-    push!(ctx.code.preamble, quote
+    push!(ctx.preamble, quote
         $sym = $ex
         #TODO this line is not strictly correct unless the tensor is trimmed.
         $qos_stop = $qos_fill = length($sym.srt)

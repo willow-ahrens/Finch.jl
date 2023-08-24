@@ -308,7 +308,7 @@ function Fiber! end
 
 @staged function Fiber!(lvl)
     contain(LowerJulia()) do ctx
-        lvl = virtualize(:lvl, lvl, ctx)
+        lvl = virtualize(:lvl, lvl, ctx.code)
         lvl = declare_level!(lvl, ctx, literal(0), literal(virtual_level_default(lvl)))
         push!(ctx.code.preamble, assemble_level!(lvl, ctx, literal(1), literal(1)))
         lvl = freeze_level!(lvl, ctx, literal(1))

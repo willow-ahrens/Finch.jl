@@ -120,7 +120,7 @@ function virtualize(ex, ::Type{RepeatRLELevel{D, Ti, Tp, Tv}}, ctx, tag=:lvl) wh
     shape = value(:($sym.shape), Int)
     ros_fill = freshen(ctx, sym, :_ros_fill)
     qos_stop = freshen(ctx, sym, :_qos_stop)
-    push!(ctx.code.preamble, quote
+    push!(ctx.preamble, quote
         $sym = $ex
     end)
     dirty = freshen(ctx, sym, :_dirty)

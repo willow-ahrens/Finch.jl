@@ -55,11 +55,10 @@ execute(ex) = execute(ex, DefaultAlgebra())
     end
 end
 
-
 function execute_code(ex, T, algebra = DefaultAlgebra(); ctx = LowerJulia(algebra = algebra))
     code = contain(ctx) do ctx_2
         prgm = nothing
-        prgm = virtualize(ex, T, ctx_2)
+        prgm = virtualize(ex, T, ctx_2.code)
         lower_global(prgm, ctx_2)
     end
 end

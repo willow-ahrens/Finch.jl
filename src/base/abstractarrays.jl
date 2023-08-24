@@ -18,7 +18,7 @@ end
 
 function virtualize(ex, ::Type{<:AbstractArray{T, N}}, ctx, tag=:tns) where {T, N}
     sym = freshen(ctx, tag)
-    push!(ctx.code.preamble, :($sym = $ex))
+    push!(ctx.preamble, :($sym = $ex))
     VirtualAbstractArray(sym, T, N)
 end
 

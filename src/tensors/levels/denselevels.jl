@@ -96,7 +96,7 @@ end
 function virtualize(ex, ::Type{DenseLevel{Ti, Lvl}}, ctx, tag=:lvl) where {Ti, Lvl}
     sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Ti)
-    push!(ctx.code.preamble, quote
+    push!(ctx.preamble, quote
         $sym = $ex
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
@@ -133,7 +133,7 @@ function declare_level!(lvl::VirtualDenseLevel, ctx::AbstractCompiler, pos, init
 end
 
 function trim_level!(lvl::VirtualDenseLevel, ctx::AbstractCompiler, pos)
-    qos = freshen(ctx, :qos)
+    qos = freshen(ctx.code, :qos)
     push!(ctx.code.preamble, quote
         $qos = $(ctx(pos)) * $(ctx(lvl.shape))
     end)
