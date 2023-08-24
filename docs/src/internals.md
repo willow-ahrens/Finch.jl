@@ -53,7 +53,7 @@ julia> (@macroexpand @finch (C .= 0; for i=_; C[i] = A[i] * B[i] end)) |> Finch.
 quote
     _res_1 = (Finch.execute)((Finch.FinchNotation.block_instance)((Finch.FinchNotation.declare_instance)((Finch.FinchNotation.tag_instance)(variable_instance(:C), (Finch.FinchNotation.finch_leaf_instance)(C)), literal_instance(0)), begin
                     let i = index_instance(i)
-                        (Finch.FinchNotation.loop_instance)(i, Finch.FinchNotation.Dimensionless(), (Finch.FinchNotation.assign_instance)((Finch.FinchNotation.access_instance)((Finch.FinchNotation.tag_instance)(variable_instance(:C), (Finch.FinchNotation.finch_leaf_instance)(C)), (Finch.FinchNotation.updater_instance)(), (Finch.FinchNotation.tag_instance)(variable_instance(:i), (Finch.FinchNotation.finch_leaf_instance)(i))), (Finch.FinchNotation.literal_instance)((Finch.FinchNotation.initwrite)((Finch.default)(C))), (Finch.FinchNotation.call_instance)((Finch.FinchNotation.tag_instance)(variable_instance(:*), (Finch.FinchNotation.finch_leaf_instance)(*)), (Finch.FinchNotation.access_instance)((Finch.FinchNotation.tag_instance)(variable_instance(:A), (Finch.FinchNotation.finch_leaf_instance)(A)), (Finch.FinchNotation.reader_instance)(), (Finch.FinchNotation.tag_instance)(variable_instance(:i), (Finch.FinchNotation.finch_leaf_instance)(i))), (Finch.FinchNotation.access_instance)((Finch.FinchNotation.tag_instance)(variable_instance(:B), (Finch.FinchNotation.finch_leaf_instance)(B)), (Finch.FinchNotation.reader_instance)(), (Finch.FinchNotation.tag_instance)(variable_instance(:i), (Finch.FinchNotation.finch_leaf_instance)(i))))))
+                        (Finch.FinchNotation.loop_instance)(i, Finch.FinchNotation.Dimensionless(), (Finch.FinchNotation.assign_instance)((Finch.FinchNotation.access_instance)((Finch.FinchNotation.tag_instance)(variable_instance(:C), (Finch.FinchNotation.finch_leaf_instance)(C)), (Finch.FinchNotation.updater_instance)(), (Finch.FinchNotation.tag_instance)(variable_instance(:i), (Finch.FinchNotation.finch_leaf_instance)(i))), (Finch.FinchNotation.literal_instance)(Finch.FinchNotation.initwrite), (Finch.FinchNotation.call_instance)((Finch.FinchNotation.tag_instance)(variable_instance(:*), (Finch.FinchNotation.finch_leaf_instance)(*)), (Finch.FinchNotation.access_instance)((Finch.FinchNotation.tag_instance)(variable_instance(:A), (Finch.FinchNotation.finch_leaf_instance)(A)), (Finch.FinchNotation.reader_instance)(), (Finch.FinchNotation.tag_instance)(variable_instance(:i), (Finch.FinchNotation.finch_leaf_instance)(i))), (Finch.FinchNotation.access_instance)((Finch.FinchNotation.tag_instance)(variable_instance(:B), (Finch.FinchNotation.finch_leaf_instance)(B)), (Finch.FinchNotation.reader_instance)(), (Finch.FinchNotation.tag_instance)(variable_instance(:i), (Finch.FinchNotation.finch_leaf_instance)(i))))))
                     end
                 end))
     begin
@@ -76,7 +76,7 @@ convenient to use the unexported macro `Finch.finch_program_instance`:
 julia> using Finch: @finch_program_instance
 
 julia> prgm = Finch.@finch_program_instance (C .= 0; for i=_; C[i] = A[i] * B[i] end)
-block_instance(declare_instance(tag_instance(:variable_instance(:C), Fiber(SparseList{Int64, Int64}(Element{0, Int64}([24, 45]), 5, [1, 3], [2, 5]))), literal_instance(0)), loop_instance(index_instance(i), Finch.FinchNotation.Dimensionless(), assign_instance(access_instance(tag_instance(:variable_instance(:C), Fiber(SparseList{Int64, Int64}(Element{0, Int64}([24, 45]), 5, [1, 3], [2, 5]))), updater_instance(), tag_instance(:variable_instance(:i), index_instance(i))), literal_instance(Finch.FinchNotation.InitWriter{0}()), call_instance(tag_instance(:variable_instance(:*), literal_instance(*)), access_instance(tag_instance(:variable_instance(:A), Fiber(SparseList{Int64, Int64}(Element{0, Int64}([2, 3]), 5, [1, 3], [2, 5]))), reader_instance(), tag_instance(:variable_instance(:i), index_instance(i))), access_instance(tag_instance(:variable_instance(:B), Fiber(Dense{Int64}(Element{0, Int64}([11, 12, 13, 14, 15]), 5))), reader_instance(), tag_instance(:variable_instance(:i), index_instance(i)))))))
+block_instance(declare_instance(tag_instance(:variable_instance(:C), Fiber(SparseList{Int64, Int64}(Element{0, Int64}([24, 45]), 5, [1, 3], [2, 5]))), literal_instance(0)), loop_instance(index_instance(i), Finch.FinchNotation.Dimensionless(), assign_instance(access_instance(tag_instance(:variable_instance(:C), Fiber(SparseList{Int64, Int64}(Element{0, Int64}([24, 45]), 5, [1, 3], [2, 5]))), updater_instance(), tag_instance(:variable_instance(:i), index_instance(i))), literal_instance(initwrite), call_instance(tag_instance(:variable_instance(:*), literal_instance(*)), access_instance(tag_instance(:variable_instance(:A), Fiber(SparseList{Int64, Int64}(Element{0, Int64}([2, 3]), 5, [1, 3], [2, 5]))), reader_instance(), tag_instance(:variable_instance(:i), index_instance(i))), access_instance(tag_instance(:variable_instance(:B), Fiber(Dense{Int64}(Element{0, Int64}([11, 12, 13, 14, 15]), 5))), reader_instance(), tag_instance(:variable_instance(:i), index_instance(i)))))))
 ```
 
 As we can see, our program instance contains not only the AST to be executed,
@@ -87,7 +87,7 @@ different inputs, but the same program type. We can run our program using
 
 ```jldoctest example1
 julia> typeof(prgm)
-Finch.FinchNotation.BlockInstance{Tuple{Finch.FinchNotation.DeclareInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:C}, Fiber{SparseListLevel{Int64, Int64, ElementLevel{0, Int64}}}}, Finch.FinchNotation.LiteralInstance{0}}, Finch.FinchNotation.LoopInstance{Finch.FinchNotation.IndexInstance{:i}, Finch.FinchNotation.Dimensionless, Finch.FinchNotation.AssignInstance{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:C}, Fiber{SparseListLevel{Int64, Int64, ElementLevel{0, Int64}}}}, Finch.FinchNotation.UpdaterInstance, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.InitWriter{0}()}, Finch.FinchNotation.CallInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:*}, Finch.FinchNotation.LiteralInstance{*}}, Tuple{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:A}, Fiber{SparseListLevel{Int64, Int64, ElementLevel{0, Int64}}}}, Finch.FinchNotation.ReaderInstance, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}, Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:B}, Fiber{DenseLevel{Int64, ElementLevel{0, Int64}}}}, Finch.FinchNotation.ReaderInstance, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}}}}}}}
+Finch.FinchNotation.BlockInstance{Tuple{Finch.FinchNotation.DeclareInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:C}, Fiber{SparseListLevel{Int64, Int64, ElementLevel{0, Int64}}}}, Finch.FinchNotation.LiteralInstance{0}}, Finch.FinchNotation.LoopInstance{Finch.FinchNotation.IndexInstance{:i}, Finch.FinchNotation.Dimensionless, Finch.FinchNotation.AssignInstance{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:C}, Fiber{SparseListLevel{Int64, Int64, ElementLevel{0, Int64}}}}, Finch.FinchNotation.UpdaterInstance, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.initwrite}, Finch.FinchNotation.CallInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:*}, Finch.FinchNotation.LiteralInstance{*}}, Tuple{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:A}, Fiber{SparseListLevel{Int64, Int64, ElementLevel{0, Int64}}}}, Finch.FinchNotation.ReaderInstance, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}, Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:B}, Fiber{DenseLevel{Int64, ElementLevel{0, Int64}}}}, Finch.FinchNotation.ReaderInstance, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}}}}}}}
 
 julia> C = Finch.execute(prgm).C
 SparseList (0) [1:5]
@@ -105,7 +105,7 @@ julia> function pointwise_sum(As...)
            B = Fiber!(Dense(Element(0)))
            isempty(As) && return B
            i = Finch.FinchNotation.index_instance(:i)
-           A_vars = [Finch.FinchNotation.tag_instance(Symbol(:A, n), As[n]) for n in 1:length(As)]
+           A_vars = [Finch.FinchNotation.tag_instance(Finch.FinchNotation.variable_instance(Symbol(:A, n)), As[n]) for n in 1:length(As)]
            #create a list of variable instances with different names to hold the input tensors
            ex = @finch_program_instance 0
            for A_var in A_vars
@@ -117,72 +117,9 @@ julia> function pointwise_sum(As...)
 pointwise_sum (generic function with 1 method)
 
 julia> pointwise_sum([1, 2], [3, 4])
-ERROR: type FinchNode(value, ...) has no property name
-Stacktrace:
-  [1] error(s::String)
-    @ Base ./error.jl:35
-  [2] getproperty(node::Finch.FinchNotation.FinchNode, sym::Symbol)
-    @ Finch.FinchNotation ~/Projects/Finch.jl/src/FinchNotation/nodes.jl:379
-  [3] virtualize(ex::Expr, #unused#::Type{Finch.FinchNotation.TagInstance{Symbol, Vector{Int64}}}, ctx::Finch.LowerJulia)
-    @ Finch.FinchNotation ~/Projects/Finch.jl/src/FinchNotation/virtualize.jl:51
-  [4] virtualize(ex::Expr, #unused#::Type{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Symbol, Vector{Int64}}, Finch.FinchNotation.ReaderInstance, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}}, ctx::Finch.LowerJulia)
-    @ Finch.FinchNotation ~/Projects/Finch.jl/src/FinchNotation/virtualize.jl:40
-  [5] (::Finch.FinchNotation.var"#4#5"{Expr, Finch.LowerJulia})(::Tuple{Int64, DataType})
-    @ Finch.FinchNotation ~/Projects/Finch.jl/src/FinchNotation/virtualize.jl:35
-  [6] iterate
-    @ ./generator.jl:47 [inlined]
-  [7] collect(itr::Base.Generator{Base.Iterators.Enumerate{Core.SimpleVector}, Finch.FinchNotation.var"#4#5"{Expr, Finch.LowerJulia}})
-    @ Base ./array.jl:782
-  [8] map
-    @ ./abstractarray.jl:3289 [inlined]
-  [9] virtualize(ex::Expr, #unused#::Type{Finch.FinchNotation.CallInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:+}, Finch.FinchNotation.LiteralInstance{+}}, Tuple{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Symbol, Vector{Int64}}, Finch.FinchNotation.ReaderInstance, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}, Finch.FinchNotation.CallInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:+}, Finch.FinchNotation.LiteralInstance{+}}, Tuple{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Symbol, Vector{Int64}}, Finch.FinchNotation.ReaderInstance, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}, Finch.FinchNotation.LiteralInstance{0}}}}}}, ctx::Finch.LowerJulia)
-    @ Finch.FinchNotation ~/Projects/Finch.jl/src/FinchNotation/virtualize.jl:34
- [10] virtualize(ex::Expr, #unused#::Type{Finch.FinchNotation.AssignInstance{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:B}, Fiber{DenseLevel{Int64, ElementLevel{0, Int64}}}}, Finch.FinchNotation.UpdaterInstance, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.InitWriter{0}()}, Finch.FinchNotation.CallInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:+}, Finch.FinchNotation.LiteralInstance{+}}, Tuple{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Symbol, Vector{Int64}}, Finch.FinchNotation.ReaderInstance, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}, Finch.FinchNotation.CallInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:+}, Finch.FinchNotation.LiteralInstance{+}}, Tuple{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Symbol, Vector{Int64}}, Finch.FinchNotation.ReaderInstance, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}, Finch.FinchNotation.LiteralInstance{0}}}}}}}, ctx::Finch.LowerJulia)
-    @ Finch.FinchNotation ~/Projects/Finch.jl/src/FinchNotation/virtualize.jl:30
- [11] virtualize(ex::Expr, #unused#::Type{Finch.FinchNotation.LoopInstance{Finch.FinchNotation.IndexInstance{:i}, Finch.FinchNotation.Dimensionless, Finch.FinchNotation.AssignInstance{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:B}, Fiber{DenseLevel{Int64, ElementLevel{0, Int64}}}}, Finch.FinchNotation.UpdaterInstance, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.InitWriter{0}()}, Finch.FinchNotation.CallInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:+}, Finch.FinchNotation.LiteralInstance{+}}, Tuple{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Symbol, Vector{Int64}}, Finch.FinchNotation.ReaderInstance, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}, Finch.FinchNotation.CallInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:+}, Finch.FinchNotation.LiteralInstance{+}}, Tuple{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Symbol, Vector{Int64}}, Finch.FinchNotation.ReaderInstance, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}, Finch.FinchNotation.LiteralInstance{0}}}}}}}}, ctx::Finch.LowerJulia)
-    @ Finch.FinchNotation ~/Projects/Finch.jl/src/FinchNotation/virtualize.jl:26
- [12] (::Finch.FinchNotation.var"#2#3"{Symbol, Finch.LowerJulia})(::Tuple{Int64, DataType})
-    @ Finch.FinchNotation ~/Projects/Finch.jl/src/FinchNotation/virtualize.jl:14
- [13] iterate
-    @ ./generator.jl:47 [inlined]
- [14] collect_to!(dest::Vector{Finch.FinchNotation.FinchNode}, itr::Base.Generator{Base.Iterators.Enumerate{Core.SimpleVector}, Finch.FinchNotation.var"#2#3"{Symbol, Finch.LowerJulia}}, offs::Int64, st::Tuple{Int64, Int64})
-    @ Base ./array.jl:840
- [15] collect_to_with_first!(dest::Vector{Finch.FinchNotation.FinchNode}, v1::Finch.FinchNotation.FinchNode, itr::Base.Generator{Base.Iterators.Enumerate{Core.SimpleVector}, Finch.FinchNotation.var"#2#3"{Symbol, Finch.LowerJulia}}, st::Tuple{Int64, Int64})
-    @ Base ./array.jl:818
- [16] collect(itr::Base.Generator{Base.Iterators.Enumerate{Core.SimpleVector}, Finch.FinchNotation.var"#2#3"{Symbol, Finch.LowerJulia}})
-    @ Base ./array.jl:792
- [17] map
-    @ ./abstractarray.jl:3289 [inlined]
- [18] virtualize(ex::Symbol, #unused#::Type{Finch.FinchNotation.BlockInstance{Tuple{Finch.FinchNotation.DeclareInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:B}, Fiber{DenseLevel{Int64, ElementLevel{0, Int64}}}}, Finch.FinchNotation.LiteralInstance{0}}, Finch.FinchNotation.LoopInstance{Finch.FinchNotation.IndexInstance{:i}, Finch.FinchNotation.Dimensionless, Finch.FinchNotation.AssignInstance{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:B}, Fiber{DenseLevel{Int64, ElementLevel{0, Int64}}}}, Finch.FinchNotation.UpdaterInstance, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.InitWriter{0}()}, Finch.FinchNotation.CallInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:+}, Finch.FinchNotation.LiteralInstance{+}}, Tuple{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Symbol, Vector{Int64}}, Finch.FinchNotation.ReaderInstance, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}, Finch.FinchNotation.CallInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:+}, Finch.FinchNotation.LiteralInstance{+}}, Tuple{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Symbol, Vector{Int64}}, Finch.FinchNotation.ReaderInstance, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}, Finch.FinchNotation.LiteralInstance{0}}}}}}}}}}, ctx::Finch.LowerJulia)
-    @ Finch.FinchNotation ~/Projects/Finch.jl/src/FinchNotation/virtualize.jl:13
- [19] (::Finch.var"#219#220"{Symbol, DataType})(ctx_2::Finch.LowerJulia)
-    @ Finch ~/Projects/Finch.jl/src/execute.jl:62
- [20] (::Finch.var"#120#121"{Finch.var"#219#220"{Symbol, DataType}, Finch.LowerJulia})(code_2::Finch.JuliaContext)
-    @ Finch ~/Projects/Finch.jl/src/lower.jl:14
- [21] contain(f::Finch.var"#120#121"{Finch.var"#219#220"{Symbol, DataType}, Finch.LowerJulia}, ctx::Finch.JuliaContext)
-    @ Finch ~/Projects/Finch.jl/src/environment.jl:50
- [22] contain(f::Finch.var"#219#220"{Symbol, DataType}, ctx::Finch.LowerJulia)
-    @ Finch ~/Projects/Finch.jl/src/lower.jl:13
- [23] execute_code(ex::Symbol, T::Type, algebra::Finch.DefaultAlgebra; ctx::Finch.LowerJulia)
-    @ Finch ~/Projects/Finch.jl/src/execute.jl:60
- [24] execute_code(ex::Symbol, T::Type, algebra::Finch.DefaultAlgebra)
-    @ Finch ~/Projects/Finch.jl/src/execute.jl:59
- [25] macro expansion
-    @ ~/Projects/Finch.jl/src/execute.jl:51 [inlined]
- [26] (::Finch.var"#216#217"{DataType, DataType})()
-    @ Finch ~/Projects/Finch.jl/src/util.jl:71
- [27] #s339#215
-    @ ~/Projects/Finch.jl/src/util.jl:80 [inlined]
- [28] var"#s339#215"(::Any, ex::Any, a::Any)
-    @ Finch ./none:0
- [29] (::Core.GeneratedFunctionStub)(::Any, ::Vararg{Any})
-    @ Core ./boot.jl:602
- [30] execute(ex::Finch.FinchNotation.BlockInstance{Tuple{Finch.FinchNotation.DeclareInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:B}, Fiber{DenseLevel{Int64, ElementLevel{0, Int64}}}}, Finch.FinchNotation.LiteralInstance{0}}, Finch.FinchNotation.LoopInstance{Finch.FinchNotation.IndexInstance{:i}, Finch.FinchNotation.Dimensionless, Finch.FinchNotation.AssignInstance{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:B}, Fiber{DenseLevel{Int64, ElementLevel{0, Int64}}}}, Finch.FinchNotation.UpdaterInstance, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.InitWriter{0}()}, Finch.FinchNotation.CallInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:+}, Finch.FinchNotation.LiteralInstance{+}}, Tuple{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Symbol, Vector{Int64}}, Finch.FinchNotation.ReaderInstance, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}, Finch.FinchNotation.CallInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:+}, Finch.FinchNotation.LiteralInstance{+}}, Tuple{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Symbol, Vector{Int64}}, Finch.FinchNotation.ReaderInstance, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}, Finch.FinchNotation.LiteralInstance{0}}}}}}}}})
-    @ Finch ~/Projects/Finch.jl/src/execute.jl:48
- [31] pointwise_sum(::Vector{Int64}, ::Vararg{Vector{Int64}})
-    @ Main ./none:12
- [32] top-level scope
-    @ none:1
+Dense [1:2]
+├─[1]: 4
+├─[2]: 6
 
 ```
 

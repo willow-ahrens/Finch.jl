@@ -160,7 +160,7 @@ function pointwise_finch_expr(ex, ::Type{<:Broadcast.Broadcasted{Style, Axes, Ca
 end
 
 function pointwise_finch_expr(ex, T, ctx, idxs)
-    src = freshen(ctx, :src)
+    src = freshen(ctx.code, :src)
     push!(ctx.code.preamble, :($src = $ex))
     :($src[$(idxs[1:ndims(T)]...)])
 end
@@ -171,7 +171,7 @@ end
 
 @staged function copyto_broadcast_helper!(out, bc)
     contain(LowerJulia()) do ctx
-        idxs = [freshen(ctx, :idx, n) for n = 1:ndims(bc)]
+        idxs = [freshen(ctx.code, :idx, n) for n = 1:ndims(bc)]
         pw_ex = pointwise_finch_expr(:bc, bc, ctx, idxs)
         exts = Expr(:block, (:($idx = _) for idx in reverse(idxs))...)
         quote

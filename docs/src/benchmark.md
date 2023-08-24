@@ -85,13 +85,13 @@ Benchmark the kernel, ignoring allocation costs for y
 
 ````
 BenchmarkTools.Trial: 10000 samples with 211 evaluations.
- Range (min … max):  355.251 ns … 872.038 ns  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     356.242 ns               ┊ GC (median):    0.00%
- Time  (mean ± σ):   360.181 ns ±  13.733 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+ Range (min … max):  355.450 ns … 707.346 ns  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     357.820 ns               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   361.343 ns ±  15.253 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-  █▅▇▃           ▃▁▂                                            ▂
-  ████▆▁▃▅▃▄▄▃▄▄▄████▇▇▆▇▆▇▆▇▇▇▆▇▆▅▇▇▇▆▇▇▆▆▆▆▆▆▆▆▇▆▅▆▆▅▆▅▅▅▅▆▄▆ █
-  355 ns        Histogram: log(frequency) by time        420 ns <
+  █▆▇▂         ▁▃▃▂                                             ▂
+  ████▄▃▁▃▄▄▄▄▅█████▇▇▅▅▅▅▇█▇█▇█▆▇▅▇▆▆▇▆▇▆▆▄▅▅▄▅▅▇▅▇▆▆▆▆▆▁▄▅▅▄▆ █
+  355 ns        Histogram: log(frequency) by time        428 ns <
 
  Memory estimate: 0 bytes, allocs estimate: 0.
 ````
@@ -114,13 +114,13 @@ end
 
 ````
 BenchmarkTools.Trial: 10000 samples with 202 evaluations.
- Range (min … max):  387.376 ns …  21.042 μs  ┊ GC (min … max): 0.00% … 97.80%
- Time  (median):     407.797 ns               ┊ GC (median):    0.00%
- Time  (mean ± σ):   434.074 ns ± 639.488 ns  ┊ GC (mean ± σ):  5.28% ±  3.51%
+ Range (min … max):  387.787 ns …   3.469 μs  ┊ GC (min … max): 0.00% … 84.81%
+ Time  (median):     391.500 ns               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   406.270 ns ± 136.374 ns  ┊ GC (mean ± σ):  1.66% ±  4.33%
 
-  ▅█▆▂     ▂▅▆▆▅▄▃▃▃▃▂▃▃▃▃▃▂▂▂▁▁▁▂▂▁▁   ▁ ▁                     ▂
-  ████▇▅▂▅▇████████████████████████████████████▇█▇▇▇▇▆▇▆▆▆▆▄▆▆▆ █
-  387 ns        Histogram: log(frequency) by time        494 ns <
+  ▂██▄▁      ▂▄▃▃▂▂▁      ▁▁▁   ▁                               ▁
+  █████▆▂▄▅▃▄████████▇▇▇▇█████▇███▇▇▇▇▇▆▇▆▇▇▇▅▅▆▅▅▅▅▅▆▆▅▄▅▄▄▅▄▄ █
+  388 ns        Histogram: log(frequency) by time        485 ns <
 
  Memory estimate: 608 bytes, allocs estimate: 2.
 ````
