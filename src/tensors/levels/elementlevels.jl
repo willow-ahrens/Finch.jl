@@ -14,8 +14,8 @@ Dense [1:3]
 ├─[3]: 3.0
 ```
 """
-struct ElementLevel{D, Tv}
-    val::Vector{Tv}
+struct ElementLevel{D, Tv, V<:AbstractVector{<:Tv}}
+    val::V
 end
 const Element = ElementLevel
 
@@ -23,23 +23,32 @@ function ElementLevel(d, args...)
     isbits(d) || throw(ArgumentError("Finch currently only supports isbits defaults"))
     ElementLevel{d}(args...)
 end
-ElementLevel{D}() where {D} = ElementLevel{D, typeof(D)}()
-ElementLevel{D}(val::Vector{Tv}) where {D, Tv} = ElementLevel{D, Tv}(val)
+ElementLevel{D}() where {D} = ElementLevel{D, typeof(D), Vector{typeof(D)}}()
+ElementLevel{D}(val::V) where {D, V} = ElementLevel{D, eltype(V), V}(val)
 
-ElementLevel{D, Tv}() where {D, Tv} = ElementLevel{D, Tv}(Tv[])
+ElementLevel{D, Tv}() where {D, Tv} = ElementLevel{D, Tv, Vector{Tv}}(empty(Vector{Tv}))
+ElementLevel{D, Tv, V}() where {D, Tv, V} = ElementLevel{D, Tv, V}(empty(V))
 
 Base.summary(::Element{D}) where {D} = "Element($(D))"
 similar_level(::ElementLevel{D}) where {D} = ElementLevel{D}()
 
+function memory_type(::Type{ElementLevel{D, Tv, V}}) where {D, Tv, V}
+    return containertype(V)
+end
+
+function moveto(lvl::ElementLevel{D, Tv, V},  ::Type{MemType}) where {D, Tv, V, MemType <: AbstractVector}
+    valp = MemType(lvl.val)
+    return ElementLevel{D, Tv, MemType{Tv}}(valp)
+end
+
 pattern!(lvl::ElementLevel) = Pattern()
+redefault!(lvl::ElementLevel{D, Tv, V}, init) where {D, Tv, V} = 
+    ElementLevel{init, Tv, V}(lvl.val)
 
-redefault!(lvl::ElementLevel{D, Tv}, init) where {D, Tv} = 
-    ElementLevel{init, Tv}(lvl.val)
-
-function Base.show(io::IO, lvl::ElementLevel{D, Tv}) where {D, Tv}
+function Base.show(io::IO, lvl::ElementLevel{D, Tv, V}) where {D, Tv, V}
     print(io, "Element{")
     show(io, D)
-    print(io, ", $Tv}(")
+    print(io, ", $Tv, $V}(")
     if get(io, :compact, false)
         print(io, "…")
     else
@@ -56,9 +65,9 @@ end
 @inline level_ndims(::Type{<:ElementLevel}) = 0
 @inline level_size(::ElementLevel) = ()
 @inline level_axes(::ElementLevel) = ()
-@inline level_eltype(::Type{ElementLevel{D, Tv}}) where {D, Tv} = Tv
+@inline level_eltype(::Type{ElementLevel{D, Tv, V}}) where {D, Tv, V} = Tv
 @inline level_default(::Type{<:ElementLevel{D}}) where {D} = D
-data_rep_level(::Type{<:ElementLevel{D, Tv}}) where {D, Tv} = ElementData(D, Tv)
+data_rep_level(::Type{<:ElementLevel{D, Tv, V}}) where {D, Tv, V} = ElementData(D, Tv, V)
 
 (fbr::Fiber{<:ElementLevel})() = SubFiber(fbr.lvl, 1)()
 function (fbr::SubFiber{<:ElementLevel})()
@@ -75,7 +84,7 @@ struct VirtualElementLevel
 end
 
 lower(lvl::VirtualElementLevel, ctx::AbstractCompiler, ::DefaultStyle) = lvl.ex
-function virtualize(ex, ::Type{ElementLevel{D, Tv}}, ctx, tag=:lvl) where {D, Tv}
+function virtualize(ex, ::Type{ElementLevel{D, Tv, V}}, ctx, tag=:lvl) where {D, Tv, V}
     sym = ctx.freshen(tag)
     val_alloc = ctx.freshen(sym, :_val_alloc)
     val = ctx.freshen(sym, :_val)

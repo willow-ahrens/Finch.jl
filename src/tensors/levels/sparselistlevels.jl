@@ -33,11 +33,11 @@ SparseList (0.0) [:,1:3]
 
 ```
 """
-struct SparseListLevel{Ti, Tp, Lvl}
+struct SparseListLevel{Ti, Tp, Lvl, VTi<:AbstractVector{Ti}, VTp<:AbstractVector{Tp}}
     lvl::Lvl
     shape::Ti
-    ptr::Vector{Tp}
-    idx::Vector{Ti}
+    ptr::VTp
+    idx::VTi
 end
 const SparseList = SparseListLevel
 SparseListLevel(lvl) = SparseListLevel{Int}(lvl)
@@ -45,13 +45,32 @@ SparseListLevel(lvl, shape, args...) = SparseListLevel{typeof(shape)}(lvl, shape
 SparseListLevel{Ti}(lvl, args...) where {Ti} = SparseListLevel{Ti, Int}(lvl, args...)
 SparseListLevel{Ti, Tp}(lvl, args...) where {Ti, Tp} = SparseListLevel{Ti, Tp, typeof(lvl)}(lvl, args...)
 
+
 SparseListLevel{Ti, Tp, Lvl}(lvl) where {Ti, Tp, Lvl} = SparseListLevel{Ti, Tp, Lvl}(lvl, zero(Ti))
 SparseListLevel{Ti, Tp, Lvl}(lvl, shape) where {Ti, Tp, Lvl} = 
-    SparseListLevel{Ti, Tp, Lvl}(lvl, Ti(shape), Tp[1], Ti[])
+    SparseListLevel{Ti, Tp, Lvl, memory_type(Lvl){Ti, 1}, memory_type(Lvl){Tp, 1}}(lvl, Ti(shape), single(memory_type(Lvl){Ti, 1}), empty(memory_type(Lvl){Tp, 1}))
 
+SparseListLevel{Ti, Tp, Lvl}(lvl, shape, arg1, arg2) where {Ti, Tp, Lvl} = 
+    SparseListLevel{Ti, Tp, Lvl, typeof(arg1), typeof(arg2)}(lvl, Ti(shape), arg1, arg2)
+
+#SparseListLevel{Ti, Tp, Lvl, VTi, VTp}(lvl, shape, ptr, idx) where {Ti, Tp, Lvl, VTi, VTp} = SparseListLevel{Ti, Tp, Lvl, VTi, VTp}(lvl, shape, ptr, idx)
+    
 Base.summary(lvl::SparseListLevel) = "SparseList($(summary(lvl.lvl)))"
 similar_level(lvl::SparseListLevel) = SparseList(similar_level(lvl.lvl))
 similar_level(lvl::SparseListLevel, dim, tail...) = SparseList(similar_level(lvl.lvl, tail...), dim)
+
+function memory_type(lvl::SparseListLevel{Ti, Tp, Lvl, VTi, VTp}) where {Ti, Tp, Lvl, VTi, VTp}
+    return containertype(VTi)
+end
+
+function moveto(lvl::SparseListLevel{Ti, Tp, Lvl, VTi, VTp}, ::Type{MemType}) where {Ti, Tp, Lvl, VTi, VTp, MemType <: AbstractVector}
+    lvl_2 = moveto(lvl.lvl, MemType)
+    ptr_2 = MemType(lvl.ptr)
+    idx_2 = MemType(lvl.idx)
+    return SparseListLevel{Ti, Tp, Lvl, MemType{Ti}, MemType{Tp}}(lvl_2, lvl.shape, ptr_2, idx_2)
+end
+
+
 
 function countstored_level(lvl::SparseListLevel, pos)
     countstored_level(lvl.lvl, lvl.ptr[pos + 1] - 1)
@@ -63,7 +82,7 @@ pattern!(lvl::SparseListLevel{Ti, Tp}) where {Ti, Tp} =
 redefault!(lvl::SparseListLevel{Ti, Tp}, init) where {Ti, Tp} = 
     SparseListLevel{Ti, Tp}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.idx)
 
-function Base.show(io::IO, lvl::SparseListLevel{Ti, Tp}) where {Ti, Tp}
+function Base.show(io::IO, lvl::SparseListLevel{Ti, Tp, Lvl, VTi, VTp}) where {Ti, Tp, Lvl, VTi, VTp}
     if get(io, :compact, false)
         print(io, "SparseList(")
     else
@@ -76,9 +95,9 @@ function Base.show(io::IO, lvl::SparseListLevel{Ti, Tp}) where {Ti, Tp}
     if get(io, :compact, false)
         print(io, "…")
     else
-        show(IOContext(io, :typeinfo=>Vector{Tp}), lvl.ptr)
+        show(IOContext(io, :typeinfo=>VTp), lvl.ptr)
         print(io, ", ")
-        show(IOContext(io, :typeinfo=>Vector{Ti}), lvl.idx)
+        show(IOContext(io, :typeinfo=>VTi), lvl.idx)
     end
     print(io, ")")
 end
@@ -121,7 +140,7 @@ mutable struct VirtualSparseListLevel
     qos_fill
     qos_stop
 end
-function virtualize(ex, ::Type{SparseListLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}
+function virtualize(ex, ::Type{SparseListLevel{Ti, Tp, Lvl, VTi, VTp}}, ctx, tag=:lvl) where {Ti, Tp, Lvl, VTi, VTp}
     sym = ctx.freshen(tag)
     shape = value(:($sym.shape), Int)
     qos_fill = ctx.freshen(sym, :_qos_fill)
