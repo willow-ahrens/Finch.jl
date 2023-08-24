@@ -1,3 +1,18 @@
+abstract type CompileFlag end
+struct FinchDebug <: CompileFlag end
+const finchdebug = FinchDebug()
+virtualize(ex, ::Type{FinchDebug}, ctx) = FinchDebug()
+struct FinchSafe <: CompileFlag end
+const finchsafe = FinchSafe()
+virtualize(ex, ::Type{FinchSafe}, ctx) = FinchSafe()
+struct FinchFast <: CompileFlag end
+const finchfast = FinchFast()
+virtualize(ex, ::Type{FinchFast}, ctx) = FinchFast()
+
+issafe(::FinchDebug) = true
+issafe(::FinchSafe) = true
+issafe(::FinchFast) = false
+
 """
     instantiate!(prgm, ctx)
 
@@ -57,7 +72,7 @@ execute(ex) = execute(ex, NamedTuple())
     end
 end
 
-function execute_code(ex, T; algebra = DefaultAlgebra(), ctx = LowerJulia(algebra = algebra))
+function execute_code(ex, T; algebra = DefaultAlgebra(), flag = FinchFast(), ctx = LowerJulia(algebra = algebra))
     code = contain(ctx) do ctx_2
         prgm = nothing
         prgm = virtualize(ex, T, ctx_2.code)
