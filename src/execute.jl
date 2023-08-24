@@ -185,7 +185,7 @@ function finch_kernel(fname, args, prgm, algebra = DefaultAlgebra(); ctx = Lower
     maybe_typeof(x) = x isa Type ? x : typeof(x)
     code = contain(ctx) do ctx_2
         foreach(args) do (key, val)
-            ctx_2.bindings[variable(key)] = virtualize(key, maybe_typeof(val), ctx_2, key)
+            ctx_2.bindings[variable(key)] = virtualize(key, maybe_typeof(val), ctx_2.code, key)
         end
         execute_code(:UNREACHABLE, prgm, ctx = ctx_2)
     end |> pretty |> dataflow |> unquote_literals

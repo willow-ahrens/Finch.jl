@@ -32,7 +32,7 @@ struct ConcordizeVisitor
     scope
 end
 
-freshen(ctx::ConcordizeVisitor, tags...) = freshen(ctx.ctx, tags...)
+freshen(ctx::ConcordizeVisitor, tags...) = freshen(ctx.ctx.code, tags...)
 
 function (ctx::ConcordizeVisitor)(node::FinchNode)
     function isbound(x::FinchNode)
@@ -63,7 +63,7 @@ function (ctx::ConcordizeVisitor)(node::FinchNode)
     end
 
     if node.kind === loop
-        ctx_2 = ConcordizeVisitor(ctx, union(ctx.scope, [node.idx]))
+        ctx_2 = ConcordizeVisitor(ctx.ctx, union(ctx.scope, [node.idx]))
         node = loop(node.idx, node.ext, ctx_2(node.body))
     elseif node.kind === define
         push!(ctx.scope, node.lhs)

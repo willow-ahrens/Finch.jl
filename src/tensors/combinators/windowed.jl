@@ -49,6 +49,8 @@ function virtual_resize!(arr::VirtualWindowedArray, ctx::AbstractCompiler, dims.
     virtual_resize!(arr.body, ctx, something.(arr.dims, dims)...)
 end
 
+virtual_default(arr::VirtualWindowedArray, ctx::AbstractCompiler) = virtual_default(arr.body, ctx)
+
 function instantiate_reader(arr::VirtualWindowedArray, ctx, protos)
     VirtualWindowedArray(instantiate_reader(arr.body, ctx, protos), arr.dims)
 end
