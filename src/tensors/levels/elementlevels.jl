@@ -76,9 +76,9 @@ end
 
 lower(lvl::VirtualElementLevel, ctx::AbstractCompiler, ::DefaultStyle) = lvl.ex
 function virtualize(ex, ::Type{ElementLevel{D, Tv}}, ctx, tag=:lvl) where {D, Tv}
-    sym = ctx.code.freshen(tag)
-    val_alloc = ctx.code.freshen(sym, :_val_alloc)
-    val = ctx.code.freshen(sym, :_val)
+    sym = freshen(ctx, tag)
+    val_alloc = freshen(ctx, sym, :_val_alloc)
+    val = freshen(ctx, sym, :_val)
     push!(ctx.code.preamble, quote
         $sym = $ex
     end)
@@ -129,7 +129,7 @@ end
 
 function instantiate_reader(fbr::VirtualSubFiber{VirtualElementLevel}, ctx, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
-    val = ctx.code.freshen(lvl.ex, :_val)
+    val = freshen(ctx.code, lvl.ex, :_val)
     return Thunk(
         preamble = quote
             $val = $(lvl.ex).val[$(ctx(pos))]

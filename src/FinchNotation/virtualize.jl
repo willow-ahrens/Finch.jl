@@ -2,7 +2,7 @@ Finch.virtualize(ex, (@nospecialize T), ctx) = value(ex, T)
 
 Finch.virtualize(ex, ::Type{FinchNotation.LiteralInstance{val}}, ctx) where {val} = literal(val)
 function Finch.virtualize(ex, ::Type{FinchNotation.IndexInstance{name}}, ctx) where {name}
-    ctx.code.freshen(name)
+    freshen(ctx, name)
     index(name)
 end
 Finch.virtualize(ex, ::Type{FinchNotation.DefineInstance{Lhs, Rhs}}, ctx) where {Lhs, Rhs} = define(virtualize(:($ex.lhs), Lhs, ctx), virtualize(:($ex.rhs), Rhs, ctx))

@@ -80,7 +80,7 @@ mutable struct VirtualSparseTriangleLevel
     shape
 end
 function virtualize(ex, ::Type{SparseTriangleLevel{N, Ti, Lvl}}, ctx, tag=:lvl) where {N, Ti, Lvl}
-    sym = ctx.code.freshen(tag)
+    sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Int)
     push!(ctx.code.preamble, quote
         $sym = $ex
@@ -174,7 +174,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ct
     tag = lvl.ex
     Ti = lvl.Ti
 
-    q = ctx.code.freshen(tag, :_q)
+    q = freshen(ctx.code, tag, :_q)
 
     # d is the dimension we are on 
     # j is coordinate of previous dimension
@@ -191,7 +191,7 @@ end
 
 function instantiate_reader(trv::SparseTriangleFollowTraversal, ctx, subprotos, ::Union{typeof(defaultread), typeof(follow)})
     (lvl, d, j, n, q) = (trv.lvl, trv.d, trv.j, trv.n, trv.q)
-    s = ctx.code.freshen(lvl.ex, :_s)
+    s = freshen(ctx.code, lvl.ex, :_s)
     if d == 1
         Furlable(
             body = (ctx, ext) -> Sequence([
@@ -238,13 +238,13 @@ struct SparseTriangleLaminateTraversal
 end
 
 instantiate_updater(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, protos) =
-    instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.code.freshen(:null)), ctx, protos)
+    instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, protos)
 function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseTriangleLevel}, ctx, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
 
-    q = ctx.code.freshen(tag, :_q)
+    q = freshen(ctx.code, tag, :_q)
 
     # d is the dimension we are on 
     # j is coordinate of previous dimension
@@ -261,7 +261,7 @@ end
 
 function instantiate_updater(trv::SparseTriangleLaminateTraversal, ctx, subprotos, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)})
     (lvl, d, j, n, q, dirty) = (trv.lvl, trv.d, trv.j, trv.n, trv.q, trv.dirty)
-    s = ctx.code.freshen(lvl.ex, :_s)
+    s = freshen(ctx.code, lvl.ex, :_s)
     if d == 1
         Furlable(
             body = (ctx, ext) -> Sequence([

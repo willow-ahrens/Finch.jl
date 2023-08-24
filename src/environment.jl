@@ -1,11 +1,11 @@
 abstract type AbstractCompiler end
 
-struct Freshen
+struct Namespace
     seen
     counts
 end
-Freshen() = Freshen(Set(), Dict())
-function (spc::Freshen)(tags...)
+Namespace() = Namespace(Set(), Dict())
+function freshen(spc::Namespace, tags...)
     name = Symbol(tags...)
     m = match(r"^(.*)_(\d*)$", string(name))
     if m === nothing
@@ -28,13 +28,14 @@ function (spc::Freshen)(tags...)
 end
 
 @kwdef mutable struct JuliaContext <: AbstractCompiler
-    freshen::Freshen = Freshen()
+    namespace::Namespace = Namespace()
     preamble::Vector{Any} = []
     epilogue::Vector{Any} = []
 end
 
 virtualize(ex, T, ctx, tag) = virtualize(ex, T, ctx)
 
+freshen(ctx::JuliaContext, tags...) = freshen(ctx.namespace, tags...)
 
 """
     contain(f, ctx)
@@ -46,7 +47,7 @@ contain.
 function contain(f, ctx::JuliaContext)
     preamble = Expr(:block)
     epilogue = Expr(:block)
-    ctx_2 = JuliaContext(ctx.freshen, preamble.args, epilogue.args)
+    ctx_2 = JuliaContext(ctx.namespace, preamble.args, epilogue.args)
     body = f(ctx_2)
     if epilogue == Expr(:block)
         return quote
@@ -54,7 +55,7 @@ function contain(f, ctx::JuliaContext)
             $body
         end
     else
-        res = ctx.freshen(:res)
+        res = freshen(ctx, :res)
         return quote
             $preamble
             $res = $body

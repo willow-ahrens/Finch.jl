@@ -1,6 +1,6 @@
 module FinchNotation
     using RewriteTools, SyntaxInterface, AbstractTrees, Finch
-    using Finch: virtualize
+    using Finch: virtualize, freshen
 
     export finch_leaf
     export literal

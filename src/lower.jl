@@ -9,6 +9,8 @@
     bounds_rules = get_bounds_rules(algebra, shash)
 end
 
+freshen(ctx::LowerJulia, tags...) = freshen(ctx.code, tags...)
+
 function contain(f, ctx::LowerJulia)
     contain(ctx.code) do code_2
         f(LowerJulia(code_2, ctx.algebra, ctx.bindings, ctx.modes, ctx.scope, ctx.shash, ctx.program_rules, ctx.bounds_rules))
@@ -46,7 +48,7 @@ end
 function cache!(ctx::AbstractCompiler, var, val)
     val = finch_leaf(val)
     isconstant(val) && return val
-    var = ctx.code.freshen(var)
+    var = freshen(ctx.code,var)
     val = simplify(val, ctx)
     push!(ctx.code.preamble, quote
         $var = $(contain(ctx_2 -> ctx_2(val), ctx))
@@ -155,7 +157,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
         @assert root.ext.kind === virtual
         lower_loop(ctx, root, root.ext.val)
     elseif root.kind === sieve
-        cond = ctx.code.freshen(:cond)
+        cond = freshen(ctx.code,:cond)
         push!(ctx.code.preamble, :($cond = $(ctx(root.cond))))
     
         return quote
@@ -207,8 +209,8 @@ end
 
 function lower_loop(ctx, root, ext::ParallelDimension)
     #TODO Safety check that the loop can actually be parallel
-    tid = index(ctx.code.freshen(:tid))
-    i = ctx.code.freshen(:i)
+    tid = index(freshen(ctx.code,:tid))
+    i = freshen(ctx.code,:i)
     root_2 = loop(tid, Extent(value(i, Int), value(i, Int)),
         loop(root.idx, ext.ext,
             sieve(access(VirtualSplitMask(value(:(Threads.nthreads()))), reader(), root.idx, tid),

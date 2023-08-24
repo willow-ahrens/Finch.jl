@@ -17,7 +17,7 @@ function lower(arr::VirtualAbstractArray, ctx::AbstractCompiler,  ::DefaultStyle
 end
 
 function virtualize(ex, ::Type{<:AbstractArray{T, N}}, ctx, tag=:tns) where {T, N}
-    sym = ctx.code.freshen(tag)
+    sym = freshen(ctx, tag)
     push!(ctx.code.preamble, :($sym = $ex))
     VirtualAbstractArray(sym, T, N)
 end

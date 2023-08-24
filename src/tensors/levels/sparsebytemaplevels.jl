@@ -93,10 +93,10 @@ mutable struct VirtualSparseByteMapLevel
     qos_stop
 end
 function virtualize(ex, ::Type{SparseByteMapLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}   
-    sym = ctx.code.freshen(tag)
+    sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Int)
-    qos_fill = ctx.code.freshen(sym, :_qos_fill)
-    qos_stop = ctx.code.freshen(sym, :_qos_stop)
+    qos_fill = freshen(ctx, sym, :_qos_fill)
+    qos_stop = freshen(ctx, sym, :_qos_stop)
     push!(ctx.code.preamble, quote
         $sym = $ex
         #TODO this line is not strictly correct unless the tensor is trimmed.
@@ -136,10 +136,10 @@ virtual_level_default(lvl::VirtualSparseByteMapLevel) = virtual_level_default(lv
 function declare_level!(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, pos, init)
     Ti = lvl.Ti
     Tp = lvl.Tp
-    r = ctx.code.freshen(lvl.ex, :_r)
-    p = ctx.code.freshen(lvl.ex, :_p)
-    q = ctx.code.freshen(lvl.ex, :_q)
-    i = ctx.code.freshen(lvl.ex, :_i)
+    r = freshen(ctx.code, lvl.ex, :_r)
+    p = freshen(ctx.code, lvl.ex, :_p)
+    q = freshen(ctx.code, lvl.ex, :_q)
+    i = freshen(ctx.code, lvl.ex, :_i)
     push!(ctx.code.preamble, quote
         for $r = 1:$(lvl.qos_fill)
             $p = first($(lvl.ex).srt[$r])
@@ -167,7 +167,7 @@ end
 function thaw_level!(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, pos)
     Ti = lvl.Ti
     Tp = lvl.Tp
-    p = ctx.code.freshen(lvl.ex, :_p)
+    p = freshen(ctx.code, lvl.ex, :_p)
     push!(ctx.code.preamble, quote
         for $p = 1:$(ctx(pos))
             $(lvl.ex).ptr[$p] -= $(lvl.ex).ptr[$p + 1]
@@ -179,7 +179,7 @@ function thaw_level!(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, pos)
 end
 
 function trim_level!(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, pos)
-    ros = ctx.code.freshen(:ros)
+    ros = freshen(ctx.code, :ros)
     push!(ctx.code.preamble, quote
         resize!($(lvl.ex).ptr, $(ctx(pos)) + 1)
         resize!($(lvl.ex).tbl, $(ctx(pos)) * $(ctx(lvl.shape)))
@@ -194,9 +194,9 @@ function assemble_level!(lvl::VirtualSparseByteMapLevel, ctx, pos_start, pos_sto
     Tp = lvl.Tp
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_start, pos_stop))
-    q_start = ctx.code.freshen(lvl.ex, :q_start)
-    q_stop = ctx.code.freshen(lvl.ex, :q_stop)
-    q = ctx.code.freshen(lvl.ex, :q)
+    q_start = freshen(ctx.code, lvl.ex, :q_start)
+    q_stop = freshen(ctx.code, lvl.ex, :q_stop)
+    q = freshen(ctx.code, lvl.ex, :q)
 
     quote
         $q_start = ($(ctx(pos_start)) - $(Tp(1))) * $(ctx(lvl.shape)) + $(Tp(1))
@@ -210,9 +210,9 @@ function assemble_level!(lvl::VirtualSparseByteMapLevel, ctx, pos_start, pos_sto
 end
 
 function freeze_level!(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, pos_stop)
-    r = ctx.code.freshen(lvl.ex, :_r)
-    p = ctx.code.freshen(lvl.ex, :_p)
-    p_prev = ctx.code.freshen(lvl.ex, :_p_prev)
+    r = freshen(ctx.code, lvl.ex, :_r)
+    p = freshen(ctx.code, lvl.ex, :_p)
+    p_prev = freshen(ctx.code, lvl.ex, :_p_prev)
     pos_stop = cache!(ctx, :pos_stop, pos_stop)
     Ti = lvl.Ti
     Tp = lvl.Tp
@@ -238,11 +238,11 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
     tag = lvl.ex
     Ti = lvl.Ti
     Tp = lvl.Tp
-    my_i = ctx.code.freshen(tag, :_i)
-    my_q = ctx.code.freshen(tag, :_q)
-    my_r = ctx.code.freshen(tag, :_r)
-    my_r_stop = ctx.code.freshen(tag, :_r_stop)
-    my_i_stop = ctx.code.freshen(tag, :_i_stop)
+    my_i = freshen(ctx.code, tag, :_i)
+    my_q = freshen(ctx.code, tag, :_q)
+    my_r = freshen(ctx.code, tag, :_r)
+    my_r_stop = freshen(ctx.code, tag, :_r_stop)
+    my_i_stop = freshen(ctx.code, tag, :_i_stop)
 
     Furlable(
         body = (ctx, ext) -> Thunk(
@@ -301,12 +301,12 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
     tag = lvl.ex
     Ti = lvl.Ti
     Tp = lvl.Tp
-    my_i = ctx.code.freshen(tag, :_i)
-    my_q = ctx.code.freshen(tag, :_q)
-    my_r = ctx.code.freshen(tag, :_r)
-    my_r_stop = ctx.code.freshen(tag, :_r_stop)
-    my_i_stop = ctx.code.freshen(tag, :_i_stop)
-    my_j = ctx.code.freshen(tag, :_j)
+    my_i = freshen(ctx.code, tag, :_i)
+    my_q = freshen(ctx.code, tag, :_q)
+    my_r = freshen(ctx.code, tag, :_r)
+    my_r_stop = freshen(ctx.code, tag, :_r_stop)
+    my_i_stop = freshen(ctx.code, tag, :_i_stop)
+    my_j = freshen(ctx.code, tag, :_j)
 
     Furlable(
         body = (ctx, ext) -> Thunk(
@@ -393,7 +393,7 @@ end
 function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, subprotos, ::typeof(follow))
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
-    my_q = cgx.freshen(tag, :_q)
+    my_q = freshen(ctx.code, tag, :_q)
     q = pos
 
 
@@ -416,13 +416,13 @@ is_laminable_updater(lvl::VirtualSparseByteMapLevel, ctx, ::Union{typeof(default
     is_laminable_updater(lvl.lvl, ctx, protos...)
 
 instantiate_updater(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, protos) = 
-    instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.code.freshen(:null)), ctx, protos)
+    instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, protos)
 function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseByteMapLevel}, ctx, subprotos, ::Union{typeof(defaultupdate), typeof(extrude), typeof(laminate)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp
-    my_q = ctx.code.freshen(tag, :_q)
-    dirty = ctx.code.freshen(:dirty)
+    my_q = freshen(ctx.code, tag, :_q)
+    dirty = freshen(ctx.code, :dirty)
 
     Furlable(
         tight = is_laminable_updater(lvl.lvl, ctx, subprotos...) ? nothing : lvl.lvl,

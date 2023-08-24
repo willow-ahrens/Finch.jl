@@ -20,7 +20,7 @@ end
 mutable struct VirtualFiber{Lvl} <: AbstractVirtualFiber{Lvl}
     lvl::Lvl
 end
-function virtualize(ex, ::Type{<:Fiber{Lvl}}, ctx, tag=ctx.code.freshen(:tns)) where {Lvl}
+function virtualize(ex, ::Type{<:Fiber{Lvl}}, ctx, tag=freshen(ctx, :tns)) where {Lvl}
     lvl = virtualize(:($ex.lvl), Lvl, ctx, Symbol(tag, :_lvl))
     VirtualFiber(lvl)
 end
@@ -41,7 +41,7 @@ mutable struct VirtualSubFiber{Lvl} <: AbstractVirtualFiber{Lvl}
     lvl::Lvl
     pos
 end
-function virtualize(ex, ::Type{<:SubFiber{Lvl, Pos}}, ctx, tag=ctx.code.freshen(:tns)) where {Lvl, Pos}
+function virtualize(ex, ::Type{<:SubFiber{Lvl, Pos}}, ctx, tag=freshen(ctx, :tns)) where {Lvl, Pos}
     lvl = virtualize(:($ex.lvl), Lvl, ctx, Symbol(tag, :_lvl))
     pos = virtualize(:($ex.pos), Pos, ctx)
     VirtualSubFiber(lvl, pos)
@@ -164,7 +164,7 @@ mutable struct VirtualTrackedSubFiber{Lvl}
     pos
     dirty
 end
-function virtualize(ex, ::Type{<:TrackedSubFiber{Lvl, Pos, Dirty}}, ctx, tag=ctx.code.freshen(:tns)) where {Lvl, Pos, Dirty}
+function virtualize(ex, ::Type{<:TrackedSubFiber{Lvl, Pos, Dirty}}, ctx, tag=freshen(ctx, :tns)) where {Lvl, Pos, Dirty}
     lvl = virtualize(:($ex.lvl), Lvl, ctx, Symbol(tag, :_lvl))
     pos = virtualize(:($ex.pos), Pos, ctx)
     dirty = virtualize(:($ex.dirty), Dirty, ctx)

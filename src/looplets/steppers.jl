@@ -30,7 +30,7 @@ combine_style(a::StepperStyle, b::PhaseStyle) = b
 function lower(root::FinchNode, ctx::AbstractCompiler,  style::StepperStyle)
     root.kind === loop || error("unimplemented")
     i = getname(root.idx)
-    i0 = ctx.code.freshen(i, :_start)
+    i0 = freshen(ctx.code, i, :_start)
     push!(ctx.code.preamble, quote
         $i = $(ctx(getstart(root.ext)))
     end)

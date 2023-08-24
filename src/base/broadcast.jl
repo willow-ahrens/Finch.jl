@@ -144,7 +144,7 @@ pointwise_rep_solid(tns::HollowData) = pointwise_rep_solid(tns.lvl)
 pointwise_rep_solid(ex) = ex
 
 function pointwise_finch_expr(ex, ::Type{<:Broadcast.Broadcasted{Style, Axes, F, Args}}, ctx, idxs) where {Style, F, Axes, Args}
-    f = ctx.code.freshen(:f)
+    f = freshen(ctx, :f)
     push!(ctx.code.preamble, :($f = $ex.f))
     args = map(enumerate(Args.parameters)) do (n, Arg)
         pointwise_finch_expr(:($ex.args[$n]), Arg, ctx, idxs)
@@ -160,7 +160,7 @@ function pointwise_finch_expr(ex, ::Type{<:Broadcast.Broadcasted{Style, Axes, Ca
 end
 
 function pointwise_finch_expr(ex, T, ctx, idxs)
-    src = ctx.code.freshen(:src)
+    src = freshen(ctx, :src)
     push!(ctx.code.preamble, :($src = $ex))
     :($src[$(idxs[1:ndims(T)]...)])
 end
@@ -171,7 +171,7 @@ end
 
 @staged function copyto_broadcast_helper!(out, bc)
     contain(LowerJulia()) do ctx
-        idxs = [ctx.code.freshen(:idx, n) for n = 1:ndims(bc)]
+        idxs = [freshen(ctx, :idx, n) for n = 1:ndims(bc)]
         pw_ex = pointwise_finch_expr(:bc, bc, ctx, idxs)
         exts = Expr(:block, (:($idx = _) for idx in reverse(idxs))...)
         quote
