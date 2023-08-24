@@ -46,11 +46,11 @@ export Limit
 
 include("util.jl")
 
+include("environment.jl")
 include("FinchNotation/FinchNotation.jl")
 using .FinchNotation
 using .FinchNotation: and, or, InitWriter
 include("semantics.jl")
-include("virtualize.jl")
 include("style.jl")
 include("dimensions.jl")
 include("lower.jl")

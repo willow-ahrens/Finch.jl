@@ -1,5 +1,6 @@
 module FinchNotation
     using RewriteTools, SyntaxInterface, AbstractTrees, Finch
+    using Finch: virtualize
 
     export finch_leaf
     export literal
@@ -41,6 +42,7 @@ module FinchNotation
 
     include("nodes.jl")
     include("instances.jl")
+    include("virtualize.jl")
     include("protocols.jl")
     include("syntax.jl")
 end
