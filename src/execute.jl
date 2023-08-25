@@ -1,17 +1,17 @@
-abstract type CompileFlag end
-struct FinchDebug <: CompileFlag end
-const finchdebug = FinchDebug()
-virtualize(ex, ::Type{FinchDebug}, ctx) = FinchDebug()
-struct FinchSafe <: CompileFlag end
-const finchsafe = FinchSafe()
-virtualize(ex, ::Type{FinchSafe}, ctx) = FinchSafe()
-struct FinchFast <: CompileFlag end
-const finchfast = FinchFast()
-virtualize(ex, ::Type{FinchFast}, ctx) = FinchFast()
+abstract type CompileMode end
+struct DebugFinch <: CompileMode end
+const debugfinch = DebugFinch()
+virtualize(ex, ::Type{DebugFinch}, ctx) = DebugFinch()
+struct SafeFinch <: CompileMode end
+const safefinch = SafeFinch()
+virtualize(ex, ::Type{SafeFinch}, ctx) = SafeFinch()
+struct FastFinch <: CompileMode end
+const fastfinch = FastFinch()
+virtualize(ex, ::Type{FastFinch}, ctx) = FastFinch()
 
-issafe(::FinchDebug) = true
-issafe(::FinchSafe) = true
-issafe(::FinchFast) = false
+issafe(::DebugFinch) = true
+issafe(::SafeFinch) = true
+issafe(::FastFinch) = false
 
 """
     instantiate!(prgm, ctx)
@@ -118,7 +118,7 @@ function lower_global(prgm, ctx)
 end
 
 """
-    @finch [options] prgm
+    @finch [options...] prgm
 
 Run a finch program `prgm`. The syntax for a finch program is a set of nested
 loops, statements, and branches over pointwise array assignments. For example,
@@ -152,6 +152,12 @@ over the nonzeros of either.
 Semantically, Finch programs execute every iteration. However, Finch can use
 sparsity information to reliably skip iterations when possible.
 
+`options` are optional keyword arguments:
+
+ - `algebra`: the algebra to use for the program. The default is `DefaultAlgebra()`.
+ - `mode`: the optimization mode to use for the program. The default is `fastfinch`.
+ - `ctx`: the context to use for the program. The default is a `LowerJulia` context with the given options.
+
 See also: [`@finch_code`](@ref)
 """
 macro finch(opts_ex...)
@@ -177,8 +183,7 @@ end
 """
 @finch_code [options...] prgm
 
-Return the code that would be executed in order to run a finch program `prgm`
-with the given options.
+Return the code that would be executed in order to run a finch program `prgm`.
 
 See also: [`@finch`](@ref)
 """
@@ -192,19 +197,21 @@ macro finch_code(opts_ex...)
 end
 
 """
-    finch_kernel(fname, args, prgm, ctx = LowerJulia())
+    finch_kernel(fname, args, prgm; options...)
 
 Return a function definition for which can execute a Finch program of
 type `prgm`. Here, `fname` is the name of the function and `args` is a
 `iterable` of argument name => type pairs.
+
+See also: [`@finch`](@ref)
 """
-function finch_kernel(fname, args, prgm; algebra = DefaultAlgebra(), ctx = LowerJulia(algebra=algebra))
+function finch_kernel(fname, args, prgm; algebra = DefaultAlgebra(), mode = fastfinch, ctx = LowerJulia(algebra=algebra))
     maybe_typeof(x) = x isa Type ? x : typeof(x)
     code = contain(ctx) do ctx_2
         foreach(args) do (key, val)
             ctx_2.bindings[variable(key)] = virtualize(key, maybe_typeof(val), ctx_2.code, key)
         end
-        execute_code(:UNREACHABLE, prgm, algebra = algebra, ctx = ctx_2)
+        execute_code(:UNREACHABLE, prgm, algebra = algebra, mode = mode, ctx = ctx_2)
     end |> pretty |> dataflow |> unquote_literals
     arg_defs = map(((key, val),) -> :($key::$(maybe_typeof(val))), args)
     striplines(:(function $fname($(arg_defs...))
@@ -213,7 +220,7 @@ function finch_kernel(fname, args, prgm; algebra = DefaultAlgebra(), ctx = Lower
 end
 
 """
-    @finch_kernel [options] fname(args...) = prgm
+    @finch_kernel [options...] fname(args...) = prgm
 
 Return a definition for a function named `fname` which executes `@finch prgm` on
 the arguments `args`. `args` should be a list of variables holding
