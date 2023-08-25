@@ -2,6 +2,7 @@
     code = JuliaContext()
     algebra = DefaultAlgebra()
     bindings::Dict{Any, Any} = Dict()
+    mode = fastfinch
     modes::Dict{Any, Any} = Dict()
     scope = Set()
     shash = StaticHash()
@@ -11,7 +12,7 @@ end
 
 function contain(f, ctx::LowerJulia)
     contain(ctx.code) do code_2
-        f(LowerJulia(code_2, ctx.algebra, ctx.bindings, ctx.modes, ctx.scope, ctx.shash, ctx.program_rules, ctx.bounds_rules))
+        f(LowerJulia(code_2, ctx.algebra, ctx.bindings, ctx.mode, ctx.modes, ctx.scope, ctx.shash, ctx.program_rules, ctx.bounds_rules))
     end
 end
 

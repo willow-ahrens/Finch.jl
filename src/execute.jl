@@ -72,7 +72,7 @@ execute(ex) = execute(ex, NamedTuple())
     end
 end
 
-function execute_code(ex, T; algebra = DefaultAlgebra(), flag = FinchFast(), ctx = LowerJulia(algebra = algebra))
+function execute_code(ex, T; algebra = DefaultAlgebra(), mode = fastfinch, ctx = LowerJulia(algebra = algebra))
     code = contain(ctx) do ctx_2
         prgm = nothing
         prgm = virtualize(ex, T, ctx_2.code)

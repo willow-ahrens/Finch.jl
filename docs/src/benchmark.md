@@ -85,13 +85,13 @@ Benchmark the kernel, ignoring allocation costs for y
 
 ````
 BenchmarkTools.Trial: 10000 samples with 211 evaluations.
- Range (min … max):  355.450 ns …  2.389 μs  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     358.019 ns              ┊ GC (median):    0.00%
- Time  (mean ± σ):   367.705 ns ± 38.716 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+ Range (min … max):  355.450 ns … 613.550 ns  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     358.019 ns               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   364.433 ns ±  16.314 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-  █▇▅      ▂▃▃▂▁▁ ▁▁▁  ▁▁▁▁                                    ▁
-  ███▆▇▆▇▆▆███████████████████▇██▇▇▇█▇▇▇▇█▆▆▆▆▆▆▅▅▆▆▆▅▅▅▅▅▆▄▅▄ █
-  355 ns        Histogram: log(frequency) by time       455 ns <
+  █▆█▁        ▃▅▂▃ ▁             ▁                              ▂
+  ████▆▅▄▅▄▅▄▄███████████▇▇▇██▇█▇███▇▇▇█▆▇▆▇▆▇▇▆▆▆▇▅▆▆▆▅▆▅▅▆▅▅▅ █
+  355 ns        Histogram: log(frequency) by time        430 ns <
 
  Memory estimate: 0 bytes, allocs estimate: 0.
 ````
@@ -114,13 +114,13 @@ end
 
 ````
 BenchmarkTools.Trial: 10000 samples with 203 evaluations.
- Range (min … max):  387.724 ns …   4.032 μs  ┊ GC (min … max): 0.00% … 86.76%
- Time  (median):     392.448 ns               ┊ GC (median):    0.00%
- Time  (mean ± σ):   412.556 ns ± 154.128 ns  ┊ GC (mean ± σ):  1.84% ±  4.37%
+ Range (min … max):  387.517 ns …   3.657 μs  ┊ GC (min … max): 0.00% … 86.61%
+ Time  (median):     392.241 ns               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   409.851 ns ± 142.936 ns  ┊ GC (mean ± σ):  1.71% ±  4.33%
 
-   ▇█▆▂      ▂▃▃▂▂▂▁▂▂▂▁▂▂▂▂▁▁▁▂▁▁         ▁                    ▂
-  ████████▇██████████████████████████████████▇▇▇▇▆▆▆▆▆▅▆▆▆▅▅▆▅▅ █
-  388 ns        Histogram: log(frequency) by time        486 ns <
+  ▁██▅▁     ▄▅▄▂▁▁    ▁▁▁▁ ▁▁▁                                  ▂
+  ███████▆▆▆████████████████████████▇▇▇▆▆▇▇▇▇▆▆▆▆▆▆▆▆▆▅▅▆▅▅▅▅▄▄ █
+  388 ns        Histogram: log(frequency) by time        500 ns <
 
  Memory estimate: 608 bytes, allocs estimate: 2.
 ````
