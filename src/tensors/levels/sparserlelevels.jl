@@ -96,6 +96,7 @@ mutable struct VirtualSparseRLELevel
     shape
     qos_fill
     qos_stop
+    prev_pos
 end
 function virtualize(ex, ::Type{SparseRLELevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}
     sym = freshen(ctx, tag)
@@ -106,8 +107,9 @@ function virtualize(ex, ::Type{SparseRLELevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) wher
     push!(ctx.preamble, quote
         $sym = $ex
     end)
+    prev_pos = freshen(ctx, sym, :_prev_pos)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualSparseRLELevel(lvl_2, sym, Ti, Tp, shape, qos_fill, qos_stop)
+    VirtualSparseRLELevel(lvl_2, sym, Ti, Tp, shape, qos_fill, qos_stop, prev_pos)
 end
 function lower(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
@@ -146,6 +148,11 @@ function declare_level!(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, pos, 
         $(lvl.qos_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
     end)
+    if issafe(ctx.mode)
+        push!(ctx.code.preamble, quote
+            $(lvl.prev_pos) = $(Tp(0))
+        end)
+    end
     lvl.lvl = declare_level!(lvl.lvl, ctx, qos, init)
     return lvl
 end
@@ -255,8 +262,6 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, su
 end
 
 
-is_laminable_updater(lvl::VirtualSparseRLELevel, ctx, ::Union{typeof(defaultupdate), typeof(extrude)}) = false
-
 instantiate_updater(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, protos) = 
     instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, protos)
 
@@ -274,6 +279,11 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseRLELevel},
         body = (ctx, ext) -> Thunk(
             preamble = quote
                 $qos = $qos_fill + 1
+                $(if issafe(ctx.mode)
+                    quote
+                        $(lvl.prev_pos) < $(ctx(pos)) || throw(FinchProtocolError("SparseRLELevels cannot be updated multiple times"))
+                    end
+                end)
             end,
 
             body = (ctx) -> AcceptRun(
@@ -294,6 +304,11 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseRLELevel},
                             $(lvl.ex).left[$qos] = $(ctx(getstart(ext)))
                             $(lvl.ex).right[$qos] = $(ctx(getstop(ext)))
                             $(qos) += $(Tp(1))
+                            $(if issafe(ctx.mode)
+                                quote
+                                    $(lvl.prev_pos) = $(ctx(pos))
+                                end
+                            end)
                         end
                     end
                 )

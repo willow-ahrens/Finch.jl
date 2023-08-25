@@ -412,9 +412,6 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
     )
 end
 
-is_laminable_updater(lvl::VirtualSparseByteMapLevel, ctx, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...) =
-    is_laminable_updater(lvl.lvl, ctx, protos...)
-
 instantiate_updater(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, protos) = 
     instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, protos)
 function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseByteMapLevel}, ctx, subprotos, ::Union{typeof(defaultupdate), typeof(extrude), typeof(laminate)})
@@ -425,7 +422,6 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseByteMapLev
     dirty = freshen(ctx.code, :dirty)
 
     Furlable(
-        tight = is_laminable_updater(lvl.lvl, ctx, subprotos...) ? nothing : lvl.lvl,
         body = (ctx, ext) -> Lookup(
             body = (ctx, idx) -> Thunk(
                 preamble = quote

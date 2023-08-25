@@ -99,6 +99,7 @@ mutable struct VirtualSparseVBLLevel
     ros_fill
     ros_stop
     dirty
+    prev_pos
 end
 function virtualize(ex, ::Type{SparseVBLLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}
     sym = freshen(ctx, tag)
@@ -111,8 +112,9 @@ function virtualize(ex, ::Type{SparseVBLLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) wher
     push!(ctx.preamble, quote
         $sym = $ex
     end)
+    prev_pos = freshen(ctx, sym, :_prev_pos)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualSparseVBLLevel(lvl_2, sym, Ti, Tp, shape, qos_fill, qos_stop, ros_fill, ros_stop, dirty)
+    VirtualSparseVBLLevel(lvl_2, sym, Ti, Tp, shape, qos_fill, qos_stop, ros_fill, ros_stop, dirty, prev_pos)
 end
 function lower(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
@@ -155,6 +157,11 @@ function declare_level!(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, pos, 
         Finch.resize_if_smaller!($(lvl.ex).ofs, 1)
         $(lvl.ex).ofs[1] = 1
     end)
+    if issafe(ctx.mode)
+        push!(ctx.code.preamble, quote
+            $(lvl.prev_pos) = $(Tp(0))
+        end)
+    end
     lvl.lvl = declare_level!(lvl.lvl, ctx, qos, init)
     return lvl
 end
@@ -399,8 +406,6 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, su
     )
 end
 
-is_laminable_updater(lvl::VirtualSparseVBLLevel, ctx, protos...) = false
-
 instantiate_updater(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, protos) =
     instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, protos)
 function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseVBLLevel}, ctx, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
@@ -420,12 +425,16 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseVBLLevel},
     dirty = freshen(ctx.code, tag, :dirty)
 
     Furlable(
-        tight = lvl,
         body = (ctx, ext) -> Thunk(
             preamble = quote
                 $ros = $ros_fill
                 $qos = $qos_fill + 1
                 $my_i_prev = $(Ti(-1))
+                $(if issafe(ctx.mode)
+                    quote
+                        $(lvl.prev_pos) < $(ctx(pos)) || throw(FinchProtocolError("SparseVBLLevels cannot be updated multiple times"))
+                    end
+                end)
             end,
             body = (ctx) -> Lookup(
                 body = (ctx, idx) -> Thunk(
@@ -451,6 +460,11 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseVBLLevel},
                             $(lvl.ex).idx[$ros] = $my_i_prev = $(ctx(idx))
                             $(qos) += $(Tp(1))
                             $(lvl.ex).ofs[$ros + 1] = $qos
+                            $(if issafe(ctx.mode)
+                                quote
+                                    $(lvl.prev_pos) = $(ctx(pos))
+                                end
+                            end)
                         end
                     end
                 )

@@ -165,9 +165,6 @@ function freeze_level!(lvl::VirtualDenseLevel, ctx::AbstractCompiler, pos)
     return lvl
 end
 
-is_laminable_updater(lvl::VirtualDenseLevel, ctx, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...) =
-    is_laminable_updater(lvl.lvl, ctx, protos...)
-    
 struct DenseTraversal
     fbr
     subunfurl
@@ -189,7 +186,6 @@ function instantiate_reader(trv::DenseTraversal, ctx, subprotos, ::Union{typeof(
     q = freshen(ctx.code, tag, :_q)
 
     Furlable(
-        tight = nothing,
         body = (ctx, ext) -> Lookup(
             body = (ctx, i) -> Thunk(
                 preamble = quote
@@ -209,7 +205,6 @@ function instantiate_updater(trv::DenseTraversal, ctx, subprotos, ::Union{typeof
     q = freshen(ctx.code, tag, :_q)
 
     Furlable(
-        tight = !is_laminable_updater(lvl.lvl, ctx, subprotos...) ? lvl : nothing,
         body = (ctx, ext) -> Lookup(
             body = (ctx, i) -> Thunk(
                 preamble = quote

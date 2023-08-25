@@ -80,7 +80,7 @@ virtual_level_default(::VirtualPatternLevel) = false
 virtual_level_eltype(::VirtualPatternLevel) = Bool
 
 function declare_level!(lvl::VirtualPatternLevel, ctx, pos, init)
-    init == literal(false) || throw(FormatLimitation("Must initialize Pattern Levels to false"))
+    init == literal(false) || throw(FinchProtocolError("Must initialize Pattern Levels to false"))
     lvl
 end
 
@@ -94,7 +94,6 @@ reassemble_level!(lvl::VirtualPatternLevel, ctx, pos_start, pos_stop) = quote en
 trim_level!(lvl::VirtualPatternLevel, ctx::AbstractCompiler, pos) = lvl
 
 instantiate_reader(::VirtualSubFiber{VirtualPatternLevel}, ctx, protos) = Fill(true)
-is_laminable_updater(lvl::VirtualPatternLevel, ctx) = true
 
 function instantiate_updater(fbr::VirtualSubFiber{VirtualPatternLevel}, ctx, protos)
     val = freshen(ctx.code, :null)

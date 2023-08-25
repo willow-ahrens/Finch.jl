@@ -32,9 +32,11 @@ julia> C = Fiber!(SparseList(Element(0)));
 
 julia> A = Fiber!(SparseList(Element(0)), [0, 2, 0, 0, 3]);
 
+
 julia> B = Fiber!(Dense(Element(0)), [11, 12, 13, 14, 15]);
 
 julia> @finch (C .= 0; for i=_; C[i] = A[i] * B[i] end);
+
 
 julia> C
 SparseList (0) [1:5]

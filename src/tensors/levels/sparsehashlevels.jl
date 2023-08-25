@@ -396,10 +396,6 @@ function instantiate_reader(trv::SparseHashFollowTraversal, ctx, subprotos, ::ty
     )
 end
 
-
-is_laminable_updater(lvl::VirtualSparseHashLevel, ctx, protos...) =
-    is_laminable_updater(lvl.lvl, ctx, protos[lvl.N + 1:end]...)
-
 struct SparseHashLaminateTraversal
     lvl
     pos
@@ -425,7 +421,6 @@ function instantiate_updater(trv::SparseHashLaminateTraversal, ctx, subprotos, :
     qos = freshen(ctx.code, tag, :_q)
     dirty = freshen(ctx.code, tag, :dirty)
     Furlable(
-        tight = is_laminable_updater(lvl.lvl, ctx, subprotos[lvl.N - length(coords): end]...) ? nothing : lvl.lvl,
         body = (ctx, ext) ->
             if length(coords) + 1 < lvl.N
                 Lookup(

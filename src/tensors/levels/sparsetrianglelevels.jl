@@ -157,10 +157,6 @@ function virtual_simplex(d, ctx, n)
     return simplify(call(fld, res, factorial(d)), ctx)
 end
 
-is_laminable_updater(lvl::VirtualSparseTriangleLevel, ctx, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...) =
-    is_laminable_updater(lvl.lvl, ctx, protos[lvl.N + 1:end]...)
-
-
 struct SparseTriangleFollowTraversal
     lvl
     d

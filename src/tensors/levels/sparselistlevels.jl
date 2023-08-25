@@ -120,6 +120,7 @@ mutable struct VirtualSparseListLevel
     shape
     qos_fill
     qos_stop
+    prev_pos
 end
 function virtualize(ex, ::Type{SparseListLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}
     sym = freshen(ctx, tag)
@@ -129,8 +130,9 @@ function virtualize(ex, ::Type{SparseListLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) whe
     push!(ctx.preamble, quote
         $sym = $ex
     end)
+    prev_pos = freshen(ctx, sym, :_prev_pos)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualSparseListLevel(lvl_2, sym, Ti, Tp, shape, qos_fill, qos_stop)
+    VirtualSparseListLevel(lvl_2, sym, Ti, Tp, shape, qos_fill, qos_stop, prev_pos)
 end
 function lower(lvl::VirtualSparseListLevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
@@ -168,6 +170,11 @@ function declare_level!(lvl::VirtualSparseListLevel, ctx::AbstractCompiler, pos,
         $(lvl.qos_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
     end)
+    if issafe(ctx.mode)
+        push!(ctx.code.preamble, quote
+            $(lvl.prev_pos) = $(Tp(0))
+        end)
+    end
     lvl.lvl = declare_level!(lvl.lvl, ctx, qos, init)
     return lvl
 end
@@ -347,8 +354,6 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, s
     )
 end
 
-is_laminable_updater(lvl::VirtualSparseListLevel, ctx, protos...) = false
-
 instantiate_updater(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, protos) = begin
     instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, protos)
 end
@@ -362,10 +367,14 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseListLevel}
     dirty = freshen(ctx.code, tag, :dirty)
 
     Furlable(
-        tight = lvl,
         body = (ctx, ext) -> Thunk(
             preamble = quote
                 $qos = $qos_fill + 1
+                $(if issafe(ctx.mode)
+                    quote
+                        $(lvl.prev_pos) < $(ctx(pos)) || throw(FinchProtocolError("SparseListLevels cannot be updated multiple times"))
+                    end
+                end)
             end,
             body = (ctx) -> Lookup(
                 body = (ctx, idx) -> Thunk(
@@ -383,6 +392,11 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseListLevel}
                             $(fbr.dirty) = true
                             $(lvl.ex).idx[$qos] = $(ctx(idx))
                             $qos += $(Tp(1))
+                            $(if issafe(ctx.mode)
+                                quote
+                                    $(lvl.prev_pos) = $(ctx(pos))
+                                end
+                            end)
                         end
                     end
                 )

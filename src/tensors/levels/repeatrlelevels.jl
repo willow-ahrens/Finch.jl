@@ -114,6 +114,7 @@ mutable struct VirtualRepeatRLELevel
     ros_fill
     qos_stop
     dirty
+    prev_pos
 end
 function virtualize(ex, ::Type{RepeatRLELevel{D, Ti, Tp, Tv}}, ctx, tag=:lvl) where {D, Ti, Tp, Tv}
     sym = freshen(ctx, tag)
@@ -124,7 +125,8 @@ function virtualize(ex, ::Type{RepeatRLELevel{D, Ti, Tp, Tv}}, ctx, tag=:lvl) wh
         $sym = $ex
     end)
     dirty = freshen(ctx, sym, :_dirty)
-    VirtualRepeatRLELevel(sym, D, Ti, Tp, Tv, shape, ros_fill, qos_stop, dirty)
+    prev_pos = freshen(ctx, sym, :_prev_pos)
+    VirtualRepeatRLELevel(sym, D, Ti, Tp, Tv, shape, ros_fill, qos_stop, dirty, prev_pos)
 end
 function lower(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
@@ -153,7 +155,7 @@ virtual_level_default(lvl::VirtualRepeatRLELevel) = lvl.D
 virtual_level_eltype(lvl::VirtualRepeatRLELevel) = lvl.Tv
 
 function declare_level!(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, mode, init)
-    init == literal(lvl.D) || throw(FormatLimitation("Cannot initialize RepeatRLE Levels to non-default values"))
+    init == literal(lvl.D) || throw(FinchProtocolError("Cannot initialize RepeatRLE Levels to non-default values"))
     Tp = lvl.Tp
     Ti = lvl.Ti
     push!(ctx.code.preamble, quote
@@ -161,6 +163,11 @@ function declare_level!(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, mode,
         $(lvl.ros_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
     end)
+    if issafe(ctx.mode)
+        push!(ctx.code.preamble, quote
+            $(lvl.prev_pos) = $(Tp(0))
+        end)
+    end
     return lvl
 end
 
@@ -254,8 +261,6 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, su
     )
 end
 
-is_laminable_updater(lvl::VirtualRepeatRLELevel, ctx, ::Union{typeof(defaultupdate), typeof(extrude)}) = false
-
 instantiate_updater(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, protos) = 
     instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, protos)
 function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualRepeatRLELevel}, ctx, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
@@ -289,16 +294,25 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualRepeatRLELevel},
             $(lvl.ex).idx[$my_q] = $(ctx(stop))
             $(lvl.ex).val[$my_q] = $v
             $my_q += $(Tp(1))
+            $(if issafe(ctx.mode)
+                quote
+                    $(lvl.prev_pos) = $(ctx(pos))
+                end
+            end)
         end
     end
     
     Furlable(
-        tight = lvl,
         body = (ctx, ext) -> Thunk(
             preamble = quote
                 $my_q = $(lvl.ros_fill) + $(ctx(pos))
                 $my_i_prev = $(Ti(0))
                 $my_v_prev = $D
+                $(if issafe(ctx.mode)
+                    quote
+                        $(lvl.prev_pos) < $(ctx(pos)) || throw(FinchProtocolError("RepeatRLELevels cannot be updated multiple times"))
+                    end
+                end)
             end,
             body = (ctx) -> AcceptRun(
                 body = (ctx, ext) -> Thunk(

@@ -19,6 +19,8 @@ using CIndices
 
 export @finch, @finch_program, @finch_code, @finch_kernel, value
 
+export fastfinch, safefinch, debugfinch
+
 export Fiber, Fiber!, Scalar
 export SparseRLE, SparseRLELevel 
 export SparseList, SparseListLevel

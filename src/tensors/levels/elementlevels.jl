@@ -93,7 +93,7 @@ virtual_level_eltype(lvl::VirtualElementLevel) = lvl.Tv
 virtual_level_default(lvl::VirtualElementLevel) = lvl.D
 
 function declare_level!(lvl::VirtualElementLevel, ctx, pos, init)
-    init == literal(lvl.D) || throw(FormatLimitation("Cannot initialize Element Levels to non-default values(have $init expected $(lvl.D))"))
+    init == literal(lvl.D) || throw(FinchProtocolError("Cannot initialize Element Levels to non-default values(have $init expected $(lvl.D))"))
     lvl
 end
 
@@ -137,8 +137,6 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualElementLevel}, ctx, prot
         body = (ctx) -> VirtualScalar(nothing, lvl.Tv, lvl.D, gensym(), val)
     )
 end
-
-is_laminable_updater(lvl::VirtualElementLevel, ctx) = true
 
 function instantiate_updater(fbr::VirtualSubFiber{VirtualElementLevel}, ctx, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)

@@ -137,6 +137,7 @@ mutable struct VirtualSparseCOOLevel
     shape
     qos_fill
     qos_stop
+    prev_pos
 end
 function virtualize(ex, ::Type{SparseCOOLevel{N, Ti, Tp, Tbl, Lvl}}, ctx, tag=:lvl) where {N, Ti, Tp, Tbl, Lvl}   
     sym = freshen(ctx, tag)
@@ -147,7 +148,9 @@ function virtualize(ex, ::Type{SparseCOOLevel{N, Ti, Tp, Tbl, Lvl}}, ctx, tag=:l
         $sym = $ex
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualSparseCOOLevel(lvl_2, sym, N, Ti, Tp, Tbl, shape, qos_fill, qos_stop)
+    prev_pos = freshen(ctx, sym, :_prev_pos)
+    prev_coord = map(n->freshen(ctx, sym, :_prev_coord_, n), 1:N)
+    VirtualSparseCOOLevel(lvl_2, sym, N, Ti, Tp, Tbl, shape, qos_fill, qos_stop, prev_pos)
 end
 function lower(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
@@ -185,6 +188,11 @@ function declare_level!(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler, pos, 
         $(lvl.qos_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
     end)
+    if issafe(ctx.mode)
+        push!(ctx.code.preamble, quote
+            $(lvl.prev_pos) = $(Tp(0))
+        end)
+    end
     lvl.lvl = declare_level!(lvl.lvl, ctx, qos, init)
     return lvl
 end
@@ -322,13 +330,12 @@ function instantiate_reader(trv::SparseCOOWalkTraversal, ctx, subprotos, ::Union
     )
 end
 
-is_laminable_updater(lvl::VirtualSparseCOOLevel, ctx, protos...) = false
-
 struct SparseCOOExtrudeTraversal
     lvl
     qos
     fbr_dirty
     coords
+    prev_coord
 end
 
 instantiate_updater(fbr::VirtualSubFiber{VirtualSparseCOOLevel}, ctx, protos) =
@@ -342,13 +349,27 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseCOOLevel},
     qos_stop = lvl.qos_stop
 
     qos = freshen(ctx.code, tag, :_q)
+    prev_coord = freshen(ctx.code, tag, :_prev_coord)
     Thunk(
         preamble = quote
             $qos = $qos_fill + 1
+            $(if issafe(ctx.mode)
+                quote
+                    $(lvl.prev_pos) < $(ctx(pos)) || throw(FinchProtocolError("SparseCOOLevels cannot be updated multiple times"))
+                    $prev_coord = ()
+                end
+            end)
         end,
-        body = (ctx) -> instantiate_updater(SparseCOOExtrudeTraversal(lvl, qos, fbr.dirty, []), ctx, protos),
+        body = (ctx) -> instantiate_updater(SparseCOOExtrudeTraversal(lvl, qos, fbr.dirty, [], prev_coord), ctx, protos),
         epilogue = quote
             $(lvl.ex).ptr[$(ctx(pos)) + 1] = $qos - $qos_fill - 1
+            $(if issafe(ctx.mode)
+                quote
+                    if $qos - $qos_fill - 1 > 0
+                        $(lvl.prev_pos) = $(ctx(pos))
+                    end
+                end
+            end)
             $qos_fill = $qos - 1
         end
     )
@@ -361,11 +382,10 @@ function instantiate_updater(trv::SparseCOOExtrudeTraversal, ctx, subprotos, ::U
     qos_fill = lvl.qos_fill
     qos_stop = lvl.qos_stop
     Furlable(
-        tight = lvl,
         body = (ctx, ext) -> 
             if length(coords) + 1 < lvl.N
                 Lookup(
-                    body = (ctx, i) -> instantiate_updater(SparseCOOExtrudeTraversal(lvl, qos, fbr_dirty, (i, coords...)), ctx, subprotos),
+                    body = (ctx, i) -> instantiate_updater(SparseCOOExtrudeTraversal(lvl, qos, fbr_dirty, (i, coords...), trv.prev_coord), ctx, subprotos),
                 )
             else
                 dirty = freshen(ctx.code, :dirty)
@@ -382,13 +402,24 @@ function instantiate_updater(trv::SparseCOOExtrudeTraversal, ctx, subprotos, ::U
                             $dirty = false
                         end,
                         body = (ctx) -> instantiate_updater(VirtualTrackedSubFiber(lvl.lvl, value(qos, lvl.Tp), dirty), ctx, subprotos),
-                        epilogue = quote
-                            if $dirty
-                                $(fbr_dirty) = true
-                                $(Expr(:block, map(enumerate((idx, coords...))) do (n, i)
-                                    :($(lvl.ex).tbl[$n][$qos] = $(ctx(i)))
-                                end...))
-                                $qos += $(Tp(1))
+                        epilogue = begin
+                            coords_2 = map(ctx, (idx, coords...))
+                            quote
+                                if $dirty
+                                    $(if issafe(ctx.mode)
+                                        quote
+                                            $(trv.prev_coord) < ($(reverse(coords_2)...),) || begin
+                                                throw(FinchProtocolError("SparseCOOLevels cannot be updated multiple times"))
+                                            end
+                                            $(trv.prev_coord) = ($(reverse(coords_2)...),)
+                                        end
+                                    end)
+                                    $(fbr_dirty) = true
+                                    $(Expr(:block, map(enumerate(coords_2)) do (n, i)
+                                        :($(lvl.ex).tbl[$n][$qos] = $i)
+                                    end...))
+                                    $qos += $(Tp(1))
+                                end
                             end
                         end
                     )

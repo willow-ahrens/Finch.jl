@@ -64,15 +64,22 @@ execute(ex) = execute(ex, NamedTuple())
 
 @staged function execute(ex, opts::NamedTuple)
     contain(JuliaContext()) do ctx
+        code = execute_code(:ex, ex; virtualize(:opts, opts, ctx)...)
         quote
-            @inbounds begin
-                $(execute_code(:ex, ex; virtualize(:opts, opts, ctx)...) |> unblock)
-            end
+            #try
+                @inbounds begin
+                    $(code |> unblock)
+                end
+            #catch
+            #    println("Error executing code:")
+            #    println($(QuoteNode(code |> unblock |> pretty |> dataflow |> unquote_literals)))
+            #    rethrow()
+            #end
         end
     end
 end
 
-function execute_code(ex, T; algebra = DefaultAlgebra(), mode = fastfinch, ctx = LowerJulia(algebra = algebra))
+function execute_code(ex, T; algebra = DefaultAlgebra(), mode = fastfinch, ctx = LowerJulia(algebra = algebra, mode=mode))
     code = contain(ctx) do ctx_2
         prgm = nothing
         prgm = virtualize(ex, T, ctx_2.code)
@@ -205,7 +212,7 @@ type `prgm`. Here, `fname` is the name of the function and `args` is a
 
 See also: [`@finch`](@ref)
 """
-function finch_kernel(fname, args, prgm; algebra = DefaultAlgebra(), mode = fastfinch, ctx = LowerJulia(algebra=algebra))
+function finch_kernel(fname, args, prgm; algebra = DefaultAlgebra(), mode = fastfinch, ctx = LowerJulia(algebra=algebra, mode=mode))
     maybe_typeof(x) = x isa Type ? x : typeof(x)
     code = contain(ctx) do ctx_2
         foreach(args) do (key, val)
