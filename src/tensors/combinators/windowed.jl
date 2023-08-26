@@ -15,7 +15,7 @@ struct VirtualWindowedArray <: AbstractVirtualCombinator
     dims
 end
 
-is_injective(lvl::VirtualWindowedArray, ctx, accs) = is_injective(body, ctx, accs)
+is_injective(lvl::VirtualWindowedArray, ctx) = is_injective(body, ctx)
 
 Base.show(io::IO, ex::VirtualWindowedArray) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualWindowedArray)

@@ -17,7 +17,7 @@ struct VirtualToeplitzArray <: AbstractVirtualCombinator
     dim
 end
 
-is_injective(lvl::VirtualToeplitzArray, ctx, accs) = false
+is_injective(lvl::VirtualToeplitzArray, ctx) = false
 
 
 Base.show(io::IO, ex::VirtualToeplitzArray) = Base.show(io, MIME"text/plain"(), ex)
