@@ -10,9 +10,9 @@ s = Scalar(0.0)
 # output
 
 quote
-    s = ex.body.body.lhs.tns.tns
+    s = ex.body.body.lhs.tns.bind
     s_val = s.val
-    A_lvl = ex.body.body.rhs.tns.tns.lvl
+    A_lvl = ex.body.body.rhs.tns.bind.lvl
     A_lvl_2 = A_lvl.lvl
     A_lvl_3 = A_lvl_2.lvl
     for j_3 = 1:A_lvl.shape
@@ -48,9 +48,9 @@ end</code></pre><p>When the loop order does not correspond to storage order, we 
 # output
 
 quote
-    s = ex.body.body.lhs.tns.tns
+    s = ex.body.body.lhs.tns.bind
     s_val = s.val
-    A_lvl = ex.body.body.rhs.tns.tns.lvl
+    A_lvl = ex.body.body.rhs.tns.bind.lvl
     A_lvl_2 = A_lvl.lvl
     A_lvl_3 = A_lvl_2.lvl
     for i_3 = 1:A_lvl_2.shape
@@ -121,11 +121,11 @@ f(x, y) = x * y # DO NOT DO THIS, Obscures *
 # output
 
 quote
-    C = (ex.bodies[1]).tns.tns
-    A_lvl = ((ex.bodies[2]).body.body.rhs.args[1]).tns.tns.lvl
+    C = (ex.bodies[1]).tns.bind
+    A_lvl = ((ex.bodies[2]).body.body.rhs.args[1]).tns.bind.lvl
     A_lvl_2 = A_lvl.lvl
     A_lvl_3 = A_lvl_2.lvl
-    B = ((ex.bodies[2]).body.body.rhs.args[2]).tns.tns
+    B = ((ex.bodies[2]).body.body.rhs.args[2]).tns.bind
     sugar_1 = size(B)
     B_mode1_stop = sugar_1[1]
     B_mode2_stop = sugar_1[2]
@@ -174,4 +174,4 @@ quote
     end
     (C = (Scalar){0.0, Float64}(C_val),)
 end
-</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../interop/">« C, C++, ...</a><a class="docs-footer-nextpage" href="../internals/">Internals »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Monday 21 August 2023 18:54">Monday 21 August 2023</span>. Using Julia version 1.9.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../interop/">« C, C++, ...</a><a class="docs-footer-nextpage" href="../internals/">Internals »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Saturday 26 August 2023 20:58">Saturday 26 August 2023</span>. Using Julia version 1.9.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
