@@ -5,8 +5,8 @@ julia> @finch_code begin
         end
     end
 quote
-    z2 = (ex.bodies[1]).tns.tns
-    y_lvl = (ex.bodies[2]).body.rhs.tns.tns.lvl
+    z2 = (ex.bodies[1]).tns.bind
+    y_lvl = (ex.bodies[2]).body.rhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
     z2_val = 0
     y_lvl_q = y_lvl.ptr[1]

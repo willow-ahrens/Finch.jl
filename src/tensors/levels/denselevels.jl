@@ -94,7 +94,7 @@ mutable struct VirtualDenseLevel <: AbstractVirtualLevel
     shape
 end
 function virtualize(ex, ::Type{DenseLevel{Ti, Lvl}}, ctx, tag=:lvl) where {Ti, Lvl}
-    sym = ctx.freshen(tag)
+    sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Ti)
     push!(ctx.preamble, quote
         $sym = $ex
@@ -133,8 +133,8 @@ function declare_level!(lvl::VirtualDenseLevel, ctx::AbstractCompiler, pos, init
 end
 
 function trim_level!(lvl::VirtualDenseLevel, ctx::AbstractCompiler, pos)
-    qos = ctx.freshen(:qos)
-    push!(ctx.preamble, quote
+    qos = freshen(ctx.code, :qos)
+    push!(ctx.code.preamble, quote
         $qos = $(ctx(pos)) * $(ctx(lvl.shape))
     end)
     lvl.lvl = trim_level!(lvl.lvl, ctx, value(qos))
@@ -165,16 +165,9 @@ function freeze_level!(lvl::VirtualDenseLevel, ctx::AbstractCompiler, pos)
     return lvl
 end
 
-is_laminable_updater(lvl::VirtualDenseLevel, ctx, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...) =
-    is_laminable_updater(lvl.lvl, ctx, protos...)
-    
-
 is_injective(lvl::VirtualDenseLevel, ctx, accs) = true
-
 struct DenseTraversal
     fbr
-    subunfurl
-    subfiber_ctr
 end
 
 instantiate_reader(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, protos) =
@@ -189,10 +182,9 @@ function instantiate_reader(trv::DenseTraversal, ctx, subprotos, ::Union{typeof(
     tag = lvl.ex
     Ti = lvl.Ti
 
-    q = ctx.freshen(tag, :_q)
+    q = freshen(ctx.code, tag, :_q)
 
     Furlable(
-        tight = nothing,
         body = (ctx, ext) -> Lookup(
             body = (ctx, i) -> Thunk(
                 preamble = quote
@@ -209,10 +201,9 @@ function instantiate_updater(trv::DenseTraversal, ctx, subprotos, ::Union{typeof
     tag = lvl.ex
     Ti = lvl.Ti
 
-    q = ctx.freshen(tag, :_q)
+    q = freshen(ctx.code, tag, :_q)
 
     Furlable(
-        tight = !is_laminable_updater(lvl.lvl, ctx, subprotos...) ? lvl : nothing,
         body = (ctx, ext) -> Lookup(
             body = (ctx, i) -> Thunk(
                 preamble = quote

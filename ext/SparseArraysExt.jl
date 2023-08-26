@@ -3,7 +3,7 @@ module SparseArraysExt
 using Finch
 using Finch: AbstractCompiler, DefaultStyle, Extent
 using Finch: Unfurled, Furlable, Stepper, Jumper, Run, Fill, Lookup, Simplify, Sequence, Phase, Thunk, Spike, Step
-using Finch: virtual_size, virtual_default, getstart, getstop
+using Finch: virtual_size, virtual_default, getstart, getstop, freshen
 using Finch.FinchNotation
 
 using Base: @kwdef
@@ -49,7 +49,7 @@ function lower(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler,  ::DefaultSty
 end
 
 function Finch.virtualize(ex, ::Type{<:SparseMatrixCSC{Tv, Ti}}, ctx, tag=:tns) where {Tv, Ti}
-    sym = ctx.freshen(tag)
+    sym = freshen(ctx, tag)
     push!(ctx.preamble, quote
         $sym = $ex
     end)
@@ -57,17 +57,17 @@ function Finch.virtualize(ex, ::Type{<:SparseMatrixCSC{Tv, Ti}}, ctx, tag=:tns) 
 end
 
 function Finch.declare!(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler, init)
-    throw(FormatLimitation("Finch does not support writes to SparseMatrixCSC"))
+    throw(FinchProtocolError("Finch does not support writes to SparseMatrixCSC"))
 end
 
 function Finch.instantiate_reader(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler, subprotos, ::Union{typeof(defaultread), typeof(walk), typeof(follow)}, ::Union{typeof(defaultread), typeof(walk)})
     tag = arr.ex
     Ti = arr.Ti
-    my_i = ctx.freshen(tag, :_i)
-    my_q = ctx.freshen(tag, :_q)
-    my_q_stop = ctx.freshen(tag, :_q_stop)
-    my_i1 = ctx.freshen(tag, :_i1)
-    my_val = ctx.freshen(tag, :_val)
+    my_i = freshen(ctx.code, tag, :_i)
+    my_q = freshen(ctx.code, tag, :_q)
+    my_q_stop = freshen(ctx.code, tag, :_q_stop)
+    my_i1 = freshen(ctx.code, tag, :_i1)
+    my_val = freshen(ctx.code, tag, :_val)
 
     Unfurled(
         arr = arr,
@@ -129,7 +129,7 @@ function Finch.instantiate_reader(arr::VirtualSparseMatrixCSC, ctx::AbstractComp
 end
 
 function Finch.instantiate_updater(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler, subprotos, protos...)
-    throw(FormatLimitation("Finch does not support writes to SparseMatrixCSC"))
+    throw(FinchProtocolError("Finch does not support writes to SparseMatrixCSC"))
 end
 
 Finch.FinchNotation.finch_leaf(x::VirtualSparseMatrixCSC) = virtual(x)
@@ -152,7 +152,7 @@ function lower(arr::VirtualSparseVector, ctx::AbstractCompiler,  ::DefaultStyle)
 end
 
 function Finch.virtualize(ex, ::Type{<:SparseVector{Tv, Ti}}, ctx, tag=:tns) where {Tv, Ti}
-    sym = ctx.freshen(tag)
+    sym = freshen(ctx, tag)
     push!(ctx.preamble, quote
         $sym = $ex
     end)
@@ -160,17 +160,17 @@ function Finch.virtualize(ex, ::Type{<:SparseVector{Tv, Ti}}, ctx, tag=:tns) whe
 end
 
 function Finch.declare!(arr::VirtualSparseVector, ctx::AbstractCompiler, init)
-    throw(FormatLimitation("Finch does not support writes to SparseVector"))
+    throw(FinchProtocolError("Finch does not support writes to SparseVector"))
 end
 
 function Finch.instantiate_reader(arr::VirtualSparseVector, ctx::AbstractCompiler, subprotos, ::Union{typeof(defaultread), typeof(walk)})
     tag = arr.ex
     Ti = arr.Ti
-    my_i = ctx.freshen(tag, :_i)
-    my_q = ctx.freshen(tag, :_q)
-    my_q_stop = ctx.freshen(tag, :_q_stop)
-    my_i1 = ctx.freshen(tag, :_i1)
-    my_val = ctx.freshen(tag, :_val)
+    my_i = freshen(ctx.code, tag, :_i)
+    my_q = freshen(ctx.code, tag, :_q)
+    my_q_stop = freshen(ctx.code, tag, :_q_stop)
+    my_i1 = freshen(ctx.code, tag, :_i1)
+    my_val = freshen(ctx.code, tag, :_val)
 
     Unfurled(
         arr = arr,
@@ -228,7 +228,7 @@ function Finch.instantiate_reader(arr::VirtualSparseVector, ctx::AbstractCompile
 end
 
 function Finch.instantiate_updater(arr::VirtualSparseVector, ctx::AbstractCompiler, subprotos)
-    throw(FormatLimitation("Finch does not support writes to SparseVector"))
+    throw(FinchProtocolError("Finch does not support writes to SparseVector"))
 end
 
 Finch.FinchNotation.finch_leaf(x::VirtualSparseVector) = virtual(x)

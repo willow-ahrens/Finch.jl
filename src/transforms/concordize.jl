@@ -28,9 +28,11 @@ function (ctx::DepthCalculatorVisitor)(node::FinchNode)
 end
 
 struct ConcordizeVisitor
-    freshen
+    ctx
     scope
 end
+
+freshen(ctx::ConcordizeVisitor, tags...) = freshen(ctx.ctx.code, tags...)
 
 function (ctx::ConcordizeVisitor)(node::FinchNode)
     function isbound(x::FinchNode)
@@ -52,7 +54,7 @@ function (ctx::ConcordizeVisitor)(node::FinchNode)
     if node.kind === loop || node.kind === assign || node.kind === define || node.kind === sieve
         node = Rewrite(Postwalk(Fixpoint(
             @rule access(~tns, ~mode, ~i..., ~j::isboundnotindex, ~k::All(isboundindex)...) => begin
-                j_2 = index(ctx.freshen(:s))
+                j_2 = index(freshen(ctx, :s))
                 push!(selects, j_2 => j)
                 push!(ctx.scope, j_2)
                 access(tns, mode, i..., j_2, k...)
@@ -61,7 +63,7 @@ function (ctx::ConcordizeVisitor)(node::FinchNode)
     end
 
     if node.kind === loop
-        ctx_2 = ConcordizeVisitor(ctx.freshen, union(ctx.scope, [node.idx]))
+        ctx_2 = ConcordizeVisitor(ctx.ctx, union(ctx.scope, [node.idx]))
         node = loop(node.idx, node.ext, ctx_2(node.body))
     elseif node.kind === define
         push!(ctx.scope, node.lhs)
@@ -72,7 +74,7 @@ function (ctx::ConcordizeVisitor)(node::FinchNode)
     end
 
     for (select_idx, idx_ex) in reverse(selects)
-        var = variable(ctx.freshen(:v))
+        var = variable(freshen(ctx, :v))
 
         node = block(
             define(var, idx_ex),
@@ -131,5 +133,5 @@ function concordize(root, ctx::AbstractCompiler)
             access(~tns, ~mode, ~i..., call(identity, j), ~k...)
         end
     end)))(root)
-    ConcordizeVisitor(ctx.freshen, collect(keys(ctx.bindings)))(root)
+    ConcordizeVisitor(ctx, collect(keys(ctx.bindings)))(root)
 end

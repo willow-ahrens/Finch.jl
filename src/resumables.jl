@@ -137,6 +137,12 @@ end
 
 shallowcopy(x::DebugContext) = DebugContext(shallowcopy(x.ctx), x.control)
 
+function contain(f, ctx::DebugContext)
+    contain(ctx.ctx) do ctx_2
+        f(DebugContext(ctx_2, ctx.control))
+    end
+end
+
 #Sad but true
 function Base.getproperty(ctx::DebugContext, name::Symbol)
     if name === :control
@@ -264,9 +270,9 @@ end
 
 Takes a Finch Program and stages it within a DebugContext, defined within a particualr algebra.
  """
-function begin_debug(code; algebra = DefaultAlgebra(),  sdisplay=false)
+function begin_debug(code; algebra = DefaultAlgebra(), sdisplay=false)
     ctx = DebugContext(LowerJulia(algebra = algebra), SimpleStepControl(step=0))
-    code = execute_code(:ex, typeof(code), algebra, ctx=ctx)
+    code = execute_code(:ex, typeof(code), ctx=ctx) #TODO would be nice to pass options through this
     control = StepOnlyControl(step=step, resumeLocations = [0])
     clean_partial_code(PartialCode(control, code), sdisplay=sdisplay)
 end

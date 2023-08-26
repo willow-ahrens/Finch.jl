@@ -1,6 +1,6 @@
 begin
-    B = (ex.bodies[1]).tns.tns
-    A_lvl = ((ex.bodies[2]).body.body.body.rhs.args[1]).tns.tns.lvl
+    B = (ex.bodies[1]).tns.bind
+    A_lvl = ((ex.bodies[2]).body.body.body.rhs.args[1]).tns.bind.lvl
     A_lvl_2 = A_lvl.lvl
     A_lvl_3 = A_lvl_2.lvl
     A_lvl.shape == A_lvl_2.shape || throw(DimensionMismatch("mismatched dimension limits ($(A_lvl.shape) != $(A_lvl_2.shape))"))

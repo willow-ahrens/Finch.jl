@@ -105,6 +105,8 @@ properties as follows:
 ```
 struct MyAlgebra <: AbstractAlgebra end
 
+Finch.virtualize(ex, ::Type{MyAlgebra}, ctx) = MyAlgebra()
+
 Finch.isassociative(::MyAlgebra, ::typeof(gcd)) = true
 Finch.iscommutative(::MyAlgebra, ::typeof(gcd)) = true
 Finch.isannihilator(::MyAlgebra, ::typeof(gcd), x) = x == 1

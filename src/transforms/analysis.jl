@@ -12,6 +12,25 @@ You aren't allowed to update a tensor without accessing it with i or marking ato
 new array: make_atomic
 """
 
+"""
+    is_injective(tns, ctx)
+
+Returns a vector of booleans, one for each dimension of the tensor, indicating
+whether the access is injective in that dimension.  A dimension is injective if
+each index in that dimension maps to a different memory space in the underlying
+array.
+"""
+function is_injective end
+
+"""
+    is_atomic(tns, ctx)
+
+Returns a boolean indicating whether it is safe to update the same element of the
+tensor from multiple simultaneous threads.
+"""
+function is_injective end
+function is_atomic end
+
 function gatherAcceses(prog) :: Vector{FinchNode}
     ret:: Vector{FinchNode} = []
     for node in PostOrderDFS(prog)

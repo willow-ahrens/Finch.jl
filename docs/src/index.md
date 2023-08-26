@@ -61,9 +61,9 @@ code is dense):
 ```jldoctest example1; setup=:(using Finch; A = rand(5, 5); s = Scalar(0))
 julia> @finch_code for i=_, j=_ ; s[] += A[i, j] end
 quote
-    s = ex.body.body.lhs.tns.tns
+    s = ex.body.body.lhs.tns.bind
     s_val = s.val
-    A = ex.body.body.rhs.tns.tns
+    A = ex.body.body.rhs.tns.bind
     sugar_1 = size(A)
     A_mode1_stop = sugar_1[1]
     A_mode2_stop = sugar_1[2]

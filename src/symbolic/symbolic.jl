@@ -1,6 +1,8 @@
 abstract type AbstractAlgebra end
 struct DefaultAlgebra<:AbstractAlgebra end
 
+virtualize(ex, ::Type{DefaultAlgebra}, ctx) = DefaultAlgebra()
+
 struct Chooser{D} end
 
 (f::Chooser{D})(x) where {D} = x
