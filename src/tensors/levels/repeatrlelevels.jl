@@ -22,11 +22,11 @@ RepeatRLE (0.0) [1:9]
 
 ```
 """
-struct RepeatRLELevel{D, Ti, Tp, Tv}
+struct RepeatRLELevel{D, Ti, Tp, Tv, VTp<:AbstractVector{Tp}, VTi<:AbstractVector{Ti}, VTv<:AbstractVector{Tv}}
     shape::Ti
-    ptr::Vector{Tp}
-    idx::Vector{Ti}
-    val::Vector{Tv}
+    ptr::VTp
+    idx::VTi
+    val::VTv
 end
 
 const RepeatRLE = RepeatRLELevel
@@ -35,17 +35,37 @@ function RepeatRLELevel(d, args...)
     RepeatRLELevel{d}(args...)
 end
 RepeatRLELevel{D}() where {D} = RepeatRLELevel{D, Int}()
+
 RepeatRLELevel{D}(shape, args...) where {D} = RepeatRLELevel{D, typeof(shape)}(shape, args...)
+RepeatRLELevel{D, Ti}(shape, ptr, idx, val) where {D, Ti} = RepeatRLELevel{D, Ti, eltype(ptr), eltype(val), typeof(ptr), typeof(idx), typeof(val)}(shape, ptr, idx, val)
 RepeatRLELevel{D, Ti}(args...) where {D, Ti} = RepeatRLELevel{D, Ti, Int}(args...)
 RepeatRLELevel{D, Ti, Tp}(args...) where {D, Ti, Tp} = RepeatRLELevel{D, Ti, Tp, typeof(D)}(args...)
 
 RepeatRLELevel{D, Ti, Tp, Tv}() where {D, Ti, Tp, Tv} = RepeatRLELevel{D, Ti, Tp, Tv}(zero(Ti))
 RepeatRLELevel{D, Ti, Tp, Tv}(shape) where {D, Ti, Tp, Tv} = RepeatRLELevel{D, Ti, Tp, Tv}(Ti(shape), Tp[1], Ti[], Tv[])
+RepeatRLELevel{D, Ti, Tp, Tv}(shape, ptr, idx, val) where {D, Ti, Tp, Tv} = RepeatRLELevel{D, Ti, Tp, Tv, typeof(ptr), typeof(idx), typeof(val)}(shape, ptr, idx, val)
+
 
 Base.summary(::RepeatRLE{D}) where {D} = "RepeatRLE($(D))"
 similar_level(::RepeatRLELevel{D}) where {D} = RepeatRLE{D}()
 similar_level(::RepeatRLELevel{D}, dim, tail...) where {D} = RepeatRLE{D}(dim)
 data_rep_level(::Type{<:RepeatRLELevel{D, Ti, Tp, Tv}}) where {D, Ti, Tp, Tv} = RepeatData(D, Tv)
+
+
+function memory_type(::Type{RepeatRLELevel{D, Ti, Tp, Tv, VTp, VTi, VTv}}) where {D, Ti, Tp, Tv, VTp, VTi, VTv}
+    return containertype(VTi)
+end
+
+function postype(::Type{RepeatRLELevel{D, Ti, Tp, Tv, VTp, VTi, VTv}}) where {D, Ti, Tp, Tv, VTp, VTi, VTv}
+    return postype(VTp)
+end
+
+function moveto(lvl::RepeatRLELevel{D, Ti, Tp, Tv, VTp, VTi, VTv}, ::Type{MemType}) where {D, Ti, Tp, Tv, VTp, VTi, VTv, MemType <: AbstractVector}
+    ptr_2 = MemType(lvl.ptr)
+    idx_2 = MemType(lvl.idx)
+    val_2 = MemType(lvl.val)
+    return RepeatRLELevel{D, Ti, Tp, MemType{Tp}, MemType{Ti}, MemType{VTv}}(lvl.shape, ptr_2, idx_2, val_2)
+end
 
 countstored_level(lvl::RepeatRLELevel, pos) = lvl.ptr[pos + 1] - 1
 
@@ -55,7 +75,7 @@ pattern!(lvl::RepeatRLELevel{D, Ti}) where {D, Ti} =
 redefault!(lvl::RepeatRLELevel{D, Ti, Tp, Tv}, init) where {D, Ti, Tp, Tv} = 
     RepeatRLELevel{init, Ti, Tp, Tv}(lvl.val)
 
-function Base.show(io::IO, lvl::RepeatRLELevel{D, Ti, Tp, Tv}) where {D, Ti, Tp, Tv}
+function Base.show(io::IO, lvl::RepeatRLELevel{D, Ti, Tp, Tv, VTp, VTi, VTv}) where {D, Ti, Tp, Tv, VTp, VTi, VTv}
     print(io, "RepeatRLE{")
     print(io, D)
     if get(io, :compact, false)
@@ -69,11 +89,11 @@ function Base.show(io::IO, lvl::RepeatRLELevel{D, Ti, Tp, Tv}) where {D, Ti, Tp,
     if get(io, :compact, false)
         print(io, "…")
     else
-        show(IOContext(io, :typeinfo=>Vector{Tp}), lvl.ptr)
+        show(IOContext(io, :typeinfo=>VTp), lvl.ptr)
         print(io, ", ")
-        show(IOContext(io, :typeinfo=>Vector{Ti}), lvl.idx)
+        show(IOContext(io, :typeinfo=>VTi), lvl.idx)
         print(io, ", ")
-        show(IOContext(io, :typeinfo=>Vector{Tv}), lvl.val)
+        show(IOContext(io, :typeinfo=>VTv), lvl.val)
     end
     print(io, ")")
 end
@@ -115,7 +135,7 @@ mutable struct VirtualRepeatRLELevel
     qos_stop
     dirty
 end
-function virtualize(ex, ::Type{RepeatRLELevel{D, Ti, Tp, Tv}}, ctx, tag=:lvl) where {D, Ti, Tp, Tv}
+function virtualize(ex, ::Type{RepeatRLELevel{D, Ti, Tp, Tv, VTp, VTi, VTv}}, ctx, tag=:lvl) where {D, Ti, Tp, Tv, VTp, VTi, VTv}
     sym = ctx.freshen(tag)
     shape = value(:($sym.shape), Int)
     ros_fill = ctx.freshen(sym, :_ros_fill)

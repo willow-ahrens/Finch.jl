@@ -44,6 +44,10 @@ function memory_type(::Type{DenseLevel{Ti, Lvl}}) where {Ti, Lvl}
     return memory_type(Lvl)
 end
 
+function postype(::Type{DenseLevel{Ti, Lvl}}) where {Ti, Lvl}
+    return postype(Lvl)
+end
+
 
 function moveto(lvl::DenseLevel{Ti, Lvl},  ::Type{MemType}) where {Ti, Lvl, MemType <: AbstractVector}
     return DenseLevel(moveto(lvl.lvl, MemType), lvl.shape)

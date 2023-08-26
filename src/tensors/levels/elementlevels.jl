@@ -36,6 +36,10 @@ function memory_type(::Type{ElementLevel{D, Tv, V}}) where {D, Tv, V}
     return containertype(V)
 end
 
+function postype(::Type{ElementLevel{D, Tv, V}}) where {D, Tv, V}
+    return postype(V)
+end
+
 function moveto(lvl::ElementLevel{D, Tv, V},  ::Type{MemType}) where {D, Tv, V, MemType <: AbstractVector}
     valp = MemType(lvl.val)
     return ElementLevel{D, Tv, MemType{Tv}}(valp)
@@ -52,7 +56,7 @@ function Base.show(io::IO, lvl::ElementLevel{D, Tv, V}) where {D, Tv, V}
     if get(io, :compact, false)
         print(io, "…")
     else
-        show(IOContext(io, :typeinfo=>Vector{Tv}), lvl.val)
+        show(IOContext(io, :typeinfo=>V), lvl.val)
     end
     print(io, ")")
 end 
