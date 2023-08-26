@@ -71,6 +71,10 @@ pattern!(fbr::SubFiber) = SubFiber(pattern!(fbr.lvl), fbr.pos)
 
 struct VirtualPatternLevel <: AbstractVirtualLevel end
 
+is_level_injective(::VirtualPatternLevel, ctx) = []
+is_level_concurrent(::VirtualPatternLevel, ctx) = []
+is_level_atomic(lvl::VirtualPatternLevel, ctx) = true
+
 lower(lvl::VirtualPatternLevel, ctx::AbstractCompiler, ::DefaultStyle) = :(PatternLevel())
 virtualize(ex, ::Type{<:PatternLevel}, ctx) = VirtualPatternLevel()
 
@@ -94,8 +98,6 @@ reassemble_level!(lvl::VirtualPatternLevel, ctx, pos_start, pos_stop) = quote en
 trim_level!(lvl::VirtualPatternLevel, ctx::AbstractCompiler, pos) = lvl
 
 instantiate_reader(::VirtualSubFiber{VirtualPatternLevel}, ctx, protos) = Fill(true)
-is_concurrent(lvl::VirtualPatternLevel, ctx) = true
-is_injective(lvl::VirtualPatternLevel, ctx, accs) = true
 
 function instantiate_updater(fbr::VirtualSubFiber{VirtualPatternLevel}, ctx, protos)
     val = freshen(ctx.code, :null)

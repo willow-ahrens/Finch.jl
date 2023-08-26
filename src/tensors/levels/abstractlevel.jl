@@ -7,9 +7,9 @@ abstract type AbstractVirtualLevel end
 
 
 
-is_concurrent(lvl::AbstractVirtualLevel, ctx) = true
+is_level_concurrent(lvl::AbstractVirtualLevel, ctx) = true
 
-is_injective(lvl::AbstractVirtualLevel, ctx, accs) = false
+is_level_injective(lvl::AbstractVirtualLevel, ctx, accs) = false
 
 
 

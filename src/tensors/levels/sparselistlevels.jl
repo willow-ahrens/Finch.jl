@@ -122,6 +122,11 @@ mutable struct VirtualSparseListLevel <: AbstractVirtualLevel
     qos_stop
     prev_pos
 end
+
+is_level_injective(lvl::VirtualSparseListLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., false]
+is_level_concurrent(lvl::VirtualSparseListLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., false]
+is_level_atomic(lvl::VirtualSparseListLevel, ctx) = false
+
 function virtualize(ex, ::Type{SparseListLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}
     sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Int)
@@ -353,9 +358,6 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, s
         )
     )
 end
-
-is_laminable_updater(lvl::VirtualSparseListLevel, ctx, protos...) = false
-is_injective(lvl::VirtualSparseListLevel, ctx, accs) = true
 
 instantiate_updater(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, protos) = begin
     instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, protos)

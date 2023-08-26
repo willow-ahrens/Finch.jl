@@ -23,6 +23,14 @@ array.
 function is_injective end
 
 """
+    is_concurrent(tns, ctx)
+
+Returns a vector of booleans, one for each dimension of the tensor, indicating
+whether multiple threads can loop through the corresponding dimension.
+"""
+function is_concurrent end
+
+"""
     is_atomic(tns, ctx)
 
 Returns a boolean indicating whether it is safe to update the same element of the
@@ -126,6 +134,15 @@ function parallelAnalysis(prog, index, alg, ctx) :: ParallelAnalysisResults
             push!(tensorsNeedingAtomics, root)
             push!(nonInjectiveAccss, rep.lhs)
         end
+
+        if @capture acc access(~a, ~m, ~j..., i)
+            if is_injective(a, ctx)[length(j) + 1]
+                @assert is_concurrent(a, ctx)[length(j) + 1]
+            else
+                @assert is_atomic(a, ctx)
+            end
+        end
+
 
         # The access is injective
         if !Finch.is_injective(tns.val, ctx, (length(rep.lhs.idxs),))

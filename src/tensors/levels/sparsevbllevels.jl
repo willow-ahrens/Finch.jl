@@ -101,6 +101,11 @@ mutable struct VirtualSparseVBLLevel <: AbstractVirtualLevel
     dirty
     prev_pos
 end
+
+is_level_injective(lvl::VirtualSparseVBLLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., false]
+is_level_concurrent(lvl::VirtualSparseVBLLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., false]
+is_level_atomic(lvl::VirtualSparseVBLLevel, ctx) = false
+
 function virtualize(ex, ::Type{SparseVBLLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}
     sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Int)
@@ -406,8 +411,6 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, su
     )
 end
 
-
-is_injective(lvl::VirtualSparseVBLLevel, ctx, accs) = false
 
 instantiate_updater(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, protos) =
     instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, protos)

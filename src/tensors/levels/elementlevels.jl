@@ -74,6 +74,10 @@ struct VirtualElementLevel <: AbstractVirtualLevel
     D
 end
 
+is_level_injective(::VirtualElementLevel, ctx) = []
+is_level_concurrent(::VirtualElementLevel, ctx) = []
+is_level_atomic(lvl::VirtualElementLevel, ctx) = false
+
 lower(lvl::VirtualElementLevel, ctx::AbstractCompiler, ::DefaultStyle) = lvl.ex
 function virtualize(ex, ::Type{ElementLevel{D, Tv}}, ctx, tag=:lvl) where {D, Tv}
     sym = freshen(ctx, tag)
@@ -137,9 +141,6 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualElementLevel}, ctx, prot
         body = (ctx) -> VirtualScalar(nothing, lvl.Tv, lvl.D, gensym(), val)
     )
 end
-
-is_concurrent(lvl::VirtualElementLevel, ctx) = true
-is_injective(lvl::VirtualElementLevel, ctx, accs) = true
 
 function instantiate_updater(fbr::VirtualSubFiber{VirtualElementLevel}, ctx, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)

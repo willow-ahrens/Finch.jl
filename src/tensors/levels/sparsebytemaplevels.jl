@@ -92,6 +92,11 @@ mutable struct VirtualSparseByteMapLevel <: AbstractVirtualLevel
     qos_fill
     qos_stop
 end
+
+is_level_injective(lvl::VirtualSparseByteMapLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., false]
+is_level_concurrent(lvl::VirtualSparseByteMapLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., false]
+is_level_atomic(lvl::VirtualSparseByteMapLevel, ctx) = false
+
 function virtualize(ex, ::Type{SparseByteMapLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}   
     sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Int)
@@ -411,11 +416,6 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
         )
     )
 end
-
-
-# is_concurrent(lvl::VirtualSparseByteMapLevel, ctx, ::Union{::typeof(defaultread), ::typeof(walk), ::typeof(gallop), ::typeof(follow), typeof(defaultupdate)}) = true
-
-is_injective(lvl::VirtualSparseByteMapLevel, ctx, accs) = false
 
 instantiate_updater(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, protos) = 
     instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, protos)

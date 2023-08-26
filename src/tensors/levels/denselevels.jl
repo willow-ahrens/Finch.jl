@@ -93,6 +93,11 @@ mutable struct VirtualDenseLevel <: AbstractVirtualLevel
     Ti
     shape
 end
+
+is_level_injective(lvl::VirtualDenseLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., false]
+is_level_concurrent(lvl::VirtualDenseLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., false]
+is_level_atomic(lvl::VirtualDenseLevel, ctx) = false
+
 function virtualize(ex, ::Type{DenseLevel{Ti, Lvl}}, ctx, tag=:lvl) where {Ti, Lvl}
     sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Ti)
@@ -165,9 +170,10 @@ function freeze_level!(lvl::VirtualDenseLevel, ctx::AbstractCompiler, pos)
     return lvl
 end
 
-is_injective(lvl::VirtualDenseLevel, ctx, accs) = true
 struct DenseTraversal
     fbr
+    subunfurl
+    subfiber_ctr
 end
 
 instantiate_reader(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, protos) =

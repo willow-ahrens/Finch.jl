@@ -143,6 +143,11 @@ mutable struct VirtualSparseHashLevel <: AbstractVirtualLevel
     qos_fill
     qos_stop
 end
+
+is_level_injective(lvl::VirtualSparseHashLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., (true for _ in 1:lvl.N)...]
+is_level_concurrent(lvl::VirtualSparseHashLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., (true for _ in 1:lvl.N)...]
+is_level_atomic(lvl::VirtualSparseHashLevel, ctx) = false
+
 function virtualize(ex, ::Type{SparseHashLevel{N, Ti, Tp, Tbl, Lvl}}, ctx, tag=:lvl) where {N, Ti, Tp, Tbl, Lvl}   
     sym = freshen(ctx, tag)
     shape = map(n->value(:($sym.shape[$n]), Int), 1:N)
@@ -395,11 +400,6 @@ function instantiate_reader(trv::SparseHashFollowTraversal, ctx, subprotos, ::ty
             end
     )
 end
-
-
-is_injective(lvl::VirtualSparseHashLevel, ctx, accs) = true    
-is_concurrent(lvl::VirtualSparseHashLevel, ctx) = false
-# is_concurrent(lvl::VirtualSparseHashLevel, ctx, ::Union{::typeof(defaultread), ::typeof(walk), ::typeof(gallop), ::typeof(follow)}) = true
 
 struct SparseHashLaminateTraversal
     lvl

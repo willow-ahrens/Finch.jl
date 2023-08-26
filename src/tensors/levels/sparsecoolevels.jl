@@ -139,6 +139,11 @@ mutable struct VirtualSparseCOOLevel <: AbstractVirtualLevel
     qos_stop
     prev_pos
 end
+
+is_level_injective(lvl::VirtualSparseCOOLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., (true for _ in 1:lvl.N)...]
+is_level_concurrent(lvl::VirtualSparseCOOLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., (true for _ in 1:lvl.N)...]
+is_level_atomic(lvl::VirtualSparseCOOLevel, ctx) = false
+
 function virtualize(ex, ::Type{SparseCOOLevel{N, Ti, Tp, Tbl, Lvl}}, ctx, tag=:lvl) where {N, Ti, Tp, Tbl, Lvl}   
     sym = freshen(ctx, tag)
     shape = map(n->value(:($sym.shape[$n]), Int), 1:N)
@@ -329,10 +334,6 @@ function instantiate_reader(trv::SparseCOOWalkTraversal, ctx, subprotos, ::Union
         )
     )
 end
-
-is_injective(lvl::VirtualSparseCOOLevel, ctx, accs) = true
-
-# is_concurrent(lvl::VirtualSparseCOOLevel, ctx, ::Union{::typeof(defaultread), ::typeof(walk), ::typeof(gallop), ::typeof(follow), typeof(defaultupdate)}) = true
 
 struct SparseCOOExtrudeTraversal
     lvl

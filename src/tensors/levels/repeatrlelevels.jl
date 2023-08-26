@@ -116,6 +116,11 @@ mutable struct VirtualRepeatRLELevel <: AbstractVirtualLevel
     dirty
     prev_pos
 end
+
+is_level_injective(::VirtualRepeatRLELevel, ctx) = [false]
+is_level_concurrent(::VirtualRepeatRLELevel, ctx) = [false]
+is_level_atomic(lvl::VirtualRepeatRLELevel, ctx) = false
+
 function virtualize(ex, ::Type{RepeatRLELevel{D, Ti, Tp, Tv}}, ctx, tag=:lvl) where {D, Ti, Tp, Tv}
     sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Int)
@@ -260,8 +265,6 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, su
         )
     )
 end
-
-is_injective(lvl::VirtualRepeatRLELevel, ctx, accs) = false
 
 instantiate_updater(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, protos) = 
     instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, protos)

@@ -79,6 +79,11 @@ mutable struct VirtualSparseTriangleLevel <: AbstractVirtualLevel
     Ti
     shape
 end
+
+is_level_injective(lvl::VirtualSparseTriangleLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., (true for _ in 1:lvl.N)...]
+is_level_concurrent(lvl::VirtualSparseTriangleLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., (true for _ in 1:lvl.N)...]
+is_level_atomic(lvl::VirtualSparseTriangleLevel, ctx) = false
+
 function virtualize(ex, ::Type{SparseTriangleLevel{N, Ti, Lvl}}, ctx, tag=:lvl) where {N, Ti, Lvl}
     sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Int)
@@ -156,8 +161,6 @@ function virtual_simplex(d, ctx, n)
     end
     return simplify(call(fld, res, factorial(d)), ctx)
 end
-
-is_injective(lvl::VirtualSparseTriangleLevel, ctx, accs) = false
 
 struct SparseTriangleFollowTraversal
     lvl
