@@ -10,7 +10,7 @@ function lower(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler,  ::DefaultS
 end
 
 function virtualize(ex, arrtype::Type{<:AbstractUnitRange{T}}, ctx, tag=:tns) where {T}
-    sym = ctx.freshen(tag)
+    sym = freshen(ctx, tag)
     push!(ctx.preamble, :($sym = $ex))
     target = Extent(value(:(first($sym)), T), value(:(last($sym)), T))
     VirtualAbstractUnitRange(sym, target, arrtype, T)
@@ -34,11 +34,11 @@ function instantiate_reader(arr::VirtualAbstractUnitRange, ctx, subprotos, proto
 end
 
 function declare!(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, init)
-    throw(FormatLimitation("$(arr.arrtype) is not writeable"))
+    throw(FinchProtocolError("$(arr.arrtype) is not writeable"))
 end
 
 instantiate_updater(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, protos...) = 
-    throw(FormatLimitation("$(arr.arrtype) is not writeable"))
+    throw(FinchProtocolError("$(arr.arrtype) is not writeable"))
 
 FinchNotation.finch_leaf(x::VirtualAbstractUnitRange) = virtual(x)
 

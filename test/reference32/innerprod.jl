@@ -1,8 +1,8 @@
 begin
-    B_lvl = (ex.bodies[1]).tns.tns.lvl
+    B_lvl = (ex.bodies[1]).tns.bind.lvl
     B_lvl_2 = B_lvl.lvl
     B_lvl_3 = B_lvl_2.lvl
-    A_lvl = ((ex.bodies[2]).body.body.body.rhs.args[1]).tns.tns.lvl
+    A_lvl = ((ex.bodies[2]).body.body.body.rhs.args[1]).tns.bind.lvl
     A_lvl_2 = A_lvl.lvl
     A_lvl_3 = A_lvl_2.lvl
     B_lvl_2_qos_fill = 0
