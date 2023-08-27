@@ -2,6 +2,7 @@ struct JumperStyle end
 
 @kwdef struct Jumper
     body
+    seek = (ctx, start) -> error("seek not implemented error")
 end
 
 FinchNotation.finch_leaf(x::Jumper) = virtual(x)
@@ -31,6 +32,10 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::JumperStyle)
 
     guard = :($i <= $(ctx(getstop(root.ext))))
 
+    foreach(filter(isvirtual, collect(PostOrderDFS(root.body)))) do node
+        push!(ctx.preamble, jumper_seek(node.val, ctx, root.ext))
+    end
+    
     body_2 = Rewrite(Postwalk(@rule access(~tns::isvirtual, ~mode, ~idxs...) => begin
         tns_2 = jumper_body(tns.val, ctx, root.ext)
         access(tns_2, mode, idxs...)
@@ -59,6 +64,9 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::JumperStyle)
     end
 end
 
+jumper_seek(node::Jumper, ctx, ext) = node.seek(ctx, ext)
+jumper_seek(node, ctx, ext) = quote end
+
 jumper_body(node::Jumper, ctx, ext) = node.body
 jumper_body(node, ctx, ext) = node
 
@@ -74,7 +82,7 @@ FinchNotation.finch_leaf(x::Jump) = virtual(x)
 (ctx::Stylize{<:AbstractCompiler})(node::Jump) = ctx.root.kind === loop ? JumperPhaseStyle() : DefaultStyle()
 
 function phase_range(node::Jump, ctx, ext)
-    push!(ctx.preamble, node.seek !== nothing ? node.seek(ctx, ext) : quote end)
+    #push!(ctx.preamble, node.seek !== nothing ? node.seek(ctx, ext) : quote end)
     similar_extent(ext, getstart(ext), node.stop(ctx, ext))
 end
 

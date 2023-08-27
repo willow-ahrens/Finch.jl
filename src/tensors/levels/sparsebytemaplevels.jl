@@ -325,14 +325,15 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
                 Phase(
                     stop = (ctx, ext) -> value(my_i_stop),
                     body = (ctx, ext) -> Jumper(
+                        seek = (ctx, ext) -> quote
+                            while $my_r + $(Tp(1)) < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext)))
+                                $my_r += $(Tp(1))
+                            end
+                        end,
+
                         body = Thunk(
+                            preamble = :($my_i = last($(lvl.ex).srt[$my_r])),
                             body = (ctx) -> Jump(
-                                seek = (ctx, ext) -> quote
-                                    while $my_r + $(Tp(1)) < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext)))
-                                        $my_r += $(Tp(1))
-                                    end
-                                    $my_i = last($(lvl.ex).srt[$my_r])
-                                end,
                                 stop = (ctx, ext) -> value(my_i),
                                 body = (ctx, ext, ext_2) -> Switch([
                                     value(:($(ctx(getstop(ext_2))) == $my_i)) => Thunk(

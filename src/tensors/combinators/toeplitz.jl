@@ -119,6 +119,7 @@ end
 jumper_body(node::VirtualToeplitzArray, ctx, ext) = VirtualToeplitzArray(jumper_body(node.body, ctx, ext), node.dim)
 stepper_body(node::VirtualToeplitzArray, ctx, ext) = VirtualToeplitzArray(stepper_body(node.body, ctx, ext), node.dim)
 stepper_seek(node::VirtualToeplitzArray, ctx, ext) = stepper_seek(node.body, ctx, ext)
+jumper_seek(node::VirtualToeplitzArray, ctx, ext) = jumper_seek(node.body, ctx, ext)
 
 getroot(tns::VirtualToeplitzArray) = getroot(tns.body)
 

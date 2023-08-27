@@ -292,15 +292,15 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, s
             body = (ctx) -> Sequence([
                 Phase(
                     stop = (ctx, ext) -> value(my_i1),
-                    body = (ctx, ext) -> Jumper(
+                    body = (ctx, ext) -> Stepper(
+                        seek = (ctx, ext) -> quote
+                            if $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
+                                $my_q = Finch.scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
+                            end
+                        end,                        
                         body = Thunk(
+                            preamble = :($my_i2 = $(lvl.ex).idx[$my_q]),
                             body = (ctx) -> Jump(
-                                seek = (ctx, ext) -> quote
-                                    if $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
-                                        $my_q = Finch.scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
-                                    end
-                                    $my_i2 = $(lvl.ex).idx[$my_q]
-                                end,
                                 stop = (ctx, ext) -> value(my_i2),
                                 body = (ctx, ext, ext_2) -> Switch([
                                     value(:($(ctx(getstop(ext_2))) == $my_i2)) => Thunk(
