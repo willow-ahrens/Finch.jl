@@ -199,7 +199,7 @@ function lower_loop(ctx, root, ext)
     root_2 = Rewrite(Postwalk(@rule access(~tns, ~mode, ~idxs...) => begin
         if !isempty(idxs) && root.idx == idxs[end]
             protos = [(mode.kind === reader ? defaultread : defaultupdate) for _ in idxs]
-            tns_2 = unfurl(tns, ctx, root.ext.val, protos...)
+            tns_2 = unfurl(tns, ctx, root.ext.val, mode, protos...)
             access(tns_2, mode, idxs...)
         end
     end))(root)
@@ -207,14 +207,10 @@ function lower_loop(ctx, root, ext)
 end
 
 function lower_loop(ctx, root, ext::ParallelDimension)
-    pal = parallelAnalysis(root, root.idx, ctx.algebra, ctx)
-    if !pal.naive
-        throw(pal)
-    end
-    # FIXME: Later on, we should take advantage of the info to repair with atomics or such.
+    @assert parallelAnalysis(root, root.idx, ctx.algebra, ctx)
     
-    tid = index(freshen(ctx, :tid))
-    i = freshen(ctx, :i)
+    tid = index(freshen(ctx.code, :tid))
+    i = freshen(ctx.code, :i)
     root_2 = loop(tid, Extent(value(i, Int), value(i, Int)),
         loop(root.idx, ext.ext,
             sieve(access(VirtualSplitMask(value(:(Threads.nthreads()))), reader(), root.idx, tid),

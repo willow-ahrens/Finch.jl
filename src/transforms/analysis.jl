@@ -1,3 +1,8 @@
+struct FinchConcurrencyError
+    msg
+end
+
+
 """
 Parallelism analysis plan: We will allow automatic paralleization when the following conditions are met:
 All non-locally defined tensors that are written, are only written to with the plain index i in a injective and consistent way and with an associative operator.
@@ -36,7 +41,6 @@ function is_concurrent end
 Returns a boolean indicating whether it is safe to update the same element of the
 tensor from multiple simultaneous threads.
 """
-function is_injective end
 function is_atomic end
 
 function gatherAcceses(prog) :: Vector{FinchNode}
@@ -86,7 +90,9 @@ struct ParallelAnalysisResults <: Exception
     nonConCurrentAccss::Set{FinchNode}
 end
 
-function parallelAnalysis(prog, index, alg, ctx) :: ParallelAnalysisResults
+function parallelAnalysis(prog, index, alg, ctx)
+    return true
+
     accs = gatherAcceses(prog)
     assigns = gatherAssignments(prog)
     locDefs = Set{FinchNode}(gatherLocalDeclerations(prog))

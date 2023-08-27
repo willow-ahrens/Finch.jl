@@ -59,7 +59,7 @@ end
 function instantiate_reader(arr::VirtualToeplitzArray, ctx, protos)
     VirtualToeplitzArray(instantiate_reader(arr.body, ctx, [protos[1:arr.dim]; protos[arr.dim + 2:end]]), arr.dim)
 end
-function instantiate_updater(arr::VirtualToeplitzArray, ctx, protos...)
+function instantiate_updater(arr::VirtualToeplitzArray, ctx, protos)
     VirtualToeplitzArray(instantiate_updater(arr.body, ctx, [protos[1:arr.dim]; protos[arr.dim + 2:end]]), arr.dim)
 end
 
@@ -132,7 +132,7 @@ stepper_seek(node::VirtualToeplitzArray, ctx, ext) = stepper_seek(node.body, ctx
 
 getroot(tns::VirtualToeplitzArray) = getroot(tns.body)
 
-function unfurl(tns::VirtualToeplitzArray, ctx, ext, protos...)
+function unfurl(tns::VirtualToeplitzArray, ctx, ext, mode, protos...)
     if length(virtual_size(tns, ctx)) == tns.dim + 1
         Unfurled(tns,
             Lookup(
@@ -140,6 +140,6 @@ function unfurl(tns::VirtualToeplitzArray, ctx, ext, protos...)
             )
         )
     else
-        VirtualToeplitzArray(unfurl(tns.body, ctx, ext, protos...), tns.dim)
+        VirtualToeplitzArray(unfurl(tns.body, ctx, ext, mode, protos...), tns.dim)
     end
 end

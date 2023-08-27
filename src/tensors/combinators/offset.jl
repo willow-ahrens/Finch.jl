@@ -132,8 +132,8 @@ stepper_seek(node::VirtualOffsetArray, ctx, ext) = stepper_seek(node.body, ctx, 
 
 getroot(tns::VirtualOffsetArray) = getroot(tns.body)
 
-function unfurl(tns::VirtualOffsetArray, ctx, ext, protos...)
-    VirtualOffsetArray(unfurl(tns.body, ctx, shiftdim(ext, tns.delta[end]), protos...), tns.delta)
+function unfurl(tns::VirtualOffsetArray, ctx, ext, mode, protos...)
+    VirtualOffsetArray(unfurl(tns.body, ctx, shiftdim(ext, tns.delta[end]), mode, protos...), tns.delta)
 end
 
 function lower_access(ctx::AbstractCompiler, node, tns::VirtualOffsetArray)

@@ -125,8 +125,8 @@ visit_simplify(node::VirtualProtocolizedArray) = VirtualProtocolizedArray(visit_
     guard => VirtualProtocolizedArray(body, node.protos)
 end
 
-function unfurl(tns::VirtualProtocolizedArray, ctx, ext, protos...)
-    VirtualProtocolizedArray(unfurl(tns.body, ctx, ext, map(something, tns.protos, protos)...), tns.protos)
+function unfurl(tns::VirtualProtocolizedArray, ctx, ext, mode, protos...)
+    VirtualProtocolizedArray(unfurl(tns.body, ctx, ext, mode, map(something, tns.protos, protos)...), tns.protos)
 end
 
 jumper_body(node::VirtualProtocolizedArray, ctx, ext) = VirtualProtocolizedArray(jumper_body(node.body, ctx, ext), node.protos)

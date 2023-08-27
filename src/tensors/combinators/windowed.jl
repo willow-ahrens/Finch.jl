@@ -131,12 +131,12 @@ stepper_seek(node::VirtualWindowedArray, ctx, ext) = stepper_seek(node.body, ctx
 
 getroot(tns::VirtualWindowedArray) = getroot(tns.body)
 
-function unfurl(tns::VirtualWindowedArray, ctx, ext, protos...)
+function unfurl(tns::VirtualWindowedArray, ctx, ext, mode, protos...)
     if tns.dims[end] !== nothing
         dims = virtual_size(tns.body, ctx)
-        tns_2 = unfurl(tns.body, ctx, dims[end], protos...)
+        tns_2 = unfurl(tns.body, ctx, dims[end], mode, protos...)
         truncate(tns_2, ctx, dims[end], ext)
     else
-        unfurl(tns.body, ctx, ext, protos...)
+        unfurl(tns.body, ctx, ext, mode, protos...)
     end
 end

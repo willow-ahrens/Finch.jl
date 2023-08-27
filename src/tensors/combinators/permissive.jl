@@ -126,9 +126,10 @@ stepper_seek(node::VirtualPermissiveArray, ctx, ext) = stepper_seek(node.body, c
 
 getroot(tns::VirtualPermissiveArray) = getroot(tns.body)
 
-function unfurl(tns::VirtualPermissiveArray, ctx, ext, protos...)
-    tns_2 = unfurl(tns.body, ctx, ext, protos...)
+function unfurl(tns::VirtualPermissiveArray, ctx, ext, mode, protos...)
+    tns_2 = unfurl(tns.body, ctx, ext, mode, protos...)
     dims = virtual_size(tns.body, ctx)
+    garb = (mode === reader) ? Fill(literal(missing)) : Fill(Null())
     if tns.dims[end] && dims[end] != dimless
         VirtualPermissiveArray(
             Unfurled(
@@ -136,14 +137,14 @@ function unfurl(tns::VirtualPermissiveArray, ctx, ext, protos...)
                 Sequence([
                     Phase(
                         stop = (ctx, ext_2) -> call(-, getstart(dims[end]), 1),
-                        body = (ctx, ext) -> Run(Fill(literal(missing))),
+                        body = (ctx, ext) -> Run(garb),
                     ),
                     Phase(
                         stop = (ctx, ext_2) -> getstop(dims[end]),
                         body = (ctx, ext_2) -> truncate(tns_2, ctx, dims[end], ext_2)
                     ),
                     Phase(
-                        body = (ctx, ext_2) -> Run(Fill(literal(missing))),
+                        body = (ctx, ext_2) -> Run(garb),
                     )
                 ]),
             ),

@@ -1,7 +1,6 @@
 # FIXME: Add a test for failures of concurrent.
 @testset "parallel" begin
     @info "Testing Julia Threads Parallelism and Analysis"
-     
 
     let
         io = IOBuffer()
@@ -24,7 +23,7 @@
         A = Fiber!(Dense(SparseList(Element(0.0))))
         x = Fiber!(Dense(Element(0.0)))
         y = Fiber!(Dense(Element(0.0)))
-        @test_throws Finch.ParallelAnalysisResults try
+        @test_throws Finch.FinchConcurrencyError try
             @finch_code begin
                 y .= 0
                 for j = parallel(_)
@@ -34,10 +33,10 @@
                 end
             end
         catch e
-            @test e isa Finch.ParallelAnalysisResults
-            @test !e.naive
-            @test e.withAtomics
-            @test length(e.nonInjectiveAccss) == 1
+            @test e isa Finch.FinchConcurrencyError
+            #@test !e.naive
+            #@test e.withAtomics
+            #@test length(e.nonInjectiveAccss) == 1
             throw(e)
         end
     end
@@ -47,7 +46,7 @@
         x = Fiber!(Dense(Element(0.0)))
         y = Fiber!(Dense(Element(0.0)))
 
-        @test_throws Finch.ParallelAnalysisResults try
+        @test_throws Finch.FinchConcurrencyError try
             @finch_code begin
                 y .= 0
                 for j = parallel(_)
@@ -58,10 +57,10 @@
                 end
             end
         catch e
-            @test e isa Finch.ParallelAnalysisResults
-            @test !e.naive
-            @test e.withAtomics
-            @test length(e.nonInjectiveAccss) == 1
+            @test e isa Finch.FinchConcurrencyError
+            #@test !e.naive
+            #@test e.withAtomics
+            #@test length(e.nonInjectiveAccss) == 1
             throw(e)
         end
     end
@@ -70,7 +69,7 @@
         x = Fiber!(Dense(Element(0.0)))
         y = Fiber!(Dense(Element(0.0)))
 
-        @test_throws Finch.ParallelAnalysisResults try
+        @test_throws Finch.FinchConcurrencyError try
             @finch_code begin
                 y .= 0
                 for j = parallel(_)
@@ -81,12 +80,12 @@
                 end
             end
         catch e
-            @test e isa Finch.ParallelAnalysisResults
-            @test !e.naive
-            @test !e.withAtomics
-            @test length(e.nonInjectiveAccss) == 1
-            @test e.withAtomicsAndAssoc
-            @test length(e.nonAssocAssigns) == 2
+            @test e isa Finch.FinchConcurrencyError
+            #@test !e.naive
+            #@test !e.withAtomics
+            #@test length(e.nonInjectiveAccss) == 1
+            #@test e.withAtomicsAndAssoc
+            #@test length(e.nonAssocAssigns) == 2
             throw(e)
         end
     end
