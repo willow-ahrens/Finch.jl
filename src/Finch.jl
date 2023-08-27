@@ -41,7 +41,6 @@ export choose, minby, maxby, overwrite, initwrite, d
 
 export default, AsArray
 
-
 export parallelAnalysis, ParallelAnalysisResults
 export parallel, extent, dimless
 
