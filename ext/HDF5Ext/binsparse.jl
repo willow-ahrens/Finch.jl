@@ -1,4 +1,5 @@
 using Finch: level_ndims
+using CIndices
 
 bswrite_type_lookup = Dict(
     UInt8 => "uint8",
@@ -32,6 +33,10 @@ bsread_type_lookup = Dict(
     "bint8" => Bool,
 )
 
+indices_one_to_zero(vec::Vector{<:Integer}) = vec .- one(eltype(vec))
+indices_one_to_zero(vec::Vector{<:CIndex{Ti}}) where {Ti} = unsafe_wrap(Array, reinterpret(Ptr{Ti}, pointer(vec)), length(vec); own = false)
+indices_zero_to_one(vec::Vector{Ti}) where {Ti} = unsafe_wrap(Array, reinterpret(Ptr{CIndex{Ti}}, pointer(vec)), length(vec); own = false)
+
 function bswrite_data(f, desc, key, data)
     T = get(bswrite_cast_lookup, eltype(data), eltype(data))
     desc["data_types"]["$(key)_type"] = bswrite_type_lookup[eltype(data)]
@@ -50,7 +55,7 @@ function Finch.bswrite(fname, fbr::Fiber, attrs = Dict())
             "format" => Dict(),
             "fill" => true,
             "swizzle" => collect(ndims(fbr)-1:-1:0),
-            "shape" => size(fbr),
+            "shape" => map(Int, size(fbr)),
             "data_types" => Dict(),
             "attrs" => attrs,
         )
@@ -90,7 +95,7 @@ function bsread_level(f, desc, fmt, ::Val{:dense})
     R = fmt["rank"]
     for r = 1:R
         n = level_ndims(typeof(lvl))
-        shape = Int(desc["shape"][end - n])
+        shape = CIndex{Int}(desc["shape"][end - n])
         lvl = DenseLevel(lvl, shape)
     end
     lvl
@@ -101,8 +106,8 @@ function bswrite_level(f, desc, fmt, lvl::SparseListLevel)
     fmt["rank"] = 1
     n = level_ndims(typeof(lvl))
     N = length(desc["shape"])
-    bswrite_data(f, desc, "pointers_$(N - n - 1)", lvl.ptr)
-    bswrite_data(f, desc, "indices_$(N - n)", lvl.idx)
+    bswrite_data(f, desc, "pointers_$(N - n - 1)", indices_one_to_zero(lvl.ptr))
+    bswrite_data(f, desc, "indices_$(N - n)", indices_one_to_zero(lvl.idx))
     fmt["subformat"] = Dict()
     bswrite_level(f, desc, fmt["subformat"], lvl.lvl)
 end
@@ -111,9 +116,9 @@ function bswrite_level(f, desc, fmt, lvl::SparseCOOLevel{R}) where {R}
     fmt["rank"] = R
     n = level_ndims(typeof(lvl))
     N = length(desc["shape"])
-    bswrite_data(f, desc, "pointers_$(N - n - 1)", lvl.ptr)
+    bswrite_data(f, desc, "pointers_$(N - n - 1)", indices_one_to_zero(lvl.ptr))
     for r = 1:R
-        bswrite_data(f, desc, "indices_$(N - n + r - 1)", lvl.tbl[r])
+        bswrite_data(f, desc, "indices_$(N - n + r - 1)", indices_one_to_zero(lvl.tbl[r]))
     end
     fmt["subformat"] = Dict()
     bswrite_level(f, desc, fmt["subformat"], lvl.lvl)
@@ -123,14 +128,14 @@ function bsread_level(f, desc, fmt, ::Val{:sparse})
     lvl = bsread_level(f, desc, fmt["subformat"])
     n = level_ndims(typeof(lvl)) + R
     N = length(desc["shape"])
-    ptr = bsread_data(f, desc, "pointers_$(N - n - 1)")
+    ptr = indices_zero_to_one(bsread_data(f, desc, "pointers_$(N - n - 1)"))
     tbl = (map(1:R) do r
-        bsread_data(f, desc, "indices_$(N - n + r - 1)")
+        indices_zero_to_one(bsread_data(f, desc, "indices_$(N - n + r - 1)"))
     end...,)
     shape = ntuple(r->eltype(tbl[r])(desc["shape"][N - n + r]), R)
     if R == 1
         SparseListLevel(lvl, shape[1], ptr, tbl[1])
     else
-        SparseCOOLevel{Int(R)}(lvl, shape, tbl, ptr)
+        SparseCOOLevel{Int(R), typeof(shape), eltype(ptr)}(lvl, shape, tbl, ptr)
     end
 end
