@@ -64,7 +64,7 @@ include("transforms/scopes.jl")
 include("transforms/lifecycle.jl")
 include("transforms/dimensionalize.jl")
 include("transforms/evaluate.jl")
-include("transforms/analysis.jl")
+include("transforms/concurrent.jl")
 
 include("execute.jl")
 

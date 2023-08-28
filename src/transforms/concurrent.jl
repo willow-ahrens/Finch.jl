@@ -3,20 +3,6 @@ struct FinchConcurrencyError
 end
 
 """
-Parallelism analysis plan: We will allow automatic paralleization when the following conditions are met:
-All non-locally defined tensors that are written, are only written to with the plain index i in a injective and consistent way and with an associative operator.
-
-all reader or updater accesses on i need to be concurrent (safe to iterate multiple instances of at the same time)
-
-two array axis properties: is_concurrent and is_injective
-third properties: is_atomic
-
-You aren't allowed to update a tensor without accessing it with i or marking atomic.
-
-new array: make_atomic
-"""
-
-"""
     is_injective(tns, ctx)
 
 Returns a vector of booleans, one for each dimension of the tensor, indicating
@@ -42,7 +28,14 @@ tensor from multiple simultaneous threads.
 """
 function is_atomic end
 
-function parallelAnalysis(root, index, alg, ctx)
+"""
+ensure_concurrent(root, ctx)
+
+Ensures that all nonlocal assignments to the tensor root are consistently
+accessed with the same indices and associative operator.  Also ensures that the
+tensor is either atomic, or accessed by `i` and concurrent and injective on `i`.
+"""
+function ensure_concurrent(root, ctx)
     @assert @capture root loop(~idx, ~ext, ~body)
 
     #get local definitions
@@ -63,7 +56,7 @@ function parallelAnalysis(root, index, alg, ctx)
         if !allequal(ops)
             throw(FinchConcurrencyError("Nonlocal assignments to $(root) are not all the same operator"))
         end
-        if !isassociative(alg, first(ops))
+        if !isassociative(ctx.algebra, first(ops))
             throw(FinchConcurrencyError("Nonlocal assignments to $(root) are not associative"))
         end
         accs = map(agn -> (@capture agn assign(~lhs, ~op, ~rhs); lhs), agns)
@@ -72,10 +65,13 @@ function parallelAnalysis(root, index, alg, ctx)
         end
         acc = first(accs)
 
-        if !is_atomic(acc.tns, ctx)
-            if !@capture(acc, access(~tns, ~mode, ~i..., idx)) && !(is_injective(tns, ctx)[end]) && !(is_concurrent(a, ctx)[end])
-                throw(FinchConcurrencyError("Cannot prove that $(acc) is safe to update from multiple threads"))
-            end 
+        if !(
+            (is_atomic(acc.tns, ctx) && all(is_concurrent(tns, ctx))) ||
+            (@capture(acc, access(~tns, ~mode, ~i..., idx)) && is_injective(tns, ctx)[length(i) + 1] && is_concurrent(tns, ctx)[length(i) + 1])
+        )
+            throw(FinchConcurrencyError("Cannot prove that $(acc) is safe to update from multiple threads"))
         end
     end
+
+    return root
 end

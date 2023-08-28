@@ -7,18 +7,17 @@ julia> @finch_code begin
         end
     end
 quote
-    y_lvl = (ex.bodies[1]).tns.tns.lvl
+    y_lvl = (ex.bodies[1]).tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
-    x_lvl = ((ex.bodies[2]).body.body.rhs.args[1]).tns.tns.lvl
+    x_lvl = ((ex.bodies[2]).body.body.rhs.args[1]).tns.bind.lvl
     x_lvl_2 = x_lvl.lvl
-    A_lvl = ((ex.bodies[2]).body.body.rhs.args[2]).tns.tns.lvl
+    A_lvl = ((ex.bodies[2]).body.body.rhs.args[2]).tns.bind.lvl
     A_lvl_2 = A_lvl.lvl
     A_lvl_3 = A_lvl_2.lvl
     A_lvl_2.shape == x_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(A_lvl_2.shape) != $(x_lvl.shape))"))
     Finch.resize_if_smaller!(y_lvl_2.val, A_lvl.shape)
     Finch.fill_range!(y_lvl_2.val, 0.0, 1, A_lvl.shape)
     Threads.@threads for i_4 = 1:Threads.nthreads()
-            Threads.nthreads()
             phase_start_2 = max(1, 1 + fld(A_lvl.shape * (i_4 + -1), Threads.nthreads()))
             phase_stop_2 = min(A_lvl.shape, fld(A_lvl.shape * i_4, Threads.nthreads()))
             if phase_stop_2 >= phase_start_2
@@ -53,7 +52,6 @@ quote
                     end
                 end
             end
-            Threads.nthreads()
         end
     qos = 1 * A_lvl.shape
     resize!(y_lvl_2.val, qos)

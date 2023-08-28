@@ -111,8 +111,8 @@ end
 
 getroot(tns::Unfurled) = getroot(tns.arr)
 
-is_injective(lvl::Unfurled, ctx) = is_injective(lvl.arr, ctx)[1:lvl.ndims]
-is_concurrent(lvl::Unfurled, ctx) = is_concurrent(lvl.arr, ctx)[1:lvl.ndims]
+is_injective(lvl::Unfurled, ctx) = is_injective(lvl.arr, ctx)
+is_concurrent(lvl::Unfurled, ctx) = is_concurrent(lvl.arr, ctx)
 is_atomic(lvl::Unfurled, ctx) = is_atomic(lvl.arr, ctx)
 
 function lower_access(ctx::AbstractCompiler, node, tns::Unfurled)

@@ -207,7 +207,7 @@ function lower_loop(ctx, root, ext)
 end
 
 function lower_loop(ctx, root, ext::ParallelDimension)
-    @assert parallelAnalysis(root, root.idx, ctx.algebra, ctx)
+    root = ensure_concurrent(root, ctx)
     
     tid = index(freshen(ctx.code, :tid))
     i = freshen(ctx.code, :i)

@@ -82,7 +82,7 @@ end
 
 is_level_injective(lvl::VirtualSparseTriangleLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., (true for _ in 1:lvl.N)...]
 is_level_concurrent(lvl::VirtualSparseTriangleLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., (true for _ in 1:lvl.N)...]
-is_level_atomic(lvl::VirtualSparseTriangleLevel, ctx) = false
+is_level_atomic(lvl::VirtualSparseTriangleLevel, ctx) = is_level_atomic(lvl.lvl, ctx)
 
 function virtualize(ex, ::Type{SparseTriangleLevel{N, Ti, Lvl}}, ctx, tag=:lvl) where {N, Ti, Lvl}
     sym = freshen(ctx, tag)
