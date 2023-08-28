@@ -116,10 +116,10 @@ visit_simplify(node::VirtualPermissiveArray) = VirtualPermissiveArray(visit_simp
     guard => VirtualPermissiveArray(body, node.dims)
 end
 
-jumper_body(node::VirtualPermissiveArray, ctx, ext) = VirtualPermissiveArray(jumper_body(node.body, ctx, ext), node.dims)
-stepper_body(node::VirtualPermissiveArray, ctx, ext) = VirtualPermissiveArray(stepper_body(node.body, ctx, ext), node.dims)
-stepper_seek(node::VirtualPermissiveArray, ctx, ext) = stepper_seek(node.body, ctx, ext)
-jumper_seek(node::VirtualPermissiveArray, ctx, ext) = jumper_seek(node.body, ctx, ext)
+#stepper_body(node::VirtualPermissiveArray, ctx, ext) = VirtualPermissiveArray(stepper_body(node.body, ctx, ext), node.dims)
+#stepper_seek(node::VirtualPermissiveArray, ctx, ext) = stepper_seek(node.body, ctx, ext)
+replay_body(node::VirtualPermissiveArray, ctx, ext) = VirtualPermissiveArray(replay_body(node.body, ctx, ext), node.dims)
+replay_seek(node::VirtualPermissiveArray, ctx, ext) = replay_seek(node.body, ctx, ext)
 
 getroot(tns::VirtualPermissiveArray) = getroot(tns.body)
 

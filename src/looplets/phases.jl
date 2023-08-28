@@ -45,7 +45,7 @@ phase_op(::JumperPhaseStyle) = virtual_union
 
 combine_style(a::DefaultStyle, b::PhaseStyle) = b
 combine_style(a::LookupStyle, b::PhaseStyle) = b
-combine_style(a::T, b::T) where {T<:PhaseStyle} = b
+combine_style(a::S, b::T) where {S<:PhaseStyle, T<:PhaseStyle} = SequencePhaseStyle() 
 combine_style(a::PhaseStyle, b::RunStyle) = a
 combine_style(a::PhaseStyle, b::SpikeStyle) = a
 combine_style(a::SimplifyStyle, b::PhaseStyle) = b

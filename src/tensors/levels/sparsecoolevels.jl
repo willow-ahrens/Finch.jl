@@ -269,7 +269,7 @@ function instantiate_reader(trv::SparseCOOWalkTraversal, ctx, subprotos, ::Union
             body = (ctx) -> Sequence([
                 Phase(
                     stop = (ctx, ext) -> value(my_i_stop),
-                    body = (ctx, ext) -> Stepper(
+                    body = (ctx, ext) -> Replay(
                         seek = (ctx, ext) -> quote
                             if $(lvl.ex).tbl[$R][$my_q] < $(ctx(getstart(ext)))
                                 $my_q = Finch.scansearch($(lvl.ex).tbl[$R], $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)

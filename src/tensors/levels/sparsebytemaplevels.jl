@@ -260,7 +260,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
             body = (ctx) -> Sequence([
                 Phase(
                     stop = (ctx, ext) -> value(my_i_stop),
-                    body = (ctx, ext) -> Stepper(
+                    body = (ctx, ext) -> Replay(
                         seek = (ctx, ext) -> quote
                             while $my_r + $(Tp(1)) < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext)))
                                 $my_r += $(Tp(1))
@@ -324,7 +324,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
             body = (ctx) -> Sequence([
                 Phase(
                     stop = (ctx, ext) -> value(my_i_stop),
-                    body = (ctx, ext) -> Jumper(
+                    body = (ctx, ext) -> Replay(
                         seek = (ctx, ext) -> quote
                             while $my_r + $(Tp(1)) < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext)))
                                 $my_r += $(Tp(1))
@@ -350,7 +350,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
                                             $my_r += $(Tp(1))
                                         end
                                     ),
-                                    literal(true) => Stepper(
+                                    literal(true) => Replay(
                                         seek = (ctx, ext) -> quote
                                             while $my_r + $(Tp(1)) < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext)))
                                                 $my_r += $(Tp(1))

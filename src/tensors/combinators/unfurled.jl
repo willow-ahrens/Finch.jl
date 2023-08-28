@@ -101,10 +101,10 @@ function unfurl(tns::Unfurled, ctx, ext, protos...)
     unfurl(tns.body, ctx, ext, protos...)
 end
 
-jumper_body(node::Unfurled, ctx, ext) = Unfurled(node.arr, node.ndims, jumper_body(node.body, ctx, ext))
-stepper_body(node::Unfurled, ctx, ext) = Unfurled(node.arr, node.ndims, stepper_body(node.body, ctx, ext))
-stepper_seek(node::Unfurled, ctx, ext) = stepper_seek(node.body, ctx, ext)
-jumper_seek(node::Unfurled, ctx, ext) = jumper_seek(node.body, ctx, ext)
+#stepper_body(node::Unfurled, ctx, ext) = Unfurled(node.arr, node.ndims, stepper_body(node.body, ctx, ext))
+#stepper_seek(node::Unfurled, ctx, ext) = stepper_seek(node.body, ctx, ext)
+replay_body(node::Unfurled, ctx, ext) = Unfurled(node.arr, node.ndims, replay_body(node.body, ctx, ext))
+replay_seek(node::Unfurled, ctx, ext) = replay_seek(node.body, ctx, ext)
 
 function lower(node::Unfurled, ctx::AbstractCompiler, ::DefaultStyle)
     ctx(node.body)

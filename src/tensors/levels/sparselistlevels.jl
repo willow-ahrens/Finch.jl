@@ -232,7 +232,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, s
             body = (ctx) -> Sequence([
                 Phase(
                     stop = (ctx, ext) -> value(my_i1),
-                    body = (ctx, ext) -> Stepper(
+                    body = (ctx, ext) -> Replay(
                         seek = (ctx, ext) -> quote
                             if $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
                                 $my_q = Finch.scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
@@ -292,7 +292,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, s
             body = (ctx) -> Sequence([
                 Phase(
                     stop = (ctx, ext) -> value(my_i1),
-                    body = (ctx, ext) -> Stepper(
+                    body = (ctx, ext) -> Replay(
                         seek = (ctx, ext) -> quote
                             if $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
                                 $my_q = Finch.scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
@@ -312,16 +312,14 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, s
                                             $my_q += $(Tp(1))
                                         end
                                     ),
-                                    literal(true) => Stepper(
+                                    literal(true) => Replay(
                                         seek = (ctx, ext) -> quote
                                             if $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
                                                 $my_q = Finch.scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                                             end
                                         end,
                                         body = Thunk(
-                                            preamble = :(
-                                                $my_i3 = $(lvl.ex).idx[$my_q]
-                                            ),
+                                            preamble = :($my_i3 = $(lvl.ex).idx[$my_q]),
                                             body = (ctx) -> Step(
                                                 stop = (ctx, ext) -> value(my_i3),
                                                 chunk = Spike(

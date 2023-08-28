@@ -229,7 +229,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, su
                     $my_i1 = $(Ti(0))
                 end
             end),
-            body = (ctx) -> Stepper(
+            body = (ctx) -> Replay(
                 seek = (ctx, ext) -> quote
                     if $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
                         $my_q = Finch.scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)

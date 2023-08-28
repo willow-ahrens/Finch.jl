@@ -2,7 +2,7 @@ module SparseArraysExt
 
 using Finch
 using Finch: AbstractCompiler, DefaultStyle, Extent
-using Finch: Unfurled, Furlable, Stepper, Jumper, Run, Fill, Lookup, Simplify, Sequence, Phase, Thunk, Spike, Step
+using Finch: Unfurled, Furlable, Replay, Run, Fill, Lookup, Simplify, Sequence, Phase, Thunk, Spike, Step
 using Finch: virtual_size, virtual_default, getstart, getstop
 using Finch.FinchNotation
 
@@ -89,7 +89,7 @@ function Finch.instantiate_reader(arr::VirtualSparseMatrixCSC, ctx::AbstractComp
                         body = (ctx) -> Sequence([
                             Phase(
                                 stop = (ctx, ext) -> value(my_i1),
-                                body = (ctx, ext) -> Stepper(
+                                body = (ctx, ext) -> Replay(
                                     seek = (ctx, ext) -> quote
                                         if $(arr.ex).rowval[$my_q] < $(ctx(getstart(ext)))
                                             $my_q = Finch.scansearch($(arr.ex).rowval, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
@@ -190,7 +190,7 @@ function Finch.instantiate_reader(arr::VirtualSparseVector, ctx::AbstractCompile
                 body = (ctx) -> Sequence([
                     Phase(
                         stop = (ctx, ext) -> value(my_i1),
-                        body = (ctx, ext) -> Stepper(
+                        body = (ctx, ext) -> Replay(
                             seek = (ctx, ext) -> quote
                                 if $(arr.ex).nzind[$my_q] < $(ctx(getstart(ext)))
                                     $my_q = Finch.scansearch($(arr.ex).nzind, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)

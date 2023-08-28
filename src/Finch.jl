@@ -77,6 +77,7 @@ include("looplets/phases.jl")
 include("looplets/sequences.jl")
 include("looplets/jumpers.jl")
 include("looplets/steppers.jl")
+include("looplets/replays.jl")
 include("looplets/fills.jl")
 
 include("tensors/scalars.jl")

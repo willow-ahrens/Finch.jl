@@ -298,7 +298,7 @@ function instantiate_reader(trv::SparseHashWalkTraversal, ctx, subprotos, ::Unio
             body = (ctx) -> Sequence([
                 Phase(
                     stop = (ctx, ext) -> value(my_i_stop),
-                    body = (ctx, ext) -> Stepper(
+                    body = (ctx, ext) -> Replay(
                         seek = (ctx, ext) -> quote
                             while $my_q + $(Tp(1)) < $my_q_stop && $(lvl.ex).srt[$my_q][1][2][$R] < $(ctx(getstart(ext)))
                                 $my_q += $(Tp(1))

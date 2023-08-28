@@ -228,7 +228,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, su
             body = (ctx) -> Sequence([
                 Phase(
                     stop = (ctx, ext) -> value(my_i1),
-                    body = (ctx, ext) -> Stepper(
+                    body = (ctx, ext) -> Replay(
                         seek = (ctx, ext) -> quote
                             if $(lvl.ex).idx[$my_r] < $(ctx(getstart(ext)))
                                 $my_r = Finch.scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_r, $my_r_stop - 1)
@@ -307,7 +307,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, su
             body = (ctx) -> Sequence([
                 Phase(
                     stop = (ctx, ext) -> value(my_i1),
-                    body = (ctx, ext) -> Jumper(
+                    body = (ctx, ext) -> Replay(
                         seek = (ctx, ext) -> quote
                             if $(lvl.ex).idx[$my_r] < $(ctx(getstart(ext)))
                                 $my_r = Finch.scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_r, $my_r_stop - 1)
@@ -316,16 +316,14 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, su
                         body = Thunk(
                             preamble = quote
                                 $my_i = $(lvl.ex).idx[$my_r]
+                                $my_q_stop = $(lvl.ex).ofs[$my_r + $(Tp(1))]
+                                $my_i_start = $my_i - ($my_q_stop - $(lvl.ex).ofs[$my_r])
+                                $my_q_ofs = $my_q_stop - $my_i - $(Tp(1))
                             end,
                             body = (ctx) -> Jump(
                                 stop = (ctx, ext) -> value(my_i),
                                 body = (ctx, ext, ext_2) -> Switch([
                                     value(:($(ctx(getstop(ext_2))) == $my_i)) => Thunk(
-                                        preamble=quote
-                                            $my_q_stop = $(lvl.ex).ofs[$my_r + $(Tp(1))]
-                                            $my_i_start = $my_i - ($my_q_stop - $(lvl.ex).ofs[$my_r])
-                                            $my_q_ofs = $my_q_stop - $my_i - $(Tp(1))
-                                        end,
                                         body = (ctx) -> Sequence([
                                             Phase(
                                                 stop = (ctx, ext) -> value(my_i_start),
@@ -346,7 +344,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, su
                                             $my_r += $(Tp(1))
                                         end
                                     ),
-                                    literal(true) => Stepper(
+                                    literal(true) => Replay(
                                         seek = (ctx, ext) -> quote
                                             if $(lvl.ex).idx[$my_r] < $(ctx(getstart(ext)))
                                                 $my_r = Finch.scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_r, $my_r_stop - 1)
