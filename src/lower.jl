@@ -199,7 +199,7 @@ function lower_loop(ctx, root, ext)
     root_2 = Rewrite(Postwalk(@rule access(~tns, ~mode, ~idxs...) => begin
         if !isempty(idxs) && root.idx == idxs[end]
             protos = [(mode.kind === reader ? defaultread : defaultupdate) for _ in idxs]
-            tns_2 = unfurl(tns, ctx, root.ext.val, protos...)
+            tns_2 = unfurl(tns, ctx, root.ext.val, mode, protos...)
             access(tns_2, mode, idxs...)
         end
     end))(root)
@@ -207,9 +207,10 @@ function lower_loop(ctx, root, ext)
 end
 
 function lower_loop(ctx, root, ext::ParallelDimension)
-    #TODO Safety check that the loop can actually be parallel
-    tid = index(freshen(ctx.code,:tid))
-    i = freshen(ctx.code,:i)
+    root = ensure_concurrent(root, ctx)
+    
+    tid = index(freshen(ctx.code, :tid))
+    i = freshen(ctx.code, :i)
     root_2 = loop(tid, Extent(value(i, Int), value(i, Int)),
         loop(root.idx, ext.ext,
             sieve(access(VirtualSplitMask(value(:(Threads.nthreads()))), reader(), root.idx, tid),

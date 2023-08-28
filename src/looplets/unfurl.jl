@@ -23,11 +23,11 @@ Return an array object (usually a looplet nest) for lowering the virtual tensor
 that should be used for each index, but one doesn't need to unfurl all the
 indices at once.
 """
-function unfurl(tns::Furlable, ctx, ext, protos...)
+function unfurl(tns::Furlable, ctx, ext, mode, protos...)
     tns = tns.body(ctx, ext)
     return tns
 end
-unfurl(tns, ctx, ext, protos...) = tns
+unfurl(tns, ctx, ext, mode, protos...) = tns
 
 instantiate_reader(tns::Furlable, ctx, protos) = tns
 instantiate_updater(tns::Furlable, ctx, protos) = tns

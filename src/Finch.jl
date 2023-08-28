@@ -41,6 +41,7 @@ export choose, minby, maxby, overwrite, initwrite, d
 
 export default, AsArray
 
+export parallelAnalysis, ParallelAnalysisResults
 export parallel, extent, dimless
 
 include("base/limits.jl")
@@ -63,6 +64,7 @@ include("transforms/scopes.jl")
 include("transforms/lifecycle.jl")
 include("transforms/dimensionalize.jl")
 include("transforms/evaluate.jl")
+include("transforms/concurrent.jl")
 
 include("execute.jl")
 
@@ -83,6 +85,7 @@ include("looplets/fills.jl")
 
 include("tensors/scalars.jl")
 include("tensors/fibers.jl")
+include("tensors/levels/abstractlevel.jl")
 include("tensors/levels/sparserlelevels.jl")
 include("tensors/levels/sparselistlevels.jl")
 include("tensors/levels/sparsehashlevels.jl")
@@ -95,6 +98,7 @@ include("tensors/levels/elementlevels.jl")
 include("tensors/levels/patternlevels.jl")
 include("tensors/levels/sparsetrianglelevels.jl")
 include("tensors/masks.jl")
+include("tensors/combinators/abstractCombinator.jl")
 include("tensors/combinators/unfurled.jl")
 include("tensors/combinators/protocolized.jl")
 include("tensors/combinators/roots.jl")

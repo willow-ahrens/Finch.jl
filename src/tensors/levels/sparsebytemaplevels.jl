@@ -83,7 +83,7 @@ function (fbr::SubFiber{<:SparseByteMapLevel{Ti}})(idxs...) where {Ti}
     end
 end
 
-mutable struct VirtualSparseByteMapLevel
+mutable struct VirtualSparseByteMapLevel <: AbstractVirtualLevel
     lvl
     ex
     Ti
@@ -92,6 +92,11 @@ mutable struct VirtualSparseByteMapLevel
     qos_fill
     qos_stop
 end
+
+is_level_injective(lvl::VirtualSparseByteMapLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., false]
+is_level_concurrent(lvl::VirtualSparseByteMapLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., false]
+is_level_atomic(lvl::VirtualSparseByteMapLevel, ctx) = false
+
 function virtualize(ex, ::Type{SparseByteMapLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}   
     sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Int)

@@ -68,11 +68,15 @@ end
 
 countstored_level(lvl::ElementLevel, pos) = pos
 
-struct VirtualElementLevel
+struct VirtualElementLevel <: AbstractVirtualLevel
     ex
     Tv
     D
 end
+
+is_level_injective(::VirtualElementLevel, ctx) = []
+is_level_concurrent(::VirtualElementLevel, ctx) = []
+is_level_atomic(lvl::VirtualElementLevel, ctx) = false
 
 lower(lvl::VirtualElementLevel, ctx::AbstractCompiler, ::DefaultStyle) = lvl.ex
 function virtualize(ex, ::Type{ElementLevel{D, Tv}}, ctx, tag=:lvl) where {D, Tv}

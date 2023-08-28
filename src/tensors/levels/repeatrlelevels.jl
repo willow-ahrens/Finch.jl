@@ -104,7 +104,7 @@ function (fbr::SubFiber{<:RepeatRLELevel})(i, tail...)
     return lvl.val[q]
 end
 
-mutable struct VirtualRepeatRLELevel
+mutable struct VirtualRepeatRLELevel <: AbstractVirtualLevel
     ex
     D
     Ti
@@ -116,6 +116,11 @@ mutable struct VirtualRepeatRLELevel
     dirty
     prev_pos
 end
+
+is_level_injective(::VirtualRepeatRLELevel, ctx) = [false]
+is_level_concurrent(::VirtualRepeatRLELevel, ctx) = [false]
+is_level_atomic(lvl::VirtualRepeatRLELevel, ctx) = false
+
 function virtualize(ex, ::Type{RepeatRLELevel{D, Ti, Tp, Tv}}, ctx, tag=:lvl) where {D, Ti, Tp, Tv}
     sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Int)

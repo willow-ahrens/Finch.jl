@@ -15,12 +15,16 @@ thaw!(tns::FinchNode, ctx::AbstractCompiler) = thaw!(resolve(tns, ctx), ctx)
 freeze!(tns::FinchNode, ctx::AbstractCompiler) = freeze!(resolve(tns, ctx), ctx)
 trim!(tns::FinchNode, ctx::AbstractCompiler) = trim!(resolve(tns, ctx), ctx)
 
-function unfurl(tns::FinchNode, ctx, ext, protos...)
-    unfurl(resolve(tns, ctx), ctx, ext, protos...)
+function unfurl(tns::FinchNode, ctx, ext, mode, protos...)
+    unfurl(resolve(tns, ctx), ctx, ext, mode, protos...)
 end
 
 lower_access(ctx::AbstractCompiler, node, tns::FinchNode) = 
     lower_access(ctx, node, resolve(tns, ctx))
+
+is_injective(lvl::FinchNode, ctx) = is_injective(resolve(lvl, ctx), ctx)
+is_concurrent(lvl::FinchNode, ctx) = is_concurrent(resolve(lvl, ctx), ctx)
+is_atomic(lvl::FinchNode, ctx) = is_atomic(resolve(lvl, ctx), ctx)
 
 function getroot(node::FinchNode)
     if node.kind === virtual
