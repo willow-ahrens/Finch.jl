@@ -33,6 +33,27 @@ bsread_type_lookup = Dict(
     "bint8" => Bool,
 )
 
+bsCSC = Dict(
+    "level" => "dense",
+    "rank" => 1,
+    "subformat" => Dict(
+        "level" => "sparse",
+        "rank" => 1,
+        "subformat" => Dict(
+            "level" => "element",
+            "fill_value" => [0]
+        )
+    )
+)
+
+bswrite_format_lookup = Dict(
+    "CSR" => bsCSR,
+)
+
+bsread_format_lookup = Dict(
+    bsCSR => "CSR",
+)
+
 indices_one_to_zero(vec::Vector{<:Integer}) = vec .- one(eltype(vec))
 indices_one_to_zero(vec::Vector{<:CIndex{Ti}}) where {Ti} = unsafe_wrap(Array, reinterpret(Ptr{Ti}, pointer(vec)), length(vec); own = false)
 indices_zero_to_one(vec::Vector{Ti}) where {Ti} = unsafe_wrap(Array, reinterpret(Ptr{CIndex{Ti}}, pointer(vec)), length(vec); own = false)
@@ -60,6 +81,7 @@ function Finch.bswrite(fname, fbr::Fiber, attrs = Dict())
             "attrs" => attrs,
         )
         bswrite_level(f, desc, desc["format"], fbr.lvl)
+        desc["format"] = get(bswrite_format_lookup, (desc["format"], desc["format"]))
         f["binsparse"] = json(desc, 4)
     end
     fname
@@ -68,6 +90,7 @@ end
 function Finch.bsread(fname)
     h5open(fname, "r") do f
         desc = JSON.parse(read(f["binsparse"]))
+        desc["format"] = get(bsread_format_lookup, desc["format"], desc["format"])
         Fiber(bsread_level(f, desc, desc["format"]))
     end
 end
