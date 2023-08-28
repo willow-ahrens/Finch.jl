@@ -1,4 +1,4 @@
-struct OffsetArray{Delta<:Tuple, Body}
+struct OffsetArray{Delta<:Tuple, Body} <: AbstractCombinator
     body::Body
     delta::Delta
 end
@@ -10,11 +10,14 @@ end
 
 Base.getindex(arr::OffsetArray, i...) = arr.body[(i .+ arr.delta)...]
 
-
-struct VirtualOffsetArray
+struct VirtualOffsetArray <: AbstractVirtualCombinator
     body
     delta
 end
+
+is_injective(lvl::VirtualOffsetArray, ctx) = is_injective(lvl.body, ctx)
+is_concurrent(lvl::VirtualOffsetArray, ctx) = is_concurrent(lvl.body, ctx)
+is_atomic(lvl::VirtualOffsetArray, ctx) = is_atomic(lvl.body, ctx)
 
 Base.show(io::IO, ex::VirtualOffsetArray) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualOffsetArray)
@@ -129,8 +132,8 @@ stepper_seek(node::VirtualOffsetArray, ctx, ext) = stepper_seek(node.body, ctx, 
 
 getroot(tns::VirtualOffsetArray) = getroot(tns.body)
 
-function unfurl(tns::VirtualOffsetArray, ctx, ext, protos...)
-    VirtualOffsetArray(unfurl(tns.body, ctx, shiftdim(ext, tns.delta[end]), protos...), tns.delta)
+function unfurl(tns::VirtualOffsetArray, ctx, ext, mode, protos...)
+    VirtualOffsetArray(unfurl(tns.body, ctx, shiftdim(ext, tns.delta[end]), mode, protos...), tns.delta)
 end
 
 function lower_access(ctx::AbstractCompiler, node, tns::VirtualOffsetArray)

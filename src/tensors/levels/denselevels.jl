@@ -87,12 +87,17 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:DenseLeve
     display_fiber_data(io, mime, fbr, depth, 1, crds, show, get_fbr)
 end
 
-mutable struct VirtualDenseLevel
+mutable struct VirtualDenseLevel <: AbstractVirtualLevel
     lvl
     ex
     Ti
     shape
 end
+
+is_level_injective(lvl::VirtualDenseLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., true]
+is_level_concurrent(lvl::VirtualDenseLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., true]
+is_level_atomic(lvl::VirtualDenseLevel, ctx) = is_level_atomic(lvl.lvl, ctx)
+
 function virtualize(ex, ::Type{DenseLevel{Ti, Lvl}}, ctx, tag=:lvl) where {Ti, Lvl}
     sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Ti)

@@ -112,7 +112,7 @@ function (fbr::SubFiber{<:SparseListLevel{Ti}})(idxs...) where {Ti}
     length(r) == 0 ? default(fbr_2) : fbr_2(idxs[1:end-1]...)
 end
 
-mutable struct VirtualSparseListLevel
+mutable struct VirtualSparseListLevel <: AbstractVirtualLevel
     lvl
     ex
     Ti
@@ -122,6 +122,11 @@ mutable struct VirtualSparseListLevel
     qos_stop
     prev_pos
 end
+
+is_level_injective(lvl::VirtualSparseListLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., false]
+is_level_concurrent(lvl::VirtualSparseListLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., false]
+is_level_atomic(lvl::VirtualSparseListLevel, ctx) = false
+
 function virtualize(ex, ::Type{SparseListLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}
     sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Int)

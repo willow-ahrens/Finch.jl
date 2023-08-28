@@ -72,13 +72,18 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseTri
     display_fiber_data(io, mime, fbr, depth, N, crds, print_coord, get_fbr)
 end
 
-mutable struct VirtualSparseTriangleLevel
+mutable struct VirtualSparseTriangleLevel <: AbstractVirtualLevel
     lvl
     ex
     N
     Ti
     shape
 end
+
+is_level_injective(lvl::VirtualSparseTriangleLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., (true for _ in 1:lvl.N)...]
+is_level_concurrent(lvl::VirtualSparseTriangleLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., (true for _ in 1:lvl.N)...]
+is_level_atomic(lvl::VirtualSparseTriangleLevel, ctx) = is_level_atomic(lvl.lvl, ctx)
+
 function virtualize(ex, ::Type{SparseTriangleLevel{N, Ti, Lvl}}, ctx, tag=:lvl) where {N, Ti, Lvl}
     sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Int)

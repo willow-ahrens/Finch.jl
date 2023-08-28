@@ -1,4 +1,4 @@
-struct ToeplitzArray{dim, Body}
+struct ToeplitzArray{dim, Body} <: AbstractCombinator
     body::Body
 end
 
@@ -12,10 +12,20 @@ end
 
 #Base.getindex(arr::ToeplitzArray, i...) = ...
 
-struct VirtualToeplitzArray
+struct VirtualToeplitzArray <: AbstractVirtualCombinator
     body
     dim
 end
+
+function is_injective(lvl::VirtualToeplitzArray, ctx)
+    sub = is_injective(lvl.body, ctx)
+    return [sub[1:lvl.dim]..., false, sub[lvl.dim + 1:end]...]
+end
+function is_concurrent(lvl::VirtualToeplitzArray, ctx)
+    sub = is_concurrent(lvl.body, ctx)
+    return [sub[1:lvl.dim]..., false, sub[lvl.dim + 1:end]...]
+end
+is_atomic(lvl::VirtualToeplitzArray, ctx) = is_atomic(lvl.body, ctx)
 
 Base.show(io::IO, ex::VirtualToeplitzArray) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualToeplitzArray)
@@ -49,7 +59,7 @@ end
 function instantiate_reader(arr::VirtualToeplitzArray, ctx, protos)
     VirtualToeplitzArray(instantiate_reader(arr.body, ctx, [protos[1:arr.dim]; protos[arr.dim + 2:end]]), arr.dim)
 end
-function instantiate_updater(arr::VirtualToeplitzArray, ctx, protos...)
+function instantiate_updater(arr::VirtualToeplitzArray, ctx, protos)
     VirtualToeplitzArray(instantiate_updater(arr.body, ctx, [protos[1:arr.dim]; protos[arr.dim + 2:end]]), arr.dim)
 end
 
@@ -122,7 +132,7 @@ stepper_seek(node::VirtualToeplitzArray, ctx, ext) = stepper_seek(node.body, ctx
 
 getroot(tns::VirtualToeplitzArray) = getroot(tns.body)
 
-function unfurl(tns::VirtualToeplitzArray, ctx, ext, protos...)
+function unfurl(tns::VirtualToeplitzArray, ctx, ext, mode, protos...)
     if length(virtual_size(tns, ctx)) == tns.dim + 1
         Unfurled(tns,
             Lookup(
@@ -130,6 +140,6 @@ function unfurl(tns::VirtualToeplitzArray, ctx, ext, protos...)
             )
         )
     else
-        VirtualToeplitzArray(unfurl(tns.body, ctx, ext, protos...), tns.dim)
+        VirtualToeplitzArray(unfurl(tns.body, ctx, ext, mode, protos...), tns.dim)
     end
 end
