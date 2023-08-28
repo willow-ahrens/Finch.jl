@@ -1,6 +1,7 @@
 abstract type AbstractCombinator end
 abstract type AbstractVirtualCombinator <: AbstractVirtualTensor end
 
+#=
 """
     is_laminable(tns, ctx, protos)
     
@@ -20,3 +21,4 @@ function is_laminable(tns, ctx, subprotos, protos...)
         is_laminable(tns, ctx, subprotos[1:end-1], subprotos[end], protos...)
     end
 end
+=#
