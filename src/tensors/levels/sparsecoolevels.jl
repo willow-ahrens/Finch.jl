@@ -276,11 +276,8 @@ function instantiate_reader(trv::SparseCOOWalkTraversal, ctx, subprotos, ::Union
                             end
                         end,
                         body = if R == 1
-                            Thunk(
-                                preamble = quote
-                                    $my_i = $(lvl.ex).tbl[$R][$my_q]
-                                end,
-                                body = (ctx) -> Step(
+                            Step(
+                                    preamble = :($my_i = $(lvl.ex).tbl[$R][$my_q]),
                                     stop =  (ctx, ext) -> value(my_i),
                                     chunk = Spike(
                                         body = Fill(virtual_level_default(lvl)),
@@ -290,17 +287,15 @@ function instantiate_reader(trv::SparseCOOWalkTraversal, ctx, subprotos, ::Union
                                         $my_q += $(Tp(1))
                                     end
                                 )
-                            )
                         else
-                            Thunk(
-                                preamble = quote
-                                    $my_i = $(lvl.ex).tbl[$R][$my_q]
-                                    $my_q_step = $my_q
-                                    if $(lvl.ex).tbl[$R][$my_q_step] == $my_i
-                                        $my_q_step = Finch.scansearch($(lvl.ex).tbl[$R], $my_i + 1, $my_q_step, $my_q_stop - 1)
-                                    end
-                                end,
-                                body = (ctx) -> Step(
+                            Step(
+                                    preamble = quote
+                                        $my_i = $(lvl.ex).tbl[$R][$my_q]
+                                        $my_q_step = $my_q
+                                        if $(lvl.ex).tbl[$R][$my_q_step] == $my_i
+                                            $my_q_step = Finch.scansearch($(lvl.ex).tbl[$R], $my_i + 1, $my_q_step, $my_q_stop - 1)
+                                        end
+                                    end,
                                     stop = (ctx, ext) -> value(my_i),
                                     chunk = Spike(
                                         body = Fill(virtual_level_default(lvl)),
@@ -310,7 +305,6 @@ function instantiate_reader(trv::SparseCOOWalkTraversal, ctx, subprotos, ::Union
                                         $my_q = $my_q_step
                                     end
                                 )
-                            )
                         end
                     )
                 ),

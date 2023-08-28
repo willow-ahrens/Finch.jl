@@ -238,11 +238,8 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, s
                                 $my_q = Finch.scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                             end
                         end,
-                        body = Thunk(
-                            preamble = quote
-                                $my_i = $(lvl.ex).idx[$my_q]
-                            end,
-                            body = (ctx) -> Step(
+                        body = Step(
+                                preamble = :($my_i = $(lvl.ex).idx[$my_q]),
                                 stop = (ctx, ext) -> value(my_i),
                                 chunk = Spike(
                                     body = Fill(virtual_level_default(lvl)),
@@ -252,7 +249,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, s
                                     $my_q += $(Tp(1))
                                 end
                             )
-                        )
+                        
                     )
                 ),
                 Phase(
@@ -298,9 +295,8 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, s
                                 $my_q = Finch.scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                             end
                         end,                        
-                        body = Thunk(
-                            preamble = :($my_i2 = $(lvl.ex).idx[$my_q]),
-                            body = (ctx) -> Jump(
+                        body = Jump(
+                                preamble = :($my_i2 = $(lvl.ex).idx[$my_q]),
                                 stop = (ctx, ext) -> value(my_i2),
                                 body = (ctx, ext, ext_2) -> Switch([
                                     value(:($(ctx(getstop(ext_2))) == $my_i2)) => Thunk(
@@ -318,9 +314,8 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, s
                                                 $my_q = Finch.scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                                             end
                                         end,
-                                        body = Thunk(
-                                            preamble = :($my_i3 = $(lvl.ex).idx[$my_q]),
-                                            body = (ctx) -> Step(
+                                        body = Step(
+                                                preamble = :($my_i3 = $(lvl.ex).idx[$my_q]),
                                                 stop = (ctx, ext) -> value(my_i3),
                                                 chunk = Spike(
                                                     body = Fill(virtual_level_default(lvl)),
@@ -330,11 +325,9 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, s
                                                     $my_q += $(Tp(1))
                                                 end
                                             )
-                                        )
                                     ),
                                 ])
-                            )
-                        )
+                            ),
                     )
                 ),
                 Phase(

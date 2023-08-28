@@ -1,4 +1,5 @@
 @kwdef struct Step
+    preamble = nothing
     chunk = nothing
     body = (ctx, ext) -> chunk
     stop = (ctx, ext) -> nothing
@@ -11,6 +12,7 @@ FinchNotation.finch_leaf(x::Step) = virtual(x)
 (ctx::Stylize{<:AbstractCompiler})(node::Step) = ctx.root.kind === loop ? StepperPhaseStyle() : DefaultStyle()
 
 function phase_range(node::Step, ctx, ext)
+    push!(ctx.preamble, node.preamble !== nothing ? node.preamble : quote end)
     ext_2 = similar_extent(ext, getstart(ext), node.stop(ctx, ext))
     bound_measure_below!(ext_2, getunit(ext))
 end

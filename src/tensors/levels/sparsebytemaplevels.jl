@@ -266,11 +266,8 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
                                 $my_r += $(Tp(1))
                             end
                         end,
-                        body = Thunk(
-                            preamble = :(
-                                $my_i = last($(lvl.ex).srt[$my_r])
-                            ),
-                            body = (ctx) -> Step(
+                        body = Step(
+                                preamble = :($my_i = last($(lvl.ex).srt[$my_r])),
                                 stop = (ctx, ext) -> value(my_i),
                                 chunk = Spike(
                                     body = Fill(virtual_level_default(lvl)),
@@ -285,7 +282,6 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
                                     $my_r += $(Tp(1))
                                 end
                             )
-                        )
                     )
                 ),
                 Phase(
@@ -331,9 +327,8 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
                             end
                         end,
 
-                        body = Thunk(
-                            preamble = :($my_i = last($(lvl.ex).srt[$my_r])),
-                            body = (ctx) -> Jump(
+                        body = Jump(
+                                preamble = :($my_i = last($(lvl.ex).srt[$my_r])),
                                 stop = (ctx, ext) -> value(my_i),
                                 body = (ctx, ext, ext_2) -> Switch([
                                     value(:($(ctx(getstop(ext_2))) == $my_i)) => Thunk(
@@ -356,11 +351,8 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
                                                 $my_r += $(Tp(1))
                                             end
                                         end,
-                                        body = Thunk(
-                                            preamble = :(
-                                                $my_j = last($(lvl.ex).srt[$my_r])
-                                            ),
-                                            body = (ctx) -> Step(
+                                        body = Step(
+                                                preamble = :($my_j = last($(lvl.ex).srt[$my_r])),
                                                 stop = (ctx, ext) -> value(my_j),
                                                 chunk = Spike(
                                                     body = Fill(virtual_level_default(lvl)),
@@ -376,11 +368,9 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
                                                 end
                                             )
                                         )
-                                    ),
                                 ])
                             )
                         )
-                    )
                 ),
                 Phase(
                     body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))
