@@ -26,7 +26,7 @@ end
 
 lower(tns::VirtualScalar, ctx::AbstractCompiler, ::DefaultStyle) = :($Scalar{$(tns.D), $(tns.Tv)}($(tns.val)))
 function virtualize(ex, ::Type{Scalar{D, Tv}}, ctx, tag) where {D, Tv}
-    sym = ctx.freshen(tag)
+    sym = freshen(ctx, tag)
     val = Symbol(tag, :_val) #TODO hmm this is risky
     push!(ctx.preamble, quote
         $sym = $ex
@@ -43,7 +43,7 @@ virtual_eltype(tns::VirtualScalar, ctx) = tns.Tv
 FinchNotation.finch_leaf(x::VirtualScalar) = virtual(x)
 
 function declare!(tns::VirtualScalar, ctx, init)
-    push!(ctx.preamble, quote
+    push!(ctx.code.preamble, quote
         $(tns.val) = $(ctx(init))
     end)
     tns
@@ -85,7 +85,7 @@ FinchNotation.finch_leaf(x::VirtualDirtyScalar) = virtual(x)
 
 function lower_access(ctx::AbstractCompiler, node, tns::VirtualDirtyScalar)
     @assert isempty(node.idxs)
-    push!(ctx.preamble, quote
+    push!(ctx.code.preamble, quote
         $(tns.dirty) = true
     end)
     return tns.val

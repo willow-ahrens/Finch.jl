@@ -1,4 +1,4 @@
-struct PermissiveArray{dims, Body}
+struct PermissiveArray{dims, Body} <: AbstractCombinator
     body::Body
 end
 
@@ -12,10 +12,14 @@ end
 
 #Base.getindex(arr::PermissiveArray, i...) = ...
 
-struct VirtualPermissiveArray
+struct VirtualPermissiveArray <: AbstractVirtualCombinator
     body
     dims
 end
+
+is_injective(lvl::VirtualPermissiveArray, ctx) = is_injective(lvl.body, ctx)
+is_concurrent(lvl::VirtualPermissiveArray, ctx) = is_concurrent(lvl.body, ctx)
+is_atomic(lvl::VirtualPermissiveArray, ctx) = is_atomic(lvl.body, ctx)
 
 Base.show(io::IO, ex::VirtualPermissiveArray) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualPermissiveArray)
@@ -123,9 +127,10 @@ replay_seek(node::VirtualPermissiveArray, ctx, ext) = replay_seek(node.body, ctx
 
 getroot(tns::VirtualPermissiveArray) = getroot(tns.body)
 
-function unfurl(tns::VirtualPermissiveArray, ctx, ext, protos...)
-    tns_2 = unfurl(tns.body, ctx, ext, protos...)
+function unfurl(tns::VirtualPermissiveArray, ctx, ext, mode, protos...)
+    tns_2 = unfurl(tns.body, ctx, ext, mode, protos...)
     dims = virtual_size(tns.body, ctx)
+    garb = (mode.kind === reader) ? Fill(literal(missing)) : Fill(Null())
     if tns.dims[end] && dims[end] != dimless
         VirtualPermissiveArray(
             Unfurled(
@@ -133,14 +138,14 @@ function unfurl(tns::VirtualPermissiveArray, ctx, ext, protos...)
                 Sequence([
                     Phase(
                         stop = (ctx, ext_2) -> call(-, getstart(dims[end]), 1),
-                        body = (ctx, ext) -> Run(Fill(literal(missing))),
+                        body = (ctx, ext) -> Run(garb),
                     ),
                     Phase(
                         stop = (ctx, ext_2) -> getstop(dims[end]),
                         body = (ctx, ext_2) -> truncate(tns_2, ctx, dims[end], ext_2)
                     ),
                     Phase(
-                        body = (ctx, ext_2) -> Run(Fill(literal(missing))),
+                        body = (ctx, ext_2) -> Run(garb),
                     )
                 ]),
             ),

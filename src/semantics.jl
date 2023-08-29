@@ -20,7 +20,7 @@ the last arguments of protos rather than the first, as Finch is column major.
 """
 function instantiate_reader(tns, ctx, subprotos, protos...)
     if isempty(subprotos)
-        throw(FormatLimitation("$(typeof(tns)) does not support reads with protocol $(protos)"))
+        throw(FinchProtocolError("$(typeof(tns)) does not support reads with protocol $(protos)"))
     else
         instantiate_reader(tns, ctx, subprotos[1:end-1], subprotos[end], protos...)
     end
@@ -40,7 +40,7 @@ the last arguments of protos rather than the first, as Finch is column major.
 """
 function instantiate_updater(tns, ctx, subprotos, protos...)
     if isempty(subprotos)
-        throw(FormatLimitation("$(typeof(tns)) does not support reads with protocol $(protos)"))
+        throw(FinchProtocolError("$(typeof(tns)) does not support reads with protocol $(protos)"))
     else
         instantiate_updater(tns, ctx, subprotos[1:end-1], subprotos[end], protos...)
     end
@@ -60,7 +60,7 @@ function freeze! end
 Thaw the read-only virtual tensor `tns` in the context `ctx` and return it. Afterwards,
 the tensor is update-only.
 """
-thaw!(tns, ctx) = throw(FormatLimitation("cannot modify $(typeof(tns)) in place (forgot to declare with .= ?)"))
+thaw!(tns, ctx) = throw(FinchProtocolError("cannot modify $(typeof(tns)) in place (forgot to declare with .= ?)"))
 
 """
     trim!(tns, ctx)
@@ -137,7 +137,7 @@ function virtual_eltype end
 function virtual_resize!(tns, ctx, dims...)
     for (dim, ref) in zip(dims, virtual_size(tns, ctx))
         if dim !== dimless && ref !== dimless #TODO this should be a function like checkdim or something haha
-            push!(ctx.preamble, quote
+            push!(ctx.code.preamble, quote
                 $(ctx(getstart(dim))) == $(ctx(getstart(ref))) || throw(DimensionMismatch("mismatched dimension start"))
                 $(ctx(getstop(dim))) == $(ctx(getstop(ref))) || throw(DimensionMismatch("mismatched dimension stop"))
             end)

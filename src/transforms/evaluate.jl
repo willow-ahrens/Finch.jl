@@ -1,9 +1,22 @@
 """
     evaluate_partial(root, ctx)
 
+This pass evaluates tags, global variable definitions, and foldable functions
+into the context bindings.
 """
 function evaluate_partial(root, ctx)
-    root_2 = Rewrite(Fixpoint(
+    root_2 = Rewrite(Fixpoint(Postwalk(Chain([
+        (@rule tag(~var, ~bind::isindex) => bind),
+        (@rule tag(~var, ~bind::isvariable) => bind),
+        (@rule tag(~var, ~bind::isliteral) => bind),
+        (@rule tag(~var, ~bind::isvalue) => bind),
+        (@rule tag(~var, ~bind::isvirtual) => begin
+            get!(ctx.bindings, var, bind)
+            var
+        end
+        )
+    ]))))(root)
+    root_3 = Rewrite(Fixpoint(
         Postwalk(Fixpoint(Chain([
             (@rule call(~f::isliteral, ~a::(All(Or(isconstant, isvirtual, isvariable)))...) => virtual_call(f.val, ctx, a...)),
             (@rule call(~f::isliteral, ~a::(All(isliteral))...) => finch_leaf(getval(f)(getval.(a)...))),
@@ -15,13 +28,13 @@ function evaluate_partial(root, ctx)
                 end
             end),
         ])))
-    ))(root)
+    ))(root_2)
     Rewrite(Fixpoint(Chain([
         (@rule block(define(~a::isvariable, ~v::Or(isconstant, isvirtual)), ~s...) => begin
             ctx.bindings[a] = v
             block(s...)
         end),
-    ])))(root_2)
+    ])))(root_3)
 end
 
 virtual_call(f, ctx, a...) = nothing

@@ -132,7 +132,7 @@ end
 
 
 
-mutable struct VirtualSparseHashLevel
+mutable struct VirtualSparseHashLevel <: AbstractVirtualLevel
     lvl
     ex
     N
@@ -143,12 +143,17 @@ mutable struct VirtualSparseHashLevel
     qos_fill
     qos_stop
 end
+
+is_level_injective(lvl::VirtualSparseHashLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., (true for _ in 1:lvl.N)...]
+is_level_concurrent(lvl::VirtualSparseHashLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., (true for _ in 1:lvl.N)...]
+is_level_atomic(lvl::VirtualSparseHashLevel, ctx) = false
+
 function virtualize(ex, ::Type{SparseHashLevel{N, Ti, Tp, Tbl, Lvl}}, ctx, tag=:lvl) where {N, Ti, Tp, Tbl, Lvl}   
-    sym = ctx.freshen(tag)
+    sym = freshen(ctx, tag)
     shape = map(n->value(:($sym.shape[$n]), Int), 1:N)
-    P = ctx.freshen(sym, :_P)
-    qos_fill = ctx.freshen(sym, :_qos_fill)
-    qos_stop = ctx.freshen(sym, :_qos_stop)
+    P = freshen(ctx, sym, :_P)
+    qos_fill = freshen(ctx, sym, :_qos_fill)
+    qos_stop = freshen(ctx, sym, :_qos_stop)
     push!(ctx.preamble, quote
         $sym = $ex
         $(qos_fill) = length($sym.tbl)
@@ -190,7 +195,7 @@ function declare_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos,
     Tp = lvl.Tp
 
     qos = call(-, call(getindex, :($(lvl.ex).ptr), call(+, pos, 1)), 1)
-    push!(ctx.preamble, quote
+    push!(ctx.code.preamble, quote
         $(lvl.qos_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
         empty!($(lvl.ex).tbl)
@@ -203,8 +208,8 @@ end
 function trim_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos)
     Ti = lvl.Ti
     Tp = lvl.Tp
-    qos = ctx.freshen(:qos)
-    push!(ctx.preamble, quote
+    qos = freshen(ctx.code, :qos)
+    push!(ctx.code.preamble, quote
         resize!($(lvl.ex).ptr, $(ctx(pos)) + 1)
         $qos = $(lvl.ex).ptr[end] - $(Tp(1))
         resize!($(lvl.ex).srt, $qos)
@@ -216,8 +221,8 @@ end
 function thaw_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos)
     Ti = lvl.Ti
     Tp = lvl.Tp
-    p = ctx.freshen(lvl.ex, :_p)
-    push!(ctx.preamble, quote
+    p = freshen(ctx.code, lvl.ex, :_p)
+    push!(ctx.code.preamble, quote
         for $p = 1:$(ctx(pos))
             $(lvl.ex).ptr[$p] -= $(lvl.ex).ptr[$p + 1]
         end
@@ -240,10 +245,10 @@ end
 hashkeycmp(((pos, idx), qos),) = (pos, reverse(idx)...)
 
 function freeze_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos_stop)
-    p = ctx.freshen(:p)
+    p = freshen(ctx.code, :p)
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
-    qos_stop = ctx.freshen(:qos_stop)
-    push!(ctx.preamble, quote
+    qos_stop = freshen(ctx.code, :qos_stop)
+    push!(ctx.code.preamble, quote
         resize!($(lvl.ex).srt, length($(lvl.ex).tbl))
         copyto!($(lvl.ex).srt, pairs($(lvl.ex).tbl))
         sort!($(lvl.ex).srt, by=hashkeycmp)
@@ -276,11 +281,11 @@ function instantiate_reader(trv::SparseHashWalkTraversal, ctx, subprotos, ::Unio
     tag = lvl.ex
     Ti = lvl.Ti
     Tp = lvl.Tp
-    my_i = ctx.freshen(tag, :_i)
-    my_q = ctx.freshen(tag, :_q)
-    my_q_step = ctx.freshen(tag, :_q_step)
-    my_q_stop = ctx.freshen(tag, :_q_stop)
-    my_i_stop = ctx.freshen(tag, :_i_stop)
+    my_i = freshen(ctx.code, tag, :_i)
+    my_q = freshen(ctx.code, tag, :_q)
+    my_q_step = freshen(ctx.code, tag, :_q_step)
+    my_q_stop = freshen(ctx.code, tag, :_q_stop)
+    my_i_stop = freshen(ctx.code, tag, :_i_stop)
 
     Furlable(
         body = (ctx, ext) -> Thunk(
@@ -366,7 +371,7 @@ function instantiate_reader(trv::SparseHashFollowTraversal, ctx, subprotos, ::ty
     Tp = lvl.Tp
     qos_fill = lvl.qos_fill
     qos_stop = lvl.qos_stop
-    qos = ctx.freshen(tag, :_q)
+    qos = freshen(ctx.code, tag, :_q)
     Furlable(
         body = (ctx, ext) ->
             if length(coords)  + 1 < lvl.N
@@ -390,10 +395,6 @@ function instantiate_reader(trv::SparseHashFollowTraversal, ctx, subprotos, ::ty
     )
 end
 
-
-is_laminable_updater(lvl::VirtualSparseHashLevel, ctx, protos...) =
-    is_laminable_updater(lvl.lvl, ctx, protos[lvl.N + 1:end]...)
-
 struct SparseHashLaminateTraversal
     lvl
     pos
@@ -402,7 +403,7 @@ struct SparseHashLaminateTraversal
 end
     
 instantiate_updater(fbr::VirtualSubFiber{VirtualSparseHashLevel}, ctx, protos) =
-    instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos)
+    instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, protos)
 function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseHashLevel}, ctx, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     instantiate_updater(SparseHashLaminateTraversal(lvl, pos, fbr.dirty, ()), ctx, protos)
@@ -415,11 +416,10 @@ function instantiate_updater(trv::SparseHashLaminateTraversal, ctx, subprotos, :
     Tp = lvl.Tp
     qos_fill = lvl.qos_fill
     qos_stop = lvl.qos_stop
-    my_key = ctx.freshen(tag, :_key)
-    qos = ctx.freshen(tag, :_q)
-    dirty = ctx.freshen(tag, :dirty)
+    my_key = freshen(ctx.code, tag, :_key)
+    qos = freshen(ctx.code, tag, :_q)
+    dirty = freshen(ctx.code, tag, :dirty)
     Furlable(
-        tight = is_laminable_updater(lvl.lvl, ctx, subprotos[lvl.N - length(coords): end]...) ? nothing : lvl.lvl,
         body = (ctx, ext) ->
             if length(coords) + 1 < lvl.N
                 Lookup(

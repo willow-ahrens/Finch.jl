@@ -72,15 +72,20 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseTri
     display_fiber_data(io, mime, fbr, depth, N, crds, print_coord, get_fbr)
 end
 
-mutable struct VirtualSparseTriangleLevel
+mutable struct VirtualSparseTriangleLevel <: AbstractVirtualLevel
     lvl
     ex
     N
     Ti
     shape
 end
+
+is_level_injective(lvl::VirtualSparseTriangleLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., (true for _ in 1:lvl.N)...]
+is_level_concurrent(lvl::VirtualSparseTriangleLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., (true for _ in 1:lvl.N)...]
+is_level_atomic(lvl::VirtualSparseTriangleLevel, ctx) = is_level_atomic(lvl.lvl, ctx)
+
 function virtualize(ex, ::Type{SparseTriangleLevel{N, Ti, Lvl}}, ctx, tag=:lvl) where {N, Ti, Lvl}
-    sym = ctx.freshen(tag)
+    sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Int)
     push!(ctx.preamble, quote
         $sym = $ex
@@ -157,10 +162,6 @@ function virtual_simplex(d, ctx, n)
     return simplify(call(fld, res, factorial(d)), ctx)
 end
 
-is_laminable_updater(lvl::VirtualSparseTriangleLevel, ctx, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...) =
-    is_laminable_updater(lvl.lvl, ctx, protos[lvl.N + 1:end]...)
-
-
 struct SparseTriangleFollowTraversal
     lvl
     d
@@ -174,7 +175,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ct
     tag = lvl.ex
     Ti = lvl.Ti
 
-    q = ctx.freshen(tag, :_q)
+    q = freshen(ctx.code, tag, :_q)
 
     # d is the dimension we are on 
     # j is coordinate of previous dimension
@@ -191,7 +192,7 @@ end
 
 function instantiate_reader(trv::SparseTriangleFollowTraversal, ctx, subprotos, ::Union{typeof(defaultread), typeof(follow)})
     (lvl, d, j, n, q) = (trv.lvl, trv.d, trv.j, trv.n, trv.q)
-    s = ctx.freshen(lvl.ex, :_s)
+    s = freshen(ctx.code, lvl.ex, :_s)
     if d == 1
         Furlable(
             body = (ctx, ext) -> Sequence([
@@ -238,13 +239,13 @@ struct SparseTriangleLaminateTraversal
 end
 
 instantiate_updater(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, protos) =
-    instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos)
+    instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, protos)
 function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseTriangleLevel}, ctx, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
 
-    q = ctx.freshen(tag, :_q)
+    q = freshen(ctx.code, tag, :_q)
 
     # d is the dimension we are on 
     # j is coordinate of previous dimension
@@ -261,7 +262,7 @@ end
 
 function instantiate_updater(trv::SparseTriangleLaminateTraversal, ctx, subprotos, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)})
     (lvl, d, j, n, q, dirty) = (trv.lvl, trv.d, trv.j, trv.n, trv.q, trv.dirty)
-    s = ctx.freshen(lvl.ex, :_s)
+    s = freshen(ctx.code, lvl.ex, :_s)
     if d == 1
         Furlable(
             body = (ctx, ext) -> Sequence([

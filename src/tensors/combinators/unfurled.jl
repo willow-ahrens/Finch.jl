@@ -1,4 +1,4 @@
-@kwdef struct Unfurled
+@kwdef struct Unfurled <: AbstractVirtualCombinator
     arr
     ndims = 0
     body
@@ -97,8 +97,8 @@ visit_simplify(node::Unfurled) = Unfurled(node.arr, node.ndims, visit_simplify(n
     guard => Unfurled(node.arr, node.ndims, body)
 end
 
-function unfurl(tns::Unfurled, ctx, ext, protos...)
-    unfurl(tns.body, ctx, ext, protos...)
+function unfurl(tns::Unfurled, ctx, ext, mode, protos...)
+    unfurl(tns.body, ctx, ext, mode, protos...)
 end
 
 #stepper_body(node::Unfurled, ctx, ext) = Unfurled(node.arr, node.ndims, stepper_body(node.body, ctx, ext))
@@ -111,6 +111,10 @@ function lower(node::Unfurled, ctx::AbstractCompiler, ::DefaultStyle)
 end
 
 getroot(tns::Unfurled) = getroot(tns.arr)
+
+is_injective(lvl::Unfurled, ctx) = is_injective(lvl.arr, ctx)
+is_concurrent(lvl::Unfurled, ctx) = is_concurrent(lvl.arr, ctx)
+is_atomic(lvl::Unfurled, ctx) = is_atomic(lvl.arr, ctx)
 
 function lower_access(ctx::AbstractCompiler, node, tns::Unfurled)
     if !isempty(node.idxs)

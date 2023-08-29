@@ -1,4 +1,4 @@
-@kwdef mutable struct VirtualAbstractArray
+@kwdef mutable struct VirtualAbstractArray <: AbstractVirtualTensor
     ex
     eltype
     ndims
@@ -6,7 +6,7 @@ end
 
 function virtual_size(arr::VirtualAbstractArray, ctx::AbstractCompiler)
     dims = map(i -> Symbol(arr.ex, :_mode, i, :_stop), 1:arr.ndims)
-    push!(ctx.preamble, quote
+    push!(ctx.code.preamble, quote
         ($(dims...),) = size($(arr.ex))
     end)
     return map(i->Extent(literal(1), value(dims[i], Int)), 1:arr.ndims)
@@ -17,13 +17,13 @@ function lower(arr::VirtualAbstractArray, ctx::AbstractCompiler,  ::DefaultStyle
 end
 
 function virtualize(ex, ::Type{<:AbstractArray{T, N}}, ctx, tag=:tns) where {T, N}
-    sym = ctx.freshen(tag)
+    sym = freshen(ctx, tag)
     push!(ctx.preamble, :($sym = $ex))
     VirtualAbstractArray(sym, T, N)
 end
 
 function declare!(arr::VirtualAbstractArray, ctx::AbstractCompiler, init)
-    push!(ctx.preamble, quote
+    push!(ctx.code.preamble, quote
         fill!($(arr.ex), $(ctx(init)))
     end)
     arr
@@ -59,3 +59,7 @@ Base.getindex(arr::AsArray{T, N}, i::Vararg{Int, N}) where {T, N} = arr.fbr[i...
 Base.getindex(arr::AsArray{T, N}, i::Vararg{Any, N}) where {T, N} = arr.fbr[i...]
 Base.setindex!(arr::AsArray{T, N}, v, i::Vararg{Int, N}) where {T, N} = arr.fbr[i...] = v
 Base.setindex!(arr::AsArray{T, N}, v, i::Vararg{Any, N}) where {T, N} = arr.fbr[i...] = v
+
+is_injective(tns::VirtualAbstractArray, ctx) = [true for _ in tns.ndims]
+is_concurrent(tns::VirtualAbstractArray, ctx) = [true for _ in tns.ndims]
+is_atomic(tns::VirtualAbstractArray, ctx) = true

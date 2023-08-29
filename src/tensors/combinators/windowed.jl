@@ -1,4 +1,4 @@
-struct WindowedArray{Dims<:Tuple, Body}
+struct WindowedArray{Dims<:Tuple, Body} <: AbstractCombinator
     body::Body
     dims::Dims
 end
@@ -10,10 +10,14 @@ end
 
 Base.getindex(arr::WindowedArray, i...) = arr.body[i...]
 
-struct VirtualWindowedArray
+struct VirtualWindowedArray <: AbstractVirtualCombinator
     body
     dims
 end
+
+is_injective(lvl::VirtualWindowedArray, ctx) = is_injective(lvl.body, ctx)
+is_concurrent(lvl::VirtualWindowedArray, ctx) = is_concurrent(lvl.body, ctx)
+is_atomic(lvl::VirtualWindowedArray, ctx) = is_atomic(lvl.body, ctx)
 
 Base.show(io::IO, ex::VirtualWindowedArray) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualWindowedArray)
@@ -48,6 +52,8 @@ end
 function virtual_resize!(arr::VirtualWindowedArray, ctx::AbstractCompiler, dims...)
     virtual_resize!(arr.body, ctx, something.(arr.dims, dims)...)
 end
+
+virtual_default(arr::VirtualWindowedArray, ctx::AbstractCompiler) = virtual_default(arr.body, ctx)
 
 function instantiate_reader(arr::VirtualWindowedArray, ctx, protos)
     VirtualWindowedArray(instantiate_reader(arr.body, ctx, protos), arr.dims)
@@ -126,12 +132,12 @@ replay_seek(node::VirtualWindowedArray, ctx, ext) = replay_seek(node.body, ctx, 
 
 getroot(tns::VirtualWindowedArray) = getroot(tns.body)
 
-function unfurl(tns::VirtualWindowedArray, ctx, ext, protos...)
+function unfurl(tns::VirtualWindowedArray, ctx, ext, mode, protos...)
     if tns.dims[end] !== nothing
         dims = virtual_size(tns.body, ctx)
-        tns_2 = unfurl(tns.body, ctx, dims[end], protos...)
+        tns_2 = unfurl(tns.body, ctx, dims[end], mode, protos...)
         truncate(tns_2, ctx, dims[end], ext)
     else
-        unfurl(tns.body, ctx, ext, protos...)
+        unfurl(tns.body, ctx, ext, mode, protos...)
     end
 end

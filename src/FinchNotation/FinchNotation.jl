@@ -1,5 +1,6 @@
 module FinchNotation
     using RewriteTools, SyntaxInterface, AbstractTrees, Finch
+    using Finch: virtualize, freshen
 
     export finch_leaf
     export literal
@@ -9,6 +10,7 @@ module FinchNotation
     export value
     export loop
     export assign
+    export tag
     export call
     export cached
     export reader, updater, access
@@ -40,6 +42,7 @@ module FinchNotation
 
     include("nodes.jl")
     include("instances.jl")
+    include("virtualize.jl")
     include("protocols.jl")
     include("syntax.jl")
 end

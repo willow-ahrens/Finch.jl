@@ -104,7 +104,7 @@ function (fbr::SubFiber{<:RepeatRLELevel})(i, tail...)
     return lvl.val[q]
 end
 
-mutable struct VirtualRepeatRLELevel
+mutable struct VirtualRepeatRLELevel <: AbstractVirtualLevel
     ex
     D
     Ti
@@ -114,17 +114,24 @@ mutable struct VirtualRepeatRLELevel
     ros_fill
     qos_stop
     dirty
+    prev_pos
 end
+
+is_level_injective(::VirtualRepeatRLELevel, ctx) = [false]
+is_level_concurrent(::VirtualRepeatRLELevel, ctx) = [false]
+is_level_atomic(lvl::VirtualRepeatRLELevel, ctx) = false
+
 function virtualize(ex, ::Type{RepeatRLELevel{D, Ti, Tp, Tv}}, ctx, tag=:lvl) where {D, Ti, Tp, Tv}
-    sym = ctx.freshen(tag)
+    sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Int)
-    ros_fill = ctx.freshen(sym, :_ros_fill)
-    qos_stop = ctx.freshen(sym, :_qos_stop)
+    ros_fill = freshen(ctx, sym, :_ros_fill)
+    qos_stop = freshen(ctx, sym, :_qos_stop)
     push!(ctx.preamble, quote
         $sym = $ex
     end)
-    dirty = ctx.freshen(sym, :_dirty)
-    VirtualRepeatRLELevel(sym, D, Ti, Tp, Tv, shape, ros_fill, qos_stop, dirty)
+    dirty = freshen(ctx, sym, :_dirty)
+    prev_pos = freshen(ctx, sym, :_prev_pos)
+    VirtualRepeatRLELevel(sym, D, Ti, Tp, Tv, shape, ros_fill, qos_stop, dirty, prev_pos)
 end
 function lower(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
@@ -153,20 +160,25 @@ virtual_level_default(lvl::VirtualRepeatRLELevel) = lvl.D
 virtual_level_eltype(lvl::VirtualRepeatRLELevel) = lvl.Tv
 
 function declare_level!(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, mode, init)
-    init == literal(lvl.D) || throw(FormatLimitation("Cannot initialize RepeatRLE Levels to non-default values"))
+    init == literal(lvl.D) || throw(FinchProtocolError("Cannot initialize RepeatRLE Levels to non-default values"))
     Tp = lvl.Tp
     Ti = lvl.Ti
-    push!(ctx.preamble, quote
+    push!(ctx.code.preamble, quote
         $(lvl.ex).ptr[1] = $(Tp(1))
         $(lvl.ros_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
     end)
+    if issafe(ctx.mode)
+        push!(ctx.code.preamble, quote
+            $(lvl.prev_pos) = $(Tp(0))
+        end)
+    end
     return lvl
 end
 
 function trim_level!(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, pos)
-    qos = ctx.freshen(:qos)
-    push!(ctx.preamble, quote
+    qos = freshen(ctx.code, :qos)
+    push!(ctx.code.preamble, quote
         resize!($(lvl.ex).ptr, $(ctx(pos)) + 1)
         $qos = $(lvl.ex).ptr[end] - $(lvl.Tp(1))
         resize!($(lvl.ex).idx, $qos)
@@ -187,12 +199,12 @@ end
 function freeze_level!(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, pos_stop)
     Tp = lvl.Tp
     Ti = lvl.Ti
-    p = ctx.freshen(:p)
+    p = freshen(ctx.code, :p)
     pos_stop = ctx(cache!(ctx, :p_stop, pos_stop))
     qos_stop = lvl.qos_stop
     ros_fill = lvl.ros_fill
-    qos_fill = ctx.freshen(:qos_stop)
-    push!(ctx.preamble, quote
+    qos_fill = freshen(ctx.code, :qos_stop)
+    push!(ctx.code.preamble, quote
         for $p = 2:($pos_stop + 1)
             $(lvl.ex).ptr[$p] += $(lvl.ex).ptr[$p - 1]
         end
@@ -210,10 +222,10 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, su
     tag = lvl.ex
     Tp = lvl.Tp
     Ti = lvl.Ti
-    my_i = ctx.freshen(tag, :_i)
-    my_q = ctx.freshen(tag, :_q)
-    my_q_stop = ctx.freshen(tag, :_q_stop)
-    my_i1 = ctx.freshen(tag, :_i1)
+    my_i = freshen(ctx.code, tag, :_i)
+    my_q = freshen(ctx.code, tag, :_q)
+    my_q_stop = freshen(ctx.code, tag, :_q_stop)
+    my_i1 = freshen(ctx.code, tag, :_i1)
 
     Furlable(
         body = (ctx, ext) -> Thunk(
@@ -250,26 +262,24 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, su
     )
 end
 
-is_laminable_updater(lvl::VirtualRepeatRLELevel, ctx, ::Union{typeof(defaultupdate), typeof(extrude)}) = false
-
 instantiate_updater(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, protos) = 
-    instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, ctx.freshen(:null)), ctx, protos)
+    instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, protos)
 function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualRepeatRLELevel}, ctx, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp
     Ti = lvl.Ti
-    my_q = ctx.freshen(tag, :_q)
-    my_p = ctx.freshen(tag, :_p)
-    my_v = ctx.freshen(tag, :_v)
+    my_q = freshen(ctx.code, tag, :_q)
+    my_p = freshen(ctx.code, tag, :_p)
+    my_v = freshen(ctx.code, tag, :_v)
     D = lvl.D
 
-    my_i_prev = ctx.freshen(tag, :_i_prev)
-    my_v_prev = ctx.freshen(tag, :_v_prev)
+    my_i_prev = freshen(ctx.code, tag, :_i_prev)
+    my_v_prev = freshen(ctx.code, tag, :_v_prev)
 
     qos_stop = lvl.qos_stop
     ros_fill = lvl.ros_fill
-    qos_fill = ctx.freshen(tag, :qos_fill)
+    qos_fill = freshen(ctx.code, tag, :qos_fill)
 
     function record_run(ctx, stop, v)
         quote
@@ -285,16 +295,25 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualRepeatRLELevel},
             $(lvl.ex).idx[$my_q] = $(ctx(stop))
             $(lvl.ex).val[$my_q] = $v
             $my_q += $(Tp(1))
+            $(if issafe(ctx.mode)
+                quote
+                    $(lvl.prev_pos) = $(ctx(pos))
+                end
+            end)
         end
     end
     
     Furlable(
-        tight = lvl,
         body = (ctx, ext) -> Thunk(
             preamble = quote
                 $my_q = $(lvl.ros_fill) + $(ctx(pos))
                 $my_i_prev = $(Ti(0))
                 $my_v_prev = $D
+                $(if issafe(ctx.mode)
+                    quote
+                        $(lvl.prev_pos) < $(ctx(pos)) || throw(FinchProtocolError("RepeatRLELevels cannot be updated multiple times"))
+                    end
+                end)
             end,
             body = (ctx) -> AcceptRun(
                 body = (ctx, ext) -> Thunk(

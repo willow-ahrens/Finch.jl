@@ -9,19 +9,20 @@ const ID = 8
     index    =  2ID
     variable =  3ID
     virtual  =  4ID
-    call     =  5ID | IS_TREE
-    access   =  6ID | IS_TREE 
-    reader   =  7ID | IS_TREE
-    updater  =  8ID | IS_TREE
-    cached   =  9ID | IS_TREE
-    assign   = 10ID | IS_TREE | IS_STATEFUL
-    loop     = 11ID | IS_TREE | IS_STATEFUL
-    sieve    = 12ID | IS_TREE | IS_STATEFUL
-    define   = 13ID | IS_TREE | IS_STATEFUL
-    declare  = 14ID | IS_TREE | IS_STATEFUL
-    thaw     = 15ID | IS_TREE | IS_STATEFUL
-    freeze   = 16ID | IS_TREE | IS_STATEFUL
-    block = 17ID | IS_TREE | IS_STATEFUL
+    tag      =  5ID | IS_TREE
+    call     =  6ID | IS_TREE
+    access   =  7ID | IS_TREE 
+    reader   =  8ID | IS_TREE
+    updater  =  9ID | IS_TREE
+    cached   = 10ID | IS_TREE
+    assign   = 11ID | IS_TREE | IS_STATEFUL
+    loop     = 12ID | IS_TREE | IS_STATEFUL
+    sieve    = 13ID | IS_TREE | IS_STATEFUL
+    define   = 14ID | IS_TREE | IS_STATEFUL
+    declare  = 15ID | IS_TREE | IS_STATEFUL
+    thaw     = 16ID | IS_TREE | IS_STATEFUL
+    freeze   = 17ID | IS_TREE | IS_STATEFUL
+    block    = 18ID | IS_TREE | IS_STATEFUL
 end
 
 """
@@ -63,6 +64,13 @@ compiler. This type is typically used for tensors, as it allows users to
 specify the tensor's shape and data type.
 """
 virtual
+
+"""
+    tag(var, bind)
+
+Finch AST expression for a global variable `var` with the value `bind`.
+"""
+tag
 
 """
     call(op, args...)
@@ -285,6 +293,12 @@ function FinchNode(kind::FinchNodeKind, args::Vector)
         else
             error("wrong number of arguments to access(...)")
         end
+    elseif kind === tag
+        if length(args) == 2
+            return FinchNode(tag, nothing, nothing, args)
+        else
+            error("wrong number of arguments to tag(...)")
+        end
     elseif kind === call
         if length(args) >= 1
             return FinchNode(call, nothing, nothing, args)
@@ -379,6 +393,13 @@ function Base.getproperty(node::FinchNode, sym::Symbol)
         error("type FinchNode(reader, ...) has no property $sym")
     elseif node.kind === updater
         error("type FinchNode(updater, ...) has no property $sym")
+    elseif node.kind === tag
+        if sym === :var
+            return node.children[1]
+        elseif sym === :bind
+            return node.children[2]
+        end
+        error("type FinchNode(tag, ...) has no property $sym")
     elseif node.kind === access
         if sym === :tns
             return node.children[1]
@@ -514,6 +535,12 @@ function display_expression(io, mime, node::FinchNode)
         display_expression(io, mime, node.arg)
         print(io, ", ")
         display_expression(io, mime, node.ref.val)
+        print(io, ")")
+    elseif node.kind === tag
+        print(io, "tag(")
+        display_expression(io, mime, node.var)
+        print(io, ", ")
+        display_expression(io, mime, node.val)
         print(io, ")")
     elseif node.kind === virtual
         print(io, "virtual(")

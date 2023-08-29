@@ -1,7 +1,7 @@
 begin
-    B = ex.lhs.tns.tns
+    B = ex.lhs.tns.bind
     B_val = B.val
-    A_lvl = ex.rhs.tns.tns.lvl
+    A_lvl = ex.rhs.tns.bind.lvl
     A_lvl_2 = A_lvl.lvl
     A_lvl_q = A_lvl.ptr[1]
     A_lvl_q_stop = A_lvl.ptr[1 + 1]
