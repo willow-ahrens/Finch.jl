@@ -319,9 +319,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, su
                                     $my_q_ofs = $my_q_stop - $my_i - $(Tp(1))
                                 end,
                                 stop = (ctx, ext) -> value(my_i),
-                                body = (ctx, ext, ext_2) -> Switch([
-                                    value(:($(ctx(getstop(ext_2))) == $my_i)) => Thunk(
-                                        body = (ctx) -> Sequence([
+                                chunk = Sequence([
                                             Phase(
                                                 stop = (ctx, ext) -> value(my_i_start),
                                                 body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
@@ -329,56 +327,13 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, su
                                             Phase(
                                                 body = (ctx, ext) -> Lookup(
                                                     body = (ctx, i) -> Thunk(
-                                                        preamble = quote
-                                                            $my_q = $my_q_ofs + $(ctx(i))
-                                                        end,
+                                                        preamble = :($my_q = $my_q_ofs + $(ctx(i))),
                                                         body = (ctx) -> instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Tp)), ctx, subprotos),
                                                     )
                                                 )
                                             )
                                         ]),
-                                        epilogue = quote
-                                            $my_r += $(Tp(1))
-                                        end
-                                    ),
-                                    literal(true) => Replay(
-                                        seek = (ctx, ext) -> quote
-                                            if $(lvl.ex).idx[$my_r] < $(ctx(getstart(ext)))
-                                                $my_r = Finch.scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_r, $my_r_stop - 1)
-                                            end
-                                        end,
-                                        body = Step(
-                                                preamble = quote
-                                                    $my_j = $(lvl.ex).idx[$my_r]
-                                                    $my_q_stop = $(lvl.ex).ofs[$my_r + $(Tp(1))]
-                                                    $my_i_start = $my_j - ($my_q_stop - $(lvl.ex).ofs[$my_r])
-                                                    $my_q_ofs = $my_q_stop - $my_j - $(Tp(1))
-                                                end,
-                                                stop = (ctx, ext) -> value(my_j),
-                                                body = (ctx, ext) -> Thunk(
-                                                    body = (ctx) -> Sequence([
-                                                        Phase(
-                                                            stop = (ctx, ext) -> value(my_i_start),
-                                                            body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
-                                                        ),
-                                                        Phase(
-                                                            body = (ctx, ext) -> Lookup(
-                                                                body = (ctx, i) -> Thunk(
-                                                                    preamble = quote
-                                                                        $my_q = $my_q_ofs + $(ctx(i))
-                                                                    end,
-                                                                    body = (ctx) -> instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Tp)), ctx, subprotos),
-                                                                )
-                                                            )
-                                                        )
-                                                    ]),
-                                                    epilogue = quote
-                                                        $my_r += ($(ctx(getstop(ext))) == $my_j)
-                                                    end
-                                                )
-                                            )
-                                        )
-                                ])
+                                next = (ctx, ext) -> :($my_r += $(Tp(1))),
                             )
                         ),
                 ),

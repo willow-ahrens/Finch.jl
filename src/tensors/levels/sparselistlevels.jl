@@ -298,36 +298,12 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, s
                         body = Jump(
                                 preamble = :($my_i2 = $(lvl.ex).idx[$my_q]),
                                 stop = (ctx, ext) -> value(my_i2),
-                                body = (ctx, ext, ext_2) -> Switch([
-                                    value(:($(ctx(getstop(ext_2))) == $my_i2)) => Thunk(
-                                        body = (ctx) -> Spike(
+                                chunk =  Spike(
                                             body = Fill(virtual_level_default(lvl)),
                                             tail = instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, subprotos),
                                         ),
-                                        epilogue = quote
-                                            $my_q += $(Tp(1))
-                                        end
-                                    ),
-                                    literal(true) => Replay(
-                                        seek = (ctx, ext) -> quote
-                                            if $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
-                                                $my_q = Finch.scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
-                                            end
-                                        end,
-                                        body = Step(
-                                                preamble = :($my_i3 = $(lvl.ex).idx[$my_q]),
-                                                stop = (ctx, ext) -> value(my_i3),
-                                                chunk = Spike(
-                                                    body = Fill(virtual_level_default(lvl)),
-                                                    tail =  instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, subprotos),
-                                                ),
-                                                next = (ctx, ext) -> quote
-                                                    $my_q += $(Tp(1))
-                                                end
-                                            )
-                                    ),
-                                ])
-                            ),
+                                next = (ctx, ext) -> :($my_q += $(Tp(1))),
+                            )
                     )
                 ),
                 Phase(

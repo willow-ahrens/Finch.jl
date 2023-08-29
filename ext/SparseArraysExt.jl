@@ -95,25 +95,21 @@ function Finch.instantiate_reader(arr::VirtualSparseMatrixCSC, ctx::AbstractComp
                                             $my_q = Finch.scansearch($(arr.ex).rowval, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                                         end
                                     end,
-                                    body = Thunk(
-                                        preamble = quote
-                                            $my_i = $(arr.ex).rowval[$my_q]
-                                        end,
-                                        body = (ctx) -> Step(
-                                            stop = (ctx, ext) -> value(my_i),
-                                            chunk = Spike(
-                                                body = Fill(zero(arr.Tv)),
-                                                tail = Thunk(
-                                                    preamble = quote
-                                                        $my_val = $(arr.ex).nzval[$my_q]
-                                                    end,
-                                                    body = (ctx) -> Fill(value(my_val, arr.Tv))
-                                                )
-                                            ),
-                                            next = (ctx, ext) -> quote
-                                                $my_q += $(Ti(1))
-                                            end
-                                        )
+                                    body = Step(
+                                        preamble = :($my_i = $(arr.ex).rowval[$my_q]),
+                                        stop = (ctx, ext) -> value(my_i),
+                                        chunk = Spike(
+                                            body = Fill(zero(arr.Tv)),
+                                            tail = Thunk(
+                                                preamble = quote
+                                                    $my_val = $(arr.ex).nzval[$my_q]
+                                                end,
+                                                body = (ctx) -> Fill(value(my_val, arr.Tv))
+                                            )
+                                        ),
+                                        next = (ctx, ext) -> quote
+                                            $my_q += $(Ti(1))
+                                        end
                                     )
                                 )
                             ),
@@ -196,25 +192,21 @@ function Finch.instantiate_reader(arr::VirtualSparseVector, ctx::AbstractCompile
                                     $my_q = Finch.scansearch($(arr.ex).nzind, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                                 end
                             end,
-                            body = Thunk(
-                                preamble = quote
-                                    $my_i = $(arr.ex).nzind[$my_q]
-                                end,
-                                body = (ctx) -> Step(
-                                    stop = (ctx, ext) -> value(my_i),
-                                    chunk = Spike(
-                                        body = Fill(zero(arr.Tv)),
-                                        tail = Thunk(
-                                            preamble = quote
-                                                $my_val = $(arr.ex).nzval[$my_q]
-                                            end,
-                                            body = (ctx) -> Fill(value(my_val, arr.Tv))
-                                        )
-                                    ),
-                                    next = (ctx, ext) -> quote
-                                        $my_q += $(Ti(1))
-                                    end
-                                )
+                            body = Step(
+                                preamble = :($my_i = $(arr.ex).nzind[$my_q]),
+                                stop = (ctx, ext) -> value(my_i),
+                                chunk = Spike(
+                                    body = Fill(zero(arr.Tv)),
+                                    tail = Thunk(
+                                        preamble = quote
+                                            $my_val = $(arr.ex).nzval[$my_q]
+                                        end,
+                                        body = (ctx) -> Fill(value(my_val, arr.Tv))
+                                    )
+                                ),
+                                next = (ctx, ext) -> quote
+                                    $my_q += $(Ti(1))
+                                end
                             )
                         )
                     ),

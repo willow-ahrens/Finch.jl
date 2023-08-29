@@ -330,45 +330,14 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
                         body = Jump(
                                 preamble = :($my_i = last($(lvl.ex).srt[$my_r])),
                                 stop = (ctx, ext) -> value(my_i),
-                                body = (ctx, ext, ext_2) -> Switch([
-                                    value(:($(ctx(getstop(ext_2))) == $my_i)) => Thunk(
-                                        body = (ctx) -> Spike(
+                                chunk =  Spike(
                                             body = Fill(virtual_level_default(lvl)),
                                             tail = Thunk(
-                                                preamble = quote
-                                                    $my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $my_i
-                                                end,
+                                                preamble = :($my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $my_i),
                                                 body = (ctx) -> instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, subprotos),
                                             ),
                                         ),
-                                        epilogue = quote
-                                            $my_r += $(Tp(1))
-                                        end
-                                    ),
-                                    literal(true) => Replay(
-                                        seek = (ctx, ext) -> quote
-                                            while $my_r + $(Tp(1)) < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext)))
-                                                $my_r += $(Tp(1))
-                                            end
-                                        end,
-                                        body = Step(
-                                                preamble = :($my_j = last($(lvl.ex).srt[$my_r])),
-                                                stop = (ctx, ext) -> value(my_j),
-                                                chunk = Spike(
-                                                    body = Fill(virtual_level_default(lvl)),
-                                                    tail = Thunk(
-                                                        preamble = quote
-                                                            $my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $my_j
-                                                        end,
-                                                        body = (ctx) -> instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, subprotos),
-                                                    ),
-                                                ),
-                                                next = (ctx, ext) -> quote
-                                                    $my_r += $(Tp(1))
-                                                end
-                                            )
-                                        )
-                                ])
+                                next = (ctx, ext) -> :($my_r += $(Tp(1)))
                             )
                         )
                 ),

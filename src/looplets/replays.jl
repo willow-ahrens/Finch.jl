@@ -1,6 +1,6 @@
 struct ReplayStyle end
 
-@kwdef struct Replay 
+@kwdef mutable struct Replay 
     body
     seek = (ctx, start) -> error("seek not implemented error")
 end
@@ -26,15 +26,28 @@ combine_style(a::ReplayStyle, b::SequenceStyle) = SequenceStyle()
 combine_style(a::ThunkStyle, b::ReplayStyle) = ThunkStyle()
 combine_style(a::ReplayStyle, b::PhaseStyle) = b
 
-replay_seek(node::Replay, ctx, ext) = node.seek(ctx, ext)
+function replay_seek(node::Replay, ctx, ext)
+  if node.body isa Jump
+    node.body = Jump(seek = node.seek, #Propagating Replay's seek to Jump 
+                     preamble = node.body.preamble,
+                     stop = node.body.stop,
+                     chunk = node.body.chunk,
+                     next = node.body.next)
+  end
+  return node.seek(ctx, ext)
+end
 replay_seek(node, ctx, ext) = quote end
 
-replay_body(node::Replay, ctx, ext) = node.body
+function replay_body(node::Replay, ctx, ext)
+  node.body isa Step || node.body isa Jump || error("Replay's body must be either Step or Jump")
+  return node.body
+end
+
 replay_body(node, ctx, ext) = node
 
 function lower(root::FinchNode, ctx::AbstractCompiler,  style::ReplayStyle)
     root.kind === loop || error("unimplemented")
-
+    
     i = getname(root.idx)
     i0 = ctx.freshen(i, :_start)
     push!(ctx.preamble, quote
@@ -46,7 +59,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::ReplayStyle)
     foreach(filter(isvirtual, collect(PostOrderDFS(root.body)))) do node
         push!(ctx.preamble, replay_seek(node.val, ctx, root.ext))
     end
-    
+
     body_2 = Rewrite(Postwalk(@rule access(~tns::isvirtual, ~mode, ~idxs...) => begin
         tns_2 = replay_body(tns.val, ctx, root.ext)
         access(tns_2, mode, idxs...)
