@@ -141,7 +141,6 @@ mutable struct VirtualSparseCOOLevel <: AbstractVirtualLevel
 end
 
 is_level_injective(lvl::VirtualSparseCOOLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., (true for _ in 1:lvl.N)...]
-is_level_concurrent(lvl::VirtualSparseCOOLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., (true for _ in 1:lvl.N)...]
 is_level_atomic(lvl::VirtualSparseCOOLevel, ctx) = false
 
 function virtualize(ex, ::Type{SparseCOOLevel{N, Ti, Tp, Tbl, Lvl}}, ctx, tag=:lvl) where {N, Ti, Tp, Tbl, Lvl}   

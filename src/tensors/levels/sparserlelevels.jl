@@ -100,7 +100,6 @@ mutable struct VirtualSparseRLELevel <: AbstractVirtualLevel
 end
 
 is_level_injective(lvl::VirtualSparseRLELevel, ctx) = [false, is_level_injective(lvl.lvl, ctx)...]
-is_level_concurrent(lvl::VirtualSparseRLELevel, ctx) = [false, is_level_concurrent(lvl.lvl, ctx)...]
 is_level_atomic(lvl::VirtualSparseRLELevel, ctx) = false
 
 function virtualize(ex, ::Type{SparseRLELevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}

@@ -124,7 +124,6 @@ mutable struct VirtualSparseListLevel <: AbstractVirtualLevel
 end
 
 is_level_injective(lvl::VirtualSparseListLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., false]
-is_level_concurrent(lvl::VirtualSparseListLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., false]
 is_level_atomic(lvl::VirtualSparseListLevel, ctx) = false
 
 function virtualize(ex, ::Type{SparseListLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}

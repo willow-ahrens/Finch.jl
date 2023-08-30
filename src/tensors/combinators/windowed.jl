@@ -16,7 +16,6 @@ struct VirtualWindowedArray <: AbstractVirtualCombinator
 end
 
 is_injective(lvl::VirtualWindowedArray, ctx) = is_injective(lvl.body, ctx)
-is_concurrent(lvl::VirtualWindowedArray, ctx) = is_concurrent(lvl.body, ctx)
 is_atomic(lvl::VirtualWindowedArray, ctx) = is_atomic(lvl.body, ctx)
 
 Base.show(io::IO, ex::VirtualWindowedArray) = Base.show(io, MIME"text/plain"(), ex)

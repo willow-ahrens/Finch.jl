@@ -72,7 +72,6 @@ pattern!(fbr::SubFiber) = SubFiber(pattern!(fbr.lvl), fbr.pos)
 struct VirtualPatternLevel <: AbstractVirtualLevel end
 
 is_level_injective(::VirtualPatternLevel, ctx) = []
-is_level_concurrent(::VirtualPatternLevel, ctx) = []
 is_level_atomic(lvl::VirtualPatternLevel, ctx) = true
 
 lower(lvl::VirtualPatternLevel, ctx::AbstractCompiler, ::DefaultStyle) = :(PatternLevel())

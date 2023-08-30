@@ -13,14 +13,6 @@ array.
 function is_injective end
 
 """
-    is_concurrent(tns, ctx)
-
-Returns a vector of booleans, one for each dimension of the tensor, indicating
-whether multiple threads can loop through the corresponding dimension.
-"""
-function is_concurrent end
-
-"""
     is_atomic(tns, ctx)
 
 Returns a boolean indicating whether it is safe to update the same element of the
@@ -66,8 +58,8 @@ function ensure_concurrent(root, ctx)
         acc = first(accs)
 
         if !(
-            (is_atomic(acc.tns, ctx) && all(is_concurrent(tns, ctx))) ||
-            (@capture(acc, access(~tns, ~mode, ~i..., idx)) && is_injective(tns, ctx)[length(i) + 1] && is_concurrent(tns, ctx)[length(i) + 1])
+            (is_atomic(acc.tns, ctx)) ||
+            (@capture(acc, access(~tns, ~mode, ~i..., idx)) && is_injective(tns, ctx)[length(i) + 1])
         )
             throw(FinchConcurrencyError("Cannot prove that $(acc) is safe to update from multiple threads"))
         end

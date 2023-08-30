@@ -95,7 +95,6 @@ mutable struct VirtualDenseLevel <: AbstractVirtualLevel
 end
 
 is_level_injective(lvl::VirtualDenseLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., true]
-is_level_concurrent(lvl::VirtualDenseLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., true]
 is_level_atomic(lvl::VirtualDenseLevel, ctx) = is_level_atomic(lvl.lvl, ctx)
 
 function virtualize(ex, ::Type{DenseLevel{Ti, Lvl}}, ctx, tag=:lvl) where {Ti, Lvl}

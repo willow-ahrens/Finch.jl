@@ -145,7 +145,6 @@ mutable struct VirtualSparseHashLevel <: AbstractVirtualLevel
 end
 
 is_level_injective(lvl::VirtualSparseHashLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., (true for _ in 1:lvl.N)...]
-is_level_concurrent(lvl::VirtualSparseHashLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., (true for _ in 1:lvl.N)...]
 is_level_atomic(lvl::VirtualSparseHashLevel, ctx) = false
 
 function virtualize(ex, ::Type{SparseHashLevel{N, Ti, Tp, Tbl, Lvl}}, ctx, tag=:lvl) where {N, Ti, Tp, Tbl, Lvl}   

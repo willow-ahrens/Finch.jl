@@ -118,7 +118,6 @@ mutable struct VirtualRepeatRLELevel <: AbstractVirtualLevel
 end
 
 is_level_injective(::VirtualRepeatRLELevel, ctx) = [false]
-is_level_concurrent(::VirtualRepeatRLELevel, ctx) = [false]
 is_level_atomic(lvl::VirtualRepeatRLELevel, ctx) = false
 
 function virtualize(ex, ::Type{RepeatRLELevel{D, Ti, Tp, Tv}}, ctx, tag=:lvl) where {D, Ti, Tp, Tv}

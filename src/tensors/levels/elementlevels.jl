@@ -75,7 +75,6 @@ struct VirtualElementLevel <: AbstractVirtualLevel
 end
 
 is_level_injective(::VirtualElementLevel, ctx) = []
-is_level_concurrent(::VirtualElementLevel, ctx) = []
 is_level_atomic(lvl::VirtualElementLevel, ctx) = false
 
 lower(lvl::VirtualElementLevel, ctx::AbstractCompiler, ::DefaultStyle) = lvl.ex

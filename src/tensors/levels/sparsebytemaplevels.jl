@@ -94,7 +94,6 @@ mutable struct VirtualSparseByteMapLevel <: AbstractVirtualLevel
 end
 
 is_level_injective(lvl::VirtualSparseByteMapLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., false]
-is_level_concurrent(lvl::VirtualSparseByteMapLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., false]
 is_level_atomic(lvl::VirtualSparseByteMapLevel, ctx) = false
 
 function virtualize(ex, ::Type{SparseByteMapLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}   
