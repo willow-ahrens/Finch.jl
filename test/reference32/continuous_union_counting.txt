@@ -5,10 +5,10 @@ julia> @finch_code begin
         end
     end
 quote
-    s = (ex.bodies[1]).tns.tns
-    x_lvl = ((ex.bodies[2]).body.rhs.args[1]).tns.tns.lvl
+    s = (ex.bodies[1]).tns.bind
+    x_lvl = ((ex.bodies[2]).body.rhs.args[1]).tns.bind.lvl
     x_lvl_2 = x_lvl.lvl
-    y_lvl = ((ex.bodies[2]).body.rhs.args[2]).tns.tns.lvl
+    y_lvl = ((ex.bodies[2]).body.rhs.args[2]).tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
     y_lvl.shape == x_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(y_lvl.shape) != $(x_lvl.shape))"))
     s_val = 0

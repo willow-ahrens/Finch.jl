@@ -30,15 +30,15 @@ combine_style(a::StepperStyle, b::PhaseStyle) = b
 function lower(root::FinchNode, ctx::AbstractCompiler,  style::StepperStyle)
     root.kind === loop || error("unimplemented")
     i = getname(root.idx)
-    i0 = ctx.freshen(i, :_start)
-    push!(ctx.preamble, quote
+    i0 = freshen(ctx.code, i, :_start)
+    push!(ctx.code.preamble, quote
         $i = $(ctx(getstart(root.ext)))
     end)
 
     guard = :($i <= $(ctx(getstop(root.ext))))
 
     foreach(filter(isvirtual, collect(PostOrderDFS(root.body)))) do node
-        push!(ctx.preamble, stepper_seek(node.val, ctx, root.ext))
+        push!(ctx.code.preamble, stepper_seek(node.val, ctx, root.ext))
     end
 
     body_2 = Rewrite(Postwalk(@rule access(~tns::isvirtual, ~mode, ~idxs...) => begin
@@ -47,7 +47,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::StepperStyle)
     end))(root.body)
 
     body_3 = contain(ctx) do ctx_2
-        push!(ctx_2.preamble, :($i0 = $i))
+        push!(ctx_2.code.preamble, :($i0 = $i))
         if is_continuous_extent(root.ext) 
             ctx_2(loop(root.idx, bound_measure_below!(ContinuousExtent(start = value(i0), stop = getstop(root.ext)), literal(0)), body_2))
         else

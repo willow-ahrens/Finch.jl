@@ -1,7 +1,7 @@
 begin
-    x = ex.body.lhs.tns.tns
+    x = ex.body.lhs.tns.bind
     x_val = x.val
-    yf_lvl = (ex.body.rhs.args[1]).tns.tns.lvl
+    yf_lvl = (ex.body.rhs.args[1]).tns.bind.lvl
     yf_lvl_2 = yf_lvl.lvl
     yf_lvl_q = yf_lvl.ptr[1]
     yf_lvl_q_stop = yf_lvl.ptr[1 + 1]

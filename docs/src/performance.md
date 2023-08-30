@@ -37,9 +37,9 @@ this takes `O(n + nnz)` time.
 # output
 
 quote
-    s = ex.body.body.lhs.tns.tns
+    s = ex.body.body.lhs.tns.bind
     s_val = s.val
-    A_lvl = ex.body.body.rhs.tns.tns.lvl
+    A_lvl = ex.body.body.rhs.tns.bind.lvl
     A_lvl_2 = A_lvl.lvl
     A_lvl_3 = A_lvl_2.lvl
     for j_3 = 1:A_lvl.shape
@@ -90,9 +90,9 @@ Note the double for loop in the following code
 # output
 
 quote
-    s = ex.body.body.lhs.tns.tns
+    s = ex.body.body.lhs.tns.bind
     s_val = s.val
-    A_lvl = ex.body.body.rhs.tns.tns.lvl
+    A_lvl = ex.body.body.rhs.tns.bind.lvl
     A_lvl_2 = A_lvl.lvl
     A_lvl_3 = A_lvl_2.lvl
     for i_3 = 1:A_lvl_2.shape
@@ -216,11 +216,11 @@ Checking the generated code, we see that this code is indeed densifying (notice 
 # output
 
 quote
-    C = (ex.bodies[1]).tns.tns
-    A_lvl = ((ex.bodies[2]).body.body.rhs.args[1]).tns.tns.lvl
+    C = (ex.bodies[1]).tns.bind
+    A_lvl = ((ex.bodies[2]).body.body.rhs.args[1]).tns.bind.lvl
     A_lvl_2 = A_lvl.lvl
     A_lvl_3 = A_lvl_2.lvl
-    B = ((ex.bodies[2]).body.body.rhs.args[2]).tns.tns
+    B = ((ex.bodies[2]).body.body.rhs.args[2]).tns.bind
     sugar_1 = size(B)
     B_mode1_stop = sugar_1[1]
     B_mode2_stop = sugar_1[2]

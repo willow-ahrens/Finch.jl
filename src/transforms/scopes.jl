@@ -1,16 +1,18 @@
 @kwdef struct ScopeVisitor
-    freshen = Freshen()
+    namespace = Namespace()
     vars = Dict(index(:(:)) => index(:(:)))
     scope = Set()
     global_scope = scope
 end
+
+freshen(ctx::ScopeVisitor, tags...) = freshen(ctx.namespace, tags...)
 
 """
     enforce_scopes(prgm)
 
 A transformation which gives all loops unique index names and enforces that
 tensor roots are declared in a containing scope and enforces that variables are
-decared once within their scope. . Note that `loop` and `sieve` both introduce new scopes.
+declared once within their scope. Note that `loop` and `sieve` both introduce new scopes.
 """
 enforce_scopes(prgm) = ScopeVisitor()(prgm)
 
@@ -24,7 +26,7 @@ end
 
 function (ctx::ScopeVisitor)(node::FinchNode)
     if @capture node loop(~idx, ~ext, ~body)
-        ctx.vars[idx] = index(ctx.freshen(idx.name))
+        ctx.vars[idx] = index(freshen(ctx, idx.name))
         loop(ctx(idx), ctx(ext), open_scope(body, ctx))
     elseif @capture node sieve(~cond, ~body)
         sieve(ctx(cond), open_scope(body, ctx))
