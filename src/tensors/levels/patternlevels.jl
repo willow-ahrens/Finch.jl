@@ -15,7 +15,7 @@ Dense [1:3]
 ├─[3]: true
 ```
 """
-struct PatternLevel end
+struct PatternLevel{VB<:AbstractVector{Bool}} end
 const Pattern = PatternLevel
 
 Base.summary(::Pattern) = "Pattern()"
@@ -27,7 +27,7 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:PatternLe
     show(io, mime, true)
 end
 
-pattern!(::PatternLevel) = Pattern()
+pattern!(::PatternLevel) = Pattern{Vector{Bool}}()
 
 function Base.show(io::IO, lvl::PatternLevel)
     print(io, "Pattern()")
@@ -40,6 +40,15 @@ end
 @inline level_default(::Type{PatternLevel}) = false
 (fbr::AbstractFiber{<:PatternLevel})() = true
 data_rep_level(::Type{<:PatternLevel}) = ElementData(false, Bool)
+
+function memory_type(::Type{PatternLevel{VB}}) where {VB}
+    return containertype(VB)
+end
+
+function moveto(lvl::PatternLevel{VB},  ::Type{MemType}) where {VB, MemType <: AbstractVector}
+    return PatternLevel{MemType{1, Bool}}
+end
+
 
 """
     pattern!(fbr)

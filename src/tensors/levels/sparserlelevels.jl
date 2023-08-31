@@ -1,4 +1,4 @@
-struct SparseRLELevel{Ti, Tp, VTp<:AbstractVector{<:Tp}, VLTi<:AbstractVector, VRTi<:AbstractVector, Lvl}
+struct SparseRLELevel{Ti, Tp, VTp<:AbstractVector, VLTi<:AbstractVector, VRTi<:AbstractVector, Lvl}
     lvl::Lvl
     shape::Ti
     ptr::VTp

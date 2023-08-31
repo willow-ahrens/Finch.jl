@@ -33,7 +33,7 @@ SparseList (0.0) [:,1:3]
 
 ```
 """
-struct SparseListLevel{Ti, Tp, VTp<:AbstractVector{Tp}, VTi<:AbstractVector{Ti}, Lvl}
+struct SparseListLevel{Ti, Tp, VTp<:AbstractVector, VTi<:AbstractVector, Lvl}
     lvl::Lvl
     shape::Ti
     ptr::VTp

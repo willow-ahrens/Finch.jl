@@ -1,9 +1,9 @@
-struct SparseByteMapLevel{Ti, Tp, VTp<:AbstractVector{Tp}, BV<:AbstractVector{Bool}, VTpi<:AbstractVector{Tuple{Tp, Ti}}, Lvl}
+struct SparseByteMapLevel{Ti, Tp, VTp<:AbstractVector, BV<:AbstractVector{Bool}, VTpi<:AbstractVector{<:Tuple{Any, Any}}, Lvl}
     lvl::Lvl
     shape::Ti
-    ptr::Vector{Tp}
-    tbl::Vector{Bool}
-    srt::Vector{Tuple{Tp, Ti}}
+    ptr:: VTp
+    tbl::BV
+    srt::VTpi
 end
 const SparseByteMap = SparseByteMapLevel
 SparseByteMapLevel(lvl) = SparseByteMapLevel{Int}(lvl)
