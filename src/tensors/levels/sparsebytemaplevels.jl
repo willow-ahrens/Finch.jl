@@ -6,9 +6,9 @@ struct SparseByteMapLevel{Ti, Tp, VTp<:AbstractVector, BV<:AbstractVector{Bool},
     srt::VTpi
 end
 const SparseByteMap = SparseByteMapLevel
-SparseByteMapLevel(lvl) = SparseByteMapLevel{Int}(lvl)
+SparseByteMapLevel(lvl::Lvl) where {Lvl} = SparseByteMapLevel{indextype(Lvl)}(lvl)
 SparseByteMapLevel(lvl, shape, args...) = SparseByteMapLevel{typeof(shape)}(lvl, shape, args...)
-SparseByteMapLevel{Ti}(lvl, args...) where {Ti} = SparseByteMapLevel{Ti, Int}(lvl, args...)
+SparseByteMapLevel{Ti}(lvl::Lvl, args...) where {Ti, Lvl} = SparseByteMapLevel{Ti, postype(Lvl)}(lvl, args...)
 SparseByteMapLevel{Ti, Tp}(lvl, args...) where {Ti, Tp} = SparseByteMapLevel{Ti, Tp,  memory_type(typeof(lvl)){Tp, 1}, memory_type(typeof(lvl)){Bool, 1}, memory_type(typeof(lvl)){Tuple{Tp, Ti}, 1}, typeof(lvl)}(lvl, args...)
 
 SparseByteMapLevel{Ti, Tp, VTp, BV, VTpi, Lvl}(lvl) where {Ti, Tp, VTp, BV, VTpi, Lvl} = SparseByteMapLevel{Ti, Tp, VTp, BV, VTpi, Lvl}(lvl, zero(Ti))
@@ -25,8 +25,10 @@ function memory_type(::Type{SparseByteMapLevel{Ti, Tp, VTp, BV, VTpi, Lvl}}) whe
 end
 
 function postype(::Type{SparseByteMapLevel{Ti, Tp, VTp, BV, VTpi, Lvl}}) where {Ti, Tp, VTp, BV, VTpi, Lvl}
-    return postype(VTp)
+    return Tp
 end
+
+indextype(::Type{SparseByteMapLevel{Ti, Tp, VTp, BV, VTpi, Lvl}}) where {Ti, Tp, VTp, BV, VTpi, Lvl} = indextype(Ti)
 
 function moveto(lvl:: SparseByteMapLevel{Ti, Tp, VTp, BV, VTpi, Lvl}, ::Type{MemType}) where {Ti, Tp, VTp, BV, VTpi, Lvl, MemType <: AbstractVector}
     lvl_2 = moveto(lvl.lvl, MemType)

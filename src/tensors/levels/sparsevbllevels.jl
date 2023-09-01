@@ -7,7 +7,7 @@ struct SparseVBLLevel{Ti, Tp, VTp<:AbstractVector, VTi<:AbstractVector, VTo<:Abs
 end
 
 const SparseVBL = SparseVBLLevel
-SparseVBLLevel(lvl, ) = SparseVBLLevel{Int}(lvl)
+SparseVBLLevel(lvl::Lvl) where {Lvl} = SparseVBLLevel{indextype(Lvl)}(lvl)
 SparseVBLLevel(lvl, shape, args...) = SparseVBLLevel{typeof(shape)}(lvl, shape, args...)
 SparseVBLLevel{Ti}(lvl, args...) where {Ti} = SparseVBLLevel{Ti,  postype(typeof(lvl))}(lvl, args...)
 SparseVBLLevel{Ti, Tp}(lvl, args...) where {Ti, Tp} = SparseVBLLevel{Ti, Tp, memory_type(typeof(lvl)){Tp, 1}, memory_type(typeof(lvl)){Ti, 1}, memory_type(typeof(lvl)){Tp, 1}, typeof(lvl)}(lvl, args...)
@@ -22,7 +22,11 @@ function memory_type(::Type{SparseVBLLevel{Ti, Tp, VTp, VTi, VTo, Lvl}}) where {
 end
 
 function postype(::Type{SparseVBLLevel{Ti, Tp, VTp, VTi, VTo, Lvl}}) where {Ti, Tp, VTp, VTi, VTo, Lvl}
-    return postype(Lvl)
+    return Tp
+end
+
+function indextype(::Type{SparseVBLLevel{Ti, Tp, VTp, VTi, VTo, Lvl}}) where {Ti, Tp, VTp, VTi, VTo, Lvl}
+    return indextype(Ti)
 end
 
 

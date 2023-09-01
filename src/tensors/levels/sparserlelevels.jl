@@ -7,7 +7,7 @@ struct SparseRLELevel{Ti, Tp, VTp<:AbstractVector, VLTi<:AbstractVector, VRTi<:A
 end
 
 const SparseRLE = SparseRLELevel
-SparseRLELevel(lvl, ) = SparseRLELevel{Int}(lvl)
+SparseRLELevel(lvl:: Lvl) where {Lvl} = SparseRLELevel{indextype(Lvl)}(lvl)
 SparseRLELevel(lvl, shape, args...) = SparseRLELevel{typeof(shape)}(lvl, shape, args...)
 SparseRLELevel{Ti}(lvl, args...) where {Ti} =
     SparseRLELevel{Ti,
@@ -31,7 +31,11 @@ function memory_type(::Type{SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}}) where
 end
 
 function postype(::Type{SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}}) where {Ti, Tp, VTp, VLTi, VRTi, Lvl}
-    return postype(VTp)
+    return VTp
+end
+
+function indextype(::Type{SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}}) where {Ti, Tp, VTp, VLTi, VRTi, Lvl}
+    return indextype(Ti)
 end
 
 function moveto(lvl::SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}, ::Type{MemType}) where {Ti, Tp, VTp, VLTi, VRTi, Lvl, MemType <: AbstractVector}
@@ -57,7 +61,7 @@ function Base.show(io::IO, lvl::SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}) wh
     if get(io, :compact, false)
         print(io, "SparseRLE(")
     else
-        print(io, "SparseRLE{$Ti, $Tp}(")
+        print(io, "SparseRLE{$Ti, $Tp, $VTp, $VLTi, $VRTi, $Lvl}(")
     end
     show(io, lvl.lvl)
     print(io, ", ")

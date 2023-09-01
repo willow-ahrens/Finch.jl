@@ -40,7 +40,7 @@ struct SparseListLevel{Ti, Tp, VTp<:AbstractVector, VTi<:AbstractVector, Lvl}
     idx::VTi
 end
 const SparseList = SparseListLevel
-SparseListLevel(lvl) = SparseListLevel{Int}(lvl)
+SparseListLevel(lvl::Lvl) where {Lvl} = SparseListLevel{indextype(Lvl)}(lvl)
 SparseListLevel(lvl, shape, args...) = SparseListLevel{typeof(shape)}(lvl, shape, args...)
 SparseListLevel{Ti}(lvl, args...) where {Ti} = SparseListLevel{Ti, postype(typeof(lvl))}(lvl, args...)
 SparseListLevel{Ti, Tp}(lvl, args...) where {Ti, Tp} =
@@ -62,7 +62,11 @@ function memory_type(::Type{SparseListLevel{Ti, Tp,  VTp, VTi, Lvl}}) where {Ti,
 end
 
 function postype(::Type{SparseListLevel{Ti, Tp,  VTp, VTi, Lvl}}) where {Ti, Tp, Lvl, VTi, VTp}
-    return postype(Lvl)
+    return Tp
+end
+
+function indextype(::Type{SparseListLevel{Ti, Tp,  VTp, VTi, Lvl}}) where {Ti, Tp, Lvl, VTi, VTp}
+    return indextype(Ti)
 end
 
 function moveto(lvl::SparseListLevel{Ti, Tp,  VTp, VTi, Lvl}, ::Type{MemType}) where {Ti, Tp, Lvl, VTi, VTp, MemType <: AbstractVector}

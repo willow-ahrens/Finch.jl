@@ -5,7 +5,7 @@ struct SparseTriangleLevel{N, Ti, Lvl}
     # shift/delta
 end
 SparseTriangleLevel(lvl) = throw(ArgumentError("You must specify the number of dimensions in a SparseTriangleLevel, e.g. Fiber!(SparseTriangle{2}(Element(0.0)))"))
-SparseTriangleLevel{N}(lvl, args...) where {N} = SparseTriangleLevel{N, Int}(lvl, args...)
+SparseTriangleLevel{N}(lvl:: Lvl, args...) where {Lvl, N} = SparseTriangleLevel{N, indextype(Lvl)}(lvl, args...)
 SparseTriangleLevel{N}(lvl, shape, args...) where {N} = SparseTriangleLevel{N, typeof(shape)}(lvl, shape, args...)
 SparseTriangleLevel{N, Ti}(lvl, args...) where {N, Ti} = SparseTriangleLevel{N, Ti, typeof(lvl)}(lvl, args...)
 SparseTriangleLevel{N, Ti, Lvl}(lvl) where {N, Ti, Lvl} = SparseTriangleLevel{N, Ti, Lvl}(lvl, zero(Ti))
@@ -23,6 +23,10 @@ end
 
 function postype(::Type{SparseTriangleLevel{N, Ti, Lvl}}) where {N, Ti, Lvl}
     return postype(Lvl)
+end
+
+function indextype(::Type{SparseTriangleLevel{N, Ti, Lvl}}) where {N, Ti, Lvl}
+    return indextype(Ti)
 end
 
 

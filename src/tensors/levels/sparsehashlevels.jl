@@ -44,7 +44,7 @@ const SparseHash = SparseHashLevel
 
 SparseHashLevel(lvl) = throw(ArgumentError("You must specify the number of dimensions in a SparseHashLevel, e.g. Fiber!(SparseHash{2}(Element(0.0)))"))
 SparseHashLevel(lvl, shape, args...) = SparseHashLevel{length(shape)}(lvl, shape, args...)
-SparseHashLevel{N}(lvl) where {N} = SparseHashLevel{N, NTuple{N, Int}}(lvl)
+SparseHashLevel{N}(lvl:: Lvl) where {N, Lvl} = SparseHashLevel{N, tuplize(indextype(Lvl), N)}(lvl)
 SparseHashLevel{N}(lvl, shape, args...) where {N} = SparseHashLevel{N, typeof(shape)}(lvl, shape, args...)
 
 SparseHashLevel{N, Ti}(lvl, args...) where {N, Ti} = SparseHashLevel{N, Ti, postype(typeof(lvl)), Dict{Tuple{postype(typeof(lvl)), Ti}, postype(typeof(lvl))}, (memory_type(typeof(lvl))){postype(typeof(lvl)), 1}, (memory_type(typeof(lvl))){Pair{Tuple{postype(typeof(lvl)), Ti}, postype(typeof(lvl))}, 1}, typeof(lvl)}(lvl, args...)
@@ -71,7 +71,11 @@ function memory_type(::Type{SparseHashLevel{N, Ti, Tp, Tbl, VTp, VTpip, Lvl}}) w
 end
 
 function postype(::Type{SparseHashLevel{N, Ti, Tp, Tbl, VTp, VTpip, Lvl}}) where {N, Ti, Tp, Tbl, VTp, VTpip, Lvl}
-    return postype(VTp)
+    return Tp
+end
+
+function indextype(::Type{SparseHashLevel{N, Ti, Tp, Tbl, VTp, VTpip, Lvl}}) where {N, Ti, Tp, Tbl, VTp, VTpip, Lvl}
+    return indextype(Ti)
 end
 
 function moveto(lvl::SparseHashLevel{N, Ti, Tp, Tbl, VTp, VTpip, Lvl}, ::Type{MemType}) where {N, Ti, Tp, Tbl, VTp, VTpip, Lvl, MemType <: AbstractVector}

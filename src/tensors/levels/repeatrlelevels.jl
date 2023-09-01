@@ -57,8 +57,10 @@ function memory_type(::Type{RepeatRLELevel{D, Ti, Tp, Tv, VTp, VTi, VTv}}) where
 end
 
 function postype(::Type{RepeatRLELevel{D, Ti, Tp, Tv, VTp, VTi, VTv}}) where {D, Ti, Tp, Tv, VTp, VTi, VTv}
-    return postype(VTp)
+    return Tp
 end
+
+indextype(::Type{RepeatRLELevel{D, Ti, Tp, Tv, VTp, VTi, VTv}}) where {D, Ti, Tp, Tv, VTp, VTi, VTv} = indextype(Ti)
 
 function moveto(lvl::RepeatRLELevel{D, Ti, Tp, Tv, VTp, VTi, VTv}, ::Type{MemType}) where {D, Ti, Tp, Tv, VTp, VTi, VTv, MemType <: AbstractVector}
     ptr_2 = MemType(lvl.ptr)

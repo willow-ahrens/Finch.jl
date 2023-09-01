@@ -29,7 +29,7 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:PatternLe
     show(io, mime, true)
 end
 
-pattern!(::PatternLevel{Ti, Tp, VB}) where {Ti, Tp,VB} = Pattern{Ti, Tp, VB}()
+pattern!(::PatternLevel{Ti, Tp, VB}) where {Ti, Tp, VB} = Pattern{Ti, Tp, VB}()
 
 function Base.show(io::IO, lvl::PatternLevel)
     print(io, "Pattern()")
@@ -50,7 +50,7 @@ end
 
 postype(::Type{PatternLevel{Ti, Tp, VB}}) where {Ti, Tp, VB} = Tp
 
-indextype(::Type{PatternLevel{Ti, Tp, VB}}) where {Ti, Tp, VB} = Ti
+indextype(::Type{PatternLevel{Ti, Tp, VB}}) where {Ti, Tp, VB} = indextype(Ti)
 
 
 function moveto(lvl::PatternLevel{Ti, Tp, VB},  ::Type{MemType}) where {Ti, Tp, VB, MemType <: AbstractVector}

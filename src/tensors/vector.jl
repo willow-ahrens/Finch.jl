@@ -9,5 +9,21 @@ empty(::Type{Vector{S}}) where S = S[]
 postype(::Type{Vector{S}}) where {S} = Int
 
 
-itertype(::Type{Tuple{T, Vararg{Any}}}) where {T} = T.parameters[1]
-itertype(::Type{Tuple{T, Vararg{Any}}}, ::Type{N}) where {T, N} = NTuple{N, itertype(T)}
+indextype(::Type{Tuple{T, Vararg{Any}}}) where {T} = indextype(T.parameters[1])
+indextype(::Type{T}) where {T} = T
+# indextype(::Type{T}, ::Type{N}) where {T, N} = indextype(indextype(T), N)
+# function indextype(::Type{Tuple{T, Vararg{Any}}}, ::Type{N}) where {T, N}
+#     if N > 0
+#         return  NTuple{N, indextype(T)}
+#     else
+#         return indextype(T)
+#     end
+# end
+
+function tuplize(::Type{T}, N::Int) where {T}
+    if N > 1
+        return  NTuple{N, T}
+    else
+        return Tuple{T}
+    end
+end

@@ -28,7 +28,7 @@ struct DenseLevel{Ti, Lvl}
     lvl::Lvl
     shape::Ti
 end
-DenseLevel(lvl) = DenseLevel{Int}(lvl)
+DenseLevel(lvl::Lvl) where {Lvl} = DenseLevel{indextype(Lvl)}(lvl)
 DenseLevel(lvl, shape::Ti, args...) where {Ti} = DenseLevel{Ti}(lvl, shape, args...)
 DenseLevel{Ti}(lvl, args...) where {Ti} = DenseLevel{Ti, typeof(lvl)}(lvl, args...)
 
@@ -46,6 +46,10 @@ end
 
 function postype(::Type{DenseLevel{Ti, Lvl}}) where {Ti, Lvl}
     return postype(Lvl)
+end
+
+function indextype(::Type{DenseLevel{Ti, Lvl}}) where {Ti, Lvl}
+    return indextype(Ti)
 end
 
 
