@@ -53,7 +53,7 @@ function indextype(::Type{DenseLevel{Ti, Lvl}}) where {Ti, Lvl}
 end
 
 
-function moveto(lvl::DenseLevel{Ti, Lvl},  ::Type{MemType}) where {Ti, Lvl, MemType <: AbstractVector}
+function moveto(lvl::DenseLevel{Ti, Lvl},  ::Type{MemType}) where {Ti, Lvl, MemType <: AbstractArray}
     return DenseLevel(moveto(lvl.lvl, MemType), lvl.shape)
 end
 

@@ -53,7 +53,7 @@ postype(::Type{PatternLevel{Ti, Tp, VB}}) where {Ti, Tp, VB} = Tp
 indextype(::Type{PatternLevel{Ti, Tp, VB}}) where {Ti, Tp, VB} = indextype(Ti)
 
 
-function moveto(lvl::PatternLevel{Ti, Tp, VB},  ::Type{MemType}) where {Ti, Tp, VB, MemType <: AbstractVector}
+function moveto(lvl::PatternLevel{Ti, Tp, VB},  ::Type{MemType}) where {Ti, Tp, VB, MemType <: AbstractArray}
     return PatternLevel{Ti, Tp, MemType{Bool, 1}}
 end
 

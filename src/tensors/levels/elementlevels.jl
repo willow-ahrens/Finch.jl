@@ -50,7 +50,7 @@ function indextype(::Type{ElementLevel{D, Ti, Tv, V}}) where {D, Ti, Tv, V}
 end
 
 
-function moveto(lvl::ElementLevel{D, Ti, Tv, V},  ::Type{MemType}) where {D, Ti, Tv, V, MemType <: AbstractVector}
+function moveto(lvl::ElementLevel{D, Ti, Tv, V},  ::Type{MemType}) where {D, Ti, Tv, V, MemType <: AbstractArray}
     valp = MemType{Tv, 1}(lvl.val)
     return ElementLevel{D, Ti, Tv, MemType{Tv, 1}}(valp)
 end

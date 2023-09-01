@@ -78,7 +78,7 @@ function indextype(::Type{SparseHashLevel{N, Ti, Tp, Tbl, VTp, VTpip, Lvl}}) whe
     return indextype(Ti)
 end
 
-function moveto(lvl::SparseHashLevel{N, Ti, Tp, Tbl, VTp, VTpip, Lvl}, ::Type{MemType}) where {N, Ti, Tp, Tbl, VTp, VTpip, Lvl, MemType <: AbstractVector}
+function moveto(lvl::SparseHashLevel{N, Ti, Tp, Tbl, VTp, VTpip, Lvl}, ::Type{MemType}) where {N, Ti, Tp, Tbl, VTp, VTpip, Lvl, MemType <: AbstractArray}
     lvl_2 = moveto(lvl.lvl, MemType)
     ptr_2 = MemType{Tp, 1}(lvl.ptr)
     str_2 = MemType{Pair{Tuple{Tp, Ti}, Tp}, 1}(lvl.srt)

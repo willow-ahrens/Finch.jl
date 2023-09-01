@@ -30,7 +30,7 @@ function indextype(::Type{SparseTriangleLevel{N, Ti, Lvl}}) where {N, Ti, Lvl}
 end
 
 
-function moveto(lvl::SparseTriangleLevel{N, Ti, Lvl},  ::Type{MemType}) where {N, Ti, Lvl, MemType <: AbstractVector}
+function moveto(lvl::SparseTriangleLevel{N, Ti, Lvl},  ::Type{MemType}) where {N, Ti, Lvl, MemType <: AbstractArray}
     lvl_2 = moveto(lvl.lvl, MemType)
     return SparseTriangleLevel{N, Ti, typeof(lvl_2)}(lvl_2, lvl.shape)
 end

@@ -1,0 +1,8 @@
+Fiber!(SparseCOO{1}(Element(0)) moves:
+initialized fiber: Fiber(SparseCOO{1, Tuple{Int64}, Int64}(Element{0.0, Int64, Float64, Vector{Float64}}([2.0, 2.0, 3.0, 3.0]), (6,), (Int64[2, 3, 5, 6], ), [1, 5]))
+initialized fiber: Fiber(SparseCOO{1, Tuple{Int16}, Int64}(Element{0.0, Int64, Float64, Vector{Float64}}([2.0, 2.0, 3.0, 3.0]), (6,), (Int16[2, 3, 5, 6], ), [1, 5]))
+sized fiber: Fiber(SparseCOO{1, Tuple{Int64}, Int64}(Element{0.0, Int64, Float64, Vector{Float64}}([]), (7,), (Int64[], ), [1, 1]))
+sized fiber: Fiber(SparseCOO{1, Tuple{Int16}, Int64}(Element{0.0, Int64, Float64, Vector{Float64}}([]), (7,), (Int16[], ), [1, 1]))
+empty fiber: Fiber(SparseCOO{1, Tuple{Int64}, Int64}(Element{0.0, Int64, Float64, Vector{Float64}}([]), (0,), (Int64[], ), [1, 1]))
+empty fiber: Fiber(SparseCOO{1, Tuple{Int16}, Int64}(Element{0.0, Int64, Float64, Vector{Float64}}([]), (0,), (Int16[], ), [1, 1]))
+

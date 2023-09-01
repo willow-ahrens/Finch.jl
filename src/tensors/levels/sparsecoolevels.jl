@@ -90,7 +90,7 @@ function indextype(::Type{SparseCOOLevel{N, Ti, Tp, Tbl, VTp, Lvl}}) where {N, T
     return indextype(Ti)
 end
 
-function moveto(lvl::SparseCOOLevel{N, Ti, Tp, Tbl, VTp, Lvl}, ::Type{MemType}) where {N, Ti, Tp, Tbl, VTp, Lvl, MemType <: AbstractVector}
+function moveto(lvl::SparseCOOLevel{N, Ti, Tp, Tbl, VTp, Lvl}, ::Type{MemType}) where {N, Ti, Tp, Tbl, VTp, Lvl, MemType <: AbstractArray}
     lvl_2 = moveto(lvl.lvl, MemType)
     ptr_2 = MemType{Tp, 1}(lvl.ptr)
     tbl_2 = Tuple(MemType{ti, 1}(sv) for (ti, sv) in zip(Ti.parameters, lvl.tbl))
