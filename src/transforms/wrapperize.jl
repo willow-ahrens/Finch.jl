@@ -39,16 +39,18 @@ function get_wrapper_rules(alg, depth, ctx)
                 end
             end
         end),
-        (@rule access(~A, ~m, ~i1..., access(~I, reader(), ~k), ~i2...) => begin
-            I = resolve(I, ctx) #TODO do we like this pattern?
-            if I isa VirtualAbstractUnitRange
-                A_2 = call(window, A, [nothing for _ in i1]..., I.target, [nothing for _ in i2]...)
-                A_3 = call(offset, A_2, [0 for _ in i1]..., call(-, getstart(I.target), 1), [0 for _ in i2]...)
-                access(A_3, m, i1..., k, i2...)
-            end
+        (@rule access(~A, ~m, ~i1..., access(call(extent, ~start, ~stop), reader(), ~k), ~i2...) => begin
+            A_2 = call(window, A, [nothing for _ in i1]..., call(extent, start, stop), [nothing for _ in i2]...)
+            A_3 = call(offset, A_2, [0 for _ in i1]..., call(-, start, 1), [0 for _ in i2]...)
+            access(A_3, m, i1..., k, i2...)
+        end),
+        (@rule access(~A, ~m, ~i1..., access(~I::isvirtual, reader(), ~k), ~i2...) => if I.val isa Extent
+            A_2 = call(window, A, [nothing for _ in i1]..., I, [nothing for _ in i2]...)
+            A_3 = call(offset, A_2, [0 for _ in i1]..., call(-, getstart(I), 1), [0 for _ in i2]...)
+            access(A_3, m, i1..., k, i2...)
         end),
         (@rule assign(access(~a, updater(), ~i...), initwrite, ~rhs) => begin
-            assign(access(a, updater(), i...), initwrite(something(virtual_default(a, ctx))), rhs)
+            assign(access(a, updater(), i...), call(initwrite, call(default, a)), rhs)
         end),
     ]
 end
@@ -76,13 +78,13 @@ semantics of the wrapper.
 """
 function wrapperize(root, ctx::AbstractCompiler)
     depth = depth_calculator(root)
-    #tnss = unique(filter(!isnothing, map(node->if @capture(node, access(~A, ~m, ~i...)) getroot(A) end, PostOrderDFS(root))))
-    #for tns in tnss
-    #    if haskey(ctx.bindings, tns)
-    #        root = block(define(tns, ctx.bindings[tns]), root)
-    #        delete!(ctx.bindings, tns)
-    #    end
-    #end
+    tnss = unique(filter(!isnothing, map(node->if @capture(node, access(~A, ~m, ~i...)) getroot(A) end, PostOrderDFS(root))))
+    for tns in tnss
+        if haskey(ctx.bindings, tns)
+            root = block(define(tns, ctx.bindings[tns]), root)
+            delete!(ctx.bindings, tns)
+        end
+    end
     root = Rewrite(Fixpoint(Chain([
         Postwalk(Fixpoint(Chain(get_wrapper_rules(ctx.algebra, depth, ctx))))
     ])))(root)

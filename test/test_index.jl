@@ -72,11 +72,11 @@
     end
     @test reference_isequal(C, C_ref)
 
-    I = 2:4
-    @test check_output("sparse_window.jl", @finch_code (C .= 0; for i=_; C[i] = A[I[i]] end))
-    @finch (C .= 0; for i=_; C[i] = A[I[i]] end)
+    @test check_output("sparse_window.jl", @finch_code (C .= 0; for i=_; C[i] = A[(2:4)[i]] end))
+    @finch (C .= 0; for i=_; C[i] = A[(2:4)[i]] end)
     @test reference_isequal(C, [A(2), A(3), A(4)])
 
+    I = 2:4
     @finch (C .= 0; for i=_; C[i] = I[i] end)
     @test reference_isequal(C, [2, 3, 4])
 
