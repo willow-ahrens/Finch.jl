@@ -163,7 +163,7 @@ function virtualize(ex, ::Type{SplitMask}, ctx)
 end
 
 FinchNotation.finch_leaf(x::VirtualSplitMask) = virtual(x)
-Finch.virtual_size(arr::VirtualSplitMask, ctx) = (Extent(1, arr.P), dimless)
+Finch.virtual_size(arr::VirtualSplitMask, ctx) = (dimless, Extent(literal(1), arr.P))
 
 function instantiate_reader(arr::VirtualSplitMask, ctx, subprotos, ::typeof(defaultread), ::typeof(defaultread))
     Unfurled(
