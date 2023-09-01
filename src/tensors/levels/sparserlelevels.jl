@@ -27,7 +27,7 @@ similar_level(lvl::SparseRLELevel) = SparseRLE(similar_level(lvl.lvl))
 similar_level(lvl::SparseRLELevel, dim, tail...) = SparseRLE(similar_level(lvl.lvl, tail...), dim)
 
 function memory_type(::Type{SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}}) where {Ti, Tp, VTp, VLTi, VRTi, Lvl}
-    return containertype(Lvl)
+    return containertype(VTp)
 end
 
 function postype(::Type{SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}}) where {Ti, Tp, VTp, VLTi, VRTi, Lvl}

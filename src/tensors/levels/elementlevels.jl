@@ -14,7 +14,7 @@ Dense [1:3]
 ├─[3]: 3.0
 ```
 """
-struct ElementLevel{D, Tv, V<:AbstractVector{<:Tv}}
+struct ElementLevel{D, Tv, V<:AbstractVector}
     val::V
 end
 const Element = ElementLevel
@@ -27,6 +27,7 @@ ElementLevel{D}() where {D} = ElementLevel{D, typeof(D), Vector{typeof(D)}}()
 ElementLevel{D}(val::V) where {D, V} = ElementLevel{D, eltype(V), V}(val)
 
 ElementLevel{D, Tv}() where {D, Tv} = ElementLevel{D, Tv, Vector{Tv}}(empty(Vector{Tv}))
+ElementLevel{D, Tv}(val::V) where {D, Tv, V} = ElementLevel{D, eltype(V), V}(val)
 ElementLevel{D, Tv, V}() where {D, Tv, V} = ElementLevel{D, Tv, V}(empty(V))
 
 Base.summary(::Element{D}) where {D} = "Element($(D))"
@@ -42,10 +43,10 @@ end
 
 function moveto(lvl::ElementLevel{D, Tv, V},  ::Type{MemType}) where {D, Tv, V, MemType <: AbstractVector}
     valp = MemType(lvl.val)
-    return ElementLevel{D, Tv, MemType{Tv}}(valp)
+    return ElementLevel{D, Tv, MemType{Tv, 1}}(valp)
 end
 
-pattern!(lvl::ElementLevel) = Pattern()
+pattern!(lvl::ElementLevel{D, Tv, V}) where {D, Tv, V} = Pattern{Int, postype(ElementLevel{D, Tv, V}), containertype(V){Bool, 1}}()
 redefault!(lvl::ElementLevel{D, Tv, V}, init) where {D, Tv, V} = 
     ElementLevel{init, Tv, V}(lvl.val)
 
@@ -71,7 +72,7 @@ end
 @inline level_axes(::ElementLevel) = ()
 @inline level_eltype(::Type{ElementLevel{D, Tv, V}}) where {D, Tv, V} = Tv
 @inline level_default(::Type{<:ElementLevel{D}}) where {D} = D
-data_rep_level(::Type{<:ElementLevel{D, Tv, V}}) where {D, Tv, V} = ElementData(D, Tv, V)
+data_rep_level(::Type{<:ElementLevel{D, Tv, V}}) where {D, Tv, V} = ElementData(D, Tv)
 
 (fbr::Fiber{<:ElementLevel})() = SubFiber(fbr.lvl, 1)()
 function (fbr::SubFiber{<:ElementLevel})()

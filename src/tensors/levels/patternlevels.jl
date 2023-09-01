@@ -15,8 +15,10 @@ Dense [1:3]
 ├─[3]: true
 ```
 """
-struct PatternLevel{VB<:AbstractVector{Bool}} end
+struct PatternLevel{Ti, Tp, VB<:AbstractVector{Bool}} end
 const Pattern = PatternLevel
+
+PatternLevel() = PatternLevel{Int, Int, Vector{Bool}}()
 
 Base.summary(::Pattern) = "Pattern()"
 similar_level(::PatternLevel) = PatternLevel()
@@ -27,26 +29,32 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:PatternLe
     show(io, mime, true)
 end
 
-pattern!(::PatternLevel) = Pattern{Vector{Bool}}()
+pattern!(::PatternLevel{Ti, Tp, VB}) where {Ti, Tp,VB} = Pattern{Ti, Tp, VB}()
 
 function Base.show(io::IO, lvl::PatternLevel)
     print(io, "Pattern()")
 end 
 
-@inline level_ndims(::Type{PatternLevel}) = 0
+@inline level_ndims(::Type{PatternLevel{Ti, Tp, VB}}) where {Ti, Tp, VB} = 0
 @inline level_size(::PatternLevel) = ()
 @inline level_axes(::PatternLevel) = ()
-@inline level_eltype(::Type{PatternLevel}) = Bool
-@inline level_default(::Type{PatternLevel}) = false
+@inline level_eltype(::Type{PatternLevel{Ti, Tp, VB}}) where {Ti, Tp, VB} = Bool
+@inline level_default(::Type{PatternLevel{Ti, Tp, VB}}) where {Ti, Tp, VB} = false
 (fbr::AbstractFiber{<:PatternLevel})() = true
 data_rep_level(::Type{<:PatternLevel}) = ElementData(false, Bool)
 
-function memory_type(::Type{PatternLevel{VB}}) where {VB}
+function memory_type(::Type{PatternLevel{Ti, Tp,VB}}) where {Ti, Tp, VB}
     return containertype(VB)
 end
 
-function moveto(lvl::PatternLevel{VB},  ::Type{MemType}) where {VB, MemType <: AbstractVector}
-    return PatternLevel{MemType{1, Bool}}
+
+postype(::Type{PatternLevel{Ti, Tp, VB}}) where {Ti, Tp, VB} = Tp
+
+indextype(::Type{PatternLevel{Ti, Tp, VB}}) where {Ti, Tp, VB} = Ti
+
+
+function moveto(lvl::PatternLevel{Ti, Tp, VB},  ::Type{MemType}) where {Ti, Tp, VB, MemType <: AbstractVector}
+    return PatternLevel{Ti, Tp, MemType{Bool, 1}}
 end
 
 

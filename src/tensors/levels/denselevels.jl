@@ -53,7 +53,7 @@ function moveto(lvl::DenseLevel{Ti, Lvl},  ::Type{MemType}) where {Ti, Lvl, MemT
     return DenseLevel(moveto(lvl.lvl, MemType), lvl.shape)
 end
 
-pattern!(lvl::DenseLevel{Ti}) where {Ti} = 
+pattern!(lvl::DenseLevel{Ti, Lvl}) where {Ti, Lvl} = 
     DenseLevel{Ti}(pattern!(lvl.lvl), lvl.shape)
 
 redefault!(lvl::DenseLevel{Ti}, init) where {Ti} = 

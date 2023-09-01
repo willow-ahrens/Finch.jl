@@ -76,7 +76,7 @@ quote
     resize!(z_lvl.left, qos)
     resize!(z_lvl.right, qos)
     resize!(z_lvl_2.val, qos)
-    (z = Fiber((SparseRLELevel){Limit{Float32}, Int64}(z_lvl_2, y_lvl.shape, z_lvl.ptr, z_lvl.left, z_lvl.right)),)
+    (z = Fiber((SparseRLELevel){Limit{Float32}, Int64, Vector{Int64}, Vector{Limit{Float32}}, Vector{Limit{Float32}}, ElementLevel{0, Int64, Vector{Int64}}}(z_lvl_2, y_lvl.shape, z_lvl.ptr, z_lvl.left, z_lvl.right)),)
 end
 julia> @finch begin
         z .= 0
@@ -84,5 +84,5 @@ julia> @finch begin
             z[i] += x[i] * y[i]
         end
     end
-(z = Fiber(SparseRLE{Limit{Float32}, Int64}(Element{0, Int64}([1, 1, 1, 1, 1, 1, 1]), limit(100.0), [1, 8], [limit(17.0), limit(41.0), limit(47.0), limit(66.0), limit(86.0), limit(92.0), limit(93.0)], [limit(18.0), limit(46.0), limit(48.0), limit(67.0), limit(91.0), limit(92.0), limit(93.0)])),)
+(z = Fiber(SparseRLE{Limit{Float32}, Int64}(Element{0, Int64, Vector{Int64}}([1, 1, 1, 1, 1, 1, 1]), limit(100.0), [1, 8], [limit(17.0), limit(41.0), limit(47.0), limit(66.0), limit(86.0), limit(92.0), limit(93.0)], [limit(18.0), limit(46.0), limit(48.0), limit(67.0), limit(91.0), limit(92.0), limit(93.0)])),)
 

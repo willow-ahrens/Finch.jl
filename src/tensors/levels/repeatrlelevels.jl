@@ -49,7 +49,7 @@ RepeatRLELevel{D, Ti, Tp, Tv}(shape, ptr, idx, val) where {D, Ti, Tp, Tv} = Repe
 Base.summary(::RepeatRLE{D}) where {D} = "RepeatRLE($(D))"
 similar_level(::RepeatRLELevel{D}) where {D} = RepeatRLE{D}()
 similar_level(::RepeatRLELevel{D}, dim, tail...) where {D} = RepeatRLE{D}(dim)
-data_rep_level(::Type{<:RepeatRLELevel{D, Ti, Tp, Tv}}) where {D, Ti, Tp, Tv} = RepeatData(D, Tv)
+data_rep_level(::Type{<:RepeatRLELevel{D, Ti, Tp, Tv, VTp, VTi, VTv}}) where {D, Ti, Tp, Tv, VTp, VTi, VTv} = RepeatData(D, Tv)
 
 
 function memory_type(::Type{RepeatRLELevel{D, Ti, Tp, Tv, VTp, VTi, VTv}}) where {D, Ti, Tp, Tv, VTp, VTi, VTv}
@@ -72,8 +72,8 @@ countstored_level(lvl::RepeatRLELevel, pos) = lvl.ptr[pos + 1] - 1
 pattern!(lvl::RepeatRLELevel{D, Ti}) where {D, Ti} = 
     DenseLevel{Ti}(Pattern(), lvl.shape)
 
-redefault!(lvl::RepeatRLELevel{D, Ti, Tp, Tv}, init) where {D, Ti, Tp, Tv} = 
-    RepeatRLELevel{init, Ti, Tp, Tv}(lvl.val)
+redefault!(lvl::RepeatRLELevel{D, Ti, Tp, Tv, VTp, VTi, VTv}, init) where {D, Ti, Tp, Tv, VTp, VTi, VTv} = 
+    RepeatRLELevel{D, Ti, Tp, Tv, VTp, VTi, VTv}(lvl.val)
 
 function Base.show(io::IO, lvl::RepeatRLELevel{D, Ti, Tp, Tv, VTp, VTi, VTv}) where {D, Ti, Tp, Tv, VTp, VTi, VTv}
     print(io, "RepeatRLE{")
@@ -112,7 +112,7 @@ end
 @inline level_ndims(::Type{<:RepeatRLELevel}) = 1
 @inline level_size(lvl::RepeatRLELevel) = (lvl.shape,)
 @inline level_axes(lvl::RepeatRLELevel) = (Base.OneTo(lvl.shape),)
-@inline level_eltype(::Type{RepeatRLELevel{D, Ti, Tp, Tv}}) where {D, Ti, Tp, Tv} = Tv
+@inline level_eltype(::Type{RepeatRLELevel{D, Ti, Tp, Tv, VTp, VTi, VTv}}) where {D, Ti, Tp, Tv, VTp, VTi, VTv} = Tv
 @inline level_default(::Type{<:RepeatRLELevel{D}}) where {D} = D
 (fbr::AbstractFiber{<:RepeatRLELevel})() = fbr
 (fbr::Fiber{<:RepeatRLELevel})(idx...) = SubFiber(fbr.lvl, 1)(idx...)

@@ -1,1 +1,1 @@
-Fiber(SparseByteMap(Dense(Element{0.0, Float64}(…), 5), 10, …))
+Fiber(SparseByteMap(Dense(Element{0.0, Float64, Vector{Float64}}(…), 5), 10, …))

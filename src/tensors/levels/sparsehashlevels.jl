@@ -32,6 +32,7 @@ SparseHash (0.0) [1:3,1:3]
 ├─├─[3, 3]: 40.0
 ```
 """
+# {N, Ti<:Tuple, Tp, Tbl<:Dict{Tuple{Tp, Ti}, Tp}, VTp<:AbstractVector{<:Tp}, VTpip<:AbstractVector{Pair{Tuple{Tp, Ti}, Tp}}, Lvl}
 struct SparseHashLevel{N, Ti<:Tuple, Tp, Tbl<:Dict{Tuple{Tp, Ti}, Tp}, VTp<:AbstractVector{<:Tp}, VTpip<:AbstractVector{Pair{Tuple{Tp, Ti}, Tp}}, Lvl}
     lvl::Lvl
     shape::Ti
@@ -47,9 +48,12 @@ SparseHashLevel{N}(lvl) where {N} = SparseHashLevel{N, NTuple{N, Int}}(lvl)
 SparseHashLevel{N}(lvl, shape, args...) where {N} = SparseHashLevel{N, typeof(shape)}(lvl, shape, args...)
 
 SparseHashLevel{N, Ti}(lvl, args...) where {N, Ti} = SparseHashLevel{N, Ti, postype(typeof(lvl)), Dict{Tuple{postype(typeof(lvl)), Ti}, postype(typeof(lvl))}, (memory_type(typeof(lvl))){postype(typeof(lvl)), 1}, (memory_type(typeof(lvl))){Pair{Tuple{postype(typeof(lvl)), Ti}, postype(typeof(lvl))}, 1}, typeof(lvl)}(lvl, args...)
+# FIXME: Adding pos here is not neeccesarily the right thing...
+SparseHashLevel{N, Ti, Tp}(lvl, args...) where {N, Ti, Tp} = SparseHashLevel{N, Ti, postype(typeof(lvl)), Dict{Tuple{postype(typeof(lvl)), Ti}, postype(typeof(lvl))}, (memory_type(typeof(lvl))){postype(typeof(lvl)), 1}, (memory_type(typeof(lvl))){Pair{Tuple{postype(typeof(lvl)), Ti}, postype(typeof(lvl))}, 1}, typeof(lvl)}(lvl, args...)
 # SparseHashLevel{N, Ti, Tp}(lvl, args...) where {N, Ti, Tp} =
 #     SparseHashLevel{N, Ti, Tp, Dict{Tuple{Tp, Ti}, Tp}}(lvl, args...)
-SparseHashLevel{N, Ti, Tp, Tbl}(lvl::Lvl, args...) where {N, Ti, Tp, Tbl, Lvl} = SparseHashLevel{N, Ti, Tp, Tbl, (memory_type(typeof(lvl))){Tp, 1}, (memory_type(typeof(lvl))){Pair{Tuple{Tp, Ti}, Tp}, 1}}(lvl, args...)
+SparseHashLevel{N, Ti, Tp, Tbl}(lvl::Lvl, args...) where {N, Ti, Tp, Tbl, Lvl} = SparseHashLevel{N, Ti, Tp, Tbl, (memory_type(typeof(lvl))){Tp, 1}, (memory_type(typeof(lvl))){Pair{Tuple{Tp, Ti}, Tp}, 1}, Lvl}(lvl, args...)
+SparseHashLevel{N, Ti, Tp, Tbl, VTp, VTpip}(lvl::Lvl, args...) where {N, Ti, Tp, Tbl, VTp, VTpip, Lvl} = SparseHashLevel{N, Ti, Tp, Tbl, VTp, VTpip, Lvl}(lvl::Lvl, args...)
 
 SparseHashLevel{N, Ti, Tp, Tbl, VTp, VTpip, Lvl}(lvl) where {N, Ti, Tp, Tbl, VTp, VTpip, Lvl} =
     SparseHashLevel{N, Ti, Tp, Tbl, VTp, VTpip, Lvl}(lvl, ((zero(ti) for ti in Ti.parameters)..., ))
@@ -63,7 +67,7 @@ similar_level(lvl::SparseHashLevel{N}) where {N} = SparseHashLevel{N}(similar_le
 similar_level(lvl::SparseHashLevel{N}, tail...) where {N} = SparseHashLevel{N}(similar_level(lvl.lvl, tail[1:end-N]...), (tail[end-N+1:end]...,))
 
 function memory_type(::Type{SparseHashLevel{N, Ti, Tp, Tbl, VTp, VTpip, Lvl}}) where {N, Ti, Tp, Tbl, VTp, VTpip, Lvl}
-    return containertype(Lvl)
+    return containertype(VTp)
 end
 
 function postype(::Type{SparseHashLevel{N, Ti, Tp, Tbl, VTp, VTpip, Lvl}}) where {N, Ti, Tp, Tbl, VTp, VTpip, Lvl}
