@@ -83,7 +83,7 @@ function Base.show(io::IO, lvl::RepeatRLELevel{D, Ti, Tp, Tv, VTp, VTi, VTv}) wh
     if get(io, :compact, false)
         print(io, "}(")
     else
-        print(io, ", $Ti, $Tp, $Tv}(")
+        print(io, ", $Ti, $Tp, $Tv, $VTp, $VTi, $VTv}(")
     end
 
     show(io, lvl.shape)
