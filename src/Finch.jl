@@ -106,6 +106,7 @@ include("tensors/combinators/permissive.jl")
 include("tensors/combinators/offset.jl")
 include("tensors/combinators/toeplitz.jl")
 include("tensors/combinators/windowed.jl")
+include("tensors/combinators/swizzle.jl")
 
 
 include("traits.jl")
