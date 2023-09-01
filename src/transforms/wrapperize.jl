@@ -9,14 +9,14 @@ after simplification so one can expect constants to be folded.
 """
 function get_wrapper_rules(alg, depth, ctx)
     return [
+#        (@rule access(~A, ~m, ~i...) => access(unwrap(A), m, i...)),
         (@rule access(~A, ~m, ~i1..., call(~proto::isliteral, ~j), ~i2...) => if isprotocol(proto.val)
-            #access(call(protocolize, A, [nothing for _ in i1]..., proto.val, [nothing for _ in i2]...), m, i1..., j, i2...)
             protos = ([nothing for _ in i1]..., proto.val, [nothing for _ in i2]...)
-            access(VirtualProtocolizedArray(A, protos), m, i1..., j, i2...)
+            access(call(protocolize, A, protos...), m, i1..., j, i2...)
         end),
         (@rule access(~A, ~m, ~i1..., call($(~), ~j), ~i2...) => begin
             dims = ([false for _ in i1]..., true, [false for _ in i2]...)
-            access(VirtualPermissiveArray(A, dims), m, i1..., j, i2...)
+            access(call(permissive, A, dims...), m, i1..., j, i2...)
         end),
         (@rule access(~A, ~m, ~i1..., call(-, ~j, ~k), ~i2...) =>
             access(A, m, i1..., call(+, j, call(-, k)), i2...)),
@@ -26,7 +26,7 @@ function get_wrapper_rules(alg, depth, ctx)
             if (!isempty(j1) || !isempty(j2))
                 k_2 = call(+, ~j1..., ~j2...)
                 if depth(k_2) < depth(k) && depth(k_2) != 0
-                    access(VirtualToeplitzArray(A, length(i1) + 1), m, i1..., k, k_2, i2...)
+                    access(call(toeplitz, A, length(i1) + 1), m, i1..., k, k_2, i2...)
                 end
             end
         end),
@@ -35,15 +35,15 @@ function get_wrapper_rules(alg, depth, ctx)
                 k_2 = call(+, ~j1..., ~j2...)
                 if depth(k_2) == 0
                     delta = ([0 for _ in i1]..., k_2, [0 for _ in i2]...)
-                    access(VirtualOffsetArray(A, delta), m, i1..., k, i2...)
+                    access(call(offset, A, delta...), m, i1..., k, i2...)
                 end
             end
         end),
         (@rule access(~A, ~m, ~i1..., access(~I, reader(), ~k), ~i2...) => begin
             I = resolve(I, ctx) #TODO do we like this pattern?
             if I isa VirtualAbstractUnitRange
-                A_2 = VirtualWindowedArray(A, ([nothing for _ in i1]..., I.target, [nothing for _ in i2]...))
-                A_3 = VirtualOffsetArray(A_2, ([0 for _ in i1]..., call(-, getstart(I.target), 1), [0 for _ in i2]...))
+                A_2 = call(window, A, [nothing for _ in i1]..., I.target, [nothing for _ in i2]...)
+                A_3 = call(offset, A_2, [0 for _ in i1]..., call(-, getstart(I.target), 1), [0 for _ in i2]...)
                 access(A_3, m, i1..., k, i2...)
             end
         end),
@@ -76,7 +76,15 @@ semantics of the wrapper.
 """
 function wrapperize(root, ctx::AbstractCompiler)
     depth = depth_calculator(root)
-    Rewrite(Fixpoint(Chain([
+    #tnss = unique(filter(!isnothing, map(node->if @capture(node, access(~A, ~m, ~i...)) getroot(A) end, PostOrderDFS(root))))
+    #for tns in tnss
+    #    if haskey(ctx.bindings, tns)
+    #        root = block(define(tns, ctx.bindings[tns]), root)
+    #        delete!(ctx.bindings, tns)
+    #    end
+    #end
+    root = Rewrite(Fixpoint(Chain([
         Postwalk(Fixpoint(Chain(get_wrapper_rules(ctx.algebra, depth, ctx))))
     ])))(root)
+    evaluate_partial(root, ctx)
 end
