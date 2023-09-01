@@ -51,7 +51,7 @@ end
 
 
 function moveto(lvl::ElementLevel{D, Ti, Tv, V},  ::Type{MemType}) where {D, Ti, Tv, V, MemType <: AbstractVector}
-    valp = MemType(lvl.val)
+    valp = MemType{Tv, 1}(lvl.val)
     return ElementLevel{D, Ti, Tv, MemType{Tv, 1}}(valp)
 end
 

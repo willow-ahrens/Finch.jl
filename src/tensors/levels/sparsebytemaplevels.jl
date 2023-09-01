@@ -32,10 +32,10 @@ indextype(::Type{SparseByteMapLevel{Ti, Tp, VTp, BV, VTpi, Lvl}}) where {Ti, Tp,
 
 function moveto(lvl:: SparseByteMapLevel{Ti, Tp, VTp, BV, VTpi, Lvl}, ::Type{MemType}) where {Ti, Tp, VTp, BV, VTpi, Lvl, MemType <: AbstractVector}
     lvl_2 = moveto(lvl.lvl, MemType)
-    ptr_2 = MemType(lvl.ptr)
-    tbl_2 = MemType(lvl.tbl)
-    srt_2 = MemType(lvl.srt)
-    return  SparseByteMapLevel{Ti, Tp, MemType{Tp}, MemType{Bool}, MemType{Tuple{Tp, Ti}}, typeof(lvl_2)}(lvl_2, lvl.shape, ptr_2, tbl_2, srt_2)
+    ptr_2 = MemType{Tp, 1}(lvl.ptr)
+    tbl_2 = MemType{Bool, 1}(lvl.tbl)
+    srt_2 = MemType{Tuple{Tp, Ti}, 1}(lvl.srt)
+    return  SparseByteMapLevel{Ti, Tp, MemType{Tp, 1}, MemType{Bool, 1}, MemType{Tuple{Tp, Ti}, 1}, typeof(lvl_2)}(lvl_2, lvl.shape, ptr_2, tbl_2, srt_2)
 end
 
 

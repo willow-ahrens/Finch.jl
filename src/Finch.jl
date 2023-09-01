@@ -105,7 +105,7 @@ include("tensors/combinators/windowed.jl")
 
 include("traits.jl")
 
-export fsparse, fsparse!, fsprand, fspzeros, ffindnz, countstored
+export fsparse, fsparse!, fsprand, fspzeros, ffindnz, countstored, moveto
 
 include("base/abstractarrays.jl")
 include("base/abstractunitranges.jl")

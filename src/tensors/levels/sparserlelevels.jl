@@ -40,10 +40,9 @@ end
 
 function moveto(lvl::SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}, ::Type{MemType}) where {Ti, Tp, VTp, VLTi, VRTi, Lvl, MemType <: AbstractVector}
     lvl_2 = moveto(lvl.lvl, MemType)
-    # FIX ME
-    ptr_2 = MemType(lvl.ptr)
-    left_2 = MemType(lvl.left)
-    right_2 = MemType(lvl.right)
+    ptr_2 = MemType{Tp, 1}(lvl.ptr)
+    left_2 = MemType{Ti, 1}(lvl.left)
+    right_2 = MemType{Ti, 1}(lvl.right)
     return SparseRLELevel{Ti, Tp, MemType{Tp, 1}, MemType{Ti, 1}, MemType{Ti, 1}, typeof(lvl_2)}(lvl_2, lvl.shape, ptr_2, left_2, right_2)
 end
 

@@ -92,9 +92,9 @@ end
 
 function moveto(lvl::SparseCOOLevel{N, Ti, Tp, Tbl, VTp, Lvl}, ::Type{MemType}) where {N, Ti, Tp, Tbl, VTp, Lvl, MemType <: AbstractVector}
     lvl_2 = moveto(lvl.lvl, MemType)
-    ptr_2 = MemType(lvl.ptr)
-    tbl_2 = Tuple(MemType(sv) for sv in lvl.tbl)
-    return SparseCOOLevel{N, Ti, Tp, typeof(tbl_2), MemType{Tp}, typeof(lvl_2)}(lvl_2, lvl.shape, tbl_2, ptr_2)
+    ptr_2 = MemType{Tp, 1}(lvl.ptr)
+    tbl_2 = Tuple(MemType{ti, 1}(sv) for (ti, sv) in zip(Ti.parameters, lvl.tbl))
+    return SparseCOOLevel{N, Ti, Tp, typeof(tbl_2), MemType{Tp, 1}, typeof(lvl_2)}(lvl_2, lvl.shape, tbl_2, ptr_2)
 end
 
 

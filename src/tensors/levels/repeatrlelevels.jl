@@ -63,10 +63,10 @@ end
 indextype(::Type{RepeatRLELevel{D, Ti, Tp, Tv, VTp, VTi, VTv}}) where {D, Ti, Tp, Tv, VTp, VTi, VTv} = indextype(Ti)
 
 function moveto(lvl::RepeatRLELevel{D, Ti, Tp, Tv, VTp, VTi, VTv}, ::Type{MemType}) where {D, Ti, Tp, Tv, VTp, VTi, VTv, MemType <: AbstractVector}
-    ptr_2 = MemType(lvl.ptr)
-    idx_2 = MemType(lvl.idx)
-    val_2 = MemType(lvl.val)
-    return RepeatRLELevel{D, Ti, Tp, MemType{Tp}, MemType{Ti}, MemType{VTv}}(lvl.shape, ptr_2, idx_2, val_2)
+    ptr_2 = MemType{Tp, 1}(lvl.ptr)
+    idx_2 = MemType{Ti, 1}(lvl.idx)
+    val_2 = MemType{Tv, 1}(lvl.val)
+    return RepeatRLELevel{D, Ti, Tp, MemType{Tp, 1}, MemType{Ti, 1}, MemType{VTv, 1}}(lvl.shape, ptr_2, idx_2, val_2)
 end
 
 countstored_level(lvl::RepeatRLELevel, pos) = lvl.ptr[pos + 1] - 1

@@ -71,9 +71,9 @@ end
 
 function moveto(lvl::SparseListLevel{Ti, Tp,  VTp, VTi, Lvl}, ::Type{MemType}) where {Ti, Tp, Lvl, VTi, VTp, MemType <: AbstractVector}
     lvl_2 = moveto(lvl.lvl, MemType)
-    ptr_2 = MemType(lvl.ptr)
-    idx_2 = MemType(lvl.idx)
-    return SparseListLevel{Ti, Tp, typeof(lvl_2), MemType{Ti}, MemType{Tp}}(lvl_2, lvl.shape, ptr_2, idx_2)
+    ptr_2 = MemType{Tp, 1}(lvl.ptr)
+    idx_2 = MemType{Ti, 1}(lvl.idx)
+    return SparseListLevel{Ti, Tp, typeof(lvl_2), MemType{Ti, 1}, MemType{Tp, 1}}(lvl_2, lvl.shape, ptr_2, idx_2)
 end
 
 

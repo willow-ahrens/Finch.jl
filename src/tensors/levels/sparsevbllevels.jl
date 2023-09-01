@@ -32,10 +32,10 @@ end
 
 function moveto(lvl::SparseVBLLevel{Ti, Tp, VTp, VTi, VTo, Lvl},  ::Type{MemType}) where {Ti, Tp, VTp, VTi, VTo, Lvl, MemType <: AbstractVector}
     lvl_2 = moveto(lvl.lvl, MemType)
-    ptr_2 = MemType(lvl.ptr)
-    idx_2 = MemType(lvl.idx)
-    ofs_2 = MemType(lvl.ofs)
-    return SparseVBLLevel{Ti, Tp, MemType{Tp,1}, MemType{Ti,1}, MemType{Tp,1}, typeof(lvl_2)}(lvl_2, lvl.shape, ptr_2, idx_2, ofs_2)
+    ptr_2 = MemType{Tp, 1}(lvl.ptr)
+    idx_2 = MemType{Ti, 1}(lvl.idx)
+    ofs_2 = MemType{Tp, 1}(lvl.ofs)
+    return SparseVBLLevel{Ti, Tp, MemType{Tp, 1}, MemType{Ti, 1}, MemType{Tp, 1}, typeof(lvl_2)}(lvl_2, lvl.shape, ptr_2, idx_2, ofs_2)
 end
 
 Base.summary(lvl::SparseVBLLevel) = "SparseVBL($(summary(lvl.lvl)))"

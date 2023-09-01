@@ -356,12 +356,9 @@ end
 If the fiber/level is not on the given memType, it creates a new version of this fiber on that memory type
 and copies the data in to it.
 """
-function moveto(fiber::Fiber{Lvl}, ::Type{MemType}; override = false) where {Lvl, MemType <: AbstractVector}
-    if !override && memory_type(Lvl) == MemType
-        return fbr
-    else
-        moveto(fbr.lvl, memType, sizes)
-    end
+function moveto(fiber::Fiber{Lvl}, ::Type{MemType}) where {Lvl, MemType <: AbstractVector}
+    lvlp = moveto(fbr.lvl, memType)
+    return Fiber{typeof(lvlp)}(lvlp)
 end
 
 
