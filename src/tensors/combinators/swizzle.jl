@@ -38,6 +38,7 @@ function virtual_call(::typeof(swizzle), ctx, body, dims...)
     @assert All(isliteral)(dims)
     VirtualSwizzleArray(body, map(dim -> dim.val, dims))
 end
+virtual_uncall(arr::VirtualSwizzleArray) = call(swizzle, arr.body, arr.dims...)
 
 lower(tns::VirtualSwizzleArray, ctx::AbstractCompiler, ::DefaultStyle) = :(SwizzleArray($(ctx(tns.body)), $(tns.dims)))
 

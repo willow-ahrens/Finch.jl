@@ -46,6 +46,8 @@ function virtual_call(::typeof(extent), ctx, start, stop)
     end
 end
 
+virtual_uncall(ext::Extent) = call(extent, ext.start, ext.stop)
+
 FinchNotation.finch_leaf(x::Extent) = virtual(x)
 
 Base.:(==)(a::Extent, b::Extent) =
@@ -123,6 +125,8 @@ function virtual_call(::typeof(parallel), ctx, arg)
         ParallelDimension(arg.val)
     end
 end
+
+virtual_uncall(ext::ParallelDimension) = call(parallel, ext)
 
 FinchNotation.finch_leaf(x::ParallelDimension) = virtual(x)
 
