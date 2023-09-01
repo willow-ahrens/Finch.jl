@@ -58,7 +58,7 @@ similar_level(lvl::SparseListLevel) = SparseList(similar_level(lvl.lvl))
 similar_level(lvl::SparseListLevel, dim, tail...) = SparseList(similar_level(lvl.lvl, tail...), dim)
 
 function memory_type(::Type{SparseListLevel{Ti, Tp,  VTp, VTi, Lvl}}) where {Ti, Tp, Lvl, VTi, VTp}
-    return containertype(VTi)
+    return containertype(VTp)
 end
 
 function postype(::Type{SparseListLevel{Ti, Tp,  VTp, VTi, Lvl}}) where {Ti, Tp, Lvl, VTi, VTp}

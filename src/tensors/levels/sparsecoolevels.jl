@@ -43,7 +43,7 @@ const SparseCOO = SparseCOOLevel
 
 SparseCOOLevel(lvl) = throw(ArgumentError("You must specify the number of dimensions in a SparseCOOLevel, e.g. Fiber!(SparseCOO{2}(Element(0.0)))"))
 SparseCOOLevel(lvl, shape, args...) = SparseCOOLevel{length(shape)}(lvl, shape, args...)
-SparseCOOLevel{N}(lvl:: Lvl) where {Lvl, N} = SparseCOOLevel{N, indextype(Lvl)}(lvl)
+SparseCOOLevel{N}(lvl:: Lvl) where {Lvl, N} = SparseCOOLevel{N, tuplize(indextype(Lvl), N)}(lvl)
 SparseCOOLevel{N}(lvl, shape, args...) where {N} = SparseCOOLevel{N, typeof(shape)}(lvl, shape, args...)
 
 SparseCOOLevel{N, Ti}(lvl, args...) where {N, Ti} =

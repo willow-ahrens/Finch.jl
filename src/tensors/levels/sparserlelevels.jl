@@ -31,7 +31,7 @@ function memory_type(::Type{SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}}) where
 end
 
 function postype(::Type{SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}}) where {Ti, Tp, VTp, VLTi, VRTi, Lvl}
-    return VTp
+    return Tp
 end
 
 function indextype(::Type{SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}}) where {Ti, Tp, VTp, VLTi, VRTi, Lvl}

@@ -9,7 +9,8 @@ empty(::Type{Vector{S}}) where S = S[]
 postype(::Type{Vector{S}}) where {S} = Int
 
 
-indextype(::Type{Tuple{T, Vararg{Any}}}) where {T} = indextype(T.parameters[1])
+indextype(::Type{Tuple{T, Vararg{Any}}}) where {T} = indextype(T)
+indextype(::Type{Tuple{T}}) where {T} = indextype(T)
 indextype(::Type{T}) where {T} = T
 # indextype(::Type{T}, ::Type{N}) where {T, N} = indextype(indextype(T), N)
 # function indextype(::Type{Tuple{T, Vararg{Any}}}, ::Type{N}) where {T, N}
