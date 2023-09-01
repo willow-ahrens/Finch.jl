@@ -78,13 +78,7 @@ semantics of the wrapper.
 """
 function wrapperize(root, ctx::AbstractCompiler)
     depth = depth_calculator(root)
-    tnss = unique(filter(!isnothing, map(node->if @capture(node, access(~A, ~m, ~i...)) getroot(A) end, PostOrderDFS(root))))
-    for tns in tnss
-        if haskey(ctx.bindings, tns)
-            root = block(define(tns, ctx.bindings[tns]), root)
-            delete!(ctx.bindings, tns)
-        end
-    end
+    root = unevaluate_partial(root, ctx)
     root = Rewrite(Fixpoint(Chain([
         Postwalk(Fixpoint(Chain(get_wrapper_rules(ctx.algebra, depth, ctx))))
     ])))(root)
