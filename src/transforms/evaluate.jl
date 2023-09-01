@@ -30,6 +30,7 @@ function evaluate_partial(root, ctx)
         ])))
     ))(root_2)
     Rewrite(Fixpoint(Chain([
+        (@rule block(~s1..., block(~s2...), ~s3...)=> block(s1..., s2..., s3...)),
         (@rule block(define(~a::isvariable, ~v::Or(isconstant, isvirtual)), ~s...) => begin
             ctx.bindings[a] = v
             block(s...)
