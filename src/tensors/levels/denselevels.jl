@@ -104,14 +104,19 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:DenseLeve
     display_fiber_data(io, mime, fbr, depth, 1, crds, show, get_fbr)
 end
 
-mutable struct VirtualDenseLevel
+mutable struct VirtualDenseLevel <: AbstractVirtualLevel
     lvl
     ex
     Ti
     shape
 end
+
+is_level_injective(lvl::VirtualDenseLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., true]
+is_level_concurrent(lvl::VirtualDenseLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., true]
+is_level_atomic(lvl::VirtualDenseLevel, ctx) = is_level_atomic(lvl.lvl, ctx)
+
 function virtualize(ex, ::Type{DenseLevel{Ti, Lvl}}, ctx, tag=:lvl) where {Ti, Lvl}
-    sym = ctx.freshen(tag)
+    sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Ti)
     push!(ctx.preamble, quote
         $sym = $ex
@@ -150,8 +155,8 @@ function declare_level!(lvl::VirtualDenseLevel, ctx::AbstractCompiler, pos, init
 end
 
 function trim_level!(lvl::VirtualDenseLevel, ctx::AbstractCompiler, pos)
-    qos = ctx.freshen(:qos)
-    push!(ctx.preamble, quote
+    qos = freshen(ctx.code, :qos)
+    push!(ctx.code.preamble, quote
         $qos = $(ctx(pos)) * $(ctx(lvl.shape))
     end)
     lvl.lvl = trim_level!(lvl.lvl, ctx, value(qos))
@@ -182,26 +187,52 @@ function freeze_level!(lvl::VirtualDenseLevel, ctx::AbstractCompiler, pos)
     return lvl
 end
 
-is_laminable_updater(lvl::VirtualDenseLevel, ctx, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...) =
-    is_laminable_updater(lvl.lvl, ctx, protos...)
-instantiate_reader(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, ::Union{typeof(defaultread), typeof(follow)}, protos...) = subunfurl_dense_helper(fbr, ctx, instantiate_reader, VirtualSubFiber, protos...)
-instantiate_updater(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...) = subunfurl_dense_helper(fbr, ctx, instantiate_updater, VirtualSubFiber, protos...)
-instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualDenseLevel}, ctx, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...) = subunfurl_dense_helper(fbr, ctx, instantiate_updater, (lvl, pos) -> VirtualTrackedSubFiber(lvl, pos, fbr.dirty), protos...)
-function subunfurl_dense_helper(fbr, ctx, subunfurl, subfiber_ctr, protos...)
-    (lvl, pos) = (fbr.lvl, fbr.pos)
+struct DenseTraversal
+    fbr
+    subunfurl
+    subfiber_ctr
+end
+
+instantiate_reader(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, protos) =
+    instantiate_reader(DenseTraversal(fbr, instantiate_reader, VirtualSubFiber), ctx, protos)
+instantiate_updater(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, protos) =
+    instantiate_updater(DenseTraversal(fbr, instantiate_updater, VirtualSubFiber), ctx, protos)
+instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualDenseLevel}, ctx, protos) =
+    instantiate_updater(DenseTraversal(fbr, instantiate_updater, (lvl, pos) -> VirtualTrackedSubFiber(lvl, pos, fbr.dirty)), ctx, protos)
+
+function instantiate_reader(trv::DenseTraversal, ctx, subprotos, ::Union{typeof(defaultread), typeof(follow)})
+    (lvl, pos) = (trv.fbr.lvl, trv.fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
 
-    q = ctx.freshen(tag, :_q)
+    q = freshen(ctx.code, tag, :_q)
 
     Furlable(
-        tight = (subunfurl == instantiate_updater && !is_laminable_updater(lvl.lvl, ctx, protos...)) ? lvl : nothing,
         body = (ctx, ext) -> Lookup(
             body = (ctx, i) -> Thunk(
                 preamble = quote
                     $q = ($(ctx(pos)) - $(Ti(1))) * $(ctx(lvl.shape)) + $(ctx(i))
                 end,
-                body = (ctx) -> subunfurl(subfiber_ctr(lvl.lvl, value(q, lvl.Ti)), ctx, protos...)
+                body = (ctx) -> trv.subunfurl(trv.subfiber_ctr(lvl.lvl, value(q, lvl.Ti)), ctx, subprotos)
+            )
+        )
+    )
+end
+
+function instantiate_updater(trv::DenseTraversal, ctx, subprotos, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)})
+    (lvl, pos) = (trv.fbr.lvl, trv.fbr.pos)
+    tag = lvl.ex
+    Ti = lvl.Ti
+
+    q = freshen(ctx.code, tag, :_q)
+
+    Furlable(
+        body = (ctx, ext) -> Lookup(
+            body = (ctx, i) -> Thunk(
+                preamble = quote
+                    $q = ($(ctx(pos)) - $(Ti(1))) * $(ctx(lvl.shape)) + $(ctx(i))
+                end,
+                body = (ctx) -> trv.subunfurl(trv.subfiber_ctr(lvl.lvl, value(q, lvl.Ti)), ctx, subprotos)
             )
         )
     )

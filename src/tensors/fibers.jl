@@ -1,5 +1,6 @@
 abstract type AbstractFiber{Lvl} end
-abstract type AbstractVirtualFiber{Lvl} end
+abstract type AbstractVirtualTensor end
+abstract type AbstractVirtualFiber{Lvl} <: AbstractVirtualTensor end
 
 """
     Fiber(lvl)
@@ -17,10 +18,17 @@ struct Fiber{Lvl} <: AbstractFiber{Lvl}
     lvl::Lvl
 end
 
+
+
 mutable struct VirtualFiber{Lvl} <: AbstractVirtualFiber{Lvl}
     lvl::Lvl
 end
-function virtualize(ex, ::Type{<:Fiber{Lvl}}, ctx, tag=ctx.freshen(:tns)) where {Lvl}
+
+is_injective(fiber::VirtualFiber, ctx) = is_level_injective(fiber.lvl, ctx)
+is_concurrent(fiber::VirtualFiber, ctx) = is_level_concurrent(fiber.lvl, ctx)
+is_atomic(fiber::VirtualFiber, ctx) = is_level_atomic(fiber.lvl, ctx)
+
+function virtualize(ex, ::Type{<:Fiber{Lvl}}, ctx, tag=freshen(ctx, :tns)) where {Lvl}
     lvl = virtualize(:($ex.lvl), Lvl, ctx, Symbol(tag, :_lvl))
     VirtualFiber(lvl)
 end
@@ -41,7 +49,7 @@ mutable struct VirtualSubFiber{Lvl} <: AbstractVirtualFiber{Lvl}
     lvl::Lvl
     pos
 end
-function virtualize(ex, ::Type{<:SubFiber{Lvl, Pos}}, ctx, tag=ctx.freshen(:tns)) where {Lvl, Pos}
+function virtualize(ex, ::Type{<:SubFiber{Lvl, Pos}}, ctx, tag=freshen(ctx, :tns)) where {Lvl, Pos}
     lvl = virtualize(:($ex.lvl), Lvl, ctx, Symbol(tag, :_lvl))
     pos = virtualize(:($ex.pos), Pos, ctx)
     VirtualSubFiber(lvl, pos)
@@ -141,16 +149,16 @@ freeze_level!(fbr, ctx, mode) = fbr.lvl
 
 function declare!(fbr::VirtualFiber, ctx::AbstractCompiler, init)
     lvl = declare_level!(fbr.lvl, ctx, literal(1), init)
-    push!(ctx.preamble, assemble_level!(lvl, ctx, literal(1), literal(1))) #TODO this feels unnecessary?
+    push!(ctx.code.preamble, assemble_level!(lvl, ctx, literal(1), literal(1))) #TODO this feels unnecessary?
     fbr = VirtualFiber(lvl)
 end
 
-function instantiate_reader(fbr::VirtualFiber, ctx::AbstractCompiler, protos...)
-    return Unfurled(fbr, instantiate_reader(VirtualSubFiber(fbr.lvl, literal(1)), ctx, reverse(protos)...))
+function instantiate_reader(fbr::VirtualFiber, ctx::AbstractCompiler, protos)
+    return Unfurled(fbr, instantiate_reader(VirtualSubFiber(fbr.lvl, literal(1)), ctx, protos))
 end
 
-function instantiate_updater(fbr::VirtualFiber, ctx::AbstractCompiler, protos...)
-    return Unfurled(fbr, instantiate_updater(VirtualSubFiber(fbr.lvl, literal(1)), ctx, reverse(protos)...))
+function instantiate_updater(fbr::VirtualFiber, ctx::AbstractCompiler, protos)
+    return Unfurled(fbr, instantiate_updater(VirtualSubFiber(fbr.lvl, literal(1)), ctx, protos))
 end
 
 struct TrackedSubFiber{Lvl, Pos, Dirty} <: AbstractFiber{Lvl}
@@ -164,7 +172,7 @@ mutable struct VirtualTrackedSubFiber{Lvl}
     pos
     dirty
 end
-function virtualize(ex, ::Type{<:TrackedSubFiber{Lvl, Pos, Dirty}}, ctx, tag=ctx.freshen(:tns)) where {Lvl, Pos, Dirty}
+function virtualize(ex, ::Type{<:TrackedSubFiber{Lvl, Pos, Dirty}}, ctx, tag=freshen(ctx, :tns)) where {Lvl, Pos, Dirty}
     lvl = virtualize(:($ex.lvl), Lvl, ctx, Symbol(tag, :_lvl))
     pos = virtualize(:($ex.pos), Pos, ctx)
     dirty = virtualize(:($ex.dirty), Dirty, ctx)
@@ -172,15 +180,6 @@ function virtualize(ex, ::Type{<:TrackedSubFiber{Lvl, Pos, Dirty}}, ctx, tag=ctx
 end
 lower(fbr::VirtualTrackedSubFiber, ctx::AbstractCompiler, ::DefaultStyle) = :(TrackedSubFiber($(ctx(fbr.lvl)), $(ctx(fbr.pos))))
 FinchNotation.finch_leaf(x::VirtualTrackedSubFiber) = virtual(x)
-
-function instantiate_updater(fbr::VirtualTrackedSubFiber, ctx, protos...)
-    Thunk(
-        preamble = quote
-            $(fbr.dirty) = true
-        end,
-        body = (ctx) -> instantiate_updater(VirtualSubFiber(fbr.lvl, fbr.pos))
-    )
-end
 
 """
     redefault!(fbr, init)
@@ -219,7 +218,7 @@ function freeze!(fbr::VirtualFiber, ctx::AbstractCompiler)
     return VirtualFiber(freeze_level!(fbr.lvl, ctx, literal(1)))
 end
 
-thaw_level!(lvl, ctx, pos) = throw(FormatLimitation("cannot modify $(typeof(lvl)) in place (forgot to declare with .= ?)"))
+thaw_level!(lvl, ctx, pos) = throw(FinchProtocolError("cannot modify $(typeof(lvl)) in place (forgot to declare with .= ?)"))
 function thaw!(fbr::VirtualFiber, ctx::AbstractCompiler)
     return VirtualFiber(thaw_level!(fbr.lvl, ctx, literal(1)))
 end
@@ -317,9 +316,9 @@ function Fiber! end
 
 @staged function Fiber!(lvl)
     contain(LowerJulia()) do ctx
-        lvl = virtualize(:lvl, lvl, ctx)
+        lvl = virtualize(:lvl, lvl, ctx.code)
         lvl = declare_level!(lvl, ctx, literal(0), literal(virtual_level_default(lvl)))
-        push!(ctx.preamble, assemble_level!(lvl, ctx, literal(1), literal(1)))
+        push!(ctx.code.preamble, assemble_level!(lvl, ctx, literal(1), literal(1)))
         lvl = freeze_level!(lvl, ctx, literal(1))
         :(Fiber($(ctx(lvl))))
     end
@@ -334,6 +333,7 @@ Base.summary(fbr::SubFiber) = "$(join(size(fbr), "×")) SubFiber($(summary(fbr.l
 
 Base.similar(fbr::AbstractFiber) = Fiber(similar_level(fbr.lvl))
 Base.similar(fbr::AbstractFiber, dims::Tuple) = Fiber(similar_level(fbr.lvl, dims...))
+
 
 
 
@@ -373,4 +373,5 @@ end
 # function memory_type(::Type{<:VirtualFiber{Lvl}}) where {LvL}
 #     memory_type(Lvl)
 # end
+
 

@@ -155,18 +155,16 @@ the type domain directly, the `TagInstance` type represents a value `tns`
 referred to by a variable named `tag`. All `TagInstance` in the same program
 must agree on the value of variables, and only one value will be virtualized.
 """
-struct TagInstance{tag, Tns} <: FinchNodeInstance
-    tns::Tns
+struct TagInstance{Var, Bind} <: FinchNodeInstance
+    var::Var
+	bind::Bind
 end
 
-Base.:(==)(a::TagInstance, b::TagInstance) = false
-Base.:(==)(a::TagInstance{tag}, b::TagInstance{tag}) where {tag} = a.tns == b.tns
+Base.:(==)(a::TagInstance, b::TagInstance) = a.var == b.var && a.bind == b.bind
 
-@inline tag_instance(tag, tns) = TagInstance{tag, typeof(tns)}(tns)
-@inline tag_instance(tag, tns::IndexInstance) = tns
-@inline tag_instance(tag, tns::VariableInstance) = tns
+@inline tag_instance(var, bind) = TagInstance(var, bind)
 
-Base.show(io::IO, node::TagInstance{tag}) where {tag} = print(io, "tag_instance(:", tag, ", ", tag, ")")
+Base.show(io::IO, node::TagInstance) = print(io, "tag_instance(:", node.var, ", ", node.bind, ")")
 
 @inline finch_leaf_instance(arg::Type) = literal_instance(arg)
 @inline finch_leaf_instance(arg::Function) = literal_instance(arg)

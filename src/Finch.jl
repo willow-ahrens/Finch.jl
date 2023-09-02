@@ -19,6 +19,8 @@ using CIndices
 
 export @finch, @finch_program, @finch_code, @finch_kernel, value
 
+export fastfinch, safefinch, debugfinch
+
 export Fiber, Fiber!, Scalar
 export SparseRLE, SparseRLELevel 
 export SparseList, SparseListLevel
@@ -39,6 +41,7 @@ export choose, minby, maxby, overwrite, initwrite, d
 
 export default, AsArray
 
+export parallelAnalysis, ParallelAnalysisResults
 export parallel, extent, dimless
 
 include("base/limits.jl")
@@ -46,11 +49,11 @@ export Limit
 
 include("util.jl")
 
+include("environment.jl")
 include("FinchNotation/FinchNotation.jl")
 using .FinchNotation
 using .FinchNotation: and, or, InitWriter
 include("semantics.jl")
-include("virtualize.jl")
 include("style.jl")
 include("dimensions.jl")
 include("lower.jl")
@@ -61,6 +64,7 @@ include("transforms/scopes.jl")
 include("transforms/lifecycle.jl")
 include("transforms/dimensionalize.jl")
 include("transforms/evaluate.jl")
+include("transforms/concurrent.jl")
 
 include("execute.jl")
 
@@ -82,6 +86,7 @@ include("looplets/fills.jl")
 include("tensors/vector.jl")
 include("tensors/scalars.jl")
 include("tensors/fibers.jl")
+include("tensors/levels/abstractlevel.jl")
 include("tensors/levels/sparserlelevels.jl")
 include("tensors/levels/sparselistlevels.jl")
 include("tensors/levels/sparsehashlevels.jl")
@@ -94,6 +99,7 @@ include("tensors/levels/elementlevels.jl")
 include("tensors/levels/patternlevels.jl")
 include("tensors/levels/sparsetrianglelevels.jl")
 include("tensors/masks.jl")
+include("tensors/combinators/abstractCombinator.jl")
 include("tensors/combinators/unfurled.jl")
 include("tensors/combinators/protocolized.jl")
 include("tensors/combinators/roots.jl")

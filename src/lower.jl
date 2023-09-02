@@ -1,43 +1,19 @@
-struct Freshen
-    seen
-    counts
-end
-Freshen() = Freshen(Set(), Dict())
-function (spc::Freshen)(tags...)
-    name = Symbol(tags...)
-    m = match(r"^(.*)_(\d*)$", string(name))
-    if m === nothing
-        tag = name
-        n = 1
-    else
-        tag = Symbol(m.captures[1])
-        n = parse(BigInt, m.captures[2])
-    end
-    if (tag, n) in spc.seen
-        n = max(get(spc.counts, tag, 0), n) + 1
-        spc.counts[tag] = n
-    end
-    push!(spc.seen, (tag, n))
-    if n == 1
-        return Symbol(tag)
-    else
-        return Symbol(tag, :_, n)
-    end
-end
-
-abstract type AbstractCompiler end
-
 @kwdef mutable struct LowerJulia <: AbstractCompiler
+    code = JuliaContext()
     algebra = DefaultAlgebra()
-    preamble::Vector{Any} = []
     bindings::Dict{Any, Any} = Dict()
+    mode = fastfinch
     modes::Dict{Any, Any} = Dict()
     scope = Set()
-    epilogue::Vector{Any} = []
-    freshen::Freshen = Freshen()
     shash = StaticHash()
     program_rules = get_program_rules(algebra, shash)
     bounds_rules = get_bounds_rules(algebra, shash)
+end
+
+function contain(f, ctx::LowerJulia)
+    contain(ctx.code) do code_2
+        f(LowerJulia(code_2, ctx.algebra, ctx.bindings, ctx.mode, ctx.modes, ctx.scope, ctx.shash, ctx.program_rules, ctx.bounds_rules))
+    end
 end
 
 struct StaticHash
@@ -64,15 +40,16 @@ function open_scope(prgm, ctx::AbstractCompiler)
     for tns in ctx_2.scope
         pop!(ctx_2.modes, tns, nothing)
     end
+    ctx.bindings = copy(ctx.bindings)
     res
 end
 
 function cache!(ctx::AbstractCompiler, var, val)
     val = finch_leaf(val)
     isconstant(val) && return val
-    var = ctx.freshen(var)
+    var = freshen(ctx.code,var)
     val = simplify(val, ctx)
-    push!(ctx.preamble, quote
+    push!(ctx.code.preamble, quote
         $var = $(contain(ctx_2 -> ctx_2(val), ctx))
     end)
     return cached(value(var, Any), literal(val))
@@ -88,37 +65,6 @@ function resolve(node::FinchNode, ctx::AbstractCompiler)
         return resolve(ctx.bindings[node], ctx)
     else
         error("unimplemented $node")
-    end
-end
-
-"""
-    contain(f, ctx)
-
-Call f on a subcontext of `ctx` and return the result. Variable bindings,
-preambles, and epilogues defined in the subcontext will not escape the call to
-contain.
-"""
-function contain(f, ctx::AbstractCompiler)
-    ctx_2 = shallowcopy(ctx)
-    preamble = Expr(:block)
-    ctx_2.preamble = preamble.args
-    epilogue = Expr(:block)
-    ctx_2.epilogue = epilogue.args
-    ctx_2.bindings = copy(ctx.bindings)
-    body = f(ctx_2)
-    if epilogue == Expr(:block)
-        return quote
-            $preamble
-            $body
-        end
-    else
-        res = ctx_2.freshen(:res)
-        return quote
-            $preamble
-            $res = $body
-            $epilogue
-            $res
-        end
     end
 end
 
@@ -210,8 +156,8 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
         @assert root.ext.kind === virtual
         lower_loop(ctx, root, root.ext.val)
     elseif root.kind === sieve
-        cond = ctx.freshen(:cond)
-        push!(ctx.preamble, :($cond = $(ctx(root.cond))))
+        cond = freshen(ctx.code,:cond)
+        push!(ctx.code.preamble, :($cond = $(ctx(root.cond))))
     
         return quote
             if $cond
@@ -253,7 +199,7 @@ function lower_loop(ctx, root, ext)
     root_2 = Rewrite(Postwalk(@rule access(~tns, ~mode, ~idxs...) => begin
         if !isempty(idxs) && root.idx == idxs[end]
             protos = [(mode.kind === reader ? defaultread : defaultupdate) for _ in idxs]
-            tns_2 = unfurl(tns, ctx, root.ext.val, protos...)
+            tns_2 = unfurl(tns, ctx, root.ext.val, mode, protos...)
             access(tns_2, mode, idxs...)
         end
     end))(root)
@@ -261,9 +207,10 @@ function lower_loop(ctx, root, ext)
 end
 
 function lower_loop(ctx, root, ext::ParallelDimension)
-    #TODO Safety check that the loop can actually be parallel
-    tid = index(ctx.freshen(:tid))
-    i = ctx.freshen(:i)
+    root = ensure_concurrent(root, ctx)
+    
+    tid = index(freshen(ctx.code, :tid))
+    i = freshen(ctx.code, :i)
     root_2 = loop(tid, Extent(value(i, Int), value(i, Int)),
         loop(root.idx, ext.ext,
             sieve(access(VirtualSplitMask(value(:(Threads.nthreads()))), reader(), root.idx, tid),

@@ -86,7 +86,11 @@ SparseList (false) [1:10]
 pattern!(fbr::Fiber) = Fiber(pattern!(fbr.lvl))
 pattern!(fbr::SubFiber) = SubFiber(pattern!(fbr.lvl), fbr.pos)
 
-struct VirtualPatternLevel end
+struct VirtualPatternLevel <: AbstractVirtualLevel end
+
+is_level_injective(::VirtualPatternLevel, ctx) = []
+is_level_concurrent(::VirtualPatternLevel, ctx) = []
+is_level_atomic(lvl::VirtualPatternLevel, ctx) = true
 
 lower(lvl::VirtualPatternLevel, ctx::AbstractCompiler, ::DefaultStyle) = :(PatternLevel())
 virtualize(ex, ::Type{<:PatternLevel}, ctx) = VirtualPatternLevel()
@@ -97,7 +101,7 @@ virtual_level_default(::VirtualPatternLevel) = false
 virtual_level_eltype(::VirtualPatternLevel) = Bool
 
 function declare_level!(lvl::VirtualPatternLevel, ctx, pos, init)
-    init == literal(false) || throw(FormatLimitation("Must initialize Pattern Levels to false"))
+    init == literal(false) || throw(FinchProtocolError("Must initialize Pattern Levels to false"))
     lvl
 end
 
@@ -110,21 +114,20 @@ reassemble_level!(lvl::VirtualPatternLevel, ctx, pos_start, pos_stop) = quote en
 
 trim_level!(lvl::VirtualPatternLevel, ctx::AbstractCompiler, pos) = lvl
 
-instantiate_reader(::VirtualSubFiber{VirtualPatternLevel}, ctx) = Fill(true)
-is_laminable_updater(lvl::VirtualPatternLevel, ctx) = true
+instantiate_reader(::VirtualSubFiber{VirtualPatternLevel}, ctx, protos) = Fill(true)
 
-function instantiate_updater(fbr::VirtualSubFiber{VirtualPatternLevel}, ctx)
-    val = ctx.freshen(:null)
-    push!(ctx.preamble, :($val = false))
+function instantiate_updater(fbr::VirtualSubFiber{VirtualPatternLevel}, ctx, protos)
+    val = freshen(ctx.code, :null)
+    push!(ctx.code.preamble, :($val = false))
     VirtualScalar(nothing, Bool, false, gensym(), val)
 end
 
-function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualPatternLevel}, ctx)
+function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualPatternLevel}, ctx, protos)
     VirtualScalar(nothing, Bool, false, gensym(), fbr.dirty)
 end
 
 function lower_access(ctx::AbstractCompiler, node, tns::VirtualFiber{VirtualPatternLevel})
-    val = ctx.freshen(:null)
-    push!(ctx.preamble, :($val = false))
+    val = freshen(ctx.code, :null)
+    push!(ctx.code.preamble, :($val = false))
     val
 end

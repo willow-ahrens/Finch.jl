@@ -47,6 +47,9 @@ function get_wrapper_rules(alg, depth, ctx)
                 access(A_3, m, i1..., k, i2...)
             end
         end),
+        (@rule assign(access(~a, updater(), ~i...), initwrite, ~rhs) => begin
+            assign(access(a, updater(), i...), initwrite(something(virtual_default(a, ctx))), rhs)
+        end),
     ]
 end
 

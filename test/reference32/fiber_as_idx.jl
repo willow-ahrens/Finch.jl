@@ -1,10 +1,10 @@
 begin
-    B_lvl = (ex.bodies[1]).tns.tns.lvl
+    B_lvl = (ex.bodies[1]).tns.bind.lvl
     B_lvl_2 = B_lvl.lvl
-    A_lvl = (ex.bodies[2]).body.rhs.tns.tns.lvl
+    A_lvl = (ex.bodies[2]).body.rhs.tns.bind.lvl
     A_lvl_2 = A_lvl.lvl
     A_lvl_3 = A_lvl_2.lvl
-    I_lvl = ((ex.bodies[2]).body.rhs.idxs[1]).tns.tns.lvl
+    I_lvl = ((ex.bodies[2]).body.rhs.idxs[1]).tns.bind.lvl
     A_lvl.shape == I_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(A_lvl.shape) != $(I_lvl.shape))"))
     Finch.resize_if_smaller!(B_lvl_2.val, A_lvl.shape)
     Finch.fill_range!(B_lvl_2.val, 0, 1, A_lvl.shape)

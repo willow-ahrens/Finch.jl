@@ -1,6 +1,6 @@
 begin
-    B = (ex.bodies[1]).tns.tns
-    A_lvl = (ex.bodies[2]).body.body.rhs.tns.tns.lvl
+    B = (ex.bodies[1]).tns.bind
+    A_lvl = (ex.bodies[2]).body.body.rhs.tns.bind.lvl
     A_lvl_2 = A_lvl.lvl
     B_val = 0
     A_lvl_q = A_lvl.ptr[1]

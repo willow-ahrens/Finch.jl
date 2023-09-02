@@ -1,9 +1,9 @@
 begin
-    C_lvl = (ex.bodies[1]).tns.tns.lvl
+    C_lvl = (ex.bodies[1]).tns.bind.lvl
     C_lvl_2 = C_lvl.lvl
-    A_lvl = (((ex.bodies[2]).body.body.rhs.args[1]).args[1]).tns.tns.lvl
+    A_lvl = (((ex.bodies[2]).body.body.rhs.args[1]).args[1]).tns.bind.lvl
     A_lvl_2 = A_lvl.lvl
-    F_lvl = ((ex.bodies[2]).body.body.rhs.args[3]).tns.tns.lvl
+    F_lvl = ((ex.bodies[2]).body.body.rhs.args[3]).tns.bind.lvl
     F_lvl_2 = F_lvl.lvl
     C_lvl_qos_stop = 0
     Finch.resize_if_smaller!(C_lvl.ptr, 1 + 1)

@@ -1,4 +1,4 @@
-struct ProtocolizedArray{Protos<:Tuple, Body}
+struct ProtocolizedArray{Protos<:Tuple, Body} <: AbstractCombinator
     body::Body
     protos::Protos
 end
@@ -10,10 +10,15 @@ end
 
 Base.getindex(arr::ProtocolizedArray, i...) = arr.body[i...]
 
-struct VirtualProtocolizedArray
+struct VirtualProtocolizedArray <: AbstractVirtualCombinator
     body
     protos
 end
+
+is_injective(lvl::VirtualProtocolizedArray, ctx) = is_injective(lvl.body, ctx)
+is_concurrent(lvl::VirtualProtocolizedArray, ctx) = is_concurrent(lvl.body, ctx)
+is_atomic(lvl::VirtualProtocolizedArray, ctx) = is_atomic(lvl.body, ctx)
+
 Base.:(==)(a::VirtualProtocolizedArray, b::VirtualProtocolizedArray) = a.body == b.body && a.protos == b.protos
 
 Base.show(io::IO, ex::VirtualProtocolizedArray) = Base.show(io, MIME"text/plain"(), ex)
@@ -50,11 +55,11 @@ function virtual_resize!(arr::VirtualProtocolizedArray, ctx::AbstractCompiler, d
     virtual_resize!(arr.body, ctx, dim)
 end
 
-function instantiate_reader(arr::VirtualProtocolizedArray, ctx, protos...)
-    VirtualProtocolizedArray(instantiate_reader(arr.body, ctx,  map(something, arr.protos, protos)...), arr.protos)
+function instantiate_reader(arr::VirtualProtocolizedArray, ctx, protos)
+    VirtualProtocolizedArray(instantiate_reader(arr.body, ctx,  map(something, arr.protos, protos)), arr.protos)
 end
-function instantiate_updater(arr::VirtualProtocolizedArray, ctx, protos...)
-    VirtualProtocolizedArray(instantiate_updater(arr.body, ctx,  map(something, arr.protos, protos)...), arr.protos)
+function instantiate_updater(arr::VirtualProtocolizedArray, ctx, protos)
+    VirtualProtocolizedArray(instantiate_updater(arr.body, ctx,  map(something, arr.protos, protos)), arr.protos)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualProtocolizedArray) = ctx(node.body)
@@ -120,8 +125,8 @@ visit_simplify(node::VirtualProtocolizedArray) = VirtualProtocolizedArray(visit_
     guard => VirtualProtocolizedArray(body, node.protos)
 end
 
-function unfurl(tns::VirtualProtocolizedArray, ctx, ext, protos...)
-    VirtualProtocolizedArray(unfurl(tns.body, ctx, ext, map(something, tns.protos, protos)...), tns.protos)
+function unfurl(tns::VirtualProtocolizedArray, ctx, ext, mode, protos...)
+    VirtualProtocolizedArray(unfurl(tns.body, ctx, ext, mode, map(something, tns.protos, protos)...), tns.protos)
 end
 
 jumper_body(node::VirtualProtocolizedArray, ctx, ext) = VirtualProtocolizedArray(jumper_body(node.body, ctx, ext), node.protos)

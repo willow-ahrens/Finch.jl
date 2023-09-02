@@ -24,9 +24,9 @@ julia> @finch_code begin
         end
     end
 quote
-    y = (ex.bodies[1]).tns.tns
-    A = ((ex.bodies[2]).body.body.rhs.args[1]).tns.tns
-    x = ((ex.bodies[2]).body.body.rhs.args[2]).tns.tns
+    y = (ex.bodies[1]).tns.bind
+    A = ((ex.bodies[2]).body.body.rhs.args[1]).tns.bind
+    x = ((ex.bodies[2]).body.body.rhs.args[2]).tns.bind
     sugar_2 = size(x)
     x_mode1_stop = sugar_2[1]
     x_mode1_stop == A.n || throw(DimensionMismatch("mismatched dimension limits ($(x_mode1_stop) != $(A.n))"))

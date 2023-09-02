@@ -91,13 +91,18 @@ end
 
 countstored_level(lvl::ElementLevel, pos) = pos
 
-struct VirtualElementLevel
+struct VirtualElementLevel <: AbstractVirtualLevel
     ex
     Tv
     D
 end
 
+is_level_injective(::VirtualElementLevel, ctx) = []
+is_level_concurrent(::VirtualElementLevel, ctx) = []
+is_level_atomic(lvl::VirtualElementLevel, ctx) = false
+
 lower(lvl::VirtualElementLevel, ctx::AbstractCompiler, ::DefaultStyle) = lvl.ex
+
 function virtualize(ex, ::Type{ElementLevel{D, Ti, Tv, V}}, ctx, tag=:lvl) where {D, Ti, Tv, V}
     sym = ctx.freshen(tag)
     val_alloc = ctx.freshen(sym, :_val_alloc)
@@ -116,7 +121,7 @@ virtual_level_eltype(lvl::VirtualElementLevel) = lvl.Tv
 virtual_level_default(lvl::VirtualElementLevel) = lvl.D
 
 function declare_level!(lvl::VirtualElementLevel, ctx, pos, init)
-    init == literal(lvl.D) || throw(FormatLimitation("Cannot initialize Element Levels to non-default values(have $init expected $(lvl.D))"))
+    init == literal(lvl.D) || throw(FinchProtocolError("Cannot initialize Element Levels to non-default values(have $init expected $(lvl.D))"))
     lvl
 end
 
@@ -125,7 +130,7 @@ freeze_level!(lvl::VirtualElementLevel, ctx, pos) = lvl
 thaw_level!(lvl::VirtualElementLevel, ctx::AbstractCompiler, pos) = lvl
 
 function trim_level!(lvl::VirtualElementLevel, ctx::AbstractCompiler, pos)
-    push!(ctx.preamble, quote
+    push!(ctx.code.preamble, quote
         resize!($(lvl.ex).val, $(ctx(pos)))
     end)
     return lvl
@@ -144,15 +149,15 @@ supports_reassembly(::VirtualElementLevel) = true
 function reassemble_level!(lvl::VirtualElementLevel, ctx, pos_start, pos_stop)
     pos_start = cache!(ctx, :pos_start, simplify(pos_start, ctx))
     pos_stop = cache!(ctx, :pos_stop, simplify(pos_stop, ctx))
-    push!(ctx.preamble, quote
+    push!(ctx.code.preamble, quote
         Finch.fill_range!($(lvl.ex).val, $(lvl.D), $(ctx(pos_start)), $(ctx(pos_stop)))
     end)
     lvl
 end
 
-function instantiate_reader(fbr::VirtualSubFiber{VirtualElementLevel}, ctx)
+function instantiate_reader(fbr::VirtualSubFiber{VirtualElementLevel}, ctx, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
-    val = ctx.freshen(lvl.ex, :_val)
+    val = freshen(ctx.code, lvl.ex, :_val)
     return Thunk(
         preamble = quote
             $val = $(lvl.ex).val[$(ctx(pos))]
@@ -161,14 +166,12 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualElementLevel}, ctx)
     )
 end
 
-is_laminable_updater(lvl::VirtualElementLevel, ctx) = true
-
-function instantiate_updater(fbr::VirtualSubFiber{VirtualElementLevel}, ctx)
+function instantiate_updater(fbr::VirtualSubFiber{VirtualElementLevel}, ctx, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     VirtualScalar(nothing, lvl.Tv, lvl.D, gensym(), :($(lvl.ex).val[$(ctx(pos))]))
 end
 
-function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualElementLevel}, ctx)
+function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualElementLevel}, ctx, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     VirtualDirtyScalar(nothing, lvl.Tv, lvl.D, gensym(), :($(lvl.ex).val[$(ctx(pos))]), fbr.dirty)
 end

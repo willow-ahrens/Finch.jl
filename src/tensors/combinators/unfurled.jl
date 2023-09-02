@@ -1,4 +1,4 @@
-@kwdef struct Unfurled
+@kwdef struct Unfurled <: AbstractVirtualCombinator
     arr
     ndims = 0
     body
@@ -28,8 +28,8 @@ virtual_size(tns::Unfurled, ctx) = virtual_size(tns.arr, ctx)
 virtual_resize!(tns::Unfurled, ctx, dims...) = virtual_resize!(tns.arr, ctx, dims...)
 virtual_default(tns::Unfurled, ctx) = virtual_default(tns.arr, ctx)
 
-instantiate_reader(tns::Unfurled, ctx, protos...) = tns
-instantiate_updater(tns::Unfurled, ctx, protos...) = tns
+instantiate_reader(tns::Unfurled, ctx, protos) = tns
+instantiate_updater(tns::Unfurled, ctx, protos) = tns
 
 (ctx::Stylize{<:AbstractCompiler})(node::Unfurled) = ctx(node.body)
 function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::Unfurled)
@@ -97,8 +97,8 @@ visit_simplify(node::Unfurled) = Unfurled(node.arr, node.ndims, visit_simplify(n
     guard => Unfurled(node.arr, node.ndims, body)
 end
 
-function unfurl(tns::Unfurled, ctx, ext, protos...)
-    unfurl(tns.body, ctx, ext, protos...)
+function unfurl(tns::Unfurled, ctx, ext, mode, protos...)
+    unfurl(tns.body, ctx, ext, mode, protos...)
 end
 
 jumper_body(node::Unfurled, ctx, ext) = Unfurled(node.arr, node.ndims, jumper_body(node.body, ctx, ext))
@@ -110,6 +110,10 @@ function lower(node::Unfurled, ctx::AbstractCompiler, ::DefaultStyle)
 end
 
 getroot(tns::Unfurled) = getroot(tns.arr)
+
+is_injective(lvl::Unfurled, ctx) = is_injective(lvl.arr, ctx)
+is_concurrent(lvl::Unfurled, ctx) = is_concurrent(lvl.arr, ctx)
+is_atomic(lvl::Unfurled, ctx) = is_atomic(lvl.arr, ctx)
 
 function lower_access(ctx::AbstractCompiler, node, tns::Unfurled)
     if !isempty(node.idxs)
