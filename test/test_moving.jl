@@ -5,15 +5,25 @@
     
     struct ForceCopyArray{T, N} <: AbstractArray{T, N}
         data::Array{T, N}
-        function ForceCopyArray(arr:: AbstractArray{T, N}) where {T, N}
-            copied = copy(arr)
-            new{T, N}(arr)
+        function ForceCopyArray(arr:: AbstractArray{T, N}; override=false) where {T, N}
+            if ! override
+                copied = copy(arr)
+                new{T, N}(arr)
+            else
+                new{T, N}(arr)
+            end
         end
 
-        function ForceCopyArray{T, N}(arr:: AbstractArray{T, N}) where {T, N}
-            copied = copy(arr)
-            new{T, N}(arr)
+        function ForceCopyArray{T, N}(arr:: AbstractArray{T, N}; override=false) where {T, N}
+            if ! override
+                copied = copy(arr)
+                new{T, N}(arr)
+            else
+                new{T, N}(arr)
+            end
         end
+
+        
     end
 
 
@@ -25,6 +35,9 @@
     Base.size(A::ForceCopyArray{T, N}) where {T, N} = size(A.data)
     Base.firstindex(A::ForceCopyArray{T, N}) where {T, N} = Base.firstindex(A.data)
     Base.lastindex(A::ForceCopyArray{T, N}) where {T, N} = Base.lastindex(A.data)
+
+    Base.resize!(A::ForceCopyArray{T, N}, ts) where {T, N} = ForceCopyArray{T, N}(resize!(A.data, ts), override=true)
+    Base.resize!(A::NoCopyArray{T, N}, ts) where {T, N} = NoCopyArray{T, N}(resize!(A.data, ts))
 
     Base.size(A::NoCopyArray{T, N}) where {T, N} = size(A.data)
     Base.firstindex(A::NoCopyArray{T, N}) where {T, N} = Base.firstindex(A.data)
@@ -1051,4 +1064,132 @@
         
         @test check_output("format_moves_srl_e.txt", String(take!(io)))
     end
+
+    @testset "typicalAfterMove" begin
+        @info "Testing Typical Usage After Move"
+
+        let
+            io = IOBuffer()
+
+            @repl io Ap = Fiber!(SparseList(Element(0.0)), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
+            @repl io Bp = Fiber!(Dense(Element(0.0)), fill(1.1, 10))
+            @repl io A = moveto(Ap, ForceCopyArray)
+            @repl io B = moveto(Bp, ForceCopyArray)
+            @repl io @finch_code for i=_; B[i] += A[i] end
+            @repl io @finch for i=_; B[i] += A[i] end
+        
+            @test check_output("typical_inplace_sparse_add_move.txt", String(take!(io)))
+        end
+
+
+        let
+            io = IOBuffer()
+
+            @repl io Ap = Fiber!(Dense(SparseList(Element(0.0))), [0 0 3.3; 1.1 0 0; 2.2 0 4.4; 0 0 5.5])
+            @repl io yp = fiber!([1.0, 2.0, 3.0, 4.0])
+            @repl io xp = fiber!([1, 2, 3])
+            @repl io A = moveto(Ap, ForceCopyArray)
+            @repl io y = moveto(yp, ForceCopyArray)
+            @repl io x = moveto(xp, ForceCopyArray)
+
+            @repl io @finch_code begin
+                y .= 0
+                for j = _
+                    for i = _
+                        y[i] += A[i, j] * x[j]
+                    end
+                end
+            end
+            @repl io @finch begin
+                y .= 0
+                for j = _
+                    for i = _
+                        y[i] += A[i, j] * x[j]
+                    end
+                end
+            end
+        
+            @test check_output("typical_spmv_csc_move.txt", String(take!(io)))
+        end
+
+        # MArray{9}
+
+    #     let
+    #         io = IOBuffer()
+
+    #         @repl io A = Fiber!(Dense(SparseList(Element(0.0))), [0 0 3.3; 1.1 0 0; 2.2 0 4.4; 0 0 5.5])
+    #         @repl io B = Fiber!(SparseHash{2}(Element(0.0)))
+    #         @repl io @finch_code begin
+    #             B .= 0
+    #             for j = _
+    #                 for i = _
+    #                     B[j, i] = A[i, j]
+    #                 end
+    #             end
+    #         end
+    #         @repl io @finch begin
+    #             B .= 0
+    #             for j = _
+    #                 for i = _
+    #                     B[j, i] = A[i, j]
+    #                 end
+    #             end
+    #         end
+        
+    #         @test check_output("typical_transpose_csc_to_coo.txt", String(take!(io)))
+    #     end
+
+    #     let
+    #         x = Fiber(
+    #             SparseList{Int64, Int64}(
+    #                 Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0]),
+    #                 10, [1, 6], [1, 3, 5, 7, 9]))
+    #         y = Fiber(
+    #             SparseList{Int64, Int64}(
+    #                 Element{0.0}([1.0, 1.0, 1.0]),
+    #                 10, [1, 4], [2, 5, 8]))
+    #         z = Fiber(SparseList{Int64, Int64}(Element{0.0}(), 10))
+    
+    #         io = IOBuffer()
+
+    #         @repl io @finch_code (z .= 0; for i=_; z[i] = x[gallop(i)] + y[gallop(i)] end)
+    #         @repl io @finch (z .= 0; for i=_; z[i] = x[gallop(i)] + y[gallop(i)] end)
+
+    #         @test check_output("typical_merge_gallop.txt", String(take!(io)))
+
+    #         io = IOBuffer()
+
+    #         @repl io @finch_code (z .= 0; for i=_; z[i] = x[gallop(i)] + y[i] end)
+    #         @repl io @finch (z .= 0; for i=_; z[i] = x[gallop(i)] + y[i] end)
+
+    #         @test check_output("typical_merge_leadfollow.txt", String(take!(io)))
+
+    #         io = IOBuffer()
+
+    #         @repl io @finch_code (z .= 0; for i=_; z[i] = x[i] + y[i] end)
+    #         @repl io @finch (z .= 0; for i=_; z[i] = x[i] + y[i] end)
+
+    #         @test check_output("typical_merge_twofinger.txt", String(take!(io)))
+
+    #         io = IOBuffer()
+
+    #         @repl io X = Fiber!(SparseList(Element(0.0)), [1.0, 0.0, 0.0, 3.0, 0.0, 2.0, 0.0])
+    #         @repl io x_min = Scalar(Inf)
+    #         @repl io x_max = Scalar(-Inf)
+    #         @repl io x_sum = Scalar(0.0)
+    #         @repl io x_var = Scalar(0.0)
+    #         @repl io @finch_code begin
+    #             for i = _
+    #                 x = X[i]
+    #                 x_min[] <<min>>= x
+    #                 x_max[] <<max>>= x
+    #                 x_sum[] += x
+    #                 x_var[] += x * x
+    #             end
+    #         end
+
+    #         @test check_output("typical_stats_example.txt", String(take!(io)))
+    #     end
+    end
+        
 end
