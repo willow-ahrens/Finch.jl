@@ -119,7 +119,7 @@ is_level_concurrent(lvl::VirtualSparseByteMapLevel, ctx) = [is_level_concurrent(
 is_level_atomic(lvl::VirtualSparseByteMapLevel, ctx) = false
 
 function virtualize(ex, ::Type{SparseByteMapLevel{Ti, Tp, VTp, BV, VTpi, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, VTp, BV, VTpi, Lvl}
-    sym = ctx.freshen(tag)
+    sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Int)
     qos_fill = freshen(ctx, sym, :_qos_fill)
     qos_stop = freshen(ctx, sym, :_qos_stop)

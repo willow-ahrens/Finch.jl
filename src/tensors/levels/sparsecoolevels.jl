@@ -186,7 +186,7 @@ is_level_concurrent(lvl::VirtualSparseCOOLevel, ctx) = [is_level_concurrent(lvl.
 is_level_atomic(lvl::VirtualSparseCOOLevel, ctx) = false
 
 function virtualize(ex, ::Type{SparseCOOLevel{N, Ti, Tp, Tbl, VTp, Lvl}}, ctx, tag=:lvl) where {N, Ti, Tp, Tbl, VTp, Lvl}
-    sym = ctx.freshen(tag)
+    sym = freshen(ctx, tag)
     shape = map(n->value(:($sym.shape[$n]), Int), 1:N)
     qos_fill = freshen(ctx, sym, :_qos_fill)
     qos_stop = freshen(ctx, sym, :_qos_stop)

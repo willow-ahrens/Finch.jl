@@ -144,7 +144,7 @@ is_level_concurrent(::VirtualRepeatRLELevel, ctx) = [false]
 is_level_atomic(lvl::VirtualRepeatRLELevel, ctx) = false
 
 function virtualize(ex, ::Type{RepeatRLELevel{D, Ti, Tp, Tv, VTp, VTi, VTv}}, ctx, tag=:lvl) where {D, Ti, Tp, Tv, VTp, VTi, VTv}
-    sym = ctx.freshen(tag)
+    sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Int)
     ros_fill = freshen(ctx, sym, :_ros_fill)
     qos_stop = freshen(ctx, sym, :_qos_stop)

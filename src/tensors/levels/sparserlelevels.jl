@@ -114,10 +114,7 @@ function (fbr::SubFiber{<:SparseRLELevel})(idxs...)
     r1 != r2 ? default(fbr_2) : fbr_2(idxs[1:end-1]...)
 end
 
-  is_level_injective(lvl::VirtualSparseRLELevel, ctx) = [false, is_level_injective(lvl.lvl, ctx)...]
-is_level_concurrent(lvl::VirtualSparseRLELevel, ctx) = [false, is_level_concurrent(lvl.lvl, ctx)...]
-is_level_atomic(lvl::VirtualSparseRLELevel, ctx) = false
-  
+
 mutable struct VirtualSparseRLELevel <: AbstractVirtualLevel
     lvl
     ex
@@ -132,9 +129,14 @@ mutable struct VirtualSparseRLELevel <: AbstractVirtualLevel
     Lvl
     prev_pos
 end
+
+  is_level_injective(lvl::VirtualSparseRLELevel, ctx) = [false, is_level_injective(lvl.lvl, ctx)...]
+is_level_concurrent(lvl::VirtualSparseRLELevel, ctx) = [false, is_level_concurrent(lvl.lvl, ctx)...]
+is_level_atomic(lvl::VirtualSparseRLELevel, ctx) = false
   
+
 function virtualize(ex, ::Type{SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, VTp, VLTi, VRTi, Lvl}
-    sym = ctx.freshen(tag)
+    sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Int)
     qos_fill = freshen(ctx, sym, :_qos_fill)
     qos_stop = freshen(ctx, sym, :_qos_stop)

@@ -176,7 +176,7 @@ is_level_concurrent(lvl::VirtualSparseHashLevel, ctx) = [is_level_concurrent(lvl
 is_level_atomic(lvl::VirtualSparseHashLevel, ctx) = false
 
 function virtualize(ex, ::Type{SparseHashLevel{N, Ti, Tp, Tbl, VTp, VTpip, Lvl}}, ctx, tag=:lvl) where {N, Ti, Tp, Tbl, VTp, VTpip, Lvl}  
-    sym = ctx.freshen(tag)
+    sym = freshen(ctx, tag)
 
     shape = map(n->value(:($sym.shape[$n]), Int), 1:N)
     P = freshen(ctx, sym, :_P)
