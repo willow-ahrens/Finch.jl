@@ -51,8 +51,8 @@ end
 
 
 function moveto(lvl::ElementLevel{D, Ti, Tv, V},  ::Type{MemType}) where {D, Ti, Tv, V, MemType <: AbstractArray}
-    valp = MemType{Tv, 1}(lvl.val)
-    return ElementLevel{D, Ti, Tv, MemType{Tv, 1}}(valp)
+    valp = MemType(lvl.val)
+    return ElementLevel{D, Ti, Tv, typeof(valp)}(valp)
 end
 
 pattern!(lvl::ElementLevel{D, Ti, Tv, V}) where  {D, Ti, Tv, V} = Pattern{Ti, postype(ElementLevel{D, Ti, Tv, V}), containertype(V){Bool, 1}}()

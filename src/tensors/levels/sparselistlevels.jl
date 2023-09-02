@@ -33,7 +33,7 @@ SparseList (0.0) [:,1:3]
 
 ```
 """
-struct SparseListLevel{Ti, Tp, VTp<:AbstractVector, VTi<:AbstractVector, Lvl}
+struct SparseListLevel{Ti, Tp, VTp, VTi, Lvl}
     lvl::Lvl
     shape::Ti
     ptr::VTp
@@ -73,7 +73,7 @@ function moveto(lvl::SparseListLevel{Ti, Tp,  VTp, VTi, Lvl}, ::Type{MemType}) w
     lvl_2 = moveto(lvl.lvl, MemType)
     ptr_2 = MemType{Tp, 1}(lvl.ptr)
     idx_2 = MemType{Ti, 1}(lvl.idx)
-    return SparseListLevel{Ti, Tp, typeof(lvl_2), MemType{Ti, 1}, MemType{Tp, 1}}(lvl_2, lvl.shape, ptr_2, idx_2)
+    return SparseListLevel{Ti, Tp, typeof(ptr_2), typeof(idx_2), typeof(lvl_2)}(lvl_2, lvl.shape, ptr_2, idx_2)
 end
 
 

@@ -1,5 +1,5 @@
 @testset "constructors" begin
-    @info "Testing Fiber Constructors"
+    @info "Testing Fiber Movement"
 
     using Base.Meta
     
@@ -588,6 +588,6 @@
         @test isstructequal(fbr, Fiber!(SparseRLE(Element(0.0), Int16(0))))
         @test isstructequal(fbr, Fiber!(SparseRLE{Int16}(Element(0.0), 0)))
 
-        #@test check_output("format_constructors_srl_e.txt", String(take!(io)))
+        @test check_output("format_constructors_srl_e.txt", String(take!(io)))
     end
 end
