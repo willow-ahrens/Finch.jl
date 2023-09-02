@@ -44,7 +44,7 @@ using Finch: AsArray
         io = IOBuffer()
         println(io, "getindex tests")
 
-        A = Fiber(SparseList(Dense(SparseList(Element{0.0, Float64}(collect(1:30).* 1.01), 5, [1, 3, 6, 8, 12, 14, 17, 20, 24, 27, 27, 28, 31], [2, 3, 3, 4, 5, 2, 3, 1, 3, 4, 5, 2, 4, 2, 4, 5, 2, 3, 5, 1, 3, 4, 5, 2, 3, 4, 2, 1, 2, 3]), 3), 4, [1, 5], [1, 2, 3, 4]))
+        A = Fiber(SparseList(Dense(SparseList(Element{0.0, Int64, Float64}(collect(1:30).* 1.01), 5, [1, 3, 6, 8, 12, 14, 17, 20, 24, 27, 27, 28, 31], [2, 3, 3, 4, 5, 2, 3, 1, 3, 4, 5, 2, 4, 2, 4, 5, 2, 3, 5, 1, 3, 4, 5, 2, 3, 4, 2, 1, 2, 3]), 3), 4, [1, 5], [1, 2, 3, 4]))
 
         print(io, "A = ")
         show(io, MIME("text/plain"), A)

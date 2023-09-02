@@ -54,13 +54,14 @@ default(fbr::HollowData) = default(fbr.lvl)
 Base.ndims(fbr::HollowData) = ndims(fbr.lvl)
 
 """
-    ElementData(default, eltype)
+    ElementData(default, eltype, indextype)
     
-Represents a scalar element of type `eltype` and default `default`.
+Represents a scalar element of type `eltype` and default `default`. Tensors using this data should use `indextype` as the index.
 """
 struct ElementData
     default
     eltype
+    indextype
 end
 Finch.finch_leaf(x::ElementData) = virtual(x)
 default(fbr::ElementData) = fbr.default
@@ -88,9 +89,9 @@ Base.ndims(fbr::RepeatData) = 1
 Return a trait object representing everything that can be learned about the data
 based on the storage format (type) of the tensor
 """
-data_rep(tns) = (DenseData^(ndims(tns)))(ElementData(default(tns), eltype(tns)))
+data_rep(tns) = (DenseData^(ndims(tns)))(ElementData(default(tns), eltype(tns), Int64))
 
-data_rep(T::Type{<:Number}) = ElementData(zero(T), T)
+data_rep(T::Type{<:Number}) = ElementData(zero(T), T, Int64)
 
 """
     data_rep(tns)
@@ -129,7 +130,7 @@ fiber_ctr(fbr) = fiber_ctr(fbr, [nothing for _ in 1:ndims(fbr)])
 fiber_ctr(fbr::HollowData, protos) = fiber_ctr_hollow(fbr.lvl, protos)
 fiber_ctr_hollow(fbr::DenseData, protos) = :(Fiber!($(level_ctr(SparseData(fbr.lvl), protos...))))
 fiber_ctr_hollow(fbr::ExtrudeData, protos) = :(Fiber!($(level_ctr(SparseData(fbr.lvl), protos...))))
-fiber_ctr_hollow(fbr::RepeatData, protos) = :(Fiber!($(level_ctr(SparseData(ElementData(fbr.default, fbr.eltype)), protos...)))) #This is the best format we have for this case right now
+fiber_ctr_hollow(fbr::RepeatData, protos) = :(Fiber!($(level_ctr(SparseData(ElementData(fbr.default, fbr.eltype, Int)), protos...)))) #This is the best format we have for this case right now
 fiber_ctr_hollow(fbr::SparseData, protos) = :(Fiber!($(level_ctr(fbr, protos...))))
 fiber_ctr(fbr, protos) = :(Fiber!($(level_ctr(fbr, protos...))))
 
@@ -138,5 +139,5 @@ level_ctr(fbr::SparseData, proto::Union{typeof(laminate)}, protos...) = :(Sparse
 level_ctr(fbr::DenseData, proto, protos...) = :(Dense($(level_ctr(fbr.lvl, protos...))))
 level_ctr(fbr::ExtrudeData, proto, protos...) = :(Dense($(level_ctr(fbr.lvl, protos...)), 1))
 level_ctr(fbr::RepeatData, proto::Union{Nothing, typeof(walk), typeof(extrude)}) = :(Repeat{$(fbr.default), $(fbr.eltype)}())
-level_ctr(fbr::RepeatData, proto::Union{typeof(laminate)}) = level_ctr(DenseData(ElementData(fbr.default, fbr.eltype)), proto)
-level_ctr(fbr::ElementData) = :(Element{$(fbr.default), $(fbr.eltype)}())
+level_ctr(fbr::RepeatData, proto::Union{typeof(laminate)}) = level_ctr(DenseData(ElementData(fbr.default, fbr.eltype, Int)), proto)
+level_ctr(fbr::ElementData) = :(Element{$(fbr.default), $(fbr.eltype), $(fbr.indextype)}())

@@ -135,7 +135,7 @@ function lower(rep, ctx::PointwiseRep, ::Union{DefaultStyle, PointwiseElementSty
         (@rule access(~ex::isvirtual, ~m) => finch_leaf(default(ex.val))),
     ])))(rep), ctx.ctx)
     @assert isliteral(background)
-    return ElementData(background.val, typeof(background.val))
+    return ElementData(background.val, typeof(background.val), Int)
 end
 
 pointwise_rep_hollow(ex::HollowData) = literal(default(ex))

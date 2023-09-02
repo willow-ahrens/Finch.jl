@@ -21,9 +21,9 @@ getindex_rep_def(lvl::DenseData, idx, idxs...) = DenseData(getindex_rep_def(lvl.
 
 getindex_rep_def(lvl::ElementData) = lvl
 
-getindex_rep_def(lvl::RepeatData, idx::Drop) = SolidData(ElementData(lvl.default, lvl.eltype))
-getindex_rep_def(lvl::RepeatData, idx) = SolidData(ElementData(lvl.default, lvl.eltype))
-getindex_rep_def(lvl::RepeatData, idx::Type{<:AbstractUnitRange}) = SolidData(ElementData(lvl.default, lvl.eltype))
+getindex_rep_def(lvl::RepeatData, idx::Drop) = SolidData(ElementData(lvl.default, lvl.eltype, Int))
+getindex_rep_def(lvl::RepeatData, idx) = SolidData(ElementData(lvl.default, lvl.eltype, Int))
+getindex_rep_def(lvl::RepeatData, idx::Type{<:AbstractUnitRange}) = SolidData(ElementData(lvl.default, lvl.eltype, Int))
 
 Base.getindex(arr::Fiber, inds...) = getindex_helper(arr, to_indices(arr, inds)...)
 @staged function getindex_helper(arr, inds...)
