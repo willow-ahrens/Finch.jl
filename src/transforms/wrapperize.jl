@@ -21,7 +21,7 @@ function get_wrapper_rules(alg, depth, ctx)
             call(protocolize, A, protos_3...)
         end),
         (@rule call(protocolize, call(swizzle, ~A, ~sigma...), ~protos...) =>
-            call(swizzle, call(protocolize, A, protos[invperm(sigma)]...), sigma)),
+            call(swizzle, call(protocolize, A, protos[invperm(getval.(sigma))]...), sigma...)),
         (@rule access(~A, ~m, ~i1..., call($(~), ~j), ~i2...) => begin
             dims = ([false for _ in i1]..., true, [false for _ in i2]...)
             access(call(permissive, A, dims...), m, i1..., j, i2...)
@@ -29,7 +29,7 @@ function get_wrapper_rules(alg, depth, ctx)
         (@rule call(permissive, call(permissive, ~A, ~dims_1...), ~dims_2...) =>
             call(permissive, A, (dims_1 .| dims_2)...)),
         (@rule call(permissive, call(swizzle, ~A, ~sigma...), ~dims...) =>
-            call(swizzle, call(permissive, A, dims[invperm(sigma)]...), sigma)),
+            call(swizzle, call(permissive, A, dims[invperm(getval.(sigma))]...), sigma...)),
         (@rule access(~A, ~m, ~i1..., call(-, ~j, ~k), ~i2...) =>
             access(A, m, i1..., call(+, j, call(-, k)), i2...)),
         (@rule access(~A, ~m, ~i1..., call(+, ~j), ~i2...) =>
@@ -42,9 +42,10 @@ function get_wrapper_rules(alg, depth, ctx)
                 end
             end
         end),
-        (@rule call(toeplitz, call(swizzle, ~A, ~sigma), ~dim...) => begin
-            idim = invperm(sigma[dim])
-            call(swizzle, call(toeplitz, A, invperm(sigma)[dim]...), sigma[1:idim-1]..., sigma[idim], sigma[idim], sigma[idim+1:end])
+        (@rule call(toeplitz, call(swizzle, ~A, ~sigma...), ~dim...) => begin
+            sigma = getval.(sigma)
+            idim = invperm(sigma)[dim]
+            call(swizzle, call(toeplitz, A, idim), sigma[1:idim-1]..., sigma[idim], sigma[idim], sigma[idim+1:end]...)
         end),
         (@rule access(~A, ~m, ~i1..., call(+, ~j1..., ~k, ~j2...), ~i2...) => begin
             if !isempty(j1) || !isempty(j2) 
@@ -62,7 +63,7 @@ function get_wrapper_rules(alg, depth, ctx)
             call(offset, A, delta_3...)
         end),
         (@rule call(offset, call(swizzle, ~A, ~sigma...), ~delta...) =>
-            call(swizzle, call(offset, A, delta[invperm(sigma)]...), sigma)),
+            call(swizzle, call(offset, A, delta[invperm(getval.(sigma))]...), sigma...)),
         (@rule access(~A, ~m, ~i1..., access(call(extent, ~start, ~stop), reader(), ~k), ~i2...) => begin
             A_2 = call(window, A, [nothing for _ in i1]..., call(extent, start, stop), [nothing for _ in i2]...)
             A_3 = call(offset, A_2, [0 for _ in i1]..., call(-, start, 1), [0 for _ in i2]...)
@@ -77,9 +78,9 @@ function get_wrapper_rules(alg, depth, ctx)
             assign(access(a, updater(), i...), call(initwrite, call(default, a)), rhs)
         end),
         (@rule call(swizzle, call(swizzle, ~A, ~sigma_1...), ~sigma_2...) =>
-            call(swizzle, A, sigma_1[sigma_2]...)),
+            call(swizzle, A, sigma_1[getval.(sigma_2)]...)),
         (@rule access(call(swizzle, ~A, ~sigma...), ~m, ~i...) =>
-            access(A, m, i[sigma...]...)),
+            access(A, m, i[getval.(sigma)]...)),
         (@rule block(~s1..., define(~x, call(swizzle, ~A, ~sigma...), ~m, ~i...), ~s2...) => begin
             x_2 = variable(freshen(ctx.code, x))
             s2_2 = Rewrite(Postwalk(@rule x => swizzle(x, sigma...)))(block(s_2...))

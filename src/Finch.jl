@@ -36,6 +36,7 @@ export Pattern, PatternLevel
 export walk, gallop, follow, extrude, laminate
 export fiber, fiber!, Fiber!, pattern!, dropdefaults, dropdefaults!, redefault!
 export diagmask, lotrimask, uptrimask, bandmask
+export offset, permissive, protocolize, swizzle, toeplitz, window
 
 export choose, minby, maxby, overwrite, initwrite, d
 
