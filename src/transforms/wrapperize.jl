@@ -16,7 +16,7 @@ function get_wrapper_rules(alg, depth, ctx)
         end),
         (@rule call(protocolize, call(protocolize, ~A, ~protos_1...), ~protos_2...) => begin
             protos_3 = map(protos_1, protos_2) do proto_1, proto_2
-                something(protos_1, protos_2, Some(nothing)) 
+                something(proto_1, proto_2, Some(nothing)) 
             end
             call(protocolize, A, protos_3...)
         end),
