@@ -138,4 +138,66 @@
         @test check_output("chunkmask.txt", String(take!(io)))
     end
 
+    let
+        #=
+            function wrapper_result(inst)
+                ctx = Finch.LowerJulia()
+                prgm = Finch.virtualize(:inst, typeof(inst), ctx.code)
+                prgm = Finch.evaluate_partial(prgm, ctx)
+                Finch.wrapperize(prgm, ctx)
+            end
+        =#
+
+        x = Scalar(0.0)
+        A = Fiber!(Dense(Dense(Dense(Element(0.0)))), 
+        [1 3 5; 2 4 6;;; 7 9 11; 8 10 12;;; 13 15 17; 14 16 18;;; 19 21 23; 20 22 24])
+        @finch begin
+            x .= 0
+            for i = _
+                for j = _
+                    for k = _
+                        x[] += swizzle(A, 3, 2, 1)[i, j, k]
+                    end
+                end
+            end
+        end
+
+        @test x[] == (24 + 1)*24/2
+
+        @test check_output("swizzle_1.txt", @finch_code begin
+            for i = _
+                for j = _
+                    for k = _
+                        x[] += swizzle(A, 3, 2, 1)[k, j, i]
+                    end
+                end
+            end
+        end)
+
+        x = Scalar(0.0)
+        A = swizzle(Fiber!(Dense(Dense(Dense(Element(0.0)))), 
+        [1 3 5; 2 4 6;;; 7 9 11; 8 10 12;;; 13 15 17; 14 16 18;;; 19 21 23; 20 22 24]), 3, 2, 1)
+        @finch begin
+            x .= 0
+            for i = _
+                for j = _
+                    for k = _
+                        x[] += A[i, j, k]
+                    end
+                end
+            end
+        end
+
+        @test x[] == (24 + 1)*24/2
+
+        @test check_output("swizzle_2.txt", @finch_code begin
+            for i = _
+                for j = _
+                    for k = _
+                        x[] += A[k, j, i]
+                    end
+                end
+            end
+        end)
+    end
 end

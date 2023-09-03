@@ -81,9 +81,9 @@ function get_wrapper_rules(alg, depth, ctx)
             call(swizzle, A, sigma_1[getval.(sigma_2)]...)),
         (@rule access(call(swizzle, ~A, ~sigma...), ~m, ~i...) =>
             access(A, m, i[getval.(sigma)]...)),
-        (@rule block(~s1..., define(~x, call(swizzle, ~A, ~sigma...), ~m, ~i...), ~s2...) => begin
+        (@rule block(~s1..., define(~x, call(swizzle, ~A, ~sigma...)), ~s2...) => begin
             x_2 = variable(freshen(ctx.code, x))
-            s2_2 = Rewrite(Postwalk(@rule x => swizzle(x, sigma...)))(block(s_2...))
+            s2_2 = Rewrite(Postwalk(@rule x => call(swizzle, x, sigma...)))(block(s2...))
             block(s1..., define(x, A), s2_2)
         end),
     ]
