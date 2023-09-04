@@ -126,7 +126,7 @@ function virtual_call(::typeof(parallel), ctx, arg)
     end
 end
 
-virtual_uncall(ext::ParallelDimension) = call(parallel, ext)
+virtual_uncall(ext::ParallelDimension) = call(parallel, ext.ext)
 
 FinchNotation.finch_leaf(x::ParallelDimension) = virtual(x)
 

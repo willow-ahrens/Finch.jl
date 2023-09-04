@@ -93,11 +93,11 @@ end
 lower the program `prgm` at global scope in the context `ctx`.
 """
 function lower_global(prgm, ctx)
+    prgm = enforce_scopes(prgm)
     prgm = evaluate_partial(prgm, ctx)
     code = contain(ctx) do ctx_2
         quote
             $(begin
-                prgm = enforce_scopes(prgm)
                 prgm = wrapperize(prgm, ctx_2)
                 prgm = enforce_lifecycles(prgm)
                 prgm = dimensionalize!(prgm, ctx_2)
@@ -111,11 +111,11 @@ function lower_global(prgm, ctx)
             end)
             $(begin
                 res = contain(ctx_2) do ctx_3
-                    :(($(map(getresults(prgm)) do tns
+                    :((; $(map(getresults(prgm)) do tns
                         @assert tns.kind === variable
                         name = tns.name
                         tns = trim!(resolve(tns, ctx_2), ctx_3)
-                        :($name = $(ctx_3(tns)))
+                        Expr(:kw, name, ctx_3(tns))
                     end...), ))
                 end
                 res
