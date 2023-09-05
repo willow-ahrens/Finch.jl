@@ -215,13 +215,8 @@ begin
             while i <= phase_stop_19
                 B_lvl_i = B_lvl.idx[B_lvl_q]
                 phase_stop_20 = min(10 + B_lvl_i, phase_stop_19)
-<<<<<<< HEAD
-                if B_lvl_i == phase_stop_20 + +(-10)
-                    B_lvl_2_val_5 = B_lvl_2.val[B_lvl_q]
-=======
                 if B_lvl_i == phase_stop_20 + -10
-                    B_lvl_2_val_4 = B_lvl_2.val[B_lvl_q]
->>>>>>> main
+                    B_lvl_2_val_5 = B_lvl_2.val[B_lvl_q]
                     if C_lvl_qos > C_lvl_qos_stop
                         C_lvl_qos_stop = max(C_lvl_qos_stop << 1, 1)
                         Finch.resize_if_smaller!(C_lvl.idx, C_lvl_qos_stop)
