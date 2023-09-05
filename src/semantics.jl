@@ -4,7 +4,7 @@
 Declare the read-only virtual tensor `tns` in the context `ctx` with a starting value of `init` and return it.
 Afterwards the tensor is update-only.
 """
-declare!(tns, ctx, init) = @assert something(virtual_default(tns, ctx)) == init
+declare!(tns, ctx, init) = @assert virtual_default(tns, ctx) == init
 
 """
     instantiate_reader(tns, ctx, protos)

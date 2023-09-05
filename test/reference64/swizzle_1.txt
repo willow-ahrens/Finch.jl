@@ -1,0 +1,20 @@
+begin
+    x = ex.body.body.body.lhs.tns.bind
+    x_val = x.val
+    A_lvl = (ex.body.body.body.rhs.tns.args[1]).bind.lvl
+    A_lvl_2 = A_lvl.lvl
+    A_lvl_3 = A_lvl_2.lvl
+    A_lvl_4 = A_lvl_3.lvl
+    for i_3 = 1:A_lvl_3.shape
+        for j_3 = 1:A_lvl_2.shape
+            for k_3 = 1:A_lvl.shape
+                A_lvl_q = (1 - 1) * A_lvl.shape + k_3
+                A_lvl_2_q = (A_lvl_q - 1) * A_lvl_2.shape + j_3
+                A_lvl_3_q = (A_lvl_2_q - 1) * A_lvl_3.shape + i_3
+                A_lvl_4_val_2 = A_lvl_4.val[A_lvl_3_q]
+                x_val = A_lvl_4_val_2 + x_val
+            end
+        end
+    end
+    (x = (Scalar){0.0, Float64}(x_val),)
+end

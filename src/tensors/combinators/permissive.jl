@@ -40,6 +40,8 @@ function virtual_call(::typeof(permissive), ctx, body, dims...)
     VirtualPermissiveArray(body, map(dim -> dim.val, dims))
 end
 
+virtual_uncall(arr::VirtualPermissiveArray) = call(permissive, arr.body, arr.dims...)
+
 lower(tns::VirtualPermissiveArray, ctx::AbstractCompiler, ::DefaultStyle) = :(PermissiveArray($(ctx(tns.body)), $(tns.dims)))
 
 function virtual_size(arr::VirtualPermissiveArray, ctx::AbstractCompiler)

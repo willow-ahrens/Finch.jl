@@ -3,13 +3,14 @@
     
     using StatsBase
     using Random
+    using StableRNGs
 
     Shape = 100 #1000
     NumItvl = 10 #100 
 
     # Generating Random Intervals
-    v = sort(sample(MersenneTwister(1234), 1:Shape, NumItvl*2, replace=false))
-    w = sort(sample(MersenneTwister(4321), 1:Shape, NumItvl*2, replace=false))
+    v = sort(sample(StableRNG(1234), 1:Shape, NumItvl*2, replace=false))
+    w = sort(sample(StableRNG(4321), 1:Shape, NumItvl*2, replace=false))
     s1, e1 = v[begin:2:end], v[begin+1:2:end]
     s2, e2 = w[begin:2:end], w[begin+1:2:end]
 
@@ -71,8 +72,8 @@
 
     let
         colptr = [1+NumItvl*i for i in 0:NumItvl]
-        endpoint1 = vcat([sort(sample(MersenneTwister(i), 1:Shape, NumItvl*2, replace=false)) for i in 1:NumItvl]...)
-        endpoint2 = vcat([sort(sample(MersenneTwister(i+NumItvl), 1:Shape, NumItvl*2, replace=false)) for i in 1:NumItvl]...)
+        endpoint1 = vcat([sort(sample(StableRNG(i), 1:Shape, NumItvl*2, replace=false)) for i in 1:NumItvl]...)
+        endpoint2 = vcat([sort(sample(StableRNG(i+NumItvl), 1:Shape, NumItvl*2, replace=false)) for i in 1:NumItvl]...)
         col_s1, col_e1 = endpoint1[begin:2:end], endpoint1[begin+1:2:end]
         col_s2, col_e2 = endpoint2[begin:2:end], endpoint2[begin+1:2:end]
 
@@ -116,7 +117,7 @@
 
     let
         colptr = [1+NumItvl*i for i in 0:NumItvl]
-        endpoint1 = vcat([sort(sample(MersenneTwister(i), 1:Shape, NumItvl*2, replace=false)) for i in 1:NumItvl]...)
+        endpoint1 = vcat([sort(sample(StableRNG(i), 1:Shape, NumItvl*2, replace=false)) for i in 1:NumItvl]...)
         col_s1, col_e1 = endpoint1[begin:2:end], endpoint1[begin+1:2:end]
 
         x1 = Fiber(SparseList{Float32}(SparseRLE{Float32}(Element{0}(fill(1, NumItvl*NumItvl)), Shape, colptr, col_s1, col_e1), Shape, [1, NumItvl+1], e1))
