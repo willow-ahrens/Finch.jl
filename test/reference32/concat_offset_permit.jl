@@ -216,14 +216,14 @@ begin
                 B_lvl_i = B_lvl.idx[B_lvl_q]
                 phase_stop_20 = min(10 + B_lvl_i, phase_stop_19)
                 if B_lvl_i == phase_stop_20 + +(-10)
-                    B_lvl_2_val_4 = B_lvl_2.val[B_lvl_q]
+                    B_lvl_2_val_5 = B_lvl_2.val[B_lvl_q]
                     if C_lvl_qos > C_lvl_qos_stop
                         C_lvl_qos_stop = max(C_lvl_qos_stop << 1, 1)
                         Finch.resize_if_smaller!(C_lvl.idx, C_lvl_qos_stop)
                         Finch.resize_if_smaller!(C_lvl_2.val, C_lvl_qos_stop)
                         Finch.fill_range!(C_lvl_2.val, 0.0, C_lvl_qos, C_lvl_qos_stop)
                     end
-                    C_lvl_2.val[C_lvl_qos] = B_lvl_2_val_4
+                    C_lvl_2.val[C_lvl_qos] = B_lvl_2_val_5
                     C_lvl.idx[C_lvl_qos] = phase_stop_20
                     C_lvl_qos += 1
                     B_lvl_q += 1
