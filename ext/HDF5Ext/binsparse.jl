@@ -32,6 +32,124 @@ bsread_type_lookup = Dict(
     "bint8" => Bool,
 )
 
+bswrite_format_lookup = Dict(
+    "CSR" => Dict(
+        "swizzle" => [1, 2],
+        "level" => Dict(
+            "level" => "dense",
+            "rank" => 1,
+            "subformat" => Dict(
+                "level" => "sparse",
+                "rank" => 1,
+                "subformat" => Dict(
+                    "level" => "element",
+                    "fill_value" => [0]
+                )
+            )
+        )
+    ),
+
+    "CSC" => Dict(
+        "swizzle" => [2, 1],
+        "level" => Dict(
+            "level" => "dense",
+            "rank" => 1,
+            "subformat" => Dict(
+                "level" => "sparse",
+                "rank" => 1,
+                "subformat" => Dict(
+                    "level" => "element",
+                    "fill_value" => [0]
+                )
+            )
+        )
+    ),
+
+    "DCSR" => Dict(
+        "swizzle" => [1, 2],
+        "level" => Dict(
+            "level" => "sparse",
+            "rank" => 1,
+            "subformat" => Dict(
+                "level" => "sparse",
+                "rank" => 1,
+                "subformat" => Dict(
+                    "level" => "element",
+                    "fill_value" => [0]
+                )
+            )
+        )
+    ),
+
+    "DCSC" => Dict(
+        "swizzle" => [2, 1],
+        "level" => Dict(
+            "level" => "sparse",
+            "rank" => 1,
+            "subformat" => Dict(
+                "level" => "sparse",
+                "rank" => 1,
+                "subformat" => Dict(
+                    "level" => "element",
+                    "fill_value" => [0]
+                )
+            )
+        )
+    ),
+
+    "COO" => Dict(
+        "swizzle" => [1, 2],
+        "level" => Dict(
+            "level" => "sparse",
+            "rank" => 2,
+            "subformat" => Dict(
+                "level" => "element",
+                "fill_value" => [0]
+            )
+        )
+    ),
+
+    "DMAT" => Dict(
+        "swizzle" => [1, 2],
+        "level" => Dict(
+            "level" => "dense",
+            "rank" => 1,
+            "subformat" => Dict(
+                "level" => "dense",
+                "rank" => 1,
+                "subformat" => Dict(
+                    "level" => "element",
+                    "fill_value" => [0]
+                )
+            )
+        )
+    ),
+
+    "DVEC" => Dict(
+        "swizzle" => [1],
+        "level" => Dict(
+            "level" => "dense",
+            "rank" => 1,
+            "subformat" => Dict(
+                "level" => "element",
+                "fill_value" => [0]
+            )
+        )
+    ),
+
+    "VEC" => Dict(
+        "swizzle" => [1],
+        "level" => Dict(
+            "level" => "sparse",
+            "rank" => 1,
+            "subformat" => Dict(
+                "level" => "element",
+                "fill_value" => [0]
+            )
+        )
+    )
+)
+
 function bswrite_data(f, desc, key, data)
     T = get(bswrite_cast_lookup, eltype(data), eltype(data))
     desc["data_types"]["$(key)_type"] = bswrite_type_lookup[eltype(data)]
