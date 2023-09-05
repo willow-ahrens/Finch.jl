@@ -42,6 +42,7 @@ function virtual_call(::typeof(protocolize), ctx, body, protos...)
     @assert All(isliteral)(protos)
     VirtualProtocolizedArray(body, map(proto -> proto.val, protos))
 end
+virtual_uncall(arr::VirtualProtocolizedArray) = call(protocolize, arr.body, arr.protos...)
 
 function lower(tns::VirtualProtocolizedArray, ctx::AbstractCompiler, ::DefaultStyle)
     error()

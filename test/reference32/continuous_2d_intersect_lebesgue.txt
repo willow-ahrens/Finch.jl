@@ -102,5 +102,5 @@ julia> @finch begin
             s[] += (x[j, i] * y[j, i]) * d(i, j)
         end
     end
-(s = Scalar{0, Int32}(697),)
+(s = Scalar{0, Int32}(630),)
 

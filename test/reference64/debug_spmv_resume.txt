@@ -19,7 +19,7 @@ Any[quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -41,7 +41,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -63,7 +63,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -85,7 +85,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -107,7 +107,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -129,7 +129,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -151,7 +151,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -173,7 +173,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -195,7 +195,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -216,7 +216,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -239,7 +239,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -262,7 +262,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -294,7 +294,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -326,7 +326,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -358,7 +358,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -398,7 +398,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -438,7 +438,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -482,7 +482,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -526,7 +526,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -570,7 +570,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -614,7 +614,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -658,7 +658,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -705,7 +705,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -752,7 +752,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -799,7 +799,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -848,7 +848,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -905,7 +905,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -962,7 +962,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -1019,7 +1019,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -1076,7 +1076,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -1133,7 +1133,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -1192,7 +1192,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -1258,7 +1258,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -1324,7 +1324,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -1390,7 +1390,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -1455,7 +1455,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -1514,7 +1514,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -1573,7 +1573,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -1632,7 +1632,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -1694,7 +1694,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -1756,7 +1756,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -1821,7 +1821,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -1886,7 +1886,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -1951,7 +1951,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -2017,7 +2017,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -2083,7 +2083,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -2149,7 +2149,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -2215,7 +2215,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -2281,7 +2281,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -2358,7 +2358,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -2435,7 +2435,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -2512,7 +2512,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -2597,7 +2597,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -2682,7 +2682,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -2771,7 +2771,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -2860,7 +2860,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -2949,7 +2949,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -3038,7 +3038,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -3127,7 +3127,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -3219,7 +3219,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -3311,7 +3311,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -3403,7 +3403,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -3497,7 +3497,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -3599,7 +3599,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -3701,7 +3701,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -3803,7 +3803,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -3905,7 +3905,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -4007,7 +4007,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -4111,7 +4111,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -4222,7 +4222,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -4333,7 +4333,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -4444,7 +4444,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -4554,7 +4554,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -4658,7 +4658,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -4762,7 +4762,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -4866,7 +4866,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -4973,7 +4973,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -5080,7 +5080,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -5188,7 +5188,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -5296,7 +5296,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -5404,7 +5404,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -5513,7 +5513,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -5622,7 +5622,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -5731,7 +5731,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -5840,7 +5840,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -5947,7 +5947,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -6054,7 +6054,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -6161,7 +6161,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -6268,7 +6268,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -6375,7 +6375,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -6482,7 +6482,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -6589,7 +6589,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -6696,7 +6696,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -6803,7 +6803,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -6910,7 +6910,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -7017,7 +7017,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -7124,7 +7124,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -7231,7 +7231,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -7337,7 +7337,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -7439,7 +7439,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -7541,7 +7541,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -7643,7 +7643,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -7745,7 +7745,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -7847,7 +7847,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -7949,7 +7949,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -8051,7 +8051,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -8157,7 +8157,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -8263,7 +8263,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -8369,7 +8369,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -8475,7 +8475,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -8581,7 +8581,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -8687,7 +8687,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -8793,7 +8793,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -8898,7 +8898,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -8999,7 +8999,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -9100,7 +9100,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -9201,7 +9201,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -9302,7 +9302,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -9403,7 +9403,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -9504,7 +9504,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -9604,7 +9604,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -9700,7 +9700,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -9796,7 +9796,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -9892,7 +9892,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -9988,7 +9988,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -10084,7 +10084,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -10180,7 +10180,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -10276,7 +10276,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -10376,7 +10376,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -10476,7 +10476,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -10576,7 +10576,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -10676,7 +10676,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -10776,7 +10776,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -10876,7 +10876,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -10976,7 +10976,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -11075,7 +11075,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -11170,7 +11170,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -11265,7 +11265,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -11360,7 +11360,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -11455,7 +11455,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -11549,7 +11549,7 @@ end, quote
     end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -11639,7 +11639,7 @@ end, quote
         end
     qos = @finch{#0,lower.jl:81}(1) * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -11729,7 +11729,7 @@ end, quote
         end
     qos = 1 * @finch{#0,lower.jl:81}(y_lvl.shape::Int64)
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -11819,7 +11819,7 @@ end, quote
         end
     qos = 1 * y_lvl.shape
     resize!(y_lvl_2.val, @finch{#0,lower.jl:81}(qos))
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -11909,7 +11909,7 @@ end, quote
         end
     qos = 1 * y_lvl.shape
     resize!(y_lvl_2.val, qos)
-    (y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = @finch{#0,fibers.jl:35}(Finch.VirtualFiber{Finch.VirtualDenseLevel}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -11999,7 +11999,7 @@ end, quote
         end
     qos = 1 * y_lvl.shape
     resize!(y_lvl_2.val, qos)
-    (y = Fiber(@finch{#0,denselevels.jl:110}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))),)
+    (; y = Fiber(@finch{#0,denselevels.jl:110}(Finch.VirtualDenseLevel(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0), :y_lvl, Int64, value(y_lvl.shape, Int64)))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -12089,7 +12089,7 @@ end, quote
         end
     qos = 1 * y_lvl.shape
     resize!(y_lvl_2.val, qos)
-    (y = Fiber((DenseLevel){Int64}(@finch{#0,elementlevels.jl:81}(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0)), @finch{#0,lower.jl:81}(y_lvl.shape::Int64))),)
+    (; y = Fiber((DenseLevel){Int64}(@finch{#0,elementlevels.jl:81}(Finch.VirtualElementLevel(:y_lvl_2, Float64, 0.0)), @finch{#0,lower.jl:81}(y_lvl.shape::Int64))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -12179,7 +12179,7 @@ end, quote
         end
     qos = 1 * y_lvl.shape
     resize!(y_lvl_2.val, qos)
-    (y = Fiber((DenseLevel){Int64}(y_lvl_2, @finch{#0,lower.jl:81}(y_lvl.shape::Int64))),)
+    (; y = Fiber((DenseLevel){Int64}(y_lvl_2, @finch{#0,lower.jl:81}(y_lvl.shape::Int64))))
 end, quote
     y_lvl = ex.body.body.lhs.tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
@@ -12269,5 +12269,5 @@ end, quote
         end
     qos = 1 * y_lvl.shape
     resize!(y_lvl_2.val, qos)
-    (y = Fiber((DenseLevel){Int64}(y_lvl_2, y_lvl.shape)),)
+    (; y = Fiber((DenseLevel){Int64}(y_lvl_2, y_lvl.shape)))
 end]
