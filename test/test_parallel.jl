@@ -4,10 +4,19 @@
 
     let
         io = IOBuffer()
-        A = Fiber!(Dense(SparseList(Element(0.0))))
-        x = Fiber!(Dense(Element(0.0)))
+        A = Fiber!(Dense(SparseList(Element(0.0))), [1 2; 3 4])
+        x = Fiber!(Dense(Element(0.0)), [1, 1])
         y = Fiber!(Dense(Element(0.0)))
         @repl io @finch_code begin
+            y .= 0
+            for j = parallel(_)
+                for i = _
+                    y[j] += x[i] * A[walk(i), j]
+                end
+            end
+        end
+
+        @repl io @finch begin
             y .= 0
             for j = parallel(_)
                 for i = _
