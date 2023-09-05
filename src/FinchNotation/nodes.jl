@@ -540,7 +540,7 @@ function display_expression(io, mime, node::FinchNode)
         print(io, "tag(")
         display_expression(io, mime, node.var)
         print(io, ", ")
-        display_expression(io, mime, node.val)
+        display_expression(io, mime, node.bind)
         print(io, ")")
     elseif node.kind === virtual
         print(io, "virtual(")
