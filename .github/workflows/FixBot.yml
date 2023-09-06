@@ -16,7 +16,7 @@ permissions:
   statuses: read
 jobs:
   FixBot:
-    name: Fix Test Output Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
     if: github.event_name == 'workflow_dispatch'
     runs-on: ${{ matrix.os }}
     needs: []
