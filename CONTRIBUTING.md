@@ -72,6 +72,15 @@ test suites by specifying them as positional arguments, e.g.
 
 This information is summarized with `./tests/runtests.jl --help`
 
+## Benchmarking
+
+The Finch test suite includes a benchmarking script that measures Finch
+performance on a variety of kernels. It also includes some scripts to help
+compare Finch performance on the feature branch to the main branch. To run the
+benchmarking script, run `./benchmarks/runbenchmarks.jl`. To run the comparison
+script, run `./benchmarks/runjudge.jl`. Both scripts take a while to run and
+generate a report at the end.
+
 ## Documentation
 
 The `/docs` directory includes Finch documentation in `/src`, and a built
