@@ -25,9 +25,11 @@ jobs:
       matrix: # hello world
         version:
           - 'release'
-        os-arch:
-          - {os: ubuntu-latest, arch: x64}
-          - {os: windows-latest, arch: x86}
+        include:
+          - os: ubuntu-latest
+            arch: x64
+          - os: windows-latest
+            arch: x86
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@v1
