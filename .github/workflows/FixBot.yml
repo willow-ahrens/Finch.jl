@@ -42,7 +42,7 @@ jobs:
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
-      - uses: actions/cache@v1
+      - uses: actions/cache@v3
         env:
           cache-name: cache-artifacts
         with:
@@ -52,17 +52,18 @@ jobs:
             ${{ runner.os }}-test-${{ env.cache-name }}-
             ${{ runner.os }}-test-
             ${{ runner.os }}-
-      #- uses: julia-actions/julia-buildpkg@v1
-      #- uses: julia-actions/julia-runtest@v1
-      #  with:
-      #    flags: "--overwrite"
-      - name: Make changes
+      - uses: julia-actions/julia-buildpkg@v1
+      - name: Run tests
         run: |
-          touch foo${{runner.os}}.txt
+          julia -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd()))'
+          julia --color=yes test/runtests.jl --overwrite
+  
       - name: Commit changes
         run: |
           git config --global user.email "robot@server"
           git config --global user.name "Robot"
+          git config pull.rebase false  # merge
           git add .
           git commit -m "Regenerate test output"
+          git pull
           git push
