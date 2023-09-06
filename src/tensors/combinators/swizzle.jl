@@ -5,6 +5,8 @@ end
 SwizzleArray(body, dims) = SwizzleArray{dims}(body)
 SwizzleArray{dims}(body::Body) where {dims, Body} = SwizzleArray{dims, Body}(body)
 
+Base.size(arr::SwizzleArray{dims}) where {dims} = map(n->size(arr.body)[n], dims)
+
 Base.show(io::IO, ex::SwizzleArray) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::SwizzleArray{dims}) where {dims}
 	print(io, "SwizzleArray($(ex.body), $dims)")

@@ -1,4 +1,4 @@
-using Finch: level_ndims
+using Finch: level_ndims, SwizzleArray
 using CIndices
 
 bswrite_type_lookup = Dict(
@@ -168,19 +168,19 @@ function bsread_data(f, desc, key)
 end
 
 Finch.bswrite(fname, fbr::Fiber, attrs = Dict()) = 
-    bswrite(fname, swizzle(fbr, 1:ndims(fbr)), attrs)
-function Finch.bswrite(fname, fbr::SwizzledArray{Fiber, dims}, attrs = Dict()) where {dims}
+    bswrite(fname, swizzle(fbr, (1:ndims(fbr)...)), attrs)
+function Finch.bswrite(fname, arr::SwizzleArray{dims, <:Fiber}, attrs = Dict()) where {dims}
     h5open(fname, "w") do f
         desc = Dict(
             "format" => Dict(),
             "fill" => true,
             "swizzle" => reverse(collect(dims)),
-            "shape" => size(fbr),
+            "shape" => map(Int, size(arr)),
             "data_types" => Dict(),
             "attrs" => attrs,
         )
-        bswrite_level(f, desc, desc["format"], fbr.lvl)
-        desc["format"] = get(bswrite_format_lookup, (desc["format"], desc["format"]))
+        bswrite_level(f, desc, desc["format"], arr.body.lvl)
+        desc["format"] = get(bswrite_format_lookup, desc["format"], desc["format"])
         f["binsparse"] = json(desc, 4)
     end
     fname
