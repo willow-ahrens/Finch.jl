@@ -1,0 +1,68 @@
+name: FixBot
+on:
+  workflow_dispatch:
+permissions:
+  actions: read
+  checks: read
+  contents: write
+  deployments: read
+  issues: read
+  discussions: read
+  packages: read
+  pages: read
+  pull-requests: read
+  repository-projects: read
+  security-events: read
+  statuses: read
+jobs:
+  FixBot:
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ${{ matrix.os }}
+    needs: []
+    strategy:
+      fail-fast: false
+      matrix: # hello world
+        version:
+          - '1.6.7'
+        os:
+          - ubuntu-latest
+          - windows-latest
+        arch:
+          - x64
+          - x86
+        exclude:
+          - os: ubuntu-latest
+            arch: x86
+          - os: windows-latest
+            arch: x64
+    steps:
+      - uses: actions/checkout@v3
+      - uses: julia-actions/setup-julia@v1
+        with:
+          version: ${{ matrix.version }}
+          arch: ${{ matrix.arch }}
+      - uses: actions/cache@v1
+        env:
+          cache-name: cache-artifacts
+        with:
+          path: ~/.julia/artifacts
+          key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/Project.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-test-${{ env.cache-name }}-
+            ${{ runner.os }}-test-
+            ${{ runner.os }}-
+      #- uses: julia-actions/julia-buildpkg@v1
+      #- uses: julia-actions/julia-runtest@v1
+      #  with:
+      #    flags: "--overwrite"
+      - name: Make changes
+        run: |
+          touch foo${{runner.os}}.txt
+      - name: Commit changes
+        run: |
+          git config --global user.email "robot@server"
+          git config --global user.name "Robot"
+          git add .
+          git commit -m "Regenerate test output"
+          git push
