@@ -31,11 +31,11 @@ jobs:
         arch:
           - x64
           - x86
-        include:
+        exclude:
           - os: ubuntu-latest
-            arch: x64
-          - os: windows-latest
             arch: x86
+          - os: windows-latest
+            arch: x64
     steps:
       - uses: actions/checkout@v3
       - uses: julia-actions/setup-julia@v1
