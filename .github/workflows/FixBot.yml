@@ -60,6 +60,7 @@ jobs:
         run: |
           git config --global user.email "robot@server"
           git config --global user.name "Robot"
+          git config pull.rebase false  # merge
           git add .
           git commit -m "Regenerate test output"
           git pull
