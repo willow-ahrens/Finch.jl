@@ -51,7 +51,8 @@ end
 end
 
 function data_rep(bc::Type{<:Broadcast.Broadcasted{Style, Axes, Callable{f}, Args}}) where {Style, f, Axes, Args}
-    broadcast_rep(f, map(Arg -> pad_data_rep(data_rep(Arg), ndims(bc)), Args.parameters))
+    args = map(data_rep, Args.parameters)
+    broadcast_rep(f, map(arg -> pad_data_rep(arg, maximum(ndims, args)), args))
 end
 
 pad_data_rep(rep, n) = ndims(rep) < n ? pad_data_rep(ExtrudeData(rep), n) : rep
