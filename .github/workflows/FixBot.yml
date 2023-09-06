@@ -25,6 +25,12 @@ jobs:
       matrix: # hello world
         version:
           - '1.6.7'
+        os:
+          - ubuntu-latest
+          - windows-latest
+        arch:
+          - x64
+          - x86
         include:
           - os: ubuntu-latest
             arch: x64
