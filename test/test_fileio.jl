@@ -32,7 +32,7 @@ using Pkg
             bswrite(A_dense_fname, A_dense)
             
             A_dense_test = bsread(A_dense_fname)
-            @test isstructequal(A_dense_test, A_dense)
+                        @test isstructequal(A_dense_test, A_dense)
 
             A_CSC = Fiber!(Dense{CIndex{Int}}(SparseList{CIndex{Int}, CIndex{Int}}(Element(0.0))), A)
             A_CSC_fname = joinpath(f, "A_CSC.bs")
@@ -44,6 +44,8 @@ using Pkg
             A_COO_fname = joinpath(f, "A_COO.bs")
             bswrite(A_COO_fname, A_COO)
             A_COO_test = bsread(A_COO_fname)
+            println(A_COO_test)
+            println(A_COO)
             @test isstructequal(A_COO_test, A_COO)
         end
     end

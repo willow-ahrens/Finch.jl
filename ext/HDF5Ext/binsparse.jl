@@ -193,6 +193,7 @@ function Finch.bsread(fname)
         if !issorted(reverse(desc["swizzle"]))
             fbr = swizzle(fbr, reverse(desc["swizzle"]))
         end
+        fbr
     end
 end
 bsread_level(f, desc, fmt) = bsread_level(f, desc, fmt, Val(Symbol(fmt["level"])))
@@ -260,10 +261,11 @@ function bsread_level(f, desc, fmt, ::Val{:sparse})
         indices_zero_to_one(bsread_data(f, desc, "indices_$(N - n + r - 1)"))
     end...,)
     if N - n > 0
-        ptr = indices_zero_to_one(bsread_data(f, desc, "pointers_to_$(N - n)"))
+        ptr = bsread_data(f, desc, "pointers_to_$(N - n)")
     else
-        ptr = [1, length(tbl[1]) + 1]
+        ptr = [0, length(tbl[1])]
     end
+    ptr = indices_zero_to_one(ptr)
     shape = ntuple(r->eltype(tbl[r])(desc["shape"][N - n + r]), R)
     if R == 1
         SparseListLevel(lvl, shape[1], ptr, tbl[1])
