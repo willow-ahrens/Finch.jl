@@ -109,7 +109,7 @@
     @testset "plus times" begin
         n = 0
         for a_fmt in fmts
-            for b_fmt in fmts[1:2]
+            for b_fmt in fmts[1:6]
                 a_str = "$(summary(a_fmt.fmt(0.0)))[$(a_fmt.proto[1]), $(a_fmt.proto[2])]"
                 b_str = "$(summary(b_fmt.fmt(0.0)))[$(b_fmt.proto[1]), $(b_fmt.proto[2])]"
                 @testset "+* $a_str $b_str" begin

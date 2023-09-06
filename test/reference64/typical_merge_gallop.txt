@@ -59,9 +59,6 @@ quote
                     y_lvl_q += 1
                     x_lvl_q += 1
                 elseif x_lvl_i2 == phase_stop_2
-                    if y_lvl.idx[y_lvl_q] < i
-                        y_lvl_q = Finch.scansearch(y_lvl.idx, i, y_lvl_q, y_lvl_q_stop - 1)
-                    end
                     while i <= phase_stop_2 - 1
                         y_lvl_i2 = y_lvl.idx[y_lvl_q]
                         phase_stop_3 = min(y_lvl_i2, -1 + phase_stop_2)
@@ -81,9 +78,6 @@ quote
                         i = phase_stop_3 + 1
                     end
                     x_lvl_2_val_2 = x_lvl_2.val[x_lvl_q]
-                    if y_lvl.idx[y_lvl_q] < phase_stop_2
-                        y_lvl_q = Finch.scansearch(y_lvl.idx, phase_stop_2, y_lvl_q, y_lvl_q_stop - 1)
-                    end
                     y_lvl_i2 = y_lvl.idx[y_lvl_q]
                     phase_stop_4 = min(y_lvl_i2, phase_stop_2)
                     if y_lvl_i2 == phase_stop_4
@@ -124,9 +118,6 @@ quote
                     end
                     x_lvl_q += 1
                 elseif y_lvl_i2 == phase_stop_2
-                    if x_lvl.idx[x_lvl_q] < i
-                        x_lvl_q = Finch.scansearch(x_lvl.idx, i, x_lvl_q, x_lvl_q_stop - 1)
-                    end
                     while i <= phase_stop_2 - 1
                         x_lvl_i2 = x_lvl.idx[x_lvl_q]
                         phase_stop_5 = min(x_lvl_i2, -1 + phase_stop_2)
@@ -146,9 +137,6 @@ quote
                         i = phase_stop_5 + 1
                     end
                     y_lvl_2_val_2 = y_lvl_2.val[y_lvl_q]
-                    if x_lvl.idx[x_lvl_q] < phase_stop_2
-                        x_lvl_q = Finch.scansearch(x_lvl.idx, phase_stop_2, x_lvl_q, x_lvl_q_stop - 1)
-                    end
                     x_lvl_i2 = x_lvl.idx[x_lvl_q]
                     phase_stop_6 = min(x_lvl_i2, phase_stop_2)
                     if x_lvl_i2 == phase_stop_6
@@ -189,12 +177,6 @@ quote
                     end
                     y_lvl_q += 1
                 else
-                    if y_lvl.idx[y_lvl_q] < i
-                        y_lvl_q = Finch.scansearch(y_lvl.idx, i, y_lvl_q, y_lvl_q_stop - 1)
-                    end
-                    if x_lvl.idx[x_lvl_q] < i
-                        x_lvl_q = Finch.scansearch(x_lvl.idx, i, x_lvl_q, x_lvl_q_stop - 1)
-                    end
                     while i <= phase_stop_2
                         y_lvl_i2 = y_lvl.idx[y_lvl_q]
                         x_lvl_i2 = x_lvl.idx[x_lvl_q]
@@ -269,9 +251,6 @@ quote
                     z_lvl_qos += 1
                     x_lvl_q += 1
                 else
-                    if x_lvl.idx[x_lvl_q] < i
-                        x_lvl_q = Finch.scansearch(x_lvl.idx, i, x_lvl_q, x_lvl_q_stop - 1)
-                    end
                     while i <= phase_stop_9
                         x_lvl_i2 = x_lvl.idx[x_lvl_q]
                         phase_stop_10 = min(x_lvl_i2, phase_stop_9)
@@ -319,9 +298,6 @@ quote
                     z_lvl_qos += 1
                     y_lvl_q += 1
                 else
-                    if y_lvl.idx[y_lvl_q] < i
-                        y_lvl_q = Finch.scansearch(y_lvl.idx, i, y_lvl_q, y_lvl_q_stop - 1)
-                    end
                     while i <= phase_stop_12
                         y_lvl_i2 = y_lvl.idx[y_lvl_q]
                         phase_stop_13 = min(y_lvl_i2, phase_stop_12)

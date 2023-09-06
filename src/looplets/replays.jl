@@ -26,16 +26,7 @@ combine_style(a::ReplayStyle, b::SequenceStyle) = SequenceStyle()
 combine_style(a::ThunkStyle, b::ReplayStyle) = ThunkStyle()
 combine_style(a::ReplayStyle, b::PhaseStyle) = b
 
-function replay_seek(node::Replay, ctx, ext)
-    if node.body isa Jump
-        node.body = Jump(seek = node.seek, #Propagating Replay's seek to Jump 
-                         preamble = node.body.preamble,
-                         stop = node.body.stop,
-                         chunk = node.body.chunk,
-                         next = node.body.next)
-    end
-    return node.seek(ctx, ext)
-end
+replay_seek(node::Replay, ctx, ext) = node.seek(ctx, ext)
 replay_seek(node, ctx, ext) = quote end
 
 function replay_body(node::Replay, ctx, ext)
