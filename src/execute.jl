@@ -62,7 +62,7 @@ end
 
 execute(ex) = execute(ex, NamedTuple())
 
-@staged function execute(ex, opts::NamedTuple)
+@staged function execute(ex, opts)
     contain(JuliaContext()) do ctx
         code = execute_code(:ex, ex; virtualize(:opts, opts, ctx)...)
         quote
