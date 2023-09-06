@@ -52,10 +52,13 @@ jobs:
             ${{ runner.os }}-test-${{ env.cache-name }}-
             ${{ runner.os }}-test-
             ${{ runner.os }}-
-      - uses: julia-actions/julia-buildpkg@v1
-      - uses: julia-actions/julia-runtest@v1
-        with:
-          flags: "--overwrite"
+      #- uses: julia-actions/julia-buildpkg@v1
+      #- uses: julia-actions/julia-runtest@v1
+      #  with:
+      #    flags: "--overwrite"
+      - name: Make changes
+        run: |
+          touch foo${{runner.os}}.txt
       - name: Commit changes
         run: |
           git config --global user.email "robot@server"
