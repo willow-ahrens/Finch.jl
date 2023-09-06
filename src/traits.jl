@@ -13,6 +13,7 @@ Finch.finch_leaf(x::SparseData) = virtual(x)
 
 Base.ndims(fbr::SparseData) = 1 + ndims(fbr.lvl)
 default(fbr::SparseData) = default(fbr.lvl)
+Base.eltype(fbr::SparseData) = eltype(fbr.lvl)
 
 """
     DenseData(lvl)
@@ -26,6 +27,7 @@ Finch.finch_leaf(x::DenseData) = virtual(x)
 default(fbr::DenseData) = default(fbr.lvl)
 
 Base.ndims(fbr::DenseData) = 1 + ndims(fbr.lvl)
+Base.eltype(fbr::DenseData) = eltype(fbr.lvl)
 
 """
     ExtrudeData(lvl)
@@ -37,8 +39,8 @@ struct ExtrudeData
 end
 Finch.finch_leaf(x::ExtrudeData) = virtual(x)
 default(fbr::ExtrudeData) = default(fbr.lvl)
-
 Base.ndims(fbr::ExtrudeData) = 1 + ndims(fbr.lvl)
+Base.eltype(fbr::ExtrudeData) = eltype(fbr.lvl)
 
 """
     HollowData(lvl)
@@ -52,6 +54,7 @@ Finch.finch_leaf(x::HollowData) = virtual(x)
 default(fbr::HollowData) = default(fbr.lvl)
 
 Base.ndims(fbr::HollowData) = ndims(fbr.lvl)
+Base.eltype(fbr::HollowData) = eltype(fbr.lvl)
 
 """
     ElementData(default, eltype)
@@ -66,6 +69,7 @@ Finch.finch_leaf(x::ElementData) = virtual(x)
 default(fbr::ElementData) = fbr.default
 
 Base.ndims(fbr::ElementData) = 0
+Base.eltype(fbr::ElementData) = fbr.eltype
 
 """
     RepeatData(default, eltype)
@@ -81,6 +85,7 @@ Finch.finch_leaf(x::RepeatData) = virtual(x)
 default(fbr::RepeatData) = fbr.default
 
 Base.ndims(fbr::RepeatData) = 1
+Base.eltype(fbr::RepeatData) = fbr.eltype
 
 """
     data_rep(tns)

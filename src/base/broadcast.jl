@@ -3,18 +3,6 @@ using Base.Broadcast: Broadcasted, BroadcastStyle, AbstractArrayStyle
 using Base: broadcasted
 const AbstractArrayOrBroadcasted = Union{AbstractArray,Broadcasted}
 
-#=
-function Base.mapreduce(f, op, A::Fiber, As::AbstractArrayOrBroadcasted...; dims=:, init=nothing)=
-    _mapreduce(f, op, A, As..., dims, init)
-function _mapreduce(f, op, As..., dims, init)
-    init === nothing && throw(ArgumentError("Finch requires an initial value for reductions."))
-    init = something(init)
-    allequal(ndims.(As)) || throw(ArgumentError("Finch cannot currently mapreduce arguments with differing numbers of dimensions"))
-    allequal(axes.(As)) || throw(DimensionMismatchError("Finch cannot currently mapreduce arguments with differing size"))
-    reduce(op, Broadcast.broadcasted(f, As...), dims, init)
-end
-=#
-
 struct Callable{F} end
 @inline (::Callable{F})(args...) where {F} = F(args...)
 """
@@ -57,91 +45,74 @@ function Base.similar(bc::Broadcast.Broadcasted{FinchStyle{N}}, ::Type{T}, dims)
 end
 
 @staged function similar_broadcast_helper(bc)
-    idxs = [index(Symbol(:i, n)) for n = 1:ndims(bc)]
-    ctx = LowerJulia()
-    rep = pointwise_finch_traits(:bc, bc, idxs)
-    rep = PointwiseRep(ctx, reverse(idxs))(rep)
+    ctx = JuliaContext()
+    rep = data_rep(bc)
     fiber_ctr(collapse_rep(rep))
 end
 
-struct PointwiseHollowStyle end
-struct PointwiseDenseStyle end
-struct PointwiseRepeatStyle end
-struct PointwiseElementStyle end
-
-combine_style(a::PointwiseHollowStyle, ::PointwiseHollowStyle) = a
-combine_style(a::PointwiseHollowStyle, ::PointwiseDenseStyle) = a
-combine_style(a::PointwiseHollowStyle, ::PointwiseRepeatStyle) = a
-combine_style(a::PointwiseHollowStyle, ::PointwiseElementStyle) = a
-combine_style(a::PointwiseDenseStyle, ::PointwiseDenseStyle) = a
-combine_style(a::PointwiseDenseStyle, ::PointwiseRepeatStyle) = a
-combine_style(a::PointwiseDenseStyle, ::PointwiseElementStyle) = a
-combine_style(a::PointwiseRepeatStyle, ::PointwiseRepeatStyle) = a
-combine_style(a::PointwiseRepeatStyle, ::PointwiseElementStyle) = a
-combine_style(a::PointwiseElementStyle, ::PointwiseElementStyle) = a
-
-struct PointwiseRep <: AbstractCompiler
-    ctx
-    idxs
+function data_rep(bc::Type{<:Broadcast.Broadcasted{Style, Axes, Callable{f}, Args}}) where {Style, f, Axes, Args}
+    broadcast_rep(f, map(Arg -> pad_data_rep(data_rep(Arg), ndims(bc)), Args.parameters))
 end
 
-stylize_access(node, ctx::Stylize{PointwiseRep}, ::HollowData) = PointwiseHollowStyle()
-stylize_access(node, ctx::Stylize{PointwiseRep}, ::SparseData) = PointwiseDenseStyle()
-stylize_access(node, ctx::Stylize{PointwiseRep}, ::DenseData) = PointwiseDenseStyle()
-stylize_access(node, ctx::Stylize{PointwiseRep}, ::RepeatData) =
-    !isempty(ctx.root) && first(ctx.root) == last(node.idxs) ? PointwiseRepeatStyle() : PointwiseDenseStyle()
-stylize_access(node, ctx::Stylize{PointwiseRep}, ::ElementData) =
-    isempty(ctx.root) ? PointwiseElementStyle() : PointwiseDenseStyle()
+pad_data_rep(rep, n) = ndims(rep) < n ? pad_data_rep(ExtrudeData(rep), n) : rep
 
-simplify(root, ctx::PointwiseRep) = simplify(root, ctx.ctx)
+struct BroadcastRepExtrudeStyle end
+struct BroadcastRepSparseStyle end
+struct BroadcastRepDenseStyle end
+struct BroadcastRepRepeatStyle end
+struct BroadcastRepElementStyle end
 
-pointwise_rep_body(tns::SparseData) = HollowData(tns.lvl)
-pointwise_rep_body(tns::DenseData) = tns.lvl
-pointwise_rep_body(tns::RepeatData) = tns.lvl
-pointwise_rep_body(tns::ElementData) = tns.lvl
+combine_style(a::BroadcastRepSparseStyle, b::BroadcastRepExtrudeStyle) = a
+combine_style(a::BroadcastRepSparseStyle, b::BroadcastRepSparseStyle) = a
+combine_style(a::BroadcastRepSparseStyle, b::BroadcastRepDenseStyle) = a
+combine_style(a::BroadcastRepSparseStyle, b::BroadcastRepRepeatStyle) = a
+combine_style(a::BroadcastRepSparseStyle, b::BroadcastRepElementStyle) = a
 
-(ctx::PointwiseRep)(rep) = lower(rep, ctx, Stylize(ctx.idxs, ctx)(rep))
-function lower(rep, ctx::PointwiseRep, ::PointwiseHollowStyle)
-    background = simplify(Postwalk(Chain([
-        (@rule access(~ex::isvirtual, ~m, ~i...) => pointwise_rep_hollow(ex.val)),
-    ]))(rep), ctx.ctx)
-    body = simplify(Postwalk(Chain([
-        (@rule access(~ex::isvirtual, ~m, ~i...) => access(pointwise_rep_solid(ex.val), m, i...)),
-    ]))(rep), ctx.ctx)
-    if isliteral(background)
-        return HollowData(ctx(body))
-    else
-        return ctx(body)
+combine_style(a::BroadcastRepDenseStyle, b::BroadcastRepExtrudeStyle) = a
+combine_style(a::BroadcastRepDenseStyle, b::BroadcastRepDenseStyle) = a
+combine_style(a::BroadcastRepDenseStyle, b::BroadcastRepRepeatStyle) = a
+combine_style(a::BroadcastRepDenseStyle, b::BroadcastRepElementStyle) = a
+
+combine_style(a::BroadcastRepRepeatStyle, b::BroadcastRepExtrudeStyle) = a
+combine_style(a::BroadcastRepRepeatStyle, b::BroadcastRepRepeatStyle) = a
+combine_style(a::BroadcastRepRepeatStyle, b::BroadcastRepElementStyle) = a
+
+combine_style(a::BroadcastRepElementStyle, b::BroadcastRepElementStyle) = a
+
+broadcast_rep_style(r::ExtrudeData) = BroadcastRepExtrudeStyle()
+broadcast_rep_style(r::SparseData) = BroadcastRepSparseStyle()
+broadcast_rep_style(r::DenseData) = BroadcastRepDenseStyle()
+broadcast_rep_style(r::RepeatData) = BroadcastRepRepeatStyle()
+broadcast_rep_style(r::ElementData) = BroadcastRepElementStyle()
+
+broadcast_rep(f, args) = broadcast_rep(mapreduce(broadcast_rep_style, result_style, args), f, args)
+
+broadcast_rep_child(r::ExtrudeData) = r.lvl
+broadcast_rep_child(r::SparseData) = r.lvl
+broadcast_rep_child(r::DenseData) = r.lvl
+broadcast_rep_child(r::RepeatData) = r.lvl
+
+broadcast_rep(::BroadcastRepDenseStyle, f, args) = DenseData(broadcast_rep(f, map(broadcast_rep_child, args)))
+
+function broadcast_rep(::BroadcastRepSparseStyle, f, args)
+    if length(args) == 1
+        return SparseData(broadcast_rep(f, map(broadcast_rep_child, args)))
     end
+    for arg in args
+        if isannihilator(DefaultAlgebra(), f, default(arg))
+            return SparseData(broadcast_rep(f, map(broadcast_rep_child, args)))
+        end
+    end
+    return DenseData(broadcast_rep(f, map(broadcast_rep_child, args)))
 end
 
-function lower(rep, ctx::PointwiseRep, ::PointwiseDenseStyle)
-    body = simplify(Rewrite(Postwalk(Chain([
-        (@rule access(~ex::isvirtual, ~m, ~i..., $(ctx.idxs[1])) => access(pointwise_rep_body(ex.val), m, i...)),
-    ])))(rep), ctx.ctx)
-    return DenseData(PointwiseRep(ctx, ctx.idxs[2:end])(body))
+function broadcast_rep(::BroadcastRepRepeatStyle, f, args)
+    return RepeatData(broadcast_rep(f, map(broadcast_rep_child, args)))
 end
 
-function lower(rep, ctx::PointwiseRep, ::PointwiseRepeatStyle)
-    background = simplify(Postwalk(Chain([
-        (@rule access(~ex::isvirtual, ~m, ~i...) => finch_leaf(default(ex.val))),
-    ]))(rep), ctx.ctx)
-    @assert isliteral(background)
-    return RepeatData(background.val, typeof(background.val))
+function broadcast_rep(::BroadcastRepElementStyle, f, args)
+    return ElementData(f(map(default, args)...), Base.Broadcast.combine_eltypes(f, (args...,)))
 end
-
-function lower(rep, ctx::PointwiseRep, ::Union{DefaultStyle, PointwiseElementStyle})
-    background = simplify(Rewrite(Postwalk(Chain([
-        (@rule access(~ex::isvirtual, ~m) => finch_leaf(default(ex.val))),
-    ])))(rep), ctx.ctx)
-    @assert isliteral(background)
-    return ElementData(background.val, typeof(background.val))
-end
-
-pointwise_rep_hollow(ex::HollowData) = literal(default(ex))
-pointwise_rep_hollow(ex) = nothing
-pointwise_rep_solid(tns::HollowData) = pointwise_rep_solid(tns.lvl)
-pointwise_rep_solid(ex) = ex
 
 function pointwise_finch_expr(ex, ::Type{<:Broadcast.Broadcasted{Style, Axes, F, Args}}, ctx, idxs) where {Style, F, Axes, Args}
     f = freshen(ctx, :f)
