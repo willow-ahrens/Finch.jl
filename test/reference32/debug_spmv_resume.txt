@@ -462,7 +462,7 @@ end, quote
             j = 1
             if @finch{#0,lower.jl:81}(cached(phase_stop, min(x_lvl.shape::Int32, x_lvl_i1))) >= @finch{#0,lower.jl:81}(cached(phase_start, 1))
                 j_4 = j
-                @finch{#0,replays.jl:48} begin
+                @finch{#0,replays.jl:39} begin
                   for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                     virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Replay)[j], virtual(Finch.Lookup)[i, j])
                   end
@@ -506,7 +506,7 @@ end, quote
             j = 1
             if @finch{#0,lower.jl:81}(phase_stop) >= @finch{#0,lower.jl:81}(cached(phase_start, 1))
                 j_4 = j
-                @finch{#0,replays.jl:48} begin
+                @finch{#0,replays.jl:39} begin
                   for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                     virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Replay)[j], virtual(Finch.Lookup)[i, j])
                   end
@@ -550,7 +550,7 @@ end, quote
             j = 1
             if phase_stop >= @finch{#0,lower.jl:81}(cached(phase_start, 1))
                 j_4 = j
-                @finch{#0,replays.jl:48} begin
+                @finch{#0,replays.jl:39} begin
                   for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                     virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Replay)[j], virtual(Finch.Lookup)[i, j])
                   end
@@ -594,7 +594,7 @@ end, quote
             j = 1
             if phase_stop >= @finch{#0,lower.jl:81}(phase_start)
                 j_4 = j
-                @finch{#0,replays.jl:48} begin
+                @finch{#0,replays.jl:39} begin
                   for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                     virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Replay)[j], virtual(Finch.Lookup)[i, j])
                   end
@@ -638,7 +638,7 @@ end, quote
             j = 1
             if phase_stop >= phase_start
                 j_4 = j
-                @finch{#0,replays.jl:48} begin
+                @finch{#0,replays.jl:39} begin
                   for j = virtual(Finch.Extent), i = virtual(Finch.Extent)
                     virtual(Unfurled(Finch.VirtualFiber{Finch.VirtualDenseLevel}, Finch.Furlable))[i] <<+>>= *(virtual(Finch.Replay)[j], virtual(Finch.Lookup)[i, j])
                   end
@@ -2729,7 +2729,7 @@ end, quote
                                                         i = 1
                                                         if @finch{#0,lower.jl:81}(cached(phase_stop_3, min(A_lvl_2.shape::Int32, A_lvl_2_i1))) >= @finch{#0,lower.jl:81}(cached(phase_start_3, 1))
                                                             i_4 = i
-                                                            @finch{#0,replays.jl:48} begin
+                                                            @finch{#0,replays.jl:39} begin
                                                               for i = virtual(Finch.Extent)
                                                                 virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Replay)[i], virtual(Finch.VirtualScalar)[])
                                                               end
@@ -2818,7 +2818,7 @@ end, quote
                                                         i = 1
                                                         if @finch{#0,lower.jl:81}(phase_stop_3) >= @finch{#0,lower.jl:81}(cached(phase_start_3, 1))
                                                             i_4 = i
-                                                            @finch{#0,replays.jl:48} begin
+                                                            @finch{#0,replays.jl:39} begin
                                                               for i = virtual(Finch.Extent)
                                                                 virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Replay)[i], virtual(Finch.VirtualScalar)[])
                                                               end
@@ -2907,7 +2907,7 @@ end, quote
                                                         i = 1
                                                         if phase_stop_3 >= @finch{#0,lower.jl:81}(cached(phase_start_3, 1))
                                                             i_4 = i
-                                                            @finch{#0,replays.jl:48} begin
+                                                            @finch{#0,replays.jl:39} begin
                                                               for i = virtual(Finch.Extent)
                                                                 virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Replay)[i], virtual(Finch.VirtualScalar)[])
                                                               end
@@ -2996,7 +2996,7 @@ end, quote
                                                         i = 1
                                                         if phase_stop_3 >= @finch{#0,lower.jl:81}(phase_start_3)
                                                             i_4 = i
-                                                            @finch{#0,replays.jl:48} begin
+                                                            @finch{#0,replays.jl:39} begin
                                                               for i = virtual(Finch.Extent)
                                                                 virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Replay)[i], virtual(Finch.VirtualScalar)[])
                                                               end
@@ -3085,7 +3085,7 @@ end, quote
                                                         i = 1
                                                         if phase_stop_3 >= phase_start_3
                                                             i_4 = i
-                                                            @finch{#0,replays.jl:48} begin
+                                                            @finch{#0,replays.jl:39} begin
                                                               for i = virtual(Finch.Extent)
                                                                 virtual(Finch.Lookup)[i] <<+>>= *(virtual(Finch.Replay)[i], virtual(Finch.VirtualScalar)[])
                                                               end
