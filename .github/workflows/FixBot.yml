@@ -55,7 +55,7 @@ jobs:
       - uses: julia-actions/julia-buildpkg@v1
       - name: Run tests
         run: |
-          julia -e 'using Pkg; Pkg.develop(PackageSpec(path="^."))'
+          julia -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd()))'
           julia --color=yes test/runtests.jl --overwrite
   
       - name: Commit changes
