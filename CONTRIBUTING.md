@@ -5,6 +5,35 @@ you use or want to use Finch and have a question or bug, please do file a
 to contribute to Finch, please first file an issue to double check that there is
 interest from a contributor in the feature.
 
+## Versions
+
+Finch is currently in a pre-release state. The API is not yet stable, and
+breaking changes may occur between minor versions. We follow [semantic
+versioning](https://semver.org/) and will release 1.0 when the API is stable.
+The main branch of the Finch repo is the most up-to-date development branch.
+While it is not stable, it should always pass tests.
+
+Contributors will develop and test Finch from a local directory. Please see the
+[Package documentation](https://pkgdocs.julialang.org/v1/getting-started/) for more
+info, particularly the section on [developing](https://pkgdocs.julialang.org/v1/managing-packages/#developing).
+
+To determine which version of
+Finch you have, run `Pkg.status("Finch")` in the Julia REPL. If the installed
+version of Finch tracks a local path, the output will include the path like so:
+
+```
+Status `~/.julia/environments/v1.9/Project.toml`
+  [9177782c] Finch v0.5.4 `~/Projects/Finch.jl`
+```
+
+If the installed version of Finch tracks a particular version (probably not what
+you want since it will not reflect local changes), the output will look like this:
+
+```
+Status `~/.julia/environments/v1.8/Project.toml`
+  [9177782c] Finch v0.5.4
+```
+
 ## Utilities
 
 Finch include several scripts that can be executed directly, e.g. `runtests.jl`.
