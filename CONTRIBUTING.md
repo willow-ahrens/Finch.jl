@@ -48,13 +48,19 @@ All pull requests should pass continuous integration testing before merging.
 The test suite has a few options, which are accessible through running the test
 suite directly as `./tests/runtests.jl`.
 
-Finch compares compiler output against reference versions. If you run the test
-suite directly you can pass the `--overwrite` flag to tell the test suite to
-overwrite the reference.  Because the reference output depends on the system
-word size, you'll need to generate reference output for 32-bit and 64-bit builds
-of Julia to get Finch to pass tests. The easiest way to do this is to run each
-32-bit or 64-bit build of Julia on a system that supports it. You can
-[Download](https://julialang.org/downloads/) multiple builds yourself or use
+Finch compares compiler output against reference versions.
+
+If you have the appropriate permissions, you can run the
+[FixBot](https://github.com/willow-ahrens/Finch.jl/actions/workflows/FixBot.yml)
+github action on your PR branch to automatically generate output for both 32-bit
+and 64-bit builds.
+
+If you run the test suite directly you can pass the `--overwrite` flag to tell
+the test suite to overwrite the reference.  Because the reference output depends
+on the system word size, you'll need to generate reference output for 32-bit and
+64-bit builds of Julia to get Finch to pass tests. The easiest way to do this is
+to run each 32-bit or 64-bit build of Julia on a system that supports it. You
+can [Download](https://julialang.org/downloads/) multiple builds yourself or use
 [juliaup](https://github.com/JuliaLang/juliaup) to manage multiple versions.
 Using juliaup, it might look like this:
 
