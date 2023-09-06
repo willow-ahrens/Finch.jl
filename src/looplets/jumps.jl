@@ -8,7 +8,7 @@ end
 
 FinchNotation.finch_leaf(x::Jump) = virtual(x)
 
-(ctx::Stylize{<:AbstractCompiler})(node::Jump) = ctx.root.kind === loop ? JumperPhaseStyle() : DefaultStyle()
+(ctx::Stylize{<:AbstractCompiler})(node::Jump) = ctx.root.kind === loop ? JumpPhaseStyle() : DefaultStyle()
 
 function phase_range(node::Jump, ctx, ext)
     push!(ctx.code.preamble, node.preamble !== nothing ? node.preamble : quote end)

@@ -101,8 +101,6 @@ function unfurl(tns::Unfurled, ctx, ext, mode, protos...)
     unfurl(tns.body, ctx, ext, mode, protos...)
 end
 
-#stepper_body(node::Unfurled, ctx, ext) = Unfurled(node.arr, node.ndims, stepper_body(node.body, ctx, ext))
-#stepper_seek(node::Unfurled, ctx, ext) = stepper_seek(node.body, ctx, ext)
 replay_body(node::Unfurled, ctx, ext) = Unfurled(node.arr, node.ndims, replay_body(node.body, ctx, ext))
 replay_seek(node::Unfurled, ctx, ext) = replay_seek(node.body, ctx, ext)
 

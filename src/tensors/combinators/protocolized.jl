@@ -130,8 +130,6 @@ function unfurl(tns::VirtualProtocolizedArray, ctx, ext, mode, protos...)
     VirtualProtocolizedArray(unfurl(tns.body, ctx, ext, mode, map(something, tns.protos, protos)...), tns.protos)
 end
 
-#stepper_body(node::VirtualProtocolizedArray, ctx, ext) = VirtualProtocolizedArray(stepper_body(node.body, ctx, ext), node.protos)
-#stepper_seek(node::VirtualProtocolizedArray, ctx, ext) = stepper_seek(node.body, ctx, ext)
 replay_body(node::VirtualProtocolizedArray, ctx, ext) = VirtualProtocolizedArray(replay_body(node.body, ctx, ext), node.protos)
 replay_seek(node::VirtualProtocolizedArray, ctx, ext) = replay_seek(node.body, ctx, ext)
 

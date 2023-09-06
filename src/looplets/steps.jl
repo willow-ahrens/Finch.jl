@@ -9,7 +9,7 @@ end
 
 FinchNotation.finch_leaf(x::Step) = virtual(x)
 
-(ctx::Stylize{<:AbstractCompiler})(node::Step) = ctx.root.kind === loop ? StepperPhaseStyle() : DefaultStyle()
+(ctx::Stylize{<:AbstractCompiler})(node::Step) = ctx.root.kind === loop ? StepPhaseStyle() : DefaultStyle()
 
 function phase_range(node::Step, ctx, ext)
     push!(ctx.code.preamble, node.preamble !== nothing ? node.preamble : quote end)

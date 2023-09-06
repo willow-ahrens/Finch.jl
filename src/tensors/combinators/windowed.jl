@@ -127,8 +127,6 @@ visit_simplify(node::VirtualWindowedArray) = VirtualWindowedArray(visit_simplify
     guard => VirtualWindowedArray(body, node.dims)
 end
 
-#stepper_body(node::VirtualWindowedArray, ctx, ext) = VirtualWindowedArray(stepper_body(node.body, ctx, ext), node.dims)
-#stepper_seek(node::VirtualWindowedArray, ctx, ext) = stepper_seek(node.body, ctx, ext)
 replay_body(node::VirtualWindowedArray, ctx, ext) = VirtualWindowedArray(replay_body(node.body, ctx, ext), node.dims)
 replay_seek(node::VirtualWindowedArray, ctx, ext) = replay_seek(node.body, ctx, ext)
 

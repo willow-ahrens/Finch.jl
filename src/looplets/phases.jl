@@ -34,12 +34,12 @@ phase_body(node, ctx, ext, ext_2) = truncate(node, ctx, ext, ext_2)
 
 abstract type PhaseStyle end
 struct SequencePhaseStyle <: PhaseStyle end
-struct StepperPhaseStyle <: PhaseStyle end
-struct JumperPhaseStyle <: PhaseStyle end
+struct StepPhaseStyle <: PhaseStyle end
+struct JumpPhaseStyle <: PhaseStyle end
 
 phase_op(::SequencePhaseStyle) = virtual_intersect
-phase_op(::StepperPhaseStyle) = virtual_intersect
-phase_op(::JumperPhaseStyle) = virtual_union
+phase_op(::StepPhaseStyle) = virtual_intersect
+phase_op(::JumpPhaseStyle) = virtual_union
 
 (ctx::Stylize{<:AbstractCompiler})(node::Phase) = ctx.root.kind === loop ? SequencePhaseStyle() : DefaultStyle()
 

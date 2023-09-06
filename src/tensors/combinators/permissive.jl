@@ -122,8 +122,6 @@ visit_simplify(node::VirtualPermissiveArray) = VirtualPermissiveArray(visit_simp
     guard => VirtualPermissiveArray(body, node.dims)
 end
 
-#stepper_body(node::VirtualPermissiveArray, ctx, ext) = VirtualPermissiveArray(stepper_body(node.body, ctx, ext), node.dims)
-#stepper_seek(node::VirtualPermissiveArray, ctx, ext) = stepper_seek(node.body, ctx, ext)
 replay_body(node::VirtualPermissiveArray, ctx, ext) = VirtualPermissiveArray(replay_body(node.body, ctx, ext), node.dims)
 replay_seek(node::VirtualPermissiveArray, ctx, ext) = replay_seek(node.body, ctx, ext)
 

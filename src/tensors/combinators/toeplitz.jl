@@ -128,8 +128,6 @@ visit_simplify(node::VirtualToeplitzArray) = VirtualToeplitzArray(visit_simplify
     guard => VirtualToeplitzArray(body, node.dim)
 end
 
-#stepper_body(node::VirtualToeplitzArray, ctx, ext) = VirtualToeplitzArray(stepper_body(node.body, ctx, ext), node.dim)
-#stepper_seek(node::VirtualToeplitzArray, ctx, ext) = stepper_seek(node.body, ctx, ext)
 replay_body(node::VirtualToeplitzArray, ctx, ext) = VirtualToeplitzArray(replay_body(node.body, ctx, ext), node.dim)
 replay_seek(node::VirtualToeplitzArray, ctx, ext) = replay_seek(node.body, ctx, ext)
 

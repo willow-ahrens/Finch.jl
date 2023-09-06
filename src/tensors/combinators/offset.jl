@@ -127,8 +127,6 @@ visit_simplify(node::VirtualOffsetArray) = VirtualOffsetArray(visit_simplify(nod
     guard => VirtualOffsetArray(body, node.delta)
 end
 
-#stepper_body(node::VirtualOffsetArray, ctx, ext) = VirtualOffsetArray(stepper_body(node.body, ctx, shiftdim(ext, node.delta[end])), node.delta)
-#stepper_seek(node::VirtualOffsetArray, ctx, ext) = stepper_seek(node.body, ctx, shiftdim(ext, node.delta[end]))
 replay_body(node::VirtualOffsetArray, ctx, ext) = VirtualOffsetArray(replay_body(node.body, ctx, shiftdim(ext, node.delta[end])), node.delta)
 replay_seek(node::VirtualOffsetArray, ctx, ext) = replay_seek(node.body, ctx, shiftdim(ext, node.delta[end]))
 
