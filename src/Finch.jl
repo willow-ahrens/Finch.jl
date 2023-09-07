@@ -84,6 +84,7 @@ include("looplets/jumpers.jl")
 include("looplets/steppers.jl")
 include("looplets/fills.jl")
 
+include("tensors/vector.jl")
 include("tensors/scalars.jl")
 include("tensors/fibers.jl")
 include("tensors/levels/abstractlevel.jl")
@@ -112,7 +113,7 @@ include("tensors/combinators/swizzle.jl")
 
 include("traits.jl")
 
-export fsparse, fsparse!, fsprand, fspzeros, ffindnz, countstored
+export fsparse, fsparse!, fsprand, fspzeros, ffindnz, countstored, moveto
 
 include("base/abstractarrays.jl")
 include("base/abstractunitranges.jl")

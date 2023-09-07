@@ -1,1 +1,1 @@
-Fiber(Dense(SparseHash{1}(Element{0.0, Float64}(…), (5,), …), 10))
+Fiber(Dense(SparseHash{1}(Element{0.0, Int32, Float64, Vector{Float64}}(…), (5,), …), 10))

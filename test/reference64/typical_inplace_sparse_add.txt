@@ -53,5 +53,5 @@ end
 julia> @finch for i = _
         B[i] += A[i]
     end
-(B = Fiber(Dense{Int64}(Element{0.0, Float64}([3.1, 1.1, 4.1, 1.1, 5.1, 1.1, 6.1, 1.1, 7.1, 1.1]), 10)),)
+(B = Fiber(Dense{Int64}(Element{0.0, Int64, Float64, Vector{Float64}}([3.1, 1.1, 4.1, 1.1, 5.1, 1.1, 6.1, 1.1, 7.1, 1.1]), 10)),)
 

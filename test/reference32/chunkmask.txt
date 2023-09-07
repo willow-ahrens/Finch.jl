@@ -27,9 +27,9 @@ julia> @finch begin
             end
         end
     end
-(A = Fiber(Dense{Int32}(Dense{Int32}(Element{0.0, Float64}([1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0]), 15), 3)),)
+(A = Fiber(Dense{Int32}(Dense{Int32}(Element{0.0, Int32, Float64, Vector{Float64}}([1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0]), 15), 3)),)
 julia> AsArray(A)
-15×3 AsArray{Float64, 2, Fiber{DenseLevel{Int32, DenseLevel{Int32, ElementLevel{0.0, Float64}}}}}:
+15×3 AsArray{Float64, 2, Fiber{DenseLevel{Int32, DenseLevel{Int32, ElementLevel{0.0, Int32, Float64, Vector{Float64}}}}}}:
  1.0  0.0  0.0
  1.0  0.0  0.0
  1.0  0.0  0.0
@@ -73,9 +73,9 @@ julia> @finch begin
             end
         end
     end
-(A = Fiber(Dense{Int32}(Dense{Int32}(Element{0.0, Float64}([1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0]), 14), 3)),)
+(A = Fiber(Dense{Int32}(Dense{Int32}(Element{0.0, Int32, Float64, Vector{Float64}}([1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0]), 14), 3)),)
 julia> AsArray(A)
-14×3 AsArray{Float64, 2, Fiber{DenseLevel{Int32, DenseLevel{Int32, ElementLevel{0.0, Float64}}}}}:
+14×3 AsArray{Float64, 2, Fiber{DenseLevel{Int32, DenseLevel{Int32, ElementLevel{0.0, Int32, Float64, Vector{Float64}}}}}}:
  1.0  0.0  0.0
  1.0  0.0  0.0
  1.0  0.0  0.0

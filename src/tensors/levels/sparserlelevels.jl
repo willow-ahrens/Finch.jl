@@ -1,40 +1,66 @@
-struct SparseRLELevel{Ti, Tp, Lvl}
+struct SparseRLELevel{Ti, Tp, VTp<:AbstractVector, VLTi<:AbstractVector, VRTi<:AbstractVector, Lvl}
     lvl::Lvl
     shape::Ti
-    ptr::Vector{Tp}
-    left::Vector{Ti}
-    right::Vector{Ti}
+    ptr::VTp
+    left::VLTi
+    right::VRTi
 end
 
 const SparseRLE = SparseRLELevel
-SparseRLELevel(lvl, ) = SparseRLELevel{Int}(lvl)
+SparseRLELevel(lvl:: Lvl) where {Lvl} = SparseRLELevel{indextype(Lvl)}(lvl)
 SparseRLELevel(lvl, shape, args...) = SparseRLELevel{typeof(shape)}(lvl, shape, args...)
-SparseRLELevel{Ti}(lvl, args...) where {Ti} = SparseRLELevel{Ti, Int}(lvl, args...)
-SparseRLELevel{Ti, Tp}(lvl, args...) where {Ti, Tp} = SparseRLELevel{Ti, Tp, typeof(lvl)}(lvl, args...)
+SparseRLELevel{Ti}(lvl, args...) where {Ti} =
+    SparseRLELevel{Ti,
+        postype(typeof(lvl)),
+        (memory_type(typeof(lvl))){postype(typeof(lvl)), 1},
+        (memory_type(typeof(lvl))){Ti, 1},
+        (memory_type(typeof(lvl))){Ti, 1},
+        typeof(lvl)}(lvl, args...)
+#SparseRLELevel{Ti, Tp}(lvl, args...) where {Ti, Tp} = SparseRLELevel{Ti, Tp, typeof(lvl)}(lvl, args...)
 
-SparseRLELevel{Ti, Tp, Lvl}(lvl) where {Ti, Tp, Lvl} = SparseRLELevel{Ti, Tp, Lvl}(lvl, zero(Ti))
-SparseRLELevel{Ti, Tp, Lvl}(lvl, shape) where {Ti, Tp, Lvl} = 
-    SparseRLELevel{Ti, Tp, Lvl}(lvl, shape, Tp[1], Ti[], Ti[])
+SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}(lvl) where {Ti, Tp, VTp, VLTi, VRTi, Lvl} = SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}(lvl, zero(Ti))
+SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}(lvl, shape) where {Ti, Tp, VTp, VLTi, VRTi, Lvl} = 
+    SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}(lvl, shape, single(VTp), empty(VLTi), empty(VRTi))
 
 Base.summary(lvl::SparseRLELevel) = "SparseRLE($(summary(lvl.lvl)))"
 similar_level(lvl::SparseRLELevel) = SparseRLE(similar_level(lvl.lvl))
 similar_level(lvl::SparseRLELevel, dim, tail...) = SparseRLE(similar_level(lvl.lvl, tail...), dim)
 
-pattern!(lvl::SparseRLELevel{Ti, Tp}) where {Ti, Tp} = 
-    SparseRLELevel{Ti, Tp}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.left, lvl.right)
+function memory_type(::Type{SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}}) where {Ti, Tp, VTp, VLTi, VRTi, Lvl}
+    return containertype(VTp)
+end
+
+function postype(::Type{SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}}) where {Ti, Tp, VTp, VLTi, VRTi, Lvl}
+    return Tp
+end
+
+function indextype(::Type{SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}}) where {Ti, Tp, VTp, VLTi, VRTi, Lvl}
+    return indextype(Ti)
+end
+
+function moveto(lvl::SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}, ::Type{MemType}) where {Ti, Tp, VTp, VLTi, VRTi, Lvl, MemType <: AbstractArray}
+    lvl_2 = moveto(lvl.lvl, MemType)
+    ptr_2 = MemType{Tp, 1}(lvl.ptr)
+    left_2 = MemType{Ti, 1}(lvl.left)
+    right_2 = MemType{Ti, 1}(lvl.right)
+    return SparseRLELevel{Ti, Tp, MemType{Tp, 1}, MemType{Ti, 1}, MemType{Ti, 1}, typeof(lvl_2)}(lvl_2, lvl.shape, ptr_2, left_2, right_2)
+end
+
+pattern!(lvl::SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}) where {Ti, Tp, VTp, VLTi, VRTi, Lvl} = 
+    SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.left, lvl.right)
 
 function countstored_level(lvl::SparseRLELevel, pos)
     countstored_level(lvl.lvl, lvl.left[lvl.ptr[pos + 1]]-1)
 end
 
-redefault!(lvl::SparseRLELevel{Ti, Tp}, init) where {Ti, Tp} = 
-    SparseRLELevel{Ti, Tp}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.left, lvl.right)
+redefault!(lvl::SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}, init) where {Ti, Tp, VTp, VLTi, VRTi, Lvl} = 
+    SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.left, lvl.right)
 
-function Base.show(io::IO, lvl::SparseRLELevel{Ti, Tp}) where {Ti, Tp}
+function Base.show(io::IO, lvl::SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}) where {Ti, Tp, VTp, VLTi, VRTi, Lvl}
     if get(io, :compact, false)
         print(io, "SparseRLE(")
     else
-        print(io, "SparseRLE{$Ti, $Tp}(")
+        print(io, "SparseRLE{$Ti, $Tp, $VTp, $VLTi, $VRTi, $Lvl}(")
     end
     show(io, lvl.lvl)
     print(io, ", ")
@@ -43,11 +69,11 @@ function Base.show(io::IO, lvl::SparseRLELevel{Ti, Tp}) where {Ti, Tp}
     if get(io, :compact, false)
         print(io, "…")
     else
-        show(IOContext(io, :typeinfo=>Vector{Tp}), lvl.ptr)
+        show(IOContext(io, :typeinfo=>VTp), lvl.ptr)
         print(io, ", ")
-        show(IOContext(io, :typeinfo=>Vector{Ti}), lvl.left)
+        show(IOContext(io, :typeinfo=>VLTi), lvl.left)
         print(io, ", ")
-        show(IOContext(io, :typeinfo=>Vector{Ti}), lvl.right)
+        show(IOContext(io, :typeinfo=>VRTi), lvl.right)
     end
     print(io, ")")
 end
@@ -69,12 +95,12 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseRLE
     display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
 end
 
-@inline level_ndims(::Type{<:SparseRLELevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = 1 + level_ndims(Lvl)
+@inline level_ndims(::Type{<:SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}}) where {Ti, Tp, VTp, VLTi, VRTi, Lvl} = 1 + level_ndims(Lvl)
 @inline level_size(lvl::SparseRLELevel) = (lvl.shape, level_size(lvl.lvl)...)
 @inline level_axes(lvl::SparseRLELevel) = (Base.OneTo(lvl.shape), level_axes(lvl.lvl)...)
-@inline level_eltype(::Type{<:SparseRLELevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = level_eltype(Lvl)
-@inline level_default(::Type{<:SparseRLELevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = level_default(Lvl)
-data_rep_level(::Type{<:SparseRLELevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = SparseData(data_rep_level(Lvl))
+@inline level_eltype(::Type{<:SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}}) where {Ti, Tp, VTp, VLTi, VRTi, Lvl} = level_eltype(Lvl)
+@inline level_default(::Type{<:SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}}) where {Ti, Tp, VTp, VLTi, VRTi, Lvl}= level_default(Lvl)
+data_rep_level(::Type{<:SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}}) where {Ti, Tp, VTp, VLTi, VRTi, Lvl} = SparseData(data_rep_level(Lvl), Ti)
 
 (fbr::AbstractFiber{<:SparseRLELevel})() = fbr
 function (fbr::SubFiber{<:SparseRLELevel})(idxs...)
@@ -88,6 +114,7 @@ function (fbr::SubFiber{<:SparseRLELevel})(idxs...)
     r1 != r2 ? default(fbr_2) : fbr_2(idxs[1:end-1]...)
 end
 
+
 mutable struct VirtualSparseRLELevel <: AbstractVirtualLevel
     lvl
     ex
@@ -96,14 +123,19 @@ mutable struct VirtualSparseRLELevel <: AbstractVirtualLevel
     shape
     qos_fill
     qos_stop
+    VTp
+    VLTi
+    VRTi
+    Lvl
     prev_pos
 end
 
-is_level_injective(lvl::VirtualSparseRLELevel, ctx) = [false, is_level_injective(lvl.lvl, ctx)...]
+  is_level_injective(lvl::VirtualSparseRLELevel, ctx) = [false, is_level_injective(lvl.lvl, ctx)...]
 is_level_concurrent(lvl::VirtualSparseRLELevel, ctx) = [false, is_level_concurrent(lvl.lvl, ctx)...]
 is_level_atomic(lvl::VirtualSparseRLELevel, ctx) = false
+  
 
-function virtualize(ex, ::Type{SparseRLELevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}
+function virtualize(ex, ::Type{SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, VTp, VLTi, VRTi, Lvl}
     sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Int)
     qos_fill = freshen(ctx, sym, :_qos_fill)
@@ -114,11 +146,11 @@ function virtualize(ex, ::Type{SparseRLELevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) wher
     end)
     prev_pos = freshen(ctx, sym, :_prev_pos)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualSparseRLELevel(lvl_2, sym, Ti, Tp, shape, qos_fill, qos_stop, prev_pos)
+    VirtualSparseRLELevel(lvl_2, sym, Ti, Tp, shape, qos_fill, qos_stop, VTp, VLTi, VRTi, Lvl, prev_pos)
 end
 function lower(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
-        $SparseRLELevel{$(lvl.Ti), $(lvl.Tp)}(
+        $SparseRLELevel{$(lvl.Ti), $(lvl.Tp), $(lvl.VTp), $(lvl.VLTi), $(lvl.VRTi), $(lvl.Lvl)}(
             $(ctx(lvl.lvl)),
             $(ctx(lvl.shape)),
             $(lvl.ex).ptr,
