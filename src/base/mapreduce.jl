@@ -83,8 +83,7 @@ end
 function reduce_helper_code(::Type{Callable{op}}, bc::Type{<:Broadcasted{FinchStyle{N}}}, ::Type{Val{dims}}, ::Type{Val{init}}) where {op, dims, init, N}
     contain(LowerJulia()) do ctx
         idxs = [freshen(ctx.code, :idx, n) for n = 1:N]
-        rep = pointwise_finch_traits(:bc, bc, index.(idxs))
-        rep = collapse_rep(PointwiseRep(ctx, index.(reverse(idxs)))(rep))
+        rep = collapse_rep(data_rep(bc))
         dst = freshen(ctx.code, :dst)
         if dims == Colon()
             dst_protos = []
