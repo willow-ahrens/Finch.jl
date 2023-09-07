@@ -1,1 +1,1 @@
-5×10 Fiber!(SparseCOO{1}(Dense(Element(0.0, Int32))))
+5×10 Fiber!(SparseCOO{1}(Dense(Element(0.0))))
