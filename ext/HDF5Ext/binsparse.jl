@@ -161,9 +161,12 @@ function bswrite_data(f, desc, key, data)
     f[key] = reinterpret(T, data)
 end
 
-function bsread_data(f, desc, key)
+bsread_data(f, desc, key) =
+    bsread_data(f, desc, key, desc["data_types"]["$(key)_type"])
+
+function bsread_data(f, desc, key, valtype)
     data = read(f[key])
-    T = bsread_type_lookup[desc["data_types"]["$(key)_type"]]
+    T = bsread_type_lookup[valtype]
     convert(Vector{T}, reinterpret(T, data))
 end
 
@@ -203,11 +206,26 @@ function bswrite_level(f, desc, fmt, lvl::ElementLevel{D}) where {D}
     bswrite_data(f, desc, "values", lvl.val)
     bswrite_data(f, desc, "fill_value", [D])
 end
-function bsread_level(f, desc, fmt, ::Val{:element})
-    val = bsread_data(f, desc, "values")
-    D = bsread_data(f, desc, "fill_value")[1]
-    ElementLevel(D, val)
+
+bsread_level(f, desc, fmt, ::Val{:element}) =
+    bsread_element_level(f, desc, fmt, desc["data_types"]["values_type"])
+
+function bsread_element_level(f, desc, fmt, valtype)
+    if (m = match(r"^iso\[([^\[]*)\]$", valtype)) != nothing
+        throw(ArgumentError("iso values not currently supported"))
+    elseif (m = match(r"^complex\[([^\[]*)\]$", valtype)) != nothing
+        lvl = bsread_element_level(f, desc, fmt, m.captures[1])
+        return bsread_element_level_complex(lvl)
+    elseif (m = match(r"^[^\[]*$", valtype)) != nothing
+        val = bsread_data(f, desc, "values", valtype)
+        D = bsread_data(f, desc, "fill_value", valtype)[1]
+        return ElementLevel(D, val)
+    else
+        throw(ArgumentError("unknown value type wrapper $valtype"))
+    end
 end
+
+bsread_element_level_complex(lvl::ElementLevel{D}) where {D} = ElementLevel{Complex{D}}(reinterpret(Complex{D}, lvl.val))
 
 function bswrite_level(f, desc, fmt, lvl::DenseLevel{D}) where {D}
     fmt["level"] = "dense"
