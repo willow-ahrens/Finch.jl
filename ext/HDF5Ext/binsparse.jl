@@ -15,10 +15,6 @@ bswrite_type_lookup = Dict(
     Bool => "bint8",
 )
 
-bswrite_cast_lookup = Dict(
-    Bool => UInt8,
-)
-
 bsread_type_lookup = Dict(
     "uint8" => UInt8,
     "uint16" => UInt16,
@@ -148,13 +144,11 @@ indices_one_to_zero(vec::Vector{<:CIndex{Ti}}) where {Ti} = unsafe_wrap(Array, r
 indices_zero_to_one(vec::Vector{Ti}) where {Ti} = unsafe_wrap(Array, reinterpret(Ptr{CIndex{Ti}}, pointer(vec)), length(vec); own = false)
 
 function bswrite_data(f, desc, key, data)
-    T = get(bswrite_cast_lookup, eltype(data), eltype(data))
     desc["data_types"]["$(key)_type"] = bswrite_type_lookup[eltype(data)]
-    f[key] = reinterpret(T, data)
+    f[key] = reinterpret(bsread_type_lookup[bswrite_type_lookup[eltype(data)]], data)
 end
 
-bsread_data(f, desc, key) =
-    bsread_data(f, desc, key, desc["data_types"]["$(key)_type"])
+bsread_data(f, desc, key) = bsread_data(f, desc, key, Val{desc["data_types"]["$(key)_type"]})
 
 function bsread_data(f, desc, key, valtype)
     data = read(f[key])
