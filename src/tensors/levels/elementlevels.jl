@@ -62,6 +62,7 @@ pattern!(lvl::ElementLevel{D, Ti, Tv, V}) where  {D, Ti, Tv, V} = Pattern{Ti, po
 redefault!(lvl::ElementLevel{D, Ti, Tv, V}, init) where {D, Ti, Tv, V} = 
     ElementLevel{init, Ti, Tv, V}(lvl.val)
 
+
 function Base.show(io::IO, lvl::ElementLevel{D, Ti, Tv, V}) where {D, Ti, Tv, V}
     print(io, "Element{")
     show(io, D)
