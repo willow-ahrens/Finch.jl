@@ -166,7 +166,7 @@ indices_one_to_zero(vec::Vector{<:Integer}) = vec .- one(eltype(vec))
 indices_one_to_zero(vec::Vector{<:CIndex{Ti}}) where {Ti} = unsafe_wrap(Array, reinterpret(Ptr{Ti}, pointer(vec)), length(vec); own = false)
 
 Finch.bswrite(fname, fbr::Fiber, attrs = Dict()) = 
-    bswrite(fname, swizzle(fbr, (1:ndims(fbr)...)), attrs)
+    bswrite(fname, swizzle(fbr, 1:ndims(fbr)...), attrs)
 function Finch.bswrite(fname, arr::SwizzleArray{dims, <:Fiber}, attrs = Dict()) where {dims}
     h5open(fname, "w") do f
         desc = Dict(
@@ -195,7 +195,7 @@ function Finch.bsread(fname)
         end
         fbr = Fiber(bsread_level(f, desc, fmt))
         if !issorted(reverse(desc["swizzle"]))
-            fbr = swizzle(fbr, reverse(desc["swizzle"]))
+            fbr = swizzle(fbr, reverse(desc["swizzle"])...)
         end
         fbr
     end

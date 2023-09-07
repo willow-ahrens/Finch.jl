@@ -18,6 +18,9 @@ Base.:(==)(a::Structure, b::Structure) = isstructequal(a.t, b.t)
 
 isstructequal(a, b) = a === b
 
+isstructequal(a::T, b::T) where {T <: Finch.SwizzleArray} = 
+    isstructequal(a.body, b.body)
+
 isstructequal(a::T, b::T) where {T <: Fiber} = 
     isstructequal(a.lvl, b.lvl)
 
