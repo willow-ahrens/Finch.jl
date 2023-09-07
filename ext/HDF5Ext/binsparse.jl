@@ -158,9 +158,9 @@ bsread_format_lookup = Dict(
 
 bswrite_format_lookup = Dict(v => k for (k, v) in bsread_format_lookup)
 
+indices_zero_to_one(vec::Vector{Ti}) where {Ti} = unsafe_wrap(Array, reinterpret(Ptr{CIndex{Ti}}, pointer(vec)), length(vec); own = false)
 indices_one_to_zero(vec::Vector{<:Integer}) = vec .- one(eltype(vec))
 indices_one_to_zero(vec::Vector{<:CIndex{Ti}}) where {Ti} = unsafe_wrap(Array, reinterpret(Ptr{Ti}, pointer(vec)), length(vec); own = false)
-indices_zero_to_one(vec::Vector{Ti}) where {Ti} = unsafe_wrap(Array, reinterpret(Ptr{CIndex{Ti}}, pointer(vec)), length(vec); own = false)
 
 Finch.bswrite(fname, fbr::Fiber, attrs = Dict()) = 
     bswrite(fname, swizzle(fbr, (1:ndims(fbr)...)), attrs)
