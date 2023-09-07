@@ -44,7 +44,6 @@ bswrite_format_lookup = Dict(
                 "rank" => 1,
                 "subformat" => Dict(
                     "level" => "element",
-                    "fill_value" => [0]
                 )
             )
         )
@@ -60,7 +59,6 @@ bswrite_format_lookup = Dict(
                 "rank" => 1,
                 "subformat" => Dict(
                     "level" => "element",
-                    "fill_value" => [0]
                 )
             )
         )
@@ -76,7 +74,6 @@ bswrite_format_lookup = Dict(
                 "rank" => 1,
                 "subformat" => Dict(
                     "level" => "element",
-                    "fill_value" => [0]
                 )
             )
         )
@@ -92,7 +89,6 @@ bswrite_format_lookup = Dict(
                 "rank" => 1,
                 "subformat" => Dict(
                     "level" => "element",
-                    "fill_value" => [0]
                 )
             )
         )
@@ -105,7 +101,6 @@ bswrite_format_lookup = Dict(
             "rank" => 2,
             "subformat" => Dict(
                 "level" => "element",
-                "fill_value" => [0]
             )
         )
     ),
@@ -120,7 +115,6 @@ bswrite_format_lookup = Dict(
                 "rank" => 1,
                 "subformat" => Dict(
                     "level" => "element",
-                    "fill_value" => [0]
                 )
             )
         )
@@ -133,7 +127,6 @@ bswrite_format_lookup = Dict(
             "rank" => 1,
             "subformat" => Dict(
                 "level" => "element",
-                "fill_value" => [0]
             )
         )
     ),
@@ -145,7 +138,6 @@ bswrite_format_lookup = Dict(
             "rank" => 1,
             "subformat" => Dict(
                 "level" => "element",
-                "fill_value" => [0]
             )
         )
     )
