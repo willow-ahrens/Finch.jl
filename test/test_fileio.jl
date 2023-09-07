@@ -34,7 +34,8 @@ using Pkg
                                 @testset "binsparse $name($D)" begin
                                     fmt = copyto!(fmt, A)
                                     bswrite(joinpath(f, "$name.bs"), fmt)
-                                    @test isstructequal(bsread(joinpath(f, "$name.bs")), fmt)
+                                    out = bsread(joinpath(f, "$name.bs"))
+                                    @test Structure(fmt) == Structure(bsread(joinpath(f, "$name.bs")))
                                 end
                             end
                         end
@@ -56,13 +57,13 @@ using Pkg
             A_COO_fname = joinpath(f, "A_COO.ttx")
             fttwrite(A_COO_fname, A_COO)
             A_COO_test = fttread(A_COO_fname)
-            @test isstructequal(A_COO_test, A_COO)
+            @test Structure(A_COO_test) == Structure(A_COO)
 
             A_COO = Fiber!(SparseCOO{2}(Element(0.0)), A)
             A_COO_fname = joinpath(f, "A_COO.tns")
             ftnswrite(A_COO_fname, A_COO)
             A_COO_test = ftnsread(A_COO_fname)
-            @test isstructequal(A_COO_test, A_COO)
+            @test Structure(A_COO_test) == Structure(A_COO)
         end
     end
 end

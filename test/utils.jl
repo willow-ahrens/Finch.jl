@@ -10,6 +10,12 @@ function reference_isequal(a,b)
     return true
 end
 
+struct Structure
+t
+end
+
+Base.:(==)(a::Structure, b::Structure) = isstructequal(a.t, b.t)
+
 isstructequal(a, b) = a === b
 
 isstructequal(a::T, b::T) where {T <: Fiber} = 
