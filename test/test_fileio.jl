@@ -27,8 +27,8 @@ using Pkg
                         ]
                             for (name, fmt) in [
                                 "A_dense" => Fiber!(Dense{CIndex{Int}}(Dense{CIndex{Int}}(Element(D)))),
-                                "A_CSC" => Fiber!(Dense{CIndex{Int}}(SparseList{CIndex{Int}}(Element(D)))),
-                                "A_CSR" => swizzle(Fiber!(Dense{CIndex{Int}}(SparseList{CIndex{Int}}(Element(D)))), 2, 1),
+                                "A_CSC" => Fiber!(Dense{CIndex{Int}}(SparseList{CIndex{Int}, CIndex{Int}}(Element(D)))),
+                                "A_CSR" => swizzle(Fiber!(Dense{CIndex{Int}}(SparseList{CIndex{Int}, CIndex{Int}}(Element(D)))), 2, 1),
                                 "A_COO" => Fiber!(SparseCOO{2, Tuple{CIndex{Int}, CIndex{Int}}, CIndex{Int}}(Element(D))),
                             ]
                                 @testset "binsparse $name($D)" begin
