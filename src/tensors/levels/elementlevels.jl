@@ -34,6 +34,7 @@ ElementLevel{D, Ti, Tv}() where {D, Ti, Tv} = ElementLevel{D, Ti, Tv, Vector{Tv}
 ElementLevel{D, Ti, Tv}(val::V) where {D, Ti, Tv, V} = ElementLevel{D, Ti, eltype(V), V}(val)
 ElementLevel{D, Ti, Tv, V}() where {D, Ti, Tv, V} = ElementLevel{D, Ti, Tv, V}(empty(V))
 
+Base.summary(::Element{D, Int}) where {D} = "Element($(D))"
 Base.summary(::Element{D, Ti}) where {D, Ti} = "Element($(D), $(Ti))"
 # similar_level(::ElementLevel{D}) where {D} = ElementLevel{D}()
 similar_level(::ElementLevel{D, Ti}) where {D, Ti} = ElementLevel{D, Ti}()
