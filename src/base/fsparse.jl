@@ -191,9 +191,9 @@ V)`, where `I` is a tuple of coordinate vectors, one for each mode of `arr`, and
 See also: (`findnz`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#SparseArrays.findnz)
 """
 function ffindnz(src)
+    elem = ElementLevel{zero(eltype(src)), Int}
     tmp = Fiber(
-        SparseCOOLevel{ndims(src)}(
-        ElementLevel{zero(eltype(src)), eltype(src)}()))
+        SparseCOOLevel{ndims(src)}(elem()))
     tmp = copyto!(tmp, src)
     nnz = tmp.lvl.ptr[2] - 1
     tbl = tmp.lvl.tbl
