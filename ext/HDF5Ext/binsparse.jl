@@ -29,20 +29,7 @@ function bsread_data(f, desc, key)
         throw(ArgumentError("unknown binsparse type wrapper $valtype"))
     end
 end
-
-bswrite_type_lookup = Dict(
-    UInt8 => "uint8",
-    UInt16 => "uint16",
-    UInt32 => "uint32",
-    UInt64 => "uint64",
-    Int8 => "int8",
-    Int16 => "int16",
-    Int32 => "int32",
-    Int64 => "int64",
-    Float32 => "float32",
-    Float64 => "float64",
-    Bool => "bint8",
-)
+bswrite_type_lookup = Dict(v => k for (k, v) in bsread_type_lookup)
 
 function bswrite_data(f, desc, key, data)
     type_desc = bswrite_data_helper(f, desc, key, data)
@@ -50,7 +37,7 @@ end
 
 function bswrite_data_helper(f, desc, key, data::Vector{T}) where {T}
     haskey(bswrite_type_lookup, T) || throw(ArgumentError("Cannot write $T to binsparse"))
-    f[key] = convert(Vector{bsread_type_lookup[bswrite_type_lookup[T]]}, data)
+    f[key] = data
     desc["data_types"]["$(key)_type"] = bswrite_type_lookup[T]
 end
 
