@@ -353,7 +353,7 @@ end
     moveto(fbr, memType)
 
 If the fiber/level is not on the given memType, it creates a new version of this fiber on that memory type
-and copies the data in to it.
+and copies the data in to it, according to the constructor `memtype`.
 """
 function moveto(fiber::Fiber{Lvl}, ::Type{MemType}) where {Lvl, MemType <: AbstractArray}
     lvlp = moveto(fiber.lvl, MemType)

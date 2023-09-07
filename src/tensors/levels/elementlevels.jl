@@ -1,8 +1,10 @@
 """
-    ElementLevel{D, [Tv]}()
+    ElementLevel{D, [Ti, Tv, V]}()
 
 A subfiber of an element level is a scalar of type `Tv`, initialized to `D`. `D`
-may optionally be given as the first argument.
+may optionally be given as the first argument. The data is stored in a vector
+of type `V` with `eltype(V) = Tv`. The type `Ti` is the index type used to
+access V.
 
 In the [`Fiber!`](@ref) constructor, `e` is an alias for `ElementLevel`.
 

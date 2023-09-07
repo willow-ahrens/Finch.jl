@@ -196,7 +196,33 @@ SparseCOO (0.0) [1:4,1:3]
 
 The COO format is compact and straightforward, but doesn't support random
 access. For random access, one should use the `SparseHash` format. A full listing
-of supported formats is described below:
+of supported formats is described after a rough description of shared common internals of level,
+relating to types and storage.
+
+## Types and Storage of Level
+
+All levels have an `indextype` and a `postype`, typically denoted as `Ti` and `Tp` in the constructors. 
+Index type is mostly self expanatory as it is ofen just `Int`, but for levels that store multiple dimensions, 
+the index type is often a subtype of a Tuple. Pos (or position) type is the type used to define the iteratiorator through any 
+auxiliary data stuctures; it is named for the pos array in typical definitions of CSC or CSR.
+
+Additionally, many levels have a `VTp` or `VTi` in their constructors; these stand for vector of element type `Tp` or `Ti`. 
+More generally, levels are paramterized by the types that they use for storage. By default, all levels use `Vector`, but a user 
+could in theory all the storage types of their levels so that a fiber could be stored on a GPU or CPU or via a different 
+allocation mechanism.  The storage type should behave like `AbstractArray` and needs to implement the usual abstract array functions
+and `Base.resize!`.
+
+When levels are constructed in short form as in the examples above, the index, position, and storage types are inferred
+from the level below. All the levels at the bottom of a Fiber (`Element, Pattern, Repeater`) specify an index type, position type,
+and storage type even if they don't need them. These are used by levels that take these as parameters. 
+
+### Move to: Copying Fibers to a new storage type.
+
+If one needs to copy a fiber to another fibrer with a different storage type, one can use the `moveto` function, described below.
+
+```@docs
+moveto
+```
 
 # Public Functions
 

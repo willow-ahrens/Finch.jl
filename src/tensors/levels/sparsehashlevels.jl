@@ -1,5 +1,5 @@
 """
-    SparseHashLevel{[N], [Ti=Tuple{Int...}], [Tp=Int]}(lvl, [dims])
+    SparseHashLevel{[N], [Ti=Tuple{Int...}], [Tp=Int], [Tbl], [VTp] [VTpip]}(lvl, [dims])
 
 A subfiber of a sparse level does not need to represent slices which are
 entirely [`default`](@ref). Instead, only potentially non-default slices are
@@ -9,7 +9,9 @@ in the subfiber, so fibers in the sublevel are the slices `A[:, ..., :, i_1,
 `dims` are the sizes of the last dimensions.
 
 `Ti` is the type of the last `N` fiber indices, and `Tp` is the type used for
-positions in the level.
+positions in the level. `Tbl` is the type of the dictionary used to do hashing,
+a subtype of `Dict{Tuple{Tp, Ti}, Tp}`. Finally, `VTp` stores the positions
+of subfibers and `VTpip` is a storage type that is a subtype of `AbstractVector{Pair{Tuple{Tp, Ti}, Tp}}`.
 
 In the [`Fiber!`](@ref) constructor, `sh` is an alias for `SparseHashLevel`.
 

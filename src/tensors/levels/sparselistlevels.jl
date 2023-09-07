@@ -1,5 +1,5 @@
 """
-    SparseListLevel{[Ti=Int], [Tp=Int]}(lvl, [dim])
+    SparseListLevel{[Ti=Int], [Tp=Int], [VTp=Vector{Tp}], [VTi=Vector{Ti}]}(lvl, [dim])
 
 A subfiber of a sparse level does not need to represent slices `A[:, ..., :, i]`
 which are entirely [`default`](@ref). Instead, only potentially non-default
@@ -7,7 +7,8 @@ slices are stored as subfibers in `lvl`.  A sorted list is used to record which
 slices are stored. Optionally, `dim` is the size of the last dimension.
 
 `Ti` is the type of the last fiber index, and `Tp` is the type used for
-positions in the level.
+positions in the level. The types `VTp` and `VTi` are the types of the
+arrays used to store positions and indicies. 
 
 In the [`Fiber!`](@ref) constructor, `sl` is an alias for `SparseListLevel`.
 

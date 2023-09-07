@@ -1,5 +1,5 @@
 """
-    SparseCOOLevel{[N], [Ti=Tuple{Int...}], [Tp=Int]}(lvl, [dims])
+    SparseCOOLevel{[N], [Ti=Tuple{Int...}], [Tp=Int], [Tbl], [VTp]}(lvl, [dims])
 
 A subfiber of a sparse level does not need to represent slices which are
 entirely [`default`](@ref). Instead, only potentially non-default slices are
@@ -11,6 +11,10 @@ order.  Optionally, `dims` are the sizes of the last dimensions.
 
 `Ti` is the type of the last `N` fiber indices, and `Tp` is the type used for
 positions in the level.
+
+The type `Tbl` is an NTuple type where each entry k is a subtype `AbstractVector{Ti[k]}`.
+
+The type `VTp` is the type for the pointer array.
 
 In the [`Fiber!`](@ref) constructor, `sh` is an alias for `SparseCOOLevel`.
 
