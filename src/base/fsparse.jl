@@ -20,10 +20,10 @@ See also: [`fiber!`](@ref)
 
 ```jldoctest
 julia> println(summary(fiber(sparse([1 0; 0 1]))))
-2×2 Fiber!(Dense(SparseList(Element(0))))
+2×2 Fiber!(Dense(SparseList(Element(0, Int64))))
 
 julia> println(summary(fiber(ones(3, 2, 4))))
-3×2×4 Fiber!(Dense(Dense(Dense(Element(0.0)))))
+3×2×4 Fiber!(Dense(Dense(Dense(Element(0.0, Int64)))))
 ```
 """
 function fiber(arr; default=zero(eltype(arr)))

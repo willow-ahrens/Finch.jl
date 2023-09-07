@@ -30,9 +30,9 @@ julia> @finch_code for i = _
         B[i] += A[i]
     end
 quote
-    B_lvl = ex.body.lhs.tns.tns.lvl
+    B_lvl = ex.body.lhs.tns.bind.lvl
     B_lvl_2 = B_lvl.lvl
-    A_lvl = ex.body.rhs.tns.tns.lvl
+    A_lvl = ex.body.rhs.tns.bind.lvl
     A_lvl_2 = A_lvl.lvl
     A_lvl.shape == B_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(A_lvl.shape) != $(B_lvl.shape))"))
     A_lvl_q = A_lvl.ptr[1]

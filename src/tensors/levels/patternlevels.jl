@@ -41,7 +41,7 @@ end
 @inline level_eltype(::Type{PatternLevel{Ti, Tp, VB}}) where {Ti, Tp, VB} = Bool
 @inline level_default(::Type{PatternLevel{Ti, Tp, VB}}) where {Ti, Tp, VB} = false
 (fbr::AbstractFiber{<:PatternLevel})() = true
-data_rep_level(::Type{<:PatternLevel{Ti}}) where {Ti} = ElementData(false, Bool, Ti)
+data_rep_level(::Type{<:PatternLevel{Ti}}) where {Ti} = ElementData(false, Ti, Bool)
 
 function memory_type(::Type{PatternLevel{Ti, Tp,VB}}) where {Ti, Tp, VB}
     return containertype(VB)

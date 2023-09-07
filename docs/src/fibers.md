@@ -57,11 +57,48 @@ Dense [1:4]
 ├─[4]: 0.0
 
 julia> A_fbr[:, 3]
-Dense [1:4]
-├─[1]: 4.4
-├─[2]: 0.0
-├─[3]: 5.5
-├─[4]: 0.0
+ERROR: ArgumentError: invalid index: 1.0 of type Float64
+Stacktrace:
+  [1] to_index(i::Float64)
+    @ Base ./indices.jl:300
+  [2] to_index(A::Vector{Int64}, i::Float64)
+    @ Base ./indices.jl:277
+  [3] _to_indices1(A::Vector{Int64}, inds::Tuple{Base.OneTo{Int64}}, I1::Float64)
+    @ Base ./indices.jl:359
+  [4] to_indices
+    @ ./indices.jl:354 [inlined]
+  [5] to_indices
+    @ ./indices.jl:345 [inlined]
+  [6] setindex!
+    @ ./abstractarray.jl:1397 [inlined]
+  [7] macro expansion
+    @ ~/gitcode/finch/Finch.jl/src/util.jl:114 [inlined]
+  [8] macro expansion
+    @ ./simdloop.jl:77 [inlined]
+  [9] fill_range!
+    @ ~/gitcode/finch/Finch.jl/src/util.jl:113 [inlined]
+ [10] macro expansion
+    @ ~/gitcode/finch/Finch.jl/src/environment.jl:144 [inlined]
+ [11] macro expansion
+    @ ~/gitcode/finch/Finch.jl/src/execute.jl:71 [inlined]
+ [12] macro expansion
+    @ ~/gitcode/finch/Finch.jl/src/environment.jl:60 [inlined]
+ [13] macro expansion
+    @ ~/gitcode/finch/Finch.jl/src/util.jl:76 [inlined]
+ [14] execute(ex::Finch.FinchNotation.BlockInstance{Tuple{Finch.FinchNotation.DeclareInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:win}, Fiber{DenseLevel{Float64, ElementLevel{0.0, Float64, Int64, Vector{Int64}}}}}, Finch.FinchNotation.LiteralInstance{0.0}}, Finch.FinchNotation.LoopInstance{Finch.FinchNotation.IndexInstance{:mode_1}, Finch.FinchNotation.Dimensionless, Finch.FinchNotation.AssignInstance{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:win}, Fiber{DenseLevel{Float64, ElementLevel{0.0, Float64, Int64, Vector{Int64}}}}}, Finch.FinchNotation.UpdaterInstance, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:mode_1}, Finch.FinchNotation.IndexInstance{:mode_1}}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.initwrite}, Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:arr}, Fiber{DenseLevel{Int64, DenseLevel{Int64, ElementLevel{0.0, Int64, Float64, Vector{Float64}}}}}}, Finch.FinchNotation.ReaderInstance, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:mode_1}, Finch.FinchNotation.IndexInstance{:mode_1}}, Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:inds_2}, Int64}}}}}}}, opts::NamedTuple{(), Tuple{}})
+    @ Finch ~/gitcode/finch/Finch.jl/src/util.jl:68
+ [15] macro expansion
+    @ ~/gitcode/finch/Finch.jl/src/execute.jl:177 [inlined]
+ [16] macro expansion
+    @ ~/gitcode/finch/Finch.jl/src/base/index.jl:62 [inlined]
+ [17] macro expansion
+    @ ~/gitcode/finch/Finch.jl/src/util.jl:76 [inlined]
+ [18] getindex_helper
+    @ ~/gitcode/finch/Finch.jl/src/util.jl:68 [inlined]
+ [19] getindex(::Fiber{DenseLevel{Int64, DenseLevel{Int64, ElementLevel{0.0, Int64, Float64, Vector{Float64}}}}}, ::Function, ::Int64)
+    @ Finch ~/gitcode/finch/Finch.jl/src/base/index.jl:28
+ [20] top-level scope
+    @ none:1
 
 julia> A_fbr(3)
 Dense [1:4]

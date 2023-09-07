@@ -33,22 +33,22 @@ function reduce_rep_def(op, z, lvl::HollowData, idx, idxs...)
     end
 end
 
-reduce_rep_def(op, z, lvl::SparseData, idx::Drop, idxs...) = ExtrudeData(reduce_rep_def(op, z, lvl.lvl, idxs...))
+reduce_rep_def(op, z, lvl::SparseData, idx::Drop{Idx}, idxs...) where {Idx} = ExtrudeData(reduce_rep_def(op, z, lvl.lvl, idxs...), Idx)
 function reduce_rep_def(op, z, lvl::SparseData, idx, idxs...)
     if op(z, default(lvl)) == z
-        SparseData(reduce_rep_def(op, z, lvl.lvl, idxs...))
+        SparseData(reduce_rep_def(op, z, lvl.lvl, idxs...), indextype(lvl))
     else
-        DenseData(reduce_rep_def(op, z, lvl.lvl, idxs...))
+        DenseData(reduce_rep_def(op, z, lvl.lvl, idxs...), indextype(lvl))
     end
 end
 
-reduce_rep_def(op, z, lvl::DenseData, idx::Drop, idxs...) = ExtrudeData(reduce_rep_def(op, z, lvl.lvl, idxs...))
-reduce_rep_def(op, z, lvl::DenseData, idx, idxs...) = DenseData(reduce_rep_def(op, z, lvl.lvl, idxs...))
+reduce_rep_def(op, z, lvl::DenseData, idx::Drop{Idx}, idxs...) where {Idx} = ExtrudeData(reduce_rep_def(op, z, lvl.lvl, idxs...), Idx)
+reduce_rep_def(op, z, lvl::DenseData, idx, idxs...) = DenseData(reduce_rep_def(op, z, lvl.lvl, idxs...), indextype(lvl))
 
-reduce_rep_def(op, z, lvl::ElementData) = ElementData(z, fixpoint_type(op, z, lvl), Int)
+reduce_rep_def(op, z, lvl::ElementData) = ElementData(z, indextype(lvl), fixpoint_type(op, z, lvl))
 
-reduce_rep_def(op, z, lvl::RepeatData, idx::Drop) = ExtrudeData(reduce_rep_def(op, ElementData(lvl.default, lvl.eltype, Int)))
-reduce_rep_def(op, z, lvl::RepeatData, idx) = RepeatData(z, fixpoint_type(op, z))
+reduce_rep_def(op, z, lvl::RepeatData, idx::Drop{Idx}) where {Idx} = ExtrudeData(reduce_rep_def(op, ElementData(lvl.default, indextype(lvl), lvl.eltype)), Idx)
+reduce_rep_def(op, z, lvl::RepeatData, idx) = RepeatData(z, indextype(lvl), fixpoint_type(op, z))
 
 function Base.reduce(op, src::Fiber; kw...)
     bc = broadcasted(identity, src)

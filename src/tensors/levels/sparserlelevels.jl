@@ -100,7 +100,7 @@ end
 @inline level_axes(lvl::SparseRLELevel) = (Base.OneTo(lvl.shape), level_axes(lvl.lvl)...)
 @inline level_eltype(::Type{<:SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}}) where {Ti, Tp, VTp, VLTi, VRTi, Lvl} = level_eltype(Lvl)
 @inline level_default(::Type{<:SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}}) where {Ti, Tp, VTp, VLTi, VRTi, Lvl}= level_default(Lvl)
-data_rep_level(::Type{<:SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}}) where {Ti, Tp, VTp, VLTi, VRTi, Lvl} = SparseData(data_rep_level(Lvl))
+data_rep_level(::Type{<:SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}}) where {Ti, Tp, VTp, VLTi, VRTi, Lvl} = SparseData(data_rep_level(Lvl), Ti)
 
 (fbr::AbstractFiber{<:SparseRLELevel})() = fbr
 function (fbr::SubFiber{<:SparseRLELevel})(idxs...)

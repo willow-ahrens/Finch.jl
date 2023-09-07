@@ -124,7 +124,7 @@ end
 @inline level_axes(lvl::SparseListLevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.shape))
 @inline level_eltype(::Type{<:SparseListLevel{Ti, Tp,  VTp, VTi, Lvl}}) where {Ti, Tp,  VTp, VTi, Lvl} = level_eltype(Lvl)
 @inline level_default(::Type{<:SparseListLevel{Ti, Tp,  VTp, VTi, Lvl}}) where {Ti, Tp,  VTp, VTi, Lvl} = level_default(Lvl)
-data_rep_level(::Type{<:SparseListLevel{Ti, Tp,  VTp, VTi, Lvl}}) where {Ti, Tp,  VTp, VTi, Lvl} = SparseData(data_rep_level(Lvl))
+data_rep_level(::Type{<:SparseListLevel{Ti, Tp,  VTp, VTi, Lvl}}) where {Ti, Tp,  VTp, VTi, Lvl} = SparseData(data_rep_level(Lvl), Ti)
 
 (fbr::AbstractFiber{<:SparseListLevel})() = fbr
 function (fbr::SubFiber{<:SparseListLevel{Ti}})(idxs...) where {Ti}
