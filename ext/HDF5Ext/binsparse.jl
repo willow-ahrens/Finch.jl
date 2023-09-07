@@ -15,13 +15,12 @@ bsread_type_lookup = Dict(
     "bint8" => Bool,
 )
 
-bsread_data(f, desc, key) = bsread_data_helper(f, desc, key, Val{desc["data_types"]["$(key)_type"]})
-
-function bsread_data_helper(f, desc, key, valtype)
+function bsread_data(f, desc, key)
     if (m = match(r"^iso\[([^\[]*)\]$", valtype)) != nothing
         throw(ArgumentError("iso values not currently supported"))
     elseif (m = match(r"^complex\[([^\[]*)\]$", valtype)) != nothing
-        data = bsread_data(f, desc, key, m.captures[1])
+        desc["data_types"]["$(key)_type"] = m.captures[1]
+        data = bsread_data(f, desc, key)
         return reinterpret(reshape, Complex{eltype(data)}, reshape(data, 2, :))
     elseif (m = match(r"^[^\[]*$", valtype)) != nothing
         haskey(bsread_type_lookup, valtype) || throw(ArgumentError("unknown binsparse type $valtype"))
@@ -47,18 +46,17 @@ bswrite_type_lookup = Dict(
 
 function bswrite_data(f, desc, key, data)
     type_desc = bswrite_data_helper(f, desc, key, data)
-    desc["data_types"]["$(key)_type"] = type_desc 
 end
 
 function bswrite_data_helper(f, desc, key, data::Vector{T}) where {T}
     haskey(bswrite_type_lookup, T) || throw(ArgumentError("Cannot write $T to binsparse"))
     f[key] = convert(Vector{bsread_type_lookup[bswrite_type_lookup[T]]}, data)
-    return bswrite_type_lookup[T]
+    desc["data_types"]["$(key)_type"] = bswrite_type_lookup[T]
 end
 
 function bswrite_data_helper(f, desc, key, data::Vector{Complex{T}}) where {T}
     data = reshape(reinterpret(reshape, T, f), :)
-    return "complex[$(bs_write_data_helper(f, desc, key, data))]))]"
+    desc["data_types"]["$(key)_type"] = "complex[$(desc["data_types"]["$(key)_type"])]))]"
 end
 
 bsread_format_lookup = Dict(
