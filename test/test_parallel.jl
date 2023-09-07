@@ -25,7 +25,7 @@
             end
         end
 
-        @test check_output("debug_parallel_spmv.txt", String(take!(io)))
+        @test check_output("parallel/parallel_spmv.txt", String(take!(io)))
     end
 
     let

@@ -44,7 +44,7 @@ using CIndices
     A = copyto!(Fiber!(Dense(Dense(Element(0)))), A)
     B = Fiber!(Dense(Element(0)))
     
-    @test check_output("fiber_as_idx.jl", @finch_code (B .= 0; for i=_; B[i] = A[I[i], i] end))
+    @test check_output("issues/fiber_as_idx.jl", @finch_code (B .= 0; for i=_; B[i] = A[I[i], i] end))
     @finch (B .= 0; for i=_; B[i] = A[I[i], i] end)
 
     @test B == [11, 12, 93, 34, 35]
@@ -146,11 +146,11 @@ using CIndices
 
         x = Scalar(Inf)
 
-        @test check_output("specialvals_minimum_inf.jl", @finch_code (for i=_; x[] <<min>>= yf[i] end))
+        @test check_output("issues/specialvals_minimum_inf.jl", @finch_code (for i=_; x[] <<min>>= yf[i] end))
         @finch for i=_; x[] <<min>>= yf[i] end
         @test x[] == 1.0
 
-        @test check_output("specialvals_repr_inf.txt", String(take!(io)))
+        @test check_output("issues/specialvals_repr_inf.txt", String(take!(io)))
 
         io = IOBuffer()
         y = [2.0, NaN, NaN, 1.0, 3.0, NaN]
@@ -160,11 +160,11 @@ using CIndices
 
         x = Scalar(Inf)
 
-        @test check_output("specialvals_minimum_nan.jl", @finch_code (for i=_; x[] <<min>>= yf[i] end))
+        @test check_output("issues/specialvals_minimum_nan.jl", @finch_code (for i=_; x[] <<min>>= yf[i] end))
         @finch for i=_; x[] <<min>>= yf[i] end
         @test isequal(x[], NaN)
 
-        @test check_output("specialvals_repr_nan.txt", String(take!(io)))
+        @test check_output("issues/specialvals_repr_nan.txt", String(take!(io)))
 
         io = IOBuffer()
         y = [2.0, missing, missing, 1.0, 3.0, missing]
@@ -174,11 +174,11 @@ using CIndices
 
         x = Scalar(Inf)
 
-        @test check_output("specialvals_minimum_missing.jl", @finch_code (for i=_; x[] <<min>>= yf[i] end))
+        @test check_output("issues/specialvals_minimum_missing.jl", @finch_code (for i=_; x[] <<min>>= yf[i] end))
         @finch for i=_; x[] <<min>>= coalesce(yf[i], missing, Inf) end
         @test x[] == 1.0
 
-        @test check_output("specialvals_repr_missing.txt", String(take!(io)))
+        @test check_output("issues/specialvals_repr_missing.txt", String(take!(io)))
 
         io = IOBuffer()
         y = [2.0, nothing, nothing, 1.0, 3.0, Some(1.0), nothing]
@@ -188,11 +188,11 @@ using CIndices
 
         x = Scalar(Inf)
 
-        @test check_output("specialvals_minimum_nothing.jl", @finch_code (for i=_; x[] <<min>>= something(yf[i], nothing, Inf) end))
+        @test check_output("issues/specialvals_minimum_nothing.jl", @finch_code (for i=_; x[] <<min>>= something(yf[i], nothing, Inf) end))
         @finch for i=_; x[] <<min>>= something(yf[i], nothing, Inf) end
         @test x[] == 1.0
 
-        @test check_output("specialvals_repr_nothing.txt", String(take!(io)))
+        @test check_output("issues/specialvals_repr_nothing.txt", String(take!(io)))
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/118
@@ -210,7 +210,7 @@ using CIndices
         println(io, redefault!(B, Inf))
         println(io, C)
         @test Structure(C) == Structure(redefault!(B, Inf))
-        @test check_output("issue118.txt", String(take!(io)))
+        @test check_output("issues/issue118.txt", String(take!(io)))
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/97
@@ -244,7 +244,7 @@ using CIndices
         @repl io C = Scalar(0)
         @repl io @finch for k=_, j=_, i=_; C[] += A[i, j, k] end
 
-        check_output("pull197.txt", String(take!(io)))
+        check_output("issues/pull197.txt", String(take!(io)))
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/70

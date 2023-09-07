@@ -1,2 +1,0 @@
-Error in finch_call_ at line 274: Argument 1 is not rooted
-

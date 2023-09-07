@@ -58,7 +58,7 @@
         @test Structure(fbr) == Structure(Fiber!(SparseList(Element(0.0), Int16(0))))
         @test Structure(fbr) == Structure(Fiber!(SparseList{Int16}(Element(0.0), 0)))
 
-        @test check_output("format_constructors_sl_e.txt", String(take!(io)))
+        @test check_output("constructors/format_constructors_sl_e.txt", String(take!(io)))
     end
 
     @testset "Fiber!(SparseVBL(Element(0))" begin
@@ -116,7 +116,7 @@
         @test Structure(fbr) == Structure(Fiber!(SparseVBL(Element(0.0), Int16(0))))
         @test Structure(fbr) == Structure(Fiber!(SparseVBL{Int16}(Element(0.0), 0)))
 
-        @test check_output("format_constructors_sv_e.txt", String(take!(io)))
+        @test check_output("constructors/format_constructors_sv_e.txt", String(take!(io)))
     end
 
     @testset "Fiber!(SparseByteMap(Element(0))" begin
@@ -174,7 +174,7 @@
         @test Structure(fbr) == Structure(Fiber!(SparseByteMap(Element(0.0), Int16(0))))
         @test Structure(fbr) == Structure(Fiber!(SparseByteMap{Int16}(Element(0.0), 0)))
 
-        @test check_output("format_constructors_sm_e.txt", String(take!(io)))
+        @test check_output("constructors/format_constructors_sm_e.txt", String(take!(io)))
     end
 
     @testset "Fiber!(SparseCOO{1}(Element(0))" begin
@@ -232,7 +232,7 @@
         @test Structure(fbr) == Structure(Fiber!(SparseCOO{1}(Element(0.0), (Int16(0),))))
         @test Structure(fbr) == Structure(Fiber!(SparseCOO{1, Tuple{Int16}}(Element(0.0), (0,))))
 
-        @test check_output("format_constructors_sc1_e.txt", String(take!(io)))
+        @test check_output("constructors/format_constructors_sc1_e.txt", String(take!(io)))
     end
 
     @testset "Fiber!(SparseCOO{2}(Element(0))" begin
@@ -292,7 +292,7 @@
         @test Structure(fbr) == Structure(Fiber!(SparseCOO{2}(Element(0.0), (Int16(0), Int16(0),))))
         @test Structure(fbr) == Structure(Fiber!(SparseCOO{2, Tuple{Int16, Int16}}(Element(0.0), (0,0,))))
 
-        @test check_output("format_constructors_sc2_e.txt", String(take!(io)))
+        @test check_output("constructors/format_constructors_sc2_e.txt", String(take!(io)))
     end
 
     @testset "Fiber!(SparseHash{1}(Element(0))" begin
@@ -350,7 +350,7 @@
         @test Structure(fbr) == Structure(Fiber!(SparseHash{1}(Element(0.0), (Int16(0),))))
         @test Structure(fbr) == Structure(Fiber!(SparseHash{1, Tuple{Int16}}(Element(0.0), (0,))))
 
-        @test check_output("format_constructors_sh1_e.txt", String(take!(io)))
+        @test check_output("constructors/format_constructors_sh1_e.txt", String(take!(io)))
     end
 
     @testset "Fiber!(SparseHash{2}(Element(0))" begin
@@ -410,7 +410,7 @@
         @test Structure(fbr) == Structure(Fiber!(SparseHash{2}(Element(0.0), (Int16(0), Int16(0),))))
         @test Structure(fbr) == Structure(Fiber!(SparseHash{2, Tuple{Int16, Int16}}(Element(0.0), (0,0,))))
 
-        @test check_output("format_constructors_sh2_e.txt", String(take!(io)))
+        @test check_output("constructors/format_constructors_sh2_e.txt", String(take!(io)))
     end
 
     @testset "Fiber!(SparseTriangle{2}(Element(0))" begin
@@ -472,7 +472,7 @@
         @test Structure(fbr) == Structure(Fiber!(SparseTriangle{2}(Element(0.0), Int16(0))))
         @test Structure(fbr) == Structure(Fiber!(SparseTriangle{2, Int16}(Element(0.0), 0)))
 
-        @test check_output("format_constructors_st2_e.txt", String(take!(io)))
+        @test check_output("constructors/format_constructors_st2_e.txt", String(take!(io)))
     end
 
     @testset "Fiber!(SparseTriangle{3}(Element(0))" begin
@@ -530,7 +530,7 @@
         @test Structure(fbr) == Structure(Fiber!(SparseTriangle{3}(Element(0.0), Int16(0))))
         @test Structure(fbr) == Structure(Fiber!(SparseTriangle{3, Int16}(Element(0.0), 0)))
 
-        @test check_output("format_constructors_st3_e.txt", String(take!(io))) 
+        @test check_output("constructors/format_constructors_st3_e.txt", String(take!(io))) 
     end
      
     @testset "Fiber!(SparseRLE(Element(0))" begin
@@ -588,6 +588,6 @@
         @test Structure(fbr) == Structure(Fiber!(SparseRLE(Element(0.0), Int16(0))))
         @test Structure(fbr) == Structure(Fiber!(SparseRLE{Int16}(Element(0.0), 0)))
 
-        #@test check_output("format_constructors_srl_e.txt", String(take!(io)))
+        #@test check_output("constructors/format_constructors_srl_e.txt", String(take!(io)))
     end
 end
