@@ -164,16 +164,19 @@ relating to types and storage.
 
 ## Types and Storage of Level
 
-All levels have an `indextype` and a `postype`, typically denoted as `Ti` and `Tp` in the constructors. 
-Index type is mostly self expanatory as it is ofen just `Int`, but for levels that store multiple dimensions, 
-the index type is often a subtype of a Tuple. Pos (or position) type is the type used to define the iteratiorator through any 
-auxiliary data stuctures; it is named for the pos array in typical definitions of CSC or CSR.
+All levels have an `indextype` and a `postype`, typically denoted as `Ti` and `Tp` in the constructors, but accessible by two
+functions:
+
+```@docs
+indextype
+postype
+```
 
 Additionally, many levels have a `VTp` or `VTi` in their constructors; these stand for vector of element type `Tp` or `Ti`. 
 More generally, levels are paramterized by the types that they use for storage. By default, all levels use `Vector`, but a user 
-could in theory all the storage types of their levels so that a fiber could be stored on a GPU or CPU or via a different 
-allocation mechanism.  The storage type should behave like `AbstractArray` and needs to implement the usual abstract array functions
-and `Base.resize!`.
+could could change any or all of the storage types of a fiber so that the fiber would be stored on a GPU or CPU or some combination thereof, 
+or eveni just via a vector with a different allocation mechanism.  The storage type should behave like `AbstractArray` 
+and needs to implement the usual abstract array functions and `Base.resize!`. See the tests for an example. 
 
 When levels are constructed in short form as in the examples above, the index, position, and storage types are inferred
 from the level below. All the levels at the bottom of a Fiber (`Element, Pattern, Repeater`) specify an index type, position type,

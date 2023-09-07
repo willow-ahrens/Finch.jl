@@ -6,6 +6,10 @@ unwrap(::Type{T}) where {T} = T
 single(::Type{Vector{S}}) where S = S[1]
 empty(::Type{Vector{S}}) where S = S[]
 
+
+single(::Type{AbstractVector{S}}) where S = S[1]
+empty(::Type{AbstractVector{S}}) where S = S[]
+
 postype(::Type{Vector{S}}) where {S} = Int
 
 
@@ -27,19 +31,4 @@ function tuplize(::Type{T}, N::Int) where {T}
     else
         return Tuple{T}
     end
-end
-
-
-
-struct ForceCopyArray{T, N} <: AbstractArray{T, N}
-    data::Array{T, N}
-    function ForceCopyArray(arr:: AbstractArray{T, N}) where {T, N}
-        copied = copy(arr)
-        new{T, N}(arr)
-    end
-end
-
-
-struct NoCopyArray{T, N} <: AbstractArray{T, N}
-    data::Array{T, N}
 end
