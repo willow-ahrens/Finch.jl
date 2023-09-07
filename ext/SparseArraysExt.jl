@@ -95,11 +95,8 @@ function Finch.instantiate_reader(arr::VirtualSparseMatrixCSC, ctx::AbstractComp
                                             $my_q = Finch.scansearch($(arr.ex).rowval, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                                         end
                                     end,
-                                    body = Thunk(
-                                        preamble = quote
-                                            $my_i = $(arr.ex).rowval[$my_q]
-                                        end,
-                                        body = (ctx) -> Step(
+                                    body = Step(
+                                            preamble = :($my_i = $(arr.ex).rowval[$my_q]),
                                             stop = (ctx, ext) -> value(my_i),
                                             chunk = Spike(
                                                 body = Fill(zero(arr.Tv)),
@@ -115,7 +112,6 @@ function Finch.instantiate_reader(arr::VirtualSparseMatrixCSC, ctx::AbstractComp
                                             end
                                         )
                                     )
-                                )
                             ),
                             Phase(
                                 body = (ctx, ext) -> Run(Fill(zero(arr.Tv)))
@@ -196,11 +192,8 @@ function Finch.instantiate_reader(arr::VirtualSparseVector, ctx::AbstractCompile
                                     $my_q = Finch.scansearch($(arr.ex).nzind, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                                 end
                             end,
-                            body = Thunk(
-                                preamble = quote
-                                    $my_i = $(arr.ex).nzind[$my_q]
-                                end,
-                                body = (ctx) -> Step(
+                            body = Step(
+                                    preamble = :($my_i = $(arr.ex).nzind[$my_q]),
                                     stop = (ctx, ext) -> value(my_i),
                                     chunk = Spike(
                                         body = Fill(zero(arr.Tv)),
@@ -216,7 +209,6 @@ function Finch.instantiate_reader(arr::VirtualSparseVector, ctx::AbstractCompile
                                     end
                                 )
                             )
-                        )
                     ),
                     Phase(
                         body = (ctx, ext) -> Run(Fill(zero(arr.Tv)))

@@ -130,6 +130,7 @@ end
 jumper_body(node::VirtualOffsetArray, ctx, ext) = VirtualOffsetArray(jumper_body(node.body, ctx, shiftdim(ext, node.delta[end])), node.delta)
 stepper_body(node::VirtualOffsetArray, ctx, ext) = VirtualOffsetArray(stepper_body(node.body, ctx, shiftdim(ext, node.delta[end])), node.delta)
 stepper_seek(node::VirtualOffsetArray, ctx, ext) = stepper_seek(node.body, ctx, shiftdim(ext, node.delta[end]))
+jumper_seek(node::VirtualOffsetArray, ctx, ext) = jumper_seek(node.body, ctx, shiftdim(ext, node.delta[end]))
 
 getroot(tns::VirtualOffsetArray) = getroot(tns.body)
 

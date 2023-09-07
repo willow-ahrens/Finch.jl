@@ -72,15 +72,19 @@ end
 stepper_seek(node::Stepper, ctx, ext) = node.seek(ctx, ext)
 stepper_seek(node, ctx, ext) = quote end
 
-stepper_body(node::Stepper, ctx, ext) = node.body
+function stepper_body(node::Stepper, ctx, ext) 
+    node.body isa Step || error("Stepper's body must be Step")
+    node.body
+end
 stepper_body(node, ctx, ext) = node
 
 @kwdef struct Step
-    chunk = nothing
-    body = (ctx, ext) -> chunk
+    preamble = nothing
     stop = (ctx, ext) -> nothing
-    range = (ctx, ext) -> Extent(something(start(ctx, ext), getstart(ext)), something(stop(ctx, ext), getstop(ext)))
+    chunk = nothing
     next = (ctx, ext) -> nothing
+    range = (ctx, ext) -> Extent(something(start(ctx, ext), getstart(ext)), something(stop(ctx, ext), getstop(ext)))
+    body = (ctx, ext) -> chunk
 end
 
 FinchNotation.finch_leaf(x::Step) = virtual(x)
@@ -88,6 +92,7 @@ FinchNotation.finch_leaf(x::Step) = virtual(x)
 (ctx::Stylize{<:AbstractCompiler})(node::Step) = ctx.root.kind === loop ? StepperPhaseStyle() : DefaultStyle()
 
 function phase_range(node::Step, ctx, ext)
+    push!(ctx.code.preamble, node.preamble !== nothing ? node.preamble : quote end)
     ext_2 = similar_extent(ext, getstart(ext), node.stop(ctx, ext))
     bound_measure_below!(ext_2, getunit(ext))
 end

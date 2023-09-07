@@ -133,5 +133,6 @@ end
 jumper_body(node::VirtualProtocolizedArray, ctx, ext) = VirtualProtocolizedArray(jumper_body(node.body, ctx, ext), node.protos)
 stepper_body(node::VirtualProtocolizedArray, ctx, ext) = VirtualProtocolizedArray(stepper_body(node.body, ctx, ext), node.protos)
 stepper_seek(node::VirtualProtocolizedArray, ctx, ext) = stepper_seek(node.body, ctx, ext)
+jumper_seek(node::VirtualProtocolizedArray, ctx, ext) = jumper_seek(node.body, ctx, ext)
 
 getroot(tns::VirtualProtocolizedArray) = getroot(tns.body)

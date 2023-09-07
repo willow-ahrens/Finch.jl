@@ -310,11 +310,8 @@ function instantiate_reader(trv::SparseHashWalkTraversal, ctx, subprotos, ::Unio
                             end
                         end,
                         body = if R == 1
-                            Thunk(
-                                preamble = quote
-                                    $my_i = $(lvl.ex).srt[$my_q][1][2][$R]
-                                end,
-                                body = (ctx) -> Step(
+                            Step(
+                                    preamble = :($my_i = $(lvl.ex).srt[$my_q][1][2][$R]),
                                     stop =  (ctx, ext) -> value(my_i),
                                     chunk = Spike(
                                         body = Fill(virtual_level_default(lvl)),
@@ -324,17 +321,15 @@ function instantiate_reader(trv::SparseHashWalkTraversal, ctx, subprotos, ::Unio
                                         $my_q += $(Tp(1))
                                     end
                                 )
-                            )
                         else
-                            Thunk(
-                                preamble = quote
-                                    $my_i = $(lvl.ex).srt[$my_q][1][2][$R]
-                                    $my_q_step = $my_q
-                                    while $my_q_step < $my_q_stop && $(lvl.ex).srt[$my_q_step][1][2][$R] == $my_i
-                                        $my_q_step += $(Tp(1))
-                                    end
-                                end,
-                                body = (ctx) -> Step(
+                             Step(
+                                    preamble = quote
+                                        $my_i = $(lvl.ex).srt[$my_q][1][2][$R]
+                                        $my_q_step = $my_q
+                                        while $my_q_step < $my_q_stop && $(lvl.ex).srt[$my_q_step][1][2][$R] == $my_i
+                                            $my_q_step += $(Tp(1))
+                                        end
+                                    end,
                                     stop = (ctx, ext) -> value(my_i),
                                     chunk = Spike(
                                         body = Fill(virtual_level_default(lvl)),
@@ -344,7 +339,6 @@ function instantiate_reader(trv::SparseHashWalkTraversal, ctx, subprotos, ::Unio
                                         $my_q = $my_q_step
                                     end
                                 )
-                            )
                         end
                     )
                 ),

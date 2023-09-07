@@ -271,18 +271,13 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
                                 $my_r += $(Tp(1))
                             end
                         end,
-                        body = Thunk(
-                            preamble = :(
-                                $my_i = last($(lvl.ex).srt[$my_r])
-                            ),
-                            body = (ctx) -> Step(
+                        body = Step(
+                                preamble = :($my_i = last($(lvl.ex).srt[$my_r])),
                                 stop = (ctx, ext) -> value(my_i),
                                 chunk = Spike(
                                     body = Fill(virtual_level_default(lvl)),
                                     tail = Thunk(
-                                        preamble = quote
-                                            $my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $my_i
-                                        end,
+                                        preamble = :($my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $my_i),
                                         body = (ctx) -> instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, subprotos),
                                     ),
                                 ),
@@ -290,7 +285,6 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
                                     $my_r += $(Tp(1))
                                 end
                             )
-                        )
                     )
                 ),
                 Phase(
@@ -330,61 +324,25 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
                 Phase(
                     stop = (ctx, ext) -> value(my_i_stop),
                     body = (ctx, ext) -> Jumper(
-                        body = Thunk(
-                            body = (ctx) -> Jump(
-                                seek = (ctx, ext) -> quote
-                                    while $my_r + $(Tp(1)) < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext)))
-                                        $my_r += $(Tp(1))
-                                    end
-                                    $my_i = last($(lvl.ex).srt[$my_r])
-                                end,
+                        seek = (ctx, ext) -> quote
+                            while $my_r + $(Tp(1)) < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext)))
+                                $my_r += $(Tp(1))
+                            end
+                        end,
+
+                        body = Jump(
+                                preamble = :($my_i = last($(lvl.ex).srt[$my_r])),
                                 stop = (ctx, ext) -> value(my_i),
-                                body = (ctx, ext, ext_2) -> Switch([
-                                    value(:($(ctx(getstop(ext_2))) == $my_i)) => Thunk(
-                                        body = (ctx) -> Spike(
+                                chunk =  Spike(
                                             body = Fill(virtual_level_default(lvl)),
                                             tail = Thunk(
-                                                preamble = quote
-                                                    $my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $my_i
-                                                end,
+                                                preamble = :($my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $my_i),
                                                 body = (ctx) -> instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, subprotos),
                                             ),
                                         ),
-                                        epilogue = quote
-                                            $my_r += $(Tp(1))
-                                        end
-                                    ),
-                                    literal(true) => Stepper(
-                                        seek = (ctx, ext) -> quote
-                                            while $my_r + $(Tp(1)) < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext)))
-                                                $my_r += $(Tp(1))
-                                            end
-                                        end,
-                                        body = Thunk(
-                                            preamble = :(
-                                                $my_j = last($(lvl.ex).srt[$my_r])
-                                            ),
-                                            body = (ctx) -> Step(
-                                                stop = (ctx, ext) -> value(my_j),
-                                                chunk = Spike(
-                                                    body = Fill(virtual_level_default(lvl)),
-                                                    tail = Thunk(
-                                                        preamble = quote
-                                                            $my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $my_j
-                                                        end,
-                                                        body = (ctx) -> instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, subprotos),
-                                                    ),
-                                                ),
-                                                next = (ctx, ext) -> quote
-                                                    $my_r += $(Tp(1))
-                                                end
-                                            )
-                                        )
-                                    ),
-                                ])
+                                next = (ctx, ext) -> :($my_r += $(Tp(1)))
                             )
                         )
-                    )
                 ),
                 Phase(
                     body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))

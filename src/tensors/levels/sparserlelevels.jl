@@ -231,12 +231,11 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, su
                                 $my_q = Finch.scansearch($(lvl.ex).right, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                             end
                         end,
-                        body = Thunk(
-                            preamble = quote
-                                $my_i_start = $(lvl.ex).left[$my_q]
-                                $my_i_stop = $(lvl.ex).right[$my_q]
-                            end,
-                            body = (ctx) -> Step(
+                        body = Step(
+                                preamble = quote
+                                    $my_i_start = $(lvl.ex).left[$my_q]
+                                    $my_i_stop = $(lvl.ex).right[$my_q]
+                                end,
                                 stop = (ctx, ext) -> value(my_i_stop),
                                 body = (ctx, ext) -> Thunk( 
                                     body = (ctx) -> Sequence([
@@ -256,7 +255,6 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, su
                                 )
                             )
                         )
-                    )
                 ),
                 Phase(
                     body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))

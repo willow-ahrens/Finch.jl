@@ -130,6 +130,7 @@ end
 jumper_body(node::VirtualWindowedArray, ctx, ext) = VirtualWindowedArray(jumper_body(node.body, ctx, ext), node.dims)
 stepper_body(node::VirtualWindowedArray, ctx, ext) = VirtualWindowedArray(stepper_body(node.body, ctx, ext), node.dims)
 stepper_seek(node::VirtualWindowedArray, ctx, ext) = stepper_seek(node.body, ctx, ext)
+jumper_seek(node::VirtualWindowedArray, ctx, ext) = jumper_seek(node.body, ctx, ext)
 
 getroot(tns::VirtualWindowedArray) = getroot(tns.body)
 
