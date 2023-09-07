@@ -219,6 +219,8 @@ function Finch.virtual_call(::typeof(chunkmask), ctx, b, dim)
     end
 end
 
+virtual_uncall(arr::VirtualChunkMask) = call(chunkmask, arr.b, arr.dim)
+
 FinchNotation.finch_leaf(x::VirtualChunkMask) = virtual(x)
 Finch.virtual_size(arr::VirtualChunkMask, ctx) = (arr.dim, Extent(literal(1), call(cld, measure(arr.dim), arr.b)))
 

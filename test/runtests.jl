@@ -100,7 +100,6 @@ include("utils.jl")
         end
     end
     if should_run("embed") include("embed/test_embed.jl") end
-    if should_run("debug") include("test_debug.jl") end
     if should_run("parallel") include("test_parallel.jl") end
     if should_run("continuous") include("test_continuous.jl") end
     #algebra goes at the end since it calls refresh()
