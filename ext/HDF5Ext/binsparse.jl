@@ -1,6 +1,36 @@
 using Finch: level_ndims, SwizzleArray
 using CIndices
 
+bsread_type_lookup = Dict(
+    "uint8" => UInt8,
+    "uint16" => UInt16,
+    "uint32" => UInt32,
+    "uint64" => UInt64,
+    "int8" => Int8,
+    "int16" => Int16,
+    "int32" => Int32,
+    "int64" => Int64,
+    "float32" => Float32,
+    "float64" => Float64,
+    "bint8" => Bool,
+)
+
+bsread_data(f, desc, key) = bsread_data_helper(f, desc, key, Val{desc["data_types"]["$(key)_type"]})
+
+function bsread_data_helper(f, desc, key, valtype)
+    if (m = match(r"^iso\[([^\[]*)\]$", valtype)) != nothing
+        throw(ArgumentError("iso values not currently supported"))
+    elseif (m = match(r"^complex\[([^\[]*)\]$", valtype)) != nothing
+        data = bsread_data(f, desc, key, m.captures[1])
+        return reinterpret(reshape, Complex{eltype(data)}, reshape(data, 2, :))
+    elseif (m = match(r"^[^\[]*$", valtype)) != nothing
+        haskey(bsread_type_lookup, valtype) || throw(ArgumentError("unknown binsparse type $valtype"))
+        convert(Vector{bsread_type_lookup[valtype]}, read(f[key]))
+    else
+        throw(ArgumentError("unknown binsparse type wrapper $valtype"))
+    end
+end
+
 bswrite_type_lookup = Dict(
     UInt8 => "uint8",
     UInt16 => "uint16",
@@ -15,19 +45,21 @@ bswrite_type_lookup = Dict(
     Bool => "bint8",
 )
 
-bsread_type_lookup = Dict(
-    "uint8" => UInt8,
-    "uint16" => UInt16,
-    "uint32" => UInt32,
-    "uint64" => UInt64,
-    "int8" => Int8,
-    "int16" => Int16,
-    "int32" => Int32,
-    "int64" => Int64,
-    "float32" => Float32,
-    "float64" => Float64,
-    "bint8" => Bool,
-)
+function bswrite_data(f, desc, key, data)
+    type_desc = bswrite_data_helper(f, desc, key, data)
+    desc["data_types"]["$(key)_type"] = type_desc 
+end
+
+function bswrite_data_helper(f, desc, key, data::Vector{T}) where {T}
+    haskey(bswrite_type_lookup, T) || throw(ArgumentError("Cannot write $T to binsparse"))
+    f[key] = convert(Vector{bsread_type_lookup[bswrite_type_lookup[T]]}, data)
+    return bswrite_type_lookup[T]
+end
+
+function bswrite_data_helper(f, desc, key, data::Vector{Complex{T}}) where {T}
+    data = reshape(reinterpret(reshape, T, f), :)
+    return "complex[$(bs_write_data_helper(f, desc, key, data))]))]"
+end
 
 bswrite_format_lookup = Dict(
     "CSR" => Dict(
@@ -143,18 +175,7 @@ indices_one_to_zero(vec::Vector{<:Integer}) = vec .- one(eltype(vec))
 indices_one_to_zero(vec::Vector{<:CIndex{Ti}}) where {Ti} = unsafe_wrap(Array, reinterpret(Ptr{Ti}, pointer(vec)), length(vec); own = false)
 indices_zero_to_one(vec::Vector{Ti}) where {Ti} = unsafe_wrap(Array, reinterpret(Ptr{CIndex{Ti}}, pointer(vec)), length(vec); own = false)
 
-function bswrite_data(f, desc, key, data)
-    desc["data_types"]["$(key)_type"] = bswrite_type_lookup[eltype(data)]
-    f[key] = reinterpret(bsread_type_lookup[bswrite_type_lookup[eltype(data)]], data)
-end
 
-bsread_data(f, desc, key) = bsread_data(f, desc, key, Val{desc["data_types"]["$(key)_type"]})
-
-function bsread_data(f, desc, key, valtype)
-    data = read(f[key])
-    T = bsread_type_lookup[valtype]
-    convert(Vector{T}, reinterpret(T, data))
-end
 
 Finch.bswrite(fname, fbr::Fiber, attrs = Dict()) = 
     bswrite(fname, swizzle(fbr, (1:ndims(fbr)...)), attrs)
