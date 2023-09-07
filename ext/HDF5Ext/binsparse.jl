@@ -61,7 +61,7 @@ function bswrite_data_helper(f, desc, key, data::Vector{Complex{T}}) where {T}
     return "complex[$(bs_write_data_helper(f, desc, key, data))]))]"
 end
 
-bswrite_format_lookup = Dict(
+bsread_format_lookup = Dict(
     "CSR" => Dict(
         "swizzle" => [1, 2],
         "level" => Dict(
@@ -171,6 +171,8 @@ bswrite_format_lookup = Dict(
     )
 )
 
+bswrite_format_lookup = Dict(v => k for (k, v) in bsread_format_lookup)
+
 indices_one_to_zero(vec::Vector{<:Integer}) = vec .- one(eltype(vec))
 indices_one_to_zero(vec::Vector{<:CIndex{Ti}}) where {Ti} = unsafe_wrap(Array, reinterpret(Ptr{Ti}, pointer(vec)), length(vec); own = false)
 indices_zero_to_one(vec::Vector{Ti}) where {Ti} = unsafe_wrap(Array, reinterpret(Ptr{CIndex{Ti}}, pointer(vec)), length(vec); own = false)
@@ -182,12 +184,12 @@ function Finch.bswrite(fname, arr::SwizzleArray{dims, <:Fiber}, attrs = Dict()) 
         desc = Dict(
             "format" => Dict(),
             "fill" => true,
-            "swizzle" => reverse(collect(dims)),
             "shape" => map(Int, size(arr)),
             "data_types" => Dict(),
             "attrs" => attrs,
         )
         bswrite_level(f, desc, desc["format"], arr.body.lvl)
+        desc["format"]["swizzle"] = reverse(collect(dims))
         desc["format"] = get(bswrite_format_lookup, desc["format"], desc["format"])
         f["binsparse"] = json(desc, 4)
     end
@@ -197,9 +199,10 @@ end
 function Finch.bsread(fname)
     h5open(fname, "r") do f
         desc = JSON.parse(read(f["binsparse"]))
-        fbr = Fiber(bsread_level(f, desc, desc["format"]))
-        if !issorted(reverse(desc["swizzle"]))
-            fbr = swizzle(fbr, reverse(desc["swizzle"]))
+        fmt = get(bsread_format_lookup, desc["format"], desc["format"])
+        fbr = Fiber(bsread_level(f, desc, fmt))
+        if !issorted(reverse(fmt["swizzle"]))
+            fbr = swizzle(fbr, reverse(fmt["swizzle"]))
         end
         fbr
     end
