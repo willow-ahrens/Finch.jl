@@ -16,34 +16,37 @@ bsread_type_lookup = Dict(
 )
 
 function bsread_data(f, desc, key)
-    if (m = match(r"^iso\[([^\[]*)\]$", valtype)) != nothing
+    t = desc["data_types"]["$(key)_type"]
+    if (m = match(r"^iso\[([^\[]*)\]$", t)) != nothing
         throw(ArgumentError("iso values not currently supported"))
-    elseif (m = match(r"^complex\[([^\[]*)\]$", valtype)) != nothing
+    elseif (m = match(r"^complex\[([^\[]*)\]$", t)) != nothing
         desc["data_types"]["$(key)_type"] = m.captures[1]
         data = bsread_data(f, desc, key)
         return reinterpret(reshape, Complex{eltype(data)}, reshape(data, 2, :))
-    elseif (m = match(r"^[^\[]*$", valtype)) != nothing
-        haskey(bsread_type_lookup, valtype) || throw(ArgumentError("unknown binsparse type $valtype"))
-        convert(Vector{bsread_type_lookup[valtype]}, read(f[key]))
+    elseif (m = match(r"^[^\]]*$", t)) != nothing
+        haskey(bsread_type_lookup, t) || throw(ArgumentError("unknown binsparse type $t"))
+        convert(Vector{bsread_type_lookup[t]}, read(f[key]))
     else
-        throw(ArgumentError("unknown binsparse type wrapper $valtype"))
+        throw(ArgumentError("unknown binsparse type wrapper $t"))
     end
 end
+
 bswrite_type_lookup = Dict(v => k for (k, v) in bsread_type_lookup)
 
 function bswrite_data(f, desc, key, data)
     type_desc = bswrite_data_helper(f, desc, key, data)
 end
 
-function bswrite_data_helper(f, desc, key, data::Vector{T}) where {T}
+function bswrite_data_helper(f, desc, key, data::AbstractVector{T}) where {T}
     haskey(bswrite_type_lookup, T) || throw(ArgumentError("Cannot write $T to binsparse"))
     f[key] = data
     desc["data_types"]["$(key)_type"] = bswrite_type_lookup[T]
 end
 
-function bswrite_data_helper(f, desc, key, data::Vector{Complex{T}}) where {T}
-    data = reshape(reinterpret(reshape, T, f), :)
-    desc["data_types"]["$(key)_type"] = "complex[$(desc["data_types"]["$(key)_type"])]))]"
+function bswrite_data_helper(f, desc, key, data::AbstractVector{Complex{T}}) where {T}
+    data = reshape(reinterpret(reshape, T, data), :)
+    bswrite_data_helper(f, desc, key, data)
+    desc["data_types"]["$(key)_type"] = "complex[$(desc["data_types"]["$(key)_type"])]"
 end
 
 bsread_format_lookup = Dict(
@@ -200,7 +203,7 @@ function bswrite_level(f, desc, fmt, lvl::ElementLevel{D}) where {D}
     bswrite_data(f, desc, "fill_value", [D])
 end
 function bsread_level(f, desc, fmt, ::Val{:element})
-    val = bsread_data(f, desc, "values")
+    val = convert(Vector, bsread_data(f, desc, "values"))
     D = bsread_data(f, desc, "fill_value")[1]
     ElementLevel(D, val)
 end

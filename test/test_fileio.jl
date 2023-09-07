@@ -4,49 +4,43 @@ using Pkg
         using HDF5
         using CIndices
         @info "Testing HDF5 fileio"
-        A = [0.0 1.0 2.0 2.0 ;
-            0.0 0.0 0.0 0.0 ;
-            1.0 1.0 2.0 0.0 ;
-            0.0 0.0 0.0 0.0 ]
-        mktempdir() do f
-            A_dense = Fiber!(Dense(Dense(Element(0.0))), A)
-            A_dense_fname = joinpath(f, "A_dense.fbr")
-            fbrwrite(A_dense_fname, A_dense)
-            A_dense_test = fbrread(A_dense_fname)
-            @test isstructequal(A_dense_test, A_dense)
-
-            A_CSC = Fiber!(Dense(SparseList(Element(0.0))), A)
-            A_CSC_fname = joinpath(f, "A_CSC.fbr")
-            fbrwrite(A_CSC_fname, A_CSC)
-            A_CSC_test = fbrread(A_CSC_fname)
-            @test isstructequal(A_CSC_test, A_CSC)
-
-            A_COO = Fiber!(SparseCOO{2}(Element(0.0)), A)
-            A_COO_fname = joinpath(f, "A_COO.fbr")
-            fbrwrite(A_COO_fname, A_COO)
-            A_COO_test = fbrread(A_COO_fname)
-            @test isstructequal(A_COO_test, A_COO)
-
-            A_dense = Fiber!(Dense{CIndex{Int}}(Dense{CIndex{Int}}(Element(0.0))), A)
-            A_dense_fname = joinpath(f, "A_dense.bs")
-            bswrite(A_dense_fname, A_dense)
-            
-            A_dense_test = bsread(A_dense_fname)
-                        @test isstructequal(A_dense_test, A_dense)
-
-            A_CSC = Fiber!(Dense{CIndex{Int}}(SparseList{CIndex{Int}, CIndex{Int}}(Element(0.0))), A)
-            A_CSC_fname = joinpath(f, "A_CSC.bs")
-            bswrite(A_CSC_fname, A_CSC)
-            A_CSC_test = bsread(A_CSC_fname)
-            @test isstructequal(A_CSC_test, A_CSC)
-
-            A_COO = Fiber!(SparseCOO{2, Tuple{CIndex{Int}, CIndex{Int}}, CIndex{Int}}(Element(0.0)), A)
-            A_COO_fname = joinpath(f, "A_COO.bs")
-            bswrite(A_COO_fname, A_COO)
-            A_COO_test = bsread(A_COO_fname)
-            println(A_COO_test)
-            println(A_COO)
-            @test isstructequal(A_COO_test, A_COO)
+        @testset "binsparse" begin
+            mktempdir() do f
+                for A in [
+                    [false true false false ;
+                    true true true true],
+                    [0 1 2 2 ;
+                    0 0 0 0 ;
+                    1 1 2 0 ;
+                    0 0 0 0 ],
+                    [0.0 1.0 2.0 2.0 ;
+                    0.0 0.0 0.0 0.0 ;
+                    1.0 1.0 2.0 0.0 ;
+                    0.0 0.0 0.0 0.0 ],
+                    [0 + 1im 1 + 0im 0 + 0im ;
+                    0 + 0im 1 + 0im 0 + 0im ]
+                ]
+                    @testset "$(typeof(A))" begin
+                        for D in [
+                            zero(eltype(A)),
+                            one(eltype(A)),
+                        ]
+                            for (name, fmt) in [
+                                "A_dense" => Fiber!(Dense{CIndex{Int}}(Dense{CIndex{Int}}(Element(D)))),
+                                "A_CSC" => Fiber!(Dense{CIndex{Int}}(SparseList{CIndex{Int}}(Element(D)))),
+                                "A_CSR" => swizzle(Fiber!(Dense{CIndex{Int}}(SparseList{CIndex{Int}}(Element(D)))), 2, 1),
+                                "A_COO" => Fiber!(SparseCOO{2, Tuple{CIndex{Int}, CIndex{Int}}, CIndex{Int}}(Element(D))),
+                            ]
+                                @testset "binsparse $name($D)" begin
+                                    fmt = copyto!(fmt, A)
+                                    bswrite(joinpath(f, "$name.bs"), fmt)
+                                    @test isstructequal(bsread(joinpath(f, "$name.bs")), fmt)
+                                end
+                            end
+                        end
+                    end
+                end
+            end
         end
     end
 
