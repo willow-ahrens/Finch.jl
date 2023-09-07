@@ -175,8 +175,6 @@ indices_one_to_zero(vec::Vector{<:Integer}) = vec .- one(eltype(vec))
 indices_one_to_zero(vec::Vector{<:CIndex{Ti}}) where {Ti} = unsafe_wrap(Array, reinterpret(Ptr{Ti}, pointer(vec)), length(vec); own = false)
 indices_zero_to_one(vec::Vector{Ti}) where {Ti} = unsafe_wrap(Array, reinterpret(Ptr{CIndex{Ti}}, pointer(vec)), length(vec); own = false)
 
-
-
 Finch.bswrite(fname, fbr::Fiber, attrs = Dict()) = 
     bswrite(fname, swizzle(fbr, (1:ndims(fbr)...)), attrs)
 function Finch.bswrite(fname, arr::SwizzleArray{dims, <:Fiber}, attrs = Dict()) where {dims}
@@ -213,26 +211,11 @@ function bswrite_level(f, desc, fmt, lvl::ElementLevel{D}) where {D}
     bswrite_data(f, desc, "values", lvl.val)
     bswrite_data(f, desc, "fill_value", [D])
 end
-
-bsread_level(f, desc, fmt, ::Val{:element}) =
-    bsread_element_level(f, desc, fmt, desc["data_types"]["values_type"])
-
-function bsread_element_level(f, desc, fmt, valtype)
-    if (m = match(r"^iso\[([^\[]*)\]$", valtype)) != nothing
-        throw(ArgumentError("iso values not currently supported"))
-    elseif (m = match(r"^complex\[([^\[]*)\]$", valtype)) != nothing
-        lvl = bsread_element_level(f, desc, fmt, m.captures[1])
-        return bsread_element_level_complex(lvl)
-    elseif (m = match(r"^[^\[]*$", valtype)) != nothing
-        val = bsread_data(f, desc, "values", valtype)
-        D = bsread_data(f, desc, "fill_value", valtype)[1]
-        return ElementLevel(D, val)
-    else
-        throw(ArgumentError("unknown value type wrapper $valtype"))
-    end
+function bsread_level(f, desc, fmt, ::Val{:element})
+    val = bsread_data(f, desc, "values")
+    D = bsread_data(f, desc, "fill_value")[1]
+    ElementLevel(D, val)
 end
-
-bsread_element_level_complex(lvl::ElementLevel{D}) where {D} = ElementLevel{Complex{D}}(reinterpret(Complex{D}, lvl.val))
 
 function bswrite_level(f, desc, fmt, lvl::DenseLevel{D}) where {D}
     fmt["level"] = "dense"
