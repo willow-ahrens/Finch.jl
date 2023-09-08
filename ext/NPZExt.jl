@@ -2,11 +2,12 @@ module NPZExt
 
 using Finch
 using Finch : NPXGroup
+using Finch.JSON
+using Finch.DataStructures
 
 isdefined(Base, :get_extension) ? (using NPZ) : (using ..NPZ)
 
 using NPZ
-using JSON
 
 function Base.getindex(g::NPXGroup, key::AbstractString)
     path =joinpath(g.dirname, key)
@@ -32,7 +33,7 @@ function Finch.bspread_npx(fname)
     bspread(NPXGroup(fname))
 end
 
-function Finch.bspwrite_npx(fname, arr, attrs = Dict()) where {dims}
+function Finch.bspwrite_npx(fname, arr, attrs = OrderedDict())
     bspwrite(NPXGroup(fname), arr, attrs)
     fname
 end
