@@ -165,45 +165,55 @@ indices_zero_to_one(vec::Vector{Ti}) where {Ti} = unsafe_wrap(Array, reinterpret
 indices_one_to_zero(vec::Vector{<:Integer}) = vec .- one(eltype(vec))
 indices_one_to_zero(vec::Vector{<:CIndex{Ti}}) where {Ti} = unsafe_wrap(Array, reinterpret(Ptr{Ti}, pointer(vec)), length(vec); own = false)
 
-Finch.bspwrite(fname, fbr::Fiber, attrs = Dict()) = 
-    bspwrite(fname, swizzle(fbr, 1:ndims(fbr)...), attrs)
-function Finch.bspwrite(fname, arr::SwizzleArray{dims, <:Fiber}, attrs = Dict()) where {dims}
-    h5open(fname, "w") do f
-        desc = Dict(
-            "format" => Dict(
-                "subformat" => Dict(),
-                "swizzle" => reverse(collect(dims)),
-            ),
-            "fill" => true,
-            "shape" => map(Int, size(arr)),
-            "data_types" => Dict(),
-            "attrs" => attrs,
-        )
-        bspwrite_level(f, desc, desc["format"]["subformat"], arr.body.lvl)
-        desc["format"] = get(bspwrite_format_lookup, desc["format"], desc["format"])
-        f["binsparse"] = json(desc, 4)
+Finch.bspwrite(io, fbr::Fiber, attrs = Dict()) = 
+    bspwrite(io, swizzle(fbr, 1:ndims(fbr)...), attrs)
+
+function Finch.bspwrite(fname::String, arr::SwizzleArray{dims, <:Fiber}, attrs = Dict()) where {dims}
+    h5open(fname, "w") do io
+        bspwrite(io, arr, attrs)
     end
     fname
 end
 
-function Finch.bspread(fname)
+function Finch.bspwrite(io, arr::SwizzleArray{dims, <:Fiber}, attrs = Dict()) where {dims}
+    desc = Dict(
+        "format" => Dict(
+            "subformat" => Dict(),
+            "swizzle" => reverse(collect(dims)),
+        ),
+        "fill" => true,
+        "shape" => map(Int, size(arr)),
+        "data_types" => Dict(),
+        "attrs" => attrs,
+    )
+    bspwrite_level(io, desc, desc["format"]["subformat"], arr.body.lvl)
+    desc["format"] = get(bspwrite_format_lookup, desc["format"], desc["format"])
+    io["binsparse"] = json(desc, 4)
+end
+
+function Finch.bspread(fname::String)
     h5open(fname, "r") do f
-        desc = JSON.parse(read(f["binsparse"]))
-        fmt = get(bspread_format_lookup, desc["format"], desc["format"])
-        if !issorted(reverse(fmt["swizzle"]))
-            sigma = reverse(sortperm(fmt["swizzle"]))
-            desc["shape"] = desc["shape"][sigma]
-        end
-        fbr = Fiber(bspread_level(f, desc, fmt["subformat"]))
-        if !issorted(reverse(fmt["swizzle"]))
-            fbr = swizzle(fbr, reverse(fmt["swizzle"])...)
-        end
-        if haskey(desc, "structure")
-            throw(ArgumentError("binsparse structure field currently unsupported"))
-        end
-        fbr
+        bspread(f)
     end
 end
+
+function Finch.bspread(f)
+    desc = JSON.parse(read(f["binsparse"]))
+    fmt = get(bspread_format_lookup, desc["format"], desc["format"])
+    if !issorted(reverse(fmt["swizzle"]))
+        sigma = reverse(sortperm(fmt["swizzle"]))
+        desc["shape"] = desc["shape"][sigma]
+    end
+    fbr = Fiber(bspread_level(f, desc, fmt["subformat"]))
+    if !issorted(reverse(fmt["swizzle"]))
+        fbr = swizzle(fbr, reverse(fmt["swizzle"])...)
+    end
+    if haskey(desc, "structure")
+        throw(ArgumentError("binsparse structure field currently unsupported"))
+    end
+    fbr
+end
+
 bspread_level(f, desc, fmt) = bspread_level(f, desc, fmt, Val(Symbol(fmt["level"])))
 
 function bspwrite_level(f, desc, fmt, lvl::ElementLevel{D}) where {D}
