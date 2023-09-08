@@ -1,1 +1,0 @@
-Fiber(SparseCOO{2}(Element{0.0, Float64}(…), (5, 10), …))

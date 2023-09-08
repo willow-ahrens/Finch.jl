@@ -30,7 +30,7 @@ julia = "1.6.7"
 
 [extensions]
 HDF5Ext = "HDF5"
-NPZ = "NPZ"
+NPZExt = "NPZ"
 SparseArraysExt = "SparseArrays"
 TensorMarketExt = "TensorMarket"
 
