@@ -38,7 +38,7 @@ function bspread end
 using Finch: level_ndims, SwizzleArray
 using CIndices
 
-bspread_type_lookup = Dict(
+bspread_type_lookup = OrderedDict(
     "uint8" => UInt8,
     "uint16" => UInt16,
     "uint32" => UInt32,
@@ -68,7 +68,7 @@ function bspread_data(f, desc, key)
     end
 end
 
-bspwrite_type_lookup = Dict(v => k for (k, v) in bspread_type_lookup)
+bspwrite_type_lookup = OrderedDict(v => k for (k, v) in bspread_type_lookup)
 
 function bspwrite_data(f, desc, key, data)
     type_desc = bspwrite_data_helper(f, desc, key, data)
@@ -86,117 +86,117 @@ function bspwrite_data_helper(f, desc, key, data::AbstractVector{Complex{T}}) wh
     desc["data_types"]["$(key)_type"] = "complex[$(desc["data_types"]["$(key)_type"])]"
 end
 
-bspread_format_lookup = Dict(
-    "CSR" => Dict(
+bspread_format_lookup = OrderedDict(
+    "CSR" => OrderedDict(
         "swizzle" => [1, 2],
-        "subformat" => Dict(
+        "subformat" => OrderedDict(
             "level" => "dense",
             "rank" => 1,
-            "subformat" => Dict(
+            "subformat" => OrderedDict(
                 "level" => "sparse",
                 "rank" => 1,
-                "subformat" => Dict(
+                "subformat" => OrderedDict(
                     "level" => "element",
                 )
             )
         )
     ),
 
-    "CSC" => Dict(
+    "CSC" => OrderedDict(
         "swizzle" => [2, 1],
-        "subformat" => Dict(
+        "subformat" => OrderedDict(
             "level" => "dense",
             "rank" => 1,
-            "subformat" => Dict(
+            "subformat" => OrderedDict(
                 "level" => "sparse",
                 "rank" => 1,
-                "subformat" => Dict(
+                "subformat" => OrderedDict(
                     "level" => "element",
                 )
             )
         )
     ),
 
-    "DCSR" => Dict(
+    "DCSR" => OrderedDict(
         "swizzle" => [1, 2],
-        "subformat" => Dict(
+        "subformat" => OrderedDict(
             "level" => "sparse",
             "rank" => 1,
-            "subformat" => Dict(
+            "subformat" => OrderedDict(
                 "level" => "sparse",
                 "rank" => 1,
-                "subformat" => Dict(
+                "subformat" => OrderedDict(
                     "level" => "element",
                 )
             )
         )
     ),
 
-    "DCSC" => Dict(
+    "DCSC" => OrderedDict(
         "swizzle" => [2, 1],
-        "subformat" => Dict(
+        "subformat" => OrderedDict(
             "level" => "sparse",
             "rank" => 1,
-            "subformat" => Dict(
+            "subformat" => OrderedDict(
                 "level" => "sparse",
                 "rank" => 1,
-                "subformat" => Dict(
+                "subformat" => OrderedDict(
                     "level" => "element",
                 )
             )
         )
     ),
 
-    "COO" => Dict(
+    "COO" => OrderedDict(
         "swizzle" => [1, 2],
-        "subformat" => Dict(
+        "subformat" => OrderedDict(
             "level" => "sparse",
             "rank" => 2,
-            "subformat" => Dict(
+            "subformat" => OrderedDict(
                 "level" => "element",
             )
         )
     ),
 
-    "DMAT" => Dict(
+    "DMAT" => OrderedDict(
         "swizzle" => [1, 2],
-        "subformat" => Dict(
+        "subformat" => OrderedDict(
             "level" => "dense",
             "rank" => 1,
-            "subformat" => Dict(
+            "subformat" => OrderedDict(
                 "level" => "dense",
                 "rank" => 1,
-                "subformat" => Dict(
+                "subformat" => OrderedDict(
                     "level" => "element",
                 )
             )
         )
     ),
 
-    "DVEC" => Dict(
+    "DVEC" => OrderedDict(
         "swizzle" => [1],
-        "subformat" => Dict(
+        "subformat" => OrderedDict(
             "level" => "dense",
             "rank" => 1,
-            "subformat" => Dict(
+            "subformat" => OrderedDict(
                 "level" => "element",
             )
         )
     ),
 
-    "VEC" => Dict(
+    "VEC" => OrderedDict(
         "swizzle" => [1],
-        "subformat" => Dict(
+        "subformat" => OrderedDict(
             "level" => "sparse",
             "rank" => 1,
-            "subformat" => Dict(
+            "subformat" => OrderedDict(
                 "level" => "element",
             )
         )
     )
 )
 
-bspwrite_format_lookup = Dict(v => k for (k, v) in bspread_format_lookup)
+bspwrite_format_lookup = OrderedDict(v => k for (k, v) in bspread_format_lookup)
 
 indices_zero_to_one(vec::Vector{Ti}) where {Ti} = unsafe_wrap(Array, reinterpret(Ptr{CIndex{Ti}}, pointer(vec)), length(vec); own = false)
 indices_one_to_zero(vec::Vector{<:Integer}) = vec .- one(eltype(vec))
@@ -209,7 +209,7 @@ end
 function bspwrite_h5 end
 function bspwrite_npx end
 
-function bspwrite(fname::AbstractString, arr, attrs = Dict())
+function bspwrite(fname::AbstractString, arr, attrs = OrderedDict())
     if endswith(fname, ".h5")
         bspwrite_h5(fname, arr, attrs)
     elseif endswith(fname, ".npx")
@@ -219,22 +219,22 @@ function bspwrite(fname::AbstractString, arr, attrs = Dict())
     end
 end
 
-bspwrite_tensor(io, fbr::Fiber, attrs = Dict()) = 
+bspwrite_tensor(io, fbr::Fiber, attrs = OrderedDict()) = 
     bspwrite_tensor(io, swizzle(fbr, 1:ndims(fbr)...), attrs)
-function bspwrite_tensor(io, arr::SwizzleArray{dims, <:Fiber}, attrs = Dict()) where {dims}
-    desc = Dict(
-        "format" => Dict(
-            "subformat" => Dict(),
+function bspwrite_tensor(io, arr::SwizzleArray{dims, <:Fiber}, attrs = OrderedDict()) where {dims}
+    desc = OrderedDict(
+        "format" => OrderedDict(
+            "subformat" => OrderedDict(),
             "swizzle" => reverse(collect(dims)),
         ),
         "fill" => true,
         "shape" => map(Int, size(arr)),
-        "data_types" => Dict(),
+        "data_types" => OrderedDict(),
         "attrs" => attrs,
     )
     bspwrite_level(io, desc, desc["format"]["subformat"], arr.body.lvl)
     desc["format"] = get(bspwrite_format_lookup, desc["format"], desc["format"])
-    io["binsparse"] = json(desc, 4)
+    io["binsparse"] = JSONText(json(desc, 4))
 end
 
 function bspread_h5 end
@@ -283,7 +283,7 @@ end
 function bspwrite_level(f, desc, fmt, lvl::DenseLevel{D}) where {D}
     fmt["level"] = "dense"
     fmt["rank"] = 1
-    fmt["subformat"] = Dict()
+    fmt["subformat"] = OrderedDict()
     bspwrite_level(f, desc, fmt["subformat"], lvl.lvl)
 end
 function bspread_level(f, desc, fmt, ::Val{:dense})
@@ -306,7 +306,7 @@ function bspwrite_level(f, desc, fmt, lvl::SparseListLevel)
         bspwrite_data(f, desc, "pointers_to_$(N - n)", indices_one_to_zero(lvl.ptr))
     end
     bspwrite_data(f, desc, "indices_$(N - n)", indices_one_to_zero(lvl.idx))
-    fmt["subformat"] = Dict()
+    fmt["subformat"] = OrderedDict()
     bspwrite_level(f, desc, fmt["subformat"], lvl.lvl)
 end
 function bspwrite_level(f, desc, fmt, lvl::SparseCOOLevel{R}) where {R}
@@ -320,7 +320,7 @@ function bspwrite_level(f, desc, fmt, lvl::SparseCOOLevel{R}) where {R}
     for r = 1:R
         bspwrite_data(f, desc, "indices_$(N - n + r - 1)", indices_one_to_zero(lvl.tbl[r]))
     end
-    fmt["subformat"] = Dict()
+    fmt["subformat"] = OrderedDict()
     bspwrite_level(f, desc, fmt["subformat"], lvl.lvl)
 end
 function bspread_level(f, desc, fmt, ::Val{:sparse})
