@@ -52,6 +52,9 @@ bspread_type_lookup = OrderedDict(
     "bint8" => Bool,
 )
 
+function bspread_vector end
+function bspwrite_vector end
+
 function bspread_data(f, desc, key)
     t = desc["data_types"]["$(key)_type"]
     if (m = match(r"^iso\[([^\[]*)\]$", t)) != nothing
@@ -62,7 +65,7 @@ function bspread_data(f, desc, key)
         return reinterpret(reshape, Complex{eltype(data)}, reshape(data, 2, :))
     elseif (m = match(r"^[^\]]*$", t)) != nothing
         haskey(bspread_type_lookup, t) || throw(ArgumentError("unknown binsparse type $t"))
-        convert(Vector{bspread_type_lookup[t]}, read(f[key]))
+        convert(Vector{bspread_type_lookup[t]}, bspread_vector(f, key))
     else
         throw(ArgumentError("unknown binsparse type wrapper $t"))
     end
@@ -76,7 +79,7 @@ end
 
 function bspwrite_data_helper(f, desc, key, data::AbstractVector{T}) where {T}
     haskey(bspwrite_type_lookup, T) || throw(ArgumentError("Cannot write $T to binsparse"))
-    f[key] = data
+    bspwrite_vector(f, data, key)
     desc["data_types"]["$(key)_type"] = bspwrite_type_lookup[T]
 end
 
@@ -257,7 +260,7 @@ end
 function bspread_header end
 
 function bspread(f)
-    desc = bspread_header(f)
+    desc = bspread_header(f, "binsparse")
     fmt = get(bspread_format_lookup, desc["format"], desc["format"])
     if !issorted(reverse(fmt["swizzle"]))
         sigma = reverse(sortperm(fmt["swizzle"]))
