@@ -1,7 +1,7 @@
 """
     bspwrite(::AbstractString, tns)
     bspwrite(::HDF5.File, tns)
-    bspwrite(::NPXPath, tns)
+    bspwrite(::NPYDPath, tns)
 
 Write the Finch tensor to a file using
 [Binsparse](https://github.com/GraphBLAS/binsparse-specification) file format.
@@ -9,7 +9,7 @@ Write the Finch tensor to a file using
 Supported file extensions are:
 
 - `.bsp.h5`: HDF5 file format ([HDF5](https://github.com/JuliaIO/HDF5.jl) must be loaded)
-- `.bsp.npx`: NumPy and JSON directory format ([NPZ](https://github.com/fhs/NPZ.jl) must be loaded)
+- `.bsp.npyd`: NumPy and JSON directory format ([NPZ](https://github.com/fhs/NPZ.jl) must be loaded)
 
 !!! warning
     The Binsparse spec is under development. Additionally, this function may not
@@ -20,14 +20,14 @@ function bspwrite end
 """
 bspread(::AbstractString)
 bspread(::HDF5.File)
-bspread(::NPXPath)
+bspread(::NPYDPath)
 
 Read the [Binsparse](https://github.com/GraphBLAS/binsparse-specification) file into a Finch tensor.
 
 Supported file extensions are:
 
 - `.bsp.h5`: HDF5 file format ([HDF5](https://github.com/JuliaIO/HDF5.jl) must be loaded)
-- `.bsp.npx`: NumPy and JSON directory format ([NPZ](https://github.com/fhs/NPZ.jl) must be loaded)
+- `.bsp.npyd`: NumPy and JSON directory format ([NPZ](https://github.com/fhs/NPZ.jl) must be loaded)
 
 !!! warning
 The Binsparse spec is under development. Additionally, this function may not
@@ -202,22 +202,23 @@ indices_zero_to_one(vec::Vector{Ti}) where {Ti} = unsafe_wrap(Array, reinterpret
 indices_one_to_zero(vec::Vector{<:Integer}) = vec .- one(eltype(vec))
 indices_one_to_zero(vec::Vector{<:CIndex{Ti}}) where {Ti} = unsafe_wrap(Array, reinterpret(Ptr{Ti}, pointer(vec)), length(vec); own = false)
 
-struct NPXGroup
+struct NPYDGroup
     dirname::String
 end
 
 function bspwrite_h5 end
-function bspwrite_npx end
+function bspwrite_npyd end
 
 function bspwrite(fname::AbstractString, arr, attrs = OrderedDict())
     if endswith(fname, ".h5")
         bspwrite_h5(fname, arr, attrs)
-    elseif endswith(fname, ".npx")
-        bspwrite_npx(fname, arr, attrs)
+    elseif endswith(fname, ".npyd")
+        bspwrite_npyd(fname, arr, attrs)
     else
         error("Unknown file extension for file $fname")
     end
 end
+bspwrite(fname, arr, attrs = OrderedDict()) = bspwrite_tensor(fname, arr, attrs)
 
 bspwrite_tensor(io, fbr::Fiber, attrs = OrderedDict()) = 
     bspwrite_tensor(io, swizzle(fbr, 1:ndims(fbr)...), attrs)
@@ -241,20 +242,22 @@ end
 function bspwrite_header end
 
 function bspread_h5 end
-function bspread_npx end
+function bspread_npyd end
 
 function bspread(fname::AbstractString)
     if endswith(fname, ".h5")
         bspread_h5(fname)
-    elseif endswith(fname, ".npx")
-        bspread_npx(fname)
+    elseif endswith(fname, ".npyd")
+        bspread_npyd(fname)
     else
         error("Unknown file extension for file $fname")
     end
 end
 
-function bspread_tensor(f)
-    desc = JSON.parse(read(f["binsparse"]))
+function bspread_header end
+
+function bspread(f)
+    desc = bspread_header(f)
     fmt = get(bspread_format_lookup, desc["format"], desc["format"])
     if !issorted(reverse(fmt["swizzle"]))
         sigma = reverse(sortperm(fmt["swizzle"]))

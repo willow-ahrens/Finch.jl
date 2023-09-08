@@ -52,8 +52,8 @@ using Pkg
     if haskey(Pkg.project().dependencies, "NPZ")
         using NPZ
         using CIndices
-        @info "Testing NPX fileio"
-        @testset "npx binsparse" begin
+        @info "Testing NPYD fileio"
+        @testset "npyd binsparse" begin
             mktempdir() do f
                 for (iA, A) in enumerate([
                     [false true false false ;
@@ -84,7 +84,7 @@ using Pkg
                             ]
                                 @testset "binsparse $name($D)" begin
                                     fmt = copyto!(fmt, A)
-                                    fname = joinpath(f, "A$(iA)_D$(iD)_$name.bsp.npx")
+                                    fname = joinpath(f, "A$(iA)_D$(iD)_$name.bsp.npyd")
                                     bspwrite(fname, fmt)
                                     out = bspread(fname)
                                     @test Structure(fmt) == Structure(bspread(fname))

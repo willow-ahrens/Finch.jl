@@ -7,7 +7,7 @@ The following file extensions are supported:
 - `.tns`: FROSTT `.tns` text file format
 - `.ttx`: TensorMarket `.ttx` text file format
 - `.bsp.h5`: [Binsparse](https://github.com/GraphBLAS/binsparse-specification) HDF5 file format
-- `.bsp.npx`: [Binsparse](https://github.com/GraphBLAS/binsparse-specification) NumPy and JSON subdirectory format
+- `.bsp.npyd`: [Binsparse](https://github.com/GraphBLAS/binsparse-specification) NumPy and JSON subdirectory format
 """
 function fwrite(filename::AbstractString, tns)
     if endswith(filename, ".tns")
@@ -16,7 +16,7 @@ function fwrite(filename::AbstractString, tns)
         fttwrite(filename, tns)
     elseif endswith(filename, ".bsp.h5")
         bspwrite(filename, tns)
-    elseif endswith(filename, ".bsp.npx")
+    elseif endswith(filename, ".bsp.npyd")
         bspwrite(filename, tns)
     else
         error("Unknown file extension for file $filename")
@@ -32,7 +32,7 @@ The following file extensions are supported:
 - `.tns`: FROSTT `.tns` text file format
 - `.ttx`: TensorMarket `.ttx` text file format
 - `.bsp.h5`: [Binsparse](https://github.com/GraphBLAS/binsparse-specification) HDF5 file format
-- `.bsp.npx`: [Binsparse](https://github.com/GraphBLAS/binsparse-specification) NumPy and JSON subdirectory format
+- `.bsp.npyd`: [Binsparse](https://github.com/GraphBLAS/binsparse-specification) NumPy and JSON subdirectory format
 """
 function fread(filename::AbstractString)
     if endswith(filename, ".tns")
@@ -41,7 +41,7 @@ function fread(filename::AbstractString)
         fttread(filename)
     elseif endswith(filename, ".bsp.h5")
         bspread(filename)
-    elseif endswith(filename, ".bsp.npx")
+    elseif endswith(filename, ".bsp.npyd")
         bspread(filename)
     else
         error("Unknown file extension for file $filename")
