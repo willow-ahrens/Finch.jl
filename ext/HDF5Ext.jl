@@ -18,4 +18,8 @@ function Finch.bspwrite_h5(fname, arr, attrs = Dict())
     fname
 end
 
+function Finch.bspwrite_header(f::HDF5.File, str::String, key)
+    f[key] = str
+end
+
 end

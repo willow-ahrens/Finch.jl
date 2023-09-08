@@ -21,7 +21,7 @@ end
 Base.getindex(g::NPXGroup, key::AbstractString) = NPXGroup(joinpath(g.dirname, key))
 
 Base.setindex!(g::NPXGroup, val::AbstractArray, key::AbstractString) = npzwrite(mkpath(joinpath(g.dirname, "$(key).npy")), val)
-Base.setindex!(g::NPXGroup, val::JSONText, key::AbstractString) = npzwrite(mkpath(joinpath(g.dirname, "$(key).json")), val)
+Finch.bspwrite_header(f::NPXGroup, str::String, key) = npzwrite(mkpath(joinpath(g.dirname, "$(key).json")), str)
 function Base.setindex!(g::NPXGroup, val::AbstractDict, key::AbstractString)
     for (key_2, val) in val
         setindex!(g[key], val, key_2)

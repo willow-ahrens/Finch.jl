@@ -221,6 +221,7 @@ end
 
 bspwrite_tensor(io, fbr::Fiber, attrs = OrderedDict()) = 
     bspwrite_tensor(io, swizzle(fbr, 1:ndims(fbr)...), attrs)
+
 function bspwrite_tensor(io, arr::SwizzleArray{dims, <:Fiber}, attrs = OrderedDict()) where {dims}
     desc = OrderedDict(
         "format" => OrderedDict(
@@ -234,8 +235,10 @@ function bspwrite_tensor(io, arr::SwizzleArray{dims, <:Fiber}, attrs = OrderedDi
     )
     bspwrite_level(io, desc, desc["format"]["subformat"], arr.body.lvl)
     desc["format"] = get(bspwrite_format_lookup, desc["format"], desc["format"])
-    io["binsparse"] = JSONText(json(desc, 4))
+    bspwrite_header(io, json(desc, 4), "binsparse")
 end
+
+function bspwrite_header end
 
 function bspread_h5 end
 function bspread_npx end
