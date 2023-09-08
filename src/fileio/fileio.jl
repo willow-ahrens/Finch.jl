@@ -11,9 +11,9 @@ The following file extensions are supported:
 """
 function fwrite(filename::AbstractString, tns)
     if endswith(filename, ".tns")
-        tnswrite(filename, tns)
+        ftnswrite(filename, tns)
     elseif endswith(filename, ".ttx")
-        ttwrite(filename, tns)
+        fttwrite(filename, tns)
     elseif endswith(filename, ".bsp.h5")
         bspwrite(filename, tns)
     elseif endswith(filename, ".bsp.npx")
@@ -36,9 +36,9 @@ The following file extensions are supported:
 """
 function fread(filename::AbstractString)
     if endswith(filename, ".tns")
-        tnsread(filename)
+        ftnsread(filename)
     elseif endswith(filename, ".ttx")
-        ttread(filename)
+        fttread(filename)
     elseif endswith(filename, ".bsp.h5")
         bspread(filename)
     elseif endswith(filename, ".bsp.npx")
