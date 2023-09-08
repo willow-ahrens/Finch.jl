@@ -49,25 +49,22 @@ using Pkg
         end
     end
 
-    if haskey(Pkg.project().dependencies, "TensorMarket")
-        using TensorMarket
-        @info "Testing TensorMarket fileio"
-        A = [0.0 1.0 2.0 2.0 ;
-            0.0 0.0 0.0 0.0 ;
-            1.0 1.0 2.0 0.0 ;
-            0.0 0.0 0.0 1.0 ]
-        mktempdir() do f
-            A_COO = Fiber!(SparseCOO{2}(Element(0.0)), A)
-            A_COO_fname = joinpath(f, "A_COO.ttx")
-            fttwrite(A_COO_fname, A_COO)
-            A_COO_test = fttread(A_COO_fname)
-            @test Structure(A_COO_test) == Structure(A_COO)
+    @info "Testing TensorMarket fileio"
+    A = [0.0 1.0 2.0 2.0 ;
+        0.0 0.0 0.0 0.0 ;
+        1.0 1.0 2.0 0.0 ;
+        0.0 0.0 0.0 1.0 ]
+    mktempdir() do f
+        A_COO = Fiber!(SparseCOO{2}(Element(0.0)), A)
+        A_COO_fname = joinpath(f, "A_COO.ttx")
+        fttwrite(A_COO_fname, A_COO)
+        A_COO_test = fttread(A_COO_fname)
+        @test Structure(A_COO_test) == Structure(A_COO)
 
-            A_COO = Fiber!(SparseCOO{2}(Element(0.0)), A)
-            A_COO_fname = joinpath(f, "A_COO.tns")
-            ftnswrite(A_COO_fname, A_COO)
-            A_COO_test = ftnsread(A_COO_fname)
-            @test Structure(A_COO_test) == Structure(A_COO)
-        end
+        A_COO = Fiber!(SparseCOO{2}(Element(0.0)), A)
+        A_COO_fname = joinpath(f, "A_COO.tns")
+        ftnswrite(A_COO_fname, A_COO)
+        A_COO_test = ftnsread(A_COO_fname)
+        @test Structure(A_COO_test) == Structure(A_COO)
     end
 end

@@ -50,3 +50,4 @@ end
 
 include("binsparse.jl")
 include("tensormarket.jl")
+include("frostt.jl")
