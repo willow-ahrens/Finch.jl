@@ -32,7 +32,7 @@ Compare the output of `println(arg)` with standard reference output, stored
 in a file named `fname`. Call `julia runtests.jl --help` for more information on
 how to overwrite the reference output.
 """
-check_println(fname, arg) = check_string(fname, replace(sprint(println, arg), "\r"=>""))
+check_println(fname, arg) = check_write(fname, replace(sprint(println, arg), "\r"=>""))
 
 """
     check_write(fname, result)
