@@ -202,6 +202,10 @@ indices_zero_to_one(vec::Vector{Ti}) where {Ti} = unsafe_wrap(Array, reinterpret
 indices_one_to_zero(vec::Vector{<:Integer}) = vec .- one(eltype(vec))
 indices_one_to_zero(vec::Vector{<:CIndex{Ti}}) where {Ti} = unsafe_wrap(Array, reinterpret(Ptr{Ti}, pointer(vec)), length(vec); own = false)
 
+struct NPXGroup
+    dirname::String
+end
+
 function bspwrite_h5 end
 function bspwrite_npx end
 
