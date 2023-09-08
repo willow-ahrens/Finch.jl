@@ -31,8 +31,8 @@ only supports HDF5, but if you file an issue someone might add Numpy NPZ).
 Binsparse arrays are stored 0-indexed.
 
 ```@docs
-bswrite
-bsread
+bspwrite
+bspread
 ```
 
 ## TensorMarket (`.mtx`, `.ttx`)

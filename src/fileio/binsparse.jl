@@ -1,5 +1,5 @@
 """
-    bswrite(filename, tns)
+    bspwrite(filename, tns)
 
 Write the Finch fiber to a file using 
 [Binsparse](https://github.com/GraphBLAS/binsparse-specification) HDF5 file
@@ -11,10 +11,10 @@ format.
     The Binsparse spec is under development. Additionally, this function may not
     be fully conformant. Please file bug reports if you see anything amiss.
 """
-function bswrite end
+function bspwrite end
 
 """
-    bsread(filename)
+    bspread(filename)
 
 Read the [Binsparse](https://github.com/GraphBLAS/binsparse-specification) HDF5 file into a Finch tensor.
 
@@ -24,4 +24,4 @@ Read the [Binsparse](https://github.com/GraphBLAS/binsparse-specification) HDF5 
     The Binsparse spec is under development. Additionally, this function may not
     be fully conformant. Please file bug reports if you see anything amiss.
 """
-function bsread end
+function bspread end

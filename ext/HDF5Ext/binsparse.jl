@@ -1,7 +1,7 @@
 using Finch: level_ndims, SwizzleArray
 using CIndices
 
-bsread_type_lookup = Dict(
+bspread_type_lookup = Dict(
     "uint8" => UInt8,
     "uint16" => UInt16,
     "uint32" => UInt32,
@@ -15,41 +15,41 @@ bsread_type_lookup = Dict(
     "bint8" => Bool,
 )
 
-function bsread_data(f, desc, key)
+function bspread_data(f, desc, key)
     t = desc["data_types"]["$(key)_type"]
     if (m = match(r"^iso\[([^\[]*)\]$", t)) != nothing
         throw(ArgumentError("iso values not currently supported"))
     elseif (m = match(r"^complex\[([^\[]*)\]$", t)) != nothing
         desc["data_types"]["$(key)_type"] = m.captures[1]
-        data = bsread_data(f, desc, key)
+        data = bspread_data(f, desc, key)
         return reinterpret(reshape, Complex{eltype(data)}, reshape(data, 2, :))
     elseif (m = match(r"^[^\]]*$", t)) != nothing
-        haskey(bsread_type_lookup, t) || throw(ArgumentError("unknown binsparse type $t"))
-        convert(Vector{bsread_type_lookup[t]}, read(f[key]))
+        haskey(bspread_type_lookup, t) || throw(ArgumentError("unknown binsparse type $t"))
+        convert(Vector{bspread_type_lookup[t]}, read(f[key]))
     else
         throw(ArgumentError("unknown binsparse type wrapper $t"))
     end
 end
 
-bswrite_type_lookup = Dict(v => k for (k, v) in bsread_type_lookup)
+bspwrite_type_lookup = Dict(v => k for (k, v) in bspread_type_lookup)
 
-function bswrite_data(f, desc, key, data)
-    type_desc = bswrite_data_helper(f, desc, key, data)
+function bspwrite_data(f, desc, key, data)
+    type_desc = bspwrite_data_helper(f, desc, key, data)
 end
 
-function bswrite_data_helper(f, desc, key, data::AbstractVector{T}) where {T}
-    haskey(bswrite_type_lookup, T) || throw(ArgumentError("Cannot write $T to binsparse"))
+function bspwrite_data_helper(f, desc, key, data::AbstractVector{T}) where {T}
+    haskey(bspwrite_type_lookup, T) || throw(ArgumentError("Cannot write $T to binsparse"))
     f[key] = data
-    desc["data_types"]["$(key)_type"] = bswrite_type_lookup[T]
+    desc["data_types"]["$(key)_type"] = bspwrite_type_lookup[T]
 end
 
-function bswrite_data_helper(f, desc, key, data::AbstractVector{Complex{T}}) where {T}
+function bspwrite_data_helper(f, desc, key, data::AbstractVector{Complex{T}}) where {T}
     data = reshape(reinterpret(reshape, T, data), :)
-    bswrite_data_helper(f, desc, key, data)
+    bspwrite_data_helper(f, desc, key, data)
     desc["data_types"]["$(key)_type"] = "complex[$(desc["data_types"]["$(key)_type"])]"
 end
 
-bsread_format_lookup = Dict(
+bspread_format_lookup = Dict(
     "CSR" => Dict(
         "swizzle" => [1, 2],
         "subformat" => Dict(
@@ -159,15 +159,15 @@ bsread_format_lookup = Dict(
     )
 )
 
-bswrite_format_lookup = Dict(v => k for (k, v) in bsread_format_lookup)
+bspwrite_format_lookup = Dict(v => k for (k, v) in bspread_format_lookup)
 
 indices_zero_to_one(vec::Vector{Ti}) where {Ti} = unsafe_wrap(Array, reinterpret(Ptr{CIndex{Ti}}, pointer(vec)), length(vec); own = false)
 indices_one_to_zero(vec::Vector{<:Integer}) = vec .- one(eltype(vec))
 indices_one_to_zero(vec::Vector{<:CIndex{Ti}}) where {Ti} = unsafe_wrap(Array, reinterpret(Ptr{Ti}, pointer(vec)), length(vec); own = false)
 
-Finch.bswrite(fname, fbr::Fiber, attrs = Dict()) = 
-    bswrite(fname, swizzle(fbr, 1:ndims(fbr)...), attrs)
-function Finch.bswrite(fname, arr::SwizzleArray{dims, <:Fiber}, attrs = Dict()) where {dims}
+Finch.bspwrite(fname, fbr::Fiber, attrs = Dict()) = 
+    bspwrite(fname, swizzle(fbr, 1:ndims(fbr)...), attrs)
+function Finch.bspwrite(fname, arr::SwizzleArray{dims, <:Fiber}, attrs = Dict()) where {dims}
     h5open(fname, "w") do f
         desc = Dict(
             "format" => Dict(
@@ -179,22 +179,22 @@ function Finch.bswrite(fname, arr::SwizzleArray{dims, <:Fiber}, attrs = Dict()) 
             "data_types" => Dict(),
             "attrs" => attrs,
         )
-        bswrite_level(f, desc, desc["format"]["subformat"], arr.body.lvl)
-        desc["format"] = get(bswrite_format_lookup, desc["format"], desc["format"])
+        bspwrite_level(f, desc, desc["format"]["subformat"], arr.body.lvl)
+        desc["format"] = get(bspwrite_format_lookup, desc["format"], desc["format"])
         f["binsparse"] = json(desc, 4)
     end
     fname
 end
 
-function Finch.bsread(fname)
+function Finch.bspread(fname)
     h5open(fname, "r") do f
         desc = JSON.parse(read(f["binsparse"]))
-        fmt = get(bsread_format_lookup, desc["format"], desc["format"])
+        fmt = get(bspread_format_lookup, desc["format"], desc["format"])
         if !issorted(reverse(fmt["swizzle"]))
             sigma = reverse(sortperm(fmt["swizzle"]))
             desc["shape"] = desc["shape"][sigma]
         end
-        fbr = Fiber(bsread_level(f, desc, fmt["subformat"]))
+        fbr = Fiber(bspread_level(f, desc, fmt["subformat"]))
         if !issorted(reverse(fmt["swizzle"]))
             fbr = swizzle(fbr, reverse(fmt["swizzle"])...)
         end
@@ -204,27 +204,27 @@ function Finch.bsread(fname)
         fbr
     end
 end
-bsread_level(f, desc, fmt) = bsread_level(f, desc, fmt, Val(Symbol(fmt["level"])))
+bspread_level(f, desc, fmt) = bspread_level(f, desc, fmt, Val(Symbol(fmt["level"])))
 
-function bswrite_level(f, desc, fmt, lvl::ElementLevel{D}) where {D}
+function bspwrite_level(f, desc, fmt, lvl::ElementLevel{D}) where {D}
     fmt["level"] = "element"
-    bswrite_data(f, desc, "values", lvl.val)
-    bswrite_data(f, desc, "fill_value", [D])
+    bspwrite_data(f, desc, "values", lvl.val)
+    bspwrite_data(f, desc, "fill_value", [D])
 end
-function bsread_level(f, desc, fmt, ::Val{:element})
-    val = convert(Vector, bsread_data(f, desc, "values"))
-    D = bsread_data(f, desc, "fill_value")[1]
+function bspread_level(f, desc, fmt, ::Val{:element})
+    val = convert(Vector, bspread_data(f, desc, "values"))
+    D = bspread_data(f, desc, "fill_value")[1]
     ElementLevel(D, val)
 end
 
-function bswrite_level(f, desc, fmt, lvl::DenseLevel{D}) where {D}
+function bspwrite_level(f, desc, fmt, lvl::DenseLevel{D}) where {D}
     fmt["level"] = "dense"
     fmt["rank"] = 1
     fmt["subformat"] = Dict()
-    bswrite_level(f, desc, fmt["subformat"], lvl.lvl)
+    bspwrite_level(f, desc, fmt["subformat"], lvl.lvl)
 end
-function bsread_level(f, desc, fmt, ::Val{:dense})
-    lvl = bsread_level(f, desc, fmt["subformat"])
+function bspread_level(f, desc, fmt, ::Val{:dense})
+    lvl = bspread_level(f, desc, fmt["subformat"])
     R = fmt["rank"]
     for r = 1:R
         n = level_ndims(typeof(lvl))
@@ -234,42 +234,42 @@ function bsread_level(f, desc, fmt, ::Val{:dense})
     lvl
 end
 
-function bswrite_level(f, desc, fmt, lvl::SparseListLevel)
+function bspwrite_level(f, desc, fmt, lvl::SparseListLevel)
     fmt["level"] = "sparse"
     fmt["rank"] = 1
     n = level_ndims(typeof(lvl))
     N = length(desc["shape"])
     if N - n > 0
-        bswrite_data(f, desc, "pointers_to_$(N - n)", indices_one_to_zero(lvl.ptr))
+        bspwrite_data(f, desc, "pointers_to_$(N - n)", indices_one_to_zero(lvl.ptr))
     end
-    bswrite_data(f, desc, "indices_$(N - n)", indices_one_to_zero(lvl.idx))
+    bspwrite_data(f, desc, "indices_$(N - n)", indices_one_to_zero(lvl.idx))
     fmt["subformat"] = Dict()
-    bswrite_level(f, desc, fmt["subformat"], lvl.lvl)
+    bspwrite_level(f, desc, fmt["subformat"], lvl.lvl)
 end
-function bswrite_level(f, desc, fmt, lvl::SparseCOOLevel{R}) where {R}
+function bspwrite_level(f, desc, fmt, lvl::SparseCOOLevel{R}) where {R}
     fmt["level"] = "sparse"
     fmt["rank"] = R
     n = level_ndims(typeof(lvl))
     N = length(desc["shape"])
     if N - n > 0
-        bswrite_data(f, desc, "pointers_to_$(N - n)", indices_one_to_zero(lvl.ptr))
+        bspwrite_data(f, desc, "pointers_to_$(N - n)", indices_one_to_zero(lvl.ptr))
     end
     for r = 1:R
-        bswrite_data(f, desc, "indices_$(N - n + r - 1)", indices_one_to_zero(lvl.tbl[r]))
+        bspwrite_data(f, desc, "indices_$(N - n + r - 1)", indices_one_to_zero(lvl.tbl[r]))
     end
     fmt["subformat"] = Dict()
-    bswrite_level(f, desc, fmt["subformat"], lvl.lvl)
+    bspwrite_level(f, desc, fmt["subformat"], lvl.lvl)
 end
-function bsread_level(f, desc, fmt, ::Val{:sparse})
+function bspread_level(f, desc, fmt, ::Val{:sparse})
     R = fmt["rank"]
-    lvl = bsread_level(f, desc, fmt["subformat"])
+    lvl = bspread_level(f, desc, fmt["subformat"])
     n = level_ndims(typeof(lvl)) + R
     N = length(desc["shape"])
     tbl = (map(1:R) do r
-        indices_zero_to_one(bsread_data(f, desc, "indices_$(N - n + r - 1)"))
+        indices_zero_to_one(bspread_data(f, desc, "indices_$(N - n + r - 1)"))
     end...,)
     if N - n > 0
-        ptr = bsread_data(f, desc, "pointers_to_$(N - n)")
+        ptr = bspread_data(f, desc, "pointers_to_$(N - n)")
     else
         ptr = [0, length(tbl[1])]
     end
