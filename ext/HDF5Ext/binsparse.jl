@@ -198,6 +198,9 @@ function Finch.bsread(fname)
         if !issorted(reverse(fmt["swizzle"]))
             fbr = swizzle(fbr, reverse(fmt["swizzle"])...)
         end
+        if haskey(desc, "structure")
+            throw(ArgumentError("binsparse structure field currently unsupported"))
+        end
         fbr
     end
 end
