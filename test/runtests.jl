@@ -26,25 +26,33 @@ end
 parsed_args = parse_args(ARGS, s)
 
 """
-    check_output(fname, arg)
+    check_println(fname, arg)
 
 Compare the output of `println(arg)` with standard reference output, stored
 in a file named `fname`. Call `julia runtests.jl --help` for more information on
 how to overwrite the reference output.
 """
-function check_output(fname, arg)
+check_println(fname, arg) = check_string(fname, replace(sprint(println, arg), "\r"=>""))
+
+"""
+    check_write(fname, result)
+
+Compare the output of `result` with standard reference output, stored
+in a file named `fname`. Call `julia runtests.jl --help` for more information on
+how to overwrite the reference output.
+"""
+function check_write(fname, result)
     global parsed_args
     ref_dir = joinpath(@__DIR__, "reference$(Sys.WORD_SIZE)")
     ref_file = joinpath(ref_dir, fname)
     if parsed_args["overwrite"]
         mkpath(dirname(ref_file))
         open(ref_file, "w") do f
-            println(f, arg)
+            write(f, result)
         end
         true
     else
-        reference = replace(read(ref_file, String), "\r"=>"")
-        result = replace(sprint(println, arg), "\r"=>"")
+        reference = read(ref_file, String)
         if reference == result
             return true
         else

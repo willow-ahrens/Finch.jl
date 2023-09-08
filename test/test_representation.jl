@@ -16,7 +16,7 @@ using Base.Meta
                 println(io, "fiber: ", repr(fbr))
             end
 
-            @test check_output("representation/format_representation_$key.txt", String(take!(io)))
+            @test check_println("representation/format_representation_$key.txt", String(take!(io)))
             print(String(take!(io)))
         end
     end

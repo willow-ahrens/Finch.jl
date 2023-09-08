@@ -189,7 +189,6 @@ function Finch.bsread(fname)
         desc = JSON.parse(read(f["binsparse"]))
         fmt = get(bsread_format_lookup, desc["format"], desc["format"])
         if !issorted(reverse(desc["swizzle"]))
-            println(desc["swizzle"])
             sigma = reverse(sortperm(desc["swizzle"]))
             desc["shape"] = desc["shape"][sigma]
         end
