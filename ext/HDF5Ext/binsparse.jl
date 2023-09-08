@@ -52,7 +52,7 @@ end
 bsread_format_lookup = Dict(
     "CSR" => Dict(
         "swizzle" => [1, 2],
-        "format" => Dict(
+        "subformat" => Dict(
             "level" => "dense",
             "rank" => 1,
             "subformat" => Dict(
@@ -67,7 +67,7 @@ bsread_format_lookup = Dict(
 
     "CSC" => Dict(
         "swizzle" => [2, 1],
-        "format" => Dict(
+        "subformat" => Dict(
             "level" => "dense",
             "rank" => 1,
             "subformat" => Dict(
@@ -82,7 +82,7 @@ bsread_format_lookup = Dict(
 
     "DCSR" => Dict(
         "swizzle" => [1, 2],
-        "format" => Dict(
+        "subformat" => Dict(
             "level" => "sparse",
             "rank" => 1,
             "subformat" => Dict(
@@ -97,7 +97,7 @@ bsread_format_lookup = Dict(
 
     "DCSC" => Dict(
         "swizzle" => [2, 1],
-        "format" => Dict(
+        "subformat" => Dict(
             "level" => "sparse",
             "rank" => 1,
             "subformat" => Dict(
@@ -112,7 +112,7 @@ bsread_format_lookup = Dict(
 
     "COO" => Dict(
         "swizzle" => [1, 2],
-        "format" => Dict(
+        "subformat" => Dict(
             "level" => "sparse",
             "rank" => 2,
             "subformat" => Dict(
@@ -123,7 +123,7 @@ bsread_format_lookup = Dict(
 
     "DMAT" => Dict(
         "swizzle" => [1, 2],
-        "format" => Dict(
+        "subformat" => Dict(
             "level" => "dense",
             "rank" => 1,
             "subformat" => Dict(
@@ -138,7 +138,7 @@ bsread_format_lookup = Dict(
 
     "DVEC" => Dict(
         "swizzle" => [1],
-        "format" => Dict(
+        "subformat" => Dict(
             "level" => "dense",
             "rank" => 1,
             "subformat" => Dict(
@@ -149,7 +149,7 @@ bsread_format_lookup = Dict(
 
     "VEC" => Dict(
         "swizzle" => [1],
-        "format" => Dict(
+        "subformat" => Dict(
             "level" => "sparse",
             "rank" => 1,
             "subformat" => Dict(
@@ -170,14 +170,16 @@ Finch.bswrite(fname, fbr::Fiber, attrs = Dict()) =
 function Finch.bswrite(fname, arr::SwizzleArray{dims, <:Fiber}, attrs = Dict()) where {dims}
     h5open(fname, "w") do f
         desc = Dict(
-            "format" => Dict(),
-            "swizzle" => reverse(collect(dims)),
+            "format" => Dict(
+                "subformat" => Dict(),
+                "swizzle" => reverse(collect(dims)),
+            ),
             "fill" => true,
             "shape" => map(Int, size(arr)),
             "data_types" => Dict(),
             "attrs" => attrs,
         )
-        bswrite_level(f, desc, desc["format"], arr.body.lvl)
+        bswrite_level(f, desc, desc["format"]["subformat"], arr.body.lvl)
         desc["format"] = get(bswrite_format_lookup, desc["format"], desc["format"])
         f["binsparse"] = json(desc, 4)
     end
@@ -188,13 +190,13 @@ function Finch.bsread(fname)
     h5open(fname, "r") do f
         desc = JSON.parse(read(f["binsparse"]))
         fmt = get(bsread_format_lookup, desc["format"], desc["format"])
-        if !issorted(reverse(desc["swizzle"]))
-            sigma = reverse(sortperm(desc["swizzle"]))
+        if !issorted(reverse(fmt["swizzle"]))
+            sigma = reverse(sortperm(fmt["swizzle"]))
             desc["shape"] = desc["shape"][sigma]
         end
-        fbr = Fiber(bsread_level(f, desc, fmt))
-        if !issorted(reverse(desc["swizzle"]))
-            fbr = swizzle(fbr, reverse(desc["swizzle"])...)
+        fbr = Fiber(bsread_level(f, desc, fmt["subformat"]))
+        if !issorted(reverse(fmt["swizzle"]))
+            fbr = swizzle(fbr, reverse(fmt["swizzle"])...)
         end
         fbr
     end

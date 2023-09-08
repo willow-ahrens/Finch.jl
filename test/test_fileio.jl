@@ -26,10 +26,12 @@ using Pkg
                             1 => one(eltype(A)),
                         ]
                             for (name, fmt) in [
-                                "A_dense" => Fiber!(Dense{CIndex{Int}}(Dense{CIndex{Int}}(Element(D)))),
+                                "A_dense" => swizzle(Fiber!(Dense{CIndex{Int}}(Dense{CIndex{Int}}(Element(D)))), 2, 1),
+                                "A_denseC" => Fiber!(Dense{CIndex{Int}}(Dense{CIndex{Int}}(Element(D)))),
                                 "A_CSC" => Fiber!(Dense{CIndex{Int}}(SparseList{CIndex{Int}, CIndex{Int}}(Element(D)))),
                                 "A_CSR" => swizzle(Fiber!(Dense{CIndex{Int}}(SparseList{CIndex{Int}, CIndex{Int}}(Element(D)))), 2, 1),
-                                "A_COO" => Fiber!(SparseCOO{2, Tuple{CIndex{Int}, CIndex{Int}}, CIndex{Int}}(Element(D))),
+                                "A_COO" => swizzle(Fiber!(SparseCOO{2, Tuple{CIndex{Int}, CIndex{Int}}, CIndex{Int}}(Element(D))), 2, 1),
+                                "A_COOC" => Fiber!(SparseCOO{2, Tuple{CIndex{Int}, CIndex{Int}}, CIndex{Int}}(Element(D))),
                             ]
                                 @testset "binsparse $name($D)" begin
                                     fmt = copyto!(fmt, A)
