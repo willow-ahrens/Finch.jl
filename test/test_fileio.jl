@@ -6,7 +6,7 @@ using Pkg
         @info "Testing HDF5 fileio"
         @testset "binsparse" begin
             mktempdir() do f
-                for A in [
+                for (iA, A) in enumerate([
                     [false true false false ;
                     true true true true],
                     [0 1 2 2 ;
@@ -19,11 +19,11 @@ using Pkg
                     0.0 0.0 0.0 0.0 ],
                     [0 + 1im 1 + 0im 0 + 0im ;
                     0 + 0im 1 + 0im 0 + 0im ]
-                ]
+                ])
                     @testset "$(typeof(A))" begin
-                        for D in [
-                            zero(eltype(A)),
-                            one(eltype(A)),
+                        for (iD, D) in [
+                            0 => zero(eltype(A)),
+                            1 => one(eltype(A)),
                         ]
                             for (name, fmt) in [
                                 "A_dense" => Fiber!(Dense{CIndex{Int}}(Dense{CIndex{Int}}(Element(D)))),
@@ -33,9 +33,10 @@ using Pkg
                             ]
                                 @testset "binsparse $name($D)" begin
                                     fmt = copyto!(fmt, A)
-                                    bswrite(joinpath(f, "$name.bs"), fmt)
-                                    out = bsread(joinpath(f, "$name.bs"))
-                                    @test Structure(fmt) == Structure(bsread(joinpath(f, "$name.bs")))
+                                    bswrite(joinpath(f, "foo.bs"), fmt)
+                                    out = bsread(joinpath(f, "foo.bs"))
+                                    @test Structure(fmt) == Structure(bsread(joinpath(f, "foo.bs")))
+                                    check_write("binsparse/A$(iA)_D$(iD)_$name.h5", read(joinpath(f, "foo.bs")))
                                 end
                             end
                         end
