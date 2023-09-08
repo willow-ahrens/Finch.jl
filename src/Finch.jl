@@ -148,9 +148,7 @@ end
     end
 end
 
-include("fileio/fiberio.jl")
-include("fileio/binsparse.jl")
-include("fileio/tensormarket.jl")
+include("fileio/fileio.jl")
 
 export fbrread, fbrwrite, bspread, bspwrite
 export ftnsread, ftnswrite, fttread, fttwrite

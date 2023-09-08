@@ -35,10 +35,11 @@ using Pkg
                             ]
                                 @testset "binsparse $name($D)" begin
                                     fmt = copyto!(fmt, A)
-                                    bspwrite(joinpath(f, "foo.bs"), fmt)
-                                    out = bspread(joinpath(f, "foo.bs"))
-                                    @test Structure(fmt) == Structure(bspread(joinpath(f, "foo.bs")))
-                                    check_write("binsparse/A$(iA)_D$(iD)_$name.h5", read(joinpath(f, "foo.bs")))
+                                    fname = joinpath(f, "foo.bsp.h5")
+                                    bspwrite(fname, fmt)
+                                    out = bspread(fname)
+                                    @test Structure(fmt) == Structure(bspread(fname))
+                                    check_write("binsparse/A$(iA)_D$(iD)_$name.bsp.h5", read(fname))
                                 end
                             end
                         end
