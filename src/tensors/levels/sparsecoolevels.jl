@@ -54,19 +54,19 @@ SparseCOOLevel{N, Ti}(lvl, args...) where {N, Ti} =
     SparseCOOLevel{N,
         Ti,
         postype(typeof(lvl)),
-        Tuple{((memory_type(typeof(lvl))){ti, 1} for ti in Ti.parameters)...},
-        (memory_type(typeof(lvl))){postype(typeof(lvl)), 1},
+        Tuple{((memtype(typeof(lvl))){ti, 1} for ti in Ti.parameters)...},
+        (memtype(typeof(lvl))){postype(typeof(lvl)), 1},
         typeof(lvl)}(lvl, args...)
 SparseCOOLevel{N, Ti}(lvl) where {N, Ti} =
     SparseCOOLevel{N,
         Ti,
         postype(typeof(lvl)),
-        Tuple{((memory_type(typeof(lvl))){ti, 1} for ti in Ti.parameters)...},
-        (memory_type(typeof(lvl))){postype(typeof(lvl)), 1},
+        Tuple{((memtype(typeof(lvl))){ti, 1} for ti in Ti.parameters)...},
+        (memtype(typeof(lvl))){postype(typeof(lvl)), 1},
         typeof(lvl)}(lvl)
 
 SparseCOOLevel{N, Ti, Tp}(lvl, args...) where {N, Ti, Tp} =
-    SparseCOOLevel{N, Ti, Tp, Tuple{(memory_type(typeof(lvl)){ti, 1} for ti in Ti.parameters)...}, memory_type(typeof(lvl)){Tp, 1}, typeof(lvl)}(lvl, args...)
+    SparseCOOLevel{N, Ti, Tp, Tuple{(memtype(typeof(lvl)){ti, 1} for ti in Ti.parameters)...}, memtype(typeof(lvl)){Tp, 1}, typeof(lvl)}(lvl, args...)
 
 SparseCOOLevel{N, Ti, Tp, Tbl, VTp, Lvl}(lvl) where {N, Ti, Tp, Tbl, VTp, Lvl} =
     SparseCOOLevel{N, Ti, Tp, Tbl, VTp, Lvl}(lvl, ((zero(ti) for ti in Ti.parameters)...,))
@@ -74,7 +74,7 @@ SparseCOOLevel{N, Ti, Tp, Tbl, VTp, Lvl}(lvl, shape) where {N, Ti, Tp, Tbl, VTp,
     SparseCOOLevel{N, Ti, Tp, Tbl, VTp, Lvl}(lvl, Ti(shape), ((ti() for ti in Tbl.parameters)...,), VTp(Tp[1]))
 
 
-# SparseCOOLevel{N, Ti}(lvl) where {N, Ti} = SparseCOOLevel{N, Ti, postype(typeof(lvl)), Tuple{(memory_type(typeof(lvl)){ti, 1} for ti in Ti.parameters)...}, memory_type(typeof(lvl)){postype(typeof(lvl)), 1}, typeof(lvl)}(lvl)
+# SparseCOOLevel{N, Ti}(lvl) where {N, Ti} = SparseCOOLevel{N, Ti, postype(typeof(lvl)), Tuple{(memtype(typeof(lvl)){ti, 1} for ti in Ti.parameters)...}, memtype(typeof(lvl)){postype(typeof(lvl)), 1}, typeof(lvl)}(lvl)
 
 Base.summary(lvl::SparseCOOLevel{N}) where {N} = "SparseCOO{$N}($(summary(lvl.lvl)))"
 similar_level(lvl::SparseCOOLevel{N}) where {N} = SparseCOOLevel{N}(similar_level(lvl.lvl))
@@ -82,7 +82,7 @@ similar_level(lvl::SparseCOOLevel{N}, tail...) where {N} = SparseCOOLevel{N}(sim
 
 
 
-function memory_type(::Type{SparseCOOLevel{N, Ti, Tp, Tbl, VTp, Lvl}}) where {N, Ti, Tp, Tbl, VTp, Lvl}
+function memtype(::Type{SparseCOOLevel{N, Ti, Tp, Tbl, VTp, Lvl}}) where {N, Ti, Tp, Tbl, VTp, Lvl}
     return containertype(VTp)
 end
 

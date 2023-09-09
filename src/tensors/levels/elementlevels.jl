@@ -39,7 +39,7 @@ Base.summary(::Element{D, Ti}) where {D, Ti} = "Element($(D), $(Ti))"
 # similar_level(::ElementLevel{D}) where {D} = ElementLevel{D}()
 similar_level(::ElementLevel{D, Ti}) where {D, Ti} = ElementLevel{D, Ti}()
 
-function memory_type(::Type{ElementLevel{D, Ti, Tv, V}}) where {D, Ti, Tv, V}
+function memtype(::Type{ElementLevel{D, Ti, Tv, V}}) where {D, Ti, Tv, V}
     return containertype(V)
 end
 

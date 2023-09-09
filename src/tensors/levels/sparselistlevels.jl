@@ -45,11 +45,11 @@ SparseListLevel(lvl::Lvl) where {Lvl} = SparseListLevel{indextype(Lvl)}(lvl)
 SparseListLevel(lvl, shape, args...) = SparseListLevel{typeof(shape)}(lvl, shape, args...)
 SparseListLevel{Ti}(lvl, args...) where {Ti} = SparseListLevel{Ti, postype(typeof(lvl))}(lvl, args...)
 SparseListLevel{Ti, Tp}(lvl, args...) where {Ti, Tp} =
-    SparseListLevel{Ti, Tp, memory_type(typeof(lvl)){Tp, 1}, memory_type(typeof(lvl)){Ti, 1}, typeof(lvl)}(lvl, args...)
+    SparseListLevel{Ti, Tp, memtype(typeof(lvl)){Tp, 1}, memtype(typeof(lvl)){Ti, 1}, typeof(lvl)}(lvl, args...)
 
 SparseListLevel{Ti, Tp, VTp, VTi, Lvl}(lvl) where {Ti, Tp, VTp, VTi, Lvl} = SparseListLevel{Ti, Tp, VTp, VTi, Lvl}(lvl, zero(Ti))
 SparseListLevel{Ti, Tp, VTp, VTi, Lvl}(lvl, shape) where {Ti, Tp, VTp, VTi, Lvl} = 
-    SparseListLevel{Ti, Tp, VTp, VTi, Lvl}(lvl, Ti(shape), single(memory_type(Lvl){Ti, 1}), empty(memory_type(Lvl){Tp, 1}))
+    SparseListLevel{Ti, Tp, VTp, VTi, Lvl}(lvl, Ti(shape), single(memtype(Lvl){Ti, 1}), empty(memtype(Lvl){Tp, 1}))
 
 SparseListLevel{Ti, Tp, Lvl}(lvl, shape, ptr, idx) where {Ti, Tp, Lvl} = 
     SparseListLevel{Ti, Tp, typeof(ptr), typeof(idx), Lvl}(lvl, Ti(shape), ptr, idx)
@@ -58,7 +58,7 @@ Base.summary(lvl::SparseListLevel) = "SparseList($(summary(lvl.lvl)))"
 similar_level(lvl::SparseListLevel) = SparseList(similar_level(lvl.lvl))
 similar_level(lvl::SparseListLevel, dim, tail...) = SparseList(similar_level(lvl.lvl, tail...), dim)
 
-function memory_type(::Type{SparseListLevel{Ti, Tp,  VTp, VTi, Lvl}}) where {Ti, Tp, Lvl, VTi, VTp}
+function memtype(::Type{SparseListLevel{Ti, Tp,  VTp, VTi, Lvl}}) where {Ti, Tp, Lvl, VTi, VTp}
     return containertype(VTp)
 end
 

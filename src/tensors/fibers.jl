@@ -338,13 +338,13 @@ Base.similar(fbr::AbstractFiber, dims::Tuple) = Fiber(similar_level(fbr.lvl, dim
 
 
 """
-    memory_type(fbr)
+    memtype(fbr)
 
 Finds the memory type of a fiber or a level. This is the vector type used to store arrays.
 """
 
-function memory_type(::Type{<:Fiber{Lvl}}) where {Lvl}
-    memory_type(Lvl)
+function memtype(::Type{<:Fiber{Lvl}}) where {Lvl}
+    memtype(Lvl)
 end
 
 
@@ -362,15 +362,15 @@ end
 
 
 # function moveto(fiber::VirtualFiber{Lvl}}, memType; override = false) where {LvL}
-#     if !override && memory_type(Lvl) == memType
+#     if !override && memtype(Lvl) == memType
 #         return fbr
 #     else
 #         moveto(fbr.lvl, memType, sizes)
 #     end
 # end
 
-# function memory_type(::Type{<:VirtualFiber{Lvl}}) where {LvL}
-#     memory_type(Lvl)
+# function memtype(::Type{<:VirtualFiber{Lvl}}) where {LvL}
+#     memtype(Lvl)
 # end
 
 

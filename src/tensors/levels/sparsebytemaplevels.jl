@@ -9,19 +9,19 @@ const SparseByteMap = SparseByteMapLevel
 SparseByteMapLevel(lvl::Lvl) where {Lvl} = SparseByteMapLevel{indextype(Lvl)}(lvl)
 SparseByteMapLevel(lvl, shape, args...) = SparseByteMapLevel{typeof(shape)}(lvl, shape, args...)
 SparseByteMapLevel{Ti}(lvl::Lvl, args...) where {Ti, Lvl} = SparseByteMapLevel{Ti, postype(Lvl)}(lvl, args...)
-SparseByteMapLevel{Ti, Tp}(lvl, args...) where {Ti, Tp} = SparseByteMapLevel{Ti, Tp,  memory_type(typeof(lvl)){Tp, 1}, memory_type(typeof(lvl)){Bool, 1}, memory_type(typeof(lvl)){Tuple{Tp, Ti}, 1}, typeof(lvl)}(lvl, args...)
+SparseByteMapLevel{Ti, Tp}(lvl, args...) where {Ti, Tp} = SparseByteMapLevel{Ti, Tp,  memtype(typeof(lvl)){Tp, 1}, memtype(typeof(lvl)){Bool, 1}, memtype(typeof(lvl)){Tuple{Tp, Ti}, 1}, typeof(lvl)}(lvl, args...)
 
 SparseByteMapLevel{Ti, Tp, VTp, BV, VTpi, Lvl}(lvl) where {Ti, Tp, VTp, BV, VTpi, Lvl} = SparseByteMapLevel{Ti, Tp, VTp, BV, VTpi, Lvl}(lvl, zero(Ti))
 SparseByteMapLevel{Ti, Tp, VTp, BV, VTpi, Lvl}(lvl, shape) where {Ti, Tp, VTp, BV, VTpi, Lvl} = 
-    SparseByteMapLevel{Ti, Tp, VTp, BV, VTpi, Lvl}(lvl, Ti(shape), single(memory_type(Lvl){Tp, 1}), empty( memory_type(Lvl){Bool, 1}), empty(memory_type(Lvl){Tuple{Tp, Ti}, 1}))
+    SparseByteMapLevel{Ti, Tp, VTp, BV, VTpi, Lvl}(lvl, Ti(shape), single(memtype(Lvl){Tp, 1}), empty( memtype(Lvl){Bool, 1}), empty(memtype(Lvl){Tuple{Tp, Ti}, 1}))
 
 
 Base.summary(lvl::SparseByteMapLevel) = "SparseByteMap($(summary(lvl.lvl)))"
 similar_level(lvl::SparseByteMapLevel) = SparseByteMap(similar_level(lvl.lvl))
 similar_level(lvl::SparseByteMapLevel, dims...) = SparseByteMap(similar_level(lvl.lvl, dims[1:end-1]...), dims[end])
 
-function memory_type(::Type{SparseByteMapLevel{Ti, Tp, VTp, BV, VTpi, Lvl}}) where {Ti, Tp, VTp, BV, VTpi, Lvl}
-    return memory_type(Lvl)
+function memtype(::Type{SparseByteMapLevel{Ti, Tp, VTp, BV, VTpi, Lvl}}) where {Ti, Tp, VTp, BV, VTpi, Lvl}
+    return memtype(Lvl)
 end
 
 function postype(::Type{SparseByteMapLevel{Ti, Tp, VTp, BV, VTpi, Lvl}}) where {Ti, Tp, VTp, BV, VTpi, Lvl}

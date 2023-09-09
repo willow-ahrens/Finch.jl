@@ -43,7 +43,7 @@ end
 (fbr::AbstractFiber{<:PatternLevel})() = true
 data_rep_level(::Type{<:PatternLevel{Ti}}) where {Ti} = ElementData(false, Ti, Bool)
 
-function memory_type(::Type{PatternLevel{Ti, Tp,VB}}) where {Ti, Tp, VB}
+function memtype(::Type{PatternLevel{Ti, Tp,VB}}) where {Ti, Tp, VB}
     return containertype(VB)
 end
 

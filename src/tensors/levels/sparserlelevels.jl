@@ -12,9 +12,9 @@ SparseRLELevel(lvl, shape, args...) = SparseRLELevel{typeof(shape)}(lvl, shape, 
 SparseRLELevel{Ti}(lvl, args...) where {Ti} =
     SparseRLELevel{Ti,
         postype(typeof(lvl)),
-        (memory_type(typeof(lvl))){postype(typeof(lvl)), 1},
-        (memory_type(typeof(lvl))){Ti, 1},
-        (memory_type(typeof(lvl))){Ti, 1},
+        (memtype(typeof(lvl))){postype(typeof(lvl)), 1},
+        (memtype(typeof(lvl))){Ti, 1},
+        (memtype(typeof(lvl))){Ti, 1},
         typeof(lvl)}(lvl, args...)
 #SparseRLELevel{Ti, Tp}(lvl, args...) where {Ti, Tp} = SparseRLELevel{Ti, Tp, typeof(lvl)}(lvl, args...)
 
@@ -26,7 +26,7 @@ Base.summary(lvl::SparseRLELevel) = "SparseRLE($(summary(lvl.lvl)))"
 similar_level(lvl::SparseRLELevel) = SparseRLE(similar_level(lvl.lvl))
 similar_level(lvl::SparseRLELevel, dim, tail...) = SparseRLE(similar_level(lvl.lvl, tail...), dim)
 
-function memory_type(::Type{SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}}) where {Ti, Tp, VTp, VLTi, VRTi, Lvl}
+function memtype(::Type{SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}}) where {Ti, Tp, VTp, VLTi, VRTi, Lvl}
     return containertype(VTp)
 end
 

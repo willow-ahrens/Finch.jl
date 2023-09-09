@@ -40,8 +40,8 @@ Base.summary(lvl::Dense) = "Dense($(summary(lvl.lvl)))"
 similar_level(lvl::DenseLevel) = Dense(similar_level(lvl.lvl))
 similar_level(lvl::DenseLevel, dims...) = Dense(similar_level(lvl.lvl, dims[1:end-1]...), dims[end])
 
-function memory_type(::Type{DenseLevel{Ti, Lvl}}) where {Ti, Lvl}
-    return memory_type(Lvl)
+function memtype(::Type{DenseLevel{Ti, Lvl}}) where {Ti, Lvl}
+    return memtype(Lvl)
 end
 
 function postype(::Type{DenseLevel{Ti, Lvl}}) where {Ti, Lvl}
