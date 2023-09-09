@@ -1,1 +1,1 @@
-Fiber(SparseCOO{1}(Dense(Element{0.0, Int64, Float64, Vector{Float64}}(…), 5), (10,), …))
+Fiber(SparseCOO{1}(Dense(Element{0.0, Float64, Int64, Vector{Float64}}(…), 5), (10,), …))

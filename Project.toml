@@ -30,6 +30,7 @@ julia = "1.6.7"
 
 [extensions]
 HDF5Ext = "HDF5"
+NPZExt = "NPZ"
 SparseArraysExt = "SparseArrays"
 TensorMarketExt = "TensorMarket"
 
@@ -46,11 +47,13 @@ SimpleWeightedGraphs = "47aef6b3-ad0c-573a-a1e2-d07658019622"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 TensorMarket = "8b7d4fe7-0b45-4d0d-9dd8-5cc9b23b4b77"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+NPZ = "15e1cf62-19b3-5cfa-8e77-841668bca605"
 
 [targets]
-test = ["Test", "ArgParse", "LinearAlgebra", "Random", "SparseArrays", "Graphs", "SimpleWeightedGraphs", "HDF5", "Pkg", "TensorMarket", "Documenter", "Literate"]
+test = ["Test", "ArgParse", "LinearAlgebra", "Random", "SparseArrays", "Graphs", "SimpleWeightedGraphs", "HDF5", "NPZ", "Pkg", "TensorMarket", "Documenter", "Literate"]
 
 [weakdeps]
 HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
+NPZ = "15e1cf62-19b3-5cfa-8e77-841668bca605"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 TensorMarket = "8b7d4fe7-0b45-4d0d-9dd8-5cc9b23b4b77"

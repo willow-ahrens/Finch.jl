@@ -2,48 +2,99 @@ using Pkg
 @testset "fileio" begin
     if haskey(Pkg.project().dependencies, "HDF5")
         using HDF5
+        using CIndices
         @info "Testing HDF5 fileio"
-        A = [0.0 1.0 2.0 2.0 ;
-            0.0 0.0 0.0 0.0 ;
-            1.0 1.0 2.0 0.0 ;
-            0.0 0.0 0.0 0.0 ]
-        mktempdir() do f
-            A_dense = Fiber!(Dense(Dense(Element(0.0))), A)
-            A_dense_fname = joinpath(f, "A_dense.fbr")
-            fbrwrite(A_dense_fname, A_dense)
-            A_dense_test = fbrread(A_dense_fname)
-            @test isstructequal(A_dense_test, A_dense)
+        @testset "h5 binsparse" begin
+            mktempdir() do f
+                for (iA, A) in enumerate([
+                    [false true false false ;
+                    true true true true],
+                    [0 1 2 2 ;
+                    0 0 0 0 ;
+                    1 1 2 0 ;
+                    0 0 0 0 ],
+                    [0.0 1.0 2.0 2.0 ;
+                    0.0 0.0 0.0 0.0 ;
+                    1.0 1.0 2.0 0.0 ;
+                    0.0 0.0 0.0 0.0 ],
+                    [0 + 1im 1 + 0im 0 + 0im ;
+                    0 + 0im 1 + 0im 0 + 0im ]
+                ])
+                    @testset "$(typeof(A))" begin
+                        for (iD, D) in [
+                            0 => zero(eltype(A)),
+                            1 => one(eltype(A)),
+                        ]
+                            elem = Element{D, eltype(A), CIndex{Int}}()
+                            for (name, fmt) in [
+                                "A_dense" => swizzle(Fiber!(Dense{CIndex{Int}}(Dense{CIndex{Int}}(elem))), 2, 1),
+                                "A_denseC" => Fiber!(Dense{CIndex{Int}}(Dense{CIndex{Int}}(elem))),
+                                "A_CSC" => Fiber!(Dense{CIndex{Int}}(SparseList{CIndex{Int}, CIndex{Int}}(elem))),
+                                "A_CSR" => swizzle(Fiber!(Dense{CIndex{Int}}(SparseList{CIndex{Int}, CIndex{Int}}(elem))), 2, 1),
+                                "A_COO" => swizzle(Fiber!(SparseCOO{2, Tuple{CIndex{Int}, CIndex{Int}}, CIndex{Int}}(elem)), 2, 1),
+                                "A_COOC" => Fiber!(SparseCOO{2, Tuple{CIndex{Int}, CIndex{Int}}, CIndex{Int}}(elem)),
+                            ]
+                                @testset "binsparse $name($D)" begin
+                                    fmt = copyto!(fmt, A)
+                                    fname = joinpath(f, "foo.bsp.h5")
+                                    bspwrite(fname, fmt)
+                                    out = bspread(fname)
+                                    @test Structure(fmt) == Structure(bspread(fname))
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
 
-            A_CSC = Fiber!(Dense(SparseList(Element(0.0))), A)
-            A_CSC_fname = joinpath(f, "A_CSC.fbr")
-            fbrwrite(A_CSC_fname, A_CSC)
-            A_CSC_test = fbrread(A_CSC_fname)
-            @test isstructequal(A_CSC_test, A_CSC)
-
-            A_COO = Fiber!(SparseCOO{2}(Element(0.0)), A)
-            A_COO_fname = joinpath(f, "A_COO.fbr")
-            fbrwrite(A_COO_fname, A_COO)
-            A_COO_test = fbrread(A_COO_fname)
-            @test isstructequal(A_COO_test, A_COO)
-
-            A_dense = Fiber!(Dense(Dense(Element(0.0))), A)
-            A_dense_fname = joinpath(f, "A_dense.bs")
-            bswrite(A_dense_fname, A_dense)
-            
-            A_dense_test = bsread(A_dense_fname)
-            @test isstructequal(A_dense_test, A_dense)
-
-            A_CSC = Fiber!(Dense(SparseList(Element(0.0))), A)
-            A_CSC_fname = joinpath(f, "A_CSC.bs")
-            bswrite(A_CSC_fname, A_CSC)
-            A_CSC_test = bsread(A_CSC_fname)
-            @test isstructequal(A_CSC_test, A_CSC)
-
-            A_COO = Fiber!(SparseCOO{2}(Element(0.0)), A)
-            A_COO_fname = joinpath(f, "A_COO.bs")
-            bswrite(A_COO_fname, A_COO)
-            A_COO_test = bsread(A_COO_fname)
-            @test isstructequal(A_COO_test, A_COO)
+    if haskey(Pkg.project().dependencies, "NPZ")
+        using NPZ
+        using CIndices
+        @info "Testing NPYD fileio"
+        @testset "npyd binsparse" begin
+            mktempdir() do f
+                for (iA, A) in enumerate([
+                    [false true false false ;
+                    true true true true],
+                    [0 1 2 2 ;
+                    0 0 0 0 ;
+                    1 1 2 0 ;
+                    0 0 0 0 ],
+                    [0.0 1.0 2.0 2.0 ;
+                    0.0 0.0 0.0 0.0 ;
+                    1.0 1.0 2.0 0.0 ;
+                    0.0 0.0 0.0 0.0 ],
+                    [0 + 1im 1 + 0im 0 + 0im ;
+                    0 + 0im 1 + 0im 0 + 0im ]
+                ])
+                    @testset "$(typeof(A))" begin
+                        for (iD, D) in [
+                            0 => zero(eltype(A)),
+                            1 => one(eltype(A)),
+                        ]
+                            elem = Element{D, eltype(A), CIndex{Int}}()
+                            for (name, fmt) in [
+                                "A_dense" => swizzle(Fiber!(Dense{CIndex{Int}}(Dense{CIndex{Int}}(elem))), 2, 1),
+                                "A_denseC" => Fiber!(Dense{CIndex{Int}}(Dense{CIndex{Int}}(elem))),
+                                "A_CSC" => Fiber!(Dense{CIndex{Int}}(SparseList{CIndex{Int}, CIndex{Int}}(elem))),
+                                "A_CSR" => swizzle(Fiber!(Dense{CIndex{Int}}(SparseList{CIndex{Int}, CIndex{Int}}(elem))), 2, 1),
+                                "A_COO" => swizzle(Fiber!(SparseCOO{2, Tuple{CIndex{Int}, CIndex{Int}}, CIndex{Int}}(elem)), 2, 1),
+                                "A_COOC" => Fiber!(SparseCOO{2, Tuple{CIndex{Int}, CIndex{Int}}, CIndex{Int}}(elem)),
+                            ]
+                                @testset "binsparse $name($D)" begin
+                                    fmt = copyto!(fmt, A)
+                                    fname = joinpath(f, "A$(iA)_D$(iD)_$name.bsp.npyd")
+                                    bspwrite(fname, fmt)
+                                    out = bspread(fname)
+                                    @test Structure(fmt) == Structure(bspread(fname))
+                                end
+                            end
+                        end
+                    end
+                end
+            end
         end
     end
 
@@ -59,13 +110,13 @@ using Pkg
             A_COO_fname = joinpath(f, "A_COO.ttx")
             fttwrite(A_COO_fname, A_COO)
             A_COO_test = fttread(A_COO_fname)
-            @test isstructequal(A_COO_test, A_COO)
+            @test Structure(A_COO_test) == Structure(A_COO)
 
             A_COO = Fiber!(SparseCOO{2}(Element(0.0)), A)
             A_COO_fname = joinpath(f, "A_COO.tns")
             ftnswrite(A_COO_fname, A_COO)
             A_COO_test = ftnsread(A_COO_fname)
-            @test isstructequal(A_COO_test, A_COO)
+            @test Structure(A_COO_test) == Structure(A_COO)
         end
     end
 end

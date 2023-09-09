@@ -96,7 +96,7 @@
                 @testset "convert $(summary(tmp))" begin
                     @finch (tmp .= 0; for i=_; tmp[i] = ref[i] end)
                     @finch (res .= 0; for i=_; res[i] = tmp[i] end)
-                    @test isstructequal(ref, res)
+                    @test Structure(ref) == Structure(res)
                 end
             end
 
@@ -120,7 +120,7 @@
                     @testset "convert $arr_key $(summary(tmp))"  begin
                         @finch (tmp .= 0; for j=_, i=_; tmp[i, j] = ref[i, j] end)
                         @finch (res .= 0; for j=_, i=_; res[i, j] = tmp[i, j] end)
-                        @test isstructequal(ref, res)
+                        @test Structure(ref) == Structure(res)
                     end
                 end
             end
@@ -142,7 +142,7 @@
                     @finch (ref .= 0; for i=_; ref[i] = arr[i] end)
                     @finch (tmp .= 0; for i=_; tmp[i] = ref[i] end)
                     @finch (res .= 0; for i=_; res[i] = tmp[i] end)
-                    @test isstructequal(ref, res)
+                    @test Structure(ref) == Structure(res)
                 end
             end
 
@@ -166,7 +166,7 @@
                         @finch (ref .= 0; for j=_, i=_; ref[i, j] = arr[i, j] end)
                         @finch (tmp .= 0; for j=_, i=_; tmp[i, j] = ref[i, j] end)
                         @finch (res .= 0; for j=_, i=_; res[i, j] = tmp[i, j] end)
-                        @test isstructequal(ref, res)
+                        @test Structure(ref) == Structure(res)
                     end
                 end
             end
@@ -194,7 +194,7 @@
                 @testset "convert $arr_key $(summary(tmp))"  begin
                     @finch (tmp .= 0; for j=_, i=_; tmp[i, j] = ref[i, j] end)
                     @finch (res .= 0; for j=_, i=_; res[i, j] = tmp[i, j] end)
-                    @test isstructequal(ref, res)
+                    @test Structure(ref) == Structure(res)
                 end
             end
         end

@@ -55,7 +55,7 @@ function data_rep(bc::Type{<:Broadcast.Broadcasted{Style, Axes, Callable{f}, Arg
     broadcast_rep(f, map(arg -> pad_data_rep(arg, maximum(ndims, args)), args))
 end
 
-pad_data_rep(rep, n) = ndims(rep) < n ? pad_data_rep(ExtrudeData(rep, typeof(n)), n) : rep
+pad_data_rep(rep, n) = ndims(rep) < n ? pad_data_rep(ExtrudeData(rep), n) : rep
 
 struct BroadcastRepExtrudeStyle end
 struct BroadcastRepSparseStyle end
@@ -93,28 +93,27 @@ broadcast_rep_child(r::SparseData) = r.lvl
 broadcast_rep_child(r::DenseData) = r.lvl
 broadcast_rep_child(r::RepeatData) = r.lvl
 
-broadcast_rep(::BroadcastRepDenseStyle, f, args) = DenseData(broadcast_rep(f, map(broadcast_rep_child, args)), Int)
+broadcast_rep(::BroadcastRepDenseStyle, f, args) = DenseData(broadcast_rep(f, map(broadcast_rep_child, args)))
 
 function broadcast_rep(::BroadcastRepSparseStyle, f, args)
     if length(args) == 1
-        return SparseData(broadcast_rep(f, map(broadcast_rep_child, args)), Int)
+        return SparseData(broadcast_rep(f, map(broadcast_rep_child, args)))
     end
     for arg in args
         if isannihilator(DefaultAlgebra(), f, default(arg))
-            return SparseData(broadcast_rep(f, map(broadcast_rep_child, args)), Int)
+            return SparseData(broadcast_rep(f, map(broadcast_rep_child, args)))
         end
     end
-    return DenseData(broadcast_rep(f, map(broadcast_rep_child, args)), Int)
+    return DenseData(broadcast_rep(f, map(broadcast_rep_child, args)))
 end
 
 function broadcast_rep(::BroadcastRepRepeatStyle, f, args)
-    return RepeatData(broadcast_rep(f, map(broadcast_rep_child, args)), Int)
+    return RepeatData(broadcast_rep(f, map(broadcast_rep_child, args)))
 end
 
 function broadcast_rep(::BroadcastRepElementStyle, f, args)
-    return ElementData(f(map(default, args)...), Int, Base.Broadcast.combine_eltypes(f, (args...,)))
+    return ElementData(f(map(default, args)...), Base.Broadcast.combine_eltypes(f, (args...,)))
 end
-
 
 function pointwise_finch_expr(ex, ::Type{<:Broadcast.Broadcasted{Style, Axes, F, Args}}, ctx, idxs) where {Style, F, Axes, Args}
     f = freshen(ctx, :f)

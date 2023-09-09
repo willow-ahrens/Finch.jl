@@ -11,7 +11,7 @@ using Base.Meta
             for arr in arrs
                 println(io, "array: ", arr)
                 fbr = f(arr)
-                @test isstructequal(fbr, eval(Meta.parse(repr(fbr))))
+                @test Structure(fbr) == Structure(eval(Meta.parse(repr(fbr))))
                 @test reference_isequal(fbr, arr)
                 println(io, "fiber: ", repr(fbr))
             end

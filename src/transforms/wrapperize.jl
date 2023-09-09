@@ -83,7 +83,12 @@ function get_wrapper_rules(alg, depth, ctx)
             access(A, m, i[getval.(sigma)]...)),
         (@rule block(~s1..., define(~x, call(swizzle, ~A, ~sigma...)), ~s2...) => begin
             x_2 = variable(freshen(ctx.code, x))
-            s2_2 = Rewrite(Postwalk(@rule x => call(swizzle, x, sigma...)))(block(s2...))
+            s2_2 = Rewrite(Prewalk(Chain([
+                (@rule access(x, ~m, ~i...) => access(call(swizzle, x, sigma...), m, i...)),
+                (@rule declare(x, ~i) => declare(x, ~i)),
+                (@rule freeze(x) => freeze(x)),
+                (@rule thaw(x) => thaw(x)),
+            ])))(block(s2...))
             block(s1..., define(x, A), s2_2)
         end),
     ]

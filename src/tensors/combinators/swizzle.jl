@@ -5,6 +5,13 @@ end
 SwizzleArray(body, dims) = SwizzleArray{dims}(body)
 SwizzleArray{dims}(body::Body) where {dims, Body} = SwizzleArray{dims, Body}(body)
 
+Base.ndims(arr::SwizzleArray) = ndims(typeof(arr))
+Base.ndims(::Type{SwizzleArray{dims, Body}}) where {dims, Body} = ndims(Body)
+default(arr::SwizzleArray) = default(typeof(arr))
+default(::Type{SwizzleArray{dims, Body}}) where {dims, Body} = default(Body)
+
+Base.size(arr::SwizzleArray{dims}) where {dims} = map(n->size(arr.body)[n], dims)
+
 Base.show(io::IO, ex::SwizzleArray) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::SwizzleArray{dims}) where {dims}
 	print(io, "SwizzleArray($(ex.body), $dims)")
@@ -42,12 +49,16 @@ virtual_uncall(arr::VirtualSwizzleArray) = call(swizzle, arr.body, arr.dims...)
 
 lower(tns::VirtualSwizzleArray, ctx::AbstractCompiler, ::DefaultStyle) = :(SwizzleArray($(ctx(tns.body)), $(tns.dims)))
 
+function virtual_default(arr::VirtualSwizzleArray, ctx::AbstractCompiler)
+    virtual_default(arr.body, ctx)
+end
+
 function virtual_size(arr::VirtualSwizzleArray, ctx::AbstractCompiler)
     virtual_size(arr.body, ctx)[arr.dims]
 end
 
 function virtual_resize!(arr::VirtualSwizzleArray, ctx::AbstractCompiler, dims...)
-    virtual_resize!(arr.body, ctx, virtual_size(arr.body, ctx)[iperm(arr.dims)])
+    virtual_resize!(arr.body, ctx, dims[invperm(arr.dims)]...)
 end
 
 function instantiate_reader(arr::VirtualSwizzleArray, ctx, protos)

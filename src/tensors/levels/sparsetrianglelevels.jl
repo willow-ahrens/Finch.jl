@@ -5,7 +5,7 @@ struct SparseTriangleLevel{N, Ti, Lvl}
     # shift/delta
 end
 SparseTriangleLevel(lvl) = throw(ArgumentError("You must specify the number of dimensions in a SparseTriangleLevel, e.g. Fiber!(SparseTriangle{2}(Element(0.0)))"))
-SparseTriangleLevel{N}(lvl:: Lvl, args...) where {Lvl, N} = SparseTriangleLevel{N, indextype(Lvl)}(lvl, args...)
+SparseTriangleLevel{N}(lvl::Lvl, args...) where {Lvl, N} = SparseTriangleLevel{N, Int}(lvl, args...)
 SparseTriangleLevel{N}(lvl, shape, args...) where {N} = SparseTriangleLevel{N, typeof(shape)}(lvl, shape, args...)
 SparseTriangleLevel{N, Ti}(lvl, args...) where {N, Ti} = SparseTriangleLevel{N, Ti, typeof(lvl)}(lvl, args...)
 SparseTriangleLevel{N, Ti, Lvl}(lvl) where {N, Ti, Lvl} = SparseTriangleLevel{N, Ti, Lvl}(lvl, zero(Ti))
@@ -16,25 +16,18 @@ Base.summary(lvl::SparseTriangle{N}) where {N} = "SparseTriangle{$N}($(summary(l
 similar_level(lvl::SparseTriangle{N}) where {N} = SparseTriangle(similar_level(lvl.lvl))
 similar_level(lvl::SparseTriangle{N}, dims...) where {N} = SparseTriangle(similar_level(lvl.lvl, dims[1:end-1]...), dims[end])
 
-
-function memory_type(::Type{SparseTriangleLevel{N, Ti, Lvl}}) where {N, Ti, Lvl}
-    return memory_type(Lvl)
+function memtype(::Type{SparseTriangleLevel{N, Ti, Lvl}}) where {N, Ti, Lvl}
+    return memtype(Lvl)
 end
 
 function postype(::Type{SparseTriangleLevel{N, Ti, Lvl}}) where {N, Ti, Lvl}
     return postype(Lvl)
 end
 
-function indextype(::Type{SparseTriangleLevel{N, Ti, Lvl}}) where {N, Ti, Lvl}
-    return indextype(Ti)
-end
-
-
 function moveto(lvl::SparseTriangleLevel{N, Ti, Lvl},  ::Type{MemType}) where {N, Ti, Lvl, MemType <: AbstractArray}
     lvl_2 = moveto(lvl.lvl, MemType)
     return SparseTriangleLevel{N, Ti, typeof(lvl_2)}(lvl_2, lvl.shape)
 end
-
 
 pattern!(lvl::SparseTriangleLevel{N, Ti}) where {N, Ti} = 
     SparseTriangleLevel{N, Ti}(pattern!(lvl.lvl), lvl.shape)
@@ -44,7 +37,7 @@ pattern!(lvl::SparseTriangleLevel{N, Ti}) where {N, Ti} =
 @inline level_axes(lvl::SparseTriangleLevel{N}) where {N} = (level_axes(lvl.lvl)..., repeat([Base.OneTo(lvl.shape)], N)...)
 @inline level_eltype(::Type{<:SparseTriangleLevel{N, Ti, Lvl}}) where {N, Ti, Lvl} = level_eltype(Lvl)
 @inline level_default(::Type{<:SparseTriangleLevel{N, Ti, Lvl}}) where {N, Ti, Lvl} = level_default(Lvl)
-data_rep_level(::Type{<:SparseTriangleLevel{N, Ti, Lvl}}) where {N, Ti, Lvl} = (SparseData^N)(data_rep_level(Lvl), Ti)
+data_rep_level(::Type{<:SparseTriangleLevel{N, Ti, Lvl}}) where {N, Ti, Lvl} = (SparseData^N)(data_rep_level(Lvl))
 
 simplex(shape, n) = fld(prod(shape .+ n .- (1:n)), factorial(n))
 
