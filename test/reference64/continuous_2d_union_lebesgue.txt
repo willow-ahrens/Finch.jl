@@ -166,7 +166,7 @@ quote
                         j = phase_stop_18 + limit(0+ϵ)
                     end
                 end
-                phase_start_23 = max(1.0f0, limit(0+ϵ) + x_lvl_2_i_end_2)
+                phase_start_23 = max(limit(1.0), limit(0+ϵ) + x_lvl_2_i_end_2)
                 phase_stop_23 = min(y_lvl_2.shape, y_lvl_2_i_end_2)
                 if phase_stop_23 >= phase_start_23
                     j = phase_start_23
@@ -189,7 +189,7 @@ quote
                         end
                     end
                 end
-                phase_start_27 = max(1.0f0, limit(0+ϵ) + y_lvl_2_i_end_2)
+                phase_start_27 = max(limit(1.0), limit(0+ϵ) + y_lvl_2_i_end_2)
                 phase_stop_27 = min(y_lvl_2.shape, x_lvl_2_i_end_2)
                 if phase_stop_27 >= phase_start_27
                     j = phase_start_27
@@ -218,7 +218,7 @@ quote
             i = phase_stop_2 + limit(0+ϵ)
         end
     end
-    phase_start_32 = max(1.0f0, limit(0+ϵ) + y_lvl_i_end)
+    phase_start_32 = max(limit(1.0), limit(0+ϵ) + y_lvl_i_end)
     phase_stop_32 = min(y_lvl.shape, x_lvl_i_end)
     if phase_stop_32 >= phase_start_32
         i = phase_start_32
@@ -268,7 +268,7 @@ quote
             end
         end
     end
-    phase_start_41 = max(1.0f0, limit(0+ϵ) + x_lvl_i_end)
+    phase_start_41 = max(limit(1.0), limit(0+ϵ) + x_lvl_i_end)
     phase_stop_41 = min(y_lvl.shape, y_lvl_i_end)
     if phase_stop_41 >= phase_start_41
         i = phase_start_41
