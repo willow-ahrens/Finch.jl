@@ -25,13 +25,14 @@ using Pkg
                             0 => zero(eltype(A)),
                             1 => one(eltype(A)),
                         ]
+                            elem = Element{D, eltype(A), CIndex{Int}}()
                             for (name, fmt) in [
-                                "A_dense" => swizzle(Fiber!(Dense{CIndex{Int}}(Dense{CIndex{Int}}(Element(D)))), 2, 1),
-                                "A_denseC" => Fiber!(Dense{CIndex{Int}}(Dense{CIndex{Int}}(Element(D)))),
-                                "A_CSC" => Fiber!(Dense{CIndex{Int}}(SparseList{CIndex{Int}, CIndex{Int}}(Element(D)))),
-                                "A_CSR" => swizzle(Fiber!(Dense{CIndex{Int}}(SparseList{CIndex{Int}, CIndex{Int}}(Element(D)))), 2, 1),
-                                "A_COO" => swizzle(Fiber!(SparseCOO{2, Tuple{CIndex{Int}, CIndex{Int}}, CIndex{Int}}(Element(D))), 2, 1),
-                                "A_COOC" => Fiber!(SparseCOO{2, Tuple{CIndex{Int}, CIndex{Int}}, CIndex{Int}}(Element(D))),
+                                "A_dense" => swizzle(Fiber!(Dense{CIndex{Int}}(Dense{CIndex{Int}}(elem))), 2, 1),
+                                "A_denseC" => Fiber!(Dense{CIndex{Int}}(Dense{CIndex{Int}}(elem))),
+                                "A_CSC" => Fiber!(Dense{CIndex{Int}}(SparseList{CIndex{Int}, CIndex{Int}}(elem))),
+                                "A_CSR" => swizzle(Fiber!(Dense{CIndex{Int}}(SparseList{CIndex{Int}, CIndex{Int}}(elem))), 2, 1),
+                                "A_COO" => swizzle(Fiber!(SparseCOO{2, Tuple{CIndex{Int}, CIndex{Int}}, CIndex{Int}}(elem)), 2, 1),
+                                "A_COOC" => Fiber!(SparseCOO{2, Tuple{CIndex{Int}, CIndex{Int}}, CIndex{Int}}(elem)),
                             ]
                                 @testset "binsparse $name($D)" begin
                                     fmt = copyto!(fmt, A)
@@ -73,13 +74,14 @@ using Pkg
                             0 => zero(eltype(A)),
                             1 => one(eltype(A)),
                         ]
+                            elem = Element{D, eltype(A), CIndex{Int}}()
                             for (name, fmt) in [
-                                "A_dense" => swizzle(Fiber!(Dense{CIndex{Int}}(Dense{CIndex{Int}}(Element(D)))), 2, 1),
-                                "A_denseC" => Fiber!(Dense{CIndex{Int}}(Dense{CIndex{Int}}(Element(D)))),
-                                "A_CSC" => Fiber!(Dense{CIndex{Int}}(SparseList{CIndex{Int}, CIndex{Int}}(Element(D)))),
-                                "A_CSR" => swizzle(Fiber!(Dense{CIndex{Int}}(SparseList{CIndex{Int}, CIndex{Int}}(Element(D)))), 2, 1),
-                                "A_COO" => swizzle(Fiber!(SparseCOO{2, Tuple{CIndex{Int}, CIndex{Int}}, CIndex{Int}}(Element(D))), 2, 1),
-                                "A_COOC" => Fiber!(SparseCOO{2, Tuple{CIndex{Int}, CIndex{Int}}, CIndex{Int}}(Element(D))),
+                                "A_dense" => swizzle(Fiber!(Dense{CIndex{Int}}(Dense{CIndex{Int}}(elem))), 2, 1),
+                                "A_denseC" => Fiber!(Dense{CIndex{Int}}(Dense{CIndex{Int}}(elem))),
+                                "A_CSC" => Fiber!(Dense{CIndex{Int}}(SparseList{CIndex{Int}, CIndex{Int}}(elem))),
+                                "A_CSR" => swizzle(Fiber!(Dense{CIndex{Int}}(SparseList{CIndex{Int}, CIndex{Int}}(elem))), 2, 1),
+                                "A_COO" => swizzle(Fiber!(SparseCOO{2, Tuple{CIndex{Int}, CIndex{Int}}, CIndex{Int}}(elem)), 2, 1),
+                                "A_COOC" => Fiber!(SparseCOO{2, Tuple{CIndex{Int}, CIndex{Int}}, CIndex{Int}}(elem)),
                             ]
                                 @testset "binsparse $name($D)" begin
                                     fmt = copyto!(fmt, A)
