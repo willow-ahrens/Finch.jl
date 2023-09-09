@@ -254,5 +254,5 @@ julia> @finch begin
             z[i] = x[gallop(i)] + y[i]
         end
     end
-(z = Fiber(SparseList{Int64, Int64}(Element{0.0, Int32, Float64, Vector{Float64}}([2.0, 1.0, 3.0, 5.0, 5.0, 1.0, 6.0]), 10, [1, 8], [1, 2, 3, 5, 7, 8, 9])),)
+(z = Fiber(SparseList{Int64, Int64}(Element{0.0, Float64, Int32, Vector{Float64}}([2.0, 1.0, 3.0, 5.0, 5.0, 1.0, 6.0]), 10, [1, 8], [1, 2, 3, 5, 7, 8, 9])),)
 
