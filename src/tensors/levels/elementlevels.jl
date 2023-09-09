@@ -30,8 +30,7 @@ end
 ElementLevel{D}() where {D} = ElementLevel{D, typeof(D)}()
 ElementLevel{D}(val::Vv) where {D, Vv} = ElementLevel{D, eltype(Vv)}(val)
 ElementLevel{D, Tv}(args...) where {D, Tv} = ElementLevel{D, Tv, Int}(args...)
-ElementLevel{D, Tv, Tp}() where {D, Tv, Tp} = ElementLevel{D, Tv, Int}(Tv[])
-ElementLevel{D, Tv, Tp}() where {D, Tv, Tp, Vv} = ElementLevel{D, Tv, Int, Vector{Int}}()
+ElementLevel{D, Tv, Tp}(args...) where {D, Tv, Tp, Vv} = ElementLevel{D, Tv, Tp, Vector{Tv}}(args...)
 ElementLevel{D, Tv, Tp, Vv}() where {D, Tv, Tp, Vv} = ElementLevel{D, Tv, Int, Vv}(Tv[])
 
 ElementLevel{D, Tv, Tp}(val::Vv) where {D, Tv, Tp, Vv} = ElementLevel{D, Tv, Int, Vv}(val)
@@ -51,7 +50,7 @@ function moveto(lvl::ElementLevel{D, Tv, Tp, Vv}, ::Type{MemType}) where {D, Tv,
 end
 
 pattern!(lvl::ElementLevel{D, Tv, Tp, Vv}) where  {D, Tv, Tp, Vv} =
-    Pattern{Int, Tp, Vv}()
+    Pattern{Tp, Vv}()
 redefault!(lvl::ElementLevel{D, Tv, Tp, Vv}, init) where {D, Tv, Tp, Vv} = 
     ElementLevel{init, Tv, Tp, Vv}(lvl.val)
 

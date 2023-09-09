@@ -1,5 +1,5 @@
 """
-    PatternLevel{D, [Tv]}()
+    PatternLevel{[Tp, V]}()
 
 A subfiber of a pattern level is the Boolean value true, but it's `default` is
 false. PatternLevels are used to create tensors that represent which values
@@ -15,10 +15,10 @@ Dense [1:3]
 ├─[3]: true
 ```
 """
-struct PatternLevel{Ti, Tp, VB<:AbstractVector{Bool}} end
+struct PatternLevel{Tp, V} end
 const Pattern = PatternLevel
 
-PatternLevel() = PatternLevel{Int, Int, Vector{Bool}}()
+PatternLevel() = PatternLevel{Int, Vector{Bool}}()
 
 Base.summary(::Pattern) = "Pattern()"
 similar_level(::PatternLevel) = PatternLevel()
@@ -29,28 +29,28 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:PatternLe
     show(io, mime, true)
 end
 
-pattern!(::PatternLevel{Ti, Tp, VB}) where {Ti, Tp, VB} = Pattern{Ti, Tp, VB}()
+pattern!(::PatternLevel{Tp, V}) where {Tp, V} = Pattern{Tp, V}()
 
 function Base.show(io::IO, lvl::PatternLevel)
     print(io, "Pattern()")
 end 
 
-@inline level_ndims(::Type{PatternLevel{Ti, Tp, VB}}) where {Ti, Tp, VB} = 0
+@inline level_ndims(::Type{<:PatternLevel}) = 0
 @inline level_size(::PatternLevel) = ()
 @inline level_axes(::PatternLevel) = ()
-@inline level_eltype(::Type{PatternLevel{Ti, Tp, VB}}) where {Ti, Tp, VB} = Bool
-@inline level_default(::Type{PatternLevel{Ti, Tp, VB}}) where {Ti, Tp, VB} = false
+@inline level_eltype(::Type{<:PatternLevel}) = Bool
+@inline level_default(::Type{<:PatternLevel}) = false
 (fbr::AbstractFiber{<:PatternLevel})() = true
-data_rep_level(::Type{<:PatternLevel{Ti}}) where {Ti} = ElementData(false, Bool)
+data_rep_level(::Type{<:PatternLevel}) = ElementData(false, Bool)
 
-function memtype(::Type{PatternLevel{Ti, Tp,VB}}) where {Ti, Tp, VB}
-    return containertype(VB)
+function memtype(::Type{PatternLevel{Tp, V}}) where {Tp, V}
+    return containertype(V)
 end
 
-postype(::Type{PatternLevel{Ti, Tp, VB}}) where {Ti, Tp, VB} = Tp
+postype(::Type{<:PatternLevel{Tp}}) where {Tp} = Tp
 
-function moveto(lvl::PatternLevel{Ti, Tp, VB},  ::Type{MemType}) where {Ti, Tp, VB, MemType <: AbstractArray}
-    return PatternLevel{Ti, Tp, MemType{Bool, 1}}
+function moveto(lvl::PatternLevel{Tp}, ::Type{MemType}) where {Tp, MemType <: AbstractArray}
+    return PatternLevel{Tp, MemType{Bool, 1}}()
 end
 
 
