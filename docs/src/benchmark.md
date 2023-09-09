@@ -39,8 +39,13 @@ using MatrixDepot
 ````
 
 ````
+[32m[1m Downloading[22m[39m artifact: MPICH
+[32m[1m Downloading[22m[39m artifact: HDF5
 [ Info: verify download of index files...
-[ Info: reading database
+[ Info: creating database file
+[ Info: reading index files
+[ Info: downloading: https://sparse.tamu.edu/files/ss_index.mat
+[ Info: downloading index file https://math.nist.gov/MatrixMarket/matrices.html
 [ Info: adding metadata...
 [ Info: adding svd data...
 [ Info: writing database
@@ -84,14 +89,14 @@ Benchmark the kernel, ignoring allocation costs for y
 ````
 
 ````
-BenchmarkTools.Trial: 10000 samples with 207 evaluations.
- Range (min … max):  365.536 ns … 635.870 ns  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     368.155 ns               ┊ GC (median):    0.00%
- Time  (mean ± σ):   373.535 ns ±  13.167 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+BenchmarkTools.Trial: 10000 samples with 189 evaluations.
+ Range (min … max):  540.217 ns …  29.891 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     695.243 ns               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   736.606 ns ± 365.156 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-  ▇▄█▃ ▅▂▆▃       ▂▁▃▂▁▂ ▂                                      ▂
-  ████▅██████▇▅▅▅▅█████████▇▇▇▆▆▆▄▇▇▇▇▇▇▇█▆▇▇▇▆█▆▇▆▅▃▅▅▅▅▆▅▅▅▆▆ █
-  366 ns        Histogram: log(frequency) by time        427 ns <
+    ▁█ ▇▆ ▃ ▂█ ▂ ▁                                               
+  ▂▂██▂██▂█▇██▇█▆█▇▄▅▄▄▄▄▃▃▂▃▃▂▂▂▂▂▂▂▁▂▁▂▂▁▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁ ▃
+  540 ns           Histogram: frequency by time         1.34 μs <
 
  Memory estimate: 0 bytes, allocs estimate: 0.
 ````
@@ -113,15 +118,15 @@ end
 ````
 
 ````
-BenchmarkTools.Trial: 10000 samples with 201 evaluations.
- Range (min … max):  398.632 ns …  20.933 μs  ┊ GC (min … max): 0.00% … 97.65%
- Time  (median):     420.398 ns               ┊ GC (median):    0.00%
- Time  (mean ± σ):   443.245 ns ± 683.030 ns  ┊ GC (mean ± σ):  5.53% ±  3.51%
+BenchmarkTools.Trial: 10000 samples with 167 evaluations.
+ Range (min … max):  619.766 ns … 208.364 μs  ┊ GC (min … max):  0.00% … 99.51%
+ Time  (median):       1.010 μs               ┊ GC (median):     0.00%
+ Time  (mean ± σ):     1.236 μs ±   6.005 μs  ┊ GC (mean ± σ):  15.21% ±  3.14%
 
-  ▅██▅▂        ▂▄▄▆▆▆▆▅▄▄▃▂▁▁▁▂▂▃▂▃▂▂▂▁                         ▂
-  █████▇▇▇▆▅▆▅▆██████████████████████████▇▇▇███████▇██▇▇▇▆▆▆▅▅▅ █
-  399 ns        Histogram: log(frequency) by time        481 ns <
+    ▁▄█▅▃▂▂▁▃    ▂▂▂▃▄▄▄▂▁  ▁                                    
+  ▂▃█████████▇▆▆█████████████▇▆▆▅▅▄▄▃▄▄▃▃▃▂▂▂▂▂▂▂▂▂▂▂▂▁▁▁▁▁▁▁▁▁ ▄
+  620 ns           Histogram: frequency by time         1.95 μs <
 
- Memory estimate: 608 bytes, allocs estimate: 2.
+ Memory estimate: 624 bytes, allocs estimate: 2.
 ````
 

@@ -19,7 +19,6 @@ struct Fiber{Lvl} <: AbstractFiber{Lvl}
 end
 
 
-
 mutable struct VirtualFiber{Lvl} <: AbstractVirtualFiber{Lvl}
     lvl::Lvl
 end
@@ -333,3 +332,60 @@ Base.summary(fbr::SubFiber) = "$(join(size(fbr), "×")) SubFiber($(summary(fbr.l
 
 Base.similar(fbr::AbstractFiber) = Fiber(similar_level(fbr.lvl))
 Base.similar(fbr::AbstractFiber, dims::Tuple) = Fiber(similar_level(fbr.lvl, dims...))
+
+
+
+
+
+"""
+    memory_type(fbr)
+
+Finds the memory type of a fiber or a level. This is the vector type used to store arrays.
+"""
+
+function memory_type(::Type{<:Fiber{Lvl}}) where {Lvl}
+    memory_type(Lvl)
+end
+
+
+
+"""
+    moveto(fbr, memType)
+
+If the fiber/level is not on the given memType, it creates a new version of this fiber on that memory type
+and copies the data in to it, according to the constructor `memtype`.
+"""
+function moveto(fiber::Fiber{Lvl}, ::Type{MemType}) where {Lvl, MemType <: AbstractArray}
+    lvlp = moveto(fiber.lvl, MemType)
+    return Fiber{typeof(lvlp)}(lvlp)
+end
+
+
+# function moveto(fiber::VirtualFiber{Lvl}}, memType; override = false) where {LvL}
+#     if !override && memory_type(Lvl) == memType
+#         return fbr
+#     else
+#         moveto(fbr.lvl, memType, sizes)
+#     end
+# end
+
+# function memory_type(::Type{<:VirtualFiber{Lvl}}) where {LvL}
+#     memory_type(Lvl)
+# end
+
+
+"""
+    indextype(lvl)
+Return an index type with the same flavor as those used to index the fibers contained in `lvl`.
+"""
+function indextype end
+
+
+"""
+    postype(lvl)
+Return a position type with the same flavor as those used to store the positions of the fibers contained in `lvl`.
+The name position descends from the pos or position or pointer arrays found in many definitions of CSR or CSC.
+In Finch, positions should be data used to access either a subfiber or some other similar auxiliary data. Thus,
+we often end up iterating over positions.
+"""
+function postype end

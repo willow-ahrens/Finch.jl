@@ -168,7 +168,7 @@ using CIndices
 
         io = IOBuffer()
         y = [2.0, missing, missing, 1.0, 3.0, missing]
-        yf = Fiber!(SparseList(Element{missing, Union{Float64,Missing}}()), y)
+        yf = Fiber!(SparseList(Element{missing, Int, Union{Float64,Missing}}()), y)
         println(io, "Fiber!(SparseList(Element(missing)), $y):")
         println(io, yf)
 
@@ -182,7 +182,7 @@ using CIndices
 
         io = IOBuffer()
         y = [2.0, nothing, nothing, 1.0, 3.0, Some(1.0), nothing]
-        yf = Fiber!(SparseList(Element{nothing, Union{Float64,Nothing,Some{Float64}}}()), y)
+        yf = Fiber!(SparseList(Element{nothing, Int, Union{Float64,Nothing,Some{Float64}}}()), y)
         println(io, "Fiber!(SparseList(Element(nothing)), $y):")
         println(io, yf)
 

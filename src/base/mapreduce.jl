@@ -33,22 +33,22 @@ function reduce_rep_def(op, z, lvl::HollowData, idx, idxs...)
     end
 end
 
-reduce_rep_def(op, z, lvl::SparseData, idx::Drop, idxs...) = ExtrudeData(reduce_rep_def(op, z, lvl.lvl, idxs...))
+reduce_rep_def(op, z, lvl::SparseData, idx::Drop{Idx}, idxs...) where {Idx} = ExtrudeData(reduce_rep_def(op, z, lvl.lvl, idxs...), Idx)
 function reduce_rep_def(op, z, lvl::SparseData, idx, idxs...)
     if op(z, default(lvl)) == z
-        SparseData(reduce_rep_def(op, z, lvl.lvl, idxs...))
+        SparseData(reduce_rep_def(op, z, lvl.lvl, idxs...), indextype(lvl))
     else
-        DenseData(reduce_rep_def(op, z, lvl.lvl, idxs...))
+        DenseData(reduce_rep_def(op, z, lvl.lvl, idxs...), indextype(lvl))
     end
 end
 
-reduce_rep_def(op, z, lvl::DenseData, idx::Drop, idxs...) = ExtrudeData(reduce_rep_def(op, z, lvl.lvl, idxs...))
-reduce_rep_def(op, z, lvl::DenseData, idx, idxs...) = DenseData(reduce_rep_def(op, z, lvl.lvl, idxs...))
+reduce_rep_def(op, z, lvl::DenseData, idx::Drop{Idx}, idxs...) where {Idx} = ExtrudeData(reduce_rep_def(op, z, lvl.lvl, idxs...), Idx)
+reduce_rep_def(op, z, lvl::DenseData, idx, idxs...) = DenseData(reduce_rep_def(op, z, lvl.lvl, idxs...), indextype(lvl))
 
-reduce_rep_def(op, z, lvl::ElementData) = ElementData(z, fixpoint_type(op, z, lvl))
+reduce_rep_def(op, z, lvl::ElementData) = ElementData(z, indextype(lvl), fixpoint_type(op, z, lvl))
 
-reduce_rep_def(op, z, lvl::RepeatData, idx::Drop) = ExtrudeData(reduce_rep_def(op, ElementData(lvl.default, lvl.eltype)))
-reduce_rep_def(op, z, lvl::RepeatData, idx) = RepeatData(z, fixpoint_type(op, z))
+reduce_rep_def(op, z, lvl::RepeatData, idx::Drop{Idx}) where {Idx} = ExtrudeData(reduce_rep_def(op, ElementData(lvl.default, indextype(lvl), lvl.eltype)), Idx)
+reduce_rep_def(op, z, lvl::RepeatData, idx) = RepeatData(z, indextype(lvl), fixpoint_type(op, z))
 
 function Base.reduce(op, src::Fiber; kw...)
     bc = broadcasted(identity, src)
@@ -83,8 +83,7 @@ end
 function reduce_helper_code(::Type{Callable{op}}, bc::Type{<:Broadcasted{FinchStyle{N}}}, ::Type{Val{dims}}, ::Type{Val{init}}) where {op, dims, init, N}
     contain(LowerJulia()) do ctx
         idxs = [freshen(ctx.code, :idx, n) for n = 1:N]
-        rep = pointwise_finch_traits(:bc, bc, index.(idxs))
-        rep = collapse_rep(PointwiseRep(ctx, index.(reverse(idxs)))(rep))
+        rep = collapse_rep(data_rep(bc))
         dst = freshen(ctx.code, :dst)
         if dims == Colon()
             dst_protos = []

@@ -1,0 +1,69 @@
+julia> @finch_code begin
+        y .= 0
+        for j = parallel(_)
+            for i = _
+                y[j] += x[i] * A[walk(i), j]
+            end
+        end
+    end
+quote
+    y_lvl = (ex.bodies[1]).tns.bind.lvl
+    y_lvl_2 = y_lvl.lvl
+    x_lvl = ((ex.bodies[2]).body.body.rhs.args[1]).tns.bind.lvl
+    x_lvl_2 = x_lvl.lvl
+    A_lvl = ((ex.bodies[2]).body.body.rhs.args[2]).tns.bind.lvl
+    A_lvl_2 = A_lvl.lvl
+    A_lvl_3 = A_lvl_2.lvl
+    A_lvl_2.shape == x_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(A_lvl_2.shape) != $(x_lvl.shape))"))
+    Finch.resize_if_smaller!(y_lvl_2.val, A_lvl.shape)
+    Finch.fill_range!(y_lvl_2.val, 0.0, 1, A_lvl.shape)
+    Threads.@threads for i_4 = 1:Threads.nthreads()
+            phase_start_2 = max(1, 1 + fld(A_lvl.shape * (i_4 + -1), Threads.nthreads()))
+            phase_stop_2 = min(A_lvl.shape, fld(A_lvl.shape * i_4, Threads.nthreads()))
+            if phase_stop_2 >= phase_start_2
+                for j_6 = phase_start_2:phase_stop_2
+                    y_lvl_q = (1 - 1) * A_lvl.shape + j_6
+                    A_lvl_q = (1 - 1) * A_lvl.shape + j_6
+                    A_lvl_2_q = A_lvl_2.ptr[A_lvl_q]
+                    A_lvl_2_q_stop = A_lvl_2.ptr[A_lvl_q + 1]
+                    if A_lvl_2_q < A_lvl_2_q_stop
+                        A_lvl_2_i1 = A_lvl_2.idx[A_lvl_2_q_stop - 1]
+                    else
+                        A_lvl_2_i1 = 0
+                    end
+                    phase_stop_3 = min(A_lvl_2.shape, A_lvl_2_i1)
+                    if phase_stop_3 >= 1
+                        i = 1
+                        if A_lvl_2.idx[A_lvl_2_q] < 1
+                            A_lvl_2_q = Finch.scansearch(A_lvl_2.idx, 1, A_lvl_2_q, A_lvl_2_q_stop - 1)
+                        end
+                        while i <= phase_stop_3
+                            A_lvl_2_i = A_lvl_2.idx[A_lvl_2_q]
+                            phase_stop_4 = min(phase_stop_3, A_lvl_2_i)
+                            if A_lvl_2_i == phase_stop_4
+                                A_lvl_3_val_2 = A_lvl_3.val[A_lvl_2_q]
+                                x_lvl_q = (1 - 1) * x_lvl.shape + phase_stop_4
+                                x_lvl_2_val_2 = x_lvl_2.val[x_lvl_q]
+                                y_lvl_2.val[y_lvl_q] = y_lvl_2.val[y_lvl_q] + A_lvl_3_val_2 * x_lvl_2_val_2
+                                A_lvl_2_q += 1
+                            end
+                            i = phase_stop_4 + 1
+                        end
+                    end
+                end
+            end
+        end
+    qos = 1 * A_lvl.shape
+    resize!(y_lvl_2.val, qos)
+    (y = Fiber((DenseLevel){Int64}(y_lvl_2, A_lvl.shape)),)
+end
+julia> @finch begin
+        y .= 0
+        for j = parallel(_)
+            for i = _
+                y[j] += x[i] * A[walk(i), j]
+            end
+        end
+    end
+(y = Fiber(Dense{Int64}(Element{0.0, Int64, Float64, Vector{Float64}}([4.0, 6.0]), 2)),)
+
