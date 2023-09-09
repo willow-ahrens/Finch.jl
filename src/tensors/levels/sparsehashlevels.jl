@@ -76,10 +76,6 @@ function postype(::Type{SparseHashLevel{N, Ti, Tp, Tbl, VTp, VTpip, Lvl}}) where
     return Tp
 end
 
-function indextype(::Type{SparseHashLevel{N, Ti, Tp, Tbl, VTp, VTpip, Lvl}}) where {N, Ti, Tp, Tbl, VTp, VTpip, Lvl}
-    return indextype(Ti)
-end
-
 function moveto(lvl::SparseHashLevel{N, Ti, Tp, Tbl, VTp, VTpip, Lvl}, ::Type{MemType}) where {N, Ti, Tp, Tbl, VTp, VTpip, Lvl, MemType <: AbstractArray}
     lvl_2 = moveto(lvl.lvl, MemType)
     ptr_2 = MemType{Tp, 1}(lvl.ptr)
@@ -138,7 +134,7 @@ end
 @inline level_axes(lvl::SparseHashLevel) = (map(Base.OneTo, lvl.shape)..., level_axes(lvl.lvl)...)
 @inline level_eltype(::Type{<:SparseHashLevel{N, Ti, Tp, Tbl, VTp, VTpip, Lvl}}) where {N, Ti, Tp, Tbl, VTp, VTpip, Lvl} = level_eltype(Lvl)
 @inline level_default(::Type{<:SparseHashLevel{N, Ti, Tp, Tbl, VTp, VTpip, Lvl}}) where {N, Ti, Tp, Tbl, VTp, VTpip, Lvl} = level_default(Lvl)
-data_rep_level(::Type{<:SparseHashLevel{N, Ti, Tp, Tbl, VTp, VTpip, Lvl}}) where {N, Ti, Tp, Tbl, VTp, VTpip, Lvl} = (SparseData^N)(data_rep_level(Lvl), Ti)
+data_rep_level(::Type{<:SparseHashLevel{N, Ti, Tp, Tbl, VTp, VTpip, Lvl}}) where {N, Ti, Tp, Tbl, VTp, VTpip, Lvl} = (SparseData^N)(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:SparseHashLevel})() = fbr
 (fbr::SubFiber{<:SparseHashLevel})() = fbr

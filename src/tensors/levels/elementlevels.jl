@@ -47,12 +47,6 @@ function postype(::Type{ElementLevel{D, Ti, Tv, V}}) where {D, Ti, Tv, V}
     return postype(V)
 end
 
-
-function indextype(::Type{ElementLevel{D, Ti, Tv, V}}) where {D, Ti, Tv, V}
-    return indextype(Ti)
-end
-
-
 function moveto(lvl::ElementLevel{D, Ti, Tv, V},  ::Type{MemType}) where {D, Ti, Tv, V, MemType <: AbstractArray}
     valp = MemType(lvl.val)
     return ElementLevel{D, Ti, Tv, typeof(valp)}(valp)
@@ -85,7 +79,7 @@ end
 @inline level_axes(::ElementLevel) = ()
 @inline level_eltype(::Type{ElementLevel{D, Ti, Tv, V}}) where {D, Ti, Tv, V} = Tv
 @inline level_default(::Type{<:ElementLevel{D}}) where {D} = D
-data_rep_level(::Type{<:ElementLevel{D, Ti, Tv, V}}) where {D, Ti, Tv, V} = ElementData(D, Ti, Tv)
+data_rep_level(::Type{<:ElementLevel{D, Ti, Tv, V}}) where {D, Ti, Tv, V} = ElementData(D, Tv)
 
 (fbr::Fiber{<:ElementLevel})() = SubFiber(fbr.lvl, 1)()
 function (fbr::SubFiber{<:ElementLevel})()

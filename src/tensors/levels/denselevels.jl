@@ -28,7 +28,7 @@ struct DenseLevel{Ti, Lvl}
     lvl::Lvl
     shape::Ti
 end
-DenseLevel(lvl::Lvl) where {Lvl} = DenseLevel{indextype(Lvl)}(lvl)
+DenseLevel(lvl) = DenseLevel{Int}(lvl)
 DenseLevel(lvl, shape::Ti, args...) where {Ti} = DenseLevel{Ti}(lvl, shape, args...)
 DenseLevel{Ti}(lvl, args...) where {Ti} = DenseLevel{Ti, typeof(lvl)}(lvl, args...)
 
@@ -48,11 +48,6 @@ function postype(::Type{DenseLevel{Ti, Lvl}}) where {Ti, Lvl}
     return postype(Lvl)
 end
 
-function indextype(::Type{DenseLevel{Ti, Lvl}}) where {Ti, Lvl}
-    return indextype(Ti)
-end
-
-
 function moveto(lvl::DenseLevel{Ti, Lvl},  ::Type{MemType}) where {Ti, Lvl, MemType <: AbstractArray}
     return DenseLevel(moveto(lvl.lvl, MemType), lvl.shape)
 end
@@ -68,7 +63,7 @@ redefault!(lvl::DenseLevel{Ti}, init) where {Ti} =
 @inline level_axes(lvl::DenseLevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.shape))
 @inline level_eltype(::Type{<:DenseLevel{Ti, Lvl}}) where {Ti, Lvl} = level_eltype(Lvl)
 @inline level_default(::Type{<:DenseLevel{Ti, Lvl}}) where {Ti, Lvl} = level_default(Lvl)
-data_rep_level(::Type{<:DenseLevel{Ti, Lvl}}) where {Ti, Lvl} = DenseData(data_rep_level(Lvl), Ti)
+data_rep_level(::Type{<:DenseLevel{Ti, Lvl}}) where {Ti, Lvl} = DenseData(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:DenseLevel})() = fbr
 function (fbr::SubFiber{<:DenseLevel{Ti}})(idxs...) where {Ti}

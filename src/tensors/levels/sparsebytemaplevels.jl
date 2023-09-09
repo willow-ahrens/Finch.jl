@@ -6,7 +6,7 @@ struct SparseByteMapLevel{Ti, Tp, VTp<:AbstractVector, BV<:AbstractVector{Bool},
     srt::VTpi
 end
 const SparseByteMap = SparseByteMapLevel
-SparseByteMapLevel(lvl::Lvl) where {Lvl} = SparseByteMapLevel{indextype(Lvl)}(lvl)
+SparseByteMapLevel(lvl::Lvl) where {Lvl} = SparseByteMapLevel{Int}(lvl)
 SparseByteMapLevel(lvl, shape, args...) = SparseByteMapLevel{typeof(shape)}(lvl, shape, args...)
 SparseByteMapLevel{Ti}(lvl::Lvl, args...) where {Ti, Lvl} = SparseByteMapLevel{Ti, postype(Lvl)}(lvl, args...)
 SparseByteMapLevel{Ti, Tp}(lvl, args...) where {Ti, Tp} = SparseByteMapLevel{Ti, Tp,  memtype(typeof(lvl)){Tp, 1}, memtype(typeof(lvl)){Bool, 1}, memtype(typeof(lvl)){Tuple{Tp, Ti}, 1}, typeof(lvl)}(lvl, args...)
@@ -27,8 +27,6 @@ end
 function postype(::Type{SparseByteMapLevel{Ti, Tp, VTp, BV, VTpi, Lvl}}) where {Ti, Tp, VTp, BV, VTpi, Lvl}
     return Tp
 end
-
-indextype(::Type{SparseByteMapLevel{Ti, Tp, VTp, BV, VTpi, Lvl}}) where {Ti, Tp, VTp, BV, VTpi, Lvl} = indextype(Ti)
 
 function moveto(lvl:: SparseByteMapLevel{Ti, Tp, VTp, BV, VTpi, Lvl}, ::Type{MemType}) where {Ti, Tp, VTp, BV, VTpi, Lvl, MemType <: AbstractArray}
     lvl_2 = moveto(lvl.lvl, MemType)
@@ -88,7 +86,7 @@ end
 @inline level_axes(lvl::SparseByteMapLevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.shape))
 @inline level_eltype(::Type{<:SparseByteMapLevel{Ti, Tp, VTp, BV, VTpi, Lvl}}) where {Ti, Tp, VTp, BV, VTpi, Lvl} = level_eltype(Lvl)
 @inline level_default(::Type{<:SparseByteMapLevel{Ti, Tp, VTp, BV, VTpi, Lvl}}) where {Ti, Tp, VTp, BV, VTpi, Lvl}= level_default(Lvl)
-data_rep_level(::Type{<:SparseByteMapLevel{Ti, Tp, VTp, BV, VTpi, Lvl}}) where {Ti, Tp, VTp, BV, VTpi, Lvl} = SparseData(data_rep_level(Lvl), Ti)
+data_rep_level(::Type{<:SparseByteMapLevel{Ti, Tp, VTp, BV, VTpi, Lvl}}) where {Ti, Tp, VTp, BV, VTpi, Lvl} = SparseData(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:SparseByteMapLevel})() = fbr
 function (fbr::SubFiber{<:SparseByteMapLevel{Ti}})(idxs...) where {Ti}

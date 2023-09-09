@@ -41,7 +41,7 @@ struct SparseListLevel{Ti, Tp, VTp, VTi, Lvl}
     idx::VTi
 end
 const SparseList = SparseListLevel
-SparseListLevel(lvl::Lvl) where {Lvl} = SparseListLevel{indextype(Lvl)}(lvl)
+SparseListLevel(lvl::Lvl) where {Lvl} = SparseListLevel{Int}(lvl)
 SparseListLevel(lvl, shape, args...) = SparseListLevel{typeof(shape)}(lvl, shape, args...)
 SparseListLevel{Ti}(lvl, args...) where {Ti} = SparseListLevel{Ti, postype(typeof(lvl))}(lvl, args...)
 SparseListLevel{Ti, Tp}(lvl, args...) where {Ti, Tp} =
@@ -66,11 +66,7 @@ function postype(::Type{SparseListLevel{Ti, Tp,  VTp, VTi, Lvl}}) where {Ti, Tp,
     return Tp
 end
 
-function indextype(::Type{SparseListLevel{Ti, Tp,  VTp, VTi, Lvl}}) where {Ti, Tp, Lvl, VTi, VTp}
-    return indextype(Ti)
-end
-
-function moveto(lvl::SparseListLevel{Ti, Tp,  VTp, VTi, Lvl}, ::Type{MemType}) where {Ti, Tp, Lvl, VTi, VTp, MemType <: AbstractArray}
+function moveto(lvl::SparseListLevel{Ti, Tp, VTp, VTi, Lvl}, ::Type{MemType}) where {Ti, Tp, Lvl, VTi, VTp, MemType <: AbstractArray}
     lvl_2 = moveto(lvl.lvl, MemType)
     ptr_2 = MemType{Tp, 1}(lvl.ptr)
     idx_2 = MemType{Ti, 1}(lvl.idx)
@@ -125,7 +121,7 @@ end
 @inline level_axes(lvl::SparseListLevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.shape))
 @inline level_eltype(::Type{<:SparseListLevel{Ti, Tp,  VTp, VTi, Lvl}}) where {Ti, Tp,  VTp, VTi, Lvl} = level_eltype(Lvl)
 @inline level_default(::Type{<:SparseListLevel{Ti, Tp,  VTp, VTi, Lvl}}) where {Ti, Tp,  VTp, VTi, Lvl} = level_default(Lvl)
-data_rep_level(::Type{<:SparseListLevel{Ti, Tp,  VTp, VTi, Lvl}}) where {Ti, Tp,  VTp, VTi, Lvl} = SparseData(data_rep_level(Lvl), Ti)
+data_rep_level(::Type{<:SparseListLevel{Ti, Tp,  VTp, VTi, Lvl}}) where {Ti, Tp,  VTp, VTi, Lvl} = SparseData(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:SparseListLevel})() = fbr
 function (fbr::SubFiber{<:SparseListLevel{Ti}})(idxs...) where {Ti}

@@ -49,7 +49,7 @@ RepeatRLELevel{D, Ti, Tp, Tv}(shape, ptr, idx, val) where {D, Ti, Tp, Tv} = Repe
 Base.summary(::RepeatRLE{D}) where {D} = "RepeatRLE($(D))"
 similar_level(::RepeatRLELevel{D}) where {D} = RepeatRLE{D}()
 similar_level(::RepeatRLELevel{D}, dim, tail...) where {D} = RepeatRLE{D}(dim)
-data_rep_level(::Type{<:RepeatRLELevel{D, Ti, Tp, Tv, VTp, VTi, VTv}}) where {D, Ti, Tp, Tv, VTp, VTi, VTv} = RepeatData(D, Ti, Tv)
+data_rep_level(::Type{<:RepeatRLELevel{D, Ti, Tp, Tv, VTp, VTi, VTv}}) where {D, Ti, Tp, Tv, VTp, VTi, VTv} = RepeatData(D, Tv)
 
 
 function memtype(::Type{RepeatRLELevel{D, Ti, Tp, Tv, VTp, VTi, VTv}}) where {D, Ti, Tp, Tv, VTp, VTi, VTv}
@@ -59,8 +59,6 @@ end
 function postype(::Type{RepeatRLELevel{D, Ti, Tp, Tv, VTp, VTi, VTv}}) where {D, Ti, Tp, Tv, VTp, VTi, VTv}
     return Tp
 end
-
-indextype(::Type{RepeatRLELevel{D, Ti, Tp, Tv, VTp, VTi, VTv}}) where {D, Ti, Tp, Tv, VTp, VTi, VTv} = indextype(Ti)
 
 function moveto(lvl::RepeatRLELevel{D, Ti, Tp, Tv, VTp, VTi, VTv}, ::Type{MemType}) where {D, Ti, Tp, Tv, VTp, VTi, VTv, MemType <: AbstractArray}
     ptr_2 = MemType{Tp, 1}(lvl.ptr)

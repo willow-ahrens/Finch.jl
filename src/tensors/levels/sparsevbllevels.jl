@@ -7,7 +7,7 @@ struct SparseVBLLevel{Ti, Tp, VTp<:AbstractVector, VTi<:AbstractVector, VTo<:Abs
 end
 
 const SparseVBL = SparseVBLLevel
-SparseVBLLevel(lvl::Lvl) where {Lvl} = SparseVBLLevel{indextype(Lvl)}(lvl)
+SparseVBLLevel(lvl::Lvl) where {Lvl} = SparseVBLLevel{Int}(lvl)
 SparseVBLLevel(lvl, shape, args...) = SparseVBLLevel{typeof(shape)}(lvl, shape, args...)
 SparseVBLLevel{Ti}(lvl, args...) where {Ti} = SparseVBLLevel{Ti,  postype(typeof(lvl))}(lvl, args...)
 SparseVBLLevel{Ti, Tp}(lvl, args...) where {Ti, Tp} = SparseVBLLevel{Ti, Tp, memtype(typeof(lvl)){Tp, 1}, memtype(typeof(lvl)){Ti, 1}, memtype(typeof(lvl)){Tp, 1}, typeof(lvl)}(lvl, args...)
@@ -24,11 +24,6 @@ end
 function postype(::Type{SparseVBLLevel{Ti, Tp, VTp, VTi, VTo, Lvl}}) where {Ti, Tp, VTp, VTi, VTo, Lvl}
     return Tp
 end
-
-function indextype(::Type{SparseVBLLevel{Ti, Tp, VTp, VTi, VTo, Lvl}}) where {Ti, Tp, VTp, VTi, VTo, Lvl}
-    return indextype(Ti)
-end
-
 
 function moveto(lvl::SparseVBLLevel{Ti, Tp, VTp, VTi, VTo, Lvl},  ::Type{MemType}) where {Ti, Tp, VTp, VTi, VTo, Lvl, MemType <: AbstractArray}
     lvl_2 = moveto(lvl.lvl, MemType)
@@ -95,7 +90,7 @@ end
 @inline level_axes(lvl::SparseVBLLevel) = (Base.OneTo(lvl.shape), level_axes(lvl.lvl)...)
 @inline level_eltype(::Type{<:SparseVBLLevel{Ti, Tp, VTp, VTi, VTo, Lvl}}) where {Ti, Tp, VTp, VTi, VTo, Lvl} = level_eltype(Lvl)
 @inline level_default(::Type{<:SparseVBLLevel{Ti, Tp, VTp, VTi, VTo, Lvl}}) where {Ti, Tp, VTp, VTi, VTo, Lvl} = level_default(Lvl)
-data_rep_level(::Type{<:SparseVBLLevel{Ti, Tp, VTp, VTi, VTo, Lvl}}) where {Ti, Tp, VTp, VTi, VTo, Lvl} = SparseData(data_rep_level(Lvl), Ti)
+data_rep_level(::Type{<:SparseVBLLevel{Ti, Tp, VTp, VTi, VTo, Lvl}}) where {Ti, Tp, VTp, VTi, VTo, Lvl} = SparseData(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:SparseVBLLevel})() = fbr
 function (fbr::SubFiber{<:SparseVBLLevel})(idxs...)

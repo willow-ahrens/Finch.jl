@@ -90,10 +90,6 @@ function postype(::Type{SparseCOOLevel{N, Ti, Tp, Tbl, VTp, Lvl}}) where {N, Ti,
     return Tp
 end
 
-function indextype(::Type{SparseCOOLevel{N, Ti, Tp, Tbl, VTp, Lvl}}) where {N, Ti, Tp, Tbl, VTp, Lvl}
-    return indextype(Ti)
-end
-
 function moveto(lvl::SparseCOOLevel{N, Ti, Tp, Tbl, VTp, Lvl}, ::Type{MemType}) where {N, Ti, Tp, Tbl, VTp, Lvl, MemType <: AbstractArray}
     lvl_2 = moveto(lvl.lvl, MemType)
     ptr_2 = MemType{Tp, 1}(lvl.ptr)
@@ -155,7 +151,7 @@ end
 @inline level_axes(lvl::SparseCOOLevel) = (level_axes(lvl.lvl)..., map(Base.OneTo, lvl.shape)...)
 @inline level_eltype(::Type{<:SparseCOOLevel{N, Ti, Tp, Tbl, VTp, Lvl}}) where {N, Ti, Tp, Tbl, VTp, Lvl} = level_eltype(Lvl)
 @inline level_default(::Type{<:SparseCOOLevel{N, Ti, Tp, Tbl, VTp, Lvl}}) where {N, Ti, Tp, Tbl, VTp, Lvl} = level_default(Lvl)
-data_rep_level(::Type{<:SparseCOOLevel{N, Ti, Tp, Tbl, VTp, Lvl}}) where {N, Ti, Tp, Tbl, VTp, Lvl} = (SparseData^N)(data_rep_level(Lvl), Ti)
+data_rep_level(::Type{<:SparseCOOLevel{N, Ti, Tp, Tbl, VTp, Lvl}}) where {N, Ti, Tp, Tbl, VTp, Lvl} = (SparseData^N)(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:SparseCOOLevel})() = fbr
 (fbr::SubFiber{<:SparseCOOLevel})() = fbr

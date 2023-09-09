@@ -97,12 +97,6 @@ function memtype(::Type{<:Fiber{Lvl}}) where {Lvl}
 end
 
 """
-    indextype(lvl)
-Return an index type with the same flavor as those used to index the fibers contained in `lvl`.
-"""
-function indextype end
-
-"""
     postype(lvl)
 Return a position type with the same flavor as those used to store the positions of the fibers contained in `lvl`.
 The name position descends from the pos or position or pointer arrays found in many definitions of CSR or CSC.

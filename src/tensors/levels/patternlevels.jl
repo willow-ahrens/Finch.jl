@@ -41,17 +41,13 @@ end
 @inline level_eltype(::Type{PatternLevel{Ti, Tp, VB}}) where {Ti, Tp, VB} = Bool
 @inline level_default(::Type{PatternLevel{Ti, Tp, VB}}) where {Ti, Tp, VB} = false
 (fbr::AbstractFiber{<:PatternLevel})() = true
-data_rep_level(::Type{<:PatternLevel{Ti}}) where {Ti} = ElementData(false, Ti, Bool)
+data_rep_level(::Type{<:PatternLevel{Ti}}) where {Ti} = ElementData(false, Bool)
 
 function memtype(::Type{PatternLevel{Ti, Tp,VB}}) where {Ti, Tp, VB}
     return containertype(VB)
 end
 
-
 postype(::Type{PatternLevel{Ti, Tp, VB}}) where {Ti, Tp, VB} = Tp
-
-indextype(::Type{PatternLevel{Ti, Tp, VB}}) where {Ti, Tp, VB} = indextype(Ti)
-
 
 function moveto(lvl::PatternLevel{Ti, Tp, VB},  ::Type{MemType}) where {Ti, Tp, VB, MemType <: AbstractArray}
     return PatternLevel{Ti, Tp, MemType{Bool, 1}}

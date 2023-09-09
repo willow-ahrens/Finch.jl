@@ -7,7 +7,7 @@ struct SparseRLELevel{Ti, Tp, VTp<:AbstractVector, VLTi<:AbstractVector, VRTi<:A
 end
 
 const SparseRLE = SparseRLELevel
-SparseRLELevel(lvl:: Lvl) where {Lvl} = SparseRLELevel{indextype(Lvl)}(lvl)
+SparseRLELevel(lvl:: Lvl) where {Lvl} = SparseRLELevel{Int}(lvl)
 SparseRLELevel(lvl, shape, args...) = SparseRLELevel{typeof(shape)}(lvl, shape, args...)
 SparseRLELevel{Ti}(lvl, args...) where {Ti} =
     SparseRLELevel{Ti,
@@ -32,10 +32,6 @@ end
 
 function postype(::Type{SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}}) where {Ti, Tp, VTp, VLTi, VRTi, Lvl}
     return Tp
-end
-
-function indextype(::Type{SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}}) where {Ti, Tp, VTp, VLTi, VRTi, Lvl}
-    return indextype(Ti)
 end
 
 function moveto(lvl::SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}, ::Type{MemType}) where {Ti, Tp, VTp, VLTi, VRTi, Lvl, MemType <: AbstractArray}
@@ -100,7 +96,7 @@ end
 @inline level_axes(lvl::SparseRLELevel) = (Base.OneTo(lvl.shape), level_axes(lvl.lvl)...)
 @inline level_eltype(::Type{<:SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}}) where {Ti, Tp, VTp, VLTi, VRTi, Lvl} = level_eltype(Lvl)
 @inline level_default(::Type{<:SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}}) where {Ti, Tp, VTp, VLTi, VRTi, Lvl}= level_default(Lvl)
-data_rep_level(::Type{<:SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}}) where {Ti, Tp, VTp, VLTi, VRTi, Lvl} = SparseData(data_rep_level(Lvl), Ti)
+data_rep_level(::Type{<:SparseRLELevel{Ti, Tp, VTp, VLTi, VRTi, Lvl}}) where {Ti, Tp, VTp, VLTi, VRTi, Lvl} = SparseData(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:SparseRLELevel})() = fbr
 function (fbr::SubFiber{<:SparseRLELevel})(idxs...)
