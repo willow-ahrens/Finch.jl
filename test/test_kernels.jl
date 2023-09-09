@@ -12,7 +12,7 @@
         B = Fiber!(Dense(SparseList(Element(0.0),m),m))
 
         if !seen
-            check_println("kernels/innerprod.jl", @finch_code (B .= 0; for j=_, i=_, k=_; B[i, j] += A[k, i] * A[k, j] end))
+            check_output("kernels/innerprod.jl", @finch_code (B .= 0; for j=_, i=_, k=_; B[i, j] += A[k, i] * A[k, j] end))
             seen = true
         end
         @finch (B .= 0; for j=_, i=_, k=_; B[i, j] += A[k, i] * A[k, j] end)
@@ -27,7 +27,7 @@
             A = fiber(A_ref)
             B = Finch.Scalar{0.0}()
             if !seen
-                check_println("kernels/triangle.jl", @finch_code (B .= 0; for i=_, j=_, k=_; B[] += A[k, i] * A[j, i] * A[k, j] end))
+                check_output("kernels/triangle.jl", @finch_code (B .= 0; for i=_, j=_, k=_; B[] += A[k, i] * A[j, i] * A[k, j] end))
                 seen = true
             end
             @finch (B .= 0; for i=_, j=_, k=_; B[] += A[k, i] * A[j, i] * A[k, j] end)
@@ -83,7 +83,7 @@
                         for i=_ B[i, j] = w[i] end
                     end
                 end
-                check_println("kernels/gustavsons.jl", code)
+                check_output("kernels/gustavsons.jl", code)
                 seen = true
             end
             @finch begin
