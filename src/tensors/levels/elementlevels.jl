@@ -1,8 +1,10 @@
 """
-    ElementLevel{D, [Ti, Tv, Vv]}()
+    ElementLevel{D, [Tv=typeof(D), Tp=Int, Vv]}()
 
 A subfiber of an element level is a scalar of type `Tv`, initialized to `D`. `D`
-may optionally be given as the first argument. The data is stored in a vector
+may optionally be given as the first argument.
+
+The data is stored in a vector
 of type `Vv` with `eltype(Vv) = Tv`. The type `Ti` is the index type used to
 access Vv.
 
@@ -16,7 +18,7 @@ Dense [1:3]
 ├─[3]: 3.0
 ```
 """
-struct ElementLevel{D, Ti, Tv, Vv<:AbstractVector}
+struct ElementLevel{D, Tv, Tp, Vv<:AbstractVector}
     val::Vv
 end
 const Element = ElementLevel
@@ -25,42 +27,37 @@ function ElementLevel(d, args...)
     isbits(d) || throw(ArgumentError("Finch currently only supports isbits defaults"))
     ElementLevel{d}(args...)
 end
-ElementLevel{D}() where {D} = ElementLevel{D, Int, typeof(D), Vector{typeof(D)}}()
-ElementLevel{D}(val::Vv) where {D, Vv} = ElementLevel{D, Int, eltype(Vv), Vv}(val)
-ElementLevel{D, Ti}() where {D, Ti} = ElementLevel{D, Ti, typeof(D), Vector{typeof(D)}}()
-ElementLevel{D, Ti}(val::Vv) where {D, Ti, Vv} = ElementLevel{D, Ti, eltype(Vv), Vv}(val)
+ElementLevel{D}() where {D} = ElementLevel{D, typeof(D)}()
+ElementLevel{D}(val::Vv) where {D, Vv} = ElementLevel{D, eltype(Vv)}(val)
+ElementLevel{D, Tv}(args...) where {D, Tv} = ElementLevel{D, Tv, Int}(args...)
+ElementLevel{D, Tv, Tp}() where {D, Tv, Tp} = ElementLevel{D, Tv, Int}(Tv[])
 
-ElementLevel{D, Ti, Tv}() where {D, Ti, Tv} = ElementLevel{D, Ti, Tv, Vector{Tv}}(empty(Vector{Tv}))
-ElementLevel{D, Ti, Tv}(val::Vv) where {D, Ti, Tv, Vv} = ElementLevel{D, Ti, eltype(Vv), Vv}(val)
-ElementLevel{D, Ti, Tv, Vv}() where {D, Ti, Tv, Vv} = ElementLevel{D, Ti, Tv, Vv}(empty(Vv))
+ElementLevel{D, Tv, Tp}(val::Vv) where {D, Tv, Tp, Vv} = ElementLevel{D, Tv, Int, Vv}(val)
 
-Base.summary(::Element{D, Int}) where {D} = "Element($(D))"
-Base.summary(::Element{D, Ti}) where {D, Ti} = "Element($(D), $(Ti))"
-# similar_level(::ElementLevel{D}) where {D} = ElementLevel{D}()
-similar_level(::ElementLevel{D, Ti}) where {D, Ti} = ElementLevel{D, Ti}()
+Base.summary(::Element{D}) where {D} = "Element($(D))"
 
-function memtype(::Type{ElementLevel{D, Ti, Tv, Vv}}) where {D, Ti, Tv, Vv}
-    return containertype(Vv)
-end
+similar_level(::ElementLevel{D, Tv, Tp}) where {D, Tv, Tp} = ElementLevel{D, Tv, Tp}()
 
-function postype(::Type{ElementLevel{D, Ti, Tv, Vv}}) where {D, Ti, Tv, Vv}
-    return postype(Vv)
-end
+memtype(::Type{ElementLevel{D, Tv, Tp, Vv}}) where {D, Tv, Tp, Vv} =
+    containertype(Vv)
 
-function moveto(lvl::ElementLevel{D, Ti, Tv, Vv},  ::Type{MemType}) where {D, Ti, Tv, Vv, MemType <: AbstractArray}
+postype(::Type{ElementLevel{D, Tv, Tp}}) where {D, Tv, Tp} = Tp
+
+function moveto(lvl::ElementLevel{D, Tv, Tp, Vv},  ::Type{MemType}) where {D, Tv, Tp, Vv, MemType <: AbstractArray}
     valp = MemType(lvl.val)
-    return ElementLevel{D, Ti, Tv, typeof(valp)}(valp)
+    return ElementLevel{D, Tv, Tp, typeof(valp)}(valp)
 end
 
-pattern!(lvl::ElementLevel{D, Ti, Tv, Vv}) where  {D, Ti, Tv, Vv} = Pattern{Ti, postype(ElementLevel{D, Ti, Tv, Vv}), containertype(Vv){Bool, 1}}()
-redefault!(lvl::ElementLevel{D, Ti, Tv, Vv}, init) where {D, Ti, Tv, Vv} = 
-    ElementLevel{init, Ti, Tv, Vv}(lvl.val)
+pattern!(lvl::ElementLevel{D, Tv, Tp, Vv}) where  {D, Tv, Tp, Vv} =
+    Pattern{Ti, Tp, Vv}()
+redefault!(lvl::ElementLevel{D, Tv, Tp, Vv}, init) where {D, Tv, Tp, Vv} = 
+    ElementLevel{init, Tv, Tp, Vv}(lvl.val)
 
 
-function Base.show(io::IO, lvl::ElementLevel{D, Ti, Tv, Vv}) where {D, Ti, Tv, Vv}
+function Base.show(io::IO, lvl::ElementLevel{D, Tv, Tp, Vv}) where {D, Tv, Tp, Vv}
     print(io, "Element{")
     show(io, D)
-    print(io, ", $Ti, $Tv, $Vv}(")
+    print(io, ", $Tv, $Tp, $Vv}(")
     if get(io, :compact, false)
         print(io, "…")
     else
@@ -77,9 +74,9 @@ end
 @inline level_ndims(::Type{<:ElementLevel}) = 0
 @inline level_size(::ElementLevel) = ()
 @inline level_axes(::ElementLevel) = ()
-@inline level_eltype(::Type{ElementLevel{D, Ti, Tv, Vv}}) where {D, Ti, Tv, Vv} = Tv
+@inline level_eltype(::Type{ElementLevel{D, Tv, Tp, Vv}}) where {D, Tv, Tp, Vv} = Tv
 @inline level_default(::Type{<:ElementLevel{D}}) where {D} = D
-data_rep_level(::Type{<:ElementLevel{D, Ti, Tv, Vv}}) where {D, Ti, Tv, Vv} = ElementData(D, Tv)
+data_rep_level(::Type{<:ElementLevel{D, Tv, Tp, Vv}}) where {D, Tv, Tp, Vv} = ElementData(D, Tv)
 
 (fbr::Fiber{<:ElementLevel})() = SubFiber(fbr.lvl, 1)()
 function (fbr::SubFiber{<:ElementLevel})()
@@ -101,7 +98,7 @@ is_level_atomic(lvl::VirtualElementLevel, ctx) = false
 
 lower(lvl::VirtualElementLevel, ctx::AbstractCompiler, ::DefaultStyle) = lvl.ex
 
-function virtualize(ex, ::Type{ElementLevel{D, Ti, Tv, Vv}}, ctx, tag=:lvl) where {D, Ti, Tv, Vv}
+function virtualize(ex, ::Type{ElementLevel{D, Tv, Tp, Vv}}, ctx, tag=:lvl) where {D, Tv, Tp, Vv}
     sym = freshen(ctx, tag)
     val_alloc = freshen(ctx, sym, :_val_alloc)
     val = freshen(ctx, sym, :_val)
