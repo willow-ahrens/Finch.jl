@@ -5,8 +5,6 @@ A subfiber of a dense level is an array which stores every slice `A[:, ..., :,
 i]` as a distinct subfiber in `lvl`. Optionally, `dim` is the size of the last
 dimension. `Ti` is the type of the indices used to index the level.
 
-In the [`Fiber!`](@ref) constructor, `d` is an alias for `DenseLevel`.
-
 ```jldoctest
 julia> ndims(Fiber!(Dense(Element(0.0))))
 1

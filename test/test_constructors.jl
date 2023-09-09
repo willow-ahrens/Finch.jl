@@ -1,5 +1,5 @@
 @testset "constructors" begin
-    @info "Testing Fiber Movement"
+    @info "Testing Fiber Constructors"
 
     using Base.Meta
     
