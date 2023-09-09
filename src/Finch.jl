@@ -113,7 +113,12 @@ include("tensors/combinators/swizzle.jl")
 
 include("traits.jl")
 
-export fsparse, fsparse!, fsprand, fspzeros, ffindnz, countstored, moveto
+export fsparse, fsparse!, fsprand, fspzeros, ffindnz, fread, fwrite, countstored
+
+export bspread, bspwrite
+export ftnsread, ftnswrite, fttread, fttwrite
+
+export moveto
 
 include("base/abstractarrays.jl")
 include("base/abstractunitranges.jl")
@@ -130,6 +135,7 @@ include("base/fsparse.jl")
         @require HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f" include("../ext/HDF5Ext.jl")
         @require TensorMarket = "8b7d4fe7-0b45-4d0d-9dd8-5cc9b23b4b77" include("../ext/TensorMarketExt.jl")
         @require NPZ = "15e1cf62-19b3-5cfa-8e77-841668bca605" include("../ext/NPZExt.jl")
+        @require MatrixMarket = "4d4711f2-db25-561a-b6b3-d35e7d4047d3" include("../ext/MatrixMarketExt.jl")
     end
 end
 
@@ -151,8 +157,5 @@ end
 end
 
 include("fileio/fileio.jl")
-
-export fbrread, fbrwrite, bspread, bspwrite
-export ftnsread, ftnswrite, fttread, fttwrite
 
 end

@@ -6,6 +6,16 @@ using Pkg
         @info "Testing HDF5 fileio"
         @testset "h5 binsparse" begin
             mktempdir() do f
+                A = [0.0 1.0 2.0 2.0 ;
+                0.0 0.0 0.0 0.0 ;
+                1.0 1.0 2.0 0.0 ;
+                0.0 0.0 0.0 1.0 ]
+                A_COO = Fiber!(SparseCOO{2}(Element(0.0)), A)
+                A_COO_fname = joinpath(f, "A_COO.bsp.h5")
+                fwrite(A_COO_fname, A_COO)
+                A_COO_test = fread(A_COO_fname)
+                @test A_COO_test == A_COO
+
                 for (iA, A) in enumerate([
                     [false true false false ;
                     true true true true],
@@ -55,6 +65,16 @@ using Pkg
         @info "Testing NPYD fileio"
         @testset "npyd binsparse" begin
             mktempdir() do f
+                A = [0.0 1.0 2.0 2.0 ;
+                0.0 0.0 0.0 0.0 ;
+                1.0 1.0 2.0 0.0 ;
+                0.0 0.0 0.0 1.0 ]
+                A_COO = Fiber!(SparseCOO{2}(Element(0.0)), A)
+                A_COO_fname = joinpath(f, "A_COO.bsp.npyd")
+                fwrite(A_COO_fname, A_COO)
+                A_COO_test = fread(A_COO_fname)
+                @test A_COO_test == A_COO
+
                 for (iA, A) in enumerate([
                     [false true false false ;
                     true true true true],
@@ -112,11 +132,26 @@ using Pkg
             A_COO_test = fttread(A_COO_fname)
             @test Structure(A_COO_test) == Structure(A_COO)
 
+            A_COO_fname2 = joinpath(f, "A_COO.ttx")
+            fwrite(A_COO_fname2, A_COO)
+            A_COO_test = fread(A_COO_fname2)
+            @test A_COO_test == A_COO
+
+            A_COO_fname2 = joinpath(f, "A_COO.mtx")
+            fwrite(A_COO_fname2, A_COO)
+            A_COO_test = fread(A_COO_fname2)
+            @test A_COO_test == A_COO
+
             A_COO = Fiber!(SparseCOO{2}(Element(0.0)), A)
             A_COO_fname = joinpath(f, "A_COO.tns")
             ftnswrite(A_COO_fname, A_COO)
             A_COO_test = ftnsread(A_COO_fname)
             @test Structure(A_COO_test) == Structure(A_COO)
+
+            A_COO_fname2 = joinpath(f, "A_COO.tns")
+            fwrite(A_COO_fname2, A_COO)
+            A_COO_test = fread(A_COO_fname2)
+            @test A_COO_test == A_COO
         end
     end
 end

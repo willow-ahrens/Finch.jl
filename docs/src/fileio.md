@@ -3,8 +3,16 @@ CurrentModule = Finch
 ```
 # Finch Tensor File Input/Output
 
+All of the file formats supported by Finch are listed below. Each format has a
+corresponding `read` and `write` function, and can be selected automatically
+based on the file extension with the following functions:
 
-## Binsparse Format (`.fbr`)
+```@docs
+fread
+fwrite
+```
+
+## Binsparse Format (`.bsp`)
 
 Finch supports the most recent revision of the
 [Binsparse](https://github.com/GraphBLAS/binsparse-specification) binary sparse
@@ -28,4 +36,13 @@ Finch supports the [MatrixMarket](https://math.nist.gov/MatrixMarket/formats.htm
 ```@docs
 fttwrite
 fttread
+```
+
+## FROSTT (`.tns`)
+
+Finch supports the [FROSTT](http://frostt.io/tensors/) format for legacy codes that still use it.
+
+```@docs
+ftnswrite
+ftnsread
 ```
