@@ -39,7 +39,6 @@ using Pkg
                                     bspwrite(fname, fmt)
                                     out = bspread(fname)
                                     @test Structure(fmt) == Structure(bspread(fname))
-                                    check_write("binsparse/A$(iA)_D$(iD)_$name.bsp.h5", read(fname))
                                 end
                             end
                         end

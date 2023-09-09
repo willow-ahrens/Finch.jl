@@ -1,1 +1,0 @@
-5×10 Fiber!(Dense(SparseByteMap(Element(0.0))))
