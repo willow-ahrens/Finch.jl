@@ -49,7 +49,7 @@ SparseListLevel{Ti, Tp}(lvl, args...) where {Ti, Tp} =
 
 SparseListLevel{Ti, Tp, Vp, Vi, Lvl}(lvl) where {Ti, Tp, Vp, Vi, Lvl} = SparseListLevel{Ti, Tp, Vp, Vi, Lvl}(lvl, zero(Ti))
 SparseListLevel{Ti, Tp, Vp, Vi, Lvl}(lvl, shape) where {Ti, Tp, Vp, Vi, Lvl} = 
-    SparseListLevel{Ti, Tp, Vp, Vi, Lvl}(lvl, Ti(shape), single(memtype(Lvl){Ti, 1}), empty(memtype(Lvl){Tp, 1}))
+    SparseListLevel{Ti, Tp, Vp, Vi, Lvl}(lvl, Ti(shape), Tp[1], Ti[])
 
 SparseListLevel{Ti, Tp, Lvl}(lvl, shape, ptr, idx) where {Ti, Tp, Lvl} = 
     SparseListLevel{Ti, Tp, typeof(ptr), typeof(idx), Lvl}(lvl, Ti(shape), ptr, idx)

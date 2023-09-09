@@ -62,7 +62,7 @@ SparseHashLevel{N, Ti, Tp, Tbl, Vp, VTpip, Lvl}(lvl) where {N, Ti, Tp, Tbl, Vp, 
 SparseHashLevel{N, Ti, Tp, Tbl, Vp, VTpip, Lvl}(lvl, shape) where {N, Ti, Tp, Tbl, Vp, VTpip, Lvl} =
     SparseHashLevel{N, Ti, Tp, Tbl, Vp, VTpip, Lvl}(lvl, shape, Tbl())
 SparseHashLevel{N, Ti, Tp, Tbl, Vp, VTpip, Lvl}(lvl, shape, tbl) where {N, Ti, Tp, Tbl, Vp, VTpip, Lvl} =
-    SparseHashLevel{N, Ti, Tp, Tbl, Vp, VTpip, Lvl}(lvl, Ti(shape), tbl, single(Vp), empty(VTpip))
+    SparseHashLevel{N, Ti, Tp, Tbl, Vp, VTpip, Lvl}(lvl, Ti(shape), tbl, Tp[1], Pair{Tuple{Tp, Ti}, Tp}[])
 
 Base.summary(lvl::SparseHashLevel{N}) where {N} = "SparseHash{$N}($(summary(lvl.lvl)))"
 similar_level(lvl::SparseHashLevel{N}) where {N} = SparseHashLevel{N}(similar_level(lvl.lvl))

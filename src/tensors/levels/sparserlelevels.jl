@@ -20,7 +20,7 @@ SparseRLELevel{Ti}(lvl, args...) where {Ti} =
 
 SparseRLELevel{Ti, Tp, Vp, VLTi, VRTi, Lvl}(lvl) where {Ti, Tp, Vp, VLTi, VRTi, Lvl} = SparseRLELevel{Ti, Tp, Vp, VLTi, VRTi, Lvl}(lvl, zero(Ti))
 SparseRLELevel{Ti, Tp, Vp, VLTi, VRTi, Lvl}(lvl, shape) where {Ti, Tp, Vp, VLTi, VRTi, Lvl} = 
-    SparseRLELevel{Ti, Tp, Vp, VLTi, VRTi, Lvl}(lvl, shape, single(Vp), empty(VLTi), empty(VRTi))
+    SparseRLELevel{Ti, Tp, Vp, VLTi, VRTi, Lvl}(lvl, shape, Tp[1], Ti[], Ti[])
 
 Base.summary(lvl::SparseRLELevel) = "SparseRLE($(summary(lvl.lvl)))"
 similar_level(lvl::SparseRLELevel) = SparseRLE(similar_level(lvl.lvl))

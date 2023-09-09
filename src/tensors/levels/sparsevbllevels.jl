@@ -14,7 +14,7 @@ SparseVBLLevel{Ti, Tp}(lvl, args...) where {Ti, Tp} = SparseVBLLevel{Ti, Tp, mem
 
 SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}(lvl) where {Ti, Tp, Vp, Vi, VTo, Lvl} = SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}(lvl, zero(Ti))
 SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}(lvl, shape) where {Ti, Tp, Vp, Vi, VTo, Lvl} = 
-    SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}(lvl, shape, single(Vp), empty(Vi), empty(VTo))
+    SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}(lvl, shape, Tp[1], Ti[], Tp[])
 
 
 function memtype(::Type{SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}}) where {Ti, Tp, Vp, Vi, VTo, Lvl}
@@ -104,7 +104,6 @@ function (fbr::SubFiber{<:SparseVBLLevel})(idxs...)
     fbr_2 = SubFiber(lvl.lvl, q)
     return fbr_2(idxs[1:end-1]...)
 end
-
 
 mutable struct VirtualSparseVBLLevel <: AbstractVirtualLevel
     lvl

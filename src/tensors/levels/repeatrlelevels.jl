@@ -51,7 +51,6 @@ similar_level(::RepeatRLELevel{D}) where {D} = RepeatRLE{D}()
 similar_level(::RepeatRLELevel{D}, dim, tail...) where {D} = RepeatRLE{D}(dim)
 data_rep_level(::Type{<:RepeatRLELevel{D, Ti, Tp, Tv, Vp, Vi, Vv}}) where {D, Ti, Tp, Tv, Vp, Vi, Vv} = RepeatData(D, Tv)
 
-
 function memtype(::Type{RepeatRLELevel{D, Ti, Tp, Tv, Vp, Vi, Vv}}) where {D, Ti, Tp, Tv, Vp, Vi, Vv}
     return containertype(Vi)
 end
@@ -136,8 +135,7 @@ mutable struct VirtualRepeatRLELevel <: AbstractVirtualLevel
     dirty
     prev_pos
 end
-  
- is_level_injective(::VirtualRepeatRLELevel, ctx) = [false]
+is_level_injective(::VirtualRepeatRLELevel, ctx) = [false]
 is_level_concurrent(::VirtualRepeatRLELevel, ctx) = [false]
 is_level_atomic(lvl::VirtualRepeatRLELevel, ctx) = false
 

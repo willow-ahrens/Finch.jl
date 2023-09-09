@@ -30,7 +30,7 @@ end
 ElementLevel{D}() where {D} = ElementLevel{D, typeof(D)}()
 ElementLevel{D}(val::Vv) where {D, Vv} = ElementLevel{D, eltype(Vv)}(val)
 ElementLevel{D, Tv}(args...) where {D, Tv} = ElementLevel{D, Tv, Int}(args...)
-ElementLevel{D, Tv, Tp}(args...) where {D, Tv, Tp, Vv} = ElementLevel{D, Tv, Tp, Vector{Tv}}(args...)
+ElementLevel{D, Tv, Tp}(args...) where {D, Tv, Tp} = ElementLevel{D, Tv, Tp, Vector{Tv}}(args...)
 ElementLevel{D, Tv, Tp, Vv}() where {D, Tv, Tp, Vv} = ElementLevel{D, Tv, Int, Vv}(Tv[])
 
 ElementLevel{D, Tv, Tp}(val::Vv) where {D, Tv, Tp, Vv} = ElementLevel{D, Tv, Int, Vv}(val)

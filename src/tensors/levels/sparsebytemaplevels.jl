@@ -13,7 +13,7 @@ SparseByteMapLevel{Ti, Tp}(lvl, args...) where {Ti, Tp} = SparseByteMapLevel{Ti,
 
 SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}(lvl) where {Ti, Tp, Vp, BV, VTpi, Lvl} = SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}(lvl, zero(Ti))
 SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}(lvl, shape) where {Ti, Tp, Vp, BV, VTpi, Lvl} = 
-    SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}(lvl, Ti(shape), single(memtype(Lvl){Tp, 1}), empty( memtype(Lvl){Bool, 1}), empty(memtype(Lvl){Tuple{Tp, Ti}, 1}))
+    SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}(lvl, Ti(shape), Tp[1], Bool[], Tuple{Tp, Ti}[])
 
 
 Base.summary(lvl::SparseByteMapLevel) = "SparseByteMap($(summary(lvl.lvl)))"

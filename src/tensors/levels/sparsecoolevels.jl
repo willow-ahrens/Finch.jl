@@ -71,7 +71,7 @@ SparseCOOLevel{N, Ti, Tp}(lvl, args...) where {N, Ti, Tp} =
 SparseCOOLevel{N, Ti, Tp, Tbl, Vp, Lvl}(lvl) where {N, Ti, Tp, Tbl, Vp, Lvl} =
     SparseCOOLevel{N, Ti, Tp, Tbl, Vp, Lvl}(lvl, ((zero(ti) for ti in Ti.parameters)...,))
 SparseCOOLevel{N, Ti, Tp, Tbl, Vp, Lvl}(lvl, shape) where {N, Ti, Tp, Tbl, Vp, Lvl} =
-    SparseCOOLevel{N, Ti, Tp, Tbl, Vp, Lvl}(lvl, Ti(shape), ((ti() for ti in Tbl.parameters)...,), Vp(Tp[1]))
+    SparseCOOLevel{N, Ti, Tp, Tbl, Vp, Lvl}(lvl, Ti(shape), ((ti() for ti in Tbl.parameters)...,), Tp[1])
 
 
 # SparseCOOLevel{N, Ti}(lvl) where {N, Ti} = SparseCOOLevel{N, Ti, postype(typeof(lvl)), Tuple{(memtype(typeof(lvl)){ti, 1} for ti in Ti.parameters)...}, memtype(typeof(lvl)){postype(typeof(lvl)), 1}, typeof(lvl)}(lvl)
