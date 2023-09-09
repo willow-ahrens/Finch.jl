@@ -9,7 +9,7 @@ end
 const SparseVBL = SparseVBLLevel
 SparseVBLLevel(lvl::Lvl) where {Lvl} = SparseVBLLevel{Int}(lvl)
 SparseVBLLevel(lvl, shape, args...) = SparseVBLLevel{typeof(shape)}(lvl, shape, args...)
-SparseVBLLevel{Ti}(lvl, args...) where {Ti} = SparseVBLLevel{Ti,  postype(typeof(lvl))}(lvl, args...)
+SparseVBLLevel{Ti}(lvl, args...) where {Ti} = SparseVBLLevel{Ti, postype(typeof(lvl))}(lvl, args...)
 SparseVBLLevel{Ti, Tp}(lvl, args...) where {Ti, Tp} = SparseVBLLevel{Ti, Tp, memtype(typeof(lvl)){Tp, 1}, memtype(typeof(lvl)){Ti, 1}, memtype(typeof(lvl)){Tp, 1}, typeof(lvl)}(lvl, args...)
 
 SparseVBLLevel{Ti, Tp, VTp, VTi, VTo, Lvl}(lvl) where {Ti, Tp, VTp, VTi, VTo, Lvl} = SparseVBLLevel{Ti, Tp, VTp, VTi, VTo, Lvl}(lvl, zero(Ti))
