@@ -35,20 +35,19 @@ using Pkg
                             0 => zero(eltype(A)),
                             1 => one(eltype(A)),
                         ]
-                            elem = Element{D, eltype(A), CIndex{Int}}()
+                            elem = Element{D, eltype(A), Int}()
                             for (name, fmt) in [
-                                "A_dense" => swizzle(Fiber!(Dense{CIndex{Int}}(Dense{CIndex{Int}}(elem))), 2, 1),
-                                "A_denseC" => Fiber!(Dense{CIndex{Int}}(Dense{CIndex{Int}}(elem))),
-                                "A_CSC" => Fiber!(Dense{CIndex{Int}}(SparseList{CIndex{Int}, CIndex{Int}}(elem))),
-                                "A_CSR" => swizzle(Fiber!(Dense{CIndex{Int}}(SparseList{CIndex{Int}, CIndex{Int}}(elem))), 2, 1),
-                                "A_COO" => swizzle(Fiber!(SparseCOO{2, Tuple{CIndex{Int}, CIndex{Int}}, CIndex{Int}}(elem)), 2, 1),
-                                "A_COOC" => Fiber!(SparseCOO{2, Tuple{CIndex{Int}, CIndex{Int}}, CIndex{Int}}(elem)),
+                                "A_dense" => swizzle(Fiber!(Dense{Int}(Dense{Int}(elem))), 2, 1),
+                                "A_denseC" => Fiber!(Dense{Int}(Dense{Int}(elem))),
+                                "A_CSC" => Fiber!(Dense{Int}(SparseList{Int, Int}(elem))),
+                                "A_CSR" => swizzle(Fiber!(Dense{Int}(SparseList{Int, Int}(elem))), 2, 1),
+                                "A_COO" => swizzle(Fiber!(SparseCOO{2, Tuple{Int, Int}, Int}(elem)), 2, 1),
+                                "A_COOC" => Fiber!(SparseCOO{2, Tuple{Int, Int}, Int}(elem)),
                             ]
                                 @testset "binsparse $name($D)" begin
                                     fmt = copyto!(fmt, A)
                                     fname = joinpath(f, "foo.bsp.h5")
                                     bspwrite(fname, fmt)
-                                    out = bspread(fname)
                                     @test Structure(fmt) == Structure(bspread(fname))
                                 end
                             end
@@ -94,20 +93,19 @@ using Pkg
                             0 => zero(eltype(A)),
                             1 => one(eltype(A)),
                         ]
-                            elem = Element{D, eltype(A), CIndex{Int}}()
+                            elem = Element{D, eltype(A), Int}()
                             for (name, fmt) in [
-                                "A_dense" => swizzle(Fiber!(Dense{CIndex{Int}}(Dense{CIndex{Int}}(elem))), 2, 1),
-                                "A_denseC" => Fiber!(Dense{CIndex{Int}}(Dense{CIndex{Int}}(elem))),
-                                "A_CSC" => Fiber!(Dense{CIndex{Int}}(SparseList{CIndex{Int}, CIndex{Int}}(elem))),
-                                "A_CSR" => swizzle(Fiber!(Dense{CIndex{Int}}(SparseList{CIndex{Int}, CIndex{Int}}(elem))), 2, 1),
-                                "A_COO" => swizzle(Fiber!(SparseCOO{2, Tuple{CIndex{Int}, CIndex{Int}}, CIndex{Int}}(elem)), 2, 1),
-                                "A_COOC" => Fiber!(SparseCOO{2, Tuple{CIndex{Int}, CIndex{Int}}, CIndex{Int}}(elem)),
+                                "A_dense" => swizzle(Fiber!(Dense{Int}(Dense{Int}(elem))), 2, 1),
+                                "A_denseC" => Fiber!(Dense{Int}(Dense{Int}(elem))),
+                                "A_CSC" => Fiber!(Dense{Int}(SparseList{Int, Int}(elem))),
+                                "A_CSR" => swizzle(Fiber!(Dense{Int}(SparseList{Int, Int}(elem))), 2, 1),
+                                "A_COO" => swizzle(Fiber!(SparseCOO{2, Tuple{Int, Int}, Int}(elem)), 2, 1),
+                                "A_COOC" => Fiber!(SparseCOO{2, Tuple{Int, Int}, Int}(elem)),
                             ]
                                 @testset "binsparse $name($D)" begin
                                     fmt = copyto!(fmt, A)
                                     fname = joinpath(f, "A$(iA)_D$(iD)_$name.bsp.npyd")
                                     bspwrite(fname, fmt)
-                                    out = bspread(fname)
                                     @test Structure(fmt) == Structure(bspread(fname))
                                 end
                             end

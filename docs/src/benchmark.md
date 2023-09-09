@@ -84,14 +84,14 @@ Benchmark the kernel, ignoring allocation costs for y
 ````
 
 ````
-BenchmarkTools.Trial: 10000 samples with 211 evaluations.
- Range (min … max):  355.450 ns … 573.853 ns  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     356.043 ns               ┊ GC (median):    0.00%
- Time  (mean ± σ):   358.246 ns ±   8.229 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+BenchmarkTools.Trial: 10000 samples with 184 evaluations.
+ Range (min … max):  571.435 ns …  2.353 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     574.565 ns              ┊ GC (median):    0.00%
+ Time  (mean ± σ):   600.267 ns ± 59.810 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-  █▆▄▅▃                   ▃▁                                    ▁
-  ██████▄▁▁▁▁▄▃▁▁▁▃▃▁▁▁▃▄▆██▄██▆▅▇▄▄▃▄▅▄▅▃▅▄▄▆▇▆▄▄▅▅▄▅▅▄▅▆▆▄▆▄▆ █
-  355 ns        Histogram: log(frequency) by time        397 ns <
+  █▄ ▁   ▂   ▁  ▄▅▁     ▁▁                                     ▁
+  ████▇▃▅█▆▅███████▇▇▆▇▇███▇▆▅▅▄▅▅▆▆▆▆▆▆▅▆▇▆▆▅▅▆▅▆▅▆▆▅▅▁▄▄▄▄▆▅ █
+  571 ns        Histogram: log(frequency) by time       884 ns <
 
  Memory estimate: 0 bytes, allocs estimate: 0.
 ````
@@ -113,14 +113,14 @@ end
 ````
 
 ````
-BenchmarkTools.Trial: 10000 samples with 202 evaluations.
- Range (min … max):  386.965 ns …  18.692 μs  ┊ GC (min … max): 0.00% … 97.42%
- Time  (median):     407.178 ns               ┊ GC (median):    0.00%
- Time  (mean ± σ):   429.907 ns ± 601.717 ns  ┊ GC (mean ± σ):  5.02% ±  3.50%
+BenchmarkTools.Trial: 10000 samples with 165 evaluations.
+ Range (min … max):  641.461 ns …  14.055 μs  ┊ GC (min … max): 0.00% … 93.20%
+ Time  (median):     658.176 ns               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   713.755 ns ± 555.545 ns  ┊ GC (mean ± σ):  3.56% ±  4.34%
 
-  ▄█▇▅▁     ▁▄▅▇▆▅▄▃▂▁▁▁▁▂▃▃▃▃▂▂▁▁▁▁▁▁▁▁▁                       ▂
-  █████▇▅▃▄▄██████████████████████████████████▇████▇▇▆▆▇▆▇▆▇▆▆▆ █
-  387 ns        Histogram: log(frequency) by time        481 ns <
+  ▄██▆▄▃▂▃▄▃▁▁▁▁▂▅▅▄▂▁  ▁▂▁                                     ▂
+  ███████████████████████████▇▆▆▆▅▆▅▇▇▅▆▆▇█▇▇▆▆▆▇▆▇▆▅▄▅▄▄▁▄▆▆▇█ █
+  641 ns        Histogram: log(frequency) by time       1.01 μs <
 
  Memory estimate: 608 bytes, allocs estimate: 2.
 ````
