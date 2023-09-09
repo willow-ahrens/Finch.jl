@@ -1,0 +1,106 @@
+julia> @finch_code begin
+        s .= 0
+        for i = _, j = _
+            s[] += (x[j, i] * y[j, i]) * d(i, j)
+        end
+    end
+quote
+    s = (ex.bodies[1]).tns.bind
+    x_lvl = (((ex.bodies[2]).body.body.rhs.args[1]).args[1]).tns.bind.lvl
+    x_lvl_2 = x_lvl.lvl
+    x_lvl_3 = x_lvl_2.lvl
+    y_lvl = (((ex.bodies[2]).body.body.rhs.args[1]).args[2]).tns.bind.lvl
+    y_lvl_2 = y_lvl.lvl
+    y_lvl_3 = y_lvl_2.lvl
+    y_lvl_2.shape == x_lvl_2.shape || throw(DimensionMismatch("mismatched dimension limits ($(y_lvl_2.shape) != $(x_lvl_2.shape))"))
+    y_lvl.shape == x_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(y_lvl.shape) != $(x_lvl.shape))"))
+    s_val = 0
+    y_lvl_q = y_lvl.ptr[1]
+    y_lvl_q_stop = y_lvl.ptr[1 + 1]
+    if y_lvl_q < y_lvl_q_stop
+        y_lvl_i_end = y_lvl.right[y_lvl_q_stop - 1]
+    else
+        y_lvl_i_end = 0.0f0
+    end
+    x_lvl_q = x_lvl.ptr[1]
+    x_lvl_q_stop = x_lvl.ptr[1 + 1]
+    if x_lvl_q < x_lvl_q_stop
+        x_lvl_i_end = x_lvl.right[x_lvl_q_stop - 1]
+    else
+        x_lvl_i_end = 0.0f0
+    end
+    phase_stop = min(y_lvl.shape, y_lvl_i_end, x_lvl_i_end)
+    if phase_stop >= limit(1.0)
+        i = limit(1.0)
+        if y_lvl.right[y_lvl_q] < limit(1.0)
+            y_lvl_q = Finch.scansearch(y_lvl.right, limit(1.0), y_lvl_q, y_lvl_q_stop - 1)
+        end
+        if x_lvl.right[x_lvl_q] < limit(1.0)
+            x_lvl_q = Finch.scansearch(x_lvl.right, limit(1.0), x_lvl_q, x_lvl_q_stop - 1)
+        end
+        while i <= phase_stop
+            y_lvl_i_start = y_lvl.left[y_lvl_q]
+            y_lvl_i_stop = y_lvl.right[y_lvl_q]
+            x_lvl_i_start = x_lvl.left[x_lvl_q]
+            x_lvl_i_stop = x_lvl.right[x_lvl_q]
+            phase_start_2 = i
+            phase_stop_2 = min(x_lvl_i_stop, phase_stop, y_lvl_i_stop)
+            phase_start_6 = max(phase_start_2, y_lvl_i_start, x_lvl_i_start)
+            if phase_stop_2 >= phase_start_6
+                y_lvl_2_q_2 = y_lvl_2.ptr[y_lvl_q]
+                y_lvl_2_q_stop_2 = y_lvl_2.ptr[y_lvl_q + 1]
+                if y_lvl_2_q_2 < y_lvl_2_q_stop_2
+                    y_lvl_2_i_end_2 = y_lvl_2.right[y_lvl_2_q_stop_2 - 1]
+                else
+                    y_lvl_2_i_end_2 = 0.0f0
+                end
+                x_lvl_2_q_2 = x_lvl_2.ptr[x_lvl_q]
+                x_lvl_2_q_stop_2 = x_lvl_2.ptr[x_lvl_q + 1]
+                if x_lvl_2_q_2 < x_lvl_2_q_stop_2
+                    x_lvl_2_i_end_2 = x_lvl_2.right[x_lvl_2_q_stop_2 - 1]
+                else
+                    x_lvl_2_i_end_2 = 0.0f0
+                end
+                phase_stop_7 = min(y_lvl_2.shape, y_lvl_2_i_end_2, x_lvl_2_i_end_2)
+                if phase_stop_7 >= limit(1.0)
+                    j = limit(1.0)
+                    if y_lvl_2.right[y_lvl_2_q_2] < limit(1.0)
+                        y_lvl_2_q_2 = Finch.scansearch(y_lvl_2.right, limit(1.0), y_lvl_2_q_2, y_lvl_2_q_stop_2 - 1)
+                    end
+                    if x_lvl_2.right[x_lvl_2_q_2] < limit(1.0)
+                        x_lvl_2_q_2 = Finch.scansearch(x_lvl_2.right, limit(1.0), x_lvl_2_q_2, x_lvl_2_q_stop_2 - 1)
+                    end
+                    while j <= phase_stop_7
+                        y_lvl_2_i_start_2 = y_lvl_2.left[y_lvl_2_q_2]
+                        y_lvl_2_i_stop_2 = y_lvl_2.right[y_lvl_2_q_2]
+                        x_lvl_2_i_start_2 = x_lvl_2.left[x_lvl_2_q_2]
+                        x_lvl_2_i_stop_2 = x_lvl_2.right[x_lvl_2_q_2]
+                        phase_start_8 = j
+                        phase_stop_8 = min(x_lvl_2_i_stop_2, phase_stop_7, y_lvl_2_i_stop_2)
+                        phase_start_12 = max(phase_start_8, y_lvl_2_i_start_2, x_lvl_2_i_start_2)
+                        if phase_stop_8 >= phase_start_12
+                            y_lvl_3_val_3 = y_lvl_3.val[y_lvl_2_q_2]
+                            x_lvl_3_val_3 = x_lvl_3.val[x_lvl_2_q_2]
+                            s_val = s_val + drop_eps(-phase_start_6 + phase_stop_2) * drop_eps(-phase_start_12 + phase_stop_8) * y_lvl_3_val_3 * x_lvl_3_val_3
+                        end
+                        y_lvl_2_q_2 += phase_stop_8 == y_lvl_2_i_stop_2
+                        x_lvl_2_q_2 += phase_stop_8 == x_lvl_2_i_stop_2
+                        j = phase_stop_8 + limit(0+ϵ)
+                    end
+                end
+            end
+            y_lvl_q += phase_stop_2 == y_lvl_i_stop
+            x_lvl_q += phase_stop_2 == x_lvl_i_stop
+            i = phase_stop_2 + limit(0+ϵ)
+        end
+    end
+    (s = (Scalar){0, Int32}(s_val),)
+end
+julia> @finch begin
+        s .= 0
+        for i = _, j = _
+            s[] += (x[j, i] * y[j, i]) * d(i, j)
+        end
+    end
+(s = Scalar{0, Int32}(630),)
+
