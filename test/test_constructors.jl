@@ -588,10 +588,6 @@
         @test Structure(fbr) == Structure(Fiber!(SparseRLE(Element(0.0), Int16(0))))
         @test Structure(fbr) == Structure(Fiber!(SparseRLE{Int16}(Element(0.0), 0)))
 
-<<<<<<< HEAD
-        #@test check_output("constructors/format_constructors_srl_e.txt", String(take!(io)))
-=======
         @test check_output("format_constructors_srl_e.txt", String(take!(io)))
->>>>>>> main
     end
 end
