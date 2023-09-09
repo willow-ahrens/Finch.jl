@@ -71,12 +71,16 @@ SparseList (0.0) [1:10]
 ├─[9]: 6.0
 
 julia> pattern!(A)
-SparseList (false) [1:10]
-├─[1]: true
-├─[3]: true
-├─[5]: true
-├─[7]: true
-├─[9]: true
+ERROR: UndefVarError: `Ti` not defined
+Stacktrace:
+ [1] pattern!(lvl::ElementLevel{0.0, Float64, Int64, Vector{Float64}})
+   @ Finch ~/Projects/Finch.jl/src/tensors/levels/elementlevels.jl:51
+ [2] pattern!(lvl::SparseListLevel{Int64, Int64, Vector{Int64}, Vector{Int64}, ElementLevel{0.0, Float64, Int64, Vector{Float64}}})
+   @ Finch ~/Projects/Finch.jl/src/tensors/levels/sparselistlevels.jl:82
+ [3] pattern!(fbr::Fiber{SparseListLevel{Int64, Int64, Vector{Int64}, Vector{Int64}, ElementLevel{0.0, Float64, Int64, Vector{Float64}}}})
+   @ Finch ~/Projects/Finch.jl/src/tensors/levels/patternlevels.jl:82
+ [4] top-level scope
+   @ none:1
 ```
 """
 pattern!(fbr::Fiber) = Fiber(pattern!(fbr.lvl))

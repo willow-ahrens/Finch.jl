@@ -31,6 +31,8 @@ ElementLevel{D}() where {D} = ElementLevel{D, typeof(D)}()
 ElementLevel{D}(val::Vv) where {D, Vv} = ElementLevel{D, eltype(Vv)}(val)
 ElementLevel{D, Tv}(args...) where {D, Tv} = ElementLevel{D, Tv, Int}(args...)
 ElementLevel{D, Tv, Tp}() where {D, Tv, Tp} = ElementLevel{D, Tv, Int}(Tv[])
+ElementLevel{D, Tv, Tp}() where {D, Tv, Tp, Vv} = ElementLevel{D, Tv, Int, Vector{Int}}()
+ElementLevel{D, Tv, Tp, Vv}() where {D, Tv, Tp, Vv} = ElementLevel{D, Tv, Int, Vv}(Tv[])
 
 ElementLevel{D, Tv, Tp}(val::Vv) where {D, Tv, Tp, Vv} = ElementLevel{D, Tv, Int, Vv}(val)
 
@@ -41,15 +43,15 @@ similar_level(::ElementLevel{D, Tv, Tp}) where {D, Tv, Tp} = ElementLevel{D, Tv,
 memtype(::Type{ElementLevel{D, Tv, Tp, Vv}}) where {D, Tv, Tp, Vv} =
     containertype(Vv)
 
-postype(::Type{ElementLevel{D, Tv, Tp}}) where {D, Tv, Tp} = Tp
+postype(::Type{<:ElementLevel{D, Tv, Tp}}) where {D, Tv, Tp} = Tp
 
-function moveto(lvl::ElementLevel{D, Tv, Tp, Vv},  ::Type{MemType}) where {D, Tv, Tp, Vv, MemType <: AbstractArray}
+function moveto(lvl::ElementLevel{D, Tv, Tp, Vv}, ::Type{MemType}) where {D, Tv, Tp, Vv, MemType <: AbstractArray}
     valp = MemType(lvl.val)
     return ElementLevel{D, Tv, Tp, typeof(valp)}(valp)
 end
 
 pattern!(lvl::ElementLevel{D, Tv, Tp, Vv}) where  {D, Tv, Tp, Vv} =
-    Pattern{Ti, Tp, Vv}()
+    Pattern{Int, Tp, Vv}()
 redefault!(lvl::ElementLevel{D, Tv, Tp, Vv}, init) where {D, Tv, Tp, Vv} = 
     ElementLevel{init, Tv, Tp, Vv}(lvl.val)
 
