@@ -74,7 +74,7 @@ quote
             i = phase_stop_2 + limit(0+ϵ)
         end
     end
-    phase_start_7 = max(limit(1.0), limit(0+ϵ) + y_lvl_i_end)
+    phase_start_7 = max(1.0f0, limit(0+ϵ) + y_lvl_i_end)
     phase_stop_7 = min(y_lvl.shape, x_lvl_i_end)
     if phase_stop_7 >= phase_start_7
         i = phase_start_7
@@ -100,7 +100,7 @@ quote
             end
         end
     end
-    phase_start_11 = max(limit(1.0), limit(0+ϵ) + x_lvl_i_end)
+    phase_start_11 = max(1.0f0, limit(0+ϵ) + x_lvl_i_end)
     phase_stop_11 = min(y_lvl.shape, y_lvl_i_end)
     if phase_stop_11 >= phase_start_11
         i = phase_start_11
