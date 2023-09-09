@@ -7,8 +7,6 @@ using Finch.DataStructures
 
 isdefined(Base, :get_extension) ? (using NPZ) : (using ..NPZ)
 
-using NPZ
-
 function Base.getindex(g::NPYDGroup, key::AbstractString)
     path = joinpath(g.dirname, key)
     if isfile(key, "$path.npy")
