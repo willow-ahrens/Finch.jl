@@ -172,7 +172,7 @@ indextype
 postype
 ```
 
-Additionally, many levels have a `VTp` or `VTi` in their constructors; these stand for vector of element type `Tp` or `Ti`. 
+Additionally, many levels have a `Vp` or `Vi` in their constructors; these stand for vector of element type `Tp` or `Ti`. 
 More generally, levels are paramterized by the types that they use for storage. By default, all levels use `Vector`, but a user 
 could could change any or all of the storage types of a fiber so that the fiber would be stored on a GPU or CPU or some combination thereof, 
 or eveni just via a vector with a different allocation mechanism.  The storage type should behave like `AbstractArray` 

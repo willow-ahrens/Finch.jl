@@ -13,17 +13,17 @@ getindex_rep(tns, idxs...) = collapse_rep(getindex_rep_def(tns, map(idx -> ndims
 getindex_rep_def(fbr::HollowData, idxs...) = HollowData(getindex_rep_def(fbr.lvl, idxs...))
 
 getindex_rep_def(lvl::SparseData, idx::Drop, idxs...) = HollowData(getindex_rep_def(lvl.lvl, idxs...))
-getindex_rep_def(lvl::SparseData, idx, idxs...) = HollowData(SparseData(getindex_rep_def(lvl.lvl, idxs...), indextype(lvl)))
-getindex_rep_def(lvl::SparseData, idx::Type{<:Base.Slice}, idxs...) = SparseData(getindex_rep_def(lvl.lvl, idxs...), indextype(lvl))
+getindex_rep_def(lvl::SparseData, idx, idxs...) = HollowData(SparseData(getindex_rep_def(lvl.lvl, idxs...)))
+getindex_rep_def(lvl::SparseData, idx::Type{<:Base.Slice}, idxs...) = SparseData(getindex_rep_def(lvl.lvl, idxs...))
 
 getindex_rep_def(lvl::DenseData, idx::Drop, idxs...) = getindex_rep_def(lvl.lvl, idxs...)
-getindex_rep_def(lvl::DenseData, idx, idxs...) = DenseData(getindex_rep_def(lvl.lvl, idxs...), indextype(lvl))
+getindex_rep_def(lvl::DenseData, idx, idxs...) = DenseData(getindex_rep_def(lvl.lvl, idxs...))
 
 getindex_rep_def(lvl::ElementData) = lvl
 
-getindex_rep_def(lvl::RepeatData, idx::Drop) = SolidData(ElementData(lvl.default, lvl.indextype, lvl.eltype))
-getindex_rep_def(lvl::RepeatData, idx) = SolidData(ElementData(lvl.default, lvl.indextype, lvl.eltype))
-getindex_rep_def(lvl::RepeatData, idx::Type{<:AbstractUnitRange}) = SolidData(ElementData(lvl.default, lvl.indextype, lvl.eltype))
+getindex_rep_def(lvl::RepeatData, idx::Drop) = SolidData(ElementData(lvl.default, lvl.eltype))
+getindex_rep_def(lvl::RepeatData, idx) = SolidData(ElementData(lvl.default, lvl.eltype))
+getindex_rep_def(lvl::RepeatData, idx::Type{<:AbstractUnitRange}) = SolidData(ElementData(lvl.default, lvl.eltype))
 
 Base.getindex(arr::Fiber, inds...) = getindex_helper(arr, to_indices(arr, inds)...)
 @staged function getindex_helper(arr, inds...)

@@ -5,8 +5,6 @@ A subfiber of a dense level is an array which stores every slice `A[:, ..., :,
 i]` as a distinct subfiber in `lvl`. Optionally, `dim` is the size of the last
 dimension. `Ti` is the type of the indices used to index the level.
 
-In the [`Fiber!`](@ref) constructor, `d` is an alias for `DenseLevel`.
-
 ```jldoctest
 julia> ndims(Fiber!(Dense(Element(0.0))))
 1
@@ -28,7 +26,7 @@ struct DenseLevel{Ti, Lvl}
     lvl::Lvl
     shape::Ti
 end
-DenseLevel(lvl::Lvl) where {Lvl} = DenseLevel{indextype(Lvl)}(lvl)
+DenseLevel(lvl) = DenseLevel{Int}(lvl)
 DenseLevel(lvl, shape::Ti, args...) where {Ti} = DenseLevel{Ti}(lvl, shape, args...)
 DenseLevel{Ti}(lvl, args...) where {Ti} = DenseLevel{Ti, typeof(lvl)}(lvl, args...)
 
@@ -40,18 +38,13 @@ Base.summary(lvl::Dense) = "Dense($(summary(lvl.lvl)))"
 similar_level(lvl::DenseLevel) = Dense(similar_level(lvl.lvl))
 similar_level(lvl::DenseLevel, dims...) = Dense(similar_level(lvl.lvl, dims[1:end-1]...), dims[end])
 
-function memory_type(::Type{DenseLevel{Ti, Lvl}}) where {Ti, Lvl}
-    return memory_type(Lvl)
+function memtype(::Type{DenseLevel{Ti, Lvl}}) where {Ti, Lvl}
+    return memtype(Lvl)
 end
 
 function postype(::Type{DenseLevel{Ti, Lvl}}) where {Ti, Lvl}
     return postype(Lvl)
 end
-
-function indextype(::Type{DenseLevel{Ti, Lvl}}) where {Ti, Lvl}
-    return indextype(Ti)
-end
-
 
 function moveto(lvl::DenseLevel{Ti, Lvl},  ::Type{MemType}) where {Ti, Lvl, MemType <: AbstractArray}
     return DenseLevel(moveto(lvl.lvl, MemType), lvl.shape)
@@ -68,7 +61,7 @@ redefault!(lvl::DenseLevel{Ti}, init) where {Ti} =
 @inline level_axes(lvl::DenseLevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.shape))
 @inline level_eltype(::Type{<:DenseLevel{Ti, Lvl}}) where {Ti, Lvl} = level_eltype(Lvl)
 @inline level_default(::Type{<:DenseLevel{Ti, Lvl}}) where {Ti, Lvl} = level_default(Lvl)
-data_rep_level(::Type{<:DenseLevel{Ti, Lvl}}) where {Ti, Lvl} = DenseData(data_rep_level(Lvl), Ti)
+data_rep_level(::Type{<:DenseLevel{Ti, Lvl}}) where {Ti, Lvl} = DenseData(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:DenseLevel})() = fbr
 function (fbr::SubFiber{<:DenseLevel{Ti}})(idxs...) where {Ti}
