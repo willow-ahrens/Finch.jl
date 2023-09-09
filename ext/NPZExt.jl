@@ -9,6 +9,8 @@ isdefined(Base, :get_extension) ? (using NPZ) : (using ..NPZ)
 
 using NPZ
 
+println("HEWWOOOO :3")
+
 function Base.getindex(g::NPYDGroup, key::AbstractString)
     path = joinpath(g.dirname, key)
     if isfile(key, "$path.npy")
@@ -28,7 +30,6 @@ Finch.bspread_header(g::NPYDGroup, key) = JSON.parsefile(joinpath(g.dirname, "$k
 Finch.bspwrite_header(g::NPYDGroup, str::String, key) = write(joinpath(mkpath(g.dirname), "$(key).json"), str)
 Finch.bspread_vector(g::NPYDGroup, key) = g[key]
 Finch.bspwrite_vector(g::NPYDGroup, vec, key) = (g[key] = vec)
-
 
 function Finch.bspread_npyd(fname)
     bspread(NPYDGroup(fname))

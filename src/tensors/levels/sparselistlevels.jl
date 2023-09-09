@@ -43,6 +43,7 @@ end
 const SparseList = SparseListLevel
 SparseListLevel(lvl::Lvl) where {Lvl} = SparseListLevel{Int}(lvl)
 SparseListLevel(lvl, shape, args...) = SparseListLevel{typeof(shape)}(lvl, shape, args...)
+SparseListLevel{Ti}(lvl, shape, ptr, idx) where {Ti} = SparseListLevel{Ti, eltype(ptr)}(lvl, shape, ptr, idx)
 SparseListLevel{Ti}(lvl, args...) where {Ti} = SparseListLevel{Ti, postype(typeof(lvl))}(lvl, args...)
 SparseListLevel{Ti, Tp}(lvl, args...) where {Ti, Tp} =
     SparseListLevel{Ti, Tp, memtype(typeof(lvl)){Tp, 1}, memtype(typeof(lvl)){Ti, 1}, typeof(lvl)}(lvl, args...)
