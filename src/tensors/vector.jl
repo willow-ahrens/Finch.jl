@@ -24,11 +24,3 @@ indextype(::Type{T}) where {T} = T
 #         return indextype(T)
 #     end
 # end
-
-function tuplize(::Type{T}, N::Int) where {T}
-    if N > 1
-        return NTuple{N, T}
-    else
-        return Tuple{T}
-    end
-end
