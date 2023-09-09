@@ -1,5 +1,5 @@
 """
-    SparseListLevel{[Ti=Int], [Tp=Int], [VTp=Vector{Tp}], [VTi=Vector{Ti}]}(lvl, [dim])
+    SparseListLevel{[Ti=Int], [Tp=Int], [Vp=Vector{Tp}], [Vi=Vector{Ti}]}(lvl, [dim])
 
 A subfiber of a sparse level does not need to represent slices `A[:, ..., :, i]`
 which are entirely [`default`](@ref). Instead, only potentially non-default
@@ -7,7 +7,7 @@ slices are stored as subfibers in `lvl`.  A sorted list is used to record which
 slices are stored. Optionally, `dim` is the size of the last dimension.
 
 `Ti` is the type of the last fiber index, and `Tp` is the type used for
-positions in the level. The types `VTp` and `VTi` are the types of the
+positions in the level. The types `Vp` and `Vi` are the types of the
 arrays used to store positions and indicies. 
 
 In the [`Fiber!`](@ref) constructor, `sl` is an alias for `SparseListLevel`.
@@ -34,11 +34,11 @@ SparseList (0.0) [:,1:3]
 
 ```
 """
-struct SparseListLevel{Ti, Tp, VTp, VTi, Lvl}
+struct SparseListLevel{Ti, Tp, Vp, Vi, Lvl}
     lvl::Lvl
     shape::Ti
-    ptr::VTp
-    idx::VTi
+    ptr::Vp
+    idx::Vi
 end
 const SparseList = SparseListLevel
 SparseListLevel(lvl::Lvl) where {Lvl} = SparseListLevel{Int}(lvl)
@@ -47,9 +47,9 @@ SparseListLevel{Ti}(lvl, args...) where {Ti} = SparseListLevel{Ti, postype(typeo
 SparseListLevel{Ti, Tp}(lvl, args...) where {Ti, Tp} =
     SparseListLevel{Ti, Tp, memtype(typeof(lvl)){Tp, 1}, memtype(typeof(lvl)){Ti, 1}, typeof(lvl)}(lvl, args...)
 
-SparseListLevel{Ti, Tp, VTp, VTi, Lvl}(lvl) where {Ti, Tp, VTp, VTi, Lvl} = SparseListLevel{Ti, Tp, VTp, VTi, Lvl}(lvl, zero(Ti))
-SparseListLevel{Ti, Tp, VTp, VTi, Lvl}(lvl, shape) where {Ti, Tp, VTp, VTi, Lvl} = 
-    SparseListLevel{Ti, Tp, VTp, VTi, Lvl}(lvl, Ti(shape), single(memtype(Lvl){Ti, 1}), empty(memtype(Lvl){Tp, 1}))
+SparseListLevel{Ti, Tp, Vp, Vi, Lvl}(lvl) where {Ti, Tp, Vp, Vi, Lvl} = SparseListLevel{Ti, Tp, Vp, Vi, Lvl}(lvl, zero(Ti))
+SparseListLevel{Ti, Tp, Vp, Vi, Lvl}(lvl, shape) where {Ti, Tp, Vp, Vi, Lvl} = 
+    SparseListLevel{Ti, Tp, Vp, Vi, Lvl}(lvl, Ti(shape), single(memtype(Lvl){Ti, 1}), empty(memtype(Lvl){Tp, 1}))
 
 SparseListLevel{Ti, Tp, Lvl}(lvl, shape, ptr, idx) where {Ti, Tp, Lvl} = 
     SparseListLevel{Ti, Tp, typeof(ptr), typeof(idx), Lvl}(lvl, Ti(shape), ptr, idx)
@@ -58,15 +58,15 @@ Base.summary(lvl::SparseListLevel) = "SparseList($(summary(lvl.lvl)))"
 similar_level(lvl::SparseListLevel) = SparseList(similar_level(lvl.lvl))
 similar_level(lvl::SparseListLevel, dim, tail...) = SparseList(similar_level(lvl.lvl, tail...), dim)
 
-function memtype(::Type{SparseListLevel{Ti, Tp,  VTp, VTi, Lvl}}) where {Ti, Tp, Lvl, VTi, VTp}
-    return containertype(VTp)
+function memtype(::Type{SparseListLevel{Ti, Tp,  Vp, Vi, Lvl}}) where {Ti, Tp, Lvl, Vi, Vp}
+    return containertype(Vp)
 end
 
-function postype(::Type{SparseListLevel{Ti, Tp,  VTp, VTi, Lvl}}) where {Ti, Tp, Lvl, VTi, VTp}
+function postype(::Type{SparseListLevel{Ti, Tp,  Vp, Vi, Lvl}}) where {Ti, Tp, Lvl, Vi, Vp}
     return Tp
 end
 
-function moveto(lvl::SparseListLevel{Ti, Tp, VTp, VTi, Lvl}, ::Type{MemType}) where {Ti, Tp, Lvl, VTi, VTp, MemType <: AbstractArray}
+function moveto(lvl::SparseListLevel{Ti, Tp, Vp, Vi, Lvl}, ::Type{MemType}) where {Ti, Tp, Lvl, Vi, Vp, MemType <: AbstractArray}
     lvl_2 = moveto(lvl.lvl, MemType)
     ptr_2 = MemType{Tp, 1}(lvl.ptr)
     idx_2 = MemType{Ti, 1}(lvl.idx)
@@ -85,7 +85,7 @@ pattern!(lvl::SparseListLevel{Ti, Tp}) where {Ti, Tp} =
 redefault!(lvl::SparseListLevel{Ti, Tp}, init) where {Ti, Tp} = 
     SparseListLevel{Ti, Tp}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.idx)
 
-function Base.show(io::IO, lvl::SparseListLevel{Ti, Tp,  VTp, VTi, Lvl}) where {Ti, Tp, Lvl, VTi, VTp}
+function Base.show(io::IO, lvl::SparseListLevel{Ti, Tp,  Vp, Vi, Lvl}) where {Ti, Tp, Lvl, Vi, Vp}
     if get(io, :compact, false)
         print(io, "SparseList(")
     else
@@ -98,9 +98,9 @@ function Base.show(io::IO, lvl::SparseListLevel{Ti, Tp,  VTp, VTi, Lvl}) where {
     if get(io, :compact, false)
         print(io, "…")
     else
-        show(IOContext(io, :typeinfo=>VTp), lvl.ptr)
+        show(IOContext(io, :typeinfo=>Vp), lvl.ptr)
         print(io, ", ")
-        show(IOContext(io, :typeinfo=>VTi), lvl.idx)
+        show(IOContext(io, :typeinfo=>Vi), lvl.idx)
     end
     print(io, ")")
 end
@@ -116,12 +116,12 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseLis
     display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
 end
 
-@inline level_ndims(::Type{<:SparseListLevel{Ti, Tp,  VTp, VTi, Lvl}}) where {Ti, Tp,  VTp, VTi, Lvl} = 1 + level_ndims(Lvl)
+@inline level_ndims(::Type{<:SparseListLevel{Ti, Tp,  Vp, Vi, Lvl}}) where {Ti, Tp,  Vp, Vi, Lvl} = 1 + level_ndims(Lvl)
 @inline level_size(lvl::SparseListLevel) = (level_size(lvl.lvl)..., lvl.shape)
 @inline level_axes(lvl::SparseListLevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.shape))
-@inline level_eltype(::Type{<:SparseListLevel{Ti, Tp,  VTp, VTi, Lvl}}) where {Ti, Tp,  VTp, VTi, Lvl} = level_eltype(Lvl)
-@inline level_default(::Type{<:SparseListLevel{Ti, Tp,  VTp, VTi, Lvl}}) where {Ti, Tp,  VTp, VTi, Lvl} = level_default(Lvl)
-data_rep_level(::Type{<:SparseListLevel{Ti, Tp,  VTp, VTi, Lvl}}) where {Ti, Tp,  VTp, VTi, Lvl} = SparseData(data_rep_level(Lvl))
+@inline level_eltype(::Type{<:SparseListLevel{Ti, Tp,  Vp, Vi, Lvl}}) where {Ti, Tp,  Vp, Vi, Lvl} = level_eltype(Lvl)
+@inline level_default(::Type{<:SparseListLevel{Ti, Tp,  Vp, Vi, Lvl}}) where {Ti, Tp,  Vp, Vi, Lvl} = level_default(Lvl)
+data_rep_level(::Type{<:SparseListLevel{Ti, Tp,  Vp, Vi, Lvl}}) where {Ti, Tp,  Vp, Vi, Lvl} = SparseData(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:SparseListLevel})() = fbr
 function (fbr::SubFiber{<:SparseListLevel{Ti}})(idxs...) where {Ti}
@@ -151,7 +151,7 @@ is_level_atomic(lvl::VirtualSparseListLevel, ctx) = false
 
   
 
-function virtualize(ex, ::Type{SparseListLevel{Ti, Tp,  VTp, VTi, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl, VTi, VTp}
+function virtualize(ex, ::Type{SparseListLevel{Ti, Tp,  Vp, Vi, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl, Vi, Vp}
     sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Int)
     qos_fill = freshen(ctx, sym, :_qos_fill)
