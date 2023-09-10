@@ -201,9 +201,10 @@ bspread_format_lookup = OrderedDict(
 
 bspwrite_format_lookup = OrderedDict(v => k for (k, v) in bspread_format_lookup)
 
-indices_zero_to_one(vec::Vector{Ti}) where {Ti} = unsafe_wrap(Array, reinterpret(Ptr{CIndex{Ti}}, pointer(vec)), length(vec); own = false)
-indices_one_to_zero(vec::Vector{<:Integer}) = vec .- one(eltype(vec))
-indices_one_to_zero(vec::Vector{<:CIndex{Ti}}) where {Ti} = unsafe_wrap(Array, reinterpret(Ptr{Ti}, pointer(vec)), length(vec); own = false)
+#indices_zero_to_one(vec::Vector{Ti}) where {Ti} = unsafe_wrap(Array, reinterpret(Ptr{CIndex{Ti}}, pointer(vec)), length(vec); own = true)
+indices_zero_to_one(vec::Vector) = vec .+ one(eltype(vec))
+indices_one_to_zero(vec::Vector) = vec .- one(eltype(vec))
+#indices_one_to_zero(vec::Vector{<:CIndex{Ti}}) where {Ti} = unsafe_wrap(Array, reinterpret(Ptr{Ti}, pointer(vec)), length(vec); own = true)
 
 struct NPYDGroup
     dirname::String
@@ -300,7 +301,7 @@ function bspread_level(f, desc, fmt, ::Val{:dense})
     R = fmt["rank"]
     for r = 1:R
         n = level_ndims(typeof(lvl))
-        shape = CIndex{Int}(desc["shape"][n + 1])
+        shape = Int(desc["shape"][n + 1])
         lvl = DenseLevel(lvl, shape)
     end
     lvl

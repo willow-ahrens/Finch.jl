@@ -24,7 +24,7 @@ function fttread end
 """
     ftnswrite(filename, tns)
 
-Write a sparse Finch fiber to a FROSTT `.tns` file.
+Write a sparse Finch fiber to a [FROSTT](http://frostt.io/tensors/) `.tns` file.
 
 [TensorMarket](https://github.com/willow-ahrens/TensorMarket.jl) must be loaded for this function to be available.
  
@@ -39,7 +39,7 @@ function ftnswrite end
 """
     ftnsread(filename)
 
-Read the contents of the FROSTT `.tns` file 'filename' into a Finch COO Fiber.
+Read the contents of the [FROSTT](http://frostt.io/tensors/) `.tns` file 'filename' into a Finch COO Fiber.
 
 [TensorMarket](https://github.com/willow-ahrens/TensorMarket.jl) must be loaded for this function to be available.
 

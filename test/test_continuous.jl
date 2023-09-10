@@ -9,11 +9,13 @@
     NumItvl = 10 #100 
 
     # Generating Random Intervals
-    v = sort(sample(StableRNG(1234), 1:Shape, NumItvl*2, replace=false))
-    w = sort(sample(StableRNG(4321), 1:Shape, NumItvl*2, replace=false))
+    #v = sort(sample(StableRNG(1234), 1:Shape, NumItvl*2, replace=false))
+    v = [2, 6, 9, 16, 26, 30, 37, 40, 41, 56, 68, 69, 70, 78, 86, 87, 88, 89, 92, 96]
+    #w = sort(sample(StableRNG(4321), 1:Shape, NumItvl*2, replace=false))
+    w = [2, 3, 6, 8, 12, 18, 22, 27, 29, 40, 42, 45, 47, 67, 73, 79, 83, 84, 87, 98]
+
     s1, e1 = v[begin:2:end], v[begin+1:2:end]
     s2, e2 = w[begin:2:end], w[begin+1:2:end]
-
 
     let
         x = Fiber(SparseList{Float32}(Element{0}(fill(1, NumItvl)), Shape, [1, NumItvl+1], v))
@@ -72,8 +74,10 @@
 
     let
         colptr = [1+NumItvl*i for i in 0:NumItvl]
-        endpoint1 = vcat([sort(sample(StableRNG(i), 1:Shape, NumItvl*2, replace=false)) for i in 1:NumItvl]...)
-        endpoint2 = vcat([sort(sample(StableRNG(i+NumItvl), 1:Shape, NumItvl*2, replace=false)) for i in 1:NumItvl]...)
+        #endpoint1 = vcat([sort(sample(StableRNG(i), 1:Shape, NumItvl*2, replace=false)) for i in 1:NumItvl]...)
+        #endpoint2 = vcat([sort(sample(StableRNG(i+NumItvl), 1:Shape, NumItvl*2, replace=false)) for i in 1:NumItvl]...)
+        endpoint1 = [17, 24, 27, 30, 34, 36, 37, 38, 47, 52, 55, 56, 59, 65, 78, 84, 91, 92, 94, 96, 9, 10, 13, 17, 20, 23, 27, 29, 39, 42, 46, 47, 53, 54, 62, 68, 69, 70, 81, 93, 1, 2, 5, 10, 12, 18, 19, 25, 32, 33, 34, 38, 61, 62, 63, 65, 73, 80, 93, 98, 2, 5, 18, 19, 20, 23, 26, 41, 45, 50, 61, 74, 79, 81, 83, 84, 90, 94, 95, 96, 7, 9, 14, 15, 33, 39, 40, 45, 52, 53, 57, 62, 74, 83, 89, 90, 93, 95, 98, 99, 6, 7, 10, 15, 22, 25, 32, 33, 34, 44, 46, 55, 56, 59, 63, 69, 80, 95, 97, 99, 3, 11, 15, 17, 18, 25, 30, 33, 34, 38, 39, 44, 55, 67, 71, 74, 80, 86, 92, 98, 4, 12, 15, 17, 19, 20, 37, 40, 50, 51, 59, 61, 66, 68, 84, 90, 92, 94, 99, 100, 3, 11, 15, 21, 22, 32, 35, 38, 48, 52, 54, 65, 67, 70, 71, 78, 86, 89, 95, 96, 3, 10, 16, 19, 26, 39, 46, 47, 48, 59, 60, 64, 67, 68, 73, 87, 90, 92, 94, 97]
+        endpoint2 = [11, 13, 17, 18, 19, 26, 27, 38, 39, 40, 43, 55, 65, 68, 72, 73, 74, 88, 95, 98, 2, 4, 12, 13, 20, 21, 33, 37, 38, 43, 44, 49, 55, 72, 73, 75, 78, 81, 85, 96, 1, 2, 4, 6, 7, 13, 23, 29, 30, 39, 42, 46, 47, 55, 61, 68, 91, 93, 95, 98, 8, 10, 15, 23, 24, 27, 30, 45, 49, 54, 57, 60, 63, 73, 74, 75, 81, 82, 83, 97, 2, 4, 19, 24, 32, 36, 38, 43, 45, 51, 52, 73, 74, 77, 78, 80, 82, 92, 94, 100, 2, 8, 9, 16, 17, 19, 21, 22, 25, 27, 29, 35, 37, 42, 48, 49, 72, 75, 90, 98, 11, 18, 19, 22, 26, 31, 35, 40, 44, 47, 53, 54, 59, 64, 66, 73, 77, 81, 87, 95, 1, 5, 7, 8, 17, 18, 20, 23, 28, 32, 52, 53, 54, 55, 56, 57, 58, 59, 82, 91, 1, 5, 14, 16, 22, 25, 35, 38, 40, 55, 57, 61, 67, 71, 76, 79, 80, 86, 97, 99, 2, 5, 6, 7, 14, 24, 27, 32, 34, 38, 48, 54, 55, 65, 72, 73, 81, 82, 91, 96]
         col_s1, col_e1 = endpoint1[begin:2:end], endpoint1[begin+1:2:end]
         col_s2, col_e2 = endpoint2[begin:2:end], endpoint2[begin+1:2:end]
 
@@ -117,7 +121,8 @@
 
     let
         colptr = [1+NumItvl*i for i in 0:NumItvl]
-        endpoint1 = vcat([sort(sample(StableRNG(i), 1:Shape, NumItvl*2, replace=false)) for i in 1:NumItvl]...)
+        #endpoint1 = vcat([sort(sample(StableRNG(i), 1:Shape, NumItvl*2, replace=false)) for i in 1:NumItvl]...)
+        endpoint1 = [17, 24, 27, 30, 34, 36, 37, 38, 47, 52, 55, 56, 59, 65, 78, 84, 91, 92, 94, 96, 9, 10, 13, 17, 20, 23, 27, 29, 39, 42, 46, 47, 53, 54, 62, 68, 69, 70, 81, 93, 1, 2, 5, 10, 12, 18, 19, 25, 32, 33, 34, 38, 61, 62, 63, 65, 73, 80, 93, 98, 2, 5, 18, 19, 20, 23, 26, 41, 45, 50, 61, 74, 79, 81, 83, 84, 90, 94, 95, 96, 7, 9, 14, 15, 33, 39, 40, 45, 52, 53, 57, 62, 74, 83, 89, 90, 93, 95, 98, 99, 6, 7, 10, 15, 22, 25, 32, 33, 34, 44, 46, 55, 56, 59, 63, 69, 80, 95, 97, 99, 3, 11, 15, 17, 18, 25, 30, 33, 34, 38, 39, 44, 55, 67, 71, 74, 80, 86, 92, 98, 4, 12, 15, 17, 19, 20, 37, 40, 50, 51, 59, 61, 66, 68, 84, 90, 92, 94, 99, 100, 3, 11, 15, 21, 22, 32, 35, 38, 48, 52, 54, 65, 67, 70, 71, 78, 86, 89, 95, 96, 3, 10, 16, 19, 26, 39, 46, 47, 48, 59, 60, 64, 67, 68, 73, 87, 90, 92, 94, 97]
         col_s1, col_e1 = endpoint1[begin:2:end], endpoint1[begin+1:2:end]
 
         x1 = Fiber(SparseList{Float32}(SparseRLE{Float32}(Element{0}(fill(1, NumItvl*NumItvl)), Shape, colptr, col_s1, col_e1), Shape, [1, NumItvl+1], e1))

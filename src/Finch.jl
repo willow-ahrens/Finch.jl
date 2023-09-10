@@ -113,7 +113,12 @@ include("tensors/combinators/swizzle.jl")
 
 include("traits.jl")
 
-export fsparse, fsparse!, fsprand, fspzeros, ffindnz, countstored, moveto
+export fsparse, fsparse!, fsprand, fspzeros, ffindnz, fread, fwrite, countstored
+
+export bspread, bspwrite
+export ftnsread, ftnswrite, fttread, fttwrite
+
+export moveto
 
 include("base/abstractarrays.jl")
 include("base/abstractunitranges.jl")
@@ -151,8 +156,5 @@ end
 end
 
 include("fileio/fileio.jl")
-
-export fbrread, fbrwrite, bspread, bspwrite
-export ftnsread, ftnswrite, fttread, fttwrite
 
 end
