@@ -17,7 +17,7 @@ RewriteTools = "5969e224-3634-4c61-9f66-721b69e98b8a"
 SyntaxInterface = "b33eeca9-aacb-4496-a840-e75f1646a4fb"
 
 [compat]
-AbstractTrees = ">= 0.3.4"
+AbstractTrees = "0.3.4"
 CIndices = "0.3"
 Compat = "3.29, 4"
 DataStructures = "0.18"
