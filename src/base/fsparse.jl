@@ -193,7 +193,7 @@ See also: (`findnz`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#Spars
 function ffindnz(src)
     tmp = Fiber(
         SparseCOOLevel{ndims(src)}(
-        ElementLevel{zero(eltype(src)), eltype(src)}()))
+            ElementLevel{zero(eltype(src)), eltype(src)}()))
     tmp = copyto!(tmp, src)
     nnz = tmp.lvl.ptr[2] - 1
     tbl = tmp.lvl.tbl

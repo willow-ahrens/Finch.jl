@@ -1,8 +1,8 @@
 Fiber!(SparseByteMap(Element(0)) constructors:
-initialized fiber: Fiber(SparseByteMap{Int32, Int32}(Element{0.0, Float64}([0.0, 2.0, 2.0, 0.0, 3.0, 3.0]), 6, [1, 5], [0, 1, 1, 0, 1, 1], [(1, 2), (1, 3), (1, 5), (1, 6)]))
-initialized fiber: Fiber(SparseByteMap{Int16, Int32}(Element{0.0, Float64}([0.0, 2.0, 2.0, 0.0, 3.0, 3.0]), 6, [1, 5], [0, 1, 1, 0, 1, 1], [(1, 2), (1, 3), (1, 5), (1, 6)]))
-sized fiber: Fiber(SparseByteMap{Int32, Int32}(Element{0.0, Float64}([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]), 7, [1, 0], [0, 0, 0, 0, 0, 0, 0], []))
-sized fiber: Fiber(SparseByteMap{Int16, Int32}(Element{0.0, Float64}([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]), 7, [1, 0], [0, 0, 0, 0, 0, 0, 0], []))
-empty fiber: Fiber(SparseByteMap{Int32, Int32}(Element{0.0, Float64}([]), 0, [1, 0], [], []))
-empty fiber: Fiber(SparseByteMap{Int16, Int32}(Element{0.0, Float64}([]), 0, [1, 0], [], []))
+initialized fiber: Fiber(SparseByteMap{Int32, Int32}(Element{0.0, Float64, Int32, Vector{Float64}}([0.0, 2.0, 2.0, 0.0, 3.0, 3.0]), 6, [1, 5], [0, 1, 1, 0, 1, 1], [(1, 2), (1, 3), (1, 5), (1, 6)]))
+initialized fiber: Fiber(SparseByteMap{Int16, Int32}(Element{0.0, Float64, Int32, Vector{Float64}}([0.0, 2.0, 2.0, 0.0, 3.0, 3.0]), 6, [1, 5], [0, 1, 1, 0, 1, 1], [(1, 2), (1, 3), (1, 5), (1, 6)]))
+sized fiber: Fiber(SparseByteMap{Int32, Int32}(Element{0.0, Float64, Int32, Vector{Float64}}([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]), 7, [1, 0], [0, 0, 0, 0, 0, 0, 0], []))
+sized fiber: Fiber(SparseByteMap{Int16, Int32}(Element{0.0, Float64, Int32, Vector{Float64}}([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]), 7, [1, 0], [0, 0, 0, 0, 0, 0, 0], []))
+empty fiber: Fiber(SparseByteMap{Int32, Int32}(Element{0.0, Float64, Int32, Vector{Float64}}([]), 0, [1, 0], [], []))
+empty fiber: Fiber(SparseByteMap{Int16, Int32}(Element{0.0, Float64, Int32, Vector{Float64}}([]), 0, [1, 0], [], []))
 

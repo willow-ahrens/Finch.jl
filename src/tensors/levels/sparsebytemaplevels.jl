@@ -1,23 +1,42 @@
-struct SparseByteMapLevel{Ti, Tp, Lvl}
+struct SparseByteMapLevel{Ti, Tp, Vp<:AbstractVector, BV<:AbstractVector{Bool}, VTpi<:AbstractVector{<:Tuple{Any, Any}}, Lvl}
     lvl::Lvl
     shape::Ti
-    ptr::Vector{Tp}
-    tbl::Vector{Bool}
-    srt::Vector{Tuple{Tp, Ti}}
+    ptr:: Vp
+    tbl::BV
+    srt::VTpi
 end
 const SparseByteMap = SparseByteMapLevel
-SparseByteMapLevel(lvl) = SparseByteMapLevel{Int}(lvl)
+SparseByteMapLevel(lvl::Lvl) where {Lvl} = SparseByteMapLevel{Int}(lvl)
 SparseByteMapLevel(lvl, shape, args...) = SparseByteMapLevel{typeof(shape)}(lvl, shape, args...)
-SparseByteMapLevel{Ti}(lvl, args...) where {Ti} = SparseByteMapLevel{Ti, Int}(lvl, args...)
-SparseByteMapLevel{Ti, Tp}(lvl, args...) where {Ti, Tp} = SparseByteMapLevel{Ti, Tp, typeof(lvl)}(lvl, args...)
+SparseByteMapLevel{Ti}(lvl::Lvl, args...) where {Ti, Lvl} = SparseByteMapLevel{Ti, postype(Lvl)}(lvl, args...)
+SparseByteMapLevel{Ti, Tp}(lvl, args...) where {Ti, Tp} = SparseByteMapLevel{Ti, Tp,  memtype(typeof(lvl)){Tp, 1}, memtype(typeof(lvl)){Bool, 1}, memtype(typeof(lvl)){Tuple{Tp, Ti}, 1}, typeof(lvl)}(lvl, args...)
 
-SparseByteMapLevel{Ti, Tp, Lvl}(lvl) where {Ti, Tp, Lvl} = SparseByteMapLevel{Ti, Tp, Lvl}(lvl, zero(Ti))
-SparseByteMapLevel{Ti, Tp, Lvl}(lvl, shape) where {Ti, Tp, Lvl} = 
-    SparseByteMapLevel{Ti, Tp, Lvl}(lvl, Ti(shape), Tp[1], Bool[], Tuple{Tp, Ti}[])
+SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}(lvl) where {Ti, Tp, Vp, BV, VTpi, Lvl} = SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}(lvl, zero(Ti))
+SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}(lvl, shape) where {Ti, Tp, Vp, BV, VTpi, Lvl} = 
+    SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}(lvl, Ti(shape), Tp[1], Bool[], Tuple{Tp, Ti}[])
+
 
 Base.summary(lvl::SparseByteMapLevel) = "SparseByteMap($(summary(lvl.lvl)))"
 similar_level(lvl::SparseByteMapLevel) = SparseByteMap(similar_level(lvl.lvl))
 similar_level(lvl::SparseByteMapLevel, dims...) = SparseByteMap(similar_level(lvl.lvl, dims[1:end-1]...), dims[end])
+
+function memtype(::Type{SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}}) where {Ti, Tp, Vp, BV, VTpi, Lvl}
+    return memtype(Lvl)
+end
+
+function postype(::Type{SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}}) where {Ti, Tp, Vp, BV, VTpi, Lvl}
+    return Tp
+end
+
+function moveto(lvl:: SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}, ::Type{MemType}) where {Ti, Tp, Vp, BV, VTpi, Lvl, MemType <: AbstractArray}
+    lvl_2 = moveto(lvl.lvl, MemType)
+    ptr_2 = MemType{Tp, 1}(lvl.ptr)
+    tbl_2 = MemType{Bool, 1}(lvl.tbl)
+    srt_2 = MemType{Tuple{Tp, Ti}, 1}(lvl.srt)
+    return  SparseByteMapLevel{Ti, Tp, MemType{Tp, 1}, MemType{Bool, 1}, MemType{Tuple{Tp, Ti}, 1}, typeof(lvl_2)}(lvl_2, lvl.shape, ptr_2, tbl_2, srt_2)
+end
+
+
 
 pattern!(lvl::SparseByteMapLevel{Ti, Tp}) where {Ti, Tp} = 
     SparseByteMapLevel{Ti, Tp}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)
@@ -29,7 +48,7 @@ function countstored_level(lvl::SparseByteMapLevel, pos)
     countstored_level(lvl.lvl, lvl.ptr[pos + 1] - 1)
 end
 
-function Base.show(io::IO, lvl::SparseByteMapLevel{Ti, Tp}) where {Ti, Tp}
+function Base.show(io::IO, lvl::SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl},) where {Ti, Tp, Vp, BV, VTpi, Lvl}
     if get(io, :compact, false)
         print(io, "SparseByteMap(")
     else
@@ -42,11 +61,11 @@ function Base.show(io::IO, lvl::SparseByteMapLevel{Ti, Tp}) where {Ti, Tp}
     if get(io, :compact, false)
         print(io, "…")
     else
-        show(IOContext(io, :typeinfo=>Vector{Tp}), lvl.ptr)
+        show(IOContext(io, :typeinfo=>Vp), lvl.ptr)
         print(io, ", ")
-        show(IOContext(io, :typeinfo=>Vector{Bool}), lvl.tbl)
+        show(IOContext(io, :typeinfo=>BV), lvl.tbl)
         print(io, ", ")
-        show(IOContext(io, :typeinfo=>Vector{Tuple{Tp, Ti}}), lvl.srt)
+        show(IOContext(io, :typeinfo=>VTpi), lvl.srt)
     end
     print(io, ")")
 end
@@ -62,12 +81,12 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseByt
     display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
 end
 
-@inline level_ndims(::Type{<:SparseByteMapLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = 1 + level_ndims(Lvl)
+@inline level_ndims(::Type{<:SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}}) where {Ti, Tp, Vp, BV, VTpi, Lvl} = 1 + level_ndims(Lvl)
 @inline level_size(lvl::SparseByteMapLevel) = (level_size(lvl.lvl)..., lvl.shape)
 @inline level_axes(lvl::SparseByteMapLevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.shape))
-@inline level_eltype(::Type{<:SparseByteMapLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = level_eltype(Lvl)
-@inline level_default(::Type{<:SparseByteMapLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = level_default(Lvl)
-data_rep_level(::Type{<:SparseByteMapLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = SparseData(data_rep_level(Lvl))
+@inline level_eltype(::Type{<:SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}}) where {Ti, Tp, Vp, BV, VTpi, Lvl} = level_eltype(Lvl)
+@inline level_default(::Type{<:SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}}) where {Ti, Tp, Vp, BV, VTpi, Lvl}= level_default(Lvl)
+data_rep_level(::Type{<:SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}}) where {Ti, Tp, Vp, BV, VTpi, Lvl} = SparseData(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:SparseByteMapLevel})() = fbr
 function (fbr::SubFiber{<:SparseByteMapLevel{Ti}})(idxs...) where {Ti}
@@ -92,12 +111,12 @@ mutable struct VirtualSparseByteMapLevel <: AbstractVirtualLevel
     qos_fill
     qos_stop
 end
-
+  
 is_level_injective(lvl::VirtualSparseByteMapLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., false]
 is_level_concurrent(lvl::VirtualSparseByteMapLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., false]
 is_level_atomic(lvl::VirtualSparseByteMapLevel, ctx) = false
 
-function virtualize(ex, ::Type{SparseByteMapLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}   
+function virtualize(ex, ::Type{SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Vp, BV, VTpi, Lvl}
     sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Int)
     qos_fill = freshen(ctx, sym, :_qos_fill)

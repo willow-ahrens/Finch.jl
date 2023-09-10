@@ -39,8 +39,6 @@ using MatrixDepot
 ````
 
 ````
-[32m[1m Downloading[22m[39m artifact: MPICH
-[32m[1m Downloading[22m[39m artifact: HDF5
 [ Info: verify download of index files...
 [ Info: creating database file
 [ Info: reading index files

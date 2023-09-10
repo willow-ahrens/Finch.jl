@@ -22,6 +22,26 @@ function Base.copyto!(dst::Array, src::Fiber)
     return copyto_helper!(dst, src)
 end
 
+function permutedims(src::Fiber, perm)
+    dst = similar(src)
+    copyto!(dst, swizzle(src, perm...))
+end
+
+function Base.copyto!(dst::Fiber, src::SwizzleArray)
+    copyto!(swizzle(dst, (1:ndims(dst))...), src)
+end
+
+function Base.copyto!(dst::SwizzleArray, src::Union{Fiber, AbstractArray})
+    copyto!(dst, swizzle(src, (1:ndims(src))...))
+end
+
+function Base.copyto!(dst::SwizzleArray{dims}, src::SwizzleArray) where {dims}
+    tmp = Fiber!(SparseHash{ndims(src)}(Element(default(src))))
+    tmp = copyto_helper!(tmp, swizzle(src, dims...))
+    copyto_helper!(dst.body, tmp)
+    dst
+end
+
 dropdefaults(src) = dropdefaults!(similar(src), src)
 
 dropdefaults!(dst::Fiber, src) = dropdefaults_helper!(dst, src)

@@ -11,6 +11,7 @@ by `tns` on `dims` by `op`.
 """
 function reduce_rep end
 
+#TODO we really shouldn't use Drop like this here.
 reduce_rep(op, z, tns, dims) =
     reduce_rep_def(op, z, tns, reverse(map(n -> n in dims ? Drop(n) : n, 1:ndims(tns)))...)
 

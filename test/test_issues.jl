@@ -114,7 +114,7 @@ using CIndices
 
         @finch (B .= 0; for j=_, i=_; B[i, j] = A[i, j] end)
 
-        @test isstructequal(B, fiber(A))
+        @test Structure(B) == Structure(fiber(A))
 
         v = SparseVector(10, [1, 6, 7, 9], [1.1, 2.2, 3.3, 4.4])
 
@@ -122,7 +122,7 @@ using CIndices
 
         @finch (w .= 0; for i=_; w[i] = v[i] end)
 
-        @test isstructequal(w, fiber(v))
+        @test Structure(w) == Structure(fiber(v))
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/99
@@ -209,7 +209,7 @@ using CIndices
         println(io, "redefault!(B, Inf) :", redefault!(B, Inf))
         println(io, redefault!(B, Inf))
         println(io, C)
-        @test isstructequal(redefault!(B, Inf), C)
+        @test Structure(C) == Structure(redefault!(B, Inf))
         @test check_output("issue118.txt", String(take!(io)))
     end
 
