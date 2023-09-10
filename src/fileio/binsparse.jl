@@ -301,7 +301,7 @@ function bspread_level(f, desc, fmt, ::Val{:dense})
     R = fmt["rank"]
     for r = 1:R
         n = level_ndims(typeof(lvl))
-        shape = desc["shape"][n + 1]
+        shape = Int(desc["shape"][n + 1])
         lvl = DenseLevel(lvl, shape)
     end
     lvl
