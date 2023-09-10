@@ -25,14 +25,12 @@ quote
         while i <= phase_stop
             x_lvl_i = x_lvl.idx[x_lvl_q]
             phase_stop_2 = min(phase_stop, x_lvl_i)
-            if phase_stop_2 >= i
-                if x_lvl_i == phase_stop_2
-                    x_lvl_2_val_2 = x_lvl_2.val[x_lvl_q]
-                    z1_val = x_lvl_2_val_2 + z1_val
-                    x_lvl_q += 1
-                end
-                i = phase_stop_2 + limit(0+ϵ)
+            if x_lvl_i == phase_stop_2
+                x_lvl_2_val_2 = x_lvl_2.val[x_lvl_q]
+                z1_val = x_lvl_2_val_2 + z1_val
+                x_lvl_q += 1
             end
+            i = phase_stop_2 + limit(0+ϵ)
         end
     end
     (z1 = (Scalar){0, Int32}(z1_val),)
