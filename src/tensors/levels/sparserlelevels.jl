@@ -231,30 +231,28 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, su
                                 $my_q = Finch.scansearch($(lvl.ex).right, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                             end
                         end,
-                        body = Step(
-                                preamble = quote
-                                    $my_i_start = $(lvl.ex).left[$my_q]
-                                    $my_i_stop = $(lvl.ex).right[$my_q]
-                                end,
-                                stop = (ctx, ext) -> value(my_i_stop),
-                                body = (ctx, ext) -> Thunk( 
-                                    body = (ctx) -> Sequence([
-                                        Phase(
-                                            stop = (ctx, ext) -> call(-, value(my_i_start), getunit(ext)),
-                                            body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
-                                        ),
-                                        Phase(
-                                            body = (ctx,ext) -> Run(
-                                                body = Simplify(instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q)), ctx, subprotos))
-                                            )
-                                        )
-                                    ]),
-                                    epilogue = quote
-                                        $my_q += ($(ctx(getstop(ext))) == $my_i_stop)
-                                    end
+                        preamble = quote
+                            $my_i_start = $(lvl.ex).left[$my_q]
+                            $my_i_stop = $(lvl.ex).right[$my_q]
+                        end,
+                        stop = (ctx, ext) -> value(my_i_stop),
+                        body = (ctx, ext) -> Thunk( 
+                            body = (ctx) -> Sequence([
+                                Phase(
+                                    stop = (ctx, ext) -> call(-, value(my_i_start), getunit(ext)),
+                                    body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
+                                ),
+                                Phase(
+                                    body = (ctx,ext) -> Run(
+                                        body = Simplify(instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q)), ctx, subprotos))
+                                    )
                                 )
-                            )
+                            ]),
+                            epilogue = quote
+                                $my_q += ($(ctx(getstop(ext))) == $my_i_stop)
+                            end
                         )
+                    )
                 ),
                 Phase(
                     body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))

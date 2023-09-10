@@ -282,44 +282,44 @@ function instantiate_reader(trv::SparseCOOWalkTraversal, ctx, subprotos, ::Union
             body = (ctx) -> Sequence([
                 Phase(
                     stop = (ctx, ext) -> value(my_i_stop),
-                    body = (ctx, ext) -> Stepper(
-                        seek = (ctx, ext) -> quote
-                            if $(lvl.ex).tbl[$R][$my_q] < $(ctx(getstart(ext)))
-                                $my_q = Finch.scansearch($(lvl.ex).tbl[$R], $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
-                            end
-                        end,
-                        body = if R == 1
-                            Step(
-                                    preamble = :($my_i = $(lvl.ex).tbl[$R][$my_q]),
-                                    stop =  (ctx, ext) -> value(my_i),
-                                    chunk = Spike(
-                                        body = Fill(virtual_level_default(lvl)),
-                                        tail = instantiate_reader(VirtualSubFiber(lvl.lvl, my_q), ctx, subprotos),
-                                    ),
-                                    next = (ctx, ext) -> quote
-                                        $my_q += $(Tp(1))
+                    body = (ctx, ext) -> 
+                        if R == 1
+                            Stepper(
+                                seek = (ctx, ext) -> quote
+                                    if $(lvl.ex).tbl[$R][$my_q] < $(ctx(getstart(ext)))
+                                        $my_q = Finch.scansearch($(lvl.ex).tbl[$R], $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                                     end
-                                )
+                                end,
+                                preamble = :($my_i = $(lvl.ex).tbl[$R][$my_q]),
+                                stop =  (ctx, ext) -> value(my_i),
+                                chunk = Spike(
+                                    body = Fill(virtual_level_default(lvl)),
+                                    tail = instantiate_reader(VirtualSubFiber(lvl.lvl, my_q), ctx, subprotos),
+                                ),
+                                next = (ctx, ext) -> :($my_q += $(Tp(1)))
+                            )
                         else
-                            Step(
-                                    preamble = quote
-                                        $my_i = $(lvl.ex).tbl[$R][$my_q]
-                                        $my_q_step = $my_q
-                                        if $(lvl.ex).tbl[$R][$my_q_step] == $my_i
-                                            $my_q_step = Finch.scansearch($(lvl.ex).tbl[$R], $my_i + 1, $my_q_step, $my_q_stop - 1)
-                                        end
-                                    end,
-                                    stop = (ctx, ext) -> value(my_i),
-                                    chunk = Spike(
-                                        body = Fill(virtual_level_default(lvl)),
-                                        tail = instantiate_reader(SparseCOOWalkTraversal(lvl, R - 1, value(my_q, lvl.Ti), value(my_q_step, lvl.Ti)), ctx, subprotos),
-                                    ),
-                                    next = (ctx, ext) -> quote
-                                        $my_q = $my_q_step
+                            Stepper(
+                                seek = (ctx, ext) -> quote
+                                    if $(lvl.ex).tbl[$R][$my_q] < $(ctx(getstart(ext)))
+                                        $my_q = Finch.scansearch($(lvl.ex).tbl[$R], $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                                     end
-                                )
+                                end,
+                                preamble = quote
+                                    $my_i = $(lvl.ex).tbl[$R][$my_q]
+                                    $my_q_step = $my_q
+                                    if $(lvl.ex).tbl[$R][$my_q_step] == $my_i
+                                        $my_q_step = Finch.scansearch($(lvl.ex).tbl[$R], $my_i + 1, $my_q_step, $my_q_stop - 1)
+                                    end
+                                end,
+                                stop = (ctx, ext) -> value(my_i),
+                                chunk = Spike(
+                                    body = Fill(virtual_level_default(lvl)),
+                                    tail = instantiate_reader(SparseCOOWalkTraversal(lvl, R - 1, value(my_q, lvl.Ti), value(my_q_step, lvl.Ti)), ctx, subprotos),
+                                ),
+                                next = (ctx, ext) -> :($my_q = $my_q_step)
+                            )
                         end
-                    )
                 ),
                 Phase(
                     body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))

@@ -250,17 +250,13 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, s
                                 $my_q = Finch.scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                             end
                         end,
-                        body = Step(
-                            preamble = :($my_i = $(lvl.ex).idx[$my_q]),
-                            stop = (ctx, ext) -> value(my_i),
-                            chunk = Spike(
-                                body = Fill(virtual_level_default(lvl)),
-                                tail = Simplify(instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, subprotos))
-                            ),
-                            next = (ctx, ext) -> quote
-                                $my_q += $(Tp(1))
-                            end
-                        )
+                        preamble = :($my_i = $(lvl.ex).idx[$my_q]),
+                        stop = (ctx, ext) -> value(my_i),
+                        chunk = Spike(
+                            body = Fill(virtual_level_default(lvl)),
+                            tail = Simplify(instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, subprotos))
+                        ),
+                        next = (ctx, ext) -> :($my_q += $(Tp(1))) 
                     )
                 ),
                 Phase(
@@ -306,15 +302,13 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, s
                                 $my_q = Finch.scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                             end
                         end,                        
-                        body = Jump(
-                                preamble = :($my_i2 = $(lvl.ex).idx[$my_q]),
-                                stop = (ctx, ext) -> value(my_i2),
-                                chunk =  Spike(
-                                            body = Fill(virtual_level_default(lvl)),
-                                            tail = instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, subprotos),
-                                        ),
-                                next = (ctx, ext) -> :($my_q += $(Tp(1))),
-                            )
+                        preamble = :($my_i2 = $(lvl.ex).idx[$my_q]),
+                        stop = (ctx, ext) -> value(my_i2),
+                        chunk =  Spike(
+                            body = Fill(virtual_level_default(lvl)),
+                            tail = instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, subprotos),
+                        ),
+                        next = (ctx, ext) -> :($my_q += $(Tp(1))),
                     )  
                 ),
                 Phase(
