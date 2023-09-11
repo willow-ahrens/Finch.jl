@@ -5,7 +5,7 @@ Write the Finch fiber to a file using a file format determined by the file exten
 The following file extensions are supported:
 
 - `.bsp.h5`: [Binsparse](https://github.com/GraphBLAS/binsparse-specification) HDF5 file format
-- `.bsp.npyd`: [Binsparse](https://github.com/GraphBLAS/binsparse-specification) NumPy and JSON subdirectory format
+- `.bspnpy`: [Binsparse](https://github.com/GraphBLAS/binsparse-specification) NumPy and JSON subdirectory format
 - `.mtx`: [MatrixMarket](https://math.nist.gov/MatrixMarket/formats.html#MMformat) `.mtx` text file format
 - `.ttx`: [TensorMarket](https://github.com/willow-ahrens/TensorMarket.jl) `.ttx` text file format
 - `.tns`: [FROSTT](http://frostt.io/tensors/) `.tns` text file format
@@ -17,7 +17,7 @@ function fwrite(filename::AbstractString, tns)
         fttwrite(filename, tns)
     elseif endswith(filename, ".bsp.h5")
         bspwrite(filename, tns)
-    elseif endswith(filename, ".bsp.npyd")
+    elseif endswith(filename, ".bspnpy")
         bspwrite(filename, tns)
     else
         error("Unknown file extension for file $filename")
@@ -31,7 +31,7 @@ Read the Finch fiber from a file using a file format determined by the file exte
 The following file extensions are supported:
 
 - `.bsp.h5`: [Binsparse](https://github.com/GraphBLAS/binsparse-specification) HDF5 file format
-- `.bsp.npyd`: [Binsparse](https://github.com/GraphBLAS/binsparse-specification) NumPy and JSON subdirectory format
+- `.bspnpy`: [Binsparse](https://github.com/GraphBLAS/binsparse-specification) NumPy and JSON subdirectory format
 - `.mtx`: [MatrixMarket](https://math.nist.gov/MatrixMarket/formats.html#MMformat) `.mtx` text file format
 - `.ttx`: [TensorMarket](https://github.com/willow-ahrens/TensorMarket.jl) `.ttx` text file format
 - `.tns`: [FROSTT](http://frostt.io/tensors/) `.tns` text file format
@@ -43,7 +43,7 @@ function fread(filename::AbstractString)
         fttread(filename)
     elseif endswith(filename, ".bsp.h5")
         bspread(filename)
-    elseif endswith(filename, ".bsp.npyd")
+    elseif endswith(filename, ".bspnpy")
         bspread(filename)
     else
         error("Unknown file extension for file $filename")

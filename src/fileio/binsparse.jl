@@ -1,7 +1,7 @@
 """
     bspwrite(::AbstractString, tns)
     bspwrite(::HDF5.File, tns)
-    bspwrite(::NPYDPath, tns)
+    bspwrite(::NPYPath, tns)
 
 Write the Finch tensor to a file using
 [Binsparse](https://github.com/GraphBLAS/binsparse-specification) file format.
@@ -9,7 +9,7 @@ Write the Finch tensor to a file using
 Supported file extensions are:
 
 - `.bsp.h5`: HDF5 file format ([HDF5](https://github.com/JuliaIO/HDF5.jl) must be loaded)
-- `.bsp.npyd`: NumPy and JSON directory format ([NPZ](https://github.com/fhs/NPZ.jl) must be loaded)
+- `.bspnpy`: NumPy and JSON directory format ([NPZ](https://github.com/fhs/NPZ.jl) must be loaded)
 
 !!! warning
     The Binsparse spec is under development. Additionally, this function may not
@@ -20,14 +20,14 @@ function bspwrite end
 """
 bspread(::AbstractString)
 bspread(::HDF5.File)
-bspread(::NPYDPath)
+bspread(::NPYPath)
 
 Read the [Binsparse](https://github.com/GraphBLAS/binsparse-specification) file into a Finch tensor.
 
 Supported file extensions are:
 
 - `.bsp.h5`: HDF5 file format ([HDF5](https://github.com/JuliaIO/HDF5.jl) must be loaded)
-- `.bsp.npyd`: NumPy and JSON directory format ([NPZ](https://github.com/fhs/NPZ.jl) must be loaded)
+- `.bspnpy`: NumPy and JSON directory format ([NPZ](https://github.com/fhs/NPZ.jl) must be loaded)
 
 !!! warning
 The Binsparse spec is under development. Additionally, this function may not
@@ -206,18 +206,18 @@ indices_zero_to_one(vec::Vector) = vec .+ one(eltype(vec))
 indices_one_to_zero(vec::Vector) = vec .- one(eltype(vec))
 #indices_one_to_zero(vec::Vector{<:CIndex{Ti}}) where {Ti} = unsafe_wrap(Array, reinterpret(Ptr{Ti}, pointer(vec)), length(vec); own = true)
 
-struct NPYDGroup
+struct NPYPath
     dirname::String
 end
 
 function bspwrite_h5 end
-function bspwrite_npyd end
+function bspwrite_bspnpy end
 
 function bspwrite(fname::AbstractString, arr, attrs = OrderedDict())
     if endswith(fname, ".h5")
         bspwrite_h5(fname, arr, attrs)
-    elseif endswith(fname, ".npyd")
-        bspwrite_npyd(fname, arr, attrs)
+    elseif endswith(fname, ".bspnpy")
+        bspwrite_bspnpy(fname, arr, attrs)
     else
         error("Unknown file extension for file $fname")
     end
@@ -246,13 +246,13 @@ end
 function bspwrite_header end
 
 function bspread_h5 end
-function bspread_npyd end
+function bspread_bspnpy end
 
 function bspread(fname::AbstractString)
     if endswith(fname, ".h5")
         bspread_h5(fname)
-    elseif endswith(fname, ".npyd")
-        bspread_npyd(fname)
+    elseif endswith(fname, ".bspnpy")
+        bspread_bspnpy(fname)
     else
         error("Unknown file extension for file $fname")
     end
