@@ -122,7 +122,7 @@ function phase_body(node::AcceptJumper, ctx, ext, ext_2)
     if next !== nothing
         Switch([
             value(:($(ctx(node.stop(ctx, ext))) == $(ctx(getstop(ext_2))))) => Thunk(
-                body = (ctx) -> truncate(node.chunk, ctx, similar_extent(ext, getstart(ext), getstop(ext_2)), ext_2),
+                body = (ctx) -> node.chunk,
                 epilogue = next
             ),
             literal(true) => Stepper(
