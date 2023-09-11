@@ -4,8 +4,8 @@ struct JumperStyle end
     preamble = nothing
     stop = (ctx, ext) -> nothing
     chunk = nothing
-    next = nothing
-    body = (ctx, ext) -> chunk # Do not use it
+    next = (ctx, ext) -> nothing
+    body = (ctx, ext) -> chunk 
     seek = (ctx, start) -> error("seek not implemented error")
 end
 
@@ -122,7 +122,8 @@ function phase_body(node::AcceptJumper, ctx, ext, ext_2)
     if next !== nothing
         Switch([
             value(:($(ctx(node.stop(ctx, ext))) == $(ctx(getstop(ext_2))))) => Thunk(
-                body = (ctx) -> node.chunk,
+                #body = (ctx) -> node.chunk,
+                body = (ctx) -> truncate(node.chunk, ctx, ext, similar_extent(ext, getstart(ext_2), getstop(ext))),
                 epilogue = next
             ),
             literal(true) => Stepper(

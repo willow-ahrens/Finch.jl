@@ -5,7 +5,6 @@ struct StepperStyle end
     stop = (ctx, ext) -> nothing
     chunk = nothing
     next = (ctx, ext) -> nothing
-    #range = (ctx, ext) -> Extent(something(start(ctx, ext), getstart(ext)), something(stop(ctx, ext), getstop(ext)))
     body = (ctx, ext) -> chunk
     seek = (ctx, start) -> error("seek not implemented error")
 end
