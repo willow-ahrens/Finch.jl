@@ -75,11 +75,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::StepperStyle)
         body = quote
             $i1 = $i
             $(contain(ctx_2) do ctx_3
-                (ctx_3)(loop(
-                    root.idx,
-                    ext_4,
-                    body
-                ))
+                ctx_3(loop(root.idx, ext_4, body))
             end)
             
             $i = $(ctx_2(getstop(ext_4))) + $(ctx_2(getunit(ext_4)))
