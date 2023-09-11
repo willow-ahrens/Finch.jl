@@ -90,8 +90,70 @@ function bspwrite_data_helper(f, desc, key, data::AbstractVector{Complex{T}}) wh
 end
 
 bspread_format_lookup = OrderedDict(
+    "DVEC" => OrderedDict(
+        "subformat" => OrderedDict(
+            "level" => "dense",
+            "rank" => 1,
+            "subformat" => OrderedDict(
+                "level" => "element",
+            )
+        )
+    ),
+
+    "DMAT" => OrderedDict(
+        "subformat" => OrderedDict(
+            "level" => "dense",
+            "rank" => 1,
+            "subformat" => OrderedDict(
+                "level" => "dense",
+                "rank" => 1,
+                "subformat" => OrderedDict(
+                    "level" => "element",
+                )
+            )
+        )
+    ),
+
+    "DMATR" => OrderedDict(
+        "subformat" => OrderedDict(
+            "level" => "dense",
+            "rank" => 1,
+            "subformat" => OrderedDict(
+                "level" => "dense",
+                "rank" => 1,
+                "subformat" => OrderedDict(
+                    "level" => "element",
+                )
+            )
+        )
+    ),
+
+    "DMATC" => OrderedDict(
+        "swizzle" => [1, 0],
+        "subformat" => OrderedDict(
+            "level" => "dense",
+            "rank" => 1,
+            "subformat" => OrderedDict(
+                "level" => "dense",
+                "rank" => 1,
+                "subformat" => OrderedDict(
+                    "level" => "element",
+                )
+            )
+        )
+    ),
+
+    "CVEC" => OrderedDict(
+        "subformat" => OrderedDict(
+            "level" => "sparse",
+            "rank" => 1,
+            "subformat" => OrderedDict(
+                "level" => "element",
+            )
+        )
+    ),
+
     "CSR" => OrderedDict(
-        "swizzle" => [1, 2],
         "subformat" => OrderedDict(
             "level" => "dense",
             "rank" => 1,
@@ -106,7 +168,7 @@ bspread_format_lookup = OrderedDict(
     ),
 
     "CSC" => OrderedDict(
-        "swizzle" => [2, 1],
+        "swizzle" => [1, 0],
         "subformat" => OrderedDict(
             "level" => "dense",
             "rank" => 1,
@@ -121,7 +183,6 @@ bspread_format_lookup = OrderedDict(
     ),
 
     "DCSR" => OrderedDict(
-        "swizzle" => [1, 2],
         "subformat" => OrderedDict(
             "level" => "sparse",
             "rank" => 1,
@@ -136,7 +197,7 @@ bspread_format_lookup = OrderedDict(
     ),
 
     "DCSC" => OrderedDict(
-        "swizzle" => [2, 1],
+        "swizzle" => [1, 0],
         "subformat" => OrderedDict(
             "level" => "sparse",
             "rank" => 1,
@@ -151,7 +212,6 @@ bspread_format_lookup = OrderedDict(
     ),
 
     "COO" => OrderedDict(
-        "swizzle" => [1, 2],
         "subformat" => OrderedDict(
             "level" => "sparse",
             "rank" => 2,
@@ -161,42 +221,26 @@ bspread_format_lookup = OrderedDict(
         )
     ),
 
-    "DMAT" => OrderedDict(
-        "swizzle" => [1, 2],
-        "subformat" => OrderedDict(
-            "level" => "dense",
-            "rank" => 1,
-            "subformat" => OrderedDict(
-                "level" => "dense",
-                "rank" => 1,
-                "subformat" => OrderedDict(
-                    "level" => "element",
-                )
-            )
-        )
-    ),
-
-    "DVEC" => OrderedDict(
-        "swizzle" => [1],
-        "subformat" => OrderedDict(
-            "level" => "dense",
-            "rank" => 1,
-            "subformat" => OrderedDict(
-                "level" => "element",
-            )
-        )
-    ),
-
-    "VEC" => OrderedDict(
-        "swizzle" => [1],
+    "COOR" => OrderedDict(
         "subformat" => OrderedDict(
             "level" => "sparse",
-            "rank" => 1,
+            "rank" => 2,
             "subformat" => OrderedDict(
                 "level" => "element",
             )
         )
-    )
+    ),
+
+    "COOC" => OrderedDict(
+        "swizzle" => [1, 0],
+        "subformat" => OrderedDict(
+            "level" => "sparse",
+            "rank" => 2,
+            "subformat" => OrderedDict(
+                "level" => "element",
+            )
+        )
+    ),
 )
 
 bspwrite_format_lookup = OrderedDict(v => k for (k, v) in bspread_format_lookup)
@@ -229,15 +273,17 @@ bspwrite_tensor(io, fbr::Fiber, attrs = OrderedDict()) =
 
 function bspwrite_tensor(io, arr::SwizzleArray{dims, <:Fiber}, attrs = OrderedDict()) where {dims}
     desc = OrderedDict(
-        "format" => OrderedDict(
+        "format" => OrderedDict{Any, Any}(
             "subformat" => OrderedDict(),
-            "swizzle" => reverse(collect(dims)),
         ),
         "fill" => true,
         "shape" => map(Int, size(arr)),
         "data_types" => OrderedDict(),
         "attrs" => attrs,
     )
+    if !issorted(reverse(collect(dims)))
+        desc["format"]["swizzle"] = reverse(collect(dims)) .- 1
+    end
     bspwrite_level(io, desc, desc["format"]["subformat"], arr.body.lvl)
     desc["format"] = get(bspwrite_format_lookup, desc["format"], desc["format"])
     bspwrite_header(io, json(desc, 4), "binsparse")
@@ -262,14 +308,17 @@ function bspread_header end
 
 function bspread(f)
     desc = bspread_header(f, "binsparse")
-    fmt = get(bspread_format_lookup, desc["format"], desc["format"])
+    fmt = OrderedDict{Any, Any}(get(bspread_format_lookup, desc["format"], desc["format"]))
+    if !haskey(fmt, "swizzle")
+        fmt["swizzle"] = collect(0:length(desc["shape"]) - 1)
+    end
     if !issorted(reverse(fmt["swizzle"]))
-        sigma = reverse(sortperm(fmt["swizzle"]))
+        sigma = sortperm(reverse(fmt["swizzle"] .+ 1))
         desc["shape"] = desc["shape"][sigma]
     end
     fbr = Fiber(bspread_level(f, desc, fmt["subformat"]))
     if !issorted(reverse(fmt["swizzle"]))
-        fbr = swizzle(fbr, reverse(fmt["swizzle"])...)
+        fbr = swizzle(fbr, reverse(fmt["swizzle"] .+ 1)...)
     end
     if haskey(desc, "structure")
         throw(ArgumentError("binsparse structure field currently unsupported"))
