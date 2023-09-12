@@ -129,7 +129,7 @@ end
 function concordize(root, ctx::AbstractCompiler)
     depth = depth_calculator(root)
     root = Rewrite(Postwalk(Fixpoint(@rule access(~tns, ~mode, ~i..., ~j::isindex, ~k...) => begin
-        if depth(j) < maximum(depth.(k), init=0)
+        if depth(j) <= maximum(depth.(k), init=0)
             access(~tns, ~mode, ~i..., call(identity, j), ~k...)
         end
     end)))(root)

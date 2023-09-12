@@ -273,4 +273,13 @@ using CIndices
         end)
 
     end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/278
+
+    let
+        A = [1.0 2.0 3.0; 4.0 5.0 6.0; 7.0 8.0 9.0]
+        x = Scalar{0.0}()
+        @finch (x .= 0; for i = _ x[] += A[i, i] end)
+        @test x[] == 15.0
+    end
 end
