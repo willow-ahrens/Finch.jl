@@ -288,6 +288,7 @@ using CIndices
         A = ones(3, 3)
         B = ones(3, 3)
         C = zeros(3, 3)
+        alpha=beta=1
         @finch begin
             for j=_
                 for i=_
