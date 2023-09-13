@@ -178,7 +178,9 @@ macro finch(opts_ex...)
     end
     for tns in results
         push!(thunk.args, quote
-            $(esc(tns)) = get(res, $(QuoteNode(tns)), $(esc(tns)))
+            if haskey(res, $(QuoteNode(tns)))
+                $(esc(tns)) = res[$(QuoteNode(tns))]
+            end
         end)
     end
     push!(thunk.args, quote
