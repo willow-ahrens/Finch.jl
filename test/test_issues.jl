@@ -282,4 +282,26 @@ using CIndices
         @finch (x .= 0; for i = _ x[] += A[i, i] end)
         @test x[] == 15.0
     end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/267
+    let
+        A = ones(3, 3)
+        B = ones(3, 3)
+        C = zeros(3, 3)
+        alpha=beta=1
+        @finch begin
+            for j=_
+                for i=_
+                    C[i, j] *= beta
+                end
+                for k=_
+                    foo = alpha * B[k, j]
+                    for i=_
+                        C[i, j] += foo*A[i, k]
+                    end
+                end
+            end
+        end
+        @test C == A * B
+    end
 end
