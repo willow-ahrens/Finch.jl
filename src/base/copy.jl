@@ -4,7 +4,7 @@
     idxs = [Symbol(:i_, n) for n = 1:ndims(dst)]
     exts = Expr(:block, (:($idx = _) for idx in reverse(idxs))...)
     return quote
-        @finch begin
+        @finch mode=fastfinch begin
             dst .= $(default(dst))
             $(Expr(:for, exts, quote
                 dst[$(idxs...)] = src[$(idxs...)]
