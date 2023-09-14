@@ -55,19 +55,13 @@ Base.:(==)(a::Extent, b::Extent) =
     a.stop == b.stop
 
 function bound_below!(ctx, val, below)
-  expr1 = call(>=, val, below)
-  #expr1 = Rewrite(Prewalk(Fixpoint(Chain([@rule(cached(~a, ~b) => a), @rule(~v::isliteral => v.val isa FinchNode ? v.val : v) ]))))(expr1)
-  push!(ctx.constraints, expr1)
+  push!(ctx.constraints, call(>=, val, below))
   return val
-  #return cached(val, literal(call(max, val, below)))
 end
 
 function bound_above!(ctx, val, above)
-  expr1 = call(<=, val, above)
-  #expr1 = Rewrite(Prewalk(Fixpoint(Chain([@rule(cached(~a, ~b) => a), @rule(~v::isliteral => v.val isa FinchNode ? v.val : v) ]))))(expr1)
-  push!(ctx.constraints, expr1)
+  push!(ctx.constraints, call(<=, val, above))
   return val
-  #return cached(val, literal(call(min, val, above)))
 end
 
 bound_measure_below!(ctx, ext::Extent, m) = Extent(ext.start, bound_below!(ctx, ext.stop, call(+, ext.start, m)))
@@ -281,7 +275,19 @@ end
 
 function virtual_union(ctx, a::ContinuousExtent, b::ContinuousExtent)
     ContinuousExtent(
-        start = @f(min($(getstart(a)), $(getstart(b)))),
-        stop = @f(max($(getstop(a)), $(getstop(b))))
+        start = if query_z3(call(<=, getstart(a), getstart(b)), ctx)
+                    bound_below!(ctx, getstart(a), getstart(b))
+                elseif query_z3(call(<=, getstart(b), getstart(a)), ctx)
+                    bound_below!(ctx, getstart(b), getstart(a))
+                else
+                    @f(min($(getstart(a)), $(getstart(b))))
+                end,
+        stop =  if query_z3(call(<=, getstop(a), getstop(b)), ctx)
+                    bound_above!(ctx, getstop(b), getstop(a))
+                elseif query_z3(call(<=, getstop(b), getstop(a)), ctx)
+                    bound_above!(ctx, getstop(a), getstop(b))
+                else
+                    @f(max($(getstop(a)), $(getstop(b))))
+                end
     )
 end

@@ -82,10 +82,9 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::PhaseStyle)
         end
 
 
-        if query_z3(call(>=, measure(ext_4), 0), ctx, verbose=true)  
+        if query_z3(call(>=, measure(ext_4), 0), ctx)  
             return body
         else
-          println("PHASE ", ctx(getstop(ext_4)), ctx(getstart(ext_4)))
             return quote
                 if $(ctx(getstop(ext_4))) >= $(ctx(getstart(ext_4)))
                     $body

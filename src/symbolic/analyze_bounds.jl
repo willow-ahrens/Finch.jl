@@ -167,55 +167,22 @@ function query_z3(root::FinchNode, ctx; verbose = false)
 
       z3_ctx = Context()
       z3_solver = Solver(z3_ctx, "QF_NRA")
-      constants = Dict()
-      name_to_z3var = Dict()
+      z3_constants = Dict()
+      z3_variables = Dict()
       function rename(node::FinchNode)
           if isvalue(node) && (node.val isa Symbol || node.val isa Expr)
-              value(get!(name_to_z3var, node.val, real_const(z3_ctx, string(node.val))))
+              value(get!(z3_variables, node.val, real_const(z3_ctx, string(node.val))))
           elseif isliteral(node) && (node.val isa Number)
               if node.val == Eps
-                value(get!(constants, node.val, real_const(z3_ctx, "Eps")))
+                value(get!(z3_constants, node.val, real_const(z3_ctx, "Eps")))
               else
-                value(get!(constants, node.val, real_const(z3_ctx, string(node.val))))
+                value(get!(z3_constants, node.val, real_const(z3_ctx, string(node.val))))
               end
           end
       end
       
-      #Collect Constraints from cached
-      constraints = Set() 
-      #root2 = Rewrite(Prewalk(Fixpoint(Chain([
-      #    @rule(cached(~a, ~b) => begin
-      #            a1 = Rewrite(Prewalk(Fixpoint(@rule(cached(~a1, ~b1) => a1))))(a)
-      #            if isliteral(b)
-      #              b1 = Rewrite(Prewalk(Fixpoint(@rule(cached(~a1, ~b1) => a1))))(b.val)
-      #            else
-      #              b1 = Rewrite(Prewalk(Fixpoint(@rule(cached(~a1, ~b1) => a1))))(b)
-      #            end
-      #            if @capture b1 call(max, a1, ~c1)
-      #              push!(constraints, call(>=, a1, c1))
-      #            elseif @capture b1 call(min, a1, ~c1)
-      #              push!(constraints, call(<=, a1, c1))
-      #            else
-      #              push!(constraints, call(==, a1, b1))
-      #             end
-      #            if isliteral(b)
-      #              block(a,b.val)
-      #            else
-      #              block(a,b)
-      #            end 
-      #          end),
-      #   ]))))(root)
-      if verbose
-        #println("BEFOREZ3 ", root)
-        #println("Z3 ", root2)
-        #foreach(collect(ctx.constraints)) do constraint
-        #  println("SETCTX ", constraint)
-        #end
-      end
-
+      #Collect Constraints from ctx 
       constraints = copy(ctx.constraints)
-
-      z3s = []
 
       ##Add Constraints
       foreach(collect(constraints)) do constraint
@@ -225,28 +192,23 @@ function query_z3(root::FinchNode, ctx; verbose = false)
       end
 
       #Declare Constants
-      foreach(constants) do (number, z3_variable) 
+      foreach(z3_constants) do (number, var) 
         if number == Eps
-          add(z3_solver, >(z3_variable, 0))
+          add(z3_solver, >(var, 0))
         else
-          add(z3_solver, ==(z3_variable, number))
+          add(z3_solver, ==(var, number))
         end
       end
 
       #Add main query
-      #root = Rewrite(Prewalk(Fixpoint(@rule(cached(~a, ~b::isliteral) => a))))(root)
       root = Rewrite(Postwalk(normalize_eps))(root)
       root = Rewrite(Postwalk(rename))(root)
       root = call(not, root)
-        #if verbose
-        #  println(ctx(root))
-        #end     
       add(z3_solver, eval(ctx(root)))     
    
       if verbose
         println(z3_solver)
-      println("------")
-      println(check(z3_solver)==unsat)
+        println(check(z3_solver)==unsat)
         if (check(z3_solver) != unsat)
           println(get_model(z3_solver))
         end

@@ -75,10 +75,6 @@ end
 function (ctx::SequenceVisitor)(node::Sequence) 
   new_phases = []
 
-  ## Optimization
-  last_phase = node.phases[length(node.phases)]
-  is_ext_largest = false #query(call(<=, getstop(phase_range(last_phase, ctx.ctx, ctx.ext)), getstop(ctx.ext)), ctx.ctx) == true
-
   prev_stop = call(-, getstart(ctx.ext), getunit(ctx.ext))
   for curr in node.phases
     curr_start = call(+, prev_stop, getunit(ctx.ext))
@@ -88,10 +84,7 @@ function (ctx::SequenceVisitor)(node::Sequence)
     else
         curr_stop = bound_below!(ctx.ctx, curr.stop(ctx.ctx, ctx.ext), curr_start)
     end
-    #println("SEQUENCE ", removecache(curr_stop),  " >= ", removecache(curr_start), " : ", curr_stop)
-    #if is_ext_largest && curr == last_phase
-    #  curr_stop = bound_above!(ctx.ctx, curr_stop, getstop(ctx.ext))
-    #end
+
     push!(new_phases, Phase(body = curr.body, start = (ctx, ext) -> curr_start, stop = (ctx, ext) -> curr_stop)) 
     prev_stop = curr_stop
   end
