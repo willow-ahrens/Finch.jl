@@ -182,7 +182,7 @@
             for i = _
                 for j = _
                     for k = _
-                        x[] += A[k, j, i]
+                        x[] += A[i, j, k]
                     end
                 end
             end
@@ -194,7 +194,7 @@
             for i = _
                 for j = _
                     for k = _
-                        x[] += A[k, j, i]
+                        x[] += A[i, j, k]
                     end
                 end
             end

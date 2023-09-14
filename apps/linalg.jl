@@ -3,8 +3,8 @@ function spgemm_inner(A, B)
     C = Fiber!(Dense(SparseList(Element(z))))
     w = Fiber!(SparseHash{2}(Element(z)))
     AT = Fiber!(Dense(SparseList(Element(z))))
-    @finch (w .= 0; for k=_, i=_; w[k, i] = A[i, k] end)
-    @finch (AT .= 0; for i=_, k=_; AT[k, i] = w[k, i] end)
+    @finch mode=finchfast (w .= 0; for k=_, i=_; w[k, i] = A[i, k] end)
+    @finch mode=finchfast (AT .= 0; for i=_, k=_; AT[k, i] = w[k, i] end)
     @finch (C .= 0; for j=_, i=_, k=_; C[i, j] += AT[k, i] * B[k, j] end)
     return C
 end

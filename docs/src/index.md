@@ -60,22 +60,36 @@ You can call [`@finch_code`](@ref) to see the generated code (since `A` is dense
 code is dense):
 ```jldoctest example1; setup=:(using Finch; A = rand(5, 5); s = Scalar(0))
 julia> @finch_code for i=_, j=_ ; s[] += A[i, j] end
-┌ Warning: Performance Warning: non-concordant traversal of A[i, j] (hint: most arrays prefer column major or first index fast)
-└ @ Finch ~/Projects/Finch.jl/src/transforms/concordize.jl:136
-quote
-    s = ex.body.body.lhs.tns.bind
-    s_val = s.val
-    A = ex.body.body.rhs.tns.bind
-    sugar_1 = size(A)
-    A_mode1_stop = sugar_1[1]
-    A_mode2_stop = sugar_1[2]
-    for i_3 = 1:A_mode1_stop
-        for j_3 = 1:A_mode2_stop
-            s_val = A[i_3, j_3] + s_val
-        end
-    end
-    (s = (Scalar){0, Int64}(s_val),)
-end
+ERROR: Performance Warning: non-concordant traversal of A[i, j] (hint: most arrays prefer column major or first index fast, run in fast mode to ignore this warning)
+Stacktrace:
+  [1] error(s::String)
+    @ Base ./error.jl:35
+  [2] concordize(root::Finch.FinchNotation.FinchNode, ctx::Finch.LowerJulia)
+    @ Finch ~/Projects/Finch.jl/src/transforms/concordize.jl:136
+  [3] (::Finch.var"#283#287")(ctx_2::Finch.LowerJulia)
+    @ Finch ~/Projects/Finch.jl/src/execute.jl:104
+  [4] #122
+    @ ~/Projects/Finch.jl/src/lower.jl:15 [inlined]
+  [5] contain(f::Finch.var"#122#123"{Finch.var"#283#287", Finch.LowerJulia}, ctx::Finch.JuliaContext)
+    @ Finch ~/Projects/Finch.jl/src/environment.jl:56
+  [6] contain(f::Finch.var"#283#287", ctx::Finch.LowerJulia)
+    @ Finch ~/Projects/Finch.jl/src/lower.jl:14
+  [7] lower_global(prgm::Finch.FinchNotation.FinchNode, ctx::Finch.LowerJulia)
+    @ Finch ~/Projects/Finch.jl/src/execute.jl:98
+  [8] (::Finch.var"#281#282"{Symbol, DataType})(ctx_2::Finch.LowerJulia)
+    @ Finch ~/Projects/Finch.jl/src/execute.jl:86
+  [9] (::Finch.var"#122#123"{Finch.var"#281#282"{Symbol, DataType}, Finch.LowerJulia})(code_2::Finch.JuliaContext)
+    @ Finch ~/Projects/Finch.jl/src/lower.jl:15
+ [10] contain(f::Finch.var"#122#123"{Finch.var"#281#282"{Symbol, DataType}, Finch.LowerJulia}, ctx::Finch.JuliaContext)
+    @ Finch ~/Projects/Finch.jl/src/environment.jl:56
+ [11] contain(f::Finch.var"#281#282"{Symbol, DataType}, ctx::Finch.LowerJulia)
+    @ Finch ~/Projects/Finch.jl/src/lower.jl:14
+ [12] execute_code(ex::Symbol, T::Type; algebra::Finch.DefaultAlgebra, mode::Finch.SafeFinch, ctx::Finch.LowerJulia)
+    @ Finch ~/Projects/Finch.jl/src/execute.jl:83
+ [13] execute_code(ex::Symbol, T::Type)
+    @ Finch ~/Projects/Finch.jl/src/execute.jl:82
+ [14] top-level scope
+    @ ~/Projects/Finch.jl/src/execute.jl:204
 ```
 
 
