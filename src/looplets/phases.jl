@@ -29,7 +29,26 @@ function phase_body(node::FinchNode, ctx, ext, ext_2)
         return node
     end
 end
-phase_body(node::Phase, ctx, ext, ext_2) = node.body(ctx, ext_2)
+
+function phase_body(node::Phase, ctx, ext, ext_2) 
+    body = node.body(ctx, ext_2)
+    if body isa Stepper
+
+        return Stepper(preamble = body.preamble,
+                       stop = body.stop,
+                       chunk = body.chunk,
+                       next = body.next,
+                       body = body.body,
+                       seek = body.seek,
+                       finalstop = getstop(phase_range(node, ctx, ext))
+                       #finalstop = nothing
+                      )
+    else 
+        return body
+    end
+end
+
+#phase_body(node::Phase, ctx, ext, ext_2) = node.body(ctx, ext_2)
 phase_body(node, ctx, ext, ext_2) = truncate(node, ctx, ext, ext_2)
 
 abstract type PhaseStyle end
@@ -63,7 +82,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::PhaseStyle)
         ext_2 = mapreduce((node)->phase_range(node, ctx, root.ext), (a, b) -> phase_op(style)(ctx, a, b), PostOrderDFS(body))
 
         ext_3 = virtual_intersect(ctx, root.ext.val, ext_2)
-
+        
         ext_4 = cache_dim!(ctx, :phase, ext_3)
 
         body = Rewrite(Postwalk(node->phase_body(node, ctx, root.ext, ext_4)))(body)
@@ -81,7 +100,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::PhaseStyle)
         end
 
 
-        if query(call(>=, measure(ext_4), 0), ctx)  
+        if query_z3(call(>=, measure(ext_4), 0), ctx, verbose=true)  
             return body
         else
             return quote

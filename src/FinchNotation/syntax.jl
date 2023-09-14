@@ -51,6 +51,7 @@ and(x, y, tail...) = x && and(y, tail...)
 or() = false
 or(x) = x
 or(x, y, tail...) = x || or(y, tail...)
+#not(x) = !(x)
 
 struct InitWriter{D} end
 

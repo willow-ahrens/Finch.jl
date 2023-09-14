@@ -247,6 +247,11 @@ collapsed(alg, idx, ext::ContinuousExtent, lhs, f::typeof(+), rhs) = begin
         if query(call(==, measure(ext), 0), LowerJulia())
             assign(lhs, f, literal(0))
         else
+            #display(getstart(ext))
+            #display(getstop(ext))
+            #println(query(getstart(ext), LowerJulia(), verbose=true))
+            #println(query(getstop(ext), LowerJulia(), verbose=true))
+            #println()
             assign(lhs, f, call(*, call(drop_eps, measure(ext)), a1..., a2..., call(d, i1..., i2...)))
         end
     else # Counting

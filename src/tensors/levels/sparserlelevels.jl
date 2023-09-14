@@ -252,7 +252,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, su
             end,
             body = (ctx) -> Sequence([
                 Phase(
-                    stop = (ctx, ext) -> value(my_i_end),
+                    stop = (ctx, ext) -> value(my_i_end, lvl.Ti),
                     body = (ctx, ext) -> Stepper(
                         seek = (ctx, ext) -> quote
                             if $(lvl.ex).right[$my_q] < $(ctx(getstart(ext)))
@@ -263,11 +263,11 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, su
                             $my_i_start = $(lvl.ex).left[$my_q]
                             $my_i_stop = $(lvl.ex).right[$my_q]
                         end,
-                        stop = (ctx, ext) -> value(my_i_stop),
+                        stop = (ctx, ext) -> value(my_i_stop, lvl.Ti),
                         body = (ctx, ext) -> Thunk( 
                             body = (ctx) -> Sequence([
                                 Phase(
-                                    stop = (ctx, ext) -> call(-, value(my_i_start), getunit(ext)),
+                                    stop = (ctx, ext) -> call(-, value(my_i_start, lvl.Ti), getunit(ext)),
                                     body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
                                 ),
                                 Phase(
@@ -279,7 +279,8 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, su
                             epilogue = quote
                                 $my_q += ($(ctx(getstop(ext))) == $my_i_stop)
                             end
-                        )
+                        ),
+                        #finalstop = (ctx, ext) -> value(my_i_end, lvl.Ti),
                     )
                 ),
                 Phase(

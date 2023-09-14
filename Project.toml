@@ -15,6 +15,7 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 RewriteTools = "5969e224-3634-4c61-9f66-721b69e98b8a"
 SyntaxInterface = "b33eeca9-aacb-4496-a840-e75f1646a4fb"
+Z3 = "06b161dc-0161-11ea-0f74-41f836f4024b"
 
 [weakdeps]
 HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
@@ -39,6 +40,7 @@ Requires = "1"
 RewriteTools = "0.1"
 SyntaxInterface = "0.2.1"
 julia = "1.6.7"
+Z3 = "0.4.3"
 
 [extras]
 ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"

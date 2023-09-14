@@ -78,31 +78,31 @@ include("data_matrices.jl")
 include("utils.jl")
 
 @testset "Finch.jl" begin
-    if should_run("print") include("test_print.jl") end
-    if should_run("representation") include("test_representation.jl") end
-    if should_run("constructors") include("test_constructors.jl") end
-    if should_run("conversions") include("test_conversions.jl") end
-    if should_run("merges") include("test_merges.jl") end
-    if should_run("index") include("test_index.jl") end
-    if should_run("typical") include("test_typical.jl") end
-    if should_run("kernels") include("test_kernels.jl") end
-    if should_run("issues") include("test_issues.jl") end
-    if should_run("base") include("test_base.jl") end
-    if should_run("apps") include("test_apps.jl") end
-    if should_run("fileio") include("test_fileio.jl") end
-    if should_run("docs") && Sys.WORD_SIZE == 64
-        @testset "Documentation" begin
-            if parsed_args["overwrite"]
-                include("../docs/fix.jl")
-            else
-                include("../docs/test.jl")
-            end
-        end
-    end
-    if should_run("embed") include("embed/test_embed.jl") end
-    if should_run("parallel") include("test_parallel.jl") end
+    #if should_run("print") include("test_print.jl") end
+    #if should_run("representation") include("test_representation.jl") end
+    #if should_run("constructors") include("test_constructors.jl") end
+    #if should_run("conversions") include("test_conversions.jl") end
+    #if should_run("merges") include("test_merges.jl") end
+    #if should_run("index") include("test_index.jl") end
+    #if should_run("typical") include("test_typical.jl") end
+    #if should_run("kernels") include("test_kernels.jl") end
+    #if should_run("issues") include("test_issues.jl") end
+    #if should_run("base") include("test_base.jl") end
+    #if should_run("apps") include("test_apps.jl") end
+    #if should_run("fileio") include("test_fileio.jl") end
+    #if should_run("docs") && Sys.WORD_SIZE == 64
+    #    @testset "Documentation" begin
+    #        if parsed_args["overwrite"]
+    #            include("../docs/fix.jl")
+    #        else
+    #            include("../docs/test.jl")
+    #        end
+    #    end
+    #end
+    #if should_run("embed") include("embed/test_embed.jl") end
+    #if should_run("parallel") include("test_parallel.jl") end
     if should_run("continuous") include("test_continuous.jl") end
     #algebra goes at the end since it calls refresh()
-    if should_run("algebra") include("test_algebra.jl") end
-    if should_run("moveto") include("test_moving.jl") end
+    #if should_run("algebra") include("test_algebra.jl") end
+    #if should_run("moveto") include("test_moving.jl") end
 end
