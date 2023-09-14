@@ -60,6 +60,8 @@ You can call [`@finch_code`](@ref) to see the generated code (since `A` is dense
 code is dense):
 ```jldoctest example1; setup=:(using Finch; A = rand(5, 5); s = Scalar(0))
 julia> @finch_code for i=_, j=_ ; s[] += A[i, j] end
+┌ Warning: Performance Warning: non-concordant traversal of A[i, j] (hint: most arrays prefer column major or first index fast)
+└ @ Finch ~/Projects/Finch.jl/src/transforms/concordize.jl:136
 quote
     s = ex.body.body.lhs.tns.bind
     s_val = s.val

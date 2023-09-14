@@ -13,13 +13,13 @@
 
     @test B() == 0.0
 
-    @test check_output("sieve_hl_select.jl", @finch_code (for j=_; if diagmask[3, j] B[] += A[j] end end))
+    @test check_output("sieve_hl_select.jl", @finch_code (for j=_; if diagmask[j, 3] B[] += A[j] end end))
 
-    @finch (B .= 0; for j=_; if diagmask[3, j] B[] += A[j] end end)
+    @finch (B .= 0; for j=_; if diagmask[j, 3] B[] += A[j] end end)
 
     @test B() == 3.0
 
-    @finch (B .= 0; for j=_; if diagmask[4, j] B[] += A[j] end end)
+    @finch (B .= 0; for j=_; if diagmask[j, 4] B[] += A[j] end end)
 
     @test B() == 0.0
 
@@ -168,7 +168,7 @@
             for i = _
                 for j = _
                     for k = _
-                        x[] += swizzle(A, 3, 2, 1)[k, j, i]
+                        x[] += swizzle(A, 3, 2, 1)[i, j, k]
                     end
                 end
             end
@@ -182,7 +182,7 @@
             for i = _
                 for j = _
                     for k = _
-                        x[] += A[i, j, k]
+                        x[] += A[k, j, i]
                     end
                 end
             end

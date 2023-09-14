@@ -89,6 +89,8 @@ Note the double for loop in the following code
 
 # output
 
+┌ Warning: Performance Warning: non-concordant traversal of A[i, j] (hint: most arrays prefer column major or first index fast)
+└ @ Finch ~/Projects/Finch.jl/src/transforms/concordize.jl:136
 quote
     s = ex.body.body.lhs.tns.bind
     s_val = s.val

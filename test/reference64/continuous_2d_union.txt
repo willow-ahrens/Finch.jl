@@ -19,9 +19,11 @@ quote
     z_lvl_qos_stop = 0
     z_lvl_2_qos_fill = 0
     z_lvl_2_qos_stop = 0
+    z_lvl_2_prev_pos = 0
     Finch.resize_if_smaller!(z_lvl.ptr, 1 + 1)
     Finch.fill_range!(z_lvl.ptr, 0, 1 + 1, 1 + 1)
     z_lvl_qos = 0 + 1
+    0 < 1 || throw(FinchProtocolError("SparseRLELevels cannot be updated multiple times"))
     y_lvl_q = y_lvl.ptr[1]
     y_lvl_q_stop = y_lvl.ptr[1 + 1]
     if y_lvl_q < y_lvl_q_stop
@@ -64,6 +66,7 @@ quote
                 end
                 z_lvldirty = false
                 z_lvl_2_qos = z_lvl_2_qos_fill + 1
+                z_lvl_2_prev_pos < z_lvl_qos || throw(FinchProtocolError("SparseRLELevels cannot be updated multiple times"))
                 y_lvl_2_q = y_lvl_2.ptr[y_lvl_q]
                 y_lvl_2_q_stop = y_lvl_2.ptr[y_lvl_q + 1]
                 if y_lvl_2_q < y_lvl_2_q_stop
@@ -98,6 +101,7 @@ quote
                                 z_lvl_2.left[z_lvl_2_qos] = phase_start_8
                                 z_lvl_2.right[z_lvl_2_qos] = phase_stop_6
                                 z_lvl_2_qos += 1
+                                z_lvl_2_prev_pos = z_lvl_qos
                             end
                             y_lvl_2_q += phase_stop_6 == y_lvl_2_i_stop
                             j = phase_stop_6 + limit(0+ϵ)
@@ -124,6 +128,7 @@ quote
                 end
                 z_lvldirty = false
                 z_lvl_2_qos_2 = z_lvl_2_qos_fill + 1
+                z_lvl_2_prev_pos < z_lvl_qos || throw(FinchProtocolError("SparseRLELevels cannot be updated multiple times"))
                 x_lvl_2_q = x_lvl_2.ptr[x_lvl_q]
                 x_lvl_2_q_stop = x_lvl_2.ptr[x_lvl_q + 1]
                 if x_lvl_2_q < x_lvl_2_q_stop
@@ -158,6 +163,7 @@ quote
                                 z_lvl_2.left[z_lvl_2_qos_2] = phase_start_14
                                 z_lvl_2.right[z_lvl_2_qos_2] = phase_stop_12
                                 z_lvl_2_qos_2 += 1
+                                z_lvl_2_prev_pos = z_lvl_qos
                             end
                             x_lvl_2_q += phase_stop_12 == x_lvl_2_i_stop
                             j = phase_stop_12 + limit(0+ϵ)
@@ -183,6 +189,7 @@ quote
                 end
                 z_lvldirty = false
                 z_lvl_2_qos_3 = z_lvl_2_qos_fill + 1
+                z_lvl_2_prev_pos < z_lvl_qos || throw(FinchProtocolError("SparseRLELevels cannot be updated multiple times"))
                 x_lvl_2_q_2 = x_lvl_2.ptr[x_lvl_q]
                 x_lvl_2_q_stop_2 = x_lvl_2.ptr[x_lvl_q + 1]
                 if x_lvl_2_q_2 < x_lvl_2_q_stop_2
@@ -229,6 +236,7 @@ quote
                             z_lvl_2.left[z_lvl_2_qos_3] = phase_start_20
                             z_lvl_2.right[z_lvl_2_qos_3] = phase_stop_20
                             z_lvl_2_qos_3 += 1
+                            z_lvl_2_prev_pos = z_lvl_qos
                         end
                         phase_start_21 = max(phase_start_18, y_lvl_2_i_start_2)
                         phase_stop_21 = min(phase_stop_18, limit(0-ϵ) + x_lvl_2_i_start_2)
@@ -246,6 +254,7 @@ quote
                             z_lvl_2.left[z_lvl_2_qos_3] = phase_start_21
                             z_lvl_2.right[z_lvl_2_qos_3] = phase_stop_21
                             z_lvl_2_qos_3 += 1
+                            z_lvl_2_prev_pos = z_lvl_qos
                         end
                         phase_start_22 = max(phase_start_18, x_lvl_2_i_start_2, y_lvl_2_i_start_2)
                         if phase_stop_18 >= phase_start_22
@@ -263,6 +272,7 @@ quote
                             z_lvl_2.left[z_lvl_2_qos_3] = phase_start_22
                             z_lvl_2.right[z_lvl_2_qos_3] = phase_stop_18
                             z_lvl_2_qos_3 += 1
+                            z_lvl_2_prev_pos = z_lvl_qos
                         end
                         x_lvl_2_q_2 += phase_stop_18 == x_lvl_2_i_stop_2
                         y_lvl_2_q_2 += phase_stop_18 == y_lvl_2_i_stop_2
@@ -297,6 +307,7 @@ quote
                                 z_lvl_2.left[z_lvl_2_qos_3] = phase_start_26
                                 z_lvl_2.right[z_lvl_2_qos_3] = phase_stop_24
                                 z_lvl_2_qos_3 += 1
+                                z_lvl_2_prev_pos = z_lvl_qos
                             end
                             y_lvl_2_q_2 += phase_stop_24 == y_lvl_2_i_stop_2
                             j = phase_stop_24 + limit(0+ϵ)
@@ -331,6 +342,7 @@ quote
                                 z_lvl_2.left[z_lvl_2_qos_3] = phase_start_30
                                 z_lvl_2.right[z_lvl_2_qos_3] = phase_stop_28
                                 z_lvl_2_qos_3 += 1
+                                z_lvl_2_prev_pos = z_lvl_qos
                             end
                             x_lvl_2_q_2 += phase_stop_28 == x_lvl_2_i_stop_2
                             j = phase_stop_28 + limit(0+ϵ)
@@ -374,6 +386,7 @@ quote
                     end
                     z_lvldirty = false
                     z_lvl_2_qos_4 = z_lvl_2_qos_fill + 1
+                    z_lvl_2_prev_pos < z_lvl_qos || throw(FinchProtocolError("SparseRLELevels cannot be updated multiple times"))
                     x_lvl_2_q_3 = x_lvl_2.ptr[x_lvl_q]
                     x_lvl_2_q_stop_3 = x_lvl_2.ptr[x_lvl_q + 1]
                     if x_lvl_2_q_3 < x_lvl_2_q_stop_3
@@ -408,6 +421,7 @@ quote
                                     z_lvl_2.left[z_lvl_2_qos_4] = phase_start_39
                                     z_lvl_2.right[z_lvl_2_qos_4] = phase_stop_37
                                     z_lvl_2_qos_4 += 1
+                                    z_lvl_2_prev_pos = z_lvl_qos
                                 end
                                 x_lvl_2_q_3 += phase_stop_37 == x_lvl_2_i_stop_3
                                 j = phase_stop_37 + limit(0+ϵ)
@@ -451,6 +465,7 @@ quote
                     end
                     z_lvldirty = false
                     z_lvl_2_qos_5 = z_lvl_2_qos_fill + 1
+                    z_lvl_2_prev_pos < z_lvl_qos || throw(FinchProtocolError("SparseRLELevels cannot be updated multiple times"))
                     y_lvl_2_q_3 = y_lvl_2.ptr[y_lvl_q]
                     y_lvl_2_q_stop_3 = y_lvl_2.ptr[y_lvl_q + 1]
                     if y_lvl_2_q_3 < y_lvl_2_q_stop_3
@@ -485,6 +500,7 @@ quote
                                     z_lvl_2.left[z_lvl_2_qos_5] = phase_start_48
                                     z_lvl_2.right[z_lvl_2_qos_5] = phase_stop_46
                                     z_lvl_2_qos_5 += 1
+                                    z_lvl_2_prev_pos = z_lvl_qos
                                 end
                                 y_lvl_2_q_3 += phase_stop_46 == y_lvl_2_i_stop_3
                                 j = phase_stop_46 + limit(0+ϵ)
