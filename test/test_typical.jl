@@ -69,7 +69,7 @@
 
         @repl io A = Fiber!(Dense(SparseList(Element(0.0))), [0 0 3.3; 1.1 0 0; 2.2 0 4.4; 0 0 5.5])
         @repl io B = Fiber!(SparseHash{2}(Element(0.0)))
-        @repl io @finch_code mode=finchfast begin
+        @repl io @finch_code mode=fastfinch begin
             B .= 0
             for j = _
                 for i = _
@@ -77,7 +77,7 @@
                 end
             end
         end
-        @repl io @finch mode=finchfast begin
+        @repl io @finch mode=fastfinch begin
             B .= 0
             for j = _
                 for i = _
