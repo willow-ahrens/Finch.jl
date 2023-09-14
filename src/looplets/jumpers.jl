@@ -65,7 +65,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::JumperStyle)
         push!(ctx_2.code.preamble, :($i0 = $i))
         i1 = freshen(ctx_2.code, i)
 
-        ext_1 = bound_measure_below!(similar_extent(root.ext, value(i0), getstop(root.ext)), get_smallest_measure(root.ext))
+        ext_1 = bound_measure_below!(ctx_2, similar_extent(root.ext, value(i0), getstop(root.ext)), get_smallest_measure(root.ext))
         ext_2 = mapreduce((node)->phase_range(node, ctx_2, ext_1), (a, b) -> virtual_union(ctx_2, a, b), PostOrderDFS(body_1))
         ext_3 = virtual_intersect(ctx_2, ext_1, ext_2)
         ext_4 = cache_dim!(ctx_2, :phase, ext_3)
@@ -109,7 +109,7 @@ function phase_range(node::AcceptJumper, ctx, ext)
     node = node.jumper
     push!(ctx.code.preamble, node.preamble !== nothing ? node.preamble : quote end)
     ext_2 = similar_extent(ext, getstart(ext), node.stop(ctx, ext))
-    bound_measure_below!(ext_2, get_smallest_measure(ext))
+    bound_measure_below!(ctx, ext_2, get_smallest_measure(ext))
 end
 
 function phase_body(node::AcceptJumper, ctx, ext, ext_2)

@@ -271,6 +271,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, su
                                     body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
                                 ),
                                 Phase(
+                                    stop = (ctx, ext) -> value(my_i_stop, lvl.Ti),
                                     body = (ctx,ext) -> Run(
                                         body = Simplify(instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q)), ctx, subprotos))
                                     )
@@ -280,10 +281,11 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, su
                                 $my_q += ($(ctx(getstop(ext))) == $my_i_stop)
                             end
                         ),
-                        #finalstop = (ctx, ext) -> value(my_i_end, lvl.Ti),
+                        finalstop = (ctx, ext) -> value(my_i_end, lvl.Ti),
                     )
                 ),
                 Phase(
+                    stop = (ctx, ext) -> lvl.shape,
                     body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))
                 )
             ])

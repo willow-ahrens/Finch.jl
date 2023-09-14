@@ -7,7 +7,7 @@ struct StepperStyle end
     next = (ctx, ext) -> nothing
     body = (ctx, ext) -> chunk
     seek = (ctx, start) -> error("seek not implemented error")
-    finalstop = nothing
+    finalstop = (ctx, ext) -> nothing
 end
 
 @kwdef struct AcceptStepper
@@ -67,8 +67,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::StepperStyle)
         push!(ctx_2.code.preamble, :($i0 = $i))
         i1 = freshen(ctx_2.code, i)
 
-        #ext_1 = bound_measure_below!(similar_extent(root.ext, value(i0), getstop(root.ext)), get_smallest_measure(root.ext))
-        ext_1 = similar_extent(root.ext, value(i0), getstop(root.ext))
+        ext_1 = bound_measure_below!(ctx_2, similar_extent(root.ext, value(i0), getstop(root.ext)), get_smallest_measure(root.ext))
         ext_2 = mapreduce((node)->phase_range(node, ctx_2, ext_1), (a, b) -> virtual_intersect(ctx_2, a, b), PostOrderDFS(body_1))
         ext_3 = virtual_intersect(ctx_2, ext_1, ext_2)
         ext_4 = cache_dim!(ctx_2, :phase, ext_3)
@@ -111,12 +110,12 @@ end
 function phase_range(node::AcceptStepper, ctx, ext)
     node = node.stepper
     push!(ctx.code.preamble, node.preamble !== nothing ? node.preamble : quote end)
-    if node.finalstop !== nothing
-        ext_2 = similar_extent(ext, getstart(ext), bound_above!(node.stop(ctx, ext), node.finalstop))
+    if node.finalstop(ctx, ext) !== nothing
+        ext_2 = similar_extent(ext, getstart(ext), bound_above!(ctx, node.stop(ctx, ext), node.finalstop(ctx, ext)))
     else
         ext_2 = similar_extent(ext, getstart(ext), node.stop(ctx, ext))
     end
-    bound_measure_below!(ext_2, get_smallest_measure(ext))
+    bound_measure_below!(ctx, ext_2, get_smallest_measure(ext))
 end
 
 function phase_body(node::AcceptStepper, ctx, ext, ext_2)
@@ -129,7 +128,7 @@ function phase_body(node::AcceptStepper, ctx, ext, ext_2)
                 epilogue = next
             ),
             literal(true) => 
-                truncate(node.chunk, ctx, ext, similar_extent(ext, getstart(ext_2), bound_above!(getstop(ext_2), call(-, getstop(ext), getunit(ext))))),
+                truncate(node.chunk, ctx, ext, similar_extent(ext, getstart(ext_2), bound_above!(ctx, getstop(ext_2), call(-, getstop(ext), getunit(ext))))),
         ])
     else
         node.body(ctx, ext_2)

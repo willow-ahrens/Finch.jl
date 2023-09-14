@@ -30,25 +30,7 @@ function phase_body(node::FinchNode, ctx, ext, ext_2)
     end
 end
 
-function phase_body(node::Phase, ctx, ext, ext_2) 
-    body = node.body(ctx, ext_2)
-    if body isa Stepper
-
-        return Stepper(preamble = body.preamble,
-                       stop = body.stop,
-                       chunk = body.chunk,
-                       next = body.next,
-                       body = body.body,
-                       seek = body.seek,
-                       finalstop = getstop(phase_range(node, ctx, ext))
-                       #finalstop = nothing
-                      )
-    else 
-        return body
-    end
-end
-
-#phase_body(node::Phase, ctx, ext, ext_2) = node.body(ctx, ext_2)
+phase_body(node::Phase, ctx, ext, ext_2) = node.body(ctx, ext_2)
 phase_body(node, ctx, ext, ext_2) = truncate(node, ctx, ext, ext_2)
 
 abstract type PhaseStyle end
@@ -103,6 +85,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::PhaseStyle)
         if query_z3(call(>=, measure(ext_4), 0), ctx, verbose=true)  
             return body
         else
+          println("PHASE ", ctx(getstop(ext_4)), ctx(getstart(ext_4)))
             return quote
                 if $(ctx(getstop(ext_4))) >= $(ctx(getstart(ext_4)))
                     $body

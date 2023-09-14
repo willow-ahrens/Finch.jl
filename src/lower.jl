@@ -8,11 +8,13 @@
     shash = StaticHash()
     program_rules = get_program_rules(algebra, shash)
     bounds_rules = get_bounds_rules(algebra, shash)
+    constraints = Set()
 end
 
+# f : ctx -> ctx(code)
 function contain(f, ctx::LowerJulia)
     contain(ctx.code) do code_2
-        f(LowerJulia(code_2, ctx.algebra, ctx.bindings, ctx.mode, ctx.modes, ctx.scope, ctx.shash, ctx.program_rules, ctx.bounds_rules))
+        f(LowerJulia(code_2, ctx.algebra, ctx.bindings, ctx.mode, ctx.modes, ctx.scope, ctx.shash, ctx.program_rules, ctx.bounds_rules, ctx.constraints))
     end
 end
 
@@ -49,10 +51,16 @@ function cache!(ctx::AbstractCompiler, var, val)
     isconstant(val) && return val
     var = freshen(ctx.code,var)
     val = simplify(val, ctx)
+    expr1 = call(==, value(var), val)
+    push!(ctx.constraints, expr1)
+    
     push!(ctx.code.preamble, quote
         $var = $(contain(ctx_2 -> ctx_2(val), ctx))
     end)
-    return cached(value(var, Any), literal(val))
+
+
+    return value(var)
+    #return cached(value(var, Any), literal(val))
 end
 
 resolve(node, ctx) = node

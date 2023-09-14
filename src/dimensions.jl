@@ -54,12 +54,24 @@ Base.:(==)(a::Extent, b::Extent) =
     a.start == b.start &&
     a.stop == b.stop
 
-bound_below!(val, below) = cached(val, literal(call(max, val, below)))
+function bound_below!(ctx, val, below)
+  expr1 = call(>=, val, below)
+  #expr1 = Rewrite(Prewalk(Fixpoint(Chain([@rule(cached(~a, ~b) => a), @rule(~v::isliteral => v.val isa FinchNode ? v.val : v) ]))))(expr1)
+  push!(ctx.constraints, expr1)
+  return val
+  #return cached(val, literal(call(max, val, below)))
+end
 
-bound_above!(val, above) = cached(val, literal(call(min, val, above)))
+function bound_above!(ctx, val, above)
+  expr1 = call(<=, val, above)
+  #expr1 = Rewrite(Prewalk(Fixpoint(Chain([@rule(cached(~a, ~b) => a), @rule(~v::isliteral => v.val isa FinchNode ? v.val : v) ]))))(expr1)
+  push!(ctx.constraints, expr1)
+  return val
+  #return cached(val, literal(call(min, val, above)))
+end
 
-bound_measure_below!(ext::Extent, m) = Extent(ext.start, bound_below!(ext.stop, call(+, ext.start, m)))
-bound_measure_above!(ext::Extent, m) = Extent(ext.start, bound_above!(ext.stop, call(+, ext.start, m)))
+bound_measure_below!(ctx, ext::Extent, m) = Extent(ext.start, bound_below!(ctx, ext.stop, call(+, ext.start, m)))
+bound_measure_above!(ctx, ext::Extent, m) = Extent(ext.start, bound_above!(ctx, ext.stop, call(+, ext.start, m)))
 
 cache_dim!(ctx, var, ext::Extent) = Extent(
     start = cache!(ctx, Symbol(var, :_start), ext.start),
@@ -108,6 +120,7 @@ function checklim(ctx, a::FinchNode, b::FinchNode)
         push!(ctx.code.preamble, quote
             $(ctx(a)) == $(ctx(b)) || throw(DimensionMismatch("mismatched dimension limits ($($(ctx(a))) != $($(ctx(b))))"))
         end)
+        push!(ctx.constraints, call(==, a, b))
         a
     else
         b
@@ -215,8 +228,8 @@ is_continuous_extent(x::FinchNode) = x.kind === virtual ? is_continuous_extent(x
 Base.:(==)(a::ContinuousExtent, b::ContinuousExtent) = a.start == b.start && a.stop == b.stop
 Base.:(==)(a::Extent, b::ContinuousExtent) = throw(ArgumentError("Extent and ContinuousExtent cannot interact ...yet"))
 
-bound_measure_below!(ext::ContinuousExtent, m) = ContinuousExtent(ext.start, bound_below!(ext.stop, call(+, ext.start, m)))
-bound_measure_above!(ext::ContinuousExtent, m) = ContinuousExtent(ext.start, bound_above!(ext.stop, call(+, ext.start, m)))
+bound_measure_below!(ctx, ext::ContinuousExtent, m) = ContinuousExtent(ext.start, bound_below!(ctx, ext.stop, call(+, ext.start, m)))
+bound_measure_above!(ctx, ext::ContinuousExtent, m) = ContinuousExtent(ext.start, bound_above!(ctx, ext.stop, call(+, ext.start, m)))
 
 cache_dim!(ctx, var, ext::ContinuousExtent) = ContinuousExtent(
     start = cache!(ctx, Symbol(var, :_start), ext.start),
@@ -250,16 +263,16 @@ is_continuous_extent(x::ParallelDimension) = is_continuous_extent(x.dim)
 function virtual_intersect(ctx, a::ContinuousExtent, b::ContinuousExtent)
     ContinuousExtent(
         start = if query_z3(call(<=, getstart(a), getstart(b)), ctx)
-                    getstart(b)
+                    bound_below!(ctx, getstart(b), getstart(a))
                 elseif query_z3(call(<=, getstart(b), getstart(a)), ctx)
-                    getstart(a)
+                    bound_below!(ctx, getstart(a), getstart(b))
                 else
                     @f(max($(getstart(a)), $(getstart(b))))
                 end,
         stop =  if query_z3(call(<=, getstop(a), getstop(b)), ctx)
-                    getstop(a)
+                    bound_above!(ctx, getstop(a), getstop(b))
                 elseif query_z3(call(<=, getstop(b), getstop(a)), ctx)
-                    getstop(b)
+                    bound_above!(ctx, getstop(b), getstop(a))
                 else
                     @f(min($(getstop(a)), $(getstop(b))))
                 end
