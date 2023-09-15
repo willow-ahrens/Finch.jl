@@ -67,9 +67,9 @@ get_spike_tail(node, ctx, ext, ext_2) = node
 get_spike_tail(node::Spike, ctx, ext, ext_2) = Run(node.tail)
 
 function truncate(node::Spike, ctx, ext, ext_2)
-    if query(call(>=, call(-, getstop(ext), getunit(ext)), getstop(ext_2)), ctx)
+    if query_z3(call(>=, call(-, getstop(ext), getunit(ext)), getstop(ext_2)), ctx)
         Run(node.body)
-    elseif query(call(==, getstop(ext), getstop(ext_2)), ctx)
+    elseif query_z3(call(==, getstop(ext), getstop(ext_2)), ctx)
         node
     else
         return Switch([
