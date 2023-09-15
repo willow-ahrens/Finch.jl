@@ -81,14 +81,14 @@ using CIndices
         t = Fiber!(SparseList(SparseList(Element(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
         A = dropdefaults(copyto!(Fiber!(SparseList(SparseList(Element(0.0)))), B))
-        @test_logs (:warn, "PerformanceWarning") @test_throws Finch.FinchProtocolError @finch algebra=MyAlgebra() (t .= 0; for i=_, j=_; t[i, j] = A[i, j] end)
+        @test_logs (Test.Logging.Warn, "Performance Warning") @test_throws Finch.FinchProtocolError @finch algebra=MyAlgebra() (t .= 0; for i=_, j=_; t[i, j] = A[i, j] end)
     end
 
     let
         t = Fiber!(Dense(SparseList(Element(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
         A = dropdefaults(copyto!(Fiber!(Dense(SparseList(Element(0.0)))), B))
-        @test_logs (:warn, "PerformanceWarning") @test_throws Finch.FinchProtocolError @finch algebra=MyAlgebra() (t .= 0; for i=_, j=_; t[i, j] = A[i, j] end)
+        @test_logs (:warn, "Performance Warning") @test_throws Finch.FinchProtocolError @finch algebra=MyAlgebra() (t .= 0; for i=_, j=_; t[i, j] = A[i, j] end)
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/129
