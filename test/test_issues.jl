@@ -81,14 +81,14 @@ using CIndices
         t = Fiber!(SparseList(SparseList(Element(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
         A = dropdefaults(copyto!(Fiber!(SparseList(SparseList(Element(0.0)))), B))
-        @test_throws Finch.FinchProtocolError @finch algebra=MyAlgebra() mode=safefinch (t .= 0; for i=_, j=_; t[i, j] = A[i, j] end)
+        @test_logs (:warn, "Performance Warning: non-concordant traversal of t[i, j] (hint: most arrays prefer column major or first index fast, run in fast mode to ignore this warning)") match_mode=:any @test_throws Finch.FinchProtocolError @finch algebra=MyAlgebra() (t .= 0; for i=_, j=_; t[i, j] = A[i, j] end)
     end
 
     let
         t = Fiber!(Dense(SparseList(Element(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
         A = dropdefaults(copyto!(Fiber!(Dense(SparseList(Element(0.0)))), B))
-        @test_throws Finch.FinchProtocolError @finch algebra=MyAlgebra() mode=safefinch (t .= 0; for i=_, j=_; t[i, j] = A[i, j] end)
+        @test_logs (:warn, "Performance Warning: non-concordant traversal of t[i, j] (hint: most arrays prefer column major or first index fast, run in fast mode to ignore this warning)") match_mode=:any @test_throws Finch.FinchProtocolError @finch algebra=MyAlgebra() (t .= 0; for i=_, j=_; t[i, j] = A[i, j] end)
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/129
@@ -229,7 +229,6 @@ using CIndices
         A = fsprand((10, 11), 0.5)
         B = fsprand((10, 10), 0.5)
         @test_throws Finch.FinchProtocolError @finch for j=_, i=_; A[i, j] = B[i, follow(j)] end
-        @test_throws Finch.FinchProtocolError @finch for j=_, i=_; A[j, i] = B[i, j] end
         @test_throws ArgumentError Fiber!(SparseCOO(Element(0.0)))
         @test_throws ArgumentError Fiber!(SparseHash(Element(0.0)))
         @test_throws ArgumentError Fiber!(SparseList(Element("hello")))

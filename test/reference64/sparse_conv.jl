@@ -9,6 +9,7 @@ begin
     Finch.resize_if_smaller!(C_lvl.ptr, 1 + 1)
     Finch.fill_range!(C_lvl.ptr, 0, 1 + 1, 1 + 1)
     C_lvl_qos = 0 + 1
+    0 < 1 || throw(FinchProtocolError("SparseListLevels cannot be updated multiple times"))
     A_lvl_q_2 = A_lvl.ptr[1]
     A_lvl_q_stop_2 = A_lvl.ptr[1 + 1]
     if A_lvl_q_2 < A_lvl_q_stop_2
