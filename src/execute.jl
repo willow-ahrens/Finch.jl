@@ -102,6 +102,7 @@ function lower_global(prgm, ctx)
                 prgm = enforce_lifecycles(prgm)
                 prgm = dimensionalize!(prgm, ctx_2)
                 prgm = concordize(prgm, ctx_2)
+                warn_densify(prgm, ctx_2)
                 #prgm = evaluate_partial(prgm, ctx_2)
                 prgm = simplify(prgm, ctx_2) #appears necessary
                 prgm = instantiate!(prgm, ctx_2)

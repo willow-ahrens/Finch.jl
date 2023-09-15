@@ -176,7 +176,7 @@ end
 
 virtual_level_default(lvl::VirtualRepeatRLELevel) = lvl.D
 virtual_level_eltype(lvl::VirtualRepeatRLELevel) = lvl.Tv
-virtual_level_data_rep(lvl::VirtualRepeatRLELevel) = RepeatData(ElementData(lvl.D, lvl.Tv))
+virtual_level_data_rep(lvl::VirtualRepeatRLELevel) = RepeatData(lvl.D, lvl.Tv)
 
 function declare_level!(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, mode, init)
     init == literal(lvl.D) || throw(FinchProtocolError("Cannot initialize RepeatRLE Levels to non-default values"))

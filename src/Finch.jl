@@ -61,6 +61,7 @@ include("lower.jl")
 
 include("transforms/concordize.jl")
 include("transforms/wrapperize.jl")
+include("transforms/warn_densify.jl")
 include("transforms/scopes.jl")
 include("transforms/lifecycle.jl")
 include("transforms/dimensionalize.jl")
