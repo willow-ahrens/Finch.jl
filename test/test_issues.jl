@@ -229,7 +229,6 @@ using CIndices
         A = fsprand((10, 11), 0.5)
         B = fsprand((10, 10), 0.5)
         @test_throws Finch.FinchProtocolError @finch for j=_, i=_; A[i, j] = B[i, follow(j)] end
-        @test_warn "Performance" @test_throws Finch.FinchProtocolError @finch for j=_, i=_; A[j, i] = B[i, j] end
         @test_throws ArgumentError Fiber!(SparseCOO(Element(0.0)))
         @test_throws ArgumentError Fiber!(SparseHash(Element(0.0)))
         @test_throws ArgumentError Fiber!(SparseList(Element("hello")))

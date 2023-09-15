@@ -57,24 +57,6 @@ Dense [1:4]
 ├─[4]: 0.0
 
 julia> A_fbr[:, 3]
-begin
-    #= /Users/willow/Projects/Finch.jl/src/base/index.jl:60 =#
-    win = Fiber!(Dense(Element{0.0, Float64}()))
-    #= /Users/willow/Projects/Finch.jl/src/base/index.jl:61 =#
-    (inds_1, inds_2) = (inds...,)
-    #= /Users/willow/Projects/Finch.jl/src/base/index.jl:62 =#
-    #= /Users/willow/Projects/Finch.jl/src/base/index.jl:62 =# @finch begin
-            #= /Users/willow/Projects/Finch.jl/src/base/index.jl:63 =#
-            win .= 0.0
-            #= /Users/willow/Projects/Finch.jl/src/base/index.jl:64 =#
-            for mode_1 = _
-                #= /Users/willow/Projects/Finch.jl/src/base/index.jl:65 =#
-                win[mode_1] = arr[mode_1, inds_2]
-            end
-        end
-    #= /Users/willow/Projects/Finch.jl/src/base/index.jl:68 =#
-    return win
-end
 Dense [1:4]
 ├─[1]: 4.4
 ├─[2]: 0.0

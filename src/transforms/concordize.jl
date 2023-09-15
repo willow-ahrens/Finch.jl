@@ -133,7 +133,9 @@ function concordize(root, ctx::AbstractCompiler)
             if @capture node access(~tns, ~mode, ~i...)
                 for n in 1:length(i)
                     if 1 <= depth(i[n]) < maximum(depth.(i[n+1:end]), init=0)
-                        error("Performance Warning: non-concordant traversal of $(sprint(show, MIME"text/plain"(), node)) (hint: most arrays prefer column major or first index fast, run in fast mode to ignore this warning)")
+                        push!(ctx.code.preamble, quote
+                            @warn("Performance Warning: non-concordant traversal of $($(sprint(show, MIME"text/plain"(), node))) (hint: most arrays prefer column major or first index fast, run in fast mode to ignore this warning")
+                        end)
                     end
                 end
             end
