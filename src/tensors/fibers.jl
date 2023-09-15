@@ -73,6 +73,7 @@ function virtual_resize!(tns::AbstractVirtualFiber, ctx, dims...)
 end
 virtual_eltype(tns::AbstractVirtualFiber, ctx) = virtual_level_eltype(tns.lvl)
 virtual_default(tns::AbstractVirtualFiber, ctx) = virtual_level_default(tns.lvl)
+virtual_data_rep(tns::AbstractVirtualFiber, ctx) = virtual_level_data_rep(tns.lvl)
 
 
 function declare!(fbr::VirtualFiber, ctx::AbstractCompiler, init)

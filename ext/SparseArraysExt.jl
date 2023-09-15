@@ -136,6 +136,7 @@ Finch.FinchNotation.finch_leaf(x::VirtualSparseMatrixCSC) = virtual(x)
 
 Finch.virtual_default(arr::VirtualSparseMatrixCSC, ctx) = zero(arr.Tv)
 Finch.virtual_eltype(tns::VirtualSparseMatrixCSC, ctx) = tns.Tv
+Finch.virtual_data_rep(vec::VirtualSparseMatrixCSC, ctx) = DenseData(SparseData(ElementData(zero(vec.Tv), vec.Tv)))
 
 @kwdef mutable struct VirtualSparseVector
     ex
@@ -233,8 +234,9 @@ end
 
 Finch.FinchNotation.finch_leaf(x::VirtualSparseVector) = virtual(x)
 
-Finch.virtual_default(arr::VirtualSparseVector, ctx) = zero(arr.Tv)
-Finch.virtual_eltype(tns::VirtualSparseVector, ctx) = tns.Tv
+Finch.virtual_default(vec::VirtualSparseVector, ctx) = zero(vec.Tv)
+Finch.virtual_eltype(vec::VirtualSparseVector, ctx) = vec.Tv
+Finch.virtual_data_rep(vec::VirtualSparseVector, ctx) = SparseData(ElementData(zero(vec.Tv), vec.Tv))
 
 SparseArrays.nnz(fbr::Fiber) = countstored(fbr)
 

@@ -190,6 +190,7 @@ end
 
 virtual_level_eltype(lvl::VirtualSparseListLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSparseListLevel) = virtual_level_default(lvl.lvl)
+virtual_level_data_rep(lvl::VirtualSparseListLevel) = SparseData(virtual_level_data_rep(lvl.lvl))
 
 function declare_level!(lvl::VirtualSparseListLevel, ctx::AbstractCompiler, pos, init)
     #TODO check that init == default

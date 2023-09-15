@@ -215,6 +215,7 @@ end
 
 virtual_level_eltype(lvl::VirtualSparseHashLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSparseHashLevel) = virtual_level_default(lvl.lvl)
+virtual_level_data_rep(lvl::VirtualSparseHashLevel) = (SparseData^(lvl.N))(virtual_level_data_rep(lvl.lvl))
 
 function declare_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos, init)
     Ti = lvl.Ti

@@ -225,6 +225,7 @@ end
 
 virtual_level_eltype(lvl::VirtualSparseCOOLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSparseCOOLevel) = virtual_level_default(lvl.lvl)
+virtual_level_data_rep(lvl::VirtualSparseCOOLevel) = (SparseData^(lvl.N))(virtual_level_data_rep(lvl.lvl))
 
 function declare_level!(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler, pos, init)
     Ti = lvl.Ti

@@ -95,6 +95,7 @@ virtual_level_resize!(lvl::VirtualPatternLevel, ctx) = lvl
 virtual_level_size(::VirtualPatternLevel, ctx) = ()
 virtual_level_default(::VirtualPatternLevel) = false
 virtual_level_eltype(::VirtualPatternLevel) = Bool
+virtual_level_data_rep(lvl::VirtualPatternLevel) = ElementData(false, Bool)
 
 function declare_level!(lvl::VirtualPatternLevel, ctx, pos, init)
     init == literal(false) || throw(FinchProtocolError("Must initialize Pattern Levels to false"))

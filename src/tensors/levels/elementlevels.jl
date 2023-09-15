@@ -115,6 +115,7 @@ virtual_level_resize!(lvl::VirtualElementLevel, ctx) = lvl
 virtual_level_size(::VirtualElementLevel, ctx) = ()
 virtual_level_eltype(lvl::VirtualElementLevel) = lvl.Tv
 virtual_level_default(lvl::VirtualElementLevel) = lvl.D
+virtual_level_data_rep(lvl::VirtualElementLevel) = ElementData(lvl.D, lvl.Tv)
 
 function declare_level!(lvl::VirtualElementLevel, ctx, pos, init)
     init == literal(lvl.D) || throw(FinchProtocolError("Cannot initialize Element Levels to non-default values(have $init expected $(lvl.D))"))

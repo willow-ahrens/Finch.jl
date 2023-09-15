@@ -171,6 +171,7 @@ end
 
 virtual_level_eltype(lvl::VirtualSparseVBLLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSparseVBLLevel) = virtual_level_default(lvl.lvl)
+virtual_level_data_rep(lvl::VirtualSparseVBLLevel) = SparseData(virtual_level_data_rep(lvl.lvl))
 
 function declare_level!(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, pos, init)
     Tp = lvl.Tp

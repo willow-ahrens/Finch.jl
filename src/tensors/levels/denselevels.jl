@@ -141,6 +141,7 @@ end
 
 virtual_level_eltype(lvl::VirtualDenseLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualDenseLevel) = virtual_level_default(lvl.lvl)
+virtual_level_data_rep(lvl::VirtualDenseLevel) = DenseData(virtual_level_data_rep(lvl.lvl))
 
 function declare_level!(lvl::VirtualDenseLevel, ctx::AbstractCompiler, pos, init)
     lvl.lvl = declare_level!(lvl.lvl, ctx, call(*, pos, lvl.shape), init)

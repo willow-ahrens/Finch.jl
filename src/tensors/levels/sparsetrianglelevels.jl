@@ -130,6 +130,7 @@ end
 
 virtual_level_eltype(lvl::VirtualSparseTriangleLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSparseTriangleLevel) = virtual_level_default(lvl.lvl)
+virtual_level_data_rep(lvl::VirtualSparseTriangleLevel) = SparseData(virtual_level_data_rep(lvl.lvl))
 
 function declare_level!(lvl::VirtualSparseTriangleLevel, ctx::AbstractCompiler, pos, init)
     # qos = virtual_simplex(lvl.N, ctx, lvl.shape)

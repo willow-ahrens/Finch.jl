@@ -43,4 +43,5 @@ instantiate_updater(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, protos
 FinchNotation.finch_leaf(x::VirtualAbstractUnitRange) = virtual(x)
 
 virtual_default(::VirtualAbstractUnitRange, ctx) = 0
-virtual_eltype(tns::VirtualAbstractUnitRange, ctx) = tns.eltype
+virtual_eltype(vec::VirtualAbstractUnitRange, ctx) = vec.eltype
+virtual_data_rep(vec::VirtualAbstractUnitRange, ctx) = DenseData(ElementData(zero(vec.eltype), vec.eltype))

@@ -38,7 +38,8 @@ instantiate_updater(arr::VirtualAbstractArray, ctx::AbstractCompiler, subprotos,
 FinchNotation.finch_leaf(x::VirtualAbstractArray) = virtual(x)
 
 virtual_default(::VirtualAbstractArray, ctx) = 0
-virtual_eltype(tns::VirtualAbstractArray, ctx) = tns.eltype
+virtual_eltype(arr::VirtualAbstractArray, ctx) = arr.eltype
+virtual_data_rep(arr::VirtualAbstractArray, ctx) = (DenseData^(arr.ndims))(ElementData(zero(vec.Tv), vec.Tv))
 
 default(a::AbstractArray) = default(typeof(a))
 default(T::Type{<:AbstractArray}) = zero(eltype(T))
