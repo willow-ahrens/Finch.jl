@@ -59,6 +59,8 @@ include("style.jl")
 include("dimensions.jl")
 include("lower.jl")
 
+include("traits.jl")
+
 include("transforms/concordize.jl")
 include("transforms/wrapperize.jl")
 include("transforms/warn_densify.jl")
@@ -110,9 +112,6 @@ include("tensors/combinators/offset.jl")
 include("tensors/combinators/toeplitz.jl")
 include("tensors/combinators/windowed.jl")
 include("tensors/combinators/swizzle.jl")
-
-
-include("traits.jl")
 
 export fsparse, fsparse!, fsprand, fspzeros, ffindnz, fread, fwrite, countstored
 
