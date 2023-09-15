@@ -89,36 +89,44 @@ Note the double for loop in the following code
 
 # output
 
-ERROR: Performance Warning: non-concordant traversal of A[i, j] (hint: most arrays prefer column major or first index fast, run in fast mode to ignore this warning)
-Stacktrace:
-  [1] error(s::String)
-    @ Base ./error.jl:35
-  [2] concordize(root::Finch.FinchNotation.FinchNode, ctx::Finch.LowerJulia)
-    @ Finch ~/Projects/Finch.jl/src/transforms/concordize.jl:136
-  [3] (::Finch.var"#283#287")(ctx_2::Finch.LowerJulia)
-    @ Finch ~/Projects/Finch.jl/src/execute.jl:104
-  [4] #122
-    @ ~/Projects/Finch.jl/src/lower.jl:15 [inlined]
-  [5] contain(f::Finch.var"#122#123"{Finch.var"#283#287", Finch.LowerJulia}, ctx::Finch.JuliaContext)
-    @ Finch ~/Projects/Finch.jl/src/environment.jl:56
-  [6] contain(f::Finch.var"#283#287", ctx::Finch.LowerJulia)
-    @ Finch ~/Projects/Finch.jl/src/lower.jl:14
-  [7] lower_global(prgm::Finch.FinchNotation.FinchNode, ctx::Finch.LowerJulia)
-    @ Finch ~/Projects/Finch.jl/src/execute.jl:98
-  [8] (::Finch.var"#281#282"{Symbol, DataType})(ctx_2::Finch.LowerJulia)
-    @ Finch ~/Projects/Finch.jl/src/execute.jl:86
-  [9] (::Finch.var"#122#123"{Finch.var"#281#282"{Symbol, DataType}, Finch.LowerJulia})(code_2::Finch.JuliaContext)
-    @ Finch ~/Projects/Finch.jl/src/lower.jl:15
- [10] contain(f::Finch.var"#122#123"{Finch.var"#281#282"{Symbol, DataType}, Finch.LowerJulia}, ctx::Finch.JuliaContext)
-    @ Finch ~/Projects/Finch.jl/src/environment.jl:56
- [11] contain(f::Finch.var"#281#282"{Symbol, DataType}, ctx::Finch.LowerJulia)
-    @ Finch ~/Projects/Finch.jl/src/lower.jl:14
- [12] execute_code(ex::Symbol, T::Type; algebra::Finch.DefaultAlgebra, mode::Finch.SafeFinch, ctx::Finch.LowerJulia)
-    @ Finch ~/Projects/Finch.jl/src/execute.jl:83
- [13] execute_code(ex::Symbol, T::Type)
-    @ Finch ~/Projects/Finch.jl/src/execute.jl:82
- [14] top-level scope
-    @ ~/Projects/Finch.jl/src/execute.jl:204
+quote
+    s = ex.body.body.lhs.tns.bind
+    s_val = s.val
+    A_lvl = ex.body.body.rhs.tns.bind.lvl
+    A_lvl_2 = A_lvl.lvl
+    A_lvl_3 = A_lvl_2.lvl
+    @warn "Performance Warning: non-concordant traversal of A[i, j] (hint: most arrays prefer column major or first index fast, run in fast mode to ignore this warning)"
+    for i_3 = 1:A_lvl_2.shape
+        for j_3 = 1:A_lvl.shape
+            A_lvl_q = (1 - 1) * A_lvl.shape + j_3
+            A_lvl_2_q = A_lvl_2.ptr[A_lvl_q]
+            A_lvl_2_q_stop = A_lvl_2.ptr[A_lvl_q + 1]
+            if A_lvl_2_q < A_lvl_2_q_stop
+                A_lvl_2_i1 = A_lvl_2.idx[A_lvl_2_q_stop - 1]
+            else
+                A_lvl_2_i1 = 0
+            end
+            phase_stop = min(i_3, A_lvl_2_i1)
+            if phase_stop >= i_3
+                s_2 = i_3
+                if A_lvl_2.idx[A_lvl_2_q] < i_3
+                    A_lvl_2_q = Finch.scansearch(A_lvl_2.idx, i_3, A_lvl_2_q, A_lvl_2_q_stop - 1)
+                end
+                while s_2 <= phase_stop
+                    A_lvl_2_i = A_lvl_2.idx[A_lvl_2_q]
+                    phase_stop_2 = min(phase_stop, A_lvl_2_i)
+                    if A_lvl_2_i == phase_stop_2
+                        A_lvl_3_val_2 = A_lvl_3.val[A_lvl_2_q]
+                        s_val = A_lvl_3_val_2 + s_val
+                        A_lvl_2_q += 1
+                    end
+                    s_2 = phase_stop_2 + 1
+                end
+            end
+        end
+    end
+    (s = (Scalar){0.0, Float64}(s_val),)
+end
 ```
 
 TL;DR: As a quick heuristic, if your array indices are all in alphabetical order, then
