@@ -127,10 +127,14 @@ visit_simplify(node::VirtualWindowedArray) = VirtualWindowedArray(visit_simplify
     guard => VirtualWindowedArray(body, node.dims)
 end
 
-jumper_body(node::VirtualWindowedArray, ctx, ext) = VirtualWindowedArray(jumper_body(node.body, ctx, ext), node.dims)
-stepper_body(node::VirtualWindowedArray, ctx, ext) = VirtualWindowedArray(stepper_body(node.body, ctx, ext), node.dims)
+stepper_range(node::VirtualWindowedArray, ctx, ext) = stepper_range(node.body, ctx, ext)
+stepper_body(node::VirtualWindowedArray, ctx, ext, ext_2) = VirtualWindowedArray(stepper_body(node.body, ctx, ext, ext_2), node.dims)
 stepper_seek(node::VirtualWindowedArray, ctx, ext) = stepper_seek(node.body, ctx, ext)
+
+jumper_range(node::VirtualWindowedArray, ctx, ext) = jumper_range(node.body, ctx, ext)
+jumper_body(node::VirtualWindowedArray, ctx, ext, ext_2) = VirtualWindowedArray(jumper_body(node.body, ctx, ext, ext_2), node.dims)
 jumper_seek(node::VirtualWindowedArray, ctx, ext) = jumper_seek(node.body, ctx, ext)
+
 
 getroot(tns::VirtualWindowedArray) = getroot(tns.body)
 

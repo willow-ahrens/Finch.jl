@@ -127,9 +127,12 @@ visit_simplify(node::VirtualOffsetArray) = VirtualOffsetArray(visit_simplify(nod
     guard => VirtualOffsetArray(body, node.delta)
 end
 
-jumper_body(node::VirtualOffsetArray, ctx, ext) = VirtualOffsetArray(jumper_body(node.body, ctx, shiftdim(ext, node.delta[end])), node.delta)
-stepper_body(node::VirtualOffsetArray, ctx, ext) = VirtualOffsetArray(stepper_body(node.body, ctx, shiftdim(ext, node.delta[end])), node.delta)
+stepper_range(node::VirtualOffsetArray, ctx, ext) = shiftdim(stepper_range(node.body, ctx, shiftdim(ext, node.delta[end])), call(-, node.delta[end]))
+stepper_body(node::VirtualOffsetArray, ctx, ext, ext_2) = VirtualOffsetArray(stepper_body(node.body, ctx, shiftdim(ext, node.delta[end]), shiftdim(ext_2, node.delta[end])), node.delta)
 stepper_seek(node::VirtualOffsetArray, ctx, ext) = stepper_seek(node.body, ctx, shiftdim(ext, node.delta[end]))
+
+jumper_range(node::VirtualOffsetArray, ctx, ext) = shiftdim(jumper_range(node.body, ctx, shiftdim(ext, node.delta[end])), call(-, node.delta[end]))
+jumper_body(node::VirtualOffsetArray, ctx, ext, ext_2) = VirtualOffsetArray(jumper_body(node.body, ctx, shiftdim(ext, node.delta[end]), shiftdim(ext_2, node.delta[end])), node.delta)
 jumper_seek(node::VirtualOffsetArray, ctx, ext) = jumper_seek(node.body, ctx, shiftdim(ext, node.delta[end]))
 
 getroot(tns::VirtualOffsetArray) = getroot(tns.body)
