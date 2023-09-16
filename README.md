@@ -19,7 +19,7 @@
 Finch is a adaptable Julia-to-Julia compiler for loop nests over sparse or
 structured multidimensional arrays.  Finch allows you to write `for`-loops as if
 they are dense, but compile them to be sparse! Finch compiles the loops based on
-the structure of the data! The compiler takes care of applying rules like `x * 0
+the structure of the data. The compiler takes care of applying rules like `x * 0
 => 0` and the like to avoid redundant computation. 
 
 | **Features**                             | **Syntax (e.g. ...)** |

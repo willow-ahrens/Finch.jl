@@ -7,6 +7,7 @@ begin
     A_lvl_3 = A_lvl_2.lvl
     B_lvl_2_qos_fill = 0
     B_lvl_2_qos_stop = 0
+    B_lvl_2_prev_pos = 0
     p_start_2 = A_lvl.shape
     Finch.resize_if_smaller!(B_lvl_2.ptr, p_start_2 + 1)
     Finch.fill_range!(B_lvl_2.ptr, 0, 1 + 1, p_start_2 + 1)
@@ -14,6 +15,7 @@ begin
         B_lvl_q = (1 - 1) * A_lvl.shape + j_4
         A_lvl_q = (1 - 1) * A_lvl.shape + j_4
         B_lvl_2_qos = B_lvl_2_qos_fill + 1
+        B_lvl_2_prev_pos < B_lvl_q || throw(FinchProtocolError("SparseListLevels cannot be updated multiple times"))
         for i_4 = 1:A_lvl.shape
             if B_lvl_2_qos > B_lvl_2_qos_stop
                 B_lvl_2_qos_stop = max(B_lvl_2_qos_stop << 1, 1)
@@ -68,6 +70,7 @@ begin
             if B_lvl_2dirty
                 B_lvl_2.idx[B_lvl_2_qos] = i_4
                 B_lvl_2_qos += 1
+                B_lvl_2_prev_pos = B_lvl_q
             end
         end
         B_lvl_2.ptr[B_lvl_q + 1] = (B_lvl_2_qos - B_lvl_2_qos_fill) - 1

@@ -59,7 +59,9 @@ quote
                     end
                 end), (;))
     begin
-        C = Finch.get(_res_1, :C, C)
+        if Finch.haskey(_res_1, :C)
+            C = _res_1[:C]
+        end
     end
     begin
         _res_1

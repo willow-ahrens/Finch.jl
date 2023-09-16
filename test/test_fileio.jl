@@ -61,15 +61,15 @@ using Pkg
     if haskey(Pkg.project().dependencies, "NPZ")
         using NPZ
         using CIndices
-        @info "Testing NPYD fileio"
-        @testset "npyd binsparse" begin
+        @info "Testing NPY fileio"
+        @testset "npy binsparse" begin
             mktempdir() do f
                 A = [0.0 1.0 2.0 2.0 ;
                 0.0 0.0 0.0 0.0 ;
                 1.0 1.0 2.0 0.0 ;
                 0.0 0.0 0.0 1.0 ]
                 A_COO = Fiber!(SparseCOO{2}(Element(0.0)), A)
-                A_COO_fname = joinpath(f, "A_COO.bsp.npyd")
+                A_COO_fname = joinpath(f, "A_COO.bspnpy")
                 fwrite(A_COO_fname, A_COO)
                 A_COO_test = fread(A_COO_fname)
                 @test A_COO_test == A_COO
@@ -104,7 +104,7 @@ using Pkg
                             ]
                                 @testset "binsparse $name($D)" begin
                                     fmt = copyto!(fmt, A)
-                                    fname = joinpath(f, "A$(iA)_D$(iD)_$name.bsp.npyd")
+                                    fname = joinpath(f, "A$(iA)_D$(iD)_$name.bspnpy")
                                     bspwrite(fname, fmt)
                                     @test Structure(fmt) == Structure(bspread(fname))
                                 end
