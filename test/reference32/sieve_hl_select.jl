@@ -21,8 +21,8 @@ begin
             A_lvl_i = A_lvl.idx[A_lvl_q]
             phase_stop_3 = min(phase_stop_2, A_lvl_i)
             if A_lvl_i == phase_stop_3
-                A_lvl_2_val_2 = A_lvl_2.val[A_lvl_q]
-                B_val = A_lvl_2_val_2 + B_val
+                A_lvl_2_val_3 = A_lvl_2.val[A_lvl_q]
+                B_val = A_lvl_2_val_3 + B_val
                 A_lvl_q += 1
             end
             j = phase_stop_3 + 1
