@@ -34,12 +34,13 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  ::LookupStyle)
                     end
                 end
             ))(root.body)
+            body_3 = simplify(body_3, ctx)
             open_scope(body_3, ctx_2)
         end
+
         @assert isvirtual(root.ext)
 
-        target = is_continuous_extent(root.ext) ? 0 : 1
-        if query(call(==, measure(root.ext.val), target), ctx)
+        if query_z3(call(==, measure(root.ext.val), get_smallest_measure(root.ext.val)), ctx)
             return quote
                 $idx_sym = $(ctx(getstart(root.ext)))
                 $body

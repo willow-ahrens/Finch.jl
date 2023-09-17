@@ -158,6 +158,12 @@ function shiftdim(ext::Extent, delta)
     )
 end
 
+function shiftdim(ext::ContinuousExtent, delta)
+    ContinuousExtent(
+        start = call(+, ext.start, delta),
+        stop = call(+, ext.stop, delta)
+    )
+end
 shiftdim(ext::Dimensionless, delta) = dimless
 shiftdim(ext::ParallelDimension, delta) = ParallelDimension(ext, shiftdim(ext.ext, delta))
 

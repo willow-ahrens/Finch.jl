@@ -172,6 +172,10 @@ function query_z3(root::FinchNode, ctx; verbose = false)
       function rename(node::FinchNode)
           if isvalue(node) && (node.val isa Symbol || node.val isa Expr)
               value(get!(z3_variables, node.val, real_const(z3_ctx, string(node.val))))
+          elseif isvariable(node) 
+              value(get!(z3_variables, node.name, real_const(z3_ctx, string(node.name))))
+          elseif isindex(node) 
+              value(get!(z3_variables, node.name, real_const(z3_ctx, string(node.name))))
           elseif isliteral(node) && (node.val isa Number)
               if node.val == Eps
                 value(get!(z3_constants, node.val, real_const(z3_ctx, "Eps")))
@@ -201,9 +205,13 @@ function query_z3(root::FinchNode, ctx; verbose = false)
       end
 
       #Add main query
+      #println("Before : ", root)
       root = Rewrite(Postwalk(normalize_eps))(root)
       root = Rewrite(Postwalk(rename))(root)
       root = call(not, root)
+      #println("After : ", root)
+      #println(dump(ctx(root)))
+      #println()
       add(z3_solver, eval(ctx(root)))     
    
       if verbose

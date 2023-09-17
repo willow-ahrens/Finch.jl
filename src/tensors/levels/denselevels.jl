@@ -129,7 +129,7 @@ end
 Base.summary(lvl::VirtualDenseLevel) = "Dense($(summary(lvl.lvl)))"
 
 function virtual_level_size(lvl::VirtualDenseLevel, ctx)
-    ext = Extent(literal(lvl.Ti(1)), lvl.shape)
+    ext = make_extent(lvl.Ti, literal(lvl.Ti(1)), lvl.shape)
     (virtual_level_size(lvl.lvl, ctx)..., ext)
 end
 
