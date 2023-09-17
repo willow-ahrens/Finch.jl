@@ -40,19 +40,39 @@ combinedim(ctx, a::Dimensionless, b) = b
     stop
 end
 
+@kwdef struct ContinuousExtent
+    start
+    stop
+end
+
+make_extent(::Type, start, stop) = throw(ArgumentError("Unsupported type"))
+make_extent(::Type{T}, start, stop) where T <: Integer = Extent(start, stop)
+make_extent(::Type{T}, start, stop) where T <: Real = ContinuousExtent(start, stop)
+make_extent(::Type{T}, start, stop) where T <: Limit = ContinuousExtent(start, stop)
+
+similar_extent(ext::Extent, start, stop) = Extent(start, stop)
+similar_extent(ext::ContinuousExtent, start, stop) = ContinuousExtent(start, stop)
+similar_extent(ext::FinchNode, start, stop) = ext.kind === virtual ? similar_extent(ext.val, start, stop) : similar_extent(ext, start, stop)
+
+is_continuous_extent(x) = false # generic
+is_continuous_extent(x::ContinuousExtent) = true
+is_continuous_extent(x::FinchNode) = x.kind === virtual ? is_continuous_extent(x.val) : is_continuous_extent(x)
+
+
 function virtual_call(::typeof(extent), ctx, start, stop)
     if isconstant(start) && isconstant(stop)
-        Extent(start, stop)
+       make_extent(typeof(start.val), start, stop)
     end
 end
 
 virtual_uncall(ext::Extent) = call(extent, ext.start, ext.stop)
 
 FinchNotation.finch_leaf(x::Extent) = virtual(x)
+FinchNotation.finch_leaf(x::ContinuousExtent) = virtual(x)
 
-Base.:(==)(a::Extent, b::Extent) =
-    a.start == b.start &&
-    a.stop == b.stop
+Base.:(==)(a::Extent, b::Extent) = a.start == b.start && a.stop == b.stop
+Base.:(==)(a::ContinuousExtent, b::ContinuousExtent) = a.start == b.start && a.stop == b.stop
+Base.:(==)(a::Extent, b::ContinuousExtent) = throw(ArgumentError("Extent and ContinuousExtent cannot interact ...yet"))
 
 function bound_below!(ctx, val, below)
   push!(ctx.constraints, call(>=, val, below))
@@ -157,13 +177,13 @@ function shiftdim(ext::Extent, delta)
         stop = call(+, ext.stop, delta)
     )
 end
-
 function shiftdim(ext::ContinuousExtent, delta)
     ContinuousExtent(
         start = call(+, ext.start, delta),
         stop = call(+, ext.stop, delta)
     )
 end
+
 shiftdim(ext::Dimensionless, delta) = dimless
 shiftdim(ext::ParallelDimension, delta) = ParallelDimension(ext, shiftdim(ext.ext, delta))
 
@@ -204,29 +224,6 @@ function virtual_union(ctx, a::Extent, b::Extent)
         stop = @f(max($(getstop(a)), $(getstop(b))))
     )
 end
-
-@kwdef struct ContinuousExtent
-    start
-    stop
-end
-
-FinchNotation.finch_leaf(x::ContinuousExtent) = virtual(x)
-
-make_extent(::Type, start, stop) = throw(ArgumentError("Unsupported type"))
-make_extent(::Type{T}, start, stop) where T <: Integer = Extent(start, stop)
-make_extent(::Type{T}, start, stop) where T <: Real = ContinuousExtent(start, stop)
-make_extent(::Type{T}, start, stop) where T <: Limit = ContinuousExtent(start, stop)
-
-similar_extent(ext::Extent, start, stop) = Extent(start, stop)
-similar_extent(ext::ContinuousExtent, start, stop) = ContinuousExtent(start, stop)
-similar_extent(ext::FinchNode, start, stop) = ext.kind === virtual ? similar_extent(ext.val, start, stop) : similar_extent(ext, start, stop)
-
-is_continuous_extent(x) = false # generic
-is_continuous_extent(x::ContinuousExtent) = true
-is_continuous_extent(x::FinchNode) = x.kind === virtual ? is_continuous_extent(x.val) : is_continuous_extent(x)
-
-Base.:(==)(a::ContinuousExtent, b::ContinuousExtent) = a.start == b.start && a.stop == b.stop
-Base.:(==)(a::Extent, b::ContinuousExtent) = throw(ArgumentError("Extent and ContinuousExtent cannot interact ...yet"))
 
 bound_measure_below!(ctx, ext::ContinuousExtent, m) = ContinuousExtent(ext.start, bound_below!(ctx, ext.stop, call(+, ext.start, m)))
 bound_measure_above!(ctx, ext::ContinuousExtent, m) = ContinuousExtent(ext.start, bound_above!(ctx, ext.stop, call(+, ext.start, m)))

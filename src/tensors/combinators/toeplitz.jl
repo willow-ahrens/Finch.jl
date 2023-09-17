@@ -137,6 +137,7 @@ getroot(tns::VirtualToeplitzArray) = getroot(tns.body)
 
 function unfurl(tns::VirtualToeplitzArray, ctx, ext, mode, protos...)
     if length(virtual_size(tns, ctx)) == tns.dim + 1
+        typeof(virtual_size(tns.body, ctx)[end]) == typeof(ext) || throw(ArgumentError("Extent and ContinuousExtent cannot interact ...yet"))
         Unfurled(tns,
             Lookup(
                 body = (ctx, idx) -> VirtualPermissiveArray(VirtualOffsetArray(tns.body, ([literal(0) for _ in 1:tns.dim - 1]..., idx)), ([false for _ in 1:tns.dim - 1]..., true)), 
