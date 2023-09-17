@@ -4,7 +4,7 @@
     idxs = [Symbol(:i_, n) for n = 1:ndims(dst)]
     exts = Expr(:block, (:($idx = _) for idx in reverse(idxs))...)
     return quote
-        @finch begin
+        @finch mode=fastfinch begin
             dst .= $(default(dst))
             $(Expr(:for, exts, quote
                 dst[$(idxs...)] = src[$(idxs...)]
@@ -27,19 +27,21 @@ function permutedims(src::Fiber, perm)
     copyto!(dst, swizzle(src, perm...))
 end
 
-function Base.copyto!(dst::Fiber, src::SwizzleArray)
-    copyto!(swizzle(dst, (1:ndims(dst))...), src)
+function Base.copyto!(dst::Union{Fiber, AbstractArray}, src::SwizzleArray{dims}) where {dims}
+    ret = copyto!(swizzle(dst, invperm(dims)...), src.body)
+    return ret.body
 end
 
-function Base.copyto!(dst::SwizzleArray, src::Union{Fiber, AbstractArray})
-    copyto!(dst, swizzle(src, (1:ndims(src))...))
+function Base.copyto!(dst::SwizzleArray{dims1}, src::SwizzleArray{dims2}) where {dims1, dims2}
+    println(invperm(dims2)[collect(dims1)])
+    ret = copyto!(swizzle(dst, invperm(dims2)[collect(dims1)]...), src.body)
+    return ret.body
 end
 
-function Base.copyto!(dst::SwizzleArray{dims}, src::SwizzleArray) where {dims}
+function Base.copyto!(dst::SwizzleArray{dims}, src::Union{Fiber, AbstractArray}) where {dims}
     tmp = Fiber!(SparseHash{ndims(src)}(Element(default(src))))
-    tmp = copyto_helper!(tmp, swizzle(src, dims...))
-    copyto_helper!(dst.body, tmp)
-    dst
+    tmp = copyto_helper!(swizzle(tmp, dims...), src)
+    swizzle(copyto_helper!(dst.body, tmp), dims...)
 end
 
 dropdefaults(src) = dropdefaults!(similar(src), src)

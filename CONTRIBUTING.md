@@ -46,7 +46,7 @@ environments, so you won't need to worry about `--project=.` flags, etc.
 
 All pull requests should pass continuous integration testing before merging.
 The test suite has a few options, which are accessible through running the test
-suite directly as `./tests/runtests.jl`.
+suite directly as `./test/runtests.jl`.
 
 Finch compares compiler output against reference versions.
 
@@ -65,18 +65,18 @@ can [Download](https://julialang.org/downloads/) multiple builds yourself or use
 Using juliaup, it might look like this:
 
 ```
-julia +release~x86 tests/runtests.jl --overwrite
-julia +release~x64 tests/runtests.jl --overwrite
+julia +release~x86 test/runtests.jl --overwrite
+julia +release~x64 test/runtests.jl --overwrite
 ```
 
 The test suite takes a while to run. You can filter to only run a selection of
 test suites by specifying them as positional arguments, e.g.
 
 ```
-./tests/runtests.jl constructors conversions representation
+./test/runtests.jl constructors conversions representation
 ```
 
-This information is summarized with `./tests/runtests.jl --help`
+This information is summarized with `./test/runtests.jl --help`
 
 ## Benchmarking
 

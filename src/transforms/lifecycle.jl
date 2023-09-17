@@ -75,7 +75,7 @@ function (ctx::LifecycleVisitor)(node::FinchNode)
         idxs = map(ctx, node.idxs)
         uses = get(ctx.scoped_uses, getroot(node.tns), ctx.global_uses)
         get(uses, getroot(node.tns), node.mode).kind !== node.mode.kind &&
-            throw(LifecycleError("cannot mix reads and writes to $(node.tns) outside of defining scope (perhaps missing definition)"))
+            throw(LifecycleError("cannot mix reads and writes to $(node.tns) outside of defining scope (hint: perhaps add a declaration like `var .= 0` or use an updating operator like `var += 1`)"))
         uses[getroot(node.tns)] = node.mode
         access(node.tns, node.mode, idxs...)
     elseif istree(node)

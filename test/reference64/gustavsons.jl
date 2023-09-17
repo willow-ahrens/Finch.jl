@@ -11,6 +11,7 @@ begin
     A_lvl_2.shape == A_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(A_lvl_2.shape) != $(A_lvl.shape))"))
     B_lvl_2_qos_fill = 0
     B_lvl_2_qos_stop = 0
+    B_lvl_2_prev_pos = 0
     p_start_2 = A_lvl.shape
     Finch.resize_if_smaller!(B_lvl_2.ptr, p_start_2 + 1)
     Finch.fill_range!(B_lvl_2.ptr, 0, 1 + 1, p_start_2 + 1)
@@ -107,6 +108,7 @@ begin
         end
         w_lvl.ptr[w_lvl_p_2 + 1] = w_lvl_qos_fill + 1
         B_lvl_2_qos = B_lvl_2_qos_fill + 1
+        B_lvl_2_prev_pos < B_lvl_q || throw(FinchProtocolError("SparseListLevels cannot be updated multiple times"))
         w_lvl_r_3 = w_lvl.ptr[1]
         w_lvl_r_stop = w_lvl.ptr[1 + 1]
         if w_lvl_r_3 != 0 && w_lvl_r_3 < w_lvl_r_stop
@@ -135,6 +137,7 @@ begin
                     B_lvl_3.val[B_lvl_2_qos] = w_lvl_2_val_2
                     B_lvl_2.idx[B_lvl_2_qos] = phase_stop_8
                     B_lvl_2_qos += 1
+                    B_lvl_2_prev_pos = B_lvl_q
                     w_lvl_r_3 += 1
                 end
                 i_2 = phase_stop_8 + 1

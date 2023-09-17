@@ -1,7 +1,7 @@
 """
     bspwrite(::AbstractString, tns)
     bspwrite(::HDF5.File, tns)
-    bspwrite(::NPYDPath, tns)
+    bspwrite(::NPYPath, tns)
 
 Write the Finch tensor to a file using
 [Binsparse](https://github.com/GraphBLAS/binsparse-specification) file format.
@@ -9,7 +9,7 @@ Write the Finch tensor to a file using
 Supported file extensions are:
 
 - `.bsp.h5`: HDF5 file format ([HDF5](https://github.com/JuliaIO/HDF5.jl) must be loaded)
-- `.bsp.npyd`: NumPy and JSON directory format ([NPZ](https://github.com/fhs/NPZ.jl) must be loaded)
+- `.bspnpy`: NumPy and JSON directory format ([NPZ](https://github.com/fhs/NPZ.jl) must be loaded)
 
 !!! warning
     The Binsparse spec is under development. Additionally, this function may not
@@ -20,14 +20,14 @@ function bspwrite end
 """
 bspread(::AbstractString)
 bspread(::HDF5.File)
-bspread(::NPYDPath)
+bspread(::NPYPath)
 
 Read the [Binsparse](https://github.com/GraphBLAS/binsparse-specification) file into a Finch tensor.
 
 Supported file extensions are:
 
 - `.bsp.h5`: HDF5 file format ([HDF5](https://github.com/JuliaIO/HDF5.jl) must be loaded)
-- `.bsp.npyd`: NumPy and JSON directory format ([NPZ](https://github.com/fhs/NPZ.jl) must be loaded)
+- `.bspnpy`: NumPy and JSON directory format ([NPZ](https://github.com/fhs/NPZ.jl) must be loaded)
 
 !!! warning
 The Binsparse spec is under development. Additionally, this function may not
@@ -90,8 +90,70 @@ function bspwrite_data_helper(f, desc, key, data::AbstractVector{Complex{T}}) wh
 end
 
 bspread_format_lookup = OrderedDict(
+    "DVEC" => OrderedDict(
+        "subformat" => OrderedDict(
+            "level" => "dense",
+            "rank" => 1,
+            "subformat" => OrderedDict(
+                "level" => "element",
+            )
+        )
+    ),
+
+    "DMAT" => OrderedDict(
+        "subformat" => OrderedDict(
+            "level" => "dense",
+            "rank" => 1,
+            "subformat" => OrderedDict(
+                "level" => "dense",
+                "rank" => 1,
+                "subformat" => OrderedDict(
+                    "level" => "element",
+                )
+            )
+        )
+    ),
+
+    "DMATR" => OrderedDict(
+        "subformat" => OrderedDict(
+            "level" => "dense",
+            "rank" => 1,
+            "subformat" => OrderedDict(
+                "level" => "dense",
+                "rank" => 1,
+                "subformat" => OrderedDict(
+                    "level" => "element",
+                )
+            )
+        )
+    ),
+
+    "DMATC" => OrderedDict(
+        "swizzle" => [1, 0],
+        "subformat" => OrderedDict(
+            "level" => "dense",
+            "rank" => 1,
+            "subformat" => OrderedDict(
+                "level" => "dense",
+                "rank" => 1,
+                "subformat" => OrderedDict(
+                    "level" => "element",
+                )
+            )
+        )
+    ),
+
+    "CVEC" => OrderedDict(
+        "subformat" => OrderedDict(
+            "level" => "sparse",
+            "rank" => 1,
+            "subformat" => OrderedDict(
+                "level" => "element",
+            )
+        )
+    ),
+
     "CSR" => OrderedDict(
-        "swizzle" => [1, 2],
         "subformat" => OrderedDict(
             "level" => "dense",
             "rank" => 1,
@@ -106,7 +168,7 @@ bspread_format_lookup = OrderedDict(
     ),
 
     "CSC" => OrderedDict(
-        "swizzle" => [2, 1],
+        "swizzle" => [1, 0],
         "subformat" => OrderedDict(
             "level" => "dense",
             "rank" => 1,
@@ -121,7 +183,6 @@ bspread_format_lookup = OrderedDict(
     ),
 
     "DCSR" => OrderedDict(
-        "swizzle" => [1, 2],
         "subformat" => OrderedDict(
             "level" => "sparse",
             "rank" => 1,
@@ -136,7 +197,7 @@ bspread_format_lookup = OrderedDict(
     ),
 
     "DCSC" => OrderedDict(
-        "swizzle" => [2, 1],
+        "swizzle" => [1, 0],
         "subformat" => OrderedDict(
             "level" => "sparse",
             "rank" => 1,
@@ -151,7 +212,6 @@ bspread_format_lookup = OrderedDict(
     ),
 
     "COO" => OrderedDict(
-        "swizzle" => [1, 2],
         "subformat" => OrderedDict(
             "level" => "sparse",
             "rank" => 2,
@@ -161,42 +221,26 @@ bspread_format_lookup = OrderedDict(
         )
     ),
 
-    "DMAT" => OrderedDict(
-        "swizzle" => [1, 2],
-        "subformat" => OrderedDict(
-            "level" => "dense",
-            "rank" => 1,
-            "subformat" => OrderedDict(
-                "level" => "dense",
-                "rank" => 1,
-                "subformat" => OrderedDict(
-                    "level" => "element",
-                )
-            )
-        )
-    ),
-
-    "DVEC" => OrderedDict(
-        "swizzle" => [1],
-        "subformat" => OrderedDict(
-            "level" => "dense",
-            "rank" => 1,
-            "subformat" => OrderedDict(
-                "level" => "element",
-            )
-        )
-    ),
-
-    "VEC" => OrderedDict(
-        "swizzle" => [1],
+    "COOR" => OrderedDict(
         "subformat" => OrderedDict(
             "level" => "sparse",
-            "rank" => 1,
+            "rank" => 2,
             "subformat" => OrderedDict(
                 "level" => "element",
             )
         )
-    )
+    ),
+
+    "COOC" => OrderedDict(
+        "swizzle" => [1, 0],
+        "subformat" => OrderedDict(
+            "level" => "sparse",
+            "rank" => 2,
+            "subformat" => OrderedDict(
+                "level" => "element",
+            )
+        )
+    ),
 )
 
 bspwrite_format_lookup = OrderedDict(v => k for (k, v) in bspread_format_lookup)
@@ -206,18 +250,18 @@ indices_zero_to_one(vec::Vector) = vec .+ one(eltype(vec))
 indices_one_to_zero(vec::Vector) = vec .- one(eltype(vec))
 #indices_one_to_zero(vec::Vector{<:CIndex{Ti}}) where {Ti} = unsafe_wrap(Array, reinterpret(Ptr{Ti}, pointer(vec)), length(vec); own = true)
 
-struct NPYDGroup
+struct NPYPath
     dirname::String
 end
 
 function bspwrite_h5 end
-function bspwrite_npyd end
+function bspwrite_bspnpy end
 
 function bspwrite(fname::AbstractString, arr, attrs = OrderedDict())
     if endswith(fname, ".h5")
         bspwrite_h5(fname, arr, attrs)
-    elseif endswith(fname, ".npyd")
-        bspwrite_npyd(fname, arr, attrs)
+    elseif endswith(fname, ".bspnpy")
+        bspwrite_bspnpy(fname, arr, attrs)
     else
         error("Unknown file extension for file $fname")
     end
@@ -229,15 +273,17 @@ bspwrite_tensor(io, fbr::Fiber, attrs = OrderedDict()) =
 
 function bspwrite_tensor(io, arr::SwizzleArray{dims, <:Fiber}, attrs = OrderedDict()) where {dims}
     desc = OrderedDict(
-        "format" => OrderedDict(
+        "format" => OrderedDict{Any, Any}(
             "subformat" => OrderedDict(),
-            "swizzle" => reverse(collect(dims)),
         ),
         "fill" => true,
         "shape" => map(Int, size(arr)),
         "data_types" => OrderedDict(),
         "attrs" => attrs,
     )
+    if !issorted(reverse(collect(dims)))
+        desc["format"]["swizzle"] = reverse(collect(dims)) .- 1
+    end
     bspwrite_level(io, desc, desc["format"]["subformat"], arr.body.lvl)
     desc["format"] = get(bspwrite_format_lookup, desc["format"], desc["format"])
     bspwrite_header(io, json(desc, 4), "binsparse")
@@ -246,13 +292,13 @@ end
 function bspwrite_header end
 
 function bspread_h5 end
-function bspread_npyd end
+function bspread_bspnpy end
 
 function bspread(fname::AbstractString)
     if endswith(fname, ".h5")
         bspread_h5(fname)
-    elseif endswith(fname, ".npyd")
-        bspread_npyd(fname)
+    elseif endswith(fname, ".bspnpy")
+        bspread_bspnpy(fname)
     else
         error("Unknown file extension for file $fname")
     end
@@ -262,14 +308,17 @@ function bspread_header end
 
 function bspread(f)
     desc = bspread_header(f, "binsparse")
-    fmt = get(bspread_format_lookup, desc["format"], desc["format"])
+    fmt = OrderedDict{Any, Any}(get(bspread_format_lookup, desc["format"], desc["format"]))
+    if !haskey(fmt, "swizzle")
+        fmt["swizzle"] = collect(0:length(desc["shape"]) - 1)
+    end
     if !issorted(reverse(fmt["swizzle"]))
-        sigma = reverse(sortperm(fmt["swizzle"]))
+        sigma = sortperm(reverse(fmt["swizzle"] .+ 1))
         desc["shape"] = desc["shape"][sigma]
     end
     fbr = Fiber(bspread_level(f, desc, fmt["subformat"]))
     if !issorted(reverse(fmt["swizzle"]))
-        fbr = swizzle(fbr, reverse(fmt["swizzle"])...)
+        fbr = swizzle(fbr, reverse(fmt["swizzle"] .+ 1)...)
     end
     if haskey(desc, "structure")
         throw(ArgumentError("binsparse structure field currently unsupported"))
