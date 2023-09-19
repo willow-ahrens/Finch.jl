@@ -61,7 +61,7 @@ is_continuous_extent(x::FinchNode) = x.kind === virtual ? is_continuous_extent(x
 
 function virtual_call(::typeof(extent), ctx, start, stop)
     if isconstant(start) && isconstant(stop)
-       make_extent(typeof(start.val), start, stop)
+        make_extent(typeof(start.val), start, stop)
     end
 end
 

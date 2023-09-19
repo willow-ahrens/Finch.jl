@@ -69,7 +69,9 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::StepperStyle)
 
         ext_1 = bound_measure_below!(ctx_2, similar_extent(root.ext, value(i0), getstop(root.ext)), get_smallest_measure(root.ext))
         ext_2 = mapreduce((node)->phase_range(node, ctx_2, ext_1), (a, b) -> virtual_intersect(ctx_2, a, b), PostOrderDFS(body_1))
+
         ext_3 = virtual_intersect(ctx_2, ext_1, ext_2)
+        
         ext_4 = cache_dim!(ctx_2, :phase, ext_3)
 
         body = Rewrite(Postwalk(node->phase_body(node, ctx_2, ext_1, ext_4)))(body_1)

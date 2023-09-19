@@ -136,6 +136,7 @@ minus_eps(x) = limit(x, tiny_negative())
 limit(x) = limit(x, tiny_zero())
 Limit{T}(x) where {T} = limit(T(x))
 drop_eps(x::Limit) = x.val
+drop_eps(x::Number) = x
 
 const Eps = plus_eps(Int8(0))
 

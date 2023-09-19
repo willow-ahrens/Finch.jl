@@ -1,4 +1,4 @@
-using Z3: Solver, real_const, Context, add, check, ExprAllocated, not, unsat, get_model 
+using Z3: Solver, real_const, Context, add, check, ExprAllocated, not, unsat, get_model
 """
     get_bounds_rules(alg, shash)
 
@@ -149,7 +149,6 @@ function query(root::FinchNode, ctx; verbose = false)
     end
 end
 
-
 function query_z3(root::FinchNode, ctx; verbose = false)
       function normalize_eps(node::FinchNode)
           if isliteral(node) && (node.val isa Limit) 
@@ -169,30 +168,40 @@ function query_z3(root::FinchNode, ctx; verbose = false)
       z3_solver = Solver(z3_ctx, "QF_NRA")
       z3_constants = Dict()
       z3_variables = Dict()
-      function rename(node::FinchNode)
-          if isvalue(node) && (node.val isa Symbol || node.val isa Expr)
-              value(get!(z3_variables, node.val, real_const(z3_ctx, string(node.val))))
-          elseif isvariable(node) 
-              value(get!(z3_variables, node.name, real_const(z3_ctx, string(node.name))))
-          elseif isindex(node) 
-              value(get!(z3_variables, node.name, real_const(z3_ctx, string(node.name))))
-          elseif isliteral(node) && (node.val isa Number)
-              if node.val == Eps
-                value(get!(z3_constants, node.val, real_const(z3_ctx, "Eps")))
+
+      function translate_z3(node::FinchNode)::ExprAllocated
+          if @capture node call(~op::isliteral, ~args...) 
+              return getval(op)(translate_z3.(args)...)
+          elseif isvalue(node) 
+              if node.val isa Symbol || node.val isa Expr
+                  return get!(z3_variables, node.val, real_const(z3_ctx, string(node.val)))
+              else 
+                  error("unimplemented")
+              end
+          elseif isindex(node) || isvariable(node)
+              return get!(z3_variables, node.name, real_const(z3_ctx, string(node.name)))
+          elseif isliteral(node) 
+              if node.val isa Number
+                  if node.val == Eps
+                      return get!(z3_constants, node.val, real_const(z3_ctx, "Eps"))
+                  else
+                      return get!(z3_constants, node.val, real_const(z3_ctx, string(node.val)))
+                  end
               else
-                value(get!(z3_constants, node.val, real_const(z3_ctx, string(node.val))))
+                  error("unimplemented")
               end
           end
       end
-      
+
+
       #Collect Constraints from ctx 
       constraints = copy(ctx.constraints)
 
       ##Add Constraints
       foreach(collect(constraints)) do constraint
         constraint = Rewrite(Postwalk(normalize_eps))(constraint)
-        constraint = Rewrite(Postwalk(rename))(constraint)
-        add(z3_solver, eval(ctx(constraint)))
+        constraint = translate_z3(constraint)
+        add(z3_solver, constraint)
       end
 
       #Declare Constants
@@ -205,14 +214,10 @@ function query_z3(root::FinchNode, ctx; verbose = false)
       end
 
       #Add main query
-      #println("Before : ", root)
-      root = Rewrite(Postwalk(normalize_eps))(root)
-      root = Rewrite(Postwalk(rename))(root)
       root = call(not, root)
-      #println("After : ", root)
-      #println(dump(ctx(root)))
-      #println()
-      add(z3_solver, eval(ctx(root)))     
+      root = Rewrite(Postwalk(normalize_eps))(root)
+      root = translate_z3(root)
+      add(z3_solver, root)     
    
       if verbose
         println(z3_solver)
