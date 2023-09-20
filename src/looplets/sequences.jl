@@ -75,14 +75,21 @@ end
 function (ctx::SequenceVisitor)(node::Sequence) 
   new_phases = []
 
+  println(getstart(ctx.ext))
+
   prev_stop = call(-, getstart(ctx.ext), getunit(ctx.ext))
   for curr in node.phases
     curr_start = call(+, prev_stop, getunit(ctx.ext))
-    
+        
     if curr.stop(ctx.ctx, ctx.ext) == nothing
         curr_stop = getstop(phase_range(curr, ctx.ctx, ctx.ext))
     else
         curr_stop = bound_below!(ctx.ctx, curr.stop(ctx.ctx, ctx.ext), curr_start)
+    end
+
+    println("SEQUENCE ", curr_stop, " /  ", getstop(phase_range(curr, ctx.ctx, ctx.ext)),  " / ", curr_start)
+    foreach(collect(ctx.ctx.constraints)) do c
+      display(c)
     end
 
     push!(new_phases, Phase(body = curr.body, start = (ctx, ext) -> curr_start, stop = (ctx, ext) -> curr_stop)) 

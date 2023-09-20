@@ -59,6 +59,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::PhaseStyle)
         i = getname(root.idx)
         i0=freshen(ctx.code, i)
 
+        println(root.idx, " ", root.ext)
         body = root.body
 
         ext_2 = mapreduce((node)->phase_range(node, ctx, root.ext), (a, b) -> phase_op(style)(ctx, a, b), PostOrderDFS(body))

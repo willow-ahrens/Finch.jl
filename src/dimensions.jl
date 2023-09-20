@@ -259,9 +259,9 @@ is_continuous_extent(x::ParallelDimension) = is_continuous_extent(x.dim)
 
 function virtual_intersect(ctx, a::ContinuousExtent, b::ContinuousExtent)
     ContinuousExtent(
-        start = if query_z3(call(<=, getstart(a), getstart(b)), ctx)
+        start = if query_z3(call(<=, getstart(a), getstart(b)), ctx, verbose=true)
                     bound_below!(ctx, getstart(b), getstart(a))
-                elseif query_z3(call(<=, getstart(b), getstart(a)), ctx)
+                elseif query_z3(call(<=, getstart(b), getstart(a)), ctx, verbose=false)
                     bound_below!(ctx, getstart(a), getstart(b))
                 else
                     @f(max($(getstart(a)), $(getstart(b))))

@@ -163,6 +163,11 @@ function query_z3(root::FinchNode, ctx; verbose = false)
               end
           end
       end
+   
+      root1 = root
+      if verbose
+        @info "prove" root
+      end
 
       z3_ctx = Context()
       z3_solver = Solver(z3_ctx, "QF_NRA")
@@ -218,7 +223,15 @@ function query_z3(root::FinchNode, ctx; verbose = false)
       root = Rewrite(Postwalk(normalize_eps))(root)
       root = translate_z3(root)
       add(z3_solver, root)     
+      
+      #Run Z3
+      result = check(z3_solver)==unsat
    
+      if result
+        #push!(ctx.constraints, root1)
+      end
+
+
       if verbose
         println(z3_solver)
         println(check(z3_solver)==unsat)
@@ -226,6 +239,7 @@ function query_z3(root::FinchNode, ctx; verbose = false)
           println(get_model(z3_solver))
         end
       end
+      
+      return result
 
-      return check(z3_solver)==unsat
 end
