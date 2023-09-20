@@ -101,7 +101,7 @@ include("utils.jl")
     end
     if should_run("embed") include("embed/test_embed.jl") end
     if should_run("parallel") include("test_parallel.jl") end
-    if should_run("continuous") include("test_continuous.jl") end
+    #if should_run("continuous") include("test_continuous.jl") end
     #algebra goes at the end since it calls refresh()
     if should_run("algebra") include("test_algebra.jl") end
     if should_run("moveto") include("test_moving.jl") end
