@@ -265,20 +265,10 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, su
                         $my_q = Finch.scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                     end
                 end,
-                body = Thunk(
-                    preamble = :(
-                        $my_i = $(lvl.ex).idx[$my_q]
-                    ),
-                    body = (ctx) -> Step(
-                        stop = (ctx, ext) -> value(my_i),
-                        chunk = Run(
-                            body = Fill(value(:($(lvl.ex).val[$my_q]), lvl.Tv)) #TODO Flesh out fill to assert ndims and handle writes
-                        ),
-                        next = (ctx, ext) -> quote
-                            $my_q += $(Tp(1))
-                        end
-                    )
-                )
+                preamble = :($my_i = $(lvl.ex).idx[$my_q]),
+                stop = (ctx, ext) -> value(my_i),
+                chunk = Run(Fill(value(:($(lvl.ex).val[$my_q]), lvl.Tv))), #TODO Flesh out fill to assert ndims and handle writes
+                next = (ctx, ext) -> :($my_q += $(Tp(1)))
             )
         )
     )

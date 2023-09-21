@@ -64,10 +64,6 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::PhaseStyle)
 
         ext_3 = virtual_intersect(ctx, root.ext.val, ext_2)
 
-        #if query(call(==, getstart(ext_3), getstart(ext_2)), ctx) && query(call(==, getstop(ext_3), getstop(ext_2)), ctx)
-        #    ext_3 = ext_2
-        #end
-
         ext_4 = cache_dim!(ctx, :phase, ext_3)
 
         body = Rewrite(Postwalk(node->phase_body(node, ctx, root.ext, ext_4)))(body)

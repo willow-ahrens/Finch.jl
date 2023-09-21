@@ -88,13 +88,13 @@ Benchmark the kernel, ignoring allocation costs for y
 
 ````
 BenchmarkTools.Trial: 10000 samples with 182 evaluations.
- Range (min … max):  576.934 ns … 836.830 ns  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     580.780 ns               ┊ GC (median):    0.00%
- Time  (mean ± σ):   582.280 ns ±   6.649 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+ Range (min … max):  576.929 ns … 837.368 ns  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     581.324 ns               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   581.753 ns ±   5.906 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-      ▁▂▇█                                                       
-  ▂▂▃▆█████▃▂▂▅▅▃▂▁▁▂▂▂▂▂▂▂▂▂▂▂▂▂▁▂▂▁▂▁▁▂▁▁▁▁▂▁▁▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂ ▃
-  577 ns           Histogram: frequency by time          613 ns <
+        ▁▄█▄                                                     
+  ▂▂▃▄▅▇████▁▅▂▂▁▁▁▁▂▂▁▂▂▂▂▂▂▂▂▂▁▁▁▁▁▁▁▂▁▁▁▁▁▁▁▂▁▁▁▂▁▂▂▂▂▂▂▂▂▂▂ ▃
+  577 ns           Histogram: frequency by time          607 ns <
 
  Memory estimate: 0 bytes, allocs estimate: 0.
 ````
@@ -116,14 +116,14 @@ end
 ````
 
 ````
-BenchmarkTools.Trial: 10000 samples with 165 evaluations.
- Range (min … max):  643.648 ns … 162.037 μs  ┊ GC (min … max):  0.00% … 99.38%
- Time  (median):     954.558 ns               ┊ GC (median):     0.00%
- Time  (mean ± σ):   973.615 ns ±   4.777 μs  ┊ GC (mean ± σ):  14.71% ±  2.98%
+BenchmarkTools.Trial: 10000 samples with 159 evaluations.
+ Range (min … max):  644.031 ns … 177.583 μs  ┊ GC (min … max):  0.00% … 99.43%
+ Time  (median):     949.063 ns               ┊ GC (median):     0.00%
+ Time  (mean ± σ):     1.001 μs ±   5.243 μs  ┊ GC (mean ± σ):  15.71% ±  2.98%
 
-  ▅█▇▃▂▁▁                                      ▁▄▅▆▇▆▅▄▃▂▂▁▁▁▁  ▂
-  ████████████▇▆▆▅▆▅▅▅▄▃▁▄▃▁▁▁▁▁▄▁▁▁▁▁▁▁▁▁▁▁▃▄▅████████████████ █
-  644 ns        Histogram: log(frequency) by time       1.04 μs <
+   █▃                                            ▂▂▃▁            
+  ▄██▅▅█▆▇▅▃▃▃▂▂▂▂▂▂▂▂▂▂▂▂▂▂▁▂▁▁▁▁▂▂▂▁▁▁▁▁▁▁▂▃▄▆██████▇▆▄▄▃▃▃▃▂ ▃
+  644 ns           Histogram: frequency by time         1.05 μs <
 
  Memory estimate: 624 bytes, allocs estimate: 2.
 ````

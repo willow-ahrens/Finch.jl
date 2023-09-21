@@ -275,21 +275,13 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, s
                                 $my_q = Finch.scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                             end
                         end,
-                        body = Thunk(
-                            preamble = quote
-                                $my_i = $(lvl.ex).idx[$my_q]
-                            end,
-                            body = (ctx) -> Step(
-                                stop = (ctx, ext) -> value(my_i),
-                                chunk = Spike(
-                                    body = Fill(virtual_level_default(lvl)),
-                                    tail = Simplify(instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, subprotos))
-                                ),
-                                next = (ctx, ext) -> quote
-                                    $my_q += $(Tp(1))
-                                end
-                            )
-                        )
+                        preamble = :($my_i = $(lvl.ex).idx[$my_q]),
+                        stop = (ctx, ext) -> value(my_i),
+                        chunk = Spike(
+                            body = Fill(virtual_level_default(lvl)),
+                            tail = Simplify(instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, subprotos))
+                        ),
+                        next = (ctx, ext) -> :($my_q += $(Tp(1))) 
                     )
                 ),
                 Phase(
@@ -330,51 +322,19 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, s
                 Phase(
                     stop = (ctx, ext) -> value(my_i1),
                     body = (ctx, ext) -> Jumper(
-                        body = Thunk(
-                            body = (ctx) -> Jump(
-                                seek = (ctx, ext) -> quote
-                                    if $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
-                                        $my_q = Finch.scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
-                                    end
-                                    $my_i2 = $(lvl.ex).idx[$my_q]
-                                end,
-                                stop = (ctx, ext) -> value(my_i2),
-                                body = (ctx, ext, ext_2) -> Switch([
-                                    value(:($(ctx(getstop(ext_2))) == $my_i2)) => Thunk(
-                                        body = (ctx) -> Spike(
-                                            body = Fill(virtual_level_default(lvl)),
-                                            tail = instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, subprotos),
-                                        ),
-                                        epilogue = quote
-                                            $my_q += $(Tp(1))
-                                        end
-                                    ),
-                                    literal(true) => Stepper(
-                                        seek = (ctx, ext) -> quote
-                                            if $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
-                                                $my_q = Finch.scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
-                                            end
-                                        end,
-                                        body = Thunk(
-                                            preamble = :(
-                                                $my_i3 = $(lvl.ex).idx[$my_q]
-                                            ),
-                                            body = (ctx) -> Step(
-                                                stop = (ctx, ext) -> value(my_i3),
-                                                chunk = Spike(
-                                                    body = Fill(virtual_level_default(lvl)),
-                                                    tail =  instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, subprotos),
-                                                ),
-                                                next = (ctx, ext) -> quote
-                                                    $my_q += $(Tp(1))
-                                                end
-                                            )
-                                        )
-                                    ),
-                                ])
-                            )
-                        )
-                    )
+                        seek = (ctx, ext) -> quote
+                            if $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
+                                $my_q = Finch.scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
+                            end
+                        end,                        
+                        preamble = :($my_i2 = $(lvl.ex).idx[$my_q]),
+                        stop = (ctx, ext) -> value(my_i2),
+                        chunk =  Spike(
+                            body = Fill(virtual_level_default(lvl)),
+                            tail = instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, subprotos),
+                        ),
+                        next = (ctx, ext) -> :($my_q += $(Tp(1))),
+                    )  
                 ),
                 Phase(
                     body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))

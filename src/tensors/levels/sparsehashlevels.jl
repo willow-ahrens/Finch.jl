@@ -329,30 +329,29 @@ function instantiate_reader(trv::SparseHashWalkTraversal, ctx, subprotos, ::Unio
             body = (ctx) -> Sequence([
                 Phase(
                     stop = (ctx, ext) -> value(my_i_stop),
-                    body = (ctx, ext) -> Stepper(
-                        seek = (ctx, ext) -> quote
-                            while $my_q + $(Tp(1)) < $my_q_stop && $(lvl.ex).srt[$my_q][1][2][$R] < $(ctx(getstart(ext)))
-                                $my_q += $(Tp(1))
-                            end
-                        end,
-                        body = if R == 1
-                            Thunk(
-                                preamble = quote
-                                    $my_i = $(lvl.ex).srt[$my_q][1][2][$R]
-                                end,
-                                body = (ctx) -> Step(
-                                    stop =  (ctx, ext) -> value(my_i),
-                                    chunk = Spike(
-                                        body = Fill(virtual_level_default(lvl)),
-                                        tail = instantiate_reader(VirtualSubFiber(lvl.lvl, value(:($(lvl.ex).srt[$my_q][2]))), ctx, subprotos),
-                                    ),
-                                    next = (ctx, ext) -> quote
+                    body = (ctx, ext) -> 
+                        if R == 1
+                            Stepper(
+                                seek = (ctx, ext) -> quote
+                                    while $my_q + $(Tp(1)) < $my_q_stop && $(lvl.ex).srt[$my_q][1][2][$R] < $(ctx(getstart(ext)))
                                         $my_q += $(Tp(1))
                                     end
-                                )
+                                end,
+                                preamble = :($my_i = $(lvl.ex).srt[$my_q][1][2][$R]),
+                                stop =  (ctx, ext) -> value(my_i),
+                                chunk = Spike(
+                                    body = Fill(virtual_level_default(lvl)),
+                                    tail = instantiate_reader(VirtualSubFiber(lvl.lvl, value(:($(lvl.ex).srt[$my_q][2]))), ctx, subprotos),
+                                ),
+                                next = (ctx, ext) -> :($my_q += $(Tp(1)))
                             )
                         else
-                            Thunk(
+                             Stepper(
+                                seek = (ctx, ext) -> quote
+                                    while $my_q + $(Tp(1)) < $my_q_stop && $(lvl.ex).srt[$my_q][1][2][$R] < $(ctx(getstart(ext)))
+                                        $my_q += $(Tp(1))
+                                    end
+                                end,
                                 preamble = quote
                                     $my_i = $(lvl.ex).srt[$my_q][1][2][$R]
                                     $my_q_step = $my_q
@@ -360,19 +359,14 @@ function instantiate_reader(trv::SparseHashWalkTraversal, ctx, subprotos, ::Unio
                                         $my_q_step += $(Tp(1))
                                     end
                                 end,
-                                body = (ctx) -> Step(
-                                    stop = (ctx, ext) -> value(my_i),
-                                    chunk = Spike(
-                                        body = Fill(virtual_level_default(lvl)),
-                                        tail = instantiate_reader(SparseHashWalkTraversal(lvl, R - 1, value(my_q, lvl.Ti), value(my_q_step, lvl.Ti)), ctx, subprotos),
-                                    ),
-                                    next = (ctx, ext) -> quote
-                                        $my_q = $my_q_step
-                                    end
-                                )
+                                stop = (ctx, ext) -> value(my_i),
+                                chunk = Spike(
+                                    body = Fill(virtual_level_default(lvl)),
+                                    tail = instantiate_reader(SparseHashWalkTraversal(lvl, R - 1, value(my_q, lvl.Ti), value(my_q_step, lvl.Ti)), ctx, subprotos),
+                                ),
+                                next = (ctx, ext) -> :($my_q = $my_q_step)
                             )
                         end
-                    )
                 ),
                 Phase(
                     body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))

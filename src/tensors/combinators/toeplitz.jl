@@ -128,9 +128,13 @@ visit_simplify(node::VirtualToeplitzArray) = VirtualToeplitzArray(visit_simplify
     guard => VirtualToeplitzArray(body, node.dim)
 end
 
-jumper_body(node::VirtualToeplitzArray, ctx, ext) = VirtualToeplitzArray(jumper_body(node.body, ctx, ext), node.dim)
-stepper_body(node::VirtualToeplitzArray, ctx, ext) = VirtualToeplitzArray(stepper_body(node.body, ctx, ext), node.dim)
+stepper_range(node::VirtualToeplitzArray, ctx, ext) = stepper_range(node.body, ctx, ext)
+stepper_body(node::VirtualToeplitzArray, ctx, ext, ext_2) = VirtualToeplitzArray(stepper_body(node.body, ctx, ext, ext_2), node.dim)
 stepper_seek(node::VirtualToeplitzArray, ctx, ext) = stepper_seek(node.body, ctx, ext)
+
+jumper_range(node::VirtualToeplitzArray, ctx, ext) = jumper_range(node.body, ctx, ext)
+jumper_body(node::VirtualToeplitzArray, ctx, ext, ext_2) = VirtualToeplitzArray(jumper_body(node.body, ctx, ext, ext_2), node.dim)
+jumper_seek(node::VirtualToeplitzArray, ctx, ext) = jumper_seek(node.body, ctx, ext)
 
 getroot(tns::VirtualToeplitzArray) = getroot(tns.body)
 
