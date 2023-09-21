@@ -164,11 +164,10 @@ relating to types and storage.
 
 ## Types and Storage of Level
 
-All levels have an `indextype` and a `postype`, typically denoted as `Ti` and `Tp` in the constructors, but accessible by two
-functions:
+All levels have a `postype`, typically denoted as `Tp` in the constructors, used for internal pointer types but accessible by the
+function:
 
 ```@docs
-indextype
 postype
 ```
 
