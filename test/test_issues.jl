@@ -66,12 +66,12 @@ using CIndices
         function f(a::Float64, b::Float64, c::Float64)
             return a+b+c
         end 
-        struct MyAlgebra <: Finch.AbstractAlgebra end
-        Finch.virtualize(ex, ::Type{MyAlgebra}, ::Finch.JuliaContext) = MyAlgebra()
+        struct MyAlgebra115 <: Finch.AbstractAlgebra end
+        Finch.virtualize(ex, ::Type{MyAlgebra115}, ::Finch.JuliaContext) = MyAlgebra115()
         t = Fiber!(SparseList(SparseList(Element(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
         A = dropdefaults(copyto!(Fiber!(SparseList(SparseList(Element(0.0)))), B))
-        @finch algebra=MyAlgebra() (t .= 0; for j=_, i=_; t[i, j] = f(A[i,j], A[i,j], A[i,j]) end)
+        @finch algebra=MyAlgebra115() (t .= 0; for j=_, i=_; t[i, j] = f(A[i,j], A[i,j], A[i,j]) end)
         @test t == B .* 3
     end
 
@@ -81,14 +81,14 @@ using CIndices
         t = Fiber!(SparseList(SparseList(Element(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
         A = dropdefaults(copyto!(Fiber!(SparseList(SparseList(Element(0.0)))), B))
-        @test_logs (:warn, "Performance Warning: non-concordant traversal of t[i, j] (hint: most arrays prefer column major or first index fast, run in fast mode to ignore this warning)") match_mode=:any @test_throws Finch.FinchProtocolError @finch algebra=MyAlgebra() (t .= 0; for i=_, j=_; t[i, j] = A[i, j] end)
+        @test_logs (:warn, "Performance Warning: non-concordant traversal of t[i, j] (hint: most arrays prefer column major or first index fast, run in fast mode to ignore this warning)") match_mode=:any @test_throws Finch.FinchProtocolError @finch (t .= 0; for i=_, j=_; t[i, j] = A[i, j] end)
     end
 
     let
         t = Fiber!(Dense(SparseList(Element(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
         A = dropdefaults(copyto!(Fiber!(Dense(SparseList(Element(0.0)))), B))
-        @test_logs (:warn, "Performance Warning: non-concordant traversal of t[i, j] (hint: most arrays prefer column major or first index fast, run in fast mode to ignore this warning)") match_mode=:any @test_throws Finch.FinchProtocolError @finch algebra=MyAlgebra() (t .= 0; for i=_, j=_; t[i, j] = A[i, j] end)
+        @test_logs (:warn, "Performance Warning: non-concordant traversal of t[i, j] (hint: most arrays prefer column major or first index fast, run in fast mode to ignore this warning)") match_mode=:any @test_throws Finch.FinchProtocolError @finch (t .= 0; for i=_, j=_; t[i, j] = A[i, j] end)
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/129
