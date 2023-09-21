@@ -1,5 +1,5 @@
 ```@meta
-EditURL = "benchmark.jl"
+CurrentModule = Finch
 ```
 
 # Benchmarking
@@ -36,16 +36,6 @@ using Finch
 using BenchmarkTools
 using SparseArrays
 using MatrixDepot
-````
-
-````
-[ Info: verify download of index files...
-[ Info: reading database
-[ Info: adding metadata...
-[ Info: adding svd data...
-[ Info: writing database
-[ Info: used remote sites are sparse.tamu.edu with MAT index and math.nist.gov with HTML index
-
 ````
 
 Load a sparse matrix from MatrixDepot.jl and convert it to a Finch fiber
