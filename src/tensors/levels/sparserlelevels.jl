@@ -252,6 +252,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, su
             end,
             body = (ctx) -> Sequence([
                 Phase(
+                    start = (ctx, ext) -> literal(lvl.Ti(1)),
                     stop = (ctx, ext) -> value(my_i_end, lvl.Ti),
                     body = (ctx, ext) -> Stepper(
                         seek = (ctx, ext) -> quote

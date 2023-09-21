@@ -68,32 +68,25 @@ function (ctx::SequenceVisitor)(node::FinchNode)
     end
 end
 
-function removecache(node::FinchNode)
-  return Rewrite(Prewalk(Fixpoint(@rule(cached(~a1, ~b1::isliteral) => a1))))(node)
-end
-
 function (ctx::SequenceVisitor)(node::Sequence) 
   new_phases = []
 
-  println(getstart(ctx.ext))
-
-  prev_stop = call(-, getstart(ctx.ext), getunit(ctx.ext))
+  prev_stop = call(-, getstart(phase_range(node.phases[1], ctx.ctx, ctx.ext)), getunit(ctx.ext))
+  #is_prev_stop_nothing = node.phases[1].start(ctx.ctx, ctx.ext) == nothing
+  
   for curr in node.phases
     curr_start = call(+, prev_stop, getunit(ctx.ext))
-        
-    if curr.stop(ctx.ctx, ctx.ext) == nothing
-        curr_stop = getstop(phase_range(curr, ctx.ctx, ctx.ext))
+
+    is_curr_stop_nothing = curr.stop(ctx.ctx, ctx.ext) == nothing
+    if !is_curr_stop_nothing
+        curr_stop = bound_below!(ctx.ctx, getstop(phase_range(curr, ctx.ctx, ctx.ext)), curr_start)
     else
-        curr_stop = bound_below!(ctx.ctx, curr.stop(ctx.ctx, ctx.ext), curr_start)
+        curr_stop = getstop(phase_range(curr, ctx.ctx, ctx.ext))
     end
+    push!(new_phases, Phase(body = curr.body, start = (ctx, ext) -> curr_start, stop = (ctx, ext) -> curr_stop))
 
-    println("SEQUENCE ", curr_stop, " /  ", getstop(phase_range(curr, ctx.ctx, ctx.ext)),  " / ", curr_start)
-    foreach(collect(ctx.ctx.constraints)) do c
-      display(c)
-    end
-
-    push!(new_phases, Phase(body = curr.body, start = (ctx, ext) -> curr_start, stop = (ctx, ext) -> curr_stop)) 
     prev_stop = curr_stop
+    #is_prev_stop_nothing = is_curr_stop_nothing
   end
   
   return enumerate(new_phases)

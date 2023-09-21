@@ -139,7 +139,8 @@ function unfurl(tns::VirtualPermissiveArray, ctx, ext, mode, protos...)
                 tns,
                 Sequence([
                     Phase(
-                        stop = (ctx, ext_2) -> call(-, getstart(dims[end]), 1),
+                        start = (ctx, ext_2) -> literal(typemin(Int32)), #Very hacky
+                        stop = (ctx, ext_2) -> call(-, getstart(dims[end]), getunit(ext)),
                         body = (ctx, ext) -> Run(garb),
                     ),
                     Phase(

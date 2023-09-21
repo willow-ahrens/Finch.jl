@@ -59,7 +59,6 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::PhaseStyle)
         i = getname(root.idx)
         i0=freshen(ctx.code, i)
 
-        println(root.idx, " ", root.ext)
         body = root.body
 
         ext_2 = mapreduce((node)->phase_range(node, ctx, root.ext), (a, b) -> phase_op(style)(ctx, a, b), PostOrderDFS(body))
@@ -67,7 +66,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::PhaseStyle)
         ext_3 = virtual_intersect(ctx, root.ext.val, ext_2)
         
         ext_4 = cache_dim!(ctx, :phase, ext_3)
-        
+    
         body = Rewrite(Postwalk(node->phase_body(node, ctx, root.ext, ext_4)))(body)
         body = quote
             $i0 = $i

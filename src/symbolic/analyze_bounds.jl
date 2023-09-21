@@ -150,6 +150,10 @@ function query(root::FinchNode, ctx; verbose = false)
 end
 
 function query_z3(root::FinchNode, ctx; verbose = false)
+      if verbose
+        @info "prove" root
+      end
+     
       function normalize_eps(node::FinchNode)
           if isliteral(node) && (node.val isa Limit) 
               val = node.val.val
@@ -163,11 +167,7 @@ function query_z3(root::FinchNode, ctx; verbose = false)
               end
           end
       end
-   
-      root1 = root
-      if verbose
-        @info "prove" root
-      end
+
 
       z3_ctx = Context()
       z3_solver = Solver(z3_ctx, "QF_NRA")
@@ -227,15 +227,10 @@ function query_z3(root::FinchNode, ctx; verbose = false)
       #Run Z3
       result = check(z3_solver)==unsat
    
-      if result
-        #push!(ctx.constraints, root1)
-      end
-
-
       if verbose
         println(z3_solver)
-        println(check(z3_solver)==unsat)
-        if (check(z3_solver) != unsat)
+        println(result)
+        if !result
           println(get_model(z3_solver))
         end
       end
