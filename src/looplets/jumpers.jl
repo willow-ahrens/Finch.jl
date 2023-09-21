@@ -44,6 +44,7 @@ function jumper_range(node::FinchNode, ctx, ext)
 end
 
 function jumper_range(node::Jumper, ctx, ext)
+    push!(ctx.code.preamble, node.seek !== nothing ? node.seek(ctx, ext) : quote end)
     push!(ctx.code.preamble, node.preamble !== nothing ? node.preamble : quote end)
     ext_2 = similar_extent(ext, getstart(ext), node.stop(ctx, ext))
     bound_measure_below!(ext_2, get_smallest_measure(ext))
@@ -94,10 +95,9 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::JumperStyle)
 
     guard = :($i <= $(ctx(getstop(root.ext))))
 
-    foreach(filter(isvirtual, collect(PostOrderDFS(root.body)))) do node
-        push!(ctx.code.preamble, jumper_seek(node.val, ctx, root.ext))
-    end
-
+    #foreach(filter(isvirtual, collect(PostOrderDFS(root.body)))) do node
+    #    push!(ctx.code.preamble, jumper_seek(node.val, ctx, root.ext))
+    #end
 
     body_2 = contain(ctx) do ctx_2
         push!(ctx_2.code.preamble, :($i0 = $i))
