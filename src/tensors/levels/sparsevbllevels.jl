@@ -1,3 +1,28 @@
+"""
+SparseVBLLevel{[Ti=Int], [Tp=Int], [Vp=Vector{Tp}], [Vi=Vector{Ti}], [VTo=Vector{VTo}]}(lvl, [dim])
+
+Like the [`SparseListLevel`](@ref), but contiguous subfibers are stored together in blocks.
+
+```jldoctest
+julia> Fiber!(Dense(SparseVBL(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
+Dense [:,1:3]
+├─[:,1]: SparseList (0.0) [1:3]
+│ ├─[1]: 10.0
+│ ├─[2]: 30.0
+├─[:,2]: SparseList (0.0) [1:3]
+├─[:,3]: SparseList (0.0) [1:3]
+│ ├─[1]: 20.0
+│ ├─[3]: 40.0
+
+julia> Fiber!(SparseVBL(SparseVBL(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
+SparseList (0.0) [:,1:3]
+├─[:,1]: SparseList (0.0) [1:3]
+│ ├─[1]: 10.0
+│ ├─[2]: 30.0
+├─[:,3]: SparseList (0.0) [1:3]
+│ ├─[1]: 20.0
+│ ├─[3]: 40.0
+"""
 struct SparseVBLLevel{Ti, Tp, Vp<:AbstractVector, Vi<:AbstractVector, VTo<:AbstractVector, Lvl}
     lvl::Lvl
     shape::Ti
@@ -123,7 +148,7 @@ mutable struct VirtualSparseVBLLevel <: AbstractVirtualLevel
     prev_pos
 end
 
-  is_level_injective(lvl::VirtualSparseVBLLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., false]
+is_level_injective(lvl::VirtualSparseVBLLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., false]
 is_level_concurrent(lvl::VirtualSparseVBLLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., false]
 is_level_atomic(lvl::VirtualSparseVBLLevel, ctx) = false
   

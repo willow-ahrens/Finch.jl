@@ -13,8 +13,6 @@ positions in the level. `Tbl` is the type of the dictionary used to do hashing,
 a subtype of `Dict{Tuple{Tp, Ti}, Tp}`. Finally, `Vp` stores the positions
 of subfibers and `VTpip` is a storage type that is a subtype of `AbstractVector{Pair{Tuple{Tp, Ti}, Tp}}`.
 
-In the [`Fiber!`](@ref) constructor, `sh` is an alias for `SparseHashLevel`.
-
 ```jldoctest
 julia> Fiber!(Dense(SparseHash{1}(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Dense [:,1:3]
@@ -34,7 +32,6 @@ SparseHash (0.0) [1:3,1:3]
 ├─├─[3, 3]: 40.0
 ```
 """
-# {N, Ti<:Tuple, Tp, Tbl<:Dict{Tuple{Tp, Ti}, Tp}, Vp<:AbstractVector{<:Tp}, VTpip<:AbstractVector{Pair{Tuple{Tp, Ti}, Tp}}, Lvl}
 struct SparseHashLevel{N, Ti<:Tuple, Tp, Tbl<:Dict{Tuple{Tp, Ti}, Tp}, Vp<:AbstractVector{<:Tp}, VTpip<:AbstractVector{Pair{Tuple{Tp, Ti}, Tp}}, Lvl}
     lvl::Lvl
     shape::Ti
@@ -169,7 +166,7 @@ mutable struct VirtualSparseHashLevel <: AbstractVirtualLevel
     Lvl
 end
   
-  is_level_injective(lvl::VirtualSparseHashLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., (true for _ in 1:lvl.N)...]
+is_level_injective(lvl::VirtualSparseHashLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., (true for _ in 1:lvl.N)...]
 is_level_concurrent(lvl::VirtualSparseHashLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., (true for _ in 1:lvl.N)...]
 is_level_atomic(lvl::VirtualSparseHashLevel, ctx) = false
 

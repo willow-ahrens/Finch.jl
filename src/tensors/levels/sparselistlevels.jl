@@ -10,8 +10,6 @@ slices are stored. Optionally, `dim` is the size of the last dimension.
 positions in the level. The types `Vp` and `Vi` are the types of the
 arrays used to store positions and indicies. 
 
-In the [`Fiber!`](@ref) constructor, `sl` is an alias for `SparseListLevel`.
-
 ```jldoctest
 julia> Fiber!(Dense(SparseList(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Dense [:,1:3]

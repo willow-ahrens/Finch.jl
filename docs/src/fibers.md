@@ -183,7 +183,7 @@ and storage type even if they don't need them. These are used by levels that tak
 
 ### Move to: Copying Fibers to a new storage type.
 
-If one needs to copy a fiber to another fibrer with a different storage type, one can use the `moveto` function, described below.
+If one needs to copy a fiber to another fiber with a different storage type, one can use the `moveto` function, described below.
 
 ```@docs
 moveto
@@ -197,7 +197,6 @@ moveto
 Fiber!
 fiber
 fiber!
-fiber_abbrev
 ```
 
 ### Level Constructors
@@ -208,4 +207,6 @@ ElementLevel
 SparseListLevel
 SparseCOOLevel
 SparseHashLevel
+SparseTriangleLevel
+SparseByteMapLevel
 ```

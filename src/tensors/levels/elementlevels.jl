@@ -8,8 +8,6 @@ The data is stored in a vector
 of type `Vv` with `eltype(Vv) = Tv`. The type `Ti` is the index type used to
 access Vv.
 
-In the [`Fiber!`](@ref) constructor, `e` is an alias for `ElementLevel`.
-
 ```jldoctest
 julia> Fiber!(Dense(Element(0.0)), [1, 2, 3])
 Dense [1:3]
