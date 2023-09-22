@@ -104,6 +104,9 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
         if isempty(root.bodies)
             return quote end
         else
+            #println("Block")  
+            #display(root)
+            #println()
             head = root.bodies[1]
             body = block(root.bodies[2:end]...)
             preamble = quote end
@@ -204,6 +207,9 @@ function lower_access(ctx, node, tns::Number)
 end
 
 function lower_loop(ctx, root, ext)
+    #println("LOOP")  
+    #display(root)
+    #println()
     root_2 = Rewrite(Postwalk(@rule access(~tns, ~mode, ~idxs...) => begin
         if !isempty(idxs) && root.idx == idxs[end]
             protos = [(mode.kind === reader ? defaultread : defaultupdate) for _ in idxs]
