@@ -76,7 +76,7 @@ Return an iterator over the properly modified tensors in a finch program
 """
 function getresults(node::FinchNode)
     if node.kind === block
-        return mapreduce(getresults, vcat, node.bodies, init=[])
+        return unique(mapreduce(getresults, vcat, node.bodies, init=[]))
     elseif node.kind === declare || node.kind === thaw
         return [node.tns]
     else

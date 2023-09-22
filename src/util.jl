@@ -214,7 +214,7 @@ Run dead code elimination and constant propagation. `ex` is the target Julia exp
 dataflow(ex) = ex |> striplines |> desugar |> propagate_copies |> mark_dead |> prune_dead |> resugar
 
 isassign(x) = x in Set([:+=, :*=, :&=, :|=, :(=)])
-incs = Dict(:+= => :+, :*= => :*, :&= => :&, :|= => :|)
+incs = Dict(:+= => :+, :-= => :-, :*= => :*, :&= => :&, :|= => :|)
 deincs = Dict(:+ => :+=, :* => :*=, :& => :&=, :| => :|=)
 function ispure(x)
     if x isa Symbol
