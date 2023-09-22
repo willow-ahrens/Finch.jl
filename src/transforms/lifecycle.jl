@@ -34,6 +34,7 @@ function enforce_lifecycles(prgm)
     close_scope(prgm, LifecycleVisitor())
 end
 
+#assumes arguments to prgm have been visited already and their uses collected
 function open_stmt(prgm, ctx::LifecycleVisitor)
     for (tns, mode) in ctx.uses
         cur_mode = get(ctx.modes, tns, reader())
