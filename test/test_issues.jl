@@ -303,4 +303,22 @@ using CIndices
         end
         @test C == A * B
     end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/284
+    let
+        C = Fiber!(Dense(Dense(Element(0.0))), [1 0; 0 1])
+        w = Fiber!(SparseHash{2}(Element(0.0)), [0 0; 0 0])
+        @finch mode=fastfinch begin 
+            for j = _, i = _
+                C[i, j] += 1
+            end
+            for j = _, i = _ 
+                w[j, i] = C[i, j] 
+            end
+            for i = _, j = _
+                C[j, i] = w[j, i]
+            end
+        end
+        @test C == [2.0 1.0; 1.0 2.0]
+    end
 end

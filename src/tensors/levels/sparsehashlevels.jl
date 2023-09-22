@@ -274,7 +274,7 @@ function freeze_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos_s
     push!(ctx.code.preamble, quote
         resize!($(lvl.ex).srt, length($(lvl.ex).tbl))
         copyto!($(lvl.ex).srt, pairs($(lvl.ex).tbl))
-        sort!($(lvl.ex).srt, by=hashkeycmp)
+        sort!($(lvl.ex).srt, by=$hashkeycmp)
         for $p = 2:($pos_stop + 1)
             $(lvl.ex).ptr[$p] += $(lvl.ex).ptr[$p - 1]
         end
