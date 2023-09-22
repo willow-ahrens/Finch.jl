@@ -182,6 +182,13 @@ function get_program_rules(alg, shash)
         (@rule block(~s1..., freeze(~a::isvariable), ~s2..., thaw(~a), ~s3...) => if ortho(a, s2)
             block(s1..., s2..., s3...)
         end),
+
+        (@rule loop(~idx, ~ext, define(~args...)) => block()),
+        (@rule sieve(~cond, define(~args...)) => block()),
+        (@rule loop(~idx, ~ext, block(~stmts..., define(~args...))) => 
+            loop(~idx, ~ext, block(~stmts...))),
+        (@rule sieve(~cond, block(~stmts..., define(~args...))) =>
+            sieve(~cond, block(~stmts...))),
     ]
 end
 

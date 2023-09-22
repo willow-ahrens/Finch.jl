@@ -321,4 +321,11 @@ using CIndices
         end
         @test C == [2.0 1.0; 1.0 2.0]
     end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/286
+    let 
+        A = [1 0; 0 1]
+        temp = 0.0
+        @finch j=_, i=_ temp = A[i, j] end
+    end
 end
