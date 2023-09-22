@@ -307,7 +307,7 @@ using CIndices
     #https://github.com/willow-ahrens/Finch.jl/issues/284
     let
         C = Fiber!(Dense(Dense(Element(0.0))), [1 0; 0 1])
-        w = Fiber!(SparseHash{2}(Element(0.0)), [0 0; 0 0])
+        w = Fiber!(Dense(Dense(Element(0.0))), [0 0; 0 0])
         @finch mode=fastfinch begin 
             for j = _, i = _
                 C[i, j] += 1

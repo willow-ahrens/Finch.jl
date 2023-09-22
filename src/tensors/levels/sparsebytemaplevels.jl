@@ -1,3 +1,33 @@
+"""
+    SparseByteMapLevel{[Ti=Tuple{Int...}], [Tp=Int], [Vp] [BV]}(lvl, [dims])
+
+Like the [`SparseListLevel`](@ref), but a dense bitmap is used to encode
+which slices are stored. This allows the ByteMap level to support random access.
+
+`Ti` is the type of the last fiber index, and `Tp` is the type used for
+positions in the level. 
+
+```jldoctest
+julia> Fiber!(Dense(SparseByteMap(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
+Dense [:,1:3]
+├─[:,1]: SparseByteMap (0.0) [1:3]
+│ ├─[1]: 10.0
+│ ├─[2]: 30.0
+├─[:,2]: SparseByteMap (0.0) [1:3]
+├─[:,3]: SparseByteMap (0.0) [1:3]
+│ ├─[1]: 20.0
+│ ├─[3]: 40.0
+
+julia> Fiber!(SparseByteMap(SparseByteMap(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
+SparseByteMap (0.0) [:,1:3]
+├─[:,1]: SparseByteMap (0.0) [1:3]
+│ ├─[1]: 10.0
+│ ├─[2]: 30.0
+├─[:,3]: SparseByteMap (0.0) [1:3]
+│ ├─[1]: 20.0
+│ ├─[3]: 40.0
+```
+"""
 struct SparseByteMapLevel{Ti, Tp, Vp<:AbstractVector, BV<:AbstractVector{Bool}, VTpi<:AbstractVector{<:Tuple{Any, Any}}, Lvl}
     lvl::Lvl
     shape::Ti

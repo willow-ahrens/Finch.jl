@@ -1,3 +1,23 @@
+"""
+    SparseTriangleLevel{[N], [Ti=Int]}(lvl, [dims])
+
+The sparse triangle level stores the upper triangle of `N` indices in the
+subfiber, so fibers in the sublevel are the slices `A[:, ..., :, i_1, ...,
+i_n]`, where `i_1 <= ... <= i_n`.  A packed representation is used to encode the
+subfiber. Optionally, `dims` are the sizes of the last dimensions.
+
+`Ti` is the type of the last `N` fiber indices.
+
+```jldoctest
+julia> Fiber!(SparseTriangle{2}(Element(0.0)), [10 0 20; 30 0 0; 0 0 40])
+SparseTriangle (0.0) [1:3]
+├─├─[1, 1]: 10.0
+├─├─[1, 2]: 0.0
+│ ⋮
+├─├─[2, 3]: 0.0
+├─├─[3, 3]: 40.0
+```
+"""
 struct SparseTriangleLevel{N, Ti, Lvl}
     lvl::Lvl
     shape::Ti

@@ -164,11 +164,10 @@ relating to types and storage.
 
 ## Types and Storage of Level
 
-All levels have an `indextype` and a `postype`, typically denoted as `Ti` and `Tp` in the constructors, but accessible by two
-functions:
+All levels have a `postype`, typically denoted as `Tp` in the constructors, used for internal pointer types but accessible by the
+function:
 
 ```@docs
-indextype
 postype
 ```
 
@@ -184,7 +183,7 @@ and storage type even if they don't need them. These are used by levels that tak
 
 ### Move to: Copying Fibers to a new storage type.
 
-If one needs to copy a fiber to another fibrer with a different storage type, one can use the `moveto` function, described below.
+If one needs to copy a fiber to another fiber with a different storage type, one can use the `moveto` function, described below.
 
 ```@docs
 moveto
@@ -198,7 +197,6 @@ moveto
 Fiber!
 fiber
 fiber!
-fiber_abbrev
 ```
 
 ### Level Constructors
@@ -209,4 +207,6 @@ ElementLevel
 SparseListLevel
 SparseCOOLevel
 SparseHashLevel
+SparseTriangleLevel
+SparseByteMapLevel
 ```

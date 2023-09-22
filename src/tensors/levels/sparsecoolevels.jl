@@ -16,8 +16,6 @@ The type `Tbl` is an NTuple type where each entry k is a subtype `AbstractVector
 
 The type `Vp` is the type for the pointer array.
 
-In the [`Fiber!`](@ref) constructor, `sh` is an alias for `SparseCOOLevel`.
-
 ```jldoctest
 julia> Fiber!(Dense(SparseCOO{1}(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Dense [:,1:3]

@@ -35,7 +35,7 @@ struct MyAlgebra2 <: Finch.AbstractAlgebra end
 
     @test pattern!(w) == [1, 1, 1, 0, 1, 0, 1, 1, 1, 0]
 
-    Finch.refresh()
+    @test_logs Finch.refresh()
 
     @finch algebra = MyAlgebra2() (w .= 1; for i=_; w[i] = gcd(u[i], v[i]) end)
 

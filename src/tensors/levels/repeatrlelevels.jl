@@ -9,8 +9,6 @@ The fibers have type `Tv`, initialized to `D`. `D` may optionally be given as
 the first argument.  `Ti` is the type of the last fiber index, and `Tp` is the
 type used for positions in the level.
 
-In the [`Fiber!`](@ref) constructor, `rl` is an alias for `RepeatRLELevel`.
-
 ```jldoctest
 julia> Fiber!(RepeatRLE(0.0), [11, 11, 22, 22, 00, 00, 00, 33, 33])
 RepeatRLE (0.0) [1:9]

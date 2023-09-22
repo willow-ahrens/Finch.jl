@@ -12,8 +12,6 @@ cached
 finch_leaf
 ```
 
-
-
 ### Program Instances
 
 Finch relies heavily on Julia's
