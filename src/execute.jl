@@ -62,7 +62,7 @@ end
 
 execute(ex) = execute(ex, NamedTuple())
 
-@staged function execute(ex, opts::NamedTuple)
+@staged function execute(ex, opts)
     contain(JuliaContext()) do ctx
         code = execute_code(:ex, ex; virtualize(:opts, opts, ctx)...)
         quote
@@ -79,7 +79,7 @@ execute(ex) = execute(ex, NamedTuple())
     end
 end
 
-function execute_code(ex, T; algebra = DefaultAlgebra(), mode = fastfinch, ctx = LowerJulia(algebra = algebra, mode=mode))
+function execute_code(ex, T; algebra = DefaultAlgebra(), mode = safefinch, ctx = LowerJulia(algebra = algebra, mode=mode))
     code = contain(ctx) do ctx_2
         prgm = nothing
         prgm = virtualize(ex, T, ctx_2.code)
@@ -93,16 +93,16 @@ end
 lower the program `prgm` at global scope in the context `ctx`.
 """
 function lower_global(prgm, ctx)
+    prgm = enforce_scopes(prgm)
     prgm = evaluate_partial(prgm, ctx)
     code = contain(ctx) do ctx_2
         quote
             $(begin
-                prgm = enforce_scopes(prgm)
                 prgm = wrapperize(prgm, ctx_2)
                 prgm = enforce_lifecycles(prgm)
                 prgm = dimensionalize!(prgm, ctx_2)
                 prgm = concordize(prgm, ctx_2)
-                #prgm = evaluate_partial(prgm, ctx_2)
+                prgm = evaluate_partial(prgm, ctx_2)
                 prgm = simplify(prgm, ctx_2) #appears necessary
                 prgm = instantiate!(prgm, ctx_2)
                 contain(ctx_2) do ctx_3
@@ -111,11 +111,11 @@ function lower_global(prgm, ctx)
             end)
             $(begin
                 res = contain(ctx_2) do ctx_3
-                    :(($(map(getresults(prgm)) do tns
+                    :((; $(map(getresults(prgm)) do tns
                         @assert tns.kind === variable
                         name = tns.name
                         tns = trim!(resolve(tns, ctx_2), ctx_3)
-                        :($name = $(ctx_3(tns)))
+                        Expr(:kw, name, ctx_3(tns))
                     end...), ))
                 end
                 res
@@ -178,7 +178,9 @@ macro finch(opts_ex...)
     end
     for tns in results
         push!(thunk.args, quote
-            $(esc(tns)) = get(res, $(QuoteNode(tns)), $(esc(tns)))
+            if haskey(res, $(QuoteNode(tns)))
+                $(esc(tns)) = res[$(QuoteNode(tns))]
+            end
         end)
     end
     push!(thunk.args, quote
@@ -212,7 +214,7 @@ type `prgm`. Here, `fname` is the name of the function and `args` is a
 
 See also: [`@finch`](@ref)
 """
-function finch_kernel(fname, args, prgm; algebra = DefaultAlgebra(), mode = fastfinch, ctx = LowerJulia(algebra=algebra, mode=mode))
+function finch_kernel(fname, args, prgm; algebra = DefaultAlgebra(), mode = safefinch, ctx = LowerJulia(algebra=algebra, mode=mode))
     maybe_typeof(x) = x isa Type ? x : typeof(x)
     code = contain(ctx) do ctx_2
         foreach(args) do (key, val)

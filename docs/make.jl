@@ -37,6 +37,7 @@ makedocs(;
             "Benchmarking" => "benchmark.md",
         ],
     ],
+    warnonly=[:missing_docs],
 )
 
 deploydocs(;

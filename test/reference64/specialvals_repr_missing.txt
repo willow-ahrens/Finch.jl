@@ -1,3 +1,3 @@
 Fiber!(SparseList(Element(missing)), Union{Missing, Float64}[2.0, missing, missing, 1.0, 3.0, missing]):
-Fiber(SparseList{Int64, Int64}(Element{missing, Union{Missing, Float64}}([2.0, 1.0, 3.0]), 6, [1, 4], [1, 4, 5]))
+Fiber(SparseList{Int64, Int64}(Element{missing, Union{Missing, Float64}, Int64, Vector{Union{Missing, Float64}}}([2.0, 1.0, 3.0]), 6, [1, 4], [1, 4, 5]))
 

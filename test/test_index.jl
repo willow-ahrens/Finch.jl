@@ -13,13 +13,13 @@
 
     @test B() == 0.0
 
-    @test check_output("sieve_hl_select.jl", @finch_code (for j=_; if diagmask[3, j] B[] += A[j] end end))
+    @test check_output("sieve_hl_select.jl", @finch_code (for j=_; if diagmask[j, 3] B[] += A[j] end end))
 
-    @finch (B .= 0; for j=_; if diagmask[3, j] B[] += A[j] end end)
+    @finch (B .= 0; for j=_; if diagmask[j, 3] B[] += A[j] end end)
 
     @test B() == 3.0
 
-    @finch (B .= 0; for j=_; if diagmask[4, j] B[] += A[j] end end)
+    @finch (B .= 0; for j=_; if diagmask[j, 4] B[] += A[j] end end)
 
     @test B() == 0.0
 
@@ -72,11 +72,11 @@
     end
     @test reference_isequal(C, C_ref)
 
-    I = 2:4
-    @test check_output("sparse_window.jl", @finch_code (C .= 0; for i=_; C[i] = A[I[i]] end))
-    @finch (C .= 0; for i=_; C[i] = A[I[i]] end)
+    @test check_output("sparse_window.jl", @finch_code (C .= 0; for i=_; C[i] = A[(2:4)[i]] end))
+    @finch (C .= 0; for i=_; C[i] = A[(2:4)[i]] end)
     @test reference_isequal(C, [A(2), A(3), A(4)])
 
+    I = 2:4
     @finch (C .= 0; for i=_; C[i] = I[i] end)
     @test reference_isequal(C, [2, 3, 4])
 
@@ -138,4 +138,66 @@
         @test check_output("chunkmask.txt", String(take!(io)))
     end
 
+    let
+        #=
+            function wrapper_result(inst)
+                ctx = Finch.LowerJulia()
+                prgm = Finch.virtualize(:inst, typeof(inst), ctx.code)
+                prgm = Finch.evaluate_partial(prgm, ctx)
+                Finch.wrapperize(prgm, ctx)
+            end
+        =#
+
+        x = Scalar(0.0)
+        A = Fiber!(Dense(Dense(Dense(Element(0.0)))), 
+        reshape([1 3 5 2 4 6 7 9 11 8 10 12 13 15 17 14 16 18 19 21 23 20 22 24], 2, 3, 4))
+        @finch begin
+            x .= 0
+            for i = _
+                for j = _
+                    for k = _
+                        x[] += swizzle(A, 3, 2, 1)[i, j, k]
+                    end
+                end
+            end
+        end
+
+        @test x[] == (24 + 1)*24/2
+
+        @test check_output("swizzle_1.txt", @finch_code begin
+            for i = _
+                for j = _
+                    for k = _
+                        x[] += swizzle(A, 3, 2, 1)[i, j, k]
+                    end
+                end
+            end
+        end)
+
+        x = Scalar(0.0)
+        A = swizzle(Fiber!(Dense(Dense(Dense(Element(0.0)))), 
+        reshape([1 3 5 2 4 6 7 9 11 8 10 12 13 15 17 14 16 18 19 21 23 20 22 24], 2, 3, 4)), 3, 2, 1)
+        @finch begin
+            x .= 0
+            for i = _
+                for j = _
+                    for k = _
+                        x[] += A[i, j, k]
+                    end
+                end
+            end
+        end
+
+        @test x[] == (24 + 1)*24/2
+
+        @test check_output("swizzle_2.txt", @finch_code begin
+            for i = _
+                for j = _
+                    for k = _
+                        x[] += A[i, j, k]
+                    end
+                end
+            end
+        end)
+    end
 end

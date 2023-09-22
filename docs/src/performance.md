@@ -95,6 +95,7 @@ quote
     A_lvl = ex.body.body.rhs.tns.bind.lvl
     A_lvl_2 = A_lvl.lvl
     A_lvl_3 = A_lvl_2.lvl
+    @warn "Performance Warning: non-concordant traversal of A[i, j] (hint: most arrays prefer column major or first index fast, run in fast mode to ignore this warning)"
     for i_3 = 1:A_lvl_2.shape
         for j_3 = 1:A_lvl.shape
             A_lvl_q = (1 - 1) * A_lvl.shape + j_3

@@ -66,12 +66,12 @@ using CIndices
         function f(a::Float64, b::Float64, c::Float64)
             return a+b+c
         end 
-        struct MyAlgebra <: Finch.AbstractAlgebra end
-        Finch.virtualize(ex, ::Type{MyAlgebra}, ::Finch.JuliaContext) = MyAlgebra()
+        struct MyAlgebra115 <: Finch.AbstractAlgebra end
+        Finch.virtualize(ex, ::Type{MyAlgebra115}, ::Finch.JuliaContext) = MyAlgebra115()
         t = Fiber!(SparseList(SparseList(Element(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
         A = dropdefaults(copyto!(Fiber!(SparseList(SparseList(Element(0.0)))), B))
-        @finch algebra=MyAlgebra() (t .= 0; for j=_, i=_; t[i, j] = f(A[i,j], A[i,j], A[i,j]) end)
+        @finch algebra=MyAlgebra115() (t .= 0; for j=_, i=_; t[i, j] = f(A[i,j], A[i,j], A[i,j]) end)
         @test t == B .* 3
     end
 
@@ -81,14 +81,14 @@ using CIndices
         t = Fiber!(SparseList(SparseList(Element(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
         A = dropdefaults(copyto!(Fiber!(SparseList(SparseList(Element(0.0)))), B))
-        @test_throws Finch.FinchProtocolError @finch algebra=MyAlgebra() mode=safefinch (t .= 0; for i=_, j=_; t[i, j] = A[i, j] end)
+        @test_logs (:warn, "Performance Warning: non-concordant traversal of t[i, j] (hint: most arrays prefer column major or first index fast, run in fast mode to ignore this warning)") match_mode=:any @test_throws Finch.FinchProtocolError @finch (t .= 0; for i=_, j=_; t[i, j] = A[i, j] end)
     end
 
     let
         t = Fiber!(Dense(SparseList(Element(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
         A = dropdefaults(copyto!(Fiber!(Dense(SparseList(Element(0.0)))), B))
-        @test_throws Finch.FinchProtocolError @finch algebra=MyAlgebra() mode=safefinch (t .= 0; for i=_, j=_; t[i, j] = A[i, j] end)
+        @test_logs (:warn, "Performance Warning: non-concordant traversal of t[i, j] (hint: most arrays prefer column major or first index fast, run in fast mode to ignore this warning)") match_mode=:any @test_throws Finch.FinchProtocolError @finch (t .= 0; for i=_, j=_; t[i, j] = A[i, j] end)
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/129
@@ -114,7 +114,7 @@ using CIndices
 
         @finch (B .= 0; for j=_, i=_; B[i, j] = A[i, j] end)
 
-        @test isstructequal(B, fiber(A))
+        @test Structure(B) == Structure(fiber(A))
 
         v = SparseVector(10, [1, 6, 7, 9], [1.1, 2.2, 3.3, 4.4])
 
@@ -122,7 +122,7 @@ using CIndices
 
         @finch (w .= 0; for i=_; w[i] = v[i] end)
 
-        @test isstructequal(w, fiber(v))
+        @test Structure(w) == Structure(fiber(v))
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/99
@@ -209,7 +209,7 @@ using CIndices
         println(io, "redefault!(B, Inf) :", redefault!(B, Inf))
         println(io, redefault!(B, Inf))
         println(io, C)
-        @test isstructequal(redefault!(B, Inf), C)
+        @test Structure(C) == Structure(redefault!(B, Inf))
         @test check_output("issue118.txt", String(take!(io)))
     end
 
@@ -229,7 +229,6 @@ using CIndices
         A = fsprand((10, 11), 0.5)
         B = fsprand((10, 10), 0.5)
         @test_throws Finch.FinchProtocolError @finch for j=_, i=_; A[i, j] = B[i, follow(j)] end
-        @test_throws Finch.FinchProtocolError @finch for j=_, i=_; A[j, i] = B[i, j] end
         @test_throws ArgumentError Fiber!(SparseCOO(Element(0.0)))
         @test_throws ArgumentError Fiber!(SparseHash(Element(0.0)))
         @test_throws ArgumentError Fiber!(SparseList(Element("hello")))
@@ -272,5 +271,54 @@ using CIndices
             x = 0
         end)
 
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/278
+
+    let
+        A = [1.0 2.0 3.0; 4.0 5.0 6.0; 7.0 8.0 9.0]
+        x = Scalar{0.0}()
+        @finch (x .= 0; for i = _ x[] += A[i, i] end)
+        @test x[] == 15.0
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/267
+    let
+        A = ones(3, 3)
+        B = ones(3, 3)
+        C = zeros(3, 3)
+        alpha=beta=1
+        @finch begin
+            for j=_
+                for i=_
+                    C[i, j] *= beta
+                end
+                for k=_
+                    foo = alpha * B[k, j]
+                    for i=_
+                        C[i, j] += foo*A[i, k]
+                    end
+                end
+            end
+        end
+        @test C == A * B
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/284
+    let
+        C = Fiber!(Dense(Dense(Element(0.0))), [1 0; 0 1])
+        w = Fiber!(Dense(Dense(Element(0.0))), [0 0; 0 0])
+        @finch mode=fastfinch begin 
+            for j = _, i = _
+                C[i, j] += 1
+            end
+            for j = _, i = _ 
+                w[j, i] = C[i, j] 
+            end
+            for i = _, j = _
+                C[j, i] = w[j, i]
+            end
+        end
+        @test C == [2.0 1.0; 1.0 2.0]
     end
 end

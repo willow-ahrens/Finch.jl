@@ -128,8 +128,21 @@ end
 """
 function concordize(root, ctx::AbstractCompiler)
     depth = depth_calculator(root)
+    if issafe(ctx.mode)
+        for node in PostOrderDFS(root)
+            if @capture node access(~tns, ~mode, ~i...)
+                for n in 1:length(i)
+                    if 1 <= depth(i[n]) < maximum(depth.(i[n+1:end]), init=0)
+                        push!(ctx.code.preamble, quote
+                            @warn("Performance Warning: non-concordant traversal of $($(sprint(show, MIME"text/plain"(), node))) (hint: most arrays prefer column major or first index fast, run in fast mode to ignore this warning)")
+                        end)
+                    end
+                end
+            end
+        end
+    end
     root = Rewrite(Postwalk(Fixpoint(@rule access(~tns, ~mode, ~i..., ~j::isindex, ~k...) => begin
-        if depth(j) < maximum(depth.(k), init=0)
+        if depth(j) <= maximum(depth.(k), init=0)
             access(~tns, ~mode, ~i..., call(identity, j), ~k...)
         end
     end)))(root)

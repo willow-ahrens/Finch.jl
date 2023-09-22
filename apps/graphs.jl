@@ -140,7 +140,7 @@ function tricount(edges)
     end
 
     triangles = Scalar(0)
-    @finch for j=_, k=_, i=_; triangles[] += L[i, k] * L[k, j] * edges[j, i] end
+    @finch for j=_, k=_, i=_; triangles[] += L[i, k] * L[k, j] * L[i, j] end
 
     return triangles[]
 end

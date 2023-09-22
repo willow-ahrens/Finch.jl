@@ -53,7 +53,7 @@
 
                     refdata = [dts.data[i, j] * (j == i) for (i, j) in product(axes(dts.data)...)]
                     ref = dropdefaults!(Fiber!(SparseCOO{2}(Element(dts.default))), refdata)
-                    @test isstructequal(b, ref)
+                    @test Structure(b) == Structure(ref)
                 end
             end
         end
@@ -68,7 +68,7 @@
                     @finch (b .= 0; for j=_, i=_; b[i, j] = a[$(fmt.proto[1])(i), $(fmt.proto[2])(j)] * lotrimask[i, j] end)
                     refdata = [dts.data[i, j] * (j <= i) for (i, j) in product(axes(dts.data)...)]
                     ref = dropdefaults!(Fiber!(SparseCOO{2}(Element(dts.default))), refdata)
-                    @test isstructequal(b, ref)
+                    @test Structure(b) == Structure(ref)
                 end
             end
         end
@@ -83,7 +83,7 @@
                     @finch (b .= 0; for j=_, i=_; b[i, j] = a[$(fmt.proto[1])(i), $(fmt.proto[2])(j)] * uptrimask[i, j] end)
                     refdata = [dts.data[i, j] * (j >= i) for (i, j) in product(axes(dts.data)...)]
                     ref = dropdefaults!(Fiber!(SparseCOO{2}(Element(dts.default))), refdata)
-                    @test isstructequal(b, ref)
+                    @test Structure(b) == Structure(ref)
                 end
             end
         end
@@ -99,7 +99,7 @@
                     @finch (b .= 0; for j=_, i=_; b[i, j] = a[$(fmt.proto[1])(i), $(fmt.proto[2])(j)] * bandmask[i, j - 1, j + 1] end)
                     refdata = [dts.data[i, j] * (j - 1 <= i <= j + 1) for (i, j) in product(axes(dts.data)...)]
                     ref = dropdefaults!(Fiber!(SparseCOO{2}(Element(dts.default))), refdata)
-                    @test isstructequal(b, ref)
+                    @test Structure(b) == Structure(ref)
                 end
             end
         end
@@ -123,8 +123,8 @@
                             @finch (d .= 0; for j=_, i=_; d[i, j] = a[$(a_fmt.proto[1])(i), $(a_fmt.proto[2])(j)] * b[$(b_fmt.proto[1])(i), $(b_fmt.proto[2])(j)] end)
                             c_ref = dropdefaults!(Fiber!(SparseCOO{2}(Element(a_dts.default))), a_dts.data .+ b_dts.data)
                             d_ref = dropdefaults!(Fiber!(SparseCOO{2}(Element(a_dts.default))), a_dts.data .* b_dts.data)
-                            @test isstructequal(c, c_ref)
-                            @test isstructequal(d, d_ref)
+                            @test Structure(c) == Structure(c_ref)
+                            @test Structure(d) == Structure(d_ref)
                         end
                     end
                 end

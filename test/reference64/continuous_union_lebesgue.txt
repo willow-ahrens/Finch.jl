@@ -77,15 +77,13 @@ quote
             x_lvl_i_stop = x_lvl.right[x_lvl_q]
             phase_start_8 = i
             phase_stop_8 = min(x_lvl_i_stop, phase_stop_7)
-            if phase_stop_8 >= i
-                phase_start_10 = max(x_lvl_i_start, phase_start_8)
-                if phase_stop_8 >= phase_start_10
-                    x_lvl_2_val_4 = x_lvl_2.val[x_lvl_q]
-                    s_val = s_val + drop_eps(-phase_start_10 + phase_stop_8) * x_lvl_2_val_4
-                end
-                x_lvl_q += phase_stop_8 == x_lvl_i_stop
-                i = phase_stop_8 + limit(0+ϵ)
+            phase_start_10 = max(x_lvl_i_start, phase_start_8)
+            if phase_stop_8 >= phase_start_10
+                x_lvl_2_val_4 = x_lvl_2.val[x_lvl_q]
+                s_val = s_val + drop_eps(-phase_start_10 + phase_stop_8) * x_lvl_2_val_4
             end
+            x_lvl_q += phase_stop_8 == x_lvl_i_stop
+            i = phase_stop_8 + limit(0+ϵ)
         end
     end
     phase_start_11 = max(limit(1.0), limit(0+ϵ) + x_lvl_i_end)
@@ -100,15 +98,13 @@ quote
             y_lvl_i_stop = y_lvl.right[y_lvl_q]
             phase_start_12 = i
             phase_stop_12 = min(y_lvl_i_stop, phase_stop_11)
-            if phase_stop_12 >= i
-                phase_start_14 = max(y_lvl_i_start, phase_start_12)
-                if phase_stop_12 >= phase_start_14
-                    y_lvl_2_val_4 = y_lvl_2.val[y_lvl_q]
-                    s_val = s_val + drop_eps(-phase_start_14 + phase_stop_12) * y_lvl_2_val_4
-                end
-                y_lvl_q += phase_stop_12 == y_lvl_i_stop
-                i = phase_stop_12 + limit(0+ϵ)
+            phase_start_14 = max(y_lvl_i_start, phase_start_12)
+            if phase_stop_12 >= phase_start_14
+                y_lvl_2_val_4 = y_lvl_2.val[y_lvl_q]
+                s_val = s_val + drop_eps(-phase_start_14 + phase_stop_12) * y_lvl_2_val_4
             end
+            y_lvl_q += phase_stop_12 == y_lvl_i_stop
+            i = phase_stop_12 + limit(0+ϵ)
         end
     end
     (s = (Scalar){0, Int64}(s_val),)
@@ -119,5 +115,5 @@ julia> @finch begin
             s[] += (x[i] + y[i]) * d(i)
         end
     end
-(s = Scalar{0, Int64}(79),)
+(s = Scalar{0, Int64}(114),)
 

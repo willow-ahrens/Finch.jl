@@ -5,6 +5,7 @@ on:
       - main
     tags: '*'
   pull_request:
+  workflow_dispatch:
 concurrency:
   # Skip intermediate builds: always.
   # Cancel intermediate builds: only if it is a pull request build.
@@ -16,31 +17,28 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
-      matrix: # hello world
+      matrix:
         version:
           - '1.6.7'
           - 'nightly'
         os:
           - ubuntu-latest
-          #- macOS-latest # excluded because expensive
           - windows-latest
         arch:
           - x64
           - x86
         exclude:
-          - os: windows-latest # excluded because kinda redundant
+          - os: ubuntu-latest
+            arch: x86
+          - os: windows-latest
             arch: x64
-          - os: macOS-latest
-            arch: x86
-          - os: ubuntu-latest # excluded because HDF5_jll v1.12 does not support i686
-            arch: x86
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: julia-actions/setup-julia@v1
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
-      - uses: actions/cache@v1
+      - uses: actions/cache@v3
         env:
           cache-name: cache-artifacts
         with:
@@ -56,11 +54,12 @@ jobs:
       - uses: codecov/codecov-action@v2
         with:
           files: lcov.info
+
   docs:
     name: Documentation
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: julia-actions/setup-julia@v1
         with:
           version: '1'
@@ -76,7 +75,7 @@ jobs:
     needs: docs
     steps:
       - name: Checkout built code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           ref: gh-pages
       - name: update jupyter dependencies with repo2docker

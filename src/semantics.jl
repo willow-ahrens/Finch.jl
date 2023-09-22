@@ -4,7 +4,7 @@
 Declare the read-only virtual tensor `tns` in the context `ctx` with a starting value of `init` and return it.
 Afterwards the tensor is update-only.
 """
-declare!(tns, ctx, init) = @assert something(virtual_default(tns, ctx)) == init
+declare!(tns, ctx, init) = @assert virtual_default(tns, ctx) == init
 
 """
     instantiate_reader(tns, ctx, protos)
@@ -76,7 +76,7 @@ Return an iterator over the properly modified tensors in a finch program
 """
 function getresults(node::FinchNode)
     if node.kind === block
-        return mapreduce(getresults, vcat, node.bodies, init=[])
+        return unique(mapreduce(getresults, vcat, node.bodies, init=[]))
     elseif node.kind === declare || node.kind === thaw
         return [node.tns]
     else

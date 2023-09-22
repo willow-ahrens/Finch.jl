@@ -159,7 +159,35 @@ SparseCOO (0.0) [1:4,1:3]
 
 The COO format is compact and straightforward, but doesn't support random
 access. For random access, one should use the `SparseHash` format. A full listing
-of supported formats is described below:
+of supported formats is described after a rough description of shared common internals of level,
+relating to types and storage.
+
+## Types and Storage of Level
+
+All levels have a `postype`, typically denoted as `Tp` in the constructors, used for internal pointer types but accessible by the
+function:
+
+```@docs
+postype
+```
+
+Additionally, many levels have a `Vp` or `Vi` in their constructors; these stand for vector of element type `Tp` or `Ti`. 
+More generally, levels are paramterized by the types that they use for storage. By default, all levels use `Vector`, but a user 
+could could change any or all of the storage types of a fiber so that the fiber would be stored on a GPU or CPU or some combination thereof, 
+or eveni just via a vector with a different allocation mechanism.  The storage type should behave like `AbstractArray` 
+and needs to implement the usual abstract array functions and `Base.resize!`. See the tests for an example. 
+
+When levels are constructed in short form as in the examples above, the index, position, and storage types are inferred
+from the level below. All the levels at the bottom of a Fiber (`Element, Pattern, Repeater`) specify an index type, position type,
+and storage type even if they don't need them. These are used by levels that take these as parameters. 
+
+### Move to: Copying Fibers to a new storage type.
+
+If one needs to copy a fiber to another fiber with a different storage type, one can use the `moveto` function, described below.
+
+```@docs
+moveto
+```
 
 # Public Functions
 
@@ -169,7 +197,6 @@ of supported formats is described below:
 Fiber!
 fiber
 fiber!
-fiber_abbrev
 ```
 
 ### Level Constructors
@@ -180,4 +207,6 @@ ElementLevel
 SparseListLevel
 SparseCOOLevel
 SparseHashLevel
+SparseTriangleLevel
+SparseByteMapLevel
 ```

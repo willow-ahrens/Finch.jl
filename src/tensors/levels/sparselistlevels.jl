@@ -1,5 +1,5 @@
 """
-    SparseListLevel{[Ti=Int], [Tp=Int]}(lvl, [dim])
+    SparseListLevel{[Ti=Int], [Tp=Int], [Vp=Vector{Tp}], [Vi=Vector{Ti}]}(lvl, [dim])
 
 A subfiber of a sparse level does not need to represent slices `A[:, ..., :, i]`
 which are entirely [`default`](@ref). Instead, only potentially non-default
@@ -7,9 +7,8 @@ slices are stored as subfibers in `lvl`.  A sorted list is used to record which
 slices are stored. Optionally, `dim` is the size of the last dimension.
 
 `Ti` is the type of the last fiber index, and `Tp` is the type used for
-positions in the level.
-
-In the [`Fiber!`](@ref) constructor, `sl` is an alias for `SparseListLevel`.
+positions in the level. The types `Vp` and `Vi` are the types of the
+arrays used to store positions and indicies. 
 
 ```jldoctest
 julia> Fiber!(Dense(SparseList(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
@@ -33,25 +32,47 @@ SparseList (0.0) [:,1:3]
 
 ```
 """
-struct SparseListLevel{Ti, Tp, Lvl}
+struct SparseListLevel{Ti, Tp, Vp, Vi, Lvl}
     lvl::Lvl
     shape::Ti
-    ptr::Vector{Tp}
-    idx::Vector{Ti}
+    ptr::Vp
+    idx::Vi
 end
 const SparseList = SparseListLevel
-SparseListLevel(lvl) = SparseListLevel{Int}(lvl)
+SparseListLevel(lvl::Lvl) where {Lvl} = SparseListLevel{Int}(lvl)
 SparseListLevel(lvl, shape, args...) = SparseListLevel{typeof(shape)}(lvl, shape, args...)
-SparseListLevel{Ti}(lvl, args...) where {Ti} = SparseListLevel{Ti, Int}(lvl, args...)
-SparseListLevel{Ti, Tp}(lvl, args...) where {Ti, Tp} = SparseListLevel{Ti, Tp, typeof(lvl)}(lvl, args...)
+SparseListLevel{Ti}(lvl, shape, ptr, idx) where {Ti} = SparseListLevel{Ti, eltype(ptr)}(lvl, shape, ptr, idx)
+SparseListLevel{Ti}(lvl, args...) where {Ti} = SparseListLevel{Ti, postype(typeof(lvl))}(lvl, args...)
+SparseListLevel{Ti, Tp}(lvl, args...) where {Ti, Tp} =
+    SparseListLevel{Ti, Tp, memtype(typeof(lvl)){Tp, 1}, memtype(typeof(lvl)){Ti, 1}, typeof(lvl)}(lvl, args...)
 
-SparseListLevel{Ti, Tp, Lvl}(lvl) where {Ti, Tp, Lvl} = SparseListLevel{Ti, Tp, Lvl}(lvl, zero(Ti))
-SparseListLevel{Ti, Tp, Lvl}(lvl, shape) where {Ti, Tp, Lvl} = 
-    SparseListLevel{Ti, Tp, Lvl}(lvl, Ti(shape), Tp[1], Ti[])
+SparseListLevel{Ti, Tp, Vp, Vi, Lvl}(lvl) where {Ti, Tp, Vp, Vi, Lvl} = SparseListLevel{Ti, Tp, Vp, Vi, Lvl}(lvl, zero(Ti))
+SparseListLevel{Ti, Tp, Vp, Vi, Lvl}(lvl, shape) where {Ti, Tp, Vp, Vi, Lvl} = 
+    SparseListLevel{Ti, Tp, Vp, Vi, Lvl}(lvl, Ti(shape), Tp[1], Ti[])
 
+SparseListLevel{Ti, Tp, Lvl}(lvl, shape, ptr, idx) where {Ti, Tp, Lvl} = 
+    SparseListLevel{Ti, Tp, typeof(ptr), typeof(idx), Lvl}(lvl, Ti(shape), ptr, idx)
+    
 Base.summary(lvl::SparseListLevel) = "SparseList($(summary(lvl.lvl)))"
 similar_level(lvl::SparseListLevel) = SparseList(similar_level(lvl.lvl))
 similar_level(lvl::SparseListLevel, dim, tail...) = SparseList(similar_level(lvl.lvl, tail...), dim)
+
+function memtype(::Type{SparseListLevel{Ti, Tp,  Vp, Vi, Lvl}}) where {Ti, Tp, Lvl, Vi, Vp}
+    return containertype(Vp)
+end
+
+function postype(::Type{SparseListLevel{Ti, Tp,  Vp, Vi, Lvl}}) where {Ti, Tp, Lvl, Vi, Vp}
+    return Tp
+end
+
+function moveto(lvl::SparseListLevel{Ti, Tp, Vp, Vi, Lvl}, ::Type{MemType}) where {Ti, Tp, Lvl, Vi, Vp, MemType <: AbstractArray}
+    lvl_2 = moveto(lvl.lvl, MemType)
+    ptr_2 = MemType{Tp, 1}(lvl.ptr)
+    idx_2 = MemType{Ti, 1}(lvl.idx)
+    return SparseListLevel{Ti, Tp, typeof(ptr_2), typeof(idx_2), typeof(lvl_2)}(lvl_2, lvl.shape, ptr_2, idx_2)
+end
+
+
 
 function countstored_level(lvl::SparseListLevel, pos)
     countstored_level(lvl.lvl, lvl.ptr[pos + 1] - 1)
@@ -63,7 +84,7 @@ pattern!(lvl::SparseListLevel{Ti, Tp}) where {Ti, Tp} =
 redefault!(lvl::SparseListLevel{Ti, Tp}, init) where {Ti, Tp} = 
     SparseListLevel{Ti, Tp}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.idx)
 
-function Base.show(io::IO, lvl::SparseListLevel{Ti, Tp}) where {Ti, Tp}
+function Base.show(io::IO, lvl::SparseListLevel{Ti, Tp,  Vp, Vi, Lvl}) where {Ti, Tp, Lvl, Vi, Vp}
     if get(io, :compact, false)
         print(io, "SparseList(")
     else
@@ -76,9 +97,9 @@ function Base.show(io::IO, lvl::SparseListLevel{Ti, Tp}) where {Ti, Tp}
     if get(io, :compact, false)
         print(io, "…")
     else
-        show(IOContext(io, :typeinfo=>Vector{Tp}), lvl.ptr)
+        show(IOContext(io, :typeinfo=>Vp), lvl.ptr)
         print(io, ", ")
-        show(IOContext(io, :typeinfo=>Vector{Ti}), lvl.idx)
+        show(IOContext(io, :typeinfo=>Vi), lvl.idx)
     end
     print(io, ")")
 end
@@ -94,12 +115,12 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseLis
     display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
 end
 
-@inline level_ndims(::Type{<:SparseListLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = 1 + level_ndims(Lvl)
+@inline level_ndims(::Type{<:SparseListLevel{Ti, Tp,  Vp, Vi, Lvl}}) where {Ti, Tp,  Vp, Vi, Lvl} = 1 + level_ndims(Lvl)
 @inline level_size(lvl::SparseListLevel) = (level_size(lvl.lvl)..., lvl.shape)
 @inline level_axes(lvl::SparseListLevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.shape))
-@inline level_eltype(::Type{<:SparseListLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = level_eltype(Lvl)
-@inline level_default(::Type{<:SparseListLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = level_default(Lvl)
-data_rep_level(::Type{<:SparseListLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = SparseData(data_rep_level(Lvl))
+@inline level_eltype(::Type{<:SparseListLevel{Ti, Tp,  Vp, Vi, Lvl}}) where {Ti, Tp,  Vp, Vi, Lvl} = level_eltype(Lvl)
+@inline level_default(::Type{<:SparseListLevel{Ti, Tp,  Vp, Vi, Lvl}}) where {Ti, Tp,  Vp, Vi, Lvl} = level_default(Lvl)
+data_rep_level(::Type{<:SparseListLevel{Ti, Tp,  Vp, Vi, Lvl}}) where {Ti, Tp,  Vp, Vi, Lvl} = SparseData(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:SparseListLevel})() = fbr
 function (fbr::SubFiber{<:SparseListLevel{Ti}})(idxs...) where {Ti}
@@ -122,11 +143,13 @@ mutable struct VirtualSparseListLevel <: AbstractVirtualLevel
     qos_stop
     prev_pos
 end
-
+  
 is_level_injective(lvl::VirtualSparseListLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., false]
 is_level_atomic(lvl::VirtualSparseListLevel, ctx) = false
 
-function virtualize(ex, ::Type{SparseListLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}
+  
+
+function virtualize(ex, ::Type{SparseListLevel{Ti, Tp,  Vp, Vi, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl, Vi, Vp}
     sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Int)
     qos_fill = freshen(ctx, sym, :_qos_fill)
@@ -249,21 +272,13 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, s
                                 $my_q = Finch.scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                             end
                         end,
-                        body = Thunk(
-                            preamble = quote
-                                $my_i = $(lvl.ex).idx[$my_q]
-                            end,
-                            body = (ctx) -> Step(
-                                stop = (ctx, ext) -> value(my_i),
-                                chunk = Spike(
-                                    body = Fill(virtual_level_default(lvl)),
-                                    tail = Simplify(instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, subprotos))
-                                ),
-                                next = (ctx, ext) -> quote
-                                    $my_q += $(Tp(1))
-                                end
-                            )
-                        )
+                        preamble = :($my_i = $(lvl.ex).idx[$my_q]),
+                        stop = (ctx, ext) -> value(my_i),
+                        chunk = Spike(
+                            body = Fill(virtual_level_default(lvl)),
+                            tail = Simplify(instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, subprotos))
+                        ),
+                        next = (ctx, ext) -> :($my_q += $(Tp(1))) 
                     )
                 ),
                 Phase(
@@ -304,51 +319,19 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, s
                 Phase(
                     stop = (ctx, ext) -> value(my_i1),
                     body = (ctx, ext) -> Jumper(
-                        body = Thunk(
-                            body = (ctx) -> Jump(
-                                seek = (ctx, ext) -> quote
-                                    if $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
-                                        $my_q = Finch.scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
-                                    end
-                                    $my_i2 = $(lvl.ex).idx[$my_q]
-                                end,
-                                stop = (ctx, ext) -> value(my_i2),
-                                body = (ctx, ext, ext_2) -> Switch([
-                                    value(:($(ctx(getstop(ext_2))) == $my_i2)) => Thunk(
-                                        body = (ctx) -> Spike(
-                                            body = Fill(virtual_level_default(lvl)),
-                                            tail = instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, subprotos),
-                                        ),
-                                        epilogue = quote
-                                            $my_q += $(Tp(1))
-                                        end
-                                    ),
-                                    literal(true) => Stepper(
-                                        seek = (ctx, ext) -> quote
-                                            if $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
-                                                $my_q = Finch.scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
-                                            end
-                                        end,
-                                        body = Thunk(
-                                            preamble = :(
-                                                $my_i3 = $(lvl.ex).idx[$my_q]
-                                            ),
-                                            body = (ctx) -> Step(
-                                                stop = (ctx, ext) -> value(my_i3),
-                                                chunk = Spike(
-                                                    body = Fill(virtual_level_default(lvl)),
-                                                    tail =  instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, subprotos),
-                                                ),
-                                                next = (ctx, ext) -> quote
-                                                    $my_q += $(Tp(1))
-                                                end
-                                            )
-                                        )
-                                    ),
-                                ])
-                            )
-                        )
-                    )
+                        seek = (ctx, ext) -> quote
+                            if $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
+                                $my_q = Finch.scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
+                            end
+                        end,                        
+                        preamble = :($my_i2 = $(lvl.ex).idx[$my_q]),
+                        stop = (ctx, ext) -> value(my_i2),
+                        chunk =  Spike(
+                            body = Fill(virtual_level_default(lvl)),
+                            tail = instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, subprotos),
+                        ),
+                        next = (ctx, ext) -> :($my_q += $(Tp(1))),
+                    )  
                 ),
                 Phase(
                     body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))

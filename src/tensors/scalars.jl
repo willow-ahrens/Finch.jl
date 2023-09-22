@@ -37,7 +37,7 @@ end
 
 virtual_size(::VirtualScalar, ctx) = ()
 
-virtual_default(tns::VirtualScalar, ctx) = Some(tns.D)
+virtual_default(tns::VirtualScalar, ctx) = tns.D
 virtual_eltype(tns::VirtualScalar, ctx) = tns.Tv
 
 FinchNotation.finch_leaf(x::VirtualScalar) = virtual(x)
@@ -75,7 +75,7 @@ end
 
 virtual_size(::VirtualDirtyScalar, ctx) = ()
 
-virtual_default(tns::VirtualDirtyScalar, ctx) = Some(tns.D)
+virtual_default(tns::VirtualDirtyScalar, ctx) = tns.D
 virtual_eltype(tns::VirtualDirtyScalar, ctx) = tns.Tv
 
 instantiate_reader(tns::VirtualDirtyScalar, ctx, subprotos) = tns

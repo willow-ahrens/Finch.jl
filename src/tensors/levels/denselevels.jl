@@ -5,8 +5,6 @@ A subfiber of a dense level is an array which stores every slice `A[:, ..., :,
 i]` as a distinct subfiber in `lvl`. Optionally, `dim` is the size of the last
 dimension. `Ti` is the type of the indices used to index the level.
 
-In the [`Fiber!`](@ref) constructor, `d` is an alias for `DenseLevel`.
-
 ```jldoctest
 julia> ndims(Fiber!(Dense(Element(0.0))))
 1
@@ -40,7 +38,19 @@ Base.summary(lvl::Dense) = "Dense($(summary(lvl.lvl)))"
 similar_level(lvl::DenseLevel) = Dense(similar_level(lvl.lvl))
 similar_level(lvl::DenseLevel, dims...) = Dense(similar_level(lvl.lvl, dims[1:end-1]...), dims[end])
 
-pattern!(lvl::DenseLevel{Ti}) where {Ti} = 
+function memtype(::Type{DenseLevel{Ti, Lvl}}) where {Ti, Lvl}
+    return memtype(Lvl)
+end
+
+function postype(::Type{DenseLevel{Ti, Lvl}}) where {Ti, Lvl}
+    return postype(Lvl)
+end
+
+function moveto(lvl::DenseLevel{Ti, Lvl},  ::Type{MemType}) where {Ti, Lvl, MemType <: AbstractArray}
+    return DenseLevel(moveto(lvl.lvl, MemType), lvl.shape)
+end
+
+pattern!(lvl::DenseLevel{Ti, Lvl}) where {Ti, Lvl} = 
     DenseLevel{Ti}(pattern!(lvl.lvl), lvl.shape)
 
 redefault!(lvl::DenseLevel{Ti}, init) where {Ti} = 

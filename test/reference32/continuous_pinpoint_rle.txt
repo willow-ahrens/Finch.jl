@@ -27,18 +27,16 @@ quote
             y_lvl_i_stop = y_lvl.right[y_lvl_q]
             phase_start_2 = i
             phase_stop_2 = min(phase_stop, y_lvl_i_stop)
-            if phase_stop_2 >= i
-                phase_start_4 = max(phase_start_2, y_lvl_i_start)
-                if phase_stop_2 >= phase_start_4
-                    y_lvl_2_val_2 = y_lvl_2.val[y_lvl_q]
-                    cond_2 = -phase_start_4 + phase_stop_2 == 0
-                    if cond_2
-                        z2_val = y_lvl_2_val_2 + z2_val
-                    end
+            phase_start_4 = max(phase_start_2, y_lvl_i_start)
+            if phase_stop_2 >= phase_start_4
+                y_lvl_2_val_2 = y_lvl_2.val[y_lvl_q]
+                cond_2 = -phase_start_4 + phase_stop_2 == 0
+                if cond_2
+                    z2_val = y_lvl_2_val_2 + z2_val
                 end
-                y_lvl_q += phase_stop_2 == y_lvl_i_stop
-                i = phase_stop_2 + limit(0+ϵ)
             end
+            y_lvl_q += phase_stop_2 == y_lvl_i_stop
+            i = phase_stop_2 + limit(0+ϵ)
         end
     end
     (z2 = (Scalar){0, Int32}(z2_val),)

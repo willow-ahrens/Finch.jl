@@ -46,6 +46,8 @@ function virtual_call(::typeof(extent), ctx, start, stop)
     end
 end
 
+virtual_uncall(ext::Extent) = call(extent, ext.start, ext.stop)
+
 FinchNotation.finch_leaf(x::Extent) = virtual(x)
 
 Base.:(==)(a::Extent, b::Extent) =
@@ -123,6 +125,8 @@ function virtual_call(::typeof(parallel), ctx, arg)
         ParallelDimension(arg.val)
     end
 end
+
+virtual_uncall(ext::ParallelDimension) = call(parallel, ext.ext)
 
 FinchNotation.finch_leaf(x::ParallelDimension) = virtual(x)
 
@@ -222,6 +226,10 @@ cache_dim!(ctx, var, ext::ContinuousExtent) = ContinuousExtent(
 getunit(ext::Extent) = literal(1)
 getunit(ext::ContinuousExtent) = Eps
 getunit(ext::FinchNode) = ext.kind === virtual ? getunit(ext.val) : ext
+
+get_smallest_measure(ext::Extent) = literal(1)
+get_smallest_measure(ext::ContinuousExtent) = literal(0) 
+get_smallest_measure(ext::FinchNode) = ext.kind === virtual ? get_smallest_measure(ext.val) : ext
 
 getstart(ext::ContinuousExtent) = ext.start
 getstart(ext::FinchNode) = ext.kind === virtual ? getstart(ext.val) : ext

@@ -9,6 +9,7 @@ begin
     Finch.resize_if_smaller!(C_lvl.ptr, 1 + 1)
     Finch.fill_range!(C_lvl.ptr, 0, 1 + 1, 1 + 1)
     C_lvl_qos = 0 + 1
+    0 < 1 || throw(FinchProtocolError("SparseListLevels cannot be updated multiple times"))
     A_lvl_q_2 = A_lvl.ptr[1]
     A_lvl_q_stop_2 = A_lvl.ptr[1 + 1]
     if A_lvl_q_2 < A_lvl_q_stop_2
@@ -48,13 +49,13 @@ begin
                     phase_stop_5 = min(phase_stop_4, -v_3 + -3 + A_lvl_i1)
                     if phase_stop_5 >= phase_start_4
                         j = phase_start_4
-                        if A_lvl.idx[A_lvl_q] < (phase_start_4 + v_3) + +3
-                            A_lvl_q = Finch.scansearch(A_lvl.idx, (phase_start_4 + v_3) + +3, A_lvl_q, A_lvl_q_stop - 1)
+                        if A_lvl.idx[A_lvl_q] < (phase_start_4 + v_3) + 3
+                            A_lvl_q = Finch.scansearch(A_lvl.idx, (phase_start_4 + v_3) + 3, A_lvl_q, A_lvl_q_stop - 1)
                         end
                         while j <= phase_stop_5
                             A_lvl_i = A_lvl.idx[A_lvl_q]
                             phase_stop_6 = min(phase_stop_5, -v_3 + -3 + A_lvl_i)
-                            if A_lvl_i == (phase_stop_6 + v_3) + +3
+                            if A_lvl_i == (phase_stop_6 + v_3) + 3
                                 A_lvl_2_val_3 = A_lvl_2.val[A_lvl_q]
                                 F_lvl_q = (1 - 1) * F_lvl.shape + phase_stop_6
                                 F_lvl_2_val_2 = F_lvl_2.val[F_lvl_q]

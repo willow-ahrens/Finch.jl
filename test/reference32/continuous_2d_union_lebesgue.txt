@@ -66,15 +66,13 @@ quote
                         y_lvl_2_i_stop = y_lvl_2.right[y_lvl_2_q]
                         phase_start_6 = j
                         phase_stop_6 = min(phase_stop_5, y_lvl_2_i_stop)
-                        if phase_stop_6 >= j
-                            phase_start_8 = max(phase_start_6, y_lvl_2_i_start)
-                            if phase_stop_6 >= phase_start_8
-                                y_lvl_3_val_2 = y_lvl_3.val[y_lvl_2_q]
-                                s_val = s_val + drop_eps(-phase_start_4 + phase_stop_4) * drop_eps(-phase_start_8 + phase_stop_6) * y_lvl_3_val_2
-                            end
-                            y_lvl_2_q += phase_stop_6 == y_lvl_2_i_stop
-                            j = phase_stop_6 + limit(0+ϵ)
+                        phase_start_8 = max(phase_start_6, y_lvl_2_i_start)
+                        if phase_stop_6 >= phase_start_8
+                            y_lvl_3_val_2 = y_lvl_3.val[y_lvl_2_q]
+                            s_val = s_val + drop_eps(-phase_start_4 + phase_stop_4) * drop_eps(-phase_start_8 + phase_stop_6) * y_lvl_3_val_2
                         end
+                        y_lvl_2_q += phase_stop_6 == y_lvl_2_i_stop
+                        j = phase_stop_6 + limit(0+ϵ)
                     end
                 end
             end
@@ -99,15 +97,13 @@ quote
                         x_lvl_2_i_stop = x_lvl_2.right[x_lvl_2_q]
                         phase_start_12 = j
                         phase_stop_12 = min(phase_stop_11, x_lvl_2_i_stop)
-                        if phase_stop_12 >= j
-                            phase_start_14 = max(phase_start_12, x_lvl_2_i_start)
-                            if phase_stop_12 >= phase_start_14
-                                x_lvl_3_val_2 = x_lvl_3.val[x_lvl_2_q]
-                                s_val = s_val + drop_eps(-phase_start_10 + phase_stop_10) * drop_eps(-phase_start_14 + phase_stop_12) * x_lvl_3_val_2
-                            end
-                            x_lvl_2_q += phase_stop_12 == x_lvl_2_i_stop
-                            j = phase_stop_12 + limit(0+ϵ)
+                        phase_start_14 = max(phase_start_12, x_lvl_2_i_start)
+                        if phase_stop_12 >= phase_start_14
+                            x_lvl_3_val_2 = x_lvl_3.val[x_lvl_2_q]
+                            s_val = s_val + drop_eps(-phase_start_10 + phase_stop_10) * drop_eps(-phase_start_14 + phase_stop_12) * x_lvl_3_val_2
                         end
+                        x_lvl_2_q += phase_stop_12 == x_lvl_2_i_stop
+                        j = phase_stop_12 + limit(0+ϵ)
                     end
                 end
             end
@@ -178,15 +174,13 @@ quote
                         y_lvl_2_i_stop_2 = y_lvl_2.right[y_lvl_2_q_2]
                         phase_start_24 = j
                         phase_stop_24 = min(y_lvl_2_i_stop_2, phase_stop_23)
-                        if phase_stop_24 >= j
-                            phase_start_26 = max(y_lvl_2_i_start_2, phase_start_24)
-                            if phase_stop_24 >= phase_start_26
-                                y_lvl_3_val_5 = y_lvl_3.val[y_lvl_2_q_2]
-                                s_val = s_val + drop_eps(-phase_start_16 + phase_stop_2) * drop_eps(-phase_start_26 + phase_stop_24) * y_lvl_3_val_5
-                            end
-                            y_lvl_2_q_2 += phase_stop_24 == y_lvl_2_i_stop_2
-                            j = phase_stop_24 + limit(0+ϵ)
+                        phase_start_26 = max(y_lvl_2_i_start_2, phase_start_24)
+                        if phase_stop_24 >= phase_start_26
+                            y_lvl_3_val_5 = y_lvl_3.val[y_lvl_2_q_2]
+                            s_val = s_val + drop_eps(-phase_start_16 + phase_stop_2) * drop_eps(-phase_start_26 + phase_stop_24) * y_lvl_3_val_5
                         end
+                        y_lvl_2_q_2 += phase_stop_24 == y_lvl_2_i_stop_2
+                        j = phase_stop_24 + limit(0+ϵ)
                     end
                 end
                 phase_start_27 = max(limit(1.0), limit(0+ϵ) + y_lvl_2_i_end_2)
@@ -201,15 +195,13 @@ quote
                         x_lvl_2_i_stop_2 = x_lvl_2.right[x_lvl_2_q_2]
                         phase_start_28 = j
                         phase_stop_28 = min(x_lvl_2_i_stop_2, phase_stop_27)
-                        if phase_stop_28 >= j
-                            phase_start_30 = max(x_lvl_2_i_start_2, phase_start_28)
-                            if phase_stop_28 >= phase_start_30
-                                x_lvl_3_val_5 = x_lvl_3.val[x_lvl_2_q_2]
-                                s_val = s_val + drop_eps(-phase_start_16 + phase_stop_2) * drop_eps(-phase_start_30 + phase_stop_28) * x_lvl_3_val_5
-                            end
-                            x_lvl_2_q_2 += phase_stop_28 == x_lvl_2_i_stop_2
-                            j = phase_stop_28 + limit(0+ϵ)
+                        phase_start_30 = max(x_lvl_2_i_start_2, phase_start_28)
+                        if phase_stop_28 >= phase_start_30
+                            x_lvl_3_val_5 = x_lvl_3.val[x_lvl_2_q_2]
+                            s_val = s_val + drop_eps(-phase_start_16 + phase_stop_2) * drop_eps(-phase_start_30 + phase_stop_28) * x_lvl_3_val_5
                         end
+                        x_lvl_2_q_2 += phase_stop_28 == x_lvl_2_i_stop_2
+                        j = phase_stop_28 + limit(0+ϵ)
                     end
                 end
             end
@@ -230,42 +222,38 @@ quote
             x_lvl_i_stop = x_lvl.right[x_lvl_q]
             phase_start_33 = i
             phase_stop_33 = min(x_lvl_i_stop, phase_stop_32)
-            if phase_stop_33 >= i
-                phase_start_35 = max(x_lvl_i_start, phase_start_33)
-                if phase_stop_33 >= phase_start_35
-                    x_lvl_2_q_3 = x_lvl_2.ptr[x_lvl_q]
-                    x_lvl_2_q_stop_3 = x_lvl_2.ptr[x_lvl_q + 1]
-                    if x_lvl_2_q_3 < x_lvl_2_q_stop_3
-                        x_lvl_2_i_end_3 = x_lvl_2.right[x_lvl_2_q_stop_3 - 1]
-                    else
-                        x_lvl_2_i_end_3 = 0.0f0
+            phase_start_35 = max(x_lvl_i_start, phase_start_33)
+            if phase_stop_33 >= phase_start_35
+                x_lvl_2_q_3 = x_lvl_2.ptr[x_lvl_q]
+                x_lvl_2_q_stop_3 = x_lvl_2.ptr[x_lvl_q + 1]
+                if x_lvl_2_q_3 < x_lvl_2_q_stop_3
+                    x_lvl_2_i_end_3 = x_lvl_2.right[x_lvl_2_q_stop_3 - 1]
+                else
+                    x_lvl_2_i_end_3 = 0.0f0
+                end
+                phase_stop_36 = min(y_lvl_2.shape, x_lvl_2_i_end_3)
+                if phase_stop_36 >= limit(1.0)
+                    j = limit(1.0)
+                    if x_lvl_2.right[x_lvl_2_q_3] < limit(1.0)
+                        x_lvl_2_q_3 = Finch.scansearch(x_lvl_2.right, limit(1.0), x_lvl_2_q_3, x_lvl_2_q_stop_3 - 1)
                     end
-                    phase_stop_36 = min(y_lvl_2.shape, x_lvl_2_i_end_3)
-                    if phase_stop_36 >= limit(1.0)
-                        j = limit(1.0)
-                        if x_lvl_2.right[x_lvl_2_q_3] < limit(1.0)
-                            x_lvl_2_q_3 = Finch.scansearch(x_lvl_2.right, limit(1.0), x_lvl_2_q_3, x_lvl_2_q_stop_3 - 1)
+                    while j <= phase_stop_36
+                        x_lvl_2_i_start_3 = x_lvl_2.left[x_lvl_2_q_3]
+                        x_lvl_2_i_stop_3 = x_lvl_2.right[x_lvl_2_q_3]
+                        phase_start_37 = j
+                        phase_stop_37 = min(phase_stop_36, x_lvl_2_i_stop_3)
+                        phase_start_39 = max(phase_start_37, x_lvl_2_i_start_3)
+                        if phase_stop_37 >= phase_start_39
+                            x_lvl_3_val_6 = x_lvl_3.val[x_lvl_2_q_3]
+                            s_val = s_val + drop_eps(-phase_start_35 + phase_stop_33) * drop_eps(-phase_start_39 + phase_stop_37) * x_lvl_3_val_6
                         end
-                        while j <= phase_stop_36
-                            x_lvl_2_i_start_3 = x_lvl_2.left[x_lvl_2_q_3]
-                            x_lvl_2_i_stop_3 = x_lvl_2.right[x_lvl_2_q_3]
-                            phase_start_37 = j
-                            phase_stop_37 = min(phase_stop_36, x_lvl_2_i_stop_3)
-                            if phase_stop_37 >= j
-                                phase_start_39 = max(phase_start_37, x_lvl_2_i_start_3)
-                                if phase_stop_37 >= phase_start_39
-                                    x_lvl_3_val_6 = x_lvl_3.val[x_lvl_2_q_3]
-                                    s_val = s_val + drop_eps(-phase_start_35 + phase_stop_33) * drop_eps(-phase_start_39 + phase_stop_37) * x_lvl_3_val_6
-                                end
-                                x_lvl_2_q_3 += phase_stop_37 == x_lvl_2_i_stop_3
-                                j = phase_stop_37 + limit(0+ϵ)
-                            end
-                        end
+                        x_lvl_2_q_3 += phase_stop_37 == x_lvl_2_i_stop_3
+                        j = phase_stop_37 + limit(0+ϵ)
                     end
                 end
-                x_lvl_q += phase_stop_33 == x_lvl_i_stop
-                i = phase_stop_33 + limit(0+ϵ)
             end
+            x_lvl_q += phase_stop_33 == x_lvl_i_stop
+            i = phase_stop_33 + limit(0+ϵ)
         end
     end
     phase_start_41 = max(limit(1.0), limit(0+ϵ) + x_lvl_i_end)
@@ -280,42 +268,38 @@ quote
             y_lvl_i_stop = y_lvl.right[y_lvl_q]
             phase_start_42 = i
             phase_stop_42 = min(y_lvl_i_stop, phase_stop_41)
-            if phase_stop_42 >= i
-                phase_start_44 = max(y_lvl_i_start, phase_start_42)
-                if phase_stop_42 >= phase_start_44
-                    y_lvl_2_q_3 = y_lvl_2.ptr[y_lvl_q]
-                    y_lvl_2_q_stop_3 = y_lvl_2.ptr[y_lvl_q + 1]
-                    if y_lvl_2_q_3 < y_lvl_2_q_stop_3
-                        y_lvl_2_i_end_3 = y_lvl_2.right[y_lvl_2_q_stop_3 - 1]
-                    else
-                        y_lvl_2_i_end_3 = 0.0f0
+            phase_start_44 = max(y_lvl_i_start, phase_start_42)
+            if phase_stop_42 >= phase_start_44
+                y_lvl_2_q_3 = y_lvl_2.ptr[y_lvl_q]
+                y_lvl_2_q_stop_3 = y_lvl_2.ptr[y_lvl_q + 1]
+                if y_lvl_2_q_3 < y_lvl_2_q_stop_3
+                    y_lvl_2_i_end_3 = y_lvl_2.right[y_lvl_2_q_stop_3 - 1]
+                else
+                    y_lvl_2_i_end_3 = 0.0f0
+                end
+                phase_stop_45 = min(y_lvl_2.shape, y_lvl_2_i_end_3)
+                if phase_stop_45 >= limit(1.0)
+                    j = limit(1.0)
+                    if y_lvl_2.right[y_lvl_2_q_3] < limit(1.0)
+                        y_lvl_2_q_3 = Finch.scansearch(y_lvl_2.right, limit(1.0), y_lvl_2_q_3, y_lvl_2_q_stop_3 - 1)
                     end
-                    phase_stop_45 = min(y_lvl_2.shape, y_lvl_2_i_end_3)
-                    if phase_stop_45 >= limit(1.0)
-                        j = limit(1.0)
-                        if y_lvl_2.right[y_lvl_2_q_3] < limit(1.0)
-                            y_lvl_2_q_3 = Finch.scansearch(y_lvl_2.right, limit(1.0), y_lvl_2_q_3, y_lvl_2_q_stop_3 - 1)
+                    while j <= phase_stop_45
+                        y_lvl_2_i_start_3 = y_lvl_2.left[y_lvl_2_q_3]
+                        y_lvl_2_i_stop_3 = y_lvl_2.right[y_lvl_2_q_3]
+                        phase_start_46 = j
+                        phase_stop_46 = min(phase_stop_45, y_lvl_2_i_stop_3)
+                        phase_start_48 = max(phase_start_46, y_lvl_2_i_start_3)
+                        if phase_stop_46 >= phase_start_48
+                            y_lvl_3_val_6 = y_lvl_3.val[y_lvl_2_q_3]
+                            s_val = s_val + drop_eps(-phase_start_44 + phase_stop_42) * drop_eps(-phase_start_48 + phase_stop_46) * y_lvl_3_val_6
                         end
-                        while j <= phase_stop_45
-                            y_lvl_2_i_start_3 = y_lvl_2.left[y_lvl_2_q_3]
-                            y_lvl_2_i_stop_3 = y_lvl_2.right[y_lvl_2_q_3]
-                            phase_start_46 = j
-                            phase_stop_46 = min(phase_stop_45, y_lvl_2_i_stop_3)
-                            if phase_stop_46 >= j
-                                phase_start_48 = max(phase_start_46, y_lvl_2_i_start_3)
-                                if phase_stop_46 >= phase_start_48
-                                    y_lvl_3_val_6 = y_lvl_3.val[y_lvl_2_q_3]
-                                    s_val = s_val + drop_eps(-phase_start_44 + phase_stop_42) * drop_eps(-phase_start_48 + phase_stop_46) * y_lvl_3_val_6
-                                end
-                                y_lvl_2_q_3 += phase_stop_46 == y_lvl_2_i_stop_3
-                                j = phase_stop_46 + limit(0+ϵ)
-                            end
-                        end
+                        y_lvl_2_q_3 += phase_stop_46 == y_lvl_2_i_stop_3
+                        j = phase_stop_46 + limit(0+ϵ)
                     end
                 end
-                y_lvl_q += phase_stop_42 == y_lvl_i_stop
-                i = phase_stop_42 + limit(0+ϵ)
             end
+            y_lvl_q += phase_stop_42 == y_lvl_i_stop
+            i = phase_stop_42 + limit(0+ϵ)
         end
     end
     (s = (Scalar){0, Int32}(s_val),)
@@ -326,5 +310,5 @@ julia> @finch begin
             s[] += (x[j, i] + y[j, i]) * d(i, j)
         end
     end
-(s = Scalar{0, Int32}(5228),)
+(s = Scalar{0, Int32}(5238),)
 

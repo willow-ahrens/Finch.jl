@@ -3,22 +3,16 @@ CurrentModule = Finch
 ```
 # Finch Tensor File Input/Output
 
-Finch supports many input/output tensor file formats.
-
-## Finch Format (`.fbr`)
-
-Finch's custom binary file format for fibers is best suited to users who plan to
-exclusively use Finch in Julia (perhaps across different platforms). This format
-straightforwardly maps the fields of Finch fiber formats to arrays in data
-containers (currently Finch only supports HDF5, but if you file an issue someone
-might add Numpy NPZ). Arrays are stored 1-indexed as they would be in memory.
+All of the file formats supported by Finch are listed below. Each format has a
+corresponding `read` and `write` function, and can be selected automatically
+based on the file extension with the following functions:
 
 ```@docs
-fbrwrite
-fbrread
+fread
+fwrite
 ```
 
-## Binsparse Format (`.fbr`)
+## Binsparse Format (`.bsp`)
 
 Finch supports the most recent revision of the
 [Binsparse](https://github.com/GraphBLAS/binsparse-specification) binary sparse
@@ -26,13 +20,13 @@ tensor format, as well as the proposed [v2.0 tensor
 extension](https://github.com/GraphBLAS/binsparse-specification/pull/20). This
 is a good option for those who want an efficient way to transfer sparse tensors
 between supporting libraries and languages. The Binsparse format represents the
-tensor format as a JSON string in the underlying data container (currently Finch
-only supports HDF5, but if you file an issue someone might add Numpy NPZ).
+tensor format as a JSON string in the underlying data container, which can be either
+HDF5 or a combination of NPY or JSON files.
 Binsparse arrays are stored 0-indexed.
 
 ```@docs
-bswrite
-bsread
+bspwrite
+bspread
 ```
 
 ## TensorMarket (`.mtx`, `.ttx`)
@@ -42,4 +36,13 @@ Finch supports the [MatrixMarket](https://math.nist.gov/MatrixMarket/formats.htm
 ```@docs
 fttwrite
 fttread
+```
+
+## FROSTT (`.tns`)
+
+Finch supports the [FROSTT](http://frostt.io/tensors/) format for legacy codes that still use it.
+
+```@docs
+ftnswrite
+ftnsread
 ```

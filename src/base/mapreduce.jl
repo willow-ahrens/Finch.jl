@@ -11,6 +11,7 @@ by `tns` on `dims` by `op`.
 """
 function reduce_rep end
 
+#TODO we really shouldn't use Drop like this here.
 reduce_rep(op, z, tns, dims) =
     reduce_rep_def(op, z, tns, reverse(map(n -> n in dims ? Drop(n) : n, 1:ndims(tns)))...)
 
@@ -83,8 +84,7 @@ end
 function reduce_helper_code(::Type{Callable{op}}, bc::Type{<:Broadcasted{FinchStyle{N}}}, ::Type{Val{dims}}, ::Type{Val{init}}) where {op, dims, init, N}
     contain(LowerJulia()) do ctx
         idxs = [freshen(ctx.code, :idx, n) for n = 1:N]
-        rep = pointwise_finch_traits(:bc, bc, index.(idxs))
-        rep = collapse_rep(PointwiseRep(ctx, index.(reverse(idxs)))(rep))
+        rep = collapse_rep(data_rep(bc))
         dst = freshen(ctx.code, :dst)
         if dims == Colon()
             dst_protos = []

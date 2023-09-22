@@ -80,5 +80,5 @@ julia> @finch begin
             end
         end
     end
-(y = Fiber(Dense{Int64}(Element{0.0, Float64}([9.899999999999999, 1.1, 15.400000000000002, 16.5]), 4)),)
+(y = Fiber(Dense{Int64}(Element{0.0, Float64, Int64, Vector{Float64}}([9.899999999999999, 1.1, 15.400000000000002, 16.5]), 4)),)
 

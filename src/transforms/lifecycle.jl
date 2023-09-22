@@ -34,6 +34,7 @@ function enforce_lifecycles(prgm)
     close_scope(prgm, LifecycleVisitor())
 end
 
+#assumes arguments to prgm have been visited already and their uses collected
 function open_stmt(prgm, ctx::LifecycleVisitor)
     for (tns, mode) in ctx.uses
         cur_mode = get(ctx.modes, tns, reader())
@@ -75,7 +76,7 @@ function (ctx::LifecycleVisitor)(node::FinchNode)
         idxs = map(ctx, node.idxs)
         uses = get(ctx.scoped_uses, getroot(node.tns), ctx.global_uses)
         get(uses, getroot(node.tns), node.mode).kind !== node.mode.kind &&
-            throw(LifecycleError("cannot mix reads and writes to $(node.tns) outside of defining scope (perhaps missing definition)"))
+            throw(LifecycleError("cannot mix reads and writes to $(node.tns) outside of defining scope (hint: perhaps add a declaration like `var .= 0` or use an updating operator like `var += 1`)"))
         uses[getroot(node.tns)] = node.mode
         access(node.tns, node.mode, idxs...)
     elseif istree(node)

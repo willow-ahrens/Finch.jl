@@ -1,23 +1,72 @@
-struct SparseByteMapLevel{Ti, Tp, Lvl}
+"""
+    SparseByteMapLevel{[Ti=Tuple{Int...}], [Tp=Int], [Vp] [BV]}(lvl, [dims])
+
+Like the [`SparseListLevel`](@ref), but a dense bitmap is used to encode
+which slices are stored. This allows the ByteMap level to support random access.
+
+`Ti` is the type of the last fiber index, and `Tp` is the type used for
+positions in the level. 
+
+```jldoctest
+julia> Fiber!(Dense(SparseByteMap(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
+Dense [:,1:3]
+├─[:,1]: SparseByteMap (0.0) [1:3]
+│ ├─[1]: 10.0
+│ ├─[2]: 30.0
+├─[:,2]: SparseByteMap (0.0) [1:3]
+├─[:,3]: SparseByteMap (0.0) [1:3]
+│ ├─[1]: 20.0
+│ ├─[3]: 40.0
+
+julia> Fiber!(SparseByteMap(SparseByteMap(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
+SparseByteMap (0.0) [:,1:3]
+├─[:,1]: SparseByteMap (0.0) [1:3]
+│ ├─[1]: 10.0
+│ ├─[2]: 30.0
+├─[:,3]: SparseByteMap (0.0) [1:3]
+│ ├─[1]: 20.0
+│ ├─[3]: 40.0
+```
+"""
+struct SparseByteMapLevel{Ti, Tp, Vp<:AbstractVector, BV<:AbstractVector{Bool}, VTpi<:AbstractVector{<:Tuple{Any, Any}}, Lvl}
     lvl::Lvl
     shape::Ti
-    ptr::Vector{Tp}
-    tbl::Vector{Bool}
-    srt::Vector{Tuple{Tp, Ti}}
+    ptr:: Vp
+    tbl::BV
+    srt::VTpi
 end
 const SparseByteMap = SparseByteMapLevel
-SparseByteMapLevel(lvl) = SparseByteMapLevel{Int}(lvl)
+SparseByteMapLevel(lvl::Lvl) where {Lvl} = SparseByteMapLevel{Int}(lvl)
 SparseByteMapLevel(lvl, shape, args...) = SparseByteMapLevel{typeof(shape)}(lvl, shape, args...)
-SparseByteMapLevel{Ti}(lvl, args...) where {Ti} = SparseByteMapLevel{Ti, Int}(lvl, args...)
-SparseByteMapLevel{Ti, Tp}(lvl, args...) where {Ti, Tp} = SparseByteMapLevel{Ti, Tp, typeof(lvl)}(lvl, args...)
+SparseByteMapLevel{Ti}(lvl::Lvl, args...) where {Ti, Lvl} = SparseByteMapLevel{Ti, postype(Lvl)}(lvl, args...)
+SparseByteMapLevel{Ti, Tp}(lvl, args...) where {Ti, Tp} = SparseByteMapLevel{Ti, Tp,  memtype(typeof(lvl)){Tp, 1}, memtype(typeof(lvl)){Bool, 1}, memtype(typeof(lvl)){Tuple{Tp, Ti}, 1}, typeof(lvl)}(lvl, args...)
 
-SparseByteMapLevel{Ti, Tp, Lvl}(lvl) where {Ti, Tp, Lvl} = SparseByteMapLevel{Ti, Tp, Lvl}(lvl, zero(Ti))
-SparseByteMapLevel{Ti, Tp, Lvl}(lvl, shape) where {Ti, Tp, Lvl} = 
-    SparseByteMapLevel{Ti, Tp, Lvl}(lvl, Ti(shape), Tp[1], Bool[], Tuple{Tp, Ti}[])
+SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}(lvl) where {Ti, Tp, Vp, BV, VTpi, Lvl} = SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}(lvl, zero(Ti))
+SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}(lvl, shape) where {Ti, Tp, Vp, BV, VTpi, Lvl} = 
+    SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}(lvl, Ti(shape), Tp[1], Bool[], Tuple{Tp, Ti}[])
+
 
 Base.summary(lvl::SparseByteMapLevel) = "SparseByteMap($(summary(lvl.lvl)))"
 similar_level(lvl::SparseByteMapLevel) = SparseByteMap(similar_level(lvl.lvl))
 similar_level(lvl::SparseByteMapLevel, dims...) = SparseByteMap(similar_level(lvl.lvl, dims[1:end-1]...), dims[end])
+
+function memtype(::Type{SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}}) where {Ti, Tp, Vp, BV, VTpi, Lvl}
+    return memtype(Lvl)
+end
+
+function postype(::Type{SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}}) where {Ti, Tp, Vp, BV, VTpi, Lvl}
+    return Tp
+end
+
+function moveto(lvl:: SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}, ::Type{MemType}) where {Ti, Tp, Vp, BV, VTpi, Lvl, MemType <: AbstractArray}
+    lvl_2 = moveto(lvl.lvl, MemType)
+    ptr_2 = MemType{Tp, 1}(lvl.ptr)
+    tbl_2 = MemType{Bool, 1}(lvl.tbl)
+    srt_2 = MemType{Tuple{Tp, Ti}, 1}(lvl.srt)
+    return  SparseByteMapLevel{Ti, Tp, MemType{Tp, 1}, MemType{Bool, 1}, MemType{Tuple{Tp, Ti}, 1}, typeof(lvl_2)}(lvl_2, lvl.shape, ptr_2, tbl_2, srt_2)
+end
+
+
 
 pattern!(lvl::SparseByteMapLevel{Ti, Tp}) where {Ti, Tp} = 
     SparseByteMapLevel{Ti, Tp}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)
@@ -29,7 +78,7 @@ function countstored_level(lvl::SparseByteMapLevel, pos)
     countstored_level(lvl.lvl, lvl.ptr[pos + 1] - 1)
 end
 
-function Base.show(io::IO, lvl::SparseByteMapLevel{Ti, Tp}) where {Ti, Tp}
+function Base.show(io::IO, lvl::SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl},) where {Ti, Tp, Vp, BV, VTpi, Lvl}
     if get(io, :compact, false)
         print(io, "SparseByteMap(")
     else
@@ -42,11 +91,11 @@ function Base.show(io::IO, lvl::SparseByteMapLevel{Ti, Tp}) where {Ti, Tp}
     if get(io, :compact, false)
         print(io, "…")
     else
-        show(IOContext(io, :typeinfo=>Vector{Tp}), lvl.ptr)
+        show(IOContext(io, :typeinfo=>Vp), lvl.ptr)
         print(io, ", ")
-        show(IOContext(io, :typeinfo=>Vector{Bool}), lvl.tbl)
+        show(IOContext(io, :typeinfo=>BV), lvl.tbl)
         print(io, ", ")
-        show(IOContext(io, :typeinfo=>Vector{Tuple{Tp, Ti}}), lvl.srt)
+        show(IOContext(io, :typeinfo=>VTpi), lvl.srt)
     end
     print(io, ")")
 end
@@ -62,12 +111,12 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseByt
     display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
 end
 
-@inline level_ndims(::Type{<:SparseByteMapLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = 1 + level_ndims(Lvl)
+@inline level_ndims(::Type{<:SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}}) where {Ti, Tp, Vp, BV, VTpi, Lvl} = 1 + level_ndims(Lvl)
 @inline level_size(lvl::SparseByteMapLevel) = (level_size(lvl.lvl)..., lvl.shape)
 @inline level_axes(lvl::SparseByteMapLevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.shape))
-@inline level_eltype(::Type{<:SparseByteMapLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = level_eltype(Lvl)
-@inline level_default(::Type{<:SparseByteMapLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = level_default(Lvl)
-data_rep_level(::Type{<:SparseByteMapLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = SparseData(data_rep_level(Lvl))
+@inline level_eltype(::Type{<:SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}}) where {Ti, Tp, Vp, BV, VTpi, Lvl} = level_eltype(Lvl)
+@inline level_default(::Type{<:SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}}) where {Ti, Tp, Vp, BV, VTpi, Lvl}= level_default(Lvl)
+data_rep_level(::Type{<:SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}}) where {Ti, Tp, Vp, BV, VTpi, Lvl} = SparseData(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:SparseByteMapLevel})() = fbr
 function (fbr::SubFiber{<:SparseByteMapLevel{Ti}})(idxs...) where {Ti}
@@ -92,11 +141,11 @@ mutable struct VirtualSparseByteMapLevel <: AbstractVirtualLevel
     qos_fill
     qos_stop
 end
-
+  
 is_level_injective(lvl::VirtualSparseByteMapLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., false]
 is_level_atomic(lvl::VirtualSparseByteMapLevel, ctx) = false
 
-function virtualize(ex, ::Type{SparseByteMapLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}   
+function virtualize(ex, ::Type{SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Vp, BV, VTpi, Lvl}
     sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Int)
     qos_fill = freshen(ctx, sym, :_qos_fill)
@@ -270,26 +319,16 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
                                 $my_r += $(Tp(1))
                             end
                         end,
-                        body = Thunk(
-                            preamble = :(
-                                $my_i = last($(lvl.ex).srt[$my_r])
+                        preamble = :($my_i = last($(lvl.ex).srt[$my_r])),
+                        stop = (ctx, ext) -> value(my_i),
+                        chunk = Spike(
+                            body = Fill(virtual_level_default(lvl)),
+                            tail = Thunk(
+                                preamble = :($my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $my_i),
+                                body = (ctx) -> instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, subprotos),
                             ),
-                            body = (ctx) -> Step(
-                                stop = (ctx, ext) -> value(my_i),
-                                chunk = Spike(
-                                    body = Fill(virtual_level_default(lvl)),
-                                    tail = Thunk(
-                                        preamble = quote
-                                            $my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $my_i
-                                        end,
-                                        body = (ctx) -> instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, subprotos),
-                                    ),
-                                ),
-                                next = (ctx, ext) -> quote
-                                    $my_r += $(Tp(1))
-                                end
-                            )
-                        )
+                        ),
+                        next = (ctx, ext) -> :($my_r += $(Tp(1))),
                     )
                 ),
                 Phase(
@@ -329,60 +368,21 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
                 Phase(
                     stop = (ctx, ext) -> value(my_i_stop),
                     body = (ctx, ext) -> Jumper(
-                        body = Thunk(
-                            body = (ctx) -> Jump(
-                                seek = (ctx, ext) -> quote
-                                    while $my_r + $(Tp(1)) < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext)))
-                                        $my_r += $(Tp(1))
-                                    end
-                                    $my_i = last($(lvl.ex).srt[$my_r])
-                                end,
-                                stop = (ctx, ext) -> value(my_i),
-                                body = (ctx, ext, ext_2) -> Switch([
-                                    value(:($(ctx(getstop(ext_2))) == $my_i)) => Thunk(
-                                        body = (ctx) -> Spike(
-                                            body = Fill(virtual_level_default(lvl)),
-                                            tail = Thunk(
-                                                preamble = quote
-                                                    $my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $my_i
-                                                end,
-                                                body = (ctx) -> instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, subprotos),
-                                            ),
-                                        ),
-                                        epilogue = quote
-                                            $my_r += $(Tp(1))
-                                        end
-                                    ),
-                                    literal(true) => Stepper(
-                                        seek = (ctx, ext) -> quote
-                                            while $my_r + $(Tp(1)) < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext)))
-                                                $my_r += $(Tp(1))
-                                            end
-                                        end,
-                                        body = Thunk(
-                                            preamble = :(
-                                                $my_j = last($(lvl.ex).srt[$my_r])
-                                            ),
-                                            body = (ctx) -> Step(
-                                                stop = (ctx, ext) -> value(my_j),
-                                                chunk = Spike(
-                                                    body = Fill(virtual_level_default(lvl)),
-                                                    tail = Thunk(
-                                                        preamble = quote
-                                                            $my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $my_j
-                                                        end,
-                                                        body = (ctx) -> instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, subprotos),
-                                                    ),
-                                                ),
-                                                next = (ctx, ext) -> quote
-                                                    $my_r += $(Tp(1))
-                                                end
-                                            )
-                                        )
-                                    ),
-                                ])
-                            )
-                        )
+                        seek = (ctx, ext) -> quote
+                            while $my_r + $(Tp(1)) < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext)))
+                                $my_r += $(Tp(1))
+                            end
+                        end,
+                        preamble = :($my_i = last($(lvl.ex).srt[$my_r])),
+                        stop = (ctx, ext) -> value(my_i),
+                        chunk =  Spike(
+                            body = Fill(virtual_level_default(lvl)),
+                            tail = Thunk(
+                                preamble = :($my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $my_i),
+                                body = (ctx) -> instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, subprotos),
+                            ),
+                        ),
+                        next = (ctx, ext) -> :($my_r += $(Tp(1)))
                     )
                 ),
                 Phase(

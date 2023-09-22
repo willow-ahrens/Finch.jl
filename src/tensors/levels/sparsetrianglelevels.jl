@@ -1,3 +1,23 @@
+"""
+    SparseTriangleLevel{[N], [Ti=Int]}(lvl, [dims])
+
+The sparse triangle level stores the upper triangle of `N` indices in the
+subfiber, so fibers in the sublevel are the slices `A[:, ..., :, i_1, ...,
+i_n]`, where `i_1 <= ... <= i_n`.  A packed representation is used to encode the
+subfiber. Optionally, `dims` are the sizes of the last dimensions.
+
+`Ti` is the type of the last `N` fiber indices.
+
+```jldoctest
+julia> Fiber!(SparseTriangle{2}(Element(0.0)), [10 0 20; 30 0 0; 0 0 40])
+SparseTriangle (0.0) [1:3]
+├─├─[1, 1]: 10.0
+├─├─[1, 2]: 0.0
+│ ⋮
+├─├─[2, 3]: 0.0
+├─├─[3, 3]: 40.0
+```
+"""
 struct SparseTriangleLevel{N, Ti, Lvl}
     lvl::Lvl
     shape::Ti
@@ -5,7 +25,7 @@ struct SparseTriangleLevel{N, Ti, Lvl}
     # shift/delta
 end
 SparseTriangleLevel(lvl) = throw(ArgumentError("You must specify the number of dimensions in a SparseTriangleLevel, e.g. Fiber!(SparseTriangle{2}(Element(0.0)))"))
-SparseTriangleLevel{N}(lvl, args...) where {N} = SparseTriangleLevel{N, Int}(lvl, args...)
+SparseTriangleLevel{N}(lvl::Lvl, args...) where {Lvl, N} = SparseTriangleLevel{N, Int}(lvl, args...)
 SparseTriangleLevel{N}(lvl, shape, args...) where {N} = SparseTriangleLevel{N, typeof(shape)}(lvl, shape, args...)
 SparseTriangleLevel{N, Ti}(lvl, args...) where {N, Ti} = SparseTriangleLevel{N, Ti, typeof(lvl)}(lvl, args...)
 SparseTriangleLevel{N, Ti, Lvl}(lvl) where {N, Ti, Lvl} = SparseTriangleLevel{N, Ti, Lvl}(lvl, zero(Ti))
@@ -15,6 +35,19 @@ const SparseTriangle = SparseTriangleLevel
 Base.summary(lvl::SparseTriangle{N}) where {N} = "SparseTriangle{$N}($(summary(lvl.lvl)))"
 similar_level(lvl::SparseTriangle{N}) where {N} = SparseTriangle(similar_level(lvl.lvl))
 similar_level(lvl::SparseTriangle{N}, dims...) where {N} = SparseTriangle(similar_level(lvl.lvl, dims[1:end-1]...), dims[end])
+
+function memtype(::Type{SparseTriangleLevel{N, Ti, Lvl}}) where {N, Ti, Lvl}
+    return memtype(Lvl)
+end
+
+function postype(::Type{SparseTriangleLevel{N, Ti, Lvl}}) where {N, Ti, Lvl}
+    return postype(Lvl)
+end
+
+function moveto(lvl::SparseTriangleLevel{N, Ti, Lvl},  ::Type{MemType}) where {N, Ti, Lvl, MemType <: AbstractArray}
+    lvl_2 = moveto(lvl.lvl, MemType)
+    return SparseTriangleLevel{N, Ti, typeof(lvl_2)}(lvl_2, lvl.shape)
+end
 
 pattern!(lvl::SparseTriangleLevel{N, Ti}) where {N, Ti} = 
     SparseTriangleLevel{N, Ti}(pattern!(lvl.lvl), lvl.shape)

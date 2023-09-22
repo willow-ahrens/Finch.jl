@@ -1,36 +1,78 @@
-struct SparseVBLLevel{Ti, Tp, Lvl}
+"""
+SparseVBLLevel{[Ti=Int], [Tp=Int], [Vp=Vector{Tp}], [Vi=Vector{Ti}], [VTo=Vector{VTo}]}(lvl, [dim])
+
+Like the [`SparseListLevel`](@ref), but contiguous subfibers are stored together in blocks.
+
+```jldoctest
+julia> Fiber!(Dense(SparseVBL(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
+Dense [:,1:3]
+├─[:,1]: SparseList (0.0) [1:3]
+│ ├─[1]: 10.0
+│ ├─[2]: 30.0
+├─[:,2]: SparseList (0.0) [1:3]
+├─[:,3]: SparseList (0.0) [1:3]
+│ ├─[1]: 20.0
+│ ├─[3]: 40.0
+
+julia> Fiber!(SparseVBL(SparseVBL(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
+SparseList (0.0) [:,1:3]
+├─[:,1]: SparseList (0.0) [1:3]
+│ ├─[1]: 10.0
+│ ├─[2]: 30.0
+├─[:,3]: SparseList (0.0) [1:3]
+│ ├─[1]: 20.0
+│ ├─[3]: 40.0
+"""
+struct SparseVBLLevel{Ti, Tp, Vp<:AbstractVector, Vi<:AbstractVector, VTo<:AbstractVector, Lvl}
     lvl::Lvl
     shape::Ti
-    ptr::Vector{Tp}
-    idx::Vector{Ti}
-    ofs::Vector{Tp}
+    ptr::Vp
+    idx::Vi
+    ofs::VTo
 end
 
 const SparseVBL = SparseVBLLevel
-SparseVBLLevel(lvl, ) = SparseVBLLevel{Int}(lvl)
+SparseVBLLevel(lvl::Lvl) where {Lvl} = SparseVBLLevel{Int}(lvl)
 SparseVBLLevel(lvl, shape, args...) = SparseVBLLevel{typeof(shape)}(lvl, shape, args...)
-SparseVBLLevel{Ti}(lvl, args...) where {Ti} = SparseVBLLevel{Ti, Int}(lvl, args...)
-SparseVBLLevel{Ti, Tp}(lvl, args...) where {Ti, Tp} = SparseVBLLevel{Ti, Tp, typeof(lvl)}(lvl, args...)
+SparseVBLLevel{Ti}(lvl, args...) where {Ti} = SparseVBLLevel{Ti, postype(typeof(lvl))}(lvl, args...)
+SparseVBLLevel{Ti, Tp}(lvl, args...) where {Ti, Tp} = SparseVBLLevel{Ti, Tp, memtype(typeof(lvl)){Tp, 1}, memtype(typeof(lvl)){Ti, 1}, memtype(typeof(lvl)){Tp, 1}, typeof(lvl)}(lvl, args...)
 
-SparseVBLLevel{Ti, Tp, Lvl}(lvl) where {Ti, Tp, Lvl} = SparseVBLLevel{Ti, Tp, Lvl}(lvl, zero(Ti))
-SparseVBLLevel{Ti, Tp, Lvl}(lvl, shape) where {Ti, Tp, Lvl} = 
-    SparseVBLLevel{Ti, Tp, Lvl}(lvl, shape, Tp[1], Ti[], Ti[])
+SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}(lvl) where {Ti, Tp, Vp, Vi, VTo, Lvl} = SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}(lvl, zero(Ti))
+SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}(lvl, shape) where {Ti, Tp, Vp, Vi, VTo, Lvl} = 
+    SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}(lvl, shape, Tp[1], Ti[], Tp[])
+
+
+function memtype(::Type{SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}}) where {Ti, Tp, Vp, Vi, VTo, Lvl}
+    return memtype(Lvl)
+end
+
+function postype(::Type{SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}}) where {Ti, Tp, Vp, Vi, VTo, Lvl}
+    return Tp
+end
+
+function moveto(lvl::SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl},  ::Type{MemType}) where {Ti, Tp, Vp, Vi, VTo, Lvl, MemType <: AbstractArray}
+    lvl_2 = moveto(lvl.lvl, MemType)
+    ptr_2 = MemType{Tp, 1}(lvl.ptr)
+    idx_2 = MemType{Ti, 1}(lvl.idx)
+    ofs_2 = MemType{Tp, 1}(lvl.ofs)
+    return SparseVBLLevel{Ti, Tp, MemType{Tp, 1}, MemType{Ti, 1}, MemType{Tp, 1}, typeof(lvl_2)}(lvl_2, lvl.shape, ptr_2, idx_2, ofs_2)
+end
 
 Base.summary(lvl::SparseVBLLevel) = "SparseVBL($(summary(lvl.lvl)))"
 similar_level(lvl::SparseVBLLevel) = SparseVBL(similar_level(lvl.lvl))
 similar_level(lvl::SparseVBLLevel, dim, tail...) = SparseVBL(similar_level(lvl.lvl, tail...), dim)
 
-pattern!(lvl::SparseVBLLevel{Ti, Tp}) where {Ti, Tp} = 
-    SparseVBLLevel{Ti, Tp}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.idx, lvl.ofs)
+pattern!(lvl::SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}) where {Ti, Tp, Vp, Vi, VTo, Lvl} = 
+    SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.idx, lvl.ofs)
 
 function countstored_level(lvl::SparseVBLLevel, pos)
     countstored_level(lvl.lvl, lvl.ofs[lvl.ptr[pos + 1]]-1)
 end
 
-redefault!(lvl::SparseVBLLevel{Ti, Tp}, init) where {Ti, Tp} = 
-    SparseVBLLevel{Ti, Tp}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.idx, lvl.ofs)
+redefault!(lvl::SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}, init) where {Ti, Tp, Vp, Vi, VTo, Lvl} = 
+    SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.idx, lvl.ofs)
 
-function Base.show(io::IO, lvl::SparseVBLLevel{Ti, Tp}) where {Ti, Tp}
+function Base.show(io::IO, lvl::SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}) where {Ti, Tp, Vp, Vi, VTo, Lvl}
     if get(io, :compact, false)
         print(io, "SparseVBL(")
     else
@@ -43,11 +85,11 @@ function Base.show(io::IO, lvl::SparseVBLLevel{Ti, Tp}) where {Ti, Tp}
     if get(io, :compact, false)
         print(io, "…")
     else
-        show(IOContext(io, :typeinfo=>Vector{Tp}), lvl.ptr)
+        show(IOContext(io, :typeinfo=>Vp), lvl.ptr)
         print(io, ", ")
-        show(IOContext(io, :typeinfo=>Vector{Ti}), lvl.idx)
+        show(IOContext(io, :typeinfo=>Vi), lvl.idx)
         print(io, ", ")
-        show(IOContext(io, :typeinfo=>Vector{Tp}), lvl.ofs)
+        show(IOContext(io, :typeinfo=>VTo), lvl.ofs)
     end
     print(io, ")")
 end
@@ -68,12 +110,12 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseVBL
     display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
 end
 
-@inline level_ndims(::Type{<:SparseVBLLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = 1 + level_ndims(Lvl)
+@inline level_ndims(::Type{<:SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}}) where {Ti, Tp, Vp, Vi, VTo, Lvl} = 1 + level_ndims(Lvl)
 @inline level_size(lvl::SparseVBLLevel) = (lvl.shape, level_size(lvl.lvl)...)
 @inline level_axes(lvl::SparseVBLLevel) = (Base.OneTo(lvl.shape), level_axes(lvl.lvl)...)
-@inline level_eltype(::Type{<:SparseVBLLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = level_eltype(Lvl)
-@inline level_default(::Type{<:SparseVBLLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = level_default(Lvl)
-data_rep_level(::Type{<:SparseVBLLevel{Ti, Tp, Lvl}}) where {Ti, Tp, Lvl} = SparseData(data_rep_level(Lvl))
+@inline level_eltype(::Type{<:SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}}) where {Ti, Tp, Vp, Vi, VTo, Lvl} = level_eltype(Lvl)
+@inline level_default(::Type{<:SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}}) where {Ti, Tp, Vp, Vi, VTo, Lvl} = level_default(Lvl)
+data_rep_level(::Type{<:SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}}) where {Ti, Tp, Vp, Vi, VTo, Lvl} = SparseData(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:SparseVBLLevel})() = fbr
 function (fbr::SubFiber{<:SparseVBLLevel})(idxs...)
@@ -99,13 +141,18 @@ mutable struct VirtualSparseVBLLevel <: AbstractVirtualLevel
     ros_fill
     ros_stop
     dirty
+    Vp
+    Vi
+    VTo
+    Lvl
     prev_pos
 end
 
 is_level_injective(lvl::VirtualSparseVBLLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., false]
 is_level_atomic(lvl::VirtualSparseVBLLevel, ctx) = false
+  
 
-function virtualize(ex, ::Type{SparseVBLLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Lvl}
+function virtualize(ex, ::Type{SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Vp, Vi, VTo, Lvl}
     sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Int)
     qos_fill = freshen(ctx, sym, :_qos_fill)
@@ -118,11 +165,12 @@ function virtualize(ex, ::Type{SparseVBLLevel{Ti, Tp, Lvl}}, ctx, tag=:lvl) wher
     end)
     prev_pos = freshen(ctx, sym, :_prev_pos)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualSparseVBLLevel(lvl_2, sym, Ti, Tp, shape, qos_fill, qos_stop, ros_fill, ros_stop, dirty, prev_pos)
+
+    VirtualSparseVBLLevel(lvl_2, sym, Ti, Tp, shape, qos_fill, qos_stop, ros_fill, ros_stop, dirty, Vp, Vi, VTo, Lvl, prev_pos)
 end
 function lower(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
-        $SparseVBLLevel{$(lvl.Ti), $(lvl.Tp)}(
+        $SparseVBLLevel{$(lvl.Ti), $(lvl.Tp), $(lvl.Vp), $(lvl.Vi), $(lvl.VTo), $(lvl.Lvl)}(
             $(ctx(lvl.lvl)),
             $(ctx(lvl.shape)),
             $(lvl.ex).ptr,
@@ -245,37 +293,31 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, su
                                 $my_r = Finch.scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_r, $my_r_stop - 1)
                             end
                         end,
-                        body = Thunk(
-                            preamble = quote
-                                $my_i = $(lvl.ex).idx[$my_r]
-                                $my_q_stop = $(lvl.ex).ofs[$my_r + $(Tp(1))]
-                                $my_i_start = $my_i - ($my_q_stop - $(lvl.ex).ofs[$my_r])
-                                $my_q_ofs = $my_q_stop - $my_i - $(Tp(1))
-                            end,
-                            body = (ctx) -> Step(
-                                stop = (ctx, ext) -> value(my_i),
-                                body = (ctx, ext) -> Thunk(
-                                    body = (ctx) -> Sequence([
-                                        Phase(
-                                            stop = (ctx, ext) -> value(my_i_start),
-                                            body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
-                                        ),
-                                        Phase(
-                                            body = (ctx, ext) -> Lookup(
-                                                body = (ctx, i) -> Thunk(
-                                                    preamble = quote
-                                                        $my_q = $my_q_ofs + $(ctx(i))
-                                                    end,
-                                                    body = (ctx) -> instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Tp)), ctx, subprotos),
-                                                )
-                                            )
+                        preamble = quote
+                            $my_i = $(lvl.ex).idx[$my_r]
+                            $my_q_stop = $(lvl.ex).ofs[$my_r + $(Tp(1))]
+                            $my_i_start = $my_i - ($my_q_stop - $(lvl.ex).ofs[$my_r])
+                            $my_q_ofs = $my_q_stop - $my_i - $(Tp(1))
+                        end,
+                        stop = (ctx, ext) -> value(my_i),
+                        body = (ctx, ext) -> Thunk(
+                            body = (ctx) -> Sequence([
+                                Phase(
+                                    stop = (ctx, ext) -> value(my_i_start),
+                                    body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
+                                ),
+                                Phase(
+                                    body = (ctx, ext) -> Lookup(
+                                        body = (ctx, i) -> Thunk(
+                                            preamble = :($my_q = $my_q_ofs + $(ctx(i))),
+                                            body = (ctx) -> instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Tp)), ctx, subprotos),
                                         )
-                                    ]),
-                                    epilogue = quote
-                                        $my_r += ($(ctx(getstop(ext))) == $my_i)
-                                    end
+                                    )
                                 )
-                            )
+                            ]),
+                            epilogue = quote
+                                $my_r += ($(ctx(getstop(ext))) == $my_i)
+                            end
                         )
                     )
                 ),
@@ -319,88 +361,34 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, su
                 Phase(
                     stop = (ctx, ext) -> value(my_i1),
                     body = (ctx, ext) -> Jumper(
-                        body = Thunk(
-                            preamble = quote
-                                $my_i = $(lvl.ex).idx[$my_r]
-                            end,
-                            body = (ctx) -> Jump(
-                                seek = (ctx, ext) -> quote
-                                    if $(lvl.ex).idx[$my_r] < $(ctx(getstart(ext)))
-                                        $my_r = Finch.scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_r, $my_r_stop - 1)
-                                    end
-                                    $my_i = $(lvl.ex).idx[$my_r]
-                                end,
-                                stop = (ctx, ext) -> value(my_i),
-                                body = (ctx, ext, ext_2) -> Switch([
-                                    value(:($(ctx(getstop(ext_2))) == $my_i)) => Thunk(
-                                        preamble=quote
-                                            $my_q_stop = $(lvl.ex).ofs[$my_r + $(Tp(1))]
-                                            $my_i_start = $my_i - ($my_q_stop - $(lvl.ex).ofs[$my_r])
-                                            $my_q_ofs = $my_q_stop - $my_i - $(Tp(1))
-                                        end,
-                                        body = (ctx) -> Sequence([
-                                            Phase(
-                                                stop = (ctx, ext) -> value(my_i_start),
-                                                body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
-                                            ),
-                                            Phase(
-                                                body = (ctx, ext) -> Lookup(
-                                                    body = (ctx, i) -> Thunk(
-                                                        preamble = quote
-                                                            $my_q = $my_q_ofs + $(ctx(i))
-                                                        end,
-                                                        body = (ctx) -> instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Tp)), ctx, subprotos),
-                                                    )
-                                                )
-                                            )
-                                        ]),
-                                        epilogue = quote
-                                            $my_r += $(Tp(1))
-                                        end
+                        seek = (ctx, ext) -> quote
+                            if $(lvl.ex).idx[$my_r] < $(ctx(getstart(ext)))
+                                $my_r = Finch.scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_r, $my_r_stop - 1)
+                            end
+                        end,
+                        preamble = quote
+                            $my_i = $(lvl.ex).idx[$my_r]
+                            $my_q_stop = $(lvl.ex).ofs[$my_r + $(Tp(1))]
+                            $my_i_start = $my_i - ($my_q_stop - $(lvl.ex).ofs[$my_r])
+                            $my_q_ofs = $my_q_stop - $my_i - $(Tp(1))
+                        end,
+                        stop = (ctx, ext) -> value(my_i),
+                        chunk = Sequence([
+                                    Phase(
+                                        stop = (ctx, ext) -> value(my_i_start),
+                                        body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
                                     ),
-                                    literal(true) => Stepper(
-                                        seek = (ctx, ext) -> quote
-                                            if $(lvl.ex).idx[$my_r] < $(ctx(getstart(ext)))
-                                                $my_r = Finch.scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_r, $my_r_stop - 1)
-                                            end
-                                        end,
-                                        body = Thunk(
-                                            preamble = quote
-                                                $my_j = $(lvl.ex).idx[$my_r]
-                                                $my_q_stop = $(lvl.ex).ofs[$my_r + $(Tp(1))]
-                                                $my_i_start = $my_j - ($my_q_stop - $(lvl.ex).ofs[$my_r])
-                                                $my_q_ofs = $my_q_stop - $my_j - $(Tp(1))
-                                            end,
-                                            body = (ctx) -> Step(
-                                                stop = (ctx, ext) -> value(my_j),
-                                                body = (ctx, ext) -> Thunk(
-                                                    body = (ctx) -> Sequence([
-                                                        Phase(
-                                                            stop = (ctx, ext) -> value(my_i_start),
-                                                            body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
-                                                        ),
-                                                        Phase(
-                                                            body = (ctx, ext) -> Lookup(
-                                                                body = (ctx, i) -> Thunk(
-                                                                    preamble = quote
-                                                                        $my_q = $my_q_ofs + $(ctx(i))
-                                                                    end,
-                                                                    body = (ctx) -> instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Tp)), ctx, subprotos),
-                                                                )
-                                                            )
-                                                        )
-                                                    ]),
-                                                    epilogue = quote
-                                                        $my_r += ($(ctx(getstop(ext))) == $my_j)
-                                                    end
-                                                )
+                                    Phase(
+                                        body = (ctx, ext) -> Lookup(
+                                            body = (ctx, i) -> Thunk(
+                                                preamble = :($my_q = $my_q_ofs + $(ctx(i))),
+                                                body = (ctx) -> instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Tp)), ctx, subprotos),
                                             )
                                         )
                                     )
-                                ])
-                            )
-                        ),
-                    )
+                                ]),
+                        next = (ctx, ext) -> :($my_r += $(Tp(1))),
+                    ), 
                 ),
                 Phase(
                     body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))

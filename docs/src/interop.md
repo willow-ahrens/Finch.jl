@@ -47,14 +47,14 @@ end
 ```jldoctest example2
 julia> m = 4; n = 3; ptr_c = [0, 3, 3, 5]; idx_c = [1, 2, 3, 0, 2]; val_c = [1.1, 2.2, 3.3, 4.4, 5.5];
 
-julia> ptr_jl = unsafe_wrap(Array, reinterpret(Ptr{CIndex{Int}}, pointer(ptr_c)), length(ptr_c); own = false)
-4-element Vector{CIndex{Int64}}:
+julia> ptr_jl = reinterpret(CIndex{Int}, ptr_c)
+4-element reinterpret(CIndex{Int64}, ::Vector{Int64}):
  1
  4
  4
  6
-julia> idx_jl = unsafe_wrap(Array, reinterpret(Ptr{CIndex{Int}}, pointer(idx_c)), length(idx_c); own = false)
-5-element Vector{CIndex{Int64}}:
+julia> idx_jl = reinterpret(CIndex{Int}, idx_c)
+5-element reinterpret(CIndex{Int64}, ::Vector{Int64}):
  2
  3
  4
