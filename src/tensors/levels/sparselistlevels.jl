@@ -258,13 +258,8 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, s
             preamble = quote
                 $my_q = $(lvl.ex).ptr[$(ctx(pos))]
                 $my_q_stop = $(lvl.ex).ptr[$(ctx(pos)) + $(Tp(1))]
-                if $my_q < $my_q_stop
-                    $my_i = $(lvl.ex).idx[$my_q]
-                    $my_i1 = $(lvl.ex).idx[$my_q_stop - $(Tp(1))]
-                else
-                    $my_i = $(Ti(1))
-                    $my_i1 = $(Ti(0))
-                end
+                $my_i = $(lvl.ex).idx[$my_q]
+                $my_i1 = $(lvl.ex).idx[$my_q_stop - $(Tp(1))]
             end,
             body = (ctx) -> Sequence([
                 Phase(
@@ -402,3 +397,4 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseListLevel}
         )
     )
 end
+

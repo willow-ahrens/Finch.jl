@@ -71,6 +71,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::PhaseStyle)
         body = quote
             $i0 = $i
             $(contain(ctx) do ctx_4
+                push!(ctx_4.constraints, call(>=, measure(ext_4), get_smallest_measure(ext_4)))
                 (ctx_4)(loop(
                     root.idx,
                     ext_4,
@@ -84,12 +85,6 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::PhaseStyle)
 
         if query_z3(call(>=, measure(ext_4), get_smallest_measure(ext_4)), ctx)  
             return body
-        elseif query_z3(call(<=, measure(ext_4), get_smallest_measure(ext_4)), ctx)
-            return quote
-                if $(ctx(getstop(ext_4))) == $(ctx(getstart(ext_4)))
-                    $body
-                end
-            end
         else
             return quote
                 if $(ctx(getstop(ext_4))) >= $(ctx(getstart(ext_4)))

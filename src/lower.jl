@@ -167,14 +167,21 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
         @assert root.ext.kind === virtual
         lower_loop(ctx, root, root.ext.val)
     elseif root.kind === sieve
-        cond = freshen(ctx.code,:cond)
-        push!(ctx.code.preamble, :($cond = $(ctx(root.cond))))
-    
-        return quote
-            if $cond
+        if query_z3(root.cond, ctx)
+            return quote
                 $(contain(ctx) do ctx_2
                     open_scope(root.body, ctx_2)
                 end)
+            end
+        else
+            cond = freshen(ctx.code,:cond)
+            push!(ctx.code.preamble, :($cond = $(ctx(root.cond))))
+            return quote
+                if $cond
+                    $(contain(ctx) do ctx_2
+                        open_scope(root.body, ctx_2)
+                    end)
+                end
             end
         end
     elseif root.kind === virtual
