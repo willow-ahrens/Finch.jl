@@ -68,6 +68,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::PhaseStyle)
         ext_4 = cache_dim!(ctx, :phase, ext_3)
     
         body = Rewrite(Postwalk(node->phase_body(node, ctx, root.ext, ext_4)))(body)
+       
         body = quote
             $i0 = $i
             $(contain(ctx) do ctx_4
@@ -81,7 +82,6 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::PhaseStyle)
             
             $i = $(ctx(getstop(ext_4))) + $(ctx(getunit(ext_4)))
         end
-
 
         if query_z3(call(>=, measure(ext_4), get_smallest_measure(ext_4)), ctx)  
             return body

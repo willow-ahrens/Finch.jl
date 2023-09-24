@@ -14,7 +14,7 @@ end
 # f : ctx -> ctx(code)
 function contain(f, ctx::LowerJulia)
     contain(ctx.code) do code_2
-        f(LowerJulia(code_2, ctx.algebra, ctx.bindings, ctx.mode, ctx.modes, ctx.scope, ctx.shash, ctx.program_rules, ctx.bounds_rules, ctx.constraints))
+        f(LowerJulia(code_2, ctx.algebra, ctx.bindings, ctx.mode, ctx.modes, ctx.scope, ctx.shash, ctx.program_rules, ctx.bounds_rules, copy(ctx.constraints)))
     end
 end
 
