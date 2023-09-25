@@ -149,6 +149,11 @@ function reassemble_level!(lvl::VirtualElementLevel, ctx, pos_start, pos_stop)
     lvl
 end
 
+function virtual_moveto_level!(lvl::VirtualElementLevel, ctx::AbstractCompiler, arch)
+    lvl.val = virtual_moveto!(lvl.val, ctx, arch)
+    return lvl
+end
+
 function instantiate_reader(fbr::VirtualSubFiber{VirtualElementLevel}, ctx, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     val = freshen(ctx.code, lvl.ex, :_val)
