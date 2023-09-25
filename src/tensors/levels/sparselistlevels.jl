@@ -245,6 +245,13 @@ function freeze_level!(lvl::VirtualSparseListLevel, ctx::AbstractCompiler, pos_s
     return lvl
 end
 
+function virtual_moveto_level!(lvl::VirtualSparseListLevel, ctx::AbstractCompiler, arch)
+    lvl.ptr = virtual_moveto!(lvl.ptr, ctx, arch)
+    lvl.idx = virtual_moveto!(lvl.idx, ctx, arch)
+    lvl.lvl = virtual_moveto_level!(lvl.lvl, ctx, arch)
+    return lvl
+end
+
 function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, subprotos, ::Union{typeof(defaultread), typeof(walk)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
