@@ -22,8 +22,8 @@ function Base.setindex!(g::NPYPath, val::AbstractDict, key::AbstractString)
     end
 end
 
-Finch.bspread_header(g::NPYPath, key) = JSON.parsefile(joinpath(g.dirname, "$key.json"))
-Finch.bspwrite_header(g::NPYPath, str::String, key) = write(joinpath(mkpath(g.dirname), "$(key).json"), str)
+Finch.bspread_header(g::NPYPath) = JSON.parsefile(joinpath(g.dirname, "binsparse.json"))
+Finch.bspwrite_header(g::NPYPath, str::String) = write(joinpath(mkpath(g.dirname), "binsparse.json"), str)
 Finch.bspread_vector(g::NPYPath, key) = g[key]
 Finch.bspwrite_vector(g::NPYPath, vec, key) = (g[key] = vec)
 
