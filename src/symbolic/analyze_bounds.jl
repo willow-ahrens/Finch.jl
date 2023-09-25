@@ -1,4 +1,4 @@
-using Z3: Solver, real_const, Context, add, check, ExprAllocated, not, unsat, get_model
+using Z3: Solver, real_const, bool_const, Context, add, check, ExprAllocated, not, unsat, get_model
 """
     get_bounds_rules(alg, shash)
 
@@ -177,6 +177,14 @@ function query_z3(root::FinchNode, ctx; verbose = false)
       function translate_z3(node::FinchNode)::ExprAllocated
           if @capture node call(~op::isliteral, ~args...) 
               return getval(op)(translate_z3.(args)...)
+          elseif @capture node access(~lhs::isvirtual, ~args...) 
+              if lhs.val isa VirtualScalar
+                  if lhs.val.Tv <: Bool
+                      return get!(z3_variables, lhs.val.val, bool_const(z3_ctx, string(lhs.val.val)))
+                  else
+                      return get!(z3_variables, lhs.val.val, real_const(z3_ctx, string(lhs.val.val)))
+                  end
+              end    
           elseif isvalue(node) 
               if node.val isa Symbol || node.val isa Expr
                   return get!(z3_variables, node.val, real_const(z3_ctx, string(node.val)))
