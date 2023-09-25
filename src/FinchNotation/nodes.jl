@@ -721,7 +721,7 @@ finch_leaf(arg::FinchNode) = arg
 
 Base.convert(::Type{FinchNode}, x) = finch_leaf(x)
 Base.convert(::Type{FinchNode}, x::FinchNode) = x
-Base.convert(::Type{FinchNode}, x::Symbol) = error()
+#Base.convert(::Type{FinchNode}, x::Symbol) = error() # useful for debugging if we wanted to enforce conversion of symbols to value, etc.
 
 #overload RewriteTools pattern constructor so we don't need
 #to wrap leaf nodes.
