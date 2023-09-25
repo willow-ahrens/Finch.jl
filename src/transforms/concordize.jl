@@ -30,6 +30,7 @@ end
 struct ConcordizeVisitor
     ctx
     scope
+    idx2ext
 end
 
 freshen(ctx::ConcordizeVisitor, tags...) = freshen(ctx.ctx.code, tags...)
@@ -63,7 +64,7 @@ function (ctx::ConcordizeVisitor)(node::FinchNode)
     end
 
     if node.kind === loop
-        ctx_2 = ConcordizeVisitor(ctx.ctx, union(ctx.scope, [node.idx]))
+        ctx_2 = ConcordizeVisitor(ctx.ctx, union(ctx.scope, [node.idx]), ctx.idx2ext)
         node = loop(node.idx, node.ext, ctx_2(node.body))
     elseif node.kind === define
         push!(ctx.scope, node.lhs)
@@ -75,10 +76,21 @@ function (ctx::ConcordizeVisitor)(node::FinchNode)
 
     for (select_idx, idx_ex) in reverse(selects)
         var = variable(freshen(ctx, :v))
+       
+        if isindex(idx_ex)
+            ext = similar_extent(ctx.idx2ext[idx_ex], var, var)
+            node = Rewrite(Postwalk(@rule call(d, ~i1..., idx_ex, ~i2...) => call(d, i1..., select_idx, i2...)))(node)
+        elseif @capture idx_ex call(identity, ~idx::isindex)
+            ext = similar_extent(ctx.idx2ext[idx], var, var)
+            node = Rewrite(Postwalk(@rule call(d, ~i1..., idx, ~i2...) => call(d, i1..., select_idx, i2...)))(node)
+        else
+            ext = Extent(var, var)           
+            node = Rewrite(Postwalk(@rule call(d, ~i1..., idx_ex, ~i2...) => call(d, i1..., select_idx, i2...)))(node)
+        end
 
         node = block(
             define(var, idx_ex),
-            loop(select_idx, Extent(var, var), node)
+            loop(select_idx, ext, node)
         )
     end
 
@@ -146,5 +158,15 @@ function concordize(root, ctx::AbstractCompiler)
             access(~tns, ~mode, ~i..., call(identity, j), ~k...)
         end
     end)))(root)
-    ConcordizeVisitor(ctx, collect(keys(ctx.bindings)))(root)
+
+    idx2ext = Dict()
+    for node in PostOrderDFS(root)
+        if @capture node loop(~idx, ~ext::isvirtual, ~body)
+            idx2ext[idx] = ext.val
+        end
+    end
+
+    root2 = ConcordizeVisitor(ctx, collect(keys(ctx.bindings)), idx2ext)(root)
+    display(root2)
+    root2
 end
