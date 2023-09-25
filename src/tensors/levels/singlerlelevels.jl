@@ -253,7 +253,8 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSingleRLELevel}, ctx, su
                 ),
                 Phase(
                     stop = (ctx, ext) -> value(my_i_stop, lvl.Ti),
-                    body = (ctx, ext) -> Run(Simplify(instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q)), ctx, subprotos))),
+                    #body = (ctx, ext) -> Run(Simplify(instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q)), ctx, subprotos))),
+                    body = (ctx, ext) -> Run(Fill(1)),
                 ),
                 Phase(
                     stop = (ctx, ext) -> lvl.shape,

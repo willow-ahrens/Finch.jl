@@ -116,7 +116,8 @@ function phase_body(node::AcceptStepper, ctx, ext, ext_2)
     next = node.next(ctx, ext_2)
     if next !== nothing
         Switch([
-            value(:($(ctx(node.stop(ctx, ext))) == $(ctx(getstop(ext_2))))) => Thunk(
+            #value(:($(ctx(node.stop(ctx, ext))) == $(ctx(getstop(ext_2))))) => Thunk(
+            call(==, node.stop(ctx, ext), getstop(ext_2))=> Thunk(
                 body = (ctx) -> truncate(node.chunk, ctx, ext, similar_extent(ext, getstart(ext_2), getstop(ext))),
                 epilogue = next
             ),

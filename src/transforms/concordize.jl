@@ -166,7 +166,5 @@ function concordize(root, ctx::AbstractCompiler)
         end
     end
 
-    root2 = ConcordizeVisitor(ctx, collect(keys(ctx.bindings)), idx2ext)(root)
-    display(root2)
-    root2
+    ConcordizeVisitor(ctx, collect(keys(ctx.bindings)), idx2ext)(root)
 end

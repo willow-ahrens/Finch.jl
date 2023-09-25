@@ -53,7 +53,17 @@ function (ctx::SwitchVisitor)(node::FinchNode)
         [(literal(true) => node)]
     end
 end
-(ctx::SwitchVisitor)(node::Switch) = node.cases
+#(ctx::SwitchVisitor)(node::Switch) = node.cases
+
+function (ctx::SwitchVisitor)(node::Switch)
+    for (guard, body) in node.cases[1:end-1] #skip last default case
+        if query_z3(guard, ctx.ctx)
+            return [guard => body]
+        end
+    end
+    return node.cases
+end
+
 
 function lower(stmt, ctx::AbstractCompiler,  ::SwitchStyle)
     cases = (SwitchVisitor(ctx=ctx))(stmt)

@@ -73,7 +73,8 @@ function truncate(node::Spike, ctx, ext, ext_2)
         node
     else
         return Switch([
-            value(:($(ctx(getstop(ext_2))) < $(ctx(getstop(ext))))) => Run(node.body),
+            #value(:($(ctx(getstop(ext_2))) < $(ctx(getstop(ext))))) => Run(node.body),
+            call(<, getstop(ext_2), getstop(ext)) => Run(node.body),
             literal(true) => node,
         ])
     end
