@@ -32,6 +32,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  ::RunStyle)
                 end
             end
         ))(root)
+
         if Stylize(root, ctx)(root) isa RunStyle #TODO do we need this always? Can we do this generically?
             error("run style couldn't lower runs")
         end

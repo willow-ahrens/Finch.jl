@@ -182,6 +182,23 @@ function get_program_rules(alg, shash)
         (@rule block(~s1..., freeze(~a::isvariable), ~s2..., thaw(~a), ~s3...) => if ortho(a, s2)
             block(s1..., s2..., s3...)
         end),
+
+        
+        # For better discordant traversal 
+        (@rule loop(~idx, ~ext::isvirtual, ~body) => begin
+            body_2 = Postwalk(@rule block(define(~a::isvariable, idx), loop(~idx2, ~ext2::isvirtual, ~body2)) => begin
+                if idx ∉ getunbound(body2)
+                    if ext2.val.start == a && ext2.val.stop == a
+                        loop(idx2, ext, body2)
+                    end
+                end
+            end)(body)
+
+            if body_2 !== nothing
+               body_2
+            end
+        end),
+
     ]
 end
 
