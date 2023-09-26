@@ -89,11 +89,11 @@ function instantiate_updater(fbr::VirtualFiber, ctx::AbstractCompiler, protos)
     return Unfurled(fbr, instantiate_updater(VirtualSubFiber(fbr.lvl, literal(1)), ctx, protos))
 end
 
-function virtual_moveto!(lvl::VirtualFiber, ctx::AbstractCompiler, arch)
+function virtual_moveto(lvl::VirtualFiber, ctx::AbstractCompiler, arch)
     return VirtualFiber(virtual_moveto_level!(fbr.lvl, ctx, arch))
 end
 
-function virtual_moveto!(fbr::VirtualSubFiber, ctx::AbstractCompiler, arch)
+function virtual_moveto(fbr::VirtualSubFiber, ctx::AbstractCompiler, arch)
     return VirtualTrackedSubFiber(virtual_moveto_level!(fbr.lvl, ctx, arch), fbr.pos)
 end
 
@@ -117,7 +117,7 @@ end
 lower(fbr::VirtualTrackedSubFiber, ctx::AbstractCompiler, ::DefaultStyle) = :(TrackedSubFiber($(ctx(fbr.lvl)), $(ctx(fbr.pos))))
 FinchNotation.finch_leaf(x::VirtualTrackedSubFiber) = virtual(x)
 
-function virtual_moveto!(fbr::VirtualTrackedSubFiber, ctx::AbstractCompiler, arch)
+function virtual_moveto(fbr::VirtualTrackedSubFiber, ctx::AbstractCompiler, arch)
     return VirtualTrackedSubFiber(virtual_moveto_level!(fbr.lvl, ctx, arch), fbr.pos, fbr.dirty)
 end
 

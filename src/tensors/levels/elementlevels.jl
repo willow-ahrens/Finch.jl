@@ -150,7 +150,7 @@ function reassemble_level!(lvl::VirtualElementLevel, ctx, pos_start, pos_stop)
 end
 
 function virtual_moveto_level!(lvl::VirtualElementLevel, ctx::AbstractCompiler, arch)
-    lvl.val = virtual_moveto!(lvl.val, ctx, arch)
+    lvl.val = virtual_moveto(lvl.val, ctx, arch)
     return lvl
 end
 
