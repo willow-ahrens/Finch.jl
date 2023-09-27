@@ -16,7 +16,7 @@ Dense [1:3]
 ├─[3]: 3.0
 ```
 """
-struct ElementLevel{D, Tv, Tp, Val<:AbstractVector}
+struct ElementLevel{D, Tv, Tp, Val}
     val::Val
 end
 const Element = ElementLevel

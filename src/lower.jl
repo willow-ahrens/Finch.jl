@@ -6,14 +6,13 @@
     modes::Dict{Any, Any} = Dict()
     scope = Set()
     shash = StaticHash()
-    arch = Serial()
     program_rules = get_program_rules(algebra, shash)
     bounds_rules = get_bounds_rules(algebra, shash)
 end
 
-function contain(f, ctx::LowerJulia)
-    contain(ctx.code) do code_2
-        f(LowerJulia(code_2, ctx.algebra, ctx.bindings, ctx.mode, ctx.modes, ctx.scope, ctx.shash, ctx.program_rules, ctx.bounds_rules))
+function contain(f, ctx::LowerJulia; bindings = ctx.bindings, kwargs...)
+    contain(ctx.code, kwargs...) do code_2
+        f(LowerJulia(code_2, ctx.algebra, bindings, ctx.mode, ctx.modes, ctx.scope, ctx.shash, ctx.program_rules, ctx.bounds_rules))
     end
 end
 
@@ -207,23 +206,25 @@ function lower_loop(ctx, root, ext)
     return ctx(root_2, result_style(LookupStyle(), Stylize(root_2, ctx)(root_2)))
 end
 
-function lower_loop(ctx, root, ext::ParallelDimension)
+lower_loop(ctx, root, ext::ParallelDimension) = 
+    lower_parallel_loop(ctx, root, ext, ext.device)
+function lower_parallel_loop(ctx, root, ext::ParallelDimension, device::VirtualCPU)
     root = ensure_concurrent(root, ctx)
     
-    tid = value(freshen(ctx.code, :tid))
+    tid = index(freshen(ctx.code, :tid))
     i = freshen(ctx.code, :i)
 
     decl_in_scope = unique(filter(!isnothing, map(node-> begin
         if @capture(node, declare(~tns, ~init))
             tns 
-        end, PostOrderDFS(body)
-    end)))
+        end
+    end, PostOrderDFS(root.body))))
 
     used_in_scope = unique(filter(!isnothing, map(node-> begin
         if @capture(node, access(~tns, ~mode, ~idxs...))
             getroot(tns)
-        end, PostOrderDFS(body)
-    end)))
+        end
+    end, PostOrderDFS(root.body))))
 
     root_2 = loop(tid, Extent(value(i, Int), value(i, Int)),
         loop(root.idx, ext.ext,
@@ -233,24 +234,26 @@ function lower_loop(ctx, root, ext::ParallelDimension)
         )
     )
 
-    arch = freshen(ctx, :arch)
-
     bindings_2 = copy(ctx.bindings)
     for tns in setdiff(used_in_scope, decl_in_scope)
-        bindings_2[tns] = virtual_moveto!(bindings_2[tns], ctx, CPU(nthreads()))
+        bindings_2[tns] = virtual_moveto!(bindings_2[tns], ctx, device)
     end
-    ctx_2 = LowerJulia(ctx.code, ctx.algebra, bindings_2, ctx.mode, ctx.modes, ctx.scope, ctx.shash, ctx.program_rules, ctx.bounds_rules)
+
     return quote
         Threads.@threads for $i = 1:Threads.nthreads()
-            $(contain(ctx_2, arch = threaded) do ctx_3
-                for tns in union(used_in_scope, decl_in_scope)
-                    bindings_2 = copy(ctx_3.bindings)
-                    for tns in setdiff(used_in_scope, decl_in_scope)
-                        bindings_2[tns] = virtual_moveto!(bindings_2[tns], ctx_3, CPU(nthreads()))
+            $(contain(ctx, bindings=bindings_2) do ctx_2
+                subtask = VirtualCPUThread(value(i, Int), device, ctx_2.code.task)
+                contain(ctx_2, task=subtask) do ctx_3
+                    for tns in union(used_in_scope, decl_in_scope)
+                        bindings_2 = copy(ctx_3.bindings)
+                        for tns in setdiff(used_in_scope, decl_in_scope)
+                            bindings_2[tns] = virtual_moveto!(bindings_2[tns], ctx_3, subtask)
+                        end
+                    end
+                    contain(ctx_3, bindings=bindings_2) do ctx_4
+                        ctx_4(instantiate!(root_2, ctx_4))
                     end
                 end
-                ctx_4 = LowerJulia(ctx_3.code, ctx_3.algebra, bindings_2, ctx_3.mode, ctx_3.modes, ctx_3.scope, ctx_3.shash, ctx_3.program_rules, ctx_3.bounds_rules)
-                ctx_4(instantiate!(root_2, ctx_4))
             end)
         end
     end

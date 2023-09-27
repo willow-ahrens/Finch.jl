@@ -103,17 +103,19 @@
         # Computes a horizontal blur a row at a time
         input = Fiber!(Dense(SparseList(Element(0.0))))
         output = Fiber!(Dense(SparseList(Element(0.0))))
-        cpu = CPU(nthreads())
-        tmp = Fiber!(SparseList(Element(0, localmem(cpu))))
+        cpu = CPU(Threads.nthreads())
+        tmp = Fiber!(SparseList(Element(0, CPULocalVector{Vector}(cpu))))
 
-        for y = parallel(_, cpu)
-            tmp .= 0
-            for x = _
-                tmp[x] += input[x-1, y] + input[x, y] + input[x+1, y]
-            end
+        @finch begin
+            for y = parallel(_, cpu)
+                tmp .= 0
+                for x = _
+                    tmp[x] += input[x-1, y] + input[x, y] + input[x+1, y]
+                end
 
-            for x = _
-                output[x, y] = tmp[x]
+                for x = _
+                    output[x, y] = tmp[x]
+                end
             end
         end
     end

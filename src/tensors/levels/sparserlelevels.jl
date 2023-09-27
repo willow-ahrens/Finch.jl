@@ -295,7 +295,7 @@ instantiate_updater(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, protos) =
     instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, protos)
 
 function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseRLELevel}, ctx, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
-    is_serial(ctx.arch) || throw(FinchArchitectureError("SparseRLELevel updater is not concurrent"))
+    #is_serial(ctx.arch) || throw(FinchArchitectureError("SparseRLELevel updater is not concurrent"))
     (lvl, pos) = (fbr.lvl, fbr.pos) 
     tag = lvl.ex
     Tp = lvl.Tp

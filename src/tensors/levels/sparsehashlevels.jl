@@ -432,7 +432,7 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseHashLevel}
 end
 
 function instantiate_updater(trv::SparseHashLaminateTraversal, ctx, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
-    is_serial(ctx.arch) || throw(FinchArchitectureError("SparseHashLevel updater is not concurrent"))
+    #is_serial(ctx.arch) || throw(FinchArchitectureError("SparseHashLevel updater is not concurrent"))
     (lvl, pos, fbr_dirty, coords) = (trv.lvl, trv.pos, trv.dirty, trv.coords)
     tag = lvl.ex
     Ti = lvl.Ti
