@@ -236,7 +236,7 @@ function lower_parallel_loop(ctx, root, ext::ParallelDimension, device::VirtualC
 
     bindings_2 = copy(ctx.bindings)
     for tns in setdiff(used_in_scope, decl_in_scope)
-        bindings_2[tns] = virtual_moveto!(bindings_2[tns], ctx, device)
+        bindings_2[tns] = virtual_moveto(bindings_2[tns], ctx, device)
     end
 
     return quote
@@ -247,7 +247,7 @@ function lower_parallel_loop(ctx, root, ext::ParallelDimension, device::VirtualC
                     for tns in union(used_in_scope, decl_in_scope)
                         bindings_2 = copy(ctx_3.bindings)
                         for tns in setdiff(used_in_scope, decl_in_scope)
-                            bindings_2[tns] = virtual_moveto!(bindings_2[tns], ctx_3, subtask)
+                            bindings_2[tns] = virtual_moveto(bindings_2[tns], ctx_3, subtask)
                         end
                     end
                     contain(ctx_3, bindings=bindings_2) do ctx_4

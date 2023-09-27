@@ -75,18 +75,18 @@ function virtualize(ex, ::Type{CPULocalVector{V}}, ctx, tag) where {V}
 end
 FinchNotation.finch_leaf(device::VirtualCPULocalVector) = virtual(device)
 
-function moveto!(vec::Vector, device::CPU)
+function moveto(vec::Vector, device::CPU)
     return vec
 end
 
-function moveto!(vec::Vector, task::CPUThread)
+function moveto(vec::Vector, task::CPUThread)
     return copy(vec)
 end
 
-function moveto!(vec::CPULocalVector, task::CPUThread)
+function moveto(vec::CPULocalVector, task::CPUThread)
     return vec.data[task.tid]
 end
 
-function virtual_moveto!(vec::VirtualCPULocalVector, ctx, dev::VirtualCPU)
+function virtual_moveto(vec::VirtualCPULocalVector, ctx, dev::VirtualCPU)
     return virtualize(:($(vec.sym)[$(dev.tid)]), vec.V, ctx.code, Symbol(vec.tag, :_cpu)) 
 end

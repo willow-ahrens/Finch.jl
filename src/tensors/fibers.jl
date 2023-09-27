@@ -281,15 +281,3 @@ function moveto(fiber::Fiber{Lvl}, ::Type{MemType}) where {Lvl, MemType <: Abstr
     lvlp = moveto(fiber.lvl, MemType)
     return Fiber{typeof(lvlp)}(lvlp)
 end
-
-# function moveto(fiber::VirtualFiber{Lvl}}, memType; override = false) where {LvL}
-#     if !override && memtype(Lvl) == memType
-#         return fbr
-#     else
-#         moveto(fbr.lvl, memType, sizes)
-#     end
-# end
-
-# function memtype(::Type{<:VirtualFiber{Lvl}}) where {LvL}
-#     memtype(Lvl)
-# end
