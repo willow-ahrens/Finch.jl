@@ -19,8 +19,8 @@ function Finch.bspwrite_h5(fname, arr, attrs = OrderedDict())
     fname
 end
 
-Finch.bspread_header(f::HDF5.File, key) = JSON.parse(read(f[key]))
-Finch.bspwrite_header(f::HDF5.File, str::String, key) = (f[key] = str)
+Finch.bspread_header(f::HDF5.File) = JSON.parse(read(attributes(f)["binsparse"]))
+Finch.bspwrite_header(f::HDF5.File, str::String) = (attributes(f)["binsparse"] = str)
 Finch.bspread_vector(g::HDF5.File, key) = read(g[key])
 Finch.bspwrite_vector(g::HDF5.File, vec, key) = (g[key] = vec)
 
