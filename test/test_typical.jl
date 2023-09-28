@@ -91,14 +91,14 @@
 
     let
         x = Fiber(
-            SparseList{Int64, Int64}(
-                Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0]),
+            SparseList{Int64}(
+                Element{0.0, Float64, Int64}([2.0, 3.0, 4.0, 5.0, 6.0]),
                 10, [1, 6], [1, 3, 5, 7, 9]))
         y = Fiber(
-            SparseList{Int64, Int64}(
-                Element{0.0}([1.0, 1.0, 1.0]),
+            SparseList{Int64}(
+                Element{0.0, Float64, Int64}([1.0, 1.0, 1.0]),
                 10, [1, 4], [2, 5, 8]))
-        z = Fiber(SparseList{Int64, Int64}(Element{0.0}(), 10))
+        z = Fiber(SparseList{Int64}(Element{0.0}(), 10))
     
         io = IOBuffer()
 

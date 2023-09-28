@@ -22,7 +22,9 @@ julia> @finch_code begin
     end
 quote
     X_lvl = (ex.body.bodies[1]).rhs.tns.bind.lvl
-    X_lvl_2 = X_lvl.lvl
+    val = X_lvl.lvl.val
+    X_lvl_ptr = X_lvl.ptr
+    X_lvl_idx = X_lvl.idx
     x_min = (ex.body.bodies[2]).lhs.tns.bind
     x_min_val = x_min.val
     x_max = (ex.body.bodies[3]).lhs.tns.bind
@@ -31,21 +33,21 @@ quote
     x_sum_val = x_sum.val
     x_var = (ex.body.bodies[5]).lhs.tns.bind
     x_var_val = x_var.val
-    X_lvl_q = X_lvl.ptr[1]
-    X_lvl_q_stop = X_lvl.ptr[1 + 1]
+    X_lvl_q = X_lvl_ptr[1]
+    X_lvl_q_stop = X_lvl_ptr[1 + 1]
     if X_lvl_q < X_lvl_q_stop
-        X_lvl_i1 = X_lvl.idx[X_lvl_q_stop - 1]
+        X_lvl_i1 = X_lvl_idx[X_lvl_q_stop - 1]
     else
         X_lvl_i1 = 0
     end
     phase_stop = min(X_lvl_i1, X_lvl.shape)
     if phase_stop >= 1
         i = 1
-        if X_lvl.idx[X_lvl_q] < 1
-            X_lvl_q = Finch.scansearch(X_lvl.idx, 1, X_lvl_q, X_lvl_q_stop - 1)
+        if X_lvl_idx[X_lvl_q] < 1
+            X_lvl_q = Finch.scansearch(X_lvl_idx, 1, X_lvl_q, X_lvl_q_stop - 1)
         end
         while i <= phase_stop
-            X_lvl_i = X_lvl.idx[X_lvl_q]
+            X_lvl_i = X_lvl_idx[X_lvl_q]
             phase_stop_2 = min(phase_stop, X_lvl_i)
             if X_lvl_i == phase_stop_2
                 cond = 0 < -i + phase_stop_2
@@ -53,11 +55,11 @@ quote
                     x_min_val = min(0.0, x_min_val)
                     x_max_val = max(0.0, x_max_val)
                 end
-                X_lvl_2_val_2 = X_lvl_2.val[X_lvl_q]
-                x_min_val = min(X_lvl_2_val_2, x_min_val)
-                x_max_val = max(X_lvl_2_val_2, x_max_val)
-                x_sum_val = X_lvl_2_val_2 + x_sum_val
-                x_var_val = X_lvl_2_val_2 * X_lvl_2_val_2 + x_var_val
+                X_lvl_2_val = val[X_lvl_q]
+                x_min_val = min(X_lvl_2_val, x_min_val)
+                x_max_val = max(X_lvl_2_val, x_max_val)
+                x_sum_val = X_lvl_2_val + x_sum_val
+                x_var_val = X_lvl_2_val * X_lvl_2_val + x_var_val
                 X_lvl_q += 1
             else
                 cond_2 = 0 < 1 + -i + phase_stop_2

@@ -47,6 +47,7 @@ SparseCOOLevel(lvl) = throw(ArgumentError("You must specify the number of dimens
 SparseCOOLevel(lvl, shape::NTuple{N, Any}, args...) where {N} = SparseCOOLevel{N}(lvl, shape, args...)
 
 SparseCOOLevel{N}(lvl) where {N} = SparseCOOLevel{N, NTuple{N, Int}}(lvl)
+SparseCOOLevel{N}(lvl, shape::TI, args...) where {N, TI} = SparseCOOLevel{N, TI}(lvl, shape, args...)
 SparseCOOLevel{N, TI}(lvl) where {N, TI} = SparseCOOLevel{N, TI}(lvl, ((zero(Ti) for Ti in TI.parameters)...,))
 SparseCOOLevel{N, TI}(lvl, shape) where {N, TI} = 
     SparseCOOLevel{N, TI}(lvl, TI(shape), postype(lvl)[1], ((Ti[] for Ti in TI.parameters)...,))
@@ -92,11 +93,10 @@ function Base.show(io::IO, lvl::SparseCOOLevel{N, TI}) where {N, TI}
     if get(io, :compact, false)
         print(io, "…")
     else
-        show(IOContext(io, :typeinfo=>Ptr), lvl.ptr)
+        show(io, lvl.ptr)
         print(io, ", (")
         for (n, Ti) = enumerate(TI.parameters)
-            print(io, Ti) #TODO we have to do something about this.
-            show(IOContext(io, :typeinfo=>Vector{Ti}), lvl.tbl[n])
+            show(io, lvl.tbl[n])
             print(io, ", ")
         end
         print(io, ") ")
@@ -269,8 +269,8 @@ struct SparseCOOWalkTraversal
 end
 
 function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseCOOLevel}, ctx, protos)
-    Tp = postype(lvl)
     (lvl, pos) = (fbr.lvl, fbr.pos)
+    Tp = postype(lvl)
     start = value(:($(ctx(lvl.ptr))[$(ctx(pos))]), Tp)
     stop = value(:($(ctx(lvl.ptr))[$(ctx(pos)) + 1]), Tp)
 

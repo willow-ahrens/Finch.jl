@@ -186,13 +186,13 @@
         fbr = dropdefaults!(Fiber!(SparseCOO{1}(Element(zero(eltype(arr))))), arr)
         println(io, "initialized fiber: ", fbr)
         lvl = fbr.lvl
-        @test Structure(fbr) == Structure(Fiber(SparseCOO{1}(lvl.lvl, lvl.shape, lvl.tbl, lvl.ptr)))
-        @test Structure(fbr) == Structure(Fiber(SparseCOO{1, Tuple{Int}}(lvl.lvl, lvl.shape, lvl.tbl, lvl.ptr)))
+        @test Structure(fbr) == Structure(Fiber(SparseCOO{1}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl)))
+        @test Structure(fbr) == Structure(Fiber(SparseCOO{1, Tuple{Int}}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl)))
 
         fbr = dropdefaults!(Fiber!(SparseCOO{1, Tuple{Int16}}(Element(zero(eltype(arr))))), arr)
         println(io, "initialized fiber: ", fbr)
         lvl = fbr.lvl
-        @test Structure(fbr) == Structure(Fiber(SparseCOO{1, Tuple{Int16}}(lvl.lvl, lvl.shape, lvl.tbl, lvl.ptr)))
+        @test Structure(fbr) == Structure(Fiber(SparseCOO{1, Tuple{Int16}}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl)))
 
         fbr = Fiber!(SparseCOO{1}(Element(0.0), (7,)))
         println(io, "sized fiber: ", fbr)
@@ -246,13 +246,13 @@
         fbr = dropdefaults!(Fiber!(SparseCOO{2}(Element(zero(eltype(arr))))), arr)
         println(io, "initialized fiber: ", fbr)
         lvl = fbr.lvl
-        @test Structure(fbr) == Structure(Fiber(SparseCOO{2}(lvl.lvl, lvl.shape, lvl.tbl, lvl.ptr)))
-        @test Structure(fbr) == Structure(Fiber(SparseCOO{2, Tuple{Int, Int}}(lvl.lvl, lvl.shape, lvl.tbl, lvl.ptr)))
+        @test Structure(fbr) == Structure(Fiber(SparseCOO{2}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl)))
+        @test Structure(fbr) == Structure(Fiber(SparseCOO{2, Tuple{Int, Int}}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl)))
 
         fbr = dropdefaults!(Fiber!(SparseCOO{2, Tuple{Int16, Int16}}(Element(zero(eltype(arr))))), arr)
         println(io, "initialized fiber: ", fbr)
         lvl = fbr.lvl
-        @test Structure(fbr) == Structure(Fiber(SparseCOO{2, Tuple{Int16, Int16}}(lvl.lvl, lvl.shape, lvl.tbl, lvl.ptr)))
+        @test Structure(fbr) == Structure(Fiber(SparseCOO{2, Tuple{Int16, Int16}}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl)))
 
         fbr = Fiber!(SparseCOO{2}(Element(0.0), (3, 7)))
         println(io, "sized fiber: ", fbr)
@@ -304,13 +304,13 @@
         fbr = dropdefaults!(Fiber!(SparseHash{1}(Element(zero(eltype(arr))))), arr)
         println(io, "initialized fiber: ", fbr)
         lvl = fbr.lvl
-        @test Structure(fbr) == Structure(Fiber(SparseHash{1}(lvl.lvl, lvl.shape, lvl.tbl, lvl.ptr, lvl.srt)))
-        @test Structure(fbr) == Structure(Fiber(SparseHash{1, Tuple{Int}}(lvl.lvl, lvl.shape, lvl.tbl, lvl.ptr, lvl.srt)))
+        @test Structure(fbr) == Structure(Fiber(SparseHash{1}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)))
+        @test Structure(fbr) == Structure(Fiber(SparseHash{1, Tuple{Int}}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)))
 
         fbr = dropdefaults!(Fiber!(SparseHash{1, Tuple{Int16}}(Element(zero(eltype(arr))))), arr)
         println(io, "initialized fiber: ", fbr)
         lvl = fbr.lvl
-        @test Structure(fbr) == Structure(Fiber(SparseHash{1, Tuple{Int16}}(lvl.lvl, lvl.shape, lvl.tbl, lvl.ptr, lvl.srt)))
+        @test Structure(fbr) == Structure(Fiber(SparseHash{1, Tuple{Int16}}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)))
 
         fbr = Fiber!(SparseHash{1}(Element(0.0), (7,)))
         println(io, "sized fiber: ", fbr)
@@ -364,13 +364,13 @@
         fbr = dropdefaults!(Fiber!(SparseHash{2}(Element(zero(eltype(arr))))), arr)
         println(io, "initialized fiber: ", fbr)
         lvl = fbr.lvl
-        @test Structure(fbr) == Structure(Fiber(SparseHash{2}(lvl.lvl, lvl.shape, lvl.tbl, lvl.ptr, lvl.srt)))
-        @test Structure(fbr) == Structure(Fiber(SparseHash{2, Tuple{Int, Int}}(lvl.lvl, lvl.shape, lvl.tbl, lvl.ptr, lvl.srt)))
+        @test Structure(fbr) == Structure(Fiber(SparseHash{2}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)))
+        @test Structure(fbr) == Structure(Fiber(SparseHash{2, Tuple{Int, Int}}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)))
 
         fbr = dropdefaults!(Fiber!(SparseHash{2, Tuple{Int16, Int16}}(Element(zero(eltype(arr))))), arr)
         println(io, "initialized fiber: ", fbr)
         lvl = fbr.lvl
-        @test Structure(fbr) == Structure(Fiber(SparseHash{2, Tuple{Int16, Int16}}(lvl.lvl, lvl.shape, lvl.tbl, lvl.ptr, lvl.srt)))
+        @test Structure(fbr) == Structure(Fiber(SparseHash{2, Tuple{Int16, Int16}}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)))
 
         fbr = Fiber!(SparseHash{2}(Element(0.0), (3, 7)))
         println(io, "sized fiber: ", fbr)

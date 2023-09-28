@@ -44,7 +44,7 @@ const SparseHash = SparseHashLevel
 SparseHashLevel(lvl) = throw(ArgumentError("You must specify the number of dimensions in a SparseHashLevel, e.g. Fiber!(SparseHash{2}(Element(0.0)))"))
 SparseHashLevel(lvl, shape, args...) = SparseHashLevel{length(shape)}(lvl, shape, args...)
 SparseHashLevel{N}(lvl::Lvl) where {N, Lvl} = SparseHashLevel{N, NTuple{N, Int}}(lvl)
-SparseHashLevel{N}(lvl, shape::TI, args...) where {N, TI} = SparseHashLevel{N, Ti}(lvl, shape, args...)
+SparseHashLevel{N}(lvl, shape::TI, args...) where {N, TI} = SparseHashLevel{N, TI}(lvl, shape, args...)
 SparseHashLevel{N, TI}(lvl) where {N, TI} = SparseHashLevel{N, TI}(lvl, ((zero(ti) for ti in TI.parameters)...,))
 
 SparseHashLevel{N, TI}(lvl, shape) where {N, TI} =
@@ -64,7 +64,7 @@ similar_level(lvl::SparseHashLevel{N}) where {N} = SparseHashLevel{N}(similar_le
 similar_level(lvl::SparseHashLevel{N}, tail...) where {N} = SparseHashLevel{N}(similar_level(lvl.lvl, tail[1:end-N]...), (tail[end-N+1:end]...,))
 
 function postype(::Type{SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}}) where {N, TI, Ptr, Tbl, Srt, Lvl}
-    return postype(lvl)
+    return postype(Lvl)
 end
 
 function moveto(lvl::SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}, device) where {N, TI, Ptr, Tbl, Srt, Lvl}
@@ -98,13 +98,13 @@ function Base.show(io::IO, lvl::SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}) wher
     if get(io, :compact, false)
         print(io, "…")
     else
-        show(IOContext(io, :typeinfo=>Ptr), lvl.ptr)
+        show(io, lvl.ptr)
         print(io, ", ")
         print(io, typeof(lvl.tbl))
         print(io, "(")
         print(io, join(sort!(collect(pairs(lvl.tbl))), ", "))
         print(io, "), ")
-        show(IOContext(io, :typeinfo=>Srt), lvl.srt)
+        show(io, lvl.srt)
     end
     print(io, ")")
 end
@@ -291,6 +291,7 @@ end
 
 function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseHashLevel}, ctx, subprotos, proto::Union{typeof(defaultread), typeof(walk)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
+    Tp = postype(lvl)
     start = value(:($(ctx(lvl.ptr))[$(ctx(pos))]), Tp)
     stop = value(:($(ctx(lvl.ptr))[$(ctx(pos)) + 1]), Tp)
 

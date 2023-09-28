@@ -10,9 +10,9 @@ const SparseRLE = SparseRLELevel
 SparseRLELevel(lvl::Lvl) where {Lvl} = SparseRLELevel{Int}(lvl)
 SparseRLELevel(lvl, shape, args...) = SparseRLELevel{typeof(shape)}(lvl, shape, args...)
 SparseRLELevel{Ti}(lvl) where {Ti} = SparseRLELevel(lvl, zero(Ti))
-SparseRLELevel{Ti}(lvl, shape) where {Ti} = SparseRLELevel{Ti}(lvl, shape, postype(lvl)[], Ti[], Ti[])
+SparseRLELevel{Ti}(lvl, shape) where {Ti} = SparseRLELevel{Ti}(lvl, shape, postype(lvl)[1], Ti[], Ti[])
 SparseRLELevel{Ti}(lvl::Lvl, shape, ptr::Ptr, left::Left, right::Right) where {Ti, Lvl, Ptr, Left, Right} =
-    SparseRLELevel{Ti, Lvl, Ptr, Left, Right}(lvl, shape, ptr, left, right)
+    SparseRLELevel{Ti, Ptr, Left, Right, Lvl}(lvl, Ti(shape), ptr, left, right)
 
 Base.summary(lvl::SparseRLELevel) = "SparseRLE($(summary(lvl.lvl)))"
 similar_level(lvl::SparseRLELevel) = SparseRLE(similar_level(lvl.lvl))
@@ -53,11 +53,11 @@ function Base.show(io::IO, lvl::SparseRLELevel{Ti, Ptr, Left, Right, Lvl}) where
     if get(io, :compact, false)
         print(io, "…")
     else
-        show(IOContext(io, :typeinfo=>Ptr), lvl.ptr)
+        show(io, lvl.ptr)
         print(io, ", ")
-        show(IOContext(io, :typeinfo=>Left), lvl.left)
+        show(io, lvl.left)
         print(io, ", ")
-        show(IOContext(io, :typeinfo=>Right), lvl.right)
+        show(io, lvl.right)
     end
     print(io, ")")
 end

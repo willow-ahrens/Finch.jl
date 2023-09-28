@@ -40,7 +40,7 @@ SparseVBLLevel{Ti}(lvl::Lvl, shape, ptr::Ptr, idx::Idx, ofs::Ofs) where {Ti, Lvl
     SparseVBLLevel{Ti, Ptr, Idx, Ofs, Lvl}(lvl, Ti(shape), ptr, idx, ofs)
 
 function postype(::Type{SparseVBLLevel{Ti, Ptr, Idx, Ofs, Lvl}}) where {Ti, Ptr, Idx, Ofs, Lvl}
-    return postype(lvl)
+    return postype(Lvl)
 end
 
 function moveto(lvl::SparseVBLLevel{Ti}, device) where {Ti}
@@ -300,7 +300,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, su
                             body = (ctx) -> Sequence([
                                 Phase(
                                     stop = (ctx, ext) -> value(my_i_start),
-                                    body = (ctx, ext) -> Run(Fill(Virtual_level_default(lvl))),
+                                    body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
                                 ),
                                 Phase(
                                     body = (ctx, ext) -> Lookup(
@@ -318,7 +318,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, su
                     )
                 ),
                 Phase(
-                    body = (ctx, ext) -> Run(Fill(Virtual_level_default(lvl)))
+                    body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))
                 )
             ])
         )
@@ -372,7 +372,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, su
                         chunk = Sequence([
                                     Phase(
                                         stop = (ctx, ext) -> value(my_i_start),
-                                        body = (ctx, ext) -> Run(Fill(Virtual_level_default(lvl))),
+                                        body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
                                     ),
                                     Phase(
                                         body = (ctx, ext) -> Lookup(
@@ -387,7 +387,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, su
                     ), 
                 ),
                 Phase(
-                    body = (ctx, ext) -> Run(Fill(Virtual_level_default(lvl)))
+                    body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))
                 )
             ])
         )

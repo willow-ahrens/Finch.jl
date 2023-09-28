@@ -43,15 +43,15 @@ function moveto(lvl::ElementLevel{D, Tv, Tp}, device) where {D, Tv, Tp}
 end
 
 pattern!(lvl::ElementLevel{D, Tv, Tp}) where  {D, Tv, Tp} =
-    Pattern{Tp, }()
+    Pattern{Tp}()
 redefault!(lvl::ElementLevel{D, Tv, Tp}, init) where {D, Tv, Tp} = 
-    ElementLevel{init, Tv, Tp, }(lvl.val)
+    ElementLevel{init, Tv, Tp}(lvl.val)
 
 
 function Base.show(io::IO, lvl::ElementLevel{D, Tv, Tp, Val}) where {D, Tv, Tp, Val}
     print(io, "Element{")
     show(io, D)
-    print(io, ", $Tv, $Tp, $Val}(")
+    print(io, ", $Tv, $Tp}(")
     if get(io, :compact, false)
         print(io, "…")
     else

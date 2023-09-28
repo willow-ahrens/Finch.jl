@@ -17,41 +17,44 @@ julia> @finch_code for i = _
     end
 quote
     B_lvl = ex.body.lhs.tns.bind.lvl
+    val = B_lvl.lvl.val
     B_lvl_2 = B_lvl.lvl
     A_lvl = ex.body.rhs.tns.bind.lvl
-    A_lvl_2 = A_lvl.lvl
+    val_2 = A_lvl.lvl.val
+    A_lvl_ptr = A_lvl.ptr
+    A_lvl_idx = A_lvl.idx
     A_lvl.shape == B_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(A_lvl.shape) != $(B_lvl.shape))"))
-    A_lvl_q = A_lvl.ptr[1]
-    A_lvl_q_stop = A_lvl.ptr[1 + 1]
+    A_lvl_q = A_lvl_ptr[1]
+    A_lvl_q_stop = A_lvl_ptr[1 + 1]
     if A_lvl_q < A_lvl_q_stop
-        A_lvl_i1 = A_lvl.idx[A_lvl_q_stop - 1]
+        A_lvl_i1 = A_lvl_idx[A_lvl_q_stop - 1]
     else
         A_lvl_i1 = 0
     end
     phase_stop = min(A_lvl.shape, A_lvl_i1)
     if phase_stop >= 1
         i = 1
-        if A_lvl.idx[A_lvl_q] < 1
-            A_lvl_q = Finch.scansearch(A_lvl.idx, 1, A_lvl_q, A_lvl_q_stop - 1)
+        if A_lvl_idx[A_lvl_q] < 1
+            A_lvl_q = Finch.scansearch(A_lvl_idx, 1, A_lvl_q, A_lvl_q_stop - 1)
         end
         while i <= phase_stop
-            A_lvl_i = A_lvl.idx[A_lvl_q]
+            A_lvl_i = A_lvl_idx[A_lvl_q]
             phase_stop_2 = min(phase_stop, A_lvl_i)
             if A_lvl_i == phase_stop_2
-                A_lvl_2_val_2 = A_lvl_2.val[A_lvl_q]
+                A_lvl_2_val = val_2[A_lvl_q]
                 B_lvl_q = (1 - 1) * B_lvl.shape + phase_stop_2
-                B_lvl_2.val[B_lvl_q] = A_lvl_2_val_2 + B_lvl_2.val[B_lvl_q]
+                val[B_lvl_q] = A_lvl_2_val + val[B_lvl_q]
                 A_lvl_q += 1
             end
             i = phase_stop_2 + 1
         end
     end
     qos = 1 * B_lvl.shape
-    resize!(B_lvl_2.val, qos)
+    resize!(val, qos)
     (B = Fiber((DenseLevel){Int64}(B_lvl_2, B_lvl.shape)),)
 end
 julia> @finch for i = _
         B[i] += A[i]
     end
-(B = Fiber(Dense{Int64}(Element{0.0, Float64, Int64, Vector{Float64}}([3.1, 1.1, 4.1, 1.1, 5.1, 1.1, 6.1, 1.1, 7.1, 1.1]), 10)),)
+(B = Fiber(Dense{Int64}(Element{0.0, Float64, Int64}([3.1, 1.1, 4.1, 1.1, 5.1, 1.1, 6.1, 1.1, 7.1, 1.1]), 10)),)
 

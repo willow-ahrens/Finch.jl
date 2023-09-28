@@ -84,11 +84,11 @@ function Base.show(io::IO, lvl::SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl},) whe
     if get(io, :compact, false)
         print(io, "…")
     else
-        show(IOContext(io, :typeinfo=>Ptr), lvl.ptr)
+        show(io, lvl.ptr)
         print(io, ", ")
-        show(IOContext(io, :typeinfo=>Tbl), lvl.tbl)
+        show(io, lvl.tbl)
         print(io, ", ")
-        show(IOContext(io, :typeinfo=>Srt), lvl.srt)
+        show(io, lvl.srt)
     end
     print(io, ")")
 end

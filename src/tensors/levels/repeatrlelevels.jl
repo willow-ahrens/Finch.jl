@@ -72,7 +72,7 @@ function Base.show(io::IO, lvl::RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}) wh
     if get(io, :compact, false)
         print(io, "}(")
     else
-        print(io, ", $Ti, $Tp, $Tv, $Ptr, $Idx, $Val}(")
+        print(io, ", $Ti, $Tp, $Tv}(")
     end
 
     show(io, lvl.shape)
@@ -80,11 +80,11 @@ function Base.show(io::IO, lvl::RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}) wh
     if get(io, :compact, false)
         print(io, "…")
     else
-        show(IOContext(io, :typeinfo=>Ptr), lvl.ptr)
+        show(io, lvl.ptr)
         print(io, ", ")
-        show(IOContext(io, :typeinfo=>Idx), lvl.idx)
+        show(io, lvl.idx)
         print(io, ", ")
-        show(IOContext(io, :typeinfo=>Val), lvl.val)
+        show(io, lvl.val)
     end
     print(io, ")")
 end
@@ -173,6 +173,7 @@ end
 
 virtual_level_default(lvl::VirtualRepeatRLELevel) = lvl.D
 virtual_level_eltype(lvl::VirtualRepeatRLELevel) = lvl.Tv
+postype(lvl::VirtualRepeatRLELevel) = lvl.Tp
 
 function declare_level!(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, mode, init)
     init == literal(lvl.D) || throw(FinchProtocolError("Cannot initialize RepeatRLE Levels to non-default values"))

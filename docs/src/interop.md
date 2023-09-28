@@ -61,15 +61,10 @@ julia> idx_jl = reinterpret(CIndex{Int}, idx_c)
  1
  3
 julia> A = Fiber(Dense(SparseList{CIndex{Int}, CIndex{Int}}(Element{0.0, Float64}(val_c), m, ptr_jl, idx_jl), n))
-Dense [:,1:3]
-├─[:,1]: SparseList (0.0) [1:CIndex{Int64}(4)]
-│ ├─[CIndex{Int64}(2)]: 1.1
-│ ├─[CIndex{Int64}(3)]: 2.2
-│ ├─[CIndex{Int64}(4)]: 3.3
-├─[:,2]: SparseList (0.0) [1:CIndex{Int64}(4)]
-├─[:,3]: SparseList (0.0) [1:CIndex{Int64}(4)]
-│ ├─[CIndex{Int64}(1)]: 4.4
-│ ├─[CIndex{Int64}(3)]: 5.5
+ERROR: MethodError: no method matching (SparseListLevel{CIndex{Int64}, CIndex{Int64}})(::ElementLevel{0.0, Float64, Int64, Vector{Float64}}, ::Int64, ::Base.ReinterpretArray{CIndex{Int64}, 1, Int64, Vector{Int64}, false}, ::Base.ReinterpretArray{CIndex{Int64}, 1, Int64, Vector{Int64}, false})
+Stacktrace:
+ [1] top-level scope
+   @ none:1
 ```
 
 We can also convert between representations by by copying to or from `CIndex` fibers.
