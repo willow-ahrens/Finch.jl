@@ -1,5 +1,5 @@
 """
-    SparseCOOLevel{[N], [Ti=Tuple{Int...}], [Tp=Int], [Tbl], [Ptr]}(lvl, [dims])
+    SparseCOOLevel{[N], [TI=Tuple{Int...}], [Ptr], [Tbl]}(lvl, [dims])
 
 A subfiber of a sparse level does not need to represent slices which are
 entirely [`default`](@ref). Instead, only potentially non-default slices are
@@ -9,10 +9,10 @@ i_n]`.  A set of `N` lists (one for each index) are used to record which slices
 are stored. The coordinates (sets of `N` indices) are sorted in column major
 order.  Optionally, `dims` are the sizes of the last dimensions.
 
-`Ti` is the type of the last `N` fiber indices, and `Tp` is the type used for
+`TI` is the type of the last `N` fiber indices, and `Tp` is the type used for
 positions in the level.
 
-The type `Tbl` is an NTuple type where each entry k is a subtype `AbstractVector{Ti[k]}`.
+The type `Tbl` is an NTuple type where each entry k is a subtype `AbstractVector{TI[k]}`.
 
 The type `Ptr` is the type for the pointer array.
 
@@ -35,98 +35,71 @@ SparseCOO (0.0) [1:3,1:3]
 ├─├─[3, 3]: 40.0
 ```
 """
-struct SparseCOOLevel{N, Ti<:Tuple, Tp, Tbl<:NTuple{N, <:AbstractVector}, Ptr<:AbstractVector, Lvl}
+struct SparseCOOLevel{N, TI<:Tuple, Ptr, Tbl, Lvl}
     lvl::Lvl
-    shape::Ti
-    tbl::Tbl
+    shape::TI
     ptr::Ptr
+    tbl::Tbl
 end
 const SparseCOO = SparseCOOLevel
 
 SparseCOOLevel(lvl) = throw(ArgumentError("You must specify the number of dimensions in a SparseCOOLevel, e.g. Fiber!(SparseCOO{2}(Element(0.0)))"))
-SparseCOOLevel(lvl, shape, args...) = SparseCOOLevel{length(shape)}(lvl, shape, args...)
-SparseCOOLevel{N}(lvl::Lvl) where {Lvl, N} = SparseCOOLevel{N, NTuple{N, Int}}(lvl)
-SparseCOOLevel{N}(lvl, shape, args...) where {N} = SparseCOOLevel{N, typeof(shape)}(lvl, shape, args...)
+SparseCOOLevel(lvl, shape, args...) where {TI} = SparseCOOLevel{length(shape)}(lvl, shape, args...)
 
-SparseCOOLevel{N, Ti}(lvl, args...) where {N, Ti} =
-    SparseCOOLevel{N,
-        Ti,
-        postype(typeof(lvl)),
-        Tuple{((memtype(typeof(lvl))){ti, 1} for ti in Ti.parameters)...},
-        (memtype(typeof(lvl))){postype(typeof(lvl)), 1},
-        typeof(lvl)}(lvl, args...)
-SparseCOOLevel{N, Ti}(lvl) where {N, Ti} =
-    SparseCOOLevel{N,
-        Ti,
-        postype(typeof(lvl)),
-        Tuple{((memtype(typeof(lvl))){ti, 1} for ti in Ti.parameters)...},
-        (memtype(typeof(lvl))){postype(typeof(lvl)), 1},
-        typeof(lvl)}(lvl)
+SparseCOOLevel{N}(lvl) where {N} = SparseCOOLevel{N, NTuple{N, Int}}(lvl)
+SparseCOOLevel{N, TI}(lvl) where {N, TI} = SparseCOOLevel{N, TI}(lvl, ((zero(Ti) for Ti in TI.parameters)...,))
+SparseCOOLevel{N, TI}(lvl, shape) where {N, TI} = 
+    SparseCOOLevel{N, TI}(lvl, TI(shape), postype(lvl)[1], ((Ti[] for Ti in TI.parameters)...,))
 
-SparseCOOLevel{N, Ti, Tp}(lvl, args...) where {N, Ti, Tp} =
-    SparseCOOLevel{N, Ti, Tp, Tuple{(memtype(typeof(lvl)){ti, 1} for ti in Ti.parameters)...}, memtype(typeof(lvl)){Tp, 1}, typeof(lvl)}(lvl, args...)
-
-SparseCOOLevel{N, Ti, Tp, Tbl, Ptr, Lvl}(lvl) where {N, Ti, Tp, Tbl, Ptr, Lvl} =
-    SparseCOOLevel{N, Ti, Tp, Tbl, Ptr, Lvl}(lvl, ((zero(ti) for ti in Ti.parameters)...,))
-SparseCOOLevel{N, Ti, Tp, Tbl, Ptr, Lvl}(lvl, shape) where {N, Ti, Tp, Tbl, Ptr, Lvl} =
-    SparseCOOLevel{N, Ti, Tp, Tbl, Ptr, Lvl}(lvl, Ti(shape), ((ti() for ti in Tbl.parameters)...,), Tp[1])
-
-
-# SparseCOOLevel{N, Ti}(lvl) where {N, Ti} = SparseCOOLevel{N, Ti, postype(typeof(lvl)), Tuple{(memtype(typeof(lvl)){ti, 1} for ti in Ti.parameters)...}, memtype(typeof(lvl)){postype(typeof(lvl)), 1}, typeof(lvl)}(lvl)
+SparseCOOLevel{N, TI}(lvl::Lvl, shape, ptr::Ptr, tbl::Tbl) where {N, TI, Lvl, Ptr, Tbl} = 
+    SparseCOOLevel{N, TI, Ptr, Tbl}(lvl, TI(shape), ptr, tbl)
 
 Base.summary(lvl::SparseCOOLevel{N}) where {N} = "SparseCOO{$N}($(summary(lvl.lvl)))"
 similar_level(lvl::SparseCOOLevel{N}) where {N} = SparseCOOLevel{N}(similar_level(lvl.lvl))
 similar_level(lvl::SparseCOOLevel{N}, tail...) where {N} = SparseCOOLevel{N}(similar_level(lvl.lvl, tail[1:end-N]...), (tail[end-N+1:end]...,))
 
-
-
-function memtype(::Type{SparseCOOLevel{N, Ti, Tp, Tbl, Ptr, Lvl}}) where {N, Ti, Tp, Tbl, Ptr, Lvl}
-    return memtype(Ptr)
+function postype(::Type{SparseCOOLevel{N, TI, Ptr, Tbl, Lvl}}) where {N, TI, Ptr, Tbl, Lvl}
+    return postype(Lvl)
 end
 
-function postype(::Type{SparseCOOLevel{N, Ti, Tp, Tbl, Ptr, Lvl}}) where {N, Ti, Tp, Tbl, Ptr, Lvl}
-    return Tp
+function moveto(lvl::SparseCOOLevel{N, TI}, device) where {N, Ti}
+    lvl_2 = moveto(lvl.lvl, device)
+    ptr_2 = moveto(lvl.ptr, device)
+    tbl_2 = ntuple(n->moveto(lvl.tbl[n], device), N)
+    return SparseCOOLevel{N, TI}(lvl_2, lvl.shape, ptr_2, tbl_2)
 end
 
-function moveto(lvl::SparseCOOLevel{N, Ti, Tp, Tbl, Ptr, Lvl}, ::Type{MemType}) where {N, Ti, Tp, Tbl, Ptr, Lvl, MemType <: AbstractArray}
-    lvl_2 = moveto(lvl.lvl, MemType)
-    ptr_2 = MemType{Tp, 1}(lvl.ptr)
-    tbl_2 = Tuple(MemType{ti, 1}(sv) for (ti, sv) in zip(Ti.parameters, lvl.tbl))
-    return SparseCOOLevel{N, Ti, Tp, typeof(tbl_2), MemType{Tp, 1}, typeof(lvl_2)}(lvl_2, lvl.shape, tbl_2, ptr_2)
-end
-
-
-pattern!(lvl::SparseCOOLevel{N, Ti, Tp, Tbl, Ptr, Lvl}) where {N, Ti, Tp, Tbl, Ptr, Lvl} = 
-    SparseCOOLevel{N, Ti, Tp, Tbl, Ptr, Lvl}(pattern!(lvl.lvl), lvl.shape, lvl.tbl, lvl.ptr)
+pattern!(lvl::SparseCOOLevel{N, TI}) where {N, TI} = 
+    SparseCOOLevel{N, TI}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.tbl)
 
 function countstored_level(lvl::SparseCOOLevel, pos)
     countstored_level(lvl.lvl, lvl.ptr[pos + 1] - 1)
 end
 
-redefault!(lvl::SparseCOOLevel{N, Ti, Tp}, init) where {N, Ti, Tp} = 
-    SparseCOOLevel{N, Ti, Tp}(redefault!(lvl.lvl, init), lvl.shape, lvl.tbl, lvl.ptr)
+redefault!(lvl::SparseCOOLevel{N, TI}, init) where {N, TI, Tp} = 
+    SparseCOOLevel{N, TI}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.tbl)
 
-function Base.show(io::IO, lvl::SparseCOOLevel{N, Ti, Tp, Tbl, Ptr, Lvl}) where {N, Ti, Tp, Tbl, Ptr, Lvl}
+function Base.show(io::IO, lvl::SparseCOOLevel{N, TI}) where {N, TI}
     if get(io, :compact, false)
         print(io, "SparseCOO{$N}(")
     else
-        print(io, "SparseCOO{$N, $Ti, $Tp}(")
+        print(io, "SparseCOO{$N, $TI}(")
     end
     show(io, lvl.lvl)
     print(io, ", ")
-    show(IOContext(io, :typeinfo=>Ti), lvl.shape)
+    show(IOContext(io, :typeinfo=>TI), lvl.shape)
     print(io, ", ")
     if get(io, :compact, false)
         print(io, "…")
     else
-        print(io, "(")
-        for (n, ti) = enumerate(Ti.parameters)
-            print(io, ti) #TODO we have to do something about this.
-            show(IOContext(io, :typeinfo=>Vector{ti}), lvl.tbl[n])
+        show(IOContext(io, :typeinfo=>Ptr), lvl.ptr)
+        print(io, ", (")
+        for (n, Ti) = enumerate(TI.parameters)
+            print(io, Ti) #TODO we have to do something about this.
+            show(IOContext(io, :typeinfo=>Vector{Ti}), lvl.tbl[n])
             print(io, ", ")
         end
-        print(io, "), ")
-        show(IOContext(io, :typeinfo=>Ptr), lvl.ptr)
+        print(io, ") ")
     end
     print(io, ")")
 end
@@ -144,16 +117,16 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseCOO
     display_fiber_data(io, mime, fbr, depth, N, crds, print_coord, get_fbr)
 end
 
-@inline level_ndims(::Type{<:SparseCOOLevel{N, Ti, Tp, Tbl, Ptr, Lvl}}) where {N, Ti, Tp, Tbl, Ptr, Lvl} = N + level_ndims(Lvl)
+@inline level_ndims(::Type{<:SparseCOOLevel{N, TI, Ptr, Tbl, Lvl}}) where {N, TI, Ptr, Tbl, Lvl} = N + level_ndims(Lvl)
 @inline level_size(lvl::SparseCOOLevel) = (level_size(lvl.lvl)..., lvl.shape...)
 @inline level_axes(lvl::SparseCOOLevel) = (level_axes(lvl.lvl)..., map(Base.OneTo, lvl.shape)...)
-@inline level_eltype(::Type{<:SparseCOOLevel{N, Ti, Tp, Tbl, Ptr, Lvl}}) where {N, Ti, Tp, Tbl, Ptr, Lvl} = level_eltype(Lvl)
-@inline level_default(::Type{<:SparseCOOLevel{N, Ti, Tp, Tbl, Ptr, Lvl}}) where {N, Ti, Tp, Tbl, Ptr, Lvl} = level_default(Lvl)
-data_rep_level(::Type{<:SparseCOOLevel{N, Ti, Tp, Tbl, Ptr, Lvl}}) where {N, Ti, Tp, Tbl, Ptr, Lvl} = (SparseData^N)(data_rep_level(Lvl))
+@inline level_eltype(::Type{<:SparseCOOLevel{N, TI, Ptr, Tbl, Lvl}}) where {N, TI, Ptr, Tbl, Lvl} = level_eltype(Lvl)
+@inline level_default(::Type{<:SparseCOOLevel{N, TI, Ptr, Tbl, Lvl}}) where {N, TI, Ptr, Tbl, Lvl} = level_default(Lvl)
+data_rep_level(::Type{<:SparseCOOLevel{N, TI, Ptr, Tbl, Lvl}}) where {N, TI, Ptr, Tbl, Lvl} = (SparseData^N)(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:SparseCOOLevel})() = fbr
 (fbr::SubFiber{<:SparseCOOLevel})() = fbr
-function (fbr::SubFiber{<:SparseCOOLevel{N, Ti}})(idxs...) where {N, Ti}
+function (fbr::SubFiber{<:SparseCOOLevel{N, TI}})(idxs...) where {N, TI}
     isempty(idxs) && return fbr
     idx = idxs[end-N + 1:end]
     lvl = fbr.lvl
@@ -168,8 +141,7 @@ mutable struct VirtualSparseCOOLevel <: AbstractVirtualLevel
     lvl
     ex
     N
-    Ti
-    Tp
+    TI
     Tbl
     Ptr
     Lvl
@@ -182,7 +154,7 @@ end
 is_level_injective(lvl::VirtualSparseCOOLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., (true for _ in 1:lvl.N)...]
 is_level_atomic(lvl::VirtualSparseCOOLevel, ctx) = false
 
-function virtualize(ex, ::Type{SparseCOOLevel{N, Ti, Tp, Tbl, Ptr, Lvl}}, ctx, tag=:lvl) where {N, Ti, Tp, Tbl, Ptr, Lvl}
+function virtualize(ex, ::Type{SparseCOOLevel{N, TI, Ptr, Tbl, Lvl}}, ctx, tag=:lvl) where {N, TI, Ptr, Tbl, Lvl}
     sym = freshen(ctx, tag)
     shape = map(n->value(:($sym.shape[$n]), Int), 1:N)
     qos_fill = freshen(ctx, sym, :_qos_fill)
@@ -194,15 +166,15 @@ function virtualize(ex, ::Type{SparseCOOLevel{N, Ti, Tp, Tbl, Ptr, Lvl}}, ctx, t
 
     prev_pos = freshen(ctx, sym, :_prev_pos)
     prev_coord = map(n->freshen(ctx, sym, :_prev_coord_, n), 1:N)
-    VirtualSparseCOOLevel(lvl_2, sym, N, Ti, Tp, Tbl, Ptr, Lvl, shape, qos_fill, qos_stop, prev_pos)
+    VirtualSparseCOOLevel(lvl_2, sym, N, TI, Ptr, Tbl, Lvl, shape, qos_fill, qos_stop, prev_pos)
 end
 function lower(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
-        $SparseCOOLevel{$(lvl.N), $(lvl.Ti), $(lvl.Tp), $(lvl.Tbl), $(lvl.Ptr), $(lvl.Lvl)}(
+        $SparseCOOLevel{$(lvl.N), $(lvl.TI), $(lvl.Tbl), $(lvl.Ptr), $(lvl.Lvl)}(
             $(ctx(lvl.lvl)),
             ($(map(ctx, lvl.shape)...),),
-            $(lvl.ex).tbl,
             $(lvl.ex).ptr,
+            $(lvl.ex).tbl
         )
     end
 end
@@ -210,7 +182,7 @@ end
 Base.summary(lvl::VirtualSparseCOOLevel) = "SparseCOO{$(lvl.N)}($(summary(lvl.lvl)))"
 
 function virtual_level_size(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler)
-    ext = map((ti, stop)->Extent(literal(ti(1)), stop), lvl.Ti.parameters, lvl.shape)
+    ext = map((ti, stop)->Extent(literal(ti(1)), stop), lvl.TI.parameters, lvl.shape)
     (virtual_level_size(lvl.lvl, ctx)..., ext...)
 end
 
@@ -224,8 +196,8 @@ virtual_level_eltype(lvl::VirtualSparseCOOLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSparseCOOLevel) = virtual_level_default(lvl.lvl)
 
 function declare_level!(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler, pos, init)
-    Ti = lvl.Ti
-    Tp = lvl.Tp
+    TI = lvl.TI
+    Tp = postype(lvl)
 
     qos = call(-, call(getindex, :($(lvl.ex).ptr), call(+, pos, 1)), 1)
     push!(ctx.code.preamble, quote
@@ -242,7 +214,7 @@ function declare_level!(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler, pos, 
 end
 
 function trim_level!(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler, pos)
-    Tp = lvl.Tp
+    Tp = postype(lvl)
     qos = freshen(ctx.code, :qos)
 
     push!(ctx.code.preamble, quote
@@ -287,9 +259,10 @@ struct SparseCOOWalkTraversal
 end
 
 function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseCOOLevel}, ctx, protos)
+    Tp = postype(lvl)
     (lvl, pos) = (fbr.lvl, fbr.pos)
-    start = value(:($(lvl.ex).ptr[$(ctx(pos))]), lvl.Tp)
-    stop = value(:($(lvl.ex).ptr[$(ctx(pos)) + 1]), lvl.Tp)
+    start = value(:($(lvl.ex).ptr[$(ctx(pos))]), Tp)
+    stop = value(:($(lvl.ex).ptr[$(ctx(pos)) + 1]), Tp)
 
     instantiate_reader(SparseCOOWalkTraversal(lvl, lvl.N, start, stop), ctx, protos)
 end
@@ -297,8 +270,8 @@ end
 function instantiate_reader(trv::SparseCOOWalkTraversal, ctx, subprotos, ::Union{typeof(defaultread), typeof(walk)})
     (lvl, R, start, stop) = (trv.lvl, trv.R, trv.start, trv.stop)
     tag = lvl.ex
-    Ti = lvl.Ti
-    Tp = lvl.Tp
+    TI = lvl.TI
+    Tp = postype(lvl)
     my_i = freshen(ctx.code, tag, :_i)
     my_q = freshen(ctx.code, tag, :_q)
     my_q_step = freshen(ctx.code, tag, :_q_step)
@@ -314,8 +287,8 @@ function instantiate_reader(trv::SparseCOOWalkTraversal, ctx, subprotos, ::Union
                     $my_i = $(lvl.ex).tbl[$R][$my_q]
                     $my_i_stop = $(lvl.ex).tbl[$R][$my_q_stop - 1]
                 else
-                    $my_i = $(Ti.parameters[R](1))
-                    $my_i_stop = $(Ti.parameters[R](0))
+                    $my_i = $(TI.parameters[R](1))
+                    $my_i_stop = $(TI.parameters[R](0))
                 end
             end,
             body = (ctx) -> Sequence([
@@ -354,7 +327,7 @@ function instantiate_reader(trv::SparseCOOWalkTraversal, ctx, subprotos, ::Union
                                 stop = (ctx, ext) -> value(my_i),
                                 chunk = Spike(
                                     body = Fill(virtual_level_default(lvl)),
-                                    tail = instantiate_reader(SparseCOOWalkTraversal(lvl, R - 1, value(my_q, lvl.Ti), value(my_q_step, lvl.Ti)), ctx, subprotos),
+                                    tail = instantiate_reader(SparseCOOWalkTraversal(lvl, R - 1, value(my_q, lvl.TI), value(my_q_step, lvl.TI)), ctx, subprotos),
                                 ),
                                 next = (ctx, ext) -> :($my_q = $my_q_step)
                             )
@@ -381,8 +354,8 @@ instantiate_updater(fbr::VirtualSubFiber{VirtualSparseCOOLevel}, ctx, protos) =
 function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseCOOLevel}, ctx, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
-    Ti = lvl.Ti
-    Tp = lvl.Tp
+    TI = lvl.TI
+    Tp = postype(lvl)
     qos_fill = lvl.qos_fill
     qos_stop = lvl.qos_stop
 
@@ -416,8 +389,8 @@ end
 function instantiate_updater(trv::SparseCOOExtrudeTraversal, ctx, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
     #is_serial(ctx.arch) || throw(FinchArchitectureError("SparseCOOLevel updater is not concurrent"))
     (lvl, qos, fbr_dirty, coords) = (trv.lvl, trv.qos, trv.fbr_dirty, trv.coords)
-    Ti = lvl.Ti
-    Tp = lvl.Tp
+    TI = lvl.TI
+    Tp = postype(lvl)
     qos_fill = lvl.qos_fill
     qos_stop = lvl.qos_stop
     Furlable(
@@ -436,11 +409,11 @@ function instantiate_updater(trv::SparseCOOExtrudeTraversal, ctx, subprotos, ::U
                                 $(Expr(:block, map(1:lvl.N) do n
                                     :(Finch.resize_if_smaller!($(lvl.ex).tbl[$n], $qos_stop))
                                 end...))
-                                $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(qos, lvl.Tp), value(qos_stop, lvl.Tp)), ctx))
+                                $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(qos, Tp), value(qos_stop, Tp)), ctx))
                             end
                             $dirty = false
                         end,
-                        body = (ctx) -> instantiate_updater(VirtualTrackedSubFiber(lvl.lvl, value(qos, lvl.Tp), dirty), ctx, subprotos),
+                        body = (ctx) -> instantiate_updater(VirtualTrackedSubFiber(lvl.lvl, value(qos, Tp), dirty), ctx, subprotos),
                         epilogue = begin
                             coords_2 = map(ctx, (idx, coords...))
                             quote
