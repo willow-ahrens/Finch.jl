@@ -85,7 +85,6 @@ mutable struct VirtualElementLevel <: AbstractVirtualLevel
     D
     Tv
     Tp
-    
     val
 end
 

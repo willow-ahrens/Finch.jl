@@ -4,16 +4,16 @@
     A = fiber([(i + j) % 3 for i = 1:5, j = 1:10])
 
     formats = [
-        "list" => SparseList{Int64, Int64},
-        "byte" => SparseByteMap{Int64, Int64},
-        "hash1" => SparseHash{1, Tuple{Int64}, Int64},
-        "coo1" => SparseCOO{1, Tuple{Int64}, Int64},
-        "dense" => Dense{Int64},
+        "list" => SparseList{Int64},
+        "byte" => SparseByteMap{Int64},
+        "hash1" => SparseHash{1, Tuple{Int64}},
+        "coo1" => SparseCOO{1, Tuple{Int64}},
+        "dense" => Dense,
     ]
 
     for (rown, rowf) in formats
         @testset "print $rown d" begin
-            B = dropdefaults!(Fiber!(rowf(Dense{Int64}(Element{0.0}()))), A)
+            B = dropdefaults!(Fiber!(rowf(Dense{Int64}(Element{0.0, Float64, Int64}()))), A)
             @test check_output("print_$(rown)_dense.txt", sprint(show, B))
             @test check_output("print_$(rown)_dense_small.txt", sprint(show, B, context=:compact=>true))
             @test check_output("display_$(rown)_dense.txt", sprint(show, MIME"text/plain"(), B))

@@ -76,7 +76,7 @@ function countstored_level(lvl::SparseCOOLevel, pos)
     countstored_level(lvl.lvl, lvl.ptr[pos + 1] - 1)
 end
 
-redefault!(lvl::SparseCOOLevel{N, TI}, init) where {N, TI, Tp} = 
+redefault!(lvl::SparseCOOLevel{N, TI}, init) where {N, TI} = 
     SparseCOOLevel{N, TI}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.tbl)
 
 function Base.show(io::IO, lvl::SparseCOOLevel{N, TI}) where {N, TI}
