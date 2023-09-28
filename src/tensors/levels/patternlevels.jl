@@ -41,14 +41,10 @@ end
 (fbr::AbstractFiber{<:PatternLevel})() = true
 data_rep_level(::Type{<:PatternLevel}) = ElementData(false, Bool)
 
-function memtype(::Type{PatternLevel{Tp, V}}) where {Tp, V}
-    return memtype(V)
-end
-
 postype(::Type{<:PatternLevel{Tp}}) where {Tp} = Tp
 
-function moveto(lvl::PatternLevel{Tp}, ::Type{MemType}) where {Tp, MemType <: AbstractArray}
-    return PatternLevel{Tp, MemType{Bool, 1}}()
+function moveto(lvl::PatternLevel{Tp}, device) where {Tp}
+    return PatternLevel{Tp}()
 end
 
 

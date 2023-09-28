@@ -49,19 +49,15 @@ similar_level(::RepeatRLELevel{D}) where {D} = RepeatRLE{D}()
 similar_level(::RepeatRLELevel{D}, dim, tail...) where {D} = RepeatRLE{D}(dim)
 data_rep_level(::Type{<:RepeatRLELevel{D, Ti, Tp, Tv, Vp, Vi, Vv}}) where {D, Ti, Tp, Tv, Vp, Vi, Vv} = RepeatData(D, Tv)
 
-function memtype(::Type{RepeatRLELevel{D, Ti, Tp, Tv, Vp, Vi, Vv}}) where {D, Ti, Tp, Tv, Vp, Vi, Vv}
-    return memtype(Vi)
-end
-
 function postype(::Type{RepeatRLELevel{D, Ti, Tp, Tv, Vp, Vi, Vv}}) where {D, Ti, Tp, Tv, Vp, Vi, Vv}
     return Tp
 end
 
-function moveto(lvl::RepeatRLELevel{D, Ti, Tp, Tv, Vp, Vi, Vv}, ::Type{MemType}) where {D, Ti, Tp, Tv, Vp, Vi, Vv, MemType <: AbstractArray}
-    ptr_2 = MemType{Tp, 1}(lvl.ptr)
-    idx_2 = MemType{Ti, 1}(lvl.idx)
-    val_2 = MemType{Tv, 1}(lvl.val)
-    return RepeatRLELevel{D, Ti, Tp, MemType{Tp, 1}, MemType{Ti, 1}, MemType{Vv, 1}}(lvl.shape, ptr_2, idx_2, val_2)
+function moveto(lvl::RepeatRLELevel{D, Ti, Tp, Tv, Vp, Vi, Vv}, device) where {D, Ti, Tp, Tv, Vp, Vi, Vv}
+    ptr_2 = moveto(lvl.ptr, device)
+    idx_2 = moveto(lvl.idx, device)
+    val_2 = moveto(lvl.val, device)
+    return RepeatRLELevel{D, Ti, Tp}(lvl.shape, ptr_2, idx_2, val_2)
 end
 
 countstored_level(lvl::RepeatRLELevel, pos) = lvl.ptr[pos + 1] - 1

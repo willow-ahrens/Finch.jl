@@ -73,7 +73,7 @@ end
 virtual_eltype(tns::AbstractVirtualFiber, ctx) = virtual_level_eltype(tns.lvl)
 virtual_default(tns::AbstractVirtualFiber, ctx) = virtual_level_default(tns.lvl)
 postype(fbr::AbstractVirtualFiber) = postype(fbr.lvl)
-memtype(fbr::AbstractVirtualFiber) = memtype(fbr.lvl)
+allocator(fbr::AbstractVirtualFiber) = allocator(fbr.lvl)
 
 
 function declare!(fbr::VirtualFiber, ctx::AbstractCompiler, init)
@@ -274,12 +274,9 @@ Base.similar(fbr::AbstractFiber) = Fiber(similar_level(fbr.lvl))
 Base.similar(fbr::AbstractFiber, dims::Tuple) = Fiber(similar_level(fbr.lvl, dims...))
 
 """
-    moveto(fbr, memType)
+    moveto(fbr, device)
 
-If the fiber/level is not on the given memType, it creates a new version of this fiber on that memory type
-and copies the data in to it, according to the constructor `memtype`.
+If the fiber/level is not on the given device, it creates a new version of this fiber on that memory type
+and copies the data in to it, according to the `device`.
 """
-function moveto(fiber::Fiber{Lvl}, ::Type{MemType}) where {Lvl, MemType <: AbstractArray}
-    lvlp = moveto(fiber.lvl, MemType)
-    return Fiber{typeof(lvlp)}(lvlp)
-end
+moveto(fiber::Fiber, device) = Fiber(moveto(fiber.lvl, device))

@@ -62,7 +62,6 @@ CPULocalVector{V}(device::CPU) where {V} =
 
 Base.eltype(::Type{CPULocalVector{V}}) where {V} = eltype(V)
 Base.ndims(::Type{CPULocalVector{V}}) where {V} = ndims(V)
-memtype(::Type{CPULocalVector{V}}) where {V} = CPULocalVector{memtype(V)}
 
 struct VirtualCPULocalVector
     ex

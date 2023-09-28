@@ -86,20 +86,6 @@ Freeze all fibers in `lvl`. Positions `1:pos` need freezing.
 freeze_level!(fbr, ctx, mode) = fbr.lvl
 
 """
-    memtype(fbr)
-
-The memory type of a fiber or a level. This is the vector type used to store arrays.
-"""
-function memtype(::Type{<:Fiber{Lvl}}) where {Lvl}
-    memtype(Lvl)
-end
-
-memtype(arg) = memtype(typeof(arg))
-memtype(T::Type) = throw(MethodError(memtype, Tuple{T}))
-
-memtype(::Type{<:Vector}) = Vector
-
-"""
     postype(lvl)
 Return a position type with the same flavor as those used to store the positions of the fibers contained in `lvl`.
 The name position descends from the pos or position or pointer arrays found in many definitions of CSR or CSC.

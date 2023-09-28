@@ -37,16 +37,12 @@ Base.summary(lvl::Dense) = "Dense($(summary(lvl.lvl)))"
 similar_level(lvl::DenseLevel) = Dense(similar_level(lvl.lvl))
 similar_level(lvl::DenseLevel, dims...) = Dense(similar_level(lvl.lvl, dims[1:end-1]...), dims[end])
 
-function memtype(::Type{DenseLevel{Ti, Lvl}}) where {Ti, Lvl}
-    return memtype(Lvl)
-end
-
 function postype(::Type{DenseLevel{Ti, Lvl}}) where {Ti, Lvl}
     return postype(Lvl)
 end
 
-function moveto(lvl::DenseLevel{Ti, Lvl},  ::Type{MemType}) where {Ti, Lvl, MemType <: AbstractArray}
-    return DenseLevel(moveto(lvl.lvl, MemType), lvl.shape)
+function moveto(lvl::DenseLevel{Ti}, device) where {Ti}
+    return DenseLevel{Ti}(moveto(lvl.lvl, device), lvl.shape)
 end
 
 pattern!(lvl::DenseLevel{Ti, Lvl}) where {Ti, Lvl} = 
@@ -140,7 +136,6 @@ end
 virtual_level_eltype(lvl::VirtualDenseLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualDenseLevel) = virtual_level_default(lvl.lvl)
 
-memtype(lvl::VirtualDenseLevel) = memtype(lvl.lvl)
 postype(lvl::VirtualDenseLevel) = postype(lvl.lvl)
 
 function declare_level!(lvl::VirtualDenseLevel, ctx::AbstractCompiler, pos, init)

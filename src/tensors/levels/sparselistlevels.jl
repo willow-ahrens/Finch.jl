@@ -42,7 +42,7 @@ const SparseList = SparseListLevel
 SparseListLevel(lvl) = SparseListLevel{Int}(lvl)
 SparseListLevel(lvl, shape::Ti) where {Ti} = SparseListLevel{Ti}(lvl, shape)
 SparseListLevel{Ti}(lvl) where {Ti} = SparseListLevel{Ti}(lvl, zero(Ti))
-SparseListLevel{Ti}(lvl, shape) where {Ti} = SparseListLevel{Ti}(lvl, shape, convert(memtype(lvl), postype(lvl)[1]), convert(memtype(lvl), Ti[]))
+SparseListLevel{Ti}(lvl, shape) where {Ti} = SparseListLevel{Ti}(lvl, shape, postype(lvl)[1], Ti[])
 
 SparseListLevel{Ti}(lvl::Lvl, shape, ptr::Ptr, idx::Idx) where {Ti, Lvl, Ptr, Idx} =
     SparseListLevel{Ti, Ptr, Idx, Lvl}(lvl, shape, ptr, idx)
@@ -50,10 +50,6 @@ SparseListLevel{Ti}(lvl::Lvl, shape, ptr::Ptr, idx::Idx) where {Ti, Lvl, Ptr, Id
 Base.summary(lvl::SparseListLevel) = "SparseList($(summary(lvl.lvl)))"
 similar_level(lvl::SparseListLevel) = SparseList(similar_level(lvl.lvl))
 similar_level(lvl::SparseListLevel, dim, tail...) = SparseList(similar_level(lvl.lvl, tail...), dim)
-
-function memtype(::Type{SparseListLevel{Ti, Ptr, Idx, Lvl}}) where {Ti, Ptr, Idx, Lvl}
-    return memtype(Lvl)
-end
 
 function postype(::Type{SparseListLevel{Ti, Ptr, Idx, Lvl}}) where {Ti, Ptr, Idx, Lvl}
     return postype(Lvl)
@@ -183,7 +179,6 @@ end
 virtual_level_eltype(lvl::VirtualSparseListLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSparseListLevel) = virtual_level_default(lvl.lvl)
 
-memtype(lvl::VirtualSparseListLevel) = memtype(lvl.lvl)
 postype(lvl::VirtualSparseListLevel) = postype(lvl.lvl)
 
 function declare_level!(lvl::VirtualSparseListLevel, ctx::AbstractCompiler, pos, init)

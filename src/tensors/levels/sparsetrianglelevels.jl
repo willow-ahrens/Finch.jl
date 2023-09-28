@@ -36,10 +36,6 @@ Base.summary(lvl::SparseTriangle{N}) where {N} = "SparseTriangle{$N}($(summary(l
 similar_level(lvl::SparseTriangle{N}) where {N} = SparseTriangle(similar_level(lvl.lvl))
 similar_level(lvl::SparseTriangle{N}, dims...) where {N} = SparseTriangle(similar_level(lvl.lvl, dims[1:end-1]...), dims[end])
 
-function memtype(::Type{SparseTriangleLevel{N, Ti, Lvl}}) where {N, Ti, Lvl}
-    return memtype(Lvl)
-end
-
 function postype(::Type{SparseTriangleLevel{N, Ti, Lvl}}) where {N, Ti, Lvl}
     return postype(Lvl)
 end
