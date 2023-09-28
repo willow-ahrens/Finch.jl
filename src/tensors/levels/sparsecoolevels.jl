@@ -52,7 +52,7 @@ SparseCOOLevel{N, TI}(lvl, shape) where {N, TI} =
     SparseCOOLevel{N, TI}(lvl, TI(shape), postype(lvl)[1], ((Ti[] for Ti in TI.parameters)...,))
 
 SparseCOOLevel{N, TI}(lvl::Lvl, shape, ptr::Ptr, tbl::Tbl) where {N, TI, Lvl, Ptr, Tbl} = 
-    SparseCOOLevel{N, TI, Ptr, Tbl}(lvl, TI(shape), ptr, tbl)
+    SparseCOOLevel{N, TI, Ptr, Tbl, Lvl}(lvl, TI(shape), ptr, tbl)
 
 Base.summary(lvl::SparseCOOLevel{N}) where {N} = "SparseCOO{$N}($(summary(lvl.lvl)))"
 similar_level(lvl::SparseCOOLevel{N}) where {N} = SparseCOOLevel{N}(similar_level(lvl.lvl))
@@ -171,7 +171,7 @@ function virtualize(ex, ::Type{SparseCOOLevel{N, TI, Ptr, Tbl, Lvl}}, ctx, tag=:
 end
 function lower(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
-        $SparseCOOLevel{$(lvl.N), $(lvl.TI), $(lvl.Tbl), $(lvl.Ptr), $(lvl.Lvl)}(
+        $SparseCOOLevel{$(lvl.N), $(lvl.TI)}(
             $(ctx(lvl.lvl)),
             ($(map(ctx, lvl.shape)...),),
             $(ctx(lvl.ptr)),
@@ -195,6 +195,8 @@ end
 
 virtual_level_eltype(lvl::VirtualSparseCOOLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSparseCOOLevel) = virtual_level_default(lvl.lvl)
+
+postype(lvl::VirtualSparseCOOLevel) = postype(lvl.lvl)
 
 function declare_level!(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler, pos, init)
     TI = lvl.TI

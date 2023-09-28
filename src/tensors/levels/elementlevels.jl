@@ -55,7 +55,7 @@ function Base.show(io::IO, lvl::ElementLevel{D, Tv, Tp, Val}) where {D, Tv, Tp, 
     if get(io, :compact, false)
         print(io, "…")
     else
-        show(IOContext(io, :typeinfo=>Val), lvl.val)
+        show(io, lvl.val)
     end
     print(io, ")")
 end 

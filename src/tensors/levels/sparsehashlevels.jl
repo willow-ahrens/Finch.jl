@@ -35,8 +35,8 @@ SparseHash (0.0) [1:3,1:3]
 struct SparseHashLevel{N, TI<:Tuple, Ptr, Tbl, Srt, Lvl}
     lvl::Lvl
     shape::TI
-    tbl::Tbl
     ptr::Ptr
+    tbl::Tbl
     srt::Srt
 end
 const SparseHash = SparseHashLevel
@@ -45,9 +45,16 @@ SparseHashLevel(lvl) = throw(ArgumentError("You must specify the number of dimen
 SparseHashLevel(lvl, shape, args...) = SparseHashLevel{length(shape)}(lvl, shape, args...)
 SparseHashLevel{N}(lvl::Lvl) where {N, Lvl} = SparseHashLevel{N, NTuple{N, Int}}(lvl)
 SparseHashLevel{N}(lvl, shape::TI, args...) where {N, TI} = SparseHashLevel{N, Ti}(lvl, shape, args...)
-SparseHashLevel{N, TI}(lvl) where {N, TI} = SparseHashLevel{N, TI}(lvl, (zero(ti) for ti in TI.parameters)...)
+SparseHashLevel{N, TI}(lvl) where {N, TI} = SparseHashLevel{N, TI}(lvl, ((zero(ti) for ti in TI.parameters)...,))
 
-SparseHashLevel{N, TI}(lvl, shape) where {N, TI} = SparseHashLevel{N, TI}(lvl, Tp[1], shape, Pair{Tuple{Tp, TI}, Tp}[])
+SparseHashLevel{N, TI}(lvl, shape) where {N, TI} =
+    SparseHashLevel{N, TI}(
+        lvl,
+        shape,
+        postype(lvl)[1],
+        Dict{Tuple{postype(lvl), TI}, postype(lvl)}(),
+        Pair{Tuple{postype(lvl), TI}, postype(lvl)}[]
+    )
 
 SparseHashLevel{N, TI}(lvl::Lvl, shape, ptr::Ptr, tbl::Tbl, srt::Srt) where {N, TI, Lvl, Ptr, Tbl, Srt} =
     SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}(lvl, shape, ptr, tbl, srt)
@@ -57,7 +64,7 @@ similar_level(lvl::SparseHashLevel{N}) where {N} = SparseHashLevel{N}(similar_le
 similar_level(lvl::SparseHashLevel{N}, tail...) where {N} = SparseHashLevel{N}(similar_level(lvl.lvl, tail[1:end-N]...), (tail[end-N+1:end]...,))
 
 function postype(::Type{SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}}) where {N, TI, Ptr, Tbl, Srt, Lvl}
-    return Tp
+    return postype(lvl)
 end
 
 function moveto(lvl::SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}, device) where {N, TI, Ptr, Tbl, Srt, Lvl}
@@ -82,7 +89,7 @@ function Base.show(io::IO, lvl::SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}) wher
     if get(io, :compact, false)
         print(io, "SparseHash{$N}(")
     else
-        print(io, "SparseHash{$N, $TI, $Tp}(")
+        print(io, "SparseHash{$N, $TI}(")
     end
     show(io, lvl.lvl)
     print(io, ", ")
@@ -176,7 +183,7 @@ function virtualize(ex, ::Type{SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}}, ctx,
 end
 function lower(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
-        $SparseHashLevel{$(lvl.N), $(lvl.TI), $(lvl.Tbl), $(lvl.Ptr), $(lvl.Srt), $(lvl.Lvl)}(
+        $SparseHashLevel{$(lvl.N), $(lvl.TI)}(
             $(ctx(lvl.lvl)),
             ($(map(ctx, lvl.shape)...),),
             $(ctx(lvl.ptr)),
@@ -201,6 +208,8 @@ end
 
 virtual_level_eltype(lvl::VirtualSparseHashLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSparseHashLevel) = virtual_level_default(lvl.lvl)
+
+postype(lvl::VirtualSparseHashLevel) = postype(lvl.lvl)
 
 function declare_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos, init)
     TI = lvl.TI

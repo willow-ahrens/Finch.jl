@@ -85,9 +85,9 @@ function Base.show(io::IO, lvl::SparseListLevel{Ti, Ptr, Idx, Lvl}) where {Ti, L
     if get(io, :compact, false)
         print(io, "…")
     else
-        show(IOContext(io, :typeinfo=>Ptr), lvl.ptr)
+        show(io, lvl.ptr)
         print(io, ", ")
-        show(IOContext(io, :typeinfo=>Idx), lvl.idx)
+        show(io, lvl.idx)
     end
     print(io, ")")
 end

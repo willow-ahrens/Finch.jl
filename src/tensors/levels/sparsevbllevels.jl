@@ -78,11 +78,11 @@ function Base.show(io::IO, lvl::SparseVBLLevel{Ti, Ptr, Idx, Ofs, Lvl}) where {T
     if get(io, :compact, false)
         print(io, "…")
     else
-        show(IOContext(io, :typeinfo=>Ptr), lvl.ptr)
+        show(io, lvl.ptr)
         print(io, ", ")
-        show(IOContext(io, :typeinfo=>Idx), lvl.idx)
+        show(io, lvl.idx)
         print(io, ", ")
-        show(IOContext(io, :typeinfo=>Ofs), lvl.ofs)
+        show(io, lvl.ofs)
     end
     print(io, ")")
 end
@@ -400,7 +400,7 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseVBLLevel},
     #is_serial(ctx.arch) || throw(FinchArchitectureError("SparseVBLLevel updater is not concurrent"))
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
-    Tp = postype(Tp)
+    Tp = postype(lvl)
     Ti = lvl.Ti
     my_p = freshen(ctx.code, tag, :_p)
     my_q = freshen(ctx.code, tag, :_q)

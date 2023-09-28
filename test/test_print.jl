@@ -32,8 +32,8 @@
     end
 
     formats = [
-        "hash2" => SparseHash{2, Tuple{Int64, Int64}, Int64},
-        "coo2" =>SparseCOO{2, Tuple{Int64, Int64}, Int64},
+        "hash2" => SparseHash{2, Tuple{Int64, Int64}},
+        "coo2" =>SparseCOO{2, Tuple{Int64, Int64}},
         ]
 
     for (rowcoln, rowcolf) in formats
