@@ -142,8 +142,8 @@ mutable struct VirtualSparseCOOLevel <: AbstractVirtualLevel
     ex
     N
     TI
-    Tbl
-    Ptr
+    ptr
+    tbl
     Lvl
     shape
     qos_fill
@@ -163,18 +163,19 @@ function virtualize(ex, ::Type{SparseCOOLevel{N, TI, Ptr, Tbl, Lvl}}, ctx, tag=:
         $sym = $ex
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-
+    ptr = virtualize(:($sym.ptr), Ptr, ctx, Symbol(tag, :_ptr))
+    tbl = map(n->virtualize(:($sym.tbl[$n]), Tbl.parameters[n], ctx, Symbol(tag, :_tbl, n)), 1:N)
     prev_pos = freshen(ctx, sym, :_prev_pos)
     prev_coord = map(n->freshen(ctx, sym, :_prev_coord_, n), 1:N)
-    VirtualSparseCOOLevel(lvl_2, sym, N, TI, Ptr, Tbl, Lvl, shape, qos_fill, qos_stop, prev_pos)
+    VirtualSparseCOOLevel(lvl_2, sym, N, TI, ptr, tbl, Lvl, shape, qos_fill, qos_stop, prev_pos)
 end
 function lower(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
         $SparseCOOLevel{$(lvl.N), $(lvl.TI), $(lvl.Tbl), $(lvl.Ptr), $(lvl.Lvl)}(
             $(ctx(lvl.lvl)),
             ($(map(ctx, lvl.shape)...),),
-            $(lvl.ex).ptr,
-            $(lvl.ex).tbl
+            $(ctx(lvl.ptr)),
+            ($(map(ctx, lvl.tbl)...),)
         )
     end
 end
@@ -199,7 +200,7 @@ function declare_level!(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler, pos, 
     TI = lvl.TI
     Tp = postype(lvl)
 
-    qos = call(-, call(getindex, :($(lvl.ex).ptr), call(+, pos, 1)), 1)
+    qos = call(-, call(getindex, :($(ctx(lvl.ptr))), call(+, pos, 1)), 1)
     push!(ctx.code.preamble, quote
         $(lvl.qos_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
@@ -218,10 +219,10 @@ function trim_level!(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler, pos)
     qos = freshen(ctx.code, :qos)
 
     push!(ctx.code.preamble, quote
-        resize!($(lvl.ex).ptr, $(ctx(pos)) + 1)
-        $qos = $(lvl.ex).ptr[end] - $(Tp(1))
+        resize!($(ctx(lvl.ptr)), $(ctx(pos)) + 1)
+        $qos = $(ctx(lvl.ptr))[end] - $(Tp(1))
         $(Expr(:block, map(1:lvl.N) do n
-            :(resize!($(lvl.ex).tbl[$n], $qos))
+            :(resize!($(ctx(lvl.tbl[n])), $qos))
         end...))
     end)
     lvl.lvl = trim_level!(lvl.lvl, ctx, value(qos, Tp))
@@ -232,8 +233,8 @@ function assemble_level!(lvl::VirtualSparseCOOLevel, ctx, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_start, pos_stop))
     return quote
-        Finch.resize_if_smaller!($(lvl.ex).ptr, $pos_stop + 1)
-        Finch.fill_range!($(lvl.ex).ptr, 0, $pos_start + 1, $pos_stop + 1)
+        Finch.resize_if_smaller!($(ctx(lvl.ptr)), $pos_stop + 1)
+        Finch.fill_range!($(ctx(lvl.ptr)), 0, $pos_start + 1, $pos_stop + 1)
     end
 end
 
@@ -243,9 +244,9 @@ function freeze_level!(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler, pos_st
     qos_stop = freshen(ctx.code, :qos_stop)
     push!(ctx.code.preamble, quote
         for $p = 2:($pos_stop + 1)
-            $(lvl.ex).ptr[$p] += $(lvl.ex).ptr[$p - 1]
+            $(ctx(lvl.ptr))[$p] += $(ctx(lvl.ptr))[$p - 1]
         end
-        $qos_stop = $(lvl.ex).ptr[$pos_stop + 1] - 1
+        $qos_stop = $(ctx(lvl.ptr))[$pos_stop + 1] - 1
     end)
     lvl.lvl = freeze_level!(lvl.lvl, ctx, value(qos_stop))
     return lvl
@@ -261,8 +262,8 @@ end
 function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseCOOLevel}, ctx, protos)
     Tp = postype(lvl)
     (lvl, pos) = (fbr.lvl, fbr.pos)
-    start = value(:($(lvl.ex).ptr[$(ctx(pos))]), Tp)
-    stop = value(:($(lvl.ex).ptr[$(ctx(pos)) + 1]), Tp)
+    start = value(:($(ctx(lvl.ptr))[$(ctx(pos))]), Tp)
+    stop = value(:($(ctx(lvl.ptr))[$(ctx(pos)) + 1]), Tp)
 
     instantiate_reader(SparseCOOWalkTraversal(lvl, lvl.N, start, stop), ctx, protos)
 end
@@ -284,8 +285,8 @@ function instantiate_reader(trv::SparseCOOWalkTraversal, ctx, subprotos, ::Union
                 $my_q = $(ctx(start))
                 $my_q_stop = $(ctx(stop))
                 if $my_q < $my_q_stop
-                    $my_i = $(lvl.ex).tbl[$R][$my_q]
-                    $my_i_stop = $(lvl.ex).tbl[$R][$my_q_stop - 1]
+                    $my_i = $(ctx(lvl.tbl[R]))[$my_q]
+                    $my_i_stop = $(ctx(lvl.tbl[R]))[$my_q_stop - 1]
                 else
                     $my_i = $(TI.parameters[R](1))
                     $my_i_stop = $(TI.parameters[R](0))
@@ -298,11 +299,11 @@ function instantiate_reader(trv::SparseCOOWalkTraversal, ctx, subprotos, ::Union
                         if R == 1
                             Stepper(
                                 seek = (ctx, ext) -> quote
-                                    if $(lvl.ex).tbl[$R][$my_q] < $(ctx(getstart(ext)))
-                                        $my_q = Finch.scansearch($(lvl.ex).tbl[$R], $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
+                                    if $(ctx(lvl.tbl[R]))[$my_q] < $(ctx(getstart(ext)))
+                                        $my_q = Finch.scansearch($(ctx(lvl.tbl[R])), $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                                     end
                                 end,
-                                preamble = :($my_i = $(lvl.ex).tbl[$R][$my_q]),
+                                preamble = :($my_i = $(ctx(lvl.tbl[R]))[$my_q]),
                                 stop =  (ctx, ext) -> value(my_i),
                                 chunk = Spike(
                                     body = Fill(virtual_level_default(lvl)),
@@ -313,15 +314,15 @@ function instantiate_reader(trv::SparseCOOWalkTraversal, ctx, subprotos, ::Union
                         else
                             Stepper(
                                 seek = (ctx, ext) -> quote
-                                    if $(lvl.ex).tbl[$R][$my_q] < $(ctx(getstart(ext)))
-                                        $my_q = Finch.scansearch($(lvl.ex).tbl[$R], $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
+                                    if $(ctx(lvl.tbl[R]))[$my_q] < $(ctx(getstart(ext)))
+                                        $my_q = Finch.scansearch($(ctx(lvl.tbl[R])), $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                                     end
                                 end,
                                 preamble = quote
-                                    $my_i = $(lvl.ex).tbl[$R][$my_q]
+                                    $my_i = $(ctx(lvl.tbl[R]))[$my_q]
                                     $my_q_step = $my_q
-                                    if $(lvl.ex).tbl[$R][$my_q_step] == $my_i
-                                        $my_q_step = Finch.scansearch($(lvl.ex).tbl[$R], $my_i + 1, $my_q_step, $my_q_stop - 1)
+                                    if $(ctx(lvl.tbl[R]))[$my_q_step] == $my_i
+                                        $my_q_step = Finch.scansearch($(ctx(lvl.tbl[R])), $my_i + 1, $my_q_step, $my_q_stop - 1)
                                     end
                                 end,
                                 stop = (ctx, ext) -> value(my_i),
@@ -373,7 +374,7 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseCOOLevel},
         end,
         body = (ctx) -> instantiate_updater(SparseCOOExtrudeTraversal(lvl, qos, fbr.dirty, [], prev_coord), ctx, protos),
         epilogue = quote
-            $(lvl.ex).ptr[$(ctx(pos)) + 1] = $qos - $qos_fill - 1
+            $(ctx(lvl.ptr))[$(ctx(pos)) + 1] = $qos - $qos_fill - 1
             $(if issafe(ctx.mode)
                 quote
                     if $qos - $qos_fill - 1 > 0
@@ -407,7 +408,7 @@ function instantiate_updater(trv::SparseCOOExtrudeTraversal, ctx, subprotos, ::U
                             if $qos > $qos_stop
                                 $qos_stop = max($qos_stop << 1, 1)
                                 $(Expr(:block, map(1:lvl.N) do n
-                                    :(Finch.resize_if_smaller!($(lvl.ex).tbl[$n], $qos_stop))
+                                    :(Finch.resize_if_smaller!($(ctx(lvl.tbl[n])), $qos_stop))
                                 end...))
                                 $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(qos, Tp), value(qos_stop, Tp)), ctx))
                             end
@@ -428,7 +429,7 @@ function instantiate_updater(trv::SparseCOOExtrudeTraversal, ctx, subprotos, ::U
                                     end)
                                     $(fbr_dirty) = true
                                     $(Expr(:block, map(enumerate(coords_2)) do (n, i)
-                                        :($(lvl.ex).tbl[$n][$qos] = $i)
+                                        :($(ctx(lvl.tbl[n]))[$qos] = $i)
                                     end...))
                                     $qos += $(Tp(1))
                                 end

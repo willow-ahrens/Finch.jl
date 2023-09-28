@@ -136,8 +136,6 @@ end
 is_level_injective(lvl::VirtualSparseListLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., false]
 is_level_atomic(lvl::VirtualSparseListLevel, ctx) = false
 
-  
-
 function virtualize(ex, ::Type{SparseListLevel{Ti, Ptr, Idx, Lvl}}, ctx, tag=:lvl) where {Ti, Ptr, Idx, Lvl}
     sym = freshen(ctx, tag)
     push!(ctx.preamble, quote
