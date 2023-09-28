@@ -16,7 +16,7 @@ Dense [1:3]
 ├─[3]: 3.0
 ```
 """
-struct ElementLevel{D, Tv, Tp, Tm, Val}
+struct ElementLevel{D, Tv, Tp, Val}
     val::Val
 end
 const Element = ElementLevel
@@ -28,33 +28,30 @@ end
 ElementLevel{D}() where {D} = ElementLevel{D, typeof(D)}()
 ElementLevel{D}(val::Val) where {D, Val} = ElementLevel{D, eltype(Val)}(val)
 ElementLevel{D, Tv}(args...) where {D, Tv} = ElementLevel{D, Tv, Int}(args...)
-ElementLevel{D, Tv, Tp}(args...) where {D, Tv, Tp} = ElementLevel{D, Tv, Tp, Vector}(args...)
-ElementLevel{D, Tv, Tp, Tm}() where {D, Tv, Tp, Tm} = ElementLevel{D, Tv, Tp, Tm}(convert(Tm, Tv[]))
+ElementLevel{D, Tv, Tp}() where {D, Tv, Tp} = ElementLevel{D, Tv, Tp}(Tv[])
 
-ElementLevel{D, Tv, Tp, Tm}(val::Val) where {D, Tv, Tp, Tm, Val} = ElementLevel{D, Tv, Tp, Tm, Val}(val)
+ElementLevel{D, Tv, Tp}(val::Val) where {D, Tv, Tp, Val} = ElementLevel{D, Tv, Tp, Val}(val)
 
 Base.summary(::Element{D}) where {D} = "Element($(D))"
 
-similar_level(::ElementLevel{D, Tv, Tp, Tm}) where {D, Tv, Tp, Tm} = ElementLevel{D, Tv, Tp, Tm}()
-
-memtype(::Type{<:ElementLevel{D, Tv, Tp, Tm}}) where {D, Tv, Tp, Tm} = Tm
+similar_level(::ElementLevel{D, Tv, Tp, }) where {D, Tv, Tp} = ElementLevel{D, Tv, Tp}()
 
 postype(::Type{<:ElementLevel{D, Tv, Tp}}) where {D, Tv, Tp} = Tp
 
-function moveto(lvl::ElementLevel{D, Tv, Tp}, Tm) where {D, Tv, Tp}
-    return ElementLevel{D, Tv, Tp, Tm}(convert(Tm, lvl.val))
+function moveto(lvl::ElementLevel{D, Tv, Tp}, device) where {D, Tv, Tp}
+    return ElementLevel{D, Tv, Tp, }(moveto(lvl.val, device))
 end
 
-pattern!(lvl::ElementLevel{D, Tv, Tp, Tm}) where  {D, Tv, Tp, Tm} =
-    Pattern{Tp, Tm}()
-redefault!(lvl::ElementLevel{D, Tv, Tp, Tm}, init) where {D, Tv, Tp, Tm} = 
-    ElementLevel{init, Tv, Tp, Tm}(lvl.val)
+pattern!(lvl::ElementLevel{D, Tv, Tp, }) where  {D, Tv, Tp, Tm} =
+    Pattern{Tp, }()
+redefault!(lvl::ElementLevel{D, Tv, Tp, }, init) where {D, Tv, Tp, Tm} = 
+    ElementLevel{init, Tv, Tp, }(lvl.val)
 
 
-function Base.show(io::IO, lvl::ElementLevel{D, Tv, Tp, Tm, Val}) where {D, Tv, Tp, Tm, Val}
+function Base.show(io::IO, lvl::ElementLevel{D, Tv, Tp, , Val}) where {D, Tv, Tp, Tm, Val}
     print(io, "Element{")
     show(io, D)
-    print(io, ", $Tv, $Tp, $Tm, $Val}(")
+    print(io, ", $Tv, $Tp, $, $Val}(")
     if get(io, :compact, false)
         print(io, "…")
     else
@@ -88,7 +85,7 @@ mutable struct VirtualElementLevel <: AbstractVirtualLevel
     D
     Tv
     Tp
-    Tm
+    
     val
 end
 
@@ -97,13 +94,13 @@ is_level_atomic(lvl::VirtualElementLevel, ctx) = false
 
 lower(lvl::VirtualElementLevel, ctx::AbstractCompiler, ::DefaultStyle) = lvl.ex
 
-function virtualize(ex, ::Type{ElementLevel{D, Tv, Tp, Tm, Val}}, ctx, tag=:lvl) where {D, Tv, Tp, Tm, Val}
+function virtualize(ex, ::Type{ElementLevel{D, Tv, Tp, , Val}}, ctx, tag=:lvl) where {D, Tv, Tp, Tm, Val}
     sym = freshen(ctx, tag)
     val = virtualize(:($ex.val), Val, ctx, :val)
     push!(ctx.preamble, quote
         $sym = $ex
     end)
-    VirtualElementLevel(sym, D, Tv, Tp, Tm, val)
+    VirtualElementLevel(sym, D, Tv, Tp, , val)
 end
 
 Base.summary(lvl::VirtualElementLevel) = "Element($(lvl.D))"
@@ -113,7 +110,6 @@ virtual_level_size(::VirtualElementLevel, ctx) = ()
 virtual_level_eltype(lvl::VirtualElementLevel) = lvl.Tv
 virtual_level_default(lvl::VirtualElementLevel) = lvl.D
 
-memtype(lvl::VirtualElementLevel) = lvl.Tm
 postype(lvl::VirtualElementLevel) = lvl.Tp
 
 function declare_level!(lvl::VirtualElementLevel, ctx, pos, init)
