@@ -40,9 +40,9 @@ function postype(::Type{SparseTriangleLevel{N, Ti, Lvl}}) where {N, Ti, Lvl}
     return postype(Lvl)
 end
 
-function moveto(lvl::SparseTriangleLevel{N, Ti, Lvl},  ::Type{MemType}) where {N, Ti, Lvl, MemType <: AbstractArray}
-    lvl_2 = moveto(lvl.lvl, MemType)
-    return SparseTriangleLevel{N, Ti, typeof(lvl_2)}(lvl_2, lvl.shape)
+function moveto(lvl::SparseTriangleLevel{N, Ti, Lvl}, device) where {N, Ti, Lvl, MemType <: AbstractArray}
+    lvl_2 = moveto(lvl.lvl, device)
+    return SparseTriangleLevel{N, Ti}(lvl_2, lvl.shape)
 end
 
 pattern!(lvl::SparseTriangleLevel{N, Ti}) where {N, Ti} = 
