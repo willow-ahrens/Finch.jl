@@ -151,6 +151,9 @@ end
 is_level_injective(lvl::VirtualSparseVBLLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., false]
 is_level_atomic(lvl::VirtualSparseVBLLevel, ctx) = false
   
+memtype(lvl::VirtualSparseVBLLevel) = memtype(lvl.lvl)
+postype(lvl::VirtualSparseVBLLevel) = postype(lvl.lvl)
+
 
 function virtualize(ex, ::Type{SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Vp, Vi, VTo, Lvl}
     sym = freshen(ctx, tag)

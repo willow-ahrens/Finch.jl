@@ -27,7 +27,7 @@ similar_level(lvl::SparseRLELevel) = SparseRLE(similar_level(lvl.lvl))
 similar_level(lvl::SparseRLELevel, dim, tail...) = SparseRLE(similar_level(lvl.lvl, tail...), dim)
 
 function memtype(::Type{SparseRLELevel{Ti, Tp, Vp, VLTi, VRTi, Lvl}}) where {Ti, Tp, Vp, VLTi, VRTi, Lvl}
-    return containertype(Vp)
+    return memtype(Vp)
 end
 
 function postype(::Type{SparseRLELevel{Ti, Tp, Vp, VLTi, VRTi, Lvl}}) where {Ti, Tp, Vp, VLTi, VRTi, Lvl}
@@ -130,6 +130,9 @@ end
 is_level_concurrent(lvl::VirtualSparseRLELevel, ctx) = [false, is_level_concurrent(lvl.lvl, ctx)...]
 is_level_atomic(lvl::VirtualSparseRLELevel, ctx) = false
   
+
+memtype(lvl::VirtualSparseRLELevel) = memtype(lvl.Vp)
+postype(lvl::VirtualSparseRLELevel) = postype(lvl.Tp)
 
 function virtualize(ex, ::Type{SparseRLELevel{Ti, Tp, Vp, VLTi, VRTi, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Vp, VLTi, VRTi, Lvl}
     sym = freshen(ctx, tag)

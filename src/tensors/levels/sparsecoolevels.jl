@@ -81,7 +81,7 @@ similar_level(lvl::SparseCOOLevel{N}, tail...) where {N} = SparseCOOLevel{N}(sim
 
 
 function memtype(::Type{SparseCOOLevel{N, Ti, Tp, Tbl, Vp, Lvl}}) where {N, Ti, Tp, Tbl, Vp, Lvl}
-    return containertype(Vp)
+    return memtype(Vp)
 end
 
 function postype(::Type{SparseCOOLevel{N, Ti, Tp, Tbl, Vp, Lvl}}) where {N, Ti, Tp, Tbl, Vp, Lvl}

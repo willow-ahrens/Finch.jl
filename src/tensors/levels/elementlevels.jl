@@ -16,7 +16,7 @@ Dense [1:3]
 ├─[3]: 3.0
 ```
 """
-struct ElementLevel{D, Tv, Tp, Val}
+struct ElementLevel{D, Tv, Tp, Tm, Val}
     val::Val
 end
 const Element = ElementLevel
@@ -28,35 +28,33 @@ end
 ElementLevel{D}() where {D} = ElementLevel{D, typeof(D)}()
 ElementLevel{D}(val::Val) where {D, Val} = ElementLevel{D, eltype(Val)}(val)
 ElementLevel{D, Tv}(args...) where {D, Tv} = ElementLevel{D, Tv, Int}(args...)
-ElementLevel{D, Tv, Tp}(args...) where {D, Tv, Tp} = ElementLevel{D, Tv, Tp, Vector{Tv}}(args...)
-ElementLevel{D, Tv, Tp, Val}() where {D, Tv, Tp, Val} = ElementLevel{D, Tv, Int, Val}(Tv[])
+ElementLevel{D, Tv, Tp}(args...) where {D, Tv, Tp} = ElementLevel{D, Tv, Tp, Vector}(args...)
+ElementLevel{D, Tv, Tp, Tm}() where {D, Tv, Tp, Tm} = ElementLevel{D, Tv, Tp, Tm}(convert(Tm, Tv[]))
 
-ElementLevel{D, Tv, Tp}(val::Val) where {D, Tv, Tp, Val} = ElementLevel{D, Tv, Int, Val}(val)
+ElementLevel{D, Tv, Tp, Tm}(val::Val) where {D, Tv, Tp, Tm, Val} = ElementLevel{D, Tv, Tp, Tm, Val}(val)
 
 Base.summary(::Element{D}) where {D} = "Element($(D))"
 
-similar_level(::ElementLevel{D, Tv, Tp}) where {D, Tv, Tp} = ElementLevel{D, Tv, Tp}()
+similar_level(::ElementLevel{D, Tv, Tp, Tm}) where {D, Tv, Tp, Tm} = ElementLevel{D, Tv, Tp, Tm}()
 
-memtype(::Type{ElementLevel{D, Tv, Tp, Val}}) where {D, Tv, Tp, Val} =
-    containertype(Val)
+memtype(::Type{<:ElementLevel{D, Tv, Tp, Tm}}) where {D, Tv, Tp, Tm} = Tm
 
 postype(::Type{<:ElementLevel{D, Tv, Tp}}) where {D, Tv, Tp} = Tp
 
-function moveto(lvl::ElementLevel{D, Tv, Tp, Val}, ::Type{MemType}) where {D, Tv, Tp, Val, MemType <: AbstractArray}
-    valp = MemType(lvl.val)
-    return ElementLevel{D, Tv, Tp, typeof(valp)}(valp)
+function moveto(lvl::ElementLevel{D, Tv, Tp}, Tm) where {D, Tv, Tp}
+    return ElementLevel{D, Tv, Tp, Tm}(convert(Tm, lvl.val))
 end
 
-pattern!(lvl::ElementLevel{D, Tv, Tp, Val}) where  {D, Tv, Tp, Val} =
-    Pattern{Tp, Val}()
-redefault!(lvl::ElementLevel{D, Tv, Tp, Val}, init) where {D, Tv, Tp, Val} = 
-    ElementLevel{init, Tv, Tp, Val}(lvl.val)
+pattern!(lvl::ElementLevel{D, Tv, Tp, Tm}) where  {D, Tv, Tp, Tm} =
+    Pattern{Tp, Tm}()
+redefault!(lvl::ElementLevel{D, Tv, Tp, Tm}, init) where {D, Tv, Tp, Tm} = 
+    ElementLevel{init, Tv, Tp, Tm}(lvl.val)
 
 
-function Base.show(io::IO, lvl::ElementLevel{D, Tv, Tp, Val}) where {D, Tv, Tp, Val}
+function Base.show(io::IO, lvl::ElementLevel{D, Tv, Tp, Tm, Val}) where {D, Tv, Tp, Tm, Val}
     print(io, "Element{")
     show(io, D)
-    print(io, ", $Tv, $Tp, $Val}(")
+    print(io, ", $Tv, $Tp, $Tm, $Val}(")
     if get(io, :compact, false)
         print(io, "…")
     else
@@ -73,9 +71,9 @@ end
 @inline level_ndims(::Type{<:ElementLevel}) = 0
 @inline level_size(::ElementLevel) = ()
 @inline level_axes(::ElementLevel) = ()
-@inline level_eltype(::Type{ElementLevel{D, Tv, Tp, Val}}) where {D, Tv, Tp, Val} = Tv
+@inline level_eltype(::Type{<:ElementLevel{D, Tv}}) where {D, Tv} = Tv
 @inline level_default(::Type{<:ElementLevel{D}}) where {D} = D
-data_rep_level(::Type{<:ElementLevel{D, Tv, Tp, Val}}) where {D, Tv, Tp, Val} = ElementData(D, Tv)
+data_rep_level(::Type{<:ElementLevel{D, Tv}}) where {D, Tv} = ElementData(D, Tv)
 
 (fbr::Fiber{<:ElementLevel})() = SubFiber(fbr.lvl, 1)()
 function (fbr::SubFiber{<:ElementLevel})()
@@ -85,10 +83,12 @@ end
 
 countstored_level(lvl::ElementLevel, pos) = pos
 
-struct VirtualElementLevel <: AbstractVirtualLevel
+mutable struct VirtualElementLevel <: AbstractVirtualLevel
     ex
-    Tv
     D
+    Tv
+    Tp
+    Tm
     val
 end
 
@@ -97,13 +97,13 @@ is_level_atomic(lvl::VirtualElementLevel, ctx) = false
 
 lower(lvl::VirtualElementLevel, ctx::AbstractCompiler, ::DefaultStyle) = lvl.ex
 
-function virtualize(ex, ::Type{ElementLevel{D, Tv, Tp, Val}}, ctx, tag=:lvl) where {D, Tv, Tp, Val}
+function virtualize(ex, ::Type{ElementLevel{D, Tv, Tp, Tm, Val}}, ctx, tag=:lvl) where {D, Tv, Tp, Tm, Val}
     sym = freshen(ctx, tag)
     val = virtualize(:($ex.val), Val, ctx, :val)
     push!(ctx.preamble, quote
         $sym = $ex
     end)
-    VirtualElementLevel(sym, Tv, D, val)
+    VirtualElementLevel(sym, D, Tv, Tp, Tm, val)
 end
 
 Base.summary(lvl::VirtualElementLevel) = "Element($(lvl.D))"
@@ -112,6 +112,9 @@ virtual_level_resize!(lvl::VirtualElementLevel, ctx) = lvl
 virtual_level_size(::VirtualElementLevel, ctx) = ()
 virtual_level_eltype(lvl::VirtualElementLevel) = lvl.Tv
 virtual_level_default(lvl::VirtualElementLevel) = lvl.D
+
+memtype(lvl::VirtualElementLevel) = lvl.Tm
+postype(lvl::VirtualElementLevel) = lvl.Tp
 
 function declare_level!(lvl::VirtualElementLevel, ctx, pos, init)
     init == literal(lvl.D) || throw(FinchProtocolError("Cannot initialize Element Levels to non-default values(have $init expected $(lvl.D))"))
@@ -148,7 +151,7 @@ function reassemble_level!(lvl::VirtualElementLevel, ctx, pos_start, pos_stop)
     lvl
 end
 
-function virtual_moveto_level!(lvl::VirtualElementLevel, ctx::AbstractCompiler, arch)
+function virtual_moveto_level(lvl::VirtualElementLevel, ctx::AbstractCompiler, arch)
     lvl.val = virtual_moveto(lvl.val, ctx, arch)
     return lvl
 end

@@ -129,8 +129,9 @@ function virtual_call(::typeof(parallel), ctx, ext)
 end
 
 function virtual_call(::typeof(parallel), ctx, ext, device)
-    if ext.kind === virtual && device.kind === virtual
-        ParallelDimension(ext.val, device.val)
+    device = resolve(device, ctx) #TODO this feels broken
+    if ext.kind === virtual
+        ParallelDimension(ext.val, device)
     end
 end
 

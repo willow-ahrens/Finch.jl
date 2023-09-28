@@ -42,7 +42,7 @@ end
 data_rep_level(::Type{<:PatternLevel}) = ElementData(false, Bool)
 
 function memtype(::Type{PatternLevel{Tp, V}}) where {Tp, V}
-    return containertype(V)
+    return memtype(V)
 end
 
 postype(::Type{<:PatternLevel{Tp}}) where {Tp} = Tp

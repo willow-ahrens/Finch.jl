@@ -186,6 +186,9 @@ end
 virtual_level_eltype(lvl::VirtualSparseByteMapLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSparseByteMapLevel) = virtual_level_default(lvl.lvl)
 
+memtype(lvl::VirtualSparseByteMapLevel) = memtype(lvl.lvl)
+postype(lvl::VirtualSparseByteMapLevel) = postype(lvl.lvl)
+
 function declare_level!(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, pos, init)
     Ti = lvl.Ti
     Tp = lvl.Tp

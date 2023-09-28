@@ -50,7 +50,7 @@ similar_level(::RepeatRLELevel{D}, dim, tail...) where {D} = RepeatRLE{D}(dim)
 data_rep_level(::Type{<:RepeatRLELevel{D, Ti, Tp, Tv, Vp, Vi, Vv}}) where {D, Ti, Tp, Tv, Vp, Vi, Vv} = RepeatData(D, Tv)
 
 function memtype(::Type{RepeatRLELevel{D, Ti, Tp, Tv, Vp, Vi, Vv}}) where {D, Ti, Tp, Tv, Vp, Vi, Vv}
-    return containertype(Vi)
+    return memtype(Vi)
 end
 
 function postype(::Type{RepeatRLELevel{D, Ti, Tp, Tv, Vp, Vi, Vv}}) where {D, Ti, Tp, Tv, Vp, Vi, Vv}

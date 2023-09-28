@@ -66,7 +66,7 @@ similar_level(lvl::SparseHashLevel{N}) where {N} = SparseHashLevel{N}(similar_le
 similar_level(lvl::SparseHashLevel{N}, tail...) where {N} = SparseHashLevel{N}(similar_level(lvl.lvl, tail[1:end-N]...), (tail[end-N+1:end]...,))
 
 function memtype(::Type{SparseHashLevel{N, Ti, Tp, Tbl, Vp, VTpip, Lvl}}) where {N, Ti, Tp, Tbl, Vp, VTpip, Lvl}
-    return containertype(Vp)
+    return memtype(Vp)
 end
 
 function postype(::Type{SparseHashLevel{N, Ti, Tp, Tbl, Vp, VTpip, Lvl}}) where {N, Ti, Tp, Tbl, Vp, VTpip, Lvl}

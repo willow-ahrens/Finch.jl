@@ -94,6 +94,11 @@ function memtype(::Type{<:Fiber{Lvl}}) where {Lvl}
     memtype(Lvl)
 end
 
+memtype(arg) = memtype(typeof(arg))
+memtype(T::Type) = throw(MethodError(memtype, Tuple{T}))
+
+memtype(::Type{<:Vector}) = Vector
+
 """
     postype(lvl)
 Return a position type with the same flavor as those used to store the positions of the fibers contained in `lvl`.
@@ -102,3 +107,8 @@ In Finch, positions should be data used to access either a subfiber or some othe
 we often end up iterating over positions.
 """
 function postype end
+
+postype(arg) = postype(typeof(arg))
+postype(T::Type) = throw(MethodError(postype, Tuple{T}))
+
+#postype(::Type{Vector{S}}) where {S} = Int

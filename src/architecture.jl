@@ -60,6 +60,10 @@ end
 CPULocalVector{V}(device::CPU) where {V} =
     CPULocalVector{V}(device, [V([]) for _ in 1:device.n])
 
+Base.eltype(::Type{CPULocalVector{V}}) where {V} = eltype(V)
+Base.ndims(::Type{CPULocalVector{V}}) where {V} = ndims(V)
+memtype(::Type{CPULocalVector{V}}) where {V} = CPULocalVector{memtype(V)}
+
 struct VirtualCPULocalVector
     ex
     tag

@@ -101,12 +101,13 @@
 
     let
         # Computes a horizontal blur a row at a time
-        input = Fiber!(Dense(SparseList(Element(0.0))))
-        output = Fiber!(Dense(SparseList(Element(0.0))))
+        input = Fiber!(Dense(Dense(Element(0.0))))
+        output = Fiber!(Dense(Dense(Element(0.0))))
         cpu = CPU(Threads.nthreads())
-        tmp = Fiber!(SparseList(Element(0, CPULocalVector{Vector}(cpu))))
+        tmp = Fiber!(Dense(Element(0)))
 
-        @finch begin
+        println(@finch_code begin
+            output .= 0
             for y = parallel(_, cpu)
                 tmp .= 0
                 for x = _
@@ -117,6 +118,6 @@
                     output[x, y] = tmp[x]
                 end
             end
-        end
+        end)
     end
 end

@@ -27,10 +27,9 @@ struct DenseLevel{Ti, Lvl}
     shape::Ti
 end
 DenseLevel(lvl) = DenseLevel{Int}(lvl)
-DenseLevel(lvl, shape::Ti, args...) where {Ti} = DenseLevel{Ti}(lvl, shape, args...)
-DenseLevel{Ti}(lvl, args...) where {Ti} = DenseLevel{Ti, typeof(lvl)}(lvl, args...)
-
-DenseLevel{Ti, Lvl}(lvl) where {Ti, Lvl} = DenseLevel{Ti, Lvl}(lvl, zero(Ti))
+#DenseLevel(lvl, shape::Ti) where {Ti} = DenseLevel{Ti}(lvl, shape)
+DenseLevel{Ti}(lvl) where {Ti} = DenseLevel{Ti}(lvl, zero(Ti))
+DenseLevel{Ti}(lvl::Lvl, shape) where {Ti, Lvl} = DenseLevel{Ti, Lvl}(lvl, shape)
 
 const Dense = DenseLevel
 
@@ -141,6 +140,9 @@ end
 virtual_level_eltype(lvl::VirtualDenseLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualDenseLevel) = virtual_level_default(lvl.lvl)
 
+memtype(lvl::VirtualDenseLevel) = memtype(lvl.lvl)
+postype(lvl::VirtualDenseLevel) = postype(lvl.lvl)
+
 function declare_level!(lvl::VirtualDenseLevel, ctx::AbstractCompiler, pos, init)
     lvl.lvl = declare_level!(lvl.lvl, ctx, call(*, pos, lvl.shape), init)
     return lvl
@@ -179,8 +181,8 @@ function freeze_level!(lvl::VirtualDenseLevel, ctx::AbstractCompiler, pos)
     return lvl
 end
 
-function virtual_moveto_level!(lvl::VirtualDenseLevel, ctx::AbstractCompiler, arch)
-    lvl.lvl = virtual_moveto_level!(lvl.lvl, ctx, arch)
+function virtual_moveto_level(lvl::VirtualDenseLevel, ctx::AbstractCompiler, arch)
+    lvl.lvl = virtual_moveto_level(lvl.lvl, ctx, arch)
     return lvl
 end
 

@@ -54,7 +54,7 @@ function (ctx::DeclareDimensions)(node::FinchNode)
         access(tns, mode, idxs...)
     elseif node.kind === loop 
         if node.ext.kind !== virtual
-            error(node.ext)
+            error("could not evaluate $(node.ext) into a dimension")
         end
         ctx.dims[node.idx] = node.ext.val
         body = ctx(node.body)

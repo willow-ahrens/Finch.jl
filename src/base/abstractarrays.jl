@@ -40,6 +40,14 @@ FinchNotation.finch_leaf(x::VirtualAbstractArray) = virtual(x)
 virtual_default(::VirtualAbstractArray, ctx) = 0
 virtual_eltype(tns::VirtualAbstractArray, ctx) = tns.eltype
 
+function virtual_moveto(vec::VirtualAbstractArray, ctx, ::Finch.VirtualCPUThread)
+    ex = freshen(ctx.code, vec.ex)
+    push!(ctx.code.preamble, quote
+        $ex = copy($(vec.ex))
+    end)
+    Finch.VirtualAbstractArray(ex, vec.eltype, vec.ndims)
+end
+
 default(a::AbstractArray) = default(typeof(a))
 default(T::Type{<:AbstractArray}) = zero(eltype(T))
 

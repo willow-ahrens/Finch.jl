@@ -236,7 +236,7 @@ function lower_parallel_loop(ctx, root, ext::ParallelDimension, device::VirtualC
 
     bindings_2 = copy(ctx.bindings)
     for tns in setdiff(used_in_scope, decl_in_scope)
-        bindings_2[tns] = virtual_moveto(bindings_2[tns], ctx, device)
+        bindings_2[tns] = virtual_moveto(resolve(tns, ctx), ctx, device)
     end
 
     return quote
@@ -244,11 +244,11 @@ function lower_parallel_loop(ctx, root, ext::ParallelDimension, device::VirtualC
             $(contain(ctx, bindings=bindings_2) do ctx_2
                 subtask = VirtualCPUThread(value(i, Int), device, ctx_2.code.task)
                 contain(ctx_2, task=subtask) do ctx_3
-                    for tns in union(used_in_scope, decl_in_scope)
-                        bindings_2 = copy(ctx_3.bindings)
-                        for tns in setdiff(used_in_scope, decl_in_scope)
-                            bindings_2[tns] = virtual_moveto(bindings_2[tns], ctx_3, subtask)
-                        end
+                    bindings_2 = copy(ctx_3.bindings)
+                    for tns in intersect(used_in_scope, decl_in_scope)
+                        println(bindings_2[tns])
+                        bindings_2[tns] = virtual_moveto(resolve(tns, ctx_3), ctx_3, subtask)
+                        println(bindings_2[tns])
                     end
                     contain(ctx_3, bindings=bindings_2) do ctx_4
                         ctx_4(instantiate!(root_2, ctx_4))
