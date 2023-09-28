@@ -252,6 +252,13 @@ function freeze_level!(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler, pos_st
     return lvl
 end
 
+function virtual_moveto_level(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler, arch)
+    lvl.ptr = virtual_moveto(lvl.ptr, ctx, arch)
+    lvl.tbl = map(idx -> virtual_moveto(idx, ctx, arch), lvl.tbl)
+    lvl.lvl = virtual_moveto_level(lvl.lvl, ctx, arch)
+    return lvl
+end
+
 struct SparseCOOWalkTraversal
     lvl
     R
