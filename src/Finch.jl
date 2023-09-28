@@ -44,7 +44,7 @@ export default, AsArray
 
 export parallelAnalysis, ParallelAnalysisResults
 export parallel, extent, dimless
-export CPU, CPULocalVector
+export CPU, CPULocalVector, CPULocalMemory
 
 include("base/limits.jl")
 export Limit

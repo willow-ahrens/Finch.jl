@@ -52,6 +52,13 @@ FinchNotation.finch_leaf(device::VirtualCPUThread) = virtual(device)
 virtual_get_device(task::VirtualCPUThread) = task.device
 virtual_get_task(task::VirtualCPUThread) = task.parent
 
+struct CPULocalMemory
+    device::CPU
+end
+function moveto(vec::V, mem::CPULocalMemory) where {V <: Vector}
+    CPULocalVector{V}(mem.device, [copy(vec) for _ in 1:mem.device.n])
+end
+
 struct CPULocalVector{V}
     device::CPU
     data::Vector{V}
@@ -90,6 +97,6 @@ function moveto(vec::CPULocalVector, task::CPUThread)
     return vec.data[task.tid]
 end
 
-function virtual_moveto(vec::VirtualCPULocalVector, ctx, dev::VirtualCPU)
-    return virtualize(:($(vec.sym)[$(dev.tid)]), vec.V, ctx.code, Symbol(vec.tag, :_cpu)) 
+function virtual_moveto(vec::VirtualCPULocalVector, ctx, dev::VirtualCPUThread)
+    return virtualize(:($(vec.ex)[$(ctx(dev.tid))]), vec.V, ctx.code, Symbol(vec.tag, :_cpu)) 
 end

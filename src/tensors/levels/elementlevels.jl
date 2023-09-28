@@ -34,24 +34,24 @@ ElementLevel{D, Tv, Tp}(val::Val) where {D, Tv, Tp, Val} = ElementLevel{D, Tv, T
 
 Base.summary(::Element{D}) where {D} = "Element($(D))"
 
-similar_level(::ElementLevel{D, Tv, Tp, }) where {D, Tv, Tp} = ElementLevel{D, Tv, Tp}()
+similar_level(::ElementLevel{D, Tv, Tp}) where {D, Tv, Tp} = ElementLevel{D, Tv, Tp}()
 
 postype(::Type{<:ElementLevel{D, Tv, Tp}}) where {D, Tv, Tp} = Tp
 
 function moveto(lvl::ElementLevel{D, Tv, Tp}, device) where {D, Tv, Tp}
-    return ElementLevel{D, Tv, Tp, }(moveto(lvl.val, device))
+    return ElementLevel{D, Tv, Tp}(moveto(lvl.val, device))
 end
 
-pattern!(lvl::ElementLevel{D, Tv, Tp, }) where  {D, Tv, Tp, Tm} =
+pattern!(lvl::ElementLevel{D, Tv, Tp}) where  {D, Tv, Tp} =
     Pattern{Tp, }()
-redefault!(lvl::ElementLevel{D, Tv, Tp, }, init) where {D, Tv, Tp, Tm} = 
+redefault!(lvl::ElementLevel{D, Tv, Tp}, init) where {D, Tv, Tp} = 
     ElementLevel{init, Tv, Tp, }(lvl.val)
 
 
-function Base.show(io::IO, lvl::ElementLevel{D, Tv, Tp, , Val}) where {D, Tv, Tp, Tm, Val}
+function Base.show(io::IO, lvl::ElementLevel{D, Tv, Tp, Val}) where {D, Tv, Tp, Val}
     print(io, "Element{")
     show(io, D)
-    print(io, ", $Tv, $Tp, $, $Val}(")
+    print(io, ", $Tv, $Tp, $Val}(")
     if get(io, :compact, false)
         print(io, "…")
     else
@@ -94,13 +94,13 @@ is_level_atomic(lvl::VirtualElementLevel, ctx) = false
 
 lower(lvl::VirtualElementLevel, ctx::AbstractCompiler, ::DefaultStyle) = lvl.ex
 
-function virtualize(ex, ::Type{ElementLevel{D, Tv, Tp, , Val}}, ctx, tag=:lvl) where {D, Tv, Tp, Tm, Val}
+function virtualize(ex, ::Type{ElementLevel{D, Tv, Tp, Val}}, ctx, tag=:lvl) where {D, Tv, Tp, Val}
     sym = freshen(ctx, tag)
     val = virtualize(:($ex.val), Val, ctx, :val)
     push!(ctx.preamble, quote
         $sym = $ex
     end)
-    VirtualElementLevel(sym, D, Tv, Tp, , val)
+    VirtualElementLevel(sym, D, Tv, Tp, val)
 end
 
 Base.summary(lvl::VirtualElementLevel) = "Element($(lvl.D))"

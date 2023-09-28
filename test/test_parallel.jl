@@ -104,7 +104,7 @@
         input = Fiber!(Dense(Dense(Element(0.0))))
         output = Fiber!(Dense(Dense(Element(0.0))))
         cpu = CPU(Threads.nthreads())
-        tmp = Fiber!(Dense(Element(0)))
+        tmp = moveto(Fiber!(Dense(Element(0))), CPULocalMemory(cpu))
 
         println(@finch_code begin
             output .= 0
