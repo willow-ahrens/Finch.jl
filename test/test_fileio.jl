@@ -39,10 +39,10 @@ using Pkg
                             for (name, fmt) in [
                                 "A_dense" => swizzle(Fiber!(Dense{Int}(Dense{Int}(elem))), 2, 1),
                                 "A_denseC" => Fiber!(Dense{Int}(Dense{Int}(elem))),
-                                "A_CSC" => Fiber!(Dense{Int}(SparseList{Int, Int}(elem))),
-                                "A_CSR" => swizzle(Fiber!(Dense{Int}(SparseList{Int, Int}(elem))), 2, 1),
-                                "A_COO" => swizzle(Fiber!(SparseCOO{2, Tuple{Int, Int}, Int}(elem)), 2, 1),
-                                "A_COOC" => Fiber!(SparseCOO{2, Tuple{Int, Int}, Int}(elem)),
+                                "A_CSC" => Fiber!(Dense{Int}(SparseList{Int}(elem))),
+                                "A_CSR" => swizzle(Fiber!(Dense{Int}(SparseList{Int}(elem))), 2, 1),
+                                "A_COO" => swizzle(Fiber!(SparseCOO{2, Tuple{Int, Int}}(elem)), 2, 1),
+                                "A_COOC" => Fiber!(SparseCOO{2, Tuple{Int, Int}}(elem)),
                             ]
                                 @testset "binsparse $name($D)" begin
                                     fmt = copyto!(fmt, A)
@@ -97,10 +97,10 @@ using Pkg
                             for (name, fmt) in [
                                 "A_dense" => swizzle(Fiber!(Dense{Int}(Dense{Int}(elem))), 2, 1),
                                 "A_denseC" => Fiber!(Dense{Int}(Dense{Int}(elem))),
-                                "A_CSC" => Fiber!(Dense{Int}(SparseList{Int, Int}(elem))),
-                                "A_CSR" => swizzle(Fiber!(Dense{Int}(SparseList{Int, Int}(elem))), 2, 1),
-                                "A_COO" => swizzle(Fiber!(SparseCOO{2, Tuple{Int, Int}, Int}(elem)), 2, 1),
-                                "A_COOC" => Fiber!(SparseCOO{2, Tuple{Int, Int}, Int}(elem)),
+                                "A_CSC" => Fiber!(Dense{Int}(SparseList{Int}(elem))),
+                                "A_CSR" => swizzle(Fiber!(Dense{Int}(SparseList{Int}(elem))), 2, 1),
+                                "A_COO" => swizzle(Fiber!(SparseCOO{2, Tuple{Int, Int}}(elem)), 2, 1),
+                                "A_COOC" => Fiber!(SparseCOO{2, Tuple{Int, Int}}(elem)),
                             ]
                                 @testset "binsparse $name($D)" begin
                                     fmt = copyto!(fmt, A)
