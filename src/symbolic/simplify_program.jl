@@ -175,6 +175,15 @@ function get_program_rules(alg, shash)
             end
         end),
 
+        # handles counting query 
+        (@rule block(~s1..., declare(~a::isvariable, ~v::isconstant), ~s2..., freeze(~a), ~s3...) => begin
+            if ortho(a, s2) 
+                block(s1..., Postwalk(@rule a => v)(block(s3...)))
+            end
+        end),
+        (@rule access(~a::isliteral, reader()) => getval(a)), 
+
+
         (@rule block(~s1..., thaw(~a::isvariable), ~s2..., freeze(~a), ~s3...) => if ortho(a, s2)
             block(s1..., s2..., s3...)
         end),

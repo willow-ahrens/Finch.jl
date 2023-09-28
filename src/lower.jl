@@ -214,9 +214,6 @@ function lower_access(ctx, node, tns::Number)
 end
 
 function lower_loop(ctx, root, ext)
-    #println("LOOP")  
-    #display(root)
-    #println()
     root_2 = Rewrite(Postwalk(@rule access(~tns, ~mode, ~idxs...) => begin
         if !isempty(idxs) && root.idx == idxs[end]
             protos = [(mode.kind === reader ? defaultread : defaultupdate) for _ in idxs]

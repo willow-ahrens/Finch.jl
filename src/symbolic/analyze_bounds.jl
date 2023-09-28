@@ -176,7 +176,11 @@ function query_z3(root::FinchNode, ctx; verbose = false)
 
       function translate_z3(node::FinchNode)::ExprAllocated
           if @capture node call(~op::isliteral, ~args...) 
-              return getval(op)(translate_z3.(args)...)
+              if op.val == fld
+                  return /(translate_z3.(args)...)
+              else
+                  return getval(op)(translate_z3.(args)...)
+              end
           elseif @capture node access(~lhs::isvirtual, ~args...) 
               if lhs.val isa VirtualScalar
                   if lhs.val.Tv <: Bool

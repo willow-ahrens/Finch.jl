@@ -207,9 +207,25 @@ virtual_intersect(ctx, a, b::Dimensionless) = a
 virtual_intersect(ctx, a::Dimensionless, b::Dimensionless) = b
 
 function virtual_intersect(ctx, a::Extent, b::Extent)
+    #Extent(
+    #    start = @f(max($(getstart(a)), $(getstart(b)))),
+    #    stop = @f(min($(getstop(a)), $(getstop(b))))
+    #)
     Extent(
-        start = @f(max($(getstart(a)), $(getstart(b)))),
-        stop = @f(min($(getstop(a)), $(getstop(b))))
+        start = if query_z3(call(<=, getstart(a), getstart(b)), ctx)
+                    bound_below!(ctx, getstart(b), getstart(a))
+                elseif query_z3(call(<=, getstart(b), getstart(a)), ctx)
+                    bound_below!(ctx, getstart(a), getstart(b))
+                else
+                    @f(max($(getstart(a)), $(getstart(b))))
+                end,
+        stop =  if query_z3(call(<=, getstop(a), getstop(b)), ctx)
+                    bound_above!(ctx, getstop(a), getstop(b))
+                elseif query_z3(call(<=, getstop(b), getstop(a)), ctx)
+                    bound_above!(ctx, getstop(b), getstop(a))
+                else
+                    @f(min($(getstop(a)), $(getstop(b))))
+                end
     )
 end
 
@@ -219,9 +235,25 @@ virtual_union(ctx, a::Dimensionless, b::Dimensionless) = b
 
 #virtual_union(ctx, a, b) = virtual_union(ctx, promote(a, b)...)
 function virtual_union(ctx, a::Extent, b::Extent)
+    #Extent(
+    #    start = @f(min($(getstart(a)), $(getstart(b)))),
+    #    stop = @f(max($(getstop(a)), $(getstop(b))))
+    #)
     Extent(
-        start = @f(min($(getstart(a)), $(getstart(b)))),
-        stop = @f(max($(getstop(a)), $(getstop(b))))
+        start = if query_z3(call(<=, getstart(a), getstart(b)), ctx)
+                    bound_below!(ctx, getstart(a), getstart(b))
+                elseif query_z3(call(<=, getstart(b), getstart(a)), ctx)
+                    bound_below!(ctx, getstart(b), getstart(a))
+                else
+                    @f(min($(getstart(a)), $(getstart(b))))
+                end,
+        stop =  if query_z3(call(<=, getstop(a), getstop(b)), ctx)
+                    bound_above!(ctx, getstop(b), getstop(a))
+                elseif query_z3(call(<=, getstop(b), getstop(a)), ctx)
+                    bound_above!(ctx, getstop(a), getstop(b))
+                else
+                    @f(max($(getstop(a)), $(getstop(b))))
+                end
     )
 end
 

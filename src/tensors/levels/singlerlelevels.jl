@@ -254,13 +254,72 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSingleRLELevel}, ctx, su
                 Phase(
                     stop = (ctx, ext) -> value(my_i_stop, lvl.Ti),
                     #body = (ctx, ext) -> Run(Simplify(instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q)), ctx, subprotos))),
-                    body = (ctx, ext) -> Run(Fill(1)),
+                    body = (ctx, ext) -> Run(Fill(true)),
                 ),
                 Phase(
                     stop = (ctx, ext) -> lvl.shape,
                     body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))
                 )
             ])
+        )
+    )
+end
+
+instantiate_updater(fbr::VirtualSubFiber{VirtualSingleRLELevel}, ctx, protos) = 
+    instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, protos)
+
+function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSingleRLELevel}, ctx, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
+    (lvl, pos) = (fbr.lvl, fbr.pos) 
+    tag = lvl.ex
+    Tp = lvl.Tp
+    Ti = lvl.Ti
+    qos = freshen(ctx.code, tag, :_qos)
+    qos_fill = lvl.qos_fill
+    qos_stop = lvl.qos_stop
+    dirty = freshen(ctx.code, tag, :dirty)
+    
+    Furlable(
+        body = (ctx, ext) -> Thunk(
+            preamble = quote
+                $qos = $qos_fill + 1
+                $(if issafe(ctx.mode)
+                    quote
+                        $(lvl.prev_pos) < $(ctx(pos)) || throw(FinchProtocolError("SingleRLELevels cannot be updated multiple times"))
+                    end
+                end)
+            end,
+
+            body = (ctx) -> AcceptRun(
+                body = (ctx, ext) -> Thunk(
+                    preamble = quote
+                        if $qos > $qos_stop
+                            $qos_stop = max($qos_stop << 1, 1)
+                            Finch.resize_if_smaller!($(lvl.ex).left, $qos_stop)
+                            Finch.resize_if_smaller!($(lvl.ex).right, $qos_stop)
+                            $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(qos, lvl.Tp), value(qos_stop, lvl.Tp)), ctx))
+                        end
+                        $dirty = false
+                    end,
+                    body = (ctx) -> instantiate_updater(VirtualTrackedSubFiber(lvl.lvl, value(qos, lvl.Tp), dirty), ctx, subprotos),
+                    epilogue = quote
+                        if $dirty
+                            $(fbr.dirty) = true
+                            $(lvl.ex).left[$qos] = $(ctx(getstart(ext)))
+                            $(lvl.ex).right[$qos] = $(ctx(getstop(ext)))
+                            $(qos) += $(Tp(1))
+                            $(if issafe(ctx.mode)
+                                quote
+                                    $(lvl.prev_pos) = $(ctx(pos))
+                                end
+                            end)
+                        end
+                    end
+                )
+            ),
+            epilogue = quote
+                $(lvl.ex).ptr[$(ctx(pos)) + 1] = $qos - $qos_fill - 1
+                $qos_fill = $qos - 1
+            end
         )
     )
 end

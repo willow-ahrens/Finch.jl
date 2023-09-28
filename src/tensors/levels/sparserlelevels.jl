@@ -248,7 +248,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, su
                 else
                     $my_i_end = $(Ti(0))
                 end
-
+                #$my_i_end = $(lvl.ex).right[$my_q_stop - $(Tp(1))]
             end,
             body = (ctx) -> Sequence([
                 Phase(
