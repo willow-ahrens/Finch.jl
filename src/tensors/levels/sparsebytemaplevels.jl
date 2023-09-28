@@ -28,7 +28,7 @@ SparseByteMap (0.0) [:,1:3]
 │ ├─[3]: 40.0
 ```
 """
-struct SparseByteMapLevel{Ti, Tp, Ptr, Tbl, Srt, Lvl}
+struct SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl}
     lvl::Lvl
     shape::Ti
     ptr::Ptr
@@ -38,51 +38,44 @@ end
 const SparseByteMap = SparseByteMapLevel
 SparseByteMapLevel(lvl::Lvl) where {Lvl} = SparseByteMapLevel{Int}(lvl)
 SparseByteMapLevel(lvl, shape, args...) = SparseByteMapLevel{typeof(shape)}(lvl, shape, args...)
-SparseByteMapLevel{Ti}(lvl::Lvl, args...) where {Ti, Lvl} = SparseByteMapLevel{Ti, postype(Lvl)}(lvl, args...)
-SparseByteMapLevel{Ti, Tp}(lvl, args...) where {Ti, Tp} = SparseByteMapLevel{Ti, Tp, memtype(typeof(lvl)){Tp, 1}, memtype(typeof(lvl)){Bool, 1}, memtype(typeof(lvl)){Tuple{Tp, Ti}, 1}, typeof(lvl)}(lvl, args...)
-
-SparseByteMapLevel{Ti, Tp, Ptr, Tbl, Srt, Lvl}(lvl) where {Ti, Tp, Ptr, Tbl, Srt, Lvl} = SparseByteMapLevel{Ti, Tp, Ptr, Tbl, Srt, Lvl}(lvl, zero(Ti))
-SparseByteMapLevel{Ti, Tp, Ptr, Tbl, Srt, Lvl}(lvl, shape) where {Ti, Tp, Ptr, Tbl, Srt, Lvl} = 
-    SparseByteMapLevel{Ti, Tp, Ptr, Tbl, Srt, Lvl}(lvl, Ti(shape), Tp[1], Bool[], Tuple{Tp, Ti}[])
-
+SparseByteMapLevel{Ti}(lvl) where {Ti} = SparseByteMapLevel{Ti}(lvl, zero(Ti))
+SparseByteMapLevel{Ti}(lvl, shape) where {Ti} = 
+    SparseByteMapLevel{Ti}(lvl, shape, postype(lvl)[1], Bool[], Tuple{postype(lvl), Ti}[])
+SparseByteMapLevel{Ti}(lvl::Lvl, shape, ptr::Ptr, tbl::Tbl, srt::Srt) where {Ti, Lvl, Ptr, Tbl, Srt} = 
+    SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl}(lvl, shape, ptr, tbl, srt)
 
 Base.summary(lvl::SparseByteMapLevel) = "SparseByteMap($(summary(lvl.lvl)))"
 similar_level(lvl::SparseByteMapLevel) = SparseByteMap(similar_level(lvl.lvl))
 similar_level(lvl::SparseByteMapLevel, dims...) = SparseByteMap(similar_level(lvl.lvl, dims[1:end-1]...), dims[end])
 
-function memtype(::Type{SparseByteMapLevel{Ti, Tp, Ptr, Tbl, Srt, Lvl}}) where {Ti, Tp, Ptr, Tbl, Srt, Lvl}
-    return memtype(Lvl)
+function postype(::Type{SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl}}) where {Ti, Ptr, Tbl, Srt, Lvl}
+    return postype(Lvl)
 end
 
-function postype(::Type{SparseByteMapLevel{Ti, Tp, Ptr, Tbl, Srt, Lvl}}) where {Ti, Tp, Ptr, Tbl, Srt, Lvl}
-    return Tp
-end
-
-function moveto(lvl::SparseByteMapLevel{Ti, Tp, Ptr, Tbl, Srt, Lvl}, ::Type{MemType}) where {Ti, Tp, Ptr, Tbl, Srt, Lvl, MemType <: AbstractArray}
-    lvl_2 = moveto(lvl.lvl, MemType)
-    ptr_2 = MemType{Tp, 1}(lvl.ptr)
-    tbl_2 = MemType{Bool, 1}(lvl.tbl)
-    srt_2 = MemType{Tuple{Tp, Ti}, 1}(lvl.srt)
-    return  SparseByteMapLevel{Ti, Tp, MemType{Tp, 1}, MemType{Bool, 1}, MemType{Tuple{Tp, Ti}, 1}, typeof(lvl_2)}(lvl_2, lvl.shape, ptr_2, tbl_2, srt_2)
+function moveto(lvl::SparseByteMapLevel{Ti}, device) where {Ti}
+    lvl_2 = moveto(lvl.lvl, device)
+    ptr_2 = moveto(lvl.ptr, device)
+    tbl_2 = moveto(lvl.tbl, device)
+    srt_2 = moveto(lvl.srt, device)
+    return  SparseByteMapLevel{Ti}(lvl_2, lvl.shape, ptr_2, tbl_2, srt_2)
 end
 
 
+pattern!(lvl::SparseByteMapLevel{Ti}) where {Ti} = 
+    SparseByteMapLevel{Ti}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)
 
-pattern!(lvl::SparseByteMapLevel{Ti, Tp}) where {Ti, Tp} = 
-    SparseByteMapLevel{Ti, Tp}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)
-
-redefault!(lvl::SparseByteMapLevel{Ti, Tp}, init) where {Ti, Tp} = 
-    SparseByteMapLevel{Ti, Tp}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)
+redefault!(lvl::SparseByteMapLevel{Ti}, init) where {Ti} = 
+    SparseByteMapLevel{Ti}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)
 
 function countstored_level(lvl::SparseByteMapLevel, pos)
     countstored_level(lvl.lvl, lvl.ptr[pos + 1] - 1)
 end
 
-function Base.show(io::IO, lvl::SparseByteMapLevel{Ti, Tp, Ptr, Tbl, Srt, Lvl},) where {Ti, Tp, Ptr, Tbl, Srt, Lvl}
+function Base.show(io::IO, lvl::SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl},) where {Ti, Ptr, Tbl, Srt, Lvl}
     if get(io, :compact, false)
         print(io, "SparseByteMap(")
     else
-        print(io, "SparseByteMap{$Ti, $Tp}(")
+        print(io, "SparseByteMap{$Ti}(")
     end
     show(io, lvl.lvl)
     print(io, ", ")
@@ -111,12 +104,12 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseByt
     display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
 end
 
-@inline level_ndims(::Type{<:SparseByteMapLevel{Ti, Tp, Ptr, Tbl, Srt, Lvl}}) where {Ti, Tp, Ptr, Tbl, Srt, Lvl} = 1 + level_ndims(Lvl)
+@inline level_ndims(::Type{<:SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl}}) where {Ti, Ptr, Tbl, Srt, Lvl} = 1 + level_ndims(Lvl)
 @inline level_size(lvl::SparseByteMapLevel) = (level_size(lvl.lvl)..., lvl.shape)
 @inline level_axes(lvl::SparseByteMapLevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.shape))
-@inline level_eltype(::Type{<:SparseByteMapLevel{Ti, Tp, Ptr, Tbl, Srt, Lvl}}) where {Ti, Tp, Ptr, Tbl, Srt, Lvl} = level_eltype(Lvl)
-@inline level_default(::Type{<:SparseByteMapLevel{Ti, Tp, Ptr, Tbl, Srt, Lvl}}) where {Ti, Tp, Ptr, Tbl, Srt, Lvl}= level_default(Lvl)
-data_rep_level(::Type{<:SparseByteMapLevel{Ti, Tp, Ptr, Tbl, Srt, Lvl}}) where {Ti, Tp, Ptr, Tbl, Srt, Lvl} = SparseData(data_rep_level(Lvl))
+@inline level_eltype(::Type{<:SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl}}) where {Ti, Ptr, Tbl, Srt, Lvl} = level_eltype(Lvl)
+@inline level_default(::Type{<:SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl}}) where {Ti, Ptr, Tbl, Srt, Lvl}= level_default(Lvl)
+data_rep_level(::Type{<:SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl}}) where {Ti, Ptr, Tbl, Srt, Lvl} = SparseData(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:SparseByteMapLevel})() = fbr
 function (fbr::SubFiber{<:SparseByteMapLevel{Ti}})(idxs...) where {Ti}
@@ -136,7 +129,9 @@ mutable struct VirtualSparseByteMapLevel <: AbstractVirtualLevel
     lvl
     ex
     Ti
-    Tp
+    ptr
+    tbl
+    srt
     shape
     qos_fill
     qos_stop
@@ -145,7 +140,7 @@ end
 is_level_injective(lvl::VirtualSparseByteMapLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., false]
 is_level_atomic(lvl::VirtualSparseByteMapLevel, ctx) = false
 
-function virtualize(ex, ::Type{SparseByteMapLevel{Ti, Tp, Ptr, Tbl, Srt, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Ptr, Tbl, Srt, Lvl}
+function virtualize(ex, ::Type{SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl}}, ctx, tag=:lvl) where {Ti, Ptr, Tbl, Srt, Lvl}
     sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Int)
     qos_fill = freshen(ctx, sym, :_qos_fill)
@@ -156,16 +151,19 @@ function virtualize(ex, ::Type{SparseByteMapLevel{Ti, Tp, Ptr, Tbl, Srt, Lvl}}, 
         $qos_stop = $qos_fill = length($sym.srt)
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualSparseByteMapLevel(lvl_2, sym, Ti, Tp, shape, qos_fill, qos_stop)
+    ptr = virtualize(:($sym.ptr), Ptr, ctx, Symbol(sym, :ptr))
+    tbl = virtualize(:($sym.tbl), Tbl, ctx, Symbol(sym, :tbl))
+    srt = virtualize(:($sym.srt), Srt, ctx, Symbol(sym, :srt))
+    VirtualSparseByteMapLevel(lvl_2, sym, Ti, ptr, tbl, srt, shape, qos_fill, qos_stop)
 end
 function lower(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
-        $SparseByteMapLevel{$(lvl.Ti), $(lvl.Tp)}(
+        $SparseByteMapLevel{$(lvl.Ti)}(
             $(ctx(lvl.lvl)),
             $(ctx(lvl.shape)),
-            $(lvl.ex).ptr,
-            $(lvl.ex).tbl,
-            $(lvl.ex).srt,
+            $(ctx(lvl.ptr)),
+            $(ctx(lvl.tbl)),
+            $(ctx(lvl.srt)),
         )
     end
 end
@@ -186,33 +184,32 @@ end
 virtual_level_eltype(lvl::VirtualSparseByteMapLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSparseByteMapLevel) = virtual_level_default(lvl.lvl)
 
-memtype(lvl::VirtualSparseByteMapLevel) = memtype(lvl.lvl)
 postype(lvl::VirtualSparseByteMapLevel) = postype(lvl.lvl)
 
 function declare_level!(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, pos, init)
     Ti = lvl.Ti
-    Tp = lvl.Tp
+    Tp = postype(lvl)
     r = freshen(ctx.code, lvl.ex, :_r)
     p = freshen(ctx.code, lvl.ex, :_p)
     q = freshen(ctx.code, lvl.ex, :_q)
     i = freshen(ctx.code, lvl.ex, :_i)
     push!(ctx.code.preamble, quote
         for $r = 1:$(lvl.qos_fill)
-            $p = first($(lvl.ex).srt[$r])
-            $(lvl.ex).ptr[$p] = $(Tp(0))
-            $(lvl.ex).ptr[$p + 1] = $(Tp(0))
-            $i = last($(lvl.ex).srt[$r])
+            $p = first($(ctx(lvl.srt))[$r])
+            $(ctx(lvl.ptr))[$p] = $(Tp(0))
+            $(ctx(lvl.ptr))[$p + 1] = $(Tp(0))
+            $i = last($(ctx(lvl.srt))[$r])
             $q = ($p - $(Tp(1))) * $(ctx(lvl.shape)) + $i
-            $(lvl.ex).tbl[$q] = false
+            $(ctx(lvl.tbl))[$q] = false
             if $(supports_reassembly(lvl.lvl))
-                $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(q, lvl.Tp), value(q, lvl.Tp)), ctx))
+                $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(q, Tp), value(q, Tp)), ctx))
             end
         end
         $(lvl.qos_fill) = 0
         if $(!supports_reassembly(lvl.lvl))
             $(lvl.qos_stop) = $(Tp(0))
         end
-        $(lvl.ex).ptr[1] = 1
+        $(ctx(lvl.ptr))[1] = 1
     end)
     if !supports_reassembly(lvl.lvl)
         lvl.lvl = declare_level!(lvl.lvl, ctx, call(*, pos, lvl.shape), init)
@@ -222,13 +219,13 @@ end
 
 function thaw_level!(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, pos)
     Ti = lvl.Ti
-    Tp = lvl.Tp
+    Tp = postype(lvl)
     p = freshen(ctx.code, lvl.ex, :_p)
     push!(ctx.code.preamble, quote
         for $p = 1:$(ctx(pos))
-            $(lvl.ex).ptr[$p] -= $(lvl.ex).ptr[$p + 1]
+            $(ctx(lvl.ptr))[$p] -= $(ctx(lvl.ptr))[$p + 1]
         end
-        $(lvl.ex).ptr[1] = 1
+        $(ctx(lvl.ptr))[1] = 1
     end)
     lvl.lvl = thaw_level!(lvl.lvl, ctx, call(*, pos, lvl.shape))
     return lvl
@@ -237,9 +234,9 @@ end
 function trim_level!(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, pos)
     ros = freshen(ctx.code, :ros)
     push!(ctx.code.preamble, quote
-        resize!($(lvl.ex).ptr, $(ctx(pos)) + 1)
-        resize!($(lvl.ex).tbl, $(ctx(pos)) * $(ctx(lvl.shape)))
-        resize!($(lvl.ex).srt, $(lvl.qos_fill))
+        resize!($(ctx(lvl.ptr)), $(ctx(pos)) + 1)
+        resize!($(ctx(lvl.tbl)), $(ctx(pos)) * $(ctx(lvl.shape)))
+        resize!($(ctx(lvl.srt)), $(lvl.qos_fill))
     end)
     lvl.lvl = trim_level!(lvl.lvl, ctx, call(*, pos, lvl.shape))
     return lvl
@@ -247,7 +244,7 @@ end
 
 function assemble_level!(lvl::VirtualSparseByteMapLevel, ctx, pos_start, pos_stop)
     Ti = lvl.Ti
-    Tp = lvl.Tp
+    Tp = postype(lvl)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_start, pos_stop))
     q_start = freshen(ctx.code, lvl.ex, :q_start)
@@ -257,11 +254,11 @@ function assemble_level!(lvl::VirtualSparseByteMapLevel, ctx, pos_start, pos_sto
     quote
         $q_start = ($(ctx(pos_start)) - $(Tp(1))) * $(ctx(lvl.shape)) + $(Tp(1))
         $q_stop = $(ctx(pos_stop)) * $(ctx(lvl.shape))
-        Finch.resize_if_smaller!($(lvl.ex).ptr, $pos_stop + 1)
-        Finch.fill_range!($(lvl.ex).ptr, 0, $pos_start + 1, $pos_stop + 1)
-        Finch.resize_if_smaller!($(lvl.ex).tbl, $q_stop)
-        Finch.fill_range!($(lvl.ex).tbl, false, $q_start, $q_stop)
-        $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(q_start, lvl.Tp), value(q_stop, lvl.Tp)), ctx))
+        Finch.resize_if_smaller!($(ctx(lvl.ptr)), $pos_stop + 1)
+        Finch.fill_range!($(ctx(lvl.ptr)), 0, $pos_start + 1, $pos_stop + 1)
+        Finch.resize_if_smaller!($(ctx(lvl.tbl)), $q_stop)
+        Finch.fill_range!($(ctx(lvl.tbl)), false, $q_start, $q_stop)
+        $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(q_start, Tp), value(q_stop, Tp)), ctx))
     end
 end
 
@@ -271,19 +268,19 @@ function freeze_level!(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, po
     p_prev = freshen(ctx.code, lvl.ex, :_p_prev)
     pos_stop = cache!(ctx, :pos_stop, pos_stop)
     Ti = lvl.Ti
-    Tp = lvl.Tp
+    Tp = postype(lvl)
     push!(ctx.code.preamble, quote
-        sort!(view($(lvl.ex).srt, 1:$(lvl.qos_fill)))
+        sort!(view($(ctx(lvl.srt)), 1:$(lvl.qos_fill)))
         $p_prev = $(Tp(0))
         for $r = 1:$(lvl.qos_fill)
-            $p = first($(lvl.ex).srt[$r])
+            $p = first($(ctx(lvl.srt))[$r])
             if $p != $p_prev
-                $(lvl.ex).ptr[$p_prev + 1] = $r
-                $(lvl.ex).ptr[$p] = $r
+                $(ctx(lvl.ptr))[$p_prev + 1] = $r
+                $(ctx(lvl.ptr))[$p] = $r
             end
             $p_prev = $p
         end
-        $(lvl.ex).ptr[$p_prev + 1] = $(lvl.qos_fill) + 1
+        $(ctx(lvl.ptr))[$p_prev + 1] = $(lvl.qos_fill) + 1
     end)
     lvl.lvl = freeze_level!(lvl.lvl, ctx, call(*, pos_stop, lvl.shape))
     return lvl
@@ -293,7 +290,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
-    Tp = lvl.Tp
+    Tp = postype(lvl)
     my_i = freshen(ctx.code, tag, :_i)
     my_q = freshen(ctx.code, tag, :_q)
     my_r = freshen(ctx.code, tag, :_r)
@@ -303,11 +300,11 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
     Furlable(
         body = (ctx, ext) -> Thunk(
             preamble = quote
-                $my_r = $(lvl.ex).ptr[$(ctx(pos))]
-                $my_r_stop = $(lvl.ex).ptr[$(ctx(pos)) + 1]
+                $my_r = $(ctx(lvl.ptr))[$(ctx(pos))]
+                $my_r_stop = $(ctx(lvl.ptr))[$(ctx(pos)) + 1]
                 if $my_r != 0 && $my_r < $my_r_stop
-                    $my_i = last($(lvl.ex).srt[$my_r])
-                    $my_i_stop = last($(lvl.ex).srt[$my_r_stop - 1])
+                    $my_i = last($(ctx(lvl.srt))[$my_r])
+                    $my_i_stop = last($(ctx(lvl.srt))[$my_r_stop - 1])
                 else
                     $my_i = $(Ti(1))
                     $my_i_stop = $(Ti(0))
@@ -318,11 +315,11 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
                     stop = (ctx, ext) -> value(my_i_stop),
                     body = (ctx, ext) -> Stepper(
                         seek = (ctx, ext) -> quote
-                            while $my_r + $(Tp(1)) < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext)))
+                            while $my_r + $(Tp(1)) < $my_r_stop && last($(ctx(lvl.srt))[$my_r]) < $(ctx(getstart(ext)))
                                 $my_r += $(Tp(1))
                             end
                         end,
-                        preamble = :($my_i = last($(lvl.ex).srt[$my_r])),
+                        preamble = :($my_i = last($(ctx(lvl.srt))[$my_r])),
                         stop = (ctx, ext) -> value(my_i),
                         chunk = Spike(
                             body = Fill(virtual_level_default(lvl)),
@@ -346,7 +343,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
-    Tp = lvl.Tp
+    Tp = postype(lvl)
     my_i = freshen(ctx.code, tag, :_i)
     my_q = freshen(ctx.code, tag, :_q)
     my_r = freshen(ctx.code, tag, :_r)
@@ -357,11 +354,11 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
     Furlable(
         body = (ctx, ext) -> Thunk(
             preamble = quote
-                $my_r = $(lvl.ex).ptr[$(ctx(pos))]
-                $my_r_stop = $(lvl.ex).ptr[$(ctx(pos)) + 1]
+                $my_r = $(ctx(lvl.ptr))[$(ctx(pos))]
+                $my_r_stop = $(ctx(lvl.ptr))[$(ctx(pos)) + 1]
                 if $my_r != 0 && $my_r < $my_r_stop
-                    $my_i = last($(lvl.ex).srt[$my_r])
-                    $my_i_stop = last($(lvl.ex).srt[$my_r_stop - 1])
+                    $my_i = last($(ctx(lvl.srt))[$my_r])
+                    $my_i_stop = last($(ctx(lvl.srt))[$my_r_stop - 1])
                 else
                     $my_i = $(Tp(1))
                     $my_i_stop = $(Tp(0))
@@ -372,11 +369,11 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
                     stop = (ctx, ext) -> value(my_i_stop),
                     body = (ctx, ext) -> Jumper(
                         seek = (ctx, ext) -> quote
-                            while $my_r + $(Tp(1)) < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext)))
+                            while $my_r + $(Tp(1)) < $my_r_stop && last($(ctx(lvl.srt))[$my_r]) < $(ctx(getstart(ext)))
                                 $my_r += $(Tp(1))
                             end
                         end,
-                        preamble = :($my_i = last($(lvl.ex).srt[$my_r])),
+                        preamble = :($my_i = last($(ctx(lvl.srt))[$my_r])),
                         stop = (ctx, ext) -> value(my_i),
                         chunk =  Spike(
                             body = Fill(virtual_level_default(lvl)),
@@ -425,7 +422,7 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseByteMapLev
     #is_serial(ctx.arch) || throw(FinchArchitectureError("SparseByteMapLevel updater is not concurrent"))
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
-    Tp = lvl.Tp
+    Tp = postype(lvl)
     my_q = freshen(ctx.code, tag, :_q)
     dirty = freshen(ctx.code, :dirty)
 
@@ -440,14 +437,14 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseByteMapLev
                 epilogue = quote
                     if $dirty
                         $(fbr.dirty) = true
-                        if !$(lvl.ex).tbl[$my_q]
-                            $(lvl.ex).tbl[$my_q] = true
+                        if !$(ctx(lvl.tbl))[$my_q]
+                            $(ctx(lvl.tbl))[$my_q] = true
                             $(lvl.qos_fill) += 1
                             if $(lvl.qos_fill) > $(lvl.qos_stop)
                                 $(lvl.qos_stop) = max($(lvl.qos_stop) << 1, 1)
-                                Finch.resize_if_smaller!($(lvl.ex).srt, $(lvl.qos_stop))
+                                Finch.resize_if_smaller!($(ctx(lvl.srt)), $(lvl.qos_stop))
                             end
-                            $(lvl.ex).srt[$(lvl.qos_fill)] = ($(ctx(pos)), $(ctx(idx)))
+                            $(ctx(lvl.srt))[$(lvl.qos_fill)] = ($(ctx(pos)), $(ctx(idx)))
                         end
                     end
                 end
