@@ -20,11 +20,11 @@ RepeatRLE (0.0) [1:9]
 
 ```
 """
-struct RepeatRLELevel{D, Ti, Tp, Tv, Vp<:AbstractVector, Vi<:AbstractVector, Vv<:AbstractVector}
+struct RepeatRLELevel{D, Ti, Tp, Tv, Ptr<:AbstractVector, Idx<:AbstractVector, Val<:AbstractVector}
     shape::Ti
-    ptr::Vp
-    idx::Vi
-    val::Vv
+    ptr::Ptr
+    idx::Idx
+    val::Val
 end
 
 const RepeatRLE = RepeatRLELevel
@@ -47,13 +47,13 @@ RepeatRLELevel{D, Ti, Tp, Tv}(shape, ptr, idx, val) where {D, Ti, Tp, Tv} = Repe
 Base.summary(::RepeatRLE{D}) where {D} = "RepeatRLE($(D))"
 similar_level(::RepeatRLELevel{D}) where {D} = RepeatRLE{D}()
 similar_level(::RepeatRLELevel{D}, dim, tail...) where {D} = RepeatRLE{D}(dim)
-data_rep_level(::Type{<:RepeatRLELevel{D, Ti, Tp, Tv, Vp, Vi, Vv}}) where {D, Ti, Tp, Tv, Vp, Vi, Vv} = RepeatData(D, Tv)
+data_rep_level(::Type{<:RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}}) where {D, Ti, Tp, Tv, Ptr, Idx, Val} = RepeatData(D, Tv)
 
-function postype(::Type{RepeatRLELevel{D, Ti, Tp, Tv, Vp, Vi, Vv}}) where {D, Ti, Tp, Tv, Vp, Vi, Vv}
+function postype(::Type{RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}}) where {D, Ti, Tp, Tv, Ptr, Idx, Val}
     return Tp
 end
 
-function moveto(lvl::RepeatRLELevel{D, Ti, Tp, Tv, Vp, Vi, Vv}, device) where {D, Ti, Tp, Tv, Vp, Vi, Vv}
+function moveto(lvl::RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}, device) where {D, Ti, Tp, Tv, Ptr, Idx, Val}
     ptr_2 = moveto(lvl.ptr, device)
     idx_2 = moveto(lvl.idx, device)
     val_2 = moveto(lvl.val, device)
@@ -65,16 +65,16 @@ countstored_level(lvl::RepeatRLELevel, pos) = lvl.ptr[pos + 1] - 1
 pattern!(lvl::RepeatRLELevel{D, Ti}) where {D, Ti} = 
     DenseLevel{Ti}(Pattern(), lvl.shape)
 
-redefault!(lvl::RepeatRLELevel{D, Ti, Tp, Tv, Vp, Vi, Vv}, init) where {D, Ti, Tp, Tv, Vp, Vi, Vv} = 
-    RepeatRLELevel{D, Ti, Tp, Tv, Vp, Vi, Vv}(lvl.val)
+redefault!(lvl::RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}, init) where {D, Ti, Tp, Tv, Ptr, Idx, Val} = 
+    RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}(lvl.val)
 
-function Base.show(io::IO, lvl::RepeatRLELevel{D, Ti, Tp, Tv, Vp, Vi, Vv}) where {D, Ti, Tp, Tv, Vp, Vi, Vv}
+function Base.show(io::IO, lvl::RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}) where {D, Ti, Tp, Tv, Ptr, Idx, Val}
     print(io, "RepeatRLE{")
     print(io, D)
     if get(io, :compact, false)
         print(io, "}(")
     else
-        print(io, ", $Ti, $Tp, $Tv, $Vp, $Vi, $Vv}(")
+        print(io, ", $Ti, $Tp, $Tv, $Ptr, $Idx, $Val}(")
     end
 
     show(io, lvl.shape)
@@ -82,11 +82,11 @@ function Base.show(io::IO, lvl::RepeatRLELevel{D, Ti, Tp, Tv, Vp, Vi, Vv}) where
     if get(io, :compact, false)
         print(io, "…")
     else
-        show(IOContext(io, :typeinfo=>Vp), lvl.ptr)
+        show(IOContext(io, :typeinfo=>Ptr), lvl.ptr)
         print(io, ", ")
-        show(IOContext(io, :typeinfo=>Vi), lvl.idx)
+        show(IOContext(io, :typeinfo=>Idx), lvl.idx)
         print(io, ", ")
-        show(IOContext(io, :typeinfo=>Vv), lvl.val)
+        show(IOContext(io, :typeinfo=>Val), lvl.val)
     end
     print(io, ")")
 end
@@ -105,7 +105,7 @@ end
 @inline level_ndims(::Type{<:RepeatRLELevel}) = 1
 @inline level_size(lvl::RepeatRLELevel) = (lvl.shape,)
 @inline level_axes(lvl::RepeatRLELevel) = (Base.OneTo(lvl.shape),)
-@inline level_eltype(::Type{RepeatRLELevel{D, Ti, Tp, Tv, Vp, Vi, Vv}}) where {D, Ti, Tp, Tv, Vp, Vi, Vv} = Tv
+@inline level_eltype(::Type{RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}}) where {D, Ti, Tp, Tv, Ptr, Idx, Val} = Tv
 @inline level_default(::Type{<:RepeatRLELevel{D}}) where {D} = D
 (fbr::AbstractFiber{<:RepeatRLELevel})() = fbr
 (fbr::Fiber{<:RepeatRLELevel})(idx...) = SubFiber(fbr.lvl, 1)(idx...)
@@ -132,7 +132,7 @@ end
 is_level_injective(::VirtualRepeatRLELevel, ctx) = [false]
 is_level_atomic(lvl::VirtualRepeatRLELevel, ctx) = false
 
-function virtualize(ex, ::Type{RepeatRLELevel{D, Ti, Tp, Tv, Vp, Vi, Vv}}, ctx, tag=:lvl) where {D, Ti, Tp, Tv, Vp, Vi, Vv}
+function virtualize(ex, ::Type{RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}}, ctx, tag=:lvl) where {D, Ti, Tp, Tv, Ptr, Idx, Val}
     sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Int)
     ros_fill = freshen(ctx, sym, :_ros_fill)

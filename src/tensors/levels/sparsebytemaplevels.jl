@@ -1,5 +1,5 @@
 """
-    SparseByteMapLevel{[Ti=Tuple{Int...}], [Tp=Int], [Vp] [BV]}(lvl, [dims])
+    SparseByteMapLevel{[Ti=Tuple{Int...}], [Tp=Int], [Ptr] [Tbl]}(lvl, [dims])
 
 Like the [`SparseListLevel`](@ref), but a dense bitmap is used to encode
 which slices are stored. This allows the ByteMap level to support random access.
@@ -28,12 +28,12 @@ SparseByteMap (0.0) [:,1:3]
 │ ├─[3]: 40.0
 ```
 """
-struct SparseByteMapLevel{Ti, Tp, Vp<:AbstractVector, BV<:AbstractVector{Bool}, VTpi<:AbstractVector{<:Tuple{Any, Any}}, Lvl}
+struct SparseByteMapLevel{Ti, Tp, Ptr, Tbl, Srt, Lvl}
     lvl::Lvl
     shape::Ti
-    ptr:: Vp
-    tbl::BV
-    srt::VTpi
+    ptr::Ptr
+    tbl::Tbl
+    srt::Srt
 end
 const SparseByteMap = SparseByteMapLevel
 SparseByteMapLevel(lvl::Lvl) where {Lvl} = SparseByteMapLevel{Int}(lvl)
@@ -41,24 +41,24 @@ SparseByteMapLevel(lvl, shape, args...) = SparseByteMapLevel{typeof(shape)}(lvl,
 SparseByteMapLevel{Ti}(lvl::Lvl, args...) where {Ti, Lvl} = SparseByteMapLevel{Ti, postype(Lvl)}(lvl, args...)
 SparseByteMapLevel{Ti, Tp}(lvl, args...) where {Ti, Tp} = SparseByteMapLevel{Ti, Tp, memtype(typeof(lvl)){Tp, 1}, memtype(typeof(lvl)){Bool, 1}, memtype(typeof(lvl)){Tuple{Tp, Ti}, 1}, typeof(lvl)}(lvl, args...)
 
-SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}(lvl) where {Ti, Tp, Vp, BV, VTpi, Lvl} = SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}(lvl, zero(Ti))
-SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}(lvl, shape) where {Ti, Tp, Vp, BV, VTpi, Lvl} = 
-    SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}(lvl, Ti(shape), Tp[1], Bool[], Tuple{Tp, Ti}[])
+SparseByteMapLevel{Ti, Tp, Ptr, Tbl, Srt, Lvl}(lvl) where {Ti, Tp, Ptr, Tbl, Srt, Lvl} = SparseByteMapLevel{Ti, Tp, Ptr, Tbl, Srt, Lvl}(lvl, zero(Ti))
+SparseByteMapLevel{Ti, Tp, Ptr, Tbl, Srt, Lvl}(lvl, shape) where {Ti, Tp, Ptr, Tbl, Srt, Lvl} = 
+    SparseByteMapLevel{Ti, Tp, Ptr, Tbl, Srt, Lvl}(lvl, Ti(shape), Tp[1], Bool[], Tuple{Tp, Ti}[])
 
 
 Base.summary(lvl::SparseByteMapLevel) = "SparseByteMap($(summary(lvl.lvl)))"
 similar_level(lvl::SparseByteMapLevel) = SparseByteMap(similar_level(lvl.lvl))
 similar_level(lvl::SparseByteMapLevel, dims...) = SparseByteMap(similar_level(lvl.lvl, dims[1:end-1]...), dims[end])
 
-function memtype(::Type{SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}}) where {Ti, Tp, Vp, BV, VTpi, Lvl}
+function memtype(::Type{SparseByteMapLevel{Ti, Tp, Ptr, Tbl, Srt, Lvl}}) where {Ti, Tp, Ptr, Tbl, Srt, Lvl}
     return memtype(Lvl)
 end
 
-function postype(::Type{SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}}) where {Ti, Tp, Vp, BV, VTpi, Lvl}
+function postype(::Type{SparseByteMapLevel{Ti, Tp, Ptr, Tbl, Srt, Lvl}}) where {Ti, Tp, Ptr, Tbl, Srt, Lvl}
     return Tp
 end
 
-function moveto(lvl:: SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}, ::Type{MemType}) where {Ti, Tp, Vp, BV, VTpi, Lvl, MemType <: AbstractArray}
+function moveto(lvl::SparseByteMapLevel{Ti, Tp, Ptr, Tbl, Srt, Lvl}, ::Type{MemType}) where {Ti, Tp, Ptr, Tbl, Srt, Lvl, MemType <: AbstractArray}
     lvl_2 = moveto(lvl.lvl, MemType)
     ptr_2 = MemType{Tp, 1}(lvl.ptr)
     tbl_2 = MemType{Bool, 1}(lvl.tbl)
@@ -78,7 +78,7 @@ function countstored_level(lvl::SparseByteMapLevel, pos)
     countstored_level(lvl.lvl, lvl.ptr[pos + 1] - 1)
 end
 
-function Base.show(io::IO, lvl::SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl},) where {Ti, Tp, Vp, BV, VTpi, Lvl}
+function Base.show(io::IO, lvl::SparseByteMapLevel{Ti, Tp, Ptr, Tbl, Srt, Lvl},) where {Ti, Tp, Ptr, Tbl, Srt, Lvl}
     if get(io, :compact, false)
         print(io, "SparseByteMap(")
     else
@@ -91,11 +91,11 @@ function Base.show(io::IO, lvl::SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl},) 
     if get(io, :compact, false)
         print(io, "…")
     else
-        show(IOContext(io, :typeinfo=>Vp), lvl.ptr)
+        show(IOContext(io, :typeinfo=>Ptr), lvl.ptr)
         print(io, ", ")
-        show(IOContext(io, :typeinfo=>BV), lvl.tbl)
+        show(IOContext(io, :typeinfo=>Tbl), lvl.tbl)
         print(io, ", ")
-        show(IOContext(io, :typeinfo=>VTpi), lvl.srt)
+        show(IOContext(io, :typeinfo=>Srt), lvl.srt)
     end
     print(io, ")")
 end
@@ -111,12 +111,12 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseByt
     display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
 end
 
-@inline level_ndims(::Type{<:SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}}) where {Ti, Tp, Vp, BV, VTpi, Lvl} = 1 + level_ndims(Lvl)
+@inline level_ndims(::Type{<:SparseByteMapLevel{Ti, Tp, Ptr, Tbl, Srt, Lvl}}) where {Ti, Tp, Ptr, Tbl, Srt, Lvl} = 1 + level_ndims(Lvl)
 @inline level_size(lvl::SparseByteMapLevel) = (level_size(lvl.lvl)..., lvl.shape)
 @inline level_axes(lvl::SparseByteMapLevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.shape))
-@inline level_eltype(::Type{<:SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}}) where {Ti, Tp, Vp, BV, VTpi, Lvl} = level_eltype(Lvl)
-@inline level_default(::Type{<:SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}}) where {Ti, Tp, Vp, BV, VTpi, Lvl}= level_default(Lvl)
-data_rep_level(::Type{<:SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}}) where {Ti, Tp, Vp, BV, VTpi, Lvl} = SparseData(data_rep_level(Lvl))
+@inline level_eltype(::Type{<:SparseByteMapLevel{Ti, Tp, Ptr, Tbl, Srt, Lvl}}) where {Ti, Tp, Ptr, Tbl, Srt, Lvl} = level_eltype(Lvl)
+@inline level_default(::Type{<:SparseByteMapLevel{Ti, Tp, Ptr, Tbl, Srt, Lvl}}) where {Ti, Tp, Ptr, Tbl, Srt, Lvl}= level_default(Lvl)
+data_rep_level(::Type{<:SparseByteMapLevel{Ti, Tp, Ptr, Tbl, Srt, Lvl}}) where {Ti, Tp, Ptr, Tbl, Srt, Lvl} = SparseData(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:SparseByteMapLevel})() = fbr
 function (fbr::SubFiber{<:SparseByteMapLevel{Ti}})(idxs...) where {Ti}
@@ -145,7 +145,7 @@ end
 is_level_injective(lvl::VirtualSparseByteMapLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., false]
 is_level_atomic(lvl::VirtualSparseByteMapLevel, ctx) = false
 
-function virtualize(ex, ::Type{SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Vp, BV, VTpi, Lvl}
+function virtualize(ex, ::Type{SparseByteMapLevel{Ti, Tp, Ptr, Tbl, Srt, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Ptr, Tbl, Srt, Lvl}
     sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Int)
     qos_fill = freshen(ctx, sym, :_qos_fill)

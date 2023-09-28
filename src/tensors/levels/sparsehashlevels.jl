@@ -1,5 +1,5 @@
 """
-    SparseHashLevel{[N], [Ti=Tuple{Int...}], [Tp=Int], [Tbl], [Vp] [VTpip]}(lvl, [dims])
+    SparseHashLevel{[N], [Ti=Tuple{Int...}], [Tp=Int], [Tbl], [Ptr] [Srt]}(lvl, [dims])
 
 A subfiber of a sparse level does not need to represent slices which are
 entirely [`default`](@ref). Instead, only potentially non-default slices are
@@ -10,8 +10,8 @@ in the subfiber, so fibers in the sublevel are the slices `A[:, ..., :, i_1,
 
 `Ti` is the type of the last `N` fiber indices, and `Tp` is the type used for
 positions in the level. `Tbl` is the type of the dictionary used to do hashing,
-a subtype of `Dict{Tuple{Tp, Ti}, Tp}`. Finally, `Vp` stores the positions
-of subfibers and `VTpip` is a storage type that is a subtype of `AbstractVector{Pair{Tuple{Tp, Ti}, Tp}}`.
+`Ptr` stores the positions of subfibers, and `Srt` stores the sorted key/value
+pairs in the hash table.
 
 ```jldoctest
 julia> Fiber!(Dense(SparseHash{1}(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
@@ -32,12 +32,12 @@ SparseHash (0.0) [1:3,1:3]
 ├─├─[3, 3]: 40.0
 ```
 """
-struct SparseHashLevel{N, Ti<:Tuple, Tp, Tbl<:Dict{Tuple{Tp, Ti}, Tp}, Vp<:AbstractVector{<:Tp}, VTpip<:AbstractVector{Pair{Tuple{Tp, Ti}, Tp}}, Lvl}
+struct SparseHashLevel{N, Ti<:Tuple, Tp, Tbl, Ptr, Srt, Lvl}
     lvl::Lvl
     shape::Ti
     tbl::Tbl
-    ptr::Vp
-    srt::VTpip
+    ptr::Ptr
+    srt::Srt
 end
 const SparseHash = SparseHashLevel
 
@@ -52,45 +52,45 @@ SparseHashLevel{N, Ti, Tp}(lvl, args...) where {N, Ti, Tp} = SparseHashLevel{N, 
 # SparseHashLevel{N, Ti, Tp}(lvl, args...) where {N, Ti, Tp} =
 #     SparseHashLevel{N, Ti, Tp, Dict{Tuple{Tp, Ti}, Tp}}(lvl, args...)
 SparseHashLevel{N, Ti, Tp, Tbl}(lvl::Lvl, args...) where {N, Ti, Tp, Tbl, Lvl} = SparseHashLevel{N, Ti, Tp, Tbl, (memtype(typeof(lvl))){Tp, 1}, (memtype(typeof(lvl))){Pair{Tuple{Tp, Ti}, Tp}, 1}, Lvl}(lvl, args...)
-SparseHashLevel{N, Ti, Tp, Tbl, Vp, VTpip}(lvl::Lvl, args...) where {N, Ti, Tp, Tbl, Vp, VTpip, Lvl} = SparseHashLevel{N, Ti, Tp, Tbl, Vp, VTpip, Lvl}(lvl::Lvl, args...)
+SparseHashLevel{N, Ti, Tp, Tbl, Ptr, Srt}(lvl::Lvl, args...) where {N, Ti, Tp, Tbl, Ptr, Srt, Lvl} = SparseHashLevel{N, Ti, Tp, Tbl, Ptr, Srt, Lvl}(lvl::Lvl, args...)
 
-SparseHashLevel{N, Ti, Tp, Tbl, Vp, VTpip, Lvl}(lvl) where {N, Ti, Tp, Tbl, Vp, VTpip, Lvl} =
-    SparseHashLevel{N, Ti, Tp, Tbl, Vp, VTpip, Lvl}(lvl, ((zero(ti) for ti in Ti.parameters)..., ))
-SparseHashLevel{N, Ti, Tp, Tbl, Vp, VTpip, Lvl}(lvl, shape) where {N, Ti, Tp, Tbl, Vp, VTpip, Lvl} =
-    SparseHashLevel{N, Ti, Tp, Tbl, Vp, VTpip, Lvl}(lvl, shape, Tbl())
-SparseHashLevel{N, Ti, Tp, Tbl, Vp, VTpip, Lvl}(lvl, shape, tbl) where {N, Ti, Tp, Tbl, Vp, VTpip, Lvl} =
-    SparseHashLevel{N, Ti, Tp, Tbl, Vp, VTpip, Lvl}(lvl, Ti(shape), tbl, Tp[1], Pair{Tuple{Tp, Ti}, Tp}[])
+SparseHashLevel{N, Ti, Tp, Tbl, Ptr, Srt, Lvl}(lvl) where {N, Ti, Tp, Tbl, Ptr, Srt, Lvl} =
+    SparseHashLevel{N, Ti, Tp, Tbl, Ptr, Srt, Lvl}(lvl, ((zero(ti) for ti in Ti.parameters)..., ))
+SparseHashLevel{N, Ti, Tp, Tbl, Ptr, Srt, Lvl}(lvl, shape) where {N, Ti, Tp, Tbl, Ptr, Srt, Lvl} =
+    SparseHashLevel{N, Ti, Tp, Tbl, Ptr, Srt, Lvl}(lvl, shape, Tbl())
+SparseHashLevel{N, Ti, Tp, Tbl, Ptr, Srt, Lvl}(lvl, shape, tbl) where {N, Ti, Tp, Tbl, Ptr, Srt, Lvl} =
+    SparseHashLevel{N, Ti, Tp, Tbl, Ptr, Srt, Lvl}(lvl, Ti(shape), tbl, Tp[1], Pair{Tuple{Tp, Ti}, Tp}[])
 
 Base.summary(lvl::SparseHashLevel{N}) where {N} = "SparseHash{$N}($(summary(lvl.lvl)))"
 similar_level(lvl::SparseHashLevel{N}) where {N} = SparseHashLevel{N}(similar_level(lvl.lvl))
 similar_level(lvl::SparseHashLevel{N}, tail...) where {N} = SparseHashLevel{N}(similar_level(lvl.lvl, tail[1:end-N]...), (tail[end-N+1:end]...,))
 
-function memtype(::Type{SparseHashLevel{N, Ti, Tp, Tbl, Vp, VTpip, Lvl}}) where {N, Ti, Tp, Tbl, Vp, VTpip, Lvl}
-    return memtype(Vp)
+function memtype(::Type{SparseHashLevel{N, Ti, Tp, Tbl, Ptr, Srt, Lvl}}) where {N, Ti, Tp, Tbl, Ptr, Srt, Lvl}
+    return memtype(Ptr)
 end
 
-function postype(::Type{SparseHashLevel{N, Ti, Tp, Tbl, Vp, VTpip, Lvl}}) where {N, Ti, Tp, Tbl, Vp, VTpip, Lvl}
+function postype(::Type{SparseHashLevel{N, Ti, Tp, Tbl, Ptr, Srt, Lvl}}) where {N, Ti, Tp, Tbl, Ptr, Srt, Lvl}
     return Tp
 end
 
-function moveto(lvl::SparseHashLevel{N, Ti, Tp, Tbl, Vp, VTpip, Lvl}, ::Type{MemType}) where {N, Ti, Tp, Tbl, Vp, VTpip, Lvl, MemType <: AbstractArray}
+function moveto(lvl::SparseHashLevel{N, Ti, Tp, Tbl, Ptr, Srt, Lvl}, ::Type{MemType}) where {N, Ti, Tp, Tbl, Ptr, Srt, Lvl, MemType <: AbstractArray}
     lvl_2 = moveto(lvl.lvl, MemType)
     ptr_2 = MemType{Tp, 1}(lvl.ptr)
     srt_2 = MemType{Pair{Tuple{Tp, Ti}, Tp}, 1}(lvl.srt)
     return SparseHashLevel{N, Ti, Tp, Tbl, typeof(ptr_2), typeof(srt_2), typeof(lvl_2)}(lvl_2, lvl.shape, lvl.tbl, ptr_2, srt_2)
 end
 
-pattern!(lvl::SparseHashLevel{N, Ti, Tp, Tbl, Vp, VTpip, Lvl}) where {N, Ti, Tp, Tbl, Vp, VTpip, Lvl} = 
+pattern!(lvl::SparseHashLevel{N, Ti, Tp, Tbl, Ptr, Srt, Lvl}) where {N, Ti, Tp, Tbl, Ptr, Srt, Lvl} = 
     SparseHashLevel{N, Ti, Tp, Tbl}(pattern!(lvl.lvl), lvl.shape, lvl.tbl, lvl.ptr, lvl.srt)
 
 function countstored_level(lvl::SparseHashLevel, pos)
     countstored_level(lvl.lvl, lvl.ptr[pos + 1] - 1)
 end
 
-redefault!(lvl::SparseHashLevel{N, Ti, Tp, Tbl, Vp, VTpip, Lvl}, init) where {N, Ti, Tp, Tbl, Vp, VTpip, Lvl} = 
-    SparseHashLevel{N, Ti, Tp, Tbl, Vp, VTpip, Lvl}(redefault!(lvl.lvl, init), lvl.shape, lvl.tbl, lvl.ptr, lvl.srt)
+redefault!(lvl::SparseHashLevel{N, Ti, Tp, Tbl, Ptr, Srt, Lvl}, init) where {N, Ti, Tp, Tbl, Ptr, Srt, Lvl} = 
+    SparseHashLevel{N, Ti, Tp, Tbl, Ptr, Srt, Lvl}(redefault!(lvl.lvl, init), lvl.shape, lvl.tbl, lvl.ptr, lvl.srt)
 
-function Base.show(io::IO, lvl::SparseHashLevel{N, Ti, Tp, Tbl, Vp, VTpip, Lvl}) where {N, Ti, Tp, Tbl, Vp, VTpip, Lvl}
+function Base.show(io::IO, lvl::SparseHashLevel{N, Ti, Tp, Tbl, Ptr, Srt, Lvl}) where {N, Ti, Tp, Tbl, Ptr, Srt, Lvl}
     if get(io, :compact, false)
         print(io, "SparseHash{$N}(")
     else
@@ -107,9 +107,9 @@ function Base.show(io::IO, lvl::SparseHashLevel{N, Ti, Tp, Tbl, Vp, VTpip, Lvl})
         print(io, "(")
         print(io, join(sort!(collect(pairs(lvl.tbl))), ", "))
         print(io, "), ")
-        show(IOContext(io, :typeinfo=>Vp), lvl.ptr)
+        show(IOContext(io, :typeinfo=>Ptr), lvl.ptr)
         print(io, ", ")
-        show(IOContext(io, :typeinfo=>VTpip), lvl.srt)
+        show(IOContext(io, :typeinfo=>Srt), lvl.srt)
     end
     print(io, ")")
 end
@@ -126,12 +126,12 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseHas
     print(io, "]")
     display_fiber_data(io, mime, fbr, depth, N, crds, print_coord, get_fbr)
 end
-@inline level_ndims(::Type{<:SparseHashLevel{N, Ti, Tp, Tbl, Vp, VTpip, Lvl}}) where {N, Ti, Tp, Tbl, Vp, VTpip, Lvl} = N + level_ndims(Lvl)
+@inline level_ndims(::Type{<:SparseHashLevel{N, Ti, Tp, Tbl, Ptr, Srt, Lvl}}) where {N, Ti, Tp, Tbl, Ptr, Srt, Lvl} = N + level_ndims(Lvl)
 @inline level_size(lvl::SparseHashLevel) = (lvl.shape..., level_size(lvl.lvl)...)
 @inline level_axes(lvl::SparseHashLevel) = (map(Base.OneTo, lvl.shape)..., level_axes(lvl.lvl)...)
-@inline level_eltype(::Type{<:SparseHashLevel{N, Ti, Tp, Tbl, Vp, VTpip, Lvl}}) where {N, Ti, Tp, Tbl, Vp, VTpip, Lvl} = level_eltype(Lvl)
-@inline level_default(::Type{<:SparseHashLevel{N, Ti, Tp, Tbl, Vp, VTpip, Lvl}}) where {N, Ti, Tp, Tbl, Vp, VTpip, Lvl} = level_default(Lvl)
-data_rep_level(::Type{<:SparseHashLevel{N, Ti, Tp, Tbl, Vp, VTpip, Lvl}}) where {N, Ti, Tp, Tbl, Vp, VTpip, Lvl} = (SparseData^N)(data_rep_level(Lvl))
+@inline level_eltype(::Type{<:SparseHashLevel{N, Ti, Tp, Tbl, Ptr, Srt, Lvl}}) where {N, Ti, Tp, Tbl, Ptr, Srt, Lvl} = level_eltype(Lvl)
+@inline level_default(::Type{<:SparseHashLevel{N, Ti, Tp, Tbl, Ptr, Srt, Lvl}}) where {N, Ti, Tp, Tbl, Ptr, Srt, Lvl} = level_default(Lvl)
+data_rep_level(::Type{<:SparseHashLevel{N, Ti, Tp, Tbl, Ptr, Srt, Lvl}}) where {N, Ti, Tp, Tbl, Ptr, Srt, Lvl} = (SparseData^N)(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:SparseHashLevel})() = fbr
 (fbr::SubFiber{<:SparseHashLevel})() = fbr
@@ -158,8 +158,8 @@ mutable struct VirtualSparseHashLevel <: AbstractVirtualLevel
     Ti
     Tp
     Tbl
-    Vp
-    VTpip
+    Ptr
+    Srt
     shape
     qos_fill
     qos_stop
@@ -169,7 +169,7 @@ end
 is_level_injective(lvl::VirtualSparseHashLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., (true for _ in 1:lvl.N)...]
 is_level_atomic(lvl::VirtualSparseHashLevel, ctx) = false
 
-function virtualize(ex, ::Type{SparseHashLevel{N, Ti, Tp, Tbl, Vp, VTpip, Lvl}}, ctx, tag=:lvl) where {N, Ti, Tp, Tbl, Vp, VTpip, Lvl}  
+function virtualize(ex, ::Type{SparseHashLevel{N, Ti, Tp, Tbl, Ptr, Srt, Lvl}}, ctx, tag=:lvl) where {N, Ti, Tp, Tbl, Ptr, Srt, Lvl}  
     sym = freshen(ctx, tag)
 
     shape = map(n->value(:($sym.shape[$n]), Int), 1:N)
@@ -182,11 +182,11 @@ function virtualize(ex, ::Type{SparseHashLevel{N, Ti, Tp, Tbl, Vp, VTpip, Lvl}},
         $(qos_stop) = $(qos_fill)
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualSparseHashLevel(lvl_2, sym, N, Ti, Tp, Tbl, Vp, VTpip, shape, qos_fill, qos_stop, Lvl)
+    VirtualSparseHashLevel(lvl_2, sym, N, Ti, Tp, Tbl, Ptr, Srt, shape, qos_fill, qos_stop, Lvl)
 end
 function lower(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
-        $SparseHashLevel{$(lvl.N), $(lvl.Ti), $(lvl.Tp), $(lvl.Tbl), $(lvl.Vp), $(lvl.VTpip), $(lvl.Lvl)}(
+        $SparseHashLevel{$(lvl.N), $(lvl.Ti), $(lvl.Tp), $(lvl.Tbl), $(lvl.Ptr), $(lvl.Srt), $(lvl.Lvl)}(
             $(ctx(lvl.lvl)),
             ($(map(ctx, lvl.shape)...),),
             $(lvl.ex).tbl,

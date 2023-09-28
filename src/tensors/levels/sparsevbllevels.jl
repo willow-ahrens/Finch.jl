@@ -1,5 +1,5 @@
 """
-SparseVBLLevel{[Ti=Int], [Tp=Int], [Vp=Vector{Tp}], [Vi=Vector{Ti}], [VTo=Vector{VTo}]}(lvl, [dim])
+SparseVBLLevel{[Ti=Int], [Tp=Int], [Ptr=Vector{Tp}], [Idx=Vector{Ti}], [Ofs=Vector{Ofs}]}(lvl, [dim])
 
 Like the [`SparseListLevel`](@ref), but contiguous subfibers are stored together in blocks.
 
@@ -23,12 +23,12 @@ SparseList (0.0) [:,1:3]
 │ ├─[1]: 20.0
 │ ├─[3]: 40.0
 """
-struct SparseVBLLevel{Ti, Tp, Vp<:AbstractVector, Vi<:AbstractVector, VTo<:AbstractVector, Lvl}
+struct SparseVBLLevel{Ti, Tp, Ptr<:AbstractVector, Idx<:AbstractVector, Ofs<:AbstractVector, Lvl}
     lvl::Lvl
     shape::Ti
-    ptr::Vp
-    idx::Vi
-    ofs::VTo
+    ptr::Ptr
+    idx::Idx
+    ofs::Ofs
 end
 
 const SparseVBL = SparseVBLLevel
@@ -37,20 +37,20 @@ SparseVBLLevel(lvl, shape, args...) = SparseVBLLevel{typeof(shape)}(lvl, shape, 
 SparseVBLLevel{Ti}(lvl, args...) where {Ti} = SparseVBLLevel{Ti, postype(typeof(lvl))}(lvl, args...)
 SparseVBLLevel{Ti, Tp}(lvl, args...) where {Ti, Tp} = SparseVBLLevel{Ti, Tp, memtype(typeof(lvl)){Tp, 1}, memtype(typeof(lvl)){Ti, 1}, memtype(typeof(lvl)){Tp, 1}, typeof(lvl)}(lvl, args...)
 
-SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}(lvl) where {Ti, Tp, Vp, Vi, VTo, Lvl} = SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}(lvl, zero(Ti))
-SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}(lvl, shape) where {Ti, Tp, Vp, Vi, VTo, Lvl} = 
-    SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}(lvl, shape, Tp[1], Ti[], Tp[])
+SparseVBLLevel{Ti, Tp, Ptr, Idx, Ofs, Lvl}(lvl) where {Ti, Tp, Ptr, Idx, Ofs, Lvl} = SparseVBLLevel{Ti, Tp, Ptr, Idx, Ofs, Lvl}(lvl, zero(Ti))
+SparseVBLLevel{Ti, Tp, Ptr, Idx, Ofs, Lvl}(lvl, shape) where {Ti, Tp, Ptr, Idx, Ofs, Lvl} = 
+    SparseVBLLevel{Ti, Tp, Ptr, Idx, Ofs, Lvl}(lvl, shape, Tp[1], Ti[], Tp[])
 
 
-function memtype(::Type{SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}}) where {Ti, Tp, Vp, Vi, VTo, Lvl}
+function memtype(::Type{SparseVBLLevel{Ti, Tp, Ptr, Idx, Ofs, Lvl}}) where {Ti, Tp, Ptr, Idx, Ofs, Lvl}
     return memtype(Lvl)
 end
 
-function postype(::Type{SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}}) where {Ti, Tp, Vp, Vi, VTo, Lvl}
+function postype(::Type{SparseVBLLevel{Ti, Tp, Ptr, Idx, Ofs, Lvl}}) where {Ti, Tp, Ptr, Idx, Ofs, Lvl}
     return Tp
 end
 
-function moveto(lvl::SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl},  ::Type{MemType}) where {Ti, Tp, Vp, Vi, VTo, Lvl, MemType <: AbstractArray}
+function moveto(lvl::SparseVBLLevel{Ti, Tp, Ptr, Idx, Ofs, Lvl},  ::Type{MemType}) where {Ti, Tp, Ptr, Idx, Ofs, Lvl, MemType <: AbstractArray}
     lvl_2 = moveto(lvl.lvl, MemType)
     ptr_2 = MemType{Tp, 1}(lvl.ptr)
     idx_2 = MemType{Ti, 1}(lvl.idx)
@@ -62,17 +62,17 @@ Base.summary(lvl::SparseVBLLevel) = "SparseVBL($(summary(lvl.lvl)))"
 similar_level(lvl::SparseVBLLevel) = SparseVBL(similar_level(lvl.lvl))
 similar_level(lvl::SparseVBLLevel, dim, tail...) = SparseVBL(similar_level(lvl.lvl, tail...), dim)
 
-pattern!(lvl::SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}) where {Ti, Tp, Vp, Vi, VTo, Lvl} = 
-    SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.idx, lvl.ofs)
+pattern!(lvl::SparseVBLLevel{Ti, Tp, Ptr, Idx, Ofs, Lvl}) where {Ti, Tp, Ptr, Idx, Ofs, Lvl} = 
+    SparseVBLLevel{Ti, Tp, Ptr, Idx, Ofs, Lvl}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.idx, lvl.ofs)
 
 function countstored_level(lvl::SparseVBLLevel, pos)
     countstored_level(lvl.lvl, lvl.ofs[lvl.ptr[pos + 1]]-1)
 end
 
-redefault!(lvl::SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}, init) where {Ti, Tp, Vp, Vi, VTo, Lvl} = 
-    SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.idx, lvl.ofs)
+redefault!(lvl::SparseVBLLevel{Ti, Tp, Ptr, Idx, Ofs, Lvl}, init) where {Ti, Tp, Ptr, Idx, Ofs, Lvl} = 
+    SparseVBLLevel{Ti, Tp, Ptr, Idx, Ofs, Lvl}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.idx, lvl.ofs)
 
-function Base.show(io::IO, lvl::SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}) where {Ti, Tp, Vp, Vi, VTo, Lvl}
+function Base.show(io::IO, lvl::SparseVBLLevel{Ti, Tp, Ptr, Idx, Ofs, Lvl}) where {Ti, Tp, Ptr, Idx, Ofs, Lvl}
     if get(io, :compact, false)
         print(io, "SparseVBL(")
     else
@@ -85,11 +85,11 @@ function Base.show(io::IO, lvl::SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}) where 
     if get(io, :compact, false)
         print(io, "…")
     else
-        show(IOContext(io, :typeinfo=>Vp), lvl.ptr)
+        show(IOContext(io, :typeinfo=>Ptr), lvl.ptr)
         print(io, ", ")
-        show(IOContext(io, :typeinfo=>Vi), lvl.idx)
+        show(IOContext(io, :typeinfo=>Idx), lvl.idx)
         print(io, ", ")
-        show(IOContext(io, :typeinfo=>VTo), lvl.ofs)
+        show(IOContext(io, :typeinfo=>Ofs), lvl.ofs)
     end
     print(io, ")")
 end
@@ -110,19 +110,19 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseVBL
     display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
 end
 
-@inline level_ndims(::Type{<:SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}}) where {Ti, Tp, Vp, Vi, VTo, Lvl} = 1 + level_ndims(Lvl)
+@inline level_ndims(::Type{<:SparseVBLLevel{Ti, Tp, Ptr, Idx, Ofs, Lvl}}) where {Ti, Tp, Ptr, Idx, Ofs, Lvl} = 1 + level_ndims(Lvl)
 @inline level_size(lvl::SparseVBLLevel) = (lvl.shape, level_size(lvl.lvl)...)
 @inline level_axes(lvl::SparseVBLLevel) = (Base.OneTo(lvl.shape), level_axes(lvl.lvl)...)
-@inline level_eltype(::Type{<:SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}}) where {Ti, Tp, Vp, Vi, VTo, Lvl} = level_eltype(Lvl)
-@inline level_default(::Type{<:SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}}) where {Ti, Tp, Vp, Vi, VTo, Lvl} = level_default(Lvl)
-data_rep_level(::Type{<:SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}}) where {Ti, Tp, Vp, Vi, VTo, Lvl} = SparseData(data_rep_level(Lvl))
+@inline level_eltype(::Type{<:SparseVBLLevel{Ti, Tp, Ptr, Idx, Ofs, Lvl}}) where {Ti, Tp, Ptr, Idx, Ofs, Lvl} = level_eltype(Lvl)
+@inline level_default(::Type{<:SparseVBLLevel{Ti, Tp, Ptr, Idx, Ofs, Lvl}}) where {Ti, Tp, Ptr, Idx, Ofs, Lvl} = level_default(Lvl)
+data_rep_level(::Type{<:SparseVBLLevel{Ti, Tp, Ptr, Idx, Ofs, Lvl}}) where {Ti, Tp, Ptr, Idx, Ofs, Lvl} = SparseData(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:SparseVBLLevel})() = fbr
 function (fbr::SubFiber{<:SparseVBLLevel})(idxs...)
     isempty(idxs) && return fbr
     lvl = fbr.lvl
     p = fbr.pos
-    r = lvl.ptr[p] + searchsortedfirst(@view(lvl.idx[lvl.ptr[p]:lvl.ptr[p + 1] - 1]), idxs[end]) - 1
+    r = lvl.ptr[p] + searchsortedfirst(@Idxew(lvl.idx[lvl.ptr[p]:lvl.ptr[p + 1] - 1]), idxs[end]) - 1
     r < lvl.ptr[p + 1] || return default(fbr)
     q = lvl.ofs[r + 1] - 1 - lvl.idx[r] + idxs[end]
     q >= lvl.ofs[r] || return default(fbr)
@@ -130,7 +130,7 @@ function (fbr::SubFiber{<:SparseVBLLevel})(idxs...)
     return fbr_2(idxs[1:end-1]...)
 end
 
-mutable struct VirtualSparseVBLLevel <: AbstractVirtualLevel
+mutable struct IdxrtualSparseVBLLevel <: AbstractIdxrtualLevel
     lvl
     ex
     Ti
@@ -141,21 +141,21 @@ mutable struct VirtualSparseVBLLevel <: AbstractVirtualLevel
     ros_fill
     ros_stop
     dirty
-    Vp
-    Vi
-    VTo
+    Ptr
+    Idx
+    Ofs
     Lvl
     prev_pos
 end
 
-is_level_injective(lvl::VirtualSparseVBLLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., false]
-is_level_atomic(lvl::VirtualSparseVBLLevel, ctx) = false
+is_level_injective(lvl::IdxrtualSparseVBLLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., false]
+is_level_atomic(lvl::IdxrtualSparseVBLLevel, ctx) = false
   
-memtype(lvl::VirtualSparseVBLLevel) = memtype(lvl.lvl)
-postype(lvl::VirtualSparseVBLLevel) = postype(lvl.lvl)
+memtype(lvl::IdxrtualSparseVBLLevel) = memtype(lvl.lvl)
+postype(lvl::IdxrtualSparseVBLLevel) = postype(lvl.lvl)
 
 
-function virtualize(ex, ::Type{SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Vp, Vi, VTo, Lvl}
+function Idxrtualize(ex, ::Type{SparseVBLLevel{Ti, Tp, Ptr, Idx, Ofs, Lvl}}, ctx, tag=:lvl) where {Ti, Tp, Ptr, Idx, Ofs, Lvl}
     sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Int)
     qos_fill = freshen(ctx, sym, :_qos_fill)
@@ -167,13 +167,13 @@ function virtualize(ex, ::Type{SparseVBLLevel{Ti, Tp, Vp, Vi, VTo, Lvl}}, ctx, t
         $sym = $ex
     end)
     prev_pos = freshen(ctx, sym, :_prev_pos)
-    lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
+    lvl_2 = Idxrtualize(:($sym.lvl), Lvl, ctx, sym)
 
-    VirtualSparseVBLLevel(lvl_2, sym, Ti, Tp, shape, qos_fill, qos_stop, ros_fill, ros_stop, dirty, Vp, Vi, VTo, Lvl, prev_pos)
+    IdxrtualSparseVBLLevel(lvl_2, sym, Ti, Tp, shape, qos_fill, qos_stop, ros_fill, ros_stop, dirty, Ptr, Idx, Ofs, Lvl, prev_pos)
 end
-function lower(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, ::DefaultStyle)
+function lower(lvl::IdxrtualSparseVBLLevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
-        $SparseVBLLevel{$(lvl.Ti), $(lvl.Tp), $(lvl.Vp), $(lvl.Vi), $(lvl.VTo), $(lvl.Lvl)}(
+        $SparseVBLLevel{$(lvl.Ti), $(lvl.Tp), $(lvl.Ptr), $(lvl.Idx), $(lvl.Ofs), $(lvl.Lvl)}(
             $(ctx(lvl.lvl)),
             $(ctx(lvl.shape)),
             $(lvl.ex).ptr,
@@ -183,23 +183,23 @@ function lower(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, ::DefaultStyle
     end
 end
 
-Base.summary(lvl::VirtualSparseVBLLevel) = "SparseVBL($(summary(lvl.lvl)))"
+Base.summary(lvl::IdxrtualSparseVBLLevel) = "SparseVBL($(summary(lvl.lvl)))"
 
-function virtual_level_size(lvl::VirtualSparseVBLLevel, ctx)
+function Idxrtual_level_size(lvl::IdxrtualSparseVBLLevel, ctx)
     ext = Extent(literal(lvl.Ti(1)), lvl.shape)
-    (virtual_level_size(lvl.lvl, ctx)..., ext)
+    (Idxrtual_level_size(lvl.lvl, ctx)..., ext)
 end
 
-function virtual_level_resize!(lvl::VirtualSparseVBLLevel, ctx, dims...)
+function Idxrtual_level_resize!(lvl::IdxrtualSparseVBLLevel, ctx, dims...)
     lvl.shape = getstop(dims[end])
-    lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims[1:end-1]...)
+    lvl.lvl = Idxrtual_level_resize!(lvl.lvl, ctx, dims[1:end-1]...)
     lvl
 end
 
-virtual_level_eltype(lvl::VirtualSparseVBLLevel) = virtual_level_eltype(lvl.lvl)
-virtual_level_default(lvl::VirtualSparseVBLLevel) = virtual_level_default(lvl.lvl)
+Idxrtual_level_eltype(lvl::IdxrtualSparseVBLLevel) = Idxrtual_level_eltype(lvl.lvl)
+Idxrtual_level_default(lvl::IdxrtualSparseVBLLevel) = Idxrtual_level_default(lvl.lvl)
 
-function declare_level!(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, pos, init)
+function declare_level!(lvl::IdxrtualSparseVBLLevel, ctx::AbstractCompiler, pos, init)
     Tp = lvl.Tp
     Ti = lvl.Ti
     ros = call(-, call(getindex, :($(lvl.ex).ptr), call(+, pos, 1)), 1)
@@ -221,7 +221,7 @@ function declare_level!(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, pos, 
     return lvl
 end
 
-function trim_level!(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, pos)
+function trim_level!(lvl::IdxrtualSparseVBLLevel, ctx::AbstractCompiler, pos)
     Tp = lvl.Tp
     Ti = lvl.Ti
     ros = freshen(ctx.code, :ros)
@@ -237,7 +237,7 @@ function trim_level!(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, pos)
     return lvl
 end
 
-function assemble_level!(lvl::VirtualSparseVBLLevel, ctx, pos_start, pos_stop)
+function assemble_level!(lvl::IdxrtualSparseVBLLevel, ctx, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_start, pos_stop))
     return quote
@@ -246,7 +246,7 @@ function assemble_level!(lvl::VirtualSparseVBLLevel, ctx, pos_start, pos_stop)
     end
 end
 
-function freeze_level!(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, pos_stop)
+function freeze_level!(lvl::IdxrtualSparseVBLLevel, ctx::AbstractCompiler, pos_stop)
     p = freshen(ctx.code, :p)
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
     qos_stop = freshen(ctx.code, :qos_stop)
@@ -260,7 +260,7 @@ function freeze_level!(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, pos_st
     return lvl
 end
 
-function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, subprotos, ::Union{typeof(defaultread), typeof(walk)})
+function instantiate_reader(fbr::IdxrtualSubFiber{IdxrtualSparseVBLLevel}, ctx, subprotos, ::Union{typeof(defaultread), typeof(walk)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp
@@ -307,13 +307,13 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, su
                             body = (ctx) -> Sequence([
                                 Phase(
                                     stop = (ctx, ext) -> value(my_i_start),
-                                    body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
+                                    body = (ctx, ext) -> Run(Fill(Idxrtual_level_default(lvl))),
                                 ),
                                 Phase(
                                     body = (ctx, ext) -> Lookup(
                                         body = (ctx, i) -> Thunk(
                                             preamble = :($my_q = $my_q_ofs + $(ctx(i))),
-                                            body = (ctx) -> instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Tp)), ctx, subprotos),
+                                            body = (ctx) -> instantiate_reader(IdxrtualSubFiber(lvl.lvl, value(my_q, lvl.Tp)), ctx, subprotos),
                                         )
                                     )
                                 )
@@ -325,14 +325,14 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, su
                     )
                 ),
                 Phase(
-                    body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))
+                    body = (ctx, ext) -> Run(Fill(Idxrtual_level_default(lvl)))
                 )
             ])
         )
     )
 end
 
-function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, subprotos, ::typeof(gallop))
+function instantiate_reader(fbr::IdxrtualSubFiber{IdxrtualSparseVBLLevel}, ctx, subprotos, ::typeof(gallop))
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp
@@ -379,13 +379,13 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, su
                         chunk = Sequence([
                                     Phase(
                                         stop = (ctx, ext) -> value(my_i_start),
-                                        body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
+                                        body = (ctx, ext) -> Run(Fill(Idxrtual_level_default(lvl))),
                                     ),
                                     Phase(
                                         body = (ctx, ext) -> Lookup(
                                             body = (ctx, i) -> Thunk(
                                                 preamble = :($my_q = $my_q_ofs + $(ctx(i))),
-                                                body = (ctx) -> instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Tp)), ctx, subprotos),
+                                                body = (ctx) -> instantiate_reader(IdxrtualSubFiber(lvl.lvl, value(my_q, lvl.Tp)), ctx, subprotos),
                                             )
                                         )
                                     )
@@ -394,16 +394,16 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, su
                     ), 
                 ),
                 Phase(
-                    body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))
+                    body = (ctx, ext) -> Run(Fill(Idxrtual_level_default(lvl)))
                 )
             ])
         )
     )
 end
 
-instantiate_updater(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, protos) =
-    instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, protos)
-function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseVBLLevel}, ctx, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
+instantiate_updater(fbr::IdxrtualSubFiber{IdxrtualSparseVBLLevel}, ctx, protos) =
+    instantiate_updater(IdxrtualTrackedSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, protos)
+function instantiate_updater(fbr::IdxrtualTrackedSubFiber{IdxrtualSparseVBLLevel}, ctx, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
     #is_serial(ctx.arch) || throw(FinchArchitectureError("SparseVBLLevel updater is not concurrent"))
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
@@ -441,7 +441,7 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseVBLLevel},
                         end
                         $dirty = false
                     end,
-                    body = (ctx) -> instantiate_updater(VirtualTrackedSubFiber(lvl.lvl, value(qos, lvl.Tp), dirty), ctx, subprotos),
+                    body = (ctx) -> instantiate_updater(IdxrtualTrackedSubFiber(lvl.lvl, value(qos, lvl.Tp), dirty), ctx, subprotos),
                     epilogue = quote
                         if $dirty
                             $(fbr.dirty) = true
