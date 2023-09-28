@@ -44,7 +44,7 @@ end
 const SparseCOO = SparseCOOLevel
 
 SparseCOOLevel(lvl) = throw(ArgumentError("You must specify the number of dimensions in a SparseCOOLevel, e.g. Fiber!(SparseCOO{2}(Element(0.0)))"))
-SparseCOOLevel(lvl, shape, args...) where {TI} = SparseCOOLevel{length(shape)}(lvl, shape, args...)
+SparseCOOLevel(lvl, shape::NTuple{N, Any}, args...) where {N} = SparseCOOLevel{N}(lvl, shape, args...)
 
 SparseCOOLevel{N}(lvl) where {N} = SparseCOOLevel{N, NTuple{N, Int}}(lvl)
 SparseCOOLevel{N, TI}(lvl) where {N, TI} = SparseCOOLevel{N, TI}(lvl, ((zero(Ti) for Ti in TI.parameters)...,))
@@ -62,7 +62,7 @@ function postype(::Type{SparseCOOLevel{N, TI, Ptr, Tbl, Lvl}}) where {N, TI, Ptr
     return postype(Lvl)
 end
 
-function moveto(lvl::SparseCOOLevel{N, TI}, device) where {N, Ti}
+function moveto(lvl::SparseCOOLevel{N, TI}, device) where {N, TI}
     lvl_2 = moveto(lvl.lvl, device)
     ptr_2 = moveto(lvl.ptr, device)
     tbl_2 = ntuple(n->moveto(lvl.tbl[n], device), N)

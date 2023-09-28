@@ -115,7 +115,7 @@ function (fbr::SubFiber{<:SparseVBLLevel})(idxs...)
     isempty(idxs) && return fbr
     lvl = fbr.lvl
     p = fbr.pos
-    r = lvl.ptr[p] + searchsortedfirst(@Idxew(lvl.idx[lvl.ptr[p]:lvl.ptr[p + 1] - 1]), idxs[end]) - 1
+    r = lvl.ptr[p] + searchsortedfirst(@view(lvl.idx[lvl.ptr[p]:lvl.ptr[p + 1] - 1]), idxs[end]) - 1
     r < lvl.ptr[p + 1] || return default(fbr)
     q = lvl.ofs[r + 1] - 1 - lvl.idx[r] + idxs[end]
     q >= lvl.ofs[r] || return default(fbr)

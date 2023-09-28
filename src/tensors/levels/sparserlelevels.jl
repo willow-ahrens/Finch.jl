@@ -9,7 +9,7 @@ end
 const SparseRLE = SparseRLELevel
 SparseRLELevel(lvl::Lvl) where {Lvl} = SparseRLELevel{Int}(lvl)
 SparseRLELevel(lvl, shape, args...) = SparseRLELevel{typeof(shape)}(lvl, shape, args...)
-SparseRLELevel{Ti}(lvl) = SparseRLELevel(lvl, zero(Ti))
+SparseRLELevel{Ti}(lvl) where {Ti} = SparseRLELevel(lvl, zero(Ti))
 SparseRLELevel{Ti}(lvl, shape) where {Ti} = SparseRLELevel{Ti}(lvl, shape, postype(lvl)[], Ti[], Ti[])
 SparseRLELevel{Ti}(lvl::Lvl, shape, ptr::Ptr, left::Left, right::Right) where {Ti, Lvl, Ptr, Left, Right} =
     SparseRLELevel{Ti, Lvl, Ptr, Left, Right}(lvl, shape, ptr, left, right)

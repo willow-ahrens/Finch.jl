@@ -60,7 +60,7 @@ function postype(::Type{SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}}) where {N, T
     return Tp
 end
 
-function moveto(lvl::SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}, device) where {N, TI, Ptr, Tbl, Srt, Lvl, device}
+function moveto(lvl::SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}, device) where {N, TI, Ptr, Tbl, Srt, Lvl}
     lvl_2 = moveto(lvl.lvl, device)
     ptr_2 = moveto(lvl.ptr, device)
     tbl_2 = moveto(lvl.tbl, device)
