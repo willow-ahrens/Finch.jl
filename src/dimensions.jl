@@ -124,7 +124,7 @@ parallel(dim, device=CPU(nthreads())) = ParallelDimension(dim, device)
 function virtual_call(::typeof(parallel), ctx, ext)
     if ext.kind === virtual
         n = cache!(ctx, :n, value(:(Threads.nthreads()), Int))
-        virtual_call(parallel, ctx, ext, finch_leaf(VirtualCPU(n)))
+        virtual_call(parallel, ctx, ext, finch_leaf(VirtualCPU(nothing, n)))
     end
 end
 

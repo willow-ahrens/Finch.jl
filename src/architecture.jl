@@ -7,22 +7,30 @@ struct CPU <: AbstractDevice
     n::Int
 end
 CPU() = CPU(Threads.nthreads())
-
-struct VirtualCPU <: AbstractVirtualDevice
+@kwdef struct VirtualCPU <: AbstractVirtualDevice
+    ex
     n
 end
-virtualize(ex, ::Type{CPU}, ctx) = VirtualCPU(virtualize(:($ex.n), Int, ctx))
+function virtualize(ex, ::Type{CPU}, ctx)
+    sym = freshen(ctx, :cpu)
+    push!(ctx.preamble, quote
+        $sym = $ex
+    end)
+    VirtualCPU(sym, virtualize(:($sym.n), Int, ctx))
+end
+lower(device::VirtualCPU, ctx::AbstractCompiler, ::DefaultStyle) =
+    something(device.ex, :(CPU($(ctx(device.n)))))
+
 FinchNotation.finch_leaf(device::VirtualCPU) = virtual(device)
 
 struct Serial <: AbstractTask end
 const serial = Serial()
-
-struct VirtualSerial <: AbstractVirtualTask end
-virtualize(ex, ::Type{Serial}, ctx) = VirtualSerial()
-FinchNotation.finch_leaf(device::VirtualSerial) = virtual(device)
-
 get_device(::Serial) = CPU(1)
 get_task(::Serial) = nothing
+struct VirtualSerial <: AbstractVirtualTask end
+virtualize(ex, ::Type{Serial}, ctx) = VirtualSerial()
+lower(task::VirtualSerial, ctx::AbstractCompiler, ::DefaultStyle) = :(Serial())
+FinchNotation.finch_leaf(device::VirtualSerial) = virtual(device)
 virtual_get_device(::VirtualSerial) = VirtualCPU(1)
 virtual_get_task(::VirtualSerial) = nothing
 
@@ -31,24 +39,22 @@ struct CPUThread{Parent} <: AbstractTask
     dev::CPU
     parent::Parent
 end
-
 get_device(task::CPUThread) = task.device
 get_task(task::CPUThread) = task.parent
-
 struct VirtualCPUThread <: AbstractVirtualTask
     tid
     dev::VirtualCPU
     parent
 end
-
-virtualize(ex, ::Type{CPUThread{Parent}}, ctx) where {Parent} =
+function virtualize(ex, ::Type{CPUThread{Parent}}, ctx) where {Parent}
     VirtualCPUThread(
-        virtualize(:($ex.tid), Int, ctx),
-        virtualize(:($ex.dev), CPU, ctx),
-        virtualize(:($ex.parent), Parent, ctx)
+        virtualize(:($sym.tid), Int, ctx),
+        virtualize(:($sym.dev), CPU, ctx),
+        virtualize(:($sym.parent), Parent, ctx)
     )
+end
+lower(task::VirtualCPUThread, ctx::AbstractCompiler, ::DefaultStyle) = :(CPUThread($(ctx(task.tid)), $(ctx(task.dev)), $(ctx(task.parent))))
 FinchNotation.finch_leaf(device::VirtualCPUThread) = virtual(device)
-
 virtual_get_device(task::VirtualCPUThread) = task.device
 virtual_get_task(task::VirtualCPUThread) = task.parent
 

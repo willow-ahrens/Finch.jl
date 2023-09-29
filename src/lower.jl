@@ -228,7 +228,7 @@ function lower_parallel_loop(ctx, root, ext::ParallelDimension, device::VirtualC
 
     root_2 = loop(tid, Extent(value(i, Int), value(i, Int)),
         loop(root.idx, ext.ext,
-            sieve(access(VirtualSplitMask(value(:(Threads.nthreads()))), reader(), root.idx, tid),
+            sieve(access(VirtualSplitMask(device.n), reader(), root.idx, tid),
                 root.body
             )
         )
@@ -240,15 +240,13 @@ function lower_parallel_loop(ctx, root, ext::ParallelDimension, device::VirtualC
     end
 
     return quote
-        Threads.@threads for $i = 1:Threads.nthreads()
+        Threads.@threads for $i = 1:$(ctx(device.n))
             $(contain(ctx, bindings=bindings_2) do ctx_2
                 subtask = VirtualCPUThread(value(i, Int), device, ctx_2.code.task)
                 contain(ctx_2, task=subtask) do ctx_3
                     bindings_2 = copy(ctx_3.bindings)
                     for tns in intersect(used_in_scope, decl_in_scope)
-                        println(bindings_2[tns])
                         bindings_2[tns] = virtual_moveto(resolve(tns, ctx_3), ctx_3, subtask)
-                        println(bindings_2[tns])
                     end
                     contain(ctx_3, bindings=bindings_2) do ctx_4
                         ctx_4(instantiate!(root_2, ctx_4))
