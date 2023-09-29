@@ -129,8 +129,7 @@ Dense [1:2]
 
 ```@docs
 declare!
-instantiate_reader
-instantiate_updater
+instantiate
 freeze!
 trim!
 thaw!
