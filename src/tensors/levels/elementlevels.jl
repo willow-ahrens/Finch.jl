@@ -95,7 +95,7 @@ lower(lvl::VirtualElementLevel, ctx::AbstractCompiler, ::DefaultStyle) = lvl.ex
 
 function virtualize(ex, ::Type{ElementLevel{D, Tv, Tp, Val}}, ctx, tag=:lvl) where {D, Tv, Tp, Val}
     sym = freshen(ctx, tag)
-    val = freshen(ctx, Symbol(tag, :_val))
+    val = freshen(ctx, tag, :_val)
     push!(ctx.preamble, quote
         $sym = $ex
         $val = $ex.val

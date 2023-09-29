@@ -154,14 +154,17 @@ function virtualize(ex, ::Type{SparseVBLLevel{Ti, Ptr, Idx, Ofs, Lvl}}, ctx, tag
     ros_fill = freshen(ctx, sym, :_ros_fill)
     ros_stop = freshen(ctx, sym, :_ros_stop)
     dirty = freshen(ctx, sym, :_dirty)
+    ptr = freshen(ctx, tag, :_ptr)
+    idx = freshen(ctx, tag, :_idx)
+    ofs = freshen(ctx, tag, :_ofs)
     push!(ctx.preamble, quote
         $sym = $ex
+        $ptr = $sym.ptr
+        $idx = $sym.idx
+        $ofs = $sym.ofs
     end)
     prev_pos = freshen(ctx, sym, :_prev_pos)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    ptr = virtualize(:($sym.ptr), Ptr, ctx, Symbol(sym, :ptr))
-    idx = virtualize(:($sym.idx), Idx, ctx, Symbol(sym, :idx))
-    ofs = virtualize(:($sym.ofs), Ofs, ctx, Symbol(sym, :ofs))
     VirtualSparseVBLLevel(lvl_2, sym, Ti, shape, qos_fill, qos_stop, ros_fill, ros_stop, dirty, ptr, idx, ofs, prev_pos)
 end
 function lower(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, ::DefaultStyle)
@@ -169,9 +172,9 @@ function lower(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, ::DefaultStyle
         $SparseVBLLevel{$(lvl.Ti)}(
             $(ctx(lvl.lvl)),
             $(ctx(lvl.shape)),
-            $(ctx(lvl.ptr)),
-            $(ctx(lvl.idx)),
-            $(ctx(lvl.ofs)),
+            $(lvl.ptr),
+            $(lvl.idx),
+            $(lvl.ofs),
         )
     end
 end
@@ -195,15 +198,15 @@ virtual_level_default(lvl::VirtualSparseVBLLevel) = virtual_level_default(lvl.lv
 function declare_level!(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, pos, init)
     Tp = postype(lvl)
     Ti = lvl.Ti
-    ros = call(-, call(getindex, :($(ctx(lvl.ptr))), call(+, pos, 1)), 1)
-    qos = call(-, call(getindex, :($(ctx(lvl.ofs))), call(+, ros, 1)), 1)
+    ros = call(-, call(getindex, :($(lvl.ptr)), call(+, pos, 1)), 1)
+    qos = call(-, call(getindex, :($(lvl.ofs)), call(+, ros, 1)), 1)
     push!(ctx.code.preamble, quote
         $(lvl.qos_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
         $(lvl.ros_fill) = $(Tp(0))
         $(lvl.ros_stop) = $(Tp(0))
-        Finch.resize_if_smaller!($(ctx(lvl.ofs)), 1)
-        $(ctx(lvl.ofs))[1] = 1
+        Finch.resize_if_smaller!($(lvl.ofs), 1)
+        $(lvl.ofs)[1] = 1
     end)
     if issafe(ctx.mode)
         push!(ctx.code.preamble, quote
@@ -220,11 +223,11 @@ function trim_level!(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, pos)
     ros = freshen(ctx.code, :ros)
     qos = freshen(ctx.code, :qos)
     push!(ctx.code.preamble, quote
-        resize!($(ctx(lvl.ptr)), $(ctx(pos)) + 1)
-        $ros = $(ctx(lvl.ptr))[end] - $(Tp(1))
-        resize!($(ctx(lvl.idx)), $ros)
-        resize!($(ctx(lvl.ofs)), $ros + 1)
-        $qos = $(ctx(lvl.ofs))[end] - $(Tp(1))
+        resize!($(lvl.ptr), $(ctx(pos)) + 1)
+        $ros = $(lvl.ptr)[end] - $(Tp(1))
+        resize!($(lvl.idx), $ros)
+        resize!($(lvl.ofs), $ros + 1)
+        $qos = $(lvl.ofs)[end] - $(Tp(1))
     end)
     lvl.lvl = trim_level!(lvl.lvl, ctx, value(qos, Tp))
     return lvl
@@ -234,8 +237,8 @@ function assemble_level!(lvl::VirtualSparseVBLLevel, ctx, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_start, pos_stop))
     return quote
-        Finch.resize_if_smaller!($(ctx(lvl.ptr)), $pos_stop + 1)
-        Finch.fill_range!($(ctx(lvl.ptr)), 0, $pos_start + 1, $pos_stop + 1)
+        Finch.resize_if_smaller!($(lvl.ptr), $pos_stop + 1)
+        Finch.fill_range!($(lvl.ptr), 0, $pos_start + 1, $pos_stop + 1)
     end
 end
 
@@ -245,9 +248,9 @@ function freeze_level!(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, pos_st
     qos_stop = freshen(ctx.code, :qos_stop)
     push!(ctx.code.preamble, quote
         for $p = 2:($pos_stop + 1)
-            $(ctx(lvl.ptr))[$p] += $(ctx(lvl.ptr))[$p - 1]
+            $(lvl.ptr)[$p] += $(lvl.ptr)[$p - 1]
         end
-        $qos_stop = $(ctx(lvl.ptr))[$pos_stop + 1] - 1
+        $qos_stop = $(lvl.ptr)[$pos_stop + 1] - 1
     end)
     lvl.lvl = freeze_level!(lvl.lvl, ctx, value(qos_stop))
     return lvl
@@ -270,11 +273,11 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, su
     Furlable(
         body = (ctx, ext) -> Thunk(
             preamble = quote
-                $my_r = $(ctx(lvl.ptr))[$(ctx(pos))]
-                $my_r_stop = $(ctx(lvl.ptr))[$(ctx(pos)) + $(Tp(1))]
+                $my_r = $(lvl.ptr)[$(ctx(pos))]
+                $my_r_stop = $(lvl.ptr)[$(ctx(pos)) + $(Tp(1))]
                 if $my_r < $my_r_stop
-                    $my_i = $(ctx(lvl.idx))[$my_r]
-                    $my_i1 = $(ctx(lvl.idx))[$my_r_stop - $(Tp(1))]
+                    $my_i = $(lvl.idx)[$my_r]
+                    $my_i1 = $(lvl.idx)[$my_r_stop - $(Tp(1))]
                 else
                     $my_i = $(Ti(1))
                     $my_i1 = $(Ti(0))
@@ -285,14 +288,14 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, su
                     stop = (ctx, ext) -> value(my_i1),
                     body = (ctx, ext) -> Stepper(
                         seek = (ctx, ext) -> quote
-                            if $(ctx(lvl.idx))[$my_r] < $(ctx(getstart(ext)))
-                                $my_r = Finch.scansearch($(ctx(lvl.idx)), $(ctx(getstart(ext))), $my_r, $my_r_stop - 1)
+                            if $(lvl.idx)[$my_r] < $(ctx(getstart(ext)))
+                                $my_r = Finch.scansearch($(lvl.idx), $(ctx(getstart(ext))), $my_r, $my_r_stop - 1)
                             end
                         end,
                         preamble = quote
-                            $my_i = $(ctx(lvl.idx))[$my_r]
-                            $my_q_stop = $(ctx(lvl.ofs))[$my_r + $(Tp(1))]
-                            $my_i_start = $my_i - ($my_q_stop - $(ctx(lvl.ofs))[$my_r])
+                            $my_i = $(lvl.idx)[$my_r]
+                            $my_q_stop = $(lvl.ofs)[$my_r + $(Tp(1))]
+                            $my_i_start = $my_i - ($my_q_stop - $(lvl.ofs)[$my_r])
                             $my_q_ofs = $my_q_stop - $my_i - $(Tp(1))
                         end,
                         stop = (ctx, ext) -> value(my_i),
@@ -343,11 +346,11 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, su
     Furlable(
         body = (ctx, ext) -> Thunk(
             preamble = quote
-                $my_r = $(ctx(lvl.ptr))[$(ctx(pos))]
-                $my_r_stop = $(ctx(lvl.ptr))[$(ctx(pos)) + $(Tp(1))]
+                $my_r = $(lvl.ptr)[$(ctx(pos))]
+                $my_r_stop = $(lvl.ptr)[$(ctx(pos)) + $(Tp(1))]
                 if $my_r < $my_r_stop
-                    $my_i = $(ctx(lvl.idx))[$my_r]
-                    $my_i1 = $(ctx(lvl.idx))[$my_r_stop - $(Tp(1))]
+                    $my_i = $(lvl.idx)[$my_r]
+                    $my_i1 = $(lvl.idx)[$my_r_stop - $(Tp(1))]
                 else
                     $my_i = $(Ti(1))
                     $my_i1 = $(Ti(0))
@@ -358,14 +361,14 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, su
                     stop = (ctx, ext) -> value(my_i1),
                     body = (ctx, ext) -> Jumper(
                         seek = (ctx, ext) -> quote
-                            if $(ctx(lvl.idx))[$my_r] < $(ctx(getstart(ext)))
-                                $my_r = Finch.scansearch($(ctx(lvl.idx)), $(ctx(getstart(ext))), $my_r, $my_r_stop - 1)
+                            if $(lvl.idx)[$my_r] < $(ctx(getstart(ext)))
+                                $my_r = Finch.scansearch($(lvl.idx), $(ctx(getstart(ext))), $my_r, $my_r_stop - 1)
                             end
                         end,
                         preamble = quote
-                            $my_i = $(ctx(lvl.idx))[$my_r]
-                            $my_q_stop = $(ctx(lvl.ofs))[$my_r + $(Tp(1))]
-                            $my_i_start = $my_i - ($my_q_stop - $(ctx(lvl.ofs))[$my_r])
+                            $my_i = $(lvl.idx)[$my_r]
+                            $my_q_stop = $(lvl.ofs)[$my_r + $(Tp(1))]
+                            $my_i_start = $my_i - ($my_q_stop - $(lvl.ofs)[$my_r])
                             $my_q_ofs = $my_q_stop - $my_i - $(Tp(1))
                         end,
                         stop = (ctx, ext) -> value(my_i),
@@ -442,13 +445,13 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseVBLLevel},
                                 $ros += $(Tp(1))
                                 if $ros > $ros_stop
                                     $ros_stop = max($ros_stop << 1, 1)
-                                    Finch.resize_if_smaller!($(ctx(lvl.idx)), $ros_stop)
-                                    Finch.resize_if_smaller!($(ctx(lvl.ofs)), $ros_stop + 1)
+                                    Finch.resize_if_smaller!($(lvl.idx), $ros_stop)
+                                    Finch.resize_if_smaller!($(lvl.ofs), $ros_stop + 1)
                                 end
                             end
-                            $(ctx(lvl.idx))[$ros] = $my_i_prev = $(ctx(idx))
+                            $(lvl.idx)[$ros] = $my_i_prev = $(ctx(idx))
                             $(qos) += $(Tp(1))
-                            $(ctx(lvl.ofs))[$ros + 1] = $qos
+                            $(lvl.ofs)[$ros + 1] = $qos
                             $(if issafe(ctx.mode)
                                 quote
                                     $(lvl.prev_pos) = $(ctx(pos))
@@ -459,7 +462,7 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseVBLLevel},
                 )
             ),
             epilogue = quote
-                $(ctx(lvl.ptr))[$(ctx(pos)) + 1] = $ros - $ros_fill
+                $(lvl.ptr)[$(ctx(pos)) + 1] = $ros - $ros_fill
                 $ros_fill = $ros
                 $qos_fill = $qos - 1
             end

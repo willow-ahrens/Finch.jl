@@ -40,10 +40,10 @@ FinchNotation.finch_leaf(x::VirtualAbstractArray) = virtual(x)
 virtual_default(::VirtualAbstractArray, ctx) = 0
 virtual_eltype(tns::VirtualAbstractArray, ctx) = tns.eltype
 
-function virtual_moveto(vec::VirtualAbstractArray, ctx, ::Finch.VirtualCPUThread)
+function virtual_moveto(vec::VirtualAbstractArray, ctx, device)
     ex = freshen(ctx.code, vec.ex)
     push!(ctx.code.preamble, quote
-        $ex = copy($(vec.ex))
+        $ex = $moveto!($(vec.ex), $(ctx(device)))
     end)
     Finch.VirtualAbstractArray(ex, vec.eltype, vec.ndims)
 end

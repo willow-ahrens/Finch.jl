@@ -76,21 +76,6 @@ CPULocalVector{V}(device::CPU) where {V} =
 Base.eltype(::Type{CPULocalVector{V}}) where {V} = eltype(V)
 Base.ndims(::Type{CPULocalVector{V}}) where {V} = ndims(V)
 
-struct VirtualCPULocalVector
-    ex
-    tag
-    V
-end
-
-function virtualize(ex, ::Type{CPULocalVector{V}}, ctx, tag) where {V}
-    sym = freshen(ctx, tag)
-    push!(ctx.preamble, quote
-        $sym = $ex
-    end)
-    VirtualCPULocalVector(sym, tag, V)
-end
-FinchNotation.finch_leaf(device::VirtualCPULocalVector) = virtual(device)
-
 function moveto(vec::Vector, device::CPU)
     return vec
 end
@@ -101,8 +86,4 @@ end
 
 function moveto(vec::CPULocalVector, task::CPUThread)
     return vec.data[task.tid]
-end
-
-function virtual_moveto(vec::VirtualCPULocalVector, ctx, dev::VirtualCPUThread)
-    return virtualize(:($(vec.ex)[$(ctx(dev.tid))]), vec.V, ctx.code, Symbol(vec.tag, :_cpu)) 
 end

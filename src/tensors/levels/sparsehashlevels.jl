@@ -170,14 +170,17 @@ function virtualize(ex, ::Type{SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}}, ctx,
     P = freshen(ctx, sym, :_P)
     qos_fill = freshen(ctx, sym, :_qos_fill)
     qos_stop = freshen(ctx, sym, :_qos_stop)
+    ptr = freshen(ctx, tag, :_ptr)
+    tbl = freshen(ctx, tag, :_tbl)
+    srt = freshen(ctx, tag, :_srt)
     push!(ctx.preamble, quote
         $sym = $ex
         $(qos_fill) = length($sym.tbl)
         $(qos_stop) = $(qos_fill)
+        $ptr = $ex.ptr
+        $tbl = $ex.tbl
+        $srt = $ex.srt
     end)
-    ptr = virtualize(:($sym.ptr), Ptr, ctx, Symbol(sym, :ptr))
-    tbl = virtualize(:($sym.tbl), Tbl, ctx, Symbol(sym, :tbl))
-    srt = virtualize(:($sym.srt), Srt, ctx, Symbol(sym, :srt))
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
     VirtualSparseHashLevel(lvl_2, sym, N, TI, ptr, tbl, srt, shape, qos_fill, qos_stop, Lvl)
 end
@@ -186,9 +189,9 @@ function lower(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, ::DefaultStyl
         $SparseHashLevel{$(lvl.N), $(lvl.TI)}(
             $(ctx(lvl.lvl)),
             ($(map(ctx, lvl.shape)...),),
-            $(ctx(lvl.ptr)),
-            $(ctx(lvl.tbl)),
-            $(ctx(lvl.srt)),
+            $(lvl.ptr),
+            $(lvl.tbl),
+            $(lvl.srt),
         )
     end
 end
@@ -215,12 +218,12 @@ function declare_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos,
     TI = lvl.TI
     Tp = postype(lvl)
 
-    qos = call(-, call(getindex, :($(ctx(lvl.ptr))), call(+, pos, 1)), 1)
+    qos = call(-, call(getindex, :($(lvl.ptr)), call(+, pos, 1)), 1)
     push!(ctx.code.preamble, quote
         $(lvl.qos_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
-        empty!($(ctx(lvl.tbl)))
-        empty!($(ctx(lvl.srt)))
+        empty!($(lvl.tbl))
+        empty!($(lvl.srt))
     end)
     lvl.lvl = declare_level!(lvl.lvl, ctx, qos, init)
     return lvl
@@ -231,9 +234,9 @@ function trim_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos)
     Tp = postype(lvl)
     qos = freshen(ctx.code, :qos)
     push!(ctx.code.preamble, quote
-        resize!($(ctx(lvl.ptr)), $(ctx(pos)) + 1)
-        $qos = $(ctx(lvl.ptr))[end] - $(Tp(1))
-        resize!($(ctx(lvl.srt)), $qos)
+        resize!($(lvl.ptr), $(ctx(pos)) + 1)
+        $qos = $(lvl.ptr)[end] - $(Tp(1))
+        resize!($(lvl.srt), $qos)
     end)
     lvl.lvl = trim_level!(lvl.lvl, ctx, value(qos, Tp))
     return lvl
@@ -245,10 +248,10 @@ function thaw_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos)
     p = freshen(ctx.code, lvl.ex, :_p)
     push!(ctx.code.preamble, quote
         for $p = 1:$(ctx(pos))
-            $(ctx(lvl.ptr))[$p] -= $(ctx(lvl.ptr))[$p + 1]
+            $(lvl.ptr)[$p] -= $(lvl.ptr)[$p + 1]
         end
-        $(ctx(lvl.ptr))[1] = 1
-        $(lvl.qos_fill) = length($(ctx(lvl.tbl)))
+        $(lvl.ptr)[1] = 1
+        $(lvl.qos_fill) = length($(lvl.tbl))
     end)
     lvl.lvl = thaw_level!(lvl.lvl, ctx, call(*, pos, lvl.shape))
     return lvl
@@ -258,8 +261,8 @@ function assemble_level!(lvl::VirtualSparseHashLevel, ctx, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_start, pos_stop))
     return quote
-        Finch.resize_if_smaller!($(ctx(lvl.ptr)), $pos_stop + 1)
-        Finch.fill_range!($(ctx(lvl.ptr)), 0, $pos_start + 1, $pos_stop + 1)
+        Finch.resize_if_smaller!($(lvl.ptr), $pos_stop + 1)
+        Finch.fill_range!($(lvl.ptr), 0, $pos_start + 1, $pos_stop + 1)
     end
 end
 
@@ -270,13 +273,13 @@ function freeze_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos_s
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
     qos_stop = freshen(ctx.code, :qos_stop)
     push!(ctx.code.preamble, quote
-        resize!($(ctx(lvl.srt)), length($(ctx(lvl.tbl))))
-        copyto!($(ctx(lvl.srt)), pairs($(ctx(lvl.tbl))))
-        sort!($(ctx(lvl.srt)), by=$hashkeycmp)
+        resize!($(lvl.srt), length($(lvl.tbl)))
+        copyto!($(lvl.srt), pairs($(lvl.tbl)))
+        sort!($(lvl.srt), by=$hashkeycmp)
         for $p = 2:($pos_stop + 1)
-            $(ctx(lvl.ptr))[$p] += $(ctx(lvl.ptr))[$p - 1]
+            $(lvl.ptr)[$p] += $(lvl.ptr)[$p - 1]
         end
-        $qos_stop = $(ctx(lvl.ptr))[$pos_stop + 1] - 1
+        $qos_stop = $(lvl.ptr)[$pos_stop + 1] - 1
     end)
     lvl.lvl = freeze_level!(lvl.lvl, ctx, value(qos_stop))
     return lvl
@@ -292,8 +295,8 @@ end
 function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseHashLevel}, ctx, subprotos, proto::Union{typeof(defaultread), typeof(walk)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     Tp = postype(lvl)
-    start = value(:($(ctx(lvl.ptr))[$(ctx(pos))]), Tp)
-    stop = value(:($(ctx(lvl.ptr))[$(ctx(pos)) + 1]), Tp)
+    start = value(:($(lvl.ptr)[$(ctx(pos))]), Tp)
+    stop = value(:($(lvl.ptr)[$(ctx(pos)) + 1]), Tp)
 
     instantiate_reader(SparseHashWalkTraversal(lvl, lvl.N, start, stop), ctx, [subprotos..., proto])
 end
@@ -315,8 +318,8 @@ function instantiate_reader(trv::SparseHashWalkTraversal, ctx, subprotos, ::Unio
                 $my_q = $(ctx(start))
                 $my_q_stop = $(ctx(stop))
                 if $my_q < $my_q_stop
-                    $my_i = $(ctx(lvl.srt))[$my_q][1][2][$R]
-                    $my_i_stop = $(ctx(lvl.srt))[$my_q_stop - 1][1][2][$R]
+                    $my_i = $(lvl.srt)[$my_q][1][2][$R]
+                    $my_i_stop = $(lvl.srt)[$my_q_stop - 1][1][2][$R]
                 else
                     $my_i = $(TI.parameters[R](1))
                     $my_i_stop = $(TI.parameters[R](0))
@@ -329,29 +332,29 @@ function instantiate_reader(trv::SparseHashWalkTraversal, ctx, subprotos, ::Unio
                         if R == 1
                             Stepper(
                                 seek = (ctx, ext) -> quote
-                                    while $my_q + $(Tp(1)) < $my_q_stop && $(ctx(lvl.srt))[$my_q][1][2][$R] < $(ctx(getstart(ext)))
+                                    while $my_q + $(Tp(1)) < $my_q_stop && $(lvl.srt)[$my_q][1][2][$R] < $(ctx(getstart(ext)))
                                         $my_q += $(Tp(1))
                                     end
                                 end,
-                                preamble = :($my_i = $(ctx(lvl.srt))[$my_q][1][2][$R]),
+                                preamble = :($my_i = $(lvl.srt)[$my_q][1][2][$R]),
                                 stop =  (ctx, ext) -> value(my_i),
                                 chunk = Spike(
                                     body = Fill(virtual_level_default(lvl)),
-                                    tail = instantiate_reader(VirtualSubFiber(lvl.lvl, value(:($(ctx(lvl.srt))[$my_q][2]))), ctx, subprotos),
+                                    tail = instantiate_reader(VirtualSubFiber(lvl.lvl, value(:($(lvl.srt)[$my_q][2]))), ctx, subprotos),
                                 ),
                                 next = (ctx, ext) -> :($my_q += $(Tp(1)))
                             )
                         else
                              Stepper(
                                 seek = (ctx, ext) -> quote
-                                    while $my_q + $(Tp(1)) < $my_q_stop && $(ctx(lvl.srt))[$my_q][1][2][$R] < $(ctx(getstart(ext)))
+                                    while $my_q + $(Tp(1)) < $my_q_stop && $(lvl.srt)[$my_q][1][2][$R] < $(ctx(getstart(ext)))
                                         $my_q += $(Tp(1))
                                     end
                                 end,
                                 preamble = quote
-                                    $my_i = $(ctx(lvl.srt))[$my_q][1][2][$R]
+                                    $my_i = $(lvl.srt)[$my_q][1][2][$R]
                                     $my_q_step = $my_q
-                                    while $my_q_step < $my_q_stop && $(ctx(lvl.srt))[$my_q_step][1][2][$R] == $my_i
+                                    while $my_q_step < $my_q_stop && $(lvl.srt)[$my_q_step][1][2][$R] == $my_i
                                         $my_q_step += $(Tp(1))
                                     end
                                 end,
@@ -405,7 +408,7 @@ function instantiate_reader(trv::SparseHashFollowTraversal, ctx, subprotos, ::ty
                     body = (ctx, i) -> Thunk(
                         preamble = quote
                             $my_key = ($(ctx(pos)), ($(map(ctx, (i, coords...,))...)))
-                            $qos = get($(ctx(lvl.tbl)), $my_key, 0)
+                            $qos = get($(lvl.tbl), $my_key, 0)
                         end,
                         body = (ctx) -> Switch([
                             value(:($qos != 0)) => instantiate_reader(VirtualSubFiber(lvl.lvl, value(qos, Tp)), ctx, subprotos),
@@ -453,7 +456,7 @@ function instantiate_updater(trv::SparseHashLaminateTraversal, ctx, subprotos, :
                     body = (ctx, idx) -> Thunk(
                         preamble = quote
                             $my_key = ($(ctx(pos)), ($(map(ctx, (idx, coords...,))...),))
-                            $qos = get($(ctx(lvl.tbl)), $my_key, $(qos_fill) + $(Tp(1)))
+                            $qos = get($(lvl.tbl), $my_key, $(qos_fill) + $(Tp(1)))
                             if $qos > $qos_stop
                                 $qos_stop = max($qos_stop << 1, 1)
                                 $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(qos, Tp), value(qos_stop, Tp)), ctx))
@@ -466,8 +469,8 @@ function instantiate_updater(trv::SparseHashLaminateTraversal, ctx, subprotos, :
                                 $(fbr_dirty) = true
                                 if $qos > $qos_fill
                                     $(lvl.qos_fill) = $qos
-                                    $(ctx(lvl.tbl))[$my_key] = $qos
-                                    $(ctx(lvl.ptr))[$(ctx(pos)) + 1] += $(Tp(1))
+                                    $(lvl.tbl)[$my_key] = $qos
+                                    $(lvl.ptr)[$(ctx(pos)) + 1] += $(Tp(1))
                                 end
                             end
                         end

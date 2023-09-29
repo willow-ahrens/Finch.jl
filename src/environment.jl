@@ -1,10 +1,9 @@
 abstract type AbstractCompiler end
 
 struct Namespace
-    seen
     counts
 end
-Namespace() = Namespace(Set(), Dict())
+Namespace() = Namespace(Dict())
 function freshen(spc::Namespace, tags...)
     name = Symbol(tags...)
     m = match(r"^(.*)_(\d*)$", string(name))
@@ -15,11 +14,8 @@ function freshen(spc::Namespace, tags...)
         tag = Symbol(m.captures[1])
         n = parse(BigInt, m.captures[2])
     end
-    if (tag, n) in spc.seen
-        n = max(get(spc.counts, tag, 0), n) + 1
-        spc.counts[tag] = n
-    end
-    push!(spc.seen, (tag, n))
+    n = max(get(spc.counts, tag, 0) + 1, n)
+    spc.counts[tag] = n
     if n == 1
         return Symbol(tag)
     else
