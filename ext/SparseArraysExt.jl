@@ -60,7 +60,7 @@ function Finch.declare!(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler, init
     throw(FinchProtocolError("Finch does not support writes to SparseMatrixCSC"))
 end
 
-function Finch.instantiate_reader(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler, subprotos, ::Union{typeof(defaultread), typeof(walk), typeof(follow)}, ::Union{typeof(defaultread), typeof(walk)})
+function Finch.instantiate(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk), typeof(follow)}, ::Union{typeof(defaultread), typeof(walk)})
     tag = arr.ex
     Ti = arr.Ti
     my_i = freshen(ctx.code, tag, :_i)
@@ -122,8 +122,8 @@ function Finch.instantiate_reader(arr::VirtualSparseMatrixCSC, ctx::AbstractComp
     )
 end
 
-function Finch.instantiate_updater(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler, subprotos, protos...)
-    throw(FinchProtocolError("Finch does not support writes to SparseMatrixCSC"))
+function Finch.instantiate(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler, mode::Updater, subprotos, protos...)
+    throw(Finch.FinchProtocolError("Finch does not support writes to SparseMatrixCSC"))
 end
 
 Finch.FinchNotation.finch_leaf(x::VirtualSparseMatrixCSC) = virtual(x)
@@ -157,7 +157,7 @@ function Finch.declare!(arr::VirtualSparseVector, ctx::AbstractCompiler, init)
     throw(FinchProtocolError("Finch does not support writes to SparseVector"))
 end
 
-function Finch.instantiate_reader(arr::VirtualSparseVector, ctx::AbstractCompiler, subprotos, ::Union{typeof(defaultread), typeof(walk)})
+function Finch.instantiate(arr::VirtualSparseVector, ctx::AbstractCompiler, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
     tag = arr.ex
     Ti = arr.Ti
     my_i = freshen(ctx.code, tag, :_i)
@@ -215,8 +215,8 @@ function Finch.instantiate_reader(arr::VirtualSparseVector, ctx::AbstractCompile
     )
 end
 
-function Finch.instantiate_updater(arr::VirtualSparseVector, ctx::AbstractCompiler, subprotos)
-    throw(FinchProtocolError("Finch does not support writes to SparseVector"))
+function Finch.instantiate(arr::VirtualSparseVector, ctx::AbstractCompiler, mode::Updater, subprotos)
+    throw(Finch.FinchProtocolError("Finch does not support writes to SparseVector"))
 end
 
 Finch.FinchNotation.finch_leaf(x::VirtualSparseVector) = virtual(x)

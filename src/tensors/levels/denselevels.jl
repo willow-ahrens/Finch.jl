@@ -182,18 +182,15 @@ end
 
 struct DenseTraversal
     fbr
-    subunfurl
     subfiber_ctr
 end
 
-instantiate_reader(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, protos) =
-    instantiate_reader(DenseTraversal(fbr, instantiate_reader, VirtualSubFiber), ctx, protos)
-instantiate_updater(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, protos) =
-    instantiate_updater(DenseTraversal(fbr, instantiate_updater, VirtualSubFiber), ctx, protos)
-instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualDenseLevel}, ctx, protos) =
-    instantiate_updater(DenseTraversal(fbr, instantiate_updater, (lvl, pos) -> VirtualTrackedSubFiber(lvl, pos, fbr.dirty)), ctx, protos)
+instantiate(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, mode, protos) =
+    instantiate(DenseTraversal(fbr, VirtualSubFiber), ctx, mode, protos)
+instantiate(fbr::VirtualTrackedSubFiber{VirtualDenseLevel}, ctx, mode, protos) =
+    instantiate(DenseTraversal(fbr, (lvl, pos) -> VirtualTrackedSubFiber(lvl, pos, fbr.dirty)), ctx, mode, protos)
 
-function instantiate_reader(trv::DenseTraversal, ctx, subprotos, ::Union{typeof(defaultread), typeof(follow)})
+function instantiate(trv::DenseTraversal, ctx, mode, subprotos, ::Union{typeof(defaultread), typeof(follow), typeof(defaultupdate), typeof(laminate), typeof(extrude)})
     (lvl, pos) = (trv.fbr.lvl, trv.fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
@@ -206,26 +203,7 @@ function instantiate_reader(trv::DenseTraversal, ctx, subprotos, ::Union{typeof(
                 preamble = quote
                     $q = ($(ctx(pos)) - $(Ti(1))) * $(ctx(lvl.shape)) + $(ctx(i))
                 end,
-                body = (ctx) -> trv.subunfurl(trv.subfiber_ctr(lvl.lvl, value(q, lvl.Ti)), ctx, subprotos)
-            )
-        )
-    )
-end
-
-function instantiate_updater(trv::DenseTraversal, ctx, subprotos, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)})
-    (lvl, pos) = (trv.fbr.lvl, trv.fbr.pos)
-    tag = lvl.ex
-    Ti = lvl.Ti
-
-    q = freshen(ctx.code, tag, :_q)
-
-    Furlable(
-        body = (ctx, ext) -> Lookup(
-            body = (ctx, i) -> Thunk(
-                preamble = quote
-                    $q = ($(ctx(pos)) - $(Ti(1))) * $(ctx(lvl.shape)) + $(ctx(i))
-                end,
-                body = (ctx) -> trv.subunfurl(trv.subfiber_ctr(lvl.lvl, value(q, lvl.Ti)), ctx, subprotos)
+                body = (ctx) -> instantiate(trv.subfiber_ctr(lvl.lvl, value(q, lvl.Ti)), ctx, mode, subprotos)
             )
         )
     )

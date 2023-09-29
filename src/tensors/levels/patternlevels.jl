@@ -108,15 +108,15 @@ reassemble_level!(lvl::VirtualPatternLevel, ctx, pos_start, pos_stop) = quote en
 
 trim_level!(lvl::VirtualPatternLevel, ctx::AbstractCompiler, pos) = lvl
 
-instantiate_reader(::VirtualSubFiber{VirtualPatternLevel}, ctx, protos) = Fill(true)
+instantiate(::VirtualSubFiber{VirtualPatternLevel}, ctx, mode::Reader, protos) = Fill(true)
 
-function instantiate_updater(fbr::VirtualSubFiber{VirtualPatternLevel}, ctx, protos)
+function instantiate(fbr::VirtualSubFiber{VirtualPatternLevel}, ctx, mode::Updater, protos)
     val = freshen(ctx.code, :null)
     push!(ctx.code.preamble, :($val = false))
     VirtualScalar(nothing, Bool, false, gensym(), val)
 end
 
-function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualPatternLevel}, ctx, protos)
+function instantiate(fbr::VirtualTrackedSubFiber{VirtualPatternLevel}, ctx, mode::Updater, protos)
     VirtualScalar(nothing, Bool, false, gensym(), fbr.dirty)
 end
 

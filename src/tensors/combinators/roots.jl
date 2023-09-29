@@ -7,8 +7,8 @@ function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::FinchNode)
     stylize_access(node, ctx, resolve(tns, ctx.ctx))
 end
 
-instantiate_reader(tns::FinchNode, ctx::AbstractCompiler, protos) = instantiate_reader(resolve(tns, ctx), ctx, protos)
-instantiate_updater(tns::FinchNode, ctx::AbstractCompiler, protos) = instantiate_updater(resolve(tns, ctx), ctx, protos)
+instantiate(tns::FinchNode, ctx::AbstractCompiler, mode::Reader, protos) = instantiate(resolve(tns, ctx), ctx, mode::Reader, protos)
+instantiate(tns::FinchNode, ctx::AbstractCompiler, mode::Updater, protos) = instantiate(resolve(tns, ctx), ctx, mode::Updater, protos)
 
 declare!(tns::FinchNode, ctx::AbstractCompiler, init) = declare!(resolve(tns, ctx), ctx, init)
 thaw!(tns::FinchNode, ctx::AbstractCompiler) = thaw!(resolve(tns, ctx), ctx)

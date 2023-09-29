@@ -287,7 +287,7 @@ function freeze_level!(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, po
     return lvl
 end
 
-function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, subprotos, ::Union{typeof(defaultread), typeof(walk)})
+function instantiate(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
@@ -326,7 +326,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
                             body = Fill(virtual_level_default(lvl)),
                             tail = Thunk(
                                 preamble = :($my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $my_i),
-                                body = (ctx) -> instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, subprotos),
+                                body = (ctx) -> instantiate(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, mode::Reader, subprotos),
                             ),
                         ),
                         next = (ctx, ext) -> :($my_r += $(Tp(1))),
@@ -340,7 +340,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
     )
 end
 
-function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, subprotos, ::typeof(gallop))
+function instantiate(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, mode::Reader, subprotos, ::typeof(gallop))
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
@@ -380,7 +380,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
                             body = Fill(virtual_level_default(lvl)),
                             tail = Thunk(
                                 preamble = :($my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $my_i),
-                                body = (ctx) -> instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, subprotos),
+                                body = (ctx) -> instantiate(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, mode::Reader, subprotos),
                             ),
                         ),
                         next = (ctx, ext) -> :($my_r += $(Tp(1)))
@@ -395,7 +395,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
 end
 
 
-function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, subprotos, ::typeof(follow))
+function instantiate(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, mode::Reader, subprotos, ::typeof(follow))
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     my_q = freshen(ctx.code, tag, :_q)
@@ -409,7 +409,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
                     $my_q = $(ctx(q)) * $(ctx(lvl.shape)) + $(ctx(i))
                 end,
                 body = (ctx) -> Switch([
-                    value(:($tbl[$my_q])) => instantiate_reader(VirtualSubFiber(lvl.lvl, pos), ctx, subprotos),
+                    value(:($tbl[$my_q])) => instantiate(VirtualSubFiber(lvl.lvl, pos), ctx, mode::Reader, subprotos),
                     literal(true) => Fill(virtual_level_default(lvl))
                 ])
             )
@@ -417,9 +417,9 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
     )
 end
 
-instantiate_updater(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, protos) = 
-    instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, protos)
-function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseByteMapLevel}, ctx, subprotos, ::Union{typeof(defaultupdate), typeof(extrude), typeof(laminate)})
+instantiate(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, mode::Updater, protos) = 
+    instantiate(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, mode::Updater, protos)
+function instantiate(fbr::VirtualTrackedSubFiber{VirtualSparseByteMapLevel}, ctx, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude), typeof(laminate)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp
@@ -433,7 +433,7 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseByteMapLev
                     $my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $(ctx(idx))
                     $dirty = false
                 end,
-                body = (ctx) -> instantiate_updater(VirtualTrackedSubFiber(lvl.lvl, value(my_q, lvl.Ti), dirty), ctx, subprotos),
+                body = (ctx) -> instantiate(VirtualTrackedSubFiber(lvl.lvl, value(my_q, lvl.Ti), dirty), ctx, mode, subprotos),
                 epilogue = quote
                     if $dirty
                         $(fbr.dirty) = true

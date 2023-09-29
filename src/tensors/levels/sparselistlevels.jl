@@ -241,7 +241,7 @@ function freeze_level!(lvl::VirtualSparseListLevel, ctx::AbstractCompiler, pos_s
     return lvl
 end
 
-function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, subprotos, ::Union{typeof(defaultread), typeof(walk)})
+function instantiate(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp
@@ -277,7 +277,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, s
                         stop = (ctx, ext) -> value(my_i),
                         chunk = Spike(
                             body = Fill(virtual_level_default(lvl)),
-                            tail = Simplify(instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, subprotos))
+                            tail = Simplify(instantiate(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, mode::Reader, subprotos))
                         ),
                         next = (ctx, ext) -> :($my_q += $(Tp(1))) 
                     )
@@ -290,7 +290,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, s
     )
 end
 
-function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, subprotos, ::typeof(gallop))
+function instantiate(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, mode::Reader, subprotos, ::typeof(gallop))
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp
@@ -329,7 +329,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, s
                         stop = (ctx, ext) -> value(my_i2),
                         chunk =  Spike(
                             body = Fill(virtual_level_default(lvl)),
-                            tail = instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, subprotos),
+                            tail = instantiate(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, mode::Reader, subprotos),
                         ),
                         next = (ctx, ext) -> :($my_q += $(Tp(1))),
                     )  
@@ -342,10 +342,10 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, s
     )
 end
 
-instantiate_updater(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, protos) = begin
-    instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, protos)
+instantiate(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, mode::Updater, protos) = begin
+    instantiate(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, mode::Updater, protos)
 end
-function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseListLevel}, ctx, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
+function instantiate(fbr::VirtualTrackedSubFiber{VirtualSparseListLevel}, ctx, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp
@@ -374,7 +374,7 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseListLevel}
                         end
                         $dirty = false
                     end,
-                    body = (ctx) -> instantiate_updater(VirtualTrackedSubFiber(lvl.lvl, value(qos, lvl.Tp), dirty), ctx, subprotos),
+                    body = (ctx) -> instantiate(VirtualTrackedSubFiber(lvl.lvl, value(qos, lvl.Tp), dirty), ctx, mode, subprotos),
                     epilogue = quote
                         if $dirty
                             $(fbr.dirty) = true

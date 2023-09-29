@@ -57,11 +57,11 @@ end
 
 virtual_default(arr::VirtualOffsetArray, ctx::AbstractCompiler) = virtual_default(arr.body, ctx)
 
-function instantiate_reader(arr::VirtualOffsetArray, ctx, protos)
-    VirtualOffsetArray(instantiate_reader(arr.body, ctx, protos), arr.delta)
+function instantiate(arr::VirtualOffsetArray, ctx, mode::Reader, protos)
+    VirtualOffsetArray(instantiate(arr.body, ctx, mode::Reader, protos), arr.delta)
 end
-function instantiate_updater(arr::VirtualOffsetArray, ctx, protos)
-    VirtualOffsetArray(instantiate_updater(arr.body, ctx, protos), arr.delta)
+function instantiate(arr::VirtualOffsetArray, ctx, mode::Updater, protos)
+    VirtualOffsetArray(instantiate(arr.body, ctx, mode::Updater, protos), arr.delta)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualOffsetArray) = ctx(node.body)

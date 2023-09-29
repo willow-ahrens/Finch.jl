@@ -106,18 +106,18 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
                 push!(ctx.scope, head.lhs)
             elseif head.kind === declare
                 @assert head.tns.kind === variable
-                @assert get(ctx.modes, head.tns, reader()).kind === reader
+                @assert get(ctx.modes, head.tns, reader) === reader
                 ctx.bindings[head.tns] = declare!(ctx.bindings[head.tns], ctx, head.init) #TODO should ctx.bindings be scoped?
                 push!(ctx.scope, head.tns)
-                ctx.modes[head.tns] = updater()
+                ctx.modes[head.tns] = updater
             elseif head.kind === freeze
-                @assert ctx.modes[head.tns].kind === updater
+                @assert ctx.modes[head.tns] === updater
                 ctx.bindings[head.tns] = freeze!(ctx.bindings[head.tns], ctx)
-                ctx.modes[head.tns] = reader()
+                ctx.modes[head.tns] = reader
             elseif head.kind === thaw
-                @assert get(ctx.modes, head.tns, reader()).kind === reader
+                @assert get(ctx.modes, head.tns, reader) === reader
                 ctx.bindings[head.tns] = thaw!(ctx.bindings[head.tns], ctx)
-                ctx.modes[head.tns] = updater()
+                ctx.modes[head.tns] = updater
             else
                 preamble = contain(ctx) do ctx_2
                     ctx_2(instantiate!(head, ctx_2))
@@ -170,7 +170,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
         ctx(root.val)
     elseif root.kind === assign
         if root.lhs.kind === access
-            @assert root.lhs.mode.kind === updater
+            @assert root.lhs.mode.val === updater
             rhs = ctx(simplify(call(root.op, root.lhs, root.rhs), ctx))
         else
             rhs = ctx(root.rhs)
@@ -191,15 +191,15 @@ function lower_access(ctx, node, tns)
 end
 
 function lower_access(ctx, node, tns::Number)
-    @assert node.mode.kind === reader
+    @assert node.mode.val === reader
     tns
 end
 
 function lower_loop(ctx, root, ext)
     root_2 = Rewrite(Postwalk(@rule access(~tns, ~mode, ~idxs...) => begin
         if !isempty(idxs) && root.idx == idxs[end]
-            protos = [(mode.kind === reader ? defaultread : defaultupdate) for _ in idxs]
-            tns_2 = unfurl(tns, ctx, root.ext.val, mode, protos...)
+            protos = [(mode.val === reader ? defaultread : defaultupdate) for _ in idxs]
+            tns_2 = unfurl(tns, ctx, root.ext.val, mode.val, protos...)
             access(tns_2, mode, idxs...)
         end
     end))(root)
@@ -213,7 +213,7 @@ function lower_loop(ctx, root, ext::ParallelDimension)
     i = freshen(ctx.code, :i)
     root_2 = loop(tid, Extent(value(i, Int), value(i, Int)),
         loop(root.idx, ext.ext,
-            sieve(access(VirtualSplitMask(value(:(Threads.nthreads()))), reader(), root.idx, tid),
+            sieve(access(VirtualSplitMask(value(:(Threads.nthreads()))), reader, root.idx, tid),
                 root.body
             )
         )

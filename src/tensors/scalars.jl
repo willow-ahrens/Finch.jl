@@ -56,8 +56,8 @@ end
 function freeze!(tns::VirtualScalar, ctx)
     return tns
 end
-instantiate_reader(tns::VirtualScalar, ctx, subprotos) = tns
-instantiate_updater(tns::VirtualScalar, ctx, subprotos) = tns
+instantiate(tns::VirtualScalar, ctx, mode::Reader, subprotos) = tns
+instantiate(tns::VirtualScalar, ctx, mode::Updater, subprotos) = tns
 
 function lower_access(ctx::AbstractCompiler, node, tns::VirtualScalar)
     @assert isempty(node.idxs)
@@ -78,8 +78,8 @@ virtual_size(::VirtualDirtyScalar, ctx) = ()
 virtual_default(tns::VirtualDirtyScalar, ctx) = tns.D
 virtual_eltype(tns::VirtualDirtyScalar, ctx) = tns.Tv
 
-instantiate_reader(tns::VirtualDirtyScalar, ctx, subprotos) = tns
-instantiate_updater(tns::VirtualDirtyScalar, ctx, subprotos) = tns
+instantiate(tns::VirtualDirtyScalar, ctx, mode::Reader, subprotos) = tns
+instantiate(tns::VirtualDirtyScalar, ctx, mode::Updater, subprotos) = tns
 
 FinchNotation.finch_leaf(x::VirtualDirtyScalar) = virtual(x)
 
