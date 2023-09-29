@@ -29,22 +29,22 @@ julia> @finch_code begin
     end
 quote
     y_lvl = (ex.bodies[1]).tns.bind.lvl
-    val = y_lvl.lvl.val
     y_lvl_2 = y_lvl.lvl
+    y_lvl_val = y_lvl.lvl.val
     A_lvl = ((ex.bodies[2]).body.body.rhs.args[1]).tns.bind.lvl
     A_lvl_2 = A_lvl.lvl
-    val_3 = A_lvl_2.lvl.val
     A_lvl_ptr = A_lvl_2.ptr
     A_lvl_idx = A_lvl_2.idx
+    A_lvl_2_val = A_lvl_2.lvl.val
     x_lvl = ((ex.bodies[2]).body.body.rhs.args[2]).tns.bind.lvl
-    val_4 = x_lvl.lvl.val
+    x_lvl_val = x_lvl.lvl.val
     x_lvl.shape == A_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(x_lvl.shape) != $(A_lvl.shape))"))
-    Finch.resize_if_smaller!(val, A_lvl_2.shape)
-    Finch.fill_range!(val, 0.0, 1, A_lvl_2.shape)
+    Finch.resize_if_smaller!(y_lvl_val, A_lvl_2.shape)
+    Finch.fill_range!(y_lvl_val, 0.0, 1, A_lvl_2.shape)
     for j_4 = 1:x_lvl.shape
         x_lvl_q = (1 - 1) * x_lvl.shape + j_4
         A_lvl_q = (1 - 1) * A_lvl.shape + j_4
-        x_lvl_2_val = val_4[x_lvl_q]
+        x_lvl_2_val = x_lvl_val[x_lvl_q]
         A_lvl_2_q = A_lvl_ptr[A_lvl_q]
         A_lvl_2_q_stop = A_lvl_ptr[A_lvl_q + 1]
         if A_lvl_2_q < A_lvl_2_q_stop
@@ -62,9 +62,9 @@ quote
                 A_lvl_2_i = A_lvl_idx[A_lvl_2_q]
                 phase_stop_2 = min(phase_stop, A_lvl_2_i)
                 if A_lvl_2_i == phase_stop_2
-                    A_lvl_3_val = val_3[A_lvl_2_q]
+                    A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
                     y_lvl_q = (1 - 1) * A_lvl_2.shape + phase_stop_2
-                    val[y_lvl_q] = x_lvl_2_val * A_lvl_3_val + val[y_lvl_q]
+                    y_lvl_val[y_lvl_q] = x_lvl_2_val * A_lvl_3_val + y_lvl_val[y_lvl_q]
                     A_lvl_2_q += 1
                 end
                 i = phase_stop_2 + 1
@@ -72,7 +72,7 @@ quote
         end
     end
     qos = 1 * A_lvl_2.shape
-    resize!(val, qos)
+    resize!(y_lvl_val, qos)
     (y = Fiber((DenseLevel){Int64}(y_lvl_2, A_lvl_2.shape)),)
 end
 julia> @finch begin

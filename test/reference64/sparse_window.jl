@@ -1,13 +1,13 @@
 begin
     C_lvl = (ex.bodies[1]).tns.bind.lvl
-    val = C_lvl.lvl.val
-    C_lvl_2 = C_lvl.lvl
     C_lvl_ptr = C_lvl.ptr
     C_lvl_idx = C_lvl.idx
+    C_lvl_2 = C_lvl.lvl
+    C_lvl_val = C_lvl.lvl.val
     A_lvl = (ex.bodies[2]).body.rhs.tns.bind.lvl
-    val_3 = A_lvl.lvl.val
     A_lvl_ptr = A_lvl.ptr
     A_lvl_idx = A_lvl.idx
+    A_lvl_val = A_lvl.lvl.val
     C_lvl_qos_stop = 0
     Finch.resize_if_smaller!(C_lvl_ptr, 1 + 1)
     Finch.fill_range!(C_lvl_ptr, 0, 1 + 1, 1 + 1)
@@ -30,14 +30,14 @@ begin
             A_lvl_i = A_lvl_idx[A_lvl_q]
             phase_stop_2 = min(phase_stop, -1 + A_lvl_i)
             if A_lvl_i == phase_stop_2 + 1
-                A_lvl_2_val = val_3[A_lvl_q]
+                A_lvl_2_val = A_lvl_val[A_lvl_q]
                 if C_lvl_qos > C_lvl_qos_stop
                     C_lvl_qos_stop = max(C_lvl_qos_stop << 1, 1)
                     Finch.resize_if_smaller!(C_lvl_idx, C_lvl_qos_stop)
-                    Finch.resize_if_smaller!(val, C_lvl_qos_stop)
-                    Finch.fill_range!(val, 0.0, C_lvl_qos, C_lvl_qos_stop)
+                    Finch.resize_if_smaller!(C_lvl_val, C_lvl_qos_stop)
+                    Finch.fill_range!(C_lvl_val, 0.0, C_lvl_qos, C_lvl_qos_stop)
                 end
-                val[C_lvl_qos] = A_lvl_2_val
+                C_lvl_val[C_lvl_qos] = A_lvl_2_val
                 C_lvl_idx[C_lvl_qos] = phase_stop_2
                 C_lvl_qos += 1
                 A_lvl_q += 1
@@ -52,6 +52,6 @@ begin
     resize!(C_lvl_ptr, 1 + 1)
     qos = C_lvl_ptr[end] - 1
     resize!(C_lvl_idx, qos)
-    resize!(val, qos)
+    resize!(C_lvl_val, qos)
     (C = Fiber((SparseListLevel){Int64}(C_lvl_2, 4 + -1, C_lvl_ptr, C_lvl_idx)),)
 end

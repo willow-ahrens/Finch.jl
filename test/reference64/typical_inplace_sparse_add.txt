@@ -17,12 +17,12 @@ julia> @finch_code for i = _
     end
 quote
     B_lvl = ex.body.lhs.tns.bind.lvl
-    val = B_lvl.lvl.val
     B_lvl_2 = B_lvl.lvl
+    B_lvl_val = B_lvl.lvl.val
     A_lvl = ex.body.rhs.tns.bind.lvl
-    val_2 = A_lvl.lvl.val
     A_lvl_ptr = A_lvl.ptr
     A_lvl_idx = A_lvl.idx
+    A_lvl_val = A_lvl.lvl.val
     A_lvl.shape == B_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(A_lvl.shape) != $(B_lvl.shape))"))
     A_lvl_q = A_lvl_ptr[1]
     A_lvl_q_stop = A_lvl_ptr[1 + 1]
@@ -41,16 +41,16 @@ quote
             A_lvl_i = A_lvl_idx[A_lvl_q]
             phase_stop_2 = min(phase_stop, A_lvl_i)
             if A_lvl_i == phase_stop_2
-                A_lvl_2_val = val_2[A_lvl_q]
+                A_lvl_2_val = A_lvl_val[A_lvl_q]
                 B_lvl_q = (1 - 1) * B_lvl.shape + phase_stop_2
-                val[B_lvl_q] = A_lvl_2_val + val[B_lvl_q]
+                B_lvl_val[B_lvl_q] = A_lvl_2_val + B_lvl_val[B_lvl_q]
                 A_lvl_q += 1
             end
             i = phase_stop_2 + 1
         end
     end
     qos = 1 * B_lvl.shape
-    resize!(val, qos)
+    resize!(B_lvl_val, qos)
     (B = Fiber((DenseLevel){Int64}(B_lvl_2, B_lvl.shape)),)
 end
 julia> @finch for i = _

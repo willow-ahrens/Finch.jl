@@ -20,21 +20,22 @@ julia> @finch_code mode = fastfinch begin
     end
 quote
     B_lvl = (ex.bodies[1]).tns.bind.lvl
-    B_lvlptr = B_lvl.ptr
-    B_lvlsrt = B_lvl.srt
-    val = B_lvl.lvl.val
+    B_lvl_ptr = (ex.bodies[1]).tns.bind.lvl.ptr
+    B_lvl_tbl = (ex.bodies[1]).tns.bind.lvl.tbl
+    B_lvl_srt = (ex.bodies[1]).tns.bind.lvl.srt
     B_lvl_2 = B_lvl.lvl
+    B_lvl_val = B_lvl.lvl.val
     A_lvl = (ex.bodies[2]).body.body.rhs.tns.bind.lvl
     A_lvl_2 = A_lvl.lvl
-    val_3 = A_lvl_2.lvl.val
     A_lvl_ptr = A_lvl_2.ptr
     A_lvl_idx = A_lvl_2.idx
+    A_lvl_2_val = A_lvl_2.lvl.val
     B_lvl_qos_fill = 0
     B_lvl_qos_stop = 0
-    empty!(B_lvl.tbl)
-    empty!(B_lvlsrt)
-    Finch.resize_if_smaller!(B_lvlptr, 1 + 1)
-    Finch.fill_range!(B_lvlptr, 0, 1 + 1, 1 + 1)
+    empty!(B_lvl_tbl)
+    empty!(B_lvl_srt)
+    Finch.resize_if_smaller!(B_lvl_ptr, 1 + 1)
+    Finch.fill_range!(B_lvl_ptr, 0, 1 + 1, 1 + 1)
     for j_4 = 1:A_lvl.shape
         A_lvl_q = (1 - 1) * A_lvl.shape + j_4
         A_lvl_2_q = A_lvl_ptr[A_lvl_q]
@@ -54,19 +55,19 @@ quote
                 A_lvl_2_i = A_lvl_idx[A_lvl_2_q]
                 phase_stop_2 = min(phase_stop, A_lvl_2_i)
                 if A_lvl_2_i == phase_stop_2
-                    A_lvl_3_val = val_3[A_lvl_2_q]
+                    A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
                     B_lvl_key_2 = (1, (j_4, phase_stop_2))
-                    B_lvl_q_2 = get(B_lvl.tbl, B_lvl_key_2, B_lvl_qos_fill + 1)
+                    B_lvl_q_2 = get(B_lvl_tbl, B_lvl_key_2, B_lvl_qos_fill + 1)
                     if B_lvl_q_2 > B_lvl_qos_stop
                         B_lvl_qos_stop = max(B_lvl_qos_stop << 1, 1)
-                        Finch.resize_if_smaller!(val, B_lvl_qos_stop)
-                        Finch.fill_range!(val, 0.0, B_lvl_q_2, B_lvl_qos_stop)
+                        Finch.resize_if_smaller!(B_lvl_val, B_lvl_qos_stop)
+                        Finch.fill_range!(B_lvl_val, 0.0, B_lvl_q_2, B_lvl_qos_stop)
                     end
-                    val[B_lvl_q_2] = A_lvl_3_val
+                    B_lvl_val[B_lvl_q_2] = A_lvl_3_val
                     if B_lvl_q_2 > B_lvl_qos_fill
                         B_lvl_qos_fill = B_lvl_q_2
-                        B_lvl.tbl[B_lvl_key_2] = B_lvl_q_2
-                        B_lvlptr[1 + 1] += 1
+                        B_lvl_tbl[B_lvl_key_2] = B_lvl_q_2
+                        B_lvl_ptr[1 + 1] += 1
                     end
                     A_lvl_2_q += 1
                 end
@@ -74,17 +75,17 @@ quote
             end
         end
     end
-    resize!(B_lvlsrt, length(B_lvl.tbl))
-    copyto!(B_lvlsrt, pairs(B_lvl.tbl))
-    sort!(B_lvlsrt, by = hashkeycmp)
+    resize!(B_lvl_srt, length(B_lvl_tbl))
+    copyto!(B_lvl_srt, pairs(B_lvl_tbl))
+    sort!(B_lvl_srt, by = hashkeycmp)
     for p = 2:1 + 1
-        B_lvlptr[p] += B_lvlptr[p - 1]
+        B_lvl_ptr[p] += B_lvl_ptr[p - 1]
     end
-    resize!(B_lvlptr, 1 + 1)
-    qos = B_lvlptr[end] - 1
-    resize!(B_lvlsrt, qos)
-    resize!(val, qos)
-    (B = Fiber((SparseHashLevel){2, Tuple{Int64, Int64}}(B_lvl_2, (A_lvl.shape, A_lvl_2.shape), B_lvlptr, B_lvl.tbl, B_lvlsrt)),)
+    resize!(B_lvl_ptr, 1 + 1)
+    qos = B_lvl_ptr[end] - 1
+    resize!(B_lvl_srt, qos)
+    resize!(B_lvl_val, qos)
+    (B = Fiber((SparseHashLevel){2, Tuple{Int64, Int64}}(B_lvl_2, (A_lvl.shape, A_lvl_2.shape), B_lvl_ptr, B_lvl_tbl, B_lvl_srt)),)
 end
 julia> @finch mode = fastfinch begin
         B .= 0

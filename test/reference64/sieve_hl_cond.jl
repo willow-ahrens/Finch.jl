@@ -1,9 +1,9 @@
 begin
     B = (ex.bodies[1]).tns.bind
     A_lvl = (ex.bodies[2]).body.body.rhs.tns.bind.lvl
-    val = A_lvl.lvl.val
     A_lvl_ptr = A_lvl.ptr
     A_lvl_idx = A_lvl.idx
+    A_lvl_val = A_lvl.lvl.val
     B_val = 0
     A_lvl_q = A_lvl_ptr[1]
     A_lvl_q_stop = A_lvl_ptr[1 + 1]
@@ -22,7 +22,7 @@ begin
             A_lvl_i = A_lvl_idx[A_lvl_q]
             phase_stop_2 = min(phase_stop, A_lvl_i)
             if A_lvl_i == phase_stop_2
-                A_lvl_2_val = val[A_lvl_q]
+                A_lvl_2_val = A_lvl_val[A_lvl_q]
                 cond_2 = phase_stop_2 == 1
                 if cond_2
                     B_val = A_lvl_2_val + B_val

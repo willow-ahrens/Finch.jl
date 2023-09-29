@@ -1,4 +1,4 @@
-Fiber!(SparseRLE(Element(0)) constructors:
+Fiber!(SparseRLE(Element(0))) constructors:
 initialized fiber: Fiber(SparseRLE{Int64}(Element{0.0, Float64, Int64}([2.0, 2.0, 3.0, 3.0]), 6, [1, 5], [2, 3, 5, 6], [2, 3, 5, 6]))
 initialized fiber: Fiber(SparseRLE{Int16}(Element{0.0, Float64, Int64}([2.0, 2.0, 3.0, 3.0]), 6, [1, 5], Int16[2, 3, 5, 6], Int16[2, 3, 5, 6]))
 sized fiber: Fiber(SparseRLE{Int64}(Element{0.0, Float64, Int64}(Float64[]), 7, [1, 1], Int64[], Int64[]))

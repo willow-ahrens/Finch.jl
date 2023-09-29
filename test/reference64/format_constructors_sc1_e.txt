@@ -1,4 +1,4 @@
-Fiber!(SparseCOO{1}(Element(0)) constructors:
+Fiber!(SparseCOO{1}(Element(0))) constructors:
 initialized fiber: Fiber(SparseCOO{1, Tuple{Int64}}(Element{0.0, Float64, Int64}([2.0, 2.0, 3.0, 3.0]), (6,), [1, 5], ([2, 3, 5, 6], ) ))
 initialized fiber: Fiber(SparseCOO{1, Tuple{Int16}}(Element{0.0, Float64, Int64}([2.0, 2.0, 3.0, 3.0]), (6,), [1, 5], (Int16[2, 3, 5, 6], ) ))
 sized fiber: Fiber(SparseCOO{1, Tuple{Int64}}(Element{0.0, Float64, Int64}(Float64[]), (7,), [1, 1], (Int64[], ) ))

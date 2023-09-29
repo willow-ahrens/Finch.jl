@@ -22,9 +22,9 @@ julia> @finch_code begin
     end
 quote
     X_lvl = (ex.body.bodies[1]).rhs.tns.bind.lvl
-    val = X_lvl.lvl.val
     X_lvl_ptr = X_lvl.ptr
     X_lvl_idx = X_lvl.idx
+    X_lvl_val = X_lvl.lvl.val
     x_min = (ex.body.bodies[2]).lhs.tns.bind
     x_min_val = x_min.val
     x_max = (ex.body.bodies[3]).lhs.tns.bind
@@ -55,7 +55,7 @@ quote
                     x_min_val = min(0.0, x_min_val)
                     x_max_val = max(0.0, x_max_val)
                 end
-                X_lvl_2_val = val[X_lvl_q]
+                X_lvl_2_val = X_lvl_val[X_lvl_q]
                 x_min_val = min(X_lvl_2_val, x_min_val)
                 x_max_val = max(X_lvl_2_val, x_max_val)
                 x_sum_val = X_lvl_2_val + x_sum_val

@@ -1,17 +1,17 @@
 begin
     B_lvl = (ex.bodies[1]).tns.bind.lvl
-    val = B_lvl.lvl.val
     B_lvl_2 = B_lvl.lvl
+    B_lvl_val = B_lvl.lvl.val
     A_lvl = (ex.bodies[2]).body.rhs.tns.bind.lvl
     A_lvl_2 = A_lvl.lvl
-    val_3 = A_lvl_2.lvl.val
+    A_lvl_2_val = A_lvl_2.lvl.val
     I_lvl = ((ex.bodies[2]).body.rhs.idxs[1]).tns.bind.lvl
-    I_lvl_ptr = I_lvl.ptr
-    I_lvl_idx = I_lvl.idx
-    I_lvl_val = I_lvl.val
+    I_lvl_ptr = ((ex.bodies[2]).body.rhs.idxs[1]).tns.bind.lvl.ptr
+    I_lvl_idx = ((ex.bodies[2]).body.rhs.idxs[1]).tns.bind.lvl.idx
+    I_lvl_val = ((ex.bodies[2]).body.rhs.idxs[1]).tns.bind.lvl.val
     A_lvl.shape == I_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(A_lvl.shape) != $(I_lvl.shape))"))
-    Finch.resize_if_smaller!(val, A_lvl.shape)
-    Finch.fill_range!(val, 0, 1, A_lvl.shape)
+    Finch.resize_if_smaller!(B_lvl_val, A_lvl.shape)
+    Finch.fill_range!(B_lvl_val, 0, 1, A_lvl.shape)
     I_lvl_q = I_lvl_ptr[1]
     I_lvl_q_stop = I_lvl_ptr[1 + 1]
     i = 1
@@ -27,8 +27,8 @@ begin
                 A_lvl_q = (1 - 1) * A_lvl.shape + i_6
                 s_2 = I_lvl_val[I_lvl_q]
                 A_lvl_2_q = (A_lvl_q - 1) * A_lvl_2.shape + s_2
-                A_lvl_3_val = val_3[A_lvl_2_q]
-                val[B_lvl_q] = A_lvl_3_val
+                A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
+                B_lvl_val[B_lvl_q] = A_lvl_3_val
             end
             I_lvl_q += 1
         else
@@ -37,13 +37,13 @@ begin
                 A_lvl_q = (1 - 1) * A_lvl.shape + i_7
                 s_3 = I_lvl_val[I_lvl_q]
                 A_lvl_2_q_2 = (A_lvl_q - 1) * A_lvl_2.shape + s_3
-                A_lvl_3_val_2 = val_3[A_lvl_2_q_2]
-                val[B_lvl_q] = A_lvl_3_val_2
+                A_lvl_3_val_2 = A_lvl_2_val[A_lvl_2_q_2]
+                B_lvl_val[B_lvl_q] = A_lvl_3_val_2
             end
         end
         i = phase_stop + 1
     end
     qos = 1 * A_lvl.shape
-    resize!(val, qos)
+    resize!(B_lvl_val, qos)
     (B = Fiber((DenseLevel){Int64}(B_lvl_2, A_lvl.shape)),)
 end
