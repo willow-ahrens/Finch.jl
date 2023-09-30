@@ -181,7 +181,7 @@ function get_program_rules(alg, shash)
                 block(s1..., Postwalk(@rule a => v)(block(s3...)))
             end
         end),
-        (@rule access(~a::isliteral, reader()) => getval(a)), 
+        (@rule access(~a::isliteral, reader(), ~j...) => getval(a)), 
 
 
         (@rule block(~s1..., thaw(~a::isvariable), ~s2..., freeze(~a), ~s3...) => if ortho(a, s2)
