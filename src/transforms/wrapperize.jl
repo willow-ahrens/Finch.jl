@@ -44,23 +44,34 @@ function get_wrapper_rules(alg, depth, ctx)
         end),
         (@rule call(<, ~i::isindex, ~j::isindex) => begin
             if depth(i) < depth(j)
+                access(LoTriMask(), reader(), call(-, i, 1), j)
+            elseif depth(i) > depth(j)
                 access(UpTriMask(), reader(), call(+, i, 1), j)
             end
         end),
         (@rule call(<=, ~i::isindex, ~j::isindex) => begin
-            if depth(i) <= depth(j)
+            if depth(i) < depth(j)
+                access(LoTriMask(), reader(), i, j)
+            elseif depth(i) > depth(j)
                 access(UpTriMask(), reader(), i, j)
             end
         end),
         (@rule call(>, ~i::isindex, ~j::isindex) => begin
-            if depth(i) > depth(j)
+            if depth(i) < depth(j)
+                access(UpTriMask(), reader(), call(+, i, 1), j)
+            elseif depth(i) > depth(j)
                 access(LoTriMask(), reader(), call(-, i, 1), j)
             end
         end),
         (@rule call(>=, ~i::isindex, ~j::isindex) => begin
-            if depth(i) <= depth(j)
+            if depth(i) < depth(j)
+                access(UpTriMask(), reader(), i, j)
+            elseif depth(i) > depth(j)
                 access(LoTriMask(), reader(), i, j)
             end
+        end),
+        (@rule call(==, ~i::isindex, ~j::isindex) => begin
+            access(DiagMask(), reader(), i, j)
         end),
         (@rule call(toeplitz, call(swizzle, ~A, ~sigma...), ~dim...) => begin
             sigma = getval.(sigma)
