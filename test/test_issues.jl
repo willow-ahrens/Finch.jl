@@ -325,7 +325,7 @@ using CIndices
     #https://github.com/willow-ahrens/Finch.jl/issues/286
     let 
         A = [1 0; 0 1]
-        temp = 0.0
-        @finch j=_, i=_ temp = A[i, j] end
+        #note that A[i, j] is ignored here, as the temp local is never used
+        @finch (for j=_, i=_; temp = A[i, j] end)
     end
 end

@@ -12,8 +12,6 @@ function get_program_rules(alg, shash)
     return [
         (@rule call(~f::isliteral, ~a::(All(isliteral))...) => literal(getval(f)(getval.(a)...))),
 
-        (@rule loop(~i, ~a, block()) => block()),
-        (@rule block(~a..., block(~b...), ~c...) => block(a..., b..., c...)),
 
         (@rule call(~f::isassociative(alg), ~a..., call(~f, ~b...), ~c...) => call(f, a..., b..., c...)),
         (@rule call(~f::iscommutative(alg), ~a...) => if !(issorted(a, by = shash))
@@ -136,7 +134,6 @@ function get_program_rules(alg, shash)
             end
         end),
 
-
         # Bottom-up reduction1
         (@rule loop(~idx, ~ext::isvirtual, assign(access(~lhs, updater(), ~j...), ~f, ~rhs)) => begin
             if idx ∉ j && idx ∉ getunbound(rhs)
@@ -164,17 +161,6 @@ function get_program_rules(alg, shash)
                end
            end
         end),
-        
-        (@rule assign(~a, ~op, cached(~b, ~c)) => assign(a, op, b)),
-
-        (@rule block(~s1..., define(~a::isvariable, ~v::isconstant), ~s2...) => begin
-            s2_2 = Postwalk(@rule a => v)(block(s2...))
-            if s2_2 !== nothing
-                #We cannot remove the definition because we aren't sure if the variable gets referenced from a virtual.
-                block(s1..., define(a, v), s2_2.bodies...)
-            end
-        end),
-
         (@rule block(~s1..., thaw(~a::isvariable), ~s2..., freeze(~a), ~s3...) => if ortho(a, s2)
             block(s1..., s2..., s3...)
         end),
@@ -182,13 +168,6 @@ function get_program_rules(alg, shash)
         (@rule block(~s1..., freeze(~a::isvariable), ~s2..., thaw(~a), ~s3...) => if ortho(a, s2)
             block(s1..., s2..., s3...)
         end),
-
-        (@rule loop(~idx, ~ext, define(~args...)) => block()),
-        (@rule sieve(~cond, define(~args...)) => block()),
-        (@rule loop(~idx, ~ext, block(~stmts..., define(~args...))) => 
-            loop(~idx, ~ext, block(~stmts...))),
-        (@rule sieve(~cond, block(~stmts..., define(~args...))) =>
-            sieve(~cond, block(~stmts...))),
     ]
 end
 
@@ -225,6 +204,26 @@ end
 function simplify(root, ctx)
     Rewrite(Fixpoint(Chain([
         Prewalk(Fixpoint(Chain(ctx.program_rules))),
-        Postwalk(Fixpoint(Chain(ctx.program_rules)))
+        #these rules are non-customizeable:
+        Prewalk(Chain([
+            (@rule loop(~i, ~a, block()) => block()),
+            (@rule sieve(~cond, block()) => block()),
+            (@rule block(~a..., block(~b...), ~c...) => block(a..., b..., c...)),
+            Fixpoint(@rule block(~s1..., define(~a::isvariable, ~v::isconstant), ~s2...) => begin
+                s2_2 = Postwalk(@rule a => v)(block(s2...))
+                if s2_2 !== nothing
+                    #We cannot remove the definition because we aren't sure if the variable gets referenced from a virtual.
+                    block(s1..., define(a, v), s2_2.bodies...)
+                end
+            end),
+            Fixpoint(@rule block(~args..., define(~a, ~v)) => block(args...)),
+            (@rule loop(~idx, ~ext, define(~args...)) => block()),
+            (@rule sieve(~cond, define(~args...)) => block()),
+            (@rule loop(~idx, ~ext, block(~stmts..., define(~args...))) => 
+                loop(~idx, ~ext, block(~stmts...))),
+            (@rule sieve(~cond, block(~stmts..., define(~args...))) =>
+                sieve(~cond, block(~stmts...))),
+            (@rule assign(~a, ~op, cached(~b, ~c)) => assign(a, op, b)),
+        ])),
     ])))(root)
 end
