@@ -328,4 +328,22 @@ using CIndices
         #note that A[i, j] is ignored here, as the temp local is never used
         @finch (for j=_, i=_; temp = A[i, j] end)
     end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/288
+    let
+        A = zeros(3, 3, 3)
+        C = zeros(3, 3, 3)
+        X = zeros(3, 3)
+        @finch_code begin
+            for k=_, j=_, i=_
+                temp1 = X[i, j]
+                for l=_
+                    temp3 = A[i, l, k]
+                    if uptrimask[i+1, l]
+                        C[i, j, k] += temp1 * temp3
+                    end
+                end
+            end
+        end
+    end
 end
