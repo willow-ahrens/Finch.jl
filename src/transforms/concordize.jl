@@ -51,7 +51,7 @@ function (ctx::ConcordizeVisitor)(node::FinchNode)
         
     selects = []
 
-    if node.kind === loop || node.kind === assign || node.kind === define || node.kind === sieve
+    if node.kind === loop || node.kind === assign || node.kind === define || node.kind === sieve || node.kind === block
         node = Rewrite(Postwalk(Fixpoint(
             @rule access(~tns, ~mode, ~i..., ~j::isboundnotindex, ~k::All(isboundindex)...) => begin
                 j_2 = index(freshen(ctx, :s))
