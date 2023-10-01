@@ -342,8 +342,9 @@ using CIndices
                 let temp1 = X[i, j]
                     for l=_
                         let temp3 = A[i, l, k]
-                        if uptrimask[i+1, l]
-                            C[i, j, k] += temp1 * temp3
+                            if uptrimask[i+1, l]
+                                C[i, j, k] += temp1 * temp3
+                            end
                         end
                     end
                 end
