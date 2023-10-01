@@ -167,8 +167,8 @@ function declare_level!(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, p
     push!(ctx.code.preamble, quote
         for $r = 1:$(lvl.qos_fill)
             $p = first($(lvl.ex).srt[$r])
-            $(lvl.ex).ptr[$p] = $(Tp(0))
-            $(lvl.ex).ptr[$p + 1] = $(Tp(0))
+            $(lvl.ex).ptr[$p] = $(Tp(1))
+            $(lvl.ex).ptr[$p + 1] = $(Tp(1))
             $i = last($(lvl.ex).srt[$r])
             $q = ($p - $(Tp(1))) * $(ctx(lvl.shape)) + $i
             $(lvl.ex).tbl[$q] = false
@@ -242,7 +242,8 @@ function freeze_level!(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, po
     Tp = lvl.Tp
     push!(ctx.code.preamble, quote
         sort!(view($(lvl.ex).srt, 1:$(lvl.qos_fill)))
-        $p_prev = $(Tp(0))
+        $p_prev = $(Tp(1))
+        
         for $r = 1:$(lvl.qos_fill)
             $p = first($(lvl.ex).srt[$r])
             if $p != $p_prev
@@ -251,8 +252,15 @@ function freeze_level!(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, po
             end
             $p_prev = $p
         end
-        $(lvl.ex).ptr[$p_prev + 1] = $(lvl.qos_fill) + 1
+        if $(lvl.qos_fill) == 0
+            $(lvl.ex).ptr[1 + 1] = $(lvl.qos_fill) + 1
+        else
+            $(lvl.ex).ptr[first($(lvl.ex).srt[$(lvl.qos_fill)]) + 1] = $(lvl.qos_fill) + 1
+        end
+        #$(lvl.ex).ptr[$p_prev + 1] = $(lvl.qos_fill) + 1 # Copy propagate removes p_prev
+
     end)
+    
     lvl.lvl = freeze_level!(lvl.lvl, ctx, call(*, pos_stop, lvl.shape))
     return lvl
 end
@@ -286,8 +294,10 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
                     stop = (ctx, ext) -> value(my_i_stop),
                     body = (ctx, ext) -> Stepper(
                         seek = (ctx, ext) -> quote
-                            while $my_r + $(Tp(1)) < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext)))
-                                $my_r += $(Tp(1))
+                            if $my_r < $my_r_stop
+                                while $my_r + $(Tp(1)) < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext)))
+                                    $my_r += $(Tp(1))
+                                end
                             end
                         end,
                         preamble = :($my_i = last($(lvl.ex).srt[$my_r])),
@@ -300,9 +310,11 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
                             ),
                         ),
                         next = (ctx, ext) -> :($my_r += $(Tp(1))),
+                        finalstop = (ctx, ext) -> value(my_i_stop),
                     )
                 ),
                 Phase(
+                    stop = (ctx, ext) -> lvl.shape,
                     body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))
                 )
             ])

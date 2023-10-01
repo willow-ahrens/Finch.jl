@@ -247,7 +247,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSingleRLELevel}, ctx, su
                     $my_i_start = $(lvl.ex).left[$my_q_stop - $(Tp(1))]
                     $my_i_stop = $(lvl.ex).right[$my_q_stop - $(Tp(1))]
                 else
-                    $my_i_start= $(Ti(0))
+                    $my_i_start= $(Ti(1))
                     $my_i_stop= $(Ti(0))
                 end
             end,
