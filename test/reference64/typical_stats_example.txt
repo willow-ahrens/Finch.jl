@@ -13,23 +13,24 @@ julia> x_var = Scalar(0.0)
 Scalar{0.0, Float64}(0.0)
 julia> @finch_code begin
         for i = _
-            x = X[i]
-            x_min[] << min >>= x
-            x_max[] << max >>= x
-            x_sum[] += x
-            x_var[] += x * x
+            let x = X[i]
+                x_min[] << min >>= x
+                x_max[] << max >>= x
+                x_sum[] += x
+                x_var[] += x * x
+            end
         end
     end
 quote
-    X_lvl = (ex.body.bodies[1]).rhs.tns.bind.lvl
+    X_lvl = ex.body.rhs.tns.bind.lvl
     X_lvl_2 = X_lvl.lvl
-    x_min = (ex.body.bodies[2]).lhs.tns.bind
+    x_min = (ex.body.body.bodies[1]).lhs.tns.bind
     x_min_val = x_min.val
-    x_max = (ex.body.bodies[3]).lhs.tns.bind
+    x_max = (ex.body.body.bodies[2]).lhs.tns.bind
     x_max_val = x_max.val
-    x_sum = (ex.body.bodies[4]).lhs.tns.bind
+    x_sum = (ex.body.body.bodies[3]).lhs.tns.bind
     x_sum_val = x_sum.val
-    x_var = (ex.body.bodies[5]).lhs.tns.bind
+    x_var = (ex.body.body.bodies[4]).lhs.tns.bind
     x_var_val = x_var.val
     X_lvl_q = X_lvl.ptr[1]
     X_lvl_q_stop = X_lvl.ptr[1 + 1]
@@ -48,10 +49,11 @@ quote
             X_lvl_i = X_lvl.idx[X_lvl_q]
             phase_stop_2 = min(phase_stop, X_lvl_i)
             if X_lvl_i == phase_stop_2
-                cond = 0 < -i + phase_stop_2
-                if cond
+                for i_5 = i:phase_stop_2 - 1
                     x_min_val = min(0.0, x_min_val)
                     x_max_val = max(0.0, x_max_val)
+                    x_sum_val = 0.0 + x_sum_val
+                    x_var_val = 0.0 * 0.0 + x_var_val
                 end
                 X_lvl_2_val_2 = X_lvl_2.val[X_lvl_q]
                 x_min_val = min(X_lvl_2_val_2, x_min_val)
@@ -60,10 +62,11 @@ quote
                 x_var_val = X_lvl_2_val_2 * X_lvl_2_val_2 + x_var_val
                 X_lvl_q += 1
             else
-                cond_2 = 0 < 1 + -i + phase_stop_2
-                if cond_2
+                for i_7 = i:phase_stop_2
                     x_min_val = min(0.0, x_min_val)
                     x_max_val = max(0.0, x_max_val)
+                    x_sum_val = 0.0 + x_sum_val
+                    x_var_val = 0.0 * 0.0 + x_var_val
                 end
             end
             i = phase_stop_2 + 1
@@ -72,10 +75,11 @@ quote
     phase_start_3 = max(1, 1 + X_lvl_i1)
     phase_stop_3 = X_lvl.shape
     if phase_stop_3 >= phase_start_3
-        cond_3 = 0 < 1 + -phase_start_3 + phase_stop_3
-        if cond_3
+        for i_9 = phase_start_3:phase_stop_3
             x_min_val = min(0.0, x_min_val)
             x_max_val = max(0.0, x_max_val)
+            x_sum_val = 0.0 + x_sum_val
+            x_var_val = 0.0 * 0.0 + x_var_val
         end
     end
     (x_var = (Scalar){0.0, Float64}(x_var_val), x_sum = (Scalar){0.0, Float64}(x_sum_val), x_max = (Scalar){-Inf, Float64}(x_max_val), x_min = (Scalar){Inf, Float64}(x_min_val))

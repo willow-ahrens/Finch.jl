@@ -54,7 +54,7 @@ function (ctx::ScopeVisitor)(node::FinchNode)
         var = node.lhs
         haskey(ctx.vars, var) && throw(ScopeError("In node $(node) variable $(var) is already bound."))
         ctx.vars[var] = node.rhs
-        return node
+        define(node.lhs, node.rhs, open_scope(node.body, ctx))
     elseif istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))
     else

@@ -51,7 +51,7 @@ function (ctx::ConcordizeVisitor)(node::FinchNode)
         
     selects = []
 
-    if node.kind === loop || node.kind === assign || node.kind === define || node.kind === sieve || node.kind === block
+    if node.kind === loop || node.kind === assign || node.kind === define || node.kind === sieve
         node = Rewrite(Postwalk(Fixpoint(
             @rule access(~tns, ~mode, ~i..., ~j::isboundnotindex, ~k::All(isboundindex)...) => begin
                 j_2 = index(freshen(ctx, :s))
@@ -66,7 +66,8 @@ function (ctx::ConcordizeVisitor)(node::FinchNode)
         ctx_2 = ConcordizeVisitor(ctx.ctx, union(ctx.scope, [node.idx]))
         node = loop(node.idx, node.ext, ctx_2(node.body))
     elseif node.kind === define
-        push!(ctx.scope, node.lhs)
+        ctx_2 = ConcordizeVisitor(ctx.ctx, union(ctx.scope, [node.lhs]))
+        node = define(node.lhs, node.rhs, ctx_2(node.body))
     elseif node.kind === declare
         push!(ctx.scope, node.tns)
     elseif istree(node)
@@ -76,10 +77,7 @@ function (ctx::ConcordizeVisitor)(node::FinchNode)
     for (select_idx, idx_ex) in reverse(selects)
         var = variable(freshen(ctx, :v))
 
-        node = block(
-            define(var, idx_ex),
-            loop(select_idx, Extent(var, var), node)
-        )
+        node = define(var, idx_ex, loop(select_idx, Extent(var, var), node))
     end
 
     node

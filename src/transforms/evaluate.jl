@@ -19,19 +19,18 @@ function evaluate_partial(root, ctx)
         )
     ]))))(root)
     root = Rewrite(Fixpoint(Chain([
-        Fixpoint(@rule block(~s1..., block(~s2...), ~s3...)=> block(s1..., s2..., s3...)),
-        Fixpoint(@rule block(define(~a::isvariable, ~v::Or(isconstant, isvirtual)), ~s...) => begin
+        Fixpoint(@rule define(~a::isvariable, ~v::Or(isconstant, isvirtual), ~s) => begin
             ctx.bindings[a] = v
-            block(s...)
+            s
         end),
         Postwalk(Fixpoint(Chain([
             (@rule call(~f::isliteral, ~a::(All(Or(isvariable, isvirtual, isfoldable)))...) => virtual_call(f.val, ctx, a...)),
             (@rule call(~f::isliteral, ~a::(All(isliteral))...) => finch_leaf(getval(f)(getval.(a)...))),
-            (@rule block(~s1..., define(~a::isvariable, ~v::isconstant), ~s2...) => begin
-                s2_2 = Postwalk(@rule a => v)(block(s2...))
-                if s2_2 !== nothing
+            (@rule define(~a::isvariable, ~v::isconstant, ~body) => begin
+                body_2 = Postwalk(@rule a => v)(body)
+                if body_2 !== nothing
                     #We cannot remove the definition because we aren't sure if the variable gets referenced from a virtual.
-                    block(s1..., define(a, v), s2_2.bodies...)
+                    define(a, v, body)
                 end
             end),
         ])))
@@ -53,7 +52,7 @@ function unevaluate_partial(root, ctx)
     tnss = unique(filter(!isnothing, map(node->if @capture(node, access(~A, ~m, ~i...)) getroot(A) end, PostOrderDFS(root))))
     for tns in tnss
         if haskey(ctx.bindings, tns)
-            root = block(define(tns, ctx.bindings[tns]), root)
+            root = define(tns, ctx.bindings[tns], root)
             delete!(ctx.bindings, tns)
         end
     end

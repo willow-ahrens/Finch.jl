@@ -267,8 +267,10 @@ using CIndices
 
     let
         @test_throws Finch.ScopeError (@finch begin
-            x = 0
-            x = 0
+            let x = 0
+                let x = 0
+                end
+            end
         end)
 
     end
@@ -294,9 +296,10 @@ using CIndices
                     C[i, j] *= beta
                 end
                 for k=_
-                    foo = alpha * B[k, j]
-                    for i=_
-                        C[i, j] += foo*A[i, k]
+                    let foo = alpha * B[k, j]
+                        for i=_
+                            C[i, j] += foo*A[i, k]
+                        end
                     end
                 end
             end
@@ -326,7 +329,7 @@ using CIndices
     let 
         A = [1 0; 0 1]
         #note that A[i, j] is ignored here, as the temp local is never used
-        @finch (for j=_, i=_; temp = A[i, j] end)
+        @finch (for j=_, i=_; let temp = A[i, j]; end end)
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/288
@@ -336,11 +339,12 @@ using CIndices
         X = zeros(3, 3)
         @finch_code mode=fastfinch begin
             for k=_, j=_, i=_
-                temp1 = X[i, j]
-                for l=_
-                    temp3 = A[i, l, k]
-                    if uptrimask[i+1, l]
-                        C[i, j, k] += temp1 * temp3
+                let temp1 = X[i, j]
+                    for l=_
+                        let temp3 = A[i, l, k]
+                        if uptrimask[i+1, l]
+                            C[i, j, k] += temp1 * temp3
+                        end
                     end
                 end
             end

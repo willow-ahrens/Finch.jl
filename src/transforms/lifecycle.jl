@@ -54,6 +54,8 @@ function (ctx::LifecycleVisitor)(node::FinchNode)
         open_stmt(loop(node.idx, ctx(node.ext), open_scope(node.body, ctx)), ctx)
     elseif node.kind === sieve
         open_stmt(sieve(ctx(node.cond), open_scope(node.body, ctx)), ctx)
+    elseif node.kind === define
+        open_stmt(define(node.lhs, ctx(node.rhs), open_scope(node.body, ctx)), ctx)
     elseif node.kind === declare
         ctx.scoped_uses[node.tns] = ctx.uses
         if get(ctx.modes, node.tns, reader()) === updater 
