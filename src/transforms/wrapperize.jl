@@ -73,6 +73,9 @@ function get_wrapper_rules(alg, depth, ctx)
         (@rule call(==, ~i::isindex, ~j::isindex) => begin
             access(DiagMask(), reader(), i, j)
         end),
+        (@rule call(!=, ~i::isindex, ~j::isindex) => begin
+            call(!, access(DiagMask(), reader(), i, j))
+        end),
         (@rule call(toeplitz, call(swizzle, ~A, ~sigma...), ~dim...) => begin
             sigma = getval.(sigma)
             idim = invperm(sigma)[dim]
