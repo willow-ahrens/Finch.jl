@@ -334,7 +334,7 @@ using CIndices
         A = zeros(3, 3, 3)
         C = zeros(3, 3, 3)
         X = zeros(3, 3)
-        @finch_code begin
+        @finch_code mode=fastfinch begin
             for k=_, j=_, i=_
                 temp1 = X[i, j]
                 for l=_
