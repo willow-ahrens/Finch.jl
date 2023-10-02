@@ -362,4 +362,11 @@ using CIndices
         @finch mode=fastfinch (x .= 0; for i=_, j=_; if i != j x[] += A[j, i] end end)
         @test x[] == 30.0
     end
+  
+    #https://github.com/willow-ahrens/Finch.jl/issues/286
+    let 
+        A = [1 0; 0 1]
+        #note that A[i, j] is ignored here, as the temp local is never used
+        @finch (for j=_, i=_; temp = A[i, j] end)
+    end
 end
