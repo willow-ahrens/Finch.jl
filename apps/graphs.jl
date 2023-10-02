@@ -51,15 +51,11 @@ function bfs(edges, source=5)
     P = Fiber!(Dense(Element(0), n))
     @finch P[source] = source
 
-    v = Scalar(false)
-
     while countstored(F) > 0
         @finch begin
             _F .= false
             for j=_, k=_
-                v .= false
-                v[] = F[j] && edges[k, j] && !(V[k])
-                if v[]
+                if F[j] && edges[k, j] && !(V[k])
                     _F[k] |= true
                     P[k] <<choose(0)>>= j #Only set the parent for this vertex
                 end
@@ -91,7 +87,6 @@ function bellmanford(edges, source=1)
     active_prev = Fiber!(SparseByteMap(Pattern(), n))
     active_prev[source] = true
     active = Fiber!(SparseByteMap(Pattern(), n))
-    d = Scalar(0.0)
 
     for iter = 1:n  
         @finch for j=_; if active_prev[j] dists[j] <<minby>>= dists_prev[j] end end
@@ -101,10 +96,10 @@ function bellmanford(edges, source=1)
             for j = _
                 if active_prev[j]
                     for i = _
-                        d .= 0
-                        d[] = first(dists_prev[j]) + edges[i, j]
-                        dists[i] <<minby>>= (d[], j)
-                        active[i] |= d[] < first(dists_prev[i])
+                        let d = first(dists_prev[j]) + edges[i, j]
+                            dists[i] <<minby>>= (d, j)
+                            active[i] |= d < first(dists_prev[i])
+                        end
                     end
                 end
             end
