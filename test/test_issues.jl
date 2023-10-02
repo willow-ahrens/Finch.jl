@@ -337,7 +337,7 @@ using CIndices
         A = zeros(3, 3, 3)
         C = zeros(3, 3, 3)
         X = zeros(3, 3)
-        @finch_code mode=fastfinch begin
+        check_output("issue288_concordize_let.jl", @finch_code mode=fastfinch begin
             for k=_, j=_, i=_
                 let temp1 = X[i, j]
                     for l=_
@@ -349,6 +349,24 @@ using CIndices
                     end
                 end
             end
-        end
+        end)
+        check_output("issue288_concordize_double_let.jl", @finch_code mode=fastfinch begin
+            for k=_, j=_, i=_
+                let temp1 = X[i, j]
+                    for l=_
+                        let temp3 = A[i, l, k]
+                            if uptrimask[i+1, l]
+                                C[i, j, k] += temp1 * temp3
+                            end
+                        end
+                        let temp4 = A[i, l, k]
+                            if uptrimask[i+1, l]
+                                C[i, j, k] += temp1 * temp4
+                            end
+                        end
+                    end
+                end
+            end
+        end)
     end
 end
