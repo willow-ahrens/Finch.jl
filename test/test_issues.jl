@@ -329,37 +329,37 @@ using CIndices
         @finch mode=fastfinch for j=_, i=_; if i < j x[] += A[i, j] end end
         @test x[] == 11.0
 
-        @finch mode=fastfinch (x .= 0; for j=_, i=_; if i < j x[] += A[j, i] end end)
+        @finch mode=fastfinch (x .= 0; for i=_, j=_; if i < j x[] += A[j, i] end end)
         @test x[] == 19.0
 
         @finch mode=fastfinch (x .= 0; for j=_, i=_; if i <= j x[] += A[i, j] end end)
         @test x[] == 26.0
 
-        @finch mode=fastfinch (x .= 0; for j=_, i=_; if i <= j x[] += A[j, i] end end)
+        @finch mode=fastfinch (x .= 0; for i=_, j=_; if i <= j x[] += A[j, i] end end)
         @test x[] == 34.0
 
         @finch mode=fastfinch (x .= 0; for j=_, i=_; if i > j x[] += A[i, j] end end)
         @test x[] == 19.0
 
-        @finch mode=fastfinch (x .= 0; for j=_, i=_; if i > j x[] += A[j, i] end end)
+        @finch mode=fastfinch (x .= 0; for i=_, j=_; if i > j x[] += A[j, i] end end)
         @test x[] == 11.0
 
         @finch mode=fastfinch (x .= 0; for j=_, i=_; if i >= j x[] += A[i, j] end end)
         @test x[] == 34.0
 
-        @finch mode=fastfinch (x .= 0; for j=_, i=_; if i >= j x[] += A[j, i] end end)
+        @finch mode=fastfinch (x .= 0; for i=_, j=_; if i >= j x[] += A[j, i] end end)
         @test x[] == 26.0
 
         @finch mode=fastfinch (x .= 0; for j=_, i=_; if i == j x[] += A[i, j] end end)
         @test x[] == 15.0
 
-        @finch mode=fastfinch (x .= 0; for j=_, i=_; if i == j x[] += A[j, i] end end)
+        @finch mode=fastfinch (x .= 0; for i=_, j=_; if i == j x[] += A[j, i] end end)
         @test x[] == 15.0
 
         @finch mode=fastfinch (x .= 0; for j=_, i=_; if i != j x[] += A[i, j] end end)
         @test x[] == 30.0
 
-        @finch mode=fastfinch (x .= 0; for j=_, i=_; if i != j x[] += A[j, i] end end)
+        @finch mode=fastfinch (x .= 0; for i=_, j=_; if i != j x[] += A[j, i] end end)
         @test x[] == 30.0
     end
 end
