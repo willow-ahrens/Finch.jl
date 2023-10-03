@@ -30,7 +30,7 @@ function evaluate_partial(root, ctx)
                 body_2 = Postwalk(@rule a => v)(body)
                 if body_2 !== nothing
                     #We cannot remove the definition because we aren't sure if the variable gets referenced from a virtual.
-                    define(a, v, body)
+                    define(a, v, body_2)
                 end
             end),
         ])))
