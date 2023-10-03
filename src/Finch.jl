@@ -32,6 +32,7 @@ export SparseVBL, SparseVBLLevel
 export Dense, DenseLevel
 export RepeatRLE, RepeatRLELevel
 export Element, ElementLevel
+export PointerElement, PointerElementLevel
 export Pattern, PatternLevel
 export walk, gallop, follow, extrude, laminate
 export fiber, fiber!, Fiber!, pattern!, dropdefaults, dropdefaults!, redefault!
@@ -97,6 +98,7 @@ include("tensors/levels/sparsevbllevels.jl")
 include("tensors/levels/denselevels.jl")
 include("tensors/levels/repeatrlelevels.jl")
 include("tensors/levels/elementlevels.jl")
+include("tensors/levels/pointerlevel.jl")
 include("tensors/levels/patternlevels.jl")
 include("tensors/levels/sparsetrianglelevels.jl")
 include("tensors/masks.jl")
