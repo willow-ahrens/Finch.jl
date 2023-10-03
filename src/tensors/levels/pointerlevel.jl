@@ -128,9 +128,8 @@ function declare_level!(lvl::VirtualPointerElementLevel, ctx, pos, init)
     idx = freshen(ctx, :idx)
     sym = freshen(ctx, :pointer_to_lvl)
     lvlp = virtualize(quote $(lvl.ex).val[$idx] end, Lvl, ctx, sym)
-    # sublevel = declare_level!($(lvl.ex).val[$idx], ctx, literal(1), init)
     subLevelDeclare = contain(ctx) do ctx
-        declare_level!(lvlp, ctx, literal(0), init)
+        declare_level!(lvlp, ctx, literal(1), init)
     end
         
     push!(ctx.code.preamble, quote
@@ -144,6 +143,7 @@ function declare_level!(lvl::VirtualPointerElementLevel, ctx, pos, init)
     lvl
 end
 
+# Why do these not recurse?
 function assemble_level!(lvl::VirtualPointerElementLevel, ctx, pos_start, pos_stop)
     pos_start = cache!(ctx, :pos_start, simplify(pos_start, ctx))
     pos_stop = cache!(ctx, :pos_stop, simplify(pos_stop, ctx))
@@ -169,15 +169,14 @@ function freeze_level!(lvl::VirtualPointerElementLevel, ctx, pos)
     idx = freshen(ctx, :idx)
     sym = freshen(ctx, :pointer_to_lvl)
     lvlp = virtualize(quote $(lvl.ex).val[$idx] end, Lvl, ctx, sym)
-    # sublevel =!($(lvl.ex).val[$idx], ctx, literal(1), init)
-    subLevelDeclare = contain(ctx) do ctx
+    subLevelFreeze = contain(ctx) do ctx
         freeze_level!(lvlp, ctx, literal(1), init)
     end
         
     push!(ctx.code.preamble, quote
         for $idx in 1:$(ctx(pos))
             if !isnothing($(lvl.ex).val[$idx])
-                $subLevelDeclare
+                $subLevelFreeze
             end
         end
     end
@@ -189,15 +188,14 @@ function thaw_level!(lvl::VirtualPointerElementLevel, ctx::AbstractCompiler, pos
     idx = freshen(ctx, :idx)
     sym = freshen(ctx, :pointer_to_lvl)
     lvlp = virtualize(quote $(lvl.ex).val[$idx] end, Lvl, ctx, sym)
-    # sublevel =!($(lvl.ex).val[$idx], ctx, literal(1), init)
-    subLevelDeclare = contain(ctx) do ctx
+    subLevelThaw = contain(ctx) do ctx
         thaw_level!(lvlp, ctx, literal(1), init)
     end
         
     push!(ctx.code.preamble, quote
         for $idx in 1:$(ctx(pos))
             if !isnothing($(lvl.ex).val[$idx])
-                $subLevelDeclare
+                $subLevelThaw
             end
         end
     end
@@ -209,7 +207,6 @@ function trim_level!(lvl::VirtualPointerElementLevel, ctx::AbstractCompiler, pos
     idx = freshen(ctx, :idx)
     sym = freshen(ctx, :pointer_to_lvl)
     lvlp = virtualize(quote $(lvl.ex).val[$idx] end, Lvl, ctx, sym)
-    # sublevel = declare_level!($(lvl.ex).val[$idx], ctx, literal(1), init)
     subLevelTrim = contain(ctx) do ctx
         trim_level!(lvlp, ctx, literal(0), init)
     end
@@ -301,12 +298,3 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualPointerElementLe
             literal(true) => createNewLevelAndUse])
     )
 end
-# function instantiate_updater(fbr::VirtualSubFiber{VirtualPointerElementLevel}, ctx, protos)
-#     (lvl, pos) = (fbr.lvl, fbr.pos)
-#     VirtualScalar(nothing, lvl.Tv, lvl.D, gensym(), :($(lvl.ex).val[$(ctx(pos))]))
-# end
-
-# function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualPointerElementLevel}, ctx, protos)
-#     (lvl, pos) = (fbr.lvl, fbr.pos)
-#     VirtualDirtyScalar(nothing, lvl.Tv, lvl.D, gensym(), :($(lvl.ex).val[$(ctx(pos))]), fbr.dirty)
-# end
