@@ -35,7 +35,7 @@ SparseCOO (0.0) [1:3,1:3]
 ├─├─[3, 3]: 40.0
 ```
 """
-struct SparseCOOLevel{N, Ti<:Tuple, Tp, Tbl<:NTuple{N, <:AbstractVector}, Vp<:AbstractVector, Lvl}
+struct SparseCOOLevel{N, Ti<:Tuple, Tp, Tbl<:NTuple{N, <:AbstractVector}, Vp<:AbstractVector, Lvl} <: AbstractLevel
     lvl::Lvl
     shape::Ti
     tbl::Tbl

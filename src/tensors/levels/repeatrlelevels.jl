@@ -20,7 +20,7 @@ RepeatRLE (0.0) [1:9]
 
 ```
 """
-struct RepeatRLELevel{D, Ti, Tp, Tv, Vp<:AbstractVector, Vi<:AbstractVector, Vv<:AbstractVector}
+struct RepeatRLELevel{D, Ti, Tp, Tv, Vp<:AbstractVector, Vi<:AbstractVector, Vv<:AbstractVector} <: AbstractLevel
     shape::Ti
     ptr::Vp
     idx::Vi

@@ -32,7 +32,7 @@ SparseHash (0.0) [1:3,1:3]
 ├─├─[3, 3]: 40.0
 ```
 """
-struct SparseHashLevel{N, Ti<:Tuple, Tp, Tbl<:Dict{Tuple{Tp, Ti}, Tp}, Vp<:AbstractVector{<:Tp}, VTpip<:AbstractVector{Pair{Tuple{Tp, Ti}, Tp}}, Lvl}
+struct SparseHashLevel{N, Ti<:Tuple, Tp, Tbl<:Dict{Tuple{Tp, Ti}, Tp}, Vp<:AbstractVector{<:Tp}, VTpip<:AbstractVector{Pair{Tuple{Tp, Ti}, Tp}}, Lvl} <: AbstractLevel
     lvl::Lvl
     shape::Ti
     tbl::Tbl

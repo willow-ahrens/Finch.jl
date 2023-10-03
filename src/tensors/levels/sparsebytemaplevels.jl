@@ -28,7 +28,7 @@ SparseByteMap (0.0) [:,1:3]
 │ ├─[3]: 40.0
 ```
 """
-struct SparseByteMapLevel{Ti, Tp, Vp<:AbstractVector, BV<:AbstractVector{Bool}, VTpi<:AbstractVector{<:Tuple{Any, Any}}, Lvl}
+struct SparseByteMapLevel{Ti, Tp, Vp<:AbstractVector, BV<:AbstractVector{Bool}, VTpi<:AbstractVector{<:Tuple{Any, Any}}, Lvl} <: AbstractLevel
     lvl::Lvl
     shape::Ti
     ptr:: Vp
