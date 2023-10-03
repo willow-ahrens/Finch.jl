@@ -65,6 +65,20 @@ previously assembled and frozen. The resulting level has no assembled positions.
 function declare_level! end
 
 """
+    freeze_level!(lvl, ctx, pos, init)
+
+"""
+function freeze_level! end
+
+
+"""
+    thaw_level!(lvl, ctx, pos, init)
+
+"""
+function thaw_level! end
+
+
+"""
     assemble_level!(lvl, ctx, pos, new_pos)
 
 Assemble and positions `pos+1:new_pos` in `lvl`, assuming positions `1:pos` were

@@ -93,7 +93,7 @@ end
 countstored_level(lvl::PointerElementLevel, pos) = pos
 
 struct VirtualPointerElementLevel <: AbstractVirtualLevel
-    lvl
+    lvl  # stand in for the sublevel for virutal resize,e tc.
     ex
     Tv
     Vv
@@ -129,11 +129,95 @@ function declare_level!(lvl::VirtualPointerElementLevel, ctx, pos, init)
     sym = freshen(ctx, :pointer_to_lvl)
     lvlp = virtualize(quote $(lvl.ex).val[$idx] end, Lvl, ctx, sym)
     # sublevel = declare_level!($(lvl.ex).val[$idx], ctx, literal(1), init)
-    subLevelDeclare = contain(ctx) do 
+    subLevelDeclare = contain(ctx) do ctx
+        declare_level!(lvlp, ctx, literal(0), init)
+    end
+        
     push!(ctx.code.preamble, quote
         for $idx in $(ctx(pos)):length($(lvl.ex).val)
             if !isnothing($(lvl.ex).val[$idx])
-                
+                $subLevelDeclare
+            end
+        end
+    end
+    )
+    lvl
+end
+
+function assemble_level!(lvl::VirtualPointerElementLevel, ctx, pos_start, pos_stop)
+    pos_start = cache!(ctx, :pos_start, simplify(pos_start, ctx))
+    pos_stop = cache!(ctx, :pos_stop, simplify(pos_stop, ctx))
+    quote
+        Finch.resize_if_smaller!($(lvl.ex).val, $(ctx(pos_stop)))
+        Finch.fill_range!($(lvl.ex).val, nothing, $(ctx(pos_start)), $(ctx(pos_stop)))
+    end
+end
+
+supports_reassembly(::VirtualPointerElementLevel) = true
+function reassemble_level!(lvl::VirtualPointerElementLevel, ctx, pos_start, pos_stop)
+    pos_start = cache!(ctx, :pos_start, simplify(pos_start, ctx))
+    pos_stop = cache!(ctx, :pos_stop, simplify(pos_stop, ctx))
+    push!(ctx.code.preamble, quote
+        Finch.fill_range!($(lvl.ex).val, nothing, $(ctx(pos_start)), $(ctx(pos_stop)))
+    end)
+    lvl
+end
+
+
+
+function freeze_level!(lvl::VirtualPointerElementLevel, ctx, pos)
+    idx = freshen(ctx, :idx)
+    sym = freshen(ctx, :pointer_to_lvl)
+    lvlp = virtualize(quote $(lvl.ex).val[$idx] end, Lvl, ctx, sym)
+    # sublevel =!($(lvl.ex).val[$idx], ctx, literal(1), init)
+    subLevelDeclare = contain(ctx) do ctx
+        freeze_level!(lvlp, ctx, literal(1), init)
+    end
+        
+    push!(ctx.code.preamble, quote
+        for $idx in 1:$(ctx(pos))
+            if !isnothing($(lvl.ex).val[$idx])
+                $subLevelDeclare
+            end
+        end
+    end
+    )
+    lvl
+end
+
+function thaw_level!(lvl::VirtualPointerElementLevel, ctx::AbstractCompiler, pos)
+    idx = freshen(ctx, :idx)
+    sym = freshen(ctx, :pointer_to_lvl)
+    lvlp = virtualize(quote $(lvl.ex).val[$idx] end, Lvl, ctx, sym)
+    # sublevel =!($(lvl.ex).val[$idx], ctx, literal(1), init)
+    subLevelDeclare = contain(ctx) do ctx
+        thaw_level!(lvlp, ctx, literal(1), init)
+    end
+        
+    push!(ctx.code.preamble, quote
+        for $idx in 1:$(ctx(pos))
+            if !isnothing($(lvl.ex).val[$idx])
+                $subLevelDeclare
+            end
+        end
+    end
+    )
+    lvl
+end
+
+function trim_level!(lvl::VirtualPointerElementLevel, ctx::AbstractCompiler, pos)
+    idx = freshen(ctx, :idx)
+    sym = freshen(ctx, :pointer_to_lvl)
+    lvlp = virtualize(quote $(lvl.ex).val[$idx] end, Lvl, ctx, sym)
+    # sublevel = declare_level!($(lvl.ex).val[$idx], ctx, literal(1), init)
+    subLevelTrim = contain(ctx) do ctx
+        trim_level!(lvlp, ctx, literal(0), init)
+    end
+        
+    push!(ctx.code.preamble, quote
+        for $idx in $(ctx(pos)):length($(lvl.ex).val)
+            if !isnothing($(lvl.ex).val[$idx])
+                $subLevelTrim
             end
         end
     end
@@ -142,43 +226,6 @@ function declare_level!(lvl::VirtualPointerElementLevel, ctx, pos, init)
 end
 
 
-# function freeze_level!(lvl::VirtualPointerElementLevel, ctx, pos)
-#     lvl = call(getindex, :($(lvl.ex).val), pos)
-#     # lvl.lvl = freeze_level!(lvl, ctx, literal(1))
-#     lvl
-# end
-
-# function thaw_level!(lvl::VirtualPointerElementLevel, ctx::AbstractCompiler, pos)
-#     lvl = call(getindex, :($(lvl.ex).val), pos)
-#     lvl.lvl = thaw_level!(lvl, ctx, literal(1))
-#     lvl
-# end
-
-# function trim_level!(lvl::VirtualPointerElementLevel, ctx::AbstractCompiler, pos)
-#     push!(ctx.code.preamble, quote
-#         resize!($(lvl.ex).val, $(ctx(pos)))
-#     end)
-#     return lvl
-# end
-
-# function assemble_level!(lvl::VirtualPointerElementLevel, ctx, pos_start, pos_stop)
-#     pos_start = cache!(ctx, :pos_start, simplify(pos_start, ctx))
-#     pos_stop = cache!(ctx, :pos_stop, simplify(pos_stop, ctx))
-#     quote
-#         Finch.resize_if_smaller!($(lvl.ex).val, $(ctx(pos_stop)))
-#         Finch.fill_range!($(lvl.ex).val, $(lvl.D), $(ctx(pos_start)), $(ctx(pos_stop)))
-#     end
-# end
-
-# supports_reassembly(::VirtualPointerElementLevel) = true
-# function reassemble_level!(lvl::VirtualPointerElementLevel, ctx, pos_start, pos_stop)
-#     pos_start = cache!(ctx, :pos_start, simplify(pos_start, ctx))
-#     pos_stop = cache!(ctx, :pos_stop, simplify(pos_stop, ctx))
-#     push!(ctx.code.preamble, quote
-#         Finch.fill_range!($(lvl.ex).val, $(lvl.D), $(ctx(pos_start)), $(ctx(pos_stop)))
-#     end)
-#     lvl
-# end
 
 function instantiate_reader(fbr::VirtualSubFiber{VirtualPointerElementLevel}, ctx, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
