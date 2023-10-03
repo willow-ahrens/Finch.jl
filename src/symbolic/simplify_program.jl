@@ -114,10 +114,10 @@ function get_program_rules(alg, shash)
             body_contain_idx = idx ∈ getunbound(body)
             if !body_contain_idx
                 decl_in_scope = filter(!isnothing, map(node-> if @capture(node, declare(~tns, ~init)) tns 
-                                                              elseif @capture(node, define(~var, ~val)) var
+                                                              elseif @capture(node, define(~var, ~val, ~body)) var
                                                               end, PostOrderDFS(body)))
                 Postwalk(@rule assign(access(~lhs, updater(), ~j...), ~f, ~rhs) => begin 
-                             access_in_rhs = filter(!isnothing, map(node-> if @capture(node, access(~tns, reader(), ~k...)) tns 
+                             access_in_rhs = filter(!isnothing, map(node-> if @capture(node, access(~tns, reader(), ~k...)) tns # TODO add getroot here?
                                                                            elseif @capture(node, ~var::isvariable) var
                                                                            end, PostOrderDFS(rhs)))
                              if !(lhs in decl_in_scope) && isempty(intersect(access_in_rhs, decl_in_scope))
@@ -147,7 +147,7 @@ function get_program_rules(alg, shash)
                if idx ∉ j && idx ∉ getunbound(rhs)
                    body = block(s1..., assign(access(lhs, updater(), j...), f, rhs), s2...)
                    decl_in_scope = filter(!isnothing, map(node-> if @capture(node, declare(~tns, ~init)) tns 
-                                                                 elseif @capture(node, define(~var, ~val)) var
+                                                                 elseif @capture(node, define(~var, ~val, ~body)) var
                                                                  end, PostOrderDFS(body)))
 
                    access_in_rhs = filter(!isnothing, map(node-> if @capture(node, access(~tns, reader(), ~k...)) tns 
@@ -209,20 +209,13 @@ function simplify(root, ctx)
             (@rule loop(~i, ~a, block()) => block()),
             (@rule sieve(~cond, block()) => block()),
             (@rule block(~a..., block(~b...), ~c...) => block(a..., b..., c...)),
-            Fixpoint(@rule block(~s1..., define(~a::isvariable, ~v::isconstant), ~s2...) => begin
-                s2_2 = Postwalk(@rule a => v)(block(s2...))
-                if s2_2 !== nothing
+            (@rule define(~a::isvariable, ~v::isconstant, ~body) => begin
+                body_2 = Postwalk(@rule a => v)(body)
+                if body_2 !== nothing
                     #We cannot remove the definition because we aren't sure if the variable gets referenced from a virtual.
-                    block(s1..., define(a, v), s2_2.bodies...)
+                    define(a, v, body_2)
                 end
             end),
-            Fixpoint(@rule block(~args..., define(~a, ~v)) => block(args...)),
-            (@rule loop(~idx, ~ext, define(~args...)) => block()),
-            (@rule sieve(~cond, define(~args...)) => block()),
-            (@rule loop(~idx, ~ext, block(~stmts..., define(~args...))) => 
-                loop(~idx, ~ext, block(~stmts...))),
-            (@rule sieve(~cond, block(~stmts..., define(~args...))) =>
-                sieve(~cond, block(~stmts...))),
             (@rule assign(~a, ~op, cached(~b, ~c)) => assign(a, op, b)),
         ])),
     ])))(root)

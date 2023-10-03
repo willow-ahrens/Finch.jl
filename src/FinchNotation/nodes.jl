@@ -113,6 +113,7 @@ cached
 
 Finch AST statement that runs `body` for each value of `idx` in `ext`. Tensors
 in `body` must have ranges that agree with `ext`.
+A new scope is introduced to evaluate `body`.
 """
 loop
 
@@ -120,6 +121,7 @@ loop
     sieve(cond, body)
 
 Finch AST statement that only executes `body` if `cond` is true.
+A new scope is introduced to evaluate `body`.
 """
 sieve
 
@@ -132,9 +134,10 @@ Overwriting is accomplished with the function `overwrite(lhs, rhs) = rhs`.
 assign
 
 """
-    define(lhs, rhs)
+    define(lhs, rhs, body)
 
-Finch AST statement that defines `lhs` as having the value `rhs` in the current scope.
+Finch AST statement that defines `lhs` as having the value `rhs` in `body`. 
+A new scope is introduced to evaluate `body`.
 """
 define
 
@@ -324,7 +327,7 @@ function FinchNode(kind::FinchNodeKind, args::Vector)
             error("wrong number of arguments to assign(...)")
         end
     elseif kind === define
-        if length(args) == 2
+        if length(args) == 3
             return FinchNode(define, nothing, nothing, args)
         else
             error("wrong number of arguments to define(...)")
@@ -459,6 +462,8 @@ function Base.getproperty(node::FinchNode, sym::Symbol)
             return node.children[1]
         elseif sym === :rhs
             return node.children[2]
+        elseif sym === :body
+            return node.children[3]
         else
             error("type FinchNode(define, ...) has no property $sym")
         end
@@ -602,6 +607,23 @@ function display_statement(io, mime, node::FinchNode, indent)
         display_statement(io, mime, body, indent + 2)
         println(io)
         print(io, " "^indent * "end")
+    elseif node.kind === define
+        print(io, " "^indent * "let ")
+        display_expression(io, mime, node.lhs)
+        print(io, " = ")
+        display_expression(io, mime, node.rhs)
+        body = node.body
+        while body.kind === define
+            print(io, ", ")
+            display_expression(io, mime, body.lhs)
+            print(io, " = ")
+            display_expression(io, mime, body.rhs)
+            body = body.body
+        end
+        println(io)
+        display_statement(io, mime, body, indent + 2)
+        println(io)
+        print(io, " "^indent * "end")
     elseif node.kind === sieve
         print(io, " "^indent * "if ")
         while node.body.kind === sieve
@@ -621,11 +643,6 @@ function display_statement(io, mime, node::FinchNode, indent)
         print(io, " <<")
         display_expression(io, mime, node.op)
         print(io, ">>= ")
-        display_expression(io, mime, node.rhs)
-    elseif node.kind === define
-        print(io, " "^indent)
-        display_expression(io, mime, node.lhs)
-        print(io, " = ")
         display_expression(io, mime, node.rhs)
     elseif node.kind === declare
         print(io, " "^indent)

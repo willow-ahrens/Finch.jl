@@ -19,6 +19,7 @@ function (ctx::DepthCalculatorVisitor)(node::FinchNode)
         ctx_2(node.body)
     elseif node.kind === define
         ctx.rec[node.lhs] = ctx.depth
+        ctx(node.body)
     elseif istree(node)
         for child in children(node)
             ctx(child)
@@ -66,7 +67,8 @@ function (ctx::ConcordizeVisitor)(node::FinchNode)
         ctx_2 = ConcordizeVisitor(ctx.ctx, union(ctx.scope, [node.idx]))
         node = loop(node.idx, node.ext, ctx_2(node.body))
     elseif node.kind === define
-        push!(ctx.scope, node.lhs)
+        ctx_2 = ConcordizeVisitor(ctx.ctx, union(ctx.scope, [node.lhs]))
+        node = define(node.lhs, node.rhs, ctx_2(node.body))
     elseif node.kind === declare
         push!(ctx.scope, node.tns)
     elseif istree(node)
@@ -76,10 +78,7 @@ function (ctx::ConcordizeVisitor)(node::FinchNode)
     for (select_idx, idx_ex) in reverse(selects)
         var = variable(freshen(ctx, :v))
 
-        node = block(
-            define(var, idx_ex),
-            loop(select_idx, Extent(var, var), node)
-        )
+        node = define(var, idx_ex, loop(select_idx, Extent(var, var), node))
     end
 
     node

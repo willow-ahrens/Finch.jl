@@ -62,11 +62,12 @@ x_sum = Scalar(0.0)
 x_var = Scalar(0.0)
 @finch begin
     for i = _
-        x = X[i]
-        x_min[] <<min>>= x
-        x_max[] <<max>>= x
-        x_sum[] += x
-        x_var[] += x * x
+        let x = X[i]
+            x_min[] <<min>>= x
+            x_max[] <<max>>= x
+            x_sum[] += x
+            x_var[] += x * x
+        end
     end
 end;
 ````
