@@ -45,7 +45,7 @@ Base.summary(::PointerElement{Tp, Vv, Lvl}) where {Tp, Vv, Lvl} = "PointerElemen
 
 similar_level(::PointerElement{Tp, Vv, Lvl}) where {Tp, Vv, Lvl} = PointerElementLevel{Tp, Vv, Lvl}()
 
-memtype(::Type{PointerElement{Tp, Vv, Lvl}}) where {Tp, Vv, Lvl} =
+Memtype(::Type{PointerElement{Tp, Vv, Lvl}}) where {Tp, Vv, Lvl} =
     containertype(Vv)
 
 postype(::Type{<:PointerElement{Tp, Vv, Lvl}}) where {Tp, Vv, Lvl} = Tp
@@ -125,30 +125,41 @@ virtual_level_eltype(lvl::VirtualPointerElementLevel) = virtual_level_eltype(lvl
 virtual_level_default(lvl::VirtualPointerElementLevel) = virtual_level_default(lvl.lvl)
 
 function declare_level!(lvl::VirtualPointerElementLevel, ctx, pos, init)
-    lvl = call(getindex, :($(lvl.ex).val), pos)
-    lvl.lvl = declare_level!(lvl, ctx, literal(1), init)
-    lvl
-end
-
-
-function freeze_level!(lvl::VirtualPointerElementLevel, ctx, pos)
-    lvl = call(getindex, :($(lvl.ex).val), pos)
-    lvl.lvl = freeze_level!(lvl, ctx, literal(1))
-    lvl
-end
-
-function thaw_level!(lvl::VirtualPointerElementLevel, ctx::AbstractCompiler, pos)
-    lvl = call(getindex, :($(lvl.ex).val), pos)
-    lvl.lvl = thaw_level!(lvl, ctx, literal(1))
-    lvl
-end
-
-function trim_level!(lvl::VirtualPointerElementLevel, ctx::AbstractCompiler, pos)
+    idx = freshen(ctx, :idx)
+    sym = freshen(ctx, :pointer_to_lvl)
+    lvlp = virtualize(quote $(lvl.ex).val[$idx] end, Lvl, ctx, sym)
+    # sublevel = declare_level!($(lvl.ex).val[$idx], ctx, literal(1), init)
+    subLevelDeclare = contain(ctx) do 
     push!(ctx.code.preamble, quote
-        resize!($(lvl.ex).val, $(ctx(pos)))
-    end)
-    return lvl
+        for $idx in $(ctx(pos)):length($(lvl.ex).val)
+            if !isnothing($(lvl.ex).val[$idx])
+                
+            end
+        end
+    end
+    )
+    lvl
 end
+
+
+# function freeze_level!(lvl::VirtualPointerElementLevel, ctx, pos)
+#     lvl = call(getindex, :($(lvl.ex).val), pos)
+#     # lvl.lvl = freeze_level!(lvl, ctx, literal(1))
+#     lvl
+# end
+
+# function thaw_level!(lvl::VirtualPointerElementLevel, ctx::AbstractCompiler, pos)
+#     lvl = call(getindex, :($(lvl.ex).val), pos)
+#     lvl.lvl = thaw_level!(lvl, ctx, literal(1))
+#     lvl
+# end
+
+# function trim_level!(lvl::VirtualPointerElementLevel, ctx::AbstractCompiler, pos)
+#     push!(ctx.code.preamble, quote
+#         resize!($(lvl.ex).val, $(ctx(pos)))
+#     end)
+#     return lvl
+# end
 
 # function assemble_level!(lvl::VirtualPointerElementLevel, ctx, pos_start, pos_stop)
 #     pos_start = cache!(ctx, :pos_start, simplify(pos_start, ctx))
@@ -177,7 +188,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualPointerElementLevel}, ct
     sym = freshen(ctx, :pointer_to_lvl)
     lvlp = virtualize(quote $(lvl.ex).val[$(ctx(pos))] end, Lvl, ctx, sym)
 
-    lvlpAsSubfiber = VirtualTrackedSubFiber(lvlp, value(1, lvl.Tv))
+    lvlpAsSubfiber = VirtualSubFiber(lvlp, value(1, lvl.Tv))
     val = freshen(ctx.code, lvl.ex, :_val)
     return Thunk(
         preamble = quote
@@ -196,19 +207,51 @@ function instantiate_updater(fbr::VirtualSubFiber{VirtualPointerElementLevel}, c
     isnulltest = freshen(ctx.code, tag, :_nulltest)
     D = level_default(lvl)
     sym = freshen(ctx, :pointer_to_lvl)
-    lvlp = virtualize(quote $(lvl.ex).val[$(ctx(pos))] end, Lvl, ctx, sym)
+    lvlp = virtualize(quote $(lvl.ex).val[$(ctx(pos))] end, lvl.Lvl, ctx, sym)
 
     lvlpAsSubfiber = VirtualTrackedSubFiber(lvlp, value(1, lvl.Tv))
+    symNew = freshen(ctx, :pointer_to_nev_lvl)
+    createNewLevelAndUse = Thunk(preamble = quote
+        $symNew = similar_level(lvl.Lvl)
+        $(lvl.ex).val[$(ctx(pos))] = $symNew
+    end,
+        body = (ctx) -> instantiate_updater(lvlpAsSubfiber, ctx, protos))
+        
     val = freshen(ctx.code, lvl.ex, :_val)
-    # Okay. If we need to update, if something is not there in a position, we have to create it.
-    # We copy the lvl associate to the sub level. We lower it. We copy it.
     return Thunk(
         preamble = quote
             $isnulltest = !isnothing($(lvl.ex).val[$(ctx(pos))])
             
         end,
         body = (ctx) -> switch([value($isnulltest) => instantiate_updater(lvlpAsSubfiber, ctx, protos),
-            literal(true) => literal(D)])
+            literal(true) => createNewLevelAndUse])
+    )
+end
+
+function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualPointerElementLevel}, ctx, subprotos)
+    (lvl, pos) = (fbr.lvl, fbr.pos)
+    tag = lvl.ex
+    isnulltest = freshen(ctx.code, tag, :_nulltest)
+    D = level_default(lvl)
+    sym = freshen(ctx, :pointer_to_lvl)
+    lvlp = virtualize(quote $(lvl.ex).val[$(ctx(pos))] end, lvl.Lvl, ctx, sym)
+
+    lvlpAsSubfiber = VirtualTrackedSubFiber(lvlp, value(1, lvl.Tv))
+    symNew = freshen(ctx, :pointer_to_nev_lvl)
+    createNewLevelAndUse = Thunk(preamble = quote
+        $symNew = similar_level(lvl.Lvl)
+        $(lvl.ex).val[$(ctx(pos))] = $symNew
+    end,
+        body = (ctx) -> instantiate_updater(lvlpAsSubfiber, ctx, protos))
+        
+    val = freshen(ctx.code, lvl.ex, :_val)
+    return Thunk(
+        preamble = quote
+            $isnulltest = !isnothing($(lvl.ex).val[$(ctx(pos))])
+            
+        end,
+        body = (ctx) -> switch([value($isnulltest) => instantiate_updater(lvlpAsSubfiber, ctx, subprotos),
+            literal(true) => createNewLevelAndUse])
     )
 end
 # function instantiate_updater(fbr::VirtualSubFiber{VirtualPointerElementLevel}, ctx, protos)
