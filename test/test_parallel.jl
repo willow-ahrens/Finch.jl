@@ -106,7 +106,29 @@
         cpu = CPU(Threads.nthreads())
         tmp = moveto(Fiber!(Dense(Element(0))), CPULocalMemory(cpu))
 
-        println(@finch_code begin
+        check_output("parallel_blur.jl", @finch_code begin
+            output .= 0
+            for y = parallel(_, cpu)
+                tmp .= 0
+                for x = _
+                    tmp[x] += input[x-1, y] + input[x, y] + input[x+1, y]
+                end
+
+                for x = _
+                    output[x, y] = tmp[x]
+                end
+            end
+        end)
+    end
+
+    let
+        # Computes a horizontal blur a row at a time
+        input = Fiber!(Dense(SparseList(Element(0.0))))
+        output = Fiber!(Dense(Dense(Element(0.0))))
+        cpu = CPU(Threads.nthreads())
+        tmp = moveto(Fiber!(Dense(Element(0))), CPULocalMemory(cpu))
+
+        check_output("parallel_blur_sparse.jl", @finch_code begin
             output .= 0
             for y = parallel(_, cpu)
                 tmp .= 0
