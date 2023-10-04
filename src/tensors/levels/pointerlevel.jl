@@ -113,7 +113,8 @@ function virtualize(ex, ::Type{PointerElementLevel{Tp, Vv, Lvl}}, ctx, tag=:lvl)
         $sym = $ex
     end)
     # FIXME: Need to ensure that this virtualize dies....
-    lvl_2 = contain(ctx) do ctx2 virtualize(:(($sym).val[0]), Lvl, ctx2, sym) end
+    dummyCtx = JuliaContext()
+    lvl_2 = virtualize(:(), Lvl, dummyCtx, sym)
     VirtualPointerElementLevel(lvl_2, sym, typeof(level_default(Lvl)), Vv, Lvl)
 end
 
@@ -127,9 +128,9 @@ virtual_level_default(lvl::VirtualPointerElementLevel) = virtual_level_default(l
 function declare_level!(lvl::VirtualPointerElementLevel, ctx, pos, init)
     idx = freshen(ctx.code, :idx)
     sym = freshen(ctx.code, :pointer_to_lvl)
-    lvlp = virtualize(quote $(lvl.ex).val[$idx] end, lvl.Lvl, ctx.code, sym)
+    fiber = VirtualFiber(virtualize(quote $(lvl.ex).val[$idx] end, lvl.Lvl, ctx.code, sym))
     subLevelDeclare = contain(ctx) do ctx
-        declare_level!(lvlp, ctx, literal(1), init)
+        declare!(fiber, ctx, init)
     end
         
     push!(ctx.code.preamble, quote
@@ -168,9 +169,9 @@ end
 function freeze_level!(lvl::VirtualPointerElementLevel, ctx, pos)
     idx = freshen(ctx.code, :idx)
     sym = freshen(ctx.code, :pointer_to_lvl)
-    lvlp = virtualize(quote $(lvl.ex).val[$idx] end, lvl.Lvl, ctx.code, sym)
+    fiber = VirtualFiber(virtualize(quote $(lvl.ex).val[$idx] end, lvl.Lvl, ctx.code, sym))
     subLevelFreeze = contain(ctx) do ctx
-        freeze_level!(lvlp, ctx, literal(1))
+        freeze!(fiber, ctx)
     end
         
     push!(ctx.code.preamble, quote
@@ -187,9 +188,9 @@ end
 function thaw_level!(lvl::VirtualPointerElementLevel, ctx::AbstractCompiler, pos)
     idx = freshen(ctx.code, :idx)
     sym = freshen(ctx.code, :pointer_to_lvl)
-    lvlp = virtualize(quote $(lvl.ex).val[$idx] end, lvl.Lvl, ctx.code, sym)
+    fiber = VirtualFiber(virtualize(quote $(lvl.ex).val[$idx] end, lvl.Lvl, ctx.code, sym))
     subLevelThaw = contain(ctx) do ctx
-        thaw_level!(lvlp, ctx, literal(1))
+        thaw!(fiber, ctx)
     end
         
     push!(ctx.code.preamble, quote
@@ -206,17 +207,18 @@ end
 function trim_level!(lvl::VirtualPointerElementLevel, ctx::AbstractCompiler, pos)
     idx = freshen(ctx.code, :idx)
     sym = freshen(ctx.code, :pointer_to_lvl)
-    lvlp = virtualize(quote $(lvl.ex).val[$idx] end, lvl.Lvl, ctx.code, sym)
+    fiber = VirtualFiber(virtualize(quote $(lvl.ex).val[$idx] end, lvl.Lvl, ctx.code, sym))
     subLevelTrim = contain(ctx) do ctx
-        trim_level!(lvlp, ctx, literal(0))
+        trim!(fiber, ctx)
     end
         
     push!(ctx.code.preamble, quote
-        for $idx in $(ctx(pos)):length($(lvl.ex).val)
+        for $idx in 1:$(ctx(pos))
             if !isnothing($(lvl.ex).val[$idx])
                 $subLevelTrim
             end
         end
+        resize!($(lvl.ex).val, $(ctx(pos)) + 1)
     end
     )
     lvl

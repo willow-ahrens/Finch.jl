@@ -67,6 +67,8 @@ function declare_level! end
 """
     freeze_level!(lvl, ctx, pos, init)
 
+Given the last reference position, `pos`, freeze all fibers within `lvl` assuming
+that we have potentially updated `1:pos`. 
 """
 function freeze_level! end
 
@@ -74,6 +76,8 @@ function freeze_level! end
 """
     thaw_level!(lvl, ctx, pos, init)
 
+Given the last reference position, `pos`, thaw all fibers within `lvl` assuming
+that we have previously assembled and frozen `1:pos`.
 """
 function thaw_level! end
 
@@ -82,7 +86,7 @@ function thaw_level! end
     assemble_level!(lvl, ctx, pos, new_pos)
 
 Assemble and positions `pos+1:new_pos` in `lvl`, assuming positions `1:pos` were
-previously assembled.
+previously assembled. Not avaliable on all level types as this presumes updating.
 """
 function assemble_level! end
 
