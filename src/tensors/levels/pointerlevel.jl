@@ -128,13 +128,15 @@ virtual_level_default(lvl::VirtualPointerElementLevel) = virtual_level_default(l
 function declare_level!(lvl::VirtualPointerElementLevel, ctx, pos, init)
     idx = freshen(ctx.code, :idx)
     sym = freshen(ctx.code, :pointer_to_lvl)
-    fiber = VirtualFiber(virtualize(quote $(lvl.ex).val[$idx] end, lvl.Lvl, ctx.code, sym))
+    
     subLevelDeclare = contain(ctx) do ctx
+        virtualLevel = virtualize(quote $(lvl.ex).val[$idx] end, lvl.Lvl, ctx.code, sym)
+        fiber = VirtualFiber(virtualLevel)
         declare!(fiber, ctx, init)
     end
         
     push!(ctx.code.preamble, quote
-        for $idx in $(ctx(pos)):length($(lvl.ex).val)
+        for $idx in ($(ctx(pos))+1):length($(lvl.ex).val)
             if !isnothing($(lvl.ex).val[$idx])
                 $subLevelDeclare
             end
@@ -169,8 +171,9 @@ end
 function freeze_level!(lvl::VirtualPointerElementLevel, ctx, pos)
     idx = freshen(ctx.code, :idx)
     sym = freshen(ctx.code, :pointer_to_lvl)
-    fiber = VirtualFiber(virtualize(quote $(lvl.ex).val[$idx] end, lvl.Lvl, ctx.code, sym))
+    
     subLevelFreeze = contain(ctx) do ctx
+        fiber = VirtualFiber(virtualize(quote $(lvl.ex).val[$idx] end, lvl.Lvl, ctx.code, sym))
         freeze!(fiber, ctx)
     end
         
@@ -188,8 +191,9 @@ end
 function thaw_level!(lvl::VirtualPointerElementLevel, ctx::AbstractCompiler, pos)
     idx = freshen(ctx.code, :idx)
     sym = freshen(ctx.code, :pointer_to_lvl)
-    fiber = VirtualFiber(virtualize(quote $(lvl.ex).val[$idx] end, lvl.Lvl, ctx.code, sym))
+
     subLevelThaw = contain(ctx) do ctx
+        fiber = VirtualFiber(virtualize(quote $(lvl.ex).val[$idx] end, lvl.Lvl, ctx.code, sym))
         thaw!(fiber, ctx)
     end
         
@@ -207,8 +211,9 @@ end
 function trim_level!(lvl::VirtualPointerElementLevel, ctx::AbstractCompiler, pos)
     idx = freshen(ctx.code, :idx)
     sym = freshen(ctx.code, :pointer_to_lvl)
-    fiber = VirtualFiber(virtualize(quote $(lvl.ex).val[$idx] end, lvl.Lvl, ctx.code, sym))
+    
     subLevelTrim = contain(ctx) do ctx
+        fiber = VirtualFiber(virtualize(quote $(lvl.ex).val[$idx] end, lvl.Lvl, ctx.code, sym))
         trim!(fiber, ctx)
     end
         

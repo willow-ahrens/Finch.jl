@@ -78,9 +78,7 @@ macro staged(def)
                 end
             end
             Core._apply_pure(body_2, ())
-            #=quote
-                println($(QuoteNode(res)))
-            end=#
+            
         end
 
     end
