@@ -163,6 +163,24 @@ end
 is_level_injective(lvl::VirtualSparseHashLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., (true for _ in 1:lvl.N)...]
 is_level_atomic(lvl::VirtualSparseHashLevel, ctx) = false
 
+function virtual_moveto_level(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, arch)
+    ptr_2 = freshen(ctx.code, lvl.ptr)
+    push!(ctx.code.preamble, quote
+        $ptr_2 = $(lvl.ptr)
+        $tbl_2 = $(lvl.tbl)
+        $srt_2 = $(lvl.srt)
+        $(lvl.ptr) = $moveto($(lvl.ptr), $(ctx(arch)))
+        $(lvl.tbl) = $moveto($(lvl.tbl), $(ctx(arch)))
+        $(lvl.srt) = $moveto($(lvl.srt), $(ctx(arch)))
+    end)
+    push!(ctx.code.epilogue, quote
+        $ptr = $ptr_2
+        $tbl = $tbl_2
+        $srt = $srt_2
+    end)
+    virtual_moveto_level(lvl.lvl, ctx, arch)
+end
+
 function virtualize(ex, ::Type{SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}}, ctx, tag=:lvl) where {N, TI, Ptr, Tbl, Srt, Lvl}  
     sym = freshen(ctx, tag)
 

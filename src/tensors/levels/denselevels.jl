@@ -177,8 +177,7 @@ function freeze_level!(lvl::VirtualDenseLevel, ctx::AbstractCompiler, pos)
 end
 
 function virtual_moveto_level(lvl::VirtualDenseLevel, ctx::AbstractCompiler, arch)
-    lvl.lvl = virtual_moveto_level(lvl.lvl, ctx, arch)
-    return lvl
+    virtual_moveto_level(lvl.lvl, ctx, arch)
 end
 
 struct DenseTraversal

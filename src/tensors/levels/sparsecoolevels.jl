@@ -261,10 +261,26 @@ function freeze_level!(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler, pos_st
 end
 
 function virtual_moveto_level(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler, arch)
-    lvl.ptr = virtual_moveto(lvl.ptr, ctx, arch)
-    lvl.tbl = map(idx -> virtual_moveto(idx, ctx, arch), lvl.tbl)
-    lvl.lvl = virtual_moveto_level(lvl.lvl, ctx, arch)
-    return lvl
+    ptr_2 = freshen(ctx.code, lvl.ptr)
+    push!(ctx.code.preamble, quote
+        $ptr_2 = $(lvl.ptr)
+        $(lvl.ptr) = $moveto($(lvl.ptr), $(ctx(arch)))
+    end)
+    push!(ctx.code.epilogue, quote
+        $ptr = $ptr_2
+    end)
+    tbl_2 = map(lvl.tbl) do idx
+        idx_2 = freshen(ctx.code, idx)
+        push!(ctx.code.preamble, quote
+            $idx_2 = $idx
+            $idx = $moveto($idx, $(ctx(arch)))
+        end)
+        push!(ctx.code.epilogue, quote
+            $idx = $idx_2
+        end)
+        idx_2
+    end
+    virtual_moveto_level(lvl.lvl, ctx, arch)
 end
 
 struct SparseCOOWalkTraversal

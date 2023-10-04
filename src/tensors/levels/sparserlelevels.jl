@@ -162,6 +162,25 @@ function virtual_level_resize!(lvl::VirtualSparseRLELevel, ctx, dims...)
     lvl
 end
 
+function virtual_moveto_level(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, arch)
+    ptr_2 = freshen(ctx.code, lvl.ptr)
+    left_2 = freshen(ctx.code, lvl.left)
+    right_2 = freshen(ctx.code, lvl.right)
+    push!(ctx.code.preamble, quote
+        $ptr_2 = $(lvl.ptr)
+        $left_2 = $(lvl.left)
+        $right_2 = $(lvl.right)
+        $(lvl.ptr) = $moveto($(lvl.ptr), $(ctx(arch)))
+        $(lvl.left) = $moveto($(lvl.left), $(ctx(arch)))
+        $(lvl.right) = $moveto($(lvl.right), $(ctx(arch)))
+    end)
+    push!(ctx.code.epilogue, quote
+        $ptr = $ptr_2
+        $left = $left_2
+        $right = $right_2
+    end)
+    virtual_moveto_level(lvl.lvl, ctx, arch)
+end
 
 virtual_level_eltype(lvl::VirtualSparseRLELevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSparseRLELevel) = virtual_level_default(lvl.lvl)

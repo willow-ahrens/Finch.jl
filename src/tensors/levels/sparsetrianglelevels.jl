@@ -101,6 +101,7 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseTri
     display_fiber_data(io, mime, fbr, depth, N, crds, print_coord, get_fbr)
 end
 
+
 mutable struct VirtualSparseTriangleLevel <: AbstractVirtualLevel
     lvl
     ex
@@ -148,6 +149,10 @@ end
 
 virtual_level_eltype(lvl::VirtualSparseTriangleLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSparseTriangleLevel) = virtual_level_default(lvl.lvl)
+
+function virtual_moveto_level(lvl::VirtualSparseTriangleLevel, ctx::AbstractCompiler, arch)
+    virtual_moveto_level(lvl.lvl, ctx, arch)
+end
 
 function declare_level!(lvl::VirtualSparseTriangleLevel, ctx::AbstractCompiler, pos, init)
     # qos = virtual_simplex(lvl.N, ctx, lvl.shape)

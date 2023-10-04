@@ -80,6 +80,9 @@ struct VirtualPatternLevel <: AbstractVirtualLevel
     Tp
 end
 
+function virtual_moveto_level(lvl::VirtualPatternLevel, ctx::AbstractCompiler, arch)
+end
+
 is_level_injective(::VirtualPatternLevel, ctx) = []
 is_level_atomic(lvl::VirtualPatternLevel, ctx) = true
 

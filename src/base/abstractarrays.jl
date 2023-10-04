@@ -43,9 +43,12 @@ virtual_eltype(tns::VirtualAbstractArray, ctx) = tns.eltype
 function virtual_moveto(vec::VirtualAbstractArray, ctx, device)
     ex = freshen(ctx.code, vec.ex)
     push!(ctx.code.preamble, quote
-        $ex = $moveto!($(vec.ex), $(ctx(device)))
+        $ex = $(vec.ex)
+        $(vec.ex) = $moveto!($(vec.ex), $(ctx(device)))
     end)
-    Finch.VirtualAbstractArray(ex, vec.eltype, vec.ndims)
+    push!(ctx.code.epilogue, quote
+        $(vec.ex) = $ex
+    end)
 end
 
 default(a::AbstractArray) = default(typeof(a))

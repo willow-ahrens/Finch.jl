@@ -150,10 +150,12 @@ end
 function virtual_moveto_level(lvl::VirtualElementLevel, ctx::AbstractCompiler, arch)
     val_2 = freshen(ctx.code, :val)
     push!(ctx.code.preamble, quote
-        $val_2 = $moveto($(lvl.val), $(ctx(arch)))
+        $val_2 = $(lvl.val)
+        $(lvl.val) = $moveto($(lvl.val), $(ctx(arch)))
     end)
-    lvl.val = val_2
-    return lvl
+    push!(ctx.code.epilogue, quote
+        $(lvl.val) = $val_2
+    end)
 end
 
 function instantiate_reader(fbr::VirtualSubFiber{VirtualElementLevel}, ctx, protos)

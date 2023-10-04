@@ -178,6 +178,26 @@ virtual_level_default(lvl::VirtualRepeatRLELevel) = lvl.D
 virtual_level_eltype(lvl::VirtualRepeatRLELevel) = lvl.Tv
 postype(lvl::VirtualRepeatRLELevel) = lvl.Tp
 
+function virtual_moveto_level(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, arch)
+    ptr_2 = freshen(ctx.code, lvl.ptr)
+    idx_2 = freshen(ctx.code, lvl.idx)
+    val_2 = freshen(ctx.code, lvl.val)
+    push!(ctx.code.preamble, quote
+        $ptr_2 = $(lvl.ptr)
+        $idx_2 = $(lvl.idx)
+        $val_2 = $(lvl.val)
+        $(lvl.ptr) = $moveto($(lvl.ptr), $(ctx(arch)))
+        $(lvl.idx) = $moveto($(lvl.idx), $(ctx(arch)))
+        $(lvl.val) = $moveto($(lvl.val), $(ctx(arch)))
+    end)
+    push!(ctx.code.epilogue, quote
+        $ptr = $ptr_2
+        $idx = $idx_2
+        $val = $val_2
+    end)
+    virtual_moveto_level(lvl.lvl, ctx, arch)
+end
+
 function declare_level!(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, mode, init)
     init == literal(lvl.D) || throw(FinchProtocolError("Cannot initialize RepeatRLE Levels to non-default values"))
     Tp = lvl.Tp

@@ -91,11 +91,11 @@ function instantiate_updater(fbr::VirtualFiber, ctx::AbstractCompiler, protos)
 end
 
 function virtual_moveto(fbr::VirtualFiber, ctx::AbstractCompiler, arch)
-    return VirtualFiber(virtual_moveto_level(fbr.lvl, ctx, arch))
+    virtual_moveto_level(fbr.lvl, ctx, arch)
 end
 
 function virtual_moveto(fbr::VirtualSubFiber, ctx::AbstractCompiler, arch)
-    return VirtualTrackedSubFiber(virtual_moveto_level(fbr.lvl, ctx, arch), fbr.pos)
+    virtual_moveto_level(fbr.lvl, ctx, arch)
 end
 
 struct TrackedSubFiber{Lvl, Pos, Dirty} <: AbstractFiber{Lvl}

@@ -195,6 +195,26 @@ end
 virtual_level_eltype(lvl::VirtualSparseVBLLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSparseVBLLevel) = virtual_level_default(lvl.lvl)
 
+function virtual_moveto_level(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, arch)
+    ptr_2 = freshen(ctx.code, lvl.ptr)
+    tbl_2 = freshen(ctx.code, lvl.tbl)
+    ofs_2 = freshen(ctx.code, lvl.ofs)
+    push!(ctx.code.preamble, quote
+        $ptr_2 = $(lvl.ptr)
+        $tbl_2 = $(lvl.tbl)
+        $ofs_2 = $(lvl.ofs)
+        $(lvl.ptr) = $moveto($(lvl.ptr), $(ctx(arch)))
+        $(lvl.tbl) = $moveto($(lvl.tbl), $(ctx(arch)))
+        $(lvl.ofs) = $moveto($(lvl.ofs), $(ctx(arch)))
+    end)
+    push!(ctx.code.epilogue, quote
+        $ptr = $ptr_2
+        $tbl = $tbl_2
+        $ofs = $ofs_2
+    end)
+    virtual_moveto_level(lvl.lvl, ctx, arch)
+end
+
 function declare_level!(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, pos, init)
     Tp = postype(lvl)
     Ti = lvl.Ti
