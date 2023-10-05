@@ -28,8 +28,8 @@ virtual_size(tns::Unfurled, ctx) = virtual_size(tns.arr, ctx)
 virtual_resize!(tns::Unfurled, ctx, dims...) = virtual_resize!(tns.arr, ctx, dims...)
 virtual_default(tns::Unfurled, ctx) = virtual_default(tns.arr, ctx)
 
-instantiate_reader(tns::Unfurled, ctx, protos) = tns
-instantiate_updater(tns::Unfurled, ctx, protos) = tns
+instantiate(tns::Unfurled, ctx, mode::Reader, protos) = tns
+instantiate(tns::Unfurled, ctx, mode::Updater, protos) = tns
 
 (ctx::Stylize{<:AbstractCompiler})(node::Unfurled) = ctx(node.body)
 function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::Unfurled)

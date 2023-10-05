@@ -7,42 +7,22 @@ Afterwards the tensor is update-only.
 declare!(tns, ctx, init) = @assert virtual_default(tns, ctx) == init
 
 """
-    instantiate_reader(tns, ctx, protos)
+    instantiate(tns, ctx, mode, protos)
     
-Return an object (usually a looplet nest) capable of reading the read-only
-virtual tensor `tns`.  As soon as a read-only tensor enters scope, each
-subsequent read access will be initialized with a separate call to
-`instantiate_reader`. `protos` is the list of protocols in each case.
+Return an object (usually a looplet nest) capable of unfurling the 
+virtual tensor `tns`. Before executing a statement, each
+subsequent in-scope access will be initialized with a separate call to
+`instantiate`. `protos` is the list of protocols in each case.
 
-The fallback for `instantiate_reader` will iteratively move the last element of
+The fallback for `instantiate` will iteratively move the last element of
 `protos` into the arguments of a function. This allows fibers to specialize on
 the last arguments of protos rather than the first, as Finch is column major.
 """
-function instantiate_reader(tns, ctx, subprotos, protos...)
+function instantiate(tns, ctx, mode, subprotos, protos...)
     if isempty(subprotos)
         throw(FinchProtocolError("$(typeof(tns)) does not support reads with protocol $(protos)"))
     else
-        instantiate_reader(tns, ctx, subprotos[1:end-1], subprotos[end], protos...)
-    end
-end
-
-"""
-    instantiate_updater(tns, ctx, protos...)
-    
-Return an object (usually a looplet nest) capable of updating the update-only
-virtual tensor `tns`.  As soon as an update only tensor enters scope, each
-subsequent update access will be initialized with a separate call to
-`instantiate_updater`.  `protos` is the list of protocols in each case.
-
-The fallback for `instantiate_updater` will iteratively move the last element of
-`protos` into the arguments of a function. This allows fibers to specialize on
-the last arguments of protos rather than the first, as Finch is column major.
-"""
-function instantiate_updater(tns, ctx, subprotos, protos...)
-    if isempty(subprotos)
-        throw(FinchProtocolError("$(typeof(tns)) does not support reads with protocol $(protos)"))
-    else
-        instantiate_updater(tns, ctx, subprotos[1:end-1], subprotos[end], protos...)
+        instantiate(tns, ctx, mode, subprotos[1:end-1], subprotos[end], protos...)
     end
 end
 

@@ -276,7 +276,7 @@ function freeze_level!(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, pos_st
     return lvl
 end
 
-function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, subprotos, ::Union{typeof(defaultread), typeof(walk)})
+function instantiate(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = postype(lvl)
@@ -329,7 +329,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, su
                                     body = (ctx, ext) -> Lookup(
                                         body = (ctx, i) -> Thunk(
                                             preamble = :($my_q = $my_q_ofs + $(ctx(i))),
-                                            body = (ctx) -> instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, Tp)), ctx, subprotos),
+                                            body = (ctx) -> instantiate(VirtualSubFiber(lvl.lvl, value(my_q, Tp)), ctx, mode, subprotos),
                                         )
                                     )
                                 )
@@ -348,7 +348,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, su
     )
 end
 
-function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, subprotos, ::typeof(gallop))
+function instantiate(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, mode::Reader, subprotos, ::typeof(gallop))
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = postype(lvl)
@@ -401,7 +401,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, su
                                         body = (ctx, ext) -> Lookup(
                                             body = (ctx, i) -> Thunk(
                                                 preamble = :($my_q = $my_q_ofs + $(ctx(i))),
-                                                body = (ctx) -> instantiate_reader(VirtualSubFiber(lvl.lvl, value(my_q, Tp)), ctx, subprotos),
+                                                body = (ctx) -> instantiate(VirtualSubFiber(lvl.lvl, value(my_q, Tp)), ctx, mode, subprotos),
                                             )
                                         )
                                     )
@@ -417,10 +417,9 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, su
     )
 end
 
-instantiate_updater(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, protos) =
-    instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, protos)
-function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseVBLLevel}, ctx, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
-    #is_serial(ctx.arch) || throw(FinchArchitectureError("SparseVBLLevel updater is not concurrent"))
+instantiate(fbr::VirtualSubFiber{VirtualSparseVBLLevel}, ctx, mode::Updater, protos) =
+    instantiate(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, mode, protos)
+function instantiate(fbr::VirtualTrackedSubFiber{VirtualSparseVBLLevel}, ctx, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = postype(lvl)
@@ -457,7 +456,7 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualSparseVBLLevel},
                         end
                         $dirty = false
                     end,
-                    body = (ctx) -> instantiate_updater(VirtualTrackedSubFiber(lvl.lvl, value(qos, Tp), dirty), ctx, subprotos),
+                    body = (ctx) -> instantiate(VirtualTrackedSubFiber(lvl.lvl, value(qos, Tp), dirty), ctx, mode, subprotos),
                     epilogue = quote
                         if $dirty
                             $(fbr.dirty) = true

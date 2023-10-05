@@ -51,11 +51,11 @@ function virtual_resize!(arr::VirtualPermissiveArray, ctx::AbstractCompiler, dim
     virtual_resize!(arr.body, ctx, ifelse.(arr.dims, virtual_size(arr.body, ctx), dim))
 end
 
-function instantiate_reader(arr::VirtualPermissiveArray, ctx, protos)
-    VirtualPermissiveArray(instantiate_reader(arr.body, ctx, protos), arr.dims)
+function instantiate(arr::VirtualPermissiveArray, ctx, mode::Reader, protos)
+    VirtualPermissiveArray(instantiate(arr.body, ctx, mode::Reader, protos), arr.dims)
 end
-function instantiate_updater(arr::VirtualPermissiveArray, ctx, protos)
-    VirtualPermissiveArray(instantiate_updater(arr.body, ctx, protos), arr.dims)
+function instantiate(arr::VirtualPermissiveArray, ctx, mode::Updater, protos)
+    VirtualPermissiveArray(instantiate(arr.body, ctx, mode::Updater, protos), arr.dims)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualPermissiveArray) = ctx(node.body)
@@ -134,7 +134,7 @@ getroot(tns::VirtualPermissiveArray) = getroot(tns.body)
 function unfurl(tns::VirtualPermissiveArray, ctx, ext, mode, protos...)
     tns_2 = unfurl(tns.body, ctx, ext, mode, protos...)
     dims = virtual_size(tns.body, ctx)
-    garb = (mode.kind === reader) ? Fill(literal(missing)) : Fill(Null())
+    garb = (mode === reader) ? Fill(literal(missing)) : Fill(Null())
     if tns.dims[end] && dims[end] != dimless
         VirtualPermissiveArray(
             Unfurled(
