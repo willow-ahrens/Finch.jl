@@ -42,64 +42,64 @@ function get_wrapper_rules(alg, depth, ctx)
                 end
             end
         end),
-        (@rule call(<, ~i::isindex, ~j::isindex) => begin
+        (@rule call(<, ~i, ~j::isindex) => begin
             if depth(i) < depth(j)
                 access(LoTriMask(), reader(), j, call(+, i, 1))
             end
         end),
-        (@rule call(<, ~i::isindex, ~j::isindex) => begin
+        (@rule call(<, ~i::isindex, ~j) => begin
             if depth(i) > depth(j)
                 access(UpTriMask(), reader(), i, call(-, j, 1))
             end
         end),
-        (@rule call(<=, ~i::isindex, ~j::isindex) => begin
+        (@rule call(<=, ~i, ~j::isindex) => begin
             if depth(i) < depth(j)
                 access(LoTriMask(), reader(), j, i)
             end
         end),
-        (@rule call(<=, ~i::isindex, ~j::isindex) => begin
+        (@rule call(<=, ~i::isindex, ~j) => begin
             if depth(i) > depth(j)
                 access(UpTriMask(), reader(), i, j)
             end
         end),
-        (@rule call(>, ~i::isindex, ~j::isindex) => begin
+        (@rule call(>, ~i, ~j::isindex) => begin
             if depth(i) < depth(j)
                 access(UpTriMask(), reader(), j, call(-, i, 1))
             end
         end),
-        (@rule call(>, ~i::isindex, ~j::isindex) => begin
+        (@rule call(>, ~i::isindex, ~j) => begin
             if depth(i) > depth(j)
                 access(LoTriMask(), reader(), i, call(+, j, 1))
             end
         end),
-        (@rule call(>=, ~i::isindex, ~j::isindex) => begin
+        (@rule call(>=, ~i, ~j::isindex) => begin
             if depth(i) < depth(j)
                 access(UpTriMask(), reader(), j, i)
             end
         end),
-        (@rule call(>=, ~i::isindex, ~j::isindex) => begin
+        (@rule call(>=, ~i::isindex, ~j) => begin
             if depth(i) > depth(j)
                 access(LoTriMask(), reader(), i, j)
             end
         end),
-        (@rule call(==, ~i::isindex, ~j::isindex) => begin
-            if depth(i) > depth(j)
-                access(DiagMask(), reader(), i, j)
-            end
-        end),
-        (@rule call(==, ~i::isindex, ~j::isindex) => begin
+        (@rule call(==, ~i, ~j::isindex) => begin
             if depth(i) < depth(j)
                 access(DiagMask(), reader(), j, i)
             end
         end),
-        (@rule call(!=, ~i::isindex, ~j::isindex) => begin
+        (@rule call(==, ~i::isindex, ~j) => begin
             if depth(i) > depth(j)
-                call(!, access(DiagMask(), reader(), i, j))
+                access(DiagMask(), reader(), i, j)
             end
         end),
-        (@rule call(!=, ~i::isindex, ~j::isindex) => begin
+        (@rule call(!=, ~i, ~j::isindex) => begin
             if depth(i) < depth(j)
                 call(!, access(DiagMask(), reader(), j, i))
+            end
+        end),
+        (@rule call(!=, ~i::isindex, ~j) => begin
+            if depth(i) > depth(j)
+                call(!, access(DiagMask(), reader(), i, j))
             end
         end),
         (@rule call(toeplitz, call(swizzle, ~A, ~sigma...), ~dim...) => begin
