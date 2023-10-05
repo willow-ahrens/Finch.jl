@@ -61,7 +61,7 @@ julia> idx_jl = reinterpret(CIndex{Int}, idx_c)
  1
  3
 julia> A = Fiber(Dense(SparseList{CIndex{Int}, CIndex{Int}}(Element{0.0, Float64}(val_c), m, ptr_jl, idx_jl), n))
-ERROR: MethodError: no method matching (SparseListLevel{CIndex{Int64}, CIndex{Int64}})(::ElementLevel{0.0, Float64, Int64, Vector{Float64}}, ::Int64, ::Base.ReinterpretArray{CIndex{Int64}, 1, Int64, Vector{Int64}, false}, ::Base.ReinterpretArray{CIndex{Int64}, 1, Int64, Vector{Int64}, false})
+ERROR: MethodError: no method matching (SparseListLevel{CIndex{Int64}, CIndex{Int64}, Idx, Lvl} where {Idx, Lvl})(::ElementLevel{0.0, Float64, Int64, Vector{Float64}}, ::Int64, ::Base.ReinterpretArray{CIndex{Int64}, 1, Int64, Vector{Int64}, false}, ::Base.ReinterpretArray{CIndex{Int64}, 1, Int64, Vector{Int64}, false})
 Stacktrace:
  [1] top-level scope
    @ none:1
