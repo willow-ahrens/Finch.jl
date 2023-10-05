@@ -325,6 +325,47 @@ using CIndices
         @test C == [2.0 1.0; 1.0 2.0]
     end
 
+    #https://github.com/willow-ahrens/Finch.jl/issues/291
+    let
+        A = [1 2 3; 4 5 6; 7 8 9]
+        x = Scalar(0.0)
+        @finch mode=fastfinch for j=_, i=_; if i < j x[] += A[i, j] end end
+        @test x[] == 11.0
+
+        @finch mode=fastfinch (x .= 0; for i=_, j=_; if i < j x[] += A[j, i] end end)
+        @test x[] == 19.0
+
+        @finch mode=fastfinch (x .= 0; for j=_, i=_; if i <= j x[] += A[i, j] end end)
+        @test x[] == 26.0
+
+        @finch mode=fastfinch (x .= 0; for i=_, j=_; if i <= j x[] += A[j, i] end end)
+        @test x[] == 34.0
+
+        @finch mode=fastfinch (x .= 0; for j=_, i=_; if i > j x[] += A[i, j] end end)
+        @test x[] == 19.0
+
+        @finch mode=fastfinch (x .= 0; for i=_, j=_; if i > j x[] += A[j, i] end end)
+        @test x[] == 11.0
+
+        @finch mode=fastfinch (x .= 0; for j=_, i=_; if i >= j x[] += A[i, j] end end)
+        @test x[] == 34.0
+
+        @finch mode=fastfinch (x .= 0; for i=_, j=_; if i >= j x[] += A[j, i] end end)
+        @test x[] == 26.0
+
+        @finch mode=fastfinch (x .= 0; for j=_, i=_; if i == j x[] += A[i, j] end end)
+        @test x[] == 15.0
+
+        @finch mode=fastfinch (x .= 0; for i=_, j=_; if i == j x[] += A[j, i] end end)
+        @test x[] == 15.0
+
+        @finch mode=fastfinch (x .= 0; for j=_, i=_; if i != j x[] += A[i, j] end end)
+        @test x[] == 30.0
+
+        @finch mode=fastfinch (x .= 0; for i=_, j=_; if i != j x[] += A[j, i] end end)
+        @test x[] == 30.0
+    end
+  
     #https://github.com/willow-ahrens/Finch.jl/issues/286
     let 
         A = [1 0; 0 1]
