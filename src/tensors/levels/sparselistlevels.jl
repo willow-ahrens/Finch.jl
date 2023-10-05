@@ -354,7 +354,7 @@ end
 instantiate(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, mode::Updater, protos) = begin
     instantiate(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, mode, protos)
 end
-function instantiate(fbr::VirtualTrackedSubFiber{VirtualSparseListLevel}, ctx, mode, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
+function instantiate(fbr::VirtualTrackedSubFiber{VirtualSparseListLevel}, ctx, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = postype(lvl)
