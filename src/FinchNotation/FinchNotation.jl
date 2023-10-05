@@ -9,11 +9,12 @@ module FinchNotation
     export virtual
     export value
     export loop
+    export define
     export assign
     export tag
     export call
     export cached
-    export access, reader, updater, Reader, Updater
+    export reader, Reader, updater, Updater, access
     export define, declare, thaw, freeze
     export block
     export protocol

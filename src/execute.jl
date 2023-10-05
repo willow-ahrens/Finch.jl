@@ -34,7 +34,7 @@ function (ctx::InstantiateTensors)(node::FinchNode)
         block(map(ctx, node.bodies)...)
     elseif node.kind === define
         push!(ctx.escape, node.lhs)
-        define(node.lhs, ctx(node.rhs))
+        define(node.lhs, ctx(node.rhs), ctx(node.body))
     elseif node.kind === declare
         push!(ctx.escape, node.tns)
         node

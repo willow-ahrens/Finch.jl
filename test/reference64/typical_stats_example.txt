@@ -13,25 +13,26 @@ julia> x_var = Scalar(0.0)
 Scalar{0.0, Float64}(0.0)
 julia> @finch_code begin
         for i = _
-            x = X[i]
-            x_min[] << min >>= x
-            x_max[] << max >>= x
-            x_sum[] += x
-            x_var[] += x * x
+            let x = X[i]
+                x_min[] << min >>= x
+                x_max[] << max >>= x
+                x_sum[] += x
+                x_var[] += x * x
+            end
         end
     end
 quote
-    X_lvl = (ex.body.bodies[1]).rhs.tns.bind.lvl
+    X_lvl = ex.body.rhs.tns.bind.lvl
     X_lvl_ptr = X_lvl.ptr
     X_lvl_idx = X_lvl.idx
     X_lvl_val = X_lvl.lvl.val
-    x_min = (ex.body.bodies[2]).lhs.tns.bind
+    x_min = (ex.body.body.bodies[1]).lhs.tns.bind
     x_min_val = x_min.val
-    x_max = (ex.body.bodies[3]).lhs.tns.bind
+    x_max = (ex.body.body.bodies[2]).lhs.tns.bind
     x_max_val = x_max.val
-    x_sum = (ex.body.bodies[4]).lhs.tns.bind
+    x_sum = (ex.body.body.bodies[3]).lhs.tns.bind
     x_sum_val = x_sum.val
-    x_var = (ex.body.bodies[5]).lhs.tns.bind
+    x_var = (ex.body.body.bodies[4]).lhs.tns.bind
     x_var_val = x_var.val
     X_lvl_q = X_lvl_ptr[1]
     X_lvl_q_stop = X_lvl_ptr[1 + 1]

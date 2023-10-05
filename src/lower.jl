@@ -101,15 +101,11 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
             preamble = quote end
 
             #The idea here is that we expect parent blocks to eagerly process
-            #child blocks, so the effects of the statements like define or
-            #freeze should always be visible to any subsequent statement, even
-            #if it's in a different block.
+            #child blocks, so the effects of the statements like freeze or thaw
+            #should always be visible to any subsequent statement, even if its
+            #in a different block.
             if head.kind === block
                 ctx(block(head.bodies..., body))
-            elseif head.kind === define
-                @assert head.lhs.kind === variable
-                ctx.bindings[head.lhs] = cache!(ctx, head.lhs.name, head.rhs)
-                push!(ctx.scope, head.lhs)
             elseif head.kind === declare
                 @assert head.tns.kind === variable
                 @assert get(ctx.modes, head.tns, reader) === reader
@@ -137,7 +133,14 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
                 end)
             end
         end
-    elseif (root.kind === define || root.kind === declare || root.kind === freeze || root.kind === thaw)
+    elseif root.kind === define
+        @assert root.lhs.kind === variable
+        ctx.bindings[root.lhs] = cache!(ctx, root.lhs.name, root.rhs)
+        push!(ctx.scope, root.lhs)
+        contain(ctx) do ctx_2
+            open_scope(root.body, ctx_2)
+        end
+    elseif (root.kind === declare || root.kind === freeze || root.kind === thaw)
         #these statements only apply to subsequent statements in a block
         #if we try to lower them directly they are a no-op
         #arguably, the declare, freeze, or thaw nodes should never reach this case but we'll leave that alone for now

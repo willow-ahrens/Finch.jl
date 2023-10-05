@@ -40,9 +40,9 @@ begin
                     Finch.fill_range!(C_lvl_val, 0.0, C_lvl_qos, C_lvl_qos_stop)
                 end
                 C_lvldirty = false
-                v_2 = -phase_stop_2
-                phase_start_4 = max(1, -v_2 + -2)
-                phase_stop_4 = min(F_lvl.shape, A_lvl.shape + -v_2 + -3)
+                v_3 = -phase_stop_2
+                phase_start_4 = max(1, -v_3 + -2)
+                phase_stop_4 = min(F_lvl.shape, A_lvl.shape + -v_3 + -3)
                 if phase_stop_4 >= phase_start_4
                     A_lvl_q = A_lvl_ptr[1]
                     A_lvl_q_stop = A_lvl_ptr[1 + 1]
@@ -51,16 +51,16 @@ begin
                     else
                         A_lvl_i1 = 0
                     end
-                    phase_stop_5 = min(phase_stop_4, -v_2 + -3 + A_lvl_i1)
+                    phase_stop_5 = min(phase_stop_4, -v_3 + -3 + A_lvl_i1)
                     if phase_stop_5 >= phase_start_4
                         j = phase_start_4
-                        if A_lvl_idx[A_lvl_q] < (phase_start_4 + v_2) + 3
-                            A_lvl_q = Finch.scansearch(A_lvl_idx, (phase_start_4 + v_2) + 3, A_lvl_q, A_lvl_q_stop - 1)
+                        if A_lvl_idx[A_lvl_q] < (phase_start_4 + v_3) + 3
+                            A_lvl_q = Finch.scansearch(A_lvl_idx, (phase_start_4 + v_3) + 3, A_lvl_q, A_lvl_q_stop - 1)
                         end
                         while j <= phase_stop_5
                             A_lvl_i = A_lvl_idx[A_lvl_q]
-                            phase_stop_6 = min(phase_stop_5, -v_2 + -3 + A_lvl_i)
-                            if A_lvl_i == (phase_stop_6 + v_2) + 3
+                            phase_stop_6 = min(phase_stop_5, -v_3 + -3 + A_lvl_i)
+                            if A_lvl_i == (phase_stop_6 + v_3) + 3
                                 A_lvl_2_val_2 = A_lvl_val[A_lvl_q]
                                 F_lvl_q = (1 - 1) * F_lvl.shape + phase_stop_6
                                 F_lvl_2_val = F_lvl_val[F_lvl_q]

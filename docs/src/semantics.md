@@ -22,10 +22,10 @@ The core Finch expressions are:
 
 And the core Finch statements are:
 
-- [`define`](@ref) e.g. `var = val`
 - [`declare`](@ref) e.g. `tns .= init`
 - [`assign`](@ref) e.g. `lhs[idxs...] <<op>>= rhs`
 - [`loop`](@ref) e.g. `for i = _; ... end`
+- [`define`](@ref) e.g. `let var = val; ... end`
 - [`sieve`](@ref) e.g. `if cond; ... end`
 - [`block`](@ref) e.g. `begin ... end`
 

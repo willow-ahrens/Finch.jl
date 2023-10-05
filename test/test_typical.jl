@@ -130,11 +130,12 @@
         @repl io x_var = Scalar(0.0)
         @repl io @finch_code begin
             for i = _
-                x = X[i]
-                x_min[] <<min>>= x
-                x_max[] <<max>>= x
-                x_sum[] += x
-                x_var[] += x * x
+                let x = X[i]
+                    x_min[] <<min>>= x
+                    x_max[] <<max>>= x
+                    x_sum[] += x
+                    x_var[] += x * x
+                end
             end
         end
 
