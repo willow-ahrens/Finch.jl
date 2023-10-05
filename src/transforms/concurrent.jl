@@ -48,14 +48,19 @@ function ensure_concurrent(root, ctx)
         if !allequal(ops)
             throw(FinchConcurrencyError("Nonlocal assignments to $(root) are not all the same operator"))
         end
-        if !isassociative(ctx.algebra, first(ops))
-            throw(FinchConcurrencyError("Nonlocal assignments to $(root) are not associative"))
-        end
+
         accs = map(agn -> (@capture agn assign(~lhs, ~op, ~rhs); lhs), agns)
         if !allequal(accs)
             throw(FinchConcurrencyError("Nonlocal assignments to $(root) are not all the same access"))
         end
         acc = first(accs)
+
+        if !(
+                (@capture(acc, access(~tns, ~mode, ~i..., idx)) && is_injective(tns, ctx)[length(i) + 1]) ||
+                isassociative(ctx.algebra, first(ops))
+            )
+            throw(FinchConcurrencyError("Nonlocal assignments to $(root) are not associative"))
+        end
 
         if !(
             (is_atomic(acc.tns, ctx)) ||
