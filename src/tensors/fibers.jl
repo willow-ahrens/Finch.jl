@@ -269,10 +269,4 @@ Base.summary(fbr::SubFiber) = "$(join(size(fbr), "×")) SubFiber($(summary(fbr.l
 Base.similar(fbr::AbstractFiber) = Fiber(similar_level(fbr.lvl))
 Base.similar(fbr::AbstractFiber, dims::Tuple) = Fiber(similar_level(fbr.lvl, dims...))
 
-"""
-    moveto(fbr, device)
-
-If the fiber/level is not on the given device, it creates a new version of this fiber on that memory type
-and copies the data in to it, according to the `device`.
-"""
 moveto(fiber::Fiber, device) = Fiber(moveto(fiber.lvl, device))

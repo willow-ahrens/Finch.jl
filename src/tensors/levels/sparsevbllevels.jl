@@ -142,7 +142,6 @@ end
 is_level_injective(lvl::VirtualSparseVBLLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., false]
 is_level_atomic(lvl::VirtualSparseVBLLevel, ctx) = false
   
-memtype(lvl::VirtualSparseVBLLevel) = memtype(lvl.lvl)
 postype(lvl::VirtualSparseVBLLevel) = postype(lvl.lvl)
 
 
