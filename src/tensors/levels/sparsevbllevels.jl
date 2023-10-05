@@ -208,9 +208,9 @@ function virtual_moveto_level(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler,
         $(lvl.ofs) = $moveto($(lvl.ofs), $(ctx(arch)))
     end)
     push!(ctx.code.epilogue, quote
-        $ptr = $ptr_2
-        $tbl = $tbl_2
-        $ofs = $ofs_2
+        $(lvl.ptr) = $ptr_2
+        $(lvl.tbl) = $tbl_2
+        $(lvl.ofs) = $ofs_2
     end)
     virtual_moveto_level(lvl.lvl, ctx, arch)
 end

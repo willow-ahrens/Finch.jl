@@ -244,9 +244,9 @@ function virtual_moveto_level(lvl::VirtualSparseListLevel, ctx::AbstractCompiler
         $(lvl.idx) = $moveto($(lvl.idx), $(ctx(arch)))
     end)
     push!(ctx.code.epilogue, quote
-    $ptr = $ptr_2
-    $idx = $idx_2
-end)
+        $(lvl.ptr) = $ptr_2
+        $(lvl.idx) = $idx_2
+    end)
     virtual_moveto_level(lvl.lvl, ctx, arch)
 end
 

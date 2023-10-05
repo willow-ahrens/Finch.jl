@@ -191,9 +191,9 @@ function virtual_moveto_level(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler,
         $(lvl.val) = $moveto($(lvl.val), $(ctx(arch)))
     end)
     push!(ctx.code.epilogue, quote
-        $ptr = $ptr_2
-        $idx = $idx_2
-        $val = $val_2
+        $(lvl.ptr) = $ptr_2
+        $(lvl.idx) = $idx_2
+        $(lvl.val) = $val_2
     end)
     virtual_moveto_level(lvl.lvl, ctx, arch)
 end

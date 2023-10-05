@@ -7,8 +7,15 @@ function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::FinchNode)
     stylize_access(node, ctx, resolve(tns, ctx.ctx))
 end
 
-instantiate(tns::FinchNode, ctx::AbstractCompiler, mode::Reader, protos) = instantiate(resolve(tns, ctx), ctx, mode::Reader, protos)
-instantiate(tns::FinchNode, ctx::AbstractCompiler, mode::Updater, protos) = instantiate(resolve(tns, ctx), ctx, mode::Updater, protos)
+function instantiate(tns::FinchNode, ctx::AbstractCompiler, mode, protos)
+    if tns.kind === virtual
+        return instantiate(tns.val, ctx, mode, protos)
+    elseif tns.kind === variable
+        return Unfurled(tns, instantiate(resolve(tns, ctx), ctx, mode, protos))
+    else
+        return tns
+    end
+end
 
 declare!(tns::FinchNode, ctx::AbstractCompiler, init) = declare!(resolve(tns, ctx), ctx, init)
 thaw!(tns::FinchNode, ctx::AbstractCompiler) = thaw!(resolve(tns, ctx), ctx)

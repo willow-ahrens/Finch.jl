@@ -239,7 +239,7 @@ function lower_parallel_loop(ctx, root, ext::ParallelDimension, device::VirtualC
 
     root_2 = loop(tid, Extent(value(i, Int), value(i, Int)),
         loop(root.idx, ext.ext,
-            sieve(access(VirtualSplitMask(device.n), reader(), root.idx, tid),
+            sieve(access(VirtualSplitMask(device.n), reader, root.idx, tid),
                 root.body
             )
         )

@@ -175,9 +175,9 @@ function virtual_moveto_level(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler,
         $(lvl.right) = $moveto($(lvl.right), $(ctx(arch)))
     end)
     push!(ctx.code.epilogue, quote
-        $ptr = $ptr_2
-        $left = $left_2
-        $right = $right_2
+        $(lvl.ptr) = $ptr_2
+        $(lvl.left) = $left_2
+        $(lvl.right) = $right_2
     end)
     virtual_moveto_level(lvl.lvl, ctx, arch)
 end

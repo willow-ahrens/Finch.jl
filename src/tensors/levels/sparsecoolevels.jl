@@ -267,7 +267,7 @@ function virtual_moveto_level(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler,
         $(lvl.ptr) = $moveto($(lvl.ptr), $(ctx(arch)))
     end)
     push!(ctx.code.epilogue, quote
-        $ptr = $ptr_2
+        $(lvl.ptr) = $ptr_2
     end)
     tbl_2 = map(lvl.tbl) do idx
         idx_2 = freshen(ctx.code, idx)
