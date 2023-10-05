@@ -137,8 +137,112 @@ unfurl
 ```
 ## Virtualization
 
-TODO more on the way...
+Finch generates different code depending on the types of the arguments to the
+program. For example, in the following program, `A` and `B` have different
+types, and so the code generated for the loop is different. In order to execute
+a program, Finch builds a typed AST (Abstract Syntax Tree), then calls
+`Finch.execute` on it. The AST object is just an instance of a program to
+execute, and contains the program to execute along with the data to execute it.
+The type of the program instance contains only the program portion; there may be
+many program instances with different inputs, but the same program type. During
+compilation, Finch uses the type of the program to construct a more ergonomic
+representation, which is then used to generate code. This process is called
+"virtualization".  All of the Finch AST nodes have both instance and virtual
+representations. For example, the literal `42` is represented as
+`Finch.FinchNotation.LiteralInstance(42)` and then virtualized to `literal(42)`.
+The virtualization process is implemented by the `virtualize` function. 
 
+```jldoctest example2; setup = :(using Finch)
+julia> A = Fiber!(SparseList(Element(0)), [0, 2, 0, 0, 3]);
+
+julia> B = Fiber!(Dense(Element(0)), [11, 12, 13, 14, 15]);
+
+julia> s = Scalar(0);
+
+julia> typeof(A)
+Fiber{SparseListLevel{Int64, Vector{Int64}, Vector{Int64}, ElementLevel{0, Int64, Int64, Vector{Int64}}}}
+
+julia> typeof(B)
+Fiber{DenseLevel{Int64, ElementLevel{0, Int64, Int64, Vector{Int64}}}}
+
+julia> inst = Finch.@finch_program_instance begin
+           for i = _
+               s[] += A[i]
+           end
+       end
+loop_instance(index_instance(i), Finch.FinchNotation.Dimensionless(), assign_instance(access_instance(tag_instance(:variable_instance(:s), Scalar{0, Int64}(0)), literal_instance(Finch.FinchNotation.Updater()), ), tag_instance(:variable_instance(:+), literal_instance(+)), access_instance(tag_instance(:variable_instance(:A), Fiber(SparseList{Int64}(Element{0, Int64, Int64}([2, 3]), 5, [1, 3], [2, 5]))), literal_instance(Finch.FinchNotation.Reader()), tag_instance(:variable_instance(:i), index_instance(i)))))
+
+julia> typeof(inst)
+Finch.FinchNotation.LoopInstance{Finch.FinchNotation.IndexInstance{:i}, Finch.FinchNotation.Dimensionless, Finch.FinchNotation.AssignInstance{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:s}, Scalar{0, Int64}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.Updater()}, Tuple{}}, Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:+}, Finch.FinchNotation.LiteralInstance{+}}, Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:A}, Fiber{SparseListLevel{Int64, Vector{Int64}, Vector{Int64}, ElementLevel{0, Int64, Int64, Vector{Int64}}}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.Reader()}, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}}}
+
+julia> Finch.virtualize(:inst, typeof(inst), Finch.JuliaContext())
+for i = virtual(Finch.FinchNotation.Dimensionless)
+  tag(s, virtual(Finch.VirtualScalar))[] <<tag(+, +)>>= tag(A, virtual(Finch.VirtualFiber{Finch.VirtualSparseListLevel}))[tag(i, i)]
+end
+
+julia> @finch_code begin
+           for i = _
+               s[] += A[i]
+           end
+       end
+quote
+    s = ex.body.lhs.tns.bind
+    s_val = s.val
+    A_lvl = ex.body.rhs.tns.bind.lvl
+    A_lvl_ptr = A_lvl.ptr
+    A_lvl_idx = A_lvl.idx
+    A_lvl_val = A_lvl.lvl.val
+    A_lvl_q = A_lvl_ptr[1]
+    A_lvl_q_stop = A_lvl_ptr[1 + 1]
+    if A_lvl_q < A_lvl_q_stop
+        A_lvl_i1 = A_lvl_idx[A_lvl_q_stop - 1]
+    else
+        A_lvl_i1 = 0
+    end
+    phase_stop = min(A_lvl_i1, A_lvl.shape)
+    if phase_stop >= 1
+        i = 1
+        if A_lvl_idx[A_lvl_q] < 1
+            A_lvl_q = Finch.scansearch(A_lvl_idx, 1, A_lvl_q, A_lvl_q_stop - 1)
+        end
+        while i <= phase_stop
+            A_lvl_i = A_lvl_idx[A_lvl_q]
+            phase_stop_2 = min(phase_stop, A_lvl_i)
+            if A_lvl_i == phase_stop_2
+                A_lvl_2_val = A_lvl_val[A_lvl_q]
+                s_val = A_lvl_2_val + s_val
+                A_lvl_q += 1
+            end
+            i = phase_stop_2 + 1
+        end
+    end
+    (s = (Scalar){0, Int64}(s_val),)
+end
+
+julia> @finch_code begin
+           for i = _
+               s[] += B[i]
+           end
+       end
+quote
+    s = ex.body.lhs.tns.bind
+    s_val = s.val
+    B_lvl = ex.body.rhs.tns.bind.lvl
+    B_lvl_val = B_lvl.lvl.val
+    for i_3 = 1:B_lvl.shape
+        B_lvl_q = (1 - 1) * B_lvl.shape + i_3
+        B_lvl_2_val = B_lvl_val[B_lvl_q]
+        s_val = B_lvl_2_val + s_val
+    end
+    (s = (Scalar){0, Int64}(s_val),)
+end
+```
+
+Users can also create their own virtual nodes to represent their custom types.
+These types may contain constants and other virtuals, as well as reference variables
+in the scope of the executing context. Any aspect of virtuals visible to Finch should be
+considered immutable, but virtuals may reference mutable variables in the scope of the
+executing context.
 
 ## Fiber internals
 
