@@ -51,11 +51,8 @@ function virtual_resize!(arr::VirtualPermissiveArray, ctx::AbstractCompiler, dim
     virtual_resize!(arr.body, ctx, ifelse.(arr.dims, virtual_size(arr.body, ctx), dim))
 end
 
-function instantiate(arr::VirtualPermissiveArray, ctx, mode::Reader, protos)
-    VirtualPermissiveArray(instantiate(arr.body, ctx, mode::Reader, protos), arr.dims)
-end
-function instantiate(arr::VirtualPermissiveArray, ctx, mode::Updater, protos)
-    VirtualPermissiveArray(instantiate(arr.body, ctx, mode::Updater, protos), arr.dims)
+function instantiate(arr::VirtualPermissiveArray, ctx, mode, protos)
+    VirtualPermissiveArray(instantiate(arr.body, ctx, mode, protos), arr.dims)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualPermissiveArray) = ctx(node.body)

@@ -55,11 +55,8 @@ function virtual_resize!(arr::VirtualProtocolizedArray, ctx::AbstractCompiler, d
     virtual_resize!(arr.body, ctx, dim)
 end
 
-function instantiate(arr::VirtualProtocolizedArray, ctx, mode::Reader, protos)
-    VirtualProtocolizedArray(instantiate(arr.body, ctx, mode::Reader,  map(something, arr.protos, protos)), arr.protos)
-end
-function instantiate(arr::VirtualProtocolizedArray, ctx, mode::Updater, protos)
-    VirtualProtocolizedArray(instantiate(arr.body, ctx, mode::Updater,  map(something, arr.protos, protos)), arr.protos)
+function instantiate(arr::VirtualProtocolizedArray, ctx, mode, protos)
+    VirtualProtocolizedArray(instantiate(arr.body, ctx, mode, map(something, arr.protos, protos)), arr.protos)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualProtocolizedArray) = ctx(node.body)

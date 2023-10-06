@@ -56,11 +56,8 @@ end
 
 virtual_default(arr::VirtualWindowedArray, ctx::AbstractCompiler) = virtual_default(arr.body, ctx)
 
-function instantiate(arr::VirtualWindowedArray, ctx, mode::Reader, protos)
-    VirtualWindowedArray(instantiate(arr.body, ctx, mode::Reader, protos), arr.dims)
-end
-function instantiate(arr::VirtualWindowedArray, ctx, mode::Updater, protos)
-    VirtualWindowedArray(instantiate(arr.body, ctx, mode::Updater, protos), arr.dims)
+function instantiate(arr::VirtualWindowedArray, ctx, mode, protos)
+    VirtualWindowedArray(instantiate(arr.body, ctx, mode, protos), arr.dims)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualWindowedArray) = ctx(node.body)
