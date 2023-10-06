@@ -48,7 +48,11 @@ function check_output(fname, arg)
         if reference == result
             return true
         else
-            @info "disagreement with reference output" reference result
+            println("disagreement with reference output")
+            println("reference")
+            println(reference)
+            println("result")
+            println(result)
             return false
         end
     end
