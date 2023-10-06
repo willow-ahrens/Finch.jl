@@ -105,7 +105,13 @@ function Base.show(io::IO, lvl::SparseHashLevel{N, Ti, Tp, Tbl, Vp, VTpip, Lvl})
     else
         print(io, typeof(lvl.tbl))
         print(io, "(")
-        print(io, join(sort!(collect(pairs(lvl.tbl))), ", "))
+        if get(io, :limit, false) && length(lvl.tbl) > 10
+            print(io, join(sort!(collect(pairs(lvl.tbl)))[1:5], ", "))
+            print(io, ", …, ")
+            print(io, join(sort!(collect(pairs(lvl.tbl)))[end-5:end], ", "))
+        else
+            print(io, join(sort!(collect(pairs(lvl.tbl))), ", "))
+        end
         print(io, "), ")
         show(IOContext(io, :typeinfo=>Vp), lvl.ptr)
         print(io, ", ")
