@@ -8,7 +8,6 @@
         "byte" => SparseByteMap{Int64},
         "hash1" => SparseHash{1, Tuple{Int64}},
         "coo1" => SparseCOO{1, Tuple{Int64}},
-        "dense" => Dense{Int64},
     ]
 
     for (rown, rowf) in formats
