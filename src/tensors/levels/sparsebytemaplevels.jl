@@ -124,7 +124,11 @@ function virtualize(ex, ::Type{SparseByteMapLevel{Ti, Tp, Vp, BV, VTpi, Lvl}}, c
     push!(ctx.preamble, quote
         $sym = $ex
         #TODO this line is not strictly correct unless the tensor is trimmed.
-        $qos_stop = $qos_fill = length($sym.srt)
+        #$qos_stop = $qos_fill = length($sym.srt)
+        Finch.fill_range!($sym.ptr, 0, 1, length($sym.ptr))
+        Finch.fill_range!($sym.srt, (0,0), 1, length($sym.srt))
+        Finch.fill_range!($sym.tbl, false, 1, length($sym.tbl))
+        $qos_stop = $qos_fill = 0 
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
     VirtualSparseByteMapLevel(lvl_2, sym, Ti, Tp, shape, qos_fill, qos_stop)
@@ -167,8 +171,8 @@ function declare_level!(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, p
     push!(ctx.code.preamble, quote
         for $r = 1:$(lvl.qos_fill)
             $p = first($(lvl.ex).srt[$r])
-            $(lvl.ex).ptr[$p] = $(Tp(1))
-            $(lvl.ex).ptr[$p + 1] = $(Tp(1))
+            $(lvl.ex).ptr[$p] = $(Tp(0))
+            $(lvl.ex).ptr[$p + 1] = $(Tp(0))
             $i = last($(lvl.ex).srt[$r])
             $q = ($p - $(Tp(1))) * $(ctx(lvl.shape)) + $i
             $(lvl.ex).tbl[$q] = false
@@ -242,7 +246,7 @@ function freeze_level!(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, po
     Tp = lvl.Tp
     push!(ctx.code.preamble, quote
         sort!(view($(lvl.ex).srt, 1:$(lvl.qos_fill)))
-        $p_prev = $(Tp(1))
+        $p_prev = $(Tp(0))
         
         for $r = 1:$(lvl.qos_fill)
             $p = first($(lvl.ex).srt[$r])
@@ -294,7 +298,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx
                     stop = (ctx, ext) -> value(my_i_stop),
                     body = (ctx, ext) -> Stepper(
                         seek = (ctx, ext) -> quote
-                            if $my_r < $my_r_stop
+                            if $my_r != 0 && $my_r < $my_r_stop
                                 while $my_r + $(Tp(1)) < $my_r_stop && last($(lvl.ex).srt[$my_r]) < $(ctx(getstart(ext)))
                                     $my_r += $(Tp(1))
                                 end

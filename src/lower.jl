@@ -221,6 +221,7 @@ function lower_loop(ctx, root, ext)
             access(tns_2, mode, idxs...)
         end
     end))(root)
+
     return ctx(root_2, result_style(LookupStyle(), Stylize(root_2, ctx)(root_2)))
 end
 
