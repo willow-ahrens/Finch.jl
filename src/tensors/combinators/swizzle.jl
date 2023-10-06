@@ -61,11 +61,8 @@ function virtual_resize!(arr::VirtualSwizzleArray, ctx::AbstractCompiler, dims..
     virtual_resize!(arr.body, ctx, dims[invperm(arr.dims)]...)
 end
 
-function instantiate_reader(arr::VirtualSwizzleArray, ctx, protos)
-    VirtualSwizzleArray(instantiate_reader(arr.body, ctx, protos), arr.dims)
-end
-function instantiate_updater(arr::VirtualSwizzleArray, ctx, protos)
-    VirtualSwizzleArray(instantiate_updater(arr.body, ctx, protos), arr.dims)
+function instantiate(arr::VirtualSwizzleArray, ctx, mode, protos)
+    VirtualSwizzleArray(instantiate(arr.body, ctx, mode, protos), arr.dims)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualSwizzleArray) = ctx(node.body)

@@ -14,8 +14,8 @@ module FinchNotation
     export tag
     export call
     export cached
-    export reader, updater, access
-    export declare, thaw, freeze
+    export reader, Reader, updater, Updater, access
+    export define, declare, thaw, freeze
     export block
     export protocol
     export sieve

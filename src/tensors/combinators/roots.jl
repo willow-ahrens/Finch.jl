@@ -7,8 +7,15 @@ function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::FinchNode)
     stylize_access(node, ctx, resolve(tns, ctx.ctx))
 end
 
-instantiate_reader(tns::FinchNode, ctx::AbstractCompiler, protos) = instantiate_reader(resolve(tns, ctx), ctx, protos)
-instantiate_updater(tns::FinchNode, ctx::AbstractCompiler, protos) = instantiate_updater(resolve(tns, ctx), ctx, protos)
+function instantiate(tns::FinchNode, ctx::AbstractCompiler, mode, protos)
+    if tns.kind === virtual
+        return instantiate(tns.val, ctx, mode, protos)
+    elseif tns.kind === variable
+        return Unfurled(tns, instantiate(resolve(tns, ctx), ctx, mode, protos))
+    else
+        return tns
+    end
+end
 
 declare!(tns::FinchNode, ctx::AbstractCompiler, init) = declare!(resolve(tns, ctx), ctx, init)
 thaw!(tns::FinchNode, ctx::AbstractCompiler) = thaw!(resolve(tns, ctx), ctx)
@@ -23,7 +30,6 @@ lower_access(ctx::AbstractCompiler, node, tns::FinchNode) =
     lower_access(ctx, node, resolve(tns, ctx))
 
 is_injective(lvl::FinchNode, ctx) = is_injective(resolve(lvl, ctx), ctx)
-is_concurrent(lvl::FinchNode, ctx) = is_concurrent(resolve(lvl, ctx), ctx)
 is_atomic(lvl::FinchNode, ctx) = is_atomic(resolve(lvl, ctx), ctx)
 
 function getroot(node::FinchNode)

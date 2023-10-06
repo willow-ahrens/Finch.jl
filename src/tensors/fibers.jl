@@ -25,7 +25,6 @@ mutable struct VirtualFiber{Lvl} <: AbstractVirtualFiber{Lvl}
 end
 
 is_injective(fiber::VirtualFiber, ctx) = is_level_injective(fiber.lvl, ctx)
-is_concurrent(fiber::VirtualFiber, ctx) = is_level_concurrent(fiber.lvl, ctx)
 is_atomic(fiber::VirtualFiber, ctx) = is_level_atomic(fiber.lvl, ctx)
 
 function virtualize(ex, ::Type{<:Fiber{Lvl}}, ctx, tag=freshen(ctx, :tns)) where {Lvl}
@@ -73,6 +72,8 @@ function virtual_resize!(tns::AbstractVirtualFiber, ctx, dims...)
 end
 virtual_eltype(tns::AbstractVirtualFiber, ctx) = virtual_level_eltype(tns.lvl)
 virtual_default(tns::AbstractVirtualFiber, ctx) = virtual_level_default(tns.lvl)
+postype(fbr::AbstractVirtualFiber) = postype(fbr.lvl)
+allocator(fbr::AbstractVirtualFiber) = allocator(fbr.lvl)
 
 
 function declare!(fbr::VirtualFiber, ctx::AbstractCompiler, init)
@@ -81,12 +82,16 @@ function declare!(fbr::VirtualFiber, ctx::AbstractCompiler, init)
     fbr = VirtualFiber(lvl)
 end
 
-function instantiate_reader(fbr::VirtualFiber, ctx::AbstractCompiler, protos)
-    return Unfurled(fbr, instantiate_reader(VirtualSubFiber(fbr.lvl, literal(1)), ctx, protos))
+function instantiate(fbr::VirtualFiber, ctx::AbstractCompiler, mode, protos)
+    return Unfurled(fbr, instantiate(VirtualSubFiber(fbr.lvl, literal(1)), ctx, mode, protos))
 end
 
-function instantiate_updater(fbr::VirtualFiber, ctx::AbstractCompiler, protos)
-    return Unfurled(fbr, instantiate_updater(VirtualSubFiber(fbr.lvl, literal(1)), ctx, protos))
+function virtual_moveto(fbr::VirtualFiber, ctx::AbstractCompiler, arch)
+    virtual_moveto_level(fbr.lvl, ctx, arch)
+end
+
+function virtual_moveto(fbr::VirtualSubFiber, ctx::AbstractCompiler, arch)
+    virtual_moveto_level(fbr.lvl, ctx, arch)
 end
 
 struct TrackedSubFiber{Lvl, Pos, Dirty} <: AbstractFiber{Lvl}
@@ -108,6 +113,10 @@ function virtualize(ex, ::Type{<:TrackedSubFiber{Lvl, Pos, Dirty}}, ctx, tag=fre
 end
 lower(fbr::VirtualTrackedSubFiber, ctx::AbstractCompiler, ::DefaultStyle) = :(TrackedSubFiber($(ctx(fbr.lvl)), $(ctx(fbr.pos))))
 FinchNotation.finch_leaf(x::VirtualTrackedSubFiber) = virtual(x)
+
+function virtual_moveto(fbr::VirtualTrackedSubFiber, ctx::AbstractCompiler, arch)
+    return VirtualTrackedSubFiber(virtual_moveto_level(fbr.lvl, ctx, arch), fbr.pos, fbr.dirty)
+end
 
 """
     redefault!(fbr, init)
@@ -260,25 +269,4 @@ Base.summary(fbr::SubFiber) = "$(join(size(fbr), "×")) SubFiber($(summary(fbr.l
 Base.similar(fbr::AbstractFiber) = Fiber(similar_level(fbr.lvl))
 Base.similar(fbr::AbstractFiber, dims::Tuple) = Fiber(similar_level(fbr.lvl, dims...))
 
-"""
-    moveto(fbr, memType)
-
-If the fiber/level is not on the given memType, it creates a new version of this fiber on that memory type
-and copies the data in to it, according to the constructor `memtype`.
-"""
-function moveto(fiber::Fiber{Lvl}, ::Type{MemType}) where {Lvl, MemType <: AbstractArray}
-    lvlp = moveto(fiber.lvl, MemType)
-    return Fiber{typeof(lvlp)}(lvlp)
-end
-
-# function moveto(fiber::VirtualFiber{Lvl}}, memType; override = false) where {LvL}
-#     if !override && memtype(Lvl) == memType
-#         return fbr
-#     else
-#         moveto(fbr.lvl, memType, sizes)
-#     end
-# end
-
-# function memtype(::Type{<:VirtualFiber{Lvl}}) where {LvL}
-#     memtype(Lvl)
-# end
+moveto(fiber::Fiber, device) = Fiber(moveto(fiber.lvl, device))

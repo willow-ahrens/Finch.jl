@@ -1,5 +1,5 @@
 """
-    PatternLevel{[Tp, V]}()
+    PatternLevel{[Tp]}()
 
 A subfiber of a pattern level is the Boolean value true, but it's `default` is
 false. PatternLevels are used to create tensors that represent which values
@@ -13,10 +13,10 @@ Dense [1:3]
 ├─[3]: true
 ```
 """
-struct PatternLevel{Tp, V} end
+struct PatternLevel{Tp} end
 const Pattern = PatternLevel
 
-PatternLevel() = PatternLevel{Int, Vector{Bool}}()
+PatternLevel() = PatternLevel{Int}()
 
 Base.summary(::Pattern) = "Pattern()"
 similar_level(::PatternLevel) = PatternLevel()
@@ -27,7 +27,7 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:PatternLe
     show(io, mime, true)
 end
 
-pattern!(::PatternLevel{Tp, V}) where {Tp, V} = Pattern{Tp, V}()
+pattern!(::PatternLevel{Tp}) where {Tp} = Pattern{Tp}()
 
 function Base.show(io::IO, lvl::PatternLevel)
     print(io, "Pattern()")
@@ -41,14 +41,10 @@ end
 (fbr::AbstractFiber{<:PatternLevel})() = true
 data_rep_level(::Type{<:PatternLevel}) = ElementData(false, Bool)
 
-function memtype(::Type{PatternLevel{Tp, V}}) where {Tp, V}
-    return containertype(V)
-end
-
 postype(::Type{<:PatternLevel{Tp}}) where {Tp} = Tp
 
-function moveto(lvl::PatternLevel{Tp}, ::Type{MemType}) where {Tp, MemType <: AbstractArray}
-    return PatternLevel{Tp, MemType{Bool, 1}}()
+function moveto(lvl::PatternLevel{Tp}, device) where {Tp}
+    return PatternLevel{Tp}()
 end
 
 
@@ -80,19 +76,25 @@ SparseList (false) [1:10]
 pattern!(fbr::Fiber) = Fiber(pattern!(fbr.lvl))
 pattern!(fbr::SubFiber) = SubFiber(pattern!(fbr.lvl), fbr.pos)
 
-struct VirtualPatternLevel <: AbstractVirtualLevel end
+struct VirtualPatternLevel <: AbstractVirtualLevel
+    Tp
+end
+
+function virtual_moveto_level(lvl::VirtualPatternLevel, ctx::AbstractCompiler, arch)
+end
 
 is_level_injective(::VirtualPatternLevel, ctx) = []
-is_level_concurrent(::VirtualPatternLevel, ctx) = []
 is_level_atomic(lvl::VirtualPatternLevel, ctx) = true
 
 lower(lvl::VirtualPatternLevel, ctx::AbstractCompiler, ::DefaultStyle) = :(PatternLevel())
-virtualize(ex, ::Type{<:PatternLevel}, ctx) = VirtualPatternLevel()
+virtualize(ex, ::Type{PatternLevel{Tp}}, ctx) where {Tp} = VirtualPatternLevel(Tp)
 
 virtual_level_resize!(lvl::VirtualPatternLevel, ctx) = lvl
 virtual_level_size(::VirtualPatternLevel, ctx) = ()
 virtual_level_default(::VirtualPatternLevel) = false
 virtual_level_eltype(::VirtualPatternLevel) = Bool
+
+postype(lvl::VirtualPatternLevel) = lvl.Tp
 
 function declare_level!(lvl::VirtualPatternLevel, ctx, pos, init)
     init == literal(false) || throw(FinchProtocolError("Must initialize Pattern Levels to false"))
@@ -108,15 +110,15 @@ reassemble_level!(lvl::VirtualPatternLevel, ctx, pos_start, pos_stop) = quote en
 
 trim_level!(lvl::VirtualPatternLevel, ctx::AbstractCompiler, pos) = lvl
 
-instantiate_reader(::VirtualSubFiber{VirtualPatternLevel}, ctx, protos) = Fill(true)
+instantiate(::VirtualSubFiber{VirtualPatternLevel}, ctx, mode::Reader, protos) = Fill(true)
 
-function instantiate_updater(fbr::VirtualSubFiber{VirtualPatternLevel}, ctx, protos)
+function instantiate(fbr::VirtualSubFiber{VirtualPatternLevel}, ctx, mode::Updater, protos)
     val = freshen(ctx.code, :null)
     push!(ctx.code.preamble, :($val = false))
     VirtualScalar(nothing, Bool, false, gensym(), val)
 end
 
-function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualPatternLevel}, ctx, protos)
+function instantiate(fbr::VirtualTrackedSubFiber{VirtualPatternLevel}, ctx, mode::Updater, protos)
     VirtualScalar(nothing, Bool, false, gensym(), fbr.dirty)
 end
 

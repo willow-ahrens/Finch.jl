@@ -1,3 +1,9 @@
+struct Reader end
+struct Updater end
+
+const reader = Reader()
+const updater = Updater()
+
 const IS_TREE = 1
 const IS_STATEFUL = 2
 const IS_CONST = 4
@@ -12,8 +18,6 @@ const ID = 8
     tag      =  5ID | IS_TREE
     call     =  6ID | IS_TREE
     access   =  7ID | IS_TREE 
-    reader   =  8ID | IS_TREE
-    updater  =  9ID | IS_TREE
     cached   = 10ID | IS_TREE
     assign   = 11ID | IS_TREE | IS_STATEFUL
     loop     = 12ID | IS_TREE | IS_STATEFUL
@@ -89,20 +93,6 @@ access is in-place.
 access
 
 """
-    reader()
-
-Finch AST expression for an access mode that is read-only.
-"""
-reader
-
-"""
-    updater()
-
-Finch AST expression for an access mode that updates tensor values.
-"""
-updater
-
-"""
     cached(val, ref)
 
 Finch AST expression `val`, equivalent to the quoted expression `ref`
@@ -166,8 +156,8 @@ thaw
     block(bodies...)
 
 Finch AST statement that executes each of it's arguments in turn. If the body is
-not a block, replaces accesses to read-only tensors in the body with
-instantiate_reader and accesses to update-only tensors in the body with instantiate_updater.
+not a block, replaces accesses to tensors in the body with
+instantiate.
 """
 block
 
@@ -352,18 +342,6 @@ function FinchNode(kind::FinchNodeKind, args::Vector)
         end
     elseif kind === block
         return FinchNode(block, nothing, nothing, args)
-    elseif kind === reader
-        if length(args) == 0
-            return FinchNode(kind, nothing, nothing, FinchNode[])
-        else
-            error("wrong number of arguments to reader()")
-        end
-    elseif kind === updater
-        if length(args) == 0
-            return FinchNode(updater, nothing, nothing, FinchNode[])
-        else
-            error("wrong number of arguments to updater()")
-        end
     else
         error("unimplemented")
     end
@@ -392,10 +370,6 @@ function Base.getproperty(node::FinchNode, sym::Symbol)
         else
             error("type FinchNode(variable, ...) has no property $sym")
         end
-    elseif node.kind === reader
-        error("type FinchNode(reader, ...) has no property $sym")
-    elseif node.kind === updater
-        error("type FinchNode(updater, ...) has no property $sym")
     elseif node.kind === tag
         if sym === :var
             return node.children[1]
@@ -531,10 +505,6 @@ function display_expression(io, mime, node::FinchNode)
         print(io, node.name)
     elseif node.kind === variable
         print(io, node.name)
-    elseif node.kind === reader
-        print(io, "reader()")
-    elseif node.kind === updater
-        print(io, "updater()")
     elseif node.kind === cached
         print(io, "cached(")
         display_expression(io, mime, node.arg)
@@ -734,11 +704,13 @@ virtual.
 finch_leaf(arg) = literal(arg)
 finch_leaf(arg::Type) = literal(arg)
 finch_leaf(arg::Function) = literal(arg)
+finch_leaf(arg::Reader) = literal(arg)
+finch_leaf(arg::Updater) = literal(arg)
 finch_leaf(arg::FinchNode) = arg
 
 Base.convert(::Type{FinchNode}, x) = finch_leaf(x)
 Base.convert(::Type{FinchNode}, x::FinchNode) = x
-Base.convert(::Type{FinchNode}, x::Symbol) = error()
+#Base.convert(::Type{FinchNode}, x::Symbol) = error() # useful for debugging if we wanted to enforce conversion of symbols to value, etc.
 
 #overload RewriteTools pattern constructor so we don't need
 #to wrap leaf nodes.

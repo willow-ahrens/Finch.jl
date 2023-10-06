@@ -45,13 +45,9 @@ function (ctx::InstantiateTensors)(node::FinchNode)
         push!(ctx.escape, node.tns)
         node
     elseif (@capture node access(~tns, ~mode, ~idxs...)) && !(getroot(tns) in ctx.escape)
-        #@assert get(ctx.ctx.modes, tns, reader()).kind === node.mode.kind
-        protos = [(mode.kind === reader ? defaultread : defaultupdate) for _ in idxs]
-        if mode.kind === reader
-            tns_2 = instantiate_reader(tns, ctx.ctx, protos)
-        else
-            tns_2 = instantiate_updater(tns, ctx.ctx, protos)
-        end
+        #@assert get(ctx.ctx.modes, tns, reader) === node.mode.val
+        protos = [(mode.val === reader ? defaultread : defaultupdate) for _ in idxs]
+        tns_2 = instantiate(tns, ctx.ctx, mode.val, protos)
         access(tns_2, mode, idxs...)
     elseif istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))

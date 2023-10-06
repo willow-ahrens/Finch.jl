@@ -37,7 +37,7 @@ function pointwise_finch_traits(ex, ::Type{<:Broadcast.Broadcasted{Style, Axes, 
     call(f, args...)
 end
 function pointwise_finch_traits(ex, T, idxs)
-    access(data_rep(T), reader(), idxs[1:ndims(T)]...)
+    access(data_rep(T), reader, idxs[1:ndims(T)]...)
 end
 
 function Base.similar(bc::Broadcast.Broadcasted{FinchStyle{N}}, ::Type{T}, dims) where {N, T}

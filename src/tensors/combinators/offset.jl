@@ -16,7 +16,6 @@ struct VirtualOffsetArray <: AbstractVirtualCombinator
 end
 
 is_injective(lvl::VirtualOffsetArray, ctx) = is_injective(lvl.body, ctx)
-is_concurrent(lvl::VirtualOffsetArray, ctx) = is_concurrent(lvl.body, ctx)
 is_atomic(lvl::VirtualOffsetArray, ctx) = is_atomic(lvl.body, ctx)
 
 Base.show(io::IO, ex::VirtualOffsetArray) = Base.show(io, MIME"text/plain"(), ex)
@@ -57,11 +56,8 @@ end
 
 virtual_default(arr::VirtualOffsetArray, ctx::AbstractCompiler) = virtual_default(arr.body, ctx)
 
-function instantiate_reader(arr::VirtualOffsetArray, ctx, protos)
-    VirtualOffsetArray(instantiate_reader(arr.body, ctx, protos), arr.delta)
-end
-function instantiate_updater(arr::VirtualOffsetArray, ctx, protos)
-    VirtualOffsetArray(instantiate_updater(arr.body, ctx, protos), arr.delta)
+function instantiate(arr::VirtualOffsetArray, ctx, mode, protos)
+    VirtualOffsetArray(instantiate(arr.body, ctx, mode, protos), arr.delta)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualOffsetArray) = ctx(node.body)

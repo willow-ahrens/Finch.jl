@@ -22,7 +22,7 @@ end
 
 virtual_resize!(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, idx_dim) = arr
 
-function instantiate_reader(arr::VirtualAbstractUnitRange, ctx, subprotos, proto::typeof(defaultread))
+function instantiate(arr::VirtualAbstractUnitRange, ctx, mode::Reader, subprotos, proto::typeof(defaultread))
     Unfurled(
         arr = arr,
         body = Furlable(
@@ -37,7 +37,7 @@ function declare!(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, init)
     throw(FinchProtocolError("$(arr.arrtype) is not writeable"))
 end
 
-instantiate_updater(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, protos...) = 
+instantiate(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, mode::Updater, protos...) = 
     throw(FinchProtocolError("$(arr.arrtype) is not writeable"))
 
 FinchNotation.finch_leaf(x::VirtualAbstractUnitRange) = virtual(x)

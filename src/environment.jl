@@ -1,10 +1,9 @@
 abstract type AbstractCompiler end
 
 struct Namespace
-    seen
     counts
 end
-Namespace() = Namespace(Set(), Dict())
+Namespace() = Namespace(Dict())
 function freshen(spc::Namespace, tags...)
     name = Symbol(tags...)
     m = match(r"^(.*)_(\d*)$", string(name))
@@ -15,11 +14,8 @@ function freshen(spc::Namespace, tags...)
         tag = Symbol(m.captures[1])
         n = parse(BigInt, m.captures[2])
     end
-    if (tag, n) in spc.seen
-        n = max(get(spc.counts, tag, 0), n) + 1
-        spc.counts[tag] = n
-    end
-    push!(spc.seen, (tag, n))
+    n = max(get(spc.counts, tag, 0) + 1, n)
+    spc.counts[tag] = n
     if n == 1
         return Symbol(tag)
     else
@@ -31,6 +27,7 @@ end
     namespace::Namespace = Namespace()
     preamble::Vector{Any} = []
     epilogue::Vector{Any} = []
+    task = VirtualSerial()
 end
 
 virtualize(ex, T, ctx, tag) = virtualize(ex, T, ctx)
@@ -49,10 +46,13 @@ Call f on a subcontext of `ctx` and return the result. Variable bindings,
 preambles, and epilogues defined in the subcontext will not escape the call to
 contain.
 """
-function contain(f, ctx::JuliaContext)
+function contain(f, ctx::AbstractCompiler, task=nothing)
+    ctx_2 = shallowcopy(ctx)
+    ctx_2.task = something(task, ctx.task)
     preamble = Expr(:block)
+    ctx_2.preamble = preamble.args
     epilogue = Expr(:block)
-    ctx_2 = JuliaContext(ctx.namespace, preamble.args, epilogue.args)
+    ctx_2.epilogue = epilogue.args
     body = f(ctx_2)
     if epilogue == Expr(:block)
         return quote
@@ -60,7 +60,7 @@ function contain(f, ctx::JuliaContext)
             $body
         end
     else
-        res = freshen(ctx, :res)
+        res = freshen(ctx_2, :res)
         return quote
             $preamble
             $res = $body

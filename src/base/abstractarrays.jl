@@ -32,13 +32,24 @@ end
 freeze!(arr::VirtualAbstractArray, ctx::AbstractCompiler) = arr
 thaw!(arr::VirtualAbstractArray, ctx::AbstractCompiler) = arr
 
-instantiate_reader(arr::VirtualAbstractArray, ctx::AbstractCompiler, subprotos, protos...) = arr
-instantiate_updater(arr::VirtualAbstractArray, ctx::AbstractCompiler, subprotos, protos...) = arr
+instantiate(arr::VirtualAbstractArray, ctx::AbstractCompiler, mode::Reader, subprotos, protos...) = arr
+instantiate(arr::VirtualAbstractArray, ctx::AbstractCompiler, mode::Updater, subprotos, protos...) = arr
 
 FinchNotation.finch_leaf(x::VirtualAbstractArray) = virtual(x)
 
 virtual_default(::VirtualAbstractArray, ctx) = 0
 virtual_eltype(tns::VirtualAbstractArray, ctx) = tns.eltype
+
+function virtual_moveto(vec::VirtualAbstractArray, ctx, device)
+    ex = freshen(ctx.code, vec.ex)
+    push!(ctx.code.preamble, quote
+        $ex = $(vec.ex)
+        $(vec.ex) = $moveto!($(vec.ex), $(ctx(device)))
+    end)
+    push!(ctx.code.epilogue, quote
+        $(vec.ex) = $ex
+    end)
+end
 
 default(a::AbstractArray) = default(typeof(a))
 default(T::Type{<:AbstractArray}) = zero(eltype(T))
@@ -61,5 +72,4 @@ Base.setindex!(arr::AsArray{T, N}, v, i::Vararg{Int, N}) where {T, N} = arr.fbr[
 Base.setindex!(arr::AsArray{T, N}, v, i::Vararg{Any, N}) where {T, N} = arr.fbr[i...] = v
 
 is_injective(tns::VirtualAbstractArray, ctx) = [true for _ in tns.ndims]
-is_concurrent(tns::VirtualAbstractArray, ctx) = [true for _ in tns.ndims]
 is_atomic(tns::VirtualAbstractArray, ctx) = true

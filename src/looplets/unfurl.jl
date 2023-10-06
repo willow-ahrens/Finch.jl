@@ -29,5 +29,4 @@ function unfurl(tns::Furlable, ctx, ext, mode, protos...)
 end
 unfurl(tns, ctx, ext, mode, protos...) = tns
 
-instantiate_reader(tns::Furlable, ctx, protos) = tns
-instantiate_updater(tns::Furlable, ctx, protos) = tns
+instantiate(tns::Furlable, ctx, mode, protos) = tns

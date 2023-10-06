@@ -16,7 +16,6 @@ struct VirtualProtocolizedArray <: AbstractVirtualCombinator
 end
 
 is_injective(lvl::VirtualProtocolizedArray, ctx) = is_injective(lvl.body, ctx)
-is_concurrent(lvl::VirtualProtocolizedArray, ctx) = is_concurrent(lvl.body, ctx)
 is_atomic(lvl::VirtualProtocolizedArray, ctx) = is_atomic(lvl.body, ctx)
 
 Base.:(==)(a::VirtualProtocolizedArray, b::VirtualProtocolizedArray) = a.body == b.body && a.protos == b.protos
@@ -56,11 +55,8 @@ function virtual_resize!(arr::VirtualProtocolizedArray, ctx::AbstractCompiler, d
     virtual_resize!(arr.body, ctx, dim)
 end
 
-function instantiate_reader(arr::VirtualProtocolizedArray, ctx, protos)
-    VirtualProtocolizedArray(instantiate_reader(arr.body, ctx,  map(something, arr.protos, protos)), arr.protos)
-end
-function instantiate_updater(arr::VirtualProtocolizedArray, ctx, protos)
-    VirtualProtocolizedArray(instantiate_updater(arr.body, ctx,  map(something, arr.protos, protos)), arr.protos)
+function instantiate(arr::VirtualProtocolizedArray, ctx, mode, protos)
+    VirtualProtocolizedArray(instantiate(arr.body, ctx, mode, map(something, arr.protos, protos)), arr.protos)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualProtocolizedArray) = ctx(node.body)

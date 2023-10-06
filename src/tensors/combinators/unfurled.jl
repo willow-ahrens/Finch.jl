@@ -28,8 +28,7 @@ virtual_size(tns::Unfurled, ctx) = virtual_size(tns.arr, ctx)
 virtual_resize!(tns::Unfurled, ctx, dims...) = virtual_resize!(tns.arr, ctx, dims...)
 virtual_default(tns::Unfurled, ctx) = virtual_default(tns.arr, ctx)
 
-instantiate_reader(tns::Unfurled, ctx, protos) = tns
-instantiate_updater(tns::Unfurled, ctx, protos) = tns
+instantiate(tns::Unfurled, ctx, mode, protos) = tns
 
 (ctx::Stylize{<:AbstractCompiler})(node::Unfurled) = ctx(node.body)
 function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::Unfurled)
@@ -116,7 +115,6 @@ end
 getroot(tns::Unfurled) = getroot(tns.arr)
 
 is_injective(lvl::Unfurled, ctx) = is_injective(lvl.arr, ctx)
-is_concurrent(lvl::Unfurled, ctx) = is_concurrent(lvl.arr, ctx)
 is_atomic(lvl::Unfurled, ctx) = is_atomic(lvl.arr, ctx)
 
 function lower_access(ctx::AbstractCompiler, node, tns::Unfurled)

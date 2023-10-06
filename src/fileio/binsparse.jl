@@ -400,6 +400,6 @@ function bspread_level(f, desc, fmt, ::Val{:sparse})
     if R == 1
         SparseListLevel(lvl, shape[1], ptr, tbl[1])
     else
-        SparseCOOLevel{Int(R), typeof(shape), eltype(ptr)}(lvl, shape, tbl, ptr)
+        SparseCOOLevel{Int(R), typeof(shape)}(lvl, shape, ptr, tbl)
     end
 end

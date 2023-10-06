@@ -3,11 +3,11 @@
 
     using Base.Meta
     
-    @testset "Fiber!(SparseList(Element(0))" begin
+    @testset "Fiber!(SparseList(Element(0)))" begin
         io = IOBuffer()
         arr = [0.0, 2.0, 2.0, 0.0, 3.0, 3.0]
 
-        println(io, "Fiber!(SparseList(Element(0)) constructors:")
+        println(io, "Fiber!(SparseList(Element(0))) constructors:")
 
         fbr = dropdefaults!(Fiber!(SparseList(Element(zero(eltype(arr))))), arr)
         println(io, "initialized fiber: ", fbr)
@@ -61,11 +61,11 @@
         @test check_output("format_constructors_sl_e.txt", String(take!(io)))
     end
 
-    @testset "Fiber!(SparseVBL(Element(0))" begin
+    @testset "Fiber!(SparseVBL(Element(0)))" begin
         io = IOBuffer()
         arr = [0.0, 2.0, 2.0, 0.0, 3.0, 3.0]
 
-        println(io, "Fiber!(SparseVBL(Element(0)) constructors:")
+        println(io, "Fiber!(SparseVBL(Element(0))) constructors:")
 
         fbr = dropdefaults!(Fiber!(SparseVBL(Element(zero(eltype(arr))))), arr)
         println(io, "initialized fiber: ", fbr)
@@ -119,11 +119,11 @@
         @test check_output("format_constructors_sv_e.txt", String(take!(io)))
     end
 
-    @testset "Fiber!(SparseByteMap(Element(0))" begin
+    @testset "Fiber!(SparseByteMap(Element(0)))" begin
         io = IOBuffer()
         arr = [0.0, 2.0, 2.0, 0.0, 3.0, 3.0]
 
-        println(io, "Fiber!(SparseByteMap(Element(0)) constructors:")
+        println(io, "Fiber!(SparseByteMap(Element(0))) constructors:")
 
         fbr = dropdefaults!(Fiber!(SparseByteMap(Element(zero(eltype(arr))))), arr)
         println(io, "initialized fiber: ", fbr)
@@ -177,22 +177,22 @@
         @test check_output("format_constructors_sm_e.txt", String(take!(io)))
     end
 
-    @testset "Fiber!(SparseCOO{1}(Element(0))" begin
+    @testset "Fiber!(SparseCOO{1}(Element(0)))" begin
         io = IOBuffer()
         arr = [0.0, 2.0, 2.0, 0.0, 3.0, 3.0]
 
-        println(io, "Fiber!(SparseCOO{1}(Element(0)) constructors:")
+        println(io, "Fiber!(SparseCOO{1}(Element(0))) constructors:")
 
         fbr = dropdefaults!(Fiber!(SparseCOO{1}(Element(zero(eltype(arr))))), arr)
         println(io, "initialized fiber: ", fbr)
         lvl = fbr.lvl
-        @test Structure(fbr) == Structure(Fiber(SparseCOO{1}(lvl.lvl, lvl.shape, lvl.tbl, lvl.ptr)))
-        @test Structure(fbr) == Structure(Fiber(SparseCOO{1, Tuple{Int}}(lvl.lvl, lvl.shape, lvl.tbl, lvl.ptr)))
+        @test Structure(fbr) == Structure(Fiber(SparseCOO{1}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl)))
+        @test Structure(fbr) == Structure(Fiber(SparseCOO{1, Tuple{Int}}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl)))
 
         fbr = dropdefaults!(Fiber!(SparseCOO{1, Tuple{Int16}}(Element(zero(eltype(arr))))), arr)
         println(io, "initialized fiber: ", fbr)
         lvl = fbr.lvl
-        @test Structure(fbr) == Structure(Fiber(SparseCOO{1, Tuple{Int16}}(lvl.lvl, lvl.shape, lvl.tbl, lvl.ptr)))
+        @test Structure(fbr) == Structure(Fiber(SparseCOO{1, Tuple{Int16}}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl)))
 
         fbr = Fiber!(SparseCOO{1}(Element(0.0), (7,)))
         println(io, "sized fiber: ", fbr)
@@ -235,24 +235,24 @@
         @test check_output("format_constructors_sc1_e.txt", String(take!(io)))
     end
 
-    @testset "Fiber!(SparseCOO{2}(Element(0))" begin
+    @testset "Fiber!(SparseCOO{2}(Element(0)))" begin
         io = IOBuffer()
         arr = [0.0 2.0 2.0 0.0 3.0 3.0;
                1.0 0.0 7.0 1.0 0.0 0.0;
                0.0 0.0 0.0 0.0 0.0 9.0]
 
-        println(io, "Fiber!(SparseCOO{2}(Element(0)) constructors:")
+        println(io, "Fiber!(SparseCOO{2}(Element(0))) constructors:")
 
         fbr = dropdefaults!(Fiber!(SparseCOO{2}(Element(zero(eltype(arr))))), arr)
         println(io, "initialized fiber: ", fbr)
         lvl = fbr.lvl
-        @test Structure(fbr) == Structure(Fiber(SparseCOO{2}(lvl.lvl, lvl.shape, lvl.tbl, lvl.ptr)))
-        @test Structure(fbr) == Structure(Fiber(SparseCOO{2, Tuple{Int, Int}}(lvl.lvl, lvl.shape, lvl.tbl, lvl.ptr)))
+        @test Structure(fbr) == Structure(Fiber(SparseCOO{2}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl)))
+        @test Structure(fbr) == Structure(Fiber(SparseCOO{2, Tuple{Int, Int}}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl)))
 
         fbr = dropdefaults!(Fiber!(SparseCOO{2, Tuple{Int16, Int16}}(Element(zero(eltype(arr))))), arr)
         println(io, "initialized fiber: ", fbr)
         lvl = fbr.lvl
-        @test Structure(fbr) == Structure(Fiber(SparseCOO{2, Tuple{Int16, Int16}}(lvl.lvl, lvl.shape, lvl.tbl, lvl.ptr)))
+        @test Structure(fbr) == Structure(Fiber(SparseCOO{2, Tuple{Int16, Int16}}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl)))
 
         fbr = Fiber!(SparseCOO{2}(Element(0.0), (3, 7)))
         println(io, "sized fiber: ", fbr)
@@ -295,22 +295,22 @@
         @test check_output("format_constructors_sc2_e.txt", String(take!(io)))
     end
 
-    @testset "Fiber!(SparseHash{1}(Element(0))" begin
+    @testset "Fiber!(SparseHash{1}(Element(0)))" begin
         io = IOBuffer()
         arr = [0.0, 2.0, 2.0, 0.0, 3.0, 3.0]
 
-        println(io, "Fiber!(SparseHash{1}(Element(0)) constructors:")
+        println(io, "Fiber!(SparseHash{1}(Element(0))) constructors:")
 
         fbr = dropdefaults!(Fiber!(SparseHash{1}(Element(zero(eltype(arr))))), arr)
         println(io, "initialized fiber: ", fbr)
         lvl = fbr.lvl
-        @test Structure(fbr) == Structure(Fiber(SparseHash{1}(lvl.lvl, lvl.shape, lvl.tbl, lvl.ptr, lvl.srt)))
-        @test Structure(fbr) == Structure(Fiber(SparseHash{1, Tuple{Int}}(lvl.lvl, lvl.shape, lvl.tbl, lvl.ptr, lvl.srt)))
+        @test Structure(fbr) == Structure(Fiber(SparseHash{1}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)))
+        @test Structure(fbr) == Structure(Fiber(SparseHash{1, Tuple{Int}}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)))
 
         fbr = dropdefaults!(Fiber!(SparseHash{1, Tuple{Int16}}(Element(zero(eltype(arr))))), arr)
         println(io, "initialized fiber: ", fbr)
         lvl = fbr.lvl
-        @test Structure(fbr) == Structure(Fiber(SparseHash{1, Tuple{Int16}}(lvl.lvl, lvl.shape, lvl.tbl, lvl.ptr, lvl.srt)))
+        @test Structure(fbr) == Structure(Fiber(SparseHash{1, Tuple{Int16}}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)))
 
         fbr = Fiber!(SparseHash{1}(Element(0.0), (7,)))
         println(io, "sized fiber: ", fbr)
@@ -353,24 +353,24 @@
         @test check_output("format_constructors_sh1_e.txt", String(take!(io)))
     end
 
-    @testset "Fiber!(SparseHash{2}(Element(0))" begin
+    @testset "Fiber!(SparseHash{2}(Element(0)))" begin
         io = IOBuffer()
         arr = [0.0 2.0 2.0 0.0 3.0 3.0;
                1.0 0.0 7.0 1.0 0.0 0.0;
                0.0 0.0 0.0 0.0 0.0 9.0]
 
-        println(io, "Fiber!(SparseHash{2}(Element(0)) constructors:")
+        println(io, "Fiber!(SparseHash{2}(Element(0))) constructors:")
 
         fbr = dropdefaults!(Fiber!(SparseHash{2}(Element(zero(eltype(arr))))), arr)
         println(io, "initialized fiber: ", fbr)
         lvl = fbr.lvl
-        @test Structure(fbr) == Structure(Fiber(SparseHash{2}(lvl.lvl, lvl.shape, lvl.tbl, lvl.ptr, lvl.srt)))
-        @test Structure(fbr) == Structure(Fiber(SparseHash{2, Tuple{Int, Int}}(lvl.lvl, lvl.shape, lvl.tbl, lvl.ptr, lvl.srt)))
+        @test Structure(fbr) == Structure(Fiber(SparseHash{2}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)))
+        @test Structure(fbr) == Structure(Fiber(SparseHash{2, Tuple{Int, Int}}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)))
 
         fbr = dropdefaults!(Fiber!(SparseHash{2, Tuple{Int16, Int16}}(Element(zero(eltype(arr))))), arr)
         println(io, "initialized fiber: ", fbr)
         lvl = fbr.lvl
-        @test Structure(fbr) == Structure(Fiber(SparseHash{2, Tuple{Int16, Int16}}(lvl.lvl, lvl.shape, lvl.tbl, lvl.ptr, lvl.srt)))
+        @test Structure(fbr) == Structure(Fiber(SparseHash{2, Tuple{Int16, Int16}}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)))
 
         fbr = Fiber!(SparseHash{2}(Element(0.0), (3, 7)))
         println(io, "sized fiber: ", fbr)
@@ -413,7 +413,7 @@
         @test check_output("format_constructors_sh2_e.txt", String(take!(io)))
     end
 
-    @testset "Fiber!(SparseTriangle{2}(Element(0))" begin
+    @testset "Fiber!(SparseTriangle{2}(Element(0)))" begin
         io = IOBuffer()
         arr = [1.0  2.0  3.0  4.0  5.0; 
                6.0  7.0  8.0  9.0  10.0; 
@@ -421,7 +421,7 @@
                16.0 17.0 18.0 19.0 20.0; 
                21.0 22.0 23.0 24.0 25.0]
 
-        println(io, "Fiber!(SparseTriangle{2}(Element(0)) constructors:")
+        println(io, "Fiber!(SparseTriangle{2}(Element(0))) constructors:")
 
         fbr = dropdefaults!(Fiber!(SparseTriangle{2}(Element(zero(eltype(arr))))), arr)
         println(io, "initialized fiber: ", fbr)
@@ -475,11 +475,11 @@
         @test check_output("format_constructors_st2_e.txt", String(take!(io)))
     end
 
-    @testset "Fiber!(SparseTriangle{3}(Element(0))" begin
+    @testset "Fiber!(SparseTriangle{3}(Element(0)))" begin
         io = IOBuffer()
         arr = collect(reshape(1.0 .* (1:27), 3, 3, 3))
 
-        println(io, "Fiber!(SparseTriangle{3}(Element(0)) constructors:")
+        println(io, "Fiber!(SparseTriangle{3}(Element(0))) constructors:")
 
         fbr = dropdefaults!(Fiber!(SparseTriangle{3}(Element(zero(eltype(arr))))), arr)
         println(io, "initialized fiber: ", fbr)
@@ -533,11 +533,11 @@
         @test check_output("format_constructors_st3_e.txt", String(take!(io))) 
     end
      
-    @testset "Fiber!(SparseRLE(Element(0))" begin
+    @testset "Fiber!(SparseRLE(Element(0)))" begin
         io = IOBuffer()
         arr = [0.0, 2.0, 2.0, 0.0, 3.0, 3.0]
 
-        println(io, "Fiber!(SparseRLE(Element(0)) constructors:")
+        println(io, "Fiber!(SparseRLE(Element(0))) constructors:")
 
         fbr = dropdefaults!(Fiber!(SparseRLE(Element(zero(eltype(arr))))), arr)
         println(io, "initialized fiber: ", fbr)

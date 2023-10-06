@@ -20,11 +20,11 @@ RepeatRLE (0.0) [1:9]
 
 ```
 """
-struct RepeatRLELevel{D, Ti, Tp, Tv, Vp<:AbstractVector, Vi<:AbstractVector, Vv<:AbstractVector}
+struct RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}
     shape::Ti
-    ptr::Vp
-    idx::Vi
-    val::Vv
+    ptr::Ptr
+    idx::Idx
+    val::Val
 end
 
 const RepeatRLE = RepeatRLELevel
@@ -33,35 +33,29 @@ function RepeatRLELevel(d, args...)
     RepeatRLELevel{d}(args...)
 end
 RepeatRLELevel{D}() where {D} = RepeatRLELevel{D, Int}()
-
-RepeatRLELevel{D}(shape, args...) where {D} = RepeatRLELevel{D, typeof(shape)}(shape, args...)
-RepeatRLELevel{D, Ti}(shape, ptr, idx, val) where {D, Ti} = RepeatRLELevel{D, Ti, eltype(ptr), eltype(val), typeof(ptr), typeof(idx), typeof(val)}(shape, ptr, idx, val)
+RepeatRLELevel{D}(shape::Ti, args...) where {D, Ti} = RepeatRLELevel{D, Ti}(shape, args...)
 RepeatRLELevel{D, Ti}(args...) where {D, Ti} = RepeatRLELevel{D, Ti, Int}(args...)
 RepeatRLELevel{D, Ti, Tp}(args...) where {D, Ti, Tp} = RepeatRLELevel{D, Ti, Tp, typeof(D)}(args...)
-
 RepeatRLELevel{D, Ti, Tp, Tv}() where {D, Ti, Tp, Tv} = RepeatRLELevel{D, Ti, Tp, Tv}(zero(Ti))
-RepeatRLELevel{D, Ti, Tp, Tv}(shape) where {D, Ti, Tp, Tv} = RepeatRLELevel{D, Ti, Tp, Tv}(Ti(shape), Tp[1], Ti[], Tv[])
-RepeatRLELevel{D, Ti, Tp, Tv}(shape, ptr, idx, val) where {D, Ti, Tp, Tv} = RepeatRLELevel{D, Ti, Tp, Tv, typeof(ptr), typeof(idx), typeof(val)}(shape, ptr, idx, val)
 
+RepeatRLELevel{D, Ti, Tp, Tv}(shape) where {D, Ti, Tp, Tv} = RepeatRLELevel{D, Ti, Tp, Tv}(Ti(shape), Tp[1], Ti[], Tv[])
+RepeatRLELevel{D, Ti, Tp, Tv}(shape, ptr::Ptr, idx::Idx, val::Val) where {D, Ti, Tp, Tv, Ptr, Idx, Val} =
+    RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}(shape, ptr, idx, val)
 
 Base.summary(::RepeatRLE{D}) where {D} = "RepeatRLE($(D))"
 similar_level(::RepeatRLELevel{D}) where {D} = RepeatRLE{D}()
 similar_level(::RepeatRLELevel{D}, dim, tail...) where {D} = RepeatRLE{D}(dim)
-data_rep_level(::Type{<:RepeatRLELevel{D, Ti, Tp, Tv, Vp, Vi, Vv}}) where {D, Ti, Tp, Tv, Vp, Vi, Vv} = RepeatData(D, Tv)
+data_rep_level(::Type{<:RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}}) where {D, Ti, Tp, Tv, Ptr, Idx, Val} = RepeatData(D, Tv)
 
-function memtype(::Type{RepeatRLELevel{D, Ti, Tp, Tv, Vp, Vi, Vv}}) where {D, Ti, Tp, Tv, Vp, Vi, Vv}
-    return containertype(Vi)
-end
-
-function postype(::Type{RepeatRLELevel{D, Ti, Tp, Tv, Vp, Vi, Vv}}) where {D, Ti, Tp, Tv, Vp, Vi, Vv}
+function postype(::Type{RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}}) where {D, Ti, Tp, Tv, Ptr, Idx, Val}
     return Tp
 end
 
-function moveto(lvl::RepeatRLELevel{D, Ti, Tp, Tv, Vp, Vi, Vv}, ::Type{MemType}) where {D, Ti, Tp, Tv, Vp, Vi, Vv, MemType <: AbstractArray}
-    ptr_2 = MemType{Tp, 1}(lvl.ptr)
-    idx_2 = MemType{Ti, 1}(lvl.idx)
-    val_2 = MemType{Tv, 1}(lvl.val)
-    return RepeatRLELevel{D, Ti, Tp, MemType{Tp, 1}, MemType{Ti, 1}, MemType{Vv, 1}}(lvl.shape, ptr_2, idx_2, val_2)
+function moveto(lvl::RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}, device) where {D, Ti, Tp, Tv, Ptr, Idx, Val}
+    ptr_2 = moveto(lvl.ptr, device)
+    idx_2 = moveto(lvl.idx, device)
+    val_2 = moveto(lvl.val, device)
+    return RepeatRLELevel{D, Ti, Tp}(lvl.shape, ptr_2, idx_2, val_2)
 end
 
 countstored_level(lvl::RepeatRLELevel, pos) = lvl.ptr[pos + 1] - 1
@@ -69,16 +63,16 @@ countstored_level(lvl::RepeatRLELevel, pos) = lvl.ptr[pos + 1] - 1
 pattern!(lvl::RepeatRLELevel{D, Ti}) where {D, Ti} = 
     DenseLevel{Ti}(Pattern(), lvl.shape)
 
-redefault!(lvl::RepeatRLELevel{D, Ti, Tp, Tv, Vp, Vi, Vv}, init) where {D, Ti, Tp, Tv, Vp, Vi, Vv} = 
-    RepeatRLELevel{D, Ti, Tp, Tv, Vp, Vi, Vv}(lvl.val)
+redefault!(lvl::RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}, init) where {D, Ti, Tp, Tv, Ptr, Idx, Val} = 
+    RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}(lvl.val)
 
-function Base.show(io::IO, lvl::RepeatRLELevel{D, Ti, Tp, Tv, Vp, Vi, Vv}) where {D, Ti, Tp, Tv, Vp, Vi, Vv}
+function Base.show(io::IO, lvl::RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}) where {D, Ti, Tp, Tv, Ptr, Idx, Val}
     print(io, "RepeatRLE{")
     print(io, D)
     if get(io, :compact, false)
         print(io, "}(")
     else
-        print(io, ", $Ti, $Tp, $Tv, $Vp, $Vi, $Vv}(")
+        print(io, ", $Ti, $Tp, $Tv}(")
     end
 
     show(io, lvl.shape)
@@ -86,11 +80,11 @@ function Base.show(io::IO, lvl::RepeatRLELevel{D, Ti, Tp, Tv, Vp, Vi, Vv}) where
     if get(io, :compact, false)
         print(io, "…")
     else
-        show(IOContext(io, :typeinfo=>Vp), lvl.ptr)
+        show(io, lvl.ptr)
         print(io, ", ")
-        show(IOContext(io, :typeinfo=>Vi), lvl.idx)
+        show(io, lvl.idx)
         print(io, ", ")
-        show(IOContext(io, :typeinfo=>Vv), lvl.val)
+        show(io, lvl.val)
     end
     print(io, ")")
 end
@@ -109,7 +103,7 @@ end
 @inline level_ndims(::Type{<:RepeatRLELevel}) = 1
 @inline level_size(lvl::RepeatRLELevel) = (lvl.shape,)
 @inline level_axes(lvl::RepeatRLELevel) = (Base.OneTo(lvl.shape),)
-@inline level_eltype(::Type{RepeatRLELevel{D, Ti, Tp, Tv, Vp, Vi, Vv}}) where {D, Ti, Tp, Tv, Vp, Vi, Vv} = Tv
+@inline level_eltype(::Type{RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}}) where {D, Ti, Tp, Tv, Ptr, Idx, Val} = Tv
 @inline level_default(::Type{<:RepeatRLELevel{D}}) where {D} = D
 (fbr::AbstractFiber{<:RepeatRLELevel})() = fbr
 (fbr::Fiber{<:RepeatRLELevel})(idx...) = SubFiber(fbr.lvl, 1)(idx...)
@@ -127,6 +121,9 @@ mutable struct VirtualRepeatRLELevel <: AbstractVirtualLevel
     Ti
     Tp
     Tv
+    ptr
+    idx
+    val
     shape
     ros_fill
     qos_stop
@@ -134,28 +131,33 @@ mutable struct VirtualRepeatRLELevel <: AbstractVirtualLevel
     prev_pos
 end
 is_level_injective(::VirtualRepeatRLELevel, ctx) = [false]
-is_level_concurrent(::VirtualRepeatRLELevel, ctx) = [false]
 is_level_atomic(lvl::VirtualRepeatRLELevel, ctx) = false
 
-function virtualize(ex, ::Type{RepeatRLELevel{D, Ti, Tp, Tv, Vp, Vi, Vv}}, ctx, tag=:lvl) where {D, Ti, Tp, Tv, Vp, Vi, Vv}
+function virtualize(ex, ::Type{RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}}, ctx, tag=:lvl) where {D, Ti, Tp, Tv, Ptr, Idx, Val}
     sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Int)
     ros_fill = freshen(ctx, sym, :_ros_fill)
     qos_stop = freshen(ctx, sym, :_qos_stop)
+    ptr = freshen(ctx, tag, :_ptr)
+    idx = freshen(ctx, tag, :_idx)
+    val = freshen(ctx, tag, :_val)
     push!(ctx.preamble, quote
         $sym = $ex
+        $ptr = $ex.ptr
+        $idx = $ex.idx
+        $val = $ex.val
     end)
     dirty = freshen(ctx, sym, :_dirty)
     prev_pos = freshen(ctx, sym, :_prev_pos)
-    VirtualRepeatRLELevel(sym, D, Ti, Tp, Tv, shape, ros_fill, qos_stop, dirty, prev_pos)
+    VirtualRepeatRLELevel(sym, D, Ti, Tp, Tv, ptr, idx, val, shape, ros_fill, qos_stop, dirty, prev_pos)
 end
 function lower(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
         $RepeatRLELevel{$(lvl.D), $(lvl.Ti), $(lvl.Tp), $(lvl.Tv)}(
             $(ctx(lvl.shape)),
-            $(lvl.ex).ptr,
-            $(lvl.ex).idx,
-            $(lvl.ex).val
+            $(lvl.ptr),
+            $(lvl.idx),
+            $(lvl.val)
         )
     end
 end
@@ -174,13 +176,34 @@ end
 
 virtual_level_default(lvl::VirtualRepeatRLELevel) = lvl.D
 virtual_level_eltype(lvl::VirtualRepeatRLELevel) = lvl.Tv
+postype(lvl::VirtualRepeatRLELevel) = lvl.Tp
+
+function virtual_moveto_level(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, arch)
+    ptr_2 = freshen(ctx.code, lvl.ptr)
+    idx_2 = freshen(ctx.code, lvl.idx)
+    val_2 = freshen(ctx.code, lvl.val)
+    push!(ctx.code.preamble, quote
+        $ptr_2 = $(lvl.ptr)
+        $idx_2 = $(lvl.idx)
+        $val_2 = $(lvl.val)
+        $(lvl.ptr) = $moveto($(lvl.ptr), $(ctx(arch)))
+        $(lvl.idx) = $moveto($(lvl.idx), $(ctx(arch)))
+        $(lvl.val) = $moveto($(lvl.val), $(ctx(arch)))
+    end)
+    push!(ctx.code.epilogue, quote
+        $(lvl.ptr) = $ptr_2
+        $(lvl.idx) = $idx_2
+        $(lvl.val) = $val_2
+    end)
+    virtual_moveto_level(lvl.lvl, ctx, arch)
+end
 
 function declare_level!(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, mode, init)
     init == literal(lvl.D) || throw(FinchProtocolError("Cannot initialize RepeatRLE Levels to non-default values"))
     Tp = lvl.Tp
     Ti = lvl.Ti
     push!(ctx.code.preamble, quote
-        $(lvl.ex).ptr[1] = $(Tp(1))
+        $(lvl.ptr)[1] = $(Tp(1))
         $(lvl.ros_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
     end)
@@ -195,10 +218,10 @@ end
 function trim_level!(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, pos)
     qos = freshen(ctx.code, :qos)
     push!(ctx.code.preamble, quote
-        resize!($(lvl.ex).ptr, $(ctx(pos)) + 1)
-        $qos = $(lvl.ex).ptr[end] - $(lvl.Tp(1))
-        resize!($(lvl.ex).idx, $qos)
-        resize!($(lvl.ex).val, $qos)
+        resize!($(lvl.ptr), $(ctx(pos)) + 1)
+        $qos = $(lvl.ptr)[end] - $(lvl.Tp(1))
+        resize!($(lvl.idx), $qos)
+        resize!($(lvl.val), $qos)
     end)
     return lvl
 end
@@ -207,8 +230,8 @@ function assemble_level!(lvl::VirtualRepeatRLELevel, ctx, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_stop, pos_stop))
     quote
-        Finch.resize_if_smaller!($(lvl.ex).ptr, $pos_stop + 1)
-        Finch.fill_range!($(lvl.ex).ptr, 1, $pos_start + 1, $pos_stop + 1)
+        Finch.resize_if_smaller!($(lvl.ptr), $pos_stop + 1)
+        Finch.fill_range!($(lvl.ptr), 1, $pos_start + 1, $pos_stop + 1)
     end
 end
 
@@ -222,18 +245,18 @@ function freeze_level!(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, pos_st
     qos_fill = freshen(ctx.code, :qos_stop)
     push!(ctx.code.preamble, quote
         for $p = 2:($pos_stop + 1)
-            $(lvl.ex).ptr[$p] += $(lvl.ex).ptr[$p - 1]
+            $(lvl.ptr)[$p] += $(lvl.ptr)[$p - 1]
         end
-        $qos_fill = $(lvl.ex).ptr[$pos_stop + 1] - 1
-        Finch.resize_if_smaller!($(lvl.ex).idx, $qos_fill)
-        Finch.fill_range!($(lvl.ex).idx, $(ctx(lvl.shape)), $qos_stop + 1, $qos_fill)
-        Finch.resize_if_smaller!($(lvl.ex).val, $qos_fill)
-        Finch.fill_range!($(lvl.ex).val, $(lvl.D), $qos_stop + 1, $qos_fill)
+        $qos_fill = $(lvl.ptr)[$pos_stop + 1] - 1
+        Finch.resize_if_smaller!($(lvl.idx), $qos_fill)
+        Finch.fill_range!($(lvl.idx), $(ctx(lvl.shape)), $qos_stop + 1, $qos_fill)
+        Finch.resize_if_smaller!($(lvl.val), $qos_fill)
+        Finch.fill_range!($(lvl.val), $(lvl.D), $qos_stop + 1, $qos_fill)
     end)
     return lvl
 end
 
-function instantiate_reader(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, subprotos, ::Union{typeof(defaultread), typeof(walk)})
+function instantiate(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp
@@ -246,12 +269,12 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, su
     Furlable(
         body = (ctx, ext) -> Thunk(
             preamble = (quote
-                $my_q = $(lvl.ex).ptr[$(ctx(pos))]
-                $my_q_stop = $(lvl.ex).ptr[$(ctx(pos)) + $(Tp(1))]
+                $my_q = $(lvl.ptr)[$(ctx(pos))]
+                $my_q_stop = $(lvl.ptr)[$(ctx(pos)) + $(Tp(1))]
                 #TODO I think this if is only ever true
                 if $my_q < $my_q_stop
-                    $my_i = $(lvl.ex).idx[$my_q]
-                    $my_i1 = $(lvl.ex).idx[$my_q_stop - $(Tp(1))]
+                    $my_i = $(lvl.idx)[$my_q]
+                    $my_i1 = $(lvl.idx)[$my_q_stop - $(Tp(1))]
                 else
                     $my_i = $(Ti(1))
                     $my_i1 = $(Ti(0))
@@ -259,22 +282,22 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, su
             end),
             body = (ctx) -> Stepper(
                 seek = (ctx, ext) -> quote
-                    if $(lvl.ex).idx[$my_q] < $(ctx(getstart(ext)))
-                        $my_q = Finch.scansearch($(lvl.ex).idx, $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
+                    if $(lvl.idx)[$my_q] < $(ctx(getstart(ext)))
+                        $my_q = Finch.scansearch($(lvl.idx), $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                     end
                 end,
-                preamble = :($my_i = $(lvl.ex).idx[$my_q]),
+                preamble = :($my_i = $(lvl.idx)[$my_q]),
                 stop = (ctx, ext) -> value(my_i),
-                chunk = Run(Fill(value(:($(lvl.ex).val[$my_q]), lvl.Tv))), #TODO Flesh out fill to assert ndims and handle writes
+                chunk = Run(Fill(value(:($(lvl.val)[$my_q]), lvl.Tv))), #TODO Flesh out fill to assert ndims and handle writes
                 next = (ctx, ext) -> :($my_q += $(Tp(1)))
             )
         )
     )
 end
 
-instantiate_updater(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, protos) = 
-    instantiate_updater(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, protos)
-function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualRepeatRLELevel}, ctx, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
+instantiate(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, mode::Updater, protos) = 
+    instantiate(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, mode, protos)
+function instantiate(fbr::VirtualTrackedSubFiber{VirtualRepeatRLELevel}, ctx, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp
@@ -296,14 +319,14 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualRepeatRLELevel},
             if $my_q > $qos_stop
                 $qos_fill = $qos_stop
                 $qos_stop = max($qos_stop << 1, $my_q)
-                Finch.resize_if_smaller!($(lvl.ex).idx, $qos_stop)
-                Finch.fill_range!($(lvl.ex).idx, $(ctx(lvl.shape)), $qos_fill + 1, $qos_stop)
-                Finch.resize_if_smaller!($(lvl.ex).val, $qos_stop)
-                Finch.fill_range!($(lvl.ex).val, $(lvl.D), $qos_fill + 1, $qos_stop)
+                Finch.resize_if_smaller!($(lvl.idx), $qos_stop)
+                Finch.fill_range!($(lvl.idx), $(ctx(lvl.shape)), $qos_fill + 1, $qos_stop)
+                Finch.resize_if_smaller!($(lvl.val), $qos_stop)
+                Finch.fill_range!($(lvl.val), $(lvl.D), $qos_fill + 1, $qos_stop)
             end
             $(fbr.dirty) = true
-            $(lvl.ex).idx[$my_q] = $(ctx(stop))
-            $(lvl.ex).val[$my_q] = $v
+            $(lvl.idx)[$my_q] = $(ctx(stop))
+            $(lvl.val)[$my_q] = $v
             $my_q += $(Tp(1))
             $(if issafe(ctx.mode)
                 quote
@@ -354,7 +377,7 @@ function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualRepeatRLELevel},
                         $(record_run(ctx, lvl.shape, my_v_prev))
                     end
                 end
-                $(lvl.ex).ptr[$(ctx(pos)) + $(Tp(1))] += ($my_q - ($(lvl.ros_fill) + $(ctx(pos))))
+                $(lvl.ptr)[$(ctx(pos)) + $(Tp(1))] += ($my_q - ($(lvl.ros_fill) + $(ctx(pos))))
                 $(lvl.ros_fill) += $my_q - ($(lvl.ros_fill) + $(ctx(pos)))
             end
         )

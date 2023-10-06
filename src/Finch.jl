@@ -44,6 +44,7 @@ export default, AsArray
 
 export parallelAnalysis, ParallelAnalysisResults
 export parallel, extent, dimless
+export CPU, CPULocalVector, CPULocalMemory
 
 include("base/limits.jl")
 export Limit
@@ -57,6 +58,7 @@ using .FinchNotation: and, or, InitWriter
 include("semantics.jl")
 include("style.jl")
 include("dimensions.jl")
+include("architecture.jl")
 include("lower.jl")
 
 include("transforms/concordize.jl")
@@ -84,7 +86,6 @@ include("looplets/jumpers.jl")
 include("looplets/steppers.jl")
 include("looplets/fills.jl")
 
-include("tensors/vector.jl")
 include("tensors/scalars.jl")
 include("tensors/fibers.jl")
 include("tensors/levels/abstractlevel.jl")

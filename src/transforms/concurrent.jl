@@ -13,14 +13,6 @@ array.
 function is_injective end
 
 """
-    is_concurrent(tns, ctx)
-
-Returns a vector of booleans, one for each dimension of the tensor, indicating
-whether multiple threads can loop through the corresponding dimension.
-"""
-function is_concurrent end
-
-"""
     is_atomic(tns, ctx)
 
 Returns a boolean indicating whether it is safe to update the same element of the
@@ -46,7 +38,7 @@ function ensure_concurrent(root, ctx)
     #get nonlocal assignments and group by root
     nonlocal_assigns = Dict()
     for node in PostOrderDFS(body)
-        if @capture(node, assign(~lhs, ~op, ~rhs)) && !(getroot(lhs.tns) in locals)
+        if @capture(node, assign(~lhs, ~op, ~rhs)) && !(getroot(lhs.tns) in locals) && getroot(lhs.tns) !== nothing #TODO remove the nothing check
             push!(get!(nonlocal_assigns, getroot(lhs.tns), []), node)
         end
     end
@@ -56,9 +48,7 @@ function ensure_concurrent(root, ctx)
         if !allequal(ops)
             throw(FinchConcurrencyError("Nonlocal assignments to $(root) are not all the same operator"))
         end
-        if !isassociative(ctx.algebra, first(ops))
-            throw(FinchConcurrencyError("Nonlocal assignments to $(root) are not associative"))
-        end
+
         accs = map(agn -> (@capture agn assign(~lhs, ~op, ~rhs); lhs), agns)
         if !allequal(accs)
             throw(FinchConcurrencyError("Nonlocal assignments to $(root) are not all the same access"))
@@ -66,8 +56,15 @@ function ensure_concurrent(root, ctx)
         acc = first(accs)
 
         if !(
-            (is_atomic(acc.tns, ctx) && all(is_concurrent(tns, ctx))) ||
-            (@capture(acc, access(~tns, ~mode, ~i..., idx)) && is_injective(tns, ctx)[length(i) + 1] && is_concurrent(tns, ctx)[length(i) + 1])
+                (@capture(acc, access(~tns, ~mode, ~i..., idx)) && is_injective(tns, ctx)[length(i) + 1]) ||
+                isassociative(ctx.algebra, first(ops))
+            )
+            throw(FinchConcurrencyError("Nonlocal assignments to $(root) are not associative"))
+        end
+
+        if !(
+            (is_atomic(acc.tns, ctx)) ||
+            (@capture(acc, access(~tns, ~mode, ~i..., idx)) && is_injective(tns, ctx)[length(i) + 1])
         )
             throw(FinchConcurrencyError("Cannot prove that $(acc) is safe to update from multiple threads"))
         end

@@ -13,8 +13,8 @@ const program_nodes = (
     assign = assign,
     call = call,
     access = access,
-    reader = reader,
-    updater = updater,
+    reader = literal(reader),
+    updater = literal(updater),
     variable = variable,
     tag = (ex) -> :(finch_leaf($(esc(ex)))),
     literal = literal,
@@ -34,8 +34,8 @@ const instance_nodes = (
     assign = assign_instance,
     call = call_instance,
     access = access_instance,
-    reader = reader_instance,
-    updater = updater_instance,
+    reader = literal_instance(reader),
+    updater = literal_instance(updater),
     variable = variable_instance,
     tag = (ex) -> :($tag_instance($(variable_instance(ex)), $finch_leaf_instance($(esc(ex))))),
     literal = literal_instance,
@@ -183,19 +183,19 @@ function (ctx::FinchParserVisitor)(ex::Expr)
             return :($(ctx.nodes.block)($(map(ctx, bodies)...)))
         end
     elseif @capture ex :ref(~tns, ~idxs...)
-        mode = :($(ctx.nodes.reader)())
+        mode = ctx.nodes.reader
         return :($(ctx.nodes.access)($(ctx(tns)), $mode, $(map(ctx, idxs)...)))
     elseif (@capture ex (~op)(~lhs, ~rhs)) && haskey(incs, op)
         return ctx(:($lhs << $(incs[op]) >>= $rhs))
     elseif @capture ex :(=)(:ref(~tns, ~idxs...), ~rhs)
         tns isa Symbol && push!(ctx.results, tns)
-        mode = :($(ctx.nodes.updater)())
+        mode = ctx.nodes.updater
         lhs = :($(ctx.nodes.access)($(ctx(tns)), $mode, $(map(ctx, idxs)...)))
         op = :($(ctx.nodes.literal)($initwrite))
         return :($(ctx.nodes.assign)($lhs, $op, $(ctx(rhs))))
     elseif @capture ex :>>=(:call(:<<, :ref(~tns, ~idxs...), ~op), ~rhs)
         tns isa Symbol && push!(ctx.results, tns)
-        mode = :($(ctx.nodes.updater)())
+        mode = ctx.nodes.updater
         lhs = :($(ctx.nodes.access)($(ctx(tns)), $mode, $(map(ctx, idxs)...)))
         return :($(ctx.nodes.assign)($lhs, $(ctx(op)), $(ctx(rhs))))
     elseif @capture ex :>>=(:call(:<<, ~lhs, ~op), ~rhs)

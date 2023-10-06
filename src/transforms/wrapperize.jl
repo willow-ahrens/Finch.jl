@@ -44,62 +44,62 @@ function get_wrapper_rules(alg, depth, ctx)
         end),
         (@rule call(<, ~i, ~j::isindex) => begin
             if depth(i) < depth(j)
-                access(LoTriMask(), reader(), j, call(+, i, 1))
+                access(LoTriMask(), reader, j, call(+, i, 1))
             end
         end),
         (@rule call(<, ~i::isindex, ~j) => begin
             if depth(i) > depth(j)
-                access(UpTriMask(), reader(), i, call(-, j, 1))
+                access(UpTriMask(), reader, i, call(-, j, 1))
             end
         end),
         (@rule call(<=, ~i, ~j::isindex) => begin
             if depth(i) < depth(j)
-                access(LoTriMask(), reader(), j, i)
+                access(LoTriMask(), reader, j, i)
             end
         end),
         (@rule call(<=, ~i::isindex, ~j) => begin
             if depth(i) > depth(j)
-                access(UpTriMask(), reader(), i, j)
+                access(UpTriMask(), reader, i, j)
             end
         end),
         (@rule call(>, ~i, ~j::isindex) => begin
             if depth(i) < depth(j)
-                access(UpTriMask(), reader(), j, call(-, i, 1))
+                access(UpTriMask(), reader, j, call(-, i, 1))
             end
         end),
         (@rule call(>, ~i::isindex, ~j) => begin
             if depth(i) > depth(j)
-                access(LoTriMask(), reader(), i, call(+, j, 1))
+                access(LoTriMask(), reader, i, call(+, j, 1))
             end
         end),
         (@rule call(>=, ~i, ~j::isindex) => begin
             if depth(i) < depth(j)
-                access(UpTriMask(), reader(), j, i)
+                access(UpTriMask(), reader, j, i)
             end
         end),
         (@rule call(>=, ~i::isindex, ~j) => begin
             if depth(i) > depth(j)
-                access(LoTriMask(), reader(), i, j)
+                access(LoTriMask(), reader, i, j)
             end
         end),
         (@rule call(==, ~i, ~j::isindex) => begin
             if depth(i) < depth(j)
-                access(DiagMask(), reader(), j, i)
+                access(DiagMask(), reader, j, i)
             end
         end),
         (@rule call(==, ~i::isindex, ~j) => begin
             if depth(i) > depth(j)
-                access(DiagMask(), reader(), i, j)
+                access(DiagMask(), reader, i, j)
             end
         end),
         (@rule call(!=, ~i, ~j::isindex) => begin
             if depth(i) < depth(j)
-                call(!, access(DiagMask(), reader(), j, i))
+                call(!, access(DiagMask(), reader, j, i))
             end
         end),
         (@rule call(!=, ~i::isindex, ~j) => begin
             if depth(i) > depth(j)
-                call(!, access(DiagMask(), reader(), i, j))
+                call(!, access(DiagMask(), reader, i, j))
             end
         end),
         (@rule call(toeplitz, call(swizzle, ~A, ~sigma...), ~dim...) => begin
@@ -124,18 +124,18 @@ function get_wrapper_rules(alg, depth, ctx)
         end),
         (@rule call(offset, call(swizzle, ~A, ~sigma...), ~delta...) =>
             call(swizzle, call(offset, A, delta[invperm(getval.(sigma))]...), sigma...)),
-        (@rule access(~A, ~m, ~i1..., access(call(extent, ~start, ~stop), reader(), ~k), ~i2...) => begin
+        (@rule access(~A, ~m, ~i1..., access(call(extent, ~start, ~stop), reader, ~k), ~i2...) => begin
             A_2 = call(window, A, [nothing for _ in i1]..., call(extent, start, stop), [nothing for _ in i2]...)
             A_3 = call(offset, A_2, [0 for _ in i1]..., call(-, start, 1), [0 for _ in i2]...)
             access(A_3, m, i1..., k, i2...)
         end),
-        (@rule access(~A, ~m, ~i1..., access(~I::isvirtual, reader(), ~k), ~i2...) => if I.val isa Extent
+        (@rule access(~A, ~m, ~i1..., access(~I::isvirtual, reader, ~k), ~i2...) => if I.val isa Extent
             A_2 = call(window, A, [nothing for _ in i1]..., I, [nothing for _ in i2]...)
             A_3 = call(offset, A_2, [0 for _ in i1]..., call(-, getstart(I), 1), [0 for _ in i2]...)
             access(A_3, m, i1..., k, i2...)
         end),
-        (@rule assign(access(~a, updater(), ~i...), initwrite, ~rhs) => begin
-            assign(access(a, updater(), i...), call(initwrite, call(default, a)), rhs)
+        (@rule assign(access(~a, updater, ~i...), initwrite, ~rhs) => begin
+            assign(access(a, updater, i...), call(initwrite, call(default, a)), rhs)
         end),
         (@rule call(swizzle, call(swizzle, ~A, ~sigma_1...), ~sigma_2...) =>
             call(swizzle, A, sigma_1[getval.(sigma_2)]...)),
