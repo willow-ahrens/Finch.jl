@@ -54,11 +54,8 @@ function virtual_resize!(arr::VirtualToeplitzArray, ctx::AbstractCompiler, dims.
     virtual_resize!(arr.body, ctx, dims[1:arr.dim - 1]..., dimless, dims[arr.dim + 2:end]...)
 end
 
-function instantiate(arr::VirtualToeplitzArray, ctx, mode::Reader, protos)
-    VirtualToeplitzArray(instantiate(arr.body, ctx, mode::Reader, [protos[1:arr.dim]; protos[arr.dim + 2:end]]), arr.dim)
-end
-function instantiate(arr::VirtualToeplitzArray, ctx, mode::Updater, protos)
-    VirtualToeplitzArray(instantiate(arr.body, ctx, mode::Updater, [protos[1:arr.dim]; protos[arr.dim + 2:end]]), arr.dim)
+function instantiate(arr::VirtualToeplitzArray, ctx, mode, protos)
+    VirtualToeplitzArray(instantiate(arr.body, ctx, mode, [protos[1:arr.dim]; protos[arr.dim + 2:end]]), arr.dim)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualToeplitzArray) = ctx(node.body)

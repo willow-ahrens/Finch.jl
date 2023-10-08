@@ -455,7 +455,7 @@ instantiate(fbr::VirtualSubFiber{VirtualSparseHashLevel}, ctx, mode::Updater, pr
     instantiate(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, mode, protos)
 function instantiate(fbr::VirtualTrackedSubFiber{VirtualSparseHashLevel}, ctx, mode::Updater, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
-    instantiate(SparseHashLaminateTraversal(lvl, pos, fbr.dirty, ()), ctx, mode::Updater, protos)
+    instantiate(SparseHashLaminateTraversal(lvl, pos, fbr.dirty, ()), ctx, mode, protos)
 end
 
 function instantiate(trv::SparseHashLaminateTraversal, ctx, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})

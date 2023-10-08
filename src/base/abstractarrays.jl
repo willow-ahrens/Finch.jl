@@ -32,8 +32,7 @@ end
 freeze!(arr::VirtualAbstractArray, ctx::AbstractCompiler) = arr
 thaw!(arr::VirtualAbstractArray, ctx::AbstractCompiler) = arr
 
-instantiate(arr::VirtualAbstractArray, ctx::AbstractCompiler, mode::Reader, subprotos, protos...) = arr
-instantiate(arr::VirtualAbstractArray, ctx::AbstractCompiler, mode::Updater, subprotos, protos...) = arr
+instantiate(arr::VirtualAbstractArray, ctx::AbstractCompiler, mode, subprotos, protos...) = arr
 
 FinchNotation.finch_leaf(x::VirtualAbstractArray) = virtual(x)
 
