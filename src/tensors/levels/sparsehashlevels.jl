@@ -271,8 +271,8 @@ function thaw_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos)
     Tp = postype(lvl)
     p = freshen(ctx.code, lvl.ex, :_p)
     push!(ctx.code.preamble, quote
-        for $p = 1:$(ctx(pos))
-            $(lvl.ptr)[$p] -= $(lvl.ptr)[$p + 1]
+        for $p = $(ctx(pos)) + 1:-1:2
+            $(lvl.ptr)[$p] -= $(lvl.ptr)[$p - 1]
         end
         $(lvl.ptr)[1] = 1
         $(lvl.qos_fill) = length($(lvl.tbl))

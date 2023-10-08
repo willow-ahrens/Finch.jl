@@ -244,12 +244,6 @@ function thaw_level!(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, pos)
     Ti = lvl.Ti
     Tp = postype(lvl)
     p = freshen(ctx.code, lvl.ex, :_p)
-    push!(ctx.code.preamble, quote
-        for $p = 1:$(ctx(pos))
-            $(lvl.ptr)[$p] -= $(lvl.ptr)[$p + 1]
-        end
-        $(lvl.ptr)[1] = 1
-    end)
     lvl.lvl = thaw_level!(lvl.lvl, ctx, call(*, pos, lvl.shape))
     return lvl
 end
