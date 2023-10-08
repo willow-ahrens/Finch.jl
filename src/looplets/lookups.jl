@@ -14,6 +14,7 @@ FinchNotation.finch_leaf(x::Lookup) = virtual(x)
 struct LookupStyle end
 
 (ctx::Stylize{<:AbstractCompiler})(node::Lookup) = ctx.root.kind === loop ? LookupStyle() : DefaultStyle()
+instantiate(tns::Lookup, ctx, mode, protos) = tns
 combine_style(a::DefaultStyle, b::LookupStyle) = LookupStyle()
 combine_style(a::ThunkStyle, b::LookupStyle) = ThunkStyle()
 combine_style(a::SimplifyStyle, b::LookupStyle) = a
