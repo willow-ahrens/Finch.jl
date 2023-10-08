@@ -111,6 +111,7 @@
                 () -> SparseList(inner()),
             ]
 
+                output = false
                 for (arr_key, arr) in [
                     ("5x5_falses", fill(false, 5, 5)),
                     ("5x5_trues", fill(true, 5, 5)),
@@ -124,6 +125,11 @@
                     ref = dropdefaults!(ref, arr)
                     tmp = Fiber!(outer())
                     @testset "convert $arr_key $(summary(tmp))"  begin
+                        if !output
+                            check_output("convert_to_$(summary(tmp)).jl", @finch_code (tmp .= 0; for j=_,i=_; tmp[i, j] = ref[i, j] end))
+                            check_output("convert_from_$(summary(tmp)).jl", @finch_code (res .= 0; for j=_,i=_; res[i, j] = tmp[i, j] end))
+                            output = true
+                        end
                         @finch (tmp .= 0; for j=_, i=_; tmp[i, j] = ref[i, j] end)
                         @finch (res .= 0; for j=_, i=_; res[i, j] = tmp[i, j] end)
                         @test Structure(ref) == Structure(res)
@@ -136,6 +142,7 @@
             () -> SparseTriangle{1}(base()),
             () -> SparseRLE(base()),
         ]
+            output = false
             for arr in [
                 fill(false, 5),
                 fill(true, 5),
@@ -145,6 +152,11 @@
                 res = Fiber!(SparseList(Element(false)))
                 tmp = Fiber!(inner())
                 @testset "convert $(summary(tmp))" begin
+                    if !output
+                        check_output("convert_to_$(summary(tmp)).jl", @finch_code (tmp .= 0; for i=_; tmp[i] = ref[i] end))
+                        check_output("convert_from_$(summary(tmp)).jl", @finch_code (res .= 0; for i=_; res[i] = tmp[i] end))
+                        output = true
+                    end
                     @finch (ref .= 0; for i=_; ref[i] = arr[i] end)
                     @finch (tmp .= 0; for i=_; tmp[i] = ref[i] end)
                     @finch (res .= 0; for i=_; res[i] = tmp[i] end)
@@ -156,7 +168,7 @@
                 () -> Dense(inner()),
                 () -> SparseList(inner()),
             ]
-
+                output = false
                 for (arr_key, arr) in [
                     ("5x5_falses", fill(false, 5, 5)),
                     ("5x5_trues", fill(true, 5, 5)),
@@ -169,6 +181,11 @@
                     res = Fiber!(SparseList(SparseList(Element(false))))
                     tmp = Fiber!(outer())
                     @testset "convert $arr_key $(summary(tmp))"  begin
+                        if !output
+                            check_output("convert_to_$(summary(tmp)).jl", @finch_code (tmp .= 0; for j=_,i=_; tmp[i, j] = ref[i, j] end))
+                            check_output("convert_from_$(summary(tmp)).jl", @finch_code (res .= 0; for j=_,i=_; res[i, j] = tmp[i, j] end))
+                            output = true
+                        end
                         @finch (ref .= 0; for j=_, i=_; ref[i, j] = arr[i, j] end)
                         @finch (tmp .= 0; for j=_, i=_; tmp[i, j] = ref[i, j] end)
                         @finch (res .= 0; for j=_, i=_; res[i, j] = tmp[i, j] end)
@@ -184,7 +201,7 @@
             () -> SparseHash{2}(base()),
             () -> SparseRLE(SparseRLE(base())),
         ]
-
+            output = false
             for (arr_key, arr) in [
                 ("5x5_falses", fill(false, 5, 5)),
                 ("5x5_trues", fill(true, 5, 5)),
@@ -198,6 +215,11 @@
                 ref = dropdefaults!(ref, arr)
                 tmp = Fiber!(outer())
                 @testset "convert $arr_key $(summary(tmp))"  begin
+                    if !output
+                        check_output("convert_to_$(summary(tmp)).jl", @finch_code (tmp .= 0; for j=_,i=_; tmp[i, j] = ref[i, j] end))
+                        check_output("convert_from_$(summary(tmp)).jl", @finch_code (res .= 0; for j=_,i=_; res[i, j] = tmp[i, j] end))
+                        output = true
+                    end
                     @finch (tmp .= 0; for j=_, i=_; tmp[i, j] = ref[i, j] end)
                     @finch (res .= 0; for j=_, i=_; res[i, j] = tmp[i, j] end)
                     @test Structure(ref) == Structure(res)
@@ -209,7 +231,7 @@
             () -> SparseTriangle{2}(base()),
             () -> SparseRLE(SparseRLE(base())),
         ]
-
+            output = false
             for (arr_key, arr) in [
                 ("5x5_falses", fill(false, 5, 5)),
                 ("5x5_trues", fill(true, 5, 5)),
@@ -223,6 +245,11 @@
                 ref = dropdefaults!(ref, arr)
                 tmp = Fiber!(outer())
                 @testset "convert $arr_key $(summary(tmp))"  begin
+                    if !output
+                        check_output("convert_to_$(summary(tmp)).jl", @finch_code (tmp .= 0; for j=_,i=_; tmp[i, j] = ref[i, j] end))
+                        check_output("convert_from_$(summary(tmp)).jl", @finch_code (res .= 0; for j=_,i=_; res[i, j] = tmp[i, j] end))
+                        output = true
+                    end
                     @finch (tmp .= 0; for j=_, i=_; tmp[i, j] = ref[i, j] end)
                     @finch (res .= 0; for j=_, i=_; res[i, j] = tmp[i, j] end)
                     check = Scalar(true)
