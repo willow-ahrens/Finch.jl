@@ -259,4 +259,29 @@
             end
         end
     end
+
+    for fmt in [
+        Fiber!(SparseHash{2}(Element(0.0)))
+        Fiber!(Dense(SparseHash{1}(Element(0.0))))
+        Fiber!(Dense(SparseByteMap(Element(0.0))))
+    ]
+        arr_1 = fsprand((10, 10), 0.5)
+        fmt = copyto!(fmt, arr_1)
+        arr_2 = fsprand((10, 10), 0.5)
+        check_output("increment_to_$(summary(fmt)).jl", @finch_code begin
+            for j = _
+                for i = _
+                    fmt[i, j] += arr_2[i, j]
+                end
+            end
+        end)
+        @finch begin
+            for j = _
+                for i = _
+                    fmt[i, j] += arr_2[i, j]
+                end
+            end
+        end
+        @test fmt == arr_1 .+ arr_2
+    end
 end
