@@ -14,6 +14,7 @@ FinchNotation.finch_leaf(x::Run) = virtual(x)
 struct RunStyle end
 
 (ctx::Stylize{<:AbstractCompiler})(node::Run) = ctx.root.kind === loop ? RunStyle() : DefaultStyle()
+instantiate(tns::Run, ctx, mode, protos) = tns
 combine_style(a::DefaultStyle, b::RunStyle) = RunStyle()
 combine_style(a::LookupStyle, b::RunStyle) = RunStyle()
 combine_style(a::ThunkStyle, b::RunStyle) = ThunkStyle()

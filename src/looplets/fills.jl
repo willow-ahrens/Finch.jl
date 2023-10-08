@@ -10,6 +10,8 @@ struct FillStyle end
 
 (ctx::Stylize{<:AbstractCompiler})(::Fill) = FillStyle()
 
+instantiate(tns::Fill, ctx, mode, protos) = tns
+
 combine_style(a::DefaultStyle, b::FillStyle) = FillStyle()
 combine_style(a::LookupStyle, b::FillStyle) = FillStyle()
 combine_style(a::ThunkStyle, b::FillStyle) = FillStyle()

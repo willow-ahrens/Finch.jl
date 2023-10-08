@@ -17,7 +17,7 @@ end
 FinchNotation.finch_leaf(x::Stepper) = virtual(x)
 
 (ctx::Stylize{<:AbstractCompiler})(node::Stepper) = ctx.root.kind === loop ? StepperStyle() : DefaultStyle()
-
+instantiate(tns::Stepper, ctx, mode, protos) = tns
 combine_style(a::DefaultStyle, b::StepperStyle) = StepperStyle()
 combine_style(a::LookupStyle, b::StepperStyle) = StepperStyle()
 combine_style(a::StepperStyle, b::SequenceStyle) = SequenceStyle()
