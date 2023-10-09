@@ -159,11 +159,11 @@ function query_z3(root::FinchNode, ctx; verbose = false)
               val = node.val.val
               sign = node.val.sign.sign
               if sign > 0 
-                call(+, literal(val), Eps)
+                call(+, literal(val), Finch.Eps)
               elseif sign==0
                 literal(val)
               else sign < 0
-                call(-, literal(val), Eps)
+                call(-, literal(val), Finch.Eps)
               end
           end
       end
@@ -176,7 +176,7 @@ function query_z3(root::FinchNode, ctx; verbose = false)
 
       function translate_z3(node::FinchNode)::ExprAllocated
           if @capture node call(~op::isliteral, ~args...) 
-              if op.val == fld
+              if op.val == fld || op.val == inv # TODO : Implement correctly
                   return /(translate_z3.(args)...)
               else
                   return getval(op)(translate_z3.(args)...)
@@ -199,7 +199,7 @@ function query_z3(root::FinchNode, ctx; verbose = false)
               return get!(z3_variables, node.name, real_const(z3_ctx, string(node.name)))
           elseif isliteral(node) 
               if node.val isa Number
-                  if node.val == Eps
+                  if node.val == Finch.Eps
                       return get!(z3_constants, node.val, real_const(z3_ctx, "Eps"))
                   else
                       return get!(z3_constants, node.val, real_const(z3_ctx, string(node.val)))
@@ -213,40 +213,46 @@ function query_z3(root::FinchNode, ctx; verbose = false)
 
       #Collect Constraints from ctx 
       constraints = copy(ctx.constraints)
-
-      ##Add Constraints
-      foreach(collect(constraints)) do constraint
-        constraint = Rewrite(Postwalk(normalize_eps))(constraint)
-        constraint = translate_z3(constraint)
-        add(z3_solver, constraint)
-      end
-
-      #Declare Constants
-      foreach(z3_constants) do (number, var) 
-        if number == Eps
-          add(z3_solver, >(var, 0))
-        else
-          add(z3_solver, ==(var, number))
-        end
-      end
-
-      #Add main query
-      root = call(not, root)
-      root = Rewrite(Postwalk(normalize_eps))(root)
-      root = translate_z3(root)
-      add(z3_solver, root)     
       
-      #Run Z3
-      result = check(z3_solver)==unsat
-   
-      if verbose
-        println(z3_solver)
-        println(result)
-        if !result
-          println(get_model(z3_solver))
-        end
-      end
-      
-      return result
+      try 
+          ##Add Constraints
+          foreach(collect(constraints)) do constraint
+            constraint = Rewrite(Postwalk(normalize_eps))(constraint)
+            constraint = translate_z3(constraint)
+            add(z3_solver, constraint)
+          end
 
+          #Declare Constants
+          foreach(z3_constants) do (number, var) 
+            if number == Finch.Eps
+              add(z3_solver, >(var, 0))
+            else
+              add(z3_solver, ==(var, number))
+            end
+          end
+
+          #Add main query
+          root = call(not, root)
+          root = Rewrite(Postwalk(normalize_eps))(root)
+          root = translate_z3(root)
+          add(z3_solver, root)     
+          
+          #Run Z3
+          result = check(z3_solver)==unsat
+       
+          if verbose
+            println(z3_solver)
+            println(result)
+            if !result
+              println(get_model(z3_solver))
+            end
+          end
+          
+          return result
+      catch
+          if verbose
+            println("Error") 
+          end
+          return false
+      end
 end

@@ -18,7 +18,7 @@ function (ctx::DepthCalculatorVisitor)(node::FinchNode)
         ctx_2 = DepthCalculatorVisitor(depth=ctx.depth+1, rec=ctx.rec)
         ctx_2(node.body)
     elseif node.kind === define
-        ctx.rec[node.lhs] = ctx.depth
+        ctx.rec[node.lhs] = 0 #ctx.depth
     elseif istree(node)
         for child in children(node)
             ctx(child)

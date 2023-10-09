@@ -64,9 +64,9 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::PhaseStyle)
         ext_2 = mapreduce((node)->phase_range(node, ctx, root.ext), (a, b) -> phase_op(style)(ctx, a, b), PostOrderDFS(body))
         
         ext_3 = virtual_intersect(ctx, root.ext.val, ext_2)
-        
+
         ext_4 = cache_dim!(ctx, :phase, ext_3)
-    
+ 
         body = Rewrite(Postwalk(node->phase_body(node, ctx, root.ext, ext_4)))(body)
         
         body = quote
@@ -86,9 +86,17 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::PhaseStyle)
         if query_z3(call(>=, measure(ext_4), get_smallest_measure(ext_4)), ctx)  
             return body
         else
-            return quote
-                if $(ctx(getstop(ext_4))) >= $(ctx(getstart(ext_4)))
-                    $body
+            if query_z3(call(<=, measure(ext_4), get_smallest_measure(ext_4)), ctx)
+                return quote 
+                    if $(ctx(getstop(ext_4))) == $(ctx(getstart(ext_4)))
+                        $body
+                    end
+                end
+            else    
+                return quote
+                    if $(ctx(getstop(ext_4))) >= $(ctx(getstart(ext_4)))
+                        $body
+                    end
                 end
             end
         end

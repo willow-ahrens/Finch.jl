@@ -50,8 +50,15 @@ function get_wrapper_rules(alg, depth, ctx)
         (@rule access(~A, ~m, ~i1..., call(+, ~j1..., ~k, ~j2...), ~i2...) => begin
             if !isempty(j1) || !isempty(j2) 
                 k_2 = call(+, ~j1..., ~j2...)
-                if depth(k_2) == 0
+                if depth(k_2) == 0 
                     delta = ([0 for _ in i1]..., k_2, [0 for _ in i2]...)
+                    #println(i1...) 
+                    #println(i2...)
+                    #println(j1...)
+                    #println(j2...)
+                    #println(k_2) 
+                    #println(delta)
+                    #println()
                     access(call(offset, A, delta...), m, i1..., k, i2...)
                 end
             end
@@ -121,5 +128,7 @@ function wrapperize(root, ctx::AbstractCompiler)
     root = Rewrite(Fixpoint(Chain([
         Postwalk(Fixpoint(Chain(get_wrapper_rules(ctx.algebra, depth, ctx))))
     ])))(root)
-    evaluate_partial(root, ctx)
+    root = simplify(root, ctx)
+    root = evaluate_partial(root, ctx)
+    root
 end

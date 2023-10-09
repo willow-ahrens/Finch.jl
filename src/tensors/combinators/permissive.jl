@@ -45,7 +45,16 @@ virtual_uncall(arr::VirtualPermissiveArray) = call(permissive, arr.body, arr.dim
 lower(tns::VirtualPermissiveArray, ctx::AbstractCompiler, ::DefaultStyle) = :(PermissiveArray($(ctx(tns.body)), $(tns.dims)))
 
 function virtual_size(arr::VirtualPermissiveArray, ctx::AbstractCompiler)
-    ifelse.(arr.dims, (dimless,), virtual_size(arr.body, ctx)[1:length(arr.dims)])
+    virtual_body_size = virtual_size(arr.body, ctx)
+    if length(arr.dims) == length(virtual_body_size) 
+        ifelse.(arr.dims, (dimless,), virtual_body_size)
+    elseif length(arr.dims) < length(virtual_body_size) 
+        ifelse.(arr.dims, (dimless,), virtual_body_size[1:length(arr.dims)])
+    else
+        #[ifelse.(arr.dims[1:length(virtual_body_size)], (dimless,), virtual_body_size); fill(dimless, length(arr.dims)-length(virtual_body_size))]
+        ifelse.(arr.dims[1:length(virtual_body_size)], (dimless,), virtual_body_size)
+    end
+
 end
 
 function virtual_resize!(arr::VirtualPermissiveArray, ctx::AbstractCompiler, dims...)

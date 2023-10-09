@@ -51,8 +51,8 @@ function cache!(ctx::AbstractCompiler, var, val)
     isconstant(val) && return val
     var = freshen(ctx.code,var)
     val = simplify(val, ctx)
-    expr1 = call(==, value(var), val)
-    push!(ctx.constraints, expr1)
+    
+    push!(ctx.constraints, call(==, value(var), val))
     
     push!(ctx.code.preamble, quote
         $var = $(contain(ctx_2 -> ctx_2(val), ctx))
@@ -97,6 +97,8 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
           typeof(root.val) === Expr ||
           typeof(root.val) === Missing
             return QuoteNode(root.val)
+        elseif typeof(root.val) <: Limit
+            return root.val
         else
             return root.val
         end

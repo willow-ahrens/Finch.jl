@@ -28,9 +28,9 @@ struct Infinitesimal <: Number
     sign::Int8
 end
 
-tiny(x) = Infinitesimal(x)
+tiny(x) = Finch.Infinitesimal(x)
 tiny_zero() = tiny(Int8(0))
-tiny_positive() = tiny(Int8(1))
+tiny_positive() = Finch.tiny(Int8(1))
 tiny_negative() = tiny(Int8(-1))
 
 function Base.show(io::IO, x::Infinitesimal)
@@ -131,14 +131,15 @@ struct Limit{T} <: Number
 end
 
 limit(x::T, s) where {T} = Limit{T}(x, s)
-plus_eps(x) = limit(x, tiny_positive())
+plus_eps(x)::Limit = Finch.limit(0, Finch.tiny_positive())
 minus_eps(x) = limit(x, tiny_negative())
 limit(x) = limit(x, tiny_zero())
+limit(x::Limit) = x 
 Limit{T}(x) where {T} = limit(T(x))
 drop_eps(x::Limit) = x.val
 drop_eps(x::Number) = x
 
-const Eps = plus_eps(Int8(0))
+const Eps = Finch.plus_eps(Int8(0))
 
 function Base.show(io::IO, x::Limit)
     print(io, "limit(", x.val, x.sign, ")")
@@ -153,8 +154,8 @@ end
 Base.:(+)(x::Limit, y::Limit) = limit(x.val + y.val, x.sign + y.sign)
 Base.:(*)(x::Limit, y::Limit) = limit(x.val * y.val, x.val * y.sign + y.val * x.sign) 
 Base.:(-)(x::Limit, y::Limit) = limit(x.val - y.val, x.sign - y.sign)
-Base.:(<)(x::Limit, y::Limit) = x.val < y.val || (x.val == y.val && x.sign < y.sign)
-Base.:(<=)(x::Limit, y::Limit) = x.val < y.val || (x.val == y.val && x.sign <= y.sign)
+Base.:(<)(x::Limit, y::Limit)::Bool = x.val < y.val || (x.val == y.val && x.sign < y.sign)
+Base.:(<=)(x::Limit, y::Limit)::Bool = x.val < y.val || (x.val == y.val && x.sign <= y.sign)
 Base.:(==)(x::Limit, y::Limit) = x.val == y.val && x.sign == y.sign
 Base.isless(x::Limit, y::Limit) = x < y
 Base.isinf(x::Limit) = isinf(x.val)
@@ -173,6 +174,8 @@ for S in limit_types
         Limit(i::$S) = Limit{$S}(i, tiny())
         (::Type{$S})(i::Limit{T}) where {T} = convert($S, i.val)
         Base.convert(::Type{$S}, i::Limit) = convert($S, i.val)
+        Base.:(+)(x::Limit, y::$S) = x + limit(y)
+        Base.:(+)(x::$S, y::Limit) = limit(x) + y
         Base.:(<)(x::Limit, y::$S) = x < limit(y)
         Base.:(<)(x::$S, y::Limit) = limit(x) < y
         Base.:(<=)(x::Limit, y::$S) = x <= limit(y)
@@ -188,6 +191,6 @@ for S in limit_types
     end
 end
 
-Base.promote_rule(::Type{Limit{T}}, ::Type{Limit{S}}) where {T, S} = promote_type(T, S)
+Base.promote_rule(::Type{Limit{T}}, ::Type{Limit{S}}) where {T, S} = Limit(promote_type(T, S))
 Base.convert(::Type{Limit{T}}, i::Limit) where {T} = Limit{T}(convert(T, i.val), i.sign)
 Base.hash(x::Limit, h::UInt) = hash(typeof(x), hash(x.val, hash(x.sign, h)))

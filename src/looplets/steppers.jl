@@ -45,12 +45,17 @@ stepper_body(node, ctx, ext) = node
 
 function lower(root::FinchNode, ctx::AbstractCompiler,  style::StepperStyle)
     root.kind === loop || error("unimplemented")
-    
+
     i = getname(root.idx)
     i0 = freshen(ctx.code, i, :_start)
     push!(ctx.code.preamble, quote
         $i = $(ctx(getstart(root.ext)))
     end)
+    if getunit(root.ext).val == Finch.Eps
+        push!(ctx.code.preamble, quote
+            $i = Finch.limit($i)
+        end)
+    end
 
     guard = :($i <= $(ctx(getstop(root.ext))))
 

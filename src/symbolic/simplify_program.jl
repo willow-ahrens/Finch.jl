@@ -11,6 +11,10 @@ propagates constants, and is the basis for how Finch understands sparsity.
 function get_program_rules(alg, shash)
     return [
         (@rule call(~f::isliteral, ~a::(All(isliteral))...) => literal(getval(f)(getval.(a)...))),
+        #(@rule call(~f::isliteral, ~a::(All(isliteral))...) => begin
+        #    result = getval(f)(getval.(a)...)
+        #    literal(result)
+        #end),
 
         (@rule loop(~i, ~a, block()) => block()),
         (@rule block(~a..., block(~b...), ~c...) => block(a..., b..., c...)),
@@ -242,8 +246,18 @@ function visit_simplify(node::FinchNode)
 end
 
 function simplify(root, ctx)
-    Rewrite(Fixpoint(Chain([
+    root = Rewrite(Fixpoint(Chain([
         Prewalk(Fixpoint(Chain(ctx.program_rules))),
         Postwalk(Fixpoint(Chain(ctx.program_rules)))
     ])))(root)
+
+    root = Rewrite(Prewalk((x) -> if x.kind === literal 
+        if x.val isa Finch.Limit
+            if x.val == drop_eps(x.val)
+                literal(drop_eps(x.val))
+            end
+        end
+    end))(root)
+
+    return root
 end

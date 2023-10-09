@@ -1,4 +1,4 @@
-isfoldable(x) = isconstant(x) || (x.kind === call && isliteral(x.op) && all(isfoldable, x.args))
+isfoldable(x) = isvariable(x) || isconstant(x) || (x.kind === call && isliteral(x.op) && all(isfoldable, x.args))
 
 """
     evaluate_partial(root, ctx)
@@ -25,7 +25,7 @@ function evaluate_partial(root, ctx)
             block(s...)
         end),
         Postwalk(Fixpoint(Chain([
-            (@rule call(~f::isliteral, ~a::(All(Or(isvariable, isvirtual, isfoldable)))...) => virtual_call(f.val, ctx, a...)),
+            (@rule call(~f::isliteral, ~a::(All(Or(isliteral, isvirtual, isfoldable)))...) => virtual_call(f.val, ctx, a...)),
             (@rule call(~f::isliteral, ~a::(All(isliteral))...) => finch_leaf(getval(f)(getval.(a)...))),
             (@rule block(~s1..., define(~a::isvariable, ~v::isconstant), ~s2...) => begin
                 s2_2 = Postwalk(@rule a => v)(block(s2...))

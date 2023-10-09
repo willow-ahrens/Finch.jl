@@ -266,7 +266,7 @@ cache_dim!(ctx, var, ext::ContinuousExtent) = ContinuousExtent(
 )
 
 getunit(ext::Extent) = literal(1)
-getunit(ext::ContinuousExtent) = Eps
+getunit(ext::ContinuousExtent) = literal(Finch.Eps)
 getunit(ext::FinchNode) = ext.kind === virtual ? getunit(ext.val) : ext
 
 get_smallest_measure(ext::Extent) = literal(1)
