@@ -258,7 +258,7 @@ function bspwrite_h5 end
 function bspwrite_bspnpy end
 
 function bspwrite(fname::AbstractString, arr, attrs = OrderedDict())
-    if endswith(fname, ".h5")
+    if endswith(fname, ".h5") || endswith(fname, ".hdf5")
         bspwrite_h5(fname, arr, attrs)
     elseif endswith(fname, ".bspnpy")
         bspwrite_bspnpy(fname, arr, attrs)
