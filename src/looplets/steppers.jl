@@ -127,11 +127,24 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::StepperStyle)
 
     @assert isvirtual(root.ext)
 
+    brakes = quote end
+    for (guard, root_2) = get_brakes(root, ctx)
+        push!(brakes.args, quote
+            if $guard
+                $(contain(ctx) do ctx_2
+                    ext_1 = bound_measure_below!(similar_extent(root.ext, value(i0), getstop(root.ext)), get_smallest_measure(root.ext))
+                    ctx_2(loop(root.idx, ext_1, root_2))
+                )
+                $i = $(ctx(getstop(ext_1))) + $(ctx(getunit(ext_1)))
+            end
+        end)
+    end
+
     if query(call(==, measure(root.ext.val), get_smallest_measure(root.ext.val)), ctx)
         body_2
     else
         return quote
-            while $guard
+            while $guard 
                 $body_2
             end
         end
