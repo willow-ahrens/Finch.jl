@@ -132,7 +132,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::StepperStyle)
         push!(cases.args, quote
             if $guard
                 $(contain(ctx) do ctx_2
-                    ext_1 = bound_measure_below!(similar_extent(root.ext, value(i0), getstop(root.ext)), get_smallest_measure(root.ext))
+                    ext_1 = bound_measure_below!(similar_extent(root.ext, value(i), getstop(root.ext)), get_smallest_measure(root.ext))
                     ctx_2(loop(root.idx, ext_1, root_2))
                 end)
                 break
