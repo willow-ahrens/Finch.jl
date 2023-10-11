@@ -1,17 +1,10 @@
-@kwdef struct Switch
-    guard
-    body
-end
-
-FinchNotation.finch_leaf(x::Brake) = virtual(x)
-
 @kwdef struct BrakeVisitor
     ctx
 end
 
 function (ctx::BrakeVisitor)(node::FinchNode)
-    if node.kind === virtual
-        get_brakes(node.val, ctx.ctx)
+    if @capture node assign(access(~tns::isvirtual, ~m, ~i...), ~op, ~rhs)
+        get_brakes(tns.val, ctx.ctx, op)
     if istree(node)
         results = []
         for n, arg in enumerate(arguments(node))
@@ -22,8 +15,8 @@ function (ctx::BrakeVisitor)(node::FinchNode)
             end)
         end
     else
-        [(literal(true) => node)]
+        []
     end
 end
 
-get_brakes(node::Brake, ctx::BrakeVisitor) = node.guard => node.body
+get_brakes(node, ctx, op) = []

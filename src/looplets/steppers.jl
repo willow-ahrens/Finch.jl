@@ -135,7 +135,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::StepperStyle)
                     ext_1 = bound_measure_below!(similar_extent(root.ext, value(i0), getstop(root.ext)), get_smallest_measure(root.ext))
                     ctx_2(loop(root.idx, ext_1, root_2))
                 )
-                $i = $(ctx(getstop(ext_1))) + $(ctx(getunit(ext_1)))
+                break
             end
         end)
     end
@@ -145,6 +145,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::StepperStyle)
     else
         return quote
             while $guard 
+                $brakes
                 $body_2
             end
         end

@@ -63,6 +63,15 @@ function lower_access(ctx::AbstractCompiler, node, tns::VirtualScalar)
     return tns.val
 end
 
+function get_brakes(tns::VirtualScalar, ctx, op)
+    if isannihilator(ctx, virtual_default(tns, ctx), op)
+        [:(tns.val == 0) => Null()]
+    else
+        []
+    end
+end
+
+
 struct VirtualDirtyScalar
     ex
     Tv
