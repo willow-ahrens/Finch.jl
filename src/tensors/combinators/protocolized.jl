@@ -135,4 +135,11 @@ jumper_range(node::VirtualProtocolizedArray, ctx, ext) = jumper_range(node.body,
 jumper_body(node::VirtualProtocolizedArray, ctx, ext, ext_2) = VirtualProtocolizedArray(jumper_body(node.body, ctx, ext, ext_2), node.protos)
 jumper_seek(node::VirtualProtocolizedArray, ctx, ext) = jumper_seek(node.body, ctx, ext)
 
+function short_circuit_cases(node::VirtualProtocolizedArray, ctx, op)
+    map(short_circuit_cases(node.body, ctx, op)) do (guard, body)
+        guard => VirtualProtocolizedArray(body, node.protos)
+    end
+end
+
+
 getroot(tns::VirtualProtocolizedArray) = getroot(tns.body)

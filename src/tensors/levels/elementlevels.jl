@@ -174,7 +174,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualElementLevel}, ctx, mode::Updat
     VirtualScalar(nothing, lvl.Tv, lvl.D, gensym(), :($(lvl.val)[$(ctx(pos))]))
 end
 
-function instantiate(fbr::VirtualTrackedSubFiber{VirtualElementLevel}, ctx, mode::Updater, protos)
+function instantiate(fbr::VirtualHollowSubFiber{VirtualElementLevel}, ctx, mode::Updater, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
-    VirtualDirtyScalar(nothing, lvl.Tv, lvl.D, gensym(), :($(lvl.val)[$(ctx(pos))]), fbr.dirty)
+    VirtualSparseScalar(nothing, lvl.Tv, lvl.D, gensym(), :($(lvl.val)[$(ctx(pos))]), fbr.dirty)
 end

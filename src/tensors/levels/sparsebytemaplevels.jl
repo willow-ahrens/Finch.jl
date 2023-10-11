@@ -434,8 +434,8 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, mode:
 end
 
 instantiate(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, mode::Updater, protos) = 
-    instantiate(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, mode, protos)
-function instantiate(fbr::VirtualTrackedSubFiber{VirtualSparseByteMapLevel}, ctx, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude), typeof(laminate)})
+    instantiate(VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, mode, protos)
+function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseByteMapLevel}, ctx, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude), typeof(laminate)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = postype(lvl)
@@ -449,7 +449,7 @@ function instantiate(fbr::VirtualTrackedSubFiber{VirtualSparseByteMapLevel}, ctx
                     $my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $(ctx(idx))
                     $dirty = false
                 end,
-                body = (ctx) -> instantiate(VirtualTrackedSubFiber(lvl.lvl, value(my_q, lvl.Ti), dirty), ctx, mode, subprotos),
+                body = (ctx) -> instantiate(VirtualHollowSubFiber(lvl.lvl, value(my_q, lvl.Ti), dirty), ctx, mode, subprotos),
                 epilogue = quote
                     if $dirty
                         $(fbr.dirty) = true

@@ -274,8 +274,8 @@ struct SparseTriangleLaminateTraversal
 end
 
 instantiate(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, mode::Updater, protos) =
-    instantiate(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, mode, protos)
-function instantiate(fbr::VirtualTrackedSubFiber{VirtualSparseTriangleLevel}, ctx, mode::Updater, protos)
+    instantiate(VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, mode, protos)
+function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseTriangleLevel}, ctx, mode::Updater, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
@@ -304,7 +304,7 @@ function instantiate(trv::SparseTriangleLaminateTraversal, ctx, mode::Updater, s
                 Phase(
                     stop = (ctx, ext) -> j,
                     body = (ctx, ext) -> Lookup(
-                        body = (ctx, i) -> instantiate(VirtualTrackedSubFiber(lvl.lvl, call(+, q, -1, i), dirty), ctx, mode, subprotos)
+                        body = (ctx, i) -> instantiate(VirtualHollowSubFiber(lvl.lvl, call(+, q, -1, i), dirty), ctx, mode, subprotos)
                     )
                 ),
                 Phase(

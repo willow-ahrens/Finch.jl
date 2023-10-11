@@ -94,28 +94,28 @@ function virtual_moveto(fbr::VirtualSubFiber, ctx::AbstractCompiler, arch)
     virtual_moveto_level(fbr.lvl, ctx, arch)
 end
 
-struct TrackedSubFiber{Lvl, Pos, Dirty} <: AbstractFiber{Lvl}
+struct HollowSubFiber{Lvl, Pos, Dirty} <: AbstractFiber{Lvl}
     lvl::Lvl
     pos::Pos
     dirty::Dirty
 end
 
-mutable struct VirtualTrackedSubFiber{Lvl}
+mutable struct VirtualHollowSubFiber{Lvl}
     lvl::Lvl
     pos
     dirty
 end
-function virtualize(ex, ::Type{<:TrackedSubFiber{Lvl, Pos, Dirty}}, ctx, tag=freshen(ctx, :tns)) where {Lvl, Pos, Dirty}
+function virtualize(ex, ::Type{<:HollowSubFiber{Lvl, Pos, Dirty}}, ctx, tag=freshen(ctx, :tns)) where {Lvl, Pos, Dirty}
     lvl = virtualize(:($ex.lvl), Lvl, ctx, Symbol(tag, :_lvl))
     pos = virtualize(:($ex.pos), Pos, ctx)
     dirty = virtualize(:($ex.dirty), Dirty, ctx)
-    VirtualTrackedSubFiber(lvl, pos, dirty)
+    VirtualHollowSubFiber(lvl, pos, dirty)
 end
-lower(fbr::VirtualTrackedSubFiber, ctx::AbstractCompiler, ::DefaultStyle) = :(TrackedSubFiber($(ctx(fbr.lvl)), $(ctx(fbr.pos))))
-FinchNotation.finch_leaf(x::VirtualTrackedSubFiber) = virtual(x)
+lower(fbr::VirtualHollowSubFiber, ctx::AbstractCompiler, ::DefaultStyle) = :(HollowSubFiber($(ctx(fbr.lvl)), $(ctx(fbr.pos))))
+FinchNotation.finch_leaf(x::VirtualHollowSubFiber) = virtual(x)
 
-function virtual_moveto(fbr::VirtualTrackedSubFiber, ctx::AbstractCompiler, arch)
-    return VirtualTrackedSubFiber(virtual_moveto_level(fbr.lvl, ctx, arch), fbr.pos, fbr.dirty)
+function virtual_moveto(fbr::VirtualHollowSubFiber, ctx::AbstractCompiler, arch)
+    return VirtualHollowSubFiber(virtual_moveto_level(fbr.lvl, ctx, arch), fbr.pos, fbr.dirty)
 end
 
 """
