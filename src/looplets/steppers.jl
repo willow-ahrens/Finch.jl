@@ -128,13 +128,13 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::StepperStyle)
     @assert isvirtual(root.ext)
 
     brakes = quote end
-    for (guard, root_2) = get_brakes(root, ctx)
+    for (guard, root_2) = BrakeVisitor(ctx)(root)
         push!(brakes.args, quote
             if $guard
                 $(contain(ctx) do ctx_2
                     ext_1 = bound_measure_below!(similar_extent(root.ext, value(i0), getstop(root.ext)), get_smallest_measure(root.ext))
                     ctx_2(loop(root.idx, ext_1, root_2))
-                )
+                end)
                 break
             end
         end)

@@ -368,7 +368,7 @@ function (ctx::PropagateCopies)(ex)
             ctx_2 == ctx && break
         end
         return Expr(:while, cond_2, body_2)
-    elseif !isexpr(ex)
+    elseif !isexpr(ex) || ex.head == :break
         ex
     else
         error("propagate_copies reached unrecognized expression $ex")
@@ -401,7 +401,7 @@ function (ctx::MarkDead)(ex, res)
             push!(ctx.refs, ex)
         end
         ex
-    elseif !isexpr(ex)
+    elseif !isexpr(ex) || ex.head == :break
         ex
     elseif @capture ex :macrocall(~f, ~ln, ~args...)
         return Expr(:macrocall, f, ln, reverse(map((arg)->ctx(arg, res), reverse(args)))...)

@@ -74,6 +74,7 @@ include("execute.jl")
 include("symbolic/symbolic.jl")
 
 include("looplets/thunks.jl")
+include("looplets/brakes.jl")
 include("looplets/lookups.jl")
 include("looplets/nulls.jl")
 include("looplets/unfurl.jl")

@@ -97,3 +97,78 @@ function lower_access(ctx::AbstractCompiler, node, tns::VirtualDirtyScalar)
     end)
     return tns.val
 end
+
+mutable struct ScalarBrake{D, Tv, B}# <: AbstractArray{Tv, 0}
+    val::Tv
+end
+
+ScalarBrake(D, args...) = ScalarBrake{D}(args...)
+ScalarBrake{D}(args...) where {D} = ScalarBrake{D, typeof(D)}(args...)
+ScalarBrake{D, Tv}(B, args...) where {D, Tv} = ScalarBrake{D, Tv, B}(args...)
+ScalarBrake{D, Tv, B}() where {D, Tv, B} = ScalarBrake{D, Tv, B}(D)
+
+@inline Base.ndims(::Type{<:ScalarBrake}) = 0
+@inline Base.size(::ScalarBrake) = ()
+@inline Base.axes(::ScalarBrake) = ()
+@inline Base.eltype(::ScalarBrake{D, Tv}) where {D, Tv} = Tv
+@inline default(::Type{<:ScalarBrake{D}}) where {D} = D
+@inline default(::ScalarBrake{D}) where {D} = D
+
+(tns::ScalarBrake)() = tns.val
+@inline Base.getindex(tns::ScalarBrake) = tns.val
+
+struct VirtualScalarBrake
+    ex
+    Tv
+    D
+    B
+    name
+    val
+end
+
+lower(tns::VirtualScalarBrake, ctx::AbstractCompiler, ::DefaultStyle) = :($ScalarBrake{$(tns.D), $(tns.Tv), $(tns.B)}($(tns.val)))
+function virtualize(ex, ::Type{ScalarBrake{D, Tv, B}}, ctx, tag) where {D, Tv, B}
+    sym = freshen(ctx, tag)
+    val = Symbol(tag, :_val) #TODO hmm this is risky
+    push!(ctx.preamble, quote
+        $sym = $ex
+        $val = $sym.val
+    end)
+    VirtualScalarBrake(sym, Tv, D, B, tag, val)
+end
+
+virtual_size(::VirtualScalarBrake, ctx) = ()
+
+virtual_default(tns::VirtualScalarBrake, ctx) = tns.D
+virtual_eltype(tns::VirtualScalarBrake, ctx) = tns.Tv
+
+FinchNotation.finch_leaf(x::VirtualScalarBrake) = virtual(x)
+
+function declare!(tns::VirtualScalarBrake, ctx, init)
+    push!(ctx.code.preamble, quote
+        $(tns.val) = $(ctx(init))
+    end)
+    tns
+end
+
+function thaw!(tns::VirtualScalarBrake, ctx)
+    return tns
+end
+
+function freeze!(tns::VirtualScalarBrake, ctx)
+    return tns
+end
+instantiate(tns::VirtualScalarBrake, ctx, mode, subprotos) = tns
+
+function lower_access(ctx::AbstractCompiler, node, tns::VirtualScalarBrake)
+    @assert isempty(node.idxs)
+    return tns.val
+end
+
+function get_brakes(tns::VirtualScalarBrake, ctx, op)
+    if isannihilator(ctx.algebra, op, literal(tns.B))
+        [:($(tns.val) == $(tns.B)) => Null()]
+    else
+        []
+    end
+end
