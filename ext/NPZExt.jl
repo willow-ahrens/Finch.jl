@@ -21,6 +21,7 @@ function Base.setindex!(g::NPYPath, val::AbstractDict, key::AbstractString)
         setindex!(g[key], val, key_2)
     end
 end
+Base.haskey(g::NPYPath, key::AbstractString) = isfile(joinpath(mkpath(g.dirname), "$(key).npy"))  || isdir(joinpath(mkpath(g.dirname), key))
 
 Finch.bspread_header(g::NPYPath) = JSON.parsefile(joinpath(g.dirname, "binsparse.json"))
 Finch.bspwrite_header(g::NPYPath, str::String) = write(joinpath(mkpath(g.dirname), "binsparse.json"), str)

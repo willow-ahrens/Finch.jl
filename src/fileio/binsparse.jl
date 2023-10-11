@@ -56,11 +56,11 @@ function bspread_vector end
 function bspwrite_vector end
 
 function bspread_data(f, desc, key)
-    t = desc["data_types"]["$(key)_type"]
+    t = desc["data_types"][key]
     if (m = match(r"^iso\[([^\[]*)\]$", t)) != nothing
         throw(ArgumentError("iso values not currently supported"))
     elseif (m = match(r"^complex\[([^\[]*)\]$", t)) != nothing
-        desc["data_types"]["$(key)_type"] = m.captures[1]
+        desc["data_types"][key] = m.captures[1]
         data = bspread_data(f, desc, key)
         return reinterpret(reshape, Complex{eltype(data)}, reshape(data, 2, :))
     elseif (m = match(r"^[^\]]*$", t)) != nothing
@@ -80,13 +80,13 @@ end
 function bspwrite_data_helper(f, desc, key, data::AbstractVector{T}) where {T}
     haskey(bspwrite_type_lookup, T) || throw(ArgumentError("Cannot write $T to binsparse"))
     bspwrite_vector(f, data, key)
-    desc["data_types"]["$(key)_type"] = bspwrite_type_lookup[T]
+    desc["data_types"][key] = bspwrite_type_lookup[T]
 end
 
 function bspwrite_data_helper(f, desc, key, data::AbstractVector{Complex{T}}) where {T}
     data = reshape(reinterpret(reshape, T, data), :)
     bspwrite_data_helper(f, desc, key, data)
-    desc["data_types"]["$(key)_type"] = "complex[$(desc["data_types"]["$(key)_type"])]"
+    desc["data_types"][key] = "complex[$(desc["data_types"][key])]"
 end
 
 bspread_format_lookup = OrderedDict(
@@ -335,7 +335,11 @@ function bspwrite_level(f, desc, fmt, lvl::ElementLevel{D}) where {D}
 end
 function bspread_level(f, desc, fmt, ::Val{:element})
     val = convert(Vector, bspread_data(f, desc, "values"))
-    D = bspread_data(f, desc, "fill_value")[1]
+    if haskey(f, "fill_value")
+        D = bspread_data(f, desc, "fill_value")[1]
+    else
+        D = zero(eltype(val))
+    end
     ElementLevel(D, val)
 end
 
