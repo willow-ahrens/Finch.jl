@@ -296,8 +296,8 @@ function instantiate(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, mode::Rea
 end
 
 instantiate(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, mode::Updater, protos) = 
-    instantiate(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, mode, protos)
-function instantiate(fbr::VirtualTrackedSubFiber{VirtualRepeatRLELevel}, ctx, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
+    instantiate(VirtualSparseSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, mode, protos)
+function instantiate(fbr::VirtualSparseSubFiber{VirtualRepeatRLELevel}, ctx, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp

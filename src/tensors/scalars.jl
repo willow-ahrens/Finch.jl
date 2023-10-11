@@ -71,8 +71,27 @@ function get_brakes(tns::VirtualScalar, ctx, op)
     end
 end
 
+mutable struct SparseScalar{D, Tv}# <: AbstractArray{Tv, 0}
+    val::Tv
+    dirty::Bool
+end
 
-struct VirtualDirtyScalar
+SparseScalar(D, args...) = SparseScalar{D}(args...)
+SparseScalar{D}(args...) where {D} = SparseScalar{D, typeof(D)}(args...)
+SparseScalar{D, Tv}() where {D, Tv} = SparseScalar{D, Tv}(D, false)
+SparseScalar{D, Tv}(val) where {D, Tv} = SparseScalar{D, Tv}(val, true)
+
+@inline Base.ndims(::Type{<:SparseScalar}) = 0
+@inline Base.size(::SparseScalar) = ()
+@inline Base.axes(::SparseScalar) = ()
+@inline Base.eltype(::SparseScalar{D, Tv}) where {D, Tv} = Tv
+@inline default(::Type{<:SparseScalar{D}}) where {D} = D
+@inline default(::SparseScalar{D}) where {D} = D
+
+(tns::SparseScalar)() = tns.val
+@inline Base.getindex(tns::SparseScalar) = tns.val
+
+struct VirtualSparseScalar
     ex
     Tv
     D
@@ -81,16 +100,51 @@ struct VirtualDirtyScalar
     dirty
 end
 
-virtual_size(::VirtualDirtyScalar, ctx) = ()
+lower(tns::VirtualSparseScalar, ctx::AbstractCompiler, ::DefaultStyle) = :($SparseScalar{$(tns.D), $(tns.Tv)}($(tns.val), $(tns.dirty)))
+function virtualize(ex, ::Type{SparseScalar{D, Tv}}, ctx, tag) where {D, Tv}
+    sym = freshen(ctx, tag)
+    val = Symbol(tag, :_val) #TODO hmm this is risky
+    dirty = Symbol(tag, :_dirty) #TODO hmm this is risky
+    push!(ctx.preamble, quote
+        $sym = $ex
+        $val = $sym.val
+        $dirty = $sym.dirty
+    end)
+    VirtualSparseScalar(sym, Tv, D, tag, val, dirty)
+end
 
-virtual_default(tns::VirtualDirtyScalar, ctx) = tns.D
-virtual_eltype(tns::VirtualDirtyScalar, ctx) = tns.Tv
+virtual_size(::VirtualSparseScalar, ctx) = ()
 
-instantiate(tns::VirtualDirtyScalar, ctx, mode, subprotos) = tns
+virtual_default(tns::VirtualSparseScalar, ctx) = tns.D
+virtual_eltype(tns::VirtualSparseScalar, ctx) = tns.Tv
 
-FinchNotation.finch_leaf(x::VirtualDirtyScalar) = virtual(x)
+function declare!(tns::VirtualSparseScalar, ctx, init)
+    push!(ctx.code.preamble, quote
+        $(tns.val) = $(ctx(init))
+        $(tns.dirty) = false
+    end)
+    tns
+end
 
-function lower_access(ctx::AbstractCompiler, node, tns::VirtualDirtyScalar)
+function thaw!(tns::VirtualSparseScalar, ctx)
+    return tns
+end
+
+function freeze!(tns::VirtualSparseScalar, ctx)
+    return tns
+end
+
+instantiate(tns::VirtualSparseScalar, ctx, mode::Updater, subprotos) = tns
+function instantiate(tns::VirtualSparseScalar, ctx, mode::Reader, subprotos)
+    Switch(
+        tns.dirty => tns,
+        true => Simplify(Fill(tns.D)),
+    )
+end
+
+FinchNotation.finch_leaf(x::VirtualSparseScalar) = virtual(x)
+
+function lower_access(ctx::AbstractCompiler, node, tns::VirtualSparseScalar)
     @assert isempty(node.idxs)
     push!(ctx.code.preamble, quote
         $(tns.dirty) = true

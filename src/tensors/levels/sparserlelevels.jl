@@ -305,9 +305,9 @@ end
 
 
 instantiate(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, mode::Updater, protos) = 
-    instantiate(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, mode, protos)
+    instantiate(VirtualSparseSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, mode, protos)
 
-function instantiate(fbr::VirtualTrackedSubFiber{VirtualSparseRLELevel}, ctx, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
+function instantiate(fbr::VirtualSparseSubFiber{VirtualSparseRLELevel}, ctx, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
     (lvl, pos) = (fbr.lvl, fbr.pos) 
     tag = lvl.ex
     Tp = postype(lvl)
@@ -339,7 +339,7 @@ function instantiate(fbr::VirtualTrackedSubFiber{VirtualSparseRLELevel}, ctx, mo
                         end
                         $dirty = false
                     end,
-                    body = (ctx) -> instantiate(VirtualTrackedSubFiber(lvl.lvl, value(qos, Tp), dirty), ctx, mode, subprotos),
+                    body = (ctx) -> instantiate(VirtualSparseSubFiber(lvl.lvl, value(qos, Tp), dirty), ctx, mode, subprotos),
                     epilogue = quote
                         if $dirty
                             $(fbr.dirty) = true

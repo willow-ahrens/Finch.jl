@@ -118,7 +118,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualPatternLevel}, ctx, mode::Updat
     VirtualScalar(nothing, Bool, false, gensym(), val)
 end
 
-function instantiate(fbr::VirtualTrackedSubFiber{VirtualPatternLevel}, ctx, mode::Updater, protos)
+function instantiate(fbr::VirtualSparseSubFiber{VirtualPatternLevel}, ctx, mode::Updater, protos)
     VirtualScalar(nothing, Bool, false, gensym(), fbr.dirty)
 end
 

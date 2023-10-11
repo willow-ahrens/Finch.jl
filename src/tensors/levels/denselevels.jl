@@ -187,8 +187,8 @@ end
 
 instantiate(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, mode, protos) =
     instantiate(DenseTraversal(fbr, VirtualSubFiber), ctx, mode, protos)
-instantiate(fbr::VirtualTrackedSubFiber{VirtualDenseLevel}, ctx, mode, protos) =
-    instantiate(DenseTraversal(fbr, (lvl, pos) -> VirtualTrackedSubFiber(lvl, pos, fbr.dirty)), ctx, mode, protos)
+instantiate(fbr::VirtualSparseSubFiber{VirtualDenseLevel}, ctx, mode, protos) =
+    instantiate(DenseTraversal(fbr, (lvl, pos) -> VirtualSparseSubFiber(lvl, pos, fbr.dirty)), ctx, mode, protos)
 
 function instantiate(trv::DenseTraversal, ctx, mode, subprotos, ::Union{typeof(defaultread), typeof(follow), typeof(defaultupdate), typeof(laminate), typeof(extrude)})
     (lvl, pos) = (trv.fbr.lvl, trv.fbr.pos)

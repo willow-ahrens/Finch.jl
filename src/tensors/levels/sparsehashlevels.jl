@@ -452,8 +452,8 @@ struct SparseHashLaminateTraversal
 end
     
 instantiate(fbr::VirtualSubFiber{VirtualSparseHashLevel}, ctx, mode::Updater, protos) =
-    instantiate(VirtualTrackedSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, mode, protos)
-function instantiate(fbr::VirtualTrackedSubFiber{VirtualSparseHashLevel}, ctx, mode::Updater, protos)
+    instantiate(VirtualSparseSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, mode, protos)
+function instantiate(fbr::VirtualSparseSubFiber{VirtualSparseHashLevel}, ctx, mode::Updater, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     instantiate(SparseHashLaminateTraversal(lvl, pos, fbr.dirty, ()), ctx, mode, protos)
 end
@@ -486,7 +486,7 @@ function instantiate(trv::SparseHashLaminateTraversal, ctx, mode::Updater, subpr
                             end
                             $dirty = false
                         end,
-                        body = (ctx) -> instantiate(VirtualTrackedSubFiber(lvl.lvl, qos, dirty), ctx, mode, subprotos),
+                        body = (ctx) -> instantiate(VirtualSparseSubFiber(lvl.lvl, qos, dirty), ctx, mode, subprotos),
                         epilogue = quote
                             if $dirty
                                 $(fbr_dirty) = true
