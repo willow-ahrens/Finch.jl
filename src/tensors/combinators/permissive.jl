@@ -126,6 +126,12 @@ jumper_range(node::VirtualPermissiveArray, ctx, ext) = jumper_range(node.body, c
 jumper_body(node::VirtualPermissiveArray, ctx, ext, ext_2) = VirtualPermissiveArray(jumper_body(node.body, ctx, ext, ext_2), node.dims)
 jumper_seek(node::VirtualPermissiveArray, ctx, ext) = jumper_seek(node.body, ctx, ext)
 
+function get_brakes(node::VirtualPermissiveArray, ctx, op)
+    map(get_brakes(node.body, ctx, op)) do (guard, body)
+        guard => VirtualPermissiveArray(body, node.dims)
+    end
+end
+
 getroot(tns::VirtualPermissiveArray) = getroot(tns.body)
 
 function unfurl(tns::VirtualPermissiveArray, ctx, ext, mode, protos...)

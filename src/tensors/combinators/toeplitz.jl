@@ -129,6 +129,13 @@ jumper_range(node::VirtualToeplitzArray, ctx, ext) = jumper_range(node.body, ctx
 jumper_body(node::VirtualToeplitzArray, ctx, ext, ext_2) = VirtualToeplitzArray(jumper_body(node.body, ctx, ext, ext_2), node.dim)
 jumper_seek(node::VirtualToeplitzArray, ctx, ext) = jumper_seek(node.body, ctx, ext)
 
+function get_brakes(node::VirtualToeplitzArray, ctx, op)
+    map(get_brakes(node.body, ctx, op)) do (guard, body)
+        guard => VirtualToeplitzArray(body, node.dim)
+    end
+end
+
+
 getroot(tns::VirtualToeplitzArray) = getroot(tns.body)
 
 function unfurl(tns::VirtualToeplitzArray, ctx, ext, mode, protos...)
