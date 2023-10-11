@@ -294,10 +294,10 @@ end
 
 instantiate(tns::VirtualSparseShortCircuitScalar, ctx, mode::Updater, subprotos) = tns
 function instantiate(tns::VirtualSparseShortCircuitScalar, ctx, mode::Reader, subprotos)
-    Switch(
-        tns.dirty => tns,
+    Switch([
+        value(tns.dirty, Bool) => tns,
         true => Simplify(Fill(tns.D)),
-    )
+    ])
 end
 
 FinchNotation.finch_leaf(x::VirtualSparseShortCircuitScalar) = virtual(x)

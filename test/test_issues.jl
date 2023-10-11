@@ -411,24 +411,63 @@ using CIndices
         end)
     end
 
-    A = Fiber!(Dense(Dense(SparseList(Element(0.0)))), fsprand((10, 10, 10), 0.1))
-    C = Fiber!(Dense(Dense(Dense(Element(0.0)))), zeros((10, 10, 10)))
-    X = Fiber!(Dense(Dense(Element(0.0))), rand(10, 10))
-    temp2 = Scalar(0.0)
-    @finch begin
-        for l=_, j=_, i=_
-            let temp1 = X[i, j]
-                temp2 .= 0
-                for k=_
-                    if uptrimask[k+1, i]
-                        C[k, j, l] += temp1 * A[k, i, l]
+    let
+        A = Fiber!(Dense(Dense(SparseList(Element(0.0)))), fsprand((10, 10, 10), 0.1))
+        C = Fiber!(Dense(Dense(Dense(Element(0.0)))), zeros((10, 10, 10)))
+        X = Fiber!(Dense(Dense(Element(0.0))), rand(10, 10))
+        temp2 = Scalar(0.0)
+        @finch begin
+            for l=_, j=_, i=_
+                let temp1 = X[i, j]
+                    temp2 .= 0
+                    for k=_
+                        if uptrimask[k+1, i]
+                            C[k, j, l] += temp1 * A[k, i, l]
+                        end
+                        if uptrimask[k, l]
+                            temp2[] += X[k, j] * A[k, i, l]
+                        end
                     end
-                    if uptrimask[k, l]
-                        temp2[] += X[k, j] * A[k, i, l]
-                    end
+                    C[i, j, l] += temp2[]
                 end
-                C[i, j, l] += temp2[]
             end
         end
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/52
+    let
+        s = ShortCircuitScalar(false, true)
+        x = Fiber!(SparseList(Element(false)), [false, true, true, false])
+        y = Fiber!(SparseList(Element(false)), [false, true, false, true])
+        check_output("short_circuit.jl", @finch_code begin
+            for i = _
+                s[] |= x[i] && y[i]
+            end
+        end)
+
+        c = Scalar(0)
+        check_output("short_circuit_sum.jl", @finch_code begin
+            for i = _
+                let x_i = x[i]
+                    s[] |= x_i && y[i]
+                    c[] += x_i
+                end
+            end
+        end)
+
+        A = Fiber!(Dense(SparseList(Element(false))), [false true true false; false true false false]')
+
+        t = SparseShortCircuitScalar(false, true)
+
+        check_output("short_circuit_bfs.jl", @finch_code begin
+            x .= false
+            for j = _
+                t .= false
+                for i = _
+                    t[] |= A[i, j] && y[i]
+                end
+                x[j] = t[]
+            end
+        end)
     end
 end
