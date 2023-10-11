@@ -286,7 +286,7 @@ function bspwrite_tensor(io, arr::SwizzleArray{dims, <:Fiber}, attrs = OrderedDi
     end
     bspwrite_level(io, desc, desc["format"]["subformat"], arr.body.lvl)
     desc["format"] = get(bspwrite_format_lookup, desc["format"], desc["format"])
-    bspwrite_header(io, json(desc, 4))
+    bspwrite_header(io, json(Dict("binsparse" => desc), 4))
 end
 
 function bspwrite_header end
@@ -307,7 +307,7 @@ end
 function bspread_header end
 
 function bspread(f)
-    desc = bspread_header(f)
+    desc = bspread_header(f)["binsparse"]
     fmt = OrderedDict{Any, Any}(get(bspread_format_lookup, desc["format"], desc["format"]))
     if !haskey(fmt, "swizzle")
         fmt["swizzle"] = collect(0:length(desc["shape"]) - 1)
