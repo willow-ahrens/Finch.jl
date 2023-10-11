@@ -1,10 +1,10 @@
-@kwdef struct BrakeVisitor
+@kwdef struct ShortCircuitVisitor
     ctx
 end
 
-function (ctx::BrakeVisitor)(node::FinchNode)
+function (ctx::ShortCircuitVisitor)(node::FinchNode)
     if @capture node assign(access(~tns::isvirtual, ~m, ~i...), ~op, ~rhs)
-        get_brakes(tns.val, ctx.ctx, op)
+        short_circuit_cases(tns.val, ctx.ctx, op)
     elseif istree(node)
         mapreduce(vcat, enumerate(arguments(node))) do (n, arg)
             map(ctx(arg)) do (guard, body)
@@ -18,4 +18,4 @@ function (ctx::BrakeVisitor)(node::FinchNode)
     end
 end
 
-get_brakes(node, ctx, op) = []
+short_circuit_cases(node, ctx, op) = []

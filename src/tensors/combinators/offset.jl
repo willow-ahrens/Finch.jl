@@ -131,8 +131,8 @@ jumper_range(node::VirtualOffsetArray, ctx, ext) = shiftdim(jumper_range(node.bo
 jumper_body(node::VirtualOffsetArray, ctx, ext, ext_2) = VirtualOffsetArray(jumper_body(node.body, ctx, shiftdim(ext, node.delta[end]), shiftdim(ext_2, node.delta[end])), node.delta)
 jumper_seek(node::VirtualOffsetArray, ctx, ext) = jumper_seek(node.body, ctx, shiftdim(ext, node.delta[end]))
 
-function get_brakes(node::VirtualOffsetArray, ctx, op)
-    map(get_brakes(node.body, ctx, op)) do (guard, body)
+function short_circuit_cases(node::VirtualOffsetArray, ctx, op)
+    map(short_circuit_cases(node.body, ctx, op)) do (guard, body)
         guard => VirtualOffsetArray(body, node.delta)
     end
 end

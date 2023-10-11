@@ -131,8 +131,8 @@ jumper_range(node::VirtualWindowedArray, ctx, ext) = jumper_range(node.body, ctx
 jumper_body(node::VirtualWindowedArray, ctx, ext, ext_2) = VirtualWindowedArray(jumper_body(node.body, ctx, ext, ext_2), node.dims)
 jumper_seek(node::VirtualWindowedArray, ctx, ext) = jumper_seek(node.body, ctx, ext)
 
-function get_brakes(node::VirtualWindowedArray, ctx, op)
-    map(get_brakes(node.body, ctx, op)) do (guard, body)
+function short_circuit_cases(node::VirtualWindowedArray, ctx, op)
+    map(short_circuit_cases(node.body, ctx, op)) do (guard, body)
         guard => VirtualWindowedArray(body, node.dims)
     end
 end

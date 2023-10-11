@@ -127,9 +127,9 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::StepperStyle)
 
     @assert isvirtual(root.ext)
 
-    brakes = quote end
-    for (guard, root_2) = BrakeVisitor(ctx)(root)
-        push!(brakes.args, quote
+    cases = quote end
+    for (guard, root_2) = ShortCircuitVisitor(ctx)(root)
+        push!(cases.args, quote
             if $guard
                 $(contain(ctx) do ctx_2
                     ext_1 = bound_measure_below!(similar_extent(root.ext, value(i0), getstop(root.ext)), get_smallest_measure(root.ext))
@@ -145,7 +145,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::StepperStyle)
     else
         return quote
             while $guard 
-                $brakes
+                $cases
                 $body_2
             end
         end

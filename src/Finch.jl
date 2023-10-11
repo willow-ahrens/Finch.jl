@@ -21,7 +21,7 @@ export @finch, @finch_program, @finch_code, @finch_kernel, value
 
 export fastfinch, safefinch, debugfinch
 
-export Fiber, Fiber!, Scalar
+export Fiber, Fiber!
 export SparseRLE, SparseRLELevel 
 export SparseList, SparseListLevel
 export SparseHash, SparseHashLevel
@@ -33,6 +33,7 @@ export Dense, DenseLevel
 export RepeatRLE, RepeatRLELevel
 export Element, ElementLevel
 export Pattern, PatternLevel
+export Scalar, SparseScalar, ShortCircuitScalar, SparseShortCircuitScalar
 export walk, gallop, follow, extrude, laminate
 export fiber, fiber!, Fiber!, pattern!, dropdefaults, dropdefaults!, redefault!
 export diagmask, lotrimask, uptrimask, bandmask
@@ -74,7 +75,7 @@ include("execute.jl")
 include("symbolic/symbolic.jl")
 
 include("looplets/thunks.jl")
-include("looplets/brakes.jl")
+include("looplets/short_circuits.jl")
 include("looplets/lookups.jl")
 include("looplets/nulls.jl")
 include("looplets/unfurl.jl")

@@ -108,8 +108,8 @@ jumper_range(node::Unfurled, ctx, ext) = jumper_range(node.body, ctx, ext)
 jumper_body(node::Unfurled, ctx, ext, ext_2) = Unfurled(node.arr, node.ndims, jumper_body(node.body, ctx, ext, ext_2))
 jumper_seek(node::Unfurled, ctx, ext) = jumper_seek(node.body, ctx, ext)
 
-function get_brakes(tns::Unfurled, ctx, op)
-    map(get_brakes(tns.body, ctx, op)) do (guard, body)
+function short_circuit_cases(tns::Unfurled, ctx, op)
+    map(short_circuit_cases(tns.body, ctx, op)) do (guard, body)
         guard => Unfurled(tns.arr, tns.ndims, body)
     end
 end
