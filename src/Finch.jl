@@ -32,7 +32,7 @@ export SparseVBL, SparseVBLLevel
 export Dense, DenseLevel
 export RepeatRLE, RepeatRLELevel
 export Element, ElementLevel
-export PointerElement, PointerElementLevel
+export Pointer, PointerLevel
 export Pattern, PatternLevel
 export Scalar, SparseScalar, ShortCircuitScalar, SparseShortCircuitScalar
 export walk, gallop, follow, extrude, laminate

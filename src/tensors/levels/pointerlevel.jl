@@ -1,5 +1,5 @@
 """
-    PointerElementLevel{D, [Tv=typeof(D), Tp=Int, Vv]}()
+    PointerLevel{D, [Tv=typeof(D), Tp=Int, Vv]}()
 
 A subfiber of an element level is a scalar of type `Tv`, initialized to `D`. `D`
 may optionally be given as the first argument.
@@ -9,17 +9,17 @@ of type `Vv` with `eltype(Vv) = Tv`. The type `Ti` is the index type used to
 access Vv.
 
 ```jldoctest
-julia> Fiber!(Dense(PointerElement(0.0)), [1, 2, 3])
+julia> Fiber!(Dense(Pointer(0.0)), [1, 2, 3])
 Dense [1:3]
 ├─[1]: 1.0
 ├─[2]: 2.0
 ├─[3]: 3.0
 ```
 """
-struct PointerElementLevel{Tp, Vv<:AbstractVector, Lvl} <: AbstractLevel
+struct PointerLevel{Tp, Vv<:AbstractVector, Lvl} <: AbstractLevel
     val::Vv
 end
-const PointerElement = PointerElementLevel
+const Pointer = PointerLevel
 
 function cleanNothing(::Type{Union{A, B}}) where {A, B}
     if A == Nothing && B != Nothing
@@ -36,34 +36,34 @@ function cleanNothing(::Type{A}) where {A}
 end
 
 
-PointerElementLevel(lvl::Lvl) where {Lvl <: AbstractLevel} = PointerElementLevel{postype(Lvl), Vector{Union{Nothing, Lvl}}, Lvl}(Union{Nothing, Lvl}[])
-PointerElementLevel(val::Vv) where {Vv <: AbstractVector} = PointerElementLevel{postype(Vv), Vv, cleanNothing(eltype(Vv))}(val)
-PointerElementLevel{Tp, Vv, Lvl}() where {Tp, Vv, Lvl} = PointerElementLevel{Tp, Vv, Lvl}(Union{Nothing, Lvl}[])
+PointerLevel(lvl::Lvl) where {Lvl <: AbstractLevel} = PointerLevel{postype(Lvl), Vector{Union{Nothing, Lvl}}, Lvl}(Union{Nothing, Lvl}[])
+PointerLevel(val::Vv) where {Vv <: AbstractVector} = PointerLevel{postype(Vv), Vv, cleanNothing(eltype(Vv))}(val)
+PointerLevel{Tp, Vv, Lvl}() where {Tp, Vv, Lvl} = PointerLevel{Tp, Vv, Lvl}(Union{Nothing, Lvl}[])
 
-# PointerElementLevel{Tp, Vv, Lvl}(val::Vv) where {Tp, Vv <: AbstractVector, Lvl} = PointerElementLevel{Tp, Vv, Lvl}(val)
+# PointerLevel{Tp, Vv, Lvl}(val::Vv) where {Tp, Vv <: AbstractVector, Lvl} = PointerLevel{Tp, Vv, Lvl}(val)
 
-Base.summary(::PointerElement{Tp, Vv, Lvl}) where {Tp, Vv, Lvl} = "PointerElement($(Lvl))"
+Base.summary(::Pointer{Tp, Vv, Lvl}) where {Tp, Vv, Lvl} = "Pointer($(Lvl))"
 
-similar_level(::PointerElement{Tp, Vv, Lvl}) where {Tp, Vv, Lvl} = PointerElementLevel{Tp, Vv, Lvl}()
+similar_level(::Pointer{Tp, Vv, Lvl}) where {Tp, Vv, Lvl} = PointerLevel{Tp, Vv, Lvl}()
 
-Memtype(::Type{PointerElement{Tp, Vv, Lvl}}) where {Tp, Vv, Lvl} =
+Memtype(::Type{Pointer{Tp, Vv, Lvl}}) where {Tp, Vv, Lvl} =
     containertype(Vv)
 
-postype(::Type{<:PointerElement{Tp, Vv, Lvl}}) where {Tp, Vv, Lvl} = Tp
+postype(::Type{<:Pointer{Tp, Vv, Lvl}}) where {Tp, Vv, Lvl} = Tp
 
-function moveto(lvl::PointerElementLevel{Tp, Vv, Lvl}, ::Type{MemType}) where {Tp, Vv, Lvl,  MemType <: AbstractArray}
+function moveto(lvl::PointerLevel{Tp, Vv, Lvl}, ::Type{MemType}) where {Tp, Vv, Lvl,  MemType <: AbstractArray}
     valp = MemType(lvl.val)
-    return PointerElementLevel{Tp, Vv, Lvl}(valp)
+    return PointerLevel{Tp, Vv, Lvl}(valp)
 end
 
-# pattern!(lvl::PointerElementLevel{Tp, Vv, Lvl}) where  {Tp, Vv, Lvl} =
+# pattern!(lvl::PointerLevel{Tp, Vv, Lvl}) where  {Tp, Vv, Lvl} =
 #     Pattern{Tp, Vv}()
-# redefault!(lvl::PointerElementLevel{Tp, Vv, Lvl}, init) where {Tp, Vv, Lvl} = 
-#     PointerElementLevel{Tp, Vv, Lvl}(lvl.val)
+# redefault!(lvl::PointerLevel{Tp, Vv, Lvl}, init) where {Tp, Vv, Lvl} = 
+#     PointerLevel{Tp, Vv, Lvl}(lvl.val)
 
 
-function Base.show(io::IO, lvl::PointerElementLevel{Tp, Vv, Lvl}) where {Tp, Vv, Lvl}
-    print(io, "PointerElement{")
+function Base.show(io::IO, lvl::PointerLevel{Tp, Vv, Lvl}) where {Tp, Vv, Lvl}
+    print(io, "Pointer{")
     print(io, "$Tp, $Vv, $Lvl}(")
     if get(io, :compact, false)
         print(io, "…")
@@ -73,27 +73,27 @@ function Base.show(io::IO, lvl::PointerElementLevel{Tp, Vv, Lvl}) where {Tp, Vv,
     print(io, ")")
 end 
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:PointerElementLevel}, depth)
+function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:PointerLevel}, depth)
     p = fbr.pos
     show(io, mime, fbr.lvl.val[p])
 end
 
-@inline level_ndims(::Type{<:PointerElementLevel{Tp, Vv, Lvl}}) where {Tp, Vv, Lvl} = level_ndims(Lvl)
-@inline level_size(::PointerElementLevel{Tp, Vv, Lvl}) where {Tp, Vv, Lvl} = level_size(Lvl)
-@inline level_axes(::PointerElementLevel{Tp, Vv, Lvl}) where {Tp, Vv, Lvl} = level_axes(Lvl)
-@inline level_eltype(::Type{PointerElementLevel{Tp, Vv, Lvl}}) where {Tp, Vv, Lvl} = level_eltype(Lvl)
-@inline level_default(::Type{<:PointerElementLevel{Tp, Vv, Lvl}}) where {Tp, Vv, Lvl} = level_default(Lvl)
-# data_rep_level(::Type{<:PointerElementLevel{D, Tv, Tp, Vv}}) where {D, Tv, Tp, Vv} = PointerElementData(D, Tv)
+@inline level_ndims(::Type{<:PointerLevel{Tp, Vv, Lvl}}) where {Tp, Vv, Lvl} = level_ndims(Lvl)
+@inline level_size(::PointerLevel{Tp, Vv, Lvl}) where {Tp, Vv, Lvl} = level_size(Lvl)
+@inline level_axes(::PointerLevel{Tp, Vv, Lvl}) where {Tp, Vv, Lvl} = level_axes(Lvl)
+@inline level_eltype(::Type{PointerLevel{Tp, Vv, Lvl}}) where {Tp, Vv, Lvl} = level_eltype(Lvl)
+@inline level_default(::Type{<:PointerLevel{Tp, Vv, Lvl}}) where {Tp, Vv, Lvl} = level_default(Lvl)
+# data_rep_level(::Type{<:PointerLevel{D, Tv, Tp, Vv}}) where {D, Tv, Tp, Vv} = PointerData(D, Tv)
 
-(fbr::Fiber{<:PointerElementLevel})() = SubFiber(fbr.lvl, 1)()
-function (fbr::SubFiber{<:PointerElementLevel})()
+(fbr::Fiber{<:PointerLevel})() = SubFiber(fbr.lvl, 1)()
+function (fbr::SubFiber{<:PointerLevel})()
     q = fbr.pos
     return fbr.lvl.val[q]
 end
 
-countstored_level(lvl::PointerElementLevel, pos) = pos
+countstored_level(lvl::PointerLevel, pos) = pos
 
-struct VirtualPointerElementLevel <: AbstractVirtualLevel
+struct VirtualPointerLevel <: AbstractVirtualLevel
     lvl  # stand in for the sublevel for virutal resize,e tc.
     ex
     Tv
@@ -102,17 +102,17 @@ struct VirtualPointerElementLevel <: AbstractVirtualLevel
     Lvl
 end
 
-is_level_injective(::VirtualPointerElementLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., true]
-is_level_concurrent(::VirtualPointerElementLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., true]
-is_level_atomic(lvl::VirtualPointerElementLevel, ctx) = is_level_atomic(lvl.lvl, ctx)
+is_level_injective(::VirtualPointerLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., true]
+is_level_concurrent(::VirtualPointerLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., true]
+is_level_atomic(lvl::VirtualPointerLevel, ctx) = is_level_atomic(lvl.lvl, ctx)
 
-function lower(lvl::VirtualPointerElementLevel, ctx::AbstractCompiler, ::DefaultStyle)
+function lower(lvl::VirtualPointerLevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
-        $PointerElementLevel{$(lvl.Tp), $(lvl.Vv), $(lvl.Lvl)}($(lvl.ex).val)
+        $PointerLevel{$(lvl.Tp), $(lvl.Vv), $(lvl.Lvl)}($(lvl.ex).val)
     end
 end
 
-function virtualize(ex, ::Type{PointerElementLevel{Tp, Vv, Lvl}}, ctx, tag=:lvl) where {Tp, Vv, Lvl}
+function virtualize(ex, ::Type{PointerLevel{Tp, Vv, Lvl}}, ctx, tag=:lvl) where {Tp, Vv, Lvl}
     sym = freshen(ctx, tag)
     push!(ctx.preamble, quote
         $sym = $ex
@@ -122,17 +122,17 @@ function virtualize(ex, ::Type{PointerElementLevel{Tp, Vv, Lvl}}, ctx, tag=:lvl)
     dummyCtx = JuliaContext()
     lvl_2 = virtualize(:(), Lvl, dummyCtx, sym)
     println("Virtualized stuff below pointer...")
-    VirtualPointerElementLevel(lvl_2, sym, typeof(level_default(Lvl)), Vv, Tp, Lvl)
+    VirtualPointerLevel(lvl_2, sym, typeof(level_default(Lvl)), Vv, Tp, Lvl)
 end
 
-Base.summary(lvl::VirtualPointerElementLevel) = "PointerElement($(lvl.Lvl))"
+Base.summary(lvl::VirtualPointerLevel) = "Pointer($(lvl.Lvl))"
 
-virtual_level_resize!(lvl::VirtualPointerElementLevel, ctx, dims...) = virtual_level_resize!(lvl.lvl, ctx, dims...)
-virtual_level_size(lvl::VirtualPointerElementLevel, ctx) = virtual_level_size(lvl.lvl, ctx)
-virtual_level_eltype(lvl::VirtualPointerElementLevel) = virtual_level_eltype(lvl.lvl)
-virtual_level_default(lvl::VirtualPointerElementLevel) = virtual_level_default(lvl.lvl)
+virtual_level_resize!(lvl::VirtualPointerLevel, ctx, dims...) = virtual_level_resize!(lvl.lvl, ctx, dims...)
+virtual_level_size(lvl::VirtualPointerLevel, ctx) = virtual_level_size(lvl.lvl, ctx)
+virtual_level_eltype(lvl::VirtualPointerLevel) = virtual_level_eltype(lvl.lvl)
+virtual_level_default(lvl::VirtualPointerLevel) = virtual_level_default(lvl.lvl)
 
-function declare_level!(lvl::VirtualPointerElementLevel, ctx, pos, init)
+function declare_level!(lvl::VirtualPointerLevel, ctx, pos, init)
     idx = freshen(ctx.code, :idx)
     sym = freshen(ctx.code, :pointer_to_lvl)
     
@@ -154,7 +154,7 @@ function declare_level!(lvl::VirtualPointerElementLevel, ctx, pos, init)
 end
 
 # Why do these not recurse?
-function assemble_level!(lvl::VirtualPointerElementLevel, ctx, pos_start, pos_stop)
+function assemble_level!(lvl::VirtualPointerLevel, ctx, pos_start, pos_stop)
     pos_start = cache!(ctx, :pos_start, simplify(pos_start, ctx))
     pos_stop = cache!(ctx, :pos_stop, simplify(pos_stop, ctx))
     quote
@@ -163,8 +163,8 @@ function assemble_level!(lvl::VirtualPointerElementLevel, ctx, pos_start, pos_st
     end
 end
 
-supports_reassembly(::VirtualPointerElementLevel) = true
-function reassemble_level!(lvl::VirtualPointerElementLevel, ctx, pos_start, pos_stop)
+supports_reassembly(::VirtualPointerLevel) = true
+function reassemble_level!(lvl::VirtualPointerLevel, ctx, pos_start, pos_stop)
     pos_start = cache!(ctx, :pos_start, simplify(pos_start, ctx))
     pos_stop = cache!(ctx, :pos_stop, simplify(pos_stop, ctx))
     push!(ctx.code.preamble, quote
@@ -175,7 +175,7 @@ end
 
 
 
-function freeze_level!(lvl::VirtualPointerElementLevel, ctx, pos)
+function freeze_level!(lvl::VirtualPointerLevel, ctx, pos)
     idx = freshen(ctx.code, :idx)
     sym = freshen(ctx.code, :pointer_to_lvl)
     
@@ -195,7 +195,7 @@ function freeze_level!(lvl::VirtualPointerElementLevel, ctx, pos)
     return lvl
 end
 
-function thaw_level!(lvl::VirtualPointerElementLevel, ctx::AbstractCompiler, pos)
+function thaw_level!(lvl::VirtualPointerLevel, ctx::AbstractCompiler, pos)
     idx = freshen(ctx.code, :idx)
     sym = freshen(ctx.code, :pointer_to_lvl)
 
@@ -215,7 +215,7 @@ function thaw_level!(lvl::VirtualPointerElementLevel, ctx::AbstractCompiler, pos
     return lvl
 end
 
-function trim_level!(lvl::VirtualPointerElementLevel, ctx::AbstractCompiler, pos)
+function trim_level!(lvl::VirtualPointerLevel, ctx::AbstractCompiler, pos)
     idx = freshen(ctx.code, :idx)
     sym = freshen(ctx.code, :pointer_to_lvl)
     
@@ -238,7 +238,7 @@ end
 
 
 
-function instantiate_reader(fbr::VirtualSubFiber{VirtualPointerElementLevel}, ctx, protos)
+function instantiate_reader(fbr::VirtualSubFiber{VirtualPointerLevel}, ctx, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     isnulltest = freshen(ctx.code, tag, :_nulltest)
@@ -257,7 +257,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualPointerElementLevel}, ct
 end
 
 
-function instantiate_updater(fbr::VirtualSubFiber{VirtualPointerElementLevel}, ctx, protos)
+function instantiate_updater(fbr::VirtualSubFiber{VirtualPointerLevel}, ctx, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
    
@@ -284,7 +284,7 @@ function instantiate_updater(fbr::VirtualSubFiber{VirtualPointerElementLevel}, c
     end)
 end
 
-function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualPointerElementLevel}, ctx, subprotos)
+function instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualPointerLevel}, ctx, subprotos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     isnulltest = freshen(ctx.code, tag, :_nulltest)
