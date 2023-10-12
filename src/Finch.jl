@@ -143,22 +143,22 @@ include("base/fsparse.jl")
     end
 end
 
-# @setup_workload begin
-#     # Putting some things in `setup` can reduce the size of the
-#     # precompile file and potentially make loading faster.
-#     @compile_workload begin
-#         # all calls in this block will be precompiled, regardless of whether
-#         # they belong to your package or not (on Julia 1.8 and higher)
-#         y = Fiber!(Dense(Element(0.0)))
-#         A = Fiber!(Dense(SparseList(Element(0.0))))
-#         x = Fiber!(SparseList(Element(0.0)))
-#         Finch.execute_code(:ex, typeof(Finch.@finch_program_instance begin
-#                 for j=_, i=_; y[i] += A[i, j] * x[j] end
-#             end
-#         ))
+@setup_workload begin
+    # Putting some things in `setup` can reduce the size of the
+    # precompile file and potentially make loading faster.
+    @compile_workload begin
+        # all calls in this block will be precompiled, regardless of whether
+        # they belong to your package or not (on Julia 1.8 and higher)
+        y = Fiber!(Dense(Element(0.0)))
+        A = Fiber!(Dense(SparseList(Element(0.0))))
+        x = Fiber!(SparseList(Element(0.0)))
+        Finch.execute_code(:ex, typeof(Finch.@finch_program_instance begin
+                for j=_, i=_; y[i] += A[i, j] * x[j] end
+            end
+        ))
 
-#     end
-# end
+    end
+end
 
 include("fileio/fileio.jl")
 

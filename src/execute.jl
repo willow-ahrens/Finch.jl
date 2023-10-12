@@ -197,7 +197,7 @@ macro finch_code(opts_ex...)
     (opts, ex) = (opts_ex[1:end-1], opts_ex[end])
     prgm = FinchNotation.finch_parse_instance(ex)
     return quote
-        $execute_code(:ex, typeof($prgm); $(map(esc, opts)...)) |> pretty  |> unresolve |> unquote_literals
+        $execute_code(:ex, typeof($prgm); $(map(esc, opts)...)) |> pretty |> dataflow |> unresolve |> unquote_literals
     end
 end
 

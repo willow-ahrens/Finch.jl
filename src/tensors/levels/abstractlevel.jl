@@ -84,7 +84,7 @@ function thaw_level! end
     assemble_level!(lvl, ctx, pos, new_pos)
 
 Assemble and positions `pos+1:new_pos` in `lvl`, assuming positions `1:pos` were
-previously assembled. Not avaliable on all level types as this presumes updating.
+previously assembled.
 """
 function assemble_level! end
 
@@ -92,7 +92,7 @@ function assemble_level! end
     reassemble_level!(lvl, ctx, pos_start, pos_end) 
 
 Set the previously assempled positions from `pos_start` to `pos_end` to
-`level_default(lvl)`.
+`level_default(lvl)`.  Not avaliable on all level types as this presumes updating.
 """
 function reassemble_level! end
 

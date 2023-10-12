@@ -18,7 +18,7 @@ SparseTriangle (0.0) [1:3]
 ├─├─[3, 3]: 40.0
 ```
 """
-struct SparseTriangleLevel{N, Ti, Lvl} <: AbstractLevel
+struct SparseTriangleLevel{N, Ti, Lvl}
     lvl::Lvl
     shape::Ti
     # FUTURE: uplo (upper or lower) - trait 
