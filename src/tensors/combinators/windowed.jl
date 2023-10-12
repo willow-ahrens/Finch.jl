@@ -16,7 +16,6 @@ struct VirtualWindowedArray <: AbstractVirtualCombinator
 end
 
 is_injective(lvl::VirtualWindowedArray, ctx) = is_injective(lvl.body, ctx)
-is_concurrent(lvl::VirtualWindowedArray, ctx) = is_concurrent(lvl.body, ctx)
 is_atomic(lvl::VirtualWindowedArray, ctx) = is_atomic(lvl.body, ctx)
 
 Base.show(io::IO, ex::VirtualWindowedArray) = Base.show(io, MIME"text/plain"(), ex)
@@ -57,11 +56,8 @@ end
 
 virtual_default(arr::VirtualWindowedArray, ctx::AbstractCompiler) = virtual_default(arr.body, ctx)
 
-function instantiate_reader(arr::VirtualWindowedArray, ctx, protos)
-    VirtualWindowedArray(instantiate_reader(arr.body, ctx, protos), arr.dims)
-end
-function instantiate_updater(arr::VirtualWindowedArray, ctx, protos)
-    VirtualWindowedArray(instantiate_updater(arr.body, ctx, protos), arr.dims)
+function instantiate(arr::VirtualWindowedArray, ctx, mode, protos)
+    VirtualWindowedArray(instantiate(arr.body, ctx, mode, protos), arr.dims)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualWindowedArray) = ctx(node.body)
@@ -135,6 +131,11 @@ jumper_range(node::VirtualWindowedArray, ctx, ext) = jumper_range(node.body, ctx
 jumper_body(node::VirtualWindowedArray, ctx, ext, ext_2) = VirtualWindowedArray(jumper_body(node.body, ctx, ext, ext_2), node.dims)
 jumper_seek(node::VirtualWindowedArray, ctx, ext) = jumper_seek(node.body, ctx, ext)
 
+function short_circuit_cases(node::VirtualWindowedArray, ctx, op)
+    map(short_circuit_cases(node.body, ctx, op)) do (guard, body)
+        guard => VirtualWindowedArray(body, node.dims)
+    end
+end
 
 getroot(tns::VirtualWindowedArray) = getroot(tns.body)
 

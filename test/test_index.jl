@@ -97,8 +97,9 @@
     y = Array{Any}(undef, 4)
 
     @finch begin
-        z = Finch.permissive(x, true)
-        for i = _; y[i] := z[i] end
+        let z = Finch.permissive(x, true)
+            for i = _; y[i] := z[i] end
+        end
     end
 
     @test isequal(y, [0.0, 0.0, missing, missing])
@@ -115,10 +116,11 @@
 
         @repl io A = Fiber!(Dense(Dense(Element(0.0), 15), 3))
         @repl io @finch begin
-            m = Finch.chunkmask(5, 1:15)
-            for i = _
-                for j = _
-                    A[j, i] = m[j, i]
+            let m = Finch.chunkmask(5, 1:15)
+                for i = _
+                    for j = _
+                        A[j, i] = m[j, i]
+                    end
                 end
             end
         end
@@ -126,10 +128,11 @@
 
         @repl io A = Fiber!(Dense(Dense(Element(0.0), 14), 3))
         @repl io @finch begin
-            m = Finch.chunkmask(5, 1:14)
-            for i = _
-                for j = _
-                    A[j, i] = m[j, i]
+            let m = Finch.chunkmask(5, 1:14)
+                for i = _
+                    for j = _
+                        A[j, i] = m[j, i]
+                    end
                 end
             end
         end

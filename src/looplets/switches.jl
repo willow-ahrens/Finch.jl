@@ -15,6 +15,7 @@ FinchNotation.finch_leaf(x::Switch) = virtual(x)
 struct SwitchStyle end
 
 (ctx::Stylize{<:AbstractCompiler})(node::Switch) = SwitchStyle()
+instantiate(tns::Switch, ctx, mode, protos) = tns
 combine_style(a::DefaultStyle, b::SwitchStyle) = SwitchStyle()
 combine_style(a::LookupStyle, b::SwitchStyle) = SwitchStyle()
 combine_style(a::ThunkStyle, b::SwitchStyle) = ThunkStyle()

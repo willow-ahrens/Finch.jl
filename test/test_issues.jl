@@ -131,7 +131,7 @@ using CIndices
 
         ptr_jl = unsafe_wrap(Array, reinterpret(Ptr{CIndex{Int}}, pointer(ptr_c)), length(ptr_c); own = false)
         idx_jl = unsafe_wrap(Array, reinterpret(Ptr{CIndex{Int}}, pointer(idx_c)), length(idx_c); own = false)
-        A = Fiber(Dense(SparseList{CIndex{Int}, CIndex{Int}}(Element{0.0, Float64}(val_c), m, ptr_jl, idx_jl), n))
+        A = Fiber(Dense(SparseList{CIndex{Int}}(Element{0.0, Float64, CIndex{Int}}(val_c), m, ptr_jl, idx_jl), n))
 
         @test A == [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0]
     end
@@ -267,8 +267,10 @@ using CIndices
 
     let
         @test_throws Finch.ScopeError (@finch begin
-            x = 0
-            x = 0
+            let x = 0
+                let x = 0
+                end
+            end
         end)
 
     end
@@ -294,9 +296,10 @@ using CIndices
                     C[i, j] *= beta
                 end
                 for k=_
-                    foo = alpha * B[k, j]
-                    for i=_
-                        C[i, j] += foo*A[i, k]
+                    let foo = alpha * B[k, j]
+                        for i=_
+                            C[i, j] += foo*A[i, k]
+                        end
                     end
                 end
             end
@@ -320,5 +323,151 @@ using CIndices
             end
         end
         @test C == [2.0 1.0; 1.0 2.0]
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/291
+    let
+        A = [1 2 3; 4 5 6; 7 8 9]
+        x = Scalar(0.0)
+        @finch mode=fastfinch for j=_, i=_; if i < j x[] += A[i, j] end end
+        @test x[] == 11.0
+
+        @finch mode=fastfinch (x .= 0; for i=_, j=_; if i < j x[] += A[j, i] end end)
+        @test x[] == 19.0
+
+        @finch mode=fastfinch (x .= 0; for j=_, i=_; if i <= j x[] += A[i, j] end end)
+        @test x[] == 26.0
+
+        @finch mode=fastfinch (x .= 0; for i=_, j=_; if i <= j x[] += A[j, i] end end)
+        @test x[] == 34.0
+
+        @finch mode=fastfinch (x .= 0; for j=_, i=_; if i > j x[] += A[i, j] end end)
+        @test x[] == 19.0
+
+        @finch mode=fastfinch (x .= 0; for i=_, j=_; if i > j x[] += A[j, i] end end)
+        @test x[] == 11.0
+
+        @finch mode=fastfinch (x .= 0; for j=_, i=_; if i >= j x[] += A[i, j] end end)
+        @test x[] == 34.0
+
+        @finch mode=fastfinch (x .= 0; for i=_, j=_; if i >= j x[] += A[j, i] end end)
+        @test x[] == 26.0
+
+        @finch mode=fastfinch (x .= 0; for j=_, i=_; if i == j x[] += A[i, j] end end)
+        @test x[] == 15.0
+
+        @finch mode=fastfinch (x .= 0; for i=_, j=_; if i == j x[] += A[j, i] end end)
+        @test x[] == 15.0
+
+        @finch mode=fastfinch (x .= 0; for j=_, i=_; if i != j x[] += A[i, j] end end)
+        @test x[] == 30.0
+
+        @finch mode=fastfinch (x .= 0; for i=_, j=_; if i != j x[] += A[j, i] end end)
+        @test x[] == 30.0
+    end
+  
+    #https://github.com/willow-ahrens/Finch.jl/issues/286
+    let 
+        A = [1 0; 0 1]
+        #note that A[i, j] is ignored here, as the temp local is never used
+        @finch (for j=_, i=_; let temp = A[i, j]; end end)
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/288
+    let
+        A = zeros(3, 3, 3)
+        C = zeros(3, 3, 3)
+        X = zeros(3, 3)
+        check_output("issue288_concordize_let.jl", @finch_code mode=fastfinch begin
+            for k=_, j=_, i=_
+                let temp1 = X[i, j]
+                    for l=_
+                        let temp3 = A[i, l, k]
+                            if uptrimask[i+1, l]
+                                C[i, j, k] += temp1 * temp3
+                            end
+                        end
+                    end
+                end
+            end
+        end)
+        check_output("issue288_concordize_double_let.jl", @finch_code mode=fastfinch begin
+            for k=_, j=_, i=_
+                let temp1 = X[i, j]
+                    for l=_
+                        let temp3 = A[i, l, k]
+                            if uptrimask[i+1, l]
+                                C[i, j, k] += temp1 * temp3
+                            end
+                        end
+                        let temp4 = A[i, l, k]
+                            if uptrimask[i+1, l]
+                                C[i, j, k] += temp1 * temp4
+                            end
+                        end
+                    end
+                end
+            end
+        end)
+    end
+
+    let
+        A = Fiber!(Dense(Dense(SparseList(Element(0.0)))), fsprand((10, 10, 10), 0.1))
+        C = Fiber!(Dense(Dense(Dense(Element(0.0)))), zeros((10, 10, 10)))
+        X = Fiber!(Dense(Dense(Element(0.0))), rand(10, 10))
+        temp2 = Scalar(0.0)
+        @finch begin
+            for l=_, j=_, i=_
+                let temp1 = X[i, j]
+                    temp2 .= 0
+                    for k=_
+                        if uptrimask[k+1, i]
+                            C[k, j, l] += temp1 * A[k, i, l]
+                        end
+                        if uptrimask[k, l]
+                            temp2[] += X[k, j] * A[k, i, l]
+                        end
+                    end
+                    C[i, j, l] += temp2[]
+                end
+            end
+        end
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/52
+    let
+        s = ShortCircuitScalar(false, true)
+        x = Fiber!(SparseList(Element(false)), [false, true, true, false])
+        y = Fiber!(SparseList(Element(false)), [false, true, false, true])
+        check_output("short_circuit.jl", @finch_code begin
+            for i = _
+                s[] |= x[i] && y[i]
+            end
+        end)
+
+        c = Scalar(0)
+        check_output("short_circuit_sum.jl", @finch_code begin
+            for i = _
+                let x_i = x[i]
+                    s[] |= x_i && y[i]
+                    c[] += x_i
+                end
+            end
+        end)
+
+        A = Fiber!(Dense(SparseList(Element(false))), [false true true false; false true false false]')
+
+        t = SparseShortCircuitScalar(false, true)
+
+        check_output("short_circuit_bfs.jl", @finch_code begin
+            x .= false
+            for j = _
+                t .= false
+                for i = _
+                    t[] |= A[i, j] && y[i]
+                end
+                x[j] = t[]
+            end
+        end)
     end
 end

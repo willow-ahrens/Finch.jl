@@ -21,7 +21,7 @@ export @finch, @finch_program, @finch_code, @finch_kernel, value
 
 export fastfinch, safefinch, debugfinch
 
-export Fiber, Fiber!, Scalar
+export Fiber, Fiber!
 export SparseRLE, SparseRLELevel 
 export SparseList, SparseListLevel
 export SparseHash, SparseHashLevel
@@ -34,6 +34,7 @@ export RepeatRLE, RepeatRLELevel
 export Element, ElementLevel
 export PointerElement, PointerElementLevel
 export Pattern, PatternLevel
+export Scalar, SparseScalar, ShortCircuitScalar, SparseShortCircuitScalar
 export walk, gallop, follow, extrude, laminate
 export fiber, fiber!, Fiber!, pattern!, dropdefaults, dropdefaults!, redefault!
 export diagmask, lotrimask, uptrimask, bandmask
@@ -45,6 +46,7 @@ export default, AsArray
 
 export parallelAnalysis, ParallelAnalysisResults
 export parallel, extent, dimless
+export CPU, CPULocalVector, CPULocalMemory
 
 include("base/limits.jl")
 export Limit
@@ -58,6 +60,7 @@ using .FinchNotation: and, or, InitWriter
 include("semantics.jl")
 include("style.jl")
 include("dimensions.jl")
+include("architecture.jl")
 include("lower.jl")
 
 include("transforms/concordize.jl")
@@ -73,6 +76,7 @@ include("execute.jl")
 include("symbolic/symbolic.jl")
 
 include("looplets/thunks.jl")
+include("looplets/short_circuits.jl")
 include("looplets/lookups.jl")
 include("looplets/nulls.jl")
 include("looplets/unfurl.jl")
@@ -85,7 +89,6 @@ include("looplets/jumpers.jl")
 include("looplets/steppers.jl")
 include("looplets/fills.jl")
 
-include("tensors/vector.jl")
 include("tensors/scalars.jl")
 include("tensors/fibers.jl")
 include("tensors/levels/abstractlevel.jl")

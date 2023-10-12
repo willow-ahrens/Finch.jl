@@ -56,11 +56,11 @@ function bspread_vector end
 function bspwrite_vector end
 
 function bspread_data(f, desc, key)
-    t = desc["data_types"]["$(key)_type"]
+    t = desc["data_types"][key]
     if (m = match(r"^iso\[([^\[]*)\]$", t)) != nothing
         throw(ArgumentError("iso values not currently supported"))
     elseif (m = match(r"^complex\[([^\[]*)\]$", t)) != nothing
-        desc["data_types"]["$(key)_type"] = m.captures[1]
+        desc["data_types"][key] = m.captures[1]
         data = bspread_data(f, desc, key)
         return reinterpret(reshape, Complex{eltype(data)}, reshape(data, 2, :))
     elseif (m = match(r"^[^\]]*$", t)) != nothing
@@ -80,13 +80,13 @@ end
 function bspwrite_data_helper(f, desc, key, data::AbstractVector{T}) where {T}
     haskey(bspwrite_type_lookup, T) || throw(ArgumentError("Cannot write $T to binsparse"))
     bspwrite_vector(f, data, key)
-    desc["data_types"]["$(key)_type"] = bspwrite_type_lookup[T]
+    desc["data_types"][key] = bspwrite_type_lookup[T]
 end
 
 function bspwrite_data_helper(f, desc, key, data::AbstractVector{Complex{T}}) where {T}
     data = reshape(reinterpret(reshape, T, data), :)
     bspwrite_data_helper(f, desc, key, data)
-    desc["data_types"]["$(key)_type"] = "complex[$(desc["data_types"]["$(key)_type"])]"
+    desc["data_types"][key] = "complex[$(desc["data_types"][key])]"
 end
 
 bspread_format_lookup = OrderedDict(
@@ -258,7 +258,7 @@ function bspwrite_h5 end
 function bspwrite_bspnpy end
 
 function bspwrite(fname::AbstractString, arr, attrs = OrderedDict())
-    if endswith(fname, ".h5")
+    if endswith(fname, ".h5") || endswith(fname, ".hdf5")
         bspwrite_h5(fname, arr, attrs)
     elseif endswith(fname, ".bspnpy")
         bspwrite_bspnpy(fname, arr, attrs)
@@ -286,7 +286,7 @@ function bspwrite_tensor(io, arr::SwizzleArray{dims, <:Fiber}, attrs = OrderedDi
     end
     bspwrite_level(io, desc, desc["format"]["subformat"], arr.body.lvl)
     desc["format"] = get(bspwrite_format_lookup, desc["format"], desc["format"])
-    bspwrite_header(io, json(desc, 4))
+    bspwrite_header(io, json(Dict("binsparse" => desc), 4))
 end
 
 function bspwrite_header end
@@ -307,7 +307,7 @@ end
 function bspread_header end
 
 function bspread(f)
-    desc = bspread_header(f)
+    desc = bspread_header(f)["binsparse"]
     fmt = OrderedDict{Any, Any}(get(bspread_format_lookup, desc["format"], desc["format"]))
     if !haskey(fmt, "swizzle")
         fmt["swizzle"] = collect(0:length(desc["shape"]) - 1)
@@ -335,7 +335,11 @@ function bspwrite_level(f, desc, fmt, lvl::ElementLevel{D}) where {D}
 end
 function bspread_level(f, desc, fmt, ::Val{:element})
     val = convert(Vector, bspread_data(f, desc, "values"))
-    D = bspread_data(f, desc, "fill_value")[1]
+    if haskey(f, "fill_value")
+        D = bspread_data(f, desc, "fill_value")[1]
+    else
+        D = zero(eltype(val))
+    end
     ElementLevel(D, val)
 end
 
@@ -400,6 +404,6 @@ function bspread_level(f, desc, fmt, ::Val{:sparse})
     if R == 1
         SparseListLevel(lvl, shape[1], ptr, tbl[1])
     else
-        SparseCOOLevel{Int(R), typeof(shape), eltype(ptr)}(lvl, shape, tbl, ptr)
+        SparseCOOLevel{Int(R), typeof(shape)}(lvl, shape, ptr, tbl)
     end
 end

@@ -1,3 +1,9 @@
+struct Reader end
+struct Updater end
+
+const reader = Reader()
+const updater = Updater()
+
 const IS_TREE = 1
 const IS_STATEFUL = 2
 const IS_CONST = 4
@@ -12,8 +18,6 @@ const ID = 8
     tag      =  5ID | IS_TREE
     call     =  6ID | IS_TREE
     access   =  7ID | IS_TREE 
-    reader   =  8ID | IS_TREE
-    updater  =  9ID | IS_TREE
     cached   = 10ID | IS_TREE
     assign   = 11ID | IS_TREE | IS_STATEFUL
     loop     = 12ID | IS_TREE | IS_STATEFUL
@@ -89,20 +93,6 @@ access is in-place.
 access
 
 """
-    reader()
-
-Finch AST expression for an access mode that is read-only.
-"""
-reader
-
-"""
-    updater()
-
-Finch AST expression for an access mode that updates tensor values.
-"""
-updater
-
-"""
     cached(val, ref)
 
 Finch AST expression `val`, equivalent to the quoted expression `ref`
@@ -113,6 +103,7 @@ cached
 
 Finch AST statement that runs `body` for each value of `idx` in `ext`. Tensors
 in `body` must have ranges that agree with `ext`.
+A new scope is introduced to evaluate `body`.
 """
 loop
 
@@ -120,6 +111,7 @@ loop
     sieve(cond, body)
 
 Finch AST statement that only executes `body` if `cond` is true.
+A new scope is introduced to evaluate `body`.
 """
 sieve
 
@@ -132,9 +124,10 @@ Overwriting is accomplished with the function `overwrite(lhs, rhs) = rhs`.
 assign
 
 """
-    define(lhs, rhs)
+    define(lhs, rhs, body)
 
-Finch AST statement that defines `lhs` as having the value `rhs` in the current scope.
+Finch AST statement that defines `lhs` as having the value `rhs` in `body`. 
+A new scope is introduced to evaluate `body`.
 """
 define
 
@@ -163,8 +156,8 @@ thaw
     block(bodies...)
 
 Finch AST statement that executes each of it's arguments in turn. If the body is
-not a block, replaces accesses to read-only tensors in the body with
-instantiate_reader and accesses to update-only tensors in the body with instantiate_updater.
+not a block, replaces accesses to tensors in the body with
+instantiate.
 """
 block
 
@@ -324,7 +317,7 @@ function FinchNode(kind::FinchNodeKind, args::Vector)
             error("wrong number of arguments to assign(...)")
         end
     elseif kind === define
-        if length(args) == 2
+        if length(args) == 3
             return FinchNode(define, nothing, nothing, args)
         else
             error("wrong number of arguments to define(...)")
@@ -349,18 +342,6 @@ function FinchNode(kind::FinchNodeKind, args::Vector)
         end
     elseif kind === block
         return FinchNode(block, nothing, nothing, args)
-    elseif kind === reader
-        if length(args) == 0
-            return FinchNode(kind, nothing, nothing, FinchNode[])
-        else
-            error("wrong number of arguments to reader()")
-        end
-    elseif kind === updater
-        if length(args) == 0
-            return FinchNode(updater, nothing, nothing, FinchNode[])
-        else
-            error("wrong number of arguments to updater()")
-        end
     else
         error("unimplemented")
     end
@@ -389,10 +370,6 @@ function Base.getproperty(node::FinchNode, sym::Symbol)
         else
             error("type FinchNode(variable, ...) has no property $sym")
         end
-    elseif node.kind === reader
-        error("type FinchNode(reader, ...) has no property $sym")
-    elseif node.kind === updater
-        error("type FinchNode(updater, ...) has no property $sym")
     elseif node.kind === tag
         if sym === :var
             return node.children[1]
@@ -459,6 +436,8 @@ function Base.getproperty(node::FinchNode, sym::Symbol)
             return node.children[1]
         elseif sym === :rhs
             return node.children[2]
+        elseif sym === :body
+            return node.children[3]
         else
             error("type FinchNode(define, ...) has no property $sym")
         end
@@ -526,10 +505,6 @@ function display_expression(io, mime, node::FinchNode)
         print(io, node.name)
     elseif node.kind === variable
         print(io, node.name)
-    elseif node.kind === reader
-        print(io, "reader()")
-    elseif node.kind === updater
-        print(io, "updater()")
     elseif node.kind === cached
         print(io, "cached(")
         display_expression(io, mime, node.arg)
@@ -602,6 +577,23 @@ function display_statement(io, mime, node::FinchNode, indent)
         display_statement(io, mime, body, indent + 2)
         println(io)
         print(io, " "^indent * "end")
+    elseif node.kind === define
+        print(io, " "^indent * "let ")
+        display_expression(io, mime, node.lhs)
+        print(io, " = ")
+        display_expression(io, mime, node.rhs)
+        body = node.body
+        while body.kind === define
+            print(io, ", ")
+            display_expression(io, mime, body.lhs)
+            print(io, " = ")
+            display_expression(io, mime, body.rhs)
+            body = body.body
+        end
+        println(io)
+        display_statement(io, mime, body, indent + 2)
+        println(io)
+        print(io, " "^indent * "end")
     elseif node.kind === sieve
         print(io, " "^indent * "if ")
         while node.body.kind === sieve
@@ -621,11 +613,6 @@ function display_statement(io, mime, node::FinchNode, indent)
         print(io, " <<")
         display_expression(io, mime, node.op)
         print(io, ">>= ")
-        display_expression(io, mime, node.rhs)
-    elseif node.kind === define
-        print(io, " "^indent)
-        display_expression(io, mime, node.lhs)
-        print(io, " = ")
         display_expression(io, mime, node.rhs)
     elseif node.kind === declare
         print(io, " "^indent)
@@ -717,11 +704,13 @@ virtual.
 finch_leaf(arg) = literal(arg)
 finch_leaf(arg::Type) = literal(arg)
 finch_leaf(arg::Function) = literal(arg)
+finch_leaf(arg::Reader) = literal(arg)
+finch_leaf(arg::Updater) = literal(arg)
 finch_leaf(arg::FinchNode) = arg
 
 Base.convert(::Type{FinchNode}, x) = finch_leaf(x)
 Base.convert(::Type{FinchNode}, x::FinchNode) = x
-Base.convert(::Type{FinchNode}, x::Symbol) = error()
+#Base.convert(::Type{FinchNode}, x::Symbol) = error() # useful for debugging if we wanted to enforce conversion of symbols to value, etc.
 
 #overload RewriteTools pattern constructor so we don't need
 #to wrap leaf nodes.

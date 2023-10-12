@@ -116,17 +116,26 @@ end
 
 struct ParallelDimension
     ext
+    device
 end
 
-parallel(dim) = ParallelDimension(dim)
+parallel(dim, device=CPU(nthreads())) = ParallelDimension(dim, device)
 
-function virtual_call(::typeof(parallel), ctx, arg)
-    if arg.kind === virtual
-        ParallelDimension(arg.val)
+function virtual_call(::typeof(parallel), ctx, ext)
+    if ext.kind === virtual
+        n = cache!(ctx, :n, value(:(Threads.nthreads()), Int))
+        virtual_call(parallel, ctx, ext, finch_leaf(VirtualCPU(nothing, n)))
     end
 end
 
-virtual_uncall(ext::ParallelDimension) = call(parallel, ext.ext)
+function virtual_call(::typeof(parallel), ctx, ext, device)
+    device = resolve(device, ctx) #TODO this feels broken
+    if ext.kind === virtual
+        ParallelDimension(ext.val, device)
+    end
+end
+
+virtual_uncall(ext::ParallelDimension) = call(parallel, ext.ext, ext.device)
 
 FinchNotation.finch_leaf(x::ParallelDimension) = virtual(x)
 
@@ -135,12 +144,15 @@ Base.:(==)(a::ParallelDimension, b::ParallelDimension) = a.ext == b.ext
 getstart(ext::ParallelDimension) = getstart(ext.ext)
 getstop(ext::ParallelDimension) = getstop(ext.ext)
 
-combinedim(ctx, a::ParallelDimension, b::Extent) = ParallelDimension(resultdim(ctx, a.ext, b))
+combinedim(ctx, a::ParallelDimension, b::Extent) = ParallelDimension(resultdim(ctx, a.ext, b), a.device)
 combinedim(ctx, a::ParallelDimension, b::SuggestedExtent) = a
-combinedim(ctx, a::ParallelDimension, b::ParallelDimension) = ParallelDimension(combinedim(ctx, a.ext, b.ext))
+function combinedim(ctx, a::ParallelDimension, b::ParallelDimension)
+    @assert a.device == b.device
+    ParallelDimension(combinedim(ctx, a.ext, b.ext), a.device)
+end
 
-resolvedim(ext::ParallelDimension) = ParallelDimension(resolvedim(ext.ext))
-cache_dim!(ctx, tag, ext::ParallelDimension) = ParallelDimension(cache_dim!(ctx, tag, ext.ext))
+resolvedim(ext::ParallelDimension) = ParallelDimension(resolvedim(ext.ext), ext.device)
+cache_dim!(ctx, tag, ext::ParallelDimension) = ParallelDimension(cache_dim!(ctx, tag, ext.ext), ext.device)
 
 promote_rule(::Type{Extent}, ::Type{Extent}) = Extent
 
@@ -152,7 +164,7 @@ function shiftdim(ext::Extent, delta)
 end
 
 shiftdim(ext::Dimensionless, delta) = dimless
-shiftdim(ext::ParallelDimension, delta) = ParallelDimension(ext, shiftdim(ext.ext, delta))
+shiftdim(ext::ParallelDimension, delta) = ParallelDimension(ext, shiftdim(ext.ext, delta), ext.device)
 
 function shiftdim(ext::FinchNode, body)
     if ext.kind === virtual

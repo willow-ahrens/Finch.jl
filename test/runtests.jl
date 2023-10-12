@@ -48,7 +48,11 @@ function check_output(fname, arg)
         if reference == result
             return true
         else
-            @debug "disagreement with reference output" reference result
+            println("disagreement with reference output")
+            println("reference")
+            println(reference)
+            println("result")
+            println(result)
             return false
         end
     end
@@ -104,5 +108,4 @@ include("utils.jl")
     #if should_run("continuous") include("test_continuous.jl") end
     #algebra goes at the end since it calls refresh()
     if should_run("algebra") include("test_algebra.jl") end
-    if should_run("moveto") include("test_moving.jl") end
 end

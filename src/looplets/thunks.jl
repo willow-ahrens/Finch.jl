@@ -13,6 +13,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Thunk)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::Thunk) = ThunkStyle()
+instantiate(tns::Thunk, ctx, mode, protos) = tns
 combine_style(a::DefaultStyle, b::ThunkStyle) = ThunkStyle()
 combine_style(a::ThunkStyle, b::ThunkStyle) = ThunkStyle()
 combine_style(a::ThunkStyle, b::SimplifyStyle) = ThunkStyle()

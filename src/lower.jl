@@ -10,9 +10,9 @@
     bounds_rules = get_bounds_rules(algebra, shash)
 end
 
-function contain(f, ctx::LowerJulia)
-    contain(ctx.code) do code_2
-        f(LowerJulia(code_2, ctx.algebra, ctx.bindings, ctx.mode, ctx.modes, ctx.scope, ctx.shash, ctx.program_rules, ctx.bounds_rules))
+function contain(f, ctx::LowerJulia; bindings = ctx.bindings, kwargs...)
+    contain(ctx.code, kwargs...) do code_2
+        f(LowerJulia(code_2, ctx.algebra, bindings, ctx.mode, ctx.modes, ctx.scope, ctx.shash, ctx.program_rules, ctx.bounds_rules))
     end
 end
 
@@ -100,24 +100,26 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
             body = block(root.bodies[2:end]...)
             preamble = quote end
 
-            if head.kind === define
-                @assert head.lhs.kind === variable
-                ctx.bindings[head.lhs] = cache!(ctx, head.lhs.name, head.rhs)
-                push!(ctx.scope, head.lhs)
+            #The idea here is that we expect parent blocks to eagerly process
+            #child blocks, so the effects of the statements like freeze or thaw
+            #should always be visible to any subsequent statement, even if its
+            #in a different block.
+            if head.kind === block
+                ctx(block(head.bodies..., body))
             elseif head.kind === declare
                 @assert head.tns.kind === variable
-                @assert get(ctx.modes, head.tns, reader()).kind === reader
+                @assert get(ctx.modes, head.tns, reader) === reader
                 ctx.bindings[head.tns] = declare!(ctx.bindings[head.tns], ctx, head.init) #TODO should ctx.bindings be scoped?
                 push!(ctx.scope, head.tns)
-                ctx.modes[head.tns] = updater()
+                ctx.modes[head.tns] = updater
             elseif head.kind === freeze
-                @assert ctx.modes[head.tns].kind === updater
+                @assert ctx.modes[head.tns] === updater
                 ctx.bindings[head.tns] = freeze!(ctx.bindings[head.tns], ctx)
-                ctx.modes[head.tns] = reader()
+                ctx.modes[head.tns] = reader
             elseif head.kind === thaw
-                @assert get(ctx.modes, head.tns, reader()).kind === reader
+                @assert get(ctx.modes, head.tns, reader) === reader
                 ctx.bindings[head.tns] = thaw!(ctx.bindings[head.tns], ctx)
-                ctx.modes[head.tns] = updater()
+                ctx.modes[head.tns] = updater
             else
                 preamble = contain(ctx) do ctx_2
                     ctx_2(instantiate!(head, ctx_2))
@@ -131,6 +133,18 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
                 end)
             end
         end
+    elseif root.kind === define
+        @assert root.lhs.kind === variable
+        ctx.bindings[root.lhs] = cache!(ctx, root.lhs.name, root.rhs)
+        push!(ctx.scope, root.lhs)
+        contain(ctx) do ctx_2
+            open_scope(root.body, ctx_2)
+        end
+    elseif (root.kind === declare || root.kind === freeze || root.kind === thaw)
+        #these statements only apply to subsequent statements in a block
+        #if we try to lower them directly they are a no-op
+        #arguably, the declare, freeze, or thaw nodes should never reach this case but we'll leave that alone for now
+        quote end
     elseif root.kind === access
         return lower_access(ctx, root, resolve(root.tns, ctx))
     elseif root.kind === call
@@ -170,7 +184,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
         ctx(root.val)
     elseif root.kind === assign
         if root.lhs.kind === access
-            @assert root.lhs.mode.kind === updater
+            @assert root.lhs.mode.val === updater
             rhs = ctx(simplify(call(root.op, root.lhs, root.rhs), ctx))
         else
             rhs = ctx(root.rhs)
@@ -191,37 +205,67 @@ function lower_access(ctx, node, tns)
 end
 
 function lower_access(ctx, node, tns::Number)
-    @assert node.mode.kind === reader
+    @assert node.mode.val === reader
     tns
 end
 
 function lower_loop(ctx, root, ext)
     root_2 = Rewrite(Postwalk(@rule access(~tns, ~mode, ~idxs...) => begin
         if !isempty(idxs) && root.idx == idxs[end]
-            protos = [(mode.kind === reader ? defaultread : defaultupdate) for _ in idxs]
-            tns_2 = unfurl(tns, ctx, root.ext.val, mode, protos...)
+            protos = [(mode.val === reader ? defaultread : defaultupdate) for _ in idxs]
+            tns_2 = unfurl(tns, ctx, root.ext.val, mode.val, protos...)
             access(tns_2, mode, idxs...)
         end
     end))(root)
     return ctx(root_2, result_style(LookupStyle(), Stylize(root_2, ctx)(root_2)))
 end
 
-function lower_loop(ctx, root, ext::ParallelDimension)
+lower_loop(ctx, root, ext::ParallelDimension) = 
+    lower_parallel_loop(ctx, root, ext, ext.device)
+function lower_parallel_loop(ctx, root, ext::ParallelDimension, device::VirtualCPU)
     root = ensure_concurrent(root, ctx)
     
     tid = index(freshen(ctx.code, :tid))
     i = freshen(ctx.code, :i)
+
+    decl_in_scope = unique(filter(!isnothing, map(node-> begin
+        if @capture(node, declare(~tns, ~init))
+            tns 
+        end
+    end, PostOrderDFS(root.body))))
+
+    used_in_scope = unique(filter(!isnothing, map(node-> begin
+        if @capture(node, access(~tns, ~mode, ~idxs...))
+            getroot(tns)
+        end
+    end, PostOrderDFS(root.body))))
+
     root_2 = loop(tid, Extent(value(i, Int), value(i, Int)),
         loop(root.idx, ext.ext,
-            sieve(access(VirtualSplitMask(value(:(Threads.nthreads()))), reader(), root.idx, tid),
+            sieve(access(VirtualSplitMask(device.n), reader, root.idx, tid),
                 root.body
             )
         )
     )
+
+    bindings_2 = copy(ctx.bindings)
+    for tns in setdiff(used_in_scope, decl_in_scope)
+        virtual_moveto(resolve(tns, ctx), ctx, device)
+    end
+
     return quote
-        Threads.@threads for $i = 1:Threads.nthreads()
-            $(contain(ctx) do ctx_2
-                ctx_2(instantiate!(root_2, ctx_2))
+        Threads.@threads for $i = 1:$(ctx(device.n))
+            $(contain(ctx, bindings=bindings_2) do ctx_2
+                subtask = VirtualCPUThread(value(i, Int), device, ctx_2.code.task)
+                contain(ctx_2, task=subtask) do ctx_3
+                    bindings_2 = copy(ctx_3.bindings)
+                    for tns in intersect(used_in_scope, decl_in_scope)
+                        virtual_moveto(resolve(tns, ctx_3), ctx_3, subtask)
+                    end
+                    contain(ctx_3, bindings=bindings_2) do ctx_4
+                        ctx_4(instantiate!(root_2, ctx_4))
+                    end
+                end
             end)
         end
     end

@@ -28,8 +28,7 @@ virtual_size(tns::Unfurled, ctx) = virtual_size(tns.arr, ctx)
 virtual_resize!(tns::Unfurled, ctx, dims...) = virtual_resize!(tns.arr, ctx, dims...)
 virtual_default(tns::Unfurled, ctx) = virtual_default(tns.arr, ctx)
 
-instantiate_reader(tns::Unfurled, ctx, protos) = tns
-instantiate_updater(tns::Unfurled, ctx, protos) = tns
+instantiate(tns::Unfurled, ctx, mode, protos) = tns
 
 (ctx::Stylize{<:AbstractCompiler})(node::Unfurled) = ctx(node.body)
 function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::Unfurled)
@@ -109,6 +108,12 @@ jumper_range(node::Unfurled, ctx, ext) = jumper_range(node.body, ctx, ext)
 jumper_body(node::Unfurled, ctx, ext, ext_2) = Unfurled(node.arr, node.ndims, jumper_body(node.body, ctx, ext, ext_2))
 jumper_seek(node::Unfurled, ctx, ext) = jumper_seek(node.body, ctx, ext)
 
+function short_circuit_cases(tns::Unfurled, ctx, op)
+    map(short_circuit_cases(tns.body, ctx, op)) do (guard, body)
+        guard => Unfurled(tns.arr, tns.ndims, body)
+    end
+end
+
 function lower(node::Unfurled, ctx::AbstractCompiler, ::DefaultStyle)
     ctx(node.body)
 end
@@ -116,7 +121,6 @@ end
 getroot(tns::Unfurled) = getroot(tns.arr)
 
 is_injective(lvl::Unfurled, ctx) = is_injective(lvl.arr, ctx)
-is_concurrent(lvl::Unfurled, ctx) = is_concurrent(lvl.arr, ctx)
 is_atomic(lvl::Unfurled, ctx) = is_atomic(lvl.arr, ctx)
 
 function lower_access(ctx::AbstractCompiler, node, tns::Unfurled)

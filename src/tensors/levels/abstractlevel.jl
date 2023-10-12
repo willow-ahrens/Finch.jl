@@ -7,8 +7,6 @@ abstract type AbstractVirtualLevel end
 
 
 
-#is_level_concurrent(lvl::AbstractVirtualLevel, ctx) = true
-
 #is_level_injective(lvl::AbstractVirtualLevel, ctx) = false
 
 
@@ -106,15 +104,6 @@ Freeze all fibers in `lvl`. Positions `1:pos` need freezing.
 freeze_level!(fbr, ctx, mode) = fbr.lvl
 
 """
-    memtype(fbr)
-
-The memory type of a fiber or a level. This is the vector type used to store arrays.
-"""
-function memtype(::Type{<:Fiber{Lvl}}) where {Lvl}
-    memtype(Lvl)
-end
-
-"""
     postype(lvl)
 Return a position type with the same flavor as those used to store the positions of the fibers contained in `lvl`.
 The name position descends from the pos or position or pointer arrays found in many definitions of CSR or CSC.
@@ -122,3 +111,8 @@ In Finch, positions should be data used to access either a subfiber or some othe
 we often end up iterating over positions.
 """
 function postype end
+
+postype(arg) = postype(typeof(arg))
+postype(T::Type) = throw(MethodError(postype, Tuple{T}))
+
+#postype(::Type{Vector{S}}) where {S} = Int

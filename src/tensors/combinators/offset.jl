@@ -16,7 +16,6 @@ struct VirtualOffsetArray <: AbstractVirtualCombinator
 end
 
 is_injective(lvl::VirtualOffsetArray, ctx) = is_injective(lvl.body, ctx)
-is_concurrent(lvl::VirtualOffsetArray, ctx) = is_concurrent(lvl.body, ctx)
 is_atomic(lvl::VirtualOffsetArray, ctx) = is_atomic(lvl.body, ctx)
 
 Base.show(io::IO, ex::VirtualOffsetArray) = Base.show(io, MIME"text/plain"(), ex)
@@ -57,11 +56,8 @@ end
 
 virtual_default(arr::VirtualOffsetArray, ctx::AbstractCompiler) = virtual_default(arr.body, ctx)
 
-function instantiate_reader(arr::VirtualOffsetArray, ctx, protos)
-    VirtualOffsetArray(instantiate_reader(arr.body, ctx, protos), arr.delta)
-end
-function instantiate_updater(arr::VirtualOffsetArray, ctx, protos)
-    VirtualOffsetArray(instantiate_updater(arr.body, ctx, protos), arr.delta)
+function instantiate(arr::VirtualOffsetArray, ctx, mode, protos)
+    VirtualOffsetArray(instantiate(arr.body, ctx, mode, protos), arr.delta)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualOffsetArray) = ctx(node.body)
@@ -134,6 +130,12 @@ stepper_seek(node::VirtualOffsetArray, ctx, ext) = stepper_seek(node.body, ctx, 
 jumper_range(node::VirtualOffsetArray, ctx, ext) = shiftdim(jumper_range(node.body, ctx, shiftdim(ext, node.delta[end])), call(-, node.delta[end]))
 jumper_body(node::VirtualOffsetArray, ctx, ext, ext_2) = VirtualOffsetArray(jumper_body(node.body, ctx, shiftdim(ext, node.delta[end]), shiftdim(ext_2, node.delta[end])), node.delta)
 jumper_seek(node::VirtualOffsetArray, ctx, ext) = jumper_seek(node.body, ctx, shiftdim(ext, node.delta[end]))
+
+function short_circuit_cases(node::VirtualOffsetArray, ctx, op)
+    map(short_circuit_cases(node.body, ctx, op)) do (guard, body)
+        guard => VirtualOffsetArray(body, node.delta)
+    end
+end
 
 getroot(tns::VirtualOffsetArray) = getroot(tns.body)
 

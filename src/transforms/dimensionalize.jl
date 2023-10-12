@@ -35,7 +35,7 @@ struct FinchCompileError msg end
 function (ctx::DeclareDimensions)(node::FinchNode)
     if node.kind === access
         @assert @capture node access(~tns, ~mode, ~idxs...)
-        if node.mode.kind !== reader && haskey(ctx.hints, getroot(tns))
+        if node.mode.val !== reader && haskey(ctx.hints, getroot(tns))
             shape = map(suggest, virtual_size(tns, ctx.ctx))
             push!(ctx.hints[getroot(tns)], node)
         else
@@ -54,7 +54,7 @@ function (ctx::DeclareDimensions)(node::FinchNode)
         access(tns, mode, idxs...)
     elseif node.kind === loop 
         if node.ext.kind !== virtual
-            error(node.ext)
+            error("could not evaluate $(node.ext) into a dimension")
         end
         ctx.dims[node.idx] = node.ext.val
         body = ctx(node.body)
@@ -70,7 +70,7 @@ function (ctx::DeclareDimensions)(node::FinchNode)
             shape = virtual_size(node.tns, ctx.ctx)
             shape = map(suggest, shape)
             for hint in ctx.hints[node.tns]
-                @assert @capture hint access(~tns, updater(), ~idxs...)
+                @assert @capture hint access(~tns, updater, ~idxs...)
                 shape = map(zip(shape, idxs)) do (dim, idx)
                     if isindex(idx)
                         resultdim(ctx.ctx, dim, ctx.dims[idx])

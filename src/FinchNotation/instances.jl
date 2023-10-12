@@ -13,15 +13,16 @@ struct IndexInstance{name} <: FinchNodeInstance end
 
 Base.show(io::IO, node::IndexInstance{name}) where {name} = print(io, "index_instance(", Symbol(name), ")")
 
-struct DefineInstance{Lhs, Rhs} <: FinchNodeInstance
+struct DefineInstance{Lhs, Rhs, Body} <: FinchNodeInstance
 	lhs::Lhs
 	rhs::Rhs
+	body::Body
 end
-Base.:(==)(a::DefineInstance, b::DefineInstance) = a.lhs == b.lhs && a.rhs == b.rhs
+Base.:(==)(a::DefineInstance, b::DefineInstance) = a.lhs == b.lhs && a.rhs == b.rhs && a.body == b.body
 
-@inline define_instance(lhs, rhs) = DefineInstance(lhs, rhs)
+@inline define_instance(lhs, rhs, body) = DefineInstance(lhs, rhs, body)
 
-Base.show(io::IO, node::DefineInstance) = print(io, "define_instance(", node.lhs, ", ", node.rhs, ")")
+Base.show(io::IO, node::DefineInstance) = print(io, "define_instance(", node.lhs, ", ", node.rhs, ", ", node.body, ")")
 
 struct DeclareInstance{Tns, Init} <: FinchNodeInstance
 	tns::Tns
@@ -131,22 +132,6 @@ Base.:(==)(a::VariableInstance{tag}, b::VariableInstance{tag}) where {tag} = tru
 
 Base.show(io::IO, node::VariableInstance{tag}) where {tag} = print(io, "variable_instance(:", tag, ")")
 
-struct ReaderInstance end
-
-reader_instance() = ReaderInstance()
-
-Base.:(==)(a::ReaderInstance, b::ReaderInstance) = true
-
-Base.show(io::IO, node::ReaderInstance) = print(io, "reader_instance()")
-
-struct UpdaterInstance end
-
-updater_instance() = UpdaterInstance()
-
-Base.:(==)(a::UpdaterInstance, b::UpdaterInstance) = true
-
-Base.show(io::IO, node::UpdaterInstance) = print(io, "updater_instance()")
-
 """
 	TagInstance{tag, Tns}(tns)
 
@@ -169,4 +154,6 @@ Base.show(io::IO, node::TagInstance) = print(io, "tag_instance(:", node.var, ", 
 @inline finch_leaf_instance(arg::Type) = literal_instance(arg)
 @inline finch_leaf_instance(arg::Function) = literal_instance(arg)
 @inline finch_leaf_instance(arg::FinchNodeInstance) = arg
+@inline finch_leaf_instance(arg::Reader) = literal_instance(arg)
+@inline finch_leaf_instance(arg::Updater) = literal_instance(arg)
 @inline finch_leaf_instance(arg) = arg

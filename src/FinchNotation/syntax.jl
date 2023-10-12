@@ -13,8 +13,8 @@ const program_nodes = (
     assign = assign,
     call = call,
     access = access,
-    reader = reader,
-    updater = updater,
+    reader = literal(reader),
+    updater = literal(updater),
     variable = variable,
     tag = (ex) -> :(finch_leaf($(esc(ex)))),
     literal = literal,
@@ -34,8 +34,8 @@ const instance_nodes = (
     assign = assign_instance,
     call = call_instance,
     access = access_instance,
-    reader = reader_instance,
-    updater = updater_instance,
+    reader = literal_instance(reader),
+    updater = literal_instance(updater),
     variable = variable_instance,
     tag = (ex) -> :($tag_instance($(variable_instance(ex)), $finch_leaf_instance($(esc(ex))))),
     literal = literal_instance,
@@ -153,6 +153,28 @@ function (ctx::FinchParserVisitor)(ex::Expr)
                 $(ctx.nodes.loop)($(ctx(idx)), $ext, $body)
             end
         end
+    elseif @capture ex :let(:block(), ~body)
+        return ctx(body)
+    elseif @capture ex :let(:block(:(=)(~lhs, ~rhs), ~tail...), ~body)
+        if isempty(tail)
+            return ctx(:(for $lhs = $rhs; $body end))
+        else
+            return ctx(:(for $lhs = $rhs; $(Expr(:let, Expr(:block, tail...), body)) end))
+        end
+    elseif @capture ex :let(:(=)(~lhs, ~rhs), ~body)
+        rhs = ctx(rhs)
+        body = ctx(body)
+        if lhs isa Symbol
+            return quote
+                let $(esc(lhs)) = $(ctx.nodes.variable(lhs))
+                    $(ctx.nodes.define)($(esc(lhs)), $rhs, $body)
+                end
+            end
+        else
+            return quote
+                $(ctx.nodes.define)($(ctx(lhs)), $rhs, $body)
+            end
+        end
     elseif @capture ex :block(~bodies...)
         bodies = filter(!islinenum, bodies)
         if length(bodies) == 1
@@ -161,36 +183,25 @@ function (ctx::FinchParserVisitor)(ex::Expr)
             return :($(ctx.nodes.block)($(map(ctx, bodies)...)))
         end
     elseif @capture ex :ref(~tns, ~idxs...)
-        mode = :($(ctx.nodes.reader)())
+        mode = ctx.nodes.reader
         return :($(ctx.nodes.access)($(ctx(tns)), $mode, $(map(ctx, idxs)...)))
     elseif (@capture ex (~op)(~lhs, ~rhs)) && haskey(incs, op)
         return ctx(:($lhs << $(incs[op]) >>= $rhs))
     elseif @capture ex :(=)(:ref(~tns, ~idxs...), ~rhs)
         tns isa Symbol && push!(ctx.results, tns)
-        mode = :($(ctx.nodes.updater)())
+        mode = ctx.nodes.updater
         lhs = :($(ctx.nodes.access)($(ctx(tns)), $mode, $(map(ctx, idxs)...)))
         op = :($(ctx.nodes.literal)($initwrite))
         return :($(ctx.nodes.assign)($lhs, $op, $(ctx(rhs))))
     elseif @capture ex :>>=(:call(:<<, :ref(~tns, ~idxs...), ~op), ~rhs)
         tns isa Symbol && push!(ctx.results, tns)
-        mode = :($(ctx.nodes.updater)())
+        mode = ctx.nodes.updater
         lhs = :($(ctx.nodes.access)($(ctx(tns)), $mode, $(map(ctx, idxs)...)))
         return :($(ctx.nodes.assign)($lhs, $(ctx(op)), $(ctx(rhs))))
-    elseif @capture ex :(=)(~lhs, ~rhs)
-        res = :($(ctx.nodes.define)($(esc(lhs)), $(ctx(rhs))))
-        #TODO in the future would be nice if this was a let
-        if lhs isa Symbol
-            push!(ctx.results, lhs)
-            res = quote
-                begin
-                    $(esc(lhs)) = $(ctx.nodes.variable(lhs))
-                    $res
-                end
-            end
-        end
-        return res
     elseif @capture ex :>>=(:call(:<<, ~lhs, ~op), ~rhs)
         error("Finch doesn't support incrementing definitions of variables")
+    elseif @capture ex :(=)(~lhs, ~rhs)
+        error("Finch doesn't support variable bindings outside of let statements")
     elseif @capture ex :tuple(~args...)
         return ctx(:(tuple($(args...))))
     elseif @capture ex :comparison(~a, ~cmp, ~b)

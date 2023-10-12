@@ -6,7 +6,7 @@ function Finch.virtualize(ex, ::Type{FinchNotation.IndexInstance{name}}, ctx) wh
     freshen(ctx, name)
     index(name)
 end
-Finch.virtualize(ex, ::Type{FinchNotation.DefineInstance{Lhs, Rhs}}, ctx) where {Lhs, Rhs} = define(virtualize(:($ex.lhs), Lhs, ctx), virtualize(:($ex.rhs), Rhs, ctx))
+Finch.virtualize(ex, ::Type{FinchNotation.DefineInstance{Lhs, Rhs, Body}}, ctx) where {Lhs, Rhs, Body} = define(virtualize(:($ex.lhs), Lhs, ctx), virtualize(:($ex.rhs), Rhs, ctx), virtualize(:($ex.body), Body, ctx))
 Finch.virtualize(ex, ::Type{FinchNotation.DeclareInstance{Tns, Init}}, ctx) where {Tns, Init} = declare(virtualize(:($ex.tns), Tns, ctx), virtualize(:($ex.init), Init, ctx))
 Finch.virtualize(ex, ::Type{FinchNotation.FreezeInstance{Tns}}, ctx) where {Tns} = freeze(virtualize(:($ex.tns), Tns, ctx))
 Finch.virtualize(ex, ::Type{FinchNotation.ThawInstance{Tns}}, ctx) where {Tns} = thaw(virtualize(:($ex.tns), Tns, ctx))
@@ -44,8 +44,6 @@ function Finch.virtualize(ex, ::Type{FinchNotation.AccessInstance{Tns, Mode, Idx
     end
     access(tns, virtualize(:($ex.mode), Mode, ctx), idxs...)
 end
-Finch.virtualize(ex, ::Type{FinchNotation.ReaderInstance}, ctx) = reader()
-Finch.virtualize(ex, ::Type{FinchNotation.UpdaterInstance}, ctx) = updater()
 Finch.virtualize(ex, ::Type{FinchNotation.VariableInstance{tag}}, ctx) where {tag} = variable(tag)
 function Finch.virtualize(ex, ::Type{FinchNotation.TagInstance{Var, Bind}}, ctx) where {Var, Bind}
     var = virtualize(:($ex.var), Var, ctx)

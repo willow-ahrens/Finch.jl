@@ -18,7 +18,6 @@ struct VirtualPermissiveArray <: AbstractVirtualCombinator
 end
 
 is_injective(lvl::VirtualPermissiveArray, ctx) = is_injective(lvl.body, ctx)
-is_concurrent(lvl::VirtualPermissiveArray, ctx) = is_concurrent(lvl.body, ctx)
 is_atomic(lvl::VirtualPermissiveArray, ctx) = is_atomic(lvl.body, ctx)
 
 Base.show(io::IO, ex::VirtualPermissiveArray) = Base.show(io, MIME"text/plain"(), ex)
@@ -52,11 +51,8 @@ function virtual_resize!(arr::VirtualPermissiveArray, ctx::AbstractCompiler, dim
     virtual_resize!(arr.body, ctx, ifelse.(arr.dims, virtual_size(arr.body, ctx), dim))
 end
 
-function instantiate_reader(arr::VirtualPermissiveArray, ctx, protos)
-    VirtualPermissiveArray(instantiate_reader(arr.body, ctx, protos), arr.dims)
-end
-function instantiate_updater(arr::VirtualPermissiveArray, ctx, protos)
-    VirtualPermissiveArray(instantiate_updater(arr.body, ctx, protos), arr.dims)
+function instantiate(arr::VirtualPermissiveArray, ctx, mode, protos)
+    VirtualPermissiveArray(instantiate(arr.body, ctx, mode, protos), arr.dims)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualPermissiveArray) = ctx(node.body)
@@ -130,12 +126,18 @@ jumper_range(node::VirtualPermissiveArray, ctx, ext) = jumper_range(node.body, c
 jumper_body(node::VirtualPermissiveArray, ctx, ext, ext_2) = VirtualPermissiveArray(jumper_body(node.body, ctx, ext, ext_2), node.dims)
 jumper_seek(node::VirtualPermissiveArray, ctx, ext) = jumper_seek(node.body, ctx, ext)
 
+function short_circuit_cases(node::VirtualPermissiveArray, ctx, op)
+    map(short_circuit_cases(node.body, ctx, op)) do (guard, body)
+        guard => VirtualPermissiveArray(body, node.dims)
+    end
+end
+
 getroot(tns::VirtualPermissiveArray) = getroot(tns.body)
 
 function unfurl(tns::VirtualPermissiveArray, ctx, ext, mode, protos...)
     tns_2 = unfurl(tns.body, ctx, ext, mode, protos...)
     dims = virtual_size(tns.body, ctx)
-    garb = (mode.kind === reader) ? Fill(literal(missing)) : Fill(Null())
+    garb = (mode === reader) ? Fill(literal(missing)) : Fill(Null())
     if tns.dims[end] && dims[end] != dimless
         VirtualPermissiveArray(
             Unfurled(

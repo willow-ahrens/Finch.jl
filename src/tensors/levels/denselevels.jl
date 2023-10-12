@@ -27,10 +27,9 @@ struct DenseLevel{Ti, Lvl} <: AbstractLevel
     shape::Ti
 end
 DenseLevel(lvl) = DenseLevel{Int}(lvl)
-DenseLevel(lvl, shape::Ti, args...) where {Ti} = DenseLevel{Ti}(lvl, shape, args...)
-DenseLevel{Ti}(lvl, args...) where {Ti} = DenseLevel{Ti, typeof(lvl)}(lvl, args...)
-
-DenseLevel{Ti, Lvl}(lvl) where {Ti, Lvl} = DenseLevel{Ti, Lvl}(lvl, zero(Ti))
+#DenseLevel(lvl, shape::Ti) where {Ti} = DenseLevel{Ti}(lvl, shape)
+DenseLevel{Ti}(lvl) where {Ti} = DenseLevel{Ti}(lvl, zero(Ti))
+DenseLevel{Ti}(lvl::Lvl, shape) where {Ti, Lvl} = DenseLevel{Ti, Lvl}(lvl, shape)
 
 const Dense = DenseLevel
 
@@ -38,16 +37,12 @@ Base.summary(lvl::Dense) = "Dense($(summary(lvl.lvl)))"
 similar_level(lvl::DenseLevel) = Dense(similar_level(lvl.lvl))
 similar_level(lvl::DenseLevel, dims...) = Dense(similar_level(lvl.lvl, dims[1:end-1]...), dims[end])
 
-function memtype(::Type{DenseLevel{Ti, Lvl}}) where {Ti, Lvl}
-    return memtype(Lvl)
-end
-
 function postype(::Type{DenseLevel{Ti, Lvl}}) where {Ti, Lvl}
     return postype(Lvl)
 end
 
-function moveto(lvl::DenseLevel{Ti, Lvl},  ::Type{MemType}) where {Ti, Lvl, MemType <: AbstractArray}
-    return DenseLevel(moveto(lvl.lvl, MemType), lvl.shape)
+function moveto(lvl::DenseLevel{Ti}, device) where {Ti}
+    return DenseLevel{Ti}(moveto(lvl.lvl, device), lvl.shape)
 end
 
 pattern!(lvl::DenseLevel{Ti, Lvl}) where {Ti, Lvl} = 
@@ -105,7 +100,6 @@ mutable struct VirtualDenseLevel <: AbstractVirtualLevel
 end
 
 is_level_injective(lvl::VirtualDenseLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., true]
-is_level_concurrent(lvl::VirtualDenseLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., true]
 is_level_atomic(lvl::VirtualDenseLevel, ctx) = is_level_atomic(lvl.lvl, ctx)
 
 function virtualize(ex, ::Type{DenseLevel{Ti, Lvl}}, ctx, tag=:lvl) where {Ti, Lvl}
@@ -142,6 +136,8 @@ end
 
 virtual_level_eltype(lvl::VirtualDenseLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualDenseLevel) = virtual_level_default(lvl.lvl)
+
+postype(lvl::VirtualDenseLevel) = postype(lvl.lvl)
 
 function declare_level!(lvl::VirtualDenseLevel, ctx::AbstractCompiler, pos, init)
     lvl.lvl = declare_level!(lvl.lvl, ctx, call(*, pos, lvl.shape), init)
@@ -181,20 +177,21 @@ function freeze_level!(lvl::VirtualDenseLevel, ctx::AbstractCompiler, pos)
     return lvl
 end
 
+function virtual_moveto_level(lvl::VirtualDenseLevel, ctx::AbstractCompiler, arch)
+    virtual_moveto_level(lvl.lvl, ctx, arch)
+end
+
 struct DenseTraversal
     fbr
-    subunfurl
     subfiber_ctr
 end
 
-instantiate_reader(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, protos) =
-    instantiate_reader(DenseTraversal(fbr, instantiate_reader, VirtualSubFiber), ctx, protos)
-instantiate_updater(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, protos) =
-    instantiate_updater(DenseTraversal(fbr, instantiate_updater, VirtualSubFiber), ctx, protos)
-instantiate_updater(fbr::VirtualTrackedSubFiber{VirtualDenseLevel}, ctx, protos) =
-    instantiate_updater(DenseTraversal(fbr, instantiate_updater, (lvl, pos) -> VirtualTrackedSubFiber(lvl, pos, fbr.dirty)), ctx, protos)
+instantiate(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, mode, protos) =
+    instantiate(DenseTraversal(fbr, VirtualSubFiber), ctx, mode, protos)
+instantiate(fbr::VirtualHollowSubFiber{VirtualDenseLevel}, ctx, mode, protos) =
+    instantiate(DenseTraversal(fbr, (lvl, pos) -> VirtualHollowSubFiber(lvl, pos, fbr.dirty)), ctx, mode, protos)
 
-function instantiate_reader(trv::DenseTraversal, ctx, subprotos, ::Union{typeof(defaultread), typeof(follow)})
+function instantiate(trv::DenseTraversal, ctx, mode, subprotos, ::Union{typeof(defaultread), typeof(follow), typeof(defaultupdate), typeof(laminate), typeof(extrude)})
     (lvl, pos) = (trv.fbr.lvl, trv.fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
@@ -207,26 +204,7 @@ function instantiate_reader(trv::DenseTraversal, ctx, subprotos, ::Union{typeof(
                 preamble = quote
                     $q = ($(ctx(pos)) - $(Ti(1))) * $(ctx(lvl.shape)) + $(ctx(i))
                 end,
-                body = (ctx) -> trv.subunfurl(trv.subfiber_ctr(lvl.lvl, value(q, lvl.Ti)), ctx, subprotos)
-            )
-        )
-    )
-end
-
-function instantiate_updater(trv::DenseTraversal, ctx, subprotos, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)})
-    (lvl, pos) = (trv.fbr.lvl, trv.fbr.pos)
-    tag = lvl.ex
-    Ti = lvl.Ti
-
-    q = freshen(ctx.code, tag, :_q)
-    println("denseUp:", trv)
-    Furlable(
-        body = (ctx, ext) -> Lookup(
-            body = (ctx, i) -> Thunk(
-                preamble = quote
-                    $q = ($(ctx(pos)) - $(Ti(1))) * $(ctx(lvl.shape)) + $(ctx(i))
-                end,
-                body = (ctx) -> trv.subunfurl(trv.subfiber_ctr(lvl.lvl, value(q, lvl.Ti)), ctx, subprotos)
+                body = (ctx) -> instantiate(trv.subfiber_ctr(lvl.lvl, value(q, lvl.Ti)), ctx, mode, subprotos)
             )
         )
     )

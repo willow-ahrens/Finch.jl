@@ -91,14 +91,14 @@
 
     let
         x = Fiber(
-            SparseList{Int64, Int64}(
-                Element{0.0}([2.0, 3.0, 4.0, 5.0, 6.0]),
+            SparseList{Int64}(
+                Element{0.0, Float64, Int64}([2.0, 3.0, 4.0, 5.0, 6.0]),
                 10, [1, 6], [1, 3, 5, 7, 9]))
         y = Fiber(
-            SparseList{Int64, Int64}(
-                Element{0.0}([1.0, 1.0, 1.0]),
+            SparseList{Int64}(
+                Element{0.0, Float64, Int64}([1.0, 1.0, 1.0]),
                 10, [1, 4], [2, 5, 8]))
-        z = Fiber(SparseList{Int64, Int64}(Element{0.0}(), 10))
+        z = Fiber(SparseList{Int64}(Element{0.0}(), 10))
     
         io = IOBuffer()
 
@@ -130,11 +130,12 @@
         @repl io x_var = Scalar(0.0)
         @repl io @finch_code begin
             for i = _
-                x = X[i]
-                x_min[] <<min>>= x
-                x_max[] <<max>>= x
-                x_sum[] += x
-                x_var[] += x * x
+                let x = X[i]
+                    x_min[] <<min>>= x
+                    x_max[] <<max>>= x
+                    x_sum[] += x
+                    x_var[] += x * x
+                end
             end
         end
 

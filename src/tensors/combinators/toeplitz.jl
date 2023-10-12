@@ -21,10 +21,6 @@ function is_injective(lvl::VirtualToeplitzArray, ctx)
     sub = is_injective(lvl.body, ctx)
     return [sub[1:lvl.dim]..., false, sub[lvl.dim + 1:end]...]
 end
-function is_concurrent(lvl::VirtualToeplitzArray, ctx)
-    sub = is_concurrent(lvl.body, ctx)
-    return [sub[1:lvl.dim]..., false, sub[lvl.dim + 1:end]...]
-end
 is_atomic(lvl::VirtualToeplitzArray, ctx) = is_atomic(lvl.body, ctx)
 
 Base.show(io::IO, ex::VirtualToeplitzArray) = Base.show(io, MIME"text/plain"(), ex)
@@ -58,11 +54,8 @@ function virtual_resize!(arr::VirtualToeplitzArray, ctx::AbstractCompiler, dims.
     virtual_resize!(arr.body, ctx, dims[1:arr.dim - 1]..., dimless, dims[arr.dim + 2:end]...)
 end
 
-function instantiate_reader(arr::VirtualToeplitzArray, ctx, protos)
-    VirtualToeplitzArray(instantiate_reader(arr.body, ctx, [protos[1:arr.dim]; protos[arr.dim + 2:end]]), arr.dim)
-end
-function instantiate_updater(arr::VirtualToeplitzArray, ctx, protos)
-    VirtualToeplitzArray(instantiate_updater(arr.body, ctx, [protos[1:arr.dim]; protos[arr.dim + 2:end]]), arr.dim)
+function instantiate(arr::VirtualToeplitzArray, ctx, mode, protos)
+    VirtualToeplitzArray(instantiate(arr.body, ctx, mode, [protos[1:arr.dim]; protos[arr.dim + 2:end]]), arr.dim)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualToeplitzArray) = ctx(node.body)
@@ -135,6 +128,13 @@ stepper_seek(node::VirtualToeplitzArray, ctx, ext) = stepper_seek(node.body, ctx
 jumper_range(node::VirtualToeplitzArray, ctx, ext) = jumper_range(node.body, ctx, ext)
 jumper_body(node::VirtualToeplitzArray, ctx, ext, ext_2) = VirtualToeplitzArray(jumper_body(node.body, ctx, ext, ext_2), node.dim)
 jumper_seek(node::VirtualToeplitzArray, ctx, ext) = jumper_seek(node.body, ctx, ext)
+
+function short_circuit_cases(node::VirtualToeplitzArray, ctx, op)
+    map(short_circuit_cases(node.body, ctx, op)) do (guard, body)
+        guard => VirtualToeplitzArray(body, node.dim)
+    end
+end
+
 
 getroot(tns::VirtualToeplitzArray) = getroot(tns.body)
 

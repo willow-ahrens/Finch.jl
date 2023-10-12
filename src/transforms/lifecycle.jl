@@ -17,7 +17,7 @@ end
 function close_scope(prgm, ctx::LifecycleVisitor)
     prgm = ctx(prgm)
     for tns in getresults(prgm)
-        if ctx.modes[tns].kind !== reader
+        if ctx.modes[tns] !== reader
             prgm = block(prgm, freeze(tns))
         end
     end
@@ -37,10 +37,10 @@ end
 #assumes arguments to prgm have been visited already and their uses collected
 function open_stmt(prgm, ctx::LifecycleVisitor)
     for (tns, mode) in ctx.uses
-        cur_mode = get(ctx.modes, tns, reader())
-        if mode.kind === reader && cur_mode.kind === updater
+        cur_mode = get(ctx.modes, tns, reader)
+        if mode === reader && cur_mode === updater
             prgm = block(freeze(tns), prgm)
-        elseif mode.kind === updater && cur_mode.kind === reader
+        elseif mode === updater && cur_mode === reader
             prgm = block(thaw(tns), prgm)
         end
         ctx.modes[tns] = mode
@@ -54,30 +54,32 @@ function (ctx::LifecycleVisitor)(node::FinchNode)
         open_stmt(loop(node.idx, ctx(node.ext), open_scope(node.body, ctx)), ctx)
     elseif node.kind === sieve
         open_stmt(sieve(ctx(node.cond), open_scope(node.body, ctx)), ctx)
+    elseif node.kind === define
+        open_stmt(define(node.lhs, ctx(node.rhs), open_scope(node.body, ctx)), ctx)
     elseif node.kind === declare
         ctx.scoped_uses[node.tns] = ctx.uses
-        if get(ctx.modes, node.tns, reader()) === updater 
+        if get(ctx.modes, node.tns, reader) === updater 
             node = block(freeze(node.tns), node)
         end
-        ctx.modes[node.tns] = updater()
+        ctx.modes[node.tns] = updater
         node
     elseif node.kind === freeze
         haskey(ctx.modes, node.tns) || throw(LifecycleError("cannot freeze undefined $(node.tns)"))
-        ctx.modes[node.tns].kind === reader && return block()
-        ctx.modes[node.tns] = reader()
+        ctx.modes[node.tns] === reader && return block()
+        ctx.modes[node.tns] = reader
         node
     elseif node.kind === thaw
-        get(ctx.modes, node.tns, reader()).kind === updater && return block()
-        ctx.modes[node.tns] = updater()
+        get(ctx.modes, node.tns, reader) === updater && return block()
+        ctx.modes[node.tns] = updater
         node
     elseif node.kind === assign
         return open_stmt(assign(ctx(node.lhs), ctx(node.op), ctx(node.rhs)), ctx)
     elseif node.kind === access
         idxs = map(ctx, node.idxs)
         uses = get(ctx.scoped_uses, getroot(node.tns), ctx.global_uses)
-        get(uses, getroot(node.tns), node.mode).kind !== node.mode.kind &&
+        get(uses, getroot(node.tns), node.mode.val) !== node.mode.val &&
             throw(LifecycleError("cannot mix reads and writes to $(node.tns) outside of defining scope (hint: perhaps add a declaration like `var .= 0` or use an updating operator like `var += 1`)"))
-        uses[getroot(node.tns)] = node.mode
+        uses[getroot(node.tns)] = node.mode.val
         access(node.tns, node.mode, idxs...)
     elseif istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))

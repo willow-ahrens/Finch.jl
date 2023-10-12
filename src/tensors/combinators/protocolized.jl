@@ -16,7 +16,6 @@ struct VirtualProtocolizedArray <: AbstractVirtualCombinator
 end
 
 is_injective(lvl::VirtualProtocolizedArray, ctx) = is_injective(lvl.body, ctx)
-is_concurrent(lvl::VirtualProtocolizedArray, ctx) = is_concurrent(lvl.body, ctx)
 is_atomic(lvl::VirtualProtocolizedArray, ctx) = is_atomic(lvl.body, ctx)
 
 Base.:(==)(a::VirtualProtocolizedArray, b::VirtualProtocolizedArray) = a.body == b.body && a.protos == b.protos
@@ -56,11 +55,8 @@ function virtual_resize!(arr::VirtualProtocolizedArray, ctx::AbstractCompiler, d
     virtual_resize!(arr.body, ctx, dim)
 end
 
-function instantiate_reader(arr::VirtualProtocolizedArray, ctx, protos)
-    VirtualProtocolizedArray(instantiate_reader(arr.body, ctx,  map(something, arr.protos, protos)), arr.protos)
-end
-function instantiate_updater(arr::VirtualProtocolizedArray, ctx, protos)
-    VirtualProtocolizedArray(instantiate_updater(arr.body, ctx,  map(something, arr.protos, protos)), arr.protos)
+function instantiate(arr::VirtualProtocolizedArray, ctx, mode, protos)
+    VirtualProtocolizedArray(instantiate(arr.body, ctx, mode, map(something, arr.protos, protos)), arr.protos)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualProtocolizedArray) = ctx(node.body)
@@ -138,5 +134,12 @@ stepper_seek(node::VirtualProtocolizedArray, ctx, ext) = stepper_seek(node.body,
 jumper_range(node::VirtualProtocolizedArray, ctx, ext) = jumper_range(node.body, ctx, ext)
 jumper_body(node::VirtualProtocolizedArray, ctx, ext, ext_2) = VirtualProtocolizedArray(jumper_body(node.body, ctx, ext, ext_2), node.protos)
 jumper_seek(node::VirtualProtocolizedArray, ctx, ext) = jumper_seek(node.body, ctx, ext)
+
+function short_circuit_cases(node::VirtualProtocolizedArray, ctx, op)
+    map(short_circuit_cases(node.body, ctx, op)) do (guard, body)
+        guard => VirtualProtocolizedArray(body, node.protos)
+    end
+end
+
 
 getroot(tns::VirtualProtocolizedArray) = getroot(tns.body)
