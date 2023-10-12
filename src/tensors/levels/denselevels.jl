@@ -115,6 +115,7 @@ function virtualize(ex, ::Type{DenseLevel{Ti, Lvl}}, ctx, tag=:lvl) where {Ti, L
         $sym = $ex
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
+    println("calling virtualize on dense....")
     VirtualDenseLevel(lvl_2, sym, Ti, shape)
 end
 function lower(lvl::VirtualDenseLevel, ctx::AbstractCompiler, ::DefaultStyle)
@@ -199,7 +200,7 @@ function instantiate_reader(trv::DenseTraversal, ctx, subprotos, ::Union{typeof(
     Ti = lvl.Ti
 
     q = freshen(ctx.code, tag, :_q)
-
+    println("denseRead:", trv)
     Furlable(
         body = (ctx, ext) -> Lookup(
             body = (ctx, i) -> Thunk(
@@ -218,7 +219,7 @@ function instantiate_updater(trv::DenseTraversal, ctx, subprotos, ::Union{typeof
     Ti = lvl.Ti
 
     q = freshen(ctx.code, tag, :_q)
-
+    println("denseUp:", trv)
     Furlable(
         body = (ctx, ext) -> Lookup(
             body = (ctx, i) -> Thunk(

@@ -66,15 +66,15 @@ execute(ex) = execute(ex, NamedTuple())
     contain(JuliaContext()) do ctx
         code = execute_code(:ex, ex; virtualize(:opts, opts, ctx)...)
         quote
-            #try
+            try
                 @inbounds begin
                     $(code |> unblock)
                 end
-            #catch
-            #    println("Error executing code:")
-            #    println($(QuoteNode(code |> unblock |> pretty |> dataflow |> unquote_literals)))
-            #    rethrow()
-            #end
+            catch
+               println("Error executing code:")
+               println($(QuoteNode(code |> unblock |> pretty |> dataflow |> unquote_literals)))
+               rethrow()
+            end
         end
     end
 end
@@ -201,7 +201,7 @@ macro finch_code(opts_ex...)
     (opts, ex) = (opts_ex[1:end-1], opts_ex[end])
     prgm = FinchNotation.finch_parse_instance(ex)
     return quote
-        $execute_code(:ex, typeof($prgm); $(map(esc, opts)...)) |> pretty |> dataflow |> unresolve |> unquote_literals
+        $execute_code(:ex, typeof($prgm); $(map(esc, opts)...)) |> pretty  |> unresolve |> unquote_literals
     end
 end
 
