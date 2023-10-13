@@ -32,7 +32,7 @@ SparseList (0.0) [:,1:3]
 
 ```
 """
-struct SparseListLevel{Ti, Ptr, Idx, Lvl}
+struct SparseListLevel{Ti, Ptr, Idx, Lvl} <: AbstractLevel
     lvl::Lvl
     shape::Ti
     ptr::Ptr

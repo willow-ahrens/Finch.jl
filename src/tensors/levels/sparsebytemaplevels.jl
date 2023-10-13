@@ -28,7 +28,7 @@ SparseByteMap (0.0) [:,1:3]
 │ ├─[3]: 40.0
 ```
 """
-struct SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl}
+struct SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl} <: AbstractLevel
     lvl::Lvl
     shape::Ti
     ptr::Ptr

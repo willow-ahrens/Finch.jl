@@ -16,7 +16,7 @@ Dense [1:3]
 ├─[3]: 3.0
 ```
 """
-struct ElementLevel{D, Tv, Tp, Val}
+struct ElementLevel{D, Tv, Tp, Val} <: AbstractLevel
     val::Val
 end
 const Element = ElementLevel

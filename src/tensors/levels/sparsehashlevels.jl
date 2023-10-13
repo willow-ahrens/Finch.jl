@@ -32,7 +32,7 @@ SparseHash (0.0) [1:3,1:3]
 ├─├─[3, 3]: 40.0
 ```
 """
-struct SparseHashLevel{N, TI<:Tuple, Ptr, Tbl, Srt, Lvl}
+struct SparseHashLevel{N, TI<:Tuple, Ptr, Tbl, Srt, Lvl} <: AbstractLevel
     lvl::Lvl
     shape::TI
     ptr::Ptr
