@@ -70,7 +70,7 @@ end
 
 countstored_level(lvl::PointerLevel, pos) = pos
 
-struct VirtualPointerLevel <: AbstractVirtualLevel
+mutable struct VirtualPointerLevel <: AbstractVirtualLevel
     lvl  # stand in for the sublevel for virutal resize, etc.
     ex
     Tv
@@ -100,7 +100,7 @@ end
 
 Base.summary(lvl::VirtualPointerLevel) = "Pointer($(lvl.Lvl))"
 
-virtual_level_resize!(lvl::VirtualPointerLevel, ctx, dims...) = virtual_level_resize!(lvl.lvl, ctx, dims...)
+virtual_level_resize!(lvl::VirtualPointerLevel, ctx, dims...) = (lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims...); lvl)
 virtual_level_size(lvl::VirtualPointerLevel, ctx) = virtual_level_size(lvl.lvl, ctx)
 virtual_level_eltype(lvl::VirtualPointerLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualPointerLevel) = virtual_level_default(lvl.lvl)
@@ -181,7 +181,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualPointerLevel}, ctx, mode::Reade
     val = freshen(ctx.code, lvl.ex, :_val)
     lvl_2 = virtualize(:($(lvl.ex).val[$(ctx(pos))]), lvl.Lvl, ctx.code, sym)
     return body = Thunk(
-        body = (ctx) -> instantiate(VirtualSubFiber(lvl_2, value(1, lvl.Tv)), ctx, mode, protos),
+        body = (ctx) -> instantiate(VirtualSubFiber(lvl_2, literal(1)), ctx, mode, protos),
     )
 end
 
@@ -195,7 +195,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualPointerLevel}, ctx, mode::Updat
         body = (ctx) -> begin
             thaw_level!(lvl_2, ctx, literal(1))
             push!(ctx.code.preamble, assemble_level!(lvl_2, ctx, literal(1), literal(1)))
-            res = instantiate(VirtualSubFiber(lvl_2, value(1, lvl.Tv)), ctx, mode, protos)
+            res = instantiate(VirtualSubFiber(lvl_2, literal(1)), ctx, mode, protos)
             freeze_level!(lvl, ctx, literal(1))
             res
         end
