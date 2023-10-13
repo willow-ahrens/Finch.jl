@@ -200,6 +200,7 @@ end
 function freeze_level!(lvl::VirtualRootSparseListLevel, ctx::AbstractCompiler, pos_stop)
     @assert pos_stop == literal(1)
     p = freshen(ctx.code, :p)
+    Tp = postype(lvl)
     qos_stop = freshen(ctx.code, :qos_stop)
     push!(ctx.code.preamble, quote
         $qos_stop = $Tp(length($(lvl.idx))) 
