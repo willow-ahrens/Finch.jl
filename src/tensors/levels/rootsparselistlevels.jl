@@ -159,10 +159,10 @@ function declare_level!(lvl::VirtualRootSparseListLevel, ctx::AbstractCompiler, 
     #TODO check that init == default
     Ti = lvl.Ti
     Tp = postype(lvl)
-    @assert pos == literal(1)
+    @assert pos == literal(0) || pos == literal(1)
     qos = lvl.qos_fill
     push!(ctx.code.preamble, quote
-        $(qos) = $(Tp(0))
+        $(qos) = $(Tp(1))
         $(lvl.qos_stop) = $Tp(length($(lvl.idx)))
     end)
     lvl.lvl = declare_level!(lvl.lvl, ctx, literal(0), init)
@@ -175,8 +175,8 @@ function thaw_level!(lvl::VirtualRootSparseListLevel, ctx::AbstractCompiler, pos
     @assert pos == literal(1)
     qos = lvl.qos_fill
     push!(ctx.code.preamble, quote
-        $qos = $Tp(length($(lvl.idx)))
-        $(lvl.qos_stop) = $qos
+        $(lvl.qos_stop) = $Tp(length($(lvl.idx)))
+        $qos = $(lvl.qos_stop) + 1
     end)
     lvl.lvl = thaw_level!(lvl.lvl, ctx, qos)
     return lvl
@@ -237,7 +237,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualRootSparseListLevel}, ctx, mode
             preamble = quote
 
                 $my_q = $(Tp(1))
-                $my_q_stop = $Tp(length(lvl.idx)) + $(Tp(1))
+                $my_q_stop = $Tp(length($(lvl.idx))) + $(Tp(1))
                 if !isempty($(lvl.idx))
                     $my_i = $(lvl.idx)[1]
                     $my_i1 = $(lvl.idx)[end]

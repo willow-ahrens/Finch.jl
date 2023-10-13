@@ -56,8 +56,8 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:PointerLe
 end
 
 @inline level_ndims(::Type{<:PointerLevel{Val, Lvl}}) where {Val, Lvl} = level_ndims(Lvl)
-@inline level_size(::PointerLevel{Val, Lvl}) where {Val, Lvl} = level_size(Lvl)
-@inline level_axes(::PointerLevel{Val, Lvl}) where {Val, Lvl} = level_axes(Lvl)
+@inline level_size(lvl::PointerLevel{Val, Lvl}) where {Val, Lvl} = level_size(lvl.lvl)
+@inline level_axes(lvl::PointerLevel{Val, Lvl}) where {Val, Lvl} = level_axes(lvl.lvl)
 @inline level_eltype(::Type{PointerLevel{Val, Lvl}}) where {Val, Lvl} = level_eltype(Lvl)
 @inline level_default(::Type{<:PointerLevel{Val, Lvl}}) where {Val, Lvl} = level_default(Lvl)
 
@@ -84,7 +84,7 @@ is_level_atomic(lvl::VirtualPointerLevel, ctx) = is_level_atomic(lvl.lvl, ctx)
 
 function lower(lvl::VirtualPointerLevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
-        $PointerLevel{$(lvl.Val), $(lvl.Lvl)}($(lvl.ex).val, $(lvl.ex).lvl)
+        $PointerLevel{$(lvl.Val), $(lvl.Lvl)}($(lvl.ex).val, $(ctx(lvl.lvl)))
     end
 end
 
@@ -93,8 +93,7 @@ function virtualize(ex, ::Type{PointerLevel{Val, Lvl}}, ctx, tag=:lvl) where {Va
     push!(ctx.preamble, quote
         $sym = $ex
     end)
-    dummyCtx = JuliaContext()
-    lvl_2 = virtualize(:(), Lvl, dummyCtx, sym)
+    lvl_2 = virtualize(:($ex.lvl), Lvl, ctx, sym)
     VirtualPointerLevel(lvl_2, sym, typeof(level_default(Lvl)), Val, Lvl)
 end
 
@@ -122,7 +121,7 @@ function assemble_level!(lvl::VirtualPointerLevel, ctx, pos_start, pos_stop)
             $sym = similar_level($(lvl.ex).lvl)
             $(contain(ctx) do ctx_2
                 lvl_2 = virtualize(sym, lvl.Lvl, ctx_2.code, sym)
-                lvl_2 = declare_level!(lvl_2, ctx_2, literal(1), literal(virtual_level_default(lvl_2)))
+                lvl_2 = declare_level!(lvl_2, ctx_2, literal(0), literal(virtual_level_default(lvl_2)))
                 lvl_2 = virtual_level_resize!(lvl_2, ctx_2, virtual_level_size(lvl.lvl, ctx_2)...)
                 push!(ctx_2.code.preamble, assemble_level!(lvl_2, ctx_2, literal(1), literal(1)))
                 lvl_2 = freeze_level!(lvl_2, ctx_2, literal(1))
