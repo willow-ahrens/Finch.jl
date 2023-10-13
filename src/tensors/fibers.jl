@@ -268,7 +268,7 @@ function FiberCode!(lvl)
         push!(ctx.code.preamble, assemble_level!(lvl, ctx, literal(1), literal(1)))
         lvl = freeze_level!(lvl, ctx, literal(1))
         ctx(lvl)
-    end
+    end |> unblock |> pretty |> dataflow |> unquote_literals
 end
 
 function Fiber!(lvl, arg)
