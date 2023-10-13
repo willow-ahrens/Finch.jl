@@ -7,7 +7,7 @@ own memory space.
 Each sublevel is stored in a vector of type `Val` with `eltype(Val) = Lvl`. 
 
 ```jldoctest
-julia> Fiber!(Dense(Pointer(Dense(Element(0.0)))), [1, 2, 3])
+julia> Fiber!(Dense(Pointer(Dense(Element(0.0)))), [[1, 2, 3]])
 Dense [1:3]
 ├─[1]: 1.0
 ├─[2]: 2.0
