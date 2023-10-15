@@ -1,0 +1,5 @@
+Fiber!(SparseList(Pointer(Dense(Element(0))))):
+initialized fiber: Fiber(SparseList{Int64}(Pointer([Dense{Int64}(Element{0, Int64, Int64}([3, 0, 9]), 3)], Dense{Int64}(Element{0, Int64, Int64}(Int64[]), 3)), 6, [1, 1], Int64[]))
+sized fiber: Fiber(SparseList{Int64}(Pointer([Dense{Int64}(Element{0, Int64, Int64}(Int64[]), 3)], Dense{Int64}(Element{0, Int64, Int64}(Int64[]), 3)), 6, [1, 1], Int64[]))
+empty fiber: Fiber(SparseList{Int64}(Pointer([Dense{Int64}(Element{0, Int64, Int64}(Int64[]), 0)], Dense{Int64}(Element{0, Int64, Int64}(Int64[]), 0)), 0, [1, 1], Int64[]))
+
