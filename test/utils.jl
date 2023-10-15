@@ -33,6 +33,9 @@ isstructequal(a::T, b::T)  where {T <: Pattern} = true
 isstructequal(a::T, b::T) where {T <: Element} =
     a.val == b.val
 
+isstructequal(a::T, b::T) where {T <: Pointer} =
+  all(isstructequal(x,y) for (x,y) in zip(a.val, b.val)) && isstructequal(a.lvl, b.lvl)
+
 isstructequal(a::T, b::T) where {T <: RepeatRLE} =
     a.shape == b.shape &&
     a.ptr == b.ptr &&
@@ -46,6 +49,11 @@ isstructequal(a::T, b::T) where {T <: Dense} =
 isstructequal(a::T, b::T) where {T <: SparseList} =
     a.shape == b.shape &&
     a.ptr == b.ptr &&
+    a.idx == b.idx &&
+    isstructequal(a.lvl, b.lvl)
+
+isstructequal(a::T, b::T) where {T <: RootSparseList} =
+    a.shape == b.shape &&
     a.idx == b.idx &&
     isstructequal(a.lvl, b.lvl)
 

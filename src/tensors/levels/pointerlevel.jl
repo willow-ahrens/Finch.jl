@@ -78,6 +78,8 @@ mutable struct VirtualPointerLevel <: AbstractVirtualLevel
     Lvl
 end
 
+postype(lvl:: VirtualPointerLevel) = postype(lvl.lvl)
+
 is_level_injective(::VirtualPointerLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., true]
 is_level_concurrent(::VirtualPointerLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., true]
 is_level_atomic(lvl::VirtualPointerLevel, ctx) = is_level_atomic(lvl.lvl, ctx)
@@ -188,6 +190,22 @@ function instantiate(fbr::VirtualSubFiber{VirtualPointerLevel}, ctx, mode::Reade
 end
 
 function instantiate(fbr::VirtualSubFiber{VirtualPointerLevel}, ctx, mode::Updater, protos)
+    (lvl, pos) = (fbr.lvl, fbr.pos)
+    tag = lvl.ex
+    sym = freshen(ctx.code, :pointer_to_lvl)
+    lvl_2 = virtualize(:($(lvl.ex).val[$(ctx(pos))]), lvl.Lvl, ctx.code, sym)
+
+    return body = Thunk(
+        body = (ctx) -> begin
+            thaw_level!(lvl_2, ctx, literal(1))
+            push!(ctx.code.preamble, assemble_level!(lvl_2, ctx, literal(1), literal(1)))
+            res = instantiate(VirtualSubFiber(lvl_2, literal(1)), ctx, mode, protos)
+            freeze_level!(lvl, ctx, literal(1))
+            res
+        end
+    )
+end
+function instantiate(fbr::VirtualHollowSubFiber{VirtualPointerLevel}, ctx, mode::Updater, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     sym = freshen(ctx.code, :pointer_to_lvl)
