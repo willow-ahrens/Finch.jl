@@ -7,7 +7,7 @@ struct StepperStyle end
     next = (ctx, ext) -> nothing
     body = (ctx, ext) -> chunk
     seek = (ctx, start) -> error("seek not implemented error")
-    epilogue = nothing
+    epilogue = (ctx, ext) -> nothing
     finalstop = (ctx, ext) -> nothing
 end
 
@@ -128,7 +128,6 @@ end
 function phase_range(node::AcceptStepper, ctx, ext)
     node = node.stepper
     push!(ctx.code.preamble, node.preamble !== nothing ? node.preamble : quote end)
-    push!(ctx.code.epilogue, node.epilogue !== nothing ? node.epilogue : quote end)
     if node.finalstop(ctx, ext) !== nothing
         ext_2 = similar_extent(ext, getstart(ext), bound_above!(ctx, node.stop(ctx, ext), node.finalstop(ctx, ext)))
     else
@@ -150,7 +149,11 @@ function phase_body(node::AcceptStepper, ctx, ext, ext_2)
                 truncate(node.chunk, ctx, ext, similar_extent(ext, getstart(ext_2), bound_above!(ctx, getstop(ext_2), call(-, getstop(ext), getunit(ext))))),
         ])
     else
-        node.body(ctx, ext_2)
-
+        if node.epilogue(ctx, ext_2) !== nothing
+          Thunk(body = (ctx) -> node.body(ctx, ext_2),
+                epilogue = node.epilogue(ctx, ext_2))
+        else
+          node.body(ctx, ext_2)
+        end
     end
 end

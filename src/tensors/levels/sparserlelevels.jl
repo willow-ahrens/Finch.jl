@@ -276,7 +276,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, su
                                 )
                             )
                         ]),
-                        epilogue = quote
+                        epilogue = (ctx, ext) -> quote
                             $my_q += ($(ctx(getstop(ext))) == $my_i_stop)
                         end,
                         finalstop = (ctx, ext) -> value(my_i_end, lvl.Ti),
