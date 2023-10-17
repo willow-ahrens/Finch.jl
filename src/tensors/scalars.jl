@@ -86,7 +86,8 @@ FinchNotation.finch_leaf(x::VirtualDirtyScalar) = virtual(x)
 function lower_access(ctx::AbstractCompiler, node, tns::VirtualDirtyScalar)
     @assert isempty(node.idxs)
     push!(ctx.code.preamble, quote
-        $(tns.dirty) = true
+        $(tns.dirty) = true 
     end)
+
     return tns.val
 end

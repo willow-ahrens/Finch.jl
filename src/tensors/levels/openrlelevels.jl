@@ -279,7 +279,7 @@ function instantiate_reader(fbr::VirtualSubFiber{VirtualOpenRLELevel}, ctx, subp
                                 )
                             ]),
                             epilogue = quote
-                                $my_q += ($(ctx(getstop(ext))) == $my_i_stop)
+                               $my_q += ($(ctx(getstop(ext))) == $my_i_stop - $(ctx(getunit(ext))))
                             end
                         ),
                         finalstop = (ctx, ext) -> call(-, value(my_i_end, lvl.Ti), getunit(ext)),

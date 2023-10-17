@@ -441,7 +441,9 @@ function (ctx::MarkDead)(ex, res)
         body_2 = body
         while true
             ctx_2 = copy(ctx)
+            ctx_3 = branch(ctx) # Correct?
             body_2 = ctx(body, false)
+            meet!(ctx, ctx_3) # Correct?
             ctx == ctx_2 && break
         end
         ext = ctx(ext, iseffectful(body_2))
