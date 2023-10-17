@@ -4,19 +4,17 @@
 [ddocs]:https://willow-ahrens.github.io/Finch.jl/dev
 [ci]:https://github.com/willow-ahrens/Finch.jl/actions/workflows/CI.yml?query=branch%3Amain
 [cov]:https://codecov.io/gh/willow-ahrens/Finch.jl
-[tool]:https://mybinder.org/v2/gh/willow-ahrens/Finch.jl/gh-pages?labpath=dev%2Finteractive.ipynb
 [example]:https://github.com/willow-ahrens/Finch.jl/tree/main/docs/examples
 
 [docs_ico]:https://img.shields.io/badge/docs-stable-blue.svg
 [ddocs_ico]:https://img.shields.io/badge/docs-dev-blue.svg
 [ci_ico]:https://github.com/willow-ahrens/Finch.jl/actions/workflows/CI.yml/badge.svg?branch=main
 [cov_ico]:https://codecov.io/gh/willow-ahrens/Finch.jl/branch/main/graph/badge.svg
-[tool_ico]:https://mybinder.org/badge_logo.svg
 [example_ico]:https://img.shields.io/badge/examples-docs%2Fexamples-blue.svg
 
 | **Documentation**                             | **Build Status**                      | **Examples**    |
 |:---------------------------------------------:|:-------------------------------------:|:---------------------:|
-| [![][docs_ico]][docs] [![][ddocs_ico]][ddocs] | [![][ci_ico]][ci] [![][cov_ico]][cov] | [![][example_ico]][example] [![][tool_ico]][tool]  |
+| [![][docs_ico]][docs] [![][ddocs_ico]][ddocs] | [![][ci_ico]][ci] [![][cov_ico]][cov] | [![][example_ico]][example] |
 
 Finch is a adaptable Julia-to-Julia compiler for loop nests over sparse or
 structured multidimensional arrays.  Finch allows you to write `for`-loops as if
