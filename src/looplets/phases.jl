@@ -2,7 +2,13 @@
     body
     start = (ctx, ext) -> nothing
     stop = (ctx, ext) -> nothing
-    range = (ctx, ext) -> similar_extent(ext, something(start(ctx, ext), getstart(ext)), something(stop(ctx, ext), getstop(ext)))
+    range = (ctx, ext) -> begin 
+      if ismissing(start(ctx,ext))
+          similar_extent(ext, getstart(ext), something(stop(ctx, ext), getstop(ext)))
+      else
+         similar_extent(ext, something(start(ctx, ext), getstart(ext)), something(stop(ctx, ext), getstop(ext)))
+      end
+    end
 end
 FinchNotation.finch_leaf(x::Phase) = virtual(x)
 
@@ -66,7 +72,17 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::PhaseStyle)
         ext_3 = virtual_intersect(ctx, root.ext.val, ext_2)
 
         ext_4 = cache_dim!(ctx, :phase, ext_3)
- 
+
+        #display(getstart(root.ext))
+        #display(getstop(root.ext))
+        #display(getstart(ext_2))
+        #display(getstop(ext_2))
+        #display(simplify(getstart(ext_3), ctx))
+        #display(getstop(ext_3))
+        #display(getstart(ext_4))
+        #display(getstop(ext_4))
+        #println()
+
         body = Rewrite(Postwalk(node->phase_body(node, ctx, root.ext, ext_4)))(body)
         
         body = quote

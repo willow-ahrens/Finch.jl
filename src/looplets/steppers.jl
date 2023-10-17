@@ -7,6 +7,7 @@ struct StepperStyle end
     next = (ctx, ext) -> nothing
     body = (ctx, ext) -> chunk
     seek = (ctx, start) -> error("seek not implemented error")
+    epilogue = nothing
     finalstop = (ctx, ext) -> nothing
 end
 
@@ -40,7 +41,26 @@ combine_style(a::StepperStyle, b::PhaseStyle) = b
 stepper_seek(node::Stepper, ctx, ext) = node.seek(ctx, ext)
 stepper_seek(node, ctx, ext) = quote end
 
-stepper_body(node::Stepper, ctx, ext) = AcceptStepper(node)
+stepper_body(node::Stepper, ctx, ext) = begin 
+  if query_z3(call(==,1,getstart(ext)), ctx)
+    if node.body(ctx,ext) isa Sequence
+      firstphase = node.body(ctx,ext).phases[1] 
+      restphase = node.body(ctx,ext).phases[2:end]
+      pushfirst!(restphase, Phase(start=(ctx,ext)->missing, stop=firstphase.stop, body=firstphase.body))
+      return AcceptStepper(Stepper(
+                                  preamble=node.preamble,
+                                  stop=node.stop,
+                                  chunk = node.chunk,
+                                  next = node.next,
+                                  body = (ctx,ext) -> Sequence(restphase),
+                                  seek = node.seek,
+                                  epilogue = node.epilogue,
+                                  finalstop = node.finalstop
+                                  ))
+    end
+  end
+  return AcceptStepper(node)
+end
 stepper_body(node, ctx, ext) = node
 
 function lower(root::FinchNode, ctx::AbstractCompiler,  style::StepperStyle)
@@ -84,7 +104,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::StepperStyle)
             $(contain(ctx_2) do ctx_3
                 ctx_3(loop(root.idx, ext_4, body))
             end)
-            
+           
             $i = $(ctx_2(getstop(ext_4))) + $(ctx_2(getunit(ext_4)))
         end
 
@@ -108,6 +128,7 @@ end
 function phase_range(node::AcceptStepper, ctx, ext)
     node = node.stepper
     push!(ctx.code.preamble, node.preamble !== nothing ? node.preamble : quote end)
+    push!(ctx.code.epilogue, node.epilogue !== nothing ? node.epilogue : quote end)
     if node.finalstop(ctx, ext) !== nothing
         ext_2 = similar_extent(ext, getstart(ext), bound_above!(ctx, node.stop(ctx, ext), node.finalstop(ctx, ext)))
     else
@@ -120,8 +141,7 @@ function phase_body(node::AcceptStepper, ctx, ext, ext_2)
     node = node.stepper
     next = node.next(ctx, ext_2)
     if next !== nothing
-        Switch([
-            #value(:($(ctx(node.stop(ctx, ext))) == $(ctx(getstop(ext_2))))) => Thunk(
+        return Switch([
             call(==, node.stop(ctx, ext), getstop(ext_2))=> Thunk(
                 body = (ctx) -> truncate(node.chunk, ctx, ext, similar_extent(ext, getstart(ext_2), getstop(ext))),
                 epilogue = next
@@ -131,5 +151,6 @@ function phase_body(node::AcceptStepper, ctx, ext, ext_2)
         ])
     else
         node.body(ctx, ext_2)
+
     end
 end
