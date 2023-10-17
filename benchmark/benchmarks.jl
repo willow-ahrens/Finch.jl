@@ -39,28 +39,6 @@ let
     end
 end
 
-SUITE["embed"] = BenchmarkGroup()
-
-libembedbenchmarks_file = joinpath(@__DIR__, "libembedbenchmarks.so")
-if isfile(libembedbenchmarks_file)
-    Base.Libc.Libdl.dlopen(libembedbenchmarks_file)
-
-    ccall((:benchmarks_initialize, "libembedbenchmarks.so"), Cvoid, ())
-
-    function sample_spmv_tiny((), params::BenchmarkTools.Parameters)
-        evals = params.evals
-        sample_time = ccall((:benchmark_spmv_tiny, "libembedbenchmarks.so"), Clong, (Cint,), evals)
-        time = max((sample_time / evals) - params.overhead, 0.001)
-        gctime = memory = allocs = return_val = 0
-        return time, gctime, memory, allocs, return_val
-    end
-
-    SUITE["embed"]["spmv_tiny"] = BenchmarkTools.Benchmark(sample_spmv_tiny, (), BenchmarkTools.Parameters())
-
-    #TODO how to call this at the right time?
-    #println(ccall((:benchmarks_finalize, "libembedbenchmarks.so"), Cvoid, ()))
-end
-
 SUITE["graphs"] = BenchmarkGroup()
 
 SUITE["graphs"]["pagerank"] = BenchmarkGroup()
@@ -102,30 +80,30 @@ end
 SUITE["indices"] = BenchmarkGroup()
 
 function spmv32(A, x)
-    y = Fiber!(Dense{Int32}(Element(0.0)))
+    y = Fiber!(Dense{Int32}(Element{0.0, Float64, Int32}()))
     @finch (y .= 0; for i=_, j=_; y[i] += A[j, i] * x[j] end)
     return y
 end
 
 SUITE["indices"]["SpMV_32"] = BenchmarkGroup()
 for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
-    A = fiber(SparseMatrixCSC(matrixdepot(mtx)))
-    A = copyto!(Fiber!(Dense{Int32}(SparseList{Int32, Int32}(Element(0.0)))), A)
-    x = copyto!(Fiber!(Dense{Int32}(Element(0.0))), rand(size(A)[2]))
+    A = SparseMatrixCSC(matrixdepot(mtx))
+    A = Fiber!(Dense{Int32}(SparseList{Int32}(Element{0.0, Float64, Int32}())), A)
+    x = Fiber!(Dense{Int32}(Element{0.0, Float64, Int32}()), rand(size(A)[2]))
     SUITE["indices"]["SpMV_32"][mtx] = @benchmarkable spmv32($A, $x) 
 end
 
 function spmv64(A, x)
-    y = Fiber!(Dense{Int64}(Element(0.0)))
+    y = Fiber!(Dense{Int64}(Element{0.0, Float64, Int64}()))
     @finch (y .= 0; for i=_, j=_; y[i] += A[j, i] * x[j] end)
     return y
 end
 
 SUITE["indices"]["SpMV_64"] = BenchmarkGroup()
 for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
-    A = fiber(SparseMatrixCSC(matrixdepot(mtx)))
-    A = copyto!(Fiber!(Dense{Int64}(SparseList{Int64, Int64}(Element(0.0)))), A)
-    x = copyto!(Fiber!(Dense{Int64}(Element(0.0))), rand(size(A)[2]))
+    A = SparseMatrixCSC(matrixdepot(mtx))
+    A = Fiber!(Dense{Int64}(SparseList{Int64}(Element{0.0, Float64, Int64}())), A)
+    x = Fiber!(Dense{Int64}(Element{0.0, Float64, Int64}()), rand(size(A)[2]))
     SUITE["indices"]["SpMV_64"][mtx] = @benchmarkable spmv64($A, $x) 
 end
 

@@ -21,7 +21,7 @@ run this with a $(Sys.WORD_SIZE==32 ? 64 : 32)-bit julia executable.")
     "suites"
         nargs = '*'
         default = ["all"]
-        help = "names of test suites to run, from: print, representation, constructors, conversions, merges, index, typical, kernels, issues, base, apps, fileio, docs, embed, debug, continuous, algebra, moveto."
+        help = "names of test suites to run, from: print, representation, constructors, conversions, merges, index, typical, kernels, issues, base, apps, fileio, docs, debug, continuous, algebra, moveto."
 end
 parsed_args = parse_args(ARGS, s)
 
@@ -103,7 +103,6 @@ include("utils.jl")
             end
         end
     end
-    if should_run("embed") include("embed/test_embed.jl") end
     if should_run("parallel") include("test_parallel.jl") end
     #if should_run("continuous") include("test_continuous.jl") end
     #algebra goes at the end since it calls refresh()

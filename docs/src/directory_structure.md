@@ -19,7 +19,6 @@ not up to date.
 │   ├── fix.jl                 # fix docstrings
 │   ├── make.jl                # build documentation locally
 │   └── ...                 
-├── embed                      # wrappers for embedding Finch in C
 ├── ext                        # conditionally-loaded code for interaction with other packages (e.g. SparseArrays)
 ├── src                        # Source files
 │   ├── base                   # Implementations of base functions (e.g. map, reduce, etc.)
@@ -48,7 +47,6 @@ not up to date.
 │   ├──  util.jl               # shims and julia codegen utils (Dead code elimination, etc...)
 │   └── ...
 ├── test                       # tests
-│   ├──  embed                 # tests for the C embedding. Optional build before runtests.jl
 │   ├──  reference32           # reference output for 32-bit systems
 │   ├──  reference64           # reference output for 64-bit systems
 │   ├──  runtests.jl           # runs the test suite. (pass -h for options and more info!)
