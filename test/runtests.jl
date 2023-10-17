@@ -92,7 +92,7 @@ include("utils.jl")
     if should_run("kernels") include("test_kernels.jl") end
     if should_run("issues") include("test_issues.jl") end
     if should_run("base") include("test_base.jl") end
-    if should_run("apps") include("test_apps.jl") end
+    if should_run("examples") include("test_examples.jl") end
     if should_run("fileio") include("test_fileio.jl") end
     if should_run("docs") && Sys.WORD_SIZE == 64
         @testset "Documentation" begin

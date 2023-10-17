@@ -77,8 +77,5 @@ quote
 end
 ```
 
-
-We're working on adding more documentation, for now take a look at the examples
-for [linear
-algebra](https://github.com/willow-ahrens/Finch.jl/blob/main/apps/linalg.jl) or
-[graphs](https://github.com/willow-ahrens/Finch.jl/blob/main/apps/graphs.jl).
+We're working on adding more documentation, for now take a look at the
+[examples](https://github.com/willow-ahrens/Finch.jl/blob/main/docs/examples)!

@@ -5,10 +5,6 @@ not up to date.
 
 ```
 .
-├── apps                       # Example applications implemented in Finch!
-│   ├── graphs.jl              # Graph Algorithms: Pagerank, Bellman-Ford, etc...
-│   ├── linalg.jl              # Linear Algebra: Sparse-Sparse Matmul, etc...
-│   └── ...
 ├── benchmark                  # benchmarks for internal use
 │   ├── runbenchmarks.jl       # run benchmarks
 │   ├── runjudge.jl            # run benchmarks on current branch and compare with main
@@ -17,6 +13,8 @@ not up to date.
 │   ├── [build]                # rendered docs website
 │   ├── src                    # docs website source
 │   ├── fix.jl                 # fix docstrings
+│   ├── examples               # example applications implemented in Finch!
+│   │   └── ...                 
 │   ├── make.jl                # build documentation locally
 │   └── ...                 
 ├── ext                        # conditionally-loaded code for interaction with other packages (e.g. SparseArrays)
