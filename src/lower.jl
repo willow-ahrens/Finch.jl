@@ -51,7 +51,7 @@ function cache!(ctx::AbstractCompiler, var, val)
     isconstant(val) && return val
     var = freshen(ctx.code,var)
     val = simplify(val, ctx)
-    
+   
     push!(ctx.constraints, call(==, value(var), val))
     
     push!(ctx.code.preamble, quote

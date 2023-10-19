@@ -176,8 +176,10 @@ function query_z3(root::FinchNode, ctx; verbose = false)
 
       function translate_z3(node::FinchNode)::ExprAllocated
           if @capture node call(~op::isliteral, ~args...) 
-              if op.val == fld || op.val == inv # TODO : Implement correctly
+              if op.val == fld # TODO : Implement correctly
                   return /(translate_z3.(args)...)
+              elseif op.val == inv 
+                  return /(1.0, translate_z3.(args)...)
               else
                   return getval(op)(translate_z3.(args)...)
               end
@@ -222,6 +224,12 @@ function query_z3(root::FinchNode, ctx; verbose = false)
             add(z3_solver, constraint)
           end
 
+          #Add main query
+          root = call(not, root)
+          root = Rewrite(Postwalk(normalize_eps))(root)
+          root = translate_z3(root)
+          add(z3_solver, root)     
+ 
           #Declare Constants
           foreach(z3_constants) do (number, var) 
             if number == Finch.Eps
@@ -229,20 +237,15 @@ function query_z3(root::FinchNode, ctx; verbose = false)
             else
               add(z3_solver, ==(var, number))
             end
-          end
+          end 
 
-          #Add main query
-          root = call(not, root)
-          root = Rewrite(Postwalk(normalize_eps))(root)
-          root = translate_z3(root)
-          add(z3_solver, root)     
-          
           #Run Z3
           result = check(z3_solver)==unsat
        
           if verbose
             println(z3_solver)
             println(result)
+            println()
             if !result
               println(get_model(z3_solver))
             end

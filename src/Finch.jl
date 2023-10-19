@@ -39,7 +39,7 @@ export Pattern, PatternLevel
 export walk, gallop, follow, extrude, laminate
 export fiber, fiber!, Fiber!, pattern!, dropdefaults, dropdefaults!, redefault!
 export diagmask, lotrimask, uptrimask, bandmask
-export offset, permissive, protocolize, swizzle, toeplitz, window
+export scale, offset, permissive, protocolize, swizzle, toeplitz, window
 
 export choose, minby, maxby, overwrite, initwrite, d
 
@@ -112,6 +112,7 @@ include("tensors/combinators/protocolized.jl")
 include("tensors/combinators/roots.jl")
 include("tensors/combinators/permissive.jl")
 include("tensors/combinators/offset.jl")
+include("tensors/combinators/scale.jl")
 include("tensors/combinators/toeplitz.jl")
 include("tensors/combinators/windowed.jl")
 include("tensors/combinators/swizzle.jl")

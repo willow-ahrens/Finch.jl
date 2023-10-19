@@ -34,6 +34,21 @@ function get_wrapper_rules(alg, depth, ctx)
             access(A, m, i1..., call(+, j, call(-, k)), i2...)),
         (@rule access(~A, ~m, ~i1..., call(+, ~j), ~i2...) =>
             access(A, m, i1..., j, i2...)),
+        (@rule access(~A, ~m, ~i1..., call(*, ~j1..., ~k, ~j2...), ~i2...) => begin
+            if !isempty(j1) || !isempty(j2) 
+                k_2 = call(*, ~j1..., ~j2...)
+                if depth(k_2) == 0 
+                    scale_1 = ([1 for _ in i1]..., k_2, [1 for _ in i2]...)
+                    access(call(scale, A, scale_1...), m, i1..., k, i2...)
+                end
+            end
+        end),
+        (@rule call(scale, call(scale, ~A, ~scale_1...), ~scale_2...) => begin
+            scale_3 = map(scale_1, scale_2) do proto_1, proto_2
+                call(*, scale_1, scale_2) 
+            end
+            call(scale, A, scale_3...)
+        end),
         (@rule access(~A, ~m, ~i1..., call(+, ~j1..., ~k, ~j2...), ~i2...) => begin
             if (!isempty(j1) || !isempty(j2))
                 k_2 = call(+, ~j1..., ~j2...)
@@ -52,13 +67,6 @@ function get_wrapper_rules(alg, depth, ctx)
                 k_2 = call(+, ~j1..., ~j2...)
                 if depth(k_2) == 0 
                     delta = ([0 for _ in i1]..., k_2, [0 for _ in i2]...)
-                    #println(i1...) 
-                    #println(i2...)
-                    #println(j1...)
-                    #println(j2...)
-                    #println(k_2) 
-                    #println(delta)
-                    #println()
                     access(call(offset, A, delta...), m, i1..., k, i2...)
                 end
             end
@@ -69,6 +77,7 @@ function get_wrapper_rules(alg, depth, ctx)
             end
             call(offset, A, delta_3...)
         end),
+
         (@rule call(offset, call(swizzle, ~A, ~sigma...), ~delta...) =>
             call(swizzle, call(offset, A, delta[invperm(getval.(sigma))]...), sigma...)),
         (@rule access(~A, ~m, ~i1..., access(call(extent, ~start, ~stop), reader(), ~k), ~i2...) => begin
@@ -130,5 +139,7 @@ function wrapperize(root, ctx::AbstractCompiler)
     ])))(root)
     root = simplify(root, ctx)
     root = evaluate_partial(root, ctx)
+    display(root)
+    println(root)
     root
 end

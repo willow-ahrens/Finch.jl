@@ -92,8 +92,8 @@ cache_dim!(ctx, var, ext::Extent) = Extent(
     stop = cache!(ctx, Symbol(var, :_stop), ext.stop)
 )
 
-getstart(ext::Extent) = ext.start
-getstop(ext::Extent) = ext.stop
+getstart(ext::Extent) = simplify(ext.start, LowerJulia())
+getstop(ext::Extent) = simplify(ext.stop, LowerJulia())
 measure(ext::Extent) = call(+, call(-, ext.stop, ext.start), 1)
 
 combinedim(ctx, a::Extent, b::Extent) =
@@ -134,7 +134,9 @@ function checklim(ctx, a::FinchNode, b::FinchNode)
         push!(ctx.code.preamble, quote
             $(ctx(a)) == $(ctx(b)) || throw(DimensionMismatch("mismatched dimension limits ($($(ctx(a))) != $($(ctx(b))))"))
         end)
-        push!(ctx.constraints, call(==, a, b))
+        if !query_z3(call(not, call(==, a, b)), ctx)
+          push!(ctx.constraints, call(==, a, b))
+        end
         a
     else
         b
@@ -194,6 +196,31 @@ function shiftdim(ext::FinchNode, body)
         error("unimplemented")
     end
 end
+
+function scaledim(ext::Extent, scale)
+    Extent(
+        start = call(*, ext.start, scale),
+        stop = call(*, ext.stop, scale)
+    )
+end
+function scaledim(ext::ContinuousExtent, scale)
+    ContinuousExtent(
+        start = call(*, ext.start, scale),
+        stop = call(*, ext.stop, scale)
+    )
+end
+
+scaledim(ext::Dimensionless, scale) = dimless
+scaledim(ext::ParallelDimension, scale) = ParallelDimension(ext, scaledim(ext.ext, scale))
+
+function scaledim(ext::FinchNode, body)
+    if ext.kind === virtual
+        scaledim(ext.val, body)
+    else
+        error("unimplemented")
+    end
+end
+
 
 #virtual_intersect(ctx, a, b) = virtual_intersect(ctx, promote(a, b)...)
 function virtual_intersect(ctx, a, b)
@@ -273,10 +300,10 @@ get_smallest_measure(ext::Extent) = literal(1)
 get_smallest_measure(ext::ContinuousExtent) = literal(0) 
 get_smallest_measure(ext::FinchNode) = ext.kind === virtual ? get_smallest_measure(ext.val) : ext
 
-getstart(ext::ContinuousExtent) = ext.start
+getstart(ext::ContinuousExtent) = simplify(ext.start, LowerJulia())
 getstart(ext::FinchNode) = ext.kind === virtual ? getstart(ext.val) : ext
 
-getstop(ext::ContinuousExtent) = ext.stop
+getstop(ext::ContinuousExtent) = simplify(ext.stop, LowerJulia())
 getstop(ext::FinchNode) = ext.kind === virtual ? getstop(ext.val) : ext
 
 measure(ext::ContinuousExtent) = call(-, ext.stop, ext.start) # TODO: Think carefully, Not quite sure!
