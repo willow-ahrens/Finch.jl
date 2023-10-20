@@ -96,7 +96,7 @@ broadcast_rep_child(r::RepeatData) = r.lvl
 broadcast_rep(::BroadcastRepDenseStyle, f, args) = DenseData(broadcast_rep(f, map(broadcast_rep_child, args)))
 
 function broadcast_rep(::BroadcastRepSparseStyle, f, args)
-    if length(args) == 1
+    if all(arg -> isa(arg, SparseData), args)
         return SparseData(broadcast_rep(f, map(broadcast_rep_child, args)))
     end
     for arg in args
