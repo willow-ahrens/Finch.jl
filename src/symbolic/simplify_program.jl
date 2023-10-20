@@ -71,6 +71,7 @@ function get_program_rules(alg, shash)
         (@rule call(ifelse, false, ~a, ~b) => b),
         (@rule call(ifelse, ~a, ~b, ~b) => b),
         (@rule $(literal(-0.0)) => literal(0.0)),
+        (@rule call(norm, ~x::isliteral, ~y) => if iszero(x.val) x end),
 
         (@rule block(~a1..., sieve(~c, ~b1), sieve(~c, ~b2), ~a2...) =>
             block(a1..., sieve(~c, block(b1, b2)), a2...)

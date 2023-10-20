@@ -2,6 +2,7 @@ using Base: Broadcast
 using Base.Broadcast: Broadcasted, BroadcastStyle, AbstractArrayStyle
 using Base.Broadcast: combine_eltypes
 using Base: broadcasted
+using LinearAlgebra
 
 """
     reduce_rep(op, tns, dims)
@@ -55,15 +56,50 @@ function Base.reduce(op, src::Fiber; kw...)
     bc = broadcasted(identity, src)
     reduce(op, broadcasted(identity, src); kw...)
 end
-function Base.mapreduce(f, op, src::Fiber, args::Union{Fiber, Base.AbstractArrayOrBroadcasted}...; kw...)
+function Base.mapreduce(f, op, src::Fiber, args::Union{Fiber, Base.AbstractArrayOrBroadcasted, Number}...; kw...)
     reduce(op, broadcasted(f, src, args...); kw...)
 end
-function Base.map(f, src::Fiber, args::Union{Fiber, Base.AbstractArrayOrBroadcasted}...)
+function Base.map(f, src::Fiber, args::Union{Fiber, Base.AbstractArrayOrBroadcasted, Number}...)
     f.(src, args...)
 end
 function Base.map!(dst, f, src::Fiber, args::Union{Fiber, Base.AbstractArrayOrBroadcasted}...)
     copyto!(dst, Base.broadcasted(f, src, args...))
 end
+
+Base.:+(
+    x::Fiber,
+    y::Union{Fiber, Base.AbstractArrayOrBroadcasted, Number},
+    z::Union{Fiber, Base.AbstractArrayOrBroadcasted, Number}...
+) = map(+, x, y, z...)
+Base.:+(
+    x::Union{Fiber, Base.AbstractArrayOrBroadcasted, Number},
+    y::Fiber,
+    z::Union{Fiber, Base.AbstractArrayOrBroadcasted, Number}...
+) = map(+, y, x, z...)
+Base.:+(
+    x::Fiber,
+    y::Fiber,
+    z::Union{Fiber, Base.AbstractArrayOrBroadcasted, Number}...
+) = map(+, x, y, z...)
+Base.:*(
+    x::Fiber,
+    y::Number,
+    z::Number...
+) = map(*, x, y, z...)
+Base.:*(
+    x::Number,
+    y::Fiber,
+    z::Number...
+) = map(*, y, x, z...)
+
+Base.:-(x::Fiber) = map(-, x)
+
+Base.:-(x::Fiber, y::Union{Fiber, Base.AbstractArrayOrBroadcasted, Number}) = map(-, x, y)
+Base.:-(x::Union{Fiber, Base.AbstractArrayOrBroadcasted, Number}, y::Fiber) = map(-, x, y)
+Base.:-(x::Fiber, y::Fiber) = map(-, x, y)
+
+Base.:/(x::Fiber, y::Number) = map(/, x, y)
+Base.:/(x::Number, y::Fiber) = map(\, y, x)
 
 function initial_value(op, T)
     try
@@ -122,4 +158,142 @@ Base.any(arr::FiberOrBroadcast; kwargs...) = reduce(or, arr; init = false, kwarg
 Base.all(arr::FiberOrBroadcast; kwargs...) = reduce(and, arr; init = true, kwargs...)
 Base.minimum(arr::FiberOrBroadcast; kwargs...) = reduce(min, arr; init = Inf, kwargs...)
 Base.maximum(arr::FiberOrBroadcast; kwargs...) = reduce(max, arr; init = -Inf, kwargs...)
-#Base.extrema(arr::FiberOrBroadcast; kwargs...) #TODO 
+
+min1max2((a, b), (c, d)) = (min(a, c), max(b, d))
+plex(a) = (a, a)
+isassociative(::AbstractAlgebra, ::typeof(min1max2)) = true
+iscommutative(::AbstractAlgebra, ::typeof(min1max2)) = true
+isidempotent(::AbstractAlgebra, ::typeof(min1max2)) = true
+isidentity(alg::AbstractAlgebra, ::typeof(min1max2), x::Tuple) = !ismissing(x) && isinf(x[1]) && x[1] > 0 && isinf(x[2]) && x[2] < 0
+isannihilator(alg::AbstractAlgebra, ::typeof(min1max2), x::Tuple) = !ismissing(x) && isinf(x[1]) && x[1] < 0 && isinf(x[2]) && x[2] > 0
+Base.extrema(arr::FiberOrBroadcast; kwargs...) = mapreduce(plex, min1max2, arr; init = (Inf, -Inf), kwargs...)
+
+struct Square{T, S}
+    arg::T
+    scale::S
+end
+
+@inline square(x) = Square(sign(x)^2, norm(x))
+
+@inline root(x::Square) = sqrt(x.arg) * x.scale
+
+@inline Base.zero(::Type{Square{T, S}}) where {T, S} = Square{T, S}(zero(T), zero(S))
+@inline Base.zero(::Square{T, S}) where {T, S} = Square{T, S}(zero(T), zero(S))
+
+function Base.promote_rule(::Type{Square{T1, S1}}, ::Type{Square{T2, S2}}) where {T1, S1, T2, S2}
+    return Square{promote_type(T1, T2), promote_type(S1, S2)}
+end
+
+function Base.convert(::Type{Square{T, S}}, x::Square) where {T, S}
+    return Square(convert(T, x.arg), convert(S, x.scale))
+end
+
+function Base.promote_rule(::Type{Square{T1, S1}}, ::Type{T2}) where {T1, S1, T2<:Number}
+    return promote_type(T1, T2)
+end
+
+function Base.convert(T::Type{<:Number}, x::Square)
+    return convert(T, root(x))
+end
+
+@inline function Base.:+(x::T, y::T) where {T <: Square}
+    if x.scale < y.scale
+        (x, y) = (y, x)
+    end
+    if x.scale > y.scale
+        if iszero(y.scale)
+            return Square(x.arg + zero(y.arg) * (one(y.scale)/one(x.scale))^1, x.scale)
+        else
+            return Square(x.arg + y.arg * (y.scale/x.scale)^2, x.scale)
+        end
+    else
+        return Square(x.arg + y.arg * (one(y.scale)/one(x.scale))^1, x.scale)
+    end
+end
+
+@inline function Base.:*(x::Square, y::Integer)
+    return Square(x.arg * y, x.scale)
+end
+
+@inline function Base.:*(x::Integer, y::Square)
+    return Square(y.arg * x, y.scale)
+end
+
+struct Power{T, S, E}
+    arg::T
+    scale::S
+    exponent::E
+end
+
+@inline power(x, p) = Power(sign(x)^p, norm(x), p)
+
+@inline root(x::Power) = x.arg ^ inv(x.exponent) * x.scale
+
+@inline Base.zero(::Type{Power{T, S, E}}) where {T, S, E} = Power{T, S, E}(zero(T), zero(S), one(E))
+@inline Base.zero(x::Power) = Power(zero(x.arg), zero(x.scale), x.exponent)
+
+function Base.promote_rule(::Type{Power{T1, S1, E1}}, ::Type{Power{T2, S2, E2}}) where {T1, S1, E1, T2, S2, E2}
+    return Power{promote_type(T1, T2), promote_type(S1, S2), promote_type(E1, E2)}
+end
+
+function Base.convert(::Type{Power{T, S, E}}, x::Power) where {T, S, E}
+    return Power(convert(T, x.arg), convert(S, x.scale), convert(E, x.exponent))
+end
+
+function Base.promote_rule(::Type{Power{T1, S1, E1}}, ::Type{T2}) where {T1, S1, E1, T2<:Number}
+    return promote_type(T1, T2)
+end
+
+function Base.convert(T::Type{<:Number}, x::Power)
+    return convert(T, root(x))
+end
+
+@inline function Base.:+(x::T, y::T) where {T <: Power}
+    if x.exponent != y.exponent
+        if iszero(x.arg) && iszero(x.scale)
+            (x, y) = (y, x)
+        end
+        if iszero(y.arg) && iszero(y.scale)
+            y = Power(y.arg, y.scale, x.exponent)
+        else
+            ArgumentError("Cannot accurately add Powers with different exponents")
+        end
+    end
+    #TODO handle negative exponent
+    if x.scale < y.scale
+        (x, y) = (y, x)
+    end
+    if x.scale > y.scale
+        if iszero(y.scale)
+            return Power(x.arg + zero(y.arg) * (one(y.scale)/one(x.scale))^one(y.exponent), x.scale, x.exponent)
+        else
+            return Power(x.arg + y.arg * (y.scale/x.scale)^y.exponent, x.scale, x.exponent)
+        end
+    else
+        return Power(x.arg + y.arg * (one(y.scale)/one(x.scale))^one(y.exponent), x.scale, x.exponent)
+    end
+end
+
+@inline function Base.:*(x::Power, y::Integer)
+    return Power(x.arg * y, x.scale, x.exponent)
+end
+
+@inline function Base.:*(x::Integer, y::Power)
+    return Power(y.arg * x, y.scale, y.exponent)
+end
+
+function LinearAlgebra.norm(arr::FiberOrBroadcast, p::Real = 2)
+    if p == 2
+        return root(sum(broadcasted(square, arr)))
+    elseif p == 1
+        return sum(broadcasted(abs, arr))
+    elseif p == Inf
+        return maximum(broadcasted(abs, arr))
+    elseif p == 0
+        return sum(broadcasted(!, broadcasted(iszero, arr)))
+    elseif p == -Inf
+        return minimum(broadcasted(abs, arr))
+    else
+        return root(sum(broadcasted(power, broadcasted(norm, arr, p), p)))
+    end
+end
