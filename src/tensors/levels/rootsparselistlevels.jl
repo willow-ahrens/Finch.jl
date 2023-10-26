@@ -20,6 +20,7 @@ struct RootSparseListLevel{Ti, Idx, Lvl} <: AbstractLevel
     lvl::Lvl
     shape::Ti
     idx::Idx
+    endpoint::Base.RefValue{Ti}
 end
 const RootSparseList = RootSparseListLevel
 RootSparseListLevel(lvl) = RootSparseListLevel{Int}(lvl)
@@ -28,8 +29,10 @@ RootSparseListLevel{Ti}(lvl) where {Ti} = RootSparseListLevel{Ti}(lvl, zero(Ti))
 RootSparseListLevel{Ti}(lvl, shape) where {Ti} = RootSparseListLevel{Ti}(lvl, shape, Ti[])
 
 RootSparseListLevel{Ti}(lvl::Lvl, shape, idx::Idx) where {Ti, Lvl, Idx} =
-    RootSparseListLevel{Ti, Idx, Lvl}(lvl, shape, idx)
-    
+    RootSparseListLevel{Ti, Idx, Lvl}(lvl, shape, idx, Base.Ref(length(idx)))
+
+RootSparseListLevel{Ti}(lvl::Lvl, shape, idx::Idx, endpoint::Ti) where {Ti, Lvl, Idx} =
+    RootSparseListLevel{Ti, Idx, Lvl}(lvl, shape, idx,  Base.Ref(endpoint))
 Base.summary(lvl::RootSparseListLevel) = "RootSparseList($(summary(lvl.lvl)))"
 similar_level(lvl::RootSparseListLevel) = RootSparseList(similar_level(lvl.lvl))
 similar_level(lvl::RootSparseListLevel, dim, tail...) = RootSparseList(similar_level(lvl.lvl, tail...), dim)
@@ -107,8 +110,9 @@ mutable struct VirtualRootSparseListLevel <: AbstractVirtualLevel
     Ti
     idx
     shape
-    qos_fill
-    qos_stop
+    qos_fill # next position to use
+    qos_stop # max position avaliable
+    endpoint # endpoint.
 end
   
 is_level_injective(lvl::VirtualRootSparseListLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., false]
@@ -123,9 +127,10 @@ function virtualize(ex, ::Type{RootSparseListLevel{Ti, Idx, Lvl}}, ctx, tag=:lvl
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
     shape = value(:($sym.shape), Int)
+    endpoint = value(:($sym.endpoint[]), Ti)
     qos_fill = freshen(ctx, sym, :_qos_fill)
     qos_stop = freshen(ctx, sym, :_qos_stop)
-    VirtualRootSparseListLevel(lvl_2, sym, Ti, idx, shape, qos_fill, qos_stop)
+    VirtualRootSparseListLevel(lvl_2, sym, Ti, idx, shape, qos_fill, qos_stop, endpoint)
 end
 function lower(lvl::VirtualRootSparseListLevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
@@ -133,6 +138,7 @@ function lower(lvl::VirtualRootSparseListLevel, ctx::AbstractCompiler, ::Default
             $(ctx(lvl.lvl)),
             $(ctx(lvl.shape)),
             $(lvl.idx),
+            $(ctx(lvl.endpoint)),
         )
     end
 end
@@ -161,8 +167,9 @@ function declare_level!(lvl::VirtualRootSparseListLevel, ctx::AbstractCompiler, 
     Tp = postype(lvl)
     @assert pos == literal(0) || pos == literal(1)
     qos = lvl.qos_fill
+    endpoint = ctx(lvl.endpoint)
     push!(ctx.code.preamble, quote
-        $(qos) = $(Tp(1))
+        $(qos) = $Tp($endpoint) + $(Tp(1))
         $(lvl.qos_stop) = $Tp(length($(lvl.idx)))
     end)
     lvl.lvl = declare_level!(lvl.lvl, ctx, literal(0), init)
@@ -174,8 +181,9 @@ function thaw_level!(lvl::VirtualRootSparseListLevel, ctx::AbstractCompiler, pos
     Tp = postype(lvl)
     @assert pos == literal(1)
     qos = lvl.qos_fill
+    endpoint = ctx(lvl.endpoint)
     push!(ctx.code.preamble, quote
-        $(lvl.qos_stop) = $Tp(length($(lvl.idx)))
+        $(lvl.qos_stop) = $Tp($endpoint)
         $qos = $(lvl.qos_stop) + 1
     end)
     lvl.lvl = thaw_level!(lvl.lvl, ctx, qos)
@@ -186,7 +194,9 @@ function trim_level!(lvl::VirtualRootSparseListLevel, ctx::AbstractCompiler, pos
     @assert pos == literal(1)
     qos = freshen(ctx.code, :qos)
     Tp = postype(lvl)
+    endpoint = ctx(lvl.endpoint)
     push!(ctx.code.preamble, quote
+        resize!($(lvl.idx), $Tp($endpoint))
         $qos = $Tp(length($(lvl.idx)))
     end)
     lvl.lvl = trim_level!(lvl.lvl, ctx, value(qos, Tp))
@@ -227,6 +237,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualRootSparseListLevel}, ctx, mode
     tag = lvl.ex
     Tp = postype(lvl)
     Ti = lvl.Ti
+    qos_fill = lvl.qos_fill
     my_i = freshen(ctx.code, tag, :_i)
     my_q = freshen(ctx.code, tag, :_q)
     my_q_stop = freshen(ctx.code, tag, :_q_stop)
@@ -237,7 +248,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualRootSparseListLevel}, ctx, mode
             preamble = quote
 
                 $my_q = $(Tp(1))
-                $my_q_stop = $Tp(length($(lvl.idx))) + $(Tp(1))
+                $my_q_stop = $Tp($(qos_fill)) + $(Tp(1))
                 if !isempty($(lvl.idx))
                     $my_i = $(lvl.idx)[1]
                     $my_i1 = $(lvl.idx)[end]
@@ -277,6 +288,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualRootSparseListLevel}, ctx, mode
     tag = lvl.ex
     Tp = postype(lvl)
     Ti = lvl.Ti
+    qos_fill = lvl.qos_fill
     my_i = freshen(ctx.code, tag, :_i)
     my_q = freshen(ctx.code, tag, :_q)
     my_q_stop = freshen(ctx.code, tag, :_q_stop)
@@ -289,7 +301,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualRootSparseListLevel}, ctx, mode
         body = (ctx, ext) -> Thunk(
             preamble = quote
                 $my_q = $(Tp(1))
-                $my_q_stop = $Tp(length(lvl.idx)) + $(Tp(1))
+                $my_q_stop = $Tp($(qos_fill)) + $(Tp(1))
                 if !isempty($(lvl.idx))
                     $my_i = $(lvl.idx)[1]
                     $my_i1 = $(lvl.idx)[end]
@@ -334,6 +346,7 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualRootSparseListLevel}, ctx
     qos = lvl.qos_fill
     qos_stop = lvl.qos_stop
     dirty = freshen(ctx.code, tag, :dirty)
+    endpoint = ctx(lvl.endpoint)
 
     Furlable(
         body = (ctx, ext) -> Lookup(
@@ -357,6 +370,7 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualRootSparseListLevel}, ctx
                         $(fbr.dirty) = true
                         $(lvl.idx)[$qos] = $(ctx(idx))
                         $qos += $(Tp(1))
+                        $endpoint += $(Tp(1))
                     end
                 end
             )

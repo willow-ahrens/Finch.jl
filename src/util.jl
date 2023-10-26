@@ -120,6 +120,12 @@ function resize_if_smaller!(arr, i)
     end
 end
 
+function resize_if_larger!(arr, i)
+    if length(arr) >= i
+        resize!(arr, i)
+    end
+end
+
 """
     pretty(ex) 
 

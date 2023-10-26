@@ -111,7 +111,6 @@ function declare_level!(lvl::VirtualPointerLevel, ctx, pos, init)
     return lvl
 end
 
-# Why do these not recurse?
 function assemble_level!(lvl::VirtualPointerLevel, ctx, pos_start, pos_stop)
     pos_start = cache!(ctx, :pos_start, simplify(pos_start, ctx))
     pos_stop = cache!(ctx, :pos_stop, simplify(pos_stop, ctx))
