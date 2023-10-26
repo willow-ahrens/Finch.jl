@@ -33,6 +33,9 @@ RootSparseListLevel{Ti}(lvl::Lvl, shape, idx::Idx) where {Ti, Lvl, Idx} =
 
 RootSparseListLevel{Ti}(lvl::Lvl, shape, idx::Idx, endpoint::Ti) where {Ti, Lvl, Idx} =
     RootSparseListLevel{Ti, Idx, Lvl}(lvl, shape, idx,  Base.Ref(endpoint))
+
+RootSparseListLevel{Ti, Idx, Lvl}(lvl::Lvl, shape::Ti, idx::Idx, endpoint::Ti) where {Ti, Lvl, Idx} =
+    RootSparseListLevel{Ti, Idx, Lvl}(lvl, shape, idx,  Base.Ref(endpoint))
 Base.summary(lvl::RootSparseListLevel) = "RootSparseList($(summary(lvl.lvl)))"
 similar_level(lvl::RootSparseListLevel) = RootSparseList(similar_level(lvl.lvl))
 similar_level(lvl::RootSparseListLevel, dim, tail...) = RootSparseList(similar_level(lvl.lvl, tail...), dim)
@@ -183,8 +186,9 @@ function thaw_level!(lvl::VirtualRootSparseListLevel, ctx::AbstractCompiler, pos
     qos = lvl.qos_fill
     endpoint = ctx(lvl.endpoint)
     push!(ctx.code.preamble, quote
-        $(lvl.qos_stop) = $Tp($endpoint)
-        $qos = $(lvl.qos_stop) + 1
+        $(lvl.qos_stop) = $Tp(length($(lvl.idx)))
+        $(qos) = $Tp($endpoint + 1)
+
     end)
     lvl.lvl = thaw_level!(lvl.lvl, ctx, qos)
     return lvl
@@ -197,14 +201,16 @@ function trim_level!(lvl::VirtualRootSparseListLevel, ctx::AbstractCompiler, pos
     endpoint = ctx(lvl.endpoint)
     push!(ctx.code.preamble, quote
         resize!($(lvl.idx), $Tp($endpoint))
-        $qos = $Tp(length($(lvl.idx)))
+        $(qos) = $Tp(length($(lvl.idx)) + 1) 
+
     end)
     lvl.lvl = trim_level!(lvl.lvl, ctx, value(qos, Tp))
     return lvl
 end
 
 function assemble_level!(lvl::VirtualRootSparseListLevel, ctx, pos_start, pos_stop)
-    return quote end
+    return quote
+    end
 end
 
 function freeze_level!(lvl::VirtualRootSparseListLevel, ctx::AbstractCompiler, pos_stop)
@@ -212,8 +218,9 @@ function freeze_level!(lvl::VirtualRootSparseListLevel, ctx::AbstractCompiler, p
     p = freshen(ctx.code, :p)
     Tp = postype(lvl)
     qos_stop = freshen(ctx.code, :qos_stop)
+    endpoint = ctx(lvl.endpoint)
     push!(ctx.code.preamble, quote
-        $qos_stop = $Tp(length($(lvl.idx))) 
+        $qos_stop = $Tp(length($(lvl.idx)))
     end)
     lvl.lvl = freeze_level!(lvl.lvl, ctx, value(qos_stop))
     return lvl
@@ -242,6 +249,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualRootSparseListLevel}, ctx, mode
     my_q = freshen(ctx.code, tag, :_q)
     my_q_stop = freshen(ctx.code, tag, :_q_stop)
     my_i1 = freshen(ctx.code, tag, :_i1)
+    endpoint = ctx(lvl.endpoint)
 
     Furlable(
         body = (ctx, ext) -> Thunk(
@@ -251,7 +259,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualRootSparseListLevel}, ctx, mode
                 $my_q_stop = $Tp($(qos_fill)) + $(Tp(1))
                 if !isempty($(lvl.idx))
                     $my_i = $(lvl.idx)[1]
-                    $my_i1 = $(lvl.idx)[end]
+                    $my_i1 = $(lvl.idx)[$endpoint]
                 else
                     $my_i = $(Ti(1))
                     $my_i1 = $(Ti(0))
@@ -296,6 +304,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualRootSparseListLevel}, ctx, mode
     my_i2 = freshen(ctx.code, tag, :_i2)
     my_i3 = freshen(ctx.code, tag, :_i3)
     my_i4 = freshen(ctx.code, tag, :_i4)
+    endpoint = ctx(lvl.endpoint)
 
     Furlable(
         body = (ctx, ext) -> Thunk(
@@ -304,7 +313,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualRootSparseListLevel}, ctx, mode
                 $my_q_stop = $Tp($(qos_fill)) + $(Tp(1))
                 if !isempty($(lvl.idx))
                     $my_i = $(lvl.idx)[1]
-                    $my_i1 = $(lvl.idx)[end]
+                    $my_i1 = $(lvl.idx)[$endpoint]
                 else
                     $my_i = $(Ti(1))
                     $my_i1 = $(Ti(0))
@@ -348,6 +357,7 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualRootSparseListLevel}, ctx
     dirty = freshen(ctx.code, tag, :dirty)
     endpoint = ctx(lvl.endpoint)
 
+
     Furlable(
         body = (ctx, ext) -> Lookup(
             body = (ctx, idx) -> Thunk(
@@ -372,6 +382,9 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualRootSparseListLevel}, ctx
                         $qos += $(Tp(1))
                         $endpoint += $(Tp(1))
                     end
+
+
+
                 end
             )
         )

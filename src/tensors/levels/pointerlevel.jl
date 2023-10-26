@@ -214,7 +214,7 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualPointerLevel}, ctx, mode:
         body = (ctx) -> begin
             thaw_level!(lvl_2, ctx, literal(1))
             push!(ctx.code.preamble, assemble_level!(lvl_2, ctx, literal(1), literal(1)))
-            res = instantiate(VirtualSubFiber(lvl_2, literal(1)), ctx, mode, protos)
+            res = instantiate(VirtualHollowSubFiber(lvl_2, literal(1), fbr.dirty), ctx, mode, protos)
             freeze_level!(lvl, ctx, literal(1))
             res
         end

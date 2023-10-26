@@ -663,56 +663,56 @@
           @test check_output("format_constructors_d_p_rsl_e.txt", String(take!(io)))
     end
 
-        @testset "Fiber!(SparseList(Pointer(Dense(Element(0)))))" begin
+        @testset "Fiber!(RootSparseList(Pointer(Dense(Element(0)))))" begin
           io = IOBuffer()
           arr = [0.0 2.0 2.0 0.0 3.0 3.0;
               1.0 0.0 7.0 1.0 0.0 0.0;
               0.0 0.0 0.0 0.0 0.0 9.0]
           
-          println(io, "Fiber!(SparseList(Pointer(Dense(Element(0))))):")
+          println(io, "Fiber!(RootSparseList(Pointer(Dense(Element(0))))):")
           
-          fbr = dropdefaults!(Fiber(SparseList(Pointer(Dense(Element(0))))), arr)
+          fbr = dropdefaults!(Fiber(RootSparseList(Pointer(Dense(Element(0))))), arr)
           
           println(io, "initialized fiber: ", fbr)
-          @test Structure(fbr) == Structure(Fiber(SparseList(Pointer(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6)))
-          @test Structure(fbr) == Structure(Fiber(SparseList(Pointer{typeof(fbr.lvl.lvl.val), typeof(fbr.lvl.lvl.lvl)}(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6)))
+          @test Structure(fbr) == Structure(Fiber(RootSparseList(Pointer(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6, fbr.lvl.idx, fbr.lvl.endpoint)))
+          @test Structure(fbr) == Structure(Fiber(RootSparseList(Pointer{typeof(fbr.lvl.lvl.val), typeof(fbr.lvl.lvl.lvl)}(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6, fbr.lvl.idx, fbr.lvl.endpoint)))
 
-          fbr = Fiber!(SparseList(Pointer(Dense(Element(0), 3)), 6))
+          fbr = Fiber!(RootSparseList(Pointer(Dense(Element(0), 3)), 6))
           println(io, "sized fiber: ", fbr)
-          @test Structure(fbr) == Structure(Fiber!(SparseList(Pointer(Dense(Element(0), 3)), 6)))
+          @test Structure(fbr) == Structure(Fiber!(RootSparseList(Pointer(Dense(Element(0), 3)), 6)))
 
 
-          fbr = Fiber!(SparseList(Pointer(Dense(Element(0)))))
+          fbr = Fiber!(RootSparseList(Pointer(Dense(Element(0)))))
           println(io, "empty fiber: ", fbr)
-          @test Structure(fbr) == Structure(Fiber!(SparseList(Pointer(Dense(Element(0))))))
+          @test Structure(fbr) == Structure(Fiber!(RootSparseList(Pointer(Dense(Element(0))))))
 
-          @test check_output("format_constructors_d_p_rsl_e.txt", String(take!(io)))
+          @test check_output("format_constructors_rsl_p_d_e.txt", String(take!(io)))
         end
 
-    @testset "Fiber!(SparseList(Pointer(RootSparseList(Element(0)))))" begin
+    @testset "Fiber!(RootSparseList(Pointer(RootSparseList(Element(0)))))" begin
           io = IOBuffer()
           arr = [0.0 2.0 2.0 0.0 3.0 3.0;
               1.0 0.0 7.0 1.0 0.0 0.0;
               0.0 0.0 0.0 0.0 0.0 9.0]
           
-          println(io, "Fiber!(SparseList(Pointer(RootSparseList(Element(0))))):")
+          println(io, "Fiber!(RootSparseList(Pointer(RootSparseList(Element(0))))):")
           
-          fbr = dropdefaults!(Fiber(SparseList(Pointer(RootSparseList(Element(0))))), arr)
+          fbr = dropdefaults!(Fiber(RootSparseList(Pointer(RootSparseList(Element(0))))), arr)
           
           println(io, "initialized fiber: ", fbr)
-          @test Structure(fbr) == Structure(Fiber(SparseList(Pointer(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6)))
-          @test Structure(fbr) == Structure(Fiber(SparseList(Pointer{typeof(fbr.lvl.lvl.val), typeof(fbr.lvl.lvl.lvl)}(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6)))
+          @test Structure(fbr) == Structure(Fiber(RootSparseList(Pointer(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6, fbr.lvl.idx, fbr.lvl.endpoint)))
+          @test Structure(fbr) == Structure(Fiber(RootSparseList(Pointer{typeof(fbr.lvl.lvl.val), typeof(fbr.lvl.lvl.lvl)}(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6, fbr.lvl.idx, fbr.lvl.endpoint)))
 
-          fbr = Fiber!(SparseList(Pointer(RootSparseList(Element(0), 3)), 6))
+          fbr = Fiber!(RootSparseList(Pointer(RootSparseList(Element(0), 3)), 6))
           println(io, "sized fiber: ", fbr)
-          @test Structure(fbr) == Structure(Fiber!(SparseList(Pointer(RootSparseList(Element(0), 3)), 6)))
+          @test Structure(fbr) == Structure(Fiber!(RootSparseList(Pointer(RootSparseList(Element(0), 3)), 6)))
 
 
-          fbr = Fiber!(SparseList(Pointer(RootSparseList(Element(0)))))
+          fbr = Fiber!(RootSparseList(Pointer(RootSparseList(Element(0)))))
           println(io, "empty fiber: ", fbr)
-          @test Structure(fbr) == Structure(Fiber!(SparseList(Pointer(RootSparseList(Element(0))))))
+          @test Structure(fbr) == Structure(Fiber!(RootSparseList(Pointer(RootSparseList(Element(0))))))
 
-        @test check_output("format_constructors_sl_p_rsl_e.txt", String(take!(io)))
+        @test check_output("format_constructors_rsl_p_rsl_e.txt", String(take!(io)))
     end
 
 end
