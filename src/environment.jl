@@ -39,6 +39,19 @@ end
 
 freshen(ctx::JuliaContext, tags...) = freshen(ctx.namespace, tags...)
 
+contain_epilogue_helper(node, epilogue) = node
+function contain_epilogue_helper(node::Expr, epilogue)
+    if @capture node :for(~ext, ~body)
+        return node
+    elseif @capture node :while(~ext, ~body)
+        return node
+    elseif @capture node :break()
+        return Expr(:block, epilogue, node)
+    else
+        return Expr(node.head, map(x -> contain_epilogue_helper(x, epilogue), node.args)...)
+    end
+end
+
 """
     contain(f, ctx)
 
@@ -63,7 +76,7 @@ function contain(f, ctx::AbstractCompiler, task=nothing)
         res = freshen(ctx_2, :res)
         return quote
             $preamble
-            $res = $body
+            $res = $(contain_epilogue_helper(body, epilogue))
             $epilogue
             $res
         end
