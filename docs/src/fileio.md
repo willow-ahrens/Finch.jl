@@ -16,13 +16,11 @@ fwrite
 
 Finch supports the most recent revision of the
 [Binsparse](https://github.com/GraphBLAS/binsparse-specification) binary sparse
-tensor format, as well as the proposed [v2.0 tensor
-extension](https://github.com/GraphBLAS/binsparse-specification/pull/20). This
-is a good option for those who want an efficient way to transfer sparse tensors
-between supporting libraries and languages. The Binsparse format represents the
-tensor format as a JSON string in the underlying data container, which can be either
-HDF5 or a combination of NPY or JSON files.
-Binsparse arrays are stored 0-indexed.
+tensor format, including the v2.0 tensor extension. This is a good option for
+those who want an efficient way to transfer sparse tensors between supporting
+libraries and languages. The Binsparse format represents the tensor format as a
+JSON string in the underlying data container, which can be either HDF5 or a
+combination of NPY or JSON files.  Binsparse arrays are stored 0-indexed.
 
 ```@docs
 bspwrite
