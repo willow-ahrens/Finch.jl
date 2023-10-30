@@ -40,17 +40,25 @@ begin
                 if x_lvl_idx[x_lvl_q] < i
                     x_lvl_q = Finch.scansearch(x_lvl_idx, i, x_lvl_q, x_lvl_q_stop - 1)
                 end
-                while i <= phase_stop
+                while true
                     x_lvl_i = x_lvl_idx[x_lvl_q]
-                    phase_stop_3 = min(phase_stop, x_lvl_i)
-                    if x_lvl_i == phase_stop_3
+                    if x_lvl_i < phase_stop
                         x_lvl_2_val = x_lvl_val[x_lvl_q]
                         for i_9 = 1:phase_stop
                             c_val = x_lvl_2_val + c_val
                         end
                         x_lvl_q += 1
+                    else
+                        phase_stop_4 = min(phase_stop, x_lvl_i)
+                        if x_lvl_i == phase_stop_4
+                            x_lvl_2_val = x_lvl_val[x_lvl_q]
+                            for i_11 = 1:phase_stop
+                                c_val = x_lvl_2_val + c_val
+                            end
+                            x_lvl_q += 1
+                        end
+                        break
                     end
-                    i = phase_stop_3 + 1
                 end
                 break
             end
@@ -75,21 +83,26 @@ begin
         end
     end
     phase_start_5 = max(1, 1 + y_lvl_i1)
-    phase_stop_5 = min(y_lvl.shape, x_lvl_i1)
-    if phase_stop_5 >= phase_start_5
-        i = phase_start_5
+    phase_stop_6 = min(y_lvl.shape, x_lvl_i1)
+    if phase_stop_6 >= phase_start_5
         if x_lvl_idx[x_lvl_q] < phase_start_5
             x_lvl_q = Finch.scansearch(x_lvl_idx, phase_start_5, x_lvl_q, x_lvl_q_stop - 1)
         end
-        while i <= phase_stop_5
+        while true
             x_lvl_i = x_lvl_idx[x_lvl_q]
-            phase_stop_6 = min(x_lvl_i, phase_stop_5)
-            if x_lvl_i == phase_stop_6
+            if x_lvl_i < phase_stop_6
                 x_lvl_2_val_2 = x_lvl_val[x_lvl_q]
                 c_val = x_lvl_2_val_2 + c_val
                 x_lvl_q += 1
+            else
+                phase_stop_8 = min(x_lvl_i, phase_stop_6)
+                if x_lvl_i == phase_stop_8
+                    x_lvl_2_val_2 = x_lvl_val[x_lvl_q]
+                    c_val = x_lvl_2_val_2 + c_val
+                    x_lvl_q += 1
+                end
+                break
             end
-            i = phase_stop_6 + 1
         end
     end
     (c = (Scalar){0, Int64}(c_val), s = (ShortCircuitScalar){false, Bool, true}(s_val))

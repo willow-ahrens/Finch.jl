@@ -28,18 +28,16 @@ begin
     end
     phase_stop = min(tmp_lvl_i_stop, tmp_lvl.shape[2])
     if phase_stop >= 1
-        j = 1
         while tmp_lvl_q + 1 < tmp_lvl_q_stop && (((tmp_lvl_srt[tmp_lvl_q])[1])[2])[2] < 1
             tmp_lvl_q += 1
         end
-        while j <= phase_stop
+        while true
             tmp_lvl_i = (((tmp_lvl_srt[tmp_lvl_q])[1])[2])[2]
             tmp_lvl_q_step = tmp_lvl_q
             while tmp_lvl_q_step < tmp_lvl_q_stop && (((tmp_lvl_srt[tmp_lvl_q_step])[1])[2])[2] == tmp_lvl_i
                 tmp_lvl_q_step += 1
             end
-            phase_stop_2 = min(phase_stop, tmp_lvl_i)
-            if tmp_lvl_i == phase_stop_2
+            if tmp_lvl_i < phase_stop
                 if res_lvl_qos > res_lvl_qos_stop
                     res_lvl_qos_stop = max(res_lvl_qos_stop << 1, 1)
                     Finch.resize_if_smaller!(res_lvl_idx, res_lvl_qos_stop)
@@ -57,14 +55,12 @@ begin
                 end
                 phase_stop_3 = min(tmp_lvl_i_stop_2, tmp_lvl.shape[1])
                 if phase_stop_3 >= 1
-                    i = 1
                     while tmp_lvl_q_2 + 1 < tmp_lvl_q_step && (((tmp_lvl_srt[tmp_lvl_q_2])[1])[2])[1] < 1
                         tmp_lvl_q_2 += 1
                     end
-                    while i <= phase_stop_3
+                    while true
                         tmp_lvl_i_2 = (((tmp_lvl_srt[tmp_lvl_q_2])[1])[2])[1]
-                        phase_stop_4 = min(phase_stop_3, tmp_lvl_i_2)
-                        if tmp_lvl_i_2 == phase_stop_4
+                        if tmp_lvl_i_2 < phase_stop_3
                             tmp_lvl_2_val = tmp_lvl_val[(tmp_lvl.srt[tmp_lvl_q_2])[2]]
                             if res_lvl_2_qos > res_lvl_2_qos_stop
                                 res_lvl_2_qos_stop = max(res_lvl_2_qos_stop << 1, 1)
@@ -74,23 +70,108 @@ begin
                             end
                             res = (res_lvl_2_val[res_lvl_2_qos] = tmp_lvl_2_val)
                             res_lvldirty = true
-                            res_lvl_idx_2[res_lvl_2_qos] = phase_stop_4
+                            res_lvl_idx_2[res_lvl_2_qos] = tmp_lvl_i_2
                             res_lvl_2_qos += 1
                             res_lvl_2_prev_pos = res_lvl_qos
                             tmp_lvl_q_2 += 1
+                        else
+                            phase_stop_5 = min(tmp_lvl_i_2, phase_stop_3)
+                            if tmp_lvl_i_2 == phase_stop_5
+                                tmp_lvl_2_val = tmp_lvl_val[(tmp_lvl.srt[tmp_lvl_q_2])[2]]
+                                if res_lvl_2_qos > res_lvl_2_qos_stop
+                                    res_lvl_2_qos_stop = max(res_lvl_2_qos_stop << 1, 1)
+                                    Finch.resize_if_smaller!(res_lvl_idx_2, res_lvl_2_qos_stop)
+                                    Finch.resize_if_smaller!(res_lvl_2_val, res_lvl_2_qos_stop)
+                                    Finch.fill_range!(res_lvl_2_val, false, res_lvl_2_qos, res_lvl_2_qos_stop)
+                                end
+                                res_lvl_2_val[res_lvl_2_qos] = tmp_lvl_2_val
+                                res_lvldirty = true
+                                res_lvl_idx_2[res_lvl_2_qos] = phase_stop_5
+                                res_lvl_2_qos += 1
+                                res_lvl_2_prev_pos = res_lvl_qos
+                                tmp_lvl_q_2 += 1
+                            end
+                            break
                         end
-                        i = phase_stop_4 + 1
                     end
                 end
                 res_lvl_ptr_2[res_lvl_qos + 1] = (res_lvl_2_qos - res_lvl_2_qos_fill) - 1
                 res_lvl_2_qos_fill = res_lvl_2_qos - 1
                 if res_lvldirty
-                    res_lvl_idx[res_lvl_qos] = phase_stop_2
+                    res_lvl_idx[res_lvl_qos] = tmp_lvl_i
                     res_lvl_qos += 1
                 end
                 tmp_lvl_q = tmp_lvl_q_step
+            else
+                phase_stop_7 = min(tmp_lvl_i, phase_stop)
+                if tmp_lvl_i == phase_stop_7
+                    if res_lvl_qos > res_lvl_qos_stop
+                        res_lvl_qos_stop = max(res_lvl_qos_stop << 1, 1)
+                        Finch.resize_if_smaller!(res_lvl_idx, res_lvl_qos_stop)
+                        Finch.resize_if_smaller!(res_lvl_ptr_2, res_lvl_qos_stop + 1)
+                        Finch.fill_range!(res_lvl_ptr_2, 0, res_lvl_qos + 1, res_lvl_qos_stop + 1)
+                    end
+                    res_lvldirty = false
+                    res_lvl_2_qos_2 = res_lvl_2_qos_fill + 1
+                    res_lvl_2_prev_pos < res_lvl_qos || throw(FinchProtocolError("SparseListLevels cannot be updated multiple times"))
+                    tmp_lvl_q_2 = tmp_lvl_q
+                    if tmp_lvl_q < tmp_lvl_q_step
+                        tmp_lvl_i_stop_2 = (((tmp_lvl_srt[tmp_lvl_q_step - 1])[1])[2])[1]
+                    else
+                        tmp_lvl_i_stop_2 = 0
+                    end
+                    phase_stop_8 = min(tmp_lvl_i_stop_2, tmp_lvl.shape[1])
+                    if phase_stop_8 >= 1
+                        while tmp_lvl_q_2 + 1 < tmp_lvl_q_step && (((tmp_lvl_srt[tmp_lvl_q_2])[1])[2])[1] < 1
+                            tmp_lvl_q_2 += 1
+                        end
+                        while true
+                            tmp_lvl_i_2 = (((tmp_lvl_srt[tmp_lvl_q_2])[1])[2])[1]
+                            if tmp_lvl_i_2 < phase_stop_8
+                                tmp_lvl_2_val_2 = tmp_lvl_val[(tmp_lvl.srt[tmp_lvl_q_2])[2]]
+                                if res_lvl_2_qos_2 > res_lvl_2_qos_stop
+                                    res_lvl_2_qos_stop = max(res_lvl_2_qos_stop << 1, 1)
+                                    Finch.resize_if_smaller!(res_lvl_idx_2, res_lvl_2_qos_stop)
+                                    Finch.resize_if_smaller!(res_lvl_2_val, res_lvl_2_qos_stop)
+                                    Finch.fill_range!(res_lvl_2_val, false, res_lvl_2_qos_2, res_lvl_2_qos_stop)
+                                end
+                                res_lvl_2_val[res_lvl_2_qos_2] = tmp_lvl_2_val_2
+                                res_lvldirty = true
+                                res_lvl_idx_2[res_lvl_2_qos_2] = tmp_lvl_i_2
+                                res_lvl_2_qos_2 += 1
+                                res_lvl_2_prev_pos = res_lvl_qos
+                                tmp_lvl_q_2 += 1
+                            else
+                                phase_stop_10 = min(tmp_lvl_i_2, phase_stop_8)
+                                if tmp_lvl_i_2 == phase_stop_10
+                                    tmp_lvl_2_val_2 = tmp_lvl_val[(tmp_lvl.srt[tmp_lvl_q_2])[2]]
+                                    if res_lvl_2_qos_2 > res_lvl_2_qos_stop
+                                        res_lvl_2_qos_stop = max(res_lvl_2_qos_stop << 1, 1)
+                                        Finch.resize_if_smaller!(res_lvl_idx_2, res_lvl_2_qos_stop)
+                                        Finch.resize_if_smaller!(res_lvl_2_val, res_lvl_2_qos_stop)
+                                        Finch.fill_range!(res_lvl_2_val, false, res_lvl_2_qos_2, res_lvl_2_qos_stop)
+                                    end
+                                    res_lvl_2_val[res_lvl_2_qos_2] = tmp_lvl_2_val_2
+                                    res_lvldirty = true
+                                    res_lvl_idx_2[res_lvl_2_qos_2] = phase_stop_10
+                                    res_lvl_2_qos_2 += 1
+                                    res_lvl_2_prev_pos = res_lvl_qos
+                                    tmp_lvl_q_2 += 1
+                                end
+                                break
+                            end
+                        end
+                    end
+                    res_lvl_ptr_2[res_lvl_qos + 1] = (res_lvl_2_qos_2 - res_lvl_2_qos_fill) - 1
+                    res_lvl_2_qos_fill = res_lvl_2_qos_2 - 1
+                    if res_lvldirty
+                        res_lvl_idx[res_lvl_qos] = phase_stop_7
+                        res_lvl_qos += 1
+                    end
+                    tmp_lvl_q = tmp_lvl_q_step
+                end
+                break
             end
-            j = phase_stop_2 + 1
         end
     end
     res_lvl_ptr[1 + 1] = (res_lvl_qos - 0) - 1

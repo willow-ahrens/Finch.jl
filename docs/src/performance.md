@@ -55,19 +55,24 @@ quote
         end
         phase_stop = min(A_lvl_2_i1, A_lvl_2.shape)
         if phase_stop >= 1
-            i = 1
             if A_lvl_idx[A_lvl_2_q] < 1
                 A_lvl_2_q = Finch.scansearch(A_lvl_idx, 1, A_lvl_2_q, A_lvl_2_q_stop - 1)
             end
-            while i <= phase_stop
+            while true
                 A_lvl_2_i = A_lvl_idx[A_lvl_2_q]
-                phase_stop_2 = min(phase_stop, A_lvl_2_i)
-                if A_lvl_2_i == phase_stop_2
+                if A_lvl_2_i < phase_stop
                     A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
                     s_val = A_lvl_3_val + s_val
                     A_lvl_2_q += 1
+                else
+                    phase_stop_3 = min(A_lvl_2_i, phase_stop)
+                    if A_lvl_2_i == phase_stop_3
+                        A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
+                        s_val = s_val + A_lvl_3_val
+                        A_lvl_2_q += 1
+                    end
+                    break
                 end
-                i = phase_stop_2 + 1
             end
         end
     end
@@ -112,19 +117,24 @@ quote
             end
             phase_stop = min(i_3, A_lvl_2_i1)
             if phase_stop >= i_3
-                s_2 = i_3
                 if A_lvl_idx[A_lvl_2_q] < i_3
                     A_lvl_2_q = Finch.scansearch(A_lvl_idx, i_3, A_lvl_2_q, A_lvl_2_q_stop - 1)
                 end
-                while s_2 <= phase_stop
+                while true
                     A_lvl_2_i = A_lvl_idx[A_lvl_2_q]
-                    phase_stop_2 = min(phase_stop, A_lvl_2_i)
-                    if A_lvl_2_i == phase_stop_2
+                    if A_lvl_2_i < phase_stop
                         A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
                         s_val = A_lvl_3_val + s_val
                         A_lvl_2_q += 1
+                    else
+                        phase_stop_3 = min(A_lvl_2_i, phase_stop)
+                        if A_lvl_2_i == phase_stop_3
+                            A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
+                            s_val = s_val + A_lvl_3_val
+                            A_lvl_2_q += 1
+                        end
+                        break
                     end
-                    s_2 = phase_stop_2 + 1
                 end
             end
         end
@@ -249,28 +259,39 @@ quote
             if A_lvl_idx[A_lvl_2_q] < 1
                 A_lvl_2_q = Finch.scansearch(A_lvl_idx, 1, A_lvl_2_q, A_lvl_2_q_stop - 1)
             end
-            while i <= phase_stop
+            while true
                 A_lvl_2_i = A_lvl_idx[A_lvl_2_q]
-                phase_stop_2 = min(phase_stop, A_lvl_2_i)
-                if A_lvl_2_i == phase_stop_2
-                    for i_6 = i:phase_stop_2 - 1
+                if A_lvl_2_i < phase_stop
+                    for i_6 = i:A_lvl_2_i - 1
                         C_val = f(0.0, B[i_6, j_4]) + C_val
                     end
                     A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
-                    C_val = C_val + f(A_lvl_3_val, B[phase_stop_2, j_4])
+                    C_val = C_val + f(A_lvl_3_val, B[A_lvl_2_i, j_4])
                     A_lvl_2_q += 1
+                    i = A_lvl_2_i + 1
                 else
-                    for i_8 = i:phase_stop_2
-                        C_val = f(0.0, B[i_8, j_4]) + C_val
+                    phase_stop_3 = min(A_lvl_2_i, phase_stop)
+                    if A_lvl_2_i == phase_stop_3
+                        for i_8 = i:phase_stop_3 - 1
+                            C_val = f(0.0, B[i_8, j_4]) + C_val
+                        end
+                        A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
+                        C_val = C_val + f(A_lvl_3_val, B[phase_stop_3, j_4])
+                        A_lvl_2_q += 1
+                    else
+                        for i_10 = i:phase_stop_3
+                            C_val = f(0.0, B[i_10, j_4]) + C_val
+                        end
                     end
+                    i = phase_stop_3 + 1
+                    break
                 end
-                i = phase_stop_2 + 1
             end
         end
         phase_start_3 = max(1, 1 + A_lvl_2_i1)
         if B_mode1_stop >= phase_start_3
-            for i_10 = phase_start_3:B_mode1_stop
-                C_val = f(0.0, B[i_10, j_4]) + C_val
+            for i_12 = phase_start_3:B_mode1_stop
+                C_val = f(0.0, B[i_12, j_4]) + C_val
             end
         end
     end

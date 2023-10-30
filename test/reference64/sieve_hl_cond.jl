@@ -15,19 +15,24 @@ begin
     phase_start_2 = max(1, 1 + (1 - 1))
     phase_stop_2 = min(A_lvl.shape, A_lvl_i1, 1)
     if phase_stop_2 >= phase_start_2
-        j = phase_start_2
         if A_lvl_idx[A_lvl_q] < phase_start_2
             A_lvl_q = Finch.scansearch(A_lvl_idx, phase_start_2, A_lvl_q, A_lvl_q_stop - 1)
         end
-        while j <= phase_stop_2
+        while true
             A_lvl_i = A_lvl_idx[A_lvl_q]
-            phase_stop_3 = min(phase_stop_2, A_lvl_i)
-            if A_lvl_i == phase_stop_3
+            if A_lvl_i < phase_stop_2
                 A_lvl_2_val_2 = A_lvl_val[A_lvl_q]
                 B_val = A_lvl_2_val_2 + B_val
                 A_lvl_q += 1
+            else
+                phase_stop_4 = min(A_lvl_i, phase_stop_2)
+                if A_lvl_i == phase_stop_4
+                    A_lvl_2_val_2 = A_lvl_val[A_lvl_q]
+                    B_val = B_val + A_lvl_2_val_2
+                    A_lvl_q += 1
+                end
+                break
             end
-            j = phase_stop_3 + 1
         end
     end
     (B = (Scalar){0.0, Float64}(B_val),)
