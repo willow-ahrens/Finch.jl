@@ -45,19 +45,24 @@ quote
         end
         phase_stop = min(A_i1, A.m)
         if phase_stop >= 1
-            i = 1
             if A.rowval[A_q] < 1
                 A_q = Finch.scansearch(A.rowval, 1, A_q, A_q_stop - 1)
             end
-            while i <= phase_stop
+            while true
                 A_i = A.rowval[A_q]
-                phase_stop_2 = min(phase_stop, A_i)
-                if A_i == phase_stop_2
+                if A_i < phase_stop
                     A_val = A.nzval[A_q]
-                    y[phase_stop_2] = x[j_4] * A_val + y[phase_stop_2]
+                    y[A_i] = x[j_4] * A_val + y[A_i]
                     A_q += 1
+                else
+                    phase_stop_3 = min(A_i, phase_stop)
+                    if A_i == phase_stop_3
+                        A_val = A.nzval[A_q]
+                        y[phase_stop_3] = x[j_4] * A_val + y[phase_stop_3]
+                        A_q += 1
+                    end
+                    break
                 end
-                i = phase_stop_2 + 1
             end
         end
     end

@@ -18,11 +18,10 @@ begin
     if I_lvl_idx[I_lvl_q] < 1
         I_lvl_q = Finch.scansearch(I_lvl_idx, 1, I_lvl_q, I_lvl_q_stop - 1)
     end
-    while i <= A_lvl.shape
+    while true
         I_lvl_i = I_lvl_idx[I_lvl_q]
-        phase_stop = min(A_lvl.shape, I_lvl_i)
-        if I_lvl_i == phase_stop
-            for i_6 = i:phase_stop
+        if I_lvl_i < A_lvl.shape
+            for i_6 = i:I_lvl_i
                 B_lvl_q = (1 - 1) * A_lvl.shape + i_6
                 A_lvl_q = (1 - 1) * A_lvl.shape + i_6
                 s_2 = I_lvl_val[I_lvl_q]
@@ -31,17 +30,32 @@ begin
                 B_lvl_val[B_lvl_q] = A_lvl_3_val
             end
             I_lvl_q += 1
+            i = I_lvl_i + 1
         else
-            for i_7 = i:phase_stop
-                B_lvl_q = (1 - 1) * A_lvl.shape + i_7
-                A_lvl_q = (1 - 1) * A_lvl.shape + i_7
-                s_3 = I_lvl_val[I_lvl_q]
-                A_lvl_2_q_2 = (A_lvl_q - 1) * A_lvl_2.shape + s_3
-                A_lvl_3_val_2 = A_lvl_2_val[A_lvl_2_q_2]
-                B_lvl_val[B_lvl_q] = A_lvl_3_val_2
+            phase_stop_2 = min(A_lvl.shape, I_lvl_i)
+            if I_lvl_i == phase_stop_2
+                for i_7 = i:phase_stop_2
+                    B_lvl_q = (1 - 1) * A_lvl.shape + i_7
+                    A_lvl_q = (1 - 1) * A_lvl.shape + i_7
+                    s_3 = I_lvl_val[I_lvl_q]
+                    A_lvl_2_q_2 = (A_lvl_q - 1) * A_lvl_2.shape + s_3
+                    A_lvl_3_val_2 = A_lvl_2_val[A_lvl_2_q_2]
+                    B_lvl_val[B_lvl_q] = A_lvl_3_val_2
+                end
+                I_lvl_q += 1
+            else
+                for i_8 = i:phase_stop_2
+                    B_lvl_q = (1 - 1) * A_lvl.shape + i_8
+                    A_lvl_q = (1 - 1) * A_lvl.shape + i_8
+                    s_4 = I_lvl_val[I_lvl_q]
+                    A_lvl_2_q_3 = (A_lvl_q - 1) * A_lvl_2.shape + s_4
+                    A_lvl_3_val_3 = A_lvl_2_val[A_lvl_2_q_3]
+                    B_lvl_val[B_lvl_q] = A_lvl_3_val_3
+                end
             end
+            i = phase_stop_2 + 1
+            break
         end
-        i = phase_stop + 1
     end
     qos = 1 * A_lvl.shape
     resize!(B_lvl_val, qos)
