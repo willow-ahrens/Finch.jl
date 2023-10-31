@@ -57,13 +57,13 @@ function bspwrite_vector end
 
 function bspread_data(f, desc, key)
     t = desc["data_types"][key]
-    if (m = match(r"^iso\[([^\[]*)\]$", t)) != nothing
+    if (m = match(r"^iso\[([^\[]*)\]$", t)) !== nothing
         throw(ArgumentError("iso values not currently supported"))
-    elseif (m = match(r"^complex\[([^\[]*)\]$", t)) != nothing
+    elseif (m = match(r"^complex\[([^\[]*)\]$", t)) !== nothing
         desc["data_types"][key] = m.captures[1]
         data = bspread_data(f, desc, key)
-        return reinterpret(reshape, Complex{eltype(data)}, reshape(data, 2, :))
-    elseif (m = match(r"^[^\]]*$", t)) != nothing
+        return reinterpret(Complex{eltype(data)}, data)
+    elseif (m = match(r"^[^\]]*$", t)) !== nothing
         haskey(bspread_type_lookup, t) || throw(ArgumentError("unknown binsparse type $t"))
         convert(Vector{bspread_type_lookup[t]}, bspread_vector(f, key))
     else
@@ -84,7 +84,7 @@ function bspwrite_data_helper(f, desc, key, data::AbstractVector{T}) where {T}
 end
 
 function bspwrite_data_helper(f, desc, key, data::AbstractVector{Complex{T}}) where {T}
-    data = reshape(reinterpret(reshape, T, data), :)
+    data = reinterpret(T, data)
     bspwrite_data_helper(f, desc, key, data)
     desc["data_types"][key] = "complex[$(desc["data_types"][key])]"
 end
