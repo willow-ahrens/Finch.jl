@@ -27,28 +27,50 @@ begin
         if tmp_lvl_right[tmp_lvl_q] < 1
             tmp_lvl_q = Finch.scansearch(tmp_lvl_right, 1, tmp_lvl_q, tmp_lvl_q_stop - 1)
         end
-        while i <= phase_stop
+        while true
+            i_start_2 = i
             tmp_lvl_i_start = tmp_lvl_left[tmp_lvl_q]
             tmp_lvl_i_stop = tmp_lvl_right[tmp_lvl_q]
-            phase_start_2 = i
-            phase_stop_2 = min(phase_stop, tmp_lvl_i_stop)
-            phase_start_4 = max(phase_start_2, tmp_lvl_i_start)
-            if phase_stop_2 >= phase_start_4
-                tmp_lvl_2_val = tmp_lvl_val[tmp_lvl_q]
-                for i_8 = phase_start_4:phase_stop_2
-                    if res_lvl_qos > res_lvl_qos_stop
-                        res_lvl_qos_stop = max(res_lvl_qos_stop << 1, 1)
-                        Finch.resize_if_smaller!(res_lvl_idx, res_lvl_qos_stop)
-                        Finch.resize_if_smaller!(res_lvl_val, res_lvl_qos_stop)
-                        Finch.fill_range!(res_lvl_val, false, res_lvl_qos, res_lvl_qos_stop)
+            if tmp_lvl_i_stop < phase_stop
+                phase_start_3 = max(i_start_2, tmp_lvl_i_start)
+                if tmp_lvl_i_stop >= phase_start_3
+                    tmp_lvl_2_val = tmp_lvl_val[tmp_lvl_q]
+                    for i_8 = phase_start_3:tmp_lvl_i_stop
+                        if res_lvl_qos > res_lvl_qos_stop
+                            res_lvl_qos_stop = max(res_lvl_qos_stop << 1, 1)
+                            Finch.resize_if_smaller!(res_lvl_idx, res_lvl_qos_stop)
+                            Finch.resize_if_smaller!(res_lvl_val, res_lvl_qos_stop)
+                            Finch.fill_range!(res_lvl_val, false, res_lvl_qos, res_lvl_qos_stop)
+                        end
+                        res_lvl_val[res_lvl_qos] = tmp_lvl_2_val
+                        res_lvl_idx[res_lvl_qos] = i_8
+                        res_lvl_qos += 1
                     end
-                    res_lvl_val[res_lvl_qos] = tmp_lvl_2_val
-                    res_lvl_idx[res_lvl_qos] = i_8
-                    res_lvl_qos += 1
                 end
+                tmp_lvl_q += tmp_lvl_i_stop == tmp_lvl_i_stop
+                i = tmp_lvl_i_stop + 1
+            else
+                phase_start_4 = i
+                phase_stop_5 = min(tmp_lvl_i_stop, phase_stop)
+                phase_start_6 = max(tmp_lvl_i_start, phase_start_4)
+                if phase_stop_5 >= phase_start_6
+                    tmp_lvl_2_val_2 = tmp_lvl_val[tmp_lvl_q]
+                    for i_11 = phase_start_6:phase_stop_5
+                        if res_lvl_qos > res_lvl_qos_stop
+                            res_lvl_qos_stop = max(res_lvl_qos_stop << 1, 1)
+                            Finch.resize_if_smaller!(res_lvl_idx, res_lvl_qos_stop)
+                            Finch.resize_if_smaller!(res_lvl_val, res_lvl_qos_stop)
+                            Finch.fill_range!(res_lvl_val, false, res_lvl_qos, res_lvl_qos_stop)
+                        end
+                        res_lvl_val[res_lvl_qos] = tmp_lvl_2_val_2
+                        res_lvl_idx[res_lvl_qos] = i_11
+                        res_lvl_qos += 1
+                    end
+                end
+                tmp_lvl_q += phase_stop_5 == tmp_lvl_i_stop
+                i = phase_stop_5 + 1
+                break
             end
-            tmp_lvl_q += phase_stop_2 == tmp_lvl_i_stop
-            i = phase_stop_2 + 1
         end
     end
     res_lvl_ptr[1 + 1] = (res_lvl_qos - 0) - 1

@@ -40,14 +40,12 @@ begin
         end
         phase_stop = min(tmp_lvl_2_i_stop, tmp_lvl_2.shape[1])
         if phase_stop >= 1
-            i = 1
             while tmp_lvl_2_q + 1 < tmp_lvl_2_q_stop && (((tmp_lvl_srt[tmp_lvl_2_q])[1])[2])[1] < 1
                 tmp_lvl_2_q += 1
             end
-            while i <= phase_stop
+            while true
                 tmp_lvl_2_i = (((tmp_lvl_srt[tmp_lvl_2_q])[1])[2])[1]
-                phase_stop_2 = min(phase_stop, tmp_lvl_2_i)
-                if tmp_lvl_2_i == phase_stop_2
+                if tmp_lvl_2_i < phase_stop
                     tmp_lvl_3_val = tmp_lvl_2_val[(tmp_lvl_2.srt[tmp_lvl_2_q])[2]]
                     if res_lvl_2_qos > res_lvl_2_qos_stop
                         res_lvl_2_qos_stop = max(res_lvl_2_qos_stop << 1, 1)
@@ -57,12 +55,29 @@ begin
                     end
                     res = (res_lvl_2_val[res_lvl_2_qos] = tmp_lvl_3_val)
                     res_lvldirty = true
-                    res_lvl_idx_2[res_lvl_2_qos] = phase_stop_2
+                    res_lvl_idx_2[res_lvl_2_qos] = tmp_lvl_2_i
                     res_lvl_2_qos += 1
                     res_lvl_2_prev_pos = res_lvl_qos
                     tmp_lvl_2_q += 1
+                else
+                    phase_stop_3 = min(tmp_lvl_2_i, phase_stop)
+                    if tmp_lvl_2_i == phase_stop_3
+                        tmp_lvl_3_val = tmp_lvl_2_val[(tmp_lvl_2.srt[tmp_lvl_2_q])[2]]
+                        if res_lvl_2_qos > res_lvl_2_qos_stop
+                            res_lvl_2_qos_stop = max(res_lvl_2_qos_stop << 1, 1)
+                            Finch.resize_if_smaller!(res_lvl_idx_2, res_lvl_2_qos_stop)
+                            Finch.resize_if_smaller!(res_lvl_2_val, res_lvl_2_qos_stop)
+                            Finch.fill_range!(res_lvl_2_val, false, res_lvl_2_qos, res_lvl_2_qos_stop)
+                        end
+                        res_lvl_2_val[res_lvl_2_qos] = tmp_lvl_3_val
+                        res_lvldirty = true
+                        res_lvl_idx_2[res_lvl_2_qos] = phase_stop_3
+                        res_lvl_2_qos += 1
+                        res_lvl_2_prev_pos = res_lvl_qos
+                        tmp_lvl_2_q += 1
+                    end
+                    break
                 end
-                i = phase_stop_2 + 1
             end
         end
         res_lvl_ptr_2[res_lvl_qos + 1] = (res_lvl_2_qos - res_lvl_2_qos_fill) - 1
