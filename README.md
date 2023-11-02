@@ -1,4 +1,4 @@
-# Finch.jl: Simplifying Sparse and Structured Array Programming
+# Finch.jl
 
 [docs]:https://willow-ahrens.github.io/Finch.jl/stable
 [ddocs]:https://willow-ahrens.github.io/Finch.jl/dev
