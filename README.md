@@ -16,7 +16,7 @@
 |:---------------------------------------------:|:-------------------------------------:|:---------------------:|
 | [![][docs_ico]][docs] [![][ddocs_ico]][ddocs] | [![][ci_ico]][ci] [![][cov_ico]][cov] | [![][example_ico]][example] |
 
-Finch is a cutting-edge Julia-to-Julia compiler specially designed for optimizing loop nests over sparse or structured multidimensional arrays. By enabling users to write conventional `for` loops and transforming them behind-the-scenes into their sparse counterparts, Finch elevates ease of writing and efficiency of execution within sparse data environments.
+Finch is a cutting-edge Julia-to-Julia compiler specially designed for optimizing loop nests over sparse or structured multidimensional arrays. Finch empowers users to write conventional `for` loops which the compiler transforms behind-the-scenes into their sparse counterparts.
 
 ## Key Features
 
