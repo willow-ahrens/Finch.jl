@@ -1,4 +1,4 @@
-# Finch.jl: High-Performance Sparse Computing in Julia
+# Finch.jl: Simplifying Sparse and Structured Array Programming
 
 [docs]:https://willow-ahrens.github.io/Finch.jl/stable
 [ddocs]:https://willow-ahrens.github.io/Finch.jl/dev
@@ -16,8 +16,6 @@
 |:---------------------------------------------:|:-------------------------------------:|:---------------------:|
 | [![][docs_ico]][docs] [![][ddocs_ico]][ddocs] | [![][ci_ico]][ci] [![][cov_ico]][cov] | [![][example_ico]][example] |
 
-# Finch.jl: Simplifying Sparse and Structured Array Programming
-
 Finch is a cutting-edge Julia-to-Julia compiler specially designed for optimizing loop nests over sparse or structured multidimensional arrays. By enabling users to write conventional `for` loops and transforming them behind-the-scenes into their sparse counterparts, Finch elevates ease of writing and efficiency of execution within sparse data environments.
 
 ## Key Features
@@ -26,7 +24,6 @@ Finch is a cutting-edge Julia-to-Julia compiler specially designed for optimizin
 - **Smart Compilation**: Finch’s compiler is intuitive and modular, applying optimizations such as constant propagation and term rewriting. Rules like `x * 0 => 0` eliminate unnecessary computations in sparse code automatically.
 - **Wide Format Support**: Seamlessly works with major sparse formats (CSC, CSF, COO, Hash, Bytemap, Dense Triangular) and unique structures like Run Length Encoding or user-defined background (zero) values.
 - **Enhanced Control Structures**: Introduces flexibility in computations by supporting conditionals, multiple outputs, and even user-defined types and functions.
-
 
 ### Comprehensive Sparse Solutions
 
