@@ -37,7 +37,7 @@ Finch supports a wide variety of array structure beyond sparsity. Whether you're
 | Background Values Other Than Zero |  `B = Fiber!(SparseList(Element(1.0)))`|
 | Broadcasts and Reductions |  `sum(A .* B)`|
 | Custom Operators |  `x[] <<min>>= y[i] + z[i]`|
-| Multiple Outputs |  `x[] <<min>>= y[i]; z[] <<max>>=y[i]`|
+| Multiple Outputs |  `x[] <<min>>= y[i]; z[] <<max>>= y[i]`|
 | Multicore Parallelism |  `for i = parallel(1:100)`|
 | Conditionals |  `if dist[] < best_dist[]`|
 | Affine Indexing (e.g. Convolution) |  `A[i + j]`|
@@ -84,7 +84,7 @@ end;
 
 ### Sparse Matrix-Vector Multiplication
 
-Illustrating Finch's power with a more complex structure, the following example performs a sparse matrix-vector multiplication using a column-major approach.
+As a more traditional example, what follows is a sparse matrix-vector multiplication using a column-major approach.
 
 ```julia
 x = Fiber!(Dense(Element(0.0)), rand(42));
@@ -98,6 +98,7 @@ y = Fiber!(Dense(Element(0.0)));
     end
 end
 ```
+
 # Installation
 
 At the [Julia](https://julialang.org/downloads/) REPL, install the latest stable version by running:
