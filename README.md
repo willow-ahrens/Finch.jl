@@ -28,11 +28,9 @@ Finch is a cutting-edge Julia-to-Julia compiler specially designed for optimizin
 - **Enhanced Control Structures**: Introduces flexibility in computations by supporting conditionals, multiple outputs, and even user-defined types and functions.
 
 
-## An Insight into Finch’s Capabilities
-
 ### Comprehensive Sparse Solutions
 
-Finch is not just about individual sparse formats. Whether you're dealing with [custom background (zero) values](https://en.wikipedia.org/wiki/GraphBLAS), [run-length encoding](https://en.wikipedia.org/wiki/Run-length_encoding), or matrices with [special structures](https://en.wikipedia.org/wiki/Sparse_matrix#Special_structure) like banded or triangular matrices, Finch’s compiler is adept at understanding and optimizing various data patterns and computational rules.
+Finch is not just about individual sparse formats. Whether you're dealing with [custom background (zero) values](https://en.wikipedia.org/wiki/GraphBLAS), [run-length encoding](https://en.wikipedia.org/wiki/Run-length_encoding), or matrices with [special structures](https://en.wikipedia.org/wiki/Sparse_matrix#Special_structure) like banded or triangular matrices, Finch’s compiler can understand and optimize various data patterns and computational rules.
 
 ### Supported Syntax and Structures
 
