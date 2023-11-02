@@ -58,7 +58,7 @@ If you're trying to implement a new array type (e.g. blocked, padded, ragged, et
 ### Users Seeking Convenience for Sparse Operations:
 If you need flexible and convenient support for sparse array operations, Finch.jl may be a good choice. The formats in Finch can adapt to many use cases, and it supports high-level commands like broadcast and reduce. By understanding how Finch generates implementations, you can get decent performance for a variety of problems.
 
-Note: Finch is currently optimized for sparse code and does not implement traditional dense optimizations. We are currently adding these features, but if you need dense performance, you may want to look at [LoopVectorization.jl](https://github.com/JuliaSIMD/LoopVectorization.jl) or [JuliaGPU](https://github.com/JuliaGPU)
+Note: Finch is currently optimized for sparse code and does not implement traditional dense optimizations. We are currently adding these features, but if you need dense performance, you may want to look at [LoopVectorization.jl](https://github.com/JuliaSIMD/LoopVectorization.jl) [Tullio.jl](https://github.com/mcabbott/Tullio.jl) or [JuliaGPU](https://github.com/JuliaGPU)
 
 ## Quick Start: Examples
 
