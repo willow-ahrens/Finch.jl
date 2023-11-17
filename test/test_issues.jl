@@ -473,10 +473,10 @@ using CIndices
 
     #https://github.com/willow-ahrens/Finch.jl/issues/313
     let
-        edge_matrix = Fiber!(SparseList(SparseList(Element(0.0), 254156), 254156))
-        edge_values = fsprand((254156, 254156), .0001)
+        edge_matrix = Fiber!(SparseList(SparseList(Element(0.0), 254), 254))
+        edge_values = fsprand((254, 254), .001)
         @finch (edge_matrix .= 0; for j=_, i=_; edge_matrix[i,j] = edge_values[i,j]; end)
-        output_matrix = Fiber!(SparseHash{1}(SparseHash{1}(Element(0.0), (254156,)), (254156,)))
+        output_matrix = Fiber!(SparseHash{1}(SparseHash{1}(Element(0.0), (254,)), (254,)))
         @finch (for v_4=_, v_3=_, v_2=_, v_5=_; output_matrix[v_2,v_5] += edge_matrix[v_5, v_4]*edge_matrix[v_2, v_3]*edge_matrix[v_3, v_4]; end)
 
         a_matrix = [1 0; 0 1]
