@@ -279,6 +279,7 @@ function bspwrite_tensor(io, arr::SwizzleArray{dims, <:Fiber}, attrs = OrderedDi
         "fill" => true,
         "shape" => map(Int, size(arr)),
         "data_types" => OrderedDict(),
+        "version" => "0.1",
         "attrs" => attrs,
     )
     if !issorted(reverse(collect(dims)))
@@ -308,6 +309,7 @@ function bspread_header end
 
 function bspread(f)
     desc = bspread_header(f)["binsparse"]
+    @assert desc["version"] == "0.1"
     fmt = OrderedDict{Any, Any}(get(bspread_format_lookup, desc["format"], desc["format"]))
     if !haskey(fmt, "swizzle")
         fmt["swizzle"] = collect(0:length(desc["shape"]) - 1)
