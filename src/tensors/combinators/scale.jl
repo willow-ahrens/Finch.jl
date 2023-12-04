@@ -45,7 +45,7 @@ lower(tns::VirtualScaleArray, ctx::AbstractCompiler, ::DefaultStyle) = :(ScaleAr
 
 function virtual_size(arr::VirtualScaleArray, ctx::AbstractCompiler)
     map(zip(virtual_size(arr.body, ctx), arr.scale)) do (dim, scale)
-        scaledim(dim, call(inv, scale))
+        scaledim(dim, call(/, 1.0f0, scale))
     end
 end
 function virtual_resize!(arr::VirtualScaleArray, ctx::AbstractCompiler, dims...)
@@ -115,7 +115,7 @@ function (ctx::SequenceVisitor)(node::VirtualScaleArray)
 end
 
 phase_body(node::VirtualScaleArray, ctx, ext, ext_2) = VirtualScaleArray(phase_body(node.body, ctx, scaledim(ext, node.scale[end]), scaledim(ext_2, node.scale[end])), node.scale)
-phase_range(node::VirtualScaleArray, ctx, ext) = scaledim(phase_range(node.body, ctx, scaledim(ext, node.scale[end])), call(inv, node.scale[end]))
+phase_range(node::VirtualScaleArray, ctx, ext) = scaledim(phase_range(node.body, ctx, scaledim(ext, node.scale[end])), call(/, 1.0f0, node.scale[end]))
 
 get_spike_body(node::VirtualScaleArray, ctx, ext, ext_2) = VirtualScaleArray(get_spike_body(node.body, ctx, scaledim(ext, node.scale[end]), scaledim(ext_2, node.scale[end])), node.scale)
 get_spike_tail(node::VirtualScaleArray, ctx, ext, ext_2) = VirtualScaleArray(get_spike_tail(node.body, ctx, scaledim(ext, node.scale[end]), scaledim(ext_2, node.scale[end])), node.scale)

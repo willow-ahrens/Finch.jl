@@ -87,6 +87,7 @@ function lower(root, ctx::AbstractCompiler, ::DefaultStyle)
 end
 
 function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
+
     if root.kind === value
         return root.val
     elseif root.kind === index
@@ -223,7 +224,6 @@ function lower_loop(ctx, root, ext)
             access(tns_2, mode, idxs...)
         end
     end))(root)
-
     return ctx(root_2, result_style(LookupStyle(), Stylize(root_2, ctx)(root_2)))
 end
 

@@ -47,7 +47,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  ::LookupStyle)
             end
         else
             return quote
-                for $idx_sym = $(ctx(getstart(root.ext))):$(ctx(getstop(root.ext)))
+                for $idx_sym = floor(Int, $(ctx(getstart(root.ext)))):floor(Int, $(ctx(getstop(root.ext)))) # Floor needed because of scaled array combinator
                     $body
                 end
             end

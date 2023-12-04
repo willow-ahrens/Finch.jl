@@ -21,9 +21,18 @@ function evaluate_partial(root, ctx)
     root = Rewrite(Fixpoint(Chain([
         Fixpoint(@rule block(~s1..., block(~s2...), ~s3...)=> block(s1..., s2..., s3...)),
         Fixpoint(@rule block(define(~a::isvariable, ~v::Or(isconstant, isvirtual)), ~s...) => begin
+        #Fixpoint(@rule block(define(~a::isvariable, ~v), ~s...) => begin # TODO : Fix this, will cause the problem (use only for NerF)
+            #println(define(a, v))
             ctx.bindings[a] = v
             block(s...)
         end),
+        
+        #Prewalk(@rule define(~a::isvariable, access(~v::isvariable, ~m, ~idx...)) => begin # TODO : Fix this, will cause the problem (use only for NerF)
+        #    println(define(a, v))
+        #    ctx.bindings[a] = ctx.bindings[v]
+        #    define(a, v) 
+        #end),
+
         Postwalk(Fixpoint(Chain([
             (@rule call(~f::isliteral, ~a::(All(Or(isliteral, isvirtual, isfoldable)))...) => virtual_call(f.val, ctx, a...)),
             (@rule call(~f::isliteral, ~a::(All(isliteral))...) => finch_leaf(getval(f)(getval.(a)...))),

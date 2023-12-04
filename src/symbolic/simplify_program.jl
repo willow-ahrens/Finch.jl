@@ -122,7 +122,7 @@ function get_program_rules(alg, shash)
                 decl_in_scope = filter(!isnothing, map(node-> if @capture(node, declare(~tns, ~init)) tns 
                                                               elseif @capture(node, define(~var, ~val)) var
                                                               end, PostOrderDFS(body)))
-                Postwalk(@rule assign(access(~lhs, updater(), ~j...), ~f, ~rhs) => begin 
+                body_2 = Postwalk(@rule assign(access(~lhs, updater(), ~j...), ~f, ~rhs) => begin 
                              access_in_rhs = filter(!isnothing, map(node-> if @capture(node, access(~tns, reader(), ~k...)) tns 
                                                                            elseif @capture(node, ~var::isvariable) var
                                                                            end, PostOrderDFS(rhs)))
@@ -130,6 +130,7 @@ function get_program_rules(alg, shash)
                                  collapsed(alg, idx, ext.val, access(lhs, updater(), j...), f, rhs)
                              end
                          end)(body)
+                body_2
             end
         end),
 
@@ -144,7 +145,8 @@ function get_program_rules(alg, shash)
         # Bottom-up reduction1
         (@rule loop(~idx, ~ext::isvirtual, assign(access(~lhs, updater(), ~j...), ~f, ~rhs)) => begin
             if idx ∉ j && idx ∉ getunbound(rhs)
-                collapsed(alg, idx, ext.val, access(lhs, updater(), j...), f, rhs)
+                body_1 = collapsed(alg, idx, ext.val, access(lhs, updater(), j...), f, rhs)
+                body_1
             end
         end),
 

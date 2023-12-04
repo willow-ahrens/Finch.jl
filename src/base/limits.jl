@@ -176,6 +176,8 @@ for S in limit_types
         Base.convert(::Type{$S}, i::Limit) = convert($S, i.val)
         Base.:(+)(x::Limit, y::$S)::Limit = x + limit(y)
         Base.:(+)(x::$S, y::Limit)::Limit = limit(x) + y
+        Base.:(-)(x::Limit, y::$S)::Limit = x - limit(y)
+        Base.:(-)(x::$S, y::Limit)::Limit = limit(x) - y
         Base.:(<)(x::Limit, y::$S) = x < limit(y)
         Base.:(<)(x::$S, y::Limit) = limit(x) < y
         Base.:(<=)(x::Limit, y::$S) = x <= limit(y)

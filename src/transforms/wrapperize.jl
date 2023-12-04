@@ -35,8 +35,26 @@ function get_wrapper_rules(alg, depth, ctx)
         (@rule access(~A, ~m, ~i1..., call(+, ~j), ~i2...) =>
             access(A, m, i1..., j, i2...)),
         (@rule access(~A, ~m, ~i1..., call(*, ~j1..., ~k, ~j2...), ~i2...) => begin
+            if (!isempty(j1) || !isempty(j2))
+                k_2 = call(*, ~j1..., ~j2...)
+                if length(j1) == 1 && length(j2) == 0
+                    k_2 = j1[1]
+                elseif length(j1) == 0 && length(j2) == 1
+                    k_2 = j2[1]
+                end
+                if depth(k_2) < depth(k) && depth(k_2) != 0
+                    access(call(products, A, length(i1) + 1), m, i1..., k, k_2, i2...)
+                end
+            end
+        end),
+        (@rule access(~A, ~m, ~i1..., call(*, ~j1..., ~k, ~j2...), ~i2...) => begin
             if !isempty(j1) || !isempty(j2) 
                 k_2 = call(*, ~j1..., ~j2...)
+                if length(j1) == 1 && length(j2) == 0
+                    k_2 = j1[1]
+                elseif length(j1) == 0 && length(j2) == 1
+                    k_2 = j2[1]
+                end
                 if depth(k_2) == 0 
                     scale_1 = ([1 for _ in i1]..., k_2, [1 for _ in i2]...)
                     access(call(scale, A, scale_1...), m, i1..., k, i2...)
@@ -139,7 +157,5 @@ function wrapperize(root, ctx::AbstractCompiler)
     ])))(root)
     root = simplify(root, ctx)
     root = evaluate_partial(root, ctx)
-    display(root)
-    println(root)
     root
 end
