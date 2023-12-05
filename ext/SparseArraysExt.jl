@@ -4,6 +4,7 @@ using Finch
 using Finch: AbstractCompiler, DefaultStyle, Extent
 using Finch: Unfurled, Furlable, Stepper, Jumper, Run, Fill, Lookup, Simplify, Sequence, Phase, Thunk, Spike 
 using Finch: virtual_size, virtual_default, getstart, getstop, freshen
+using Finch: FinchProtocolError
 using Finch.FinchNotation
 
 using Base: @kwdef
@@ -123,7 +124,7 @@ function Finch.instantiate(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler, m
 end
 
 function Finch.instantiate(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler, mode::Updater, subprotos, protos...)
-    throw(Finch.FinchProtocolError("Finch does not support writes to SparseMatrixCSC"))
+    throw(FinchProtocolError("Finch does not support writes to SparseMatrixCSC"))
 end
 
 Finch.FinchNotation.finch_leaf(x::VirtualSparseMatrixCSC) = virtual(x)
@@ -216,7 +217,7 @@ function Finch.instantiate(arr::VirtualSparseVector, ctx::AbstractCompiler, mode
 end
 
 function Finch.instantiate(arr::VirtualSparseVector, ctx::AbstractCompiler, mode::Updater, subprotos)
-    throw(Finch.FinchProtocolError("Finch does not support writes to SparseVector"))
+    throw(FinchProtocolError("Finch does not support writes to SparseVector"))
 end
 
 Finch.FinchNotation.finch_leaf(x::VirtualSparseVector) = virtual(x)
