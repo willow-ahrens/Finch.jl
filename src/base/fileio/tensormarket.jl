@@ -1,5 +1,5 @@
 """
-    fttxwrite(filename, tns)
+    fttwrite(filename, tns)
 
 Write a sparse Finch fiber to a TensorMarket file.
     
@@ -10,7 +10,7 @@ See also: [ttwrite](http://willowahrens.io/TensorMarket.jl/stable/#TensorMarket.
 fttwrite(args...) = throw(FinchExtensionError("TensorMarket.jl must be loaded to use fttxwrite (hint: `using TensorMarket`)"))
 
 """
-    fttxread(filename, infoonly=false, retcoord=false)
+    fttread(filename, infoonly=false, retcoord=false)
 
 Read the TensorMarket file into a Finch fiber. The fiber will be dense or
 COO depending on the format of the file.
