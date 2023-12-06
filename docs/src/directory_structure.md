@@ -19,8 +19,9 @@ not up to date.
 │   └── ...                 
 ├── ext                        # conditionally-loaded code for interaction with other packages (e.g. SparseArrays)
 ├── src                        # Source files
-│   ├── base                   # Implementations of base functions (e.g. map, reduce, etc.)
-│   ├── fileio                 # File IO function definitions
+│   ├── interface              # Implementations of array api functions (e.g. map, reduce, etc.)
+│   │   ├── fileio             # File IO function definitions
+│   │   └── ...
 │   ├── FinchNotation          # SubModule containing the Finch IR
 │   │   ├── nodes.jl           # defines the Finch IR
 │   │   ├── syntax.jl          # defines the @finch frontend syntax
@@ -38,11 +39,12 @@ not up to date.
 │   │   ├── dimensionalize.jl  # computes extents for loops and declarations
 │   │   ├── concordize.jl      # adds loops to ensure all accesses are concordant
 │   │   └── wrapperize.jl      # converts index expressions to array wrappers
-│   ├──  execute.jl            # global compiler calls
-│   ├──  lower.jl              # inner compiler definition
-│   ├──  semantics.jl          # finch array interface functions
-│   ├──  traits.jl             # functions and types to reason about appropriate outputs
-│   ├──  util.jl               # shims and julia codegen utils (Dead code elimination, etc...)
+│   ├── execute.jl             # global compiler calls
+│   ├── lower.jl               # inner compiler definition
+│   ├── semantics.jl           # finch array interface functions
+│   ├── traits.jl              # functions and types to reason about appropriate outputs
+│   ├── util                   # shims and julia codegen utils (Dead code elimination, etc...)
+│   │   └── ...
 │   └── ...
 ├── test                       # tests
 │   ├──  reference32           # reference output for 32-bit systems
