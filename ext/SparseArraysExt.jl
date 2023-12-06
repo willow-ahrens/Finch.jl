@@ -34,6 +34,24 @@ function Finch.fiber!(arr::SparseVector{Tv, Ti}; default=zero(Tv)) where {Tv, Ti
     return Fiber(SparseList{Ti}(Element{zero(Tv)}(arr.nzval), n, [1, length(arr.nzind) + 1], arr.nzind))
 end
 
+function SparseArrays.SparseMatrixCSC(arr::Union{Fiber, Swizzle})
+    return SparseMatrixCSC(Fiber!(Dense(SparseList(Element(0.0))), arr))
+end
+
+function SparseArrays.SparseMatrixCSC(arr::Fiber{<:Dense{Ti, <:SparseList{Ti, Ptr, Idx, <:Element{Tv}}}}) where {Ti, Ptr, Idx, Tv}
+    return SparseMatrixCSC{Ti, Tv}(size(arr)..., arr.lvl.lvl.ptr, arr.lvl.lvl.idx, arr.lvl.lvl.lvl.val)
+end
+
+function SparseArrays.sparse(fbr::Fiber)
+    if ndims(fbr) == 1
+        return SparseVector(fbr)
+    elseif ndims(fbr) == 2
+        return SparseMatrixCSC(fbr)
+    else
+        throw(ArgumentError("SparseArrays only supports 1D and 2D arrays"))
+    end
+end
+
 @kwdef mutable struct VirtualSparseMatrixCSC
     ex
     Tv
@@ -131,6 +149,14 @@ Finch.FinchNotation.finch_leaf(x::VirtualSparseMatrixCSC) = virtual(x)
 Finch.virtual_default(arr::VirtualSparseMatrixCSC, ctx) = zero(arr.Tv)
 Finch.virtual_eltype(tns::VirtualSparseMatrixCSC, ctx) = tns.Tv
 
+
+function SparseArrays.SparseVector(arr::Union{Fiber, Swizzle})
+    return SparseVector(Fiber!(SparseList(Element(0.0)), arr))
+end
+
+function SparseArrays.SparseVector(arr::Fiber{<:SparseList{Ti, Ptr, Idx, <:Element{Tv}}}) where {Ti, Ptr, Idx, Tv}
+    return SparseVector{Ti, Tv}(size(arr)..., arr.lvl.ptr, arr.lvl.idx, arr.lvl.lvl.val)
+end
 @kwdef mutable struct VirtualSparseVector
     ex
     Tv
