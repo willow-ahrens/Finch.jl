@@ -20,7 +20,8 @@ not up to date.
 ├── ext                        # conditionally-loaded code for interaction with other packages (e.g. SparseArrays)
 ├── src                        # Source files
 │   ├── interface              # Implementations of array api functions (e.g. map, reduce, etc.)
-│   ├── fileio                 # File IO function definitions
+│   │   ├── fileio             # File IO function definitions
+│   │   └── ...
 │   ├── FinchNotation          # SubModule containing the Finch IR
 │   │   ├── nodes.jl           # defines the Finch IR
 │   │   ├── syntax.jl          # defines the @finch frontend syntax
