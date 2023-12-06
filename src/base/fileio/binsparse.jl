@@ -254,8 +254,8 @@ struct NPYPath
     dirname::String
 end
 
-bspwrite_h5(args...) = throw(FinchExtensionError("HDF5.jl must be loaded to write Binsparse HDF5 (hint: `using HDF5`)"))
-bspwrite_bspnpy(args...) = throw(FinchExtensionError("NPZ.jl must be loaded to write Binsparse NPY (hint: `using NPZ`)"))
+bspwrite_h5(args...) = throw(FinchExtensionError("HDF5.jl must be loaded to write .bsp.h5 files (hint: `using HDF5`)"))
+bspwrite_bspnpy(args...) = throw(FinchExtensionError("NPZ.jl must be loaded to write .bspnpy files (hint: `using NPZ`)"))
 
 function bspwrite(fname::AbstractString, arr, attrs = OrderedDict())
     if endswith(fname, ".h5") || endswith(fname, ".hdf5")
@@ -292,8 +292,8 @@ end
 
 function bspwrite_header end
 
-bspread_h5(args...) = throw(FinchExtensionError("HDF5.jl must be loaded to read Binsparse HDF5 (hint: `using HDF5`)"))
-bspread_bspnpy(args...) = throw(FinchExtensionError("NPZ.jl must be loaded to read Binsparse NPY (hint: `using NPZ`)"))
+bspread_h5(args...) = throw(FinchExtensionError("HDF5.jl must be loaded to read .bsp.h5 files (hint: `using HDF5`)"))
+bspread_bspnpy(args...) = throw(FinchExtensionError("NPZ.jl must be loaded to read .bspnpy files (hint: `using NPZ`)"))
 
 function bspread(fname::AbstractString)
     if endswith(fname, ".h5") || endswith(fname, ".hdf5")
