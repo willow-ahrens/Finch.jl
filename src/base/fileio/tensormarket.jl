@@ -1,5 +1,5 @@
 """
-    ttxwrite(filename, tns)
+    fttwrite(filename, tns)
 
 Write a sparse Finch fiber to a TensorMarket file.
     
@@ -7,10 +7,10 @@ Write a sparse Finch fiber to a TensorMarket file.
 
 See also: [ttwrite](http://willowahrens.io/TensorMarket.jl/stable/#TensorMarket.ttwrite)
 """
-function ttxwrite end
+fttwrite(args...) = throw(FinchExtensionError("TensorMarket.jl must be loaded to use write .ttx files (hint: `using TensorMarket`)"))
 
 """
-    ttxread(filename, infoonly=false, retcoord=false)
+    fttread(filename, infoonly=false, retcoord=false)
 
 Read the TensorMarket file into a Finch fiber. The fiber will be dense or
 COO depending on the format of the file.
@@ -19,10 +19,10 @@ COO depending on the format of the file.
 
 See also: [ttread](http://willowahrens.io/TensorMarket.jl/stable/#TensorMarket.ttread)
 """
-function ttxread end
+fttread(args...) = throw(FinchExtensionError("TensorMarket.jl must be loaded to use read .ttx files (hint: `using TensorMarket`)"))
 
 """
-    tnswrite(filename, tns)
+    ftnswrite(filename, tns)
 
 Write a sparse Finch fiber to a FROSTT `.tns` file.
 
@@ -34,10 +34,10 @@ Write a sparse Finch fiber to a FROSTT `.tns` file.
 
 See also: [tnswrite](http://willowahrens.io/TensorMarket.jl/stable/#TensorMarket.tnswrite)
 """
-function tnswrite end
+ftnswrite(args...) = throw(FinchExtensionError("TensorMarket.jl must be loaded to write .tns files (hint: `using TensorMarket`)"))
 
 """
-    tnsread(filename)
+    ftnsread(filename)
 
 Read the contents of the FROSTT `.tns` file 'filename' into a Finch COO Fiber.
 
@@ -49,32 +49,4 @@ Read the contents of the FROSTT `.tns` file 'filename' into a Finch COO Fiber.
 
 See also: [tnsread](http://willowahrens.io/TensorMarket.jl/stable/#TensorMarket.tnsread)
 """
-function tnsread end
-
-"""
-    bspwrite(filename, tns)
-
-Write the Finch fiber to a file using 
-[Binsparse](https://github.com/GraphBLAS/binsparse-specification) HDF5 file
-format.
-
-[HDF5](https://github.com/JuliaIO/HDF5.jl) must be loaded for this function to be available
-
-!!! warning
-    The Binsparse spec is under development. Additionally, this function may not
-    be fully conformant. Please file bug reports if you see anything amiss.
-"""
-function bspwrite end
-
-"""
-    bspread(filename)
-
-Read the [Binsparse](https://github.com/GraphBLAS/binsparse-specification) HDF5 file into a Finch tensor.
-
-[HDF5](https://github.com/JuliaIO/HDF5.jl) must be loaded for this function to be available
-
-!!! warning
-    The Binsparse spec is under development. Additionally, this function may not
-    be fully conformant. Please file bug reports if you see anything amiss.
-"""
-function bspread end
+ftnsread(args...) = throw(FinchExtensionError("TensorMarket.jl must be loaded to read .tns files (hint: `using TensorMarket`)"))

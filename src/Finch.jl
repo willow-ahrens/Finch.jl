@@ -47,6 +47,14 @@ export parallelAnalysis, ParallelAnalysisResults
 export parallel, extent, dimless
 export CPU, CPULocalVector, CPULocalMemory
 
+struct FinchProtocolError <: Exception
+    msg::String
+end
+
+struct FinchExtensionError <: Exception
+    msg::String
+end
+
 include("base/limits.jl")
 export Limit
 
@@ -131,6 +139,7 @@ include("base/mapreduce.jl")
 include("base/compare.jl")
 include("base/copy.jl")
 include("base/fsparse.jl")
+include("base/fileio/fileio.jl")
 
 @static if !isdefined(Base, :get_extension)
     function __init__()
@@ -157,7 +166,5 @@ end
 
     end
 end
-
-include("fileio/fileio.jl")
 
 end

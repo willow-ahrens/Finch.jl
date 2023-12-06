@@ -254,8 +254,8 @@ struct NPYPath
     dirname::String
 end
 
-function bspwrite_h5 end
-function bspwrite_bspnpy end
+bspwrite_h5(args...) = throw(FinchExtensionError("HDF5.jl must be loaded to write .bsp.h5 files (hint: `using HDF5`)"))
+bspwrite_bspnpy(args...) = throw(FinchExtensionError("NPZ.jl must be loaded to write .bspnpy files (hint: `using NPZ`)"))
 
 function bspwrite(fname::AbstractString, arr, attrs = OrderedDict())
     if endswith(fname, ".h5") || endswith(fname, ".hdf5")
@@ -292,8 +292,8 @@ end
 
 function bspwrite_header end
 
-function bspread_h5 end
-function bspread_bspnpy end
+bspread_h5(args...) = throw(FinchExtensionError("HDF5.jl must be loaded to read .bsp.h5 files (hint: `using HDF5`)"))
+bspread_bspnpy(args...) = throw(FinchExtensionError("NPZ.jl must be loaded to read .bspnpy files (hint: `using NPZ`)"))
 
 function bspread(fname::AbstractString)
     if endswith(fname, ".h5") || endswith(fname, ".hdf5")
