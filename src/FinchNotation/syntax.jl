@@ -96,6 +96,7 @@ overwrite(l, r) = r
 struct Dimensionless end
 const dimless = Dimensionless()
 function extent end
+function continuous end
 
 struct FinchParserVisitor
     nodes

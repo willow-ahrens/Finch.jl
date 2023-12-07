@@ -57,11 +57,8 @@ end
 
 virtual_default(arr::VirtualScaleArray, ctx::AbstractCompiler) = virtual_default(arr.body, ctx)
 
-function instantiate_reader(arr::VirtualScaleArray, ctx, protos)
-    VirtualScaleArray(instantiate_reader(arr.body, ctx, protos), arr.scale)
-end
-function instantiate_updater(arr::VirtualScaleArray, ctx, protos)
-    VirtualScaleArray(instantiate_updater(arr.body, ctx, protos), arr.scale)
+function instantiate(arr::VirtualScaleArray, ctx, mode, protos)
+    VirtualScaleArray(instantiate(arr.body, ctx, mode, protos), arr.scale)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualScaleArray) = ctx(node.body)
