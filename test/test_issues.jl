@@ -490,6 +490,11 @@ using CIndices
         @finch (output_tensor .=0; for j=_,i=_,k=_; output_tensor[i,k] += a_fiber[i,j] * b_fiber[k,j]; end)
     end
 
+    #https://github.com/willow-ahrens/Finch.jl/issues/319
+    let
+        x = SparseMatrixCSC(spzeros(2,2))
+        @test_throws Finch.FinchProtocolError @finch x .= 0
+    end
     #https://github.com/willow-ahrens/Finch.jl/issues/321
     let
         A = fsprand((10, 10), 0.1)
