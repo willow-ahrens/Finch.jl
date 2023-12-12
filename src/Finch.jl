@@ -47,10 +47,18 @@ export parallelAnalysis, ParallelAnalysisResults
 export parallel, extent, dimless
 export CPU, CPULocalVector, CPULocalMemory
 
-include("base/limits.jl")
 export Limit
 
-include("util.jl")
+struct FinchProtocolError <: Exception
+    msg::String
+end
+
+struct FinchExtensionError <: Exception
+    msg::String
+end
+
+include("util/util.jl")
+include("util/limits.jl")
 
 include("environment.jl")
 include("FinchNotation/FinchNotation.jl")
@@ -123,14 +131,15 @@ export ftnsread, ftnswrite, fttread, fttwrite
 
 export moveto
 
-include("base/abstractarrays.jl")
-include("base/abstractunitranges.jl")
-include("base/broadcast.jl")
-include("base/index.jl")
-include("base/mapreduce.jl")
-include("base/compare.jl")
-include("base/copy.jl")
-include("base/fsparse.jl")
+include("interface/abstractarrays.jl")
+include("interface/abstractunitranges.jl")
+include("interface/broadcast.jl")
+include("interface/index.jl")
+include("interface/mapreduce.jl")
+include("interface/compare.jl")
+include("interface/copy.jl")
+include("interface/fsparse.jl")
+include("interface/fileio/fileio.jl")
 
 @static if !isdefined(Base, :get_extension)
     function __init__()
@@ -157,7 +166,5 @@ end
 
     end
 end
-
-include("fileio/fileio.jl")
 
 end

@@ -53,6 +53,16 @@ end
 default(a::AbstractArray) = default(typeof(a))
 default(T::Type{<:AbstractArray}) = zero(eltype(T))
 
+"""
+    Array(arr::Union{Fiber, SwizzleArray})
+
+Construct an array from a fiber or swizzle. May reuse memory, will usually densify the fiber.
+"""
+function Base.Array(fbr::Union{Fiber, SwizzleArray})
+    arr = Array{eltype(fbr)}(undef, size(fbr)...)
+    return copyto!(arr, fbr)
+end
+
 struct AsArray{T, N, Fbr} <: AbstractArray{T, N}
     fbr::Fbr
     function AsArray{T, N, Fbr}(fbr::Fbr) where {T, N, Fbr}

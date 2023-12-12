@@ -495,4 +495,25 @@ using CIndices
         x = SparseMatrixCSC(spzeros(2,2))
         @test_throws Finch.FinchProtocolError @finch x .= 0
     end
+    #https://github.com/willow-ahrens/Finch.jl/issues/321
+    let
+        A = fsprand((10, 10), 0.1)
+        B = sparse(A)
+        @test B isa SparseMatrixCSC
+        @test B == A
+        B = SparseMatrixCSC(A)
+        @test B isa SparseMatrixCSC
+        @test B == A
+        A = fsprand((10,), 0.1)
+        B = sparse(A)
+        @test B isa SparseVector
+        @test B == A
+        B = SparseVector(A)
+        @test B isa SparseVector
+        @test B == A
+        A = fsprand((10, 10), 0.1)
+        B = Array(A)
+        @test B isa Array
+        @test B == A
+    end
 end
