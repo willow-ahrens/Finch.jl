@@ -21,7 +21,7 @@ end
 const Pointer = PointerLevel
 
 PointerLevel(lvl::Lvl) where {Lvl} = PointerLevel([lvl], lvl)
-
+PointerLevel{Val, Lvl}(lvl::Lvl) where {Val, Lvl} =  PointerLevel{Val, Lvl}([lvl], lvl)
 Base.summary(::Pointer{Val, Lvl}) where {Val, Lvl} = "Pointer($(Lvl))"
 
 similar_level(lvl::Pointer{Val, Lvl}) where {Val, Lvl} = PointerLevel{Val, Lvl}(similar_level(lvl.lvl))

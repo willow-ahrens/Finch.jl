@@ -32,10 +32,10 @@ RootSparseListLevel{Ti}(lvl::Lvl, shape, idx::Idx) where {Ti, Lvl, Idx} =
     RootSparseListLevel{Ti, Idx, Lvl}(lvl, shape, idx, Base.Ref(length(idx)))
 
 RootSparseListLevel{Ti}(lvl::Lvl, shape, idx::Idx, endpoint::Ti) where {Ti, Lvl, Idx} =
-    RootSparseListLevel{Ti, Idx, Lvl}(lvl, shape, idx,  Base.Ref(endpoint))
+    RootSparseListLevel{Ti, Idx, Lvl}(lvl, shape, idx,  Base.Ref((endpoint)))
 
 RootSparseListLevel{Ti, Idx, Lvl}(lvl::Lvl, shape::Ti, idx::Idx, endpoint::Ti) where {Ti, Lvl, Idx} =
-    RootSparseListLevel{Ti, Idx, Lvl}(lvl, shape, idx,  Base.Ref(endpoint))
+    RootSparseListLevel{Ti, Idx, Lvl}(lvl, shape, idx,  Base.Ref((endpoint)))
 Base.summary(lvl::RootSparseListLevel) = "RootSparseList($(summary(lvl.lvl)))"
 similar_level(lvl::RootSparseListLevel) = RootSparseList(similar_level(lvl.lvl))
 similar_level(lvl::RootSparseListLevel, dim, tail...) = RootSparseList(similar_level(lvl.lvl, tail...), dim)
@@ -47,11 +47,11 @@ end
 function moveto(lvl::RootSparseListLevel{Ti, Idx, Lvl}, Tm) where {Ti, Idx, Lvl}
     lvl_2 = moveto(lvl.lvl, Tm)
     idx_2 = moveto(lvl.idx, Tm)
-    return RootSparseListLevel{Ti}(lvl_2, lvl.shape, idx_2)
+    return RootSparseListLevel{Ti}(lvl_2, lvl.shape, idx_2, lvl.endpoint[])
 end
 
 function countstored_level(lvl::RootSparseListLevel, pos)
-    countstored_level(lvl.lvl, length(lvl.idx))
+    countstored_level(lvl.lvl, lvl.endpoint[])
 end
 
 pattern!(lvl::RootSparseListLevel{Ti}) where {Ti} = 
@@ -221,6 +221,7 @@ function freeze_level!(lvl::VirtualRootSparseListLevel, ctx::AbstractCompiler, p
     endpoint = ctx(lvl.endpoint)
     push!(ctx.code.preamble, quote
         $qos_stop = $Tp(length($(lvl.idx)))
+        $(lvl.qos_fill) = $Tp($endpoint) + $(Tp(1))
     end)
     lvl.lvl = freeze_level!(lvl.lvl, ctx, value(qos_stop))
     return lvl
@@ -256,7 +257,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualRootSparseListLevel}, ctx, mode
             preamble = quote
 
                 $my_q = $(Tp(1))
-                $my_q_stop = $Tp($(qos_fill)) + $(Tp(1))
+                $my_q_stop = $Tp($endpoint) + $(Tp(1))
                 if !isempty($(lvl.idx))
                     $my_i = $(lvl.idx)[1]
                     $my_i1 = $(lvl.idx)[$endpoint]
@@ -310,7 +311,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualRootSparseListLevel}, ctx, mode
         body = (ctx, ext) -> Thunk(
             preamble = quote
                 $my_q = $(Tp(1))
-                $my_q_stop = $Tp($(qos_fill)) + $(Tp(1))
+                $my_q_stop = $Tp($endpoint) + $(Tp(1))
                 if !isempty($(lvl.idx))
                     $my_i = $(lvl.idx)[1]
                     $my_i1 = $(lvl.idx)[$endpoint]
