@@ -128,7 +128,7 @@ is_atomic(lvl::Unfurled, ctx) = is_atomic(lvl.arr, ctx)
 
 function lower_access(ctx::AbstractCompiler, node, tns::Unfurled)
     if !isempty(node.idxs)
-        error("I'm not sure how this has happened")
+        error("Unfurled not lowered completely")
     end
     lower_access(ctx, node, tns.body)
 end
