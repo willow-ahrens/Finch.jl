@@ -16,7 +16,6 @@ struct VirtualScaleArray <: AbstractVirtualCombinator
 end
 
 is_injective(lvl::VirtualScaleArray, ctx) = is_injective(lvl.body, ctx)
-is_concurrent(lvl::VirtualScaleArray, ctx) = is_concurrent(lvl.body, ctx)
 is_atomic(lvl::VirtualScaleArray, ctx) = is_atomic(lvl.body, ctx)
 
 Base.show(io::IO, ex::VirtualScaleArray) = Base.show(io, MIME"text/plain"(), ex)
@@ -124,10 +123,19 @@ visit_simplify(node::VirtualScaleArray) = VirtualScaleArray(visit_simplify(node.
     guard => VirtualScaleArray(body, node.scale)
 end
 
-jumper_body(node::VirtualScaleArray, ctx, ext) = VirtualScaleArray(jumper_body(node.body, ctx, scaledim(ext, node.scale[end])), node.scale)
-stepper_body(node::VirtualScaleArray, ctx, ext) = VirtualScaleArray(stepper_body(node.body, ctx, scaledim(ext, node.scale[end])), node.scale)
+stepper_range(node::VirtualScaleArray, ctx, ext) = scaledim(stepper_range(node.body, ctx, scaledim(ext, node.scale[end])), call(/, 1.0f0, node.scale[end]))
+stepper_body(node::VirtualScaleArray, ctx, ext, ext_2) = VirtualScaleArray(stepper_body(node.body, ctx, scaledim(ext, node.scale[end]), scaledim(ext, node.scale[end])), node.scale)
 stepper_seek(node::VirtualScaleArray, ctx, ext) = stepper_seek(node.body, ctx, scaledim(ext, node.scale[end]))
+
+jumper_range(node::VirtualScaleArray, ctx, ext) = scaledim(jumper_range(node.body, ctx, scaledim(ext, node.scale[end])), call(/, 1.0f0, node.scale[end]))
+jumper_body(node::VirtualScaleArray, ctx, ext, ext_2) = VirtualScaleArray(jumper_body(node.body, ctx, scaledim(ext, node.scale[end]), scaledim(ext, node.scale[end])), node.scale)
 jumper_seek(node::VirtualScaleArray, ctx, ext) = jumper_seek(node.body, ctx, scaledim(ext, node.scale[end]))
+
+function short_circuit_cases(node::VirtualScaleArray, ctx, op)
+    map(short_circuit_cases(node.body, ctx, op)) do (guard, body)
+        guard => VirtualScaleArray(body, node.scale)
+    end
+end
 
 getroot(tns::VirtualScaleArray) = getroot(tns.body)
 
