@@ -36,6 +36,7 @@ quote
     A.m == y_mode1_stop || throw(DimensionMismatch("mismatched dimension stop"))
     fill!(y, 0)
     for j_4 = 1:x_mode1_stop
+        val = x[j_4]
         A_q = A.colptr[j_4]
         A_q_stop = A.colptr[j_4 + 1]
         if A_q < A_q_stop
@@ -52,13 +53,13 @@ quote
                 A_i = A.rowval[A_q]
                 if A_i < phase_stop
                     A_val = A.nzval[A_q]
-                    y[A_i] = x[j_4] * A_val + y[A_i]
+                    y[A_i] = val * A_val + y[A_i]
                     A_q += 1
                 else
                     phase_stop_3 = min(A_i, phase_stop)
                     if A_i == phase_stop_3
                         A_val = A.nzval[A_q]
-                        y[phase_stop_3] = x[j_4] * A_val + y[phase_stop_3]
+                        y[phase_stop_3] = val * A_val + y[phase_stop_3]
                         A_q += 1
                     end
                     break
