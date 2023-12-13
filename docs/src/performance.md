@@ -245,6 +245,8 @@ quote
     B_mode2_stop == A_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(B_mode2_stop) != $(A_lvl.shape))"))
     C_val = 0
     for j_4 = 1:B_mode2_stop
+        sugar_2 = size(B)
+        B_mode1_stop = sugar_2[1]
         A_lvl_q = (1 - 1) * A_lvl.shape + j_4
         A_lvl_2_q = A_lvl_ptr[A_lvl_q]
         A_lvl_2_q_stop = A_lvl_ptr[A_lvl_q + 1]
@@ -263,24 +265,33 @@ quote
                 A_lvl_2_i = A_lvl_idx[A_lvl_2_q]
                 if A_lvl_2_i < phase_stop
                     for i_6 = i:A_lvl_2_i - 1
-                        C_val = f(0.0, B[i_6, j_4]) + C_val
+                        val = B[i_6, j_4]
+                        C_val = f(0.0, val) + C_val
                     end
                     A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
-                    C_val = C_val + f(A_lvl_3_val, B[A_lvl_2_i, j_4])
+                    sugar_4 = size(B)
+                    B_mode1_stop = sugar_4[1]
+                    val = B[A_lvl_2_i, j_4]
+                    C_val = C_val + f(A_lvl_3_val, val)
                     A_lvl_2_q += 1
                     i = A_lvl_2_i + 1
                 else
                     phase_stop_3 = min(A_lvl_2_i, phase_stop)
                     if A_lvl_2_i == phase_stop_3
                         for i_8 = i:phase_stop_3 - 1
-                            C_val = f(0.0, B[i_8, j_4]) + C_val
+                            val = B[i_8, j_4]
+                            C_val = C_val + f(0.0, val)
                         end
                         A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
-                        C_val = C_val + f(A_lvl_3_val, B[phase_stop_3, j_4])
+                        sugar_6 = size(B)
+                        B_mode1_stop = sugar_6[1]
+                        val = B[phase_stop_3, j_4]
+                        C_val = C_val + f(A_lvl_3_val, val)
                         A_lvl_2_q += 1
                     else
                         for i_10 = i:phase_stop_3
-                            C_val = f(0.0, B[i_10, j_4]) + C_val
+                            val = B[i_10, j_4]
+                            C_val = C_val + f(0.0, val)
                         end
                     end
                     i = phase_stop_3 + 1
@@ -291,7 +302,8 @@ quote
         phase_start_3 = max(1, 1 + A_lvl_2_i1)
         if B_mode1_stop >= phase_start_3
             for i_12 = phase_start_3:B_mode1_stop
-                C_val = f(0.0, B[i_12, j_4]) + C_val
+                val = B[i_12, j_4]
+                C_val = C_val + f(0.0, val)
             end
         end
     end

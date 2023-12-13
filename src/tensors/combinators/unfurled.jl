@@ -5,6 +5,9 @@
     Unfurled(arr, ndims, body) = begin
         new(arr, ndims, body) 
     end
+    Unfurled(arr, ndims, body::Unfurled) = begin
+        Unfurled(arr, ndims, body.body) 
+    end
     Unfurled(arr, body) = Unfurled(arr, 0, body)
 end
 
@@ -20,7 +23,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Unfurled)
     print(io, ")")
 end
 
-Base.summary(io::IO, ex::Unfurled) = print(io, "Unfurled($(summary(ex.arr)), $(summary(ex.body)))")
+Base.summary(io::IO, ex::Unfurled) = print(io, "Unfurled($(summary(ex.arr)), $(ex.ndims), $(summary(ex.body)))")
 
 FinchNotation.finch_leaf(x::Unfurled) = virtual(x)
 
@@ -36,7 +39,7 @@ function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::Unfurled)
 end
 
 function popdim(node::Unfurled, ctx)
-    if node.ndims + 1 == length(virtual_size(node.arr, ctx)) || node.body isa Unfurled
+    if node.ndims + 1 == length(virtual_size(node.arr, ctx))
         return node.body
     else
         return Unfurled(node.arr, node.ndims + 1, node.body)
@@ -97,7 +100,7 @@ visit_simplify(node::Unfurled) = Unfurled(node.arr, node.ndims, visit_simplify(n
 end
 
 function unfurl(tns::Unfurled, ctx, ext, mode, protos...)
-    unfurl(tns.body, ctx, ext, mode, protos...)
+    Unfurled(tns.arr, tns.ndims, unfurl(tns.body, ctx, ext, mode, protos...))
 end
 
 stepper_range(node::Unfurled, ctx, ext) = stepper_range(node.body, ctx, ext)
