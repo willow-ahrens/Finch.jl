@@ -89,6 +89,7 @@
                 for j = _
                     for i = parallel(_)
                         B[i, j] = A[i, j]
+                        B[i+1, j] = A[i, j]
                     end
                 end
             end
