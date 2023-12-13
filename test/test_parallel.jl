@@ -86,10 +86,9 @@
 
         @test_throws Finch.FinchConcurrencyError begin
             @finch_code begin
-                y .= 0
                 for j = _
                     for i = parallel(_)
-                        B[i, j] *= A[i, j]
+                        B[i, j] = A[i, j]
                     end
                 end
             end
