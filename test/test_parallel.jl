@@ -32,7 +32,7 @@
         A = Fiber!(Dense(SparseList(Element(0.0))))
         x = Fiber!(Dense(Element(0.0)))
         y = Fiber!(Dense(Element(0.0)))
-        @test_throws Finch.FinchConcurrencyError try
+        @test_throws Finch.FinchConcurrencyError begin
             @finch_code begin
                 y .= 0
                 for j = parallel(_)
@@ -41,12 +41,6 @@
                     end
                 end
             end
-        catch e
-            @test e isa Finch.FinchConcurrencyError
-            #@test !e.naive
-            #@test e.withAtomics
-            #@test length(e.nonInjectiveAccss) == 1
-            throw(e)
         end
     end
 
@@ -55,7 +49,7 @@
         x = Fiber!(Dense(Element(0.0)))
         y = Fiber!(Dense(Element(0.0)))
 
-        @test_throws Finch.FinchConcurrencyError try
+        @test_throws Finch.FinchConcurrencyError begin
             @finch_code begin
                 y .= 0
                 for j = parallel(_)
@@ -65,12 +59,6 @@
                     end
                 end
             end
-        catch e
-            @test e isa Finch.FinchConcurrencyError
-            #@test !e.naive
-            #@test e.withAtomics
-            #@test length(e.nonInjectiveAccss) == 1
-            throw(e)
         end
     end
     let
@@ -78,7 +66,7 @@
         x = Fiber!(Dense(Element(0.0)))
         y = Fiber!(Dense(Element(0.0)))
 
-        @test_throws Finch.FinchConcurrencyError try
+        @test_throws Finch.FinchConcurrencyError begin
             @finch_code begin
                 y .= 0
                 for j = parallel(_)
@@ -88,14 +76,23 @@
                     end
                 end
             end
-        catch e
-            @test e isa Finch.FinchConcurrencyError
-            #@test !e.naive
-            #@test !e.withAtomics
-            #@test length(e.nonInjectiveAccss) == 1
-            #@test e.withAtomicsAndAssoc
-            #@test length(e.nonAssocAssigns) == 2
-            throw(e)
+        end
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/317
+    let
+        A = rand(5, 5)
+        B = rand(5, 5)
+
+        @test_throws Finch.FinchConcurrencyError begin
+            @finch_code begin
+                for j = _
+                    for i = parallel(_)
+                        B[i, j] = A[i, j]
+                        B[i+1, j] = A[i, j]
+                    end
+                end
+            end
         end
     end
 

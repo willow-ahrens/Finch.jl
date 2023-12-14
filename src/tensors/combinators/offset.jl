@@ -145,7 +145,7 @@ end
 
 function lower_access(ctx::AbstractCompiler, node, tns::VirtualOffsetArray)
     if !isempty(node.idxs)
-        error("oh no!")
+        error("OffsetArray not lowered completely")
     end
     lower_access(ctx, node, tns.body)
 end
