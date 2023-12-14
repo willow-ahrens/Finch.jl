@@ -37,7 +37,7 @@ module FinchNotation
 
     export getval, getname
 
-    export overwrite, initwrite, Dimensionless, dimless, extent, continuous
+    export overwrite, initwrite, Dimensionless, dimless, extent, realextent
 
     export d
 

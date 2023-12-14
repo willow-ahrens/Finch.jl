@@ -18,8 +18,8 @@
     s2, e2 = w[begin:2:end], w[begin+1:2:end]
 
     let
-        x = Fiber(SparseList{Float32}(Element{0}(fill(1, NumItvl)), Shape, [1, NumItvl+1], v))
-        y = Fiber(SparseRLE{Float32}(Element{0}(fill(1, NumItvl)), Shape, [1, NumItvl+1], v, v))
+        x = Fiber(SparseList{Float32}(Element{0}(fill(1, 2*NumItvl)), Shape, [1, 2*NumItvl+1], v))
+        y = Fiber(SparseRLE{Float32}(Element{0}(fill(1, 2*NumItvl)), Shape, [1, 2*NumItvl+1], v, v))
         z1 = Scalar(0);
         z2 = Scalar(0);
 
@@ -37,6 +37,28 @@
         @finch (z1 .= 0; for i=_; z1[] += x[i] * d(i) end)
         @finch (z2 .= 0; for i=_; z2[] += y[i] * d(i) end)
         @test z1.val == 0 && z2.val == 0
+    end
+
+    let
+        x = Fiber(SparseList{Float32}(Element{0}(fill(1, 2*NumItvl)), Shape, [1, 2*NumItvl+1], v))
+        y = Fiber(SparseRLE{Float32}(Element{0}(fill(1, 2*NumItvl)), Shape, [1, 2*NumItvl+1], v, v))
+        z1 = Scalar(0);
+        z2 = Scalar(0);
+
+        io = IOBuffer()
+        @repl io @finch_code (z1 .= 0; for i=_; z1[] += x[2*i+10] end)
+        @repl io @finch (z1 .= 0; for i=_; z1[] += x[2*i+10] end)
+        @test check_output("continuous_affine_sl.txt", String(take!(io)))
+
+        @repl io @finch_code (z1 .= 0; for i=_; z2[] += y[2*i+10] end)
+        @repl io @finch (z1 .= 0; for i=_; z2[] += y[2*i+10] end)
+        @test check_output("continuous_affine_rle.txt", String(take!(io)))
+      
+        @test z1.val == z2.val
+
+        @finch (z1 .= 0; for i=realextent(3,15); z1[] += coalesce(x[~(2*i+10)],0) end)
+        @finch (z2 .= 0; for i=realextent(3,15); z2[] += coalesce(y[~(2*i+10)],0) end)
+        @test z1.val == 5 && z2.val == 5 
     end
 
     let

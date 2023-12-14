@@ -50,14 +50,14 @@ function virtual_call(::typeof(extent), ctx, start, stop)
         Extent(start, stop)
     end
 end
-function virtual_call(::typeof(continuous), ctx, start, stop)
+function virtual_call(::typeof(realextent), ctx, start, stop)
     if isconstant(start) && isconstant(stop)
         ContinuousExtent(start, stop)
     end
 end
 
 virtual_uncall(ext::Extent) = call(extent, ext.start, ext.stop)
-virtual_uncall(ext::ContinuousExtent) = call(continuous, ext.start, ext.stop)
+virtual_uncall(ext::ContinuousExtent) = call(realextent, ext.start, ext.stop)
 
 FinchNotation.finch_leaf(x::Extent) = virtual(x)
 FinchNotation.finch_leaf(x::ContinuousExtent) = virtual(x)

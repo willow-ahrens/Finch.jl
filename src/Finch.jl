@@ -44,7 +44,7 @@ export choose, minby, maxby, overwrite, initwrite, d
 export default, AsArray
 
 export parallelAnalysis, ParallelAnalysisResults
-export parallel, continuous, extent, dimless
+export parallel, realextent, extent, dimless
 export CPU, CPULocalVector, CPULocalMemory
 
 export Limit
