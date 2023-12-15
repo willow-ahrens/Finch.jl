@@ -1,1 +1,0 @@
-10×5 Fiber!(SparseHash{1}(Dense(Element(0.0))))
