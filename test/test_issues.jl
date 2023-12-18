@@ -519,7 +519,7 @@ using CIndices
 
     #https://github.com/willow-ahrens/Finch.jl/issues/339
     let
-        Output = Fiber!(SparseList(Dense(Element(0))))
+        Output = Fiber(SparseList(Dense(Element(0),1),10))
         Point = Fiber(SparseList(Element{0}([1]), 10, [1,2], [1]))
         Kernel = Fiber(SparseList(Dense(Element{0}([1]),1), 10, [1,2], [2]))
 
