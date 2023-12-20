@@ -437,15 +437,6 @@ function (ctx::MarkDead)(ex, res)
         delete!(ctx.refs, lhs)
         rhs = ctx(rhs, res)
         return Expr(f, lhs, rhs)
-    #elseif @capture ex :for(:(=)(~i, ~ext), ~body)
-    #    body_2 = body
-    #    while true
-    #        ctx_2 = copy(ctx)
-    #        body_2 = ctx(body, false)
-    #        ctx == ctx_2 && break
-    #    end
-    #    ext = ctx(ext, iseffectful(body_2))
-    #    return Expr(:for, Expr(:(=), i, ext), body_2)
     elseif @capture ex :for(:(=)(~i, ~ext), ~body)
         body_2 = body
         while true
