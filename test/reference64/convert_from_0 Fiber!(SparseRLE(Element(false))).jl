@@ -42,7 +42,7 @@ begin
                             Finch.resize_if_smaller!(res_lvl_val, res_lvl_qos_stop)
                             Finch.fill_range!(res_lvl_val, false, res_lvl_qos, res_lvl_qos_stop)
                         end
-                        res_lvl_val[res_lvl_qos] = tmp_lvl_2_val
+                        res = (res_lvl_val[res_lvl_qos] = tmp_lvl_2_val)
                         res_lvl_idx[res_lvl_qos] = i_8
                         res_lvl_qos += 1
                     end

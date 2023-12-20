@@ -30,8 +30,8 @@ function (h::StaticHash)(x)
 end
 
 (ctx::AbstractCompiler)(root) = ctx(root, Stylize(root, ctx)(root))
-#(ctx::AbstractCompiler)(root, style) = (display(root); display(style); lower(root, ctx, style))
 (ctx::AbstractCompiler)(root, style) = lower(root, ctx, style)
+#(ctx::AbstractCompiler)(root, style) = (println(); println(); display(root); display(style); lower(root, ctx, style))
 
 function open_scope(prgm, ctx::AbstractCompiler)
     ctx_2 = shallowcopy(ctx)

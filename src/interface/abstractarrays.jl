@@ -32,7 +32,33 @@ end
 freeze!(arr::VirtualAbstractArray, ctx::AbstractCompiler) = arr
 thaw!(arr::VirtualAbstractArray, ctx::AbstractCompiler) = arr
 
-instantiate(arr::VirtualAbstractArray, ctx::AbstractCompiler, mode, subprotos, protos...) = arr
+function instantiate(arr::VirtualAbstractArray, ctx::AbstractCompiler, mode, subprotos, protos...)
+    val = freshen(ctx.code, :val)
+    function nest(idx...)
+        if length(idx) == arr.ndims
+            if mode === reader
+                Thunk(
+                    preamble = quote
+                        $val = $(arr.ex)[$(map(ctx, idx)...)]
+                    end,
+                    body = (ctx) -> VirtualScalar(nothing, arr.eltype, nothing#=We don't know what init is, but it won't be used here =#, gensym(), val)
+                )
+            else
+                VirtualScalar(nothing, arr.eltype, nothing#=We don't know what init is, but it won't be used here=#, gensym(), :($(arr.ex)[$(map(ctx, idx)...)]))
+            end
+        else
+            Furlable(
+                body = (ctx, ext) -> Lookup(
+                    body = (ctx, i) -> nest(i, idx...)
+                )
+            )
+        end
+    end
+    Unfurled(
+        arr = arr,
+        body = nest()
+    )
+end
 
 FinchNotation.finch_leaf(x::VirtualAbstractArray) = virtual(x)
 
@@ -43,7 +69,7 @@ function virtual_moveto(vec::VirtualAbstractArray, ctx, device)
     ex = freshen(ctx.code, vec.ex)
     push!(ctx.code.preamble, quote
         $ex = $(vec.ex)
-        $(vec.ex) = $moveto!($(vec.ex), $(ctx(device)))
+        $(vec.ex) = $moveto($(vec.ex), $(ctx(device)))
     end)
     push!(ctx.code.epilogue, quote
         $(vec.ex) = $ex

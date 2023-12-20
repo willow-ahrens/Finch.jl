@@ -22,7 +22,7 @@ begin
                 Finch.fill_range!(res_lvl_val, false, res_lvl_qos, res_lvl_qos_stop)
             end
             tmp_lvl_2_val = tmp_lvl_val[tmp_lvl_q + -1 + i_5]
-            res_lvl_val[res_lvl_qos] = tmp_lvl_2_val
+            res = (res_lvl_val[res_lvl_qos] = tmp_lvl_2_val)
             res_lvl_idx[res_lvl_qos] = i_5
             res_lvl_qos += 1
         end

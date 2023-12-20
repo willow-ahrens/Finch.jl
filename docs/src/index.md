@@ -70,7 +70,11 @@ quote
     @warn "Performance Warning: non-concordant traversal of A[i, j] (hint: most arrays prefer column major or first index fast, run in fast mode to ignore this warning)"
     for i_3 = 1:A_mode1_stop
         for j_3 = 1:A_mode2_stop
-            s_val = A[i_3, j_3] + s_val
+            sugar_3 = size(A)
+            A_mode1_stop = sugar_3[1]
+            A_mode2_stop = sugar_3[2]
+            val = A[i_3, j_3]
+            s_val = val + s_val
         end
     end
     (s = (Scalar){0, Int64}(s_val),)
