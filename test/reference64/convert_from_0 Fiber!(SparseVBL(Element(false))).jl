@@ -45,7 +45,7 @@ begin
                         end
                         tmp_lvl_q = tmp_lvl_q_ofs + i_8
                         tmp_lvl_2_val = tmp_lvl_val[tmp_lvl_q]
-                        res_lvl_val[res_lvl_qos] = tmp_lvl_2_val
+                        res = (res_lvl_val[res_lvl_qos] = tmp_lvl_2_val)
                         res_lvl_idx[res_lvl_qos] = i_8
                         res_lvl_qos += 1
                     end
