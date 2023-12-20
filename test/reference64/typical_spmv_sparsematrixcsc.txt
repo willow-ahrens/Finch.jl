@@ -36,6 +36,8 @@ quote
     A.m == y_mode1_stop || throw(DimensionMismatch("mismatched dimension stop"))
     fill!(y, 0)
     for j_4 = 1:x_mode1_stop
+        sugar_5 = size(x)
+        x_mode1_stop = sugar_5[1]
         val = x[j_4]
         A_q = A.colptr[j_4]
         A_q_stop = A.colptr[j_4 + 1]
