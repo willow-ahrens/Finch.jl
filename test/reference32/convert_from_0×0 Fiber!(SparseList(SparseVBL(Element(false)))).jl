@@ -78,7 +78,7 @@ begin
                                     end
                                     tmp_lvl_2_q = tmp_lvl_2_q_ofs + i_8
                                     tmp_lvl_3_val = tmp_lvl_2_val[tmp_lvl_2_q]
-                                    res_lvl_2_val[res_lvl_2_qos] = tmp_lvl_3_val
+                                    res = (res_lvl_2_val[res_lvl_2_qos] = tmp_lvl_3_val)
                                     res_lvldirty = true
                                     res_lvl_idx_2[res_lvl_2_qos] = i_8
                                     res_lvl_2_qos += 1
