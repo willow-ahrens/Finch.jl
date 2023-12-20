@@ -1,0 +1,51 @@
+julia> @finch_code begin
+        z2 .= 0
+        for i = _
+            z2[] += y[i]
+        end
+    end
+quote
+    z2 = (ex.bodies[1]).tns.bind
+    y_lvl = (ex.bodies[2]).body.rhs.tns.bind.lvl
+    y_lvl_2 = y_lvl.lvl
+    z2_val = 0
+    y_lvl_q = y_lvl.ptr[1]
+    y_lvl_q_stop = y_lvl.ptr[1 + 1]
+    if y_lvl_q < y_lvl_q_stop
+        y_lvl_i_end = y_lvl.right[y_lvl_q_stop - 1]
+    else
+        y_lvl_i_end = 0.0f0
+    end
+    phase_stop = min(y_lvl_i_end, y_lvl.shape)
+    if phase_stop >= limit(1.0)
+        i = limit(1.0)
+        if y_lvl.right[y_lvl_q] < limit(1.0)
+            y_lvl_q = Finch.scansearch(y_lvl.right, limit(1.0), y_lvl_q, y_lvl_q_stop - 1)
+        end
+        while i <= phase_stop
+            y_lvl_i_start = y_lvl.left[y_lvl_q]
+            y_lvl_i_stop = y_lvl.right[y_lvl_q]
+            phase_start_2 = i
+            phase_stop_2 = min(phase_stop, y_lvl_i_stop)
+            phase_start_4 = max(phase_start_2, y_lvl_i_start)
+            if phase_stop_2 >= phase_start_4
+                y_lvl_2_val_2 = y_lvl_2.val[y_lvl_q]
+                cond_2 = -phase_start_4 + phase_stop_2 == 0
+                if cond_2
+                    z2_val = y_lvl_2_val_2 + z2_val
+                end
+            end
+            y_lvl_q += phase_stop_2 == y_lvl_i_stop
+            i = phase_stop_2 + limit(0+ϵ)
+        end
+    end
+    (z2 = (Scalar){0, Int64}(z2_val),)
+end
+julia> @finch begin
+        z2 .= 0
+        for i = _
+            z2[] += y[i]
+        end
+    end
+(z2 = Scalar{0, Int64}(10),)
+
