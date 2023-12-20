@@ -516,4 +516,27 @@ using CIndices
         @test B isa Array
         @test B == A
     end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/339
+    let
+        Output = Fiber(SparseList(Dense(Element(0),1),10))
+        Point = Fiber(SparseList(Element{0}([1]), 10, [1,2], [1]))
+        Kernel = Fiber(SparseList(Dense(Element{0}([1]),1), 10, [1,2], [2]))
+
+        eval(@finch_kernel function test(Output, Point, Kernel) 
+            Output .= 0
+            for x = _
+                for xx = _
+                    for m = _
+                        Output[m,x] += Point[x] * Kernel[m,xx]
+                    end
+                end
+            end
+        end)
+
+        test(Output, Point, Kernel)
+        Ans = Fiber(SparseList{Int64}(Dense{Int64}(Element{0, Int64, Int64}([1]), 1), 10, [1, 2], [1]))
+        @test Ans == Output
+    end
+
 end
