@@ -123,12 +123,8 @@ mutable struct VirtualSparseLevel <: AbstractVirtualLevel
     lvl
     ex
     Ti
-    ptr
-    idx
+    tbl
     shape
-    qos_fill
-    qos_stop
-    prev_pos
 end
   
 is_level_injective(lvl::VirtualSparseLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., false]
@@ -136,19 +132,14 @@ is_level_atomic(lvl::VirtualSparseLevel, ctx) = false
 
 function virtualize(ex, ::Type{SparseLevel{Ti, Ptr, Idx, Lvl}}, ctx, tag=:lvl) where {Ti, Ptr, Idx, Lvl}
     sym = freshen(ctx, tag)
-    ptr = freshen(ctx, tag, :_ptr)
-    idx = freshen(ctx, tag, :_idx)
+    tbl = freshen(ctx, tag, :_tbl)
     push!(ctx.preamble, quote
         $sym = $ex
-        $ptr = $sym.ptr
-        $idx = $sym.idx
+        $tbl = $sym.tbl
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
     shape = value(:($sym.shape), Int)
-    qos_fill = freshen(ctx, sym, :_qos_fill)
-    qos_stop = freshen(ctx, sym, :_qos_stop)
-    prev_pos = freshen(ctx, sym, :_prev_pos)
-    VirtualSparseLevel(lvl_2, sym, Ti, ptr, idx, shape, qos_fill, qos_stop, prev_pos)
+    VirtualSparseLevel(lvl_2, sym, Ti, tbl, shape)
 end
 function lower(lvl::VirtualSparseLevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
@@ -179,43 +170,59 @@ virtual_level_default(lvl::VirtualSparseLevel) = virtual_level_default(lvl.lvl)
 
 postype(lvl::VirtualSparseLevel) = postype(lvl.lvl)
 
+struct ListTable{Ti, Tp, Ptr, Idx}
+    ptr::Ptr
+    idx::Idx
+end
+
+ListTable{Ti, Tp}() = ListTable{Ti, Tp}(Tp[1], Ti[], Ref{Ti}(0))
+ListTable{Ti, Tp}(ptr::Ptr, idx::Idx) where {Ptr, Idx} = ListTable{Ti, Tp, Ptr, Idx}(Tp[1], Ti[])
+
+
 function declare_level!(lvl::VirtualSparseLevel, ctx::AbstractCompiler, pos, init)
     #TODO check that init == default
     Ti = lvl.Ti
     Tp = postype(lvl)
-    qos = call(-, call(getindex, :($(lvl.ptr)), call(+, pos, 1)),  1)
+    qos = ctx.freshen(qos)
     push!(ctx.code.preamble, quote
-        $(lvl.qos_fill) = $(Tp(0))
-        $(lvl.qos_stop) = $(Tp(0))
+        $qos = Finch.declare_table!($(lvl.tbl), $pos)
     end)
-    if issafe(ctx.mode)
-        push!(ctx.code.preamble, quote
-            $(lvl.prev_pos) = $(Tp(0))
-        end)
-    end
-    lvl.lvl = declare_level!(lvl.lvl, ctx, qos, init)
+    lvl.lvl = declare_level!(lvl.lvl, ctx, value(qos, Tp), init)
     return lvl
+end
+
+function declare_table!(tbl::ListTable, pos)
+    return tbl.ptr[pos + 1] - 1
 end
 
 function trim_level!(lvl::VirtualSparseLevel, ctx::AbstractCompiler, pos)
     qos = freshen(ctx.code, :qos)
     Tp = postype(lvl)
     push!(ctx.code.preamble, quote
-        resize!($(lvl.ptr), $(ctx(pos)) + 1)
-        $qos = $(lvl.ptr)[end] - $(Tp(1))
-        resize!($(lvl.idx), $qos)
+        $qos = Finch.trim_table!($(lvl.tbl), $pos)
     end)
     lvl.lvl = trim_level!(lvl.lvl, ctx, value(qos, Tp))
     return lvl
+end
+
+function trim_table!(tbl::ListTable, pos)
+    resize!(lvl.ptr, pos + 1)
+    qos = lvl.ptr[end] - 1
+    resize!(lvl.idx, qos)
+    return qos
 end
 
 function assemble_level!(lvl::VirtualSparseLevel, ctx, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_start, pos_stop))
     return quote
-        Finch.resize_if_smaller!($(lvl.ptr), $pos_stop + 1)
-        Finch.fill_range!($(lvl.ptr), 0, $pos_start + 1, $pos_stop + 1)
+        Finch.assemble_table!($(lvl.tbl), $pos_start, $pos_stop)
     end
+end
+
+function assemble_table!(tbl::ListTable, pos_start, pos_stop)
+    resize_if_smaller!(tbl.ptr, pos_stop + 1)
+    fill_range!(tbl.ptr, 0, pos_start + 1, pos_stop + 1)
 end
 
 function freeze_level!(lvl::VirtualSparseLevel, ctx::AbstractCompiler, pos_stop)
@@ -223,29 +230,35 @@ function freeze_level!(lvl::VirtualSparseLevel, ctx::AbstractCompiler, pos_stop)
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
     qos_stop = freshen(ctx.code, :qos_stop)
     push!(ctx.code.preamble, quote
-        for $p = 2:($pos_stop + 1)
-            $(lvl.ptr)[$p] += $(lvl.ptr)[$p - 1]
-        end
-        $qos_stop = $(lvl.ptr)[$pos_stop + 1] - 1
+        $qos_stop = Finch.freeze_table!($(lvl.tbl), pos_stop)
     end)
     lvl.lvl = freeze_level!(lvl.lvl, ctx, value(qos_stop))
     return lvl
+end
+
+function freeze_table!(tbl::ListTable, pos_stop)
+    for p = 2:(pos_stop + 1)
+        tbl.ptr[p] += tbl.ptr[p - 1]
+    end
 end
 
 function virtual_moveto_level(lvl::VirtualSparseLevel, ctx::AbstractCompiler, arch)
     ptr_2 = freshen(ctx.code, lvl.ptr)
     idx_2 = freshen(ctx.code, lvl.idx)
     push!(ctx.code.preamble, quote
-        $ptr_2 = $(lvl.ptr)
-        $idx_2 = $(lvl.idx)
-        $(lvl.ptr) = $moveto($(lvl.ptr), $(ctx(arch)))
-        $(lvl.idx) = $moveto($(lvl.idx), $(ctx(arch)))
+        $tbl_2 = $(lvl.tbl)
+        $(lvl.tbl) = $moveto($(lvl.tbl), $(ctx(arch)))
     end)
     push!(ctx.code.epilogue, quote
-        $(lvl.ptr) = $ptr_2
-        $(lvl.idx) = $idx_2
+        $(lvl.tbl) = $tbl_2
     end)
     virtual_moveto_level(lvl.lvl, ctx, arch)
+end
+
+function moveto(tbl::ListTable, arch)
+    ptr_2 = moveto(ptr_2, arch)
+    idx_2 = moveto(idx_2, arch)
+    return ListTable(ptr_2, idx_2)
 end
 
 function instantiate(fbr::VirtualSubFiber{VirtualSparseLevel}, ctx, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
@@ -261,7 +274,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseLevel}, ctx, mode::Reader
     Furlable(
         body = (ctx, ext) -> Thunk(
             preamble = quote
-                $sub_tbl = $(lvl.tbl)[($(ctx(pos)))]
+                $subtbl = walk_table($(lvl.tbl), $(ctx(pos)))
                 (($my_i, $my_q), $state) = iterate($sub_tbl)
             end,
             body = (ctx) -> Sequence([
@@ -269,7 +282,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseLevel}, ctx, mode::Reader
                     stop = (ctx, ext) -> value(my_i1),
                     body = (ctx, ext) -> Stepper(
                         seek = (ctx, ext) -> quote
-                            ($my_i, $state) = seek($sub_tbl, $state)
+                            (($my_i, $my_q), $state) = seek($subtbl, $state, $my_i, $my_q)
                         end,
                         stop = (ctx, ext) -> value(my_i),
                         chunk = Spike(
@@ -287,6 +300,9 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseLevel}, ctx, mode::Reader
     )
 end
 
+struct ListTableWalk{Ti, Tp, Tbl}
+    
+
 instantiate(fbr::VirtualSubFiber{VirtualSparseLevel}, ctx, mode::Updater, protos) = begin
     instantiate(VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, mode, protos)
 end
@@ -302,12 +318,12 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseLevel}, ctx, mode::
     Furlable(
         body = (ctx, ext) -> Thunk(
             preamble = quote
-                $sub_tbl = $(lvl.tbl)[($(ctx(pos)))]
+                $subtbl = open_subtable($(lvl.tbl), $(ctx(pos)))
             end,
             body = (ctx) -> Lookup(
                 body = (ctx, idx) -> Thunk(
                     preamble = quote
-                        $ref = register_update($(lvl.tbl), idx)[]
+                        $ref, $qos = register_update($subtbl, $idx)
                         if $qos > $qos_stop
                             $qos_stop = max($qos_stop << 1, 1)
                             $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(qos, Tp), value(qos_stop, Tp)), ctx))
@@ -318,20 +334,13 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseLevel}, ctx, mode::
                     epilogue = quote
                         if $dirty
                             $(fbr.dirty) = true
-                            $(lvl.idx)[$qos] = $(ctx(idx))
-                            $qos += $(Tp(1))
-                            $(if issafe(ctx.mode)
-                                quote
-                                    $(lvl.prev_pos) = $(ctx(pos))
-                                end
-                            end)
+                            commit_update($ref)
                         end
                     end
                 )
             ),
             epilogue = quote
-                $(lvl.ptr)[$(ctx(pos)) + 1] = $qos - $qos_fill - 1
-                $qos_fill = $qos - 1
+                close_subtable($subtbl)
             end
         )
     )
