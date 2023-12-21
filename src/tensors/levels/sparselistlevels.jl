@@ -225,12 +225,27 @@ function freeze_level!(lvl::VirtualSparseListLevel, ctx::AbstractCompiler, pos_s
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
     qos_stop = freshen(ctx.code, :qos_stop)
     push!(ctx.code.preamble, quote
-        for $p = 2:($pos_stop + 1)
-            $(lvl.ptr)[$p] += $(lvl.ptr)[$p - 1]
+        for $p = 1:$pos_stop
+            $(lvl.ptr)[$p + 1] += $(lvl.ptr)[$p]
         end
         $qos_stop = $(lvl.ptr)[$pos_stop + 1] - 1
     end)
     lvl.lvl = freeze_level!(lvl.lvl, ctx, value(qos_stop))
+    return lvl
+end
+
+function thaw_level!(lvl::VirtualSparseListLevel, ctx::AbstractCompiler, pos_stop)
+    p = freshen(ctx.code, :p)
+    pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
+    qos_stop = freshen(ctx.code, :qos_stop)
+    push!(ctx.code.preamble, quote
+        $qos_stop = $(lvl.ptr)[$pos_stop + 1] - 1
+        for $p = 1:$pos_stop
+            $(lvl.ptr)[$p] = $(lvl.ptr)[$p + 1] - $(lvl.ptr)[$p]
+        end
+        lvl.ptr[$pos_stop + 1] = 0
+    end)
+    lvl.lvl = thaw_level!(lvl.lvl, ctx, value(qos_stop))
     return lvl
 end
 
