@@ -239,11 +239,12 @@ function thaw_level!(lvl::VirtualSparseListLevel, ctx::AbstractCompiler, pos_sto
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
     qos_stop = freshen(ctx.code, :qos_stop)
     push!(ctx.code.preamble, quote
-        $qos_stop = $(lvl.ptr)[$pos_stop + 1] - 1
-        for $p = 1:$pos_stop
-            $(lvl.ptr)[$p] = $(lvl.ptr)[$p + 1] - $(lvl.ptr)[$p]
+        $(lvl.qos_fill) = $(lvl.ptr)[$pos_stop + 1] - 1
+        $(lvl.qos_stop) = $(lvl.qos_fill)
+        $qos_stop = $(lvl.qos_fill)
+        for $p = $pos_stop:-1:1
+            $(lvl.ptr)[$p + 1] -= $(lvl.ptr)[$p]
         end
-        $(lvl.ptr)[$pos_stop + 1] = 0
     end)
     lvl.lvl = thaw_level!(lvl.lvl, ctx, value(qos_stop))
     return lvl
@@ -414,7 +415,7 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseListLevel}, ctx, mo
                 )
             ),
             epilogue = quote
-                $(lvl.ptr)[$(ctx(pos)) + 1] = $qos - $qos_fill - 1
+                $(lvl.ptr)[$(ctx(pos)) + 1] += $qos - $qos_fill - 1
                 $qos_fill = $qos - 1
             end
         )
