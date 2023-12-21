@@ -3,6 +3,53 @@ using CIndices
 
 @testset "issues" begin
     @info "Testing Github Issues"
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/358
+    let
+        A = Fiber!(Dense(SparseList(Element(0))), [
+          0 0 0 0 0;
+          1 0 0 0 0;
+          0 0 0 0 0
+        ])
+        B = Fiber!(Dense(SparseList(Element(0))), [
+          0 0 0 0 0;
+          0 0 1 0 0;
+          1 0 0 0 0
+        ])
+        C = Fiber!(Dense(SparseList(Element(0))), [
+          0 0 0 0 0;
+          0 0 0 1 0;
+          0 0 0 0 0
+        ])
+        D_ref = A .+ B
+        E_ref = D_ref .+ C
+        for D in [
+            Fiber!(Dense(SparseList(Element(0)))),
+            Fiber!(Dense(SparseHash{1}(Element(0)))),
+            Fiber!(Dense(Dense(Element(0)))),
+        ]
+            E = deepcopy(D)
+            @finch mode=fastfinch begin
+                D .= 0
+                E .= 0
+                for j = _, i = _
+                    E[i, j] += A[i, j]
+                end
+                for j = _, i = _
+                    E[i, j] += B[i, j]
+                end
+                for j = _, i = _
+                    D[i, j] += E[i, j]
+                end
+                for j = _, i = _
+                    E[i, j] += C[i, j]
+                end
+            end
+            @test D == D_ref
+            @test E == E_ref
+        end
+    end
+
     #https://github.com/willow-ahrens/Finch.jl/issues/51
     let
         x = Fiber!(Dense(Element(0.0)), [1, 2, 3])
@@ -495,6 +542,7 @@ using CIndices
         x = SparseMatrixCSC(spzeros(2,2))
         @test_throws Finch.FinchProtocolError @finch x .= 0
     end
+
     #https://github.com/willow-ahrens/Finch.jl/issues/321
     let
         A = fsprand((10, 10), 0.1)
@@ -516,4 +564,5 @@ using CIndices
         @test B isa Array
         @test B == A
     end
+
 end

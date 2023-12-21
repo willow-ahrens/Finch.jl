@@ -243,7 +243,7 @@ function thaw_level!(lvl::VirtualSparseListLevel, ctx::AbstractCompiler, pos_sto
         for $p = 1:$pos_stop
             $(lvl.ptr)[$p] = $(lvl.ptr)[$p + 1] - $(lvl.ptr)[$p]
         end
-        lvl.ptr[$pos_stop + 1] = 0
+        $(lvl.ptr)[$pos_stop + 1] = 0
     end)
     lvl.lvl = thaw_level!(lvl.lvl, ctx, value(qos_stop))
     return lvl
