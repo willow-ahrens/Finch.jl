@@ -38,6 +38,8 @@ jobs:
             arch: x64
     steps:
       - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.WILLOW_BOT_TOKEN }}
       - uses: julia-actions/setup-julia@v1
         with:
           version: ${{ matrix.version }}
@@ -60,8 +62,8 @@ jobs:
   
       - name: Commit changes
         run: |
-          git config --global user.email "robot@server"
-          git config --global user.name "Robot"
+          git config --global user.email "willow-bot@users.noreply.github.com"
+          git config --global user.name "Willow Bot"
           git config pull.rebase false  # merge
           git add docs/src/*
           git add test/reference*/*
