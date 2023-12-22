@@ -171,9 +171,9 @@ quote
             end
         end
     end
-    z_lvl_ptr[1 + 1] = (z_lvl_qos - 0) - 1
-    for p = 2:1 + 1
-        z_lvl_ptr[p] += z_lvl_ptr[p - 1]
+    z_lvl_ptr[1 + 1] += (z_lvl_qos - 0) - 1
+    for p = 1:1
+        z_lvl_ptr[p + 1] += z_lvl_ptr[p]
     end
     resize!(z_lvl_ptr, 1 + 1)
     qos = z_lvl_ptr[end] - 1

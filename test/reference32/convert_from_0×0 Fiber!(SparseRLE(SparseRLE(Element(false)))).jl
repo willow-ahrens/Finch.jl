@@ -117,7 +117,7 @@ begin
                                 end
                             end
                         end
-                        res_lvl_ptr_2[res_lvl_qos + 1] = (res_lvl_2_qos - res_lvl_2_qos_fill) - 1
+                        res_lvl_ptr_2[res_lvl_qos + 1] += (res_lvl_2_qos - res_lvl_2_qos_fill) - 1
                         res_lvl_2_qos_fill = res_lvl_2_qos - 1
                         if res_lvldirty
                             res_lvl_idx[res_lvl_qos] = j_8
@@ -205,7 +205,7 @@ begin
                                 end
                             end
                         end
-                        res_lvl_ptr_2[res_lvl_qos + 1] = (res_lvl_2_qos_2 - res_lvl_2_qos_fill) - 1
+                        res_lvl_ptr_2[res_lvl_qos + 1] += (res_lvl_2_qos_2 - res_lvl_2_qos_fill) - 1
                         res_lvl_2_qos_fill = res_lvl_2_qos_2 - 1
                         if res_lvldirty
                             res_lvl_idx[res_lvl_qos] = j_11
@@ -219,13 +219,13 @@ begin
             end
         end
     end
-    res_lvl_ptr[1 + 1] = (res_lvl_qos - 0) - 1
-    for p = 2:1 + 1
-        res_lvl_ptr[p] += res_lvl_ptr[p - 1]
+    res_lvl_ptr[1 + 1] += (res_lvl_qos - 0) - 1
+    for p = 1:1
+        res_lvl_ptr[p + 1] += res_lvl_ptr[p]
     end
     qos_stop = res_lvl_ptr[1 + 1] - 1
-    for p_2 = 2:qos_stop + 1
-        res_lvl_ptr_2[p_2] += res_lvl_ptr_2[p_2 - 1]
+    for p_2 = 1:qos_stop
+        res_lvl_ptr_2[p_2 + 1] += res_lvl_ptr_2[p_2]
     end
     resize!(res_lvl_ptr, 1 + 1)
     qos = res_lvl_ptr[end] - 1
