@@ -55,7 +55,7 @@ begin
                             Finch.fill_range!(res_lvl_2_val, false, res_lvl_2_qos, res_lvl_2_qos_stop)
                         end
                         tmp_lvl_3_val = tmp_lvl_2_val[tmp_lvl_2_q + -1 + i_5]
-                        res_lvl_2_val[res_lvl_2_qos] = tmp_lvl_3_val
+                        res = (res_lvl_2_val[res_lvl_2_qos] = tmp_lvl_3_val)
                         res_lvldirty = true
                         res_lvl_idx_2[res_lvl_2_qos] = i_5
                         res_lvl_2_qos += 1

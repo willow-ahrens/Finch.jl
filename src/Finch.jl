@@ -37,14 +37,14 @@ export Scalar, SparseScalar, ShortCircuitScalar, SparseShortCircuitScalar
 export walk, gallop, follow, extrude, laminate
 export fiber, fiber!, Fiber!, pattern!, dropdefaults, dropdefaults!, redefault!
 export diagmask, lotrimask, uptrimask, bandmask
-export offset, permissive, protocolize, swizzle, toeplitz, window
+export scale, product, offset, permissive, protocolize, swizzle, toeplitz, window
 
 export choose, minby, maxby, overwrite, initwrite, d
 
 export default, AsArray
 
 export parallelAnalysis, ParallelAnalysisResults
-export parallel, extent, dimless
+export parallel, realextent, extent, dimless
 export CPU, CPULocalVector, CPULocalMemory
 
 export Limit
@@ -120,6 +120,8 @@ include("tensors/combinators/offset.jl")
 include("tensors/combinators/toeplitz.jl")
 include("tensors/combinators/windowed.jl")
 include("tensors/combinators/swizzle.jl")
+include("tensors/combinators/scale.jl")
+include("tensors/combinators/product.jl")
 
 
 include("traits.jl")
