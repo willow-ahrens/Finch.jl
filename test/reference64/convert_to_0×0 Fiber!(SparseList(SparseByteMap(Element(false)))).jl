@@ -194,9 +194,9 @@ begin
             end
         end
     end
-    tmp_lvl_ptr[1 + 1] = (tmp_lvl_qos - 0) - 1
-    for p = 2:1 + 1
-        tmp_lvl_ptr[p] += tmp_lvl_ptr[p - 1]
+    tmp_lvl_ptr[1 + 1] += (tmp_lvl_qos - 0) - 1
+    for p = 1:1
+        tmp_lvl_ptr[p + 1] += tmp_lvl_ptr[p]
     end
     sort!(view(tmp_lvl_srt, 1:tmp_lvl_2_qos_fill))
     tmp_lvl_2_p_prev = 0
