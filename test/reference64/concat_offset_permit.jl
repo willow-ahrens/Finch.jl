@@ -373,9 +373,9 @@ begin
             C_lvl_qos += 1
         end
     end
-    C_lvl_ptr[1 + 1] = (C_lvl_qos - 0) - 1
-    for p = 2:1 + 1
-        C_lvl_ptr[p] += C_lvl_ptr[p - 1]
+    C_lvl_ptr[1 + 1] += (C_lvl_qos - 0) - 1
+    for p = 1:1
+        C_lvl_ptr[p + 1] += C_lvl_ptr[p]
     end
     resize!(C_lvl_ptr, 1 + 1)
     qos = C_lvl_ptr[end] - 1
