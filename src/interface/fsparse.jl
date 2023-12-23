@@ -58,7 +58,12 @@ SparseCOO (0.0) [1:3×1:3×1:3]
 └─└─└─[1, 1, 1] [2, 2, 2] [3, 3, 3]
       1.0       2.0       3.0    
 """
-function fsparse(I::Tuple, V::Vector, shape = map(maximum, I), combine = eltype(V) isa Bool ? (|) : (+))
+fsparse(iV::AbstractVector, args...) = fsparse_parse((), iV, args...)
+fsparse_parse(I, i::AbstractVector, args...) = fsparse_parse((I..., i), args...)
+fsparse_parse(I, V::AbstractVector) = fsparse_impl(I, V)
+fsparse_parse(I, V::AbstractVector, m::Tuple) = fsparse_impl(I, V, m)
+fsparse_parse(I, V::AbstractVector, m::Tuple, combine) = fsparse_impl(I, V, m, combine)
+function fsparse_impl(I::Tuple, V::Vector, shape = map(maximum, I), combine = eltype(V) isa Bool ? (|) : (+))
     C = map(tuple, reverse(I)...)
     updater = false
     if !issorted(C)
@@ -80,21 +85,25 @@ function fsparse(I::Tuple, V::Vector, shape = map(maximum, I), combine = eltype(
     else
         I = map(copy, I)
     end
-    return fsparse!(I, V, shape)
+    return fsparse!(I..., V, shape)
 end
 
 """
-    fsparse!(I::Tuple, V,[ M::Tuple])
+    fsparse!(I..., V,[ M::Tuple])
 
 Like [`fsparse`](@ref), but the coordinates must be sorted and unique, and memory
 is reused.
 """
-function fsparse!(I::Tuple, V, shape = map(maximum, I))
+fsparse!(args...) = fsparse!_parse((), args...)
+fsparse!_parse(I, i::AbstractVector, args...) = fsparse!_parse((I..., i), args...)
+fsparse!_parse(I, V::AbstractVector) = fsparse!_impl(I, V)
+fsparse!_parse(I, V::AbstractVector, M::Tuple) = fsparse!_impl(I, V, M)
+function fsparse!_impl(I::Tuple, V, shape = map(maximum, I))
     return Fiber(SparseCOO{length(I), Tuple{map(eltype, I)...}}(Element{zero(eltype(V)), eltype(V), Int}(V), shape, [1, length(V) + 1], I))
 end
-#, filter = r".*"s
+
 """
-    fsprand([rng],[type], m::Tuple,p::AbstractFloat,[rfn])
+    fsprand([rng],[type], M..., p::AbstractFloat,[rfn])
 
 Create a random sparse tensor of size `m` in COO format, in which the
 probability of any element being nonzero is independently given by `p` (and
@@ -107,7 +116,7 @@ See also: (`sprand`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#Spars
 
 # Examples
 ```julia
-julia> fsprand(Bool, (3, 3), 0.5)
+julia> fsprand(Bool, 3, 3, 0.5)
 SparseCOO (false) [1:3,1:3]
 ├─├─[1, 1]: true
 ├─├─[3, 1]: true
@@ -115,76 +124,70 @@ SparseCOO (false) [1:3,1:3]
 ├─├─[3, 2]: true
 ├─├─[3, 3]: true  
 
-julia> fsprand(Float64, (2, 2, 2), 0.5)
+julia> fsprand(Float64, 2, 2, 2, 0.5)
 SparseCOO (0.0) [1:2,1:2,1:2]
 ├─├─├─[2, 2, 1]: 0.6478553157718558
 ├─├─├─[1, 1, 2]: 0.996665291437684
 ├─├─├─[2, 1, 2]: 0.7491940599574348 
 ```
 """
-fsprand(shape::Tuple, p::AbstractFloat, rfn::Function, ::Type{T}) where {T} = fsprand(default_rng(), shape, p, rfn, T)
-function fsprand(r::AbstractRNG, shape::Tuple, p::AbstractFloat, rfn::Function, ::Type{T}) where T
-    I = fsprand_helper(r, shape, p)
-    V = rfn(r, T, length(I[1]))
-    return fsparse!(I, V, shape)
+fsprand(args...) = fsprand_parse_rng(args...)
+
+fsprand_parse_rng(r::AbstractRNG, args...) = fsprand_parse_type(r, args...)
+fsprand_parse_rng(args...) = fsprand_parse_type(default_rng(), args...)
+
+fsprand_parse_type(r, T::Type, args...) = fsprand_parse_shape(r, (T,), (), args...)
+fsprand_parse_type(r, args...) = fsprand_parse_shape(r, (), (), args...)
+
+fsprand_parse_shape(r, T, M, m, args...) = fsprand_parse_shape(r, T, (M..., m), args...)
+fsprand_parse_shape(r, T, M, p::AbstractFloat, rfn=rand) = fsprand_impl(r, T, M, p, rfn)
+fsprand_parse_shape(r, T, M) = ArgumentError("No float p given to fsprand")
+
+function fsprand_impl(r::AbstractRNG, T, M::Tuple, p::AbstractFloat, rfn)
+    I = fsprand_helper(r, M, p)
+    V = rfn(r, T..., length(I[1]))
+    return fsparse!(I..., V, M)
 end
 
-fsprand(shape::Tuple, p::AbstractFloat, rfn::Function) = fsprand(default_rng(), shape, p, rfn)
-function fsprand(r::AbstractRNG, shape::Tuple, p::AbstractFloat, rfn::Function)
-    I = fsprand_helper(r, shape, p)
-    V = rfn(r, length(I[1]))
-    return fsparse!(I, V, shape)
-end
-
-function fsprand_helper(r::AbstractRNG, shape::Tuple, p::AbstractFloat)
-    I = map(shape -> Vector{typeof(shape)}(), shape)
-    for i in randsubseq(r, CartesianIndices(shape), p)
-        for r = 1:length(shape)
+function fsprand_helper(r::AbstractRNG, M::Tuple, p::AbstractFloat)
+    I = map(shape -> Vector{typeof(shape)}(), M)
+    for i in randsubseq(r, CartesianIndices(M), p)
+        for r = 1:length(M)
             push!(I[r], i[r])
         end
     end
     I
 end
 
-fsprand(shape::Tuple, p::AbstractFloat) = fsprand(default_rng(), shape, p, rand)
-
-fsprand(r::AbstractRNG, shape::Tuple, p::AbstractFloat) = fsprand(r, shape, p, rand)
-fsprand(r::AbstractRNG, ::Type{T}, shape::Tuple, p::AbstractFloat) where {T} = fsprand(r, shape, p, (r, i) -> rand(r, T, i))
-fsprand(r::AbstractRNG, ::Type{Bool}, shape::Tuple, p::AbstractFloat) = fsprand(r, shape, p, (r, i) -> fill(true, i))
-fsprand(::Type{T}, shape::Tuple, p::AbstractFloat) where {T} = fsprand(default_rng(), T, shape, p)
-
-fsprandn(shape::Tuple, p::AbstractFloat) = fsprand(default_rng(), shape, p, randn)
-fsprandn(r::AbstractRNG, shape::Tuple, p::AbstractFloat) = fsprand(r, shape, p, randn)
-fsprandn(::Type{T}, shape::Tuple, p::AbstractFloat) where T = fsprand(default_rng(), shape, p, (r, i) -> randn(r, T, i))
-fsprandn(r::AbstractRNG, ::Type{T}, shape::Tuple, p::AbstractFloat) where T = fsprand(r, shape, p, (r, i) -> randn(r, T, i))
+fsprandn(args...) = fsprand(args..., randn)
 
 """
-    fspzeros([type], shape::Tuple)
+    fspzeros([type], M::Tuple)
 
-Create a random zero tensor of size `m`, with elements of type `type`. The
+Create a random zero tensor of size `M`, with elements of type `type`. The
 tensor is in COO format.
 
 See also: (`spzeros`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#SparseArrays.spzeros)
 
 # Examples
 ```jldoctest
-julia> fspzeros(Bool, (3, 3))
+julia> fspzeros(Bool, 3, 3)
 SparseCOO (false) [1:3,1:3]
     
-julia> fspzeros(Float64, (2, 2, 2))
+julia> fspzeros(Float64, 2, 2, 2)
 SparseCOO (0.0) [1:2,1:2,1:2]
 ```
 """
-fspzeros(shape) = fspzeros(Float64, shape)
-function fspzeros(::Type{T}, shape) where {T}
-    return fsparse!(((Int[] for _ in shape)...,), T[], shape)
+fspzeros(M...) = fspzeros(Float64, M...)
+function fspzeros(::Type{T}, M...) where {T}
+    return fsparse!((Int[] for _ in M)..., T[], M)
 end
 
 """
     ffindnz(arr)
 
-Return the nonzero elements of `arr`, as Finch understands `arr`. Returns `(I,
-V)`, where `I` is a tuple of coordinate vectors, one for each mode of `arr`, and
+Return the nonzero elements of `arr`, as Finch understands `arr`. Returns `(I...,
+V)`, where `I` are the coordinate vectors, one for each mode of `arr`, and
 `V` is a vector of corresponding nonzero values, which can be passed to
 [`fsparse`](@ref).
 
@@ -198,5 +201,5 @@ function ffindnz(src)
     nnz = tmp.lvl.ptr[2] - 1
     tbl = tmp.lvl.tbl
     val = tmp.lvl.lvl.val
-    (ntuple(n->tbl[n][1:nnz], ndims(src)), val[1:nnz])
+    (ntuple(n->tbl[n][1:nnz], ndims(src))..., val[1:nnz])
 end
