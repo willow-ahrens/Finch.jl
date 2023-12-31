@@ -166,33 +166,6 @@ Base.:(+)(x::Limit)::Limit = x
 Base.:(-)(x::Limit)::Limit = limit(-x.val, -x.sign)
 
 #Crazy julia multiple dispatch stuff don't worry about it
-#limit_types = [Int8, Int16, Int32, Int64, Int128, UInt8, UInt16, UInt32, UInt64, UInt128, BigInt, Float32, Float64]
-#for S in limit_types
-#    @eval begin
-#        @inline Base.promote_rule(::Type{Limit{T}}, ::Type{$S}) where {T} = Limit{promote_type(T, $S)}
-#        Base.convert(::Type{Limit{T}}, i::$S) where {T} = limit(convert(T, i))
-#        Limit(i::$S) = Limit{$S}(i, tiny_zero())
-#        (::Type{$S})(i::Limit{T}) where {T} = convert($S, i.val)
-#        Base.convert(::Type{$S}, i::Limit) = convert($S, i.val)
-#        Base.:(+)(x::Limit, y::$S)::Limit = x + limit(y)
-#        Base.:(+)(x::$S, y::Limit)::Limit = limit(x) + y
-#        Base.:(-)(x::Limit, y::$S)::Limit = x - limit(y)
-#        Base.:(-)(x::$S, y::Limit)::Limit = limit(x) - y
-#        Base.:(<)(x::Limit, y::$S) = x < limit(y)
-#        Base.:(<)(x::$S, y::Limit) = limit(x) < y
-#        Base.:(<=)(x::Limit, y::$S) = x <= limit(y)
-#        Base.:(<=)(x::$S, y::Limit) = limit(x) <= y
-#        Base.:(==)(x::Limit, y::$S) = x == limit(y)
-#        Base.:(==)(x::$S, y::Limit) = limit(x) == y
-#        Base.isless(x::Limit, y::$S) = x < limit(y)
-#        Base.isless(x::$S, y::Limit) = limit(x) < y
-#        Base.max(x::$S, y::Limit)::Limit = max(limit(x), y)
-#        Base.max(x::Limit, y::$S)::Limit = max(x, limit(y))
-#        Base.min(x::$S, y::Limit)::Limit = min(limit(x), y)
-#        Base.min(x::Limit, y::$S)::Limit = min(x, limit(y))
-#    end
-#end
-
 Base.promote_rule(::Type{Limit{T}}, ::Type{S}) where {T, S<:Real} = Limit{promote_type(T, S)}
 Base.convert(::Type{Limit{T}}, i::Real) where {T} = limit(convert(T, i))
 Limit(i::S) where {S<:Real} = Limit{S}(i, tiny_zero())
