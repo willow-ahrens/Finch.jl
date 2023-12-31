@@ -124,14 +124,14 @@ julia> 1.0 < minus_eps(1.0)
 false
 """
 struct Limit{T} <: Number
-    val
+    val::T
     sign::Infinitesimal
     Limit{T}(x::T, y) where {T} = new{T}(x, y)
     Limit{T}(x::T, y) where {T<:Limit} = error()
 end
 
 limit(x::T, s) where {T} = Limit{T}(x, s)
-plus_eps(x)::Limit = limit(0, tiny_positive())
+plus_eps(x)::Limit = limit(x, tiny_positive())
 minus_eps(x)::Limit = limit(x, tiny_negative())
 limit(x) = limit(x, tiny_zero())
 limit(x::Limit) = x 
