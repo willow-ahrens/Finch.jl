@@ -36,7 +36,7 @@ begin
                 else
                     ref_lvl_2_i1 = 0
                 end
-                phase_stop_3 = min(ref_lvl_i, ref_lvl_2.shape, ref_lvl_2_i1)
+                phase_stop_3 = min(ref_lvl_i, ref_lvl_2_i1, ref_lvl_2.shape)
                 if phase_stop_3 >= 1
                     if ref_lvl_idx_2[ref_lvl_2_q] < 1
                         ref_lvl_2_q = Finch.scansearch(ref_lvl_idx_2, 1, ref_lvl_2_q, ref_lvl_2_q_stop - 1)
@@ -48,7 +48,7 @@ begin
                             tmp_lvl_val[tmp_lvl_s + -1 + ref_lvl_2_i] = ref_lvl_3_val
                             ref_lvl_2_q += 1
                         else
-                            phase_stop_5 = min(ref_lvl_2_i, phase_stop_3)
+                            phase_stop_5 = min(phase_stop_3, ref_lvl_2_i)
                             if ref_lvl_2_i == phase_stop_5
                                 ref_lvl_3_val = ref_lvl_2_val[ref_lvl_2_q]
                                 tmp_lvl_val[tmp_lvl_s + -1 + phase_stop_5] = ref_lvl_3_val
@@ -60,9 +60,9 @@ begin
                 end
                 ref_lvl_q += 1
             else
-                phase_stop_9 = min(ref_lvl_i, phase_stop)
-                if ref_lvl_i == phase_stop_9
-                    tmp_lvl_s = tmp_lvl_q + fld(phase_stop_9 * (-1 + phase_stop_9), 2)
+                phase_stop_8 = min(phase_stop, ref_lvl_i)
+                if ref_lvl_i == phase_stop_8
+                    tmp_lvl_s = tmp_lvl_q + fld(phase_stop_8 * (-1 + phase_stop_8), 2)
                     ref_lvl_2_q = ref_lvl_ptr_2[ref_lvl_q]
                     ref_lvl_2_q_stop = ref_lvl_ptr_2[ref_lvl_q + 1]
                     if ref_lvl_2_q < ref_lvl_2_q_stop
@@ -70,22 +70,22 @@ begin
                     else
                         ref_lvl_2_i1 = 0
                     end
-                    phase_stop_10 = min(ref_lvl_2.shape, ref_lvl_2_i1, phase_stop_9)
-                    if phase_stop_10 >= 1
+                    phase_stop_9 = min(ref_lvl_2_i1, ref_lvl_2.shape, phase_stop_8)
+                    if phase_stop_9 >= 1
                         if ref_lvl_idx_2[ref_lvl_2_q] < 1
                             ref_lvl_2_q = Finch.scansearch(ref_lvl_idx_2, 1, ref_lvl_2_q, ref_lvl_2_q_stop - 1)
                         end
                         while true
                             ref_lvl_2_i = ref_lvl_idx_2[ref_lvl_2_q]
-                            if ref_lvl_2_i < phase_stop_10
+                            if ref_lvl_2_i < phase_stop_9
                                 ref_lvl_3_val_3 = ref_lvl_2_val[ref_lvl_2_q]
                                 tmp_lvl_val[tmp_lvl_s + -1 + ref_lvl_2_i] = ref_lvl_3_val_3
                                 ref_lvl_2_q += 1
                             else
-                                phase_stop_12 = min(ref_lvl_2_i, phase_stop_10)
-                                if ref_lvl_2_i == phase_stop_12
+                                phase_stop_11 = min(ref_lvl_2_i, phase_stop_9)
+                                if ref_lvl_2_i == phase_stop_11
                                     ref_lvl_3_val_3 = ref_lvl_2_val[ref_lvl_2_q]
-                                    tmp_lvl_val[tmp_lvl_s + -1 + phase_stop_12] = ref_lvl_3_val_3
+                                    tmp_lvl_val[tmp_lvl_s + -1 + phase_stop_11] = ref_lvl_3_val_3
                                     ref_lvl_2_q += 1
                                 end
                                 break

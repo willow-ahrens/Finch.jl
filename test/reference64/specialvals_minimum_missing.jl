@@ -30,7 +30,7 @@ begin
                 yf_lvl_q += 1
                 i = yf_lvl_i + 1
             else
-                phase_stop_3 = min(yf_lvl_i, phase_stop)
+                phase_stop_3 = min(phase_stop, yf_lvl_i)
                 if yf_lvl_i == phase_stop_3
                     cond_3 = 0 < -i + phase_stop_3
                     if cond_3
@@ -50,10 +50,9 @@ begin
             end
         end
     end
-    phase_start_3 = max(1, 1 + yf_lvl_i1)
-    phase_stop_4 = yf_lvl.shape
-    if phase_stop_4 >= phase_start_3
-        cond_6 = 0 < 1 + -phase_start_3 + phase_stop_4
+    phase_start = max(1, 1 + yf_lvl_i1)
+    if yf_lvl.shape >= phase_start
+        cond_6 = 0 < 1 + yf_lvl.shape + -phase_start
         if cond_6
             x_val = missing
         end

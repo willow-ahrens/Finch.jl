@@ -12,9 +12,8 @@ begin
     Finch.fill_range!(res_lvl_ptr, 0, 1 + 1, 1 + 1)
     res_lvl_qos = 0 + 1
     0 < 1 || throw(FinchProtocolError("SparseListLevels cannot be updated multiple times"))
-    phase_stop = tmp_lvl.shape
-    if phase_stop >= 1
-        for i_5 = 1:phase_stop
+    if tmp_lvl.shape >= 1
+        for i_5 = 1:tmp_lvl.shape
             if res_lvl_qos > res_lvl_qos_stop
                 res_lvl_qos_stop = max(res_lvl_qos_stop << 1, 1)
                 Finch.resize_if_smaller!(res_lvl_idx, res_lvl_qos_stop)
