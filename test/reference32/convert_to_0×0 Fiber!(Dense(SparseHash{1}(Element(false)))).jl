@@ -67,7 +67,7 @@ begin
                             end
                             ref_lvl_2_q += 1
                         else
-                            phase_stop_5 = min(ref_lvl_2_i, phase_stop_3)
+                            phase_stop_5 = min(phase_stop_3, ref_lvl_2_i)
                             if ref_lvl_2_i == phase_stop_5
                                 ref_lvl_3_val = ref_lvl_2_val[ref_lvl_2_q]
                                 tmp_lvl_2_key = (tmp_lvl_q, (phase_stop_5,))
@@ -91,9 +91,9 @@ begin
                 end
                 ref_lvl_q += 1
             else
-                phase_stop_7 = min(ref_lvl_i, phase_stop)
-                if ref_lvl_i == phase_stop_7
-                    tmp_lvl_q = (1 - 1) * ref_lvl.shape + phase_stop_7
+                phase_stop_6 = min(phase_stop, ref_lvl_i)
+                if ref_lvl_i == phase_stop_6
+                    tmp_lvl_q = (1 - 1) * ref_lvl.shape + phase_stop_6
                     ref_lvl_2_q = ref_lvl_ptr_2[ref_lvl_q]
                     ref_lvl_2_q_stop = ref_lvl_ptr_2[ref_lvl_q + 1]
                     if ref_lvl_2_q < ref_lvl_2_q_stop
@@ -101,14 +101,14 @@ begin
                     else
                         ref_lvl_2_i1 = 0
                     end
-                    phase_stop_8 = min(ref_lvl_2_i1, ref_lvl_2.shape)
-                    if phase_stop_8 >= 1
+                    phase_stop_7 = min(ref_lvl_2_i1, ref_lvl_2.shape)
+                    if phase_stop_7 >= 1
                         if ref_lvl_idx_2[ref_lvl_2_q] < 1
                             ref_lvl_2_q = Finch.scansearch(ref_lvl_idx_2, 1, ref_lvl_2_q, ref_lvl_2_q_stop - 1)
                         end
                         while true
                             ref_lvl_2_i = ref_lvl_idx_2[ref_lvl_2_q]
-                            if ref_lvl_2_i < phase_stop_8
+                            if ref_lvl_2_i < phase_stop_7
                                 ref_lvl_3_val_2 = ref_lvl_2_val[ref_lvl_2_q]
                                 tmp_lvl_2_key_2 = (tmp_lvl_q, (ref_lvl_2_i,))
                                 tmp_lvl_2_q_2 = get(tmp_lvl_tbl, tmp_lvl_2_key_2, tmp_lvl_2_qos_fill + 1)
@@ -125,10 +125,10 @@ begin
                                 end
                                 ref_lvl_2_q += 1
                             else
-                                phase_stop_10 = min(ref_lvl_2_i, phase_stop_8)
-                                if ref_lvl_2_i == phase_stop_10
+                                phase_stop_9 = min(ref_lvl_2_i, phase_stop_7)
+                                if ref_lvl_2_i == phase_stop_9
                                     ref_lvl_3_val_2 = ref_lvl_2_val[ref_lvl_2_q]
-                                    tmp_lvl_2_key_2 = (tmp_lvl_q, (phase_stop_10,))
+                                    tmp_lvl_2_key_2 = (tmp_lvl_q, (phase_stop_9,))
                                     tmp_lvl_2_q_2 = get(tmp_lvl_tbl, tmp_lvl_2_key_2, tmp_lvl_2_qos_fill + 1)
                                     if tmp_lvl_2_q_2 > tmp_lvl_2_qos_stop
                                         tmp_lvl_2_qos_stop = max(tmp_lvl_2_qos_stop << 1, 1)

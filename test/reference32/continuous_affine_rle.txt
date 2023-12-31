@@ -28,6 +28,7 @@ quote
             y_lvl_q = Finch.scansearch(y_lvl_right, -4.5f0 * 2 + 10, y_lvl_q, y_lvl_q_stop - 1)
         end
         while true
+            i_start_3 = i
             y_lvl_i_start = y_lvl_left[y_lvl_q]
             y_lvl_i_stop = y_lvl_right[y_lvl_q]
             phase_start_2 = i
@@ -44,13 +45,12 @@ quote
                 y_lvl_q += ((y_lvl_i_stop + -10) * (1.0f0 / 2)) * 2 + 10 == y_lvl_i_stop
                 i = phase_stop_2 + limit(0+ϵ)
             else
-                phase_start_5 = i
                 phase_stop_5 = min(phase_stop, 0.5f0 * (-10 + y_lvl_i_stop))
                 if phase_stop_5 >= i
-                    phase_start_7 = max(0.5f0 * (y_lvl_i_start + limit(-10)), phase_start_5)
-                    if phase_stop_5 >= phase_start_7
+                    phase_start_5 = max(i_start_3, 0.5f0 * (y_lvl_i_start + limit(-10)))
+                    if phase_stop_5 >= phase_start_5
                         y_lvl_2_val_2 = y_lvl_val[y_lvl_q]
-                        cond_2 = -phase_start_7 + phase_stop_5 == 0
+                        cond_2 = -phase_start_5 + phase_stop_5 == 0
                         if cond_2
                             z2_val = z2_val + y_lvl_2_val_2
                         end

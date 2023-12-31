@@ -50,7 +50,7 @@ quote
                 else
                     x1_lvl_2_i_end = 0.0f0
                 end
-                phase_stop_3 = min(y_lvl.shape, y_lvl_i_end, x1_lvl_2_i_end)
+                phase_stop_3 = min(y_lvl.shape, x1_lvl_2_i_end, y_lvl_i_end)
                 if phase_stop_3 >= limit(1.0)
                     j = limit(1.0)
                     if y_lvl_right[y_lvl_q] < limit(1.0)
@@ -60,27 +60,29 @@ quote
                         x1_lvl_2_q = Finch.scansearch(x1_lvl_right, limit(1.0), x1_lvl_2_q, x1_lvl_2_q_stop - 1)
                     end
                     while j <= phase_stop_3
+                        j_start_2 = j
                         y_lvl_i_start = y_lvl_left[y_lvl_q]
                         y_lvl_i_stop = y_lvl_right[y_lvl_q]
                         x1_lvl_2_i_start = x1_lvl_left[x1_lvl_2_q]
                         x1_lvl_2_i_stop = x1_lvl_right[x1_lvl_2_q]
-                        phase_start_3 = j
-                        phase_stop_4 = min(x1_lvl_2_i_stop, phase_stop_3, y_lvl_i_stop)
-                        phase_start_7 = max(phase_start_3, y_lvl_i_start, x1_lvl_2_i_start)
-                        if phase_stop_4 >= phase_start_7
-                            y_lvl_2_val_2 = y_lvl_val[y_lvl_q]
-                            x1_lvl_3_val_2 = x1_lvl_2_val[x1_lvl_2_q]
-                            s2_val = s2_val + drop_eps(-phase_start_7 + phase_stop_4) * x1_lvl_3_val_2 * y_lvl_2_val_2
+                        phase_stop_4 = min(y_lvl_i_stop, x1_lvl_2_i_stop, phase_stop_3)
+                        if phase_stop_4 >= j
+                            phase_start_3 = max(j_start_2, x1_lvl_2_i_start, y_lvl_i_start)
+                            if phase_stop_4 >= phase_start_3
+                                y_lvl_2_val_2 = y_lvl_val[y_lvl_q]
+                                x1_lvl_3_val_2 = x1_lvl_2_val[x1_lvl_2_q]
+                                s2_val = s2_val + drop_eps(-phase_start_3 + phase_stop_4) * x1_lvl_3_val_2 * y_lvl_2_val_2
+                            end
+                            y_lvl_q += phase_stop_4 == y_lvl_i_stop
+                            x1_lvl_2_q += phase_stop_4 == x1_lvl_2_i_stop
+                            j = phase_stop_4 + limit(0+ϵ)
                         end
-                        y_lvl_q += phase_stop_4 == y_lvl_i_stop
-                        x1_lvl_2_q += phase_stop_4 == x1_lvl_2_i_stop
-                        j = phase_stop_4 + limit(0+ϵ)
                     end
                 end
                 x1_lvl_q += 1
             else
-                phase_stop_12 = min(x1_lvl_i, phase_stop)
-                if x1_lvl_i == phase_stop_12
+                phase_stop_11 = min(phase_stop, x1_lvl_i)
+                if x1_lvl_i == phase_stop_11
                     y_lvl_q = y_lvl_ptr[1]
                     y_lvl_q_stop = y_lvl_ptr[1 + 1]
                     if y_lvl_q < y_lvl_q_stop
@@ -95,8 +97,8 @@ quote
                     else
                         x1_lvl_2_i_end = 0.0f0
                     end
-                    phase_stop_13 = min(y_lvl.shape, y_lvl_i_end, x1_lvl_2_i_end)
-                    if phase_stop_13 >= limit(1.0)
+                    phase_stop_12 = min(y_lvl.shape, x1_lvl_2_i_end, y_lvl_i_end)
+                    if phase_stop_12 >= limit(1.0)
                         j = limit(1.0)
                         if y_lvl_right[y_lvl_q] < limit(1.0)
                             y_lvl_q = Finch.scansearch(y_lvl_right, limit(1.0), y_lvl_q, y_lvl_q_stop - 1)
@@ -104,22 +106,24 @@ quote
                         if x1_lvl_right[x1_lvl_2_q] < limit(1.0)
                             x1_lvl_2_q = Finch.scansearch(x1_lvl_right, limit(1.0), x1_lvl_2_q, x1_lvl_2_q_stop - 1)
                         end
-                        while j <= phase_stop_13
+                        while j <= phase_stop_12
+                            j_start_5 = j
                             y_lvl_i_start = y_lvl_left[y_lvl_q]
                             y_lvl_i_stop = y_lvl_right[y_lvl_q]
                             x1_lvl_2_i_start = x1_lvl_left[x1_lvl_2_q]
                             x1_lvl_2_i_stop = x1_lvl_right[x1_lvl_2_q]
-                            phase_start_13 = j
-                            phase_stop_14 = min(x1_lvl_2_i_stop, y_lvl_i_stop, phase_stop_13)
-                            phase_start_17 = max(y_lvl_i_start, x1_lvl_2_i_start, phase_start_13)
-                            if phase_stop_14 >= phase_start_17
-                                y_lvl_2_val_4 = y_lvl_val[y_lvl_q]
-                                x1_lvl_3_val_4 = x1_lvl_2_val[x1_lvl_2_q]
-                                s2_val = s2_val + drop_eps(-phase_start_17 + phase_stop_14) * x1_lvl_3_val_4 * y_lvl_2_val_4
+                            phase_stop_13 = min(y_lvl_i_stop, x1_lvl_2_i_stop, phase_stop_12)
+                            if phase_stop_13 >= j
+                                phase_start_9 = max(x1_lvl_2_i_start, y_lvl_i_start, j_start_5)
+                                if phase_stop_13 >= phase_start_9
+                                    y_lvl_2_val_4 = y_lvl_val[y_lvl_q]
+                                    x1_lvl_3_val_4 = x1_lvl_2_val[x1_lvl_2_q]
+                                    s2_val = s2_val + drop_eps(-phase_start_9 + phase_stop_13) * x1_lvl_3_val_4 * y_lvl_2_val_4
+                                end
+                                y_lvl_q += phase_stop_13 == y_lvl_i_stop
+                                x1_lvl_2_q += phase_stop_13 == x1_lvl_2_i_stop
+                                j = phase_stop_13 + limit(0+ϵ)
                             end
-                            y_lvl_q += phase_stop_14 == y_lvl_i_stop
-                            x1_lvl_2_q += phase_stop_14 == x1_lvl_2_i_stop
-                            j = phase_stop_14 + limit(0+ϵ)
                         end
                     end
                     x1_lvl_q += 1

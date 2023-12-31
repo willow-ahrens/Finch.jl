@@ -23,10 +23,10 @@ begin
     output_lvl_2_val = moveto(output_lvl_2_val, cpu)
     Threads.@threads for i = 1:cpu.n
             tmp_lvl_val = moveto(val_3, CPUThread(i, cpu, Serial()))
-            phase_start_2 = max(1, 1 + fld(y_stop * (i + -1), cpu.n))
+            phase_start = max(1, 1 + fld(y_stop * (i + -1), cpu.n))
             phase_stop_2 = min(y_stop, fld(y_stop * i, cpu.n))
-            if phase_stop_2 >= phase_start_2
-                for y_8 = phase_start_2:phase_stop_2
+            if phase_stop_2 >= phase_start
+                for y_8 = phase_start:phase_stop_2
                     input_lvl_q_2 = (1 - 1) * input_lvl.shape + (y_8 + 0)
                     input_lvl_q = (1 - 1) * input_lvl.shape + y_8
                     input_lvl_q_3 = (1 - 1) * input_lvl.shape + (y_8 + 0)

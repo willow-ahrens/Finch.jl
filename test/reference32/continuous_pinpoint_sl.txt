@@ -30,7 +30,7 @@ quote
                 z1_val = x_lvl_2_val + z1_val
                 x_lvl_q += 1
             else
-                phase_stop_3 = min(x_lvl_i, phase_stop)
+                phase_stop_3 = min(phase_stop, x_lvl_i)
                 if x_lvl_i == phase_stop_3
                     x_lvl_2_val = x_lvl_val[x_lvl_q]
                     z1_val = z1_val + x_lvl_2_val

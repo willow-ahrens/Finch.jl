@@ -27,10 +27,10 @@ begin
     output_lvl_2_val = moveto(output_lvl_2_val, cpu)
     Threads.@threads for i = 1:cpu.n
             tmp_lvl_val = moveto(val_3, CPUThread(i, cpu, Serial()))
-            phase_start_2 = max(1, 1 + fld(y_stop * (i + -1), cpu.n))
+            phase_start = max(1, 1 + fld(y_stop * (i + -1), cpu.n))
             phase_stop_2 = min(y_stop, fld(y_stop * i, cpu.n))
-            if phase_stop_2 >= phase_start_2
-                for y_8 = phase_start_2:phase_stop_2
+            if phase_stop_2 >= phase_start
+                for y_8 = phase_start:phase_stop_2
                     input_lvl_q_2 = (1 - 1) * input_lvl.shape + (y_8 + 0)
                     input_lvl_q = (1 - 1) * input_lvl.shape + y_8
                     input_lvl_q_3 = (1 - 1) * input_lvl.shape + (y_8 + 0)
@@ -58,7 +58,7 @@ begin
                     else
                         input_lvl_2_i1_3 = 0
                     end
-                    phase_stop_3 = min(input_lvl_2.shape, input_lvl_2_i1_2, -1 + input_lvl_2_i1_3, 1 + input_lvl_2_i1)
+                    phase_stop_3 = min(input_lvl_2.shape, input_lvl_2_i1_2, 1 + input_lvl_2_i1, -1 + input_lvl_2_i1_3)
                     if phase_stop_3 >= 1
                         x = 1
                         if input_lvl_idx[input_lvl_2_q] < 1 + -1
@@ -74,7 +74,7 @@ begin
                             input_lvl_2_i = input_lvl_idx[input_lvl_2_q]
                             input_lvl_2_i_2 = input_lvl_idx[input_lvl_2_q_2]
                             input_lvl_2_i_3 = input_lvl_idx[input_lvl_2_q_3]
-                            phase_stop_4 = min(phase_stop_3, input_lvl_2_i_2, -1 + input_lvl_2_i_3, 1 + input_lvl_2_i)
+                            phase_stop_4 = min(input_lvl_2_i_2, 1 + input_lvl_2_i, -1 + input_lvl_2_i_3, phase_stop_3)
                             if (input_lvl_2_i == phase_stop_4 + -1 && input_lvl_2_i_2 == phase_stop_4) && input_lvl_2_i_3 == phase_stop_4 + 1
                                 input_lvl_3_val_2 = input_lvl_2_val[input_lvl_2_q_2]
                                 input_lvl_3_val = input_lvl_2_val[input_lvl_2_q]
@@ -124,15 +124,15 @@ begin
                             x = phase_stop_4 + 1
                         end
                     end
-                    phase_start_5 = max(1, 2 + input_lvl_2_i1)
+                    phase_start_2 = max(1, input_lvl_2_i1 + 2)
                     phase_stop_5 = min(input_lvl_2.shape, input_lvl_2_i1_2, -1 + input_lvl_2_i1_3)
-                    if phase_stop_5 >= phase_start_5
-                        x = phase_start_5
-                        if input_lvl_idx[input_lvl_2_q_2] < phase_start_5
-                            input_lvl_2_q_2 = Finch.scansearch(input_lvl_idx, phase_start_5, input_lvl_2_q_2, input_lvl_2_q_stop_2 - 1)
+                    if phase_stop_5 >= phase_start_2
+                        x = phase_start_2
+                        if input_lvl_idx[input_lvl_2_q_2] < phase_start_2
+                            input_lvl_2_q_2 = Finch.scansearch(input_lvl_idx, phase_start_2, input_lvl_2_q_2, input_lvl_2_q_stop_2 - 1)
                         end
-                        if input_lvl_idx[input_lvl_2_q_3] < phase_start_5 + 1
-                            input_lvl_2_q_3 = Finch.scansearch(input_lvl_idx, phase_start_5 + 1, input_lvl_2_q_3, input_lvl_2_q_stop_3 - 1)
+                        if input_lvl_idx[input_lvl_2_q_3] < phase_start_2 + 1
+                            input_lvl_2_q_3 = Finch.scansearch(input_lvl_idx, phase_start_2 + 1, input_lvl_2_q_3, input_lvl_2_q_stop_3 - 1)
                         end
                         while x <= phase_stop_5
                             input_lvl_2_i_2 = input_lvl_idx[input_lvl_2_q_2]
@@ -159,20 +159,20 @@ begin
                             x = phase_stop_6 + 1
                         end
                     end
-                    phase_start_7 = max(1, 1 + input_lvl_2_i1_2)
-                    phase_stop_7 = min(input_lvl_2.shape, -1 + input_lvl_2_i1_3, 1 + input_lvl_2_i1)
-                    if phase_stop_7 >= phase_start_7
-                        x = phase_start_7
-                        if input_lvl_idx[input_lvl_2_q] < phase_start_7 + -1
-                            input_lvl_2_q = Finch.scansearch(input_lvl_idx, phase_start_7 + -1, input_lvl_2_q, input_lvl_2_q_stop - 1)
+                    phase_start_3 = max(1, 1 + input_lvl_2_i1_2)
+                    phase_stop_7 = min(input_lvl_2.shape, 1 + input_lvl_2_i1, -1 + input_lvl_2_i1_3)
+                    if phase_stop_7 >= phase_start_3
+                        x = phase_start_3
+                        if input_lvl_idx[input_lvl_2_q] < phase_start_3 + -1
+                            input_lvl_2_q = Finch.scansearch(input_lvl_idx, phase_start_3 + -1, input_lvl_2_q, input_lvl_2_q_stop - 1)
                         end
-                        if input_lvl_idx[input_lvl_2_q_3] < phase_start_7 + 1
-                            input_lvl_2_q_3 = Finch.scansearch(input_lvl_idx, phase_start_7 + 1, input_lvl_2_q_3, input_lvl_2_q_stop_3 - 1)
+                        if input_lvl_idx[input_lvl_2_q_3] < phase_start_3 + 1
+                            input_lvl_2_q_3 = Finch.scansearch(input_lvl_idx, phase_start_3 + 1, input_lvl_2_q_3, input_lvl_2_q_stop_3 - 1)
                         end
                         while x <= phase_stop_7
                             input_lvl_2_i = input_lvl_idx[input_lvl_2_q]
                             input_lvl_2_i_3 = input_lvl_idx[input_lvl_2_q_3]
-                            phase_stop_8 = min(-1 + input_lvl_2_i_3, 1 + input_lvl_2_i, phase_stop_7)
+                            phase_stop_8 = min(1 + input_lvl_2_i, -1 + input_lvl_2_i_3, phase_stop_7)
                             if input_lvl_2_i == phase_stop_8 + -1 && input_lvl_2_i_3 == phase_stop_8 + 1
                                 input_lvl_3_val_7 = input_lvl_2_val[input_lvl_2_q_3]
                                 input_lvl_3_val_6 = input_lvl_2_val[input_lvl_2_q]
@@ -194,11 +194,11 @@ begin
                             x = phase_stop_8 + 1
                         end
                     end
-                    phase_start_9 = max(1, 1 + input_lvl_2_i1_2, 2 + input_lvl_2_i1)
+                    phase_start_4 = max(1, 1 + input_lvl_2_i1_2, input_lvl_2_i1 + 2)
                     phase_stop_9 = min(input_lvl_2.shape, -1 + input_lvl_2_i1_3)
-                    if phase_stop_9 >= phase_start_9
-                        if input_lvl_idx[input_lvl_2_q_3] < phase_start_9 + 1
-                            input_lvl_2_q_3 = Finch.scansearch(input_lvl_idx, phase_start_9 + 1, input_lvl_2_q_3, input_lvl_2_q_stop_3 - 1)
+                    if phase_stop_9 >= phase_start_4
+                        if input_lvl_idx[input_lvl_2_q_3] < phase_start_4 + 1
+                            input_lvl_2_q_3 = Finch.scansearch(input_lvl_idx, phase_start_4 + 1, input_lvl_2_q_3, input_lvl_2_q_stop_3 - 1)
                         end
                         while true
                             input_lvl_2_i_3 = input_lvl_idx[input_lvl_2_q_3]
@@ -220,15 +220,15 @@ begin
                             end
                         end
                     end
-                    phase_start_12 = max(1, input_lvl_2_i1_3)
+                    phase_start_6 = max(1, input_lvl_2_i1_3)
                     phase_stop_12 = min(input_lvl_2.shape, input_lvl_2_i1_2, 1 + input_lvl_2_i1)
-                    if phase_stop_12 >= phase_start_12
-                        x = phase_start_12
-                        if input_lvl_idx[input_lvl_2_q_2] < phase_start_12
-                            input_lvl_2_q_2 = Finch.scansearch(input_lvl_idx, phase_start_12, input_lvl_2_q_2, input_lvl_2_q_stop_2 - 1)
+                    if phase_stop_12 >= phase_start_6
+                        x = phase_start_6
+                        if input_lvl_idx[input_lvl_2_q_2] < phase_start_6
+                            input_lvl_2_q_2 = Finch.scansearch(input_lvl_idx, phase_start_6, input_lvl_2_q_2, input_lvl_2_q_stop_2 - 1)
                         end
-                        if input_lvl_idx[input_lvl_2_q] < phase_start_12 + -1
-                            input_lvl_2_q = Finch.scansearch(input_lvl_idx, phase_start_12 + -1, input_lvl_2_q, input_lvl_2_q_stop - 1)
+                        if input_lvl_idx[input_lvl_2_q] < phase_start_6 + -1
+                            input_lvl_2_q = Finch.scansearch(input_lvl_idx, phase_start_6 + -1, input_lvl_2_q, input_lvl_2_q_stop - 1)
                         end
                         while x <= phase_stop_12
                             input_lvl_2_i_2 = input_lvl_idx[input_lvl_2_q_2]
@@ -255,11 +255,11 @@ begin
                             x = phase_stop_13 + 1
                         end
                     end
-                    phase_start_14 = max(1, input_lvl_2_i1_3, 2 + input_lvl_2_i1)
+                    phase_start_7 = max(1, input_lvl_2_i1_3, input_lvl_2_i1 + 2)
                     phase_stop_14 = min(input_lvl_2.shape, input_lvl_2_i1_2)
-                    if phase_stop_14 >= phase_start_14
-                        if input_lvl_idx[input_lvl_2_q_2] < phase_start_14
-                            input_lvl_2_q_2 = Finch.scansearch(input_lvl_idx, phase_start_14, input_lvl_2_q_2, input_lvl_2_q_stop_2 - 1)
+                    if phase_stop_14 >= phase_start_7
+                        if input_lvl_idx[input_lvl_2_q_2] < phase_start_7
+                            input_lvl_2_q_2 = Finch.scansearch(input_lvl_idx, phase_start_7, input_lvl_2_q_2, input_lvl_2_q_stop_2 - 1)
                         end
                         while true
                             input_lvl_2_i_2 = input_lvl_idx[input_lvl_2_q_2]
@@ -280,11 +280,11 @@ begin
                             end
                         end
                     end
-                    phase_start_16 = max(1, input_lvl_2_i1_3, 1 + input_lvl_2_i1_2)
+                    phase_start_8 = max(1, input_lvl_2_i1_3, 1 + input_lvl_2_i1_2)
                     phase_stop_17 = min(input_lvl_2.shape, 1 + input_lvl_2_i1)
-                    if phase_stop_17 >= phase_start_16
-                        if input_lvl_idx[input_lvl_2_q] < phase_start_16 + -1
-                            input_lvl_2_q = Finch.scansearch(input_lvl_idx, phase_start_16 + -1, input_lvl_2_q, input_lvl_2_q_stop - 1)
+                    if phase_stop_17 >= phase_start_8
+                        if input_lvl_idx[input_lvl_2_q] < phase_start_8 + -1
+                            input_lvl_2_q = Finch.scansearch(input_lvl_idx, phase_start_8 + -1, input_lvl_2_q, input_lvl_2_q_stop - 1)
                         end
                         while true
                             input_lvl_2_i = input_lvl_idx[input_lvl_2_q]

@@ -64,7 +64,7 @@ begin
                             tmp_lvl_q += 1
                             ref_lvl_2_q += 1
                         else
-                            phase_stop_5 = min(ref_lvl_2_i, phase_stop_3)
+                            phase_stop_5 = min(phase_stop_3, ref_lvl_2_i)
                             if ref_lvl_2_i == phase_stop_5
                                 ref_lvl_3_val = ref_lvl_2_val[ref_lvl_2_q]
                                 if tmp_lvl_q > tmp_lvl_qos_stop
@@ -88,8 +88,8 @@ begin
                 end
                 ref_lvl_q += 1
             else
-                phase_stop_7 = min(ref_lvl_i, phase_stop)
-                if ref_lvl_i == phase_stop_7
+                phase_stop_6 = min(phase_stop, ref_lvl_i)
+                if ref_lvl_i == phase_stop_6
                     ref_lvl_2_q = ref_lvl_ptr_2[ref_lvl_q]
                     ref_lvl_2_q_stop = ref_lvl_ptr_2[ref_lvl_q + 1]
                     if ref_lvl_2_q < ref_lvl_2_q_stop
@@ -97,14 +97,14 @@ begin
                     else
                         ref_lvl_2_i1 = 0
                     end
-                    phase_stop_8 = min(ref_lvl_2_i1, ref_lvl_2.shape)
-                    if phase_stop_8 >= 1
+                    phase_stop_7 = min(ref_lvl_2_i1, ref_lvl_2.shape)
+                    if phase_stop_7 >= 1
                         if ref_lvl_idx_2[ref_lvl_2_q] < 1
                             ref_lvl_2_q = Finch.scansearch(ref_lvl_idx_2, 1, ref_lvl_2_q, ref_lvl_2_q_stop - 1)
                         end
                         while true
                             ref_lvl_2_i = ref_lvl_idx_2[ref_lvl_2_q]
-                            if ref_lvl_2_i < phase_stop_8
+                            if ref_lvl_2_i < phase_stop_7
                                 ref_lvl_3_val_2 = ref_lvl_2_val[ref_lvl_2_q]
                                 if tmp_lvl_q > tmp_lvl_qos_stop
                                     tmp_lvl_qos_stop = max(tmp_lvl_qos_stop << 1, 1)
@@ -114,15 +114,15 @@ begin
                                     Finch.fill_range!(tmp_lvl_val, false, tmp_lvl_q, tmp_lvl_qos_stop)
                                 end
                                 tmp_lvl_val[tmp_lvl_q] = ref_lvl_3_val_2
-                                tmp_lvl_prev_coord_3 < (phase_stop_7, ref_lvl_2_i) || throw(FinchProtocolError("SparseCOOLevels cannot be updated multiple times"))
-                                tmp_lvl_prev_coord_3 = (phase_stop_7, ref_lvl_2_i)
+                                tmp_lvl_prev_coord_3 < (phase_stop_6, ref_lvl_2_i) || throw(FinchProtocolError("SparseCOOLevels cannot be updated multiple times"))
+                                tmp_lvl_prev_coord_3 = (phase_stop_6, ref_lvl_2_i)
                                 tmp_lvl_tbl1[tmp_lvl_q] = ref_lvl_2_i
-                                tmp_lvl_tbl2[tmp_lvl_q] = phase_stop_7
+                                tmp_lvl_tbl2[tmp_lvl_q] = phase_stop_6
                                 tmp_lvl_q += 1
                                 ref_lvl_2_q += 1
                             else
-                                phase_stop_10 = min(ref_lvl_2_i, phase_stop_8)
-                                if ref_lvl_2_i == phase_stop_10
+                                phase_stop_9 = min(ref_lvl_2_i, phase_stop_7)
+                                if ref_lvl_2_i == phase_stop_9
                                     ref_lvl_3_val_2 = ref_lvl_2_val[ref_lvl_2_q]
                                     if tmp_lvl_q > tmp_lvl_qos_stop
                                         tmp_lvl_qos_stop = max(tmp_lvl_qos_stop << 1, 1)
@@ -132,10 +132,10 @@ begin
                                         Finch.fill_range!(tmp_lvl_val, false, tmp_lvl_q, tmp_lvl_qos_stop)
                                     end
                                     tmp_lvl_val[tmp_lvl_q] = ref_lvl_3_val_2
-                                    tmp_lvl_prev_coord_3 < (phase_stop_7, phase_stop_10) || throw(FinchProtocolError("SparseCOOLevels cannot be updated multiple times"))
-                                    tmp_lvl_prev_coord_3 = (phase_stop_7, phase_stop_10)
-                                    tmp_lvl_tbl1[tmp_lvl_q] = phase_stop_10
-                                    tmp_lvl_tbl2[tmp_lvl_q] = phase_stop_7
+                                    tmp_lvl_prev_coord_3 < (phase_stop_6, phase_stop_9) || throw(FinchProtocolError("SparseCOOLevels cannot be updated multiple times"))
+                                    tmp_lvl_prev_coord_3 = (phase_stop_6, phase_stop_9)
+                                    tmp_lvl_tbl1[tmp_lvl_q] = phase_stop_9
+                                    tmp_lvl_tbl2[tmp_lvl_q] = phase_stop_6
                                     tmp_lvl_q += 1
                                     ref_lvl_2_q += 1
                                 end

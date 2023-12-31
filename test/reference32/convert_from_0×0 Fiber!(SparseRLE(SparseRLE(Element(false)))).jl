@@ -42,9 +42,9 @@ begin
             tmp_lvl_i_start = tmp_lvl_left[tmp_lvl_q]
             tmp_lvl_i_stop = tmp_lvl_right[tmp_lvl_q]
             if tmp_lvl_i_stop < phase_stop
-                phase_start_3 = max(j_start_2, tmp_lvl_i_start)
-                if tmp_lvl_i_stop >= phase_start_3
-                    for j_8 = phase_start_3:tmp_lvl_i_stop
+                phase_start = max(j_start_2, tmp_lvl_i_start)
+                if tmp_lvl_i_stop >= phase_start
+                    for j_8 = phase_start:tmp_lvl_i_stop
                         if res_lvl_qos > res_lvl_qos_stop
                             res_lvl_qos_stop = max(res_lvl_qos_stop << 1, 1)
                             Finch.resize_if_smaller!(res_lvl_idx, res_lvl_qos_stop)
@@ -72,10 +72,10 @@ begin
                                 tmp_lvl_2_i_start = tmp_lvl_left_2[tmp_lvl_2_q]
                                 tmp_lvl_2_i_stop = tmp_lvl_right_2[tmp_lvl_2_q]
                                 if tmp_lvl_2_i_stop < phase_stop_5
-                                    phase_start_6 = max(i_start_2, tmp_lvl_2_i_start)
-                                    if tmp_lvl_2_i_stop >= phase_start_6
+                                    phase_start_2 = max(i_start_2, tmp_lvl_2_i_start)
+                                    if tmp_lvl_2_i_stop >= phase_start_2
                                         tmp_lvl_3_val = tmp_lvl_2_val[tmp_lvl_2_q]
-                                        for i_8 = phase_start_6:tmp_lvl_2_i_stop
+                                        for i_8 = phase_start_2:tmp_lvl_2_i_stop
                                             if res_lvl_2_qos > res_lvl_2_qos_stop
                                                 res_lvl_2_qos_stop = max(res_lvl_2_qos_stop << 1, 1)
                                                 Finch.resize_if_smaller!(res_lvl_idx_2, res_lvl_2_qos_stop)
@@ -92,12 +92,11 @@ begin
                                     tmp_lvl_2_q += tmp_lvl_2_i_stop == tmp_lvl_2_i_stop
                                     i = tmp_lvl_2_i_stop + 1
                                 else
-                                    phase_start_7 = i
-                                    phase_stop_9 = min(tmp_lvl_2_i_stop, phase_stop_5)
-                                    phase_start_9 = max(tmp_lvl_2_i_start, phase_start_7)
-                                    if phase_stop_9 >= phase_start_9
+                                    phase_stop_9 = min(phase_stop_5, tmp_lvl_2_i_stop)
+                                    phase_start_3 = max(i_start_2, tmp_lvl_2_i_start)
+                                    if phase_stop_9 >= phase_start_3
                                         tmp_lvl_3_val_2 = tmp_lvl_2_val[tmp_lvl_2_q]
-                                        for i_11 = phase_start_9:phase_stop_9
+                                        for i_11 = phase_start_3:phase_stop_9
                                             if res_lvl_2_qos > res_lvl_2_qos_stop
                                                 res_lvl_2_qos_stop = max(res_lvl_2_qos_stop << 1, 1)
                                                 Finch.resize_if_smaller!(res_lvl_idx_2, res_lvl_2_qos_stop)
@@ -128,11 +127,10 @@ begin
                 tmp_lvl_q += tmp_lvl_i_stop == tmp_lvl_i_stop
                 j = tmp_lvl_i_stop + 1
             else
-                phase_start_11 = j
-                phase_stop_13 = min(tmp_lvl_i_stop, phase_stop)
-                phase_start_13 = max(tmp_lvl_i_start, phase_start_11)
-                if phase_stop_13 >= phase_start_13
-                    for j_11 = phase_start_13:phase_stop_13
+                phase_stop_12 = min(phase_stop, tmp_lvl_i_stop)
+                phase_start_5 = max(j_start_2, tmp_lvl_i_start)
+                if phase_stop_12 >= phase_start_5
+                    for j_11 = phase_start_5:phase_stop_12
                         if res_lvl_qos > res_lvl_qos_stop
                             res_lvl_qos_stop = max(res_lvl_qos_stop << 1, 1)
                             Finch.resize_if_smaller!(res_lvl_idx, res_lvl_qos_stop)
@@ -149,8 +147,8 @@ begin
                         else
                             tmp_lvl_2_i_end_2 = 0
                         end
-                        phase_stop_16 = min(tmp_lvl_2.shape, tmp_lvl_2_i_end_2)
-                        if phase_stop_16 >= 1
+                        phase_stop_15 = min(tmp_lvl_2.shape, tmp_lvl_2_i_end_2)
+                        if phase_stop_15 >= 1
                             i = 1
                             if tmp_lvl_right_2[tmp_lvl_2_q_2] < 1
                                 tmp_lvl_2_q_2 = Finch.scansearch(tmp_lvl_right_2, 1, tmp_lvl_2_q_2, tmp_lvl_2_q_stop_2 - 1)
@@ -159,11 +157,11 @@ begin
                                 i_start_6 = i
                                 tmp_lvl_2_i_start_2 = tmp_lvl_left_2[tmp_lvl_2_q_2]
                                 tmp_lvl_2_i_stop_2 = tmp_lvl_right_2[tmp_lvl_2_q_2]
-                                if tmp_lvl_2_i_stop_2 < phase_stop_16
-                                    phase_start_16 = max(i_start_6, tmp_lvl_2_i_start_2)
-                                    if tmp_lvl_2_i_stop_2 >= phase_start_16
+                                if tmp_lvl_2_i_stop_2 < phase_stop_15
+                                    phase_start_6 = max(i_start_6, tmp_lvl_2_i_start_2)
+                                    if tmp_lvl_2_i_stop_2 >= phase_start_6
                                         tmp_lvl_3_val_3 = tmp_lvl_2_val[tmp_lvl_2_q_2]
-                                        for i_17 = phase_start_16:tmp_lvl_2_i_stop_2
+                                        for i_17 = phase_start_6:tmp_lvl_2_i_stop_2
                                             if res_lvl_2_qos_2 > res_lvl_2_qos_stop
                                                 res_lvl_2_qos_stop = max(res_lvl_2_qos_stop << 1, 1)
                                                 Finch.resize_if_smaller!(res_lvl_idx_2, res_lvl_2_qos_stop)
@@ -180,12 +178,11 @@ begin
                                     tmp_lvl_2_q_2 += tmp_lvl_2_i_stop_2 == tmp_lvl_2_i_stop_2
                                     i = tmp_lvl_2_i_stop_2 + 1
                                 else
-                                    phase_start_17 = i
-                                    phase_stop_20 = min(tmp_lvl_2_i_stop_2, phase_stop_16)
-                                    phase_start_19 = max(tmp_lvl_2_i_start_2, phase_start_17)
-                                    if phase_stop_20 >= phase_start_19
+                                    phase_stop_19 = min(phase_stop_15, tmp_lvl_2_i_stop_2)
+                                    phase_start_7 = max(i_start_6, tmp_lvl_2_i_start_2)
+                                    if phase_stop_19 >= phase_start_7
                                         tmp_lvl_3_val_4 = tmp_lvl_2_val[tmp_lvl_2_q_2]
-                                        for i_20 = phase_start_19:phase_stop_20
+                                        for i_20 = phase_start_7:phase_stop_19
                                             if res_lvl_2_qos_2 > res_lvl_2_qos_stop
                                                 res_lvl_2_qos_stop = max(res_lvl_2_qos_stop << 1, 1)
                                                 Finch.resize_if_smaller!(res_lvl_idx_2, res_lvl_2_qos_stop)
@@ -199,8 +196,8 @@ begin
                                             res_lvl_2_prev_pos = res_lvl_qos
                                         end
                                     end
-                                    tmp_lvl_2_q_2 += phase_stop_20 == tmp_lvl_2_i_stop_2
-                                    i = phase_stop_20 + 1
+                                    tmp_lvl_2_q_2 += phase_stop_19 == tmp_lvl_2_i_stop_2
+                                    i = phase_stop_19 + 1
                                     break
                                 end
                             end
@@ -213,8 +210,8 @@ begin
                         end
                     end
                 end
-                tmp_lvl_q += phase_stop_13 == tmp_lvl_i_stop
-                j = phase_stop_13 + 1
+                tmp_lvl_q += phase_stop_12 == tmp_lvl_i_stop
+                j = phase_stop_12 + 1
                 break
             end
         end

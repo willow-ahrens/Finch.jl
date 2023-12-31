@@ -60,7 +60,7 @@ begin
                     res_lvl_2_prev_pos = res_lvl_qos
                     tmp_lvl_2_q += 1
                 else
-                    phase_stop_3 = min(tmp_lvl_2_i, phase_stop)
+                    phase_stop_3 = min(phase_stop, tmp_lvl_2_i)
                     if tmp_lvl_2_i == phase_stop_3
                         tmp_lvl_3_val = tmp_lvl_2_val[tmp_lvl_2_q]
                         if res_lvl_2_qos > res_lvl_2_qos_stop
