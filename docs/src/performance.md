@@ -65,7 +65,7 @@ quote
                     s_val = A_lvl_3_val + s_val
                     A_lvl_2_q += 1
                 else
-                    phase_stop_3 = min(A_lvl_2_i, phase_stop)
+                    phase_stop_3 = min(phase_stop, A_lvl_2_i)
                     if A_lvl_2_i == phase_stop_3
                         A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
                         s_val = s_val + A_lvl_3_val
@@ -127,7 +127,7 @@ quote
                         s_val = A_lvl_3_val + s_val
                         A_lvl_2_q += 1
                     else
-                        phase_stop_3 = min(A_lvl_2_i, phase_stop)
+                        phase_stop_3 = min(phase_stop, A_lvl_2_i)
                         if A_lvl_2_i == phase_stop_3
                             A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
                             s_val = s_val + A_lvl_3_val
@@ -278,7 +278,7 @@ quote
                     A_lvl_2_q += 1
                     i = A_lvl_2_i + 1
                 else
-                    phase_stop_3 = min(A_lvl_2_i, phase_stop)
+                    phase_stop_3 = min(phase_stop, A_lvl_2_i)
                     if A_lvl_2_i == phase_stop_3
                         for i_8 = i:phase_stop_3 - 1
                             val = B[i_8, j_4]
@@ -305,9 +305,9 @@ quote
                 end
             end
         end
-        phase_start_3 = max(1, 1 + A_lvl_2_i1)
-        if B_mode1_stop >= phase_start_3
-            for i_12 = phase_start_3:B_mode1_stop
+        phase_start = max(1, 1 + A_lvl_2_i1)
+        if B_mode1_stop >= phase_start
+            for i_12 = phase_start:B_mode1_stop
                 sugar_8 = size(B)
                 B_mode1_stop = sugar_8[1]
                 B_mode2_stop = sugar_8[2]

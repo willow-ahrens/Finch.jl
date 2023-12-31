@@ -61,7 +61,7 @@ begin
                     res_lvl_2_prev_pos = res_lvl_qos
                     tmp_lvl_2_r += 1
                 else
-                    phase_stop_3 = min(tmp_lvl_2_i, phase_stop)
+                    phase_stop_3 = min(phase_stop, tmp_lvl_2_i)
                     if tmp_lvl_2_i == phase_stop_3
                         tmp_lvl_2_q = (tmp_lvl_q - 1) * tmp_lvl_2.shape + tmp_lvl_2_i
                         tmp_lvl_3_val_2 = tmp_lvl_2_val[tmp_lvl_2_q]

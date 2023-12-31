@@ -44,7 +44,7 @@ begin
         else
             A_lvl_2_i1 = 0
         end
-        phase_stop = min(y_lvl.shape, y_lvl_i1, A_lvl_2_i1)
+        phase_stop = min(y_lvl.shape, A_lvl_2_i1, y_lvl_i1)
         if phase_stop >= 1
             i = 1
             if y_lvl_idx[y_lvl_q] < 1
@@ -59,7 +59,7 @@ begin
                 end
                 y_lvl_i = y_lvl_idx[y_lvl_q]
                 A_lvl_2_i = A_lvl_idx[A_lvl_2_q]
-                phase_stop_2 = min(A_lvl_2_i, phase_stop, y_lvl_i)
+                phase_stop_2 = min(y_lvl_i, A_lvl_2_i, phase_stop)
                 if y_lvl_i == phase_stop_2 && A_lvl_2_i == phase_stop_2
                     A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
                     y_lvl_2_val = y_lvl_val[y_lvl_q]

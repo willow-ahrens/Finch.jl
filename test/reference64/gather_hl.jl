@@ -24,7 +24,7 @@ begin
                 B_val = A_lvl_2_val + B_val
                 A_lvl_q += 1
             else
-                phase_stop_3 = min(A_lvl_i, phase_stop)
+                phase_stop_3 = min(phase_stop, A_lvl_i)
                 if A_lvl_i == phase_stop_3
                     A_lvl_2_val = A_lvl_val[A_lvl_q]
                     B_val = B_val + A_lvl_2_val

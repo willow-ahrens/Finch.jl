@@ -45,9 +45,8 @@ begin
                 res_lvldirty = false
                 res_lvl_2_qos = res_lvl_2_qos_fill + 1
                 res_lvl_2_prev_pos < res_lvl_qos || throw(FinchProtocolError("SparseListLevels cannot be updated multiple times"))
-                phase_stop_3 = tmp_lvl_2.shape
-                if phase_stop_3 >= 1
-                    for i_5 = 1:phase_stop_3
+                if tmp_lvl_2.shape >= 1
+                    for i_5 = 1:tmp_lvl_2.shape
                         if res_lvl_2_qos > res_lvl_2_qos_stop
                             res_lvl_2_qos_stop = max(res_lvl_2_qos_stop << 1, 1)
                             Finch.resize_if_smaller!(res_lvl_idx_2, res_lvl_2_qos_stop)
@@ -70,8 +69,8 @@ begin
                 end
                 tmp_lvl_q += 1
             else
-                phase_stop_5 = min(tmp_lvl_i, phase_stop)
-                if tmp_lvl_i == phase_stop_5
+                phase_stop_3 = min(phase_stop, tmp_lvl_i)
+                if tmp_lvl_i == phase_stop_3
                     tmp_lvl_2_q = (tmp_lvl_q - 1) * fld(tmp_lvl_2.shape, 1) + 1
                     if res_lvl_qos > res_lvl_qos_stop
                         res_lvl_qos_stop = max(res_lvl_qos_stop << 1, 1)
@@ -82,9 +81,8 @@ begin
                     res_lvldirty = false
                     res_lvl_2_qos_2 = res_lvl_2_qos_fill + 1
                     res_lvl_2_prev_pos < res_lvl_qos || throw(FinchProtocolError("SparseListLevels cannot be updated multiple times"))
-                    phase_stop_6 = tmp_lvl_2.shape
-                    if phase_stop_6 >= 1
-                        for i_8 = 1:phase_stop_6
+                    if tmp_lvl_2.shape >= 1
+                        for i_8 = 1:tmp_lvl_2.shape
                             if res_lvl_2_qos_2 > res_lvl_2_qos_stop
                                 res_lvl_2_qos_stop = max(res_lvl_2_qos_stop << 1, 1)
                                 Finch.resize_if_smaller!(res_lvl_idx_2, res_lvl_2_qos_stop)
@@ -102,7 +100,7 @@ begin
                     res_lvl_ptr_2[res_lvl_qos + 1] += (res_lvl_2_qos_2 - res_lvl_2_qos_fill) - 1
                     res_lvl_2_qos_fill = res_lvl_2_qos_2 - 1
                     if res_lvldirty
-                        res_lvl_idx[res_lvl_qos] = phase_stop_5
+                        res_lvl_idx[res_lvl_qos] = phase_stop_3
                         res_lvl_qos += 1
                     end
                     tmp_lvl_q += 1
