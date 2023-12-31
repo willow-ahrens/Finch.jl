@@ -193,11 +193,11 @@ Base.:(-)(x::Limit)::Limit = limit(-x.val, -x.sign)
 #    end
 #end
 
-Base.promote_rule(::Type{Limit{T}}, ::S) where {T, S<:Real} = Limit{promote_type(T, S)}
+Base.promote_rule(::Type{Limit{T}}, ::Type{S}) where {T, S<:Real} = Limit{promote_type(T, S)}
 Base.convert(::Type{Limit{T}}, i::Real) where {T} = limit(convert(T, i))
 Limit(i::S) where {S<:Real} = Limit{S}(i, tiny_zero())
 (::Type{S})(i::Limit{T}) where {T, S<:Real} = convert(S, i.val)
-Base.convert(::S, i::Limit) where {S<:Real} = convert(S, i.val)
+Base.convert(::Type{S}, i::Limit) where {S<:Real} = convert(S, i.val)
 Base.:(+)(x::Limit, y::Real)::Limit = x + limit(y)
 Base.:(+)(x::Real, y::Limit)::Limit = limit(x) + y
 Base.:(-)(x::Limit, y::Real)::Limit = x - limit(y)
