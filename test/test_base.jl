@@ -2,7 +2,7 @@ using Finch: AsArray
 
 @testset "base" begin
     @info "Testing Julia Base Functions"
-    A = Fiber!(SparseList(Element(0.0)), fsparse(([1, 3, 5, 7, 9],), [2.0, 3.0, 4.0, 5.0, 6.0], (10,)))
+    A = Fiber!(SparseList(Element(0.0)), fsparse([1, 3, 5, 7, 9], [2.0, 3.0, 4.0, 5.0, 6.0], (10,)))
     B = Fiber!(SparseList(Element(0.0)), A)
     @test A == B
 

@@ -55,14 +55,14 @@ begin
                             Finch.fill_range!(res_lvl_2_val, false, res_lvl_2_qos, res_lvl_2_qos_stop)
                         end
                         tmp_lvl_3_val = tmp_lvl_2_val[tmp_lvl_2_q + -1 + i_5]
-                        res_lvl_2_val[res_lvl_2_qos] = tmp_lvl_3_val
+                        res = (res_lvl_2_val[res_lvl_2_qos] = tmp_lvl_3_val)
                         res_lvldirty = true
                         res_lvl_idx_2[res_lvl_2_qos] = i_5
                         res_lvl_2_qos += 1
                         res_lvl_2_prev_pos = res_lvl_qos
                     end
                 end
-                res_lvl_ptr_2[res_lvl_qos + 1] = (res_lvl_2_qos - res_lvl_2_qos_fill) - 1
+                res_lvl_ptr_2[res_lvl_qos + 1] += (res_lvl_2_qos - res_lvl_2_qos_fill) - 1
                 res_lvl_2_qos_fill = res_lvl_2_qos - 1
                 if res_lvldirty
                     res_lvl_idx[res_lvl_qos] = tmp_lvl_i
@@ -99,7 +99,7 @@ begin
                             res_lvl_2_prev_pos = res_lvl_qos
                         end
                     end
-                    res_lvl_ptr_2[res_lvl_qos + 1] = (res_lvl_2_qos_2 - res_lvl_2_qos_fill) - 1
+                    res_lvl_ptr_2[res_lvl_qos + 1] += (res_lvl_2_qos_2 - res_lvl_2_qos_fill) - 1
                     res_lvl_2_qos_fill = res_lvl_2_qos_2 - 1
                     if res_lvldirty
                         res_lvl_idx[res_lvl_qos] = phase_stop_5
@@ -111,13 +111,13 @@ begin
             end
         end
     end
-    res_lvl_ptr[1 + 1] = (res_lvl_qos - 0) - 1
-    for p = 2:1 + 1
-        res_lvl_ptr[p] += res_lvl_ptr[p - 1]
+    res_lvl_ptr[1 + 1] += (res_lvl_qos - 0) - 1
+    for p = 1:1
+        res_lvl_ptr[p + 1] += res_lvl_ptr[p]
     end
     qos_stop = res_lvl_ptr[1 + 1] - 1
-    for p_2 = 2:qos_stop + 1
-        res_lvl_ptr_2[p_2] += res_lvl_ptr_2[p_2 - 1]
+    for p_2 = 1:qos_stop
+        res_lvl_ptr_2[p_2 + 1] += res_lvl_ptr_2[p_2]
     end
     resize!(res_lvl_ptr, 1 + 1)
     qos = res_lvl_ptr[end] - 1

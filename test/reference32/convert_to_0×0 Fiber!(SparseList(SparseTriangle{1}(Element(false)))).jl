@@ -132,9 +132,9 @@ begin
             end
         end
     end
-    tmp_lvl_ptr[1 + 1] = (tmp_lvl_qos - 0) - 1
-    for p = 2:1 + 1
-        tmp_lvl_ptr[p] += tmp_lvl_ptr[p - 1]
+    tmp_lvl_ptr[1 + 1] += (tmp_lvl_qos - 0) - 1
+    for p = 1:1
+        tmp_lvl_ptr[p + 1] += tmp_lvl_ptr[p]
     end
     resize!(tmp_lvl_ptr, 1 + 1)
     qos = tmp_lvl_ptr[end] - 1

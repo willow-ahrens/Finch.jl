@@ -83,7 +83,7 @@ begin
                         end
                     end
                 end
-                tmp_lvl_ptr[tmp_lvl_q + 1] = (tmp_lvl_2_qos - tmp_lvl_2_qos_fill) - 1
+                tmp_lvl_ptr[tmp_lvl_q + 1] += (tmp_lvl_2_qos - tmp_lvl_2_qos_fill) - 1
                 tmp_lvl_2_qos_fill = tmp_lvl_2_qos - 1
                 ref_lvl_q += 1
             else
@@ -139,7 +139,7 @@ begin
                             end
                         end
                     end
-                    tmp_lvl_ptr[tmp_lvl_q + 1] = (tmp_lvl_2_qos_2 - tmp_lvl_2_qos_fill) - 1
+                    tmp_lvl_ptr[tmp_lvl_q + 1] += (tmp_lvl_2_qos_2 - tmp_lvl_2_qos_fill) - 1
                     tmp_lvl_2_qos_fill = tmp_lvl_2_qos_2 - 1
                     ref_lvl_q += 1
                 end
@@ -147,8 +147,8 @@ begin
             end
         end
     end
-    for p = 2:ref_lvl.shape + 1
-        tmp_lvl_ptr[p] += tmp_lvl_ptr[p - 1]
+    for p = 1:ref_lvl.shape
+        tmp_lvl_ptr[p + 1] += tmp_lvl_ptr[p]
     end
     qos = 1 * ref_lvl.shape
     resize!(tmp_lvl_ptr, qos + 1)

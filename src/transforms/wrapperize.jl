@@ -34,6 +34,43 @@ function get_wrapper_rules(alg, depth, ctx)
             access(A, m, i1..., call(+, j, call(-, k)), i2...)),
         (@rule access(~A, ~m, ~i1..., call(+, ~j), ~i2...) =>
             access(A, m, i1..., j, i2...)),
+        (@rule access(~A, ~m, ~i1..., call(*, ~j1..., ~k, ~j2...), ~i2...) => begin
+            if !isempty(j1) || !isempty(j2)
+                if length(j1) == 1 && isempty(j2)
+                    k_2 = j1[1]
+                elseif isempty(j1) && length(j2) == 1
+                    k_2 = j2[1]
+                else
+                    k_2 = call(*, ~j1..., ~j2...)
+                end
+
+                if depth(k_2) < depth(k) && depth(k_2) != 0
+                    access(call(products, A, length(i1) + 1), m, i1..., k, k_2, i2...)
+                end
+            end
+        end),
+        (@rule access(~A, ~m, ~i1..., call(*, ~j1..., ~k, ~j2...), ~i2...) => begin
+            if !isempty(j1) || !isempty(j2) 
+                if length(j1) == 1 && isempty(j2)
+                    k_2 = j1[1]
+                elseif isempty(j1) && length(j2) == 1
+                    k_2 = j2[1]
+                else
+                    k_2 = call(*, ~j1..., ~j2...)
+                end
+
+                if depth(k_2) == 0 
+                    s1 = ([1 for _ in i1]..., k_2, [1 for _ in i2]...)
+                    access(call(scale, A, s1...), m, i1..., k, i2...)
+                end
+            end
+        end),
+        (@rule call(scale, call(scale, ~A, ~s1...), ~s2...) => begin
+            s3 = map(s1, s2) do proto_1, proto_2
+                call(*, s1, s2) 
+            end
+            call(scale, A, s3...)
+        end),
         (@rule access(~A, ~m, ~i1..., call(+, ~j1..., ~k, ~j2...), ~i2...) => begin
             if (!isempty(j1) || !isempty(j2))
                 k_2 = call(+, ~j1..., ~j2...)
@@ -163,9 +200,11 @@ performed:
 
 ```julia
 A[i - j] => A[i + (-j)]
+A[3 * i] => ScaleArray(A, (3,))[i]
+A[i * j] => ProductArray(A, 1)[i, j]
 A[i + 1] => OffsetArray(A, (1,))[i]
 A[i + j] => ToeplitzArray(A, 1)[i, j]
-A[~i] => PermissiveArray(A, 1)[i, j]
+A[~i] => PermissiveArray(A, 1)[i]
 ```
 
 The loop binding order may be used to determine which index comes first in an

@@ -42,7 +42,7 @@ begin
                             Finch.resize_if_smaller!(res_lvl_val, res_lvl_qos_stop)
                             Finch.fill_range!(res_lvl_val, false, res_lvl_qos, res_lvl_qos_stop)
                         end
-                        res_lvl_val[res_lvl_qos] = tmp_lvl_2_val
+                        res = (res_lvl_val[res_lvl_qos] = tmp_lvl_2_val)
                         res_lvl_idx[res_lvl_qos] = i_8
                         res_lvl_qos += 1
                     end
@@ -73,9 +73,9 @@ begin
             end
         end
     end
-    res_lvl_ptr[1 + 1] = (res_lvl_qos - 0) - 1
-    for p = 2:1 + 1
-        res_lvl_ptr[p] += res_lvl_ptr[p - 1]
+    res_lvl_ptr[1 + 1] += (res_lvl_qos - 0) - 1
+    for p = 1:1
+        res_lvl_ptr[p + 1] += res_lvl_ptr[p]
     end
     resize!(res_lvl_ptr, 1 + 1)
     qos = res_lvl_ptr[end] - 1

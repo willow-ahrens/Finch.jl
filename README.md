@@ -64,7 +64,7 @@ Below is a Julia program using Finch to compute the minimum, maximum, sum, and v
 ```julia
 using Finch
 
-X = Fiber!(SparseList(Element(0.0)), fsprand((10,), 0.5))
+X = Fiber!(SparseList(Element(0.0)), fsprand(10, 0.5))
 x_min = Scalar(Inf)
 x_max = Scalar(-Inf)
 x_sum = Scalar(0.0)
@@ -88,7 +88,7 @@ As a more traditional example, what follows is a sparse matrix-vector multiplica
 
 ```julia
 x = Fiber!(Dense(Element(0.0)), rand(42));
-A = Fiber!(Dense(SparseList(Element(0.0))), fsprand((42, 42), 0.1));
+A = Fiber!(Dense(SparseList(Element(0.0))), fsprand(42, 42, 0.1));
 y = Fiber!(Dense(Element(0.0)));
 
 @finch begin

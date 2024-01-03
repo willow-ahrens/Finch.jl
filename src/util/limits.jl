@@ -124,14 +124,14 @@ julia> 1.0 < minus_eps(1.0)
 false
 """
 struct Limit{T} <: Number
-    val
+    val::T
     sign::Infinitesimal
     Limit{T}(x::T, y) where {T} = new{T}(x, y)
     Limit{T}(x::T, y) where {T<:Limit} = error()
 end
 
 limit(x::T, s) where {T} = Limit{T}(x, s)
-plus_eps(x)::Limit = limit(0, tiny_positive())
+plus_eps(x)::Limit = limit(x, tiny_positive())
 minus_eps(x)::Limit = limit(x, tiny_negative())
 limit(x) = limit(x, tiny_zero())
 limit(x::Limit) = x 
@@ -171,7 +171,7 @@ for S in limit_types
     @eval begin
         @inline Base.promote_rule(::Type{Limit{T}}, ::Type{$S}) where {T} = Limit{promote_type(T, $S)}
         Base.convert(::Type{Limit{T}}, i::$S) where {T} = limit(convert(T, i))
-        Limit(i::$S) = Limit{$S}(i, tiny())
+        Limit(i::$S) = Limit{$S}(i, tiny_zero())
         (::Type{$S})(i::Limit{T}) where {T} = convert($S, i.val)
         Base.convert(::Type{$S}, i::Limit) = convert($S, i.val)
         Base.:(+)(x::Limit, y::$S)::Limit = x + limit(y)

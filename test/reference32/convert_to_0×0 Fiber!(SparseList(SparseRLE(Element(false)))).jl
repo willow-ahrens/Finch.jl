@@ -184,9 +184,9 @@ begin
             end
         end
     end
-    tmp_lvl_ptr[1 + 1] = (tmp_lvl_qos - 0) - 1
-    for p = 2:1 + 1
-        tmp_lvl_ptr[p] += tmp_lvl_ptr[p - 1]
+    tmp_lvl_ptr[1 + 1] += (tmp_lvl_qos - 0) - 1
+    for p = 1:1
+        tmp_lvl_ptr[p + 1] += tmp_lvl_ptr[p]
     end
     qos_stop = tmp_lvl_ptr[1 + 1] - 1
     for p_2 = 2:qos_stop + 1

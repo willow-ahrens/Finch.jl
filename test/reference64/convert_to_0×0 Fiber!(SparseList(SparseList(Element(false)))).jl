@@ -95,7 +95,7 @@ begin
                         end
                     end
                 end
-                tmp_lvl_ptr_2[tmp_lvl_qos + 1] = (tmp_lvl_2_qos - tmp_lvl_2_qos_fill) - 1
+                tmp_lvl_ptr_2[tmp_lvl_qos + 1] += (tmp_lvl_2_qos - tmp_lvl_2_qos_fill) - 1
                 tmp_lvl_2_qos_fill = tmp_lvl_2_qos - 1
                 if tmp_lvldirty
                     tmp_lvl_idx[tmp_lvl_qos] = ref_lvl_i
@@ -163,7 +163,7 @@ begin
                             end
                         end
                     end
-                    tmp_lvl_ptr_2[tmp_lvl_qos + 1] = (tmp_lvl_2_qos_2 - tmp_lvl_2_qos_fill) - 1
+                    tmp_lvl_ptr_2[tmp_lvl_qos + 1] += (tmp_lvl_2_qos_2 - tmp_lvl_2_qos_fill) - 1
                     tmp_lvl_2_qos_fill = tmp_lvl_2_qos_2 - 1
                     if tmp_lvldirty
                         tmp_lvl_idx[tmp_lvl_qos] = phase_stop_7
@@ -175,13 +175,13 @@ begin
             end
         end
     end
-    tmp_lvl_ptr[1 + 1] = (tmp_lvl_qos - 0) - 1
-    for p = 2:1 + 1
-        tmp_lvl_ptr[p] += tmp_lvl_ptr[p - 1]
+    tmp_lvl_ptr[1 + 1] += (tmp_lvl_qos - 0) - 1
+    for p = 1:1
+        tmp_lvl_ptr[p + 1] += tmp_lvl_ptr[p]
     end
     qos_stop = tmp_lvl_ptr[1 + 1] - 1
-    for p_2 = 2:qos_stop + 1
-        tmp_lvl_ptr_2[p_2] += tmp_lvl_ptr_2[p_2 - 1]
+    for p_2 = 1:qos_stop
+        tmp_lvl_ptr_2[p_2 + 1] += tmp_lvl_ptr_2[p_2]
     end
     resize!(tmp_lvl_ptr, 1 + 1)
     qos = tmp_lvl_ptr[end] - 1
