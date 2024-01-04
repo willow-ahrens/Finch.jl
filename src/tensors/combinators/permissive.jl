@@ -15,6 +15,7 @@ end
 struct VirtualPermissiveArray <: AbstractVirtualCombinator
     body
     dims
+    dimVals
 end
 
 is_injective(lvl::VirtualPermissiveArray, ctx) = is_injective(lvl.body, ctx)
@@ -30,13 +31,13 @@ Base.summary(io::IO, ex::VirtualPermissiveArray) = print(io, "VPermissive($(summ
 FinchNotation.finch_leaf(x::VirtualPermissiveArray) = virtual(x)
 
 function virtualize(ex, ::Type{PermissiveArray{dims, Body}}, ctx) where {dims, Body}
-    VirtualPermissiveArray(virtualize(:($ex.body), Body, ctx), dims)
+    VirtualPermissiveArray(virtualize(:($ex.body), Body, ctx), dims, map(dim -> dimless, dims))
 end
 
 permissive(body, dims...) = PermissiveArray(body, dims)
 function virtual_call(::typeof(permissive), ctx, body, dims...)
     @assert All(isliteral)(dims)
-    VirtualPermissiveArray(body, map(dim -> dim.val, dims))
+    VirtualPermissiveArray(body, map(dim -> dim.val, dims), map(dim -> dimless, dims))
 end
 
 virtual_uncall(arr::VirtualPermissiveArray) = call(permissive, arr.body, arr.dims...)
@@ -44,7 +45,7 @@ virtual_uncall(arr::VirtualPermissiveArray) = call(permissive, arr.body, arr.dim
 lower(tns::VirtualPermissiveArray, ctx::AbstractCompiler, ::DefaultStyle) = :(PermissiveArray($(ctx(tns.body)), $(tns.dims)))
 
 function virtual_size(arr::VirtualPermissiveArray, ctx::AbstractCompiler)
-    ifelse.(arr.dims, (dimless,), virtual_size(arr.body, ctx))
+    ifelse.(arr.dims, arr.dimVals, virtual_size(arr.body, ctx))
 end
 
 function virtual_resize!(arr::VirtualPermissiveArray, ctx::AbstractCompiler, dims...)
@@ -52,7 +53,7 @@ function virtual_resize!(arr::VirtualPermissiveArray, ctx::AbstractCompiler, dim
 end
 
 function instantiate(arr::VirtualPermissiveArray, ctx, mode, protos)
-    VirtualPermissiveArray(instantiate(arr.body, ctx, mode, protos), arr.dims)
+    VirtualPermissiveArray(instantiate(arr.body, ctx, mode, protos), arr.dims, virtual_size(arr.body))
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualPermissiveArray) = ctx(node.body)
@@ -64,7 +65,7 @@ function popdim(node::VirtualPermissiveArray)
     if length(node.dims) == 1
         return node.body
     else
-        return VirtualPermissiveArray(node.body, node.dims[1:end-1])
+        return VirtualPermissiveArray(node.body, node.dims[1:end-1], nod.dimVals[1:end-1])
     end
 end
 
@@ -75,18 +76,18 @@ function get_point_body(node::VirtualPermissiveArray, ctx, ext, idx)
     if body_2 === nothing
         return nothing
     else
-        return popdim(VirtualPermissiveArray(body_2, node.dims))
+        return popdim(VirtualPermissiveArray(body_2, node.dims, node.dimVals))
     end
 end
 
-(ctx::ThunkVisitor)(node::VirtualPermissiveArray) = VirtualPermissiveArray(ctx(node.body), node.dims)
+(ctx::ThunkVisitor)(node::VirtualPermissiveArray) = VirtualPermissiveArray(ctx(node.body), node.dims, node.dimVals)
 
 function get_run_body(node::VirtualPermissiveArray, ctx, ext)
     body_2 = get_run_body(node.body, ctx, ext)
     if body_2 === nothing
         return nothing
     else
-        return popdim(VirtualPermissiveArray(body_2, node.dims))
+        return popdim(VirtualPermissiveArray(body_2, node.dims, node.dimVals))
     end
 end
 
@@ -95,40 +96,40 @@ function get_acceptrun_body(node::VirtualPermissiveArray, ctx, ext)
     if body_2 === nothing
         return nothing
     else
-        return popdim(VirtualPermissiveArray(body_2, node.dims))
+        return popdim(VirtualPermissiveArray(body_2, node.dims, node.dimVals))
     end
 end
 
 function (ctx::SequenceVisitor)(node::VirtualPermissiveArray)
     map(ctx(node.body)) do (keys, body)
-        return keys => VirtualPermissiveArray(body, node.dims)
+        return keys => VirtualPermissiveArray(body, node.dims, node.dimVals)
     end
 end
 
-phase_body(node::VirtualPermissiveArray, ctx, ext, ext_2) = VirtualPermissiveArray(phase_body(node.body, ctx, ext, ext_2), node.dims)
+phase_body(node::VirtualPermissiveArray, ctx, ext, ext_2) = VirtualPermissiveArray(phase_body(node.body, ctx, ext, ext_2), node.dims, node.dimVals)
 phase_range(node::VirtualPermissiveArray, ctx, ext) = phase_range(node.body, ctx, ext)
 
-get_spike_body(node::VirtualPermissiveArray, ctx, ext, ext_2) = VirtualPermissiveArray(get_spike_body(node.body, ctx, ext, ext_2), node.dims)
-get_spike_tail(node::VirtualPermissiveArray, ctx, ext, ext_2) = VirtualPermissiveArray(get_spike_tail(node.body, ctx, ext, ext_2), node.dims)
+get_spike_body(node::VirtualPermissiveArray, ctx, ext, ext_2) = VirtualPermissiveArray(get_spike_body(node.body, ctx, ext, ext_2), node.dims, node.dimVals)
+get_spike_tail(node::VirtualPermissiveArray, ctx, ext, ext_2) = VirtualPermissiveArray(get_spike_tail(node.body, ctx, ext, ext_2), node.dims, node.dimVals)
 
 visit_fill(node, tns::VirtualPermissiveArray) = visit_fill(node, tns.body)
-visit_simplify(node::VirtualPermissiveArray) = VirtualPermissiveArray(visit_simplify(node.body), node.dims)
+visit_simplify(node::VirtualPermissiveArray) = VirtualPermissiveArray(visit_simplify(node.body), node.dims, node.dimVals)
 
 (ctx::SwitchVisitor)(node::VirtualPermissiveArray) = map(ctx(node.body)) do (guard, body)
-    guard => VirtualPermissiveArray(body, node.dims)
+    guard => VirtualPermissiveArray(body, node.dims, node.dimVals)
 end
 
 stepper_range(node::VirtualPermissiveArray, ctx, ext) = stepper_range(node.body, ctx, ext)
-stepper_body(node::VirtualPermissiveArray, ctx, ext, ext_2) = VirtualPermissiveArray(stepper_body(node.body, ctx, ext, ext_2), node.dims)
+stepper_body(node::VirtualPermissiveArray, ctx, ext, ext_2) = VirtualPermissiveArray(stepper_body(node.body, ctx, ext, ext_2), node.dims, node.dimVals)
 stepper_seek(node::VirtualPermissiveArray, ctx, ext) = stepper_seek(node.body, ctx, ext)
 
 jumper_range(node::VirtualPermissiveArray, ctx, ext) = jumper_range(node.body, ctx, ext)
-jumper_body(node::VirtualPermissiveArray, ctx, ext, ext_2) = VirtualPermissiveArray(jumper_body(node.body, ctx, ext, ext_2), node.dims)
+jumper_body(node::VirtualPermissiveArray, ctx, ext, ext_2) = VirtualPermissiveArray(jumper_body(node.body, ctx, ext, ext_2), node.dims, node.dimVals)
 jumper_seek(node::VirtualPermissiveArray, ctx, ext) = jumper_seek(node.body, ctx, ext)
 
 function short_circuit_cases(node::VirtualPermissiveArray, ctx, op)
     map(short_circuit_cases(node.body, ctx, op)) do (guard, body)
-        guard => VirtualPermissiveArray(body, node.dims)
+        guard => VirtualPermissiveArray(body, node.dims, node.dimVals)
     end
 end
 
@@ -136,8 +137,8 @@ getroot(tns::VirtualPermissiveArray) = getroot(tns.body)
 
 function unfurl(tns::VirtualPermissiveArray, ctx, ext, mode, protos...)
     tns_2 = unfurl(tns.body, ctx, ext, mode, protos...)
-    dims = virtual_size(tns.body, ctx)
     garb = (mode === reader) ? Fill(literal(missing)) : Fill(Null())
+    dims = node.dimVals
     if tns.dims[end] && dims[end] != dimless
         VirtualPermissiveArray(
             Unfurled(
