@@ -52,11 +52,6 @@ isstructequal(a::T, b::T) where {T <: SparseList} =
     a.idx == b.idx &&
     isstructequal(a.lvl, b.lvl)
 
-isstructequal(a::T, b::T) where {T <: RootSparseList} =
-    a.shape == b.shape &&
-    a.idx == b.idx &&
-    isstructequal(a.lvl, b.lvl)
-
 isstructequal(a::T, b::T) where {T <: SparseCOO} =
     a.shape == b.shape &&
     a.ptr == b.ptr &&

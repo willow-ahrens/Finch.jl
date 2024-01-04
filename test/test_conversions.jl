@@ -293,8 +293,8 @@
     ]
         for outer in [
             () -> Dense(Pointer(inner())),
-            () -> RootSparseList(inner()),
-            () -> RootSparseList(Pointer(inner())),
+            () -> SparseList(inner()),
+            () -> SparseList(Pointer(inner())),
         ]
 
             for (arr_key, arr) in [
