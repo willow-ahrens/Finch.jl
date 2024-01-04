@@ -196,6 +196,7 @@ function instantiate(trv::DenseTraversal, ctx, mode, subprotos, ::Union{typeof(d
     Ti = lvl.Ti
 
     q = freshen(ctx.code, tag, :_q)
+
     Furlable(
         body = (ctx, ext) -> Lookup(
             body = (ctx, i) -> Thunk(
